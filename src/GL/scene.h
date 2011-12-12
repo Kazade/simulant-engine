@@ -8,6 +8,7 @@
 #include "mesh.h"
 #include "camera.h"
 #include "renderer.h"
+#include "texture.h"
 
 namespace GL {
 

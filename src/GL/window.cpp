@@ -28,6 +28,10 @@ bool Window::update() {
     return is_running_;
 }
 
+void Window::set_title(const std::string& title) {
+    SDL_WM_SetCaption(title.c_str(), NULL);
+}
+
 void Window::check_events() {
     SDL_Event event;
 
