@@ -5,9 +5,11 @@
 #include <vector>
 #include <SDL_opengl.h>
 
+#include "resource.h"
+
 namespace GL {
 
-class Texture {
+class Texture : public Resource {
 public:
     typedef std::vector<uint8_t> Data;
 

@@ -6,6 +6,8 @@
 
 #include "scene.h"
 
+#include "loaders/tga_loader.h"
+
 namespace GL {
 
 class Window {
@@ -20,6 +22,9 @@ public:
         }
 
         create_gl_window(width, height, bpp);
+
+        //Register the default resource loaders
+	register_loader("tga", Loader::ptr(new TGALoader));
     }
 
     ~Window() {
@@ -28,8 +33,11 @@ public:
 
     void set_title(const std::string& title);
     Scene& scene() { return scene_; }
+    Loader& loader(const std::string& ext);
 
     bool update();
+
+    void register_loader(const std::string& extension, Loader::ptr loader);
 
 private:
     bool is_running_;
@@ -43,6 +51,9 @@ private:
 
     uint32_t width_;
     uint32_t height_;
+
+    std::map<std::string, Loader::ptr> loaders_;
+
 };
 
 }
