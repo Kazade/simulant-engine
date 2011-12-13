@@ -25,10 +25,8 @@ public:
         create_gl_window(width, height, bpp);
 
         //Register the default resource loaders
-        register_loader("tga", Loader::ptr(new GL::loaders::TextureLoader));
-        register_loader("png", Loader::ptr(new GL::loaders::TextureLoader));
-
-        register_loader("bsp", Loader::ptr(new GL::loaders::Q2BSPLoader));
+        register_loader(LoaderType::ptr(new GL::loaders::TextureLoaderType));
+        register_loader(LoaderType::ptr(new GL::loaders::Q2BSPLoaderType));
     }
 
     ~Window() {
@@ -37,14 +35,19 @@ public:
 
     void set_title(const std::string& title);
     Scene& scene() { return scene_; }
-    Loader& loader(const std::string& ext) {
-        //FIXME: assert
-        return *loaders_[ext];
+    Loader loader(const std::string& filename) {
+        for(LoaderType::ptr l: loaders) {
+            if(l->supports(filename)) {
+                return l->loader_for(filename);
+            }
+        }
+    
+        throw std::runtime_error("Unable to find a load for: + filename);
     }
 
     bool update();
 
-    void register_loader(const std::string& extension, Loader::ptr loader);
+    void register_loader(LoaderType::ptr loader_type);
 
 private:
     bool is_running_;
@@ -59,7 +62,7 @@ private:
     uint32_t width_;
     uint32_t height_;
 
-    std::map<std::string, Loader::ptr> loaders_;
+    std::vector<LoaderType::ptr> loaders_;
 
 };
 

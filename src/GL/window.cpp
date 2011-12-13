@@ -67,10 +67,9 @@ void Window::create_gl_window(int width, int height, int bpp) {
     assert(surface_);
 }
 
-void Window::register_loader(const std::string& extension, Loader::ptr loader) {
-    //FIXME: lower-case
+void Window::register_loader(LoaderType::ptr loader) {
     //FIXME: assert doesn't exist already
-    loaders_[extension] = loader;
+    loaders_.push_back(loader);
 }
 
 }

@@ -6,13 +6,31 @@
 
 namespace GL {
 
+class LoaderType {
+public:
+    typedef std::tr1::shared_ptr<LoaderType> ptr;
+    virtual std::string name() = 0;
+    virtual bool supports(const std::string& filename) const = 0;
+    virtual Loader loader_for(const std::string& filename) const = 0;
+};
+
+
+
+/*
+    if(LoaderType().supports("filename")) {
+        Loader::ptr = LoaderType().loader(filename);
+    }
+*/
 class Loader {
 public:
     typedef std::tr1::shared_ptr<Loader> ptr;
 
+    Loader(const std::string& filename);
     virtual ~Loader();
-    virtual void load_into(Resource& resource, const std::string& filename) = 0;
+    virtual load_into(Resource& resource) = 0;
 
+protected:
+    std::string filename_;
 };
 
 }
