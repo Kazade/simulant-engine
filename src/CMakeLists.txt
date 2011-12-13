@@ -17,10 +17,18 @@ SET(KGLT_SOURCES
     GL/renderer.cpp
     GL/camera.cpp
     GL/texture.cpp
+    GL/loader.cpp
+    GL/shortcuts.cpp
+    GL/loaders/q2bsp_loader.cpp
+    GL/loaders/texture_loader.cpp
 )
 
-SET(SOURCES
+SET(SAMPLE_SOURCES
     sample.cpp
+)
+
+SET(Q2_SAMPLE_SOURCES
+    q2bsp_sample.cpp
 )
 
 INCLUDE_DIRECTORIES(
@@ -33,10 +41,17 @@ LINK_LIBRARIES(
     ${SDL_LIBRARIES}
     ${GL_LIBRARIES}
     ${GLU_LIBRARIES}
+    SOIL
 )
 
 ADD_EXECUTABLE(
-	kglt_sample
-        ${KGLT_SOURCES}
-	${SOURCES}
+    kglt_sample
+    ${KGLT_SOURCES}
+    ${SAMPLE_SOURCES}
+)
+
+ADD_EXECUTABLE(
+    kglt_bsp_sample
+    ${KGLT_SOURCES}
+    ${Q2_SAMPLE_SOURCES}
 )
