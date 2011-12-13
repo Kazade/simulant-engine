@@ -1,29 +1,40 @@
 #include "GL/window.h"
 #include "GL/types.h"
+#include "GL/shortcuts.h"
 
 int main(int argc, char* argv[]) {
 	GL::Window window;
 	window.set_title("KGLT Sample");
 
-	window.scene().render_options.backface_culling_enabled = false;
+    /**
+        Generate a mesh and build a 2D square
 
-	GL::MeshID mid = window.scene().new_mesh();
+        Base objects are always created with new_X() and can
+        be destroyed with delete_X(). They are held by the object
+        that spawned them. For example, meshes are held by the scene.
 
-	window.scene().mesh(mid).move(0.0f, 0.0f, -4.0f);
-	window.scene().mesh(mid).add_vertex(-1.0, -1.0f, 0.0f);
-	window.scene().mesh(mid).add_vertex(1.0f, -1.0f, 0.0f);
-	window.scene().mesh(mid).add_vertex(1.0f, 1.0f, 0.0f);
-	window.scene().mesh(mid).add_vertex(-1.0f, 1.0f, 0.0f);
-	window.scene().mesh(mid).add_triangle(0, 1, 2);
-	window.scene().mesh(mid).add_triangle(0, 2, 3);
+        Creating an object gives you an ID, this can then be exchanged
+        for a reference to an object.
+    */
+    GL::MeshID mid = window.scene().new_mesh();
+    GL::Mesh& mesh = window.scene().mesh(mid);
 
-	//Create a texture, use the TGA loader to fill it
-	GL::TextureID tid = window.scene().new_texture();
-	GL::Texture& tex = window.scene().texture(tid);
-	window.loader("tga").load_into(tex, "sample.tga");
+    /**
+        Once we have the reference to a base object, we can
+        manipulate it easily
+    */
+	mesh.move(0.0f, 0.0f, -4.0f);
+	mesh.add_vertex(-1.0, -1.0f, 0.0f, 0.0f, 0.0f);
+	mesh.add_vertex(1.0f, -1.0f, 0.0f, 1.0f, 0.0f);
+	mesh.add_vertex(1.0f, 1.0f, 0.0f, 1.0f, 1.0f);
+	mesh.add_vertex(-1.0f, 1.0f, 0.0f, 0.0f, 1.0f);
+	mesh.add_triangle(0, 1, 2);
+	mesh.add_triangle(0, 2, 3);
 
+    ///Shortcut function for loading images
+    GL::TextureID tid = GL::create_texture_from_file(window, "sample.tga");
 	//Apply the texture to the mesh
-	window.scene().mesh(mid).apply_texture(0, tid);
+	mesh.apply_texture(0, tid);
 
 	while(window.update()) {}
 	return 0;

@@ -17,6 +17,7 @@ struct RenderOptions {
     bool wireframe_enabled;
     bool texture_enabled;
     bool backface_culling_enabled;
+    uint8_t point_size;
 };
 
 class Renderer : public ObjectVisitor {
@@ -31,6 +32,8 @@ public:
 
         if(!options_.texture_enabled) {
             glDisable(GL_TEXTURE_2D);
+        } else {
+            glEnable(GL_TEXTURE_2D);
         }
 
         if(options_.wireframe_enabled) {
@@ -42,6 +45,8 @@ public:
         if(!options_.backface_culling_enabled) {
             glDisable(GL_CULL_FACE);
         }
+
+        glPointSize(options_.point_size);
     }
 
     void visit(Mesh* mesh);

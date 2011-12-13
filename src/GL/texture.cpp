@@ -21,6 +21,22 @@ void Texture::resize(int width, int height) {
 }
 
 void Texture::upload(bool free_after) {
+    if(!gl_tex()) {
+        glGenTextures(1, &gl_tex_);
+    }
+
+    glBindTexture(GL_TEXTURE_2D, gl_tex_);
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0, bpp_ / 8,
+        width_, height_, 0,
+        (bpp_ == 32) ? GL_RGBA : GL_RGB,
+        GL_UNSIGNED_BYTE, &data_[0]
+    );
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
     if(free_after) {
         free();
     }

@@ -6,7 +6,8 @@
 
 #include "scene.h"
 
-#include "loaders/tga_loader.h"
+#include "loaders/texture_loader.h"
+#include "loaders/q2bsp_loader.h"
 
 namespace GL {
 
@@ -24,7 +25,10 @@ public:
         create_gl_window(width, height, bpp);
 
         //Register the default resource loaders
-	register_loader("tga", Loader::ptr(new TGALoader));
+        register_loader("tga", Loader::ptr(new GL::loaders::TextureLoader));
+        register_loader("png", Loader::ptr(new GL::loaders::TextureLoader));
+
+        register_loader("bsp", Loader::ptr(new GL::loaders::Q2BSPLoader));
     }
 
     ~Window() {
@@ -33,7 +37,10 @@ public:
 
     void set_title(const std::string& title);
     Scene& scene() { return scene_; }
-    Loader& loader(const std::string& ext);
+    Loader& loader(const std::string& ext) {
+        //FIXME: assert
+        return *loaders_[ext];
+    }
 
     bool update();
 

@@ -16,7 +16,8 @@ TextureID& Mesh::texture(uint32_t l) {
 }
 
 void Mesh::apply_texture(uint32_t level, TextureID tex) {
-    assert(0);
+    assert(level < MAX_TEXTURES_PER_MESH);
+    textures_[level] = tex;
 }
 
 void Mesh::add_vertex(float x, float y, float z, float u, float v) {

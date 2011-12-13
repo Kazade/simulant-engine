@@ -10,7 +10,7 @@ bool Window::update() {
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45.0f, (GLfloat)width_ / (GLfloat)height_, 0.1f, 100.0f);
+    gluPerspective(45.0f, (GLfloat)width_ / (GLfloat)height_, 0.1f, 1000.0f);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
@@ -65,6 +65,12 @@ void Window::create_gl_window(int width, int height, int bpp) {
     surface_ = SDL_SetVideoMode(width, height, bpp, SDL_OPENGL);
 
     assert(surface_);
+}
+
+void Window::register_loader(const std::string& extension, Loader::ptr loader) {
+    //FIXME: lower-case
+    //FIXME: assert doesn't exist already
+    loaders_[extension] = loader;
 }
 
 }

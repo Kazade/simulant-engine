@@ -13,7 +13,7 @@ class Texture : public Resource {
 public:
     typedef std::vector<uint8_t> Data;
 
-    GLuint gl_tex() const;
+    GLuint gl_tex() const { return gl_tex_; }
 
     Texture():
         width_(0),

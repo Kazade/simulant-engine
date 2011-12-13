@@ -12,7 +12,7 @@
 
 namespace GL {
 
-class Scene : public Object {
+class Scene : public Object, public Resource {
 public:
     void move(float x, float y, float z) {
         throw std::logic_error("You cannot move the scene");
@@ -25,6 +25,7 @@ public:
         render_options.wireframe_enabled = false;
         render_options.texture_enabled = true;
         render_options.backface_culling_enabled = true;
+        render_options.point_size = 1;
     }
 
     MeshID new_mesh();

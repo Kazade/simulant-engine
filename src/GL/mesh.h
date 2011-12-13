@@ -5,6 +5,8 @@
 #include "types.h"
 #include "object_visitor.h"
 
+#define MAX_TEXTURES_PER_MESH 1
+
 namespace GL {
 
 struct Vertex : public Vec3 {
@@ -15,10 +17,17 @@ struct Triangle {
     uint32_t a, b, c;
 };
 
+enum MeshArrangement {
+    POINTS,
+    TRIANGLES,
+    TRIANGLE_FAN
+};
+
 class Mesh : public Object {
 public:
     Mesh() {
-
+        textures_.resize(MAX_TEXTURES_PER_MESH, 0); //Allow up to 5 textures on a mesh
+        set_arrangement(MeshArrangement::TRIANGLES);
     }
 
     void add_submesh() {
@@ -42,6 +51,10 @@ public:
         return triangles_;
     }
 
+    std::vector<Vertex>& vertices() {
+        return vertices_;
+    }
+
     TextureID& texture(uint32_t l = 0);
 
     void apply_texture(uint32_t level, TextureID tex);
@@ -49,18 +62,23 @@ public:
     void add_triangle(uint32_t a, uint32_t b, uint32_t c);
 
     void accept(ObjectVisitor& visitor) {
-/*        for(Object* child: children_) {
+        for(Object* child: children_) {
             child->accept(visitor);
-        }*/
+        }
 
         visitor.visit(this);
     }
+
+    void set_arrangement(MeshArrangement m) { arrangement_ = m; }
+    MeshArrangement arrangement() { return arrangement_; }
 
 private:
     std::vector<Mesh> submeshes_;
     std::vector<Vertex> vertices_;
     std::vector<Triangle> triangles_;
     std::vector<TextureID> textures_;
+
+    MeshArrangement arrangement_;
 };
 
 }

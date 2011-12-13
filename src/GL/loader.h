@@ -10,6 +10,7 @@ class Loader {
 public:
     typedef std::tr1::shared_ptr<Loader> ptr;
 
+    virtual ~Loader();
     virtual void load_into(Resource& resource, const std::string& filename) = 0;
 
 };

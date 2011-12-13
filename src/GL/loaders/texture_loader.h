@@ -4,12 +4,14 @@
 #include "../loader.h"
 
 namespace GL {
+namespace loaders {
 
-class TGALoader : public Loader {
+class TextureLoader : public Loader {
 public:
     void load_into(Resource& resource, const std::string& filename);
 };
 
+}
 }
 
 #endif

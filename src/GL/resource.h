@@ -5,7 +5,7 @@ namespace GL {
 
 class Resource {
 public:
-	~Resource() {}
+	virtual ~Resource() {}
 };
 
 }
