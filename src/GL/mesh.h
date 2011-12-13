@@ -10,11 +10,16 @@
 namespace GL {
 
 struct Vertex : public Vec3 {
-    Vec2 uv; //Make a vector?
 };
 
 struct Triangle {
-    uint32_t a, b, c;
+    uint32_t idx[3];
+    Vec2 uv[3];
+    Vec2 st[3];
+    GL::TextureID tex_id;
+
+    Triangle():
+        tex_id(0) {}
 };
 
 enum MeshArrangement {
@@ -58,8 +63,8 @@ public:
     TextureID& texture(uint32_t l = 0);
 
     void apply_texture(uint32_t level, TextureID tex);
-    void add_vertex(float x, float y, float z, float u=0.0f, float v=0.0f);
-    void add_triangle(uint32_t a, uint32_t b, uint32_t c);
+    void add_vertex(float x, float y, float z);
+    Triangle& add_triangle(uint32_t a, uint32_t b, uint32_t c);
 
     void accept(ObjectVisitor& visitor) {
         for(Object* child: children_) {

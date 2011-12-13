@@ -44,6 +44,8 @@ public:
 
         if(!options_.backface_culling_enabled) {
             glDisable(GL_CULL_FACE);
+        } else {
+            glEnable(GL_CULL_FACE);
         }
 
         glPointSize(options_.point_size);

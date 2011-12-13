@@ -8,9 +8,26 @@ namespace loaders {
 
 class Q2BSPLoader : public Loader {
 public:
-    void load_into(Resource& resource, const std::string& filename);
+    Q2BSPLoader(const std::string& filename):
+        Loader(filename) {}
+
+    void into(Resource& resource);
 
 };
+
+class Q2BSPLoaderType : public LoaderType {
+public:
+    std::string name() { return "bsp_loader"; }
+    bool supports(const std::string& filename) const {
+        //FIXME: check magic
+        return filename.find(".bsp") != std::string::npos;
+    }
+
+    Loader::ptr loader_for(const std::string& filename) const {
+        return Loader::ptr(new Q2BSPLoader(filename));
+    }
+};
+
 
 }
 }

@@ -16,26 +16,27 @@ TextureID& Mesh::texture(uint32_t l) {
 }
 
 void Mesh::apply_texture(uint32_t level, TextureID tex) {
+    //FIXME: Apply to all triangles
+
     assert(level < MAX_TEXTURES_PER_MESH);
     textures_[level] = tex;
 }
 
-void Mesh::add_vertex(float x, float y, float z, float u, float v) {
+void Mesh::add_vertex(float x, float y, float z) {
     Vertex vert;
     vert.x = x;
     vert.y = y;
     vert.z = z;
-    vert.uv.x = u;
-    vert.uv.y = v;
     vertices_.push_back(vert);
 }
 
-void Mesh::add_triangle(uint32_t a, uint32_t b, uint32_t c) {
+Triangle& Mesh::add_triangle(uint32_t a, uint32_t b, uint32_t c) {
     Triangle t;
-    t.a = a;
-    t.b = b;
-    t.c = c;
+    t.idx[0] = a;
+    t.idx[1] = b;
+    t.idx[2] = c;
     triangles_.push_back(t);
+    return triangles_[triangles_.size() - 1];
 }
 
 }

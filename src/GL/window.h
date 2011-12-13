@@ -8,6 +8,7 @@
 
 #include "loaders/texture_loader.h"
 #include "loaders/q2bsp_loader.h"
+#include "loader.h"
 
 namespace GL {
 
@@ -15,6 +16,7 @@ class Window {
 public:
     Window(int width=640, int height=480, int bpp=0):
         is_running_(true),
+        scene_(this),
         width_(width),
         height_(height) {
 
@@ -35,21 +37,30 @@ public:
 
     void set_title(const std::string& title);
     Scene& scene() { return scene_; }
-    Loader loader(const std::string& filename) {
-        for(LoaderType::ptr l: loaders) {
-            if(l->supports(filename)) {
-                return l->loader_for(filename);
+    Loader::ptr loader_for(const std::string& filename) {
+        std::string final_file = find_file(filename);
+
+        for(LoaderType::ptr loader_type: loaders_) {
+            if(loader_type->supports(final_file)) {
+                return loader_type->loader_for(final_file);
             }
         }
-    
-        throw std::runtime_error("Unable to find a load for: + filename);
+
+        throw std::runtime_error("Unable to find a load for: + filename");
     }
 
     bool update();
 
     void register_loader(LoaderType::ptr loader_type);
-
+    void add_search_path(const std::string& path) {
+        resource_paths_.push_back(path);
+    }
 private:
+    std::string find_file(const std::string& filename) {
+        //FIXME: Search the resource paths!
+        return filename;
+    }
+
     bool is_running_;
 
     SDL_Surface* surface_;
@@ -62,6 +73,7 @@ private:
     uint32_t width_;
     uint32_t height_;
 
+    std::vector<std::string> resource_paths_;
     std::vector<LoaderType::ptr> loaders_;
 
 };

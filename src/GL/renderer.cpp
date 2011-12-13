@@ -24,24 +24,22 @@ void Renderer::visit(Mesh* mesh) {
             }
             glEnd();
         } else {
-
-            glBegin(GL_TRIANGLES);
             for(Triangle& triangle: mesh->triangles()) {
-                    Vertex v1 = mesh->vertex(triangle.a);
-                    Vertex v2 = mesh->vertex(triangle.b);
-                    Vertex v3 = mesh->vertex(triangle.c);
+                if(triangle.tex_id) {
+                    GLuint tex_id = scene_->texture(triangle.tex_id).gl_tex();
+                    glBindTexture(GL_TEXTURE_2D, tex_id);
+                }
+                assert(glGetError() == GL_NO_ERROR);
 
-                    glTexCoord2f(v1.uv.x, v1.uv.y);
+                glBegin(GL_TRIANGLES);
+                for(int i = 0; i < 3; ++i) {
+                    Vertex v1 = mesh->vertex(triangle.idx[i]);
+                    glTexCoord2f(triangle.uv[i].x, triangle.uv[i].y);
                     glVertex3f(v1.x, v1.y, v1.z);
-
-                    glTexCoord2f(v2.uv.x, v2.uv.y);
-                    glVertex3f(v2.x, v2.y, v2.z);
-
-                    glTexCoord2f(v3.uv.x, v3.uv.y);
-                    glVertex3f(v3.x, v3.y, v3.z);
-
+                }
+                glEnd();
             }
-            glEnd();
+
 
         }
     glPopMatrix();
