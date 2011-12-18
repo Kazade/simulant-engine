@@ -10,7 +10,7 @@ bool Window::update() {
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45.0f, (GLfloat)width_ / (GLfloat)height_, 0.1f, 1000.0f);
+    gluPerspective(90.0f, (GLfloat)width_ / (GLfloat)height_, 1.0f, 5000.0f);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
@@ -37,6 +37,12 @@ void Window::check_events() {
 
     while(SDL_PollEvent(&event)) {
         switch(event.type) {
+            case SDL_KEYDOWN:
+                signal_key_pressed_(event.key.keysym);
+                break;
+            case SDL_KEYUP:
+                signal_key_released_(event.key.keysym);
+                break;
             case SDL_ACTIVEEVENT:
                 break;
             case SDL_VIDEORESIZE:

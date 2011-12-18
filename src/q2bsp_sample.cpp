@@ -2,8 +2,18 @@
 #include "GL/types.h"
 #include "GL/shortcuts.h"
 
+GL::Window window(1024, 768);
+std::vector<uint8_t> keys(SDLK_LAST, 0);
+
+void on_key_down(SDL_keysym sym) {
+    keys[sym.sym] = 1;
+}
+
+void on_key_up(SDL_keysym sym) {
+    keys[sym.sym] = 0;
+}
+
 int main(int argc, char* argv[]) {
-	GL::Window window;
 	window.set_title("KGLT Sample");
 
     window.scene().render_options.wireframe_enabled = false;
@@ -13,9 +23,22 @@ int main(int argc, char* argv[]) {
 
     window.loader_for("sample.bsp")->into(window.scene());
 
-    //FIXME: move camera not mesh!
-    window.scene().mesh(1).move(0.0f, 200.0f, -200.0f);
+    window.signal_key_pressed().connect(&on_key_down);
+    window.signal_key_released().connect(&on_key_up);
 
-	while(window.update()) {}
+	while(window.update()) {
+        if(keys[SDLK_LEFT]) {
+            window.scene().camera().rotate_y(-2.0f);
+        }
+
+        if(keys[SDLK_RIGHT]) {
+            window.scene().camera().rotate_y(2.0f);
+        }
+
+        if(keys[SDLK_UP]) {
+            window.scene().camera().move_forward(2.0f);
+        }
+
+	}
 	return 0;
 }

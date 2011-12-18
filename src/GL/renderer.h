@@ -27,30 +27,7 @@ public:
 
     ~Renderer();
 
-    void start_render(Scene* scene) {
-        scene_ = scene;
-
-        if(!options_.texture_enabled) {
-            glDisable(GL_TEXTURE_2D);
-        } else {
-            glEnable(GL_TEXTURE_2D);
-        }
-
-        if(options_.wireframe_enabled) {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        } else {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        }
-
-        if(!options_.backface_culling_enabled) {
-            glDisable(GL_CULL_FACE);
-        } else {
-            glEnable(GL_CULL_FACE);
-        }
-
-        glPointSize(options_.point_size);
-    }
-
+    void start_render(Scene* scene);
     void visit(Mesh* mesh);
 
     //The default camera is set in start_render

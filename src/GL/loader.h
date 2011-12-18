@@ -3,7 +3,7 @@
 
 #include <string>
 #include <tr1/memory>
-#include "resource.h"
+#include "loadable.h"
 
 namespace GL {
 
@@ -21,7 +21,7 @@ public:
         filename_(filename) {}
 
     virtual ~Loader();
-    virtual void into(Resource& resource) = 0;
+    virtual void into(Loadable& resource) = 0;
 
 protected:
     std::string filename_;

@@ -14,7 +14,7 @@ namespace GL {
 
 class Window;
 
-class Scene : public Object, public Resource {
+class Scene : public Object, public Loadable {
 public:
     void move(float x, float y, float z) {
         throw std::logic_error("You cannot move the scene");
@@ -53,8 +53,8 @@ public:
 
     Window* window() { return window_; }
 private:
-    std::map<MeshID, Mesh> meshes_;
-    std::map<CameraID, Camera> cameras_;
+    std::map<MeshID, Mesh::ptr> meshes_;
+    std::map<CameraID, Camera::ptr> cameras_;
     std::map<TextureID, Texture> textures_;
     CameraID current_camera_;
     Window* window_;

@@ -5,11 +5,11 @@
 #include <vector>
 #include <SDL_opengl.h>
 
-#include "resource.h"
+#include "loadable.h"
 
 namespace GL {
 
-class Texture : public Resource {
+class Texture : public Loadable {
 public:
     typedef std::vector<uint8_t> Data;
 
@@ -23,8 +23,8 @@ public:
 
     ~Texture();
 
-    void set_bpp(int bits=32);
-    void resize(int width, int height);
+    void set_bpp(uint32_t bits=32);
+    void resize(uint32_t width, uint32_t height);
     void upload(bool free_after=true); //Upload to GL, initializes the tex ID
     void free(); //Frees the data used to construct the texture
 

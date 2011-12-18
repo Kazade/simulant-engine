@@ -25,6 +25,8 @@ typedef uint32_t CameraID;
 
 typedef uint32_t Index;
 
+const TextureID NullTextureID = 0;
+
 }
 
 #endif // TYPES_H_INCLUDED

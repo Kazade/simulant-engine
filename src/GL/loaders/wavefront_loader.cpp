@@ -5,7 +5,7 @@
 
 namespace GL {
 
-void WavefrontLoader::load_into(Resource& resource, const std::string& filename) {
+void WavefrontLoader::load_into(Loadable& resource, const std::string& filename) {
 
     std::ifstream file(filename.c_str());
     if(!file.good()) {

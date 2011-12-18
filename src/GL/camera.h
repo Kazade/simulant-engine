@@ -8,6 +8,15 @@ namespace GL {
 
 class Camera : public Object {
 public:
+    typedef std::tr1::shared_ptr<Camera> ptr;
+
+    void watch(Object& obj);
+    void follow(Object& obj, float dist, float height=0.0f);
+    void look_at(const Vec3& position);
+
+    void rotate_x(float amount);
+    void rotate_z(float amount);
+
     void accept(ObjectVisitor& visitor) {
         for(Object* child: children_) {
             child->accept(visitor);

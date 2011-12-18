@@ -10,8 +10,8 @@
 namespace GL {
 namespace loaders {
 
-void TextureLoader::into(Resource& resource) {
-    Resource* res_ptr = &resource;
+void TextureLoader::into(Loadable& resource) {
+    Loadable* res_ptr = &resource;
     Texture* tex = dynamic_cast<Texture*>(res_ptr);
     assert(tex && "You passed a Resource that is not a texture to the TGA loader");
 

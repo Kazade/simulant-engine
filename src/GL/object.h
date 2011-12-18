@@ -5,7 +5,10 @@
 #include <cassert>
 #include <vector>
 #include <algorithm>
+#include <tr1/memory>
 
+#include "kazmath/vec3.h"
+#include "kazmath/quaternion.h"
 #include "types.h"
 
 namespace GL {
@@ -14,12 +17,15 @@ class ObjectVisitor;
 
 class Object {
 private:
-    Vec3 position_;
-//    Mat3 rotation_;
+    static uint64_t object_counter;
+    uint64_t id_;
 
-    Object* parent_;
+    kmVec3 position_;
+    kmQuaternion rotation_;
 
 protected:
+    Object* parent_;
+
     std::vector<Object*> children_;
 
     void attach_child(Object* child) {
@@ -47,15 +53,24 @@ protected:
         children_.erase(std::remove(children_.begin(), children_.end(), child), children_.end());
     }
 
-public:
-    Object():
-        parent_(nullptr) {
+    float yaw_;
 
+public:
+    typedef std::tr1::shared_ptr<Object> ptr;
+
+    Object():
+        id_(++object_counter),
+        parent_(nullptr),
+        yaw_(0.0f) {
+
+        kmQuaternionIdentity(&rotation_); //Set a default rotation
     }
 
     virtual ~Object();
 
-    virtual void move(float x, float y, float z);
+    virtual void move_to(float x, float y, float z);
+    virtual void move_forward(float amount);
+    virtual void rotate_y(float amount);
 
     void set_parent(Object* p) {
         if(has_parent()) {
@@ -72,7 +87,8 @@ public:
     Object& parent() { assert(parent_); return *parent_; }
     Object& child(uint32_t i);
 
-    Vec3& position() { return position_; }
+    kmVec3& position() { return position_; }
+    kmQuaternion& rotation() { return rotation_; }
 
     template<typename T>
     Object* root_as() {
@@ -85,6 +101,8 @@ public:
     }
 
     virtual void accept(ObjectVisitor& visitor) = 0;
+
+    uint64_t id() const { return id_; }
 };
 
 }

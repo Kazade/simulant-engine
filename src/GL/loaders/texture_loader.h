@@ -11,7 +11,7 @@ public:
     TextureLoader(const std::string& filename):
         Loader(filename) {}
 
-    void into(Resource& resource);
+    void into(Loadable& resource);
 };
 
 class TextureLoaderType : public LoaderType {

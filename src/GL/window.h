@@ -4,6 +4,8 @@
 #include <SDL/SDL.h>
 #include <SDL/SDL_opengl.h>
 
+#include <sigc++/sigc++.h>
+
 #include "scene.h"
 
 #include "loaders/texture_loader.h"
@@ -55,6 +57,10 @@ public:
     void add_search_path(const std::string& path) {
         resource_paths_.push_back(path);
     }
+
+    sigc::signal<void, SDL_keysym>& signal_key_pressed() { return signal_key_pressed_; }
+    sigc::signal<void, SDL_keysym>& signal_key_released() { return signal_key_released_; }
+
 private:
     std::string find_file(const std::string& filename) {
         //FIXME: Search the resource paths!
@@ -76,6 +82,8 @@ private:
     std::vector<std::string> resource_paths_;
     std::vector<LoaderType::ptr> loaders_;
 
+    sigc::signal<void, SDL_keysym> signal_key_pressed_;
+    sigc::signal<void, SDL_keysym> signal_key_released_;
 };
 
 }

@@ -1,11 +1,16 @@
 #include <cstdint>
 #include <fstream>
 #include <iostream>
+#include <sstream>
+#include <boost/algorithm/string/trim.hpp>
 
 #include "../window.h"
 #include "../scene.h"
 #include "../mesh.h"
 #include "../types.h"
+
+#include "kazmath/vec3.h"
+#include "kazmath/mat4.h"
 
 #include "q2bsp_loader.h"
 
@@ -92,8 +97,83 @@ struct Header {
 
 }
 
-void Q2BSPLoader::into(Resource& resource) {
-    Resource* res_ptr = &resource;
+typedef std::map<std::string, std::string> EntityProperties;
+
+void parse_entities(const std::string& entity_string, std::vector<EntityProperties>& entities) {
+    bool inside_entity = false;
+    EntityProperties current;
+    std::string key, value;
+    bool inside_key = false, inside_value = false, key_done_for_this_line = false;
+    for(char c: entity_string) {
+        if(c == '{') {
+            assert(!inside_entity);
+            inside_entity = true;
+            current.clear();
+        }
+        else if(c == '}') {
+            assert(inside_entity);
+            inside_entity = false;
+            entities.push_back(current);
+        }
+        else if(c == '\n' || c == '\r') {
+            key_done_for_this_line = false;
+            if(!key.empty() && !value.empty()) {
+                boost::algorithm::trim(key);
+                boost::algorithm::trim(value);
+
+                current[key] = value;
+                std::cout << "Storing {" << key << " : " << value << "}" << std::endl;
+            }
+            key.clear();
+            value.clear();
+        }
+        else if (c == '"') {
+            if(!inside_key && !inside_value) {
+                if(!key_done_for_this_line) {
+                    inside_key = true;
+                } else {
+                    inside_value = true;
+                }
+
+            }
+            else if(inside_key) {
+                inside_key = false;
+                key_done_for_this_line = true;
+            } else {
+                inside_value = false;
+            }
+        }
+        else {
+            if(inside_key) {
+                key.push_back(c);
+            } else {
+                value.push_back(c);
+            }
+
+        }
+    }
+
+}
+
+kmVec3 find_player_spawn_point(std::vector<EntityProperties>& entities) {
+    for(EntityProperties p: entities) {
+        std::cout << p["classname"] << std::endl;
+        if(p["classname"] == "info_player_start") {
+            kmVec3 pos;
+            std::istringstream origin(p["origin"]);
+            origin >> pos.x >> pos.y >> pos.z;
+            std::cout << "Setting start position to: " << pos.x << ", " << pos.y << ", " << pos.z << std::endl;
+            return pos;
+        }
+    }
+    kmVec3 none;
+    kmVec3Fill(&none, 0, 0, 0);
+
+    return none;
+}
+
+void Q2BSPLoader::into(Loadable& resource) {
+    Loadable* res_ptr = &resource;
     Scene* scene = dynamic_cast<Scene*>(res_ptr);
     assert(scene && "You passed a Resource that is not a scene to the Scene loader");
 
@@ -101,6 +181,10 @@ void Q2BSPLoader::into(Resource& resource) {
     if(!file.good()) {
         throw std::runtime_error("Couldn't load the BSP file: " + filename_);
     }
+
+    //Needed because the Quake 2 coord system is weird
+    kmMat4 rotation;
+    kmMat4RotationX(&rotation, kmDegreesToRadians(-90.0f));
 
     Q2::Header header;
     file.read((char*)&header, sizeof(Q2::Header));
@@ -112,6 +196,17 @@ void Q2BSPLoader::into(Resource& resource) {
     MeshID mid = scene->new_mesh();
     Mesh& mesh = scene->mesh(mid);
     //mesh.set_arrangement(MeshArrangement::POINTS);
+
+    std::vector<char> entity_buffer(header.lumps[Q2::LumpType::ENTITIES].length);
+    file.seekg(header.lumps[Q2::LumpType::ENTITIES].offset);
+    file.read(&entity_buffer[0], sizeof(char) * header.lumps[Q2::LumpType::ENTITIES].length);
+    std::string entity_string(entity_buffer.begin(), entity_buffer.end());
+
+
+    std::vector<EntityProperties> entities;
+    parse_entities(entity_string, entities);
+    scene->camera().position() = find_player_spawn_point(entities);
+    kmVec3Transform(&scene->camera().position(), &scene->camera().position(), &rotation);
 
     int32_t num_vertices = header.lumps[Q2::LumpType::VERTICES].length / sizeof(Q2::Point3f);
     std::vector<Q2::Point3f> vertices(num_vertices);
@@ -139,22 +234,58 @@ void Q2BSPLoader::into(Resource& resource) {
     file.seekg(header.lumps[Q2::LumpType::FACE_EDGE_TABLE].offset);
     file.read((char*)&face_edges[0], sizeof(int32_t) * num_face_edges);
 
+
     //Copy the vertices to the mesh
     for(Q2::Point3f& p: vertices) {
-        mesh.add_vertex(p.x * 0.1, p.y * 0.1, p.z * 0.1);
+        kmVec3 point;
+        kmVec3Fill(&point, p.x, p.y, p.z);
+        kmVec3Transform(&point, &point, &rotation);
+        mesh.add_vertex(point.x, point.y, point.z);
     }
 
     std::map<std::string, GL::TextureID> tex_lookup;
+    std::map<GL::TextureID, uint32_t> mesh_for_texture;
+    std::map<std::string, std::pair<uint32_t, uint32_t> > texture_dimensions;
+
     for(Q2::TextureInfo& tex: textures) {
+
+        kmVec3 u_axis, v_axis;
+        kmVec3Fill(&u_axis, tex.u_axis.x, tex.u_axis.y, tex.u_axis.z);
+        kmVec3Fill(&v_axis, tex.v_axis.x, tex.v_axis.y, tex.v_axis.z);
+        kmVec3Transform(&u_axis, &u_axis, &rotation);
+        kmVec3Transform(&v_axis, &v_axis, &rotation);
+        tex.u_axis.x = u_axis.x;
+        tex.u_axis.y = u_axis.y;
+        tex.u_axis.z = u_axis.z;
+
+        tex.v_axis.x = v_axis.x;
+        tex.v_axis.y = v_axis.y;
+        tex.v_axis.z = v_axis.z;
+
         if(tex_lookup.find(tex.texture_name) != tex_lookup.end()) continue;
 
         //Load texture
         GL::TextureID tid = scene->new_texture();
         Texture& texture = scene->texture(tid);
-        scene->window()->loader_for(std::string(tex.texture_name) + ".tga")->into(texture);
+
+        //HACK!
+        scene->window()->loader_for("textures/" + std::string(tex.texture_name) + ".tga")->into(texture);
+
+        //We need to store this to divide the texture coordinates later
+        texture_dimensions[tex.texture_name].first = texture.width();
+        texture_dimensions[tex.texture_name].second = texture.height();
+
         texture.upload();
         tex_lookup[tex.texture_name] = tid;
+
+        //Create a submesh for each texture, set it to use the parent mesh's verticces
+        mesh_for_texture[tid] = mesh.add_submesh(true);
+        Mesh& new_submesh = mesh.submesh(mesh_for_texture[tid]);
+        new_submesh.apply_texture(tid);
     }
+
+    std::cout << "Num textures: " << tex_lookup.size() << std::endl;
+    std::cout << "Num submeshes: " << mesh.submeshes().size() << std::endl;
 
     for(Q2::Face& f: faces) {
         std::vector<uint32_t> indexes;
@@ -174,15 +305,15 @@ void Q2BSPLoader::into(Resource& resource) {
 
         Q2::TextureInfo& tex = textures[f.texture_info];
         //std::cout << tex.texture_name << std::endl;
-
+        Mesh& texture_mesh = mesh.submesh(mesh_for_texture[tex_lookup[tex.texture_name]]);
         for(int32_t i = 1; i < indexes.size() - 1; ++i) {
             std::vector<uint32_t> tri_idx;
             tri_idx.push_back(indexes[0]);
             tri_idx.push_back(indexes[i+1]);
             tri_idx.push_back(indexes[i]);
 
-            Triangle& tri = mesh.add_triangle(tri_idx[0], tri_idx[1], tri_idx[2]);
-            tri.tex_id = tex_lookup[tex.texture_name];
+            //std::cout << "Adding triangle to mesh: " << texture_mesh.id() << std::endl;
+            Triangle& tri = texture_mesh.add_triangle(tri_idx[0], tri_idx[1], tri_idx[2]);
 
             for(int32_t j = 0; j < 3; ++j) {
                 float u = mesh.vertex(tri_idx[j]).x * tex.u_axis.x
@@ -193,8 +324,11 @@ void Q2BSPLoader::into(Resource& resource) {
                         + mesh.vertex(tri_idx[j]).y * tex.v_axis.y
                         + mesh.vertex(tri_idx[j]).z * tex.v_axis.z + tex.v_offset;
 
-                tri.uv[j].x = u;
-                tri.uv[j].y = v;
+                float w = float(texture_dimensions[tex.texture_name].first);
+                float h = float(texture_dimensions[tex.texture_name].second);
+
+                tri.uv[j].x = u / w;
+                tri.uv[j].y = v / h;
             }
         }
     }

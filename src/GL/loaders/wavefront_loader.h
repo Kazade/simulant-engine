@@ -7,7 +7,7 @@ namespace GL {
 
 class WavefrontLoader : public Loader {
 public:
-    void load_into(Resource& resource, const std::string& filename);
+    void load_into(Loadable& resource, const std::string& filename);
 
 
 };

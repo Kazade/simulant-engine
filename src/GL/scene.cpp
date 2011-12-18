@@ -8,7 +8,9 @@ MeshID Scene::new_mesh() {
     static MeshID counter = 0;
     MeshID id = ++counter;
 
-    Mesh& mesh = meshes_[id];
+    meshes_.insert(std::make_pair(id, Mesh::ptr(new Mesh)));
+
+    Mesh& mesh = *meshes_[id];
     mesh.set_parent(this);
 
     return id;
@@ -16,7 +18,7 @@ MeshID Scene::new_mesh() {
 
 Mesh& Scene::mesh(MeshID m) {
     //FIXME: Assert contains
-    return meshes_[m];
+    return *meshes_[m];
 }
 
 TextureID Scene::new_texture() {
@@ -34,7 +36,10 @@ Texture& Scene::texture(TextureID t) {
 CameraID Scene::new_camera() {
     static CameraID counter = 0;
     CameraID id = ++counter;
-    Camera& cam = cameras_[id];
+
+    cameras_.insert(std::make_pair(id, Camera::ptr(new Camera)));
+
+    Camera& cam = *cameras_[id];
     cam.set_parent(this);
 
     //We always need a camera, so if this is the
@@ -50,10 +55,10 @@ Camera& Scene::camera(CameraID c) {
     //FIXME: Assert
 
     if(c == 0) {
-        return cameras_[current_camera_];
+        return *cameras_[current_camera_];
     }
 
-    return cameras_[c];
+    return *cameras_[c];
 }
 
 void Scene::render() {
