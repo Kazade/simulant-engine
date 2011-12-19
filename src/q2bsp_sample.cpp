@@ -21,6 +21,13 @@ int main(int argc, char* argv[]) {
     window.scene().render_options.backface_culling_enabled = true;
     window.scene().render_options.point_size = 1;
 
+    //Create a shader
+    //Shader& shader = window.scene().shader(window.scene().new_shader());
+
+    //Load the lighting shader
+    //window.loader_for("lighting.shader")->into(shader);
+
+    //Load the Quake 2 map
     window.loader_for("sample.bsp")->into(window.scene());
 
     window.signal_key_pressed().connect(&on_key_down);
@@ -37,6 +44,9 @@ int main(int argc, char* argv[]) {
 
         if(keys[SDLK_UP]) {
             window.scene().camera().move_forward(2.0f);
+        }
+        if(keys[SDLK_DOWN]) {
+            window.scene().camera().move_forward(-2.0f);
         }
 
 	}

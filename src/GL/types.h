@@ -20,12 +20,13 @@ struct Vec2 {
 
 typedef uint32_t MeshID;
 typedef uint32_t TextureID;
-typedef uint32_t AnimatorID;
 typedef uint32_t CameraID;
-
-typedef uint32_t Index;
+typedef uint32_t ShaderID;
 
 const TextureID NullTextureID = 0;
+const ShaderID NullShaderID = 0;
+const CameraID DefaultCameraID = 0;
+
 
 }
 

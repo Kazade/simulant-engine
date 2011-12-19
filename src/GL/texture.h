@@ -25,7 +25,9 @@ public:
 
     void set_bpp(uint32_t bits=32);
     void resize(uint32_t width, uint32_t height);
-    void upload(bool free_after=true); //Upload to GL, initializes the tex ID
+    void upload(bool free_after=true,
+                bool generate_mipmaps=true,
+                bool repeat=true); //Upload to GL, initializes the tex ID
     void free(); //Frees the data used to construct the texture
 
     uint32_t width() const { return width_; }
