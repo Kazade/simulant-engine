@@ -3,7 +3,7 @@
 #include "GL/shortcuts.h"
 
 int main(int argc, char* argv[]) {
-	GL::Window window;
+	kglt::Window window;
 	window.set_title("KGLT Sample");
 
     /**
@@ -16,8 +16,8 @@ int main(int argc, char* argv[]) {
         Creating an object gives you an ID, this can then be exchanged
         for a reference to an object.
     */
-    GL::MeshID mid = window.scene().new_mesh();
-    GL::Mesh& mesh = window.scene().mesh(mid);
+    kglt::MeshID mid = window.scene().new_mesh();
+    kglt::Mesh& mesh = window.scene().mesh(mid);
 
     /**
         Once we have the reference to a base object, we can
@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
 	mesh.add_triangle(0, 2, 3);
 
     ///Shortcut function for loading images
-    GL::TextureID tid = GL::create_texture_from_file(window, "sample.tga");
+    kglt::TextureID tid = kglt::create_texture_from_file(window, "sample.tga");
 	//Apply the texture to the mesh
 	mesh.apply_texture(0, tid);
 

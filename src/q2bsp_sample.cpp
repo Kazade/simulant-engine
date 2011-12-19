@@ -1,8 +1,7 @@
-#include "GL/window.h"
-#include "GL/types.h"
-#include "GL/shortcuts.h"
+#include "kglt/window.h"
+#include "kglt/types.h"
 
-GL::Window window(1024, 768);
+kglt::Window window(1024, 768);
 std::vector<uint8_t> keys(SDLK_LAST, 0);
 
 void on_key_down(SDL_keysym sym) {
