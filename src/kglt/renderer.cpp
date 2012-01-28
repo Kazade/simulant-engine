@@ -1,4 +1,4 @@
-#include <SDL_opengl.h>
+#include "glee/GLee.h"
 
 #include "kazmath/mat4.h"
 

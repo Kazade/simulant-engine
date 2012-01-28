@@ -1,8 +1,9 @@
 #ifndef WINDOW_H_INCLUDED
 #define WINDOW_H_INCLUDED
 
+#include "glee/GLee.h"
+
 #include <SDL/SDL.h>
-#include <SDL/SDL_opengl.h>
 
 #include <sigc++/sigc++.h>
 

@@ -1,8 +1,8 @@
 #ifndef RENDERER_H_INCLUDED
 #define RENDERER_H_INCLUDED
 
+#include "glee/GLee.h"
 #include <iostream>
-#include <SDL_opengl.h>
 
 #include "object.h"
 #include "object_visitor.h"

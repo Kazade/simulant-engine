@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include "GL/glew.h"
+#include "glee/GLee.h"
 
 #include "kazmath/mat4.h"
 #include "kazmath/mat3.h"

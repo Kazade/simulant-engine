@@ -25,7 +25,7 @@ public:
         window_(window) {
         new_camera(); //Create a default camera
 
-        Shader& def = shader(new_shader()); //Create a default shader;
+        ShaderProgram& def = shader(new_shader()); //Create a default shader;
         /*
             TODO: Load the default shader which simply renders textured
             polygons like the fixed function.
@@ -46,7 +46,7 @@ public:
     Mesh& mesh(MeshID m);
     Camera& camera(CameraID c = DefaultCameraID);
     Texture& texture(TextureID t);
-    Shader& shader(ShaderID s = NullShaderID)
+    ShaderProgram& shader(ShaderID s = NullShaderID);
 
     void render();
 
