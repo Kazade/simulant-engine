@@ -9,6 +9,7 @@
 #include "camera.h"
 #include "renderer.h"
 #include "texture.h"
+#include "shader.h"
 
 namespace kglt {
 
