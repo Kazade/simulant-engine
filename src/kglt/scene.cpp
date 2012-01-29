@@ -51,6 +51,17 @@ CameraID Scene::new_camera() {
     return id;
 }
 
+ShaderProgram& Scene::shader(ShaderID s) {
+    return shaders_[s];
+}
+
+ShaderID Scene::new_shader() {
+    static ShaderID counter = 0;
+    ShaderID id = counter++; //The first shader should be 0 - or the default shader
+    ShaderProgram& shader = shaders_[id];
+    return id;
+}
+    
 Camera& Scene::camera(CameraID c) {
     //FIXME: Assert
 
@@ -59,6 +70,16 @@ Camera& Scene::camera(CameraID c) {
     }
 
     return *cameras_[c];
+}
+
+void Scene::init() {
+    assert(glGetError() == GL_NO_ERROR);
+    ShaderProgram& def = shader(new_shader()); //Create a default shader;
+    assert(glGetError() == GL_NO_ERROR);
+        
+    def.add_and_compile(SHADER_TYPE_VERTEX, kglt::default_vert_shader_120);
+    def.add_and_compile(SHADER_TYPE_FRAGMENT, kglt::default_frag_shader_120);
+    def.activate();
 }
 
 void Scene::render() {

@@ -1,7 +1,7 @@
 #ifndef WINDOW_H_INCLUDED
 #define WINDOW_H_INCLUDED
 
-#include "glee/GLee.h"
+#include "../glee/GLee.h"
 
 #include <SDL/SDL.h>
 
@@ -12,6 +12,8 @@
 #include "loaders/texture_loader.h"
 #include "loaders/q2bsp_loader.h"
 #include "loader.h"
+
+#include "kazbase/logging/logging.h"
 
 namespace kglt {
 
@@ -26,9 +28,9 @@ public:
         if(SDL_Init(SDL_INIT_VIDEO) < 0) {
             throw std::runtime_error("Unable to initialize SDL");
         }
-
+        
         create_gl_window(width, height, bpp);
-
+        scene_.init();
         //Register the default resource loaders
         register_loader(LoaderType::ptr(new kglt::loaders::TextureLoaderType));
         register_loader(LoaderType::ptr(new kglt::loaders::Q2BSPLoaderType));
@@ -61,6 +63,9 @@ public:
 
     sigc::signal<void, SDL_keysym>& signal_key_pressed() { return signal_key_pressed_; }
     sigc::signal<void, SDL_keysym>& signal_key_released() { return signal_key_released_; }
+
+    uint32_t width() const { return width_; }
+    uint32_t height() const { return height_; }
 
 private:
     std::string find_file(const std::string& filename) {

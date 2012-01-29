@@ -2,6 +2,7 @@
 #define MESH_H_INCLUDED
 
 #include <stdexcept>
+#include "glee/GLee.h"
 #include "object.h"
 #include "types.h"
 #include "object_visitor.h"
@@ -42,12 +43,18 @@ public:
         is_submesh_(false),
         use_parent_vertices_(false) {
 
+        glGenBuffers(1, &vertex_buffer_);
+
         //Set all textures to a NullTextureID
         for(uint32_t i = 0; i < MAX_TEXTURE_LEVELS; ++i) {
             textures_[i] = NullTextureID;
         }
 
         set_arrangement(MeshArrangement::TRIANGLES);
+    }
+
+    ~Mesh() {
+        glDeleteBuffers(1, &vertex_buffer_);
     }
 
     uint32_t add_submesh(bool use_parent_vertices=false);
@@ -104,7 +111,13 @@ public:
     void set_arrangement(MeshArrangement m) { arrangement_ = m; }
     MeshArrangement arrangement() { return arrangement_; }
 
+    void activate_vbo() {
+        glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_);
+    
+    }
 private:
+    void update_vbo();
+
     bool is_submesh_;
     bool use_parent_vertices_;
 
@@ -114,6 +127,8 @@ private:
     TextureID textures_[MAX_TEXTURE_LEVELS];
 
     MeshArrangement arrangement_;
+    
+    GLuint vertex_buffer_;
 };
 
 }

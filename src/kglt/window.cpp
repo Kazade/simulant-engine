@@ -60,6 +60,8 @@ void Window::create_gl_window(int width, int height, int bpp) {
 //    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 //    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
+    surface_ = SDL_SetVideoMode(width, height, bpp, SDL_OPENGL);
+
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
@@ -68,9 +70,8 @@ void Window::create_gl_window(int width, int height, int bpp) {
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
-    surface_ = SDL_SetVideoMode(width, height, bpp, SDL_OPENGL);
-
     assert(surface_);
+    assert(GLEE_VERSION_2_1);
 }
 
 void Window::register_loader(LoaderType::ptr loader) {

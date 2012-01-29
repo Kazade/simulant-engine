@@ -1,10 +1,13 @@
 #include "glee/GLee.h"
 
+#include "utils/gl_error.h"
 #include "kazmath/mat4.h"
 
 #include "scene.h"
 #include "renderer.h"
 #include "mesh.h"
+#include "shader.h"
+#include "window.h"
 
 namespace kglt {
 
@@ -48,6 +51,10 @@ void Renderer::start_render(Scene* scene) {
     gluLookAt(pos.x, pos.y, pos.z,
               pos.x + forward.x, pos.y + forward.y, pos.z + forward.z,
               up.x, up.y, up.z);
+              
+    float aspect = float(scene->window()->width()) / float(scene->window()->height());
+    kmMat4* top = &projection_stack_.top();
+    kmMat4PerspectiveProjection(top, 45.0f, aspect, 0.1f, 100.0f);
 }
 
 void Renderer::visit(Mesh* mesh) {
@@ -58,32 +65,41 @@ void Renderer::visit(Mesh* mesh) {
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
-    glPushMatrix();
+    //FIXME: Allow meshes to override the shader
+    ShaderProgram& s = scene_->shader(NullShaderID);
+    s.bind_attrib(0, "vertex_position");
+    s.bind_attrib(1, "vertex_texcoord_1");
+    s.set_uniform("texture_1", 0);
+    s.activate();
+
+    kmMat4 transform;
+    kmMat4Identity(&transform);
+    check_and_log_error(__FILE__, __LINE__);
+    
+    modelview_stack_.push();
+        mesh->activate_vbo();
+        
+        uint32_t stride = (sizeof(float) * 3) + (sizeof(float) * 2);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(0));
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(sizeof(float) * 3));
+        glClientActiveTexture(GL_TEXTURE0);
+        
         //FIXME: should be absolute position
         //glTranslatef(mesh->position().x, mesh->position().y, mesh->position().z);
+        kmMat4 trans;
+        kmMat4Identity(&trans);
+        kmMat4Translation(&trans, mesh->position().x, mesh->position().y, mesh->position().z);
+        kmMat4Multiply(&modelview_stack_.top(), &modelview_stack_.top(), &trans);
+        
+        s.set_uniform("modelview_matrix", &modelview_stack_.top());
+        s.set_uniform("projection_matrix", &projection_stack_.top());
+
         if(mesh->arrangement() == MeshArrangement::POINTS) {
-            glBegin(GL_POINTS);
-            for(Vertex& vert: mesh->vertices()) {
-                glVertex3f(vert.x, vert.y, vert.z);
-            }
-            glEnd();
+            glDrawArrays(GL_POINTS, 0, mesh->vertices().size());        
         } else {
-//            std::cout << "Rendering mesh: " << mesh->id() << std::endl;
-            glBegin(GL_TRIANGLES);
-            for(Triangle& triangle: mesh->triangles()) {
-                for(int i = 0; i < 3; ++i) {
-                    Vertex v1 = mesh->vertex(triangle.idx[i]);
-                    glTexCoord2f(triangle.uv[i].x, triangle.uv[i].y);
-                    glVertex3f(v1.x, v1.y, v1.z);
-                }
-            }
-            glEnd();
+            glDrawArrays(GL_TRIANGLES, 0, mesh->triangles().size());
         }
-    glPopMatrix();
-}
-
-Renderer::~Renderer() {
-
+    modelview_stack_.pop();
 }
 
 }

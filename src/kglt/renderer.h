@@ -7,6 +7,8 @@
 #include "object.h"
 #include "object_visitor.h"
 
+#include "kglt/utils/matrix_stack.h"
+
 namespace kglt {
 
 class Mesh;
@@ -23,9 +25,13 @@ struct RenderOptions {
 class Renderer : public ObjectVisitor {
 public:
     Renderer(RenderOptions options):
-        options_(options) {}
+        options_(options) {
 
-    ~Renderer();
+    }
+
+    ~Renderer() {
+
+    }
 
     void start_render(Scene* scene);
     void visit(Mesh* mesh);
@@ -43,6 +49,9 @@ public:
 private:
     RenderOptions options_;
     Scene* scene_;
+    
+    MatrixStack modelview_stack_;
+    MatrixStack projection_stack_;
 };
 
 }

@@ -24,8 +24,7 @@ public:
     Scene(Window* window):
         window_(window) {
         new_camera(); //Create a default camera
-
-        ShaderProgram& def = shader(new_shader()); //Create a default shader;
+        
         /*
             TODO: Load the default shader which simply renders textured
             polygons like the fixed function.
@@ -48,6 +47,7 @@ public:
     Texture& texture(TextureID t);
     ShaderProgram& shader(ShaderID s = NullShaderID);
 
+    void init();
     void render();
 
     void accept(ObjectVisitor& visitor) {
@@ -65,6 +65,7 @@ private:
     std::map<MeshID, Mesh::ptr> meshes_;
     std::map<CameraID, Camera::ptr> cameras_;
     std::map<TextureID, Texture> textures_;
+    std::map<ShaderID, ShaderProgram> shaders_;
     CameraID current_camera_;
     Window* window_;
 };
