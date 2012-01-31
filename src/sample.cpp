@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
         Once we have the reference to a base object, we can
         manipulate it easily
     */
-	mesh.move_to(0.0f, 0.0f, -50.0f);
+	mesh.move_to(0.0f, 0.0f, -5.0f);
 	mesh.add_vertex(-1.0, -1.0f, 0.0f);
 	mesh.add_vertex(1.0f, -1.0f, 0.0f);
 	mesh.add_vertex(1.0f, 1.0f, 0.0f);
