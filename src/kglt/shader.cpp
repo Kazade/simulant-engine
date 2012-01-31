@@ -120,7 +120,11 @@ void ShaderProgram::add_and_compile(ShaderType type, const std::string& source) 
 }
 
 GLint ShaderProgram::get_uniform_loc(const std::string& name) {
-    return glGetUniformLocation(program_id_, name.c_str());
+    GLint location = glGetUniformLocation(program_id_, name.c_str());
+    if(location < 0) {
+        L_INFO("Couldn't find uniform with name: " + name);
+    }
+    return location;
 }
 
 void ShaderProgram::set_uniform(const std::string& name, const float x) {
@@ -134,8 +138,11 @@ void ShaderProgram::set_uniform(const std::string& name, const int32_t x) {
 }
 
 void ShaderProgram::set_uniform(const std::string& name, const kmMat4* matrix) {
-    glUniformMatrix4fv(get_uniform_loc(name), 1, false, (GLfloat*) matrix->mat);
-    check_and_log_error(__FILE__, __LINE__);    
+    GLint loc = get_uniform_loc(name);
+    if(loc >= 0) {
+        glUniformMatrix4fv(loc, 1, false, (GLfloat*) matrix->mat);
+        check_and_log_error(__FILE__, __LINE__);
+    }
 }
 
 void ShaderProgram::set_uniform(const std::string& name, const kmMat3* matrix) {

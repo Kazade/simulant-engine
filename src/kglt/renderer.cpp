@@ -67,10 +67,12 @@ void Renderer::visit(Mesh* mesh) {
 
     //FIXME: Allow meshes to override the shader
     ShaderProgram& s = scene_->shader(NullShaderID);
+    s.activate();
+        
     s.bind_attrib(0, "vertex_position");
     s.bind_attrib(1, "vertex_texcoord_1");
     s.set_uniform("texture_1", 0);
-    s.activate();
+
 
     kmMat4 transform;
     kmMat4Identity(&transform);
@@ -80,8 +82,10 @@ void Renderer::visit(Mesh* mesh) {
         mesh->activate_vbo();
         
         uint32_t stride = (sizeof(float) * 3) + (sizeof(float) * 2);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(0));
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(sizeof(float) * 3));
+//        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(0));
+//        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(sizeof(float) * 3));
+        glVertexPointer(3, GL_FLOAT, stride, BUFFER_OFFSET(0));
+        glTexCoordPointer(2, GL_FLOAT, stride, BUFFER_OFFSET(sizeof(float) * 3));
         glClientActiveTexture(GL_TEXTURE0);
         
         //FIXME: should be absolute position
@@ -91,13 +95,17 @@ void Renderer::visit(Mesh* mesh) {
         kmMat4Translation(&trans, mesh->position().x, mesh->position().y, mesh->position().z);
         kmMat4Multiply(&modelview_stack_.top(), &modelview_stack_.top(), &trans);
         
+        kmMat4 modelview_projection;
+        kmMat4Multiply(&modelview_projection, &projection_stack_.top(), &modelview_stack_.top());
+        
+        s.set_uniform("modelview_projection_matrix", &modelview_projection);
         s.set_uniform("modelview_matrix", &modelview_stack_.top());
         s.set_uniform("projection_matrix", &projection_stack_.top());
 
         if(mesh->arrangement() == MeshArrangement::POINTS) {
             glDrawArrays(GL_POINTS, 0, mesh->vertices().size());        
         } else {
-            glDrawArrays(GL_TRIANGLES, 0, mesh->triangles().size());
+            glDrawArrays(GL_TRIANGLES, 0, mesh->triangles().size() * 3);
         }
     modelview_stack_.pop();
 }

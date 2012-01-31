@@ -18,20 +18,13 @@ namespace kglt {
 const std::string default_vert_shader_120 = R"(
 #version 120
 
+uniform mat4 modelview_projection_matrix;
 uniform mat4 modelview_matrix;
 uniform mat4 projection_matrix;
 
-attribute vec4 vertex_position;
-//attribute vec4 vertex_colour_1;
-attribute vec2 vertex_texcoord_1;
-
-varying vec4 colour;
-varying vec2 texcoord_1;
-
 void main() {
-    gl_Position = projection_matrix * modelview_matrix * vertex_position;
-    colour = vec4(1.0f, 1.0f, 1.0f, 1.0f);//vertex_colour_1;
-    texcoord_1 = vertex_texcoord_1;
+    gl_Position = modelview_projection_matrix * gl_Vertex;
+    gl_TexCoord[0]  = gl_TextureMatrix[0] * gl_MultiTexCoord0;
 }
 
 )";
@@ -41,11 +34,8 @@ const std::string default_frag_shader_120 = R"(
 
 uniform sampler2D texture_1;
 
-varying vec4 colour;
-varying vec2 texcoord_1;
-
 void main() {
-    gl_FragColor = colour * texture2D(texture_1, texcoord_1);
+    gl_FragColor = texture2D(texture_1, gl_TexCoord[0].st);
 }
 
 )";

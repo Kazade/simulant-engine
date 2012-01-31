@@ -7,16 +7,8 @@ bool Window::update() {
 
     //FIXME: Add a Viewport class for this shizzle
     glViewport(0, 0, width_, height_);
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(90.0f, (GLfloat)width_ / (GLfloat)height_, 1.0f, 5000.0f);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
-    glColor3f(1, 1, 1);
 
     glClearColor(0.5, 0.5, 0.5, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

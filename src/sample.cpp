@@ -22,11 +22,12 @@ int main(int argc, char* argv[]) {
     kglt::MeshID mid = window.scene().new_mesh();
     kglt::Mesh& mesh = window.scene().mesh(mid);
 
+    window.scene().render_options.backface_culling_enabled = false;
     /**
         Once we have the reference to a base object, we can
         manipulate it easily
     */
-	mesh.move_to(0.0f, 0.0f, -4.0f);
+	mesh.move_to(0.0f, 0.0f, -50.0f);
 	mesh.add_vertex(-1.0, -1.0f, 0.0f);
 	mesh.add_vertex(1.0f, -1.0f, 0.0f);
 	mesh.add_vertex(1.0f, 1.0f, 0.0f);
