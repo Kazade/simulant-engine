@@ -103,12 +103,15 @@ void Renderer::visit(Mesh* mesh) {
         s.set_uniform("projection_matrix", &projection_stack_.top());
 
         glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        
         if(mesh->arrangement() == MeshArrangement::POINTS) {
             glDrawArrays(GL_POINTS, 0, mesh->vertices().size());        
         } else {
             glDrawArrays(GL_TRIANGLES, 0, mesh->triangles().size() * 3);
         }
         glDisableClientState(GL_VERTEX_ARRAY);        
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);        
     modelview_stack_.pop();
 }
 

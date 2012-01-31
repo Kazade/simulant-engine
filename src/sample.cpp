@@ -35,12 +35,12 @@ int main(int argc, char* argv[]) {
 	kglt::Triangle& tri1 = mesh.add_triangle(0, 1, 2);
 	tri1.uv[0].x = 0.0f; tri1.uv[0].y = 0.0f;
 	tri1.uv[1].x = 1.0f; tri1.uv[1].y = 0.0f;
-	tri1.uv[2].x = 1.0f; tri1.uv[2].y = 1.0f;		
+	tri1.uv[2].x = 1.0f; tri1.uv[2].y = 1.0f;
 	
 	kglt::Triangle& tri2 = mesh.add_triangle(0, 2, 3);
 	tri2.uv[0].x = 0.0f; tri2.uv[0].y = 0.0f;
 	tri2.uv[1].x = 1.0f; tri2.uv[1].y = 1.0f;
-	tri2.uv[2].x = 0.0f; tri2.uv[2].y = 1.0f;		
+	tri2.uv[2].x = 0.0f; tri2.uv[2].y = 1.0f;
 	
     ///Shortcut function for loading images
     kglt::TextureID tid = kglt::create_texture_from_file(window, "sample.tga");

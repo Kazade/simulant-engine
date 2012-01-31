@@ -71,7 +71,7 @@ void Mesh::update_vbo() {
     
     uint32_t i = 0;
     for(Triangle& tri: triangles_) {
-        uint32_t offset = sizeof(VData) * i * 3;
+        uint32_t offset = (sizeof(VData) * 3) * i;
         
         VData data;
         for(uint32_t j = 0; j < 3; ++j) {
