@@ -36,12 +36,8 @@ void Mesh::add_vertex(float x, float y, float z) {
 
 Triangle& Mesh::add_triangle(uint32_t a, uint32_t b, uint32_t c) {
     Triangle t;
-    t.idx[0] = a;
-    t.idx[1] = b;
-    t.idx[2] = c;
+    t.set_indexes(a, b, c);
     triangles_.push_back(t);
-    
-    update_vbo();
     
     return triangles_[triangles_.size() - 1];
 }
@@ -65,27 +61,26 @@ void Mesh::update_vbo() {
         float uv[2];
     };
 
-    uint32_t size_in_bytes = triangles_.size() * sizeof(VData) * 3;
+    uint32_t size_in_bytes = triangles().size() * sizeof(VData) * 3;
     
     glBufferData(GL_ARRAY_BUFFER, size_in_bytes, NULL, GL_STATIC_DRAW);
     
-    uint32_t i = 0;
-    for(Triangle& tri: triangles_) {
-        uint32_t offset = (sizeof(VData) * 3) * i;
-        
-        VData data;
+    uint32_t offset = 0;
+    for(Triangle& tri: triangles()) {        
         for(uint32_t j = 0; j < 3; ++j) {
-            Vertex& v = vertices()[tri.idx[j]];
+            Vertex& v = vertices()[tri.index(j)];
 
+            VData data;
             data.pos[0] = v.x;
             data.pos[1] = v.y;
             data.pos[2] = v.z;
-            data.uv[0] = tri.uv[j].x;
-            data.uv[1] = tri.uv[j].y;
+            data.uv[0] = tri.uv(j).x;
+            data.uv[1] = tri.uv(j).y;
             
-            glBufferSubData(GL_ARRAY_BUFFER, offset + (sizeof(VData) * j), sizeof(VData), &data.pos[0]);
+            glBufferSubData(GL_ARRAY_BUFFER, offset + (sizeof(VData) * j), sizeof(VData), &data);
         }
-        ++i;
+        
+        offset += sizeof(VData) * 3;
     }
 }
 

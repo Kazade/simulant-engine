@@ -98,9 +98,15 @@ void Renderer::visit(Mesh* mesh) {
         kmMat4 modelview_projection;
         kmMat4Multiply(&modelview_projection, &projection_stack_.top(), &modelview_stack_.top());
         
-        s.set_uniform("modelview_projection_matrix", &modelview_projection);
-        s.set_uniform("modelview_matrix", &modelview_stack_.top());
-        s.set_uniform("projection_matrix", &projection_stack_.top());
+        if(s.has_uniform("modelview_projection_matrix")) {
+            s.set_uniform("modelview_projection_matrix", &modelview_projection);
+        }
+        if(s.has_uniform("modelview_matrix")) {
+            s.set_uniform("modelview_matrix", &modelview_stack_.top());
+        }
+        if(s.has_uniform("projection_matrix")) {
+            s.set_uniform("projection_matrix", &projection_stack_.top());
+        }
 
         glEnableClientState(GL_VERTEX_ARRAY);
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);

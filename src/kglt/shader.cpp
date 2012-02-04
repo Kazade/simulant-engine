@@ -4,6 +4,7 @@
 #include "utils/gl_error.h"
 #include "kazbase/logging/logging.h"
 #include "kazbase/exceptions.h"
+#include "kazbase/list_utils.h"
 #include "types.h"
 #include "shader.h"
 
@@ -120,13 +121,23 @@ void ShaderProgram::add_and_compile(ShaderType type, const std::string& source) 
 }
 
 GLint ShaderProgram::get_uniform_loc(const std::string& name) {
+    if(container::contains(cached_uniform_locations_, name)) {
+        return cached_uniform_locations_[name];
+    }
+
     GLint location = glGetUniformLocation(program_id_, name.c_str());
     if(location < 0) {
-        L_INFO("Couldn't find uniform with name: " + name);
+        L_DEBUG("No uniform with name: " + name);
     }
+    
+    cached_uniform_locations_[name] = location;
     return location;
 }
 
+bool ShaderProgram::has_uniform(const std::string& name) {
+    return get_uniform_loc(name) != -1;
+}
+    
 void ShaderProgram::set_uniform(const std::string& name, const float x) {
     glUniform1f(get_uniform_loc(name), x);
     check_and_log_error(__FILE__, __LINE__);

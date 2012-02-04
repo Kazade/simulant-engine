@@ -18,14 +18,31 @@ enum TextureLevel {
 struct Vertex : public Vec3 {
 };
 
-struct Triangle {
-    uint32_t idx[3];
-    Vec2 uv[3];
-    Vec2 st[3];
-    kglt::TextureID lightmap_id;
-
+class Triangle {
+public:
     Triangle():
-        lightmap_id(0) {}
+        lightmap_id_(0) {}
+        
+    void set_indexes(uint32_t a, uint32_t b, uint32_t c) {
+        idx_[0] = a;
+        idx_[1] = b;
+        idx_[2] = c;
+    }
+    
+    void set_uv(uint32_t i, float u, float v) {
+        uv_[i].x = u;
+        uv_[i].y = v;
+    }
+    
+    uint32_t index(uint32_t i) { return idx_[i]; }
+    Vec2 uv(uint32_t i) { return uv_[i]; }
+    
+private:
+    uint32_t idx_[3];
+    Vec2 uv_[3];
+    Vec2 st_[3];
+    kglt::TextureID lightmap_id_;
+
 };
 
 enum MeshArrangement {
@@ -112,8 +129,11 @@ public:
     MeshArrangement arrangement() { return arrangement_; }
 
     void activate_vbo() {
-        glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_);
+        glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_);    
+    }
     
+    void done() {
+        update_vbo();
     }
 private:
     void update_vbo();

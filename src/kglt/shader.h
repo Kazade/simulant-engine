@@ -61,12 +61,15 @@ public:
     void set_uniform(const std::string& name, const kmVec3* vec);
 
     void bind_attrib(uint32_t idx, const std::string& name);
+    
+    bool has_uniform(const std::string& name);    
 private:
     GLint get_uniform_loc(const std::string& name);
 
     GLuint program_id_;
     GLuint shader_ids_[SHADER_TYPE_MAX];
 
+    std::map<std::string, GLint> cached_uniform_locations_;
 };
 
 }

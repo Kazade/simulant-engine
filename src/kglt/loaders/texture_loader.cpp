@@ -25,24 +25,49 @@ void TextureLoader::into(Loadable& resource) {
     );
 
     if(!data) {
-        std::cout << "Falling back to 404.tga" << std::endl;
-        data = SOIL_load_image(
-            "404.tga",
-            &width,
-            &height,
-            &channels,
-            SOIL_LOAD_AUTO
-        );
-        if(!data) {
-            throw std::runtime_error("Couldn't find texture: " + filename_);
+        std::cout << "Falling back to checkerboard" << std::endl;
+        
+        //FIXME: Don't generate this each time!
+        channels = 4;
+        tex->set_bpp(channels * 8);
+        tex->resize(64, 64);
+        uint32_t j = 0;
+        uint32_t switch_counter = 0;
+        bool black = true;                
+        for(uint32_t i = 0; i < 64 * 64; ++i) {
+            if(j++ == 7) {
+                black = !black;                
+                j = 0;                
+            }
+            
+            if(i % 64 == 0) {
+                switch_counter++;
+                if(switch_counter == 8) {
+                    black = !black;                
+                    switch_counter = 0;
+                }
+            }
+            
+            if(black) {
+                tex->data()[i * channels] = 0;
+                tex->data()[(i * channels) + 1] = 0;
+                tex->data()[(i * channels) + 2] = 0;                                
+                tex->data()[(i * channels) + 3] = 255;                
+            } else {
+                tex->data()[i * channels] = 255;
+                tex->data()[(i * channels) + 1] = 255;
+                tex->data()[(i * channels) + 2] = 255;                                
+                tex->data()[(i * channels) + 3] = 255;                            
+            }
         }
+        
+    } else {
+        tex->set_bpp(channels * 8);
+        tex->resize(width, height);
+        tex->data().assign(data, data + (width * height * channels));
+
+        SOIL_free_image_data(data);
     }
-
-    tex->set_bpp(channels * 8);
-    tex->resize(width, height);
-    tex->data().assign(data, data + (width * height * channels));
-
-    SOIL_free_image_data(data);
 }
 
 }

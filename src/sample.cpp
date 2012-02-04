@@ -33,14 +33,16 @@ int main(int argc, char* argv[]) {
 	mesh.add_vertex(1.0f, 1.0f, 0.0f);
 	mesh.add_vertex(-1.0f, 1.0f, 0.0f);
 	kglt::Triangle& tri1 = mesh.add_triangle(0, 1, 2);
-	tri1.uv[0].x = 0.0f; tri1.uv[0].y = 0.0f;
-	tri1.uv[1].x = 1.0f; tri1.uv[1].y = 0.0f;
-	tri1.uv[2].x = 1.0f; tri1.uv[2].y = 1.0f;
+	tri1.set_uv(0, 0.0f, 0.0f);
+	tri1.set_uv(1, 1.0f, 0.0f);
+	tri1.set_uv(2, 1.0f, 1.0f);
 	
 	kglt::Triangle& tri2 = mesh.add_triangle(0, 2, 3);
-	tri2.uv[0].x = 0.0f; tri2.uv[0].y = 0.0f;
-	tri2.uv[1].x = 1.0f; tri2.uv[1].y = 1.0f;
-	tri2.uv[2].x = 0.0f; tri2.uv[2].y = 1.0f;
+	tri2.set_uv(0, 0.0f, 0.0f);
+	tri2.set_uv(1, 1.0f, 1.0f);
+	tri2.set_uv(2, 0.0f, 1.0f);		
+	
+	mesh.done(); //Mark the mesh as finished	
 	
     ///Shortcut function for loading images
     kglt::TextureID tid = kglt::create_texture_from_file(window, "sample.tga");

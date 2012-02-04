@@ -327,10 +327,10 @@ void Q2BSPLoader::into(Loadable& resource) {
                 float w = float(texture_dimensions[tex.texture_name].first);
                 float h = float(texture_dimensions[tex.texture_name].second);
 
-                tri.uv[j].x = u / w;
-                tri.uv[j].y = v / h;
+                tri.set_uv(j, u / w, v / h);
             }
         }
+        texture_mesh.done();
     }
 }
 
