@@ -10,6 +10,7 @@
 #include "renderer.h"
 #include "texture.h"
 #include "shader.h"
+#include "viewport.h"
 
 namespace kglt {
 
@@ -22,7 +23,8 @@ public:
     }
 
     Scene(Window* window):
-        window_(window) {
+        window_(window),
+        viewport_(this) {
         new_camera(); //Create a default camera
         
         /*
@@ -60,7 +62,9 @@ public:
 
     RenderOptions render_options;
 
-    Window* window() { return window_; }
+    Window& window() { return *window_; }
+    Viewport& viewport() { return viewport_; }
+
 private:
     std::map<MeshID, Mesh::ptr> meshes_;
     std::map<CameraID, Camera::ptr> cameras_;
@@ -68,6 +72,7 @@ private:
     std::map<ShaderID, ShaderProgram> shaders_;
     CameraID current_camera_;
     Window* window_;
+    Viewport viewport_;
 };
 
 }

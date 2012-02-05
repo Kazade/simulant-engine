@@ -9,6 +9,7 @@
 #include "../mesh.h"
 #include "../types.h"
 
+#include "kazbase/logging/logging.h"
 #include "kazmath/vec3.h"
 #include "kazmath/mat4.h"
 
@@ -269,7 +270,7 @@ void Q2BSPLoader::into(Loadable& resource) {
         Texture& texture = scene->texture(tid);
 
         //HACK!
-        scene->window()->loader_for("textures/" + std::string(tex.texture_name) + ".tga")->into(texture);
+        scene->window().loader_for("textures/" + std::string(tex.texture_name) + ".tga")->into(texture);
 
         //We need to store this to divide the texture coordinates later
         texture_dimensions[tex.texture_name].first = texture.width();
@@ -312,7 +313,7 @@ void Q2BSPLoader::into(Loadable& resource) {
             tri_idx.push_back(indexes[i+1]);
             tri_idx.push_back(indexes[i]);
 
-            //std::cout << "Adding triangle to mesh: " << texture_mesh.id() << std::endl;
+            L_DEBUG("Adding triangle to mesh: " + boost::lexical_cast<std::string>(texture_mesh.id()));
             Triangle& tri = texture_mesh.add_triangle(tri_idx[0], tri_idx[1], tri_idx[2]);
 
             for(int32_t j = 0; j < 3; ++j) {
@@ -330,7 +331,11 @@ void Q2BSPLoader::into(Loadable& resource) {
                 tri.set_uv(j, u / w, v / h);
             }
         }
-        texture_mesh.done();
+    }
+    
+    L_DEBUG("Compiling meshes");
+    for(Mesh::ptr m: mesh.submeshes()) {
+        m->done();
     }
 }
 

@@ -21,6 +21,7 @@ SET(KGLT_SOURCES
     kglt/camera.cpp
     kglt/texture.cpp
     kglt/loader.cpp
+    kglt/viewport.cpp
     kglt/shader.cpp
     kglt/shortcuts.cpp
     kglt/loaders/q2bsp_loader.cpp

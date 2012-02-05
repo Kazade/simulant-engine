@@ -10,6 +10,41 @@
 
 namespace kglt {
 
+const std::string default_vert_shader_120 = R"(
+#version 120
+
+uniform mat4 modelview_projection_matrix;
+uniform mat4 modelview_matrix;
+uniform mat4 projection_matrix;
+
+void main() {
+    gl_Position = modelview_projection_matrix * gl_Vertex;
+    gl_TexCoord[0]  = gl_TextureMatrix[0] * gl_MultiTexCoord0;
+}
+
+)";
+
+const std::string default_frag_shader_120 = R"(
+#version 120
+
+uniform sampler2D texture_1;
+
+struct light {
+    int type;
+    vec4 ambient;
+    vec4 diffuse;
+    vec4 specular;
+    vec4 position;
+};
+
+uniform light lights[8];
+
+void main() {
+    gl_FragColor = texture2D(texture_1, gl_TexCoord[0].st);
+}
+
+)";
+
 ShaderProgram::ShaderProgram():
     program_id_(0) {
 
@@ -84,7 +119,7 @@ void ShaderProgram::add_and_compile(ShaderType type, const std::string& source) 
     
     GLint compiled = 0;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
-    if(compiled == GL_FALSE) {
+    if(!compiled) {
         GLint length;
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
         
@@ -107,7 +142,7 @@ void ShaderProgram::add_and_compile(ShaderType type, const std::string& source) 
 
     GLint linked = 0;
     glGetProgramiv(program_id_, GL_LINK_STATUS, &linked);
-    if(linked == GL_FALSE) {
+    if(!linked) {
         GLint length;
         glGetProgramiv(program_id_, GL_INFO_LOG_LENGTH, &length);
         

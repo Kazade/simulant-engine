@@ -21,9 +21,9 @@ class Window {
 public:
     Window(int width=640, int height=480, int bpp=0):
         is_running_(true),
-        scene_(this),
         width_(width),
-        height_(height) {
+        height_(height),
+        scene_(this) {
 
         if(SDL_Init(SDL_INIT_VIDEO) < 0) {
             throw std::runtime_error("Unable to initialize SDL");
@@ -77,13 +77,15 @@ private:
 
     SDL_Surface* surface_;
 
+    uint32_t width_;
+    uint32_t height_;
+    
     Scene scene_;
 
     void create_gl_window(int width, int height, int bpp);
     void check_events();
 
-    uint32_t width_;
-    uint32_t height_;
+
 
     std::vector<std::string> resource_paths_;
     std::vector<LoaderType::ptr> loaders_;

@@ -45,16 +45,18 @@ void Renderer::start_render(Scene* scene) {
 
     kmVec3 up;
     kmVec3 forward;
+    kmVec3 centre;
+    
     kmMat4GetForwardVec3(&forward, &rot_mat);
     kmMat4GetUpVec3(&up, &rot_mat);
+    kmVec3Add(&centre, &pos, &forward);
 
-    gluLookAt(pos.x, pos.y, pos.z,
-              pos.x + forward.x, pos.y + forward.y, pos.z + forward.z,
-              up.x, up.y, up.z);
-              
-    float aspect = float(scene->window()->width()) / float(scene->window()->height());
-    kmMat4* top = &projection_stack_.top();
-    kmMat4PerspectiveProjection(top, 45.0f, aspect, 0.1f, 100.0f);
+
+    kmMat4* modelview = &modelview_stack_.top();
+    kmMat4LookAt(modelview, &pos, &centre, &up);
+
+    scene->viewport().update_opengl();
+    scene->viewport().update_projection_matrix(&projection_stack_.top());
 }
 
 void Renderer::visit(Mesh* mesh) {

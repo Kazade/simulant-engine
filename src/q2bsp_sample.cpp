@@ -13,11 +13,12 @@ void on_key_up(SDL_keysym sym) {
 }
 
 int main(int argc, char* argv[]) {
+    logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));
 	window.set_title("KGLT Sample");
 
     window.scene().render_options.wireframe_enabled = false;
     window.scene().render_options.texture_enabled = true;
-    window.scene().render_options.backface_culling_enabled = true;
+    window.scene().render_options.backface_culling_enabled = false;
     window.scene().render_options.point_size = 1;
 
     //Create a shader
