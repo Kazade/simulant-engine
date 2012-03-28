@@ -1,8 +1,11 @@
 #ifndef SCENE_H_INCLUDED
 #define SCENE_H_INCLUDED
 
+#include <boost/any.hpp>
 #include <stdexcept>
 #include <map>
+
+#include "kazbase/list_utils.h"
 
 #include "object.h"
 #include "mesh.h"
@@ -65,6 +68,16 @@ public:
     Window& window() { return *window_; }
     Viewport& viewport() { return viewport_; }
 
+    void set_extra_data(const std::string& name, boost::any extra_scene_data) { extra_scene_data_[name] = extra_scene_data; }
+    
+    template<typename T>
+    T extra_data_as(const std::string& name) { 
+        if(!container::contains(extra_scene_data_, name)) {
+            throw std::logic_error("No such extra data attached to the scene: " + name);
+        }
+        return boost::any_cast<T>(extra_scene_data_[name]);
+    }
+
 private:
     std::map<MeshID, Mesh::ptr> meshes_;
     std::map<CameraID, Camera::ptr> cameras_;
@@ -73,6 +86,8 @@ private:
     CameraID current_camera_;
     Window* window_;
     Viewport viewport_;
+    
+    std::map<std::string, boost::any> extra_scene_data_;
 };
 
 }

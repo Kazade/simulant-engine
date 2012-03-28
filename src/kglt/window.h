@@ -51,7 +51,7 @@ public:
             }
         }
 
-        throw std::runtime_error("Unable to find a load for: + filename");
+        throw std::runtime_error("Unable to find a loader for: " + filename);
     }
 
     bool update();

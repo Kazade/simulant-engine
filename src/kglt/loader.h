@@ -7,6 +7,7 @@
 
 namespace kglt {
 
+class Scene;
 
 /*
     if(LoaderType().supports("filename")) {
@@ -25,6 +26,8 @@ public:
 
 protected:
     std::string filename_;
+    
+    Scene* loadable_to_scene_ptr(Loadable& resource);    
 };
 
 class LoaderType {
