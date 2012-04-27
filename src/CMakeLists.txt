@@ -12,41 +12,8 @@ PKG_CHECK_MODULES(SIGC QUIET sigc++-2.0)
 
 FIND_PACKAGE(Boost COMPONENTS system filesystem thread date_time REQUIRED)
 
-SET(KGLT_SOURCES
-    kglt/window.cpp
-    kglt/object.cpp
-    kglt/scene.cpp
-    kglt/mesh.cpp
-    kglt/renderer.cpp
-    kglt/camera.cpp
-    kglt/texture.cpp
-    kglt/loader.cpp
-    kglt/viewport.cpp
-    kglt/shader.cpp
-    kglt/shortcuts.cpp
-    kglt/loaders/q2bsp_loader.cpp
-    kglt/loaders/texture_loader.cpp
-    kglt/utils/gl_error.cpp
-    glee/GLee.c
-)
-
-SET(KAZBASE_SOURCES
-    kazbase/logging/logging.cpp
-)
-
-
-SET(KAZMATH_SOURCES
-    kazmath/vec2.c
-    kazmath/vec3.c    
-    kazmath/vec4.c    
-    kazmath/mat3.c    
-    kazmath/mat4.c    
-    kazmath/plane.c    
-    kazmath/aabb.c    
-    kazmath/utility.c    
-    kazmath/ray2.c    
-    kazmath/quaternion.c    
-)
+FILE(GLOB_RECURSE KGLT_SOURCES kglt/*.cpp)
+FILE(GLOB_RECURSE KAZBASE_SOURCES kazbase/*.cpp)
 
 SET(SAMPLE_SOURCES
     sample.cpp
@@ -61,7 +28,6 @@ INCLUDE_DIRECTORIES(
     ${GL_INCLUDE_DIRS}
     ${GLU_INCLUDE_DIRS}
     ${SIGC_INCLUDE_DIRS}
-    ${CMAKE_SOURCE_DIR}
 )
 
 LINK_LIBRARIES(
