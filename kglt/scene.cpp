@@ -77,8 +77,8 @@ void Scene::init() {
     ShaderProgram& def = shader(new_shader()); //Create a default shader;
     assert(glGetError() == GL_NO_ERROR);
         
-    def.add_and_compile(SHADER_TYPE_VERTEX, kglt::default_vert_shader_120);
-    def.add_and_compile(SHADER_TYPE_FRAGMENT, kglt::default_frag_shader_120);
+    def.add_and_compile(SHADER_TYPE_VERTEX, kglt::get_default_vert_shader_120());
+    def.add_and_compile(SHADER_TYPE_FRAGMENT, kglt::get_default_frag_shader_120());
     def.activate();
 }
 

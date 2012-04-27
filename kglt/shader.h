@@ -15,8 +15,8 @@
 
 namespace kglt {
 
-extern const std::string default_vert_shader_120;
-extern const std::string default_frag_shader_120;
+const std::string get_default_vert_shader_120();
+const std::string get_default_frag_shader_120();
 
 enum ShaderType {
     SHADER_TYPE_VERTEX,

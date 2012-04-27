@@ -10,7 +10,8 @@
 
 namespace kglt {
 
-const std::string default_vert_shader_120 = R"(
+const std::string get_default_vert_shader_120() {
+    const std::string default_vert_shader_120 = R"(
 #version 120
 
 uniform mat4 modelview_projection_matrix;
@@ -23,8 +24,12 @@ void main() {
 }
 
 )";
+    
+    return default_vert_shader_120;
+}
 
-const std::string default_frag_shader_120 = R"(
+const std::string get_default_frag_shader_120() {    
+    const std::string default_frag_shader_120 = R"(
 #version 120
 
 uniform sampler2D texture_1;
@@ -43,7 +48,9 @@ void main() {
     gl_FragColor = texture2D(texture_1, gl_TexCoord[0].st);
 }
 
-)";
+)";    
+    return default_frag_shader_120;
+}
 
 ShaderProgram::ShaderProgram():
     program_id_(0) {
