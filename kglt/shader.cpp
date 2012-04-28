@@ -15,12 +15,10 @@ const std::string get_default_vert_shader_120() {
 #version 120
 
 uniform mat4 modelview_projection_matrix;
-uniform mat4 modelview_matrix;
-uniform mat4 projection_matrix;
 
 void main() {
     gl_Position = modelview_projection_matrix * gl_Vertex;
-    gl_TexCoord[0]  = gl_TextureMatrix[0] * gl_MultiTexCoord0;
+    gl_TexCoord[0] = gl_TextureMatrix[0] * gl_MultiTexCoord0;
 }
 
 )";
@@ -193,19 +191,35 @@ void ShaderProgram::set_uniform(const std::string& name, const int32_t x) {
 void ShaderProgram::set_uniform(const std::string& name, const kmMat4* matrix) {
     GLint loc = get_uniform_loc(name);
     if(loc >= 0) {
-        glUniformMatrix4fv(loc, 1, false, (GLfloat*) matrix->mat);
+        float mat[16];
+        unsigned char i = 16;
+        while(i--) { mat[i] = (float) matrix->mat[i]; }
+        glUniformMatrix4fv(loc, 1, false, (GLfloat*)mat);
         check_and_log_error(__FILE__, __LINE__);
     }
 }
 
 void ShaderProgram::set_uniform(const std::string& name, const kmMat3* matrix) {
-    glUniformMatrix3fv(get_uniform_loc(name), 1, false, (GLfloat*) matrix->mat);
-    check_and_log_error(__FILE__, __LINE__);    
+    GLint loc = get_uniform_loc(name);
+    if(loc >= 0) {
+        float mat[9];
+        unsigned char i = 9;
+        while(i--) { mat[i] = (float) matrix->mat[i]; }
+        glUniformMatrix3fv(get_uniform_loc(name), 1, false, (GLfloat*)mat);
+        check_and_log_error(__FILE__, __LINE__);    
+    }
 }
 
 void ShaderProgram::set_uniform(const std::string& name, const kmVec3* vec) {
-    glUniform3fv(get_uniform_loc(name), 1, (GLfloat*) vec);
-    check_and_log_error(__FILE__, __LINE__);    
+    GLint loc = get_uniform_loc(name);
+    if(loc >= 0) {
+        float v[3];
+        v[0] = (float)vec->x;
+        v[1] = (float)vec->y;
+        v[2] = (float)vec->z;
+        glUniform3fv(get_uniform_loc(name), 1, (GLfloat*) v);
+        check_and_log_error(__FILE__, __LINE__);    
+    }
 }
 
 }

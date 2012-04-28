@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
     //window.loader_for("lighting.shader")->into(shader);
 
     //Load the Quake 2 map
-    window.loader_for("sample.bsp")->into(window.scene());
+    window.loader_for("sample_data/sample.bsp")->into(window.scene());
 
     window.signal_key_pressed().connect(&on_key_down);
     window.signal_key_released().connect(&on_key_up);
