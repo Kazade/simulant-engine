@@ -21,6 +21,22 @@ Mesh& Scene::mesh(MeshID m) {
     return *meshes_[m];
 }
 
+SpriteID Scene::new_sprite() {
+    static SpriteID counter = 0;
+    SpriteID id = ++counter;
+    sprites_.insert(std::make_pair(id, Sprite::ptr(new Sprite)));
+    
+    Sprite& sprite = *sprites_[id];
+    sprite.set_parent(this);
+    
+    return id;
+}
+
+Sprite& Scene::sprite(SpriteID s) {
+    //FIXME: assert contains
+    return *sprites_[s];
+}
+
 TextureID Scene::new_texture() {
     static TextureID counter = 0;
     TextureID id = ++counter;

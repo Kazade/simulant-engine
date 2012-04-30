@@ -63,6 +63,8 @@ public:
         parent_(nullptr),
         yaw_(0.0f) {
 
+        kmVec3Fill(&position_, 0.0, 0.0, 0.0);
+        
         kmQuaternionIdentity(&rotation_); //Set a default rotation
     }
 
@@ -73,7 +75,9 @@ public:
     virtual void rotate_y(float amount);
 
     void set_parent(Object* p) {
+        Object* old_parent = nullptr;
         if(has_parent()) {
+            old_parent = &parent();
             parent().detach_child(this);
         }
 
@@ -81,6 +85,7 @@ public:
             p->attach_child(this);
         }
 
+        on_parent_set(old_parent); //Signal
     }
 
     bool has_parent() const { return parent_ != nullptr; }
@@ -91,16 +96,17 @@ public:
     kmQuaternion& rotation() { return rotation_; }
 
     template<typename T>
-    Object* root_as() {
+    T* root_as() {
         Object* self = this;
         while(self->has_parent()) {
             self = &self->parent();
         }
 
-        return dynamic_cast<T>(self);
+        return dynamic_cast<T*>(self);
     }
 
     virtual void accept(ObjectVisitor& visitor) = 0;
+    virtual void on_parent_set(Object* old_parent) {}
 
     uint64_t id() const { return id_; }
 };

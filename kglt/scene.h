@@ -14,6 +14,7 @@
 #include "texture.h"
 #include "shader.h"
 #include "viewport.h"
+#include "sprite.h"
 
 namespace kglt {
 
@@ -29,7 +30,7 @@ public:
         window_(window),
         viewport_(this) {
         new_camera(); //Create a default camera
-        
+
         /*
             TODO: Load the default shader which simply renders textured
             polygons like the fixed function.
@@ -46,11 +47,13 @@ public:
     CameraID new_camera();
     TextureID new_texture();
     ShaderID new_shader();
+    SpriteID new_sprite();
 
     Mesh& mesh(MeshID m);
     Camera& camera(CameraID c = DefaultCameraID);
     Texture& texture(TextureID t);
     ShaderProgram& shader(ShaderID s = NullShaderID);
+    Sprite& sprite(SpriteID s);
 
     void init();
     void render();
@@ -69,9 +72,9 @@ public:
     Viewport& viewport() { return viewport_; }
 
     void set_extra_data(const std::string& name, boost::any extra_scene_data) { extra_scene_data_[name] = extra_scene_data; }
-    
+
     template<typename T>
-    T extra_data_as(const std::string& name) { 
+    T extra_data_as(const std::string& name) {
         if(!container::contains(extra_scene_data_, name)) {
             throw std::logic_error("No such extra data attached to the scene: " + name);
         }
@@ -83,10 +86,12 @@ private:
     std::map<CameraID, Camera::ptr> cameras_;
     std::map<TextureID, Texture> textures_;
     std::map<ShaderID, ShaderProgram> shaders_;
+    std::map<SpriteID, Sprite::ptr> sprites_;
+
     CameraID current_camera_;
     Window* window_;
     Viewport viewport_;
-    
+
     std::map<std::string, boost::any> extra_scene_data_;
 };
 

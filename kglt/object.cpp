@@ -1,6 +1,7 @@
 #include "kazmath/mat3.h"
 
 #include "object.h"
+#include "object_visitor.h"
 
 namespace kglt {
 

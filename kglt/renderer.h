@@ -44,12 +44,15 @@ public:
     //so this method must exist
     void visit(Scene* scene) {}
 
+    //Sprites are just containers
+    void visit(Sprite* sprite) {}
+
     void finish_render() {}
 
 private:
     RenderOptions options_;
     Scene* scene_;
-    
+
     MatrixStack modelview_stack_;
     MatrixStack projection_stack_;
 };

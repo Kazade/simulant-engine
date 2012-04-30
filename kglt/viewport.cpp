@@ -13,22 +13,22 @@ Viewport::Viewport(Scene* parent):
     height_(parent ? parent->window().height() : 480),
     ratio_(ASPECT_RATIO_16_BY_9),
     aspect_(width_ / height_) {
-    
+
     maintain_standard_ratio_size(ASPECT_RATIO_16_BY_9);
     set_perspective_projection(45.0f);
 }
-    
+
 void Viewport::set_size(uint32_t width, uint32_t height) {
     width_ = width;
     height_ = height;
-    
+
     update_viewport();
 }
 
 void Viewport::set_position(uint32_t left, uint32_t top) {
     x_ = left;
     y_ = top;
-    
+
     update_viewport();
 }
 
@@ -40,7 +40,7 @@ void Viewport::maintain_standard_ratio_size(AspectRatio ratio) {
         break;
         case ASPECT_RATIO_16_BY_9:
             aspect_ = 16.0 / 9.0;
-        break;        
+        break;
         case ASPECT_RATIO_16_BY_10:
             aspect_ = 16.0 / 10.0;
         break;
@@ -53,19 +53,24 @@ void Viewport::maintain_standard_ratio_size(AspectRatio ratio) {
 void Viewport::maintain_custom_ratio_size(float aspect) {
     ratio_ = ASPECT_RATIO_CUSTOM;
     aspect_ = aspect;
-    
+
     update_viewport();
 }
 
 void Viewport::set_perspective_projection(double fov, double near, double far) {
     projection_type_ = PROJECTION_TYPE_PERSPECTIVE;
-    
+
     kmMat4PerspectiveProjection(&projection_, fov, aspect_, near, far);
 }
 
 void Viewport::set_orthographic_projection(double left, double right, double bottom, double top, double near, double far) {
     projection_type_ = PROJECTION_TYPE_ORTHOGRAPHIC;
     kmMat4OrthographicProjection(&projection_, left, right, bottom, top, near, far);
+}
+
+void Viewport::set_orthographic_projection_from_height(float desired_height_in_units) {
+    float width = desired_height_in_units * aspect_;
+    set_orthographic_projection(-width / 2.0, width / 2.0, -desired_height_in_units / 2.0, desired_height_in_units / 2.0, -1.0, 1.0);
 }
 
 ProjectionType Viewport::projection_type() {
@@ -78,9 +83,9 @@ void Viewport::update_projection_matrix(kmMat4* pOut) {
 
 void Viewport::update_opengl() const {
     double x, y, width, height;
-    
+
     width = width_;
-    
+
     switch(ratio_) {
         case ASPECT_RATIO_CUSTOM: {
             height = width_ / aspect_;
@@ -97,7 +102,7 @@ void Viewport::update_opengl() const {
     double diff = height_ - height;
     x = 0.0;
     y = diff / 2.0;
-    
+
     glViewport(x, y, width, height);
 }
 

@@ -11,6 +11,7 @@
 
 #include "loaders/texture_loader.h"
 #include "loaders/q2bsp_loader.h"
+#include "loaders/sprite_loader.h"
 #include "loader.h"
 
 #include "kazbase/logging/logging.h"
@@ -28,12 +29,13 @@ public:
         if(SDL_Init(SDL_INIT_VIDEO) < 0) {
             throw std::runtime_error("Unable to initialize SDL");
         }
-        
+
         create_gl_window(width, height, bpp);
         scene_.init();
         //Register the default resource loaders
         register_loader(LoaderType::ptr(new kglt::loaders::TextureLoaderType));
         register_loader(LoaderType::ptr(new kglt::loaders::Q2BSPLoaderType));
+        register_loader(LoaderType::ptr(new kglt::loaders::SpriteLoaderType));
     }
 
     ~Window() {
@@ -42,6 +44,20 @@ public:
 
     void set_title(const std::string& title);
     Scene& scene() { return scene_; }
+
+    Loader::ptr loader_for(const std::string& filename, const std::string& type_hint) {
+        std::string final_file = find_file(filename);
+
+        //See if we can find a loader that supports this type hint
+        for(LoaderType::ptr loader_type: loaders_) {
+            if(loader_type->has_hint(type_hint) && loader_type->supports(filename)) {
+                return loader_type->loader_for(final_file);
+            }
+        }
+
+        throw std::runtime_error("Unable to find a loader for: " + filename);
+    }
+
     Loader::ptr loader_for(const std::string& filename) {
         std::string final_file = find_file(filename);
 
@@ -79,7 +95,7 @@ private:
 
     uint32_t width_;
     uint32_t height_;
-    
+
     Scene scene_;
 
     void create_gl_window(int width, int height, int bpp);

@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="KGLT" />
+		<Option makefile_is_custom="1" />
+		<Option execution_dir="/home/kazade/Git/KGLT/build" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="2D Sample (Debug)">
+				<Option output="build/samples/2d_sample" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="build" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Option use_console_runner="0" />
+				<MakeCommands>
+					<Build command="$make" />
+					<CompileFile command="$make $file" />
+					<Clean command="$make clean$target" />
+					<DistClean command="$make -f $makefile distclean$target" />
+					<AskRebuildNeeded command="$make -q $target" />
+					<SilentBuild command="$make &gt; $(CMD_NULL)" />
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+		</Compiler>
+		<ExtraCommands>
+			<Add before="cmake .." />
+			<Mode after="always" />
+		</ExtraCommands>
+		<Unit filename="kglt/batcher.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/camera.cpp">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/camera.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/light.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/loadable.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/loader.cpp">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/loader.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/loaders/q2bsp_loader.cpp">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/loaders/q2bsp_loader.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/loaders/texture_loader.cpp">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/loaders/texture_loader.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/loaders/wavefront_loader.cpp">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/loaders/wavefront_loader.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/mesh.cpp">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/mesh.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/object.cpp">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/object.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/object_visitor.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/procedural/mesh.h" />
+		<Unit filename="kglt/procedural/mesh/rectangle.cpp" />
+		<Unit filename="kglt/procedural/mesh/rectangle.h" />
+		<Unit filename="kglt/renderer.cpp">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/renderer.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/rendering/batch.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/scene.cpp">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/scene.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/shader.cpp">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/shader.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/shortcuts.cpp">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/shortcuts.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/sprite.cpp">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/sprite.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/texture.cpp">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/texture.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/types.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/utils/gl_error.cpp">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/utils/gl_error.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/utils/matrix_stack.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/viewport.cpp">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/viewport.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/window.cpp">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="kglt/window.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="samples/2d_sample.cpp" />
+		<Unit filename="samples/q2bsp_sample.cpp" />
+		<Unit filename="samples/sample.cpp" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
