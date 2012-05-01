@@ -12,8 +12,8 @@ int main(int argc, char* argv[]) {
 	window.scene().render_options.wireframe_enabled = true;
     window.scene().render_options.texture_enabled = true;
 
-    kglt::SpriteID sprite_id = window.scene().new_sprite();
-    kglt::Sprite& sprite = window.scene().sprite(sprite_id);
+	//Shortcut function to create and then return a new sprite
+	kglt::Sprite& sprite = kglt::return_new_sprite(window.scene());
 
     //Get a sprite loader, set the sprite frame-with option to 40 pixels
     window.loader_for("sample_data/sonic.png", "LOADER_HINT_SPRITE")->into(sprite, { "SPRITE_FRAME_WIDTH", "40" });

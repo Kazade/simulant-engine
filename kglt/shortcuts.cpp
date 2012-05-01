@@ -11,4 +11,14 @@ TextureID create_texture_from_file(Window& window, const std::string& filename) 
     return tid;
 }
 
+Mesh& return_new_mesh(Scene& scene) {
+	MeshID mid = scene.new_mesh();
+	return scene.mesh(mid);
+}
+
+Sprite& return_new_sprite(Scene& scene) {
+	SpriteID sid = scene.new_sprite();
+	return scene.sprite(sid);
+}
+
 }
