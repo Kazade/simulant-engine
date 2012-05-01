@@ -49,6 +49,19 @@ public:
 
     void finish_render() {}
 
+    virtual void pre_visit(Object* obj) {
+		modelview_stack_.push();
+		
+		kmMat4 trans;
+		kmMat4Identity(&trans);
+		kmMat4Translation(&trans, obj->position().x, obj->position().y, obj->position().z);
+		kmMat4Multiply(&modelview_stack_.top(), &modelview_stack_.top(), &trans);				
+	}
+	
+    virtual void post_visit(Object* obj) {
+		modelview_stack_.pop();
+	}
+    
 private:
     RenderOptions options_;
     Scene* scene_;

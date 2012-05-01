@@ -6,6 +6,7 @@
 namespace kglt {
 
 Sprite::Sprite():
+	initialized_(false),
 	frame_width_(0),
 	frame_height_(0),
 	animation_fps_(0),
@@ -22,6 +23,13 @@ void Sprite::set_frame_count(uint32_t frames) {
 void Sprite::set_render_dimensions(float width, float height) {
     render_width_ = width;
     render_height_ = height;
+    
+    Scene* scene = root_as<Scene>();
+    assert(scene);
+    
+    //Rebuild the mesh
+    Mesh& mesh = scene->mesh(mesh_id_);
+    kglt::procedural::mesh::rectangle(mesh, render_width_, render_height_);
 }
 
 void Sprite::on_parent_set(Object* old_parent) {

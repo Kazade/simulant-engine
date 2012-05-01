@@ -28,12 +28,17 @@ public:
     virtual void on_parent_set(Object* old_parent);
 
     void accept(ObjectVisitor& visitor) {
+		visitor.pre_visit(this);
+		
         for(Object* child: children_) {
             child->accept(visitor);
         }
 
         visitor.visit(this);
+        visitor.post_visit(this);
     }
+    
+    MeshID mesh_id() const { return mesh_id_; }
 private:
     bool initialized_;
 

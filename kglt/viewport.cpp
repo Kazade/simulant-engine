@@ -12,10 +12,12 @@ Viewport::Viewport(Scene* parent):
     width_(parent ? parent->window().width() : 640),
     height_(parent ? parent->window().height() : 480),
     ratio_(ASPECT_RATIO_16_BY_9),
-    aspect_(width_ / height_) {
+    aspect_(width_ / height_),
+    colour_(Colour(0.5, 0.5, 0.5, 0.5)) {
 
     maintain_standard_ratio_size(ASPECT_RATIO_16_BY_9);
     set_perspective_projection(45.0f);
+    
 }
 
 void Viewport::set_size(uint32_t width, uint32_t height) {
@@ -70,7 +72,7 @@ void Viewport::set_orthographic_projection(double left, double right, double bot
 
 void Viewport::set_orthographic_projection_from_height(float desired_height_in_units) {
     float width = desired_height_in_units * aspect_;
-    set_orthographic_projection(-width / 2.0, width / 2.0, -desired_height_in_units / 2.0, desired_height_in_units / 2.0, -1.0, 1.0);
+    set_orthographic_projection(-width / 2.0, width / 2.0, -desired_height_in_units / 2.0, desired_height_in_units / 2.0, -10.0, 10.0);
 }
 
 ProjectionType Viewport::projection_type() {
@@ -104,6 +106,7 @@ void Viewport::update_opengl() const {
     y = diff / 2.0;
 
     glViewport(x, y, width, height);
+    glClearColor(colour_.r, colour_.g, colour_.b, colour_.a);
 }
 
 void Viewport::update_viewport() {

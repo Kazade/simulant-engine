@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include "kazmath/mat4.h"
+#include "types.h"
 
 namespace kglt {
 
@@ -38,6 +39,10 @@ public:
     void update_projection_matrix(kmMat4* pout);
     void update_opengl() const;
 
+	void set_background_colour(const Colour& colour) {
+		colour_ = colour;
+	}
+
 private:
     uint32_t x_;
     uint32_t y_;
@@ -46,6 +51,8 @@ private:
 
     AspectRatio ratio_;
     float aspect_;
+
+	Colour colour_;
 
     void update_viewport();
 

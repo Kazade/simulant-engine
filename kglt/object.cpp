@@ -29,13 +29,34 @@ void Object::move_forward(float amount) {
     kmVec3Add(&position_, &position_, &forward);
 }
 
+void Object::rotate_x(float amount) {
+    kmQuaternion rot;
+    rot.x = 1.0f;
+    rot.y = 0.0f;
+    rot.z = 0.0f;
+    rot.w = amount * kmPIOver180;
+    kmQuaternionMultiply(&rotation(), &rotation(), &rot);
+}
+
+void Object::rotate_z(float amount) {
+    kmQuaternion rot;
+    rot.x = 0.0f;
+    rot.y = 0.0f;
+    rot.z = 1.0f;
+    rot.w = amount * kmPIOver180;
+    kmQuaternionMultiply(&rotation(), &rot, &rotation());
+}
+
 void Object::rotate_y(float amount) {
     kmQuaternion rot;
-    kmVec3 v;
-    v.x = 0.0f;
-    v.y = 1.0f;
-    v.z = 0.0f;
-    kmQuaternionRotationAxis(&rot, &v, kmDegreesToRadians(amount));
+
+	rot.w = cos(amount / 2);
+	rot.x = 0.0;
+	rot.y = sin(amount / 2);
+	rot.z = 0.0;
+	
+	kmQuaternionNormalize(&rot, &rot);
+	
     kmQuaternionMultiply(&rotation_, &rot, &rotation_);
     kmQuaternionNormalize(&rotation_, &rotation_);
 }

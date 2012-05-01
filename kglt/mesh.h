@@ -118,11 +118,14 @@ public:
     Triangle& add_triangle(uint32_t a, uint32_t b, uint32_t c);
 
     void accept(ObjectVisitor& visitor) {
+		visitor.pre_visit(this);
+		
         for(Object* child: children_) {
             child->accept(visitor);
         }
 
         visitor.visit(this);
+        visitor.post_visit(this);
     }
 
     void set_arrangement(MeshArrangement m) { arrangement_ = m; }

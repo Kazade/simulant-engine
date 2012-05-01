@@ -53,26 +53,27 @@ protected:
         children_.erase(std::remove(children_.begin(), children_.end(), child), children_.end());
     }
 
-    float yaw_;
-
 public:
     typedef std::tr1::shared_ptr<Object> ptr;
 
     Object():
         id_(++object_counter),
-        parent_(nullptr),
-        yaw_(0.0f) {
+        parent_(nullptr) {
 
         kmVec3Fill(&position_, 0.0, 0.0, 0.0);
+        kmQuaternionIdentity(&rotation_);
         
-        kmQuaternionIdentity(&rotation_); //Set a default rotation
+		//rotate_y(180.0);
     }
 
     virtual ~Object();
 
     virtual void move_to(float x, float y, float z);
     virtual void move_forward(float amount);
+    
+    virtual void rotate_x(float amount);        
     virtual void rotate_y(float amount);
+    virtual void rotate_z(float amount);
 
     void set_parent(Object* p) {
         Object* old_parent = nullptr;
@@ -83,7 +84,9 @@ public:
 
         if(p) {
             p->attach_child(this);
-        }
+        } else {
+			//Clean up?
+		}
 
         on_parent_set(old_parent); //Signal
     }

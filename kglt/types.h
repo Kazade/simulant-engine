@@ -18,6 +18,13 @@ struct Vec2 {
         x(0.0f), y(0.0f) {}
 };
 
+struct Colour {
+	float r, g, b, a;
+	
+	Colour(float r, float g, float b, float a):
+		r(r), g(g), b(b), a(a) {}
+};
+
 
 //FIXME: Should be something like UniqueID<0>, UniqueID<1> or something so that
 //IDs can't be incorrectly passed
