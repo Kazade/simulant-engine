@@ -71,7 +71,7 @@ int main(int argc, char* argv[]) {
     //Create a new mesh
     Mesh& mesh = kglt::return_new_mesh(window.scene());
     
-    //Create a rectangle 1.0 unit across, and half a unit high
+    //Construct a rectangle 1.0 unit across, and half a unit high
 	kglt::procedural::mesh::rectangle(mesh, 1.0, 0.5);
 	
 	//Move the rectangle out a little

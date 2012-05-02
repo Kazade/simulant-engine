@@ -25,6 +25,9 @@ void Renderer::start_render(Scene* scene) {
     } else {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
+    
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     if(!options_.backface_culling_enabled) {
         glDisable(GL_CULL_FACE);

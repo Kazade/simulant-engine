@@ -14,6 +14,7 @@
 namespace kglt {
 
 class ObjectVisitor;
+class Scene;
 
 class Object {
 private:
@@ -53,6 +54,8 @@ protected:
         children_.erase(std::remove(children_.begin(), children_.end(), child), children_.end());
     }
 
+	virtual void do_update(double dt) {}
+
 public:
     typedef std::tr1::shared_ptr<Object> ptr;
 
@@ -68,6 +71,14 @@ public:
 
     virtual ~Object();
 
+	virtual void update(double dt) {
+		do_update(dt);
+		
+		for(Object* child: children_) {
+			child->update(dt);
+		}
+	}
+	
     virtual void move_to(float x, float y, float z);
     virtual void move_forward(float amount);
     
@@ -112,6 +123,8 @@ public:
     virtual void on_parent_set(Object* old_parent) {}
 
     uint64_t id() const { return id_; }
+    
+    Scene& scene();
 };
 
 }

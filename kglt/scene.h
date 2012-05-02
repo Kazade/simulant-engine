@@ -57,6 +57,7 @@ public:
 
     void init();
     void render();
+    void update(double dt);
 
     void accept(ObjectVisitor& visitor) {
         for(Object* child: children_) {

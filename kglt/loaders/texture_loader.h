@@ -12,13 +12,15 @@ public:
         Loader(filename) {}
 
     void into(Loadable& resource);
+    void into(Loadable& resource, const kglt::option_list::OptionList& options);
 };
 
 class TextureLoaderType : public LoaderType {
 public:
     std::string name() { return "texture_loader"; }
     bool supports(const std::string& filename) const {
-        return filename.find(".tga") != std::string::npos;
+        return filename.find(".tga") != std::string::npos ||
+               filename.find(".png") != std::string::npos;
     }
 
     Loader::ptr loader_for(const std::string& filename) const {

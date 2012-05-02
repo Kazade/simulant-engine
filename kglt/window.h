@@ -62,7 +62,7 @@ public:
         std::string final_file = find_file(filename);
 
         for(LoaderType::ptr loader_type: loaders_) {
-            if(loader_type->supports(final_file)) {
+            if(loader_type->supports(final_file) && !loader_type->requires_hint()) {
                 return loader_type->loader_for(final_file);
             }
         }
@@ -100,8 +100,6 @@ private:
 
     void create_gl_window(int width, int height, int bpp);
     void check_events();
-
-
 
     std::vector<std::string> resource_paths_;
     std::vector<LoaderType::ptr> loaders_;

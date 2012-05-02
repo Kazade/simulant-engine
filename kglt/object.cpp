@@ -1,5 +1,6 @@
 #include "kazmath/mat3.h"
 
+#include "scene.h"
 #include "object.h"
 #include "object_visitor.h"
 
@@ -59,6 +60,12 @@ void Object::rotate_y(float amount) {
 	
     kmQuaternionMultiply(&rotation_, &rot, &rotation_);
     kmQuaternionNormalize(&rotation_, &rotation_);
+}
+
+Scene& Object::scene() { 
+	Scene* scene = root_as<Scene>(); 
+	assert(scene);
+	return *scene;
 }
 
 }
