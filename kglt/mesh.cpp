@@ -77,10 +77,9 @@ void Mesh::update_vbo() {
             data.uv[0] = tri.uv(j).x;
             data.uv[1] = tri.uv(j).y;
             
-            glBufferSubData(GL_ARRAY_BUFFER, offset + (sizeof(VData) * j), sizeof(VData), &data);
-        }
-        
-        offset += sizeof(VData) * 3;
+            glBufferSubData(GL_ARRAY_BUFFER, offset, sizeof(VData), &data);
+            offset += sizeof(VData);
+        }                
     }
 }
 

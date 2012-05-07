@@ -5,13 +5,14 @@ namespace kglt {
 bool Window::update() {
     check_events();
 
-    //FIXME: Add a Viewport class for this shizzle
-    glViewport(0, 0, width_, height_);
+    scene().viewport().update_opengl();
+    
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
 
-    glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	scene_.update(0.01);
 
     scene_.render();
 

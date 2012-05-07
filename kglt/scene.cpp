@@ -98,6 +98,12 @@ void Scene::init() {
     def.activate();
 }
 
+void Scene::update(double dt) {
+	for(Object* child: children_) {
+		child->update(dt);
+	}
+}
+
 void Scene::render() {
     Renderer renderer(render_options);
 

@@ -35,11 +35,11 @@ int main(int argc, char* argv[]) {
 
 	while(window.update()) {
         if(keys[SDLK_LEFT]) {
-            window.scene().camera().rotate_y(-2.0f);
+            window.scene().camera().rotate_y(-0.1);
         }
 
         if(keys[SDLK_RIGHT]) {
-            window.scene().camera().rotate_y(2.0f);
+            window.scene().camera().rotate_y(0.1);
         }
 
         if(keys[SDLK_UP]) {

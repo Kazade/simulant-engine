@@ -16,6 +16,9 @@ public:
     virtual void visit(Camera* camera) = 0;
     virtual void visit(Scene* scene) = 0;
     virtual void visit(Sprite* sprite) = 0;
+    
+    virtual void pre_visit(Object* obj) = 0;
+    virtual void post_visit(Object* obj) = 0;
 };
 
 }

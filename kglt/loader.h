@@ -6,6 +6,8 @@
 #include <tr1/memory>
 #include "loadable.h"
 
+#include "kglt/option_list.h"
+
 namespace kglt {
 
 class Scene;
@@ -38,7 +40,7 @@ public:
         throw LoaderRequiresOptionsError();
     }
 
-    virtual void into(Loadable& resource, std::initializer_list<std::string> options) {
+    virtual void into(Loadable& resource, const kglt::option_list::OptionList& options) {
         throw LoaderOptionsUnsupportedError();
     }
 protected:
@@ -53,6 +55,7 @@ public:
     virtual std::string name() = 0;
     virtual bool supports(const std::string& filename) const = 0;
     virtual bool has_hint(const std::string& type_hint) const { return false; }
+    virtual bool requires_hint() const { return false; }
     virtual Loader::ptr loader_for(const std::string& filename) const = 0;
 };
 

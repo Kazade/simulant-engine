@@ -11,7 +11,7 @@ public:
     SpriteLoader(const std::string& filename):
         Loader(filename) {}
 
-    void into(Loadable& resource, std::initializer_list<std::string> options);
+    void into(Loadable& resource, const kglt::option_list::OptionList& options);
 };
 
 class SpriteLoaderType : public LoaderType {
@@ -29,6 +29,8 @@ public:
     Loader::ptr loader_for(const std::string& filename) const {
         return Loader::ptr(new SpriteLoader(filename));
     }
+    
+    bool requires_hint() const { return true; }
 };
 
 }

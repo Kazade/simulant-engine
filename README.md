@@ -38,15 +38,10 @@ int main(int argc, char* argv[]) {
     GL::Window window;
 
     //Set some rendering options
-    window.scene().render_options.backface_culling_enabled = false;
     window.scene().render_options.wireframe_enabled = true;
-    window.scene().render_options.textures_enabled = false;
 
-    //Create a mesh
-    GL::MeshID m = window.scene().new_mesh();
-    
-    //Get a handle to the mesh
-    Mesh& mesh = window.scene().mesh(m);
+    //Create a new mesh
+    Mesh& mesh = kglt::return_new_mesh(window.scene());
     
     //Add a submesh, add 3 vertices and a triangle made up of them
     mesh.add_submesh();
@@ -61,3 +56,32 @@ int main(int argc, char* argv[]) {
 }
 ```
 
+We can also draw a rectangle even more easily:
+
+```
+#include "GL/window.h"
+
+int main(int argc, char* argv[]) {
+
+    GL::Window window;
+
+    //Set some rendering options
+    window.scene().render_options.wireframe_enabled = true;
+
+    //Create a new mesh
+    Mesh& mesh = kglt::return_new_mesh(window.scene());
+    
+    //Construct a rectangle 1.0 unit across, and half a unit high
+	kglt::procedural::mesh::rectangle(mesh, 1.0, 0.5);
+	
+	//Move the rectangle out a little
+	mesh.move_to(0.0, 0.0, -1.0);
+	
+	//Create an orthographic projection, 2 units high, with a 16:9 ratio (default)
+	window.scene().viewport().set_orthographic_projection_from_height(2.0);
+	
+    while(window.update()) {}    
+
+    return 0;
+}
+```

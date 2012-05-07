@@ -25,6 +25,9 @@ void Renderer::start_render(Scene* scene) {
     } else {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
+    
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     if(!options_.backface_culling_enabled) {
         glDisable(GL_CULL_FACE);
@@ -48,9 +51,9 @@ void Renderer::start_render(Scene* scene) {
     kmVec3 centre;
     
     kmMat4GetForwardVec3(&forward, &rot_mat);
+    
     kmMat4GetUpVec3(&up, &rot_mat);
     kmVec3Add(&centre, &pos, &forward);
-
 
     kmMat4* modelview = &modelview_stack_.top();
     kmMat4LookAt(modelview, &pos, &centre, &up);
@@ -79,48 +82,39 @@ void Renderer::visit(Mesh* mesh) {
     kmMat4 transform;
     kmMat4Identity(&transform);
     check_and_log_error(__FILE__, __LINE__);
-    
-    modelview_stack_.push();
-        mesh->activate_vbo();
         
-        uint32_t stride = (sizeof(float) * 3) + (sizeof(float) * 2);
+	mesh->activate_vbo();
+	
+	uint32_t stride = (sizeof(float) * 3) + (sizeof(float) * 2);
 //        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(0));
 //        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(sizeof(float) * 3));
-        glVertexPointer(3, GL_FLOAT, stride, BUFFER_OFFSET(0));
-        glTexCoordPointer(2, GL_FLOAT, stride, BUFFER_OFFSET(sizeof(float) * 3));
-        glClientActiveTexture(GL_TEXTURE0);
-        
-        //FIXME: should be absolute position
-        //glTranslatef(mesh->position().x, mesh->position().y, mesh->position().z);
-        kmMat4 trans;
-        kmMat4Identity(&trans);
-        kmMat4Translation(&trans, mesh->position().x, mesh->position().y, mesh->position().z);
-        kmMat4Multiply(&modelview_stack_.top(), &modelview_stack_.top(), &trans);
-        
-        kmMat4 modelview_projection;
-        kmMat4Multiply(&modelview_projection, &projection_stack_.top(), &modelview_stack_.top());
-        
-        if(s.has_uniform("modelview_projection_matrix")) {
-            s.set_uniform("modelview_projection_matrix", &modelview_projection);
-        }
-        if(s.has_uniform("modelview_matrix")) {
-            s.set_uniform("modelview_matrix", &modelview_stack_.top());
-        }
-        if(s.has_uniform("projection_matrix")) {
-            s.set_uniform("projection_matrix", &projection_stack_.top());
-        }
+	glVertexPointer(3, GL_FLOAT, stride, BUFFER_OFFSET(0));
+	glTexCoordPointer(2, GL_FLOAT, stride, BUFFER_OFFSET(sizeof(float) * 3));
+	glClientActiveTexture(GL_TEXTURE0);
+	
+	kmMat4 modelview_projection;
+	kmMat4Multiply(&modelview_projection, &projection_stack_.top(), &modelview_stack_.top());
+	
+	if(s.has_uniform("modelview_projection_matrix")) {
+		s.set_uniform("modelview_projection_matrix", &modelview_projection);
+	}
+	if(s.has_uniform("modelview_matrix")) {
+		s.set_uniform("modelview_matrix", &modelview_stack_.top());
+	}
+	if(s.has_uniform("projection_matrix")) {
+		s.set_uniform("projection_matrix", &projection_stack_.top());
+	}
 
-        glEnableClientState(GL_VERTEX_ARRAY);
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-        
-        if(mesh->arrangement() == MeshArrangement::POINTS) {
-            glDrawArrays(GL_POINTS, 0, mesh->vertices().size());        
-        } else {
-            glDrawArrays(GL_TRIANGLES, 0, mesh->triangles().size() * 3);
-        }
-        glDisableClientState(GL_VERTEX_ARRAY);        
-        glDisableClientState(GL_TEXTURE_COORD_ARRAY);        
-    modelview_stack_.pop();
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	
+	if(mesh->arrangement() == MeshArrangement::POINTS) {
+		glDrawArrays(GL_POINTS, 0, mesh->vertices().size());        
+	} else {
+		glDrawArrays(GL_TRIANGLES, 0, mesh->triangles().size() * 3);
+	}
+	glDisableClientState(GL_VERTEX_ARRAY);        
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);        
 }
 
 }
