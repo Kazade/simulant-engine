@@ -1,8 +1,27 @@
-
+#include "glee/GLee.h"
 #include "mesh.h"
 
 namespace kglt {
 
+Mesh::Mesh():
+    Object(),
+    is_submesh_(false),
+    use_parent_vertices_(false) {
+
+    glGenBuffers(1, &vertex_buffer_);
+
+    //Set all textures to a NullTextureID
+    for(uint32_t i = 0; i < MAX_TEXTURE_LEVELS; ++i) {
+        textures_[i] = NullTextureID;
+    }
+
+    set_arrangement(MeshArrangement::TRIANGLES);
+}
+
+Mesh::~Mesh() {
+    glDeleteBuffers(1, &vertex_buffer_);
+}
+    
 Vertex& Mesh::vertex(uint32_t v) {
     if(use_parent_vertices_) {
         if(!is_submesh_) {
@@ -53,6 +72,10 @@ uint32_t Mesh::add_submesh(bool use_parent_vertices) {
     return id;
 }
 
+void Mesh::activate_vbo() {
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_);
+}
+    
 void Mesh::update_vbo() {
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_);
     
