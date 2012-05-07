@@ -7,7 +7,7 @@
 
 namespace kglt {
 
-TextureID create_texture_from_file(Window& scene, const std::string& filename);
+TextureID create_texture_from_file(WindowBase& window, const std::string& filename);
 
 Mesh& return_new_mesh(Scene& scene);
 Sprite& return_new_sprite(Scene& scene);

@@ -2,24 +2,6 @@
 
 namespace kglt {
 
-bool Window::update() {
-    check_events();
-
-    scene().viewport().update_opengl();
-    
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	scene_.update(0.01);
-
-    scene_.render();
-
-    SDL_GL_SwapBuffers();
-
-    return is_running_;
-}
 
 void Window::set_title(const std::string& title) {
     SDL_WM_SetCaption(title.c_str(), NULL);
@@ -41,7 +23,7 @@ void Window::check_events() {
             case SDL_VIDEORESIZE:
                 break;
             case SDL_QUIT:
-                is_running_ = false;
+                stop_running();
                 break;
             default:
                 break;
@@ -53,6 +35,9 @@ void Window::create_gl_window(int width, int height, int bpp) {
 //    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 //    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
+    set_width(width);
+    set_height(height);
+        
     surface_ = SDL_SetVideoMode(width, height, bpp, SDL_OPENGL);
 
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
@@ -67,9 +52,8 @@ void Window::create_gl_window(int width, int height, int bpp) {
     assert(GLEE_VERSION_2_1);
 }
 
-void Window::register_loader(LoaderType::ptr loader) {
-    //FIXME: assert doesn't exist already
-    loaders_.push_back(loader);
+void Window::swap_buffers() {
+    SDL_GL_SwapBuffers();
 }
 
 }

@@ -18,7 +18,7 @@
 
 namespace kglt {
 
-class Window;
+class WindowBase;
 
 class Scene : public Object, public Loadable {
 public:
@@ -26,7 +26,7 @@ public:
         throw std::logic_error("You cannot move the scene");
     }
 
-    Scene(Window* window):
+    Scene(WindowBase* window):
         window_(window),
         viewport_(this) {
         new_camera(); //Create a default camera
@@ -69,7 +69,7 @@ public:
 
     RenderOptions render_options;
 
-    Window& window() { return *window_; }
+    WindowBase& window() { return *window_; }
     Viewport& viewport() { return viewport_; }
 
     void set_extra_data(const std::string& name, boost::any extra_scene_data) { extra_scene_data_[name] = extra_scene_data; }
@@ -90,7 +90,7 @@ private:
     std::map<SpriteID, Sprite::ptr> sprites_;
 
     CameraID current_camera_;
-    Window* window_;
+    WindowBase* window_;
     Viewport viewport_;
 
     std::map<std::string, boost::any> extra_scene_data_;
