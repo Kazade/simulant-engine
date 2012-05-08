@@ -3,8 +3,6 @@
 
 #include <cstdint>
 #include <vector>
-#include <SDL_opengl.h>
-
 #include "loadable.h"
 
 namespace kglt {
@@ -13,7 +11,7 @@ class Texture : public Loadable {
 public:
     typedef std::vector<uint8_t> Data;
 
-    GLuint gl_tex() const { return gl_tex_; }
+    uint32_t gl_tex() const { return gl_tex_; }
 
     Texture():
         width_(0),
@@ -42,7 +40,7 @@ private:
 
     Texture::Data data_;
 
-    GLuint gl_tex_;
+    uint32_t gl_tex_;
 };
 
 }

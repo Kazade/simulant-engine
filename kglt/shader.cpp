@@ -1,6 +1,7 @@
 #include <stdexcept>
 #include <boost/format.hpp>
 
+#include "glee/GLee.h"
 #include "utils/gl_error.h"
 #include "kazbase/logging/logging.h"
 #include "kazbase/exceptions.h"
@@ -160,7 +161,7 @@ void ShaderProgram::add_and_compile(ShaderType type, const std::string& source) 
     assert(linked); 
 }
 
-GLint ShaderProgram::get_uniform_loc(const std::string& name) {
+int32_t ShaderProgram::get_uniform_loc(const std::string& name) {
     if(container::contains(cached_uniform_locations_, name)) {
         return cached_uniform_locations_[name];
     }

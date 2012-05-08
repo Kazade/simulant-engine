@@ -1,7 +1,6 @@
 #ifndef RENDERER_H_INCLUDED
 #define RENDERER_H_INCLUDED
 
-#include "glee/GLee.h"
 #include <iostream>
 
 #include "object.h"

@@ -1,5 +1,5 @@
-#ifndef OBJECT_H_INCLUDED
-#define OBJECT_H_INCLUDED
+#ifndef KGLT_OBJECT_H_INCLUDED
+#define KGLT_OBJECT_H_INCLUDED
 
 #include <iostream>
 #include <cassert>

@@ -5,8 +5,6 @@
 
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
-#include "glee/GLee.h"
-
 #include "kazmath/mat4.h"
 #include "kazmath/mat3.h"
 #include "kazmath/vec3.h"
@@ -42,12 +40,12 @@ public:
     
     bool has_uniform(const std::string& name);    
 private:
-    GLint get_uniform_loc(const std::string& name);
+    int32_t get_uniform_loc(const std::string& name);
 
-    GLuint program_id_;
-    GLuint shader_ids_[SHADER_TYPE_MAX];
+    uint32_t program_id_;
+    uint32_t shader_ids_[SHADER_TYPE_MAX];
 
-    std::map<std::string, GLint> cached_uniform_locations_;
+    std::map<std::string, int32_t> cached_uniform_locations_;
 };
 
 }

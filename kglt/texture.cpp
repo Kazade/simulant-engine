@@ -1,5 +1,6 @@
 #include <cassert>
 
+#include "glee/GLee.h"
 #include "texture.h"
 
 namespace kglt {

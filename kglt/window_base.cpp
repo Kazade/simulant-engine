@@ -1,3 +1,4 @@
+#include "glee/GLee.h"
 #include "window_base.h"
 
 namespace kglt {
