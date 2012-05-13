@@ -55,6 +55,8 @@ public:
     ShaderProgram& shader(ShaderID s = NullShaderID);
     Sprite& sprite(SpriteID s);
 
+    void delete_mesh(MeshID mid);
+
     void init();
     void render();
     void update(double dt);

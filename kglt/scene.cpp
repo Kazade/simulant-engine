@@ -21,6 +21,12 @@ Mesh& Scene::mesh(MeshID m) {
     return *meshes_[m];
 }
 
+void Scene::delete_mesh(MeshID mid) {
+    Mesh& m = mesh(mid);
+    m.set_parent(nullptr);
+    meshes_.erase(mid);
+}
+
 SpriteID Scene::new_sprite() {
     static SpriteID counter = 0;
     SpriteID id = ++counter;
