@@ -51,6 +51,9 @@ TextureID Scene::new_texture() {
 }
 
 Texture& Scene::texture(TextureID t) {
+    if(t == NullTextureID) {
+        return null_texture_;
+    }
     //FIXMe: assert this
     return textures_[t];
 }
@@ -102,6 +105,16 @@ void Scene::init() {
     def.add_and_compile(SHADER_TYPE_VERTEX, kglt::get_default_vert_shader_120());
     def.add_and_compile(SHADER_TYPE_FRAGMENT, kglt::get_default_frag_shader_120());
     def.activate();
+    
+    //Create the null texture
+    null_texture_.resize(1, 1);
+    null_texture_.set_bpp(32);
+    
+    null_texture_.data()[0] = 255;
+    null_texture_.data()[1] = 255;
+    null_texture_.data()[2] = 255;
+    null_texture_.data()[3] = 255;
+    null_texture_.upload();
 }
 
 void Scene::update(double dt) {

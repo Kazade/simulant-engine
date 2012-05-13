@@ -96,6 +96,8 @@ private:
     Viewport viewport_;
 
     std::map<std::string, boost::any> extra_scene_data_;
+    
+    Texture null_texture_;
 };
 
 }

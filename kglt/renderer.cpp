@@ -64,11 +64,7 @@ void Renderer::start_render(Scene* scene) {
 
 void Renderer::visit(Mesh* mesh) {
     kglt::TextureID tex = mesh->texture(PRIMARY);
-    if(tex != NullTextureID) {
-        glBindTexture(GL_TEXTURE_2D, scene_->texture(tex).gl_tex());
-    } else {
-        glBindTexture(GL_TEXTURE_2D, 0);
-    }
+    glBindTexture(GL_TEXTURE_2D, scene_->texture(tex).gl_tex());
 
     //FIXME: Allow meshes to override the shader
     ShaderProgram& s = scene_->shader(NullShaderID);

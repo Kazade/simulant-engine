@@ -75,8 +75,14 @@ public:
 
 protected:
     void stop_running() { is_running_ = false; }
-    void set_width(uint32_t width) { width_ = width; }
-    void set_height(uint32_t height) { height_ = height; }
+    
+    void set_width(uint32_t width) { 
+        width_ = width; 
+    }
+    
+    void set_height(uint32_t height) {
+        height_ = height; 
+    }
     
 private:
     std::tr1::shared_ptr<Scene> scene_;

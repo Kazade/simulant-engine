@@ -49,6 +49,7 @@ private:
     uint32_t width_;
     uint32_t height_;
 
+
     AspectRatio ratio_;
     float aspect_;
 
