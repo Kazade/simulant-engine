@@ -15,8 +15,6 @@ bool WindowBase::update() {
     
     check_events();
 
-    scene().viewport().update_opengl();
-    
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
 

@@ -7,6 +7,7 @@
 
 #include "kazbase/list_utils.h"
 
+#include "types.h"
 #include "object.h"
 #include "mesh.h"
 #include "camera.h"
@@ -15,6 +16,7 @@
 #include "shader.h"
 #include "viewport.h"
 #include "sprite.h"
+#include "pass.h"
 
 namespace kglt {
 
@@ -27,8 +29,7 @@ public:
     }
 
     Scene(WindowBase* window):
-        window_(window),
-        viewport_(this) {
+        window_(window) {
         new_camera(); //Create a default camera
 
         /*
@@ -41,6 +42,13 @@ public:
         render_options.texture_enabled = true;
         render_options.backface_culling_enabled = true;
         render_options.point_size = 1;
+        
+		/**
+		 * Create the default pass, which uses a perspective projection and
+		 * a fullscreen viewport
+		 */
+		 add_pass(Renderer::ptr(new Renderer()), VIEWPORT_TYPE_FULL);
+		 pass().renderer().set_perspective_projection(45.0, 0.1, 1000.0);        
     }
 
     MeshID new_mesh();
@@ -72,7 +80,6 @@ public:
     RenderOptions render_options;
 
     WindowBase& window() { return *window_; }
-    Viewport& viewport() { return viewport_; }
 
     void set_extra_data(const std::string& name, boost::any extra_scene_data) { extra_scene_data_[name] = extra_scene_data; }
 
@@ -84,6 +91,21 @@ public:
         return boost::any_cast<T>(extra_scene_data_[name]);
     }
 
+	void add_pass(
+		Renderer::ptr renderer, 
+		ViewportType viewport=VIEWPORT_TYPE_FULL,
+		CameraID camera_id = DefaultCameraID
+	) {
+		Pass p(this, renderer, viewport, camera_id);
+		passes_.push_back(p);
+	}
+	
+	void remove_all_passes() {
+		passes_.clear();
+	}
+	
+	Pass& pass(uint32_t index = 0) { return passes_.at(index); }
+	
 private:
     std::map<MeshID, Mesh::ptr> meshes_;
     std::map<CameraID, Camera::ptr> cameras_;
@@ -93,11 +115,12 @@ private:
 
     CameraID current_camera_;
     WindowBase* window_;
-    Viewport viewport_;
 
     std::map<std::string, boost::any> extra_scene_data_;
     
     Texture null_texture_;
+    
+    std::vector<Pass> passes_;
 };
 
 }

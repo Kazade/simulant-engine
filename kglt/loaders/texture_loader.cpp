@@ -14,7 +14,7 @@ namespace kglt {
 namespace loaders {
 
 void TextureLoader::into(Loadable& resource) {
-	into(resource, { "FALLBACK_TO_CHECKERBOARD" , "0" });
+	into(resource, { "FALLBACK_TO_CHECKERBOARD" , "1" });
 }
 
 void TextureLoader::into(Loadable& resource, const kglt::option_list::OptionList& options) {

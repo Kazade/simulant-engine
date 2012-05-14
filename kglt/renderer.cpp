@@ -14,12 +14,8 @@ namespace kglt {
 void Renderer::start_render(Scene* scene) {
     scene_ = scene;
 
-    if(!options_.texture_enabled) {
-        glDisable(GL_TEXTURE_2D);
-    } else {
-        glEnable(GL_TEXTURE_2D);
-    }
-
+	glEnable(GL_TEXTURE_2D);
+    
     if(options_.wireframe_enabled) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     } else {
@@ -59,12 +55,27 @@ void Renderer::start_render(Scene* scene) {
     kmMat4Identity(modelview);    
     kmMat4LookAt(modelview, &pos, &centre, &up);
 
-    scene->viewport().update_opengl();
-    scene->viewport().update_projection_matrix(&projection_stack_.top());
+    kmMat4Assign(&projection_stack_.top(), &projection_matrix_);    
+}
+
+void Renderer::set_perspective_projection(double fov, double aspect, double near, double far) {
+    kmMat4PerspectiveProjection(&projection_matrix_, fov, aspect, near, far);
+}
+
+void Renderer::set_orthographic_projection(double left, double right, double bottom, double top, double near, double far) {
+    kmMat4OrthographicProjection(&projection_matrix_, left, right, bottom, top, near, far);
+}
+
+void Renderer::set_orthographic_projection_from_height(double desired_height_in_units, double ratio) {
+    double width = desired_height_in_units * ratio;
+    set_orthographic_projection(-width / 2.0, width / 2.0, -desired_height_in_units / 2.0, desired_height_in_units / 2.0, -10.0, 10.0);	
 }
 
 void Renderer::visit(Mesh* mesh) {
     kglt::TextureID tex = mesh->texture(PRIMARY);
+    if(!options_.texture_enabled) {
+		tex = NullTextureID; //Turn off the texture
+	}
     glBindTexture(GL_TEXTURE_2D, scene_->texture(tex).gl_tex());
 
     //FIXME: Allow meshes to override the shader
@@ -74,7 +85,6 @@ void Renderer::visit(Mesh* mesh) {
     s.bind_attrib(0, "vertex_position");
     s.bind_attrib(1, "vertex_texcoord_1");
     s.set_uniform("texture_1", 0);
-
 
     kmMat4 transform;
     kmMat4Identity(&transform);

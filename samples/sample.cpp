@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
 	//Apply the texture to the mesh
 	mesh.apply_texture(tid, kglt::TextureLevel::PRIMARY);
 
-	window.scene().viewport().set_orthographic_projection_from_height(2.0);
+	window.scene().pass().renderer().set_orthographic_projection_from_height(2.0, (float) window.width() / (float)window.height());
 
 	while(window.update()) {}
 	return 0;

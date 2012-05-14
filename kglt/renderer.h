@@ -23,7 +23,11 @@ struct RenderOptions {
 
 class Renderer : public ObjectVisitor {
 public:
-    Renderer(RenderOptions options):
+	typedef std::tr1::shared_ptr<Renderer> ptr;
+
+	Renderer() {}
+
+	Renderer(RenderOptions options):
         options_(options) {
 
     }
@@ -31,6 +35,8 @@ public:
     ~Renderer() {
 
     }
+
+	void set_options(const RenderOptions& options) { options_ = options; }
 
     void start_render(Scene* scene);
     void visit(Mesh* mesh);
@@ -60,13 +66,19 @@ public:
     virtual void post_visit(Object* obj) {
 		modelview_stack_.pop();
 	}
-    
+	    
+    void set_perspective_projection(double fov, double aspect, double near=1.0, double far=1000.0f);
+    void set_orthographic_projection(double left, double right, double bottom, double top, double near=-1.0, double far=1.0);
+	void set_orthographic_projection_from_height(double desired_height_in_units, double ratio);
+
 private:
     RenderOptions options_;
     Scene* scene_;
 
     MatrixStack modelview_stack_;
     MatrixStack projection_stack_;
+    
+    kmMat4 projection_matrix_;
 };
 
 }

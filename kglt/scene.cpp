@@ -114,7 +114,7 @@ void Scene::init() {
     null_texture_.data()[1] = 255;
     null_texture_.data()[2] = 255;
     null_texture_.data()[3] = 255;
-    null_texture_.upload();
+    null_texture_.upload();   
 }
 
 void Scene::update(double dt) {
@@ -124,13 +124,21 @@ void Scene::update(double dt) {
 }
 
 void Scene::render() {
-    Renderer renderer(render_options);
-
-    renderer.start_render(this);
-
-    this->accept(renderer);
-
-    renderer.finish_render();
+	/**
+	 * Go through all the render passes
+	 * set the render options and send the viewport to OpenGL
+	 * before going through the scene, objects in the scene
+	 * should be able to mark as only being renderered in certain
+	 * passes
+	 */
+	for(Pass& pass: passes_) {
+		pass.renderer().set_options(render_options);
+		pass.viewport().update_opengl();
+		
+		pass.renderer().start_render(this);
+		this->accept(pass.renderer());
+		pass.renderer().finish_render();
+	}	
 }
 
 }
