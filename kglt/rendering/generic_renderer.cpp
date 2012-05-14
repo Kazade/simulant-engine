@@ -11,7 +11,7 @@
 
 namespace kglt {
 
-void Renderer::start_render(Scene* scene) {
+void GenericRenderer::start_render(Scene* scene) {
     scene_ = scene;
 
 	glEnable(GL_TEXTURE_2D);
@@ -58,20 +58,20 @@ void Renderer::start_render(Scene* scene) {
     kmMat4Assign(&projection_stack_.top(), &projection_matrix_);    
 }
 
-void Renderer::set_perspective_projection(double fov, double aspect, double near, double far) {
+void GenericRenderer::set_perspective_projection(double fov, double aspect, double near, double far) {
     kmMat4PerspectiveProjection(&projection_matrix_, fov, aspect, near, far);
 }
 
-void Renderer::set_orthographic_projection(double left, double right, double bottom, double top, double near, double far) {
+void GenericRenderer::set_orthographic_projection(double left, double right, double bottom, double top, double near, double far) {
     kmMat4OrthographicProjection(&projection_matrix_, left, right, bottom, top, near, far);
 }
 
-void Renderer::set_orthographic_projection_from_height(double desired_height_in_units, double ratio) {
+void GenericRenderer::set_orthographic_projection_from_height(double desired_height_in_units, double ratio) {
     double width = desired_height_in_units * ratio;
     set_orthographic_projection(-width / 2.0, width / 2.0, -desired_height_in_units / 2.0, desired_height_in_units / 2.0, -10.0, 10.0);	
 }
 
-void Renderer::visit(Mesh* mesh) {
+void GenericRenderer::visit(Mesh* mesh) {
     kglt::TextureID tex = mesh->texture(PRIMARY);
     if(!options_.texture_enabled) {
 		tex = NullTextureID; //Turn off the texture

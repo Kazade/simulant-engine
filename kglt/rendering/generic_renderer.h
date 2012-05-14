@@ -1,5 +1,5 @@
-#ifndef RENDERER_H_INCLUDED
-#define RENDERER_H_INCLUDED
+#ifndef KGLT_GENERIC_RENDERER_H_INCLUDED
+#define KGLT_GENERIC_RENDERER_H_INCLUDED
 
 #include <iostream>
 
@@ -21,18 +21,18 @@ struct RenderOptions {
     uint8_t point_size;
 };
 
-class Renderer : public ObjectVisitor {
+class GenericRenderer : public ObjectVisitor {
 public:
 	typedef std::tr1::shared_ptr<Renderer> ptr;
 
-	Renderer() {}
+	GenericRenderer() {}
 
-	Renderer(RenderOptions options):
+	GenericRenderer(RenderOptions options):
         options_(options) {
 
     }
 
-    ~Renderer() {
+    ~GenericRenderer() {
 
     }
 
