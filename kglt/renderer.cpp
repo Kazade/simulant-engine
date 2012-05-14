@@ -56,6 +56,7 @@ void Renderer::start_render(Scene* scene) {
     kmVec3Add(&centre, &pos, &forward);
 
     kmMat4* modelview = &modelview_stack_.top();
+    kmMat4Identity(modelview);    
     kmMat4LookAt(modelview, &pos, &centre, &up);
 
     scene->viewport().update_opengl();

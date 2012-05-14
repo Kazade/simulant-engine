@@ -12,6 +12,9 @@ public:
 
 	Camera():
 		Object() {	
+			
+		kmQuaternionRotationYawPitchRoll(&rotation(), 180.0, 0.0, 0.0);
+		kmQuaternionNormalize(&rotation(), &rotation());
 	}
 
     void watch(Object& obj);
