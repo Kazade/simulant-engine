@@ -100,11 +100,18 @@ Camera& Scene::camera(CameraID c) {
 void Scene::init() {
     assert(glGetError() == GL_NO_ERROR);
     ShaderProgram& def = shader(new_shader()); //Create a default shader;
+            
     assert(glGetError() == GL_NO_ERROR);
         
     def.add_and_compile(SHADER_TYPE_VERTEX, kglt::get_default_vert_shader_120());
     def.add_and_compile(SHADER_TYPE_FRAGMENT, kglt::get_default_frag_shader_120());
     def.activate();
+    
+    //Bind the vertex attributes for the default shader and relink
+    def.bind_attrib(0, "vertex_position");
+    def.bind_attrib(1, "vertex_texcoord_1");
+    def.bind_attrib(2, "vertex_diffuse");
+    def.relink();
     
     //Create the null texture
     null_texture_.resize(1, 1);
@@ -115,6 +122,16 @@ void Scene::init() {
     null_texture_.data()[2] = 255;
     null_texture_.data()[3] = 255;
     null_texture_.upload();   
+}
+
+std::pair<ShaderID, bool> Scene::find_shader(const std::string& name) {
+	for(std::pair<ShaderID, ShaderProgram> shader: shaders_) {
+		if(shader.second.name() == name) {
+			return std::make_pair(shader.first, true);
+		}
+	}
+
+	return return std::make_pair(NullShaderID, false);
 }
 
 void Scene::update(double dt) {

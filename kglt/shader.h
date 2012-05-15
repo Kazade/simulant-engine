@@ -39,6 +39,8 @@ public:
     void bind_attrib(uint32_t idx, const std::string& name);
     
     bool has_uniform(const std::string& name);    
+    
+    void relink();
 private:
     int32_t get_uniform_loc(const std::string& name);
 

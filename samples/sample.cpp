@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
 	tri2.set_uv(0, 0.0f, 0.0f);
 	tri2.set_uv(1, 1.0f, 1.0f);
 	tri2.set_uv(2, 0.0f, 1.0f);		
-	
+		
 	mesh.done(); //Mark the mesh as finished	
 	
     ///Shortcut function for loading images

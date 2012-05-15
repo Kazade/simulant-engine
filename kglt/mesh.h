@@ -121,6 +121,11 @@ public:
         update_vbo();
     }
 
+	/*
+	 * 	FIXME: This should apply to the triangles, not the mesh itself
+	 */
+	void set_diffuse_colour(const Colour& colour) { diffuse_colour_ = colour; }
+
 private:
     void update_vbo();
 
@@ -135,6 +140,8 @@ private:
     MeshArrangement arrangement_;
 
     uint32_t vertex_buffer_;
+    
+    Colour diffuse_colour_;
 };
 
 }

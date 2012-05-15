@@ -7,6 +7,10 @@ void Window::set_title(const std::string& title) {
     SDL_WM_SetCaption(title.c_str(), NULL);
 }
 
+void Window::show_cursor(bool value) {
+	SDL_ShowCursor(value);
+}
+
 void Window::check_events() {
     SDL_Event event;
 

@@ -6,7 +6,8 @@ namespace kglt {
 Mesh::Mesh():
     Object(),
     is_submesh_(false),
-    use_parent_vertices_(false) {
+    use_parent_vertices_(false),
+    diffuse_colour_(1.0, 1.0, 1.0, 1.0) {
 
     glGenBuffers(1, &vertex_buffer_);
 
@@ -82,6 +83,7 @@ void Mesh::update_vbo() {
     struct VData {
         float pos[3];
         float uv[2];
+        float diffuse[4];
     };
 
     uint32_t size_in_bytes = triangles().size() * sizeof(VData) * 3;
@@ -99,6 +101,10 @@ void Mesh::update_vbo() {
             data.pos[2] = v.z;
             data.uv[0] = tri.uv(j).x;
             data.uv[1] = tri.uv(j).y;
+            data.diffuse[0] = diffuse_colour_.r;
+            data.diffuse[1] = diffuse_colour_.g;
+            data.diffuse[2] = diffuse_colour_.b;
+            data.diffuse[3] = diffuse_colour_.a;
             
             glBufferSubData(GL_ARRAY_BUFFER, offset, sizeof(VData), &data);
             offset += sizeof(VData);

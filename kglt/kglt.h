@@ -5,4 +5,6 @@
 #include "scene.h"
 #include "viewport.h"
 
+#include "rendering/selection_renderer.h"
+
 #endif

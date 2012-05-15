@@ -15,11 +15,19 @@ const std::string get_default_vert_shader_120() {
     const std::string default_vert_shader_120 = R"(
 #version 120
 
+attribute vec3 vertex_position;
+attribute vec2 vertex_texcoord_1;
+attribute vec4 vertex_diffuse;
+
 uniform mat4 modelview_projection_matrix;
 
+varying vec2 fragment_texcoord_1;
+varying vec4 fragment_diffuse;
+
 void main() {
-    gl_Position = modelview_projection_matrix * gl_Vertex;
-    gl_TexCoord[0] = gl_TextureMatrix[0] * gl_MultiTexCoord0;
+    gl_Position = modelview_projection_matrix * vec4(vertex_position, 1.0);
+    fragment_texcoord_1 = vertex_texcoord_1;
+    fragment_diffuse = vertex_diffuse;
 }
 
 )";
@@ -31,8 +39,12 @@ const std::string get_default_frag_shader_120() {
     const std::string default_frag_shader_120 = R"(
 #version 120
 
+varying vec2 fragment_texcoord_1;
+varying vec4 fragment_diffuse;
+
 uniform sampler2D texture_1;
 
+/*
 struct light {
     int type;
     vec4 ambient;
@@ -41,10 +53,10 @@ struct light {
     vec4 position;
 };
 
-uniform light lights[8];
+uniform light lights[8];*/
 
 void main() {
-    gl_FragColor = texture2D(texture_1, gl_TexCoord[0].st);
+    gl_FragColor = texture2D(texture_1, fragment_texcoord_1.st) * fragment_diffuse;
 }
 
 )";    
@@ -143,6 +155,10 @@ void ShaderProgram::add_and_compile(ShaderType type, const std::string& source) 
     glAttachShader(program_id_, shader);
     check_and_log_error(__FILE__, __LINE__);
     
+	relink();
+}
+
+void ShaderProgram::relink() {
     glLinkProgram(program_id_);
     check_and_log_error(__FILE__, __LINE__);
 
@@ -158,7 +174,7 @@ void ShaderProgram::add_and_compile(ShaderType type, const std::string& source) 
         glGetProgramInfoLog(program_id_, length, NULL, &log[0]);
         L_ERROR(std::string(log.begin(), log.end()));
     }
-    assert(linked); 
+    assert(linked); 	
 }
 
 int32_t ShaderProgram::get_uniform_loc(const std::string& name) {

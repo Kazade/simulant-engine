@@ -18,6 +18,8 @@
 #include "sprite.h"
 #include "pass.h"
 
+#include "rendering/generic_renderer.h"
+
 namespace kglt {
 
 class WindowBase;
@@ -47,7 +49,7 @@ public:
 		 * Create the default pass, which uses a perspective projection and
 		 * a fullscreen viewport
 		 */
-		 add_pass(Renderer::ptr(new Renderer()), VIEWPORT_TYPE_FULL);
+		 add_pass(Renderer::ptr(new GenericRenderer()), VIEWPORT_TYPE_FULL);
 		 pass().renderer().set_perspective_projection(45.0, 0.1, 1000.0);        
     }
 
@@ -62,6 +64,8 @@ public:
     Texture& texture(TextureID t);
     ShaderProgram& shader(ShaderID s = NullShaderID);
     Sprite& sprite(SpriteID s);
+
+	std::pair<ShaderID, bool> find_shader(const std::string& name);
 
     void delete_mesh(MeshID mid);
 

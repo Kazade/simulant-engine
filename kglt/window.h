@@ -25,6 +25,7 @@ public:
     }
 
     void set_title(const std::string& title);
+    void show_cursor(bool value=true);
     
     sigc::signal<void, SDL_keysym>& signal_key_pressed() { return signal_key_pressed_; }
     sigc::signal<void, SDL_keysym>& signal_key_released() { return signal_key_released_; }

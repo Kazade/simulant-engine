@@ -4,7 +4,7 @@
 int main(int argc, char* argv[]) {
 	kglt::Window window;	
 	kglt::Scene& scene = window.scene();
-	kglt::SelectionRenderer selection_renderer(new kglt::SelectionRenderer());	
+	kglt::SelectionRenderer::ptr selection_renderer(new kglt::SelectionRenderer());	
 	
 	window.show_cursor(true); //Show the cursor
 	
@@ -13,7 +13,7 @@ int main(int argc, char* argv[]) {
 	scene.add_pass(kglt::Renderer::ptr(new kglt::GenericRenderer())); //Normal rendering
 		
 	while(window.update()) {
-		kglt::MeshID hovered_mesh = selection_renderer.selected_mesh();
+		kglt::MeshID hovered_mesh = selection_renderer->selected_mesh();
 		if(hovered_mesh) {
 			scene.mesh(hovered_mesh).set_diffuse_colour(kglt::Colour(1.0, 0.0, 0.0, 1.0));
 		}
