@@ -1,5 +1,7 @@
 #include "glee/GLee.h"
 
+#include "kglt/scene.h"
+#include "kglt/shortcuts.h"
 #include "selection_renderer.h"
 
 namespace kglt {

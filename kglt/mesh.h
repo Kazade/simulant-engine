@@ -3,6 +3,7 @@
 
 #include <stdexcept>
 
+#include <map>
 #include "object.h"
 #include "types.h"
 #include "object_visitor.h"
@@ -49,6 +50,12 @@ enum MeshArrangement {
     POINTS,
     TRIANGLES,
     TRIANGLE_FAN
+};
+
+enum VertexAttribute {
+	VERTEX_ATTRIBUTE_POSITION = 1,
+	VERTEX_ATTRIBUTE_TEXCOORD_1 = 2,
+	VERTEX_ATTRIBUTE_DIFFUSE = 4
 };
 
 class Mesh : public Object {
@@ -114,12 +121,11 @@ public:
 
     void set_arrangement(MeshArrangement m) { arrangement_ = m; }
     MeshArrangement arrangement() { return arrangement_; }
+	
+    void vbo(uint32_t vertex_attributes);
 
-    void activate_vbo();
-
-    void done() {
-        update_vbo();
-    }
+    void done() {}
+    void invalidate() { vertex_buffer_objects_.clear(); }
 
 	/*
 	 * 	FIXME: This should apply to the triangles, not the mesh itself
@@ -127,7 +133,9 @@ public:
 	void set_diffuse_colour(const Colour& colour) { diffuse_colour_ = colour; }
 
 private:
-    void update_vbo();
+	std::map<uint32_t, uint32_t> vertex_buffer_objects_;
+
+	uint32_t build_vbo(uint32_t vertex_attributes);
 
     bool is_submesh_;
     bool use_parent_vertices_;
@@ -138,8 +146,6 @@ private:
     TextureID textures_[MAX_TEXTURE_LEVELS];
 
     MeshArrangement arrangement_;
-
-    uint32_t vertex_buffer_;
     
     Colour diffuse_colour_;
 };

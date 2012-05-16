@@ -1,6 +1,8 @@
 #ifndef KGLT_LOADABLE_H
 #define KGLT_LOADABLE_H
 
+#include <string>
+
 namespace kglt {
 
 class Loadable {

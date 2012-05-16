@@ -21,4 +21,9 @@ Sprite& return_new_sprite(Scene& scene) {
 	return scene.sprite(sid);
 }
 
+ShaderProgram& return_new_shader(Scene& scene) {
+	ShaderID sid = scene.new_shader();
+	return scene.shader(sid);
+}
+
 }

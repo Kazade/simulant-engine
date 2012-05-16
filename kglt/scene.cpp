@@ -131,7 +131,7 @@ std::pair<ShaderID, bool> Scene::find_shader(const std::string& name) {
 		}
 	}
 
-	return return std::make_pair(NullShaderID, false);
+	return std::make_pair(NullShaderID, false);
 }
 
 void Scene::update(double dt) {

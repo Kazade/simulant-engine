@@ -51,7 +51,7 @@ void GenericRenderer::visit(Mesh* mesh) {
     kmMat4Identity(&transform);
     check_and_log_error(__FILE__, __LINE__);
                 
-	mesh->activate_vbo();
+	mesh->vbo(VERTEX_ATTRIBUTE_POSITION | VERTEX_ATTRIBUTE_TEXCOORD_1 | VERTEX_ATTRIBUTE_DIFFUSE);
 	
 	uint32_t stride = (sizeof(float) * 3) + (sizeof(float) * 2) + (sizeof(float) * 4);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(0));

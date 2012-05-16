@@ -69,7 +69,7 @@ void Sprite::_update_frame(uint32_t current_frame) {
 	mesh.triangles()[1].set_uv(1, frame_width * (current_frame + 1), -1.0);	
 	mesh.triangles()[1].set_uv(2, frame_width * current_frame, -1.0);	
 	
-	mesh.done();
+	mesh.invalidate();
 }
 
 void Sprite::set_render_dimensions(float width, float height) {
