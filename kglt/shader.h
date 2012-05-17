@@ -47,7 +47,7 @@ private:
     uint32_t program_id_;
     uint32_t shader_ids_[SHADER_TYPE_MAX];
 
-    std::map<std::string, int32_t> cached_uniform_locations_;
+    std::map<std::string, int32_t> cached_uniform_locations_;    
 };
 
 }

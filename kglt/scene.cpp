@@ -158,4 +158,14 @@ void Scene::render() {
 	}	
 }
 
+MeshID Scene::_mesh_id_from_mesh_ptr(Mesh* mesh) {
+	for(std::pair<MeshID, Mesh::ptr> pair: meshes_) {
+		if(pair.second.get() == mesh) {
+			return pair.first;
+		}
+	}
+	
+	return 0;
+}
+
 }

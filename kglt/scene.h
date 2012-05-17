@@ -110,6 +110,9 @@ public:
 	
 	Pass& pass(uint32_t index = 0) { return passes_.at(index); }
 	
+	
+	MeshID _mesh_id_from_mesh_ptr(Mesh* mesh);
+	
 private:
     std::map<MeshID, Mesh::ptr> meshes_;
     std::map<CameraID, Camera::ptr> cameras_;

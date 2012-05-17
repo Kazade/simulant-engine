@@ -11,6 +11,10 @@ void Window::show_cursor(bool value) {
 	SDL_ShowCursor(value);
 }
 
+void Window::cursor_position(int32_t& mouse_x, int32_t& mouse_y) {
+	SDL_GetMouseState(&mouse_x, &mouse_y);
+}
+
 void Window::check_events() {
     SDL_Event event;
 

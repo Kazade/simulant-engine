@@ -59,6 +59,8 @@ public:
     }
 
     virtual void set_title(const std::string& title) = 0;
+    virtual void cursor_position(int32_t& mouse_x, int32_t& mouse_y) = 0;
+    
     virtual void check_events() = 0;
     virtual void swap_buffers() = 0;
     
