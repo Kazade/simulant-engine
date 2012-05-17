@@ -77,13 +77,15 @@ CameraID Scene::new_camera() {
 }
 
 ShaderProgram& Scene::shader(ShaderID s) {
-    return shaders_[s];
+	auto it = shaders_.find(s);
+	assert(it != shaders_.end());
+	return *(*it).second;    
 }
 
 ShaderID Scene::new_shader() {
     static ShaderID counter = 0;
-    ShaderID id = counter++; //The first shader should be 0 - or the default shader
-    ShaderProgram& shader = shaders_[id];
+    ShaderID id = counter++; //The first shader should be 0 - or the default shader    
+    shaders_.insert(std::make_pair(id, ShaderProgram::ptr(new ShaderProgram)));
     return id;
 }
     
@@ -125,8 +127,8 @@ void Scene::init() {
 }
 
 std::pair<ShaderID, bool> Scene::find_shader(const std::string& name) {
-	for(std::pair<ShaderID, ShaderProgram> shader: shaders_) {
-		if(shader.second.name() == name) {
+	for(std::pair<const ShaderID, ShaderProgram::ptr>& shader: shaders_) {
+		if(shader.second->name() == name) {
 			return std::make_pair(shader.first, true);
 		}
 	}

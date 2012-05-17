@@ -69,13 +69,14 @@ ShaderProgram::ShaderProgram():
     for(uint32_t i = 0; i < SHADER_TYPE_MAX; ++i) {
         shader_ids_[i] = NullShaderID;
     }
-
 }
 
 ShaderProgram::~ShaderProgram() {
     try {
         for(uint32_t i = 0; i < ShaderType::SHADER_TYPE_MAX; ++i) {
-            if(shader_ids_[i] != NullShaderID) glDeleteShader(shader_ids_[i]);
+            if(shader_ids_[i] != NullShaderID) {
+				glDeleteShader(shader_ids_[i]);
+			}
         }
 
         if(program_id_) {

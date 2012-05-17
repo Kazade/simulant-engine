@@ -117,7 +117,7 @@ private:
     std::map<MeshID, Mesh::ptr> meshes_;
     std::map<CameraID, Camera::ptr> cameras_;
     std::map<TextureID, Texture> textures_;
-    std::map<ShaderID, ShaderProgram> shaders_;
+    std::map<ShaderID, ShaderProgram::ptr> shaders_;
     std::map<SpriteID, Sprite::ptr> sprites_;
 
     CameraID current_camera_;

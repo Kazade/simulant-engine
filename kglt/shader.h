@@ -2,6 +2,7 @@
 #define SHADER_H_INCLUDED
 
 #include <string>
+#include <tr1/memory>
 
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
@@ -24,6 +25,8 @@ enum ShaderType {
 
 class ShaderProgram : public Loadable {
 public:
+	typedef std::tr1::shared_ptr<ShaderProgram> ptr;
+
     ShaderProgram();
     ~ShaderProgram();
 
@@ -42,6 +45,9 @@ public:
     
     void relink();
 private:
+	ShaderProgram(const ShaderProgram& rhs);
+	ShaderProgram& operator=(const ShaderProgram& rhs);
+
     int32_t get_uniform_loc(const std::string& name);
 
     uint32_t program_id_;

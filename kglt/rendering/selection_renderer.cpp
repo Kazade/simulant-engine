@@ -140,7 +140,13 @@ void SelectionRenderer::visit(Mesh* mesh) {
 	s.set_uniform("modelview_projection_matrix", &modelview_projection);	
 	
 	kmVec3 colour;
-	kmVec3Fill(&colour, current_colour.get(0), current_colour.second, current_colour.third);
+	kmVec3Fill(
+		&colour, 
+		std::get<0>(current_colour), 
+		std::get<1>(current_colour), 
+		std::get<2>(current_colour)
+	);
+	
 	s.set_uniform("selection_colour", &colour);
 	
 	glEnableVertexAttribArray(0);		
