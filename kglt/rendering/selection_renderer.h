@@ -11,19 +11,25 @@ class SelectionRenderer : public Renderer {
 public:
 	typedef std::tr1::shared_ptr<SelectionRenderer> ptr;
 	
+	SelectionRenderer(Scene& scene):
+		Renderer(scene),
+		selected_mesh_id_(0) {}
+	
+	SelectionRenderer(Scene& scene, const RenderOptions& options):
+		Renderer(scene, options),
+		selected_mesh_id_(0) {}
+	
 	void visit(Camera* camera) {}
 	void visit(Scene* scene) {}
 	void visit(Sprite* sprite) {}
 	void visit(Mesh* mesh);
 	
-	MeshID selected_mesh() const { return selected_mesh_; }
+	MeshID selected_mesh() const { return selected_mesh_id_; }
 	
 private:
 	void on_start_render();
 	void on_finish_render();
 
-	MeshID selected_mesh_;
-	
     uint8_t r_count, g_count, b_count;	
     
     std::map<std::tuple<float, float, float>, MeshID> colour_mesh_lookup_;

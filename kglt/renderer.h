@@ -19,13 +19,13 @@ class Renderer : public ObjectVisitor {
 public:
 	typedef std::tr1::shared_ptr<Renderer> ptr;
 
-	Renderer();
-	Renderer(const RenderOptions& options);
+	Renderer(Scene& scene);
+	Renderer(Scene& scene, const RenderOptions& options);
 	virtual ~Renderer() {}
 	
 	void set_options(const RenderOptions& options) { options_ = options; }
 	
-	virtual void start_render(Scene* scene);
+	virtual void start_render();
 	virtual void finish_render() { on_finish_render(); }
 
     virtual void pre_visit(Object* obj) {
@@ -46,13 +46,14 @@ public:
 	virtual void set_orthographic_projection_from_height(double desired_height_in_units, double ratio);
 	
 	RenderOptions& options() { return options_; }
-	Scene& scene() { return *scene_; }
+	Scene& scene() { return scene_; }
 	
 	MatrixStack& modelview_stack() { return modelview_stack_; }
 	MatrixStack& projection_stack() { return projection_stack_; }
+	
 private:
     RenderOptions options_;
-    Scene* scene_;
+    Scene& scene_;
 
     MatrixStack modelview_stack_;
     MatrixStack projection_stack_;

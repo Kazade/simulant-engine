@@ -130,7 +130,10 @@ public:
 	/*
 	 * 	FIXME: This should apply to the triangles, not the mesh itself
 	 */
-	void set_diffuse_colour(const Colour& colour) { diffuse_colour_ = colour; }
+	void set_diffuse_colour(const Colour& colour) { 
+		diffuse_colour_ = colour; 
+		invalidate();
+	}
 
 private:
 	std::map<uint32_t, uint32_t> vertex_buffer_objects_;

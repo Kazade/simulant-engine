@@ -17,7 +17,10 @@ MeshID Scene::new_mesh() {
 }
 
 Mesh& Scene::mesh(MeshID m) {
-    //FIXME: Assert contains
+	if(!container::contains(meshes_, m)) {
+		throw DoesNotExist<MeshID>();
+	}
+	
     return *meshes_[m];
 }
 
@@ -154,7 +157,7 @@ void Scene::render() {
 		pass.renderer().set_options(render_options);
 		pass.viewport().update_opengl();
 		
-		pass.renderer().start_render(this);
+		pass.renderer().start_render();
 		this->accept(pass.renderer());
 		pass.renderer().finish_render();
 	}	

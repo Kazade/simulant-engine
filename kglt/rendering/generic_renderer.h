@@ -15,9 +15,11 @@ class GenericRenderer : public Renderer {
 public:
 	typedef std::tr1::shared_ptr<Renderer> ptr;
 
-	GenericRenderer() {}
-	GenericRenderer(const RenderOptions& options):
-        Renderer(options) {}
+	GenericRenderer(Scene& scene):
+		Renderer(scene) {}
+		
+	GenericRenderer(Scene& scene, const RenderOptions& options):
+        Renderer(scene, options) {}
             
     void visit(Mesh* mesh);
 

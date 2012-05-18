@@ -10,12 +10,12 @@ int main(int argc, char* argv[]) {
 	
 	scene.remove_all_passes();
 	scene.add_pass(
-		kglt::Renderer::ptr(new kglt::GenericRenderer()),
+		kglt::Renderer::ptr(new kglt::GenericRenderer(scene)),
 		kglt::VIEWPORT_TYPE_VERTICAL_SPLIT_LEFT
 	);
 	
 	scene.add_pass(
-		kglt::Renderer::ptr(new kglt::GenericRenderer()),
+		kglt::Renderer::ptr(new kglt::GenericRenderer(scene)),
 		kglt::VIEWPORT_TYPE_VERTICAL_SPLIT_RIGHT
 	);
 	

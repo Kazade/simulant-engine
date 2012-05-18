@@ -1,4 +1,7 @@
 #include "glee/GLee.h"
+
+#include <boost/format.hpp>
+
 #include "kglt/utils/gl_error.h"
 #include "kglt/scene.h"
 #include "kglt/shortcuts.h"
@@ -68,7 +71,12 @@ void SelectionRenderer::on_start_render() {
 	 * selection render done in the second pass will perform faster as
 	 * the depth test will disqualify polygons
 	 */
+	 
+	//FIXME: !!!
+	//glPushAttrib(GL_CLEAR_COLOR_BIT);
+	//glClearColor(1.0, 1.0, 1.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT); 	
+	//glPopAttrib(GL_CLEAR_COLOR_BIT);
 	
 	r_count = 0;
 	g_count = 0; 
@@ -93,7 +101,11 @@ void SelectionRenderer::on_finish_render() {
 		(1.0 / 255.0) * pixel[2]
 	);
 	
-	selected_mesh_id_ = colour_mesh_lookup_[selected_colour];
+	//L_DEBUG((boost::format("%f, %f, %f") % std::get<0>(selected_colour) % std::get<1>(selected_colour) % std::get<2>(selected_colour)).str());
+	
+	if(container::contains(colour_mesh_lookup_, selected_colour)) {
+		selected_mesh_id_ = colour_mesh_lookup_[selected_colour];
+	}
 	
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
 }

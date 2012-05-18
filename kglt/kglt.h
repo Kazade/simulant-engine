@@ -7,4 +7,6 @@
 
 #include "rendering/selection_renderer.h"
 
+#include "procedural/mesh.h"
+
 #endif

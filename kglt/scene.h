@@ -49,7 +49,7 @@ public:
 		 * Create the default pass, which uses a perspective projection and
 		 * a fullscreen viewport
 		 */
-		 add_pass(Renderer::ptr(new GenericRenderer()), VIEWPORT_TYPE_FULL);
+		 add_pass(Renderer::ptr(new GenericRenderer(*this)), VIEWPORT_TYPE_FULL);
 		 pass().renderer().set_perspective_projection(45.0, 0.1, 1000.0);        
     }
 

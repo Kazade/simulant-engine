@@ -1,22 +1,35 @@
 #include "renderer.h"
 #include "scene.h"
+#include "window_base.h"
 
 namespace kglt {
 	
-Renderer::Renderer() {
-	
+Renderer::Renderer(Scene& scene):
+	scene_(scene) {
+
+	set_perspective_projection(
+		45.0, 
+		float(scene_.window().width()) / float(scene_.window().height()),
+		0.1,
+		1000.0
+	);
 }
 
-Renderer::Renderer(const RenderOptions& options):
-	options_(options) {
-	
+Renderer::Renderer(Scene& scene, const RenderOptions& options):
+	scene_(scene),
+	options_(options) { 
+		
+	set_perspective_projection(
+		45.0, 
+		float(scene_.window().width()) / float(scene_.window().height()),
+		0.1,
+		1000.0
+	);		
 }
-	
-void Renderer::start_render(Scene* scene) {
-	scene_ = scene;
-	
-    kmVec3& pos = scene->camera().position();
-    kmQuaternion& rot = scene->camera().rotation();
+
+void Renderer::start_render() {
+    kmVec3& pos = scene().camera().position();
+    kmQuaternion& rot = scene().camera().rotation();
     kmMat4 rot_mat;
     kmMat4RotationQuaternion(&rot_mat, &rot);
 
