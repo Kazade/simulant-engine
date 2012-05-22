@@ -56,12 +56,15 @@ protected:
 
 	virtual void do_update(double dt) {}
 
+    void* user_data_;
+
 public:
     typedef std::tr1::shared_ptr<Object> ptr;
 
     Object():
         id_(++object_counter),
-        parent_(nullptr) {
+        parent_(nullptr),
+        user_data_(nullptr) {
 
         kmVec3Fill(&position_, 0.0, 0.0, 0.0);
         kmQuaternionIdentity(&rotation_);
@@ -125,6 +128,9 @@ public:
     uint64_t id() const { return id_; }
     
     Scene& scene();
+    
+    void set_user_data(void* data) { user_data_ = data; }
+    void* user_data() const { return user_data_; }
 };
 
 }

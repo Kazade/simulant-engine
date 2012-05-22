@@ -8,6 +8,7 @@ namespace procedural {
 namespace mesh {
 
 void rectangle(kglt::Mesh& mesh, float width, float height);
+void rectangle_outline(kglt::Mesh& mesh, float width, float height);
 
 }
 }

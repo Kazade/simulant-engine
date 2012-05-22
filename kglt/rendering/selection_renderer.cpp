@@ -162,11 +162,13 @@ void SelectionRenderer::visit(Mesh* mesh) {
 	s.set_uniform("selection_colour", &colour);
 	
 	glEnableVertexAttribArray(0);		
-	if(mesh->arrangement() == MeshArrangement::POINTS) {
-		glDrawArrays(GL_POINTS, 0, mesh->vertices().size());        
-	} else {
+	if(mesh->arrangement() == MESH_ARRANGEMENT_POINTS) {
+		glDrawArrays(GL_POINTS, 0, mesh->vertices().size());        	
+	} else if(mesh->arrangement() == MESH_ARRANGEMENT_TRIANGLES) {
 		glDrawArrays(GL_TRIANGLES, 0, mesh->triangles().size() * 3);
-	}	
+	} else {
+		assert(0);
+	}
 	glDisableVertexAttribArray(0);	
 }
 

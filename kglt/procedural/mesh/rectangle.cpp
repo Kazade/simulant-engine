@@ -26,6 +26,20 @@ void rectangle(kglt::Mesh& mesh, float width, float height) {
     mesh.done();
 }
 
+void rectangle_outline(kglt::Mesh& mesh, float width, float height) {
+	mesh.vertices().clear();
+	mesh.triangles().clear();
+	
+    mesh.add_vertex(-width / 2.0, -height / 2.0, 0.0);
+    mesh.add_vertex(width / 2.0, -height / 2.0, 0.0);
+    mesh.add_vertex(width / 2.0,  height / 2.0, 0.0);
+    mesh.add_vertex(-width / 2.0,  height / 2.0, 0.0);
+    mesh.add_vertex(-width / 2.0, -height / 2.0, 0.0);
+    
+    mesh.set_arrangement(kglt::MESH_ARRANGEMENT_LINE_STRIP);
+    mesh.done();
+}
+
 }
 }
 }

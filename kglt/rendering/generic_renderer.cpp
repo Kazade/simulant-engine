@@ -79,11 +79,15 @@ void GenericRenderer::visit(Mesh* mesh) {
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
 	glEnableVertexAttribArray(2);
-		
-	if(mesh->arrangement() == MeshArrangement::POINTS) {
-		glDrawArrays(GL_POINTS, 0, mesh->vertices().size());        
-	} else {
+
+	if(mesh->arrangement() == MESH_ARRANGEMENT_POINTS) {
+		glDrawArrays(GL_POINTS, 0, mesh->vertices().size());
+	} else if(mesh->arrangement() == MESH_ARRANGEMENT_LINE_STRIP) {
+		glDrawArrays(GL_LINE_STRIP, 0, mesh->vertices().size());
+	} else if(mesh->arrangement() == MESH_ARRANGEMENT_TRIANGLES) {
 		glDrawArrays(GL_TRIANGLES, 0, mesh->triangles().size() * 3);
+	} else {
+		assert(0);
 	}
 	
 	glDisableVertexAttribArray(0);
