@@ -1,6 +1,12 @@
+#ifndef KGLT_WINDOW_BASE_H
+#define KGLT_WINDOW_BASE_H
+
 #include <tr1/memory>
 
+#include <sigc++/sigc++.h>
+
 #include "scene.h"
+#include "keyboard.h"
 
 #include "loaders/texture_loader.h"
 #include "loaders/q2bsp_loader.h"
@@ -58,6 +64,9 @@ public:
         resource_paths_.push_back(path);
     }
 
+    virtual sigc::signal<void, KeyCode>& signal_key_pressed() = 0;
+    virtual sigc::signal<void, KeyCode>& signal_key_released() = 0;
+    
     virtual void set_title(const std::string& title) = 0;
     virtual void cursor_position(int32_t& mouse_x, int32_t& mouse_y) = 0;
     
@@ -102,3 +111,5 @@ private:
 };
 
 }
+
+#endif

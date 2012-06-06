@@ -118,7 +118,9 @@ public:
             child->accept(visitor);
         }
 
-        visitor.visit(this);
+		if(is_visible()) {
+			visitor.visit(this);
+		}
         visitor.post_visit(this);
     }
 

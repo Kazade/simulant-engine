@@ -29,8 +29,14 @@ void GenericRenderer::on_start_render() {
         glEnable(GL_CULL_FACE);
     }
 
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    
     glPointSize(options().point_size);
 
+	GLint depth_bits;
+	glGetIntegerv(GL_DEPTH_BITS, &depth_bits);
+	assert(depth_bits > 0);
 }
 
 void GenericRenderer::visit(Mesh* mesh) {
@@ -47,8 +53,6 @@ void GenericRenderer::visit(Mesh* mesh) {
     //s.bind_attrib(2, "vertex_diffuse");
     s.set_uniform("texture_1", 0);
 
-    kmMat4 transform;
-    kmMat4Identity(&transform);
     check_and_log_error(__FILE__, __LINE__);
                 
 	mesh->vbo(VERTEX_ATTRIBUTE_POSITION | VERTEX_ATTRIBUTE_TEXCOORD_1 | VERTEX_ATTRIBUTE_DIFFUSE);

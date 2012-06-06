@@ -34,7 +34,7 @@ public:
 		kmMat4 trans;
 		kmMat4Identity(&trans);
 		kmMat4Translation(&trans, obj->position().x, obj->position().y, obj->position().z);
-		kmMat4Multiply(&modelview_stack_.top(), &modelview_stack_.top(), &trans);				
+		kmMat4Multiply(&modelview_stack_.top(), &modelview_stack_.top(), &trans);
 	}
 	
     virtual void post_visit(Object* obj) {
@@ -48,7 +48,7 @@ public:
 	RenderOptions& options() { return options_; }
 	Scene& scene() { return scene_; }
 	
-	MatrixStack& modelview_stack() { return modelview_stack_; }
+	MatrixStack modelview_stack() { return modelview_stack_; }
 	MatrixStack& projection_stack() { return projection_stack_; }
 	
 private:

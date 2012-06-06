@@ -38,6 +38,7 @@ const TextureID NullTextureID = 0;
 const ShaderID NullShaderID = 0;
 const CameraID DefaultCameraID = 0;
 
+class Mesh;
 
 }
 

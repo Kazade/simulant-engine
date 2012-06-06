@@ -163,7 +163,9 @@ void SelectionRenderer::visit(Mesh* mesh) {
 	
 	glEnableVertexAttribArray(0);		
 	if(mesh->arrangement() == MESH_ARRANGEMENT_POINTS) {
-		glDrawArrays(GL_POINTS, 0, mesh->vertices().size());        	
+		glDrawArrays(GL_POINTS, 0, mesh->vertices().size());   
+	} else if(mesh->arrangement() == MESH_ARRANGEMENT_LINE_STRIP) {
+		glDrawArrays(GL_LINE_STRIP, 0, mesh->vertices().size());     	
 	} else if(mesh->arrangement() == MESH_ARRANGEMENT_TRIANGLES) {
 		glDrawArrays(GL_TRIANGLES, 0, mesh->triangles().size() * 3);
 	} else {

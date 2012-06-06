@@ -1,7 +1,22 @@
+#include "../glee/GLee.h"
+
+#include <SDL/SDL.h>
+
 #include "window.h"
 
 namespace kglt {
 
+Window::Window(int width, int height, int bpp) {
+	if(SDL_Init(SDL_INIT_VIDEO) < 0) {
+		throw std::runtime_error("Unable to initialize SDL");
+	}
+
+	create_gl_window(width, height, bpp);
+}
+
+Window::~Window() {
+	SDL_Quit();
+}
 
 void Window::set_title(const std::string& title) {
     SDL_WM_SetCaption(title.c_str(), NULL);
@@ -21,10 +36,10 @@ void Window::check_events() {
     while(SDL_PollEvent(&event)) {
         switch(event.type) {
             case SDL_KEYDOWN:
-                signal_key_pressed_(event.key.keysym);
+                signal_key_pressed_((KeyCode)event.key.keysym.sym);
                 break;
             case SDL_KEYUP:
-                signal_key_released_(event.key.keysym);
+                signal_key_released_((KeyCode)event.key.keysym.sym);
                 break;
             case SDL_ACTIVEEVENT:
                 break;

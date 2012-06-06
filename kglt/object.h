@@ -57,14 +57,15 @@ protected:
 	virtual void do_update(double dt) {}
 
     void* user_data_;
-
+    bool is_visible_;
 public:
     typedef std::tr1::shared_ptr<Object> ptr;
 
     Object():
         id_(++object_counter),
         parent_(nullptr),
-        user_data_(nullptr) {
+        user_data_(nullptr),
+        is_visible_(true) {
 
         kmVec3Fill(&position_, 0.0, 0.0, 0.0);
         kmQuaternionIdentity(&rotation_);
@@ -81,7 +82,10 @@ public:
 			child->update(dt);
 		}
 	}
-	
+
+	void set_visible(bool value=true) { is_visible_ = value; }
+	bool is_visible() const { return is_visible_; }
+
     virtual void move_to(float x, float y, float z);
     virtual void move_forward(float amount);
     

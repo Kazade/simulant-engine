@@ -2,14 +2,14 @@
 #include "kglt/types.h"
 
 kglt::Window window(1024, 768);
-std::vector<uint8_t> keys(SDLK_LAST, 0);
+std::vector<uint8_t> keys(kglt::KEY_CODE_LAST, 0);
 
-void on_key_down(SDL_keysym sym) {
-    keys[sym.sym] = 1;
+void on_key_down(kglt::KeyCode sym) {
+    keys[sym] = 1;
 }
 
-void on_key_up(SDL_keysym sym) {
-    keys[sym.sym] = 0;
+void on_key_up(kglt::KeyCode sym) {
+    keys[sym] = 0;
 }
 
 int main(int argc, char* argv[]) {
@@ -34,18 +34,18 @@ int main(int argc, char* argv[]) {
     window.signal_key_released().connect(&on_key_up);
 
 	while(window.update()) {
-        if(keys[SDLK_LEFT]) {
+        if(keys[kglt::KEY_CODE_LEFT]) {
             window.scene().camera().rotate_y(-0.1);
         }
 
-        if(keys[SDLK_RIGHT]) {
+        if(keys[kglt::KEY_CODE_RIGHT]) {
             window.scene().camera().rotate_y(0.1);
         }
 
-        if(keys[SDLK_UP]) {
+        if(keys[kglt::KEY_CODE_UP]) {
             window.scene().camera().move_forward(2.0f);
         }
-        if(keys[SDLK_DOWN]) {
+        if(keys[kglt::KEY_CODE_DOWN]) {
             window.scene().camera().move_forward(-2.0f);
         }
 

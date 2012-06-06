@@ -1,3 +1,5 @@
+#include "../glee/GLee.h"
+
 #include "viewport.h"
 #include "window.h"
 #include "scene.h"
