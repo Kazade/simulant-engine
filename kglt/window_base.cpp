@@ -13,6 +13,8 @@ bool WindowBase::update() {
         initialized = true;
     }
     
+    idle_.execute(); //Execute idle tasks first
+    
     check_events();
 
     glEnable(GL_DEPTH_TEST);

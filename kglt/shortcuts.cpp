@@ -7,7 +7,9 @@ TextureID create_texture_from_file(WindowBase& window, const std::string& filena
 	kglt::TextureID tid = window.scene().new_texture();
 	kglt::Texture& tex = window.scene().texture(tid);
 	window.loader_for(filename)->into(tex);
-    tex.upload(true); //Upload
+	
+	//Upload the texture in the main thread, regardless of where this was called from
+	window.idle().add_once(sigc::bind(sigc::mem_fun(&tex, &kglt::Texture::upload), true, true, true));
     return tid;
 }
 

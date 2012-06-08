@@ -2,6 +2,8 @@
 #define SCENE_H_INCLUDED
 
 #include <boost/any.hpp>
+#include <boost/thread/mutex.hpp>
+
 #include <stdexcept>
 #include <map>
 
@@ -128,6 +130,8 @@ private:
     Texture null_texture_;
     
     std::vector<Pass> passes_;
+    
+    boost::mutex scene_lock_;
 };
 
 }

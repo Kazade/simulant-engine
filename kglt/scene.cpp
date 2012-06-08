@@ -6,10 +6,13 @@ namespace kglt {
 
 MeshID Scene::new_mesh() {
     static MeshID counter = 0;
-    MeshID id = ++counter;
-
-    meshes_.insert(std::make_pair(id, Mesh::ptr(new Mesh)));
-
+    MeshID id = 0;
+    {
+        boost::mutex::scoped_lock lock(scene_lock_);
+        id = ++counter;
+        meshes_.insert(std::make_pair(id, Mesh::ptr(new Mesh)));
+    }
+    
     Mesh& mesh = *meshes_[id];
     mesh.set_parent(this);
 
@@ -17,6 +20,8 @@ MeshID Scene::new_mesh() {
 }
 
 Mesh& Scene::mesh(MeshID m) {
+    boost::mutex::scoped_lock lock(scene_lock_);
+    
 	if(!container::contains(meshes_, m)) {
 		throw DoesNotExist<MeshID>();
 	}
@@ -27,13 +32,21 @@ Mesh& Scene::mesh(MeshID m) {
 void Scene::delete_mesh(MeshID mid) {
     Mesh& m = mesh(mid);
     m.set_parent(nullptr);
-    meshes_.erase(mid);
+    
+    {
+        boost::mutex::scoped_lock lock(scene_lock_);
+        meshes_.erase(mid);
+    }
 }
 
 SpriteID Scene::new_sprite() {
     static SpriteID counter = 0;
-    SpriteID id = ++counter;
-    sprites_.insert(std::make_pair(id, Sprite::ptr(new Sprite)));
+    SpriteID id = 0;
+    {
+        boost::mutex::scoped_lock lock(scene_lock_);
+        id = ++counter;
+        sprites_.insert(std::make_pair(id, Sprite::ptr(new Sprite)));
+    }
     
     Sprite& sprite = *sprites_[id];
     sprite.set_parent(this);
@@ -42,13 +55,22 @@ SpriteID Scene::new_sprite() {
 }
 
 Sprite& Scene::sprite(SpriteID s) {
-    //FIXME: assert contains
+    boost::mutex::scoped_lock lock(scene_lock_);
+    
+	if(!container::contains(sprites_, s)) {
+		throw DoesNotExist<SpriteID>();
+	}
+	    
     return *sprites_[s];
 }
 
 TextureID Scene::new_texture() {
     static TextureID counter = 0;
-    TextureID id = ++counter;
+    TextureID id = 0;
+    {
+        boost::mutex::scoped_lock lock(scene_lock_);
+        id = ++counter;
+    }
     Texture& tex = textures_[id];
     return id;
 }
@@ -57,29 +79,44 @@ Texture& Scene::texture(TextureID t) {
     if(t == NullTextureID) {
         return null_texture_;
     }
-    //FIXMe: assert this
+    
+    boost::mutex::scoped_lock lock(scene_lock_);
+    
+	if(!container::contains(textures_, t)) {
+		throw DoesNotExist<TextureID>();
+	}
+	
     return textures_[t];
 }
 
 CameraID Scene::new_camera() {
     static CameraID counter = 0;
-    CameraID id = ++counter;
-
-    cameras_.insert(std::make_pair(id, Camera::ptr(new Camera)));
-
-    Camera& cam = *cameras_[id];
+    CameraID id = 0;
+    
+    {
+        boost::mutex::scoped_lock lock(scene_lock_);
+        id = ++counter;
+        cameras_.insert(std::make_pair(id, Camera::ptr(new Camera)));
+    }
+    
+    Camera& cam = camera(id);
     cam.set_parent(this);
 
     //We always need a camera, so if this is the
     //first one, then make it the current one
-    if(cameras_.size() == 1) {
-        current_camera_ = id;
+    {
+        boost::mutex::scoped_lock lock(scene_lock_);
+        if(cameras_.size() == 1) {
+            current_camera_ = id;
+        }
     }
-
+    
     return id;
 }
 
 ShaderProgram& Scene::shader(ShaderID s) {
+    boost::mutex::scoped_lock lock(scene_lock_);
+    
 	auto it = shaders_.find(s);
 	assert(it != shaders_.end());
 	return *(*it).second;    
@@ -87,18 +124,26 @@ ShaderProgram& Scene::shader(ShaderID s) {
 
 ShaderID Scene::new_shader() {
     static ShaderID counter = 0;
-    ShaderID id = counter++; //The first shader should be 0 - or the default shader    
-    shaders_.insert(std::make_pair(id, ShaderProgram::ptr(new ShaderProgram)));
+    ShaderID id = 0;
+    {
+        boost::mutex::scoped_lock lock(scene_lock_);
+        id = counter++; //The first shader should be 0 - or the default shader    
+        shaders_.insert(std::make_pair(id, ShaderProgram::ptr(new ShaderProgram)));
+    }
     return id;
 }
     
 Camera& Scene::camera(CameraID c) {
-    //FIXME: Assert
-
+    boost::mutex::scoped_lock lock(scene_lock_);
+    
     if(c == 0) {
         return *cameras_[current_camera_];
     }
 
+	if(!container::contains(cameras_, c)) {
+		throw DoesNotExist<CameraID>();
+	}
+	
     return *cameras_[c];
 }
 

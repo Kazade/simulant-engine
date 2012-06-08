@@ -13,6 +13,8 @@
 #include "loaders/sprite_loader.h"
 #include "loader.h"
 
+#include "idle_task_manager.h"
+
 #include "kazbase/logging/logging.h"
 
 namespace kglt {
@@ -84,6 +86,8 @@ public:
     }
     bool update();   
 
+    IdleTaskManager& idle() { return idle_; }
+
 protected:
     void stop_running() { is_running_ = false; }
     
@@ -107,7 +111,9 @@ private:
     std::string find_file(const std::string& filename) {
         //FIXME: Search the resource paths!
         return filename;
-    }    
+    }
+    
+    IdleTaskManager idle_;
 };
 
 }
