@@ -187,3 +187,4 @@ kglt/background.h
 kglt/background.cpp
 kaztimer/kaztimer.h
 kaztimer/kaztimer.cpp
+samples/combined_sample_1.cpp

@@ -12,6 +12,7 @@ public:
         Loader(filename) {}
 
     void into(Loadable& resource, const kglt::option_list::OptionList& options);
+    void into(Loadable& resource);
 };
 
 class SpriteLoaderType : public LoaderType {

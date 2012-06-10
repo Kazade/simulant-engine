@@ -8,6 +8,26 @@
 namespace kglt {
 namespace loaders {
 
+void SpriteLoader::into(Loadable& resource) {
+    Loadable* res_ptr = &resource;
+    Sprite* sprite = dynamic_cast<Sprite*>(res_ptr);
+    assert(sprite && "You passed a Resource that is not a sprite to the Sprite loader");
+
+    Scene& scene = sprite->scene(); //Grab the scene that this sprite belongs to
+
+
+    //CONTINUE HERE! NEED TO BE ABLE TO PASS DOWN FALLBACK_TO_CHECKERBOARD OPTION
+    //Load the texture from the specified filename
+    TextureID tex_id = kglt::create_texture_from_file(scene.window(), filename_);
+
+    //Get a handle to the texture
+    Texture& tex = scene.texture(tex_id);
+    sprite->_set_frame_count(1);
+    sprite->_set_texture_id(tex_id);
+    sprite->_set_frame_size(tex.width(), tex.height());
+    sprite->set_animation_frames(0, 0);
+}
+
 void SpriteLoader::into(Loadable& resource, const kglt::option_list::OptionList& options) {
     Loadable* res_ptr = &resource;
     Sprite* sprite = dynamic_cast<Sprite*>(res_ptr);
