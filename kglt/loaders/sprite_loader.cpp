@@ -26,6 +26,7 @@ void SpriteLoader::into(Loadable& resource) {
     sprite->_set_texture_id(tex_id);
     sprite->_set_frame_size(tex.width(), tex.height());
     sprite->set_animation_frames(0, 0);
+    sprite->set_render_dimensions(tex.width(), tex.height());
 }
 
 void SpriteLoader::into(Loadable& resource, const kglt::option_list::OptionList& options) {
@@ -55,6 +56,7 @@ void SpriteLoader::into(Loadable& resource, const kglt::option_list::OptionList&
 	sprite->_set_texture_id(tex_id);
 	sprite->_set_frame_size(frame_width, tex.height());		
 	sprite->set_animation_frames(0, 0);
+    sprite->set_render_dimensions(tex.width(), tex.height());
 }
 
 }

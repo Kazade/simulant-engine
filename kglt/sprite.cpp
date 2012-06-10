@@ -84,6 +84,10 @@ void Sprite::set_render_dimensions(float width, float height) {
     kglt::procedural::mesh::rectangle(mesh, render_width_, render_height_);
 }
 
+Texture& Sprite::texture() {
+    return scene().texture(sprite_texture_);
+}
+
 void Sprite::on_parent_set(Object* old_parent) {
     if(has_parent() && !initialized_) {
         L_DEBUG("Initializing sprite");

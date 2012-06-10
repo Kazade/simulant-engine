@@ -9,6 +9,7 @@
 namespace kglt {
 
 class Scene;
+class Texture;
 
 class Sprite : public Loadable, public Object {
 public:
@@ -53,6 +54,8 @@ public:
     
     void _update_frame(uint32_t frame);
     
+    Texture& texture();
+
 private:
     bool initialized_;
 
