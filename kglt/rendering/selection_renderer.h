@@ -25,6 +25,8 @@ public:
     void visit(Background* bg) {}
     void visit(BackgroundLayer* layer) {}
 	void visit(Mesh* mesh);
+    void visit(UI* ui) {}
+    void visit(ui::Element* element) {}
 	
 	MeshID selected_mesh() const { return selected_mesh_id_; }
 	

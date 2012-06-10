@@ -76,7 +76,6 @@ TextureID Scene::new_texture() {
 }
 
 void Scene::delete_texture(TextureID tid) {
-    Texture& m = texture(tid);
     {
         boost::mutex::scoped_lock lock(scene_lock_);
         textures_.erase(tid);

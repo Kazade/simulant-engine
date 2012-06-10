@@ -37,6 +37,9 @@ public:
     //Backgrounds and Layers are just containers
     void visit(Background* bg) {}
     void visit(BackgroundLayer* layer) {}
+    void visit(UI* ui) {}
+    void visit(ui::Element* element) {}
+
 private:
 	void on_start_render();
 };

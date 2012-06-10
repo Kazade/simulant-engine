@@ -20,7 +20,7 @@
 #include "sprite.h"
 #include "pass.h"
 #include "background.h"
-
+#include "ui.h"
 #include "rendering/generic_renderer.h"
 
 namespace kglt {
@@ -94,11 +94,15 @@ public:
         background().accept(visitor);
 
         for(Object* child: children_) {
-            if(dynamic_cast<Background*>(child)) {
+            if(dynamic_cast<Background*>(child) ||
+               dynamic_cast<UI*>(child)) {
                 continue;
             }
             child->accept(visitor);
         }
+
+        // HACK: same as above, UI must be drawn last
+        ui().accept(visitor);
 
         visitor.visit(this);
     }
@@ -136,6 +140,7 @@ public:
 	MeshID _mesh_id_from_mesh_ptr(Mesh* mesh);
 	
     Background& background() { return background_; }
+    UI& ui() { return ui_interface_; }
 private:
     std::map<MeshID, Mesh::ptr> meshes_;
     std::map<CameraID, Camera::ptr> cameras_;
@@ -150,6 +155,7 @@ private:
     
     Texture null_texture_;
     Background background_;
+    UI ui_interface_;
 
     std::vector<Pass> passes_;
     

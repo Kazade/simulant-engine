@@ -188,3 +188,15 @@ kglt/background.cpp
 kaztimer/kaztimer.h
 kaztimer/kaztimer.cpp
 samples/combined_sample_1.cpp
+samples/ui_sample.cpp
+kglt/ui.h
+kglt/ui.cpp
+kaztext/kaztext.h
+kaztext/kaztext.cpp
+kglt/ui/label.h
+kglt/ui/element.h
+kglt/ui/shortcuts.h
+kglt/ui/shortcuts.cpp
+kglt/ui/types.h
+kglt/ui/label.cpp
+kglt/ui/element.cpp

@@ -6,7 +6,8 @@
 #include "viewport.h"
 
 #include "rendering/selection_renderer.h"
-
 #include "procedural/mesh.h"
+
+#include "kglt/ui/label.h"
 
 #endif

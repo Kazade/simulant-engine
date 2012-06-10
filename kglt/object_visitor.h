@@ -9,6 +9,11 @@ class Scene;
 class Sprite;
 class Background;
 class BackgroundLayer;
+class UI;
+
+namespace ui {
+    class Element;
+}
 
 class ObjectVisitor {
 public:
@@ -20,6 +25,8 @@ public:
     virtual void visit(Sprite* sprite) = 0;
     virtual void visit(Background* background) = 0;
     virtual void visit(BackgroundLayer* layer) = 0;
+    virtual void visit(UI* ui) = 0;
+    virtual void visit(ui::Element* element) = 0;
     
     virtual void pre_visit(Object* obj) = 0;
     virtual void post_visit(Object* obj) = 0;
