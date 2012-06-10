@@ -19,6 +19,7 @@
 #include "viewport.h"
 #include "sprite.h"
 #include "pass.h"
+#include "background.h"
 
 #include "rendering/generic_renderer.h"
 
@@ -34,6 +35,9 @@ public:
 
     Scene(WindowBase* window):
         window_(window) {
+
+        background().set_parent(this);
+
         new_camera(); //Create a default camera
 
         /*
@@ -70,13 +74,29 @@ public:
 	std::pair<ShaderID, bool> find_shader(const std::string& name);
 
     void delete_mesh(MeshID mid);
+    void delete_texture(TextureID tid);
 
     void init();
     void render();
     void update(double dt);
 
     void accept(ObjectVisitor& visitor) {
+        /**
+          HACK: We need to implement render queues for BACKGROUND, DEFAULT and OVERLAY
+          so that we can control the order of object rendering. This requires implementation of the
+          batch rendering stuff though - and I don't have the time or energy for that atm.
+
+          So, for now we render the background first, and then ignore it when iterating the children
+
+          FIXME: !!
+        */
+
+        background().accept(visitor);
+
         for(Object* child: children_) {
+            if(dynamic_cast<Background*>(child)) {
+                continue;
+            }
             child->accept(visitor);
         }
 
@@ -115,6 +135,7 @@ public:
 	
 	MeshID _mesh_id_from_mesh_ptr(Mesh* mesh);
 	
+    Background& background() { return background_; }
 private:
     std::map<MeshID, Mesh::ptr> meshes_;
     std::map<CameraID, Camera::ptr> cameras_;
@@ -128,7 +149,8 @@ private:
     std::map<std::string, boost::any> extra_scene_data_;
     
     Texture null_texture_;
-    
+    Background background_;
+
     std::vector<Pass> passes_;
     
     boost::mutex scene_lock_;

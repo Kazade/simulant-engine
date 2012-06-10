@@ -36,7 +36,7 @@ public:
     }
 
     uint32_t index(uint32_t i) { return idx_[i]; }
-    Vec2 uv(uint32_t i) { return uv_[i]; }
+    Vec2& uv(uint32_t i) { return uv_[i]; }
 
 private:
     uint32_t idx_[3];
@@ -140,6 +140,12 @@ public:
 		invalidate();
 	}
 
+    bool depth_test_enabled() const { return depth_test_enabled_; }
+    bool depth_writes_enabled() const { return depth_writes_enabled_; }
+
+    void enable_depth_test(bool value=true) { depth_test_enabled_ = value; }
+    void enable_depth_writes(bool value=true) { depth_writes_enabled_ = value; }
+
 private:
 	std::map<uint32_t, uint32_t> vertex_buffer_objects_;
 
@@ -156,6 +162,9 @@ private:
     MeshArrangement arrangement_;
     
     Colour diffuse_colour_;
+
+    bool depth_test_enabled_;
+    bool depth_writes_enabled_;
 };
 
 }

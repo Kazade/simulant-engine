@@ -40,6 +40,20 @@ void GenericRenderer::on_start_render() {
 }
 
 void GenericRenderer::visit(Mesh* mesh) {
+    glPushAttrib(GL_DEPTH_BUFFER_BIT);
+
+    if(!mesh->depth_test_enabled()) {
+        glDisable(GL_DEPTH_TEST);
+    } else {
+        glEnable(GL_DEPTH_TEST);
+    }
+
+    if(!mesh->depth_writes_enabled()) {
+        glDepthMask(GL_FALSE);
+    } else {
+        glDepthMask(GL_TRUE);
+    }
+
     kglt::TextureID tex = mesh->texture(PRIMARY);
     if(!options().texture_enabled) {
 		tex = NullTextureID; //Turn off the texture
@@ -98,6 +112,7 @@ void GenericRenderer::visit(Mesh* mesh) {
 	glDisableVertexAttribArray(1);
 	glDisableVertexAttribArray(2);
 		
+    glPopAttrib();
 	/*glDisableClientState(GL_VERTEX_ARRAY);        
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);        */
 }

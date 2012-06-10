@@ -57,17 +57,17 @@ void Sprite::do_update(double dt) {
 }
 
 void Sprite::_update_frame(uint32_t current_frame) {
-	float frame_width = 1.0 / frame_count_;
+    double frame_width = 1.0 / double(frame_count_);
 	
 	Mesh& mesh = scene().mesh(mesh_id_);
 	
-	mesh.triangles()[0].set_uv(0, frame_width * current_frame, 0.0);
-	mesh.triangles()[0].set_uv(1, frame_width * (current_frame + 1), 0.0);
-	mesh.triangles()[0].set_uv(2, frame_width * (current_frame + 1), -1.0);
+    mesh.triangle(0).uv(0).x = frame_width * current_frame;
+    mesh.triangle(0).uv(1).x = frame_width * (current_frame + 1);
+    mesh.triangle(0).uv(2).x = frame_width * (current_frame + 1);
 	
-	mesh.triangles()[1].set_uv(0, frame_width * current_frame, 0.0);
-	mesh.triangles()[1].set_uv(1, frame_width * (current_frame + 1), -1.0);	
-	mesh.triangles()[1].set_uv(2, frame_width * current_frame, -1.0);	
+    mesh.triangle(1).uv(0).x = frame_width * current_frame;
+    mesh.triangle(1).uv(1).x = frame_width * (current_frame + 1);
+    mesh.triangle(1).uv(2).x = frame_width * current_frame;
 	
 	mesh.invalidate();
 }

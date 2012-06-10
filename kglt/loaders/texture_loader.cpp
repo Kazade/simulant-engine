@@ -80,6 +80,21 @@ void TextureLoader::into(Loadable& resource, const kglt::option_list::OptionList
         tex->resize(width, height);
         tex->data().assign(data, data + (width * height * channels));
 
+        //SOIL loads images upside-down this loop will flip it the right way
+        for(uint32_t j = 0; j * 2 < height; ++j)
+        {
+            int index1 = j * width * channels;
+            int index2 = (height - 1 - j) * width * channels;
+            for(uint32_t i = width * channels; i > 0; --i )
+            {
+                uint8_t temp = tex->data()[index1];
+                tex->data()[index1] = tex->data()[index2];
+                tex->data()[index2] = temp;
+                ++index1;
+                ++index2;
+            }
+        }
+
         SOIL_free_image_data(data);
     }
 }

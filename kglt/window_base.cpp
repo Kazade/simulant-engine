@@ -1,3 +1,5 @@
+#include <boost/thread/thread.hpp>
+
 #include "glee/GLee.h"
 #include "window_base.h"
 
@@ -13,21 +15,24 @@ bool WindowBase::update() {
         initialized = true;
     }
     
-    idle_.execute(); //Execute idle tasks first
-    
+    idle_.execute(); //Execute idle tasks first   
     check_events();
+
+    ktiUpdateFrameTime();
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	scene().update(0.01);
+    scene().update(delta_time());
 
     scene().render();
 
     swap_buffers();
 
+    boost::this_thread::sleep(boost::posix_time::milliseconds(10));
+    
     return is_running_;
 }
 

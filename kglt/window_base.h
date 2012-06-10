@@ -16,6 +16,7 @@
 #include "idle_task_manager.h"
 
 #include "kazbase/logging/logging.h"
+#include "kaztimer/kaztimer.h"
 
 namespace kglt {
     
@@ -30,6 +31,10 @@ public:
         register_loader(LoaderType::ptr(new kglt::loaders::TextureLoaderType));
         register_loader(LoaderType::ptr(new kglt::loaders::Q2BSPLoaderType));
         register_loader(LoaderType::ptr(new kglt::loaders::SpriteLoaderType));
+
+        ktiGenTimers(1, &timer_);
+        ktiBindTimer(timer_);
+        ktiStartGameTimer();
     }
     
     virtual ~WindowBase() {
@@ -74,7 +79,8 @@ public:
     
     virtual void check_events() = 0;
     virtual void swap_buffers() = 0;
-    
+    double delta_time() { return ktiGetDeltaTime(); }
+
     uint32_t width() const { return width_; }
     uint32_t height() const { return height_; }
     
@@ -114,6 +120,8 @@ private:
     }
     
     IdleTaskManager idle_;
+
+    KTIuint timer_;
 };
 
 }

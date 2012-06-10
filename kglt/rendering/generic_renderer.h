@@ -34,6 +34,9 @@ public:
     //Sprites are just containers
     void visit(Sprite* sprite) {}	  
     
+    //Backgrounds and Layers are just containers
+    void visit(Background* bg) {}
+    void visit(BackgroundLayer* layer) {}
 private:
 	void on_start_render();
 };

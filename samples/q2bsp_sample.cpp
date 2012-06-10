@@ -35,18 +35,18 @@ int main(int argc, char* argv[]) {
 
 	while(window.update()) {
         if(keys[kglt::KEY_CODE_LEFT]) {
-            window.scene().camera().rotate_y(-0.1);
+            window.scene().camera().rotate_y(-4.0 * window.delta_time());
         }
 
         if(keys[kglt::KEY_CODE_RIGHT]) {
-            window.scene().camera().rotate_y(0.1);
+            window.scene().camera().rotate_y(4.0 * window.delta_time());
         }
 
         if(keys[kglt::KEY_CODE_UP]) {
-            window.scene().camera().move_forward(2.0f);
+            window.scene().camera().move_forward(15.0 * window.delta_time());
         }
         if(keys[kglt::KEY_CODE_DOWN]) {
-            window.scene().camera().move_forward(-2.0f);
+            window.scene().camera().move_forward(-15.0 * window.delta_time());
         }
 
 	}

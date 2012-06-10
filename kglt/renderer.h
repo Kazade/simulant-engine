@@ -29,6 +29,8 @@ public:
 	virtual void finish_render() { on_finish_render(); }
 
     virtual void pre_visit(Object* obj) {
+        obj->pre_visit(*this);
+
 		modelview_stack_.push();
 		
 		kmMat4 trans;
@@ -39,11 +41,13 @@ public:
 	
     virtual void post_visit(Object* obj) {
 		modelview_stack_.pop();
+
+        obj->post_visit(*this);
 	}
 	
     virtual void set_perspective_projection(double fov, double aspect, double near=1.0, double far=1000.0f);
     virtual void set_orthographic_projection(double left, double right, double bottom, double top, double near=-1.0, double far=1.0);
-	virtual void set_orthographic_projection_from_height(double desired_height_in_units, double ratio);
+	virtual double set_orthographic_projection_from_height(double desired_height_in_units, double ratio);
 	
 	RenderOptions& options() { return options_; }
 	Scene& scene() { return scene_; }

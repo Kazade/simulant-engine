@@ -22,6 +22,8 @@ public:
 	void visit(Camera* camera) {}
 	void visit(Scene* scene) {}
 	void visit(Sprite* sprite) {}
+    void visit(Background* bg) {}
+    void visit(BackgroundLayer* layer) {}
 	void visit(Mesh* mesh);
 	
 	MeshID selected_mesh() const { return selected_mesh_id_; }

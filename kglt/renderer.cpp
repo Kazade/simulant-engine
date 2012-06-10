@@ -50,22 +50,23 @@ void Renderer::start_render() {
     kmMat4Identity(modelview);    
     kmMat4LookAt(modelview, &pos, &centre, &up);
 
-    kmMat4Assign(&projection_stack_.top(), &projection_matrix_);    	
+    //kmMat4Assign(&projection_stack_.top(), &projection_matrix_);
     
     on_start_render();
 }
 
 void Renderer::set_perspective_projection(double fov, double aspect, double near, double far) {
-    kmMat4PerspectiveProjection(&projection_matrix_, fov, aspect, near, far);
+    kmMat4PerspectiveProjection(&projection_stack().top(), fov, aspect, near, far);
 }
 
 void Renderer::set_orthographic_projection(double left, double right, double bottom, double top, double near, double far) {
-    kmMat4OrthographicProjection(&projection_matrix_, left, right, bottom, top, near, far);
+    kmMat4OrthographicProjection(&projection_stack().top(), left, right, bottom, top, near, far);
 }
 
-void Renderer::set_orthographic_projection_from_height(double desired_height_in_units, double ratio) {
+double Renderer::set_orthographic_projection_from_height(double desired_height_in_units, double ratio) {
     double width = desired_height_in_units * ratio;
     set_orthographic_projection(-width / 2.0, width / 2.0, -desired_height_in_units / 2.0, desired_height_in_units / 2.0, -10.0, 10.0);	
+    return width;
 }
 
 }

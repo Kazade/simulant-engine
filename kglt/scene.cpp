@@ -75,6 +75,14 @@ TextureID Scene::new_texture() {
     return id;
 }
 
+void Scene::delete_texture(TextureID tid) {
+    Texture& m = texture(tid);
+    {
+        boost::mutex::scoped_lock lock(scene_lock_);
+        textures_.erase(tid);
+    }
+}
+
 Texture& Scene::texture(TextureID t) {
     if(t == NullTextureID) {
         return null_texture_;

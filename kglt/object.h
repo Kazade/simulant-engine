@@ -126,6 +126,9 @@ public:
         return dynamic_cast<T*>(self);
     }
 
+    virtual void pre_visit(ObjectVisitor& visitor) {}
+    virtual void post_visit(ObjectVisitor& visitor) {}
+
     virtual void accept(ObjectVisitor& visitor) = 0;
     virtual void on_parent_set(Object* old_parent) {}
 
