@@ -19,6 +19,10 @@ namespace ui {
 
 class UI : public Object {
 public:
+    UI() {
+        move_to(0.0, 0.0, -1.0);
+    }
+
     void accept(ObjectVisitor& visitor) {
         visitor.pre_visit(this);
 

@@ -1,35 +1,34 @@
 #include "label.h"
 
+#include "../window_base.h"
+#include "../scene.h"
+#include "../text.h"
+
 namespace kglt {
 namespace ui {
 
 void Label::set_text(const std::string& text) {
-    text_ = text;
+    text_object().set_text(text);
 }
 
-void Label::set_position(float x, float y) {
-    double parent_width = 0.0;
-    double parent_height = 0.0;
-    double parent_left = 0.0;
-    double parent_top = 0.0;
+Text& Label::text_object() {
+    return scene().text(text_id_);
+}
 
-    ui::Element* parent_element = nullptr;
-    if(has_parent()) {
-        parent_element = dynamic_cast<ui::Element*>(&parent());
+double Label::width() {
+    return text_object().width_in_pixels();
+}
+
+double Label::height() {
+    return text_object().font().size();
+}
+
+void Label::on_parent_set(Object *old_parent) {
+    Element::on_parent_set(old_parent);
+
+    if(!text_id_) {
+        text_id_ = scene().new_text(); //Create the text object if we have to
     }
-
-    if(parent_element) {
-        parent_width = parent_ui->width();
-        parent_height = parent_ui->height();
-        parent_left = parent->position().x;
-        parent_top = parent->position().y;
-    } else {
-        parent_width = scene().window().width();
-        parent_height = scene().window().height();
-    }
-
-    position().x = parent_left + (x * parent_width);
-    position().y = parent_top + (y * parent_height);
 }
 
 }

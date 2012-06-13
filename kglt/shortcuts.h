@@ -12,6 +12,7 @@ TextureID create_texture_from_file(WindowBase& window, const std::string& filena
 Mesh& return_new_mesh(Scene& scene);
 Sprite& return_new_sprite(Scene& scene);
 ShaderProgram& return_new_shader(Scene& scene);
+Text& return_new_text(Scene& scene);
 
 }
 

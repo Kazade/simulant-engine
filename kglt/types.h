@@ -33,6 +33,8 @@ typedef uint32_t TextureID;
 typedef uint32_t CameraID;
 typedef uint32_t ShaderID;
 typedef uint32_t SpriteID;
+typedef uint32_t FontID;
+typedef uint32_t TextID;
 
 const TextureID NullTextureID = 0;
 const ShaderID NullShaderID = 0;

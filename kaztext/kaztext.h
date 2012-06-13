@@ -16,13 +16,17 @@ typedef float KTfloat;
 void ktGenFonts(KTsizei n, KTuint* fonts);
 void ktBindFont(KTuint font);
 void ktLoadFont(const KTchar* filename, const KTsizei font_size);
-void ktDrawText(KTfloat x, KTfloat y, const KTwchar* text);
-void ktDrawTextCentred(KTfloat x, KTfloat y, const KTwchar* text);
-void ktDrawTextWrapped(KTfloat x, KTfloat y, KTfloat width, KTfloat height, const KTwchar* text, KTuint alignment);
+void ktDrawText(KTfloat x, KTfloat y, const KTchar* text);
+void ktDrawTextCentred(KTfloat x, KTfloat y, const KTchar* text);
+void ktDrawTextWrapped(KTfloat x, KTfloat y, KTfloat width, KTfloat height, const KTchar* text, KTuint alignment);
 void ktDeleteFonts(KTsizei n, const KTuint* fonts);
 void ktCacheString(const KTwchar* string);
 
-KTfloat ktGetStringWidth(const KTwchar* text);
+uint32_t ktStringLength(const KTchar* utf8_text);
+KTfloat ktStringWidthInPixels(const KTchar* text);
+
+void ktSetProjectionMatrix(float* mat4);
+void ktSetModelviewMatrix(float* mat4);
 
 #define KT_FONT_HEIGHT 1000
 

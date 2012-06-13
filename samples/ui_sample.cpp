@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
     kglt::ui::Label& label = kglt::ui::return_new_label(window.scene());
     label.set_text("<b>Hello</b> <span foreground=\"yellow\">World</span>");
     label.set_position(0.1, 0.1); //All positions and heights are between 0.0 and 1.0 for resolution independence
-    label.set_font_size((1.0 / 480.0) * 12.0); //At 640x480, this will be equivalent to 12pt
+    //label.set_font_size((1.0 / 480.0) * 12.0); //At 640x480, this will be equivalent to 12pt
 /*
     kglt::ui::Button& button = kglt::ui::return_new_button(interface);
     button.set_text("<b>Click me!</b>");

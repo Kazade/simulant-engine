@@ -140,6 +140,47 @@ ShaderID Scene::new_shader() {
     return id;
 }
     
+FontID Scene::new_font() {
+    static FontID counter = 0;
+    FontID id = 0;
+    {
+        boost::mutex::scoped_lock lock(scene_lock_);
+        id = counter++;
+        fonts_.insert(std::make_pair(id, Font::ptr(new Font)));
+    }
+    return id;
+}
+
+Font& Scene::font(FontID f) {
+    boost::mutex::scoped_lock lock(scene_lock_);
+
+    if(!container::contains(fonts_, f)) {
+        throw DoesNotExist<Font>();
+    }
+
+    return *fonts_[f];
+}
+
+TextID Scene::new_text() {
+    static TextID counter = 0;
+    TextID id = 0;
+    {
+        boost::mutex::scoped_lock lock(scene_lock_);
+        id = counter++;
+        texts_.insert(std::make_pair(id, Text::ptr(new Text)));
+        texts_[id]->set_parent(this);
+    }
+    return id;
+}
+
+Text& Scene::text(TextID t) {
+    boost::mutex::scoped_lock lock(scene_lock_);
+    if(!container::contains(texts_, t)) {
+        throw DoesNotExist<TextID>();
+    }
+    return *texts_[t];
+}
+
 Camera& Scene::camera(CameraID c) {
     boost::mutex::scoped_lock lock(scene_lock_);
     

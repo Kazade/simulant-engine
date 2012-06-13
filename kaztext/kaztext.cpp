@@ -1,3 +1,4 @@
+
 #include <map>
 #include <vector>
 #include <iostream>
@@ -8,10 +9,30 @@
 #include <freetype/ftglyph.h>
 
 #include <GL/gl.h>
+#include <GL/glext.h>
+#include <GL/glx.h>
+
 #include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string/trim.hpp>
 
 #include "kaztext.h"
+#include "utf8/checked.h"
+
+PFNGLCREATESHADERPROC glCreateShader = (PFNGLCREATESHADERPROC) glXGetProcAddress((GLubyte*) "glCreateShader");
+PFNGLCREATEPROGRAMPROC glCreateProgram = (PFNGLCREATEPROGRAMPROC) glXGetProcAddress((GLubyte*) "glCreateProgram");
+PFNGLSHADERSOURCEPROC glShaderSource = (PFNGLSHADERSOURCEPROC) glXGetProcAddress((GLubyte*) "glShaderSource");
+PFNGLCOMPILESHADERPROC glCompileShader = (PFNGLCOMPILESHADERPROC) glXGetProcAddress((GLubyte*) "glCompileShader");
+PFNGLGETSHADERIVPROC glGetShaderiv = (PFNGLGETSHADERIVPROC) glXGetProcAddress((GLubyte*) "glGetShaderiv");
+PFNGLGETPROGRAMIVPROC glGetProgramiv = (PFNGLGETPROGRAMIVPROC) glXGetProcAddress((GLubyte*) "glGetProgramiv");
+PFNGLATTACHSHADERPROC glAttachShader = (PFNGLATTACHSHADERPROC) glXGetProcAddress((GLubyte*) "glAttachShader");
+PFNGLLINKPROGRAMPROC glLinkProgram = (PFNGLLINKPROGRAMPROC) glXGetProcAddress((GLubyte*) "glLinkProgram");
+PFNGLUSEPROGRAMPROC glUseProgram = (PFNGLUSEPROGRAMPROC) glXGetProcAddress((GLubyte*) "glUseProgram");
+PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray = (PFNGLENABLEVERTEXATTRIBARRAYPROC) glXGetProcAddress((GLubyte*) "glEnableVertexAttribArray");
+PFNGLDISABLEVERTEXATTRIBARRAYPROC glDisableVertexAttribArray = (PFNGLDISABLEVERTEXATTRIBARRAYPROC) glXGetProcAddress((GLubyte*) "glDisableVertexAttribArray");
+PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer = (PFNGLVERTEXATTRIBPOINTERPROC) glXGetProcAddress((GLubyte*) "glVertexAttribPointer");
+PFNGLBINDATTRIBLOCATIONPROC glBindAttribLocation = (PFNGLBINDATTRIBLOCATIONPROC) glXGetProcAddress((GLubyte*) "glBindAttribLocation");
+PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation = (PFNGLGETUNIFORMLOCATIONPROC) glXGetProcAddress((GLubyte*) "glGetUniformLocation");
+PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv = (PFNGLUNIFORMMATRIX4FVPROC) glXGetProcAddress((GLubyte*) "glUniformMatrix4fv");
 
 static KTuint next_font_id = 0;
 
@@ -19,9 +40,120 @@ KTuint get_next_font_id() {
     return ++next_font_id;
 }
 
-class Font {
+static float projection[16] = {
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1
+};
+
+static float modelview[16] = {
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1
+};
+
+void ktSetProjectionMatrix(float* mat4) {
+    for(int i = 0; i < 16; ++i) {
+        projection[i] = mat4[i];
+    }
+}
+
+void ktSetModelviewMatrix(float* mat4) {
+    for(int i = 0; i < 16; ++i) {
+        modelview[i] = mat4[i];
+    }
+}
+
+static std::string vertex_shader() {
+    static std::string vert = ""
+        "#version 120\n"
+        ""
+        "attribute vec3 vertex_position;\n"
+        "attribute vec2 vertex_texcoord_1;\n"
+        "attribute vec4 vertex_diffuse;\n"
+        ""
+        "uniform mat4 modelview_matrix;\n"
+        "uniform mat4 projection_matrix;\n"
+        ""
+        "varying vec2 fragment_texcoord_1;\n"
+        "varying vec4 fragment_diffuse;\n"
+        ""
+        "void main() { \n"
+        "   gl_Position = projection_matrix * modelview_matrix * vec4(vertex_position, 1.0);\n"
+        "   fragment_texcoord_1 = vertex_texcoord_1;\n"
+        "   fragment_diffuse = vertex_diffuse;\n"
+        "}"
+    "";
+
+    return vert;
+}
+
+static std::string fragment_shader() {
+    static std::string frag = ""
+        "#version 120\n"
+        ""
+        "uniform sampler2D texture_1;\n"
+        ""
+        "varying vec2 fragment_texcoord_1;\n"
+        "varying vec4 fragment_diffuse;\n"
+        ""
+        "void main() { \n"
+        "   gl_FragColor = vec4(fragment_diffuse.rgb, texture2D(texture_1, fragment_texcoord_1.st).a * fragment_diffuse.a);\n"
+        "}"
+    "";
+
+    return frag;
+}
+
+static GLuint program_id = 0;
+static GLuint vertex_shader_id = 0;
+static GLuint frag_shader_id = 0;
+static GLuint proj_location = 0;
+static GLuint mod_location = 0;
+
+void compile_shader() {
+    vertex_shader_id = glCreateShader(GL_VERTEX_SHADER);
+    frag_shader_id = glCreateShader(GL_FRAGMENT_SHADER);
+    program_id = glCreateProgram();
+
+    const char* vert_shader = vertex_shader().c_str();
+    glShaderSource(vertex_shader_id, 1, &vert_shader, NULL);
+
+    const char* frag_shader = fragment_shader().c_str();
+    glShaderSource(frag_shader_id, 1, &frag_shader, NULL);
+
+    glCompileShader(vertex_shader_id);
+    glCompileShader(frag_shader_id);
+
+    GLint compiled = 0;
+    glGetShaderiv(vertex_shader_id, GL_COMPILE_STATUS, &compiled);
+    assert(compiled);
+
+    glGetShaderiv(frag_shader_id, GL_COMPILE_STATUS, &compiled);
+    assert(compiled);
+
+    glAttachShader(program_id, vertex_shader_id);
+    glAttachShader(program_id, frag_shader_id);
+
+    glBindAttribLocation(program_id, 0, "vertex_position");
+    glBindAttribLocation(program_id, 1, "vertex_tecoord_1");
+    glBindAttribLocation(program_id, 2, "vertex_diffuse");
+
+    glLinkProgram(program_id);
+
+    GLint linked = 0;
+    glGetProgramiv(program_id, GL_LINK_STATUS, &linked);
+    assert(linked);
+
+    proj_location = glGetUniformLocation(program_id, "projection_matrix");
+    mod_location = glGetUniformLocation(program_id, "modelview_matrix");
+}
+
+class KTFont {
 public:
-    typedef boost::shared_ptr<Font> ptr;
+    typedef boost::shared_ptr<KTFont> ptr;
 
     struct Char {
         uint32_t width;
@@ -36,7 +168,7 @@ public:
         float top;
     };
 
-    Font(const std::string& ttf, const int font_size);
+    KTFont(const std::string& ttf, const int font_size);
     bool load();
     bool generate_glyph_texture(wchar_t ch);
 
@@ -61,7 +193,7 @@ private:
     std::map<wchar_t, Char> char_properties_;
 };
 
-static std::map<uint32_t, Font::ptr> fonts_;
+static std::map<uint32_t, KTFont::ptr> fonts_;
 static uint32_t current_font_;
 
 
@@ -79,7 +211,7 @@ struct FreeTypeInitializer {
 
 FreeTypeInitializer ft;
 
-Font::Font(const std::string& ttf, const int font_size):
+KTFont::KTFont(const std::string& ttf, const int font_size):
 ttf_(ttf),
 font_size_(font_size) {
 
@@ -94,7 +226,7 @@ static uint32_t pow2(uint32_t i) {
     return result;
 }
 
-bool Font::generate_glyph_texture(wchar_t ch) {
+bool KTFont::generate_glyph_texture(wchar_t ch) {
     if(textures_[ch] > 0) return true;
 
     if(FT_Load_Glyph(face_, FT_Get_Char_Index(face_, ch), FT_LOAD_DEFAULT) != 0) {
@@ -144,7 +276,7 @@ bool Font::generate_glyph_texture(wchar_t ch) {
     return true;
 }
 
-bool Font::load() {
+bool KTFont::load() {
     if(FT_New_Face(ft.ftlib, ttf_.c_str(), 0, &face_) != 0) {
         return false;
     }
@@ -166,40 +298,116 @@ bool Font::load() {
 void ktGenFonts(uint32_t n, uint32_t* fonts) {
     for(uint32_t i = 0; i < n; ++i) {
         uint32_t new_id = get_next_font_id();
-        fonts_[new_id] = Font::ptr();
+        fonts_[new_id] = KTFont::ptr();
         fonts[i] = new_id;
     }
 }
 
-void ktBindFont(KTuint n) {
+void ktDeleteFonts(KTsizei n, const KTuint* fonts) {
+    for(uint32_t i = 0; i < n; ++i) {
+        fonts_.erase(fonts[i]);
+    }
+}
+
+void ktBindFont(KTuint n) {        
     assert(fonts_.find(n) != fonts_.end() && "Invalid font id");
     current_font_ = n;
 }
 
 void ktLoadFont(const char* name, KTsizei size) {
-    fonts_[current_font_] = Font::ptr(new Font(name, size));
+    fonts_[current_font_] = KTFont::ptr(new KTFont(name, size));
     fonts_[current_font_]->load();
 }
 
-void ktDrawText(float x, float y, const KTwchar* text_in) {
+void ktDrawText(float x, float y, const KTchar* text_in) {
+    if(!program_id) {
+        compile_shader();
+    }
+
     glPushAttrib(GL_ENABLE_BIT);
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    std::wstring text(text_in);
+    std::string text_utf8(text_in);
+    std::vector<uint32_t> text;
+    utf8::utf8to32(text_utf8.begin(), text_utf8.end(), std::back_inserter(text));
 
-    Font::ptr font = fonts_[current_font_];
+    KTFont::ptr font = fonts_.at(current_font_);
 
-    glPushMatrix();
-    glScalef(1, -1, 1);
-    glTranslatef(x, -y, 0);
+    //glPushMatrix();
+    //glScalef(1, -1, 1);
+    //glTranslatef(x, -y, 0);
 
-    for(std::wstring::const_iterator it = text.begin(); it != text.end(); ++it) {
-        wchar_t ch = (*it);
+    std::vector<float> positions;
+    std::vector<float> texcoords;
+    std::vector<float> colours;
+
+    positions.resize(3 * 4, 0);
+    texcoords.resize(2 * 4, 0);
+    colours.resize(4 * 4, 1.0);
+
+    float x_offset = x;
+    float y_offset = -y;
+
+    assert(program_id);
+
+    glUseProgram(program_id);
+
+    glUniformMatrix4fv(proj_location, 1, false, (GLfloat*)projection);
+    glUniformMatrix4fv(mod_location, 1, false, (GLfloat*)modelview);
+
+    glClientActiveTexture(GL_TEXTURE0);
+
+    glDisable(GL_CULL_FACE);
+
+    for(std::vector<uint32_t>::const_iterator it = text.begin(); it != text.end(); ++it) {
+        uint32_t ch = (*it);
 
         font->generate_glyph_texture(ch);
 
+        //Calculate the position for this char
+        float this_x_offset = x_offset + font->get_char_left(ch);
+        float this_y_offset = y_offset + (font->get_char_top(ch) - font->get_char_height(ch));
+
+        positions[(0 * 3) + 0] = this_x_offset; //X
+        positions[(0 * 3) + 1] = this_y_offset + font->get_char_height(ch); //Y
+        texcoords[(0 * 2) + 0] = 0.0; //U
+        texcoords[(0 * 2) + 1] = 0.0; //V
+
+        positions[(1 * 3) + 0] = this_x_offset; //X
+        positions[(1 * 3) + 1] = this_y_offset; //Y
+        texcoords[(1 * 2) + 0] = 0.0; //U
+        texcoords[(1 * 2) + 1] = font->get_char_tex_coord_y(ch); //V
+
+        positions[(2 * 3) + 0] = this_x_offset + font->get_char_width(ch); //X
+        positions[(2 * 3) + 1] = this_y_offset; //Y
+        texcoords[(2 * 2) + 0] = font->get_char_tex_coord_x(ch); //U
+        texcoords[(2 * 2) + 1] = font->get_char_tex_coord_y(ch); //V
+
+        positions[(3 * 3) + 0] = this_x_offset + font->get_char_width(ch); //X
+        positions[(3 * 3) + 1] = this_y_offset + font->get_char_height(ch); //Y
+        texcoords[(3 * 2) + 0] = font->get_char_tex_coord_x(ch); //U
+        texcoords[(3 * 2) + 1] = 0.0; //V
+
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+        glEnableVertexAttribArray(2);
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, &positions[0]);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, &texcoords[0]);
+        glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 0, &colours[0]);
+
+        glBindTexture(GL_TEXTURE_2D, font->get_char_texture(ch));
+        glDrawArrays(GL_QUADS, 0, 4);
+
+        glDisableVertexAttribArray(2);
+        glDisableVertexAttribArray(1);
+        glDisableVertexAttribArray(0);
+
+        x_offset += font->get_char_advance_x(ch); //Move right for the next character
+
+        /*
         glPushMatrix();
             glTranslatef(font->get_char_left(ch), font->get_char_top(ch) - font->get_char_height(ch), 0);
             glBindTexture(GL_TEXTURE_2D, font->get_char_texture(ch));
@@ -214,9 +422,9 @@ void ktDrawText(float x, float y, const KTwchar* text_in) {
                 glVertex2f(font->get_char_width(ch), font->get_char_height(ch));
             glEnd();
         glPopMatrix();
-        glTranslatef(font->get_char_advance_x(ch), 0, 0);
+        glTranslatef(font->get_char_advance_x(ch), 0, 0);*/
     }
-    glPopMatrix();
+    //glPopMatrix();
 
     glPopAttrib();
 }
@@ -229,28 +437,26 @@ void ktCacheString(const KTwchar* s) {
     }
 }
 
-KTfloat ktGetStringWidth(const KTwchar* text_in) {
-    Font::ptr font = fonts_[current_font_];
+KTfloat ktStringWidthInPixels(const KTchar* text_in) {
+    KTFont::ptr font = fonts_[current_font_];
     
-    std::wstring text(text_in);
+    std::string text_utf8(text_in);
+    std::vector<uint32_t> text;
+    utf8::utf8to32(text_utf8.begin(), text_utf8.end(), std::back_inserter(text));
     int len = 0;
-    for(std::wstring::const_iterator it = text.begin(); it != text.end(); ++it) {
-        wchar_t ch = (*it);
+    for(std::vector<uint32_t>::const_iterator it = text.begin(); it != text.end(); ++it) {
+        uint32_t ch = (*it);
         len += font->get_char_advance_x(ch);
     }
     return (float) len;
 }
 
-void ktDrawTextCentred(float x, float y, const KTwchar* text) {
-    KTfloat length = ktGetStringWidth(text) / 2.0f; 
-    glPushMatrix();
+void ktDrawTextCentred(float x, float y, const KTchar* text) {
+    KTfloat length = ktStringWidthInPixels(text) / 2.0f;
     ktDrawText(x - int(length), y, text);
-    glPopMatrix();
 }
 
-void ktDrawTextWrapped(KTfloat x, KTfloat y, KTfloat width, KTfloat height, const KTwchar* text, KTuint alignment) {
-	std::vector<std::wstring> lines;
-
+void ktDrawTextWrapped(KTfloat x, KTfloat y, KTfloat width, KTfloat height, const KTchar* text, KTuint alignment) {
 	KTuint line_height;
 	ktGetIntegerv(KT_FONT_HEIGHT, &line_height);
 	line_height *= 1.5f; //FIXME: HACK, need to get actual line height from FT
@@ -259,77 +465,79 @@ void ktDrawTextWrapped(KTfloat x, KTfloat y, KTfloat width, KTfloat height, cons
 	
 	KTfloat cx = 0.0f, cy = line_height;
 
-	std::wstring to_split(text);
-	std::wstring temp;
-	KTuint last_space = 0;
-	
-	for(KTuint i = 0; i < to_split.length(); ++i) {		
-		KTfloat char_width = fonts_[current_font_]->get_char_advance_x(to_split[i]);
-		if(to_split[i] == L'\n') {
-			//Split on new lines, don't add the newline char though
-			lines.push_back(temp);
-			cx = 0.0f;
-			temp.clear();
-			cy += line_height;
-			continue;
-		}
-		
-		if(cx + char_width >= width) {
-			std::wstring new_line(temp.begin(), temp.begin() + last_space);
-			std::wstring remainder(temp.begin() + last_space, temp.end());
-			lines.push_back(new_line);
-			
-			remainder += to_split[i];						
-			cx = 0.0f;	
-			for(KTuint j = 0; j < remainder.length(); ++j) {
-				cx += fonts_[current_font_]->get_char_advance_x(remainder[j]);
-			}
-					
-			temp = remainder;
-			
-			cy += line_height;
-			if(cy >= height) {
-				//If we have gone past the available height, clear the temp string and the add
-				//three dots (...) to the finally displayed line
-				temp.clear();
-				std::wstring last_line = lines[lines.size() - 1];
-				std::wstring new_last_line(last_line.begin(), last_line.begin() + (last_line.length() - 3));
-				new_last_line += L"...";
-				lines[lines.size() - 1] = new_last_line;
-				break;
-			}
-		} else {			
-			temp += to_split[i];
-			cx += char_width;
-			
-			if(to_split[i] == L' ') {
-				last_space = temp.size();
-			}					
-		}
+    std::string text_utf8(text);
+    std::string buffer;
+    std::vector<std::string> lines;
+    KTuint last_space = 0;
+    std::string::iterator it = text_utf8.begin();
+    while(it != text_utf8.end()) {
+        uint32_t c = utf8::next(it, text_utf8.end());
+
+         KTfloat char_width = fonts_[current_font_]->get_char_advance_x(c);
+        if(c == L'\n') {
+            lines.push_back(buffer);
+            buffer.clear();
+            cx = 0.0f;
+            cy += line_height;
+            continue;
+        }
+
+        if(cx + char_width >= width) {
+            std::string new_line(buffer.begin(), buffer.end() + last_space);
+            std::string remainder(buffer.begin() + last_space, buffer.end());
+            lines.push_back(new_line);
+
+            //Append this char to remainder
+            utf8::append(c, std::back_inserter(remainder));
+
+            std::string::iterator it2 = remainder.begin();
+            while(it2 != remainder.end()) {
+                uint32_t rc = utf8::next(it2, remainder.end());
+                cx += fonts_[current_font_]->get_char_advance_x(rc);
+            }
+
+            buffer = remainder;
+            cy += line_height;
+
+            if(cy >= height) {
+                //If we have gone past the available height, clear the temp string and the add
+                //three dots (...) to the finally displayed line
+                buffer.clear();
+                std::string last_line = lines[lines.size() - 1];
+                std::string new_last_line(last_line.begin(), last_line.begin() + (last_line.size() - 3));
+                new_last_line += "...";
+                lines[lines.size() - 1] = new_last_line;
+                break;
+            }
+        } else {
+            utf8::append(c, std::back_inserter(buffer));
+            cx += char_width;
+            if(c == L' ') {
+                last_space = buffer.length();
+            }
+        }
+    }
+
+    if(!buffer.empty()) {
+        lines.push_back(buffer);
 	}
 	
-	if(!temp.empty()) {
-		lines.push_back(temp);
-	}
-	
-	glPushMatrix();
-		for(KTuint i = 0; i < lines.size(); ++i) {
-			lines[i] = boost::algorithm::trim_copy(lines[i]);
-			glTranslatef(0.0f, line_height, 0.0f);
-			if(alignment == KT_ALIGN_LEFT) {
-				ktDrawText(x, 0, lines[i].c_str());
-			} else if(alignment == KT_ALIGN_CENTRE) {
-				ktDrawTextCentred(x + (width / 2), 0, lines[i].c_str());
-			} else {
-				assert(0 && "Right align not implemented");
-			}
-			
-		}
-	glPopMatrix();
+    float y_offset = 0.0f;
+    for(KTuint i = 0; i < lines.size(); ++i) {
+        lines[i] = boost::algorithm::trim_copy(lines[i]);
+        y_offset += line_height;
+        if(alignment == KT_ALIGN_LEFT) {
+            ktDrawText(x, y_offset, lines[i].c_str());
+        } else if(alignment == KT_ALIGN_CENTRE) {
+            ktDrawTextCentred(x + (width / 2), y_offset, lines[i].c_str());
+        } else {
+            assert(0 && "Right align not implemented");
+        }
+    }
 }
 
 void ktGetIntegerv(KTuint type, KTuint* out) {
-	Font::ptr font = fonts_[current_font_];
+    KTFont::ptr font = fonts_[current_font_];
 	if(type == KT_FONT_HEIGHT) {
 		*out = font->get_size();
 	}

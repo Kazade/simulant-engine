@@ -32,8 +32,11 @@ public:
         visitor.post_visit(this);
     }
 
-    double width() const { return width_; }
-    double height() const { return height_; }
+    double total_width() const { return padding_left() + padding_right() + width(); }
+    double total_height() const { return padding_top() + padding_bottom() + height(); }
+
+    virtual double width() const { return width_; }
+    virtual double height() const { return height_; }
     double border_width() const { return border_width_; }
 
     double padding_left() const { return padding_[PADDING_LEFT]; }
@@ -45,6 +48,8 @@ public:
     void set_foreground_colour(float r, float g, float b, float a);
     void set_border_colour(float r, float g, float b, float a);
 
+    void set_position(float x, float y);
+
 private:
     double width_;
     double height_;
@@ -55,6 +60,9 @@ private:
     kglt::MeshID border_mesh_;
 
     void rebuild_meshes();
+
+protected:
+    void on_parent_set(Object *old_parent);
 };
 
 }

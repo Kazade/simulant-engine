@@ -20,6 +20,9 @@
 #include "sprite.h"
 #include "pass.h"
 #include "background.h"
+#include "font.h"
+#include "text.h"
+
 #include "ui.h"
 #include "rendering/generic_renderer.h"
 
@@ -37,6 +40,7 @@ public:
         window_(window) {
 
         background().set_parent(this);
+        ui().set_parent(this);
 
         new_camera(); //Create a default camera
 
@@ -64,12 +68,16 @@ public:
     TextureID new_texture();
     ShaderID new_shader();
     SpriteID new_sprite();
+    FontID new_font();
+    TextID new_text();
 
     Mesh& mesh(MeshID m);
     Camera& camera(CameraID c = DefaultCameraID);
     Texture& texture(TextureID t);
     ShaderProgram& shader(ShaderID s = NullShaderID);
     Sprite& sprite(SpriteID s);
+    Font& font(FontID f);
+    Text& text(TextID t);
 
 	std::pair<ShaderID, bool> find_shader(const std::string& name);
 
@@ -147,6 +155,8 @@ private:
     std::map<TextureID, Texture> textures_;
     std::map<ShaderID, ShaderProgram::ptr> shaders_;
     std::map<SpriteID, Sprite::ptr> sprites_;
+    std::map<FontID, Font::ptr> fonts_;
+    std::map<TextID, Text::ptr> texts_;
 
     CameraID current_camera_;
     WindowBase* window_;

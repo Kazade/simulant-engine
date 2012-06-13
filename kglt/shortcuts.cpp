@@ -28,4 +28,9 @@ ShaderProgram& return_new_shader(Scene& scene) {
 	return scene.shader(sid);
 }
 
+Text& return_new_text(Scene &scene) {
+    TextID tid = scene.new_text();
+    return scene.text(tid);
+}
+
 }

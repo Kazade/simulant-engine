@@ -10,6 +10,7 @@ namespace kglt {
 class Mesh;
 class Camera;
 class Scene;
+class Text;
 
 class GenericRenderer : public Renderer {
 public:
@@ -39,6 +40,9 @@ public:
     void visit(BackgroundLayer* layer) {}
     void visit(UI* ui) {}
     void visit(ui::Element* element) {}
+
+    //Text is magic, we need to handle it
+    void visit(Text* text);
 
 private:
 	void on_start_render();
