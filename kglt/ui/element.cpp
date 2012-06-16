@@ -18,13 +18,13 @@ Element::Element():
 
 }
 
-void Element::on_parent_set(Object* old_parent) {
+void Element::_initialize(Scene& scene) {
     if(!border_mesh_) {
-        border_mesh_ = scene().new_mesh();
+        border_mesh_ = scene.new_mesh();
     }
 
     if(!background_mesh_) {
-        background_mesh_ = scene().new_mesh();
+        background_mesh_ = scene.new_mesh();
     }
 
     rebuild_meshes();
@@ -37,21 +37,24 @@ void Element::rebuild_meshes() {
     kglt::procedural::mesh::rectangle_outline(border, total_width(), total_height());
 
     for(kglt::Vertex& v: border.vertices()) {
-        v.x -= total_width() / 2.0;
+        v.x += total_width() / 2.0;
         v.y *= -1.0; //Flip the Y-axis
         v.y -= total_height() / 2.0;
     }
 
     border.set_diffuse_colour(kglt::Colour(1.0, 1.0, 1.0, 1.0));
 
+    kglt::Mesh& background = scene().mesh(background_mesh_);
+    background.set_parent(this);
+    kglt::procedural::mesh::rectangle(background, total_width(), total_height());
 
-    //CONTINUE
-    /**
-      1. Need to move the mesh so that it starts at 0,0 -> width, height
-      2. Need to generate the background mesh
-      3. Need to properly set the colours etc.
-      4. Need to finish the label and make sure everything renders
-    */
+    for(kglt::Vertex& v: background.vertices()) {
+        v.x += total_width() / 2.0;
+        v.y *= -1.0; //Flip the Y-axis
+        v.y -= total_height() / 2.0;
+    }
+
+    background.set_diffuse_colour(kglt::Colour(0.0, 0.2, 1.0, 0.5));
 }
 
 void Element::set_position(float x, float y) {

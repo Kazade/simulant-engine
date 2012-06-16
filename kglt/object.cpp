@@ -68,4 +68,10 @@ Scene& Object::scene() {
 	return *scene;
 }
 
+const Scene& Object::scene() const {
+    const Scene* scene = root_as<const Scene>();
+    assert(scene);
+    return *scene;
+}
+
 }

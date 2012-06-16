@@ -32,11 +32,11 @@ public:
         visitor.post_visit(this);
     }
 
-    double total_width() const { return padding_left() + padding_right() + width(); }
-    double total_height() const { return padding_top() + padding_bottom() + height(); }
+    double total_width() { return padding_left() + padding_right() + width(); }
+    double total_height() { return padding_top() + padding_bottom() + height(); }
 
-    virtual double width() const { return width_; }
-    virtual double height() const { return height_; }
+    virtual double width() { return width_; }
+    virtual double height() { return height_; }
     double border_width() const { return border_width_; }
 
     double padding_left() const { return padding_[PADDING_LEFT]; }
@@ -59,10 +59,9 @@ private:
     kglt::MeshID background_mesh_;
     kglt::MeshID border_mesh_;
 
-    void rebuild_meshes();
-
 protected:
-    void on_parent_set(Object *old_parent);
+    void rebuild_meshes();
+    void _initialize(Scene& scene);
 };
 
 }

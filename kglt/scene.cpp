@@ -15,6 +15,7 @@ MeshID Scene::new_mesh() {
     
     Mesh& mesh = *meshes_[id];
     mesh.set_parent(this);
+    mesh._initialize(*this);
 
     return id;
 }
@@ -50,7 +51,8 @@ SpriteID Scene::new_sprite() {
     
     Sprite& sprite = *sprites_[id];
     sprite.set_parent(this);
-    
+    sprite._initialize(*this);
+
     return id;
 }
 
@@ -108,6 +110,7 @@ CameraID Scene::new_camera() {
     
     Camera& cam = camera(id);
     cam.set_parent(this);
+    cam._initialize(*this);
 
     //We always need a camera, so if this is the
     //first one, then make it the current one
@@ -145,7 +148,7 @@ FontID Scene::new_font() {
     FontID id = 0;
     {
         boost::mutex::scoped_lock lock(scene_lock_);
-        id = counter++;
+        id = ++counter;
         fonts_.insert(std::make_pair(id, Font::ptr(new Font)));
     }
     return id;
@@ -166,9 +169,10 @@ TextID Scene::new_text() {
     TextID id = 0;
     {
         boost::mutex::scoped_lock lock(scene_lock_);
-        id = counter++;
+        id = ++counter;
         texts_.insert(std::make_pair(id, Text::ptr(new Text)));
         texts_[id]->set_parent(this);
+        texts_[id]->_initialize(*this);
     }
     return id;
 }
@@ -179,6 +183,15 @@ Text& Scene::text(TextID t) {
         throw DoesNotExist<TextID>();
     }
     return *texts_[t];
+}
+
+const Text& Scene::text(TextID t) const {
+    boost::mutex::scoped_lock lock(scene_lock_);
+    if(!container::contains(texts_, t)) {
+        throw DoesNotExist<TextID>();
+    }
+    std::map<TextID, Text::ptr>::const_iterator it = texts_.find(t);
+    return *(it->second);
 }
 
 Camera& Scene::camera(CameraID c) {

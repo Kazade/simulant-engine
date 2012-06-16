@@ -77,7 +77,9 @@ public:
     ShaderProgram& shader(ShaderID s = NullShaderID);
     Sprite& sprite(SpriteID s);
     Font& font(FontID f);
+
     Text& text(TextID t);
+    const Text& text(TextID t) const;
 
 	std::pair<ShaderID, bool> find_shader(const std::string& name);
 
@@ -169,7 +171,7 @@ private:
 
     std::vector<Pass> passes_;
     
-    boost::mutex scene_lock_;
+    mutable boost::mutex scene_lock_;
 };
 
 }

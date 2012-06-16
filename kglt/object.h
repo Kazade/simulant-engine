@@ -110,7 +110,10 @@ public:
     }
 
     bool has_parent() const { return parent_ != nullptr; }
+
     Object& parent() { assert(parent_); return *parent_; }
+    const Object& parent() const { assert(parent_); return *parent_; }
+
     Object& child(uint32_t i);
 
     kmVec3& position() { return position_; }
@@ -119,6 +122,16 @@ public:
     template<typename T>
     T* root_as() {
         Object* self = this;
+        while(self->has_parent()) {
+            self = &self->parent();
+        }
+
+        return dynamic_cast<T*>(self);
+    }
+
+    template<typename T>
+    T* root_as() const {
+        const Object* self = this;
         while(self->has_parent()) {
             self = &self->parent();
         }
@@ -135,9 +148,12 @@ public:
     uint64_t id() const { return id_; }
     
     Scene& scene();
+    const Scene& scene() const;
     
     void set_user_data(void* data) { user_data_ = data; }
     void* user_data() const { return user_data_; }
+
+    virtual void _initialize(Scene& scene) {}
 };
 
 }

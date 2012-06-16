@@ -9,9 +9,29 @@ namespace ui {
 
 void Label::set_text(const std::string& text) {
     text_object().set_text(text);
+    rebuild_meshes();
 }
 
 Text& Label::text_object() {
+    assert(text_id_);
+    return scene().text(text_id_);
+}
+
+void Label::_initialize(Scene &scene) {
+    text_id_ = scene.new_text(); //Create the text object if we have to
+    kglt::Text& text = scene.text(text_id_);
+    text.set_parent(this);
+    text.move_to(0.0, 0.0, 0.2);
+
+    if(UI* ui = dynamic_cast<UI*>(&parent())) {
+        set_font(ui->default_font_id());
+    }
+
+    Element::_initialize(scene);
+}
+
+const Text& Label::text_object() const {
+    assert(text_id_);
     return scene().text(text_id_);
 }
 
@@ -23,12 +43,12 @@ double Label::height() {
     return text_object().font().size();
 }
 
-void Label::on_parent_set(Object *old_parent) {
-    Element::on_parent_set(old_parent);
+std::string Label::text() const {
+    return text_object().text();
+}
 
-    if(!text_id_) {
-        text_id_ = scene().new_text(); //Create the text object if we have to
-    }
+void Label::set_font(kglt::FontID fid) {
+    text_object().apply_font(fid);
 }
 
 }

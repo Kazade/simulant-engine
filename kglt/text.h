@@ -31,7 +31,7 @@ public:
     Font& font();
 
     void set_text(const std::string& utf8_text);
-    std::string& text() { return text_; }
+    std::string text() const { return text_; }
     uint32_t length() const; //Returns the actual length of the utf-8 string
     double width_in_pixels();
 

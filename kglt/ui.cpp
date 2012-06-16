@@ -13,7 +13,7 @@ namespace kglt {
 void UI::pre_visit(ObjectVisitor& visitor) {
     if(Renderer* renderer = dynamic_cast<Renderer*>(&visitor)) {
         renderer->projection_stack().push();
-        renderer->set_orthographic_projection(0, scene().window().width(), scene().window().height(), 0);
+        renderer->set_orthographic_projection(0, scene().window().width(), scene().window().height(), 0, -1.0, 10.0);
     }
 }
 
@@ -23,14 +23,11 @@ void UI::post_visit(ObjectVisitor &visitor) {
     }
 }
 
-void UI::register_font(const std::string& name, const std::string& ttf_path) {
-    if(!os::path::exists(ttf_path)) {
-        throw IOError("No such TTF file: " + ttf_path);
-    }
-    font_paths_[name] = ttf_path;
-}
-
 ui::LabelID UI::new_label() {
+    if(!default_font_id_) {
+        throw std::logic_error("You must give the UI a default font before creating ui elements");
+    }
+
     static ui::LabelID counter = 0;
     ui::LabelID id = 0;
     {
@@ -41,6 +38,8 @@ ui::LabelID UI::new_label() {
 
     ui::Label& new_label = label(id);
     new_label.set_parent(this);
+    new_label._initialize(scene());
+
 
     return id;
 }

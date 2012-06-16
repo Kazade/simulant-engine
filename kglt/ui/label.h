@@ -14,16 +14,22 @@ class Label : public Element {
 public:
     typedef std::tr1::shared_ptr<Label> ptr;
 
+    Label():
+        text_id_(0) {}
+
     void set_text(const std::string& text);
+    std::string text() const;
+    void set_font(kglt::FontID fid);
 
     virtual double width();
     virtual double height();
 
+    virtual void _initialize(Scene &scene);
+
 private:
     TextID text_id_;
     Text& text_object();
-
-    void on_parent_set(Object *old_parent);
+    const Text& text_object() const;
 };
 
 }

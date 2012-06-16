@@ -10,6 +10,8 @@
 #include "kglt/shader.h"
 #include "kglt/window.h"
 
+#include "../utils/gl_error.h"
+
 namespace kglt {
 
 void GenericRenderer::on_start_render() {
@@ -51,8 +53,11 @@ void GenericRenderer::visit(Text* text) {
 
     for(int i = 0; i < 16; ++i) tmp[i] = (float) modelview_stack().top().mat[i];
     ktSetModelviewMatrix(tmp);
+
     //FIXME: Need to make kaztext OpenGL 3 friendly!
     ktDrawText(text->position().x, text->position().y, text->text().c_str());
+
+    check_and_log_error(__FILE__, __LINE__);
 }
 
 void GenericRenderer::visit(Mesh* mesh) {

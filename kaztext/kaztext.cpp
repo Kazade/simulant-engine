@@ -33,6 +33,7 @@ PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer = (PFNGLVERTEXATTRIBPOINTERPR
 PFNGLBINDATTRIBLOCATIONPROC glBindAttribLocation = (PFNGLBINDATTRIBLOCATIONPROC) glXGetProcAddress((GLubyte*) "glBindAttribLocation");
 PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation = (PFNGLGETUNIFORMLOCATIONPROC) glXGetProcAddress((GLubyte*) "glGetUniformLocation");
 PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv = (PFNGLUNIFORMMATRIX4FVPROC) glXGetProcAddress((GLubyte*) "glUniformMatrix4fv");
+PFNGLUNIFORM1IPROC glUniform1i = (PFNGLUNIFORM1IPROC) glXGetProcAddress((GLubyte*) "glUniform1i");
 
 static KTuint next_font_id = 0;
 
@@ -81,7 +82,7 @@ static std::string vertex_shader() {
         "varying vec4 fragment_diffuse;\n"
         ""
         "void main() { \n"
-        "   gl_Position = projection_matrix * modelview_matrix * vec4(vertex_position, 1.0);\n"
+        "   gl_Position = modelview_matrix * projection_matrix * vec4(vertex_position, 1.0);\n"
         "   fragment_texcoord_1 = vertex_texcoord_1;\n"
         "   fragment_diffuse = vertex_diffuse;\n"
         "}"
@@ -110,8 +111,9 @@ static std::string fragment_shader() {
 static GLuint program_id = 0;
 static GLuint vertex_shader_id = 0;
 static GLuint frag_shader_id = 0;
-static GLuint proj_location = 0;
-static GLuint mod_location = 0;
+static GLint proj_location = 0;
+static GLint mod_location = 0;
+static GLint tex_location = 0;
 
 void compile_shader() {
     vertex_shader_id = glCreateShader(GL_VERTEX_SHADER);
@@ -147,8 +149,15 @@ void compile_shader() {
     glGetProgramiv(program_id, GL_LINK_STATUS, &linked);
     assert(linked);
 
+    glUseProgram(program_id);
+
     proj_location = glGetUniformLocation(program_id, "projection_matrix");
     mod_location = glGetUniformLocation(program_id, "modelview_matrix");
+    tex_location = glGetUniformLocation(program_id, "texture_1");
+
+    assert(proj_location > -1);
+    assert(mod_location > -1);
+    assert(tex_location > -1);
 }
 
 class KTFont {
@@ -289,7 +298,7 @@ bool KTFont::load() {
         ktCacheString(L"This is my string");
     */
     for(wchar_t i = 32; i <= 127; ++i) {
-        generate_glyph_texture(i);
+        assert(generate_glyph_texture(i));
     }
 
     return true;
@@ -316,7 +325,7 @@ void ktBindFont(KTuint n) {
 
 void ktLoadFont(const char* name, KTsizei size) {
     fonts_[current_font_] = KTFont::ptr(new KTFont(name, size));
-    fonts_[current_font_]->load();
+    assert(fonts_[current_font_]->load());
 }
 
 void ktDrawText(float x, float y, const KTchar* text_in) {
@@ -335,10 +344,6 @@ void ktDrawText(float x, float y, const KTchar* text_in) {
 
     KTFont::ptr font = fonts_.at(current_font_);
 
-    //glPushMatrix();
-    //glScalef(1, -1, 1);
-    //glTranslatef(x, -y, 0);
-
     std::vector<float> positions;
     std::vector<float> texcoords;
     std::vector<float> colours;
@@ -356,6 +361,7 @@ void ktDrawText(float x, float y, const KTchar* text_in) {
 
     glUniformMatrix4fv(proj_location, 1, false, (GLfloat*)projection);
     glUniformMatrix4fv(mod_location, 1, false, (GLfloat*)modelview);
+    glUniform1i(tex_location, 0);
 
     glClientActiveTexture(GL_TEXTURE0);
 
