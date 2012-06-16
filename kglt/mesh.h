@@ -113,14 +113,15 @@ public:
 
     void accept(ObjectVisitor& visitor) {
 		visitor.pre_visit(this);
-		
+
+        if(is_visible()) {
+            visitor.visit(this);
+        }
+
         for(Object* child: children_) {
             child->accept(visitor);
         }
 
-		if(is_visible()) {
-			visitor.visit(this);
-		}
         visitor.post_visit(this);
     }
 

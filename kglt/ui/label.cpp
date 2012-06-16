@@ -20,14 +20,16 @@ Text& Label::text_object() {
 void Label::_initialize(Scene &scene) {
     text_id_ = scene.new_text(); //Create the text object if we have to
     kglt::Text& text = scene.text(text_id_);
-    text.set_parent(this);
-    text.move_to(0.0, 0.0, 0.2);
+
+    text.move_to(padding_left(), padding_bottom(), 0.2);
 
     if(UI* ui = dynamic_cast<UI*>(&parent())) {
         set_font(ui->default_font_id());
     }
 
     Element::_initialize(scene);
+
+    text.set_parent(&background());
 }
 
 const Text& Label::text_object() const {
@@ -40,7 +42,7 @@ double Label::width() {
 }
 
 double Label::height() {
-    return text_object().font().size();
+    return float(text_object().font().size()) * 1.5;
 }
 
 std::string Label::text() const {

@@ -82,7 +82,7 @@ static std::string vertex_shader() {
         "varying vec4 fragment_diffuse;\n"
         ""
         "void main() { \n"
-        "   gl_Position = modelview_matrix * projection_matrix * vec4(vertex_position, 1.0);\n"
+        "   gl_Position = projection_matrix * modelview_matrix * vec4(vertex_position, 1.0);\n"
         "   fragment_texcoord_1 = vertex_texcoord_1;\n"
         "   fragment_diffuse = vertex_diffuse;\n"
         "}"
@@ -101,7 +101,8 @@ static std::string fragment_shader() {
         "varying vec4 fragment_diffuse;\n"
         ""
         "void main() { \n"
-        "   gl_FragColor = vec4(fragment_diffuse.rgb, texture2D(texture_1, fragment_texcoord_1.st).a * fragment_diffuse.a);\n"
+        "   float a = texture2D(texture_1, fragment_texcoord_1.st).a;\n"
+        "   gl_FragColor = vec4(fragment_diffuse.rgb, a * fragment_diffuse.a);\n"
         "}"
     "";
 
@@ -139,8 +140,10 @@ void compile_shader() {
     glAttachShader(program_id, vertex_shader_id);
     glAttachShader(program_id, frag_shader_id);
 
+    glLinkProgram(program_id);
+
     glBindAttribLocation(program_id, 0, "vertex_position");
-    glBindAttribLocation(program_id, 1, "vertex_tecoord_1");
+    glBindAttribLocation(program_id, 1, "vertex_texcoord_1");
     glBindAttribLocation(program_id, 2, "vertex_diffuse");
 
     glLinkProgram(program_id);
@@ -261,11 +264,11 @@ bool KTFont::generate_glyph_texture(wchar_t ch) {
     uint32_t tex_w = char_properties_[ch].texture_width;
     uint32_t tex_h = char_properties_[ch].texture_height;
 
-    std::vector<GLubyte> data(tex_w * tex_h * 2);
+    std::vector<GLubyte> data(tex_w * tex_h * 4);
     for(KTuint j = 0; j < tex_h; ++j) {
         for(KTuint i = 0; i < tex_w; ++i) {
-            int idx = 2 * (i + j * tex_w);
-            data[idx] = data[idx+1] = (i >= (KTuint)bitmap.width || j >= (KTuint)bitmap.rows) ? 0 : bitmap.buffer[i + bitmap.width * j];
+            int idx = 4 * (i + j * tex_w);
+            data[idx] = data[idx+1] = data[idx+2] = data[idx+3] = (i >= (KTuint)bitmap.width || j >= (KTuint)bitmap.rows) ? 0 : bitmap.buffer[i + bitmap.width * j];
         }
     }
 
@@ -275,7 +278,8 @@ bool KTFont::generate_glyph_texture(wchar_t ch) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA16, tex_w, tex_h, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, &data[0]);
+    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_w, tex_h, 0, GL_RGBA, GL_UNSIGNED_BYTE, &data[0]);
 
     char_properties_[ch].advance_x = (float) (face_->glyph->advance.x >> 6);
     char_properties_[ch].advance_y = (float) ((face_->glyph->metrics.horiBearingY - face_->glyph->metrics.height) >> 6);
@@ -334,9 +338,6 @@ void ktDrawText(float x, float y, const KTchar* text_in) {
     }
 
     glPushAttrib(GL_ENABLE_BIT);
-    glEnable(GL_TEXTURE_2D);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     std::string text_utf8(text_in);
     std::vector<uint32_t> text;
@@ -353,7 +354,7 @@ void ktDrawText(float x, float y, const KTchar* text_in) {
     colours.resize(4 * 4, 1.0);
 
     float x_offset = x;
-    float y_offset = -y;
+    float y_offset = y;
 
     assert(program_id);
 
@@ -364,8 +365,6 @@ void ktDrawText(float x, float y, const KTchar* text_in) {
     glUniform1i(tex_location, 0);
 
     glClientActiveTexture(GL_TEXTURE0);
-
-    glDisable(GL_CULL_FACE);
 
     for(std::vector<uint32_t>::const_iterator it = text.begin(); it != text.end(); ++it) {
         uint32_t ch = (*it);
@@ -412,26 +411,7 @@ void ktDrawText(float x, float y, const KTchar* text_in) {
         glDisableVertexAttribArray(0);
 
         x_offset += font->get_char_advance_x(ch); //Move right for the next character
-
-        /*
-        glPushMatrix();
-            glTranslatef(font->get_char_left(ch), font->get_char_top(ch) - font->get_char_height(ch), 0);
-            glBindTexture(GL_TEXTURE_2D, font->get_char_texture(ch));
-            glBegin(GL_QUADS);
-                glTexCoord2f(0, 0);
-                glVertex2f(0, font->get_char_height(ch));
-                glTexCoord2f(0, font->get_char_tex_coord_y(ch));
-                glVertex2f(0, 0);
-                glTexCoord2f(font->get_char_tex_coord_x(ch), font->get_char_tex_coord_y(ch));
-                glVertex2f(font->get_char_width(ch), 0);
-                glTexCoord2f(font->get_char_tex_coord_x(ch), 0);
-                glVertex2f(font->get_char_width(ch), font->get_char_height(ch));
-            glEnd();
-        glPopMatrix();
-        glTranslatef(font->get_char_advance_x(ch), 0, 0);*/
     }
-    //glPopMatrix();
-
     glPopAttrib();
 }
 
@@ -452,6 +432,7 @@ KTfloat ktStringWidthInPixels(const KTchar* text_in) {
     int len = 0;
     for(std::vector<uint32_t>::const_iterator it = text.begin(); it != text.end(); ++it) {
         uint32_t ch = (*it);
+        font->generate_glyph_texture(ch);
         len += font->get_char_advance_x(ch);
     }
     return (float) len;

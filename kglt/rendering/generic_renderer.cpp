@@ -45,6 +45,8 @@ void GenericRenderer::on_start_render() {
 void GenericRenderer::visit(Text* text) {
     KTuint kt_font = text->font().kt_font(); //Get the kaztext font ID
 
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
     ktBindFont(kt_font);
 
     float tmp[16];
@@ -54,8 +56,7 @@ void GenericRenderer::visit(Text* text) {
     for(int i = 0; i < 16; ++i) tmp[i] = (float) modelview_stack().top().mat[i];
     ktSetModelviewMatrix(tmp);
 
-    //FIXME: Need to make kaztext OpenGL 3 friendly!
-    ktDrawText(text->position().x, text->position().y, text->text().c_str());
+    ktDrawText(0, (text->font().size() * 0.25) , text->text().c_str());
 
     check_and_log_error(__FILE__, __LINE__);
 }

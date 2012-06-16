@@ -13,7 +13,7 @@ namespace kglt {
 void UI::pre_visit(ObjectVisitor& visitor) {
     if(Renderer* renderer = dynamic_cast<Renderer*>(&visitor)) {
         renderer->projection_stack().push();
-        renderer->set_orthographic_projection(0, scene().window().width(), scene().window().height(), 0, -1.0, 10.0);
+        renderer->set_orthographic_projection(0, scene().window().width(), 0, scene().window().height(), -1.0, 10.0);
     }
 }
 
