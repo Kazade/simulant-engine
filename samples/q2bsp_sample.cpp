@@ -30,8 +30,8 @@ int main(int argc, char* argv[]) {
     //Load the Quake 2 map
     window.loader_for("sample_data/sample.bsp")->into(window.scene());
 
-    window.signal_key_pressed().connect(&on_key_down);
-    window.signal_key_released().connect(&on_key_up);
+    window.signal_key_down().connect(&on_key_down);
+    window.signal_key_up().connect(&on_key_up);
 
 	while(window.update()) {
         if(keys[kglt::KEY_CODE_LEFT]) {

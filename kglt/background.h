@@ -43,6 +43,7 @@ public:
         }
         visitor.post_visit(this);
     }
+
 private:
     Background& background_;
     TextureID texture_id_;

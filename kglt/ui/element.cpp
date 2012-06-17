@@ -59,6 +59,10 @@ Object& Element::background() {
     return scene().mesh(background_mesh_);
 }
 
+Object& Element::border() {
+    return scene().mesh(border_mesh_);
+}
+
 void Element::set_position(float x, float y) {
     double parent_width = 0.0;
     double parent_height = 0.0;

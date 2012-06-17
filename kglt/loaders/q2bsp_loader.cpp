@@ -307,7 +307,7 @@ void Q2BSPLoader::into(Loadable& resource) {
         Q2::TextureInfo& tex = textures[f.texture_info];
         //std::cout << tex.texture_name << std::endl;
         Mesh& texture_mesh = mesh.submesh(mesh_for_texture[tex_lookup[tex.texture_name]]);
-        for(int32_t i = 1; i < indexes.size() - 1; ++i) {
+        for(int32_t i = 1; i < (int32_t) indexes.size() - 1; ++i) {
             std::vector<uint32_t> tri_idx;
             tri_idx.push_back(indexes[0]);
             tri_idx.push_back(indexes[i+1]);

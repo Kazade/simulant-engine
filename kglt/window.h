@@ -17,8 +17,8 @@ public:
     void show_cursor(bool value=true);
     void cursor_position(int32_t& mouse_x, int32_t& mouse_y);
     
-    sigc::signal<void, KeyCode>& signal_key_pressed() { return signal_key_pressed_; }
-    sigc::signal<void, KeyCode>& signal_key_released() { return signal_key_released_; }
+    sigc::signal<void, KeyCode>& signal_key_down() { return signal_key_pressed_; }
+    sigc::signal<void, KeyCode>& signal_key_up() { return signal_key_released_; }
     
 private:
     SDL_Surface* surface_;

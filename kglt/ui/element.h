@@ -52,6 +52,7 @@ public:
     void set_position(float x, float y);
 
     Object& background();
+    Object& border();
 private:
     double width_;
     double height_;

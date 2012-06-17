@@ -16,8 +16,8 @@ Renderer::Renderer(Scene& scene):
 }
 
 Renderer::Renderer(Scene& scene, const RenderOptions& options):
-	scene_(scene),
-	options_(options) { 
+    options_(options),
+    scene_(scene) {
 		
 	set_perspective_projection(
 		45.0, 
