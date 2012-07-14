@@ -4,14 +4,14 @@ namespace kglt {
 namespace procedural {
 namespace mesh {
 
-void rectangle(kglt::Mesh& mesh, float width, float height) {
+void rectangle(kglt::Mesh& mesh, float width, float height, float x_offset, float y_offset) {
 	mesh.vertices().clear();
 	mesh.triangles().clear();
 	
-    mesh.add_vertex(-width / 2.0, -height / 2.0, 0.0);
-    mesh.add_vertex(width / 2.0, -height / 2.0, 0.0);
-    mesh.add_vertex(width / 2.0,  height / 2.0, 0.0);
-    mesh.add_vertex(-width / 2.0,  height / 2.0, 0.0);
+    mesh.add_vertex(x_offset + (-width / 2.0), y_offset + (-height / 2.0), 0.0);
+    mesh.add_vertex(x_offset + (width / 2.0), y_offset + (-height / 2.0), 0.0);
+    mesh.add_vertex(x_offset + (width / 2.0),  y_offset + (height / 2.0), 0.0);
+    mesh.add_vertex(x_offset + (-width / 2.0),  y_offset + (height / 2.0), 0.0);
 
     kglt::Triangle& tri1 = mesh.add_triangle(0, 1, 2);
     tri1.set_uv(0, 0.0, 0.0);
@@ -26,15 +26,15 @@ void rectangle(kglt::Mesh& mesh, float width, float height) {
     mesh.done();
 }
 
-void rectangle_outline(kglt::Mesh& mesh, float width, float height) {
+void rectangle_outline(kglt::Mesh& mesh, float width, float height, float x_offset, float y_offset) {
 	mesh.vertices().clear();
 	mesh.triangles().clear();
 	
-    mesh.add_vertex(-width / 2.0, -height / 2.0, 0.0);
-    mesh.add_vertex(width / 2.0, -height / 2.0, 0.0);
-    mesh.add_vertex(width / 2.0,  height / 2.0, 0.0);
-    mesh.add_vertex(-width / 2.0,  height / 2.0, 0.0);
-    mesh.add_vertex(-width / 2.0, -height / 2.0, 0.0);
+    mesh.add_vertex(x_offset + (-width / 2.0), y_offset + (-height / 2.0), 0.0);
+    mesh.add_vertex(x_offset + (width / 2.0), y_offset + (-height / 2.0), 0.0);
+    mesh.add_vertex(x_offset + (width / 2.0), y_offset + (height / 2.0), 0.0);
+    mesh.add_vertex(x_offset + (-width / 2.0), y_offset + (height / 2.0), 0.0);
+    mesh.add_vertex(x_offset + (-width / 2.0), y_offset + (-height / 2.0), 0.0);
     
     mesh.set_arrangement(kglt::MESH_ARRANGEMENT_LINE_STRIP);
     mesh.done();
