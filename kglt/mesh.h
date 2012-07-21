@@ -112,17 +112,7 @@ public:
     Triangle& add_triangle(uint32_t a, uint32_t b, uint32_t c);
 
     void accept(ObjectVisitor& visitor) {
-		visitor.pre_visit(this);
-
-        if(is_visible()) {
-            visitor.visit(this);
-        }
-
-        for(Object* child: children_) {
-            child->accept(visitor);
-        }
-
-        visitor.post_visit(this);
+        do_accept<Mesh>(this, visitor);
     }
 
     void set_arrangement(MeshArrangement m) { arrangement_ = m; }
@@ -147,6 +137,11 @@ public:
     void enable_depth_test(bool value=true) { depth_test_enabled_ = value; }
     void enable_depth_writes(bool value=true) { depth_writes_enabled_ = value; }
 
+    void set_branch_selectable(bool value = true) { ///< Sets this node and its children selectable or not
+        branch_selectable_ = value;
+    }    
+    bool branch_selectable() const { return branch_selectable_; }
+    
 private:
 	std::map<uint32_t, uint32_t> vertex_buffer_objects_;
 
@@ -166,6 +161,7 @@ private:
 
     bool depth_test_enabled_;
     bool depth_writes_enabled_;
+    bool branch_selectable_;
 };
 
 }

@@ -6,14 +6,14 @@
 #include <vector>
 #include <algorithm>
 #include <tr1/memory>
-
+#include "object_visitor.h"
 #include "kazmath/vec3.h"
 #include "kazmath/quaternion.h"
 #include "types.h"
 
 namespace kglt {
 
-class ObjectVisitor;
+
 class Scene;
 
 class Object {
@@ -154,6 +154,24 @@ public:
     void* user_data() const { return user_data_; }
 
     virtual void _initialize(Scene& scene) {}
+    
+protected:    
+    template<typename T>
+    void do_accept(T* _this, ObjectVisitor& visitor) {
+		if(!visitor.pre_visit(_this)) {
+		    return;
+		}
+
+        if(_this->is_visible()) {
+            visitor.visit(_this);
+        }
+
+        for(Object* child: _this->children_) {
+            child->accept(visitor);
+        }
+
+        visitor.post_visit(_this);    
+    }
 };
 
 }

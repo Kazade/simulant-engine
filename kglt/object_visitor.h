@@ -3,6 +3,7 @@
 
 namespace kglt {
 
+class Object;
 class Mesh;
 class Camera;
 class Scene;
@@ -30,7 +31,7 @@ public:
     virtual void visit(ui::Element* element) = 0;
     virtual void visit(Text* text) = 0;
 
-    virtual void pre_visit(Object* obj) = 0;
+    virtual bool pre_visit(Object* obj) = 0; ///< Return false to cancel visiting a node
     virtual void post_visit(Object* obj) = 0;
 };
 

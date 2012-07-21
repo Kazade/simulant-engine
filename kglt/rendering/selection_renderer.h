@@ -31,6 +31,20 @@ public:
 	
 	MeshID selected_mesh() const { return selected_mesh_id_; }
 	
+	bool pre_visit(Object* obj) {
+	    //If this is a mesh, and the entire branch is not selectable,
+	    //then bail out
+	    if(Mesh* m = dynamic_cast<Mesh*>(obj)) {
+	        if(!m->branch_selectable()) {	            
+	            return false;
+	        }
+	    }
+	    
+	    Renderer::pre_visit(obj);
+	    
+	    return true;
+	}
+	
 private:
 	void on_start_render();
 	void on_finish_render();

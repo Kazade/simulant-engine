@@ -28,7 +28,7 @@ public:
 	virtual void start_render();
 	virtual void finish_render() { on_finish_render(); }
 
-    virtual void pre_visit(Object* obj) {
+    virtual bool pre_visit(Object* obj) {
         obj->pre_visit(*this);
 
 		modelview_stack_.push();
@@ -37,6 +37,8 @@ public:
 		kmMat4Identity(&trans);
 		kmMat4Translation(&trans, obj->position().x, obj->position().y, obj->position().z);
 		kmMat4Multiply(&modelview_stack_.top(), &modelview_stack_.top(), &trans);
+		
+		return true;
 	}
 	
     virtual void post_visit(Object* obj) {

@@ -22,11 +22,7 @@ public:
     void look_at(const Vec3& position);
 
     void accept(ObjectVisitor& visitor) {
-        for(Object* child: children_) {
-            child->accept(visitor);
-        }
-
-        visitor.visit(this);
+        do_accept<Camera>(this, visitor);
     }
 };
 

@@ -10,7 +10,8 @@ Mesh::Mesh():
     use_parent_vertices_(false),
     diffuse_colour_(1.0, 1.0, 1.0, 1.0),
     depth_test_enabled_(true),
-    depth_writes_enabled_(true) {
+    depth_writes_enabled_(true),
+    branch_selectable_(true) {
 
     //Set all textures to a NullTextureID
     for(uint32_t i = 0; i < MAX_TEXTURE_LEVELS; ++i) {

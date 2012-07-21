@@ -15,16 +15,7 @@ public:
     typedef std::tr1::shared_ptr<Text> ptr;
 
     void accept(ObjectVisitor& visitor) {
-        visitor.pre_visit(this);
-
-        for(Object* child: children_) {
-            child->accept(visitor);
-        }
-
-        if(is_visible()) {
-            visitor.visit(this);
-        }
-        visitor.post_visit(this);
+        do_accept<Text>(this, visitor);
     }
 
     void apply_font(FontID font_id);
