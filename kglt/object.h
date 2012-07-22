@@ -6,6 +6,9 @@
 #include <vector>
 #include <algorithm>
 #include <tr1/memory>
+
+#include <boost/any.hpp>
+
 #include "object_visitor.h"
 #include "kazmath/vec3.h"
 #include "kazmath/quaternion.h"
@@ -24,6 +27,7 @@ private:
     kmVec3 position_;
     kmQuaternion rotation_;
 
+    boost::any user_data_;
 protected:
     Object* parent_;
 
@@ -56,7 +60,7 @@ protected:
 
 	virtual void do_update(double dt) {}
 
-    void* user_data_;
+
     bool is_visible_;
 public:
     typedef std::tr1::shared_ptr<Object> ptr;
@@ -64,7 +68,6 @@ public:
     Object():
         id_(++object_counter),
         parent_(nullptr),
-        user_data_(nullptr),
         is_visible_(true) {
 
         kmVec3Fill(&position_, 0.0, 0.0, 0.0);
@@ -150,8 +153,17 @@ public:
     Scene& scene();
     const Scene& scene() const;
     
-    void set_user_data(void* data) { user_data_ = data; }
-    void* user_data() const { return user_data_; }
+    void set_user_data(boost::any data) { 
+        user_data_ = data; 
+    }
+
+    template<typename T>
+    T user_data() const { 
+        assert(!user_data_.empty());
+        return boost::any_cast<T>(user_data_);
+    }
+    
+    bool has_user_data() const { return !user_data_.empty(); }
 
     virtual void _initialize(Scene& scene) {}
     
