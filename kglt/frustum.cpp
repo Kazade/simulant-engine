@@ -1,15 +1,57 @@
 #include <cassert>
 #include "frustum.h"
 
-namespace frustum {
+namespace kglt {
 
-void Frustum::build_frustum(const kmVec3& camera_position, const kmVec3& camera_forward,
-                   double near_distance, double far_distance) {
-    assert(0 && "Not implemented");
+Frustum::Frustum():
+    initialized_(false) {
+
+}
+
+void Frustum::build_frustum(const kmMat4* modelview_projection) {
+    planes_.resize(FRUSTUM_PLANE_MAX);
+
+    kmPlaneExtractFromMat4(&planes_[FRUSTUM_PLANE_LEFT], modelview_projection, 1);
+    kmPlaneExtractFromMat4(&planes_[FRUSTUM_PLANE_RIGHT], modelview_projection, -1);
+    kmPlaneExtractFromMat4(&planes_[FRUSTUM_PLANE_BOTTOM], modelview_projection, 2);
+    kmPlaneExtractFromMat4(&planes_[FRUSTUM_PLANE_TOP], modelview_projection, -2);
+    kmPlaneExtractFromMat4(&planes_[FRUSTUM_PLANE_NEAR], modelview_projection, 3);
+    kmPlaneExtractFromMat4(&planes_[FRUSTUM_PLANE_FAR], modelview_projection, -3);
+
+    near_corners_.resize(FRUSTUM_CORNER_MAX);
+    kmPlaneGetIntersection(
+        &near_corners_[FRUSTUM_CORNER_BOTTOM_LEFT],
+        &planes_[FRUSTUM_PLANE_LEFT],
+        &planes_[FRUSTUM_PLANE_BOTTOM],
+        &planes_[FRUSTUM_PLANE_NEAR]
+    );
+
+    kmPlaneGetIntersection(
+        &near_corners_[FRUSTUM_CORNER_BOTTOM_RIGHT],
+        &planes_[FRUSTUM_PLANE_RIGHT],
+        &planes_[FRUSTUM_PLANE_BOTTOM],
+        &planes_[FRUSTUM_PLANE_NEAR]
+    );
+
+    kmPlaneGetIntersection(
+        &near_corners_[FRUSTUM_CORNER_TOP_RIGHT],
+        &planes_[FRUSTUM_PLANE_RIGHT],
+        &planes_[FRUSTUM_PLANE_TOP],
+        &planes_[FRUSTUM_PLANE_NEAR]
+    );
+
+    kmPlaneGetIntersection(
+        &near_corners_[FRUSTUM_CORNER_TOP_LEFT],
+        &planes_[FRUSTUM_PLANE_LEFT],
+        &planes_[FRUSTUM_PLANE_TOP],
+        &planes_[FRUSTUM_PLANE_NEAR]
+    );
+
+    initialized_ = true;
 }
 
 std::vector<kmVec3> Frustum::near_corners() const {
-    assert(0 && "Not implemented");
+    return near_corners_;
 }
 
 std::vector<kmVec3> Frustum::far_corners() const {

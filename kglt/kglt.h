@@ -4,6 +4,7 @@
 #include "window.h"
 #include "scene.h"
 #include "viewport.h"
+#include "frustum.h"
 
 #include "rendering/selection_renderer.h"
 #include "procedural/mesh.h"
