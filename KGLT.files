@@ -206,3 +206,6 @@ kglt/text.cpp
 kglt/font.h
 kglt/font.cpp
 samples/text_sample.cpp
+kglt/frustum.h
+kglt/frustum.cpp
+tests/test_frustum.cpp
