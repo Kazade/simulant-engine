@@ -21,7 +21,7 @@ TEST(test_frustum_generation) {
     kmMat4Multiply(&modelview_projection, &projection, &modelview);
 
     //Build the frustum from the modelview projection matrix
-    frustum.build_frustum(&modelview_projection);
+    frustum.build(&modelview_projection);
     CHECK(frustum.initialized());
 
     std::vector<kmVec3> near_corners = frustum.near_corners();

@@ -8,7 +8,7 @@ Frustum::Frustum():
 
 }
 
-void Frustum::build_frustum(const kmMat4* modelview_projection) {
+void Frustum::build(const kmMat4* modelview_projection) {
     planes_.resize(FRUSTUM_PLANE_MAX);
 
     kmPlaneExtractFromMat4(&planes_[FRUSTUM_PLANE_LEFT], modelview_projection, 1);

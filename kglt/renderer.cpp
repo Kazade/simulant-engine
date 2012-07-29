@@ -28,34 +28,8 @@ Renderer::Renderer(Scene& scene, const RenderOptions& options):
 }
 
 void Renderer::start_render() {
-    kmVec3& pos = scene().camera().position();
-    kmQuaternion& rot = scene().camera().rotation();
-    kmMat4 rot_mat;
-    kmMat4RotationQuaternion(&rot_mat, &rot);
-
-    rot_mat.mat[12] = pos.x;
-    rot_mat.mat[13] = pos.y;
-    rot_mat.mat[14] = pos.z;
-
-    kmVec3 up;
-    kmVec3 forward;
-    kmVec3 centre;
-    
-    kmMat4GetForwardVec3(&forward, &rot_mat);
-    
-    kmMat4GetUpVec3(&up, &rot_mat);
-    kmVec3Add(&centre, &pos, &forward);
-
     kmMat4* modelview = &modelview_stack_.top();
-    kmMat4Identity(modelview);    
-    kmMat4LookAt(modelview, &pos, &centre, &up);
-
-    //Keep the frustum updated
-    kmMat4 mvp;
-    kmMat4Multiply(&mvp, &projection_stack_.top(), modelview);
-    frustum_.build_frustum(&mvp);
-
-    //kmMat4Assign(&projection_stack_.top(), &projection_matrix_);
+    scene().camera().apply(modelview);
     
     on_start_render();
 }

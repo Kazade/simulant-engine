@@ -30,7 +30,7 @@ class Frustum {
 public:
     Frustum();
 
-    void build_frustum(const kmMat4* modelview_projection);
+    void build(const kmMat4* modelview_projection);
 
     std::vector<kmVec3> near_corners() const; ///< Returns the near 4 corners of the frustum
     std::vector<kmVec3> far_corners() const; ///< Returns the far 4 corners of the frustum
