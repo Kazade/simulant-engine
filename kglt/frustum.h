@@ -51,6 +51,21 @@ public:
         return kmVec3Length(&diff);
     }
 
+    double near_width() const {
+        assert(initialized_);
+        kmVec3 diff;
+        kmVec3Subtract(&diff, &near_corners_[FRUSTUM_CORNER_BOTTOM_LEFT], &near_corners_[FRUSTUM_CORNER_BOTTOM_RIGHT]);
+        return kmVec3Length(&diff);
+    }
+
+    double far_width() const {
+        assert(initialized_);
+        kmVec3 diff;
+        kmVec3Subtract(&diff, &far_corners_[FRUSTUM_CORNER_BOTTOM_LEFT], &far_corners_[FRUSTUM_CORNER_BOTTOM_RIGHT]);
+        return kmVec3Length(&diff);
+    }
+
+
     double depth() const {
         assert(initialized_);
 
