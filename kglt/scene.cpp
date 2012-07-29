@@ -263,9 +263,11 @@ void Scene::render() {
 		pass.renderer().set_options(render_options);
 		pass.viewport().update_opengl();
 		
+        signal_render_pass_started_(pass);
 		pass.renderer().start_render();
 		this->accept(pass.renderer());
 		pass.renderer().finish_render();
+        signal_render_pass_finished_(pass);
 	}	
 }
 

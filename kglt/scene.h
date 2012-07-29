@@ -1,6 +1,7 @@
 #ifndef SCENE_H_INCLUDED
 #define SCENE_H_INCLUDED
 
+#include <sigc++/sigc++.h>
 #include <boost/any.hpp>
 #include <boost/thread/mutex.hpp>
 
@@ -151,6 +152,9 @@ public:
 	
     Background& background() { return background_; }
     UI& ui() { return ui_interface_; }
+
+    sigc::signal<void, Pass&>& signal_render_pass_started() { return signal_render_pass_started_; }
+    sigc::signal<void, Pass&>& signal_render_pass_finished() { return signal_render_pass_finished_; }
 private:
     std::map<MeshID, Mesh::ptr> meshes_;
     std::map<CameraID, Camera::ptr> cameras_;
@@ -172,6 +176,9 @@ private:
     std::vector<Pass> passes_;
     
     mutable boost::mutex scene_lock_;
+
+    sigc::signal<void, Pass&> signal_render_pass_started_;
+    sigc::signal<void, Pass&> signal_render_pass_finished_;
 };
 
 }
