@@ -116,15 +116,29 @@ void Background::set_visible_dimensions(double width, double height) {
 }
 
 void Background::pre_visit(ObjectVisitor& visitor) {
+    /**
+     * FIXME:
+     * This is a bit hacky, I should come up with something better. Basically, most elements in the scene
+     * are rendered by the active camera. The camera controls the projection matrix and the viewing frustum
+     * but in the case of a background I need to override the projection. Which I've done manually here.
+     *
+     * Perhaps a better way is to render the background using active_camera().frustum().far_corners() as the bounds,
+     * and then use the texture coordinates of the background mesh to manipulate the visible area. That would
+     * avoid this hack. The mesh would need to be rescaled each frame.
+     */
     if(Renderer* renderer = dynamic_cast<Renderer*>(&visitor)) {
-        renderer->projection_stack().push();
-        renderer->set_orthographic_projection(-visible_x_ / 2.0, visible_x_ / 2.0, -visible_y_ / 2.0, visible_y_ / 2.0);
+        tmp_projection_ = renderer->projection_matrix(); //Store the projection matrix before
+
+        kmMat4 new_proj;
+        kmMat4OrthographicProjection(&new_proj, -visible_x_ / 2.0, visible_x_ / 2.0, -visible_y_ / 2.0, visible_y_ / 2.0, -1.0, 1.0);
+        renderer->set_projection_matrix(new_proj);
     }
 }
 
 void Background::post_visit(ObjectVisitor& visitor) {
     if(Renderer* renderer = dynamic_cast<Renderer*>(&visitor)) {
-        renderer->projection_stack().pop();
+        //Restore the stored projection
+        renderer->set_projection_matrix(tmp_projection_);
     }
 }
 

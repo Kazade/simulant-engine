@@ -38,6 +38,7 @@ public:
     }
 
     Scene(WindowBase* window):
+        active_camera_(DefaultCameraID),
         window_(window) {
 
         background().set_parent(this);
@@ -61,7 +62,6 @@ public:
 		 * a fullscreen viewport
 		 */
 		 add_pass(Renderer::ptr(new GenericRenderer(*this)), VIEWPORT_TYPE_FULL);
-		 pass().renderer().set_perspective_projection(45.0, 0.1, 1000.0);        
     }
 
     MeshID new_mesh();
@@ -78,6 +78,9 @@ public:
     ShaderProgram& shader(ShaderID s = NullShaderID);
     Sprite& sprite(SpriteID s);
     Font& font(FontID f);
+
+    Camera& active_camera() { return camera(active_camera_); }
+    void set_active_camera(CameraID cam) { active_camera_ = cam; }
 
     Text& text(TextID t);
     const Text& text(TextID t) const;
@@ -155,6 +158,7 @@ public:
 
     sigc::signal<void, Pass&>& signal_render_pass_started() { return signal_render_pass_started_; }
     sigc::signal<void, Pass&>& signal_render_pass_finished() { return signal_render_pass_finished_; }
+
 private:
     std::map<MeshID, Mesh::ptr> meshes_;
     std::map<CameraID, Camera::ptr> cameras_;
@@ -164,7 +168,7 @@ private:
     std::map<FontID, Font::ptr> fonts_;
     std::map<TextID, Text::ptr> texts_;
 
-    CameraID current_camera_;
+    CameraID active_camera_;
     WindowBase* window_;
 
     std::map<std::string, boost::any> extra_scene_data_;

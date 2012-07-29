@@ -4,6 +4,7 @@
 #include <map>
 
 #include <boost/thread/thread.hpp>
+#include <kazmath/mat4.h>
 
 #include "object.h"
 #include "object_visitor.h"
@@ -47,6 +48,8 @@ private:
     kglt::FontID default_font_id_;
 
     boost::mutex ui_lock_;
+
+    kmMat4 tmp_projection_;
 };
 
 }

@@ -50,7 +50,7 @@ void GenericRenderer::visit(Text* text) {
     ktBindFont(kt_font);
 
     float tmp[16];
-    for(int i = 0; i < 16; ++i) tmp[i] = (float) projection_stack().top().mat[i];
+    for(int i = 0; i < 16; ++i) tmp[i] = (float) projection_matrix().mat[i];
     ktSetProjectionMatrix(tmp);
 
     for(int i = 0; i < 16; ++i) tmp[i] = (float) modelview_stack().top().mat[i];
@@ -101,7 +101,7 @@ void GenericRenderer::visit(Mesh* mesh) {
 	glClientActiveTexture(GL_TEXTURE0);
 	
 	kmMat4 modelview_projection;
-	kmMat4Multiply(&modelview_projection, &projection_stack().top(), &modelview_stack().top());
+    kmMat4Multiply(&modelview_projection, &projection_matrix(), &modelview_stack().top());
 	
 	if(s.has_uniform("modelview_projection_matrix")) {
 		s.set_uniform("modelview_projection_matrix", &modelview_projection);
@@ -110,7 +110,7 @@ void GenericRenderer::visit(Mesh* mesh) {
 		s.set_uniform("modelview_matrix", &modelview_stack().top());
 	}
 	if(s.has_uniform("projection_matrix")) {
-		s.set_uniform("projection_matrix", &projection_stack().top());
+        s.set_uniform("projection_matrix", &projection_matrix());
 	}
 
 	/*glEnableClientState(GL_VERTEX_ARRAY);

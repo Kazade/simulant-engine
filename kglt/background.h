@@ -5,6 +5,7 @@
 #include <vector>
 #include <tr1/memory>
 #include <cstdint>
+#include <kazmath/mat4.h>
 
 #include "object.h"
 #include "types.h"
@@ -16,7 +17,7 @@ class Scene;
 class Background;
 class Renderer;
 
-class BackgroundLayer : Object {
+class BackgroundLayer : public Object {
 public:
     BackgroundLayer(Background& background, const std::string& image_path);
     ~BackgroundLayer();
@@ -32,16 +33,7 @@ public:
     Background& background() { return background_; }
 
     void accept(ObjectVisitor& visitor) {
-        visitor.pre_visit(this);
-
-        for(Object* child: children_) {
-            child->accept(visitor);
-        }
-
-        if(is_visible()) {
-            visitor.visit(this);
-        }
-        visitor.post_visit(this);
+        do_accept<BackgroundLayer>(this, visitor);
     }
 
 private:
@@ -70,21 +62,14 @@ public:
     void post_visit(ObjectVisitor &visitor);
 
     void accept(ObjectVisitor& visitor) {
-        visitor.pre_visit(this);
-
-        for(Object* child: children_) {
-            child->accept(visitor);
-        }
-
-        if(is_visible()) {
-            visitor.visit(this);
-        }
-        visitor.post_visit(this);
+        do_accept<Background>(this, visitor);
     }
 private:
     std::vector<std::tr1::shared_ptr<BackgroundLayer> > layers_;
     double visible_x_;
     double visible_y_;
+
+    kmMat4 tmp_projection_;
 
 };
 
