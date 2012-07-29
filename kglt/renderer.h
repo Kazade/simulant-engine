@@ -4,6 +4,7 @@
 #include "object.h"
 #include "object_visitor.h"
 
+#include "frustum.h"
 #include "kglt/utils/matrix_stack.h"
 
 namespace kglt {
@@ -57,6 +58,8 @@ public:
 	MatrixStack modelview_stack() { return modelview_stack_; }
 	MatrixStack& projection_stack() { return projection_stack_; }
 	
+    Frustum& frustum() { return frustum_; }
+
 private:
     RenderOptions options_;
     Scene& scene_;
@@ -64,6 +67,8 @@ private:
     MatrixStack modelview_stack_;
     MatrixStack projection_stack_;
     
+    Frustum frustum_;
+
     kmMat4 projection_matrix_;
     
     virtual void on_start_render() {}

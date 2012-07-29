@@ -50,6 +50,11 @@ void Renderer::start_render() {
     kmMat4Identity(modelview);    
     kmMat4LookAt(modelview, &pos, &centre, &up);
 
+    //Keep the frustum updated
+    kmMat4 mvp;
+    kmMat4Multiply(&mvp, &projection_stack_.top(), modelview);
+    frustum_.build_frustum(&mvp);
+
     //kmMat4Assign(&projection_stack_.top(), &projection_matrix_);
     
     on_start_render();
