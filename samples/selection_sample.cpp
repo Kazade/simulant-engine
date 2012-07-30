@@ -17,6 +17,13 @@ int main(int argc, char* argv[]) {
 	scene.add_pass(kglt::Renderer::ptr(selection)); //Add the selection pass
 	scene.add_pass(kglt::Renderer::ptr(new kglt::GenericRenderer(scene))); //Normal rendering
 	
+    scene.active_camera().set_perspective_projection(
+        45.0,
+        float(window.width()) / float(window.height()),
+        0.1,
+        1000.0
+    );
+
 	kglt::Mesh& mesh_1 = kglt::return_new_mesh(scene);
 	kglt::Mesh& mesh_2 = kglt::return_new_mesh(scene);
 	

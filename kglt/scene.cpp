@@ -117,7 +117,7 @@ CameraID Scene::new_camera() {
     {
         boost::mutex::scoped_lock lock(scene_lock_);
         if(cameras_.size() == 1) {
-            current_camera_ = id;
+            active_camera_ = id;
         }
     }
     
@@ -196,9 +196,10 @@ const Text& Scene::text(TextID t) const {
 
 Camera& Scene::camera(CameraID c) {
     boost::mutex::scoped_lock lock(scene_lock_);
-    
+
+    //FIXME: This is wrong! Shouldn't need to check for 0
     if(c == 0) {
-        return *cameras_[current_camera_];
+        return *cameras_[active_camera_];
     }
 
 	if(!container::contains(cameras_, c)) {

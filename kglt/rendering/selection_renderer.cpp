@@ -148,7 +148,7 @@ void SelectionRenderer::visit(Mesh* mesh) {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, BUFFER_OFFSET(0));
     
 	kmMat4 modelview_projection;
-	kmMat4Multiply(&modelview_projection, &projection_stack().top(), &modelview_stack().top());
+    kmMat4Multiply(&modelview_projection, &projection_matrix(), &modelview_stack().top());
 	s.set_uniform("modelview_projection_matrix", &modelview_projection);	
 	
 	kmVec3 colour;

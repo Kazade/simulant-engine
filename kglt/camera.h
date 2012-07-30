@@ -12,33 +12,15 @@ class Camera : public Object {
 public:
     typedef std::tr1::shared_ptr<Camera> ptr;
 
-	Camera():
-		Object() {	
-			
-		kmQuaternionRotationYawPitchRoll(&rotation(), 180.0, 0.0, 0.0);
-		kmQuaternionNormalize(&rotation(), &rotation());
-	}
+    Camera();
 
     void watch(Object& obj);
     void follow(Object& obj, float dist, float height=0.0f);
     void look_at(const Vec3& position);
 
     void accept(ObjectVisitor& visitor) {
-        if(Renderer* renderer = dynamic_cast<Renderer*>(&visitor)) {
-            //If the visitor is a renderer
-
-            kmMat4* proj = &renderer->projection_stack().top();
-            kmMat4 modelview;
-            apply(&modelview); //Get the modelview transformations for this camera
-            kmMat4 mvp;
-            kmMat4Multiply(&mvp, proj, &modelview);
-            frustum_.build(&mvp); //Update the frustum for this camera
-        }
-
         do_accept<Camera>(this, visitor);
     }
-
-    Frustum& frustum() { return frustum_; }
 
     void apply(kmMat4* modelview_out) {
         kmVec3& pos = position();
@@ -63,8 +45,25 @@ public:
         kmMat4LookAt(modelview_out, &pos, &centre, &up);
     }
 
+    Frustum& frustum() { return frustum_; }
+
+    void set_perspective_projection(double fov, double aspect, double near=1.0, double far=1000.0f);
+    void set_orthographic_projection(double left, double right, double bottom, double top, double near=-1.0, double far=1.0);
+    double set_orthographic_projection_from_height(double desired_height_in_units, double ratio);
+
+    const kmMat4& projection_matrix() const { return projection_matrix_; }
+
 private:
     Frustum frustum_;
+    kmMat4 projection_matrix_;
+
+    void update_frustum() {
+        kmMat4 modelview;
+        apply(&modelview); //Get the modelview transformations for this camera
+        kmMat4 mvp;
+        kmMat4Multiply(&mvp, &projection_matrix_, &modelview);
+        frustum_.build(&mvp); //Update the frustum for this camera
+    }
 };
 
 }

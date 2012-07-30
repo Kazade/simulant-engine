@@ -46,24 +46,20 @@ public:
 
         obj->post_visit(*this);
 	}
-	
-    virtual void set_perspective_projection(double fov, double aspect, double near=1.0, double far=1000.0f);
-    virtual void set_orthographic_projection(double left, double right, double bottom, double top, double near=-1.0, double far=1.0);
-	virtual double set_orthographic_projection_from_height(double desired_height_in_units, double ratio);
-	
+		
 	RenderOptions& options() { return options_; }
 	Scene& scene() { return scene_; }
 	
 	MatrixStack modelview_stack() { return modelview_stack_; }
-	MatrixStack& projection_stack() { return projection_stack_; }
 	
+    void set_projection_matrix(kmMat4 projection_matrix) { projection_matrix_ = projection_matrix; }
+    const kmMat4& projection_matrix() const { return projection_matrix_; }
+
 private:
     RenderOptions options_;
     Scene& scene_;
 
     MatrixStack modelview_stack_;
-    MatrixStack projection_stack_;
-    
     kmMat4 projection_matrix_;
     
     virtual void on_start_render() {}
