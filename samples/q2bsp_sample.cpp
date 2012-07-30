@@ -21,6 +21,13 @@ int main(int argc, char* argv[]) {
     window.scene().render_options.backface_culling_enabled = false;
     window.scene().render_options.point_size = 1;
 
+    window.scene().active_camera().set_perspective_projection(
+        45.0,
+        float(window.width()) / float(window.height()),
+        0.1,
+        1000.0
+    );
+
     //Create a shader
     //Shader& shader = window.scene().shader(window.scene().new_shader());
 

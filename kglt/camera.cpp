@@ -11,12 +11,7 @@ Camera::Camera():
     kmQuaternionRotationYawPitchRoll(&rotation(), 180.0, 0.0, 0.0);
     kmQuaternionNormalize(&rotation(), &rotation());
 
-    set_perspective_projection(
-        45.0,
-        float(scene().window().width()) / float(scene().window().height()),
-        0.1,
-        1000.0
-    );
+    kmMat4Identity(&projection_matrix_); //Initialize the projection matrix
 }
 
 void Camera::set_perspective_projection(double fov, double aspect, double near, double far) {
