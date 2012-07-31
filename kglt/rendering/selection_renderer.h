@@ -28,7 +28,8 @@ public:
     void visit(UI* ui) {}
     void visit(ui::Element* element) {}
     void visit(Text* text) {} //Dunno if this should be selectable..
-	
+    void visit(Overlay* overlay) {}
+
 	MeshID selected_mesh() const { return selected_mesh_id_; }
 	
 	bool pre_visit(Object* obj) {

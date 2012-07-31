@@ -209,6 +209,27 @@ Camera& Scene::camera(CameraID c) {
     return *cameras_[c];
 }
 
+OverlayID Scene::new_overlay() {
+    static OverlayID counter = 0;
+    OverlayID id = 0;
+    {
+        boost::mutex::scoped_lock lock(scene_lock_);
+        id = ++counter;
+        overlays_.insert(std::make_pair(id, Overlay::ptr(new Overlay)));
+        overlays_[id]->set_parent(this);
+        overlays_[id]->_initialize(*this);
+    }
+    return id;
+}
+
+Overlay& Scene::overlay(OverlayID oid) {
+    boost::mutex::scoped_lock lock(scene_lock_);
+    if(!container::contains(overlays_, oid)) {
+        throw DoesNotExist<OverlayID>();
+    }
+    return *overlays_[oid];
+}
+
 void Scene::init() {
     assert(glGetError() == GL_NO_ERROR);
     ShaderProgram& def = shader(new_shader()); //Create a default shader;

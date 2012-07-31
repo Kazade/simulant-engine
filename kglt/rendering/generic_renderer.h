@@ -40,6 +40,7 @@ public:
     void visit(BackgroundLayer* layer) {}
     void visit(UI* ui) {}
     void visit(ui::Element* element) {}
+    void visit(Overlay* overlay) {}
 
     //Text is magic, we need to handle it
     void visit(Text* text);

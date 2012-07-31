@@ -12,6 +12,7 @@ class Background;
 class BackgroundLayer;
 class UI;
 class Text;
+class Overlay;
 
 namespace ui {
     class Element;
@@ -30,6 +31,7 @@ public:
     virtual void visit(UI* ui) = 0;
     virtual void visit(ui::Element* element) = 0;
     virtual void visit(Text* text) = 0;
+    virtual void visit(Overlay* overlay) = 0;
 
     virtual bool pre_visit(Object* obj) = 0; ///< Return false to cancel visiting a node
     virtual void post_visit(Object* obj) = 0;

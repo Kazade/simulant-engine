@@ -23,6 +23,7 @@
 #include "background.h"
 #include "font.h"
 #include "text.h"
+#include "overlay.h"
 
 #include "ui.h"
 #include "rendering/generic_renderer.h"
@@ -71,6 +72,7 @@ public:
     SpriteID new_sprite();
     FontID new_font();
     TextID new_text();
+    OverlayID new_overlay();
 
     Mesh& mesh(MeshID m);
     Camera& camera(CameraID c = DefaultCameraID);
@@ -78,6 +80,7 @@ public:
     ShaderProgram& shader(ShaderID s = NullShaderID);
     Sprite& sprite(SpriteID s);
     Font& font(FontID f);
+    Overlay& overlay(OverlayID oid);
 
     Camera& active_camera() { return camera(active_camera_); }
     void set_active_camera(CameraID cam) { active_camera_ = cam; }
@@ -167,6 +170,7 @@ private:
     std::map<SpriteID, Sprite::ptr> sprites_;
     std::map<FontID, Font::ptr> fonts_;
     std::map<TextID, Text::ptr> texts_;
+    std::map<OverlayID, Overlay::ptr> overlays_;
 
     CameraID active_camera_;
     WindowBase* window_;

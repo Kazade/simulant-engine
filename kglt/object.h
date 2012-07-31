@@ -6,7 +6,7 @@
 #include <vector>
 #include <algorithm>
 #include <tr1/memory>
-
+#include <stdexcept>
 #include <boost/any.hpp>
 
 #include "object_visitor.h"
@@ -16,6 +16,11 @@
 
 namespace kglt {
 
+class InvalidParentObject : public std::logic_error {
+public:
+    InvalidParentObject(const std::string& msg):
+        std::logic_error(msg) {}
+};
 
 class Scene;
 
@@ -97,6 +102,10 @@ public:
     virtual void rotate_z(float amount);
 
     void set_parent(Object* p) {
+        if(!can_set_parent(p)) {
+            throw InvalidParentObject("You cannot set this object type as a parent of this object");
+        }
+
         Object* old_parent = nullptr;
         if(has_parent()) {
             old_parent = &parent();
@@ -184,6 +193,8 @@ protected:
 
         visitor.post_visit(_this);    
     }
+
+    virtual bool can_set_parent(Object* p) const { return true; }
 };
 
 }

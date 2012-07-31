@@ -209,3 +209,6 @@ samples/text_sample.cpp
 kglt/frustum.h
 kglt/frustum.cpp
 tests/test_frustum.cpp
+kglt/overlay.h
+kglt/overlay.cpp
+tests/test_overlay.cpp
