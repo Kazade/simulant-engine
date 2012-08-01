@@ -268,8 +268,9 @@ std::pair<ShaderID, bool> Scene::find_shader(const std::string& name) {
 }
 
 void Scene::update(double dt) {
-	for(Object* child: children_) {
-		child->update(dt);
+    for(uint32_t i = 0; i < child_count(); ++i) {
+        Object& c = child(i);
+        c.update(dt);
 	}
 }
 

@@ -143,7 +143,6 @@ kglt/mesh.cpp
 kglt/mesh.h
 kglt/object.cpp
 kglt/object.h
-kglt/object_visitor.h
 kglt/option_list.cpp
 kglt/option_list.h
 kglt/pass.cpp
@@ -212,3 +211,6 @@ tests/test_frustum.cpp
 kglt/overlay.h
 kglt/overlay.cpp
 tests/test_overlay.cpp
+kglt/generic/visitor.h
+kglt/generic/tree.h
+tests/test_tree.cpp

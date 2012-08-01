@@ -45,6 +45,8 @@ public:
         if(p) {
             p->attach_child((T*)this);
         }
+
+        on_parent_set(old_parent);
     }
 
     void detach() {
@@ -67,13 +69,21 @@ public:
 
     template<typename Derived>
     const Derived& root_as() const {
-        T* self = this;
+        T* self = (T*)this;
         while(self->has_parent()) {
             self = &self->parent();
         }
 
         return dynamic_cast<const Derived&>(*self);
     }
+
+    template<typename Derived>
+    Derived& parent_as() {
+        assert(has_parent());
+        return dynamic_cast<Derived&>(parent());
+    }
+
+    virtual void on_parent_set(T* old_parent) {}
 
 private:
     T* parent_;
@@ -104,7 +114,9 @@ private:
         children_.erase(std::remove(children_.begin(), children_.end(), child), children_.end());
     }
 
-    virtual bool can_set_parent(T* parent) { return true; }
+    virtual bool can_set_parent(T* parent) {
+        return true;
+    }
 };
 
 #endif // TREE_H

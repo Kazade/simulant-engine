@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <boost/any.hpp>
 
+#include "generic/tree.h"
 #include "object_visitor.h"
 #include "kazmath/vec3.h"
 #include "kazmath/quaternion.h"
@@ -16,15 +17,9 @@
 
 namespace kglt {
 
-class InvalidParentObject : public std::logic_error {
-public:
-    InvalidParentObject(const std::string& msg):
-        std::logic_error(msg) {}
-};
-
 class Scene;
 
-class Object {
+class Object : public TreeNode<Object> {
 private:
     static uint64_t object_counter;
     uint64_t id_;
@@ -34,45 +29,14 @@ private:
 
     boost::any user_data_;
 protected:
-    Object* parent_;
-
-    std::vector<Object*> children_;
-
-    void attach_child(Object* child) {
-        if(child->has_parent()) {
-            child->parent().detach_child(child);
-        }
-
-        child->parent_ = this;
-        children_.push_back(child);
-    }
-
-    void detach_child(Object* child) {
-        //Make sure that the child has a parent
-        if(!child->has_parent()) {
-            return;
-        }
-
-        //Make sure *we* are the parent
-        if(&child->parent() != this) {
-            return;
-        }
-
-        //Erase the child from our children and set its parent to null
-        child->parent_ = nullptr;
-        children_.erase(std::remove(children_.begin(), children_.end(), child), children_.end());
-    }
-
 	virtual void do_update(double dt) {}
-
-
     bool is_visible_;
+
 public:
     typedef std::tr1::shared_ptr<Object> ptr;
 
     Object():
         id_(++object_counter),
-        parent_(nullptr),
         is_visible_(true) {
 
         kmVec3Fill(&position_, 0.0, 0.0, 0.0);
@@ -86,8 +50,9 @@ public:
 	virtual void update(double dt) {
 		do_update(dt);
 		
-		for(Object* child: children_) {
-			child->update(dt);
+        for(uint32_t i = 0; i < child_count(); ++i) {
+            Object& c = child(i);
+            c.update(dt);
 		}
 	}
 
@@ -101,55 +66,8 @@ public:
     virtual void rotate_y(float amount);
     virtual void rotate_z(float amount);
 
-    void set_parent(Object* p) {
-        if(!can_set_parent(p)) {
-            throw InvalidParentObject("You cannot set this object type as a parent of this object");
-        }
-
-        Object* old_parent = nullptr;
-        if(has_parent()) {
-            old_parent = &parent();
-            parent().detach_child(this);
-        }
-
-        if(p) {
-            p->attach_child(this);
-        } else {
-			//Clean up?
-		}
-
-        on_parent_set(old_parent); //Signal
-    }
-
-    bool has_parent() const { return parent_ != nullptr; }
-
-    Object& parent() { assert(parent_); return *parent_; }
-    const Object& parent() const { assert(parent_); return *parent_; }
-
-    Object& child(uint32_t i);
-
     kmVec3& position() { return position_; }
     kmQuaternion& rotation() { return rotation_; }
-
-    template<typename T>
-    T* root_as() {
-        Object* self = this;
-        while(self->has_parent()) {
-            self = &self->parent();
-        }
-
-        return dynamic_cast<T*>(self);
-    }
-
-    template<typename T>
-    T* root_as() const {
-        const Object* self = this;
-        while(self->has_parent()) {
-            self = &self->parent();
-        }
-
-        return dynamic_cast<T*>(self);
-    }
 
     virtual void pre_visit(ObjectVisitor& visitor) {}
     virtual void post_visit(ObjectVisitor& visitor) {}
@@ -187,14 +105,14 @@ protected:
             visitor.visit(_this);
         }
 
-        for(Object* child: _this->children_) {
-            child->accept(visitor);
+        for(uint32_t i = 0; i < child_count(); ++i) {
+            Object& c = child(i);
+            c.accept(visitor);
         }
 
         visitor.post_visit(_this);    
     }
 
-    virtual bool can_set_parent(Object* p) const { return true; }
 };
 
 }

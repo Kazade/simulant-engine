@@ -20,17 +20,7 @@ public:
     Element();
 
     void accept(ObjectVisitor& visitor) {
-        visitor.pre_visit(this);
-
-        if(is_visible()) {
-            visitor.visit(this);
-        }
-
-        for(Object* child: children_) {
-            child->accept(visitor);
-        }
-
-        visitor.post_visit(this);
+        do_accept(this, visitor);
     }
 
     double total_width() { return padding_left() + padding_right() + width(); }

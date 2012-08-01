@@ -42,8 +42,9 @@ public:
     void accept(ObjectVisitor& visitor) {
 		visitor.pre_visit(this);
 		
-        for(Object* child: children_) {
-            child->accept(visitor);
+        for(uint32_t i = 0; i < child_count(); ++i) {
+            Object& c = child(i);
+            c.accept(visitor);
         }
 
         visitor.visit(this);

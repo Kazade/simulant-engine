@@ -96,8 +96,8 @@ public:
         return vertices_;
     }
 
-    Mesh& parent_mesh() {
-        Mesh* mesh = dynamic_cast<Mesh*>(parent_);
+    Mesh& parent_mesh() {        
+        Mesh* mesh = &parent_as<Mesh>();
         if(!is_submesh_ || !mesh) {
             throw std::logic_error("Attempted to get parent mesh from non-submesh");
         }

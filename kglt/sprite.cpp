@@ -76,11 +76,10 @@ void Sprite::set_render_dimensions(float width, float height) {
     render_width_ = width;
     render_height_ = height;
     
-    Scene* scene = root_as<Scene>();
-    assert(scene);
+    Scene& scene = root_as<Scene>();
     
     //Rebuild the mesh
-    Mesh& mesh = scene->mesh(mesh_id_);
+    Mesh& mesh = scene.mesh(mesh_id_);
     kglt::procedural::mesh::rectangle(mesh, render_width_, render_height_);
 }
 
@@ -93,14 +92,13 @@ void Sprite::on_parent_set(Object* old_parent) {
         L_DEBUG("Initializing sprite");
 
         //Get the scene
-        Scene* scene = root_as<Scene>();
-        assert(scene);
+        Scene& scene = root_as<Scene>();
 
         //Create a mesh
-        mesh_id_ = scene->new_mesh();
+        mesh_id_ = scene.new_mesh();
 
         //Make the mesh a rectangle, set the parent as this sprite
-        Mesh& mesh = scene->mesh(mesh_id_);
+        Mesh& mesh = scene.mesh(mesh_id_);
 
         kglt::procedural::mesh::rectangle(mesh, render_width_, render_height_);
 

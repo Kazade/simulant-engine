@@ -9,9 +9,7 @@ namespace kglt {
 uint64_t Object::object_counter = 0;
 
 Object::~Object() {
-    if(has_parent()) {
-        parent().detach_child(this);
-    }
+
 }
 
 void Object::move_to(float x, float y, float z) {
@@ -63,15 +61,11 @@ void Object::rotate_y(float amount) {
 }
 
 Scene& Object::scene() { 
-	Scene* scene = root_as<Scene>(); 
-	assert(scene);
-	return *scene;
+    return root_as<Scene>();
 }
 
 const Scene& Object::scene() const {
-    const Scene* scene = root_as<const Scene>();
-    assert(scene);
-    return *scene;
+    return root_as<const Scene>();
 }
 
 }

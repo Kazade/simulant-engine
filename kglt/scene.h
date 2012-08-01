@@ -110,12 +110,13 @@ public:
 
         background().accept(visitor);
 
-        for(Object* child: children_) {
-            if(dynamic_cast<Background*>(child) ||
-               dynamic_cast<UI*>(child)) {
+        for(uint32_t i = 0; i < child_count(); ++i) {
+            Object& c = child(i);
+            if(dynamic_cast<Background*>(&c) ||
+               dynamic_cast<UI*>(&c)) {
                 continue;
             }
-            child->accept(visitor);
+            c.accept(visitor);
         }
 
         // HACK: same as above, UI must be drawn last
