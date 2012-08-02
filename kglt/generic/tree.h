@@ -1,16 +1,78 @@
 #ifndef TREE_H
 #define TREE_H
 
+#include <boost/iterator/iterator_facade.hpp>
 #include <stdexcept>
 #include <vector>
 #include <tr1/memory>
+#include <sigc++/sigc++.h>
 
 #include "kazbase/logging/logging.h"
+
+namespace kglt {
+namespace generic {
 
 class InvalidParentNodeError : public std::logic_error {
 public:
     InvalidParentNodeError():
         std::logic_error("Tried to set an invalid parent type on a tree node") {}
+};
+
+template<typename T>
+class tree_iterator :
+        public boost::iterator_facade<
+            tree_iterator<T>,
+            T,
+            boost::forward_traversal_tag,
+            T&
+        > {
+
+public:
+    tree_iterator():
+        position_(0) {
+    }
+
+    explicit tree_iterator(T& p):
+        position_(0) {
+        linearized_tree_ = linearize_tree(&p);
+    }
+
+private:
+    friend class boost::iterator_core_access;
+
+    void linearize_recurse(T* node, std::vector<T*>& results) {
+        results.push_back(node);
+        for(uint32_t i = 0; i < node->child_count(); ++i) {
+            linearize_recurse(&node->child(i), results);
+        }
+    }
+
+    std::vector<T*> linearize_tree(T* start) {
+        std::vector<T*> results;
+        linearize_recurse(start, results);
+        return results;
+    }
+
+    std::vector<T*> linearized_tree_;
+    uint32_t position_;
+
+    void increment() {
+        ++position_;
+
+        if(position_ == linearized_tree_.size()) {
+            position_ = 0;
+            linearized_tree_.clear();
+        }
+    }
+
+    bool equal(tree_iterator<T> const& other) const {
+        return this->linearized_tree_ == other.linearized_tree_ &&
+                this->position_ == other.position_;
+    }
+
+    T& dereference() const {
+        return *linearized_tree_.at(position_);
+    }
 };
 
 template<typename T>
@@ -31,22 +93,28 @@ public:
         set_parent(&parent);
     }
 
-    void set_parent(T* p) {
-        if(!can_set_parent(p)) {
+    void set_parent(T* new_parent) {
+        if(!can_set_parent(new_parent)) {
             throw InvalidParentNodeError();
         }
 
-        T* old_parent = nullptr;
-        if(has_parent()) {
-            old_parent = &parent();
-            parent().detach_child((T*)this);
+        T* old_parent = (has_parent()) ? &parent() : nullptr;
+
+        if(old_parent == new_parent) {
+            return; //Do nothing if we are setting the same parent
         }
 
-        if(p) {
-            p->attach_child((T*)this);
+        if(old_parent) {
+            old_parent->detach_child((T*)this);
+        }
+
+        if(new_parent) {
+            new_parent->attach_child((T*)this);
         }
 
         on_parent_set(old_parent);
+
+        signal_parent_changed_(old_parent, new_parent); //Fire off a signal to indicate that the parent changed
     }
 
     void detach() {
@@ -85,9 +153,20 @@ public:
 
     virtual void on_parent_set(T* old_parent) {}
 
+
+    sigc::signal<void, T*, T*>& signal_parent_changed() { return signal_parent_changed_; }
+
+    tree_iterator<TreeNode<T> > begin() { return tree_iterator<TreeNode<T>>(*this); }
+    tree_iterator<TreeNode<T> > end() { return tree_iterator<TreeNode<T> > (); }
+
+protected:
+    std::vector<T*>& children() { return children_; }
+
 private:
     T* parent_;
     std::vector<T*> children_;
+
+    sigc::signal<void, T*, T*> signal_parent_changed_;
 
     void attach_child(T* child) {
         if(child->has_parent()) {
@@ -118,5 +197,9 @@ private:
         return true;
     }
 };
+
+
+} //namespace generic
+} //namespace kglt
 
 #endif // TREE_H

@@ -22,7 +22,7 @@ TEST(test_overlay_creation) {
     kglt::Mesh& mesh = kglt::return_new_mesh(scene);
 
     //Shouldn't be able to set the parent of an overlay to a mesh
-    CHECK_THROW(overlay.set_parent(&mesh), InvalidParentNodeError);
+    CHECK_THROW(overlay.set_parent(&mesh), generic::InvalidParentNodeError);
 
     overlay.set_parent(&scene); //Should work
 

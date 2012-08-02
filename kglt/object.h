@@ -10,6 +10,8 @@
 #include <boost/any.hpp>
 
 #include "generic/tree.h"
+#include "generic/user_data_carrier.h"
+
 #include "object_visitor.h"
 #include "kazmath/vec3.h"
 #include "kazmath/quaternion.h"
@@ -19,32 +21,14 @@ namespace kglt {
 
 class Scene;
 
-class Object : public TreeNode<Object> {
-private:
-    static uint64_t object_counter;
-    uint64_t id_;
-
-    kmVec3 position_;
-    kmQuaternion rotation_;
-
-    boost::any user_data_;
-protected:
-	virtual void do_update(double dt) {}
-    bool is_visible_;
+class Object :
+    public generic::TreeNode<Object>, //Objects form a tree
+    public generic::UserDataCarrier { //And they allow additional data to be attached
 
 public:
     typedef std::tr1::shared_ptr<Object> ptr;
 
-    Object():
-        id_(++object_counter),
-        is_visible_(true) {
-
-        kmVec3Fill(&position_, 0.0, 0.0, 0.0);
-        kmQuaternionIdentity(&rotation_);
-        
-		//rotate_y(180.0);
-    }
-
+    Object();
     virtual ~Object();
 
 	virtual void update(double dt) {
@@ -80,18 +64,6 @@ public:
     Scene& scene();
     const Scene& scene() const;
     
-    void set_user_data(boost::any data) { 
-        user_data_ = data; 
-    }
-
-    template<typename T>
-    T user_data() const { 
-        assert(!user_data_.empty());
-        return boost::any_cast<T>(user_data_);
-    }
-    
-    bool has_user_data() const { return !user_data_.empty(); }
-
     virtual void _initialize(Scene& scene) {}
     
 protected:    
@@ -112,6 +84,35 @@ protected:
 
         visitor.post_visit(_this);    
     }
+
+    virtual void do_update(double dt) {}
+
+private:
+    static uint64_t object_counter;
+    uint64_t id_;
+
+    kmVec3 position_;
+    kmQuaternion rotation_;
+
+    kmVec3 absolute_position_;
+    kmQuaternion absolute_orientation_;
+
+    void parent_changed_callback(Object* old_parent, Object* new_parent) {
+        update_from_parent();
+    }
+
+    void update_from_parent() {
+        if(!has_parent()) {
+            kmVec3Assign(&absolute_position_, &position_);
+            kmQuaternionAssign(&absolute_orientation_, &rotation_);
+            return;
+        }
+
+        kmVec3Add(&absolute_position_, &parent().absolute_position_, &position_);
+        kmQuaternionAdd(&absolute_orientation_, &parent().absolute_orientation_, &rotation_);
+    }
+
+    bool is_visible_;
 
 };
 

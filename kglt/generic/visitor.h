@@ -1,6 +1,7 @@
 #ifndef VISITOR_H
 #define VISITOR_H
 
+namespace kglt {
 namespace generic {
 
 template<typename Derived>
@@ -23,6 +24,7 @@ public:
     virtual void visit(T& /* visitable */) = 0;
 };
 
+}
 }
 
 #endif // VISITOR_H

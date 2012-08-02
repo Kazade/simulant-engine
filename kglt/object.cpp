@@ -1,3 +1,6 @@
+#include <algorithm>
+#include <functional>
+
 #include "kazmath/mat3.h"
 
 #include "scene.h"
@@ -8,6 +11,19 @@ namespace kglt {
 
 uint64_t Object::object_counter = 0;
 
+Object::Object():
+    id_(++object_counter),
+    is_visible_(true) {
+
+    kmVec3Fill(&position_, 0.0, 0.0, 0.0);
+    kmQuaternionIdentity(&rotation_);
+
+    update_from_parent();
+
+    //When the parent changes, update the position/orientation
+    signal_parent_changed().connect(sigc::mem_fun(this, &Object::parent_changed_callback));
+}
+
 Object::~Object() {
 
 }
@@ -16,6 +32,8 @@ void Object::move_to(float x, float y, float z) {
     position_.x = x;
     position_.y = y;
     position_.z = z;
+
+    std::for_each(children().begin(), children().end(), [](Object* x) { x->update_from_parent(); });
 }
 
 void Object::move_forward(float amount) {
@@ -26,6 +44,8 @@ void Object::move_forward(float amount) {
     kmVec3Normalize(&forward, &forward);
     kmVec3Scale(&forward, &forward, amount);
     kmVec3Add(&position_, &position_, &forward);
+
+    std::for_each(children().begin(), children().end(), [](Object* x) { x->update_from_parent(); });
 }
 
 void Object::rotate_x(float amount) {
@@ -35,6 +55,8 @@ void Object::rotate_x(float amount) {
     rot.z = 0.0f;
     rot.w = amount * kmPIOver180;
     kmQuaternionMultiply(&rotation(), &rotation(), &rot);
+
+    std::for_each(children().begin(), children().end(), [](Object* x) { x->update_from_parent(); });
 }
 
 void Object::rotate_z(float amount) {
@@ -44,6 +66,8 @@ void Object::rotate_z(float amount) {
     rot.z = 1.0f;
     rot.w = amount * kmPIOver180;
     kmQuaternionMultiply(&rotation(), &rot, &rotation());
+
+    std::for_each(children().begin(), children().end(), [](Object* x) { x->update_from_parent(); });
 }
 
 void Object::rotate_y(float amount) {
@@ -58,6 +82,8 @@ void Object::rotate_y(float amount) {
 	
     kmQuaternionMultiply(&rotation_, &rot, &rotation_);
     kmQuaternionNormalize(&rotation_, &rotation_);
+
+    std::for_each(children().begin(), children().end(), [](Object* x) { x->update_from_parent(); });
 }
 
 Scene& Object::scene() { 

@@ -73,7 +73,7 @@ TextureID Scene::new_texture() {
         boost::mutex::scoped_lock lock(scene_lock_);
         id = ++counter;
     }
-    Texture& tex = textures_[id];
+    textures_.insert(std::make_pair(id, Texture()));
     return id;
 }
 
