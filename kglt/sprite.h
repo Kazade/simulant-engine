@@ -13,10 +13,11 @@ class Texture;
 
 class Sprite :
     public Loadable,
-    public Object,
-    public generic::VisitableBase<Sprite> {
+    public Object {
 
 public:
+    VIS_DEFINE_VISITABLE();
+
     typedef std::tr1::shared_ptr<Sprite> ptr;
 
     Sprite();

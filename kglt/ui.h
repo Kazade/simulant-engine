@@ -18,10 +18,11 @@ namespace ui {
 }
 
 class UI :
-    public Object,
-    public generic::VisitableBase<UI> {
+    public Object {
 
 public:
+    VIS_DEFINE_VISITABLE();
+
     UI():
         default_font_id_(0) {
         move_to(0.0, 0.0, -1.0);

@@ -215,3 +215,8 @@ kglt/generic/visitor.h
 kglt/generic/tree.h
 tests/test_tree.cpp
 kglt/generic/user_data_carrier.h
+kglt/generic/loki/typelist.h
+kglt/generic/loki/sequence.h
+kglt/generic/loki/null_type.h
+kglt/generic/loki/type_manip.h
+kglt/generic/loki/typelist_macros.h

@@ -4,6 +4,9 @@
 #include "object.h"
 #include "kglt/utils/matrix_stack.h"
 
+#include "text.h"
+#include "mesh.h"
+
 #include "generic/visitor.h"
 #include "generic/tree.h"
 
@@ -21,6 +24,7 @@ public:
     BaseRenderer(const RenderOptions& options=RenderOptions()):
         options_(options) {
 
+         Visits(*this, Loki::Seq<Object, Mesh, Text>::Type());
     }
 
     virtual ~BaseRenderer() {}
@@ -30,6 +34,10 @@ public:
     void set_options(RenderOptions& options) {
         options_ = options;
     }
+
+    virtual void visit(Object& object) {}
+    virtual void visit(Mesh& object) = 0;
+    virtual void visit(Text& object) = 0;
 
 protected:
     RenderOptions& options() { return options_; }

@@ -17,8 +17,10 @@ class Scene;
 class Background;
 class Renderer;
 
-class BackgroundLayer : public Object, public generic::VisitableBase<BackgroundLayer> {
+class BackgroundLayer : public Object {
 public:
+    VIS_DEFINE_VISITABLE();
+
     BackgroundLayer(Background& background, const std::string& image_path);
     ~BackgroundLayer();
 
@@ -45,9 +47,11 @@ private:
 };
 
 class Background :
-    public Object,
-    public generic::VisitableBase<Background> {
+    public Object {
+
 public:
+    VIS_DEFINE_VISITABLE();
+
     Background();
 
     void add_layer(const std::string& image_path);

@@ -61,8 +61,10 @@ enum VertexAttribute {
 	VERTEX_ATTRIBUTE_DIFFUSE = 4
 };
 
-class Mesh : public Object, public generic::VisitableBase<Mesh> {
+class Mesh : public Object {
 public:
+    VIS_DEFINE_VISITABLE();
+
     typedef std::tr1::shared_ptr<Mesh> ptr;
 
     Mesh();

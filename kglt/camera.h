@@ -8,9 +8,10 @@
 namespace kglt {
 
 class Camera :
-    public Object,
-    public generic::VisitableBase<Camera> {
+    public Object {
 public:
+    VIS_DEFINE_VISITABLE();
+
     typedef std::tr1::shared_ptr<Camera> ptr;
 
     Camera();

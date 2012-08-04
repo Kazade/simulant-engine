@@ -34,10 +34,11 @@ class WindowBase;
 
 class Scene :
     public Object,
-    public Loadable,
-    public generic::VisitableBase<Scene> {
+    public Loadable {
 
 public:
+    VIS_DEFINE_VISITABLE();
+
     void move(float x, float y, float z) {
         throw std::logic_error("You cannot move the scene");
     }

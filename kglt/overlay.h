@@ -23,10 +23,11 @@ namespace kglt {
 */
 
 class Overlay :
-    public Object,
-    public generic::VisitableBase<Overlay> {
+    public Object {
 
 public:
+    VIS_DEFINE_VISITABLE();
+
     typedef std::tr1::shared_ptr<Overlay> ptr;
 
     Overlay();
