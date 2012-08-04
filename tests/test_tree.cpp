@@ -41,6 +41,10 @@ TEST(test_tree_iteration) {
     node2.set_parent(root);
     node3.set_parent(node1);
 
+    CHECK(node1.has_siblings());
+    CHECK(node2.has_siblings());
+    CHECK(!node3.has_siblings());
+
     generic::tree_iterator<Object> iter(root);
     generic::tree_iterator<Object> end;
 

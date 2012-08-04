@@ -42,48 +42,50 @@ void GenericRenderer::on_start_render() {
 	assert(depth_bits > 0);
 }
 
-void GenericRenderer::visit(Text* text) {
-    KTuint kt_font = text->font().kt_font(); //Get the kaztext font ID
+void GenericRenderer::visit(Text& text) {
+    KTuint kt_font = text.font().kt_font(); //Get the kaztext font ID
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     ktBindFont(kt_font);
 
     float tmp[16];
-    for(int i = 0; i < 16; ++i) tmp[i] = (float) projection_matrix().mat[i];
+    for(int i = 0; i < 16; ++i) tmp[i] = (float) projection().top().mat[i];
     ktSetProjectionMatrix(tmp);
 
-    for(int i = 0; i < 16; ++i) tmp[i] = (float) modelview_stack().top().mat[i];
+    for(int i = 0; i < 16; ++i) tmp[i] = (float) modelview().top().mat[i];
     ktSetModelviewMatrix(tmp);
 
-    ktDrawText(0, (text->font().size() * 0.25) , text->text().c_str());
+    ktDrawText(0, (text.font().size() * 0.25) , text.text().c_str());
 
     check_and_log_error(__FILE__, __LINE__);
 }
 
-void GenericRenderer::visit(Mesh* mesh) {
+void GenericRenderer::visit(Mesh& mesh) {
+    Scene& scene = mesh.scene();
+
     glPushAttrib(GL_DEPTH_BUFFER_BIT);
 
-    if(!mesh->depth_test_enabled()) {
+    if(!mesh.depth_test_enabled()) {
         glDisable(GL_DEPTH_TEST);
     } else {
         glEnable(GL_DEPTH_TEST);
     }
 
-    if(!mesh->depth_writes_enabled()) {
+    if(!mesh.depth_writes_enabled()) {
         glDepthMask(GL_FALSE);
     } else {
         glDepthMask(GL_TRUE);
     }
 
-    kglt::TextureID tex = mesh->texture(PRIMARY);
+    kglt::TextureID tex = mesh.texture(PRIMARY);
     if(!options().texture_enabled) {
 		tex = NullTextureID; //Turn off the texture
 	}
-    glBindTexture(GL_TEXTURE_2D, scene().texture(tex).gl_tex());
+    glBindTexture(GL_TEXTURE_2D, scene.texture(tex).gl_tex());
 
     //FIXME: Allow meshes to override the shader
-    ShaderProgram& s = scene().shader(NullShaderID);
+    ShaderProgram& s = scene.shader(NullShaderID);
     s.activate();
                     
     //s.bind_attrib(2, "vertex_diffuse");
@@ -91,7 +93,7 @@ void GenericRenderer::visit(Mesh* mesh) {
 
     check_and_log_error(__FILE__, __LINE__);
                 
-	mesh->vbo(VERTEX_ATTRIBUTE_POSITION | VERTEX_ATTRIBUTE_TEXCOORD_1 | VERTEX_ATTRIBUTE_DIFFUSE);
+    mesh.vbo(VERTEX_ATTRIBUTE_POSITION | VERTEX_ATTRIBUTE_TEXCOORD_1 | VERTEX_ATTRIBUTE_DIFFUSE);
 	
 	uint32_t stride = (sizeof(float) * 3) + (sizeof(float) * 2) + (sizeof(float) * 4);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(0));
@@ -101,16 +103,16 @@ void GenericRenderer::visit(Mesh* mesh) {
 	glClientActiveTexture(GL_TEXTURE0);
 	
 	kmMat4 modelview_projection;
-    kmMat4Multiply(&modelview_projection, &projection_matrix(), &modelview_stack().top());
+    kmMat4Multiply(&modelview_projection, &projection().top(), &modelview().top());
 	
 	if(s.has_uniform("modelview_projection_matrix")) {
 		s.set_uniform("modelview_projection_matrix", &modelview_projection);
 	}
 	if(s.has_uniform("modelview_matrix")) {
-		s.set_uniform("modelview_matrix", &modelview_stack().top());
+        s.set_uniform("modelview_matrix", &modelview().top());
 	}
 	if(s.has_uniform("projection_matrix")) {
-        s.set_uniform("projection_matrix", &projection_matrix());
+        s.set_uniform("projection_matrix", &projection().top());
 	}
 
 	/*glEnableClientState(GL_VERTEX_ARRAY);
@@ -120,12 +122,12 @@ void GenericRenderer::visit(Mesh* mesh) {
 	glEnableVertexAttribArray(1);
 	glEnableVertexAttribArray(2);
 
-	if(mesh->arrangement() == MESH_ARRANGEMENT_POINTS) {
-		glDrawArrays(GL_POINTS, 0, mesh->vertices().size());
-	} else if(mesh->arrangement() == MESH_ARRANGEMENT_LINE_STRIP) {
-		glDrawArrays(GL_LINE_STRIP, 0, mesh->vertices().size());
-	} else if(mesh->arrangement() == MESH_ARRANGEMENT_TRIANGLES) {
-		glDrawArrays(GL_TRIANGLES, 0, mesh->triangles().size() * 3);
+    if(mesh.arrangement() == MESH_ARRANGEMENT_POINTS) {
+        glDrawArrays(GL_POINTS, 0, mesh.vertices().size());
+    } else if(mesh.arrangement() == MESH_ARRANGEMENT_LINE_STRIP) {
+        glDrawArrays(GL_LINE_STRIP, 0, mesh.vertices().size());
+    } else if(mesh.arrangement() == MESH_ARRANGEMENT_TRIANGLES) {
+        glDrawArrays(GL_TRIANGLES, 0, mesh.triangles().size() * 3);
 	} else {
 		assert(0);
 	}

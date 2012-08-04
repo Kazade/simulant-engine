@@ -44,11 +44,11 @@ void main() {
     return frag_shader;
 }
 
-void SelectionRenderer::on_start_render() {
-	std::pair<ShaderID, bool> selection_shader = scene().find_shader("selection_shader");
+void SelectionRenderer::on_start_render(Scene& scene) {
+    std::pair<ShaderID, bool> selection_shader = scene.find_shader("selection_shader");
 	if(!selection_shader.second) {
 		//Load the selection shader into the scene
-		ShaderProgram& shader = kglt::return_new_shader(scene());
+        ShaderProgram& shader = kglt::return_new_shader(scene);
 		shader.set_name("selection_shader");
 		
 		shader.add_and_compile(SHADER_TYPE_VERTEX, selection_vert_shader_120());
@@ -63,7 +63,7 @@ void SelectionRenderer::on_start_render() {
 		
 	} else {
 		//Activate the shader
-		scene().shader(selection_shader.first).activate();
+        scene.shader(selection_shader.first).activate();
 	}
 	
 	/*
@@ -85,13 +85,13 @@ void SelectionRenderer::on_start_render() {
 	selected_mesh_id_ = 0;
 }
 
-void SelectionRenderer::on_finish_render() {	
+void SelectionRenderer::on_finish_render(Scene &scene) {
 	uint8_t pixel[3];
 	GLint viewport[4];
 	glGetIntegerv(GL_VIEWPORT, viewport);
 	
 	int32_t mouse_x, mouse_y;
-	scene().window().cursor_position(mouse_x, mouse_y);
+    scene.window().cursor_position(mouse_x, mouse_y);
 	
 	glReadPixels(mouse_x, viewport[3] - mouse_y, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, pixel);
 	
@@ -110,11 +110,12 @@ void SelectionRenderer::on_finish_render() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
 }
 	
-void SelectionRenderer::visit(Mesh* mesh) {
-	std::pair<ShaderID, bool> selection_shader = scene().find_shader("selection_shader");
+void SelectionRenderer::visit(Mesh& mesh) {
+    Scene& scene = mesh.root_as<Scene>();
+    std::pair<ShaderID, bool> selection_shader = scene.find_shader("selection_shader");
 	assert(selection_shader.second);
 	
-	ShaderProgram& s = scene().shader(selection_shader.first);
+    ShaderProgram& s = scene.shader(selection_shader.first);
 	
 	b_count++;
 	if(b_count == 255) {
@@ -133,22 +134,22 @@ void SelectionRenderer::visit(Mesh* mesh) {
 		(1.0 / 255.0) * b_count
 	);
 	
-	colour_mesh_lookup_[current_colour] = scene()._mesh_id_from_mesh_ptr(mesh);
+    colour_mesh_lookup_[current_colour] = scene._mesh_id_from_mesh_ptr(&mesh);
 	
 	//Bind the NULL texture (e.g. make sure everything is white)
-	glBindTexture(GL_TEXTURE_2D, scene().texture(NullTextureID).gl_tex());
+    glBindTexture(GL_TEXTURE_2D, scene.texture(NullTextureID).gl_tex());
 
     kmMat4 transform;
     kmMat4Identity(&transform);
     check_and_log_error(__FILE__, __LINE__);
     
     //Only draw vertices
-	mesh->vbo(VERTEX_ATTRIBUTE_POSITION);
+    mesh.vbo(VERTEX_ATTRIBUTE_POSITION);
 	
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, BUFFER_OFFSET(0));
     
 	kmMat4 modelview_projection;
-    kmMat4Multiply(&modelview_projection, &projection_matrix(), &modelview_stack().top());
+    kmMat4Multiply(&modelview_projection, &projection().top(), &modelview().top());
 	s.set_uniform("modelview_projection_matrix", &modelview_projection);	
 	
 	kmVec3 colour;
@@ -162,12 +163,12 @@ void SelectionRenderer::visit(Mesh* mesh) {
 	s.set_uniform("selection_colour", &colour);
 	
 	glEnableVertexAttribArray(0);		
-	if(mesh->arrangement() == MESH_ARRANGEMENT_POINTS) {
-		glDrawArrays(GL_POINTS, 0, mesh->vertices().size());   
-	} else if(mesh->arrangement() == MESH_ARRANGEMENT_LINE_STRIP) {
-		glDrawArrays(GL_LINE_STRIP, 0, mesh->vertices().size());     	
-	} else if(mesh->arrangement() == MESH_ARRANGEMENT_TRIANGLES) {
-		glDrawArrays(GL_TRIANGLES, 0, mesh->triangles().size() * 3);
+    if(mesh.arrangement() == MESH_ARRANGEMENT_POINTS) {
+        glDrawArrays(GL_POINTS, 0, mesh.vertices().size());
+    } else if(mesh.arrangement() == MESH_ARRANGEMENT_LINE_STRIP) {
+        glDrawArrays(GL_LINE_STRIP, 0, mesh.vertices().size());
+    } else if(mesh.arrangement() == MESH_ARRANGEMENT_TRIANGLES) {
+        glDrawArrays(GL_TRIANGLES, 0, mesh.triangles().size() * 3);
 	} else {
 		assert(0);
 	}

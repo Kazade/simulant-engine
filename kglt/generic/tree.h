@@ -78,6 +78,8 @@ private:
 template<typename T>
 class TreeNode {
 public:
+    typedef tree_iterator<TreeNode<T> > iterator;
+
     TreeNode():
         parent_(nullptr) {}
 
@@ -159,6 +161,8 @@ public:
     tree_iterator<TreeNode<T> > begin() { return tree_iterator<TreeNode<T>>(*this); }
     tree_iterator<TreeNode<T> > end() { return tree_iterator<TreeNode<T> > (); }
 
+    bool has_siblings() const { return has_parent() ? parent().child_count() > 1 : false; }
+
 protected:
     std::vector<T*>& children() { return children_; }
 
@@ -197,7 +201,6 @@ private:
         return true;
     }
 };
-
 
 } //namespace generic
 } //namespace kglt

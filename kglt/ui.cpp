@@ -10,12 +10,13 @@
 
 namespace kglt {
 
+/*
 void UI::pre_visit(ObjectVisitor& visitor) {
     if(Renderer* renderer = dynamic_cast<Renderer*>(&visitor)) {
         /**
          * FIXME:
          * See background.cpp for why this is all bollocks
-         */
+         *
         tmp_projection_ = renderer->projection_matrix();
 
         kmMat4 new_proj;
@@ -28,7 +29,7 @@ void UI::post_visit(ObjectVisitor &visitor) {
     if(Renderer* renderer = dynamic_cast<Renderer*>(&visitor)) {
         renderer->set_projection_matrix(tmp_projection_);
     }
-}
+}*/
 
 ui::LabelID UI::new_label() {
     if(!default_font_id_) {

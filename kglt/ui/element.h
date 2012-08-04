@@ -2,7 +2,7 @@
 #define ELEMENT_H
 
 #include "../object.h"
-#include "../object_visitor.h"
+#include "../generic/visitor.h"
 
 namespace kglt {
 namespace ui {
@@ -15,13 +15,12 @@ enum PaddingIndex {
     PADDING_MAX
 };
 
-class Element : public Object {
+class Element :
+    public Object,
+    public generic::VisitableBase<Element> {
+
 public:
     Element();
-
-    void accept(ObjectVisitor& visitor) {
-        do_accept(this, visitor);
-    }
 
     double total_width() { return padding_left() + padding_right() + width(); }
     double total_height() { return padding_top() + padding_bottom() + height(); }

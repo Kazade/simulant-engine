@@ -10,32 +10,20 @@ namespace kglt {
 class SelectionRenderer : public Renderer {
 public:
 	typedef std::tr1::shared_ptr<SelectionRenderer> ptr;
-	
-	SelectionRenderer(Scene& scene):
-		Renderer(scene),
+		
+    SelectionRenderer(const RenderOptions& options=RenderOptions()):
+        Renderer(options),
 		selected_mesh_id_(0) {}
 	
-	SelectionRenderer(Scene& scene, const RenderOptions& options):
-		Renderer(scene, options),
-		selected_mesh_id_(0) {}
-	
-	void visit(Camera* camera) {}
-	void visit(Scene* scene) {}
-	void visit(Sprite* sprite) {}
-    void visit(Background* bg) {}
-    void visit(BackgroundLayer* layer) {}
-	void visit(Mesh* mesh);
-    void visit(UI* ui) {}
-    void visit(ui::Element* element) {}
-    void visit(Text* text) {} //Dunno if this should be selectable..
-    void visit(Overlay* overlay) {}
+    void visit(Mesh& mesh);
+    void visit(Text& text) {} //Dunno if this should be selectable..
 
 	MeshID selected_mesh() const { return selected_mesh_id_; }
 	
-	bool pre_visit(Object* obj) {
+    bool pre_visit(Object& obj) {
 	    //If this is a mesh, and the entire branch is not selectable,
 	    //then bail out
-	    if(Mesh* m = dynamic_cast<Mesh*>(obj)) {
+        if(Mesh* m = dynamic_cast<Mesh*>(&obj)) {
 	        if(!m->branch_selectable()) {	            
 	            return false;
 	        }
@@ -47,8 +35,8 @@ public:
 	}
 	
 private:
-	void on_start_render();
-	void on_finish_render();
+    void on_start_render(Scene& scene);
+    void on_finish_render(Scene& scene);
 
     uint8_t r_count, g_count, b_count;	
     

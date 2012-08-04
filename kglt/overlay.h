@@ -5,6 +5,7 @@
 #include <kazmath/mat4.h>
 
 #include "object.h"
+#include "generic/visitor.h"
 
 namespace kglt {
 
@@ -21,7 +22,10 @@ namespace kglt {
   Overlays are rendered from lowest zindex first to highest.
 */
 
-class Overlay : public Object {
+class Overlay :
+    public Object,
+    public generic::VisitableBase<Overlay> {
+
 public:
     typedef std::tr1::shared_ptr<Overlay> ptr;
 
@@ -33,9 +37,6 @@ public:
     void set_ortho(double left, double right, double bottom, double top);
     const kmMat4& projection_matrix() const { return projection_matrix_; }
 
-    void accept(ObjectVisitor& visitor) {
-        do_accept<Overlay>(this, visitor);
-    }
 private:
     int32_t zindex_;
     kmMat4 projection_matrix_;

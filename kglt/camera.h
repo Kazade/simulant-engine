@@ -2,13 +2,14 @@
 #define CAMERA_H_INCLUDED
 
 #include "object.h"
-#include "object_visitor.h"
 #include "frustum.h"
 #include "renderer.h"
 
 namespace kglt {
 
-class Camera : public Object {
+class Camera :
+    public Object,
+    public generic::VisitableBase<Camera> {
 public:
     typedef std::tr1::shared_ptr<Camera> ptr;
 
@@ -17,10 +18,6 @@ public:
     void watch(Object& obj);
     void follow(Object& obj, float dist, float height=0.0f);
     void look_at(const Vec3& position);
-
-    void accept(ObjectVisitor& visitor) {
-        do_accept<Camera>(this, visitor);
-    }
 
     void apply(kmMat4* modelview_out) {
         kmVec3& pos = position();

@@ -7,8 +7,7 @@
 #include <kazmath/mat4.h>
 
 #include "object.h"
-#include "object_visitor.h"
-
+#include "generic/visitor.h"
 #include "kaztext/kaztext.h"
 #include "ui/types.h"
 
@@ -18,19 +17,18 @@ namespace ui {
     class Label;
 }
 
-class UI : public Object {
+class UI :
+    public Object,
+    public generic::VisitableBase<UI> {
+
 public:
     UI():
         default_font_id_(0) {
         move_to(0.0, 0.0, -1.0);
     }
 
-    void accept(ObjectVisitor& visitor) {
-        do_accept<UI>(this, visitor);
-    }
-
-    void pre_visit(ObjectVisitor& visitor);
-    void post_visit(ObjectVisitor &visitor);
+    /*void pre_visit(ObjectVisitor& visitor);
+    void post_visit(ObjectVisitor &visitor);*/
 
     ui::LabelID new_label();
     ui::Label& label(ui::LabelID label_id);

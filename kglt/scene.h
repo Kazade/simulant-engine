@@ -32,7 +32,11 @@ namespace kglt {
 
 class WindowBase;
 
-class Scene : public Object, public Loadable {
+class Scene :
+    public Object,
+    public Loadable,
+    public generic::VisitableBase<Scene> {
+
 public:
     void move(float x, float y, float z) {
         throw std::logic_error("You cannot move the scene");
@@ -62,7 +66,7 @@ public:
 		 * Create the default pass, which uses a perspective projection and
 		 * a fullscreen viewport
 		 */
-		 add_pass(Renderer::ptr(new GenericRenderer(*this)), VIEWPORT_TYPE_FULL);
+         add_pass(Renderer::ptr(new GenericRenderer(render_options)), VIEWPORT_TYPE_FULL);
     }
 
     MeshID new_mesh();
@@ -97,7 +101,7 @@ public:
     void render();
     void update(double dt);
 
-    void accept(ObjectVisitor& visitor) {
+    /*void accept(ObjectVisitor& visitor) {
         /**
           HACK: We need to implement render queues for BACKGROUND, DEFAULT and OVERLAY
           so that we can control the order of object rendering. This requires implementation of the
@@ -106,7 +110,7 @@ public:
           So, for now we render the background first, and then ignore it when iterating the children
 
           FIXME: !!
-        */
+        *
 
         background().accept(visitor);
 
@@ -123,7 +127,7 @@ public:
         ui().accept(visitor);
 
         visitor.visit(this);
-    }
+    }*/
 
     RenderOptions render_options;
 

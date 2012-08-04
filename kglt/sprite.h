@@ -3,7 +3,7 @@
 
 #include "object.h"
 #include "loadable.h"
-#include "object_visitor.h"
+#include "generic/visitor.h"
 #include "kazbase/logging/logging.h"
 
 namespace kglt {
@@ -11,7 +11,11 @@ namespace kglt {
 class Scene;
 class Texture;
 
-class Sprite : public Loadable, public Object {
+class Sprite :
+    public Loadable,
+    public Object,
+    public generic::VisitableBase<Sprite> {
+
 public:
     typedef std::tr1::shared_ptr<Sprite> ptr;
 
@@ -38,18 +42,6 @@ public:
 	//===============================================================
 	
     virtual void on_parent_set(Object* old_parent);
-
-    void accept(ObjectVisitor& visitor) {
-		visitor.pre_visit(this);
-		
-        for(uint32_t i = 0; i < child_count(); ++i) {
-            Object& c = child(i);
-            c.accept(visitor);
-        }
-
-        visitor.visit(this);
-        visitor.post_visit(this);
-    }
     
     MeshID mesh_id() const { return mesh_id_; }
     

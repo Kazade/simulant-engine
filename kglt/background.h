@@ -9,7 +9,7 @@
 
 #include "object.h"
 #include "types.h"
-#include "object_visitor.h"
+#include "generic/visitor.h"
 
 namespace kglt {
 
@@ -17,7 +17,7 @@ class Scene;
 class Background;
 class Renderer;
 
-class BackgroundLayer : public Object {
+class BackgroundLayer : public Object, public generic::VisitableBase<BackgroundLayer> {
 public:
     BackgroundLayer(Background& background, const std::string& image_path);
     ~BackgroundLayer();
@@ -32,10 +32,6 @@ public:
 
     Background& background() { return background_; }
 
-    void accept(ObjectVisitor& visitor) {
-        do_accept<BackgroundLayer>(this, visitor);
-    }
-
 private:
     Background& background_;
     TextureID texture_id_;
@@ -48,7 +44,9 @@ private:
     double offset_y_;
 };
 
-class Background : public Object {
+class Background :
+    public Object,
+    public generic::VisitableBase<Background> {
 public:
     Background();
 
@@ -58,12 +56,8 @@ public:
 
     void set_visible_dimensions(double width, double height);
 
-    void pre_visit(ObjectVisitor& visitor);
-    void post_visit(ObjectVisitor &visitor);
-
-    void accept(ObjectVisitor& visitor) {
-        do_accept<Background>(this, visitor);
-    }
+    /*void pre_visit(ObjectVisitor& visitor);
+    void post_visit(ObjectVisitor &visitor);*/
 private:
     std::vector<std::tr1::shared_ptr<BackgroundLayer> > layers_;
     double visible_x_;

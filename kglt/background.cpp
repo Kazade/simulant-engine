@@ -115,6 +115,7 @@ void Background::set_visible_dimensions(double width, double height) {
     visible_y_ = height;
 }
 
+/*
 void Background::pre_visit(ObjectVisitor& visitor) {
     /**
      * FIXME:
@@ -125,7 +126,7 @@ void Background::pre_visit(ObjectVisitor& visitor) {
      * Perhaps a better way is to render the background using active_camera().frustum().far_corners() as the bounds,
      * and then use the texture coordinates of the background mesh to manipulate the visible area. That would
      * avoid this hack. The mesh would need to be rescaled each frame.
-     */
+
     if(Renderer* renderer = dynamic_cast<Renderer*>(&visitor)) {
         tmp_projection_ = renderer->projection_matrix(); //Store the projection matrix before
 
@@ -140,6 +141,6 @@ void Background::post_visit(ObjectVisitor& visitor) {
         //Restore the stored projection
         renderer->set_projection_matrix(tmp_projection_);
     }
-}
+}*/
 
 }

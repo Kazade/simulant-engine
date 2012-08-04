@@ -11,8 +11,8 @@
 
 #include "generic/tree.h"
 #include "generic/user_data_carrier.h"
+#include "generic/visitor.h"
 
-#include "object_visitor.h"
 #include "kazmath/vec3.h"
 #include "kazmath/quaternion.h"
 #include "types.h"
@@ -23,9 +23,12 @@ class Scene;
 
 class Object :
     public generic::TreeNode<Object>, //Objects form a tree
-    public generic::UserDataCarrier { //And they allow additional data to be attached
+    public generic::UserDataCarrier,
+    public generic::VisitableBase<Object> { //And they allow additional data to be attached
 
 public:
+    VIS_DEFINE_VISITABLE();
+
     typedef std::tr1::shared_ptr<Object> ptr;
 
     Object();
@@ -53,10 +56,6 @@ public:
     kmVec3& position() { return position_; }
     kmQuaternion& rotation() { return rotation_; }
 
-    virtual void pre_visit(ObjectVisitor& visitor) {}
-    virtual void post_visit(ObjectVisitor& visitor) {}
-
-    virtual void accept(ObjectVisitor& visitor) = 0;
     virtual void on_parent_set(Object* old_parent) {}
 
     uint64_t id() const { return id_; }
@@ -65,26 +64,6 @@ public:
     const Scene& scene() const;
     
     virtual void _initialize(Scene& scene) {}
-    
-protected:    
-    template<typename T>
-    void do_accept(T* _this, ObjectVisitor& visitor) {
-		if(!visitor.pre_visit(_this)) {
-		    return;
-		}
-
-        if(_this->is_visible()) {
-            visitor.visit(_this);
-        }
-
-        for(uint32_t i = 0; i < child_count(); ++i) {
-            Object& c = child(i);
-            c.accept(visitor);
-        }
-
-        visitor.post_visit(_this);    
-    }
-
     virtual void do_update(double dt) {}
 
 private:

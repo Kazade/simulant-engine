@@ -6,17 +6,16 @@
 #include "types.h"
 
 #include "object.h"
-#include "object_visitor.h"
+#include "generic/visitor.h"
 
 namespace kglt {
 
-class Text : public Object {
+class Text :
+    public Object,
+    public generic::VisitableBase<Text> {
+
 public:
     typedef std::tr1::shared_ptr<Text> ptr;
-
-    void accept(ObjectVisitor& visitor) {
-        do_accept<Text>(this, visitor);
-    }
 
     void apply_font(FontID font_id);
     Font& font();
