@@ -21,9 +21,12 @@ public:
             
     void visit(Mesh& mesh);
     void visit(Text& text);
+    void visit(Background& background);
 
-private:
-	void on_start_render();
+private:    
+    void on_start_render(Scene& scene);
+
+    void render_mesh(Mesh& mesh, Scene& scene);
 };
 
 }

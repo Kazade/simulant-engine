@@ -102,8 +102,7 @@ public:
     void render();
     void update(double dt);
 
-    /*void accept(ObjectVisitor& visitor) {
-        /**
+    /*void accept(ObjectVisitor& visitor) {        
           HACK: We need to implement render queues for BACKGROUND, DEFAULT and OVERLAY
           so that we can control the order of object rendering. This requires implementation of the
           batch rendering stuff though - and I don't have the time or energy for that atm.
@@ -111,7 +110,7 @@ public:
           So, for now we render the background first, and then ignore it when iterating the children
 
           FIXME: !!
-        *
+
 
         background().accept(visitor);
 

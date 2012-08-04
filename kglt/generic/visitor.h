@@ -1,6 +1,9 @@
 #ifndef VISITOR_H
 #define VISITOR_H
 
+#include <cstddef>
+#include <vector>
+
 #include "loki/sequence.h"
 
 namespace kglt {

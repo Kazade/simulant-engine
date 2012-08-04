@@ -54,6 +54,8 @@ public:
     virtual void rotate_z(float amount);
 
     kmVec3& position() { return position_; }
+    kmVec3& absolute_position() { return absolute_position_; }
+
     kmQuaternion& rotation() { return rotation_; }
 
     virtual void on_parent_set(Object* old_parent) {}
@@ -89,6 +91,8 @@ private:
 
         kmVec3Add(&absolute_position_, &parent().absolute_position_, &position_);
         kmQuaternionAdd(&absolute_orientation_, &parent().absolute_orientation_, &rotation_);
+
+        std::for_each(children().begin(), children().end(), [](Object* x) { x->update_from_parent(); });
     }
 
     bool is_visible_;

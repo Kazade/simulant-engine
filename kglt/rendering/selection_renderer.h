@@ -17,6 +17,7 @@ public:
 	
     void visit(Mesh& mesh);
     void visit(Text& text) {} //Dunno if this should be selectable..
+    void visit(Background& background) {} //You can't select backgrounds
 
 	MeshID selected_mesh() const { return selected_mesh_id_; }
 	

@@ -17,10 +17,8 @@ class Scene;
 class Background;
 class Renderer;
 
-class BackgroundLayer : public Object {
+class BackgroundLayer {
 public:
-    VIS_DEFINE_VISITABLE();
-
     BackgroundLayer(Background& background, const std::string& image_path);
     ~BackgroundLayer();
 
@@ -31,6 +29,7 @@ public:
     uint32_t height() const { return height_; }
 
     TextureID texture_id() const { return texture_id_; }
+    MeshID mesh_id() const { return mesh_id_; }
 
     Background& background() { return background_; }
 
@@ -60,8 +59,8 @@ public:
 
     void set_visible_dimensions(double width, double height);
 
-    /*void pre_visit(ObjectVisitor& visitor);
-    void post_visit(ObjectVisitor &visitor);*/
+    double visible_x() const { return visible_x_; }
+    double visible_y() const { return visible_y_; }
 private:
     std::vector<std::tr1::shared_ptr<BackgroundLayer> > layers_;
     double visible_x_;

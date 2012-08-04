@@ -11,11 +11,9 @@ namespace kglt {
 BackgroundLayer::BackgroundLayer(Background &bg, const std::string& image_path):
     background_(bg),
     texture_id_(NullTextureID),
+    mesh_id_(0),
     width_(0),
     height_(0) {
-
-    //Set the background as the parent
-    set_parent(&background_);
 
     texture_id_ = kglt::create_texture_from_file(background().scene().window(), image_path);
 
@@ -36,11 +34,12 @@ BackgroundLayer::BackgroundLayer(Background &bg, const std::string& image_path):
     }
 
     //Create the mesh for this background layer
-    mesh_id_ = scene().new_mesh();
+    mesh_id_ = background().scene().new_mesh();
 
-    //Set the mesh's parent as this
-    Mesh& mesh = scene().mesh(mesh_id_);
-    mesh.set_parent(this);
+    //Detach the mesh from the scene graph (we don't want the renderer to visit it)
+    Mesh& mesh = background().scene().mesh(mesh_id_);
+    mesh.detach();
+
     kglt::procedural::mesh::rectangle(mesh, width(), height());
     mesh.apply_texture(texture_id_);
 
@@ -53,7 +52,7 @@ void BackgroundLayer::scroll_x(double amount) {
     offset_x_ += amount;
     offset_x_ -= floor(offset_x_); //Only leave the remainder (we want 0.0 - 1.0)
 
-    Mesh& mesh = scene().mesh(mesh_id_);
+    Mesh& mesh = background().scene().mesh(mesh_id_);
 
     //Reset the texture coordinates
     kglt::procedural::mesh::rectangle(mesh, width(), height());
@@ -69,7 +68,7 @@ void BackgroundLayer::scroll_y(double amount) {
     offset_y_ -= floor(offset_y_);
 
     //FIXME: this is so inefficient it makes me cry - need a way to just invalidate tex coords (custom shader to use offset perhaps)
-    Mesh& mesh = scene().mesh(mesh_id_);
+    Mesh& mesh = background().scene().mesh(mesh_id_);
 
     //Reset the texture coordinates
     kglt::procedural::mesh::rectangle(mesh, width(), height());
@@ -84,6 +83,10 @@ BackgroundLayer::~BackgroundLayer() {
     try {
         if(texture_id_) {
             background().scene().delete_texture(texture_id_);
+        }
+
+        if(mesh_id_) {
+            background().scene().delete_mesh(mesh_id_);
         }
     } catch (...) {
         //Whatever.. we tried. We gotta catch this (destructors can't throw)
@@ -114,33 +117,5 @@ void Background::set_visible_dimensions(double width, double height) {
     visible_x_ = width;
     visible_y_ = height;
 }
-
-/*
-void Background::pre_visit(ObjectVisitor& visitor) {
-    /**
-     * FIXME:
-     * This is a bit hacky, I should come up with something better. Basically, most elements in the scene
-     * are rendered by the active camera. The camera controls the projection matrix and the viewing frustum
-     * but in the case of a background I need to override the projection. Which I've done manually here.
-     *
-     * Perhaps a better way is to render the background using active_camera().frustum().far_corners() as the bounds,
-     * and then use the texture coordinates of the background mesh to manipulate the visible area. That would
-     * avoid this hack. The mesh would need to be rescaled each frame.
-
-    if(Renderer* renderer = dynamic_cast<Renderer*>(&visitor)) {
-        tmp_projection_ = renderer->projection_matrix(); //Store the projection matrix before
-
-        kmMat4 new_proj;
-        kmMat4OrthographicProjection(&new_proj, -visible_x_ / 2.0, visible_x_ / 2.0, -visible_y_ / 2.0, visible_y_ / 2.0, -1.0, 1.0);
-        renderer->set_projection_matrix(new_proj);
-    }
-}
-
-void Background::post_visit(ObjectVisitor& visitor) {
-    if(Renderer* renderer = dynamic_cast<Renderer*>(&visitor)) {
-        //Restore the stored projection
-        renderer->set_projection_matrix(tmp_projection_);
-    }
-}*/
 
 }

@@ -14,7 +14,7 @@
 
 namespace kglt {
 
-void GenericRenderer::on_start_render() {
+void GenericRenderer::on_start_render(Scene& scene) {
 	glEnable(GL_TEXTURE_2D);
     
     if(options().wireframe_enabled) {
@@ -61,9 +61,7 @@ void GenericRenderer::visit(Text& text) {
     check_and_log_error(__FILE__, __LINE__);
 }
 
-void GenericRenderer::visit(Mesh& mesh) {
-    Scene& scene = mesh.scene();
-
+void GenericRenderer::render_mesh(Mesh& mesh, Scene& scene) {
     glPushAttrib(GL_DEPTH_BUFFER_BIT);
 
     if(!mesh.depth_test_enabled()) {
@@ -80,47 +78,44 @@ void GenericRenderer::visit(Mesh& mesh) {
 
     kglt::TextureID tex = mesh.texture(PRIMARY);
     if(!options().texture_enabled) {
-		tex = NullTextureID; //Turn off the texture
-	}
+        tex = NullTextureID; //Turn off the texture
+    }
     glBindTexture(GL_TEXTURE_2D, scene.texture(tex).gl_tex());
 
     //FIXME: Allow meshes to override the shader
     ShaderProgram& s = scene.shader(NullShaderID);
     s.activate();
-                    
+
     //s.bind_attrib(2, "vertex_diffuse");
     s.set_uniform("texture_1", 0);
 
     check_and_log_error(__FILE__, __LINE__);
-                
+
     mesh.vbo(VERTEX_ATTRIBUTE_POSITION | VERTEX_ATTRIBUTE_TEXCOORD_1 | VERTEX_ATTRIBUTE_DIFFUSE);
-	
-	uint32_t stride = (sizeof(float) * 3) + (sizeof(float) * 2) + (sizeof(float) * 4);
+
+    uint32_t stride = (sizeof(float) * 3) + (sizeof(float) * 2) + (sizeof(float) * 4);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(0));
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(sizeof(float) * 3));
     glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(sizeof(float) * 5));
 
-	glClientActiveTexture(GL_TEXTURE0);
-	
-	kmMat4 modelview_projection;
-    kmMat4Multiply(&modelview_projection, &projection().top(), &modelview().top());
-	
-	if(s.has_uniform("modelview_projection_matrix")) {
-		s.set_uniform("modelview_projection_matrix", &modelview_projection);
-	}
-	if(s.has_uniform("modelview_matrix")) {
-        s.set_uniform("modelview_matrix", &modelview().top());
-	}
-	if(s.has_uniform("projection_matrix")) {
-        s.set_uniform("projection_matrix", &projection().top());
-	}
+    glClientActiveTexture(GL_TEXTURE0);
 
-	/*glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);*/
-	
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-	glEnableVertexAttribArray(2);
+    kmMat4 modelview_projection;
+    kmMat4Multiply(&modelview_projection, &projection().top(), &modelview().top());
+
+    if(s.has_uniform("modelview_projection_matrix")) {
+        s.set_uniform("modelview_projection_matrix", &modelview_projection);
+    }
+    if(s.has_uniform("modelview_matrix")) {
+        s.set_uniform("modelview_matrix", &modelview().top());
+    }
+    if(s.has_uniform("projection_matrix")) {
+        s.set_uniform("projection_matrix", &projection().top());
+    }
+
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
 
     if(mesh.arrangement() == MESH_ARRANGEMENT_POINTS) {
         glDrawArrays(GL_POINTS, 0, mesh.vertices().size());
@@ -128,17 +123,47 @@ void GenericRenderer::visit(Mesh& mesh) {
         glDrawArrays(GL_LINE_STRIP, 0, mesh.vertices().size());
     } else if(mesh.arrangement() == MESH_ARRANGEMENT_TRIANGLES) {
         glDrawArrays(GL_TRIANGLES, 0, mesh.triangles().size() * 3);
-	} else {
-		assert(0);
-	}
-	
-	glDisableVertexAttribArray(0);
-	glDisableVertexAttribArray(1);
-	glDisableVertexAttribArray(2);
-		
+    } else {
+        assert(0);
+    }
+
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+    glDisableVertexAttribArray(2);
+
     glPopAttrib();
-	/*glDisableClientState(GL_VERTEX_ARRAY);        
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);        */
+}
+
+void GenericRenderer::visit(Background& background) {
+    /*
+     *  We store the current projection matrix, then manipulate it so that the correct part
+     *  of the background fills the screen. Finally we render the background layers in order
+     *  and restore the projection.
+     */
+
+    projection().push();
+
+    kmMat4 new_proj;
+    kmMat4OrthographicProjection(
+                &new_proj, -background.visible_x() / 2.0,
+                background.visible_x() / 2.0,
+                -background.visible_y() / 2.0,
+                background.visible_y() / 2.0, -1.0, 1.0
+    );
+
+    kmMat4Assign(&projection().top(), &new_proj);
+
+    for(uint32_t i = 0; i < background.layer_count(); ++i) {
+        BackgroundLayer& layer = background.layer(i);
+        render_mesh(background.scene().mesh(layer.mesh_id()), background.scene());
+    }
+
+    projection().pop();
+}
+
+void GenericRenderer::visit(Mesh& mesh) {
+    Scene& scene = mesh.scene();
+    render_mesh(mesh, scene);
 }
 
 }

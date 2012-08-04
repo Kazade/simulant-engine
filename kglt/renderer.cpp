@@ -22,29 +22,24 @@ void BaseRenderer::render(Scene& scene) {
     on_finish_render(scene);
 }
 
-/*
-Renderer::Renderer(Scene& scene):
-	scene_(scene) {
+bool BaseRenderer::pre_visit(Object& obj) {
+    modelview().push();
 
+    kmMat4 trans;
+    kmMat4Identity(&trans);
+    kmMat4Translation(&trans, obj.absolute_position().x, obj.absolute_position().y, obj.absolute_position().z);
+    kmMat4Multiply(&modelview().top(), &modelview().top(), &trans);
 
+    return true;
 }
 
-Renderer::Renderer(Scene& scene, const RenderOptions& options):
-    options_(options),
-    scene_(scene) {	
+void BaseRenderer::post_visit(Object& object) {
+    modelview().pop();
 }
 
-void Renderer::start_render() {
-    //Apply the camera transform
-    kmMat4* modelview = &modelview_stack_.top();
-    scene().active_camera().apply(modelview);
+void Renderer::visit(Object object) {
 
-    //Initialize the projection matrix
-    set_projection_matrix(scene().active_camera().projection_matrix());
-
-    on_start_render();
-}*/
-
+}
 
 
 }

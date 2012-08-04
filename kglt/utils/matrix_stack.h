@@ -1,6 +1,7 @@
 #ifndef KGLT_MATRIX_STACK_H
 #define KGLT_MATRIX_STACK_H
 
+#include <cassert>
 #include <stack>
 #include "kazmath/mat4.h"
 
