@@ -63,7 +63,7 @@ public:
     Mesh& mesh(MeshID m);
     Camera& camera(CameraID c = DefaultCameraID);
     Texture& texture(TextureID t);
-    ShaderProgram& shader(ShaderID s = NullShaderID);
+    ShaderProgram& shader(ShaderID s);
     Sprite& sprite(SpriteID s);
     Font& font(FontID f);
 

@@ -111,10 +111,7 @@ void SelectionRenderer::on_finish_render(Scene &scene) {
 	
 void SelectionRenderer::visit(Mesh& mesh) {
     Scene& scene = mesh.root_as<Scene>();
-    std::pair<ShaderID, bool> selection_shader = scene.find_shader("selection_shader");
-	assert(selection_shader.second);
-	
-    ShaderProgram& s = scene.shader(selection_shader.first);
+    ShaderProgram& s = scene.shader(selection_shader_);
 	
 	b_count++;
 	if(b_count == 255) {
