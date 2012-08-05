@@ -11,7 +11,7 @@ namespace kglt {
 
 /**
   An overlay represents a 2D layer on top of the rendered scene. Unlike other
-  objects, overlays can only be a child of the scene node itself.
+  objects, overlays can only be the root of a tree, they cannot be attached to the scene directly.
 
   You can attach objects to the overlay, but their z position must lie within
   the -1.0 -> 1.0 range.
@@ -42,8 +42,17 @@ private:
     int32_t zindex_;
     kmMat4 projection_matrix_;
 
-    bool can_set_parent(Object* p);
+    bool can_set_parent(Object* p); //Don't allow overlays to be attached to anything
 };
+
+class OverlayManager {
+public:
+    OverlayID new_overlay();
+    Overlay& overlay(OverlayID oid);
+
+
+};
+
 
 }
 #endif // OVERLAY_H

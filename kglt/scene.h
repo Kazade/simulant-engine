@@ -28,13 +28,20 @@
 #include "ui.h"
 #include "rendering/generic_renderer.h"
 
+#include "generic/visitor.h"
+#include "generic/manager.h"
+
 namespace kglt {
 
 class WindowBase;
 
 class Scene :
     public Object,
-    public Loadable {
+    public Loadable,
+    public generic::TemplatedManager<Mesh, MeshID>,
+    public generic::TemplatedManager<Sprite, SpriteID>,
+    public generic::TemplatedManager<Camera, CameraID>,
+    public generic::TemplatedManager<Text, TextID> {
 
 public:
     VIS_DEFINE_VISITABLE();
@@ -43,32 +50,7 @@ public:
         throw std::logic_error("You cannot move the scene");
     }
 
-    Scene(WindowBase* window):
-        active_camera_(DefaultCameraID),
-        window_(window) {
-
-        background().set_parent(this);
-        ui().set_parent(this);
-
-        new_camera(); //Create a default camera
-
-        /*
-            TODO: Load the default shader which simply renders textured
-            polygons like the fixed function.
-        */
-
-        //Set up the default render options
-        render_options.wireframe_enabled = false;
-        render_options.texture_enabled = true;
-        render_options.backface_culling_enabled = true;
-        render_options.point_size = 1;
-        
-		/**
-		 * Create the default pass, which uses a perspective projection and
-		 * a fullscreen viewport
-		 */
-         add_pass(Renderer::ptr(new GenericRenderer(render_options)), VIEWPORT_TYPE_FULL);
-    }
+    Scene(WindowBase* window);
 
     MeshID new_mesh();
     CameraID new_camera();
@@ -97,51 +79,17 @@ public:
 
     void delete_mesh(MeshID mid);
     void delete_texture(TextureID tid);
+    void delete_sprite(SpriteID sid);
+    void delete_camera(CameraID cid);
+    void delete_text(TextID tid);
 
     void init();
     void render();
     void update(double dt);
 
-    /*void accept(ObjectVisitor& visitor) {        
-          HACK: We need to implement render queues for BACKGROUND, DEFAULT and OVERLAY
-          so that we can control the order of object rendering. This requires implementation of the
-          batch rendering stuff though - and I don't have the time or energy for that atm.
-
-          So, for now we render the background first, and then ignore it when iterating the children
-
-          FIXME: !!
-
-
-        background().accept(visitor);
-
-        for(uint32_t i = 0; i < child_count(); ++i) {
-            Object& c = child(i);
-            if(dynamic_cast<Background*>(&c) ||
-               dynamic_cast<UI*>(&c)) {
-                continue;
-            }
-            c.accept(visitor);
-        }
-
-        // HACK: same as above, UI must be drawn last
-        ui().accept(visitor);
-
-        visitor.visit(this);
-    }*/
-
     RenderOptions render_options;
 
     WindowBase& window() { return *window_; }
-
-    void set_extra_data(const std::string& name, boost::any extra_scene_data) { extra_scene_data_[name] = extra_scene_data; }
-
-    template<typename T>
-    T extra_data_as(const std::string& name) {
-        if(!container::contains(extra_scene_data_, name)) {
-            throw std::logic_error("No such extra data attached to the scene: " + name);
-        }
-        return boost::any_cast<T>(extra_scene_data_[name]);
-    }
 
 	void add_pass(
 		Renderer::ptr renderer, 
@@ -167,21 +115,21 @@ public:
     sigc::signal<void, Pass&>& signal_render_pass_started() { return signal_render_pass_started_; }
     sigc::signal<void, Pass&>& signal_render_pass_finished() { return signal_render_pass_finished_; }
 
+    template<typename T>
+    void post_create_callback(T& obj) {
+        obj.set_parent(this);
+        obj._initialize(*this);
+    }
+
 private:
-    std::map<MeshID, Mesh::ptr> meshes_;
-    std::map<CameraID, Camera::ptr> cameras_;
     std::map<TextureID, Texture> textures_;
     std::map<ShaderID, ShaderProgram::ptr> shaders_;
-    std::map<SpriteID, Sprite::ptr> sprites_;
     std::map<FontID, Font::ptr> fonts_;
-    std::map<TextID, Text::ptr> texts_;
     std::map<OverlayID, Overlay::ptr> overlays_;
 
     CameraID active_camera_;
     WindowBase* window_;
 
-    std::map<std::string, boost::any> extra_scene_data_;
-    
     Texture null_texture_;
     Background background_;
     UI ui_interface_;

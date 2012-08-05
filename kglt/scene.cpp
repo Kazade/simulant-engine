@@ -4,66 +4,60 @@
 
 namespace kglt {
 
-MeshID Scene::new_mesh() {
-    static MeshID counter = 0;
-    MeshID id = 0;
-    {
-        boost::mutex::scoped_lock lock(scene_lock_);
-        id = ++counter;
-        meshes_.insert(std::make_pair(id, Mesh::ptr(new Mesh)));
-    }
-    
-    Mesh& mesh = *meshes_[id];
-    mesh.set_parent(this);
-    mesh._initialize(*this);
+Scene::Scene(WindowBase* window):
+    active_camera_(DefaultCameraID),
+    window_(window) {
 
-    return id;
+    TemplatedManager<Mesh, MeshID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Mesh>));
+    TemplatedManager<Sprite, SpriteID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Sprite>));
+    TemplatedManager<Camera, CameraID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Camera>));
+    TemplatedManager<Text, TextID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Text>));
+
+    background().set_parent(this);
+    ui().set_parent(this);
+
+    active_camera_ = new_camera(); //Create a default camera
+
+    /*
+        TODO: Load the default shader which simply renders textured
+        polygons like the fixed function.
+    */
+
+    //Set up the default render options
+    render_options.wireframe_enabled = false;
+    render_options.texture_enabled = true;
+    render_options.backface_culling_enabled = true;
+    render_options.point_size = 1;
+
+    /**
+     * Create the default pass, which uses a perspective projection and
+     * a fullscreen viewport
+     */
+     add_pass(Renderer::ptr(new GenericRenderer(render_options)), VIEWPORT_TYPE_FULL);
+}
+
+MeshID Scene::new_mesh() {
+    return TemplatedManager<Mesh, MeshID>::manager_new();
 }
 
 Mesh& Scene::mesh(MeshID m) {
-    boost::mutex::scoped_lock lock(scene_lock_);
-    
-	if(!container::contains(meshes_, m)) {
-		throw DoesNotExist<MeshID>();
-	}
-	
-    return *meshes_[m];
+    return TemplatedManager<Mesh, MeshID>::manager_get(m);
 }
 
 void Scene::delete_mesh(MeshID mid) {
-    Mesh& m = mesh(mid);
-    m.set_parent(nullptr);
-    
-    {
-        boost::mutex::scoped_lock lock(scene_lock_);
-        meshes_.erase(mid);
-    }
+    return TemplatedManager<Mesh, MeshID>::manager_delete(mid);
 }
 
 SpriteID Scene::new_sprite() {
-    static SpriteID counter = 0;
-    SpriteID id = 0;
-    {
-        boost::mutex::scoped_lock lock(scene_lock_);
-        id = ++counter;
-        sprites_.insert(std::make_pair(id, Sprite::ptr(new Sprite)));
-    }
-    
-    Sprite& sprite = *sprites_[id];
-    sprite.set_parent(this);
-    sprite._initialize(*this);
-
-    return id;
+    return TemplatedManager<Sprite, SpriteID>::manager_new();
 }
 
 Sprite& Scene::sprite(SpriteID s) {
-    boost::mutex::scoped_lock lock(scene_lock_);
-    
-	if(!container::contains(sprites_, s)) {
-		throw DoesNotExist<SpriteID>();
-	}
-	    
-    return *sprites_[s];
+    return TemplatedManager<Sprite, SpriteID>::manager_get(s);
+}
+
+void Scene::delete_sprite(SpriteID sid) {
+    return TemplatedManager<Sprite, SpriteID>::manager_delete(sid);
 }
 
 TextureID Scene::new_texture() {
@@ -99,29 +93,15 @@ Texture& Scene::texture(TextureID t) {
 }
 
 CameraID Scene::new_camera() {
-    static CameraID counter = 0;
-    CameraID id = 0;
-    
-    {
-        boost::mutex::scoped_lock lock(scene_lock_);
-        id = ++counter;
-        cameras_.insert(std::make_pair(id, Camera::ptr(new Camera)));
-    }
-    
-    Camera& cam = camera(id);
-    cam.set_parent(this);
-    cam._initialize(*this);
+    return TemplatedManager<Camera, CameraID>::manager_new();
+}
 
-    //We always need a camera, so if this is the
-    //first one, then make it the current one
-    {
-        boost::mutex::scoped_lock lock(scene_lock_);
-        if(cameras_.size() == 1) {
-            active_camera_ = id;
-        }
-    }
-    
-    return id;
+Camera& Scene::camera(CameraID c) {
+    return TemplatedManager<Camera, CameraID>::manager_get(c);
+}
+
+void Scene::delete_camera(CameraID cid) {
+    TemplatedManager<Camera, CameraID>::manager_delete(cid);
 }
 
 ShaderProgram& Scene::shader(ShaderID s) {
@@ -165,48 +145,19 @@ Font& Scene::font(FontID f) {
 }
 
 TextID Scene::new_text() {
-    static TextID counter = 0;
-    TextID id = 0;
-    {
-        boost::mutex::scoped_lock lock(scene_lock_);
-        id = ++counter;
-        texts_.insert(std::make_pair(id, Text::ptr(new Text)));
-        texts_[id]->set_parent(this);
-        texts_[id]->_initialize(*this);
-    }
-    return id;
+    return TemplatedManager<Text, TextID>::manager_new();
 }
 
 Text& Scene::text(TextID t) {
-    boost::mutex::scoped_lock lock(scene_lock_);
-    if(!container::contains(texts_, t)) {
-        throw DoesNotExist<TextID>();
-    }
-    return *texts_[t];
+    return TemplatedManager<Text, TextID>::manager_get(t);
 }
 
 const Text& Scene::text(TextID t) const {
-    boost::mutex::scoped_lock lock(scene_lock_);
-    if(!container::contains(texts_, t)) {
-        throw DoesNotExist<TextID>();
-    }
-    std::map<TextID, Text::ptr>::const_iterator it = texts_.find(t);
-    return *(it->second);
+    return TemplatedManager<Text, TextID>::manager_get(t);
 }
 
-Camera& Scene::camera(CameraID c) {
-    boost::mutex::scoped_lock lock(scene_lock_);
-
-    //FIXME: This is wrong! Shouldn't need to check for 0
-    if(c == 0) {
-        return *cameras_[active_camera_];
-    }
-
-	if(!container::contains(cameras_, c)) {
-		throw DoesNotExist<CameraID>();
-	}
-	
-    return *cameras_[c];
+void Scene::delete_text(TextID tid) {
+    TemplatedManager<Text, TextID>::manager_delete(tid);
 }
 
 OverlayID Scene::new_overlay() {
@@ -293,13 +244,7 @@ void Scene::render() {
 }
 
 MeshID Scene::_mesh_id_from_mesh_ptr(Mesh* mesh) {
-	for(std::pair<MeshID, Mesh::ptr> pair: meshes_) {
-		if(pair.second.get() == mesh) {
-			return pair.first;
-		}
-	}
-	
-	return 0;
+    return TemplatedManager<Mesh, MeshID>::_get_object_id_from_ptr(mesh);
 }
 
 }

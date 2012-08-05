@@ -206,8 +206,8 @@ void Q2BSPLoader::into(Loadable& resource) {
 
     std::vector<EntityProperties> entities;
     parse_entities(entity_string, entities);
-    scene->camera().position() = find_player_spawn_point(entities);
-    kmVec3Transform(&scene->camera().position(), &scene->camera().position(), &rotation);
+    scene->active_camera().position() = find_player_spawn_point(entities);
+    kmVec3Transform(&scene->active_camera().position(), &scene->active_camera().position(), &rotation);
 
     int32_t num_vertices = header.lumps[Q2::LumpType::VERTICES].length / sizeof(Q2::Point3f);
     std::vector<Q2::Point3f> vertices(num_vertices);
