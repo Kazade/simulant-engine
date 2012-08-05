@@ -44,27 +44,26 @@ void main() {
     return frag_shader;
 }
 
+void SelectionRenderer::_initialize(Scene& scene) {
+    //Load the selection shader into the scene
+    selection_shader_ = scene.new_shader();
+    ShaderProgram& shader = scene.shader(selection_shader_);
+    shader.set_name("selection_shader");
+
+    shader.add_and_compile(SHADER_TYPE_VERTEX, selection_vert_shader_120());
+    shader.add_and_compile(SHADER_TYPE_FRAGMENT, selection_frag_shader_120());
+    shader.activate();
+
+    //Bind the vertex attributes for the selection shader and relink
+    shader.bind_attrib(0, "vertex_position");
+    shader.relink();
+
+    shader.activate();
+}
+
 void SelectionRenderer::on_start_render(Scene& scene) {
-    std::pair<ShaderID, bool> selection_shader = scene.find_shader("selection_shader");
-	if(!selection_shader.second) {
-		//Load the selection shader into the scene
-        ShaderProgram& shader = kglt::return_new_shader(scene);
-		shader.set_name("selection_shader");
-		
-		shader.add_and_compile(SHADER_TYPE_VERTEX, selection_vert_shader_120());
-		shader.add_and_compile(SHADER_TYPE_FRAGMENT, selection_frag_shader_120());
-		shader.activate();
-		
-		//Bind the vertex attributes for the selection shader and relink
-		shader.bind_attrib(0, "vertex_position");
-		shader.relink();		
-		
-		shader.activate();
-		
-	} else {
-		//Activate the shader
-        scene.shader(selection_shader.first).activate();
-	}
+    //Activate the shader
+    scene.shader(selection_shader_).activate();
 	
 	/*
 	 * Do we need to clear the depth buffer? If we don't then a 

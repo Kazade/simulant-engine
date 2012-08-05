@@ -42,7 +42,7 @@ public:
             objects_.insert(std::make_pair(id, typename ObjectType::ptr(new ObjectType)));
         }
 
-        signal_post_create_(*objects_[id]);
+        signal_post_create_(*objects_[id], id);
 
         return id;
     }
@@ -50,7 +50,7 @@ public:
     void manager_delete(ObjectIDType id) {
         if(manager_contains(id)) {
             ObjectType& obj = *objects_[id];
-            signal_pre_delete_(obj); //Must happen outside the lock
+            signal_pre_delete_(obj, id); //Must happen outside the lock
 
             boost::mutex::scoped_lock lock(manager_lock_);
             if(manager_contains(id)) {
@@ -82,13 +82,13 @@ public:
         return objects_.find(id) != objects_.end();
     }
 
-    sigc::signal<void, ObjectType&>& signal_post_create() { return signal_post_create_; }
-    sigc::signal<void, ObjectType&>& signal_pre_delete() { return signal_pre_delete_; }
+    sigc::signal<void, ObjectType&, ObjectIDType>& signal_post_create() { return signal_post_create_; }
+    sigc::signal<void, ObjectType&, ObjectIDType>& signal_pre_delete() { return signal_pre_delete_; }
 
 private:
     std::map<ObjectIDType, typename ObjectType::ptr> objects_;
-    sigc::signal<void, ObjectType&> signal_post_create_;
-    sigc::signal<void, ObjectType&> signal_pre_delete_;
+    sigc::signal<void, ObjectType&, ObjectIDType> signal_post_create_;
+    sigc::signal<void, ObjectType&, ObjectIDType> signal_pre_delete_;
 
 protected:
     ObjectIDType _get_object_id_from_ptr(ObjectType* ptr) {

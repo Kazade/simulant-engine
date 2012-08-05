@@ -14,6 +14,76 @@
 
 namespace kglt {
 
+const std::string get_default_vert_shader_120() {
+    const std::string default_vert_shader_120 = R"(
+#version 120
+
+attribute vec3 vertex_position;
+attribute vec2 vertex_texcoord_1;
+attribute vec4 vertex_diffuse;
+
+uniform mat4 modelview_projection_matrix;
+
+varying vec2 fragment_texcoord_1;
+varying vec4 fragment_diffuse;
+
+void main() {
+    gl_Position = modelview_projection_matrix * vec4(vertex_position, 1.0);
+    fragment_texcoord_1 = vertex_texcoord_1;
+    fragment_diffuse = vertex_diffuse;
+}
+
+)";
+
+    return default_vert_shader_120;
+}
+
+const std::string get_default_frag_shader_120() {
+    const std::string default_frag_shader_120 = R"(
+#version 120
+
+varying vec2 fragment_texcoord_1;
+varying vec4 fragment_diffuse;
+
+uniform sampler2D texture_1;
+
+/*
+struct light {
+    int type;
+    vec4 ambient;
+    vec4 diffuse;
+    vec4 specular;
+    vec4 position;
+};
+
+uniform light lights[8];*/
+
+void main() {
+    gl_FragColor = texture2D(texture_1, fragment_texcoord_1.st) * fragment_diffuse;
+}
+
+)";
+    return default_frag_shader_120;
+}
+
+void GenericRenderer::_initialize(Scene& scene) {
+    default_shader_ = scene.new_shader();
+
+    ShaderProgram& def = scene.shader(default_shader_); //Create a default shader;
+
+    assert(glGetError() == GL_NO_ERROR);
+
+    def.add_and_compile(SHADER_TYPE_VERTEX, get_default_vert_shader_120());
+    def.add_and_compile(SHADER_TYPE_FRAGMENT, get_default_frag_shader_120());
+    def.activate();
+
+    //Bind the vertex attributes for the default shader and relink
+    def.bind_attrib(0, "vertex_position");
+    def.bind_attrib(1, "vertex_texcoord_1");
+    def.bind_attrib(2, "vertex_diffuse");
+    def.relink();
+}
+
 void GenericRenderer::on_start_render(Scene& scene) {
 	glEnable(GL_TEXTURE_2D);
     
@@ -40,6 +110,8 @@ void GenericRenderer::on_start_render(Scene& scene) {
 	GLint depth_bits;
 	glGetIntegerv(GL_DEPTH_BITS, &depth_bits);
 	assert(depth_bits > 0);
+
+    scene.shader(default_shader_).activate();
 }
 
 void GenericRenderer::visit(Text& text) {
@@ -83,7 +155,7 @@ void GenericRenderer::render_mesh(Mesh& mesh, Scene& scene) {
     glBindTexture(GL_TEXTURE_2D, scene.texture(tex).gl_tex());
 
     //FIXME: Allow meshes to override the shader
-    ShaderProgram& s = scene.shader(NullShaderID);
+    ShaderProgram& s = scene.shader(default_shader_);
     s.activate();
 
     //s.bind_attrib(2, "vertex_diffuse");

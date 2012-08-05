@@ -40,6 +40,7 @@ public:
     virtual void visit(Mesh& object) = 0;
     virtual void visit(Text& object) = 0;
     virtual void visit(Background& object) = 0;
+    virtual void _initialize(Scene& scene) {}
 
 protected:
     RenderOptions& options() { return options_; }

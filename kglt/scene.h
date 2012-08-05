@@ -23,7 +23,6 @@
 #include "background.h"
 #include "font.h"
 #include "text.h"
-#include "overlay.h"
 
 #include "ui.h"
 #include "rendering/generic_renderer.h"
@@ -41,7 +40,8 @@ class Scene :
     public generic::TemplatedManager<Mesh, MeshID>,
     public generic::TemplatedManager<Sprite, SpriteID>,
     public generic::TemplatedManager<Camera, CameraID>,
-    public generic::TemplatedManager<Text, TextID> {
+    public generic::TemplatedManager<Text, TextID>,
+    public generic::TemplatedManager<ShaderProgram, ShaderID> {
 
 public:
     VIS_DEFINE_VISITABLE();
@@ -59,7 +59,6 @@ public:
     SpriteID new_sprite();
     FontID new_font();
     TextID new_text();
-    OverlayID new_overlay();
 
     Mesh& mesh(MeshID m);
     Camera& camera(CameraID c = DefaultCameraID);
@@ -67,7 +66,6 @@ public:
     ShaderProgram& shader(ShaderID s = NullShaderID);
     Sprite& sprite(SpriteID s);
     Font& font(FontID f);
-    Overlay& overlay(OverlayID oid);
 
     Camera& active_camera() { return camera(active_camera_); }
     void set_active_camera(CameraID cam) { active_camera_ = cam; }
@@ -82,6 +80,7 @@ public:
     void delete_sprite(SpriteID sid);
     void delete_camera(CameraID cid);
     void delete_text(TextID tid);
+    void delete_shader(ShaderID s);
 
     void init();
     void render();
@@ -94,8 +93,10 @@ public:
 	void add_pass(
 		Renderer::ptr renderer, 
 		ViewportType viewport=VIEWPORT_TYPE_FULL,
-		CameraID camera_id = DefaultCameraID
+        CameraID camera_id=DefaultCameraID
 	) {
+        renderer->_initialize(*this); //Initialize the renderer if need be
+
 		Pass p(this, renderer, viewport, camera_id);
 		passes_.push_back(p);
 	}
@@ -115,17 +116,21 @@ public:
     sigc::signal<void, Pass&>& signal_render_pass_started() { return signal_render_pass_started_; }
     sigc::signal<void, Pass&>& signal_render_pass_finished() { return signal_render_pass_finished_; }
 
-    template<typename T>
-    void post_create_callback(T& obj) {
+    template<typename T, typename ID>
+    void post_create_callback(T& obj, ID id) {
         obj.set_parent(this);
         obj._initialize(*this);
     }
 
+    void post_create_shader_callback(ShaderProgram& obj, ShaderID id) {
+        shader_lookup_[obj.name()] = id;
+    }
+
 private:
     std::map<TextureID, Texture> textures_;
-    std::map<ShaderID, ShaderProgram::ptr> shaders_;
     std::map<FontID, Font::ptr> fonts_;
-    std::map<OverlayID, Overlay::ptr> overlays_;
+
+    std::map<std::string, ShaderID> shader_lookup_;
 
     CameraID active_camera_;
     WindowBase* window_;
@@ -133,6 +138,8 @@ private:
     Texture null_texture_;
     Background background_;
     UI ui_interface_;
+
+    ShaderID null_shader_;
 
     std::vector<Pass> passes_;
     

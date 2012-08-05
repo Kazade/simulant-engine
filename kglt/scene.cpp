@@ -8,10 +8,11 @@ Scene::Scene(WindowBase* window):
     active_camera_(DefaultCameraID),
     window_(window) {
 
-    TemplatedManager<Mesh, MeshID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Mesh>));
-    TemplatedManager<Sprite, SpriteID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Sprite>));
-    TemplatedManager<Camera, CameraID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Camera>));
-    TemplatedManager<Text, TextID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Text>));
+    TemplatedManager<Mesh, MeshID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Mesh, MeshID>));
+    TemplatedManager<Sprite, SpriteID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Sprite, SpriteID>));
+    TemplatedManager<Camera, CameraID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Camera, CameraID>));
+    TemplatedManager<Text, TextID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Text, TextID>));
+    TemplatedManager<ShaderProgram, ShaderID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_shader_callback));
 
     background().set_parent(this);
     ui().set_parent(this);
@@ -105,22 +106,15 @@ void Scene::delete_camera(CameraID cid) {
 }
 
 ShaderProgram& Scene::shader(ShaderID s) {
-    boost::mutex::scoped_lock lock(scene_lock_);
-    
-	auto it = shaders_.find(s);
-	assert(it != shaders_.end());
-	return *(*it).second;    
+    return TemplatedManager<ShaderProgram, ShaderID>::manager_get(s);
 }
 
 ShaderID Scene::new_shader() {
-    static ShaderID counter = 0;
-    ShaderID id = 0;
-    {
-        boost::mutex::scoped_lock lock(scene_lock_);
-        id = counter++; //The first shader should be 0 - or the default shader    
-        shaders_.insert(std::make_pair(id, ShaderProgram::ptr(new ShaderProgram)));
-    }
-    return id;
+    return TemplatedManager<ShaderProgram, ShaderID>::manager_new();
+}
+
+void Scene::delete_shader(ShaderID s) {
+    TemplatedManager<ShaderProgram, ShaderID>::manager_delete(s);
 }
     
 FontID Scene::new_font() {
@@ -160,42 +154,9 @@ void Scene::delete_text(TextID tid) {
     TemplatedManager<Text, TextID>::manager_delete(tid);
 }
 
-OverlayID Scene::new_overlay() {
-    static OverlayID counter = 0;
-    OverlayID id = 0;
-    {
-        boost::mutex::scoped_lock lock(scene_lock_);
-        id = ++counter;
-        overlays_.insert(std::make_pair(id, Overlay::ptr(new Overlay)));
-        overlays_[id]->set_parent(this);
-        overlays_[id]->_initialize(*this);
-    }
-    return id;
-}
-
-Overlay& Scene::overlay(OverlayID oid) {
-    boost::mutex::scoped_lock lock(scene_lock_);
-    if(!container::contains(overlays_, oid)) {
-        throw DoesNotExist<OverlayID>();
-    }
-    return *overlays_[oid];
-}
-
 void Scene::init() {
     assert(glGetError() == GL_NO_ERROR);
-    ShaderProgram& def = shader(new_shader()); //Create a default shader;
-            
-    assert(glGetError() == GL_NO_ERROR);
-        
-    def.add_and_compile(SHADER_TYPE_VERTEX, kglt::get_default_vert_shader_120());
-    def.add_and_compile(SHADER_TYPE_FRAGMENT, kglt::get_default_frag_shader_120());
-    def.activate();
-    
-    //Bind the vertex attributes for the default shader and relink
-    def.bind_attrib(0, "vertex_position");
-    def.bind_attrib(1, "vertex_texcoord_1");
-    def.bind_attrib(2, "vertex_diffuse");
-    def.relink();
+
     
     //Create the null texture
     null_texture_.resize(1, 1);
@@ -209,13 +170,12 @@ void Scene::init() {
 }
 
 std::pair<ShaderID, bool> Scene::find_shader(const std::string& name) {
-	for(std::pair<const ShaderID, ShaderProgram::ptr>& shader: shaders_) {
-		if(shader.second->name() == name) {
-			return std::make_pair(shader.first, true);
-		}
-	}
+    std::map<std::string, ShaderID>::const_iterator it = shader_lookup_.find(name);
+    if(it == shader_lookup_.end()) {
+        return std::make_pair(NullShaderID, false);
+    }
 
-	return std::make_pair(NullShaderID, false);
+    return std::make_pair((*it).second, true);
 }
 
 void Scene::update(double dt) {

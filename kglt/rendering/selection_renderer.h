@@ -34,7 +34,8 @@ public:
 	    
 	    return true;
 	}
-	
+
+    void _initialize(Scene& scene);
 private:
     void on_start_render(Scene& scene);
     void on_finish_render(Scene& scene);
@@ -43,6 +44,7 @@ private:
     
     std::map<std::tuple<float, float, float>, MeshID> colour_mesh_lookup_;
     MeshID selected_mesh_id_;
+    ShaderID selection_shader_;
 };
 
 

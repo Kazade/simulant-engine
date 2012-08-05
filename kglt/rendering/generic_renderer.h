@@ -23,10 +23,12 @@ public:
     void visit(Text& text);
     void visit(Background& background);
 
+    void _initialize(Scene& scene);
 private:    
     void on_start_render(Scene& scene);
-
     void render_mesh(Mesh& mesh, Scene& scene);
+
+    ShaderID default_shader_;
 };
 
 }
