@@ -31,35 +31,33 @@ void UI::post_visit(ObjectVisitor &visitor) {
     }
 }*/
 
+UI::UI(Scene* scene):
+    scene_(*scene),
+    default_font_id_(0) {
+
+    //Create the overlay for the UI
+    overlay_ = scene_.new_overlay();
+
+    Overlay& overlay = scene_.overlay(overlay_);
+    overlay.set_ortho(0, scene_.window().width(), 0, scene_.window().height());
+
+    generic::TemplatedManager<UI, ui::Label, ui::LabelID>::signal_post_create().connect(
+        sigc::mem_fun(this, &UI::post_create_callback<ui::Label, ui::LabelID>)
+    );
+
+    //move_to(0.0, 0.0, -1.0);
+}
+
 ui::LabelID UI::new_label() {
     if(!default_font_id_) {
         throw std::logic_error("You must give the UI a default font before creating ui elements");
     }
 
-    static ui::LabelID counter = 0;
-    ui::LabelID id = 0;
-    {
-        boost::mutex::scoped_lock lock(ui_lock_);
-        id = ++counter;
-        labels_.insert(std::make_pair(id, ui::Label::ptr(new ui::Label(&this->scene()))));
-    }
-
-    ui::Label& new_label = label(id);
-    new_label.set_parent(this);
-    new_label._initialize(scene());
-
-
-    return id;
+    return generic::TemplatedManager<UI, ui::Label, ui::LabelID>::manager_new();
 }
 
 ui::Label& UI::label(ui::LabelID label_id) {
-    boost::mutex::scoped_lock lock(ui_lock_);
-
-    if(!container::contains(labels_, label_id)) {
-        throw DoesNotExist<ui::LabelID>();
-    }
-
-    return *labels_[label_id];
+    return generic::TemplatedManager<UI, ui::Label, ui::LabelID>::manager_get(label_id);
 }
 
 }

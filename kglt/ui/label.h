@@ -7,6 +7,7 @@
 namespace kglt {
 
 class Text;
+class UI;
 
 namespace ui {
 
@@ -14,8 +15,8 @@ class Label : public Element {
 public:
     typedef std::tr1::shared_ptr<Label> ptr;
 
-    Label(Scene* scene):
-        Element(scene),
+    Label(UI* ui):
+        Element(ui),
         text_id_(0) {}
 
     void set_text(const std::string& text);

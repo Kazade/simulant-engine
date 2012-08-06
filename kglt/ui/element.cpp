@@ -4,12 +4,14 @@
 #include "../procedural/mesh.h"
 #include "../scene.h"
 #include "../window_base.h"
+#include "../ui.h"
 
 namespace kglt {
 namespace ui {
 
-Element::Element(Scene *scene):
-    Object(scene),
+Element::Element(UI *ui):
+    Object(&ui->scene()),
+    ui_(*ui),
     width_(0),
     height_(0),
     border_width_(1),

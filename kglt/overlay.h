@@ -42,7 +42,7 @@ private:
     int32_t zindex_;
     kmMat4 projection_matrix_;
 
-    bool can_set_parent(Object* p); //Don't allow overlays to be attached to anything
+    bool can_set_parent(Object* p) { return false; } //Don't allow overlays to be attached to anything
 };
 
 class OverlayManager {

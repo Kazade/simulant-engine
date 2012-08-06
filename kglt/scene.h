@@ -23,8 +23,8 @@
 #include "background.h"
 #include "font.h"
 #include "text.h"
+#include "overlay.h"
 
-#include "ui.h"
 #include "rendering/generic_renderer.h"
 
 #include "generic/visitor.h"
@@ -33,6 +33,7 @@
 namespace kglt {
 
 class WindowBase;
+class UI;
 
 class Scene :
     public Object,
@@ -42,7 +43,8 @@ class Scene :
     public generic::TemplatedManager<Scene, Camera, CameraID>,
     public generic::TemplatedManager<Scene, Text, TextID>,
     public generic::TemplatedManager<Scene, ShaderProgram, ShaderID>,
-    public generic::TemplatedManager<Scene, Font, FontID> {
+    public generic::TemplatedManager<Scene, Font, FontID>,
+    public generic::TemplatedManager<Scene, Overlay, OverlayID> {
 
 public:
     VIS_DEFINE_VISITABLE();
@@ -60,6 +62,7 @@ public:
     SpriteID new_sprite();
     FontID new_font();
     TextID new_text();
+    OverlayID new_overlay(); ///< Creates a new overlay
 
     Mesh& mesh(MeshID m);
     Camera& camera(CameraID c = DefaultCameraID);
@@ -67,6 +70,7 @@ public:
     ShaderProgram& shader(ShaderID s);
     Sprite& sprite(SpriteID s);
     Font& font(FontID f);
+    Overlay& overlay(OverlayID overlay); ///< Grabs an overlay by its ID
 
     Camera& active_camera() { return camera(active_camera_); }
     void set_active_camera(CameraID cam) { active_camera_ = cam; }
@@ -83,6 +87,7 @@ public:
     void delete_text(TextID tid);
     void delete_shader(ShaderID s);
     void delete_font(FontID f);
+    void delete_overlay(OverlayID overlay); ///< Deletes an overlay by its ID
 
     void init();
     void render();
@@ -113,7 +118,7 @@ public:
 	MeshID _mesh_id_from_mesh_ptr(Mesh* mesh);
 	
     Background& background() { return background_; }
-    UI& ui() { return ui_interface_; }
+    UI& ui() { return *ui_interface_; }
 
     sigc::signal<void, Pass&>& signal_render_pass_started() { return signal_render_pass_started_; }
     sigc::signal<void, Pass&>& signal_render_pass_finished() { return signal_render_pass_finished_; }
@@ -128,6 +133,21 @@ public:
         shader_lookup_[obj.name()] = id;
     }
 
+    uint32_t overlay_count() const { ///< Returns the number of overlays in the scene
+        return TemplatedManager<Scene, Overlay, OverlayID>::objects_.size();
+    }
+
+    Overlay& overlay_ordered_by_zindex(uint32_t idx) { ///< Returns an overlay by index into a sorted list by zindex
+        std::vector<Overlay::ptr> overlays;
+        for(std::pair<OverlayID, Overlay::ptr> pair: TemplatedManager<Scene, Overlay, OverlayID>::objects_) {
+            overlays.push_back(pair.second);
+        }
+
+        std::sort(overlays.begin(), overlays.end(), [](Overlay::ptr x, Overlay::ptr y) { return x->zindex() < y->zindex(); });
+
+        return *overlays[idx];
+    }
+
 private:
     std::map<TextureID, Texture> textures_;
     std::map<std::string, ShaderID> shader_lookup_;
@@ -137,7 +157,7 @@ private:
 
     Texture null_texture_;
     Background background_;
-    UI ui_interface_;
+    std::tr1::shared_ptr<UI> ui_interface_;
 
     std::vector<Pass> passes_;
     

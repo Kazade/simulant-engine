@@ -8,25 +8,26 @@
 
 #include "object.h"
 #include "generic/visitor.h"
+#include "generic/manager.h"
 #include "kaztext/kaztext.h"
 #include "ui/types.h"
+#include "ui/label.h"
+#include "scene.h"
 
 namespace kglt {
 
-namespace ui {
-    class Label;
-}
-
 class UI :
-    public Object {
+    public generic::TemplatedManager<UI, ui::Label, ui::LabelID> {
 
 public:
-    VIS_DEFINE_VISITABLE();
+    UI(Scene* scene);
 
-    UI(Scene* scene):
-        Object(scene),
-        default_font_id_(0) {
-        move_to(0.0, 0.0, -1.0);
+    template<typename Element, typename ElementID>
+    void post_create_callback(Element& element, ElementID id) {
+        Overlay& overlay = scene_.overlay(overlay_);
+        element._initialize(scene_);
+        element.set_parent(&overlay);
+        element.set_font(default_font_id_);
     }
 
     /*void pre_visit(ObjectVisitor& visitor);
@@ -43,13 +44,17 @@ public:
         return default_font_id_;
     }
 
+    Scene& scene() { return scene_; }
 private:
-    std::map<ui::LabelID, std::tr1::shared_ptr<ui::Label> > labels_;
+    Scene& scene_;
+
     kglt::FontID default_font_id_;
 
     boost::mutex ui_lock_;
 
     kmMat4 tmp_projection_;
+
+    OverlayID overlay_;
 };
 
 }

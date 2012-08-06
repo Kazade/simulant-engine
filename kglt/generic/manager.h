@@ -4,6 +4,7 @@
 #include <map>
 #include <stdexcept>
 #include <sigc++/sigc++.h>
+#include "kazbase/list_utils.h"
 
 namespace kglt {
 namespace generic {
@@ -85,12 +86,13 @@ public:
     sigc::signal<void, ObjectType&, ObjectIDType>& signal_post_create() { return signal_post_create_; }
     sigc::signal<void, ObjectType&, ObjectIDType>& signal_pre_delete() { return signal_pre_delete_; }
 
-private:
-    std::map<ObjectIDType, typename ObjectType::ptr> objects_;
+private:    
     sigc::signal<void, ObjectType&, ObjectIDType> signal_post_create_;
     sigc::signal<void, ObjectType&, ObjectIDType> signal_pre_delete_;
 
 protected:
+    std::map<ObjectIDType, typename ObjectType::ptr> objects_;
+
     ObjectIDType _get_object_id_from_ptr(ObjectType* ptr) {
         for(std::pair<ObjectIDType, typename ObjectType::ptr> pair: objects_) {
             if(pair.second.get() == ptr) {

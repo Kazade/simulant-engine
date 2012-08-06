@@ -2,6 +2,7 @@
 #include "../scene.h"
 #include "label.h"
 #include "types.h"
+#include "../ui.h"
 
 namespace kglt {
 namespace ui {

@@ -5,6 +5,9 @@
 #include "../generic/visitor.h"
 
 namespace kglt {
+
+class UI;
+
 namespace ui {
 
 enum PaddingIndex {
@@ -20,7 +23,7 @@ class Element :
     public generic::VisitableBase<Element> {
 
 public:
-    Element(Scene* scene);
+    Element(UI* scene);
 
     double total_width() { return padding_left() + padding_right() + width(); }
     double total_height() { return padding_top() + padding_bottom() + height(); }
@@ -42,7 +45,12 @@ public:
 
     Object& background();
     Object& border();
+
+    //FIXME: This should all be done here, not a subclass
+    virtual void set_font(FontID fid) = 0;
 private:
+    UI& ui_;
+
     double width_;
     double height_;
     double border_width_;
@@ -52,6 +60,8 @@ private:
     kglt::MeshID border_mesh_;
 
 protected:
+    UI& ui() { return ui_; }
+
     void rebuild_meshes();
     void _initialize(Scene& scene);
 };

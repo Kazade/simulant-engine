@@ -3,6 +3,7 @@
 #include "../window_base.h"
 #include "../scene.h"
 #include "../text.h"
+#include "../ui.h"
 
 namespace kglt {
 namespace ui {
@@ -23,9 +24,7 @@ void Label::_initialize(Scene &scene) {
 
     text.move_to(padding_left(), padding_bottom(), 0.2);
 
-    if(UI* ui = dynamic_cast<UI*>(&parent())) {
-        set_font(ui->default_font_id());
-    }
+    set_font(ui().default_font_id());
 
     Element::_initialize(scene);
 

@@ -1,13 +1,14 @@
 #include "glee/GLee.h"
 #include "scene.h"
 #include "renderer.h"
+#include "ui.h"
 
 namespace kglt {
 
 Scene::Scene(WindowBase* window):
     Object(nullptr),
     background_(this),
-    ui_interface_(this),
+    ui_interface_(new UI(this)),
     active_camera_(DefaultCameraID),
     window_(window) {
 
@@ -18,7 +19,6 @@ Scene::Scene(WindowBase* window):
     TemplatedManager<Scene, ShaderProgram, ShaderID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_shader_callback));
 
     background().set_parent(this);
-    ui().set_parent(this);
 
     active_camera_ = new_camera(); //Create a default camera
 
@@ -146,6 +146,18 @@ const Text& Scene::text(TextID t) const {
 
 void Scene::delete_text(TextID tid) {
     TemplatedManager<Scene, Text, TextID>::manager_delete(tid);
+}
+
+OverlayID Scene::new_overlay() {
+    return TemplatedManager<Scene, Overlay, OverlayID>::manager_new();
+}
+
+Overlay& Scene::overlay(OverlayID overlay) {
+    return TemplatedManager<Scene, Overlay, OverlayID>::manager_get(overlay);
+}
+
+void Scene::delete_overlay(OverlayID overlay) {
+    TemplatedManager<Scene, Overlay, OverlayID>::manager_delete(overlay);
 }
 
 void Scene::init() {

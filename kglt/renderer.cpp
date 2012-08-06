@@ -19,6 +19,24 @@ void BaseRenderer::render(Scene& scene) {
         }
     }
 
+    /*
+      Once the entire scene has been rendered, it's time to handle the
+      overlays.
+    */
+    for(uint32_t i = 0; i < scene.overlay_count(); ++i) {
+        Overlay& overlay = scene.overlay_ordered_by_zindex(i);
+        projection().push();
+
+        for(Scene::iterator it = overlay.begin(); it != overlay.end(); ++it) {
+            Object& object = static_cast<Object&>(*it);
+            if(pre_visit(object)) {
+                (*this)(object);
+                post_visit(object);
+            }
+        }
+        projection().pop();
+    }
+
     on_finish_render(scene);
 }
 
