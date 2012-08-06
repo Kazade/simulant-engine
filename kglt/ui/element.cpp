@@ -93,6 +93,8 @@ void Element::set_position(float x, float y) {
 
     position().x = parent_left + (x * parent_width);
     position().y = parent_bottom + (y * parent_height);
+
+    update_from_parent();
 }
 
 }

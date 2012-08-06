@@ -52,5 +52,9 @@ void Label::set_font(kglt::FontID fid) {
     text_object().apply_font(fid);
 }
 
+void Label::set_foreground_colour(const kglt::Colour& colour) {
+    text_object().set_colour(colour);
+}
+
 }
 }

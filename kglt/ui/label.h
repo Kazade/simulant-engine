@@ -28,6 +28,7 @@ public:
 
     virtual void _initialize(Scene &scene);
 
+    virtual void set_foreground_colour(const kglt::Colour& colour);
 private:
     TextID text_id_;
     Text& text_object();

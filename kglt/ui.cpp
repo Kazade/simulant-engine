@@ -10,27 +10,6 @@
 
 namespace kglt {
 
-/*
-void UI::pre_visit(ObjectVisitor& visitor) {
-    if(Renderer* renderer = dynamic_cast<Renderer*>(&visitor)) {
-        /**
-         * FIXME:
-         * See background.cpp for why this is all bollocks
-         *
-        tmp_projection_ = renderer->projection_matrix();
-
-        kmMat4 new_proj;
-        kmMat4OrthographicProjection(&new_proj, 0, scene().window().width(), 0, scene().window().height(), -1.0, 10.0);
-        renderer->set_projection_matrix(new_proj);
-    }
-}
-
-void UI::post_visit(ObjectVisitor &visitor) {
-    if(Renderer* renderer = dynamic_cast<Renderer*>(&visitor)) {
-        renderer->set_projection_matrix(tmp_projection_);
-    }
-}*/
-
 UI::UI(Scene* scene):
     scene_(*scene),
     default_font_id_(0) {

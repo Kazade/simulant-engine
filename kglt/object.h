@@ -67,6 +67,20 @@ public:
 
     Scene& scene() { return *scene_; }
     const Scene& scene() const { return *scene_; }
+
+protected:
+    void update_from_parent() {
+        if(!has_parent()) {
+            kmVec3Assign(&absolute_position_, &position_);
+            kmQuaternionAssign(&absolute_orientation_, &rotation_);
+            return;
+        }
+
+        kmVec3Add(&absolute_position_, &parent().absolute_position_, &position_);
+        kmQuaternionAdd(&absolute_orientation_, &parent().absolute_orientation_, &rotation_);
+
+        std::for_each(children().begin(), children().end(), [](Object* x) { x->update_from_parent(); });
+    }
 private:
     static uint64_t object_counter;
     uint64_t id_;
@@ -81,19 +95,6 @@ private:
 
     void parent_changed_callback(Object* old_parent, Object* new_parent) {
         update_from_parent();
-    }
-
-    void update_from_parent() {
-        if(!has_parent()) {
-            kmVec3Assign(&absolute_position_, &position_);
-            kmQuaternionAssign(&absolute_orientation_, &rotation_);
-            return;
-        }
-
-        kmVec3Add(&absolute_position_, &parent().absolute_position_, &position_);
-        kmQuaternionAdd(&absolute_orientation_, &parent().absolute_orientation_, &rotation_);
-
-        std::for_each(children().begin(), children().end(), [](Object* x) { x->update_from_parent(); });
     }
 
     bool is_visible_;

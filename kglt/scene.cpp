@@ -8,8 +8,8 @@ namespace kglt {
 Scene::Scene(WindowBase* window):
     Object(nullptr),
     background_(this),
-    ui_interface_(new UI(this)),
     active_camera_(DefaultCameraID),
+    ui_interface_(new UI(this)),
     window_(window) {
 
     TemplatedManager<Scene, Mesh, MeshID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Mesh, MeshID>));

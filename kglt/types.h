@@ -20,7 +20,10 @@ struct Vec2 {
 
 struct Colour {
 	float r, g, b, a;
-	
+
+    Colour():
+        r(1.0), g(1.0), b(1.0), a(1.0) {}
+
 	Colour(float r, float g, float b, float a):
 		r(r), g(g), b(b), a(a) {}
 };

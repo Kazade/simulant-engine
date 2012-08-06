@@ -38,7 +38,8 @@ public:
     double padding_bottom() const { return padding_[PADDING_BOTTOM]; }
 
     void set_background_colour(float r, float g, float b, float a);
-    void set_foreground_colour(float r, float g, float b, float a);
+    virtual void set_foreground_colour(const kglt::Colour& colour) {}
+
     void set_border_colour(float r, float g, float b, float a);
 
     void set_position(float x, float y);

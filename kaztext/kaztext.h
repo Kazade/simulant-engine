@@ -27,6 +27,7 @@ KTfloat ktStringWidthInPixels(const KTchar* text);
 
 void ktSetProjectionMatrix(float* mat4);
 void ktSetModelviewMatrix(float* mat4);
+void ktSetColour(float r, float g, float b, float a);
 
 #define KT_FONT_HEIGHT 1000
 

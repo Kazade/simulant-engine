@@ -30,9 +30,14 @@ public:
     uint32_t length() const; //Returns the actual length of the utf-8 string
     double width_in_pixels();
 
+    void set_colour(const kglt::Colour& colour) { colour_ = colour; }
+    kglt::Colour& colour() { return colour_; }
+
 private:
     FontID applied_font_;
     std::string text_;
+
+    kglt::Colour colour_;
 };
 
 }
