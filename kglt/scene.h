@@ -41,7 +41,8 @@ class Scene :
     public generic::TemplatedManager<Scene, Sprite, SpriteID>,
     public generic::TemplatedManager<Scene, Camera, CameraID>,
     public generic::TemplatedManager<Scene, Text, TextID>,
-    public generic::TemplatedManager<Scene, ShaderProgram, ShaderID> {
+    public generic::TemplatedManager<Scene, ShaderProgram, ShaderID>,
+    public generic::TemplatedManager<Scene, Font, FontID> {
 
 public:
     VIS_DEFINE_VISITABLE();
@@ -81,6 +82,7 @@ public:
     void delete_camera(CameraID cid);
     void delete_text(TextID tid);
     void delete_shader(ShaderID s);
+    void delete_font(FontID f);
 
     void init();
     void render();
@@ -128,8 +130,6 @@ public:
 
 private:
     std::map<TextureID, Texture> textures_;
-    std::map<FontID, Font::ptr> fonts_;
-
     std::map<std::string, ShaderID> shader_lookup_;
 
     CameraID active_camera_;
@@ -138,8 +138,6 @@ private:
     Texture null_texture_;
     Background background_;
     UI ui_interface_;
-
-    ShaderID null_shader_;
 
     std::vector<Pass> passes_;
     

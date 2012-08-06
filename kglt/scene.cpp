@@ -121,24 +121,15 @@ void Scene::delete_shader(ShaderID s) {
 }
     
 FontID Scene::new_font() {
-    static FontID counter = 0;
-    FontID id = 0;
-    {
-        boost::mutex::scoped_lock lock(scene_lock_);
-        id = ++counter;
-        fonts_.insert(std::make_pair(id, Font::ptr(new Font)));
-    }
-    return id;
+    return TemplatedManager<Scene, Font, FontID>::manager_new();
 }
 
 Font& Scene::font(FontID f) {
-    boost::mutex::scoped_lock lock(scene_lock_);
+    return TemplatedManager<Scene, Font, FontID>::manager_get(f);
+}
 
-    if(!container::contains(fonts_, f)) {
-        throw DoesNotExist<Font>();
-    }
-
-    return *fonts_[f];
+void Scene::delete_font(FontID f) {
+    TemplatedManager<Scene, Font, FontID>::manager_delete(f);
 }
 
 TextID Scene::new_text() {

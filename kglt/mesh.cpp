@@ -70,6 +70,10 @@ Triangle& Mesh::add_triangle(uint32_t a, uint32_t b, uint32_t c) {
 }
 
 uint32_t Mesh::add_submesh(bool use_parent_vertices) {
+    /*
+        TODO: Is this the right way to do this? Shouldn't the Scene manage
+        all mesh creation?
+    */
     Mesh::ptr new_mesh(new Mesh(&this->scene()));
     submeshes_.push_back(new_mesh);
     uint32_t id = submeshes_.size() - 1;

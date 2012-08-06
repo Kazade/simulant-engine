@@ -9,11 +9,13 @@
 
 namespace kglt {
 
+class Scene;
+
 class Font {
 public:
     typedef std::tr1::shared_ptr<Font> ptr;
 
-    Font();
+    Font(Scene* scene);
     ~Font();
 
     void initialize(const std::string& ttf_path, const uint32_t font_size);
