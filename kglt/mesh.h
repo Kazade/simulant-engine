@@ -67,7 +67,7 @@ public:
 
     typedef std::tr1::shared_ptr<Mesh> ptr;
 
-    Mesh();
+    Mesh(Scene* parent);
     ~Mesh();
 
     uint32_t add_submesh(bool use_parent_vertices=false);

@@ -4,8 +4,8 @@
 
 namespace kglt {
 
-Mesh::Mesh():
-    Object(),
+Mesh::Mesh(Scene* parent):
+    Object(parent),
     is_submesh_(false),
     use_parent_vertices_(false),
     diffuse_colour_(1.0, 1.0, 1.0, 1.0),
@@ -70,7 +70,7 @@ Triangle& Mesh::add_triangle(uint32_t a, uint32_t b, uint32_t c) {
 }
 
 uint32_t Mesh::add_submesh(bool use_parent_vertices) {
-    Mesh::ptr new_mesh(new Mesh);
+    Mesh::ptr new_mesh(new Mesh(&this->scene()));
     submeshes_.push_back(new_mesh);
     uint32_t id = submeshes_.size() - 1;
 

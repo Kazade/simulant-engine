@@ -23,7 +23,8 @@ class UI :
 public:
     VIS_DEFINE_VISITABLE();
 
-    UI():
+    UI(Scene* scene):
+        Object(scene),
         default_font_id_(0) {
         move_to(0.0, 0.0, -1.0);
     }

@@ -51,7 +51,7 @@ class Background :
 public:
     VIS_DEFINE_VISITABLE();
 
-    Background();
+    Background(Scene *scene);
 
     void add_layer(const std::string& image_path);
     BackgroundLayer& layer(uint32_t index) { return *layers_.at(index); }

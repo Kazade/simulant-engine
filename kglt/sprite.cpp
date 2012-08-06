@@ -5,7 +5,8 @@
 
 namespace kglt {
 
-Sprite::Sprite():
+Sprite::Sprite(Scene *scene):
+    Object(scene),
 	initialized_(false),
 	frame_width_(0),
 	frame_height_(0),

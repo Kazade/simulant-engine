@@ -37,11 +37,11 @@ class WindowBase;
 class Scene :
     public Object,
     public Loadable,
-    public generic::TemplatedManager<Mesh, MeshID>,
-    public generic::TemplatedManager<Sprite, SpriteID>,
-    public generic::TemplatedManager<Camera, CameraID>,
-    public generic::TemplatedManager<Text, TextID>,
-    public generic::TemplatedManager<ShaderProgram, ShaderID> {
+    public generic::TemplatedManager<Scene, Mesh, MeshID>,
+    public generic::TemplatedManager<Scene, Sprite, SpriteID>,
+    public generic::TemplatedManager<Scene, Camera, CameraID>,
+    public generic::TemplatedManager<Scene, Text, TextID>,
+    public generic::TemplatedManager<Scene, ShaderProgram, ShaderID> {
 
 public:
     VIS_DEFINE_VISITABLE();

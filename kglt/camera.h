@@ -14,7 +14,7 @@ public:
 
     typedef std::tr1::shared_ptr<Camera> ptr;
 
-    Camera();
+    Camera(Scene* scene);
 
     void watch(Object& obj);
     void follow(Object& obj, float dist, float height=0.0f);

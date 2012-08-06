@@ -41,7 +41,7 @@ ui::LabelID UI::new_label() {
     {
         boost::mutex::scoped_lock lock(ui_lock_);
         id = ++counter;
-        labels_.insert(std::make_pair(id, ui::Label::ptr(new ui::Label())));
+        labels_.insert(std::make_pair(id, ui::Label::ptr(new ui::Label(&this->scene()))));
     }
 
     ui::Label& new_label = label(id);

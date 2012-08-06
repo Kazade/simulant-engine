@@ -106,7 +106,7 @@ struct Visitor {
 
 template<typename TypeList, typename Action>
 void apply(const TypeList&, Action& action) {
-    typename TypeList::Head head;
+    typename TypeList::Head head(nullptr);
     action(&head);
     apply(typename TypeList::Tail(), action);
 }

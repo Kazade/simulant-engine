@@ -20,7 +20,7 @@ class Element :
     public generic::VisitableBase<Element> {
 
 public:
-    Element();
+    Element(Scene* scene);
 
     double total_width() { return padding_left() + padding_right() + width(); }
     double total_height() { return padding_top() + padding_bottom() + height(); }

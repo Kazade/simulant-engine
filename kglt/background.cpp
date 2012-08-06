@@ -94,7 +94,10 @@ BackgroundLayer::~BackgroundLayer() {
     }
 }
 
-Background::Background() {}
+Background::Background(Scene *scene):
+    Object(scene) {
+
+}
 
 void Background::add_layer(const std::string &image_path) {
     std::tr1::shared_ptr<BackgroundLayer> new_layer(new BackgroundLayer(*this, image_path));

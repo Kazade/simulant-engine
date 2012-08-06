@@ -5,14 +5,17 @@
 namespace kglt {
 
 Scene::Scene(WindowBase* window):
+    Object(nullptr),
+    background_(this),
+    ui_interface_(this),
     active_camera_(DefaultCameraID),
     window_(window) {
 
-    TemplatedManager<Mesh, MeshID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Mesh, MeshID>));
-    TemplatedManager<Sprite, SpriteID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Sprite, SpriteID>));
-    TemplatedManager<Camera, CameraID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Camera, CameraID>));
-    TemplatedManager<Text, TextID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Text, TextID>));
-    TemplatedManager<ShaderProgram, ShaderID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_shader_callback));
+    TemplatedManager<Scene, Mesh, MeshID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Mesh, MeshID>));
+    TemplatedManager<Scene, Sprite, SpriteID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Sprite, SpriteID>));
+    TemplatedManager<Scene, Camera, CameraID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Camera, CameraID>));
+    TemplatedManager<Scene, Text, TextID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Text, TextID>));
+    TemplatedManager<Scene, ShaderProgram, ShaderID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_shader_callback));
 
     background().set_parent(this);
     ui().set_parent(this);
@@ -38,27 +41,27 @@ Scene::Scene(WindowBase* window):
 }
 
 MeshID Scene::new_mesh() {
-    return TemplatedManager<Mesh, MeshID>::manager_new();
+    return TemplatedManager<Scene, Mesh, MeshID>::manager_new();
 }
 
 Mesh& Scene::mesh(MeshID m) {
-    return TemplatedManager<Mesh, MeshID>::manager_get(m);
+    return TemplatedManager<Scene, Mesh, MeshID>::manager_get(m);
 }
 
 void Scene::delete_mesh(MeshID mid) {
-    return TemplatedManager<Mesh, MeshID>::manager_delete(mid);
+    return TemplatedManager<Scene, Mesh, MeshID>::manager_delete(mid);
 }
 
 SpriteID Scene::new_sprite() {
-    return TemplatedManager<Sprite, SpriteID>::manager_new();
+    return TemplatedManager<Scene, Sprite, SpriteID>::manager_new();
 }
 
 Sprite& Scene::sprite(SpriteID s) {
-    return TemplatedManager<Sprite, SpriteID>::manager_get(s);
+    return TemplatedManager<Scene, Sprite, SpriteID>::manager_get(s);
 }
 
 void Scene::delete_sprite(SpriteID sid) {
-    return TemplatedManager<Sprite, SpriteID>::manager_delete(sid);
+    return TemplatedManager<Scene, Sprite, SpriteID>::manager_delete(sid);
 }
 
 TextureID Scene::new_texture() {
@@ -94,27 +97,27 @@ Texture& Scene::texture(TextureID t) {
 }
 
 CameraID Scene::new_camera() {
-    return TemplatedManager<Camera, CameraID>::manager_new();
+    return TemplatedManager<Scene, Camera, CameraID>::manager_new();
 }
 
 Camera& Scene::camera(CameraID c) {
-    return TemplatedManager<Camera, CameraID>::manager_get(c);
+    return TemplatedManager<Scene, Camera, CameraID>::manager_get(c);
 }
 
 void Scene::delete_camera(CameraID cid) {
-    TemplatedManager<Camera, CameraID>::manager_delete(cid);
+    TemplatedManager<Scene, Camera, CameraID>::manager_delete(cid);
 }
 
 ShaderProgram& Scene::shader(ShaderID s) {
-    return TemplatedManager<ShaderProgram, ShaderID>::manager_get(s);
+    return TemplatedManager<Scene, ShaderProgram, ShaderID>::manager_get(s);
 }
 
 ShaderID Scene::new_shader() {
-    return TemplatedManager<ShaderProgram, ShaderID>::manager_new();
+    return TemplatedManager<Scene, ShaderProgram, ShaderID>::manager_new();
 }
 
 void Scene::delete_shader(ShaderID s) {
-    TemplatedManager<ShaderProgram, ShaderID>::manager_delete(s);
+    TemplatedManager<Scene, ShaderProgram, ShaderID>::manager_delete(s);
 }
     
 FontID Scene::new_font() {
@@ -139,19 +142,19 @@ Font& Scene::font(FontID f) {
 }
 
 TextID Scene::new_text() {
-    return TemplatedManager<Text, TextID>::manager_new();
+    return TemplatedManager<Scene, Text, TextID>::manager_new();
 }
 
 Text& Scene::text(TextID t) {
-    return TemplatedManager<Text, TextID>::manager_get(t);
+    return TemplatedManager<Scene, Text, TextID>::manager_get(t);
 }
 
 const Text& Scene::text(TextID t) const {
-    return TemplatedManager<Text, TextID>::manager_get(t);
+    return TemplatedManager<Scene, Text, TextID>::manager_get(t);
 }
 
 void Scene::delete_text(TextID tid) {
-    TemplatedManager<Text, TextID>::manager_delete(tid);
+    TemplatedManager<Scene, Text, TextID>::manager_delete(tid);
 }
 
 void Scene::init() {
@@ -204,7 +207,7 @@ void Scene::render() {
 }
 
 MeshID Scene::_mesh_id_from_mesh_ptr(Mesh* mesh) {
-    return TemplatedManager<Mesh, MeshID>::_get_object_id_from_ptr(mesh);
+    return TemplatedManager<Scene, Mesh, MeshID>::_get_object_id_from_ptr(mesh);
 }
 
 }

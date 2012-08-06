@@ -19,6 +19,9 @@ public:
 
     typedef std::tr1::shared_ptr<Text> ptr;
 
+    Text(Scene* scene):
+        Object(scene) {}
+
     void apply_font(FontID font_id);
     Font& font();
 

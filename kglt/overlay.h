@@ -30,7 +30,7 @@ public:
 
     typedef std::tr1::shared_ptr<Overlay> ptr;
 
-    Overlay();
+    Overlay(Scene* scene);
 
     void set_zindex(int32_t zindex) { zindex_ = zindex; }
     int32_t zindex() const { return zindex_; }

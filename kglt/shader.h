@@ -14,6 +14,8 @@
 
 namespace kglt {
 
+class Scene;
+
 enum ShaderType {
     SHADER_TYPE_VERTEX,
     SHADER_TYPE_FRAGMENT,
@@ -24,7 +26,7 @@ class ShaderProgram : public Loadable {
 public:
 	typedef std::tr1::shared_ptr<ShaderProgram> ptr;
 
-    ShaderProgram();
+    ShaderProgram(Scene* scene);
     ~ShaderProgram();
 
     void activate();

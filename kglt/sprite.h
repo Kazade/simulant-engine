@@ -20,7 +20,7 @@ public:
 
     typedef std::tr1::shared_ptr<Sprite> ptr;
 
-    Sprite();
+    Sprite(Scene* scene);
 	virtual ~Sprite();
 	
     uint32_t frame_count() const { return frame_count_; }

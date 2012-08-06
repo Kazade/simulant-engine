@@ -11,8 +11,9 @@ namespace kglt {
 
 uint64_t Object::object_counter = 0;
 
-Object::Object():
+Object::Object(Scene *parent_scene):
     id_(++object_counter),
+    scene_(parent_scene),
     is_visible_(true) {
 
     kmVec3Fill(&position_, 0.0, 0.0, 0.0);
@@ -84,14 +85,6 @@ void Object::rotate_y(float amount) {
     kmQuaternionNormalize(&rotation_, &rotation_);
 
     update_from_parent();
-}
-
-Scene& Object::scene() { 
-    return root_as<Scene>();
-}
-
-const Scene& Object::scene() const {
-    return root_as<const Scene>();
 }
 
 }

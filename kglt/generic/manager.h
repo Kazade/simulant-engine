@@ -31,7 +31,7 @@ public:
     }
 };
 
-template<typename ObjectType, typename ObjectIDType, typename NewIDGenerator=IncrementalGetNextID<ObjectIDType> >
+template<typename Derived, typename ObjectType, typename ObjectIDType, typename NewIDGenerator=IncrementalGetNextID<ObjectIDType> >
 class TemplatedManager : public virtual BaseManager {
 public:
     ObjectIDType manager_new() {
@@ -39,7 +39,7 @@ public:
         {
             boost::mutex::scoped_lock lock(manager_lock_);
             id = NewIDGenerator()();
-            objects_.insert(std::make_pair(id, typename ObjectType::ptr(new ObjectType)));
+            objects_.insert(std::make_pair(id, typename ObjectType::ptr(new ObjectType((Derived*)this))));
         }
 
         signal_post_create_(*objects_[id], id);

@@ -31,7 +31,7 @@ public:
 
     typedef std::tr1::shared_ptr<Object> ptr;
 
-    Object();
+    Object(Scene* parent_scene);
     virtual ~Object();
 
 	virtual void update(double dt) {
@@ -61,16 +61,17 @@ public:
     virtual void on_parent_set(Object* old_parent) {}
 
     uint64_t id() const { return id_; }
-    
-    Scene& scene();
-    const Scene& scene() const;
-    
+        
     virtual void _initialize(Scene& scene) {}
     virtual void do_update(double dt) {}
 
+    Scene& scene() { return *scene_; }
+    const Scene& scene() const { return *scene_; }
 private:
     static uint64_t object_counter;
     uint64_t id_;
+
+    Scene* scene_; //Each object is owned by a scene
 
     kmVec3 position_;
     kmQuaternion rotation_;

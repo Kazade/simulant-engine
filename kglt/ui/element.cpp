@@ -8,7 +8,8 @@
 namespace kglt {
 namespace ui {
 
-Element::Element():
+Element::Element(Scene *scene):
+    Object(scene),
     width_(0),
     height_(0),
     border_width_(1),
