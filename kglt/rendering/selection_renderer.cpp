@@ -81,7 +81,7 @@ void SelectionRenderer::on_start_render(Scene& scene) {
 	g_count = 0; 
 	b_count	= 0;
 	colour_mesh_lookup_.clear();
-	selected_mesh_id_ = 0;
+    selected_mesh_id_ = 0;
 }
 
 void SelectionRenderer::on_finish_render(Scene &scene) {
@@ -112,7 +112,7 @@ void SelectionRenderer::on_finish_render(Scene &scene) {
 void SelectionRenderer::visit(Mesh& mesh) {
     Scene& scene = mesh.root_as<Scene>();
     ShaderProgram& s = scene.shader(selection_shader_);
-	
+
 	b_count++;
 	if(b_count == 255) {
 		b_count = 0;

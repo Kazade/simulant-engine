@@ -12,10 +12,9 @@ int main(int argc, char* argv[]) {
 	
 	scene.remove_all_passes();		
 	
-    kglt::SelectionRenderer::ptr selection(new kglt::SelectionRenderer());
-	
-	scene.add_pass(kglt::Renderer::ptr(selection)); //Add the selection pass
-    scene.add_pass(kglt::Renderer::ptr(new kglt::GenericRenderer())); //Normal rendering
+    auto selection = kglt::SelectionRenderer::create();
+    scene.add_pass(selection); //Add the selection pass
+    scene.add_pass(kglt::GenericRenderer::create()); //Normal rendering
 	
     scene.active_camera().set_perspective_projection(
         45.0,

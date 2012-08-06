@@ -3,7 +3,8 @@
 
 #include <iostream>
 
-#include "kglt/renderer.h"
+#include "../renderer.h"
+#include "../generic/creator.h"
 
 namespace kglt {
 
@@ -12,7 +13,9 @@ class Camera;
 class Scene;
 class Text;
 
-class GenericRenderer : public Renderer {
+class GenericRenderer :
+    public Renderer,
+    public generic::Creator<GenericRenderer> {
 public:
 	typedef std::tr1::shared_ptr<Renderer> ptr;
 

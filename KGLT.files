@@ -221,3 +221,4 @@ kglt/generic/loki/null_type.h
 kglt/generic/loki/type_manip.h
 kglt/generic/loki/typelist_macros.h
 kglt/generic/manager.h
+kglt/generic/creator.h

@@ -3,11 +3,15 @@
 
 #include <map>
 
-#include "kglt/renderer.h"
+#include "../renderer.h"
+#include "../generic/creator.h"
 
 namespace kglt {
 
-class SelectionRenderer : public Renderer {
+class SelectionRenderer :
+    public Renderer,
+    public generic::Creator<SelectionRenderer> {
+
 public:
 	typedef std::tr1::shared_ptr<SelectionRenderer> ptr;
 		
