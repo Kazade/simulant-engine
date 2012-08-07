@@ -18,6 +18,8 @@ Object::Object(Scene *parent_scene):
 
     kmVec3Fill(&position_, 0.0, 0.0, 0.0);
     kmQuaternionIdentity(&rotation_);
+    kmVec3Fill(&absolute_position_, 0.0, 0.0, 0.0);
+    kmQuaternionIdentity(&absolute_orientation_);
 
     update_from_parent();
 

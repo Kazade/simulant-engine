@@ -73,11 +73,10 @@ protected:
         if(!has_parent()) {
             kmVec3Assign(&absolute_position_, &position_);
             kmQuaternionAssign(&absolute_orientation_, &rotation_);
-            return;
+        } else {
+            kmVec3Add(&absolute_position_, &parent().absolute_position_, &position_);
+            kmQuaternionAdd(&absolute_orientation_, &parent().absolute_orientation_, &rotation_);
         }
-
-        kmVec3Add(&absolute_position_, &parent().absolute_position_, &position_);
-        kmQuaternionAdd(&absolute_orientation_, &parent().absolute_orientation_, &rotation_);
 
         std::for_each(children().begin(), children().end(), [](Object* x) { x->update_from_parent(); });
     }
