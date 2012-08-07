@@ -19,6 +19,10 @@ void BaseRenderer::render(Scene& scene) {
         }
     }
 
+    //Reset the modelview and projection for the overlay
+    kmMat4Identity(&modelview().top());
+    kmMat4Identity(&projection().top());
+
     /*
       Once the entire scene has been rendered, it's time to handle the
       overlays.

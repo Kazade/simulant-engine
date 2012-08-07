@@ -110,8 +110,7 @@ void SelectionRenderer::on_finish_render(Scene &scene) {
 }
 	
 void SelectionRenderer::visit(Mesh& mesh) {
-    Scene& scene = mesh.root_as<Scene>();
-    ShaderProgram& s = scene.shader(selection_shader_);
+    ShaderProgram& s = mesh.scene().shader(selection_shader_);
 
 	b_count++;
 	if(b_count == 255) {
@@ -130,10 +129,10 @@ void SelectionRenderer::visit(Mesh& mesh) {
 		(1.0 / 255.0) * b_count
 	);
 	
-    colour_mesh_lookup_[current_colour] = scene._mesh_id_from_mesh_ptr(&mesh);
+    colour_mesh_lookup_[current_colour] = mesh.scene()._mesh_id_from_mesh_ptr(&mesh);
 	
 	//Bind the NULL texture (e.g. make sure everything is white)
-    glBindTexture(GL_TEXTURE_2D, scene.texture(NullTextureID).gl_tex());
+    glBindTexture(GL_TEXTURE_2D, mesh.scene().texture(NullTextureID).gl_tex());
 
     kmMat4 transform;
     kmMat4Identity(&transform);

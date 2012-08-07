@@ -112,9 +112,9 @@ public:
 		passes_.clear();
 	}
 	
+    uint32_t pass_count() const { return passes_.size(); }
 	Pass& pass(uint32_t index = 0) { return passes_.at(index); }
-	
-	
+		
 	MeshID _mesh_id_from_mesh_ptr(Mesh* mesh);
 	
     Background& background() { return background_; }
