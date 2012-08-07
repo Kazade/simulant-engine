@@ -37,7 +37,7 @@ Scene::Scene(WindowBase* window):
      * Create the default pass, which uses a perspective projection and
      * a fullscreen viewport
      */
-     add_pass(Renderer::ptr(new GenericRenderer(render_options)), VIEWPORT_TYPE_FULL);
+     add_pass(GenericRenderer::create(render_options), VIEWPORT_TYPE_FULL);
 }
 
 MeshID Scene::new_mesh() {
