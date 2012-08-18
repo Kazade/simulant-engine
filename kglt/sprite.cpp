@@ -5,8 +5,9 @@
 
 namespace kglt {
 
-Sprite::Sprite(Scene *scene):
+Sprite::Sprite(Scene *scene, SpriteID id):
     Object(scene),
+    generic::Identifiable<SpriteID>(id),
 	initialized_(false),
 	frame_width_(0),
 	frame_height_(0),

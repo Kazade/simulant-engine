@@ -313,7 +313,7 @@ void Q2BSPLoader::into(Loadable& resource) {
             tri_idx.push_back(indexes[i+1]);
             tri_idx.push_back(indexes[i]);
 
-            L_DEBUG("Adding triangle to mesh: " + boost::lexical_cast<std::string>(texture_mesh.id()));
+            L_DEBUG("Adding triangle to mesh: " + boost::lexical_cast<std::string>(texture_mesh.uuid()));
             Triangle& tri = texture_mesh.add_triangle(tri_idx[0], tri_idx[1], tri_idx[2]);
 
             for(int32_t j = 0; j < 3; ++j) {

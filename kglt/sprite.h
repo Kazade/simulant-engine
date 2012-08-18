@@ -4,6 +4,7 @@
 #include "object.h"
 #include "loadable.h"
 #include "generic/visitor.h"
+#include "generic/identifiable.h"
 #include "kazbase/logging/logging.h"
 
 namespace kglt {
@@ -13,14 +14,15 @@ class Texture;
 
 class Sprite :
     public Loadable,
-    public Object {
+    public Object,
+    public generic::Identifiable<SpriteID> {
 
 public:
     VIS_DEFINE_VISITABLE();
 
     typedef std::tr1::shared_ptr<Sprite> ptr;
 
-    Sprite(Scene* scene);
+    Sprite(Scene* scene, SpriteID id);
 	virtual ~Sprite();
 	
     uint32_t frame_count() const { return frame_count_; }

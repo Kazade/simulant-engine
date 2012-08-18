@@ -7,20 +7,23 @@
 
 #include "object.h"
 #include "generic/visitor.h"
+#include "generic/identifiable.h"
 #include "font.h"
 
 namespace kglt {
 
 class Text :
-    public Object {
+    public Object,
+    public generic::Identifiable<TextID> {
 
 public:
     VIS_DEFINE_VISITABLE();
 
     typedef std::tr1::shared_ptr<Text> ptr;
 
-    Text(Scene* scene):
-        Object(scene) {}
+    Text(Scene* scene, TextID id=0):
+        Object(scene),
+        generic::Identifiable<TextID>(id) {}
 
     void apply_font(FontID font_id);
     Font& font();

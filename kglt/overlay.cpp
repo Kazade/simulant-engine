@@ -4,8 +4,9 @@
 
 namespace kglt {
 
-Overlay::Overlay(Scene *scene):
+Overlay::Overlay(Scene *scene, OverlayID id):
     Object(scene),
+    generic::Identifiable<OverlayID>(id),
     zindex_(0) {
 
     set_ortho(-1.0, 1.0, -1.0, 1.0);

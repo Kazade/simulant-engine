@@ -86,9 +86,57 @@ We can also draw a rectangle even more easily:
 
 # Documentation
 
+## Objects
+
+Everything visible in the Scene is a subclass of Object. An Object can have children, and they can have children etc. 
+
+Each object has a position and an orientation relative to its parent. If this changes (or the Object's parent changes) an absolute position and orientation is recalculated. Pretty standard scene graph stuff.
+
 ## The Scene
 
-### Passes
+The Scene owns everything. Like everything else it's a Object. It forms the root node of the scene you are trying to display. The Scene is also a factory for creating new objects. If you want to spawn a Mesh object for example, you would do so using window().scene().new_mesh();
+
+Things you can spawn from the scene are:
+
+ * Meshes
+ * Textures
+ * Shader programs
+ * 2D Sprites
+ * Fonts
+ * Text objects
+
+The Scene also contains other objects that aren't attached to it's heirarchy, these include:
+ 
+ * The UI instance
+ * Overlays
+ * The Background instance
+
+These objects are special, and so aren't traditional child nodes of the scene.
+
+## The UI instance
+
+The Scene object contains an instance of the UI class. This class is basically a layer above a 2D overlay that allows you to create common UI widgets such as labels. To create a label for example you would do something like this:
+
+ui::LabelID lid = scene().ui().new_label();
+ui::Label& label = scene().ui().label(lid);
+label.set_text("This is a label");
+label.set_position(0.1, 0.1); //UI positions are between 0.0 and 1.0 in both directions
+label.set_foreground_colour(kglt::Colour(1.0, 1.0, 0.0, 1.0));
+label.set_background_colour(kglt::Colour(0.0, 0.0, 0.0, 0.0));
+
+Internally, new_label() creates a series of Mesh and Text objects and attaches them to an overlay.
+
+## Overlays
+
+Overlays are used to render 2D elements on top of the scene.
+
+An Overlay is a different kind of root node than the Scene object. A Scene is rendered through a camera, which maintains a projection and a frustum. You can move the camera around a Scene.
+
+Overlays are different, Overlays create a 2D orthographic projection that you can control. Object's can be attached to the Overlay and they will be rendered on top of the regular Scene. Cameras have no effect on an Overlay. Although an Overlay is an Object, it is not part of the Scene heirarchy and instead is the root of its own heirarchy. To render a 2D mesh on top of the scene, you would do the following:
+
+Overlay& overlay = return_new_overlay(scene); //Create an overlay
+Mesh& mesh = return_new_mesh(scene); //Create a mesh
+mesh.set_parent(overlay); //Detach the mesh from the scene and attach it to the overlay
 
 ## Backgrounds
 

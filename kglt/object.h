@@ -60,13 +60,15 @@ public:
 
     virtual void on_parent_set(Object* old_parent) {}
 
-    uint64_t id() const { return id_; }
+    uint64_t uuid() const { return uuid_; }
         
     virtual void _initialize(Scene& scene) {}
     virtual void do_update(double dt) {}
 
     Scene& scene() { return *scene_; }
     const Scene& scene() const { return *scene_; }
+
+    virtual void destroy() {}
 
 protected:
     void update_from_parent() {
@@ -80,9 +82,10 @@ protected:
 
         std::for_each(children().begin(), children().end(), [](Object* x) { x->update_from_parent(); });
     }
+
 private:
     static uint64_t object_counter;
-    uint64_t id_;
+    uint64_t uuid_;
 
     Scene* scene_; //Each object is owned by a scene
 
@@ -97,7 +100,6 @@ private:
     }
 
     bool is_visible_;
-
 };
 
 }

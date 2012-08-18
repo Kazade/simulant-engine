@@ -11,7 +11,8 @@
 
 namespace kglt {
 
-ShaderProgram::ShaderProgram(Scene *scene):
+ShaderProgram::ShaderProgram(Scene *scene, ShaderID id):
+    generic::Identifiable<ShaderID>(id),
     program_id_(0) {
 
     for(uint32_t i = 0; i < SHADER_TYPE_MAX; ++i) {

@@ -8,13 +8,14 @@
 namespace kglt {
 
 class Camera :
-    public Object {
+    public Object,
+    public generic::Identifiable<CameraID> {
 public:
     VIS_DEFINE_VISITABLE();
 
     typedef std::tr1::shared_ptr<Camera> ptr;
 
-    Camera(Scene* scene);
+    Camera(Scene* scene, CameraID id);
 
     void watch(Object& obj);
     void follow(Object& obj, float dist, float height=0.0f);

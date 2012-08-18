@@ -2,7 +2,10 @@
 #define LABEL_H
 
 #include <tr1/memory>
+
+#include "../generic/identifiable.h"
 #include "element.h"
+#include "types.h"
 
 namespace kglt {
 
@@ -11,12 +14,16 @@ class UI;
 
 namespace ui {
 
-class Label : public Element {
+class Label :
+    public Element,
+    public generic::Identifiable<LabelID> {
+
 public:
     typedef std::tr1::shared_ptr<Label> ptr;
 
-    Label(UI* ui):
+    Label(UI* ui, LabelID id):
         Element(ui),
+        generic::Identifiable<LabelID>(id),
         text_id_(0) {}
 
     void set_text(const std::string& text);

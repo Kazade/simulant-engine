@@ -6,6 +6,7 @@
 
 #include "object.h"
 #include "generic/visitor.h"
+#include "generic/identifiable.h"
 
 namespace kglt {
 
@@ -23,14 +24,15 @@ namespace kglt {
 */
 
 class Overlay :
-    public Object {
+    public Object,
+    public generic::Identifiable<OverlayID> {
 
 public:
     VIS_DEFINE_VISITABLE();
 
     typedef std::tr1::shared_ptr<Overlay> ptr;
 
-    Overlay(Scene* scene);
+    Overlay(Scene* scene, OverlayID id=0);
 
     void set_zindex(int32_t zindex) { zindex_ = zindex; }
     int32_t zindex() const { return zindex_; }

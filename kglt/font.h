@@ -5,17 +5,21 @@
 #include <string>
 #include <tr1/memory>
 
+#include "generic/identifiable.h"
 #include "kaztext/kaztext.h"
+#include "types.h"
 
 namespace kglt {
 
 class Scene;
 
-class Font {
+class Font :
+    public generic::Identifiable<FontID> {
+
 public:
     typedef std::tr1::shared_ptr<Font> ptr;
 
-    Font(Scene* scene);
+    Font(Scene* scene, FontID id);
     ~Font();
 
     void initialize(const std::string& ttf_path, const uint32_t font_size);

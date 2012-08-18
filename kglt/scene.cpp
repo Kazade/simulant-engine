@@ -40,8 +40,16 @@ Scene::Scene(WindowBase* window):
      add_pass(GenericRenderer::create(render_options), VIEWPORT_TYPE_FULL);
 }
 
-MeshID Scene::new_mesh() {
-    return TemplatedManager<Scene, Mesh, MeshID>::manager_new();
+MeshID Scene::new_mesh(Object *parent) {
+    MeshID result = TemplatedManager<Scene, Mesh, MeshID>::manager_new();
+    if(parent) {
+        mesh(result).set_parent(parent);
+    }
+    return result;
+}
+
+bool Scene::has_mesh(MeshID m) const {
+    return TemplatedManager<Scene, Mesh, MeshID>::manager_contains(m);
 }
 
 Mesh& Scene::mesh(MeshID m) {
@@ -49,6 +57,11 @@ Mesh& Scene::mesh(MeshID m) {
 }
 
 void Scene::delete_mesh(MeshID mid) {
+    Mesh& obj = mesh(mid);
+    for(uint32_t i = 0; i < obj.child_count(); ++i) {
+        obj.child(i).destroy();
+    }
+
     return TemplatedManager<Scene, Mesh, MeshID>::manager_delete(mid);
 }
 
@@ -61,6 +74,10 @@ Sprite& Scene::sprite(SpriteID s) {
 }
 
 void Scene::delete_sprite(SpriteID sid) {
+    Sprite& obj = sprite(sid);
+    for(uint32_t i = 0; i < obj.child_count(); ++i) {
+        obj.child(i).destroy();
+    }
     return TemplatedManager<Scene, Sprite, SpriteID>::manager_delete(sid);
 }
 

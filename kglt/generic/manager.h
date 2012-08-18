@@ -40,7 +40,7 @@ public:
         {
             boost::mutex::scoped_lock lock(manager_lock_);
             id = NewIDGenerator()();
-            objects_.insert(std::make_pair(id, typename ObjectType::ptr(new ObjectType((Derived*)this))));
+            objects_.insert(std::make_pair(id, typename ObjectType::ptr(new ObjectType((Derived*)this, id))));
         }
 
         signal_post_create_(*objects_[id], id);
@@ -79,7 +79,7 @@ public:
         return *(it->second);
     }
 
-    bool manager_contains(ObjectIDType id) {
+    bool manager_contains(ObjectIDType id) const {
         return objects_.find(id) != objects_.end();
     }
 

@@ -1,11 +1,13 @@
 #include "glee/GLee.h"
 #include "mesh.h"
 #include "kazbase/list_utils.h"
+#include "scene.h"
 
 namespace kglt {
 
-Mesh::Mesh(Scene* parent):
+Mesh::Mesh(Scene* parent, MeshID id):
     Object(parent),
+    Identifiable<MeshID>(id),
     is_submesh_(false),
     use_parent_vertices_(false),
     diffuse_colour_(1.0, 1.0, 1.0, 1.0),
@@ -27,6 +29,10 @@ Mesh::~Mesh() {
 	}
 }
     
+void Mesh::destroy() {
+    scene().delete_mesh(id());
+}
+
 Vertex& Mesh::vertex(uint32_t v) {
     if(use_parent_vertices_) {
         if(!is_submesh_) {

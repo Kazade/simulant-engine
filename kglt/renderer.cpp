@@ -59,7 +59,7 @@ void BaseRenderer::post_visit(Object& object) {
     modelview().pop();
 }
 
-void Renderer::visit(Object object) {
+void Renderer::visit(Object &object) {
 
 }
 

@@ -122,6 +122,8 @@ private:
     IdleTaskManager idle_;
 
     KTIuint timer_;
+
+    void destroy() {}
 };
 
 }

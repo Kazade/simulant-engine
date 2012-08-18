@@ -6,6 +6,7 @@
 #include <map>
 #include "object.h"
 #include "types.h"
+#include "generic/identifiable.h"
 #include "generic/visitor.h"
 
 namespace kglt {
@@ -61,13 +62,16 @@ enum VertexAttribute {
 	VERTEX_ATTRIBUTE_DIFFUSE = 4
 };
 
-class Mesh : public Object {
+class Mesh :
+    public Object,
+    public generic::Identifiable<MeshID> {
+
 public:
     VIS_DEFINE_VISITABLE();
 
     typedef std::tr1::shared_ptr<Mesh> ptr;
 
-    Mesh(Scene* parent);
+    Mesh(Scene* parent, MeshID id=0); //This must be optional for the visitor class to work :(
     ~Mesh();
 
     uint32_t add_submesh(bool use_parent_vertices=false);
@@ -160,6 +164,8 @@ private:
     bool depth_test_enabled_;
     bool depth_writes_enabled_;
     bool branch_selectable_;
+
+    virtual void destroy();
 };
 
 }

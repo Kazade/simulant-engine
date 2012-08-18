@@ -4,7 +4,8 @@
 
 namespace kglt {
 
-Font::Font(Scene* scene):
+Font::Font(Scene* scene, FontID id):
+    generic::Identifiable<FontID>(id),
     kt_font_(0) {
     ktGenFonts(1, &kt_font_);
 }

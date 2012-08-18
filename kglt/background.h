@@ -68,6 +68,7 @@ private:
 
     kmMat4 tmp_projection_;
 
+    void destroy() {}
 };
 
 }

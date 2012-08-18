@@ -55,7 +55,7 @@ public:
 
     Scene(WindowBase* window);
 
-    MeshID new_mesh();
+    MeshID new_mesh(Object* parent=nullptr);
     CameraID new_camera();
     TextureID new_texture();
     ShaderID new_shader();
@@ -63,6 +63,8 @@ public:
     FontID new_font();
     TextID new_text();
     OverlayID new_overlay(); ///< Creates a new overlay
+
+    bool has_mesh(MeshID m) const;
 
     Mesh& mesh(MeshID m);
     Camera& camera(CameraID c = DefaultCameraID);

@@ -12,7 +12,7 @@ namespace kglt {
 uint64_t Object::object_counter = 0;
 
 Object::Object(Scene *parent_scene):
-    id_(++object_counter),
+    uuid_(++object_counter),
     scene_(parent_scene),
     is_visible_(true) {
 

@@ -11,6 +11,8 @@
 #include "kazmath/vec3.h"
 
 #include "loadable.h"
+#include "generic/identifiable.h"
+#include "types.h"
 
 namespace kglt {
 
@@ -22,11 +24,14 @@ enum ShaderType {
     SHADER_TYPE_MAX
 };
 
-class ShaderProgram : public Loadable {
+class ShaderProgram :
+    public Loadable,
+    public generic::Identifiable<ShaderID> {
+
 public:
 	typedef std::tr1::shared_ptr<ShaderProgram> ptr;
 
-    ShaderProgram(Scene* scene);
+    ShaderProgram(Scene* scene, ShaderID id);
     ~ShaderProgram();
 
     void activate();

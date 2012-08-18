@@ -78,7 +78,7 @@ public:
       that isn't one of the classes listed in the
       template list
     */
-    void visit(Object object);
+    void visit(Object& object);
 };
 
 }

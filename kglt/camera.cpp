@@ -5,8 +5,9 @@
 
 namespace kglt {
 
-Camera::Camera(Scene *scene):
-    Object(scene) {
+Camera::Camera(Scene *scene, CameraID id):
+    Object(scene),
+    generic::Identifiable<CameraID>(id) {
 
     kmQuaternionRotationYawPitchRoll(&rotation(), 180.0, 0.0, 0.0);
     kmQuaternionNormalize(&rotation(), &rotation());
