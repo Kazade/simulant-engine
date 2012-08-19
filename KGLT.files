@@ -224,3 +224,8 @@ kglt/generic/manager.h
 kglt/generic/creator.h
 kglt/generic/identifiable.h
 tests/test_sprite.cpp
+kglt/material.h
+tests/test_material.cpp
+kglt/material.cpp
+kglt/colour.h
+kglt/colour.cpp

@@ -2,6 +2,7 @@
 #define TYPES_H_INCLUDED
 
 #include <cstdint>
+#include "colour.h"
 
 namespace kglt {
 
@@ -18,16 +19,6 @@ struct Vec2 {
         x(0.0f), y(0.0f) {}
 };
 
-struct Colour {
-	float r, g, b, a;
-
-    Colour():
-        r(1.0), g(1.0), b(1.0), a(1.0) {}
-
-	Colour(float r, float g, float b, float a):
-		r(r), g(g), b(b), a(a) {}
-};
-
 
 //FIXME: Should be something like UniqueID<0>, UniqueID<1> or something so that
 //IDs can't be incorrectly passed
@@ -39,6 +30,7 @@ typedef uint32_t SpriteID;
 typedef uint32_t FontID;
 typedef uint32_t TextID;
 typedef uint32_t OverlayID;
+typedef uint32_t MaterialID;
 
 const TextureID NullTextureID = 0;
 const ShaderID NullShaderID = 0;

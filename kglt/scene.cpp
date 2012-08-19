@@ -82,6 +82,14 @@ void Scene::delete_sprite(SpriteID sid) {
     return TemplatedManager<Scene, Sprite, SpriteID>::manager_delete(sid);
 }
 
+MaterialID Scene::new_material() {
+    return TemplatedManager<Scene, Material, MaterialID>::manager_new();
+}
+
+Material& Scene::material(MaterialID mid) {
+    return TemplatedManager<Scene, Material, MaterialID>::manager_get(mid);
+}
+
 TextureID Scene::new_texture() {
     static TextureID counter = 0;
     TextureID id = 0;

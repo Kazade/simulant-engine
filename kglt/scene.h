@@ -24,6 +24,7 @@
 #include "font.h"
 #include "text.h"
 #include "overlay.h"
+#include "material.h"
 
 #include "rendering/generic_renderer.h"
 
@@ -44,7 +45,8 @@ class Scene :
     public generic::TemplatedManager<Scene, Text, TextID>,
     public generic::TemplatedManager<Scene, ShaderProgram, ShaderID>,
     public generic::TemplatedManager<Scene, Font, FontID>,
-    public generic::TemplatedManager<Scene, Overlay, OverlayID> {
+    public generic::TemplatedManager<Scene, Overlay, OverlayID>,
+    public generic::TemplatedManager<Scene, Material, MaterialID> {
 
 public:
     VIS_DEFINE_VISITABLE();
@@ -63,6 +65,7 @@ public:
     FontID new_font();
     TextID new_text();
     OverlayID new_overlay(); ///< Creates a new overlay
+    MaterialID new_material();
 
     bool has_mesh(MeshID m) const;
     bool has_overlay(OverlayID o) const;
@@ -75,6 +78,7 @@ public:
     Sprite& sprite(SpriteID s);
     Font& font(FontID f);
     Overlay& overlay(OverlayID overlay); ///< Grabs an overlay by its ID
+    Material& material(MaterialID material);
 
     Camera& active_camera() { return camera(active_camera_); }
     void set_active_camera(CameraID cam) { active_camera_ = cam; }
