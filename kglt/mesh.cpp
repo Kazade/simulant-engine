@@ -10,6 +10,7 @@ Mesh::Mesh(Scene* parent, MeshID id):
     Identifiable<MeshID>(id),
     is_submesh_(false),
     use_parent_vertices_(false),
+    material_(0),
     diffuse_colour_(1.0, 1.0, 1.0, 1.0),
     depth_test_enabled_(true),
     depth_writes_enabled_(true),
@@ -77,8 +78,9 @@ Triangle& Mesh::add_triangle(uint32_t a, uint32_t b, uint32_t c) {
 
 uint32_t Mesh::add_submesh(bool use_parent_vertices) {
     /*
-        TODO: Is this the right way to do this? Shouldn't the Scene manage
-        all mesh creation?
+        FIXME: Using Meshes as submeshes seems dodgy, submeshes are part
+        of the mesh and shouldn't be owned by the scene so we are sort of circumventing
+        that a bit. I think Submesh should be its own type that doesn't derive Object
     */
     Mesh::ptr new_mesh(new Mesh(&this->scene()));
     submeshes_.push_back(new_mesh);

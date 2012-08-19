@@ -24,7 +24,6 @@ TEST(test_material_initialization) {
     CHECK_EQUAL(0.0, mat.technique().pass(0).shininess());
 }
 
-/*
 TEST(test_material_applies_to_mesh) {
     kglt::Window window;
     kglt::Scene& scene = window.scene();
@@ -34,4 +33,4 @@ TEST(test_material_applies_to_mesh) {
     Mesh& mesh = scene.mesh(mesh_id);
     mesh.apply_material(mid);
     CHECK_EQUAL(mid, mesh.material_id());
-}*/
+}

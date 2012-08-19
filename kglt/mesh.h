@@ -144,6 +144,9 @@ public:
     }    
     bool branch_selectable() const { return branch_selectable_; }
     
+    void apply_material(MaterialID material) { material_ = material; }
+    MaterialID material_id() const { return material_; }
+
 private:
 	std::map<uint32_t, uint32_t> vertex_buffer_objects_;
 
@@ -155,6 +158,9 @@ private:
     std::vector<Mesh::ptr> submeshes_;
     std::vector<Vertex> vertices_;
     std::vector<Triangle> triangles_;
+
+    MaterialID material_;
+
     TextureID textures_[MAX_TEXTURE_LEVELS];
 
     MeshArrangement arrangement_;
