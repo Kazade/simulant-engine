@@ -65,6 +65,8 @@ public:
     OverlayID new_overlay(); ///< Creates a new overlay
 
     bool has_mesh(MeshID m) const;
+    bool has_overlay(OverlayID o) const;
+    bool has_sprite(SpriteID s) const;
 
     Mesh& mesh(MeshID m);
     Camera& camera(CameraID c = DefaultCameraID);

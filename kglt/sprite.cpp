@@ -8,7 +8,6 @@ namespace kglt {
 Sprite::Sprite(Scene *scene, SpriteID id):
     Object(scene),
     generic::Identifiable<SpriteID>(id),
-	initialized_(false),
 	frame_width_(0),
 	frame_height_(0),
 	animation_fps_(1.0),
@@ -18,6 +17,14 @@ Sprite::Sprite(Scene *scene, SpriteID id):
 	render_width_(1.0),
 	render_height_(1.0) {
 	
+    L_DEBUG("Initializing sprite");
+
+    //Create a mesh
+    mesh_id_ = scene->new_mesh(this);
+
+    //Make the mesh a rectangle, set the parent as this sprite
+    Mesh& mesh = scene->mesh(mesh_id_);
+    kglt::procedural::mesh::rectangle(mesh, render_width_, render_height_);
 }
 
 Sprite::~Sprite() {
@@ -78,10 +85,8 @@ void Sprite::set_render_dimensions(float width, float height) {
     render_width_ = width;
     render_height_ = height;
     
-    Scene& scene = root_as<Scene>();
-    
     //Rebuild the mesh
-    Mesh& mesh = scene.mesh(mesh_id_);
+    Mesh& mesh = scene().mesh(mesh_id_);
     kglt::procedural::mesh::rectangle(mesh, render_width_, render_height_);
 }
 
@@ -89,28 +94,5 @@ Texture& Sprite::texture() {
     return scene().texture(sprite_texture_);
 }
 
-void Sprite::on_parent_set(Object* old_parent) {
-    if(has_parent() && !initialized_) {
-        L_DEBUG("Initializing sprite");
-
-        //Get the scene
-        Scene& scene = root_as<Scene>();
-
-        //Create a mesh
-        mesh_id_ = scene.new_mesh();
-
-        //Make the mesh a rectangle, set the parent as this sprite
-        Mesh& mesh = scene.mesh(mesh_id_);
-
-        kglt::procedural::mesh::rectangle(mesh, render_width_, render_height_);
-
-        mesh.set_parent(this);
-
-        //Mark the sprite as being initialized
-        initialized_ = true;
-    } else if(!initialized_ && !has_parent()) {
-        L_WARN("Sprite has not been attached to a parent, and has not been initialized");
-    }
-}
 
 }

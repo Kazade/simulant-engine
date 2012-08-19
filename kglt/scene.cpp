@@ -58,10 +58,7 @@ Mesh& Scene::mesh(MeshID m) {
 
 void Scene::delete_mesh(MeshID mid) {
     Mesh& obj = mesh(mid);
-    for(uint32_t i = 0; i < obj.child_count(); ++i) {
-        obj.child(i).destroy();
-    }
-
+    obj.destroy_children();
     return TemplatedManager<Scene, Mesh, MeshID>::manager_delete(mid);
 }
 
@@ -73,11 +70,15 @@ Sprite& Scene::sprite(SpriteID s) {
     return TemplatedManager<Scene, Sprite, SpriteID>::manager_get(s);
 }
 
+bool Scene::has_sprite(SpriteID s) const {
+    return TemplatedManager<Scene, Sprite, SpriteID>::manager_contains(s);
+}
+
 void Scene::delete_sprite(SpriteID sid) {
     Sprite& obj = sprite(sid);
-    for(uint32_t i = 0; i < obj.child_count(); ++i) {
-        obj.child(i).destroy();
-    }
+
+    obj.destroy_children();
+
     return TemplatedManager<Scene, Sprite, SpriteID>::manager_delete(sid);
 }
 
@@ -122,6 +123,8 @@ Camera& Scene::camera(CameraID c) {
 }
 
 void Scene::delete_camera(CameraID cid) {
+    Camera& obj = camera(cid);
+    obj.destroy_children();
     TemplatedManager<Scene, Camera, CameraID>::manager_delete(cid);
 }
 
@@ -145,7 +148,7 @@ Font& Scene::font(FontID f) {
     return TemplatedManager<Scene, Font, FontID>::manager_get(f);
 }
 
-void Scene::delete_font(FontID f) {
+void Scene::delete_font(FontID f) {    
     TemplatedManager<Scene, Font, FontID>::manager_delete(f);
 }
 
@@ -162,6 +165,8 @@ const Text& Scene::text(TextID t) const {
 }
 
 void Scene::delete_text(TextID tid) {
+    Text& obj = text(tid);
+    obj.destroy_children();
     TemplatedManager<Scene, Text, TextID>::manager_delete(tid);
 }
 
@@ -169,12 +174,18 @@ OverlayID Scene::new_overlay() {
     return TemplatedManager<Scene, Overlay, OverlayID>::manager_new();
 }
 
+bool Scene::has_overlay(OverlayID o) const {
+    return TemplatedManager<Scene, Overlay, OverlayID>::manager_contains(o);
+}
+
 Overlay& Scene::overlay(OverlayID overlay) {
     return TemplatedManager<Scene, Overlay, OverlayID>::manager_get(overlay);
 }
 
-void Scene::delete_overlay(OverlayID overlay) {
-    TemplatedManager<Scene, Overlay, OverlayID>::manager_delete(overlay);
+void Scene::delete_overlay(OverlayID oid) {
+    Overlay& obj = overlay(oid);
+    obj.destroy_children();
+    TemplatedManager<Scene, Overlay, OverlayID>::manager_delete(oid);
 }
 
 void Scene::init() {

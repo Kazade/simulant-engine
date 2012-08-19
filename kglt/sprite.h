@@ -42,9 +42,7 @@ public:
 	void _set_frame_count(uint32_t frame_count) {
 		frame_count_ = frame_count;
 	}
-	//===============================================================
-	
-    virtual void on_parent_set(Object* old_parent);
+	//===============================================================	
     
     MeshID mesh_id() const { return mesh_id_; }
     
@@ -53,8 +51,6 @@ public:
     Texture& texture();
 
 private:
-    bool initialized_;
-
     uint32_t frame_width_;
     uint32_t frame_height_;
 

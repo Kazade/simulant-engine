@@ -58,8 +58,6 @@ public:
 
     kmQuaternion& rotation() { return rotation_; }
 
-    virtual void on_parent_set(Object* old_parent) {}
-
     uint64_t uuid() const { return uuid_; }
         
     virtual void _initialize(Scene& scene) {}
@@ -69,6 +67,18 @@ public:
     const Scene& scene() const { return *scene_; }
 
     virtual void destroy() {}
+    void destroy_children() {
+        //If this looks weird, it's because when you destroy
+        //children the index changes so you need to gather them
+        //up first and then destroy them
+        std::vector<Object*> to_destroy;
+        for(uint32_t i = 0; i < child_count(); ++i) {
+            to_destroy.push_back(&child(i));
+        }
+        for(Object* o: to_destroy) {
+            o->destroy();
+        }
+    }
 
 protected:
     void update_from_parent() {
