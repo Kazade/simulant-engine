@@ -46,8 +46,10 @@ int main(int argc, char* argv[]) {
 	
     ///Shortcut function for loading images
     kglt::TextureID tid = kglt::create_texture_from_file(window, "sample.tga");
+    kglt::MaterialID matid = kglt::create_material_from_texture(window.scene(), tid);
+
 	//Apply the texture to the mesh
-	mesh.apply_texture(tid, kglt::TextureLevel::PRIMARY);
+    mesh.apply_material(matid);
 
     window.scene().active_camera().set_orthographic_projection_from_height(2.0, (float) window.width() / (float)window.height());
 

@@ -14,6 +14,8 @@ Sprite& return_new_sprite(Scene& scene);
 ShaderProgram& return_new_shader(Scene& scene);
 Text& return_new_text(Scene& scene);
 
+MaterialID create_material_from_texture(Scene& scene, TextureID tex);
+
 }
 
 #endif // SHORTCUTS_H_INCLUDED

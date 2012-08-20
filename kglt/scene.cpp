@@ -62,7 +62,10 @@ Scene::Scene(WindowBase* window):
     background_(this),
     active_camera_(DefaultCameraID),
     ui_interface_(new UI(this)),
-    window_(window) {
+    window_(window),
+    default_texture_(0),
+    default_shader_(0),
+    default_material_(0) {
 
     TemplatedManager<Scene, Mesh, MeshID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Mesh, MeshID>));
     TemplatedManager<Scene, Sprite, SpriteID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Sprite, SpriteID>));

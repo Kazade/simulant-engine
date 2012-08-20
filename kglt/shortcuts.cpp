@@ -33,4 +33,11 @@ Text& return_new_text(Scene &scene) {
     return scene.text(tid);
 }
 
+MaterialID create_material_from_texture(Scene& scene, TextureID tex) {
+    kglt::MaterialID matid = scene.new_material();
+    kglt::Material& mat = scene.material(matid);
+    mat.technique().pass(mat.technique().new_pass(scene.default_shader())).set_texture_unit(0, tex);
+    return matid;
+}
+
 }

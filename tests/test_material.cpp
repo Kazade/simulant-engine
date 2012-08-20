@@ -33,5 +33,5 @@ TEST(test_material_applies_to_mesh) {
     MeshID mesh_id = scene.new_mesh();
     Mesh& mesh = scene.mesh(mesh_id);
     mesh.apply_material(mid);
-    CHECK_EQUAL(mid, mesh.material_id());
+    CHECK_EQUAL(mid, mesh.material());
 }

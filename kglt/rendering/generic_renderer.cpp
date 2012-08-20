@@ -46,8 +46,6 @@ void GenericRenderer::on_start_render(Scene& scene) {
 	GLint depth_bits;
 	glGetIntegerv(GL_DEPTH_BITS, &depth_bits);
 	assert(depth_bits > 0);
-
-    scene.shader(default_shader_).activate();
 }
 
 void GenericRenderer::visit(Text& text) {
@@ -84,21 +82,18 @@ void GenericRenderer::render_mesh(Mesh& mesh, Scene& scene) {
         glDepthMask(GL_TRUE);
     }
 
-    kglt::TextureID tex = mesh.texture(PRIMARY);
-    if(!options().texture_enabled) {
-        tex = 0; //Turn off the texture
+    MaterialID mid = mesh.material();
+    if(mid == 0) {
+        //No material was specified so fallback to the default
+        mid = scene.default_material();
     }
-    glBindTexture(GL_TEXTURE_2D, scene.texture(tex).gl_tex());
 
-    //FIXME: Allow meshes to override the shader
-    ShaderProgram& s = scene.shader(default_shader_);
-    s.activate();
+    Material& mat = scene.material(mid); //Grab the material for the mesh
 
-    //s.bind_attrib(2, "vertex_diffuse");
-    s.set_uniform("texture_1", 0);
+    //FIXME: Read the active technique from somewhere
+    MaterialTechnique& technique = mat.technique(DEFAULT_MATERIAL_SCHEME);
 
-    check_and_log_error(__FILE__, __LINE__);
-
+    //Set up the VBO for the mesh
     mesh.vbo(VERTEX_ATTRIBUTE_POSITION | VERTEX_ATTRIBUTE_TEXCOORD_1 | VERTEX_ATTRIBUTE_DIFFUSE);
 
     uint32_t stride = (sizeof(float) * 3) + (sizeof(float) * 2) + (sizeof(float) * 4);
@@ -106,33 +101,57 @@ void GenericRenderer::render_mesh(Mesh& mesh, Scene& scene) {
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(sizeof(float) * 3));
     glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(sizeof(float) * 5));
 
-    glClientActiveTexture(GL_TEXTURE0);
-
+    //Calculate the modelview-projection matrix
     kmMat4 modelview_projection;
     kmMat4Multiply(&modelview_projection, &projection().top(), &modelview().top());
-
-    if(s.has_uniform("modelview_projection_matrix")) {
-        s.set_uniform("modelview_projection_matrix", &modelview_projection);
-    }
-    if(s.has_uniform("modelview_matrix")) {
-        s.set_uniform("modelview_matrix", &modelview().top());
-    }
-    if(s.has_uniform("projection_matrix")) {
-        s.set_uniform("projection_matrix", &projection().top());
-    }
 
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
 
-    if(mesh.arrangement() == MESH_ARRANGEMENT_POINTS) {
-        glDrawArrays(GL_POINTS, 0, mesh.vertices().size());
-    } else if(mesh.arrangement() == MESH_ARRANGEMENT_LINE_STRIP) {
-        glDrawArrays(GL_LINE_STRIP, 0, mesh.vertices().size());
-    } else if(mesh.arrangement() == MESH_ARRANGEMENT_TRIANGLES) {
-        glDrawArrays(GL_TRIANGLES, 0, mesh.triangles().size() * 3);
-    } else {
-        assert(0);
+    for(uint32_t i = 0; i < technique.pass_count(); ++i) {
+        MaterialPass& pass = technique.pass(i);
+
+        //Grab and activate the shader for the pass
+        ShaderProgram& s = scene.shader(pass.shader() != 0 ? pass.shader() : scene.default_shader());
+        s.activate();
+
+        //FIXME: Need a way for a MaterialPass to specify the shader
+        //uniforms/attributes
+        s.set_uniform("texture_1", 0);
+
+        if(s.has_uniform("modelview_projection_matrix")) {
+            s.set_uniform("modelview_projection_matrix", &modelview_projection);
+        }
+        if(s.has_uniform("modelview_matrix")) {
+            s.set_uniform("modelview_matrix", &modelview().top());
+        }
+        if(s.has_uniform("projection_matrix")) {
+            s.set_uniform("projection_matrix", &projection().top());
+        }
+
+        //Go through the texture units and bind the textures
+        for(uint32_t j = 0; j < pass.texture_unit_count(); ++j) {
+            glClientActiveTexture(GL_TEXTURE0 + j);
+            glBindTexture(GL_TEXTURE_2D, scene.texture(pass.texture_unit(j).texture()).gl_tex());
+        }
+
+        //Render the mesh, once for each pass
+        if(mesh.arrangement() == MESH_ARRANGEMENT_POINTS) {
+            glDrawArrays(GL_POINTS, 0, mesh.vertices().size());
+        } else if(mesh.arrangement() == MESH_ARRANGEMENT_LINE_STRIP) {
+            glDrawArrays(GL_LINE_STRIP, 0, mesh.vertices().size());
+        } else if(mesh.arrangement() == MESH_ARRANGEMENT_TRIANGLES) {
+            glDrawArrays(GL_TRIANGLES, 0, mesh.triangles().size() * 3);
+        } else {
+            assert(0);
+        }
+
+        //Unbind the textures
+        for(uint32_t j = 0; j < pass.texture_unit_count(); ++j) {
+            glClientActiveTexture(GL_TEXTURE0 + j);
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
     }
 
     glDisableVertexAttribArray(0);

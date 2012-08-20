@@ -158,7 +158,7 @@ public:
     }
 
     MaterialID default_material() const { return default_material_; }
-
+    ShaderID default_shader() const { return default_shader_; }
 private:
     std::map<std::string, ShaderID> shader_lookup_;
 

@@ -145,7 +145,7 @@ public:
     bool branch_selectable() const { return branch_selectable_; }
     
     void apply_material(MaterialID material) { material_ = material; }
-    MaterialID material_id() const { return material_; }
+    MaterialID material() const { return material_; }
 
 private:
 	std::map<uint32_t, uint32_t> vertex_buffer_objects_;

@@ -66,6 +66,10 @@ public:
     Colour specular() const { return specular_; }
     float shininess() const { return shininess_; }
 
+    ShaderID shader() const { return shader_; }
+
+    uint32_t texture_unit_count() const { return texture_units_.size(); }
+    TextureUnit& texture_unit(uint32_t index) { return texture_units_.at(index); }
 private:
     ShaderID shader_;
 
