@@ -23,12 +23,24 @@ public:
 
     MaterialPass(ShaderID shader);
     void set_texture_unit(uint32_t texture_unit_id, TextureID tex);
-    void set_animated_texture_unit(uint32_t texture_unit_id, const std::vector<TextureID> textures, float duration);
+    void set_animated_texture_unit(uint32_t texture_unit_id, const std::vector<TextureID> textures, double duration);
 
     Colour diffuse() const { return diffuse_; }
     Colour ambient() const { return ambient_; }
     Colour specular() const { return specular_; }
     float shininess() const { return shininess_; }
+
+    void update_texture_animation(double dt);
+
+    struct TextureUnit {
+        std::vector<TextureID> animated_texture_units;
+        double animated_texture_duration;
+
+        TextureID texture_unit;
+
+        bool is_animated() const { return !animated_texture_units.empty(); }
+    };
+
 private:
     ShaderID shader_;
 
@@ -36,6 +48,8 @@ private:
     Colour ambient_;
     Colour specular_;
     float shininess_;
+
+    std::vector<TextureUnit> texture_units_;
 };
 
 class MaterialTechnique {

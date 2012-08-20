@@ -5,6 +5,8 @@
 
 namespace kglt {
 
+const int MAX_TEXTURE_UNITS = 8;
+
 Material::Material(Scene *scene, MaterialID mat_id):
     generic::Identifiable<MaterialID>(mat_id) {
 
@@ -47,11 +49,29 @@ MaterialPass::MaterialPass(ShaderID shader):
 }
 
 void MaterialPass::set_texture_unit(uint32_t texture_unit_id, TextureID tex) {
-    assert(0);
+    if(texture_unit_id >= MAX_TEXTURE_UNITS) {
+        throw std::logic_error("Texture unit ID is too high");
+    }
+
+    if(texture_units_.size() <= texture_unit_id) {
+        texture_units_.resize(texture_unit_id + 1);
+    }
+    texture_units_[texture_unit_id].animated_texture_units = std::vector<TextureID>();
+    texture_units_[texture_unit_id].animated_texture_duration = 0.0;
+    texture_units_[texture_unit_id].texture_unit = tex;
 }
 
-void MaterialPass::set_animated_texture_unit(uint32_t texture_unit_id, const std::vector<TextureID> textures, float duration) {
-    assert(0);
+void MaterialPass::set_animated_texture_unit(uint32_t texture_unit_id, const std::vector<TextureID> textures, double duration) {
+    if(texture_unit_id >= MAX_TEXTURE_UNITS) {
+        throw std::logic_error("Texture unit ID is too high");
+    }
+
+    if(texture_units_.size() <= texture_unit_id) {
+        texture_units_.resize(texture_unit_id + 1);
+    }
+    texture_units_[texture_unit_id].animated_texture_units = textures;
+    texture_units_[texture_unit_id].animated_texture_duration = duration;
+    texture_units_[texture_unit_id].texture_unit = 0;
 }
 
 }
