@@ -274,7 +274,7 @@ void Scene::init() {
 std::pair<ShaderID, bool> Scene::find_shader(const std::string& name) {
     std::map<std::string, ShaderID>::const_iterator it = shader_lookup_.find(name);
     if(it == shader_lookup_.end()) {
-        return std::make_pair(NullShaderID, false);
+        return std::make_pair(0, false);
     }
 
     return std::make_pair((*it).second, true);

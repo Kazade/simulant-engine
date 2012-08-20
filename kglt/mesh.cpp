@@ -18,7 +18,7 @@ Mesh::Mesh(Scene* parent, MeshID id):
 
     //Set all textures to a NullTextureID
     for(uint32_t i = 0; i < MAX_TEXTURE_LEVELS; ++i) {
-        textures_[i] = NullTextureID;
+        textures_[i] = 0;
     }
 
     set_arrangement(MESH_ARRANGEMENT_TRIANGLES);

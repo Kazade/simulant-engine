@@ -16,14 +16,14 @@ ShaderProgram::ShaderProgram(Scene *scene, ShaderID id):
     program_id_(0) {
 
     for(uint32_t i = 0; i < SHADER_TYPE_MAX; ++i) {
-        shader_ids_[i] = NullShaderID;
+        shader_ids_[i] = 0;
     }
 }
 
 ShaderProgram::~ShaderProgram() {
     try {
         for(uint32_t i = 0; i < ShaderType::SHADER_TYPE_MAX; ++i) {
-            if(shader_ids_[i] != NullShaderID) {
+            if(shader_ids_[i] != 0) {
 				glDeleteShader(shader_ids_[i]);
 			}
         }
@@ -54,7 +54,7 @@ void ShaderProgram::add_and_compile(ShaderType type, const std::string& source) 
         check_and_log_error(__FILE__, __LINE__);
     }
     
-    if(shader_ids_[type] != NullShaderID) {
+    if(shader_ids_[type] != 0) {
         glDeleteShader(shader_ids_[type]);
         shader_ids_[type] = 0;
         check_and_log_error(__FILE__, __LINE__);

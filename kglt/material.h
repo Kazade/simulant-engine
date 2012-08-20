@@ -15,8 +15,6 @@ namespace kglt {
 class Scene;
 class Material;
 
-const std::string DEFAULT_SCHEME = "scheme";
-
 class TextureUnit {
 public:
     TextureUnit();
@@ -83,7 +81,7 @@ class MaterialTechnique {
 public:
     typedef std::tr1::shared_ptr<MaterialTechnique> ptr;
 
-    MaterialTechnique(Material& mat, const std::string& scheme=DEFAULT_SCHEME);
+    MaterialTechnique(Material& mat, const std::string& scheme=DEFAULT_MATERIAL_SCHEME);
     uint32_t new_pass(ShaderID shader);
     MaterialPass& pass(uint32_t index);
     uint32_t pass_count() const { return passes_.size(); }
@@ -101,7 +99,7 @@ public:
     typedef std::tr1::shared_ptr<Material> ptr;
 
     Material(Scene* scene, MaterialID mat_id);
-    MaterialTechnique& technique(const std::string& scheme=DEFAULT_SCHEME);
+    MaterialTechnique& technique(const std::string& scheme=DEFAULT_MATERIAL_SCHEME);
     MaterialTechnique& new_technique(const std::string& scheme);
     bool has_technique(const std::string& scheme) const { return techniques_.find(scheme) != techniques_.end(); }
 

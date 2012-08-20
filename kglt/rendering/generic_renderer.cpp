@@ -86,7 +86,7 @@ void GenericRenderer::render_mesh(Mesh& mesh, Scene& scene) {
 
     kglt::TextureID tex = mesh.texture(PRIMARY);
     if(!options().texture_enabled) {
-        tex = NullTextureID; //Turn off the texture
+        tex = 0; //Turn off the texture
     }
     glBindTexture(GL_TEXTURE_2D, scene.texture(tex).gl_tex());
 

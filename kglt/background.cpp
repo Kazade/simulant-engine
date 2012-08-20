@@ -10,7 +10,7 @@ namespace kglt {
 
 BackgroundLayer::BackgroundLayer(Background &bg, const std::string& image_path):
     background_(bg),
-    texture_id_(NullTextureID),
+    texture_id_(0),
     mesh_id_(0),
     width_(0),
     height_(0) {

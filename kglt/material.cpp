@@ -33,7 +33,7 @@ TextureUnit::TextureUnit(std::vector<TextureID> textures, double duration):
 Material::Material(Scene *scene, MaterialID mat_id):
     generic::Identifiable<MaterialID>(mat_id) {
 
-    new_technique(DEFAULT_SCHEME); //Create the default technique
+    new_technique(DEFAULT_MATERIAL_SCHEME); //Create the default technique
 }
 
 MaterialTechnique& Material::technique(const std::string& scheme) {

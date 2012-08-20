@@ -132,7 +132,7 @@ void SelectionRenderer::visit(Mesh& mesh) {
     colour_mesh_lookup_[current_colour] = mesh.scene()._mesh_id_from_mesh_ptr(&mesh);
 	
 	//Bind the NULL texture (e.g. make sure everything is white)
-    glBindTexture(GL_TEXTURE_2D, mesh.scene().texture(NullTextureID).gl_tex());
+    glBindTexture(GL_TEXTURE_2D, mesh.scene().texture(0).gl_tex());
 
     kmMat4 transform;
     kmMat4Identity(&transform);

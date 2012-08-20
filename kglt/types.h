@@ -2,6 +2,7 @@
 #define TYPES_H_INCLUDED
 
 #include <cstdint>
+#include <string>
 #include "colour.h"
 
 namespace kglt {
@@ -32,9 +33,9 @@ typedef uint32_t TextID;
 typedef uint32_t OverlayID;
 typedef uint32_t MaterialID;
 
-const TextureID NullTextureID = 0;
-const ShaderID NullShaderID = 0;
 const CameraID DefaultCameraID = 0;
+
+const std::string DEFAULT_MATERIAL_SCHEME = "scheme";
 
 class Mesh;
 
