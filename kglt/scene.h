@@ -46,7 +46,8 @@ class Scene :
     public generic::TemplatedManager<Scene, ShaderProgram, ShaderID>,
     public generic::TemplatedManager<Scene, Font, FontID>,
     public generic::TemplatedManager<Scene, Overlay, OverlayID>,
-    public generic::TemplatedManager<Scene, Material, MaterialID> {
+    public generic::TemplatedManager<Scene, Material, MaterialID>,
+    public generic::TemplatedManager<Scene, Texture, TextureID> {
 
 public:
     VIS_DEFINE_VISITABLE();
@@ -156,21 +157,25 @@ public:
         return *overlays[idx];
     }
 
+    MaterialID default_material() const { return default_material_; }
+
 private:
-    std::map<TextureID, Texture> textures_;
     std::map<std::string, ShaderID> shader_lookup_;
 
     CameraID active_camera_;
     WindowBase* window_;
 
-    Texture null_texture_;
+    TextureID default_texture_;
+    ShaderID default_shader_;
+    MaterialID default_material_;
+
+    void initialize_defaults();
+
     Background background_;
     std::tr1::shared_ptr<UI> ui_interface_;
 
     std::vector<Pass> passes_;
     
-    mutable boost::mutex scene_lock_;
-
     sigc::signal<void, Pass&> signal_render_pass_started_;
     sigc::signal<void, Pass&> signal_render_pass_finished_;
 };

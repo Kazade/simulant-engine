@@ -17,6 +17,7 @@ TEST(test_material_initialization) {
 
     CHECK_EQUAL(1, mat.technique_count()); //Should return the default technique
     CHECK_EQUAL(kglt::DEFAULT_SCHEME, mat.technique().scheme());
+    mat.technique().new_pass(0); //Create a pass
     CHECK_EQUAL(1, mat.technique().pass_count()); //Should return the default pass
     CHECK(kglt::Colour::white == mat.technique().pass(0).diffuse()); //Check the default pass sets white as the default
     CHECK(kglt::Colour::white == mat.technique().pass(0).ambient()); //Check the default pass sets white as the default

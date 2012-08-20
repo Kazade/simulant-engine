@@ -9,7 +9,6 @@ Material::Material(Scene *scene, MaterialID mat_id):
     generic::Identifiable<MaterialID>(mat_id) {
 
     MaterialTechnique& def = new_technique(DEFAULT_SCHEME);
-    def.new_pass(0);
 }
 
 MaterialTechnique& Material::technique(const std::string& scheme) {

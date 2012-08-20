@@ -2,18 +2,27 @@
 #define TEXTURE_H_INCLUDED
 
 #include <cstdint>
+#include <tr1/memory>
 #include <vector>
+#include "generic/identifiable.h"
 #include "loadable.h"
+#include "types.h"
 
 namespace kglt {
 
-class Texture : public Loadable {
+class Scene;
+
+class Texture :
+    public Loadable,
+    public generic::Identifiable<TextureID> {
 public:
+    typedef std::tr1::shared_ptr<Texture> ptr;
     typedef std::vector<uint8_t> Data;
 
     uint32_t gl_tex() const { return gl_tex_; }
 
-    Texture():
+    Texture(Scene* scene, TextureID id):
+        generic::Identifiable<TextureID>(id),
         width_(0),
         height_(0),
         bpp_(32),

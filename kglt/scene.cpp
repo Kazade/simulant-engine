@@ -5,6 +5,58 @@
 
 namespace kglt {
 
+const std::string get_default_vert_shader_120() {
+    const std::string default_vert_shader_120 = R"(
+#version 120
+
+attribute vec3 vertex_position;
+attribute vec2 vertex_texcoord_1;
+attribute vec4 vertex_diffuse;
+
+uniform mat4 modelview_projection_matrix;
+
+varying vec2 fragment_texcoord_1;
+varying vec4 fragment_diffuse;
+
+void main() {
+    gl_Position = modelview_projection_matrix * vec4(vertex_position, 1.0);
+    fragment_texcoord_1 = vertex_texcoord_1;
+    fragment_diffuse = vertex_diffuse;
+}
+
+)";
+
+    return default_vert_shader_120;
+}
+
+const std::string get_default_frag_shader_120() {
+    const std::string default_frag_shader_120 = R"(
+#version 120
+
+varying vec2 fragment_texcoord_1;
+varying vec4 fragment_diffuse;
+
+uniform sampler2D texture_1;
+
+/*
+struct light {
+    int type;
+    vec4 ambient;
+    vec4 diffuse;
+    vec4 specular;
+    vec4 position;
+};
+
+uniform light lights[8];*/
+
+void main() {
+    gl_FragColor = texture2D(texture_1, fragment_texcoord_1.st) * fragment_diffuse;
+}
+
+)";
+    return default_frag_shader_120;
+}
+
 Scene::Scene(WindowBase* window):
     Object(nullptr),
     background_(this),
@@ -38,6 +90,42 @@ Scene::Scene(WindowBase* window):
      * a fullscreen viewport
      */
      add_pass(GenericRenderer::create(render_options), VIEWPORT_TYPE_FULL);
+}
+
+void Scene::initialize_defaults() {
+    //Create the default blank texture
+    default_texture_ = new_texture();
+    Texture& tex = texture(default_texture_);
+    tex.resize(1, 1);
+    tex.set_bpp(32);
+
+    tex.data()[0] = 255;
+    tex.data()[1] = 255;
+    tex.data()[2] = 255;
+    tex.data()[3] = 255;
+    tex.upload();
+
+    //Create the default shader program
+    default_shader_ = new_shader();
+    ShaderProgram& def = shader(default_shader_); //Create a default shader;
+
+    assert(glGetError() == GL_NO_ERROR);
+
+    def.add_and_compile(SHADER_TYPE_VERTEX, get_default_vert_shader_120());
+    def.add_and_compile(SHADER_TYPE_FRAGMENT, get_default_frag_shader_120());
+    def.activate();
+
+    //Bind the vertex attributes for the default shader and relink
+    def.bind_attrib(0, "vertex_position");
+    def.bind_attrib(1, "vertex_texcoord_1");
+    def.bind_attrib(2, "vertex_diffuse");
+    def.relink();
+
+    //Finally create the default material to link them
+    default_material_ = new_material();
+    Material& mat = material(default_material_);
+    mat.technique().new_pass(default_shader_);
+    mat.technique().pass(0).set_texture_unit(0, default_texture_);
 }
 
 MeshID Scene::new_mesh(Object *parent) {
@@ -91,35 +179,15 @@ Material& Scene::material(MaterialID mid) {
 }
 
 TextureID Scene::new_texture() {
-    static TextureID counter = 0;
-    TextureID id = 0;
-    {
-        boost::mutex::scoped_lock lock(scene_lock_);
-        id = ++counter;
-    }
-    textures_.insert(std::make_pair(id, Texture()));
-    return id;
+    return TemplatedManager<Scene, Texture, TextureID>::manager_new();
 }
 
 void Scene::delete_texture(TextureID tid) {
-    {
-        boost::mutex::scoped_lock lock(scene_lock_);
-        textures_.erase(tid);
-    }
+    TemplatedManager<Scene, Texture, TextureID>::manager_delete(tid);
 }
 
 Texture& Scene::texture(TextureID t) {
-    if(t == NullTextureID) {
-        return null_texture_;
-    }
-    
-    boost::mutex::scoped_lock lock(scene_lock_);
-    
-	if(!container::contains(textures_, t)) {
-		throw DoesNotExist<TextureID>();
-	}
-	
-    return textures_[t];
+    return TemplatedManager<Scene, Texture, TextureID>::manager_get(t);
 }
 
 CameraID Scene::new_camera() {
@@ -199,16 +267,8 @@ void Scene::delete_overlay(OverlayID oid) {
 void Scene::init() {
     assert(glGetError() == GL_NO_ERROR);
 
-    
-    //Create the null texture
-    null_texture_.resize(1, 1);
-    null_texture_.set_bpp(32);
-    
-    null_texture_.data()[0] = 255;
-    null_texture_.data()[1] = 255;
-    null_texture_.data()[2] = 255;
-    null_texture_.data()[3] = 255;
-    null_texture_.upload();   
+    initialize_defaults();
+
 }
 
 std::pair<ShaderID, bool> Scene::find_shader(const std::string& name) {
