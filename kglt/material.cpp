@@ -5,12 +5,35 @@
 
 namespace kglt {
 
-const int MAX_TEXTURE_UNITS = 8;
+const uint32_t MAX_TEXTURE_UNITS = 8;
+
+TextureUnit::TextureUnit():
+    time_elapsed_(0),
+    current_texture_(0),
+    texture_unit_(0){
+
+}
+
+TextureUnit::TextureUnit(TextureID tex_id):
+    time_elapsed_(0),
+    current_texture_(0),
+    texture_unit_(tex_id) {
+
+}
+
+TextureUnit::TextureUnit(std::vector<TextureID> textures, double duration):
+    animated_texture_units_(textures),
+    animated_texture_duration_(duration),
+    time_elapsed_(0),
+    current_texture_(0),
+    texture_unit_(0) {
+
+}
 
 Material::Material(Scene *scene, MaterialID mat_id):
     generic::Identifiable<MaterialID>(mat_id) {
 
-    MaterialTechnique& def = new_technique(DEFAULT_SCHEME);
+    new_technique(DEFAULT_SCHEME); //Create the default technique
 }
 
 MaterialTechnique& Material::technique(const std::string& scheme) {
@@ -56,9 +79,7 @@ void MaterialPass::set_texture_unit(uint32_t texture_unit_id, TextureID tex) {
     if(texture_units_.size() <= texture_unit_id) {
         texture_units_.resize(texture_unit_id + 1);
     }
-    texture_units_[texture_unit_id].animated_texture_units = std::vector<TextureID>();
-    texture_units_[texture_unit_id].animated_texture_duration = 0.0;
-    texture_units_[texture_unit_id].texture_unit = tex;
+    texture_units_[texture_unit_id] = TextureUnit(tex);
 }
 
 void MaterialPass::set_animated_texture_unit(uint32_t texture_unit_id, const std::vector<TextureID> textures, double duration) {
@@ -69,9 +90,7 @@ void MaterialPass::set_animated_texture_unit(uint32_t texture_unit_id, const std
     if(texture_units_.size() <= texture_unit_id) {
         texture_units_.resize(texture_unit_id + 1);
     }
-    texture_units_[texture_unit_id].animated_texture_units = textures;
-    texture_units_[texture_unit_id].animated_texture_duration = duration;
-    texture_units_[texture_unit_id].texture_unit = 0;
+    texture_units_[texture_unit_id] = TextureUnit(textures, duration);
 }
 
 }

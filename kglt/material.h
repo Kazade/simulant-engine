@@ -17,6 +17,44 @@ class Material;
 
 const std::string DEFAULT_SCHEME = "scheme";
 
+class TextureUnit {
+public:
+    TextureUnit();
+
+    TextureUnit(TextureID tex_id);
+    TextureUnit(std::vector<TextureID> textures, double duration);
+
+    bool is_animated() const { return !animated_texture_units_.empty(); }
+
+    TextureID texture() const {
+        if(is_animated()) {
+            return animated_texture_units_[current_texture_];
+        } else {
+            return texture_unit_;
+        }
+    }
+
+    void update(double dt) {
+        time_elapsed_ += dt;
+        if(time_elapsed_ >= (animated_texture_duration_ / double(animated_texture_units_.size()))) {
+            current_texture_++;
+            time_elapsed_ = 0.0;
+
+            if(current_texture_ == animated_texture_units_.size()) {
+                current_texture_ = 0;
+            }
+        }
+    }
+
+private:
+    std::vector<TextureID> animated_texture_units_;
+    double animated_texture_duration_;
+    double time_elapsed_;
+    uint32_t current_texture_;
+
+    TextureID texture_unit_;
+};
+
 class MaterialPass {
 public:
     typedef std::tr1::shared_ptr<MaterialPass> ptr;
@@ -29,17 +67,6 @@ public:
     Colour ambient() const { return ambient_; }
     Colour specular() const { return specular_; }
     float shininess() const { return shininess_; }
-
-    void update_texture_animation(double dt);
-
-    struct TextureUnit {
-        std::vector<TextureID> animated_texture_units;
-        double animated_texture_duration;
-
-        TextureID texture_unit;
-
-        bool is_animated() const { return !animated_texture_units.empty(); }
-    };
 
 private:
     ShaderID shader_;
