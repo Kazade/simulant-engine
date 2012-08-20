@@ -18,6 +18,10 @@ struct Colour {
 
     static const Colour white;
     static const Colour black;
+    static const Colour grey;
+    static const Colour red;
+    static const Colour green;
+    static const Colour blue;
 };
 
 }
