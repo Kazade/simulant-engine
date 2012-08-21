@@ -181,6 +181,10 @@ Material& Scene::material(MaterialID mid) {
     return TemplatedManager<Scene, Material, MaterialID>::manager_get(mid);
 }
 
+void Scene::delete_material(MaterialID mid) {
+    TemplatedManager<Scene, Material, MaterialID>::manager_delete(mid);
+}
+
 TextureID Scene::new_texture() {
     return TemplatedManager<Scene, Texture, TextureID>::manager_new();
 }

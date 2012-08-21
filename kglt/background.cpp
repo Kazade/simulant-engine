@@ -11,11 +11,13 @@ namespace kglt {
 BackgroundLayer::BackgroundLayer(Background &bg, const std::string& image_path):
     background_(bg),
     texture_id_(0),
+    material_id_(0),
     mesh_id_(0),
     width_(0),
     height_(0) {
 
     texture_id_ = kglt::create_texture_from_file(background().scene().window(), image_path);
+    material_id_ = kglt::create_material_from_texture(background().scene(), texture_id_);
 
     kglt::Texture& tex = background().scene().texture(texture_id_);
     width_ = tex.width();
@@ -41,7 +43,7 @@ BackgroundLayer::BackgroundLayer(Background &bg, const std::string& image_path):
     mesh.detach();
 
     kglt::procedural::mesh::rectangle(mesh, width(), height());
-    mesh.apply_texture(texture_id_);
+    mesh.apply_material(material_id_);
 
     //Disable depth testing stuff
     mesh.enable_depth_test(false);
@@ -83,6 +85,10 @@ BackgroundLayer::~BackgroundLayer() {
     try {
         if(texture_id_) {
             background().scene().delete_texture(texture_id_);
+        }
+
+        if(material_id_) {
+            background().scene().delete_material(material_id_);
         }
 
         if(mesh_id_) {

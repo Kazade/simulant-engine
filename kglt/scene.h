@@ -97,6 +97,7 @@ public:
     void delete_shader(ShaderID s);
     void delete_font(FontID f);
     void delete_overlay(OverlayID overlay); ///< Deletes an overlay by its ID
+    void delete_material(MaterialID m);
 
     void init();
     void render();
