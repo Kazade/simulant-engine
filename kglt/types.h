@@ -27,7 +27,6 @@ typedef uint32_t MeshID;
 typedef uint32_t TextureID;
 typedef uint32_t CameraID;
 typedef uint32_t ShaderID;
-typedef uint32_t SpriteID;
 typedef uint32_t FontID;
 typedef uint32_t TextID;
 typedef uint32_t OverlayID;

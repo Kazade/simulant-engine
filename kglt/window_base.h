@@ -5,12 +5,10 @@
 
 #include <sigc++/sigc++.h>
 
-#include "scene.h"
 #include "keyboard.h"
 
 #include "loaders/texture_loader.h"
 #include "loaders/q2bsp_loader.h"
-#include "loaders/sprite_loader.h"
 #include "loader.h"
 
 #include "idle_task_manager.h"
@@ -30,7 +28,6 @@ public:
         //Register the default resource loaders
         register_loader(LoaderType::ptr(new kglt::loaders::TextureLoaderType));
         register_loader(LoaderType::ptr(new kglt::loaders::Q2BSPLoaderType));
-        register_loader(LoaderType::ptr(new kglt::loaders::SpriteLoaderType));
 
         ktiGenTimers(1, &timer_);
         ktiBindTimer(timer_);
@@ -84,12 +81,7 @@ public:
     uint32_t width() const { return width_; }
     uint32_t height() const { return height_; }
     
-    Scene& scene() { 
-        if(!scene_) {
-            scene_.reset(new Scene(this));
-        }
-        return *scene_; 
-    }
+    Scene& scene();
     bool update();   
 
     IdleTaskManager& idle() { return idle_; }

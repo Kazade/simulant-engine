@@ -18,7 +18,6 @@
 #include "texture.h"
 #include "shader.h"
 #include "viewport.h"
-#include "sprite.h"
 #include "pass.h"
 #include "background.h"
 #include "font.h"
@@ -40,7 +39,6 @@ class Scene :
     public Object,
     public Loadable,
     public generic::TemplatedManager<Scene, Mesh, MeshID>,
-    public generic::TemplatedManager<Scene, Sprite, SpriteID>,
     public generic::TemplatedManager<Scene, Camera, CameraID>,
     public generic::TemplatedManager<Scene, Text, TextID>,
     public generic::TemplatedManager<Scene, ShaderProgram, ShaderID>,
@@ -63,7 +61,6 @@ public:
     CameraID new_camera();
     TextureID new_texture();
     ShaderID new_shader();
-    SpriteID new_sprite();
     FontID new_font();
     TextID new_text();
     OverlayID new_overlay(); ///< Creates a new overlay
@@ -71,13 +68,11 @@ public:
 
     bool has_mesh(MeshID m) const;
     bool has_overlay(OverlayID o) const;
-    bool has_sprite(SpriteID s) const;
 
     Mesh& mesh(MeshID m);
     Camera& camera(CameraID c = DefaultCameraID);
     Texture& texture(TextureID t);
     ShaderProgram& shader(ShaderID s);
-    Sprite& sprite(SpriteID s);
     Font& font(FontID f);
     Overlay& overlay(OverlayID overlay); ///< Grabs an overlay by its ID
     Material& material(MaterialID material);
@@ -92,7 +87,6 @@ public:
 
     void delete_mesh(MeshID mid);
     void delete_texture(TextureID tid);
-    void delete_sprite(SpriteID sid);
     void delete_camera(CameraID cid);
     void delete_text(TextID tid);
     void delete_shader(ShaderID s);

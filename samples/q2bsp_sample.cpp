@@ -1,5 +1,6 @@
 #include "kglt/window.h"
 #include "kglt/types.h"
+#include "kglt/scene.h"
 
 kglt::Window window(1024, 768);
 std::vector<uint8_t> keys(kglt::KEY_CODE_LAST, 0);

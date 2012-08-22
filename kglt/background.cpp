@@ -5,6 +5,7 @@
 #include "shortcuts.h"
 #include "procedural/mesh.h"
 #include "renderer.h"
+#include "scene.h"
 
 namespace kglt {
 

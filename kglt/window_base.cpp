@@ -2,6 +2,7 @@
 
 #include "glee/GLee.h"
 #include "window_base.h"
+#include "scene.h"
 
 namespace kglt {
     
@@ -34,6 +35,13 @@ bool WindowBase::update() {
     boost::this_thread::sleep(boost::posix_time::milliseconds(10));
     
     return is_running_;
+}
+
+Scene& WindowBase::scene() {
+    if(!scene_) {
+        scene_.reset(new Scene(this));
+    }
+    return *scene_;
 }
 
 void WindowBase::register_loader(LoaderType::ptr loader) {

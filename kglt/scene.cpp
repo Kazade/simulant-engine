@@ -67,8 +67,7 @@ Scene::Scene(WindowBase* window):
     default_shader_(0),
     default_material_(0) {
 
-    TemplatedManager<Scene, Mesh, MeshID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Mesh, MeshID>));
-    TemplatedManager<Scene, Sprite, SpriteID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Sprite, SpriteID>));
+    TemplatedManager<Scene, Mesh, MeshID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Mesh, MeshID>));    
     TemplatedManager<Scene, Camera, CameraID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Camera, CameraID>));
     TemplatedManager<Scene, Text, TextID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Text, TextID>));
     TemplatedManager<Scene, ShaderProgram, ShaderID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_shader_callback));
@@ -155,26 +154,6 @@ void Scene::delete_mesh(MeshID mid) {
     Mesh& obj = mesh(mid);
     obj.destroy_children();
     return TemplatedManager<Scene, Mesh, MeshID>::manager_delete(mid);
-}
-
-SpriteID Scene::new_sprite() {
-    return TemplatedManager<Scene, Sprite, SpriteID>::manager_new();
-}
-
-Sprite& Scene::sprite(SpriteID s) {
-    return TemplatedManager<Scene, Sprite, SpriteID>::manager_get(s);
-}
-
-bool Scene::has_sprite(SpriteID s) const {
-    return TemplatedManager<Scene, Sprite, SpriteID>::manager_contains(s);
-}
-
-void Scene::delete_sprite(SpriteID sid) {
-    Sprite& obj = sprite(sid);
-
-    obj.destroy_children();
-
-    return TemplatedManager<Scene, Sprite, SpriteID>::manager_delete(sid);
 }
 
 MaterialID Scene::new_material() {

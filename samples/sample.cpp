@@ -1,7 +1,5 @@
-#include "kglt/window.h"
-#include "kglt/types.h"
+#include "kglt/kglt.h"
 #include "kglt/shortcuts.h"
-#include "kglt/mesh.h"
 
 int main(int argc, char* argv[]) {
     logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));

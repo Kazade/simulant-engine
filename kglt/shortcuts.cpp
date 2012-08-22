@@ -1,4 +1,4 @@
-
+#include "scene.h"
 #include "shortcuts.h"
 
 namespace kglt {
@@ -19,11 +19,6 @@ TextureID create_texture_from_file(WindowBase& window, const std::string& filena
 Mesh& return_new_mesh(Scene& scene) {
 	MeshID mid = scene.new_mesh();
 	return scene.mesh(mid);
-}
-
-Sprite& return_new_sprite(Scene& scene) {
-	SpriteID sid = scene.new_sprite();
-	return scene.sprite(sid);
 }
 
 ShaderProgram& return_new_shader(Scene& scene) {
