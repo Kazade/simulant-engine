@@ -57,6 +57,7 @@ public:
     }
 
     Scene(WindowBase* window);
+    ~Scene();
 
     MeshID new_mesh(Object* parent=nullptr);
     CameraID new_camera();

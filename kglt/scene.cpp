@@ -95,6 +95,10 @@ Scene::Scene(WindowBase* window):
      add_pass(GenericRenderer::create(render_options), VIEWPORT_TYPE_FULL);
 }
 
+Scene::~Scene() {
+    //TODO: Log the unfreed resources (textures, meshes, materials etc.)
+}
+
 void Scene::initialize_defaults() {
     //Create the default blank texture
     default_texture_ = new_texture();
@@ -288,6 +292,13 @@ std::pair<ShaderID, bool> Scene::find_shader(const std::string& name) {
 }
 
 void Scene::update(double dt) {
+    /*
+      Update all animated materials
+    */
+    for(std::pair<MaterialID, Material::ptr> p: generic::TemplatedManager<Scene, Material, MaterialID>::objects_) {
+        p.second->update(dt);
+    }
+
     for(uint32_t i = 0; i < child_count(); ++i) {
         Object& c = child(i);
         c.update(dt);

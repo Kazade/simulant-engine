@@ -1,5 +1,6 @@
 #include "kglt/kglt.h"
 #include "kglt/shortcuts.h"
+#include "kglt/additional.h"
 
 int main(int argc, char* argv[]) {
 	//Set up logging to stdio
@@ -8,15 +9,15 @@ int main(int argc, char* argv[]) {
 	kglt::Window window;
 	window.set_title("KGLT Sprite Sample");
 
-	//Shortcut function to create and then return a new sprite
-	kglt::Sprite& sprite = kglt::return_new_sprite(window.scene());
+    //Load the strip of sprites into separate textures
+    kglt::additional::SpriteStripLoader loader(window.scene(), "sample_data/sonic.png", 64);
+    std::vector<kglt::TextureID> frames = loader.load_frames();
 
-	//Get a sprite loader, set the sprite frame-width option to 64 pixels
-	window.loader_for("sample_data/sonic.png", "LOADER_HINT_SPRITE")->into(sprite, { "SPRITE_FRAME_WIDTH", "64" });
-	sprite.set_render_dimensions(1.5, 1.5); //Render the sprite 1.5 x 1.5 units
-	sprite.move_to(0.0, 0.0, -1.0);
-	sprite.set_animation_frames(4, 5);
-	sprite.set_animation_fps(8.0);
+    //Construct a Sprite object that takes care of handling materials, meshes etc.
+    kglt::additional::Sprite::ptr sprite = kglt::additional::Sprite::create(window.scene());
+    sprite->add_animation("stand", container::slice(frames, 4, 6), 0.5);
+    sprite->set_render_dimensions(1.5, 1.5);
+    sprite->move_to(0.0, 0.0, -1.0);
 
 	//Automatically calculate an orthographic projection, taking into account the aspect ratio
 	//and the passed height. For example, passing a height of 2.0 would mean the view would extend
@@ -24,7 +25,7 @@ int main(int argc, char* argv[]) {
 	window.scene().pass().viewport().configure(kglt::VIEWPORT_TYPE_BLACKBAR_16_BY_9);
     window.scene().active_camera().set_orthographic_projection_from_height((float) 224 / (float) 40, 16.0 / 9.0);
 	
-	while(window.update()) {}
+    while(window.update()) {}
 
 	return 0;
 }

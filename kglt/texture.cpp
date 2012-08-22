@@ -1,4 +1,6 @@
 #include <cassert>
+#include <stdexcept>
+#include <boost/lexical_cast.hpp>
 
 #include "glee/GLee.h"
 #include "texture.h"
@@ -25,6 +27,8 @@ void Texture::resize(uint32_t width, uint32_t height) {
 }
 
 void Texture::upload(bool free_after, bool generate_mipmaps, bool repeat) {
+    assert(glGetError() == GL_NO_ERROR);
+
     if(!gl_tex()) {
         glGenTextures(1, &gl_tex_);
     }
@@ -46,6 +50,7 @@ void Texture::upload(bool free_after, bool generate_mipmaps, bool repeat) {
         glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
     }
 
+    assert(glGetError() == GL_NO_ERROR);
     glTexImage2D(
         GL_TEXTURE_2D,
         0, (bpp_ == 32)? GL_RGBA: GL_RGB,
@@ -54,7 +59,10 @@ void Texture::upload(bool free_after, bool generate_mipmaps, bool repeat) {
         GL_UNSIGNED_BYTE, &data_[0]
     );
 
-    assert(glGetError() == GL_NO_ERROR);
+    int error = glGetError();
+    if(error != GL_NO_ERROR) {
+        throw std::runtime_error("OpenGL error: " + boost::lexical_cast<std::string>(error));
+    }
 
     if(free_after) {
         free();

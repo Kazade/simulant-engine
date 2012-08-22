@@ -70,6 +70,13 @@ public:
 
     uint32_t texture_unit_count() const { return texture_units_.size(); }
     TextureUnit& texture_unit(uint32_t index) { return texture_units_.at(index); }
+
+    void update(double dt) {
+        for(TextureUnit& t: texture_units_) {
+            t.update(dt);
+        }
+    }
+
 private:
     ShaderID shader_;
 
@@ -92,6 +99,12 @@ public:
 
     const std::string& scheme() const { return scheme_; }
 
+    void update(double dt) {
+        for(MaterialPass::ptr& p: passes_) {
+            p->update(dt);
+        }
+    }
+
 private:
     std::string scheme_;
 
@@ -108,6 +121,12 @@ public:
     bool has_technique(const std::string& scheme) const { return techniques_.find(scheme) != techniques_.end(); }
 
     uint32_t technique_count() const { return techniques_.size(); }
+
+    void update(double dt) {
+        for(std::pair<std::string, MaterialTechnique::ptr> p: techniques_) {
+            p.second->update(dt);
+        }
+    }
 
 private:
     std::map<std::string, MaterialTechnique::ptr> techniques_;

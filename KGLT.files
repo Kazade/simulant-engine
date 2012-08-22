@@ -229,3 +229,8 @@ tests/test_material.cpp
 kglt/material.cpp
 kglt/colour.h
 kglt/colour.cpp
+kglt/additional/sprite.h
+kglt/additional/sprite_strip_loader.h
+kglt/additional/sprite_strip_loader.cpp
+kglt/additional.h
+kglt/additional/sprite.cpp

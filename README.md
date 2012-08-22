@@ -100,8 +100,8 @@ Things you can spawn from the scene are:
 
  * Meshes
  * Textures
+ * Materials
  * Shader programs
- * 2D Sprites
  * Fonts
  * Text objects
 
@@ -149,8 +149,14 @@ Current constraints:
  * All layers must be the same dimensions
  * You cannot set the visible dimensions to greater than the layer size
 
+## The "additional" namespace
 
+KGLT is designed so that the core is as streamlined and minimalist as possible. The idea being that everything can be built using a combination of the core objects (e.g. Meshes, Texts, Fonts and Materials). Still, this means that creating objects such as animated sprites is quite a manual process. The "additional" namespace contains classes that manage the core objects for you to provide easy common functionality. For example, the kglt::additional::Sprite class allows you to construct characters with several animations easily:
+    
+    auto sprite = kglt::additional::Sprite::create(scene); //Create a sprite
+    sprite->add_animation("anim_1", frames); //Frames is an array of texture IDs
+    sprite->set_current_animation("anim_1");
+    sprite->move_to(0, 0, -1);
 
-
-
+These additional classes aren't owned by the Scene, but they do automatically take care of core objects for you.
 
