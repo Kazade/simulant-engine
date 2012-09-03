@@ -1,8 +1,11 @@
 #ifndef SHADER_H_INCLUDED
 #define SHADER_H_INCLUDED
 
+#include <set>
 #include <string>
 #include <tr1/memory>
+
+#include "kazbase/list_utils.h"
 
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
@@ -17,6 +20,88 @@
 namespace kglt {
 
 class Scene;
+
+/*
+  Automatic uniforms that are set by the renderer
+*/
+enum ShaderAvailableAuto {
+    SP_AUTO_MODELVIEW_PROJECTION_MATRIX,
+    SP_AUTO_MODELVIEW_MATRIX,
+    SP_AUTO_PROJECTION_MATRIX,
+    SP_AUTO_MATERIAL_DIFFUSE,
+    SP_AUTO_MATERIAL_SPECULAR,
+    SP_AUTO_MATERIAL_AMBIENT,
+    SP_AUTO_MATERIAL_SHININESS
+    //TODO: lights, cameras(?)
+};
+
+const std::set<ShaderAvailableAuto> SHADER_AVAILABLE_AUTOS = {
+    SP_AUTO_MODELVIEW_PROJECTION_MATRIX,
+    SP_AUTO_MODELVIEW_MATRIX,
+    SP_AUTO_PROJECTION_MATRIX,
+    SP_AUTO_MATERIAL_DIFFUSE,
+    SP_AUTO_MATERIAL_SPECULAR,
+    SP_AUTO_MATERIAL_AMBIENT,
+    SP_AUTO_MATERIAL_SHININESS
+};
+
+enum ShaderAvailableAttributes {
+    SP_ATTR_VERTEX_POSITION,
+    SP_ATTR_VERTEX_COLOUR,
+    SP_ATTR_VERTEX_NORMAL,
+    SP_ATTR_VERTEX_TEXCOORD0,
+    SP_ATTR_VERTEX_COLOR = SP_ATTR_VERTEX_COLOUR
+};
+
+const std::set<ShaderAvailableAttributes> SHADER_AVAILABLE_ATTRS = {
+    SP_ATTR_VERTEX_POSITION,
+    SP_ATTR_VERTEX_COLOUR,
+    SP_ATTR_VERTEX_NORMAL,
+    SP_ATTR_VERTEX_TEXCOORD0
+};
+
+class ShaderProgram;
+
+class ShaderParams {
+public:
+    ShaderParams(ShaderProgram& parent);
+
+    void register_auto(ShaderAvailableAuto auto_const, const std::string& uniform_name);
+    void register_attribute(ShaderAvailableAttributes attr_const, const std::string& attrib_name);
+
+    void set_int(const std::string& uniform_name, const int32_t value);
+    void set_float(const std::string& uniform_name, const float value);
+    void set_mat4x4(const std::string& uniform_name, const float* values);
+    void set_mat3x3(const std::string& uniform_name, const float* values);
+    void set_vec3(const std::string& uniform_name, const float* values);
+
+    bool uses_auto(ShaderAvailableAuto auto_const) const { return container::contains(auto_uniforms_, auto_const); }
+    bool uses_attribute(ShaderAvailableAttributes attr_const) const { return container::contains(auto_attributes_, attr_const); }
+
+    std::string auto_location(ShaderAvailableAuto auto_name) const {
+        auto it = auto_uniforms_.find(auto_name);
+        if(it == auto_uniforms_.end()) {
+            throw std::logic_error("Specified auto is not registered");
+        }
+
+        return (*it).second;
+    }
+
+    std::string attribute_location(ShaderAvailableAttributes attr_name) const {
+        auto it = auto_attributes_.find(attr_name);
+        if(it == auto_attributes_.end()) {
+            throw std::logic_error("Specified attribute is not registered");
+        }
+
+        return (*it).second;
+    }
+
+private:
+    ShaderProgram& program_;
+
+    std::map<ShaderAvailableAuto, std::string> auto_uniforms_;
+    std::map<ShaderAvailableAttributes, std::string> auto_attributes_;
+};
 
 enum ShaderType {
     SHADER_TYPE_VERTEX,
@@ -36,28 +121,33 @@ public:
 
     void activate();
     void add_and_compile(ShaderType type, const std::string& source);
+    
+    void relink();
 
+    ShaderParams& params() { return params_; }
+
+    void bind_attrib(uint32_t idx, const std::string& name);
+    int32_t get_uniform_loc(const std::string& name);
+    bool has_uniform(const std::string& name);
+
+private:
     void set_uniform(const std::string& name, const float x);
     void set_uniform(const std::string& name, const int32_t x);
     void set_uniform(const std::string& name, const kmMat4* matrix);
     void set_uniform(const std::string& name, const kmMat3* matrix);
     void set_uniform(const std::string& name, const kmVec3* vec);
 
-    void bind_attrib(uint32_t idx, const std::string& name);
-    
-    bool has_uniform(const std::string& name);    
-    
-    void relink();
-private:
 	ShaderProgram(const ShaderProgram& rhs);
 	ShaderProgram& operator=(const ShaderProgram& rhs);
-
-    int32_t get_uniform_loc(const std::string& name);
 
     uint32_t program_id_;
     uint32_t shader_ids_[SHADER_TYPE_MAX];
 
-    std::map<std::string, int32_t> cached_uniform_locations_;    
+    std::map<std::string, int32_t> cached_uniform_locations_;
+
+    ShaderParams params_;
+
+    friend class ShaderParams;
 };
 
 }

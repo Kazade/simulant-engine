@@ -11,9 +11,43 @@
 
 namespace kglt {
 
+ShaderParams::ShaderParams(ShaderProgram& parent):
+    program_(parent) {
+
+}
+
+void ShaderParams::register_auto(ShaderAvailableAuto auto_const, const std::string& uniform_name) {
+    auto_uniforms_[auto_const] = uniform_name;
+}
+
+void ShaderParams::register_attribute(ShaderAvailableAttributes attr_const, const std::string& attrib_name) {
+    auto_attributes_[attr_const] = attrib_name;
+}
+
+void ShaderParams::set_int(const std::string& uniform_name, const int32_t value) {
+    program_.set_uniform(uniform_name, (int32_t) value);
+}
+
+void ShaderParams::set_float(const std::string& uniform_name, const float value) {
+    program_.set_uniform(uniform_name, (float) value);
+}
+
+void ShaderParams::set_mat4x4(const std::string& uniform_name, const float* values) {
+    program_.set_uniform(uniform_name, (const kmMat4*) values); //Dodgy cast, but should work
+}
+
+void ShaderParams::set_mat3x3(const std::string& uniform_name, const float* values) {
+    program_.set_uniform(uniform_name, (const kmMat3*) values); //Dodgy cast, but should work
+}
+
+void ShaderParams::set_vec3(const std::string& uniform_name, const float* values) {
+    program_.set_uniform(uniform_name, (const kmVec3*) values); //Dodgy cast, but should work
+}
+
 ShaderProgram::ShaderProgram(Scene *scene, ShaderID id):
     generic::Identifiable<ShaderID>(id),
-    program_id_(0) {
+    program_id_(0),
+    params_(*this) {
 
     for(uint32_t i = 0; i < SHADER_TYPE_MAX; ++i) {
         shader_ids_[i] = 0;

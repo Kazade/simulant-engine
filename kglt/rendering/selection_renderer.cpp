@@ -51,11 +51,13 @@ void SelectionRenderer::_initialize(Scene& scene) {
     shader.set_name("selection_shader");
 
     shader.add_and_compile(SHADER_TYPE_VERTEX, selection_vert_shader_120());
-    shader.add_and_compile(SHADER_TYPE_FRAGMENT, selection_frag_shader_120());
-    shader.activate();
+    shader.add_and_compile(SHADER_TYPE_FRAGMENT, selection_frag_shader_120());        
+    shader.activate();   
 
     //Bind the vertex attributes for the selection shader and relink
-    shader.bind_attrib(0, "vertex_position");
+    shader.params().register_attribute(SP_ATTR_VERTEX_POSITION, "vertex_position");
+    shader.params().register_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX, "modelview_projection_matrix");
+    shader.bind_attrib(0, shader.params().attribute_location(SP_ATTR_VERTEX_POSITION));
     shader.relink();
 
     shader.activate();
@@ -131,9 +133,6 @@ void SelectionRenderer::visit(Mesh& mesh) {
 	
     colour_mesh_lookup_[current_colour] = mesh.scene()._mesh_id_from_mesh_ptr(&mesh);
 	
-	//Bind the NULL texture (e.g. make sure everything is white)
-    glBindTexture(GL_TEXTURE_2D, mesh.scene().texture(0).gl_tex());
-
     kmMat4 transform;
     kmMat4Identity(&transform);
     check_and_log_error(__FILE__, __LINE__);
@@ -145,8 +144,12 @@ void SelectionRenderer::visit(Mesh& mesh) {
     
 	kmMat4 modelview_projection;
     kmMat4Multiply(&modelview_projection, &projection().top(), &modelview().top());
-	s.set_uniform("modelview_projection_matrix", &modelview_projection);	
 	
+    s.params().set_mat4x4(
+        s.params().auto_location(SP_AUTO_MODELVIEW_PROJECTION_MATRIX),
+        modelview_projection.mat
+    );
+
 	kmVec3 colour;
 	kmVec3Fill(
 		&colour, 
@@ -155,7 +158,7 @@ void SelectionRenderer::visit(Mesh& mesh) {
 		std::get<2>(current_colour)
 	);
 	
-	s.set_uniform("selection_colour", &colour);
+    s.params().set_vec3("selection_colour", (const float*) &colour);
 	
 	glEnableVertexAttribArray(0);		
     if(mesh.arrangement() == MESH_ARRANGEMENT_POINTS) {

@@ -114,20 +114,44 @@ void GenericRenderer::render_mesh(Mesh& mesh, Scene& scene) {
 
         //Grab and activate the shader for the pass
         ShaderProgram& s = scene.shader(pass.shader() != 0 ? pass.shader() : scene.default_shader());
+        s.relink(); //FIXME: this shouldn't be here!
         s.activate();
 
         //FIXME: Need a way for a MaterialPass to specify the shader
         //uniforms/attributes
-        s.set_uniform("texture_1", 0);
+        s.params().set_int("texture_1", 0);
 
-        if(s.has_uniform("modelview_projection_matrix")) {
-            s.set_uniform("modelview_projection_matrix", &modelview_projection);
+        if(s.params().uses_attribute(SP_ATTR_VERTEX_POSITION)) {
+            s.bind_attrib(0, s.params().attribute_location(SP_ATTR_VERTEX_POSITION));
         }
-        if(s.has_uniform("modelview_matrix")) {
-            s.set_uniform("modelview_matrix", &modelview().top());
+
+        if(s.params().uses_attribute(SP_ATTR_VERTEX_TEXCOORD0)) {
+            s.bind_attrib(1, s.params().attribute_location(SP_ATTR_VERTEX_TEXCOORD0));
         }
-        if(s.has_uniform("projection_matrix")) {
-            s.set_uniform("projection_matrix", &projection().top());
+
+        if(s.params().uses_attribute(SP_ATTR_VERTEX_COLOUR)) {
+            s.bind_attrib(2, s.params().attribute_location(SP_ATTR_VERTEX_COLOUR));
+        }
+
+        if(s.params().uses_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX)) {
+            s.params().set_mat4x4(
+                s.params().auto_location(SP_AUTO_MODELVIEW_PROJECTION_MATRIX),
+                modelview_projection.mat
+            );
+        }
+
+        if(s.params().uses_auto(SP_AUTO_MODELVIEW_MATRIX)) {
+            s.params().set_mat4x4(
+                s.params().auto_location(SP_AUTO_MODELVIEW_MATRIX),
+                modelview().top().mat
+            );
+        }
+
+        if(s.params().uses_auto(SP_AUTO_PROJECTION_MATRIX)) {
+            s.params().set_mat4x4(
+                s.params().auto_location(SP_AUTO_PROJECTION_MATRIX),
+                projection().top().mat
+            );
         }
 
         //Go through the texture units and bind the textures

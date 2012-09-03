@@ -229,3 +229,4 @@ kglt/additional/sprite_strip_loader.h
 kglt/additional/sprite_strip_loader.cpp
 kglt/additional.h
 kglt/additional/sprite.cpp
+tests/test_shader.cpp

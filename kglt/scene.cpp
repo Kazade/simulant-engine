@@ -121,10 +121,13 @@ void Scene::initialize_defaults() {
     def.add_and_compile(SHADER_TYPE_FRAGMENT, get_default_frag_shader_120());
     def.activate();
 
+    def.params().register_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX, "modelview_projection_matrix");
+
     //Bind the vertex attributes for the default shader and relink
-    def.bind_attrib(0, "vertex_position");
-    def.bind_attrib(1, "vertex_texcoord_1");
-    def.bind_attrib(2, "vertex_diffuse");
+    def.params().register_attribute(SP_ATTR_VERTEX_POSITION, "vertex_position");
+    def.params().register_attribute(SP_ATTR_VERTEX_TEXCOORD0, "vertex_texcoord_1");
+    def.params().register_attribute(SP_ATTR_VERTEX_COLOR, "vertex_diffuse");
+
     def.relink();
 
     //Finally create the default material to link them
