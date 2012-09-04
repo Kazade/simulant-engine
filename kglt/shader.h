@@ -78,7 +78,7 @@ public:
     bool uses_auto(ShaderAvailableAuto auto_const) const { return container::contains(auto_uniforms_, auto_const); }
     bool uses_attribute(ShaderAvailableAttributes attr_const) const { return container::contains(auto_attributes_, attr_const); }
 
-    std::string auto_location(ShaderAvailableAuto auto_name) const {
+    std::string auto_uniform_variable_name(ShaderAvailableAuto auto_name) const {
         auto it = auto_uniforms_.find(auto_name);
         if(it == auto_uniforms_.end()) {
             throw std::logic_error("Specified auto is not registered");
@@ -87,7 +87,7 @@ public:
         return (*it).second;
     }
 
-    std::string attribute_location(ShaderAvailableAttributes attr_name) const {
+    std::string attribute_variable_name(ShaderAvailableAttributes attr_name) const {
         auto it = auto_attributes_.find(attr_name);
         if(it == auto_attributes_.end()) {
             throw std::logic_error("Specified attribute is not registered");

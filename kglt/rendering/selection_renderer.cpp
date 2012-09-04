@@ -57,7 +57,7 @@ void SelectionRenderer::_initialize(Scene& scene) {
     //Bind the vertex attributes for the selection shader and relink
     shader.params().register_attribute(SP_ATTR_VERTEX_POSITION, "vertex_position");
     shader.params().register_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX, "modelview_projection_matrix");
-    shader.bind_attrib(0, shader.params().attribute_location(SP_ATTR_VERTEX_POSITION));
+    shader.bind_attrib(0, shader.params().attribute_variable_name(SP_ATTR_VERTEX_POSITION));
     shader.relink();
 
     shader.activate();
@@ -146,7 +146,7 @@ void SelectionRenderer::visit(Mesh& mesh) {
     kmMat4Multiply(&modelview_projection, &projection().top(), &modelview().top());
 	
     s.params().set_mat4x4(
-        s.params().auto_location(SP_AUTO_MODELVIEW_PROJECTION_MATRIX),
+        s.params().auto_uniform_variable_name(SP_AUTO_MODELVIEW_PROJECTION_MATRIX),
         modelview_projection.mat
     );
 

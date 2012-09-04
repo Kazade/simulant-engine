@@ -111,7 +111,7 @@ void GenericRenderer::render_mesh(Mesh& mesh, Scene& scene) {
 
         if(s.params().uses_attribute(SP_ATTR_VERTEX_POSITION)) {
             //Find the location of the attribute, enable it and then point the vertex data at it
-            int32_t loc = s.get_attrib_loc(s.params().attribute_location(SP_ATTR_VERTEX_POSITION));
+            int32_t loc = s.get_attrib_loc(s.params().attribute_variable_name(SP_ATTR_VERTEX_POSITION));
             if(loc > -1) {
                 glEnableVertexAttribArray(loc);
                 glVertexAttribPointer(loc, 3, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(0));
@@ -119,7 +119,7 @@ void GenericRenderer::render_mesh(Mesh& mesh, Scene& scene) {
         }
 
         if(s.params().uses_attribute(SP_ATTR_VERTEX_TEXCOORD0)) {
-            int32_t loc = s.get_attrib_loc(s.params().attribute_location(SP_ATTR_VERTEX_TEXCOORD0));
+            int32_t loc = s.get_attrib_loc(s.params().attribute_variable_name(SP_ATTR_VERTEX_TEXCOORD0));
             if(loc > -1) {
                 glEnableVertexAttribArray(loc);
                 glVertexAttribPointer(loc, 2, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(sizeof(float) * 3));
@@ -127,7 +127,7 @@ void GenericRenderer::render_mesh(Mesh& mesh, Scene& scene) {
         }
 
         if(s.params().uses_attribute(SP_ATTR_VERTEX_DIFFUSE)) {
-            int32_t loc = s.get_attrib_loc(s.params().attribute_location(SP_ATTR_VERTEX_DIFFUSE));
+            int32_t loc = s.get_attrib_loc(s.params().attribute_variable_name(SP_ATTR_VERTEX_DIFFUSE));
             if(loc > -1) {
                 glEnableVertexAttribArray(loc);
                 glVertexAttribPointer(loc, 4, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(sizeof(float) * 5));
@@ -136,21 +136,21 @@ void GenericRenderer::render_mesh(Mesh& mesh, Scene& scene) {
 
         if(s.params().uses_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX)) {
             s.params().set_mat4x4(
-                s.params().auto_location(SP_AUTO_MODELVIEW_PROJECTION_MATRIX),
+                s.params().auto_uniform_variable_name(SP_AUTO_MODELVIEW_PROJECTION_MATRIX),
                 modelview_projection.mat
             );
         }
 
         if(s.params().uses_auto(SP_AUTO_MODELVIEW_MATRIX)) {
             s.params().set_mat4x4(
-                s.params().auto_location(SP_AUTO_MODELVIEW_MATRIX),
+                s.params().auto_uniform_variable_name(SP_AUTO_MODELVIEW_MATRIX),
                 modelview().top().mat
             );
         }
 
         if(s.params().uses_auto(SP_AUTO_PROJECTION_MATRIX)) {
             s.params().set_mat4x4(
-                s.params().auto_location(SP_AUTO_PROJECTION_MATRIX),
+                s.params().auto_uniform_variable_name(SP_AUTO_PROJECTION_MATRIX),
                 projection().top().mat
             );
         }
