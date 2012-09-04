@@ -40,7 +40,7 @@ TEST(test_shader_params) {
 
     CHECK(s.params().uses_attribute(SP_ATTR_VERTEX_NORMAL));
     CHECK(s.params().uses_attribute(SP_ATTR_VERTEX_POSITION));
-    CHECK(!s.params().uses_attribute(SP_ATTR_VERTEX_COLOUR));
+    CHECK(!s.params().uses_attribute(SP_ATTR_VERTEX_DIFFUSE));
 }
 
 

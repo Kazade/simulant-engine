@@ -97,40 +97,41 @@ void GenericRenderer::render_mesh(Mesh& mesh, Scene& scene) {
     mesh.vbo(VERTEX_ATTRIBUTE_POSITION | VERTEX_ATTRIBUTE_TEXCOORD_1 | VERTEX_ATTRIBUTE_DIFFUSE);
 
     uint32_t stride = (sizeof(float) * 3) + (sizeof(float) * 2) + (sizeof(float) * 4);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(0));
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(sizeof(float) * 3));
-    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(sizeof(float) * 5));
 
     //Calculate the modelview-projection matrix
     kmMat4 modelview_projection;
     kmMat4Multiply(&modelview_projection, &projection().top(), &modelview().top());
-
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    glEnableVertexAttribArray(2);
 
     for(uint32_t i = 0; i < technique.pass_count(); ++i) {
         MaterialPass& pass = technique.pass(i);
 
         //Grab and activate the shader for the pass
         ShaderProgram& s = scene.shader(pass.shader() != 0 ? pass.shader() : scene.default_shader());
-        s.relink(); //FIXME: this shouldn't be here!
-        s.activate();
-
-        //FIXME: Need a way for a MaterialPass to specify the shader
-        //uniforms/attributes
-        s.params().set_int("texture_1", 0);
+        s.activate(); //Activate the shader
 
         if(s.params().uses_attribute(SP_ATTR_VERTEX_POSITION)) {
-            s.bind_attrib(0, s.params().attribute_location(SP_ATTR_VERTEX_POSITION));
+            //Find the location of the attribute, enable it and then point the vertex data at it
+            int32_t loc = s.get_attrib_loc(s.params().attribute_location(SP_ATTR_VERTEX_POSITION));
+            if(loc > -1) {
+                glEnableVertexAttribArray(loc);
+                glVertexAttribPointer(loc, 3, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(0));
+            }
         }
 
         if(s.params().uses_attribute(SP_ATTR_VERTEX_TEXCOORD0)) {
-            s.bind_attrib(1, s.params().attribute_location(SP_ATTR_VERTEX_TEXCOORD0));
+            int32_t loc = s.get_attrib_loc(s.params().attribute_location(SP_ATTR_VERTEX_TEXCOORD0));
+            if(loc > -1) {
+                glEnableVertexAttribArray(loc);
+                glVertexAttribPointer(loc, 2, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(sizeof(float) * 3));
+            }
         }
 
-        if(s.params().uses_attribute(SP_ATTR_VERTEX_COLOUR)) {
-            s.bind_attrib(2, s.params().attribute_location(SP_ATTR_VERTEX_COLOUR));
+        if(s.params().uses_attribute(SP_ATTR_VERTEX_DIFFUSE)) {
+            int32_t loc = s.get_attrib_loc(s.params().attribute_location(SP_ATTR_VERTEX_DIFFUSE));
+            if(loc > -1) {
+                glEnableVertexAttribArray(loc);
+                glVertexAttribPointer(loc, 4, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(sizeof(float) * 5));
+            }
         }
 
         if(s.params().uses_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX)) {
@@ -158,7 +159,7 @@ void GenericRenderer::render_mesh(Mesh& mesh, Scene& scene) {
         for(uint32_t j = 0; j < pass.texture_unit_count(); ++j) {
             glClientActiveTexture(GL_TEXTURE0 + j);
             glBindTexture(GL_TEXTURE_2D, scene.texture(pass.texture_unit(j).texture()).gl_tex());
-        }
+        }        
 
         //Render the mesh, once for each pass
         if(mesh.arrangement() == MESH_ARRANGEMENT_POINTS) {
@@ -176,11 +177,11 @@ void GenericRenderer::render_mesh(Mesh& mesh, Scene& scene) {
             glClientActiveTexture(GL_TEXTURE0 + j);
             glBindTexture(GL_TEXTURE_2D, 0);
         }
-    }
 
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
-    glDisableVertexAttribArray(2);
+        glDisableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
+        glDisableVertexAttribArray(2);
+    }
 
     glPopAttrib();
 }

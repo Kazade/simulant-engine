@@ -161,6 +161,15 @@ void ShaderProgram::relink() {
     assert(linked); 	
 }
 
+int32_t ShaderProgram::get_attrib_loc(const std::string& name) {
+    GLint location = glGetAttribLocation(program_id_, name.c_str());
+    if(location < 0) {
+        L_WARN("No attribute with name: " + name);
+    }
+
+    return location;
+}
+
 int32_t ShaderProgram::get_uniform_loc(const std::string& name) {
     if(container::contains(cached_uniform_locations_, name)) {
         return cached_uniform_locations_[name];
@@ -168,7 +177,7 @@ int32_t ShaderProgram::get_uniform_loc(const std::string& name) {
 
     GLint location = glGetUniformLocation(program_id_, name.c_str());
     if(location < 0) {
-        L_DEBUG("No uniform with name: " + name);
+        L_WARN("No uniform with name: " + name);
     }
     
     cached_uniform_locations_[name] = location;

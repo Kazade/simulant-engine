@@ -47,15 +47,15 @@ const std::set<ShaderAvailableAuto> SHADER_AVAILABLE_AUTOS = {
 
 enum ShaderAvailableAttributes {
     SP_ATTR_VERTEX_POSITION,
-    SP_ATTR_VERTEX_COLOUR,
+    SP_ATTR_VERTEX_DIFFUSE,
     SP_ATTR_VERTEX_NORMAL,
     SP_ATTR_VERTEX_TEXCOORD0,
-    SP_ATTR_VERTEX_COLOR = SP_ATTR_VERTEX_COLOUR
+    SP_ATTR_VERTEX_COLOR = SP_ATTR_VERTEX_DIFFUSE
 };
 
 const std::set<ShaderAvailableAttributes> SHADER_AVAILABLE_ATTRS = {
     SP_ATTR_VERTEX_POSITION,
-    SP_ATTR_VERTEX_COLOUR,
+    SP_ATTR_VERTEX_DIFFUSE,
     SP_ATTR_VERTEX_NORMAL,
     SP_ATTR_VERTEX_TEXCOORD0
 };
@@ -125,6 +125,8 @@ public:
     void relink();
 
     ShaderParams& params() { return params_; }
+
+    int32_t get_attrib_loc(const std::string& name);
 
     void bind_attrib(uint32_t idx, const std::string& name);
     int32_t get_uniform_loc(const std::string& name);

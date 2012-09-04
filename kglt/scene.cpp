@@ -128,6 +128,8 @@ void Scene::initialize_defaults() {
     def.params().register_attribute(SP_ATTR_VERTEX_TEXCOORD0, "vertex_texcoord_1");
     def.params().register_attribute(SP_ATTR_VERTEX_COLOR, "vertex_diffuse");
 
+    def.params().set_int("texture_1", 0); //Set texture_1 to be the first texture unit
+
     def.relink();
 
     //Finally create the default material to link them
