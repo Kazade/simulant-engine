@@ -18,7 +18,7 @@ ShaderProgram& return_new_shader(Scene& scene);
 Text& return_new_text(Scene& scene);
 Texture& return_new_texture(Scene& scene);
 Material& return_new_material(Scene& scene);
-
+Light& return_new_light(Scene& scene);
 MaterialID create_material_from_texture(Scene& scene, TextureID tex);
 
 }

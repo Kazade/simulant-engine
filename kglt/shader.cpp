@@ -32,16 +32,20 @@ void ShaderParams::set_float(const std::string& uniform_name, const float value)
     program_.set_uniform(uniform_name, (float) value);
 }
 
-void ShaderParams::set_mat4x4(const std::string& uniform_name, const float* values) {
-    program_.set_uniform(uniform_name, (const kmMat4*) values); //Dodgy cast, but should work
+void ShaderParams::set_mat4x4(const std::string& uniform_name, const kmMat4& values) {
+    program_.set_uniform(uniform_name, &values);
 }
 
-void ShaderParams::set_mat3x3(const std::string& uniform_name, const float* values) {
-    program_.set_uniform(uniform_name, (const kmMat3*) values); //Dodgy cast, but should work
+void ShaderParams::set_mat3x3(const std::string& uniform_name, const kmMat3& values) {
+    program_.set_uniform(uniform_name, &values);
 }
 
-void ShaderParams::set_vec3(const std::string& uniform_name, const float* values) {
-    program_.set_uniform(uniform_name, (const kmVec3*) values); //Dodgy cast, but should work
+void ShaderParams::set_vec3(const std::string& uniform_name, const kmVec3& values) {
+    program_.set_uniform(uniform_name, &values);
+}
+
+void ShaderParams::set_vec4(const std::string& uniform_name, const kmVec4& values) {
+    program_.set_uniform(uniform_name, &values);
 }
 
 ShaderProgram::ShaderProgram(Scene *scene, ShaderID id):
@@ -58,36 +62,36 @@ ShaderProgram::~ShaderProgram() {
     try {
         for(uint32_t i = 0; i < ShaderType::SHADER_TYPE_MAX; ++i) {
             if(shader_ids_[i] != 0) {
-				glDeleteShader(shader_ids_[i]);
-			}
+                glDeleteShader(shader_ids_[i]);
+            }
         }
 
         if(program_id_) {
             glDeleteProgram(program_id_);
         }
-        check_and_log_error(__FILE__, __LINE__);        
+        check_and_log_error(__FILE__, __LINE__);
     } catch (...) { }
 }
 
 void ShaderProgram::activate() {
 
     glUseProgram(program_id_);
-    check_and_log_error(__FILE__, __LINE__);    
+    check_and_log_error(__FILE__, __LINE__);
 }
 
 void ShaderProgram::bind_attrib(uint32_t idx, const std::string& name) {
     glBindAttribLocation(program_id_, idx, name.c_str());
-    check_and_log_error(__FILE__, __LINE__);    
+    check_and_log_error(__FILE__, __LINE__);
 }
 
 void ShaderProgram::add_and_compile(ShaderType type, const std::string& source) {
     check_and_log_error(__FILE__, __LINE__);
-    
+
     if(program_id_ == 0) {
         program_id_ = glCreateProgram();
         check_and_log_error(__FILE__, __LINE__);
     }
-    
+
     if(shader_ids_[type] != 0) {
         glDeleteShader(shader_ids_[type]);
         shader_ids_[type] = 0;
@@ -101,7 +105,7 @@ void ShaderProgram::add_and_compile(ShaderType type, const std::string& source) 
             shader_type = GL_VERTEX_SHADER;
         } break;
         case ShaderType::SHADER_TYPE_FRAGMENT: {
-            L_DEBUG("Adding fragment shader");        
+            L_DEBUG("Adding fragment shader");
             shader_type = GL_FRAGMENT_SHADER;
         } break;
         default:
@@ -111,23 +115,23 @@ void ShaderProgram::add_and_compile(ShaderType type, const std::string& source) 
     GLuint shader = glCreateShader(shader_type);
     check_and_log_error(__FILE__, __LINE__);
     shader_ids_[type] = shader;
-    
+
     const char* c_str = source.c_str();
     glShaderSource(shader, 1, &c_str, nullptr);
     check_and_log_error(__FILE__, __LINE__);
-        
+
     glCompileShader(shader);
     check_and_log_error(__FILE__, __LINE__);
-    
+
     GLint compiled = 0;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
     if(!compiled) {
         GLint length;
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
-        
+
         std::vector<char> log;
         log.resize(length);
-        
+
         glGetShaderInfoLog(shader, length, NULL, &log[0]);
         L_ERROR(std::string(log.begin(), log.end()));
     }
@@ -138,8 +142,8 @@ void ShaderProgram::add_and_compile(ShaderType type, const std::string& source) 
     check_and_log_error(__FILE__, __LINE__);
     glAttachShader(program_id_, shader);
     check_and_log_error(__FILE__, __LINE__);
-    
-	relink();
+
+    relink();
 }
 
 void ShaderProgram::relink() {
@@ -151,14 +155,14 @@ void ShaderProgram::relink() {
     if(!linked) {
         GLint length;
         glGetProgramiv(program_id_, GL_INFO_LOG_LENGTH, &length);
-        
+
         std::vector<char> log;
         log.resize(length);
-        
+
         glGetProgramInfoLog(program_id_, length, NULL, &log[0]);
         L_ERROR(std::string(log.begin(), log.end()));
     }
-    assert(linked); 	
+    assert(linked);
 }
 
 int32_t ShaderProgram::get_attrib_loc(const std::string& name) {
@@ -179,7 +183,7 @@ int32_t ShaderProgram::get_uniform_loc(const std::string& name) {
     if(location < 0) {
         L_WARN("No uniform with name: " + name);
     }
-    
+
     cached_uniform_locations_[name] = location;
     return location;
 }
@@ -187,7 +191,7 @@ int32_t ShaderProgram::get_uniform_loc(const std::string& name) {
 bool ShaderProgram::has_uniform(const std::string& name) {
     return get_uniform_loc(name) != -1;
 }
-    
+
 void ShaderProgram::set_uniform(const std::string& name, const float x) {
     glUniform1f(get_uniform_loc(name), x);
     check_and_log_error(__FILE__, __LINE__);
@@ -195,7 +199,7 @@ void ShaderProgram::set_uniform(const std::string& name, const float x) {
 
 void ShaderProgram::set_uniform(const std::string& name, const int32_t x) {
     glUniform1i(get_uniform_loc(name), x);
-    check_and_log_error(__FILE__, __LINE__);    
+    check_and_log_error(__FILE__, __LINE__);
 }
 
 void ShaderProgram::set_uniform(const std::string& name, const kmMat4* matrix) {
@@ -216,19 +220,23 @@ void ShaderProgram::set_uniform(const std::string& name, const kmMat3* matrix) {
         unsigned char i = 9;
         while(i--) { mat[i] = (float) matrix->mat[i]; }
         glUniformMatrix3fv(get_uniform_loc(name), 1, false, (GLfloat*)mat);
-        check_and_log_error(__FILE__, __LINE__);    
+        check_and_log_error(__FILE__, __LINE__);
     }
 }
 
 void ShaderProgram::set_uniform(const std::string& name, const kmVec3* vec) {
     GLint loc = get_uniform_loc(name);
     if(loc >= 0) {
-        float v[3];
-        v[0] = (float)vec->x;
-        v[1] = (float)vec->y;
-        v[2] = (float)vec->z;
-        glUniform3fv(get_uniform_loc(name), 1, (GLfloat*) v);
-        check_and_log_error(__FILE__, __LINE__);    
+        glUniform3fv(get_uniform_loc(name), 1, (GLfloat*) vec);
+        check_and_log_error(__FILE__, __LINE__);
+    }
+}
+
+void ShaderProgram::set_uniform(const std::string& name, const kmVec4* vec) {
+    GLint loc = get_uniform_loc(name);
+    if(loc >= 0) {
+        glUniform4fv(get_uniform_loc(name), 1, (GLfloat*) vec);
+        check_and_log_error(__FILE__, __LINE__);
     }
 }
 

@@ -24,8 +24,10 @@
 #include "text.h"
 #include "overlay.h"
 #include "material.h"
+#include "light.h"
 
 #include "rendering/generic_renderer.h"
+#include "partitioner.h"
 
 #include "generic/visitor.h"
 #include "generic/manager.h"
@@ -45,7 +47,8 @@ class Scene :
     public generic::TemplatedManager<Scene, Font, FontID>,
     public generic::TemplatedManager<Scene, Overlay, OverlayID>,
     public generic::TemplatedManager<Scene, Material, MaterialID>,
-    public generic::TemplatedManager<Scene, Texture, TextureID> {
+    public generic::TemplatedManager<Scene, Texture, TextureID>,
+    public generic::TemplatedManager<Scene, Light, LightID> {
 
 public:
     VIS_DEFINE_VISITABLE();
@@ -65,6 +68,7 @@ public:
     TextID new_text();
     OverlayID new_overlay(); ///< Creates a new overlay
     MaterialID new_material();
+    LightID new_light(Object* parent=nullptr, LightType type=LIGHT_TYPE_POINT);
 
     bool has_mesh(MeshID m) const;
     bool has_overlay(OverlayID o) const;
@@ -76,6 +80,7 @@ public:
     Font& font(FontID f);
     Overlay& overlay(OverlayID overlay); ///< Grabs an overlay by its ID
     Material& material(MaterialID material);
+    Light& light(LightID light);
 
     Camera& active_camera() { return camera(active_camera_); }
     void set_active_camera(CameraID cam) { active_camera_ = cam; }
@@ -83,7 +88,7 @@ public:
     Text& text(TextID t);
     const Text& text(TextID t) const;
 
-	std::pair<ShaderID, bool> find_shader(const std::string& name);
+    std::pair<ShaderID, bool> find_shader(const std::string& name);
 
     void delete_mesh(MeshID mid);
     void delete_texture(TextureID tid);
@@ -93,6 +98,7 @@ public:
     void delete_font(FontID f);
     void delete_overlay(OverlayID overlay); ///< Deletes an overlay by its ID
     void delete_material(MaterialID m);
+    void delete_light(LightID light_id);
 
     void init();
     void render();
@@ -102,26 +108,26 @@ public:
 
     WindowBase& window() { return *window_; }
 
-	void add_pass(
-		Renderer::ptr renderer, 
-		ViewportType viewport=VIEWPORT_TYPE_FULL,
+    void add_pass(
+        Renderer::ptr renderer,
+        ViewportType viewport=VIEWPORT_TYPE_FULL,
         CameraID camera_id=DefaultCameraID
-	) {
+    ) {
         renderer->_initialize(*this); //Initialize the renderer if need be
 
-		Pass p(this, renderer, viewport, camera_id);
-		passes_.push_back(p);
-	}
-	
-	void remove_all_passes() {
-		passes_.clear();
-	}
-	
+        Pass p(this, renderer, viewport, camera_id);
+        passes_.push_back(p);
+    }
+
+    void remove_all_passes() {
+        passes_.clear();
+    }
+
     uint32_t pass_count() const { return passes_.size(); }
-	Pass& pass(uint32_t index = 0) { return passes_.at(index); }
-		
-	MeshID _mesh_id_from_mesh_ptr(Mesh* mesh);
-	
+    Pass& pass(uint32_t index = 0) { return passes_.at(index); }
+
+    MeshID _mesh_id_from_mesh_ptr(Mesh* mesh);
+
     Background& background() { return background_; }
     UI& ui() { return *ui_interface_; }
 
@@ -155,6 +161,9 @@ public:
 
     MaterialID default_material() const { return default_material_; }
     ShaderID default_shader() const { return default_shader_; }
+
+    Partitioner& partitioner() { return *partitioner_; }
+
 private:
     std::map<std::string, ShaderID> shader_lookup_;
 
@@ -171,9 +180,11 @@ private:
     std::tr1::shared_ptr<UI> ui_interface_;
 
     std::vector<Pass> passes_;
-    
+
     sigc::signal<void, Pass&> signal_render_pass_started_;
     sigc::signal<void, Pass&> signal_render_pass_finished_;
+
+    Partitioner::ptr partitioner_;
 };
 
 }

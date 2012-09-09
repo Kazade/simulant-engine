@@ -147,7 +147,7 @@ void SelectionRenderer::visit(Mesh& mesh) {
 	
     s.params().set_mat4x4(
         s.params().auto_uniform_variable_name(SP_AUTO_MODELVIEW_PROJECTION_MATRIX),
-        modelview_projection.mat
+        modelview_projection
     );
 
 	kmVec3 colour;
@@ -158,7 +158,7 @@ void SelectionRenderer::visit(Mesh& mesh) {
 		std::get<2>(current_colour)
 	);
 	
-    s.params().set_vec3("selection_colour", (const float*) &colour);
+    s.params().set_vec3("selection_colour", colour);
 	
 	glEnableVertexAttribArray(0);		
     if(mesh.arrangement() == MESH_ARRANGEMENT_POINTS) {

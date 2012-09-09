@@ -230,3 +230,10 @@ kglt/additional/sprite_strip_loader.cpp
 kglt/additional.h
 kglt/additional/sprite.cpp
 tests/test_shader.cpp
+kglt/light.cpp
+kglt/partitioner.h
+kglt/partitioners/null_partitioner.h
+kglt/partitioners/null_partitioner.cpp
+samples/light_sample.cpp
+kglt/procedural/mesh/cube.h
+kglt/procedural/mesh/cube.cpp

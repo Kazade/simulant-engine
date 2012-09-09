@@ -11,19 +11,14 @@
 
 namespace kglt {
 
-enum TextureLevel {
-    PRIMARY,
-    SECONDARY,
-    MAX_TEXTURE_LEVELS
-};
-
 struct Vertex : public Vec3 {
 };
 
 class Triangle {
 public:
     Triangle():
-        lightmap_id_(0) {}
+        lightmap_id_(0),
+        uses_surface_normal_(true) {}
 
     void set_indexes(uint32_t a, uint32_t b, uint32_t c) {
         idx_[0] = a;
@@ -36,30 +31,52 @@ public:
         uv_[i].y = v;
     }
 
+    void set_surface_normal(float x, float y, float z) {
+        surface_normal_ = Vec3(x, y, z);
+        uses_surface_normal_ = true;
+    }
+
+    void set_normal(uint32_t i, float x, float y, float z) {
+        normals_[i] = Vec3(x, y, z);
+        uses_surface_normal_ = false;
+    }
+
     uint32_t index(uint32_t i) { return idx_[i]; }
     Vec2& uv(uint32_t i) { return uv_[i]; }
+    Vec3& normal(uint32_t i) {
+        if(uses_surface_normal_) {
+            return surface_normal_;
+        }
+        return normals_[i];
+    }
 
 private:
+    Vec3 surface_normal_;
+
     uint32_t idx_[3];
     Vec2 uv_[3];
     Vec2 st_[3];
+    Vec3 normals_[3];
+
     kglt::TextureID lightmap_id_;
 
+    bool uses_surface_normal_;
 };
 
 enum MeshArrangement {
-	MESH_ARRANGEMENT_POINTS,
-	MESH_ARRANGEMENT_TRIANGLES,
-	MESH_ARRANGEMENT_TRIANGLE_FAN,
-	MESH_ARRANGEMENT_TRIANGLE_STRIP,
-	MESH_ARRANGEMENT_LINES,
-	MESH_ARRANGEMENT_LINE_STRIP
+    MESH_ARRANGEMENT_POINTS,
+    MESH_ARRANGEMENT_TRIANGLES,
+    MESH_ARRANGEMENT_TRIANGLE_FAN,
+    MESH_ARRANGEMENT_TRIANGLE_STRIP,
+    MESH_ARRANGEMENT_LINES,
+    MESH_ARRANGEMENT_LINE_STRIP
 };
 
 enum VertexAttribute {
-	VERTEX_ATTRIBUTE_POSITION = 1,
-	VERTEX_ATTRIBUTE_TEXCOORD_1 = 2,
-	VERTEX_ATTRIBUTE_DIFFUSE = 4
+    VERTEX_ATTRIBUTE_POSITION = 1,
+    VERTEX_ATTRIBUTE_TEXCOORD_1 = 2,
+    VERTEX_ATTRIBUTE_DIFFUSE = 4,
+    VERTEX_ATTRIBUTE_NORMAL = 8
 };
 
 class Mesh :
@@ -102,7 +119,7 @@ public:
         return vertices_;
     }
 
-    Mesh& parent_mesh() {        
+    Mesh& parent_mesh() {
         Mesh* mesh = &parent_as<Mesh>();
         if(!is_submesh_ || !mesh) {
             throw std::logic_error("Attempted to get parent mesh from non-submesh");
@@ -111,27 +128,24 @@ public:
         return *mesh;
     }
 
-    TextureID& texture(TextureLevel l = PRIMARY);
-
-    void apply_texture(TextureID tex, TextureLevel level=PRIMARY);
     void add_vertex(float x, float y, float z);
     Triangle& add_triangle(uint32_t a, uint32_t b, uint32_t c);
 
     void set_arrangement(MeshArrangement m) { arrangement_ = m; }
     MeshArrangement arrangement() { return arrangement_; }
-	
+
     void vbo(uint32_t vertex_attributes);
 
     void done() {}
     void invalidate() { vertex_buffer_objects_.clear(); }
 
-	/*
-	 * 	FIXME: This should apply to the triangles, not the mesh itself
-	 */
-	void set_diffuse_colour(const Colour& colour) { 
-		diffuse_colour_ = colour; 
-		invalidate();
-	}
+    /*
+     * 	FIXME: This should apply to the triangles, not the mesh itself
+     */
+    void set_diffuse_colour(const Colour& colour) {
+        diffuse_colour_ = colour;
+        invalidate();
+    }
 
     bool depth_test_enabled() const { return depth_test_enabled_; }
     bool depth_writes_enabled() const { return depth_writes_enabled_; }
@@ -141,16 +155,16 @@ public:
 
     void set_branch_selectable(bool value = true) { ///< Sets this node and its children selectable or not
         branch_selectable_ = value;
-    }    
+    }
     bool branch_selectable() const { return branch_selectable_; }
-    
+
     void apply_material(MaterialID material) { material_ = material; }
     MaterialID material() const { return material_; }
 
 private:
-	std::map<uint32_t, uint32_t> vertex_buffer_objects_;
+    std::map<uint32_t, uint32_t> vertex_buffer_objects_;
 
-	uint32_t build_vbo(uint32_t vertex_attributes);
+    uint32_t build_vbo(uint32_t vertex_attributes);
 
     bool is_submesh_;
     bool use_parent_vertices_;
@@ -161,10 +175,8 @@ private:
 
     MaterialID material_;
 
-    TextureID textures_[MAX_TEXTURE_LEVELS];
-
     MeshArrangement arrangement_;
-    
+
     Colour diffuse_colour_;
 
     bool depth_test_enabled_;

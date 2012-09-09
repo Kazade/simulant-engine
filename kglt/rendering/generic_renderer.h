@@ -31,6 +31,14 @@ public:
 private:    
     void on_start_render(Scene& scene);
     void render_mesh(Mesh& mesh, Scene& scene);
+
+    void set_auto_uniforms_on_shader(
+        ShaderProgram& shader,
+        Scene& scene,
+        const std::vector<LightID>& lights_within_range,
+        uint32_t iteration
+    );
+    void set_auto_attributes_on_shader(ShaderProgram& shader);
 };
 
 }

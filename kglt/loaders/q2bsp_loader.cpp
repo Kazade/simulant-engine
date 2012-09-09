@@ -249,6 +249,9 @@ void Q2BSPLoader::into(Loadable& resource) {
     std::map<std::string, std::pair<uint32_t, uint32_t> > texture_dimensions;
 
     for(Q2::TextureInfo& tex: textures) {
+        MaterialID material_id = scene->new_material();
+        Material& mat = scene->material(material_id);
+        mat.technique().new_pass(scene->default_shader()); //Create a pass for the material
 
         kmVec3 u_axis, v_axis;
         kmVec3Fill(&u_axis, tex.u_axis.x, tex.u_axis.y, tex.u_axis.z);
@@ -279,10 +282,13 @@ void Q2BSPLoader::into(Loadable& resource) {
         texture.upload();
         tex_lookup[tex.texture_name] = tid;
 
+        //Set the texture for unit 0
+        mat.technique().pass(0).set_texture_unit(0, tid);
+
         //Create a submesh for each texture, set it to use the parent mesh's verticces
         mesh_for_texture[tid] = mesh.add_submesh(true);
         Mesh& new_submesh = mesh.submesh(mesh_for_texture[tid]);
-        new_submesh.apply_texture(tid);
+        new_submesh.apply_material(material_id);
     }
 
     std::cout << "Num textures: " << tex_lookup.size() << std::endl;
@@ -316,6 +322,19 @@ void Q2BSPLoader::into(Loadable& resource) {
             L_DEBUG("Adding triangle to mesh: " + boost::lexical_cast<std::string>(texture_mesh.uuid()));
             Triangle& tri = texture_mesh.add_triangle(tri_idx[0], tri_idx[1], tri_idx[2]);
 
+            Vec3 normal;
+            Vec3 vec1, vec2;
+            Vec3& v1 = mesh.vertex(tri.index(0));
+            Vec3& v2 = mesh.vertex(tri.index(1));
+            Vec3& v3 = mesh.vertex(tri.index(2));
+
+            kmVec3Subtract(&vec1, &v2, &v1);
+            kmVec3Subtract(&vec2, &v3, &v1);
+            kmVec3Cross(&normal, &vec1, &vec2);
+            kmVec3Normalize(&normal, &normal);
+
+            tri.set_surface_normal(normal.x, normal.y, normal.z);
+
             for(int32_t j = 0; j < 3; ++j) {
                 float u = mesh.vertex(tri_idx[j]).x * tex.u_axis.x
                         + mesh.vertex(tri_idx[j]).y * tex.u_axis.y
@@ -332,7 +351,7 @@ void Q2BSPLoader::into(Loadable& resource) {
             }
         }
     }
-    
+
     L_DEBUG("Compiling meshes");
     for(Mesh::ptr m: mesh.submeshes()) {
         m->done();

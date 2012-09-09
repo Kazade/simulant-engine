@@ -18,6 +18,7 @@ TEST(test_shader_params) {
     CHECK(sid > 0);
 
     ShaderProgram& s = scene.shader(sid);
+    s.activate();
 
     kmMat4 ident;
     kmMat4Identity(&ident);
@@ -32,7 +33,7 @@ TEST(test_shader_params) {
 
     //Finally set some uniform constants manually
     s.params().set_int("texture_1", 0);
-    s.params().set_mat4x4("matrix", ident.mat);
+    s.params().set_mat4x4("matrix", ident);
 
     CHECK(s.params().uses_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX));
     CHECK(s.params().uses_auto(SP_AUTO_MATERIAL_DIFFUSE));

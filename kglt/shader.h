@@ -31,8 +31,17 @@ enum ShaderAvailableAuto {
     SP_AUTO_MATERIAL_DIFFUSE,
     SP_AUTO_MATERIAL_SPECULAR,
     SP_AUTO_MATERIAL_AMBIENT,
-    SP_AUTO_MATERIAL_SHININESS
-    //TODO: lights, cameras(?)
+    SP_AUTO_MATERIAL_SHININESS,
+    SP_AUTO_LIGHT_POSITION,
+    SP_AUTO_LIGHT_DIRECTION,
+    SP_AUTO_LIGHT_DIFFUSE,
+    SP_AUTO_LIGHT_SPECULAR,
+    SP_AUTO_LIGHT_AMBIENT,
+    SP_AUTO_LIGHT_CONSTANT_ATTENUATION,
+    SP_AUTO_LIGHT_LINEAR_ATTENUATION,
+    SP_AUTO_LIGHT_QUADRATIC_ATTENUATION
+
+    //TODO: cameras(?)
 };
 
 const std::set<ShaderAvailableAuto> SHADER_AVAILABLE_AUTOS = {
@@ -71,9 +80,10 @@ public:
 
     void set_int(const std::string& uniform_name, const int32_t value);
     void set_float(const std::string& uniform_name, const float value);
-    void set_mat4x4(const std::string& uniform_name, const float* values);
-    void set_mat3x3(const std::string& uniform_name, const float* values);
-    void set_vec3(const std::string& uniform_name, const float* values);
+    void set_mat4x4(const std::string& uniform_name, const kmMat4& values);
+    void set_mat3x3(const std::string& uniform_name, const kmMat3& values);
+    void set_vec3(const std::string& uniform_name, const kmVec3& values);
+    void set_vec4(const std::string& uniform_name, const kmVec4& values);
 
     bool uses_auto(ShaderAvailableAuto auto_const) const { return container::contains(auto_uniforms_, auto_const); }
     bool uses_attribute(ShaderAvailableAttributes attr_const) const { return container::contains(auto_attributes_, attr_const); }
@@ -114,14 +124,14 @@ class ShaderProgram :
     public generic::Identifiable<ShaderID> {
 
 public:
-	typedef std::tr1::shared_ptr<ShaderProgram> ptr;
+    typedef std::tr1::shared_ptr<ShaderProgram> ptr;
 
     ShaderProgram(Scene* scene, ShaderID id);
     ~ShaderProgram();
 
     void activate();
     void add_and_compile(ShaderType type, const std::string& source);
-    
+
     void relink();
 
     ShaderParams& params() { return params_; }
@@ -138,9 +148,10 @@ private:
     void set_uniform(const std::string& name, const kmMat4* matrix);
     void set_uniform(const std::string& name, const kmMat3* matrix);
     void set_uniform(const std::string& name, const kmVec3* vec);
+    void set_uniform(const std::string& name, const kmVec4* vec);
 
-	ShaderProgram(const ShaderProgram& rhs);
-	ShaderProgram& operator=(const ShaderProgram& rhs);
+    ShaderProgram(const ShaderProgram& rhs);
+    ShaderProgram& operator=(const ShaderProgram& rhs);
 
     uint32_t program_id_;
     uint32_t shader_ids_[SHADER_TYPE_MAX];

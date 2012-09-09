@@ -4,10 +4,10 @@
 namespace kglt {
 
 TextureID create_texture_from_file(WindowBase& window, const std::string& filename, bool upload) {
-	kglt::TextureID tid = window.scene().new_texture();
-	kglt::Texture& tex = window.scene().texture(tid);
-	window.loader_for(filename)->into(tex);
-	
+    kglt::TextureID tid = window.scene().new_texture();
+    kglt::Texture& tex = window.scene().texture(tid);
+    window.loader_for(filename)->into(tex);
+
     if(upload) {
         //Upload the texture in the main thread, regardless of where this was called from
         window.idle().add_once(sigc::bind(sigc::mem_fun(&tex, &kglt::Texture::upload), true, true, true));
@@ -17,13 +17,13 @@ TextureID create_texture_from_file(WindowBase& window, const std::string& filena
 }
 
 Mesh& return_new_mesh(Scene& scene) {
-	MeshID mid = scene.new_mesh();
-	return scene.mesh(mid);
+    MeshID mid = scene.new_mesh();
+    return scene.mesh(mid);
 }
 
 ShaderProgram& return_new_shader(Scene& scene) {
-	ShaderID sid = scene.new_shader();
-	return scene.shader(sid);
+    ShaderID sid = scene.new_shader();
+    return scene.shader(sid);
 }
 
 Text& return_new_text(Scene &scene) {
@@ -39,6 +39,11 @@ Texture& return_new_texture(Scene& scene) {
 Material& return_new_material(Scene& scene) {
     MaterialID mid = scene.new_material();
     return scene.material(mid);
+}
+
+Light& return_new_light(Scene& scene) {
+    LightID lid = scene.new_light();
+    return scene.light(lid);
 }
 
 MaterialID create_material_from_texture(Scene& scene, TextureID tex) {

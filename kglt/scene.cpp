@@ -2,6 +2,7 @@
 #include "scene.h"
 #include "renderer.h"
 #include "ui.h"
+#include "partitioners/null_partitioner.h"
 
 namespace kglt {
 
@@ -12,14 +13,38 @@ const std::string get_default_vert_shader_120() {
 attribute vec3 vertex_position;
 attribute vec2 vertex_texcoord_1;
 attribute vec4 vertex_diffuse;
+attribute vec3 vertex_normal;
 
 uniform mat4 modelview_projection_matrix;
 
 varying vec2 fragment_texcoord_1;
 varying vec4 fragment_diffuse;
 
+uniform vec4 light_position;
+
+uniform float light_constant_attenuation;
+uniform float light_linear_attenuation;
+uniform float light_quadratic_attenuation;
+
+varying vec3 light_direction;
+varying vec3 fragment_normal;
+varying vec3 eye_vec;
+
+varying float attenuation;
+
 void main() {
     gl_Position = modelview_projection_matrix * vec4(vertex_position, 1.0);
+
+    light_direction = light_position.xyz - gl_Position.xyz;
+
+    float d = length(light_direction);
+
+    attenuation = light_constant_attenuation /
+                        (1 + light_linear_attenuation*d) +
+                        (1 + light_quadratic_attenuation*d*d);
+
+    fragment_normal = vertex_normal;
+    eye_vec = -gl_Position.xyz;
     fragment_texcoord_1 = vertex_texcoord_1;
     fragment_diffuse = vertex_diffuse;
 }
@@ -38,19 +63,37 @@ varying vec4 fragment_diffuse;
 
 uniform sampler2D texture_1;
 
-/*
-struct light {
-    int type;
-    vec4 ambient;
-    vec4 diffuse;
-    vec4 specular;
-    vec4 position;
-};
+uniform vec4 light_ambient;
+uniform vec4 light_diffuse;
+uniform vec4 light_specular;
 
-uniform light lights[8];*/
+varying vec3 light_direction;
+varying vec3 fragment_normal;
+varying vec3 eye_vec;
+
+varying float attenuation;
 
 void main() {
-    gl_FragColor = texture2D(texture_1, fragment_texcoord_1.st) * fragment_diffuse;
+    vec4 material_ambient = vec4(1.0);
+    vec4 material_diffuse = vec4(1.0);
+    vec4 material_specular = vec4(1.0);
+    float material_shininess = 1.0;
+
+    vec3 N = normalize(fragment_normal);
+    vec3 L = normalize(light_direction);
+
+    float lt = dot(N, L);
+
+    vec4 colour = (light_ambient * material_ambient);
+    if(lt > 0.0) {
+        colour += (light_diffuse * material_diffuse * fragment_diffuse * lt);
+        vec3 E = normalize(eye_vec);
+        vec3 R = reflect(-L, N);
+        float specular = pow(max(dot(R, E), 0.0), material_shininess);
+        colour += (light_specular * material_specular * specular);
+    }
+
+    gl_FragColor = texture2D(texture_1, fragment_texcoord_1.st) * colour * attenuation;
 }
 
 )";
@@ -59,15 +102,16 @@ void main() {
 
 Scene::Scene(WindowBase* window):
     Object(nullptr),
-    background_(this),
     active_camera_(DefaultCameraID),
-    ui_interface_(new UI(this)),
     window_(window),
     default_texture_(0),
     default_shader_(0),
-    default_material_(0) {
+    default_material_(0),
+    background_(this),
+    ui_interface_(new UI(this)),
+    partitioner_(new NullPartitioner(*this)) {
 
-    TemplatedManager<Scene, Mesh, MeshID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Mesh, MeshID>));    
+    TemplatedManager<Scene, Mesh, MeshID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Mesh, MeshID>));
     TemplatedManager<Scene, Camera, CameraID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Camera, CameraID>));
     TemplatedManager<Scene, Text, TextID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Text, TextID>));
     TemplatedManager<Scene, ShaderProgram, ShaderID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_shader_callback));
@@ -122,11 +166,19 @@ void Scene::initialize_defaults() {
     def.activate();
 
     def.params().register_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX, "modelview_projection_matrix");
+    def.params().register_auto(SP_AUTO_LIGHT_POSITION, "light_position");
+    def.params().register_auto(SP_AUTO_LIGHT_AMBIENT, "light_ambient");
+    def.params().register_auto(SP_AUTO_LIGHT_SPECULAR, "light_specular");
+    def.params().register_auto(SP_AUTO_LIGHT_DIFFUSE, "light_diffuse");
+    def.params().register_auto(SP_AUTO_LIGHT_CONSTANT_ATTENUATION, "light_constant_attenuation");
+    def.params().register_auto(SP_AUTO_LIGHT_LINEAR_ATTENUATION, "light_linear_attenuation");
+    def.params().register_auto(SP_AUTO_LIGHT_QUADRATIC_ATTENUATION, "light_quadratic_attenuation");
 
     //Bind the vertex attributes for the default shader and relink
     def.params().register_attribute(SP_ATTR_VERTEX_POSITION, "vertex_position");
     def.params().register_attribute(SP_ATTR_VERTEX_TEXCOORD0, "vertex_texcoord_1");
     def.params().register_attribute(SP_ATTR_VERTEX_COLOR, "vertex_diffuse");
+    def.params().register_attribute(SP_ATTR_VERTEX_NORMAL, "vertex_normal");
 
     def.params().set_int("texture_1", 0); //Set texture_1 to be the first texture unit
 
@@ -144,6 +196,10 @@ MeshID Scene::new_mesh(Object *parent) {
     if(parent) {
         mesh(result).set_parent(parent);
     }
+
+    //Add the mesh to the partitioner
+    partitioner_->add(mesh(result));
+
     return result;
 }
 
@@ -156,6 +212,9 @@ Mesh& Scene::mesh(MeshID m) {
 }
 
 void Scene::delete_mesh(MeshID mid) {
+    //Remove the mesh from the partitioner
+    partitioner_->remove(mesh(mid));
+
     Mesh& obj = mesh(mid);
     obj.destroy_children();
     return TemplatedManager<Scene, Mesh, MeshID>::manager_delete(mid);
@@ -210,7 +269,7 @@ ShaderID Scene::new_shader() {
 void Scene::delete_shader(ShaderID s) {
     TemplatedManager<Scene, ShaderProgram, ShaderID>::manager_delete(s);
 }
-    
+
 FontID Scene::new_font() {
     return TemplatedManager<Scene, Font, FontID>::manager_new();
 }
@@ -219,7 +278,7 @@ Font& Scene::font(FontID f) {
     return TemplatedManager<Scene, Font, FontID>::manager_get(f);
 }
 
-void Scene::delete_font(FontID f) {    
+void Scene::delete_font(FontID f) {
     TemplatedManager<Scene, Font, FontID>::manager_delete(f);
 }
 
@@ -259,6 +318,31 @@ void Scene::delete_overlay(OverlayID oid) {
     TemplatedManager<Scene, Overlay, OverlayID>::manager_delete(oid);
 }
 
+LightID Scene::new_light(Object* parent, LightType type) {
+    LightID lid = TemplatedManager<Scene, Light, LightID>::manager_new();
+
+    Light& l = light(lid);
+    l.set_type(type);
+    if(parent) {
+        l.set_parent(parent);
+    }
+
+    partitioner_->add(l); //Add the light to the partitioner
+
+    return lid;
+}
+
+Light& Scene::light(LightID light_id) {
+    return TemplatedManager<Scene, Light, LightID>::manager_get(light_id);
+}
+
+void Scene::delete_light(LightID light_id) {
+    Light& obj = light(light_id);
+    partitioner_->remove(obj); //Remove the light from the partitioner
+    obj.destroy_children();
+    TemplatedManager<Scene, Light, LightID>::manager_delete(light_id);
+}
+
 void Scene::init() {
     assert(glGetError() == GL_NO_ERROR);
 
@@ -286,25 +370,25 @@ void Scene::update(double dt) {
     for(uint32_t i = 0; i < child_count(); ++i) {
         Object& c = child(i);
         c.update(dt);
-	}
+    }
 }
 
 void Scene::render() {
-	/**
-	 * Go through all the render passes
-	 * set the render options and send the viewport to OpenGL
-	 * before going through the scene, objects in the scene
-	 * should be able to mark as only being renderered in certain
-	 * passes
-	 */
-	for(Pass& pass: passes_) {
-		pass.renderer().set_options(render_options);
-		pass.viewport().update_opengl();
-		
-        signal_render_pass_started_(pass);        
+    /**
+     * Go through all the render passes
+     * set the render options and send the viewport to OpenGL
+     * before going through the scene, objects in the scene
+     * should be able to mark as only being renderered in certain
+     * passes
+     */
+    for(Pass& pass: passes_) {
+        pass.renderer().set_options(render_options);
+        pass.viewport().update_opengl();
+
+        signal_render_pass_started_(pass);
         pass.renderer().render(*this);
         signal_render_pass_finished_(pass);
-	}	
+    }
 }
 
 MeshID Scene::_mesh_id_from_mesh_ptr(Mesh* mesh) {

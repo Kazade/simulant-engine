@@ -53,6 +53,12 @@ private:
     TextureID texture_unit_;
 };
 
+enum IterationType {
+    ITERATE_ONCE,
+    ITERATE_N,
+    ITERATE_ONCE_PER_LIGHT
+};
+
 class MaterialPass {
 public:
     typedef std::tr1::shared_ptr<MaterialPass> ptr;
@@ -77,6 +83,13 @@ public:
         }
     }
 
+    IterationType iteration() const { return iteration_; }
+    uint32_t max_iterations() const { return max_iterations_; }
+    void set_iteration(IterationType iter_type, uint32_t max=1) {
+        iteration_ = iter_type;
+        max_iterations_ = max;
+    }
+
 private:
     ShaderID shader_;
 
@@ -86,6 +99,9 @@ private:
     float shininess_;
 
     std::vector<TextureUnit> texture_units_;
+
+    IterationType iteration_;
+    uint32_t max_iterations_;
 };
 
 class MaterialTechnique {
