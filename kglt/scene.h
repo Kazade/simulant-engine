@@ -164,6 +164,8 @@ public:
 
     Partitioner& partitioner() { return *partitioner_; }
 
+    kglt::Colour ambient_light() const { return ambient_light_; }
+
 private:
     std::map<std::string, ShaderID> shader_lookup_;
 
@@ -173,6 +175,7 @@ private:
     TextureID default_texture_;
     ShaderID default_shader_;
     MaterialID default_material_;
+    kglt::Colour ambient_light_;
 
     void initialize_defaults();
 

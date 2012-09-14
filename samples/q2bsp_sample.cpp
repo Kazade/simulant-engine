@@ -1,6 +1,5 @@
-#include "kglt/window.h"
-#include "kglt/types.h"
-#include "kglt/scene.h"
+#include "kglt/kglt.h"
+#include "kglt/shortcuts.h"
 
 kglt::Window window(1024, 768);
 std::vector<uint8_t> keys(kglt::KEY_CODE_LAST, 0);
@@ -15,7 +14,7 @@ void on_key_up(kglt::KeyCode sym) {
 
 int main(int argc, char* argv[]) {
     logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));
-	window.set_title("KGLT Sample");
+    window.set_title("KGLT Sample");
 
     window.scene().render_options.wireframe_enabled = false;
     window.scene().render_options.texture_enabled = true;
@@ -38,10 +37,15 @@ int main(int argc, char* argv[]) {
     //Load the Quake 2 map
     window.loader_for("sample_data/sample.bsp")->into(window.scene());
 
+    kglt::Light& l = kglt::return_new_light(window.scene());
+    l.set_diffuse(kglt::Colour(1.0, 0.0, 0.0, 1.0));
+    l.set_attenuation_from_range(1000.0);
+    l.set_parent(&window.scene().active_camera());
+
     window.signal_key_down().connect(&on_key_down);
     window.signal_key_up().connect(&on_key_up);
 
-	while(window.update()) {
+    while(window.update()) {
         if(keys[kglt::KEY_CODE_LEFT]) {
             window.scene().active_camera().rotate_y(-4.0 * window.delta_time());
         }
@@ -51,12 +55,12 @@ int main(int argc, char* argv[]) {
         }
 
         if(keys[kglt::KEY_CODE_UP]) {
-            window.scene().active_camera().move_forward(15.0 * window.delta_time());
+            window.scene().active_camera().move_forward(100.0 * window.delta_time());
         }
         if(keys[kglt::KEY_CODE_DOWN]) {
-            window.scene().active_camera().move_forward(-15.0 * window.delta_time());
+            window.scene().active_camera().move_forward(-100.0 * window.delta_time());
         }
 
-	}
-	return 0;
+    }
+    return 0;
 }

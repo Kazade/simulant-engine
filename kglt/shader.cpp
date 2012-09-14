@@ -48,6 +48,12 @@ void ShaderParams::set_vec4(const std::string& uniform_name, const kmVec4& value
     program_.set_uniform(uniform_name, &values);
 }
 
+void ShaderParams::set_colour(const std::string& uniform_name, const Colour& values) {
+    kmVec4 tmp;
+    kmVec4Fill(&tmp, values.r, values.g, values.b, values.a);
+    set_vec4(uniform_name, tmp);
+}
+
 ShaderProgram::ShaderProgram(Scene *scene, ShaderID id):
     generic::Identifiable<ShaderID>(id),
     program_id_(0),

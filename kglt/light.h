@@ -29,21 +29,33 @@ public:
         range_(100.0) {
 
         kmVec3Fill(&direction_, 0.0, 0.0, 0.0);
-        kmVec4Fill(&ambient_, 0.2f, 0.2f, 0.2f, 0.2f);
-        kmVec4Fill(&diffuse_, 1.0f, 1.0f, 1.0f, 1.0f);
-        kmVec4Fill(&specular_, 1.0f, 1.0f, 1.0f, 1.0f);
-
-        set_attenuation(100.0, 1.0, 0.045, 0.0075);
+        set_ambient(kglt::Colour(0.2f, 0.2f, 0.2f, 0.2f));
+        set_diffuse(kglt::Colour(1.0f, 1.0f, 1.0f, 1.0f));
+        set_specular(kglt::Colour(1.0f, 1.0f, 1.0f, 1.0f));
+        set_attenuation_from_range(100.0);
     }
 
     void set_type(LightType type) { type_ = type; }
 
+    void set_diffuse(const kglt::Colour& colour) {
+        diffuse_ = colour;
+    }
+
+    void set_ambient(const kglt::Colour& colour) {
+        ambient_ = colour;
+    }
+
+    void set_specular(const kglt::Colour& colour) {
+        specular_ = colour;
+    }
+
     LightType type() const { return type_; }
-    kmVec4 ambient() const { return ambient_; }
-    kmVec4 diffuse() const { return diffuse_; }
-    kmVec4 specular() const { return specular_; }
+    kglt::Colour ambient() const { return ambient_; }
+    kglt::Colour diffuse() const { return diffuse_; }
+    kglt::Colour specular() const { return specular_; }
 
     void set_attenuation(float range, float constant, float linear, float quadratic);
+    void set_attenuation_from_range(float range);
 
     kmVec3 direction() const { return direction_; }
     float range() const { return range_; }
@@ -55,9 +67,9 @@ private:
     LightType type_;
 
     kmVec3 direction_;
-    kmVec4 ambient_;
-    kmVec4 diffuse_;
-    kmVec4 specular_;
+    kglt::Colour ambient_;
+    kglt::Colour diffuse_;
+    kglt::Colour specular_;
 
     float range_;
     float const_attenuation_;

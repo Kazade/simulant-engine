@@ -22,31 +22,23 @@ varying vec4 fragment_diffuse;
 
 uniform vec4 light_position;
 
-uniform float light_constant_attenuation;
-uniform float light_linear_attenuation;
-uniform float light_quadratic_attenuation;
-
 varying vec3 light_direction;
 varying vec3 fragment_normal;
 varying vec3 eye_vec;
-
-varying float attenuation;
+varying float dist;
 
 void main() {
-    gl_Position = modelview_projection_matrix * vec4(vertex_position, 1.0);
+    vec4 vertex = (modelview_projection_matrix * vec4(vertex_position, 1.0));
 
-    light_direction = light_position.xyz - gl_Position.xyz;
-
-    float d = length(light_direction);
-
-    attenuation = light_constant_attenuation /
-                        (1 + light_linear_attenuation*d) +
-                        (1 + light_quadratic_attenuation*d*d);
+    light_direction = light_position.xyz - vertex.xyz;
+    dist = length(light_direction);
 
     fragment_normal = vertex_normal;
-    eye_vec = -gl_Position.xyz;
+    eye_vec = -vertex.xyz;
     fragment_texcoord_1 = vertex_texcoord_1;
     fragment_diffuse = vertex_diffuse;
+
+    gl_Position = vertex;
 }
 
 )";
@@ -63,37 +55,45 @@ varying vec4 fragment_diffuse;
 
 uniform sampler2D texture_1;
 
+uniform vec4 global_ambient;
 uniform vec4 light_ambient;
 uniform vec4 light_diffuse;
 uniform vec4 light_specular;
 
+uniform float light_constant_attenuation;
+uniform float light_linear_attenuation;
+uniform float light_quadratic_attenuation;
+
 varying vec3 light_direction;
 varying vec3 fragment_normal;
 varying vec3 eye_vec;
-
-varying float attenuation;
+varying float dist;
 
 void main() {
-    vec4 material_ambient = vec4(1.0);
+    vec4 material_ambient = vec4(0.1, 0.1, 0.1, 1.0);
     vec4 material_diffuse = vec4(1.0);
-    vec4 material_specular = vec4(1.0);
-    float material_shininess = 1.0;
+    vec4 material_specular = vec4(0.1);
+    float material_shininess = 0.1;
 
     vec3 N = normalize(fragment_normal);
     vec3 L = normalize(light_direction);
 
     float lt = dot(N, L);
 
-    vec4 colour = (light_ambient * material_ambient);
+    float attenuation = 1.0 / (light_constant_attenuation +
+                               light_linear_attenuation * dist +
+                               light_quadratic_attenuation * dist * dist);
+
+    vec4 colour = global_ambient + (light_ambient * material_ambient * attenuation);
     if(lt > 0.0) {
-        colour += (light_diffuse * material_diffuse * fragment_diffuse * lt);
+        colour += light_diffuse * material_diffuse * lt * attenuation;
         vec3 E = normalize(eye_vec);
         vec3 R = reflect(-L, N);
         float specular = pow(max(dot(R, E), 0.0), material_shininess);
-        colour += (light_specular * material_specular * specular);
+        colour += (light_specular * material_specular * specular) * attenuation;
     }
 
-    gl_FragColor = texture2D(texture_1, fragment_texcoord_1.st) * colour * attenuation;
+    gl_FragColor = /*texture2D(texture_1, fragment_texcoord_1.st) * */ colour;
 }
 
 )";
@@ -107,6 +107,7 @@ Scene::Scene(WindowBase* window):
     default_texture_(0),
     default_shader_(0),
     default_material_(0),
+    ambient_light_(0.2, 0.2, 0.2, 1.0),
     background_(this),
     ui_interface_(new UI(this)),
     partitioner_(new NullPartitioner(*this)) {
@@ -173,6 +174,7 @@ void Scene::initialize_defaults() {
     def.params().register_auto(SP_AUTO_LIGHT_CONSTANT_ATTENUATION, "light_constant_attenuation");
     def.params().register_auto(SP_AUTO_LIGHT_LINEAR_ATTENUATION, "light_linear_attenuation");
     def.params().register_auto(SP_AUTO_LIGHT_QUADRATIC_ATTENUATION, "light_quadratic_attenuation");
+    def.params().register_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT, "global_ambient");
 
     //Bind the vertex attributes for the default shader and relink
     def.params().register_attribute(SP_ATTR_VERTEX_POSITION, "vertex_position");
@@ -189,6 +191,8 @@ void Scene::initialize_defaults() {
     Material& mat = material(default_material_);
     mat.technique().new_pass(default_shader_);
     mat.technique().pass(0).set_texture_unit(0, default_texture_);
+    mat.technique().pass(0).set_iteration(ITERATE_ONCE_PER_LIGHT, 8);
+
 }
 
 MeshID Scene::new_mesh(Object *parent) {

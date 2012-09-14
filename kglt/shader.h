@@ -32,6 +32,7 @@ enum ShaderAvailableAuto {
     SP_AUTO_MATERIAL_SPECULAR,
     SP_AUTO_MATERIAL_AMBIENT,
     SP_AUTO_MATERIAL_SHININESS,
+    SP_AUTO_LIGHT_GLOBAL_AMBIENT,
     SP_AUTO_LIGHT_POSITION,
     SP_AUTO_LIGHT_DIRECTION,
     SP_AUTO_LIGHT_DIFFUSE,
@@ -84,6 +85,7 @@ public:
     void set_mat3x3(const std::string& uniform_name, const kmMat3& values);
     void set_vec3(const std::string& uniform_name, const kmVec3& values);
     void set_vec4(const std::string& uniform_name, const kmVec4& values);
+    void set_colour(const std::string& uniform_name, const Colour& values);
 
     bool uses_auto(ShaderAvailableAuto auto_const) const { return container::contains(auto_uniforms_, auto_const); }
     bool uses_attribute(ShaderAvailableAttributes attr_const) const { return container::contains(auto_attributes_, attr_const); }

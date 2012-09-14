@@ -15,7 +15,7 @@ Element::Element(UI *ui):
     width_(0),
     height_(0),
     border_width_(1),
-    padding_({5, 5, 5, 5}),
+    padding_{5, 5, 5, 5},
     background_mesh_(0),
     border_mesh_(0) {
 

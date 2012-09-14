@@ -73,11 +73,11 @@ void GenericRenderer::set_auto_uniforms_on_shader(
     const std::vector<LightID>& lights_within_range,
     uint32_t iteration) {
 
-    if(s.params().uses_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX)) {
-        //Calculate the modelview-projection matrix
-        kmMat4 modelview_projection;
-        kmMat4Multiply(&modelview_projection, &projection().top(), &modelview().top());
+    //Calculate the modelview-projection matrix
+    kmMat4 modelview_projection;
+    kmMat4Multiply(&modelview_projection, &projection().top(), &modelview().top());
 
+    if(s.params().uses_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX)) {
         s.params().set_mat4x4(
             s.params().auto_uniform_variable_name(SP_AUTO_MODELVIEW_PROJECTION_MATRIX),
             modelview_projection
@@ -99,51 +99,102 @@ void GenericRenderer::set_auto_uniforms_on_shader(
     }
 
     if(s.params().uses_auto(SP_AUTO_LIGHT_POSITION)) {
+        //Transform the light position by the modelview matrix before
+        //passing to the shader
+        kmVec3 light_pos;
+        kmVec3Fill(&light_pos, 0, 0, 0);
+        if(iteration < lights_within_range.size()) {
+            light_pos = scene.light(lights_within_range.at(iteration)).position();
+        }
+
+        kmVec3Transform(&light_pos, &light_pos, &modelview_projection);
+
         s.params().set_vec4(
             s.params().auto_uniform_variable_name(SP_AUTO_LIGHT_POSITION),
-            Vec4(scene.light(lights_within_range.at(iteration)).position(), 1.0)
+            Vec4(light_pos, 1.0)
         );
     }
 
     if(s.params().uses_auto(SP_AUTO_LIGHT_AMBIENT)) {
-        s.params().set_vec4(
+        kglt::Colour ambient(0, 0, 0, 1);
+        if(iteration < lights_within_range.size()) {
+            ambient = scene.light(lights_within_range.at(iteration)).ambient();
+        }
+        s.params().set_colour(
             s.params().auto_uniform_variable_name(SP_AUTO_LIGHT_AMBIENT),
-            scene.light(lights_within_range.at(iteration)).ambient()
+            ambient
         );
     }
 
     if(s.params().uses_auto(SP_AUTO_LIGHT_DIFFUSE)) {
-        s.params().set_vec4(
+        kglt::Colour diffuse(0, 0, 0, 1);
+
+        if(iteration < lights_within_range.size()) {
+            diffuse = scene.light(lights_within_range.at(iteration)).diffuse();
+        }
+
+        s.params().set_colour(
             s.params().auto_uniform_variable_name(SP_AUTO_LIGHT_DIFFUSE),
-            scene.light(lights_within_range.at(iteration)).diffuse()
+            diffuse
         );
     }
 
     if(s.params().uses_auto(SP_AUTO_LIGHT_SPECULAR)) {
-        s.params().set_vec4(
+        kglt::Colour specular(0, 0, 0, 1);
+
+        if(iteration < lights_within_range.size()) {
+            specular = scene.light(lights_within_range.at(iteration)).specular();
+        }
+
+        s.params().set_colour(
             s.params().auto_uniform_variable_name(SP_AUTO_LIGHT_SPECULAR),
-            scene.light(lights_within_range.at(iteration)).specular()
+            specular
         );
     }
 
     if(s.params().uses_auto(SP_AUTO_LIGHT_CONSTANT_ATTENUATION)) {
+        float constant_attenuation = 1.0;
+
+        if(iteration < lights_within_range.size()) {
+            constant_attenuation = scene.light(lights_within_range.at(iteration)).constant_attenuation();
+        }
+
         s.params().set_float(
             s.params().auto_uniform_variable_name(SP_AUTO_LIGHT_CONSTANT_ATTENUATION),
-            scene.light(lights_within_range.at(iteration)).constant_attenuation()
+            constant_attenuation
         );
     }
 
     if(s.params().uses_auto(SP_AUTO_LIGHT_LINEAR_ATTENUATION)) {
+        float linear_attenuation = 1.0;
+
+        if(iteration < lights_within_range.size()) {
+            linear_attenuation = scene.light(lights_within_range.at(iteration)).linear_attenuation();
+        }
+
         s.params().set_float(
             s.params().auto_uniform_variable_name(SP_AUTO_LIGHT_LINEAR_ATTENUATION),
-            scene.light(lights_within_range.at(iteration)).constant_attenuation()
+            linear_attenuation
         );
     }
 
     if(s.params().uses_auto(SP_AUTO_LIGHT_QUADRATIC_ATTENUATION)) {
+        float quadratic_attenuation = 1.0;
+
+        if(iteration < lights_within_range.size()) {
+            quadratic_attenuation = scene.light(lights_within_range.at(iteration)).quadratic_attenuation();
+        }
+
         s.params().set_float(
             s.params().auto_uniform_variable_name(SP_AUTO_LIGHT_QUADRATIC_ATTENUATION),
-            scene.light(lights_within_range.at(iteration)).constant_attenuation()
+            quadratic_attenuation
+        );
+    }
+
+    if(s.params().uses_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT)) {
+        s.params().set_colour(
+            s.params().auto_uniform_variable_name(SP_AUTO_LIGHT_GLOBAL_AMBIENT),
+            scene.ambient_light()
         );
     }
 }
@@ -261,7 +312,12 @@ void GenericRenderer::render_mesh(Mesh& mesh, Scene& scene) {
             } else {
                 assert(0);
             }
+
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE); //Additive after first pass
         }
+
+        //FIXME: should restore whatever was before the loop
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         //Unbind the textures
         for(uint32_t j = 0; j < pass.texture_unit_count(); ++j) {
