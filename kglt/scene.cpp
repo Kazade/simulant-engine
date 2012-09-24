@@ -3,102 +3,9 @@
 #include "renderer.h"
 #include "ui.h"
 #include "partitioners/null_partitioner.h"
+#include "shaders/default_shaders.h"
 
 namespace kglt {
-
-const std::string get_default_vert_shader_120() {
-    const std::string default_vert_shader_120 = R"(
-#version 120
-
-attribute vec3 vertex_position;
-attribute vec2 vertex_texcoord_1;
-attribute vec4 vertex_diffuse;
-attribute vec3 vertex_normal;
-
-uniform mat4 modelview_projection_matrix;
-
-varying vec2 fragment_texcoord_1;
-varying vec4 fragment_diffuse;
-
-uniform vec4 light_position;
-
-varying vec3 light_direction;
-varying vec3 fragment_normal;
-varying vec3 eye_vec;
-varying float dist;
-
-void main() {
-    vec4 vertex = (modelview_projection_matrix * vec4(vertex_position, 1.0));
-
-    light_direction = light_position.xyz - vertex.xyz;
-    dist = length(light_direction);
-
-    fragment_normal = vertex_normal;
-    eye_vec = -vertex.xyz;
-    fragment_texcoord_1 = vertex_texcoord_1;
-    fragment_diffuse = vertex_diffuse;
-
-    gl_Position = vertex;
-}
-
-)";
-
-    return default_vert_shader_120;
-}
-
-const std::string get_default_frag_shader_120() {
-    const std::string default_frag_shader_120 = R"(
-#version 120
-
-varying vec2 fragment_texcoord_1;
-varying vec4 fragment_diffuse;
-
-uniform sampler2D texture_1;
-
-uniform vec4 global_ambient;
-uniform vec4 light_ambient;
-uniform vec4 light_diffuse;
-uniform vec4 light_specular;
-
-uniform float light_constant_attenuation;
-uniform float light_linear_attenuation;
-uniform float light_quadratic_attenuation;
-
-varying vec3 light_direction;
-varying vec3 fragment_normal;
-varying vec3 eye_vec;
-varying float dist;
-
-void main() {
-    vec4 material_ambient = vec4(0.1, 0.1, 0.1, 1.0);
-    vec4 material_diffuse = vec4(1.0);
-    vec4 material_specular = vec4(0.1);
-    float material_shininess = 0.1;
-
-    vec3 N = normalize(fragment_normal);
-    vec3 L = normalize(light_direction);
-
-    float lt = dot(N, L);
-
-    float attenuation = 1.0 / (light_constant_attenuation +
-                               light_linear_attenuation * dist +
-                               light_quadratic_attenuation * dist * dist);
-
-    vec4 colour = global_ambient + (light_ambient * material_ambient * attenuation);
-    if(lt > 0.0) {
-        colour += light_diffuse * material_diffuse * lt * attenuation;
-        vec3 E = normalize(eye_vec);
-        vec3 R = reflect(-L, N);
-        float specular = pow(max(dot(R, E), 0.0), material_shininess);
-        colour += (light_specular * material_specular * specular) * attenuation;
-    }
-
-    gl_FragColor = /*texture2D(texture_1, fragment_texcoord_1.st) * */ colour;
-}
-
-)";
-    return default_frag_shader_120;
-}
 
 Scene::Scene(WindowBase* window):
     Object(nullptr),
@@ -107,7 +14,7 @@ Scene::Scene(WindowBase* window):
     default_texture_(0),
     default_shader_(0),
     default_material_(0),
-    ambient_light_(0.2, 0.2, 0.2, 1.0),
+    ambient_light_(1.0, 1.0, 1.0, 1.0),
     background_(this),
     ui_interface_(new UI(this)),
     partitioner_(new NullPartitioner(*this)) {
@@ -162,25 +69,25 @@ void Scene::initialize_defaults() {
 
     assert(glGetError() == GL_NO_ERROR);
 
-    def.add_and_compile(SHADER_TYPE_VERTEX, get_default_vert_shader_120());
-    def.add_and_compile(SHADER_TYPE_FRAGMENT, get_default_frag_shader_120());
+    def.add_and_compile(SHADER_TYPE_VERTEX, ambient_render_vert);
+    def.add_and_compile(SHADER_TYPE_FRAGMENT, ambient_render_frag);
     def.activate();
 
     def.params().register_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX, "modelview_projection_matrix");
-    def.params().register_auto(SP_AUTO_LIGHT_POSITION, "light_position");
+/*    def.params().register_auto(SP_AUTO_LIGHT_POSITION, "light_position");
     def.params().register_auto(SP_AUTO_LIGHT_AMBIENT, "light_ambient");
     def.params().register_auto(SP_AUTO_LIGHT_SPECULAR, "light_specular");
     def.params().register_auto(SP_AUTO_LIGHT_DIFFUSE, "light_diffuse");
     def.params().register_auto(SP_AUTO_LIGHT_CONSTANT_ATTENUATION, "light_constant_attenuation");
     def.params().register_auto(SP_AUTO_LIGHT_LINEAR_ATTENUATION, "light_linear_attenuation");
-    def.params().register_auto(SP_AUTO_LIGHT_QUADRATIC_ATTENUATION, "light_quadratic_attenuation");
+    def.params().register_auto(SP_AUTO_LIGHT_QUADRATIC_ATTENUATION, "light_quadratic_attenuation");*/
     def.params().register_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT, "global_ambient");
 
     //Bind the vertex attributes for the default shader and relink
     def.params().register_attribute(SP_ATTR_VERTEX_POSITION, "vertex_position");
     def.params().register_attribute(SP_ATTR_VERTEX_TEXCOORD0, "vertex_texcoord_1");
     def.params().register_attribute(SP_ATTR_VERTEX_COLOR, "vertex_diffuse");
-    def.params().register_attribute(SP_ATTR_VERTEX_NORMAL, "vertex_normal");
+    //def.params().register_attribute(SP_ATTR_VERTEX_NORMAL, "vertex_normal");
 
     def.params().set_int("texture_1", 0); //Set texture_1 to be the first texture unit
 
