@@ -1,0 +1,28 @@
+#!/usr/bin/env python
+
+import sys
+
+def main():
+    # ./compile_to_c.py FILE [FILE] [FILE] [OUTPUT]
+    arguments = sys.argv[1:]
+    output = arguments[-1]
+    inputs = arguments[:-1]
+    
+    with open(output, "w") as fileout:
+        fileout.write("#ifndef %s\n" % output.replace(".", "_").upper())
+        fileout.write("#define %s\n\n" % output.replace(".", "_").upper())
+        fileout.write("#include <string>\n")
+    
+        for filein in inputs:
+            content = open(filein, "r").read()
+            
+            fileout.write("""
+const std::string %s = R"(
+    %s
+)";
+""" % (filein.replace(".", "_"), content))
+        fileout.write("#endif\n")
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main())
