@@ -28,11 +28,6 @@ Scene::Scene(WindowBase* window):
 
     active_camera_ = new_camera(); //Create a default camera
 
-    /*
-        TODO: Load the default shader which simply renders textured
-        polygons like the fixed function.
-    */
-
     //Set up the default render options
     render_options.wireframe_enabled = false;
     render_options.texture_enabled = true;
@@ -74,13 +69,6 @@ void Scene::initialize_defaults() {
     def.activate();
 
     def.params().register_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX, "modelview_projection_matrix");
-/*    def.params().register_auto(SP_AUTO_LIGHT_POSITION, "light_position");
-    def.params().register_auto(SP_AUTO_LIGHT_AMBIENT, "light_ambient");
-    def.params().register_auto(SP_AUTO_LIGHT_SPECULAR, "light_specular");
-    def.params().register_auto(SP_AUTO_LIGHT_DIFFUSE, "light_diffuse");
-    def.params().register_auto(SP_AUTO_LIGHT_CONSTANT_ATTENUATION, "light_constant_attenuation");
-    def.params().register_auto(SP_AUTO_LIGHT_LINEAR_ATTENUATION, "light_linear_attenuation");
-    def.params().register_auto(SP_AUTO_LIGHT_QUADRATIC_ATTENUATION, "light_quadratic_attenuation");*/
     def.params().register_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT, "global_ambient");
 
     //Bind the vertex attributes for the default shader and relink
@@ -93,13 +81,33 @@ void Scene::initialize_defaults() {
 
     def.relink();
 
+    phong_shader_ = new_shader();
+    ShaderProgram& phong = shader(phong_shader_);
+    phong.add_and_compile(SHADER_TYPE_VERTEX, phong_lighting_vert);
+    phong.add_and_compile(SHADER_TYPE_FRAGMENT, phong_lighting_frag);
+    phong.activate();
+    
+    phong.params().register_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX, "modelview_projection_matrix");
+    phong.params().register_auto(SP_AUTO_LIGHT_POSITION, "light_position");
+    phong.params().register_auto(SP_AUTO_LIGHT_AMBIENT, "light_ambient");
+    phong.params().register_auto(SP_AUTO_LIGHT_SPECULAR, "light_specular");
+    phong.params().register_auto(SP_AUTO_LIGHT_DIFFUSE, "light_diffuse");
+    phong.params().register_auto(SP_AUTO_LIGHT_CONSTANT_ATTENUATION, "light_constant_attenuation");
+    phong.params().register_auto(SP_AUTO_LIGHT_LINEAR_ATTENUATION, "light_linear_attenuation");
+    phong.params().register_auto(SP_AUTO_LIGHT_QUADRATIC_ATTENUATION, "light_quadratic_attenuation");
+
+    phong.params().register_attribute(SP_ATTR_VERTEX_POSITION, "vertex_position");
+    phong.relink();
+
     //Finally create the default material to link them
     default_material_ = new_material();
     Material& mat = material(default_material_);
     mat.technique().new_pass(default_shader_);
+    mat.technique().new_pass(phong_shader_);
+    
     mat.technique().pass(0).set_texture_unit(0, default_texture_);
-    mat.technique().pass(0).set_iteration(ITERATE_ONCE_PER_LIGHT, 8);
-
+    mat.technique().pass(0).set_iteration(ITERATE_ONCE);
+    mat.technique().pass(1).set_iteration(ITERATE_ONCE_PER_LIGHT, 8);
 }
 
 MeshID Scene::new_mesh(Object *parent) {

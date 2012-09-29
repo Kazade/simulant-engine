@@ -275,6 +275,7 @@ void GenericRenderer::render_mesh(Mesh& mesh, Scene& scene) {
         VERTEX_ATTRIBUTE_NORMAL
     );
 
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     for(uint32_t i = 0; i < technique.pass_count(); ++i) {
         MaterialPass& pass = technique.pass(i);
 
@@ -312,8 +313,6 @@ void GenericRenderer::render_mesh(Mesh& mesh, Scene& scene) {
             } else {
                 assert(0);
             }
-
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE); //Additive after first pass
         }
 
         //FIXME: should restore whatever was before the loop
@@ -329,6 +328,8 @@ void GenericRenderer::render_mesh(Mesh& mesh, Scene& scene) {
         glDisableVertexAttribArray(1);
         glDisableVertexAttribArray(2);
         glDisableVertexAttribArray(3);
+
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE); //Additive after first pass
     }
 
     glPopAttrib();

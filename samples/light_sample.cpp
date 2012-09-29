@@ -15,6 +15,7 @@ int main(int argc, char* argv[]) {
     );
 
     kglt::Scene& scene = window.scene();
+    scene.set_ambient_light(kglt::Colour(0.2, 0.2, 0.2, 1.0));
 
     kglt::Mesh& mesh = kglt::return_new_mesh(scene);
     kglt::procedural::mesh::cube(mesh, 3.0);
