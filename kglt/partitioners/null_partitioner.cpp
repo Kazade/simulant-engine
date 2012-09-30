@@ -13,9 +13,9 @@ std::vector<LightID> NullPartitioner::lights_within_range(const kmVec3& location
         kmVec3 diff;
         kmVec3Subtract(&diff, &location, &light.position());
         float dist = kmVec3Length(&diff);
-        if(dist < light.range()) {
+        //if(dist < light.range()) {
             lights_in_range.push_back(std::make_pair(light_id, dist));
-        }
+        //}
     }
 
     //Sort them by distance

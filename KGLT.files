@@ -237,3 +237,4 @@ kglt/partitioners/null_partitioner.cpp
 samples/light_sample.cpp
 kglt/procedural/mesh/cube.h
 kglt/procedural/mesh/cube.cpp
+kglt/shaders/default_shaders.h

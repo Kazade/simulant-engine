@@ -29,7 +29,7 @@ public:
         range_(100.0) {
 
         kmVec3Fill(&direction_, 0.0, 0.0, 0.0);
-        set_ambient(kglt::Colour(0.2f, 0.2f, 0.2f, 0.2f));
+        set_ambient(kglt::Colour(0.2f, 0.2f, 0.2f, 1.0f));
         set_diffuse(kglt::Colour(1.0f, 1.0f, 1.0f, 1.0f));
         set_specular(kglt::Colour(1.0f, 1.0f, 1.0f, 1.0f));
         set_attenuation_from_range(100.0);

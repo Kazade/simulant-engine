@@ -10,10 +10,13 @@
 #include "../types.h"
 
 #include "kazbase/logging/logging.h"
+#include "kazbase/string.h"
 #include "kazmath/vec3.h"
 #include "kazmath/mat4.h"
 
 #include "q2bsp_loader.h"
+
+#include "kglt/shortcuts.h"
 
 namespace kglt  {
 namespace loaders {
@@ -173,6 +176,44 @@ kmVec3 find_player_spawn_point(std::vector<EntityProperties>& entities) {
     return none;
 }
 
+void add_lights_to_scene(Scene& scene, const std::vector<EntityProperties>& entities) {
+    //Needed because the Quake 2 coord system is weird
+    kmMat4 rotation;
+    kmMat4RotationX(&rotation, kmDegreesToRadians(-90.0f));
+
+    for(EntityProperties props: entities) {
+        if(props["classname"] == "light") {
+            kmVec3 pos;
+            std::istringstream origin(props["origin"]);
+            origin >> pos.x >> pos.y >> pos.z;
+
+            kglt::Light& new_light = kglt::return_new_light(scene);
+
+            kmVec3Transform(&pos, &pos, &rotation);
+            new_light.move_to(pos.x, pos.y, pos.z);
+
+            float range = 300; //Default in Q2
+            if(container::contains(props, std::string("light"))) {
+                std::string tmp = props["light"];
+                std::istringstream value(tmp);
+                value >> range;
+            }
+
+            if(container::contains(props, std::string("_color"))) {
+                kglt::Colour diffuse;
+                std::istringstream value(props["_color"]);
+                value >> diffuse.r >> diffuse.g >> diffuse.b;
+                diffuse.a = 1.0;
+                new_light.set_diffuse(diffuse);
+            }
+
+
+            std::cout << "Creating light at: " << pos.x << ", " << pos.y << ", " << pos.z << std::endl;
+            new_light.set_attenuation_from_range(range * 4);
+        }
+    }
+}
+
 void Q2BSPLoader::into(Loadable& resource) {
     Loadable* res_ptr = &resource;
     Scene* scene = dynamic_cast<Scene*>(res_ptr);
@@ -208,6 +249,8 @@ void Q2BSPLoader::into(Loadable& resource) {
     parse_entities(entity_string, entities);
     scene->active_camera().position() = find_player_spawn_point(entities);
     kmVec3Transform(&scene->active_camera().position(), &scene->active_camera().position(), &rotation);
+
+    add_lights_to_scene(*scene, entities);
 
     int32_t num_vertices = header.lumps[Q2::LumpType::VERTICES].length / sizeof(Q2::Point3f);
     std::vector<Q2::Point3f> vertices(num_vertices);
@@ -249,9 +292,8 @@ void Q2BSPLoader::into(Loadable& resource) {
     std::map<std::string, std::pair<uint32_t, uint32_t> > texture_dimensions;
 
     for(Q2::TextureInfo& tex: textures) {
-        MaterialID material_id = scene->new_material();
+        MaterialID material_id = scene->new_material(scene->default_material()); //Duplicate the default material
         Material& mat = scene->material(material_id);
-        mat.technique().new_pass(scene->default_shader()); //Create a pass for the material
 
         kmVec3 u_axis, v_axis;
         kmVec3Fill(&u_axis, tex.u_axis.x, tex.u_axis.y, tex.u_axis.z);

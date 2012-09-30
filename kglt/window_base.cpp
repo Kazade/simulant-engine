@@ -6,16 +6,20 @@
 
 namespace kglt {
     
-bool WindowBase::update() {
+void WindowBase::init() {
     static bool initialized = false;
     if(!initialized) {
         assert(width_ && "Subclass should've set the window width by now");
         assert(height_ && "Subclass should've set the window height by now");
-    
+
         scene().init();
         initialized = true;
     }
-    
+}
+
+bool WindowBase::update() {    
+    init(); //Make sure we were initialized
+
     idle_.execute(); //Execute idle tasks first   
     check_events();
 

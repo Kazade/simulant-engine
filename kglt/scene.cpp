@@ -97,6 +97,7 @@ void Scene::initialize_defaults() {
     phong.params().register_auto(SP_AUTO_LIGHT_QUADRATIC_ATTENUATION, "light_quadratic_attenuation");
 
     phong.params().register_attribute(SP_ATTR_VERTEX_POSITION, "vertex_position");
+    phong.params().register_attribute(SP_ATTR_VERTEX_NORMAL, "vertex_normal");
     phong.relink();
 
     //Finally create the default material to link them
@@ -139,8 +140,30 @@ void Scene::delete_mesh(MeshID mid) {
     return TemplatedManager<Scene, Mesh, MeshID>::manager_delete(mid);
 }
 
-MaterialID Scene::new_material() {
-    return TemplatedManager<Scene, Material, MaterialID>::manager_new();
+MaterialID Scene::new_material(MaterialID clone_from) {
+    MaterialID result = TemplatedManager<Scene, Material, MaterialID>::manager_new();
+    if(clone_from > 0) {
+        kglt::Material& existing = material(clone_from);
+        kglt::Material& new_mat = material(result);
+
+        for(uint32_t i = 0; i < existing.technique_count(); ++i) {
+            //FIXME: handle multiple schemes
+            MaterialTechnique& old_tech = existing.technique();
+            MaterialTechnique& new_tech = new_mat.technique();
+            for(uint32_t j = 0; j < old_tech.pass_count(); ++j) {
+                MaterialPass& old_pass = old_tech.pass(j);
+                uint32_t pass_id = new_tech.new_pass(old_pass.shader());
+                MaterialPass& new_pass = new_tech.pass(pass_id);
+
+                new_pass.set_iteration(old_pass.iteration(), old_pass.max_iterations());
+                for(uint32_t k = 0; k < old_pass.texture_unit_count(); ++k) {
+                    new_pass.set_texture_unit(k, old_pass.texture_unit(k).texture());
+                }
+                //FIXME: Copy animated texture unit and other properties
+            }
+        }
+    }
+    return result;
 }
 
 Material& Scene::material(MaterialID mid) {

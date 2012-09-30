@@ -330,6 +330,7 @@ void GenericRenderer::render_mesh(Mesh& mesh, Scene& scene) {
         glDisableVertexAttribArray(3);
 
         glBlendFunc(GL_SRC_ALPHA, GL_ONE); //Additive after first pass
+        assert(glGetError() == GL_NO_ERROR);
     }
 
     glPopAttrib();

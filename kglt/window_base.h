@@ -34,6 +34,8 @@ public:
         ktiStartGameTimer();
     }
     
+    void init();
+
     virtual ~WindowBase() {
         
     }
@@ -116,6 +118,7 @@ private:
     KTIuint timer_;
 
     void destroy() {}
+
 };
 
 }

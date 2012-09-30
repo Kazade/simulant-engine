@@ -67,7 +67,7 @@ public:
     FontID new_font();
     TextID new_text();
     OverlayID new_overlay(); ///< Creates a new overlay
-    MaterialID new_material();
+    MaterialID new_material(MaterialID clone_from=0);
     LightID new_light(Object* parent=nullptr, LightType type=LIGHT_TYPE_POINT);
 
     bool has_mesh(MeshID m) const;

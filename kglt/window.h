@@ -10,6 +10,8 @@ namespace kglt {
 
 class Window : public WindowBase {
 public:
+    typedef std::tr1::shared_ptr<Window> ptr;
+
     Window(int width=640, int height=480, int bpp=0);
     virtual ~Window();
 
@@ -20,6 +22,12 @@ public:
     sigc::signal<void, KeyCode>& signal_key_down() { return signal_key_pressed_; }
     sigc::signal<void, KeyCode>& signal_key_up() { return signal_key_released_; }
     
+    static kglt::Window::ptr create(int width=640, int height=480, int bpp=0) {
+        kglt::Window::ptr new_window(new kglt::Window(width, height, bpp));
+        new_window->init();
+        return new_window;
+    }
+
 private:
     SDL_Surface* surface_;
 

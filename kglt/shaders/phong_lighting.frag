@@ -5,7 +5,6 @@ varying vec4 fragment_diffuse;
 
 uniform sampler2D texture_1;
 
-uniform vec4 global_ambient;
 uniform vec4 light_ambient;
 uniform vec4 light_diffuse;
 uniform vec4 light_specular;
@@ -34,7 +33,7 @@ void main() {
                                light_linear_attenuation * dist +
                                light_quadratic_attenuation * dist * dist);
 
-    vec4 colour = global_ambient + (light_ambient * material_ambient * attenuation);
+    vec4 colour = (light_ambient * material_ambient * attenuation);
     if(lt > 0.0) {
         colour += light_diffuse * material_diffuse * lt * attenuation;
         vec3 E = normalize(eye_vec);
@@ -43,6 +42,6 @@ void main() {
         colour += (light_specular * material_specular * specular) * attenuation;
     }
 
-    gl_FragColor = /*texture2D(texture_1, fragment_texcoord_1.st) * */ colour;
+    gl_FragColor = colour;
 }
 
