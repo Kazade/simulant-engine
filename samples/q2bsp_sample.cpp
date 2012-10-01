@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
     window->set_title("Quake 2 Renderer");
 
     kglt::Scene& scene = window->scene();
-    scene.set_ambient_light(kglt::Colour(0.1, 0.1, 0.1, 1.0));
+    scene.set_ambient_light(kglt::Colour(0.02, 0.02, 0.02, 1.0));
 
     scene.active_camera().set_perspective_projection(
         45.0,
