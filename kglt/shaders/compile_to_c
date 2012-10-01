@@ -18,7 +18,7 @@ def main():
             
             fileout.write("""
 const std::string %s = R"(
-    %s
+%s
 )";
 """ % (filein.replace(".", "_"), content))
         fileout.write("#endif\n")
