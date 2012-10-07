@@ -25,7 +25,7 @@ public:
     virtual void relocate(Light& obj) = 0;
 
     virtual std::vector<LightID> lights_within_range(const kmVec3& location) = 0;
-    virtual std::set<MeshID> meshes_visible_from(const Camera& camera) = 0;
+    virtual std::set<MeshID> meshes_visible_from(CameraID camera_id, SceneGroupID scene_group_id=0) = 0;
 
 protected:
     Scene& scene() { return scene_; }

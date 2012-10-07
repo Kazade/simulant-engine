@@ -12,10 +12,11 @@ class SceneGroup :
     public Relatable {
 
 public:
+    typedef std::tr1::shared_ptr<SceneGroup> ptr;
+
     ReverseRelation<SceneGroup, Mesh> meshes;
 
-    SceneGroup(Scene& parent, uint32_t priority);
-    uint32_t priority() const { return priority_; }
+    SceneGroup(Scene& parent);
 
 private:
     uint32_t priority_;

@@ -34,7 +34,7 @@ public:
     void relocate(Light& obj) {}
 
     std::vector<LightID> lights_within_range(const kmVec3& location);
-    std::set<MeshID> meshes_visible_from(const Camera& camera);
+    std::set<MeshID> meshes_visible_from(CameraID camera_id, SceneGroupID scene_group_id=0);
 
 private:
     std::set<MeshID> all_meshes_;

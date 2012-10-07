@@ -30,7 +30,7 @@ std::vector<LightID> NullPartitioner::lights_within_range(const kmVec3& location
     return result;
 }
 
-std::set<MeshID> NullPartitioner::meshes_visible_from(const Camera& camera) {
+std::set<MeshID> NullPartitioner::meshes_visible_from(CameraID camera_id, SceneGroupID scene_group_id) {
     //Just return all of the meshes
     return all_meshes_;
 }

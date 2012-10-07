@@ -47,9 +47,9 @@ typedef uint32_t CameraID;
 typedef uint32_t ShaderID;
 typedef uint32_t FontID;
 typedef uint32_t TextID;
-typedef uint32_t OverlayID;
 typedef uint32_t MaterialID;
 typedef uint32_t LightID;
+typedef uint32_t SceneGroupID;
 
 const CameraID DefaultCameraID = 0;
 
@@ -60,6 +60,7 @@ class Light;
 class Scene;
 class Camera;
 class SceneGroup;
+class ShaderProgram;
 
 }
 

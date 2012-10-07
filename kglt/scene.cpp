@@ -8,16 +8,17 @@
 namespace kglt {
 
 Scene::Scene(WindowBase* window):
-    Object(nullptr),
-    active_camera_(DefaultCameraID),
+    Object(nullptr),    
     window_(window),
+    default_camera_(0),
+    default_scene_group_(0),
     default_texture_(0),
     default_shader_(0),
     default_material_(0),
     ambient_light_(1.0, 1.0, 1.0, 1.0),
     background_(this),
     ui_interface_(new UI(this)),
-    partitioner_(new NullPartitioner(*this)) {
+    pipeline_(new Pipeline(*this)) {
 
     TemplatedManager<Scene, Mesh, MeshID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Mesh, MeshID>));
     TemplatedManager<Scene, Camera, CameraID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Camera, CameraID>));
@@ -25,20 +26,6 @@ Scene::Scene(WindowBase* window):
     TemplatedManager<Scene, ShaderProgram, ShaderID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_shader_callback));
 
     background().set_parent(this);
-
-    active_camera_ = new_camera(); //Create a default camera
-
-    //Set up the default render options
-    render_options.wireframe_enabled = false;
-    render_options.texture_enabled = true;
-    render_options.backface_culling_enabled = true;
-    render_options.point_size = 1;
-
-    /**
-     * Create the default pass, which uses a perspective projection and
-     * a fullscreen viewport
-     */
-     add_pass(GenericRenderer::create(render_options), VIEWPORT_TYPE_FULL);
 }
 
 Scene::~Scene() {
@@ -46,6 +33,9 @@ Scene::~Scene() {
 }
 
 void Scene::initialize_defaults() {
+    default_camera_ = new_camera(); //Create a default camera
+    default_scene_group_ = new_scene_group();
+
     //Create the default blank texture
     default_texture_ = new_texture();
     Texture& tex = texture(default_texture_);
@@ -224,6 +214,22 @@ void Scene::delete_font(FontID f) {
     TemplatedManager<Scene, Font, FontID>::manager_delete(f);
 }
 
+SceneGroupID Scene::new_scene_group() {
+    return TemplatedManager<Scene, SceneGroup, SceneGroupID>::manager_new();
+}
+
+SceneGroup& Scene::scene_group(SceneGroupID group) {
+    if(group > 0) {
+        return TemplatedManager<Scene, SceneGroup, SceneGroupID>::manager_get(group);
+    } else {
+        return TemplatedManager<Scene, SceneGroup, SceneGroupID>::manager_get(default_scene_group_);
+    }
+}
+
+void Scene::delete_scene_group(SceneGroupID group) {
+    TemplatedManager<Scene, SceneGroup, SceneGroupID>::manager_delete(group);
+}
+
 TextID Scene::new_text() {
     return TemplatedManager<Scene, Text, TextID>::manager_new();
 }
@@ -240,24 +246,6 @@ void Scene::delete_text(TextID tid) {
     Text& obj = text(tid);
     obj.destroy_children();
     TemplatedManager<Scene, Text, TextID>::manager_delete(tid);
-}
-
-OverlayID Scene::new_overlay() {
-    return TemplatedManager<Scene, Overlay, OverlayID>::manager_new();
-}
-
-bool Scene::has_overlay(OverlayID o) const {
-    return TemplatedManager<Scene, Overlay, OverlayID>::manager_contains(o);
-}
-
-Overlay& Scene::overlay(OverlayID overlay) {
-    return TemplatedManager<Scene, Overlay, OverlayID>::manager_get(overlay);
-}
-
-void Scene::delete_overlay(OverlayID oid) {
-    Overlay& obj = overlay(oid);
-    obj.destroy_children();
-    TemplatedManager<Scene, Overlay, OverlayID>::manager_delete(oid);
 }
 
 LightID Scene::new_light(Object* parent, LightType type) {

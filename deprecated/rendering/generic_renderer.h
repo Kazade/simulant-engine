@@ -5,6 +5,7 @@
 
 #include "../renderer.h"
 #include "../generic/creator.h"
+#include "../types.h"
 
 namespace kglt {
 

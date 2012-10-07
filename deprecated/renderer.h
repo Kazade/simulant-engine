@@ -10,7 +10,6 @@
 #include "text.h"
 #include "mesh.h"
 #include "background.h"
-#include "overlay.h"
 
 namespace kglt {
 	
@@ -26,7 +25,7 @@ public:
     BaseRenderer(const RenderOptions& options=RenderOptions()):
         options_(options) {
 
-         Visits(*this, Loki::Seq<Object, Mesh, Text, Background, Overlay>::Type());
+         Visits(*this, Loki::Seq<Object, Mesh, Text, Background>::Type());
     }
 
     virtual ~BaseRenderer() {}
@@ -41,9 +40,6 @@ public:
     virtual void visit(Mesh& object) = 0;
     virtual void visit(Text& object) = 0;
     virtual void visit(Background& object) = 0;
-    virtual void visit(Overlay& overlay) {
-        kmMat4Assign(&projection().top(), &overlay.projection_matrix());
-    }
 
     virtual void _initialize(Scene& scene) {}
 

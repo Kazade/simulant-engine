@@ -108,10 +108,6 @@ kglt/procedural/mesh/rectangle.cpp
 kglt/procedural/mesh/rectangle.h
 kglt/procedural/mesh.h
 kglt/rendering/batch.h
-kglt/rendering/generic_renderer.cpp
-kglt/rendering/generic_renderer.h
-kglt/rendering/selection_renderer.cpp
-kglt/rendering/selection_renderer.h
 kglt/soil/image_DXT.c
 kglt/soil/image_DXT.h
 kglt/soil/image_helper.c
@@ -143,10 +139,6 @@ kglt/object.cpp
 kglt/object.h
 kglt/option_list.cpp
 kglt/option_list.h
-kglt/pass.cpp
-kglt/pass.h
-kglt/renderer.cpp
-kglt/renderer.h
 kglt/scene.cpp
 kglt/scene.h
 kglt/shader.cpp
@@ -204,8 +196,6 @@ samples/text_sample.cpp
 kglt/frustum.h
 kglt/frustum.cpp
 tests/test_frustum.cpp
-kglt/overlay.h
-kglt/overlay.cpp
 tests/test_overlay.cpp
 kglt/generic/visitor.h
 kglt/generic/tree.h
@@ -242,3 +232,6 @@ kglt/scene_group.h
 kglt/scene_group.cpp
 kglt/generic/relation.h
 tests/test_relation.cpp
+samples/new_pipeline_sample.cpp
+kglt/pipeline.h
+kglt/pipeline.cpp
