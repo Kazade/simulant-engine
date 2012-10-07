@@ -1,17 +1,20 @@
 #ifndef KGLT_SCENE_GROUP_H
 #define KGLT_SCENE_GROUP_H
 
+#include "generic/relation.h"
 #include "generic/identifiable.h"
+#include "types.h"
 
 namespace kglt {
 
 class SceneGroup :
-    public generic::Identifiable<SceneGroupID> {
+    public generic::Identifiable<SceneGroupID>,
+    public Relatable {
 
 public:
-    SceneGroup(Scene& parent, uint32_t priority);
-    void add_pass(CameraID camera_id, ViewportType viewport, TextureID target=0);
+    ReverseRelation<SceneGroup, Mesh> meshes;
 
+    SceneGroup(Scene& parent, uint32_t priority);
     uint32_t priority() const { return priority_; }
 
 private:

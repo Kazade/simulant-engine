@@ -8,6 +8,7 @@ namespace kglt {
 Mesh::Mesh(Scene* parent, MeshID id):
     Object(parent),
     Identifiable<MeshID>(id),
+    scene_group(this),
     is_submesh_(false),
     use_parent_vertices_(false),
     material_(0),

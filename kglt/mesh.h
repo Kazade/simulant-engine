@@ -8,6 +8,7 @@
 #include "types.h"
 #include "generic/identifiable.h"
 #include "generic/visitor.h"
+#include "generic/relation.h"
 
 namespace kglt {
 
@@ -81,9 +82,12 @@ enum VertexAttribute {
 
 class Mesh :
     public Object,
-    public generic::Identifiable<MeshID> {
+    public generic::Identifiable<MeshID>,
+    public Relatable {
 
 public:
+    Relation<Mesh, SceneGroup> scene_group;
+
     VIS_DEFINE_VISITABLE();
 
     typedef std::tr1::shared_ptr<Mesh> ptr;

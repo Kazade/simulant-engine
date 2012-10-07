@@ -59,6 +59,7 @@ class Mesh;
 class Light;
 class Scene;
 class Camera;
+class SceneGroup;
 
 }
 

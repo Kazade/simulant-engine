@@ -238,3 +238,7 @@ samples/light_sample.cpp
 kglt/procedural/mesh/cube.h
 kglt/procedural/mesh/cube.cpp
 kglt/shaders/default_shaders.h
+kglt/scene_group.h
+kglt/scene_group.cpp
+kglt/generic/relation.h
+tests/test_relation.cpp
