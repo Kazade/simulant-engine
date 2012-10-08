@@ -25,7 +25,6 @@
 #include "light.h"
 #include "scene_group.h"
 
-#include "rendering/generic_renderer.h"
 #include "pipeline.h"
 
 #include "generic/visitor.h"
@@ -125,6 +124,13 @@ public:
     kglt::Colour ambient_light() const { return ambient_light_; }
     void set_ambient_light(const kglt::Colour& c) { ambient_light_ = c; }
 
+    sigc::signal<void, Mesh&>& signal_mesh_created() { return signal_mesh_created_; }
+    sigc::signal<void, Mesh&>& signal_mesh_destroyed() { return signal_mesh_destroyed_; }
+
+    sigc::signal<void, Light&>& signal_light_created() { return signal_light_created_; }
+    sigc::signal<void, Light&>& signal_light_destroyed() { return signal_light_destroyed_; }
+
+    Pipeline& pipeline() { return *pipeline_; }
 private:
     std::map<std::string, ShaderID> shader_lookup_;
 
@@ -144,6 +150,12 @@ private:
     std::tr1::shared_ptr<UI> ui_interface_;
 
     Pipeline::ptr pipeline_;
+
+    sigc::signal<void, Mesh&> signal_mesh_created_;
+    sigc::signal<void, Mesh&> signal_mesh_destroyed_;
+
+    sigc::signal<void, Light&> signal_light_created_;
+    sigc::signal<void, Light&> signal_light_destroyed_;
 };
 
 }

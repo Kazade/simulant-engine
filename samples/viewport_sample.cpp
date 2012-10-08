@@ -8,19 +8,12 @@ int main(int argc, char* argv[]) {
 	
 	//scene.pass().viewport().configure(VIEWPORT_16_BY_9);
 	
-	scene.remove_all_passes();
-	scene.add_pass(
-        kglt::Renderer::ptr(new kglt::GenericRenderer()),
-		kglt::VIEWPORT_TYPE_VERTICAL_SPLIT_LEFT
-	);
-	
-	scene.add_pass(
-        kglt::Renderer::ptr(new kglt::GenericRenderer()),
-		kglt::VIEWPORT_TYPE_VERTICAL_SPLIT_RIGHT
-	);
-	
-	scene.pass(0).viewport().set_background_colour(kglt::Colour(1.0, 0, 0, 0));
-	scene.pass(1).viewport().set_background_colour(kglt::Colour(0, 1.0, 0, 0));
+    scene.pipeline().remove_all_passes();
+    scene.pipeline().add_pass(0, 0, 0, kglt::VIEWPORT_TYPE_VERTICAL_SPLIT_LEFT);
+    scene.pipeline().add_pass(0, 0, 0, kglt::VIEWPORT_TYPE_VERTICAL_SPLIT_RIGHT);
+
+//	scene.pass(0).viewport().set_background_colour(kglt::Colour(1.0, 0, 0, 0));
+//	scene.pass(1).viewport().set_background_colour(kglt::Colour(0, 1.0, 0, 0));
 	
 	//Create a cube mesh
 	kglt::Mesh& mesh = kglt::return_new_mesh(scene);	

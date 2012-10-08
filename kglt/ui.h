@@ -24,9 +24,7 @@ public:
 
     template<typename Element, typename ElementID>
     void post_create_callback(Element& element, ElementID id) {
-        Overlay& overlay = scene_.overlay(overlay_);
         element._initialize(scene_);
-        element.set_parent(&overlay);
         element.set_font(default_font_id_);
     }
 
@@ -53,8 +51,6 @@ private:
     boost::mutex ui_lock_;
 
     kmMat4 tmp_projection_;
-
-    OverlayID overlay_;
 };
 
 }

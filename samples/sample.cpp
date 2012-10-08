@@ -20,7 +20,6 @@ int main(int argc, char* argv[]) {
     kglt::MeshID mid = window.scene().new_mesh();
     kglt::Mesh& mesh = window.scene().mesh(mid);
 
-    window.scene().render_options.backface_culling_enabled = false;
     /**
         Once we have the reference to a base object, we can
         manipulate it easily
@@ -49,7 +48,7 @@ int main(int argc, char* argv[]) {
 	//Apply the texture to the mesh
     mesh.apply_material(matid);
 
-    window.scene().active_camera().set_orthographic_projection_from_height(2.0, (float) window.width() / (float)window.height());
+    window.scene().camera().set_orthographic_projection_from_height(2.0, (float) window.width() / (float)window.height());
 
 	while(window.update()) {}
 	return 0;

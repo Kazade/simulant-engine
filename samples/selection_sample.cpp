@@ -3,6 +3,11 @@
 
 int main(int argc, char* argv[]) {
 	//Set up logging to stdio
+
+/** FIXME:
+ *  THIS SAMPLE IS TOTALLY BROKEN AS IT SHOULD BE IMPLEMENTED
+ *  IN TERMS OF PASSES RATHER THAN A SEPARATE RENDERER
+ *
 	logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));
 		
 	kglt::Window window;	
@@ -45,6 +50,6 @@ int main(int argc, char* argv[]) {
 		} 
 		last_hovered_mesh = hovered_mesh;		
 	}
-	
+    */
 	return 0;
 }

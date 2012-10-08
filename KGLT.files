@@ -107,7 +107,6 @@ kglt/loaders/wavefront_loader.h
 kglt/procedural/mesh/rectangle.cpp
 kglt/procedural/mesh/rectangle.h
 kglt/procedural/mesh.h
-kglt/rendering/batch.h
 kglt/soil/image_DXT.c
 kglt/soil/image_DXT.h
 kglt/soil/image_helper.c
@@ -196,7 +195,6 @@ samples/text_sample.cpp
 kglt/frustum.h
 kglt/frustum.cpp
 tests/test_frustum.cpp
-tests/test_overlay.cpp
 kglt/generic/visitor.h
 kglt/generic/tree.h
 tests/test_tree.cpp
@@ -235,3 +233,7 @@ tests/test_relation.cpp
 samples/new_pipeline_sample.cpp
 kglt/pipeline.h
 kglt/pipeline.cpp
+kglt/renderer.h
+kglt/renderers/generic_renderer.h
+kglt/renderers/generic_renderer.cpp
+kglt/renderer.cpp

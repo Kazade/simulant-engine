@@ -6,8 +6,7 @@ int main(int argc, char* argv[]) {
 
     kglt::Window window;
 
-    window.scene().render_options.backface_culling_enabled = false;
-    window.scene().active_camera().set_perspective_projection(
+    window.scene().camera().set_perspective_projection(
         45.0,
         float(window.width()) / float(window.height()),
         0.1,

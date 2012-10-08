@@ -1,6 +1,8 @@
 #ifndef KGLT_SCENE_GROUP_H
 #define KGLT_SCENE_GROUP_H
 
+#include <tr1/memory>
+
 #include "generic/relation.h"
 #include "generic/identifiable.h"
 #include "types.h"
@@ -16,7 +18,7 @@ public:
 
     ReverseRelation<SceneGroup, Mesh> meshes;
 
-    SceneGroup(Scene& parent);
+    SceneGroup(Scene* parent, SceneGroupID id);
 
 private:
     uint32_t priority_;

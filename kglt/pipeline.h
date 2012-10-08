@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <tr1/memory>
+#include <sigc++/sigc++.h>
 
 #include "types.h"
 #include "viewport.h"
@@ -29,6 +30,13 @@ private:
     friend class Pipeline;
 };
 
+struct RenderOptions {
+    bool wireframe_enabled;
+    bool texture_enabled;
+    bool backface_culling_enabled;
+    uint8_t point_size;
+};
+
 class Pipeline {
 public:
     typedef std::tr1::shared_ptr<Pipeline> ptr;
@@ -42,6 +50,7 @@ public:
     //void set_batcher(Batcher::ptr batcher);
     void set_renderer(Renderer::ptr renderer);
 
+    void run();
     void run_pass(uint32_t index);
 
     sigc::signal<void, uint32_t>& signal_render_pass_started() { return signal_render_pass_started_; }

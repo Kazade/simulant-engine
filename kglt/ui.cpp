@@ -14,11 +14,11 @@ UI::UI(Scene* scene):
     scene_(*scene),
     default_font_id_(0) {
 
-    //Create the overlay for the UI
-    overlay_ = scene_.new_overlay();
-
-    Overlay& overlay = scene_.overlay(overlay_);
-    overlay.set_ortho(0, scene_.window().width(), 0, scene_.window().height());
+    /**
+     * FIXME: I removed the overlay setup code from here in favour of creating an extra
+     * passes with ortho cameras. This class needs to create an ortho camera, and add a
+     * pass to the scene. Need to somehow make that pass undeletable() and always last.
+     */
 
     generic::TemplatedManager<UI, ui::Label, ui::LabelID>::signal_post_create().connect(
         sigc::mem_fun(this, &UI::post_create_callback<ui::Label, ui::LabelID>)

@@ -1,6 +1,9 @@
 #ifndef CAMERA_H_INCLUDED
 #define CAMERA_H_INCLUDED
 
+#include "kazmath/mat4.h"
+#include "generic/identifiable.h"
+
 #include "object.h"
 #include "frustum.h"
 #include "renderer.h"

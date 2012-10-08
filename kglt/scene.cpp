@@ -107,8 +107,7 @@ MeshID Scene::new_mesh(Object *parent) {
         mesh(result).set_parent(parent);
     }
 
-    //Add the mesh to the partitioner
-    partitioner_->add(mesh(result));
+    signal_mesh_created_(mesh(result));
 
     return result;
 }
@@ -122,8 +121,7 @@ Mesh& Scene::mesh(MeshID m) {
 }
 
 void Scene::delete_mesh(MeshID mid) {
-    //Remove the mesh from the partitioner
-    partitioner_->remove(mesh(mid));
+    signal_mesh_destroyed_(mesh(mid));
 
     Mesh& obj = mesh(mid);
     obj.destroy_children();
@@ -257,7 +255,7 @@ LightID Scene::new_light(Object* parent, LightType type) {
         l.set_parent(parent);
     }
 
-    partitioner_->add(l); //Add the light to the partitioner
+    signal_light_created_(l);
 
     return lid;
 }
@@ -266,9 +264,10 @@ Light& Scene::light(LightID light_id) {
     return TemplatedManager<Scene, Light, LightID>::manager_get(light_id);
 }
 
-void Scene::delete_light(LightID light_id) {
+void Scene::delete_light(LightID light_id) {    
     Light& obj = light(light_id);
-    partitioner_->remove(obj); //Remove the light from the partitioner
+    signal_light_destroyed_(obj);
+
     obj.destroy_children();
     TemplatedManager<Scene, Light, LightID>::manager_delete(light_id);
 }
@@ -304,21 +303,7 @@ void Scene::update(double dt) {
 }
 
 void Scene::render() {
-    /**
-     * Go through all the render passes
-     * set the render options and send the viewport to OpenGL
-     * before going through the scene, objects in the scene
-     * should be able to mark as only being renderered in certain
-     * passes
-     */
-    for(Pass& pass: passes_) {
-        pass.renderer().set_options(render_options);
-        pass.viewport().update_opengl();
-
-        signal_render_pass_started_(pass);
-        pass.renderer().render(*this);
-        signal_render_pass_finished_(pass);
-    }
+    pipeline_->run();
 }
 
 MeshID Scene::_mesh_id_from_mesh_ptr(Mesh* mesh) {

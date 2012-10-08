@@ -9,7 +9,6 @@
 #include "material.h"
 #include "shader.h"
 
-#include "rendering/selection_renderer.h"
 #include "procedural/mesh.h"
 
 #include "kglt/ui/label.h"

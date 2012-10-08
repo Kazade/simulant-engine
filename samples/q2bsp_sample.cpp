@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
     kglt::Scene& scene = window->scene();
     scene.set_ambient_light(kglt::Colour(0.02, 0.02, 0.02, 1.0));
 
-    scene.active_camera().set_perspective_projection(
+    scene.camera().set_perspective_projection(
         45.0,
         float(window->width()) / float(window->height()),
         0.1,
@@ -42,18 +42,18 @@ int main(int argc, char* argv[]) {
 
     while(window->update()) {
         if(keys[kglt::KEY_CODE_LEFT]) {
-            scene.active_camera().rotate_y(-4.0 * window->delta_time());
+            scene.camera().rotate_y(-4.0 * window->delta_time());
         }
 
         if(keys[kglt::KEY_CODE_RIGHT]) {
-            scene.active_camera().rotate_y(4.0 * window->delta_time());
+            scene.camera().rotate_y(4.0 * window->delta_time());
         }
 
         if(keys[kglt::KEY_CODE_UP]) {
-            scene.active_camera().move_forward(100.0 * window->delta_time());
+            scene.camera().move_forward(100.0 * window->delta_time());
         }
         if(keys[kglt::KEY_CODE_DOWN]) {
-            scene.active_camera().move_forward(-100.0 * window->delta_time());
+            scene.camera().move_forward(-100.0 * window->delta_time());
         }
 
     }

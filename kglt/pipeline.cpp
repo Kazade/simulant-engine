@@ -1,8 +1,12 @@
 #include "pipeline.h"
 #include "scene.h"
 
+#include "mesh.h"
+#include "light.h"
+
+#include "partitioner.h"
 #include "partitioners/null_partitioner.h"
-#include "rendering/generic_renderer.h"
+#include "renderers/generic_renderer.h"
 
 namespace kglt {
 
@@ -20,7 +24,14 @@ Pass::Pass(Scene& scene, SceneGroupID sg, TextureID target, CameraID camera, Vie
 Pipeline::Pipeline(Scene& scene):
     scene_(scene),
     partitioner_(new NullPartitioner(scene)), //TODO: Should be Octree-powered GenericPartitioner
-    renderer_(new GenericRenderer()) {
+    renderer_(new GenericRenderer(scene)) {
+
+    //Keep the partitioner updated with new meshes
+    scene_.signal_mesh_created().connect(sigc::mem_fun<Mesh&>(partitioner_.get(), &kglt::Partitioner::add));
+    scene_.signal_mesh_destroyed().connect(sigc::mem_fun<Mesh&>(partitioner_.get(), &kglt::Partitioner::remove));
+
+    scene_.signal_light_created().connect(sigc::mem_fun<Light&>(partitioner_.get(), &kglt::Partitioner::add));
+    scene_.signal_light_destroyed().connect(sigc::mem_fun<Light&>(partitioner_.get(), &kglt::Partitioner::remove));
 
     //Set up the default render options
     render_options.wireframe_enabled = false;
@@ -47,8 +58,16 @@ void Pipeline::set_renderer(Renderer::ptr renderer) {
     renderer_ = renderer;
 }
 
+void Pipeline::run() {
+    for(uint32_t i = 0; i < passes_.size(); ++i) {
+        run_pass(i);
+    }
+}
+
 void Pipeline::run_pass(uint32_t index) {
     Pass::ptr pass = passes_.at(index);
+
+    pass->viewport_.update_opengl();
 
     signal_render_pass_started_(index);
 
