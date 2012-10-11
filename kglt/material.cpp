@@ -69,7 +69,8 @@ MaterialPass& MaterialTechnique::pass(uint32_t index) {
 MaterialPass::MaterialPass(ShaderID shader):
     shader_(shader),
     iteration_(ITERATE_ONCE),
-    max_iterations_(1) {
+    max_iterations_(1),
+    blend_(BLEND_NONE){
 
 }
 

@@ -4,16 +4,16 @@
 int main(int argc, char* argv[]) {
     logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));
 
-    kglt::Window window;
-
-    window.scene().camera().set_perspective_projection(
+    kglt::Window::ptr window = kglt::Window::create();
+    window->set_title("Lighting Sample");
+    window->scene().camera().set_perspective_projection(
         45.0,
-        float(window.width()) / float(window.height()),
+        float(window->width()) / float(window->height()),
         0.1,
         1000.0
     );
 
-    kglt::Scene& scene = window.scene();
+    kglt::Scene& scene = window->scene();
     scene.set_ambient_light(kglt::Colour(0.2, 0.2, 0.2, 1.0));
 
     kglt::Mesh& mesh = kglt::return_new_mesh(scene);
@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
     light2.set_diffuse(kglt::Colour(0.0, 0.0, 1.0, 1.0));
     light2.set_attenuation_from_range(100.0);
 
-    while(window.update()) {}
+    while(window->update()) {}
 
     return 0;
 }

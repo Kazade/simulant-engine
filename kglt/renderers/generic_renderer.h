@@ -3,7 +3,9 @@
 
 #include <vector>
 
+#include "../utils/geometry_buffer.h"
 #include "../renderer.h"
+#include "../material.h"
 
 namespace kglt {
 
@@ -13,12 +15,13 @@ public:
         Renderer(scene) {}
 
 private:
-    void render_mesh(const Mesh &mesh);
+    void render_buffer(GeometryBuffer& mesh);
 
     void set_auto_uniforms_on_shader(ShaderProgram& s, Scene& scene,
         const std::vector<LightID>& lights_within_range, uint32_t iteration);
 
-    void set_auto_attributes_on_shader(ShaderProgram& s);
+    void set_auto_attributes_on_shader(ShaderProgram& s, GeometryBuffer& buffer);
+    void set_blending_mode(BlendType type);
 };
 
 }

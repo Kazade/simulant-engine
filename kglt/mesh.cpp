@@ -79,6 +79,104 @@ uint32_t Mesh::add_submesh(bool use_parent_vertices) {
     return id;
 }
 
+std::vector<GeometryBuffer::ptr> Mesh::to_geometry_buffers() {        
+    assert(arrangement() == MESH_ARRANGEMENT_TRIANGLES); //Sigh..
+
+    kmMat4 rot, trans;
+    kmMat4RotationQuaternion(&rot, &rotation());
+    kmMat4Translation(&trans, absolute_position().x, absolute_position().y, absolute_position().z);
+    kmMat4Multiply(&trans, &trans, &rot);
+
+    std::vector<GeometryBuffer::ptr> result;
+    std::map<MaterialID, uint32_t> lookup;
+
+    if(submeshes().size() && submesh(0).submeshes().size()) {
+        L_WARN("Geometry buffer conversion doesn't work for multi-level meshes yet");
+    }
+
+    lookup[material()] = 0;
+    result.push_back(GeometryBuffer::ptr(new GeometryBuffer(arrangement(), VERTEX_ATTRIBUTE_POSITION |
+                                                            VERTEX_ATTRIBUTE_TEXCOORD_1 |
+                                                            VERTEX_ATTRIBUTE_DIFFUSE |
+                                                            VERTEX_ATTRIBUTE_NORMAL)));
+    result.at(0)->resize(triangles().size() * 3);
+    result.at(0)->set_material(material());
+    uint32_t current_vertex = 0;
+    for(Triangle& tri: triangles()) {
+        for(uint32_t j = 0; j < 3; ++j) {
+            assert(current_vertex < result.at(0)->count());
+
+            GeometryBuffer::ptr buffer = result.at(0);
+
+            float* pos_out = buffer->vertex(current_vertex) + buffer->offset(VERTEX_ATTRIBUTE_POSITION);
+            float* uv_out = buffer->vertex(current_vertex) + buffer->offset(VERTEX_ATTRIBUTE_TEXCOORD_1) / sizeof(float);
+            float* diffuse_out = buffer->vertex(current_vertex) + buffer->offset(VERTEX_ATTRIBUTE_DIFFUSE) / sizeof(float);
+            float* normal_out = buffer->vertex(current_vertex) + buffer->offset(VERTEX_ATTRIBUTE_NORMAL) / sizeof(float);
+
+            pos_out[0] = vertex(tri.index(j)).x;
+            pos_out[1] = vertex(tri.index(j)).y;
+            pos_out[2] = vertex(tri.index(j)).z;
+
+            kmVec3Transform((kmVec3*)pos_out, (const kmVec3*)pos_out, &trans);
+
+            memcpy(uv_out, &tri.uv(j), sizeof(float) * 2);
+            memcpy(diffuse_out, &diffuse_colour_, sizeof(float) * 4); //What is this... I don't even
+            memcpy(normal_out, &tri.normal(j), sizeof(float) * 3);
+
+            current_vertex++;
+        }
+    }
+
+    for(uint32_t i = 0; i < submeshes().size(); ++i) {
+        Mesh& m = submesh(i);
+
+        if(m.triangles().empty()) {
+            continue;
+        }
+
+        GeometryBuffer::ptr buffer;
+
+        if(container::contains(lookup, m.material())) {
+            buffer = result.at(lookup[m.material()]);
+        } else {
+            lookup[material()] = result.size();
+
+            //FIXME: Meshes should totally be re-written to use GeometryBuffers directly
+            //then specifying vertex declarations would actually make sense
+            result.push_back(GeometryBuffer::ptr(new GeometryBuffer(arrangement(), VERTEX_ATTRIBUTE_POSITION |
+                                                                    VERTEX_ATTRIBUTE_TEXCOORD_1 |
+                                                                    VERTEX_ATTRIBUTE_DIFFUSE |
+                                                                    VERTEX_ATTRIBUTE_NORMAL)));
+            buffer = result.at(result.size()-1);
+            buffer->set_material(m.material());
+        }
+
+        uint32_t initial_count = buffer->count();
+        uint32_t initial_size = buffer->count() * buffer->stride();
+        buffer->resize(initial_size + (m.triangles().size() * 3)); //Resize the buffer
+        current_vertex = 0;
+        for(Triangle& tri: m.triangles()) {
+            for(uint32_t j = 0; j < 3; ++j) {
+                float* pos_out = buffer->vertex(initial_count + current_vertex) + buffer->offset(VERTEX_ATTRIBUTE_POSITION);
+                float* uv_out = buffer->vertex(initial_count + current_vertex) + buffer->offset(VERTEX_ATTRIBUTE_TEXCOORD_1) / sizeof(float);
+                float* diffuse_out = buffer->vertex(initial_count + current_vertex) + buffer->offset(VERTEX_ATTRIBUTE_DIFFUSE) / sizeof(float);
+                float* normal_out = buffer->vertex(initial_count + current_vertex) + buffer->offset(VERTEX_ATTRIBUTE_NORMAL) / sizeof(float);
+
+                pos_out[0] = vertex(tri.index(j)).x;
+                pos_out[1] = vertex(tri.index(j)).y;
+                pos_out[2] = vertex(tri.index(j)).z;
+
+                memcpy(uv_out, &tri.uv(j), sizeof(float) * 2);
+                memcpy(diffuse_out, &diffuse_colour_, sizeof(float) * 4); //What is this... I don't even
+                memcpy(normal_out, &tri.normal(j), sizeof(float) * 3);
+
+                current_vertex++;
+            }
+        }
+    }
+    return result;
+}
+
 void Mesh::vbo(uint32_t vertex_attributes) {
     if(!container::contains(vertex_buffer_objects_, vertex_attributes)) {
         //Build the VBO if necessary

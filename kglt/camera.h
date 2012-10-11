@@ -54,16 +54,17 @@ public:
     double set_orthographic_projection_from_height(double desired_height_in_units, double ratio);
 
     const kmMat4& projection_matrix() const { return projection_matrix_; }
+    const kmMat4& modelview_matrix() const { return modelview_matrix_; }
 
 private:
     Frustum frustum_;
     kmMat4 projection_matrix_;
+    kmMat4 modelview_matrix_;
 
     void update_frustum() {
-        kmMat4 modelview;
-        apply(&modelview); //Get the modelview transformations for this camera
+        apply(&modelview_matrix_); //Get the modelview transformations for this camera
         kmMat4 mvp;
-        kmMat4Multiply(&mvp, &projection_matrix_, &modelview);
+        kmMat4Multiply(&mvp, &projection_matrix_, &modelview_matrix_);
         frustum_.build(&mvp); //Update the frustum for this camera
     }
 };

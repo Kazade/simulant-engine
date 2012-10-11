@@ -9,6 +9,7 @@
 #include "generic/identifiable.h"
 #include "generic/visitor.h"
 #include "generic/relation.h"
+#include "utils/geometry_buffer.h"
 
 namespace kglt {
 
@@ -62,22 +63,6 @@ private:
     kglt::TextureID lightmap_id_;
 
     bool uses_surface_normal_;
-};
-
-enum MeshArrangement {
-    MESH_ARRANGEMENT_POINTS,
-    MESH_ARRANGEMENT_TRIANGLES,
-    MESH_ARRANGEMENT_TRIANGLE_FAN,
-    MESH_ARRANGEMENT_TRIANGLE_STRIP,
-    MESH_ARRANGEMENT_LINES,
-    MESH_ARRANGEMENT_LINE_STRIP
-};
-
-enum VertexAttribute {
-    VERTEX_ATTRIBUTE_POSITION = 1,
-    VERTEX_ATTRIBUTE_TEXCOORD_1 = 2,
-    VERTEX_ATTRIBUTE_DIFFUSE = 4,
-    VERTEX_ATTRIBUTE_NORMAL = 8
 };
 
 class Mesh :
@@ -138,6 +123,7 @@ public:
     void set_arrangement(MeshArrangement m) { arrangement_ = m; }
     MeshArrangement arrangement() { return arrangement_; }
 
+    std::vector<GeometryBuffer::ptr> to_geometry_buffers();
     void vbo(uint32_t vertex_attributes);
 
     void done() {}

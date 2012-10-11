@@ -30,9 +30,18 @@ std::vector<LightID> NullPartitioner::lights_within_range(const kmVec3& location
     return result;
 }
 
-std::set<MeshID> NullPartitioner::meshes_visible_from(CameraID camera_id, SceneGroupID scene_group_id) {
-    //Just return all of the meshes
-    return all_meshes_;
+std::vector<GeometryBuffer::ptr> NullPartitioner::geometry_visible_from(CameraID camera_id, SceneGroupID scene_group_id) {
+    std::vector<GeometryBuffer::ptr> result;
+
+    //Just return all of the meshes in the scene group
+    for(MeshID mid: all_meshes_) {
+        if(scene().mesh(mid).scene_group.get() && scene().mesh(mid).scene_group().id() == scene_group_id) {
+            std::vector<GeometryBuffer::ptr> new_buffers = scene().mesh(mid).to_geometry_buffers();
+            result.insert(result.end(), new_buffers.begin(), new_buffers.end());
+        }
+    }
+
+    return result;
 }
 
 }

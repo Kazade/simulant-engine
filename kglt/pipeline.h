@@ -16,6 +16,8 @@ class Pass {
 public:
     typedef std::tr1::shared_ptr<Pass> ptr;
 
+    Viewport& viewport() { return viewport_; }
+
 private:
     Pass(Scene& scene, SceneGroupID sg, TextureID target, CameraID camera, ViewportType viewport);
 
@@ -45,6 +47,7 @@ public:
 
     void remove_all_passes();
     void add_pass(SceneGroupID scene_group, TextureID target=0, CameraID camera=0, ViewportType viewport=VIEWPORT_TYPE_FULL);
+    Pass& pass(uint32_t index) { return *passes_.at(index); }
 
     void set_partitioner(Partitioner::ptr partitioner);
     //void set_batcher(Batcher::ptr batcher);
@@ -53,11 +56,16 @@ public:
     void run();
     void run_pass(uint32_t index);
 
+    Partitioner& partitioner() { return *partitioner_; }
+
     sigc::signal<void, uint32_t>& signal_render_pass_started() { return signal_render_pass_started_; }
     sigc::signal<void, uint32_t>& signal_render_pass_finished() { return signal_render_pass_finished_; }
 
     RenderOptions render_options;
+
 private:
+    void init();
+
     Scene& scene_;
     Partitioner::ptr partitioner_;
     Renderer::ptr renderer_;
@@ -66,6 +74,8 @@ private:
 
     sigc::signal<void, uint32_t> signal_render_pass_started_;
     sigc::signal<void, uint32_t> signal_render_pass_finished_;
+
+    friend class Scene;
 };
 
 }

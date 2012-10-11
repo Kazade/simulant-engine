@@ -326,6 +326,7 @@ void Q2BSPLoader::into(Loadable& resource) {
 
         //Set the texture for unit 0
         mat.technique().pass(0).set_texture_unit(0, tid);
+        mat.technique().pass(0).set_blending(BLEND_NONE);
 
         //Create a submesh for each texture, set it to use the parent mesh's verticces
         mesh_for_texture[tid] = mesh.add_submesh(true);

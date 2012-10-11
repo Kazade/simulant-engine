@@ -12,7 +12,7 @@ class Window : public WindowBase {
 public:
     typedef std::tr1::shared_ptr<Window> ptr;
 
-    Window(int width=640, int height=480, int bpp=0);
+
     virtual ~Window();
 
     void set_title(const std::string& title);
@@ -29,6 +29,8 @@ public:
     }
 
 private:
+    Window(int width=640, int height=480, int bpp=0);
+
     SDL_Surface* surface_;
 
     void create_gl_window(int width, int height, int bpp);

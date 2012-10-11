@@ -16,6 +16,7 @@ void Sprite::add_animation(const std::string& anim_name, const std::vector<Textu
     Material& mat = kglt::return_new_material(scene_);
     mat.technique().new_pass(scene_.default_shader());
     mat.technique().pass(0).set_animated_texture_unit(0, frames, duration);
+    mat.technique().pass(0).set_blending(BLEND_ALPHA);
     animations_[anim_name] = mat.id();
 
     if(animations_.size() == 1 && current_animation_.empty()) {

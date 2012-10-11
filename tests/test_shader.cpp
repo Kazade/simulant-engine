@@ -11,8 +11,8 @@
 using namespace kglt;
 
 TEST(test_shader_params) {
-    kglt::Window window;
-    kglt::Scene& scene = window.scene();
+    kglt::Window::ptr window = kglt::Window::create();
+    kglt::Scene& scene = window->scene();
 
     ShaderID sid = scene.new_shader();
     CHECK(sid > 0);

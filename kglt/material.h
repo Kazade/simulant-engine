@@ -59,6 +59,14 @@ enum IterationType {
     ITERATE_ONCE_PER_LIGHT
 };
 
+enum BlendType {
+    BLEND_NONE,
+    BLEND_ADD,
+    BLEND_MODULATE,
+    BLEND_COLOUR,
+    BLEND_ALPHA
+};
+
 class MaterialPass {
 public:
     typedef std::tr1::shared_ptr<MaterialPass> ptr;
@@ -90,6 +98,8 @@ public:
         max_iterations_ = max;
     }
 
+    void set_blending(BlendType blend) { blend_ = blend; }
+    BlendType blending() { return blend_; }
 private:
     ShaderID shader_;
 
@@ -102,6 +112,8 @@ private:
 
     IterationType iteration_;
     uint32_t max_iterations_;
+
+    BlendType blend_;
 };
 
 class MaterialTechnique {

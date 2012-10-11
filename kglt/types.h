@@ -38,6 +38,21 @@ struct Vec2 : public kmVec2 {
     }
 };
 
+enum MeshArrangement {
+    MESH_ARRANGEMENT_POINTS,
+    MESH_ARRANGEMENT_TRIANGLES,
+    MESH_ARRANGEMENT_TRIANGLE_FAN,
+    MESH_ARRANGEMENT_TRIANGLE_STRIP,
+    MESH_ARRANGEMENT_LINES,
+    MESH_ARRANGEMENT_LINE_STRIP
+};
+
+enum VertexAttribute {
+    VERTEX_ATTRIBUTE_POSITION = 1,
+    VERTEX_ATTRIBUTE_TEXCOORD_1 = 2,
+    VERTEX_ATTRIBUTE_DIFFUSE = 4,
+    VERTEX_ATTRIBUTE_NORMAL = 8
+};
 
 //FIXME: Should be something like UniqueID<0>, UniqueID<1> or something so that
 //IDs can't be incorrectly passed

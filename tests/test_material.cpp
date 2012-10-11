@@ -10,8 +10,8 @@
 using namespace kglt;
 
 TEST(test_material_initialization) {
-    kglt::Window window;
-    kglt::Scene& scene = window.scene();
+    kglt::Window::ptr window = kglt::Window::create();
+    kglt::Scene& scene = window->scene();
 
     Material& mat = scene.material(scene.new_material());
 
@@ -26,8 +26,8 @@ TEST(test_material_initialization) {
 }
 
 TEST(test_material_applies_to_mesh) {
-    kglt::Window window;
-    kglt::Scene& scene = window.scene();
+    kglt::Window::ptr window = kglt::Window::create();
+    kglt::Scene& scene = window->scene();
 
     MaterialID mid = scene.new_material();
     MeshID mesh_id = scene.new_mesh();

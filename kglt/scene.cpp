@@ -20,6 +20,8 @@ Scene::Scene(WindowBase* window):
     ui_interface_(new UI(this)),
     pipeline_(new Pipeline(*this)) {
 
+    pipeline_->init();
+
     TemplatedManager<Scene, Mesh, MeshID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Mesh, MeshID>));
     TemplatedManager<Scene, Camera, CameraID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Camera, CameraID>));
     TemplatedManager<Scene, Text, TextID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Text, TextID>));
@@ -35,6 +37,9 @@ Scene::~Scene() {
 void Scene::initialize_defaults() {
     default_camera_ = new_camera(); //Create a default camera
     default_scene_group_ = new_scene_group();
+
+    //Create a default pass for the default scene group
+    pipeline_->add_pass(default_scene_group_);
 
     //Create the default blank texture
     default_texture_ = new_texture();
@@ -98,7 +103,9 @@ void Scene::initialize_defaults() {
     
     mat.technique().pass(0).set_texture_unit(0, default_texture_);
     mat.technique().pass(0).set_iteration(ITERATE_ONCE);
+    mat.technique().pass(0).set_blending(BLEND_NONE);
     mat.technique().pass(1).set_iteration(ITERATE_ONCE_PER_LIGHT, 8);
+    mat.technique().pass(1).set_blending(BLEND_ADD);
 }
 
 MeshID Scene::new_mesh(Object *parent) {
@@ -106,6 +113,8 @@ MeshID Scene::new_mesh(Object *parent) {
     if(parent) {
         mesh(result).set_parent(parent);
     }
+
+    mesh(result).scene_group = scene_group(default_scene_group_);
 
     signal_mesh_created_(mesh(result));
 
@@ -179,6 +188,10 @@ CameraID Scene::new_camera() {
 }
 
 Camera& Scene::camera(CameraID c) {
+    if(c == 0) {
+        return camera(default_camera_);
+    }
+
     return TemplatedManager<Scene, Camera, CameraID>::manager_get(c);
 }
 

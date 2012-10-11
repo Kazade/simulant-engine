@@ -5,6 +5,7 @@
 #include <tr1/memory>
 
 #include "types.h"
+#include "utils/geometry_buffer.h"
 
 namespace kglt {
 
@@ -15,13 +16,13 @@ public:
     Renderer(Scene& scene):
         scene_(scene) {}
 
-    void render(const std::set<MeshID> meshes); //FIXME: Should pass in batching structure
+    void render(const std::vector<GeometryBuffer::ptr>& buffers); //FIXME: Should pass in batching structure
     Scene& scene() { return scene_; }
 
 private:
     Scene& scene_;
 
-    virtual void render_mesh(const Mesh& mesh) = 0;
+    virtual void render_buffer(GeometryBuffer& buffer) = 0;
 };
 
 }

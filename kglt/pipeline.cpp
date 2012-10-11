@@ -26,20 +26,20 @@ Pipeline::Pipeline(Scene& scene):
     partitioner_(new NullPartitioner(scene)), //TODO: Should be Octree-powered GenericPartitioner
     renderer_(new GenericRenderer(scene)) {
 
-    //Keep the partitioner updated with new meshes
-    scene_.signal_mesh_created().connect(sigc::mem_fun<Mesh&>(partitioner_.get(), &kglt::Partitioner::add));
-    scene_.signal_mesh_destroyed().connect(sigc::mem_fun<Mesh&>(partitioner_.get(), &kglt::Partitioner::remove));
-
-    scene_.signal_light_created().connect(sigc::mem_fun<Light&>(partitioner_.get(), &kglt::Partitioner::add));
-    scene_.signal_light_destroyed().connect(sigc::mem_fun<Light&>(partitioner_.get(), &kglt::Partitioner::remove));
-
     //Set up the default render options
     render_options.wireframe_enabled = false;
     render_options.texture_enabled = true;
     render_options.backface_culling_enabled = true;
     render_options.point_size = 1;
+}
 
-    add_pass(0); //Add a pass for the default scene group by default
+void Pipeline::init() {
+    //Keep the partitioner updated with new meshes
+    scene_.signal_mesh_created().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::add_mesh));
+    scene_.signal_mesh_destroyed().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::remove_mesh));
+
+    scene_.signal_light_created().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::add_light));
+    scene_.signal_light_destroyed().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::remove_light));
 }
 
 void Pipeline::remove_all_passes() {
@@ -71,10 +71,10 @@ void Pipeline::run_pass(uint32_t index) {
 
     signal_render_pass_started_(index);
 
-    std::set<MeshID> visible_meshes = partitioner_->meshes_visible_from(pass->camera_, pass->scene_group_);
+    std::vector<GeometryBuffer::ptr> buffers = partitioner_->geometry_visible_from(pass->camera_, pass->scene_group_);
 
     //TODO: Batched rendering
-    renderer_->render(visible_meshes);
+    renderer_->render(buffers);
 
     signal_render_pass_finished_(index);
 }
