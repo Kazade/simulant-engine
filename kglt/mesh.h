@@ -13,6 +13,18 @@
 
 namespace kglt {
 
+class MeshBase {
+protected:
+    GeometryBuffer::ptr vertex_data_;
+
+public:
+    void set_arrangement(MeshArrangement arrangement);
+    void set_attributes(uint32_t attributes);
+
+};
+
+
+
 struct Vertex : public Vec3 {
 };
 

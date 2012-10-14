@@ -54,7 +54,11 @@ public:
     double set_orthographic_projection_from_height(double desired_height_in_units, double ratio);
 
     const kmMat4& projection_matrix() const { return projection_matrix_; }
-    const kmMat4& modelview_matrix() const { return modelview_matrix_; }
+    const kmMat4& modelview_matrix() {
+        apply(&modelview_matrix_); //Get the modelview transformations for this camera
+        return modelview_matrix_;
+
+    }
 
 private:
     Frustum frustum_;

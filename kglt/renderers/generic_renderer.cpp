@@ -19,11 +19,14 @@ void GenericRenderer::set_auto_uniforms_on_shader(
     //Calculate the modelview-projection matrix
     kmMat4 modelview_projection;
 
+    const kmMat4* modelview = &scene.camera().modelview_matrix();
+    const kmMat4* projection = &scene.camera().projection_matrix();
+
 //    L_WARN("CAMERA SELECTION NOT IMPLEMENTED");
     kmMat4Multiply(
         &modelview_projection,
-        &scene.camera().projection_matrix(),
-        &scene.camera().modelview_matrix()
+        projection,
+        modelview
     );
 
     if(s.params().uses_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX)) {
@@ -211,12 +214,12 @@ void GenericRenderer::set_blending_mode(BlendType type) {
 }
 
 void GenericRenderer::render_buffer(GeometryBuffer& buffer) {
+
     if(!buffer.count()) {
         return;
     }
 
-    GLuint vbo = buffer.vbo();
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    buffer.vbo();
 
     check_and_log_error(__FILE__, __LINE__);
 

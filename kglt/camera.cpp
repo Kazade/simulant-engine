@@ -13,6 +13,7 @@ Camera::Camera(Scene *scene, CameraID id):
     kmQuaternionNormalize(&rotation(), &rotation());
 
     kmMat4Identity(&projection_matrix_); //Initialize the projection matrix
+    kmMat4Identity(&modelview_matrix_);
 }
 
 void Camera::set_perspective_projection(double fov, double aspect, double near, double far) {

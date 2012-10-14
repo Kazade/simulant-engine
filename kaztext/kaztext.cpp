@@ -6,11 +6,9 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-#include <freetype/ftglyph.h>
+#include "glee/GLee.h"
 
-#include <GL/gl.h>
-#include <GL/glext.h>
-#include <GL/glx.h>
+#include <freetype/ftglyph.h>
 
 #include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string/trim.hpp>
@@ -18,6 +16,7 @@
 #include "kaztext.h"
 #include "utf8/checked.h"
 
+/*
 PFNGLCREATESHADERPROC glCreateShader = (PFNGLCREATESHADERPROC) glXGetProcAddress((GLubyte*) "glCreateShader");
 PFNGLCREATEPROGRAMPROC glCreateProgram = (PFNGLCREATEPROGRAMPROC) glXGetProcAddress((GLubyte*) "glCreateProgram");
 PFNGLSHADERSOURCEPROC glShaderSource = (PFNGLSHADERSOURCEPROC) glXGetProcAddress((GLubyte*) "glShaderSource");
@@ -34,7 +33,7 @@ PFNGLBINDATTRIBLOCATIONPROC glBindAttribLocation = (PFNGLBINDATTRIBLOCATIONPROC)
 PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation = (PFNGLGETUNIFORMLOCATIONPROC) glXGetProcAddress((GLubyte*) "glGetUniformLocation");
 PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv = (PFNGLUNIFORMMATRIX4FVPROC) glXGetProcAddress((GLubyte*) "glUniformMatrix4fv");
 PFNGLUNIFORM1IPROC glUniform1i = (PFNGLUNIFORM1IPROC) glXGetProcAddress((GLubyte*) "glUniform1i");
-
+*/
 static KTuint next_font_id = 0;
 
 KTuint get_next_font_id() {

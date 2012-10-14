@@ -33,6 +33,38 @@ void GeometryBuffer::resize(uint32_t vertex_count) {
     buffer_.resize(floats_per_element * vertex_count);
 }
 
+void GeometryBuffer::set_vertex(uint32_t vertex, const GeometryBufferEntry& values) {
+    uint32_t start_index = vertex * floats_per_vertex();
+
+    for(VertexAttribute attr: {
+        VERTEX_ATTRIBUTE_POSITION,
+        VERTEX_ATTRIBUTE_TEXCOORD_1,
+        VERTEX_ATTRIBUTE_NORMAL,
+        VERTEX_ATTRIBUTE_DIFFUSE}) {
+
+        if(has_attribute(attr)) {
+            uint32_t float_index = start_index + (offset(attr) / sizeof(float)); //Find the first index
+
+            if(attr == VERTEX_ATTRIBUTE_POSITION) {
+                buffer_.at(float_index) = values.position.x;
+                buffer_.at(float_index + 1) = values.position.y;
+                buffer_.at(float_index + 2) = values.position.z;
+            } else if(attr == VERTEX_ATTRIBUTE_TEXCOORD_1) {
+                buffer_.at(float_index) = values.texcoord_1.x;
+                buffer_.at(float_index + 1) = values.texcoord_1.y;
+            } else if(attr == VERTEX_ATTRIBUTE_NORMAL) {
+                buffer_.at(float_index) = values.normal.x;
+                buffer_.at(float_index + 1) = values.normal.y;
+            } else if(attr == VERTEX_ATTRIBUTE_DIFFUSE) {
+                buffer_.at(float_index) = values.diffuse.r;
+                buffer_.at(float_index + 1) = values.diffuse.g;
+                buffer_.at(float_index + 2) = values.diffuse.b;
+                buffer_.at(float_index + 3) = values.diffuse.a;
+            }
+        }
+    }
+}
+
 MeshArrangement GeometryBuffer::arrangement() const {
     return arrangement_;
 }
@@ -47,11 +79,6 @@ uint32_t GeometryBuffer::stride() const {
 
 MaterialID GeometryBuffer::material() const {
     return material_;
-}
-
-float* GeometryBuffer::vertex(uint32_t index) {
-    uint32_t floats_per_element = stride() / sizeof(float);
-    return &buffer_.at(index * floats_per_element);
 }
 
 int32_t GeometryBuffer::offset(VertexAttribute attr) {
@@ -92,14 +119,14 @@ GLuint GeometryBuffer::vbo() {
         glGenBuffers(1, &vertex_buffer_);
         glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_);
         if(!buffer_.empty()) {
-            glBufferData(GL_ARRAY_BUFFER, buffer_.size() * sizeof(float), vertex(0), GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, buffer_.size() * sizeof(float), &buffer_[0], GL_STATIC_DRAW);
         } else {
             L_WARN("Tried to create a VBO with no data");
         }
-    } /*else {
+    } else {
         glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, stride() * count(), start());
-    }*/
+        //glBufferData(GL_ARRAY_BUFFER, buffer_.size() * sizeof(float), &buffer_[0], GL_STATIC_DRAW);
+    }
 
     return vertex_buffer_;
 }

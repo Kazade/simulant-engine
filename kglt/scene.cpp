@@ -152,6 +152,7 @@ MaterialID Scene::new_material(MaterialID clone_from) {
                 uint32_t pass_id = new_tech.new_pass(old_pass.shader());
                 MaterialPass& new_pass = new_tech.pass(pass_id);
 
+                new_pass.set_blending(old_pass.blending());
                 new_pass.set_iteration(old_pass.iteration(), old_pass.max_iterations());
                 for(uint32_t k = 0; k < old_pass.texture_unit_count(); ++k) {
                     new_pass.set_texture_unit(k, old_pass.texture_unit(k).texture());

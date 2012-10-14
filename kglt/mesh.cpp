@@ -108,20 +108,14 @@ std::vector<GeometryBuffer::ptr> Mesh::to_geometry_buffers() {
 
             GeometryBuffer::ptr buffer = result.at(0);
 
-            float* pos_out = buffer->vertex(current_vertex) + buffer->offset(VERTEX_ATTRIBUTE_POSITION);
-            float* uv_out = buffer->vertex(current_vertex) + buffer->offset(VERTEX_ATTRIBUTE_TEXCOORD_1) / sizeof(float);
-            float* diffuse_out = buffer->vertex(current_vertex) + buffer->offset(VERTEX_ATTRIBUTE_DIFFUSE) / sizeof(float);
-            float* normal_out = buffer->vertex(current_vertex) + buffer->offset(VERTEX_ATTRIBUTE_NORMAL) / sizeof(float);
+            GeometryBufferEntry entry;
+            entry.position = vertex(tri.index(j));
+            entry.texcoord_1 = tri.uv(j);
+            entry.diffuse = diffuse_colour_;
+            entry.normal = tri.normal(j);
 
-            pos_out[0] = vertex(tri.index(j)).x;
-            pos_out[1] = vertex(tri.index(j)).y;
-            pos_out[2] = vertex(tri.index(j)).z;
-
-            kmVec3Transform((kmVec3*)pos_out, (const kmVec3*)pos_out, &trans);
-
-            memcpy(uv_out, &tri.uv(j), sizeof(float) * 2);
-            memcpy(diffuse_out, &diffuse_colour_, sizeof(float) * 4); //What is this... I don't even
-            memcpy(normal_out, &tri.normal(j), sizeof(float) * 3);
+            kmVec3Transform(&entry.position, &entry.position, &trans);
+            buffer->set_vertex(current_vertex, entry);
 
             current_vertex++;
         }
@@ -151,24 +145,18 @@ std::vector<GeometryBuffer::ptr> Mesh::to_geometry_buffers() {
             buffer->set_material(m.material());
         }
 
-        uint32_t initial_count = buffer->count();
-        uint32_t initial_size = buffer->count() * buffer->stride();
-        buffer->resize(initial_size + (m.triangles().size() * 3)); //Resize the buffer
-        current_vertex = 0;
+        current_vertex = buffer->count();
+        buffer->resize(buffer->count() + (m.triangles().size() * 3)); //Resize the buffer
         for(Triangle& tri: m.triangles()) {
             for(uint32_t j = 0; j < 3; ++j) {
-                float* pos_out = buffer->vertex(initial_count + current_vertex) + buffer->offset(VERTEX_ATTRIBUTE_POSITION);
-                float* uv_out = buffer->vertex(initial_count + current_vertex) + buffer->offset(VERTEX_ATTRIBUTE_TEXCOORD_1) / sizeof(float);
-                float* diffuse_out = buffer->vertex(initial_count + current_vertex) + buffer->offset(VERTEX_ATTRIBUTE_DIFFUSE) / sizeof(float);
-                float* normal_out = buffer->vertex(initial_count + current_vertex) + buffer->offset(VERTEX_ATTRIBUTE_NORMAL) / sizeof(float);
+                GeometryBufferEntry entry;
+                entry.position = m.vertex(tri.index(j));
+                entry.texcoord_1 = tri.uv(j);
+                entry.diffuse = diffuse_colour_;
+                entry.normal = tri.normal(j);
 
-                pos_out[0] = vertex(tri.index(j)).x;
-                pos_out[1] = vertex(tri.index(j)).y;
-                pos_out[2] = vertex(tri.index(j)).z;
-
-                memcpy(uv_out, &tri.uv(j), sizeof(float) * 2);
-                memcpy(diffuse_out, &diffuse_colour_, sizeof(float) * 4); //What is this... I don't even
-                memcpy(normal_out, &tri.normal(j), sizeof(float) * 3);
+                kmVec3Transform(&entry.position, &entry.position, &trans);
+                buffer->set_vertex(current_vertex, entry);
 
                 current_vertex++;
             }
