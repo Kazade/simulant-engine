@@ -3,7 +3,7 @@
 #include "sprite.h"
 
 namespace kglt {
-namespace additional {
+namespace extra {
 
 Sprite::Sprite(Scene& scene):
     scene_(scene) {

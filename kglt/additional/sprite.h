@@ -5,7 +5,7 @@
 #include "../scene.h"
 
 namespace kglt {
-namespace additional {
+namespace extra {
 
 /**
   USAGE:

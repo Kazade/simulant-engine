@@ -8,7 +8,7 @@
 #include "../shortcuts.h"
 
 namespace kglt {
-namespace additional {
+namespace extra {
 
 SpriteStripLoader::SpriteStripLoader(Scene& scene, const std::string& filename, uint32_t frame_width):
     scene_(scene),

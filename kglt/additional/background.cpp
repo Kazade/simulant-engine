@@ -8,6 +8,7 @@
 #include "scene.h"
 
 namespace kglt {
+namespace extra {
 
 BackgroundLayer::BackgroundLayer(Background &bg, const std::string& image_path):
     background_(bg),
@@ -128,4 +129,5 @@ void Background::set_visible_dimensions(double width, double height) {
     visible_y_ = height;
 }
 
+} //extra
 }

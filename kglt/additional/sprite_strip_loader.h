@@ -11,7 +11,7 @@ namespace kglt {
 
 class Scene;
 
-namespace additional {
+namespace extra {
 
 class SpriteStripLoader :
         public generic::Creator<SpriteStripLoader> {
