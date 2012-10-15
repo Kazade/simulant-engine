@@ -4,21 +4,19 @@
 #include "mesh.h"
 #include "light.h"
 
+#include "window_base.h"
 #include "partitioner.h"
 #include "partitioners/null_partitioner.h"
 #include "renderers/generic_renderer.h"
 
 namespace kglt {
 
-Pass::Pass(Scene& scene, SceneGroupID sg, TextureID target, CameraID camera, ViewportType viewport):
+Pass::Pass(Scene& scene, SceneGroupID sg, TextureID target, CameraID camera, ViewportID viewport):
     scene_(scene),
     scene_group_(sg),
     target_(target),
     camera_(camera),
-    viewport_(&scene) {
-
-    viewport_.configure(viewport);
-
+    viewport_(viewport) {
 }
 
 Pipeline::Pipeline(Scene& scene):
@@ -46,7 +44,7 @@ void Pipeline::remove_all_passes() {
     passes_.clear();
 }
 
-void Pipeline::add_pass(SceneGroupID scene_group, TextureID target, CameraID camera, ViewportType viewport) {
+void Pipeline::add_pass(SceneGroupID scene_group, TextureID target, CameraID camera, ViewportID viewport) {
     passes_.push_back(Pass::ptr(new Pass(scene_, scene_group, target, camera, viewport)));
 }
 
@@ -58,8 +56,8 @@ void Pipeline::set_renderer(Renderer::ptr renderer) {
     renderer_ = renderer;
 }
 
-void Pipeline::run() {
-    for(uint32_t i = 0; i < passes_.size(); ++i) {
+void Pipeline::run() {    
+    for(uint32_t i = 0; i < passes_.size(); ++i) {       
         run_pass(i);
     }
 }
@@ -67,7 +65,7 @@ void Pipeline::run() {
 void Pipeline::run_pass(uint32_t index) {
     Pass::ptr pass = passes_.at(index);
 
-    pass->viewport_.update_opengl();
+    scene_.window().viewport(pass->viewport()).update_opengl(); //FIXME update_opengl shouldn't exist
 
     signal_render_pass_started_(index);
 

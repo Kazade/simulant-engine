@@ -15,7 +15,8 @@ Mesh::Mesh(Scene* parent, MeshID id):
     diffuse_colour_(1.0, 1.0, 1.0, 1.0),
     depth_test_enabled_(true),
     depth_writes_enabled_(true),
-    branch_selectable_(true) {
+    branch_selectable_(true),
+    is_dirty_(false) {
 
     set_arrangement(MESH_ARRANGEMENT_TRIANGLES);
 }
@@ -79,7 +80,12 @@ uint32_t Mesh::add_submesh(bool use_parent_vertices) {
     return id;
 }
 
-std::vector<GeometryBuffer::ptr> Mesh::to_geometry_buffers() {        
+std::vector<GeometryBuffer::ptr> Mesh::to_geometry_buffers() {            
+    //If the mesh didn't change, and there is stuff in the cache, just return it
+    if(!is_dirty_ && !buffer_cache_.empty()) {
+        return buffer_cache_;
+    }
+
     assert(arrangement() == MESH_ARRANGEMENT_TRIANGLES); //Sigh..
 
     kmMat4 rot, trans;
@@ -87,7 +93,7 @@ std::vector<GeometryBuffer::ptr> Mesh::to_geometry_buffers() {
     kmMat4Translation(&trans, absolute_position().x, absolute_position().y, absolute_position().z);
     kmMat4Multiply(&trans, &trans, &rot);
 
-    std::vector<GeometryBuffer::ptr> result;
+    std::vector<GeometryBuffer::ptr>& result = buffer_cache_;
     std::map<MaterialID, uint32_t> lookup;
 
     if(submeshes().size() && submesh(0).submeshes().size()) {

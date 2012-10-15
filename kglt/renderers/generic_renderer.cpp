@@ -214,6 +214,9 @@ void GenericRenderer::set_blending_mode(BlendType type) {
 }
 
 void GenericRenderer::render_buffer(GeometryBuffer& buffer) {
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
 
     if(!buffer.count()) {
         return;

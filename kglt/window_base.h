@@ -16,14 +16,21 @@
 #include "kazbase/logging/logging.h"
 #include "kaztimer/kaztimer.h"
 
+#include "generic/manager.h"
+#include "types.h"
+#include "viewport.h"
+
 namespace kglt {
     
-class WindowBase {
+class WindowBase :
+        public generic::TemplatedManager<WindowBase, Viewport, ViewportID> {
+
 public:
     WindowBase():
         width_(0),
         height_(0),
-        is_running_(true) {
+        is_running_(true),
+        default_viewport_(0) {
         
         //Register the default resource loaders
         register_loader(LoaderType::ptr(new kglt::loaders::TextureLoaderType));
@@ -88,6 +95,11 @@ public:
 
     IdleTaskManager& idle() { return idle_; }
 
+    ViewportID new_viewport();
+    Viewport& viewport(ViewportID viewport=0);
+    void delete_viewport(ViewportID viewport);
+    ViewportID default_viewport() const { return default_viewport_; }
+
 protected:
     void stop_running() { is_running_ = false; }
     
@@ -118,6 +130,8 @@ private:
     KTIuint timer_;
 
     void destroy() {}
+
+    ViewportID default_viewport_;
 
 };
 

@@ -12,6 +12,12 @@ void WindowBase::init() {
         assert(width_ && "Subclass should've set the window width by now");
         assert(height_ && "Subclass should've set the window height by now");
 
+        //Create a default viewport
+        default_viewport_ = new_viewport();
+        viewport(default_viewport_).set_position(0, 0);
+        viewport(default_viewport_).set_size(width(), height());
+
+        //Initialize the scene
         scene().init();
         initialized = true;
     }
@@ -51,6 +57,21 @@ Scene& WindowBase::scene() {
 void WindowBase::register_loader(LoaderType::ptr loader) {
     //FIXME: assert doesn't exist already
     loaders_.push_back(loader);
+}
+
+ViewportID WindowBase::new_viewport() {
+    return TemplatedManager<WindowBase, Viewport, ViewportID>::manager_new();
+}
+
+Viewport& WindowBase::viewport(ViewportID viewport) {
+    if(viewport == 0) {
+        return TemplatedManager<WindowBase, Viewport, ViewportID>::manager_get(default_viewport_);
+    }
+    return TemplatedManager<WindowBase, Viewport, ViewportID>::manager_get(viewport);
+}
+
+void WindowBase::delete_viewport(ViewportID viewport) {
+    TemplatedManager<WindowBase, Viewport, ViewportID>::manager_delete(viewport);
 }
 
 

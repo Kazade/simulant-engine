@@ -209,7 +209,7 @@ void add_lights_to_scene(Scene& scene, const std::vector<EntityProperties>& enti
 
 
             std::cout << "Creating light at: " << pos.x << ", " << pos.y << ", " << pos.z << std::endl;
-            new_light.set_attenuation_from_range(range * 4);
+            new_light.set_attenuation_from_range(range);
         }
     }
 }

@@ -121,6 +121,8 @@ public:
     MaterialID default_material() const { return default_material_; }
     ShaderID default_shader() const { return default_shader_; }
 
+    SceneGroupID default_scene_group() const { return default_scene_group_; }
+
     kglt::Colour ambient_light() const { return ambient_light_; }
     void set_ambient_light(const kglt::Colour& c) { ambient_light_ = c; }
 

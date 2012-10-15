@@ -7,13 +7,18 @@ int main(int argc, char* argv[]) {
 	
 	//scene.pass().viewport().configure(VIEWPORT_16_BY_9);
 	
-    scene.pipeline().remove_all_passes();
-    scene.pipeline().add_pass(0, 0, 0, kglt::VIEWPORT_TYPE_VERTICAL_SPLIT_LEFT);
-    scene.pipeline().add_pass(0, 0, 0, kglt::VIEWPORT_TYPE_VERTICAL_SPLIT_RIGHT);
+    kglt::ViewportID first = window->viewport().id(); //Get the default viewport ID
+    kglt::ViewportID second = window->new_viewport();
 
-    scene.pipeline().pass(0).viewport().set_background_colour(kglt::Colour(1.0, 0, 0, 0));
-    scene.pipeline().pass(1).viewport().set_background_colour(kglt::Colour(0, 1.0, 0, 0));
-	
+    window->viewport(first).configure(kglt::VIEWPORT_TYPE_VERTICAL_SPLIT_LEFT);
+    window->viewport(second).configure(kglt::VIEWPORT_TYPE_VERTICAL_SPLIT_RIGHT);
+
+    window->viewport(first).set_background_colour(kglt::Colour(1.0, 0, 0, 0));
+    window->viewport(second).set_background_colour(kglt::Colour(0, 1.0, 0, 0));
+
+    //Add another pass to render to the second viewport
+    scene.pipeline().add_pass(0, 0, 0, second);
+
 	//Create a cube mesh
 	kglt::Mesh& mesh = kglt::return_new_mesh(scene);	
 //	kglt::procedural::mesh::cube(mesh, 1.0);

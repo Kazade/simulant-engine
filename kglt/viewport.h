@@ -1,9 +1,11 @@
 #ifndef KGLT_VIEWPORT_H
 #define KGLT_VIEWPORT_H
 
+#include <tr1/memory>
 #include <cstdint>
 #include "kazmath/mat4.h"
 #include "types.h"
+#include "generic/identifiable.h"
 
 namespace kglt {
 
@@ -33,9 +35,11 @@ enum ViewportType {
 	VIEWPORT_TYPE_CUSTOM
 };
 
-class Viewport {
+class Viewport : public generic::Identifiable<ViewportID> {
 public:
-    Viewport(Scene* parent);
+    typedef std::tr1::shared_ptr<Viewport> ptr;
+
+    Viewport(WindowBase* parent, ViewportID id);
 
 	void configure(ViewportType viewport);
 
@@ -49,8 +53,8 @@ public:
 	void update_opengl() const;
 
 private:
-	Scene* parent_;
-	
+    WindowBase* parent_;
+
     uint32_t x_;
     uint32_t y_;
     uint32_t width_;

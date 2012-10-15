@@ -20,8 +20,6 @@ Scene::Scene(WindowBase* window):
     ui_interface_(new UI(this)),
     pipeline_(new Pipeline(*this)) {
 
-    pipeline_->init();
-
     TemplatedManager<Scene, Mesh, MeshID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Mesh, MeshID>));
     TemplatedManager<Scene, Camera, CameraID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Camera, CameraID>));
     TemplatedManager<Scene, Text, TextID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Text, TextID>));
@@ -36,6 +34,7 @@ Scene::~Scene() {
 
 void Scene::initialize_defaults() {
     default_camera_ = new_camera(); //Create a default camera
+
     default_scene_group_ = new_scene_group();
 
     //Create a default pass for the default scene group
@@ -290,6 +289,7 @@ void Scene::init() {
     assert(glGetError() == GL_NO_ERROR);
 
     initialize_defaults();
+    pipeline_->init(); //Initialize the pipeline
 
 }
 

@@ -186,6 +186,9 @@ private:
     bool branch_selectable_;
 
     virtual void destroy();
+
+    std::vector<GeometryBuffer::ptr> buffer_cache_;
+    bool is_dirty_;
 };
 
 }

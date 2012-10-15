@@ -8,7 +8,8 @@
 
 namespace kglt {
 
-Viewport::Viewport(Scene* parent):
+Viewport::Viewport(WindowBase* parent, ViewportID id):
+    generic::Identifiable<ViewportID>(id),
 	parent_(parent),
     x_(0),
     y_(0),
@@ -64,32 +65,32 @@ void Viewport::update_opengl() const {
 		break;
 		case VIEWPORT_TYPE_FULL: {
 			x = 0; y = 0;
-			width = parent_->window().width();
-			height = parent_->window().height();
+            width = parent_->width();
+            height = parent_->height();
 		}
 		break;
 		case VIEWPORT_TYPE_BLACKBAR_16_BY_9: {
-			glViewport(0, 0, parent_->window().width(), parent_->window().height());
+            glViewport(0, 0, parent_->width(), parent_->height());
 			glClearColor(0, 0, 0, 0);
 			glClear(GL_COLOR_BUFFER_BIT);
 			
-			float desired_height = parent_->window().width() / (16.0 / 9.0);
-			float y_offset = (parent_->window().height() - desired_height) / 2.0;
+            float desired_height = parent_->width() / (16.0 / 9.0);
+            float y_offset = (parent_->height() - desired_height) / 2.0;
 			x = 0; 
 			y = y_offset;
-			width = parent_->window().width();
+            width = parent_->width();
 			height = desired_height;			
 		}
 		break;
 		case VIEWPORT_TYPE_VERTICAL_SPLIT_LEFT: {
 			x = 0; y = 0;
-			width = parent_->window().width() / 2.0;
-			height = parent_->window().height();			
+            width = parent_->width() / 2.0;
+            height = parent_->height();
 		} break;
 		case VIEWPORT_TYPE_VERTICAL_SPLIT_RIGHT: {
-			x = parent_->window().width() / 2.0; y = 0;
-			width = parent_->window().width() / 2.0;
-			height = parent_->window().height();			
+            x = parent_->width() / 2.0; y = 0;
+            width = parent_->width() / 2.0;
+            height = parent_->height();
 		} break;		
 		default:
 			assert(0 && "Not Implemented");
