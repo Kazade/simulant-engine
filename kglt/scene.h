@@ -18,7 +18,6 @@
 #include "texture.h"
 #include "shader.h"
 #include "viewport.h"
-#include "background.h"
 #include "font.h"
 #include "text.h"
 #include "material.h"
@@ -105,7 +104,6 @@ public:
 
     MeshID _mesh_id_from_mesh_ptr(Mesh* mesh);
 
-    Background& background() { return background_; }
     UI& ui() { return *ui_interface_; }
 
     template<typename T, typename ID>
@@ -148,7 +146,6 @@ private:
 
     void initialize_defaults();
 
-    Background background_;
     std::tr1::shared_ptr<UI> ui_interface_;
 
     Pipeline::ptr pipeline_;

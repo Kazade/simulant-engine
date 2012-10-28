@@ -2,10 +2,11 @@
 
 #include "kazbase/logging/logging.h"
 #include "background.h"
-#include "shortcuts.h"
-#include "procedural/mesh.h"
-#include "renderer.h"
-#include "scene.h"
+
+#include "../shortcuts.h"
+#include "../procedural/mesh.h"
+#include "../renderer.h"
+#include "../scene.h"
 
 namespace kglt {
 namespace extra {
@@ -16,7 +17,9 @@ BackgroundLayer::BackgroundLayer(Background &bg, const std::string& image_path):
     material_id_(0),
     mesh_id_(0),
     width_(0),
-    height_(0) {
+    height_(0),
+    offset_x_(0),
+    offset_y_(0) {
 
     texture_id_ = kglt::create_texture_from_file(background().scene().window(), image_path);
     material_id_ = kglt::create_material_from_texture(background().scene(), texture_id_);
@@ -40,9 +43,9 @@ BackgroundLayer::BackgroundLayer(Background &bg, const std::string& image_path):
     //Create the mesh for this background layer
     mesh_id_ = background().scene().new_mesh();
 
-    //Detach the mesh from the scene graph (we don't want the renderer to visit it)
+    //Set the mesh's scene group to that of the background
     Mesh& mesh = background().scene().mesh(mesh_id_);
-    mesh.detach();
+    mesh.scene_group = background().scene().scene_group(background().scene_group());
 
     kglt::procedural::mesh::rectangle(mesh, width(), height());
     mesh.apply_material(material_id_);
@@ -102,13 +105,20 @@ BackgroundLayer::~BackgroundLayer() {
     }
 }
 
-Background::Background(Scene *scene):
-    Object(scene) {
+Background::Background(Scene& scene, ViewportID viewport):
+    scene_(scene),
+    viewport_(viewport) {
 
+    background_sg_ = scene.new_scene_group(); //Create a SG for the background
+    ortho_camera_ = scene.new_camera(); //Create an ortho cam
+
+    //Add a pass for this background
+    //FIXME: priority = -1000
+    scene_.pipeline().add_pass(background_sg_, 0, ortho_camera_, viewport_);
 }
 
 void Background::add_layer(const std::string &image_path) {
-    std::tr1::shared_ptr<BackgroundLayer> new_layer(new BackgroundLayer(*this, image_path));
+    BackgroundLayer::ptr new_layer(new BackgroundLayer(*this, image_path));
     layers_.push_back(new_layer);
 
     if(layer_count() == 1) {
@@ -127,6 +137,9 @@ void Background::set_visible_dimensions(double width, double height) {
 
     visible_x_ = width;
     visible_y_ = height;
+
+    //Set the camera to the visible dimensions
+    scene().camera(ortho_camera_).set_orthographic_projection(0, visible_x_, 0, visible_y_);
 }
 
 } //extra

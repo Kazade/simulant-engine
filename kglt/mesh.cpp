@@ -82,7 +82,7 @@ uint32_t Mesh::add_submesh(bool use_parent_vertices) {
 
 std::vector<GeometryBuffer::ptr> Mesh::to_geometry_buffers() {            
     //If the mesh didn't change, and there is stuff in the cache, just return it
-    if(!is_dirty_ && !buffer_cache_.empty()) {
+    if(!buffer_cache_.empty()) {
         return buffer_cache_;
     }
 

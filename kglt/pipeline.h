@@ -17,6 +17,7 @@ public:
     typedef std::tr1::shared_ptr<Pass> ptr;
 
     ViewportID viewport() { return viewport_; }
+    CameraID camera() { return camera_; }
 
 private:
     Pass(Scene& scene, SceneGroupID sg, TextureID target, CameraID camera, ViewportID viewport);

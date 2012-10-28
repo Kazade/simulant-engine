@@ -10,11 +10,11 @@ int main(int argc, char* argv[]) {
     window->set_title("KGLT Sprite Sample");
 
     //Load the strip of sprites into separate textures
-    kglt::additional::SpriteStripLoader loader(window->scene(), "sample_data/sonic.png", 64);
+    kglt::extra::SpriteStripLoader loader(window->scene(), "sample_data/sonic.png", 64);
     std::vector<kglt::TextureID> frames = loader.load_frames();
 
     //Construct a Sprite object that takes care of handling materials, meshes etc.
-    kglt::additional::Sprite::ptr sprite = kglt::additional::Sprite::create(window->scene());
+    kglt::extra::Sprite::ptr sprite = kglt::extra::Sprite::create(window->scene());
     sprite->add_animation("stand", container::slice(frames, 4, 6), 0.5);
     sprite->set_render_dimensions(1.5, 1.5);
     sprite->move_to(0.0, 0.0, -1.0);

@@ -15,8 +15,7 @@ Scene::Scene(WindowBase* window):
     default_texture_(0),
     default_shader_(0),
     default_material_(0),
-    ambient_light_(1.0, 1.0, 1.0, 1.0),
-    background_(this),
+    ambient_light_(1.0, 1.0, 1.0, 1.0),    
     ui_interface_(new UI(this)),
     pipeline_(new Pipeline(*this)) {
 
@@ -24,8 +23,6 @@ Scene::Scene(WindowBase* window):
     TemplatedManager<Scene, Camera, CameraID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Camera, CameraID>));
     TemplatedManager<Scene, Text, TextID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Text, TextID>));
     TemplatedManager<Scene, ShaderProgram, ShaderID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_shader_callback));
-
-    background().set_parent(this);
 }
 
 Scene::~Scene() {

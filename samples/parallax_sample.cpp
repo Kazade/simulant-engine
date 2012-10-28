@@ -1,8 +1,8 @@
-
-
-
 #include "kglt/kglt.h"
 #include "kglt/shortcuts.h"
+#include "kglt/additional.h"
+
+using kglt::extra::Background;
 
 int main(int argc, char* argv[]) {
 	//Set up logging to stdio
@@ -19,19 +19,21 @@ int main(int argc, char* argv[]) {
 //	window.scene().pass().viewport().configure(kglt::VIEWPORT_TYPE_BLACKBAR_16_BY_9);
     scene.camera().set_orthographic_projection_from_height((float) 224 / (float) 40, 16.0 / 9.0);
 	
-	//Alternatively window.scene().background().add_layer("sample_data/parallax/back_layer.png", BACKGROUND_FILL);
-    scene.background().add_layer("sample_data/parallax/back_layer.png");
-    scene.background().add_layer("sample_data/parallax/middle_layer.png");
-    scene.background().add_layer("sample_data/parallax/front_layer.png");
+    Background::ptr background = Background::create(scene);
 
-    double width = scene.background().layer(0).width();
+	//Alternatively window.scene().background().add_layer("sample_data/parallax/back_layer.png", BACKGROUND_FILL);
+    background->add_layer("sample_data/parallax/back_layer.png");
+    background->add_layer("sample_data/parallax/middle_layer.png");
+    background->add_layer("sample_data/parallax/front_layer.png");
+
+    double width = background->layer(0).width();
     double height = width / (16.0 / 9.0);
-    scene.background().set_visible_dimensions(width, height); //The visible height in pixels (ortho)
+    background->set_visible_dimensions(width, height); //The visible height in pixels (ortho)
 
     while(window->update()) {
-        scene.background().layer(0).scroll_x(0.1 * window->delta_time());
-        scene.background().layer(1).scroll_x(0.2 * window->delta_time());
-        scene.background().layer(2).scroll_x(1.0 * window->delta_time());
+        background->layer(0).scroll_x(0.1 * window->delta_time());
+        background->layer(1).scroll_x(0.2 * window->delta_time());
+        background->layer(2).scroll_x(1.0 * window->delta_time());
 	}
 
 	return 0;

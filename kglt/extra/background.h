@@ -7,18 +7,23 @@
 #include <cstdint>
 #include <kazmath/mat4.h>
 
-#include "object.h"
-#include "types.h"
-#include "generic/visitor.h"
+#include "../object.h"
+#include "../types.h"
+#include "../generic/creator.h"
 
 namespace kglt {
 
 class Scene;
-class Background;
 class Renderer;
+
+namespace extra {
+
+class Background;
 
 class BackgroundLayer {
 public:
+    typedef std::tr1::shared_ptr<BackgroundLayer> ptr;
+
     BackgroundLayer(Background& background, const std::string& image_path);
     ~BackgroundLayer();
 
@@ -46,13 +51,11 @@ private:
     double offset_y_;
 };
 
-class Background :
-    public Object {
-
+class Background {
 public:
-    VIS_DEFINE_VISITABLE();
+    typedef std::tr1::shared_ptr<Background> ptr;
 
-    Background(Scene *scene);
+    Background(Scene& scene, ViewportID viewport);
 
     void add_layer(const std::string& image_path);
     BackgroundLayer& layer(uint32_t index) { return *layers_.at(index); }
@@ -63,8 +66,23 @@ public:
     double visible_x() const { return visible_x_; }
     double visible_y() const { return visible_y_; }
 
+    Scene& scene() { return scene_; }
+
+    SceneGroupID scene_group() const { return background_sg_; }
+
+    static std::tr1::shared_ptr<Background> create(Scene& scene, ViewportID viewport=0) {
+        return std::tr1::shared_ptr<Background>(new Background(scene, viewport));
+    }
+
 private:
-    std::vector<std::tr1::shared_ptr<BackgroundLayer> > layers_;
+    Scene& scene_;
+
+    ViewportID viewport_;
+    SceneGroupID background_sg_;
+    CameraID ortho_camera_;
+
+    std::vector<BackgroundLayer::ptr> layers_;
+
     double visible_x_;
     double visible_y_;
 
@@ -73,5 +91,6 @@ private:
     void destroy() {}
 };
 
+}
 }
 #endif // BACKGROUND_H

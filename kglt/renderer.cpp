@@ -3,9 +3,9 @@
 
 namespace kglt {
 
-void Renderer::render(const std::vector<GeometryBuffer::ptr>& buffers) { //FIXME: Should pass in batching structure
+void Renderer::render(const std::vector<GeometryBuffer::ptr>& buffers, CameraID camera) { //FIXME: Should pass in batching structure
     for(GeometryBuffer::ptr buffer: buffers) {
-        render_buffer(*buffer);
+        render_buffer(*buffer, camera);
     }
 }
 

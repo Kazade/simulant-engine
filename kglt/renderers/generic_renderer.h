@@ -15,10 +15,10 @@ public:
         Renderer(scene) {}
 
 private:
-    void render_buffer(GeometryBuffer& mesh);
+    void render_buffer(GeometryBuffer& mesh, CameraID camera);
 
     void set_auto_uniforms_on_shader(ShaderProgram& s, Scene& scene,
-        const std::vector<LightID>& lights_within_range, uint32_t iteration);
+        const std::vector<LightID>& lights_within_range, uint32_t iteration, CameraID camera);
 
     void set_auto_attributes_on_shader(ShaderProgram& s, GeometryBuffer& buffer);
     void set_blending_mode(BlendType type);

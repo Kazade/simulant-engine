@@ -16,13 +16,13 @@ public:
     Renderer(Scene& scene):
         scene_(scene) {}
 
-    void render(const std::vector<GeometryBuffer::ptr>& buffers); //FIXME: Should pass in batching structure
+    void render(const std::vector<GeometryBuffer::ptr>& buffers, CameraID camera); //FIXME: Should pass in batching structure
     Scene& scene() { return scene_; }
 
 private:
     Scene& scene_;
 
-    virtual void render_buffer(GeometryBuffer& buffer) = 0;
+    virtual void render_buffer(GeometryBuffer& buffer, CameraID camera) = 0;
 };
 
 }

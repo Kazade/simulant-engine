@@ -210,11 +210,7 @@ tests/test_material.cpp
 kglt/material.cpp
 kglt/colour.h
 kglt/colour.cpp
-kglt/additional/sprite.h
-kglt/additional/sprite_strip_loader.h
-kglt/additional/sprite_strip_loader.cpp
 kglt/additional.h
-kglt/additional/sprite.cpp
 tests/test_shader.cpp
 kglt/light.cpp
 kglt/partitioner.h
@@ -238,5 +234,9 @@ kglt/renderer.cpp
 kglt/utils/geometry_buffer.h
 tests/test_geometry_buffer.cpp
 kglt/utils/geometry_buffer.cpp
-kglt/additional/background.h
-kglt/additional/background.cpp
+kglt/extra/sprite_strip_loader.h
+kglt/extra/sprite.h
+kglt/extra/background.h
+kglt/extra/sprite_strip_loader.cpp
+kglt/extra/sprite.cpp
+kglt/extra/background.cpp

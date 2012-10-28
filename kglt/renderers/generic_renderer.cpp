@@ -14,15 +14,15 @@ void GenericRenderer::set_auto_uniforms_on_shader(
     ShaderProgram& s,
     Scene& scene,
     const std::vector<LightID>& lights_within_range,
-    uint32_t iteration) {
+    uint32_t iteration,
+    CameraID camera) {
 
     //Calculate the modelview-projection matrix
     kmMat4 modelview_projection;
 
-    const kmMat4* modelview = &scene.camera().modelview_matrix();
-    const kmMat4* projection = &scene.camera().projection_matrix();
+    const kmMat4* modelview = &scene.camera(camera).modelview_matrix();
+    const kmMat4* projection = &scene.camera(camera).projection_matrix();
 
-//    L_WARN("CAMERA SELECTION NOT IMPLEMENTED");
     kmMat4Multiply(
         &modelview_projection,
         projection,
@@ -39,14 +39,14 @@ void GenericRenderer::set_auto_uniforms_on_shader(
     if(s.params().uses_auto(SP_AUTO_MODELVIEW_MATRIX)) {
         s.params().set_mat4x4(
             s.params().auto_uniform_variable_name(SP_AUTO_MODELVIEW_MATRIX),
-            scene.camera().modelview_matrix() //FIXME: Wrong camera
+            *modelview
         );
     }
 
     if(s.params().uses_auto(SP_AUTO_PROJECTION_MATRIX)) {
         s.params().set_mat4x4(
             s.params().auto_uniform_variable_name(SP_AUTO_PROJECTION_MATRIX),
-            scene.camera().projection_matrix() //FIXME: wrong camera
+            *projection
         );
     }
 
@@ -213,7 +213,7 @@ void GenericRenderer::set_blending_mode(BlendType type) {
     }
 }
 
-void GenericRenderer::render_buffer(GeometryBuffer& buffer) {
+void GenericRenderer::render_buffer(GeometryBuffer& buffer, CameraID camera) {
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
@@ -264,7 +264,7 @@ void GenericRenderer::render_buffer(GeometryBuffer& buffer) {
         }
 
         for(uint32_t j = 0; j < iteration_count; ++j) {
-            set_auto_uniforms_on_shader(s, scene(), lights, j); //Uniforms might change depending on the iteration
+            set_auto_uniforms_on_shader(s, scene(), lights, j, camera); //Uniforms might change depending on the iteration
 
             //Render the mesh, once for each iteration of the pass
             if(buffer.arrangement() == MESH_ARRANGEMENT_POINTS) {

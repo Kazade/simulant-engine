@@ -72,7 +72,7 @@ void Pipeline::run_pass(uint32_t index) {
     std::vector<GeometryBuffer::ptr> buffers = partitioner_->geometry_visible_from(pass->camera_, pass->scene_group_);
 
     //TODO: Batched rendering
-    renderer_->render(buffers);
+    renderer_->render(buffers, pass->camera());
 
     signal_render_pass_finished_(index);
 }

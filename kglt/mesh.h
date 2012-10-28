@@ -139,7 +139,7 @@ public:
     void vbo(uint32_t vertex_attributes);
 
     void done() {}
-    void invalidate() { vertex_buffer_objects_.clear(); }
+    void invalidate() { buffer_cache_.clear(); }
 
     /*
      * 	FIXME: This should apply to the triangles, not the mesh itself
