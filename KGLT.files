@@ -240,3 +240,4 @@ kglt/extra/background.h
 kglt/extra/sprite_strip_loader.cpp
 kglt/extra/sprite.cpp
 kglt/extra/background.cpp
+tests/test_newmesh.cpp

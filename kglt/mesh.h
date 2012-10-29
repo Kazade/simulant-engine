@@ -13,17 +13,131 @@
 
 namespace kglt {
 
-class MeshBase {
-protected:
-    GeometryBuffer::ptr vertex_data_;
+namespace newmesh {
 
+class VertexData {
 public:
-    void set_arrangement(MeshArrangement arrangement);
-    void set_attributes(uint32_t attributes);
+    VertexData():
+        cursor_position_(-1) {
+    }
+
+    void set_texture_coordinate_dimensions(uint32_t coord_index, uint32_t count);
+
+    void move_to_start();
+    void move_to(uint16_t index);
+    void move_to_end();
+    void move_next();
+
+    void done();
+
+    void position(float x, float y, float z);
+    void position(const kmVec3& pos);
+
+    void normal(float x, float y, float z);
+    void normal(const kmVec3& n);
+
+    void tex_coord0(float u);
+    void tex_coord0(float u, float v);
+    void tex_coord0(float u, float v, float w);
+    void tex_coord0(float x, float y, float z, float w);
+
+    void tex_coord1(float u);
+    void tex_coord1(float u, float v);
+    void tex_coord1(float u, float v, float w);
+    void tex_coord1(float x, float y, float z, float w);
+
+    void tex_coord2(float u);
+    void tex_coord2(float u, float v);
+    void tex_coord2(float u, float v, float w);
+    void tex_coord2(float x, float y, float z, float w);
+
+    void tex_coord3(float u);
+    void tex_coord3(float u, float v);
+    void tex_coord3(float u, float v, float w);
+    void tex_coord3(float x, float y, float z, float w);
+
+    void tex_coord4(float u);
+    void tex_coord4(float u, float v);
+    void tex_coord4(float u, float v, float w);
+    void tex_coord4(float x, float y, float z, float w);
+
+    void diffuse(float r, float g, float b, float a);
+    void diffuse(const Colour& colour);
+
+    void specular(float r, float g, float b, float a);
+    void specular(const Colour& colour);
+
+    bool has_positions() const;
+    bool has_normals() const;
+    bool has_texcoord0() const;
+    bool has_texcoord1() const;
+    bool has_texcoord2() const;
+    bool has_texcoord3() const;
+    bool has_texcoord4() const;
+    bool has_diffuse() const;
+    bool has_specular() const;
+
+private:
+    uint16_t tex_coord_dimensions_[8];
+
+    struct Vertex {
+        kmVec3 position;
+        kmVec3 normal;
+        kmVec4 tex_coords[8];
+        Colour diffuse_;
+        Colour specular_;
+    };
+
+    std::vector<Vertex> data_;
+    int32_t cursor_position_;
+};
+
+
+class IndexData {
+public:
+    void clear() { indices_.clear(); }
+    void reserve(uint16_t size) { indices_.reserve(size); }
+    void index(uint16_t idx) { indices_.push_back(idx); }
+
+private:
+    std::vector<uint16_t> indices_;
+};
+
+typedef uint16_t SubMeshIndex;
+
+class SubMesh {
+public:
+    typedef std::tr1::shared_ptr<SubMesh> ptr;
+
+    SubMesh(Mesh& parent, MaterialID material, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool uses_shared_vertices=true);
+
+    VertexData& vertex_data();
+    IndexData& index_data();
+
+private:
+    Mesh& parent_;
+    MaterialID material_;
+    MeshArrangement arrangement_;
+    bool uses_shared_data_;
+};
+
+class Mesh {
+public:
+    Mesh();
+    VertexData& shared_data() { return shared_data_; }
+
+    SubMeshIndex new_submesh(MaterialID material, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool uses_shared_vertices=true);
+    SubMesh& submesh(SubMeshIndex index);
+    void delete_submesh(SubMeshIndex index);
+
+private:
+    VertexData shared_data_;
+    std::vector<SubMesh::ptr> submeshes_;
 
 };
 
 
+}
 
 struct Vertex : public Vec3 {
 };
