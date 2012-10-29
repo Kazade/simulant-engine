@@ -111,8 +111,9 @@ public:
 
     SubMesh(Mesh& parent, MaterialID material, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool uses_shared_vertices=true);
 
-    VertexData& vertex_data();
-    IndexData& index_data();
+    virtual VertexData& vertex_data();
+    virtual IndexData& index_data();
+    virtual MaterialID material() const;
 
 private:
     Mesh& parent_;
@@ -124,7 +125,10 @@ private:
 class Mesh {
 public:
     Mesh();
-    VertexData& shared_data() { return shared_data_; }
+
+    VertexData& shared_data() {
+        return shared_data_;
+    }
 
     SubMeshIndex new_submesh(MaterialID material, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool uses_shared_vertices=true);
     SubMesh& submesh(SubMeshIndex index);
@@ -134,6 +138,72 @@ private:
     VertexData shared_data_;
     std::vector<SubMesh::ptr> submeshes_;
 
+    MeshID mesh_template_;
+};
+
+class Entity;
+
+class SubEntity {
+public:
+    SubEntity(Entity& parent, uint16_t idx):
+        parent_(parent),
+        index_(idx),
+        material_(0) {
+    }
+
+    MaterialID material() const {
+        if(material_) {
+            return material_;
+        }
+
+        return submesh().material();
+    }
+    void override_material(MaterialID material) { material_ = material; }
+
+    const VertexData& vertex_data() const { return submesh().vertex_data(); }
+    const IndexData& index_data() const { return submesh().index_data(); }
+
+private:
+    Entity& parent_;
+    uint16_t index_;
+    MaterialID material_;
+
+    SubMesh& submesh() { return parent_._mesh_ref().submesh(index_); }
+};
+
+class Entity {
+public:
+    Entity(Scene& scene):
+        scene_(scene),
+        mesh_(0) {}
+
+    Entity(Scene& scene, MeshID mesh):
+        scene_(scene),
+        mesh_(mesh) {
+    }
+
+    void set_mesh(MeshID mesh) {
+        mesh_ = mesh;
+    }
+
+    const VertexData& shared_data() const {
+        return scene.mesh(mesh_).shared_data();
+    }
+
+    const uint16_t subentity_count() const {
+        return subentities_.size();
+    }
+
+    SubEntity& subentity(uint32_t idx) {
+        return *subentities_.at(idx);
+    }
+
+private:
+    MeshID mesh_;
+
+    friend class SubEntity;
+
+    Mesh& _mesh_ref() { return scene_.mesh(mesh); }
 };
 
 
