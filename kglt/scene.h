@@ -23,6 +23,8 @@
 #include "material.h"
 #include "light.h"
 #include "scene_group.h"
+#include "newmesh.h"
+#include "entity.h"
 
 #include "pipeline.h"
 
@@ -45,7 +47,9 @@ class Scene :
     public generic::TemplatedManager<Scene, Material, MaterialID>,
     public generic::TemplatedManager<Scene, Texture, TextureID>,
     public generic::TemplatedManager<Scene, Light, LightID>,
-    public generic::TemplatedManager<Scene, SceneGroup, SceneGroupID> {
+    public generic::TemplatedManager<Scene, SceneGroup, SceneGroupID>,
+    public generic::TemplatedManager<Scene, newmesh::Mesh, newmesh::MeshID>,
+    public generic::TemplatedManager<Scene, Entity, EntityID> {
 
 public:
     VIS_DEFINE_VISITABLE();
@@ -65,13 +69,20 @@ public:
     Mesh& mesh(MeshID m);
     void delete_mesh(MeshID mid);
 
+    newmesh::MeshID new_newmesh();
+    newmesh::Mesh& newmesh(newmesh::MeshID m);
+
+    EntityID new_entity();
+    Entity& entity(EntityID e);
+    void delete_entity(EntityID e);
+
     CameraID new_camera();
     TextureID new_texture();
     ShaderID new_shader();
     FontID new_font();
     TextID new_text();
     MaterialID new_material(MaterialID clone_from=0);
-    LightID new_light(Object* parent=nullptr, LightType type=LIGHT_TYPE_POINT);
+    LightID new_light(Object* parent=nullptr, LightType type=LIGHT_TYPE_POINT);    
 
     bool has_mesh(MeshID m) const;
 

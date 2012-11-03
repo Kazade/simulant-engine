@@ -9,6 +9,8 @@
 #include "kazmath/vec2.h"
 #include "kazmath/vec4.h"
 
+#include "generic/unique_id.h"
+
 namespace kglt {
 
 struct Vec4 : public kmVec4 {
@@ -66,11 +68,18 @@ typedef uint32_t MaterialID;
 typedef uint32_t LightID;
 typedef uint32_t SceneGroupID;
 typedef uint32_t ViewportID;
+typedef uint32_t EntityID;
 
 const CameraID DefaultCameraID = 0;
 
 const std::string DEFAULT_MATERIAL_SCHEME = "scheme";
 
+namespace newmesh {
+    class Mesh;
+    typedef UniqueID<0> MeshID;
+}
+
+class Entity;
 class Mesh;
 class Light;
 class Scene;

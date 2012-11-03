@@ -241,3 +241,11 @@ kglt/extra/sprite_strip_loader.cpp
 kglt/extra/sprite.cpp
 kglt/extra/background.cpp
 tests/test_newmesh.cpp
+kglt/generic/managed.h
+kglt/entity.h
+kglt/entity.cpp
+kglt/newmesh.h
+kglt/generic/unique_id.h
+kglt/newmesh.cpp
+kglt/vertex_data.h
+kglt/vertex_data.cpp

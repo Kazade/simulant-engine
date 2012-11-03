@@ -104,6 +104,26 @@ void Scene::initialize_defaults() {
     mat.technique().pass(1).set_blending(BLEND_ADD);
 }
 
+EntityID Scene::new_entity() {
+    return TemplatedManager<Scene, Entity, EntityID>::manager_new();
+}
+
+Entity& Scene::entity(EntityID e) {
+    return TemplatedManager<Scene, Entity, EntityID>::manager_get(e);
+}
+
+void Scene::delete_entity(EntityID e) {
+    TemplatedManager<Scene, Entity, EntityID>::manager_delete(e);
+}
+
+newmesh::MeshID Scene::new_newmesh() {
+    return TemplatedManager<Scene, newmesh::Mesh, newmesh::MeshID>::manager_new();
+}
+
+newmesh::Mesh& Scene::newmesh(newmesh::MeshID m) {
+    return TemplatedManager<Scene, newmesh::Mesh, newmesh::MeshID>::manager_get(m);
+}
+
 MeshID Scene::new_mesh(Object *parent) {
     MeshID result = TemplatedManager<Scene, Mesh, MeshID>::manager_new();
     if(parent) {

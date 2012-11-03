@@ -27,8 +27,8 @@ template<typename T>
 class IncrementalGetNextID {
 public:
     T operator()() {
-        static T counter = 0;
-        return ++counter;
+        static uint32_t counter = 0;
+        return T(++counter);
     }
 };
 
@@ -36,7 +36,7 @@ template<typename Derived, typename ObjectType, typename ObjectIDType, typename 
 class TemplatedManager : public virtual BaseManager {
 public:
     ObjectIDType manager_new() {
-        ObjectIDType id = 0;
+        ObjectIDType id(0);
         {
             boost::recursive_mutex::scoped_lock lock(manager_lock_);
             id = NewIDGenerator()();
