@@ -11,4 +11,15 @@ newmesh::Mesh& Entity::_mesh_ref() {
     return scene_.newmesh(mesh_);
 }
 
+void Entity::set_mesh(newmesh::MeshID mesh) {
+    mesh_ = mesh;
+
+    newmesh::Mesh& m = this->_mesh_ref();
+
+    subentities_.clear();
+    for(uint16_t i = 0; i < m.submesh_count(); ++i) {
+        subentities_.push_back(SubEntity::create(*this, i));
+    }
+}
+
 }

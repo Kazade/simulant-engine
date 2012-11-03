@@ -29,9 +29,7 @@ public:
     newmesh::MeshID mesh() const { return mesh_; }
     bool has_mesh() const { return mesh_ != newmesh::MeshID(0); }
 
-    void set_mesh(newmesh::MeshID mesh) {
-        mesh_ = mesh;
-    }
+    void set_mesh(newmesh::MeshID mesh);
 
     const VertexData& shared_data() const;
 
@@ -39,7 +37,7 @@ public:
         return subentities_.size();
     }
 
-    SubEntity& subentity(uint32_t idx) {
+    SubEntity& subentity(uint16_t idx) {
         return *subentities_.at(idx);
     }
 

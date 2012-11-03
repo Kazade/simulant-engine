@@ -14,15 +14,14 @@ void VertexData::check_or_add_attribute(AttributeBitMask attr) {
 VertexData::VertexData():
     enabled_bitmask_(0),
     tex_coord_dimensions_{0},
-    cursor_position_(-1) {
+    cursor_position_(0) {
 }
 
 void VertexData::position(float x, float y, float z) {
     check_or_add_attribute(BM_POSITIONS);
 
-    if(data_.empty()) {
+    if(cursor_position_ == data_.size()) {
         data_.push_back(Vertex());
-        cursor_position_ = 0;
     }
 
     Vertex& vert = data_.at(cursor_position_);
@@ -38,9 +37,6 @@ void VertexData::position(const kmVec3& pos) {
 
 void VertexData::move_next() {
     cursor_position_++;
-    if(cursor_position_ == data_.size()) {
-        data_.push_back(Vertex());
-    }
 }
 
 void VertexData::done() {
