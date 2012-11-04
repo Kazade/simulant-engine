@@ -1,7 +1,7 @@
 #ifndef NULL_PARTITIONER_H
 #define NULL_PARTITIONER_H
 
-#include "../mesh.h"
+#include "../entity.h"
 #include "../light.h"
 
 #include "../partitioner.h"
@@ -13,15 +13,13 @@ public:
     NullPartitioner(Scene& scene):
         Partitioner(scene) {}
 
-    void add_mesh(Mesh& obj) {
-        all_meshes_.insert(obj.id());
+    void add_entity(EntityID obj) {
+        all_entities_.insert(obj);
     }
 
-    void remove_mesh(Mesh& obj) {
-        all_meshes_.erase(obj.id());
+    void remove_entity(EntityID obj) {
+        all_entities_.erase(obj);
     }
-
-    void relocate(Mesh& obj) {}
 
     void add_light(Light& obj) {
         all_lights_.insert(obj.id());
@@ -31,13 +29,11 @@ public:
         all_lights_.erase(obj.id());
     }
 
-    void relocate(Light& obj) {}
-
     std::vector<LightID> lights_within_range(const kmVec3& location);
-    std::vector<GeometryBuffer::ptr> geometry_visible_from(CameraID camera_id, SceneGroupID scene_group_id=0);
+    std::vector<SubEntity::ptr> geometry_visible_from(CameraID camera_id, SceneGroupID scene_group_id=0);
 
 private:
-    std::set<MeshID> all_meshes_;
+    std::set<EntityID> all_entities_;
     std::set<LightID> all_lights_;
 };
 

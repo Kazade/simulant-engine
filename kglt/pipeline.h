@@ -47,7 +47,7 @@ public:
     Pipeline(Scene& scene);
 
     void remove_all_passes();
-    void add_pass(SceneGroupID scene_group, TextureID target=0, CameraID camera=0, ViewportID viewport=0);
+    void add_pass(SceneGroupID scene_group, TextureID target=TextureID(), CameraID camera=CameraID(), ViewportID viewport=ViewportID());
     Pass& pass(uint32_t index) { return *passes_.at(index); }
 
     void set_partitioner(Partitioner::ptr partitioner);

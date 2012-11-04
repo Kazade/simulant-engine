@@ -151,7 +151,7 @@ void GenericRenderer::set_auto_uniforms_on_shader(
     }
 }
 
-void GenericRenderer::set_auto_attributes_on_shader(ShaderProgram& s, GeometryBuffer& buffer) {
+void GenericRenderer::set_auto_attributes_on_shader(ShaderProgram& s, SubEntity& buffer) {
     uint32_t stride = buffer.stride();
 
     if(s.params().uses_attribute(SP_ATTR_VERTEX_POSITION)) {
@@ -213,12 +213,12 @@ void GenericRenderer::set_blending_mode(BlendType type) {
     }
 }
 
-void GenericRenderer::render_buffer(GeometryBuffer& buffer, CameraID camera) {
+void GenericRenderer::render_subentity(SubEntity& buffer, CameraID camera) {
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
 
-    if(!buffer.count()) {
+    if(!buffer.index_data().count()) {
         return;
     }
 
@@ -268,11 +268,11 @@ void GenericRenderer::render_buffer(GeometryBuffer& buffer, CameraID camera) {
 
             //Render the mesh, once for each iteration of the pass
             if(buffer.arrangement() == MESH_ARRANGEMENT_POINTS) {
-                glDrawArrays(GL_POINTS, 0, buffer.count());
+                glDrawArrays(GL_POINTS, 0, buffer.index_data().count());
             } else if(buffer.arrangement() == MESH_ARRANGEMENT_LINE_STRIP) {
-                glDrawArrays(GL_LINE_STRIP, 0, buffer.count());
+                glDrawArrays(GL_LINE_STRIP, 0, buffer.index_data().count());
             } else if(buffer.arrangement() == MESH_ARRANGEMENT_TRIANGLES) {
-                glDrawArrays(GL_TRIANGLES, 0, buffer.count());
+                glDrawArrays(GL_TRIANGLES, 0, buffer.index_data().count());
             } else {
                 assert(0);
             }

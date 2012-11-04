@@ -15,55 +15,56 @@ Element::Element(UI *ui):
     width_(0),
     height_(0),
     border_width_(1),
-    padding_{5, 5, 5, 5},
-    background_mesh_(0),
-    border_mesh_(0) {
+    padding_{5, 5, 5, 5} {
 
 }
 
 void Element::_initialize(Scene& scene) {
-    if(!border_mesh_) {
-        border_mesh_ = scene.new_mesh();
-    }
-
-    if(!background_mesh_) {
-        background_mesh_ = scene.new_mesh();
-    }
+    mesh_id_ = scene.new_mesh();
+    entity_id_ = scene.new_entity(mesh_id_);
 
     rebuild_meshes();
 }
 
 void Element::rebuild_meshes() {
-    kglt::Mesh& border = scene().mesh(border_mesh_);
-    border.set_parent(this);
-    border.move_to(0.0, 0.0, 0.1); //Move the border slightly forward
-    kglt::procedural::mesh::rectangle_outline(border, total_width(), total_height());
+    kglt::Mesh& mesh = scene().mesh(mesh_id_);
 
-    for(kglt::Vertex& v: border.vertices()) {
-        v.x += total_width() / 2.0 ;
-        v.y += total_height() / 2.0;
+    //Create the background submesh
+    SubMeshIndex background = kglt::procedural::mesh::rectangle(
+        mesh,
+        total_width(),
+        total_height(),
+        total_width() / 2.0,
+        total_height() / 2.0,
+        0.0, true
+    );
+
+    //Create an outline submesh (don't clear the existing submeshes or data)
+    //Slightly offset in the z-axis
+    SubMeshIndex border = kglt::procedural::mesh::rectangle_outline(
+        mesh,
+        total_width(),
+        total_height(),
+        total_width() / 2.0,
+        total_height() / 2.0,
+        0.1, false
+    );
+
+    //Go through the background submesh vertices and override the diffuse colour
+    for(uint16_t idx: mesh.submesh(background).index_data().all()) {
+        mesh.shared_data().move_to(idx);
+        mesh.shared_data().diffuse(kglt::Colour(0.0, 0.2, 1.0, 0.75));
     }
 
-    border.set_diffuse_colour(kglt::Colour(0.0, 0.0, 0.5, 1.0));
-
-    kglt::Mesh& background = scene().mesh(background_mesh_);
-    background.set_parent(this);
-    kglt::procedural::mesh::rectangle(background, total_width(), total_height());
-
-    for(kglt::Vertex& v: background.vertices()) {
-        v.x += total_width() / 2.0;
-        v.y += total_height() / 2.0;
+    //Go through the border submesh vertices and override the diffuse colour
+    for(uint16_t idx: mesh.submesh(border).index_data().all()) {
+        mesh.shared_data().move_to(idx);
+        mesh.shared_data().diffuse(kglt::Colour(0.0, 0.0, 0.5, 1.0));
     }
 
-    background.set_diffuse_colour(kglt::Colour(0.0, 0.2, 1.0, 0.75));
-}
-
-Object& Element::background() {
-    return scene().mesh(background_mesh_);
-}
-
-Object& Element::border() {
-    return scene().mesh(border_mesh_);
+    //Rebuild the entity
+    kglt::Entity& e = scene().entity(entity_id_);
+    e.set_mesh(mesh_id_);
 }
 
 void Element::set_position(float x, float y) {

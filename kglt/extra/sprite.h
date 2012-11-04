@@ -37,6 +37,7 @@ public:
     MaterialID material();
     Scene& scene() { return scene_; }
 
+    EntityID entity() { return entity_id_; }
 private:
     Scene& scene_;
 
@@ -46,6 +47,7 @@ private:
     std::map<std::string, MaterialID> animations_;
 
     MeshID mesh_id_;
+    EntityID entity_id_;
 };
 
 }

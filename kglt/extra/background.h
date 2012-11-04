@@ -34,7 +34,7 @@ public:
     uint32_t height() const { return height_; }
 
     MaterialID material_id() const { return material_id_; }
-    MeshID mesh_id() const { return mesh_id_; }
+    EntityID entity() const { return entity_id_; }
 
     Background& background() { return background_; }
 
@@ -42,6 +42,8 @@ private:
     Background& background_;
     TextureID texture_id_;
     MaterialID material_id_;
+
+    EntityID entity_id_;
     MeshID mesh_id_;
 
     uint32_t width_;

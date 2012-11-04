@@ -33,8 +33,8 @@ Pipeline::Pipeline(Scene& scene):
 
 void Pipeline::init() {
     //Keep the partitioner updated with new meshes
-    scene_.signal_mesh_created().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::add_mesh));
-    scene_.signal_mesh_destroyed().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::remove_mesh));
+    scene_.signal_entity_created().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::add_entity));
+    scene_.signal_entity_destroyed().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::remove_entity));
 
     scene_.signal_light_created().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::add_light));
     scene_.signal_light_destroyed().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::remove_light));
@@ -69,7 +69,7 @@ void Pipeline::run_pass(uint32_t index) {
 
     signal_render_pass_started_(index);
 
-    std::vector<GeometryBuffer::ptr> buffers = partitioner_->geometry_visible_from(pass->camera_, pass->scene_group_);
+    std::vector<SubEntity::ptr> buffers = partitioner_->geometry_visible_from(pass->camera_, pass->scene_group_);
 
     //TODO: Batched rendering
     renderer_->render(buffers, pass->camera());

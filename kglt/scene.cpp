@@ -19,7 +19,7 @@ Scene::Scene(WindowBase* window):
     ui_interface_(new UI(this)),
     pipeline_(new Pipeline(*this)) {
 
-    TemplatedManager<Scene, Mesh, MeshID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Mesh, MeshID>));
+    TemplatedManager<Scene, Entity, EntityID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Entity, EntityID>));
     TemplatedManager<Scene, Camera, CameraID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Camera, CameraID>));
     TemplatedManager<Scene, Text, TextID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Text, TextID>));
     TemplatedManager<Scene, ShaderProgram, ShaderID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_shader_callback));
@@ -104,8 +104,21 @@ void Scene::initialize_defaults() {
     mat.technique().pass(1).set_blending(BLEND_ADD);
 }
 
-EntityID Scene::new_entity() {
-    return TemplatedManager<Scene, Entity, EntityID>::manager_new();
+EntityID Scene::new_entity(MeshID mid) {
+    EntityID result = TemplatedManager<Scene, Entity, EntityID>::manager_new();
+
+    //If a mesh was specified, set it
+    if(mid) {
+        entity(result).set_mesh(mid);
+    }
+
+    //Set the scene group to the default (otherwise nothing gets rendered)
+    entity(result).scene_group = scene_group(default_scene_group_);
+
+    //Tell everyone about the new entity
+    signal_entity_created_(result);
+
+    return result;
 }
 
 Entity& Scene::entity(EntityID e) {
@@ -113,31 +126,22 @@ Entity& Scene::entity(EntityID e) {
 }
 
 void Scene::delete_entity(EntityID e) {
+    signal_entity_destroyed_(e);
+
     TemplatedManager<Scene, Entity, EntityID>::manager_delete(e);
 }
 
-newmesh::MeshID Scene::new_newmesh() {
-    return TemplatedManager<Scene, newmesh::Mesh, newmesh::MeshID>::manager_new();
+
+Mesh& Scene::mesh(MeshID m) {
+    return const_cast<Mesh&>(static_cast<const Scene*>(this)->mesh(m));
 }
 
-newmesh::Mesh& Scene::newmesh(newmesh::MeshID m) {
-    return const_cast<newmesh::Mesh&>(static_cast<const Scene*>(this)->newmesh(m));
+const Mesh& Scene::mesh(MeshID m) const {
+    return TemplatedManager<Scene, Mesh, MeshID>::manager_get(m);
 }
 
-const newmesh::Mesh& Scene::newmesh(newmesh::MeshID m) const {
-    return TemplatedManager<Scene, newmesh::Mesh, newmesh::MeshID>::manager_get(m);
-}
-
-MeshID Scene::new_mesh(Object *parent) {
+MeshID Scene::new_mesh() {
     MeshID result = TemplatedManager<Scene, Mesh, MeshID>::manager_new();
-    if(parent) {
-        mesh(result).set_parent(parent);
-    }
-
-    mesh(result).scene_group = scene_group(default_scene_group_);
-
-    signal_mesh_created_(mesh(result));
-
     return result;
 }
 
@@ -145,21 +149,13 @@ bool Scene::has_mesh(MeshID m) const {
     return TemplatedManager<Scene, Mesh, MeshID>::manager_contains(m);
 }
 
-Mesh& Scene::mesh(MeshID m) {
-    return TemplatedManager<Scene, Mesh, MeshID>::manager_get(m);
-}
-
 void Scene::delete_mesh(MeshID mid) {
-    signal_mesh_destroyed_(mesh(mid));
-
-    Mesh& obj = mesh(mid);
-    obj.destroy_children();
     return TemplatedManager<Scene, Mesh, MeshID>::manager_delete(mid);
 }
 
 MaterialID Scene::new_material(MaterialID clone_from) {
     MaterialID result = TemplatedManager<Scene, Material, MaterialID>::manager_new();
-    if(clone_from > 0) {
+    if(clone_from) {
         kglt::Material& existing = material(clone_from);
         kglt::Material& new_mat = material(result);
 
@@ -251,7 +247,7 @@ SceneGroupID Scene::new_scene_group() {
 }
 
 SceneGroup& Scene::scene_group(SceneGroupID group) {
-    if(group > 0) {
+    if(group) {
         return TemplatedManager<Scene, SceneGroup, SceneGroupID>::manager_get(group);
     } else {
         return TemplatedManager<Scene, SceneGroup, SceneGroupID>::manager_get(default_scene_group_);
@@ -317,7 +313,7 @@ void Scene::init() {
 std::pair<ShaderID, bool> Scene::find_shader(const std::string& name) {
     std::map<std::string, ShaderID>::const_iterator it = shader_lookup_.find(name);
     if(it == shader_lookup_.end()) {
-        return std::make_pair(0, false);
+        return std::make_pair(ShaderID(), false);
     }
 
     return std::make_pair((*it).second, true);

@@ -13,8 +13,16 @@ void VertexData::check_or_add_attribute(AttributeBitMask attr) {
 
 VertexData::VertexData():
     enabled_bitmask_(0),
-    tex_coord_dimensions_{0},
     cursor_position_(0) {
+
+    //Default to u,v for all tex coords
+    for(uint8_t i = 0; i < 8; ++i) {
+        set_texture_coordinate_dimensions(i, 2);
+    }
+}
+
+void VertexData::clear() {
+    data_.clear();
 }
 
 void VertexData::position(float x, float y, float z) {

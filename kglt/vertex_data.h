@@ -29,6 +29,7 @@ public:
 
     void set_texture_coordinate_dimensions(uint32_t coord_index, uint32_t count);
 
+    void clear();
     void move_to_start();
     void move_to(uint16_t index);
     void move_to_end();
@@ -130,6 +131,9 @@ public:
     void clear() { indices_.clear(); }
     void reserve(uint16_t size) { indices_.reserve(size); }
     void index(uint16_t idx) { indices_.push_back(idx); }
+    uint16_t count() const { return indices_.size(); }
+
+    const std::vector<uint16_t>& all() const { return indices_; }
 
     bool operator==(const IndexData& other) const {
         return this->indices_ == other.indices_;

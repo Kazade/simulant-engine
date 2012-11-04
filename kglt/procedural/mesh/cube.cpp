@@ -5,51 +5,80 @@ namespace procedural {
 namespace mesh {
 
 void cube(kglt::Mesh& mesh, float width) {
-    mesh.vertices().clear();
-    mesh.triangles().clear();
+    mesh.clear();
 
     float hw = width * 0.5;
 
-    mesh.add_vertex(-hw, -hw, hw);
-    mesh.add_vertex( hw, -hw, hw);
-    mesh.add_vertex( hw,  hw, hw);
-    mesh.add_vertex(-hw,  hw, hw);
+    //Front
+    mesh.shared_data().position(-hw, -hw, hw);
+    mesh.shared_data().normal(0, 0, 1);
+    mesh.shared_data().tex_coord0(0, 0);
+    mesh.shared_data().move_next();
 
-    mesh.add_vertex(-hw, -hw,-hw);
-    mesh.add_vertex( hw, -hw,-hw);
-    mesh.add_vertex( hw,  hw,-hw);
-    mesh.add_vertex(-hw,  hw,-hw);
+    mesh.shared_data().position( hw, -hw, hw);
+    mesh.shared_data().normal(0, 0, 1);
+    mesh.shared_data().tex_coord0(1, 0);
+    mesh.shared_data().move_next();
 
-    kglt::Triangle& tri1 = mesh.add_triangle(0, 1, 2);
-    tri1.set_uv(0, 0.0, 0.0);
-    tri1.set_uv(1, 1.0, 0.0);
-    tri1.set_uv(2, 1.0, 1.0);
+    mesh.shared_data().position( hw,  hw, hw);
+    mesh.shared_data().normal(0, 0, 1);
+    mesh.shared_data().tex_coord0(1, 1);
+    mesh.shared_data().move_next();
 
-    tri1.set_surface_normal(0, 0, 1);
+    mesh.shared_data().position(-hw,  hw, hw);
+    mesh.shared_data().normal(0, 0, 1);
+    mesh.shared_data().tex_coord0(0, 1);
+    mesh.shared_data().move_next();
 
-    kglt::Triangle& tri2 = mesh.add_triangle(0, 2, 3);
-    tri2.set_uv(0, 0.0, 0.0);
-    tri2.set_uv(1, 1.0, 1.0);
-    tri2.set_uv(2, 0.0, 1.0);
+    //Right
+    mesh.shared_data().position(hw, -hw, hw);
+    mesh.shared_data().normal(1, 0, 0);
+    mesh.shared_data().tex_coord0(0, 0);
+    mesh.shared_data().move_next();
 
-    tri2.set_surface_normal(0, 0, 1);
+    mesh.shared_data().position( hw, -hw, -hw);
+    mesh.shared_data().normal(1, 0, 0);
+    mesh.shared_data().tex_coord0(1, 0);
+    mesh.shared_data().move_next();
 
-    //Right side
-    kglt::Triangle& tri3 = mesh.add_triangle(1, 5, 6);
-    tri3.set_uv(0, 0.0, 0.0);
-    tri3.set_uv(1, 1.0, 1.0);
-    tri3.set_uv(2, 0.0, 1.0);
+    mesh.shared_data().position( hw,  hw, -hw);
+    mesh.shared_data().normal(0, 0, 1);
+    mesh.shared_data().tex_coord0(1, 1);
+    mesh.shared_data().move_next();
 
-    tri3.set_surface_normal(1, 0, 0);
+    mesh.shared_data().position(hw,  hw, hw);
+    mesh.shared_data().normal(0, 0, 1);
+    mesh.shared_data().tex_coord0(0, 1);
+    mesh.shared_data().move_next();
 
-    kglt::Triangle& tri4 = mesh.add_triangle(1, 6, 2);
-    tri4.set_uv(0, 0.0, 0.0);
-    tri4.set_uv(1, 1.0, 1.0);
-    tri4.set_uv(2, 0.0, 1.0);
+    //Back
+    mesh.shared_data().position(hw, -hw, -hw);
+    mesh.shared_data().normal(1, 0, 0);
+    mesh.shared_data().tex_coord0(0, 0);
+    mesh.shared_data().move_next();
 
-    tri4.set_surface_normal(1, 0, 0);
+    mesh.shared_data().position(-hw, -hw, -hw);
+    mesh.shared_data().normal(1, 0, 0);
+    mesh.shared_data().tex_coord0(1, 0);
+    mesh.shared_data().move_next();
 
-    mesh.done();
+    mesh.shared_data().position(-hw,  hw, -hw);
+    mesh.shared_data().normal(0, 0, 1);
+    mesh.shared_data().tex_coord0(1, 1);
+    mesh.shared_data().move_next();
+
+    mesh.shared_data().position(hw,  hw, -hw);
+    mesh.shared_data().normal(0, 0, 1);
+    mesh.shared_data().tex_coord0(0, 1);
+    mesh.shared_data().move_next();
+
+    mesh.shared_data().done();
+
+    SubMeshIndex sm = mesh.new_submesh(MaterialID(), MESH_ARRANGEMENT_LINES, true);
+
+    for(uint8_t i = 0; i < mesh.shared_data().count(); ++i) {
+        mesh.submesh(sm).index_data().index(i);
+    }
 }
 
 }

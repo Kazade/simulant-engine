@@ -4,40 +4,72 @@ namespace kglt {
 namespace procedural {
 namespace mesh {
 
-void rectangle(kglt::Mesh& mesh, float width, float height, float x_offset, float y_offset) {
-	mesh.vertices().clear();
-	mesh.triangles().clear();
-	
-    mesh.add_vertex(x_offset + (-width / 2.0), y_offset + (-height / 2.0), 0.0);
-    mesh.add_vertex(x_offset + (width / 2.0), y_offset + (-height / 2.0), 0.0);
-    mesh.add_vertex(x_offset + (width / 2.0),  y_offset + (height / 2.0), 0.0);
-    mesh.add_vertex(x_offset + (-width / 2.0),  y_offset + (height / 2.0), 0.0);
+SubMeshIndex rectangle(kglt::Mesh& mesh, float width, float height, float x_offset, float y_offset, bool clear) {
+    if(clear) {
+        mesh.clear();
+    }
 
-    kglt::Triangle& tri1 = mesh.add_triangle(0, 1, 2);
-    tri1.set_uv(0, 0.0, 0.0);
-    tri1.set_uv(1, 1.0, 0.0);
-    tri1.set_uv(2, 1.0, 1.0);
+    uint16_t offset = mesh.shared_data().count();
 
-    kglt::Triangle& tri2 = mesh.add_triangle(0, 2, 3);
-    tri2.set_uv(0, 0.0, 0.0);
-    tri2.set_uv(1, 1.0, 1.0);
-    tri2.set_uv(2, 0.0, 1.0);
-    
-    mesh.done();
+    //Build some shared vertex data
+    mesh.shared_data().position(x_offset + (-width / 2.0), y_offset + (-height / 2.0), 0.0);
+    mesh.shared_data().tex_coord0(0.0, 0.0);
+    mesh.shared_data().move_next();
+
+    mesh.shared_data().position(x_offset + (width / 2.0), y_offset + (-height / 2.0), 0.0);
+    mesh.shared_data().tex_coord0(1.0, 0.0);
+    mesh.shared_data().move_next();
+
+    mesh.shared_data().position(x_offset + (width / 2.0),  y_offset + (height / 2.0), 0.0);
+    mesh.shared_data().tex_coord0(1.0, 1.0);
+    mesh.shared_data().move_next();
+
+    mesh.shared_data().position(x_offset + (-width / 2.0),  y_offset + (height / 2.0), 0.0);
+    mesh.shared_data().tex_coord0(0.0, 1.0);
+    mesh.shared_data().done();
+
+    //Create a submesh that uses the shared data
+    SubMeshIndex sm = mesh.new_submesh(MaterialID(), MESH_ARRANGEMENT_TRIANGLES, true);
+    mesh.submesh(sm).index_data().index(offset + 0);
+    mesh.submesh(sm).index_data().index(offset + 1);
+    mesh.submesh(sm).index_data().index(offset + 2);
+
+    mesh.submesh(sm).index_data().index(offset + 0);
+    mesh.submesh(sm).index_data().index(offset + 2);
+    mesh.submesh(sm).index_data().index(offset + 3);
+
+    return sm;
 }
 
-void rectangle_outline(kglt::Mesh& mesh, float width, float height, float x_offset, float y_offset) {
-	mesh.vertices().clear();
-	mesh.triangles().clear();
-	
-    mesh.add_vertex(x_offset + (-width / 2.0), y_offset + (-height / 2.0), 0.0);
-    mesh.add_vertex(x_offset + (width / 2.0), y_offset + (-height / 2.0), 0.0);
-    mesh.add_vertex(x_offset + (width / 2.0), y_offset + (height / 2.0), 0.0);
-    mesh.add_vertex(x_offset + (-width / 2.0), y_offset + (height / 2.0), 0.0);
-    mesh.add_vertex(x_offset + (-width / 2.0), y_offset + (-height / 2.0), 0.0);
+SubMeshIndex rectangle_outline(kglt::Mesh& mesh, float width, float height, float x_offset, float y_offset, bool clear) {
+    if(clear) {
+        mesh.clear();
+    }
+
+    uint16_t offset = mesh.shared_data().count();
+
+    mesh.shared_data().position(x_offset + (-width / 2.0), y_offset + (-height / 2.0), 0.0);
+    mesh.shared_data().move_next();
+
+    mesh.shared_data().position(x_offset + (width / 2.0), y_offset + (-height / 2.0), 0.0);
+    mesh.shared_data().move_next();
+
+    mesh.shared_data().position(x_offset + (width / 2.0), y_offset + (height / 2.0), 0.0);
+    mesh.shared_data().move_next();
+
+    mesh.shared_data().position(x_offset + (-width / 2.0), y_offset + (height / 2.0), 0.0);
+    mesh.shared_data().move_next();
+
+    mesh.shared_data().position(x_offset + (-width / 2.0), y_offset + (-height / 2.0), 0.0);
+    mesh.shared_data().done();
     
-    mesh.set_arrangement(kglt::MESH_ARRANGEMENT_LINE_STRIP);
-    mesh.done();
+    SubMeshIndex sm = mesh.new_submesh(MaterialID(), MESH_ARRANGEMENT_LINES, true);
+
+    for(uint8_t i = 0; i < mesh.shared_data().count(); ++i) {
+        mesh.submesh(sm).index_data().index(offset + i);
+    }
+
+    return sm;
 }
 
 }

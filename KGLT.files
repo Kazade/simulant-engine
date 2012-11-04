@@ -132,8 +132,6 @@ kglt/light.h
 kglt/loadable.h
 kglt/loader.cpp
 kglt/loader.h
-kglt/mesh.cpp
-kglt/mesh.h
 kglt/object.cpp
 kglt/object.h
 kglt/option_list.cpp
@@ -244,8 +242,9 @@ tests/test_newmesh.cpp
 kglt/generic/managed.h
 kglt/entity.h
 kglt/entity.cpp
-kglt/newmesh.h
 kglt/generic/unique_id.h
-kglt/newmesh.cpp
 kglt/vertex_data.h
 kglt/vertex_data.cpp
+kglt/mesh.h
+kglt/mesh.cpp
+kglt/generic/safe_bool.h

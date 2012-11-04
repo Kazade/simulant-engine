@@ -9,7 +9,10 @@ Sprite::Sprite(Scene& scene):
     scene_(scene) {
 
     mesh_id_ = scene_.new_mesh();    
-    kglt::procedural::mesh::rectangle(scene_.mesh(mesh_id_), 1.0, 1.0);
+    entity_id_ = scene_.new_entity();
+
+    kglt::procedural::mesh::rectangle(scene_.mesh(mesh_id_), 1.0, 1.0);    
+    scene_.entity(entity()).set_mesh(mesh_id_); //Reuild the entity
 }
 
 void Sprite::add_animation(const std::string& anim_name, const std::vector<TextureID>& frames, double duration) {
@@ -26,16 +29,18 @@ void Sprite::add_animation(const std::string& anim_name, const std::vector<Textu
 
 void Sprite::set_active_animation(const std::string &anim_name) {
     current_animation_ = anim_name;
-    scene_.mesh(mesh_id_).apply_material(animations_[anim_name]);
+    scene_.mesh(mesh_id_).submesh(0).set_material(animations_[anim_name]);
 }
 
 void Sprite::set_render_dimensions(float width, float height) {
     Mesh& mesh = scene().mesh(mesh_id_);
     kglt::procedural::mesh::rectangle(mesh, width, height);
+
+    scene().entity(entity()).set_mesh(mesh_id_); //Reuild the entity
 }
 
 void Sprite::move_to(float x, float y, float z) {
-    scene_.mesh(mesh_id_).move_to(x, y, z);
+    scene().entity(entity()).move_to(x, y, z);
 }
 
 }

@@ -3,36 +3,42 @@
 
 #include "generic/identifiable.h"
 #include "generic/managed.h"
+#include "generic/relation.h"
 
 #include "object.h"
-#include "newmesh.h"
+#include "mesh.h"
 
 namespace kglt {
 
 class SubEntity;
 
 class Entity :
-    public newmesh::MeshInterface,
+    public MeshInterface,
     public Managed<Entity>,
     public generic::Identifiable<EntityID>,
-    public Object {
+    public Object,
+    public Relatable {
 
 public:
+    Relation<Entity, SceneGroup> scene_group;
+
     Entity(Scene* scene, EntityID id):
         generic::Identifiable<EntityID>(id),
         Object(scene),
+        scene_group(this),
         mesh_(0) {}
 
-    Entity(Scene* scene, EntityID id, newmesh::MeshID mesh):
+    Entity(Scene* scene, EntityID id, MeshID mesh):
         generic::Identifiable<EntityID>(id),
         Object(scene),
+        scene_group(this),
         mesh_(mesh) {
     }
 
-    newmesh::MeshID mesh() const { return mesh_; }
-    bool has_mesh() const { return mesh_ != newmesh::MeshID(0); }
+    MeshID mesh() const { return mesh_; }
+    bool has_mesh() const { return mesh_ != MeshID(0); }
 
-    void set_mesh(newmesh::MeshID mesh);
+    void set_mesh(MeshID mesh);
 
     const VertexData& shared_data() const;
 
@@ -44,18 +50,19 @@ public:
         return *subentities_.at(idx);
     }
 
+    const std::vector<std::tr1::shared_ptr<SubEntity> >& _subentities() { return subentities_; }
 private:
-    newmesh::MeshID mesh_;
+    MeshID mesh_;
 
     std::vector<std::tr1::shared_ptr<SubEntity> > subentities_;
 
     friend class SubEntity;
 
-    newmesh::Mesh& _mesh_ref();
+    Mesh& _mesh_ref();
 };
 
 class SubEntity :
-    public newmesh::SubMeshInterface,
+    public SubMeshInterface,
     public Managed<SubEntity> {
 
 public:
@@ -76,13 +83,14 @@ public:
 
     const VertexData& vertex_data() const { return submesh().vertex_data(); }
     const IndexData& index_data() const { return submesh().index_data(); }
+    const MeshArrangement arrangement() const { return submesh().arrangement(); }
 
 private:
     Entity& parent_;
     uint16_t index_;
     MaterialID material_;
 
-    const newmesh::SubMesh& submesh() const { return parent_._mesh_ref().submesh(index_); }
+    const SubMesh& submesh() const { return parent_._mesh_ref().submesh(index_); }
 };
 
 }

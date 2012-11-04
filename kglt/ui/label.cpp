@@ -28,7 +28,8 @@ void Label::_initialize(Scene &scene) {
 
     Element::_initialize(scene);
 
-    text.set_parent(&background());
+    //Set the text element as a child of the main element entity
+    text.set_parent(&scene.entity(entity()));
 }
 
 const Text& Label::text_object() const {

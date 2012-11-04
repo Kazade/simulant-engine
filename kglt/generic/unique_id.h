@@ -2,10 +2,14 @@
 #define UNIQUE_ID_H
 
 #include <cstdint>
+#include "safe_bool.h"
 
 template<uint32_t T>
-class UniqueID {
+class UniqueID : public safe_bool<UniqueID<T> >{
 public:
+    UniqueID():
+        id_(0) {}
+
     explicit UniqueID(uint32_t id):
         id_(id) {}
 
@@ -23,6 +27,11 @@ public:
 
     bool operator!=(const UniqueID<T>& other) const {
         return !(*this == other);
+    }
+
+public:
+    bool boolean_test() const {
+        return id_ != 0;
     }
 
 private:

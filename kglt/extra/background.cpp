@@ -15,7 +15,6 @@ BackgroundLayer::BackgroundLayer(Background &bg, const std::string& image_path):
     background_(bg),
     texture_id_(0),
     material_id_(0),
-    mesh_id_(0),
     width_(0),
     height_(0),
     offset_x_(0),
@@ -42,23 +41,31 @@ BackgroundLayer::BackgroundLayer(Background &bg, const std::string& image_path):
 
     //Create the mesh for this background layer
     mesh_id_ = background().scene().new_mesh();
+    Mesh& mesh = background().scene().mesh(mesh_id_);
+    kglt::procedural::mesh::rectangle(mesh, width(), height());
+    mesh.submesh(0).set_material(material_id_);
+
+    //Create the entity for this background
+    entity_id_ = background().scene().new_entity();
+    Entity& entity = background().scene().entity(entity_id_);
+    entity.set_mesh(mesh.id());
 
     //Set the mesh's scene group to that of the background
-    Mesh& mesh = background().scene().mesh(mesh_id_);
-    mesh.scene_group = background().scene().scene_group(background().scene_group());
+    entity.scene_group = background().scene().scene_group(background().scene_group());
 
-    kglt::procedural::mesh::rectangle(mesh, width(), height());
-    mesh.apply_material(material_id_);
-
+    L_WARN("Must disable depth writes on the background material");
     //Disable depth testing stuff
-    mesh.enable_depth_test(false);
-    mesh.enable_depth_writes(false);
+//    mesh.enable_depth_test(false);
+//    mesh.enable_depth_writes(false);
 }
 
 void BackgroundLayer::scroll_x(double amount) {
     offset_x_ += amount;
     offset_x_ -= floor(offset_x_); //Only leave the remainder (we want 0.0 - 1.0)
 
+    L_ERROR("Background scrolling disabled until I write a decent way of transforming texture coordinates");
+
+/*
     Mesh& mesh = background().scene().mesh(mesh_id_);
 
     //Reset the texture coordinates
@@ -67,13 +74,15 @@ void BackgroundLayer::scroll_x(double amount) {
         mesh.triangle(0).uv(i).x += offset_x_;
         mesh.triangle(1).uv(i).x += offset_x_;
     }
-    mesh.invalidate();
+    mesh.invalidate();*/
 }
 
 void BackgroundLayer::scroll_y(double amount) {
     offset_y_ += amount;
     offset_y_ -= floor(offset_y_);
 
+    L_ERROR("Background scrolling disabled until I write a decent way of transforming texture coordinates");
+/*
     //FIXME: this is so inefficient it makes me cry - need a way to just invalidate tex coords (custom shader to use offset perhaps)
     Mesh& mesh = background().scene().mesh(mesh_id_);
 
@@ -84,6 +93,7 @@ void BackgroundLayer::scroll_y(double amount) {
         mesh.triangle(1).uv(i).y += offset_y_;
     }
     mesh.invalidate();
+*/
 }
 
 BackgroundLayer::~BackgroundLayer() {
@@ -98,6 +108,10 @@ BackgroundLayer::~BackgroundLayer() {
 
         if(mesh_id_) {
             background().scene().delete_mesh(mesh_id_);
+        }
+
+        if(entity_id_) {
+            background().scene().delete_entity(entity_id_);
         }
     } catch (...) {
         //Whatever.. we tried. We gotta catch this (destructors can't throw)
@@ -114,7 +128,7 @@ Background::Background(Scene& scene, ViewportID viewport):
 
     //Add a pass for this background
     //FIXME: priority = -1000
-    scene_.pipeline().add_pass(background_sg_, 0, ortho_camera_, viewport_);
+    scene_.pipeline().add_pass(background_sg_, TextureID(), ortho_camera_, viewport_);
 }
 
 void Background::add_layer(const std::string &image_path) {

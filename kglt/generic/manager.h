@@ -101,7 +101,7 @@ protected:
             }
         }
 
-        return 0;
+        return ObjectIDType();
     }
 };
 

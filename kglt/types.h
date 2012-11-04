@@ -56,31 +56,24 @@ enum VertexAttribute {
     VERTEX_ATTRIBUTE_NORMAL = 8
 };
 
-//FIXME: Should be something like UniqueID<0>, UniqueID<1> or something so that
-//IDs can't be incorrectly passed
-typedef uint32_t MeshID;
-typedef uint32_t TextureID;
-typedef uint32_t CameraID;
-typedef uint32_t ShaderID;
-typedef uint32_t FontID;
-typedef uint32_t TextID;
-typedef uint32_t MaterialID;
-typedef uint32_t LightID;
-typedef uint32_t SceneGroupID;
-typedef uint32_t ViewportID;
-typedef uint32_t EntityID;
+typedef UniqueID<0> MeshID;
+typedef UniqueID<1> TextureID;
+typedef UniqueID<2> CameraID;
+typedef UniqueID<3> ShaderID;
+typedef UniqueID<4> FontID;
+typedef UniqueID<5> TextID;
+typedef UniqueID<6> MaterialID;
+typedef UniqueID<7> LightID;
+typedef UniqueID<8> SceneGroupID;
+typedef UniqueID<9> ViewportID;
+typedef UniqueID<10> EntityID;
 
-const CameraID DefaultCameraID = 0;
+const CameraID DefaultCameraID = CameraID();
 
 const std::string DEFAULT_MATERIAL_SCHEME = "scheme";
 
-namespace newmesh {
-    class Mesh;
-    typedef UniqueID<0> MeshID;
-}
-
-class Entity;
 class Mesh;
+class Entity;
 class Light;
 class Scene;
 class Camera;

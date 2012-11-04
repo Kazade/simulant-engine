@@ -44,11 +44,10 @@ public:
 
     void set_position(float x, float y);
 
-    Object& background();
-    Object& border();
-
     //FIXME: This should all be done here, not a subclass
     virtual void set_font(FontID fid) = 0;
+
+    EntityID entity() const { return entity_id_; }
 private:
     UI& ui_;
 
@@ -57,8 +56,8 @@ private:
     double border_width_;
     double padding_[PADDING_MAX];
 
-    kglt::MeshID background_mesh_;
-    kglt::MeshID border_mesh_;
+    kglt::MeshID mesh_id_;
+    kglt::EntityID entity_id_;
 
 protected:
     UI& ui() { return ui_; }

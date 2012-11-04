@@ -6,6 +6,7 @@
 
 #include "types.h"
 #include "utils/geometry_buffer.h"
+#include "entity.h"
 
 namespace kglt {
 
@@ -16,13 +17,13 @@ public:
     Renderer(Scene& scene):
         scene_(scene) {}
 
-    void render(const std::vector<GeometryBuffer::ptr>& buffers, CameraID camera); //FIXME: Should pass in batching structure
+    void render(const std::vector<SubEntity::ptr>& subentities, CameraID camera); //FIXME: Should pass in batching structure
     Scene& scene() { return scene_; }
 
 private:
     Scene& scene_;
 
-    virtual void render_buffer(GeometryBuffer& buffer, CameraID camera) = 0;
+    virtual void render_subentity(SubEntity& buffer, CameraID camera) = 0;
 };
 
 }

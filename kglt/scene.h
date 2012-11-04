@@ -23,7 +23,7 @@
 #include "material.h"
 #include "light.h"
 #include "scene_group.h"
-#include "newmesh.h"
+#include "mesh.h"
 #include "entity.h"
 
 #include "pipeline.h"
@@ -48,7 +48,6 @@ class Scene :
     public generic::TemplatedManager<Scene, Texture, TextureID>,
     public generic::TemplatedManager<Scene, Light, LightID>,
     public generic::TemplatedManager<Scene, SceneGroup, SceneGroupID>,
-    public generic::TemplatedManager<Scene, newmesh::Mesh, newmesh::MeshID>,
     public generic::TemplatedManager<Scene, Entity, EntityID> {
 
 public:
@@ -65,15 +64,12 @@ public:
     SceneGroup& scene_group(SceneGroupID group=0);
     void delete_scene_group(SceneGroupID group);
 
-    MeshID new_mesh(Object* parent=nullptr);
+    MeshID new_mesh();
     Mesh& mesh(MeshID m);
+    const Mesh& mesh(MeshID m) const;
     void delete_mesh(MeshID mid);
 
-    newmesh::MeshID new_newmesh();
-    newmesh::Mesh& newmesh(newmesh::MeshID m);
-    const newmesh::Mesh& newmesh(newmesh::MeshID m) const;
-
-    EntityID new_entity();
+    EntityID new_entity(MeshID mid=MeshID());
     Entity& entity(EntityID e);
     void delete_entity(EntityID e);
 
@@ -82,7 +78,7 @@ public:
     ShaderID new_shader();
     FontID new_font();
     TextID new_text();
-    MaterialID new_material(MaterialID clone_from=0);
+    MaterialID new_material(MaterialID clone_from=MaterialID());
     LightID new_light(Object* parent=nullptr, LightType type=LIGHT_TYPE_POINT);    
 
     bool has_mesh(MeshID m) const;
@@ -136,8 +132,8 @@ public:
     kglt::Colour ambient_light() const { return ambient_light_; }
     void set_ambient_light(const kglt::Colour& c) { ambient_light_ = c; }
 
-    sigc::signal<void, Mesh&>& signal_mesh_created() { return signal_mesh_created_; }
-    sigc::signal<void, Mesh&>& signal_mesh_destroyed() { return signal_mesh_destroyed_; }
+    sigc::signal<void, EntityID>& signal_entity_created() { return signal_entity_created_; }
+    sigc::signal<void, EntityID>& signal_entity_destroyed() { return signal_entity_destroyed_; }
 
     sigc::signal<void, Light&>& signal_light_created() { return signal_light_created_; }
     sigc::signal<void, Light&>& signal_light_destroyed() { return signal_light_destroyed_; }
@@ -162,8 +158,8 @@ private:
 
     Pipeline::ptr pipeline_;
 
-    sigc::signal<void, Mesh&> signal_mesh_created_;
-    sigc::signal<void, Mesh&> signal_mesh_destroyed_;
+    sigc::signal<void, EntityID> signal_entity_created_;
+    sigc::signal<void, EntityID> signal_entity_destroyed_;
 
     sigc::signal<void, Light&> signal_light_created_;
     sigc::signal<void, Light&> signal_light_destroyed_;

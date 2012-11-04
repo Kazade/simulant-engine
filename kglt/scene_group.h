@@ -16,7 +16,7 @@ class SceneGroup :
 public:
     typedef std::tr1::shared_ptr<SceneGroup> ptr;
 
-    ReverseRelation<SceneGroup, Mesh> meshes;
+    ReverseRelation<SceneGroup, Entity> entities;
 
     SceneGroup(Scene* parent, SceneGroupID id);
 

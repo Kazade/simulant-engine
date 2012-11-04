@@ -278,19 +278,27 @@ void Q2BSPLoader::into(Loadable& resource) {
     file.seekg(header.lumps[Q2::LumpType::FACE_EDGE_TABLE].offset);
     file.read((char*)&face_edges[0], sizeof(int32_t) * num_face_edges);
 
+    std::vector<kmVec3> positions;
 
     //Copy the vertices to the mesh
     for(Q2::Point3f& p: vertices) {
         kmVec3 point;
         kmVec3Fill(&point, p.x, p.y, p.z);
         kmVec3Transform(&point, &point, &rotation);
-        mesh.add_vertex(point.x, point.y, point.z);
+
+        positions.push_back(point);
     }
 
-    std::map<std::string, kglt::TextureID> tex_lookup;
     std::map<kglt::TextureID, uint32_t> mesh_for_texture;
+
+    uint16_t texinfo_idx = 0;
+    std::map<uint16_t, MaterialID> tex_info_to_material;
+    std::map<std::string, kglt::TextureID> tex_lookup;
     std::map<std::string, std::pair<uint32_t, uint32_t> > texture_dimensions;
 
+    /**
+     *  Load the textures and generate materials
+     */
     for(Q2::TextureInfo& tex: textures) {
         MaterialID material_id = scene->new_material(scene->default_material()); //Duplicate the default material
         Material& mat = scene->material(material_id);
@@ -308,34 +316,34 @@ void Q2BSPLoader::into(Loadable& resource) {
         tex.v_axis.y = v_axis.y;
         tex.v_axis.z = v_axis.z;
 
-        if(tex_lookup.find(tex.texture_name) != tex_lookup.end()) continue;
+        kglt::TextureID tid;
+        if(tex_lookup.find(tex.texture_name) != tex_lookup.end()) {
+            tid = tex_lookup[tex.texture_name];
+        } else {
+            tid = scene->new_texture();
+            Texture& texture = scene->texture(tid);
 
-        //Load texture
-        kglt::TextureID tid = scene->new_texture();
-        Texture& texture = scene->texture(tid);
+            //HACK!
+            scene->window().loader_for("textures/" + std::string(tex.texture_name) + ".tga")->into(texture);
 
-        //HACK!
-        scene->window().loader_for("textures/" + std::string(tex.texture_name) + ".tga")->into(texture);
+            //We need to store this to divide the texture coordinates later
+            texture_dimensions[tex.texture_name].first = texture.width();
+            texture_dimensions[tex.texture_name].second = texture.height();
 
-        //We need to store this to divide the texture coordinates later
-        texture_dimensions[tex.texture_name].first = texture.width();
-        texture_dimensions[tex.texture_name].second = texture.height();
-
-        texture.upload();
-        tex_lookup[tex.texture_name] = tid;
+            texture.upload();
+            tex_lookup[tex.texture_name] = tid;
+        }
 
         //Set the texture for unit 0
         mat.technique().pass(0).set_texture_unit(0, tid);
         mat.technique().pass(0).set_blending(BLEND_NONE);
 
-        //Create a submesh for each texture, set it to use the parent mesh's verticces
-        mesh_for_texture[tid] = mesh.add_submesh(true);
-        Mesh& new_submesh = mesh.submesh(mesh_for_texture[tid]);
-        new_submesh.apply_material(material_id);
+        tex_info_to_material[texinfo_idx] = material_id;
+        texinfo_idx++;
     }
 
     std::cout << "Num textures: " << tex_lookup.size() << std::endl;
-    std::cout << "Num submeshes: " << mesh.submeshes().size() << std::endl;
+    std::cout << "Num submeshes: " << mesh.submesh_count() << std::endl;
 
     for(Q2::Face& f: faces) {
         std::vector<uint32_t> indexes;
@@ -353,9 +361,16 @@ void Q2BSPLoader::into(Loadable& resource) {
             }
         }
 
+        //Add a submesh for this face
+        SubMeshIndex sm = mesh.new_submesh(tex_info_to_material[f.texture_info], MESH_ARRANGEMENT_TRIANGLES, false);
+
         Q2::TextureInfo& tex = textures[f.texture_info];
-        //std::cout << tex.texture_name << std::endl;
-        Mesh& texture_mesh = mesh.submesh(mesh_for_texture[tex_lookup[tex.texture_name]]);
+
+        SubMesh& submesh = mesh.submesh(sm);
+
+        /*
+         * Build the triangles for this "face"
+         */
         for(int32_t i = 1; i < (int32_t) indexes.size() - 1; ++i) {
             uint32_t tri_idx[] = {
                 indexes[0],
@@ -363,42 +378,45 @@ void Q2BSPLoader::into(Loadable& resource) {
                 indexes[i]
             };
 
-            Triangle& tri = texture_mesh.add_triangle(tri_idx[0], tri_idx[1], tri_idx[2]);
-
-            Vec3 normal;
-            Vec3 vec1, vec2;
-            Vec3& v1 = mesh.vertex(tri.index(0));
-            Vec3& v2 = mesh.vertex(tri.index(1));
-            Vec3& v3 = mesh.vertex(tri.index(2));
+            //Calculate the surface normal for this triangle
+            kmVec3 normal;
+            kmVec3 vec1, vec2;
+            kmVec3& v1 = positions[tri_idx[0]];
+            kmVec3& v2 = positions[tri_idx[1]];
+            kmVec3& v3 = positions[tri_idx[2]];
 
             kmVec3Subtract(&vec1, &v2, &v1);
             kmVec3Subtract(&vec2, &v3, &v1);
             kmVec3Cross(&normal, &vec1, &vec2);
             kmVec3Normalize(&normal, &normal);
 
-            tri.set_surface_normal(normal.x, normal.y, normal.z);
-
             for(int32_t j = 0; j < 3; ++j) {
-                float u = mesh.vertex(tri_idx[j]).x * tex.u_axis.x
-                        + mesh.vertex(tri_idx[j]).y * tex.u_axis.y
-                        + mesh.vertex(tri_idx[j]).z * tex.u_axis.z + tex.u_offset;
+                float u = positions[tri_idx[j]].x * tex.u_axis.x
+                        + positions[tri_idx[j]].y * tex.u_axis.y
+                        + positions[tri_idx[j]].z * tex.u_axis.z + tex.u_offset;
 
-                float v = mesh.vertex(tri_idx[j]).x * tex.v_axis.x
-                        + mesh.vertex(tri_idx[j]).y * tex.v_axis.y
-                        + mesh.vertex(tri_idx[j]).z * tex.v_axis.z + tex.v_offset;
+                float v = positions[tri_idx[j]].x * tex.v_axis.x
+                        + positions[tri_idx[j]].y * tex.v_axis.y
+                        + positions[tri_idx[j]].z * tex.v_axis.z + tex.v_offset;
 
                 float w = float(texture_dimensions[tex.texture_name].first);
                 float h = float(texture_dimensions[tex.texture_name].second);
 
-                tri.set_uv(j, u / w, v / h);
-            }
+                submesh.vertex_data().position(positions[tri_idx[0]]);
+                submesh.vertex_data().normal(normal);
+                submesh.vertex_data().tex_coord0(u / w, v / h);
+                submesh.vertex_data().move_next();
+            }            
         }
-    }
 
-    L_DEBUG("Compiling meshes");
-    for(Mesh::ptr m: mesh.submeshes()) {
-        m->done();
-    }
+        submesh.vertex_data().done();
+
+        //Add all the indexes
+        for(uint16_t i = 0; i < submesh.vertex_data().count(); ++i) {
+            submesh.index_data().index(i);
+        }
+
+    }        
 }
 
 }
