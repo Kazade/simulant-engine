@@ -152,7 +152,7 @@ void GenericRenderer::set_auto_uniforms_on_shader(
 }
 
 void GenericRenderer::set_auto_attributes_on_shader(ShaderProgram& s, SubEntity& buffer) {
-    uint32_t stride = buffer.stride();
+    uint32_t stride = buffer.vertex_data().stride();
 
     if(s.params().uses_attribute(SP_ATTR_VERTEX_POSITION)) {
         //Find the location of the attribute, enable it and then point the vertex data at it
@@ -222,7 +222,8 @@ void GenericRenderer::render_subentity(SubEntity& buffer, CameraID camera) {
         return;
     }
 
-    buffer.vbo();
+    buffer.vertex_data().buffer_object().bind();
+    buffer.index_data().buffer_object().bind();
 
     check_and_log_error(__FILE__, __LINE__);
 

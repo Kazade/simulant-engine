@@ -93,6 +93,8 @@ public:
     bool operator!=(const VertexData& other) const {
         return !(*this == other);
     }
+
+    uint32_t stride() const { return sizeof(Vertex); }
 private:
     int32_t enabled_bitmask_;
     uint16_t tex_coord_dimensions_[8];
