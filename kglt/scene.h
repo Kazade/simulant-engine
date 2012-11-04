@@ -71,6 +71,7 @@ public:
 
     newmesh::MeshID new_newmesh();
     newmesh::Mesh& newmesh(newmesh::MeshID m);
+    const newmesh::Mesh& newmesh(newmesh::MeshID m) const;
 
     EntityID new_entity();
     Entity& entity(EntityID e);

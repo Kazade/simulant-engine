@@ -27,10 +27,6 @@ class Object :
     public generic::VisitableBase<Object> { //And they allow additional data to be attached
 
 public:
-    VIS_DEFINE_VISITABLE();
-
-    typedef std::tr1::shared_ptr<Object> ptr;
-
     Object(Scene* parent_scene);
     virtual ~Object();
 

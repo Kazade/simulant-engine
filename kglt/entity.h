@@ -3,6 +3,8 @@
 
 #include "generic/identifiable.h"
 #include "generic/managed.h"
+
+#include "object.h"
 #include "newmesh.h"
 
 namespace kglt {
@@ -12,17 +14,18 @@ class SubEntity;
 class Entity :
     public newmesh::MeshInterface,
     public Managed<Entity>,
-    public generic::Identifiable<EntityID> {
+    public generic::Identifiable<EntityID>,
+    public Object {
 
 public:
     Entity(Scene* scene, EntityID id):
         generic::Identifiable<EntityID>(id),
-        scene_(*scene),
+        Object(scene),
         mesh_(0) {}
 
     Entity(Scene* scene, EntityID id, newmesh::MeshID mesh):
         generic::Identifiable<EntityID>(id),
-        scene_(*scene),
+        Object(scene),
         mesh_(mesh) {
     }
 
@@ -42,7 +45,6 @@ public:
     }
 
 private:
-    Scene& scene_;
     newmesh::MeshID mesh_;
 
     std::vector<std::tr1::shared_ptr<SubEntity> > subentities_;

@@ -4,11 +4,11 @@
 namespace kglt {
 
 const VertexData& Entity::shared_data() const {
-    return scene_.newmesh(mesh_).shared_data();
+    return scene().newmesh(mesh_).shared_data();
 }
 
 newmesh::Mesh& Entity::_mesh_ref() {
-    return scene_.newmesh(mesh_);
+    return scene().newmesh(mesh_);
 }
 
 void Entity::set_mesh(newmesh::MeshID mesh) {

@@ -121,6 +121,10 @@ newmesh::MeshID Scene::new_newmesh() {
 }
 
 newmesh::Mesh& Scene::newmesh(newmesh::MeshID m) {
+    return const_cast<newmesh::Mesh&>(static_cast<const Scene*>(this)->newmesh(m));
+}
+
+const newmesh::Mesh& Scene::newmesh(newmesh::MeshID m) const {
     return TemplatedManager<Scene, newmesh::Mesh, newmesh::MeshID>::manager_get(m);
 }
 
