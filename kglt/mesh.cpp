@@ -23,6 +23,16 @@ SubMeshIndex Mesh::new_submesh(
     return submeshes_.size() - 1;
 }
 
+void Mesh::delete_submesh(SubMeshIndex index) {
+    if(index >= submeshes_.size()) {
+        throw std::out_of_range("Tried to delete a submesh that doesn't exist");
+    }
+
+    //Don't actually remove the submesh from the array, otherwise
+    //the other indexes will be wrong. Instead just set the smart pointer to NULL
+    submeshes_.at(index).reset();
+}
+
 SubMesh& Mesh::submesh(uint16_t index) {
     return *submeshes_.at(index);
 }

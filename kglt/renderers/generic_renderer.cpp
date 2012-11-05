@@ -157,17 +157,17 @@ void GenericRenderer::set_auto_attributes_on_shader(ShaderProgram& s, SubEntity&
     if(s.params().uses_attribute(SP_ATTR_VERTEX_POSITION)) {
         //Find the location of the attribute, enable it and then point the vertex data at it
         int32_t loc = s.get_attrib_loc(s.params().attribute_variable_name(SP_ATTR_VERTEX_POSITION));
-        if(loc > -1 && buffer.has_attribute(VERTEX_ATTRIBUTE_POSITION)) {
+        if(loc > -1 && buffer.vertex_data().has_positions()) {
             glEnableVertexAttribArray(loc);
-            glVertexAttribPointer(loc, 3, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(buffer.offset(VERTEX_ATTRIBUTE_POSITION)));
+            glVertexAttribPointer(loc, 3, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(buffer.vertex_data().position_offset()));
         }
     }
 
     if(s.params().uses_attribute(SP_ATTR_VERTEX_TEXCOORD0)) {
         int32_t loc = s.get_attrib_loc(s.params().attribute_variable_name(SP_ATTR_VERTEX_TEXCOORD0));        
-        if(loc > -1 && buffer.has_attribute(VERTEX_ATTRIBUTE_TEXCOORD_1)) {
+        if(loc > -1 && buffer.vertex_data().has_texcoord0()) {
             glEnableVertexAttribArray(loc);
-            glVertexAttribPointer(loc, 2, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(buffer.offset(VERTEX_ATTRIBUTE_TEXCOORD_1)));
+            glVertexAttribPointer(loc, 2, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(buffer.vertex_data().texcoord0_offset()));
         } else {
             L_WARN("Couldn't locate attribute, either on the mesh or in the shader");
         }
@@ -175,17 +175,17 @@ void GenericRenderer::set_auto_attributes_on_shader(ShaderProgram& s, SubEntity&
 
     if(s.params().uses_attribute(SP_ATTR_VERTEX_DIFFUSE)) {
         int32_t loc = s.get_attrib_loc(s.params().attribute_variable_name(SP_ATTR_VERTEX_DIFFUSE));
-        if(loc > -1 && buffer.has_attribute(VERTEX_ATTRIBUTE_DIFFUSE)) {
+        if(loc > -1 && buffer.vertex_data().has_diffuse()) {
             glEnableVertexAttribArray(loc);
-            glVertexAttribPointer(loc, 4, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(buffer.offset(VERTEX_ATTRIBUTE_DIFFUSE)));
+            glVertexAttribPointer(loc, 4, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(buffer.vertex_data().diffuse_offset()));
         }
     }
 
     if(s.params().uses_attribute(SP_ATTR_VERTEX_NORMAL)) {
         int32_t loc = s.get_attrib_loc(s.params().attribute_variable_name(SP_ATTR_VERTEX_NORMAL));
-        if(loc > -1 && buffer.has_attribute(VERTEX_ATTRIBUTE_NORMAL)) {
+        if(loc > -1 && buffer.vertex_data().has_normals()) {
             glEnableVertexAttribArray(loc);
-            glVertexAttribPointer(loc, 3, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(buffer.offset(VERTEX_ATTRIBUTE_NORMAL)));
+            glVertexAttribPointer(loc, 3, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(buffer.vertex_data().normal_offset()));
         } else {
             L_ERROR("Unable to find attribute for vertex normal");
         }

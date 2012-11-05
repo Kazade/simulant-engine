@@ -96,7 +96,7 @@ public:
     IdleTaskManager& idle() { return idle_; }
 
     ViewportID new_viewport();
-    Viewport& viewport(ViewportID viewport=0);
+    Viewport& viewport(ViewportID viewport=ViewportID());
     void delete_viewport(ViewportID viewport);
     ViewportID default_viewport() const { return default_viewport_; }
 

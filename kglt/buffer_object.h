@@ -1,6 +1,8 @@
 #ifndef BUFFER_OBJECT_H
 #define BUFFER_OBJECT_H
 
+#include "glee/GLee.h"
+
 namespace kglt {
 
 enum BufferObjectType {
@@ -25,7 +27,7 @@ public:
     BufferObject(BufferObjectType type, BufferObjectUsage usage=MODIFY_ONCE_USED_FOR_RENDERING);
     ~BufferObject();
 
-    void bind();
+    void bind() const;
     void create(uint32_t byte_size, const void* data);
     void modify(uint32_t offset, uint32_t byte_size, const void* data);
 
@@ -34,6 +36,7 @@ private:
 
     GLenum gl_target_;
     GLuint buffer_id_;
+    bool initialized_;
 };
 
 }

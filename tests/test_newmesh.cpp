@@ -1,15 +1,14 @@
 #include <unittest++/UnitTest++.h>
 
 #include "kglt/kglt.h"
-#include "kglt/newmesh.h"
 #include "kglt/entity.h"
 #include "kglt/vertex_data.h"
 
-using namespace kglt::newmesh;
+using namespace kglt;
 
 MeshID generate_test_mesh(kglt::Scene& scene) {
-    MeshID mid = scene.new_newmesh();
-    Mesh& mesh = scene.newmesh(mid);
+    kglt::MeshID mid = scene.new_mesh();
+    kglt::Mesh& mesh = scene.mesh(mid);
 
     kglt::VertexData& data = mesh.shared_data();
 
@@ -27,7 +26,7 @@ MeshID generate_test_mesh(kglt::Scene& scene) {
 
     data.done();
 
-    SubMesh& submesh = mesh.submesh(mesh.new_submesh(0));
+    SubMesh& submesh = mesh.submesh(mesh.new_submesh(MaterialID()));
 
     submesh.index_data().index(0);
     submesh.index_data().index(1);
@@ -38,7 +37,7 @@ MeshID generate_test_mesh(kglt::Scene& scene) {
     submesh.index_data().index(3);
 
     //Draw a line between the first two vertices
-    SubMesh& sm = mesh.submesh(mesh.new_submesh(0, kglt::MESH_ARRANGEMENT_LINES));
+    SubMesh& sm = mesh.submesh(mesh.new_submesh(MaterialID(), kglt::MESH_ARRANGEMENT_LINES));
     sm.index_data().index(0);
     sm.index_data().index(1);
 
@@ -50,7 +49,7 @@ SUITE(test_mesh) {
 TEST(basic_usage) {    
     kglt::Window::ptr window = kglt::Window::create();
     kglt::Scene& scene = window->scene();
-    Mesh& mesh = scene.newmesh(generate_test_mesh(scene));
+    Mesh& mesh = scene.mesh(generate_test_mesh(scene));
 
     kglt::VertexData& data = mesh.shared_data();
 
@@ -72,7 +71,7 @@ TEST(entity_from_mesh) {
     kglt::Window::ptr window = kglt::Window::create();
     kglt::Scene& scene = window->scene();
 
-    Mesh& mesh = scene.newmesh(generate_test_mesh(scene));
+    Mesh& mesh = scene.mesh(generate_test_mesh(scene));
 
     kglt::Entity& entity = scene.entity(scene.new_entity());
 
@@ -96,18 +95,17 @@ TEST(entity_from_mesh) {
     CHECK(mesh.submesh(0).vertex_data() == entity.subentity(0).vertex_data());
 
     //We should be able to override the material on a subentity though
-    entity.subentity(0).override_material(1);
+    entity.subentity(0).override_material(MaterialID(1));
 
-    CHECK_EQUAL(1, entity.subentity(0).material());
+    CHECK_EQUAL(MaterialID(1), entity.subentity(0).material());
 }
 
 TEST(scene_methods) {
     kglt::Window::ptr window = kglt::Window::create();
     kglt::Scene& scene = window->scene();
 
-    Mesh& mesh = scene.newmesh(scene.new_newmesh()); //Create a mesh
-    kglt::Entity& entity = scene.entity(scene.new_entity());
-    entity.set_mesh(mesh.id());
+    Mesh& mesh = scene.mesh(scene.new_mesh()); //Create a mesh
+    kglt::Entity& entity = scene.entity(scene.new_entity(mesh.id()));
 
     CHECK(mesh.id() == entity.mesh());
 }

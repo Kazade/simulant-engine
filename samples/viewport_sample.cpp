@@ -17,12 +17,7 @@ int main(int argc, char* argv[]) {
     window->viewport(second).set_background_colour(kglt::Colour(0, 1.0, 0, 0));
 
     //Add another pass to render to the second viewport
-    scene.pipeline().add_pass(0, 0, 0, second);
-
-	//Create a cube mesh
-	kglt::Mesh& mesh = kglt::return_new_mesh(scene);	
-//	kglt::procedural::mesh::cube(mesh, 1.0);
-	mesh.move_to(0.0, 0.0, -5.0);
+    scene.pipeline().add_pass(kglt::SceneGroupID(), kglt::TextureID(), kglt::CameraID(), second);
 		
     while(window->update()) {}
 	

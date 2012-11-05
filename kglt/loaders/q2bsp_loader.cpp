@@ -415,7 +415,7 @@ void Q2BSPLoader::into(Loadable& resource) {
         for(uint16_t i = 0; i < submesh.vertex_data().count(); ++i) {
             submesh.index_data().index(i);
         }
-
+        submesh.index_data().done();
     }        
 }
 

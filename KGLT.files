@@ -250,3 +250,4 @@ kglt/mesh.cpp
 kglt/generic/safe_bool.h
 kglt/buffer_object.h
 kglt/buffer_object.cpp
+tests/test_vertex_data.cpp

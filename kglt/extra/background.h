@@ -72,7 +72,7 @@ public:
 
     SceneGroupID scene_group() const { return background_sg_; }
 
-    static std::tr1::shared_ptr<Background> create(Scene& scene, ViewportID viewport=0) {
+    static std::tr1::shared_ptr<Background> create(Scene& scene, ViewportID viewport=ViewportID()) {
         return std::tr1::shared_ptr<Background>(new Background(scene, viewport));
     }
 

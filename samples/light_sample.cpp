@@ -18,7 +18,9 @@ int main(int argc, char* argv[]) {
 
     kglt::Mesh& mesh = kglt::return_new_mesh(scene);
     kglt::procedural::mesh::cube(mesh, 3.0);
-    mesh.move_to(0.0, 0.0, -5.0);
+
+    kglt::Entity& entity = scene.entity(scene.new_entity(mesh.id()));
+    entity.move_to(0.0, 0.0, -5.0);
 
     kglt::Light& light = kglt::return_new_light(scene);
     light.move_to(1.0, 0.0, 0.0);

@@ -121,6 +121,16 @@ EntityID Scene::new_entity(MeshID mid) {
     return result;
 }
 
+EntityID Scene::new_entity(Object& parent, MeshID mid) {
+    EntityID result = new_entity(mid);
+    entity(result).set_parent(&parent);
+    return result;
+}
+
+bool Scene::has_entity(EntityID m) const {
+    return TemplatedManager<Scene, Entity, EntityID>::manager_contains(m);
+}
+
 Entity& Scene::entity(EntityID e) {
     return TemplatedManager<Scene, Entity, EntityID>::manager_get(e);
 }

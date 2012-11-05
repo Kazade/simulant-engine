@@ -17,7 +17,7 @@ TEST(test_material_initialization) {
 
     CHECK_EQUAL(1, mat.technique_count()); //Should return the default technique
     CHECK_EQUAL(kglt::DEFAULT_MATERIAL_SCHEME, mat.technique().scheme());
-    mat.technique().new_pass(0); //Create a pass
+    mat.technique().new_pass(ShaderID()); //Create a pass
     CHECK_EQUAL(1, mat.technique().pass_count()); //Should return the default pass
     CHECK(kglt::Colour::white == mat.technique().pass(0).diffuse()); //Check the default pass sets white as the default
     CHECK(kglt::Colour::white == mat.technique().pass(0).ambient()); //Check the default pass sets white as the default
@@ -32,6 +32,6 @@ TEST(test_material_applies_to_mesh) {
     MaterialID mid = scene.new_material();
     MeshID mesh_id = scene.new_mesh();
     Mesh& mesh = scene.mesh(mesh_id);
-    mesh.apply_material(mid);
-    CHECK_EQUAL(mid, mesh.material());
+    mesh.submesh(0).set_material(mid);
+    CHECK_EQUAL(mid, mesh.submesh(0).material());
 }

@@ -70,7 +70,10 @@ public:
     void delete_mesh(MeshID mid);
 
     EntityID new_entity(MeshID mid=MeshID());
+    EntityID new_entity(Object& parent, MeshID mid=MeshID());
+
     Entity& entity(EntityID e);
+    bool has_entity(EntityID e) const;
     void delete_entity(EntityID e);
 
     CameraID new_camera();

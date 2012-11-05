@@ -15,7 +15,7 @@ TEST(test_shader_params) {
     kglt::Scene& scene = window->scene();
 
     ShaderID sid = scene.new_shader();
-    CHECK(sid > 0);
+    CHECK(sid);
 
     ShaderProgram& s = scene.shader(sid);
     s.activate();
