@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
         for a reference to an object.
     */
     kglt::Mesh& mesh = scene.mesh(scene.new_mesh());
-    kglt::procedural::mesh::rectangle(mesh, 1.0, 1.0, -0.5, -0.5);
+    kglt::procedural::mesh::rectangle(mesh, 1.0, 1.0);
 	
     ///Shortcut function for loading images
     kglt::TextureID tid = kglt::create_texture_from_file(*window, "sample.tga");

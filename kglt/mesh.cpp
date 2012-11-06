@@ -13,6 +13,7 @@ void Mesh::clear() {
     for(uint16_t i = 0; i < submesh_count(); ++i) {
         delete_submesh(i);
     }
+    submeshes_.clear();
     shared_data().clear();
 }
 

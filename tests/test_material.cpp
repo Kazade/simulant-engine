@@ -32,6 +32,6 @@ TEST(test_material_applies_to_mesh) {
     MaterialID mid = scene.new_material();
     MeshID mesh_id = scene.new_mesh();
     Mesh& mesh = scene.mesh(mesh_id);
-    mesh.submesh(0).set_material(mid);
-    CHECK_EQUAL(mid, mesh.submesh(0).material());
+    SubMeshIndex idx = mesh.new_submesh(mid);
+    CHECK_EQUAL(mid, mesh.submesh(idx).material());
 }

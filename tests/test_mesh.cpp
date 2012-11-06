@@ -50,5 +50,6 @@ TEST(test_procedural_rectangle_outline) {
 	kglt::procedural::mesh::rectangle_outline(mesh, 1.0, 1.0);
 	
     CHECK_EQUAL(kglt::MESH_ARRANGEMENT_LINE_STRIP, mesh.submesh(0).arrangement());
-    CHECK_EQUAL(5, mesh.shared_data().count());
+    CHECK_EQUAL(4, mesh.shared_data().count());
+    CHECK_EQUAL(5, mesh.submesh(0).index_data().count());
 }

@@ -146,12 +146,12 @@ public:
 
     uint32_t diffuse_offset() const {
         Vertex vert;
-        return uint64_t(&vert.tex_coords[5]) - uint64_t(&vert);
+        return uint64_t(&vert.diffuse) - uint64_t(&vert);
     }
 
     uint32_t specular_offset() const {
         Vertex vert;
-        return uint64_t(&vert.tex_coords[6]) - uint64_t(&vert);
+        return uint64_t(&vert.specular) - uint64_t(&vert);
     }
 
     BufferObject& buffer_object() {
@@ -162,9 +162,16 @@ public:
         return buffer_object_;
     }
 
+    uint8_t texcoord_size(uint8_t which) const {
+        if(which >= 8) {
+            throw std::out_of_range("Invalid tex coordinate index");
+        }
+        return tex_coord_dimensions_[which];
+    }
+
 private:
     int32_t enabled_bitmask_;
-    uint16_t tex_coord_dimensions_[8];
+    uint8_t tex_coord_dimensions_[8];
 
     struct Vertex {
         kmVec3 position;

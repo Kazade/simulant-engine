@@ -27,6 +27,7 @@ class WindowBase :
 
 public:
     WindowBase():
+        initialized_(false),
         width_(0),
         height_(0),
         is_running_(true),
@@ -112,6 +113,8 @@ protected:
     }
     
 private:
+    bool initialized_;
+
     std::tr1::shared_ptr<Scene> scene_;
     uint32_t width_;
     uint32_t height_;

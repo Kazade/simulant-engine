@@ -61,7 +61,7 @@ SubMeshIndex rectangle_outline(kglt::Mesh& mesh, float width, float height, floa
     mesh.shared_data().position(x_offset + (-width / 2.0), y_offset + (height / 2.0), z_offset);
     mesh.shared_data().done();
     
-    SubMeshIndex sm = mesh.new_submesh(MaterialID(), MESH_ARRANGEMENT_LINES, true);
+    SubMeshIndex sm = mesh.new_submesh(MaterialID(), MESH_ARRANGEMENT_LINE_STRIP, true);
 
     for(uint8_t i = 0; i < mesh.shared_data().count(); ++i) {
         mesh.submesh(sm).index_data().index(offset + i);

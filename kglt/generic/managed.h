@@ -23,6 +23,7 @@ public:
         if(!instance->init()) {
             throw InstanceInitializationError();
         }
+        return instance;
     }
 
     template<typename U>

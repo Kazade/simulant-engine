@@ -6,9 +6,8 @@
 
 namespace kglt {
     
-void WindowBase::init() {
-    static bool initialized = false;
-    if(!initialized) {
+void WindowBase::init() {    
+    if(!initialized_) {
         assert(width_ && "Subclass should've set the window width by now");
         assert(height_ && "Subclass should've set the window height by now");
 
@@ -19,7 +18,7 @@ void WindowBase::init() {
 
         //Initialize the scene
         scene().init();
-        initialized = true;
+        initialized_ = true;
     }
 }
 

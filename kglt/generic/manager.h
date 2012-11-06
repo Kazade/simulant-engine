@@ -11,8 +11,8 @@ namespace generic {
 
 class NoSuchObjectError : public std::logic_error {
 public:
-    NoSuchObjectError():
-        std::logic_error("The manager does not contain an object with the specified ID") {}
+    NoSuchObjectError(const std::string& type_name):
+        std::logic_error("The manager does not contain an object with the specified ID: " + type_name) {}
 };
 
 class BaseManager {
@@ -65,7 +65,7 @@ public:
         boost::recursive_mutex::scoped_lock lock(manager_lock_);
 
         if(!container::contains(objects_, id)) {
-            throw NoSuchObjectError();
+            throw NoSuchObjectError(typeid(ObjectType).name());
         }
 
         return *objects_[id];
@@ -74,7 +74,7 @@ public:
     const ObjectType& manager_get(ObjectIDType id) const {
         boost::recursive_mutex::scoped_lock lock(manager_lock_);
         if(!container::contains(objects_, id)) {
-            throw NoSuchObjectError();
+            throw NoSuchObjectError(typeid(ObjectType).name());
         }
         typename std::map<ObjectIDType, typename ObjectType::ptr>::const_iterator it = objects_.find(id);
         return *(it->second);

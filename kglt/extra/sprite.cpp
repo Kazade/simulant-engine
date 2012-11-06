@@ -12,6 +12,7 @@ Sprite::Sprite(Scene& scene):
     entity_id_ = scene_.new_entity();
 
     kglt::procedural::mesh::rectangle(scene_.mesh(mesh_id_), 1.0, 1.0);    
+
     scene_.entity(entity()).set_mesh(mesh_id_); //Reuild the entity
 }
 
@@ -36,7 +37,8 @@ void Sprite::set_render_dimensions(float width, float height) {
     Mesh& mesh = scene().mesh(mesh_id_);
     kglt::procedural::mesh::rectangle(mesh, width, height);
 
-    scene().entity(entity()).set_mesh(mesh_id_); //Reuild the entity
+    scene().entity(entity()).set_mesh(mesh_id_); //Rebuild the entity
+    set_active_animation(current_animation_); //Re-set the current animation
 }
 
 void Sprite::move_to(float x, float y, float z) {

@@ -167,7 +167,16 @@ void GenericRenderer::set_auto_attributes_on_shader(ShaderProgram& s, SubEntity&
         int32_t loc = s.get_attrib_loc(s.params().attribute_variable_name(SP_ATTR_VERTEX_TEXCOORD0));        
         if(loc > -1 && buffer.vertex_data().has_texcoord0()) {
             glEnableVertexAttribArray(loc);
-            glVertexAttribPointer(loc, 2, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(buffer.vertex_data().texcoord0_offset()));
+            uint32_t offset = buffer.vertex_data().texcoord0_offset();
+
+            glVertexAttribPointer(
+                loc,
+                buffer.vertex_data().texcoord_size(0),
+                GL_FLOAT,
+                GL_FALSE,
+                stride,
+                BUFFER_OFFSET(offset)
+            );
         } else {
             L_WARN("Couldn't locate attribute, either on the mesh or in the shader");
         }
@@ -175,7 +184,7 @@ void GenericRenderer::set_auto_attributes_on_shader(ShaderProgram& s, SubEntity&
 
     if(s.params().uses_attribute(SP_ATTR_VERTEX_DIFFUSE)) {
         int32_t loc = s.get_attrib_loc(s.params().attribute_variable_name(SP_ATTR_VERTEX_DIFFUSE));
-        if(loc > -1 && buffer.vertex_data().has_diffuse()) {
+        if(loc > -1 && buffer.vertex_data().has_diffuse()) {            
             glEnableVertexAttribArray(loc);
             glVertexAttribPointer(loc, 4, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(buffer.vertex_data().diffuse_offset()));
         }
@@ -242,7 +251,7 @@ void GenericRenderer::render_subentity(SubEntity& buffer, CameraID camera) {
         set_blending_mode(pass.blending());
 
         //Grab and activate the shader for the pass
-        ShaderProgram& s = scene().shader(pass.shader() != 0 ? pass.shader() : scene().default_shader());
+        ShaderProgram& s = scene().shader(pass.shader() ? pass.shader() : scene().default_shader());
         s.activate(); //Activate the shader
 
         //FIXME: lights within range of what?
@@ -269,11 +278,11 @@ void GenericRenderer::render_subentity(SubEntity& buffer, CameraID camera) {
 
             //Render the mesh, once for each iteration of the pass
             if(buffer.arrangement() == MESH_ARRANGEMENT_POINTS) {
-                glDrawArrays(GL_POINTS, 0, buffer.index_data().count());
+                glDrawElements(GL_POINTS, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
             } else if(buffer.arrangement() == MESH_ARRANGEMENT_LINE_STRIP) {
-                glDrawArrays(GL_LINE_STRIP, 0, buffer.index_data().count());
+                glDrawElements(GL_LINE_STRIP, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
             } else if(buffer.arrangement() == MESH_ARRANGEMENT_TRIANGLES) {
-                glDrawArrays(GL_TRIANGLES, 0, buffer.index_data().count());
+                glDrawElements(GL_TRIANGLES, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
             } else {
                 assert(0);
             }
