@@ -85,6 +85,7 @@ public:
     const IndexData& index_data() const { return submesh().index_data(); }
     const MeshArrangement arrangement() const { return submesh().arrangement(); }
 
+    Entity& _parent() { return parent_; }
 private:
     Entity& parent_;
     uint16_t index_;

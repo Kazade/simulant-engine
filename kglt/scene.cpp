@@ -77,6 +77,7 @@ void Scene::initialize_defaults() {
     phong.add_and_compile(SHADER_TYPE_FRAGMENT, phong_lighting_frag);
     phong.activate();
     
+    phong.params().register_auto(SP_AUTO_MODELVIEW_MATRIX, "modelview_matrix");
     phong.params().register_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX, "modelview_projection_matrix");
     phong.params().register_auto(SP_AUTO_LIGHT_POSITION, "light_position");
     phong.params().register_auto(SP_AUTO_LIGHT_AMBIENT, "light_ambient");

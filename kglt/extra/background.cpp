@@ -42,7 +42,7 @@ BackgroundLayer::BackgroundLayer(Background &bg, const std::string& image_path):
     //Create the mesh for this background layer
     mesh_id_ = background().scene().new_mesh();
     Mesh& mesh = background().scene().mesh(mesh_id_);
-    kglt::procedural::mesh::rectangle(mesh, width(), height());
+    kglt::procedural::mesh::rectangle(mesh, width(), height(), width() / 2.0, height() / 2.0);
     mesh.submesh(0).set_material(material_id_);
 
     //Create the entity for this background

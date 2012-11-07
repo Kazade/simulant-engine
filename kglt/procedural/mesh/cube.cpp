@@ -74,11 +74,20 @@ void cube(kglt::Mesh& mesh, float width) {
 
     mesh.shared_data().done();
 
-    SubMeshIndex sm = mesh.new_submesh(MaterialID(), MESH_ARRANGEMENT_LINES, true);
+    SubMeshIndex sm = mesh.new_submesh(MaterialID(), MESH_ARRANGEMENT_TRIANGLES, true);
 
-    for(uint8_t i = 0; i < mesh.shared_data().count(); ++i) {
-        mesh.submesh(sm).index_data().index(i);
+    //Go through each of the sides
+    for(uint8_t side = 0; side < mesh.shared_data().count() / 4; ++side) {
+        mesh.submesh(sm).index_data().index((side * 4));
+        mesh.submesh(sm).index_data().index((side * 4) + 1);
+        mesh.submesh(sm).index_data().index((side * 4) + 2);
+
+        mesh.submesh(sm).index_data().index((side * 4));
+        mesh.submesh(sm).index_data().index((side * 4) + 2);
+        mesh.submesh(sm).index_data().index((side * 4) + 3);
     }
+
+    mesh.submesh(sm).index_data().done();
 }
 
 }

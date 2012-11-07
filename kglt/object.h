@@ -13,6 +13,7 @@
 #include "generic/user_data_carrier.h"
 #include "generic/visitor.h"
 
+#include "kazmath/mat4.h"
 #include "kazmath/vec3.h"
 #include "kazmath/quaternion.h"
 #include "types.h"
@@ -48,6 +49,13 @@ public:
     virtual void rotate_x(float amount);        
     virtual void rotate_y(float amount);
     virtual void rotate_z(float amount);
+
+    kmMat4 absolute_transformation() {
+        kmMat4 transform;
+        kmMat4RotationQuaternion(&transform, &absolute_orientation_);
+        kmMat4Translation(&transform, absolute_position().x, absolute_position().y, absolute_position().z);
+        return transform;
+    }
 
     kmVec3& position() { return position_; }
     kmVec3& absolute_position() { return absolute_position_; }

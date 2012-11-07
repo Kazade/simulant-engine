@@ -15,18 +15,23 @@ void GenericRenderer::set_auto_uniforms_on_shader(
     Scene& scene,
     const std::vector<LightID>& lights_within_range,
     uint32_t iteration,
-    CameraID camera) {
+    CameraID camera,
+    SubEntity& subentity) {
 
     //Calculate the modelview-projection matrix
     kmMat4 modelview_projection;
 
-    const kmMat4* modelview = &scene.camera(camera).modelview_matrix();
+    const kmMat4 model = subentity._parent().absolute_transformation();
+    const kmMat4* view = &scene.camera(camera).modelview_matrix();
     const kmMat4* projection = &scene.camera(camera).projection_matrix();
+
+    kmMat4 modelview;
+    kmMat4Multiply(&modelview, view, &model);
 
     kmMat4Multiply(
         &modelview_projection,
         projection,
-        modelview
+        &modelview
     );
 
     if(s.params().uses_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX)) {
@@ -39,7 +44,7 @@ void GenericRenderer::set_auto_uniforms_on_shader(
     if(s.params().uses_auto(SP_AUTO_MODELVIEW_MATRIX)) {
         s.params().set_mat4x4(
             s.params().auto_uniform_variable_name(SP_AUTO_MODELVIEW_MATRIX),
-            *modelview
+            modelview
         );
     }
 
@@ -56,10 +61,11 @@ void GenericRenderer::set_auto_uniforms_on_shader(
         kmVec3 light_pos;
         kmVec3Fill(&light_pos, 0, 0, 0);
         if(iteration < lights_within_range.size()) {
-            light_pos = scene.light(lights_within_range.at(iteration)).position();
+            light_pos = scene.light(lights_within_range.at(iteration)).absolute_position();
         }
 
-        kmVec3Transform(&light_pos, &light_pos, &modelview_projection);
+        //Take the position into view space
+        kmVec3Transform(&light_pos, &light_pos, view);
 
         s.params().set_vec4(
             s.params().auto_uniform_variable_name(SP_AUTO_LIGHT_POSITION),
@@ -274,7 +280,7 @@ void GenericRenderer::render_subentity(SubEntity& buffer, CameraID camera) {
         }
 
         for(uint32_t j = 0; j < iteration_count; ++j) {
-            set_auto_uniforms_on_shader(s, scene(), lights, j, camera); //Uniforms might change depending on the iteration
+            set_auto_uniforms_on_shader(s, scene(), lights, j, camera, buffer); //Uniforms might change depending on the iteration
 
             //Render the mesh, once for each iteration of the pass
             if(buffer.arrangement() == MESH_ARRANGEMENT_POINTS) {
@@ -283,7 +289,12 @@ void GenericRenderer::render_subentity(SubEntity& buffer, CameraID camera) {
                 glDrawElements(GL_LINE_STRIP, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
             } else if(buffer.arrangement() == MESH_ARRANGEMENT_TRIANGLES) {
                 glDrawElements(GL_TRIANGLES, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
-            } else {
+            } else if(buffer.arrangement() == MESH_ARRANGEMENT_TRIANGLE_STRIP)  {
+                glDrawElements(GL_TRIANGLE_STRIP, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+            } else if(buffer.arrangement() == MESH_ARRANGEMENT_TRIANGLE_FAN)  {
+                glDrawElements(GL_TRIANGLE_FAN, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+            }
+            else {
                 assert(0);
             }
         }
