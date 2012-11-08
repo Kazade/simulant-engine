@@ -102,7 +102,7 @@ varying float dist;
 void main() {
     vec4 material_ambient = vec4(0.1, 0.1, 0.1, 1.0);
     vec4 material_diffuse = vec4(1.0);
-    vec4 material_specular = vec4(0.1);
+    vec4 material_specular = vec4(0.4);
     float material_shininess = 0.1;
 
     vec3 N = normalize(fragment_normal);

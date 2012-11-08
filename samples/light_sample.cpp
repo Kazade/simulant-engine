@@ -35,12 +35,12 @@ int main(int argc, char* argv[]) {
     kglt::Light& light = kglt::return_new_light(scene);
     light.move_to(1.0, 0.0, 0.0);
     light.set_diffuse(kglt::Colour(1.0, 0.0, 0.0, 1.0));
-    light.set_attenuation_from_range(100.0);
+    light.set_attenuation_from_range(8.0);
 
     kglt::Light& light2 = kglt::return_new_light(scene);
     light2.move_to(-1.0, 0.0, 0.0);
     light2.set_diffuse(kglt::Colour(0.0, 0.0, 1.0, 1.0));
-    light2.set_attenuation_from_range(100.0);
+    light2.set_attenuation_from_range(20.0);
 
     window->signal_key_down().connect(&on_key_down);
     window->signal_key_up().connect(&on_key_up);

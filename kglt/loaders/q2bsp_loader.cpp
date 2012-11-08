@@ -235,7 +235,7 @@ void Q2BSPLoader::into(Loadable& resource) {
         throw std::runtime_error("Not a valid Q2 map");
     }
 
-    MeshID mid = scene->new_mesh();
+    MeshID mid = scene->new_mesh();    
     Mesh& mesh = scene->mesh(mid);
     //mesh.set_arrangement(MeshArrangement::POINTS);
 
@@ -279,7 +279,6 @@ void Q2BSPLoader::into(Loadable& resource) {
     file.read((char*)&face_edges[0], sizeof(int32_t) * num_face_edges);
 
     std::vector<kmVec3> positions;
-
     //Copy the vertices to the mesh
     for(Q2::Point3f& p: vertices) {
         kmVec3 point;
@@ -352,26 +351,49 @@ void Q2BSPLoader::into(Loadable& resource) {
             if(edge_idx > 0) {
                 Q2::Edge& e = edges[edge_idx];
                 indexes.push_back(e.a);
-                indexes.push_back(e.b);
+                //indexes.push_back(e.b);
             } else {
                 edge_idx = -edge_idx;
                 Q2::Edge& e = edges[edge_idx];
                 indexes.push_back(e.b);
-                indexes.push_back(e.a);
+                //indexes.push_back(e.a);
             }
         }
 
         //Add a submesh for this face
-        SubMeshIndex sm = mesh.new_submesh(tex_info_to_material[f.texture_info], MESH_ARRANGEMENT_TRIANGLES, false);
+        SubMeshIndex sm = mesh.new_submesh(tex_info_to_material[f.texture_info], MESH_ARRANGEMENT_TRIANGLE_FAN, true);
 
         Q2::TextureInfo& tex = textures[f.texture_info];
 
         SubMesh& submesh = mesh.submesh(sm);
 
+        kmVec3 normal;
+        kmVec3Fill(&normal, 0, 1, 0);
+
         /*
          * Build the triangles for this "face"
          */
-        for(int32_t i = 1; i < (int32_t) indexes.size() - 1; ++i) {
+        for(int16_t i = 0; i < (int16_t) indexes.size(); ++i) {
+            const kmVec3& pos = positions[indexes[i]];
+
+            float u = pos.x * tex.u_axis.x
+                    + pos.y * tex.u_axis.y
+                    + pos.z * tex.u_axis.z + tex.u_offset;
+
+            float v = pos.x * tex.v_axis.x
+                    + pos.y * tex.v_axis.y
+                    + pos.z * tex.v_axis.z + tex.v_offset;
+
+            float w = float(texture_dimensions[tex.texture_name].first);
+            float h = float(texture_dimensions[tex.texture_name].second);
+
+            mesh.shared_data().position(pos);
+            mesh.shared_data().normal(normal);
+            mesh.shared_data().tex_coord0(u / w, v / h);
+            mesh.shared_data().move_next();
+
+            submesh.index_data().index(mesh.shared_data().count() - 1);
+            /*
             uint32_t tri_idx[] = {
                 indexes[0],
                 indexes[i+1],
@@ -390,33 +412,17 @@ void Q2BSPLoader::into(Loadable& resource) {
             kmVec3Cross(&normal, &vec1, &vec2);
             kmVec3Normalize(&normal, &normal);
 
-            for(int32_t j = 0; j < 3; ++j) {
-                float u = positions[tri_idx[j]].x * tex.u_axis.x
-                        + positions[tri_idx[j]].y * tex.u_axis.y
-                        + positions[tri_idx[j]].z * tex.u_axis.z + tex.u_offset;
+            for(uint8_t j = 0; j < 3; ++j) {
 
-                float v = positions[tri_idx[j]].x * tex.v_axis.x
-                        + positions[tri_idx[j]].y * tex.v_axis.y
-                        + positions[tri_idx[j]].z * tex.v_axis.z + tex.v_offset;
-
-                float w = float(texture_dimensions[tex.texture_name].first);
-                float h = float(texture_dimensions[tex.texture_name].second);
-
-                submesh.vertex_data().position(positions[tri_idx[0]]);
-                submesh.vertex_data().normal(normal);
-                submesh.vertex_data().tex_coord0(u / w, v / h);
-                submesh.vertex_data().move_next();
-            }            
+            } */
         }
 
-        submesh.vertex_data().done();
-
-        //Add all the indexes
-        for(uint16_t i = 0; i < submesh.vertex_data().count(); ++i) {
-            submesh.index_data().index(i);
-        }
+        mesh.shared_data().done();
         submesh.index_data().done();
     }        
+
+    //Finally, create an entity from the world mesh
+    scene->new_entity(mid);
 }
 
 }
