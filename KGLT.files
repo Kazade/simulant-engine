@@ -251,3 +251,7 @@ kglt/generic/safe_bool.h
 kglt/buffer_object.h
 kglt/buffer_object.cpp
 tests/test_vertex_data.cpp
+kglt/partitioners/octree_partitioner.h
+tests/test_octree.cpp
+kglt/partitioners/octree.h
+kglt/partitioners/octree.cpp
