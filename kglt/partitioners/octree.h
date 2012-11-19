@@ -1,9 +1,10 @@
 #ifndef OCTREE_H
 #define OCTREE_H
 
+#include <set>
 #include <map>
 #include <stdexcept>
-
+#include <vector>
 #include <tr1/memory>
 
 #include "../generic/managed.h"
@@ -28,7 +29,7 @@
 
 
 enum OctreePosition {
-    NEGX_POSY_NEGZ,
+    NEGX_POSY_NEGZ = 0,
     POSX_POSY_NEGZ,
     POSX_POSY_POSZ,
     NEGX_POSY_POSZ,
@@ -55,6 +56,21 @@ public:
     virtual void set_centre(const kmVec3& centre) = 0;
 };
 
+class ObjectDoesNotFitError :
+    public std::runtime_error {
+
+public:
+
+    ObjectDoesNotFitError(const Boundable* obj):
+        std::runtime_error("Object does not fit into the octree node"),
+        object(obj) {
+
+    }
+
+    const Boundable* object;
+};
+
+
 class Octree;
 
 class OctreeNode :
@@ -75,12 +91,13 @@ public:
 
     OctreeNode& child(OctreePosition pos);
     bool has_child(OctreePosition pos) const;
-    bool has_objects() const;
+    bool has_objects() const { return !objects_.empty(); }
 
     bool is_root() const { return !parent_; }
 
-    const kmAABB& absolute_loose_bounds() const;
-    const kmAABB& absolute_strict_bounds() const;
+    const kmAABB& absolute_loose_bounds() const { return loose_bounds_; }
+    const kmAABB& absolute_strict_bounds() const { return strict_bounds_; }
+
     const float loose_diameter() const {
         //Any dimension will do...
         return kmAABBDiameterX(&loose_bounds_);
@@ -93,17 +110,22 @@ public:
 private:
     OctreeNode* parent_;
     std::map<OctreePosition, std::tr1::shared_ptr<OctreeNode> > children_;
+    std::set<const Boundable*> objects_;
 
     kmAABB strict_bounds_;
     kmAABB loose_bounds_;
     kmVec3 centre_;
 
-    void create_child(OctreePosition pos);
+    OctreeNode& create_child(OctreePosition pos);
 
     OctreeNode& insert_into_subtree(const Boundable* obj);
 
-    void add_object(const Boundable* obj);
-    void remove_object(const Boundable* obj);
+    void add_object(const Boundable* obj) { objects_.insert(obj); }
+    void remove_object(const Boundable* obj) { objects_.erase(obj); }
+
+    std::vector<kmAABB> calculate_child_loose_bounds();
+    std::vector<kmAABB> calculate_child_strict_bounds();
+    std::vector<kmAABB> calculate_child_bounds(float child_width);
 
     friend class Octree;
 
