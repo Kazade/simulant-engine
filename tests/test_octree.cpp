@@ -77,19 +77,24 @@ SUITE(octree_tests) {
         kmVec3 obj_centre = obj.centre();
         CHECK(kmVec3AreEqual(&root_centre, &obj_centre));
 
-        Object obj2(2, 2, 2); //Add a smaller object
-        obj.set_centre(kglt::Vec3(10, 10, 20));
+        Object obj2(3, 3, 3); //Add a smaller object
+        obj2.set_centre(kglt::Vec3(10, 10, 17));
 
         tree.grow(&obj2);
         /* This object was positioned outside the loose bounds of the
          * first one. This should have grown the tree upwards, the root
          * should now have 2 child nodes. The original root, and a new
          * child containing obj2
-        */
+         *
+         * The original root went from 7.5 to 12.5 on each axis (centred at 10, 10, 10)
+         *
+         * The new root should go from 7.5 to 17.5 on the z-axis
+        */        
 
         CHECK_EQUAL(10, tree.root().strict_diameter());
         CHECK_EQUAL(20, tree.root().loose_diameter());
-        CHECK_EQUAL(2, tree.root().child_count());
+        CHECK_EQUAL(2, (uint32_t) tree.root().child_count());
+        CHECK_CLOSE(12.5, tree.root().centre().z, 0.001);
 
         //Neither object should be in the root node
         CHECK(!tree.find(&obj).is_root());
@@ -102,7 +107,7 @@ SUITE(octree_tests) {
         CHECK_EQUAL(10, tree.find(&obj2).loose_diameter());
 
         kmVec3 expected_centre;
-        kmVec3Fill(&expected_centre, 10, 10, 0);
+        kmVec3Fill(&expected_centre, 10, 10, 15);
         CHECK(kmVec3AreEqual(&expected_centre, &tree.find(&obj2).centre()));
 
         //Root shouldn't have objects

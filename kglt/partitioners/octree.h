@@ -8,7 +8,9 @@
 #include <tr1/memory>
 
 #include "../generic/managed.h"
-#include "kazmath/aabb.h"
+
+#include "kazbase/list_utils.h"
+#include "kazmath/kazmath.h"
 
 /*
  * BANTER FOLLOWS!
@@ -89,8 +91,13 @@ public:
     uint8_t child_count() const { return children_.size(); }
     uint32_t object_count() const;
 
-    OctreeNode& child(OctreePosition pos);
-    bool has_child(OctreePosition pos) const;
+    OctreeNode& child(OctreePosition pos) {
+        return *container::const_get(children_, pos);
+    }
+
+    bool has_child(OctreePosition pos) const {
+        return container::contains(children_, pos);
+    }
     bool has_objects() const { return !objects_.empty(); }
 
     bool is_root() const { return !parent_; }
@@ -120,12 +127,17 @@ private:
 
     OctreeNode& insert_into_subtree(const Boundable* obj);
 
-    void add_object(const Boundable* obj) { objects_.insert(obj); }
-    void remove_object(const Boundable* obj) { objects_.erase(obj); }
+    void add_object(const Boundable* obj) {
+        objects_.insert(obj);
+    }
 
-    std::vector<kmAABB> calculate_child_loose_bounds();
-    std::vector<kmAABB> calculate_child_strict_bounds();
-    std::vector<kmAABB> calculate_child_bounds(float child_width);
+    void remove_object(const Boundable* obj) {
+        objects_.erase(obj);
+    }
+
+    kmAABB calculate_child_loose_bounds(OctreePosition pos);
+    kmAABB calculate_child_strict_bounds(OctreePosition pos);
+    kmAABB calculate_child_bounds(OctreePosition pos, float child_width);
 
     friend class Octree;
 
@@ -177,8 +189,13 @@ private:
     void _increment_node_count();
     void _decrement_node_count();
 
-    void _register_object(const Boundable* obj);
-    void _unregister_object(const Boundable* obj);
+    void _register_object(OctreeNode* node, const Boundable* obj) {
+        object_node_lookup_[obj] = node;
+    }
+
+    void _unregister_object(OctreeNode* node, const Boundable* obj) {
+        object_node_lookup_.erase(obj);
+    }
 
     std::map<const Boundable*, OctreeNode*> object_node_lookup_;
 
