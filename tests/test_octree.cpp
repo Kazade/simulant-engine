@@ -2,6 +2,8 @@
 #include "kglt/partitioners/octree.h"
 #include "kglt/types.h"
 
+using namespace kglt;
+
 class Object :
     public Boundable {
 
@@ -58,6 +60,22 @@ private:
 };
 
 SUITE(octree_tests) {
+    TEST(test_moving_objects) {
+        Octree tree;
+
+        Object obj(10, 10, 10);
+        obj.set_centre(kglt::Vec3(0, 0, 0));
+
+        tree.grow(&obj); //Insert the obj
+
+        kglt::Vec3 expected_centre(0, 0, 0);
+        CHECK(kmVec3AreEqual(&tree.root().centre(), &expected_centre));
+        CHECK_EQUAL(10, tree.root().strict_diameter());
+        CHECK_EQUAL(20, tree.root().loose_diameter());
+
+        //CONTINUE: write tests for relocate
+    }
+
     TEST(test_insertion) {
 
         Octree tree;

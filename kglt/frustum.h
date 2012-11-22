@@ -3,6 +3,8 @@
 
 #include <kazmath/vec3.h>
 #include <kazmath/plane.h>
+#include <kazmath/aabb.h>
+
 #include <cstdint>
 #include <vector>
 
@@ -26,6 +28,12 @@ enum FrustumPlane {
     FRUSTUM_PLANE_MAX
 };
 
+enum FrustumClassification {
+    FRUSTUM_CONTAINS_NONE = 0,
+    FRUSTUM_CONTAINS_PARTIAL,
+    FRUSTUM_CONTAINS_ALL
+};
+
 class Frustum {
 public:
     Frustum();
@@ -35,6 +43,9 @@ public:
     std::vector<kmVec3> near_corners() const; ///< Returns the near 4 corners of the frustum
     std::vector<kmVec3> far_corners() const; ///< Returns the far 4 corners of the frustum
     bool contains_point(const kmVec3& point) const; ///< Returns true if the frustum contains point
+
+    FrustumClassification contains_aabb(const kmAABB& box) const;
+
     bool initialized() const { return initialized_; }
 
     double near_height() const {
@@ -88,7 +99,7 @@ public:
         kmVec3Subtract(&diff, &far_avg, &near_avg);
         return kmVec3Length(&diff);
 
-    }
+    }    
 
 private:
     bool initialized_;

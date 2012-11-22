@@ -2,6 +2,9 @@
 #include "kazbase/list_utils.h"
 #include "kazmath/aabb.h"
 #include "octree.h"
+#include "../frustum.h"
+
+namespace kglt {
 
 Octree::Octree() {
 
@@ -13,6 +16,30 @@ OctreeNode& Octree::find(const Boundable* object) {
     }
 
     return *container::const_get(object_node_lookup_, object);
+}
+
+void visible_node_finder(OctreeNode* self, std::vector<OctreeNode*>& result, const Frustum& frustum) {
+
+    //Returns > 0 if it's even partially contained (see FrustumClassification)
+    if(frustum.contains_aabb(self->absolute_loose_bounds())) {
+        result.push_back(self);
+    }
+
+    //Go through the child nodes (if any) and check those
+    for(uint8_t i = 0; i < 8; ++i) {
+        if(self->has_child((OctreePosition)i)) {
+            visible_node_finder(&self->child((OctreePosition)i), result, frustum);
+        }
+    }
+}
+
+std::vector<OctreeNode*> Octree::nodes_visible_from(const Frustum& frustum) {
+    std::vector<OctreeNode*> result;
+
+    //Find all the nodes that are within the frustum
+    visible_node_finder(&root(), result, frustum);
+
+    return result;
 }
 
 void Octree::grow(const Boundable *object) {
@@ -329,3 +356,4 @@ OctreeNode::OctreeNode(OctreeNode* parent, float strict_diameter, const kmVec3& 
     kmAABBInitialize(&loose_bounds_, &centre_, strict_diameter * 2, strict_diameter * 2, strict_diameter * 2);
 }
 
+}

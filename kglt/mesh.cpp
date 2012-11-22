@@ -1,3 +1,5 @@
+#include <limits>
+
 #include "mesh.h"
 
 namespace kglt {
@@ -45,6 +47,33 @@ SubMesh::SubMesh(
     arrangement_(arrangement),
     uses_shared_data_(uses_shared_vertices) {
 
+    vertex_data().signal_update_complete().connect(sigc::mem_fun(this, &SubMesh::recalc_bounds));
+    index_data().signal_update_complete().connect(sigc::mem_fun(this, &SubMesh::recalc_bounds));
+}
+
+/**
+ * @brief SubMesh::recalc_bounds
+ *
+ * Recalculate the bounds of the submesh. This involves interating over all of the
+ * vertices that make up the submesh and so is potentially quite slow. This happens automatically
+ * when vertex_data().done() or index_data().done() are called.
+ */
+void SubMesh::recalc_bounds() {
+    //Set the min bounds to the max
+    kmVec3Fill(&bounds_.min, std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+    //Set the max bounds to the min
+    kmVec3Fill(&bounds_.max, -1000000, -1000000, -1000000);
+
+    for(uint16_t idx: index_data().all()) {
+        kmVec3 pos = vertex_data().position_at(idx);
+        if(pos.x < bounds_.min.x) bounds_.min.x = pos.x;
+        if(pos.y < bounds_.min.y) bounds_.min.y = pos.y;
+        if(pos.z < bounds_.min.z) bounds_.min.z = pos.z;
+
+        if(pos.x > bounds_.max.x) bounds_.max.x = pos.x;
+        if(pos.y > bounds_.max.y) bounds_.max.y = pos.y;
+        if(pos.z > bounds_.max.z) bounds_.max.z = pos.z;
+    }
 }
 
 VertexData& SubMesh::vertex_data() {

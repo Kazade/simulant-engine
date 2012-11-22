@@ -5,6 +5,7 @@
 #include "generic/managed.h"
 #include "generic/relation.h"
 
+#include "boundable.h"
 #include "object.h"
 #include "mesh.h"
 
@@ -63,7 +64,8 @@ private:
 
 class SubEntity :
     public SubMeshInterface,
-    public Managed<SubEntity> {
+    public Managed<SubEntity>,
+    public Boundable {
 
 public:
     SubEntity(Entity& parent, uint16_t idx):
@@ -86,6 +88,43 @@ public:
     const MeshArrangement arrangement() const { return submesh().arrangement(); }
 
     Entity& _parent() { return parent_; }
+
+    /* Boundable interface implementation */
+
+    /**
+     * @brief absolute_bounds
+     * @return the bounds of the linked submesh, transformed by the entities absolute
+     * transformation matrix.
+     */
+    const kmAABB absolute_bounds() const {
+        kmAABB local = local_bounds();
+        kmMat4 transform = parent_.absolute_transformation();
+
+        //Transform local by the transformation matrix of the parent
+        kmVec3Transform(&local.min, &local.min, &transform);
+        kmVec3Transform(&local.max, &local.max, &transform);
+
+        return local;
+    }
+
+    /**
+     * @brief local_bounds
+     * @return the bounds of the associated submesh
+     */
+    const kmAABB local_bounds() const {
+        return submesh().bounds();
+    }
+
+    const kmVec3 centre() const {
+        // Return the centre point of the absolute bounds of this subentity
+        // which is the submesh().bounds() transformed by the parent entity's
+        // location
+        kmVec3 centre;
+        kmAABB abs_bounds = absolute_bounds();
+        kmAABBCentre(&abs_bounds, &centre);
+        return centre;
+    }
+
 private:
     Entity& parent_;
     uint16_t index_;

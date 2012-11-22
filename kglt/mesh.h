@@ -7,6 +7,8 @@
 #include "generic/managed.h"
 #include "generic/identifiable.h"
 
+#include "kazmath/kazmath.h"
+
 #include "vertex_data.h"
 #include "types.h"
 
@@ -48,6 +50,12 @@ public:
     void set_material(MaterialID mat) { material_ = mat; }
 
     const MeshArrangement arrangement() const { return arrangement_; }
+
+    const kmAABB& bounds() const {
+        return bounds_;
+    }
+
+    void recalc_bounds();
 private:
     Mesh& parent_;
     MaterialID material_;
@@ -56,6 +64,8 @@ private:
 
     VertexData vertex_data_;
     IndexData index_data_;
+
+    kmAABB bounds_;
 };
 
 class Mesh :

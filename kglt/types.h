@@ -80,7 +80,7 @@ class Camera;
 class SceneGroup;
 class ShaderProgram;
 class Viewport;
-
+class Frustum;
 class WindowBase;
 
 }

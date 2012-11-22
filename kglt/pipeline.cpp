@@ -6,7 +6,7 @@
 
 #include "window_base.h"
 #include "partitioner.h"
-#include "partitioners/null_partitioner.h"
+#include "partitioners/octree_partitioner.h"
 #include "renderers/generic_renderer.h"
 
 namespace kglt {
@@ -21,7 +21,7 @@ Pass::Pass(Scene& scene, SceneGroupID sg, TextureID target, CameraID camera, Vie
 
 Pipeline::Pipeline(Scene& scene):
     scene_(scene),
-    partitioner_(new NullPartitioner(scene)), //TODO: Should be Octree-powered GenericPartitioner
+    partitioner_(new OctreePartitioner(scene)),
     renderer_(new GenericRenderer(scene)) {
 
     //Set up the default render options

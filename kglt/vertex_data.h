@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <vector>
 
+#include <sigc++/sigc++.h>
+
 #include "generic/managed.h"
 #include "kazmath/vec3.h"
 #include "kazmath/vec4.h"
@@ -52,6 +54,10 @@ public:
 
     void position(float x, float y, float z);
     void position(const kmVec3& pos);
+
+    kmVec3 position_at(uint16_t idx) {
+        return data_.at(idx).position;
+    }
 
     void normal(float x, float y, float z);
     void normal(const kmVec3& n);
@@ -169,6 +175,8 @@ public:
         return tex_coord_dimensions_[which];
     }
 
+    sigc::signal<void>& signal_update_complete() { return signal_update_complete_; }
+
 private:
     int32_t enabled_bitmask_;
     uint8_t tex_coord_dimensions_[8];
@@ -206,6 +214,8 @@ private:
     void tex_coordX(uint8_t which, float u, float v, float w);
     void tex_coordX(uint8_t which, float x, float y, float z, float w);
     void check_texcoord(uint8_t which);
+
+    sigc::signal<void> signal_update_complete_;
 };
 
 
@@ -237,9 +247,14 @@ public:
     const BufferObject& buffer_object() const {
         return buffer_object_;
     }
+
+    sigc::signal<void>& signal_update_complete() { return signal_update_complete_; }
+
 private:
     std::vector<uint16_t> indices_;
     BufferObject buffer_object_;
+
+    sigc::signal<void> signal_update_complete_;
 };
 
 

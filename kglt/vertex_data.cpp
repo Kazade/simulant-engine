@@ -209,6 +209,8 @@ void VertexData::done() {
     assert(glGetError() == GL_NO_ERROR);
     buffer_object_.create(data_.size() * sizeof(Vertex), &data_[0]);
     assert(glGetError() == GL_NO_ERROR);
+
+    signal_update_complete_();
 }
 
 IndexData::IndexData():
@@ -219,6 +221,8 @@ IndexData::IndexData():
 void IndexData::done() {
     buffer_object_.create(indices_.size() * sizeof(uint16_t), &indices_[0]);
     assert(glGetError() == GL_NO_ERROR);
+
+    signal_update_complete_();
 }
 
 }

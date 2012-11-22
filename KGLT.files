@@ -255,3 +255,5 @@ kglt/partitioners/octree_partitioner.h
 tests/test_octree.cpp
 kglt/partitioners/octree.h
 kglt/partitioners/octree.cpp
+kglt/partitioners/octree_partitioner.cpp
+kglt/boundable.h

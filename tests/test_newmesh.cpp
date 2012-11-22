@@ -35,11 +35,20 @@ MeshID generate_test_mesh(kglt::Scene& scene) {
     submesh.index_data().index(0);
     submesh.index_data().index(2);
     submesh.index_data().index(3);
+    submesh.index_data().done();
 
     //Draw a line between the first two vertices
     SubMesh& sm = mesh.submesh(mesh.new_submesh(MaterialID(), kglt::MESH_ARRANGEMENT_LINES));
     sm.index_data().index(0);
     sm.index_data().index(1);
+    sm.index_data().done();
+
+    kmVec3 expected_min, expected_max;
+    kmVec3Fill(&expected_min, -1.0, -1.0, 0.0);
+    kmVec3Fill(&expected_max, 1.0, -1.0, 0.0);
+
+    CHECK(kmVec3AreEqual(&sm.bounds().min, &expected_min));
+    CHECK(kmVec3AreEqual(&sm.bounds().max, &expected_max));
 
     return mid;
 }

@@ -8,10 +8,11 @@
 #include <tr1/memory>
 
 #include "../generic/managed.h"
+#include "../boundable.h"
+#include "../types.h"
 
 #include "kazbase/list_utils.h"
 #include "kazmath/kazmath.h"
-
 /*
  * BANTER FOLLOWS!
  *
@@ -29,6 +30,7 @@
  * of the parent, rather than a quarter of the size.
  */
 
+namespace kglt {
 
 enum OctreePosition {
     NEGX_POSY_NEGZ = 0,
@@ -48,15 +50,6 @@ class ChildNodeDoesNotExist :
         std::logic_error("Attempted to get a child node that doesn't exist") {}
 };
 
-class Boundable {
-public:
-    virtual const kmAABB absolute_bounds() const = 0;
-    virtual const kmAABB local_bounds() const = 0;
-    virtual const kmVec3 centre() const = 0;
-
-    virtual void set_bounds(float width, float height, float depth) = 0;
-    virtual void set_centre(const kmVec3& centre) = 0;
-};
 
 class ObjectDoesNotFitError :
     public std::runtime_error {
@@ -114,6 +107,7 @@ public:
         return kmAABBDiameterX(&strict_bounds_);
     }
 
+    const std::set<const Boundable*>& objects() const { return objects_; }
 private:
     OctreeNode* parent_;
     std::map<OctreePosition, std::tr1::shared_ptr<OctreeNode> > children_;
@@ -182,6 +176,8 @@ public:
 
     OctreeNode& find(const Boundable* object);
 
+    std::vector<OctreeNode*> nodes_visible_from(const Frustum& frustum);
+
 private:
     OctreeNode::ptr root_;
     uint32_t node_count_;
@@ -202,5 +198,5 @@ private:
     friend class OctreeNode;
 };
 
-
+}
 #endif // OCTREE_H

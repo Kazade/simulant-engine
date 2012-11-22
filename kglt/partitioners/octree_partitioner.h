@@ -1,10 +1,8 @@
 #ifndef OCTREE_PARTITIONER_H
 #define OCTREE_PARTITIONER_H
 
-#include "partitioner.h"
-#include "generic/tree.h"
-
-#include "kazmath/aabb.h"
+#include "../partitioner.h"
+#include "octree.h"
 
 namespace kglt {
 
@@ -12,6 +10,9 @@ class OctreePartitioner :
     public Partitioner {
 
 public:
+    OctreePartitioner(Scene& scene):
+        Partitioner(scene) {}
+
     void add_entity(EntityID obj);
     void remove_entity(EntityID obj);
 
@@ -21,7 +22,10 @@ public:
     std::vector<LightID> lights_within_range(const kmVec3& location);
     std::vector<SubEntity::ptr> geometry_visible_from(CameraID camera_id, SceneGroupID scene_group_id=0);
 
+private:
+    Octree tree_;
 
+    std::map<const Boundable*, SubEntity::ptr> boundable_to_subentity_;
 };
 
 

@@ -8,6 +8,15 @@ Frustum::Frustum():
 
 }
 
+FrustumClassification Frustum::contains_aabb(const kmAABB& box) const {
+    /**
+     * This should return FRUSTUM_CONTAINS_PARTIAL if the box full encompasses
+     * the frustum, or if any of the boxes corners are contained within the frustum
+     */
+
+    assert(0);
+}
+
 void Frustum::build(const kmMat4* modelview_projection) {
     planes_.resize(FRUSTUM_PLANE_MAX);
 
