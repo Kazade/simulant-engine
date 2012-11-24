@@ -25,7 +25,9 @@ public:
     void look_at(const Vec3& position);
 
     void apply(kmMat4* modelview_out) {
-        kmVec3& pos = position();
+        kmVec3 pos;
+        kmVec3Assign(&pos, &position());
+
         kmQuaternion& rot = rotation();
         kmMat4 rot_mat;
         kmMat4RotationQuaternion(&rot_mat, &rot);
@@ -45,6 +47,8 @@ public:
 
         kmMat4Identity(modelview_out);
         kmMat4LookAt(modelview_out, &pos, &centre, &up);
+
+        set_position(pos);
     }
 
     Frustum& frustum() { return frustum_; }

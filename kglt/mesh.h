@@ -66,6 +66,9 @@ private:
     IndexData index_data_;
 
     kmAABB bounds_;
+
+    sigc::connection vrecalc_;
+    sigc::connection irecalc_;
 };
 
 class Mesh :

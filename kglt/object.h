@@ -57,8 +57,12 @@ public:
         return transform;
     }
 
-    kmVec3& position() { return position_; }
-    kmVec3& absolute_position() { return absolute_position_; }
+    void set_position(const kmVec3& pos) {
+        kmVec3Assign(&position_, &pos);
+    }
+
+    const kmVec3& position() const { return position_; }
+    const kmVec3& absolute_position() const { return absolute_position_; }
 
     kmQuaternion& rotation() { return rotation_; }
 

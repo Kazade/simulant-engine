@@ -21,8 +21,8 @@ public:
     virtual void add_entity(EntityID obj) = 0;
     virtual void remove_entity(EntityID obj) = 0;
 
-    virtual void add_light(Light& obj) = 0;
-    virtual void remove_light(Light& obj) = 0;
+    virtual void add_light(LightID obj) = 0;
+    virtual void remove_light(LightID obj) = 0;
 
     virtual std::vector<LightID> lights_within_range(const kmVec3& location) = 0;
     virtual std::vector<SubEntity::ptr> geometry_visible_from(CameraID camera_id, SceneGroupID scene_group_id=0) = 0;

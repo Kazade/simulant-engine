@@ -21,12 +21,12 @@ public:
         all_entities_.erase(obj);
     }
 
-    void add_light(Light& obj) {
-        all_lights_.insert(obj.id());
+    void add_light(LightID obj) {
+        all_lights_.insert(obj);
     }
 
-    void remove_light(Light& obj) {
-        all_lights_.erase(obj.id());
+    void remove_light(LightID obj) {
+        all_lights_.erase(obj);
     }
 
     std::vector<LightID> lights_within_range(const kmVec3& location);

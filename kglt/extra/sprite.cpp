@@ -13,7 +13,7 @@ Sprite::Sprite(Scene& scene):
 
     kglt::procedural::mesh::rectangle(scene_.mesh(mesh_id_), 1.0, 1.0);    
 
-    scene_.entity(entity()).set_mesh(mesh_id_); //Reuild the entity
+    scene_.entity(entity()).set_mesh(mesh_id_); //Rebuild the entity
 }
 
 void Sprite::add_animation(const std::string& anim_name, const std::vector<TextureID>& frames, double duration) {

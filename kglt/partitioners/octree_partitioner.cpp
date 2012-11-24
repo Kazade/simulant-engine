@@ -19,12 +19,20 @@ void OctreePartitioner::remove_entity(EntityID obj) {
     //tree_.shrink(&scene().entity(obj));
 }
 
-void OctreePartitioner::add_light(Light &obj) {
-
+void OctreePartitioner::add_light(LightID obj) {
+    Light& light = scene().entity(obj);
+    Boundable* boundable = dynamic_cast<Boundable*>(&light);
+    assert(boundable);
+    tree_.grow(boundable);
+    boundable_to_light_[boundable] = obj;
 }
 
-void OctreePartitioner::remove_light(Light &obj) {
-
+void OctreePartitioner::remove_light(LightID &obj) {
+    Light& light = scene().entity(obj);
+    Boundable* boundable = dynamic_cast<Boundable*>(&light);
+    assert(boundable);
+    tree_.shrink(boundable);
+    boundable_to_light_.erase(boundable);
 }
 
 std::vector<SubEntity::ptr> OctreePartitioner::geometry_visible_from(CameraID camera_id, SceneGroupID scene_group_id) {
@@ -51,7 +59,12 @@ std::vector<SubEntity::ptr> OctreePartitioner::geometry_visible_from(CameraID ca
 }
 
 std::vector<LightID> OctreePartitioner::lights_within_range(const kmVec3& location) {
-    assert(0);
+    /*
+     *  FIXME: Need to think about lights!
+     */
+
+    std::vector<LightID> lights;
+    return lights;
 }
 
 }

@@ -8,13 +8,27 @@ Frustum::Frustum():
 
 }
 
-FrustumClassification Frustum::contains_aabb(const kmAABB& box) const {
-    /**
-     * This should return FRUSTUM_CONTAINS_PARTIAL if the box full encompasses
-     * the frustum, or if any of the boxes corners are contained within the frustum
-     */
+bool Frustum::intersects_aabb(const kmAABB &box) const {
+    for(const kmPlane& plane: planes_) {
+        bool inside = false;
+        for(uint8_t i = 0; i < FRUSTUM_CORNER_MAX; ++i) {
+            if(kmPlaneDotCoord(&plane, &near_corners_[i]) > 0) {
+                inside = true;
+                break;
+            }
 
-    assert(0);
+            if(kmPlaneDotCoord(&plane, &far_corners_[i]) > 0) {
+                inside = true;
+                break;
+            }
+        }
+
+        if(!inside) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 void Frustum::build(const kmMat4* modelview_projection) {
@@ -97,7 +111,7 @@ std::vector<kmVec3> Frustum::far_corners() const {
     return far_corners_;
 }
 
-bool Frustum::contains_point(const kmVec3& point) const {
+bool Frustum::contains_point(const kmVec3& point) const {    
     assert(0 && "Not implemented");
 }
 

@@ -4,6 +4,7 @@
 #include "object.h"
 #include "generic/identifiable.h"
 #include "types.h"
+#include "boundable.h"
 
 #include "kazmath/vec4.h"
 
@@ -17,7 +18,8 @@ enum LightType {
 
 class Light :
     public Object,
-    public generic::Identifiable<LightID> {
+    public generic::Identifiable<LightID>,
+    public Boundable {
 
 public:
     typedef std::tr1::shared_ptr<Light> ptr;
@@ -62,6 +64,23 @@ public:
     float constant_attenuation() const { return const_attenuation_; }
     float linear_attenuation() const { return linear_attenuation_; }
     float quadratic_attenuation() const { return quadratic_attenuation_; }
+
+    /** Boundable interface **/
+    const kmAABB absolute_bounds() const {
+        kmAABB result;
+        kmAABBInitialize(&result, &absolute_position(), range(), range(), range());
+        return result;
+    }
+
+    const kmAABB local_bounds() const {
+        kmAABB result;
+        kmAABBInitialize(&result, nullptr, range(), range(), range());
+        return result;
+    }
+
+    const kmVec3 centre() const {
+        return position();
+    }
 
 private:
     LightType type_;

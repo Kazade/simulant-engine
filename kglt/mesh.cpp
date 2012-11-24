@@ -47,8 +47,8 @@ SubMesh::SubMesh(
     arrangement_(arrangement),
     uses_shared_data_(uses_shared_vertices) {
 
-    vertex_data().signal_update_complete().connect(sigc::mem_fun(this, &SubMesh::recalc_bounds));
-    index_data().signal_update_complete().connect(sigc::mem_fun(this, &SubMesh::recalc_bounds));
+    vrecalc_ = vertex_data().signal_update_complete().connect(sigc::mem_fun(this, &SubMesh::recalc_bounds));
+    irecalc_ = index_data().signal_update_complete().connect(sigc::mem_fun(this, &SubMesh::recalc_bounds));
 }
 
 /**
@@ -64,15 +64,17 @@ void SubMesh::recalc_bounds() {
     //Set the max bounds to the min
     kmVec3Fill(&bounds_.max, -1000000, -1000000, -1000000);
 
-    for(uint16_t idx: index_data().all()) {
-        kmVec3 pos = vertex_data().position_at(idx);
-        if(pos.x < bounds_.min.x) bounds_.min.x = pos.x;
-        if(pos.y < bounds_.min.y) bounds_.min.y = pos.y;
-        if(pos.z < bounds_.min.z) bounds_.min.z = pos.z;
+    if(index_data().count()) {
+        for(uint16_t idx: index_data().all()) {
+            kmVec3 pos = vertex_data().position_at(idx);
+            if(pos.x < bounds_.min.x) bounds_.min.x = pos.x;
+            if(pos.y < bounds_.min.y) bounds_.min.y = pos.y;
+            if(pos.z < bounds_.min.z) bounds_.min.z = pos.z;
 
-        if(pos.x > bounds_.max.x) bounds_.max.x = pos.x;
-        if(pos.y > bounds_.max.y) bounds_.max.y = pos.y;
-        if(pos.z > bounds_.max.z) bounds_.max.z = pos.z;
+            if(pos.x > bounds_.max.x) bounds_.max.x = pos.x;
+            if(pos.y > bounds_.max.y) bounds_.max.y = pos.y;
+            if(pos.z > bounds_.max.z) bounds_.max.z = pos.z;
+        }
     }
 }
 
@@ -94,6 +96,9 @@ const IndexData& SubMesh::index_data() const {
     return index_data_;
 }
 
-SubMesh::~SubMesh() {}
+SubMesh::~SubMesh() {
+    vrecalc_.disconnect();
+    irecalc_.disconnect();
+}
 
 }

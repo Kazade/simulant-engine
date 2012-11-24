@@ -21,7 +21,7 @@ OctreeNode& Octree::find(const Boundable* object) {
 void visible_node_finder(OctreeNode* self, std::vector<OctreeNode*>& result, const Frustum& frustum) {
 
     //Returns > 0 if it's even partially contained (see FrustumClassification)
-    if(frustum.contains_aabb(self->absolute_loose_bounds())) {
+    if(frustum.intersects_aabb(self->absolute_loose_bounds())) {
         result.push_back(self);
     }
 
@@ -46,6 +46,13 @@ void Octree::grow(const Boundable *object) {
     assert(object);
 
     kmAABB obj_bounds = object->absolute_bounds();
+    float obj_diameter = std::max(
+        kmAABBDiameterX(&obj_bounds),
+        std::max(
+            kmAABBDiameterY(&obj_bounds),
+            kmAABBDiameterZ(&obj_bounds)
+        )
+    );
 
     if(!root_) {
         L_DEBUG("Creating root node");
@@ -53,13 +60,7 @@ void Octree::grow(const Boundable *object) {
          *  We don't have a root node yet, so create one centred around
          *  the object with strict bounds that encompass it.
          */
-        float node_size = std::ceil(std::max(
-            kmAABBDiameterX(&obj_bounds),
-            std::max(
-                kmAABBDiameterY(&obj_bounds),
-                kmAABBDiameterZ(&obj_bounds)
-            )
-        ));
+        float node_size = obj_diameter;
 
         root_.reset(new OctreeNode(
             nullptr,
@@ -70,8 +71,8 @@ void Octree::grow(const Boundable *object) {
         L_DEBUG("Root node created with strict width of: " + boost::lexical_cast<std::string>(node_size));
     }
 
-    //While the object is outside the root (this won't be entered if the root has just been created)
-    while(kmAABBContainsAABB(&root().absolute_loose_bounds(), &obj_bounds) != KM_CONTAINS_ALL) {
+    //While the object is too big for the root
+    while(!kmAABBContainsAABB(&root().absolute_strict_bounds(), &obj_bounds)) {
         L_DEBUG("Root node cannot contain object, growing upwards");
 
         /*
@@ -298,55 +299,37 @@ kmAABB OctreeNode::calculate_child_strict_bounds(OctreePosition pos) {
  * nodes then an ObjectDoesNotFitError() is thrown.
  */
 OctreeNode& OctreeNode::insert_into_subtree(const Boundable* obj) {
-    kmAABB loose = absolute_loose_bounds();
     kmAABB obj_bounds = obj->absolute_bounds();
 
-    std::vector<OctreePosition> destination_children;
+    float obj_diameter = std::max(
+        kmAABBDiameterX(&obj_bounds),
+        std::max(
+            kmAABBDiameterY(&obj_bounds),
+            kmAABBDiameterZ(&obj_bounds)
+        )
+    );
 
-    if(kmAABBContainsAABB(&loose, &obj_bounds) == KM_CONTAINS_ALL) {
-        //If this node fully contains the object, work out if it fits any of the children
+    if(obj_diameter < this->strict_diameter() / 2) {
+        //Object will fit into child
+        L_DEBUG("Object will fit into child, traversing next level");
         for(uint8_t i = 0; i < 8; ++i) {
-            kmAABB bounds = calculate_child_loose_bounds((OctreePosition)i);
-            if(kmAABBContainsAABB(&bounds, &obj_bounds) == KM_CONTAINS_ALL) {
-                destination_children.push_back((OctreePosition) i);
+            kmAABB bounds = calculate_child_strict_bounds((OctreePosition)i);
+            kmVec3 centre = obj->centre();
+            if(kmAABBContainsPoint(&bounds, &centre)) {
+                OctreeNode& child = create_child((OctreePosition) i);
+                return child.insert_into_subtree(obj);
             }
         }
 
+        throw std::logic_error("Something went wrong while adding the object to the Octree");
     } else {
-        //This should never really happen unless the function has been called outside of Octree::grow()
-        throw ObjectDoesNotFitError(obj);
-    }
-
-    if(destination_children.empty()) {
         L_DEBUG("Destination node for object found");
 
         //Add to this node
         this->add_object(obj);
         return *this;
-    } else if (destination_children.size() == 1) {
-        L_DEBUG("Object fits into child node, inserting further down the tree");
-
-        OctreeNode& child = create_child(destination_children[0]);
-        return child.insert_into_subtree(obj);
-    } else {
-        L_DEBUG("Object fits into more than one node, determining best...");
-
-        //Work out where the object's centre point is
-        kmVec3 obj_centre = obj->centre();
-        for(OctreePosition pos: destination_children) {
-            kmAABB bounds = calculate_child_strict_bounds(pos);
-            if(kmAABBContainsPoint(&bounds, &obj_centre)) {
-                L_DEBUG("Object fits into child node, inserting further down the tree");
-
-                OctreeNode& child = create_child(pos);
-                return child.insert_into_subtree(obj);
-            }
-        }
-
-        throw std::runtime_error("Something went seriously wrong while inserting an object into the octree.");
     }
 }
-
 
 OctreeNode::OctreeNode(OctreeNode* parent, float strict_diameter, const kmVec3& centre):
     parent_(parent),
