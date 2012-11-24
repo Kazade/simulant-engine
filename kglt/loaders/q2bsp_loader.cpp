@@ -247,8 +247,9 @@ void Q2BSPLoader::into(Loadable& resource) {
 
     std::vector<EntityProperties> entities;
     parse_entities(entity_string, entities);
-    scene->camera().position() = find_player_spawn_point(entities);
-    kmVec3Transform(&scene->camera().position(), &scene->camera().position(), &rotation);
+    kmVec3 cam_pos = find_player_spawn_point(entities);
+    kmVec3Transform(&cam_pos, &cam_pos, &rotation);
+    scene->camera().set_position(cam_pos);
 
     add_lights_to_scene(*scene, entities);
 

@@ -295,7 +295,7 @@ LightID Scene::new_light(Object* parent, LightType type) {
         l.set_parent(parent);
     }
 
-    signal_light_created_(l);
+    signal_light_created_(lid);
 
     return lid;
 }
@@ -306,7 +306,7 @@ Light& Scene::light(LightID light_id) {
 
 void Scene::delete_light(LightID light_id) {    
     Light& obj = light(light_id);
-    signal_light_destroyed_(obj);
+    signal_light_destroyed_(light_id);
 
     obj.destroy_children();
     TemplatedManager<Scene, Light, LightID>::manager_delete(light_id);

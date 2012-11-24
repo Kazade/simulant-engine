@@ -16,22 +16,22 @@ void OctreePartitioner::add_entity(EntityID obj) {
 }
 
 void OctreePartitioner::remove_entity(EntityID obj) {
-    //tree_.shrink(&scene().entity(obj));
+    //FIXME: tree_.shrink(&scene().entity(obj));
 }
 
 void OctreePartitioner::add_light(LightID obj) {
-    Light& light = scene().entity(obj);
+    Light& light = scene().light(obj);
     Boundable* boundable = dynamic_cast<Boundable*>(&light);
     assert(boundable);
     tree_.grow(boundable);
     boundable_to_light_[boundable] = obj;
 }
 
-void OctreePartitioner::remove_light(LightID &obj) {
-    Light& light = scene().entity(obj);
+void OctreePartitioner::remove_light(LightID obj) {
+    Light& light = scene().light(obj);
     Boundable* boundable = dynamic_cast<Boundable*>(&light);
     assert(boundable);
-    tree_.shrink(boundable);
+    //FIXME: tree_.shrink(boundable);
     boundable_to_light_.erase(boundable);
 }
 

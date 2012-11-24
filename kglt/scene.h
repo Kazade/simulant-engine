@@ -138,8 +138,8 @@ public:
     sigc::signal<void, EntityID>& signal_entity_created() { return signal_entity_created_; }
     sigc::signal<void, EntityID>& signal_entity_destroyed() { return signal_entity_destroyed_; }
 
-    sigc::signal<void, Light&>& signal_light_created() { return signal_light_created_; }
-    sigc::signal<void, Light&>& signal_light_destroyed() { return signal_light_destroyed_; }
+    sigc::signal<void, LightID>& signal_light_created() { return signal_light_created_; }
+    sigc::signal<void, LightID>& signal_light_destroyed() { return signal_light_destroyed_; }
 
     Pipeline& pipeline() { return *pipeline_; }
 private:
@@ -164,8 +164,8 @@ private:
     sigc::signal<void, EntityID> signal_entity_created_;
     sigc::signal<void, EntityID> signal_entity_destroyed_;
 
-    sigc::signal<void, Light&> signal_light_created_;
-    sigc::signal<void, Light&> signal_light_destroyed_;
+    sigc::signal<void, LightID> signal_light_created_;
+    sigc::signal<void, LightID> signal_light_destroyed_;
 };
 
 }

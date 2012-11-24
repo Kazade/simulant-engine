@@ -92,8 +92,13 @@ void Element::set_position(float x, float y) {
         parent_height = scene().window().height();
     }
 
-    position().x = parent_left + (x * parent_width);
-    position().y = parent_bottom + (y * parent_height);
+    Object::set_position(
+        Vec3(
+            parent_left + (x * parent_width),
+            parent_bottom + (y * parent_height),
+            position().z
+        )
+    );
 
     update_from_parent();
 }
