@@ -36,7 +36,7 @@ void VertexData::set_texture_coordinate_dimensions(uint8_t coord_index, uint8_t 
 
 void VertexData::clear() {
     data_.clear();
-    cursor_position_ = 0;
+    cursor_position_ = 0;    
 }
 
 void VertexData::position(float x, float y, float z) {

@@ -12,32 +12,38 @@ Mesh::Mesh(Scene* scene, MeshID id):
 
 void Mesh::clear() {
     //Delete the submeshes and clear the shared data
-    for(uint16_t i = 0; i < submesh_count(); ++i) {
+    for(SubMeshIndex i: submesh_ids()) {
         delete_submesh(i);
     }
     submeshes_.clear();
     shared_data().clear();
 }
 
-SubMeshIndex Mesh::new_submesh(
+SubMeshIndex Mesh::new_submesh(    
     MaterialID material, MeshArrangement arrangement, bool uses_shared_vertices) {
 
+    static SubMeshIndex counter = 0;
+
+    SubMeshIndex idx = ++counter;
+
     submeshes_.push_back(SubMesh::create(*this, material, arrangement, uses_shared_vertices));
-    return submeshes_.size() - 1;
+    submeshes_by_index_[idx] = submeshes_[submeshes_.size()-1];
+
+    return idx;
 }
 
 void Mesh::delete_submesh(SubMeshIndex index) {
-    if(index >= submeshes_.size()) {
+    if(!container::contains(submeshes_by_index_, index)) {
         throw std::out_of_range("Tried to delete a submesh that doesn't exist");
     }
 
-    //Don't actually remove the submesh from the array, otherwise
-    //the other indexes will be wrong. Instead just set the smart pointer to NULL
-    submeshes_.at(index).reset();
+    submeshes_.erase(std::remove(submeshes_.begin(), submeshes_.end(), submeshes_by_index_[index]), submeshes_.end());
+    submeshes_by_index_.erase(index);
 }
 
-SubMesh& Mesh::submesh(uint16_t index) {
-    return *submeshes_.at(index);
+SubMesh& Mesh::submesh(SubMeshIndex index) {
+    assert(index > 0);
+    return *submeshes_by_index_[index];
 }
 
 SubMesh::SubMesh(
@@ -64,17 +70,20 @@ void SubMesh::recalc_bounds() {
     //Set the max bounds to the min
     kmVec3Fill(&bounds_.max, -1000000, -1000000, -1000000);
 
-    if(index_data().count()) {
-        for(uint16_t idx: index_data().all()) {
-            kmVec3 pos = vertex_data().position_at(idx);
-            if(pos.x < bounds_.min.x) bounds_.min.x = pos.x;
-            if(pos.y < bounds_.min.y) bounds_.min.y = pos.y;
-            if(pos.z < bounds_.min.z) bounds_.min.z = pos.z;
+    if(!index_data().count()) {
+        kmAABBInitialize(&bounds_, nullptr, 0, 0, 0);
+        return;
+    }
 
-            if(pos.x > bounds_.max.x) bounds_.max.x = pos.x;
-            if(pos.y > bounds_.max.y) bounds_.max.y = pos.y;
-            if(pos.z > bounds_.max.z) bounds_.max.z = pos.z;
-        }
+    for(uint16_t idx: index_data().all()) {
+        kmVec3 pos = vertex_data().position_at(idx);
+        if(pos.x < bounds_.min.x) bounds_.min.x = pos.x;
+        if(pos.y < bounds_.min.y) bounds_.min.y = pos.y;
+        if(pos.z < bounds_.min.z) bounds_.min.z = pos.z;
+
+        if(pos.x > bounds_.max.x) bounds_.max.x = pos.x;
+        if(pos.y > bounds_.max.y) bounds_.max.y = pos.y;
+        if(pos.z > bounds_.max.z) bounds_.max.z = pos.z;
     }
 }
 

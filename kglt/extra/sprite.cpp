@@ -30,7 +30,9 @@ void Sprite::add_animation(const std::string& anim_name, const std::vector<Textu
 
 void Sprite::set_active_animation(const std::string &anim_name) {
     current_animation_ = anim_name;
-    scene_.mesh(mesh_id_).submesh(0).set_material(animations_[anim_name]);
+    kglt::Mesh& mesh = scene_.mesh(mesh_id_);
+
+    mesh.submesh(mesh.submesh_ids()[0]).set_material(animations_[anim_name]);
 }
 
 void Sprite::set_render_dimensions(float width, float height) {

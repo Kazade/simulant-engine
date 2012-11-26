@@ -17,9 +17,11 @@ void Entity::set_mesh(MeshID mesh) {
     Mesh& m = this->_mesh_ref();
 
     subentities_.clear();
-    for(uint16_t i = 0; i < m.submesh_count(); ++i) {
-        subentities_.push_back(SubEntity::create(*this, i));
+    for(SubMeshIndex idx: m.submesh_ids()) {
+        subentities_.push_back(SubEntity::create(*this, idx));
     }
+
+    signal_mesh_changed_(id());
 }
 
 }

@@ -170,6 +170,8 @@ public:
 
     uint32_t node_count() const;
 
+    bool has_root() const { return root_ != nullptr; }
+
     void grow(const Boundable* object);
     void shrink(const Boundable* object);
     void relocate(const Boundable* object);
@@ -189,7 +191,7 @@ private:
         object_node_lookup_[obj] = node;
     }
 
-    void _unregister_object(OctreeNode* node, const Boundable* obj) {
+    void _unregister_object(const Boundable* obj) {
         object_node_lookup_.erase(obj);
     }
 

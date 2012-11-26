@@ -4,6 +4,8 @@
 #include <sstream>
 #include <boost/algorithm/string/trim.hpp>
 
+#include "../utils/profiler/profiler.h"
+
 #include "../window.h"
 #include "../scene.h"
 #include "../mesh.h"
@@ -160,6 +162,8 @@ void parse_entities(const std::string& entity_string, std::vector<EntityProperti
 }
 
 kmVec3 find_player_spawn_point(std::vector<EntityProperties>& entities) {
+    PROFILE_SCOPED();
+
     for(EntityProperties p: entities) {
         std::cout << p["classname"] << std::endl;
         if(p["classname"] == "info_player_start") {
@@ -177,6 +181,8 @@ kmVec3 find_player_spawn_point(std::vector<EntityProperties>& entities) {
 }
 
 void add_lights_to_scene(Scene& scene, const std::vector<EntityProperties>& entities) {
+    PROFILE_SCOPED();
+
     //Needed because the Quake 2 coord system is weird
     kmMat4 rotation;
     kmMat4RotationX(&rotation, kmDegreesToRadians(-90.0f));
@@ -215,6 +221,8 @@ void add_lights_to_scene(Scene& scene, const std::vector<EntityProperties>& enti
 }
 
 void Q2BSPLoader::into(Loadable& resource) {
+    PROFILE_SCOPED();
+
     Loadable* res_ptr = &resource;
     Scene* scene = dynamic_cast<Scene*>(res_ptr);
     assert(scene && "You passed a Resource that is not a scene to the Scene loader");
@@ -299,6 +307,9 @@ void Q2BSPLoader::into(Loadable& resource) {
     /**
      *  Load the textures and generate materials
      */
+
+    std::map<MaterialID, SubMeshIndex> material_to_submesh;
+
     for(Q2::TextureInfo& tex: textures) {
         MaterialID material_id = scene->new_material(scene->default_material()); //Duplicate the default material
         Material& mat = scene->material(material_id);
@@ -340,10 +351,12 @@ void Q2BSPLoader::into(Loadable& resource) {
 
         tex_info_to_material[texinfo_idx] = material_id;
         texinfo_idx++;
+
+        material_to_submesh[mat.id()] = mesh.new_submesh(mat.id(), MESH_ARRANGEMENT_TRIANGLES, true);
     }
 
     std::cout << "Num textures: " << tex_lookup.size() << std::endl;
-    std::cout << "Num submeshes: " << mesh.submesh_count() << std::endl;
+    std::cout << "Num submeshes: " << mesh.submesh_ids().size() << std::endl;
 
     for(Q2::Face& f: faces) {
         std::vector<uint32_t> indexes;
@@ -362,39 +375,27 @@ void Q2BSPLoader::into(Loadable& resource) {
         }
 
         //Add a submesh for this face
-        SubMeshIndex sm = mesh.new_submesh(tex_info_to_material[f.texture_info], MESH_ARRANGEMENT_TRIANGLE_FAN, true);
-
+        SubMesh& sm = mesh.submesh(material_to_submesh[tex_info_to_material[f.texture_info]]);
         Q2::TextureInfo& tex = textures[f.texture_info];
-
-        SubMesh& submesh = mesh.submesh(sm);
 
         kmVec3 normal;
         kmVec3Fill(&normal, 0, 1, 0);
 
         /*
+         *  A unique vertex is defined by a combination of the position ID and the
+         *  texture_info index (because texture coordinates depend on both and some
+         *  some vertices must be duplicated.
+         *
+         *  Here we store a mapping so that we don't create duplicate vertices if we don't need to!
+         */
+
+        /*
          * Build the triangles for this "face"
          */
-        for(int16_t i = 0; i < (int16_t) indexes.size(); ++i) {
-            const kmVec3& pos = positions[indexes[i]];
 
-            float u = pos.x * tex.u_axis.x
-                    + pos.y * tex.u_axis.y
-                    + pos.z * tex.u_axis.z + tex.u_offset;
+        std::map<uint32_t, uint32_t> index_lookup;
 
-            float v = pos.x * tex.v_axis.x
-                    + pos.y * tex.v_axis.y
-                    + pos.z * tex.v_axis.z + tex.v_offset;
-
-            float w = float(texture_dimensions[tex.texture_name].first);
-            float h = float(texture_dimensions[tex.texture_name].second);
-
-            mesh.shared_data().position(pos);
-            mesh.shared_data().normal(normal);
-            mesh.shared_data().tex_coord0(u / w, v / h);
-            mesh.shared_data().move_next();
-
-            submesh.index_data().index(mesh.shared_data().count() - 1);
-            /*
+        for(int16_t i = 1; i < (int16_t) indexes.size() - 1; ++i) {
             uint32_t tri_idx[] = {
                 indexes[0],
                 indexes[i+1],
@@ -414,13 +415,49 @@ void Q2BSPLoader::into(Loadable& resource) {
             kmVec3Normalize(&normal, &normal);
 
             for(uint8_t j = 0; j < 3; ++j) {
+                if(container::contains(index_lookup, tri_idx[j])) {
+                    //We've already processed this vertex
+                    sm.index_data().index(index_lookup[tri_idx[j]]);
+                    continue;
+                }
 
-            } */
+
+                kmVec3& pos = positions[tri_idx[j]];
+
+                //We haven't done this before so calculate the vertex
+                float u = pos.x * tex.u_axis.x
+                        + pos.y * tex.u_axis.y
+                        + pos.z * tex.u_axis.z + tex.u_offset;
+
+                float v = pos.x * tex.v_axis.x
+                        + pos.y * tex.v_axis.y
+                        + pos.z * tex.v_axis.z + tex.v_offset;
+
+                float w = float(texture_dimensions[tex.texture_name].first);
+                float h = float(texture_dimensions[tex.texture_name].second);
+
+                mesh.shared_data().position(pos);
+                mesh.shared_data().normal(normal);
+                mesh.shared_data().tex_coord0(u / w, v / h);
+                mesh.shared_data().move_next();
+
+                sm.index_data().index(mesh.shared_data().count() - 1);
+
+                //Cache this new vertex in the lookup
+                index_lookup[tri_idx[j]] = mesh.shared_data().count() - 1;
+            }
         }
-
-        mesh.shared_data().done();
-        submesh.index_data().done();
     }        
+
+    mesh.shared_data().done();
+    for(SubMeshIndex i: mesh.submesh_ids()) {
+        //Delete empty submeshes
+        if(!mesh.submesh(i).index_data().count()) {
+            mesh.delete_submesh(i);
+            continue;
+        }
+        mesh.submesh(i).index_data().done();
+    }
 
     //Finally, create an entity from the world mesh
     scene->new_entity(mid);

@@ -73,7 +73,7 @@ TEST(basic_usage) {
     CHECK(!data.has_specular());
     CHECK_EQUAL(4, data.count());
 
-    CHECK_EQUAL(2, mesh.submesh_count());
+    CHECK_EQUAL(2, mesh.submesh_ids().size());
 }
 
 TEST(entity_from_mesh) {
@@ -95,7 +95,7 @@ TEST(entity_from_mesh) {
 
     //The entity should report the same data as the mesh, the same subentity count
     //as well as the same shared vertex data
-    CHECK_EQUAL(mesh.submesh_count(), entity.subentity_count());
+    CHECK_EQUAL(mesh.submesh_ids().size(), entity.subentity_count());
     CHECK(mesh.shared_data().count() == entity.shared_data().count());
 
     //Likewise for subentities, they should just proxy to the submesh

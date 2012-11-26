@@ -52,6 +52,9 @@ public:
     }
 
     const std::vector<std::tr1::shared_ptr<SubEntity> >& _subentities() { return subentities_; }
+
+    sigc::signal<void, EntityID>& signal_mesh_changed() { return signal_mesh_changed_; }
+
 private:
     MeshID mesh_;
 
@@ -60,6 +63,8 @@ private:
     friend class SubEntity;
 
     Mesh& _mesh_ref();
+
+    sigc::signal<void, EntityID> signal_mesh_changed_;
 };
 
 class SubEntity :
@@ -68,7 +73,7 @@ class SubEntity :
     public Boundable {
 
 public:
-    SubEntity(Entity& parent, uint16_t idx):
+    SubEntity(Entity& parent, SubMeshIndex idx):
         parent_(parent),
         index_(idx),
         material_(0) {
@@ -127,7 +132,7 @@ public:
 
 private:
     Entity& parent_;
-    uint16_t index_;
+    SubMeshIndex index_;
     MaterialID material_;
 
     const SubMesh& submesh() const { return parent_._mesh_ref().submesh(index_); }

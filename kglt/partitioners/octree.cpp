@@ -42,6 +42,23 @@ std::vector<OctreeNode*> Octree::nodes_visible_from(const Frustum& frustum) {
     return result;
 }
 
+void Octree::shrink(const Boundable* object) {
+    assert(object);
+
+    if(!container::contains(this->object_node_lookup_, object)) {
+        throw std::logic_error("Tried to remove an object that doesn't exist in the tree");
+    }
+
+    OctreeNode& node = *container::const_get(this->object_node_lookup_, object);
+    node.remove_object(object);
+
+    if(!node.has_objects() && !node.child_count()) {
+        L_WARN("FIXME: Node should be deleted but this is not yet implemented");
+    }
+
+    _unregister_object(object);
+}
+
 void Octree::grow(const Boundable *object) {
     assert(object);
 

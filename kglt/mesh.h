@@ -3,11 +3,14 @@
 
 #include <cstdint>
 #include <vector>
+#include <map>
+#include <set>
 
 #include "generic/managed.h"
 #include "generic/identifiable.h"
 
 #include "kazmath/kazmath.h"
+#include "kazbase/list_utils.h"
 
 #include "vertex_data.h"
 #include "types.h"
@@ -90,16 +93,19 @@ public:
     SubMeshIndex new_submesh(MaterialID material, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool uses_shared_vertices=true);
     SubMesh& submesh(SubMeshIndex index);
     void delete_submesh(SubMeshIndex index);
-
-    const uint16_t submesh_count() const { return submeshes_.size(); }
-
     void clear();
+
+    std::vector<SubMeshIndex> submesh_ids() {
+        std::set<SubMeshIndex> keys = container::keys(submeshes_by_index_);
+        return std::vector<SubMeshIndex>(keys.begin(), keys.end());
+    }
 
 private:
     Scene& scene_;
 
     VertexData shared_data_;
     std::vector<SubMesh::ptr> submeshes_;
+    std::map<SubMeshIndex, SubMesh::ptr> submeshes_by_index_;
 };
 
 }
