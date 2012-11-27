@@ -257,3 +257,4 @@ kglt/partitioners/octree.h
 kglt/partitioners/octree.cpp
 kglt/partitioners/octree_partitioner.cpp
 kglt/boundable.h
+kglt/extra/paragraph.h
