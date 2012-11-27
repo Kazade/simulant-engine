@@ -54,6 +54,10 @@ void ShaderParams::set_colour(const std::string& uniform_name, const Colour& val
     set_vec4(uniform_name, tmp);
 }
 
+void ShaderParams::set_mat4x4_array(const std::string& uniform_name, const std::vector<kmMat4>& matrices) {
+    program_.set_uniform(uniform_name, matrices);
+}
+
 ShaderProgram::ShaderProgram(Scene *scene, ShaderID id):
     generic::Identifiable<ShaderID>(id),
     program_id_(0),
@@ -242,6 +246,14 @@ void ShaderProgram::set_uniform(const std::string& name, const kmVec4* vec) {
     GLint loc = get_uniform_loc(name);
     if(loc >= 0) {
         glUniform4fv(get_uniform_loc(name), 1, (GLfloat*) vec);
+        check_and_log_error(__FILE__, __LINE__);
+    }
+}
+
+void ShaderProgram::set_uniform(const std::string& name, const std::vector<kmMat4>& matrices) {
+    GLint loc = get_uniform_loc(name);
+    if(loc >= 0) {
+        glUniformMatrix4fv(loc, matrices.size(), false, (GLfloat*) &matrices[0]);
         check_and_log_error(__FILE__, __LINE__);
     }
 }

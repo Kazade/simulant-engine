@@ -32,6 +32,7 @@ enum ShaderAvailableAuto {
     SP_AUTO_MATERIAL_SPECULAR,
     SP_AUTO_MATERIAL_AMBIENT,
     SP_AUTO_MATERIAL_SHININESS,
+    SP_AUTO_MATERIAL_TEX_MATRICES,
     SP_AUTO_LIGHT_GLOBAL_AMBIENT,
     SP_AUTO_LIGHT_POSITION,
     SP_AUTO_LIGHT_DIRECTION,
@@ -86,6 +87,8 @@ public:
     void set_vec3(const std::string& uniform_name, const kmVec3& values);
     void set_vec4(const std::string& uniform_name, const kmVec4& values);
     void set_colour(const std::string& uniform_name, const Colour& values);
+
+    void set_mat4x4_array(const std::string& uniform_name, const std::vector<kmMat4>& matrices);
 
     bool uses_auto(ShaderAvailableAuto auto_const) const { return container::contains(auto_uniforms_, auto_const); }
     bool uses_attribute(ShaderAvailableAttributes attr_const) const { return container::contains(auto_attributes_, attr_const); }
@@ -151,6 +154,7 @@ private:
     void set_uniform(const std::string& name, const kmMat3* matrix);
     void set_uniform(const std::string& name, const kmVec3* vec);
     void set_uniform(const std::string& name, const kmVec4* vec);
+    void set_uniform(const std::string& name, const std::vector<kmMat4>& matrices);
 
     ShaderProgram(const ShaderProgram& rhs);
     ShaderProgram& operator=(const ShaderProgram& rhs);

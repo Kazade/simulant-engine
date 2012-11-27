@@ -10,13 +10,17 @@
 
 namespace kglt {
 
+/*
+ * FIXME: Stupid argument ordering
+ */
 void GenericRenderer::set_auto_uniforms_on_shader(
     ShaderProgram& s,
     Scene& scene,
     const std::vector<LightID>& lights_within_range,
     uint32_t iteration,
     CameraID camera,
-    SubEntity& subentity) {
+    SubEntity& subentity,
+    MaterialPass& pass) {
 
     //Calculate the modelview-projection matrix
     kmMat4 modelview_projection;
@@ -155,6 +159,20 @@ void GenericRenderer::set_auto_uniforms_on_shader(
             scene.ambient_light()
         );
     }
+
+    if(s.params().uses_auto(SP_AUTO_MATERIAL_TEX_MATRICES)) {
+        //Gather the texture matrices from the passes texture units
+        std::vector<kmMat4> matrices;
+        for(uint16_t j = 0; j < pass.texture_unit_count(); ++j) {
+            matrices.push_back(pass.texture_unit(j).matrix());
+        }
+
+        //Pass as an array to the shader
+        s.params().set_mat4x4_array(
+            s.params().auto_uniform_variable_name(SP_AUTO_MATERIAL_TEX_MATRICES),
+            matrices
+        );
+    }
 }
 
 void GenericRenderer::set_auto_attributes_on_shader(ShaderProgram& s, SubEntity& buffer) {
@@ -280,7 +298,7 @@ void GenericRenderer::render_subentity(SubEntity& buffer, CameraID camera) {
         }
 
         for(uint32_t j = 0; j < iteration_count; ++j) {
-            set_auto_uniforms_on_shader(s, scene(), lights, j, camera, buffer); //Uniforms might change depending on the iteration
+            set_auto_uniforms_on_shader(s, scene(), lights, j, camera, buffer, pass); //Uniforms might change depending on the iteration
 
             //Render the mesh, once for each iteration of the pass
             if(buffer.arrangement() == MESH_ARRANGEMENT_POINTS) {

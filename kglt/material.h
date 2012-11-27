@@ -7,6 +7,7 @@
 #include <string>
 #include <tr1/memory>
 
+#include "kazmath/mat4.h"
 #include "generic/identifiable.h"
 #include "types.h"
 
