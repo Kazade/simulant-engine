@@ -12,6 +12,7 @@ TextureUnit::TextureUnit():
     current_texture_(0),
     texture_unit_(0){
 
+    kmMat4Identity(&texture_matrix_);
 }
 
 TextureUnit::TextureUnit(TextureID tex_id):
@@ -19,6 +20,7 @@ TextureUnit::TextureUnit(TextureID tex_id):
     current_texture_(0),
     texture_unit_(tex_id) {
 
+    kmMat4Identity(&texture_matrix_);
 }
 
 TextureUnit::TextureUnit(std::vector<TextureID> textures, double duration):
@@ -28,6 +30,7 @@ TextureUnit::TextureUnit(std::vector<TextureID> textures, double duration):
     current_texture_(0),
     texture_unit_(0) {
 
+    kmMat4Identity(&texture_matrix_);
 }
 
 Material::Material(Scene *scene, MaterialID mat_id):

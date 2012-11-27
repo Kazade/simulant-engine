@@ -44,6 +44,10 @@ public:
         }
     }
 
+    kmMat4& matrix() {
+        return texture_matrix_;
+    }
+
 private:
     std::vector<TextureID> animated_texture_units_;
     double animated_texture_duration_;
@@ -51,6 +55,7 @@ private:
     uint32_t current_texture_;
 
     TextureID texture_unit_;
+    kmMat4 texture_matrix_;
 };
 
 enum IterationType {
