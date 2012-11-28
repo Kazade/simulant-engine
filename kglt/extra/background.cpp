@@ -23,6 +23,9 @@ BackgroundLayer::BackgroundLayer(Background &bg, const std::string& image_path):
     texture_id_ = kglt::create_texture_from_file(background().scene().window(), image_path);
     material_id_ = kglt::create_material_from_texture(background().scene(), texture_id_);
 
+    Material& mat = background().scene().material(material_id_);
+    mat.technique().pass(0).set_blending(BLEND_NONE);
+
     kglt::Texture& tex = background().scene().texture(texture_id_);
     width_ = tex.width();
     height_ = tex.height();
@@ -37,6 +40,7 @@ BackgroundLayer::BackgroundLayer(Background &bg, const std::string& image_path):
             //background().scene().delete_texture(texture_id_);
             throw std::logic_error((boost::format("Invalid image size, layer already exists with dimensions: %d, %d") % width % height).str());
         }
+        mat.technique().pass(0).set_blending(BLEND_ALPHA);
     }
 
     //Create the mesh for this background layer
@@ -60,40 +64,15 @@ BackgroundLayer::BackgroundLayer(Background &bg, const std::string& image_path):
 }
 
 void BackgroundLayer::scroll_x(double amount) {
-    offset_x_ += amount;
-    offset_x_ -= floor(offset_x_); //Only leave the remainder (we want 0.0 - 1.0)
-
-    L_ERROR("Background scrolling disabled until I write a decent way of transforming texture coordinates");
-
-/*
     Mesh& mesh = background().scene().mesh(mesh_id_);
-
-    //Reset the texture coordinates
-    kglt::procedural::mesh::rectangle(mesh, width(), height());
-    for(uint32_t i = 0; i < 3; ++i) {
-        mesh.triangle(0).uv(i).x += offset_x_;
-        mesh.triangle(1).uv(i).x += offset_x_;
-    }
-    mesh.invalidate();*/
+    Material& mat = background().scene().material(mesh.submesh(mesh.submesh_ids()[0]).material());
+    mat.technique().pass(0).texture_unit(0).scroll_x(amount);
 }
 
 void BackgroundLayer::scroll_y(double amount) {
-    offset_y_ += amount;
-    offset_y_ -= floor(offset_y_);
-
-    L_ERROR("Background scrolling disabled until I write a decent way of transforming texture coordinates");
-/*
-    //FIXME: this is so inefficient it makes me cry - need a way to just invalidate tex coords (custom shader to use offset perhaps)
     Mesh& mesh = background().scene().mesh(mesh_id_);
-
-    //Reset the texture coordinates
-    kglt::procedural::mesh::rectangle(mesh, width(), height());
-    for(uint32_t i = 0; i < 3; ++i) {
-        mesh.triangle(0).uv(i).y += offset_y_;
-        mesh.triangle(1).uv(i).y += offset_y_;
-    }
-    mesh.invalidate();
-*/
+    Material& mat = background().scene().material(mesh.submesh(mesh.submesh_ids()[0]).material());
+    mat.technique().pass(0).texture_unit(0).scroll_y(amount);
 }
 
 BackgroundLayer::~BackgroundLayer() {
