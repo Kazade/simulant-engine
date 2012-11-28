@@ -61,6 +61,7 @@ void Scene::initialize_defaults() {
 
     def.params().register_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX, "modelview_projection_matrix");
     def.params().register_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT, "global_ambient");
+    def.params().register_auto(SP_AUTO_MATERIAL_TEX_MATRICES, "texture_matrix");
 
     //Bind the vertex attributes for the default shader and relink
     def.params().register_attribute(SP_ATTR_VERTEX_POSITION, "vertex_position");
