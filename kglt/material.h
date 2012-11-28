@@ -51,6 +51,12 @@ public:
         kmMat4Multiply(&texture_matrix_, &texture_matrix_, &diff);
     }
 
+    void scroll_y(float amount) {
+        kmMat4 diff;
+        kmMat4Translation(&diff, 0, amount, 0);
+        kmMat4Multiply(&texture_matrix_, &texture_matrix_, &diff);
+    }
+
     kmMat4& matrix() {
         return texture_matrix_;
     }
