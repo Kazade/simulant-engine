@@ -28,10 +28,6 @@ int main(int argc, char* argv[]) {
     background->add_layer("sample_data/parallax/middle_layer.png");
     background->add_layer("sample_data/parallax/front_layer.png");
 
-    double width = background->layer(0).width();
-    double height = width / (16.0 / 9.0);
-    background->set_visible_dimensions(width, height); //The visible height in pixels (ortho)
-
     //Load the strip of sprites into separate textures
     SpriteStripLoader loader(scene, "sample_data/sonic.png", 64);
     std::vector<kglt::TextureID> frames = loader.load_frames();

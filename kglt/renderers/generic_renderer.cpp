@@ -175,54 +175,54 @@ void GenericRenderer::set_auto_uniforms_on_shader(
     }
 }
 
+template<typename EnabledMethod, typename OffsetMethod>
+void send_attribute(ShaderProgram& s,
+                    ShaderAvailableAttributes attr,
+                    const VertexData& data,
+                    EnabledMethod exists_on_data_predicate,
+                    OffsetMethod offset_func) {
+
+    if(!s.params().uses_attribute(attr)) {
+        return;
+    }
+
+    int32_t loc = s.get_attrib_loc(s.params().attribute_variable_name(attr));
+    if(loc < 0) {
+        L_WARN("Couldn't locate attribute, on the shader");
+        return;
+    }
+
+    auto get_has_attribute = sigc::mem_fun(data, exists_on_data_predicate);
+    auto get_offset = sigc::mem_fun(data, offset_func);
+    if(get_has_attribute()) {
+        glEnableVertexAttribArray(loc);
+        glVertexAttribPointer(
+            loc,
+            SHADER_ATTRIBUTE_SIZES.find(attr)->second,
+            GL_FLOAT,
+            GL_FALSE,
+            data.stride(),
+            BUFFER_OFFSET(get_offset())
+        );
+    } else {
+        L_WARN("Couldn't locate attribute, on the mesh");
+    }
+}
+
 void GenericRenderer::set_auto_attributes_on_shader(ShaderProgram& s, SubEntity& buffer) {
-    uint32_t stride = buffer.vertex_data().stride();
-
-    if(s.params().uses_attribute(SP_ATTR_VERTEX_POSITION)) {
-        //Find the location of the attribute, enable it and then point the vertex data at it
-        int32_t loc = s.get_attrib_loc(s.params().attribute_variable_name(SP_ATTR_VERTEX_POSITION));
-        if(loc > -1 && buffer.vertex_data().has_positions()) {
-            glEnableVertexAttribArray(loc);
-            glVertexAttribPointer(loc, 3, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(buffer.vertex_data().position_offset()));
-        }
-    }
-
-    if(s.params().uses_attribute(SP_ATTR_VERTEX_TEXCOORD0)) {
-        int32_t loc = s.get_attrib_loc(s.params().attribute_variable_name(SP_ATTR_VERTEX_TEXCOORD0));        
-        if(loc > -1 && buffer.vertex_data().has_texcoord0()) {
-            glEnableVertexAttribArray(loc);
-            uint32_t offset = buffer.vertex_data().texcoord0_offset();
-
-            glVertexAttribPointer(
-                loc,
-                buffer.vertex_data().texcoord_size(0),
-                GL_FLOAT,
-                GL_FALSE,
-                stride,
-                BUFFER_OFFSET(offset)
-            );
-        } else {
-            L_WARN("Couldn't locate attribute, either on the mesh or in the shader");
-        }
-    }
-
-    if(s.params().uses_attribute(SP_ATTR_VERTEX_DIFFUSE)) {
-        int32_t loc = s.get_attrib_loc(s.params().attribute_variable_name(SP_ATTR_VERTEX_DIFFUSE));
-        if(loc > -1 && buffer.vertex_data().has_diffuse()) {            
-            glEnableVertexAttribArray(loc);
-            glVertexAttribPointer(loc, 4, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(buffer.vertex_data().diffuse_offset()));
-        }
-    }
-
-    if(s.params().uses_attribute(SP_ATTR_VERTEX_NORMAL)) {
-        int32_t loc = s.get_attrib_loc(s.params().attribute_variable_name(SP_ATTR_VERTEX_NORMAL));
-        if(loc > -1 && buffer.vertex_data().has_normals()) {
-            glEnableVertexAttribArray(loc);
-            glVertexAttribPointer(loc, 3, GL_FLOAT, GL_FALSE, stride, BUFFER_OFFSET(buffer.vertex_data().normal_offset()));
-        } else {
-            L_ERROR("Unable to find attribute for vertex normal");
-        }
-    }
+    /*
+     *  Binding attributes generically is hard. So we have some template magic in the send_attribute
+     *  function above that takes the VertexData member functions we need to provide the attribute
+     *  and just makes the whole thing generic. Before this was 100s of lines of boilerplate. Thank god
+     *  for templates!
+     */
+    send_attribute(s, SP_ATTR_VERTEX_POSITION, buffer.vertex_data(), &VertexData::has_positions, &VertexData::position_offset);
+    send_attribute(s, SP_ATTR_VERTEX_TEXCOORD0, buffer.vertex_data(), &VertexData::has_texcoord0, &VertexData::texcoord0_offset);
+    send_attribute(s, SP_ATTR_VERTEX_TEXCOORD1, buffer.vertex_data(), &VertexData::has_texcoord1, &VertexData::texcoord1_offset);
+    send_attribute(s, SP_ATTR_VERTEX_TEXCOORD2, buffer.vertex_data(), &VertexData::has_texcoord2, &VertexData::texcoord2_offset);
+    send_attribute(s, SP_ATTR_VERTEX_TEXCOORD3, buffer.vertex_data(), &VertexData::has_texcoord3, &VertexData::texcoord3_offset);
+    send_attribute(s, SP_ATTR_VERTEX_DIFFUSE, buffer.vertex_data(), &VertexData::has_diffuse, &VertexData::diffuse_offset);
+    send_attribute(s, SP_ATTR_VERTEX_NORMAL, buffer.vertex_data(), &VertexData::has_normals, &VertexData::normal_offset);
 }
 
 void GenericRenderer::set_blending_mode(BlendType type) {
@@ -247,7 +247,7 @@ void GenericRenderer::set_blending_mode(BlendType type) {
 }
 
 void GenericRenderer::render_subentity(SubEntity& buffer, CameraID camera) {
-    glEnable(GL_CULL_FACE);
+    //glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
 

@@ -52,6 +52,9 @@ public:
 
 	void update_opengl() const;
 
+    uint32_t width() const { return width_; }
+    uint32_t height() const { return height_; }
+
 private:
     WindowBase* parent_;
 

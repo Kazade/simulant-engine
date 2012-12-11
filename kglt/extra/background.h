@@ -18,6 +18,12 @@ class Renderer;
 
 namespace extra {
 
+enum BGResizeStyle {
+    BG_RESIZE_ZOOM,
+    BG_RESIZE_SCALE
+};
+
+
 class Background;
 
 class BackgroundLayer {
@@ -30,43 +36,25 @@ public:
     void scroll_x(double amount);
     void scroll_y(double amount);
 
-    uint32_t width() const { return width_; }
-    uint32_t height() const { return height_; }
-
-    MaterialID material_id() const { return material_id_; }
-    EntityID entity() const { return entity_id_; }
-
     Background& background() { return background_; }
 
 private:
     Background& background_;
     TextureID texture_id_;
-    MaterialID material_id_;
 
-    EntityID entity_id_;
-    MeshID mesh_id_;
-
-    uint32_t width_;
-    uint32_t height_;
-
-    double offset_x_;
-    double offset_y_;
+    uint32_t texture_unit_;
 };
 
 class Background {
 public:
     typedef std::tr1::shared_ptr<Background> ptr;
 
-    Background(Scene& scene, ViewportID viewport);
+    Background(Scene& scene, ViewportID viewport, BGResizeStyle style = BG_RESIZE_ZOOM);
+    ~Background();
 
     void add_layer(const std::string& image_path);
     BackgroundLayer& layer(uint32_t index) { return *layers_.at(index); }
     uint32_t layer_count() const { return layers_.size(); }
-
-    void set_visible_dimensions(double width, double height);
-
-    double visible_x() const { return visible_x_; }
-    double visible_y() const { return visible_y_; }
 
     Scene& scene() { return scene_; }
 
@@ -76,21 +64,25 @@ public:
         return std::tr1::shared_ptr<Background>(new Background(scene, viewport));
     }
 
+    MaterialID material() const { return material_id_; }
+
 private:
     Scene& scene_;
 
     ViewportID viewport_;
     SceneGroupID background_sg_;
     CameraID ortho_camera_;
+    BGResizeStyle style_;
 
     std::vector<BackgroundLayer::ptr> layers_;
 
-    double visible_x_;
-    double visible_y_;
-
-    kmMat4 tmp_projection_;
-
     void destroy() {}
+
+    MeshID mesh_id_;
+    EntityID entity_id_;
+    MaterialID material_id_;
+
+    friend class BackgroundLayer;
 };
 
 }

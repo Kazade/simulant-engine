@@ -65,10 +65,17 @@ void Scene::initialize_defaults() {
 
     //Bind the vertex attributes for the default shader and relink
     def.params().register_attribute(SP_ATTR_VERTEX_POSITION, "vertex_position");
-    def.params().register_attribute(SP_ATTR_VERTEX_TEXCOORD0, "vertex_texcoord_1");
+    def.params().register_attribute(SP_ATTR_VERTEX_TEXCOORD0, "vertex_texcoord_0");
+    def.params().register_attribute(SP_ATTR_VERTEX_TEXCOORD1, "vertex_texcoord_1");
+    def.params().register_attribute(SP_ATTR_VERTEX_TEXCOORD2, "vertex_texcoord_2");
+    def.params().register_attribute(SP_ATTR_VERTEX_TEXCOORD3, "vertex_texcoord_3");
+
     //def.params().register_attribute(SP_ATTR_VERTEX_NORMAL, "vertex_normal");
 
-    def.params().set_int("texture_1", 0); //Set texture_1 to be the first texture unit
+    def.params().set_int("textures[0]", 0); //Set texture_1 to be the first texture unit
+    def.params().set_int("textures[1]", 1); //Set texture_1 to be the first texture unit
+    def.params().set_int("textures[2]", 2); //Set texture_1 to be the first texture unit
+    def.params().set_int("textures[3]", 3); //Set texture_1 to be the first texture unit
 
     def.relink();
 
