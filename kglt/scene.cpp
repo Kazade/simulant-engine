@@ -62,6 +62,7 @@ void Scene::initialize_defaults() {
     def.params().register_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX, "modelview_projection_matrix");
     def.params().register_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT, "global_ambient");
     def.params().register_auto(SP_AUTO_MATERIAL_TEX_MATRICES, "texture_matrix");
+    def.params().register_auto(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS, "active_texture_count");
 
     //Bind the vertex attributes for the default shader and relink
     def.params().register_attribute(SP_ATTR_VERTEX_POSITION, "vertex_position");
@@ -73,9 +74,9 @@ void Scene::initialize_defaults() {
     //def.params().register_attribute(SP_ATTR_VERTEX_NORMAL, "vertex_normal");
 
     def.params().set_int("textures[0]", 0); //Set texture_1 to be the first texture unit
-    def.params().set_int("textures[1]", 1); //Set texture_1 to be the first texture unit
-    def.params().set_int("textures[2]", 2); //Set texture_1 to be the first texture unit
-    def.params().set_int("textures[3]", 3); //Set texture_1 to be the first texture unit
+    def.params().set_int("textures[1]", 1); //Set texture_2 to be the second texture unit
+    def.params().set_int("textures[2]", 2); //Set texture_3 to be the third texture unit
+    def.params().set_int("textures[3]", 3); //Set texture_4 to be the fourth texture unit
 
     def.relink();
 
@@ -107,7 +108,7 @@ void Scene::initialize_defaults() {
     
     mat.technique().pass(0).set_texture_unit(0, default_texture_);
     mat.technique().pass(0).set_iteration(ITERATE_ONCE);
-    mat.technique().pass(0).set_blending(BLEND_NONE);
+    mat.technique().pass(0).set_blending(BLEND_ALPHA);
     mat.technique().pass(1).set_iteration(ITERATE_ONCE_PER_LIGHT, 8);
     mat.technique().pass(1).set_blending(BLEND_ADD);
 }

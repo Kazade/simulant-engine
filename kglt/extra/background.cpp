@@ -83,7 +83,7 @@ Background::Background(Scene& scene, ViewportID viewport, BGResizeStyle style):
 
     mesh_id_ = scene.new_mesh();
     Mesh& mesh = scene.mesh(mesh_id_);
-    material_id_ = scene.new_material(scene.default_material());    
+    material_id_ = scene.new_material(scene.default_material());
 
     SubMeshIndex index = kglt::procedural::mesh::rectangle(
         mesh,

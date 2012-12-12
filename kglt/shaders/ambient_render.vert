@@ -13,6 +13,7 @@ attribute vec2 vertex_texcoord_7;
 
 uniform mat4 modelview_projection_matrix;
 uniform mat4 texture_matrix[8];
+uniform int active_texture_count;
 
 varying vec2 fragment_texcoord[8];
 
@@ -29,7 +30,7 @@ void main() {
     vertex_texcoords[7] = vertex_texcoord_7;
 
     vec4 vertex = (modelview_projection_matrix * vec4(vertex_position, 1.0));
-    for(int i = 0; i < 8; ++i) {
+    for(int i = 0; i < active_texture_count; ++i) {
         fragment_texcoord[i] = (texture_matrix[i] * vec4(vertex_texcoords[i], 0, 1)).st;
     }
     gl_Position = vertex;

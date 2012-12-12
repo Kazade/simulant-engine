@@ -173,6 +173,13 @@ void GenericRenderer::set_auto_uniforms_on_shader(
             matrices
         );
     }
+
+    if(s.params().uses_auto(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS)) {
+        s.params().set_int(
+            s.params().auto_uniform_variable_name(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS),
+            pass.texture_unit_count()
+        );
+    }
 }
 
 template<typename EnabledMethod, typename OffsetMethod>
@@ -205,7 +212,7 @@ void send_attribute(ShaderProgram& s,
             BUFFER_OFFSET(get_offset())
         );
     } else {
-        L_WARN("Couldn't locate attribute, on the mesh");
+        L_WARN("Couldn't locate attribute on the mesh: " + boost::lexical_cast<std::string>(attr));
     }
 }
 
@@ -293,8 +300,9 @@ void GenericRenderer::render_subentity(SubEntity& buffer, CameraID camera) {
 
         //Go through the texture units and bind the textures
         for(uint32_t j = 0; j < pass.texture_unit_count(); ++j) {
-            glClientActiveTexture(GL_TEXTURE0 + j);
-            glBindTexture(GL_TEXTURE_2D, scene().texture(pass.texture_unit(j).texture()).gl_tex());
+            glActiveTexture(GL_TEXTURE0 + j);
+            TextureID texture_unit = pass.texture_unit(j).texture();
+            glBindTexture(GL_TEXTURE_2D, scene().texture(texture_unit).gl_tex());
         }
 
         for(uint32_t j = 0; j < iteration_count; ++j) {
@@ -319,7 +327,7 @@ void GenericRenderer::render_subentity(SubEntity& buffer, CameraID camera) {
 
         //Unbind the textures
         for(uint32_t j = 0; j < pass.texture_unit_count(); ++j) {
-            glClientActiveTexture(GL_TEXTURE0 + j);
+            glActiveTexture(GL_TEXTURE0 + j);
             glBindTexture(GL_TEXTURE_2D, 0);
         }
 

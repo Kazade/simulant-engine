@@ -174,6 +174,38 @@ void VertexData::tex_coord1(float u, float v, float w, float x) {
     tex_coordX(1, u, v, w, x);
 }
 
+void VertexData::tex_coord2(float u) {
+    tex_coordX(2, u);
+}
+
+void VertexData::tex_coord2(float u, float v) {
+    tex_coordX(2, u, v);
+}
+
+void VertexData::tex_coord2(float u, float v, float w) {
+    tex_coordX(2, u, v, w);
+}
+
+void VertexData::tex_coord2(float u, float v, float w, float x) {
+    tex_coordX(2, u, v, w, x);
+}
+
+void VertexData::tex_coord3(float u) {
+    tex_coordX(3, u);
+}
+
+void VertexData::tex_coord3(float u, float v) {
+    tex_coordX(3, u, v);
+}
+
+void VertexData::tex_coord3(float u, float v, float w) {
+    tex_coordX(3, u, v, w);
+}
+
+void VertexData::tex_coord3(float u, float v, float w, float x) {
+    tex_coordX(3, u, v, w, x);
+}
+
 void VertexData::diffuse(float r, float g, float b, float a) {
     check_or_add_attribute(BM_DIFFUSE);
 
