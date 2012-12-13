@@ -36,7 +36,8 @@ void main() {
     vertex_texcoords[7] = vertex_texcoord_7;
 
     vec4 vertex = (modelview_projection_matrix * vec4(vertex_position, 1.0));
-    for(int i = 0; i < active_texture_count; ++i) {
+    for(int i = 0; i < 8; ++i) {
+        if(i >= active_texture_count) break;
         fragment_texcoord[i] = (texture_matrix[i] * vec4(vertex_texcoords[i], 0, 1)).st;
     }
     gl_Position = vertex;
