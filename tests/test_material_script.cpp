@@ -8,23 +8,22 @@ using namespace kglt;
 
 TEST(test_basic_material_script_parsing) {
     const std::string text = R"(
-        BEGIN(technique)
-            SET(NAME "my_technique")
+        BEGIN(technique "my_technique")
             BEGIN(pass)
-                SET(TEXTURE_UNIT0 "sample_data/sample.png")
+                SET(TEXTURE_UNIT "sample_data/sample.png")
 
-                BEGIN(vertex)
+                BEGIN_DATA(vertex)
                     #version 120
                     void main() {
                         gl_Position = vec4(1.0);
                     }
-                END(vertex)
-                BEGIN(fragment)
+                END_DATA(vertex)
+                BEGIN_DATA(fragment)
                     #version 120
                     void main() {
                         gl_FragColor = vec4(1.0);
                     }
-                END(fragment)
+                END_DATA(fragment)
             END(pass)
         END(technique)
     )";
@@ -36,7 +35,11 @@ TEST(test_basic_material_script_parsing) {
 
     Material& mat = window->scene().material(material_id);
 
-    CHECK_EQUAL(1, mat.technique_count());
+    CHECK_EQUAL(2, mat.technique_count());
+    CHECK(mat.has_technique(DEFAULT_MATERIAL_SCHEME));
+    CHECK(mat.has_technique("my_technique"));
     CHECK_EQUAL(1, mat.technique("my_technique").pass_count());
     CHECK_EQUAL(1, mat.technique("my_technique").pass(0).texture_unit_count());
+
+    //TODO: Add tests to make sure that the shader has compiled correctly
 }

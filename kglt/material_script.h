@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "material.h"
 #include "types.h"
 
 namespace kglt {
@@ -43,10 +44,13 @@ private:
             MaterialID new_material,
             const std::vector<std::string>& lines,
             uint16_t& current_line,
-            const std::string& parent_block_type);
+            const std::string& parent_block_type,
+            MaterialTechnique* current_technique=nullptr,
+            MaterialPass* current_pass=nullptr);
 
-    void handle_technique_set_command(MaterialID new_material, const std::vector<std::string>& args);
-    void handle_pass_set_command(MaterialID new_material, const std::vector<std::string>& args);
+    void handle_technique_set_command(MaterialID new_material, const std::vector<std::string>& args, MaterialTechnique* technique);
+    void handle_pass_set_command(MaterialID new_material, const std::vector<std::string>& args, MaterialPass* pass);
+    void handle_data_block(MaterialID new_material, const std::string& data_type, const std::vector<std::string>& lines, MaterialPass* pass);
 };
 
 }
