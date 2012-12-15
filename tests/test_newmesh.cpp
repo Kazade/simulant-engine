@@ -98,10 +98,12 @@ TEST(entity_from_mesh) {
     CHECK_EQUAL(mesh.submesh_ids().size(), entity.subentity_count());
     CHECK(mesh.shared_data().count() == entity.shared_data().count());
 
+    kglt::SubMeshIndex idx = mesh.submesh_ids()[0];
+
     //Likewise for subentities, they should just proxy to the submesh
-    CHECK_EQUAL(mesh.submesh(0).material(), entity.subentity(0).material());
-    CHECK(mesh.submesh(0).index_data() == entity.subentity(0).index_data());
-    CHECK(mesh.submesh(0).vertex_data() == entity.subentity(0).vertex_data());
+    CHECK_EQUAL(mesh.submesh(idx).material(), entity.subentity(0).material());
+    CHECK(mesh.submesh(idx).index_data() == entity.subentity(0).index_data());
+    CHECK(mesh.submesh(idx).vertex_data() == entity.subentity(0).vertex_data());
 
     //We should be able to override the material on a subentity though
     entity.subentity(0).override_material(MaterialID(1));

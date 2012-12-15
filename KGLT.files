@@ -260,3 +260,4 @@ kglt/boundable.h
 samples/texture_scroll_sample.cpp
 kglt/material_script.h
 kglt/material_script.cpp
+tests/test_material_script.cpp

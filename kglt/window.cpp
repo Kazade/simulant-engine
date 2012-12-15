@@ -2,7 +2,6 @@
 
 #include <SDL/SDL.h>
 
-#include "utils/profiler/profiler.h"
 #include "window.h"
 
 namespace kglt {
@@ -17,8 +16,6 @@ Window::Window(int width, int height, int bpp) {
 
 Window::~Window() {
 	SDL_Quit();
-
-    Profiler::dump();
 }
 
 void Window::set_title(const std::string& title) {

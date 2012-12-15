@@ -82,6 +82,7 @@ class ShaderProgram;
 class Viewport;
 class Frustum;
 class WindowBase;
+class Material;
 
 }
 
