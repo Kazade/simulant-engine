@@ -16,6 +16,7 @@ WindowBase::WindowBase():
 
     //Register the default resource loaders
     register_loader(LoaderType::ptr(new kglt::loaders::TextureLoaderType));
+    register_loader(LoaderType::ptr(new kglt::loaders::MaterialScriptLoaderType));
     register_loader(LoaderType::ptr(new kglt::loaders::Q2BSPLoaderType));
 
     ktiGenTimers(1, &timer_);

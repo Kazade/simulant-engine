@@ -2,7 +2,7 @@
 
 #include <string>
 #include "kglt/kglt.h"
-#include "kglt/material_script.h"
+#include "kglt/loaders/material_script.h"
 
 using namespace kglt;
 
@@ -10,7 +10,7 @@ TEST(test_basic_material_script_parsing) {
     const std::string text = R"(
         BEGIN(technique "my_technique")
             BEGIN(pass)
-                SET(TEXTURE_UNIT "sample_data/sample.png")
+                SET(TEXTURE_UNIT "../sample_data/sample.tga")
 
                 BEGIN_DATA(vertex)
                     #version 120
@@ -30,10 +30,9 @@ TEST(test_basic_material_script_parsing) {
 
     kglt::Window::ptr window = kglt::Window::create();
 
-    MaterialScript script(window->scene(), MaterialLanguageText(text));
-    MaterialID material_id = script.generate();
-
-    Material& mat = window->scene().material(material_id);
+    Material& mat = window->scene().material(window->scene().new_material());
+    MaterialScript script((MaterialLanguageText(text))); //Most vexing parse \o/
+    script.generate(mat);
 
     CHECK_EQUAL(2, mat.technique_count());
     CHECK(mat.has_technique(DEFAULT_MATERIAL_SCHEME));

@@ -8,6 +8,7 @@
 #include <tr1/memory>
 
 #include "kazmath/mat4.h"
+#include "loadable.h"
 #include "generic/identifiable.h"
 #include "types.h"
 
@@ -157,7 +158,9 @@ private:
     std::vector<MaterialPass::ptr> passes_;
 };
 
-class Material : public generic::Identifiable<MaterialID> {
+class Material :
+    public generic::Identifiable<MaterialID>,
+    public Loadable {
 public:
     typedef std::tr1::shared_ptr<Material> ptr;
 
@@ -174,7 +177,9 @@ public:
         }
     }
 
+    Scene& scene() { return scene_; }
 private:
+    Scene& scene_;
     std::map<std::string, MaterialTechnique::ptr> techniques_;
 };
 

@@ -10,6 +10,7 @@
 #include "resource_locator.h"
 
 #include "loaders/texture_loader.h"
+#include "loaders/material_script.h"
 #include "loaders/q2bsp_loader.h"
 #include "loader.h"
 
@@ -36,7 +37,7 @@ public:
     }
     
     Loader::ptr loader_for(const std::string& filename, const std::string& type_hint) {
-        std::string final_file = find_file(filename);
+        std::string final_file = resource_locator().locate_file(filename);
 
         //See if we can find a loader that supports this type hint
         for(LoaderType::ptr loader_type: loaders_) {
@@ -49,7 +50,7 @@ public:
     }
 
     Loader::ptr loader_for(const std::string& filename) {
-        std::string final_file = find_file(filename);
+        std::string final_file = resource_locator().locate_file(filename);
 
         for(LoaderType::ptr loader_type: loaders_) {
             if(loader_type->supports(final_file) && !loader_type->requires_hint()) {
@@ -61,9 +62,6 @@ public:
     }    
     
     void register_loader(LoaderType::ptr loader_type);
-    void add_search_path(const std::string& path) {
-        resource_paths_.push_back(path);
-    }
 
     virtual sigc::signal<void, KeyCode>& signal_key_up() = 0;
     virtual sigc::signal<void, KeyCode>& signal_key_down() = 0;
@@ -88,6 +86,7 @@ public:
     void delete_viewport(ViewportID viewport);
     ViewportID default_viewport() const { return default_viewport_; }
 
+    ResourceLocator& resource_locator() { return *resource_locator_; }
 protected:
     void stop_running() { is_running_ = false; }
     

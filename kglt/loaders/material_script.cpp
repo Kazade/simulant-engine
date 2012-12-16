@@ -2,27 +2,25 @@
 #include "material_script.h"
 #include "kazbase/exceptions.h"
 #include "kazbase/string.h"
-#include "types.h"
-#include "material.h"
-#include "scene.h"
-#include "shortcuts.h"
+#include "../types.h"
+#include "../material.h"
+#include "../scene.h"
+#include "../shortcuts.h"
 
 namespace kglt {
 
-MaterialScript::MaterialScript(Scene& scene, const std::string& filename):
-    scene_(scene),
+MaterialScript::MaterialScript(const std::string& filename):
     filename_(filename),
     text_(MaterialLanguageText("")){
 
 }
 
-MaterialScript::MaterialScript(Scene& scene, const MaterialLanguageText& text):
-    scene_(scene),
+MaterialScript::MaterialScript(const MaterialLanguageText& text):
     text_(text) {
 
 }
 
-void MaterialScript::handle_technique_set_command(MaterialID new_material, const std::vector<std::string>& args, MaterialTechnique* technique) {
+void MaterialScript::handle_technique_set_command(Material& mat, const std::vector<std::string>& args, MaterialTechnique* technique) {
     if(args.size() < 2) {
         throw SyntaxError("Wrong number of arguments for SET command");
     }
@@ -31,21 +29,21 @@ void MaterialScript::handle_technique_set_command(MaterialID new_material, const
     throw SyntaxError("Invalid SET command for technique: " + type);
 }
 
-void MaterialScript::handle_pass_set_command(MaterialID new_material, const std::vector<std::string>& args, MaterialPass* pass) {
+void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<std::string>& args, MaterialPass* pass) {
     if(args.size() < 2) {
         throw SyntaxError("Wrong number of arguments for SET command");
     }
     std::string type = str::upper(args[0]);
     if(type == "TEXTURE_UNIT") {
-        TextureID tex_id = kglt::create_texture_from_file(scene_.window(), args[1]);
+        TextureID tex_id = kglt::create_texture_from_file(mat.scene().window(), str::strip(args[1], "\""));
         pass->set_texture_unit(pass->texture_unit_count(), tex_id);
     } else {
         throw SyntaxError("Invalid SET command for pass: " + type);
     }
 }
 
-void MaterialScript::handle_data_block(MaterialID new_material, const std::string& data_type, const std::vector<std::string>& lines, MaterialPass* pass) {
-    ShaderProgram& shader = scene_.shader(pass->shader());
+void MaterialScript::handle_data_block(Material& mat, const std::string& data_type, const std::vector<std::string>& lines, MaterialPass* pass) {
+    ShaderProgram& shader = mat.scene().shader(pass->shader());
 
     if(str::upper(data_type) == "VERTEX") {
         std::string source = str::join(lines, "\n");
@@ -58,13 +56,11 @@ void MaterialScript::handle_data_block(MaterialID new_material, const std::strin
     }
 }
 
-void MaterialScript::handle_block(MaterialID new_material,
+void MaterialScript::handle_block(Material& mat,
         const std::vector<std::string>& lines,
         uint16_t& current_line,
         const std::string& parent_block_type,
         MaterialTechnique* current_technique, MaterialPass* current_pass) {
-
-    Material& mat = scene_.material(new_material);
 
     std::string line = str::strip(lines[current_line]);
     current_line++;
@@ -111,7 +107,7 @@ void MaterialScript::handle_block(MaterialID new_material,
         assert(current_technique); //Shouldn't happen, should be caught by parent check above
 
         //Create the pass with the default shader
-        uint32_t pass_number = current_technique->new_pass(scene_.new_shader());
+        uint32_t pass_number = current_technique->new_pass(mat.scene().new_shader());
         current_pass = &current_technique->pass(pass_number);
     }
 
@@ -138,13 +134,13 @@ void MaterialScript::handle_block(MaterialID new_material,
             }
 
             if(block_type == "PASS") {
-                handle_data_block(new_material, data_type, data, current_pass);
+                handle_data_block(mat, data_type, data, current_pass);
             } else {
                 throw SyntaxError("Line: " + current_line + std::string(". Block does not accept BEGIN_DATA commands"));
             }
         } else if(str::starts_with(line, "BEGIN")) {
             L_DEBUG("Found BEGIN block");
-            handle_block(new_material, lines, current_line, block_type, current_technique, current_pass);
+            handle_block(mat, lines, current_line, block_type, current_technique, current_pass);
         } else if(str::starts_with(line, "END")) {
             L_DEBUG("Found END block");
             //If we hit an END block, the type must match the BEGIN
@@ -158,7 +154,7 @@ void MaterialScript::handle_block(MaterialID new_material,
 
             if(end_block_type == "PASS") {
                 //At the end of the pass, relink the shader
-                scene_.shader(current_pass->shader()).relink();
+                mat.scene().shader(current_pass->shader()).relink();
             }
             return; //Exit this function, we are done with this block
         } else if(str::starts_with(line, "SET")) {
@@ -167,9 +163,9 @@ void MaterialScript::handle_block(MaterialID new_material,
             std::vector<std::string> args = str::split(args_part, " ");
 
             if(block_type == "TECHNIQUE") {
-                handle_technique_set_command(new_material, args, current_technique);
+                handle_technique_set_command(mat, args, current_technique);
             } else if (block_type == "PASS") {
-                handle_pass_set_command(new_material, args, current_pass);
+                handle_pass_set_command(mat, args, current_pass);
             } else {
                 throw SyntaxError("Line: " + current_line + std::string(". Block does not accept SET commands"));
             }
@@ -180,49 +176,40 @@ void MaterialScript::handle_block(MaterialID new_material,
 
 }
 
-MaterialID MaterialScript::generate() {
+void MaterialScript::generate(Material& material) {
     std::vector<std::string> lines;
 
-    MaterialID material = scene_.new_material();
-    try {
-        if(!filename_.empty()) {
-            std::ifstream file_in(filename_.c_str());
-            if(!file_in.good()) {
-                throw IOError("Couldn't open file: " + filename_);
-            }
-
-            std::string line;
-            while(std::getline(file_in, line)) {
-                line = str::strip(line); //Strip any indentation
-                lines.push_back(line);
-            }
-        } else if (!text_.text().empty()) {
-            lines = str::split(text_.text(), "\n");
-            for(uint16_t i = 0; i < lines.size(); ++i) {
-                lines[i] = str::strip(lines[i]);
-            }
-        } else {
-            throw std::logic_error("Filename or text must be specified");
+    if(!filename_.empty()) {
+        std::ifstream file_in(filename_.c_str());
+        if(!file_in.good()) {
+            throw IOError("Couldn't open file: " + filename_);
         }
 
-        //FIXME: Parse INCLUDE commands and insert associated files into the lines
-
-        uint16_t current_line = 0;
-        //Go through the lines in the file
-        while(current_line < lines.size()) {
-            std::string line = lines[current_line];
-            if(str::starts_with(line, "BEGIN")) {
-                handle_block(material, lines, current_line, "");
-            }
-            current_line++;
+        std::string line;
+        while(std::getline(file_in, line)) {
+            line = str::strip(line); //Strip any indentation
+            lines.push_back(line);
         }
-    } catch(...) {
-        //Delete the material if we couldn't load the file
-        scene_.delete_material(material);
-        throw;
+    } else if (!text_.text().empty()) {
+        lines = str::split(text_.text(), "\n");
+        for(uint16_t i = 0; i < lines.size(); ++i) {
+            lines[i] = str::strip(lines[i]);
+        }
+    } else {
+        throw std::logic_error("Filename or text must be specified");
     }
 
-    return material;
+    //FIXME: Parse INCLUDE commands and insert associated files into the lines
+
+    uint16_t current_line = 0;
+    //Go through the lines in the file
+    while(current_line < lines.size()) {
+        std::string line = lines[current_line];
+        if(str::starts_with(line, "BEGIN")) {
+            handle_block(material, lines, current_line, "");
+        }
+        current_line++;
+    }
 }
 
 }

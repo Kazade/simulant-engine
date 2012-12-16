@@ -18,7 +18,7 @@ public:
     std::list<std::string>& resource_path() { return resource_path_; }
 
     std::string locate_file(const std::string& filename);
-    std::istringstream read_file(const std::string& filename);
+    std::tr1::shared_ptr<std::stringstream> read_file(const std::string& filename);
     std::vector<std::string> read_file_lines(const std::string& filename);
 
 private:

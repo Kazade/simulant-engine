@@ -1,4 +1,5 @@
 #include "kazbase/os/path.h"
+#include "kazbase/exceptions.h"
 #include "resource_locator.h"
 
 namespace kglt {
@@ -20,7 +21,7 @@ std::string ResourceLocator::locate_file(const std::string& filename) {
     throw IOError("Unable to find file: " + filename);
 }
 
-std::istringstream ResourceLocator::read_file(const std::string& filename) {
+std::tr1::shared_ptr<std::stringstream> ResourceLocator::read_file(const std::string& filename) {
     std::string path = locate_file(filename);
 
     std::ifstream file_in(path.c_str());
@@ -28,8 +29,8 @@ std::istringstream ResourceLocator::read_file(const std::string& filename) {
         throw IOError("Unable to load file: " + filename);
     }
 
-    std::istringstream result;
-    result << file_in.rdbuf();
+    std::tr1::shared_ptr<std::stringstream> result(new std::stringstream);
+    (*result) << file_in.rdbuf();
     return result;
 }
 
@@ -54,7 +55,7 @@ std::string ResourceLocator::find_executable_directory() {
 }
 
 std::string ResourceLocator::find_working_directory() {
-    return os::path::cwd();
+    return os::path::working_directory();
 }
 
 }
