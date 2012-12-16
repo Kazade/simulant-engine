@@ -5,7 +5,24 @@
 #include "scene.h"
 
 namespace kglt {
-    
+
+WindowBase::WindowBase():
+    initialized_(false),
+    width_(0),
+    height_(0),
+    is_running_(true),
+    default_viewport_(0),
+    resource_locator_(ResourceLocator::create()) {
+
+    //Register the default resource loaders
+    register_loader(LoaderType::ptr(new kglt::loaders::TextureLoaderType));
+    register_loader(LoaderType::ptr(new kglt::loaders::Q2BSPLoaderType));
+
+    ktiGenTimers(1, &timer_);
+    ktiBindTimer(timer_);
+    ktiStartGameTimer();
+}
+
 void WindowBase::init() {    
     if(!initialized_) {
         assert(width_ && "Subclass should've set the window width by now");

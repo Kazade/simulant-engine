@@ -7,6 +7,8 @@
 
 #include "keyboard.h"
 
+#include "resource_locator.h"
+
 #include "loaders/texture_loader.h"
 #include "loaders/q2bsp_loader.h"
 #include "loader.h"
@@ -26,22 +28,7 @@ class WindowBase :
         public generic::TemplatedManager<WindowBase, Viewport, ViewportID> {
 
 public:
-    WindowBase():
-        initialized_(false),
-        width_(0),
-        height_(0),
-        is_running_(true),
-        default_viewport_(0) {
-        
-        //Register the default resource loaders
-        register_loader(LoaderType::ptr(new kglt::loaders::TextureLoaderType));
-        register_loader(LoaderType::ptr(new kglt::loaders::Q2BSPLoaderType));
-
-        ktiGenTimers(1, &timer_);
-        ktiBindTimer(timer_);
-        ktiStartGameTimer();
-    }
-    
+    WindowBase();
     void init();
 
     virtual ~WindowBase() {
@@ -119,15 +106,9 @@ private:
     uint32_t width_;
     uint32_t height_;
 
-    std::vector<std::string> resource_paths_;
     std::vector<LoaderType::ptr> loaders_;
     bool is_running_;
-    
-    std::string find_file(const std::string& filename) {
-        //FIXME: Search the resource paths!
-        return filename;
-    }
-    
+        
     IdleTaskManager idle_;
 
     KTIuint timer_;
@@ -136,6 +117,7 @@ private:
 
     ViewportID default_viewport_;
 
+    ResourceLocator::ptr resource_locator_;
 };
 
 }
