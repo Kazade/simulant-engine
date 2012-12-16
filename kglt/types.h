@@ -70,7 +70,7 @@ typedef UniqueID<10> EntityID;
 
 const CameraID DefaultCameraID = CameraID();
 
-const std::string DEFAULT_MATERIAL_SCHEME = "scheme";
+const std::string DEFAULT_MATERIAL_SCHEME = "default";
 
 class Mesh;
 class Entity;
