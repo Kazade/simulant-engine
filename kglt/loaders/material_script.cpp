@@ -73,6 +73,8 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
 
         if(arg_1 == "MODELVIEW_PROJECTION_MATRIX") {
             shader.params().register_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX, variable_name);
+        } else if(arg_1 == "TEXTURE_MATRIX0") {
+            shader.params().register_auto(SP_AUTO_MATERIAL_TEX_MATRIX0, variable_name);
         } else {
             throw SyntaxError("Unhandled auto-uniform: " + arg_1);
         }

@@ -160,17 +160,35 @@ void GenericRenderer::set_auto_uniforms_on_shader(
         );
     }
 
-    if(s.params().uses_auto(SP_AUTO_MATERIAL_TEX_MATRICES)) {
-        //Gather the texture matrices from the passes texture units
-        std::vector<kmMat4> matrices;
-        for(uint16_t j = 0; j < pass.texture_unit_count(); ++j) {
-            matrices.push_back(pass.texture_unit(j).matrix());
-        }
-
+    if(s.params().uses_auto(SP_AUTO_MATERIAL_TEX_MATRIX0)) {
         //Pass as an array to the shader
-        s.params().set_mat4x4_array(
-            s.params().auto_uniform_variable_name(SP_AUTO_MATERIAL_TEX_MATRICES),
-            matrices
+        s.params().set_mat4x4(
+            s.params().auto_uniform_variable_name(SP_AUTO_MATERIAL_TEX_MATRIX0),
+            pass.texture_unit(0).matrix()
+        );
+    }
+
+    if(s.params().uses_auto(SP_AUTO_MATERIAL_TEX_MATRIX1)) {
+        //Pass as an array to the shader
+        s.params().set_mat4x4(
+            s.params().auto_uniform_variable_name(SP_AUTO_MATERIAL_TEX_MATRIX1),
+            pass.texture_unit(1).matrix()
+        );
+    }
+
+    if(s.params().uses_auto(SP_AUTO_MATERIAL_TEX_MATRIX2)) {
+        //Pass as an array to the shader
+        s.params().set_mat4x4(
+            s.params().auto_uniform_variable_name(SP_AUTO_MATERIAL_TEX_MATRIX2),
+            pass.texture_unit(2).matrix()
+        );
+    }
+
+    if(s.params().uses_auto(SP_AUTO_MATERIAL_TEX_MATRIX3)) {
+        //Pass as an array to the shader
+        s.params().set_mat4x4(
+            s.params().auto_uniform_variable_name(SP_AUTO_MATERIAL_TEX_MATRIX3),
+            pass.texture_unit(3).matrix()
         );
     }
 
