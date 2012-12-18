@@ -34,17 +34,34 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
         throw SyntaxError("Wrong number of arguments for SET command");
     }
     std::string type = str::upper(args[0]);
+    std::string arg_1 = str::upper(args[1]);
+
     if(type == "TEXTURE_UNIT") {
         TextureID tex_id = kglt::create_texture_from_file(mat.scene().window(), str::strip(args[1], "\""));
         pass->set_texture_unit(pass->texture_unit_count(), tex_id);
     } else if(type == "ITERATION") {
-        if(str::upper(args[1]) == "ONCE") {
+        if(arg_1 == "ONCE") {
             pass->set_iteration(ITERATE_ONCE);
-        } else if(str::upper(args[1]) == "ONCE_PER_LIGHT") {
+        } else if(arg_1 == "ONCE_PER_LIGHT") {
             pass->set_iteration(ITERATE_ONCE_PER_LIGHT);
         } else {
             throw SyntaxError("Invalid argument to SET(ITERATION): " + args[1]);
         }
+    } else if(type == "ATTRIBUTE") {
+        if(args.size() < 3) {
+            throw SyntaxError("Wrong number of arguments for SET(ATTRIBUTE) command");
+        }
+
+        ShaderProgram& shader = mat.scene().shader(pass->shader());
+
+        if(arg_1 == "POSITION") {
+            std::string variable_name = str::strip(args[2], "\"");
+            shader.params().register_attribute(SP_ATTR_VERTEX_POSITION, variable_name);
+        } else {
+            throw SyntaxError("Unhandled attribute: " + arg_1);
+        }
+
+
     } else {
         throw SyntaxError("Invalid SET command for pass: " + type);
     }
