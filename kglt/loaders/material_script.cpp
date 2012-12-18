@@ -37,6 +37,14 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
     if(type == "TEXTURE_UNIT") {
         TextureID tex_id = kglt::create_texture_from_file(mat.scene().window(), str::strip(args[1], "\""));
         pass->set_texture_unit(pass->texture_unit_count(), tex_id);
+    } else if(type == "ITERATION") {
+        if(str::upper(args[1]) == "ONCE") {
+            pass->set_iteration(ITERATE_ONCE);
+        } else if(str::upper(args[1]) == "ONCE_PER_LIGHT") {
+            pass->set_iteration(ITERATE_ONCE_PER_LIGHT);
+        } else {
+            throw SyntaxError("Invalid argument to SET(ITERATION): " + args[1]);
+        }
     } else {
         throw SyntaxError("Invalid SET command for pass: " + type);
     }
