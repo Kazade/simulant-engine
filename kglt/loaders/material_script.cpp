@@ -53,10 +53,17 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
         }
 
         ShaderProgram& shader = mat.scene().shader(pass->shader());
-
+        std::string variable_name = str::strip(args[2], "\"");
         if(arg_1 == "POSITION") {
-            std::string variable_name = str::strip(args[2], "\"");
             shader.params().register_attribute(SP_ATTR_VERTEX_POSITION, variable_name);
+        } else if(arg_1 == "TEXCOORD0") {
+            shader.params().register_attribute(SP_ATTR_VERTEX_TEXCOORD0, variable_name);
+        } else if(arg_1 == "TEXCOORD1") {
+            shader.params().register_attribute(SP_ATTR_VERTEX_TEXCOORD1, variable_name);
+        } else if(arg_1 == "TEXCOORD2") {
+            shader.params().register_attribute(SP_ATTR_VERTEX_TEXCOORD2, variable_name);
+        } else if(arg_1 == "TEXCOORD3") {
+            shader.params().register_attribute(SP_ATTR_VERTEX_TEXCOORD3, variable_name);
         } else {
             throw SyntaxError("Unhandled attribute: " + arg_1);
         }
