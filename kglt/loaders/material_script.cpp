@@ -67,8 +67,15 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
         } else {
             throw SyntaxError("Unhandled attribute: " + arg_1);
         }
+    } else if(type == "AUTO_UNIFORM") {
+        ShaderProgram& shader = mat.scene().shader(pass->shader());
+        std::string variable_name = str::strip(args[2], "\"");
 
-
+        if(arg_1 == "MODELVIEW_PROJECTION_MATRIX") {
+            shader.params().register_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX, variable_name);
+        } else {
+            throw SyntaxError("Unhandled auto-uniform: " + arg_1);
+        }
     } else {
         throw SyntaxError("Invalid SET command for pass: " + type);
     }
