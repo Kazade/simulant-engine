@@ -4,6 +4,7 @@
 #include "ui.h"
 #include "partitioners/null_partitioner.h"
 #include "shaders/default_shaders.h"
+#include "window_base.h"
 
 namespace kglt {
 
@@ -49,6 +50,11 @@ void Scene::initialize_defaults() {
     tex.data()[3] = 255;
     tex.upload();
 
+    default_material_ = new_material();
+    Material& mat = material(default_material_);
+    this->window().loader_for("kglt/materials/generic_multitexture.kglm")->into(mat);
+
+/*
     //Create the default shader program
     default_shader_ = new_shader();
     ShaderProgram& def = shader(default_shader_); //Create a default shader;
@@ -110,7 +116,7 @@ void Scene::initialize_defaults() {
     mat.technique().pass(0).set_iteration(ITERATE_ONCE);
     mat.technique().pass(0).set_blending(BLEND_ALPHA);
     mat.technique().pass(1).set_iteration(ITERATE_ONCE_PER_LIGHT, 8);
-    mat.technique().pass(1).set_blending(BLEND_ADD);
+    mat.technique().pass(1).set_blending(BLEND_ADD);*/
 }
 
 EntityID Scene::new_entity(MeshID mid) {

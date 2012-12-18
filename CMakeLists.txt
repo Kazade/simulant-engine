@@ -34,6 +34,8 @@ MACRO (ADD_PCH_RULE  _header_filename _src_list)
                             DEPENDS ${_header_filename})
 ENDMACRO(ADD_PCH_RULE _header_filename _src_list)
 
+FILE(COPY ${CMAKE_SOURCE_DIR}/kglt/materials DESTINATION ${CMAKE_BINARY_DIR}/kglt)
+
 INCLUDE_DIRECTORIES(
     ${CMAKE_SOURCE_DIR}
     ${KAZMATH_INCLUDE_DIRS}
