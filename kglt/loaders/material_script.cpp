@@ -77,6 +77,12 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
             shader.params().register_auto(SP_AUTO_MATERIAL_TEX_MATRIX0, variable_name);
         } else if(arg_1 == "TEXTURE_MATRIX1") {
             shader.params().register_auto(SP_AUTO_MATERIAL_TEX_MATRIX1, variable_name);
+        } else if(arg_1 == "TEXTURE_MATRIX2") {
+            shader.params().register_auto(SP_AUTO_MATERIAL_TEX_MATRIX2, variable_name);
+        } else if(arg_1 == "TEXTURE_MATRIX3") {
+            shader.params().register_auto(SP_AUTO_MATERIAL_TEX_MATRIX3, variable_name);
+        } else if(arg_1 == "LIGHT_GLOBAL_AMBIENT") {
+            shader.params().register_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT, variable_name);
         } else {
             throw SyntaxError("Unhandled auto-uniform: " + arg_1);
         }
