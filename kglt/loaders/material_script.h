@@ -53,6 +53,14 @@ private:
     void handle_technique_set_command(Material& mat , const std::vector<std::string>& args, MaterialTechnique* technique);
     void handle_pass_set_command(Material& mat, const std::vector<std::string>& args, MaterialPass* pass);
     void handle_data_block(Material& mat, const std::string& data_type, const std::vector<std::string>& lines, MaterialPass* pass);
+
+    void stage_uniform(const std::string& variable, int32_t value) {
+        //Stage the uniform for application later
+        staged_integer_uniforms_.insert(std::make_pair(variable, value));
+    }
+
+    void apply_staged_uniforms(ShaderProgram& program);
+    std::map<std::string, int32_t> staged_integer_uniforms_;
 };
 
 namespace loaders {

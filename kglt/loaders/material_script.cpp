@@ -29,6 +29,19 @@ void MaterialScript::handle_technique_set_command(Material& mat, const std::vect
     throw SyntaxError("Invalid SET command for technique: " + type);
 }
 
+void MaterialScript::apply_staged_uniforms(ShaderProgram& program) {
+    /*
+     *  Because the material script will probably define the uniforms before the
+     *  shader code is available, we need to stage any uniform params and apply them
+     *  at the end of the pass block.
+     */
+    for(std::pair<std::string, int32_t> p: staged_integer_uniforms_) {
+        program.params().set_int(p.first, p.second);
+    }
+
+    staged_integer_uniforms_.clear();
+}
+
 void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<std::string>& args, MaterialPass* pass) {
     if(args.size() < 2) {
         throw SyntaxError("Wrong number of arguments for SET command");
@@ -67,6 +80,26 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
         } else {
             throw SyntaxError("Unhandled attribute: " + arg_1);
         }
+    } else if(type == "UNIFORM") {
+        if(args.size() < 4) {
+            throw SyntaxError("Wrong number of arguments to SET(UNIFORM)");
+        }
+
+        std::string variable_name = str::strip(args[2], "\"");
+
+        if(arg_1 == "INT") {
+            int32_t value = 0;
+            try {
+                value = boost::lexical_cast<int>(args[3]);
+            } catch(boost::bad_lexical_cast& e) {
+                throw SyntaxError("Invalid INT value passed to SET(UNIFORM)");
+            }
+
+            stage_uniform(variable_name, value);
+        } else {
+            throw SyntaxError("Unhandled type passed to SET(UNIFORM)");
+        }
+
     } else if(type == "AUTO_UNIFORM") {
         ShaderProgram& shader = mat.scene().shader(pass->shader());
         std::string variable_name = str::strip(args[2], "\"");
@@ -83,6 +116,8 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
             shader.params().register_auto(SP_AUTO_MATERIAL_TEX_MATRIX3, variable_name);
         } else if(arg_1 == "LIGHT_GLOBAL_AMBIENT") {
             shader.params().register_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT, variable_name);
+        } else if(arg_1 == "ACTIVE_TEXTURE_UNITS") {
+            shader.params().register_auto(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS, variable_name);
         } else {
             throw SyntaxError("Unhandled auto-uniform: " + arg_1);
         }
@@ -202,8 +237,13 @@ void MaterialScript::handle_block(Material& mat,
             }
 
             if(end_block_type == "PASS") {
+                ShaderProgram& shader = mat.scene().shader(current_pass->shader());
+
+                //Apply any staged uniforms
+                apply_staged_uniforms(shader);
+
                 //At the end of the pass, relink the shader
-                mat.scene().shader(current_pass->shader()).relink();
+                shader.relink();
             }
             return; //Exit this function, we are done with this block
         } else if(str::starts_with(line, "SET")) {

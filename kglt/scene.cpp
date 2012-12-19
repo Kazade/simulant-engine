@@ -54,6 +54,7 @@ void Scene::initialize_defaults() {
     Material& mat = material(default_material_);
     this->window().loader_for("kglt/materials/generic_multitexture.kglm")->into(mat);
 
+    default_shader_ = mat.technique().pass(0).shader();
 /*
     //Create the default shader program
     default_shader_ = new_shader();

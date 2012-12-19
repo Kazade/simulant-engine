@@ -47,8 +47,11 @@ Light& return_new_light(Scene& scene) {
 }
 
 MaterialID create_material_from_texture(Scene& scene, TextureID tex) {
-    kglt::MaterialID matid = scene.new_material();
+    //Duplicate the default material
+    kglt::MaterialID matid = scene.new_material(scene.default_material());
     kglt::Material& mat = scene.material(matid);
+
+    //Set texture unit 0 to this texture
     mat.technique().pass(mat.technique().new_pass(scene.default_shader())).set_texture_unit(0, tex);
     return matid;
 }

@@ -162,34 +162,70 @@ void GenericRenderer::set_auto_uniforms_on_shader(
 
     if(s.params().uses_auto(SP_AUTO_MATERIAL_TEX_MATRIX0)) {
         //Pass as an array to the shader
-        s.params().set_mat4x4(
-            s.params().auto_uniform_variable_name(SP_AUTO_MATERIAL_TEX_MATRIX0),
-            pass.texture_unit(0).matrix()
-        );
+        if(pass.texture_unit_count()) {
+            s.params().set_mat4x4(
+                s.params().auto_uniform_variable_name(SP_AUTO_MATERIAL_TEX_MATRIX0),
+                pass.texture_unit(0).matrix()
+            );
+        } else {
+            kmMat4 identity;
+            kmMat4Identity(&identity);
+            s.params().set_mat4x4(
+                s.params().auto_uniform_variable_name(SP_AUTO_MATERIAL_TEX_MATRIX0),
+                identity
+            );
+        }
     }
 
     if(s.params().uses_auto(SP_AUTO_MATERIAL_TEX_MATRIX1)) {
         //Pass as an array to the shader
-        s.params().set_mat4x4(
-            s.params().auto_uniform_variable_name(SP_AUTO_MATERIAL_TEX_MATRIX1),
-            pass.texture_unit(1).matrix()
-        );
+        if(pass.texture_unit_count() > 1) {
+            s.params().set_mat4x4(
+                s.params().auto_uniform_variable_name(SP_AUTO_MATERIAL_TEX_MATRIX1),
+                pass.texture_unit(1).matrix()
+            );
+        } else {
+            kmMat4 identity;
+            kmMat4Identity(&identity);
+            s.params().set_mat4x4(
+                s.params().auto_uniform_variable_name(SP_AUTO_MATERIAL_TEX_MATRIX1),
+                identity
+            );
+        }
     }
 
     if(s.params().uses_auto(SP_AUTO_MATERIAL_TEX_MATRIX2)) {
         //Pass as an array to the shader
-        s.params().set_mat4x4(
-            s.params().auto_uniform_variable_name(SP_AUTO_MATERIAL_TEX_MATRIX2),
-            pass.texture_unit(2).matrix()
-        );
+        if(pass.texture_unit_count() > 2) {
+            s.params().set_mat4x4(
+                s.params().auto_uniform_variable_name(SP_AUTO_MATERIAL_TEX_MATRIX2),
+                pass.texture_unit(2).matrix()
+            );
+        } else {
+            kmMat4 identity;
+            kmMat4Identity(&identity);
+            s.params().set_mat4x4(
+                s.params().auto_uniform_variable_name(SP_AUTO_MATERIAL_TEX_MATRIX1),
+                identity
+            );
+        }
     }
 
     if(s.params().uses_auto(SP_AUTO_MATERIAL_TEX_MATRIX3)) {
         //Pass as an array to the shader
-        s.params().set_mat4x4(
-            s.params().auto_uniform_variable_name(SP_AUTO_MATERIAL_TEX_MATRIX3),
-            pass.texture_unit(3).matrix()
-        );
+        if(pass.texture_unit_count() > 3) {
+            s.params().set_mat4x4(
+                s.params().auto_uniform_variable_name(SP_AUTO_MATERIAL_TEX_MATRIX3),
+                pass.texture_unit(3).matrix()
+            );
+        } else {
+            kmMat4 identity;
+            kmMat4Identity(&identity);
+            s.params().set_mat4x4(
+                s.params().auto_uniform_variable_name(SP_AUTO_MATERIAL_TEX_MATRIX1),
+                identity
+            );
+        }
     }
 
     if(s.params().uses_auto(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS)) {

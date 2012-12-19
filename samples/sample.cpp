@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
     kglt::procedural::mesh::rectangle(mesh, 1.0, 1.0);
 	
     ///Shortcut function for loading images
-    kglt::TextureID tid = kglt::create_texture_from_file(*window, "sample.tga");
+    kglt::TextureID tid = kglt::create_texture_from_file(*window, "sample_data/sample.tga");
     kglt::MaterialID matid = kglt::create_material_from_texture(scene, tid);
 
 	//Apply the texture to the mesh

@@ -203,16 +203,19 @@ bool ShaderProgram::has_uniform(const std::string& name) {
 }
 
 void ShaderProgram::set_uniform(const std::string& name, const float x) {
+    activate();
     glUniform1f(get_uniform_loc(name), x);
     check_and_log_error(__FILE__, __LINE__);
 }
 
 void ShaderProgram::set_uniform(const std::string& name, const int32_t x) {
+    activate();
     glUniform1i(get_uniform_loc(name), x);
     check_and_log_error(__FILE__, __LINE__);
 }
 
 void ShaderProgram::set_uniform(const std::string& name, const kmMat4* matrix) {
+    activate();
     GLint loc = get_uniform_loc(name);
     if(loc >= 0) {
         float mat[16];
@@ -224,6 +227,7 @@ void ShaderProgram::set_uniform(const std::string& name, const kmMat4* matrix) {
 }
 
 void ShaderProgram::set_uniform(const std::string& name, const kmMat3* matrix) {
+    activate();
     GLint loc = get_uniform_loc(name);
     if(loc >= 0) {
         float mat[9];
@@ -235,6 +239,7 @@ void ShaderProgram::set_uniform(const std::string& name, const kmMat3* matrix) {
 }
 
 void ShaderProgram::set_uniform(const std::string& name, const kmVec3* vec) {
+    activate();
     GLint loc = get_uniform_loc(name);
     if(loc >= 0) {
         glUniform3fv(get_uniform_loc(name), 1, (GLfloat*) vec);
@@ -243,6 +248,7 @@ void ShaderProgram::set_uniform(const std::string& name, const kmVec3* vec) {
 }
 
 void ShaderProgram::set_uniform(const std::string& name, const kmVec4* vec) {
+    activate();
     GLint loc = get_uniform_loc(name);
     if(loc >= 0) {
         glUniform4fv(get_uniform_loc(name), 1, (GLfloat*) vec);
@@ -251,6 +257,7 @@ void ShaderProgram::set_uniform(const std::string& name, const kmVec4* vec) {
 }
 
 void ShaderProgram::set_uniform(const std::string& name, const std::vector<kmMat4>& matrices) {
+    activate();
     GLint loc = get_uniform_loc(name);
     if(loc >= 0) {
         glUniformMatrix4fv(loc, matrices.size(), false, (GLfloat*) &matrices[0]);
