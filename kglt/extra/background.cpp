@@ -16,20 +16,37 @@ BackgroundLayer::BackgroundLayer(Background &bg, const std::string& image_path):
     texture_id_(0) {
 
     texture_id_ = kglt::create_texture_from_file(background().scene().window(), image_path);
-    texture_unit_ = background().layer_count();
-
+    pass_id_ = background().layer_count();
     kglt::Material& mat = background().scene().material(background().material());
-    mat.technique().pass(0).set_texture_unit(texture_unit_, texture_id_);
+
+    if(pass_id_ >= mat.technique().pass_count()) {
+        //Duplicate the first pass to create this one
+        mat.technique().new_pass(mat.technique().pass(0).shader());
+
+        //All passes except the first should have alpha blending enabled
+        mat.technique().pass(pass_id_).set_blending(BLEND_ALPHA);
+    }
+
+    //Finally set the texture on the new pass
+    mat.technique().pass(pass_id_).set_texture_unit(0, texture_id_);
 }
 
 void BackgroundLayer::scroll_x(double amount) {
+    /*
+     *  Scrolls the background layer on the x-axis by 'amount'.
+     *  This is simply a thunk to manipulate the underlyng texture matrix
+     */
     Material& mat = background().scene().material(background().material());
-    mat.technique().pass(0).texture_unit(texture_unit_).scroll_x(amount);
+    mat.technique().pass(pass_id_).texture_unit(0).scroll_x(amount);
 }
 
 void BackgroundLayer::scroll_y(double amount) {
-    Material& mat = background().scene().material(background().material());
-    mat.technique().pass(0).texture_unit(texture_unit_).scroll_y(amount);
+    /*
+     *  Scrolls the background layer on the y-axis by 'amount'.
+     *  This is simply a thunk to manipulate the underlyng texture matrix
+     */
+    Material& mat = background().scene().material(background().material());    
+    mat.technique().pass(pass_id_).texture_unit(0).scroll_y(amount);
 }
 
 BackgroundLayer::~BackgroundLayer() {
@@ -83,7 +100,11 @@ Background::Background(Scene& scene, ViewportID viewport, BGResizeStyle style):
 
     mesh_id_ = scene.new_mesh();
     Mesh& mesh = scene.mesh(mesh_id_);
-    material_id_ = scene.new_material(scene.default_material());
+    Material& mat = scene.material(scene.new_material());
+
+    //Load the background material
+    scene.window().loader_for("kglt/materials/background.kglm")->into(mat);
+    material_id_ = mat.id();
 
     SubMeshIndex index = kglt::procedural::mesh::rectangle(
         mesh,

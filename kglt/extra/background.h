@@ -40,9 +40,9 @@ public:
 
 private:
     Background& background_;
-    TextureID texture_id_;
+    uint8_t pass_id_;
 
-    uint32_t texture_unit_;
+    TextureID texture_id_;
 };
 
 class Background {
