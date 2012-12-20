@@ -123,6 +123,24 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
         } else {
             throw SyntaxError("Unhandled auto-uniform: " + arg_1);
         }
+    } else if (type == "FLAG") {
+        std::string arg_2 = str::upper(args[2]);
+
+        if(arg_1 == "DEPTH_WRITE") {
+            if(arg_2 == "ON") {
+                pass->set_depth_write_enabled(true);
+            } else {
+                pass->set_depth_write_enabled(false);
+            }
+        } else if(arg_1 == "DEPTH_CHECK") {
+            if(arg_2 == "ON") {
+                pass->set_depth_test_enabled(true);
+            } else {
+                pass->set_depth_test_enabled(false);
+            }
+        } else {
+            throw SyntaxError("Invalid argument passed to SET(FLAG): " + arg_1);
+        }
     } else {
         throw SyntaxError("Invalid SET command for pass: " + type);
     }

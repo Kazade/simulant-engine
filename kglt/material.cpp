@@ -75,7 +75,9 @@ MaterialPass::MaterialPass(ShaderID shader):
     shininess_(0),
     iteration_(ITERATE_ONCE),    
     max_iterations_(1),
-    blend_(BLEND_NONE) {
+    blend_(BLEND_NONE),
+    depth_writes_enabled_(true),
+    depth_test_enabled_(true) {
 
 }
 

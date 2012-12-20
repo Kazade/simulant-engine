@@ -119,6 +119,18 @@ public:
 
     void set_blending(BlendType blend) { blend_ = blend; }
     BlendType blending() { return blend_; }
+
+    void set_depth_write_enabled(bool value=true) {
+        depth_writes_enabled_ = value;
+    }
+
+    bool depth_write_enabled() const { return depth_writes_enabled_; }
+
+    void set_depth_test_enabled(bool value=true) {
+        depth_test_enabled_ = value;
+    }
+    bool depth_test_enabled() const { return depth_test_enabled_; }
+
 private:
     ShaderID shader_;
 
@@ -133,6 +145,9 @@ private:
     uint32_t max_iterations_;
 
     BlendType blend_;
+
+    bool depth_writes_enabled_;
+    bool depth_test_enabled_;
 };
 
 class MaterialTechnique {
