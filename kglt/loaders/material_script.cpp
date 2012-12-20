@@ -77,6 +77,8 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
             shader.params().register_attribute(SP_ATTR_VERTEX_TEXCOORD2, variable_name);
         } else if(arg_1 == "TEXCOORD3") {
             shader.params().register_attribute(SP_ATTR_VERTEX_TEXCOORD3, variable_name);
+        } else if(arg_1 == "DIFFUSE") {
+            shader.params().register_attribute(SP_ATTR_VERTEX_DIFFUSE, variable_name);
         } else {
             throw SyntaxError("Unhandled attribute: " + arg_1);
         }
