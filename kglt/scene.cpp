@@ -14,7 +14,6 @@ Scene::Scene(WindowBase* window):
     default_camera_(0),
     default_scene_group_(0),
     default_texture_(0),
-    default_shader_(0),
     default_material_(0),
     ambient_light_(1.0, 1.0, 1.0, 1.0),    
     ui_interface_(new UI(this)),
@@ -54,70 +53,8 @@ void Scene::initialize_defaults() {
     Material& mat = material(default_material_);
     this->window().loader_for("kglt/materials/generic_multitexture.kglm")->into(mat);
 
-    default_shader_ = mat.technique().pass(0).shader();
-/*
-    //Create the default shader program
-    default_shader_ = new_shader();
-    ShaderProgram& def = shader(default_shader_); //Create a default shader;
-
-    assert(glGetError() == GL_NO_ERROR);
-
-    def.add_and_compile(SHADER_TYPE_VERTEX, ambient_render_vert);
-    def.add_and_compile(SHADER_TYPE_FRAGMENT, ambient_render_frag);
-    def.activate();
-
-    def.params().register_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX, "modelview_projection_matrix");
-    def.params().register_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT, "global_ambient");
-    def.params().register_auto(SP_AUTO_MATERIAL_TEX_MATRICES, "texture_matrix");
-    def.params().register_auto(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS, "active_texture_count");
-
-    //Bind the vertex attributes for the default shader and relink
-    def.params().register_attribute(SP_ATTR_VERTEX_POSITION, "vertex_position");
-    def.params().register_attribute(SP_ATTR_VERTEX_TEXCOORD0, "vertex_texcoord_0");
-    def.params().register_attribute(SP_ATTR_VERTEX_TEXCOORD1, "vertex_texcoord_1");
-    def.params().register_attribute(SP_ATTR_VERTEX_TEXCOORD2, "vertex_texcoord_2");
-    def.params().register_attribute(SP_ATTR_VERTEX_TEXCOORD3, "vertex_texcoord_3");
-
-    //def.params().register_attribute(SP_ATTR_VERTEX_NORMAL, "vertex_normal");
-
-    def.params().set_int("textures[0]", 0); //Set texture_1 to be the first texture unit
-    def.params().set_int("textures[1]", 1); //Set texture_2 to be the second texture unit
-    def.params().set_int("textures[2]", 2); //Set texture_3 to be the third texture unit
-    def.params().set_int("textures[3]", 3); //Set texture_4 to be the fourth texture unit
-
-    def.relink();
-
-    phong_shader_ = new_shader();
-    ShaderProgram& phong = shader(phong_shader_);
-    phong.add_and_compile(SHADER_TYPE_VERTEX, phong_lighting_vert);
-    phong.add_and_compile(SHADER_TYPE_FRAGMENT, phong_lighting_frag);
-    phong.activate();
-    
-    phong.params().register_auto(SP_AUTO_MODELVIEW_MATRIX, "modelview_matrix");
-    phong.params().register_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX, "modelview_projection_matrix");
-    phong.params().register_auto(SP_AUTO_LIGHT_POSITION, "light_position");
-    phong.params().register_auto(SP_AUTO_LIGHT_AMBIENT, "light_ambient");
-    phong.params().register_auto(SP_AUTO_LIGHT_SPECULAR, "light_specular");
-    phong.params().register_auto(SP_AUTO_LIGHT_DIFFUSE, "light_diffuse");
-    phong.params().register_auto(SP_AUTO_LIGHT_CONSTANT_ATTENUATION, "light_constant_attenuation");
-    phong.params().register_auto(SP_AUTO_LIGHT_LINEAR_ATTENUATION, "light_linear_attenuation");
-    phong.params().register_auto(SP_AUTO_LIGHT_QUADRATIC_ATTENUATION, "light_quadratic_attenuation");
-
-    phong.params().register_attribute(SP_ATTR_VERTEX_POSITION, "vertex_position");
-    phong.params().register_attribute(SP_ATTR_VERTEX_NORMAL, "vertex_normal");
-    phong.relink();
-
-    //Finally create the default material to link them
-    default_material_ = new_material();
-    Material& mat = material(default_material_);
-    mat.technique().new_pass(default_shader_);
-    mat.technique().new_pass(phong_shader_);
-    
-    mat.technique().pass(0).set_texture_unit(0, default_texture_);
-    mat.technique().pass(0).set_iteration(ITERATE_ONCE);
-    mat.technique().pass(0).set_blending(BLEND_ALPHA);
-    mat.technique().pass(1).set_iteration(ITERATE_ONCE_PER_LIGHT, 8);
-    mat.technique().pass(1).set_blending(BLEND_ADD);*/
+    //Set the default material's first texture to the default (white) texture
+    mat.technique().pass(0).set_texture_unit(0, tex.id());
 }
 
 EntityID Scene::new_entity(MeshID mid) {

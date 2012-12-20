@@ -128,7 +128,6 @@ public:
     }
 
     MaterialID default_material() const { return default_material_; }
-    ShaderID default_shader() const { return default_shader_; }
 
     SceneGroupID default_scene_group() const { return default_scene_group_; }
 
@@ -150,8 +149,6 @@ private:
     CameraID default_camera_;
     SceneGroupID default_scene_group_;
     TextureID default_texture_;
-    ShaderID default_shader_;
-    ShaderID phong_shader_;
     MaterialID default_material_;
     kglt::Colour ambient_light_;
 

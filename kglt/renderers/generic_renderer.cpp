@@ -336,7 +336,12 @@ void GenericRenderer::render_subentity(SubEntity& buffer, CameraID camera) {
         set_blending_mode(pass.blending());
 
         //Grab and activate the shader for the pass
-        ShaderProgram& s = scene().shader(pass.shader() ? pass.shader() : scene().default_shader());
+        if(!pass.shader()) {
+            L_ERROR("The current pass has no attached shader, so nothing will be rendered");
+            continue;
+        }
+
+        ShaderProgram& s = scene().shader(pass.shader());
         s.activate(); //Activate the shader
 
         //FIXME: lights within range of what?
