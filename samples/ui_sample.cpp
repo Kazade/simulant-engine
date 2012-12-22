@@ -1,5 +1,7 @@
 #include "kglt/kglt.h"
-#include "kglt/ui/shortcuts.h"
+#include "kglt/extra/ui/interface.h"
+
+using namespace kglt::extra;
 
 int main(int argc, char* argv[]) {
     //Set up logging to stdio
@@ -10,31 +12,12 @@ int main(int argc, char* argv[]) {
 
     window->set_title("KGLT UI Sample");
 
-    //Automatically calculate an orthographic projection, taking into account the aspect ratio
-    //and the passed height. For example, passing a height of 2.0 would mean the view would extend
-    //+1 and -1 in the vertical direction, -1.0 - +1.0 near/far, and width would be calculated from the aspect
+    ui::Interface::ptr interface = ui::Interface::create(scene, window->width(), window->height());
+    interface->load_font("sample_data/sample.ttf", 12);
 
-    //window.scene().pass().viewport().configure(kglt::VIEWPORT_TYPE_BLACKBAR_16_BY_9);
-    //window.scene().pass().viewport().set_background_colour(kglt::Colour(0, 0, 0, 0));
-    scene.camera().set_orthographic_projection_from_height((float) 224 / (float) 40, 16.0 / 9.0);
-
-    //First, load a default font
-    kglt::FontID fid = scene.new_font();
-    kglt::Font& font = scene.font(fid);
-    font.initialize("sample_data/sample.ttf", 12);
-
-    //Set the default font for the UI
-    kglt::UI& interface = scene.ui();
-    interface.set_default_font_id(fid);
-
-    kglt::ui::Label& label = kglt::ui::return_new_label(scene);
+    ui::Label& label = interface->label(interface->new_label());
     label.set_text(u8"The quick brown fox jumped over the lazy dog \u00a9");
-    label.set_position(0.1, 0.5); //All positions and heights are between 0.0 and 1.0 for resolution independence
-    //label.set_font_size((1.0 / 480.0) * 12.0); //At 640x480, this will be equivalent to 12pt
-/*
-    kglt::ui::Button& button = kglt::ui::return_new_button(interface);
-    button.set_text("<b>Click me!</b>");
-    button.set_position(0.9, 0.9);*/
+    label.set_position(ui::Ratio(0.1), ui::Ratio(0.5));
 
     while(window->update()) {}
 

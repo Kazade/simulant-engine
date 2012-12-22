@@ -1,10 +1,12 @@
 #include "kglt/kglt.h"
 #include "kglt/shortcuts.h"
 #include "kglt/additional.h"
+#include "kglt/extra/ui/interface.h"
 
 using kglt::extra::Sprite;
 using kglt::extra::SpriteStripLoader;
 using kglt::extra::Background;
+using namespace kglt::extra;
 
 int main(int argc, char* argv[]) {
     //Set up logging to stdio
@@ -38,22 +40,16 @@ int main(int argc, char* argv[]) {
     sprite->set_render_dimensions(1.5, 1.5);
     sprite->move_to(0.0, -2.0, -1.0);
 
-    //First, load a default font
-    kglt::FontID fid = scene.new_font();
-    kglt::Font& font = scene.font(fid);
-    font.initialize("sample_data/sample.ttf", 12);
-
-    //Set the default font for the UI
-    kglt::UI& interface = scene.ui();
-    interface.set_default_font_id(fid);
+    ui::Interface::ptr interface = ui::Interface::create(scene, 800, 600);
+    interface->load_font("sample_data/sample.ttf", 12);
 
     //Create a label
-    kglt::ui::LabelID label_id = scene.ui().new_label();
-    kglt::ui::Label& label = scene.ui().label(label_id);
+    ui::LabelID label_id = interface->new_label();
+    ui::Label& label = interface->label(label_id);
 
     label.set_foreground_colour(kglt::Colour(1.0, 1.0, 0.0, 1.0));
     label.set_text("Score: 8739204");
-    label.set_position(0.02, 0.9);
+    label.set_position(ui::Ratio(0.02), ui::Ratio(0.9));
 
     while(window->update()) {
         background->layer(0).scroll_x(0.1 * window->delta_time());

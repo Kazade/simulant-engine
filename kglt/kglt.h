@@ -6,12 +6,9 @@
 #include "scene.h"
 #include "viewport.h"
 #include "frustum.h"
-#include "ui.h"
 #include "material.h"
 #include "shader.h"
 
 #include "procedural/mesh.h"
-
-#include "kglt/ui/label.h"
 
 #endif
