@@ -1,7 +1,6 @@
 #include "glee/GLee.h"
 #include "scene.h"
 #include "renderer.h"
-#include "ui.h"
 #include "partitioners/null_partitioner.h"
 #include "shaders/default_shaders.h"
 #include "window_base.h"
@@ -16,12 +15,10 @@ Scene::Scene(WindowBase* window):
     default_texture_(0),
     default_material_(0),
     ambient_light_(1.0, 1.0, 1.0, 1.0),    
-    ui_interface_(new UI(this)),
     pipeline_(new Pipeline(*this)) {
 
     TemplatedManager<Scene, Entity, EntityID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Entity, EntityID>));
     TemplatedManager<Scene, Camera, CameraID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Camera, CameraID>));
-    TemplatedManager<Scene, Text, TextID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Text, TextID>));
     TemplatedManager<Scene, ShaderProgram, ShaderID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_shader_callback));
 }
 
@@ -193,17 +190,6 @@ void Scene::delete_shader(ShaderID s) {
     TemplatedManager<Scene, ShaderProgram, ShaderID>::manager_delete(s);
 }
 
-FontID Scene::new_font() {
-    return TemplatedManager<Scene, Font, FontID>::manager_new();
-}
-
-Font& Scene::font(FontID f) {
-    return TemplatedManager<Scene, Font, FontID>::manager_get(f);
-}
-
-void Scene::delete_font(FontID f) {
-    TemplatedManager<Scene, Font, FontID>::manager_delete(f);
-}
 
 SceneGroupID Scene::new_scene_group() {
     return TemplatedManager<Scene, SceneGroup, SceneGroupID>::manager_new();
@@ -219,24 +205,6 @@ SceneGroup& Scene::scene_group(SceneGroupID group) {
 
 void Scene::delete_scene_group(SceneGroupID group) {
     TemplatedManager<Scene, SceneGroup, SceneGroupID>::manager_delete(group);
-}
-
-TextID Scene::new_text() {
-    return TemplatedManager<Scene, Text, TextID>::manager_new();
-}
-
-Text& Scene::text(TextID t) {
-    return TemplatedManager<Scene, Text, TextID>::manager_get(t);
-}
-
-const Text& Scene::text(TextID t) const {
-    return TemplatedManager<Scene, Text, TextID>::manager_get(t);
-}
-
-void Scene::delete_text(TextID tid) {
-    Text& obj = text(tid);
-    obj.destroy_children();
-    TemplatedManager<Scene, Text, TextID>::manager_delete(tid);
 }
 
 LightID Scene::new_light(Object* parent, LightType type) {

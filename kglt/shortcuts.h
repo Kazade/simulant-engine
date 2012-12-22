@@ -5,7 +5,6 @@
 #include "window.h"
 #include "types.h"
 #include "shader.h"
-#include "text.h"
 #include "texture.h"
 #include "material.h"
 
@@ -15,7 +14,6 @@ TextureID create_texture_from_file(WindowBase& window, const std::string& filena
 
 Mesh& return_new_mesh(Scene& scene);
 ShaderProgram& return_new_shader(Scene& scene);
-Text& return_new_text(Scene& scene);
 Texture& return_new_texture(Scene& scene);
 Material& return_new_material(Scene& scene);
 Light& return_new_light(Scene& scene);

@@ -18,8 +18,6 @@
 #include "texture.h"
 #include "shader.h"
 #include "viewport.h"
-#include "font.h"
-#include "text.h"
 #include "material.h"
 #include "light.h"
 #include "scene_group.h"
@@ -41,9 +39,7 @@ class Scene :
     public Loadable,
     public generic::TemplatedManager<Scene, Mesh, MeshID>,
     public generic::TemplatedManager<Scene, Camera, CameraID>,
-    public generic::TemplatedManager<Scene, Text, TextID>,
     public generic::TemplatedManager<Scene, ShaderProgram, ShaderID>,
-    public generic::TemplatedManager<Scene, Font, FontID>,
     public generic::TemplatedManager<Scene, Material, MaterialID>,
     public generic::TemplatedManager<Scene, Texture, TextureID>,
     public generic::TemplatedManager<Scene, Light, LightID>,
@@ -79,8 +75,6 @@ public:
     CameraID new_camera();
     TextureID new_texture();
     ShaderID new_shader();
-    FontID new_font();
-    TextID new_text();
     MaterialID new_material(MaterialID clone_from=MaterialID());
     LightID new_light(Object* parent=nullptr, LightType type=LIGHT_TYPE_POINT);    
 
@@ -89,21 +83,15 @@ public:
     Camera& camera(CameraID c = DefaultCameraID);
     Texture& texture(TextureID t);
     ShaderProgram& shader(ShaderID s);
-    Font& font(FontID f);
     Material& material(MaterialID material);
     Light& light(LightID light);
-
-    Text& text(TextID t);
-    const Text& text(TextID t) const;
 
     std::pair<ShaderID, bool> find_shader(const std::string& name);
 
 
     void delete_texture(TextureID tid);
     void delete_camera(CameraID cid);
-    void delete_text(TextID tid);
     void delete_shader(ShaderID s);
-    void delete_font(FontID f);
     void delete_material(MaterialID m);
     void delete_light(LightID light_id);
 
@@ -114,8 +102,6 @@ public:
     WindowBase& window() { return *window_; }
 
     MeshID _mesh_id_from_mesh_ptr(Mesh* mesh);
-
-    UI& ui() { return *ui_interface_; }
 
     template<typename T, typename ID>
     void post_create_callback(T& obj, ID id) {
@@ -153,8 +139,6 @@ private:
     kglt::Colour ambient_light_;
 
     void initialize_defaults();
-
-    std::tr1::shared_ptr<UI> ui_interface_;
 
     Pipeline::ptr pipeline_;
 

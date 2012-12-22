@@ -60,13 +60,11 @@ typedef UniqueID<0> MeshID;
 typedef UniqueID<1> TextureID;
 typedef UniqueID<2> CameraID;
 typedef UniqueID<3> ShaderID;
-typedef UniqueID<4> FontID;
-typedef UniqueID<5> TextID;
-typedef UniqueID<6> MaterialID;
-typedef UniqueID<7> LightID;
-typedef UniqueID<8> SceneGroupID;
-typedef UniqueID<9> ViewportID;
-typedef UniqueID<10> EntityID;
+typedef UniqueID<4> MaterialID;
+typedef UniqueID<5> LightID;
+typedef UniqueID<6> SceneGroupID;
+typedef UniqueID<7> ViewportID;
+typedef UniqueID<8> EntityID;
 
 const CameraID DefaultCameraID = CameraID();
 
