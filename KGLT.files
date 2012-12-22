@@ -257,3 +257,5 @@ kglt/extra/ui/interface.cpp
 kglt/extra/ui/font.h
 kglt/extra/ui/font.cpp
 kglt/extra/ui/widgets/label.h
+kglt/extra/ui/widgets/label.cpp
+kglt/extra/ui/widget.cpp

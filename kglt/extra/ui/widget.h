@@ -24,7 +24,7 @@ struct Ratio {
 
 class Widget {
 public:
-    Widget(Interface& interface, Widget* parent, Ratio left, Ratio top, Ratio width, Ratio height);
+    Widget(Interface& interface);
     virtual ~Widget() {}
 
     void set_position(Ratio left, Ratio top);

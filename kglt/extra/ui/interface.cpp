@@ -16,6 +16,18 @@ void Interface::load_font(const std::string &ttf_file, uint8_t font_height) {
     Font::ptr font = Font::create(ttf_file, font_height);
 }
 
+LabelID Interface::new_label() {
+    return LabelManager::manager_new();
+}
+
+Label& Interface::label(LabelID l) {
+    return LabelManager::manager_get(l);
+}
+
+void Interface::delete_label(LabelID l) {
+    LabelManager::manager_delete(l);
+}
+
 }
 }
 }
