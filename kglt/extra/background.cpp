@@ -116,11 +116,6 @@ Background::Background(Scene& scene, ViewportID viewport, BGResizeStyle style):
 
     mesh.submesh(index).set_material(material_id_);
 
-    L_WARN("Must disable depth writes on the background material");
-    //Disable depth testing stuff
-//    mesh.enable_depth_test(false);
-//    mesh.enable_depth_writes(false);
-
     //Create the entity for this background
     entity_id_ = scene.new_entity();
     Entity& entity = scene.entity(entity_id_);
