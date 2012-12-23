@@ -15,6 +15,7 @@ int main(int argc, char* argv[]) {
     window->set_title("KGLT Text Sample");
 
     ui::Interface::ptr interface = ui::Interface::create(scene, 800, 600);
+    interface->load_font("sample_data/sample.ttf", 12);
 
     while(window->update()) {}
 

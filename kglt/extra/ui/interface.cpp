@@ -13,7 +13,7 @@ Interface::Interface(Scene &scene, uint32_t width_in_pixels, uint32_t height_in_
 }
 
 void Interface::load_font(const std::string &ttf_file, uint8_t font_height) {
-    Font::ptr font = Font::create(ttf_file, font_height);
+    Font::ptr font = Font::create(*this, ttf_file, font_height);
 }
 
 LabelID Interface::new_label() {

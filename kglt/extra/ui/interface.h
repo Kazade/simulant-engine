@@ -41,6 +41,8 @@ public:
     void button(ButtonID button);
     void delete_button();
 
+    Scene& scene() { return scene_; }
+
 private:
     Scene& scene_;
 
