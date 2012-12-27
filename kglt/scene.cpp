@@ -9,6 +9,7 @@ namespace kglt {
 
 Scene::Scene(WindowBase* window):
     Object(nullptr),    
+    ResourceManager(nullptr),
     window_(window),
     default_camera_(0),
     default_scene_group_(0),
@@ -18,8 +19,7 @@ Scene::Scene(WindowBase* window):
     pipeline_(new Pipeline(*this)) {
 
     TemplatedManager<Scene, Entity, EntityID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Entity, EntityID>));
-    TemplatedManager<Scene, Camera, CameraID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Camera, CameraID>));
-    TemplatedManager<Scene, ShaderProgram, ShaderID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_shader_callback));
+    TemplatedManager<Scene, Camera, CameraID>::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Camera, CameraID>));    
 }
 
 Scene::~Scene() {
@@ -92,28 +92,28 @@ void Scene::delete_entity(EntityID e) {
 }
 
 
-Mesh& Scene::mesh(MeshID m) {
+Mesh& ResourceManager::mesh(MeshID m) {
     return const_cast<Mesh&>(static_cast<const Scene*>(this)->mesh(m));
 }
 
-const Mesh& Scene::mesh(MeshID m) const {
+const Mesh& ResourceManager::mesh(MeshID m) const {
     return TemplatedManager<Scene, Mesh, MeshID>::manager_get(m);
 }
 
-MeshID Scene::new_mesh() {
+MeshID ResourceManager::new_mesh() {
     MeshID result = TemplatedManager<Scene, Mesh, MeshID>::manager_new();
     return result;
 }
 
-bool Scene::has_mesh(MeshID m) const {
+bool ResourceManager::has_mesh(MeshID m) const {
     return TemplatedManager<Scene, Mesh, MeshID>::manager_contains(m);
 }
 
-void Scene::delete_mesh(MeshID mid) {
+void ResourceManager::delete_mesh(MeshID mid) {
     return TemplatedManager<Scene, Mesh, MeshID>::manager_delete(mid);
 }
 
-MaterialID Scene::new_material(MaterialID clone_from) {
+MaterialID ResourceManager::new_material(MaterialID clone_from) {
     MaterialID result = TemplatedManager<Scene, Material, MaterialID>::manager_new();
     if(clone_from) {
         kglt::Material& existing = material(clone_from);
@@ -140,24 +140,46 @@ MaterialID Scene::new_material(MaterialID clone_from) {
     return result;
 }
 
-Material& Scene::material(MaterialID mid) {
+Material& ResourceManager::material(MaterialID mid) {
     return TemplatedManager<Scene, Material, MaterialID>::manager_get(mid);
 }
 
-void Scene::delete_material(MaterialID mid) {
+void ResourceManager::delete_material(MaterialID mid) {
     TemplatedManager<Scene, Material, MaterialID>::manager_delete(mid);
 }
 
-TextureID Scene::new_texture() {
+TextureID ResourceManager::new_texture() {
     return TemplatedManager<Scene, Texture, TextureID>::manager_new();
 }
 
-void Scene::delete_texture(TextureID tid) {
+void ResourceManager::delete_texture(TextureID tid) {
     TemplatedManager<Scene, Texture, TextureID>::manager_delete(tid);
 }
 
-Texture& Scene::texture(TextureID t) {
+Texture& ResourceManager::texture(TextureID t) {
     return TemplatedManager<Scene, Texture, TextureID>::manager_get(t);
+}
+
+
+ShaderProgram& ResourceManager::shader(ShaderID s) {
+    return TemplatedManager<Scene, ShaderProgram, ShaderID>::manager_get(s);
+}
+
+ShaderID ResourceManager::new_shader() {
+    return TemplatedManager<Scene, ShaderProgram, ShaderID>::manager_new();
+}
+
+void ResourceManager::delete_shader(ShaderID s) {
+    TemplatedManager<Scene, ShaderProgram, ShaderID>::manager_delete(s);
+}
+
+std::pair<ShaderID, bool> ResourceManager::find_shader(const std::string& name) {
+    std::map<std::string, ShaderID>::const_iterator it = shader_lookup_.find(name);
+    if(it == shader_lookup_.end()) {
+        return std::make_pair(ShaderID(), false);
+    }
+
+    return std::make_pair((*it).second, true);
 }
 
 CameraID Scene::new_camera() {
@@ -177,19 +199,6 @@ void Scene::delete_camera(CameraID cid) {
     obj.destroy_children();
     TemplatedManager<Scene, Camera, CameraID>::manager_delete(cid);
 }
-
-ShaderProgram& Scene::shader(ShaderID s) {
-    return TemplatedManager<Scene, ShaderProgram, ShaderID>::manager_get(s);
-}
-
-ShaderID Scene::new_shader() {
-    return TemplatedManager<Scene, ShaderProgram, ShaderID>::manager_new();
-}
-
-void Scene::delete_shader(ShaderID s) {
-    TemplatedManager<Scene, ShaderProgram, ShaderID>::manager_delete(s);
-}
-
 
 SceneGroupID Scene::new_scene_group() {
     return TemplatedManager<Scene, SceneGroup, SceneGroupID>::manager_new();
@@ -239,15 +248,6 @@ void Scene::init() {
     initialize_defaults();
     pipeline_->init(); //Initialize the pipeline
 
-}
-
-std::pair<ShaderID, bool> Scene::find_shader(const std::string& name) {
-    std::map<std::string, ShaderID>::const_iterator it = shader_lookup_.find(name);
-    if(it == shader_lookup_.end()) {
-        return std::make_pair(ShaderID(), false);
-    }
-
-    return std::make_pair((*it).second, true);
 }
 
 void Scene::update(double dt) {

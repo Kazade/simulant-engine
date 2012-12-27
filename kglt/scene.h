@@ -34,21 +34,67 @@ namespace kglt {
 class WindowBase;
 class UI;
 
+typedef generic::TemplatedManager<Scene, Mesh, MeshID> MeshManager;
+typedef generic::TemplatedManager<Scene, ShaderProgram, ShaderID> ShaderManager;
+typedef generic::TemplatedManager<Scene, Material, MaterialID> MaterialManager;
+typedef generic::TemplatedManager<Scene, Texture, TextureID> TextureManager;
+
+class ResourceManager:
+    public MeshManager,
+    public ShaderManager,
+    public MaterialManager,
+    public TextureManager {
+
+public:
+    ResourceManager(ResourceManager* parent=nullptr):
+        parent_(parent) {
+        ShaderManager::signal_post_create().connect(sigc::mem_fun(this, &ResourceManager::post_create_shader_callback));
+    }
+
+    MeshID new_mesh();
+    Mesh& mesh(MeshID m);
+    bool has_mesh(MeshID m) const;
+    const Mesh& mesh(MeshID m) const;
+    void delete_mesh(MeshID mid);
+
+    TextureID new_texture();
+    Texture& texture(TextureID t);
+    void delete_texture(TextureID tid);
+
+    ShaderID new_shader();
+    ShaderProgram& shader(ShaderID s);
+    void delete_shader(ShaderID s);
+
+    MaterialID new_material(MaterialID clone_from=MaterialID());
+    Material& material(MaterialID material);
+    void delete_material(MaterialID m);
+
+
+    std::pair<ShaderID, bool> find_shader(const std::string& name);
+    void post_create_shader_callback(ShaderProgram& obj, ShaderID id) {
+        shader_lookup_[obj.name()] = id;
+    }
+
+    ResourceManager& parent() {
+        assert(parent_);
+        return *parent_;
+    }
+private:
+    ResourceManager* parent_;
+
+    std::map<std::string, ShaderID> shader_lookup_;
+};
+
 class Scene :
     public Object,
     public Loadable,
-    public generic::TemplatedManager<Scene, Mesh, MeshID>,
+    public ResourceManager,
     public generic::TemplatedManager<Scene, Camera, CameraID>,
-    public generic::TemplatedManager<Scene, ShaderProgram, ShaderID>,
-    public generic::TemplatedManager<Scene, Material, MaterialID>,
-    public generic::TemplatedManager<Scene, Texture, TextureID>,
     public generic::TemplatedManager<Scene, Light, LightID>,
     public generic::TemplatedManager<Scene, SceneGroup, SceneGroupID>,
     public generic::TemplatedManager<Scene, Entity, EntityID> {
 
 public:
-    VIS_DEFINE_VISITABLE();
-
     void move(float x, float y, float z) {
         throw std::logic_error("You cannot move the scene");
     }
@@ -60,11 +106,6 @@ public:
     SceneGroup& scene_group(SceneGroupID group=0);
     void delete_scene_group(SceneGroupID group);
 
-    MeshID new_mesh();
-    Mesh& mesh(MeshID m);
-    const Mesh& mesh(MeshID m) const;
-    void delete_mesh(MeshID mid);
-
     EntityID new_entity(MeshID mid=MeshID());
     EntityID new_entity(Object& parent, MeshID mid=MeshID());
 
@@ -73,26 +114,12 @@ public:
     void delete_entity(EntityID e);
 
     CameraID new_camera();
-    TextureID new_texture();
-    ShaderID new_shader();
-    MaterialID new_material(MaterialID clone_from=MaterialID());
     LightID new_light(Object* parent=nullptr, LightType type=LIGHT_TYPE_POINT);    
 
-    bool has_mesh(MeshID m) const;
-
     Camera& camera(CameraID c = DefaultCameraID);
-    Texture& texture(TextureID t);
-    ShaderProgram& shader(ShaderID s);
-    Material& material(MaterialID material);
     Light& light(LightID light);
 
-    std::pair<ShaderID, bool> find_shader(const std::string& name);
-
-
-    void delete_texture(TextureID tid);
     void delete_camera(CameraID cid);
-    void delete_shader(ShaderID s);
-    void delete_material(MaterialID m);
     void delete_light(LightID light_id);
 
     void init();
@@ -107,10 +134,6 @@ public:
     void post_create_callback(T& obj, ID id) {
         obj.set_parent(this);
         obj._initialize(*this);
-    }
-
-    void post_create_shader_callback(ShaderProgram& obj, ShaderID id) {
-        shader_lookup_[obj.name()] = id;
     }
 
     MaterialID default_material() const { return default_material_; }
@@ -128,8 +151,6 @@ public:
 
     Pipeline& pipeline() { return *pipeline_; }
 private:
-    std::map<std::string, ShaderID> shader_lookup_;
-
     WindowBase* window_;
 
     CameraID default_camera_;
