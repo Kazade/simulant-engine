@@ -3,6 +3,9 @@
 
 #include <map>
 #include <stdexcept>
+#include <thread>
+#include <mutex>
+
 #include <sigc++/sigc++.h>
 #include "kazbase/list_utils.h"
 
@@ -20,7 +23,7 @@ public:
     virtual ~BaseManager() {}
 
 protected:
-    mutable boost::recursive_mutex manager_lock_;
+    mutable std::recursive_mutex manager_lock_;
 };
 
 template<typename T>
@@ -38,7 +41,7 @@ public:
     ObjectIDType manager_new() {
         ObjectIDType id(0);
         {
-            boost::recursive_mutex::scoped_lock lock(manager_lock_);
+            std::lock_guard<std::recursive_mutex> lock(manager_lock_);
             id = NewIDGenerator()();
             objects_.insert(std::make_pair(id, typename ObjectType::ptr(new ObjectType((Derived*)this, id))));
         }
@@ -50,7 +53,7 @@ public:
 
     void manager_delete(ObjectIDType id) {
         if(manager_contains(id)) {
-            boost::recursive_mutex::scoped_lock lock(manager_lock_);
+            std::lock_guard<std::recursive_mutex> lock(manager_lock_);
 
             ObjectType& obj = *objects_[id];
             signal_pre_delete_(obj, id);
@@ -62,7 +65,7 @@ public:
     }
 
     ObjectType& manager_get(ObjectIDType id) {
-        boost::recursive_mutex::scoped_lock lock(manager_lock_);
+        std::lock_guard<std::recursive_mutex> lock(manager_lock_);
 
         if(!container::contains(objects_, id)) {
             throw NoSuchObjectError(typeid(ObjectType).name());
@@ -72,7 +75,7 @@ public:
     }
 
     const ObjectType& manager_get(ObjectIDType id) const {
-        boost::recursive_mutex::scoped_lock lock(manager_lock_);
+        std::lock_guard<std::recursive_mutex> lock(manager_lock_);
         if(!container::contains(objects_, id)) {
             throw NoSuchObjectError(typeid(ObjectType).name());
         }

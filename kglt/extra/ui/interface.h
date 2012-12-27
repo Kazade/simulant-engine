@@ -1,6 +1,8 @@
 #ifndef INTERFACE_H
 #define INTERFACE_H
 
+#include "kazbase/unicode/unicode.h"
+
 #include "../../generic/managed.h"
 #include "../../generic/manager.h"
 
@@ -8,6 +10,7 @@
 #include"../../types.h"
 
 #include "widgets/label.h"
+#include "font.h"
 
 namespace kglt {
 namespace extra {
@@ -23,7 +26,7 @@ class Interface :
 
 public:
     Interface(Scene& scene, uint32_t width_in_pixels, uint32_t height_in_pixels);
-    void load_font(const std::string& ttf_file, uint8_t font_height);
+    unicode load_font(const std::string& ttf_file, uint8_t font_height);
 
     LabelID new_label();
     Label& label(LabelID l);
@@ -43,11 +46,29 @@ public:
 
     Scene& scene() { return scene_; }
 
+    unicode default_font() const { return default_font_; }
+    uint16_t default_size() const { return default_size_; }
+
+    uint16_t width_in_pixels() const { return width_; }
+    uint16_t height_in_pixels() const { return height_; }
+
+    Font::ptr _font(const unicode& name, uint16_t size) const { return fonts_.at(name).at(size); }
+
+    SceneGroupID scene_group_id() const { return scene_group_; }
 private:
     Scene& scene_;
 
+    SceneGroupID scene_group_;
+    CameraID camera_;
+
     uint32_t width_;
     uint32_t height_;
+
+    std::map<unicode, std::map<uint16_t, Font::ptr> > fonts_;
+    unicode default_font_;
+    uint16_t default_size_;
+
+    friend class Widget;
 };
 
 }

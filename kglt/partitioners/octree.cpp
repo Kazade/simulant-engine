@@ -71,6 +71,11 @@ void Octree::grow(const Boundable *object) {
         )
     );
 
+    if(obj_diameter < kmEpsilon) {
+        L_DEBUG("Not adding object to the octree because it has no volume");
+        return;
+    }
+
     if(!root_) {
         L_DEBUG("Creating root node");
         /*

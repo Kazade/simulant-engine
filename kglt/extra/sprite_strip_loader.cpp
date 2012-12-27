@@ -60,7 +60,7 @@ std::vector<TextureID> SpriteStripLoader::load_frames() {
         tex.data().assign(data.begin(), data.end()); //Copy the frame data
 
         //Upload the texture in the idle handler
-        scene_.window().idle().add_once(sigc::bind(sigc::mem_fun(&tex, &kglt::Texture::upload), true, true, true));
+        scene_.window().idle().add_once(sigc::bind(sigc::mem_fun(&tex, &kglt::Texture::upload), true, true, true, false));
 
         results.push_back(tex.id()); //Store the ID
     }

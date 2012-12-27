@@ -302,6 +302,8 @@ void GenericRenderer::set_blending_mode(BlendType type) {
         break;
         case BLEND_MODULATE: glBlendFunc(GL_DST_COLOR, GL_ZERO);
         break;
+        case BLEND_ONE_ONE_MINUS_ALPHA: glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        break;
     default:
         throw ValueError("Invalid blend type specified");
     }

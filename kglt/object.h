@@ -59,6 +59,7 @@ public:
 
     void set_position(const kmVec3& pos) {
         kmVec3Assign(&position_, &pos);
+        update_from_parent();
     }
 
     const kmVec3& position() const { return position_; }

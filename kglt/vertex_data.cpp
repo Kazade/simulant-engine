@@ -220,6 +220,18 @@ void VertexData::diffuse(const Colour& colour) {
     diffuse(colour.r, colour.g, colour.b, colour.a);
 }
 
+void VertexData::move_to_start() {
+    move_to(0);
+}
+
+void VertexData::move_to_end() {
+    move_to(data_.size());
+}
+
+void VertexData::move_by(int16_t amount) {
+    cursor_position_ += amount;
+}
+
 void VertexData::move_to(uint16_t index) {
     if(index > data_.size()) {
         throw std::out_of_range("Tried to move outside the range of the data");

@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
 
     ui::Interface::ptr interface = ui::Interface::create(scene, 800, 600);
     interface->load_font("sample_data/sample.ttf", 12);
-
+/*
     //Create a label
     ui::LabelID label_id = interface->new_label();
     ui::Label& label = interface->label(label_id);
@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
     label.set_foreground_colour(kglt::Colour(1.0, 1.0, 0.0, 1.0));
     label.set_text("Score: 8739204");
     label.set_position(ui::Ratio(0.02), ui::Ratio(0.9));
-
+*/
     while(window->update()) {
         background->layer(0).scroll_x(0.1 * window->delta_time());
         background->layer(1).scroll_x(0.2 * window->delta_time());

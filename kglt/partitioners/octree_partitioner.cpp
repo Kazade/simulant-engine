@@ -79,8 +79,10 @@ std::vector<SubEntity::ptr> OctreePartitioner::geometry_visible_from(CameraID ca
         //Go through the objects
         for(const Boundable* obj: node->objects()) {
             if(container::contains(boundable_to_subentity_, obj)) {
-                //Build a list of visible subentities
-                results.push_back(boundable_to_subentity_[obj]);
+                if(boundable_to_subentity_[obj]->_parent().scene_group().id() == scene_group_id) {
+                    //Build a list of visible subentities
+                    results.push_back(boundable_to_subentity_[obj]);
+                }
             }
         }
     }

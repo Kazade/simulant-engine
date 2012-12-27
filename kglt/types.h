@@ -23,6 +23,17 @@ struct Vec4 : public kmVec4 {
     }
 };
 
+struct Vec2 : public kmVec2 {
+    Vec2() {
+        x = 0.0;
+        y = 0.0;
+    }
+
+    Vec2(float x, float y) {
+        kmVec2Fill(this, x, y);
+    }
+};
+
 struct Vec3 : public kmVec3 {
     Vec3() {
         kmVec3Zero(this);
@@ -31,14 +42,12 @@ struct Vec3 : public kmVec3 {
     Vec3(float x, float y, float z) {
         kmVec3Fill(this, x, y, z);
     }
-};
 
-struct Vec2 : public kmVec2 {
-    Vec2() {
-        x = 0.0;
-        y = 0.0;
+    Vec3(const Vec2& v2, float z) {
+        kmVec3Fill(this, v2.x, v2.y, z);
     }
 };
+
 
 enum MeshArrangement {
     MESH_ARRANGEMENT_POINTS,

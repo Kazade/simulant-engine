@@ -259,3 +259,6 @@ kglt/extra/ui/font.cpp
 kglt/extra/ui/widgets/label.h
 kglt/extra/ui/widgets/label.cpp
 kglt/extra/ui/widget.cpp
+kglt/extra/ui/text.h
+kglt/extra/ui/text.cpp
+kazbase/unicode/unicode.cpp

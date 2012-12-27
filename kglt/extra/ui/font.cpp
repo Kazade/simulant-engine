@@ -1,4 +1,7 @@
 #include <freetype/ftglyph.h>
+#include <freetype/ftlcdfil.h>
+
+#include <tr1/functional>
 
 #include "kazbase/exceptions.h"
 #include "kazbase/list_utils.h"
@@ -19,6 +22,7 @@ struct FreeTypeInitializer {
      */
     FreeTypeInitializer() {
         FT_Init_FreeType(&ftlib);
+        FT_Library_SetLcdFilter(ftlib, FT_LCD_FILTER_LIGHT);
     }
 
     ~FreeTypeInitializer() {
@@ -30,6 +34,12 @@ struct FreeTypeInitializer {
 
 static FreeTypeInitializer ft;
 
+uint16_t get_kerning_x(FT_Face face, char32_t left, char32_t right) {
+    FT_Vector result;
+    FT_Get_Kerning(face, left, right, FT_KERNING_DEFAULT, &result);
+    return result.x;
+}
+
 Font::Font(Interface& interface, const std::string &path, uint8_t height):
     interface_(interface),
     ttf_file_(path),
@@ -37,7 +47,7 @@ Font::Font(Interface& interface, const std::string &path, uint8_t height):
     current_texture_(0),
     current_texture_row_(0),
     vertical_texture_rows_(FONT_TEXTURE_SIZE / height),
-    row_next_left_(0) {
+    row_next_left_(1) {
 
     if(FT_New_Face(ft.ftlib, ttf_file_.c_str(), 0, &face_) != 0) {
         throw IOError("Unable to load font: " + path);
@@ -51,11 +61,9 @@ Font::Font(Interface& interface, const std::string &path, uint8_t height):
     textures_.push_back(
         tex.id()
     );
-
-    //FIXME: Create the initial texture of FONT_TEXTURE_SIZE x FONT_TEXTURE_SIZE
 }
 
-const CharacterInfo& Font::info_for_char(wchar_t c) {
+const CharacterInfo& Font::info_for_char(char32_t c) {
     /*
      * Loads a glyph and stores it in a texture. Returns all the data
      * needed to render the glyph.
@@ -65,7 +73,7 @@ const CharacterInfo& Font::info_for_char(wchar_t c) {
         return info_cache_[c];
     }
 
-    if(FT_Load_Glyph(face_, FT_Get_Char_Index(face_, c), FT_LOAD_DEFAULT) != 0) {
+    if(FT_Load_Glyph(face_, FT_Get_Char_Index(face_, c), FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT) != 0) {
         throw std::runtime_error("Unable to load glyph for character");
     }
 
@@ -74,17 +82,17 @@ const CharacterInfo& Font::info_for_char(wchar_t c) {
         throw std::runtime_error("Unable to load glyph for character");
     }
 
-    FT_Glyph_To_Bitmap(&glyph, ft_render_mode_normal, 0, 1);
+    FT_Glyph_To_Bitmap(&glyph, FT_RENDER_MODE_NORMAL, 0, 1);
 
     FT_BitmapGlyph bitmap_glyph = (FT_BitmapGlyph) glyph;
     FT_Bitmap& bitmap = bitmap_glyph->bitmap;
 
     CharacterInfo new_info;
-    new_info.advance_x = face_->glyph->advance.x >> 6;
+    new_info.advance_x = face_->glyph->metrics.horiAdvance >> 6;
     new_info.height = face_->glyph->metrics.height >> 6;
     new_info.width = face_->glyph->metrics.width >> 6;
     new_info.offset_x = face_->glyph->metrics.horiBearingX >> 6;
-    new_info.offset_y = face_->glyph->metrics.horiBearingY >> 6;
+    new_info.offset_y = ((face_->glyph->metrics.horiBearingY - face_->glyph->metrics.height) >> 6);
 
     /*
      * Create a new texture and load in the bitmap data
@@ -96,8 +104,12 @@ const CharacterInfo& Font::info_for_char(wchar_t c) {
 
     for(uint16_t j = 0; j < bitmap.rows; ++j) {
         for(uint16_t i = 0; i < bitmap.width; ++i) {
-            uint16_t idx = 4 * (i + (j * bitmap.width));
-            data[idx] = data[idx+1] = data[idx+2] = data[idx+3] = bitmap.buffer[i + (bitmap.width * j)];
+            uint16_t idx = (tex.bpp() / 8) * (i + (j * bitmap.width));
+            uint16_t source_idx = (j * bitmap.width) + i;
+            data[idx] = data[idx + 1] = data[idx + 2] = bitmap.buffer[source_idx];
+            if(tex.bpp() == 32) {
+                data[idx + 3] = data[idx];
+            }
         }
     }
 
@@ -126,40 +138,52 @@ const CharacterInfo& Font::info_for_char(wchar_t c) {
             current_texture_row_ = 0;
         }
         row_next_left_ = 0;
-        x_offset = 0;
+        x_offset = 1;
     }
 
     // Blit the glyph to the texture
-    uint16_t y_offset = current_texture_row_ * font_height_;
-    dest.sub_texture(tex, x_offset, y_offset);
+    uint16_t y_offset = current_texture_row_ * (face_->size->metrics.height);
+    dest.sub_texture(tex.id(), x_offset, y_offset);
+    dest.upload(false, false, false, /*linear=*/true);
 
     // Store the texture ID for this glyph
     new_info.texture = textures_[current_texture_];
 
     // Calculate the texture coordinates for the glyph
     kmVec2Fill(&new_info.texture_coordinates[0],
-        float(row_next_left_) / float(FONT_TEXTURE_SIZE),
-        float(current_texture_row_ + font_height_) / float(FONT_TEXTURE_SIZE)
+        float(x_offset) / float(FONT_TEXTURE_SIZE),
+        float(y_offset + tex.height()) / float(FONT_TEXTURE_SIZE)
     );
 
     kmVec2Fill(&new_info.texture_coordinates[1],
-        float(row_next_left_ + tex.width()) / float(FONT_TEXTURE_SIZE),
-        float(current_texture_row_ + font_height_) / float(FONT_TEXTURE_SIZE)
+        float(x_offset + tex.width()) / float(FONT_TEXTURE_SIZE),
+        float(y_offset + tex.height()) / float(FONT_TEXTURE_SIZE)
     );
 
     kmVec2Fill(&new_info.texture_coordinates[2],
-        float(row_next_left_ + tex.width()) / float(FONT_TEXTURE_SIZE),
-        float(current_texture_row_) / float(FONT_TEXTURE_SIZE)
+        float(x_offset + tex.width()) / float(FONT_TEXTURE_SIZE),
+        float(y_offset) / float(FONT_TEXTURE_SIZE)
     );
 
     kmVec2Fill(&new_info.texture_coordinates[3],
-        float(row_next_left_) / float(FONT_TEXTURE_SIZE),
-        float(current_texture_row_) / float(FONT_TEXTURE_SIZE)
+        float(x_offset) / float(FONT_TEXTURE_SIZE),
+        float(y_offset) / float(FONT_TEXTURE_SIZE)
     );
+    row_next_left_ += new_info.width + 1;
+
+    new_info.kern_x = std::bind(get_kerning_x, face_, c, std::tr1::placeholders::_1);
 
     //Cache this glyph
     info_cache_[c] = new_info;
     return info_cache_[c];
+}
+
+unicode Font::family_name() const {
+    return std::string(face_->family_name);
+}
+
+unicode Font::style_name() const {
+    return std::string(face_->style_name);
 }
 
 }

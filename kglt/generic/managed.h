@@ -54,6 +54,15 @@ public:
     }
 
     template<typename U, typename V, typename W>
+    static typename Managed<T>::ptr create(const U& p1, const V& p2, const W& p3) {
+        typename Managed<T>::ptr instance = typename Managed<T>::ptr(new T(p1, p2, p3));
+        if(!instance->init()) {
+            throw InstanceInitializationError();
+        }
+        return instance;
+    }
+
+    template<typename U, typename V, typename W>
     static typename Managed<T>::ptr create(U& p1, const V& p2, const W& p3) {
         typename Managed<T>::ptr instance = typename Managed<T>::ptr(new T(p1, p2, p3));
         if(!instance->init()) {

@@ -1,4 +1,4 @@
-#include <boost/thread/thread.hpp>
+#include <thread>
 
 #include "glee/GLee.h"
 #include "window_base.h"
@@ -59,7 +59,7 @@ bool WindowBase::update() {
 
     swap_buffers();
 
-    boost::this_thread::sleep(boost::posix_time::milliseconds(10));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
     
     return is_running_;
 }

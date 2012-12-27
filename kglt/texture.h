@@ -23,6 +23,7 @@ public:
 
     Texture(Scene* scene, TextureID id):
         generic::Identifiable<TextureID>(id),
+        scene_(*scene),
         width_(0),
         height_(0),
         bpp_(32),
@@ -32,9 +33,10 @@ public:
 
     void set_bpp(uint32_t bits=32);
     void resize(uint32_t width, uint32_t height);
-    void upload(bool free_after=true,
+    void upload(bool free_after=false,
                 bool generate_mipmaps=true,
-                bool repeat=true); //Upload to GL, initializes the tex ID
+                bool repeat=true,
+                bool linear=false); //Upload to GL, initializes the tex ID
     void free(); //Frees the data used to construct the texture
 
     uint32_t width() const { return width_; }
@@ -42,7 +44,12 @@ public:
     uint32_t bpp() const { return bpp_; }
     Texture::Data& data() { return data_; }
 
+    void sub_texture(TextureID src, uint16_t offset_x, uint16_t offset_y);
+
+    Scene& scene() { return scene_; }
 private:
+    Scene& scene_;
+
     uint32_t width_;
     uint32_t height_;
     uint32_t bpp_;

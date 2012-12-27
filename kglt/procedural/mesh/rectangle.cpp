@@ -11,6 +11,8 @@ SubMeshIndex rectangle(kglt::Mesh& mesh, float width, float height, float x_offs
 
     uint16_t offset = mesh.shared_data().count();
 
+    mesh.shared_data().move_to_end();
+
     //Build some shared vertex data
     mesh.shared_data().position(x_offset + (-width / 2.0), y_offset + (-height / 2.0), z_offset);
     mesh.shared_data().diffuse(kglt::Colour::white);

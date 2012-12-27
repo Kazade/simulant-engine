@@ -7,6 +7,7 @@
 #include <string>
 #include <cstdint>
 #include <map>
+#include "kazbase/unicode/unicode.h"
 
 #include "../../generic/managed.h"
 #include "../../types.h"
@@ -18,15 +19,19 @@ namespace ui {
 class Interface;
 
 struct CharacterInfo {
-    uint8_t offset_x;
-    uint8_t offset_y;
-    uint8_t width;
-    uint8_t height;
-    uint8_t advance_x;
+    float offset_x;
+    float offset_y;
+    float width;
+    float height;
+    float advance_x;
 
     TextureID texture;
     // bottom-left, bottom-right, top-right, top-left
     kmVec2 texture_coordinates[4];
+
+    //Functions to call to get kerning information
+    std::function<int16_t (char32_t)> kern_x;
+    std::function<int16_t (char32_t)> kern_y;
 };
 
 const int FONT_TEXTURE_SIZE = 512;
@@ -36,8 +41,12 @@ class Font :
 public:
     Font(Interface& interface, const std::string& path, uint8_t height);
 
-    const CharacterInfo& info_for_char(wchar_t c);
+    const CharacterInfo& info_for_char(char32_t c);
 
+    unicode family_name() const;
+    unicode style_name() const;
+
+    Interface& interface() { return interface_; }
 private:
     Interface& interface_;
 
@@ -52,7 +61,7 @@ private:
     std::vector<TextureID> textures_;
     FT_Face face_;
 
-    std::map<wchar_t, CharacterInfo> info_cache_;
+    std::map<char32_t, CharacterInfo> info_cache_;
 };
 
 }

@@ -83,7 +83,8 @@ enum BlendType {
     BLEND_ADD,
     BLEND_MODULATE,
     BLEND_COLOUR,
-    BLEND_ALPHA
+    BLEND_ALPHA,
+    BLEND_ONE_ONE_MINUS_ALPHA
 };
 
 class MaterialPass {

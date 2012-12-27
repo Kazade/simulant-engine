@@ -2,8 +2,11 @@
 #include <stdexcept>
 #include <boost/lexical_cast.hpp>
 
+#include "kazbase/logging/logging.h"
+
 #include "glee/GLee.h"
 #include "texture.h"
+#include "scene.h"
 
 namespace kglt {
 
@@ -26,7 +29,37 @@ void Texture::resize(uint32_t width, uint32_t height) {
     data_.resize(width * height * (bpp_ / 8));
 }
 
-void Texture::upload(bool free_after, bool generate_mipmaps, bool repeat) {
+void Texture::sub_texture(TextureID src, uint16_t offset_x, uint16_t offset_y) {
+    Texture& source = scene().texture(src);
+
+    if(offset_x + source.width() > width() ||
+        offset_y + source.height() > height()) {
+        throw std::logic_error("Out of bounds error while blitting texture");
+    }
+
+    if(bpp() != source.bpp()) {
+        throw std::logic_error("Tried to blit texture of a different colour depth");
+    }
+
+    for(uint16_t j = 0; j < source.height(); ++j) {
+        for(uint16_t i = 0; i < source.width(); ++i) {
+            uint16_t idx = ((width() * (offset_y + j)) + (offset_x + i)) * (bpp() / 8);
+            uint16_t source_idx = ((source.width() * j) + i) * (bpp() / 8);
+
+            data()[idx] = source.data()[source_idx];
+            data()[idx+1] = source.data()[source_idx+1];
+            data()[idx+2] = source.data()[source_idx+2];
+            if(bpp() == 32) {
+                data()[idx+3] = source.data()[source_idx+3];
+            }
+        }
+    }
+
+    //FIXME: SHould use glTexSubImage
+    upload();
+}
+
+void Texture::upload(bool free_after, bool generate_mipmaps, bool repeat, bool linear) {
     assert(glGetError() == GL_NO_ERROR);
 
     if(!gl_tex()) {
@@ -43,8 +76,13 @@ void Texture::upload(bool free_after, bool generate_mipmaps, bool repeat) {
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     }
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    if(!linear) {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    } else {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    }
 
     if(generate_mipmaps) {
         glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);

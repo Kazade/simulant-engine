@@ -46,6 +46,7 @@ public:
 
     void clear();
     void move_to_start();
+    void move_by(int16_t amount);
     void move_to(uint16_t index);
     void move_to_end();
     void move_next();

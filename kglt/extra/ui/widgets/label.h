@@ -5,6 +5,7 @@
 #include "../../../generic/managed.h"
 #include "../widget.h"
 #include "../types.h"
+#include "../text.h"
 
 namespace kglt {
 namespace extra {
@@ -18,7 +19,12 @@ public:
     Label(Interface* interface, LabelID id);
     void set_text(const std::string& text);
 
-    std::string text_;
+protected:
+    void on_resize() override;
+    void on_foreground_colour_changed() override;
+
+private:
+    Text::ptr text_;
 };
 
 }
