@@ -58,8 +58,9 @@ void ShaderParams::set_mat4x4_array(const std::string& uniform_name, const std::
     program_.set_uniform(uniform_name, matrices);
 }
 
-ShaderProgram::ShaderProgram(Scene *scene, ShaderID id):
+ShaderProgram::ShaderProgram(ResourceManager* resource_manager, ShaderID id):
     generic::Identifiable<ShaderID>(id),
+    Resource(resource_manager),
     program_id_(0),
     params_(*this) {
 

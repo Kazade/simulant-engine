@@ -50,7 +50,7 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
     std::string arg_1 = str::upper(args[1]);
 
     if(type == "TEXTURE_UNIT") {
-        TextureID tex_id = kglt::create_texture_from_file(mat.scene().window(), str::strip(args[1], "\""));
+        TextureID tex_id = kglt::create_texture_from_file(mat.resource_manager().window(), str::strip(args[1], "\""));
         pass->set_texture_unit(pass->texture_unit_count(), tex_id);
     } else if(type == "ITERATION") {
         if(arg_1 == "ONCE") {
@@ -65,7 +65,7 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
             throw SyntaxError("Wrong number of arguments for SET(ATTRIBUTE) command");
         }
 
-        ShaderProgram& shader = mat.scene().shader(pass->shader());
+        ShaderProgram& shader = mat.resource_manager().shader(pass->shader());
         std::string variable_name = str::strip(args[2], "\"");
         if(arg_1 == "POSITION") {
             shader.params().register_attribute(SP_ATTR_VERTEX_POSITION, variable_name);
@@ -103,7 +103,7 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
         }
 
     } else if(type == "AUTO_UNIFORM") {
-        ShaderProgram& shader = mat.scene().shader(pass->shader());
+        ShaderProgram& shader = mat.resource_manager().shader(pass->shader());
         std::string variable_name = str::strip(args[2], "\"");
 
         if(arg_1 == "MODELVIEW_PROJECTION_MATRIX") {
@@ -147,7 +147,7 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
 }
 
 void MaterialScript::handle_data_block(Material& mat, const std::string& data_type, const std::vector<std::string>& lines, MaterialPass* pass) {
-    ShaderProgram& shader = mat.scene().shader(pass->shader());
+    ShaderProgram& shader = mat.resource_manager().shader(pass->shader());
 
     if(str::upper(data_type) == "VERTEX") {
         std::string source = str::join(lines, "\n");
@@ -211,7 +211,7 @@ void MaterialScript::handle_block(Material& mat,
         assert(current_technique); //Shouldn't happen, should be caught by parent check above
 
         //Create the pass with the default shader
-        uint32_t pass_number = current_technique->new_pass(mat.scene().new_shader());
+        uint32_t pass_number = current_technique->new_pass(mat.resource_manager().new_shader());
         current_pass = &current_technique->pass(pass_number);
     }
 
@@ -257,7 +257,7 @@ void MaterialScript::handle_block(Material& mat,
             }
 
             if(end_block_type == "PASS") {
-                ShaderProgram& shader = mat.scene().shader(current_pass->shader());
+                ShaderProgram& shader = mat.resource_manager().shader(current_pass->shader());
 
                 //Apply any staged uniforms
                 apply_staged_uniforms(shader);

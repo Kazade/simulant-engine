@@ -12,10 +12,13 @@
 #include "kazmath/kazmath.h"
 #include "kazbase/list_utils.h"
 
+#include "resource.h"
 #include "vertex_data.h"
 #include "types.h"
 
 namespace kglt {
+
+class ResourceManager;
 
 typedef uint16_t SubMeshIndex;
 
@@ -76,11 +79,12 @@ private:
 
 class Mesh :
     public MeshInterface,
+    public Resource,
     public Managed<Mesh>,
     public generic::Identifiable<MeshID> {
 
 public:
-    Mesh(Scene* scene, MeshID id);
+    Mesh(ResourceManager* resource_manager, MeshID id);
 
     VertexData& shared_data() {
         return shared_data_;
@@ -101,8 +105,6 @@ public:
     }
 
 private:
-    Scene& scene_;
-
     VertexData shared_data_;
     std::vector<SubMesh::ptr> submeshes_;
     std::map<SubMeshIndex, SubMesh::ptr> submeshes_by_index_;

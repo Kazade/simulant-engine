@@ -8,13 +8,13 @@
 #include <tr1/memory>
 
 #include "kazmath/mat4.h"
+#include "resource.h"
 #include "loadable.h"
 #include "generic/identifiable.h"
 #include "types.h"
 
 namespace kglt {
 
-class Scene;
 class Material;
 
 class TextureUnit {
@@ -175,12 +175,14 @@ private:
 };
 
 class Material :
-    public generic::Identifiable<MaterialID>,
-    public Loadable {
+    public Resource,
+    public Loadable,
+    public generic::Identifiable<MaterialID> {
+
 public:
     typedef std::tr1::shared_ptr<Material> ptr;
 
-    Material(Scene* scene, MaterialID mat_id);
+    Material(ResourceManager* resource_manager, MaterialID mat_id);
     MaterialTechnique& technique(const std::string& scheme=DEFAULT_MATERIAL_SCHEME);
     MaterialTechnique& new_technique(const std::string& scheme);
     bool has_technique(const std::string& scheme) const { return techniques_.find(scheme) != techniques_.end(); }
@@ -193,9 +195,7 @@ public:
         }
     }
 
-    Scene& scene() { return scene_; }
 private:
-    Scene& scene_;
     std::map<std::string, MaterialTechnique::ptr> techniques_;
 };
 

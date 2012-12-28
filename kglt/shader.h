@@ -13,6 +13,7 @@
 #include "kazmath/mat3.h"
 #include "kazmath/vec3.h"
 
+#include "resource.h"
 #include "loadable.h"
 #include "generic/identifiable.h"
 #include "types.h"
@@ -159,13 +160,14 @@ enum ShaderType {
 };
 
 class ShaderProgram :
+    public Resource,
     public Loadable,
     public generic::Identifiable<ShaderID> {
 
 public:
     typedef std::tr1::shared_ptr<ShaderProgram> ptr;
 
-    ShaderProgram(Scene* scene, ShaderID id);
+    ShaderProgram(ResourceManager* resource_manager, ShaderID id);
     ~ShaderProgram();
 
     void activate();

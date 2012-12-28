@@ -9,8 +9,7 @@ namespace kglt {
 
 Scene::Scene(WindowBase* window):
     Object(nullptr),    
-    ResourceManager(nullptr),
-    window_(window),
+    ResourceManager(window, nullptr),
     default_camera_(0),
     default_scene_group_(0),
     default_texture_(0),
@@ -92,96 +91,6 @@ void Scene::delete_entity(EntityID e) {
 }
 
 
-Mesh& ResourceManager::mesh(MeshID m) {
-    return const_cast<Mesh&>(static_cast<const Scene*>(this)->mesh(m));
-}
-
-const Mesh& ResourceManager::mesh(MeshID m) const {
-    return TemplatedManager<Scene, Mesh, MeshID>::manager_get(m);
-}
-
-MeshID ResourceManager::new_mesh() {
-    MeshID result = TemplatedManager<Scene, Mesh, MeshID>::manager_new();
-    return result;
-}
-
-bool ResourceManager::has_mesh(MeshID m) const {
-    return TemplatedManager<Scene, Mesh, MeshID>::manager_contains(m);
-}
-
-void ResourceManager::delete_mesh(MeshID mid) {
-    return TemplatedManager<Scene, Mesh, MeshID>::manager_delete(mid);
-}
-
-MaterialID ResourceManager::new_material(MaterialID clone_from) {
-    MaterialID result = TemplatedManager<Scene, Material, MaterialID>::manager_new();
-    if(clone_from) {
-        kglt::Material& existing = material(clone_from);
-        kglt::Material& new_mat = material(result);
-
-        for(uint32_t i = 0; i < existing.technique_count(); ++i) {
-            //FIXME: handle multiple schemes
-            MaterialTechnique& old_tech = existing.technique();
-            MaterialTechnique& new_tech = new_mat.technique();
-            for(uint32_t j = 0; j < old_tech.pass_count(); ++j) {
-                MaterialPass& old_pass = old_tech.pass(j);
-                uint32_t pass_id = new_tech.new_pass(old_pass.shader());
-                MaterialPass& new_pass = new_tech.pass(pass_id);
-
-                new_pass.set_blending(old_pass.blending());
-                new_pass.set_iteration(old_pass.iteration(), old_pass.max_iterations());
-                for(uint32_t k = 0; k < old_pass.texture_unit_count(); ++k) {
-                    new_pass.set_texture_unit(k, old_pass.texture_unit(k).texture());
-                }
-                //FIXME: Copy animated texture unit and other properties
-            }
-        }
-    }
-    return result;
-}
-
-Material& ResourceManager::material(MaterialID mid) {
-    return TemplatedManager<Scene, Material, MaterialID>::manager_get(mid);
-}
-
-void ResourceManager::delete_material(MaterialID mid) {
-    TemplatedManager<Scene, Material, MaterialID>::manager_delete(mid);
-}
-
-TextureID ResourceManager::new_texture() {
-    return TemplatedManager<Scene, Texture, TextureID>::manager_new();
-}
-
-void ResourceManager::delete_texture(TextureID tid) {
-    TemplatedManager<Scene, Texture, TextureID>::manager_delete(tid);
-}
-
-Texture& ResourceManager::texture(TextureID t) {
-    return TemplatedManager<Scene, Texture, TextureID>::manager_get(t);
-}
-
-
-ShaderProgram& ResourceManager::shader(ShaderID s) {
-    return TemplatedManager<Scene, ShaderProgram, ShaderID>::manager_get(s);
-}
-
-ShaderID ResourceManager::new_shader() {
-    return TemplatedManager<Scene, ShaderProgram, ShaderID>::manager_new();
-}
-
-void ResourceManager::delete_shader(ShaderID s) {
-    TemplatedManager<Scene, ShaderProgram, ShaderID>::manager_delete(s);
-}
-
-std::pair<ShaderID, bool> ResourceManager::find_shader(const std::string& name) {
-    std::map<std::string, ShaderID>::const_iterator it = shader_lookup_.find(name);
-    if(it == shader_lookup_.end()) {
-        return std::make_pair(ShaderID(), false);
-    }
-
-    return std::make_pair((*it).second, true);
-}
-
 CameraID Scene::new_camera() {
     return TemplatedManager<Scene, Camera, CameraID>::manager_new();
 }
@@ -254,7 +163,7 @@ void Scene::update(double dt) {
     /*
       Update all animated materials
     */
-    for(std::pair<MaterialID, Material::ptr> p: generic::TemplatedManager<Scene, Material, MaterialID>::objects_) {
+    for(std::pair<MaterialID, Material::ptr> p: MaterialManager::objects_) {
         p.second->update(dt);
     }
 
@@ -266,10 +175,6 @@ void Scene::update(double dt) {
 
 void Scene::render() {
     pipeline_->run();
-}
-
-MeshID Scene::_mesh_id_from_mesh_ptr(Mesh* mesh) {
-    return TemplatedManager<Scene, Mesh, MeshID>::_get_object_id_from_ptr(mesh);
 }
 
 }

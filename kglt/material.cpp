@@ -33,9 +33,9 @@ TextureUnit::TextureUnit(std::vector<TextureID> textures, double duration):
     kmMat4Identity(&texture_matrix_);
 }
 
-Material::Material(Scene *scene, MaterialID mat_id):
+Material::Material(ResourceManager *resource_manager, MaterialID mat_id):
     generic::Identifiable<MaterialID>(mat_id),
-    scene_(*scene) {
+    Resource(resource_manager) {
 
     new_technique(DEFAULT_MATERIAL_SCHEME); //Create the default technique
 }

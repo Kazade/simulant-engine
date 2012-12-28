@@ -4,9 +4,9 @@
 
 namespace kglt {
 
-Mesh::Mesh(Scene* scene, MeshID id):
-    generic::Identifiable<MeshID>(id),
-    scene_(*scene) {
+Mesh::Mesh(ResourceManager *resource_manager, MeshID id):
+    Resource(resource_manager),
+    generic::Identifiable<MeshID>(id) {
 
 }
 

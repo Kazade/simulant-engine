@@ -7,23 +7,24 @@
 #include "generic/identifiable.h"
 #include "loadable.h"
 #include "types.h"
+#include "resource.h"
 
 namespace kglt {
 
-class Scene;
-
 class Texture :
+    public Resource,
     public Loadable,
     public generic::Identifiable<TextureID> {
+
 public:
     typedef std::tr1::shared_ptr<Texture> ptr;
     typedef std::vector<uint8_t> Data;
 
     uint32_t gl_tex() const { return gl_tex_; }
 
-    Texture(Scene* scene, TextureID id):
+    Texture(ResourceManager* resource_manager, TextureID id):
+        Resource(resource_manager),
         generic::Identifiable<TextureID>(id),
-        scene_(*scene),
         width_(0),
         height_(0),
         bpp_(32),
@@ -46,10 +47,7 @@ public:
 
     void sub_texture(TextureID src, uint16_t offset_x, uint16_t offset_y);
 
-    Scene& scene() { return scene_; }
 private:
-    Scene& scene_;
-
     uint32_t width_;
     uint32_t height_;
     uint32_t bpp_;
