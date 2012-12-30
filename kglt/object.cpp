@@ -89,4 +89,41 @@ void Object::rotate_y(float amount) {
     update_from_parent();
 }
 
+kmMat4 Object::absolute_transformation() {
+    kmMat4 transform;
+    kmMat4RotationQuaternion(&transform, &absolute_orientation_);
+    kmMat4Translation(&transform, absolute_position().x, absolute_position().y, absolute_position().z);
+    return transform;
+}
+
+void Object::set_position(const kmVec3& pos) {
+    kmVec3Assign(&position_, &pos);
+    update_from_parent();
+}
+
+void Object::update_from_parent() {
+    if(!has_parent()) {
+        kmVec3Assign(&absolute_position_, &position_);
+        kmQuaternionAssign(&absolute_orientation_, &rotation_);
+    } else {
+        kmVec3Add(&absolute_position_, &parent().absolute_position_, &position_);
+        kmQuaternionAdd(&absolute_orientation_, &parent().absolute_orientation_, &rotation_);
+    }
+
+    std::for_each(children().begin(), children().end(), [](Object* x) { x->update_from_parent(); });
+}
+
+void Object::destroy_children() {
+    //If this looks weird, it's because when you destroy
+    //children the index changes so you need to gather them
+    //up first and then destroy them
+    std::vector<Object*> to_destroy;
+    for(uint32_t i = 0; i < child_count(); ++i) {
+        to_destroy.push_back(&child(i));
+    }
+    for(Object* o: to_destroy) {
+        o->destroy();
+    }
+}
+
 }

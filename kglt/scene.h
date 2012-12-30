@@ -3,7 +3,6 @@
 
 #include <sigc++/sigc++.h>
 #include <boost/any.hpp>
-#include <boost/thread/mutex.hpp>
 
 #include <stdexcept>
 #include <map>
@@ -12,19 +11,7 @@
 
 #include "types.h"
 #include "object.h"
-#include "mesh.h"
-#include "camera.h"
-#include "renderer.h"
-#include "texture.h"
-#include "shader.h"
-#include "viewport.h"
-#include "material.h"
-#include "light.h"
-#include "mesh.h"
-#include "entity.h"
-
 #include "resource_manager.h"
-#include "pipeline.h"
 
 #include "generic/visitor.h"
 #include "generic/manager.h"
@@ -115,21 +102,9 @@ private:
     sigc::signal<void, LightID> signal_light_created_;
     sigc::signal<void, LightID> signal_light_destroyed_;
 
-    Partitioner::ptr partitioner_;
-    void set_partitioner(Partitioner::ptr partitioner) {
-        assert(partitioner);
+    std::tr1::shared_ptr<Partitioner> partitioner_;
 
-        partitioner_ = partitioner;
-
-        assert(partitioner_);
-
-        //Keep the partitioner updated with new meshes and lights
-        signal_entity_created().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::add_entity));
-        signal_entity_destroyed().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::remove_entity));
-
-        signal_light_created().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::add_light));
-        signal_light_destroyed().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::remove_light));
-    }
+    void set_partitioner(std::tr1::shared_ptr<Partitioner> partitioner);
 
     void do_update(double dt) override {
         update_materials(dt);
@@ -168,7 +143,7 @@ private:
 
     void initialize_defaults();
 
-    Pipeline::ptr pipeline_;
+    std::tr1::shared_ptr<Pipeline> pipeline_;
 };
 
 }

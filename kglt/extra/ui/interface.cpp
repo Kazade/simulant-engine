@@ -1,4 +1,7 @@
 #include "../../scene.h"
+#include "../../camera.h"
+#include "../../pipeline.h"
+
 #include "interface.h"
 #include "font.h"
 #include "kazbase/string.h"

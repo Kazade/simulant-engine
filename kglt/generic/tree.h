@@ -134,7 +134,9 @@ public:
 
     template<typename Derived>
     Derived& root_as() {
-        return const_cast<Derived&>(static_cast<const T*>(this)->root_as<Derived>());
+        const T* const_this = static_cast<const T*>(this);
+        const Derived& const_ref = const_this->template root_as<Derived>();
+        return const_cast<Derived&>(const_ref);
     }
 
     template<typename Derived>

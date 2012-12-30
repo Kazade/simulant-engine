@@ -1,6 +1,9 @@
 #include "glee/GLee.h"
 #include "scene.h"
 #include "renderer.h"
+#include "camera.h"
+#include "pipeline.h"
+
 #include "partitioners/null_partitioner.h"
 #include "partitioners/octree_partitioner.h"
 
@@ -212,6 +215,21 @@ void Scene::update(double dt) {
 
 void Scene::render() {
     pipeline_->run();
+}
+
+void SubScene::set_partitioner(Partitioner::ptr partitioner) {
+    assert(partitioner);
+
+    partitioner_ = partitioner;
+
+    assert(partitioner_);
+
+    //Keep the partitioner updated with new meshes and lights
+    signal_entity_created().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::add_entity));
+    signal_entity_destroyed().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::remove_entity));
+
+    signal_light_created().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::add_light));
+    signal_light_destroyed().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::remove_light));
 }
 
 }

@@ -10,12 +10,6 @@
 
 namespace kglt {
 
-enum LightType {
-    LIGHT_TYPE_POINT,
-    LIGHT_TYPE_DIRECTIONAL,
-    LIGHT_TYPE_SPOT_LIGHT
-};
-
 class Light :
     public Object,
     public generic::Identifiable<LightID>,

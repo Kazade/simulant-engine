@@ -3,6 +3,8 @@
 #include "kazbase/logging/logging.h"
 #include "background.h"
 
+#include "../pipeline.h"
+#include "../camera.h"
 #include "../shortcuts.h"
 #include "../procedural/mesh.h"
 #include "../renderer.h"
@@ -28,6 +30,8 @@ BackgroundLayer::BackgroundLayer(Background &bg, const std::string& image_path):
 
         //All passes except the first should have alpha blending enabled
         mat.technique().pass(pass_id_).set_blending(BLEND_ALPHA);
+        mat.technique().pass(pass_id_).set_depth_test_enabled(false);
+        mat.technique().pass(pass_id_).set_depth_write_enabled(false);
     }
 
     //Finally set the texture on the new pass

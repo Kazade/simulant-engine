@@ -1,38 +1,23 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 PROJECT(kglt)
 
-#SET (CMAKE_C_COMPILER             "/usr/bin/clang")
-#SET (CMAKE_CXX_COMPILER             "/usr/bin/clang++")
+SET (CMAKE_C_COMPILER             "/usr/bin/clang")
+SET (CMAKE_CXX_COMPILER             "/usr/bin/clang++")
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_modules/")
 FIND_PACKAGE(PkgConfig)
 FIND_PACKAGE(KAZMATH REQUIRED)
 
-ADD_DEFINITIONS("-Wall -std=c++0x -g")
+ADD_DEFINITIONS("-Wall -g")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 ADD_DEFINITIONS("-DBOOST_NO_RVALUE_REFERENCES") #https://svn.boost.org/trac/boost/ticket/4521
 
 PKG_CHECK_MODULES(SDL sdl)
 PKG_CHECK_MODULES(GL gl)
 PKG_CHECK_MODULES(SIGC sigc++-2.0)
 
-FIND_PACKAGE(Boost COMPONENTS system filesystem thread date_time REQUIRED)
+FIND_PACKAGE(Boost COMPONENTS system filesystem date_time REQUIRED)
 FIND_PACKAGE(Freetype REQUIRED)
-
-MACRO (ADD_PCH_RULE  _header_filename _src_list)
-        SET(_gch_filename "${_header_filename}.gch")
-        LIST(APPEND ${_src_list} ${_gch_filename})
-        SET (_args ${CMAKE_CXX_FLAGS})
-        LIST(APPEND _args -c ${_header_filename} -o ${_gch_filename})
-        GET_DIRECTORY_PROPERTY(DIRINC INCLUDE_DIRECTORIES)
-        foreach (_inc ${DIRINC})
-                LIST(APPEND _args "-I" ${_inc})
-        endforeach(_inc ${DIRINC})
-        SEPARATE_ARGUMENTS(_args)
-        add_custom_command(OUTPUT ${_gch_filename}
-                   COMMAND rm -f ${_gch_filename}
-                   COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1} ${_args}
-                            DEPENDS ${_header_filename})
-ENDMACRO(ADD_PCH_RULE _header_filename _src_list)
 
 FILE(COPY ${CMAKE_SOURCE_DIR}/kglt/materials DESTINATION ${CMAKE_BINARY_DIR}/kglt)
 
@@ -54,7 +39,6 @@ LINK_LIBRARIES(
     ${KAZMATH_LIBRARIES}
     ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}
-    ${Boost_THREAD_LIBRARY}
     ${Boost_DATE_TIME_LIBRARY}
     ${FREETYPE_LIBRARY}
 )

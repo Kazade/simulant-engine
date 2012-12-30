@@ -1,6 +1,7 @@
 #ifndef MANAGER_H
 #define MANAGER_H
 
+#include <tr1/memory>
 #include <map>
 #include <stdexcept>
 #include <thread>
@@ -106,10 +107,10 @@ private:
     sigc::signal<void, ObjectType&, ObjectIDType> signal_pre_delete_;
 
 protected:
-    std::map<ObjectIDType, typename ObjectType::ptr> objects_;
+    std::map<ObjectIDType, std::tr1::shared_ptr<ObjectType> > objects_;
 
     ObjectIDType _get_object_id_from_ptr(ObjectType* ptr) {
-        for(std::pair<ObjectIDType, typename ObjectType::ptr> pair: objects_) {
+        for(std::pair<ObjectIDType, std::tr1::shared_ptr<ObjectType> > pair: objects_) {
             if(pair.second.get() == ptr) {
                 return pair.first;
             }

@@ -8,7 +8,11 @@
 #include "frustum.h"
 #include "material.h"
 #include "shader.h"
-
+#include "camera.h"
+#include "entity.h"
+#include "pipeline.h"
+#include "light.h"
+#include "mesh.h"
 #include "procedural/mesh.h"
 
 #endif

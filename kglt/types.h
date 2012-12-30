@@ -70,6 +70,12 @@ enum AvailablePartitioner {
     PARTITIONER_OCTREE
 };
 
+enum LightType {
+    LIGHT_TYPE_POINT,
+    LIGHT_TYPE_DIRECTIONAL,
+    LIGHT_TYPE_SPOT_LIGHT
+};
+
 typedef UniqueID<0> MeshID;
 typedef UniqueID<1> TextureID;
 typedef UniqueID<2> CameraID;
@@ -95,6 +101,8 @@ class Viewport;
 class Frustum;
 class WindowBase;
 class Material;
+class Pipeline;
+class Partitioner;
 
 }
 

@@ -4,12 +4,12 @@
 #include <sstream>
 #include <boost/algorithm/string/trim.hpp>
 
-#include "../utils/profiler/profiler.h"
-
 #include "../window.h"
 #include "../scene.h"
 #include "../mesh.h"
 #include "../types.h"
+#include "../light.h"
+#include "../camera.h"
 
 #include "kazbase/logging/logging.h"
 #include "kazbase/string.h"
@@ -162,8 +162,6 @@ void parse_entities(const std::string& entity_string, std::vector<EntityProperti
 }
 
 kmVec3 find_player_spawn_point(std::vector<EntityProperties>& entities) {
-    PROFILE_SCOPED();
-
     for(EntityProperties p: entities) {
         std::cout << p["classname"] << std::endl;
         if(p["classname"] == "info_player_start") {
@@ -181,8 +179,6 @@ kmVec3 find_player_spawn_point(std::vector<EntityProperties>& entities) {
 }
 
 void add_lights_to_scene(Scene& scene, const std::vector<EntityProperties>& entities) {
-    PROFILE_SCOPED();
-
     //Needed because the Quake 2 coord system is weird
     kmMat4 rotation;
     kmMat4RotationX(&rotation, kmDegreesToRadians(-90.0f));

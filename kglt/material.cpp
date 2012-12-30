@@ -34,8 +34,8 @@ TextureUnit::TextureUnit(std::vector<TextureID> textures, double duration):
 }
 
 Material::Material(ResourceManager *resource_manager, MaterialID mat_id):
-    generic::Identifiable<MaterialID>(mat_id),
-    Resource(resource_manager) {
+    Resource(resource_manager),
+    generic::Identifiable<MaterialID>(mat_id) {
 
     new_technique(DEFAULT_MATERIAL_SCHEME); //Create the default technique
 }

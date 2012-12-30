@@ -2,6 +2,7 @@
 #include "label.h"
 #include "../interface.h"
 #include "../../../scene.h"
+#include "../../../entity.h"
 
 namespace kglt {
 namespace extra {

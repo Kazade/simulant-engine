@@ -1,3 +1,4 @@
+#include "kazbase/unicode/unicode.h"
 
 #include "material_script.h"
 #include "kazbase/exceptions.h"
@@ -240,7 +241,7 @@ void MaterialScript::handle_block(Material& mat,
             if(block_type == "PASS") {
                 handle_data_block(mat, data_type, data, current_pass);
             } else {
-                throw SyntaxError("Line: " + current_line + std::string(". Block does not accept BEGIN_DATA commands"));
+                throw SyntaxError(unicode("Line: {0}. Block does not accept BEGIN_DATA commands").format(current_line).encode());
             }
         } else if(str::starts_with(line, "BEGIN")) {
             L_DEBUG("Found BEGIN block");
@@ -276,7 +277,7 @@ void MaterialScript::handle_block(Material& mat,
             } else if (block_type == "PASS") {
                 handle_pass_set_command(mat, args, current_pass);
             } else {
-                throw SyntaxError("Line: " + current_line + std::string(". Block does not accept SET commands"));
+                throw SyntaxError(unicode("Line: {0}. Block does not accept SET commands").format(current_line).encode());
             }
 
         }

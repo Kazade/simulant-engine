@@ -1,10 +1,9 @@
 #ifndef KGLT_OBJECT_H_INCLUDED
 #define KGLT_OBJECT_H_INCLUDED
 
-#include <iostream>
+#include <iosfwd>
 #include <cassert>
 #include <vector>
-#include <algorithm>
 #include <tr1/memory>
 #include <stdexcept>
 #include <boost/any.hpp>
@@ -50,18 +49,9 @@ public:
     virtual void rotate_y(float amount);
     virtual void rotate_z(float amount);
 
-    kmMat4 absolute_transformation() {
-        kmMat4 transform;
-        kmMat4RotationQuaternion(&transform, &absolute_orientation_);
-        kmMat4Translation(&transform, absolute_position().x, absolute_position().y, absolute_position().z);
-        return transform;
-    }
+    kmMat4 absolute_transformation();
 
-    void set_position(const kmVec3& pos) {
-        kmVec3Assign(&position_, &pos);
-        update_from_parent();
-    }
-
+    void set_position(const kmVec3& pos);
     const kmVec3& position() const { return position_; }
     const kmVec3& absolute_position() const { return absolute_position_; }
 
@@ -78,31 +68,10 @@ public:
 
     virtual void destroy() = 0;
 
-    void destroy_children() {
-        //If this looks weird, it's because when you destroy
-        //children the index changes so you need to gather them
-        //up first and then destroy them
-        std::vector<Object*> to_destroy;
-        for(uint32_t i = 0; i < child_count(); ++i) {
-            to_destroy.push_back(&child(i));
-        }
-        for(Object* o: to_destroy) {
-            o->destroy();
-        }
-    }
+    void destroy_children();
 
 protected:
-    void update_from_parent() {
-        if(!has_parent()) {
-            kmVec3Assign(&absolute_position_, &position_);
-            kmQuaternionAssign(&absolute_orientation_, &rotation_);
-        } else {
-            kmVec3Add(&absolute_position_, &parent().absolute_position_, &position_);
-            kmQuaternionAdd(&absolute_orientation_, &parent().absolute_orientation_, &rotation_);
-        }
-
-        std::for_each(children().begin(), children().end(), [](Object* x) { x->update_from_parent(); });
-    }
+    void update_from_parent();
 
 private:
     static uint64_t object_counter;

@@ -1,6 +1,7 @@
 #include "interface.h"
 #include "widget.h"
 #include "../../scene.h"
+#include "../../entity.h"
 #include "../../procedural/mesh.h"
 
 namespace kglt {

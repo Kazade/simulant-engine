@@ -4,6 +4,7 @@
 #include "../../scene.h"
 #include "../../procedural/mesh.h"
 #include "../../shortcuts.h"
+#include "../../entity.h"
 
 namespace kglt {
 namespace extra {

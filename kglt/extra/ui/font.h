@@ -51,8 +51,6 @@ private:
     Interface& interface_;
 
     std::string ttf_file_;
-    uint16_t font_height_;
-
     uint16_t current_texture_; //The current texture
     uint16_t current_texture_row_; //The current row, this increments when a glyph won't fit in the row
     uint16_t vertical_texture_rows_; //The number of rows in the texture

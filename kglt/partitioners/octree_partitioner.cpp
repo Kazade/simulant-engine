@@ -2,6 +2,10 @@
 #include "octree_partitioner.h"
 #include "../scene.h"
 
+#include "../light.h"
+#include "../entity.h"
+#include "../camera.h"
+
 namespace kglt {
 
 void OctreePartitioner::event_entity_changed(EntityID ent) {

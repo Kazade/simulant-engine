@@ -1,6 +1,7 @@
 #include "kglt/procedural/mesh.h"
 #include "kglt/shortcuts.h"
 #include "sprite.h"
+#include "../entity.h"
 
 namespace kglt {
 namespace extra {

@@ -43,7 +43,6 @@ uint16_t get_kerning_x(FT_Face face, char32_t left, char32_t right) {
 Font::Font(Interface& interface, const std::string &path, uint8_t height):
     interface_(interface),
     ttf_file_(path),
-    font_height_(height),    
     current_texture_(0),
     current_texture_row_(0),
     vertical_texture_rows_(FONT_TEXTURE_SIZE / height),

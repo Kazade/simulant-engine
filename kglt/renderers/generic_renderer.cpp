@@ -4,6 +4,9 @@
 
 #include "../shader.h"
 #include "../scene.h"
+#include "../camera.h"
+#include "../light.h"
+#include "../partitioner.h"
 
 #include "kazmath/mat4.h"
 #include "../utils/gl_error.h"
