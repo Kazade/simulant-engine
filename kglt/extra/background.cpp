@@ -109,7 +109,7 @@ Background::Background(Scene& scene, ViewportID viewport, BGResizeStyle style):
 
     //Add a pass for this background
     //FIXME: priority = -1000
-    scene_.pipeline().add_stage(subscene_, ortho_camera_, viewport_);
+    scene_.pipeline().add_stage(subscene_, ortho_camera_, viewport_, TextureID(), -100);
 
     mesh_id_ = subscene.new_mesh();
     Mesh& mesh = subscene.mesh(mesh_id_);

@@ -54,7 +54,7 @@ Font::Font(Interface& interface, const std::string &path, uint8_t height):
 
     FT_Set_Char_Size(face_, height << 6, height << 6, 96, 96);
 
-    Texture& tex = interface.scene().texture(interface.scene().new_texture());
+    Texture& tex = interface.subscene().texture(interface.subscene().new_texture());
     tex.resize(FONT_TEXTURE_SIZE, FONT_TEXTURE_SIZE);
 
     textures_.push_back(
@@ -96,7 +96,7 @@ const CharacterInfo& Font::info_for_char(char32_t c) {
     /*
      * Create a new texture and load in the bitmap data
      */
-    Texture& tex = interface_.scene().texture(interface_.scene().new_texture());
+    Texture& tex = interface_.subscene().texture(interface_.subscene().new_texture());
     tex.resize(bitmap.width, bitmap.rows);
 
     std::vector<uint8_t>& data = tex.data();
@@ -115,7 +115,7 @@ const CharacterInfo& Font::info_for_char(char32_t c) {
     /*
      * Get the current texture that is not full
      */
-    Texture& dest = interface_.scene().texture(textures_[current_texture_]);
+    Texture& dest = interface_.subscene().texture(textures_[current_texture_]);
 
     uint16_t x_offset = row_next_left_;
 
@@ -127,7 +127,7 @@ const CharacterInfo& Font::info_for_char(char32_t c) {
     if(row_next_left_ + bitmap.width >= FONT_TEXTURE_SIZE) {
         current_texture_row_++;
         if(current_texture_row_ >= this->vertical_texture_rows_) {
-            Texture& new_tex = interface_.scene().texture(interface_.scene().new_texture());
+            Texture& new_tex = interface_.subscene().texture(interface_.scene().new_texture());
             new_tex.resize(FONT_TEXTURE_SIZE, FONT_TEXTURE_SIZE);
 
             textures_.push_back(

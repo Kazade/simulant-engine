@@ -82,6 +82,9 @@ void ResourceManager::delete_texture(TextureID tid) {
 }
 
 Texture& ResourceManager::texture(TextureID t) {
+    if(!has_texture(t) && parent_) {
+        return parent_->texture(t);
+    }
     return TextureManager::manager_get(t);
 }
 

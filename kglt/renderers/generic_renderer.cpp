@@ -314,8 +314,6 @@ void GenericRenderer::set_blending_mode(BlendType type) {
 
 void GenericRenderer::render_subentity(SubEntity& buffer, CameraID camera) {
     glEnable(GL_CULL_FACE);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
 
     if(!buffer.index_data().count()) {
         return;
