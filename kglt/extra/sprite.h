@@ -1,7 +1,7 @@
 #ifndef ADDITIONAL_SPRITE_H
 #define ADDITIONAL_SPRITE_H
 
-#include "../generic/creator.h"
+#include "../generic/managed.h"
 #include "../scene.h"
 
 namespace kglt {
@@ -20,12 +20,12 @@ namespace extra {
 */
 
 class Sprite :
-    public generic::Creator<Sprite> {
+    public Managed<Sprite> {
 
 public:
     typedef std::tr1::shared_ptr<Sprite> ptr;
 
-    Sprite(Scene& scene);
+    Sprite(Scene& scene, SubSceneID subscene=DefaultSubSceneID);
 
     void add_animation(const std::string& anim_name, const std::vector<TextureID>& frames, double duration);
 
@@ -36,10 +36,11 @@ public:
 
     MaterialID material();
     Scene& scene() { return scene_; }
-
-    EntityID entity() { return entity_id_; }
+    SubSceneID subscene_id() const { return subscene_; }
+    EntityID entity_id() { return entity_id_; }
 private:
     Scene& scene_;
+    SubSceneID subscene_;
 
     std::string current_animation_;
     std::string next_animation_;

@@ -18,10 +18,10 @@ int main(int argc, char* argv[]) {
     kglt::Window::ptr window = kglt::Window::create(1024, 768);
     window->set_title("Quake 2 Renderer");
 
-    kglt::Scene& scene = window->scene();
-    scene.set_ambient_light(kglt::Colour(0.02, 0.02, 0.02, 1.0));
+    kglt::SubScene& subscene = window->scene().subscene();
+    subscene.set_ambient_light(kglt::Colour(0.02, 0.02, 0.02, 1.0));
 
-    scene.camera().set_perspective_projection(
+    subscene.camera().set_perspective_projection(
         45.0,
         float(window->width()) / float(window->height()),
         0.1,
@@ -35,27 +35,26 @@ int main(int argc, char* argv[]) {
     //window.loader_for("lighting.shader")->into(shader);
 
     //Load the Quake 2 map
-    window->loader_for("sample_data/sample.bsp")->into(scene);
+    window->loader_for("sample_data/sample.bsp")->into(window->scene());
 
     window->signal_key_down().connect(&on_key_down);
     window->signal_key_up().connect(&on_key_up);
 
     while(window->update()) {
         if(keys[kglt::KEY_CODE_LEFT]) {
-            scene.camera().rotate_y(-4.0 * window->delta_time());
+            subscene.camera().rotate_y(-4.0 * window->delta_time());
         }
 
         if(keys[kglt::KEY_CODE_RIGHT]) {
-            scene.camera().rotate_y(4.0 * window->delta_time());
+            subscene.camera().rotate_y(4.0 * window->delta_time());
         }
 
         if(keys[kglt::KEY_CODE_UP]) {
-            scene.camera().move_forward(100.0 * window->delta_time());
+            subscene.camera().move_forward(100.0 * window->delta_time());
         }
         if(keys[kglt::KEY_CODE_DOWN]) {
-            scene.camera().move_forward(-100.0 * window->delta_time());
+            subscene.camera().move_forward(-100.0 * window->delta_time());
         }
-
     }
     return 0;
 }

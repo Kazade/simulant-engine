@@ -18,7 +18,7 @@ void Label::set_text(const std::string& text) {
     text_ = Text::create(interface()._font(interface().default_font(), interface().default_size()), Vec2(this->padding().left, height), text);
     text_->set_colour(foreground_colour());
 
-    interface().scene().entity(text_->entity_id()).set_parent(&interface().scene().entity(entity_id()));
+    interface().subscene().entity(text_->entity_id()).set_parent(&interface().subscene().entity(entity_id()));
 }
 
 void Label::on_resize() {

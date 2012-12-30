@@ -6,7 +6,7 @@
 
 using namespace kglt;
 
-MeshID generate_test_mesh(kglt::Scene& scene) {
+MeshID generate_test_mesh(kglt::SubScene& scene) {
     kglt::MeshID mid = scene.new_mesh();
     kglt::Mesh& mesh = scene.mesh(mid);
 
@@ -57,7 +57,7 @@ SUITE(test_mesh) {
 
 TEST(basic_usage) {    
     kglt::Window::ptr window = kglt::Window::create();
-    kglt::Scene& scene = window->scene();
+    kglt::SubScene& scene = window->scene().subscene();
     Mesh& mesh = scene.mesh(generate_test_mesh(scene));
 
     kglt::VertexData& data = mesh.shared_data();
@@ -78,7 +78,7 @@ TEST(basic_usage) {
 
 TEST(entity_from_mesh) {
     kglt::Window::ptr window = kglt::Window::create();
-    kglt::Scene& scene = window->scene();
+    kglt::SubScene& scene = window->scene().subscene();
 
     Mesh& mesh = scene.mesh(generate_test_mesh(scene));
 
@@ -113,7 +113,7 @@ TEST(entity_from_mesh) {
 
 TEST(scene_methods) {
     kglt::Window::ptr window = kglt::Window::create();
-    kglt::Scene& scene = window->scene();
+    kglt::SubScene& scene = window->scene().subscene();
 
     Mesh& mesh = scene.mesh(scene.new_mesh()); //Create a mesh
     kglt::Entity& entity = scene.entity(scene.new_entity(mesh.id()));

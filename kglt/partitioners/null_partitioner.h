@@ -10,8 +10,8 @@ namespace kglt {
 
 class NullPartitioner : public Partitioner {
 public:
-    NullPartitioner(Scene& scene):
-        Partitioner(scene) {}
+    NullPartitioner(SubScene& ss):
+        Partitioner(ss) {}
 
     void add_entity(EntityID obj) {
         all_entities_.insert(obj);
@@ -30,7 +30,7 @@ public:
     }
 
     std::vector<LightID> lights_within_range(const kmVec3& location);
-    std::vector<SubEntity::ptr> geometry_visible_from(CameraID camera_id, SceneGroupID scene_group_id=0);
+    std::vector<SubEntity::ptr> geometry_visible_from(CameraID camera_id);
 
 private:
     std::set<EntityID> all_entities_;

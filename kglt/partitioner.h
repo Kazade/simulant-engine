@@ -5,18 +5,19 @@
 #include <set>
 #include <vector>
 
+#include "generic/managed.h"
 #include "utils/geometry_buffer.h"
 #include "types.h"
 #include "entity.h"
 
 namespace kglt {
 
-class Partitioner {
-public:
-    typedef std::tr1::shared_ptr<Partitioner> ptr;
+class Partitioner:
+    public Managed<Partitioner> {
 
-    Partitioner(Scene& scene):
-        scene_(scene) {}
+public:
+    Partitioner(SubScene& ss):
+        subscene_(ss) {}
 
     virtual void add_entity(EntityID obj) = 0;
     virtual void remove_entity(EntityID obj) = 0;
@@ -25,13 +26,13 @@ public:
     virtual void remove_light(LightID obj) = 0;
 
     virtual std::vector<LightID> lights_within_range(const kmVec3& location) = 0;
-    virtual std::vector<SubEntity::ptr> geometry_visible_from(CameraID camera_id, SceneGroupID scene_group_id=0) = 0;
+    virtual std::vector<SubEntity::ptr> geometry_visible_from(CameraID camera_id) = 0;
 
 protected:
-    Scene& scene() { return scene_; }
+    SubScene& subscene() { return subscene_; }
 
 private:
-    Scene& scene_;
+    SubScene& subscene_;
 };
 
 }

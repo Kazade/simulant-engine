@@ -10,8 +10,8 @@ class OctreePartitioner :
     public Partitioner {
 
 public:
-    OctreePartitioner(Scene& scene):
-        Partitioner(scene) {}
+    OctreePartitioner(SubScene& ss):
+        Partitioner(ss) {}
 
     void add_entity(EntityID obj);
     void remove_entity(EntityID obj);
@@ -20,7 +20,7 @@ public:
     void remove_light(LightID obj);
 
     std::vector<LightID> lights_within_range(const kmVec3& location);
-    std::vector<SubEntity::ptr> geometry_visible_from(CameraID camera_id, SceneGroupID scene_group_id=0);
+    std::vector<SubEntity::ptr> geometry_visible_from(CameraID camera_id);
 
     void event_entity_changed(EntityID ent);
 private:

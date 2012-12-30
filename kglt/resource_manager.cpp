@@ -4,10 +4,17 @@
 namespace kglt {
 
 Mesh& ResourceManager::mesh(MeshID m) {
+    if(!has_mesh(m) && parent_) {
+        return parent_->mesh(m);
+    }
     return const_cast<Mesh&>(static_cast<const ResourceManager*>(this)->mesh(m));
 }
 
 const Mesh& ResourceManager::mesh(MeshID m) const {
+    if(!has_mesh(m) && parent_) {
+        return parent_->mesh(m);
+    }
+
     return MeshManager::manager_get(m);
 }
 
@@ -52,7 +59,14 @@ MaterialID ResourceManager::new_material(MaterialID clone_from) {
 }
 
 Material& ResourceManager::material(MaterialID mid) {
+    if(!has_material(mid) && parent_) {
+        return parent_->material(mid);
+    }
     return MaterialManager::manager_get(mid);
+}
+
+bool ResourceManager::has_material(MaterialID m) const {
+    return MaterialManager::manager_contains(m);
 }
 
 void ResourceManager::delete_material(MaterialID mid) {
@@ -71,9 +85,19 @@ Texture& ResourceManager::texture(TextureID t) {
     return TextureManager::manager_get(t);
 }
 
+bool ResourceManager::has_texture(TextureID t) const {
+    return TextureManager::manager_contains(t);
+}
 
 ShaderProgram& ResourceManager::shader(ShaderID s) {
+    if(!has_shader(s) && parent_) {
+        return parent_->shader(s);
+    }
     return ShaderManager::manager_get(s);
+}
+
+bool ResourceManager::has_shader(ShaderID s) const {
+    return ShaderManager::manager_contains(s);
 }
 
 ShaderID ResourceManager::new_shader() {

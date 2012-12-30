@@ -17,22 +17,17 @@ class Entity :
     public MeshInterface,
     public Managed<Entity>,
     public generic::Identifiable<EntityID>,
-    public Object,
-    public Relatable {
+    public Object {
 
 public:
-    Relation<Entity, SceneGroup> scene_group;
-
-    Entity(Scene* scene, EntityID id):
+    Entity(SubScene* subscene, EntityID id):
         generic::Identifiable<EntityID>(id),
-        Object(scene),
-        scene_group(this),
+        Object(subscene),
         mesh_(0) {}
 
-    Entity(Scene* scene, EntityID id, MeshID mesh):
+    Entity(SubScene* subscene, EntityID id, MeshID mesh):
         generic::Identifiable<EntityID>(id),
-        Object(scene),
-        scene_group(this),
+        Object(subscene),
         mesh_(mesh) {
     }
 

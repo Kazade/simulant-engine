@@ -26,8 +26,8 @@ void GenericRenderer::set_auto_uniforms_on_shader(
     kmMat4 modelview_projection;
 
     const kmMat4 model = subentity._parent().absolute_transformation();
-    const kmMat4* view = &scene.camera(camera).modelview_matrix();
-    const kmMat4* projection = &scene.camera(camera).projection_matrix();
+    const kmMat4* view = &current_subscene().camera(camera).modelview_matrix();
+    const kmMat4* projection = &current_subscene().camera(camera).projection_matrix();
 
     kmMat4 modelview;
     kmMat4Multiply(&modelview, view, &model);
@@ -65,7 +65,7 @@ void GenericRenderer::set_auto_uniforms_on_shader(
         kmVec3 light_pos;
         kmVec3Fill(&light_pos, 0, 0, 0);
         if(iteration < lights_within_range.size()) {
-            light_pos = scene.light(lights_within_range.at(iteration)).absolute_position();
+            light_pos = current_subscene().light(lights_within_range.at(iteration)).absolute_position();
         }
 
         //Take the position into view space
@@ -80,7 +80,7 @@ void GenericRenderer::set_auto_uniforms_on_shader(
     if(s.params().uses_auto(SP_AUTO_LIGHT_AMBIENT)) {
         kglt::Colour ambient(0, 0, 0, 1);
         if(iteration < lights_within_range.size()) {
-            ambient = scene.light(lights_within_range.at(iteration)).ambient();
+            ambient = current_subscene().light(lights_within_range.at(iteration)).ambient();
         }
         s.params().set_colour(
             s.params().auto_uniform_variable_name(SP_AUTO_LIGHT_AMBIENT),
@@ -92,7 +92,7 @@ void GenericRenderer::set_auto_uniforms_on_shader(
         kglt::Colour diffuse(0, 0, 0, 1);
 
         if(iteration < lights_within_range.size()) {
-            diffuse = scene.light(lights_within_range.at(iteration)).diffuse();
+            diffuse = current_subscene().light(lights_within_range.at(iteration)).diffuse();
         }
 
         s.params().set_colour(
@@ -105,7 +105,7 @@ void GenericRenderer::set_auto_uniforms_on_shader(
         kglt::Colour specular(0, 0, 0, 1);
 
         if(iteration < lights_within_range.size()) {
-            specular = scene.light(lights_within_range.at(iteration)).specular();
+            specular = current_subscene().light(lights_within_range.at(iteration)).specular();
         }
 
         s.params().set_colour(
@@ -118,7 +118,7 @@ void GenericRenderer::set_auto_uniforms_on_shader(
         float constant_attenuation = 1.0;
 
         if(iteration < lights_within_range.size()) {
-            constant_attenuation = scene.light(lights_within_range.at(iteration)).constant_attenuation();
+            constant_attenuation = current_subscene().light(lights_within_range.at(iteration)).constant_attenuation();
         }
 
         s.params().set_float(
@@ -131,7 +131,7 @@ void GenericRenderer::set_auto_uniforms_on_shader(
         float linear_attenuation = 1.0;
 
         if(iteration < lights_within_range.size()) {
-            linear_attenuation = scene.light(lights_within_range.at(iteration)).linear_attenuation();
+            linear_attenuation = current_subscene().light(lights_within_range.at(iteration)).linear_attenuation();
         }
 
         s.params().set_float(
@@ -144,7 +144,7 @@ void GenericRenderer::set_auto_uniforms_on_shader(
         float quadratic_attenuation = 1.0;
 
         if(iteration < lights_within_range.size()) {
-            quadratic_attenuation = scene.light(lights_within_range.at(iteration)).quadratic_attenuation();
+            quadratic_attenuation = current_subscene().light(lights_within_range.at(iteration)).quadratic_attenuation();
         }
 
         s.params().set_float(
@@ -156,7 +156,7 @@ void GenericRenderer::set_auto_uniforms_on_shader(
     if(s.params().uses_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT)) {
         s.params().set_colour(
             s.params().auto_uniform_variable_name(SP_AUTO_LIGHT_GLOBAL_AMBIENT),
-            scene.ambient_light()
+            current_subscene().ambient_light()
         );
     }
 
@@ -327,7 +327,7 @@ void GenericRenderer::render_subentity(SubEntity& buffer, CameraID camera) {
     if(!mid) {
         mid = scene().default_material();
     }
-    Material& mat = scene().material(mid);
+    Material& mat = current_subscene().material(mid);
     MaterialTechnique& technique = mat.technique(DEFAULT_MATERIAL_SCHEME);
 
     for(uint32_t i = 0; i < technique.pass_count(); ++i) {
@@ -355,12 +355,12 @@ void GenericRenderer::render_subentity(SubEntity& buffer, CameraID camera) {
             continue;
         }
 
-        ShaderProgram& s = scene().shader(pass.shader());
+        ShaderProgram& s = current_subscene().shader(pass.shader());
         s.activate(); //Activate the shader
 
         //FIXME: lights within range of what?
         Vec3 pos;
-        std::vector<LightID> lights = scene().pipeline().partitioner().lights_within_range(pos);
+        std::vector<LightID> lights = current_subscene().partitioner().lights_within_range(pos);
         uint32_t iteration_count = 1;
         if(pass.iteration() == ITERATE_N) {
             iteration_count = pass.max_iterations();
@@ -375,7 +375,7 @@ void GenericRenderer::render_subentity(SubEntity& buffer, CameraID camera) {
         for(uint32_t j = 0; j < pass.texture_unit_count(); ++j) {
             glActiveTexture(GL_TEXTURE0 + j);
             TextureID texture_unit = pass.texture_unit(j).texture();
-            glBindTexture(GL_TEXTURE_2D, scene().texture(texture_unit).gl_tex());
+            glBindTexture(GL_TEXTURE_2D, current_subscene().texture(texture_unit).gl_tex());
         }
 
         for(uint32_t j = 0; j < iteration_count; ++j) {

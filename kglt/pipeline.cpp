@@ -11,9 +11,9 @@
 
 namespace kglt {
 
-Pass::Pass(Scene& scene, SceneGroupID sg, TextureID target, CameraID camera, ViewportID viewport):
+Stage::Stage(Scene& scene, SubSceneID ss, CameraID camera, ViewportID viewport, TextureID target):
     scene_(scene),
-    scene_group_(sg),
+    subscene_(ss),
     target_(target),
     camera_(camera),
     viewport_(viewport) {
@@ -21,7 +21,6 @@ Pass::Pass(Scene& scene, SceneGroupID sg, TextureID target, CameraID camera, Vie
 
 Pipeline::Pipeline(Scene& scene):
     scene_(scene),
-    partitioner_(new OctreePartitioner(scene)),
     renderer_(new GenericRenderer(scene)) {
 
     //Set up the default render options
@@ -31,25 +30,12 @@ Pipeline::Pipeline(Scene& scene):
     render_options.point_size = 1;
 }
 
-void Pipeline::init() {
-    //Keep the partitioner updated with new meshes
-    scene_.signal_entity_created().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::add_entity));
-    scene_.signal_entity_destroyed().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::remove_entity));
-
-    scene_.signal_light_created().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::add_light));
-    scene_.signal_light_destroyed().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::remove_light));
+void Pipeline::remove_all_stages() {
+    stages_.clear();
 }
 
-void Pipeline::remove_all_passes() {
-    passes_.clear();
-}
-
-void Pipeline::add_pass(SceneGroupID scene_group, TextureID target, CameraID camera, ViewportID viewport) {
-    passes_.push_back(Pass::ptr(new Pass(scene_, scene_group, target, camera, viewport)));
-}
-
-void Pipeline::set_partitioner(Partitioner::ptr partitioner) {
-    partitioner_ = partitioner;
+void Pipeline::add_stage(SubSceneID subscene, CameraID camera, ViewportID viewport, TextureID target) {
+    stages_.push_back(Stage::ptr(new Stage(scene_, subscene, camera, viewport, target)));
 }
 
 void Pipeline::set_renderer(Renderer::ptr renderer) {
@@ -57,24 +43,26 @@ void Pipeline::set_renderer(Renderer::ptr renderer) {
 }
 
 void Pipeline::run() {    
-    for(uint32_t i = 0; i < passes_.size(); ++i) {       
-        run_pass(i);
+    for(uint32_t i = 0; i < stages_.size(); ++i) {
+        run_stage(i);
     }
 }
 
-void Pipeline::run_pass(uint32_t index) {
-    Pass::ptr pass = passes_.at(index);
+void Pipeline::run_stage(uint32_t index) {
+    Stage::ptr stage = stages_.at(index);
 
-    scene_.window().viewport(pass->viewport()).update_opengl(); //FIXME update_opengl shouldn't exist
+    scene_.window().viewport(stage->viewport_id()).update_opengl(); //FIXME update_opengl shouldn't exist
 
-    signal_render_pass_started_(index);
+    signal_render_stage_started_(index);
 
-    std::vector<SubEntity::ptr> buffers = partitioner_->geometry_visible_from(pass->camera_, pass->scene_group_);
+    std::vector<SubEntity::ptr> buffers = scene_.subscene(stage->subscene_id()).partitioner().geometry_visible_from(stage->camera_id());
 
     //TODO: Batched rendering
-    renderer_->render(buffers, pass->camera());
+    renderer_->set_current_subscene(stage->subscene_id());
+        renderer_->render(buffers, stage->camera_id());
+    renderer_->set_current_subscene(SubSceneID());
 
-    signal_render_pass_finished_(index);
+    signal_render_stage_finished_(index);
 }
 
 }

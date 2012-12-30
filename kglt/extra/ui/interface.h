@@ -45,6 +45,7 @@ public:
     void delete_button();
 
     Scene& scene() { return scene_; }
+    SubScene& subscene();
 
     unicode default_font() const { return default_font_; }
     uint16_t default_size() const { return default_size_; }
@@ -54,11 +55,10 @@ public:
 
     Font::ptr _font(const unicode& name, uint16_t size) const { return fonts_.at(name).at(size); }
 
-    SceneGroupID scene_group_id() const { return scene_group_; }
-private:
+private:    
     Scene& scene_;
+    SubSceneID subscene_;
 
-    SceneGroupID scene_group_;
     CameraID camera_;
 
     uint32_t width_;

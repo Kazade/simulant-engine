@@ -24,8 +24,8 @@ class Light :
 public:
     typedef std::tr1::shared_ptr<Light> ptr;
 
-    Light(Scene* scene, LightID lid):
-        Object(scene),
+    Light(SubScene* subscene, LightID lid):
+        Object(subscene),
         generic::Identifiable<LightID>(lid),
         type_(LIGHT_TYPE_POINT),
         range_(100.0) {

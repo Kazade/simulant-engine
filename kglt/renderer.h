@@ -20,8 +20,16 @@ public:
     void render(const std::vector<SubEntity::ptr>& subentities, CameraID camera); //FIXME: Should pass in batching structure
     Scene& scene() { return scene_; }
 
-private:
+    void set_current_subscene(SubSceneID subscene) {
+        current_subscene_ = subscene;
+    }
+
+protected:
+    SubScene& current_subscene();
+
+private:    
     Scene& scene_;
+    SubSceneID current_subscene_;
 
     virtual void render_subentity(SubEntity& buffer, CameraID camera) = 0;
 };

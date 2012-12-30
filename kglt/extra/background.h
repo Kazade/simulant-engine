@@ -58,19 +58,18 @@ public:
 
     Scene& scene() { return scene_; }
 
-    SceneGroupID scene_group() const { return background_sg_; }
-
     static std::tr1::shared_ptr<Background> create(Scene& scene, ViewportID viewport=ViewportID()) {
         return std::tr1::shared_ptr<Background>(new Background(scene, viewport));
     }
 
-    MaterialID material() const { return material_id_; }
+    MaterialID material_id() const { return material_id_; }
+    SubSceneID subscene_id() const { return subscene_; }
 
 private:
     Scene& scene_;
+    SubSceneID subscene_;
 
     ViewportID viewport_;
-    SceneGroupID background_sg_;
     CameraID ortho_camera_;
     BGResizeStyle style_;
 

@@ -41,14 +41,17 @@ public:
 
     TextureID new_texture();
     Texture& texture(TextureID t);
+    bool has_texture(TextureID t) const;
     void delete_texture(TextureID tid);
 
     ShaderID new_shader();
     ShaderProgram& shader(ShaderID s);
+    bool has_shader(ShaderID s) const;
     void delete_shader(ShaderID s);
 
     MaterialID new_material(MaterialID clone_from=MaterialID());
     Material& material(MaterialID material);
+    bool has_material(MaterialID m) const;
     void delete_material(MaterialID m);
 
     std::pair<ShaderID, bool> find_shader(const std::string& name);
@@ -62,6 +65,16 @@ public:
     }
 
     WindowBase& window() { assert(window_); return *window_; }
+
+    void update_materials(double dt) {
+        /*
+          Update all animated materials
+        */
+        for(std::pair<MaterialID, Material::ptr> p: MaterialManager::objects_) {
+            p.second->update(dt);
+        }
+    }
+
 private:
     WindowBase* window_;
     ResourceManager* parent_;

@@ -15,9 +15,12 @@ BackgroundLayer::BackgroundLayer(Background &bg, const std::string& image_path):
     background_(bg),
     texture_id_(0) {
 
-    texture_id_ = kglt::create_texture_from_file(background().scene().window(), image_path);
+    SubScene& subscene = background().scene().subscene(background().subscene_id());
+
+    texture_id_ = kglt::create_texture_from_file(subscene, image_path);
     pass_id_ = background().layer_count();
-    kglt::Material& mat = background().scene().material(background().material());
+
+    kglt::Material& mat = subscene.material(background().material_id());
 
     if(pass_id_ >= mat.technique().pass_count()) {
         //Duplicate the first pass to create this one
@@ -36,7 +39,8 @@ void BackgroundLayer::scroll_x(double amount) {
      *  Scrolls the background layer on the x-axis by 'amount'.
      *  This is simply a thunk to manipulate the underlyng texture matrix
      */
-    Material& mat = background().scene().material(background().material());
+    SubScene& subscene = background().scene().subscene(background().subscene_id());
+    Material& mat = subscene.material(background().material_id());
     mat.technique().pass(pass_id_).texture_unit(0).scroll_x(amount);
 }
 
@@ -45,14 +49,16 @@ void BackgroundLayer::scroll_y(double amount) {
      *  Scrolls the background layer on the y-axis by 'amount'.
      *  This is simply a thunk to manipulate the underlyng texture matrix
      */
-    Material& mat = background().scene().material(background().material());    
+    SubScene& subscene = background().scene().subscene(background().subscene_id());
+    Material& mat = subscene.material(background().material_id());
     mat.technique().pass(pass_id_).texture_unit(0).scroll_y(amount);
 }
 
 BackgroundLayer::~BackgroundLayer() {
     try {
         if(texture_id_) {
-            background().scene().delete_texture(texture_id_);
+            SubScene& subscene = background().scene().subscene(background().subscene_id());
+            subscene.delete_texture(texture_id_);
         }
     } catch (...) {
         //Whatever.. we tried. We gotta catch this (destructors can't throw)
@@ -65,8 +71,11 @@ Background::Background(Scene& scene, ViewportID viewport, BGResizeStyle style):
     viewport_(viewport),
     style_(style) {
 
-    background_sg_ = scene.new_scene_group(); //Create a SG for the background
-    ortho_camera_ = scene.new_camera(); //Create an ortho cam
+    //Create a subscene for the background
+    subscene_ = scene.new_subscene(PARTITIONER_NULL); //Always draw the background - don't cull it
+    ortho_camera_ = scene.subscene(subscene_).new_camera(); //Create an ortho cam
+
+    SubScene& subscene = scene.subscene(subscene_);
 
     float width, height;
     if(style_ == BG_RESIZE_ZOOM) {
@@ -86,7 +95,7 @@ Background::Background(Scene& scene, ViewportID viewport, BGResizeStyle style):
 
 
     //Set the camera to the visible dimensions
-    scene.camera(ortho_camera_).set_orthographic_projection(
+    subscene.camera(ortho_camera_).set_orthographic_projection(
         0,
         width,
         0,
@@ -96,11 +105,11 @@ Background::Background(Scene& scene, ViewportID viewport, BGResizeStyle style):
 
     //Add a pass for this background
     //FIXME: priority = -1000
-    scene_.pipeline().add_pass(background_sg_, TextureID(), ortho_camera_, viewport_);
+    scene_.pipeline().add_stage(subscene_, ortho_camera_, viewport_);
 
-    mesh_id_ = scene.new_mesh();
-    Mesh& mesh = scene.mesh(mesh_id_);
-    Material& mat = scene.material(scene.new_material());
+    mesh_id_ = subscene.new_mesh();
+    Mesh& mesh = subscene.mesh(mesh_id_);
+    Material& mat = subscene.material(subscene.new_material());
 
     //Load the background material
     scene.window().loader_for("kglt/materials/background.kglm")->into(mat);
@@ -117,22 +126,19 @@ Background::Background(Scene& scene, ViewportID viewport, BGResizeStyle style):
     mesh.submesh(index).set_material(material_id_);
 
     //Create the entity for this background
-    entity_id_ = scene.new_entity();
-    Entity& entity = scene.entity(entity_id_);
+    entity_id_ = subscene.new_entity();
+    Entity& entity = subscene.entity(entity_id_);
     entity.set_mesh(mesh.id());
-
-    //Set the mesh's scene group to that of the background
-    entity.scene_group = scene.scene_group(scene_group());
 }
 
 Background::~Background() {
     try {
         if(mesh_id_) {
-            scene().delete_mesh(mesh_id_);
+            scene().subscene(subscene_id()).delete_mesh(mesh_id_);
         }
 
         if(entity_id_) {
-            scene().delete_entity(entity_id_);
+            scene().subscene(subscene_id()).delete_entity(entity_id_);
         }
     } catch(...) {
         L_WARN("Error while destroying background");

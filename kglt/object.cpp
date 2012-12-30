@@ -11,9 +11,9 @@ namespace kglt {
 
 uint64_t Object::object_counter = 0;
 
-Object::Object(Scene *parent_scene):
+Object::Object(SubScene *subscene):
     uuid_(++object_counter),
-    scene_(parent_scene),
+    subscene_(subscene),
     is_visible_(true) {
 
     kmVec3Fill(&position_, 0.0, 0.0, 0.0);

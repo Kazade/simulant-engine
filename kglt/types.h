@@ -65,17 +65,22 @@ enum VertexAttribute {
     VERTEX_ATTRIBUTE_NORMAL = 8
 };
 
+enum AvailablePartitioner {
+    PARTITIONER_NULL,
+    PARTITIONER_OCTREE
+};
+
 typedef UniqueID<0> MeshID;
 typedef UniqueID<1> TextureID;
 typedef UniqueID<2> CameraID;
 typedef UniqueID<3> ShaderID;
 typedef UniqueID<4> MaterialID;
 typedef UniqueID<5> LightID;
-typedef UniqueID<6> SceneGroupID;
+typedef UniqueID<6> SubSceneID;
 typedef UniqueID<7> ViewportID;
 typedef UniqueID<8> EntityID;
 
-const CameraID DefaultCameraID = CameraID();
+const SubSceneID DefaultSubSceneID = SubSceneID();
 
 const std::string DEFAULT_MATERIAL_SCHEME = "default";
 
@@ -83,8 +88,8 @@ class Mesh;
 class Entity;
 class Light;
 class Scene;
+class SubScene;
 class Camera;
-class SceneGroup;
 class ShaderProgram;
 class Viewport;
 class Frustum;

@@ -13,12 +13,8 @@ Text::Text(Font::ptr font, Vec2 position, const unicode &text):
     interface_(font->interface()),
     font_(font) {
 
-    Scene& scene = interface_.scene();
-
-    mesh_ = scene.new_mesh();
-
-
-    kglt::Mesh& mesh = scene.mesh(mesh_);
+    mesh_ = interface_.subscene().new_mesh();
+    kglt::Mesh& mesh = interface_.subscene().mesh(mesh_);
 
     uint32_t x_offset = 0;
 
@@ -36,8 +32,8 @@ Text::Text(Font::ptr font, Vec2 position, const unicode &text):
         if(container::contains(materials_, info.texture)) {
             mat = materials_[info.texture];
         } else {
-            mat = kglt::create_material_from_texture(scene, info.texture);
-            scene.material(mat).technique().pass(0).set_blending(BLEND_ONE_ONE_MINUS_ALPHA);
+            mat = kglt::create_material_from_texture(interface_.scene(), info.texture);
+            interface_.subscene().material(mat).technique().pass(0).set_blending(BLEND_ONE_ONE_MINUS_ALPHA);
             materials_[info.texture] = mat;
         }
 
@@ -70,19 +66,17 @@ Text::Text(Font::ptr font, Vec2 position, const unicode &text):
         mesh.submesh(idx).vertex_data().done();
     }
 
-    entity_ = scene.new_entity();
-    scene.entity(entity_).set_mesh(mesh_);
-    scene.entity(entity_).set_position(Vec3(position.x, position.y, 0));
-    scene.entity(entity_).scene_group = scene.scene_group(interface_.scene_group_id());
+    entity_ = interface_.subscene().new_entity();
+    interface_.subscene().entity(entity_).set_mesh(mesh_);
+    interface_.subscene().entity(entity_).set_position(Vec3(position.x, position.y, 0));
 }
 
 void Text::set_position(Vec2 position) {
-    interface_.scene().entity(entity_).set_position(Vec3(position, 0));
+    interface_.subscene().entity(entity_).set_position(Vec3(position, 0));
 }
 
 void Text::set_colour(const Colour& colour) {
-    Scene& scene = interface_.scene();
-    kglt::Mesh& mesh = scene.mesh(mesh_);
+    kglt::Mesh& mesh = interface_.subscene().mesh(mesh_);
 
     VertexData& data = mesh.submesh(mesh.submesh_ids()[0]).vertex_data();
 

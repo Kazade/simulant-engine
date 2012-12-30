@@ -6,6 +6,7 @@
 #include <string>
 #include "../generic/creator.h"
 #include "../types.h"
+#include "../resource_manager.h"
 
 namespace kglt {
 
@@ -16,11 +17,11 @@ namespace extra {
 class SpriteStripLoader :
         public generic::Creator<SpriteStripLoader> {
 public:
-    SpriteStripLoader(Scene& scene, const std::string& filename, uint32_t frame_width);
+    SpriteStripLoader(ResourceManager& rm, const std::string& filename, uint32_t frame_width);
     std::vector<TextureID> load_frames();
 
 private:
-    Scene& scene_;
+    ResourceManager& rm_;
     std::string filename_;
     uint32_t frame_width_;
 };

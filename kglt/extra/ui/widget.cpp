@@ -15,13 +15,10 @@ Widget::Widget(Interface& interface):
     height_(Ratio(1.0)),
     parent_(nullptr) {
 
-    mesh_ = interface.scene().new_mesh();
-    entity_ = interface.scene().new_entity();
+    mesh_ = interface.subscene().new_mesh();
+    entity_ = interface.subscene().new_entity();
 
-    //Set the scene group for the entity
-    interface.scene().entity(entity_).scene_group = interface.scene().scene_group(interface.scene_group_);
-
-    Mesh& mesh = interface.scene().mesh(mesh_);
+    Mesh& mesh = interface.subscene().mesh(mesh_);
 
     background_ = kglt::procedural::mesh::rectangle(
         mesh,
@@ -32,7 +29,7 @@ Widget::Widget(Interface& interface):
         0
     );
 
-    interface.scene().entity(entity_).set_mesh(mesh_);
+    interface.subscene().entity(entity_).set_mesh(mesh_);
 }
 
 uint16_t Widget::width_in_pixels() const {
@@ -47,7 +44,7 @@ void Widget::set_position(Ratio left, Ratio top) {
     left_ = left;
     top_ = top;
 
-    interface_.scene().entity(entity_).set_position(Vec3(
+    interface_.subscene().entity(entity_).set_position(Vec3(
         (parent_) ? parent_->width_in_pixels() * left_.value : interface_.width_in_pixels() * left_.value,
         (parent_) ? parent_->height_in_pixels() * top_.value : interface_.height_in_pixels() * top_.value,
     0)); //FIXME: z-index
@@ -57,7 +54,7 @@ void Widget::set_size(Ratio width, Ratio height) {
     width_ = width;
     height_ = height;
 
-    Mesh& mesh = interface().scene().mesh(mesh_);
+    Mesh& mesh = interface().subscene().mesh(mesh_);
 
     background_ = kglt::procedural::mesh::rectangle(
         mesh,
@@ -68,7 +65,7 @@ void Widget::set_size(Ratio width, Ratio height) {
         0
     );
 
-    interface().scene().entity(entity_).set_mesh(mesh_);
+    interface().subscene().entity(entity_).set_mesh(mesh_);
 
     on_resize();
 }

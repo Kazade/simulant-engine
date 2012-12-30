@@ -13,7 +13,7 @@ void OctreePartitioner::event_entity_changed(EntityID ent) {
 void OctreePartitioner::add_entity(EntityID obj) {
     L_DEBUG("Adding entity to the partitioner");
 
-    Entity& ent = scene().entity(obj);
+    Entity& ent = subscene().entity(obj);
     for(uint16_t i = 0; i < ent.subentity_count(); ++i) {
         //All subentities are boundable
         Boundable* boundable = dynamic_cast<Boundable*>(&ent.subentity(i));        
@@ -45,7 +45,7 @@ void OctreePartitioner::remove_entity(EntityID obj) {
 }
 
 void OctreePartitioner::add_light(LightID obj) {
-    Light& light = scene().light(obj);
+    Light& light = subscene().light(obj);
     Boundable* boundable = dynamic_cast<Boundable*>(&light);
     assert(boundable);
     tree_.grow(boundable);
@@ -53,14 +53,14 @@ void OctreePartitioner::add_light(LightID obj) {
 }
 
 void OctreePartitioner::remove_light(LightID obj) {
-    Light& light = scene().light(obj);
+    Light& light = subscene().light(obj);
     Boundable* boundable = dynamic_cast<Boundable*>(&light);
     assert(boundable);
     tree_.shrink(boundable);
     boundable_to_light_.erase(boundable);
 }
 
-std::vector<SubEntity::ptr> OctreePartitioner::geometry_visible_from(CameraID camera_id, SceneGroupID scene_group_id) {
+std::vector<SubEntity::ptr> OctreePartitioner::geometry_visible_from(CameraID camera_id) {
     std::vector<SubEntity::ptr> results;
 
     //If the tree has no root then we return nothing
@@ -68,7 +68,7 @@ std::vector<SubEntity::ptr> OctreePartitioner::geometry_visible_from(CameraID ca
         return results;
     }
 
-    Camera& cam = scene().camera(camera_id);
+    Camera& cam = subscene().camera(camera_id);
 
     /**
      *  FIXME: A tree_->objects_visible_from(cam.frustum()); would be faster
@@ -79,10 +79,8 @@ std::vector<SubEntity::ptr> OctreePartitioner::geometry_visible_from(CameraID ca
         //Go through the objects
         for(const Boundable* obj: node->objects()) {
             if(container::contains(boundable_to_subentity_, obj)) {
-                if(boundable_to_subentity_[obj]->_parent().scene_group().id() == scene_group_id) {
-                    //Build a list of visible subentities
-                    results.push_back(boundable_to_subentity_[obj]);
-                }
+                //Build a list of visible subentities
+                results.push_back(boundable_to_subentity_[obj]);
             }
         }
     }

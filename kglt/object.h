@@ -28,7 +28,7 @@ class Object :
     public generic::VisitableBase<Object> { //And they allow additional data to be attached
 
 public:
-    Object(Scene* parent_scene);
+    Object(SubScene* parent_scene);
     virtual ~Object();
 
 	virtual void update(double dt) {
@@ -69,11 +69,13 @@ public:
 
     uint64_t uuid() const { return uuid_; }
         
-    virtual void _initialize(Scene& scene) {}
-    virtual void do_update(double dt) {}
+    virtual void _initialize() {}
+    virtual void do_update(double dt) {
+        L_DEBUG("Updating...");
+    }
 
-    Scene& scene() { return *scene_; }
-    const Scene& scene() const { return *scene_; }
+    SubScene& subscene() { return *subscene_; }
+    const SubScene& subscene() const { return *subscene_; }
 
     virtual void destroy() {}
     void destroy_children() {
@@ -106,7 +108,7 @@ private:
     static uint64_t object_counter;
     uint64_t uuid_;
 
-    Scene* scene_; //Each object is owned by a scene
+    SubScene* subscene_; //Each object is owned by a scene
 
     kmVec3 position_;
     kmQuaternion rotation_;

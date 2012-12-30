@@ -3,6 +3,7 @@
 
 #include "kazmath/mat4.h"
 #include "generic/identifiable.h"
+#include "generic/managed.h"
 
 #include "object.h"
 #include "frustum.h"
@@ -12,13 +13,10 @@ namespace kglt {
 
 class Camera :
     public Object,
-    public generic::Identifiable<CameraID> {
+    public generic::Identifiable<CameraID>,
+    public Managed<Camera> {
 public:
-    VIS_DEFINE_VISITABLE();
-
-    typedef std::tr1::shared_ptr<Camera> ptr;
-
-    Camera(Scene* scene, CameraID id);
+    Camera(SubScene* subscene, CameraID id);
 
     void watch(Object& obj);
     void follow(Object& obj, float dist, float height=0.0f);

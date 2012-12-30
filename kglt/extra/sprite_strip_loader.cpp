@@ -10,8 +10,8 @@
 namespace kglt {
 namespace extra {
 
-SpriteStripLoader::SpriteStripLoader(Scene& scene, const std::string& filename, uint32_t frame_width):
-    scene_(scene),
+SpriteStripLoader::SpriteStripLoader(ResourceManager& rm, const std::string& filename, uint32_t frame_width):
+    rm_(rm),
     filename_(filename),
     frame_width_(frame_width) {
 
@@ -22,7 +22,7 @@ SpriteStripLoader::SpriteStripLoader(Scene& scene, const std::string& filename, 
 
 std::vector<TextureID> SpriteStripLoader::load_frames() {
     //Load texture, but don't upload to OpenGL
-    kglt::Texture& tmp = scene_.texture(kglt::create_texture_from_file(scene_.window(), filename_, false));
+    kglt::Texture& tmp = rm_.texture(kglt::create_texture_from_file(rm_, filename_, false));
 
     if(tmp.width() % frame_width_ != 0) {
         throw IOError("Invalid texture width. Should be a multiple of: " + boost::lexical_cast<std::string>(frame_width_));
@@ -54,18 +54,18 @@ std::vector<TextureID> SpriteStripLoader::load_frames() {
 
     std::vector<TextureID> results;
     for(Texture::Data& data: frame_data) {
-        kglt::Texture& tex = kglt::return_new_texture(scene_);
+        kglt::Texture& tex = rm_.texture(rm_.new_texture());
         tex.set_bpp(tmp.bpp()); //Set the bpp
         tex.resize(frame_width_, tmp.height()); //Resize the texture
         tex.data().assign(data.begin(), data.end()); //Copy the frame data
 
         //Upload the texture in the idle handler
-        scene_.window().idle().add_once(sigc::bind(sigc::mem_fun(&tex, &kglt::Texture::upload), true, true, true, false));
+        rm_.window().idle().add_once(sigc::bind(sigc::mem_fun(&tex, &kglt::Texture::upload), true, true, false, false));
 
         results.push_back(tex.id()); //Store the ID
     }
 
-    scene_.delete_texture(tmp.id()); //Delete the temporary texture
+    rm_.delete_texture(tmp.id()); //Delete the temporary texture
     return results;
 }
 

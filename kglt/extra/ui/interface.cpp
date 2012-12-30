@@ -7,17 +7,19 @@ namespace kglt {
 namespace extra {
 namespace ui {
 
+SubScene& Interface::subscene() { return scene_.subscene(subscene_); }
+
 Interface::Interface(Scene &scene, uint32_t width_in_pixels, uint32_t height_in_pixels):
     scene_(scene),
     width_(width_in_pixels),
     height_(height_in_pixels),
     default_size_(10) {
 
-    scene_group_ = scene.new_scene_group();
-    camera_ = scene.new_camera();
+    subscene_ = scene.new_subscene(PARTITIONER_NULL); //Don't cull the UI
+    camera_ = subscene().new_camera();
 
-    scene.camera(camera_).set_orthographic_projection(0, width_, 0, height_, -1.0, 1.0);
-    scene.pipeline().add_pass(scene_group_, TextureID(), camera_, ViewportID());
+    subscene().camera(camera_).set_orthographic_projection(0, width_, 0, height_, -1.0, 1.0);
+    scene_.pipeline().add_stage(subscene_, camera_);
 }
 
 unicode Interface::load_font(const std::string &ttf_file, uint8_t font_height) {

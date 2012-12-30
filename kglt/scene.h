@@ -20,7 +20,6 @@
 #include "viewport.h"
 #include "material.h"
 #include "light.h"
-#include "scene_group.h"
 #include "mesh.h"
 #include "entity.h"
 
@@ -35,26 +34,32 @@ namespace kglt {
 class WindowBase;
 class UI;
 
-class Scene :
+class SubScene;
+
+typedef generic::TemplatedManager<SubScene, Entity, EntityID> EntityManager;
+typedef generic::TemplatedManager<SubScene, Light, LightID> LightManager;
+typedef generic::TemplatedManager<SubScene, Camera, CameraID> CameraManager;
+
+class SceneBase:
+    public ResourceManager {
+public:
+    SceneBase(WindowBase* window, ResourceManager* parent=nullptr):
+        ResourceManager(window, parent) {}
+
+    virtual ~SceneBase() {}
+};
+
+class SubScene:
+    public Managed<SubScene>,
+    public generic::Identifiable<SubSceneID>,
+    public SceneBase,
     public Object,
-    public Loadable,
-    public ResourceManager,
-    public generic::TemplatedManager<Scene, Camera, CameraID>,
-    public generic::TemplatedManager<Scene, Light, LightID>,
-    public generic::TemplatedManager<Scene, SceneGroup, SceneGroupID>,
-    public generic::TemplatedManager<Scene, Entity, EntityID> {
+    public EntityManager,
+    public LightManager,
+    public CameraManager {
 
 public:
-    void move(float x, float y, float z) {
-        throw std::logic_error("You cannot move the scene");
-    }
-
-    Scene(WindowBase* window);
-    ~Scene();
-
-    SceneGroupID new_scene_group();
-    SceneGroup& scene_group(SceneGroupID group=0);
-    void delete_scene_group(SceneGroupID group);
+    SubScene(Scene *parent, SubSceneID id);
 
     EntityID new_entity(MeshID mid=MeshID());
     EntityID new_entity(Object& parent, MeshID mid=MeshID());
@@ -63,28 +68,15 @@ public:
     bool has_entity(EntityID e) const;
     void delete_entity(EntityID e);
 
-    CameraID new_camera();
-    LightID new_light(Object* parent=nullptr, LightType type=LIGHT_TYPE_POINT);    
-
-    Camera& camera(CameraID c = DefaultCameraID);
+    LightID new_light(LightType type=LIGHT_TYPE_POINT);
+    LightID new_light(Object& parent, LightType type=LIGHT_TYPE_POINT);
     Light& light(LightID light);
-
-    void delete_camera(CameraID cid);
     void delete_light(LightID light_id);
 
-    void init();
-    void render();
-    void update(double dt);
-
-    template<typename T, typename ID>
-    void post_create_callback(T& obj, ID id) {
-        obj.set_parent(this);
-        obj._initialize(*this);
-    }
-
-    MaterialID default_material() const { return default_material_; }
-
-    SceneGroupID default_scene_group() const { return default_scene_group_; }
+    CameraID new_camera();
+    CameraID new_camera(Object& parent);
+    Camera& camera(CameraID c=CameraID());
+    void delete_camera(CameraID cid);
 
     kglt::Colour ambient_light() const { return ambient_light_; }
     void set_ambient_light(const kglt::Colour& c) { ambient_light_ = c; }
@@ -95,24 +87,81 @@ public:
     sigc::signal<void, LightID>& signal_light_created() { return signal_light_created_; }
     sigc::signal<void, LightID>& signal_light_destroyed() { return signal_light_destroyed_; }
 
-    Pipeline& pipeline() { return *pipeline_; }
+    void move(float x, float y, float z) {
+        throw std::logic_error("You cannot move the subscene");
+    }
+
+    template<typename T, typename ID>
+    void post_create_callback(T& obj, ID id) {
+        obj.set_parent(this);
+        obj._initialize();
+    }
+
+    Partitioner& partitioner() { return *partitioner_; }
 
 private:
-    CameraID default_camera_;
-    SceneGroupID default_scene_group_;
-    TextureID default_texture_;
-    MaterialID default_material_;
     kglt::Colour ambient_light_;
-
-    void initialize_defaults();
-
-    Pipeline::ptr pipeline_;
 
     sigc::signal<void, EntityID> signal_entity_created_;
     sigc::signal<void, EntityID> signal_entity_destroyed_;
 
     sigc::signal<void, LightID> signal_light_created_;
     sigc::signal<void, LightID> signal_light_destroyed_;
+
+    Partitioner::ptr partitioner_;
+    void set_partitioner(Partitioner::ptr partitioner) {
+        assert(partitioner);
+
+        partitioner_ = partitioner;
+
+        assert(partitioner_);
+
+        //Keep the partitioner updated with new meshes and lights
+        signal_entity_created().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::add_entity));
+        signal_entity_destroyed().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::remove_entity));
+
+        signal_light_created().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::add_light));
+        signal_light_destroyed().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::remove_light));
+    }
+
+    void do_update(double dt) override {
+        update_materials(dt);
+    }
+
+    friend class Scene;
+};
+
+typedef generic::TemplatedManager<Scene, SubScene, SubSceneID> SubSceneManager;
+
+class Scene:
+    public SceneBase,
+    public Loadable,
+    public SubSceneManager {
+
+public:
+    Scene(WindowBase* window);
+    ~Scene();
+
+    SubSceneID new_subscene(AvailablePartitioner partitioner=PARTITIONER_OCTREE);
+    SubScene& subscene(SubSceneID s = DefaultSubSceneID);
+    void delete_subscene(SubSceneID s);
+
+    void init();
+    void render();
+    void update(double dt);
+
+    MaterialID default_material() const { return default_material_; }
+
+    Pipeline& pipeline() { return *pipeline_; }
+
+private:
+    SubSceneID default_subscene_;
+    TextureID default_texture_;
+    MaterialID default_material_;
+
+    void initialize_defaults();
+
+    Pipeline::ptr pipeline_;
 };
 
 }

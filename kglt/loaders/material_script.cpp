@@ -50,7 +50,7 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
     std::string arg_1 = str::upper(args[1]);
 
     if(type == "TEXTURE_UNIT") {
-        TextureID tex_id = kglt::create_texture_from_file(mat.resource_manager().window(), str::strip(args[1], "\""));
+        TextureID tex_id = kglt::create_texture_from_file(mat.resource_manager(), str::strip(args[1], "\""));
         pass->set_texture_unit(pass->texture_unit_count(), tex_id);
     } else if(type == "ITERATION") {
         if(arg_1 == "ONCE") {

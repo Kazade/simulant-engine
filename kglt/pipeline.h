@@ -5,6 +5,8 @@
 #include <tr1/memory>
 #include <sigc++/sigc++.h>
 
+#include "generic/managed.h"
+
 #include "types.h"
 #include "viewport.h"
 #include "partitioner.h"
@@ -12,19 +14,20 @@
 
 namespace kglt {
 
-class Pass {
-public:
-    typedef std::tr1::shared_ptr<Pass> ptr;
+class Stage:
+    public Managed<Stage> {
 
-    ViewportID viewport() { return viewport_; }
-    CameraID camera() { return camera_; }
+public:
+    ViewportID viewport_id() { return viewport_; }
+    CameraID camera_id() { return camera_; }
+    SubSceneID subscene_id() { return subscene_; }
 
 private:
-    Pass(Scene& scene, SceneGroupID sg, TextureID target, CameraID camera, ViewportID viewport);
+    Stage(Scene& scene, SubSceneID ss, CameraID camera, ViewportID viewport, TextureID target);
 
 private:
     Scene& scene_;
-    SceneGroupID scene_group_;
+    SubSceneID subscene_;
     TextureID target_;
     CameraID camera_;
 
@@ -40,44 +43,36 @@ struct RenderOptions {
     uint8_t point_size;
 };
 
-class Pipeline {
-public:
-    typedef std::tr1::shared_ptr<Pipeline> ptr;
+class Pipeline:
+    public Managed<Pipeline> {
 
+public:
     Pipeline(Scene& scene);
 
-    void remove_all_passes();
-    void add_pass(SceneGroupID scene_group, TextureID target=TextureID(), CameraID camera=CameraID(), ViewportID viewport=ViewportID());
-    Pass& pass(uint32_t index) { return *passes_.at(index); }
+    void remove_all_stages();
+    void add_stage(SubSceneID subscene, CameraID camera, ViewportID viewport=ViewportID(), TextureID target=TextureID());
 
-    void set_partitioner(Partitioner::ptr partitioner);
     //void set_batcher(Batcher::ptr batcher);
     void set_renderer(Renderer::ptr renderer);
 
     void run();
 
-    Partitioner& partitioner() { return *partitioner_; }
-
-    sigc::signal<void, uint32_t>& signal_render_pass_started() { return signal_render_pass_started_; }
-    sigc::signal<void, uint32_t>& signal_render_pass_finished() { return signal_render_pass_finished_; }
+    sigc::signal<void, uint32_t>& signal_render_stage_started() { return signal_render_stage_started_; }
+    sigc::signal<void, uint32_t>& signal_render_stage_finished() { return signal_render_stage_finished_; }
 
     RenderOptions render_options;
 
-private:
-    void init();
-    void run_pass(uint32_t index);
+private:    
+    void run_stage(uint32_t index);
 
     Scene& scene_;
-    Partitioner::ptr partitioner_;
+
     Renderer::ptr renderer_;
 
-    Pass::ptr background_pass_;
-    Pass::ptr foreground_pass_;
+    std::vector<Stage::ptr> stages_;
 
-    std::vector<Pass::ptr> passes_;
-
-    sigc::signal<void, uint32_t> signal_render_pass_started_;
-    sigc::signal<void, uint32_t> signal_render_pass_finished_;
+    sigc::signal<void, uint32_t> signal_render_stage_started_;
+    sigc::signal<void, uint32_t> signal_render_stage_finished_;
 
     friend class Scene;
 };

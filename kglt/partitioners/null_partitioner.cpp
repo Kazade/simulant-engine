@@ -8,7 +8,7 @@ std::vector<LightID> NullPartitioner::lights_within_range(const kmVec3& location
 
     //Find all the lights within range of the location
     for(LightID light_id: all_lights_) {
-        Light& light = scene().light(light_id);
+        Light& light = subscene().light(light_id);
 
         kmVec3 diff;
         kmVec3Subtract(&diff, &location, &light.position());
@@ -30,15 +30,13 @@ std::vector<LightID> NullPartitioner::lights_within_range(const kmVec3& location
     return result;
 }
 
-std::vector<SubEntity::ptr> NullPartitioner::geometry_visible_from(CameraID camera_id, SceneGroupID scene_group_id) {
+std::vector<SubEntity::ptr> NullPartitioner::geometry_visible_from(CameraID camera_id) {
     std::vector<SubEntity::ptr> result;
 
-    //Just return all of the meshes in the scene group
+    //Just return all of the meshes in the subscene
     for(EntityID eid: all_entities_) {
-        if(scene().entity(eid).scene_group.get() && scene().entity(eid).scene_group().id() == scene_group_id) {
-            std::vector<SubEntity::ptr> subentities = scene().entity(eid)._subentities();
-            result.insert(result.end(), subentities.begin(), subentities.end());
-        }
+        std::vector<SubEntity::ptr> subentities = subscene().entity(eid)._subentities();
+        result.insert(result.end(), subentities.begin(), subentities.end());
     }
 
     return result;

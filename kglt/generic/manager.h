@@ -64,6 +64,10 @@ public:
         }
     }
 
+    uint32_t manager_count() const {
+        return objects_.size();
+    }
+
     ObjectType& manager_get(ObjectIDType id) {
         std::lock_guard<std::recursive_mutex> lock(manager_lock_);
 
@@ -89,6 +93,13 @@ public:
 
     sigc::signal<void, ObjectType&, ObjectIDType>& signal_post_create() { return signal_post_create_; }
     sigc::signal<void, ObjectType&, ObjectIDType>& signal_pre_delete() { return signal_pre_delete_; }
+
+    template<typename Func>
+    void apply_func_to_objects(Func func) {
+        for(std::pair<ObjectIDType, typename ObjectType::ptr> p: objects_) {
+            std::bind(func, p.second.get())();
+        }
+    }
 
 private:    
     sigc::signal<void, ObjectType&, ObjectIDType> signal_post_create_;

@@ -4,7 +4,7 @@
 
 TEST(test_user_data_works) {
     kglt::Window::ptr window = kglt::Window::create();
-    kglt::Scene& scene = window->scene();
+    kglt::SubScene& scene = window->scene().subscene();
 	
     kglt::EntityID mid = scene.new_entity();
     kglt::Entity& entity = scene.entity(mid);
@@ -23,7 +23,7 @@ TEST(test_user_data_works) {
 
 TEST(test_deleting_entities_deletes_children) {
     kglt::Window::ptr window = kglt::Window::create();
-    kglt::Scene& scene = window->scene();
+    kglt::SubScene& scene = window->scene().subscene();
 
     kglt::EntityID mid = scene.new_entity(); //Create the root mesh
     kglt::EntityID cid1 = scene.new_entity(scene.entity(mid)); //Create a child
@@ -41,7 +41,7 @@ TEST(test_deleting_entities_deletes_children) {
 
 TEST(test_procedural_rectangle_outline) {
     kglt::Window::ptr window = kglt::Window::create();
-    kglt::Scene& scene = window->scene();
+    kglt::SubScene& scene = window->scene().subscene();
 	
     kglt::MeshID mid = scene.new_mesh();
     kglt::Mesh& mesh = scene.mesh(mid);
