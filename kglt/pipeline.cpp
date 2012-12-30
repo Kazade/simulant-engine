@@ -42,7 +42,8 @@ void Pipeline::set_renderer(Renderer::ptr renderer) {
     renderer_ = renderer;
 }
 
-void Pipeline::run() {    
+void Pipeline::run() {
+    scene_.window().apply_func_to_objects(std::bind(&Viewport::clear, std::tr1::placeholders::_1));
     for(uint32_t i = 0; i < stages_.size(); ++i) {
         run_stage(i);
     }
@@ -51,7 +52,7 @@ void Pipeline::run() {
 void Pipeline::run_stage(uint32_t index) {
     Stage::ptr stage = stages_.at(index);
 
-    scene_.window().viewport(stage->viewport_id()).update_opengl(); //FIXME update_opengl shouldn't exist
+    scene_.window().viewport(stage->viewport_id()).apply(); //FIXME apply shouldn't exist
 
     signal_render_stage_started_(index);
 

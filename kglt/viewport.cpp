@@ -51,7 +51,14 @@ void Viewport::set_orthographic_projection_from_height(float desired_height_in_u
     set_orthographic_projection(-width / 2.0, width / 2.0, -desired_height_in_units / 2.0, desired_height_in_units / 2.0, -10.0, 10.0);
 }*/
 
-void Viewport::update_opengl() const {
+void Viewport::clear() {
+    apply();
+
+    glClearColor(colour_.r, colour_.g, colour_.b, colour_.a);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+void Viewport::apply() const {
     double x, y, width, height;
 
 	glDisable(GL_SCISSOR_TEST);
@@ -70,10 +77,6 @@ void Viewport::update_opengl() const {
 		}
 		break;
 		case VIEWPORT_TYPE_BLACKBAR_16_BY_9: {
-            glViewport(0, 0, parent_->width(), parent_->height());
-			glClearColor(0, 0, 0, 0);
-			glClear(GL_COLOR_BUFFER_BIT);
-			
             float desired_height = parent_->width() / (16.0 / 9.0);
             float y_offset = (parent_->height() - desired_height) / 2.0;
 			x = 0; 
@@ -99,8 +102,6 @@ void Viewport::update_opengl() const {
     glEnable(GL_SCISSOR_TEST);
     glScissor(x, y, width, height);
     glViewport(x, y, width, height);
-    glClearColor(colour_.r, colour_.g, colour_.b, colour_.a);
-    glClear(GL_COLOR_BUFFER_BIT);
 }
 
 }

@@ -50,7 +50,8 @@ public:
 		colour_ = colour;
 	}
 
-	void update_opengl() const;
+    void clear();
+    void apply() const;
 
     uint32_t width() const { return width_; }
     uint32_t height() const { return height_; }
