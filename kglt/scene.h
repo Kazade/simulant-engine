@@ -34,6 +34,7 @@ namespace kglt {
 class WindowBase;
 class UI;
 
+class Scene;
 class SubScene;
 
 typedef generic::TemplatedManager<SubScene, Entity, EntityID> EntityManager;
@@ -99,7 +100,13 @@ public:
 
     Partitioner& partitioner() { return *partitioner_; }
 
+    void destroy();
+
+    Scene& scene() { return scene_; }
+
 private:
+    Scene& scene_;
+
     kglt::Colour ambient_light_;
 
     sigc::signal<void, EntityID> signal_entity_created_;

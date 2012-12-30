@@ -13,11 +13,16 @@ SubScene::SubScene(Scene* parent, SubSceneID id):
     generic::Identifiable<SubSceneID>(id),
     SceneBase(&parent->window(), parent),
     Object(nullptr),
+    scene_(*parent),
     ambient_light_(1.0, 1.0, 1.0, 1.0){
 
     EntityManager::signal_post_create().connect(sigc::mem_fun(this, &SubScene::post_create_callback<Entity, EntityID>));
     CameraManager::signal_post_create().connect(sigc::mem_fun(this, &SubScene::post_create_callback<Camera, CameraID>));
     LightManager::signal_post_create().connect(sigc::mem_fun(this, &SubScene::post_create_callback<Light, LightID>));
+}
+
+void SubScene::destroy() {
+    scene().delete_subscene(id());
 }
 
 EntityID SubScene::new_entity(MeshID mid) {
@@ -50,6 +55,8 @@ Entity& SubScene::entity(EntityID e) {
 
 void SubScene::delete_entity(EntityID e) {
     signal_entity_destroyed_(e);
+
+    entity(e).destroy_children();
 
     EntityManager::manager_delete(e);
 }

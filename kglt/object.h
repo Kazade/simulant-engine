@@ -77,7 +77,8 @@ public:
     SubScene& subscene() { return *subscene_; }
     const SubScene& subscene() const { return *subscene_; }
 
-    virtual void destroy() {}
+    virtual void destroy() = 0;
+
     void destroy_children() {
         //If this looks weird, it's because when you destroy
         //children the index changes so you need to gather them

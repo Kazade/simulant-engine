@@ -62,6 +62,7 @@ public:
 
     }
 
+    void destroy();
 private:
     Frustum frustum_;
     kmMat4 projection_matrix_;

@@ -1,3 +1,4 @@
+#include "scene.h"
 #include "light.h"
 
 namespace kglt {
@@ -30,6 +31,10 @@ void Light::set_attenuation_from_range(float range) {
     const_attenuation_ = 0.5;
     linear_attenuation_ = 4.5 / range;
     quadratic_attenuation_ = 75.0 / (range * range);
+}
+
+void Light::destroy() {
+    subscene().delete_light(id());
 }
 
 }

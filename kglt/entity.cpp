@@ -24,4 +24,8 @@ void Entity::set_mesh(MeshID mesh) {
     signal_mesh_changed_(id());
 }
 
+void Entity::destroy() {
+    subscene().delete_entity(id());
+}
+
 }

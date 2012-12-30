@@ -32,4 +32,8 @@ double Camera::set_orthographic_projection_from_height(double desired_height_in_
     return width;
 }
 
+void Camera::destroy() {
+    subscene().delete_camera(id());
+}
+
 }

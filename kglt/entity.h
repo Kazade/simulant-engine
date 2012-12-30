@@ -50,6 +50,7 @@ public:
 
     sigc::signal<void, EntityID>& signal_mesh_changed() { return signal_mesh_changed_; }
 
+    void destroy();
 private:
     MeshID mesh_;
 

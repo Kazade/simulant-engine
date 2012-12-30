@@ -82,6 +82,8 @@ public:
         return position();
     }
 
+    void destroy();
+
 private:
     LightType type_;
 
