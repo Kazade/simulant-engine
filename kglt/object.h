@@ -71,7 +71,6 @@ public:
         
     virtual void _initialize() {}
     virtual void do_update(double dt) {
-        L_DEBUG("Updating...");
     }
 
     SubScene& subscene() { return *subscene_; }
