@@ -32,7 +32,8 @@ class Timer {
 public:
     Timer():
         step_(-1),
-        accumulator_(0.0f) {
+        accumulator_(0.0f),
+        is_fixed_(false) {
 
         set_game_timer();
     }
