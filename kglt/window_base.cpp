@@ -46,6 +46,7 @@ bool WindowBase::update() {
     idle_.execute(); //Execute idle tasks first   
     check_events();
 
+    ktiBindTimer(timer_);
     ktiUpdateFrameTime();
 
     glEnable(GL_DEPTH_TEST);

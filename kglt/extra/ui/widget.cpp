@@ -45,10 +45,10 @@ void Widget::set_position(Ratio left, Ratio top) {
     left_ = left;
     top_ = top;
 
-    interface_.subscene().entity(entity_).set_position(Vec3(
+    interface_.subscene().entity(entity_).move_to(
         (parent_) ? parent_->width_in_pixels() * left_.value : interface_.width_in_pixels() * left_.value,
         (parent_) ? parent_->height_in_pixels() * top_.value : interface_.height_in_pixels() * top_.value,
-    0)); //FIXME: z-index
+    0); //FIXME: z-index
 }
 
 void Widget::set_size(Ratio width, Ratio height) {

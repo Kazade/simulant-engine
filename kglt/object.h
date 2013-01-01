@@ -43,17 +43,19 @@ public:
 	bool is_visible() const { return is_visible_; }
 
     virtual void move_to(float x, float y, float z);
+    virtual void move_to(const kmVec3& pos) { move_to(pos.x, pos.y, pos.z); }
     virtual void move_forward(float amount);
     
     virtual void rotate_x(float amount);        
     virtual void rotate_y(float amount);
     virtual void rotate_z(float amount);
+    virtual void rotate_to(float angle, float x, float y, float z);
 
     kmMat4 absolute_transformation();
 
-    void set_position(const kmVec3& pos);
     const kmVec3& position() const { return position_; }
     const kmVec3& absolute_position() const { return absolute_position_; }
+
 
     kmQuaternion& rotation() { return rotation_; }
 
@@ -72,6 +74,7 @@ public:
 
 protected:
     void update_from_parent();
+    void set_position(const kmVec3& pos);
 
 private:
     static uint64_t object_counter;
@@ -87,9 +90,12 @@ private:
 
     void parent_changed_callback(Object* old_parent, Object* new_parent) {
         update_from_parent();
+        transformation_changed();
     }
 
     bool is_visible_;
+
+    virtual void transformation_changed() {}
 };
 
 }

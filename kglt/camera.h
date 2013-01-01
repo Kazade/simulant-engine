@@ -74,6 +74,8 @@ private:
         kmMat4Multiply(&mvp, &projection_matrix_, &modelview_matrix_);
         frustum_.build(&mvp); //Update the frustum for this camera
     }
+
+    void transformation_changed() override { update_frustum(); }
 };
 
 }

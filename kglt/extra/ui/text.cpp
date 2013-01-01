@@ -69,11 +69,11 @@ Text::Text(Font::ptr font, Vec2 position, const unicode &text):
 
     entity_ = interface_.subscene().new_entity();
     interface_.subscene().entity(entity_).set_mesh(mesh_);
-    interface_.subscene().entity(entity_).set_position(Vec3(position.x, position.y, 0));
+    interface_.subscene().entity(entity_).move_to(position.x, position.y, 0);
 }
 
 void Text::set_position(Vec2 position) {
-    interface_.subscene().entity(entity_).set_position(Vec3(position, 0));
+    interface_.subscene().entity(entity_).move_to(position.x, position.y, 0);
 }
 
 void Text::set_colour(const Colour& colour) {
