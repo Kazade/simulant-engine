@@ -61,7 +61,7 @@ bool WindowBase::update() {
 
     swap_buffers();
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    //std::this_thread::sleep_for(std::chrono::milliseconds(10));
     
     return is_running_;
 }

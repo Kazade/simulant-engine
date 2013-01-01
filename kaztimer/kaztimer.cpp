@@ -41,14 +41,14 @@ public:
     void set_fixed(int step) {
         step_ = step;
         is_fixed_ = true;
-        last_time_ = get_current_time_in_ms();
+        last_time_ = get_current_time_in_seconds();
         accumulator_ = 0.0f;
     }
 
     void set_game_timer() {
         step_ = -1;
         is_fixed_ = false;
-        last_time_ = get_current_time_in_ms();
+        last_time_ = get_current_time_in_seconds();
     }
     
     void update_frame_time() {
@@ -89,20 +89,21 @@ public:
     }
 
     double get_elapsed_time() {
-        long current_time = get_current_time_in_ms();
-        double elapsed = double(current_time - last_time_) * 0.001;
+        double current_time = get_current_time_in_seconds();
+        double elapsed = double(current_time - last_time_);
         last_time_ = current_time;
         return elapsed;
     }
 
-    long get_current_time_in_ms() {
+    double get_current_time_in_seconds() {
 #ifdef WIN32
         return timeGetTime();
 #else
-        struct timeval tv;
-        struct timezone tz;
-        gettimeofday(&tv, &tz);
-        return (long) (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+        struct timespec tv;
+        clock_gettime(CLOCK_REALTIME, &tv);
+
+        const double BILLION = 1000000000;
+        return double(tv.tv_sec) + (double(tv.tv_nsec) / BILLION);
 #endif
     }
 
@@ -110,7 +111,7 @@ private:
     int step_;
     bool is_fixed_;
 
-    long last_time_;
+    double last_time_;
     double accumulator_;
     double frame_time_;
 };

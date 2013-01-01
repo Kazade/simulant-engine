@@ -132,7 +132,10 @@ public:
     void render();
     void update(double dt);
 
-    MaterialID default_material() const { return default_material_; }
+    //DEPRECATED
+    MaterialID default_material() const __attribute__((deprecated("Use default_material_id()"))) { return default_material_; }
+
+    MaterialID default_material_id() const { return default_material_; }
 
     Pipeline& pipeline() { return *pipeline_; }
 
