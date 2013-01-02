@@ -102,8 +102,8 @@ private:
     bool initialized_;
 
     std::tr1::shared_ptr<Scene> scene_;
-    uint32_t width_;
-    uint32_t height_;
+    int32_t width_;
+    int32_t height_;
 
     std::vector<LoaderType::ptr> loaders_;
     bool is_running_;

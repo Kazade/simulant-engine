@@ -19,7 +19,7 @@ Sprite::Sprite(Scene& scene, SubSceneID subscene):
 void Sprite::add_animation(const std::string& anim_name, const std::vector<TextureID>& frames, double duration) {
     SubScene& subscene = scene().subscene(subscene_id());
 
-    Material& mat = subscene.material(subscene.new_material(scene().default_material()));
+    Material& mat = subscene.material(subscene.new_material(scene().default_material_id()));
     mat.technique().pass(0).set_animated_texture_unit(0, frames, duration);
     mat.technique().pass(0).set_blending(BLEND_ALPHA);
     animations_[anim_name] = mat.id();

@@ -8,8 +8,8 @@ namespace kglt {
 
 WindowBase::WindowBase():
     initialized_(false),
-    width_(0),
-    height_(0),
+    width_(-1),
+    height_(-1),
     is_running_(true),
     default_viewport_(0),
     resource_locator_(ResourceLocator::create()) {
@@ -26,8 +26,8 @@ WindowBase::WindowBase():
 
 void WindowBase::init() {    
     if(!initialized_) {
-        assert(width_ && "Subclass should've set the window width by now");
-        assert(height_ && "Subclass should've set the window height by now");
+        assert(width_ > -1 && "Subclass should've set the window width by now");
+        assert(height_ > -1 && "Subclass should've set the window height by now");
 
         //Create a default viewport
         default_viewport_ = new_viewport();
