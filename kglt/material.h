@@ -35,6 +35,8 @@ public:
     }
 
     void update(double dt) {
+        if(!is_animated()) return;
+
         time_elapsed_ += dt;
         if(time_elapsed_ >= (animated_texture_duration_ / double(animated_texture_units_.size()))) {
             current_texture_++;

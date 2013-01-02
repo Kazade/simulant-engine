@@ -7,6 +7,7 @@
 #include <tr1/memory>
 #include <stdexcept>
 #include <boost/any.hpp>
+#include <sigc++/sigc++.h>
 
 #include "generic/tree.h"
 #include "generic/user_data_carrier.h"
@@ -94,6 +95,8 @@ private:
 
     kmVec3 absolute_position_;
     kmQuaternion absolute_orientation_;
+
+    sigc::connection parent_changed_connection_;
 
     void parent_changed_callback(Object* old_parent, Object* new_parent) {
         update_from_parent();

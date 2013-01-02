@@ -26,11 +26,11 @@ Object::Object(SubScene *subscene):
     update_from_parent();
 
     //When the parent changes, update the position/orientation
-    signal_parent_changed().connect(sigc::mem_fun(this, &Object::parent_changed_callback));
+    parent_changed_connection_ = signal_parent_changed().connect(sigc::mem_fun(this, &Object::parent_changed_callback));
 }
 
 Object::~Object() {
-
+    parent_changed_connection_.disconnect();
 }
 
 void Object::lock_rotation(float angle, float x, float y, float z) {
