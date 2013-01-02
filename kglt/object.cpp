@@ -14,7 +14,9 @@ uint64_t Object::object_counter = 0;
 Object::Object(SubScene *subscene):
     uuid_(++object_counter),
     subscene_(subscene),
-    is_visible_(true) {
+    is_visible_(true),
+    rotation_locked_(false),
+    position_locked_(false) {
 
     kmVec3Fill(&position_, 0.0, 0.0, 0.0);
     kmQuaternionIdentity(&rotation_);
@@ -31,16 +33,43 @@ Object::~Object() {
 
 }
 
+void Object::lock_rotation(float angle, float x, float y, float z) {
+    kmVec3 axis;
+    kmVec3Fill(&axis, x, y, z);
+    kmQuaternionRotationAxis(&rotation_, &axis, kmDegreesToRadians(angle));
+    kmQuaternionAssign(&absolute_orientation_, &rotation_);
+    transformation_changed();
+    rotation_locked_ = true;
+}
+
+void Object::unlock_rotation() {
+    rotation_locked_ = false;
+    update_from_parent();
+}
+
+void Object::lock_position(float x, float y, float z) {
+    move_to(x, y, z);
+    position_locked_ = true;
+}
+
+void Object::unlock_position() {
+    position_locked_ = false;
+    update_from_parent();
+}
+
 void Object::move_to(float x, float y, float z) {
+    if(position_locked_) return;
+
     position_.x = x;
     position_.y = y;
     position_.z = z;
 
     update_from_parent();
-    transformation_changed();
 }
 
 void Object::move_forward(float amount) {
+    if(position_locked_) return;
+
     kmMat3 rot_matrix;
     kmVec3 forward;
     kmMat3RotationQuaternion(&rot_matrix, &rotation_);
@@ -50,18 +79,21 @@ void Object::move_forward(float amount) {
     kmVec3Add(&position_, &position_, &forward);
 
     update_from_parent();
-    transformation_changed();
+
 }
 
 void Object::rotate_to(float angle, float x, float y, float z) {
+    if(rotation_locked_) return;
+
     kmVec3 axis;
     kmVec3Fill(&axis, x, y, z);
     kmQuaternionRotationAxis(&rotation_, &axis, kmDegreesToRadians(angle));
     update_from_parent();
-    transformation_changed();
 }
 
 void Object::rotate_x(float amount) {
+    if(rotation_locked_) return;
+
     kmQuaternion rot;
     kmVec3 axis;
     kmVec3Fill(&axis, 1, 0, 0);
@@ -70,10 +102,11 @@ void Object::rotate_x(float amount) {
     kmQuaternionNormalize(&rotation_, &rotation_);
 
     update_from_parent();
-    transformation_changed();
 }
 
 void Object::rotate_z(float amount) {
+    if(rotation_locked_) return;
+
     kmQuaternion rot;
     kmVec3 axis;
     kmVec3Fill(&axis, 0, 0, 1);
@@ -82,10 +115,11 @@ void Object::rotate_z(float amount) {
     kmQuaternionNormalize(&rotation_, &rotation_);
 
     update_from_parent();
-    transformation_changed();
 }
 
 void Object::rotate_y(float amount) {
+    if(rotation_locked_) return;
+
     kmQuaternion rot;
     kmVec3 axis;
     kmVec3Fill(&axis, 0, 1, 0);
@@ -94,7 +128,6 @@ void Object::rotate_y(float amount) {
     kmQuaternionNormalize(&rotation_, &rotation_);
 
     update_from_parent();
-    transformation_changed();
 }
 
 kmMat4 Object::absolute_transformation() {
@@ -116,13 +149,20 @@ void Object::update_from_parent() {
         kmVec3Assign(&absolute_position_, &position_);
         kmQuaternionAssign(&absolute_orientation_, &rotation_);
         kmQuaternionNormalize(&absolute_orientation_, &absolute_orientation_);
+        transformation_changed();
     } else {
-        kmVec3Add(&absolute_position_, &parent().absolute_position_, &position_);
-        kmQuaternionMultiply(&absolute_orientation_, &parent().absolute_orientation_, &rotation_);
-        kmQuaternionNormalize(&absolute_orientation_, &absolute_orientation_);
+        if(!position_locked_) {
+            kmVec3Add(&absolute_position_, &parent().absolute_position_, &position_);
+        }
+        if(!rotation_locked_) {
+            kmQuaternionMultiply(&absolute_orientation_, &rotation_, &parent().absolute_orientation_);
+            kmQuaternionNormalize(&absolute_orientation_, &absolute_orientation_);
+        }
     }
 
-    std::for_each(children().begin(), children().end(), [](Object* x) { x->update_from_parent(); });
+    transformation_changed(); //FIXME: Did it though?
+
+    std::for_each(children().begin(), children().end(), [](Object* x) { x->update_from_parent(); });    
 }
 
 void Object::destroy_children() {

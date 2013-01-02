@@ -51,11 +51,18 @@ public:
     virtual void rotate_z(float amount);
     virtual void rotate_to(float angle, float x, float y, float z);
 
+    //Make this object ignore parent rotations or rotate commands until unlocked
+    void lock_rotation(float angle, float x, float y, float z);
+    void unlock_rotation();
+
+    //Make this object ignore parent translations or move commands until unlocked
+    void lock_position(float x, float y, float z);
+    void unlock_position();
+
     kmMat4 absolute_transformation();
 
     const kmVec3& position() const { return position_; }
     const kmVec3& absolute_position() const { return absolute_position_; }
-
 
     kmQuaternion& rotation() { return rotation_; }
 
@@ -90,10 +97,11 @@ private:
 
     void parent_changed_callback(Object* old_parent, Object* new_parent) {
         update_from_parent();
-        transformation_changed();
     }
 
     bool is_visible_;
+    bool rotation_locked_;
+    bool position_locked_;
 
     virtual void transformation_changed() {}
 };

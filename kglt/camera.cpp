@@ -9,8 +9,7 @@ Camera::Camera(SubScene *subscene, CameraID id):
     Object(subscene),
     generic::Identifiable<CameraID>(id) {
 
-    kmQuaternionRotationYawPitchRoll(&rotation(), 180.0, 0.0, 0.0);
-    kmQuaternionNormalize(&rotation(), &rotation());
+    rotate_to(180.0, 0, 1, 0);
 
     kmMat4Identity(&projection_matrix_); //Initialize the projection matrix
     kmMat4Identity(&modelview_matrix_);
