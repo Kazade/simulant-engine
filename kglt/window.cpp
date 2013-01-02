@@ -6,12 +6,12 @@
 
 namespace kglt {
 
-Window::Window(int width, int height, int bpp) {
+Window::Window(int width, int height, int bpp, bool fullscreen) {
 	if(SDL_Init(SDL_INIT_VIDEO) < 0) {
 		throw std::runtime_error("Unable to initialize SDL");
 	}
 
-	create_gl_window(width, height, bpp);
+    create_gl_window(width, height, bpp, fullscreen);
 }
 
 Window::~Window() {
@@ -35,9 +35,14 @@ void Window::check_events() {
 
     while(SDL_PollEvent(&event)) {
         switch(event.type) {
-            case SDL_KEYDOWN:
+            case SDL_KEYDOWN: {
+                if(event.key.keysym.sym == SDLK_ESCAPE) {
+                    stop_running();
+                    return;
+                }
                 signal_key_pressed_((KeyCode)event.key.keysym.sym);
-                break;
+            }
+            break;
             case SDL_KEYUP:
                 signal_key_released_((KeyCode)event.key.keysym.sym);
                 break;
@@ -54,11 +59,16 @@ void Window::check_events() {
     }
 }
 
-void Window::create_gl_window(int width, int height, int bpp) {
+void Window::create_gl_window(int width, int height, int bpp, bool fullscreen) {
 //    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 //    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
-    surface_ = SDL_SetVideoMode(width, height, bpp, SDL_OPENGL);
+    int32_t flags = SDL_OPENGL;
+    if(fullscreen) {
+        flags |= SDL_FULLSCREEN;
+    }
+
+    surface_ = SDL_SetVideoMode(width, height, bpp, flags);
 
     //Reset the width and height to whatever was actually created
 
@@ -75,6 +85,8 @@ void Window::create_gl_window(int width, int height, int bpp) {
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+
+    SDL_ShowCursor(0);
 
     assert(surface_);
     assert(GLEE_VERSION_2_1);

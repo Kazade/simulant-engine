@@ -24,7 +24,7 @@ WindowBase::WindowBase():
     ktiStartGameTimer();
 }
 
-void WindowBase::init() {    
+void WindowBase::init_window() {
     if(!initialized_) {
         assert(width_ > -1 && "Subclass should've set the window width by now");
         assert(height_ > -1 && "Subclass should've set the window height by now");
@@ -41,7 +41,7 @@ void WindowBase::init() {
 }
 
 bool WindowBase::update() {    
-    init(); //Make sure we were initialized
+    init_window(); //Make sure we were initialized
 
     idle_.execute(); //Execute idle tasks first   
     check_events();

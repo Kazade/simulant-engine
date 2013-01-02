@@ -30,7 +30,6 @@ class WindowBase :
 
 public:
     WindowBase();
-    void init();
 
     virtual ~WindowBase() {
         
@@ -97,6 +96,8 @@ protected:
     void set_height(uint32_t height) {
         height_ = height; 
     }
+
+    void init_window();
     
 private:
     bool initialized_;
