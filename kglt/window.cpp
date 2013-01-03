@@ -1,13 +1,14 @@
 #include "../glee/GLee.h"
 
 #include <SDL/SDL.h>
+#include "kazbase/unicode/unicode.h"
 
 #include "window.h"
 
 namespace kglt {
 
 Window::Window(int width, int height, int bpp, bool fullscreen) {
-	if(SDL_Init(SDL_INIT_VIDEO) < 0) {
+    if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
 		throw std::runtime_error("Unable to initialize SDL");
 	}
 
@@ -90,6 +91,11 @@ void Window::create_gl_window(int width, int height, int bpp, bool fullscreen) {
 
     assert(surface_);
     assert(GLEE_VERSION_2_1);
+
+    L_DEBUG(unicode("{0} joysicks found").format(SDL_NumJoysticks()).encode());
+    for(uint16_t i = 0; i < SDL_NumJoysticks(); i++) {
+        L_DEBUG(SDL_JoystickName(i));
+    }
 }
 
 void Window::swap_buffers() {
