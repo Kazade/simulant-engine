@@ -120,10 +120,10 @@ The Pipeline is where you assemble your SubScenes for rendering. You add stages 
 
 For example, if you want to render a 2D overlay on your world you'll probably want to do that using a camera that has an orthographic projection. In that case, you'd do the following:
 
-# Create a new subscene ( window->scene().new_subscene() )
-# Build your 2D overlay in the subscene (e.g. using new_mesh(), new_material(), new_entity() etc.)
-# Manipulate the subscene's camera (e.g. subscene.camera().set_orthographic_projection())
-# Finally add a stage to the pipeline (e.g. subscene.scene().pipeline().add_stage(subscene.id(), subscene.camera().id(), ViewportID(), TextureID(), 100) );
+* Create a new subscene ( window->scene().new_subscene() )
+* Build your 2D overlay in the subscene (e.g. using new_mesh(), new_material(), new_entity() etc.)
+* Manipulate the subscene's camera (e.g. subscene.camera().set_orthographic_projection())
+* Finally add a stage to the pipeline (e.g. subscene.scene().pipeline().add_stage(subscene.id(), subscene.camera().id(), ViewportID(), TextureID(), 100) );
 
 The 100 in the above example is the priority of this stage, the stage that renders the default subscene has a priority of 0, so giving your overlay subscene a priority of 100 would mean it would be renderered after the default.
 
