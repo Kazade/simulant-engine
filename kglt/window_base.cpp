@@ -3,6 +3,7 @@
 #include "glee/GLee.h"
 #include "window_base.h"
 #include "scene.h"
+#include "input_controller.h"
 
 namespace kglt {
 
@@ -12,7 +13,8 @@ WindowBase::WindowBase():
     height_(-1),
     is_running_(true),
     default_viewport_(0),
-    resource_locator_(ResourceLocator::create()) {
+    resource_locator_(ResourceLocator::create()),
+    input_controller_(InputController::create()){
 
     //Register the default resource loaders
     register_loader(LoaderType::ptr(new kglt::loaders::TextureLoaderType));
@@ -93,5 +95,20 @@ void WindowBase::delete_viewport(ViewportID viewport) {
     TemplatedManager<WindowBase, Viewport, ViewportID>::manager_delete(viewport);
 }
 
+Keyboard& WindowBase::keyboard() {
+    return input_controller_->keyboard();
+}
+
+Mouse& WindowBase::mouse() {
+    return input_controller_->mouse();
+}
+
+Joypad& WindowBase::joypad(uint8_t idx) {
+    return input_controller_->joypad(idx);
+}
+
+uint8_t WindowBase::joypad_count() const {
+    return input_controller_->joypad_count();
+}
 
 }

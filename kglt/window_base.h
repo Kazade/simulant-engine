@@ -25,6 +25,11 @@
 
 namespace kglt {
     
+class InputController;
+class Keyboard;
+class Mouse;
+class Joypad;
+
 class WindowBase :
         public generic::TemplatedManager<WindowBase, Viewport, ViewportID> {
 
@@ -86,6 +91,11 @@ public:
     ViewportID default_viewport() const { return default_viewport_; }
 
     ResourceLocator& resource_locator() { return *resource_locator_; }
+
+    Keyboard& keyboard();
+    Mouse& mouse();
+    Joypad& joypad(uint8_t idx);
+    uint8_t joypad_count() const;
 protected:
     void stop_running() { is_running_ = false; }
     
@@ -98,7 +108,8 @@ protected:
     }
 
     void init_window();
-    
+
+    InputController& input_controller() { assert(input_controller_); return *input_controller_; }
 private:
     bool initialized_;
 
@@ -118,6 +129,7 @@ private:
     ViewportID default_viewport_;
 
     ResourceLocator::ptr resource_locator_;
+    std::tr1::shared_ptr<InputController> input_controller_;
 };
 
 }

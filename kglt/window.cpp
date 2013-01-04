@@ -2,7 +2,7 @@
 
 #include <SDL/SDL.h>
 #include "kazbase/unicode/unicode.h"
-
+#include "input_controller.h"
 #include "window.h"
 
 namespace kglt {
@@ -13,6 +13,8 @@ Window::Window(int width, int height, int bpp, bool fullscreen) {
 	}
 
     create_gl_window(width, height, bpp, fullscreen);
+
+    input_controller().keyboard().key_pressed_connect(KEY_CODE_ESCAPE, std::bind(&Window::stop_running, this));
 }
 
 Window::~Window() {
@@ -35,18 +37,10 @@ void Window::check_events() {
     SDL_Event event;
 
     while(SDL_PollEvent(&event)) {
+
+        input_controller().handle_event(event);
+
         switch(event.type) {
-            case SDL_KEYDOWN: {
-                if(event.key.keysym.sym == SDLK_ESCAPE) {
-                    stop_running();
-                    return;
-                }
-                signal_key_pressed_((KeyCode)event.key.keysym.sym);
-            }
-            break;
-            case SDL_KEYUP:
-                signal_key_released_((KeyCode)event.key.keysym.sym);
-                break;
             case SDL_ACTIVEEVENT:
                 break;
             case SDL_VIDEORESIZE:
@@ -58,6 +52,8 @@ void Window::check_events() {
                 break;
         }
     }
+
+    input_controller().update();
 }
 
 void Window::create_gl_window(int width, int height, int bpp, bool fullscreen) {

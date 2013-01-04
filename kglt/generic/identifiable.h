@@ -13,6 +13,14 @@ public:
     virtual ~Identifiable() {}
 
     IDType id() const { return id_; }
+
+    virtual bool operator==(const Identifiable<IDType>& rhs) const {
+        return id() == rhs.id();
+    }
+
+    virtual bool operator<(const Identifiable<IDType>& rhs) const {
+        return id() < rhs.id();
+    }
 private:
     IDType id_;
 };

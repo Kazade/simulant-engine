@@ -3,6 +3,7 @@
 
 #include "types.h"
 #include "window.h"
+#include "input_controller.h"
 #include "scene.h"
 #include "viewport.h"
 #include "frustum.h"
