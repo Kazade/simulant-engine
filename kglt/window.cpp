@@ -8,13 +8,22 @@
 namespace kglt {
 
 Window::Window(int width, int height, int bpp, bool fullscreen) {
+    using std::bind;
+
     if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
 		throw std::runtime_error("Unable to initialize SDL");
 	}
 
-    create_gl_window(width, height, bpp, fullscreen);
+    create_gl_window(width, height, bpp, fullscreen);   
 
-    input_controller().keyboard().key_pressed_connect(KEY_CODE_ESCAPE, std::bind(&Window::stop_running, this));
+    //C++11 lambda awesomeness! input_controller isn't initialized yet
+    //so we connect ESCAPE in an idle task
+    idle().add_once([=]() {
+        //Bind the stop_running method to the ESCAPE key
+        input_controller().keyboard().key_pressed_connect(
+            KEY_CODE_ESCAPE, bind(&Window::stop_running, this)
+        );
+    });
 }
 
 Window::~Window() {

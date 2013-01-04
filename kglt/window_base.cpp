@@ -13,8 +13,7 @@ WindowBase::WindowBase():
     height_(-1),
     is_running_(true),
     default_viewport_(0),
-    resource_locator_(ResourceLocator::create()),
-    input_controller_(InputController::create()){
+    resource_locator_(ResourceLocator::create()) {
 
     //Register the default resource loaders
     register_loader(LoaderType::ptr(new kglt::loaders::TextureLoaderType));
@@ -38,6 +37,10 @@ void WindowBase::init_window() {
 
         //Initialize the scene
         scene().init();
+
+        //This needs to happen after SDL or whatever is initialized
+        input_controller_ = InputController::create();
+
         initialized_ = true;
     }
 }

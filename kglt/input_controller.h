@@ -80,12 +80,51 @@ class Mouse :
 
 };
 
+typedef uint8_t Axis;
+typedef uint8_t Button;
+typedef float AxisRange;
+
+typedef std::function<void (AxisRange, Axis)> JoypadCallback;
+typedef std::function<void (uint8_t)> JoypadButtonCallback;
+
 class Joypad :
     public Device,
     public Managed<Joypad> {
 public:
-    InputConnection axis_changed_connect(uint8_t axis, std::function<bool (uint8_t, uint32_t)> callback);
-    InputConnection axis_while_nonzero_connect(uint8_t axis, std::function<bool (uint8_t, uint32_t)> callback);
+    Joypad();
+
+    InputConnection axis_changed_connect(Axis axis, JoypadCallback callback);
+    InputConnection axis_while_nonzero_connect(Axis axis, JoypadCallback callback);
+    InputConnection axis_while_below_zero_connect(Axis axis, JoypadCallback callback);
+    InputConnection axis_while_above_zero_connect(Axis axis, JoypadCallback callback);
+
+    InputConnection button_pressed_connect(Button button, JoypadButtonCallback callback);
+    InputConnection button_released_connect(Button button, JoypadButtonCallback callback);
+
+private:
+    typedef std::pair<InputConnection, JoypadCallback> AxisSignalEntry;
+    typedef std::pair<InputConnection, JoypadButtonCallback> ButtonSignalEntry;
+
+    void _handle_axis_changed_event(Axis axis, int32_t value);
+    void _handle_button_down_event(Button button);
+    void _handle_button_up_event(Button button);
+
+    void _update();
+    void _disconnect(const InputConnection &connection);
+
+    uint8_t jitter_value_;
+
+    std::map<Axis, int32_t> axis_state_;
+
+    std::map<Axis, std::map<InputConnection, JoypadCallback> > axis_changed_signals_;
+    std::map<Axis, std::map<InputConnection, JoypadCallback> > axis_while_nonzero_signals_;
+    std::map<Axis, std::map<InputConnection, JoypadCallback> > axis_while_below_zero_signals_;
+    std::map<Axis, std::map<InputConnection, JoypadCallback> > axis_while_above_zero_signals_;
+
+    std::map<Button, std::map<InputConnection, JoypadButtonCallback> > button_pressed_signals_;
+    std::map<Button, std::map<InputConnection, JoypadButtonCallback> > button_released_signals_;
+
+    friend class InputController;
 };
 
 class InputController:
@@ -93,6 +132,7 @@ class InputController:
 
 public:
     InputController();
+    ~InputController();
 
     Keyboard& keyboard() { assert(keyboard_); return *keyboard_; }
     Mouse& mouse() { assert(mouse_); return *mouse_; }
@@ -105,7 +145,9 @@ public:
 private:
     Keyboard::ptr keyboard_;
     Mouse::ptr mouse_;
+
     std::vector<Joypad::ptr> joypads_;
+    std::vector<SDL_Joystick*> sdl_joysticks_;
 };
 
 }
