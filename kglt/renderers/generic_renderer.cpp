@@ -326,7 +326,7 @@ void GenericRenderer::render_subentity(SubEntity& buffer, CameraID camera) {
 
     MaterialID mid = buffer.material();
     if(!mid) {
-        mid = scene().default_material();
+        mid = scene().default_material_id();
     }
     Material& mat = current_subscene().material(mid);
     MaterialTechnique& technique = mat.technique(DEFAULT_MATERIAL_SCHEME);
@@ -385,6 +385,8 @@ void GenericRenderer::render_subentity(SubEntity& buffer, CameraID camera) {
             //Render the mesh, once for each iteration of the pass
             if(buffer.arrangement() == MESH_ARRANGEMENT_POINTS) {
                 glDrawElements(GL_POINTS, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+            } else if(buffer.arrangement() == MESH_ARRANGEMENT_LINES) {
+                glDrawElements(GL_LINES, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
             } else if(buffer.arrangement() == MESH_ARRANGEMENT_LINE_STRIP) {
                 glDrawElements(GL_LINE_STRIP, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
             } else if(buffer.arrangement() == MESH_ARRANGEMENT_TRIANGLES) {
