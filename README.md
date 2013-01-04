@@ -15,9 +15,8 @@ Well, it's pretty simple really...
 
 int main(int argc, char* argv[]) {
 
-    kglt::Window window;
-    
-    while(window.update()) {}    
+    kglt::Window::ptr window = kglt::Window::create();
+    while(window->update()) {}
 
     return 0;
 }
@@ -29,131 +28,110 @@ scene and the program runs until the window is closed.
 But you wanted something more interesting than that right? OK, let's draw a
 wireframe triangle:
 
-    #include "GL/window.h"
+```
+#include "kglt/kglt.h"
 
-    int main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) {
 
-        kglt::Window window;
+    kglt::Window::ptr window = kglt::Window::create();
+    kglt::Subscene& scene = window->scene().subscene();
 
-        //Set some rendering options
-        window.scene().render_options.wireframe_enabled = true;
+    //Create a new mesh
+    kglt::Mesh& mesh = scene.mesh(scene.new_mesh());
 
-        //Create a new mesh
-        kglt::Mesh& mesh = kglt::return_new_mesh(window.scene());
+    //Add a submesh, add 3 vertices and a triangle made up of them
+    kglt::SubMesh& submesh = mesh.submesh(mesh.new_submesh(MaterialID(), MESH_ARRANGEMENT_LINE_STRIP))
+    submesh.vertex_data().position(-1.0, 0.0, 0.0);
+    submesh.vertex_data().diffuse(kglt::Colour::white);
+    submesh.vertex_data().move_next();    
     
-        //Add a submesh, add 3 vertices and a triangle made up of them
-        mesh.add_submesh();
-        mesh.submesh().add_vertex(-1.0, 0.0, 0.0);
-        mesh.submesh().add_vertex(0.0, 1.0, 0.0);
-        mesh.submesh().add_vertex(1.0, 0.0, 0.0);
-        mesh.submesh().add_triangle(0, 1, 2);
+    submesh.vertex_data().position(0.0, 1.0, 0.0);
+    submesh.vertex_data().diffuse(kglt::Colour::white);
+    submesh.vertex_data().move_next();
     
-        while(window.update()) {}    
+    submesh.vertex_data().position(1.0, 0.0, 0.0);
+    submesh.vertex_data().diffuse(kglt::Colour::white);
+    submesh.vertex_data().move_next();
+    submesh.vertex_data().done();
+    
+    //Add the 3 indexes of the triangle
+    submesh.index_data().index(0);
+    submesh.index_data().index(1);
+    submesh.index_data().index(2);
+    submesh.index_data().done();
 
-        return 0;
-    }
+    kglt::Entity& entity = scene.entity(scene.new_entity(mesh.id())); //Create an entity in the world which uses the triangle
+    entity.move_to(0.0, 0.0, -1.0);
+    
+    while(window.update()) {}    
 
+    return 0;
+}
+```
 
 We can also draw a rectangle even more easily:
 
+```
+#include "kglt/kglt.h"
 
-    #include "GL/window.h"
+int main(int argc, char* argv[]) {
 
-    int main(int argc, char* argv[]) {
+    kglt::Window::ptr window = kglt::Window::create();
+    kglt::SubScene& scene = window->scene().subscene();
 
-        kglt::Window window;
+    //Create a new mesh
+    kglt::Mesh& mesh = scene.mesh(scene.new_mesh());
 
-        //Set some rendering options
-        window.scene().render_options.wireframe_enabled = true;
+    //Construct a rectangle 1.0 unit across, and half a unit high
+    kglt::procedural::mesh::rectangle_outline(mesh, 1.0, 0.5);
 
-        //Create a new mesh
-        kglt::Mesh& mesh = kglt::return_new_mesh(window.scene());
+    kglt::Entity& entity = scene.entity(scene.new_entity(mesh.id()));
     
-        //Construct a rectangle 1.0 unit across, and half a unit high
-        kglt::procedural::mesh::rectangle(mesh, 1.0, 0.5);
-	
-        //Move the rectangle out a little
-        mesh.move_to(0.0, 0.0, -1.0);
-	
-        //Create an orthographic projection, 2 units high, with a 16:9 ratio (default)
-        window.scene().viewport().set_orthographic_projection_from_height(2.0);
-	
-        while(window.update()) {}    
+    //Move the rectangle out a little
+    entity.move_to(0.0, 0.0, -1.0);
 
-        return 0;
-    }
+    //Create an orthographic projection, 2 units high, with a 16:9 ratio (default)
+    window->viewport().set_orthographic_projection_from_height(2.0);
 
+    while(window->update()) {}    
+
+    return 0;
+}
+```
 
 # Documentation
 
-## Objects
+## Scenes, SubScenes and the Pipeline
 
-Everything visible in the Scene is a subclass of Object. An Object can have children, and they can have children etc. 
+The Scene owns everything (pretty much). Every Window has a single Scene object. You can do the following with a Scene:
 
-Each object has a position and an orientation relative to its parent. If this changes (or the Object's parent changes) an absolute position and orientation is recalculated. Pretty standard scene graph stuff.
+* Create and delete SubScenes
+* Create and delete resources (e.g. Meshes, Textures, Shaders and Materials)
+* Manipulate the rendering pipeline
 
-## The Scene
+When you create a Window, the Scene is created along with a single SubScene; this is the default SubScene. SubScenes are where you create your world by spawning "Entity"s, you can think of them as a chunk of the overall Scene. Generally speaking most objects that you create should belong to the default subscene. There's nothing particularly special about the default SubScene aside from it being created automatically and it being automatically connected to a stage in the rendering pipeline for you.
 
-The Scene owns everything. Like everything else it's a Object. It forms the root node of the scene you are trying to display. The Scene is also a factory for creating new objects. If you want to spawn a Mesh object for example, you would do so using window().scene().new_mesh();
+The Pipeline is where you assemble your SubScenes for rendering. You add stages to the Pipeline, and each stage has the following:
 
-Things you can spawn from the scene are:
+* The SubScene that this stage renders
+* The CameraID of the camera to use
+* The ViewportID of the viewport to render to
+* An optional TextureID if you want to render to a texture rather than the framebuffer (not yet implemented)
 
- * Meshes
- * Textures
- * Materials
- * Shader programs
- * Fonts
- * Text objects
+For example, if you want to render a 2D overlay on your world you'll probably want to do that using a camera that has an orthographic projection. In that case, you'd do the following:
 
-The Scene also contains other objects that aren't attached to it's heirarchy, these include:
- 
- * The UI instance
- * Overlays
- * The Background instance
+# Create a new subscene ( window->scene().new_subscene() )
+# Build your 2D overlay in the subscene (e.g. using new_mesh(), new_material(), new_entity() etc.)
+# Manipulate the subscene's camera (e.g. subscene.camera().set_orthographic_projection())
+# Finally add a stage to the pipeline (e.g. subscene.scene().pipeline().add_stage(subscene.id(), subscene.camera().id(), ViewportID(), TextureID(), 100) );
 
-These objects are special, and so aren't traditional child nodes of the scene.
+The 100 in the above example is the priority of this stage, the stage that renders the default subscene has a priority of 0, so giving your overlay subscene a priority of 100 would mean it would be renderered after the default.
 
-## The UI instance
+## The "extra" namespace
 
-The Scene object contains an instance of the UI class. This class is basically a layer above a 2D overlay that allows you to create common UI widgets such as labels. To create a label for example you would do something like this:
-
-ui::LabelID lid = scene().ui().new_label();
-ui::Label& label = scene().ui().label(lid);
-label.set_text("This is a label");
-label.set_position(0.1, 0.1); //UI positions are between 0.0 and 1.0 in both directions
-label.set_foreground_colour(kglt::Colour(1.0, 1.0, 0.0, 1.0));
-label.set_background_colour(kglt::Colour(0.0, 0.0, 0.0, 0.0));
-
-Internally, new_label() creates a series of Mesh and Text objects and attaches them to an overlay.
-
-## Overlays
-
-Overlays are used to render 2D elements on top of the scene.
-
-An Overlay is a different kind of root node than the Scene object. A Scene is rendered through a camera, which maintains a projection and a frustum. You can move the camera around a Scene.
-
-Overlays are different, Overlays create a 2D orthographic projection that you can control. Object's can be attached to the Overlay and they will be rendered on top of the regular Scene. Cameras have no effect on an Overlay. Although an Overlay is an Object, it is not part of the Scene heirarchy and instead is the root of its own heirarchy. To render a 2D mesh on top of the scene, you would do the following:
-
-Overlay& overlay = return_new_overlay(scene); //Create an overlay
-Mesh& mesh = return_new_mesh(scene); //Create a mesh
-mesh.set_parent(overlay); //Detach the mesh from the scene and attach it to the overlay
-
-## Backgrounds
-
-Each Scene has a background() property. Backgrounds are made up of one or more image layers that can be independently scrolled. Each layer is always positioned central to the viewport, and is rendered at the resolution of the image. You can clip the viewport to a certain section of a background by using set_visible_dimensions(X, Y);
-
-For example, if you load a background layer from an image with a resolution of 512x256. You could then set the visible dimensions to 320x224 and use background().layer(0).scroll_x(amount) to move the viewport around.
-
-Current constraints:
-
- * All layers must be the same dimensions
- * You cannot set the visible dimensions to greater than the layer size
-
-## The "additional" namespace
-
-KGLT is designed so that the core is as streamlined and minimalist as possible. The idea being that everything can be built using a combination of the core objects (e.g. Meshes, Texts, Fonts and Materials). Still, this means that creating objects such as animated sprites is quite a manual process. The "additional" namespace contains classes that manage the core objects for you to provide easy common functionality. For example, the kglt::additional::Sprite class allows you to construct characters with several animations easily:
+KGLT is designed so that the core is as streamlined and minimalist as possible. The idea being that everything can be built using a combination of the core objects (e.g. Meshes, and Materials). Still, this means that creating objects such as animated sprites is quite a manual process. The "extra" namespace contains classes that manage the core objects for you to provide easy common functionality. For example, the kglt::extra::Sprite class allows you to construct characters with several animations easily:
     
-    auto sprite = kglt::additional::Sprite::create(scene); //Create a sprite
+    auto sprite = kglt::extra::Sprite::create(scene); //Create a sprite
     sprite->add_animation("anim_1", frames); //Frames is an array of texture IDs
     sprite->set_current_animation("anim_1");
     sprite->move_to(0, 0, -1);
