@@ -68,6 +68,13 @@ bool WindowBase::update() {
 
     //std::this_thread::sleep_for(std::chrono::milliseconds(10));
     
+    if(!is_running_) {
+        //Shutdown the input controller
+        input_controller_.reset();
+
+        //Destroy the scene
+        scene_.reset();
+    }
     return is_running_;
 }
 
