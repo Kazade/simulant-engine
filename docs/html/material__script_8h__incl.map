@@ -1,0 +1,13 @@
+<map id="kglt/loaders/material_script.h" name="kglt/loaders/material_script.h">
+<area shape="rect" id="node9" href="$managed_8h.html" title="../generic/managed.h" alt="" coords="155,101,299,131"/>
+<area shape="rect" id="node14" href="$material_8h.html" title="../material.h" alt="" coords="775,101,865,131"/>
+<area shape="rect" id="node34" href="$types_8h.html" title="types.h" alt="" coords="1171,179,1235,208"/>
+<area shape="rect" id="node52" href="$loader_8h.html" title="../loader.h" alt="" coords="323,101,403,131"/>
+<area shape="rect" id="node25" href="$resource_8h.html" title="resource.h" alt="" coords="1005,179,1088,208"/>
+<area shape="rect" id="node29" href="$loadable_8h.html" title="loadable.h" alt="" coords="477,179,557,208"/>
+<area shape="rect" id="node32" href="$identifiable_8h.html" title="generic/identifiable.h" alt="" coords="632,179,773,208"/>
+<area shape="rect" id="node38" href="$colour_8h.html" title="colour.h" alt="" coords="1335,256,1401,285"/>
+<area shape="rect" id="node46" href="$unique__id_8h.html" title="generic/unique_id.h" alt="" coords="1703,256,1836,285"/>
+<area shape="rect" id="node49" href="$safe__bool_8h.html" title="safe_bool.h" alt="" coords="1725,333,1813,363"/>
+<area shape="rect" id="node58" href="$option__list_8h.html" title="kglt/option_list.h" alt="" coords="123,179,240,208"/>
+</map>

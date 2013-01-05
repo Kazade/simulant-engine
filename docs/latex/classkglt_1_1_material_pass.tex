@@ -1,0 +1,218 @@
+\hypertarget{classkglt_1_1_material_pass}{\section{kglt\-:\-:Material\-Pass Class Reference}
+\label{classkglt_1_1_material_pass}\index{kglt\-::\-Material\-Pass@{kglt\-::\-Material\-Pass}}
+}
+
+
+{\ttfamily \#include $<$material.\-h$>$}
+
+\subsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+typedef std\-::tr1\-::shared\-\_\-ptr\\*
+$<$ \hyperlink{classkglt_1_1_material_pass}{Material\-Pass} $>$ \hyperlink{classkglt_1_1_material_pass_ace1863609e03620a2e7daf1c29af7849}{ptr}
+\end{DoxyCompactItemize}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classkglt_1_1_material_pass_a2961c9fc4fc8dc4a88fb88e001a7c710}{Material\-Pass} (\hyperlink{namespacekglt_a2aafe4bf33d26659020117cad360422f}{Shader\-I\-D} \hyperlink{classkglt_1_1_material_pass_ad740603f0820d75f0103f0a9388e14c3}{shader})
+\item 
+void \hyperlink{classkglt_1_1_material_pass_a4012915a59a46dd8e6d9e236736db43f}{set\-\_\-texture\-\_\-unit} (uint32\-\_\-t texture\-\_\-unit\-\_\-id, \hyperlink{namespacekglt_aaea040f25edb7f75ca0f3aa8136a45a1}{Texture\-I\-D} tex)
+\item 
+void \hyperlink{classkglt_1_1_material_pass_afe6270c470a69548fc779ed372e261a8}{set\-\_\-animated\-\_\-texture\-\_\-unit} (uint32\-\_\-t texture\-\_\-unit\-\_\-id, const std\-::vector$<$ \hyperlink{namespacekglt_aaea040f25edb7f75ca0f3aa8136a45a1}{Texture\-I\-D} $>$ textures, double duration)
+\item 
+\hyperlink{structkglt_1_1_colour}{Colour} \hyperlink{classkglt_1_1_material_pass_a4a7b53802594a603961f9f99cfd18421}{diffuse} () const 
+\item 
+\hyperlink{structkglt_1_1_colour}{Colour} \hyperlink{classkglt_1_1_material_pass_aadbe72523b0fde3ef6d7d40017f37b60}{ambient} () const 
+\item 
+\hyperlink{structkglt_1_1_colour}{Colour} \hyperlink{classkglt_1_1_material_pass_ace4b372efc2624e9dab4b07de70b6ddc}{specular} () const 
+\item 
+float \hyperlink{classkglt_1_1_material_pass_a9cf6e6395b0e6c378d494cbc9696be0a}{shininess} () const 
+\item 
+\hyperlink{namespacekglt_a2aafe4bf33d26659020117cad360422f}{Shader\-I\-D} \hyperlink{classkglt_1_1_material_pass_ad740603f0820d75f0103f0a9388e14c3}{shader} () const 
+\item 
+uint32\-\_\-t \hyperlink{classkglt_1_1_material_pass_a74485acbeae63d4715e2489fec37fb0e}{texture\-\_\-unit\-\_\-count} () const 
+\item 
+\hyperlink{classkglt_1_1_texture_unit}{Texture\-Unit} \& \hyperlink{classkglt_1_1_material_pass_a2a79b6e1316d16635f1aa07e5f8d1bdf}{texture\-\_\-unit} (uint32\-\_\-t index)
+\item 
+void \hyperlink{classkglt_1_1_material_pass_aab8c6590ca0cd932efc755c4dc2f58ca}{update} (double dt)
+\item 
+\hyperlink{namespacekglt_a8c4fb91dd78b0723e08e5b900ddf061d}{Iteration\-Type} \hyperlink{classkglt_1_1_material_pass_a330ba119295b0b76cb630f35b33a2542}{iteration} () const 
+\item 
+uint32\-\_\-t \hyperlink{classkglt_1_1_material_pass_a933c71d1e82257defc25fd41646358b4}{max\-\_\-iterations} () const 
+\item 
+void \hyperlink{classkglt_1_1_material_pass_a9cb3bc5a67f433b9a373e22f0666ef00}{set\-\_\-iteration} (\hyperlink{namespacekglt_a8c4fb91dd78b0723e08e5b900ddf061d}{Iteration\-Type} iter\-\_\-type, uint32\-\_\-t max=1)
+\item 
+void \hyperlink{classkglt_1_1_material_pass_ae38f0a15f0279d3ff2c21bfcee5bed87}{set\-\_\-blending} (\hyperlink{namespacekglt_a33fd92ca529c46d2bbd00e7146019aea}{Blend\-Type} blend)
+\item 
+\hyperlink{namespacekglt_a33fd92ca529c46d2bbd00e7146019aea}{Blend\-Type} \hyperlink{classkglt_1_1_material_pass_a285832dea336a7429b4e9539bd92895f}{blending} ()
+\item 
+void \hyperlink{classkglt_1_1_material_pass_aa66cde11160cd60815cb571e7e83cc85}{set\-\_\-depth\-\_\-write\-\_\-enabled} (bool value=true)
+\item 
+bool \hyperlink{classkglt_1_1_material_pass_a2047549d95261abe84b338a49c12f23c}{depth\-\_\-write\-\_\-enabled} () const 
+\item 
+void \hyperlink{classkglt_1_1_material_pass_af840e5aa63a092c3b89b5a860e177eab}{set\-\_\-depth\-\_\-test\-\_\-enabled} (bool value=true)
+\item 
+bool \hyperlink{classkglt_1_1_material_pass_ad718442903205325080417230a7fe41b}{depth\-\_\-test\-\_\-enabled} () const 
+\end{DoxyCompactItemize}
+
+
+\subsection{Member Typedef Documentation}
+\hypertarget{classkglt_1_1_material_pass_ace1863609e03620a2e7daf1c29af7849}{\index{kglt\-::\-Material\-Pass@{kglt\-::\-Material\-Pass}!ptr@{ptr}}
+\index{ptr@{ptr}!kglt::MaterialPass@{kglt\-::\-Material\-Pass}}
+\subsubsection[{ptr}]{\setlength{\rightskip}{0pt plus 5cm}typedef std\-::tr1\-::shared\-\_\-ptr$<${\bf Material\-Pass}$>$ {\bf kglt\-::\-Material\-Pass\-::ptr}}}\label{classkglt_1_1_material_pass_ace1863609e03620a2e7daf1c29af7849}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classkglt_1_1_material_pass_a2961c9fc4fc8dc4a88fb88e001a7c710}{\index{kglt\-::\-Material\-Pass@{kglt\-::\-Material\-Pass}!Material\-Pass@{Material\-Pass}}
+\index{Material\-Pass@{Material\-Pass}!kglt::MaterialPass@{kglt\-::\-Material\-Pass}}
+\subsubsection[{Material\-Pass}]{\setlength{\rightskip}{0pt plus 5cm}kglt\-::\-Material\-Pass\-::\-Material\-Pass (
+\begin{DoxyParamCaption}
+\item[{{\bf Shader\-I\-D}}]{shader}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_material_pass_a2961c9fc4fc8dc4a88fb88e001a7c710}
+
+
+\subsection{Member Function Documentation}
+\hypertarget{classkglt_1_1_material_pass_aadbe72523b0fde3ef6d7d40017f37b60}{\index{kglt\-::\-Material\-Pass@{kglt\-::\-Material\-Pass}!ambient@{ambient}}
+\index{ambient@{ambient}!kglt::MaterialPass@{kglt\-::\-Material\-Pass}}
+\subsubsection[{ambient}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Colour} kglt\-::\-Material\-Pass\-::ambient (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_material_pass_aadbe72523b0fde3ef6d7d40017f37b60}
+\hypertarget{classkglt_1_1_material_pass_a285832dea336a7429b4e9539bd92895f}{\index{kglt\-::\-Material\-Pass@{kglt\-::\-Material\-Pass}!blending@{blending}}
+\index{blending@{blending}!kglt::MaterialPass@{kglt\-::\-Material\-Pass}}
+\subsubsection[{blending}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Blend\-Type} kglt\-::\-Material\-Pass\-::blending (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_material_pass_a285832dea336a7429b4e9539bd92895f}
+\hypertarget{classkglt_1_1_material_pass_ad718442903205325080417230a7fe41b}{\index{kglt\-::\-Material\-Pass@{kglt\-::\-Material\-Pass}!depth\-\_\-test\-\_\-enabled@{depth\-\_\-test\-\_\-enabled}}
+\index{depth\-\_\-test\-\_\-enabled@{depth\-\_\-test\-\_\-enabled}!kglt::MaterialPass@{kglt\-::\-Material\-Pass}}
+\subsubsection[{depth\-\_\-test\-\_\-enabled}]{\setlength{\rightskip}{0pt plus 5cm}bool kglt\-::\-Material\-Pass\-::depth\-\_\-test\-\_\-enabled (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_material_pass_ad718442903205325080417230a7fe41b}
+\hypertarget{classkglt_1_1_material_pass_a2047549d95261abe84b338a49c12f23c}{\index{kglt\-::\-Material\-Pass@{kglt\-::\-Material\-Pass}!depth\-\_\-write\-\_\-enabled@{depth\-\_\-write\-\_\-enabled}}
+\index{depth\-\_\-write\-\_\-enabled@{depth\-\_\-write\-\_\-enabled}!kglt::MaterialPass@{kglt\-::\-Material\-Pass}}
+\subsubsection[{depth\-\_\-write\-\_\-enabled}]{\setlength{\rightskip}{0pt plus 5cm}bool kglt\-::\-Material\-Pass\-::depth\-\_\-write\-\_\-enabled (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_material_pass_a2047549d95261abe84b338a49c12f23c}
+\hypertarget{classkglt_1_1_material_pass_a4a7b53802594a603961f9f99cfd18421}{\index{kglt\-::\-Material\-Pass@{kglt\-::\-Material\-Pass}!diffuse@{diffuse}}
+\index{diffuse@{diffuse}!kglt::MaterialPass@{kglt\-::\-Material\-Pass}}
+\subsubsection[{diffuse}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Colour} kglt\-::\-Material\-Pass\-::diffuse (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_material_pass_a4a7b53802594a603961f9f99cfd18421}
+\hypertarget{classkglt_1_1_material_pass_a330ba119295b0b76cb630f35b33a2542}{\index{kglt\-::\-Material\-Pass@{kglt\-::\-Material\-Pass}!iteration@{iteration}}
+\index{iteration@{iteration}!kglt::MaterialPass@{kglt\-::\-Material\-Pass}}
+\subsubsection[{iteration}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Iteration\-Type} kglt\-::\-Material\-Pass\-::iteration (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_material_pass_a330ba119295b0b76cb630f35b33a2542}
+\hypertarget{classkglt_1_1_material_pass_a933c71d1e82257defc25fd41646358b4}{\index{kglt\-::\-Material\-Pass@{kglt\-::\-Material\-Pass}!max\-\_\-iterations@{max\-\_\-iterations}}
+\index{max\-\_\-iterations@{max\-\_\-iterations}!kglt::MaterialPass@{kglt\-::\-Material\-Pass}}
+\subsubsection[{max\-\_\-iterations}]{\setlength{\rightskip}{0pt plus 5cm}uint32\-\_\-t kglt\-::\-Material\-Pass\-::max\-\_\-iterations (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_material_pass_a933c71d1e82257defc25fd41646358b4}
+\hypertarget{classkglt_1_1_material_pass_afe6270c470a69548fc779ed372e261a8}{\index{kglt\-::\-Material\-Pass@{kglt\-::\-Material\-Pass}!set\-\_\-animated\-\_\-texture\-\_\-unit@{set\-\_\-animated\-\_\-texture\-\_\-unit}}
+\index{set\-\_\-animated\-\_\-texture\-\_\-unit@{set\-\_\-animated\-\_\-texture\-\_\-unit}!kglt::MaterialPass@{kglt\-::\-Material\-Pass}}
+\subsubsection[{set\-\_\-animated\-\_\-texture\-\_\-unit}]{\setlength{\rightskip}{0pt plus 5cm}void kglt\-::\-Material\-Pass\-::set\-\_\-animated\-\_\-texture\-\_\-unit (
+\begin{DoxyParamCaption}
+\item[{uint32\-\_\-t}]{texture\-\_\-unit\-\_\-id, }
+\item[{const std\-::vector$<$ {\bf Texture\-I\-D} $>$}]{textures, }
+\item[{double}]{duration}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_material_pass_afe6270c470a69548fc779ed372e261a8}
+\hypertarget{classkglt_1_1_material_pass_ae38f0a15f0279d3ff2c21bfcee5bed87}{\index{kglt\-::\-Material\-Pass@{kglt\-::\-Material\-Pass}!set\-\_\-blending@{set\-\_\-blending}}
+\index{set\-\_\-blending@{set\-\_\-blending}!kglt::MaterialPass@{kglt\-::\-Material\-Pass}}
+\subsubsection[{set\-\_\-blending}]{\setlength{\rightskip}{0pt plus 5cm}void kglt\-::\-Material\-Pass\-::set\-\_\-blending (
+\begin{DoxyParamCaption}
+\item[{{\bf Blend\-Type}}]{blend}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_material_pass_ae38f0a15f0279d3ff2c21bfcee5bed87}
+\hypertarget{classkglt_1_1_material_pass_af840e5aa63a092c3b89b5a860e177eab}{\index{kglt\-::\-Material\-Pass@{kglt\-::\-Material\-Pass}!set\-\_\-depth\-\_\-test\-\_\-enabled@{set\-\_\-depth\-\_\-test\-\_\-enabled}}
+\index{set\-\_\-depth\-\_\-test\-\_\-enabled@{set\-\_\-depth\-\_\-test\-\_\-enabled}!kglt::MaterialPass@{kglt\-::\-Material\-Pass}}
+\subsubsection[{set\-\_\-depth\-\_\-test\-\_\-enabled}]{\setlength{\rightskip}{0pt plus 5cm}void kglt\-::\-Material\-Pass\-::set\-\_\-depth\-\_\-test\-\_\-enabled (
+\begin{DoxyParamCaption}
+\item[{bool}]{value = {\ttfamily true}}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_material_pass_af840e5aa63a092c3b89b5a860e177eab}
+\hypertarget{classkglt_1_1_material_pass_aa66cde11160cd60815cb571e7e83cc85}{\index{kglt\-::\-Material\-Pass@{kglt\-::\-Material\-Pass}!set\-\_\-depth\-\_\-write\-\_\-enabled@{set\-\_\-depth\-\_\-write\-\_\-enabled}}
+\index{set\-\_\-depth\-\_\-write\-\_\-enabled@{set\-\_\-depth\-\_\-write\-\_\-enabled}!kglt::MaterialPass@{kglt\-::\-Material\-Pass}}
+\subsubsection[{set\-\_\-depth\-\_\-write\-\_\-enabled}]{\setlength{\rightskip}{0pt plus 5cm}void kglt\-::\-Material\-Pass\-::set\-\_\-depth\-\_\-write\-\_\-enabled (
+\begin{DoxyParamCaption}
+\item[{bool}]{value = {\ttfamily true}}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_material_pass_aa66cde11160cd60815cb571e7e83cc85}
+\hypertarget{classkglt_1_1_material_pass_a9cb3bc5a67f433b9a373e22f0666ef00}{\index{kglt\-::\-Material\-Pass@{kglt\-::\-Material\-Pass}!set\-\_\-iteration@{set\-\_\-iteration}}
+\index{set\-\_\-iteration@{set\-\_\-iteration}!kglt::MaterialPass@{kglt\-::\-Material\-Pass}}
+\subsubsection[{set\-\_\-iteration}]{\setlength{\rightskip}{0pt plus 5cm}void kglt\-::\-Material\-Pass\-::set\-\_\-iteration (
+\begin{DoxyParamCaption}
+\item[{{\bf Iteration\-Type}}]{iter\-\_\-type, }
+\item[{uint32\-\_\-t}]{max = {\ttfamily 1}}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_material_pass_a9cb3bc5a67f433b9a373e22f0666ef00}
+\hypertarget{classkglt_1_1_material_pass_a4012915a59a46dd8e6d9e236736db43f}{\index{kglt\-::\-Material\-Pass@{kglt\-::\-Material\-Pass}!set\-\_\-texture\-\_\-unit@{set\-\_\-texture\-\_\-unit}}
+\index{set\-\_\-texture\-\_\-unit@{set\-\_\-texture\-\_\-unit}!kglt::MaterialPass@{kglt\-::\-Material\-Pass}}
+\subsubsection[{set\-\_\-texture\-\_\-unit}]{\setlength{\rightskip}{0pt plus 5cm}void kglt\-::\-Material\-Pass\-::set\-\_\-texture\-\_\-unit (
+\begin{DoxyParamCaption}
+\item[{uint32\-\_\-t}]{texture\-\_\-unit\-\_\-id, }
+\item[{{\bf Texture\-I\-D}}]{tex}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_material_pass_a4012915a59a46dd8e6d9e236736db43f}
+\hypertarget{classkglt_1_1_material_pass_ad740603f0820d75f0103f0a9388e14c3}{\index{kglt\-::\-Material\-Pass@{kglt\-::\-Material\-Pass}!shader@{shader}}
+\index{shader@{shader}!kglt::MaterialPass@{kglt\-::\-Material\-Pass}}
+\subsubsection[{shader}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Shader\-I\-D} kglt\-::\-Material\-Pass\-::shader (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_material_pass_ad740603f0820d75f0103f0a9388e14c3}
+\hypertarget{classkglt_1_1_material_pass_a9cf6e6395b0e6c378d494cbc9696be0a}{\index{kglt\-::\-Material\-Pass@{kglt\-::\-Material\-Pass}!shininess@{shininess}}
+\index{shininess@{shininess}!kglt::MaterialPass@{kglt\-::\-Material\-Pass}}
+\subsubsection[{shininess}]{\setlength{\rightskip}{0pt plus 5cm}float kglt\-::\-Material\-Pass\-::shininess (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_material_pass_a9cf6e6395b0e6c378d494cbc9696be0a}
+\hypertarget{classkglt_1_1_material_pass_ace4b372efc2624e9dab4b07de70b6ddc}{\index{kglt\-::\-Material\-Pass@{kglt\-::\-Material\-Pass}!specular@{specular}}
+\index{specular@{specular}!kglt::MaterialPass@{kglt\-::\-Material\-Pass}}
+\subsubsection[{specular}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Colour} kglt\-::\-Material\-Pass\-::specular (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_material_pass_ace4b372efc2624e9dab4b07de70b6ddc}
+\hypertarget{classkglt_1_1_material_pass_a2a79b6e1316d16635f1aa07e5f8d1bdf}{\index{kglt\-::\-Material\-Pass@{kglt\-::\-Material\-Pass}!texture\-\_\-unit@{texture\-\_\-unit}}
+\index{texture\-\_\-unit@{texture\-\_\-unit}!kglt::MaterialPass@{kglt\-::\-Material\-Pass}}
+\subsubsection[{texture\-\_\-unit}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Texture\-Unit}\& kglt\-::\-Material\-Pass\-::texture\-\_\-unit (
+\begin{DoxyParamCaption}
+\item[{uint32\-\_\-t}]{index}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_material_pass_a2a79b6e1316d16635f1aa07e5f8d1bdf}
+\hypertarget{classkglt_1_1_material_pass_a74485acbeae63d4715e2489fec37fb0e}{\index{kglt\-::\-Material\-Pass@{kglt\-::\-Material\-Pass}!texture\-\_\-unit\-\_\-count@{texture\-\_\-unit\-\_\-count}}
+\index{texture\-\_\-unit\-\_\-count@{texture\-\_\-unit\-\_\-count}!kglt::MaterialPass@{kglt\-::\-Material\-Pass}}
+\subsubsection[{texture\-\_\-unit\-\_\-count}]{\setlength{\rightskip}{0pt plus 5cm}uint32\-\_\-t kglt\-::\-Material\-Pass\-::texture\-\_\-unit\-\_\-count (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_material_pass_a74485acbeae63d4715e2489fec37fb0e}
+\hypertarget{classkglt_1_1_material_pass_aab8c6590ca0cd932efc755c4dc2f58ca}{\index{kglt\-::\-Material\-Pass@{kglt\-::\-Material\-Pass}!update@{update}}
+\index{update@{update}!kglt::MaterialPass@{kglt\-::\-Material\-Pass}}
+\subsubsection[{update}]{\setlength{\rightskip}{0pt plus 5cm}void kglt\-::\-Material\-Pass\-::update (
+\begin{DoxyParamCaption}
+\item[{double}]{dt}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_material_pass_aab8c6590ca0cd932efc755c4dc2f58ca}
+
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+kglt/\hyperlink{material_8h}{material.\-h}\item 
+kglt/\hyperlink{material_8cpp}{material.\-cpp}\end{DoxyCompactItemize}

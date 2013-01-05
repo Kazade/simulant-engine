@@ -1,0 +1,22 @@
+<map id="kglt/camera.h" name="kglt/camera.h">
+<area shape="rect" id="node5" href="$identifiable_8h.html" title="generic/identifiable.h" alt="" coords="3083,315,3224,344"/>
+<area shape="rect" id="node7" href="$managed_8h.html" title="generic/managed.h" alt="" coords="1904,401,2035,431"/>
+<area shape="rect" id="node13" href="$object_8h.html" title="object.h" alt="" coords="1028,237,1095,267"/>
+<area shape="rect" id="node70" href="$frustum_8h.html" title="frustum.h" alt="" coords="1515,315,1592,344"/>
+<area shape="rect" id="node79" href="$renderer_8h.html" title="renderer.h" alt="" coords="2128,83,2208,112"/>
+<area shape="rect" id="node27" href="$tree_8h.html" title="generic/tree.h" alt="" coords="1011,315,1112,344"/>
+<area shape="rect" id="node37" href="$user__data__carrier_8h.html" title="generic/user_data_carrier.h" alt="" coords="453,315,632,344"/>
+<area shape="rect" id="node40" href="$visitor_8h.html" title="generic/visitor.h" alt="" coords="264,315,379,344"/>
+<area shape="rect" id="node52" href="$types_8h.html" title="types.h" alt="" coords="2235,315,2299,344"/>
+<area shape="rect" id="node58" href="$colour_8h.html" title="colour.h" alt="" coords="2160,401,2227,431"/>
+<area shape="rect" id="node65" href="$unique__id_8h.html" title="generic/unique_id.h" alt="" coords="2656,401,2789,431"/>
+<area shape="rect" id="node68" href="$safe__bool_8h.html" title="safe_bool.h" alt="" coords="2679,488,2767,517"/>
+<area shape="rect" id="node85" href="$geometry__buffer_8h.html" title="utils/geometry_buffer.h" alt="" coords="1677,237,1832,267"/>
+<area shape="rect" id="node93" href="$entity_8h.html" title="entity.h" alt="" coords="2349,160,2413,189"/>
+<area shape="rect" id="node97" href="$relation_8h.html" title="generic/relation.h" alt="" coords="2321,237,2441,267"/>
+<area shape="rect" id="node105" href="$boundable_8h.html" title="boundable.h" alt="" coords="2775,237,2865,267"/>
+<area shape="rect" id="node110" href="$mesh_8h.html" title="mesh.h" alt="" coords="2465,237,2529,267"/>
+<area shape="rect" id="node121" href="$resource_8h.html" title="resource.h" alt="" coords="2608,315,2691,344"/>
+<area shape="rect" id="node124" href="$vertex__data_8h.html" title="vertex_data.h" alt="" coords="2109,315,2211,344"/>
+<area shape="rect" id="node132" href="$buffer__object_8h.html" title="buffer_object.h" alt="" coords="2813,401,2920,431"/>
+</map>

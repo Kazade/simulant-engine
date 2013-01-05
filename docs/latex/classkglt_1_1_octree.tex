@@ -1,0 +1,114 @@
+\hypertarget{classkglt_1_1_octree}{\section{kglt\-:\-:Octree Class Reference}
+\label{classkglt_1_1_octree}\index{kglt\-::\-Octree@{kglt\-::\-Octree}}
+}
+
+
+{\ttfamily \#include $<$octree.\-h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classkglt_1_1_octree_ac74d2fa7ce292bcda41913881124f6f3}{Octree} ()
+\item 
+\hyperlink{classkglt_1_1_octree_node}{Octree\-Node} \& \hyperlink{classkglt_1_1_octree_af3ce34a320487077a38c887535473ac3}{root} ()
+\item 
+uint32\-\_\-t \hyperlink{classkglt_1_1_octree_a9ea9637caf95214e9f56b0f063952298}{node\-\_\-count} () const 
+\item 
+bool \hyperlink{classkglt_1_1_octree_a22a41ca7d5f0b37a9179929347203ac3}{has\-\_\-root} () const 
+\item 
+void \hyperlink{classkglt_1_1_octree_a9d1eebda7bbd1118f61ac3286bc5cf19}{grow} (const \hyperlink{classkglt_1_1_boundable}{Boundable} $\ast$object)
+\item 
+void \hyperlink{classkglt_1_1_octree_adb9fb30c3f58fd761302b275a7351bde}{shrink} (const \hyperlink{classkglt_1_1_boundable}{Boundable} $\ast$object)
+\item 
+void \hyperlink{classkglt_1_1_octree_a4d350064474290e80b010f6583e6a8ca}{relocate} (const \hyperlink{classkglt_1_1_boundable}{Boundable} $\ast$object)
+\item 
+\hyperlink{classkglt_1_1_octree_node}{Octree\-Node} \& \hyperlink{classkglt_1_1_octree_ac4097df980f03a2e9217181c197253c3}{find} (const \hyperlink{classkglt_1_1_boundable}{Boundable} $\ast$object)
+\item 
+std\-::vector$<$ \hyperlink{classkglt_1_1_octree_node}{Octree\-Node} $\ast$ $>$ \hyperlink{classkglt_1_1_octree_a7884b4165cc990532b32912740abb55a}{nodes\-\_\-visible\-\_\-from} (const \hyperlink{classkglt_1_1_frustum}{Frustum} \&frustum)
+\end{DoxyCompactItemize}
+\subsection*{Friends}
+\begin{DoxyCompactItemize}
+\item 
+class \hyperlink{classkglt_1_1_octree_a8b24235b6b0c86da018f898416ecd2e8}{Octree\-Node}
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classkglt_1_1_octree_ac74d2fa7ce292bcda41913881124f6f3}{\index{kglt\-::\-Octree@{kglt\-::\-Octree}!Octree@{Octree}}
+\index{Octree@{Octree}!kglt::Octree@{kglt\-::\-Octree}}
+\subsubsection[{Octree}]{\setlength{\rightskip}{0pt plus 5cm}kglt\-::\-Octree\-::\-Octree (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_octree_ac74d2fa7ce292bcda41913881124f6f3}
+
+
+\subsection{Member Function Documentation}
+\hypertarget{classkglt_1_1_octree_ac4097df980f03a2e9217181c197253c3}{\index{kglt\-::\-Octree@{kglt\-::\-Octree}!find@{find}}
+\index{find@{find}!kglt::Octree@{kglt\-::\-Octree}}
+\subsubsection[{find}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Octree\-Node} \& kglt\-::\-Octree\-::find (
+\begin{DoxyParamCaption}
+\item[{const {\bf Boundable} $\ast$}]{object}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_octree_ac4097df980f03a2e9217181c197253c3}
+\hypertarget{classkglt_1_1_octree_a9d1eebda7bbd1118f61ac3286bc5cf19}{\index{kglt\-::\-Octree@{kglt\-::\-Octree}!grow@{grow}}
+\index{grow@{grow}!kglt::Octree@{kglt\-::\-Octree}}
+\subsubsection[{grow}]{\setlength{\rightskip}{0pt plus 5cm}void kglt\-::\-Octree\-::grow (
+\begin{DoxyParamCaption}
+\item[{const {\bf Boundable} $\ast$}]{object}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_octree_a9d1eebda7bbd1118f61ac3286bc5cf19}
+\hypertarget{classkglt_1_1_octree_a22a41ca7d5f0b37a9179929347203ac3}{\index{kglt\-::\-Octree@{kglt\-::\-Octree}!has\-\_\-root@{has\-\_\-root}}
+\index{has\-\_\-root@{has\-\_\-root}!kglt::Octree@{kglt\-::\-Octree}}
+\subsubsection[{has\-\_\-root}]{\setlength{\rightskip}{0pt plus 5cm}bool kglt\-::\-Octree\-::has\-\_\-root (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_octree_a22a41ca7d5f0b37a9179929347203ac3}
+\hypertarget{classkglt_1_1_octree_a9ea9637caf95214e9f56b0f063952298}{\index{kglt\-::\-Octree@{kglt\-::\-Octree}!node\-\_\-count@{node\-\_\-count}}
+\index{node\-\_\-count@{node\-\_\-count}!kglt::Octree@{kglt\-::\-Octree}}
+\subsubsection[{node\-\_\-count}]{\setlength{\rightskip}{0pt plus 5cm}uint32\-\_\-t kglt\-::\-Octree\-::node\-\_\-count (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classkglt_1_1_octree_a9ea9637caf95214e9f56b0f063952298}
+\hypertarget{classkglt_1_1_octree_a7884b4165cc990532b32912740abb55a}{\index{kglt\-::\-Octree@{kglt\-::\-Octree}!nodes\-\_\-visible\-\_\-from@{nodes\-\_\-visible\-\_\-from}}
+\index{nodes\-\_\-visible\-\_\-from@{nodes\-\_\-visible\-\_\-from}!kglt::Octree@{kglt\-::\-Octree}}
+\subsubsection[{nodes\-\_\-visible\-\_\-from}]{\setlength{\rightskip}{0pt plus 5cm}std\-::vector$<$ {\bf Octree\-Node} $\ast$ $>$ kglt\-::\-Octree\-::nodes\-\_\-visible\-\_\-from (
+\begin{DoxyParamCaption}
+\item[{const {\bf Frustum} \&}]{frustum}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_octree_a7884b4165cc990532b32912740abb55a}
+\hypertarget{classkglt_1_1_octree_a4d350064474290e80b010f6583e6a8ca}{\index{kglt\-::\-Octree@{kglt\-::\-Octree}!relocate@{relocate}}
+\index{relocate@{relocate}!kglt::Octree@{kglt\-::\-Octree}}
+\subsubsection[{relocate}]{\setlength{\rightskip}{0pt plus 5cm}void kglt\-::\-Octree\-::relocate (
+\begin{DoxyParamCaption}
+\item[{const {\bf Boundable} $\ast$}]{object}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_octree_a4d350064474290e80b010f6583e6a8ca}
+\hypertarget{classkglt_1_1_octree_af3ce34a320487077a38c887535473ac3}{\index{kglt\-::\-Octree@{kglt\-::\-Octree}!root@{root}}
+\index{root@{root}!kglt::Octree@{kglt\-::\-Octree}}
+\subsubsection[{root}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Octree\-Node}\& kglt\-::\-Octree\-::root (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_octree_af3ce34a320487077a38c887535473ac3}
+\hypertarget{classkglt_1_1_octree_adb9fb30c3f58fd761302b275a7351bde}{\index{kglt\-::\-Octree@{kglt\-::\-Octree}!shrink@{shrink}}
+\index{shrink@{shrink}!kglt::Octree@{kglt\-::\-Octree}}
+\subsubsection[{shrink}]{\setlength{\rightskip}{0pt plus 5cm}void kglt\-::\-Octree\-::shrink (
+\begin{DoxyParamCaption}
+\item[{const {\bf Boundable} $\ast$}]{object}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_octree_adb9fb30c3f58fd761302b275a7351bde}
+
+
+\subsection{Friends And Related Function Documentation}
+\hypertarget{classkglt_1_1_octree_a8b24235b6b0c86da018f898416ecd2e8}{\index{kglt\-::\-Octree@{kglt\-::\-Octree}!Octree\-Node@{Octree\-Node}}
+\index{Octree\-Node@{Octree\-Node}!kglt::Octree@{kglt\-::\-Octree}}
+\subsubsection[{Octree\-Node}]{\setlength{\rightskip}{0pt plus 5cm}friend class {\bf Octree\-Node}\hspace{0.3cm}{\ttfamily [friend]}}}\label{classkglt_1_1_octree_a8b24235b6b0c86da018f898416ecd2e8}
+
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+kglt/partitioners/\hyperlink{octree_8h}{octree.\-h}\item 
+kglt/partitioners/\hyperlink{octree_8cpp}{octree.\-cpp}\end{DoxyCompactItemize}

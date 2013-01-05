@@ -1,0 +1,7 @@
+<map id="kglt::generic::UserDataCarrier" name="kglt::generic::UserDataCarrier">
+<area shape="rect" id="node3" href="$classkglt_1_1_object.html" title="kglt::Object" alt="" coords="176,83,264,112"/>
+<area shape="rect" id="node5" href="$classkglt_1_1_camera.html" title="kglt::Camera" alt="" coords="5,160,101,189"/>
+<area shape="rect" id="node7" href="$classkglt_1_1_entity.html" title="kglt::Entity" alt="" coords="125,160,211,189"/>
+<area shape="rect" id="node9" href="$classkglt_1_1_light.html" title="kglt::Light" alt="" coords="235,160,312,189"/>
+<area shape="rect" id="node11" href="$classkglt_1_1_sub_scene.html" title="kglt::SubScene" alt="" coords="336,160,445,189"/>
+</map>

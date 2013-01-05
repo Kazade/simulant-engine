@@ -1,0 +1,25 @@
+<map id="kglt/light.cpp" name="kglt/light.cpp">
+<area shape="rect" id="node3" href="$scene_8h.html" title="scene.h" alt="" coords="1127,83,1194,112"/>
+<area shape="rect" id="node160" href="$light_8h.html" title="light.h" alt="" coords="2804,160,2860,189"/>
+<area shape="rect" id="node15" href="$types_8h.html" title="types.h" alt="" coords="2691,315,2755,344"/>
+<area shape="rect" id="node34" href="$object_8h.html" title="object.h" alt="" coords="1127,237,1194,267"/>
+<area shape="rect" id="node60" href="$visitor_8h.html" title="generic/visitor.h" alt="" coords="144,315,259,344"/>
+<area shape="rect" id="node73" href="$resource__manager_8h.html" title="resource_manager.h" alt="" coords="2114,160,2252,189"/>
+<area shape="rect" id="node77" href="$manager_8h.html" title="generic/manager.h" alt="" coords="928,237,1056,267"/>
+<area shape="rect" id="node21" href="$colour_8h.html" title="colour.h" alt="" coords="2162,401,2228,431"/>
+<area shape="rect" id="node29" href="$unique__id_8h.html" title="generic/unique_id.h" alt="" coords="2508,401,2642,431"/>
+<area shape="rect" id="node32" href="$safe__bool_8h.html" title="safe_bool.h" alt="" coords="2531,488,2619,517"/>
+<area shape="rect" id="node47" href="$tree_8h.html" title="generic/tree.h" alt="" coords="854,315,955,344"/>
+<area shape="rect" id="node57" href="$user__data__carrier_8h.html" title="generic/user_data_carrier.h" alt="" coords="651,315,830,344"/>
+<area shape="rect" id="node88" href="$texture_8h.html" title="texture.h" alt="" coords="2930,237,3002,267"/>
+<area shape="rect" id="node102" href="$shader_8h.html" title="shader.h" alt="" coords="2318,237,2390,267"/>
+<area shape="rect" id="node117" href="$mesh_8h.html" title="mesh.h" alt="" coords="1999,237,2063,267"/>
+<area shape="rect" id="node146" href="$material_8h.html" title="material.h" alt="" coords="2608,237,2686,267"/>
+<area shape="rect" id="node93" href="$identifiable_8h.html" title="generic/identifiable.h" alt="" coords="2880,315,3022,344"/>
+<area shape="rect" id="node95" href="$loadable_8h.html" title="loadable.h" alt="" coords="3206,315,3286,344"/>
+<area shape="rect" id="node99" href="$resource_8h.html" title="resource.h" alt="" coords="2483,315,2566,344"/>
+<area shape="rect" id="node123" href="$managed_8h.html" title="generic/managed.h" alt="" coords="1542,401,1672,431"/>
+<area shape="rect" id="node132" href="$vertex__data_8h.html" title="vertex_data.h" alt="" coords="1864,315,1966,344"/>
+<area shape="rect" id="node140" href="$buffer__object_8h.html" title="buffer_object.h" alt="" coords="1696,401,1803,431"/>
+<area shape="rect" id="node165" href="$boundable_8h.html" title="boundable.h" alt="" coords="3040,237,3131,267"/>
+</map>

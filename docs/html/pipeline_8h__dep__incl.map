@@ -1,0 +1,7 @@
+<map id="kglt/pipeline.h" name="kglt/pipeline.h">
+<area shape="rect" id="node3" href="$background_8cpp.html" title="kglt/extra/background.cpp" alt="" coords="5,83,176,112"/>
+<area shape="rect" id="node5" href="$interface_8cpp.html" title="kglt/extra/ui/interface.cpp" alt="" coords="200,83,368,112"/>
+<area shape="rect" id="node7" href="$kglt_8h.html" title="kglt/kglt.h" alt="" coords="392,83,469,112"/>
+<area shape="rect" id="node9" href="$pipeline_8cpp.html" title="kglt/pipeline.cpp" alt="" coords="493,83,608,112"/>
+<area shape="rect" id="node11" href="$scene_8cpp.html" title="kglt/scene.cpp" alt="" coords="632,83,739,112"/>
+</map>

@@ -1,0 +1,165 @@
+\hypertarget{classkglt_1_1_camera}{\section{kglt\-:\-:Camera Class Reference}
+\label{classkglt_1_1_camera}\index{kglt\-::\-Camera@{kglt\-::\-Camera}}
+}
+
+
+{\ttfamily \#include $<$camera.\-h$>$}
+
+
+
+Inheritance diagram for kglt\-:\-:Camera\-:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classkglt_1_1_camera__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for kglt\-:\-:Camera\-:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classkglt_1_1_camera__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classkglt_1_1_camera_a42c3063735ffccb3d582168c3c717f3b}{Camera} (\hyperlink{classkglt_1_1_sub_scene}{Sub\-Scene} $\ast$\hyperlink{classkglt_1_1_object_a857d97844a3a56aeb8f0a180b7cf592f}{subscene}, \hyperlink{namespacekglt_a2a2b79f136b052b58ec737bd9c885429}{Camera\-I\-D} \hyperlink{classkglt_1_1generic_1_1_identifiable_a7930d0f7da424ad524d888726fcc12bd}{id})
+\item 
+void \hyperlink{classkglt_1_1_camera_a5cce0dca49250b3260d10fec6198a330}{watch} (\hyperlink{classkglt_1_1_object}{Object} \&obj)
+\item 
+void \hyperlink{classkglt_1_1_camera_aa3be6d31a24a292a045c0be98ec67785}{follow} (\hyperlink{classkglt_1_1_object}{Object} \&obj, float dist, float height=0.\-0f)
+\item 
+void \hyperlink{classkglt_1_1_camera_ae9a010d285b3d95f85fd4305d99492c1}{look\-\_\-at} (const \hyperlink{structkglt_1_1_vec3}{Vec3} \&\hyperlink{classkglt_1_1_object_ab103a09c02763d7fc519629292d95200}{position})
+\item 
+void \hyperlink{classkglt_1_1_camera_a18ab11dcc8431b743e43de9945110dd3}{apply} (km\-Mat4 $\ast$modelview\-\_\-out)
+\item 
+\hyperlink{classkglt_1_1_frustum}{Frustum} \& \hyperlink{classkglt_1_1_camera_a5a0bda79354de75d7ab11071ec3b1363}{frustum} ()
+\item 
+void \hyperlink{classkglt_1_1_camera_a829c16cd30b218421a85461503354bb2}{set\-\_\-perspective\-\_\-projection} (double fov, double aspect, double near=1.\-0, double far=1000.\-0f)
+\item 
+void \hyperlink{classkglt_1_1_camera_a1e5a5585e4cf9007219a7c25fa18964f}{set\-\_\-orthographic\-\_\-projection} (double left, double right, double bottom, double top, double near=-\/1.\-0, double far=1.\-0)
+\item 
+double \hyperlink{classkglt_1_1_camera_a0a9f7d359682b4f4acd4d0ea335980d7}{set\-\_\-orthographic\-\_\-projection\-\_\-from\-\_\-height} (double desired\-\_\-height\-\_\-in\-\_\-units, double ratio)
+\item 
+const km\-Mat4 \& \hyperlink{classkglt_1_1_camera_a08a31782c508b4ad37f643b67e43aab4}{projection\-\_\-matrix} () const 
+\item 
+const km\-Mat4 \& \hyperlink{classkglt_1_1_camera_af11ff86b7a0139711403767c5cb955f0}{modelview\-\_\-matrix} ()
+\item 
+void \hyperlink{classkglt_1_1_camera_abf4558388f1e6eb8c69660981e3743e0}{destroy} ()
+\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classkglt_1_1_camera_a42c3063735ffccb3d582168c3c717f3b}{\index{kglt\-::\-Camera@{kglt\-::\-Camera}!Camera@{Camera}}
+\index{Camera@{Camera}!kglt::Camera@{kglt\-::\-Camera}}
+\subsubsection[{Camera}]{\setlength{\rightskip}{0pt plus 5cm}kglt\-::\-Camera\-::\-Camera (
+\begin{DoxyParamCaption}
+\item[{{\bf Sub\-Scene} $\ast$}]{subscene, }
+\item[{{\bf Camera\-I\-D}}]{id}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_camera_a42c3063735ffccb3d582168c3c717f3b}
+
+
+\subsection{Member Function Documentation}
+\hypertarget{classkglt_1_1_camera_a18ab11dcc8431b743e43de9945110dd3}{\index{kglt\-::\-Camera@{kglt\-::\-Camera}!apply@{apply}}
+\index{apply@{apply}!kglt::Camera@{kglt\-::\-Camera}}
+\subsubsection[{apply}]{\setlength{\rightskip}{0pt plus 5cm}void kglt\-::\-Camera\-::apply (
+\begin{DoxyParamCaption}
+\item[{km\-Mat4 $\ast$}]{modelview\-\_\-out}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_camera_a18ab11dcc8431b743e43de9945110dd3}
+\hypertarget{classkglt_1_1_camera_abf4558388f1e6eb8c69660981e3743e0}{\index{kglt\-::\-Camera@{kglt\-::\-Camera}!destroy@{destroy}}
+\index{destroy@{destroy}!kglt::Camera@{kglt\-::\-Camera}}
+\subsubsection[{destroy}]{\setlength{\rightskip}{0pt plus 5cm}void kglt\-::\-Camera\-::destroy (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [virtual]}}}\label{classkglt_1_1_camera_abf4558388f1e6eb8c69660981e3743e0}
+
+
+Implements \hyperlink{classkglt_1_1_object_afad686b2f2f37613fc5eb3ea3f93e445}{kglt\-::\-Object}.
+
+\hypertarget{classkglt_1_1_camera_aa3be6d31a24a292a045c0be98ec67785}{\index{kglt\-::\-Camera@{kglt\-::\-Camera}!follow@{follow}}
+\index{follow@{follow}!kglt::Camera@{kglt\-::\-Camera}}
+\subsubsection[{follow}]{\setlength{\rightskip}{0pt plus 5cm}void kglt\-::\-Camera\-::follow (
+\begin{DoxyParamCaption}
+\item[{{\bf Object} \&}]{obj, }
+\item[{float}]{dist, }
+\item[{float}]{height = {\ttfamily 0.0f}}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_camera_aa3be6d31a24a292a045c0be98ec67785}
+\hypertarget{classkglt_1_1_camera_a5a0bda79354de75d7ab11071ec3b1363}{\index{kglt\-::\-Camera@{kglt\-::\-Camera}!frustum@{frustum}}
+\index{frustum@{frustum}!kglt::Camera@{kglt\-::\-Camera}}
+\subsubsection[{frustum}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Frustum}\& kglt\-::\-Camera\-::frustum (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_camera_a5a0bda79354de75d7ab11071ec3b1363}
+\hypertarget{classkglt_1_1_camera_ae9a010d285b3d95f85fd4305d99492c1}{\index{kglt\-::\-Camera@{kglt\-::\-Camera}!look\-\_\-at@{look\-\_\-at}}
+\index{look\-\_\-at@{look\-\_\-at}!kglt::Camera@{kglt\-::\-Camera}}
+\subsubsection[{look\-\_\-at}]{\setlength{\rightskip}{0pt plus 5cm}void kglt\-::\-Camera\-::look\-\_\-at (
+\begin{DoxyParamCaption}
+\item[{const {\bf Vec3} \&}]{position}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_camera_ae9a010d285b3d95f85fd4305d99492c1}
+\hypertarget{classkglt_1_1_camera_af11ff86b7a0139711403767c5cb955f0}{\index{kglt\-::\-Camera@{kglt\-::\-Camera}!modelview\-\_\-matrix@{modelview\-\_\-matrix}}
+\index{modelview\-\_\-matrix@{modelview\-\_\-matrix}!kglt::Camera@{kglt\-::\-Camera}}
+\subsubsection[{modelview\-\_\-matrix}]{\setlength{\rightskip}{0pt plus 5cm}const km\-Mat4\& kglt\-::\-Camera\-::modelview\-\_\-matrix (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_camera_af11ff86b7a0139711403767c5cb955f0}
+\hypertarget{classkglt_1_1_camera_a08a31782c508b4ad37f643b67e43aab4}{\index{kglt\-::\-Camera@{kglt\-::\-Camera}!projection\-\_\-matrix@{projection\-\_\-matrix}}
+\index{projection\-\_\-matrix@{projection\-\_\-matrix}!kglt::Camera@{kglt\-::\-Camera}}
+\subsubsection[{projection\-\_\-matrix}]{\setlength{\rightskip}{0pt plus 5cm}const km\-Mat4\& kglt\-::\-Camera\-::projection\-\_\-matrix (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_camera_a08a31782c508b4ad37f643b67e43aab4}
+\hypertarget{classkglt_1_1_camera_a1e5a5585e4cf9007219a7c25fa18964f}{\index{kglt\-::\-Camera@{kglt\-::\-Camera}!set\-\_\-orthographic\-\_\-projection@{set\-\_\-orthographic\-\_\-projection}}
+\index{set\-\_\-orthographic\-\_\-projection@{set\-\_\-orthographic\-\_\-projection}!kglt::Camera@{kglt\-::\-Camera}}
+\subsubsection[{set\-\_\-orthographic\-\_\-projection}]{\setlength{\rightskip}{0pt plus 5cm}void kglt\-::\-Camera\-::set\-\_\-orthographic\-\_\-projection (
+\begin{DoxyParamCaption}
+\item[{double}]{left, }
+\item[{double}]{right, }
+\item[{double}]{bottom, }
+\item[{double}]{top, }
+\item[{double}]{near = {\ttfamily -\/1.0}, }
+\item[{double}]{far = {\ttfamily 1.0}}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_camera_a1e5a5585e4cf9007219a7c25fa18964f}
+\hypertarget{classkglt_1_1_camera_a0a9f7d359682b4f4acd4d0ea335980d7}{\index{kglt\-::\-Camera@{kglt\-::\-Camera}!set\-\_\-orthographic\-\_\-projection\-\_\-from\-\_\-height@{set\-\_\-orthographic\-\_\-projection\-\_\-from\-\_\-height}}
+\index{set\-\_\-orthographic\-\_\-projection\-\_\-from\-\_\-height@{set\-\_\-orthographic\-\_\-projection\-\_\-from\-\_\-height}!kglt::Camera@{kglt\-::\-Camera}}
+\subsubsection[{set\-\_\-orthographic\-\_\-projection\-\_\-from\-\_\-height}]{\setlength{\rightskip}{0pt plus 5cm}double kglt\-::\-Camera\-::set\-\_\-orthographic\-\_\-projection\-\_\-from\-\_\-height (
+\begin{DoxyParamCaption}
+\item[{double}]{desired\-\_\-height\-\_\-in\-\_\-units, }
+\item[{double}]{ratio}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_camera_a0a9f7d359682b4f4acd4d0ea335980d7}
+\hypertarget{classkglt_1_1_camera_a829c16cd30b218421a85461503354bb2}{\index{kglt\-::\-Camera@{kglt\-::\-Camera}!set\-\_\-perspective\-\_\-projection@{set\-\_\-perspective\-\_\-projection}}
+\index{set\-\_\-perspective\-\_\-projection@{set\-\_\-perspective\-\_\-projection}!kglt::Camera@{kglt\-::\-Camera}}
+\subsubsection[{set\-\_\-perspective\-\_\-projection}]{\setlength{\rightskip}{0pt plus 5cm}void kglt\-::\-Camera\-::set\-\_\-perspective\-\_\-projection (
+\begin{DoxyParamCaption}
+\item[{double}]{fov, }
+\item[{double}]{aspect, }
+\item[{double}]{near = {\ttfamily 1.0}, }
+\item[{double}]{far = {\ttfamily 1000.0f}}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_camera_a829c16cd30b218421a85461503354bb2}
+\hypertarget{classkglt_1_1_camera_a5cce0dca49250b3260d10fec6198a330}{\index{kglt\-::\-Camera@{kglt\-::\-Camera}!watch@{watch}}
+\index{watch@{watch}!kglt::Camera@{kglt\-::\-Camera}}
+\subsubsection[{watch}]{\setlength{\rightskip}{0pt plus 5cm}void kglt\-::\-Camera\-::watch (
+\begin{DoxyParamCaption}
+\item[{{\bf Object} \&}]{obj}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_camera_a5cce0dca49250b3260d10fec6198a330}
+
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+kglt/\hyperlink{camera_8h}{camera.\-h}\item 
+kglt/\hyperlink{camera_8cpp}{camera.\-cpp}\end{DoxyCompactItemize}

@@ -1,0 +1,62 @@
+\hypertarget{scene_8h}{\section{kglt/scene.h File Reference}
+\label{scene_8h}\index{kglt/scene.\-h@{kglt/scene.\-h}}
+}
+{\ttfamily \#include $<$sigc++/sigc++.\-h$>$}\\*
+{\ttfamily \#include $<$boost/any.\-hpp$>$}\\*
+{\ttfamily \#include $<$stdexcept$>$}\\*
+{\ttfamily \#include $<$map$>$}\\*
+{\ttfamily \#include \char`\"{}kazbase/list\-\_\-utils.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}types.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}object.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}resource\-\_\-manager.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}generic/visitor.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}generic/manager.\-h\char`\"{}}\\*
+Include dependency graph for scene.\-h\-:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{scene_8h__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\-:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{scene_8h__dep__incl}
+\end{center}
+\end{figure}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \hyperlink{classkglt_1_1_scene_base}{kglt\-::\-Scene\-Base}
+\item 
+class \hyperlink{classkglt_1_1_sub_scene}{kglt\-::\-Sub\-Scene}
+\item 
+class \hyperlink{classkglt_1_1_scene}{kglt\-::\-Scene}
+\end{DoxyCompactItemize}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+namespace \hyperlink{namespacekglt}{kglt}
+\end{DoxyCompactItemize}
+\subsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef \\*
+generic\-::\-Templated\-Manager\\*
+$<$ Sub\-Scene, Entity, Entity\-I\-D $>$ \hyperlink{namespacekglt_a8677c357131c7745e0bf278a777478c6}{kglt\-::\-Entity\-Manager}
+\item 
+typedef \\*
+generic\-::\-Templated\-Manager\\*
+$<$ Sub\-Scene, Light, Light\-I\-D $>$ \hyperlink{namespacekglt_a67c1f31982b8d0c54506d309b20780e2}{kglt\-::\-Light\-Manager}
+\item 
+typedef \\*
+generic\-::\-Templated\-Manager\\*
+$<$ Sub\-Scene, Camera, Camera\-I\-D $>$ \hyperlink{namespacekglt_a62f4cbff006c7d1239f2c357cff9e3fd}{kglt\-::\-Camera\-Manager}
+\item 
+typedef \\*
+generic\-::\-Templated\-Manager\\*
+$<$ Scene, Sub\-Scene, Sub\-Scene\-I\-D $>$ \hyperlink{namespacekglt_a8531aaaf2d2242f192637125e1c40e5e}{kglt\-::\-Sub\-Scene\-Manager}
+\end{DoxyCompactItemize}

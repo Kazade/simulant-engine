@@ -1,0 +1,142 @@
+\hypertarget{classkglt_1_1_object_visitor}{\section{kglt\-:\-:Object\-Visitor Class Reference}
+\label{classkglt_1_1_object_visitor}\index{kglt\-::\-Object\-Visitor@{kglt\-::\-Object\-Visitor}}
+}
+
+
+{\ttfamily \#include $<$object\-\_\-visitor.\-h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+virtual \hyperlink{classkglt_1_1_object_visitor_ae6c9ea44e7aeb613aa0c59927f0ddb52}{$\sim$\-Object\-Visitor} ()
+\item 
+virtual void \hyperlink{classkglt_1_1_object_visitor_a4bf8855e1c314819dace5e7d753d8097}{visit} (\hyperlink{classkglt_1_1_mesh}{Mesh} $\ast$mesh)=0
+\item 
+virtual void \hyperlink{classkglt_1_1_object_visitor_a18815965b5711a54b9001018c4b0ba3a}{visit} (\hyperlink{classkglt_1_1_camera}{Camera} $\ast$camera)=0
+\item 
+virtual void \hyperlink{classkglt_1_1_object_visitor_ad0d9ba9987420f73192252b342fbcc9e}{visit} (\hyperlink{classkglt_1_1_scene}{Scene} $\ast$scene)=0
+\item 
+virtual void \hyperlink{classkglt_1_1_object_visitor_a84a58b4802f91f30cbaf59f89eb0e243}{visit} (Sprite $\ast$sprite)=0
+\item 
+virtual void \hyperlink{classkglt_1_1_object_visitor_a8452f72628ff1c16d508202a0c99677c}{visit} (Background $\ast$background)=0
+\item 
+virtual void \hyperlink{classkglt_1_1_object_visitor_a0bee6a6b86964adc8c6153e6f9aee754}{visit} (Background\-Layer $\ast$layer)=0
+\item 
+virtual void \hyperlink{classkglt_1_1_object_visitor_ac5ec43623c0d0abba8a22faa7b385bba}{visit} (U\-I $\ast$ui)=0
+\item 
+virtual void \hyperlink{classkglt_1_1_object_visitor_a2ef493060ce0b95c38d6e2e6b61b260c}{visit} (ui\-::\-Element $\ast$element)=0
+\item 
+virtual void \hyperlink{classkglt_1_1_object_visitor_aef0f520413ad607c53f6a3aad6c2ec23}{visit} (Text $\ast$text)=0
+\item 
+virtual void \hyperlink{classkglt_1_1_object_visitor_a5fc202e2edc5dcae612bfad152a586f1}{visit} (Overlay $\ast$overlay)=0
+\item 
+virtual bool \hyperlink{classkglt_1_1_object_visitor_a5d57e150679ef242b9e7ac18e524e150}{pre\-\_\-visit} (\hyperlink{classkglt_1_1_object}{Object} $\ast$obj)=0
+\begin{DoxyCompactList}\small\item\em Return false to cancel visiting a node. \end{DoxyCompactList}\item 
+virtual void \hyperlink{classkglt_1_1_object_visitor_a2f0dbafab0ee105654c6f826e50a11e8}{post\-\_\-visit} (\hyperlink{classkglt_1_1_object}{Object} $\ast$obj)=0
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classkglt_1_1_object_visitor_ae6c9ea44e7aeb613aa0c59927f0ddb52}{\index{kglt\-::\-Object\-Visitor@{kglt\-::\-Object\-Visitor}!$\sim$\-Object\-Visitor@{$\sim$\-Object\-Visitor}}
+\index{$\sim$\-Object\-Visitor@{$\sim$\-Object\-Visitor}!kglt::ObjectVisitor@{kglt\-::\-Object\-Visitor}}
+\subsubsection[{$\sim$\-Object\-Visitor}]{\setlength{\rightskip}{0pt plus 5cm}virtual kglt\-::\-Object\-Visitor\-::$\sim$\-Object\-Visitor (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}}\label{classkglt_1_1_object_visitor_ae6c9ea44e7aeb613aa0c59927f0ddb52}
+
+
+\subsection{Member Function Documentation}
+\hypertarget{classkglt_1_1_object_visitor_a2f0dbafab0ee105654c6f826e50a11e8}{\index{kglt\-::\-Object\-Visitor@{kglt\-::\-Object\-Visitor}!post\-\_\-visit@{post\-\_\-visit}}
+\index{post\-\_\-visit@{post\-\_\-visit}!kglt::ObjectVisitor@{kglt\-::\-Object\-Visitor}}
+\subsubsection[{post\-\_\-visit}]{\setlength{\rightskip}{0pt plus 5cm}virtual void kglt\-::\-Object\-Visitor\-::post\-\_\-visit (
+\begin{DoxyParamCaption}
+\item[{{\bf Object} $\ast$}]{obj}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classkglt_1_1_object_visitor_a2f0dbafab0ee105654c6f826e50a11e8}
+\hypertarget{classkglt_1_1_object_visitor_a5d57e150679ef242b9e7ac18e524e150}{\index{kglt\-::\-Object\-Visitor@{kglt\-::\-Object\-Visitor}!pre\-\_\-visit@{pre\-\_\-visit}}
+\index{pre\-\_\-visit@{pre\-\_\-visit}!kglt::ObjectVisitor@{kglt\-::\-Object\-Visitor}}
+\subsubsection[{pre\-\_\-visit}]{\setlength{\rightskip}{0pt plus 5cm}virtual bool kglt\-::\-Object\-Visitor\-::pre\-\_\-visit (
+\begin{DoxyParamCaption}
+\item[{{\bf Object} $\ast$}]{obj}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classkglt_1_1_object_visitor_a5d57e150679ef242b9e7ac18e524e150}
+
+
+Return false to cancel visiting a node. 
+
+\hypertarget{classkglt_1_1_object_visitor_a4bf8855e1c314819dace5e7d753d8097}{\index{kglt\-::\-Object\-Visitor@{kglt\-::\-Object\-Visitor}!visit@{visit}}
+\index{visit@{visit}!kglt::ObjectVisitor@{kglt\-::\-Object\-Visitor}}
+\subsubsection[{visit}]{\setlength{\rightskip}{0pt plus 5cm}virtual void kglt\-::\-Object\-Visitor\-::visit (
+\begin{DoxyParamCaption}
+\item[{{\bf Mesh} $\ast$}]{mesh}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classkglt_1_1_object_visitor_a4bf8855e1c314819dace5e7d753d8097}
+\hypertarget{classkglt_1_1_object_visitor_a18815965b5711a54b9001018c4b0ba3a}{\index{kglt\-::\-Object\-Visitor@{kglt\-::\-Object\-Visitor}!visit@{visit}}
+\index{visit@{visit}!kglt::ObjectVisitor@{kglt\-::\-Object\-Visitor}}
+\subsubsection[{visit}]{\setlength{\rightskip}{0pt plus 5cm}virtual void kglt\-::\-Object\-Visitor\-::visit (
+\begin{DoxyParamCaption}
+\item[{{\bf Camera} $\ast$}]{camera}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classkglt_1_1_object_visitor_a18815965b5711a54b9001018c4b0ba3a}
+\hypertarget{classkglt_1_1_object_visitor_ad0d9ba9987420f73192252b342fbcc9e}{\index{kglt\-::\-Object\-Visitor@{kglt\-::\-Object\-Visitor}!visit@{visit}}
+\index{visit@{visit}!kglt::ObjectVisitor@{kglt\-::\-Object\-Visitor}}
+\subsubsection[{visit}]{\setlength{\rightskip}{0pt plus 5cm}virtual void kglt\-::\-Object\-Visitor\-::visit (
+\begin{DoxyParamCaption}
+\item[{{\bf Scene} $\ast$}]{scene}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classkglt_1_1_object_visitor_ad0d9ba9987420f73192252b342fbcc9e}
+\hypertarget{classkglt_1_1_object_visitor_a84a58b4802f91f30cbaf59f89eb0e243}{\index{kglt\-::\-Object\-Visitor@{kglt\-::\-Object\-Visitor}!visit@{visit}}
+\index{visit@{visit}!kglt::ObjectVisitor@{kglt\-::\-Object\-Visitor}}
+\subsubsection[{visit}]{\setlength{\rightskip}{0pt plus 5cm}virtual void kglt\-::\-Object\-Visitor\-::visit (
+\begin{DoxyParamCaption}
+\item[{Sprite $\ast$}]{sprite}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classkglt_1_1_object_visitor_a84a58b4802f91f30cbaf59f89eb0e243}
+\hypertarget{classkglt_1_1_object_visitor_a8452f72628ff1c16d508202a0c99677c}{\index{kglt\-::\-Object\-Visitor@{kglt\-::\-Object\-Visitor}!visit@{visit}}
+\index{visit@{visit}!kglt::ObjectVisitor@{kglt\-::\-Object\-Visitor}}
+\subsubsection[{visit}]{\setlength{\rightskip}{0pt plus 5cm}virtual void kglt\-::\-Object\-Visitor\-::visit (
+\begin{DoxyParamCaption}
+\item[{Background $\ast$}]{background}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classkglt_1_1_object_visitor_a8452f72628ff1c16d508202a0c99677c}
+\hypertarget{classkglt_1_1_object_visitor_a0bee6a6b86964adc8c6153e6f9aee754}{\index{kglt\-::\-Object\-Visitor@{kglt\-::\-Object\-Visitor}!visit@{visit}}
+\index{visit@{visit}!kglt::ObjectVisitor@{kglt\-::\-Object\-Visitor}}
+\subsubsection[{visit}]{\setlength{\rightskip}{0pt plus 5cm}virtual void kglt\-::\-Object\-Visitor\-::visit (
+\begin{DoxyParamCaption}
+\item[{Background\-Layer $\ast$}]{layer}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classkglt_1_1_object_visitor_a0bee6a6b86964adc8c6153e6f9aee754}
+\hypertarget{classkglt_1_1_object_visitor_ac5ec43623c0d0abba8a22faa7b385bba}{\index{kglt\-::\-Object\-Visitor@{kglt\-::\-Object\-Visitor}!visit@{visit}}
+\index{visit@{visit}!kglt::ObjectVisitor@{kglt\-::\-Object\-Visitor}}
+\subsubsection[{visit}]{\setlength{\rightskip}{0pt plus 5cm}virtual void kglt\-::\-Object\-Visitor\-::visit (
+\begin{DoxyParamCaption}
+\item[{U\-I $\ast$}]{ui}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classkglt_1_1_object_visitor_ac5ec43623c0d0abba8a22faa7b385bba}
+\hypertarget{classkglt_1_1_object_visitor_a2ef493060ce0b95c38d6e2e6b61b260c}{\index{kglt\-::\-Object\-Visitor@{kglt\-::\-Object\-Visitor}!visit@{visit}}
+\index{visit@{visit}!kglt::ObjectVisitor@{kglt\-::\-Object\-Visitor}}
+\subsubsection[{visit}]{\setlength{\rightskip}{0pt plus 5cm}virtual void kglt\-::\-Object\-Visitor\-::visit (
+\begin{DoxyParamCaption}
+\item[{ui\-::\-Element $\ast$}]{element}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classkglt_1_1_object_visitor_a2ef493060ce0b95c38d6e2e6b61b260c}
+\hypertarget{classkglt_1_1_object_visitor_aef0f520413ad607c53f6a3aad6c2ec23}{\index{kglt\-::\-Object\-Visitor@{kglt\-::\-Object\-Visitor}!visit@{visit}}
+\index{visit@{visit}!kglt::ObjectVisitor@{kglt\-::\-Object\-Visitor}}
+\subsubsection[{visit}]{\setlength{\rightskip}{0pt plus 5cm}virtual void kglt\-::\-Object\-Visitor\-::visit (
+\begin{DoxyParamCaption}
+\item[{Text $\ast$}]{text}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classkglt_1_1_object_visitor_aef0f520413ad607c53f6a3aad6c2ec23}
+\hypertarget{classkglt_1_1_object_visitor_a5fc202e2edc5dcae612bfad152a586f1}{\index{kglt\-::\-Object\-Visitor@{kglt\-::\-Object\-Visitor}!visit@{visit}}
+\index{visit@{visit}!kglt::ObjectVisitor@{kglt\-::\-Object\-Visitor}}
+\subsubsection[{visit}]{\setlength{\rightskip}{0pt plus 5cm}virtual void kglt\-::\-Object\-Visitor\-::visit (
+\begin{DoxyParamCaption}
+\item[{Overlay $\ast$}]{overlay}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classkglt_1_1_object_visitor_a5fc202e2edc5dcae612bfad152a586f1}
+
+
+The documentation for this class was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+kglt/\hyperlink{object__visitor_8h}{object\-\_\-visitor.\-h}\end{DoxyCompactItemize}

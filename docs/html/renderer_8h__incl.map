@@ -1,0 +1,20 @@
+<map id="kglt/renderer.h" name="kglt/renderer.h">
+<area shape="rect" id="node7" href="$types_8h.html" title="types.h" alt="" coords="475,237,539,267"/>
+<area shape="rect" id="node26" href="$geometry__buffer_8h.html" title="utils/geometry_buffer.h" alt="" coords="283,160,437,189"/>
+<area shape="rect" id="node35" href="$entity_8h.html" title="entity.h" alt="" coords="865,83,929,112"/>
+<area shape="rect" id="node13" href="$colour_8h.html" title="colour.h" alt="" coords="664,324,731,353"/>
+<area shape="rect" id="node21" href="$unique__id_8h.html" title="generic/unique_id.h" alt="" coords="88,324,221,353"/>
+<area shape="rect" id="node24" href="$safe__bool_8h.html" title="safe_bool.h" alt="" coords="120,411,208,440"/>
+<area shape="rect" id="node37" href="$identifiable_8h.html" title="generic/identifiable.h" alt="" coords="664,237,805,267"/>
+<area shape="rect" id="node39" href="$managed_8h.html" title="generic/managed.h" alt="" coords="893,324,1024,353"/>
+<area shape="rect" id="node44" href="$relation_8h.html" title="generic/relation.h" alt="" coords="2327,160,2447,189"/>
+<area shape="rect" id="node54" href="$boundable_8h.html" title="boundable.h" alt="" coords="852,160,943,189"/>
+<area shape="rect" id="node58" href="$object_8h.html" title="object.h" alt="" coords="1985,160,2052,189"/>
+<area shape="rect" id="node95" href="$mesh_8h.html" title="mesh.h" alt="" coords="1103,160,1167,189"/>
+<area shape="rect" id="node69" href="$tree_8h.html" title="generic/tree.h" alt="" coords="2056,237,2157,267"/>
+<area shape="rect" id="node79" href="$user__data__carrier_8h.html" title="generic/user_data_carrier.h" alt="" coords="2675,237,2853,267"/>
+<area shape="rect" id="node82" href="$visitor_8h.html" title="generic/visitor.h" alt="" coords="1797,237,1912,267"/>
+<area shape="rect" id="node106" href="$resource_8h.html" title="resource.h" alt="" coords="1331,237,1413,267"/>
+<area shape="rect" id="node109" href="$vertex__data_8h.html" title="vertex_data.h" alt="" coords="1040,237,1141,267"/>
+<area shape="rect" id="node117" href="$buffer__object_8h.html" title="buffer_object.h" alt="" coords="1048,324,1155,353"/>
+</map>

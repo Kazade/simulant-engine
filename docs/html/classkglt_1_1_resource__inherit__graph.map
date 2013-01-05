@@ -1,0 +1,6 @@
+<map id="kglt::Resource" name="kglt::Resource">
+<area shape="rect" id="node3" href="$classkglt_1_1_material.html" title="kglt::Material" alt="" coords="5,83,101,112"/>
+<area shape="rect" id="node5" href="$classkglt_1_1_mesh.html" title="kglt::Mesh" alt="" coords="125,83,208,112"/>
+<area shape="rect" id="node7" href="$classkglt_1_1_shader_program.html" title="kglt::ShaderProgram" alt="" coords="232,83,373,112"/>
+<area shape="rect" id="node9" href="$classkglt_1_1_texture.html" title="kglt::Texture" alt="" coords="397,83,491,112"/>
+</map>

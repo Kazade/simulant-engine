@@ -1,4 +1,4 @@
-#include "../glee/GLee.h"
+#include <glee/GLee.h>
 
 #include <SDL/SDL.h>
 #include "kazbase/unicode/unicode.h"

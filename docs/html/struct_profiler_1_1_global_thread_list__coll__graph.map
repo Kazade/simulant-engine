@@ -1,0 +1,14 @@
+<map id="Profiler::GlobalThreadList" name="Profiler::GlobalThreadList">
+<area shape="rect" id="node2" href="$struct_profiler_1_1_c_a_s_lock.html" title="Profiler::CASLock" alt="" coords="460,28,585,57"/>
+<area shape="rect" id="node8" href="$struct_profiler_1_1_caller_1_1_thread_state.html" title="Profiler::Caller::Thread\lState" alt="" coords="727,75,879,122"/>
+<area shape="rect" id="node4" href="$struct_profiler_1_1_buffer.html" title="Profiler::Buffer\&lt; Root \&gt;" alt="" coords="1468,60,1625,89"/>
+<area shape="rect" id="node6" href="$struct_profiler_1_1_root.html" title="Profiler::Root" alt="" coords="1269,63,1368,92"/>
+<area shape="rect" id="node11" href="$struct_profiler_1_1_caller.html" title="Profiler::Caller" alt="" coords="1039,220,1143,249"/>
+<area shape="rect" id="node13" href="$struct_profiler_1_1_timer.html" title="Profiler::Timer" alt="" coords="751,191,855,220"/>
+<area shape="rect" id="node15" href="$struct_profiler_1_1_buffer.html" title="Profiler::Buffer\&lt; char \&gt;" alt="" coords="725,244,880,273"/>
+<area shape="rect" id="node17" href="$struct_profiler_1_1_buffer.html" title="Profiler::Buffer\&lt; const\l char * \&gt;" alt="" coords="728,297,877,343"/>
+<area shape="rect" id="node19" href="$struct_profiler_1_1_color_ramp.html" title="Profiler::ColorRamp" alt="" coords="735,367,871,396"/>
+<area shape="rect" id="node21" href="$struct_profiler_1_1_buffer.html" title="Profiler::Buffer\&lt; Marker \&gt;" alt="" coords="437,367,608,396"/>
+<area shape="rect" id="node23" href="$struct_profiler_1_1_color_ramp_1_1_marker.html" title="Profiler::ColorRamp\l::Marker" alt="" coords="201,358,337,405"/>
+<area shape="rect" id="node25" href="$struct_profiler_1_1_color_f.html" title="Profiler::ColorF" alt="" coords="7,367,116,396"/>
+</map>

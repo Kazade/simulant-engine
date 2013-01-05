@@ -1,0 +1,22 @@
+<map id="kglt/window.h" name="kglt/window.h">
+<area shape="rect" id="node3" href="$managed_8h.html" title="generic/managed.h" alt="" coords="520,237,651,267"/>
+<area shape="rect" id="node9" href="$window__base_8h.html" title="window_base.h" alt="" coords="916,83,1028,112"/>
+<area shape="rect" id="node14" href="$keyboard_8h.html" title="keyboard.h" alt="" coords="600,160,685,189"/>
+<area shape="rect" id="node16" href="$resource__locator_8h.html" title="resource_locator.h" alt="" coords="397,160,525,189"/>
+<area shape="rect" id="node25" href="$texture__loader_8h.html" title="loaders/texture_loader.h" alt="" coords="213,160,373,189"/>
+<area shape="rect" id="node27" href="$loader_8h.html" title="../loader.h" alt="" coords="253,237,333,267"/>
+<area shape="rect" id="node42" href="$material__script_8h.html" title="loaders/material_script.h" alt="" coords="1064,160,1227,189"/>
+<area shape="rect" id="node66" href="$types_8h.html" title="types.h" alt="" coords="1445,315,1509,344"/>
+<area shape="rect" id="node85" href="$q2bsp__loader_8h.html" title="loaders/q2bsp_loader.h" alt="" coords="35,160,189,189"/>
+<area shape="rect" id="node89" href="$idle__task__manager_8h.html" title="idle_task_manager.h" alt="" coords="1964,237,2105,267"/>
+<area shape="rect" id="node100" href="$manager_8h.html" title="generic/manager.h" alt="" coords="1591,237,1719,267"/>
+<area shape="rect" id="node113" href="$viewport_8h.html" title="viewport.h" alt="" coords="1301,237,1384,267"/>
+<area shape="rect" id="node32" href="$loadable_8h.html" title="loadable.h" alt="" coords="483,315,563,344"/>
+<area shape="rect" id="node35" href="$option__list_8h.html" title="kglt/option_list.h" alt="" coords="139,315,256,344"/>
+<area shape="rect" id="node48" href="$material_8h.html" title="../material.h" alt="" coords="977,237,1068,267"/>
+<area shape="rect" id="node59" href="$resource_8h.html" title="resource.h" alt="" coords="821,315,904,344"/>
+<area shape="rect" id="node64" href="$identifiable_8h.html" title="generic/identifiable.h" alt="" coords="1091,315,1232,344"/>
+<area shape="rect" id="node70" href="$colour_8h.html" title="colour.h" alt="" coords="1552,392,1619,421"/>
+<area shape="rect" id="node78" href="$unique__id_8h.html" title="generic/unique_id.h" alt="" coords="979,392,1112,421"/>
+<area shape="rect" id="node81" href="$safe__bool_8h.html" title="safe_bool.h" alt="" coords="1001,469,1089,499"/>
+</map>

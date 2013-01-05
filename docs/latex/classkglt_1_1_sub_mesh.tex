@@ -1,0 +1,163 @@
+\hypertarget{classkglt_1_1_sub_mesh}{\section{kglt\-:\-:Sub\-Mesh Class Reference}
+\label{classkglt_1_1_sub_mesh}\index{kglt\-::\-Sub\-Mesh@{kglt\-::\-Sub\-Mesh}}
+}
+
+
+{\ttfamily \#include $<$mesh.\-h$>$}
+
+
+
+Inheritance diagram for kglt\-:\-:Sub\-Mesh\-:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=332pt]{classkglt_1_1_sub_mesh__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for kglt\-:\-:Sub\-Mesh\-:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=332pt]{classkglt_1_1_sub_mesh__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classkglt_1_1_sub_mesh_ad5513ed3f25b9ed47380d8aced452a7b}{Sub\-Mesh} (\hyperlink{classkglt_1_1_mesh}{Mesh} \&parent, \hyperlink{namespacekglt_a5ffac6377a7d3e163b4d5c31f71db43a}{Material\-I\-D} \hyperlink{classkglt_1_1_sub_mesh_aa8ece9cc17fa6181a1df1b39dc3f3270}{material}, \hyperlink{namespacekglt_a4d5a692708f38d0176dd6f5d341289da}{Mesh\-Arrangement} \hyperlink{classkglt_1_1_sub_mesh_a91fc7dbd79e99dc76a2aa9284569dbfb}{arrangement}=\hyperlink{namespacekglt_a4d5a692708f38d0176dd6f5d341289daa10bc529bd0233d4686437519a810138d}{M\-E\-S\-H\-\_\-\-A\-R\-R\-A\-N\-G\-E\-M\-E\-N\-T\-\_\-\-T\-R\-I\-A\-N\-G\-L\-E\-S}, bool uses\-\_\-shared\-\_\-vertices=true)
+\item 
+virtual \hyperlink{classkglt_1_1_sub_mesh_afebf783eec695acbc279b84b2ca037b4}{$\sim$\-Sub\-Mesh} ()
+\item 
+\hyperlink{classkglt_1_1_vertex_data}{Vertex\-Data} \& \hyperlink{classkglt_1_1_sub_mesh_a4f98f5b755a1e16132585fcf6e695a7a}{vertex\-\_\-data} ()
+\item 
+\hyperlink{classkglt_1_1_index_data}{Index\-Data} \& \hyperlink{classkglt_1_1_sub_mesh_a16d80ad990d8f21acf9b72b7c311801a}{index\-\_\-data} ()
+\item 
+const \hyperlink{classkglt_1_1_vertex_data}{Vertex\-Data} \& \hyperlink{classkglt_1_1_sub_mesh_a471e8698ec355fa8b743e27b779ba687}{vertex\-\_\-data} () const 
+\item 
+const \hyperlink{classkglt_1_1_index_data}{Index\-Data} \& \hyperlink{classkglt_1_1_sub_mesh_ad955c838e794401a210952d1609964cd}{index\-\_\-data} () const 
+\item 
+const \hyperlink{namespacekglt_a5ffac6377a7d3e163b4d5c31f71db43a}{Material\-I\-D} \hyperlink{classkglt_1_1_sub_mesh_aa8ece9cc17fa6181a1df1b39dc3f3270}{material} () const 
+\item 
+void \hyperlink{classkglt_1_1_sub_mesh_af0d2fdbe85331042738ed53e8dd4f66d}{set\-\_\-material} (\hyperlink{namespacekglt_a5ffac6377a7d3e163b4d5c31f71db43a}{Material\-I\-D} mat)
+\item 
+const \hyperlink{namespacekglt_a4d5a692708f38d0176dd6f5d341289da}{Mesh\-Arrangement} \hyperlink{classkglt_1_1_sub_mesh_a91fc7dbd79e99dc76a2aa9284569dbfb}{arrangement} () const 
+\item 
+const km\-A\-A\-B\-B \& \hyperlink{classkglt_1_1_sub_mesh_a0b15e0e5454784d7daa9359b8f62c447}{bounds} () const 
+\item 
+void \hyperlink{classkglt_1_1_sub_mesh_ab89e8efac50989f93c62db9a222663d9}{recalc\-\_\-bounds} ()
+\begin{DoxyCompactList}\small\item\em \hyperlink{classkglt_1_1_sub_mesh_ab89e8efac50989f93c62db9a222663d9}{Sub\-Mesh\-::recalc\-\_\-bounds}. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classkglt_1_1_sub_mesh_ad5513ed3f25b9ed47380d8aced452a7b}{\index{kglt\-::\-Sub\-Mesh@{kglt\-::\-Sub\-Mesh}!Sub\-Mesh@{Sub\-Mesh}}
+\index{Sub\-Mesh@{Sub\-Mesh}!kglt::SubMesh@{kglt\-::\-Sub\-Mesh}}
+\subsubsection[{Sub\-Mesh}]{\setlength{\rightskip}{0pt plus 5cm}kglt\-::\-Sub\-Mesh\-::\-Sub\-Mesh (
+\begin{DoxyParamCaption}
+\item[{{\bf Mesh} \&}]{parent, }
+\item[{{\bf Material\-I\-D}}]{material, }
+\item[{{\bf Mesh\-Arrangement}}]{arrangement = {\ttfamily {\bf M\-E\-S\-H\-\_\-\-A\-R\-R\-A\-N\-G\-E\-M\-E\-N\-T\-\_\-\-T\-R\-I\-A\-N\-G\-L\-E\-S}}, }
+\item[{bool}]{uses\-\_\-shared\-\_\-vertices = {\ttfamily true}}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_sub_mesh_ad5513ed3f25b9ed47380d8aced452a7b}
+\hypertarget{classkglt_1_1_sub_mesh_afebf783eec695acbc279b84b2ca037b4}{\index{kglt\-::\-Sub\-Mesh@{kglt\-::\-Sub\-Mesh}!$\sim$\-Sub\-Mesh@{$\sim$\-Sub\-Mesh}}
+\index{$\sim$\-Sub\-Mesh@{$\sim$\-Sub\-Mesh}!kglt::SubMesh@{kglt\-::\-Sub\-Mesh}}
+\subsubsection[{$\sim$\-Sub\-Mesh}]{\setlength{\rightskip}{0pt plus 5cm}kglt\-::\-Sub\-Mesh\-::$\sim$\-Sub\-Mesh (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [virtual]}}}\label{classkglt_1_1_sub_mesh_afebf783eec695acbc279b84b2ca037b4}
+
+
+\subsection{Member Function Documentation}
+\hypertarget{classkglt_1_1_sub_mesh_a91fc7dbd79e99dc76a2aa9284569dbfb}{\index{kglt\-::\-Sub\-Mesh@{kglt\-::\-Sub\-Mesh}!arrangement@{arrangement}}
+\index{arrangement@{arrangement}!kglt::SubMesh@{kglt\-::\-Sub\-Mesh}}
+\subsubsection[{arrangement}]{\setlength{\rightskip}{0pt plus 5cm}const {\bf Mesh\-Arrangement} kglt\-::\-Sub\-Mesh\-::arrangement (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}}\label{classkglt_1_1_sub_mesh_a91fc7dbd79e99dc76a2aa9284569dbfb}
+
+
+Implements \hyperlink{classkglt_1_1_sub_mesh_interface_ad94eff60d646d22d535f09d65ff45743}{kglt\-::\-Sub\-Mesh\-Interface}.
+
+\hypertarget{classkglt_1_1_sub_mesh_a0b15e0e5454784d7daa9359b8f62c447}{\index{kglt\-::\-Sub\-Mesh@{kglt\-::\-Sub\-Mesh}!bounds@{bounds}}
+\index{bounds@{bounds}!kglt::SubMesh@{kglt\-::\-Sub\-Mesh}}
+\subsubsection[{bounds}]{\setlength{\rightskip}{0pt plus 5cm}const km\-A\-A\-B\-B\& kglt\-::\-Sub\-Mesh\-::bounds (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_sub_mesh_a0b15e0e5454784d7daa9359b8f62c447}
+\hypertarget{classkglt_1_1_sub_mesh_a16d80ad990d8f21acf9b72b7c311801a}{\index{kglt\-::\-Sub\-Mesh@{kglt\-::\-Sub\-Mesh}!index\-\_\-data@{index\-\_\-data}}
+\index{index\-\_\-data@{index\-\_\-data}!kglt::SubMesh@{kglt\-::\-Sub\-Mesh}}
+\subsubsection[{index\-\_\-data}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Index\-Data} \& kglt\-::\-Sub\-Mesh\-::index\-\_\-data (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_sub_mesh_a16d80ad990d8f21acf9b72b7c311801a}
+\hypertarget{classkglt_1_1_sub_mesh_ad955c838e794401a210952d1609964cd}{\index{kglt\-::\-Sub\-Mesh@{kglt\-::\-Sub\-Mesh}!index\-\_\-data@{index\-\_\-data}}
+\index{index\-\_\-data@{index\-\_\-data}!kglt::SubMesh@{kglt\-::\-Sub\-Mesh}}
+\subsubsection[{index\-\_\-data}]{\setlength{\rightskip}{0pt plus 5cm}const {\bf Index\-Data} \& kglt\-::\-Sub\-Mesh\-::index\-\_\-data (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [virtual]}}}\label{classkglt_1_1_sub_mesh_ad955c838e794401a210952d1609964cd}
+
+
+Implements \hyperlink{classkglt_1_1_sub_mesh_interface_a7ba1f57fffc2f289e6580f5b63ec869d}{kglt\-::\-Sub\-Mesh\-Interface}.
+
+\hypertarget{classkglt_1_1_sub_mesh_aa8ece9cc17fa6181a1df1b39dc3f3270}{\index{kglt\-::\-Sub\-Mesh@{kglt\-::\-Sub\-Mesh}!material@{material}}
+\index{material@{material}!kglt::SubMesh@{kglt\-::\-Sub\-Mesh}}
+\subsubsection[{material}]{\setlength{\rightskip}{0pt plus 5cm}const {\bf Material\-I\-D} kglt\-::\-Sub\-Mesh\-::material (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}}\label{classkglt_1_1_sub_mesh_aa8ece9cc17fa6181a1df1b39dc3f3270}
+
+
+Implements \hyperlink{classkglt_1_1_sub_mesh_interface_af77b02a088b0310da4cd1e6517fa3f78}{kglt\-::\-Sub\-Mesh\-Interface}.
+
+\hypertarget{classkglt_1_1_sub_mesh_ab89e8efac50989f93c62db9a222663d9}{\index{kglt\-::\-Sub\-Mesh@{kglt\-::\-Sub\-Mesh}!recalc\-\_\-bounds@{recalc\-\_\-bounds}}
+\index{recalc\-\_\-bounds@{recalc\-\_\-bounds}!kglt::SubMesh@{kglt\-::\-Sub\-Mesh}}
+\subsubsection[{recalc\-\_\-bounds}]{\setlength{\rightskip}{0pt plus 5cm}void kglt\-::\-Sub\-Mesh\-::recalc\-\_\-bounds (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_sub_mesh_ab89e8efac50989f93c62db9a222663d9}
+
+
+\hyperlink{classkglt_1_1_sub_mesh_ab89e8efac50989f93c62db9a222663d9}{Sub\-Mesh\-::recalc\-\_\-bounds}. 
+
+Recalculate the bounds of the submesh. This involves interating over all of the vertices that make up the submesh and so is potentially quite slow. This happens automatically when \hyperlink{classkglt_1_1_sub_mesh_a4f98f5b755a1e16132585fcf6e695a7a}{vertex\-\_\-data()}.done() or \hyperlink{classkglt_1_1_sub_mesh_a16d80ad990d8f21acf9b72b7c311801a}{index\-\_\-data()}.done() are called. \hypertarget{classkglt_1_1_sub_mesh_af0d2fdbe85331042738ed53e8dd4f66d}{\index{kglt\-::\-Sub\-Mesh@{kglt\-::\-Sub\-Mesh}!set\-\_\-material@{set\-\_\-material}}
+\index{set\-\_\-material@{set\-\_\-material}!kglt::SubMesh@{kglt\-::\-Sub\-Mesh}}
+\subsubsection[{set\-\_\-material}]{\setlength{\rightskip}{0pt plus 5cm}void kglt\-::\-Sub\-Mesh\-::set\-\_\-material (
+\begin{DoxyParamCaption}
+\item[{{\bf Material\-I\-D}}]{mat}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_sub_mesh_af0d2fdbe85331042738ed53e8dd4f66d}
+\hypertarget{classkglt_1_1_sub_mesh_a4f98f5b755a1e16132585fcf6e695a7a}{\index{kglt\-::\-Sub\-Mesh@{kglt\-::\-Sub\-Mesh}!vertex\-\_\-data@{vertex\-\_\-data}}
+\index{vertex\-\_\-data@{vertex\-\_\-data}!kglt::SubMesh@{kglt\-::\-Sub\-Mesh}}
+\subsubsection[{vertex\-\_\-data}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Vertex\-Data} \& kglt\-::\-Sub\-Mesh\-::vertex\-\_\-data (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_sub_mesh_a4f98f5b755a1e16132585fcf6e695a7a}
+\hypertarget{classkglt_1_1_sub_mesh_a471e8698ec355fa8b743e27b779ba687}{\index{kglt\-::\-Sub\-Mesh@{kglt\-::\-Sub\-Mesh}!vertex\-\_\-data@{vertex\-\_\-data}}
+\index{vertex\-\_\-data@{vertex\-\_\-data}!kglt::SubMesh@{kglt\-::\-Sub\-Mesh}}
+\subsubsection[{vertex\-\_\-data}]{\setlength{\rightskip}{0pt plus 5cm}const {\bf Vertex\-Data} \& kglt\-::\-Sub\-Mesh\-::vertex\-\_\-data (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [virtual]}}}\label{classkglt_1_1_sub_mesh_a471e8698ec355fa8b743e27b779ba687}
+
+
+Implements \hyperlink{classkglt_1_1_sub_mesh_interface_a5ec394f1ae5e362832968a5528a287ec}{kglt\-::\-Sub\-Mesh\-Interface}.
+
+
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+kglt/\hyperlink{mesh_8h}{mesh.\-h}\item 
+kglt/\hyperlink{mesh_8cpp}{mesh.\-cpp}\end{DoxyCompactItemize}

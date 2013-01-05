@@ -1,0 +1,5 @@
+<map id="kglt::Partitioner" name="kglt::Partitioner">
+<area shape="rect" id="node5" href="$classkglt_1_1_null_partitioner.html" title="kglt::NullPartitioner" alt="" coords="5,160,139,189"/>
+<area shape="rect" id="node7" href="$classkglt_1_1_octree_partitioner.html" title="kglt::OctreePartitioner" alt="" coords="163,160,312,189"/>
+<area shape="rect" id="node2" href="$class_managed.html" title="Managed\&lt; Partitioner \&gt;" alt="" coords="76,5,233,35"/>
+</map>

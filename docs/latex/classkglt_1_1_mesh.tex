@@ -1,0 +1,120 @@
+\hypertarget{classkglt_1_1_mesh}{\section{kglt\-:\-:Mesh Class Reference}
+\label{classkglt_1_1_mesh}\index{kglt\-::\-Mesh@{kglt\-::\-Mesh}}
+}
+
+
+{\ttfamily \#include $<$mesh.\-h$>$}
+
+
+
+Inheritance diagram for kglt\-:\-:Mesh\-:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=302pt]{classkglt_1_1_mesh__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for kglt\-:\-:Mesh\-:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=302pt]{classkglt_1_1_mesh__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classkglt_1_1_mesh_aca3de21a21d2773a563bcc9f5bddcaf4}{Mesh} (\hyperlink{classkglt_1_1_resource_manager}{Resource\-Manager} $\ast$\hyperlink{classkglt_1_1_resource_a966a14c55828b2adc52aad0fac828205}{resource\-\_\-manager}, \hyperlink{namespacekglt_a525b047f668a129a0b102be7f2fe32be}{Mesh\-I\-D} \hyperlink{classkglt_1_1generic_1_1_identifiable_a7930d0f7da424ad524d888726fcc12bd}{id})
+\item 
+\hyperlink{classkglt_1_1_vertex_data}{Vertex\-Data} \& \hyperlink{classkglt_1_1_mesh_a9a22675979d33496731c967910fd3e5d}{shared\-\_\-data} ()
+\item 
+const \hyperlink{classkglt_1_1_vertex_data}{Vertex\-Data} \& \hyperlink{classkglt_1_1_mesh_a31e146c27aa311685944ba4c906d5a2a}{shared\-\_\-data} () const 
+\item 
+\hyperlink{namespacekglt_aa750d1bb3b7a0d679b32c96fed625213}{Sub\-Mesh\-Index} \hyperlink{classkglt_1_1_mesh_a8480149cbf7173c4896bfe6d57ae3046}{new\-\_\-submesh} (\hyperlink{namespacekglt_a5ffac6377a7d3e163b4d5c31f71db43a}{Material\-I\-D} material, \hyperlink{namespacekglt_a4d5a692708f38d0176dd6f5d341289da}{Mesh\-Arrangement} arrangement=\hyperlink{namespacekglt_a4d5a692708f38d0176dd6f5d341289daa10bc529bd0233d4686437519a810138d}{M\-E\-S\-H\-\_\-\-A\-R\-R\-A\-N\-G\-E\-M\-E\-N\-T\-\_\-\-T\-R\-I\-A\-N\-G\-L\-E\-S}, bool uses\-\_\-shared\-\_\-vertices=true)
+\item 
+\hyperlink{classkglt_1_1_sub_mesh}{Sub\-Mesh} \& \hyperlink{classkglt_1_1_mesh_a2ce8d3df0558cab15335d49891823fa1}{submesh} (\hyperlink{namespacekglt_aa750d1bb3b7a0d679b32c96fed625213}{Sub\-Mesh\-Index} index)
+\item 
+void \hyperlink{classkglt_1_1_mesh_a207fe90b697c0cbc7b2f4befbaa4a8e8}{delete\-\_\-submesh} (\hyperlink{namespacekglt_aa750d1bb3b7a0d679b32c96fed625213}{Sub\-Mesh\-Index} index)
+\item 
+void \hyperlink{classkglt_1_1_mesh_a87121cbe7ba3a15f849f2b2205fb1778}{clear} ()
+\item 
+std\-::vector$<$ \hyperlink{namespacekglt_aa750d1bb3b7a0d679b32c96fed625213}{Sub\-Mesh\-Index} $>$ \hyperlink{classkglt_1_1_mesh_a1c0351769872c006cb815eef51783c61}{submesh\-\_\-ids} ()
+\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classkglt_1_1_mesh_aca3de21a21d2773a563bcc9f5bddcaf4}{\index{kglt\-::\-Mesh@{kglt\-::\-Mesh}!Mesh@{Mesh}}
+\index{Mesh@{Mesh}!kglt::Mesh@{kglt\-::\-Mesh}}
+\subsubsection[{Mesh}]{\setlength{\rightskip}{0pt plus 5cm}kglt\-::\-Mesh\-::\-Mesh (
+\begin{DoxyParamCaption}
+\item[{{\bf Resource\-Manager} $\ast$}]{resource\-\_\-manager, }
+\item[{{\bf Mesh\-I\-D}}]{id}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_mesh_aca3de21a21d2773a563bcc9f5bddcaf4}
+
+
+\subsection{Member Function Documentation}
+\hypertarget{classkglt_1_1_mesh_a87121cbe7ba3a15f849f2b2205fb1778}{\index{kglt\-::\-Mesh@{kglt\-::\-Mesh}!clear@{clear}}
+\index{clear@{clear}!kglt::Mesh@{kglt\-::\-Mesh}}
+\subsubsection[{clear}]{\setlength{\rightskip}{0pt plus 5cm}void kglt\-::\-Mesh\-::clear (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_mesh_a87121cbe7ba3a15f849f2b2205fb1778}
+\hypertarget{classkglt_1_1_mesh_a207fe90b697c0cbc7b2f4befbaa4a8e8}{\index{kglt\-::\-Mesh@{kglt\-::\-Mesh}!delete\-\_\-submesh@{delete\-\_\-submesh}}
+\index{delete\-\_\-submesh@{delete\-\_\-submesh}!kglt::Mesh@{kglt\-::\-Mesh}}
+\subsubsection[{delete\-\_\-submesh}]{\setlength{\rightskip}{0pt plus 5cm}void kglt\-::\-Mesh\-::delete\-\_\-submesh (
+\begin{DoxyParamCaption}
+\item[{{\bf Sub\-Mesh\-Index}}]{index}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_mesh_a207fe90b697c0cbc7b2f4befbaa4a8e8}
+\hypertarget{classkglt_1_1_mesh_a8480149cbf7173c4896bfe6d57ae3046}{\index{kglt\-::\-Mesh@{kglt\-::\-Mesh}!new\-\_\-submesh@{new\-\_\-submesh}}
+\index{new\-\_\-submesh@{new\-\_\-submesh}!kglt::Mesh@{kglt\-::\-Mesh}}
+\subsubsection[{new\-\_\-submesh}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Sub\-Mesh\-Index} kglt\-::\-Mesh\-::new\-\_\-submesh (
+\begin{DoxyParamCaption}
+\item[{{\bf Material\-I\-D}}]{material, }
+\item[{{\bf Mesh\-Arrangement}}]{arrangement = {\ttfamily {\bf M\-E\-S\-H\-\_\-\-A\-R\-R\-A\-N\-G\-E\-M\-E\-N\-T\-\_\-\-T\-R\-I\-A\-N\-G\-L\-E\-S}}, }
+\item[{bool}]{uses\-\_\-shared\-\_\-vertices = {\ttfamily true}}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_mesh_a8480149cbf7173c4896bfe6d57ae3046}
+\hypertarget{classkglt_1_1_mesh_a9a22675979d33496731c967910fd3e5d}{\index{kglt\-::\-Mesh@{kglt\-::\-Mesh}!shared\-\_\-data@{shared\-\_\-data}}
+\index{shared\-\_\-data@{shared\-\_\-data}!kglt::Mesh@{kglt\-::\-Mesh}}
+\subsubsection[{shared\-\_\-data}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Vertex\-Data}\& kglt\-::\-Mesh\-::shared\-\_\-data (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_mesh_a9a22675979d33496731c967910fd3e5d}
+\hypertarget{classkglt_1_1_mesh_a31e146c27aa311685944ba4c906d5a2a}{\index{kglt\-::\-Mesh@{kglt\-::\-Mesh}!shared\-\_\-data@{shared\-\_\-data}}
+\index{shared\-\_\-data@{shared\-\_\-data}!kglt::Mesh@{kglt\-::\-Mesh}}
+\subsubsection[{shared\-\_\-data}]{\setlength{\rightskip}{0pt plus 5cm}const {\bf Vertex\-Data}\& kglt\-::\-Mesh\-::shared\-\_\-data (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}}\label{classkglt_1_1_mesh_a31e146c27aa311685944ba4c906d5a2a}
+
+
+Implements \hyperlink{classkglt_1_1_mesh_interface_af1bc17d88334a7e54cb104411aa8d0c0}{kglt\-::\-Mesh\-Interface}.
+
+\hypertarget{classkglt_1_1_mesh_a2ce8d3df0558cab15335d49891823fa1}{\index{kglt\-::\-Mesh@{kglt\-::\-Mesh}!submesh@{submesh}}
+\index{submesh@{submesh}!kglt::Mesh@{kglt\-::\-Mesh}}
+\subsubsection[{submesh}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Sub\-Mesh} \& kglt\-::\-Mesh\-::submesh (
+\begin{DoxyParamCaption}
+\item[{{\bf Sub\-Mesh\-Index}}]{index}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_mesh_a2ce8d3df0558cab15335d49891823fa1}
+\hypertarget{classkglt_1_1_mesh_a1c0351769872c006cb815eef51783c61}{\index{kglt\-::\-Mesh@{kglt\-::\-Mesh}!submesh\-\_\-ids@{submesh\-\_\-ids}}
+\index{submesh\-\_\-ids@{submesh\-\_\-ids}!kglt::Mesh@{kglt\-::\-Mesh}}
+\subsubsection[{submesh\-\_\-ids}]{\setlength{\rightskip}{0pt plus 5cm}std\-::vector$<${\bf Sub\-Mesh\-Index}$>$ kglt\-::\-Mesh\-::submesh\-\_\-ids (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_mesh_a1c0351769872c006cb815eef51783c61}
+
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+kglt/\hyperlink{mesh_8h}{mesh.\-h}\item 
+kglt/\hyperlink{mesh_8cpp}{mesh.\-cpp}\end{DoxyCompactItemize}

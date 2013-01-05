@@ -1,0 +1,61 @@
+\hypertarget{viewport_8h}{\section{kglt/viewport.h File Reference}
+\label{viewport_8h}\index{kglt/viewport.\-h@{kglt/viewport.\-h}}
+}
+{\ttfamily \#include $<$tr1/memory$>$}\\*
+{\ttfamily \#include $<$cstdint$>$}\\*
+{\ttfamily \#include \char`\"{}kazmath/mat4.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}types.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}generic/identifiable.\-h\char`\"{}}\\*
+Include dependency graph for viewport.\-h\-:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{viewport_8h__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\-:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{viewport_8h__dep__incl}
+\end{center}
+\end{figure}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \hyperlink{classkglt_1_1_viewport}{kglt\-::\-Viewport}
+\end{DoxyCompactItemize}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+namespace \hyperlink{namespacekglt}{kglt}
+\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \hyperlink{namespacekglt_a3969996666f791279a1d6c2fe596518c}{kglt\-::\-Aspect\-Ratio} \{ \hyperlink{namespacekglt_a3969996666f791279a1d6c2fe596518cae1bd5b7c733bc5ecd06ae6146177423c}{kglt\-::\-A\-S\-P\-E\-C\-T\-\_\-\-R\-A\-T\-I\-O\-\_\-\-C\-U\-S\-T\-O\-M}, 
+\hyperlink{namespacekglt_a3969996666f791279a1d6c2fe596518cad02c7324f06d08e18561d9dcdf99c8b4}{kglt\-::\-A\-S\-P\-E\-C\-T\-\_\-\-R\-A\-T\-I\-O\-\_\-4\-\_\-\-B\-Y\-\_\-3}, 
+\hyperlink{namespacekglt_a3969996666f791279a1d6c2fe596518ca07bb17a39932b93a31a80fc876c86b3e}{kglt\-::\-A\-S\-P\-E\-C\-T\-\_\-\-R\-A\-T\-I\-O\-\_\-16\-\_\-\-B\-Y\-\_\-9}, 
+\hyperlink{namespacekglt_a3969996666f791279a1d6c2fe596518ca19c9dfd29d692e8136ad8679559fc1d4}{kglt\-::\-A\-S\-P\-E\-C\-T\-\_\-\-R\-A\-T\-I\-O\-\_\-16\-\_\-\-B\-Y\-\_\-10}
+ \}
+\item 
+enum \hyperlink{namespacekglt_a3b8596a8cf6e35aebb3938623d69eda6}{kglt\-::\-Projection\-Type} \{ \hyperlink{namespacekglt_a3b8596a8cf6e35aebb3938623d69eda6a86716d6d4a26727b24aeffddf1a7f86d}{kglt\-::\-P\-R\-O\-J\-E\-C\-T\-I\-O\-N\-\_\-\-T\-Y\-P\-E\-\_\-\-P\-E\-R\-S\-P\-E\-C\-T\-I\-V\-E}, 
+\hyperlink{namespacekglt_a3b8596a8cf6e35aebb3938623d69eda6a8be8ba43bd27120b22276d52b65fa92b}{kglt\-::\-P\-R\-O\-J\-E\-C\-T\-I\-O\-N\-\_\-\-T\-Y\-P\-E\-\_\-\-O\-R\-T\-H\-O\-G\-R\-A\-P\-H\-I\-C}
+ \}
+\item 
+enum \hyperlink{namespacekglt_a5f950f373189a571bd633fbbc8829b12}{kglt\-::\-Viewport\-Type} \{ \\*
+\hyperlink{namespacekglt_a5f950f373189a571bd633fbbc8829b12a4a385b8931a6ceb85b6cf4bd75a3eec3}{kglt\-::\-V\-I\-E\-W\-P\-O\-R\-T\-\_\-\-T\-Y\-P\-E\-\_\-\-F\-U\-L\-L}, 
+\hyperlink{namespacekglt_a5f950f373189a571bd633fbbc8829b12aa0acf6276bf29c7e546c9c94c62dffd0}{kglt\-::\-V\-I\-E\-W\-P\-O\-R\-T\-\_\-\-T\-Y\-P\-E\-\_\-\-B\-L\-A\-C\-K\-B\-A\-R\-\_\-4\-\_\-\-B\-Y\-\_\-3}, 
+\hyperlink{namespacekglt_a5f950f373189a571bd633fbbc8829b12ac2645570dcabd2d730d0ef47e951ca04}{kglt\-::\-V\-I\-E\-W\-P\-O\-R\-T\-\_\-\-T\-Y\-P\-E\-\_\-\-B\-L\-A\-C\-K\-B\-A\-R\-\_\-16\-\_\-\-B\-Y\-\_\-9}, 
+\hyperlink{namespacekglt_a5f950f373189a571bd633fbbc8829b12a3ad85224532af49bbc1204f483d33561}{kglt\-::\-V\-I\-E\-W\-P\-O\-R\-T\-\_\-\-T\-Y\-P\-E\-\_\-\-B\-L\-A\-C\-K\-B\-A\-R\-\_\-16\-\_\-\-B\-Y\-\_\-10}, 
+\\*
+\hyperlink{namespacekglt_a5f950f373189a571bd633fbbc8829b12a0ddbca7f1f0f2a0341e7f62031c4a181}{kglt\-::\-V\-I\-E\-W\-P\-O\-R\-T\-\_\-\-T\-Y\-P\-E\-\_\-\-V\-E\-R\-T\-I\-C\-A\-L\-\_\-\-S\-P\-L\-I\-T\-\_\-\-L\-E\-F\-T}, 
+\hyperlink{namespacekglt_a5f950f373189a571bd633fbbc8829b12a49a29bdc4c9d00dbcef8853f7ce73458}{kglt\-::\-V\-I\-E\-W\-P\-O\-R\-T\-\_\-\-T\-Y\-P\-E\-\_\-\-V\-E\-R\-T\-I\-C\-A\-L\-\_\-\-S\-P\-L\-I\-T\-\_\-\-R\-I\-G\-H\-T}, 
+\hyperlink{namespacekglt_a5f950f373189a571bd633fbbc8829b12a343d660910a7503a928501325d9fdb7d}{kglt\-::\-V\-I\-E\-W\-P\-O\-R\-T\-\_\-\-T\-Y\-P\-E\-\_\-\-H\-O\-R\-I\-Z\-O\-N\-T\-A\-L\-\_\-\-S\-P\-L\-I\-T\-\_\-\-T\-O\-P}, 
+\hyperlink{namespacekglt_a5f950f373189a571bd633fbbc8829b12aacca71ad579ea75d4d8fb826f086fa2c}{kglt\-::\-V\-I\-E\-W\-P\-O\-R\-T\-\_\-\-T\-Y\-P\-E\-\_\-\-H\-O\-R\-I\-Z\-O\-N\-T\-A\-L\-\_\-\-S\-P\-L\-I\-T\-\_\-\-B\-O\-T\-T\-O\-M}, 
+\\*
+\hyperlink{namespacekglt_a5f950f373189a571bd633fbbc8829b12a76e0e27830a4fc4166738e6676cf8a6a}{kglt\-::\-V\-I\-E\-W\-P\-O\-R\-T\-\_\-\-T\-Y\-P\-E\-\_\-\-C\-U\-S\-T\-O\-M}
+ \}
+\end{DoxyCompactItemize}

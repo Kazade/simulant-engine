@@ -1,0 +1,6 @@
+<map id="kglt::Window" name="kglt::Window">
+<area shape="rect" id="node2" href="$classkglt_1_1_window_base.html" title="kglt::WindowBase" alt="" coords="53,195,181,224"/>
+<area shape="rect" id="node4" href="$classkglt_1_1generic_1_1_templated_manager.html" title="kglt::generic::Templated\lManager\&lt; WindowBase, Viewport,\l ViewportID \&gt;" alt="" coords="5,83,229,147"/>
+<area shape="rect" id="node6" href="$classkglt_1_1generic_1_1_base_manager.html" title="kglt::generic::BaseManager" alt="" coords="27,5,208,35"/>
+<area shape="rect" id="node8" href="$class_managed.html" title="Managed\&lt; Window \&gt;" alt="" coords="205,195,352,224"/>
+</map>

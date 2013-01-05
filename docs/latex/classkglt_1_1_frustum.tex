@@ -1,0 +1,142 @@
+\hypertarget{classkglt_1_1_frustum}{\section{kglt\-:\-:Frustum Class Reference}
+\label{classkglt_1_1_frustum}\index{kglt\-::\-Frustum@{kglt\-::\-Frustum}}
+}
+
+
+{\ttfamily \#include $<$frustum.\-h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classkglt_1_1_frustum_a830b594468c71f8d731b6ea89273225b}{Frustum} ()
+\item 
+void \hyperlink{classkglt_1_1_frustum_a4ee45311da6e2437dff483bf29f3171c}{build} (const km\-Mat4 $\ast$modelview\-\_\-projection)
+\item 
+std\-::vector$<$ km\-Vec3 $>$ \hyperlink{classkglt_1_1_frustum_a1cd3a93ac9f35d52c9d598a17eab7d0e}{near\-\_\-corners} () const 
+\begin{DoxyCompactList}\small\item\em Returns the near 4 corners of the frustum. \end{DoxyCompactList}\item 
+std\-::vector$<$ km\-Vec3 $>$ \hyperlink{classkglt_1_1_frustum_ab892628013e107e1769d9188e5e3b100}{far\-\_\-corners} () const 
+\begin{DoxyCompactList}\small\item\em Returns the far 4 corners of the frustum. \end{DoxyCompactList}\item 
+bool \hyperlink{classkglt_1_1_frustum_a45a748cec1712ca0689eba458296710c}{contains\-\_\-point} (const km\-Vec3 \&point) const 
+\begin{DoxyCompactList}\small\item\em Returns true if the frustum contains point. \end{DoxyCompactList}\item 
+bool \hyperlink{classkglt_1_1_frustum_a4b56eb4b0c05b947464f28d3f8819a85}{intersects\-\_\-aabb} (const km\-A\-A\-B\-B \&box) const 
+\item 
+bool \hyperlink{classkglt_1_1_frustum_a208f583257b58f731262778418300b50}{initialized} () const 
+\item 
+double \hyperlink{classkglt_1_1_frustum_aec3f3851b172fa1553f7687ac86b944c}{near\-\_\-height} () const 
+\item 
+double \hyperlink{classkglt_1_1_frustum_afa6ab68502feee7c7972e1ac9b493e9e}{far\-\_\-height} () const 
+\item 
+double \hyperlink{classkglt_1_1_frustum_a1be10edcc258f43cd26e47f13eacf7f6}{near\-\_\-width} () const 
+\item 
+double \hyperlink{classkglt_1_1_frustum_ae817949856355762eaee1fae6ad77b2b}{far\-\_\-width} () const 
+\item 
+double \hyperlink{classkglt_1_1_frustum_abc670ea75cea9f9784f1443d30db2643}{depth} () const 
+\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classkglt_1_1_frustum_a830b594468c71f8d731b6ea89273225b}{\index{kglt\-::\-Frustum@{kglt\-::\-Frustum}!Frustum@{Frustum}}
+\index{Frustum@{Frustum}!kglt::Frustum@{kglt\-::\-Frustum}}
+\subsubsection[{Frustum}]{\setlength{\rightskip}{0pt plus 5cm}kglt\-::\-Frustum\-::\-Frustum (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_frustum_a830b594468c71f8d731b6ea89273225b}
+
+
+\subsection{Member Function Documentation}
+\hypertarget{classkglt_1_1_frustum_a4ee45311da6e2437dff483bf29f3171c}{\index{kglt\-::\-Frustum@{kglt\-::\-Frustum}!build@{build}}
+\index{build@{build}!kglt::Frustum@{kglt\-::\-Frustum}}
+\subsubsection[{build}]{\setlength{\rightskip}{0pt plus 5cm}void kglt\-::\-Frustum\-::build (
+\begin{DoxyParamCaption}
+\item[{const km\-Mat4 $\ast$}]{modelview\-\_\-projection}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_frustum_a4ee45311da6e2437dff483bf29f3171c}
+\hypertarget{classkglt_1_1_frustum_a45a748cec1712ca0689eba458296710c}{\index{kglt\-::\-Frustum@{kglt\-::\-Frustum}!contains\-\_\-point@{contains\-\_\-point}}
+\index{contains\-\_\-point@{contains\-\_\-point}!kglt::Frustum@{kglt\-::\-Frustum}}
+\subsubsection[{contains\-\_\-point}]{\setlength{\rightskip}{0pt plus 5cm}bool kglt\-::\-Frustum\-::contains\-\_\-point (
+\begin{DoxyParamCaption}
+\item[{const km\-Vec3 \&}]{point}
+\end{DoxyParamCaption}
+) const}}\label{classkglt_1_1_frustum_a45a748cec1712ca0689eba458296710c}
+
+
+Returns true if the frustum contains point. 
+
+\hypertarget{classkglt_1_1_frustum_abc670ea75cea9f9784f1443d30db2643}{\index{kglt\-::\-Frustum@{kglt\-::\-Frustum}!depth@{depth}}
+\index{depth@{depth}!kglt::Frustum@{kglt\-::\-Frustum}}
+\subsubsection[{depth}]{\setlength{\rightskip}{0pt plus 5cm}double kglt\-::\-Frustum\-::depth (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_frustum_abc670ea75cea9f9784f1443d30db2643}
+\hypertarget{classkglt_1_1_frustum_ab892628013e107e1769d9188e5e3b100}{\index{kglt\-::\-Frustum@{kglt\-::\-Frustum}!far\-\_\-corners@{far\-\_\-corners}}
+\index{far\-\_\-corners@{far\-\_\-corners}!kglt::Frustum@{kglt\-::\-Frustum}}
+\subsubsection[{far\-\_\-corners}]{\setlength{\rightskip}{0pt plus 5cm}std\-::vector$<$ km\-Vec3 $>$ kglt\-::\-Frustum\-::far\-\_\-corners (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classkglt_1_1_frustum_ab892628013e107e1769d9188e5e3b100}
+
+
+Returns the far 4 corners of the frustum. 
+
+\hypertarget{classkglt_1_1_frustum_afa6ab68502feee7c7972e1ac9b493e9e}{\index{kglt\-::\-Frustum@{kglt\-::\-Frustum}!far\-\_\-height@{far\-\_\-height}}
+\index{far\-\_\-height@{far\-\_\-height}!kglt::Frustum@{kglt\-::\-Frustum}}
+\subsubsection[{far\-\_\-height}]{\setlength{\rightskip}{0pt plus 5cm}double kglt\-::\-Frustum\-::far\-\_\-height (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_frustum_afa6ab68502feee7c7972e1ac9b493e9e}
+\hypertarget{classkglt_1_1_frustum_ae817949856355762eaee1fae6ad77b2b}{\index{kglt\-::\-Frustum@{kglt\-::\-Frustum}!far\-\_\-width@{far\-\_\-width}}
+\index{far\-\_\-width@{far\-\_\-width}!kglt::Frustum@{kglt\-::\-Frustum}}
+\subsubsection[{far\-\_\-width}]{\setlength{\rightskip}{0pt plus 5cm}double kglt\-::\-Frustum\-::far\-\_\-width (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_frustum_ae817949856355762eaee1fae6ad77b2b}
+\hypertarget{classkglt_1_1_frustum_a208f583257b58f731262778418300b50}{\index{kglt\-::\-Frustum@{kglt\-::\-Frustum}!initialized@{initialized}}
+\index{initialized@{initialized}!kglt::Frustum@{kglt\-::\-Frustum}}
+\subsubsection[{initialized}]{\setlength{\rightskip}{0pt plus 5cm}bool kglt\-::\-Frustum\-::initialized (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_frustum_a208f583257b58f731262778418300b50}
+\hypertarget{classkglt_1_1_frustum_a4b56eb4b0c05b947464f28d3f8819a85}{\index{kglt\-::\-Frustum@{kglt\-::\-Frustum}!intersects\-\_\-aabb@{intersects\-\_\-aabb}}
+\index{intersects\-\_\-aabb@{intersects\-\_\-aabb}!kglt::Frustum@{kglt\-::\-Frustum}}
+\subsubsection[{intersects\-\_\-aabb}]{\setlength{\rightskip}{0pt plus 5cm}bool kglt\-::\-Frustum\-::intersects\-\_\-aabb (
+\begin{DoxyParamCaption}
+\item[{const km\-A\-A\-B\-B \&}]{box}
+\end{DoxyParamCaption}
+) const}}\label{classkglt_1_1_frustum_a4b56eb4b0c05b947464f28d3f8819a85}
+\hypertarget{classkglt_1_1_frustum_a1cd3a93ac9f35d52c9d598a17eab7d0e}{\index{kglt\-::\-Frustum@{kglt\-::\-Frustum}!near\-\_\-corners@{near\-\_\-corners}}
+\index{near\-\_\-corners@{near\-\_\-corners}!kglt::Frustum@{kglt\-::\-Frustum}}
+\subsubsection[{near\-\_\-corners}]{\setlength{\rightskip}{0pt plus 5cm}std\-::vector$<$ km\-Vec3 $>$ kglt\-::\-Frustum\-::near\-\_\-corners (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const}}\label{classkglt_1_1_frustum_a1cd3a93ac9f35d52c9d598a17eab7d0e}
+
+
+Returns the near 4 corners of the frustum. 
+
+\hypertarget{classkglt_1_1_frustum_aec3f3851b172fa1553f7687ac86b944c}{\index{kglt\-::\-Frustum@{kglt\-::\-Frustum}!near\-\_\-height@{near\-\_\-height}}
+\index{near\-\_\-height@{near\-\_\-height}!kglt::Frustum@{kglt\-::\-Frustum}}
+\subsubsection[{near\-\_\-height}]{\setlength{\rightskip}{0pt plus 5cm}double kglt\-::\-Frustum\-::near\-\_\-height (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_frustum_aec3f3851b172fa1553f7687ac86b944c}
+\hypertarget{classkglt_1_1_frustum_a1be10edcc258f43cd26e47f13eacf7f6}{\index{kglt\-::\-Frustum@{kglt\-::\-Frustum}!near\-\_\-width@{near\-\_\-width}}
+\index{near\-\_\-width@{near\-\_\-width}!kglt::Frustum@{kglt\-::\-Frustum}}
+\subsubsection[{near\-\_\-width}]{\setlength{\rightskip}{0pt plus 5cm}double kglt\-::\-Frustum\-::near\-\_\-width (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+) const\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_frustum_a1be10edcc258f43cd26e47f13eacf7f6}
+
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+kglt/\hyperlink{frustum_8h}{frustum.\-h}\item 
+kglt/\hyperlink{frustum_8cpp}{frustum.\-cpp}\end{DoxyCompactItemize}

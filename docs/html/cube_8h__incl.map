@@ -1,0 +1,12 @@
+<map id="kglt/procedural/mesh/cube.h" name="kglt/procedural/mesh/cube.h">
+<area shape="rect" id="node3" href="$mesh_8h.html" title="kglt/mesh.h" alt="" coords="1340,101,1431,131"/>
+<area shape="rect" id="node13" href="$managed_8h.html" title="generic/managed.h" alt="" coords="37,256,168,285"/>
+<area shape="rect" id="node19" href="$identifiable_8h.html" title="generic/identifiable.h" alt="" coords="1496,179,1637,208"/>
+<area shape="rect" id="node25" href="$resource_8h.html" title="resource.h" alt="" coords="1979,179,2061,208"/>
+<area shape="rect" id="node29" href="$vertex__data_8h.html" title="vertex_data.h" alt="" coords="509,179,611,208"/>
+<area shape="rect" id="node46" href="$types_8h.html" title="types.h" alt="" coords="1073,179,1137,208"/>
+<area shape="rect" id="node40" href="$buffer__object_8h.html" title="buffer_object.h" alt="" coords="416,256,523,285"/>
+<area shape="rect" id="node44" href="$colour_8h.html" title="colour.h" alt="" coords="597,256,664,285"/>
+<area shape="rect" id="node56" href="$unique__id_8h.html" title="generic/unique_id.h" alt="" coords="965,256,1099,285"/>
+<area shape="rect" id="node59" href="$safe__bool_8h.html" title="safe_bool.h" alt="" coords="988,333,1076,363"/>
+</map>

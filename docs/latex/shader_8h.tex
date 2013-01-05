@@ -1,0 +1,124 @@
+\hypertarget{shader_8h}{\section{kglt/shader.h File Reference}
+\label{shader_8h}\index{kglt/shader.\-h@{kglt/shader.\-h}}
+}
+{\ttfamily \#include $<$set$>$}\\*
+{\ttfamily \#include $<$string$>$}\\*
+{\ttfamily \#include $<$tr1/memory$>$}\\*
+{\ttfamily \#include \char`\"{}kazbase/list\-\_\-utils.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}kazmath/mat4.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}kazmath/mat3.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}kazmath/vec3.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}resource.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}loadable.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}generic/identifiable.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}types.\-h\char`\"{}}\\*
+Include dependency graph for shader.\-h\-:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{shader_8h__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\-:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{shader_8h__dep__incl}
+\end{center}
+\end{figure}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \hyperlink{classkglt_1_1_shader_params}{kglt\-::\-Shader\-Params}
+\item 
+class \hyperlink{classkglt_1_1_shader_program}{kglt\-::\-Shader\-Program}
+\end{DoxyCompactItemize}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+namespace \hyperlink{namespacekglt}{kglt}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{shader_8h_a063a3af905ecefe83d76ca3f0fe0653e}{B\-U\-F\-F\-E\-R\-\_\-\-O\-F\-F\-S\-E\-T}(i)~((char $\ast$)N\-U\-L\-L + (i))
+\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \hyperlink{namespacekglt_a3c56a1c7ebb2407f24d77a71c2eaa347}{kglt\-::\-Shader\-Available\-Auto} \{ \\*
+\hyperlink{namespacekglt_a3c56a1c7ebb2407f24d77a71c2eaa347a314b8076932d0087641000b8f849bab6}{kglt\-::\-S\-P\-\_\-\-A\-U\-T\-O\-\_\-\-M\-O\-D\-E\-L\-V\-I\-E\-W\-\_\-\-P\-R\-O\-J\-E\-C\-T\-I\-O\-N\-\_\-\-M\-A\-T\-R\-I\-X}, 
+\hyperlink{namespacekglt_a3c56a1c7ebb2407f24d77a71c2eaa347a288280b0f6b2df1db1e9488266b24c35}{kglt\-::\-S\-P\-\_\-\-A\-U\-T\-O\-\_\-\-M\-O\-D\-E\-L\-V\-I\-E\-W\-\_\-\-M\-A\-T\-R\-I\-X}, 
+\hyperlink{namespacekglt_a3c56a1c7ebb2407f24d77a71c2eaa347a4a24960356fa1f2c18bd5ab8dc7a2e6a}{kglt\-::\-S\-P\-\_\-\-A\-U\-T\-O\-\_\-\-P\-R\-O\-J\-E\-C\-T\-I\-O\-N\-\_\-\-M\-A\-T\-R\-I\-X}, 
+\hyperlink{namespacekglt_a3c56a1c7ebb2407f24d77a71c2eaa347ab07e097061c77f0e630247e60a08d2a3}{kglt\-::\-S\-P\-\_\-\-A\-U\-T\-O\-\_\-\-M\-A\-T\-E\-R\-I\-A\-L\-\_\-\-D\-I\-F\-F\-U\-S\-E}, 
+\\*
+\hyperlink{namespacekglt_a3c56a1c7ebb2407f24d77a71c2eaa347a110e41b12dac515b271fd9771b964295}{kglt\-::\-S\-P\-\_\-\-A\-U\-T\-O\-\_\-\-M\-A\-T\-E\-R\-I\-A\-L\-\_\-\-S\-P\-E\-C\-U\-L\-A\-R}, 
+\hyperlink{namespacekglt_a3c56a1c7ebb2407f24d77a71c2eaa347a5f581293b5338932f44a4f0757c731f3}{kglt\-::\-S\-P\-\_\-\-A\-U\-T\-O\-\_\-\-M\-A\-T\-E\-R\-I\-A\-L\-\_\-\-A\-M\-B\-I\-E\-N\-T}, 
+\hyperlink{namespacekglt_a3c56a1c7ebb2407f24d77a71c2eaa347a7697f3a46c57c8a1724d19e239c4b40f}{kglt\-::\-S\-P\-\_\-\-A\-U\-T\-O\-\_\-\-M\-A\-T\-E\-R\-I\-A\-L\-\_\-\-S\-H\-I\-N\-I\-N\-E\-S\-S}, 
+\hyperlink{namespacekglt_a3c56a1c7ebb2407f24d77a71c2eaa347a408ba069724bd6ec2dd5c461196ae1e0}{kglt\-::\-S\-P\-\_\-\-A\-U\-T\-O\-\_\-\-M\-A\-T\-E\-R\-I\-A\-L\-\_\-\-T\-E\-X\-\_\-\-M\-A\-T\-R\-I\-X0}, 
+\\*
+\hyperlink{namespacekglt_a3c56a1c7ebb2407f24d77a71c2eaa347adac15609b23a1fabb3a6db4c05c36ff3}{kglt\-::\-S\-P\-\_\-\-A\-U\-T\-O\-\_\-\-M\-A\-T\-E\-R\-I\-A\-L\-\_\-\-T\-E\-X\-\_\-\-M\-A\-T\-R\-I\-X1}, 
+\hyperlink{namespacekglt_a3c56a1c7ebb2407f24d77a71c2eaa347a64de463713addc90ba03f6ff4feaa980}{kglt\-::\-S\-P\-\_\-\-A\-U\-T\-O\-\_\-\-M\-A\-T\-E\-R\-I\-A\-L\-\_\-\-T\-E\-X\-\_\-\-M\-A\-T\-R\-I\-X2}, 
+\hyperlink{namespacekglt_a3c56a1c7ebb2407f24d77a71c2eaa347a02a06a6cb9216be0b1b342775b329853}{kglt\-::\-S\-P\-\_\-\-A\-U\-T\-O\-\_\-\-M\-A\-T\-E\-R\-I\-A\-L\-\_\-\-T\-E\-X\-\_\-\-M\-A\-T\-R\-I\-X3}, 
+\hyperlink{namespacekglt_a3c56a1c7ebb2407f24d77a71c2eaa347ac0b8fe38a62e4acbc4d9d525fe5aa4b6}{kglt\-::\-S\-P\-\_\-\-A\-U\-T\-O\-\_\-\-M\-A\-T\-E\-R\-I\-A\-L\-\_\-\-A\-C\-T\-I\-V\-E\-\_\-\-T\-E\-X\-T\-U\-R\-E\-\_\-\-U\-N\-I\-T\-S}, 
+\\*
+\hyperlink{namespacekglt_a3c56a1c7ebb2407f24d77a71c2eaa347af156046f3c6bc1d19ff174ff6c3f2e89}{kglt\-::\-S\-P\-\_\-\-A\-U\-T\-O\-\_\-\-L\-I\-G\-H\-T\-\_\-\-G\-L\-O\-B\-A\-L\-\_\-\-A\-M\-B\-I\-E\-N\-T}, 
+\hyperlink{namespacekglt_a3c56a1c7ebb2407f24d77a71c2eaa347aada19be963bdf0b54a792373ac2b30d6}{kglt\-::\-S\-P\-\_\-\-A\-U\-T\-O\-\_\-\-L\-I\-G\-H\-T\-\_\-\-P\-O\-S\-I\-T\-I\-O\-N}, 
+\hyperlink{namespacekglt_a3c56a1c7ebb2407f24d77a71c2eaa347a4669e04fb03867fa9de5db5cc065c7a9}{kglt\-::\-S\-P\-\_\-\-A\-U\-T\-O\-\_\-\-L\-I\-G\-H\-T\-\_\-\-D\-I\-R\-E\-C\-T\-I\-O\-N}, 
+\hyperlink{namespacekglt_a3c56a1c7ebb2407f24d77a71c2eaa347a0fd579c65ab8f4c98edc2a04d1eb142a}{kglt\-::\-S\-P\-\_\-\-A\-U\-T\-O\-\_\-\-L\-I\-G\-H\-T\-\_\-\-D\-I\-F\-F\-U\-S\-E}, 
+\\*
+\hyperlink{namespacekglt_a3c56a1c7ebb2407f24d77a71c2eaa347aba35a9de32adb9cb6f0eb87d23791ca3}{kglt\-::\-S\-P\-\_\-\-A\-U\-T\-O\-\_\-\-L\-I\-G\-H\-T\-\_\-\-S\-P\-E\-C\-U\-L\-A\-R}, 
+\hyperlink{namespacekglt_a3c56a1c7ebb2407f24d77a71c2eaa347ad61d7180c56ad1838f98a62ecf51ee83}{kglt\-::\-S\-P\-\_\-\-A\-U\-T\-O\-\_\-\-L\-I\-G\-H\-T\-\_\-\-A\-M\-B\-I\-E\-N\-T}, 
+\hyperlink{namespacekglt_a3c56a1c7ebb2407f24d77a71c2eaa347a98cbc4643770fd708bbbafca754547be}{kglt\-::\-S\-P\-\_\-\-A\-U\-T\-O\-\_\-\-L\-I\-G\-H\-T\-\_\-\-C\-O\-N\-S\-T\-A\-N\-T\-\_\-\-A\-T\-T\-E\-N\-U\-A\-T\-I\-O\-N}, 
+\hyperlink{namespacekglt_a3c56a1c7ebb2407f24d77a71c2eaa347a6eb5e64a9ef0f0b4b2ec8a98b6d3ad52}{kglt\-::\-S\-P\-\_\-\-A\-U\-T\-O\-\_\-\-L\-I\-G\-H\-T\-\_\-\-L\-I\-N\-E\-A\-R\-\_\-\-A\-T\-T\-E\-N\-U\-A\-T\-I\-O\-N}, 
+\\*
+\hyperlink{namespacekglt_a3c56a1c7ebb2407f24d77a71c2eaa347aafe59465a82b11b2651aef5eb1bd88f6}{kglt\-::\-S\-P\-\_\-\-A\-U\-T\-O\-\_\-\-L\-I\-G\-H\-T\-\_\-\-Q\-U\-A\-D\-R\-A\-T\-I\-C\-\_\-\-A\-T\-T\-E\-N\-U\-A\-T\-I\-O\-N}
+ \}
+\item 
+enum \hyperlink{namespacekglt_a402d09e4a0c30dbb100d563c0a3d945a}{kglt\-::\-Shader\-Available\-Attributes} \{ \\*
+\hyperlink{namespacekglt_a402d09e4a0c30dbb100d563c0a3d945aaa2ca1b2275ef87e9256be7dbfadeb5c4}{kglt\-::\-S\-P\-\_\-\-A\-T\-T\-R\-\_\-\-V\-E\-R\-T\-E\-X\-\_\-\-P\-O\-S\-I\-T\-I\-O\-N}, 
+\hyperlink{namespacekglt_a402d09e4a0c30dbb100d563c0a3d945aa0c75095f640f0f6cc05b3f321647c795}{kglt\-::\-S\-P\-\_\-\-A\-T\-T\-R\-\_\-\-V\-E\-R\-T\-E\-X\-\_\-\-D\-I\-F\-F\-U\-S\-E}, 
+\hyperlink{namespacekglt_a402d09e4a0c30dbb100d563c0a3d945aa0d3570874a02b8b9dea67e61ce9e30ca}{kglt\-::\-S\-P\-\_\-\-A\-T\-T\-R\-\_\-\-V\-E\-R\-T\-E\-X\-\_\-\-N\-O\-R\-M\-A\-L}, 
+\hyperlink{namespacekglt_a402d09e4a0c30dbb100d563c0a3d945aa81e8ec5615467df7c39b60aa82f8592c}{kglt\-::\-S\-P\-\_\-\-A\-T\-T\-R\-\_\-\-V\-E\-R\-T\-E\-X\-\_\-\-T\-E\-X\-C\-O\-O\-R\-D0}, 
+\\*
+\hyperlink{namespacekglt_a402d09e4a0c30dbb100d563c0a3d945aa71652702bf9363bcdd5f91672c5816b7}{kglt\-::\-S\-P\-\_\-\-A\-T\-T\-R\-\_\-\-V\-E\-R\-T\-E\-X\-\_\-\-T\-E\-X\-C\-O\-O\-R\-D1}, 
+\hyperlink{namespacekglt_a402d09e4a0c30dbb100d563c0a3d945aae697dcc8b45dea2a9fe4c744948e87cf}{kglt\-::\-S\-P\-\_\-\-A\-T\-T\-R\-\_\-\-V\-E\-R\-T\-E\-X\-\_\-\-T\-E\-X\-C\-O\-O\-R\-D2}, 
+\hyperlink{namespacekglt_a402d09e4a0c30dbb100d563c0a3d945aa11e72154c74c3c7d7db5c1131be62dcf}{kglt\-::\-S\-P\-\_\-\-A\-T\-T\-R\-\_\-\-V\-E\-R\-T\-E\-X\-\_\-\-T\-E\-X\-C\-O\-O\-R\-D3}, 
+\hyperlink{namespacekglt_a402d09e4a0c30dbb100d563c0a3d945aa0b935f20e1a6585368dc6b106eb9bf30}{kglt\-::\-S\-P\-\_\-\-A\-T\-T\-R\-\_\-\-V\-E\-R\-T\-E\-X\-\_\-\-T\-E\-X\-C\-O\-O\-R\-D4}, 
+\\*
+\hyperlink{namespacekglt_a402d09e4a0c30dbb100d563c0a3d945aaf8ce012293ef38dc8be6fee43014c86e}{kglt\-::\-S\-P\-\_\-\-A\-T\-T\-R\-\_\-\-V\-E\-R\-T\-E\-X\-\_\-\-T\-E\-X\-C\-O\-O\-R\-D5}, 
+\hyperlink{namespacekglt_a402d09e4a0c30dbb100d563c0a3d945aa88b139edb62066d196cb198e121de857}{kglt\-::\-S\-P\-\_\-\-A\-T\-T\-R\-\_\-\-V\-E\-R\-T\-E\-X\-\_\-\-T\-E\-X\-C\-O\-O\-R\-D6}, 
+\hyperlink{namespacekglt_a402d09e4a0c30dbb100d563c0a3d945aa1305f2421d23f4121e11eed0afe12c85}{kglt\-::\-S\-P\-\_\-\-A\-T\-T\-R\-\_\-\-V\-E\-R\-T\-E\-X\-\_\-\-T\-E\-X\-C\-O\-O\-R\-D7}, 
+\hyperlink{namespacekglt_a402d09e4a0c30dbb100d563c0a3d945aa35963487e5449e8431e637176b9ceba2}{kglt\-::\-S\-P\-\_\-\-A\-T\-T\-R\-\_\-\-V\-E\-R\-T\-E\-X\-\_\-\-C\-O\-L\-O\-R} =  S\-P\-\_\-\-A\-T\-T\-R\-\_\-\-V\-E\-R\-T\-E\-X\-\_\-\-D\-I\-F\-F\-U\-S\-E
+ \}
+\item 
+enum \hyperlink{namespacekglt_abeac81175ad2fbd1c3912235ab3b1d56}{kglt\-::\-Shader\-Type} \{ \hyperlink{namespacekglt_abeac81175ad2fbd1c3912235ab3b1d56a352595130f867432921116909aa93b69}{kglt\-::\-S\-H\-A\-D\-E\-R\-\_\-\-T\-Y\-P\-E\-\_\-\-V\-E\-R\-T\-E\-X}, 
+\hyperlink{namespacekglt_abeac81175ad2fbd1c3912235ab3b1d56a4140a263ae0f7ccf977d94d7edf7673d}{kglt\-::\-S\-H\-A\-D\-E\-R\-\_\-\-T\-Y\-P\-E\-\_\-\-F\-R\-A\-G\-M\-E\-N\-T}, 
+\hyperlink{namespacekglt_abeac81175ad2fbd1c3912235ab3b1d56a29d2c0e52dfb94f5898893519dfdcc6b}{kglt\-::\-S\-H\-A\-D\-E\-R\-\_\-\-T\-Y\-P\-E\-\_\-\-M\-A\-X}
+ \}
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+const std\-::set\\*
+$<$ Shader\-Available\-Auto $>$ \hyperlink{namespacekglt_a609c90644c4f40d0819f5ad8bab2ca3a}{kglt\-::\-S\-H\-A\-D\-E\-R\-\_\-\-A\-V\-A\-I\-L\-A\-B\-L\-E\-\_\-\-A\-U\-T\-O\-S}
+\item 
+const std\-::map\\*
+$<$ Shader\-Available\-Attributes, \\*
+uint8\-\_\-t $>$ \hyperlink{namespacekglt_a25e5aa4661ffc838eec14145482e6d58}{kglt\-::\-S\-H\-A\-D\-E\-R\-\_\-\-A\-T\-T\-R\-I\-B\-U\-T\-E\-\_\-\-S\-I\-Z\-E\-S}
+\item 
+const std\-::set\\*
+$<$ Shader\-Available\-Attributes $>$ \hyperlink{namespacekglt_a3de57ba7765380c9a02def24525203db}{kglt\-::\-S\-H\-A\-D\-E\-R\-\_\-\-A\-V\-A\-I\-L\-A\-B\-L\-E\-\_\-\-A\-T\-T\-R\-S}
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{shader_8h_a063a3af905ecefe83d76ca3f0fe0653e}{\index{shader.\-h@{shader.\-h}!B\-U\-F\-F\-E\-R\-\_\-\-O\-F\-F\-S\-E\-T@{B\-U\-F\-F\-E\-R\-\_\-\-O\-F\-F\-S\-E\-T}}
+\index{B\-U\-F\-F\-E\-R\-\_\-\-O\-F\-F\-S\-E\-T@{B\-U\-F\-F\-E\-R\-\_\-\-O\-F\-F\-S\-E\-T}!shader.h@{shader.\-h}}
+\subsubsection[{B\-U\-F\-F\-E\-R\-\_\-\-O\-F\-F\-S\-E\-T}]{\setlength{\rightskip}{0pt plus 5cm}\#define B\-U\-F\-F\-E\-R\-\_\-\-O\-F\-F\-S\-E\-T(
+\begin{DoxyParamCaption}
+\item[{}]{i}
+\end{DoxyParamCaption}
+)~((char $\ast$)N\-U\-L\-L + (i))}}\label{shader_8h_a063a3af905ecefe83d76ca3f0fe0653e}

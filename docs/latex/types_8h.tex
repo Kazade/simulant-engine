@@ -1,0 +1,96 @@
+\hypertarget{types_8h}{\section{kglt/types.h File Reference}
+\label{types_8h}\index{kglt/types.\-h@{kglt/types.\-h}}
+}
+{\ttfamily \#include $<$cstdint$>$}\\*
+{\ttfamily \#include $<$string$>$}\\*
+{\ttfamily \#include \char`\"{}colour.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}kazmath/vec3.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}kazmath/vec2.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}kazmath/vec4.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}generic/unique\-\_\-id.\-h\char`\"{}}\\*
+Include dependency graph for types.\-h\-:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{types_8h__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\-:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{types_8h__dep__incl}
+\end{center}
+\end{figure}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structkglt_1_1_vec4}{kglt\-::\-Vec4}
+\item 
+struct \hyperlink{structkglt_1_1_vec2}{kglt\-::\-Vec2}
+\item 
+struct \hyperlink{structkglt_1_1_vec3}{kglt\-::\-Vec3}
+\end{DoxyCompactItemize}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+namespace \hyperlink{namespacekglt}{kglt}
+\end{DoxyCompactItemize}
+\subsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef \hyperlink{class_unique_i_d}{Unique\-I\-D}$<$ 0 $>$ \hyperlink{namespacekglt_a525b047f668a129a0b102be7f2fe32be}{kglt\-::\-Mesh\-I\-D}
+\item 
+typedef \hyperlink{class_unique_i_d}{Unique\-I\-D}$<$ 1 $>$ \hyperlink{namespacekglt_aaea040f25edb7f75ca0f3aa8136a45a1}{kglt\-::\-Texture\-I\-D}
+\item 
+typedef \hyperlink{class_unique_i_d}{Unique\-I\-D}$<$ 2 $>$ \hyperlink{namespacekglt_a2a2b79f136b052b58ec737bd9c885429}{kglt\-::\-Camera\-I\-D}
+\item 
+typedef \hyperlink{class_unique_i_d}{Unique\-I\-D}$<$ 3 $>$ \hyperlink{namespacekglt_a2aafe4bf33d26659020117cad360422f}{kglt\-::\-Shader\-I\-D}
+\item 
+typedef \hyperlink{class_unique_i_d}{Unique\-I\-D}$<$ 4 $>$ \hyperlink{namespacekglt_a5ffac6377a7d3e163b4d5c31f71db43a}{kglt\-::\-Material\-I\-D}
+\item 
+typedef \hyperlink{class_unique_i_d}{Unique\-I\-D}$<$ 5 $>$ \hyperlink{namespacekglt_ab90464803ef8e3c1f6da41388e859968}{kglt\-::\-Light\-I\-D}
+\item 
+typedef \hyperlink{class_unique_i_d}{Unique\-I\-D}$<$ 6 $>$ \hyperlink{namespacekglt_a36b738e02745f47c81d1c9991fdc6237}{kglt\-::\-Sub\-Scene\-I\-D}
+\item 
+typedef \hyperlink{class_unique_i_d}{Unique\-I\-D}$<$ 7 $>$ \hyperlink{namespacekglt_a24d24e429365d0832e56b0082d8e53a0}{kglt\-::\-Viewport\-I\-D}
+\item 
+typedef \hyperlink{class_unique_i_d}{Unique\-I\-D}$<$ 8 $>$ \hyperlink{namespacekglt_a693458ae13c224ae3ea4074ac3a0b02a}{kglt\-::\-Entity\-I\-D}
+\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \hyperlink{namespacekglt_a4d5a692708f38d0176dd6f5d341289da}{kglt\-::\-Mesh\-Arrangement} \{ \\*
+\hyperlink{namespacekglt_a4d5a692708f38d0176dd6f5d341289daa6bb5bcc4734331b84ac1b80da8fc199d}{kglt\-::\-M\-E\-S\-H\-\_\-\-A\-R\-R\-A\-N\-G\-E\-M\-E\-N\-T\-\_\-\-P\-O\-I\-N\-T\-S}, 
+\hyperlink{namespacekglt_a4d5a692708f38d0176dd6f5d341289daa10bc529bd0233d4686437519a810138d}{kglt\-::\-M\-E\-S\-H\-\_\-\-A\-R\-R\-A\-N\-G\-E\-M\-E\-N\-T\-\_\-\-T\-R\-I\-A\-N\-G\-L\-E\-S}, 
+\hyperlink{namespacekglt_a4d5a692708f38d0176dd6f5d341289daa2195d40035ca33b61b6a06382f5261e5}{kglt\-::\-M\-E\-S\-H\-\_\-\-A\-R\-R\-A\-N\-G\-E\-M\-E\-N\-T\-\_\-\-T\-R\-I\-A\-N\-G\-L\-E\-\_\-\-F\-A\-N}, 
+\hyperlink{namespacekglt_a4d5a692708f38d0176dd6f5d341289daa45548cbe35f9b21b3e38434acfd75880}{kglt\-::\-M\-E\-S\-H\-\_\-\-A\-R\-R\-A\-N\-G\-E\-M\-E\-N\-T\-\_\-\-T\-R\-I\-A\-N\-G\-L\-E\-\_\-\-S\-T\-R\-I\-P}, 
+\\*
+\hyperlink{namespacekglt_a4d5a692708f38d0176dd6f5d341289daa71e2bf54d4a979ea0241dfbdba384fbe}{kglt\-::\-M\-E\-S\-H\-\_\-\-A\-R\-R\-A\-N\-G\-E\-M\-E\-N\-T\-\_\-\-L\-I\-N\-E\-S}, 
+\hyperlink{namespacekglt_a4d5a692708f38d0176dd6f5d341289daacfbb919338f6b70f7aa60c319d527d6a}{kglt\-::\-M\-E\-S\-H\-\_\-\-A\-R\-R\-A\-N\-G\-E\-M\-E\-N\-T\-\_\-\-L\-I\-N\-E\-\_\-\-S\-T\-R\-I\-P}
+ \}
+\item 
+enum \hyperlink{namespacekglt_a7011dc1de2842074684fe7c225a12941}{kglt\-::\-Vertex\-Attribute} \{ \hyperlink{namespacekglt_a7011dc1de2842074684fe7c225a12941a8f23813f07620d5999d6825f5b199055}{kglt\-::\-V\-E\-R\-T\-E\-X\-\_\-\-A\-T\-T\-R\-I\-B\-U\-T\-E\-\_\-\-P\-O\-S\-I\-T\-I\-O\-N} =  1, 
+\hyperlink{namespacekglt_a7011dc1de2842074684fe7c225a12941ae8935b2a8cdba2ad7c7354c25f311772}{kglt\-::\-V\-E\-R\-T\-E\-X\-\_\-\-A\-T\-T\-R\-I\-B\-U\-T\-E\-\_\-\-T\-E\-X\-C\-O\-O\-R\-D\-\_\-1} =  2, 
+\hyperlink{namespacekglt_a7011dc1de2842074684fe7c225a12941a5f53fc942e72e7a64cf174b81a8bc3a6}{kglt\-::\-V\-E\-R\-T\-E\-X\-\_\-\-A\-T\-T\-R\-I\-B\-U\-T\-E\-\_\-\-D\-I\-F\-F\-U\-S\-E} =  4, 
+\hyperlink{namespacekglt_a7011dc1de2842074684fe7c225a12941a6677b8e1745cdab6b4c15d65f2590b43}{kglt\-::\-V\-E\-R\-T\-E\-X\-\_\-\-A\-T\-T\-R\-I\-B\-U\-T\-E\-\_\-\-N\-O\-R\-M\-A\-L} =  8
+ \}
+\item 
+enum \hyperlink{namespacekglt_a58df2fad6415575cb8217be9174fc922}{kglt\-::\-Available\-Partitioner} \{ \hyperlink{namespacekglt_a58df2fad6415575cb8217be9174fc922ad93ecc09486bbbb6510fb288408a1f6c}{kglt\-::\-P\-A\-R\-T\-I\-T\-I\-O\-N\-E\-R\-\_\-\-N\-U\-L\-L}, 
+\hyperlink{namespacekglt_a58df2fad6415575cb8217be9174fc922a3322789a83b03b058368e87611d6899b}{kglt\-::\-P\-A\-R\-T\-I\-T\-I\-O\-N\-E\-R\-\_\-\-O\-C\-T\-R\-E\-E}
+ \}
+\item 
+enum \hyperlink{namespacekglt_a4bc8798d811754c195cce0451b54ac0d}{kglt\-::\-Light\-Type} \{ \hyperlink{namespacekglt_a4bc8798d811754c195cce0451b54ac0dae51b838e196cdd38dc50e1349612985d}{kglt\-::\-L\-I\-G\-H\-T\-\_\-\-T\-Y\-P\-E\-\_\-\-P\-O\-I\-N\-T}, 
+\hyperlink{namespacekglt_a4bc8798d811754c195cce0451b54ac0dac959c675bbed62a13bb6e74859988fa0}{kglt\-::\-L\-I\-G\-H\-T\-\_\-\-T\-Y\-P\-E\-\_\-\-D\-I\-R\-E\-C\-T\-I\-O\-N\-A\-L}, 
+\hyperlink{namespacekglt_a4bc8798d811754c195cce0451b54ac0dae9a2a9bf057ca6fa15b23414f69eadb1}{kglt\-::\-L\-I\-G\-H\-T\-\_\-\-T\-Y\-P\-E\-\_\-\-S\-P\-O\-T\-\_\-\-L\-I\-G\-H\-T}
+ \}
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+const Sub\-Scene\-I\-D \hyperlink{namespacekglt_a1559a1d838d31d63178aee0545ea70ea}{kglt\-::\-Default\-Sub\-Scene\-I\-D} = Sub\-Scene\-I\-D()
+\item 
+const std\-::string \hyperlink{namespacekglt_a38d05dbff502b115008d20ebdfd77a44}{kglt\-::\-D\-E\-F\-A\-U\-L\-T\-\_\-\-M\-A\-T\-E\-R\-I\-A\-L\-\_\-\-S\-C\-H\-E\-M\-E} = \char`\"{}default\char`\"{}
+\end{DoxyCompactItemize}

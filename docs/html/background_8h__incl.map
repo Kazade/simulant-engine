@@ -1,0 +1,11 @@
+<map id="kglt/extra/background.h" name="kglt/extra/background.h">
+<area shape="rect" id="node13" href="$object_8h.html" title="../object.h" alt="" coords="1144,83,1224,112"/>
+<area shape="rect" id="node52" href="$types_8h.html" title="types.h" alt="" coords="409,160,473,189"/>
+<area shape="rect" id="node69" href="$creator_8h.html" title="../generic/creator.h" alt="" coords="765,83,896,112"/>
+<area shape="rect" id="node27" href="$tree_8h.html" title="generic/tree.h" alt="" coords="995,160,1096,189"/>
+<area shape="rect" id="node37" href="$user__data__carrier_8h.html" title="generic/user_data_carrier.h" alt="" coords="1803,160,1981,189"/>
+<area shape="rect" id="node40" href="$visitor_8h.html" title="generic/visitor.h" alt="" coords="1613,160,1728,189"/>
+<area shape="rect" id="node56" href="$colour_8h.html" title="colour.h" alt="" coords="104,247,171,276"/>
+<area shape="rect" id="node63" href="$unique__id_8h.html" title="generic/unique_id.h" alt="" coords="523,247,656,276"/>
+<area shape="rect" id="node66" href="$safe__bool_8h.html" title="safe_bool.h" alt="" coords="545,333,633,363"/>
+</map>

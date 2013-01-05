@@ -1,0 +1,6 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classkglt_1_1_render_group.html" title="kglt::RenderGroup" alt="" coords="5,59,133,88"/>
+<area shape="rect" id="node3" href="$classkglt_1_1_shader_bind_group.html" title="kglt::ShaderBindGroup" alt="" coords="184,5,336,35"/>
+<area shape="rect" id="node5" href="$classkglt_1_1_texture_bind_group.html" title="kglt::TextureBindGroup" alt="" coords="183,59,337,88"/>
+<area shape="rect" id="node7" href="$classkglt_1_1_transform_group.html" title="kglt::TransformGroup" alt="" coords="188,112,332,141"/>
+</map>

@@ -1,0 +1,130 @@
+\hypertarget{classkglt_1_1_pipeline}{\section{kglt\-:\-:Pipeline Class Reference}
+\label{classkglt_1_1_pipeline}\index{kglt\-::\-Pipeline@{kglt\-::\-Pipeline}}
+}
+
+
+{\ttfamily \#include $<$pipeline.\-h$>$}
+
+
+
+Inheritance diagram for kglt\-:\-:Pipeline\-:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=188pt]{classkglt_1_1_pipeline__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for kglt\-:\-:Pipeline\-:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=310pt]{classkglt_1_1_pipeline__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classkglt_1_1_pipeline_ab0761b4ced66af234089cc4ac0fb988f}{Pipeline} (\hyperlink{classkglt_1_1_scene}{Scene} \&scene)
+\item 
+void \hyperlink{classkglt_1_1_pipeline_aa62308ebcac926783e5857e419718d7b}{remove\-\_\-all\-\_\-stages} ()
+\item 
+void \hyperlink{classkglt_1_1_pipeline_a0d4923ffbf3412cca26a751ba86fe7e1}{add\-\_\-stage} (\hyperlink{namespacekglt_a36b738e02745f47c81d1c9991fdc6237}{Sub\-Scene\-I\-D} subscene, \hyperlink{namespacekglt_a2a2b79f136b052b58ec737bd9c885429}{Camera\-I\-D} camera, \hyperlink{namespacekglt_a24d24e429365d0832e56b0082d8e53a0}{Viewport\-I\-D} viewport=\hyperlink{namespacekglt_a24d24e429365d0832e56b0082d8e53a0}{Viewport\-I\-D}(), \hyperlink{namespacekglt_aaea040f25edb7f75ca0f3aa8136a45a1}{Texture\-I\-D} target=\hyperlink{namespacekglt_aaea040f25edb7f75ca0f3aa8136a45a1}{Texture\-I\-D}(), int32\-\_\-t priority=0)
+\item 
+void \hyperlink{classkglt_1_1_pipeline_aad6b5c6f7ce01202bb938a7f00faaae8}{set\-\_\-renderer} (\hyperlink{classkglt_1_1_renderer_a6e6ebee8ca27407c5bd7103ea325c930}{Renderer\-::ptr} renderer)
+\item 
+void \hyperlink{classkglt_1_1_pipeline_ac28f91947c918b30ce25cf6752bbd23b}{run} ()
+\item 
+sigc\-::signal$<$ void, \hyperlink{classkglt_1_1_stage}{Stage} \& $>$ \& \hyperlink{classkglt_1_1_pipeline_aa44d48c1a27c5a62d655d29626fa0627}{signal\-\_\-render\-\_\-stage\-\_\-started} ()
+\item 
+sigc\-::signal$<$ void, \hyperlink{classkglt_1_1_stage}{Stage} \& $>$ \& \hyperlink{classkglt_1_1_pipeline_affab1bd034b44d978dd205b4a8805114}{signal\-\_\-render\-\_\-stage\-\_\-finished} ()
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{structkglt_1_1_render_options}{Render\-Options} \hyperlink{classkglt_1_1_pipeline_a5bdf27ca82b18656b2d979b13bd8deed}{render\-\_\-options}
+\end{DoxyCompactItemize}
+\subsection*{Friends}
+\begin{DoxyCompactItemize}
+\item 
+class \hyperlink{classkglt_1_1_pipeline_a032858ae1fe02d2d1170981c2af2d67c}{Scene}
+\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classkglt_1_1_pipeline_ab0761b4ced66af234089cc4ac0fb988f}{\index{kglt\-::\-Pipeline@{kglt\-::\-Pipeline}!Pipeline@{Pipeline}}
+\index{Pipeline@{Pipeline}!kglt::Pipeline@{kglt\-::\-Pipeline}}
+\subsubsection[{Pipeline}]{\setlength{\rightskip}{0pt plus 5cm}kglt\-::\-Pipeline\-::\-Pipeline (
+\begin{DoxyParamCaption}
+\item[{{\bf Scene} \&}]{scene}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_pipeline_ab0761b4ced66af234089cc4ac0fb988f}
+
+
+\subsection{Member Function Documentation}
+\hypertarget{classkglt_1_1_pipeline_a0d4923ffbf3412cca26a751ba86fe7e1}{\index{kglt\-::\-Pipeline@{kglt\-::\-Pipeline}!add\-\_\-stage@{add\-\_\-stage}}
+\index{add\-\_\-stage@{add\-\_\-stage}!kglt::Pipeline@{kglt\-::\-Pipeline}}
+\subsubsection[{add\-\_\-stage}]{\setlength{\rightskip}{0pt plus 5cm}void kglt\-::\-Pipeline\-::add\-\_\-stage (
+\begin{DoxyParamCaption}
+\item[{{\bf Sub\-Scene\-I\-D}}]{subscene, }
+\item[{{\bf Camera\-I\-D}}]{camera, }
+\item[{{\bf Viewport\-I\-D}}]{viewport = {\ttfamily {\bf Viewport\-I\-D}()}, }
+\item[{{\bf Texture\-I\-D}}]{target = {\ttfamily {\bf Texture\-I\-D}()}, }
+\item[{int32\-\_\-t}]{priority = {\ttfamily 0}}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_pipeline_a0d4923ffbf3412cca26a751ba86fe7e1}
+\hypertarget{classkglt_1_1_pipeline_aa62308ebcac926783e5857e419718d7b}{\index{kglt\-::\-Pipeline@{kglt\-::\-Pipeline}!remove\-\_\-all\-\_\-stages@{remove\-\_\-all\-\_\-stages}}
+\index{remove\-\_\-all\-\_\-stages@{remove\-\_\-all\-\_\-stages}!kglt::Pipeline@{kglt\-::\-Pipeline}}
+\subsubsection[{remove\-\_\-all\-\_\-stages}]{\setlength{\rightskip}{0pt plus 5cm}void kglt\-::\-Pipeline\-::remove\-\_\-all\-\_\-stages (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_pipeline_aa62308ebcac926783e5857e419718d7b}
+\hypertarget{classkglt_1_1_pipeline_ac28f91947c918b30ce25cf6752bbd23b}{\index{kglt\-::\-Pipeline@{kglt\-::\-Pipeline}!run@{run}}
+\index{run@{run}!kglt::Pipeline@{kglt\-::\-Pipeline}}
+\subsubsection[{run}]{\setlength{\rightskip}{0pt plus 5cm}void kglt\-::\-Pipeline\-::run (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_pipeline_ac28f91947c918b30ce25cf6752bbd23b}
+\hypertarget{classkglt_1_1_pipeline_aad6b5c6f7ce01202bb938a7f00faaae8}{\index{kglt\-::\-Pipeline@{kglt\-::\-Pipeline}!set\-\_\-renderer@{set\-\_\-renderer}}
+\index{set\-\_\-renderer@{set\-\_\-renderer}!kglt::Pipeline@{kglt\-::\-Pipeline}}
+\subsubsection[{set\-\_\-renderer}]{\setlength{\rightskip}{0pt plus 5cm}void kglt\-::\-Pipeline\-::set\-\_\-renderer (
+\begin{DoxyParamCaption}
+\item[{{\bf Renderer\-::ptr}}]{renderer}
+\end{DoxyParamCaption}
+)}}\label{classkglt_1_1_pipeline_aad6b5c6f7ce01202bb938a7f00faaae8}
+\hypertarget{classkglt_1_1_pipeline_affab1bd034b44d978dd205b4a8805114}{\index{kglt\-::\-Pipeline@{kglt\-::\-Pipeline}!signal\-\_\-render\-\_\-stage\-\_\-finished@{signal\-\_\-render\-\_\-stage\-\_\-finished}}
+\index{signal\-\_\-render\-\_\-stage\-\_\-finished@{signal\-\_\-render\-\_\-stage\-\_\-finished}!kglt::Pipeline@{kglt\-::\-Pipeline}}
+\subsubsection[{signal\-\_\-render\-\_\-stage\-\_\-finished}]{\setlength{\rightskip}{0pt plus 5cm}sigc\-::signal$<$void, {\bf Stage}\&$>$\& kglt\-::\-Pipeline\-::signal\-\_\-render\-\_\-stage\-\_\-finished (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_pipeline_affab1bd034b44d978dd205b4a8805114}
+\hypertarget{classkglt_1_1_pipeline_aa44d48c1a27c5a62d655d29626fa0627}{\index{kglt\-::\-Pipeline@{kglt\-::\-Pipeline}!signal\-\_\-render\-\_\-stage\-\_\-started@{signal\-\_\-render\-\_\-stage\-\_\-started}}
+\index{signal\-\_\-render\-\_\-stage\-\_\-started@{signal\-\_\-render\-\_\-stage\-\_\-started}!kglt::Pipeline@{kglt\-::\-Pipeline}}
+\subsubsection[{signal\-\_\-render\-\_\-stage\-\_\-started}]{\setlength{\rightskip}{0pt plus 5cm}sigc\-::signal$<$void, {\bf Stage}\&$>$\& kglt\-::\-Pipeline\-::signal\-\_\-render\-\_\-stage\-\_\-started (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_pipeline_aa44d48c1a27c5a62d655d29626fa0627}
+
+
+\subsection{Friends And Related Function Documentation}
+\hypertarget{classkglt_1_1_pipeline_a032858ae1fe02d2d1170981c2af2d67c}{\index{kglt\-::\-Pipeline@{kglt\-::\-Pipeline}!Scene@{Scene}}
+\index{Scene@{Scene}!kglt::Pipeline@{kglt\-::\-Pipeline}}
+\subsubsection[{Scene}]{\setlength{\rightskip}{0pt plus 5cm}friend class {\bf Scene}\hspace{0.3cm}{\ttfamily [friend]}}}\label{classkglt_1_1_pipeline_a032858ae1fe02d2d1170981c2af2d67c}
+
+
+\subsection{Member Data Documentation}
+\hypertarget{classkglt_1_1_pipeline_a5bdf27ca82b18656b2d979b13bd8deed}{\index{kglt\-::\-Pipeline@{kglt\-::\-Pipeline}!render\-\_\-options@{render\-\_\-options}}
+\index{render\-\_\-options@{render\-\_\-options}!kglt::Pipeline@{kglt\-::\-Pipeline}}
+\subsubsection[{render\-\_\-options}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Render\-Options} kglt\-::\-Pipeline\-::render\-\_\-options}}\label{classkglt_1_1_pipeline_a5bdf27ca82b18656b2d979b13bd8deed}
+
+
+The documentation for this class was generated from the following files\-:\begin{DoxyCompactItemize}
+\item 
+kglt/\hyperlink{pipeline_8h}{pipeline.\-h}\item 
+kglt/\hyperlink{pipeline_8cpp}{pipeline.\-cpp}\end{DoxyCompactItemize}

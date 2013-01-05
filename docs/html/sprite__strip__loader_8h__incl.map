@@ -1,0 +1,19 @@
+<map id="kglt/extra/sprite_strip_loader.h" name="kglt/extra/sprite_strip_loader.h">
+<area shape="rect" id="node9" href="$creator_8h.html" title="../generic/creator.h" alt="" coords="2319,101,2449,131"/>
+<area shape="rect" id="node13" href="$types_8h.html" title="../types.h" alt="" coords="1172,256,1249,285"/>
+<area shape="rect" id="node30" href="$resource__manager_8h.html" title="../resource_manager.h" alt="" coords="1423,101,1575,131"/>
+<area shape="rect" id="node17" href="$colour_8h.html" title="colour.h" alt="" coords="641,333,708,363"/>
+<area shape="rect" id="node25" href="$unique__id_8h.html" title="generic/unique_id.h" alt="" coords="1199,333,1332,363"/>
+<area shape="rect" id="node28" href="$safe__bool_8h.html" title="safe_bool.h" alt="" coords="1221,411,1309,440"/>
+<area shape="rect" id="node35" href="$manager_8h.html" title="generic/manager.h" alt="" coords="120,179,248,208"/>
+<area shape="rect" id="node49" href="$texture_8h.html" title="texture.h" alt="" coords="1571,179,1643,208"/>
+<area shape="rect" id="node64" href="$shader_8h.html" title="shader.h" alt="" coords="1300,179,1372,208"/>
+<area shape="rect" id="node80" href="$mesh_8h.html" title="mesh.h" alt="" coords="809,179,873,208"/>
+<area shape="rect" id="node109" href="$material_8h.html" title="material.h" alt="" coords="1767,179,1844,208"/>
+<area shape="rect" id="node54" href="$identifiable_8h.html" title="generic/identifiable.h" alt="" coords="1481,256,1623,285"/>
+<area shape="rect" id="node56" href="$loadable_8h.html" title="loadable.h" alt="" coords="1937,256,2017,285"/>
+<area shape="rect" id="node60" href="$resource_8h.html" title="resource.h" alt="" coords="1375,256,1457,285"/>
+<area shape="rect" id="node86" href="$managed_8h.html" title="generic/managed.h" alt="" coords="305,333,436,363"/>
+<area shape="rect" id="node95" href="$vertex__data_8h.html" title="vertex_data.h" alt="" coords="356,256,457,285"/>
+<area shape="rect" id="node103" href="$buffer__object_8h.html" title="buffer_object.h" alt="" coords="460,333,567,363"/>
+</map>

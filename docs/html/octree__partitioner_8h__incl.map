@@ -1,0 +1,22 @@
+<map id="kglt/partitioners/octree_partitioner.h" name="kglt/partitioners/octree_partitioner.h">
+<area shape="rect" id="node3" href="$partitioner_8h.html" title="../partitioner.h" alt="" coords="1606,101,1707,131"/>
+<area shape="rect" id="node126" href="$octree_8h.html" title="octree.h" alt="" coords="402,256,471,285"/>
+<area shape="rect" id="node11" href="$managed_8h.html" title="generic/managed.h" alt="" coords="938,420,1069,449"/>
+<area shape="rect" id="node16" href="$geometry__buffer_8h.html" title="utils/geometry_buffer.h" alt="" coords="3099,256,3254,285"/>
+<area shape="rect" id="node24" href="$types_8h.html" title="../types.h" alt="" coords="3031,333,3109,363"/>
+<area shape="rect" id="node43" href="$entity_8h.html" title="entity.h" alt="" coords="973,179,1037,208"/>
+<area shape="rect" id="node29" href="$colour_8h.html" title="colour.h" alt="" coords="2855,420,2922,449"/>
+<area shape="rect" id="node37" href="$unique__id_8h.html" title="generic/unique_id.h" alt="" coords="3591,420,3725,449"/>
+<area shape="rect" id="node40" href="$safe__bool_8h.html" title="safe_bool.h" alt="" coords="3643,507,3731,536"/>
+<area shape="rect" id="node45" href="$identifiable_8h.html" title="generic/identifiable.h" alt="" coords="1383,333,1525,363"/>
+<area shape="rect" id="node48" href="$relation_8h.html" title="generic/relation.h" alt="" coords="230,256,350,285"/>
+<area shape="rect" id="node58" href="$boundable_8h.html" title="boundable.h" alt="" coords="23,333,114,363"/>
+<area shape="rect" id="node62" href="$object_8h.html" title="object.h" alt="" coords="1849,256,1915,285"/>
+<area shape="rect" id="node99" href="$mesh_8h.html" title="mesh.h" alt="" coords="973,256,1037,285"/>
+<area shape="rect" id="node73" href="$tree_8h.html" title="generic/tree.h" alt="" coords="2397,333,2498,363"/>
+<area shape="rect" id="node83" href="$user__data__carrier_8h.html" title="generic/user_data_carrier.h" alt="" coords="1549,333,1727,363"/>
+<area shape="rect" id="node86" href="$visitor_8h.html" title="generic/visitor.h" alt="" coords="1143,333,1258,363"/>
+<area shape="rect" id="node110" href="$resource_8h.html" title="resource.h" alt="" coords="885,333,967,363"/>
+<area shape="rect" id="node113" href="$vertex__data_8h.html" title="vertex_data.h" alt="" coords="2674,333,2775,363"/>
+<area shape="rect" id="node121" href="$buffer__object_8h.html" title="buffer_object.h" alt="" coords="2725,420,2831,449"/>
+</map>

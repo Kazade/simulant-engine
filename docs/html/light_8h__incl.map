@@ -1,0 +1,12 @@
+<map id="kglt/light.h" name="kglt/light.h">
+<area shape="rect" id="node3" href="$object_8h.html" title="object.h" alt="" coords="1009,83,1076,112"/>
+<area shape="rect" id="node45" href="$types_8h.html" title="types.h" alt="" coords="1687,160,1751,189"/>
+<area shape="rect" id="node63" href="$identifiable_8h.html" title="generic/identifiable.h" alt="" coords="1825,83,1967,112"/>
+<area shape="rect" id="node66" href="$boundable_8h.html" title="boundable.h" alt="" coords="1991,83,2081,112"/>
+<area shape="rect" id="node19" href="$tree_8h.html" title="generic/tree.h" alt="" coords="433,160,535,189"/>
+<area shape="rect" id="node29" href="$user__data__carrier_8h.html" title="generic/user_data_carrier.h" alt="" coords="953,160,1132,189"/>
+<area shape="rect" id="node32" href="$visitor_8h.html" title="generic/visitor.h" alt="" coords="764,160,879,189"/>
+<area shape="rect" id="node51" href="$colour_8h.html" title="colour.h" alt="" coords="1685,247,1752,276"/>
+<area shape="rect" id="node58" href="$unique__id_8h.html" title="generic/unique_id.h" alt="" coords="1451,247,1584,276"/>
+<area shape="rect" id="node61" href="$safe__bool_8h.html" title="safe_bool.h" alt="" coords="1473,333,1561,363"/>
+</map>

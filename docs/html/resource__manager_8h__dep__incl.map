@@ -1,0 +1,33 @@
+<map id="kglt/resource_manager.h" name="kglt/resource_manager.h">
+<area shape="rect" id="node3" href="$scene_8h.html" title="kglt/scene.h" alt="" coords="2019,92,2112,121"/>
+<area shape="rect" id="node61" href="$sprite__strip__loader_8h.html" title="kglt/extra/sprite_strip\l_loader.h" alt="" coords="3799,83,3943,130"/>
+<area shape="rect" id="node65" href="$resource__manager_8cpp.html" title="kglt/resource_manager.cpp" alt="" coords="3967,92,4145,121"/>
+<area shape="rect" id="node5" href="$sprite_8h.html" title="kglt/extra/sprite.h" alt="" coords="12,188,135,217"/>
+<area shape="rect" id="node11" href="$camera_8cpp.html" title="kglt/camera.cpp" alt="" coords="159,188,273,217"/>
+<area shape="rect" id="node13" href="$entity_8cpp.html" title="kglt/entity.cpp" alt="" coords="297,188,401,217"/>
+<area shape="rect" id="node15" href="$background_8cpp.html" title="kglt/extra/background.cpp" alt="" coords="425,188,596,217"/>
+<area shape="rect" id="node17" href="$sprite__strip__loader_8cpp.html" title="kglt/extra/sprite_strip\l_loader.cpp" alt="" coords="3799,179,3943,226"/>
+<area shape="rect" id="node19" href="$font_8cpp.html" title="kglt/extra/ui/font.cpp" alt="" coords="620,188,761,217"/>
+<area shape="rect" id="node21" href="$interface_8cpp.html" title="kglt/extra/ui/interface.cpp" alt="" coords="785,188,953,217"/>
+<area shape="rect" id="node23" href="$text_8cpp.html" title="kglt/extra/ui/text.cpp" alt="" coords="977,188,1119,217"/>
+<area shape="rect" id="node25" href="$widget_8cpp.html" title="kglt/extra/ui/widget.cpp" alt="" coords="1143,188,1300,217"/>
+<area shape="rect" id="node27" href="$label_8cpp.html" title="kglt/extra/ui/widgets\l/label.cpp" alt="" coords="1324,179,1463,226"/>
+<area shape="rect" id="node29" href="$kglt_8h.html" title="kglt/kglt.h" alt="" coords="1487,188,1564,217"/>
+<area shape="rect" id="node31" href="$light_8cpp.html" title="kglt/light.cpp" alt="" coords="1588,188,1684,217"/>
+<area shape="rect" id="node33" href="$loader_8cpp.html" title="kglt/loader.cpp" alt="" coords="1708,188,1815,217"/>
+<area shape="rect" id="node35" href="$material__script_8cpp.html" title="kglt/loaders/material\l_script.cpp" alt="" coords="1839,179,1977,226"/>
+<area shape="rect" id="node37" href="$q2bsp__loader_8cpp.html" title="kglt/loaders/q2bsp\l_loader.cpp" alt="" coords="2001,179,2129,226"/>
+<area shape="rect" id="node39" href="$object_8cpp.html" title="kglt/object.cpp" alt="" coords="2153,188,2260,217"/>
+<area shape="rect" id="node41" href="$null__partitioner_8cpp.html" title="kglt/partitioners/null\l_partitioner.cpp" alt="" coords="2284,179,2417,226"/>
+<area shape="rect" id="node43" href="$octree__partitioner_8cpp.html" title="kglt/partitioners/octree\l_partitioner.cpp" alt="" coords="2441,179,2591,226"/>
+<area shape="rect" id="node45" href="$pipeline_8cpp.html" title="kglt/pipeline.cpp" alt="" coords="2615,188,2729,217"/>
+<area shape="rect" id="node47" href="$renderer_8cpp.html" title="kglt/renderer.cpp" alt="" coords="2753,188,2871,217"/>
+<area shape="rect" id="node49" href="$generic__renderer_8cpp.html" title="kglt/renderers/generic\l_renderer.cpp" alt="" coords="2895,179,3041,226"/>
+<area shape="rect" id="node51" href="$scene_8cpp.html" title="kglt/scene.cpp" alt="" coords="3065,188,3172,217"/>
+<area shape="rect" id="node53" href="$shortcuts_8cpp.html" title="kglt/shortcuts.cpp" alt="" coords="3196,188,3321,217"/>
+<area shape="rect" id="node55" href="$texture_8cpp.html" title="kglt/texture.cpp" alt="" coords="3345,188,3457,217"/>
+<area shape="rect" id="node57" href="$viewport_8cpp.html" title="kglt/viewport.cpp" alt="" coords="3481,188,3601,217"/>
+<area shape="rect" id="node59" href="$window__base_8cpp.html" title="kglt/window_base.cpp" alt="" coords="3625,188,3775,217"/>
+<area shape="rect" id="node7" href="$additional_8h.html" title="kglt/additional.h" alt="" coords="2044,275,2156,304"/>
+<area shape="rect" id="node9" href="$sprite_8cpp.html" title="kglt/extra/sprite.cpp" alt="" coords="5,275,141,304"/>
+</map>

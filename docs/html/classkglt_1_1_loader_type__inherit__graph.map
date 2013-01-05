@@ -1,0 +1,5 @@
+<map id="kglt::LoaderType" name="kglt::LoaderType">
+<area shape="rect" id="node3" href="$classkglt_1_1loaders_1_1_material_script_loader_type.html" title="kglt::loaders::MaterialScript\lLoaderType" alt="" coords="189,5,371,51"/>
+<area shape="rect" id="node5" href="$classkglt_1_1loaders_1_1_q2_b_s_p_loader_type.html" title="kglt::loaders::Q2BSPLoaderType" alt="" coords="173,75,387,104"/>
+<area shape="rect" id="node7" href="$classkglt_1_1loaders_1_1_texture_loader_type.html" title="kglt::loaders::TextureLoaderType" alt="" coords="173,128,387,157"/>
+</map>

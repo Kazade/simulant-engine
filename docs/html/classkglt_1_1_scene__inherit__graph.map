@@ -1,0 +1,11 @@
+<map id="kglt::Scene" name="kglt::Scene">
+<area shape="rect" id="node2" href="$classkglt_1_1_scene_base.html" title="kglt::SceneBase" alt="" coords="287,237,404,267"/>
+<area shape="rect" id="node4" href="$classkglt_1_1_resource_manager.html" title="kglt::ResourceManager" alt="" coords="249,160,407,189"/>
+<area shape="rect" id="node6" href="$classkglt_1_1generic_1_1_templated_manager.html" title="MeshManager" alt="" coords="5,83,109,112"/>
+<area shape="rect" id="node8" href="$classkglt_1_1generic_1_1_base_manager.html" title="kglt::generic::BaseManager" alt="" coords="237,5,419,35"/>
+<area shape="rect" id="node10" href="$classkglt_1_1generic_1_1_templated_manager.html" title="ShaderManager" alt="" coords="133,83,245,112"/>
+<area shape="rect" id="node13" href="$classkglt_1_1generic_1_1_templated_manager.html" title="MaterialManager" alt="" coords="269,83,387,112"/>
+<area shape="rect" id="node16" href="$classkglt_1_1generic_1_1_templated_manager.html" title="TextureManager" alt="" coords="411,83,525,112"/>
+<area shape="rect" id="node21" href="$classkglt_1_1generic_1_1_templated_manager.html" title="SubSceneManager" alt="" coords="464,160,595,189"/>
+<area shape="rect" id="node19" href="$classkglt_1_1_loadable.html" title="kglt::Loadable" alt="" coords="515,237,616,267"/>
+</map>

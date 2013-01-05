@@ -1,0 +1,18 @@
+<map id="kglt/extra/ui/interface.h" name="kglt/extra/ui/interface.h">
+<area shape="rect" id="node5" href="$managed_8h.html" title="../../generic/managed.h" alt="" coords="23,392,177,421"/>
+<area shape="rect" id="node11" href="$manager_8h.html" title="../../generic/manager.h" alt="" coords="373,237,525,267"/>
+<area shape="rect" id="node25" href="$extra_2ui_2types_8h.html" title="./types.h" alt="" coords="1888,160,1960,189"/>
+<area shape="rect" id="node33" href="$types_8h.html" title="../../types.h" alt="" coords="1597,315,1685,344"/>
+<area shape="rect" id="node47" href="$label_8h.html" title="widgets/label.h" alt="" coords="1385,83,1495,112"/>
+<area shape="rect" id="node92" href="$font_8h.html" title="font.h" alt="" coords="1760,237,1813,267"/>
+<area shape="rect" id="node27" href="$unique__id_8h.html" title="../../generic/unique_id.h" alt="" coords="2007,392,2164,421"/>
+<area shape="rect" id="node31" href="$safe__bool_8h.html" title="safe_bool.h" alt="" coords="2041,469,2129,499"/>
+<area shape="rect" id="node38" href="$colour_8h.html" title="colour.h" alt="" coords="1372,392,1439,421"/>
+<area shape="rect" id="node49" href="$identifiable_8h.html" title="../../../generic/identifiable.h" alt="" coords="669,315,845,344"/>
+<area shape="rect" id="node52" href="$widget_8h.html" title="../widget.h" alt="" coords="1288,160,1371,189"/>
+<area shape="rect" id="node88" href="$text_8h.html" title="../text.h" alt="" coords="1516,160,1583,189"/>
+<area shape="rect" id="node56" href="$mesh_8h.html" title="../../mesh.h" alt="" coords="1139,237,1227,267"/>
+<area shape="rect" id="node69" href="$resource_8h.html" title="resource.h" alt="" coords="1421,315,1504,344"/>
+<area shape="rect" id="node73" href="$vertex__data_8h.html" title="vertex_data.h" alt="" coords="1296,315,1397,344"/>
+<area shape="rect" id="node81" href="$buffer__object_8h.html" title="buffer_object.h" alt="" coords="1052,392,1159,421"/>
+</map>

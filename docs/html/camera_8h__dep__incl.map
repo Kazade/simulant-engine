@@ -1,0 +1,10 @@
+<map id="kglt/camera.h" name="kglt/camera.h">
+<area shape="rect" id="node3" href="$camera_8cpp.html" title="kglt/camera.cpp" alt="" coords="5,92,120,121"/>
+<area shape="rect" id="node5" href="$background_8cpp.html" title="kglt/extra/background.cpp" alt="" coords="144,92,315,121"/>
+<area shape="rect" id="node7" href="$interface_8cpp.html" title="kglt/extra/ui/interface.cpp" alt="" coords="339,92,507,121"/>
+<area shape="rect" id="node9" href="$kglt_8h.html" title="kglt/kglt.h" alt="" coords="531,92,608,121"/>
+<area shape="rect" id="node11" href="$q2bsp__loader_8cpp.html" title="kglt/loaders/q2bsp\l_loader.cpp" alt="" coords="632,83,760,130"/>
+<area shape="rect" id="node13" href="$octree__partitioner_8cpp.html" title="kglt/partitioners/octree\l_partitioner.cpp" alt="" coords="784,83,933,130"/>
+<area shape="rect" id="node15" href="$generic__renderer_8cpp.html" title="kglt/renderers/generic\l_renderer.cpp" alt="" coords="957,83,1104,130"/>
+<area shape="rect" id="node17" href="$scene_8cpp.html" title="kglt/scene.cpp" alt="" coords="1128,92,1235,121"/>
+</map>

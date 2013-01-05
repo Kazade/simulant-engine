@@ -1,0 +1,46 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classkglt_1_1generic_1_1_base_manager.html" title="kglt::generic::BaseManager" alt="" coords="5,587,187,616"/>
+<area shape="rect" id="node3" href="$classkglt_1_1generic_1_1_templated_manager.html" title="kglt::generic::Templated\lManager\&lt; Derived, ObjectType,\l ObjectIDType, NewIDGenerator \&gt;" alt="" coords="236,705,460,769"/>
+<area shape="rect" id="node17" href="$classkglt_1_1generic_1_1_templated_manager.html" title="kglt::generic::Templated\lManager\&lt; WindowBase, Viewport,\l ViewportID \&gt;" alt="" coords="236,433,460,497"/>
+<area shape="rect" id="node5" href="$classkglt_1_1extra_1_1ui_1_1_interface.html" title="kglt::extra::ui::Interface" alt="" coords="529,919,687,948"/>
+<area shape="rect" id="node7" href="$classkglt_1_1_resource_manager.html" title="kglt::ResourceManager" alt="" coords="529,723,687,752"/>
+<area shape="rect" id="node11" href="$classkglt_1_1_scene.html" title="kglt::Scene" alt="" coords="995,372,1083,401"/>
+<area shape="rect" id="node13" href="$classkglt_1_1_sub_scene.html" title="kglt::SubScene" alt="" coords="984,845,1093,875"/>
+<area shape="rect" id="node9" href="$classkglt_1_1_scene_base.html" title="kglt::SceneBase" alt="" coords="779,723,896,752"/>
+<area shape="rect" id="node19" href="$classkglt_1_1_window_base.html" title="kglt::WindowBase" alt="" coords="544,267,672,296"/>
+<area shape="rect" id="node21" href="$classkglt_1_1_window.html" title="kglt::Window" alt="" coords="788,320,887,349"/>
+<area shape="rect" id="node22" href="$classkglt_1_1_boundable.html" title="kglt::Boundable" alt="" coords="781,1103,893,1132"/>
+<area shape="rect" id="node24" href="$classkglt_1_1_light.html" title="kglt::Light" alt="" coords="1000,1041,1077,1071"/>
+<area shape="rect" id="node26" href="$classkglt_1_1_sub_entity.html" title="kglt::SubEntity" alt="" coords="985,1156,1092,1185"/>
+<area shape="rect" id="node27" href="$classkglt_1_1generic_1_1_identifiable.html" title="kglt::generic::Identifiable\l\&lt; CameraID \&gt;" alt="" coords="756,1315,919,1362"/>
+<area shape="rect" id="node29" href="$classkglt_1_1_camera.html" title="kglt::Camera" alt="" coords="991,1324,1087,1353"/>
+<area shape="rect" id="node30" href="$classkglt_1_1generic_1_1_identifiable.html" title="kglt::generic::Identifiable\l\&lt; EntityID \&gt;" alt="" coords="756,599,919,646"/>
+<area shape="rect" id="node32" href="$classkglt_1_1_entity.html" title="kglt::Entity" alt="" coords="996,639,1081,668"/>
+<area shape="rect" id="node33" href="$classkglt_1_1generic_1_1_identifiable.html" title="kglt::generic::Identifiable\l\&lt; LightID \&gt;" alt="" coords="756,1033,919,1079"/>
+<area shape="rect" id="node35" href="$classkglt_1_1generic_1_1_identifiable.html" title="kglt::generic::Identifiable\l\&lt; MaterialID \&gt;" alt="" coords="756,74,919,121"/>
+<area shape="rect" id="node37" href="$classkglt_1_1_material.html" title="kglt::Material" alt="" coords="991,144,1087,173"/>
+<area shape="rect" id="node38" href="$classkglt_1_1generic_1_1_identifiable.html" title="kglt::generic::Identifiable\l\&lt; MeshID \&gt;" alt="" coords="756,423,919,470"/>
+<area shape="rect" id="node40" href="$classkglt_1_1_mesh.html" title="kglt::Mesh" alt="" coords="997,463,1080,492"/>
+<area shape="rect" id="node41" href="$classkglt_1_1generic_1_1_identifiable.html" title="kglt::generic::Identifiable\l\&lt; ShaderID \&gt;" alt="" coords="756,5,919,51"/>
+<area shape="rect" id="node43" href="$classkglt_1_1_shader_program.html" title="kglt::ShaderProgram" alt="" coords="968,91,1109,120"/>
+<area shape="rect" id="node44" href="$classkglt_1_1generic_1_1_identifiable.html" title="kglt::generic::Identifiable\l\&lt; SubSceneID \&gt;" alt="" coords="756,775,919,822"/>
+<area shape="rect" id="node46" href="$classkglt_1_1generic_1_1_identifiable.html" title="kglt::generic::Identifiable\l\&lt; TextureID \&gt;" alt="" coords="756,250,919,297"/>
+<area shape="rect" id="node48" href="$classkglt_1_1_texture.html" title="kglt::Texture" alt="" coords="992,197,1085,227"/>
+<area shape="rect" id="node49" href="$classkglt_1_1_loadable.html" title="kglt::Loadable" alt="" coords="787,144,888,173"/>
+<area shape="rect" id="node54" href="$class_managed.html" title="Managed\&lt; Camera \&gt;" alt="" coords="765,1385,909,1415"/>
+<area shape="rect" id="node56" href="$class_managed.html" title="Managed\&lt; Entity \&gt;" alt="" coords="771,669,904,699"/>
+<area shape="rect" id="node58" href="$class_managed.html" title="Managed\&lt; Interface \&gt;" alt="" coords="273,919,423,948"/>
+<area shape="rect" id="node60" href="$class_managed.html" title="Managed\&lt; Mesh \&gt;" alt="" coords="772,493,903,523"/>
+<area shape="rect" id="node62" href="$class_managed.html" title="Managed\&lt; SubEntity \&gt;" alt="" coords="760,1156,915,1185"/>
+<area shape="rect" id="node64" href="$class_managed.html" title="Managed\&lt; SubMesh \&gt;" alt="" coords="760,1263,915,1292"/>
+<area shape="rect" id="node66" href="$classkglt_1_1_sub_mesh.html" title="kglt::SubMesh" alt="" coords="985,1236,1092,1265"/>
+<area shape="rect" id="node67" href="$class_managed.html" title="Managed\&lt; SubScene \&gt;" alt="" coords="759,845,916,875"/>
+<area shape="rect" id="node69" href="$class_managed.html" title="Managed\&lt; Window \&gt;" alt="" coords="535,320,681,349"/>
+<area shape="rect" id="node71" href="$classkglt_1_1_mesh_interface.html" title="kglt::MeshInterface" alt="" coords="771,547,904,576"/>
+<area shape="rect" id="node74" href="$classkglt_1_1_resource.html" title="kglt::Resource" alt="" coords="784,197,891,227"/>
+<area shape="rect" id="node79" href="$classkglt_1_1_sub_mesh_interface.html" title="kglt::SubMeshInterface" alt="" coords="759,1209,916,1239"/>
+<area shape="rect" id="node82" href="$classkglt_1_1generic_1_1_tree_node.html" title="kglt::generic::TreeNode\l\&lt; Object \&gt;" alt="" coords="529,971,687,1018"/>
+<area shape="rect" id="node84" href="$classkglt_1_1_object.html" title="kglt::Object" alt="" coords="793,980,881,1009"/>
+<area shape="rect" id="node89" href="$classkglt_1_1generic_1_1_user_data_carrier.html" title="kglt::generic::UserDataCarrier" alt="" coords="511,1041,705,1071"/>
+<area shape="rect" id="node91" href="$structkglt_1_1generic_1_1_visitable_base.html" title="kglt::generic::Visitable\lBase\&lt; Object \&gt;" alt="" coords="533,1094,683,1141"/>
+</map>

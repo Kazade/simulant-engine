@@ -1,0 +1,11 @@
+<map id="kglt/light.h" name="kglt/light.h">
+<area shape="rect" id="node3" href="$kglt_8h.html" title="kglt/kglt.h" alt="" coords="5,92,83,121"/>
+<area shape="rect" id="node5" href="$light_8cpp.html" title="kglt/light.cpp" alt="" coords="107,92,203,121"/>
+<area shape="rect" id="node7" href="$q2bsp__loader_8cpp.html" title="kglt/loaders/q2bsp\l_loader.cpp" alt="" coords="227,83,355,130"/>
+<area shape="rect" id="node9" href="$null__partitioner_8h.html" title="kglt/partitioners/null\l_partitioner.h" alt="" coords="379,83,512,130"/>
+<area shape="rect" id="node15" href="$octree__partitioner_8cpp.html" title="kglt/partitioners/octree\l_partitioner.cpp" alt="" coords="536,83,685,130"/>
+<area shape="rect" id="node17" href="$pipeline_8cpp.html" title="kglt/pipeline.cpp" alt="" coords="709,92,824,121"/>
+<area shape="rect" id="node19" href="$generic__renderer_8cpp.html" title="kglt/renderers/generic\l_renderer.cpp" alt="" coords="848,83,995,130"/>
+<area shape="rect" id="node11" href="$null__partitioner_8cpp.html" title="kglt/partitioners/null\l_partitioner.cpp" alt="" coords="307,179,440,226"/>
+<area shape="rect" id="node13" href="$scene_8cpp.html" title="kglt/scene.cpp" alt="" coords="464,188,571,217"/>
+</map>

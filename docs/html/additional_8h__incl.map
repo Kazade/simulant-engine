@@ -1,0 +1,21 @@
+<map id="kglt/additional.h" name="kglt/additional.h">
+<area shape="rect" id="node3" href="$sprite_8h.html" title="kglt/extra/sprite.h" alt="" coords="1779,92,1901,121"/>
+<area shape="rect" id="node148" href="$sprite__strip__loader_8h.html" title="kglt/extra/sprite_strip\l_loader.h" alt="" coords="3029,179,3173,226"/>
+<area shape="rect" id="node158" href="$background_8h.html" title="kglt/extra/background.h" alt="" coords="2683,275,2840,304"/>
+<area shape="rect" id="node5" href="$managed_8h.html" title="../generic/managed.h" alt="" coords="1768,429,1912,459"/>
+<area shape="rect" id="node11" href="$scene_8h.html" title="../scene.h" alt="" coords="1413,188,1493,217"/>
+<area shape="rect" id="node22" href="$types_8h.html" title="types.h" alt="" coords="2848,429,2912,459"/>
+<area shape="rect" id="node39" href="$object_8h.html" title="object.h" alt="" coords="959,352,1025,381"/>
+<area shape="rect" id="node60" href="$visitor_8h.html" title="generic/visitor.h" alt="" coords="144,429,259,459"/>
+<area shape="rect" id="node73" href="$resource__manager_8h.html" title="resource_manager.h" alt="" coords="1951,275,2089,304"/>
+<area shape="rect" id="node77" href="$manager_8h.html" title="generic/manager.h" alt="" coords="1389,352,1517,381"/>
+<area shape="rect" id="node28" href="$colour_8h.html" title="colour.h" alt="" coords="2411,507,2477,536"/>
+<area shape="rect" id="node36" href="$unique__id_8h.html" title="generic/unique_id.h" alt="" coords="2829,507,2963,536"/>
+<area shape="rect" id="node51" href="$tree_8h.html" title="generic/tree.h" alt="" coords="1029,429,1131,459"/>
+<area shape="rect" id="node57" href="$user__data__carrier_8h.html" title="generic/user_data_carrier.h" alt="" coords="384,429,563,459"/>
+<area shape="rect" id="node86" href="$texture_8h.html" title="texture.h" alt="" coords="2397,352,2469,381"/>
+<area shape="rect" id="node92" href="$shader_8h.html" title="shader.h" alt="" coords="2301,352,2373,381"/>
+<area shape="rect" id="node102" href="$mesh_8h.html" title="mesh.h" alt="" coords="1921,352,1985,381"/>
+<area shape="rect" id="node111" href="$material_8h.html" title="material.h" alt="" coords="2012,352,2089,381"/>
+<area shape="rect" id="node153" href="$creator_8h.html" title="../generic/creator.h" alt="" coords="2696,352,2827,381"/>
+</map>

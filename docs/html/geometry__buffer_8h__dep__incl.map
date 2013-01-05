@@ -1,0 +1,21 @@
+<map id="kglt/utils/geometry_buffer.h" name="kglt/utils/geometry_buffer.h">
+<area shape="rect" id="node3" href="$renderer_8h.html" title="kglt/renderer.h" alt="" coords="665,111,769,140"/>
+<area shape="rect" id="node32" href="$generic__renderer_8h.html" title="kglt/renderers/generic\l_renderer.h" alt="" coords="843,198,989,245"/>
+<area shape="rect" id="node39" href="$partitioner_8h.html" title="kglt/partitioner.h" alt="" coords="969,111,1084,140"/>
+<area shape="rect" id="node55" href="$geometry__buffer_8cpp.html" title="kglt/utils/geometry\l_buffer.cpp" alt="" coords="1108,102,1236,149"/>
+<area shape="rect" id="node5" href="$camera_8h.html" title="kglt/camera.h" alt="" coords="541,207,643,236"/>
+<area shape="rect" id="node9" href="$background_8cpp.html" title="kglt/extra/background.cpp" alt="" coords="144,303,315,332"/>
+<area shape="rect" id="node21" href="$scene_8cpp.html" title="kglt/scene.cpp" alt="" coords="1128,303,1235,332"/>
+<area shape="rect" id="node23" href="$pipeline_8h.html" title="kglt/pipeline.h" alt="" coords="667,207,768,236"/>
+<area shape="rect" id="node36" href="$renderer_8cpp.html" title="kglt/renderer.cpp" alt="" coords="349,207,467,236"/>
+<area shape="rect" id="node7" href="$camera_8cpp.html" title="kglt/camera.cpp" alt="" coords="5,303,120,332"/>
+<area shape="rect" id="node11" href="$interface_8cpp.html" title="kglt/extra/ui/interface.cpp" alt="" coords="592,303,760,332"/>
+<area shape="rect" id="node13" href="$kglt_8h.html" title="kglt/kglt.h" alt="" coords="491,303,568,332"/>
+<area shape="rect" id="node15" href="$q2bsp__loader_8cpp.html" title="kglt/loaders/q2bsp\l_loader.cpp" alt="" coords="339,294,467,341"/>
+<area shape="rect" id="node17" href="$octree__partitioner_8cpp.html" title="kglt/partitioners/octree\l_partitioner.cpp" alt="" coords="955,294,1104,341"/>
+<area shape="rect" id="node19" href="$generic__renderer_8cpp.html" title="kglt/renderers/generic\l_renderer.cpp" alt="" coords="784,294,931,341"/>
+<area shape="rect" id="node28" href="$pipeline_8cpp.html" title="kglt/pipeline.cpp" alt="" coords="1259,303,1373,332"/>
+<area shape="rect" id="node42" href="$null__partitioner_8h.html" title="kglt/partitioners/null\l_partitioner.h" alt="" coords="1288,198,1421,245"/>
+<area shape="rect" id="node47" href="$octree__partitioner_8h.html" title="kglt/partitioners/octree\l_partitioner.h" alt="" coords="1064,198,1213,245"/>
+<area shape="rect" id="node44" href="$null__partitioner_8cpp.html" title="kglt/partitioners/null\l_partitioner.cpp" alt="" coords="1397,294,1531,341"/>
+</map>

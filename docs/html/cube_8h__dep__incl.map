@@ -1,0 +1,9 @@
+<map id="kglt/procedural/mesh/cube.h" name="kglt/procedural/mesh/cube.h">
+<area shape="rect" id="node3" href="$procedural_2mesh_8h.html" title="kglt/procedural/mesh.h" alt="" coords="353,111,508,140"/>
+<area shape="rect" id="node15" href="$cube_8cpp.html" title="kglt/procedural/mesh\l/cube.cpp" alt="" coords="532,102,673,149"/>
+<area shape="rect" id="node5" href="$background_8cpp.html" title="kglt/extra/background.cpp" alt="" coords="5,197,176,227"/>
+<area shape="rect" id="node7" href="$sprite_8cpp.html" title="kglt/extra/sprite.cpp" alt="" coords="200,197,336,227"/>
+<area shape="rect" id="node9" href="$text_8cpp.html" title="kglt/extra/ui/text.cpp" alt="" coords="360,197,501,227"/>
+<area shape="rect" id="node11" href="$widget_8cpp.html" title="kglt/extra/ui/widget.cpp" alt="" coords="525,197,683,227"/>
+<area shape="rect" id="node13" href="$kglt_8h.html" title="kglt/kglt.h" alt="" coords="707,197,784,227"/>
+</map>

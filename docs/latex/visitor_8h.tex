@@ -1,0 +1,80 @@
+\hypertarget{visitor_8h}{\section{kglt/generic/visitor.h File Reference}
+\label{visitor_8h}\index{kglt/generic/visitor.\-h@{kglt/generic/visitor.\-h}}
+}
+{\ttfamily \#include $<$cstddef$>$}\\*
+{\ttfamily \#include $<$vector$>$}\\*
+{\ttfamily \#include \char`\"{}loki/sequence.\-h\char`\"{}}\\*
+Include dependency graph for visitor.\-h\-:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=292pt]{visitor_8h__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\-:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{visitor_8h__dep__incl}
+\end{center}
+\end{figure}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structkglt_1_1generic_1_1_tag_counter}{kglt\-::generic\-::\-Tag\-Counter$<$ Base $>$}
+\item 
+struct \hyperlink{structkglt_1_1generic_1_1_tag_holder}{kglt\-::generic\-::\-Tag\-Holder$<$ Visitable, Base $>$}
+\item 
+struct \hyperlink{structkglt_1_1generic_1_1_visitable_base}{kglt\-::generic\-::\-Visitable\-Base$<$ Base $>$}
+\item 
+class \hyperlink{classkglt_1_1generic_1_1_v_table}{kglt\-::generic\-::\-V\-Table$<$ Base, Func $>$}
+\item 
+struct \hyperlink{structkglt_1_1generic_1_1_visitor}{kglt\-::generic\-::\-Visitor$<$ Base, Return\-Type $>$}
+\item 
+struct \hyperlink{structkglt_1_1generic_1_1_visitor_1_1_visit_invoker}{kglt\-::generic\-::\-Visitor$<$ Base, Return\-Type $>$\-::\-Visit\-Invoker}
+\item 
+struct \hyperlink{structkglt_1_1generic_1_1_create_vtable}{kglt\-::generic\-::\-Create\-Vtable$<$ Visitor, Visited\-List $>$}
+\item 
+struct \hyperlink{structkglt_1_1generic_1_1_get_static_vtable}{kglt\-::generic\-::\-Get\-Static\-Vtable$<$ Visitor, Visited\-List $>$}
+\end{DoxyCompactItemize}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+namespace \hyperlink{namespacekglt}{kglt}
+\item 
+namespace \hyperlink{namespacekglt_1_1generic}{kglt\-::generic}
+\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \hyperlink{visitor_8h_a7b07ebfdccabba1bddc58e9571a1cb54}{V\-I\-S\-\_\-\-D\-E\-F\-I\-N\-E\-\_\-\-V\-I\-S\-I\-T\-A\-B\-L\-E}()
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+{\footnotesize template$<$typename Visitable , typename Base $>$ }\\size\-\_\-t \hyperlink{namespacekglt_1_1generic_aa723d8494d81f8d0c021f9c76eec3e09}{kglt\-::generic\-::get\-\_\-tag} ()
+\item 
+{\footnotesize template$<$typename Type\-List , typename Action $>$ }\\void \hyperlink{namespacekglt_1_1generic_abddd3a7144b54faa21ac6062dbbe67b5}{kglt\-::generic\-::apply} (const Type\-List \&, Action \&action)
+\item 
+{\footnotesize template$<$typename Action $>$ }\\void \hyperlink{namespacekglt_1_1generic_a704609bdee41f4f73609cd360d1bdfaa}{kglt\-::generic\-::apply} (Loki\-::\-Null\-Type, Action \&)
+\item 
+{\footnotesize template$<$typename Visitor , typename Visited\-List $>$ }\\void \hyperlink{namespacekglt_1_1generic_af9c5b89d5720b4e589981dbcf6c084a5}{kglt\-::generic\-::\-Visits} (Visitor \&visitor, const Visited\-List \&)
+\end{DoxyCompactItemize}
+
+
+\subsection{Macro Definition Documentation}
+\hypertarget{visitor_8h_a7b07ebfdccabba1bddc58e9571a1cb54}{\index{visitor.\-h@{visitor.\-h}!V\-I\-S\-\_\-\-D\-E\-F\-I\-N\-E\-\_\-\-V\-I\-S\-I\-T\-A\-B\-L\-E@{V\-I\-S\-\_\-\-D\-E\-F\-I\-N\-E\-\_\-\-V\-I\-S\-I\-T\-A\-B\-L\-E}}
+\index{V\-I\-S\-\_\-\-D\-E\-F\-I\-N\-E\-\_\-\-V\-I\-S\-I\-T\-A\-B\-L\-E@{V\-I\-S\-\_\-\-D\-E\-F\-I\-N\-E\-\_\-\-V\-I\-S\-I\-T\-A\-B\-L\-E}!visitor.h@{visitor.\-h}}
+\subsubsection[{V\-I\-S\-\_\-\-D\-E\-F\-I\-N\-E\-\_\-\-V\-I\-S\-I\-T\-A\-B\-L\-E}]{\setlength{\rightskip}{0pt plus 5cm}\#define V\-I\-S\-\_\-\-D\-E\-F\-I\-N\-E\-\_\-\-V\-I\-S\-I\-T\-A\-B\-L\-E(
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{visitor_8h_a7b07ebfdccabba1bddc58e9571a1cb54}
+{\bfseries Value\-:}
+\begin{DoxyCode}
+\textcolor{keyword}{virtual} \textcolor{keywordtype}{size\_t} tag()\textcolor{keyword}{ const }\{        \(\backslash\)
+        return get\_tag\_helper(\textcolor{keyword}{this});    \(\backslash\)
+    \}
+\end{DoxyCode}

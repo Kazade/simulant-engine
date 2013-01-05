@@ -1,0 +1,140 @@
+\hypertarget{classkglt_1_1_partitioner}{\section{kglt\-:\-:Partitioner Class Reference}
+\label{classkglt_1_1_partitioner}\index{kglt\-::\-Partitioner@{kglt\-::\-Partitioner}}
+}
+
+
+{\ttfamily \#include $<$partitioner.\-h$>$}
+
+
+
+Inheritance diagram for kglt\-:\-:Partitioner\-:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=310pt]{classkglt_1_1_partitioner__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for kglt\-:\-:Partitioner\-:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=198pt]{classkglt_1_1_partitioner__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classkglt_1_1_partitioner_ab2de6d5afedd698522445c00f372e162}{Partitioner} (\hyperlink{classkglt_1_1_sub_scene}{Sub\-Scene} \&ss)
+\item 
+virtual void \hyperlink{classkglt_1_1_partitioner_a18957be64dc23a3b82b4fc52b24dca14}{add\-\_\-entity} (\hyperlink{namespacekglt_a693458ae13c224ae3ea4074ac3a0b02a}{Entity\-I\-D} obj)=0
+\item 
+virtual void \hyperlink{classkglt_1_1_partitioner_a50a28bd91be670c57ef2a2a3af0a9417}{remove\-\_\-entity} (\hyperlink{namespacekglt_a693458ae13c224ae3ea4074ac3a0b02a}{Entity\-I\-D} obj)=0
+\item 
+virtual void \hyperlink{classkglt_1_1_partitioner_a23f9cb1a5d9660f1c0d8b3b67d9fb251}{add\-\_\-light} (\hyperlink{namespacekglt_ab90464803ef8e3c1f6da41388e859968}{Light\-I\-D} obj)=0
+\item 
+virtual void \hyperlink{classkglt_1_1_partitioner_ad5fec2d4fd9ee3eee608799f700808b7}{remove\-\_\-light} (\hyperlink{namespacekglt_ab90464803ef8e3c1f6da41388e859968}{Light\-I\-D} obj)=0
+\item 
+virtual std\-::vector$<$ \hyperlink{namespacekglt_ab90464803ef8e3c1f6da41388e859968}{Light\-I\-D} $>$ \hyperlink{classkglt_1_1_partitioner_a866fd1a90374d50061c6ba3dce4f7207}{lights\-\_\-within\-\_\-range} (const km\-Vec3 \&location)=0
+\item 
+virtual std\-::vector\\*
+$<$ \hyperlink{class_managed_a59aa857eaf753735f65130812e98e9a9}{Sub\-Entity\-::ptr} $>$ \hyperlink{classkglt_1_1_partitioner_a4bc6f22e80046a34ccdb34392a74c83b}{geometry\-\_\-visible\-\_\-from} (\hyperlink{namespacekglt_a2a2b79f136b052b58ec737bd9c885429}{Camera\-I\-D} camera\-\_\-id)=0
+\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classkglt_1_1_sub_scene}{Sub\-Scene} \& \hyperlink{classkglt_1_1_partitioner_ac5a6ab937bd1377ef7e632fb879b071f}{subscene} ()
+\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\hypertarget{classkglt_1_1_partitioner_ab2de6d5afedd698522445c00f372e162}{\index{kglt\-::\-Partitioner@{kglt\-::\-Partitioner}!Partitioner@{Partitioner}}
+\index{Partitioner@{Partitioner}!kglt::Partitioner@{kglt\-::\-Partitioner}}
+\subsubsection[{Partitioner}]{\setlength{\rightskip}{0pt plus 5cm}kglt\-::\-Partitioner\-::\-Partitioner (
+\begin{DoxyParamCaption}
+\item[{{\bf Sub\-Scene} \&}]{ss}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}}\label{classkglt_1_1_partitioner_ab2de6d5afedd698522445c00f372e162}
+
+
+\subsection{Member Function Documentation}
+\hypertarget{classkglt_1_1_partitioner_a18957be64dc23a3b82b4fc52b24dca14}{\index{kglt\-::\-Partitioner@{kglt\-::\-Partitioner}!add\-\_\-entity@{add\-\_\-entity}}
+\index{add\-\_\-entity@{add\-\_\-entity}!kglt::Partitioner@{kglt\-::\-Partitioner}}
+\subsubsection[{add\-\_\-entity}]{\setlength{\rightskip}{0pt plus 5cm}virtual void kglt\-::\-Partitioner\-::add\-\_\-entity (
+\begin{DoxyParamCaption}
+\item[{{\bf Entity\-I\-D}}]{obj}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classkglt_1_1_partitioner_a18957be64dc23a3b82b4fc52b24dca14}
+
+
+Implemented in \hyperlink{classkglt_1_1_null_partitioner_a5817ca6bd49d3919b925dcb34184b5e4}{kglt\-::\-Null\-Partitioner}, and \hyperlink{classkglt_1_1_octree_partitioner_a3f0eceb85e9b68bd3afb3caa2e448ada}{kglt\-::\-Octree\-Partitioner}.
+
+\hypertarget{classkglt_1_1_partitioner_a23f9cb1a5d9660f1c0d8b3b67d9fb251}{\index{kglt\-::\-Partitioner@{kglt\-::\-Partitioner}!add\-\_\-light@{add\-\_\-light}}
+\index{add\-\_\-light@{add\-\_\-light}!kglt::Partitioner@{kglt\-::\-Partitioner}}
+\subsubsection[{add\-\_\-light}]{\setlength{\rightskip}{0pt plus 5cm}virtual void kglt\-::\-Partitioner\-::add\-\_\-light (
+\begin{DoxyParamCaption}
+\item[{{\bf Light\-I\-D}}]{obj}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classkglt_1_1_partitioner_a23f9cb1a5d9660f1c0d8b3b67d9fb251}
+
+
+Implemented in \hyperlink{classkglt_1_1_null_partitioner_a78905d24117425e97083aafeaa1b0578}{kglt\-::\-Null\-Partitioner}, and \hyperlink{classkglt_1_1_octree_partitioner_a46558d651be5a803c29b252f3b76a05d}{kglt\-::\-Octree\-Partitioner}.
+
+\hypertarget{classkglt_1_1_partitioner_a4bc6f22e80046a34ccdb34392a74c83b}{\index{kglt\-::\-Partitioner@{kglt\-::\-Partitioner}!geometry\-\_\-visible\-\_\-from@{geometry\-\_\-visible\-\_\-from}}
+\index{geometry\-\_\-visible\-\_\-from@{geometry\-\_\-visible\-\_\-from}!kglt::Partitioner@{kglt\-::\-Partitioner}}
+\subsubsection[{geometry\-\_\-visible\-\_\-from}]{\setlength{\rightskip}{0pt plus 5cm}virtual std\-::vector$<${\bf Sub\-Entity\-::ptr}$>$ kglt\-::\-Partitioner\-::geometry\-\_\-visible\-\_\-from (
+\begin{DoxyParamCaption}
+\item[{{\bf Camera\-I\-D}}]{camera\-\_\-id}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classkglt_1_1_partitioner_a4bc6f22e80046a34ccdb34392a74c83b}
+
+
+Implemented in \hyperlink{classkglt_1_1_null_partitioner_a158823b8b97b3de39861665d37eacc9b}{kglt\-::\-Null\-Partitioner}, and \hyperlink{classkglt_1_1_octree_partitioner_afc4a307bf9ab74ca44904d3abe2ce3c6}{kglt\-::\-Octree\-Partitioner}.
+
+\hypertarget{classkglt_1_1_partitioner_a866fd1a90374d50061c6ba3dce4f7207}{\index{kglt\-::\-Partitioner@{kglt\-::\-Partitioner}!lights\-\_\-within\-\_\-range@{lights\-\_\-within\-\_\-range}}
+\index{lights\-\_\-within\-\_\-range@{lights\-\_\-within\-\_\-range}!kglt::Partitioner@{kglt\-::\-Partitioner}}
+\subsubsection[{lights\-\_\-within\-\_\-range}]{\setlength{\rightskip}{0pt plus 5cm}virtual std\-::vector$<${\bf Light\-I\-D}$>$ kglt\-::\-Partitioner\-::lights\-\_\-within\-\_\-range (
+\begin{DoxyParamCaption}
+\item[{const km\-Vec3 \&}]{location}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classkglt_1_1_partitioner_a866fd1a90374d50061c6ba3dce4f7207}
+
+
+Implemented in \hyperlink{classkglt_1_1_null_partitioner_a79ca0020c1fcb4dbbe4573c4fcbcb11a}{kglt\-::\-Null\-Partitioner}, and \hyperlink{classkglt_1_1_octree_partitioner_aa8d802617db178acc794ffe379f7db8a}{kglt\-::\-Octree\-Partitioner}.
+
+\hypertarget{classkglt_1_1_partitioner_a50a28bd91be670c57ef2a2a3af0a9417}{\index{kglt\-::\-Partitioner@{kglt\-::\-Partitioner}!remove\-\_\-entity@{remove\-\_\-entity}}
+\index{remove\-\_\-entity@{remove\-\_\-entity}!kglt::Partitioner@{kglt\-::\-Partitioner}}
+\subsubsection[{remove\-\_\-entity}]{\setlength{\rightskip}{0pt plus 5cm}virtual void kglt\-::\-Partitioner\-::remove\-\_\-entity (
+\begin{DoxyParamCaption}
+\item[{{\bf Entity\-I\-D}}]{obj}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classkglt_1_1_partitioner_a50a28bd91be670c57ef2a2a3af0a9417}
+
+
+Implemented in \hyperlink{classkglt_1_1_null_partitioner_aba3c2036704213be010dc02acf18772d}{kglt\-::\-Null\-Partitioner}, and \hyperlink{classkglt_1_1_octree_partitioner_a2fa41bcdbda4f07c0b2f0eb945bd9763}{kglt\-::\-Octree\-Partitioner}.
+
+\hypertarget{classkglt_1_1_partitioner_ad5fec2d4fd9ee3eee608799f700808b7}{\index{kglt\-::\-Partitioner@{kglt\-::\-Partitioner}!remove\-\_\-light@{remove\-\_\-light}}
+\index{remove\-\_\-light@{remove\-\_\-light}!kglt::Partitioner@{kglt\-::\-Partitioner}}
+\subsubsection[{remove\-\_\-light}]{\setlength{\rightskip}{0pt plus 5cm}virtual void kglt\-::\-Partitioner\-::remove\-\_\-light (
+\begin{DoxyParamCaption}
+\item[{{\bf Light\-I\-D}}]{obj}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [pure virtual]}}}\label{classkglt_1_1_partitioner_ad5fec2d4fd9ee3eee608799f700808b7}
+
+
+Implemented in \hyperlink{classkglt_1_1_null_partitioner_ade8f71865086ba9aad1e771ebbd84cdb}{kglt\-::\-Null\-Partitioner}, and \hyperlink{classkglt_1_1_octree_partitioner_a1a38a1d3234ad083dcbff10eb354708f}{kglt\-::\-Octree\-Partitioner}.
+
+\hypertarget{classkglt_1_1_partitioner_ac5a6ab937bd1377ef7e632fb879b071f}{\index{kglt\-::\-Partitioner@{kglt\-::\-Partitioner}!subscene@{subscene}}
+\index{subscene@{subscene}!kglt::Partitioner@{kglt\-::\-Partitioner}}
+\subsubsection[{subscene}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Sub\-Scene}\& kglt\-::\-Partitioner\-::subscene (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}}\label{classkglt_1_1_partitioner_ac5a6ab937bd1377ef7e632fb879b071f}
+
+
+The documentation for this class was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+kglt/\hyperlink{partitioner_8h}{partitioner.\-h}\end{DoxyCompactItemize}

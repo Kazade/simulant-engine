@@ -1,0 +1,20 @@
+<map id="kglt/idle_task_manager.h" name="kglt/idle_task_manager.h">
+<area shape="rect" id="node3" href="$window__base_8h.html" title="kglt/window_base.h" alt="" coords="1101,83,1237,112"/>
+<area shape="rect" id="node38" href="$idle__task__manager_8cpp.html" title="kglt/idle_task_manager.cpp" alt="" coords="1261,83,1443,112"/>
+<area shape="rect" id="node5" href="$camera_8cpp.html" title="kglt/camera.cpp" alt="" coords="848,160,963,189"/>
+<area shape="rect" id="node7" href="$window_8h.html" title="kglt/window.h" alt="" coords="987,160,1088,189"/>
+<area shape="rect" id="node32" href="$pipeline_8cpp.html" title="kglt/pipeline.cpp" alt="" coords="1112,160,1227,189"/>
+<area shape="rect" id="node34" href="$scene_8cpp.html" title="kglt/scene.cpp" alt="" coords="1251,160,1357,189"/>
+<area shape="rect" id="node36" href="$window__base_8cpp.html" title="kglt/window_base.cpp" alt="" coords="1381,160,1531,189"/>
+<area shape="rect" id="node9" href="$shortcuts_8h.html" title="kglt/shortcuts.h" alt="" coords="624,237,736,267"/>
+<area shape="rect" id="node21" href="$q2bsp__loader_8cpp.html" title="kglt/loaders/q2bsp\l_loader.cpp" alt="" coords="1005,315,1133,362"/>
+<area shape="rect" id="node25" href="$kglt_8h.html" title="kglt/kglt.h" alt="" coords="999,237,1076,267"/>
+<area shape="rect" id="node28" href="$viewport_8cpp.html" title="kglt/viewport.cpp" alt="" coords="1100,237,1220,267"/>
+<area shape="rect" id="node30" href="$window_8cpp.html" title="kglt/window.cpp" alt="" coords="1244,237,1359,267"/>
+<area shape="rect" id="node11" href="$background_8cpp.html" title="kglt/extra/background.cpp" alt="" coords="5,324,176,353"/>
+<area shape="rect" id="node13" href="$sprite_8cpp.html" title="kglt/extra/sprite.cpp" alt="" coords="200,324,336,353"/>
+<area shape="rect" id="node15" href="$sprite__strip__loader_8cpp.html" title="kglt/extra/sprite_strip\l_loader.cpp" alt="" coords="360,315,504,362"/>
+<area shape="rect" id="node17" href="$text_8cpp.html" title="kglt/extra/ui/text.cpp" alt="" coords="528,324,669,353"/>
+<area shape="rect" id="node19" href="$material__script_8cpp.html" title="kglt/loaders/material\l_script.cpp" alt="" coords="693,315,832,362"/>
+<area shape="rect" id="node23" href="$shortcuts_8cpp.html" title="kglt/shortcuts.cpp" alt="" coords="856,324,981,353"/>
+</map>

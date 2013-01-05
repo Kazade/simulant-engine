@@ -1,0 +1,62 @@
+\hypertarget{frustum_8h}{\section{kglt/frustum.h File Reference}
+\label{frustum_8h}\index{kglt/frustum.\-h@{kglt/frustum.\-h}}
+}
+{\ttfamily \#include $<$kazmath/vec3.\-h$>$}\\*
+{\ttfamily \#include $<$kazmath/plane.\-h$>$}\\*
+{\ttfamily \#include $<$kazmath/aabb.\-h$>$}\\*
+{\ttfamily \#include $<$cstdint$>$}\\*
+{\ttfamily \#include $<$vector$>$}\\*
+Include dependency graph for frustum.\-h\-:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{frustum_8h__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\-:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{frustum_8h__dep__incl}
+\end{center}
+\end{figure}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \hyperlink{classkglt_1_1_frustum}{kglt\-::\-Frustum}
+\end{DoxyCompactItemize}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+namespace \hyperlink{namespacekglt}{kglt}
+\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \hyperlink{namespacekglt_aa38869135245a5fada16dd67cae4cbc8}{kglt\-::\-Frustum\-Corner} \{ \\*
+\hyperlink{namespacekglt_aa38869135245a5fada16dd67cae4cbc8a04cec1c18ae4b5a4b3c86a85160794aa}{kglt\-::\-F\-R\-U\-S\-T\-U\-M\-\_\-\-C\-O\-R\-N\-E\-R\-\_\-\-B\-O\-T\-T\-O\-M\-\_\-\-L\-E\-F\-T} =  0, 
+\hyperlink{namespacekglt_aa38869135245a5fada16dd67cae4cbc8a01b3d7fa5728734feddadc6feac6575d}{kglt\-::\-F\-R\-U\-S\-T\-U\-M\-\_\-\-C\-O\-R\-N\-E\-R\-\_\-\-B\-O\-T\-T\-O\-M\-\_\-\-R\-I\-G\-H\-T}, 
+\hyperlink{namespacekglt_aa38869135245a5fada16dd67cae4cbc8acb844e7fa341fe395de6e3dcaf9d8906}{kglt\-::\-F\-R\-U\-S\-T\-U\-M\-\_\-\-C\-O\-R\-N\-E\-R\-\_\-\-T\-O\-P\-\_\-\-R\-I\-G\-H\-T}, 
+\hyperlink{namespacekglt_aa38869135245a5fada16dd67cae4cbc8a5144932868787d12f3996c0b7fbc9d1f}{kglt\-::\-F\-R\-U\-S\-T\-U\-M\-\_\-\-C\-O\-R\-N\-E\-R\-\_\-\-T\-O\-P\-\_\-\-L\-E\-F\-T}, 
+\\*
+\hyperlink{namespacekglt_aa38869135245a5fada16dd67cae4cbc8a6af1f4b5b7d5d80a994cdf5da04a5914}{kglt\-::\-F\-R\-U\-S\-T\-U\-M\-\_\-\-C\-O\-R\-N\-E\-R\-\_\-\-M\-A\-X}
+ \}
+\item 
+enum \hyperlink{namespacekglt_a665b086b85bc84e4266872b47a5d7d1b}{kglt\-::\-Frustum\-Plane} \{ \\*
+\hyperlink{namespacekglt_a665b086b85bc84e4266872b47a5d7d1ba36753ac1222a525da8d1358edca28739}{kglt\-::\-F\-R\-U\-S\-T\-U\-M\-\_\-\-P\-L\-A\-N\-E\-\_\-\-L\-E\-F\-T} =  0, 
+\hyperlink{namespacekglt_a665b086b85bc84e4266872b47a5d7d1bac2851d135e8c018e872110bd5c93d765}{kglt\-::\-F\-R\-U\-S\-T\-U\-M\-\_\-\-P\-L\-A\-N\-E\-\_\-\-R\-I\-G\-H\-T}, 
+\hyperlink{namespacekglt_a665b086b85bc84e4266872b47a5d7d1badca53e3bc2efbf5acf207a6b4bc801cf}{kglt\-::\-F\-R\-U\-S\-T\-U\-M\-\_\-\-P\-L\-A\-N\-E\-\_\-\-B\-O\-T\-T\-O\-M}, 
+\hyperlink{namespacekglt_a665b086b85bc84e4266872b47a5d7d1ba7e39ab7d76737056a0ddc686444609ec}{kglt\-::\-F\-R\-U\-S\-T\-U\-M\-\_\-\-P\-L\-A\-N\-E\-\_\-\-T\-O\-P}, 
+\\*
+\hyperlink{namespacekglt_a665b086b85bc84e4266872b47a5d7d1ba504ff2372bf27476d5384681669cf67e}{kglt\-::\-F\-R\-U\-S\-T\-U\-M\-\_\-\-P\-L\-A\-N\-E\-\_\-\-N\-E\-A\-R}, 
+\hyperlink{namespacekglt_a665b086b85bc84e4266872b47a5d7d1ba788add92e98fb8a323043e6db84ca384}{kglt\-::\-F\-R\-U\-S\-T\-U\-M\-\_\-\-P\-L\-A\-N\-E\-\_\-\-F\-A\-R}, 
+\hyperlink{namespacekglt_a665b086b85bc84e4266872b47a5d7d1ba3fc3da8c05e20b1649242ca1e20f86fb}{kglt\-::\-F\-R\-U\-S\-T\-U\-M\-\_\-\-P\-L\-A\-N\-E\-\_\-\-M\-A\-X}
+ \}
+\item 
+enum \hyperlink{namespacekglt_a37630cdf4c322de7859d9b7453596f3e}{kglt\-::\-Frustum\-Classification} \{ \hyperlink{namespacekglt_a37630cdf4c322de7859d9b7453596f3ea7b938f50f0ff283a8ae909bedbcaf9a2}{kglt\-::\-F\-R\-U\-S\-T\-U\-M\-\_\-\-C\-O\-N\-T\-A\-I\-N\-S\-\_\-\-N\-O\-N\-E} =  0, 
+\hyperlink{namespacekglt_a37630cdf4c322de7859d9b7453596f3eaa1d3ad221062a993496db387047f39b0}{kglt\-::\-F\-R\-U\-S\-T\-U\-M\-\_\-\-C\-O\-N\-T\-A\-I\-N\-S\-\_\-\-P\-A\-R\-T\-I\-A\-L}, 
+\hyperlink{namespacekglt_a37630cdf4c322de7859d9b7453596f3ea2356cd1389a20ea4345244ca702ab8f5}{kglt\-::\-F\-R\-U\-S\-T\-U\-M\-\_\-\-C\-O\-N\-T\-A\-I\-N\-S\-\_\-\-A\-L\-L}
+ \}
+\end{DoxyCompactItemize}

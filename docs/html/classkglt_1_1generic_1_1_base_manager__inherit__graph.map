@@ -1,0 +1,18 @@
+<map id="kglt::generic::BaseManager" name="kglt::generic::BaseManager">
+<area shape="rect" id="node3" href="$classkglt_1_1generic_1_1_templated_manager.html" title="kglt::generic::Templated\lManager\&lt; Derived, ObjectType,\l ObjectIDType, NewIDGenerator \&gt;" alt="" coords="236,379,460,443"/>
+<area shape="rect" id="node32" href="$classkglt_1_1generic_1_1_templated_manager.html" title="kglt::generic::Templated\lManager\&lt; WindowBase, Viewport,\l ViewportID \&gt;" alt="" coords="236,557,460,621"/>
+<area shape="rect" id="node5" href="$classkglt_1_1extra_1_1ui_1_1_interface.html" title="kglt::extra::ui::Interface\l\&lt; Interface, Label, LabelID \&gt;" alt="" coords="536,5,725,51"/>
+<area shape="rect" id="node7" href="$classkglt_1_1_resource_manager.html" title="kglt::ResourceManager\l\&lt; ResourceManager, Texture,\l TextureID \&gt;" alt="" coords="533,75,728,139"/>
+<area shape="rect" id="node15" href="$classkglt_1_1_resource_manager.html" title="kglt::ResourceManager\l\&lt; ResourceManager, Material,\l MaterialID \&gt;" alt="" coords="532,163,729,227"/>
+<area shape="rect" id="node18" href="$classkglt_1_1_resource_manager.html" title="kglt::ResourceManager\l\&lt; ResourceManager, ShaderProgram,\l ShaderID \&gt;" alt="" coords="509,251,752,315"/>
+<area shape="rect" id="node21" href="$classkglt_1_1_resource_manager.html" title="kglt::ResourceManager\l\&lt; ResourceManager, Mesh,\l MeshID \&gt;" alt="" coords="539,339,723,403"/>
+<area shape="rect" id="node24" href="$classkglt_1_1_scene.html" title="kglt::Scene\&lt; Scene,\l SubScene, SubSceneID \&gt;" alt="" coords="541,426,720,473"/>
+<area shape="rect" id="node26" href="$classkglt_1_1_sub_scene.html" title="kglt::SubScene\&lt; SubScene,\l Camera, CameraID \&gt;" alt="" coords="537,495,724,542"/>
+<area shape="rect" id="node28" href="$classkglt_1_1_sub_scene.html" title="kglt::SubScene\&lt; SubScene,\l Light, LightID \&gt;" alt="" coords="537,565,724,611"/>
+<area shape="rect" id="node30" href="$classkglt_1_1_sub_scene.html" title="kglt::SubScene\&lt; SubScene,\l Entity, EntityID \&gt;" alt="" coords="537,634,724,681"/>
+<area shape="rect" id="node9" href="$classkglt_1_1_scene_base.html" title="kglt::SceneBase" alt="" coords="801,224,919,253"/>
+<area shape="rect" id="node11" href="$classkglt_1_1_scene.html" title="kglt::Scene" alt="" coords="980,197,1068,227"/>
+<area shape="rect" id="node13" href="$classkglt_1_1_sub_scene.html" title="kglt::SubScene" alt="" coords="969,251,1079,280"/>
+<area shape="rect" id="node34" href="$classkglt_1_1_window_base.html" title="kglt::WindowBase" alt="" coords="567,704,695,733"/>
+<area shape="rect" id="node36" href="$classkglt_1_1_window.html" title="kglt::Window" alt="" coords="811,704,909,733"/>
+</map>

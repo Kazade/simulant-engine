@@ -1,0 +1,99 @@
+\hypertarget{q2bsp__loader_8cpp}{\section{kglt/loaders/q2bsp\-\_\-loader.cpp File Reference}
+\label{q2bsp__loader_8cpp}\index{kglt/loaders/q2bsp\-\_\-loader.\-cpp@{kglt/loaders/q2bsp\-\_\-loader.\-cpp}}
+}
+{\ttfamily \#include $<$cstdint$>$}\\*
+{\ttfamily \#include $<$fstream$>$}\\*
+{\ttfamily \#include $<$iostream$>$}\\*
+{\ttfamily \#include $<$sstream$>$}\\*
+{\ttfamily \#include $<$boost/algorithm/string/trim.\-hpp$>$}\\*
+{\ttfamily \#include \char`\"{}../window.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}../scene.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}../mesh.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}../types.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}../light.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}../camera.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}kazbase/logging/logging.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}kazbase/string.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}kazmath/vec3.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}kazmath/mat4.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}q2bsp\-\_\-loader.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}kglt/shortcuts.\-h\char`\"{}}\\*
+Include dependency graph for q2bsp\-\_\-loader.\-cpp\-:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{q2bsp__loader_8cpp__incl}
+\end{center}
+\end{figure}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structkglt_1_1loaders_1_1_q2_1_1_point3f}{kglt\-::loaders\-::\-Q2\-::\-Point3f}
+\item 
+struct \hyperlink{structkglt_1_1loaders_1_1_q2_1_1_point3s}{kglt\-::loaders\-::\-Q2\-::\-Point3s}
+\item 
+struct \hyperlink{structkglt_1_1loaders_1_1_q2_1_1_edge}{kglt\-::loaders\-::\-Q2\-::\-Edge}
+\item 
+struct \hyperlink{structkglt_1_1loaders_1_1_q2_1_1_texture_info}{kglt\-::loaders\-::\-Q2\-::\-Texture\-Info}
+\item 
+struct \hyperlink{structkglt_1_1loaders_1_1_q2_1_1_face}{kglt\-::loaders\-::\-Q2\-::\-Face}
+\item 
+struct \hyperlink{structkglt_1_1loaders_1_1_q2_1_1_lump}{kglt\-::loaders\-::\-Q2\-::\-Lump}
+\item 
+struct \hyperlink{structkglt_1_1loaders_1_1_q2_1_1_header}{kglt\-::loaders\-::\-Q2\-::\-Header}
+\end{DoxyCompactItemize}
+\subsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+namespace \hyperlink{namespacekglt}{kglt}
+\item 
+namespace \hyperlink{namespacekglt_1_1loaders}{kglt\-::loaders}
+\item 
+namespace \hyperlink{namespacekglt_1_1loaders_1_1_q2}{kglt\-::loaders\-::\-Q2}
+\end{DoxyCompactItemize}
+\subsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef std\-::map$<$ std\-::string, \\*
+std\-::string $>$ \hyperlink{namespacekglt_1_1loaders_a48aa49be70974c45a4606387e72b1a48}{kglt\-::loaders\-::\-Entity\-Properties}
+\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \hyperlink{namespacekglt_1_1loaders_1_1_q2_a4ced53da607548d0832a72a85585a48b}{kglt\-::loaders\-::\-Q2\-::\-Lump\-Type} \{ \\*
+\hyperlink{namespacekglt_1_1loaders_1_1_q2_a4ced53da607548d0832a72a85585a48ba34977843f2a212fbd6af39f3e2549078}{kglt\-::loaders\-::\-Q2\-::\-E\-N\-T\-I\-T\-I\-E\-S} =  0, 
+\hyperlink{namespacekglt_1_1loaders_1_1_q2_a4ced53da607548d0832a72a85585a48ba25e761036e557c94282ca7e4fcab5688}{kglt\-::loaders\-::\-Q2\-::\-P\-L\-A\-N\-E\-S}, 
+\hyperlink{namespacekglt_1_1loaders_1_1_q2_a4ced53da607548d0832a72a85585a48ba6a50cdf59ed8ed261dc9ce41b649b871}{kglt\-::loaders\-::\-Q2\-::\-V\-E\-R\-T\-I\-C\-E\-S}, 
+\hyperlink{namespacekglt_1_1loaders_1_1_q2_a4ced53da607548d0832a72a85585a48ba37fa5ccaef4d3e6beb717abc5797e82e}{kglt\-::loaders\-::\-Q2\-::\-V\-I\-S\-I\-B\-I\-L\-I\-T\-Y}, 
+\\*
+\hyperlink{namespacekglt_1_1loaders_1_1_q2_a4ced53da607548d0832a72a85585a48ba4ccf27c95b7f13b2332fec838728cc84}{kglt\-::loaders\-::\-Q2\-::\-N\-O\-D\-E\-S}, 
+\hyperlink{namespacekglt_1_1loaders_1_1_q2_a4ced53da607548d0832a72a85585a48ba14f99efa0f3e16113b10f1778f0bb579}{kglt\-::loaders\-::\-Q2\-::\-T\-E\-X\-T\-U\-R\-E\-\_\-\-I\-N\-F\-O}, 
+\hyperlink{namespacekglt_1_1loaders_1_1_q2_a4ced53da607548d0832a72a85585a48ba2742e06163d769affcf632267579f10c}{kglt\-::loaders\-::\-Q2\-::\-F\-A\-C\-E\-S}, 
+\hyperlink{namespacekglt_1_1loaders_1_1_q2_a4ced53da607548d0832a72a85585a48ba33f9e5b7fef6b37ed63df8db1dc71cb6}{kglt\-::loaders\-::\-Q2\-::\-L\-I\-G\-H\-T\-M\-A\-P\-S}, 
+\\*
+\hyperlink{namespacekglt_1_1loaders_1_1_q2_a4ced53da607548d0832a72a85585a48ba452f9961d20e7150231d53f79d4f216e}{kglt\-::loaders\-::\-Q2\-::\-L\-E\-A\-V\-E\-S}, 
+\hyperlink{namespacekglt_1_1loaders_1_1_q2_a4ced53da607548d0832a72a85585a48bad6b9041e33eb0d1d97d6b616aff6473e}{kglt\-::loaders\-::\-Q2\-::\-L\-E\-A\-F\-\_\-\-F\-A\-C\-E\-\_\-\-T\-A\-B\-L\-E}, 
+\hyperlink{namespacekglt_1_1loaders_1_1_q2_a4ced53da607548d0832a72a85585a48baa01ae017f56ac8b61c10ee1003df4ddf}{kglt\-::loaders\-::\-Q2\-::\-L\-E\-A\-F\-\_\-\-B\-R\-U\-S\-H\-\_\-\-T\-A\-B\-L\-E}, 
+\hyperlink{namespacekglt_1_1loaders_1_1_q2_a4ced53da607548d0832a72a85585a48ba9bdc1c51d94af5bf5e5c832323fd331a}{kglt\-::loaders\-::\-Q2\-::\-E\-D\-G\-E\-S}, 
+\\*
+\hyperlink{namespacekglt_1_1loaders_1_1_q2_a4ced53da607548d0832a72a85585a48ba3424f6892602f388c8681f2f322b9a53}{kglt\-::loaders\-::\-Q2\-::\-F\-A\-C\-E\-\_\-\-E\-D\-G\-E\-\_\-\-T\-A\-B\-L\-E}, 
+\hyperlink{namespacekglt_1_1loaders_1_1_q2_a4ced53da607548d0832a72a85585a48ba3805df227c36d64d8071822229f0fdfb}{kglt\-::loaders\-::\-Q2\-::\-M\-O\-D\-E\-L\-S}, 
+\hyperlink{namespacekglt_1_1loaders_1_1_q2_a4ced53da607548d0832a72a85585a48ba105fde89f534a53f22248030497cb40e}{kglt\-::loaders\-::\-Q2\-::\-B\-R\-U\-S\-H\-E\-S}, 
+\hyperlink{namespacekglt_1_1loaders_1_1_q2_a4ced53da607548d0832a72a85585a48ba24ce138686313285cf97b685b40fb5c7}{kglt\-::loaders\-::\-Q2\-::\-B\-R\-U\-S\-H\-\_\-\-S\-I\-D\-E\-S}, 
+\\*
+\hyperlink{namespacekglt_1_1loaders_1_1_q2_a4ced53da607548d0832a72a85585a48ba41945ff640670fdb4a35b85f40743a1c}{kglt\-::loaders\-::\-Q2\-::\-P\-O\-P}, 
+\hyperlink{namespacekglt_1_1loaders_1_1_q2_a4ced53da607548d0832a72a85585a48ba1333aad992fe9e9b60082b9ae5785934}{kglt\-::loaders\-::\-Q2\-::\-A\-R\-E\-A\-S}, 
+\hyperlink{namespacekglt_1_1loaders_1_1_q2_a4ced53da607548d0832a72a85585a48bab8055b70eb73b40b3dc0cacec16d8853}{kglt\-::loaders\-::\-Q2\-::\-A\-R\-E\-A\-\_\-\-P\-O\-R\-T\-A\-L\-S}, 
+\hyperlink{namespacekglt_1_1loaders_1_1_q2_a4ced53da607548d0832a72a85585a48ba86e3baf429d39f89fb2210aa35e0ea99}{kglt\-::loaders\-::\-Q2\-::\-M\-A\-X\-\_\-\-L\-U\-M\-P\-S}
+ \}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{namespacekglt_1_1loaders_ae7a09607380a25b11271c125f43103f4}{kglt\-::loaders\-::parse\-\_\-entities} (const std\-::string \&entity\-\_\-string, std\-::vector$<$ Entity\-Properties $>$ \&entities)
+\item 
+km\-Vec3 \hyperlink{namespacekglt_1_1loaders_a636fe987ee7ba2aad168b4af849e7dd1}{kglt\-::loaders\-::find\-\_\-player\-\_\-spawn\-\_\-point} (std\-::vector$<$ Entity\-Properties $>$ \&entities)
+\item 
+void \hyperlink{namespacekglt_1_1loaders_a6283567f4803bfd4a903048f0b456f5b}{kglt\-::loaders\-::add\-\_\-lights\-\_\-to\-\_\-scene} (Scene \&scene, const std\-::vector$<$ Entity\-Properties $>$ \&entities)
+\end{DoxyCompactItemize}
