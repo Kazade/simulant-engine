@@ -191,9 +191,13 @@ InputController::~InputController() {
     //Disable joystick events
     SDL_JoystickEventState(SDL_DISABLE);
 
-    //Make sure we close the joysticks
-    for(SDL_Joystick* joy: sdl_joysticks_) {
-        SDL_JoystickClose(joy);
+    //Make sure we close the joysticks   
+    if(SDL_WasInit(SDL_INIT_JOYSTICK)) {
+        for(SDL_Joystick* joy: sdl_joysticks_) {
+            if(joy) {
+                SDL_JoystickClose(joy);
+            }
+        }
     }
 }
 

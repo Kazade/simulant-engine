@@ -4,9 +4,9 @@
 #include <tr1/memory>
 
 #include <sigc++/sigc++.h>
+#include <kaztimer/kaztimer.h>
 
 #include "keyboard.h"
-
 #include "resource_locator.h"
 
 #include "loaders/texture_loader.h"
@@ -17,8 +17,6 @@
 #include "idle_task_manager.h"
 
 #include "kazbase/logging/logging.h"
-#include "kaztimer/kaztimer.h"
-
 #include "generic/manager.h"
 #include "types.h"
 #include "viewport.h"
