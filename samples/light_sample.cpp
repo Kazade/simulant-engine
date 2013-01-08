@@ -44,25 +44,13 @@ int main(int argc, char* argv[]) {
     light2.set_diffuse(kglt::Colour(0.0, 0.0, 1.0, 1.0));
     light2.set_attenuation_from_range(20.0);
 
-    window->signal_key_down().connect(&on_key_down);
-    window->signal_key_up().connect(&on_key_up);
+    kglt::Keyboard& keyboard = window->keyboard();
+    keyboard.key_while_down_connect(kglt::KEY_CODE_LEFT, std::bind(&kglt::Camera::rotate_y, &subscene.camera(), -1.0));
+    keyboard.key_while_down_connect(kglt::KEY_CODE_RIGHT, std::bind(&kglt::Camera::rotate_y, &subscene.camera(), 1.0));
+    keyboard.key_while_down_connect(kglt::KEY_CODE_UP, std::bind(&kglt::Camera::move_forward, &subscene.camera(), 1.0));
+    keyboard.key_while_down_connect(kglt::KEY_CODE_DOWN, std::bind(&kglt::Camera::move_forward, &subscene.camera(), -1.0));
 
-    while(window->update()) {
-        if(keys[kglt::KEY_CODE_LEFT]) {
-            subscene.camera().rotate_y(-1.0 * window->delta_time());
-        }
-
-        if(keys[kglt::KEY_CODE_RIGHT]) {
-            subscene.camera().rotate_y(1.0 * window->delta_time());
-        }
-
-        if(keys[kglt::KEY_CODE_UP]) {
-            subscene.camera().move_forward(1.0 * window->delta_time());
-        }
-        if(keys[kglt::KEY_CODE_DOWN]) {
-            subscene.camera().move_forward(-1.0 * window->delta_time());
-        }
-    }
+    while(window->update()) {}
 
     return 0;
 }

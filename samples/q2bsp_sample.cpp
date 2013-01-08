@@ -37,24 +37,13 @@ int main(int argc, char* argv[]) {
     //Load the Quake 2 map
     window->loader_for("sample_data/sample.bsp")->into(window->scene());
 
-    window->signal_key_down().connect(&on_key_down);
-    window->signal_key_up().connect(&on_key_up);
+    kglt::Keyboard& keyboard = window->keyboard();
+    keyboard.key_while_down_connect(kglt::KEY_CODE_LEFT, std::bind(&kglt::Camera::rotate_y, &subscene.camera(), -4.0));
+    keyboard.key_while_down_connect(kglt::KEY_CODE_RIGHT, std::bind(&kglt::Camera::rotate_y, &subscene.camera(), 4.0));
+    keyboard.key_while_down_connect(kglt::KEY_CODE_UP, std::bind(&kglt::Camera::move_forward, &subscene.camera(), 10.0));
+    keyboard.key_while_down_connect(kglt::KEY_CODE_DOWN, std::bind(&kglt::Camera::move_forward, &subscene.camera(), -10.0));
 
-    while(window->update()) {
-        if(keys[kglt::KEY_CODE_LEFT]) {
-            subscene.camera().rotate_y(-4.0 * window->delta_time());
-        }
+    while(window->update()) {}
 
-        if(keys[kglt::KEY_CODE_RIGHT]) {
-            subscene.camera().rotate_y(4.0 * window->delta_time());
-        }
-
-        if(keys[kglt::KEY_CODE_UP]) {
-            subscene.camera().move_forward(100.0 * window->delta_time());
-        }
-        if(keys[kglt::KEY_CODE_DOWN]) {
-            subscene.camera().move_forward(-100.0 * window->delta_time());
-        }
-    }
     return 0;
 }

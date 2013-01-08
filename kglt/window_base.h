@@ -64,9 +64,6 @@ public:
     }    
     
     void register_loader(LoaderType::ptr loader_type);
-
-    virtual sigc::signal<void, KeyCode>& signal_key_up() = 0;
-    virtual sigc::signal<void, KeyCode>& signal_key_down() = 0;
     
     virtual void set_title(const std::string& title) = 0;
     virtual void cursor_position(int32_t& mouse_x, int32_t& mouse_y) = 0;

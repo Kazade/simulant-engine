@@ -258,3 +258,4 @@ kglt/resource.h
 tests/test_sound.cpp
 kglt/sound.h
 kglt/sound.cpp
+kglt/interpreter.h

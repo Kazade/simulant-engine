@@ -20,9 +20,6 @@ public:
     void show_cursor(bool value=true);
     void cursor_position(int32_t& mouse_x, int32_t& mouse_y);
     
-    sigc::signal<void, KeyCode>& signal_key_down() { return signal_key_pressed_; }
-    sigc::signal<void, KeyCode>& signal_key_up() { return signal_key_released_; }
-    
     Window(int width=640, int height=480, int bpp=0, bool fullscreen=false);
 
     bool init() { init_window(); return true; }
