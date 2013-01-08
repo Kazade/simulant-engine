@@ -85,6 +85,7 @@ typedef UniqueID<5> LightID;
 typedef UniqueID<6> SubSceneID;
 typedef UniqueID<7> ViewportID;
 typedef UniqueID<8> EntityID;
+typedef UniqueID<9> SoundID;
 
 const SubSceneID DefaultSubSceneID = SubSceneID();
 
@@ -103,6 +104,7 @@ class WindowBase;
 class Material;
 class Pipeline;
 class Partitioner;
+class Sound;
 
 }
 

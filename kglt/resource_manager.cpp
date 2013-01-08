@@ -111,6 +111,22 @@ void ResourceManager::delete_shader(ShaderID s) {
     ShaderManager::manager_delete(s);
 }
 
+SoundID ResourceManager::new_sound() {
+    return SoundManager::manager_new();
+}
+
+Sound& ResourceManager::sound(SoundID s) {
+    return SoundManager::manager_get(s);
+}
+
+bool ResourceManager::has_sound(SoundID s) const {
+    return SoundManager::manager_contains(s);
+}
+
+void ResourceManager::delete_sound(SoundID s) {
+    SoundManager::manager_delete(s);
+}
+
 std::pair<ShaderID, bool> ResourceManager::find_shader(const std::string& name) {
     std::map<std::string, ShaderID>::const_iterator it = shader_lookup_.find(name);
     if(it == shader_lookup_.end()) {

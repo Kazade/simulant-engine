@@ -8,13 +8,15 @@
 #include "object.h"
 #include "frustum.h"
 #include "renderer.h"
+#include "sound.h"
 
 namespace kglt {
 
 class Camera :
     public Object,
     public generic::Identifiable<CameraID>,
-    public Managed<Camera> {
+    public Managed<Camera>,
+    public Source {
 public:
     Camera(SubScene* subscene, CameraID id);
 
