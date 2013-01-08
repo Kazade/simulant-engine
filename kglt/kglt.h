@@ -11,6 +11,7 @@
 #include "shader.h"
 #include "camera.h"
 #include "entity.h"
+#include "sound.h"
 #include "pipeline.h"
 #include "light.h"
 #include "mesh.h"
