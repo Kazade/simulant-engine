@@ -13,8 +13,6 @@ build/kglt/CMakeFiles/kglt.dir/DependInfo.cmake
 build/kglt/CMakeFiles/kglt.dir/link.txt
 build/kglt/CMakeFiles/CMakeDirectoryInformation.cmake
 build/kglt/cmake_install.cmake
-build/kglt/libkglt.a
-build/sample_data/sonic.png
 build/samples/CMakeFiles/2d_sample.dir/cmake_clean.cmake
 build/samples/CMakeFiles/2d_sample.dir/DependInfo.cmake
 build/samples/CMakeFiles/2d_sample.dir/link.txt
@@ -45,8 +43,8 @@ build/CMakeCache.txt
 build/install_manifest.txt
 cmake_modules/FindKAZMATH.cmake
 cmake_modules/FindKGLT.cmake
-glee/GLee.c
-glee/GLee.h
+dependencies/glee/GLee.c
+dependencies/glee/GLee.h
 kazbase/base/composite_id.cpp
 kazbase/base/composite_id.h
 kazbase/base/search_index.cpp
@@ -151,10 +149,6 @@ kglt/window.cpp
 kglt/window.h
 kglt/window_base.cpp
 kglt/window_base.h
-sample_data/parallax/back_layer.png
-sample_data/parallax/front_layer.png
-sample_data/parallax/middle_layer.png
-sample_data/sonic.png
 samples/2d_sample.cpp
 samples/CMakeLists.txt
 samples/outline_sample.cpp
@@ -167,12 +161,10 @@ tests/CMakeLists.txt
 tests/main.cpp
 tests/test_mesh.cpp
 CMakeLists.txt
-kaztimer/kaztimer.h
-kaztimer/kaztimer.cpp
+dependencies/kaztimer/kaztimer.h
+dependencies/kaztimer/kaztimer.cpp
 samples/combined_sample_1.cpp
 samples/ui_sample.cpp
-kaztext/kaztext.h
-kaztext/kaztext.cpp
 kazbase/unicode/unicode.h
 samples/text_sample.cpp
 kglt/frustum.h
@@ -263,3 +255,4 @@ kazbase/unicode/unicode.cpp
 kglt/resource_manager.h
 kglt/resource_manager.cpp
 kglt/resource.h
+tests/test_sound.cpp
