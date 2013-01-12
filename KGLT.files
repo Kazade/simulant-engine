@@ -256,3 +256,6 @@ kglt/resource_manager.h
 kglt/resource_manager.cpp
 kglt/resource.h
 tests/test_sound.cpp
+kglt/loaders/opt_loader.h
+kglt/loaders/opt_loader.cpp
+samples/opt_sample.cpp

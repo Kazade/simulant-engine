@@ -12,6 +12,7 @@
 #include "kazmath/kazmath.h"
 #include "kazbase/list_utils.h"
 
+#include "loadable.h"
 #include "resource.h"
 #include "vertex_data.h"
 #include "types.h"
@@ -80,6 +81,7 @@ private:
 class Mesh :
     public MeshInterface,
     public Resource,
+    public Loadable,
     public Managed<Mesh>,
     public generic::Identifiable<MeshID> {
 
