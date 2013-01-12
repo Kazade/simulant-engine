@@ -8,6 +8,7 @@
 #include "boundable.h"
 #include "object.h"
 #include "mesh.h"
+#include "sound.h"
 
 namespace kglt {
 
@@ -17,17 +18,20 @@ class Entity :
     public MeshInterface,
     public Managed<Entity>,
     public generic::Identifiable<EntityID>,
-    public Object {
+    public Object,
+    public Source {
 
 public:
     Entity(SubScene* subscene, EntityID id):
         generic::Identifiable<EntityID>(id),
         Object(subscene),
+        Source(*subscene),
         mesh_(0) {}
 
     Entity(SubScene* subscene, EntityID id, MeshID mesh):
         generic::Identifiable<EntityID>(id),
         Object(subscene),
+        Source(*subscene),
         mesh_(mesh) {
     }
 

@@ -6,8 +6,9 @@
 namespace kglt {
 
 Camera::Camera(SubScene *subscene, CameraID id):
-    Object(subscene),
-    generic::Identifiable<CameraID>(id) {
+    Object(subscene),    
+    generic::Identifiable<CameraID>(id),
+    Source(*subscene) {
 
     rotate_to(180.0, 0, 1, 0);
 

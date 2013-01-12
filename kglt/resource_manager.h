@@ -10,6 +10,7 @@
 #include "shader.h"
 #include "mesh.h"
 #include "material.h"
+#include "sound.h"
 
 namespace kglt {
 
@@ -19,12 +20,14 @@ typedef generic::TemplatedManager<ResourceManager, Mesh, MeshID> MeshManager;
 typedef generic::TemplatedManager<ResourceManager, ShaderProgram, ShaderID> ShaderManager;
 typedef generic::TemplatedManager<ResourceManager, Material, MaterialID> MaterialManager;
 typedef generic::TemplatedManager<ResourceManager, Texture, TextureID> TextureManager;
+typedef generic::TemplatedManager<ResourceManager, Sound, SoundID> SoundManager;
 
 class ResourceManager:
     public MeshManager,
     public ShaderManager,
     public MaterialManager,
-    public TextureManager {
+    public TextureManager,
+    public SoundManager {
 
 public:
     ResourceManager(WindowBase* window, ResourceManager* parent=nullptr):
@@ -53,6 +56,11 @@ public:
     Material& material(MaterialID material);
     bool has_material(MaterialID m) const;
     void delete_material(MaterialID m);
+
+    SoundID new_sound();
+    Sound& sound(SoundID sound);
+    bool has_sound(SoundID s) const;
+    void delete_sound(SoundID s);
 
     std::pair<ShaderID, bool> find_shader(const std::string& name);
     void post_create_shader_callback(ShaderProgram& obj, ShaderID id) {
