@@ -20,7 +20,8 @@ public:
     std::string name() { return "opt_loader"; }
     bool supports(const std::string& filename) const {
         //FIXME: check magic
-        return filename.find(".opt") != std::string::npos;
+        return filename.find(".opt") != std::string::npos ||
+               filename.find(".OPT") != std::string::npos;
     }
 
     Loader::ptr loader_for(const std::string& filename) const {

@@ -7,6 +7,7 @@
 #include <sigc++/sigc++.h>
 
 #include "generic/managed.h"
+#include "kazmath/vec2.h"
 #include "kazmath/vec3.h"
 #include "kazmath/vec4.h"
 #include "buffer_object.h"
@@ -67,6 +68,7 @@ public:
     void tex_coord0(float u, float v);
     void tex_coord0(float u, float v, float w);
     void tex_coord0(float x, float y, float z, float w);
+    void tex_coord0(const kmVec2& vec) { tex_coord0(vec.x, vec.y); }
 
     void tex_coord1(float u);
     void tex_coord1(float u, float v);

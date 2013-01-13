@@ -16,8 +16,15 @@ int main(int argc, char* argv[]) {
         1000.0
     );
 
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
     kglt::Mesh& mesh = subscene.mesh(subscene.new_mesh());
-    window->loader_for("sample_data/t47/T47.opt")->into(mesh);
+    window->loader_for("sample_data/t47/SNOWSPEEDER.OPT")->into(mesh);
+
+    kglt::Entity& entity = subscene.entity(subscene.new_entity(mesh.id()));
+    entity.move_to(0, 0, -500);
+
+    while(window->update()) {}
 
     return 0;
 }
