@@ -11,6 +11,10 @@ ResourceLocator::ResourceLocator() {
 }
 
 std::string ResourceLocator::locate_file(const std::string& filename) {
+    if(os::path::exists(filename)) { //Absolute path
+        return filename;
+    }
+
     for(std::string path: resource_path_) {
         std::string full_path = os::path::join(path, filename);
         if(os::path::exists(full_path)) {

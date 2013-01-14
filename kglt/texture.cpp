@@ -107,6 +107,25 @@ void Texture::upload(bool free_after, bool generate_mipmaps, bool repeat, bool l
     }
 }
 
+void Texture::flip_vertically() {
+    /**
+     *  Flips the texture data vertically
+     */
+    for(uint32_t j = 0; j * 2 < (uint32_t) height(); ++j)
+    {
+        int index1 = j * width() * channels();
+        int index2 = (height() - 1 - j) * width() * channels();
+        for(uint32_t i = width() * channels(); i > 0; --i )
+        {
+            uint8_t temp = data()[index1];
+            data()[index1] = data()[index2];
+            data()[index2] = temp;
+            ++index1;
+            ++index2;
+        }
+    }
+}
+
 void Texture::free() {
     data_.clear();
 }

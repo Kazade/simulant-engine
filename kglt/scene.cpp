@@ -139,7 +139,7 @@ Scene::~Scene() {
 }
 
 void Scene::initialize_defaults() {
-    default_subscene_ = new_subscene();
+    default_subscene_ = new_subscene(kglt::PARTITIONER_NULL);
 
     //Create a default stage for the default subscene with it's default camera
     pipeline_->add_stage(default_subscene_, subscene().camera().id());
