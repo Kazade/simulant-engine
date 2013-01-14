@@ -1,4 +1,6 @@
 #include <queue>
+#include <deque>
+
 #include "../mesh.h"
 #include "../texture.h"
 #include "../resource_manager.h"
@@ -37,7 +39,7 @@ enum DataBlockTypes {
     OFFSET_BLOCK = 0,
     FACE = 1,
     VERTEX = 3,
-    EXTERNAL_TEXTURE = 7,
+    REUSED_TEXTURE = 7,
     VERTEX_NORMAL = 11,
     TEXTURE_VERTEX = 13,
     EMBEDDED_TEXTURE = 20,
@@ -161,9 +163,9 @@ void OPTLoader::into(Loadable& resource) {
 
 
     struct Triangle {
-        int32_t vertex_indexes[3];
-        int32_t texture_indexes[3];
-        int32_t normal_indexes[3];
+        Vec3 positions[3];
+        Vec2 tex_coords[3];
+        Vec3 normals[3];
 
         Vec3 face_normal;
         std::string texture_name;
@@ -184,8 +186,8 @@ void OPTLoader::into(Loadable& resource) {
     std::string current_texture;
 
     while(!main_offsets.empty()) {
-        std::queue<int32_t> block_offsets;
-        block_offsets.push(main_offsets.front());
+        std::deque<int32_t> block_offsets;
+        block_offsets.push_back(main_offsets.front());
         main_offsets.pop();
 
         //Temporary data store
@@ -198,7 +200,7 @@ void OPTLoader::into(Loadable& resource) {
         while(!block_offsets.empty()) {
             //Grab the next offset from the queue
             int32_t offset = block_offsets.front();
-            block_offsets.pop();
+            block_offsets.pop_front();
 
             file.seekg(offset, std::ios_base::beg);
             DataBlockHeader data_header;
@@ -217,7 +219,7 @@ void OPTLoader::into(Loadable& resource) {
                         int32_t alpha_mask_offset;
                         file.read((char*)&alpha_mask_offset, sizeof(int32_t));
                         alpha_mask_offset -= main_header.global_offset;
-                        block_offsets.push(alpha_mask_offset);
+                        block_offsets.push_back(alpha_mask_offset);
                     }
 
                     //Make sure we are looking in the right place
@@ -266,6 +268,11 @@ void OPTLoader::into(Loadable& resource) {
                     textures.push_back(new_texture);
 
                     current_texture = texture_name;
+                } break;
+                case DataBlockTypes::REUSED_TEXTURE: {
+                    EmbeddedTextureDataBlockHeader header_info;
+                    file.read((char*)&header_info, sizeof(EmbeddedTextureDataBlockHeader));
+                    current_texture = std::string(header_info.texture_name, header_info.texture_name + 8);
                 } break;
                 case DataBlockTypes::FACE: {
                     FaceDataBlock face_data_block;
@@ -334,34 +341,34 @@ void OPTLoader::into(Loadable& resource) {
                         if(vertex_indices.size() == 3) {
                             Triangle new_face;
                             new_face.texture_name = current_texture;
-                            std::copy(vertex_indices.begin(), vertex_indices.end(), new_face.vertex_indexes);
-                            std::copy(texture_coordinates.begin(), texture_coordinates.end(), new_face.texture_indexes);
-                            std::copy(vertex_normal_indexes.begin(), vertex_normal_indexes.end(), new_face.normal_indexes);
+
+                            for(int8_t i = 0; i < 3; ++i) {
+                                new_face.positions[i] = vertices[vertex_indices[i]];
+                                new_face.tex_coords[i] = texture_vertices[texture_coordinates[i]];
+                                new_face.normals[i] = vertex_normals[vertex_normal_indexes[i]];
+                            }
+
                             triangles.push_back(new_face);
                         } else {
                             Triangle t1, t2;
                             t1.texture_name = current_texture;
                             t2.texture_name = current_texture;
 
-                            t1.vertex_indexes[0] = vertex_indices[0];
-                            t1.vertex_indexes[1] = vertex_indices[1];
-                            t1.vertex_indexes[2] = vertex_indices[2];
-                            t1.texture_indexes[0] = texture_coordinates[0];
-                            t1.texture_indexes[1] = texture_coordinates[1];
-                            t1.texture_indexes[2] = texture_coordinates[2];
-                            t1.normal_indexes[0] = vertex_normal_indexes[0];
-                            t1.normal_indexes[1] = vertex_normal_indexes[1];
-                            t1.normal_indexes[2] = vertex_normal_indexes[2];
+                            int8_t j = 0;
+                            for(int8_t i: { 0, 1, 2 }) {
+                                t1.positions[j] = vertices[vertex_indices[i]];
+                                t1.tex_coords[j] = texture_vertices[texture_coordinates[i]];
+                                t1.normals[j] = vertex_normals[vertex_normal_indexes[i]];
+                                ++j;
+                            }
 
-                            t2.vertex_indexes[0] = vertex_indices[0];
-                            t2.vertex_indexes[1] = vertex_indices[2];
-                            t2.vertex_indexes[2] = vertex_indices[3];
-                            t2.texture_indexes[0] = texture_coordinates[0];
-                            t2.texture_indexes[1] = texture_coordinates[2];
-                            t2.texture_indexes[2] = texture_coordinates[3];
-                            t2.normal_indexes[0] = vertex_normal_indexes[0];
-                            t2.normal_indexes[1] = vertex_normal_indexes[2];
-                            t2.normal_indexes[2] = vertex_normal_indexes[3];
+                            j = 0;
+                            for(int8_t i: { 0, 2, 3 }) {
+                                t2.positions[j] = vertices[vertex_indices[i]];
+                                t2.tex_coords[j] = texture_vertices[texture_coordinates[i]];
+                                t2.normals[j] = vertex_normals[vertex_normal_indexes[i]];
+                                ++j;
+                            }
 
                             triangles.push_back(t1);
                             triangles.push_back(t2);
@@ -369,9 +376,32 @@ void OPTLoader::into(Loadable& resource) {
                     }
 
                 } break;
-                case DataBlockTypes::TEXTURE_OFFSET_BLOCK:
+                case DataBlockTypes::TEXTURE_OFFSET_BLOCK: {
+                    /*
+                     * FIXME: This is a weird block. It basically acts a bit like REUSED_TEXTURE
+                     * but points to several textures rather than one. What we do here is push the
+                     * offsets to the front of the queue, rather than the back, so that they are processed
+                     * before any other face blocks
+                     */
 
-                break;
+                    OffsetDataBlock mesh_info_data_block;
+                    file.read((char*)&mesh_info_data_block, sizeof(OffsetDataBlock));
+                    mesh_info_data_block.offset_to_block_offsets -= main_header.global_offset;
+                    file.seekg(mesh_info_data_block.offset_to_block_offsets, std::ios_base::beg);
+
+                    //Initialize the offset array to zero, but make it the right size
+                    std::vector<int32_t> new_block_offsets(mesh_info_data_block.block_offset_count, 0);
+                    //Read the list of offsets
+                    file.read((char*)&new_block_offsets[0], sizeof(int32_t) * mesh_info_data_block.block_offset_count);
+
+                    //Add any new block offsets to the end of the block_offsets list that we are iterating
+                    for(int32_t block_offset: new_block_offsets) {
+                        if(block_offset == 0) continue; //Ignore null offsets
+                        int32_t final = block_offset - main_header.global_offset;
+                        block_offsets.push_front(final);
+                        L_DEBUG(unicode("Adding offset to the FRONT of the list: {0}").format(final).encode());
+                    }
+                } break;
                 case DataBlockTypes::OFFSET_BLOCK: {
                     OffsetDataBlock mesh_info_data_block;
                     file.read((char*)&mesh_info_data_block, sizeof(OffsetDataBlock));
@@ -387,7 +417,7 @@ void OPTLoader::into(Loadable& resource) {
                     for(int32_t block_offset: new_block_offsets) {
                         if(block_offset == 0) continue; //Ignore null offsets
                         int32_t final = block_offset - main_header.global_offset;
-                        block_offsets.push(final);
+                        block_offsets.push_back(final);
                         L_DEBUG(unicode("Adding offset to the list: {0}").format(final).encode());
                     }
                 } break;
@@ -434,7 +464,7 @@ void OPTLoader::into(Loadable& resource) {
                         if(new_offset == 0) continue;
 
                         //Add the new offset to the iteration list
-                        block_offsets.push(new_offset - main_header.global_offset);
+                        block_offsets.push_back(new_offset - main_header.global_offset);
 
                         if(lod_data_block.face_data_header_count > 1) {
                             L_WARN("Multiple LOD levels are not currently handled");
@@ -462,7 +492,6 @@ void OPTLoader::into(Loadable& resource) {
             new_tex.resize(tex.width, tex.height);
             new_tex.set_bpp(tex.bytes_per_pixel * 8);
             new_tex.data().assign(tex.data.begin(), tex.data.end());
-            new_tex.flip_vertically();
             new_tex.upload(true, true);
 
             //Create a submesh for each texture. Don't share the vertex data between submeshes
@@ -477,9 +506,9 @@ void OPTLoader::into(Loadable& resource) {
             submesh.vertex_data().move_to_end();
 
             for(int8_t i = 0; i < 3; ++i) {
-                Vec3 pos = vertices[tri.vertex_indexes[i]];
-                Vec2 tex_coord = texture_vertices[tri.texture_indexes[i]];
-                Vec3 normal = vertex_normals[tri.normal_indexes[i]];
+                Vec3 pos = tri.positions[i];
+                Vec2 tex_coord = tri.tex_coords[i];
+                Vec3 normal = tri.normals[i];
 
                 submesh.vertex_data().position(pos.x, pos.z, pos.y);
                 submesh.vertex_data().tex_coord0(tex_coord);
