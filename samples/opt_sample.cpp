@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
     );
 
     kglt::Mesh& mesh = subscene.mesh(subscene.new_mesh());
-    window->loader_for("/home/kazade/Desktop/FLIGHTMODELS/XWING.OPT")->into(mesh);
+    window->loader_for("/home/kazade/Desktop/FLIGHTMODELS/TIEFIGHTER.OPT")->into(mesh);
 
 
     kglt::Entity& entity = subscene.entity(subscene.new_entity(mesh.id()));

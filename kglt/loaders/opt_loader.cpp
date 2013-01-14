@@ -273,6 +273,8 @@ void OPTLoader::into(Loadable& resource) {
                     EmbeddedTextureDataBlockHeader header_info;
                     file.read((char*)&header_info, sizeof(EmbeddedTextureDataBlockHeader));
                     current_texture = std::string(header_info.texture_name, header_info.texture_name + 8);
+
+                    L_DEBUG(unicode("Found *reused* texture {0} - offset: {1}").format(current_texture, offset).encode());
                 } break;
                 case DataBlockTypes::FACE: {
                     FaceDataBlock face_data_block;
@@ -501,6 +503,10 @@ void OPTLoader::into(Loadable& resource) {
         //Now let's build everything!
         /* This could be optimized, there is no vertex sharing happening */
         for(Triangle tri: triangles) {
+            if(!container::contains(texture_submesh, tri.texture_name)) {
+                L_ERROR("Some part of this file wasn't loaded, as we have found a reused texture without loading the actual texture. Some of the model will be missing");
+                continue;
+            }
             SubMesh& submesh = mesh->submesh(texture_submesh[tri.texture_name]);
 
             submesh.vertex_data().move_to_end();
