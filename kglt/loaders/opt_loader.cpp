@@ -34,14 +34,15 @@ struct MainMeshHeader {
 };
 
 enum DataBlockTypes {
-    MESH_INFO = 0,
+    OFFSET_BLOCK = 0,
     FACE = 1,
     VERTEX = 3,
     EXTERNAL_TEXTURE = 7,
     VERTEX_NORMAL = 11,
     TEXTURE_VERTEX = 13,
     EMBEDDED_TEXTURE = 20,
-    LOD = 21
+    LOD = 21,
+    TEXTURE_OFFSET_BLOCK = 24
 };
 
 struct DataBlockHeader {
@@ -77,7 +78,7 @@ struct VertexNormalDataBlock {
     int32_t offset_to_vertex_normals;
 };
 
-struct MeshInfoDataBlock {
+struct OffsetDataBlock {
     int32_t block_offset_count;
     int32_t offset_to_block_offsets;
     int32_t unknown1;
@@ -368,9 +369,12 @@ void OPTLoader::into(Loadable& resource) {
                     }
 
                 } break;
-                case DataBlockTypes::MESH_INFO: {
-                    MeshInfoDataBlock mesh_info_data_block;
-                    file.read((char*)&mesh_info_data_block, sizeof(MeshInfoDataBlock));
+                case DataBlockTypes::TEXTURE_OFFSET_BLOCK:
+
+                break;
+                case DataBlockTypes::OFFSET_BLOCK: {
+                    OffsetDataBlock mesh_info_data_block;
+                    file.read((char*)&mesh_info_data_block, sizeof(OffsetDataBlock));
                     mesh_info_data_block.offset_to_block_offsets -= main_header.global_offset;
                     file.seekg(mesh_info_data_block.offset_to_block_offsets, std::ios_base::beg);
 
@@ -404,7 +408,7 @@ void OPTLoader::into(Loadable& resource) {
                     file.seekg(tv_data_block.offset_to_texture_vertices, std::ios_base::beg);
 
                     texture_vertices.resize(tv_data_block.texture_vertex_count);
-                    file.read((char*)&texture_vertices[0], sizeof(Vec2)* tv_data_block.texture_vertex_count);
+                    file.read((char*)&texture_vertices[0], sizeof(float) * tv_data_block.texture_vertex_count * 2);
                     L_DEBUG(unicode("Loaded {0} texture vertices").format(tv_data_block.texture_vertex_count).encode());
                 } break;
                 case DataBlockTypes::VERTEX_NORMAL: {
