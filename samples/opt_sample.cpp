@@ -1,7 +1,21 @@
 #include "kglt/kglt.h"
 
-int main(int argc, char* argv[]) {
+#include "kazbase/string.h"
+
+int main(int argc, char* argv[]) {        
     logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));
+
+    if(argc < 2) {
+        std::cout << "USAGE: optview filename" << std::endl;
+        return 1;
+    }
+
+    std::string filename = argv[1];
+
+    if(!str::contains(str::lower(filename), ".opt")) {
+        std::cout << "Please specify a file with a .opt extension" << std::endl;
+        return 2;
+    }
 
     kglt::Window::ptr window = kglt::Window::create(1024, 768);
     window->set_title("OPT Renderer");
@@ -16,7 +30,7 @@ int main(int argc, char* argv[]) {
     );
 
     kglt::Mesh& mesh = subscene.mesh(subscene.new_mesh());
-    window->loader_for("/home/kazade/Desktop/FLIGHTMODELS/TIEFIGHTER.OPT")->into(mesh);
+    window->loader_for(filename)->into(mesh);
 
 
     kglt::Entity& entity = subscene.entity(subscene.new_entity(mesh.id()));
