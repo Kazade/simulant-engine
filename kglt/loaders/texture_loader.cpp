@@ -2,7 +2,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
-#include <soil/SOIL.h>
+#include <SOIL/SOIL.h>
 
 #include "kglt/option_list.h"
 #include "kazbase/exceptions.h"
