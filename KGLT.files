@@ -161,8 +161,6 @@ tests/CMakeLists.txt
 tests/main.cpp
 tests/test_mesh.cpp
 CMakeLists.txt
-dependencies/kaztimer/kaztimer.h
-dependencies/kaztimer/kaztimer.cpp
 samples/combined_sample_1.cpp
 samples/ui_sample.cpp
 kazbase/unicode/unicode.h
