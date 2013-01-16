@@ -1,6 +1,6 @@
+#include <GLee.h>
 #include <thread>
 
-#include "glee/GLee.h"
 #include "window_base.h"
 #include "scene.h"
 #include "input_controller.h"

@@ -1,4 +1,5 @@
-#include "glee/GLee.h"
+#include <GLee.h>
+
 #include "scene.h"
 #include "renderer.h"
 #include "camera.h"

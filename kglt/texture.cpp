@@ -1,10 +1,10 @@
+#include <GLee.h>
 #include <cassert>
 #include <stdexcept>
 #include <boost/lexical_cast.hpp>
 
 #include "kazbase/logging/logging.h"
 
-#include "glee/GLee.h"
 #include "texture.h"
 #include "scene.h"
 

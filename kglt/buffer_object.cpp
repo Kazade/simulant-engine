@@ -1,4 +1,4 @@
-#include "glee/GLee.h"
+#include <GLee.h>
 #include "kazbase/logging/logging.h"
 #include "buffer_object.h"
 
