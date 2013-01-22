@@ -259,3 +259,5 @@ kglt/sound.cpp
 kglt/loaders/opt_loader.h
 kglt/loaders/opt_loader.cpp
 samples/opt_sample.cpp
+kglt/materials/generic_multitexture.kglm
+kglt/materials/diffuse_render.kglm

@@ -62,22 +62,45 @@ void GenericRenderer::set_auto_uniforms_on_shader(
         );
     }
 
-    if(s.params().uses_auto(SP_AUTO_LIGHT_POSITION)) {
-        //Transform the light position by the modelview matrix before
-        //passing to the shader
-        kmVec3 light_pos;
-        kmVec3Fill(&light_pos, 0, 0, 0);
-        if(iteration < lights_within_range.size()) {
-            light_pos = current_subscene().light(lights_within_range.at(iteration)).absolute_position();
-        }
+    if(s.params().uses_auto(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_PROJECTION_MATRIX)) {
+        kmMat3 inverse_transpose_modelview_proj;
 
-        //Take the position into view space
-        kmVec3Transform(&light_pos, &light_pos, view);
+        inverse_transpose_modelview_proj.mat[0] = modelview_projection.mat[0];
+        inverse_transpose_modelview_proj.mat[1] = modelview_projection.mat[1];
+        inverse_transpose_modelview_proj.mat[2] = modelview_projection.mat[2];
 
-        s.params().set_vec4(
-            s.params().auto_uniform_variable_name(SP_AUTO_LIGHT_POSITION),
-            Vec4(light_pos, 1.0)
+        inverse_transpose_modelview_proj.mat[3] = modelview_projection.mat[4];
+        inverse_transpose_modelview_proj.mat[4] = modelview_projection.mat[5];
+        inverse_transpose_modelview_proj.mat[5] = modelview_projection.mat[6];
+
+        inverse_transpose_modelview_proj.mat[6] = modelview_projection.mat[8];
+        inverse_transpose_modelview_proj.mat[7] = modelview_projection.mat[9];
+        inverse_transpose_modelview_proj.mat[8] = modelview_projection.mat[10];
+
+        kmMat3Transpose(&inverse_transpose_modelview_proj, &inverse_transpose_modelview_proj);
+        kmMat3Inverse(&inverse_transpose_modelview_proj, &inverse_transpose_modelview_proj);
+
+        s.params().set_mat3x3(
+            s.params().auto_uniform_variable_name(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_PROJECTION_MATRIX),
+            inverse_transpose_modelview_proj
         );
+    }
+
+    if(s.params().uses_auto(SP_AUTO_LIGHT_POSITION)) {
+        if(iteration < lights_within_range.size()) {
+            //Transform the light position by the modelview matrix before
+            //passing to the shader
+            kglt::Light& light = current_subscene().light(lights_within_range.at(iteration));
+            kmVec3 light_pos = light.absolute_position();
+
+            //Take the position into view space
+            kmVec3Transform(&light_pos, &light_pos, view);
+
+            s.params().set_vec4(
+                s.params().auto_uniform_variable_name(SP_AUTO_LIGHT_POSITION),
+                Vec4(light_pos, (light.type() == LIGHT_TYPE_DIRECTIONAL) ? 0.0 : 1.0)
+            );
+        }
     }
 
     if(s.params().uses_auto(SP_AUTO_LIGHT_AMBIENT)) {
@@ -160,6 +183,34 @@ void GenericRenderer::set_auto_uniforms_on_shader(
         s.params().set_colour(
             s.params().auto_uniform_variable_name(SP_AUTO_LIGHT_GLOBAL_AMBIENT),
             current_subscene().ambient_light()
+        );
+    }
+
+    if(s.params().uses_auto(SP_AUTO_MATERIAL_AMBIENT)) {
+        s.params().set_colour(
+            s.params().auto_uniform_variable_name(SP_AUTO_MATERIAL_AMBIENT),
+            pass.ambient()
+        );
+    }
+
+    if(s.params().uses_auto(SP_AUTO_MATERIAL_DIFFUSE)) {
+        s.params().set_colour(
+            s.params().auto_uniform_variable_name(SP_AUTO_MATERIAL_DIFFUSE),
+            pass.diffuse()
+        );
+    }
+
+    if(s.params().uses_auto(SP_AUTO_MATERIAL_SPECULAR)) {
+        s.params().set_colour(
+            s.params().auto_uniform_variable_name(SP_AUTO_MATERIAL_SPECULAR),
+            pass.specular()
+        );
+    }
+
+    if(s.params().uses_auto(SP_AUTO_MATERIAL_SHININESS)) {
+        s.params().set_float(
+            s.params().auto_uniform_variable_name(SP_AUTO_MATERIAL_SHININESS),
+            pass.shininess()
         );
     }
 

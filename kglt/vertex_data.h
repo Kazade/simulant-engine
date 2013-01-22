@@ -50,7 +50,7 @@ public:
     void move_by(int16_t amount);
     void move_to(uint16_t index);
     void move_to_end();
-    void move_next();
+    uint16_t move_next();
 
     void done();
 
@@ -63,6 +63,10 @@ public:
 
     void normal(float x, float y, float z);
     void normal(const kmVec3& n);
+
+    kmVec3 normal_at(uint16_t idx) {
+        return data_.at(idx).normal;
+    }
 
     void tex_coord0(float u);
     void tex_coord0(float u, float v);

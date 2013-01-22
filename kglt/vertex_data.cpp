@@ -240,13 +240,15 @@ void VertexData::move_to(uint16_t index) {
     cursor_position_ = index;
 }
 
-void VertexData::move_next() {
+uint16_t VertexData::move_next() {
     cursor_position_++;
 
     //cursor_position_ == data_.size() is allowed (see position())
     if(cursor_position_ > (int32_t) data_.size()) {
         throw std::out_of_range("Cursor moved out of range");
     }
+
+    return cursor_position_;
 }
 
 void VertexData::done() {

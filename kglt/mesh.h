@@ -106,10 +106,14 @@ public:
         return std::vector<SubMeshIndex>(keys.begin(), keys.end());
     }
 
+    void enable_debug(bool value);
+
 private:
     VertexData shared_data_;
     std::vector<SubMesh::ptr> submeshes_;
     std::map<SubMeshIndex, SubMesh::ptr> submeshes_by_index_;
+
+    SubMeshIndex normal_debug_mesh_;
 };
 
 }
