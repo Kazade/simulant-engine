@@ -27,6 +27,7 @@ class InputController;
 class Keyboard;
 class Mouse;
 class Joypad;
+class Interpreter;
 
 class WindowBase :
         public generic::TemplatedManager<WindowBase, Viewport, ViewportID> {
@@ -90,7 +91,9 @@ public:
     Keyboard& keyboard();
     Mouse& mouse();
     Joypad& joypad(uint8_t idx);
-    uint8_t joypad_count() const;
+    uint8_t joypad_count() const;    
+
+    Interpreter& interpreter() { assert(interpreter_); return *interpreter_; }
 protected:
     void stop_running() { is_running_ = false; }
     
@@ -125,6 +128,7 @@ private:
 
     ResourceLocator::ptr resource_locator_;
     std::tr1::shared_ptr<InputController> input_controller_;
+    std::tr1::shared_ptr<Interpreter> interpreter_;
 };
 
 }

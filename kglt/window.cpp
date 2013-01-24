@@ -4,6 +4,7 @@
 #include "kazbase/unicode/unicode.h"
 #include "input_controller.h"
 #include "window.h"
+#include "interpreter.h"
 
 namespace kglt {
 
@@ -24,6 +25,8 @@ Window::Window(int width, int height, int bpp, bool fullscreen) {
             KEY_CODE_ESCAPE, bind(&Window::stop_running, this)
         );
     });
+
+    interpreter().register_class<Window>();
 }
 
 Window::~Window() {

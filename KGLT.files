@@ -259,3 +259,6 @@ tests/test_sound.cpp
 kglt/sound.h
 kglt/sound.cpp
 kglt/interpreter.h
+app/main.cpp
+app/CMakeLists.txt
+kglt/interpreter.cpp

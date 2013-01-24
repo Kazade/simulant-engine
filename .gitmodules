@@ -1,3 +1,6 @@
 [submodule "kazbase"]
 	path = kazbase
 	url = https://Kazade@github.com/Kazade/kazbase.git
+[submodule "dependencies/luabind"]
+	path = dependencies/luabind
+	url = git://github.com/luabind/luabind.git
