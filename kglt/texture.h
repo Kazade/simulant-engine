@@ -38,11 +38,14 @@ public:
                 bool generate_mipmaps=true,
                 bool repeat=true,
                 bool linear=false); //Upload to GL, initializes the tex ID
+    void flip_vertically();
     void free(); //Frees the data used to construct the texture
 
     uint32_t width() const { return width_; }
     uint32_t height() const { return height_; }
     uint32_t bpp() const { return bpp_; }
+    uint8_t channels() const { return bpp_ / 8; }
+
     Texture::Data& data() { return data_; }
 
     void sub_texture(TextureID src, uint16_t offset_x, uint16_t offset_y);

@@ -78,6 +78,8 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
             shader.params().register_attribute(SP_ATTR_VERTEX_TEXCOORD2, variable_name);
         } else if(arg_1 == "TEXCOORD3") {
             shader.params().register_attribute(SP_ATTR_VERTEX_TEXCOORD3, variable_name);
+        } else if(arg_1 == "NORMAL") {
+            shader.params().register_attribute(SP_ATTR_VERTEX_NORMAL, variable_name);
         } else if(arg_1 == "DIFFUSE") {
             shader.params().register_attribute(SP_ATTR_VERTEX_DIFFUSE, variable_name);
         } else {
@@ -109,6 +111,8 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
 
         if(arg_1 == "MODELVIEW_PROJECTION_MATRIX") {
             shader.params().register_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX, variable_name);
+        } else if(arg_1 == "INVERSE_TRANSPOSE_MODELVIEW_PROJECTION_MATRIX" || arg_1 == "NORMAL_MATRIX") {
+            shader.params().register_auto(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_PROJECTION_MATRIX, variable_name);
         } else if(arg_1 == "TEXTURE_MATRIX0") {
             shader.params().register_auto(SP_AUTO_MATERIAL_TEX_MATRIX0, variable_name);
         } else if(arg_1 == "TEXTURE_MATRIX1") {
@@ -117,8 +121,30 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
             shader.params().register_auto(SP_AUTO_MATERIAL_TEX_MATRIX2, variable_name);
         } else if(arg_1 == "TEXTURE_MATRIX3") {
             shader.params().register_auto(SP_AUTO_MATERIAL_TEX_MATRIX3, variable_name);
-        } else if(arg_1 == "LIGHT_GLOBAL_AMBIENT") {
+        } else if(arg_1 == "LIGHT_GLOBAL_AMBIENT") {            
             shader.params().register_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT, variable_name);
+        } else if(arg_1 == "LIGHT_POSITION") {
+            shader.params().register_auto(SP_AUTO_LIGHT_POSITION, variable_name);
+        } else if(arg_1 == "LIGHT_AMBIENT") {
+            shader.params().register_auto(SP_AUTO_LIGHT_AMBIENT, variable_name);
+        } else if(arg_1 == "LIGHT_DIFFUSE") {
+            shader.params().register_auto(SP_AUTO_LIGHT_DIFFUSE, variable_name);
+        } else if(arg_1 == "LIGHT_SPECULAR") {
+            shader.params().register_auto(SP_AUTO_LIGHT_SPECULAR, variable_name);
+        } else if(arg_1 == "LIGHT_CONSTANT_ATTENUATION") {
+            shader.params().register_auto(SP_AUTO_LIGHT_CONSTANT_ATTENUATION, variable_name);
+        } else if(arg_1 == "LIGHT_LINEAR_ATTENUATION") {
+            shader.params().register_auto(SP_AUTO_LIGHT_LINEAR_ATTENUATION, variable_name);
+        } else if(arg_1 == "LIGHT_QUADRATIC_ATTENUATION") {
+            shader.params().register_auto(SP_AUTO_LIGHT_QUADRATIC_ATTENUATION, variable_name);
+        } else if(arg_1 == "MATERIAL_SHININESS") {
+            shader.params().register_auto(SP_AUTO_MATERIAL_SHININESS, variable_name);
+        } else if(arg_1 == "MATERIAL_AMBIENT") {
+            shader.params().register_auto(SP_AUTO_MATERIAL_AMBIENT, variable_name);
+        } else if(arg_1 == "MATERIAL_DIFFUSE") {
+            shader.params().register_auto(SP_AUTO_MATERIAL_DIFFUSE, variable_name);
+        } else if(arg_1 == "MATERIAL_SPECULAR") {
+            shader.params().register_auto(SP_AUTO_MATERIAL_SPECULAR, variable_name);
         } else if(arg_1 == "ACTIVE_TEXTURE_UNITS") {
             shader.params().register_auto(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS, variable_name);
         } else {
@@ -138,6 +164,22 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
                 pass->set_depth_test_enabled(true);
             } else {
                 pass->set_depth_test_enabled(false);
+            }
+        } else if(arg_1 == "BLEND") {
+            if(arg_2 == "NONE") {
+                pass->set_blending(BLEND_NONE);
+            } else if (arg_2 == "ADD") {
+                pass->set_blending(BLEND_ADD);
+            } else if (arg_2 == "MODULATE") {
+                pass->set_blending(BLEND_MODULATE);
+            } else if (arg_2 == "COLOUR") {
+                pass->set_blending(BLEND_COLOUR);
+            } else if (arg_2 == "ALPHA") {
+                pass->set_blending(BLEND_ALPHA);
+            } else if (arg_2 == "ONE_ONE_MINUS_ALPHA") {
+                pass->set_blending(BLEND_ONE_ONE_MINUS_ALPHA);
+            } else {
+                throw SyntaxError("Invalid argument passed to SET(FLAG BLEND):" + arg_2);
             }
         } else {
             throw SyntaxError("Invalid argument passed to SET(FLAG): " + arg_1);

@@ -22,6 +22,8 @@ struct Colour {
     static const Colour red;
     static const Colour green;
     static const Colour blue;
+    static const Colour yellow;
+    static const Colour purple;
 };
 
 }

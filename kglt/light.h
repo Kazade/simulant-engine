@@ -24,7 +24,6 @@ public:
         type_(LIGHT_TYPE_POINT),
         range_(100.0) {
 
-        kmVec3Fill(&direction_, 0.0, 0.0, 0.0);
         set_ambient(kglt::Colour(0.2f, 0.2f, 0.2f, 1.0f));
         set_diffuse(kglt::Colour(1.0f, 1.0f, 1.0f, 1.0f));
         set_specular(kglt::Colour(1.0f, 1.0f, 1.0f, 1.0f));
@@ -32,6 +31,27 @@ public:
     }
 
     void set_type(LightType type) { type_ = type; }
+
+    /*
+     *  Direction (ab)uses the light's position.
+     *  Setting the direction implicitly sets the light type to directional
+     *
+     *  Direction is stored reversed in the position.
+     */
+    kmVec3 direction() const {
+        kmVec3 result;
+        kmVec3Fill(&result, -position().x, -position().y, -position().z);
+        return result;
+    }
+
+    void set_direction(float x, float y, float z) {
+        set_direction(Vec3(x, y, z));
+    }
+
+    void set_direction(const kmVec3& dir) {
+        set_type(LIGHT_TYPE_DIRECTIONAL);
+        move_to(-dir.x, -dir.y, -dir.z);
+    }
 
     void set_diffuse(const kglt::Colour& colour) {
         diffuse_ = colour;
@@ -53,7 +73,6 @@ public:
     void set_attenuation(float range, float constant, float linear, float quadratic);
     void set_attenuation_from_range(float range);
 
-    kmVec3 direction() const { return direction_; }
     float range() const { return range_; }
     float constant_attenuation() const { return const_attenuation_; }
     float linear_attenuation() const { return linear_attenuation_; }
@@ -81,7 +100,6 @@ public:
 private:
     LightType type_;
 
-    kmVec3 direction_;
     kglt::Colour ambient_;
     kglt::Colour diffuse_;
     kglt::Colour specular_;

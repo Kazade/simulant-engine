@@ -1,12 +1,15 @@
 #include <limits>
 
+#include "window_base.h"
+#include "resource_manager.h"
 #include "mesh.h"
 
 namespace kglt {
 
 Mesh::Mesh(ResourceManager *resource_manager, MeshID id):
     Resource(resource_manager),
-    generic::Identifiable<MeshID>(id) {
+    generic::Identifiable<MeshID>(id),
+    normal_debug_mesh_(0) {
 
 }
 
@@ -17,6 +20,44 @@ void Mesh::clear() {
     }
     submeshes_.clear();
     shared_data().clear();
+}
+
+void Mesh::enable_debug(bool value) {
+    if(value) {
+        kglt::Material& material = resource_manager().material(resource_manager().new_material());
+        resource_manager().window().loader_for("kglt/materials/diffuse_render.kglm")->into(material);
+
+        normal_debug_mesh_ = new_submesh(material.id(), MESH_ARRANGEMENT_LINES, false);
+
+        //Go through the submeshes, and for each index draw a normal line
+        for(SubMeshIndex smi: submesh_ids()) {
+            for(uint16_t idx: submesh(smi).index_data().all()) {
+                kmVec3 pos1 = submesh(smi).vertex_data().position_at(idx);
+                kmVec3 n = submesh(smi).vertex_data().normal_at(idx);
+                kmVec3Scale(&n, &n, 10.0);
+
+                kmVec3 pos2;
+                kmVec3Add(&pos2, &pos1, &n);
+
+                submesh(normal_debug_mesh_).vertex_data().position(pos1);
+                submesh(normal_debug_mesh_).vertex_data().diffuse(kglt::Colour::red);
+                int16_t next_index = submesh(normal_debug_mesh_).vertex_data().move_next();
+                submesh(normal_debug_mesh_).index_data().index(next_index - 1);
+
+                submesh(normal_debug_mesh_).vertex_data().position(pos2);
+                submesh(normal_debug_mesh_).vertex_data().diffuse(kglt::Colour::red);
+                next_index = submesh(normal_debug_mesh_).vertex_data().move_next();
+                submesh(normal_debug_mesh_).index_data().index(next_index - 1);
+            }
+        }
+        submesh(normal_debug_mesh_).vertex_data().done();
+        submesh(normal_debug_mesh_).index_data().done();
+    } else {
+        if(normal_debug_mesh_) {
+            delete_submesh(normal_debug_mesh_);
+            normal_debug_mesh_ = 0;
+        }
+    }
 }
 
 SubMeshIndex Mesh::new_submesh(    

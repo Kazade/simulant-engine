@@ -9,9 +9,6 @@
 #include "keyboard.h"
 #include "resource_locator.h"
 
-#include "loaders/texture_loader.h"
-#include "loaders/material_script.h"
-#include "loaders/q2bsp_loader.h"
 #include "loader.h"
 
 #include "idle_task_manager.h"
