@@ -1,7 +1,7 @@
+#include <GLee.h>
 #include <stdexcept>
 #include <boost/format.hpp>
 
-#include "glee/GLee.h"
 #include "utils/gl_error.h"
 #include "kazbase/logging/logging.h"
 #include "kazbase/exceptions.h"

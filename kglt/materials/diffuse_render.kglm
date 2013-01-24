@@ -1,0 +1,29 @@
+BEGIN(TECHNIQUE "default")
+    BEGIN(PASS)
+        SET(ATTRIBUTE POSITION "vertex_position")
+        SET(ATTRIBUTE DIFFUSE "vertex_diffuse")
+
+        SET(AUTO_UNIFORM MODELVIEW_PROJECTION_MATRIX "modelview_projection")
+
+        BEGIN_DATA(VERTEX)
+            attribute vec3 vertex_position;
+            attribute vec4 vertex_diffuse;
+
+            uniform mat4 modelview_projection;
+
+            varying vec4 diffuse;
+
+            void main() {
+                diffuse = vertex_diffuse;
+                gl_Position = (modelview_projection * vec4(vertex_position, 1.0));
+            }
+        END_DATA(VERTEX)
+        BEGIN_DATA(FRAGMENT)
+
+            varying vec4 diffuse;
+            void main() {
+                gl_FragColor = diffuse;
+            }
+        END_DATA(FRAGMENT)
+    END(PASS)
+END(TECHNIQUE)

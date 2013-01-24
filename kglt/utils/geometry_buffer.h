@@ -1,7 +1,7 @@
 #ifndef GEOMETRY_BUFFER_H
 #define GEOMETRY_BUFFER_H
 
-#include "glee/GLee.h"
+#include <GLee.h>
 #include <cstdint>
 #include <tr1/memory>
 #include <vector>

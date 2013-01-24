@@ -12,6 +12,7 @@
 #include "kazmath/kazmath.h"
 #include "kazbase/list_utils.h"
 
+#include "loadable.h"
 #include "resource.h"
 #include "vertex_data.h"
 #include "types.h"
@@ -80,6 +81,7 @@ private:
 class Mesh :
     public MeshInterface,
     public Resource,
+    public Loadable,
     public Managed<Mesh>,
     public generic::Identifiable<MeshID> {
 
@@ -104,10 +106,14 @@ public:
         return std::vector<SubMeshIndex>(keys.begin(), keys.end());
     }
 
+    void enable_debug(bool value);
+
 private:
     VertexData shared_data_;
     std::vector<SubMesh::ptr> submeshes_;
     std::map<SubMeshIndex, SubMesh::ptr> submeshes_by_index_;
+
+    SubMeshIndex normal_debug_mesh_;
 };
 
 }

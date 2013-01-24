@@ -1,9 +1,13 @@
 #include <thread>
 
-#include "glee/GLee.h"
+#include <GLee.h>
 #include "window_base.h"
 #include "scene.h"
 #include "input_controller.h"
+#include "loaders/texture_loader.h"
+#include "loaders/material_script.h"
+#include "loaders/q2bsp_loader.h"
+#include "loaders/opt_loader.h"
 #include "interpreter.h"
 
 namespace kglt {
@@ -21,6 +25,7 @@ WindowBase::WindowBase():
     register_loader(LoaderType::ptr(new kglt::loaders::TextureLoaderType));
     register_loader(LoaderType::ptr(new kglt::loaders::MaterialScriptLoaderType));
     register_loader(LoaderType::ptr(new kglt::loaders::Q2BSPLoaderType));
+    register_loader(LoaderType::ptr(new kglt::loaders::OPTLoaderType));
 
     ktiGenTimers(1, &timer_);
     ktiBindTimer(timer_);

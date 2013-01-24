@@ -1,4 +1,4 @@
-#include <glee/GLee.h>
+#include <GLee.h>
 
 #include "viewport.h"
 #include "window.h"
