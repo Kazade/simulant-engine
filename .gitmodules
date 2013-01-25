@@ -1,3 +1,3 @@
-[submodule "kazbase"]
-	path = kazbase
-	url = https://Kazade@github.com/Kazade/kazbase.git
+[submodule "kglt/kazbase"]
+	path = kglt/kazbase
+	url = git://github.com/Kazade/kazbase.git
