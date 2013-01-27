@@ -6,7 +6,7 @@
 #include "../resource_manager.h"
 #include "../shortcuts.h"
 
-#include "kazbase/unicode/unicode.h"
+#include "kglt/kazbase/unicode/unicode.h"
 #include "opt_loader.h"
 
 namespace kglt {

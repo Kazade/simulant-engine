@@ -1,6 +1,6 @@
 #include <utility>
 #include <tr1/functional>
-#include "kazbase/logging/logging.h"
+#include "kglt/kazbase/logging/logging.h"
 #include "idle_task_manager.h"
 
 namespace kglt {

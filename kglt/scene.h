@@ -7,7 +7,7 @@
 #include <stdexcept>
 #include <map>
 
-#include "kazbase/list_utils.h"
+#include "kglt/kazbase/list_utils.h"
 
 #include "types.h"
 #include "object.h"

@@ -24,6 +24,13 @@ public:
     void follow(Object& obj, float dist, float height=0.0f);
     void look_at(const Vec3& position);
 
+    kmMat4 view_matrix() {
+        kmMat4 transform = this->absolute_transformation();
+        kmMat4Inverse(&transform, &transform);
+
+        return transform;
+    }
+
     void apply(kmMat4* modelview_out) {
 
 

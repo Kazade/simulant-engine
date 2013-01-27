@@ -11,8 +11,8 @@
 #include "../light.h"
 #include "../camera.h"
 
-#include "kazbase/logging/logging.h"
-#include "kazbase/string.h"
+#include "kglt/kazbase/logging/logging.h"
+#include "kglt/kazbase/string.h"
 #include "kazmath/vec3.h"
 #include "kazmath/mat4.h"
 

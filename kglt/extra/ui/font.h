@@ -7,7 +7,7 @@
 #include <string>
 #include <cstdint>
 #include <map>
-#include "kazbase/unicode/unicode.h"
+#include "kglt/kazbase/unicode/unicode.h"
 
 #include "../../generic/managed.h"
 #include "../../types.h"
