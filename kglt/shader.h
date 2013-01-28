@@ -5,7 +5,7 @@
 #include <string>
 #include <tr1/memory>
 
-#include "kazbase/list_utils.h"
+#include "kglt/kazbase/list_utils.h"
 
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 

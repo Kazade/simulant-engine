@@ -1,7 +1,7 @@
 #include <GLee.h>
 
 #include <SDL/SDL.h>
-#include "kazbase/unicode/unicode.h"
+#include "kglt/kazbase/unicode/unicode.h"
 #include "input_controller.h"
 #include "window.h"
 

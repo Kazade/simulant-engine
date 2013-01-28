@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include <boost/lexical_cast.hpp>
 
-#include "kazbase/logging/logging.h"
+#include "kglt/kazbase/logging/logging.h"
 
 #include "texture.h"
 #include "scene.h"

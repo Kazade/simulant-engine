@@ -13,7 +13,7 @@
 
 #include "idle_task_manager.h"
 
-#include "kazbase/logging/logging.h"
+#include "kglt/kazbase/logging/logging.h"
 #include "generic/manager.h"
 #include "types.h"
 #include "viewport.h"

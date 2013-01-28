@@ -5,7 +5,7 @@
 #include <SOIL/SOIL.h>
 
 #include "kglt/option_list.h"
-#include "kazbase/exceptions.h"
+#include "kglt/kazbase/exceptions.h"
 
 #include "texture_loader.h"
 #include "../texture.h"
