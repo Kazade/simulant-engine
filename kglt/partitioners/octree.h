@@ -6,13 +6,13 @@
 #include <stdexcept>
 #include <vector>
 #include <tr1/memory>
+#include <kazmath/kazmath.h>
 
 #include "../generic/managed.h"
 #include "../boundable.h"
 #include "../types.h"
 
-#include "kazbase/list_utils.h"
-#include "kazmath/kazmath.h"
+#include "kglt/kazbase/list_utils.h"
 /*
  * BANTER FOLLOWS!
  *

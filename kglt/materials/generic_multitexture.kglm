@@ -107,17 +107,19 @@ BEGIN(TECHNIQUE "default")
             varying float att;
 
             void main() {
-                normal = normal_matrix * vertex_normal; //Calculate the normal
+                normal = normalize(normal_matrix * vertex_normal); //Calculate the normal
                 vec4 position = (modelview_projection * vec4(vertex_position, 1.0));
 
-                vec3 vv = position.xyz;
-                light_dir = vec3(light_position.xyz - vv);
+                vec3 vv = position.xyz * light_position.w; //Directional light this will be 0,0,0
+                light_dir = normalize(vec3(light_position.xyz) - vv);
                 eye_vec = -vv;
 
                 float d = length(light_dir);
                 //Don't apply for directional lights (hence the * w)
-                att = 1.0 / (constant_attenuation + (linear_attenuation * d) + (quadratic_attenuation * d * d)) * light_position.w;
-                if(att == 0.0) att = 1.0;
+                att = 1.0;
+                if(light_position.w > 0) {
+                    att = 1.0 / (constant_attenuation + (linear_attenuation * d) + (quadratic_attenuation * d * d));
+                }
 
                 gl_Position = position;
             }
@@ -142,11 +144,11 @@ BEGIN(TECHNIQUE "default")
                 vec3 L = normalize(light_dir);
                 float lambert_term = dot(N, L);
                 if(lambert_term > 0.0) {
-                    final_colour += light_diffuse * material_diffuse * lambert_term * att;
-                    /*vec3 E = normalize(eye_vec);
+                    final_colour += light_diffuse * material_diffuse * lambert_term;
+                    vec3 E = normalize(eye_vec);
                     vec3 R = reflect(-L, N);
                     float specular = pow(max(dot(R, E), 0.0), material_shininess);
-                    final_colour += light_specular * material_specular * specular;*/
+                    final_colour += light_specular * material_specular * specular;
                 }
 
                 gl_FragColor = final_colour;

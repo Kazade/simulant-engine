@@ -27,19 +27,14 @@ void GenericRenderer::set_auto_uniforms_on_shader(
 
     //Calculate the modelview-projection matrix
     kmMat4 modelview_projection;
+    kmMat4 modelview;
 
     const kmMat4 model = subentity._parent().absolute_transformation();
-    const kmMat4* view = &current_subscene().camera(camera).modelview_matrix();
-    const kmMat4* projection = &current_subscene().camera(camera).projection_matrix();
+    const kmMat4 view = current_subscene().camera(camera).view_matrix();
+    const kmMat4 projection = current_subscene().camera(camera).projection_matrix();
 
-    kmMat4 modelview;
-    kmMat4Multiply(&modelview, view, &model);
-
-    kmMat4Multiply(
-        &modelview_projection,
-        projection,
-        &modelview
-    );
+    kmMat4Multiply(&modelview, &view, &model);
+    kmMat4Multiply(&modelview_projection, &projection, &modelview);
 
     if(s.params().uses_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX)) {
         s.params().set_mat4x4(
@@ -58,27 +53,16 @@ void GenericRenderer::set_auto_uniforms_on_shader(
     if(s.params().uses_auto(SP_AUTO_PROJECTION_MATRIX)) {
         s.params().set_mat4x4(
             s.params().auto_uniform_variable_name(SP_AUTO_PROJECTION_MATRIX),
-            *projection
+            projection
         );
     }
 
     if(s.params().uses_auto(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_PROJECTION_MATRIX)) {
         kmMat3 inverse_transpose_modelview_proj;
 
-        inverse_transpose_modelview_proj.mat[0] = modelview_projection.mat[0];
-        inverse_transpose_modelview_proj.mat[1] = modelview_projection.mat[1];
-        inverse_transpose_modelview_proj.mat[2] = modelview_projection.mat[2];
-
-        inverse_transpose_modelview_proj.mat[3] = modelview_projection.mat[4];
-        inverse_transpose_modelview_proj.mat[4] = modelview_projection.mat[5];
-        inverse_transpose_modelview_proj.mat[5] = modelview_projection.mat[6];
-
-        inverse_transpose_modelview_proj.mat[6] = modelview_projection.mat[8];
-        inverse_transpose_modelview_proj.mat[7] = modelview_projection.mat[9];
-        inverse_transpose_modelview_proj.mat[8] = modelview_projection.mat[10];
-
-        kmMat3Transpose(&inverse_transpose_modelview_proj, &inverse_transpose_modelview_proj);
+        kmMat3AssignMat4(&inverse_transpose_modelview_proj, &modelview_projection);
         kmMat3Inverse(&inverse_transpose_modelview_proj, &inverse_transpose_modelview_proj);
+        kmMat3Transpose(&inverse_transpose_modelview_proj, &inverse_transpose_modelview_proj);
 
         s.params().set_mat3x3(
             s.params().auto_uniform_variable_name(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_PROJECTION_MATRIX),
@@ -91,14 +75,14 @@ void GenericRenderer::set_auto_uniforms_on_shader(
             //Transform the light position by the modelview matrix before
             //passing to the shader
             kglt::Light& light = current_subscene().light(lights_within_range.at(iteration));
-            kmVec3 light_pos = light.absolute_position();
 
-            //Take the position into view space
-            kmVec3Transform(&light_pos, &light_pos, view);
+            Vec4 light_pos = Vec4(light.absolute_position(), (light.type() == LIGHT_TYPE_DIRECTIONAL) ? 0.0 : 1.0);
+
+            kmVec4MultiplyMat4(&light_pos, &light_pos, &view);
 
             s.params().set_vec4(
                 s.params().auto_uniform_variable_name(SP_AUTO_LIGHT_POSITION),
-                Vec4(light_pos, (light.type() == LIGHT_TYPE_DIRECTIONAL) ? 0.0 : 1.0)
+                light_pos
             );
         }
     }

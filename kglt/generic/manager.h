@@ -8,7 +8,7 @@
 #include <mutex>
 
 #include <sigc++/sigc++.h>
-#include "kazbase/list_utils.h"
+#include "kglt/kazbase/list_utils.h"
 
 namespace kglt {
 namespace generic {

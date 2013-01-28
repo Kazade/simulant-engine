@@ -4,7 +4,7 @@
 #include "window.h"
 #include "scene.h"
 
-#include "kazbase/exceptions.h"
+#include "kglt/kazbase/exceptions.h"
 
 namespace kglt {
 

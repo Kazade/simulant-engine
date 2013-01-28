@@ -1,5 +1,5 @@
-#include "kazbase/logging/logging.h"
-#include "kazbase/list_utils.h"
+#include "kglt/kazbase/logging/logging.h"
+#include "kglt/kazbase/list_utils.h"
 #include "kazmath/aabb.h"
 #include "octree.h"
 #include "../frustum.h"

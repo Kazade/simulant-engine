@@ -40,7 +40,7 @@ public:
      */
     kmVec3 direction() const {
         kmVec3 result;
-        kmVec3Fill(&result, -position().x, -position().y, -position().z);
+        kmVec3Fill(&result, position().x, position().y, position().z);
         return result;
     }
 
@@ -50,7 +50,7 @@ public:
 
     void set_direction(const kmVec3& dir) {
         set_type(LIGHT_TYPE_DIRECTIONAL);
-        move_to(-dir.x, -dir.y, -dir.z);
+        move_to(dir.x, dir.y, dir.z);
     }
 
     void set_diffuse(const kglt::Colour& colour) {

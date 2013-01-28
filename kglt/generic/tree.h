@@ -7,7 +7,7 @@
 #include <tr1/memory>
 #include <sigc++/sigc++.h>
 
-#include "kazbase/logging/logging.h"
+#include "kglt/kazbase/logging/logging.h"
 
 namespace kglt {
 namespace generic {

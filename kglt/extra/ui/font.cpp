@@ -3,8 +3,8 @@
 
 #include <tr1/functional>
 
-#include "kazbase/exceptions.h"
-#include "kazbase/list_utils.h"
+#include "kglt/kazbase/exceptions.h"
+#include "kglt/kazbase/list_utils.h"
 
 #include "font.h"
 #include "interface.h"
