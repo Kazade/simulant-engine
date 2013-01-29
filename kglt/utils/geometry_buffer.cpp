@@ -1,4 +1,4 @@
-#include "kglt/kazbase/logging/logging.h"
+#include "../kazbase/logging.h"
 #include "geometry_buffer.h"
 
 namespace kglt {

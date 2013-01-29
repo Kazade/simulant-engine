@@ -1,5 +1,5 @@
 #include <GLee.h>
-#include "kglt/kazbase/logging/logging.h"
+#include "kazbase/logging.h"
 #include "buffer_object.h"
 
 namespace kglt {

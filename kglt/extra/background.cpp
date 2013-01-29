@@ -1,6 +1,6 @@
 #include <boost/format.hpp>
 
-#include "kglt/kazbase/logging/logging.h"
+#include "../kazbase/logging.h"
 #include "background.h"
 
 #include "../pipeline.h"

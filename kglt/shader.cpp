@@ -3,7 +3,7 @@
 #include <boost/format.hpp>
 
 #include "utils/gl_error.h"
-#include "kglt/kazbase/logging/logging.h"
+#include "kazbase/logging.h"
 #include "kglt/kazbase/exceptions.h"
 #include "kglt/kazbase/list_utils.h"
 #include "types.h"

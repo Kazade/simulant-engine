@@ -1,6 +1,6 @@
-#include "kglt/kazbase/list_utils.h"
-#include "kglt/kazbase/unicode/unicode.h"
-#include "kglt/kazbase/logging/logging.h"
+#include "kazbase/list_utils.h"
+#include "kazbase/unicode.h"
+#include "kazbase/logging.h"
 #include "input_controller.h"
 
 namespace kglt {

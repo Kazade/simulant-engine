@@ -1,8 +1,7 @@
-#include "kglt/kazbase/unicode/unicode.h"
-
 #include "material_script.h"
-#include "kglt/kazbase/exceptions.h"
-#include "kglt/kazbase/string.h"
+#include "../kazbase/exceptions.h"
+#include "../kazbase/string.h"
+#include "../kazbase/unicode.h"
 #include "../types.h"
 #include "../material.h"
 #include "../scene.h"

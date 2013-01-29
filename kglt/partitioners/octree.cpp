@@ -1,7 +1,9 @@
-#include "kglt/kazbase/logging/logging.h"
-#include "kglt/kazbase/list_utils.h"
-#include "kazmath/aabb.h"
+#include <kazmath/aabb.h>
+
 #include "octree.h"
+
+#include "../kazbase/logging.h"
+#include "../kazbase/list_utils.h"
 #include "../frustum.h"
 
 namespace kglt {
