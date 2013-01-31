@@ -30,14 +30,12 @@ int main(int argc, char* argv[]) {
     );
 
     kglt::Light& light = subscene.light(subscene.new_light());
-    //light.set_direction(1, 0, 0);
-    light.move_to(50, 0, 0);
+    light.set_direction(1, 0, 0);
+    //light.move_to(50, 0, 0);
     light.set_diffuse(kglt::Colour::yellow);
 
     kglt::Mesh& mesh = subscene.mesh(subscene.new_mesh());
     window->loader_for(filename)->into(mesh);
-
-    mesh.enable_debug(true);
 
     kglt::Entity& entity = subscene.entity(subscene.new_entity(mesh.id()));
     entity.move_to(0, 0, 500);
