@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <vector>
 
-#include "loki/sequence.h"
+#include "../loki/sequence.h"
 
 namespace kglt {
 namespace generic {
