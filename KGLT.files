@@ -218,3 +218,4 @@ kglt/kazbase/file_utils.cpp
 kglt/kazbase/logging.cpp
 kglt/kazbase/string.cpp
 kglt/kazbase/unicode.cpp
+cmake_modules/FindKAZTIMER.cmake
