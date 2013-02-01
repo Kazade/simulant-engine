@@ -10,7 +10,7 @@
 #include <sigc++/sigc++.h>
 
 #include "generic/tree.h"
-#include "generic/user_data_carrier.h"
+#include "generic/data_carrier.h"
 #include "generic/visitor.h"
 
 #include "kazmath/mat4.h"
@@ -24,7 +24,7 @@ class Scene;
 
 class Object :
     public generic::TreeNode<Object>, //Objects form a tree
-    public generic::UserDataCarrier,
+    public generic::DataCarrier,
     public generic::VisitableBase<Object> { //And they allow additional data to be attached
 
 public:

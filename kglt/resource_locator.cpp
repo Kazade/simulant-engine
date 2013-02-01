@@ -7,6 +7,7 @@ namespace kglt {
 ResourceLocator::ResourceLocator() {
     resource_path_.push_back(find_executable_directory()); //Make sure the directory the executable lives is on the resource path
     resource_path_.push_back(find_working_directory()); //Add the working directory (might be different)
+    resource_path_.push_back("/usr/local/share"); //Look in /usr/share (kglt files might be installed to /usr/share/kglt)
     resource_path_.push_back("/usr/share"); //Look in /usr/share (kglt files might be installed to /usr/share/kglt)
 }
 

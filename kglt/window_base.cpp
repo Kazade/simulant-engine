@@ -28,6 +28,8 @@ WindowBase::WindowBase():
     ktiGenTimers(1, &timer_);
     ktiBindTimer(timer_);
     ktiStartGameTimer();
+
+    logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));
 }
 
 void WindowBase::init_window() {
@@ -48,6 +50,10 @@ void WindowBase::init_window() {
 
         initialized_ = true;
     }
+}
+
+void WindowBase::set_logging_level(LoggingLevel level) {
+    logging::get_logger("/")->set_level((logging::LOG_LEVEL) level);
 }
 
 bool WindowBase::update() {    

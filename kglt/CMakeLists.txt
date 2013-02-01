@@ -10,3 +10,7 @@ SET_TARGET_PROPERTIES(kglt
                       SOVERSION 1)
 INSTALL(TARGETS kglt DESTINATION lib)
 INSTALL(DIRECTORY ./ DESTINATION include/kglt FILES_MATCHING PATTERN *.h)
+INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/../cmake_modules/FindKGLT.cmake DESTINATION /usr/share/cmake/Modules)
+
+FILE(GLOB materials "${CMAKE_CURRENT_SOURCE_DIR}/materials/*.kglm")
+INSTALL(FILES ${materials} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/kglt/materials)

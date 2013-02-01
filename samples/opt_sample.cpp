@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
     window->loader_for(filename)->into(mesh);
 
     kglt::Entity& entity = subscene.entity(subscene.new_entity(mesh.id()));
-    entity.move_to(0, 0, 500);
+    entity.move_to(0, 0, 50);
 
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     while(window->update()) {

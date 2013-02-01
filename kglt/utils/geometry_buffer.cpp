@@ -1,3 +1,5 @@
+#include <GLee.h>
+
 #include "../kazbase/logging.h"
 #include "geometry_buffer.h"
 

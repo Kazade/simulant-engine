@@ -1,7 +1,6 @@
 #ifndef GEOMETRY_BUFFER_H
 #define GEOMETRY_BUFFER_H
 
-#include <GLee.h>
 #include <cstdint>
 #include <tr1/memory>
 #include <vector>
@@ -38,7 +37,7 @@ public:
     int32_t offset(VertexAttribute attr); ///< Offset into the vertex data that stores the attribute
     uint32_t count() const;
 
-    GLuint vbo();
+    uint32_t vbo();
 
     bool has_attribute(VertexAttribute attr) const { return (attributes_ & attr) == attr; }
 
@@ -53,7 +52,7 @@ private:
     std::vector<float> buffer_;
 
     mutable bool is_dirty_;
-    GLuint vertex_buffer_;
+    uint32_t vertex_buffer_;
 
     uint32_t floats_per_vertex() const { return stride() / sizeof(float); }
 };
