@@ -3,6 +3,8 @@
 #include <iostream>
 #include <sstream>
 #include <boost/algorithm/string/trim.hpp>
+#include <kazmath/vec3.h>
+#include <kazmath/mat4.h>
 
 #include "../window.h"
 #include "../scene.h"
@@ -11,11 +13,8 @@
 #include "../light.h"
 #include "../camera.h"
 
-#include "kglt/kazbase/logging/logging.h"
-#include "kglt/kazbase/string.h"
-#include "kazmath/vec3.h"
-#include "kazmath/mat4.h"
-
+#include "../kazbase/logging.h"
+#include "../kazbase/string.h"
 #include "q2bsp_loader.h"
 
 #include "kglt/shortcuts.h"

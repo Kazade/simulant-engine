@@ -1,8 +1,8 @@
 #include <GLee.h>
 #include <boost/format.hpp>
 
-#include "kglt/kazbase/logging/logging.h"
-#include "kglt/kazbase/exceptions.h"
+#include "../kazbase/logging.h"
+#include "../kazbase/exceptions.h"
 
 void check_and_log_error(std::string file, int lineno) {
     GLuint error = glGetError();

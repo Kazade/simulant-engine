@@ -44,7 +44,8 @@ class SubScene:
     public Object,
     public EntityManager,
     public LightManager,
-    public CameraManager {
+    public CameraManager,
+    public Loadable {
 
 public:
     SubScene(Scene *parent, SubSceneID id);

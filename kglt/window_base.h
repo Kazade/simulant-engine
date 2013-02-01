@@ -13,10 +13,18 @@
 
 #include "idle_task_manager.h"
 
-#include "kglt/kazbase/logging/logging.h"
+#include "kazbase/logging.h"
 #include "generic/manager.h"
 #include "types.h"
 #include "viewport.h"
+
+enum LoggingLevel {
+    LOG_LEVEL_NONE = 0,
+    LOG_LEVEL_ERROR = 1,
+    LOG_LEVEL_WARN = 2,
+    LOG_LEVEL_INFO = 3,
+    LOG_LEVEL_DEBUG = 4
+};
 
 namespace kglt {
     
@@ -91,6 +99,8 @@ public:
     Mouse& mouse();
     Joypad& joypad(uint8_t idx);
     uint8_t joypad_count() const;
+
+    void set_logging_level(LoggingLevel level);
 protected:
     void stop_running() { is_running_ = false; }
     

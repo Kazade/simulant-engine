@@ -5,7 +5,7 @@
 #include <map>
 
 #include "generic/manager.h"
-
+#include "generic/data_carrier.h"
 #include "texture.h"
 #include "shader.h"
 #include "mesh.h"
@@ -83,11 +83,15 @@ public:
         }
     }
 
+    generic::DataCarrier& data() { return data_carrier_; }
+
 private:
     WindowBase* window_;
     ResourceManager* parent_;
 
     std::map<std::string, ShaderID> shader_lookup_;
+
+    generic::DataCarrier data_carrier_;
 };
 
 

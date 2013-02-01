@@ -1,8 +1,6 @@
 #ifndef BUFFER_OBJECT_H
 #define BUFFER_OBJECT_H
 
-#include <GLee.h>
-
 namespace kglt {
 
 enum BufferObjectType {
@@ -34,8 +32,8 @@ public:
 private:
     BufferObjectUsage usage_;
 
-    GLenum gl_target_;
-    GLuint buffer_id_;
+    uint32_t gl_target_;
+    uint32_t buffer_id_;
     bool initialized_;
 };
 

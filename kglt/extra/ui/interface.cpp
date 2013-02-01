@@ -4,7 +4,7 @@
 
 #include "interface.h"
 #include "font.h"
-#include "kglt/kazbase/string.h"
+#include "../../kazbase/string.h"
 
 namespace kglt {
 namespace extra {

@@ -6,7 +6,7 @@
 #include "../resource_manager.h"
 #include "../shortcuts.h"
 
-#include "kglt/kazbase/unicode/unicode.h"
+#include "../kazbase/unicode.h"
 #include "opt_loader.h"
 
 namespace kglt {
@@ -511,7 +511,11 @@ void OPTLoader::into(Loadable& resource) {
             Vec2 tex_coord = tri.tex_coords[i];
             Vec3 normal = tri.normals[i];
 
-            submesh.vertex_data().position(pos.x, pos.z, pos.y);
+            /* X-Wings are apparently 12.5 meters long. The XWING.OPT model from XWA
+             * has a length of 416 units, so we divide that by 33.3 to get to roughly
+             * the right size
+             */
+            submesh.vertex_data().position(pos.x / 33.3, pos.z / 33.3, pos.y / 33.3);
             submesh.vertex_data().tex_coord0(tex_coord);
             submesh.vertex_data().tex_coord1(tex_coord.x, tex_coord.y);
             submesh.vertex_data().diffuse(kglt::Colour::white);

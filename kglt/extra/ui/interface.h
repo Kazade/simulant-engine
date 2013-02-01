@@ -1,7 +1,7 @@
 #ifndef INTERFACE_H
 #define INTERFACE_H
 
-#include "kglt/kazbase/unicode/unicode.h"
+#include "../../kazbase/unicode.h"
 
 #include "../../generic/managed.h"
 #include "../../generic/manager.h"
