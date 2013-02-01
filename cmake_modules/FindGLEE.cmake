@@ -1,5 +1,5 @@
 FIND_PATH( GLEE_INCLUDE_DIRS GLee.h /usr/include /usr/local/include /usr/include/GL $ENV{INCLUDE} )
-FIND_LIBRARY( GLEE_LIBRARIES NAMES GLee PATHS /usr/lib /usr/local/lib )
+FIND_LIBRARY( GLEE_LIBRARIES NAMES GLee glee PATHS /usr/lib /usr/local/lib )
 
 IF(GLEE_INCLUDE_DIRS)
 	MESSAGE(STATUS "Found GLEE include dir: ${GLEE_INCLUDE_DIRS}")
