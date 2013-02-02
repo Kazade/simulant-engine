@@ -11,10 +11,10 @@ TEST(test_user_data_works) {
 	
     CHECK(entity.id() != 0); //Make sure we set an id for the mesh
     CHECK(entity.uuid() != 0); //Make sure we set a unique ID for the object
-    CHECK(!entity.has_user_data());
-    entity.set_user_data((int)0xDEADBEEF);
-    CHECK(entity.has_user_data());
-    CHECK_EQUAL(0xDEADBEEF, entity.user_data<int>());
+    CHECK(!entity.exists("data"));
+    entity.stash((int)0xDEADBEEF, "data");
+    CHECK(entity.exists("data"));
+    CHECK_EQUAL(0xDEADBEEF, entity.get<int>("data"));
 
     scene.delete_entity(mid);
 
