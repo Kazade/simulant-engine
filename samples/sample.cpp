@@ -36,7 +36,6 @@ int main(int argc, char* argv[]) {
 
 	//Apply the texture to the mesh
     mesh.submesh(mesh.submesh_ids()[0]).set_material(matid);
-    mesh.submesh(mesh.submesh_ids()[0]).reverse_winding();
 
     kglt::Entity& entity = subscene.entity(subscene.new_entity(mesh.id()));
 
@@ -44,7 +43,7 @@ int main(int argc, char* argv[]) {
         Once we have the reference to a base object, we can
         manipulate it easily
     */
-    entity.move_to(0.0f, 0.0f, 15.0f);
+    entity.move_to(0.0f, 0.0f, -15.0f);
 
     //subscene.camera().set_orthographic_projection_from_height(2.0, (float) window->width() / (float)window->height());
 

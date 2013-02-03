@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
     window->loader_for(filename)->into(mesh);
 
     kglt::Entity& entity = subscene.entity(subscene.new_entity(mesh.id()));
-    entity.move_to(0, 0, 50);
+    entity.move_to(0, 0, -30);
 
     //Create a sky sphere
     kglt::Mesh& mesh2 = subscene.mesh(subscene.new_mesh());
