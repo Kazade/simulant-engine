@@ -228,3 +228,6 @@ kglt/procedural/utils/simplex_noise.cpp
 kglt/procedural/texture.h
 kglt/kazbase/random.h
 kglt/kazbase/random.cpp
+kglt/extra/skybox.h
+kglt/extra/skybox.cpp
+kglt/materials/multitexture_and_lighting.kglm

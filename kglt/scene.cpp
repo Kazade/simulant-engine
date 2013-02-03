@@ -159,7 +159,7 @@ void Scene::initialize_defaults() {
 
     default_material_ = new_material();
     Material& mat = material(default_material_);
-    this->window().loader_for("kglt/materials/generic_multitexture.kglm")->into(mat);
+    this->window().loader_for("kglt/materials/multitexture_and_lighting.kglm")->into(mat);
 
     //Set the default material's first texture to the default (white) texture
     mat.technique().pass(0).set_texture_unit(0, tex.id());

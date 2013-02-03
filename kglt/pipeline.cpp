@@ -63,6 +63,10 @@ void Pipeline::run_stage(Stage::ptr stage) {
     SubScene& subscene = scene_.subscene(stage->subscene_id());
     std::vector<SubEntity::ptr> buffers = subscene.partitioner().geometry_visible_from(stage->camera_id());
 
+    std::sort(buffers.begin(), buffers.end(), [](SubEntity::ptr lhs, SubEntity::ptr rhs) {
+        return lhs->_parent().render_priority() < rhs->_parent().render_priority();
+    });
+
     //TODO: Batched rendering
     renderer_->set_current_subscene(subscene.id());
         renderer_->render(buffers, stage->camera_id());

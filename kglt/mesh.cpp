@@ -83,6 +83,18 @@ void Mesh::delete_submesh(SubMeshIndex index) {
     submeshes_by_index_.erase(index);
 }
 
+void Mesh::set_material(MaterialID material) {
+    for(SubMesh::ptr sm: submeshes_) {
+        sm->set_material(material);
+    }
+}
+
+void Mesh::reverse_winding() {
+    for(SubMesh::ptr sm: submeshes_) {
+        sm->reverse_winding();
+    }
+}
+
 SubMesh& Mesh::submesh(SubMeshIndex index) {
     assert(index > 0);
     return *submeshes_by_index_[index];

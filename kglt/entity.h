@@ -26,13 +26,15 @@ public:
         generic::Identifiable<EntityID>(id),
         Object(subscene),
         Source(*subscene),
-        mesh_(0) {}
+        mesh_(0),
+        render_priority_(0) {}
 
     Entity(SubScene* subscene, EntityID id, MeshID mesh):
         generic::Identifiable<EntityID>(id),
         Object(subscene),
         Source(*subscene),
-        mesh_(mesh) {
+        mesh_(mesh),
+        render_priority_(0) {
     }
 
     MeshID mesh() const { return mesh_; }
@@ -55,10 +57,14 @@ public:
     sigc::signal<void, EntityID>& signal_mesh_changed() { return signal_mesh_changed_; }
 
     void destroy();
+
+    int32_t render_priority() const { return render_priority_; }
+    void set_render_priority(int32_t value) { render_priority_ = value;}
 private:
     MeshID mesh_;
-
     std::vector<std::tr1::shared_ptr<SubEntity> > subentities_;
+
+    int32_t render_priority_;
 
     friend class SubEntity;
 

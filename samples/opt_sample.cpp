@@ -1,6 +1,7 @@
 #include "kglt/kglt.h"
 #include "kglt/shortcuts.h"
 #include "kglt/kazbase/string.h"
+#include "kglt/extra/skybox.h"
 
 int main(int argc, char* argv[]) {        
     logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));
@@ -43,18 +44,11 @@ int main(int argc, char* argv[]) {
     kglt::TextureID tid = subscene.new_texture();
     kglt::procedural::texture::starfield(subscene.texture(tid));
 
-    kglt::MaterialID matid = kglt::create_material_from_texture(subscene, tid);
-
-    //Apply the texture to the mesh
-    mesh2.submesh(mesh2.submesh_ids()[0]).set_material(matid);
-    mesh2.submesh(mesh2.submesh_ids()[0]).reverse_winding();
-    kglt::Entity& sky = subscene.entity(subscene.new_entity(mesh2.id()));
-
+    kglt::extra::SkyBox::ptr sky = kglt::extra::SkyBox::create(subscene, tid);
 
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     while(window->update()) {
         entity.rotate_y(10.0 * window->delta_time());
-        sky.rotate_y(10.0f * window->delta_time());
     }
 
     return 0;
