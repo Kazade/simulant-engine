@@ -63,6 +63,7 @@ public:
     }
 
     void recalc_bounds();
+    void reverse_winding();
 private:
     Mesh& parent_;
     MaterialID material_;

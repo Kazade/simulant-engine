@@ -219,3 +219,12 @@ kglt/kazbase/logging.cpp
 kglt/kazbase/string.cpp
 kglt/kazbase/unicode.cpp
 cmake_modules/FindKAZTIMER.cmake
+kglt/procedural/mesh/sphere.h
+kglt/procedural/mesh/sphere.cpp
+kglt/procedural/texture/starfield.h
+kglt/procedural/texture/starfield.cpp
+kglt/procedural/utils/simplex_noise.h
+kglt/procedural/utils/simplex_noise.cpp
+kglt/procedural/texture.h
+kglt/kazbase/random.h
+kglt/kazbase/random.cpp

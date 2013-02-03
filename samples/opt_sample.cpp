@@ -1,5 +1,5 @@
 #include "kglt/kglt.h"
-
+#include "kglt/shortcuts.h"
 #include "kglt/kazbase/string.h"
 
 int main(int argc, char* argv[]) {        
@@ -29,21 +29,32 @@ int main(int argc, char* argv[]) {
         10000.0
     );
 
-    kglt::Light& light = subscene.light(subscene.new_light());
-    light.set_direction(1, 0, 0);
-    //light.move_to(50, 0, 0);
-    light.set_diffuse(kglt::Colour::yellow);
-
     kglt::Mesh& mesh = subscene.mesh(subscene.new_mesh());
     window->loader_for(filename)->into(mesh);
 
     kglt::Entity& entity = subscene.entity(subscene.new_entity(mesh.id()));
     entity.move_to(0, 0, 50);
 
+    //Create a sky sphere
+    kglt::Mesh& mesh2 = subscene.mesh(subscene.new_mesh());
+    kglt::procedural::mesh::cube(mesh2, 300.0);
+
+    ///Shortcut function for loading images
+    kglt::TextureID tid = subscene.new_texture();
+    kglt::procedural::texture::starfield(subscene.texture(tid));
+
+    kglt::MaterialID matid = kglt::create_material_from_texture(subscene, tid);
+
+    //Apply the texture to the mesh
+    mesh2.submesh(mesh2.submesh_ids()[0]).set_material(matid);
+    mesh2.submesh(mesh2.submesh_ids()[0]).reverse_winding();
+    kglt::Entity& sky = subscene.entity(subscene.new_entity(mesh2.id()));
+
+
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     while(window->update()) {
         entity.rotate_y(10.0 * window->delta_time());
-
+        sky.rotate_y(10.0f * window->delta_time());
     }
 
     return 0;
