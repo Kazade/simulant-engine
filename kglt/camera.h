@@ -21,7 +21,8 @@ public:
     Camera(SubScene* subscene, CameraID id);
 
     void watch(Object& obj);
-    void follow(Object& obj, float dist, float height=0.0f);
+    void follow(EntityID entity, const kglt::Vec3& offset);
+
     void look_at(const Vec3& position);
 
     kmMat4 view_matrix() {
@@ -68,6 +69,9 @@ private:
     kmMat4 projection_matrix_;
     kmMat4 modelview_matrix_;
 
+    EntityID following_entity_;
+    Vec3 following_offset_;
+
     void update_frustum() {
         apply(&modelview_matrix_); //Get the modelview transformations for this camera
         kmMat4 mvp;
@@ -76,6 +80,8 @@ private:
     }
 
     void transformation_changed() override { update_frustum(); }
+
+    void do_update(double dt);
 };
 
 }

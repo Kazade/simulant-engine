@@ -4,6 +4,7 @@
 #include "../scene.h"
 #include "../material.h"
 #include "../procedural/mesh.h"
+#include "../procedural/texture.h"
 #include "../window_base.h"
 #include "../entity.h"
 
@@ -30,6 +31,14 @@ SkyBox::SkyBox(kglt::SubScene& subscene, kglt::TextureID texture, float size):
     entity_id_ = subscene.new_entity(mesh_id_);
     subscene.entity(entity_id_).set_render_priority(-100000);
 }
+
+StarField::StarField(SubScene& subscene) {
+    //Generate a starfield texture
+    texture_id_ = subscene.new_texture();
+    kglt::procedural::texture::starfield(subscene.texture(texture_id_));
+    skybox_.reset(new SkyBox(subscene, texture_id_));
+}
+
 
 }
 }

@@ -71,8 +71,7 @@ public:
     uint64_t uuid() const { return uuid_; }
         
     virtual void _initialize() {}
-    virtual void do_update(double dt) {
-    }
+    virtual void do_update(double dt) {}
 
     SubScene& subscene() { return *subscene_; }
     const SubScene& subscene() const { return *subscene_; }
@@ -85,14 +84,14 @@ protected:
     void update_from_parent();
     void set_position(const kmVec3& pos);
 
+    kmVec3 position_;
+    kmQuaternion rotation_;
 private:
     static uint64_t object_counter;
     uint64_t uuid_;
 
     SubScene* subscene_; //Each object is owned by a scene
 
-    kmVec3 position_;
-    kmQuaternion rotation_;
 
     kmVec3 absolute_position_;
     kmQuaternion absolute_orientation_;

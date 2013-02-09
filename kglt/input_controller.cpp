@@ -98,6 +98,12 @@ InputConnection Joypad::axis_changed_connect(Axis axis, JoypadCallback callback)
     return c;
 }
 
+InputConnection Joypad::axis_while_nonzero_connect(Axis axis, JoypadCallback callback) {
+    InputConnection c = new_input_connection();
+    axis_while_nonzero_signals_[axis][c] = callback;
+    return c;
+}
+
 InputConnection Joypad::axis_while_below_zero_connect(Axis axis, JoypadCallback callback) {
     InputConnection c = new_input_connection();
     axis_while_below_zero_signals_[axis][c] = callback;
@@ -161,7 +167,7 @@ void Joypad::_update() {
             }
         }
 
-        if(axis_state_[axis] <- jitter_value_) {
+        if(axis_state_[axis] < -jitter_value_) {
             for(AxisSignalEntry entry: axis_while_below_zero_signals_[axis]) {
                 entry.second(float(axis_state_[axis]) / float(32768), axis);
             }

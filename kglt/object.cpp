@@ -70,16 +70,18 @@ void Object::move_to(float x, float y, float z) {
 void Object::move_forward(float amount) {
     if(position_locked_) return;
 
-    kmMat3 rot_matrix;
+    kmQuaternion inverse;
+    kmQuaternionInverse(&inverse, &rotation_);
+
     kmVec3 forward;
-    kmMat3RotationQuaternion(&rot_matrix, &rotation_);
-    kmMat3GetForwardVec3(&forward, &rot_matrix);
+    kmVec3Fill(&forward, 0, 0, -1);
+    kmQuaternionMultiplyVec3(&forward, &inverse, &forward);
+
     kmVec3Normalize(&forward, &forward);
     kmVec3Scale(&forward, &forward, amount);
     kmVec3Add(&position_, &position_, &forward);
 
     update_from_parent();
-
 }
 
 void Object::rotate_to(float angle, float x, float y, float z) {
@@ -98,7 +100,7 @@ void Object::rotate_x(float amount) {
     kmVec3 axis;
     kmVec3Fill(&axis, 1, 0, 0);
     kmQuaternionRotationAxis(&rot, &axis, kmDegreesToRadians(amount));
-    kmQuaternionMultiply(&rotation_, &rotation(), &rot);
+    kmQuaternionMultiply(&rotation_, &rot, &rotation_);
     kmQuaternionNormalize(&rotation_, &rotation_);
 
     update_from_parent();
@@ -111,7 +113,7 @@ void Object::rotate_z(float amount) {
     kmVec3 axis;
     kmVec3Fill(&axis, 0, 0, 1);
     kmQuaternionRotationAxis(&rot, &axis, kmDegreesToRadians(amount));
-    kmQuaternionMultiply(&rotation_, &rot, &rotation());
+    kmQuaternionMultiply(&rotation_, &rot, &rotation_);
     kmQuaternionNormalize(&rotation_, &rotation_);
 
     update_from_parent();

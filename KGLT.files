@@ -198,7 +198,7 @@ kglt/sound.h
 kglt/sound.cpp
 kglt/loaders/opt_loader.h
 kglt/loaders/opt_loader.cpp
-samples/opt_sample.cpp
+samples/flightsim.cpp
 kglt/materials/generic_multitexture.kglm
 kglt/materials/diffuse_render.kglm
 kglt/kazbase/datetime.h
@@ -231,3 +231,5 @@ kglt/kazbase/random.cpp
 kglt/extra/skybox.h
 kglt/extra/skybox.cpp
 kglt/materials/multitexture_and_lighting.kglm
+kglt/input_controller.h
+kglt/input_controller.cpp
