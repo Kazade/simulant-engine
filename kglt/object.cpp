@@ -95,6 +95,7 @@ void Object::rotate_to(float angle, float x, float y, float z) {
 
 void Object::rotate_x(float amount) {
     if(rotation_locked_) return;
+    if(fabs(amount) < kmEpsilon) return;
 
     kmQuaternion rot;
     kmVec3 axis;
@@ -108,6 +109,7 @@ void Object::rotate_x(float amount) {
 
 void Object::rotate_z(float amount) {
     if(rotation_locked_) return;
+    if(fabs(amount) < kmEpsilon) return;
 
     kmQuaternion rot;
     kmVec3 axis;
@@ -121,6 +123,7 @@ void Object::rotate_z(float amount) {
 
 void Object::rotate_y(float amount) {
     if(rotation_locked_) return;
+    if(fabs(amount) < kmEpsilon) return;
 
     kmQuaternion rot;
     kmVec3 axis;
