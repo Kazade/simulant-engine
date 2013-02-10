@@ -27,7 +27,7 @@ WindowBase::WindowBase():
 
     ktiGenTimers(1, &timer_);
     ktiBindTimer(timer_);
-    ktiStartGameTimer();
+    ktiStartFixedStepTimer(60);
 
     logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));
 }
@@ -59,41 +59,45 @@ void WindowBase::set_logging_level(LoggingLevel level) {
 bool WindowBase::update() {    
     init_window(); //Make sure we were initialized
 
-    idle_.execute(); //Execute idle tasks first   
-    check_events();
-
     ktiBindTimer(timer_);
     ktiUpdateFrameTime();
 
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
-    glEnable(GL_MULTISAMPLE);
+    while(ktiTimerCanUpdate()) {
+        idle_.execute(); //Execute idle tasks first
+        check_events();
 
-    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST );
-    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST );
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LEQUAL);
+        glEnable(GL_MULTISAMPLE);
 
-    glEnable(GL_POLYGON_SMOOTH);
-    glEnable(GL_LINE_SMOOTH);
+        glHint(GL_LINE_SMOOTH_HINT, GL_NICEST );
+        glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST );
 
-    glViewport(0, 0, width(), height());
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_POLYGON_SMOOTH);
+        glEnable(GL_LINE_SMOOTH);
 
-    scene().update(delta_time());
+        glViewport(0, 0, width(), height());
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    scene().render();
+        scene().update(delta_time());
 
-    swap_buffers();
+        scene().render();
 
-    //std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    
-    if(!is_running_) {
-        //Shutdown the input controller
-        input_controller_.reset();
+        swap_buffers();
 
-        //Destroy the scene
-        scene_.reset();
+        //std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+        if(!is_running_) {
+            //Shutdown the input controller
+            input_controller_.reset();
+
+            //Destroy the scene
+            scene_.reset();
+            break;
+        }
     }
     return is_running_;
+
 }
 
 Scene& WindowBase::scene() {
