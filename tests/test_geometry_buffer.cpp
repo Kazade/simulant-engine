@@ -1,4 +1,4 @@
-#include <unittest++/UnitTest++.h>
+#include <UnitTest++.h>
 
 #include "kglt/kglt.h"
 #include "kglt/utils/geometry_buffer.h"

@@ -1,8 +1,8 @@
-#include <unittest++/UnitTest++.h>
-#include <unittest++/TestReporterStdout.h>
+#include <UnitTest++.h>
+#include <TestReporterStdout.h>
 #include <iostream>
 
-#include "kazbase/logging/logging.h"
+#include "kglt/kazbase/logging.h"
 
 int main(int argc, char* argv[]) {
     logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));

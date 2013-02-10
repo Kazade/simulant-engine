@@ -1,4 +1,4 @@
-#include <unittest++/UnitTest++.h>
+#include <UnitTest++.h>
 #include <tr1/memory>
 
 #include "kglt/generic/relation.h"

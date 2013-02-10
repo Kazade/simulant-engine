@@ -1,5 +1,5 @@
 
-#include <unittest++/UnitTest++.h>
+#include <UnitTest++.h>
 
 #include <vector>
 
