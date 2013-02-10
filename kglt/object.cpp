@@ -153,7 +153,6 @@ void Object::update_from_parent() {
     if(!has_parent()) {
         kmVec3Assign(&absolute_position_, &position_);
         kmQuaternionAssign(&absolute_orientation_, &rotation_);
-        kmQuaternionNormalize(&absolute_orientation_, &absolute_orientation_);
         transformation_changed();
     } else {
         if(!position_locked_) {
