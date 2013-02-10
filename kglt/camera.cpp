@@ -2,6 +2,7 @@
 #include "camera.h"
 #include "scene.h"
 #include "window_base.h"
+#include "kazbase/unicode.h"
 
 namespace kglt {
 
@@ -43,20 +44,24 @@ void Camera::follow(EntityID entity, const kglt::Vec3& offset) {
 
 void Camera::do_update(double dt) {
     if(following_entity_) {
-        kmQuaternion new_rotation;
         kmQuaternion entity_rotation = subscene().entity(following_entity_).absolute_rotation();
-        kmQuaternionSlerp(&new_rotation, &rotation_, &entity_rotation, 1.0 * dt);
-
-        kmVec3 rotated_offset;
         kmVec3 entity_position = subscene().entity(following_entity_).absolute_position();
+
+        kmQuaternion initial_rotation = rotation_;
+
+        kmQuaternionSlerp(&rotation_, &initial_rotation, &entity_rotation, dt);
+
         kmMat4 new_rotation_matrix;
-        kmMat4RotationQuaternion(&new_rotation_matrix, &new_rotation);
+        kmVec3 rotated_offset;
+        kmMat4RotationQuaternion(&new_rotation_matrix, &rotation_);
         kmVec3MultiplyMat4(&rotated_offset, &following_offset_, &new_rotation_matrix);
-
         kmVec3Add(&rotated_offset, &rotated_offset, &entity_position);
-
         kmVec3Assign(&position_, &rotated_offset);
-        kmQuaternionAssign(&rotation_, &new_rotation);
+
+        assert(!isnan(position_.x));
+
+        L_DEBUG(unicode("POS: {0}, {1}, {2}").format(position_.x, position_.y, position_.z).encode());
+
         update_from_parent();
     }
 }
