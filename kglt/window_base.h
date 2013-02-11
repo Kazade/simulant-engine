@@ -53,7 +53,7 @@ public:
             }
         }
 
-        throw std::runtime_error("Unable to find a loader for: " + filename);
+        throw DoesNotExist<Loader>("Unable to find a loader for: " + filename);
     }
 
     Loader::ptr loader_for(const std::string& filename) {
@@ -65,7 +65,7 @@ public:
             }
         }
 
-        throw std::runtime_error("Unable to find a loader for: " + filename);
+        throw DoesNotExist<Loader>("Unable to find a loader for: " + filename);
     }    
     
     void register_loader(LoaderType::ptr loader_type);

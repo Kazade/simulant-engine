@@ -6,19 +6,14 @@ int main(int argc, char* argv[]) {
     logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));
 
     if(argc < 2) {
-        std::cout << "USAGE: optview filename" << std::endl;
+        std::cout << "USAGE: model_viewer filename" << std::endl;
         return 1;
     }
 
     std::string filename = argv[1];
 
-    if(!str::contains(str::lower(filename), ".opt")) {
-        std::cout << "Please specify a file with a .opt extension" << std::endl;
-        return 2;
-    }
-
     kglt::Window::ptr window = kglt::Window::create(1024, 768);
-    window->set_title("OPT Renderer");
+    window->set_title("KGLT Model viewer");
 
     kglt::SubScene& subscene = window->scene().subscene();
     subscene.set_ambient_light(kglt::Colour(1.0, 1.0, 1.0, 1.0));

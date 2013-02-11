@@ -198,7 +198,6 @@ kglt/sound.h
 kglt/sound.cpp
 kglt/loaders/opt_loader.h
 kglt/loaders/opt_loader.cpp
-samples/opt_sample.cpp
 kglt/materials/generic_multitexture.kglm
 kglt/materials/diffuse_render.kglm
 kglt/kazbase/datetime.h
@@ -219,3 +218,6 @@ kglt/kazbase/logging.cpp
 kglt/kazbase/string.cpp
 kglt/kazbase/unicode.cpp
 cmake_modules/FindKAZTIMER.cmake
+kglt/loaders/dxf_loader.h
+kglt/loaders/dxf_loader.cpp
+samples/model_viewer.cpp

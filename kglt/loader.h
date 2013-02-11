@@ -6,6 +6,7 @@
 #include <tr1/memory>
 #include "loadable.h"
 
+#include "kazbase/exceptions.h"
 #include "kglt/option_list.h"
 
 namespace kglt {
