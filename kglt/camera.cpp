@@ -2,6 +2,7 @@
 #include "camera.h"
 #include "scene.h"
 #include "window_base.h"
+#include "kazbase/unicode.h"
 
 namespace kglt {
 
@@ -10,10 +11,10 @@ Camera::Camera(SubScene *subscene, CameraID id):
     generic::Identifiable<CameraID>(id),
     Source(*subscene) {
 
-    rotate_to(180.0, 0, 1, 0);
-
     kmMat4Identity(&projection_matrix_); //Initialize the projection matrix
     kmMat4Identity(&modelview_matrix_);
+
+    set_perspective_projection(45.0, 16.0 / 9.0);
 }
 
 void Camera::set_perspective_projection(double fov, double aspect, double near, double far) {
@@ -34,6 +35,35 @@ double Camera::set_orthographic_projection_from_height(double desired_height_in_
 
 void Camera::destroy() {
     subscene().delete_camera(id());
+}
+
+void Camera::follow(EntityID entity, const kglt::Vec3& offset) {
+    following_entity_ = entity;
+    following_offset_ = offset;
+}
+
+void Camera::do_update(double dt) {
+    if(following_entity_) {
+        kmQuaternion entity_rotation = subscene().entity(following_entity_).absolute_rotation();
+        kmVec3 entity_position = subscene().entity(following_entity_).absolute_position();
+
+        kmQuaternion initial_rotation = rotation_;
+
+        kmQuaternionSlerp(&rotation_, &initial_rotation, &entity_rotation, dt);
+
+        kmMat4 new_rotation_matrix;
+        kmVec3 rotated_offset;
+        kmMat4RotationQuaternion(&new_rotation_matrix, &rotation_);
+        kmVec3MultiplyMat4(&rotated_offset, &following_offset_, &new_rotation_matrix);
+        kmVec3Add(&rotated_offset, &rotated_offset, &entity_position);
+        kmVec3Assign(&position_, &rotated_offset);
+
+        assert(!isnan(position_.x));
+
+        L_DEBUG(unicode("POS: {0}, {1}, {2}").format(position_.x, position_.y, position_.z).encode());
+
+        update_from_parent();
+    }
 }
 
 }

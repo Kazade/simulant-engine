@@ -83,6 +83,18 @@ void Mesh::delete_submesh(SubMeshIndex index) {
     submeshes_by_index_.erase(index);
 }
 
+void Mesh::set_material(MaterialID material) {
+    for(SubMesh::ptr sm: submeshes_) {
+        sm->set_material(material);
+    }
+}
+
+void Mesh::reverse_winding() {
+    for(SubMesh::ptr sm: submeshes_) {
+        sm->reverse_winding();
+    }
+}
+
 SubMesh& Mesh::submesh(SubMeshIndex index) {
     assert(index > 0);
     return *submeshes_by_index_[index];
@@ -97,6 +109,22 @@ SubMesh::SubMesh(
 
     vrecalc_ = vertex_data().signal_update_complete().connect(sigc::mem_fun(this, &SubMesh::recalc_bounds));
     irecalc_ = index_data().signal_update_complete().connect(sigc::mem_fun(this, &SubMesh::recalc_bounds));
+}
+
+void SubMesh::reverse_winding() {
+    if(arrangement_ != MESH_ARRANGEMENT_TRIANGLES) {
+        throw NotImplementedError(__FILE__, __LINE__);
+    }
+
+    std::vector<uint16_t> original = index_data().all();
+
+    index_data().clear();
+    for(uint32_t i = 0; i < original.size() / 3; ++i) {
+        index_data().index(original[i * 3]);
+        index_data().index(original[(i * 3) + 2]);
+        index_data().index(original[(i * 3) + 1]);
+    }
+    index_data().done();
 }
 
 /**

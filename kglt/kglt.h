@@ -16,5 +16,6 @@
 #include "light.h"
 #include "mesh.h"
 #include "procedural/mesh.h"
+#include "procedural/texture.h"
 
 #endif

@@ -11,5 +11,5 @@ const Colour Colour::green = Colour(0.0, 1.0, 0.0, 1.0);
 const Colour Colour::blue = Colour(0.0, 0.0, 1.0, 1.0);
 const Colour Colour::yellow = Colour(1.0, 1.0, 0.0, 1.0);
 const Colour Colour::purple = Colour(1.0, 0.0, 1.0, 1.0);
-
+const Colour Colour::orange = Colour(1.0, 0.5, 0.0, 1.0);
 }

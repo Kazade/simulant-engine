@@ -29,7 +29,7 @@ WindowBase::WindowBase():
 
     ktiGenTimers(1, &timer_);
     ktiBindTimer(timer_);
-    ktiStartGameTimer();
+    ktiStartFixedStepTimer(60);
 
     logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));
 }
@@ -61,34 +61,45 @@ void WindowBase::set_logging_level(LoggingLevel level) {
 bool WindowBase::update() {    
     init_window(); //Make sure we were initialized
 
-    idle_.execute(); //Execute idle tasks first   
-    check_events();
-
     ktiBindTimer(timer_);
     ktiUpdateFrameTime();
 
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
+    while(ktiTimerCanUpdate()) {
+        idle_.execute(); //Execute idle tasks first
+        check_events();
 
-    glViewport(0, 0, width(), height());
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LEQUAL);
+        glEnable(GL_MULTISAMPLE);
 
-    scene().update(delta_time());
+        glHint(GL_LINE_SMOOTH_HINT, GL_NICEST );
+        glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST );
 
-    scene().render();
+        glEnable(GL_POLYGON_SMOOTH);
+        glEnable(GL_LINE_SMOOTH);
 
-    swap_buffers();
+        glViewport(0, 0, width(), height());
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    //std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    
-    if(!is_running_) {
-        //Shutdown the input controller
-        input_controller_.reset();
+        scene().update(delta_time());
 
-        //Destroy the scene
-        scene_.reset();
+        scene().render();
+
+        swap_buffers();
+
+        //std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+        if(!is_running_) {
+            //Shutdown the input controller
+            input_controller_.reset();
+
+            //Destroy the scene
+            scene_.reset();
+            break;
+        }
     }
     return is_running_;
+
 }
 
 Scene& WindowBase::scene() {
