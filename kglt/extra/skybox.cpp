@@ -33,6 +33,9 @@ SkyBox::SkyBox(kglt::SubScene& subscene, kglt::TextureID texture, float size, Ca
     entity_id_ = subscene.new_entity(mesh_id_);
     subscene.entity(entity_id_).set_render_priority(-100000);    
     subscene.entity(entity_id_).set_parent(subscene.camera(cam));
+
+    //Skyboxes shouldn't rotate based on their parent (e.g. the camera)
+    subscene.entity(entity_id_).lock_rotation(0, 0, 1, 0);
 }
 
 StarField::StarField(SubScene& subscene, CameraID cam) {
