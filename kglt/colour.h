@@ -16,6 +16,26 @@ struct Colour {
         return this->r == rhs.r && this->g == rhs.g && this->b == rhs.b && this->a == rhs.a;
     }
 
+    bool operator<(const Colour& rhs) const {
+        if(r < rhs.r) {
+            return true;
+        } else if (r == rhs.r) {
+            if(g < rhs.g) {
+                return true;
+            } else if(g == rhs.g) {
+                if(b < rhs.b) {
+                    return true;
+                }  else if(b == rhs.b) {
+                    if(a < rhs.a) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
     static const Colour white;
     static const Colour black;
     static const Colour grey;
