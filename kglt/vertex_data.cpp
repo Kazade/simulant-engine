@@ -38,6 +38,7 @@ void VertexData::set_texture_coordinate_dimensions(uint8_t coord_index, uint8_t 
 void VertexData::clear() {
     data_.clear();
     cursor_position_ = 0;    
+    enabled_bitmask_ = 0;
 }
 
 void VertexData::position(float x, float y, float z) {
@@ -252,6 +253,11 @@ uint16_t VertexData::move_next() {
     return cursor_position_;
 }
 
+void VertexData::reset(BufferObjectUsage usage) {
+    buffer_object_ = BufferObject(BUFFER_OBJECT_VERTEX_DATA, usage);
+    clear();
+}
+
 void VertexData::done() {
     assert(glGetError() == GL_NO_ERROR);
     buffer_object_.create(data_.size() * sizeof(Vertex), &data_[0]);
@@ -263,6 +269,11 @@ void VertexData::done() {
 IndexData::IndexData():
     buffer_object_(BUFFER_OBJECT_INDEX_DATA) {
 
+}
+
+void IndexData::reset(BufferObjectUsage usage) {
+    buffer_object_ = BufferObject(BUFFER_OBJECT_INDEX_DATA, usage);
+    clear();
 }
 
 void IndexData::done() {

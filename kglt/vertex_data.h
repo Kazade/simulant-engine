@@ -43,6 +43,7 @@ class VertexData :
 public:
     VertexData();
 
+    void reset(BufferObjectUsage usage=MODIFY_ONCE_USED_FOR_RENDERING);
     void set_texture_coordinate_dimensions(uint8_t coord_index, uint8_t count);
 
     void clear();
@@ -230,6 +231,7 @@ class IndexData {
 public:
     IndexData();
 
+    void reset(BufferObjectUsage usage=MODIFY_ONCE_USED_FOR_RENDERING);
     void clear() { indices_.clear(); }
     void reserve(uint16_t size) { indices_.reserve(size); }
     void index(uint16_t idx) { indices_.push_back(idx); }
