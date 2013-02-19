@@ -10,7 +10,7 @@ SUITE(test_vertex_data) {
     TEST(test_offsets) {
         VertexData::ptr data = VertexData::create();
 
-        CHECK_EQUAL(0, data->position_offset());
+        CHECK_EQUAL(0, (int32_t) data->position_offset());
         CHECK_EQUAL(sizeof(float) * 3, data->normal_offset());
     }
 
