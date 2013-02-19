@@ -7,14 +7,14 @@ namespace kglt {
 namespace procedural {
 namespace mesh {
 
-void circle(
+SubMeshIndex circle(
     kglt::Mesh& mesh,
     float diameter,
     float x_offset=0.0, float y_offset=0.0, float z_offset=0.0,
     bool clear=true
 );
 
-void circle_outline(
+SubMeshIndex circle_outline(
     kglt::Mesh& mesh,
     float diameter,
     float x_offset=0.0, float y_offset=0.0, float z_offset=0.0,
