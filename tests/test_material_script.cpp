@@ -4,6 +4,9 @@
 #include "kglt/kglt.h"
 #include "kglt/loaders/material_script.h"
 
+#include "kglt/testing/mock_window.h"
+
+using kglt::testing::MockWindow;
 using namespace kglt;
 
 TEST(test_basic_material_script_parsing) {
@@ -28,7 +31,7 @@ TEST(test_basic_material_script_parsing) {
         END(technique)
     )";
 
-    kglt::Window::ptr window = kglt::Window::create();
+    MockWindow::ptr window = MockWindow::create();
 
     Material& mat = window->scene().material(window->scene().new_material());
     MaterialScript script((MaterialLanguageText(text))); //Most vexing parse \o/

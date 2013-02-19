@@ -236,3 +236,6 @@ kglt/input_controller.cpp
 kglt/loaders/dxf_loader.h
 kglt/loaders/dxf_loader.cpp
 samples/model_viewer.cpp
+kglt/testing/mock_window.h
+kglt/procedural/mesh/circle.h
+kglt/procedural/mesh/circle.cpp

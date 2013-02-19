@@ -3,14 +3,16 @@
 
 #include <vector>
 
+#include "kglt/testing/mock_window.h"
 #include "kglt/shortcuts.h"
 #include "kglt/kglt.h"
 #include "kglt/object.h"
 
 using namespace kglt;
+using kglt::testing::MockWindow;
 
 TEST(test_material_initialization) {
-    kglt::Window::ptr window = kglt::Window::create();
+    MockWindow::ptr window = MockWindow::create();
     kglt::Scene& scene = window->scene();
 
     Material& mat = scene.material(scene.new_material());
@@ -26,7 +28,7 @@ TEST(test_material_initialization) {
 }
 
 TEST(test_material_applies_to_mesh) {
-    kglt::Window::ptr window = kglt::Window::create();
+    MockWindow::ptr window = MockWindow::create();
     kglt::Scene& scene = window->scene();
 
     MaterialID mid = scene.new_material();

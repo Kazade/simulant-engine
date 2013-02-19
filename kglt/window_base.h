@@ -34,9 +34,9 @@ class Mouse;
 class Joypad;
 
 class WindowBase :
-        public generic::TemplatedManager<WindowBase, Viewport, ViewportID> {
+    public generic::TemplatedManager<WindowBase, Viewport, ViewportID> {
 
-public:
+public:    
     WindowBase();
 
     virtual ~WindowBase() {

@@ -26,7 +26,8 @@ int main(int argc, char* argv[]) {
         for a reference to an object.
     */
     kglt::Mesh& mesh = subscene.mesh(subscene.new_mesh());
-    kglt::procedural::mesh::rectangle(mesh, 10.0, 10.0);
+    //kglt::procedural::mesh::rectangle(mesh, 10.0, 10.0);
+    kglt::procedural::mesh::circle(mesh, 10.0);
 	
     ///Shortcut function for loading images
     kglt::TextureID tid = subscene.new_texture();
