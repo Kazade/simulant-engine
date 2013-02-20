@@ -47,8 +47,8 @@ int main(int argc, char* argv[]) {
     */
     entity.move_to(0.0f, 0.0f, -15.0f);
 
-    while(window->update()) {
-        entity.rotate_z(20.0 * window->delta_time());
+    while(window->update([&](float dt) { entity.rotate_z(20.0 * dt); })) {
+
     }
 	return 0;
 }

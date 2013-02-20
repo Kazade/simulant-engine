@@ -58,7 +58,7 @@ void WindowBase::set_logging_level(LoggingLevel level) {
     logging::get_logger("/")->set_level((logging::LOG_LEVEL) level);
 }
 
-bool WindowBase::update() {    
+bool WindowBase::update(WindowUpdateCallback step) {
     init_window(); //Make sure we were initialized
 
     ktiBindTimer(timer_);
@@ -67,6 +67,10 @@ bool WindowBase::update() {
     while(ktiTimerCanUpdate()) {
         idle_.execute(); //Execute idle tasks first
         check_events();
+
+        if(step) {
+            step(delta_time());
+        }
 
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LEQUAL);

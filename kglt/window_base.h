@@ -33,6 +33,8 @@ class Keyboard;
 class Mouse;
 class Joypad;
 
+typedef std::tr1::function<void (float)> WindowUpdateCallback;
+
 class WindowBase :
     public generic::TemplatedManager<WindowBase, Viewport, ViewportID> {
 
@@ -84,7 +86,7 @@ public:
     uint32_t height() const { return height_; }
     
     Scene& scene();
-    bool update();   
+    bool update(WindowUpdateCallback step=WindowUpdateCallback());
 
     IdleTaskManager& idle() { return idle_; }
 
