@@ -4,18 +4,14 @@ namespace kglt {
 namespace procedural {
 namespace mesh {
 
-SubMeshIndex circle(kglt::Mesh& mesh, float diameter, float x_offset, float y_offset, float z_offset, bool clear) {
+SubMeshIndex circle(kglt::Mesh& mesh, float diameter, int32_t point_count, float x_offset, float y_offset, float z_offset) {
     float radius = diameter * 0.5f;
 
-    int point_count = 40;
+    SubMeshIndex smi = mesh.new_submesh(MaterialID(), MESH_ARRANGEMENT_TRIANGLE_FAN, false);
+    kglt::SubMesh& submesh = mesh.submesh(smi);
 
-    if(clear) {
-        mesh.clear();
-    }
-
-    uint16_t offset = mesh.shared_data().count();
-
-    mesh.shared_data().move_to_end();
+    kglt::VertexData& vdata = submesh.vertex_data();
+    kglt::IndexData& idata = submesh.index_data();
 
     for(uint16_t i = 0; i < point_count; ++i) {
         //Build some shared vertex data
@@ -28,41 +24,34 @@ SubMeshIndex circle(kglt::Mesh& mesh, float diameter, float x_offset, float y_of
         float u = cos(rads) * 0.5 + 0.5f;
         float v = sin(rads) * 0.5 + 0.5f;
 
-        mesh.shared_data().position(x_offset + x, y_offset + y, z_offset);
-        mesh.shared_data().diffuse(kglt::Colour::white);
-        mesh.shared_data().tex_coord0(u, v);
-        mesh.shared_data().tex_coord1(u, v);
-        mesh.shared_data().tex_coord2(u, v);
-        mesh.shared_data().tex_coord3(u, v);
-        mesh.shared_data().normal(0, 0, 1);
-        mesh.shared_data().move_next();
+        vdata.position(x_offset + x, y_offset + y, z_offset);
+        vdata.diffuse(kglt::Colour::white);
+        vdata.tex_coord0(u, v);
+        vdata.tex_coord1(u, v);
+        vdata.tex_coord2(u, v);
+        vdata.tex_coord3(u, v);
+        vdata.normal(0, 0, 1);
+        vdata.move_next();
     }
 
-    mesh.shared_data().done();
+    vdata.done();
 
-    SubMeshIndex sm = mesh.new_submesh(MaterialID(), MESH_ARRANGEMENT_TRIANGLE_FAN, true);
-
-    for(uint16_t i = 1; i < point_count; ++i) {
-        mesh.submesh(sm).index_data().index(offset + i);
+    for(uint16_t i = 0; i < point_count; ++i) {
+        idata.index(i);
     }
-    mesh.submesh(sm).index_data().index(offset);
-    mesh.submesh(sm).index_data().done();
+    idata.done();
 
-    return sm;
+    return smi;
 }
 
-SubMeshIndex circle_outline(kglt::Mesh& mesh, float diameter, float x_offset, float y_offset, float z_offset, bool clear) {
+SubMeshIndex circle_outline(kglt::Mesh& mesh, float diameter, int32_t point_count, float x_offset, float y_offset, float z_offset) {
     float radius = diameter * 0.5f;
 
-    int point_count = 40;
+    SubMeshIndex smi = mesh.new_submesh(MaterialID(), MESH_ARRANGEMENT_TRIANGLE_FAN, false);
+    kglt::SubMesh& submesh = mesh.submesh(smi);
 
-    if(clear) {
-        mesh.clear();
-    }
-
-    uint16_t offset = mesh.shared_data().count();
-
-    mesh.shared_data().move_to_end();
+    kglt::VertexData& vdata = submesh.vertex_data();
+    kglt::IndexData& idata = submesh.index_data();
 
     for(uint16_t i = 0; i < point_count; ++i) {
         //Build some shared vertex data
@@ -75,27 +64,25 @@ SubMeshIndex circle_outline(kglt::Mesh& mesh, float diameter, float x_offset, fl
         float u = cos(rads) * 0.5 + 0.5f;
         float v = sin(rads) * 0.5 + 0.5f;
 
-        mesh.shared_data().position(x_offset + x, y_offset + y, z_offset);
-        mesh.shared_data().diffuse(kglt::Colour::white);
-        mesh.shared_data().tex_coord0(u, v);
-        mesh.shared_data().tex_coord1(u, v);
-        mesh.shared_data().tex_coord2(u, v);
-        mesh.shared_data().tex_coord3(u, v);
-        mesh.shared_data().normal(0, 0, 1);
-        mesh.shared_data().move_next();
+        vdata.position(x_offset + x, y_offset + y, z_offset);
+        vdata.diffuse(kglt::Colour::white);
+        vdata.tex_coord0(u, v);
+        vdata.tex_coord1(u, v);
+        vdata.tex_coord2(u, v);
+        vdata.tex_coord3(u, v);
+        vdata.normal(0, 0, 1);
+        vdata.move_next();
     }
 
-    mesh.shared_data().done();
-
-    SubMeshIndex sm = mesh.new_submesh(MaterialID(), MESH_ARRANGEMENT_LINE_STRIP, true);
+    vdata.done();
 
     for(uint16_t i = 0; i < point_count; ++i) {
-        mesh.submesh(sm).index_data().index(offset + i);
+        idata.index(i);
     }
-    mesh.submesh(sm).index_data().index(offset);
-    mesh.submesh(sm).index_data().done();
+    idata.index(0);
+    idata.done();
 
-    return sm;
+    return smi;
 }
 
 }

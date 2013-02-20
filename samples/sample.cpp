@@ -25,18 +25,17 @@ int main(int argc, char* argv[]) {
         Creating an object gives you an ID, this can then be exchanged
         for a reference to an object.
     */
-    kglt::Mesh& mesh = subscene.mesh(subscene.new_mesh());
-    //kglt::procedural::mesh::rectangle(mesh, 10.0, 10.0);
-    kglt::procedural::mesh::circle(mesh, 10.0);
-	
+
     ///Shortcut function for loading images
     kglt::TextureID tid = subscene.new_texture();
     kglt::procedural::texture::starfield(subscene.texture(tid));
 
     kglt::MaterialID matid = kglt::create_material_from_texture(subscene, tid);
 
+    kglt::Mesh& mesh = subscene.mesh(subscene.new_mesh());
+    kglt::SubMeshIndex smi = kglt::procedural::mesh::circle(mesh, 10.0, 40.0);
 	//Apply the texture to the mesh
-    mesh.submesh(mesh.submesh_ids()[0]).set_material(matid);
+    mesh.submesh(smi).set_material(matid);
 
     kglt::Entity& entity = subscene.entity(subscene.new_entity(mesh.id()));
 
@@ -46,11 +45,8 @@ int main(int argc, char* argv[]) {
     */
     entity.move_to(0.0f, 0.0f, -15.0f);
 
-    //subscene.camera().set_orthographic_projection_from_height(2.0, (float) window->width() / (float)window->height());
-
     while(window->update()) {
-        //entity.rotate_x(2.0 * window->delta_time());
-        //entity.rotate_y(1.0 * window->delta_time());
+        entity.rotate_z(2.0 * window->delta_time());
     }
 	return 0;
 }
