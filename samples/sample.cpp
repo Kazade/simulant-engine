@@ -34,6 +34,8 @@ int main(int argc, char* argv[]) {
 
     kglt::Mesh& mesh = subscene.mesh(subscene.new_mesh());
     kglt::SubMeshIndex smi = kglt::procedural::mesh::circle(mesh, 10.0, 40.0);
+    kglt::SubMeshIndex smi2 = kglt::procedural::mesh::circle_outline(mesh, 10.0, 40.0);
+
 	//Apply the texture to the mesh
     mesh.submesh(smi).set_material(matid);
 
@@ -46,7 +48,7 @@ int main(int argc, char* argv[]) {
     entity.move_to(0.0f, 0.0f, -15.0f);
 
     while(window->update()) {
-        entity.rotate_z(2.0 * window->delta_time());
+        entity.rotate_z(20.0 * window->delta_time());
     }
 	return 0;
 }

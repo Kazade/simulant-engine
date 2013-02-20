@@ -383,6 +383,9 @@ void GenericRenderer::render_subentity(SubEntity& buffer, CameraID camera) {
             glDepthMask(GL_FALSE);
         }
 
+        glPointSize(pass.point_size());
+        glLineWidth(pass.line_width());
+
         set_blending_mode(pass.blending());
 
         //Grab and activate the shader for the pass

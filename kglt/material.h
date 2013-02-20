@@ -134,6 +134,12 @@ public:
     }
     bool depth_test_enabled() const { return depth_test_enabled_; }
 
+    void set_point_size(float ps) { point_size_ = ps; }
+    void set_line_width(float lw) { line_width_ = lw; }
+
+    float point_size() const { return point_size_; }
+    float line_width() const { return line_width_; }
+
 private:
     ShaderID shader_;
 
@@ -150,7 +156,10 @@ private:
     BlendType blend_;
 
     bool depth_writes_enabled_;
-    bool depth_test_enabled_;
+    bool depth_test_enabled_;    
+
+    float point_size_;
+    float line_width_;
 };
 
 class MaterialTechnique {

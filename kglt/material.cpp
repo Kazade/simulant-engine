@@ -77,7 +77,9 @@ MaterialPass::MaterialPass(ShaderID shader):
     max_iterations_(1),
     blend_(BLEND_NONE),
     depth_writes_enabled_(true),
-    depth_test_enabled_(true) {
+    depth_test_enabled_(true),
+    point_size_(1),
+    line_width_(1) {
 
 }
 
