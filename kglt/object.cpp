@@ -19,9 +19,9 @@ Object::Object(SubScene *subscene):
     position_locked_(false) {
 
     kmVec3Fill(&position_, 0.0, 0.0, 0.0);
-    kmQuaternionIdentity(&rotation_);
+    kmQuaternionRotationPitchYawRoll(&rotation_, 0, 0, 0);
     kmVec3Fill(&absolute_position_, 0.0, 0.0, 0.0);
-    kmQuaternionIdentity(&absolute_orientation_);
+    kmQuaternionRotationPitchYawRoll(&absolute_orientation_, 0, 0, 0);
 
     update_from_parent();
 
@@ -70,14 +70,8 @@ void Object::move_to(float x, float y, float z) {
 void Object::move_forward(float amount) {
     if(position_locked_) return;
 
-    kmQuaternion inverse;
-    kmQuaternionInverse(&inverse, &rotation_);
-
     kmVec3 forward;
-    kmVec3Fill(&forward, 0, 0, -1);
-    kmQuaternionMultiplyVec3(&forward, &inverse, &forward);
-
-    kmVec3Normalize(&forward, &forward);
+    kmQuaternionGetForwardVector(&forward, &absolute_rotation());
     kmVec3Scale(&forward, &forward, amount);
     kmVec3Add(&position_, &position_, &forward);
 

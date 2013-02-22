@@ -43,8 +43,12 @@ struct Vec3 : public kmVec3 {
         kmVec3Fill(this, x, y, z);
     }
 
-    Vec3(const Vec2& v2, float z) {
+    Vec3(const kmVec2& v2, float z) {
         kmVec3Fill(this, v2.x, v2.y, z);
+    }
+
+    Vec3(const kmVec3& v) {
+        kmVec3Fill(this, v.x, v.y, v.z);
     }
 };
 

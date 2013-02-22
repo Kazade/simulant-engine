@@ -155,13 +155,6 @@ void SubMesh::recalc_bounds() {
         if(pos.y > bounds_.max.y) bounds_.max.y = pos.y;
         if(pos.z > bounds_.max.z) bounds_.max.z = pos.z;
     }
-
-    L_DEBUG(unicode("X: {0} Y: {1} Z: {2}").format(
-            bounds_.max.x - bounds_.min.x,
-            bounds_.max.y - bounds_.min.y,
-            bounds_.max.z - bounds_.min.z
-        ).encode()
-    );
 }
 
 VertexData& SubMesh::vertex_data() {

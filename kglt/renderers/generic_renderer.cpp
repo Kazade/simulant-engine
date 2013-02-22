@@ -349,6 +349,8 @@ void GenericRenderer::set_blending_mode(BlendType type) {
 
 void GenericRenderer::render_subentity(SubEntity& buffer, CameraID camera) {
     glEnable(GL_CULL_FACE);
+    glEnable(GL_POINT_SMOOTH);
+    glEnable(GL_LINE_SMOOTH);
 
     if(!buffer.index_data().count()) {
         return;

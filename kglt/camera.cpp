@@ -51,16 +51,18 @@ void Camera::do_update(double dt) {
 
         kmQuaternionSlerp(&rotation_, &initial_rotation, &entity_rotation, dt);
 
+
+
         kmMat4 new_rotation_matrix;
         kmVec3 rotated_offset;
-        kmMat4RotationQuaternion(&new_rotation_matrix, &rotation_);
-        kmVec3MultiplyMat4(&rotated_offset, &following_offset_, &new_rotation_matrix);
+        kmQuaternionMultiplyVec3(&rotated_offset, &following_offset_, &rotation_);
+
+        //kmMat4RotationQuaternion(&new_rotation_matrix, &rotation_);
+        //kmVec3MultiplyMat4(&rotated_offset, &following_offset_, &new_rotation_matrix);
         kmVec3Add(&rotated_offset, &rotated_offset, &entity_position);
         kmVec3Assign(&position_, &rotated_offset);
 
         assert(!isnan(position_.x));
-
-        L_DEBUG(unicode("POS: {0}, {1}, {2}").format(position_.x, position_.y, position_.z).encode());
 
         update_from_parent();
     }

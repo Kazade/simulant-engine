@@ -1,6 +1,8 @@
 #include <queue>
 #include <deque>
 
+#include <kazmath/quaternion.h>
+
 #include "../mesh.h"
 #include "../texture.h"
 #include "../resource_manager.h"
@@ -506,28 +508,35 @@ void OPTLoader::into(Loadable& resource) {
 
         submesh.vertex_data().move_to_end();
 
+        kmQuaternion rotation;
+        kmQuaternionRotationPitchYawRoll(&rotation, kmDegreesToRadians(-90), 0, 0);
+
         for(int8_t i = 0; i < 3; ++i) {
             Vec3 pos = tri.positions[i];
             Vec2 tex_coord = tri.tex_coords[i];
             Vec3 normal = tri.normals[i];
 
+            kmQuaternionMultiplyVec3(&pos, &rotation, &pos);
+            kmQuaternionMultiplyVec3(&normal, &rotation, &normal);
+
             /* X-Wings are apparently 12.5 meters long. The XWING.OPT model from XWA
              * has a length of 416 units, so we divide that by 33.3 to get to roughly
              * the right size
              */
-            submesh.vertex_data().position(pos.x / 33.3, pos.z / 33.3, pos.y / 33.3);
+            submesh.vertex_data().position(pos.x / 33.3, pos.y / 33.3, pos.z / 33.3);
             submesh.vertex_data().tex_coord0(tex_coord);
             submesh.vertex_data().tex_coord1(tex_coord.x, tex_coord.y);
             submesh.vertex_data().diffuse(kglt::Colour::white);
-            submesh.vertex_data().normal(normal.x, normal.z, normal.y);
+            submesh.vertex_data().normal(normal.x, normal.y, normal.z);
             submesh.vertex_data().move_next();
             submesh.index_data().index(submesh.vertex_data().count()-1);
-        }
+        }        
     }
 
     for(Texture tex: textures) {
         mesh->submesh(texture_submesh[tex.name]).vertex_data().done();
         mesh->submesh(texture_submesh[tex.name]).index_data().done();
+        mesh->submesh(texture_submesh[tex.name]).reverse_winding();
     }
 }
 
