@@ -19,9 +19,9 @@ Object::Object(SubScene *subscene):
     position_locked_(false) {
 
     kmVec3Fill(&position_, 0.0, 0.0, 0.0);
-    kmQuaternionRotationPitchYawRoll(&rotation_, 0, 0, 0);
+    kmQuaternionIdentity(&rotation_);
     kmVec3Fill(&absolute_position_, 0.0, 0.0, 0.0);
-    kmQuaternionRotationPitchYawRoll(&absolute_orientation_, 0, 0, 0);
+    kmQuaternionIdentity(&absolute_orientation_);
 
     update_from_parent();
 
@@ -36,7 +36,7 @@ Object::~Object() {
 void Object::lock_rotation(float angle, float x, float y, float z) {
     kmVec3 axis;
     kmVec3Fill(&axis, x, y, z);
-    kmQuaternionRotationAxis(&rotation_, &axis, kmDegreesToRadians(angle));
+    kmQuaternionRotationAxisAngle(&rotation_, &axis, kmDegreesToRadians(angle));
     kmQuaternionAssign(&absolute_orientation_, &rotation_);
     transformation_changed();
     rotation_locked_ = true;
@@ -71,7 +71,7 @@ void Object::move_forward(float amount) {
     if(position_locked_) return;
 
     kmVec3 forward;
-    kmQuaternionGetForwardVector(&forward, &absolute_rotation());
+    kmQuaternionGetForwardVec3RH(&forward, &absolute_rotation());
     kmVec3Scale(&forward, &forward, amount);
     kmVec3Add(&position_, &position_, &forward);
 
@@ -83,7 +83,7 @@ void Object::rotate_to(float angle, float x, float y, float z) {
 
     kmVec3 axis;
     kmVec3Fill(&axis, x, y, z);
-    kmQuaternionRotationAxis(&rotation_, &axis, kmDegreesToRadians(angle));
+    kmQuaternionRotationAxisAngle(&rotation_, &axis, kmDegreesToRadians(angle));
     update_from_parent();
 }
 
@@ -94,8 +94,8 @@ void Object::rotate_x(float amount) {
     kmQuaternion rot;
     kmVec3 axis;
     kmVec3Fill(&axis, 1, 0, 0);
-    kmQuaternionRotationAxis(&rot, &axis, kmDegreesToRadians(amount));
-    kmQuaternionMultiply(&rotation_, &rot, &rotation_);
+    kmQuaternionRotationAxisAngle(&rot, &axis, kmDegreesToRadians(amount));
+    kmQuaternionMultiply(&rotation_, &rotation_, &rot);
     kmQuaternionNormalize(&rotation_, &rotation_);
 
     update_from_parent();
@@ -108,8 +108,8 @@ void Object::rotate_z(float amount) {
     kmQuaternion rot;
     kmVec3 axis;
     kmVec3Fill(&axis, 0, 0, 1);
-    kmQuaternionRotationAxis(&rot, &axis, kmDegreesToRadians(amount));
-    kmQuaternionMultiply(&rotation_, &rot, &rotation_);
+    kmQuaternionRotationAxisAngle(&rot, &axis, kmDegreesToRadians(amount));
+    kmQuaternionMultiply(&rotation_, &rotation_, &rot);
     kmQuaternionNormalize(&rotation_, &rotation_);
 
     update_from_parent();
@@ -120,11 +120,13 @@ void Object::rotate_y(float amount) {
     if(fabs(amount) < kmEpsilon) return;
 
     kmQuaternion rot;
-    kmVec3 axis;
-    kmVec3Fill(&axis, 0, 1, 0);
-    kmQuaternionRotationAxis(&rot, &axis, kmDegreesToRadians(amount));
-    kmQuaternionMultiply(&rotation_, &rot, &rotation_);
+    float rads = kmDegreesToRadians(amount);
+    kmQuaternionRotationAxisAngle(&rot, &KM_VEC3_POS_Y, rads);
+    kmQuaternionMultiply(&rotation_, &rotation_, &rot);
     kmQuaternionNormalize(&rotation_, &rotation_);
+
+    kmVec3 up;
+    kmQuaternionGetRightVec3(&up, &rot);
 
     update_from_parent();
 }

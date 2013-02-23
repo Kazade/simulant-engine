@@ -47,22 +47,19 @@ void Camera::do_update(double dt) {
         kmQuaternion entity_rotation = subscene().entity(following_entity_).absolute_rotation();
         kmVec3 entity_position = subscene().entity(following_entity_).absolute_position();
 
-        kmQuaternion initial_rotation = rotation_;
+        kmVec3 entity_forward;
+        kmQuaternionGetForwardVec3RH(&entity_forward, &entity_rotation);
 
+        kmQuaternion initial_rotation;
+        kmQuaternionAssign(&initial_rotation, &rotation_);
         kmQuaternionSlerp(&rotation_, &initial_rotation, &entity_rotation, dt);
 
-
-
-        kmMat4 new_rotation_matrix;
         kmVec3 rotated_offset;
-        kmQuaternionMultiplyVec3(&rotated_offset, &following_offset_, &rotation_);
+        kmQuaternionMultiplyVec3(&rotated_offset, &rotation_, &following_offset_);
 
         //kmMat4RotationQuaternion(&new_rotation_matrix, &rotation_);
         //kmVec3MultiplyMat4(&rotated_offset, &following_offset_, &new_rotation_matrix);
-        kmVec3Add(&rotated_offset, &rotated_offset, &entity_position);
-        kmVec3Assign(&position_, &rotated_offset);
-
-        assert(!isnan(position_.x));
+        kmVec3Add(&position_, &rotated_offset, &entity_position);
 
         update_from_parent();
     }

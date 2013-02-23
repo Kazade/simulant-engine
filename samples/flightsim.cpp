@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
         window->scene().subscene().entity(entity.id()).rotate_z(60.0 * dt);
     });
 
-    if(window->joypad_count()) {
+    /*if(window->joypad_count()) {
         window->joypad(0).axis_while_nonzero_connect(0, [=](kglt::AxisRange range, kglt::Axis) mutable {
             float dt = window->delta_time();
             window->scene().subscene().entity(entity.id()).rotate_y((range * 30) * dt);
@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
             float dt = window->delta_time();
             window->scene().subscene().entity(entity.id()).rotate_x((range * -30) * dt);
         });
-    }
+    }*/
 
     while(window->update()) {}
 

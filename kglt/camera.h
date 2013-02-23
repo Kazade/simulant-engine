@@ -41,7 +41,7 @@ public:
         kmVec3 forward;
         kmVec3 centre;
 
-        kmMat4GetForwardVec3(&forward, &rot_mat);
+        kmMat4GetForwardVec3RH(&forward, &rot_mat);
 
         kmMat4GetUpVec3(&up, &rot_mat);
         kmVec3Add(&centre, &absolute_position(), &forward);

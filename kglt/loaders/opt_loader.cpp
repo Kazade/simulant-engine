@@ -509,7 +509,7 @@ void OPTLoader::into(Loadable& resource) {
         submesh.vertex_data().move_to_end();
 
         kmQuaternion rotation;
-        kmQuaternionRotationPitchYawRoll(&rotation, kmDegreesToRadians(-90), 0, 0);
+        kmQuaternionRotationPitchYawRoll(&rotation, kmDegreesToRadians(-90), kmDegreesToRadians(180), 0);
 
         for(int8_t i = 0; i < 3; ++i) {
             Vec3 pos = tri.positions[i];
