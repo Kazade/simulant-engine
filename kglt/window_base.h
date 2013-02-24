@@ -32,8 +32,9 @@ class InputController;
 class Keyboard;
 class Mouse;
 class Joypad;
+class DebugBar;
 
-typedef std::tr1::function<void (float)> WindowUpdateCallback;
+typedef std::tr1::function<void (double)> WindowUpdateCallback;
 
 class WindowBase :
     public generic::TemplatedManager<WindowBase, Viewport, ViewportID> {
@@ -103,6 +104,9 @@ public:
     uint8_t joypad_count() const;
 
     void set_logging_level(LoggingLevel level);
+
+    inline DebugBar& debug_bar() { assert(debug_bar_); return *debug_bar_; }
+
 protected:
     void stop_running() { is_running_ = false; }
     
@@ -137,6 +141,11 @@ private:
 
     ResourceLocator::ptr resource_locator_;
     std::tr1::shared_ptr<InputController> input_controller_;
+
+    std::tr1::shared_ptr<DebugBar> debug_bar_;
+
+    double frame_counter_time_;
+    int32_t frame_counter_frames_;
 };
 
 }

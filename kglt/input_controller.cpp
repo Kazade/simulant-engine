@@ -16,19 +16,19 @@ InputConnection Device::new_input_connection() {
     return InputConnection(InputConnectionID(idx), *this);
 }
 
-InputConnection Keyboard::key_pressed_connect(KeyCode code, KeyboardCallback callback) {
+InputConnection Keyboard::key_pressed_connect(KeyCode code, KeyCallback callback) {
     InputConnection c = new_input_connection();
     key_press_signals_[code][c] = callback;
     return c;
 }
 
-InputConnection Keyboard::key_while_down_connect(KeyCode code, KeyboardCallback callback) {
+InputConnection Keyboard::key_while_down_connect(KeyCode code, KeyDownCallback callback) {
     InputConnection c = new_input_connection();
     key_while_down_signals_[code][c] = callback;
     return c;
 }
 
-InputConnection Keyboard::key_released_connect(KeyCode code, KeyboardCallback callback) {
+InputConnection Keyboard::key_released_connect(KeyCode code, KeyCallback callback) {
     InputConnection c = new_input_connection();
     key_release_signals_[code][c] = callback;
     return c;
@@ -40,7 +40,7 @@ Keyboard::Keyboard() {
 
 void Keyboard::_handle_keydown_event(KeyCode key) {
     if(container::contains(key_press_signals_, key)) {
-        for(SignalEntry entry: key_press_signals_[key]) {
+        for(KeySignalEntry entry: key_press_signals_[key]) {
             entry.second(key);
         }
     }
@@ -50,37 +50,37 @@ void Keyboard::_handle_keydown_event(KeyCode key) {
 
 void Keyboard::_handle_keyup_event(KeyCode key) {
     if(container::contains(key_release_signals_, key)) {
-        for(SignalEntry entry: key_release_signals_[key]) {
+        for(KeySignalEntry entry: key_release_signals_[key]) {
             entry.second(key);
         }
     }
     state_[key] = false;
 }
 
-void Keyboard::_update() {
+void Keyboard::_update(double dt) {
     for(KeyCode key: container::keys(key_while_down_signals_)) {
         if(state_[key]) {
-            for(SignalEntry entry: key_while_down_signals_[key]) {
-                entry.second(key);
+            for(KeyDownSignalEntry entry: key_while_down_signals_[key]) {
+                entry.second(key, dt);
             }
         }
     }
 }
 
 void Keyboard::_disconnect(const InputConnection &connection) {
-    for(std::pair<KeyCode, std::map<InputConnection, KeyboardCallback> > p: key_press_signals_) {
+    for(std::pair<KeyCode, std::map<InputConnection, KeyCallback> > p: key_press_signals_) {
         if(container::contains(p.second, connection)) {
             p.second.erase(connection);
         }
     }
 
-    for(std::pair<KeyCode, std::map<InputConnection, KeyboardCallback> > p: key_while_down_signals_) {
+    for(std::pair<KeyCode, std::map<InputConnection, KeyDownCallback> > p: key_while_down_signals_) {
         if(container::contains(p.second, connection)) {
             p.second.erase(connection);
         }
     }
 
-    for(std::pair<KeyCode, std::map<InputConnection, KeyboardCallback> > p: key_release_signals_) {
+    for(std::pair<KeyCode, std::map<InputConnection, KeyCallback> > p: key_release_signals_) {
         if(container::contains(p.second, connection)) {
             p.second.erase(connection);
         }
@@ -229,8 +229,8 @@ void InputController::handle_event(SDL_Event &event) {
     }
 }
 
-void InputController::update() {
-    keyboard_->_update();
+void InputController::update(double dt) {
+    keyboard_->_update(dt);
     for(Joypad::ptr j: joypads_) {
         j->_update();
     }

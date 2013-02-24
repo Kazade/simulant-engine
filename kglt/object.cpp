@@ -125,9 +125,6 @@ void Object::rotate_y(float amount) {
     kmQuaternionMultiply(&rotation_, &rotation_, &rot);
     kmQuaternionNormalize(&rotation_, &rotation_);
 
-    kmVec3 up;
-    kmQuaternionGetRightVec3(&up, &rot);
-
     update_from_parent();
 }
 

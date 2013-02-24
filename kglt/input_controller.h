@@ -45,7 +45,8 @@ private:
     Device& device_;
 };
 
-typedef std::function<void (KeyCode)> KeyboardCallback;
+typedef std::function<void (KeyCode)> KeyCallback;
+typedef std::function<void (KeyCode, double)> KeyDownCallback;
 
 class Keyboard :
     public Device,
@@ -53,23 +54,24 @@ class Keyboard :
 
 public:
     Keyboard();
-    InputConnection key_pressed_connect(KeyCode code, KeyboardCallback callback);
-    InputConnection key_while_down_connect(KeyCode code, KeyboardCallback callback);
-    InputConnection key_released_connect(KeyCode code, KeyboardCallback callback);
+    InputConnection key_pressed_connect(KeyCode code, KeyCallback callback);
+    InputConnection key_while_down_connect(KeyCode code, KeyDownCallback callback);
+    InputConnection key_released_connect(KeyCode code, KeyCallback callback);
 
 private:
-    typedef std::pair<InputConnection, KeyboardCallback> SignalEntry;
+    typedef std::pair<InputConnection, KeyCallback> KeySignalEntry;
+    typedef std::pair<InputConnection, KeyDownCallback> KeyDownSignalEntry;
 
     void _handle_keydown_event(KeyCode key);
     void _handle_keyup_event(KeyCode key);
-    void _update();
+    void _update(double dt);
     void _disconnect(const InputConnection &connection);
 
     std::vector<uint8_t> state_;
 
-    std::map<KeyCode, std::map<InputConnection, KeyboardCallback> > key_press_signals_;
-    std::map<KeyCode, std::map<InputConnection, KeyboardCallback> > key_while_down_signals_;
-    std::map<KeyCode, std::map<InputConnection, KeyboardCallback> > key_release_signals_;
+    std::map<KeyCode, std::map<InputConnection, KeyCallback> > key_press_signals_;
+    std::map<KeyCode, std::map<InputConnection, KeyDownCallback> > key_while_down_signals_;
+    std::map<KeyCode, std::map<InputConnection, KeyCallback> > key_release_signals_;
 
     friend class InputController;
 };
@@ -139,7 +141,7 @@ public:
     Joypad& joypad(uint8_t idx=0) { return *joypads_.at(idx); }
     uint8_t joypad_count() const { return joypads_.size(); }
 
-    void update();
+    void update(double dt);
     void handle_event(SDL_Event& event);
 
 private:

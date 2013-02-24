@@ -9,6 +9,7 @@
 #include "loaders/q2bsp_loader.h"
 #include "loaders/opt_loader.h"
 #include "loaders/dxf_loader.h"
+#include "utils/debug_bar.h"
 
 namespace kglt {
 
@@ -29,7 +30,7 @@ WindowBase::WindowBase():
 
     ktiGenTimers(1, &timer_);
     ktiBindTimer(timer_);
-    ktiStartFixedStepTimer(60);
+    ktiStartFixedStepTimer(30);
 
     logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));
 }
@@ -38,6 +39,8 @@ void WindowBase::init_window() {
     if(!initialized_) {
         assert(width_ > -1 && "Subclass should've set the window width by now");
         assert(height_ > -1 && "Subclass should've set the window height by now");
+
+        debug_bar_.reset(new DebugBar(width_, height_));
 
         //Create a default viewport
         default_viewport_ = new_viewport();
@@ -49,6 +52,19 @@ void WindowBase::init_window() {
 
         //This needs to happen after SDL or whatever is initialized
         input_controller_ = InputController::create();
+
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LEQUAL);
+        glEnable(GL_MULTISAMPLE);
+
+        glHint(GL_LINE_SMOOTH_HINT, GL_NICEST );
+        glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST );
+
+        glEnable(GL_POLYGON_SMOOTH);
+        glEnable(GL_LINE_SMOOTH);
+        glEnable(GL_POINT_SMOOTH);
+
+        glEnable(GL_CULL_FACE);
 
         initialized_ = true;
     }
@@ -64,44 +80,40 @@ bool WindowBase::update(WindowUpdateCallback step) {
     ktiBindTimer(timer_);
     ktiUpdateFrameTime();
 
+    idle_.execute(); //Execute idle tasks first
+    check_events();
+
     while(ktiTimerCanUpdate()) {
-        idle_.execute(); //Execute idle tasks first
-        check_events();
+        input_controller().update(delta_time());
 
         if(step) {
             step(delta_time());
         }
 
-        glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LEQUAL);
-        glEnable(GL_MULTISAMPLE);
-
-        glHint(GL_LINE_SMOOTH_HINT, GL_NICEST );
-        glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST );
-
-        glEnable(GL_POLYGON_SMOOTH);
-        glEnable(GL_LINE_SMOOTH);
-
-        glViewport(0, 0, width(), height());
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
         scene().update(delta_time());
-
-        scene().render();
-
-        swap_buffers();
-
-        //std::this_thread::sleep_for(std::chrono::milliseconds(10));
-
-        if(!is_running_) {
-            //Shutdown the input controller
-            input_controller_.reset();
-
-            //Destroy the scene
-            scene_.reset();
-            break;
-        }
     }
+
+    glViewport(0, 0, width(), height());
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    scene().render();
+
+    if(debug_bar_) {
+        debug_bar_->render();
+    }
+
+    swap_buffers();
+
+    //std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+    if(!is_running_) {
+        //Shutdown the input controller
+        input_controller_.reset();
+        //Destroy the scene
+        scene_.reset();
+        debug_bar_.reset();
+    }
+
     return is_running_;
 
 }

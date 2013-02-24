@@ -4,6 +4,7 @@
 #include "kazbase/unicode.h"
 #include "input_controller.h"
 #include "window.h"
+#include "utils/debug_bar.h"
 
 namespace kglt {
 
@@ -24,6 +25,14 @@ Window::Window(int width, int height, int bpp, bool fullscreen) {
             KEY_CODE_ESCAPE, bind(&Window::stop_running, this)
         );
     });
+
+    idle().add_once([=]() {
+        DebugBar* bar = &debug_bar();
+        input_controller().keyboard().key_pressed_connect(
+            KEY_CODE_BACKQUOTE, bind(&DebugBar::toggle, bar)
+        );
+    });
+
 }
 
 Window::~Window() {
@@ -46,8 +55,11 @@ void Window::check_events() {
     SDL_Event event;
 
     while(SDL_PollEvent(&event)) {
-
         input_controller().handle_event(event);
+
+        if(debug_bar().handle_event(event)) {
+            continue;
+        }
 
         switch(event.type) {
             case SDL_ACTIVEEVENT:
@@ -61,8 +73,6 @@ void Window::check_events() {
                 break;
         }
     }
-
-    input_controller().update();
 }
 
 void Window::create_gl_window(int width, int height, int bpp, bool fullscreen) {
@@ -92,11 +102,6 @@ void Window::create_gl_window(int width, int height, int bpp, bool fullscreen) {
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-
-    SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 1);
-
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
     SDL_ShowCursor(0);
 
