@@ -9,6 +9,7 @@ Mesh& ResourceManager::mesh(MeshID m) {
     } else if(!has_mesh(m)) {
         return parent_->mesh(m);
     }    
+    return MeshManager::manager_get(m);
 }
 
 const Mesh& ResourceManager::mesh(MeshID m) const {
@@ -17,6 +18,7 @@ const Mesh& ResourceManager::mesh(MeshID m) const {
     } else if(!has_mesh(m)) {
         return parent_->mesh(m);
     }
+    return MeshManager::manager_get(m);
 }
 
 MeshID ResourceManager::new_mesh() {

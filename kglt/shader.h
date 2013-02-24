@@ -4,6 +4,7 @@
 #include <set>
 #include <string>
 #include <tr1/memory>
+#include <tr1/unordered_map>
 
 #include "kglt/kazbase/list_utils.h"
 
@@ -150,8 +151,8 @@ public:
 private:
     ShaderProgram& program_;
 
-    std::map<ShaderAvailableAuto, std::string> auto_uniforms_;
-    std::map<ShaderAvailableAttributes, std::string> auto_attributes_;
+    std::tr1::unordered_map<ShaderAvailableAuto, std::string> auto_uniforms_;
+    std::tr1::unordered_map<ShaderAvailableAttributes, std::string> auto_attributes_;
 };
 
 enum ShaderType {
@@ -199,7 +200,7 @@ private:
     uint32_t program_id_;
     uint32_t shader_ids_[SHADER_TYPE_MAX];
 
-    std::map<std::string, int32_t> cached_uniform_locations_;
+    std::tr1::unordered_map<std::string, int32_t> cached_uniform_locations_;
 
     ShaderParams params_;
 

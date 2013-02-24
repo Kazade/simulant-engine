@@ -3,7 +3,7 @@
 
 #include <cstdint>
 #include <vector>
-#include <map>
+#include <tr1/unordered_map>
 #include <set>
 
 #include "generic/managed.h"
@@ -114,7 +114,7 @@ public:
 private:
     VertexData shared_data_;
     std::vector<SubMesh::ptr> submeshes_;
-    std::map<SubMeshIndex, SubMesh::ptr> submeshes_by_index_;
+    std::tr1::unordered_map<SubMeshIndex, SubMesh::ptr> submeshes_by_index_;
 
     SubMeshIndex normal_debug_mesh_;
 };
