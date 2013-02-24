@@ -58,10 +58,10 @@ void Keyboard::_handle_keyup_event(KeyCode key) {
 }
 
 void Keyboard::_update(double dt) {
-    for(KeyCode key: container::keys(key_while_down_signals_)) {
-        if(state_[key]) {
-            for(KeyDownSignalEntry entry: key_while_down_signals_[key]) {
-                entry.second(key, dt);
+    for(std::pair<KeyCode, std::map<InputConnection, KeyDownCallback> > p: key_while_down_signals_) {
+        if(state_[p.first]) {
+            for(std::pair<InputConnection, KeyDownCallback> p2: p.second) {
+                p2.second(p.first, dt);
             }
         }
     }
@@ -155,21 +155,24 @@ void Joypad::_handle_axis_changed_event(Axis axis, int32_t value) {
 }
 
 void Joypad::_update() {
-    for(Axis axis: container::keys(axis_state_)) {
-        if(axis_state_[axis] > jitter_value_ || axis_state_[axis] < -jitter_value_) {
+    for(std::pair<Axis, int32_t> p: axis_state_) {
+        Axis axis = p.first;
+        int32_t axis_state = p.second;
+
+        if(axis_state > jitter_value_ || axis_state < -jitter_value_) {
             for(AxisSignalEntry entry: axis_while_nonzero_signals_[axis]) {
-                entry.second(float(axis_state_[axis]) / float(32768), axis);
+                entry.second(float(axis_state) / float(32768), axis);
             }
         }
-        if(axis_state_[axis] > jitter_value_) {
+        if(axis_state > jitter_value_) {
             for(AxisSignalEntry entry: axis_while_above_zero_signals_[axis]) {
-                entry.second(float(axis_state_[axis]) / float(32768), axis);
+                entry.second(float(axis_state) / float(32768), axis);
             }
         }
 
-        if(axis_state_[axis] < -jitter_value_) {
+        if(axis_state < -jitter_value_) {
             for(AxisSignalEntry entry: axis_while_below_zero_signals_[axis]) {
-                entry.second(float(axis_state_[axis]) / float(32768), axis);
+                entry.second(float(axis_state) / float(32768), axis);
             }
         }
     }

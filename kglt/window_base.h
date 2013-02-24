@@ -146,6 +146,8 @@ private:
 
     double frame_counter_time_;
     int32_t frame_counter_frames_;
+    double frame_time_in_milliseconds_;
+    KTIuint frame_timer_;
 };
 
 }

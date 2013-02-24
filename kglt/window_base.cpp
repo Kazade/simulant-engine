@@ -19,7 +19,10 @@ WindowBase::WindowBase():
     height_(-1),
     is_running_(true),
     default_viewport_(0),
-    resource_locator_(ResourceLocator::create()) {
+    resource_locator_(ResourceLocator::create()),
+    frame_counter_time_(0),
+    frame_counter_frames_(0),
+    frame_time_in_milliseconds_(0) {
 
     //Register the default resource loaders
     register_loader(LoaderType::ptr(new kglt::loaders::TextureLoaderType));
@@ -32,6 +35,10 @@ WindowBase::WindowBase():
     ktiBindTimer(timer_);
     ktiStartFixedStepTimer(30);
 
+    ktiGenTimers(1, &frame_timer_);
+    ktiBindTimer(frame_timer_);
+    ktiStartGameTimer();
+
     logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));
 }
 
@@ -41,6 +48,8 @@ void WindowBase::init_window() {
         assert(height_ > -1 && "Subclass should've set the window height by now");
 
         debug_bar_.reset(new DebugBar(width_, height_));
+
+        debug_bar().add_read_only_variable("Frame Time (ms)", &frame_time_in_milliseconds_);
 
         //Create a default viewport
         default_viewport_ = new_viewport();
@@ -76,6 +85,18 @@ void WindowBase::set_logging_level(LoggingLevel level) {
 
 bool WindowBase::update(WindowUpdateCallback step) {
     init_window(); //Make sure we were initialized
+
+    ktiBindTimer(frame_timer_);
+    ktiUpdateFrameTime();
+
+    frame_counter_time_ += ktiGetDeltaTime();
+    frame_counter_frames_++;
+
+    if(frame_counter_time_ >= 1.0) {
+        frame_time_in_milliseconds_ = 1000.0 / double(frame_counter_frames_);
+        frame_counter_frames_ = 0;
+        frame_counter_time_ = 0.0;
+    }
 
     ktiBindTimer(timer_);
     ktiUpdateFrameTime();

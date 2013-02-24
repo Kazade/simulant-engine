@@ -2,7 +2,7 @@
 #define MANAGER_H
 
 #include <tr1/memory>
-#include <map>
+#include <tr1/unordered_map>
 #include <stdexcept>
 #include <thread>
 #include <mutex>
@@ -72,19 +72,20 @@ public:
     ObjectType& manager_get(ObjectIDType id) {
         std::lock_guard<std::recursive_mutex> lock(manager_lock_);
 
-        if(!container::contains(objects_, id)) {
+        typename std::tr1::unordered_map<ObjectIDType, typename ObjectType::ptr>::const_iterator it = objects_.find(id);
+        if(it == objects_.end()) {
             throw NoSuchObjectError(typeid(ObjectType).name());
         }
-
-        return *objects_[id];
+        return *(it->second);
     }
 
     const ObjectType& manager_get(ObjectIDType id) const {
         std::lock_guard<std::recursive_mutex> lock(manager_lock_);
-        if(!container::contains(objects_, id)) {
+
+        typename std::tr1::unordered_map<ObjectIDType, typename ObjectType::ptr>::const_iterator it = objects_.find(id);
+        if(it == objects_.end()) {
             throw NoSuchObjectError(typeid(ObjectType).name());
         }
-        typename std::map<ObjectIDType, typename ObjectType::ptr>::const_iterator it = objects_.find(id);
         return *(it->second);
     }
 
@@ -107,7 +108,7 @@ private:
     sigc::signal<void, ObjectType&, ObjectIDType> signal_pre_delete_;
 
 protected:
-    std::map<ObjectIDType, std::tr1::shared_ptr<ObjectType> > objects_;
+    std::tr1::unordered_map<ObjectIDType, std::tr1::shared_ptr<ObjectType> > objects_;
 
     ObjectIDType _get_object_id_from_ptr(ObjectType* ptr) {
         for(std::pair<ObjectIDType, std::tr1::shared_ptr<ObjectType> > pair: objects_) {

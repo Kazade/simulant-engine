@@ -2,6 +2,8 @@
 #define UNIQUE_ID_H
 
 #include <cstdint>
+#include <tr1/functional>
+
 #include "safe_bool.h"
 
 template<uint32_t T>
@@ -34,8 +36,22 @@ public:
         return id_ != 0;
     }
 
+    uint32_t value() const { return id_; }
 private:
     uint32_t id_;
 };
+
+namespace std {
+    namespace tr1 {
+        template<uint32_t T>
+        struct hash< UniqueID<T> > {
+            size_t operator()(const UniqueID<T>& id) const {
+                hash<uint32_t> make_hash;
+                return make_hash(id.value());
+            }
+        };
+    }
+}
+
 
 #endif // UNIQUE_ID_H

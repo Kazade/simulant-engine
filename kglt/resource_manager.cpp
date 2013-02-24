@@ -4,18 +4,19 @@
 namespace kglt {
 
 Mesh& ResourceManager::mesh(MeshID m) {
-    if(!has_mesh(m) && parent_) {
+    if(!parent_) {
+        return MeshManager::manager_get(m);
+    } else if(!has_mesh(m)) {
         return parent_->mesh(m);
-    }
-    return const_cast<Mesh&>(static_cast<const ResourceManager*>(this)->mesh(m));
+    }    
 }
 
 const Mesh& ResourceManager::mesh(MeshID m) const {
-    if(!has_mesh(m) && parent_) {
+    if(!parent_) {
+        return MeshManager::manager_get(m);
+    } else if(!has_mesh(m)) {
         return parent_->mesh(m);
     }
-
-    return MeshManager::manager_get(m);
 }
 
 MeshID ResourceManager::new_mesh() {
