@@ -186,8 +186,9 @@ int32_t ShaderProgram::get_attrib_loc(const std::string& name) {
 }
 
 int32_t ShaderProgram::get_uniform_loc(const std::string& name) {
-    if(container::contains(cached_uniform_locations_, name)) {
-        return cached_uniform_locations_[name];
+    std::tr1::unordered_map<std::string, int32_t>::const_iterator it = cached_uniform_locations_.find(name);
+    if(it != cached_uniform_locations_.end()) {
+        return (*it).second;
     }
 
     GLint location = glGetUniformLocation(program_id_, name.c_str());
@@ -195,7 +196,7 @@ int32_t ShaderProgram::get_uniform_loc(const std::string& name) {
         L_WARN("No uniform with name: " + name);
     }
 
-    cached_uniform_locations_[name] = location;
+    cached_uniform_locations_.insert(std::make_pair(name, location));
     return location;
 }
 

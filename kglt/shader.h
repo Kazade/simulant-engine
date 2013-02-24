@@ -5,6 +5,7 @@
 #include <string>
 #include <tr1/memory>
 #include <tr1/unordered_map>
+#include <tr1/functional>
 
 #include "kglt/kazbase/list_utils.h"
 
@@ -107,6 +108,32 @@ const std::set<ShaderAvailableAttributes> SHADER_AVAILABLE_ATTRS = {
     SP_ATTR_VERTEX_TEXCOORD6,
     SP_ATTR_VERTEX_TEXCOORD7
 };
+}
+
+namespace std {
+    namespace tr1 {
+        using kglt::ShaderAvailableAttributes;
+        using kglt::ShaderAvailableAuto;
+
+        template<>
+        struct hash<ShaderAvailableAuto> {
+            size_t operator()(const ShaderAvailableAuto& a) const {
+                hash<int32_t> make_hash;
+                return make_hash(int32_t(a));
+            }
+        };
+
+        template<>
+        struct hash<ShaderAvailableAttributes> {
+            size_t operator()(const ShaderAvailableAttributes& a) const {
+                hash<int32_t> make_hash;
+                return make_hash(int32_t(a));
+            }
+        };
+    }
+}
+
+namespace kglt {
 
 class ShaderProgram;
 
@@ -208,5 +235,7 @@ private:
 };
 
 }
+
+
 
 #endif // SHADER_H_INCLUDED
