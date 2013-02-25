@@ -26,6 +26,10 @@ void DebugBar::add_read_only_variable(const unicode& id, double* variable) {
     TwAddVarRO(ant_bar_, id.encode().c_str(), TW_TYPE_DOUBLE, variable, nullptr);
 }
 
+void DebugBar::add_read_only_variable(const unicode &id, kmVec3 *variable) {
+    TwAddVarRO(ant_bar_, id.encode().c_str(), TW_TYPE_DIR3F, variable, nullptr);
+}
+
 void DebugBar::add_read_only_variable(const unicode &id, kmQuaternion *variable) {
     TwAddVarRO(ant_bar_, id.encode().c_str(), TW_TYPE_QUAT4F, variable, nullptr);
 }

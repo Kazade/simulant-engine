@@ -65,4 +65,19 @@ void Camera::do_update(double dt) {
     }
 }
 
+kmVec3 Camera::project_point(ViewportID vid, const kmVec3& point) {
+    kglt::Viewport& viewport = this->subscene().scene().window().viewport(vid);
+
+    kmVec3 tmp;
+
+    kmVec3MultiplyMat4(&tmp, &point, &projection_matrix());
+
+    kmVec3 result;
+    //FIXME: viewport.left() + (viewport.width() * ...
+    result.x = viewport.width() * (tmp.x + 1.0) * 0.5;
+    result.y = viewport.height() * (tmp.y + 1.0) * 0.5;
+    result.z = (tmp.z + 1.0) * 0.5;
+    return result;
+}
+
 }

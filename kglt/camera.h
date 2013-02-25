@@ -20,6 +20,8 @@ class Camera :
 public:
     Camera(SubScene* subscene, CameraID id);
 
+    kmVec3 project_point(ViewportID vid, const kmVec3& point);
+
     void watch(Object& obj);
     void follow(EntityID entity, const kglt::Vec3& offset);
 

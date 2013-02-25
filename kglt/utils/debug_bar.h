@@ -21,7 +21,9 @@ public:
     void add_read_only_variable(const unicode& id, int32_t* variable);
     void add_read_only_variable(const unicode& id, float* variable);
     void add_read_only_variable(const unicode& id, double* variable);
+    void add_read_only_variable(const unicode &id, kmVec3 *variable);
     void add_read_only_variable(const unicode& id, kmQuaternion* variable);
+
     bool handle_event(SDL_Event& event);
     void render();
     void toggle() { visible_ = !visible_; }

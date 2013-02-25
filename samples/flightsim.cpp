@@ -68,7 +68,9 @@ int main(int argc, char* argv[]) {
         window->scene().subscene().entity(entity.id()).move_forward(60 * dt);
     });
 
-    window->debug_bar().add_read_only_variable("Rotation", (kmQuaternion*) &entity.rotation());
+    kmVec3 projected_position;
+    window->debug_bar().add_read_only_variable("Rotation", (kmQuaternion*) &entity.rotation());    
+    window->debug_bar().add_read_only_variable("Projected", &projected_position);
 
     /*if(window->joypad_count()) {
         window->joypad(0).axis_while_nonzero_connect(0, [=](kglt::AxisRange range, kglt::Axis) mutable {
@@ -82,7 +84,10 @@ int main(int argc, char* argv[]) {
         });
     }*/
 
-    while(window->update()) {}
+    while(window->update()) {
+        kglt::Camera& cam = window->scene().subscene().camera();
+        projected_position = cam.project_point(kglt::ViewportID(), entity.absolute_position());
+    }
 
     return 0;
 }
