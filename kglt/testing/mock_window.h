@@ -12,6 +12,11 @@ class MockWindow :
     public Managed<MockWindow> {
 
 public:
+    MockWindow() {
+        set_width(640);
+        set_height(480);
+    }
+
     sigc::signal<void, KeyCode>& signal_key_up() { return key_up_; }
     sigc::signal<void, KeyCode>& signal_key_down() { return key_down_; }
 

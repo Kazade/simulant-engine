@@ -15,6 +15,7 @@ namespace kglt {
 
 WindowBase::WindowBase():
     initialized_(false),
+    scene_(new Scene(this)),
     width_(-1),
     height_(-1),
     is_running_(true),
@@ -141,7 +142,7 @@ bool WindowBase::update(WindowUpdateCallback step) {
 
 Scene& WindowBase::scene() {
     if(!scene_) {
-        scene_.reset(new Scene(this));
+        throw DoesNotExist<Scene>();
     }
     return *scene_;
 }
