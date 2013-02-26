@@ -242,3 +242,4 @@ kglt/procedural/mesh/circle.cpp
 kglt/utils/debug_bar.h
 kglt/utils/debug_bar.cpp
 cmake_modules/FindAntTweakBar.cmake
+tests/test_camera.cpp

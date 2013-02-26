@@ -29,9 +29,11 @@ void GenericRenderer::set_auto_uniforms_on_shader(
     kmMat4 modelview_projection;
     kmMat4 modelview;
 
+    kglt::Camera& cam = current_subscene().camera(camera);
+
     const kmMat4 model = subentity._parent().absolute_transformation();
-    const kmMat4 view = current_subscene().camera(camera).view_matrix();
-    const kmMat4 projection = current_subscene().camera(camera).projection_matrix();
+    const kmMat4& view = cam.view_matrix();
+    const kmMat4& projection = cam.projection_matrix();
 
     kmMat4Multiply(&modelview, &view, &model);
     kmMat4Multiply(&modelview_projection, &projection, &modelview);

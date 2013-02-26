@@ -12,9 +12,20 @@ Camera::Camera(SubScene *subscene, CameraID id):
     Source(*subscene) {
 
     kmMat4Identity(&projection_matrix_); //Initialize the projection matrix
-    kmMat4Identity(&modelview_matrix_);
+    kmMat4Identity(&view_matrix_);
 
     set_perspective_projection(45.0, 16.0 / 9.0);
+}
+
+void Camera::update_frustum() {
+    //Recalculate the view matrix
+    kmMat4 transform = this->absolute_transformation();
+    kmMat4Inverse(&view_matrix_, &transform);
+
+    kmMat4 mvp;
+    kmMat4Multiply(&mvp, &projection_matrix(), &view_matrix());
+
+    frustum_.build(&mvp); //Update the frustum for this camera
 }
 
 void Camera::set_perspective_projection(double fov, double aspect, double near, double far) {
@@ -66,17 +77,32 @@ void Camera::do_update(double dt) {
 }
 
 kmVec3 Camera::project_point(ViewportID vid, const kmVec3& point) {
-    kglt::Viewport& viewport = this->subscene().scene().window().viewport(vid);
+    kglt::Viewport& viewport = subscene().scene().window().viewport(vid);
 
-    kmVec3 tmp;
-
-    kmVec3MultiplyMat4(&tmp, &point, &projection_matrix());
+    kmVec4 tmp;
+    kmVec4Fill(&tmp, point.x, point.y, point.z, 1.0);
 
     kmVec3 result;
-    //FIXME: viewport.left() + (viewport.width() * ...
-    result.x = viewport.width() * (tmp.x + 1.0) * 0.5;
-    result.y = viewport.height() * (tmp.y + 1.0) * 0.5;
-    result.z = (tmp.z + 1.0) * 0.5;
+
+    kmVec4MultiplyMat4(&tmp, &tmp, &view_matrix());
+    kmVec4MultiplyMat4(&tmp, &tmp, &projection_matrix());
+
+    if(tmp.w == 0) {
+        kmVec3Fill(&result, 0, 0, 0);
+        return result;
+    }
+
+    tmp.x /= tmp.w;
+    tmp.y /= tmp.w;
+    tmp.z /= tmp.w;
+
+    float vp_width = viewport.width();
+    float vp_height = viewport.height();
+
+    result.x = (1 + tmp.x) * vp_width / 2;
+    result.y = (1 + tmp.y) * vp_height / 2;
+    result.z = (1 + tmp.z) / 2;
+
     return result;
 }
 

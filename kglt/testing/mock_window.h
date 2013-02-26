@@ -21,6 +21,7 @@ public:
     void check_events() {}
     void swap_buffers() {}
 
+    bool init() { init_window(); return true; }
 private:
     sigc::signal<void, KeyCode> key_up_;
     sigc::signal<void, KeyCode> key_down_;
