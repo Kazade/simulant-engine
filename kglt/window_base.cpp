@@ -39,6 +39,8 @@ WindowBase::WindowBase():
     ktiBindTimer(frame_timer_);
     ktiStartGameTimer();
 
+    set_logging_level(LOG_LEVEL_NONE);
+
     logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));   
 }
 

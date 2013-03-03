@@ -79,29 +79,22 @@ void Camera::do_update(double dt) {
 kmVec3 Camera::project_point(ViewportID vid, const kmVec3& point) {
     kglt::Viewport& viewport = subscene().scene().window().viewport(vid);
 
-    kmVec4 tmp;
-    kmVec4Fill(&tmp, point.x, point.y, point.z, 1.0);
+    kmVec3 tmp;
+    kmVec3Fill(&tmp, point.x, point.y, point.z);
 
     kmVec3 result;
 
-    kmVec4MultiplyMat4(&tmp, &tmp, &view_matrix());
-    kmVec4MultiplyMat4(&tmp, &tmp, &projection_matrix());
+    kmVec3MultiplyMat4(&tmp, &tmp, &view_matrix());
+    kmVec3MultiplyMat4(&tmp, &tmp, &projection_matrix());
 
-    if(tmp.w == 0) {
-        kmVec3Fill(&result, 0, 0, 0);
-        return result;
-    }
-
-    tmp.x /= tmp.w;
-    tmp.y /= tmp.w;
-    tmp.z /= tmp.w;
+    tmp.x /= tmp.z;
+    tmp.y /= tmp.z;
 
     float vp_width = viewport.width();
     float vp_height = viewport.height();
 
-    result.x = (1 + tmp.x) * vp_width / 2;
-    result.y = (1 + tmp.y) * vp_height / 2;
-    result.z = (1 + tmp.z) / 2;
+    result.x = (tmp.x + 1) * vp_width / 2.0;
+    result.y = (tmp.y + 1) * vp_height / 2.0;
 
     return result;
 }

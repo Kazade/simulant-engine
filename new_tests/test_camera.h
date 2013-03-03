@@ -24,8 +24,13 @@ public:
 
         kmVec3 p1 = scene.camera().project_point(kglt::ViewportID(), kglt::Vec3(0, 0, -10));
 
-        this->assert_equal(window->width() / 2, p1.x);
-        this->assert_equal(window->height() / 2, p1.y);
+        assert_equal(window->width() / 2, p1.x);
+        assert_equal(window->height() / 2, p1.y);
+
+        p1 = scene.camera().project_point(kglt::ViewportID(), kglt::Vec3(1, 0, -10));
+
+        assert_true(p1.x > (window->width() / 2));
+        assert_equal(window->height() / 2, p1.y);
     }
 };
 
