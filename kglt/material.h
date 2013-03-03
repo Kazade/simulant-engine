@@ -6,6 +6,7 @@
 #include <vector>
 #include <string>
 #include <tr1/memory>
+#include <tr1/unordered_map>
 
 #include "kazmath/mat4.h"
 #include "resource.h"
@@ -201,13 +202,14 @@ public:
     uint32_t technique_count() const { return techniques_.size(); }
 
     void update(double dt) {
-        for(std::pair<std::string, MaterialTechnique::ptr> p: techniques_) {
-            p.second->update(dt);
+        std::tr1::unordered_map<std::string, MaterialTechnique::ptr>::iterator it =  techniques_.begin();
+        for(; it != techniques_.end(); ++it) {
+            (*it).second->update(dt);
         }
     }
 
 private:
-    std::map<std::string, MaterialTechnique::ptr> techniques_;
+    std::tr1::unordered_map<std::string, MaterialTechnique::ptr> techniques_;
 };
 
 }
