@@ -200,11 +200,12 @@ void Scene::delete_subscene(SubSceneID s) {
     SubSceneManager::manager_delete(s);
 }
 
-void Scene::init() {
+bool Scene::init() {
     assert(glGetError() == GL_NO_ERROR);
 
     initialize_defaults();
 
+    return true;
 }
 
 void Scene::update(double dt) {

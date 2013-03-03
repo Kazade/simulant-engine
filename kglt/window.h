@@ -10,10 +10,14 @@ struct SDL_Surface;
 namespace kglt {
 
 class Window :
-    public WindowBase,
-    public Managed<Window> {
+    public WindowBase {
 
 public:
+    static WindowBase::ptr create(int width=640, int height=480, int bpp=0, bool fullscreen=false) {
+        return WindowBase::create<Window>(width, height, bpp, fullscreen);
+    }
+
+    Window();
     virtual ~Window();
 
     void set_title(const std::string& title);
@@ -23,13 +27,10 @@ public:
     sigc::signal<void, KeyCode>& signal_key_down() { return signal_key_pressed_; }
     sigc::signal<void, KeyCode>& signal_key_up() { return signal_key_released_; }
     
-    Window(int width=640, int height=480, int bpp=0, bool fullscreen=false);
-
-    bool init() { init_window(); return true; }
 private:
     SDL_Surface* surface_;
 
-    void create_gl_window(int width, int height, int bpp, bool fullscreen);
+    bool create_window(int width, int height, int bpp, bool fullscreen);
     void check_events();
     void swap_buffers();
 

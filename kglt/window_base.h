@@ -40,7 +40,16 @@ class WindowBase :
     public generic::TemplatedManager<WindowBase, Viewport, ViewportID> {
 
 public:    
-    WindowBase();
+    typedef std::tr1::shared_ptr<WindowBase> ptr;
+
+    template<typename T>
+    static std::tr1::shared_ptr<WindowBase> create(int width=640, int height=480, int bpp=0, bool fullscreen=false) {
+        std::tr1::shared_ptr<WindowBase> window(new T());
+        if(!window->init(width, height, bpp, fullscreen)) {
+            throw InstanceInitializationError();
+        }
+        return window;
+    }
 
     virtual ~WindowBase() {
         
@@ -118,10 +127,14 @@ protected:
         height_ = height; 
     }
 
-    void init_window();
+    bool init(int width, int height, int bpp, bool fullscreen);
+    virtual bool create_window(int width, int height, int bpp, bool fullscreen) = 0;
 
     InputController& input_controller() { assert(input_controller_); return *input_controller_; }
-private:
+
+    WindowBase();
+
+private:    
     bool initialized_;
 
     std::tr1::shared_ptr<Scene> scene_;

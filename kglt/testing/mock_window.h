@@ -8,14 +8,10 @@ namespace kglt {
 namespace testing {
 
 class MockWindow :
-    public WindowBase,
-    public Managed<MockWindow> {
+    public WindowBase {
 
 public:
-    MockWindow() {
-        set_width(640);
-        set_height(480);
-    }
+    MockWindow() {}
 
     sigc::signal<void, KeyCode>& signal_key_up() { return key_up_; }
     sigc::signal<void, KeyCode>& signal_key_down() { return key_down_; }
@@ -26,8 +22,17 @@ public:
     void check_events() {}
     void swap_buffers() {}
 
-    bool init() { init_window(); return true; }
+    static WindowBase::ptr create(int width=640, int height=480, int bpp=0, bool fullscreen=false) {
+        return WindowBase::create<MockWindow>(width, height, bpp, fullscreen);
+    }
+
 private:
+    bool create_window(int width, int height, int bpp, bool fullscreen) {
+        set_width(width);
+        set_height(height);
+        return true;
+    }
+
     sigc::signal<void, KeyCode> key_up_;
     sigc::signal<void, KeyCode> key_down_;
 };

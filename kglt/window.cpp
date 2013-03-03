@@ -8,30 +8,7 @@
 
 namespace kglt {
 
-Window::Window(int width, int height, int bpp, bool fullscreen) {
-    using std::bind;
-
-    if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
-		throw std::runtime_error("Unable to initialize SDL");
-	}
-
-    create_gl_window(width, height, bpp, fullscreen);   
-
-    //C++11 lambda awesomeness! input_controller isn't initialized yet
-    //so we connect ESCAPE in an idle task
-    idle().add_once([=]() {
-        //Bind the stop_running method to the ESCAPE key
-        input_controller().keyboard().key_pressed_connect(
-            KEY_CODE_ESCAPE, bind(&Window::stop_running, this)
-        );
-    });
-
-    idle().add_once([=]() {
-        DebugBar* bar = &debug_bar();
-        input_controller().keyboard().key_pressed_connect(
-            KEY_CODE_BACKQUOTE, bind(&DebugBar::toggle, bar)
-        );
-    });
+Window::Window() {
 
 }
 
@@ -75,9 +52,14 @@ void Window::check_events() {
     }
 }
 
-void Window::create_gl_window(int width, int height, int bpp, bool fullscreen) {
+bool Window::create_window(int width, int height, int bpp, bool fullscreen) {
 //    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 //    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+
+    if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
+        return false;
+    }
+
 
     int32_t flags = SDL_OPENGL;
     if(fullscreen) {
@@ -113,6 +95,8 @@ void Window::create_gl_window(int width, int height, int bpp, bool fullscreen) {
     for(uint16_t i = 0; i < SDL_NumJoysticks(); i++) {
         L_DEBUG(SDL_JoystickName(i));
     }
+
+    return true;
 }
 
 void Window::swap_buffers() {

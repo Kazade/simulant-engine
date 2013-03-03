@@ -119,7 +119,8 @@ typedef generic::TemplatedManager<Scene, SubScene, SubSceneID> SubSceneManager;
 class Scene:
     public SceneBase,
     public Loadable,
-    public SubSceneManager {
+    public SubSceneManager,
+    public Managed<Scene> {
 
 public:
     Scene(WindowBase* window);
@@ -129,7 +130,7 @@ public:
     SubScene& subscene(SubSceneID s = DefaultSubSceneID);
     void delete_subscene(SubSceneID s);
 
-    void init();
+    bool init();
     void render();
     void update(double dt);
 

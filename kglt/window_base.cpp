@@ -15,7 +15,6 @@ namespace kglt {
 
 WindowBase::WindowBase():
     initialized_(false),
-    scene_(new Scene(this)),
     width_(-1),
     height_(-1),
     is_running_(true),
@@ -40,25 +39,25 @@ WindowBase::WindowBase():
     ktiBindTimer(frame_timer_);
     ktiStartGameTimer();
 
-    logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));
+    logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));   
 }
 
-void WindowBase::init_window() {
-    if(!initialized_) {
-        assert(width_ > -1 && "Subclass should've set the window width by now");
-        assert(height_ > -1 && "Subclass should've set the window height by now");
+bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
+    set_width(width);
+    set_height(height);
 
+    bool result = create_window(width, height, bpp, fullscreen);        
+
+    if(result && !initialized_) {
         debug_bar_.reset(new DebugBar(width_, height_));
-
         debug_bar().add_read_only_variable("Frame Time (ms)", &frame_time_in_milliseconds_);
 
         //Create a default viewport
         default_viewport_ = new_viewport();
         viewport(default_viewport_).set_position(0, 0);
-        viewport(default_viewport_).set_size(width(), height());
+        viewport(default_viewport_).set_size(this->width(), this->height());
 
-        //Initialize the scene
-        scene().init();
+        scene_ = Scene::create(this);
 
         //This needs to happen after SDL or whatever is initialized
         input_controller_ = InputController::create();
@@ -76,8 +75,27 @@ void WindowBase::init_window() {
 
         glEnable(GL_CULL_FACE);
 
+        using std::bind;
+
+        //C++11 lambda awesomeness! input_controller isn't initialized yet
+        //so we connect ESCAPE in an idle task
+        idle().add_once([=]() {
+            //Bind the stop_running method to the ESCAPE key
+            input_controller().keyboard().key_pressed_connect(
+                KEY_CODE_ESCAPE, bind(&WindowBase::stop_running, this)
+            );
+        });
+
+        idle().add_once([=]() {
+            DebugBar* bar = &debug_bar();
+            input_controller().keyboard().key_pressed_connect(
+                KEY_CODE_BACKQUOTE, bind(&DebugBar::toggle, bar)
+            );
+        });
+
         initialized_ = true;
     }
+    return result;
 }
 
 void WindowBase::set_logging_level(LoggingLevel level) {
@@ -85,8 +103,6 @@ void WindowBase::set_logging_level(LoggingLevel level) {
 }
 
 bool WindowBase::update(WindowUpdateCallback step) {
-    init_window(); //Make sure we were initialized
-
     ktiBindTimer(frame_timer_);
     ktiUpdateFrameTime();
 
