@@ -5,9 +5,12 @@
 #include <kglt/kazbase/testing.h>
 
 #include "/home/kazade/Git/KGLT/new_tests/test_frustum.h"
+#include "/home/kazade/Git/KGLT/new_tests/test_vertex_data.h"
 #include "/home/kazade/Git/KGLT/new_tests/test_mesh.h"
 #include "/home/kazade/Git/KGLT/new_tests/test_octree.h"
 #include "/home/kazade/Git/KGLT/new_tests/test_material_script.h"
+#include "/home/kazade/Git/KGLT/new_tests/test_sound.h"
+#include "/home/kazade/Git/KGLT/new_tests/test_shader.h"
 #include "/home/kazade/Git/KGLT/new_tests/test_material.h"
 #include "/home/kazade/Git/KGLT/new_tests/test_camera.h"
 #include "/home/kazade/Git/KGLT/new_tests/global.h"
@@ -25,6 +28,18 @@ int main(int argc, char* argv[]) {
     runner->register_case<CameraTest>(
         std::vector<void (CameraTest::*)()>({&CameraTest::test_project_point}), 
         {"CameraTest::test_project_point"}
+    );
+
+
+    runner->register_case<ShaderTest>(
+        std::vector<void (ShaderTest::*)()>({&ShaderTest::test_shader_params}), 
+        {"ShaderTest::test_shader_params"}
+    );
+
+
+    runner->register_case<SoundTest>(
+        std::vector<void (SoundTest::*)()>({&SoundTest::test_2d_sound_output, &SoundTest::test_3d_sound_output}), 
+        {"SoundTest::test_2d_sound_output", "SoundTest::test_3d_sound_output"}
     );
 
 
@@ -49,6 +64,12 @@ int main(int argc, char* argv[]) {
     runner->register_case<MaterialScriptTest>(
         std::vector<void (MaterialScriptTest::*)()>({&MaterialScriptTest::test_basic_material_script_parsing}), 
         {"MaterialScriptTest::test_basic_material_script_parsing"}
+    );
+
+
+    runner->register_case<VertexDataTest>(
+        std::vector<void (VertexDataTest::*)()>({&VertexDataTest::test_offsets}), 
+        {"VertexDataTest::test_offsets"}
     );
 
     

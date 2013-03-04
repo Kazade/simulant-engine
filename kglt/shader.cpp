@@ -193,7 +193,7 @@ int32_t ShaderProgram::get_uniform_loc(const std::string& name) {
 
     GLint location = glGetUniformLocation(program_id_, name.c_str());
     if(location < 0) {
-        L_WARN("No uniform with name: " + name);
+        throw RuntimeError("No uniform with name: " + name);
     }
 
     cached_uniform_locations_.insert(std::make_pair(name, location));

@@ -124,7 +124,6 @@ kglt/material.cpp
 kglt/colour.h
 kglt/colour.cpp
 kglt/additional.h
-tests/test_shader.cpp
 kglt/light.cpp
 kglt/partitioner.h
 kglt/partitioners/null_partitioner.h
@@ -162,7 +161,6 @@ kglt/mesh.cpp
 kglt/generic/safe_bool.h
 kglt/buffer_object.h
 kglt/buffer_object.cpp
-tests/test_vertex_data.cpp
 kglt/partitioners/octree_partitioner.h
 kglt/partitioners/octree.h
 kglt/partitioners/octree.cpp
@@ -187,7 +185,6 @@ kglt/extra/ui/text.cpp
 kglt/resource_manager.h
 kglt/resource_manager.cpp
 kglt/resource.h
-tests/test_sound.cpp
 kglt/sound.h
 kglt/sound.cpp
 kglt/loaders/opt_loader.h
@@ -246,3 +243,6 @@ new_tests/test_material.h
 new_tests/test_material_script.h
 new_tests/test_mesh.h
 new_tests/test_octree.h
+new_tests/test_shader.h
+new_tests/test_sound.h
+new_tests/test_vertex_data.h
