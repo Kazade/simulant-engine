@@ -71,7 +71,7 @@ public:
 
         assert_equal(10, tree.root().strict_diameter());
         assert_equal(20, tree.root().loose_diameter());
-        assert_equal(2, (uint32_t) tree.root().child_count());
+        assert_equal((uint32_t)2, (uint32_t) tree.root().child_count());
         assert_close(12.5, tree.root().centre().z, 0.001);
 
         //Neither object should be in the root node

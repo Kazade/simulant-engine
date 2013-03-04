@@ -75,7 +75,7 @@ public:
         this->assert_true(!entity.exists("data"));
         entity.stash((int)0xDEADBEEF, "data");
         this->assert_true(entity.exists("data"));
-        this->assert_equal(0xDEADBEEF, entity.get<int>("data"));
+        this->assert_equal((int)0xDEADBEEF, entity.get<int>("data"));
 
         scene.delete_entity(mid);
 
@@ -89,9 +89,9 @@ public:
         kglt::EntityID cid1 = scene.new_entity(scene.entity(mid)); //Create a child
         kglt::EntityID cid2 = scene.new_entity(scene.entity(cid1)); //Create a child of the child
 
-        this->assert_equal(1, scene.entity(mid).child_count());
-        this->assert_equal(1, scene.entity(cid1).child_count());
-        this->assert_equal(0, scene.entity(cid2).child_count());
+        this->assert_equal((uint32_t)1, scene.entity(mid).child_count());
+        this->assert_equal((uint32_t)1, scene.entity(cid1).child_count());
+        this->assert_equal((uint32_t)0, scene.entity(cid2).child_count());
 
         scene.delete_entity(mid);
         this->assert_true(!scene.has_entity(mid));
@@ -130,7 +130,7 @@ public:
         assert_true(!data.has_specular());
         assert_equal(4, data.count());
 
-        assert_equal(2, mesh.submesh_ids().size());
+        assert_equal((uint32_t)2, mesh.submesh_ids().size());
     }
 
     void test_entity_from_mesh() {

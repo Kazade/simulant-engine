@@ -43,11 +43,11 @@ public:
         kglt::MaterialScript script((MaterialLanguageText(text))); //Most vexing parse \o/
         script.generate(mat);
 
-        this->assert_equal(2, mat.technique_count());
+        this->assert_equal((uint32_t)2, mat.technique_count());
         this->assert_true(mat.has_technique(DEFAULT_MATERIAL_SCHEME));
         this->assert_true(mat.has_technique("my_technique"));
-        this->assert_equal(1, mat.technique("my_technique").pass_count());
-        this->assert_equal(1, mat.technique("my_technique").pass(0).texture_unit_count());
+        this->assert_equal((uint32_t)1, mat.technique("my_technique").pass_count());
+        this->assert_equal((uint32_t)1, mat.technique("my_technique").pass(0).texture_unit_count());
 
         //TODO: Add tests to make sure that the shader has compiled correctly
     }
