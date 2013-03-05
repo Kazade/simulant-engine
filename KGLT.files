@@ -114,7 +114,6 @@ kglt/frustum.h
 kglt/frustum.cpp
 kglt/generic/visitor.h
 kglt/generic/tree.h
-tests/test_tree.cpp
 kglt/generic/data_carrier.h
 kglt/generic/manager.h
 kglt/generic/creator.h
@@ -133,7 +132,6 @@ kglt/procedural/mesh/cube.h
 kglt/procedural/mesh/cube.cpp
 kglt/shaders/default_shaders.h
 kglt/generic/relation.h
-tests/test_relation.cpp
 samples/new_pipeline_sample.cpp
 kglt/pipeline.h
 kglt/pipeline.cpp
@@ -246,3 +244,5 @@ new_tests/test_octree.h
 new_tests/test_shader.h
 new_tests/test_sound.h
 new_tests/test_vertex_data.h
+new_tests/test_tree.h
+new_tests/test_relation.h
