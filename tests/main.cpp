@@ -4,18 +4,18 @@
 #include <tr1/memory>
 #include <kglt/kazbase/testing.h>
 
-#include "/home/lukeb/GitHub/KGLT/new_tests/test_frustum.h"
-#include "/home/lukeb/GitHub/KGLT/new_tests/test_material_script.h"
-#include "/home/lukeb/GitHub/KGLT/new_tests/global.h"
-#include "/home/lukeb/GitHub/KGLT/new_tests/test_vertex_data.h"
-#include "/home/lukeb/GitHub/KGLT/new_tests/test_shader.h"
-#include "/home/lukeb/GitHub/KGLT/new_tests/test_camera.h"
-#include "/home/lukeb/GitHub/KGLT/new_tests/test_relation.h"
-#include "/home/lukeb/GitHub/KGLT/new_tests/test_sound.h"
-#include "/home/lukeb/GitHub/KGLT/new_tests/test_mesh.h"
-#include "/home/lukeb/GitHub/KGLT/new_tests/test_tree.h"
-#include "/home/lukeb/GitHub/KGLT/new_tests/test_octree.h"
-#include "/home/lukeb/GitHub/KGLT/new_tests/test_material.h"
+#include "/home/lukeb/GitHub/KGLT/tests/test_frustum.h"
+#include "/home/lukeb/GitHub/KGLT/tests/test_material_script.h"
+#include "/home/lukeb/GitHub/KGLT/tests/global.h"
+#include "/home/lukeb/GitHub/KGLT/tests/test_vertex_data.h"
+#include "/home/lukeb/GitHub/KGLT/tests/test_shader.h"
+#include "/home/lukeb/GitHub/KGLT/tests/test_camera.h"
+#include "/home/lukeb/GitHub/KGLT/tests/test_relation.h"
+#include "/home/lukeb/GitHub/KGLT/tests/test_sound.h"
+#include "/home/lukeb/GitHub/KGLT/tests/test_mesh.h"
+#include "/home/lukeb/GitHub/KGLT/tests/test_tree.h"
+#include "/home/lukeb/GitHub/KGLT/tests/test_octree.h"
+#include "/home/lukeb/GitHub/KGLT/tests/test_material.h"
 
 int main(int argc, char* argv[]) {
     std::tr1::shared_ptr<TestRunner> runner(new TestRunner());

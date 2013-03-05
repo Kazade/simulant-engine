@@ -75,7 +75,7 @@ public:
 
         a1.b = b1;
         assert_equal(&b1, a1.b.get());
-        assert_equal(1, b1.a_set.all().size());
+        assert_equal((uint32_t)1, b1.a_set.all().size());
         assert_equal(&a1, b1.a_set.all().at(0));
         assert_false(a1.c.get());
 
@@ -83,11 +83,11 @@ public:
 
         a2.b = b1;
         assert_equal(&b1, a2.b.get());
-        assert_equal(2, b1.a_set.all().size());
+        assert_equal((uint32_t)2, b1.a_set.all().size());
 
         a3.b = b1;
         assert_equal(&b1, a3.b.get());
-        assert_equal(3, b1.a_set.all().size());
+        assert_equal((uint32_t)3, b1.a_set.all().size());
 
         std::tr1::shared_ptr<C> new_c(new C());
         a1.c = *new_c;
