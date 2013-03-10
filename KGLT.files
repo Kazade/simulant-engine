@@ -246,3 +246,5 @@ new_tests/test_octree.h
 new_tests/test_shader.h
 new_tests/test_sound.h
 new_tests/test_vertex_data.h
+kglt/procedural/mesh/capsule.h
+kglt/procedural/mesh/capsule.cpp

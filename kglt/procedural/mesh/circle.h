@@ -9,15 +9,15 @@ namespace mesh {
 
 SubMeshIndex circle(
     kglt::Mesh& mesh,
-    float diameter,
-    int32_t point_count,
+    float diameter=1.0,
+    int32_t point_count=20,
     float x_offset=0.0, float y_offset=0.0, float z_offset=0.0
 );
 
 SubMeshIndex circle_outline(
     kglt::Mesh& mesh,
-    float diameter,
-    int32_t point_count,
+    float diameter=1.0,
+    int32_t point_count=20,
     float x_offset=0.0, float y_offset=0.0, float z_offset=0.0
 );
 
