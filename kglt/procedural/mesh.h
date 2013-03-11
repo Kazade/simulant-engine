@@ -5,5 +5,6 @@
 #include "mesh/cube.h"
 #include "mesh/sphere.h"
 #include "mesh/circle.h"
+#include "mesh/capsule.h"
 
 #endif // MESH_H_INCLUDED

@@ -79,21 +79,25 @@ public:
     void tex_coord1(float u, float v);
     void tex_coord1(float u, float v, float w);
     void tex_coord1(float x, float y, float z, float w);
+    void tex_coord1(const kmVec2& vec) { tex_coord1(vec.x, vec.y); }
 
     void tex_coord2(float u);
     void tex_coord2(float u, float v);
     void tex_coord2(float u, float v, float w);
     void tex_coord2(float x, float y, float z, float w);
+    void tex_coord2(const kmVec2& vec) { tex_coord2(vec.x, vec.y); }
 
     void tex_coord3(float u);
     void tex_coord3(float u, float v);
     void tex_coord3(float u, float v, float w);
     void tex_coord3(float x, float y, float z, float w);
+    void tex_coord3(const kmVec2& vec) { tex_coord3(vec.x, vec.y); }
 
     void tex_coord4(float u);
     void tex_coord4(float u, float v);
     void tex_coord4(float u, float v, float w);
     void tex_coord4(float x, float y, float z, float w);
+    void tex_coord4(const kmVec2& vec) { tex_coord4(vec.x, vec.y); }
 
     void diffuse(float r, float g, float b, float a);
     void diffuse(const Colour& colour);

@@ -27,17 +27,16 @@ int main(int argc, char* argv[]) {
     */
 
     ///Shortcut function for loading images
-    kglt::TextureID tid = subscene.new_texture();
-    kglt::procedural::texture::starfield(subscene.texture(tid));
-
+    kglt::TextureID tid = kglt::create_texture_from_file(subscene, "sample_data/sample.tga");
     kglt::MaterialID matid = kglt::create_material_from_texture(subscene, tid);
 
+    subscene.set_ambient_light(kglt::Colour::white);
+
     kglt::Mesh& mesh = subscene.mesh(subscene.new_mesh());
-    kglt::SubMeshIndex smi = kglt::procedural::mesh::circle(mesh, 10.0, 40.0);
-    kglt::SubMeshIndex smi2 = kglt::procedural::mesh::circle_outline(mesh, 10.0, 40.0);
+    kglt::procedural::mesh::capsule(mesh);
 
 	//Apply the texture to the mesh
-    mesh.submesh(smi).set_material(matid);
+    mesh.set_material(matid);
 
     kglt::Entity& entity = subscene.entity(subscene.new_entity(mesh.id()));
 
@@ -45,9 +44,9 @@ int main(int argc, char* argv[]) {
         Once we have the reference to a base object, we can
         manipulate it easily
     */
-    entity.move_to(0.0f, 0.0f, -15.0f);
+    entity.move_to(0.0f, 0.0f, -5.0f);
 
-    while(window->update([&](float dt) { entity.rotate_z(20.0 * dt); })) {
+    while(window->update([&](float dt) { entity.rotate_y(20.0 * dt); })) {
 
     }
 	return 0;
