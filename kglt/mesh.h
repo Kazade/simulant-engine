@@ -63,7 +63,9 @@ public:
     }
 
     void recalc_bounds();
+
     void reverse_winding();
+    void transform_vertices(const kmMat4& transformation);
 private:
     Mesh& parent_;
     MaterialID material_;
@@ -111,6 +113,7 @@ public:
 
     void set_material(MaterialID material); ///< Apply material to all submeshes
     void reverse_winding(); ///< Reverse the winding of all submeshes
+
 private:
     VertexData shared_data_;
     std::vector<SubMesh::ptr> submeshes_;

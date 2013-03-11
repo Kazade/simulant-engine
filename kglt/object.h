@@ -51,6 +51,7 @@ public:
     virtual void rotate_y(float amount);
     virtual void rotate_z(float amount);
     virtual void rotate_to(float angle, float x, float y, float z);
+    virtual void rotate_to(const kmQuaternion& quat);
 
     //Make this object ignore parent rotations or rotate commands until unlocked
     void lock_rotation(float angle, float x, float y, float z);

@@ -111,6 +111,19 @@ SubMesh::SubMesh(
     irecalc_ = index_data().signal_update_complete().connect(sigc::mem_fun(this, &SubMesh::recalc_bounds));
 }
 
+void SubMesh::transform_vertices(const kmMat4& transformation) {
+    vertex_data().move_to_start();
+    for(uint16_t i = 0; i < vertex_data().count(); ++i) {
+        kmVec3 v = vertex_data().position_at(i);
+
+        kmVec3MultiplyMat4(&v, &v, &transformation);
+
+        vertex_data().position(v);
+        vertex_data().move_next();
+    }
+    vertex_data().done();
+}
+
 void SubMesh::reverse_winding() {
     if(arrangement_ != MESH_ARRANGEMENT_TRIANGLES) {
         throw NotImplementedError(__FILE__, __LINE__);

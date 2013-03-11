@@ -78,6 +78,13 @@ void Object::move_forward(float amount) {
     update_from_parent();
 }
 
+void Object::rotate_to(const kmQuaternion& quat) {
+    if(rotation_locked_) return;
+
+    kmQuaternionAssign(&rotation_, &quat);
+    update_from_parent();
+}
+
 void Object::rotate_to(float angle, float x, float y, float z) {
     if(rotation_locked_) return;
 
