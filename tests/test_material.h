@@ -41,6 +41,25 @@ public:
         kglt::SubMeshIndex idx = mesh.new_submesh(mid);
         this->assert_equal(mid, mesh.submesh(idx).material());
     }
+
+    void test_reflectiveness() {
+        kglt::Scene& scene = window->scene();
+
+        kglt::MaterialID mid = scene.new_material();
+        uint32_t pass_id = scene.material(mid).technique().new_pass(ShaderID());
+        kglt::MaterialPass& pass = scene.material(mid).technique().pass(pass_id);
+
+        assert_false(pass.is_reflective());
+        assert_false(scene.material(mid).technique().has_reflective_pass());
+        assert_equal(0.0, pass.albedo());
+        assert_equal(0, pass.reflection_texture_unit());
+
+        pass.set_albedo(0.5);
+
+        assert_equal(0.5, pass.albedo());
+        assert_true(pass.is_reflective());
+        assert_true(scene.material(mid).technique().has_reflective_pass());
+    }
 };
 
 #endif // TEST_MATERIAL_H

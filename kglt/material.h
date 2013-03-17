@@ -7,6 +7,7 @@
 #include <string>
 #include <tr1/memory>
 #include <tr1/unordered_map>
+#include <set>
 
 #include "kazmath/mat4.h"
 #include "resource.h"
@@ -90,11 +91,13 @@ enum BlendType {
     BLEND_ONE_ONE_MINUS_ALPHA
 };
 
+class MaterialTechnique;
+
 class MaterialPass {
 public:
     typedef std::tr1::shared_ptr<MaterialPass> ptr;
 
-    MaterialPass(ShaderID shader);
+    MaterialPass(MaterialTechnique& technique, ShaderID shader);
     void set_texture_unit(uint32_t texture_unit_id, TextureID tex);
     void set_animated_texture_unit(uint32_t texture_unit_id, const std::vector<TextureID> textures, double duration);
 
@@ -141,7 +144,15 @@ public:
     float point_size() const { return point_size_; }
     float line_width() const { return line_width_; }
 
+    void set_albedo(float reflectiveness);
+    float albedo() const { return albedo_; }
+    bool is_reflective() const { return albedo_ > 0.0; }
+    void set_reflection_texture_unit(uint8_t i) { reflection_texture_unit_ = i; }
+    uint8_t reflection_texture_unit() const { return reflection_texture_unit_; }
+
 private:
+    MaterialTechnique& technique_;
+
     ShaderID shader_;
 
     Colour diffuse_;
@@ -161,6 +172,9 @@ private:
 
     float point_size_;
     float line_width_;
+
+    float albedo_;
+    uint8_t reflection_texture_unit_;
 };
 
 class MaterialTechnique {
@@ -180,10 +194,14 @@ public:
         }
     }
 
-private:
-    std::string scheme_;
+    bool has_reflective_pass() const { return !reflective_passes_.empty(); }
 
+private:
+    friend class MaterialPass;
+
+    std::string scheme_;
     std::vector<MaterialPass::ptr> passes_;
+    std::set<MaterialPass*> reflective_passes_;
 };
 
 class Material :

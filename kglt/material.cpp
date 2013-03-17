@@ -62,7 +62,7 @@ MaterialTechnique::MaterialTechnique(Material& mat, const std::string& scheme) {
 }
 
 uint32_t MaterialTechnique::new_pass(ShaderID shader) {
-    passes_.push_back(MaterialPass::ptr(new MaterialPass(shader)));
+    passes_.push_back(MaterialPass::ptr(new MaterialPass(*this, shader)));
     return passes_.size() - 1; //Return the index
 }
 
@@ -70,7 +70,8 @@ MaterialPass& MaterialTechnique::pass(uint32_t index) {
     return *passes_.at(index);
 }
 
-MaterialPass::MaterialPass(ShaderID shader):
+MaterialPass::MaterialPass(MaterialTechnique& technique, ShaderID shader):
+    technique_(technique),
     shader_(shader),
     shininess_(0.0),
     iteration_(ITERATE_ONCE),    
@@ -103,6 +104,15 @@ void MaterialPass::set_animated_texture_unit(uint32_t texture_unit_id, const std
         texture_units_.resize(texture_unit_id + 1);
     }
     texture_units_[texture_unit_id] = TextureUnit(textures, duration);
+}
+
+void MaterialPass::set_albedo(float reflectiveness) {
+    albedo_ = reflectiveness;
+    if(is_reflective()) {
+        technique_.reflective_passes_.insert(this);
+    } else {
+        technique_.reflective_passes_.erase(this);
+    }
 }
 
 }

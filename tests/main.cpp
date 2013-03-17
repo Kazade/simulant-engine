@@ -4,18 +4,18 @@
 #include <tr1/memory>
 #include <kglt/kazbase/testing.h>
 
-#include "/home/lukeb/GitHub/KGLT/tests/test_frustum.h"
-#include "/home/lukeb/GitHub/KGLT/tests/test_material_script.h"
-#include "/home/lukeb/GitHub/KGLT/tests/global.h"
-#include "/home/lukeb/GitHub/KGLT/tests/test_vertex_data.h"
-#include "/home/lukeb/GitHub/KGLT/tests/test_shader.h"
-#include "/home/lukeb/GitHub/KGLT/tests/test_camera.h"
-#include "/home/lukeb/GitHub/KGLT/tests/test_relation.h"
-#include "/home/lukeb/GitHub/KGLT/tests/test_sound.h"
-#include "/home/lukeb/GitHub/KGLT/tests/test_mesh.h"
-#include "/home/lukeb/GitHub/KGLT/tests/test_tree.h"
-#include "/home/lukeb/GitHub/KGLT/tests/test_octree.h"
-#include "/home/lukeb/GitHub/KGLT/tests/test_material.h"
+#include "/home/kazade/Git/KGLT/tests/test_frustum.h"
+#include "/home/kazade/Git/KGLT/tests/test_vertex_data.h"
+#include "/home/kazade/Git/KGLT/tests/test_mesh.h"
+#include "/home/kazade/Git/KGLT/tests/test_tree.h"
+#include "/home/kazade/Git/KGLT/tests/test_octree.h"
+#include "/home/kazade/Git/KGLT/tests/test_relation.h"
+#include "/home/kazade/Git/KGLT/tests/test_material_script.h"
+#include "/home/kazade/Git/KGLT/tests/test_sound.h"
+#include "/home/kazade/Git/KGLT/tests/test_shader.h"
+#include "/home/kazade/Git/KGLT/tests/test_material.h"
+#include "/home/kazade/Git/KGLT/tests/test_camera.h"
+#include "/home/kazade/Git/KGLT/tests/global.h"
 
 int main(int argc, char* argv[]) {
     std::tr1::shared_ptr<TestRunner> runner(new TestRunner());
@@ -33,21 +33,21 @@ int main(int argc, char* argv[]) {
     );
 
 
-    runner->register_case<ShaderTest>(
-        std::vector<void (ShaderTest::*)()>({&ShaderTest::test_shader_params}), 
-        {"ShaderTest::test_shader_params"}
+    runner->register_case<RelationTest>(
+        std::vector<void (RelationTest::*)()>({&RelationTest::test_relations_work}), 
+        {"RelationTest::test_relations_work"}
     );
 
 
     runner->register_case<MaterialTest>(
-        std::vector<void (MaterialTest::*)()>({&MaterialTest::test_material_initialization, &MaterialTest::test_material_applies_to_mesh}), 
-        {"MaterialTest::test_material_initialization", "MaterialTest::test_material_applies_to_mesh"}
+        std::vector<void (MaterialTest::*)()>({&MaterialTest::test_material_initialization, &MaterialTest::test_material_applies_to_mesh, &MaterialTest::test_reflectiveness}), 
+        {"MaterialTest::test_material_initialization", "MaterialTest::test_material_applies_to_mesh", "MaterialTest::test_reflectiveness"}
     );
 
 
-    runner->register_case<RelationTest>(
-        std::vector<void (RelationTest::*)()>({&RelationTest::test_relations_work}), 
-        {"RelationTest::test_relations_work"}
+    runner->register_case<TreeTest>(
+        std::vector<void (TreeTest::*)()>({&TreeTest::test_tree_basic_usage, &TreeTest::test_tree_iteration}), 
+        {"TreeTest::test_tree_basic_usage", "TreeTest::test_tree_iteration"}
     );
 
 
@@ -57,15 +57,15 @@ int main(int argc, char* argv[]) {
     );
 
 
-    runner->register_case<SoundTest>(
-        std::vector<void (SoundTest::*)()>({&SoundTest::test_2d_sound_output, &SoundTest::test_3d_sound_output}), 
-        {"SoundTest::test_2d_sound_output", "SoundTest::test_3d_sound_output"}
+    runner->register_case<OctreeTest>(
+        std::vector<void (OctreeTest::*)()>({&OctreeTest::test_moving_objects, &OctreeTest::test_insertion}), 
+        {"OctreeTest::test_moving_objects", "OctreeTest::test_insertion"}
     );
 
 
-    runner->register_case<TreeTest>(
-        std::vector<void (TreeTest::*)()>({&TreeTest::test_tree_basic_usage, &TreeTest::test_tree_iteration}), 
-        {"TreeTest::test_tree_basic_usage", "TreeTest::test_tree_iteration"}
+    runner->register_case<ShaderTest>(
+        std::vector<void (ShaderTest::*)()>({&ShaderTest::test_shader_params}), 
+        {"ShaderTest::test_shader_params"}
     );
 
 
@@ -81,9 +81,9 @@ int main(int argc, char* argv[]) {
     );
 
 
-    runner->register_case<OctreeTest>(
-        std::vector<void (OctreeTest::*)()>({&OctreeTest::test_moving_objects, &OctreeTest::test_insertion}), 
-        {"OctreeTest::test_moving_objects", "OctreeTest::test_insertion"}
+    runner->register_case<SoundTest>(
+        std::vector<void (SoundTest::*)()>({&SoundTest::test_2d_sound_output, &SoundTest::test_3d_sound_output}), 
+        {"SoundTest::test_2d_sound_output", "SoundTest::test_3d_sound_output"}
     );
 
     
