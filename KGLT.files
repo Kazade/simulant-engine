@@ -140,7 +140,6 @@ kglt/renderers/generic_renderer.h
 kglt/renderers/generic_renderer.cpp
 kglt/renderer.cpp
 kglt/utils/geometry_buffer.h
-tests/test_geometry_buffer.cpp
 kglt/utils/geometry_buffer.cpp
 kglt/extra/sprite_strip_loader.h
 kglt/extra/sprite.h

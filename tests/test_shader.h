@@ -23,9 +23,7 @@ public:
         kglt::ShaderID sid = scene.new_shader();
         assert_true(sid);
 
-        kglt::ShaderProgram& s = scene.shader(sid);
-        window->loader_for("kglt/materials/generic_multitexture.kgltm")->into(s);
-        s.activate();
+        kglt::ShaderProgram& s = scene.shader(scene.material(scene.default_material_id()).technique().pass(0).shader());
 
         kmMat4 ident;
         kmMat4Identity(&ident);
