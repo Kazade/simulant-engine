@@ -17,5 +17,6 @@
 #include "mesh.h"
 #include "procedural/mesh.h"
 #include "procedural/texture.h"
+#include "batcher.h"
 
 #endif

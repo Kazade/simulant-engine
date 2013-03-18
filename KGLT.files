@@ -248,3 +248,4 @@ tests/test_tree.h
 tests/test_relation.h
 kglt/procedural/mesh/capsule.h
 kglt/procedural/mesh/capsule.cpp
+tests/test_batcher.h

@@ -1,56 +1,136 @@
 #ifndef BATCHER_H_INCLUDED
 #define BATCHER_H_INCLUDED
 
+#include <GLee.h>
+#include <list>
+#include <tr1/unordered_map>
+#include "kglt/kazbase/exceptions.h"
+
 namespace kglt {
 
-/*
-    Batcher batch;
-
-    // Create a group with a transform, that has texture 2 bound as the secondary texture
-    // and texture 1 bound as the primary texture
-    TransformGroup group(matrix, TextureBindGroup(SECONDARY, 2, TextureBindGroup(PRIMARY, 1));
-    batch.add(3, GL_TRIANGLES, TransformGroup, data);
-    batch.add(3, GL_TRIANGLES, TextureBindGroup(PRIMARY, 1), data);
-
-
-    Builds the following tree:
-
-            TextureBindGroup(PRIMARY, 1);  -----------|
-                       |                              |
-            TextureBindGroup(SECONDARY, 2);       Triangles
-                       |
-                TransformGroup(matrix)
-                       |
-                   Triangles
-
-*/
 class RenderGroup {
 public:
     typedef std::tr1::shared_ptr<RenderGroup> ptr;
 
-    RenderGroup(const RenderGroup& parent);
+    RenderGroup(uint32_t id):
+        id_(id) {
 
-    void set_parent_batcher(Batcher* batch);
-};
-
-class TransformGroup : public RenderGroup {};
-class TextureBindGroup : public RenderGroup {};
-class ShaderBindGroup : public RenderGroup {};
-
-class Batcher {
-public:
-    void add(uint32_t count, GLenum type, const Group& group, ???) {
-
-        RenderGroup& group = get_or_create_group(group);
     }
 
-    void draw();
+    template<typename T>
+    RenderGroup& get_or_create(uint32_t id) {
+        RenderGroups::const_iterator it = children_[typeid(T).hash_code()].find(id);
 
-    RenderGroup& get_or_create_group(const RenderGroup& group);
+        if(it != children_[typeid(T).hash_code()].end()) {
+            return *(*it).second;
+        } else {
+            std::tr1::shared_ptr<RenderGroup> new_child(new T(id));
+            children_[typeid(T).hash_code()].insert(std::make_pair(id, new_child));
+            return *new_child;
+        }
+    }
+
+    template<typename T>
+    bool exists(uint32_t id) const {
+        std::size_t hash = typeid(T).hash_code();
+
+        RenderGroupChildren::const_iterator it = children_.find(hash);
+        if(it == children_.end()) {
+            return false;
+        }
+
+        return (*it).second.find(id) != (*it).second.end();
+    }
+
+    template<typename T>
+    RenderGroup& get(uint32_t id) {
+        RenderGroups::const_iterator it = children_[typeid(T).hash_code()].find(id);
+
+        if(it != children_[typeid(T).hash_code()].end()) {
+            return *(*it).second;
+        } else {
+            throw DoesNotExist<T>();
+        }
+    }
+
+    void add(SubEntity* subentity) {
+        subentities_.push_back(subentity);
+    }
+
+    virtual void bind() = 0;
+    virtual void unbind() = 0;
+
+    /*
+    virtual RenderGroup& get_root() {
+        return parent_->get_root();
+    }*/
+
+protected:
+    uint32_t id_;
 
 private:
-    RenderGroup::ptr groups_;
+    typedef std::tr1::unordered_map<uint32_t, std::tr1::shared_ptr<RenderGroup> > RenderGroups;
+    typedef std::tr1::unordered_map<std::size_t, RenderGroups> RenderGroupChildren;
 
+    RenderGroupChildren children_;
+
+    std::list<SubEntity*> subentities_;
+};
+
+class RootGroup : public RenderGroup {
+public:
+    RootGroup():
+        RenderGroup(0) {}
+
+    void bind() {}
+    void unbind() {}
+};
+
+class ShaderGroup : public RenderGroup {
+public:
+    ShaderGroup(uint32_t id): RenderGroup(id) {}
+
+    void bind() {
+
+    }
+
+    void unbind() {
+
+    }
+};
+
+class MeshGroup : public RenderGroup {};
+class SubMeshGroup : public RenderGroup {};
+
+
+class TextureRG0 : public RenderGroup {
+public:
+    TextureRG0(uint32_t id): RenderGroup(id) {}
+
+    void bind() {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, id_);
+    }
+
+    void unbind() {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+};
+
+class TextureRG1 : public RenderGroup {
+public:
+    TextureRG1(uint32_t id): RenderGroup(id) {}
+
+    void bind() {
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, id_);
+    }
+
+    void unbind() {
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
 };
 
 }
