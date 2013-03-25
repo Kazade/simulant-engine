@@ -31,7 +31,7 @@ SkyBox::SkyBox(kglt::SubScene& subscene, kglt::TextureID texture, float size, Ca
     subscene.mesh(mesh_id_).reverse_winding();
 
     entity_id_ = subscene.new_entity(mesh_id_);
-    subscene.entity(entity_id_).set_render_priority(-100000);    
+    subscene.entity(entity_id_).set_render_priority(RENDER_PRIORITY_BACKGROUND);
     subscene.entity(entity_id_).set_parent(subscene.camera(cam));
 
     //Skyboxes shouldn't rotate based on their parent (e.g. the camera)

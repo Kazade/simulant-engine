@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
     kglt::MaterialID matid = kglt::create_material_from_texture(subscene, tid);
 
 	//Apply the texture to the mesh
-    mesh.submesh(mesh.submesh_ids()[0]).set_material(matid);
+    mesh.submesh(mesh.submesh_ids()[0]).set_material_id(matid);
 
     kglt::Entity& entity = subscene.entity(subscene.new_entity(mesh.id()));
 

@@ -38,7 +38,7 @@ Text::Text(Font::ptr font, Vec2 position, const unicode &text):
             materials_[info.texture] = mat;
         }
 
-        mesh.submesh(idx).set_material(mat);
+        mesh.submesh(idx).set_material_id(mat);
 
         x_offset -= info.offset_x;
         x_offset += info.advance_x;

@@ -24,6 +24,8 @@ public:
         current_subscene_ = subscene;
     }
 
+    virtual void render_subentity(SubEntity& buffer, CameraID camera) = 0;
+
 protected:
     SubScene& current_subscene();
 
@@ -31,7 +33,7 @@ private:
     Scene& scene_;
     SubSceneID current_subscene_;
 
-    virtual void render_subentity(SubEntity& buffer, CameraID camera) = 0;
+
 };
 
 }

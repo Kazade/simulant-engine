@@ -127,7 +127,7 @@ Background::Background(Scene& scene, ViewportID viewport, BGResizeStyle style):
         0.5
     );
 
-    mesh.submesh(index).set_material(material_id_);
+    mesh.submesh(index).set_material_id(material_id_);
 
     //Create the entity for this background
     entity_id_ = subscene.new_entity();

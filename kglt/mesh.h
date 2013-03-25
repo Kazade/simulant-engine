@@ -35,7 +35,7 @@ public:
 
     virtual const VertexData& vertex_data() const = 0;
     virtual const IndexData& index_data() const = 0;
-    virtual const MaterialID material() const = 0;
+    virtual const MaterialID material_id() const = 0;
     virtual const MeshArrangement arrangement() const = 0;
 };
 
@@ -53,8 +53,8 @@ public:
     const VertexData& vertex_data() const;
     const IndexData& index_data() const;
 
-    const MaterialID material() const { return material_; }
-    void set_material(MaterialID mat) { material_ = mat; }
+    const MaterialID material_id() const { return material_; }
+    void set_material_id(MaterialID mat) { material_ = mat; }
 
     const MeshArrangement arrangement() const { return arrangement_; }
 

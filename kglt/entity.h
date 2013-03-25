@@ -14,6 +14,22 @@ namespace kglt {
 
 class SubEntity;
 
+enum RenderPriority {
+    RENDER_PRIORITY_BACKGROUND = -100,
+    RENDER_PRIORITY_DISTANT = -50,
+    RENDER_PRIORITY_MAIN = 0,
+    RENDER_PRIORITY_NEAR = 50,
+    RENDER_PRIORITY_FOREGROUND = 100
+};
+
+const std::vector<RenderPriority> RENDER_PRIORITIES = {
+    RENDER_PRIORITY_BACKGROUND,
+    RENDER_PRIORITY_DISTANT,
+    RENDER_PRIORITY_MAIN,
+    RENDER_PRIORITY_NEAR,
+    RENDER_PRIORITY_FOREGROUND
+};
+
 class Entity :
     public MeshInterface,
     public Managed<Entity>,
@@ -27,14 +43,14 @@ public:
         Object(subscene),
         Source(*subscene),
         mesh_(0),
-        render_priority_(0) {}
+        render_priority_(RENDER_PRIORITY_MAIN) {}
 
     Entity(SubScene* subscene, EntityID id, MeshID mesh):
         generic::Identifiable<EntityID>(id),
         Object(subscene),
         Source(*subscene),
         mesh_(mesh),
-        render_priority_(0) {
+        render_priority_(RENDER_PRIORITY_MAIN) {
     }
 
     MeshID mesh() const { return mesh_; }
@@ -58,13 +74,13 @@ public:
 
     void destroy();
 
-    int32_t render_priority() const { return render_priority_; }
-    void set_render_priority(int32_t value) { render_priority_ = value;}
+    RenderPriority render_priority() const { return render_priority_; }
+    void set_render_priority(RenderPriority value) { render_priority_ = value;}
 private:
     MeshID mesh_;
     std::vector<std::tr1::shared_ptr<SubEntity> > subentities_;
 
-    int32_t render_priority_;
+    RenderPriority render_priority_;
 
     friend class SubEntity;
 
@@ -85,14 +101,17 @@ public:
         material_(0) {
     }
 
-    const MaterialID material() const {
+    const MaterialID material_id() const {
         if(material_) {
             return material_;
         }
 
-        return submesh().material();
+        return submesh().material_id();
     }
-    void override_material(MaterialID material) { material_ = material; }
+
+    const SubMeshIndex submesh_id() const { return index_; }
+
+    void override_material_id(MaterialID material) { material_ = material; }
 
     const VertexData& vertex_data() const { return submesh().vertex_data(); }
     const IndexData& index_data() const { return submesh().index_data(); }

@@ -39,7 +39,7 @@ public:
         kglt::MeshID mesh_id = scene.new_mesh();
         kglt::Mesh& mesh = scene.mesh(mesh_id);
         kglt::SubMeshIndex idx = mesh.new_submesh(mid);
-        this->assert_equal(mid, mesh.submesh(idx).material());
+        this->assert_equal(mid, mesh.submesh(idx).material_id());
     }
 
     void test_reflectiveness() {

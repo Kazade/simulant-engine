@@ -1,3 +1,5 @@
+#include <tr1/unordered_map>
+
 #include "pipeline.h"
 #include "scene.h"
 
@@ -8,6 +10,7 @@
 #include "partitioner.h"
 #include "partitioners/octree_partitioner.h"
 #include "renderers/generic_renderer.h"
+#include "batcher.h"
 
 namespace kglt {
 
@@ -63,6 +66,54 @@ void Pipeline::run_stage(Stage::ptr stage) {
     SubScene& subscene = scene_.subscene(stage->subscene_id());
     std::vector<SubEntity::ptr> buffers = subscene.partitioner().geometry_visible_from(stage->camera_id());
 
+
+    /*
+     * Go through the visible objects, sort into queues and for
+     * each material pass add the subentity. The result is that a tree
+     * of material properties (uniforms) will be created with the child nodes
+     * being the meshes
+     */
+    typedef std::tr1::unordered_map<uint32_t, std::vector<RootGroup::ptr> > QueueGroups;
+    QueueGroups queues;
+
+    //Go through the visible entities
+    for(SubEntity::ptr ent: buffers) {
+        //Get the priority queue for this entity (e.g. RENDER_PRIORITY_BACKGROUND)
+        QueueGroups::mapped_type& priority_queue = queues[(uint32_t)ent->_parent().render_priority()];
+
+        Material& mat = subscene.material(ent->material_id());
+        //Go through the entities material passes
+        for(uint8_t pass = 0; pass < mat.technique().pass_count(); ++pass) {
+            //Create a new render group if necessary
+            RootGroup::ptr group;
+            if(priority_queue.size() <= pass) {
+                group = RootGroup::ptr(new RootGroup(subscene));
+                priority_queue.push_back(group);
+            } else {
+                group = priority_queue[pass];
+            }
+
+            //Insert the entity into the RenderGroup tree
+            group->insert(*ent, pass);
+        }
+    }
+
+    renderer_->set_current_subscene(subscene.id());
+    for(RenderPriority priority: RENDER_PRIORITIES) {
+        QueueGroups::mapped_type& priority_queue = queues[priority];
+        for(RootGroup::ptr pass_group: priority_queue) {
+            pass_group->traverse(std::tr1::bind(&Renderer::render_subentity, renderer_.get(), std::tr1::placeholders::_1, stage->camera_id()));
+        }
+    }
+    renderer_->set_current_subscene(SubSceneID());
+
+    /*
+     * At this point, we will have a render group tree for each priority level
+     * when we render, we can apply the uniforms/textures/shaders etc. by traversing the
+     * tree and calling bind()/unbind() at each level
+     */
+
+/*
     std::sort(buffers.begin(), buffers.end(), [](SubEntity::ptr lhs, SubEntity::ptr rhs) {
         return lhs->_parent().render_priority() < rhs->_parent().render_priority();
     });
@@ -70,7 +121,7 @@ void Pipeline::run_stage(Stage::ptr stage) {
     //TODO: Batched rendering
     renderer_->set_current_subscene(subscene.id());
         renderer_->render(buffers, stage->camera_id());
-    renderer_->set_current_subscene(SubSceneID());
+    renderer_->set_current_subscene(SubSceneID());*/
 
     signal_render_stage_finished_(*stage);
 }

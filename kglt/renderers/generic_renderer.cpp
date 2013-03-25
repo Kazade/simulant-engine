@@ -359,7 +359,7 @@ void GenericRenderer::render_subentity(SubEntity& buffer, CameraID camera) {
 
     check_and_log_error(__FILE__, __LINE__);
 
-    MaterialID mid = buffer.material();
+    MaterialID mid = buffer.material_id();
     if(!mid) {
         mid = scene().default_material_id();
     }
@@ -371,18 +371,6 @@ void GenericRenderer::render_subentity(SubEntity& buffer, CameraID camera) {
 
         MaterialPass& pass = technique.pass(i);
 
-        if(pass.depth_test_enabled()) {
-            glEnable(GL_DEPTH_TEST);
-        } else {
-            glDisable(GL_DEPTH_TEST);
-        }
-
-        if(pass.depth_write_enabled()) {
-            glDepthMask(GL_TRUE);
-        } else {
-            glDepthMask(GL_FALSE);
-        }
-
         glPointSize(pass.point_size());
         glLineWidth(pass.line_width());
 
@@ -393,9 +381,6 @@ void GenericRenderer::render_subentity(SubEntity& buffer, CameraID camera) {
             L_ERROR("The current pass has no attached shader, so nothing will be rendered");
             continue;
         }
-
-        ShaderProgram& s = current_subscene().shader(pass.shader());
-        s.activate(); //Activate the shader
 
         //FIXME: lights within range of what?
         Vec3 pos;
@@ -409,13 +394,6 @@ void GenericRenderer::render_subentity(SubEntity& buffer, CameraID camera) {
 
         //Attributes don't change per-iteration of a pass
         set_auto_attributes_on_shader(s, buffer);
-
-        //Go through the texture units and bind the textures
-        for(uint32_t j = 0; j < pass.texture_unit_count(); ++j) {
-            glActiveTexture(GL_TEXTURE0 + j);
-            TextureID texture_unit = pass.texture_unit(j).texture();
-            glBindTexture(GL_TEXTURE_2D, current_subscene().texture(texture_unit).gl_tex());
-        }
 
         for(uint32_t j = 0; j < iteration_count; ++j) {
             set_auto_uniforms_on_shader(s, scene(), lights, j, camera, buffer, pass); //Uniforms might change depending on the iteration
@@ -437,12 +415,6 @@ void GenericRenderer::render_subentity(SubEntity& buffer, CameraID camera) {
             else {
                 assert(0);
             }
-        }
-
-        //Unbind the textures
-        for(uint32_t j = 0; j < pass.texture_unit_count(); ++j) {
-            glActiveTexture(GL_TEXTURE0 + j);
-            glBindTexture(GL_TEXTURE_2D, 0);
         }
 
         glDisableVertexAttribArray(0);

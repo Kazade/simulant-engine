@@ -157,14 +157,14 @@ public:
         kglt::SubMeshIndex idx = mesh.submesh_ids()[0];
 
         //Likewise for subentities, they should just proxy to the submesh
-        assert_equal(mesh.submesh(idx).material(), entity.subentity(0).material());
+        assert_equal(mesh.submesh(idx).material_id(), entity.subentity(0).material_id());
         assert_true(mesh.submesh(idx).index_data() == entity.subentity(0).index_data());
         assert_true(mesh.submesh(idx).vertex_data() == entity.subentity(0).vertex_data());
 
         //We should be able to override the material on a subentity though
-        entity.subentity(0).override_material(kglt::MaterialID(1));
+        entity.subentity(0).override_material_id(kglt::MaterialID(1));
 
-        assert_equal(MaterialID(1), entity.subentity(0).material());
+        assert_equal(MaterialID(1), entity.subentity(0).material_id());
     }
 
     void test_scene_methods() {

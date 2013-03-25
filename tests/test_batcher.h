@@ -9,21 +9,25 @@
 class BatcherTest : public TestCase {
 public:
     void set_up() {
-        root_group_.reset(new RootGroup());
+        if(!window) {
+            window = kglt::Window::create();
+            window->set_logging_level(LOG_LEVEL_NONE);
+        }
+        root_group_.reset(new RootGroup(window->scene().subscene()));
     }
 
     void test_group_creation() {
-        assert_false(root_group_->exists<TextureRG0>(0));
-        assert_false(root_group_->exists<ShaderGroup>(0));
+        assert_false(root_group_->exists<TextureGroup>(TextureGroupData(0, TextureID())));
+        assert_false(root_group_->exists<ShaderGroup>(ShaderGroupData(ShaderID())));
 
-        root_group_->get_or_create<TextureRG0>(0).get_or_create<TextureRG1>(1);
-        root_group_->get_or_create<ShaderGroup>(0);
+        root_group_->get_or_create<TextureGroup>(TextureGroupData(0, TextureID())).get_or_create<TextureGroup>(TextureGroupData(1, TextureID(1)));
+        root_group_->get_or_create<ShaderGroup>(ShaderGroupData(ShaderID()));
 
-        assert_true(root_group_->exists<TextureRG0>(0));
-        assert_true(root_group_->get<TextureRG0>(0).exists<TextureRG1>(1));
-        assert_false(root_group_->get<TextureRG0>(0).exists<TextureRG1>(2));
-        assert_true(root_group_->exists<ShaderGroup>(0));
-    }
+        assert_true(root_group_->exists<TextureGroup>(TextureGroupData(0, TextureID())));
+        assert_true(root_group_->get<TextureGroup>(TextureGroupData(0, TextureID())).exists<TextureGroup>(TextureGroupData(1, TextureID(1))));
+        assert_false(root_group_->get<TextureGroup>(TextureGroupData(0, TextureID())).exists<TextureGroup>(TextureGroupData(1, TextureID(2))));
+        assert_true(root_group_->exists<ShaderGroup>(ShaderGroupData(ShaderID())));
+    }    
 
 private:
     kglt::RootGroup::ptr root_group_;
