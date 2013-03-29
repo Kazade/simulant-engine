@@ -200,6 +200,8 @@ public:
     ~ShaderProgram();
 
     void activate();
+    void deactivate();
+
     void add_and_compile(ShaderType type, const std::string& source);
 
     void relink();
@@ -211,6 +213,8 @@ public:
     void bind_attrib(uint32_t idx, const std::string& name);
     int32_t get_uniform_loc(const std::string& name);
     bool has_uniform(const std::string& name);
+
+    static ShaderProgram* active_shader() { return active_shader_; }
 
 private:
     void set_uniform(const std::string& name, const float x);
@@ -232,6 +236,8 @@ private:
     ShaderParams params_;
 
     friend class ShaderParams;
+
+    static ShaderProgram* active_shader_;
 };
 
 }

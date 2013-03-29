@@ -64,6 +64,8 @@ void Pipeline::run_stage(Stage::ptr stage) {
     signal_render_stage_started_(*stage);
 
     SubScene& subscene = scene_.subscene(stage->subscene_id());
+    Camera& camera = subscene.camera(stage->camera_id());
+
     std::vector<SubEntity::ptr> buffers = subscene.partitioner().geometry_visible_from(stage->camera_id());
 
 
@@ -87,7 +89,7 @@ void Pipeline::run_stage(Stage::ptr stage) {
             //Create a new render group if necessary
             RootGroup::ptr group;
             if(priority_queue.size() <= pass) {
-                group = RootGroup::ptr(new RootGroup(subscene));
+                group = RootGroup::ptr(new RootGroup(subscene, camera));
                 priority_queue.push_back(group);
             } else {
                 group = priority_queue[pass];

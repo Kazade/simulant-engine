@@ -16,8 +16,9 @@ inline void hash_combine(std::size_t& seed, const T& v)
     seed ^= hasher(v) + 0x9e3779b9 + (seed<<6) + (seed>>2);
 }
 
-class ResourceManager;
+class SubScene;
 class SubEntity;
+class Camera;
 
 struct GroupData {
     typedef std::tr1::shared_ptr<GroupData> ptr;
@@ -143,23 +144,26 @@ public:
     typedef std::tr1::shared_ptr<RootGroup> ptr;
     typedef int data_type;
 
-    RootGroup(ResourceManager& resource_manager):
+    RootGroup(SubScene& subscene, Camera& camera):
         RenderGroup(nullptr),
-        resource_manager_(resource_manager) {}
+        subscene_(subscene),
+        camera_(camera){}
 
-    void bind() {}
+    void bind();
     void unbind() {}
 
     RenderGroup& get_root() {
         return *this;
     }
 
-    ResourceManager& resource_manager() { return resource_manager_; }
+    SubScene& subscene() { return subscene_; }
+    Camera& camera() { return camera_; }
 
     void insert(SubEntity& ent, uint8_t pass_number);
 
 private:
-    ResourceManager& resource_manager_;
+    SubScene& subscene_;
+    Camera& camera_;
 };
 
 
@@ -259,6 +263,69 @@ private:
     MeshGroupData data_;
 };
 
+struct MaterialGroupData : public GroupData {
+    MaterialGroupData(
+        const kglt::Colour& ambient,
+        const kglt::Colour& diffuse,
+        const kglt::Colour& specular,
+        float shininess,
+        uint8_t active_texture_count):
+        ambient(ambient),
+        diffuse(diffuse),
+        specular(specular),
+        shininess(shininess),
+        active_texture_count(active_texture_count){
+
+    }
+
+    kglt::Colour ambient;
+    kglt::Colour diffuse;
+    kglt::Colour specular;
+    float shininess;
+    uint8_t active_texture_count;
+
+    std::size_t hash() const {
+        size_t seed = 0;
+
+        hash_combine(seed, ambient.r);
+        hash_combine(seed, ambient.g);
+        hash_combine(seed, ambient.b);
+        hash_combine(seed, ambient.a);
+
+        hash_combine(seed, diffuse.r);
+        hash_combine(seed, diffuse.g);
+        hash_combine(seed, diffuse.b);
+        hash_combine(seed, diffuse.a);
+
+        hash_combine(seed, specular.r);
+        hash_combine(seed, specular.g);
+        hash_combine(seed, specular.b);
+        hash_combine(seed, specular.a);
+
+        hash_combine(seed, shininess);
+        hash_combine(seed, active_texture_count);
+
+        return seed;
+    }
+};
+
+class MaterialGroup : public RenderGroup {
+public:
+    typedef MaterialGroupData data_type;
+
+    MaterialGroup(RenderGroup* parent, MaterialGroupData data):
+        RenderGroup(parent),
+        data_(data) {
+
+    }
+
+    void bind();
+    void unbind();
+
+private:
+    MaterialGroupData data_;
+};
+
 struct TextureGroupData : public GroupData {
     TextureGroupData(uint8_t texture_unit, TextureID id):
         unit(texture_unit),
@@ -329,7 +396,98 @@ private:
     TextureMatrixGroupData data_;
 };
 
+struct LightGroupData : public GroupData {
+    LightGroupData(Light* light):
+        light(light) {}
 
+    Light* light;
+
+    std::size_t hash() const {
+        size_t seed = 0;
+        hash_combine(seed, typeid(LightGroupData).name());
+        hash_combine(seed, light);
+        return seed;
+    }
+};
+
+class LightGroup : public RenderGroup {
+public:
+    typedef LightGroupData data_type;
+
+    LightGroup(RenderGroup* parent, LightGroupData data):
+        RenderGroup(parent),
+        data_(data) {
+
+    }
+
+    void bind();
+    void unbind();
+
+private:
+    LightGroupData data_;
+};
+
+
+struct BlendGroupData : public GroupData {
+    BlendGroupData(BlendType type):
+        type(type) {}
+
+    BlendType type;
+
+    std::size_t hash() const {
+        size_t seed = 0;
+        hash_combine(seed, typeid(BlendGroupData).name());
+        hash_combine(seed, (uint32_t) type);
+        return seed;
+    }
+};
+
+class BlendGroup : public RenderGroup {
+public:
+    typedef BlendGroupData data_type;
+
+    BlendGroup(RenderGroup* parent, BlendGroupData data):
+        RenderGroup(parent),
+        data_(data) {}
+
+    void bind();
+    void unbind();
+
+private:
+    BlendGroupData data_;
+};
+
+struct RenderSettingsData : public GroupData {
+    RenderSettingsData(float line_width, float point_size):
+        line_width(line_width),
+        point_size(point_size) {}
+
+    float line_width;
+    float point_size;
+
+    std::size_t hash() const {
+        size_t seed = 0;
+        hash_combine(seed, typeid(RenderSettingsData).name());
+        hash_combine(seed, line_width);
+        hash_combine(seed, point_size);
+        return seed;
+    }
+};
+
+class RenderSettingsGroup : public RenderGroup {
+public:
+    typedef RenderSettingsData data_type;
+
+    RenderSettingsGroup(RenderGroup* parent, RenderSettingsData data):
+        RenderGroup(parent),
+        data_(data) {}
+
+    void bind();
+    void unbind();
+
+private:
+    RenderSettingsData data_;
+};
 
 }
 

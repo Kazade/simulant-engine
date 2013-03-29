@@ -52,6 +52,14 @@ struct Vec3 : public kmVec3 {
     }
 };
 
+enum BlendType {
+    BLEND_NONE,
+    BLEND_ADD,
+    BLEND_MODULATE,
+    BLEND_COLOUR,
+    BLEND_ALPHA,
+    BLEND_ONE_ONE_MINUS_ALPHA
+};
 
 enum MeshArrangement {
     MESH_ARRANGEMENT_POINTS,

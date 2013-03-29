@@ -11,6 +11,8 @@
 
 namespace kglt {
 
+ShaderProgram* ShaderProgram::active_shader_ = nullptr;
+
 ShaderParams::ShaderParams(ShaderProgram& parent):
     program_(parent) {
 
@@ -85,9 +87,15 @@ ShaderProgram::~ShaderProgram() {
 }
 
 void ShaderProgram::activate() {
-
     glUseProgram(program_id_);
     check_and_log_error(__FILE__, __LINE__);
+
+    active_shader_ = this;
+}
+
+void ShaderProgram::deactivate() {
+    glUseProgram(0);
+    active_shader_ = nullptr;
 }
 
 void ShaderProgram::bind_attrib(uint32_t idx, const std::string& name) {
