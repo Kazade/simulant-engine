@@ -110,12 +110,11 @@ void parse_entities(const std::string& entity_string, std::vector<EntityProperti
     std::string key, value;
     bool inside_key = false, inside_value = false, key_done_for_this_line = false;
     for(char c: entity_string) {
-        if(c == '{') {
-            assert(!inside_entity);
+        if(c == '{' && !inside_entity) {
             inside_entity = true;
             current.clear();
         }
-        else if(c == '}') {
+        else if(c == '}' && inside_entity) {
             assert(inside_entity);
             inside_entity = false;
             entities.push_back(current);
