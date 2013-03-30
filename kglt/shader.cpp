@@ -166,11 +166,13 @@ void ShaderProgram::add_and_compile(ShaderType type, const std::string& source) 
 }
 
 void ShaderProgram::relink() {
+    GLint linked = 0;
+
     glLinkProgram(program_id_);
     check_and_log_error(__FILE__, __LINE__);
 
-    GLint linked = 0;
     glGetProgramiv(program_id_, GL_LINK_STATUS, &linked);
+
     if(!linked) {
         GLint length;
         glGetProgramiv(program_id_, GL_INFO_LOG_LENGTH, &length);

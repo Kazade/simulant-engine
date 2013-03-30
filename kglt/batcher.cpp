@@ -15,6 +15,27 @@ namespace kglt {
 void RootGroup::bind() {
 }
 
+void RootGroup::generate_mesh_groups(RenderGroup* parent, SubEntity& ent, MaterialPass& pass) {
+    Vec3 pos;
+    std::vector<LightID> lights = subscene().partitioner().lights_within_range(pos);
+    uint32_t iteration_count = 1;
+    if(pass.iteration() == ITERATE_N) {
+        iteration_count = pass.max_iterations();
+        for(uint8_t i = 0; i < iteration_count; ++i) {
+            //FIXME: What exactly is this for? Should we pass an iteration counter to the shader?
+            parent->get_or_create<MeshGroup>(MeshGroupData(ent._parent().mesh(), ent.submesh_id())).add(&ent);
+        }
+    } else if (pass.iteration() == ITERATE_ONCE_PER_LIGHT) {
+        iteration_count = std::min<uint32_t>(lights.size(), pass.max_iterations());
+        for(uint8_t i = 0; i < iteration_count; ++i) {
+            parent->get_or_create<LightGroup>(LightGroupData(&subscene().light(lights[i]))).
+                    get_or_create<MeshGroup>(MeshGroupData(ent._parent().mesh(), ent.submesh_id())).add(&ent);
+        }
+    } else {
+        parent->get_or_create<MeshGroup>(MeshGroupData(ent._parent().mesh(), ent.submesh_id())).add(&ent);
+    }
+}
+
 void RootGroup::insert(SubEntity &ent, uint8_t pass_number) {
     //Get the material for the entity, this is used to build the tree
     Material& mat = subscene().material(ent.material_id());
@@ -39,28 +60,16 @@ void RootGroup::insert(SubEntity &ent, uint8_t pass_number) {
     //Add a node for the render settings
     current = &current->get_or_create<RenderSettingsGroup>(RenderSettingsData(pass.line_width(), pass.point_size()));
 
-    //Add the texture-related branches of the tree under the shader(
-    for(uint8_t tu = 0; tu < pass.texture_unit_count(); ++tu) {
-        RenderGroup* iteration_parent = &current->get_or_create<TextureGroup>(TextureGroupData(tu, pass.texture_unit(tu).texture())).
-                 get_or_create<TextureMatrixGroup>(TextureMatrixGroupData(tu, pass.texture_unit(tu).matrix()));
+    //FIXME: This code is duplicated below and that's bollocks
+    if(!pass.texture_unit_count()) {
+        generate_mesh_groups(current, ent, pass);
+    } else {
+        //Add the texture-related branches of the tree under the shader(
+        for(uint8_t tu = 0; tu < pass.texture_unit_count(); ++tu) {
+            RenderGroup* iteration_parent = &current->get_or_create<TextureGroup>(TextureGroupData(tu, pass.texture_unit(tu).texture())).
+                     get_or_create<TextureMatrixGroup>(TextureMatrixGroupData(tu, pass.texture_unit(tu).matrix()));
 
-        Vec3 pos;
-        std::vector<LightID> lights = subscene().partitioner().lights_within_range(pos);
-        uint32_t iteration_count = 1;
-        if(pass.iteration() == ITERATE_N) {
-            iteration_count = pass.max_iterations();
-            for(uint8_t i = 0; i < iteration_count; ++i) {
-                //FIXME: What exactly is this for? Should we pass an iteration counter to the shader?
-                iteration_parent->get_or_create<MeshGroup>(MeshGroupData(ent._parent().mesh(), ent.submesh_id())).add(&ent);
-            }
-        } else if (pass.iteration() == ITERATE_ONCE_PER_LIGHT) {
-            iteration_count = std::min<uint32_t>(lights.size(), pass.max_iterations());
-            for(uint8_t i = 0; i < iteration_count; ++i) {
-                iteration_parent->get_or_create<LightGroup>(LightGroupData(&subscene().light(lights[i]))).
-                        get_or_create<MeshGroup>(MeshGroupData(ent._parent().mesh(), ent.submesh_id())).add(&ent);
-            }
-        } else {
-            iteration_parent->get_or_create<MeshGroup>(MeshGroupData(ent._parent().mesh(), ent.submesh_id())).add(&ent);
+            generate_mesh_groups(iteration_parent, ent, pass);
         }
     }
 }

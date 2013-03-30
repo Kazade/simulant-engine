@@ -45,7 +45,7 @@ void starfield(kglt::Texture& texture, uint32_t width, uint32_t height) {
     texture.resize(width, height);
     texture.set_bpp();
 
-    const float GLOBAL_DENSITY = 0.05f;
+    const float GLOBAL_DENSITY = 0.01f;
     const float MAX_SIZE = 2.0;
     const float MAX_BRIGHTNESS = 255;
 

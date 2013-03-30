@@ -19,6 +19,7 @@ inline void hash_combine(std::size_t& seed, const T& v)
 class SubScene;
 class SubEntity;
 class Camera;
+class MaterialPass;
 
 struct GroupData {
     typedef std::tr1::shared_ptr<GroupData> ptr;
@@ -164,6 +165,8 @@ public:
 private:
     SubScene& subscene_;
     Camera& camera_;
+
+    void generate_mesh_groups(RenderGroup* parent, SubEntity& ent, MaterialPass& pass);
 };
 
 
