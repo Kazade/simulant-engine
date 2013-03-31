@@ -1,5 +1,6 @@
 #include <cassert>
 #include "frustum.h"
+#include "types.h"
 
 namespace kglt {
 
@@ -8,22 +9,20 @@ Frustum::Frustum():
 
 }
 
-bool Frustum::intersects_aabb(const kmAABB &box) const {
+bool Frustum::intersects_aabb(const kmAABB &aabb) const {
     for(const kmPlane& plane: planes_) {
-        bool inside = false;
-        for(uint8_t i = 0; i < FRUSTUM_CORNER_MAX; ++i) {
-            if(kmPlaneDotCoord(&plane, &near_corners_[i]) > 0) {
-                inside = true;
-                break;
-            }
+        const kglt::Vec3 pv(
+            plane.a > 0 ? aabb.max.x : aabb.min.x,
+            plane.b > 0 ? aabb.max.y : aabb.min.y,
+            plane.c > 0 ? aabb.max.z : aabb.min.z
+        );
 
-            if(kmPlaneDotCoord(&plane, &far_corners_[i]) > 0) {
-                inside = true;
-                break;
-            }
-        }
+        kglt::Vec4 v1(pv, 1.0f);
+        kglt::Vec4 v2(plane.a, plane.b, plane.c, plane.d);
 
-        if(!inside) {
+        const float n = kmVec4Dot(&v1, &v2);
+
+        if (n < 0) {
             return false;
         }
     }

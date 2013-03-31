@@ -18,6 +18,10 @@ struct Vec4 : public kmVec4 {
         kmVec4Fill(this, 0, 0, 0, 1);
     }
 
+    Vec4(float x, float y, float z, float w) {
+        kmVec4Fill(this, x, y, z, w);
+    }
+
     Vec4(const kmVec3& v, float w) {
         kmVec4Fill(this, v.x, v.y, v.z, w);
     }

@@ -1,5 +1,6 @@
 #include "../scene.h"
 #include "null_partitioner.h"
+#include "../camera.h"
 
 namespace kglt {
 
@@ -36,7 +37,12 @@ std::vector<SubEntity::ptr> NullPartitioner::geometry_visible_from(CameraID came
     //Just return all of the meshes in the subscene
     for(EntityID eid: all_entities_) {
         std::vector<SubEntity::ptr> subentities = subscene().entity(eid)._subentities();
-        result.insert(result.end(), subentities.begin(), subentities.end());
+
+        for(SubEntity::ptr ent: subentities) {
+            if(subscene().camera(camera_id).frustum().intersects_aabb(ent->absolute_bounds())) {
+                result.push_back(ent);
+            }
+        }
     }
 
     return result;
