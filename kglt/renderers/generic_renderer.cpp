@@ -2,6 +2,7 @@
 
 #include "generic_renderer.h"
 
+#include "../entity.h"
 #include "../shader.h"
 #include "../scene.h"
 #include "../camera.h"

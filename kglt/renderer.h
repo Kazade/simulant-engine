@@ -2,13 +2,15 @@
 #define RENDERER_H
 
 #include <set>
+#include <vector>
 #include <tr1/memory>
 
 #include "types.h"
 #include "utils/geometry_buffer.h"
-#include "entity.h"
 
 namespace kglt {
+
+class SubEntity;
 
 class Renderer {
 public:
@@ -17,7 +19,6 @@ public:
     Renderer(Scene& scene):
         scene_(scene) {}
 
-    void render(const std::vector<SubEntity::ptr>& subentities, CameraID camera); //FIXME: Should pass in batching structure
     Scene& scene() { return scene_; }
 
     void set_current_subscene(SubSceneID subscene) {

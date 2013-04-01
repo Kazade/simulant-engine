@@ -8,9 +8,10 @@
 #include "generic/managed.h"
 #include "utils/geometry_buffer.h"
 #include "types.h"
-#include "entity.h"
 
 namespace kglt {
+
+class SubEntity;
 
 class Partitioner:
     public Managed<Partitioner> {
@@ -26,7 +27,7 @@ public:
     virtual void remove_light(LightID obj) = 0;
 
     virtual std::vector<LightID> lights_within_range(const kmVec3& location) = 0;
-    virtual std::vector<SubEntity::ptr> geometry_visible_from(CameraID camera_id) = 0;
+    virtual std::vector<std::tr1::shared_ptr<SubEntity>> geometry_visible_from(CameraID camera_id) = 0;
 
 protected:
     SubScene& subscene() { return subscene_; }

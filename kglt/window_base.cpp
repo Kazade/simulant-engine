@@ -8,8 +8,9 @@
 #include "loaders/material_script.h"
 #include "loaders/q2bsp_loader.h"
 #include "loaders/opt_loader.h"
-#include "loaders/dxf_loader.h"
+#include "loaders/ogg_loader.h"
 #include "utils/debug_bar.h"
+#include "sound.h"
 
 namespace kglt {
 
@@ -29,7 +30,7 @@ WindowBase::WindowBase():
     register_loader(LoaderType::ptr(new kglt::loaders::MaterialScriptLoaderType));
     register_loader(LoaderType::ptr(new kglt::loaders::Q2BSPLoaderType));
     register_loader(LoaderType::ptr(new kglt::loaders::OPTLoaderType));
-    register_loader(LoaderType::ptr(new kglt::loaders::DXFLoaderType));
+    register_loader(LoaderType::ptr(new kglt::loaders::OGGLoaderType));
 
     ktiGenTimers(1, &timer_);
     ktiBindTimer(timer_);
@@ -44,11 +45,17 @@ WindowBase::WindowBase():
     logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));   
 }
 
+WindowBase::~WindowBase() {
+    Sound::shutdown_openal();
+}
+
 bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
     set_width(width);
     set_height(height);
 
     bool result = create_window(width, height, bpp, fullscreen);        
+
+    Sound::init_openal();
 
     if(result && !initialized_) {
         debug_bar_.reset(new DebugBar(width_, height_));

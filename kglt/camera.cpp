@@ -1,4 +1,4 @@
-
+#include "entity.h"
 #include "camera.h"
 #include "scene.h"
 #include "window_base.h"
@@ -54,6 +54,8 @@ void Camera::follow(EntityID entity, const kglt::Vec3& offset) {
 }
 
 void Camera::do_update(double dt) {
+    update_source(dt);
+
     if(following_entity_) {
         kmQuaternion entity_rotation = subscene().entity(following_entity_).absolute_rotation();
         kmVec3 entity_position = subscene().entity(following_entity_).absolute_position();

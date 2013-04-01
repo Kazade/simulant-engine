@@ -2,7 +2,7 @@
 
 #include "pipeline.h"
 #include "scene.h"
-
+#include "entity.h"
 #include "mesh.h"
 #include "light.h"
 

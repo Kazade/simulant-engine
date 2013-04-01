@@ -3,6 +3,7 @@
 #include "../kazbase/logging.h"
 #include "background.h"
 
+#include "../entity.h"
 #include "../pipeline.h"
 #include "../camera.h"
 #include "../shortcuts.h"

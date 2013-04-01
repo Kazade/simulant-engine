@@ -87,6 +87,10 @@ private:
     Mesh& _mesh_ref();
 
     sigc::signal<void, EntityID> signal_mesh_changed_;
+
+    void do_update(double dt) {
+        update_source(dt);
+    }
 };
 
 class SubEntity :

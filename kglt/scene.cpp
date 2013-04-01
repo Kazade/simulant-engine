@@ -1,9 +1,11 @@
 #include <GLee.h>
 
+#include "entity.h"
 #include "scene.h"
 #include "renderer.h"
 #include "camera.h"
 #include "pipeline.h"
+#include "light.h"
 
 #include "partitioners/null_partitioner.h"
 #include "partitioners/octree_partitioner.h"

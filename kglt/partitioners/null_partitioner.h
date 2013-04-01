@@ -1,12 +1,11 @@
 #ifndef NULL_PARTITIONER_H
 #define NULL_PARTITIONER_H
 
-#include "../entity.h"
-#include "../light.h"
-
 #include "../partitioner.h"
 
 namespace kglt {
+
+class SubEntity;
 
 class NullPartitioner : public Partitioner {
 public:
@@ -30,7 +29,7 @@ public:
     }
 
     std::vector<LightID> lights_within_range(const kmVec3& location);
-    std::vector<SubEntity::ptr> geometry_visible_from(CameraID camera_id);
+    std::vector<std::tr1::shared_ptr<SubEntity>> geometry_visible_from(CameraID camera_id);
 
 private:
     std::set<EntityID> all_entities_;

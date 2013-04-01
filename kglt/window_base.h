@@ -51,9 +51,7 @@ public:
         return window;
     }
 
-    virtual ~WindowBase() {
-        
-    }
+    virtual ~WindowBase();
     
     Loader::ptr loader_for(const std::string& filename, const std::string& type_hint) {
         std::string final_file = resource_locator().locate_file(filename);

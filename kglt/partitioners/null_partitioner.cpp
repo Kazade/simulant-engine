@@ -1,6 +1,8 @@
 #include "../scene.h"
-#include "null_partitioner.h"
 #include "../camera.h"
+#include "../entity.h"
+#include "../light.h"
+#include "null_partitioner.h"
 
 namespace kglt {
 
