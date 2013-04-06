@@ -33,11 +33,13 @@ public:
     void set_active_animation(const std::string& anim_name);
     void move_to(float x, float y, float z);
     void set_render_dimensions(float width, float height);
+    void set_visible(bool value=true);
 
     MaterialID material();
     Scene& scene() { return scene_; }
     SubSceneID subscene_id() const { return subscene_; }
     EntityID entity_id() { return entity_id_; }
+
 private:
     Scene& scene_;
     SubSceneID subscene_;

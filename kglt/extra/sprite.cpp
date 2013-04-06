@@ -16,6 +16,11 @@ Sprite::Sprite(Scene& scene, SubSceneID subscene):
     scene_.subscene(subscene_).entity(entity_id()).set_mesh(mesh_id_); //Rebuild the entity
 }
 
+void Sprite::set_visible(bool value) {
+    SubScene& subscene = scene().subscene(subscene_id());
+    subscene.entity(entity_id()).set_visible(value);
+}
+
 void Sprite::add_animation(const std::string& anim_name, const std::vector<TextureID>& frames, double duration) {
     SubScene& subscene = scene().subscene(subscene_id());
 

@@ -37,6 +37,8 @@ void RootGroup::generate_mesh_groups(RenderGroup* parent, SubEntity& ent, Materi
 }
 
 void RootGroup::insert(SubEntity &ent, uint8_t pass_number) {
+    if(!ent._parent().is_visible()) return;
+
     //Get the material for the entity, this is used to build the tree
     Material& mat = subscene().material(ent.material_id());
 
