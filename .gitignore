@@ -3,3 +3,4 @@
 */CMakeFiles*
 *cmake_install*
 build
+tests/main.cpp

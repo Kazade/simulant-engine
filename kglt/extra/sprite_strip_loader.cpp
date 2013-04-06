@@ -14,10 +14,6 @@ SpriteStripLoader::SpriteStripLoader(ResourceManager& rm, const std::string& fil
     rm_(rm),
     filename_(filename),
     frame_width_(frame_width) {
-
-    if(!os::path::exists(filename)) {
-        throw IOError("File does not exist: " + filename);
-    }
 }
 
 std::vector<TextureID> SpriteStripLoader::load_frames() {
