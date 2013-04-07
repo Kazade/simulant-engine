@@ -17,7 +17,9 @@ int main(int argc, char* argv[]) {
 
     ui::Label& label = interface->label(interface->new_label());
     label.set_text(u8"The quick brown fox jumped over the lazy dog \u00a9");
-    label.set_position(ui::Ratio(0.1), ui::Ratio(0.5));
+    label.set_position(ui::Ratio(0.01), ui::Ratio(0.2));
+    label.set_foreground_colour(kglt::Colour::black);
+    label.set_size(ui::Ratio(0.5), ui::Ratio(0.2));
 
     while(window->update()) {}
 

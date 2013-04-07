@@ -14,22 +14,6 @@ namespace kglt {
 
 class SubEntity;
 
-enum RenderPriority {
-    RENDER_PRIORITY_BACKGROUND = -100,
-    RENDER_PRIORITY_DISTANT = -50,
-    RENDER_PRIORITY_MAIN = 0,
-    RENDER_PRIORITY_NEAR = 50,
-    RENDER_PRIORITY_FOREGROUND = 100
-};
-
-const std::vector<RenderPriority> RENDER_PRIORITIES = {
-    RENDER_PRIORITY_BACKGROUND,
-    RENDER_PRIORITY_DISTANT,
-    RENDER_PRIORITY_MAIN,
-    RENDER_PRIORITY_NEAR,
-    RENDER_PRIORITY_FOREGROUND
-};
-
 class Entity :
     public MeshInterface,
     public Managed<Entity>,

@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 #include "colour.h"
 
 #include "kazmath/vec3.h"
@@ -90,6 +91,22 @@ enum LightType {
     LIGHT_TYPE_POINT,
     LIGHT_TYPE_DIRECTIONAL,
     LIGHT_TYPE_SPOT_LIGHT
+};
+
+enum RenderPriority {
+    RENDER_PRIORITY_BACKGROUND = -100,
+    RENDER_PRIORITY_DISTANT = -50,
+    RENDER_PRIORITY_MAIN = 0,
+    RENDER_PRIORITY_NEAR = 50,
+    RENDER_PRIORITY_FOREGROUND = 100
+};
+
+const std::vector<RenderPriority> RENDER_PRIORITIES = {
+    RENDER_PRIORITY_BACKGROUND,
+    RENDER_PRIORITY_DISTANT,
+    RENDER_PRIORITY_MAIN,
+    RENDER_PRIORITY_NEAR,
+    RENDER_PRIORITY_FOREGROUND
 };
 
 typedef UniqueID<0> MeshID;

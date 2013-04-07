@@ -1,7 +1,7 @@
-#ifndef TYPES_H
-#define TYPES_H
+#ifndef UI_TYPES_H
+#define UI_TYPES_H
 
-#include "../../generic/unique_id.h"
+#include "kglt/generic/unique_id.h"
 
 namespace kglt {
 namespace extra {

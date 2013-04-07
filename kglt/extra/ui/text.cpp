@@ -26,7 +26,7 @@ Text::Text(Font::ptr font, Vec2 position, const unicode &text):
 
         x_offset += info.offset_x;
 
-        SubMeshIndex idx = kglt::procedural::mesh::rectangle(mesh, info.width, info.height, float(x_offset) + (float(info.width) / 2.0), info.offset_y + (float(info.height) / 2.0), 0.1, false);
+        SubMeshIndex idx = kglt::procedural::mesh::rectangle(mesh, info.width, info.height, std::floor(float(x_offset) + (float(info.width) / 2.0)), std::floor(float(info.offset_y) + (float(info.height) / 2.0)), 0.1, false);
 
         MaterialID mat;
 
@@ -67,8 +67,7 @@ Text::Text(Font::ptr font, Vec2 position, const unicode &text):
         mesh.submesh(idx).vertex_data().done();
     }
 
-    entity_ = interface_.subscene().new_entity();
-    interface_.subscene().entity(entity_).set_mesh(mesh_);
+    entity_ = interface_.subscene().new_entity(mesh_);
     interface_.subscene().entity(entity_).move_to(position.x, position.y, 0);
 }
 

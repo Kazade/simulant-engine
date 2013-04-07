@@ -169,6 +169,7 @@ void Scene::initialize_defaults() {
 
 SubSceneID Scene::new_subscene(AvailablePartitioner partitioner) {
     SubScene& ss = subscene(SubSceneManager::manager_new());
+
     switch(partitioner) {
         case PARTITIONER_NULL:
         ss.set_partitioner(Partitioner::ptr(new NullPartitioner(ss)));

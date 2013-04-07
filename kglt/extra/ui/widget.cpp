@@ -17,7 +17,6 @@ Widget::Widget(Interface& interface):
     parent_(nullptr) {
 
     mesh_ = interface.subscene().new_mesh();
-    entity_ = interface.subscene().new_entity();
 
     Mesh& mesh = interface.subscene().mesh(mesh_);
 
@@ -30,7 +29,8 @@ Widget::Widget(Interface& interface):
         0
     );
 
-    interface.subscene().entity(entity_).set_mesh(mesh_);
+    mesh.set_material(interface.scene().default_material_id());
+    entity_ = interface.subscene().new_entity(mesh_);
 }
 
 uint16_t Widget::width_in_pixels() const {
@@ -66,6 +66,7 @@ void Widget::set_size(Ratio width, Ratio height) {
         0
     );
 
+    mesh.set_material(interface().scene().default_material_id());
     interface().subscene().entity(entity_).set_mesh(mesh_);
 
     on_resize();
