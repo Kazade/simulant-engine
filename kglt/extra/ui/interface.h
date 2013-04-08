@@ -4,7 +4,11 @@
 #include "../../generic/managed.h"
 #include"../../types.h"
 
-#include <Rocket/Core/SystemInterface.h>
+namespace Rocket {
+namespace Core {
+    class Context;
+}
+}
 
 namespace kglt {
 namespace extra {
@@ -13,8 +17,7 @@ namespace ui {
 class Interface;
 
 class Interface :
-    public Managed<Interface>,
-    public Rocket::Core::SystemInterface {
+    public Managed<Interface> {
 
 public:
     Interface(Scene& scene, uint32_t width_in_pixels, uint32_t height_in_pixels);
@@ -32,6 +35,8 @@ private:
 
     uint32_t width_;
     uint32_t height_;
+
+    Rocket::Core::Context* context_;
 };
 
 }
