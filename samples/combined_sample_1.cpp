@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
     sprite->add_animation("running", container::slice(frames, 31, 35), 0.5);
     sprite->set_render_dimensions(1.5, 1.5);
     sprite->move_to(0.0, -2.0, -1.0);
-
+/*
     ui::Interface::ptr interface = ui::Interface::create(scene, 800, 600);  
     interface->load_font("sample_data/sample.ttf", 12);
 
@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
     interface->label(l).set_position(ui::Ratio(0.1), ui::Ratio(0.8));
     interface->label(l).set_size(ui::Ratio(0.4), ui::Ratio(0.1));
     interface->label(l).set_foreground_colour(kglt::Colour::red);
-
+*/
     Background::ptr background = Background::create(scene);
 
     //Alternatively window.scene().background().add_layer("sample_data/parallax/back_layer.png", BACKGROUND_FILL);

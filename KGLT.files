@@ -169,16 +169,8 @@ kglt/resource_locator.cpp
 kglt/loaders/material_script.h
 kglt/loaders/material_script.cpp
 kglt/extra/ui/interface.h
-kglt/extra/ui/widget.h
 kglt/extra/ui/types.h
 kglt/extra/ui/interface.cpp
-kglt/extra/ui/font.h
-kglt/extra/ui/font.cpp
-kglt/extra/ui/widgets/label.h
-kglt/extra/ui/widgets/label.cpp
-kglt/extra/ui/widget.cpp
-kglt/extra/ui/text.h
-kglt/extra/ui/text.cpp
 kglt/resource_manager.h
 kglt/resource_manager.cpp
 kglt/resource.h
