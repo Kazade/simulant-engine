@@ -12,8 +12,11 @@ int main(int argc, char* argv[]) {
 
     window->set_title("KGLT UI Sample");
 
-    /*
-    ui::Interface::ptr interface = ui::Interface::create(scene, window->width(), window->height());
+
+    ui::Interface::ptr interface = ui::Interface::create(scene, window->width(), window->height());    
+    window->loader_for("sample_data/demo.rml")->into(*interface);
+
+/*
     interface->load_font("sample_data/sample.ttf", 12);
 
     ui::Label& label = interface->label(interface->new_label());
@@ -22,7 +25,9 @@ int main(int argc, char* argv[]) {
     label.set_foreground_colour(kglt::Colour::black);
     label.set_size(ui::Ratio(0.5), ui::Ratio(0.2));
 */
-    while(window->update()) {}
+    while(window->update([&](float dt) {
+        interface->update(dt);
+    })) {}
 
     return 0;
 }

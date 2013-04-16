@@ -9,6 +9,7 @@
 #include "loaders/q2bsp_loader.h"
 #include "loaders/opt_loader.h"
 #include "loaders/ogg_loader.h"
+#include "loaders/rml_loader.h"
 #include "utils/debug_bar.h"
 #include "sound.h"
 
@@ -23,7 +24,8 @@ WindowBase::WindowBase():
     resource_locator_(ResourceLocator::create()),
     frame_counter_time_(0),
     frame_counter_frames_(0),
-    frame_time_in_milliseconds_(0) {
+    frame_time_in_milliseconds_(0),
+    total_time_(0) {
 
     //Register the default resource loaders
     register_loader(LoaderType::ptr(new kglt::loaders::TextureLoaderType));
@@ -31,6 +33,7 @@ WindowBase::WindowBase():
     register_loader(LoaderType::ptr(new kglt::loaders::Q2BSPLoaderType));
     register_loader(LoaderType::ptr(new kglt::loaders::OPTLoaderType));
     register_loader(LoaderType::ptr(new kglt::loaders::OGGLoaderType));
+    register_loader(LoaderType::ptr(new kglt::loaders::RMLLoaderType));
 
     ktiGenTimers(1, &timer_);
     ktiBindTimer(timer_);
@@ -112,6 +115,8 @@ void WindowBase::set_logging_level(LoggingLevel level) {
 }
 
 bool WindowBase::update(WindowUpdateCallback step) {
+    signal_frame_started_();
+
     ktiBindTimer(frame_timer_);
     ktiUpdateFrameTime();
 
@@ -126,6 +131,8 @@ bool WindowBase::update(WindowUpdateCallback step) {
 
     ktiBindTimer(timer_);
     ktiUpdateFrameTime();
+
+    total_time_ += delta_time();
 
     idle_.execute(); //Execute idle tasks first
     check_events();
@@ -145,6 +152,8 @@ bool WindowBase::update(WindowUpdateCallback step) {
 
     scene().render();
 
+    signal_pre_swap_();
+
     if(debug_bar_) {
         debug_bar_->render();
     }
@@ -160,6 +169,8 @@ bool WindowBase::update(WindowUpdateCallback step) {
         scene_.reset();
         debug_bar_.reset();
     }
+
+    signal_frame_finished_();
 
     return is_running_;
 

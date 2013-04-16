@@ -241,3 +241,5 @@ tests/test_batcher.h
 kglt/batcher.cpp
 kglt/loaders/ogg_loader.h
 kglt/loaders/ogg_loader.cpp
+kglt/loaders/rml_loader.h
+kglt/loaders/rml_loader.cpp
