@@ -5,6 +5,7 @@
 #include <Rocket/Core/FontDatabase.h>
 #include <Rocket/Core/Vertex.h>
 #include <Rocket/Core/Types.h>
+#include <Rocket/Core/String.h>
 
 #include <kazmath/mat4.h>
 
@@ -47,6 +48,17 @@ public:
 
     }
 
+    bool LoadTexture(Rocket::Core::TextureHandle& texture_handle, Rocket::Core::Vector2i& texture_dimensions, const Rocket::Core::String& source) {
+        kglt::Texture& tex = subscene().texture(subscene().new_texture());
+        subscene().window().loader_for(source.CString())->into(tex);
+
+        subscene().window().idle().add_once(std::tr1::bind(&kglt::Texture::upload, tex, true, false, false, true));
+
+        textures_[texture_handle] = tex.id();
+
+        return true;
+    }
+
     bool GenerateTexture(Rocket::Core::TextureHandle& texture_handle, const Rocket::Core::byte* source, const Rocket::Core::Vector2i& dimensions) {
         kglt::Texture& tex = subscene().texture(subscene().new_texture());
 
@@ -60,6 +72,12 @@ public:
         textures_[texture_handle] = tex.id();
 
         return true;
+    }
+
+    void ReleaseTexture(Rocket::Core::TextureHandle texture) {
+        kglt::TextureID id = textures_[texture];
+        subscene().delete_texture(id);
+        textures_.erase(texture);
     }
 
     void RenderGeometry(
@@ -86,12 +104,15 @@ public:
 
         glUseProgram(0);
         glActiveTexture(GL_TEXTURE0);
-        glEnable(GL_TEXTURE_2D);
 
-        GLuint tex_id = subscene().texture(textures_[texture]).gl_tex();
-        glBindTexture(GL_TEXTURE_2D, tex_id);
-
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+        if(texture) {
+            glEnable(GL_TEXTURE_2D);
+            GLuint tex_id = subscene().texture(textures_[texture]).gl_tex();
+            glBindTexture(GL_TEXTURE_2D, tex_id);
+            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+        } else {
+            glDisable(GL_TEXTURE_2D);
+        }
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

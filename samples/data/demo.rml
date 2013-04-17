@@ -18,6 +18,7 @@
         
         p { 
             display: block;
+            background-color: yellow;
         }
     </style>
 </head>
