@@ -28,6 +28,10 @@ enum LoggingLevel {
 
 namespace kglt {
     
+namespace ui {
+    class Interface;
+}
+
 class InputController;
 class Keyboard;
 class Mouse;
@@ -119,6 +123,9 @@ public:
     sigc::signal<void>& signal_frame_finished() { return signal_frame_finished_; }
     sigc::signal<void>& signal_pre_swap() { return signal_pre_swap_; }
 
+    ui::Interface& ui() { return *interface_; }
+    void load_ui(const std::string& rml_file);
+
 protected:
     void stop_running() { is_running_ = false; }
     
@@ -136,7 +143,6 @@ protected:
     InputController& input_controller() { assert(input_controller_); return *input_controller_; }
 
     WindowBase();
-
 private:    
     bool initialized_;
 
@@ -170,6 +176,8 @@ private:
     sigc::signal<void> signal_frame_started_;
     sigc::signal<void> signal_pre_swap_;
     sigc::signal<void> signal_frame_finished_;
+
+    std::tr1::shared_ptr<ui::Interface> interface_;
 };
 
 }

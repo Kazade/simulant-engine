@@ -168,9 +168,6 @@ kglt/resource_locator.h
 kglt/resource_locator.cpp
 kglt/loaders/material_script.h
 kglt/loaders/material_script.cpp
-kglt/extra/ui/interface.h
-kglt/extra/ui/types.h
-kglt/extra/ui/interface.cpp
 kglt/resource_manager.h
 kglt/resource_manager.cpp
 kglt/resource.h
@@ -243,3 +240,6 @@ kglt/loaders/ogg_loader.h
 kglt/loaders/ogg_loader.cpp
 kglt/loaders/rml_loader.h
 kglt/loaders/rml_loader.cpp
+kglt/ui/types.h
+kglt/ui/interface.h
+kglt/ui/interface.cpp

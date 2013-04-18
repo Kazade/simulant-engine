@@ -9,19 +9,16 @@
 
 #include <kazmath/mat4.h>
 
-#include "../../kazbase/os/path.h"
-#include "../../window_base.h"
-#include "../../scene.h"
-#include "../../camera.h"
-#include "../../pipeline.h"
+#include "../kazbase/os/path.h"
+#include "../window_base.h"
+#include "../scene.h"
+#include "../camera.h"
+#include "../pipeline.h"
 
 #include "interface.h"
 
 namespace kglt {
-namespace extra {
 namespace ui {
-
-SubScene& Interface::subscene() { return scene_.subscene(subscene_); }
 
 class RocketSystemInterface : public Rocket::Core::SystemInterface {
 public:
@@ -49,10 +46,10 @@ public:
     }
 
     bool LoadTexture(Rocket::Core::TextureHandle& texture_handle, Rocket::Core::Vector2i& texture_dimensions, const Rocket::Core::String& source) {
-        kglt::Texture& tex = subscene().texture(subscene().new_texture());
-        subscene().window().loader_for(source.CString())->into(tex);
+        kglt::Texture& tex = manager().texture(manager().new_texture());
+        window_.loader_for(source.CString())->into(tex);
 
-        subscene().window().idle().add_once(std::tr1::bind(&kglt::Texture::upload, tex, true, false, false, true));
+        window_.idle().add_once(std::tr1::bind(&kglt::Texture::upload, tex, true, false, false, true));
 
         textures_[texture_handle] = tex.id();
 
@@ -60,7 +57,7 @@ public:
     }
 
     bool GenerateTexture(Rocket::Core::TextureHandle& texture_handle, const Rocket::Core::byte* source, const Rocket::Core::Vector2i& dimensions) {
-        kglt::Texture& tex = subscene().texture(subscene().new_texture());
+        kglt::Texture& tex = manager().texture(manager().new_texture());
 
         uint32_t data_size = (dimensions.x * dimensions.y * 4);
         tex.resize(dimensions.x, dimensions.y);
@@ -76,7 +73,7 @@ public:
 
     void ReleaseTexture(Rocket::Core::TextureHandle texture) {
         kglt::TextureID id = textures_[texture];
-        subscene().delete_texture(id);
+        manager().delete_texture(id);
         textures_.erase(texture);
     }
 
@@ -92,7 +89,7 @@ public:
 
 
         kmMat4 projection;
-        kmMat4OrthographicProjection(&projection, 0, subscene().window().width(), subscene().window().height(), 0, -1, 1);
+        kmMat4OrthographicProjection(&projection, 0, window_.width(), window_.height(), 0, -1, 1);
 
         glPushMatrix();
         glMatrixMode(GL_PROJECTION);
@@ -107,7 +104,7 @@ public:
 
         if(texture) {
             glEnable(GL_TEXTURE_2D);
-            GLuint tex_id = subscene().texture(textures_[texture]).gl_tex();
+            GLuint tex_id = manager().texture(textures_[texture]).gl_tex();
             glBindTexture(GL_TEXTURE_2D, tex_id);
             glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
         } else {
@@ -152,11 +149,11 @@ public:
 
     void SetScissorRegion(int x, int y, int width, int height) {
         logging::warn("Not implemented", __FILE__, __LINE__);
-        glScissor(x, subscene().window().height() - (y + height), width, height);
+        glScissor(x, window_.height() - (y + height), width, height);
     }
 
     //Our magic
-    void register_context(Rocket::Core::Context* context, kglt::SubScene* subscene) {
+    void register_context(Rocket::Core::Context* context, kglt::ResourceManager* subscene) {
         if(contexts_.find(context) != contexts_.end()) {
             throw std::logic_error("Tried to register the same context twice");
         }
@@ -171,7 +168,7 @@ public:
 
     }
 
-    SubScene& subscene() {
+    ResourceManager& manager() {
         Rocket::Core::Context* context = GetContext();
         return *contexts_[context];
     }
@@ -179,7 +176,7 @@ public:
 private:
     WindowBase& window_;
 
-    std::map<Rocket::Core::Context*, kglt::SubScene*> contexts_;    
+    std::map<Rocket::Core::Context*, kglt::ResourceManager*> contexts_;
     std::map<Rocket::Core::TextureHandle, kglt::TextureID> textures_;
 };
 
@@ -187,16 +184,20 @@ private:
 static std::tr1::shared_ptr<RocketSystemInterface> rocket_system_interface_;
 static std::tr1::shared_ptr<RocketRenderInterface> rocket_render_interface_;
 
-Interface::Interface(Scene &scene, uint32_t width_in_pixels, uint32_t height_in_pixels):
-    scene_(scene),
+Interface::Interface(WindowBase& window, uint32_t width_in_pixels, uint32_t height_in_pixels):
+    window_(window),
     width_(width_in_pixels),
     height_(height_in_pixels) {
 
+    window.signal_pre_swap().connect(sigc::mem_fun(this, &Interface::render));
+}
+
+bool Interface::init() {
     if(!rocket_system_interface_) {
-        rocket_system_interface_.reset(new RocketSystemInterface(scene.window()));
+        rocket_system_interface_.reset(new RocketSystemInterface(window_));
         Rocket::Core::SetSystemInterface(rocket_system_interface_.get());
 
-        rocket_render_interface_.reset(new RocketRenderInterface(scene.window()));
+        rocket_render_interface_.reset(new RocketRenderInterface(window_));
         Rocket::Core::SetRenderInterface(rocket_render_interface_.get());
 
         Rocket::Core::Initialise();
@@ -222,19 +223,10 @@ Interface::Interface(Scene &scene, uint32_t width_in_pixels, uint32_t height_in_
     }
 
     //FIXME: Change name for each interface
-    context_ = Rocket::Core::CreateContext("default", Rocket::Core::Vector2i(width_in_pixels, height_in_pixels));
-    subscene_ = scene.new_subscene(PARTITIONER_NULL); //Don't cull the UI
+    context_ = Rocket::Core::CreateContext("default", Rocket::Core::Vector2i(width_, height_));
+    rocket_render_interface_->register_context(context_, &window_.scene());
 
-    //Register the context and subscene for with the rocket interface
-    //FIXME: Need to handle subscene deletion
-    rocket_render_interface_->register_context(context_, &subscene());
-
-    camera_ = subscene().new_camera();
-
-    subscene().camera(camera_).set_orthographic_projection(0, width_, 0, height_, -1.0, 1.0);
-    scene_.pipeline().add_stage(subscene_, camera_, ViewportID(), TextureID(), kglt::RENDER_PRIORITY_FOREGROUND);
-
-    scene.window().signal_pre_swap().connect(sigc::mem_fun(this, &Interface::render));
+    return true;
 }
 
 std::string Interface::locate_font(const std::string& filename) {
@@ -269,8 +261,11 @@ Interface::~Interface() {
     if(rocket_render_interface_) {
         rocket_render_interface_->unregister_context(context_);
     }
+
+    context_->RemoveReference();
+
+    Rocket::Core::Shutdown();
 }
 
-}
 }
 }
