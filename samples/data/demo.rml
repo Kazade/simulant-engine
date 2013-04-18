@@ -6,10 +6,8 @@
     <style> 
         body {
             font-family: "Liberation Sans";
-            width: 300px;
-            height: 200px;
-            color: blue;
-            font-size: 24px;
+            color: yellow;
+            font-size: 16px;
         }
                 
         div {
@@ -18,16 +16,24 @@
         
         p { 
             display: block;
-            background-color: yellow;
+            padding-left: 5px;
+        }
+        
+        i {
+            font-style: italic;
+        }
+        
+        b {
+            font-weight: bold;
         }
     </style>
 </head>
 <body>    
     <p class="thing">
-        This is a thing
+        <b><i>Score:</i></b> 1234567
     </p>
-    <p class="other">
-        This is another thing
+    <p class="thing">
+        <b><i>Rings:</i></b> 10
     </p>
 </body>
 
