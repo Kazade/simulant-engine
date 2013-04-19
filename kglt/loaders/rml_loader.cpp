@@ -1,6 +1,7 @@
 #include <Rocket/Core.h>
 #include "rml_loader.h"
 
+#include "../ui/ui_private.h"
 #include "../ui/interface.h"
 
 namespace kglt {
@@ -11,11 +12,11 @@ void RMLLoader::into(Loadable& resource) {
     ui::Interface* iface = dynamic_cast<ui::Interface*>(res_ptr);
     assert(iface && "You passed a Resource that is not a Interface to the RML loader");
 
-    iface->_set_document(iface->_context()->LoadDocument(filename_.c_str()));
-    if(!iface->_document()) {
+    iface->impl()->document_ = iface->impl()->context_->LoadDocument(filename_.c_str());
+    if(!iface->impl()->document_) {
         throw IOError("Unable to load the RML document");
     } else {
-        iface->_document()->Show();
+        iface->impl()->document_->Show();
     }
 }
 

@@ -243,3 +243,4 @@ kglt/loaders/rml_loader.cpp
 kglt/ui/types.h
 kglt/ui/interface.h
 kglt/ui/interface.cpp
+kglt/ui/ui_private.h

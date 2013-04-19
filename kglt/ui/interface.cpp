@@ -16,6 +16,7 @@
 #include "../pipeline.h"
 
 #include "interface.h"
+#include "ui_private.h"
 
 namespace kglt {
 namespace ui {
@@ -187,7 +188,8 @@ static std::tr1::shared_ptr<RocketRenderInterface> rocket_render_interface_;
 Interface::Interface(WindowBase& window, uint32_t width_in_pixels, uint32_t height_in_pixels):
     window_(window),
     width_(width_in_pixels),
-    height_(height_in_pixels) {
+    height_(height_in_pixels),
+    impl_(new RocketImpl()) {
 
     window.signal_pre_swap().connect(sigc::mem_fun(this, &Interface::render));
 }
@@ -223,8 +225,8 @@ bool Interface::init() {
     }
 
     //FIXME: Change name for each interface
-    context_ = Rocket::Core::CreateContext("default", Rocket::Core::Vector2i(width_, height_));
-    rocket_render_interface_->register_context(context_, &window_.scene());
+    impl_->context_ = Rocket::Core::CreateContext("default", Rocket::Core::Vector2i(width_, height_));
+    rocket_render_interface_->register_context(impl_->context_, &window_.scene());
 
     return true;
 }
@@ -250,19 +252,19 @@ std::string Interface::locate_font(const std::string& filename) {
 }
 
 void Interface::update(float dt) {
-    context_->Update();
+    impl_->context_->Update();
 }
 
 void Interface::render() {
-    context_->Render();
+    impl_->context_->Render();
 }
 
 Interface::~Interface() {
     if(rocket_render_interface_) {
-        rocket_render_interface_->unregister_context(context_);
+        rocket_render_interface_->unregister_context(impl_->context_);
     }
 
-    context_->RemoveReference();
+    impl_->context_->RemoveReference();
 
     Rocket::Core::Shutdown();
 }

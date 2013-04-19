@@ -1,19 +1,15 @@
 #ifndef INTERFACE_H
 #define INTERFACE_H
 
+#include <tr1/memory>
+
 #include "../generic/managed.h"
 #include"../types.h"
 #include "../loadable.h"
 
-namespace Rocket {
-namespace Core {
-    class Context;
-    class ElementDocument;
-}
-}
-
 namespace kglt {
 
+class RocketImpl;
 class WindowBase;
 
 namespace ui {
@@ -31,10 +27,7 @@ public:
     uint16_t width_in_pixels() const { return width_; }
     uint16_t height_in_pixels() const { return height_; }
 
-    Rocket::Core::ElementDocument* _document() { return document_; }
-    void _set_document(Rocket::Core::ElementDocument* doc) { document_ = doc; }
-
-    Rocket::Core::Context* _context() { return context_; }
+    RocketImpl* impl() { return impl_.get(); }
 
     bool init();
     void update(float dt);
@@ -48,8 +41,7 @@ private:
     uint32_t width_;
     uint32_t height_;
 
-    Rocket::Core::Context* context_;
-    Rocket::Core::ElementDocument* document_;
+    std::unique_ptr<RocketImpl> impl_;
 };
 
 }
