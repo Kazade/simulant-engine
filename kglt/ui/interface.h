@@ -3,6 +3,7 @@
 
 #include <tr1/memory>
 
+#include "../kazbase/unicode.h"
 #include "../generic/managed.h"
 #include"../types.h"
 #include "../loadable.h"
@@ -15,6 +16,20 @@ class WindowBase;
 namespace ui {
 
 class Interface;
+
+class ElementImpl;
+
+class Element {
+public:
+    Element(std::tr1::shared_ptr<ElementImpl> impl);
+
+    void text(const unicode& content);
+    const unicode text() const;
+
+    void add_class(const std::string& cl);
+private:
+    std::tr1::shared_ptr<ElementImpl> impl_;
+};
 
 class Interface :
     public Managed<Interface>,
@@ -32,6 +47,10 @@ public:
     bool init();
     void update(float dt);
     void render();
+
+    Element append(const std::string& tag);
+    void set_styles(const std::string& stylesheet_content);
+    std::vector<Element> _(const std::string& selector);
 
 private:    
     std::string locate_font(const std::string& filename);

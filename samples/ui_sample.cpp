@@ -1,7 +1,4 @@
 #include "kglt/kglt.h"
-#include "kglt/extra/ui/interface.h"
-
-using namespace kglt::extra;
 
 int main(int argc, char* argv[]) {
     //Set up logging to stdio

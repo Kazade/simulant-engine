@@ -1,7 +1,6 @@
 #include "kglt/kglt.h"
 #include "kglt/shortcuts.h"
 #include "kglt/additional.h"
-#include "kglt/extra/ui/interface.h"
 
 using kglt::extra::Sprite;
 using kglt::extra::SpriteStripLoader;

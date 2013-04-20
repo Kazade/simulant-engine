@@ -9,6 +9,7 @@
 
 #include <kazmath/mat4.h>
 
+#include "../kazbase/string.h"
 #include "../kazbase/os/path.h"
 #include "../window_base.h"
 #include "../scene.h"
@@ -226,6 +227,10 @@ bool Interface::init() {
 
     //FIXME: Change name for each interface
     impl_->context_ = Rocket::Core::CreateContext("default", Rocket::Core::Vector2i(width_, height_));
+
+    impl_->document_ = impl_->context_->CreateDocument();
+    set_styles("body { font-family: \"Liberation Sans\"; }");
+
     rocket_render_interface_->register_context(impl_->context_, &window_.scene());
 
     return true;
@@ -257,6 +262,50 @@ void Interface::update(float dt) {
 
 void Interface::render() {
     impl_->context_->Render();
+}
+
+Element Interface::append(const std::string& tag) {
+    std::string tag_name = str::strip(tag);
+
+    Rocket::Core::Element* elem = impl_->document_->CreateElement(tag_name.c_str());
+    impl_->document_->AppendChild(elem);
+
+    Element result = Element(
+        std::tr1::shared_ptr<ElementImpl>(
+            new ElementImpl(elem)
+        )
+    );
+
+    impl_->document_->Show();
+
+    return result;
+}
+
+std::vector<Element> Interface::_(const std::string& selector) {
+    std::vector<Element> result;
+    Rocket::Core::ElementList elements;
+    if(str::starts_with(selector, ".")) {
+        impl_->document_->GetElementsByClassName(elements, str::strip(selector, ".").c_str());
+    } else if(str::starts_with(selector, "#")) {
+        Rocket::Core::Element* elem = impl_->document_->GetElementById(str::strip(selector, "#").c_str());
+        if(elem) {
+            result.push_back(
+                Element(std::tr1::shared_ptr<ElementImpl>(new ElementImpl(elem)))
+            );
+        }
+    } else {
+        impl_->document_->GetElementsByTagName(elements, ("<" + selector + ">").c_str());
+    }
+
+    for(Rocket::Core::Element* elem: elements) {
+        result.push_back(Element(std::tr1::shared_ptr<ElementImpl>(new ElementImpl(elem))));
+    }
+
+    return result;
+}
+
+void Interface::set_styles(const std::string& stylesheet_content) {
+    impl_->document_->SetStyleSheet(Rocket::Core::Factory::InstanceStyleSheetString(stylesheet_content.c_str()));
 }
 
 Interface::~Interface() {
