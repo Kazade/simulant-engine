@@ -31,6 +31,32 @@ private:
     std::tr1::shared_ptr<ElementImpl> impl_;
 };
 
+class ElementList {
+public:
+    ElementList(const std::vector<Element>& elements):
+        elements_(elements) {}
+
+    void add_class(const std::string& cl) {
+        for(Element& e: elements_) {
+            e.add_class(cl);
+        }
+    }
+
+    Element& operator[](uint32_t i) {
+        return elements_[i];
+    }
+
+    const Element& operator[](uint32_t i) const {
+        return elements_[i];
+    }
+
+    std::vector<Element>::iterator begin() { return elements_.begin(); }
+    std::vector<Element>::iterator end() { return elements_.end(); }
+
+private:
+    std::vector<Element> elements_;
+};
+
 class Interface :
     public Managed<Interface>,
     public Loadable {
@@ -50,7 +76,7 @@ public:
 
     Element append(const std::string& tag);
     void set_styles(const std::string& stylesheet_content);
-    std::vector<Element> _(const std::string& selector);
+    ElementList _(const std::string& selector);
 
 private:    
     std::string locate_font(const std::string& filename);

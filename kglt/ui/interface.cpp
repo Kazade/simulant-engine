@@ -281,7 +281,7 @@ Element Interface::append(const std::string& tag) {
     return result;
 }
 
-std::vector<Element> Interface::_(const std::string& selector) {
+ElementList Interface::_(const std::string& selector) {
     std::vector<Element> result;
     Rocket::Core::ElementList elements;
     if(str::starts_with(selector, ".")) {
@@ -301,7 +301,7 @@ std::vector<Element> Interface::_(const std::string& selector) {
         result.push_back(Element(std::tr1::shared_ptr<ElementImpl>(new ElementImpl(elem))));
     }
 
-    return result;
+    return ElementList(result);
 }
 
 void Interface::set_styles(const std::string& stylesheet_content) {
