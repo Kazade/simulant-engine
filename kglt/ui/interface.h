@@ -27,6 +27,9 @@ public:
     const unicode text() const;
 
     void add_class(const std::string& cl);
+
+    std::string css(const std::string& property);
+    void css(const std::string& property, const std::string& value);
 private:
     std::tr1::shared_ptr<ElementImpl> impl_;
 };
@@ -36,9 +39,21 @@ public:
     ElementList(const std::vector<Element>& elements):
         elements_(elements) {}
 
+    void text(const unicode& text) {
+        for(Element& e: elements_) {
+            e.text(text);
+        }
+    }
+
     void add_class(const std::string& cl) {
         for(Element& e: elements_) {
             e.add_class(cl);
+        }
+    }
+
+    void css(const std::string& property, const std::string& value) {
+        for(Element& e: elements_) {
+            e.css(property, value);
         }
     }
 

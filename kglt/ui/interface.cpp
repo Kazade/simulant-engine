@@ -51,7 +51,12 @@ public:
         kglt::Texture& tex = manager().texture(manager().new_texture());
         window_.loader_for(source.CString())->into(tex);
 
-        window_.idle().add_once(std::tr1::bind(&kglt::Texture::upload, tex, true, false, false, true));
+        //FIXME: Passing around a reference isn't entirely safe...
+        //but at least this makes sure that the upload happens in the main thread
+        window_.idle().add_once([&]() {
+            tex.flip_vertically();
+            tex.upload(true, false, false, true);
+        });
 
         textures_[texture_handle] = tex.id();
 
@@ -154,31 +159,17 @@ public:
         glScissor(x, window_.height() - (y + height), width, height);
     }
 
-    //Our magic
-    void register_context(Rocket::Core::Context* context, kglt::ResourceManager* subscene) {
-        if(contexts_.find(context) != contexts_.end()) {
-            throw std::logic_error("Tried to register the same context twice");
-        }
-        contexts_[context] = subscene;
-    }
-
-    void unregister_context(Rocket::Core::Context* context) {
-        contexts_.erase(context);
-    }
-
     void clear_objects() {
 
     }
 
     ResourceManager& manager() {
-        Rocket::Core::Context* context = GetContext();
-        return *contexts_[context];
+        return window_.scene();
     }
 
 private:
     WindowBase& window_;
 
-    std::map<Rocket::Core::Context*, kglt::ResourceManager*> contexts_;
     std::map<Rocket::Core::TextureHandle, kglt::TextureID> textures_;
 };
 
@@ -227,11 +218,8 @@ bool Interface::init() {
 
     //FIXME: Change name for each interface
     impl_->context_ = Rocket::Core::CreateContext("default", Rocket::Core::Vector2i(width_, height_));
-
     impl_->document_ = impl_->context_->CreateDocument();
     set_styles("body { font-family: \"Liberation Sans\"; }");
-
-    rocket_render_interface_->register_context(impl_->context_, &window_.scene());
 
     return true;
 }
@@ -309,10 +297,6 @@ void Interface::set_styles(const std::string& stylesheet_content) {
 }
 
 Interface::~Interface() {
-    if(rocket_render_interface_) {
-        rocket_render_interface_->unregister_context(impl_->context_);
-    }
-
     impl_->context_->RemoveReference();
 
     Rocket::Core::Shutdown();

@@ -57,6 +57,14 @@ public:
         elem_->SetClass(cl.c_str(), true);
     }
 
+    std::string css(const std::string& property) {
+        return elem_->GetProperty<Rocket::Core::String>(property.c_str()).CString();
+    }
+
+    void css(const std::string& property, const std::string& value) {
+        elem_->SetProperty(property.c_str(), value.c_str());
+    }
+
 private:
     Rocket::Core::Element* elem_;
     Rocket::Core::ElementText* text_;

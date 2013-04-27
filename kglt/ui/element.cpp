@@ -26,6 +26,14 @@ void Element::add_class(const std::string& cl) {
     impl_->add_class(cl);
 }
 
+std::string Element::css(const std::string& property) {
+    return impl_->css(property);
+}
+
+void Element::css(const std::string& property, const std::string& value) {
+    impl_->css(property, value);
+}
+
 }
 
 }
