@@ -2,8 +2,8 @@
 #define INTERPRETER_H
 
 #include "generic/managed.h"
-#include "kazbase/unicode/unicode.h"
-#include "kazbase/logging/logging.h"
+#include "kazbase/unicode.h"
+#include "kazbase/logging.h"
 
 #include <lua.hpp>
 #include <luabind/luabind.hpp>
@@ -58,7 +58,7 @@ public:
 
     template<typename T>
     void register_class() {
-        L_INFO(unicode("Registering class '{0}' with lua...").format(demangle(typeid(T).name()).encode()).encode());
+        L_INFO(_u("Registering class '{0}' with lua...").format(typeid(T).name()));
         T::export_to(*state_);
     }
 
