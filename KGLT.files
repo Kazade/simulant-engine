@@ -214,8 +214,6 @@ samples/model_viewer.cpp
 kglt/testing/mock_window.h
 kglt/procedural/mesh/circle.h
 kglt/procedural/mesh/circle.cpp
-kglt/utils/debug_bar.h
-kglt/utils/debug_bar.cpp
 cmake_modules/FindAntTweakBar.cmake
 kglt/kazbase/testing.h
 tests/test_camera.h

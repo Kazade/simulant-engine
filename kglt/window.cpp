@@ -4,7 +4,6 @@
 #include "kazbase/unicode.h"
 #include "input_controller.h"
 #include "window.h"
-#include "utils/debug_bar.h"
 
 namespace kglt {
 
@@ -33,10 +32,6 @@ void Window::check_events() {
 
     while(SDL_PollEvent(&event)) {
         input_controller().handle_event(event);
-
-        if(debug_bar().handle_event(event)) {
-            continue;
-        }
 
         switch(event.type) {
             case SDL_ACTIVEEVENT:

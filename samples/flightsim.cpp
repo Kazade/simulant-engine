@@ -2,7 +2,6 @@
 #include "kglt/shortcuts.h"
 #include "kglt/kazbase/string.h"
 #include "kglt/extra/skybox.h"
-#include "kglt/utils/debug_bar.h"
 
 int main(int argc, char* argv[]) {        
     logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));
@@ -68,10 +67,6 @@ int main(int argc, char* argv[]) {
         window->scene().subscene().entity(entity.id()).move_forward(60 * dt);
     });
 
-    kmVec3 projected_position;
-    window->debug_bar().add_read_only_variable("Rotation", (kmQuaternion*) &entity.rotation());    
-    window->debug_bar().add_read_only_variable("Projected", &projected_position);
-
     /*if(window->joypad_count()) {
         window->joypad(0).axis_while_nonzero_connect(0, [=](kglt::AxisRange range, kglt::Axis) mutable {
             float dt = window->delta_time();
@@ -84,10 +79,7 @@ int main(int argc, char* argv[]) {
         });
     }*/
 
-    while(window->update()) {
-        kglt::Camera& cam = window->scene().subscene().camera();
-        projected_position = cam.project_point(kglt::ViewportID(), entity.absolute_position());
-    }
+    while(window->update()) {}
 
     return 0;
 }

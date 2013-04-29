@@ -27,9 +27,10 @@ Console::Console(WindowBase &window):
         assert(!window_.ui()._("#lua-console").empty());
 
         ui::ElementList l = window_.ui()._("#lua-console");
+        l.css("position", "absolute");
         l.css("width", "100%");
-        l.css("height", "25%");
-        l.css("background-color", "#000000DD");
+        l.css("height", "100px");
+        l.css("background-color", "#00000088");
         l.css("color", "white");
         l.css("display", "block");
         l.css("white-space", "pre");
@@ -90,6 +91,7 @@ void Console::entry(KeyCode code) {
 void Console::update_output() {
     unicode past = _u("\n").join(history_);
     window_.ui()._("#lua-console").text(past);
+    window_.ui()._("#lua-console").scroll_to_bottom();
 }
 
 LuaResult Console::execute(const unicode &command, unicode &output) {

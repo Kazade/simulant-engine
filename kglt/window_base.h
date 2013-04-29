@@ -36,7 +36,6 @@ class InputController;
 class Keyboard;
 class Mouse;
 class Joypad;
-class DebugBar;
 class Console;
 
 typedef std::tr1::function<void (double)> WindowUpdateCallback;
@@ -118,8 +117,6 @@ public:
 
     void set_logging_level(LoggingLevel level);
 
-    inline DebugBar& debug_bar() { assert(debug_bar_); return *debug_bar_; }
-
     sigc::signal<void>& signal_frame_started() { return signal_frame_started_; }
     sigc::signal<void>& signal_frame_finished() { return signal_frame_finished_; }
     sigc::signal<void>& signal_pre_swap() { return signal_pre_swap_; }
@@ -164,8 +161,6 @@ private:
 
     ResourceLocator::ptr resource_locator_;
     std::tr1::shared_ptr<InputController> input_controller_;
-
-    std::tr1::shared_ptr<DebugBar> debug_bar_;
 
     double frame_counter_time_;
     int32_t frame_counter_frames_;

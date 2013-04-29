@@ -11,7 +11,6 @@
 #include "loaders/opt_loader.h"
 #include "loaders/ogg_loader.h"
 #include "loaders/rml_loader.h"
-#include "utils/debug_bar.h"
 #include "sound.h"
 #include "console.h"
 
@@ -63,9 +62,6 @@ bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
     Sound::init_openal();
 
     if(result && !initialized_) {
-        debug_bar_.reset(new DebugBar(width_, height_));
-        debug_bar().add_read_only_variable("Frame Time (ms)", &frame_time_in_milliseconds_);
-
         //Create a default viewport
         default_viewport_ = new_viewport();
         viewport(default_viewport_).set_position(0, 0);
@@ -97,13 +93,6 @@ bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
             //Bind the stop_running method to the ESCAPE key
             input_controller().keyboard().key_pressed_connect(
                 KEY_CODE_ESCAPE, bind(&WindowBase::stop_running, this)
-            );
-        });
-
-        idle().add_once([=]() {
-            DebugBar* bar = &debug_bar();
-            input_controller().keyboard().key_pressed_connect(
-                KEY_CODE_BACKQUOTE, bind(&DebugBar::toggle, bar)
             );
         });
 
@@ -163,10 +152,6 @@ bool WindowBase::update(WindowUpdateCallback step) {
 
     signal_pre_swap_();
 
-    if(debug_bar_) {
-        debug_bar_->render();
-    }
-
     swap_buffers();
 
     //std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -177,7 +162,6 @@ bool WindowBase::update(WindowUpdateCallback step) {
         interface_.reset(); //Destroy the UI
         //Destroy the scene
         scene_.reset();
-        debug_bar_.reset();
     }
 
     signal_frame_finished_();
