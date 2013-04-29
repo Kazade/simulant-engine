@@ -7,6 +7,7 @@
 #include "../generic/managed.h"
 #include"../types.h"
 #include "../loadable.h"
+#include "element.h"
 
 namespace kglt {
 
@@ -17,22 +18,6 @@ namespace ui {
 
 class Interface;
 
-class ElementImpl;
-
-class Element {
-public:
-    Element(std::tr1::shared_ptr<ElementImpl> impl);
-
-    void text(const unicode& content);
-    const unicode text() const;
-
-    void add_class(const std::string& cl);
-
-    std::string css(const std::string& property);
-    void css(const std::string& property, const std::string& value);
-private:
-    std::tr1::shared_ptr<ElementImpl> impl_;
-};
 
 class ElementList {
 public:
@@ -67,6 +52,32 @@ public:
 
     std::vector<Element>::iterator begin() { return elements_.begin(); }
     std::vector<Element>::iterator end() { return elements_.end(); }
+
+    bool empty() const { return elements_.empty(); }
+
+    void show() {
+        for(Element& e: elements_) {
+            e.show();
+        }
+    }
+
+    void hide() {
+        for(Element& e: elements_) {
+            e.hide();
+        }
+    }
+
+    void id(const std::string& id) {
+        for(Element& e: elements_) {
+            e.id(id);
+        }
+    }
+
+    void scroll_to_bottom() {
+        for(Element& e: elements_) {
+            e.scroll_to_bottom();
+        }
+    }
 
 private:
     std::vector<Element> elements_;

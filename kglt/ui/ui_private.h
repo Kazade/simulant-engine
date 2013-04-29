@@ -65,6 +65,14 @@ public:
         elem_->SetProperty(property.c_str(), value.c_str());
     }
 
+    void id(const std::string& id) {
+        elem_->SetId(id.c_str());
+    }
+
+    void scroll_to_bottom() {
+        elem_->SetScrollTop(elem_->GetScrollHeight());
+    }
+
 private:
     Rocket::Core::Element* elem_;
     Rocket::Core::ElementText* text_;

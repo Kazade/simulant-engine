@@ -34,6 +34,14 @@ void Element::css(const std::string& property, const std::string& value) {
     impl_->css(property, value);
 }
 
+void Element::id(const std::string& id) {
+    impl_->id(id);
+}
+
+void Element::scroll_to_bottom() {
+    impl_->scroll_to_bottom();
+}
+
 }
 
 }

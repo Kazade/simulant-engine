@@ -37,6 +37,7 @@ class Keyboard;
 class Mouse;
 class Joypad;
 class DebugBar;
+class Console;
 
 typedef std::tr1::function<void (double)> WindowUpdateCallback;
 
@@ -178,6 +179,7 @@ private:
     sigc::signal<void> signal_frame_finished_;
 
     std::tr1::shared_ptr<ui::Interface> interface_;
+    std::tr1::shared_ptr<Console> console_;
 };
 
 }

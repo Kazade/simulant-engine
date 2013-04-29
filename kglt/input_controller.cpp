@@ -16,6 +16,12 @@ InputConnection Device::new_input_connection() {
     return InputConnection(InputConnectionID(idx), *this);
 }
 
+InputConnection Keyboard::key_pressed_connect(KeyCallback callback) {
+    InputConnection c = new_input_connection();
+    global_key_press_signals_[c] = callback;
+    return c;
+}
+
 InputConnection Keyboard::key_pressed_connect(KeyCode code, KeyCallback callback) {
     InputConnection c = new_input_connection();
     key_press_signals_[code][c] = callback;
@@ -39,6 +45,11 @@ Keyboard::Keyboard() {
 }
 
 void Keyboard::_handle_keydown_event(KeyCode key) {
+    //First trigger all global handlers
+    for(KeySignalEntry entry: global_key_press_signals_) {
+        entry.second(key);
+    }
+
     if(container::contains(key_press_signals_, key)) {
         for(KeySignalEntry entry: key_press_signals_[key]) {
             entry.second(key);

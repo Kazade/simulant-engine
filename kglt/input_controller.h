@@ -54,6 +54,7 @@ class Keyboard :
 
 public:
     Keyboard();
+    InputConnection key_pressed_connect(KeyCallback callback);
     InputConnection key_pressed_connect(KeyCode code, KeyCallback callback);
     InputConnection key_while_down_connect(KeyCode code, KeyDownCallback callback);
     InputConnection key_released_connect(KeyCode code, KeyCallback callback);
@@ -68,6 +69,8 @@ private:
     void _disconnect(const InputConnection &connection);
 
     std::vector<uint8_t> state_;
+
+    std::map<InputConnection, KeyCallback> global_key_press_signals_;
 
     std::map<KeyCode, std::map<InputConnection, KeyCallback> > key_press_signals_;
     std::map<KeyCode, std::map<InputConnection, KeyDownCallback> > key_while_down_signals_;

@@ -13,6 +13,7 @@
 #include "loaders/rml_loader.h"
 #include "utils/debug_bar.h"
 #include "sound.h"
+#include "console.h"
 
 namespace kglt {
 
@@ -107,6 +108,7 @@ bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
         });
 
         interface_ = ui::Interface::create(*this, width, height);
+        console_ = Console::create(*this);
 
         initialized_ = true;
     }

@@ -248,3 +248,6 @@ kglt/ui/element.cpp
 kglt/interpreter.h
 kglt/interpreter.cpp
 cmake_modules/FindLuabind.cmake
+kglt/console.h
+kglt/console.cpp
+kglt/ui/element.h

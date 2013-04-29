@@ -10,6 +10,12 @@
 
 namespace kglt {
 
+enum LuaResult {
+    LUA_RESULT_EOF,
+    LUA_RESULT_SUCCESS,
+    LUA_RESULT_ERROR
+};
+
 template<typename T>
 class LuaClass {
 public:
@@ -34,7 +40,8 @@ public:
 
         L_INFO("Initializing LUA interpreter");
         state_ = luaL_newstate();
-        luabind::open(state_);
+        luabind::open(state_);        
+        luaopen_base(state_);
     }
 
     ~Interpreter() {
@@ -42,18 +49,9 @@ public:
         lua_close(state_);
     }
 
-    template<typename Result>
-    Result call_function() {
-
-    }
-
-    template<typename Result, typename A1>
-    Result call_function(A1 arg1) {
-
-    }
-
     void run_file(const std::string& filename);
-    void queue_string(const unicode& str);
+    LuaResult run_string(const std::string& statement, std::string &output);
+
     void update();
 
     template<typename T>
