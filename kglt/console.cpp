@@ -15,7 +15,7 @@ Console::Console(WindowBase &window):
     interpreter_(Interpreter::create()),
     active_(false) {
 
-    history_.push_back(_u("KGLT Lua 5.1 Console"));
+    history_.push_back(_u("KGLT {0} Console").format(LUA_RELEASE));
     history_.push_back(_u("Type \"help\" for more information"));
 
     history_.push_back(PROMPT_PREFIX);
@@ -37,6 +37,8 @@ Console::Console(WindowBase &window):
         l.css("padding-left", "2px");
         l.css("overflow-y", "scroll");
         l.css("z-index", "100");
+        l.css("font-family", "Ubuntu Mono");
+        l.css("font-weight", "normal");
         l.hide();
     }
     update_output();
@@ -44,8 +46,8 @@ Console::Console(WindowBase &window):
     window_.keyboard().key_pressed_connect(std::bind(&Console::entry, this, std::tr1::placeholders::_1));
 }
 
-void Console::entry(KeyCode code) {
-    if(code == KEY_CODE_BACKQUOTE) {
+void Console::entry(kglt::KeyEvent event) {
+    if(event.code == KEY_CODE_BACKQUOTE) {
         if(!active_) {
             window_.ui()._("#lua-console").show();
             active_ = true;
@@ -59,13 +61,14 @@ void Console::entry(KeyCode code) {
         return;
     }
 
-    if(code == KEY_CODE_BACKSPACE) {
+    if(event.code == KEY_CODE_BACKSPACE) {
         unicode line = history_.at(history_.size() - 1);
         if(line.length() > 4) {
             line = line.slice(0, -1);
             history_.at(history_.size() - 1) = line;
         }
-    } else if (code == KEY_CODE_RETURN) {
+    } else if (event.code == KEY_CODE_RETURN) {
+        current_command_ += history_.at(history_.size() - 1).slice(4, nullptr);
         unicode output;
         LuaResult r = execute(current_command_, output);
         if(r == LUA_RESULT_EOF) {
@@ -79,9 +82,8 @@ void Console::entry(KeyCode code) {
             history_.push_back(PROMPT_PREFIX);
             current_command_ = _u();
         }
-    } else if(std::isprint(code) && code != KEY_CODE_BACKQUOTE){
-        unicode new_char = _u("{0}").format(char(code));
-        current_command_ += new_char;
+    } else if(std::isprint(event.code) && event.code != KEY_CODE_BACKQUOTE){
+        unicode new_char = unicode(1, (char16_t) event.unicode);
         history_.at(history_.size() - 1) += new_char;
     }
 
@@ -95,9 +97,7 @@ void Console::update_output() {
 }
 
 LuaResult Console::execute(const unicode &command, unicode &output) {
-    std::string out;
-    LuaResult res = interpreter_->run_string(command.encode(), out);
-    output = _u(out);
+    LuaResult res = interpreter_->run_string(command.encode(), output);
     return res;
 }
 

@@ -197,10 +197,16 @@ bool Interface::init() {
         Rocket::Core::Initialise();
 
         bool font_found = false;
-        for(std::string font: { "liberation/LiberationSans-Regular.ttf",
-            "liberation/LiberationSans-Bold.ttf",
-            "liberation/LiberationSans-Italic.ttf",
-            "liberation/LiberationSans-BoldItalic.ttf"}) {
+        for(std::string font: {
+            "kglt/fonts/ubuntu/Ubuntu-R.ttf",
+            "kglt/fonts/ubuntu/Ubuntu-B.ttf",
+            "kglt/fonts/ubuntu/Ubuntu-I.ttf",
+            "kglt/fonts/ubuntu/Ubuntu-BI.ttf"
+            "kglt/fonts/ubuntu/UbuntuMono-R.ttf",
+            "kglt/fonts/ubuntu/UbuntuMono-B.ttf",
+            "kglt/fonts/ubuntu/UbuntuMono-I.ttf",
+            "kglt/fonts/ubuntu/UbuntuMono-BI.ttf"
+        }) {
             try {
                 if(!Rocket::Core::FontDatabase::LoadFontFace(locate_font(font).c_str())) {
                     throw IOError("Couldn't load the font");
@@ -219,7 +225,7 @@ bool Interface::init() {
     //FIXME: Change name for each interface
     impl_->context_ = Rocket::Core::CreateContext("default", Rocket::Core::Vector2i(width_, height_));
     impl_->document_ = impl_->context_->CreateDocument();
-    set_styles("body { font-family: \"Liberation Sans\"; }");
+    set_styles("body { font-family: \"Ubuntu\"; }");
 
     return true;
 }
@@ -235,13 +241,19 @@ std::string Interface::locate_font(const std::string& filename) {
         "C:\\Windows\\fonts"
     };
 
+
+    return window_.resource_locator().locate_file(filename);
+
+/*
     for(std::string font_dir: paths) {
+
+
         if(os::path::exists(os::path::join(font_dir, filename))) {
             return os::path::join(font_dir, filename);
         }
     }
 
-    throw IOError("Unable to locate font: " + filename);
+    throw IOError("Unable to locate font: " + filename);*/
 }
 
 void Interface::update(float dt) {

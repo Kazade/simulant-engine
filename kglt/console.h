@@ -19,7 +19,7 @@ public:
 
     Interpreter& lua();
 
-    void entry(KeyCode code);
+    void entry(kglt::KeyEvent code);
 
 private:
     WindowBase& window_;

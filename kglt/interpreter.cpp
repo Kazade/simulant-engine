@@ -6,7 +6,7 @@ void Interpreter::run_file(const std::string& filename) {
     luaL_dofile(this->state_, filename.c_str());
 }
 
-LuaResult Interpreter::run_string(const std::string& statement, std::string& output) {
+LuaResult Interpreter::run_string(const std::string& statement, unicode& output) {
     int stack_size = lua_gettop(this->state_);
 
     std::string final = "return " + statement;
@@ -21,7 +21,7 @@ LuaResult Interpreter::run_string(const std::string& statement, std::string& out
         output = lua_tolstring(this->state_, -1, &len);
         lua_pop(this->state_, 1);
 
-        if(result == LUA_ERRSYNTAX && output == "<eof>") {
+        if(result == LUA_ERRSYNTAX && output.contains("<eof>")) {
             return LUA_RESULT_EOF;
         } else {
             return LUA_RESULT_ERROR;

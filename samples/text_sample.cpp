@@ -6,7 +6,7 @@ int main(int argc, char* argv[]) {
     window->set_title("KGLT Text Sample");
 
     kglt::ui::Interface& ui = window->ui();
-    ui.set_styles("body { font-family: \"Liberation Sans\"; } .thing { color: red; };");
+    ui.set_styles("body { font-family: \"Ubuntu\"; } .thing { color: red; };");
     ui.append("<p>").text("Hello world!");
     ui._("p").add_class("thing");
 

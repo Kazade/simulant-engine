@@ -39,31 +39,31 @@ int main(int argc, char* argv[]) {
 
 
     //Connect keyboard signals
-    window->keyboard().key_while_down_connect(kglt::KEY_CODE_LEFT, [=](kglt::KeyCode key, double dt) mutable {
+    window->keyboard().key_while_down_connect(kglt::KEY_CODE_LEFT, [=](kglt::KeyEvent key, double dt) mutable {
         window->scene().subscene().entity(entity.id()).rotate_y(-20.0 * dt);
     });
 
-    window->keyboard().key_while_down_connect(kglt::KEY_CODE_RIGHT, [=](kglt::KeyCode key, double dt) mutable {
+    window->keyboard().key_while_down_connect(kglt::KEY_CODE_RIGHT, [=](kglt::KeyEvent key, double dt) mutable {
         window->scene().subscene().entity(entity.id()).rotate_y(20.0 * dt);
     });
 
-    window->keyboard().key_while_down_connect(kglt::KEY_CODE_UP, [=](kglt::KeyCode key, double dt) mutable {
+    window->keyboard().key_while_down_connect(kglt::KEY_CODE_UP, [=](kglt::KeyEvent key, double dt) mutable {
         window->scene().subscene().entity(entity.id()).rotate_x(20.0 * dt);
     });
 
-    window->keyboard().key_while_down_connect(kglt::KEY_CODE_DOWN, [=](kglt::KeyCode key, double dt) mutable {
+    window->keyboard().key_while_down_connect(kglt::KEY_CODE_DOWN, [=](kglt::KeyEvent key, double dt) mutable {
         window->scene().subscene().entity(entity.id()).rotate_x(-20.0 * dt);
     });
 
-    window->keyboard().key_while_down_connect(kglt::KEY_CODE_a, [=](kglt::KeyCode key, double dt) mutable {
+    window->keyboard().key_while_down_connect(kglt::KEY_CODE_a, [=](kglt::KeyEvent key, double dt) mutable {
         window->scene().subscene().entity(entity.id()).rotate_z(-60.0 * dt);
     });
 
-    window->keyboard().key_while_down_connect(kglt::KEY_CODE_d, [=](kglt::KeyCode key, double dt) mutable {
+    window->keyboard().key_while_down_connect(kglt::KEY_CODE_d, [=](kglt::KeyEvent key, double dt) mutable {
         window->scene().subscene().entity(entity.id()).rotate_z(60.0 * dt);
     });
 
-    window->keyboard().key_while_down_connect(kglt::KEY_CODE_s, [=](kglt::KeyCode key, double dt) mutable {
+    window->keyboard().key_while_down_connect(kglt::KEY_CODE_s, [=](kglt::KeyEvent key, double dt) mutable {
         window->scene().subscene().entity(entity.id()).move_forward(60 * dt);
     });
 

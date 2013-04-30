@@ -42,37 +42,127 @@ InputConnection Keyboard::key_released_connect(KeyCode code, KeyCallback callbac
 
 Keyboard::Keyboard() {
     state_.resize(KEY_CODE_LAST, 0);
+    current_mods_ = KEY_MODIFIER_NONE;
 }
 
-void Keyboard::_handle_keydown_event(KeyCode key) {
+void Keyboard::_handle_keydown_event(KeyCode key, uint16_t unicode) {
+    //Store modifiers
+    switch(key) {
+    case KEY_CODE_NUMLOCK:
+        current_mods_ |= KEY_MODIFIER_NUMLOCK;
+    break;
+    case KEY_CODE_CAPSLOCK:
+        current_mods_ |= KEY_MODIFIER_CAPSLOCK;
+    break;
+    case KEY_CODE_LCTRL: {
+        current_mods_ |= KEY_MODIFIER_LCTRL;
+        current_mods_ |= KEY_MODIFIER_CTRL;
+    } break;
+    case KEY_CODE_RCTRL: {
+        current_mods_ |= KEY_MODIFIER_RCTRL;
+        current_mods_ |= KEY_MODIFIER_CTRL;
+    } break;
+    case KEY_CODE_LSHIFT: {
+        current_mods_ |= KEY_MODIFIER_LSHIFT;
+        current_mods_ |= KEY_MODIFIER_SHIFT;
+    } break;
+    case KEY_CODE_RSHIFT: {
+        current_mods_ |= KEY_MODIFIER_RSHIFT;
+        current_mods_ |= KEY_MODIFIER_SHIFT;
+    } break;
+    case KEY_CODE_LALT: {
+        current_mods_ |= KEY_MODIFIER_LALT;
+        current_mods_ |= KEY_MODIFIER_ALT;
+    } break;
+    case KEY_CODE_RALT: {
+        current_mods_ |= KEY_MODIFIER_RALT;
+        current_mods_ |= KEY_MODIFIER_ALT;
+    } break;
+    default:
+        break;
+    }
+
     //First trigger all global handlers
     for(KeySignalEntry entry: global_key_press_signals_) {
-        entry.second(key);
+        entry.second({ key, current_mods_, unicode });
     }
 
     if(container::contains(key_press_signals_, key)) {
         for(KeySignalEntry entry: key_press_signals_[key]) {
-            entry.second(key);
+            entry.second({ key, current_mods_, unicode });
         }
     }
 
     state_[key] = true;
+
 }
 
 void Keyboard::_handle_keyup_event(KeyCode key) {
+
+    //Unset modifiers
+    switch(key) {
+    case KEY_CODE_NUMLOCK:
+        current_mods_ &= ~KEY_MODIFIER_NUMLOCK;
+    break;
+    case KEY_CODE_CAPSLOCK:
+        current_mods_ &= ~KEY_MODIFIER_CAPSLOCK;
+    break;
+    case KEY_CODE_LCTRL: {
+        current_mods_ &= ~KEY_MODIFIER_LCTRL;
+        //If the RCTRL isn't set, remove the CTRL modifier
+        if(!(current_mods_ & KEY_MODIFIER_RCTRL) == KEY_MODIFIER_RCTRL) {
+            current_mods_ &= ~KEY_MODIFIER_CTRL;
+        }
+    } break;
+    case KEY_CODE_RCTRL: {
+        current_mods_ &= ~KEY_MODIFIER_RCTRL;
+        //If the LCTRL isn't set, remove the CTRL modifier
+        if(!(current_mods_ & KEY_MODIFIER_LCTRL) == KEY_MODIFIER_LCTRL) {
+            current_mods_ &= ~KEY_MODIFIER_CTRL;
+        }
+    } break;
+    case KEY_CODE_LSHIFT: {
+        current_mods_ &= ~KEY_MODIFIER_LSHIFT;
+        if(!(current_mods_ & KEY_MODIFIER_RSHIFT) == KEY_MODIFIER_RSHIFT) {
+            current_mods_ &= ~KEY_MODIFIER_SHIFT;
+        }
+    } break;
+    case KEY_CODE_RSHIFT: {
+        current_mods_ &= ~KEY_MODIFIER_RSHIFT;
+        if(!(current_mods_ & KEY_MODIFIER_LSHIFT) == KEY_MODIFIER_LSHIFT) {
+            current_mods_ &= ~KEY_MODIFIER_SHIFT;
+        }
+    } break;
+    case KEY_CODE_LALT: {
+        current_mods_ &= ~KEY_MODIFIER_LALT;
+        if(!(current_mods_ & KEY_MODIFIER_RALT) == KEY_MODIFIER_RALT) {
+            current_mods_ &= ~KEY_MODIFIER_ALT;
+        }
+    } break;
+    case KEY_CODE_RALT: {
+        current_mods_ &= ~KEY_MODIFIER_RALT;
+        if(!(current_mods_ & KEY_MODIFIER_LALT) == KEY_MODIFIER_LALT) {
+            current_mods_ &= ~KEY_MODIFIER_ALT;
+        }
+    } break;
+    default:
+        break;
+    }
+
     if(container::contains(key_release_signals_, key)) {
         for(KeySignalEntry entry: key_release_signals_[key]) {
-            entry.second(key);
+            entry.second({ key, current_mods_, 0}); //Key up doesn't carry unicode
         }
     }
     state_[key] = false;
+
 }
 
 void Keyboard::_update(double dt) {
     for(std::pair<KeyCode, std::map<InputConnection, KeyDownCallback> > p: key_while_down_signals_) {
         if(state_[p.first]) {
             for(std::pair<InputConnection, KeyDownCallback> p2: p.second) {
-                p2.second(p.first, dt);
+                p2.second({ p.first, current_mods_ }, dt);
             }
         }
     }
@@ -224,7 +314,7 @@ InputController::~InputController() {
 void InputController::handle_event(SDL_Event &event) {
     switch(event.type) {
         case SDL_KEYDOWN:
-            keyboard()._handle_keydown_event((KeyCode)event.key.keysym.sym);
+            keyboard()._handle_keydown_event((KeyCode)event.key.keysym.sym, event.key.keysym.unicode);
         break;
         case SDL_KEYUP:
             keyboard()._handle_keyup_event((KeyCode)event.key.keysym.sym);

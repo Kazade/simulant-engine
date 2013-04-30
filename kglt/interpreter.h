@@ -50,7 +50,7 @@ public:
     }
 
     void run_file(const std::string& filename);
-    LuaResult run_string(const std::string& statement, std::string &output);
+    LuaResult run_string(const std::string& statement, unicode &output);
 
     void update();
 

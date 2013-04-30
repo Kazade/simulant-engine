@@ -81,6 +81,8 @@ bool Window::create_window(int width, int height, int bpp, bool fullscreen) {
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 0);
 
+    SDL_EnableUNICODE(1); //Enable unicode conversion of key inputs
+
     SDL_ShowCursor(0);
 
     assert(surface_);

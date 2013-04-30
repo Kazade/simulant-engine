@@ -244,6 +244,28 @@ enum KeyCode {
 	KEY_CODE_LAST
 };
 
+enum KeyModifier {
+    KEY_MODIFIER_NONE = 0,
+    KEY_MODIFIER_NUMLOCK = 2,
+    KEY_MODIFIER_CAPSLOCK = 4,
+    KEY_MODIFIER_LCTRL = 8,
+    KEY_MODIFIER_RCTRL = 16,
+    KEY_MODIFIER_LSHIFT = 32,
+    KEY_MODIFIER_RSHIFT = 64,
+    KEY_MODIFIER_LALT = 128,
+    KEY_MODIFIER_RALT = 256,
+    KEY_MODIFIER_CTRL = 512,
+    KEY_MODIFIER_SHIFT = 1024,
+    KEY_MODIFIER_ALT = 2048
+};
+
+struct KeyEvent {
+    KeyCode code;
+    uint32_t mod;
+    uint16_t unicode;
+};
+
+
 }
 
 #endif

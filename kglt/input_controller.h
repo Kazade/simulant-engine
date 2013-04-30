@@ -45,8 +45,8 @@ private:
     Device& device_;
 };
 
-typedef std::function<void (KeyCode)> KeyCallback;
-typedef std::function<void (KeyCode, double)> KeyDownCallback;
+typedef std::function<void (KeyEvent)> KeyCallback;
+typedef std::function<void (KeyEvent, double)> KeyDownCallback;
 
 class Keyboard :
     public Device,
@@ -63,7 +63,7 @@ private:
     typedef std::pair<InputConnection, KeyCallback> KeySignalEntry;
     typedef std::pair<InputConnection, KeyDownCallback> KeyDownSignalEntry;
 
-    void _handle_keydown_event(KeyCode key);
+    void _handle_keydown_event(KeyCode key, uint16_t unicode);
     void _handle_keyup_event(KeyCode key);
     void _update(double dt);
     void _disconnect(const InputConnection &connection);
@@ -77,6 +77,8 @@ private:
     std::map<KeyCode, std::map<InputConnection, KeyCallback> > key_release_signals_;
 
     friend class InputController;
+
+    uint32_t current_mods_;
 };
 
 class Mouse :
