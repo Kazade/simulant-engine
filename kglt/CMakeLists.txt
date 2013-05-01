@@ -8,6 +8,8 @@ SET_TARGET_PROPERTIES(kglt
                       PROPERTIES
                       VERSION 0.0.1
                       SOVERSION 1)
+COTIRE(kglt)
+
 INSTALL(TARGETS kglt DESTINATION lib)
 INSTALL(DIRECTORY ./ DESTINATION include/kglt FILES_MATCHING PATTERN *.h PATTERN "ui/rocket*" EXCLUDE)
 INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/../cmake_modules/KGLTConfig.cmake DESTINATION ${CMAKE_INSTALL_PREFIX}/share/kglt)
