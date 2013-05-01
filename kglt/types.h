@@ -1,6 +1,9 @@
 #ifndef TYPES_H_INCLUDED
 #define TYPES_H_INCLUDED
 
+#include <lua.hpp>
+#include <luabind/luabind.hpp>
+
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -108,6 +111,15 @@ const std::vector<RenderPriority> RENDER_PRIORITIES = {
     RENDER_PRIORITY_NEAR,
     RENDER_PRIORITY_FOREGROUND
 };
+
+template<typename T>
+class LuaClass {
+public:
+    static void export_to(lua_State& state) {
+        T::do_lua_export(state);
+    }
+};
+
 
 typedef UniqueID<0> MeshID;
 typedef UniqueID<1> TextureID;

@@ -17,6 +17,7 @@
 #include "generic/manager.h"
 #include "types.h"
 #include "viewport.h"
+#include "interpreter.h"
 
 enum LoggingLevel {
     LOG_LEVEL_NONE = 0,
@@ -41,7 +42,8 @@ class Console;
 typedef std::tr1::function<void (double)> WindowUpdateCallback;
 
 class WindowBase :
-    public generic::TemplatedManager<WindowBase, Viewport, ViewportID> {
+    public generic::TemplatedManager<WindowBase, Viewport, ViewportID>,
+    public LuaClass<WindowBase> {
 
 public:    
     typedef std::tr1::shared_ptr<WindowBase> ptr;
@@ -124,9 +126,11 @@ public:
     ui::Interface& ui() { return *interface_; }
     void load_ui(const std::string& rml_file);
 
-protected:
+    static void do_lua_export(lua_State &state);
+
     void stop_running() { is_running_ = false; }
-    
+protected:
+
     void set_width(uint32_t width) { 
         width_ = width; 
     }

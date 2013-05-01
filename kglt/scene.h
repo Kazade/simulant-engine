@@ -120,7 +120,8 @@ class Scene:
     public SceneBase,
     public Loadable,
     public SubSceneManager,
-    public Managed<Scene> {
+    public Managed<Scene>,
+    public LuaClass<Scene> {
 
 public:
     Scene(WindowBase* window);
@@ -141,6 +142,7 @@ public:
 
     Pipeline& pipeline() { return *pipeline_; }
 
+    static void do_lua_export(lua_State &state);
 private:
     SubSceneID default_subscene_;
     TextureID default_texture_;

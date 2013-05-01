@@ -1,5 +1,6 @@
 #include <locale>
 #include "window_base.h"
+#include "scene.h"
 #include "keyboard.h"
 #include "console.h"
 #include "ui/interface.h"
@@ -44,6 +45,11 @@ Console::Console(WindowBase &window):
     update_output();
 
     window_.keyboard().key_pressed_connect(std::bind(&Console::entry, this, std::tr1::placeholders::_1));
+
+    interpreter_->register_class<WindowBase>();
+    interpreter_->register_class<Scene>();
+
+    interpreter_->add_global("window", window_);
 }
 
 void Console::entry(kglt::KeyEvent event) {

@@ -129,6 +129,18 @@ void SubScene::delete_camera(CameraID cid) {
     CameraManager::manager_delete(cid);
 }
 
+void Scene::do_lua_export(lua_State &state) {
+    luabind::module(&state) [
+        luabind::class_<Scene>("Scene")
+            .def("update", &Scene::update)
+            .def("new_subscene", &Scene::new_subscene)
+            .def("subscene", &Scene::subscene)
+            .def("delete_subscene", &Scene::delete_subscene)
+            .property("default_material_id", &Scene::default_material_id)
+            .property("pipeline", &Scene::pipeline)
+    ];
+}
+
 Scene::Scene(WindowBase* window):
     SceneBase(window, nullptr),
     default_texture_(0),

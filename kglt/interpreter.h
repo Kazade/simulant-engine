@@ -16,14 +16,6 @@ enum LuaResult {
     LUA_RESULT_ERROR
 };
 
-template<typename T>
-class LuaClass {
-public:
-    static void export_to(lua_State& state) {
-        T::do_lua_export(state);
-    }
-};
-
 /*
  * USAGE:
  *
@@ -58,6 +50,11 @@ public:
     void register_class() {
         L_INFO(_u("Registering class '{0}' with lua...").format(typeid(T).name()));
         T::export_to(*state_);
+    }
+
+    template<typename T>
+    void add_global(const std::string& name, T& what) {
+        luabind::globals(state_)[name.c_str()] = &what;
     }
 
 private:
