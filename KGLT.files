@@ -249,3 +249,4 @@ cmake_modules/FindLuabind.cmake
 kglt/console.h
 kglt/console.cpp
 kglt/ui/element.h
+kglt/kazbase/config/config_reader.h
