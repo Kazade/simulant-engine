@@ -4,6 +4,7 @@
 #include "generic/managed.h"
 #include "kazbase/unicode.h"
 #include "kazbase/logging.h"
+#include "types.h"
 
 #include <lua.hpp>
 #include <luabind/luabind.hpp>
@@ -26,6 +27,9 @@ enum LuaResult {
 class Interpreter:
     public Managed<Interpreter> {
 
+private:
+    void expose_id_types(lua_State* state);
+
 public:
     Interpreter():
         state_(nullptr) {
@@ -34,6 +38,8 @@ public:
         state_ = luaL_newstate();
         luabind::open(state_);        
         luaopen_base(state_);
+
+        expose_id_types(state_);
     }
 
     ~Interpreter() {

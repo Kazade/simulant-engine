@@ -2,6 +2,17 @@
 
 namespace kglt {
 
+void Interpreter::expose_id_types(lua_State* state) {
+    luabind::module(state) [
+        luabind::class_<SubSceneID>("SubSceneID")
+            .property("value", &SubSceneID::value)
+    ];
+    luabind::module(state) [
+        luabind::class_<MaterialID>("MaterialID")
+            .property("value", &MaterialID::value)
+    ];
+}
+
 void Interpreter::run_file(const std::string& filename) {
     luaL_dofile(this->state_, filename.c_str());
 }
