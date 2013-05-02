@@ -8,7 +8,7 @@ SET_TARGET_PROPERTIES(kglt
                       PROPERTIES
                       VERSION 0.0.1
                       SOVERSION 1)
-COTIRE(kglt)
+#COTIRE(kglt)
 
 INSTALL(TARGETS kglt DESTINATION lib)
 INSTALL(DIRECTORY ./ DESTINATION include/kglt FILES_MATCHING PATTERN *.h PATTERN "ui/rocket*" EXCLUDE)
