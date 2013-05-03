@@ -11,7 +11,7 @@
 
 namespace kglt {
 
-class RocketImpl;
+struct RocketImpl;
 class WindowBase;
 
 namespace ui {

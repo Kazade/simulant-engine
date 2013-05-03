@@ -9,9 +9,9 @@
 #include <vector>
 #include "colour.h"
 
-#include "kazmath/vec3.h"
-#include "kazmath/vec2.h"
-#include "kazmath/vec4.h"
+#include <kazmath/vec3.h>
+#include <kazmath/vec2.h>
+#include <kazmath/vec4.h>
 
 #include "generic/unique_id.h"
 

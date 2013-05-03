@@ -104,7 +104,10 @@ void Pipeline::run_stage(Stage::ptr stage) {
     for(RenderPriority priority: RENDER_PRIORITIES) {
         QueueGroups::mapped_type& priority_queue = queues[priority];
         for(RootGroup::ptr pass_group: priority_queue) {
-            pass_group->traverse(std::tr1::bind(&Renderer::render_subentity, renderer_.get(), std::tr1::placeholders::_1, stage->camera_id()));
+            std::function<void (SubEntity&)> f = [=](SubEntity& subentity) {
+                renderer_->render_subentity(subentity, stage->camera_id());
+            };
+            pass_group->traverse(f);
         }
     }
     renderer_->set_current_subscene(SubSceneID());
