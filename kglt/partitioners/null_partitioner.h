@@ -29,7 +29,7 @@ public:
     }
 
     std::vector<LightID> lights_within_range(const kmVec3& location);
-    std::vector<std::tr1::shared_ptr<SubEntity>> geometry_visible_from(CameraID camera_id);
+    std::vector<std::shared_ptr<SubEntity>> geometry_visible_from(CameraID camera_id);
 
 private:
     std::set<EntityID> all_entities_;

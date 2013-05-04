@@ -4,6 +4,7 @@
 #include "window_base.h"
 #include "resource_manager.h"
 #include "mesh.h"
+#include "loader.h"
 
 namespace kglt {
 

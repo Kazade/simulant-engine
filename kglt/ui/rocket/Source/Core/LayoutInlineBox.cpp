@@ -39,7 +39,7 @@ namespace Rocket {
 namespace Core {
 
 // Constructs a new inline box for an element.
-LayoutInlineBox::LayoutInlineBox(Element* _element, const Box& _box) : box(_box), position(0, 0)
+LayoutInlineBox::LayoutInlineBox(Element* _element, const Box& _box) :  position(0, 0), box(_box)
 {
 	line = NULL;
 

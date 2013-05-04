@@ -11,6 +11,7 @@
 #include "partitioners/octree_partitioner.h"
 #include "renderers/generic_renderer.h"
 #include "batcher.h"
+#include "loader.h"
 
 namespace kglt {
 

@@ -22,7 +22,7 @@ class Camera;
 class MaterialPass;
 
 struct GroupData {
-    typedef std::tr1::shared_ptr<GroupData> ptr;
+    typedef std::shared_ptr<GroupData> ptr;
 
     virtual ~GroupData() {}
     virtual std::size_t hash() const = 0;
@@ -30,7 +30,7 @@ struct GroupData {
 
 class RenderGroup {
 public:
-    typedef std::tr1::shared_ptr<RenderGroup> ptr;
+    typedef std::shared_ptr<RenderGroup> ptr;
 
     RenderGroup(RenderGroup* parent):
         parent_(parent) {
@@ -46,7 +46,7 @@ public:
         }
 
         for(std::pair<std::size_t, RenderGroups> groups: this->children_) {
-            for(std::pair<std::size_t, std::tr1::shared_ptr<RenderGroup>> group: groups.second) {
+            for(std::pair<std::size_t, std::shared_ptr<RenderGroup>> group: groups.second) {
                 group.second->traverse(callback);
             }
         }
@@ -73,7 +73,7 @@ public:
         if(it != container.end()) {
             return *(*it).second;
         } else {
-            std::tr1::shared_ptr<RenderGroupType> new_child(new RenderGroupType(this, cast_data));
+            std::shared_ptr<RenderGroupType> new_child(new RenderGroupType(this, cast_data));
             container.insert(std::make_pair(cast_data.hash(), new_child));
             return *new_child;
         }
@@ -132,7 +132,7 @@ protected:
     RenderGroup* parent_;
 
 private:
-    typedef std::tr1::unordered_map<std::size_t, std::tr1::shared_ptr<RenderGroup> > RenderGroups;
+    typedef std::tr1::unordered_map<std::size_t, std::shared_ptr<RenderGroup> > RenderGroups;
     typedef std::tr1::unordered_map<std::size_t, RenderGroups> RenderGroupChildren;
 
     RenderGroupChildren children_;
@@ -142,7 +142,7 @@ private:
 
 class RootGroup : public RenderGroup {
 public:
-    typedef std::tr1::shared_ptr<RootGroup> ptr;
+    typedef std::shared_ptr<RootGroup> ptr;
     typedef int data_type;
 
     RootGroup(SubScene& subscene, Camera& camera):

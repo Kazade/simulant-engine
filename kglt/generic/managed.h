@@ -15,7 +15,7 @@ public:
 template<typename T>
 class Managed {
 public:
-    typedef std::tr1::shared_ptr<T> ptr;
+    typedef std::shared_ptr<T> ptr;
     typedef std::tr1::weak_ptr<T> wptr;
 
     static typename Managed<T>::ptr create() {

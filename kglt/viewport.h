@@ -37,7 +37,7 @@ enum ViewportType {
 
 class Viewport : public generic::Identifiable<ViewportID> {
 public:
-    typedef std::tr1::shared_ptr<Viewport> ptr;
+    typedef std::shared_ptr<Viewport> ptr;
 
     Viewport(WindowBase* parent, ViewportID id);
 

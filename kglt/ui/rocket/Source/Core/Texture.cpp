@@ -74,8 +74,8 @@ String Texture::GetSource() const
 // Returns the texture's handle. 
 TextureHandle Texture::GetHandle(RenderInterface* render_interface) const
 {
-	if (resource == NULL)
-		return NULL;
+    if (resource == 0)
+        return 0;
 
 	return resource->GetHandle(render_interface);
 }

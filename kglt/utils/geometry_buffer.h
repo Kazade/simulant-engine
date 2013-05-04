@@ -23,7 +23,7 @@ struct GeometryBufferEntry {
 
 class GeometryBuffer {
 public:
-    typedef std::tr1::shared_ptr<GeometryBuffer> ptr;
+    typedef std::shared_ptr<GeometryBuffer> ptr;
 
     GeometryBuffer(MeshArrangement arrangement, uint32_t attributes);
     void resize(uint32_t vertex_count);
@@ -51,7 +51,6 @@ private:
 
     std::vector<float> buffer_;
 
-    mutable bool is_dirty_;
     uint32_t vertex_buffer_;
 
     uint32_t floats_per_vertex() const { return stride() / sizeof(float); }

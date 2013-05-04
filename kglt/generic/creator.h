@@ -9,13 +9,13 @@ namespace generic {
 template<typename T>
 class Creator {
 public:
-    static std::tr1::shared_ptr<T> create() {
-        return std::tr1::shared_ptr<T>(new T());
+    static std::shared_ptr<T> create() {
+        return std::shared_ptr<T>(new T());
     }
 
     template<typename U>
-    static std::tr1::shared_ptr<T> create(U& u) {
-        return std::tr1::shared_ptr<T>(new T(u));
+    static std::shared_ptr<T> create(U& u) {
+        return std::shared_ptr<T>(new T(u));
     }
 };
 

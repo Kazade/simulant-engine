@@ -52,7 +52,7 @@ public:
         return *subentities_.at(idx);
     }
 
-    const std::vector<std::tr1::shared_ptr<SubEntity> >& _subentities() { return subentities_; }
+    const std::vector<std::shared_ptr<SubEntity> >& _subentities() { return subentities_; }
 
     sigc::signal<void, EntityID>& signal_mesh_changed() { return signal_mesh_changed_; }
 
@@ -62,7 +62,7 @@ public:
     void set_render_priority(RenderPriority value) { render_priority_ = value;}
 private:
     MeshID mesh_;
-    std::vector<std::tr1::shared_ptr<SubEntity> > subentities_;
+    std::vector<std::shared_ptr<SubEntity> > subentities_;
 
     RenderPriority render_priority_;
 

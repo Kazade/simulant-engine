@@ -9,7 +9,7 @@ namespace kglt {
 namespace ui {
 
 
-Element::Element(std::tr1::shared_ptr<ElementImpl> impl):
+Element::Element(std::shared_ptr<ElementImpl> impl):
     impl_(impl) {
 
 }

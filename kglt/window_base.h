@@ -9,15 +9,15 @@
 #include "keyboard.h"
 #include "resource_locator.h"
 
-#include "loader.h"
-
 #include "idle_task_manager.h"
 
 #include "kazbase/logging.h"
 #include "generic/manager.h"
+#include "lua/interpreter.h"
+
 #include "types.h"
 #include "viewport.h"
-#include "interpreter.h"
+
 
 enum LoggingLevel {
     LOG_LEVEL_NONE = 0,
@@ -39,18 +39,23 @@ class Mouse;
 class Joypad;
 class Console;
 
+class Loader;
+class LoaderType;
+
 typedef std::tr1::function<void (double)> WindowUpdateCallback;
+typedef std::shared_ptr<Loader> LoaderPtr;
+typedef std::shared_ptr<LoaderType> LoaderTypePtr;
 
 class WindowBase :
     public generic::TemplatedManager<WindowBase, Viewport, ViewportID>,
     public LuaClass<WindowBase> {
 
 public:    
-    typedef std::tr1::shared_ptr<WindowBase> ptr;
+    typedef std::shared_ptr<WindowBase> ptr;
 
     template<typename T>
-    static std::tr1::shared_ptr<WindowBase> create(int width=640, int height=480, int bpp=0, bool fullscreen=false) {
-        std::tr1::shared_ptr<WindowBase> window(new T());
+    static std::shared_ptr<WindowBase> create(int width=640, int height=480, int bpp=0, bool fullscreen=false) {
+        std::shared_ptr<WindowBase> window(new T());
         if(!window->init(width, height, bpp, fullscreen)) {
             throw InstanceInitializationError();
         }
@@ -59,32 +64,10 @@ public:
 
     virtual ~WindowBase();
     
-    Loader::ptr loader_for(const std::string& filename, const std::string& type_hint) {
-        std::string final_file = resource_locator().locate_file(filename);
-
-        //See if we can find a loader that supports this type hint
-        for(LoaderType::ptr loader_type: loaders_) {
-            if(loader_type->has_hint(type_hint) && loader_type->supports(filename)) {
-                return loader_type->loader_for(final_file);
-            }
-        }
-
-        throw DoesNotExist<Loader>("Unable to find a loader for: " + filename);
-    }
-
-    Loader::ptr loader_for(const std::string& filename) {
-        std::string final_file = resource_locator().locate_file(filename);
-
-        for(LoaderType::ptr loader_type: loaders_) {
-            if(loader_type->supports(final_file) && !loader_type->requires_hint()) {
-                return loader_type->loader_for(final_file);
-            }
-        }
-
-        throw DoesNotExist<Loader>("Unable to find a loader for: " + filename);
-    }    
+    LoaderPtr loader_for(const std::string& filename, const std::string& type_hint);
+    LoaderPtr loader_for(const std::string& filename);
     
-    void register_loader(LoaderType::ptr loader_type);
+    void register_loader(LoaderTypePtr loader_type);
 
     virtual sigc::signal<void, KeyCode>& signal_key_up() = 0;
     virtual sigc::signal<void, KeyCode>& signal_key_down() = 0;
@@ -148,11 +131,11 @@ protected:
 private:    
     bool initialized_;
 
-    std::tr1::shared_ptr<Scene> scene_;
+    std::shared_ptr<Scene> scene_;
     int32_t width_;
     int32_t height_;
 
-    std::vector<LoaderType::ptr> loaders_;
+    std::vector<LoaderTypePtr> loaders_;
     bool is_running_;
         
     IdleTaskManager idle_;
@@ -164,7 +147,7 @@ private:
     ViewportID default_viewport_;
 
     ResourceLocator::ptr resource_locator_;
-    std::tr1::shared_ptr<InputController> input_controller_;
+    std::shared_ptr<InputController> input_controller_;
 
     double frame_counter_time_;
     int32_t frame_counter_frames_;
@@ -177,8 +160,8 @@ private:
     sigc::signal<void> signal_pre_swap_;
     sigc::signal<void> signal_frame_finished_;
 
-    std::tr1::shared_ptr<ui::Interface> interface_;
-    std::tr1::shared_ptr<Console> console_;
+    std::shared_ptr<ui::Interface> interface_;
+    std::shared_ptr<Console> console_;
 };
 
 }

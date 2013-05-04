@@ -10,7 +10,7 @@ namespace kglt {
 
 class SubEntity;
 
-typedef std::tr1::shared_ptr<SubEntity> SubEntityPtr;
+typedef std::shared_ptr<SubEntity> SubEntityPtr;
 
 class OctreePartitioner :
     public Partitioner {

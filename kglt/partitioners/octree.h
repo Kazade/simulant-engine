@@ -110,7 +110,7 @@ public:
     const std::set<const Boundable*>& objects() const { return objects_; }
 private:
     OctreeNode* parent_;
-    std::map<OctreePosition, std::tr1::shared_ptr<OctreeNode> > children_;
+    std::map<OctreePosition, std::shared_ptr<OctreeNode> > children_;
     std::set<const Boundable*> objects_;
 
     kmAABB strict_bounds_;

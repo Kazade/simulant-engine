@@ -1,10 +1,13 @@
 #include <locale>
-#include "window_base.h"
-#include "scene.h"
-#include "keyboard.h"
+#include <functional>
+
 #include "console.h"
-#include "ui/interface.h"
-#include "input_controller.h"
+
+#include "../window_base.h"
+#include "../scene.h"
+#include "../keyboard.h"
+#include "../ui/interface.h"
+#include "../input_controller.h"
 
 namespace kglt {
 
@@ -44,7 +47,8 @@ Console::Console(WindowBase &window):
     }
     update_output();
 
-    window_.keyboard().key_pressed_connect(std::bind(&Console::entry, this, std::tr1::placeholders::_1));
+    KeyCallback cb = std::bind(&Console::entry, this, std::placeholders::_1);
+    window_.keyboard().key_pressed_connect(cb);
 
     interpreter_->register_class<WindowBase>();
     interpreter_->register_class<Scene>();
@@ -52,7 +56,7 @@ Console::Console(WindowBase &window):
     interpreter_->add_global("window", window_);
 }
 
-void Console::entry(kglt::KeyEvent event) {
+void Console::entry(const kglt::KeyEvent& event) {
     if(event.code == KEY_CODE_BACKQUOTE) {
         if(!active_) {
             window_.ui()._("#lua-console").show();

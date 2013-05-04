@@ -17,7 +17,7 @@ class Texture :
     public generic::Identifiable<TextureID> {
 
 public:
-    typedef std::tr1::shared_ptr<Texture> ptr;
+    typedef std::shared_ptr<Texture> ptr;
     typedef std::vector<uint8_t> Data;
 
     uint32_t gl_tex() const { return gl_tex_; }

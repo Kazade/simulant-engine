@@ -14,7 +14,7 @@ class SubEntity;
 
 class Renderer {
 public:
-    typedef std::tr1::shared_ptr<Renderer> ptr;
+    typedef std::shared_ptr<Renderer> ptr;
 
     Renderer(Scene& scene):
         scene_(scene) {}

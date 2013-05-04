@@ -8,7 +8,7 @@ namespace loaders {
 
 class StreamWrapper {
 public:
-    typedef std::tr1::shared_ptr<StreamWrapper> ptr;
+    typedef std::shared_ptr<StreamWrapper> ptr;
     StreamWrapper(stb_vorbis* vorbis):
         vorbis_(vorbis) {}
 

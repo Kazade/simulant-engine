@@ -17,8 +17,14 @@ public:
 
 class TextureLoaderType : public LoaderType {
 public:
+    TextureLoaderType() {
+
+    }
+
+    ~TextureLoaderType() {}
+
     std::string name() { return "texture_loader"; }
-    bool supports(const std::string& filename) const {
+    bool supports(const std::string& filename) const override {
         return filename.find(".tga") != std::string::npos ||
                filename.find(".png") != std::string::npos;
     }

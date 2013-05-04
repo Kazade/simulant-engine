@@ -103,9 +103,9 @@ private:
     sigc::signal<void, LightID> signal_light_created_;
     sigc::signal<void, LightID> signal_light_destroyed_;
 
-    std::tr1::shared_ptr<Partitioner> partitioner_;
+    std::shared_ptr<Partitioner> partitioner_;
 
-    void set_partitioner(std::tr1::shared_ptr<Partitioner> partitioner);
+    void set_partitioner(std::shared_ptr<Partitioner> partitioner);
 
     void do_update(double dt) override {
         update_materials(dt);
@@ -150,7 +150,7 @@ private:
 
     void initialize_defaults();
 
-    std::tr1::shared_ptr<Pipeline> pipeline_;
+    std::shared_ptr<Pipeline> pipeline_;
 };
 
 }

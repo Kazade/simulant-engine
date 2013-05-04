@@ -6,6 +6,7 @@
 #include "camera.h"
 #include "pipeline.h"
 #include "light.h"
+#include "loader.h"
 
 #include "partitioners/null_partitioner.h"
 #include "partitioners/octree_partitioner.h"

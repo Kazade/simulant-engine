@@ -10,7 +10,6 @@ GeometryBuffer::GeometryBuffer(MeshArrangement arrangement, uint32_t attributes)
     attributes_(attributes),
     stride_(0),
     material_(0),
-    is_dirty_(false),
     vertex_buffer_(0) {
 
     if((attributes_ & VERTEX_ATTRIBUTE_POSITION) == VERTEX_ATTRIBUTE_POSITION) {

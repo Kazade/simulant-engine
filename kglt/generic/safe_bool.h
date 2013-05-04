@@ -11,7 +11,7 @@ protected:
     safe_bool_base() {}
     safe_bool_base(const safe_bool_base&) {}
     safe_bool_base& operator=(const safe_bool_base&) {return *this;}
-    ~safe_bool_base() {}
+    virtual ~safe_bool_base() {}
 };
 
 template <typename T=void>

@@ -12,7 +12,7 @@
 #include "loaders/ogg_loader.h"
 #include "loaders/rml_loader.h"
 #include "sound.h"
-#include "console.h"
+#include "lua/console.h"
 
 namespace kglt {
 
@@ -41,14 +41,6 @@ WindowBase::WindowBase():
     frame_time_in_milliseconds_(0),
     total_time_(0) {
 
-    //Register the default resource loaders
-    register_loader(LoaderType::ptr(new kglt::loaders::TextureLoaderType));
-    register_loader(LoaderType::ptr(new kglt::loaders::MaterialScriptLoaderType));
-    register_loader(LoaderType::ptr(new kglt::loaders::Q2BSPLoaderType));
-    register_loader(LoaderType::ptr(new kglt::loaders::OPTLoaderType));
-    register_loader(LoaderType::ptr(new kglt::loaders::OGGLoaderType));
-    register_loader(LoaderType::ptr(new kglt::loaders::RMLLoaderType));
-
     ktiGenTimers(1, &timer_);
     ktiBindTimer(timer_);
     ktiStartFixedStepTimer(30);
@@ -66,6 +58,31 @@ WindowBase::~WindowBase() {
     Sound::shutdown_openal();
 }
 
+LoaderPtr WindowBase::loader_for(const std::string& filename, const std::string& type_hint) {
+    std::string final_file = resource_locator().locate_file(filename);
+
+    //See if we can find a loader that supports this type hint
+    for(LoaderTypePtr loader_type: loaders_) {
+        if(loader_type->has_hint(type_hint) && loader_type->supports(filename)) {
+            return loader_type->loader_for(final_file);
+        }
+    }
+
+    throw DoesNotExist<Loader>("Unable to find a loader for: " + filename);
+}
+
+LoaderPtr WindowBase::loader_for(const std::string& filename) {
+    std::string final_file = resource_locator().locate_file(filename);
+
+    for(LoaderTypePtr loader_type: loaders_) {
+        if(loader_type->supports(final_file) && !loader_type->requires_hint()) {
+            return loader_type->loader_for(final_file);
+        }
+    }
+
+    throw DoesNotExist<Loader>("Unable to find a loader for: " + filename);
+}
+
 bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
     set_width(width);
     set_height(height);
@@ -75,6 +92,14 @@ bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
     Sound::init_openal();
 
     if(result && !initialized_) {
+        //Register the default resource loaders
+        register_loader(std::make_shared<kglt::loaders::TextureLoaderType>());
+        register_loader(std::make_shared<kglt::loaders::MaterialScriptLoaderType>());
+        register_loader(std::make_shared<kglt::loaders::OPTLoaderType>());
+        register_loader(std::make_shared<kglt::loaders::OGGLoaderType>());
+        register_loader(std::make_shared<kglt::loaders::RMLLoaderType>());
+        register_loader(std::make_shared<kglt::loaders::Q2BSPLoaderType>());
+
         //Create a default viewport
         default_viewport_ = new_viewport();
         viewport(default_viewport_).set_position(0, 0);
@@ -190,8 +215,11 @@ Scene& WindowBase::scene() {
     return *scene_;
 }
 
-void WindowBase::register_loader(LoaderType::ptr loader) {
-    //FIXME: assert doesn't exist already
+void WindowBase::register_loader(LoaderTypePtr loader) {
+    if(container::contains(loaders_, loader)) {
+        throw LogicError("Tried to add the same loader twice");
+    }
+
     loaders_.push_back(loader);
 }
 

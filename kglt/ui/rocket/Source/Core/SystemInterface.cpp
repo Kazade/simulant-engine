@@ -61,7 +61,6 @@ bool SystemInterface::LogMessage(Log::Type logtype, const String& message)
 		OutputDebugStringA("\r\n");
 	}
 #else
-	(logtype);
 	fprintf(stderr,"%s\n", message.CString());
 #endif	
 	return true;

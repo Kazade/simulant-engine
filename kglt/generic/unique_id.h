@@ -19,8 +19,9 @@ public:
         return this->id_ == other.id_;
     }
 
-    void operator=(const UniqueID<T>& other) {
+    UniqueID& operator=(const UniqueID<T>& other) {
         this->id_ = other.id_;
+        return *this;
     }
 
     bool operator<(const UniqueID<T>& other) const {

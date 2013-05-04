@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <vector>
 #include <map>
-#include <tr1/functional>
+#include <functional>
 #include <SDL/SDL.h>
 
 #include "generic/managed.h"

@@ -26,7 +26,7 @@ std::string ResourceLocator::locate_file(const std::string& filename) {
     throw IOError("Unable to find file: " + filename);
 }
 
-std::tr1::shared_ptr<std::stringstream> ResourceLocator::read_file(const std::string& filename) {
+std::shared_ptr<std::stringstream> ResourceLocator::read_file(const std::string& filename) {
     std::string path = locate_file(filename);
 
     std::ifstream file_in(path.c_str());
@@ -34,7 +34,7 @@ std::tr1::shared_ptr<std::stringstream> ResourceLocator::read_file(const std::st
         throw IOError("Unable to load file: " + filename);
     }
 
-    std::tr1::shared_ptr<std::stringstream> result(new std::stringstream);
+    std::shared_ptr<std::stringstream> result(new std::stringstream);
     (*result) << file_in.rdbuf();
     return result;
 }

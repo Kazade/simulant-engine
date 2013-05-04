@@ -18,7 +18,7 @@ public:
     }
 
     void test_tree_basic_usage() {
-        class Object : public generic::TreeNode<Object> {};
+        class Object : public kglt::generic::TreeNode<Object> {};
 
         Object root;
         assert_false(root.has_parent());
@@ -41,7 +41,7 @@ public:
     }
 
     void test_tree_iteration() {
-        class Object : public generic::TreeNode<Object> {};
+        class Object : public kglt::generic::TreeNode<Object> {};
 
         Object root, node1, node2, node3;
 
@@ -53,8 +53,8 @@ public:
         assert_true(node2.has_siblings());
         assert_false(node3.has_siblings());
 
-        generic::tree_iterator<Object> iter(root);
-        generic::tree_iterator<Object> end;
+        kglt::generic::tree_iterator<Object> iter(root);
+        kglt::generic::tree_iterator<Object> end;
 
         int32_t i = 0;
         for(; iter != end; ++iter) {

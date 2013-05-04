@@ -1,10 +1,4 @@
 
 
-FILE(GLOB_RECURSE LUABIND_HEADERS luabind/*.h)
-FILE(GLOB_RECURSE LUABIND_FILES luabind/src/*.cpp luabind/src/*.c)
-
-INCLUDE_DIRECTORIES(./luabind)
-
-ADD_LIBRARY(luabind STATIC ${LUABIND_FILES})
-
-
+INCLUDE_DIRECTORIES(luabind)
+ADD_SUBDIRECTORY(luabind/src)

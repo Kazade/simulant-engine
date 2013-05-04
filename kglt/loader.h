@@ -31,7 +31,7 @@ public:
 */
 class Loader {
 public:
-    typedef std::tr1::shared_ptr<Loader> ptr;
+    typedef std::shared_ptr<Loader> ptr;
 
     Loader(const std::string& filename):
         filename_(filename) {}
@@ -52,7 +52,10 @@ protected:
 
 class LoaderType {
 public:
-    typedef std::tr1::shared_ptr<LoaderType> ptr;
+    typedef std::shared_ptr<LoaderType> ptr;
+
+    virtual ~LoaderType() { }
+
     virtual std::string name() = 0;
     virtual bool supports(const std::string& filename) const = 0;
     virtual bool has_hint(const std::string& type_hint) const { return false; }

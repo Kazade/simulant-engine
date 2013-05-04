@@ -28,7 +28,7 @@ class Background;
 
 class BackgroundLayer {
 public:
-    typedef std::tr1::shared_ptr<BackgroundLayer> ptr;
+    typedef std::shared_ptr<BackgroundLayer> ptr;
 
     BackgroundLayer(Background& background, const std::string& image_path);
     ~BackgroundLayer();
@@ -47,7 +47,7 @@ private:
 
 class Background {
 public:
-    typedef std::tr1::shared_ptr<Background> ptr;
+    typedef std::shared_ptr<Background> ptr;
 
     Background(Scene& scene, ViewportID viewport, BGResizeStyle style = BG_RESIZE_ZOOM);
     ~Background();
@@ -58,8 +58,8 @@ public:
 
     Scene& scene() { return scene_; }
 
-    static std::tr1::shared_ptr<Background> create(Scene& scene, ViewportID viewport=ViewportID()) {
-        return std::tr1::shared_ptr<Background>(new Background(scene, viewport));
+    static std::shared_ptr<Background> create(Scene& scene, ViewportID viewport=ViewportID()) {
+        return std::shared_ptr<Background>(new Background(scene, viewport));
     }
 
     MaterialID material_id() const { return material_id_; }

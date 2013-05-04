@@ -12,7 +12,7 @@ class ElementImpl;
 
 class Element {
 public:
-    Element(std::tr1::shared_ptr<ElementImpl> impl);
+    Element(std::shared_ptr<ElementImpl> impl);
 
     void text(const unicode& content);
     const unicode text() const;
@@ -29,7 +29,7 @@ public:
 
     void scroll_to_bottom();
 private:
-    std::tr1::shared_ptr<ElementImpl> impl_;
+    std::shared_ptr<ElementImpl> impl_;
 };
 
 }

@@ -194,7 +194,7 @@ class ShaderProgram :
     public generic::Identifiable<ShaderID> {
 
 public:
-    typedef std::tr1::shared_ptr<ShaderProgram> ptr;
+    typedef std::shared_ptr<ShaderProgram> ptr;
 
     ShaderProgram(ResourceManager* resource_manager, ShaderID id);
     ~ShaderProgram();

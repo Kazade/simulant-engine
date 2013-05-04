@@ -16,7 +16,7 @@ class Light :
     public Boundable {
 
 public:
-    typedef std::tr1::shared_ptr<Light> ptr;
+    typedef std::shared_ptr<Light> ptr;
 
     Light(SubScene* subscene, LightID lid):
         Object(subscene),

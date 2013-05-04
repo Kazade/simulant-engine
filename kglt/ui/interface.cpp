@@ -9,6 +9,7 @@
 
 #include <kazmath/mat4.h>
 
+#include "../loader.h"
 #include "../kazbase/string.h"
 #include "../kazbase/os/path.h"
 #include "../window_base.h"
@@ -174,8 +175,8 @@ private:
 };
 
 
-static std::tr1::shared_ptr<RocketSystemInterface> rocket_system_interface_;
-static std::tr1::shared_ptr<RocketRenderInterface> rocket_render_interface_;
+static std::shared_ptr<RocketSystemInterface> rocket_system_interface_;
+static std::shared_ptr<RocketRenderInterface> rocket_render_interface_;
 
 Interface::Interface(WindowBase& window, uint32_t width_in_pixels, uint32_t height_in_pixels):
     window_(window),
@@ -271,7 +272,7 @@ Element Interface::append(const std::string& tag) {
     impl_->document_->AppendChild(elem);
 
     Element result = Element(
-        std::tr1::shared_ptr<ElementImpl>(
+        std::shared_ptr<ElementImpl>(
             new ElementImpl(elem)
         )
     );
@@ -290,7 +291,7 @@ ElementList Interface::_(const std::string& selector) {
         Rocket::Core::Element* elem = impl_->document_->GetElementById(str::strip(selector, "#").c_str());
         if(elem) {
             result.push_back(
-                Element(std::tr1::shared_ptr<ElementImpl>(new ElementImpl(elem)))
+                Element(std::shared_ptr<ElementImpl>(new ElementImpl(elem)))
             );
         }
     } else {
@@ -298,7 +299,7 @@ ElementList Interface::_(const std::string& selector) {
     }
 
     for(Rocket::Core::Element* elem: elements) {
-        result.push_back(Element(std::tr1::shared_ptr<ElementImpl>(new ElementImpl(elem))));
+        result.push_back(Element(std::shared_ptr<ElementImpl>(new ElementImpl(elem))));
     }
 
     return ElementList(result);

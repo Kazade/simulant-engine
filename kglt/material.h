@@ -88,7 +88,7 @@ class MaterialTechnique;
 
 class MaterialPass {
 public:
-    typedef std::tr1::shared_ptr<MaterialPass> ptr;
+    typedef std::shared_ptr<MaterialPass> ptr;
 
     MaterialPass(MaterialTechnique& technique, ShaderID shader);
     void set_texture_unit(uint32_t texture_unit_id, TextureID tex);
@@ -172,7 +172,7 @@ private:
 
 class MaterialTechnique {
 public:
-    typedef std::tr1::shared_ptr<MaterialTechnique> ptr;
+    typedef std::shared_ptr<MaterialTechnique> ptr;
 
     MaterialTechnique(Material& mat, const std::string& scheme=DEFAULT_MATERIAL_SCHEME);
     uint32_t new_pass(ShaderID shader);
@@ -203,7 +203,7 @@ class Material :
     public generic::Identifiable<MaterialID> {
 
 public:
-    typedef std::tr1::shared_ptr<Material> ptr;
+    typedef std::shared_ptr<Material> ptr;
 
     Material(ResourceManager* resource_manager, MaterialID mat_id);
     MaterialTechnique& technique(const std::string& scheme=DEFAULT_MATERIAL_SCHEME);

@@ -10,6 +10,7 @@
 #include "../procedural/mesh.h"
 #include "../renderer.h"
 #include "../scene.h"
+#include "../loader.h"
 
 namespace kglt {
 namespace extra {

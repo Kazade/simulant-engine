@@ -108,10 +108,10 @@ private:
     sigc::signal<void, ObjectType&, ObjectIDType> signal_pre_delete_;
 
 protected:
-    std::tr1::unordered_map<ObjectIDType, std::tr1::shared_ptr<ObjectType> > objects_;
+    std::tr1::unordered_map<ObjectIDType, std::shared_ptr<ObjectType> > objects_;
 
     ObjectIDType _get_object_id_from_ptr(ObjectType* ptr) {
-        for(std::pair<ObjectIDType, std::tr1::shared_ptr<ObjectType> > pair: objects_) {
+        for(std::pair<ObjectIDType, std::shared_ptr<ObjectType> > pair: objects_) {
             if(pair.second.get() == ptr) {
                 return pair.first;
             }

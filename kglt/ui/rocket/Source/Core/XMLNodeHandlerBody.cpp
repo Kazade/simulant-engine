@@ -43,7 +43,6 @@ XMLNodeHandlerBody::~XMLNodeHandlerBody()
 
 Element* XMLNodeHandlerBody::ElementStart(XMLParser* parser, const String& name, const XMLAttributes& attributes)
 {
-	(name);
 	ROCKET_ASSERT(name == "body");
 
 	Element* element = parser->GetParseFrame()->element;

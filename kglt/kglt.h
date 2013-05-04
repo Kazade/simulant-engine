@@ -18,6 +18,7 @@
 #include "procedural/mesh.h"
 #include "procedural/texture.h"
 #include "batcher.h"
+#include "loader.h"
 #include "ui/interface.h"
 
 #endif

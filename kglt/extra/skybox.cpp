@@ -8,6 +8,7 @@
 #include "../procedural/texture.h"
 #include "../window_base.h"
 #include "../entity.h"
+#include "../loader.h"
 
 namespace kglt {
 namespace extra {

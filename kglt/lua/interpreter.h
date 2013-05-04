@@ -1,21 +1,17 @@
 #ifndef INTERPRETER_H
 #define INTERPRETER_H
 
-#include "generic/managed.h"
-#include "kazbase/unicode.h"
-#include "kazbase/logging.h"
+#include "../generic/managed.h"
+#include "../kazbase/unicode.h"
+#include "../kazbase/logging.h"
+#include "../types.h"
 #include "types.h"
 
 #include <lua.hpp>
-#include <luabind/luabind.hpp>
+
+#include "luabind/luabind.hpp"
 
 namespace kglt {
-
-enum LuaResult {
-    LUA_RESULT_EOF,
-    LUA_RESULT_SUCCESS,
-    LUA_RESULT_ERROR
-};
 
 /*
  * USAGE:

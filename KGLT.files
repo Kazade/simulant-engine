@@ -243,10 +243,11 @@ kglt/ui/interface.h
 kglt/ui/interface.cpp
 kglt/ui/ui_private.h
 kglt/ui/element.cpp
-kglt/interpreter.h
-kglt/interpreter.cpp
 cmake_modules/FindLuabind.cmake
-kglt/console.h
-kglt/console.cpp
 kglt/ui/element.h
 kglt/kazbase/config/config_reader.h
+kglt/lua/interpreter.h
+kglt/lua/console.h
+kglt/lua/interpreter.cpp
+kglt/lua/console.cpp
+kglt/lua/types.h

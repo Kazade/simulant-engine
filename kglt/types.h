@@ -2,7 +2,6 @@
 #define TYPES_H_INCLUDED
 
 #include <lua.hpp>
-#include <luabind/luabind.hpp>
 
 #include <cstdint>
 #include <string>

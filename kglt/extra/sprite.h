@@ -23,7 +23,7 @@ class Sprite :
     public Managed<Sprite> {
 
 public:
-    typedef std::tr1::shared_ptr<Sprite> ptr;
+    typedef std::shared_ptr<Sprite> ptr;
 
     Sprite(Scene& scene, SubSceneID subscene=DefaultSubSceneID);
 
