@@ -23,6 +23,8 @@ public:
     void entry(const kglt::KeyEvent& code);
 
 private:
+    void init_widget();
+
     WindowBase& window_;
 
     std::vector<unicode> history_;

@@ -24,6 +24,18 @@ Console::Console(WindowBase &window):
 
     history_.push_back(PROMPT_PREFIX);
 
+    init_widget();
+
+    KeyCallback cb = std::bind(&Console::entry, this, std::placeholders::_1);
+    window_.keyboard().key_pressed_connect(cb);
+
+    interpreter_->register_class<WindowBase>();
+    interpreter_->register_class<Scene>();
+
+    interpreter_->add_global("window", window_);
+}
+
+void Console::init_widget() {
     //If we can't find an element for the lua console
     if(window_.ui()._("#lua-console").empty()) {
         //...then create one
@@ -46,19 +58,13 @@ Console::Console(WindowBase &window):
         l.hide();
     }
     update_output();
-
-    KeyCallback cb = std::bind(&Console::entry, this, std::placeholders::_1);
-    window_.keyboard().key_pressed_connect(cb);
-
-    interpreter_->register_class<WindowBase>();
-    interpreter_->register_class<Scene>();
-
-    interpreter_->add_global("window", window_);
 }
 
 void Console::entry(const kglt::KeyEvent& event) {
     if(event.code == KEY_CODE_BACKQUOTE) {
         if(!active_) {
+            init_widget(); //Make sure there is something to show!
+
             window_.ui()._("#lua-console").show();
             active_ = true;
         } else {
