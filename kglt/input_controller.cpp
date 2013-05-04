@@ -97,6 +97,10 @@ void Keyboard::_handle_keydown_event(KeyCode key, uint16_t unicode) {
 
 }
 
+bool modifier_is_set(uint32_t state, KeyModifier modifier) {
+    return (state & modifier) == modifier;
+}
+
 void Keyboard::_handle_keyup_event(KeyCode key) {
 
     //Unset modifiers
@@ -110,38 +114,38 @@ void Keyboard::_handle_keyup_event(KeyCode key) {
     case KEY_CODE_LCTRL: {
         current_mods_ &= ~KEY_MODIFIER_LCTRL;
         //If the RCTRL isn't set, remove the CTRL modifier
-        if(!(current_mods_ & KEY_MODIFIER_RCTRL) == KEY_MODIFIER_RCTRL) {
+        if(!modifier_is_set(current_mods_, KEY_MODIFIER_RCTRL)) {
             current_mods_ &= ~KEY_MODIFIER_CTRL;
         }
     } break;
     case KEY_CODE_RCTRL: {
         current_mods_ &= ~KEY_MODIFIER_RCTRL;
         //If the LCTRL isn't set, remove the CTRL modifier
-        if(!(current_mods_ & KEY_MODIFIER_LCTRL) == KEY_MODIFIER_LCTRL) {
+        if(!modifier_is_set(current_mods_, KEY_MODIFIER_LCTRL)) {
             current_mods_ &= ~KEY_MODIFIER_CTRL;
         }
     } break;
     case KEY_CODE_LSHIFT: {
         current_mods_ &= ~KEY_MODIFIER_LSHIFT;
-        if(!(current_mods_ & KEY_MODIFIER_RSHIFT) == KEY_MODIFIER_RSHIFT) {
+        if(!modifier_is_set(current_mods_, KEY_MODIFIER_RSHIFT)) {
             current_mods_ &= ~KEY_MODIFIER_SHIFT;
         }
     } break;
     case KEY_CODE_RSHIFT: {
         current_mods_ &= ~KEY_MODIFIER_RSHIFT;
-        if(!(current_mods_ & KEY_MODIFIER_LSHIFT) == KEY_MODIFIER_LSHIFT) {
+        if(!modifier_is_set(current_mods_, KEY_MODIFIER_LSHIFT)) {
             current_mods_ &= ~KEY_MODIFIER_SHIFT;
         }
     } break;
     case KEY_CODE_LALT: {
         current_mods_ &= ~KEY_MODIFIER_LALT;
-        if(!(current_mods_ & KEY_MODIFIER_RALT) == KEY_MODIFIER_RALT) {
+        if(!modifier_is_set(current_mods_, KEY_MODIFIER_RALT)) {
             current_mods_ &= ~KEY_MODIFIER_ALT;
         }
     } break;
     case KEY_CODE_RALT: {
         current_mods_ &= ~KEY_MODIFIER_RALT;
-        if(!(current_mods_ & KEY_MODIFIER_LALT) == KEY_MODIFIER_LALT) {
+        if(!modifier_is_set(current_mods_, KEY_MODIFIER_LALT)) {
             current_mods_ &= ~KEY_MODIFIER_ALT;
         }
     } break;

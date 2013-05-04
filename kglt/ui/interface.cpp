@@ -59,7 +59,7 @@ public:
             tex.upload(true, false, false, true);
         });
 
-        textures_[texture_handle] = tex.id();
+        texture_handle = tex.id().value();
 
         return true;
     }
@@ -74,15 +74,14 @@ public:
         tex.data().assign(source, source + data_size);
         tex.upload(true, false, false, true);
 
-        textures_[texture_handle] = tex.id();
+        texture_handle = tex.id().value();
 
         return true;
     }
 
     void ReleaseTexture(Rocket::Core::TextureHandle texture) {
-        kglt::TextureID id = textures_[texture];
+        kglt::TextureID id((uint32_t) texture);
         manager().delete_texture(id);
-        textures_.erase(texture);
     }
 
     void RenderGeometry(
@@ -112,7 +111,7 @@ public:
 
         if(texture) {
             glEnable(GL_TEXTURE_2D);
-            GLuint tex_id = manager().texture(textures_[texture]).gl_tex();
+            GLuint tex_id = manager().texture(TextureID(texture)).gl_tex();
             glBindTexture(GL_TEXTURE_2D, tex_id);
             glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
         } else {
@@ -170,8 +169,6 @@ public:
 
 private:
     WindowBase& window_;
-
-    std::map<Rocket::Core::TextureHandle, kglt::TextureID> textures_;
 };
 
 
