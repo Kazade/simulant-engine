@@ -254,3 +254,4 @@ kglt/lua/types.h
 kglt/subscene.h
 kglt/subscene.cpp
 kglt/scene_base.h
+kglt/loaders/obj_loader.h
