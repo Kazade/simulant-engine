@@ -45,6 +45,7 @@ private:
     Device& device_;
 };
 
+typedef std::function<bool (KeyEvent)> GlobalKeyCallback;
 typedef std::function<void (KeyEvent)> KeyCallback;
 typedef std::function<void (KeyEvent, double)> KeyDownCallback;
 
@@ -54,12 +55,13 @@ class Keyboard :
 
 public:
     Keyboard();
-    InputConnection key_pressed_connect(KeyCallback callback);
+    InputConnection key_pressed_connect(GlobalKeyCallback callback);
     InputConnection key_pressed_connect(KeyCode code, KeyCallback callback);
     InputConnection key_while_down_connect(KeyCode code, KeyDownCallback callback);
     InputConnection key_released_connect(KeyCode code, KeyCallback callback);
 
 private:
+    typedef std::pair<InputConnection, GlobalKeyCallback> GlobalKeySignalEntry;
     typedef std::pair<InputConnection, KeyCallback> KeySignalEntry;
     typedef std::pair<InputConnection, KeyDownCallback> KeyDownSignalEntry;
 
@@ -70,7 +72,7 @@ private:
 
     std::vector<uint8_t> state_;
 
-    std::map<InputConnection, KeyCallback> global_key_press_signals_;
+    std::map<InputConnection, GlobalKeyCallback> global_key_press_signals_;
 
     std::map<KeyCode, std::map<InputConnection, KeyCallback> > key_press_signals_;
     std::map<KeyCode, std::map<InputConnection, KeyDownCallback> > key_while_down_signals_;

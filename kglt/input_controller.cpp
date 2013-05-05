@@ -16,7 +16,7 @@ InputConnection Device::new_input_connection() {
     return InputConnection(InputConnectionID(idx), *this);
 }
 
-InputConnection Keyboard::key_pressed_connect(KeyCallback callback) {
+InputConnection Keyboard::key_pressed_connect(GlobalKeyCallback callback) {
     InputConnection c = new_input_connection();
     global_key_press_signals_[c] = callback;
     return c;
@@ -82,19 +82,28 @@ void Keyboard::_handle_keydown_event(KeyCode key, uint16_t unicode) {
         break;
     }
 
-    //First trigger all global handlers
-    for(KeySignalEntry entry: global_key_press_signals_) {
-        entry.second({ key, current_mods_, unicode });
-    }
+    bool propagation_stopped = false;
 
-    if(container::contains(key_press_signals_, key)) {
-        for(KeySignalEntry entry: key_press_signals_[key]) {
-            entry.second({ key, current_mods_, unicode });
+    //First trigger all global handlers
+    for(GlobalKeySignalEntry entry: global_key_press_signals_) {
+        if(entry.second({ key, current_mods_, unicode })) {
+            propagation_stopped = true;
         }
     }
 
-    state_[key] = true;
+    //If a global handler returned true, we don't trigger any more
+    //signals
+    if(!propagation_stopped) {
+        if(container::contains(key_press_signals_, key)) {
+            for(KeySignalEntry entry: key_press_signals_[key]) {
+                entry.second({ key, current_mods_, unicode });
+            }
+        }
 
+        //This is inside the IF because, otherwise while_key_pressed events will
+        //trigger and we don't want that if the key down was handled... feels dirty
+        state_[key] = true;
+    }
 }
 
 bool modifier_is_set(uint32_t state, KeyModifier modifier) {

@@ -27,7 +27,7 @@ Console::Console(WindowBase &window):
 
     init_widget();
 
-    KeyCallback cb = std::bind(&Console::entry, this, std::placeholders::_1);
+    GlobalKeyCallback cb = std::bind(&Console::entry, this, std::placeholders::_1);
     window_.keyboard().key_pressed_connect(cb);
 
     interpreter_->register_class<WindowBase>();
@@ -62,7 +62,7 @@ void Console::init_widget() {
     update_output();
 }
 
-void Console::entry(const kglt::KeyEvent& event) {
+bool Console::entry(const kglt::KeyEvent& event) {
     if(event.code == KEY_CODE_BACKQUOTE) {
         if(!active_) {
             init_widget(); //Make sure there is something to show!
@@ -76,7 +76,7 @@ void Console::entry(const kglt::KeyEvent& event) {
     }
 
     if(!active_) {
-        return;
+        return false; //Allow key signals to propagate
     }
 
     if(event.code == KEY_CODE_BACKSPACE) {
@@ -86,7 +86,9 @@ void Console::entry(const kglt::KeyEvent& event) {
             history_.at(history_.size() - 1) = line;
         }
     } else if (event.code == KEY_CODE_RETURN) {
-        current_command_ += history_.at(history_.size() - 1).slice(4, nullptr);
+        current_command_ += history_.at(history_.size() - 1).slice(4, nullptr);        
+        command_history_.push_back(current_command_);
+
         unicode output;
         LuaResult r = execute(current_command_, output);
         if(r == LUA_RESULT_EOF) {
@@ -103,9 +105,15 @@ void Console::entry(const kglt::KeyEvent& event) {
     } else if(std::isprint(event.code) && event.code != KEY_CODE_BACKQUOTE){
         unicode new_char = unicode(1, (char16_t) event.unicode);
         history_.at(history_.size() - 1) += new_char;
+    } else {
+        //Unhandled key press, we should pass this on to the code-specific signals
+        return false;
     }
 
     update_output(); //Make sure the latest content is visible
+
+    //We are active so don't propagate keyboard signals
+    return true;
 }
 
 void Console::update_output() {

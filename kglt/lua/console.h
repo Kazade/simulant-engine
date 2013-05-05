@@ -20,7 +20,7 @@ public:
 
     Interpreter& lua();
 
-    void entry(const kglt::KeyEvent& code);
+    bool entry(const kglt::KeyEvent& code);
 
 private:
     void init_widget();
@@ -28,6 +28,8 @@ private:
     WindowBase& window_;
 
     std::vector<unicode> history_;
+    std::vector<unicode> command_history_;
+
     unicode current_command_;
 
     std::shared_ptr<Interpreter> interpreter_;
