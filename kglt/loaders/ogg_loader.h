@@ -11,23 +11,22 @@ namespace loaders {
 
 class OGGLoader : public Loader {
 public:
-    OGGLoader(const std::string& filename):
+    OGGLoader(const unicode& filename):
         Loader(filename) {}
 
-    void into(Loadable& resource);
+    void into(Loadable& resource, const LoaderOptions &options=LoaderOptions());
 
 };
 
 class OGGLoaderType : public LoaderType {
 public:
-    std::string name() { return "ogg_loader"; }
-    bool supports(const std::string& filename) const {
+    unicode name() { return "ogg_loader"; }
+    bool supports(const unicode& filename) const {
         //FIXME: check magic
-        return filename.find(".ogg") != std::string::npos ||
-               filename.find(".OGG") != std::string::npos;
+        return filename.lower().contains(".ogg");
     }
 
-    Loader::ptr loader_for(const std::string& filename) const {
+    Loader::ptr loader_for(const unicode& filename) const {
         return Loader::ptr(new OGGLoader(filename));
     }
 };

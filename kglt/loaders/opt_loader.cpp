@@ -429,14 +429,14 @@ void OPTLoader::read_block(std::istream& file, Offset offset) {
     }
 }
 
-void OPTLoader::into(Loadable& resource) {
+void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
     Loadable* res_ptr = &resource;
     Mesh* mesh = dynamic_cast<Mesh*>(res_ptr);
     assert(mesh && "You passed a Resource that is not a mesh to the OPT loader");
 
-    std::ifstream file(filename_.c_str(), std::ios::binary);
+    std::ifstream file(filename_.encode().c_str(), std::ios::binary);
     if(!file.good()) {
-        throw std::runtime_error("Couldn't load the OPT file: " + filename_);
+        throw IOError("Couldn't load the OPT file: " + filename_.encode());
     }
 
     MainHeader main_header;

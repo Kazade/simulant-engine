@@ -215,14 +215,14 @@ void add_lights_to_scene(Scene& scene, const std::vector<EntityProperties>& enti
     }
 }
 
-void Q2BSPLoader::into(Loadable& resource) {
+void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     Loadable* res_ptr = &resource;
     Scene* scene = dynamic_cast<Scene*>(res_ptr);
     assert(scene && "You passed a Resource that is not a scene to the Scene loader");
 
-    std::ifstream file(filename_.c_str(), std::ios::binary);
+    std::ifstream file(filename_.encode().c_str(), std::ios::binary);
     if(!file.good()) {
-        throw std::runtime_error("Couldn't load the BSP file: " + filename_);
+        throw std::runtime_error("Couldn't load the BSP file: " + filename_.encode());
     }
 
     //Needed because the Quake 2 coord system is weird

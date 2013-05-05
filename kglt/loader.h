@@ -7,46 +7,25 @@
 #include "loadable.h"
 
 #include "kazbase/exceptions.h"
-#include "kglt/option_list.h"
 
 namespace kglt {
 
 class Scene;
 
-class LoaderOptionsUnsupportedError : public std::logic_error {
-public:
-    LoaderOptionsUnsupportedError():
-        std::logic_error("This loader does not support options") {}
-};
+typedef std::map<unicode, unicode> LoaderOptions;
 
-class LoaderRequiresOptionsError : public std::logic_error {
-public:
-    LoaderRequiresOptionsError():
-        std::logic_error("This loader requires options") {}
-};
-/*
-    if(LoaderType().supports("filename")) {
-        Loader::ptr = LoaderType().loader(filename);
-    }
-*/
 class Loader {
 public:
     typedef std::shared_ptr<Loader> ptr;
 
-    Loader(const std::string& filename):
+    Loader(const unicode& filename):
         filename_(filename) {}
 
     virtual ~Loader();
-    virtual void into(Loadable& resource) {
-        throw LoaderRequiresOptionsError();
-    }
+    virtual void into(Loadable& resource, const LoaderOptions& options = LoaderOptions()) = 0;
 
-    virtual void into(Loadable& resource, const kglt::option_list::OptionList& options) {
-        throw LoaderOptionsUnsupportedError();
-    }
 protected:
-    std::string filename_;
-
+    unicode filename_;
     Scene* loadable_to_scene_ptr(Loadable& resource);
 };
 
@@ -56,11 +35,9 @@ public:
 
     virtual ~LoaderType() { }
 
-    virtual std::string name() = 0;
-    virtual bool supports(const std::string& filename) const = 0;
-    virtual bool has_hint(const std::string& type_hint) const { return false; }
-    virtual bool requires_hint() const { return false; }
-    virtual Loader::ptr loader_for(const std::string& filename) const = 0;
+    virtual unicode name() = 0;
+    virtual bool supports(const unicode& filename) const = 0;
+    virtual Loader::ptr loader_for(const unicode& filename) const = 0;
 };
 
 }

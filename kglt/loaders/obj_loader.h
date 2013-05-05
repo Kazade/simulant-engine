@@ -11,8 +11,7 @@ public:
     OBJLoader(const std::string& filename):
         Loader(filename) {}
 
-    void into(Loadable& resource);
-    void into(Loadable& resource, const kglt::option_list::OptionList& options);
+    void into(Loadable& resource, const LoaderOptions& options = LoaderOptions());
 };
 
 class OBJLoaderType : public LoaderType {
@@ -23,12 +22,12 @@ public:
 
     ~OBJLoaderType() {}
 
-    std::string name() { return "obj_loader"; }
-    bool supports(const std::string& filename) const override {
-        return filename.find(".obj") != std::string::npos;
+    unicode name() { return "obj_loader"; }
+    bool supports(const unicode& filename) const override {
+        return filename.lower().contains(".obj");
     }
 
-    Loader::ptr loader_for(const std::string& filename) const {
+    Loader::ptr loader_for(const unicode& filename) const {
         return Loader::ptr(new OBJLoader(filename));
     }
 };

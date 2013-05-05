@@ -60,12 +60,12 @@ void init_source(Sound* self, Source& source) {
 }
 
 
-void OGGLoader::into(Loadable& resource) {
+void OGGLoader::into(Loadable& resource, const LoaderOptions& options) {
     Loadable* res_ptr = &resource;
     Sound* sound = dynamic_cast<Sound*>(res_ptr);
     assert(sound && "You passed a Resource that is not a Sound to the OGG loader");
 
-    std::ifstream t(filename_.c_str(), std::ios::binary);
+    std::ifstream t(filename_.encode().c_str(), std::ios::binary);
     std::vector<uint8_t> data;
 
     t.seekg(0, std::ios::end);

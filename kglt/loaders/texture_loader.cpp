@@ -4,39 +4,32 @@
 #include <string>
 #include <SOIL/SOIL.h>
 
-#include "kglt/option_list.h"
-#include "kglt/kazbase/exceptions.h"
-
 #include "texture_loader.h"
+
+#include "../kazbase/exceptions.h"
+#include "../kazbase/list_utils.h"
 #include "../texture.h"
 
 namespace kglt {
 namespace loaders {
 
-void TextureLoader::into(Loadable& resource) {
-	into(resource, { "FALLBACK_TO_CHECKERBOARD" , "1" });
-}
-
-void TextureLoader::into(Loadable& resource, const kglt::option_list::OptionList& options) {
+void TextureLoader::into(Loadable& resource, const LoaderOptions& options) {
     Loadable* res_ptr = &resource;
     Texture* tex = dynamic_cast<Texture*>(res_ptr);
     assert(tex && "You passed a Resource that is not a texture to the TGA loader");
 
     int width, height, channels;
     unsigned char* data = SOIL_load_image(
-        filename_.c_str(),
+        filename_.encode().c_str(),
         &width,
         &height,
         &channels,
         SOIL_LOAD_AUTO
     );
 
-	bool fallback = false;
-	try {
-		fallback = (bool) kglt::option_list::get_as<int>(options, "FALLBACK_TO_CHECKERBOARD");
-	} catch(kglt::option_list::OptionDoesNotExist& e) {}
+    bool dont_fallback = (container::const_get(options, _u("dont_fallback"), _u("false")) == _u("true"));
 
-    if(!data && fallback) {
+    if(!data && !dont_fallback) {
         std::cout << "Falling back to checkerboard" << std::endl;
         
         //FIXME: Don't generate this each time!
@@ -74,7 +67,7 @@ void TextureLoader::into(Loadable& resource, const kglt::option_list::OptionList
         }
         
     } else if (!data) {
-		throw IOError("Couldn't load the file: " + filename_);		 
+        throw IOError("Couldn't load the file: " + filename_.encode());
     } else {
         tex->set_bpp(channels * 8);
         tex->resize(width, height);

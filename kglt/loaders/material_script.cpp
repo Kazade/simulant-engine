@@ -9,7 +9,7 @@
 
 namespace kglt {
 
-MaterialScript::MaterialScript(const std::string& filename):
+MaterialScript::MaterialScript(const unicode &filename):
     filename_(filename),
     text_(MaterialLanguageText("")){
 
@@ -331,9 +331,9 @@ void MaterialScript::generate(Material& material) {
     std::vector<std::string> lines;
 
     if(!filename_.empty()) {
-        std::ifstream file_in(filename_.c_str());
+        std::ifstream file_in(filename_.encode().c_str());
         if(!file_in.good()) {
-            throw IOError("Couldn't open file: " + filename_);
+            throw IOError("Couldn't open file: " + filename_.encode());
         }
 
         std::string line;

@@ -8,21 +8,20 @@ namespace loaders {
 
 class RMLLoader : public Loader {
 public:
-    RMLLoader(const std::string& filename):
+    RMLLoader(const unicode& filename):
         Loader(filename) {}
 
-    void into(Loadable& resource);
+    void into(Loadable& resource, const LoaderOptions& options = LoaderOptions());
 };
 
 class RMLLoaderType : public LoaderType {
 public:
-    std::string name() { return "texture_loader"; }
-    bool supports(const std::string& filename) const {
-        return filename.find(".rml") != std::string::npos ||
-               filename.find(".RML") != std::string::npos;
+    unicode name() { return "texture_loader"; }
+    bool supports(const unicode& filename) const {
+        return filename.lower().contains(".rml");
     }
 
-    Loader::ptr loader_for(const std::string& filename) const {
+    Loader::ptr loader_for(const unicode& filename) const {
         return Loader::ptr(new RMLLoader(filename));
     }
 };

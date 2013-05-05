@@ -13,10 +13,10 @@ typedef int32_t Offset;
 
 class OPTLoader : public Loader {
 public:
-    OPTLoader(const std::string& filename):
+    OPTLoader(const unicode& filename):
         Loader(filename) {}
 
-    void into(Loadable& resource);
+    void into(Loadable& resource, const LoaderOptions& options=LoaderOptions());
 
 private:
     void read_block(std::istream& file, Offset offset);
@@ -62,14 +62,13 @@ private:
 
 class OPTLoaderType : public LoaderType {
 public:
-    std::string name() { return "opt_loader"; }
-    bool supports(const std::string& filename) const {
+    unicode name() { return "opt_loader"; }
+    bool supports(const unicode& filename) const {
         //FIXME: check magic
-        return filename.find(".opt") != std::string::npos ||
-               filename.find(".OPT") != std::string::npos;
+        return filename.lower().contains(".opt");
     }
 
-    Loader::ptr loader_for(const std::string& filename) const {
+    Loader::ptr loader_for(const unicode& filename) const {
         return Loader::ptr(new OPTLoader(filename));
     }
 };

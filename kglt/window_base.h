@@ -64,7 +64,6 @@ public:
 
     virtual ~WindowBase();
     
-    LoaderPtr loader_for(const std::string& filename, const std::string& type_hint);
     LoaderPtr loader_for(const std::string& filename);
     
     void register_loader(LoaderTypePtr loader_type);

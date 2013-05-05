@@ -8,11 +8,10 @@ namespace loaders {
 
 class TextureLoader : public Loader {
 public:
-    TextureLoader(const std::string& filename):
+    TextureLoader(const unicode& filename):
         Loader(filename) {}
 
-    void into(Loadable& resource);
-    void into(Loadable& resource, const kglt::option_list::OptionList& options);
+    void into(Loadable& resource, const LoaderOptions& options = LoaderOptions());
 };
 
 class TextureLoaderType : public LoaderType {
@@ -23,13 +22,12 @@ public:
 
     ~TextureLoaderType() {}
 
-    std::string name() { return "texture_loader"; }
-    bool supports(const std::string& filename) const override {
-        return filename.find(".tga") != std::string::npos ||
-               filename.find(".png") != std::string::npos;
+    unicode name() { return "texture_loader"; }
+    bool supports(const unicode& filename) const override {
+        return filename.lower().contains(".tga") || filename.lower().contains(".png");
     }
 
-    Loader::ptr loader_for(const std::string& filename) const {
+    Loader::ptr loader_for(const unicode& filename) const {
         return Loader::ptr(new TextureLoader(filename));
     }
 };

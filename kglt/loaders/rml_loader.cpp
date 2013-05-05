@@ -7,12 +7,12 @@
 namespace kglt {
 namespace loaders {
 
-void RMLLoader::into(Loadable& resource) {
+void RMLLoader::into(Loadable& resource, const LoaderOptions &options) {
     Loadable* res_ptr = &resource;
     ui::Interface* iface = dynamic_cast<ui::Interface*>(res_ptr);
     assert(iface && "You passed a Resource that is not a Interface to the RML loader");
 
-    iface->impl()->document_ = iface->impl()->context_->LoadDocument(filename_.c_str());
+    iface->impl()->document_ = iface->impl()->context_->LoadDocument(filename_.encode().c_str());
     if(!iface->impl()->document_) {
         throw IOError("Unable to load the RML document");
     } else {

@@ -58,24 +58,11 @@ WindowBase::~WindowBase() {
     Sound::shutdown_openal();
 }
 
-LoaderPtr WindowBase::loader_for(const std::string& filename, const std::string& type_hint) {
-    std::string final_file = resource_locator().locate_file(filename);
-
-    //See if we can find a loader that supports this type hint
-    for(LoaderTypePtr loader_type: loaders_) {
-        if(loader_type->has_hint(type_hint) && loader_type->supports(filename)) {
-            return loader_type->loader_for(final_file);
-        }
-    }
-
-    throw DoesNotExist<Loader>("Unable to find a loader for: " + filename);
-}
-
 LoaderPtr WindowBase::loader_for(const std::string& filename) {
     std::string final_file = resource_locator().locate_file(filename);
 
     for(LoaderTypePtr loader_type: loaders_) {
-        if(loader_type->supports(final_file) && !loader_type->requires_hint()) {
+        if(loader_type->supports(final_file)) {
             return loader_type->loader_for(final_file);
         }
     }

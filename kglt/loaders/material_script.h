@@ -35,11 +35,11 @@ class MaterialScript :
     public Managed<MaterialScript> {
 public:
     MaterialScript(const MaterialLanguageText& text);
-    MaterialScript(const std::string& path);
+    MaterialScript(const unicode& path);
     void generate(Material& material);
 
 private:
-    std::string filename_;
+    unicode filename_;
     MaterialLanguageText text_;
 
     void handle_block(
@@ -69,12 +69,12 @@ class MaterialScriptLoader:
     public Loader {
 
 public:
-    MaterialScriptLoader(const std::string& filename):
+    MaterialScriptLoader(const unicode& filename):
         Loader(filename) {
         parser_ = MaterialScript::create(filename);
     }
 
-    void into(Loadable& resource) {
+    void into(Loadable& resource, const LoaderOptions& options) override {
         Material* mat = dynamic_cast<Material*>(&resource);
         assert(mat && "You passed a Resource that is not a material to the Material loader");
         parser_->generate(*mat);
@@ -86,12 +86,12 @@ private:
 
 class MaterialScriptLoaderType : public LoaderType {
 public:
-    std::string name() { return "material_loader"; }
-    bool supports(const std::string& filename) const {
-        return filename.find(".kglm") != std::string::npos;
+    unicode name() { return "material_loader"; }
+    bool supports(const unicode& filename) const {
+        return filename.lower().contains(".kglm");
     }
 
-    Loader::ptr loader_for(const std::string& filename) const {
+    Loader::ptr loader_for(const unicode& filename) const {
         return Loader::ptr(new MaterialScriptLoader(filename));
     }
 };
