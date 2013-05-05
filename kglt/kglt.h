@@ -5,6 +5,7 @@
 #include "window.h"
 #include "input_controller.h"
 #include "scene.h"
+#include "subscene.h"
 #include "viewport.h"
 #include "frustum.h"
 #include "material.h"

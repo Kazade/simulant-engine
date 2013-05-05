@@ -1,4 +1,4 @@
-#include "../scene.h"
+#include "../subscene.h"
 #include "../camera.h"
 #include "../entity.h"
 #include "../light.h"

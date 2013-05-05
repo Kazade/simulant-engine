@@ -5,6 +5,7 @@
 
 #include "../window_base.h"
 #include "../scene.h"
+#include "../subscene.h"
 #include "../keyboard.h"
 #include "../ui/interface.h"
 #include "../input_controller.h"
@@ -31,6 +32,7 @@ Console::Console(WindowBase &window):
 
     interpreter_->register_class<WindowBase>();
     interpreter_->register_class<Scene>();
+    interpreter_->register_class<SubScene>();
 
     interpreter_->add_global("window", window_);
 }

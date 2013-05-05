@@ -1,6 +1,7 @@
 #include "entity.h"
 #include "camera.h"
 #include "scene.h"
+#include "subscene.h"
 #include "window_base.h"
 #include "kazbase/unicode.h"
 

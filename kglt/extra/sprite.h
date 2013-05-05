@@ -1,10 +1,14 @@
 #ifndef ADDITIONAL_SPRITE_H
 #define ADDITIONAL_SPRITE_H
 
+#include <map>
 #include "../generic/managed.h"
-#include "../scene.h"
+#include "../types.h"
 
 namespace kglt {
+
+class Scene;
+
 namespace extra {
 
 /**

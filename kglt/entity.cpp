@@ -1,4 +1,4 @@
-#include "scene.h"
+#include "subscene.h"
 #include "entity.h"
 
 namespace kglt {

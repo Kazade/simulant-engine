@@ -7,6 +7,7 @@
 #include <kazmath/mat4.h>
 
 #include "../window.h"
+#include "../subscene.h"
 #include "../scene.h"
 #include "../mesh.h"
 #include "../types.h"

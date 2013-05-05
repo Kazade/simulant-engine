@@ -5,10 +5,12 @@ namespace kglt {
 void Interpreter::expose_id_types(lua_State* state) {
     luabind::module(state) [
         luabind::class_<SubSceneID>("SubSceneID")
+            .def(luabind::constructor<int>())
             .property("value", &SubSceneID::value)
     ];
     luabind::module(state) [
         luabind::class_<MaterialID>("MaterialID")
+            .def(luabind::constructor<int>())
             .property("value", &MaterialID::value)
     ];
 }

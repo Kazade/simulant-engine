@@ -1,7 +1,6 @@
-
 #include "octree_partitioner.h"
-#include "../scene.h"
 
+#include "../subscene.h"
 #include "../light.h"
 #include "../entity.h"
 #include "../camera.h"

@@ -251,3 +251,6 @@ kglt/lua/console.h
 kglt/lua/interpreter.cpp
 kglt/lua/console.cpp
 kglt/lua/types.h
+kglt/subscene.h
+kglt/subscene.cpp
+kglt/scene_base.h

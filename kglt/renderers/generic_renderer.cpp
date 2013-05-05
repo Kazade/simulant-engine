@@ -4,7 +4,7 @@
 
 #include "../entity.h"
 #include "../shader.h"
-#include "../scene.h"
+#include "../subscene.h"
 #include "../camera.h"
 #include "../light.h"
 #include "../partitioner.h"

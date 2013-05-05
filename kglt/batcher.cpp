@@ -5,7 +5,7 @@
 
 #include "light.h"
 #include "material.h"
-#include "scene.h"
+#include "subscene.h"
 #include "shader.h"
 #include "camera.h"
 #include "partitioner.h"

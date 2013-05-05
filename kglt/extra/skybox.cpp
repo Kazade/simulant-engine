@@ -2,7 +2,7 @@
 
 #include "../camera.h"
 #include "../mesh.h"
-#include "../scene.h"
+#include "../subscene.h"
 #include "../material.h"
 #include "../procedural/mesh.h"
 #include "../procedural/texture.h"
@@ -22,7 +22,7 @@ SkyBox::SkyBox(kglt::SubScene& subscene, kglt::TextureID texture, float size, Ca
 
     material_id_ = subscene.new_material();
     kglt::Material& mat = subscene.material(material_id_);
-    subscene.scene().window().loader_for("kglt/materials/generic_multitexture.kglm")->into(mat);
+    subscene.window().loader_for("kglt/materials/generic_multitexture.kglm")->into(mat);
 
     mat.technique().pass(0).set_texture_unit(0, texture);
     mat.technique().pass(0).set_depth_test_enabled(false);

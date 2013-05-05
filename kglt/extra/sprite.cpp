@@ -1,6 +1,9 @@
-#include "kglt/procedural/mesh.h"
-#include "kglt/shortcuts.h"
 #include "sprite.h"
+
+#include "../scene.h"
+#include "../subscene.h"
+#include "../procedural/mesh.h"
+#include "../shortcuts.h"
 #include "../entity.h"
 
 namespace kglt {
