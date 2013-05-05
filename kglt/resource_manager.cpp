@@ -1,7 +1,11 @@
-
+#include "window_base.h"
 #include "resource_manager.h"
 
 namespace kglt {
+
+Scene& ResourceManager::scene() {
+    return window().scene();
+}
 
 Mesh& ResourceManager::mesh(MeshID m) {
     if(!parent_) {

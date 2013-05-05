@@ -8,11 +8,13 @@ namespace loaders {
 
 class OBJLoader : public Loader {
 public:
-    OBJLoader(const std::string& filename):
+    OBJLoader(const unicode& filename):
         Loader(filename) {}
 
     void into(Loadable& resource, const LoaderOptions& options = LoaderOptions());
 };
+
+void parse_face(const unicode& input, int32_t& vertex_index, int32_t& tex_index, int32_t& normal_index);
 
 class OBJLoaderType : public LoaderType {
 public:

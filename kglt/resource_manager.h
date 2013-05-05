@@ -73,6 +73,7 @@ public:
     }
 
     WindowBase& window() { assert(window_); return *window_; }
+    Scene& scene();
 
     void update_materials(double dt) {
         /*

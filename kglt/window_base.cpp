@@ -11,6 +11,7 @@
 #include "loaders/opt_loader.h"
 #include "loaders/ogg_loader.h"
 #include "loaders/rml_loader.h"
+#include "loaders/obj_loader.h"
 #include "sound.h"
 #include "lua/console.h"
 
@@ -86,6 +87,7 @@ bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
         register_loader(std::make_shared<kglt::loaders::OGGLoaderType>());
         register_loader(std::make_shared<kglt::loaders::RMLLoaderType>());
         register_loader(std::make_shared<kglt::loaders::Q2BSPLoaderType>());
+        register_loader(std::make_shared<kglt::loaders::OBJLoaderType>());
 
         //Create a default viewport
         default_viewport_ = new_viewport();

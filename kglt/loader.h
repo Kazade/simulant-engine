@@ -26,7 +26,16 @@ public:
 
 protected:
     unicode filename_;
-    Scene* loadable_to_scene_ptr(Loadable& resource);
+
+    template<typename T>
+    T* loadable_to(Loadable& loadable) {
+        T* thing = dynamic_cast<T*>(&loadable);
+        if(!thing) {
+            throw LogicError("Attempted to cast resource to invalid type");
+        }
+
+        return thing;
+    }
 };
 
 class LoaderType {
