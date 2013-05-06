@@ -258,3 +258,9 @@ kglt/loaders/obj_loader.h
 kglt/loaders/obj_loader.cpp
 tests/test_obj_loader.h
 kglt/watcher.h
+kglt/watcher.cpp
+tests/test_watcher.h
+kglt/kazbase/os/core.h
+kglt/kazbase/os/path.cpp
+kglt/kazbase/os/core.cpp
+kglt/kazbase/os.h
