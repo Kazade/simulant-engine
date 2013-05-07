@@ -42,6 +42,8 @@ class Console;
 class Loader;
 class LoaderType;
 
+class Watcher;
+
 typedef std::tr1::function<void (double)> WindowUpdateCallback;
 typedef std::shared_ptr<Loader> LoaderPtr;
 typedef std::shared_ptr<LoaderType> LoaderTypePtr;
@@ -111,6 +113,13 @@ public:
     static void do_lua_export(lua_State &state);
 
     void stop_running() { is_running_ = false; }
+
+    Watcher& watcher() {
+        if(!watcher_) {
+            throw RuntimeError("Watcher has not been initialized");
+        }
+        return *watcher_;
+    }
 protected:
 
     void set_width(uint32_t width) { 
@@ -127,6 +136,7 @@ protected:
     InputController& input_controller() { assert(input_controller_); return *input_controller_; }
 
     WindowBase();
+
 private:    
     bool initialized_;
 
@@ -161,6 +171,7 @@ private:
 
     std::shared_ptr<ui::Interface> interface_;
     std::shared_ptr<Console> console_;
+    std::shared_ptr<Watcher> watcher_;
 };
 
 }

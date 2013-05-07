@@ -9,6 +9,7 @@
 #include "../material.h"
 #include "../types.h"
 #include "../loader.h"
+#include "../watcher.h"
 
 namespace kglt {
 
@@ -65,6 +66,16 @@ private:
 
 namespace loaders {
 
+class MaterialReloader {
+public:
+    MaterialReloader(ResourceManager& rm, MaterialID material);
+    void reload(const unicode& path, WatchEvent evt);
+
+private:
+    ResourceManager& rm_;
+    MaterialID material_;
+};
+
 class MaterialScriptLoader:
     public Loader {
 
@@ -74,11 +85,7 @@ public:
         parser_ = MaterialScript::create(filename);
     }
 
-    void into(Loadable& resource, const LoaderOptions& options) override {
-        Material* mat = dynamic_cast<Material*>(&resource);
-        assert(mat && "You passed a Resource that is not a material to the Material loader");
-        parser_->generate(*mat);
-    }
+    void into(Loadable& resource, const LoaderOptions& options) override;
 
 private:
     MaterialScript::ptr parser_;

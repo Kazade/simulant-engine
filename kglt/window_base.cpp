@@ -14,6 +14,7 @@
 #include "loaders/obj_loader.h"
 #include "sound.h"
 #include "lua/console.h"
+#include "watcher.h"
 
 namespace kglt {
 
@@ -80,6 +81,8 @@ bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
     Sound::init_openal();
 
     if(result && !initialized_) {
+        watcher_ = Watcher::create(*this);
+
         //Register the default resource loaders
         register_loader(std::make_shared<kglt::loaders::TextureLoaderType>());
         register_loader(std::make_shared<kglt::loaders::MaterialScriptLoaderType>());

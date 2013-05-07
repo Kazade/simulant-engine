@@ -154,7 +154,11 @@ void ShaderProgram::add_and_compile(ShaderType type, const std::string& source) 
         glGetShaderInfoLog(shader, length, NULL, &log[0]);
         L_ERROR(std::string(log.begin(), log.end()));
     }
-    assert(compiled);
+
+    if(!compiled) {
+        throw RuntimeError("Unable to compile shader");
+    }
+
     assert(program_id_);
     assert(shader);
 
@@ -203,7 +207,8 @@ int32_t ShaderProgram::get_uniform_loc(const std::string& name) {
 
     GLint location = glGetUniformLocation(program_id_, name.c_str());
     if(location < 0) {
-        throw RuntimeError("No uniform with name: " + name);
+        L_WARN("No uniform with name: " + name);
+        return -1;
     }
 
     cached_uniform_locations_.insert(std::make_pair(name, location));
@@ -216,37 +221,39 @@ bool ShaderProgram::has_uniform(const std::string& name) {
 
 void ShaderProgram::set_uniform(const std::string& name, const float x) {
     activate();
-    glUniform1f(get_uniform_loc(name), x);
-    check_and_log_error(__FILE__, __LINE__);
+    int32_t loc = get_uniform_loc(name);
+    if(loc > -1) {
+        glUniform1f(loc, x);
+    }
 }
 
 void ShaderProgram::set_uniform(const std::string& name, const int32_t x) {
     activate();
-    glUniform1i(get_uniform_loc(name), x);
-    check_and_log_error(__FILE__, __LINE__);
+    int32_t loc = get_uniform_loc(name);
+    if(loc > -1) {
+        glUniform1i(loc, x);
+    }
 }
 
 void ShaderProgram::set_uniform(const std::string& name, const kmMat4* matrix) {
     activate();
     GLint loc = get_uniform_loc(name);
-    if(loc >= 0) {
+    if(loc > -1) {
         float mat[16];
         unsigned char i = 16;
         while(i--) { mat[i] = (float) matrix->mat[i]; }
         glUniformMatrix4fv(loc, 1, false, (GLfloat*)mat);
-        check_and_log_error(__FILE__, __LINE__);
     }
 }
 
 void ShaderProgram::set_uniform(const std::string& name, const kmMat3* matrix) {
     activate();
     GLint loc = get_uniform_loc(name);
-    if(loc >= 0) {
+    if(loc > -1) {
         float mat[9];
         unsigned char i = 9;
         while(i--) { mat[i] = (float) matrix->mat[i]; }
-        glUniformMatrix3fv(get_uniform_loc(name), 1, false, (GLfloat*)mat);
-        check_and_log_error(__FILE__, __LINE__);
+        glUniformMatrix3fv(loc, 1, false, (GLfloat*)mat);
     }
 }
 
@@ -254,8 +261,7 @@ void ShaderProgram::set_uniform(const std::string& name, const kmVec3* vec) {
     activate();
     GLint loc = get_uniform_loc(name);
     if(loc >= 0) {
-        glUniform3fv(get_uniform_loc(name), 1, (GLfloat*) vec);
-        check_and_log_error(__FILE__, __LINE__);
+        glUniform3fv(loc, 1, (GLfloat*) vec);
     }
 }
 
@@ -263,8 +269,7 @@ void ShaderProgram::set_uniform(const std::string& name, const kmVec4* vec) {
     activate();
     GLint loc = get_uniform_loc(name);
     if(loc >= 0) {
-        glUniform4fv(get_uniform_loc(name), 1, (GLfloat*) vec);
-        check_and_log_error(__FILE__, __LINE__);
+        glUniform4fv(loc, 1, (GLfloat*) vec);
     }
 }
 
@@ -273,7 +278,6 @@ void ShaderProgram::set_uniform(const std::string& name, const std::vector<kmMat
     GLint loc = get_uniform_loc(name);
     if(loc >= 0) {
         glUniformMatrix4fv(loc, matrices.size(), false, (GLfloat*) &matrices[0]);
-        check_and_log_error(__FILE__, __LINE__);
     }
 }
 

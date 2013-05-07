@@ -4,6 +4,8 @@
 #include <sys/inotify.h>
 #include <fcntl.h>
 
+#include "kazbase/os.h"
+
 namespace kglt {
 
 /**
@@ -53,6 +55,7 @@ void Watcher::stop() {
 }
 
 bool Watcher::init() {
+    start();
 
     return true;
 }
@@ -86,9 +89,7 @@ bool Watcher::update() {
         } else if(ev->mask == IN_DELETE_SELF) {
             evt = WATCH_EVENT_DELETE;
         } else if(ev->mask == IN_IGNORED) {
-            //Remove the watch in this case
-            unwatch(descriptor_paths_.at(wd));
-            continue;
+
         } else {
             throw LogicError("Received invalid mask from inotify");
         }
@@ -105,20 +106,24 @@ bool Watcher::update() {
 }
 
 void Watcher::watch(const unicode &path, WatchCallback cb) {
+    unicode p = os::path::abs_path(path);
+
     int mask = IN_MODIFY | IN_ATTRIB | IN_MOVE_SELF | IN_DELETE_SELF;
 
-    int wd = inotify_add_watch(inotify_fd_, path.encode().c_str(), mask);
+    int wd = inotify_add_watch(inotify_fd_, p.encode().c_str(), mask);
 
     watch_callbacks_[wd] = cb;
     watch_descriptors_[path] = wd;
-    descriptor_paths_[wd] = path;
+    descriptor_paths_[wd] = p;
 }
 
 void Watcher::unwatch(const unicode &path) {
-    int wd = watch_descriptors_.at(path);
+    unicode p = os::path::abs_path(path);
+
+    int wd = watch_descriptors_.at(p);
     inotify_rm_watch(inotify_fd_, wd);
 
-    watch_descriptors_.erase(path);
+    watch_descriptors_.erase(p);
     watch_callbacks_.erase(wd);
     descriptor_paths_.erase(wd);
 }
