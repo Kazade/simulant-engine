@@ -110,10 +110,14 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
         ShaderProgram& shader = mat.resource_manager().shader(pass->shader());
         std::string variable_name = str::strip(args[2], "\"");
 
-        if(arg_1 == "MODELVIEW_PROJECTION_MATRIX") {
+        if(arg_1 == "VIEW_MATRIX") {
+            shader.params().register_auto(SP_AUTO_VIEW_MATRIX, variable_name);
+        } else if(arg_1 == "MODELVIEW_MATRIX") {
+            shader.params().register_auto(SP_AUTO_MODELVIEW_MATRIX, variable_name);
+        } else if(arg_1 == "MODELVIEW_PROJECTION_MATRIX") {
             shader.params().register_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX, variable_name);
         } else if(arg_1 == "INVERSE_TRANSPOSE_MODELVIEW_PROJECTION_MATRIX" || arg_1 == "NORMAL_MATRIX") {
-            shader.params().register_auto(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_PROJECTION_MATRIX, variable_name);
+            shader.params().register_auto(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX, variable_name);
         } else if(arg_1 == "TEXTURE_MATRIX0") {
             shader.params().register_auto(SP_AUTO_MATERIAL_TEX_MATRIX0, variable_name);
         } else if(arg_1 == "TEXTURE_MATRIX1") {

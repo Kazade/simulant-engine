@@ -92,9 +92,6 @@ public:
         Rocket::Core::TextureHandle texture,
         const Rocket::Core::Vector2f& translation) {
 
-        logging::warn("Not implemented", __FILE__, __LINE__);
-
-
         kmMat4 projection;
         kmMat4OrthographicProjection(&projection, 0, window_.width(), window_.height(), 0, -1, 1);
 

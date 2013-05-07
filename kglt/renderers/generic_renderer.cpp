@@ -35,6 +35,13 @@ void GenericRenderer::set_auto_uniforms_on_shader(
     kmMat4Multiply(&modelview, &view, &model);
     kmMat4Multiply(&modelview_projection, &projection, &modelview);
 
+    if(s.params().uses_auto(SP_AUTO_VIEW_MATRIX)) {
+        s.params().set_mat4x4(
+            s.params().auto_uniform_variable_name(SP_AUTO_VIEW_MATRIX),
+            view
+        );
+    }
+
     if(s.params().uses_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX)) {
         s.params().set_mat4x4(
             s.params().auto_uniform_variable_name(SP_AUTO_MODELVIEW_PROJECTION_MATRIX),
@@ -56,16 +63,16 @@ void GenericRenderer::set_auto_uniforms_on_shader(
         );
     }
 
-    if(s.params().uses_auto(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_PROJECTION_MATRIX)) {
-        kmMat3 inverse_transpose_modelview_proj;
+    if(s.params().uses_auto(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX)) {
+        kmMat3 inverse_transpose_modelview;
 
-        kmMat3AssignMat4(&inverse_transpose_modelview_proj, &modelview_projection);
-        kmMat3Inverse(&inverse_transpose_modelview_proj, &inverse_transpose_modelview_proj);
-        kmMat3Transpose(&inverse_transpose_modelview_proj, &inverse_transpose_modelview_proj);
+        kmMat3AssignMat4(&inverse_transpose_modelview, &modelview);
+        kmMat3Inverse(&inverse_transpose_modelview, &inverse_transpose_modelview);
+        kmMat3Transpose(&inverse_transpose_modelview, &inverse_transpose_modelview);
 
         s.params().set_mat3x3(
-            s.params().auto_uniform_variable_name(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_PROJECTION_MATRIX),
-            inverse_transpose_modelview_proj
+            s.params().auto_uniform_variable_name(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX),
+            inverse_transpose_modelview
         );
     }
 /*

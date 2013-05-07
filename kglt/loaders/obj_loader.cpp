@@ -117,7 +117,9 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             float y = parts[2].to_float();
             float z = parts[3].to_float();
 
-            normals.push_back(Vec3(x, y, z));
+            Vec3 n(x, y, z);
+            kmVec3Normalize(&n, &n);
+            normals.push_back(n);
         } else if(parts[0] == "f") {
             //Faces are a pain in the arse to parse
             parts = std::vector<unicode>(parts.begin() + 1, parts.end()); //Strip off the first bit

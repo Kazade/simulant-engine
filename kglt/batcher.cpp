@@ -91,7 +91,6 @@ void LightGroup::bind() {
 
     if(params.uses_auto(SP_AUTO_LIGHT_POSITION)) {
         Vec4 light_pos = Vec4(light->absolute_position(), (light->type() == LIGHT_TYPE_DIRECTIONAL) ? 0.0 : 1.0);
-        kmVec4MultiplyMat4(&light_pos, &light_pos, &root.camera().view_matrix());
 
         params.set_vec4(
             params.auto_uniform_variable_name(SP_AUTO_LIGHT_POSITION),

@@ -89,7 +89,7 @@ bool Watcher::update() {
         } else if(ev->mask == IN_DELETE_SELF) {
             evt = WATCH_EVENT_DELETE;
         } else if(ev->mask == IN_IGNORED) {
-
+            continue;
         } else {
             throw LogicError("Received invalid mask from inotify");
         }

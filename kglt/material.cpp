@@ -82,6 +82,7 @@ MaterialPass::MaterialPass(MaterialTechnique& technique, ShaderID shader):
     point_size_(1),
     line_width_(1) {
 
+
 }
 
 void MaterialPass::set_texture_unit(uint32_t texture_unit_id, TextureID tex) {

@@ -18,6 +18,7 @@
 #include "types.h"
 #include "viewport.h"
 
+namespace kglt {
 
 enum LoggingLevel {
     LOG_LEVEL_NONE = 0,
@@ -27,8 +28,6 @@ enum LoggingLevel {
     LOG_LEVEL_DEBUG = 4
 };
 
-namespace kglt {
-    
 namespace ui {
     class Interface;
 }

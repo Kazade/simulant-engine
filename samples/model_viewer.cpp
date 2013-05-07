@@ -13,6 +13,7 @@ int main(int argc, char* argv[]) {
     std::string filename = argv[1];
 
     kglt::Window::ptr window = kglt::Window::create(1024, 768);
+    window->set_logging_level(kglt::LOG_LEVEL_DEBUG);
     window->set_title("KGLT Model viewer");
 
     kglt::SubScene& subscene = window->scene().subscene();
@@ -25,10 +26,9 @@ int main(int argc, char* argv[]) {
     );
 
     kglt::Light& light = subscene.light(subscene.new_light());
-    light.set_direction(1, 0, 0);
-    //light.move_to(50, 0, 0);
+    light.set_direction(-1, 0, 0);
     light.set_diffuse(kglt::Colour::yellow);
-
+    //light.move_to(50, 0, -50);
     kglt::Mesh& mesh = subscene.mesh(subscene.new_mesh());
     window->loader_for(filename)->into(mesh);
 

@@ -40,7 +40,7 @@ Material& return_new_material(ResourceManager& scene) {
 MaterialID create_material_from_texture(ResourceManager& scene, TextureID tex) {
     //Duplicate the default material
     kglt::Material& mat = scene.material(scene.new_material());
-    scene.window().loader_for("kglt/materials/generic_multitexture.kglm")->into(mat);
+    scene.window().loader_for("kglt/materials/multitexture_and_lighting.kglm")->into(mat);
 
     //Set texture unit 0 to this texture
     mat.technique().pass(0).set_texture_unit(0, tex);

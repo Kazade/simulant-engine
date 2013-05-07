@@ -26,7 +26,7 @@ public:
 
         set_ambient(kglt::Colour(0.2f, 0.2f, 0.2f, 1.0f));
         set_diffuse(kglt::Colour(1.0f, 1.0f, 1.0f, 1.0f));
-        set_specular(kglt::Colour(1.0f, 1.0f, 1.0f, 1.0f));
+        set_specular(kglt::Colour(0.1f, 0.1f, 0.0f, 1.0f));
         set_attenuation_from_range(100.0);
     }
 
@@ -50,7 +50,7 @@ public:
 
     void set_direction(const kmVec3& dir) {
         set_type(LIGHT_TYPE_DIRECTIONAL);
-        move_to(dir.x, dir.y, dir.z);
+        move_to(-dir.x, -dir.y, -dir.z);
     }
 
     void set_diffuse(const kglt::Colour& colour) {

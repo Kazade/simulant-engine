@@ -152,11 +152,7 @@ void ShaderProgram::add_and_compile(ShaderType type, const std::string& source) 
         log.resize(length);
 
         glGetShaderInfoLog(shader, length, NULL, &log[0]);
-        L_ERROR(std::string(log.begin(), log.end()));
-    }
-
-    if(!compiled) {
-        throw RuntimeError("Unable to compile shader");
+        throw RuntimeError(std::string(log.begin(), log.end()));
     }
 
     assert(program_id_);
