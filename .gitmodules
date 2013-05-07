@@ -3,4 +3,4 @@
 	url = git@github.com:Kazade/kazbase.git
 [submodule "submodules/luabind"]
 	path = submodules/luabind
-	url = git://github.com/rpavlik/luabind.git
+	url = git@github.com:Kazade/luabind.git
