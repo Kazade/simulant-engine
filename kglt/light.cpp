@@ -3,6 +3,18 @@
 
 namespace kglt {
 
+Light::Light(SubScene* subscene, LightID lid):
+    Object(subscene),
+    generic::Identifiable<LightID>(lid),
+    type_(LIGHT_TYPE_POINT),
+    range_(100.0) {
+
+    set_ambient(kglt::Colour(0.5f, 0.5f, 0.5f, 1.0f));
+    set_diffuse(kglt::Colour(1.0f, 1.0f, 1.0f, 1.0f));
+    set_specular(kglt::Colour(0.1f, 0.1f, 0.1f, 1.0f));
+    set_attenuation_from_range(100.0);
+}
+
 /**
     Sets the attenuation and the range of the light. The range doesn't have any
     direct effect on the brightness on the light, it simply is a cut-off -

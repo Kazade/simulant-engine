@@ -18,18 +18,7 @@ class Light :
 public:
     typedef std::shared_ptr<Light> ptr;
 
-    Light(SubScene* subscene, LightID lid):
-        Object(subscene),
-        generic::Identifiable<LightID>(lid),
-        type_(LIGHT_TYPE_POINT),
-        range_(100.0) {
-
-        set_ambient(kglt::Colour(0.2f, 0.2f, 0.2f, 1.0f));
-        set_diffuse(kglt::Colour(1.0f, 1.0f, 1.0f, 1.0f));
-        set_specular(kglt::Colour(0.1f, 0.1f, 0.0f, 1.0f));
-        set_attenuation_from_range(100.0);
-    }
-
+    Light(SubScene* subscene, LightID lid);
     void set_type(LightType type) { type_ = type; }
 
     /*

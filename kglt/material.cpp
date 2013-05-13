@@ -73,7 +73,7 @@ MaterialPass& MaterialTechnique::pass(uint32_t index) {
 MaterialPass::MaterialPass(MaterialTechnique& technique, ShaderID shader):
     technique_(technique),
     shader_(shader),
-    shininess_(0.0),
+    shininess_(5.0),
     iteration_(ITERATE_ONCE),    
     max_iterations_(1),
     blend_(BLEND_NONE),

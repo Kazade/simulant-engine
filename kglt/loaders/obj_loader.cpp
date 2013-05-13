@@ -6,6 +6,8 @@
 #include "../kazbase/unicode.h"
 #include "../kazbase/string.h"
 #include "../kazbase/file_utils.h"
+#include "../kazbase/os.h"
+#include "../shortcuts.h"
 
 namespace kglt {
 namespace loaders {
@@ -76,7 +78,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     std::vector<Vec2> tex_coords;
     std::vector<Vec3> normals;
 
-    bool first_vertex = true;
+    bool has_materials = false;
     for(std::string tmp: lines) {
         unicode line(tmp); //Unicode has nicer methods
 
@@ -97,8 +99,8 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
 
             vertices.push_back(Vec3(x, y, z));
         } else if(parts[0] == "vt") {
-            if(parts.size() < 2) {
-                throw IOError(_u("Found {0} components for texture coordinate, expected 2").format(parts.size()));
+            if(parts.size() < 3) {
+                throw IOError(_u("Found {0} components for texture coordinate, expected 2").format(parts.size() - 1));
             } else if(parts.size() > 2) {
                 L_WARN("Ignoring extra components on texture coordinate");
             }
@@ -110,7 +112,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
 
         } else if(parts[0] == "vn") {
             if(parts.size() != 4) {
-                throw IOError(_u("Found {0} components for vertex, expected 3").format(parts.size()));
+                throw IOError(_u("Found {0} components for vertex, expected 3").format(parts.size() - 1));
             }
 
             float x = parts[1].to_float();
@@ -163,6 +165,39 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                 sm.index_data().index(first_index);
                 sm.index_data().index(sm.vertex_data().count() - 2);
                 sm.index_data().index(sm.vertex_data().count() - 1);
+            }
+        } else if(parts[0] == "newmtl") {
+            has_materials = true;
+        }
+    }
+
+    if(!has_materials) {
+        //If the OBJ file has no materials, have a look around for textures in the same directory
+
+        std::pair<unicode, unicode> parts = os::path::split_ext(filename_);
+
+        std::vector<unicode> possible_diffuse_maps = {
+            parts.first + ".jpg",
+            parts.first + "_color.jpg",
+            parts.first + "_diffuse.jpg",
+            parts.first + ".png",
+            parts.first + "_color.png",
+            parts.first + "_diffuse.png",
+        };
+
+        for(const unicode& p: possible_diffuse_maps) {
+            if(os::path::exists(p.encode())) {
+                //Load the texture
+                Texture& tex = mesh->resource_manager().texture(mesh->resource_manager().new_texture());
+                mesh->resource_manager().window().loader_for(p.encode())->into(tex);
+                mesh->resource_manager().window().idle().add_once([&]() {
+                    tex.upload();
+                });
+
+                //Create a material from it and apply it to the submesh
+                MaterialID mat = create_material_from_texture(mesh->resource_manager(), tex.id());
+                sm.set_material_id(mat);
+                break;
             }
         }
     }
