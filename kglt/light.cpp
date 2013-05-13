@@ -40,7 +40,7 @@ void Light::set_attenuation(float range, float constant, float linear, float qua
  */
 void Light::set_attenuation_from_range(float range) {
     range_ = range;
-    const_attenuation_ = 0.5;
+    const_attenuation_ = 1.0;
     linear_attenuation_ = 4.5 / range;
     quadratic_attenuation_ = 75.0 / (range * range);
 }

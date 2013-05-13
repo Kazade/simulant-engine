@@ -79,7 +79,6 @@ BEGIN(TECHNIQUE "default")
 
         SET(AUTO_UNIFORM LIGHT_POSITION "light_position")
         SET(AUTO_UNIFORM LIGHT_DIFFUSE "light_diffuse")
-        SET(AUTO_UNIFORM LIGHT_AMBIENT "light_ambient")
         SET(AUTO_UNIFORM LIGHT_SPECULAR "light_specular")
 
         SET(AUTO_UNIFORM MATERIAL_SHININESS "material_shininess")
@@ -139,17 +138,28 @@ BEGIN(TECHNIQUE "default")
                 vec4 v_eye = normalize(-vertex_position_eye);                               
                 vec4 h_eye = v_eye + s_eye;
 
+                vec4 color = vec4(0);
+
                 float intensity = max(dot(s_eye, n_eye), 0.0);
-                vec4 Id = light_diffuse * material_diffuse * intensity;
 
-                float spec = max(dot(h_eye, n_eye), 0.0);
-                vec4 Is = (light_specular * material_specular) * pow(spec, material_shininess);
+                if(intensity > 0.0) {
+                    float d = length(light_dir);
+                    float attenuation = 1.0;
 
-                float d = length(light_dir);
-                float attenuation = 1.0 / (constant_attenuation + linear_attenuation * d + quadratic_attenuation * d * d);
-                attenuation *= light_position_eye.w;
+                    if(light_position_eye.w > 0.0) {
+                        attenuation = 1.0 / (
+                            constant_attenuation +
+                            linear_attenuation * d +
+                            quadratic_attenuation * d * d
+                        );
+                    }
 
-                gl_FragColor = (Id + Is);// * attenuation;
+                    color += attenuation * (light_diffuse * material_diffuse * intensity);
+                    float spec = max(dot(h_eye, n_eye), 0.0);
+                    color += attenuation * (light_specular * material_specular) * pow(spec, material_shininess);
+                }
+
+                gl_FragColor = color;
             }
 
         END_DATA(FRAGMENT)

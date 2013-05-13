@@ -143,7 +143,6 @@ public:
 
 
     void EnableScissorRegion(bool enable) {
-        logging::warn("Not implemented", __FILE__, __LINE__);
         if(enable) {
             glEnable(GL_SCISSOR_TEST);
         } else {
@@ -152,7 +151,6 @@ public:
     }
 
     void SetScissorRegion(int x, int y, int width, int height) {
-        logging::warn("Not implemented", __FILE__, __LINE__);
         glScissor(x, window_.height() - (y + height), width, height);
     }
 
