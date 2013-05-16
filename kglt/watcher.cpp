@@ -36,7 +36,11 @@ Watcher::Watcher(WindowBase& window):
 Watcher::~Watcher() {
     //Clean up
     for(std::pair<unicode, int> p: this->watch_descriptors_) {
-        unwatch(p.first);
+        try {
+            unwatch(p.first);
+        } catch(...) {
+            L_ERROR("An error occurred when shutting down the file watcher");
+        }
     }
 }
 
@@ -120,12 +124,13 @@ void Watcher::watch(const unicode &path, WatchCallback cb) {
 void Watcher::unwatch(const unicode &path) {
     unicode p = os::path::abs_path(path);
 
-    int wd = watch_descriptors_.at(p);
-    inotify_rm_watch(inotify_fd_, wd);
-
-    watch_descriptors_.erase(p);
-    watch_callbacks_.erase(wd);
-    descriptor_paths_.erase(wd);
+    if(watch_descriptors_.find(p) != watch_descriptors_.end()) {
+        int wd = watch_descriptors_.at(p);
+        inotify_rm_watch(inotify_fd_, wd);
+        watch_descriptors_.erase(p);
+        watch_callbacks_.erase(wd);
+        descriptor_paths_.erase(wd);
+    }
 }
 
 }
