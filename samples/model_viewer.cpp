@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
     kglt::Light& light2 = subscene.light(subscene.new_light());
     light2.set_diffuse(kglt::Colour::red);
     light2.set_attenuation_from_range(100.0);
-    light2.set_direction(0, 1, 0);
+    light2.move_to(20, -20, -50);
 
     //light.move_to(50, 0, -50);
     kglt::Mesh& mesh = subscene.mesh(subscene.new_mesh());

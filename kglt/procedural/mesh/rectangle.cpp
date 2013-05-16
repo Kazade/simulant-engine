@@ -1,3 +1,5 @@
+#include "../../resource_manager.h"
+#include "../../scene.h"
 #include "rectangle.h"
 
 namespace kglt {
@@ -52,7 +54,11 @@ SubMeshIndex rectangle(kglt::Mesh& mesh, float width, float height, float x_offs
     mesh.shared_data().done();
 
     //Create a submesh that uses the shared data
-    SubMeshIndex sm = mesh.new_submesh(MaterialID(), MESH_ARRANGEMENT_TRIANGLES, true);
+    SubMeshIndex sm = mesh.new_submesh(
+        mesh.resource_manager().scene().default_material_id(),
+        MESH_ARRANGEMENT_TRIANGLES,
+        true
+    );
     mesh.submesh(sm).index_data().index(offset + 0);
     mesh.submesh(sm).index_data().index(offset + 1);
     mesh.submesh(sm).index_data().index(offset + 2);
@@ -97,7 +103,11 @@ SubMeshIndex rectangle_outline(kglt::Mesh& mesh, float width, float height, floa
     mesh.shared_data().move_next();
     mesh.shared_data().done();
     
-    SubMeshIndex sm = mesh.new_submesh(MaterialID(), MESH_ARRANGEMENT_LINE_STRIP, true);
+    SubMeshIndex sm = mesh.new_submesh(
+        mesh.resource_manager().scene().default_material_id(),
+        MESH_ARRANGEMENT_LINE_STRIP,
+        true
+    );
 
     for(uint8_t i = 0; i < 4; ++i) {
         mesh.submesh(sm).index_data().index(offset + i);

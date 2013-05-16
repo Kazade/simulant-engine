@@ -1,5 +1,7 @@
 #include <kazmath/kazmath.h>
 #include "sphere.h"
+#include "../../resource_manager.h"
+#include "../../scene.h"
 #include "../../mesh.h"
 
 namespace kglt {
@@ -82,7 +84,11 @@ void sphere(kglt::Mesh& mesh, float diameter, int32_t slices, int32_t stacks) {
 
     mesh.shared_data().done();
 
-    SubMeshIndex sm = mesh.new_submesh(MaterialID(), MESH_ARRANGEMENT_TRIANGLES, true);
+    SubMeshIndex sm = mesh.new_submesh(
+        mesh.resource_manager().scene().default_material_id(),
+        MESH_ARRANGEMENT_TRIANGLES,
+        true
+    );
 
     for(int32_t current_stack = 0; current_stack < stacks - 3; current_stack++) {
         for(int32_t current_slice = 0; current_slice < slices - 1; current_slice++) {

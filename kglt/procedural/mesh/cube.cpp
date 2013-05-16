@@ -1,3 +1,6 @@
+#include "../../resource_manager.h"
+#include "../../scene.h"
+
 #include "cube.h"
 
 namespace kglt {
@@ -9,7 +12,11 @@ void cube(kglt::Mesh& mesh, float width) {
 
     float r = width * 0.5f;
 
-    SubMeshIndex sm = mesh.new_submesh(MaterialID(), MESH_ARRANGEMENT_TRIANGLES, true);
+    SubMeshIndex sm = mesh.new_submesh(
+        mesh.resource_manager().scene().default_material_id(),
+        MESH_ARRANGEMENT_TRIANGLES,
+        true
+    );
 
     //front and back
     for(int32_t z: { -1, 1 }) {

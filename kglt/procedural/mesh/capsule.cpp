@@ -1,4 +1,5 @@
-
+#include "../../resource_manager.h"
+#include "../../scene.h"
 #include "capsule.h"
 
 namespace kglt {
@@ -10,7 +11,11 @@ SubMeshIndex capsule(kglt::Mesh& mesh, float diameter, float height,
 
     float radius = diameter * 0.5f;
 
-    SubMeshIndex smi = mesh.new_submesh(MaterialID(), MESH_ARRANGEMENT_TRIANGLES, false);
+    SubMeshIndex smi = mesh.new_submesh(
+        mesh.resource_manager().scene().default_material_id(),
+        MESH_ARRANGEMENT_TRIANGLES,
+        false
+    );
     kglt::SubMesh& submesh = mesh.submesh(smi);
 
     kglt::VertexData& vdata = submesh.vertex_data();
