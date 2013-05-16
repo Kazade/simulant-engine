@@ -56,9 +56,9 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
         pass->set_texture_unit(pass->texture_unit_count(), tex_id);
     } else if(type == "ITERATION") {
         if(arg_1 == "ONCE") {
-            pass->set_iteration(ITERATE_ONCE);
+            pass->set_iteration(ITERATE_ONCE, pass->max_iterations());
         } else if(arg_1 == "ONCE_PER_LIGHT") {
-            pass->set_iteration(ITERATE_ONCE_PER_LIGHT);
+            pass->set_iteration(ITERATE_ONCE_PER_LIGHT, pass->max_iterations());
         } else {
             throw SyntaxError("Invalid argument to SET(ITERATION): " + args[1]);
         }
