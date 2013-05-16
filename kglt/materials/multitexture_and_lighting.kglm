@@ -68,6 +68,7 @@ BEGIN(TECHNIQUE "default")
     END(PASS)
     BEGIN(PASS)
         SET(ITERATION ONCE_PER_LIGHT)
+        SET(MAX_ITERATIONS 8)
 
         SET(ATTRIBUTE POSITION "vertex_position")
         SET(ATTRIBUTE NORMAL "vertex_normal")

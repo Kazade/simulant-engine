@@ -62,6 +62,9 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
         } else {
             throw SyntaxError("Invalid argument to SET(ITERATION): " + args[1]);
         }
+    } else if (type == "MAX_ITERATIONS") {
+        int count = unicode(arg_1).to_int();
+        pass->set_iteration(pass->iteration(), count);
     } else if(type == "ATTRIBUTE") {
         if(args.size() < 3) {
             throw SyntaxError("Wrong number of arguments for SET(ATTRIBUTE) command");
