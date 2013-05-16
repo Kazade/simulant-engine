@@ -112,11 +112,7 @@ public:
 
     IterationType iteration() const { return iteration_; }
     uint32_t max_iterations() const { return max_iterations_; }
-    void set_iteration(IterationType iter_type, uint32_t max=1) {
-        iteration_ = iter_type;
-        max_iterations_ = max;
-    }
-
+    void set_iteration(IterationType iter_type, uint32_t max=8);
     void set_blending(BlendType blend) { blend_ = blend; }
     BlendType blending() { return blend_; }
 

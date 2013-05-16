@@ -107,6 +107,11 @@ void MaterialPass::set_animated_texture_unit(uint32_t texture_unit_id, const std
     texture_units_[texture_unit_id] = TextureUnit(textures, duration);
 }
 
+void MaterialPass::set_iteration(IterationType iter_type, uint32_t max) {
+    iteration_ = iter_type;
+    max_iterations_ = max;
+}
+
 void MaterialPass::set_albedo(float reflectiveness) {
     albedo_ = reflectiveness;
     if(is_reflective()) {
