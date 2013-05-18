@@ -35,7 +35,7 @@ Watcher::Watcher(WindowBase& window):
 
 Watcher::~Watcher() {
     //Clean up
-    for(std::pair<unicode, int> p: this->watch_descriptors_) {
+    for(const std::pair<unicode, int>& p: this->watch_descriptors_) {
         try {
             unwatch(p.first);
         } catch(...) {

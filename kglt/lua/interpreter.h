@@ -10,6 +10,7 @@
 #include <lua.hpp>
 
 #include "luabind/luabind.hpp"
+#include "luabind/class_info.hpp"
 
 namespace kglt {
 
@@ -27,17 +28,7 @@ private:
     void expose_id_types(lua_State* state);
 
 public:
-    Interpreter():
-        state_(nullptr) {
-
-        L_INFO("Initializing LUA interpreter");
-        state_ = luaL_newstate();
-        luabind::open(state_);        
-        luaopen_base(state_);
-
-        expose_id_types(state_);
-    }
-
+    Interpreter();
     ~Interpreter() {
         L_INFO("Shutting down LUA interpreter");
         lua_close(state_);

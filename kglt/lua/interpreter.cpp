@@ -2,6 +2,18 @@
 
 namespace kglt {
 
+Interpreter::Interpreter():
+    state_(nullptr) {
+
+    L_INFO("Initializing LUA interpreter");
+    state_ = luaL_newstate();
+    luabind::open(state_);
+    luabind::bind_class_info(state_);
+    luaopen_base(state_);
+
+    expose_id_types(state_);
+}
+
 void Interpreter::expose_id_types(lua_State* state) {
     luabind::module(state) [
         luabind::class_<SubSceneID>("SubSceneID")

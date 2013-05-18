@@ -235,7 +235,7 @@ std::string Interface::locate_font(const std::string& filename) {
     };
 
 
-    return window_.resource_locator().locate_file(filename);
+    return window_.resource_locator().locate_file(filename).encode();
 
 /*
     for(std::string font_dir: paths) {

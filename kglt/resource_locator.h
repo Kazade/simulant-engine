@@ -6,6 +6,7 @@
 #include <string>
 
 #include "generic/managed.h"
+#include "kazbase/unicode.h"
 
 namespace kglt {
 
@@ -15,17 +16,17 @@ class ResourceLocator :
 public:
     ResourceLocator();
 
-    std::list<std::string>& resource_path() { return resource_path_; }
+    std::list<unicode>& resource_path() { return resource_path_; }
 
-    std::string locate_file(const std::string& filename);
-    std::shared_ptr<std::stringstream> read_file(const std::string& filename);
-    std::vector<std::string> read_file_lines(const std::string& filename);
+    unicode locate_file(const unicode& filename);
+    std::shared_ptr<std::stringstream> read_file(const unicode& filename);
+    std::vector<std::string> read_file_lines(const unicode& filename);
 
 private:
-    std::string find_executable_directory();
-    std::string find_working_directory();
+    unicode find_executable_directory();
+    unicode find_working_directory();
 
-    std::list<std::string> resource_path_;
+    std::list<unicode> resource_path_;
 };
 
 }

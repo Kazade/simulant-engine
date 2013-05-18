@@ -123,7 +123,15 @@ void Console::update_output() {
 }
 
 LuaResult Console::execute(const unicode &command, unicode &output) {
-    LuaResult res = interpreter_->run_string(command.encode(), output);
+    std::streambuf* stdout = std::cout.rdbuf();
+
+    std::ostringstream tmp_out;
+    std::cout.rdbuf(tmp_out.rdbuf());
+    LuaResult res = interpreter_->run_string(command.encode(), output);    
+    std::cout.rdbuf(stdout);
+
+    output += unicode(tmp_out.str());
+
     return res;
 }
 
