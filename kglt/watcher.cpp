@@ -34,10 +34,12 @@ Watcher::Watcher(WindowBase& window):
 }
 
 Watcher::~Watcher() {
+
+    std::unordered_map<int, unicode> tmp = descriptor_paths_;
     //Clean up
-    for(const std::pair<unicode, int>& p: this->watch_descriptors_) {
+    for(const std::pair<int, unicode>& p: tmp) {
         try {
-            unwatch(p.first);
+            unwatch(p.second);
         } catch(...) {
             L_ERROR("An error occurred when shutting down the file watcher");
         }
@@ -111,6 +113,10 @@ bool Watcher::update() {
 
 void Watcher::watch(const unicode &path, WatchCallback cb) {
     unicode p = os::path::abs_path(path);
+
+    if(!os::path::exists(p)) {
+        return;
+    }
 
     int mask = IN_MODIFY | IN_ATTRIB | IN_MOVE_SELF | IN_DELETE_SELF;
 

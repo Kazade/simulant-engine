@@ -46,6 +46,7 @@ public:
 
     void start();
     void stop();
+
 private:
     WindowBase* window_;
 
