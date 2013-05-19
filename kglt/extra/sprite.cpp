@@ -61,5 +61,10 @@ void Sprite::move_to(float x, float y, float z) {
     subscene.entity(entity_id()).move_to(x, y, z);
 }
 
+void Sprite::rotate_to(float angle, float x, float y, float z) {
+    SubScene& subscene = scene().subscene(subscene_id());
+    subscene.entity(entity_id()).rotate_to(angle, x, y, z);
+}
+
 }
 }
