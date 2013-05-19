@@ -65,6 +65,10 @@ public:
         elem_->SetProperty(property.c_str(), value.c_str());
     }
 
+    void attr(const std::string& property, const std::string& value) {
+        elem_->SetAttribute(property.c_str(), value.c_str());
+    }
+
     void id(const std::string& id) {
         elem_->SetId(id.c_str());
     }

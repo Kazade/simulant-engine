@@ -42,6 +42,12 @@ public:
         }
     }
 
+    void attr(const std::string& property, const std::string& value) {
+        for(Element& e: elements_) {
+            e.attr(property, value);
+        }
+    }
+
     Element& operator[](uint32_t i) {
         return elements_[i];
     }

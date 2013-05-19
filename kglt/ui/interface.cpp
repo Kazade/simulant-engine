@@ -34,6 +34,17 @@ public:
         return window_.total_time();
     }
 
+    //The default interface is weird and strips the leading slash from absolute paths
+    //this works around that. I have no idea why it was designed to do that.
+    virtual void JoinPath(Rocket::Core::String& translated_path, const Rocket::Core::String& document_path, const Rocket::Core::String& path) {
+        if (path.Substring(0, 1) == "/") {
+            translated_path = path;
+            return;
+        }
+
+        Rocket::Core::SystemInterface::JoinPath(translated_path, document_path, path);
+    }
+
 private:
     WindowBase& window_;
 };

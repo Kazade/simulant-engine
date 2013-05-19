@@ -21,6 +21,7 @@ public:
 
     std::string css(const std::string& property);
     void css(const std::string& property, const std::string& value);
+    void attr(const std::string& property, const std::string& value);
 
     void show() { css("visibility", "visible"); }
     void hide() { css("visibility", "hidden"); }

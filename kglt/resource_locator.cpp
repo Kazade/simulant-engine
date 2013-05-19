@@ -12,14 +12,18 @@ ResourceLocator::ResourceLocator() {
 }
 
 unicode ResourceLocator::locate_file(const unicode &filename) {
+    /**
+      Locates a file on one of the resource paths, throws an IOError if the file
+      cannot be found
+    */
     if(os::path::exists(filename)) { //Absolute path
-        return filename;
+        return os::path::abs_path(filename);
     }
 
     for(unicode path: resource_path_) {
         unicode full_path = os::path::join(path, filename);
         if(os::path::exists(full_path)) {
-            return full_path;
+            return os::path::abs_path(full_path);
         }
     }
 

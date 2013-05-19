@@ -24,11 +24,10 @@ ConnectionID IdleTaskManager::add_once(std::tr1::function<void ()> callback) {
 }
 
 void IdleTaskManager::execute() {
-    std::map<ConnectionID, std::tr1::function<bool ()> > signals = signals_;
+    std::map<ConnectionID, std::tr1::function<bool ()> > tmp_signals = signals_;
+    std::map<ConnectionID, std::tr1::function<bool ()> >::iterator it = tmp_signals.begin();
     
-    std::map<ConnectionID, std::tr1::function<bool ()> >::iterator it = signals.begin();
-    
-    for(; it != signals.end(); ++it) {
+    for(; it != tmp_signals.end(); ++it) {
         L_DEBUG("Executing idle task");
         bool result = (*it).second();
         if(!result) {
@@ -42,6 +41,11 @@ void IdleTaskManager::execute() {
         p.second();
     }
     signals_once_.clear();
+}
+
+void IdleTaskManager::remove(ConnectionID connection) {
+    signals_.erase(connection);
+    signals_once_.erase(connection);
 }
 
 }
