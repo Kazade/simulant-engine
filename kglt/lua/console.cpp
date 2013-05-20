@@ -77,7 +77,7 @@ void Console::init_widget() {
         ui::ElementList l = window_.ui()._("#lua-console");
         l.css("position", "absolute");
         l.css("width", "100%");
-        l.css("height", "100px");
+        l.css("height", "200px");
         l.css("background-color", "#00000088");
         l.css("color", "white");
         l.css("display", "block");
