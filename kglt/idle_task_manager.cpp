@@ -28,7 +28,6 @@ void IdleTaskManager::execute() {
     std::map<ConnectionID, std::tr1::function<bool ()> >::iterator it = tmp_signals.begin();
     
     for(; it != tmp_signals.end(); ++it) {
-        L_DEBUG("Executing idle task");
         bool result = (*it).second();
         if(!result) {
             L_DEBUG("Idle task returned false. Removing.");

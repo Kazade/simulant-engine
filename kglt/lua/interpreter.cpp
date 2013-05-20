@@ -12,6 +12,21 @@ Interpreter::Interpreter():
     luaopen_base(state_);
 
     expose_id_types(state_);
+
+    std::string dir_command = R"(
+        function dir(obj)
+            for k, v in pairs(class_info(obj).methods) do
+                print(k)
+            end
+
+            for k, v in pairs(class_info(obj).attributes) do
+                print(k)
+            end
+        end
+    )";
+
+    unicode output;
+    run_string(dir_command, output);
 }
 
 void Interpreter::expose_id_types(lua_State* state) {
