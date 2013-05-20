@@ -15,6 +15,34 @@ namespace kglt {
 const unicode PROMPT_PREFIX = _u(">>> ");
 const unicode CONTINUE_PREFIX = _u("... ");
 
+int print(lua_State* L) {
+    int arg_count = lua_gettop(L);
+    lua_getglobal(L, "tostring");
+
+    std::string output;
+
+    for(int i = 1; i <= arg_count; ++i) {
+        const char* s;
+        lua_pushvalue(L, -1);
+        lua_pushvalue(L, i);
+        lua_call(L, 1, 1);
+        s = lua_tostring(L, -1);
+        if(s == NULL) {
+            return luaL_error(L, LUA_QL("tostring") " must return a string to ", LUA_QL("print"));
+        }
+        if(i > 1) {
+            output.append("\t");
+        }
+
+        output.append(s);
+        lua_pop(L, 1);
+    }
+    output.append("\n");
+
+    std::cout << output << std::endl;
+    return 0;
+}
+
 Console::Console(WindowBase &window):
     window_(window),
     interpreter_(Interpreter::create()),
@@ -35,6 +63,8 @@ Console::Console(WindowBase &window):
     interpreter_->register_class<SubScene>();
 
     interpreter_->add_global("window", window_);
+
+    lua_register(interpreter_->state(), "print", print);
 }
 
 void Console::init_widget() {
@@ -122,14 +152,18 @@ void Console::update_output() {
     window_.ui()._("#lua-console").scroll_to_bottom();
 }
 
-LuaResult Console::execute(const unicode &command, unicode &output) {
+LuaResult Console::execute(const unicode &command, unicode &output) {  
     std::streambuf* stdout = std::cout.rdbuf();
-
     std::ostringstream tmp_out;
     std::cout.rdbuf(tmp_out.rdbuf());
-    LuaResult res = interpreter_->run_string(command.encode(), output);    
-    std::cout.rdbuf(stdout);
 
+    LuaResult res = interpreter_->run_string(command.encode(), output);
+
+    std::clog.flush();
+    std::cout.flush();
+    std::cerr.flush();
+
+    std::cout.rdbuf(stdout);
     output += unicode(tmp_out.str());
 
     return res;

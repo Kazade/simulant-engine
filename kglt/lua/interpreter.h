@@ -50,6 +50,8 @@ public:
         luabind::globals(state_)[name.c_str()] = &what;
     }
 
+    lua_State* state() { return state_; }
+
 private:
     lua_State* state_;
 };

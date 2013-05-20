@@ -21,7 +21,6 @@ public:
     Interpreter& lua();
 
     bool entry(const kglt::KeyEvent& code);
-
 private:
     void init_widget();
 
