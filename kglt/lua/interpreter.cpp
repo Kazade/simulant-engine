@@ -10,20 +10,29 @@ Interpreter::Interpreter():
     luabind::open(state_);
     luabind::bind_class_info(state_);
     luaopen_base(state_);
+    //luaopen_io(state_);
+    luaopen_table(state_);
+    //luaopen_math(state_);
 
     expose_id_types(state_);
 
-    std::string dir_command = R"(
+    std::string dir_command = R"x(
         function dir(obj)
+            output = {}
+
             for k, v in pairs(class_info(obj).methods) do
-                print(k)
+                table.insert(output, k .. "()")
             end
 
             for k, v in pairs(class_info(obj).attributes) do
-                print(k)
+                table.insert(output, v)
             end
+
+            table.sort(output)
+
+            print(table.concat(output, ", "))
         end
-    )";
+    )x";
 
     unicode output;
     run_string(dir_command, output);
