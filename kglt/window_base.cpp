@@ -18,19 +18,6 @@
 
 namespace kglt {
 
-void WindowBase::do_lua_export(lua_State &state) {
-    luabind::module(&state) [
-        luabind::class_<WindowBase>("WindowBase")
-            .def("set_title", &WindowBase::set_title)
-            .property("scene", &WindowBase::scene)
-            .property("width", &WindowBase::width)
-            .property("height", &WindowBase::height)
-            .def("quit", &WindowBase::stop_running)
-            .def("total_time", &WindowBase::total_time)
-            .def("delta_time", &WindowBase::delta_time)
-    ];
-}
-
 WindowBase::WindowBase():
     initialized_(false),
     width_(-1),

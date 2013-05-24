@@ -13,7 +13,6 @@
 
 #include "kazbase/logging.h"
 #include "generic/manager.h"
-#include "lua/interpreter.h"
 
 #include "types.h"
 #include "viewport.h"
@@ -40,8 +39,7 @@ typedef std::shared_ptr<Loader> LoaderPtr;
 typedef std::shared_ptr<LoaderType> LoaderTypePtr;
 
 class WindowBase :
-    public generic::TemplatedManager<WindowBase, Viewport, ViewportID>,
-    public LuaClass<WindowBase> {
+    public generic::TemplatedManager<WindowBase, Viewport, ViewportID> {
 
 public:    
     typedef std::shared_ptr<WindowBase> ptr;
@@ -100,8 +98,6 @@ public:
 
     ui::Interface& ui() { return *interface_; }
     void load_ui(const std::string& rml_file);
-
-    static void do_lua_export(lua_State &state);
 
     void stop_running() { is_running_ = false; }
 

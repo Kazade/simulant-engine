@@ -9,6 +9,8 @@
 #include "../keyboard.h"
 #include "../ui/interface.h"
 #include "../input_controller.h"
+#include "interpreter.h"
+#include "api.h"
 
 namespace kglt {
 
@@ -58,11 +60,10 @@ Console::Console(WindowBase &window):
     GlobalKeyCallback cb = std::bind(&Console::entry, this, std::placeholders::_1);
     window_.keyboard().key_pressed_connect(cb);
 
-    interpreter_->register_class<WindowBase>();
-    interpreter_->register_class<Scene>();
-    interpreter_->register_class<SubScene>();
+    export_lua_api(interpreter_->state());
 
     interpreter_->add_global("window", window_);
+    interpreter_->add_global("scene", window_.scene());
 
     lua_register(interpreter_->state(), "print", print);
 }

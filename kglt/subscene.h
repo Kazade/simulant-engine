@@ -22,16 +22,15 @@ class SubScene:
     public EntityManager,
     public LightManager,
     public CameraManager,
-    public Loadable,
-    public LuaClass<SubScene> {
+    public Loadable {
 
 public:
-    static void do_lua_export(lua_State &state);
-
     SubScene(Scene *parent, SubSceneID id);
 
-    EntityID new_entity(MeshID mid=MeshID());
-    EntityID new_entity(Object& parent, MeshID mid=MeshID());
+    EntityID new_entity();
+    EntityID new_entity(MeshID mid);
+    EntityID new_entity_with_parent(Entity& parent);
+    EntityID new_entity_with_parent(Entity& parent, MeshID mid);
 
     Entity& entity(EntityID e);
     bool has_entity(EntityID e) const;

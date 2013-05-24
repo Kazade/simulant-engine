@@ -24,9 +24,6 @@ namespace kglt {
 class Interpreter:
     public Managed<Interpreter> {
 
-private:
-    void expose_id_types(lua_State* state);
-
 public:
     Interpreter();
     ~Interpreter() {

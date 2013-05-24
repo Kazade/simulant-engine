@@ -41,6 +41,7 @@ public:
     bool has_mesh(MeshID m) const;
     const Mesh& mesh(MeshID m) const;
     void delete_mesh(MeshID mid);
+    uint32_t mesh_count() const;
 
     TextureID new_texture();
     Texture& texture(TextureID t);

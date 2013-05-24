@@ -85,9 +85,9 @@ public:
     void test_deleting_entities_deletes_children() {
         kglt::SubScene& scene = window->scene().subscene();
 
-        kglt::EntityID mid = scene.new_entity(); //Create the root mesh
-        kglt::EntityID cid1 = scene.new_entity(scene.entity(mid)); //Create a child
-        kglt::EntityID cid2 = scene.new_entity(scene.entity(cid1)); //Create a child of the child
+        kglt::EntityID mid = scene.new_entity(); //Create the root mesh        
+        kglt::EntityID cid1 = scene.new_entity_with_parent(scene.entity(mid)); //Create a child
+        kglt::EntityID cid2 = scene.new_entity_with_parent(scene.entity(cid1)); //Create a child of the child
 
         this->assert_equal((uint32_t)1, scene.entity(mid).child_count());
         this->assert_equal((uint32_t)1, scene.entity(cid1).child_count());

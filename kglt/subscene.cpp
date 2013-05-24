@@ -9,15 +9,6 @@
 
 namespace kglt {
 
-void SubScene::do_lua_export(lua_State &state) {
-    luabind::module(&state) [
-        luabind::class_<SubScene>("SubScene")
-            .property("scene", &SubScene::scene)
-            .property("entity_count", &SubScene::entity_count)
-            .property("light_count", &SubScene::light_count)
-    ];
-}
-
 WindowBase& SubScene::window() {
     return scene_.window();
 }
@@ -38,6 +29,13 @@ void SubScene::destroy() {
     scene().delete_subscene(id());
 }
 
+EntityID SubScene::new_entity() {
+    EntityID result = EntityManager::manager_new();
+    //Tell everyone about the new entity
+    signal_entity_created_(result);
+    return result;
+}
+
 EntityID SubScene::new_entity(MeshID mid) {
     EntityID result = EntityManager::manager_new();
 
@@ -52,10 +50,16 @@ EntityID SubScene::new_entity(MeshID mid) {
     return result;
 }
 
-EntityID SubScene::new_entity(Object& parent, MeshID mid) {
-    EntityID result = new_entity(mid);
-    entity(result).set_parent(&parent);
-    return result;
+EntityID SubScene::new_entity_with_parent(Entity& parent) {
+    Entity& ent = entity(new_entity());
+    ent.set_parent(parent);
+    return ent.id();
+}
+
+EntityID SubScene::new_entity_with_parent(Entity& parent, MeshID mid) {
+    Entity& ent = entity(new_entity(mid));
+    ent.set_parent(parent);
+    return ent.id();
 }
 
 bool SubScene::has_entity(EntityID m) const {

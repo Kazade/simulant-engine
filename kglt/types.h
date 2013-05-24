@@ -119,15 +119,6 @@ enum LoggingLevel {
     LOG_LEVEL_DEBUG = 4
 };
 
-template<typename T>
-class LuaClass {
-public:
-    static void export_to(lua_State& state) {
-        T::do_lua_export(state);
-    }
-};
-
-
 typedef UniqueID<0> MeshID;
 typedef UniqueID<1> TextureID;
 typedef UniqueID<2> CameraID;

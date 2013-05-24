@@ -25,8 +25,7 @@ class Scene:
     public SceneBase,
     public Loadable,
     public SubSceneManager,
-    public Managed<Scene>,
-    public LuaClass<Scene> {
+    public Managed<Scene> {
 
 public:
     Scene(WindowBase* window);
@@ -36,6 +35,7 @@ public:
     SubScene& subscene() { return subscene(default_subscene_); }
     SubScene& subscene(SubSceneID s);
     void delete_subscene(SubSceneID s);
+    uint32_t subscene_count() const;
 
     bool init();
     void render();
@@ -46,7 +46,6 @@ public:
 
     Pipeline& pipeline() { return *pipeline_; }
 
-    static void do_lua_export(lua_State &state);
 private:
     SubSceneID default_subscene_;
     TextureID default_texture_;

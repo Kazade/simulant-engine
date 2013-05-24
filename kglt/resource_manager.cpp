@@ -38,6 +38,10 @@ void ResourceManager::delete_mesh(MeshID mid) {
     return MeshManager::manager_delete(mid);
 }
 
+uint32_t ResourceManager::mesh_count() const {
+    return MeshManager::manager_count();
+}
+
 MaterialID ResourceManager::new_material(MaterialID clone_from) {
     MaterialID result = MaterialManager::manager_new();
     if(clone_from) {

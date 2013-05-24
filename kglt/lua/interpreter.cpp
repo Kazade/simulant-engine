@@ -14,8 +14,6 @@ Interpreter::Interpreter():
     luaopen_table(state_);
     //luaopen_math(state_);
 
-    expose_id_types(state_);
-
     std::string dir_command = R"x(
         function dir(obj)
             output = {}
@@ -36,19 +34,6 @@ Interpreter::Interpreter():
 
     unicode output;
     run_string(dir_command, output);
-}
-
-void Interpreter::expose_id_types(lua_State* state) {
-    luabind::module(state) [
-        luabind::class_<SubSceneID>("SubSceneID")
-            .def(luabind::constructor<int>())
-            .property("value", &SubSceneID::value)
-    ];
-    luabind::module(state) [
-        luabind::class_<MaterialID>("MaterialID")
-            .def(luabind::constructor<int>())
-            .property("value", &MaterialID::value)
-    ];
 }
 
 void Interpreter::run_file(const std::string& filename) {

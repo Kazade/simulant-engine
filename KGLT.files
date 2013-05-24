@@ -264,3 +264,5 @@ kglt/kazbase/os/core.h
 kglt/kazbase/os/path.cpp
 kglt/kazbase/os/core.cpp
 kglt/kazbase/os.h
+kglt/lua/api.h
+kglt/lua/api.cpp

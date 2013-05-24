@@ -14,19 +14,6 @@
 
 namespace kglt {
 
-void Scene::do_lua_export(lua_State &state) {
-    luabind::module(&state) [
-        luabind::class_<Scene>("Scene")
-            .def("update", &Scene::update)
-            .def("new_subscene", &Scene::new_subscene)
-            .def("subscene", (SubScene&(Scene::*)(SubSceneID))&Scene::subscene)
-            .def("default_subscene", (SubScene&(Scene::*)())&Scene::subscene)
-            .def("delete_subscene", &Scene::delete_subscene)
-            .property("default_material_id", &Scene::default_material_id)
-            .property("pipeline", &Scene::pipeline)
-    ];
-}
-
 Scene::Scene(WindowBase* window):
     SceneBase(window, nullptr),
     default_texture_(0),
@@ -85,6 +72,10 @@ SubSceneID Scene::new_subscene(AvailablePartitioner partitioner) {
     ss.new_camera();
 
     return ss.id();
+}
+
+uint32_t Scene::subscene_count() const {
+    return SubSceneManager::manager_count();
 }
 
 SubScene& Scene::subscene(SubSceneID s) {
