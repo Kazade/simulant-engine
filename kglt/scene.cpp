@@ -4,6 +4,7 @@
 #include "renderer.h"
 #include "camera.h"
 #include "pipeline.h"
+#include "procedural/geom_factory.h"
 #include "loader.h"
 #include "subscene.h"
 #include "partitioners/null_partitioner.h"
@@ -18,7 +19,8 @@ Scene::Scene(WindowBase* window):
     SceneBase(window, nullptr),
     default_texture_(0),
     default_material_(0),
-    pipeline_(new Pipeline(*this)) {
+    pipeline_(new Pipeline(*this)),
+    geom_factory_(new GeomFactory(*this)){
 
 }
 

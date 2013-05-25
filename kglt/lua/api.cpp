@@ -35,7 +35,8 @@ void export_lua_api(lua_State* state) {
             .property("y", &Vec3::y)
             .property("z", &Vec3::z),
 
-        luabind::class_<Vec3, kmVec3>("Vec3"),
+        luabind::class_<Vec3, kmVec3>("Vec3")
+            .def(luabind::constructor<float, float, float>()),
 
         luabind::class_<kmQuaternion>("kmQuaternion")
             .property("x", &kmQuaternion::x)
@@ -70,6 +71,7 @@ void export_lua_api(lua_State* state) {
             .property("scene", &SubScene::scene)
             .property("entity_count", &SubScene::entity_count)
             .property("light_count", &SubScene::light_count)
+            .property("id", &SubScene::id)
     ];
 
     /*
@@ -115,6 +117,11 @@ void export_lua_api(lua_State* state) {
             .property("default_subscene", (SubScene&(Scene::*)())&Scene::subscene)
             .property("default_material_id", &Scene::default_material_id)
             .property("pipeline", &Scene::pipeline)
+    ];
+
+    luabind::module(state) [
+        luabind::class_<GeomFactory>("GeomFactory")
+            .def("new_line", &GeomFactory::new_line)
     ];
 }
 

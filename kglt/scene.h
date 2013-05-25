@@ -18,6 +18,7 @@ class UI;
 
 class Scene;
 class SubScene;
+class GeomFactory;
 
 typedef generic::TemplatedManager<Scene, SubScene, SubSceneID> SubSceneManager;
 
@@ -45,6 +46,7 @@ public:
     TextureID default_texture_id() const { return default_texture_; }
 
     Pipeline& pipeline() { return *pipeline_; }
+    GeomFactory& geom_factory() { return *geom_factory_; }
 
 private:
     SubSceneID default_subscene_;
@@ -54,6 +56,7 @@ private:
     void initialize_defaults();
 
     std::shared_ptr<Pipeline> pipeline_;
+    std::shared_ptr<GeomFactory> geom_factory_;
 };
 
 }

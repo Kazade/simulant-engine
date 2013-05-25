@@ -266,3 +266,5 @@ kglt/kazbase/os/core.cpp
 kglt/kazbase/os.h
 kglt/lua/api.h
 kglt/lua/api.cpp
+kglt/procedural/geom_factory.h
+kglt/procedural/geom_factory.cpp
