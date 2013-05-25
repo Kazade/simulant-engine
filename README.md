@@ -4,7 +4,26 @@
 
 While working on reverse engineering some obscure 3D model format, I needed a 
 quick way to test file parsing, and procedually generating and rendering a mesh
-from the model file. This library was spawned from that.
+from the model file. This library was spawned from that, and before long it
+became a full blown game engine!
+
+## Features
+
+ * Easy to use API, and getting simpler all the time!
+ * Flexible rendering pipeline
+ * Complex material scripting format
+ * Built-in Lua console (hit '~' , or '`' on a UK keyboard... top left!)
+ * Manipulate the scene in realtime using Lua
+ * Loading of .obj models and the X-Wing vs Tie Fighter .opt format
+ * Loading of Q2 BSP files (needs work)
+ * Octree partitioning/culling (WIP)
+ * Loading of JPG, PNG, TGA images
+ * Shortcut functions for loading 2D sprites, 2D backgrounds and 3D skyboxes
+ * Simple scene graph functions
+ * HTML/CSS based UI renderer based on libRocket
+ * Procedural functions for generating spheres, cubes, capsules, circles and rectangles
+ * Procedural functions for generate a starfield texture (needs work)
+ * Functions for creating lights, multiple viewports and cameras
 
 ## How do I use it?
 
@@ -26,50 +45,7 @@ Crazy eh? Those two lines of code construct an OpenGL window, with an empty
 scene and the program runs until the window is closed. 
 
 But you wanted something more interesting than that right? OK, let's draw a
-wireframe triangle:
-
-```
-#include "kglt/kglt.h"
-
-int main(int argc, char* argv[]) {
-
-    kglt::Window::ptr window = kglt::Window::create();
-    kglt::Subscene& scene = window->scene().subscene();
-
-    //Create a new mesh
-    kglt::Mesh& mesh = scene.mesh(scene.new_mesh());
-
-    //Add a submesh, add 3 vertices and a triangle made up of them
-    kglt::SubMesh& submesh = mesh.submesh(mesh.new_submesh(MaterialID(), MESH_ARRANGEMENT_LINE_STRIP))
-    submesh.vertex_data().position(-1.0, 0.0, 0.0);
-    submesh.vertex_data().diffuse(kglt::Colour::white);
-    submesh.vertex_data().move_next();    
-    
-    submesh.vertex_data().position(0.0, 1.0, 0.0);
-    submesh.vertex_data().diffuse(kglt::Colour::white);
-    submesh.vertex_data().move_next();
-    
-    submesh.vertex_data().position(1.0, 0.0, 0.0);
-    submesh.vertex_data().diffuse(kglt::Colour::white);
-    submesh.vertex_data().move_next();
-    submesh.vertex_data().done();
-    
-    //Add the 3 indexes of the triangle
-    submesh.index_data().index(0);
-    submesh.index_data().index(1);
-    submesh.index_data().index(2);
-    submesh.index_data().done();
-
-    kglt::Entity& entity = scene.entity(scene.new_entity(mesh.id())); //Create an entity in the world which uses the triangle
-    entity.move_to(0.0, 0.0, -1.0);
-    
-    while(window.update()) {}    
-
-    return 0;
-}
-```
-
-We can also draw a rectangle even more easily:
+rectangle:
 
 ```
 #include "kglt/kglt.h"
