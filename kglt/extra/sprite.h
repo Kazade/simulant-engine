@@ -30,6 +30,7 @@ public:
     typedef std::shared_ptr<Sprite> ptr;
 
     Sprite(Scene& scene, SubSceneID subscene=DefaultSubSceneID);
+    ~Sprite();
 
     void add_animation(const std::string& anim_name, const std::vector<TextureID>& frames, double duration);
 
@@ -42,21 +43,17 @@ public:
     void set_visible(bool value=true);
 
     MaterialID material();
-    Scene& scene() { return scene_; }
-    SubSceneID subscene_id() const { return subscene_; }
-    EntityID entity_id() { return entity_id_; }
 
 private:
     Scene& scene_;
-    SubSceneID subscene_;
+    SubScene& subscene_;
 
     std::string current_animation_;
     std::string next_animation_;
 
-    std::map<std::string, MaterialID> animations_;
+    std::map<std::string, MaterialPtr> animations_;
 
-    MeshID mesh_id_;
-    EntityID entity_id_;
+    Entity* entity_;
 };
 
 }

@@ -8,14 +8,14 @@ namespace procedural {
 namespace mesh {
 
 SubMeshIndex rectangle(
-    kglt::Mesh& mesh,
+    kglt::MeshPtr mesh,
     float width, float height,
     float x_offset=0.0, float y_offset=0.0, float z_offset=0.0,
     bool clear=true
 );
 
 SubMeshIndex rectangle_outline(
-    kglt::Mesh& mesh,
+    kglt::MeshPtr mesh,
     float width, float height,
     float x_offset=0.0, float y_offset=0.0, float z_offset=0.0,
     bool clear=true

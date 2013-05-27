@@ -60,39 +60,40 @@ public:
     }
 
     bool LoadTexture(Rocket::Core::TextureHandle& texture_handle, Rocket::Core::Vector2i& texture_dimensions, const Rocket::Core::String& source) {
-        kglt::Texture& tex = manager().texture(manager().new_texture());
-        window_.loader_for(source.CString())->into(tex);
+        kglt::TexturePtr tex = manager().texture(manager().new_texture()).lock();
+        window_.loader_for(source.CString())->into(*tex);
 
         //FIXME: Passing around a reference isn't entirely safe...
         //but at least this makes sure that the upload happens in the main thread
         window_.idle().add_once([&]() {
-            tex.flip_vertically();
-            tex.upload(true, false, false, true);
+            tex->flip_vertically();
+            tex->upload(true, false, false, true);
         });
 
-        texture_handle = tex.id().value();
+        texture_handle = tex->id().value();
 
+        textures_[texture_handle] = tex; //Hold for ref-counting
         return true;
     }
 
     bool GenerateTexture(Rocket::Core::TextureHandle& texture_handle, const Rocket::Core::byte* source, const Rocket::Core::Vector2i& dimensions) {
-        kglt::Texture& tex = manager().texture(manager().new_texture());
+        kglt::TexturePtr tex = manager().texture(manager().new_texture()).lock();
 
         uint32_t data_size = (dimensions.x * dimensions.y * 4);
-        tex.resize(dimensions.x, dimensions.y);
-        tex.set_bpp(32);
+        tex->resize(dimensions.x, dimensions.y);
+        tex->set_bpp(32);
 
-        tex.data().assign(source, source + data_size);
-        tex.upload(true, false, false, true);
+        tex->data().assign(source, source + data_size);
+        tex->upload(true, false, false, true);
 
-        texture_handle = tex.id().value();
+        texture_handle = tex->id().value();
 
+        textures_[texture_handle] = tex; //Hold for ref-counting
         return true;
     }
 
     void ReleaseTexture(Rocket::Core::TextureHandle texture) {
-        kglt::TextureID id((uint32_t) texture);
-        manager().delete_texture(id);
+        textures_.erase(texture); //Decrement the ref-count
     }
 
     void RenderGeometry(
@@ -119,7 +120,7 @@ public:
 
         if(texture) {
             glEnable(GL_TEXTURE_2D);
-            GLuint tex_id = manager().texture(TextureID(texture)).gl_tex();
+            GLuint tex_id = textures_[texture]->gl_tex();
             glBindTexture(GL_TEXTURE_2D, tex_id);
             glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
         } else {
@@ -175,6 +176,8 @@ public:
 
 private:
     WindowBase& window_;
+
+    std::map<Rocket::Core::TextureHandle, TexturePtr> textures_;
 };
 
 

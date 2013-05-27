@@ -32,13 +32,8 @@ int main(int argc, char* argv[]) {
 
     subscene.set_ambient_light(kglt::Colour::white);
 
-    kglt::Mesh& mesh = subscene.mesh(subscene.new_mesh());
-    kglt::procedural::mesh::capsule(mesh);
-
-	//Apply the texture to the mesh
-    mesh.set_material(matid);
-
-    kglt::Entity& entity = subscene.entity(subscene.new_entity(mesh.id()));
+    kglt::Entity& entity = subscene.entity(window->scene().geom_factory().new_capsule(subscene.id()));
+    entity.mesh().lock()->set_material_id(matid);
 
     /**
         Once we have the reference to a base object, we can

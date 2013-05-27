@@ -2,6 +2,7 @@
 #include <cassert>
 
 #include "material.h"
+#include "resource_manager.h"
 
 namespace kglt {
 
@@ -119,6 +120,44 @@ void MaterialPass::set_albedo(float reflectiveness) {
     } else {
         technique_.reflective_passes_.erase(this);
     }
+}
+
+//Assignment stuff
+
+MaterialTechnique::MaterialTechnique(const MaterialTechnique& rhs) {
+    *this = rhs;
+}
+
+MaterialTechnique& MaterialTechnique::operator=(const MaterialTechnique& rhs) {
+    scheme_ = rhs.scheme_;
+    passes_.clear();
+    reflective_passes_.clear();
+
+    for(MaterialPass::ptr pass: rhs.passes_) {
+        passes_.push_back(MaterialPass::ptr(new MaterialPass(*pass)));
+
+        if(rhs.reflective_passes_.find(pass.get()) != rhs.reflective_passes_.end()) {
+            reflective_passes_.insert(passes_[passes_.size()-1].get());
+        }
+    }
+
+    return *this;
+}
+
+Material& Material::operator=(const Material& rhs) {
+    techniques_.clear();
+
+    for(auto p: rhs.techniques_) {
+        techniques_[p.first] = MaterialTechnique::ptr(new MaterialTechnique(*p.second));
+    }
+
+    return *this;
+}
+
+MaterialID Material::do_clone() {
+    MaterialPtr new_mat = resource_manager().material(resource_manager().new_material()).lock();
+    *new_mat = *this;
+    return new_mat->id();
 }
 
 }

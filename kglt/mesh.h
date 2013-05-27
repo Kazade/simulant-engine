@@ -111,7 +111,7 @@ public:
 
     void enable_debug(bool value);
 
-    void set_material(MaterialID material); ///< Apply material to all submeshes
+    void set_material_id(MaterialID material); ///< Apply material to all submeshes
     void reverse_winding(); ///< Reverse the winding of all submeshes
 
 private:

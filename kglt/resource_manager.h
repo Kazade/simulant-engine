@@ -4,7 +4,7 @@
 #include <string>
 #include <map>
 
-#include "generic/manager.h"
+#include "generic/refcount_manager.h"
 #include "generic/data_carrier.h"
 #include "texture.h"
 #include "shader.h"
@@ -16,11 +16,11 @@ namespace kglt {
 
 class ResourceManager;
 
-typedef generic::TemplatedManager<ResourceManager, Mesh, MeshID> MeshManager;
-typedef generic::TemplatedManager<ResourceManager, ShaderProgram, ShaderID> ShaderManager;
-typedef generic::TemplatedManager<ResourceManager, Material, MaterialID> MaterialManager;
-typedef generic::TemplatedManager<ResourceManager, Texture, TextureID> TextureManager;
-typedef generic::TemplatedManager<ResourceManager, Sound, SoundID> SoundManager;
+typedef generic::RefCountedTemplatedManager<ResourceManager, Mesh, MeshID> MeshManager;
+typedef generic::RefCountedTemplatedManager<ResourceManager, ShaderProgram, ShaderID> ShaderManager;
+typedef generic::RefCountedTemplatedManager<ResourceManager, Material, MaterialID> MaterialManager;
+typedef generic::RefCountedTemplatedManager<ResourceManager, Texture, TextureID> TextureManager;
+typedef generic::RefCountedTemplatedManager<ResourceManager, Sound, SoundID> SoundManager;
 
 class ResourceManager:
     public MeshManager,
@@ -37,31 +37,35 @@ public:
     }
 
     MeshID new_mesh();
-    Mesh& mesh(MeshID m);
+    MeshID new_mesh_from_file(const unicode& path);
+
+    MeshRef mesh(MeshID m);
+    const MeshRef mesh(MeshID m) const;
+
     bool has_mesh(MeshID m) const;
-    const Mesh& mesh(MeshID m) const;
-    void delete_mesh(MeshID mid);
     uint32_t mesh_count() const;
 
     TextureID new_texture();
-    Texture& texture(TextureID t);
+    TextureID new_texture_from_file(const unicode& path);
+    TextureRef texture(TextureID t);
     bool has_texture(TextureID t) const;
-    void delete_texture(TextureID tid);
 
     ShaderID new_shader();
-    ShaderProgram& shader(ShaderID s);
-    bool has_shader(ShaderID s) const;
-    void delete_shader(ShaderID s);
+    ShaderRef shader(ShaderID s);
+    ShaderProgram* __shader(ShaderID s);
 
-    MaterialID new_material(MaterialID clone_from=MaterialID());
-    Material& material(MaterialID material);
+    bool has_shader(ShaderID s) const;
+
+    MaterialID new_material();
+    MaterialID new_material_from_file(const unicode& path);
+
+    MaterialRef material(MaterialID material);
     bool has_material(MaterialID m) const;
-    void delete_material(MaterialID m);
 
     SoundID new_sound();
-    Sound& sound(SoundID sound);
+    SoundID new_sound_from_file(const unicode& path);
+    SoundRef sound(SoundID sound);
     bool has_sound(SoundID s) const;
-    void delete_sound(SoundID s);
 
     std::pair<ShaderID, bool> find_shader(const std::string& name);
     void post_create_shader_callback(ShaderProgram& obj, ShaderID id) {
@@ -80,12 +84,15 @@ public:
         /*
           Update all animated materials
         */
-        for(std::pair<MaterialID, Material::ptr> p: MaterialManager::objects_) {
+        MaterialManager::apply_func_to_objects(std::bind(&Material::update, std::placeholders::_1, dt));
+        /*for(std::pair<MaterialID, Material::ptr> p: MaterialManager::objects_) {
             p.second->update(dt);
-        }
+        }*/
     }
 
     generic::DataCarrier& data() { return data_carrier_; }
+
+    void inherit(Resource* resource);
 
 private:
     WindowBase* window_;

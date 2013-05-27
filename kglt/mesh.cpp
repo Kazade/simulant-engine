@@ -26,7 +26,9 @@ void Mesh::clear() {
 
 void Mesh::enable_debug(bool value) {
     if(value) {
-        kglt::Material& material = resource_manager().material(resource_manager().new_material());
+        kglt::MaterialPtr material_ptr = resource_manager().material(resource_manager().new_material()).lock();
+        kglt::Material& material = *material_ptr;
+
         resource_manager().window().loader_for("kglt/materials/diffuse_render.kglm")->into(material);
 
         normal_debug_mesh_ = new_submesh(material.id(), MESH_ARRANGEMENT_LINES, false);
@@ -84,7 +86,7 @@ void Mesh::delete_submesh(SubMeshIndex index) {
     submeshes_by_index_.erase(index);
 }
 
-void Mesh::set_material(MaterialID material) {
+void Mesh::set_material_id(MaterialID material) {
     for(SubMesh::ptr sm: submeshes_) {
         sm->set_material_id(material);
     }

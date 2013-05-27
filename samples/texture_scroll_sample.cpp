@@ -19,17 +19,13 @@ int main(int argc, char* argv[]) {
         Creating an object gives you an ID, this can then be exchanged
         for a reference to an object.
     */
-    kglt::Mesh& mesh = subscene.mesh(subscene.new_mesh());
-    kglt::procedural::mesh::rectangle(mesh, 1.0, 1.0);
-	
+
     ///Shortcut function for loading images
     kglt::TextureID tid = kglt::create_texture_from_file(subscene, "sample_data/sample.tga");
     kglt::MaterialID matid = kglt::create_material_from_texture(subscene, tid);
 
-	//Apply the texture to the mesh
-    mesh.submesh(mesh.submesh_ids()[0]).set_material_id(matid);
-
-    kglt::Entity& entity = subscene.entity(subscene.new_entity(mesh.id()));
+    kglt::Entity& entity = subscene.entity(window->scene().geom_factory().new_rectangle(subscene.id(), 1.0, 1.0));
+    entity.mesh().lock()->set_material_id(matid);
 
     /**
         Once we have the reference to a base object, we can
@@ -40,7 +36,7 @@ int main(int argc, char* argv[]) {
     subscene.camera().set_orthographic_projection_from_height(2.0, (float) window->width() / (float)window->height());
 
     while(window->update()) {
-        subscene.material(matid).technique().pass(0).texture_unit(0).scroll_x(0.5 * window->delta_time());
+        subscene.material(matid).lock()->technique().pass(0).texture_unit(0).scroll_x(0.5 * window->delta_time());
     }
 	return 0;
 }

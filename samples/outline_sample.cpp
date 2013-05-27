@@ -6,11 +6,8 @@ int main(int argc, char* argv[]) {
 
     kglt::Scene& scene = window->scene();
     kglt::SubScene& subscene = scene.subscene();
+    kglt::Entity& entity = subscene.entity(scene.geom_factory().new_rectangle_outline(subscene.id(), 1.0, 1.0));
 
-	kglt::Mesh& mesh = kglt::return_new_mesh(scene);    	
-	kglt::procedural::mesh::rectangle_outline(mesh, 1.0, 1.0);
-
-    kglt::Entity& entity = subscene.entity(subscene.new_entity(mesh.id()));
     entity.move_to(0.0, 0.0, -5.0);
 	
     while(window->update()) {}

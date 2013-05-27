@@ -1,15 +1,19 @@
-#ifndef MANAGER_H
-#define MANAGER_H
+#ifndef REFCOUNT_MANAGER_H
+#define REFCOUNT_MANAGER_H
 
 #include "manager_base.h"
-
-#include "kglt/kazbase/list_utils.h"
 
 namespace kglt {
 namespace generic {
 
-template<typename Derived, typename ObjectType, typename ObjectIDType, typename NewIDGenerator=IncrementalGetNextID<ObjectIDType> >
-class TemplatedManager : public virtual BaseManager {
+template<
+    typename Derived,
+    typename ObjectType,
+    typename ObjectIDType,
+    typename NewIDGenerator=IncrementalGetNextID<ObjectIDType>
+>
+class RefCountedTemplatedManager :
+    public virtual BaseManager {
 public:
     ObjectIDType manager_new() {
         ObjectIDType id(0);
@@ -24,41 +28,41 @@ public:
         return id;
     }
 
-    void manager_delete(ObjectIDType id) {
-        if(manager_contains(id)) {
-            std::lock_guard<std::recursive_mutex> lock(manager_lock_);
-
-            ObjectType& obj = *objects_[id];
-            signal_pre_delete_(obj, id);
-
-            if(manager_contains(id)) {
-                objects_.erase(id);
-            }
-        }
-    }
-
     uint32_t manager_count() const {
         return objects_.size();
     }
 
-    ObjectType& manager_get(ObjectIDType id) {
+    std::weak_ptr<ObjectType> manager_get(ObjectIDType id) {
         std::lock_guard<std::recursive_mutex> lock(manager_lock_);
 
         auto it = objects_.find(id);
         if(it == objects_.end()) {
             throw NoSuchObjectError(typeid(ObjectType).name());
         }
-        return *(it->second);
+
+        return std::weak_ptr<ObjectType>(it->second);
     }
 
-    const ObjectType& manager_get(ObjectIDType id) const {
+    ObjectType* manager_get_unsafe(ObjectIDType id) {
         std::lock_guard<std::recursive_mutex> lock(manager_lock_);
 
         auto it = objects_.find(id);
         if(it == objects_.end()) {
             throw NoSuchObjectError(typeid(ObjectType).name());
         }
-        return *(it->second);
+
+        return it->second.get();
+    }
+
+    const std::weak_ptr<ObjectType> manager_get(ObjectIDType id) const {
+        std::lock_guard<std::recursive_mutex> lock(manager_lock_);
+
+        auto it = objects_.find(id);
+        if(it == objects_.end()) {
+            throw NoSuchObjectError(typeid(ObjectType).name());
+        }
+
+        return std::weak_ptr<ObjectType>(it->second);
     }
 
     bool manager_contains(ObjectIDType id) const {
@@ -75,24 +79,20 @@ public:
         }
     }
 
+    //Internal!
+    std::unordered_map<ObjectIDType, std::shared_ptr<ObjectType> > __objects() {
+        return objects_;
+    }
+
 private:
+    std::unordered_map<ObjectIDType, std::shared_ptr<ObjectType> > objects_;
+
     sigc::signal<void, ObjectType&, ObjectIDType> signal_post_create_;
     sigc::signal<void, ObjectType&, ObjectIDType> signal_pre_delete_;
 
-protected:
-    std::unordered_map<ObjectIDType, std::shared_ptr<ObjectType> > objects_;
-
-    ObjectIDType _get_object_id_from_ptr(ObjectType* ptr) {
-        for(std::pair<ObjectIDType, std::shared_ptr<ObjectType> > pair: objects_) {
-            if(pair.second.get() == ptr) {
-                return pair.first;
-            }
-        }
-
-        return ObjectIDType();
-    }
 };
 
 }
 }
-#endif // MANAGER_H
+
+#endif // REFCOUNT_MANAGER_H

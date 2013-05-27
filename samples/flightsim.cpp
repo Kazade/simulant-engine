@@ -25,10 +25,8 @@ int main(int argc, char* argv[]) {
     subscene.set_ambient_light(kglt::Colour(1.0, 1.0, 1.0, 1.0));
     subscene.camera().set_perspective_projection(45.0, float(window->width()) / float(window->height()));
 
-    kglt::Mesh& mesh = subscene.mesh(subscene.new_mesh());
-    window->loader_for(filename)->into(mesh);
-
-    kglt::Entity& entity = subscene.entity(subscene.new_entity(mesh.id()));
+    kglt::MeshID mid = subscene.new_mesh_from_file(filename);
+    kglt::Entity& entity = subscene.entity(subscene.new_entity(mid));
     entity.move_to(0, 0, -30);
 
     //Just stash the skybox along with the scene

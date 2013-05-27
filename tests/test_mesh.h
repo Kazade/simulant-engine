@@ -19,9 +19,9 @@ public:
 
     MeshID generate_test_mesh(kglt::SubScene& scene) {
         kglt::MeshID mid = scene.new_mesh();
-        kglt::Mesh& mesh = scene.mesh(mid);
+        kglt::MeshPtr mesh = scene.mesh(mid).lock();
 
-        kglt::VertexData& data = mesh.shared_data();
+        kglt::VertexData& data = mesh->shared_data();
 
         data.position(-1.0, -1.0, 0.0);
         data.move_next();
@@ -37,7 +37,7 @@ public:
 
         data.done();
 
-        kglt::SubMesh& submesh = mesh.submesh(mesh.new_submesh(MaterialID()));
+        kglt::SubMesh& submesh = mesh->submesh(mesh->new_submesh(MaterialID()));
 
         submesh.index_data().index(0);
         submesh.index_data().index(1);
@@ -49,7 +49,7 @@ public:
         submesh.index_data().done();
 
         //Draw a line between the first two vertices
-        kglt::SubMesh& sm = mesh.submesh(mesh.new_submesh(kglt::MaterialID(), kglt::MESH_ARRANGEMENT_LINES));
+        kglt::SubMesh& sm = mesh->submesh(mesh->new_submesh(kglt::MaterialID(), kglt::MESH_ARRANGEMENT_LINES));
         sm.index_data().index(0);
         sm.index_data().index(1);
         sm.index_data().done();
@@ -103,21 +103,21 @@ public:
         kglt::SubScene& scene = window->scene().subscene();
 
         kglt::MeshID mid = scene.new_mesh();
-        kglt::Mesh& mesh = scene.mesh(mid);
+        kglt::MeshPtr mesh = scene.mesh(mid).lock();
 
-        this->assert_equal(0, mesh.shared_data().count());
+        this->assert_equal(0, mesh->shared_data().count());
         kglt::SubMeshIndex idx = kglt::procedural::mesh::rectangle_outline(mesh, 1.0, 1.0);
 
-        this->assert_equal(kglt::MESH_ARRANGEMENT_LINE_STRIP, mesh.submesh(idx).arrangement());
-        this->assert_equal(4, mesh.shared_data().count());
-        this->assert_equal(5, mesh.submesh(idx).index_data().count());
+        this->assert_equal(kglt::MESH_ARRANGEMENT_LINE_STRIP, mesh->submesh(idx).arrangement());
+        this->assert_equal(4, mesh->shared_data().count());
+        this->assert_equal(5, mesh->submesh(idx).index_data().count());
     }
 
     void test_basic_usage() {
         kglt::SubScene& scene = window->scene().subscene();
-        kglt::Mesh& mesh = scene.mesh(generate_test_mesh(scene));
+        kglt::MeshPtr mesh = scene.mesh(generate_test_mesh(scene)).lock();
 
-        kglt::VertexData& data = mesh.shared_data();
+        kglt::VertexData& data = mesh->shared_data();
 
         assert_true(data.has_positions());
         assert_true(!data.has_normals());
@@ -130,36 +130,36 @@ public:
         assert_true(!data.has_specular());
         assert_equal(4, data.count());
 
-        assert_equal((uint32_t)2, mesh.submesh_ids().size());
+        assert_equal((uint32_t)2, mesh->submesh_ids().size());
     }
 
     void test_entity_from_mesh() {
         kglt::SubScene& scene = window->scene().subscene();
 
-        kglt::Mesh& mesh = scene.mesh(generate_test_mesh(scene));
+        kglt::MeshPtr mesh = scene.mesh(generate_test_mesh(scene)).lock();
 
         kglt::Entity& entity = scene.entity(scene.new_entity());
 
         assert_true(!entity.has_mesh());
 
-        entity.set_mesh(mesh.id());
+        entity.set_mesh(mesh->id());
 
         assert_true(entity.has_mesh());
 
         //The entity's MeshID should match the mesh we set
-        assert_true(mesh.id() == entity.mesh());
+        assert_true(mesh->id() == entity.mesh().lock()->id());
 
         //The entity should report the same data as the mesh, the same subentity count
         //as well as the same shared vertex data
-        assert_equal(mesh.submesh_ids().size(), entity.subentity_count());
-        assert_true(mesh.shared_data().count() == entity.shared_data().count());
+        assert_equal(mesh->submesh_ids().size(), entity.subentity_count());
+        assert_true(mesh->shared_data().count() == entity.shared_data().count());
 
-        kglt::SubMeshIndex idx = mesh.submesh_ids()[0];
+        kglt::SubMeshIndex idx = mesh->submesh_ids()[0];
 
         //Likewise for subentities, they should just proxy to the submesh
-        assert_equal(mesh.submesh(idx).material_id(), entity.subentity(0).material_id());
-        assert_true(mesh.submesh(idx).index_data() == entity.subentity(0).index_data());
-        assert_true(mesh.submesh(idx).vertex_data() == entity.subentity(0).vertex_data());
+        assert_equal(mesh->submesh(idx).material_id(), entity.subentity(0).material_id());
+        assert_true(mesh->submesh(idx).index_data() == entity.subentity(0).index_data());
+        assert_true(mesh->submesh(idx).vertex_data() == entity.subentity(0).vertex_data());
 
         //We should be able to override the material on a subentity though
         entity.subentity(0).override_material_id(kglt::MaterialID(1));
@@ -170,10 +170,10 @@ public:
     void test_scene_methods() {
         kglt::SubScene& scene = window->scene().subscene();
 
-        kglt::Mesh& mesh = scene.mesh(scene.new_mesh()); //Create a mesh
-        kglt::Entity& entity = scene.entity(scene.new_entity(mesh.id()));
+        kglt::MeshPtr mesh = scene.mesh(scene.new_mesh()).lock(); //Create a mesh
+        kglt::Entity& entity = scene.entity(scene.new_entity(mesh->id()));
 
-        assert_true(mesh.id() == entity.mesh());
+        assert_true(mesh->id() == entity.mesh().lock()->id());
     }
 };
 

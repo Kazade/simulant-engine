@@ -18,10 +18,7 @@ int main(int argc, char* argv[]) {
 
     subscene.set_ambient_light(kglt::Colour(0.2, 0.2, 0.2, 1.0));
 
-    kglt::Mesh& mesh = subscene.mesh(subscene.new_mesh());
-    kglt::procedural::mesh::cube(mesh, 2.0);
-
-    kglt::Entity& entity = subscene.entity(subscene.new_entity(mesh.id()));
+    kglt::Entity& entity = subscene.entity(scene.geom_factory().new_cube(subscene.id(), kglt::Vec3(), 2.0));
     entity.move_to(0.0, 0.0, -5.0);
 
     kglt::Light& light = subscene.light(subscene.new_light());

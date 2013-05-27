@@ -1,6 +1,8 @@
 #ifndef TYPES_H_INCLUDED
 #define TYPES_H_INCLUDED
 
+#include <memory>
+
 #include <lua.hpp>
 
 #include <cstdint>
@@ -135,19 +137,46 @@ const SubSceneID DefaultSubSceneID = SubSceneID();
 const std::string DEFAULT_MATERIAL_SCHEME = "default";
 
 class Mesh;
-class Entity;
-class Light;
-class Scene;
-class SubScene;
-class Camera;
+typedef std::weak_ptr<Mesh> MeshRef;
+typedef std::shared_ptr<Mesh> MeshPtr;
+
+class Material;
+typedef std::weak_ptr<Material> MaterialRef;
+typedef std::shared_ptr<Material> MaterialPtr;
+
+class Texture;
+typedef std::weak_ptr<Texture> TextureRef;
+typedef std::shared_ptr<Texture> TexturePtr;
+
+class Sound;
+typedef std::weak_ptr<Sound> SoundRef;
+typedef std::shared_ptr<Sound> SoundPtr;
+
 class ShaderProgram;
+typedef std::weak_ptr<ShaderProgram> ShaderRef;
+typedef std::shared_ptr<ShaderProgram> ShaderPtr;
+
+class Entity;
+typedef std::shared_ptr<Entity> EntityPtr;
+
+class Light;
+typedef std::shared_ptr<Light> LightPtr;
+
+class Scene;
+typedef std::shared_ptr<Scene> ScenePtr;
+
+class SubScene;
+typedef std::shared_ptr<SubScene> SubScenePtr;
+
+class Camera;
+typedef std::shared_ptr<Camera> CameraPtr;
+
 class Viewport;
 class Frustum;
 class WindowBase;
-class Material;
 class Pipeline;
 class Partitioner;
-class Sound;
+
 
 }
 

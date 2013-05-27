@@ -1,6 +1,7 @@
 #ifndef SUBSCENE_H
 #define SUBSCENE_H
 
+#include "generic/manager.h"
 #include "scene_base.h"
 #include "object.h"
 #include "types.h"

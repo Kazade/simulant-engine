@@ -85,9 +85,9 @@ void Pipeline::run_stage(Stage::ptr stage) {
         //Get the priority queue for this entity (e.g. RENDER_PRIORITY_BACKGROUND)
         QueueGroups::mapped_type& priority_queue = queues[(uint32_t)ent->_parent().render_priority()];
 
-        Material& mat = subscene.material(ent->material_id());
+        MaterialPtr mat = subscene.material(ent->material_id()).lock();
         //Go through the entities material passes
-        for(uint8_t pass = 0; pass < mat.technique().pass_count(); ++pass) {
+        for(uint8_t pass = 0; pass < mat->technique().pass_count(); ++pass) {
             //Create a new render group if necessary
             RootGroup::ptr group;
             if(priority_queue.size() <= pass) {

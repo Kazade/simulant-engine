@@ -17,32 +17,32 @@ SkyBox::SkyBox(kglt::SubScene& subscene, kglt::TextureID texture, float size, Ca
     subscene_(subscene),
     camera_id_(cam) {
 
-    mesh_id_ = subscene.new_mesh();
-    kglt::procedural::mesh::cube(subscene.mesh(mesh_id_), size);
+    entity_ = &subscene.entity(subscene.new_entity(subscene.new_mesh()));
 
-    material_id_ = subscene.new_material();
-    kglt::Material& mat = subscene.material(material_id_);
-    subscene.window().loader_for("kglt/materials/generic_multitexture.kglm")->into(mat);
+    kglt::MeshPtr mesh = entity_->mesh().lock();
+    kglt::procedural::mesh::cube(mesh, size);
 
-    mat.technique().pass(0).set_texture_unit(0, texture);
-    mat.technique().pass(0).set_depth_test_enabled(false);
-    mat.technique().pass(0).set_depth_write_enabled(false);
+    kglt::MaterialPtr mat = subscene.material(subscene.new_material()).lock();
+    subscene.window().loader_for("kglt/materials/generic_multitexture.kglm")->into(*mat);
 
-    subscene.mesh(mesh_id_).set_material(mat.id());
-    subscene.mesh(mesh_id_).reverse_winding();
+    mat->technique().pass(0).set_texture_unit(0, texture);
+    mat->technique().pass(0).set_depth_test_enabled(false);
+    mat->technique().pass(0).set_depth_write_enabled(false);
 
-    entity_id_ = subscene.new_entity(mesh_id_);
-    subscene.entity(entity_id_).set_render_priority(RENDER_PRIORITY_BACKGROUND);
-    subscene.entity(entity_id_).set_parent(subscene.camera(cam));
+    mesh->set_material_id(mat->id());
+    mesh->reverse_winding();
+
+    entity_->set_render_priority(RENDER_PRIORITY_BACKGROUND);
+    entity_->set_parent(subscene.camera(cam));
 
     //Skyboxes shouldn't rotate based on their parent (e.g. the camera)
-    subscene.entity(entity_id_).lock_rotation(0, 0, 1, 0);
+    entity_->lock_rotation(0, 0, 1, 0);
 }
 
 StarField::StarField(SubScene& subscene, CameraID cam) {
     //Generate a starfield texture
     texture_id_ = subscene.new_texture();
-    kglt::procedural::texture::starfield(subscene.texture(texture_id_));
+    kglt::procedural::texture::starfield(subscene.texture(texture_id_).lock());
     skybox_.reset(new SkyBox(subscene, texture_id_, 500.0f, cam));
 }
 

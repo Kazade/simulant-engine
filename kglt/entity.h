@@ -22,24 +22,12 @@ class Entity :
     public Source {
 
 public:
-    Entity(SubScene* subscene, EntityID id):
-        generic::Identifiable<EntityID>(id),
-        Object(subscene),
-        Source(*subscene),
-        mesh_(0),
-        render_priority_(RENDER_PRIORITY_MAIN) {}
+    Entity(SubScene* subscene, EntityID id);
+    Entity(SubScene* subscene, EntityID id, MeshID mesh);
 
-    Entity(SubScene* subscene, EntityID id, MeshID mesh):
-        generic::Identifiable<EntityID>(id),
-        Object(subscene),
-        Source(*subscene),
-        mesh_(mesh),
-        render_priority_(RENDER_PRIORITY_MAIN) {
-    }
-
-    MeshID mesh() const { return mesh_; }
-    bool has_mesh() const { return mesh_ != MeshID(0); }
-
+    MeshID mesh_id() const { return (mesh_) ? mesh_->id() : MeshID(0); }
+    MeshRef mesh() const { return mesh_; }
+    bool has_mesh() const { return bool(mesh_); }
     void set_mesh(MeshID mesh);
 
     const VertexData& shared_data() const;
@@ -61,20 +49,18 @@ public:
     RenderPriority render_priority() const { return render_priority_; }
     void set_render_priority(RenderPriority value) { render_priority_ = value;}
 private:
-    MeshID mesh_;
+    MeshPtr mesh_;
     std::vector<std::shared_ptr<SubEntity> > subentities_;
 
     RenderPriority render_priority_;
-
-    friend class SubEntity;
-
-    Mesh& _mesh_ref();
 
     sigc::signal<void, EntityID> signal_mesh_changed_;
 
     void do_update(double dt) {
         update_source(dt);
     }
+
+    friend class SubEntity;
 };
 
 class SubEntity :
@@ -148,7 +134,9 @@ private:
     SubMeshIndex index_;
     MaterialID material_;
 
-    const SubMesh& submesh() const { return parent_._mesh_ref().submesh(index_); }
+    const SubMesh& submesh() const {
+        return parent_.mesh().lock()->submesh(index_);
+    }
 };
 
 }

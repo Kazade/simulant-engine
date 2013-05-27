@@ -237,8 +237,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     }
 
     MeshID mid = scene->subscene().new_mesh();
-    Mesh& mesh = scene->subscene().mesh(mid);
-    //mesh.set_arrangement(MeshArrangement::POINTS);
+    MeshPtr mesh_ptr = scene->subscene().mesh(mid).lock();
+    Mesh& mesh = *mesh_ptr;
 
     std::vector<char> entity_buffer(header.lumps[Q2::LumpType::ENTITIES].length);
     file.seekg(header.lumps[Q2::LumpType::ENTITIES].offset);
@@ -304,8 +304,14 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     std::map<MaterialID, SubMeshIndex> material_to_submesh;
 
     for(Q2::TextureInfo& tex: textures) {
-        MaterialID material_id = scene->subscene().new_material(scene->default_material_id()); //Duplicate the default material
-        Material& mat = scene->subscene().material(material_id);
+        MaterialPtr new_mat;
+        {
+            //Clone the default material
+            MaterialPtr def_mat = scene->material(scene->default_material_id()).lock();
+            new_mat = scene->subscene().material(def_mat->clone()).lock();
+            new_mat->move_to_resource_manager(scene->subscene());
+        }
+        Material& mat = *new_mat;
 
         kmVec3 u_axis, v_axis;
         kmVec3Fill(&u_axis, tex.u_axis.x, tex.u_axis.y, tex.u_axis.z);
@@ -325,16 +331,16 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             tid = tex_lookup[tex.texture_name];
         } else {
             tid = scene->subscene().new_texture();
-            Texture& texture = scene->subscene().texture(tid);
+            TexturePtr texture = scene->subscene().texture(tid).lock();
 
             //HACK!
-            scene->window().loader_for("textures/" + std::string(tex.texture_name) + ".tga")->into(texture);
+            scene->window().loader_for("textures/" + std::string(tex.texture_name) + ".tga")->into(*texture);
 
             //We need to store this to divide the texture coordinates later
-            texture_dimensions[tex.texture_name].first = texture.width();
-            texture_dimensions[tex.texture_name].second = texture.height();
+            texture_dimensions[tex.texture_name].first = texture->width();
+            texture_dimensions[tex.texture_name].second = texture->height();
 
-            texture.upload();
+            texture->upload();
             tex_lookup[tex.texture_name] = tid;
         }
 
@@ -342,7 +348,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         mat.technique().pass(0).set_texture_unit(0, tid);
         mat.technique().pass(0).set_blending(BLEND_NONE);
 
-        tex_info_to_material[texinfo_idx] = material_id;
+        tex_info_to_material[texinfo_idx] = mat.id();
         texinfo_idx++;
 
         material_to_submesh[mat.id()] = mesh.new_submesh(mat.id(), MESH_ARRANGEMENT_TRIANGLES, true);

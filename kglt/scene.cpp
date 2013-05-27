@@ -36,22 +36,20 @@ void Scene::initialize_defaults() {
 
     //Create the default blank texture
     default_texture_ = new_texture();
-    Texture& tex = texture(default_texture_);
-    tex.resize(1, 1);
-    tex.set_bpp(32);
+    TexturePtr tex = texture(default_texture_).lock();
+    tex->resize(1, 1);
+    tex->set_bpp(32);
 
-    tex.data()[0] = 255;
-    tex.data()[1] = 255;
-    tex.data()[2] = 255;
-    tex.data()[3] = 255;
-    tex.upload();
+    tex->data()[0] = 255;
+    tex->data()[1] = 255;
+    tex->data()[2] = 255;
+    tex->data()[3] = 255;
+    tex->upload();
 
-    default_material_ = new_material();
-    Material& mat = material(default_material_);
-    this->window().loader_for("kglt/materials/multitexture_and_lighting.kglm")->into(mat);
+    default_material_ = new_material_from_file("kglt/materials/multitexture_and_lighting.kglm");
 
     //Set the default material's first texture to the default (white) texture
-    mat.technique().pass(0).set_texture_unit(0, tex.id());
+    material(default_material_).lock()->technique().pass(0).set_texture_unit(0, default_texture_);
 }
 
 SubSceneID Scene::new_subscene(AvailablePartitioner partitioner) {

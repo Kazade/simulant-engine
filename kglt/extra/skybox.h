@@ -20,9 +20,8 @@ public:
 private:
     SubScene& subscene_;
 
-    MeshID mesh_id_;
     MaterialID material_id_;
-    EntityID entity_id_;
+    Entity* entity_;
 
     CameraID camera_id_;
 };

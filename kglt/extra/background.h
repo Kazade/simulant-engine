@@ -56,18 +56,16 @@ public:
     BackgroundLayer& layer(uint32_t index) { return *layers_.at(index); }
     uint32_t layer_count() const { return layers_.size(); }
 
-    Scene& scene() { return scene_; }
-
     static std::shared_ptr<Background> create(Scene& scene, ViewportID viewport=ViewportID()) {
         return std::shared_ptr<Background>(new Background(scene, viewport));
     }
 
     MaterialID material_id() const { return material_id_; }
-    SubSceneID subscene_id() const { return subscene_; }
+
+    SubScene& subscene() { return subscene_; }
 
 private:
-    Scene& scene_;
-    SubSceneID subscene_;
+    SubScene& subscene_;
 
     ViewportID viewport_;
     CameraID ortho_camera_;
@@ -77,8 +75,7 @@ private:
 
     void destroy() {}
 
-    MeshID mesh_id_;
-    EntityID entity_id_;
+    Entity* entity_;
     MaterialID material_id_;
 
     friend class BackgroundLayer;

@@ -6,7 +6,9 @@ namespace kglt {
 namespace procedural {
 namespace mesh {
 
-SubMeshIndex rectangle(kglt::Mesh& mesh, float width, float height, float x_offset, float y_offset, float z_offset, bool clear) {
+SubMeshIndex rectangle(kglt::MeshPtr mesh_ptr, float width, float height, float x_offset, float y_offset, float z_offset, bool clear) {
+    kglt::Mesh& mesh = *mesh_ptr;
+
     if(clear) {
         mesh.clear();
     }
@@ -71,7 +73,9 @@ SubMeshIndex rectangle(kglt::Mesh& mesh, float width, float height, float x_offs
     return sm;
 }
 
-SubMeshIndex rectangle_outline(kglt::Mesh& mesh, float width, float height, float x_offset, float y_offset, float z_offset, bool clear) {
+SubMeshIndex rectangle_outline(kglt::MeshPtr mesh_ptr, float width, float height, float x_offset, float y_offset, float z_offset, bool clear) {
+    kglt::Mesh& mesh = *mesh_ptr;
+
     if(clear) {
         mesh.clear();
     }

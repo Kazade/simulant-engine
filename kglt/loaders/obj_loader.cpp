@@ -187,15 +187,11 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
 
         for(const unicode& p: possible_diffuse_maps) {
             if(os::path::exists(p.encode())) {
-                //Load the texture
-                Texture& tex = mesh->resource_manager().texture(mesh->resource_manager().new_texture());
-                mesh->resource_manager().window().loader_for(p.encode())->into(tex);
-                mesh->resource_manager().window().idle().add_once([&]() {
-                    tex.upload();
-                });
-
                 //Create a material from it and apply it to the submesh
-                MaterialID mat = create_material_from_texture(mesh->resource_manager(), tex.id());
+                MaterialID mat = create_material_from_texture(
+                    mesh->resource_manager(),
+                    mesh->resource_manager().new_texture_from_file(p.encode())
+                );
                 sm.set_material_id(mat);
                 break;
             }

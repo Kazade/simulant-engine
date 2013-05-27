@@ -38,8 +38,8 @@ Source::~Source() {
 }
 
 void Source::play(SoundID sound_id, bool loop) {
-    Sound& sound = subscene_.sound(sound_id);
-    sound.init_source_(*this);
+    SoundPtr sound = subscene_.sound(sound_id).lock();
+    sound->init_source_(*this);
 
     if(!al_source_) {
         alGenSources(1, &al_source_);
@@ -65,8 +65,6 @@ void Source::update_source(float dt) {
         return;
     }
 
-    Sound& sound = subscene_.sound(playing_sound_);
-
     ALint processed = 0;
 
     alGetSourcei(al_source_, AL_BUFFERS_PROCESSED, &processed);
@@ -81,7 +79,7 @@ void Source::update_source(float dt) {
             signal_stream_finished_();
 
             if(loop_stream_) {
-                play(sound.id(), loop_stream_);
+                play(playing_sound_, loop_stream_);
             } else {
                 //Reset everything
                 stream_func_ = std::function<int32_t (ALuint)>();

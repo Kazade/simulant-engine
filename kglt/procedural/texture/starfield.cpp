@@ -7,7 +7,9 @@ namespace kglt {
 namespace procedural {
 namespace texture {
 
-void draw_circle(kglt::Texture& texture, float x, float y, float size, float brightness, const kglt::Colour& colour) {
+void draw_circle(kglt::TexturePtr texture_ptr, float x, float y, float size, float brightness, const kglt::Colour& colour) {
+    kglt::Texture& texture = *texture_ptr;
+
     float radius = size * 0.5f;
 
     uint32_t start_y = int(y) - radius - 1;
@@ -37,7 +39,9 @@ void draw_circle(kglt::Texture& texture, float x, float y, float size, float bri
     }
 }
 
-void starfield(kglt::Texture& texture, uint32_t width, uint32_t height) {
+void starfield(kglt::TexturePtr texture_ptr, uint32_t width, uint32_t height) {
+    kglt::Texture& texture = *texture_ptr;
+
     seed();
 
     std::vector<float> density(width * height, 0);
@@ -70,7 +74,7 @@ void starfield(kglt::Texture& texture, uint32_t width, uint32_t height) {
                 } else if(col_rand < 0.05) {
                     colour = kglt::Colour::yellow;
                 }
-                draw_circle(texture, x, y, size, brightness, colour);
+                draw_circle(texture_ptr, x, y, size, brightness, colour);
             }
         }
     }

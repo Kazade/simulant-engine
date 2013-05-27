@@ -70,24 +70,26 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
             throw SyntaxError("Wrong number of arguments for SET(ATTRIBUTE) command");
         }
 
-        ShaderProgram& shader = mat.resource_manager().shader(pass->shader());
-        std::string variable_name = str::strip(args[2], "\"");
-        if(arg_1 == "POSITION") {
-            shader.params().register_attribute(SP_ATTR_VERTEX_POSITION, variable_name);
-        } else if(arg_1 == "TEXCOORD0") {
-            shader.params().register_attribute(SP_ATTR_VERTEX_TEXCOORD0, variable_name);
-        } else if(arg_1 == "TEXCOORD1") {
-            shader.params().register_attribute(SP_ATTR_VERTEX_TEXCOORD1, variable_name);
-        } else if(arg_1 == "TEXCOORD2") {
-            shader.params().register_attribute(SP_ATTR_VERTEX_TEXCOORD2, variable_name);
-        } else if(arg_1 == "TEXCOORD3") {
-            shader.params().register_attribute(SP_ATTR_VERTEX_TEXCOORD3, variable_name);
-        } else if(arg_1 == "NORMAL") {
-            shader.params().register_attribute(SP_ATTR_VERTEX_NORMAL, variable_name);
-        } else if(arg_1 == "DIFFUSE") {
-            shader.params().register_attribute(SP_ATTR_VERTEX_DIFFUSE, variable_name);
-        } else {
-            throw SyntaxError("Unhandled attribute: " + arg_1);
+        {
+            ShaderPtr shader = mat.resource_manager().shader(pass->shader()).lock();
+            std::string variable_name = str::strip(args[2], "\"");
+            if(arg_1 == "POSITION") {
+                shader->params().register_attribute(SP_ATTR_VERTEX_POSITION, variable_name);
+            } else if(arg_1 == "TEXCOORD0") {
+                shader->params().register_attribute(SP_ATTR_VERTEX_TEXCOORD0, variable_name);
+            } else if(arg_1 == "TEXCOORD1") {
+                shader->params().register_attribute(SP_ATTR_VERTEX_TEXCOORD1, variable_name);
+            } else if(arg_1 == "TEXCOORD2") {
+                shader->params().register_attribute(SP_ATTR_VERTEX_TEXCOORD2, variable_name);
+            } else if(arg_1 == "TEXCOORD3") {
+                shader->params().register_attribute(SP_ATTR_VERTEX_TEXCOORD3, variable_name);
+            } else if(arg_1 == "NORMAL") {
+                shader->params().register_attribute(SP_ATTR_VERTEX_NORMAL, variable_name);
+            } else if(arg_1 == "DIFFUSE") {
+                shader->params().register_attribute(SP_ATTR_VERTEX_DIFFUSE, variable_name);
+            } else {
+                throw SyntaxError("Unhandled attribute: " + arg_1);
+            }
         }
     } else if(type == "UNIFORM") {
         if(args.size() < 4) {
@@ -110,51 +112,51 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
         }
 
     } else if(type == "AUTO_UNIFORM") {
-        ShaderProgram& shader = mat.resource_manager().shader(pass->shader());
+        ShaderPtr shader = mat.resource_manager().shader(pass->shader()).lock();
         std::string variable_name = str::strip(args[2], "\"");
 
         if(arg_1 == "VIEW_MATRIX") {
-            shader.params().register_auto(SP_AUTO_VIEW_MATRIX, variable_name);
+            shader->params().register_auto(SP_AUTO_VIEW_MATRIX, variable_name);
         } else if(arg_1 == "MODELVIEW_MATRIX") {
-            shader.params().register_auto(SP_AUTO_MODELVIEW_MATRIX, variable_name);
+            shader->params().register_auto(SP_AUTO_MODELVIEW_MATRIX, variable_name);
         } else if(arg_1 == "MODELVIEW_PROJECTION_MATRIX") {
-            shader.params().register_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX, variable_name);
+            shader->params().register_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX, variable_name);
         } else if(arg_1 == "INVERSE_TRANSPOSE_MODELVIEW_PROJECTION_MATRIX" || arg_1 == "NORMAL_MATRIX") {
-            shader.params().register_auto(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX, variable_name);
+            shader->params().register_auto(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX, variable_name);
         } else if(arg_1 == "TEXTURE_MATRIX0") {
-            shader.params().register_auto(SP_AUTO_MATERIAL_TEX_MATRIX0, variable_name);
+            shader->params().register_auto(SP_AUTO_MATERIAL_TEX_MATRIX0, variable_name);
         } else if(arg_1 == "TEXTURE_MATRIX1") {
-            shader.params().register_auto(SP_AUTO_MATERIAL_TEX_MATRIX1, variable_name);
+            shader->params().register_auto(SP_AUTO_MATERIAL_TEX_MATRIX1, variable_name);
         } else if(arg_1 == "TEXTURE_MATRIX2") {
-            shader.params().register_auto(SP_AUTO_MATERIAL_TEX_MATRIX2, variable_name);
+            shader->params().register_auto(SP_AUTO_MATERIAL_TEX_MATRIX2, variable_name);
         } else if(arg_1 == "TEXTURE_MATRIX3") {
-            shader.params().register_auto(SP_AUTO_MATERIAL_TEX_MATRIX3, variable_name);
+            shader->params().register_auto(SP_AUTO_MATERIAL_TEX_MATRIX3, variable_name);
         } else if(arg_1 == "LIGHT_GLOBAL_AMBIENT") {            
-            shader.params().register_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT, variable_name);
+            shader->params().register_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT, variable_name);
         } else if(arg_1 == "LIGHT_POSITION") {
-            shader.params().register_auto(SP_AUTO_LIGHT_POSITION, variable_name);
+            shader->params().register_auto(SP_AUTO_LIGHT_POSITION, variable_name);
         } else if(arg_1 == "LIGHT_AMBIENT") {
-            shader.params().register_auto(SP_AUTO_LIGHT_AMBIENT, variable_name);
+            shader->params().register_auto(SP_AUTO_LIGHT_AMBIENT, variable_name);
         } else if(arg_1 == "LIGHT_DIFFUSE") {
-            shader.params().register_auto(SP_AUTO_LIGHT_DIFFUSE, variable_name);
+            shader->params().register_auto(SP_AUTO_LIGHT_DIFFUSE, variable_name);
         } else if(arg_1 == "LIGHT_SPECULAR") {
-            shader.params().register_auto(SP_AUTO_LIGHT_SPECULAR, variable_name);
+            shader->params().register_auto(SP_AUTO_LIGHT_SPECULAR, variable_name);
         } else if(arg_1 == "LIGHT_CONSTANT_ATTENUATION") {
-            shader.params().register_auto(SP_AUTO_LIGHT_CONSTANT_ATTENUATION, variable_name);
+            shader->params().register_auto(SP_AUTO_LIGHT_CONSTANT_ATTENUATION, variable_name);
         } else if(arg_1 == "LIGHT_LINEAR_ATTENUATION") {
-            shader.params().register_auto(SP_AUTO_LIGHT_LINEAR_ATTENUATION, variable_name);
+            shader->params().register_auto(SP_AUTO_LIGHT_LINEAR_ATTENUATION, variable_name);
         } else if(arg_1 == "LIGHT_QUADRATIC_ATTENUATION") {
-            shader.params().register_auto(SP_AUTO_LIGHT_QUADRATIC_ATTENUATION, variable_name);
+            shader->params().register_auto(SP_AUTO_LIGHT_QUADRATIC_ATTENUATION, variable_name);
         } else if(arg_1 == "MATERIAL_SHININESS") {
-            shader.params().register_auto(SP_AUTO_MATERIAL_SHININESS, variable_name);
+            shader->params().register_auto(SP_AUTO_MATERIAL_SHININESS, variable_name);
         } else if(arg_1 == "MATERIAL_AMBIENT") {
-            shader.params().register_auto(SP_AUTO_MATERIAL_AMBIENT, variable_name);
+            shader->params().register_auto(SP_AUTO_MATERIAL_AMBIENT, variable_name);
         } else if(arg_1 == "MATERIAL_DIFFUSE") {
-            shader.params().register_auto(SP_AUTO_MATERIAL_DIFFUSE, variable_name);
+            shader->params().register_auto(SP_AUTO_MATERIAL_DIFFUSE, variable_name);
         } else if(arg_1 == "MATERIAL_SPECULAR") {
-            shader.params().register_auto(SP_AUTO_MATERIAL_SPECULAR, variable_name);
+            shader->params().register_auto(SP_AUTO_MATERIAL_SPECULAR, variable_name);
         } else if(arg_1 == "ACTIVE_TEXTURE_UNITS") {
-            shader.params().register_auto(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS, variable_name);
+            shader->params().register_auto(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS, variable_name);
         } else {
             throw SyntaxError("Unhandled auto-uniform: " + arg_1);
         }
@@ -198,14 +200,14 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
 }
 
 void MaterialScript::handle_data_block(Material& mat, const std::string& data_type, const std::vector<std::string>& lines, MaterialPass* pass) {
-    ShaderProgram& shader = mat.resource_manager().shader(pass->shader());
+    ShaderPtr shader = mat.resource_manager().shader(pass->shader()).lock();
 
     if(str::upper(data_type) == "VERTEX") {
         std::string source = str::join(lines, "\n");
-        shader.add_and_compile(SHADER_TYPE_VERTEX, source);
+        shader->add_and_compile(SHADER_TYPE_VERTEX, source);
     } else if(str::upper(data_type) == "FRAGMENT") {
         std::string source = str::join(lines, "\n");
-        shader.add_and_compile(SHADER_TYPE_FRAGMENT, source);
+        shader->add_and_compile(SHADER_TYPE_FRAGMENT, source);
     } else {
         throw SyntaxError("Invalid BEGIN_DATA block: " + data_type);
     }
@@ -308,13 +310,13 @@ void MaterialScript::handle_block(Material& mat,
             }
 
             if(end_block_type == "PASS") {
-                ShaderProgram& shader = mat.resource_manager().shader(current_pass->shader());
+                ShaderPtr shader = mat.resource_manager().shader(current_pass->shader()).lock();
 
                 //Apply any staged uniforms
-                apply_staged_uniforms(shader);
+                apply_staged_uniforms(*shader);
 
                 //At the end of the pass, relink the shader
-                shader.relink();
+                shader->relink();
             }
             return; //Exit this function, we are done with this block
         } else if(str::starts_with(line, "SET")) {
@@ -397,10 +399,10 @@ MaterialReloader::MaterialReloader(ResourceManager& rm, MaterialID material):
 }
 
 void MaterialReloader::reload(const unicode& path, WatchEvent evt) {
-    Material& mat = rm_.material(material_);
+    MaterialPtr mat = rm_.material(material_).lock();
 
     try {
-        rm_.window().loader_for(path.encode())->into(mat);
+        rm_.window().loader_for(path.encode())->into(*mat);
     } catch(SyntaxError& e) {
         L_WARN("Unable to reload material as the syntax is incorrect");
     } catch(RuntimeError& e) {

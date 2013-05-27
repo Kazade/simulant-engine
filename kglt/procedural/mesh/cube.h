@@ -7,7 +7,7 @@ namespace kglt {
 namespace procedural {
 namespace mesh {
 
-void cube(kglt::Mesh& mesh, float width);
+void cube(kglt::MeshPtr mesh, float width);
 
 }
 }

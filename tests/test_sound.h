@@ -20,12 +20,11 @@ public:
     void test_2d_sound_output() {
         kglt::SubScene& subscene = window->scene().subscene();
 
-        kglt::Sound& sound = subscene.sound(subscene.new_sound());
-        window->loader_for("sample_data/test_sound.ogg")->into(sound);
+        kglt::SoundID sound = subscene.new_sound_from_file("sample_data/test_sound.ogg");
 
         assert_false(subscene.camera().is_playing_sound());
 
-        subscene.camera().play(sound.id());
+        subscene.camera().play(sound);
 
         assert_true(subscene.camera().is_playing_sound());
 
@@ -37,15 +36,14 @@ public:
     void test_3d_sound_output() {
         kglt::SubScene& subscene = window->scene().subscene();
 
-        kglt::Sound& sound = subscene.sound(subscene.new_sound());
-        window->loader_for("sample_data/test_sound.ogg")->into(sound);
+        kglt::SoundID sound = subscene.new_sound_from_file("sample_data/test_sound.ogg");
 
         kglt::Entity& entity = subscene.entity(subscene.new_entity());
         entity.move_to(10, 0, 0);
 
         assert_false(entity.is_playing_sound());
 
-        entity.play(sound.id());
+        entity.play(sound);
 
         assert_true(entity.is_playing_sound());
     }

@@ -3,21 +3,33 @@
 
 namespace kglt {
 
-const VertexData& Entity::shared_data() const {
-    return subscene().mesh(mesh_).shared_data();
+Entity::Entity(SubScene* subscene, EntityID id):
+    generic::Identifiable<EntityID>(id),
+    Object(subscene),
+    Source(*subscene),
+    render_priority_(RENDER_PRIORITY_MAIN) {
+
 }
 
-Mesh& Entity::_mesh_ref() {
-    return subscene().mesh(mesh_);
+Entity::Entity(SubScene* subscene, EntityID id, MeshID mesh):
+    generic::Identifiable<EntityID>(id),
+    Object(subscene),
+    Source(*subscene),
+    render_priority_(RENDER_PRIORITY_MAIN) {
+
+    set_mesh(mesh);
+}
+
+const VertexData& Entity::shared_data() const {
+    return mesh_->shared_data();
 }
 
 void Entity::set_mesh(MeshID mesh) {
-    mesh_ = mesh;
-
-    Mesh& m = this->_mesh_ref();
+    //Increment the ref-count on this mesh
+    mesh_ = subscene().mesh(mesh).lock();
 
     subentities_.clear();
-    for(SubMeshIndex idx: m.submesh_ids()) {
+    for(SubMeshIndex idx: mesh_->submesh_ids()) {
         subentities_.push_back(SubEntity::create(*this, idx));
     }
 

@@ -30,7 +30,8 @@ void Texture::resize(uint32_t width, uint32_t height) {
 }
 
 void Texture::sub_texture(TextureID src, uint16_t offset_x, uint16_t offset_y) {
-    Texture& source = resource_manager().texture(src);
+    TexturePtr source_ptr = resource_manager().texture(src).lock();
+    Texture& source = *source_ptr;
 
     if(offset_x + source.width() > width() ||
         offset_y + source.height() > height()) {

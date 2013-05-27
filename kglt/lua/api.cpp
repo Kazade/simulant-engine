@@ -58,7 +58,7 @@ void export_lua_api(lua_State* state) {
 
     luabind::module(state) [
         luabind::class_<ResourceManager>("ResourceManager")
-            .def("mesh", (Mesh&(ResourceManager::*)(MeshID))&ResourceManager::mesh)
+//            .def("mesh", (Mesh&(ResourceManager::*)(MeshID))&ResourceManager::mesh)
             .property("mesh_count", &ResourceManager::mesh_count)
     ];
 

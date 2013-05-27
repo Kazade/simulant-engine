@@ -35,13 +35,10 @@ int main(int argc, char* argv[]) {
     light2.set_attenuation_from_range(100.0);
     light2.move_to(20, -20, -50);
 
-    //light.move_to(50, 0, -50);
-    kglt::Mesh& mesh = subscene.mesh(subscene.new_mesh());
-    window->loader_for(filename)->into(mesh);
     subscene.set_ambient_light(kglt::Colour(0.2, 0.2, 0.2, 0.2));
-    //mesh.enable_debug(true);
 
-    kglt::Entity& entity = subscene.entity(subscene.new_entity(mesh.id()));
+    kglt::MeshID mid = subscene.new_mesh_from_file(filename);
+    kglt::Entity& entity = subscene.entity(subscene.new_entity(mid));
     entity.move_to(0, 0, -50);
 
     float x_position = 0.0f;

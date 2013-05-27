@@ -23,16 +23,16 @@ void RootGroup::generate_mesh_groups(RenderGroup* parent, SubEntity& ent, Materi
         iteration_count = pass.max_iterations();
         for(uint8_t i = 0; i < iteration_count; ++i) {
             //FIXME: What exactly is this for? Should we pass an iteration counter to the shader?
-            parent->get_or_create<MeshGroup>(MeshGroupData(ent._parent().mesh(), ent.submesh_id())).add(&ent);
+            parent->get_or_create<MeshGroup>(MeshGroupData(ent._parent().mesh_id(), ent.submesh_id())).add(&ent);
         }
     } else if (pass.iteration() == ITERATE_ONCE_PER_LIGHT) {
         iteration_count = std::min<uint32_t>(lights.size(), pass.max_iterations());
         for(uint8_t i = 0; i < iteration_count; ++i) {
             parent->get_or_create<LightGroup>(LightGroupData(&subscene().light(lights[i]))).
-                    get_or_create<MeshGroup>(MeshGroupData(ent._parent().mesh(), ent.submesh_id())).add(&ent);
+                    get_or_create<MeshGroup>(MeshGroupData(ent._parent().mesh_id(), ent.submesh_id())).add(&ent);
         }
     } else {
-        parent->get_or_create<MeshGroup>(MeshGroupData(ent._parent().mesh(), ent.submesh_id())).add(&ent);
+        parent->get_or_create<MeshGroup>(MeshGroupData(ent._parent().mesh_id(), ent.submesh_id())).add(&ent);
     }
 }
 
@@ -40,9 +40,9 @@ void RootGroup::insert(SubEntity &ent, uint8_t pass_number) {
     if(!ent._parent().is_visible()) return;
 
     //Get the material for the entity, this is used to build the tree
-    Material& mat = subscene().material(ent.material_id());
+    MaterialPtr mat = subscene().material(ent.material_id()).lock();
 
-    MaterialPass& pass = mat.technique().pass(pass_number);
+    MaterialPass& pass = mat->technique().pass(pass_number);
 
     //First, let's build the texture units
     RenderGroup* current = this;
@@ -156,12 +156,12 @@ void MeshGroup::unbind() {
 void ShaderGroup::bind() {
     RootGroup& root = static_cast<RootGroup&>(get_root());
 
-    ShaderProgram& s = root.subscene().shader(data_.shader_id);
-    s.activate(); //Activate the shader
+    ShaderPtr s = root.subscene().shader(data_.shader_id).lock();
+    s->activate(); //Activate the shader
 
     //Pass in the global ambient here, as it's the earliest place
     //in the tree we can, and it's a global value
-    ShaderParams& params = s.params();
+    ShaderParams& params = s->params();
 
     if(params.uses_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT)) {
         params.set_colour(
@@ -198,7 +198,7 @@ void DepthGroup::unbind() {
 void TextureGroup::bind() {
     glActiveTexture(GL_TEXTURE0 + data_.unit);
     RootGroup& root = static_cast<RootGroup&>(get_root());
-    glBindTexture(GL_TEXTURE_2D, root.subscene().texture(data_.texture_id).gl_tex());
+    glBindTexture(GL_TEXTURE_2D, root.subscene().texture(data_.texture_id).lock()->gl_tex());
 }
 
 void TextureGroup::unbind() {

@@ -13,6 +13,7 @@
 #include "resource.h"
 #include "loadable.h"
 #include "generic/identifiable.h"
+#include "generic/cloneable.h"
 #include "types.h"
 
 namespace kglt {
@@ -91,6 +92,7 @@ public:
     typedef std::shared_ptr<MaterialPass> ptr;
 
     MaterialPass(MaterialTechnique& technique, ShaderID shader);
+
     void set_texture_unit(uint32_t texture_unit_id, TextureID tex);
     void set_animated_texture_unit(uint32_t texture_unit_id, const std::vector<TextureID> textures, double duration);
 
@@ -171,6 +173,9 @@ public:
     typedef std::shared_ptr<MaterialTechnique> ptr;
 
     MaterialTechnique(Material& mat, const std::string& scheme=DEFAULT_MATERIAL_SCHEME);
+    MaterialTechnique(const MaterialTechnique& rhs);
+    MaterialTechnique& operator=(const MaterialTechnique& rhs);
+
     uint32_t new_pass(ShaderID shader);
     MaterialPass& pass(uint32_t index);
     uint32_t pass_count() const { return passes_.size(); }
@@ -196,7 +201,8 @@ private:
 class Material :
     public Resource,
     public Loadable,
-    public generic::Identifiable<MaterialID> {
+    public generic::Identifiable<MaterialID>,
+    public Cloneable<MaterialID> {
 
 public:
     typedef std::shared_ptr<Material> ptr;
@@ -215,8 +221,12 @@ public:
         }
     }
 
+    Material& operator=(const Material& rhs);
+
 private:
     std::tr1::unordered_map<std::string, MaterialTechnique::ptr> techniques_;
+
+    MaterialID do_clone() override;
 };
 
 }

@@ -16,6 +16,7 @@ public:
 
     ResourceManager& resource_manager() { assert(manager_); return *manager_; }
 
+    void move_to_resource_manager(ResourceManager& destination);
 private:
     ResourceManager* manager_;
 };

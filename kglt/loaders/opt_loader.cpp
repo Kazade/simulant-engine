@@ -487,14 +487,21 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
          */
         texture_name_to_id[tex.name] = mesh->resource_manager().new_texture();
 
-        kglt::Texture& new_tex = mesh->resource_manager().texture(texture_name_to_id[tex.name]);
-        new_tex.resize(tex.width, tex.height);
-        new_tex.set_bpp(tex.bytes_per_pixel * 8);
-        new_tex.data().assign(tex.data.begin(), tex.data.end());
-        new_tex.upload(true, true);
+        kglt::TexturePtr new_tex = mesh->resource_manager().texture(texture_name_to_id[tex.name]).lock();
+        new_tex->resize(tex.width, tex.height);
+        new_tex->set_bpp(tex.bytes_per_pixel * 8);
+        new_tex->data().assign(tex.data.begin(), tex.data.end());
+        new_tex->upload(true, true);
 
         //Create a submesh for each texture. Don't share the vertex data between submeshes
-        texture_submesh[tex.name] = mesh->new_submesh(create_material_from_texture(mesh->resource_manager(), new_tex.id()), MESH_ARRANGEMENT_TRIANGLES, false);
+        texture_submesh[tex.name] = mesh->new_submesh(
+            create_material_from_texture(
+                mesh->resource_manager(),
+                new_tex->id()
+            ),
+            MESH_ARRANGEMENT_TRIANGLES,
+            false
+        );
     }
 
     //Now let's build everything!
