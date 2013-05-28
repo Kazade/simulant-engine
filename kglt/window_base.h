@@ -67,8 +67,9 @@ public:
     
     virtual void check_events() = 0;
     virtual void swap_buffers() = 0;
-    double delta_time() { return ktiGetDeltaTime(); }
-    double total_time() { return total_time_; }
+
+    double delta_time() const { return delta_time_; }
+    double total_time() const { return total_time_; }
 
     uint32_t width() const { return width_; }
     uint32_t height() const { return height_; }
@@ -95,6 +96,7 @@ public:
     sigc::signal<void>& signal_frame_started() { return signal_frame_started_; }
     sigc::signal<void>& signal_frame_finished() { return signal_frame_finished_; }
     sigc::signal<void>& signal_pre_swap() { return signal_pre_swap_; }
+    sigc::signal<void, double>& signal_step() { return signal_step_; }
 
     ui::Interface& ui() { return *interface_; }
     void load_ui(const std::string& rml_file);
@@ -136,7 +138,9 @@ private:
         
     IdleTaskManager idle_;
 
-    KTIuint timer_;
+    KTIuint fixed_timer_;
+    KTIuint variable_timer_;
+    double delta_time_;
 
     void destroy() {}
 
@@ -148,13 +152,13 @@ private:
     double frame_counter_time_;
     int32_t frame_counter_frames_;
     double frame_time_in_milliseconds_;
-    KTIuint frame_timer_;
 
     double total_time_;
 
     sigc::signal<void> signal_frame_started_;
     sigc::signal<void> signal_pre_swap_;
     sigc::signal<void> signal_frame_finished_;
+    sigc::signal<void, double> signal_step_;
 
     std::shared_ptr<ui::Interface> interface_;
     std::shared_ptr<Console> console_;

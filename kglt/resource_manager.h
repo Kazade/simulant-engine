@@ -30,11 +30,7 @@ class ResourceManager:
     public SoundManager {
 
 public:
-    ResourceManager(WindowBase* window, ResourceManager* parent=nullptr):
-        window_(window),
-        parent_(parent) {
-        ShaderManager::signal_post_create().connect(sigc::mem_fun(this, &ResourceManager::post_create_shader_callback));
-    }
+    ResourceManager(WindowBase* window, ResourceManager* parent=nullptr);
 
     MeshID new_mesh();
     MeshID new_mesh_from_file(const unicode& path);
@@ -80,15 +76,7 @@ public:
     WindowBase& window() { assert(window_); return *window_; }
     Scene& scene();
 
-    void update_materials(double dt) {
-        /*
-          Update all animated materials
-        */
-        MaterialManager::apply_func_to_objects(std::bind(&Material::update, std::placeholders::_1, dt));
-        /*for(std::pair<MaterialID, Material::ptr> p: MaterialManager::objects_) {
-            p.second->update(dt);
-        }*/
-    }
+    void update();
 
     generic::DataCarrier& data() { return data_carrier_; }
 

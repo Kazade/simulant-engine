@@ -30,12 +30,12 @@ WindowBase::WindowBase():
     frame_time_in_milliseconds_(0),
     total_time_(0) {
 
-    ktiGenTimers(1, &timer_);
-    ktiBindTimer(timer_);
+    ktiGenTimers(1, &fixed_timer_);
+    ktiBindTimer(fixed_timer_);
     ktiStartFixedStepTimer(30);
 
-    ktiGenTimers(1, &frame_timer_);
-    ktiBindTimer(frame_timer_);
+    ktiGenTimers(1, &variable_timer_);
+    ktiBindTimer(variable_timer_);
     ktiStartGameTimer();
 
     set_logging_level(LOG_LEVEL_NONE);
@@ -132,10 +132,13 @@ void WindowBase::set_logging_level(LoggingLevel level) {
 bool WindowBase::update(WindowUpdateCallback step) {
     signal_frame_started_();
 
-    ktiBindTimer(frame_timer_);
+    ktiBindTimer(variable_timer_);
     ktiUpdateFrameTime();
 
-    frame_counter_time_ += ktiGetDeltaTime();
+    delta_time_ = ktiGetDeltaTime();
+    total_time_ += delta_time_;
+
+    frame_counter_time_ += delta_time_;
     frame_counter_frames_++;
 
     if(frame_counter_time_ >= 1.0) {
@@ -144,26 +147,27 @@ bool WindowBase::update(WindowUpdateCallback step) {
         frame_counter_time_ = 0.0;
     }
 
-    ktiBindTimer(timer_);
+    ktiBindTimer(fixed_timer_);
     ktiUpdateFrameTime();
-
-    total_time_ += delta_time();
+    double fixed_step = ktiGetDeltaTime();
 
     idle_.execute(); //Execute idle tasks first
     check_events();
 
     while(ktiTimerCanUpdate()) {
-        input_controller().update(delta_time());
+        input_controller().update(fixed_step);
 
         if(step) {
-            step(delta_time());
+            step(fixed_step);
         }
 
-        scene().update(delta_time());
+        scene().update(fixed_step);
+
+        signal_step_(fixed_step); //Trigger any steps
     }
 
     glViewport(0, 0, width(), height());
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     scene().render();
 

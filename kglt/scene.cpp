@@ -101,8 +101,6 @@ bool Scene::init() {
 }
 
 void Scene::update(double dt) {
-    update_materials(dt);
-
     //Update the subscenes
     SubSceneManager::apply_func_to_objects(std::bind(&Object::update, std::tr1::placeholders::_1, dt));
 }

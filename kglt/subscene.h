@@ -90,10 +90,6 @@ private:
 
     void set_partitioner(std::shared_ptr<Partitioner> partitioner);
 
-    void do_update(double dt) override {
-        update_materials(dt);
-    }
-
     friend class Scene;
 };
 

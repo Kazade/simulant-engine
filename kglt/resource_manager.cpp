@@ -4,6 +4,25 @@
 
 namespace kglt {
 
+ResourceManager::ResourceManager(WindowBase* window, ResourceManager* parent):
+    window_(window),
+    parent_(parent) {
+
+    window_->signal_frame_finished().connect(std::bind(&ResourceManager::update, this));
+
+    ShaderManager::signal_post_create().connect(sigc::mem_fun(this, &ResourceManager::post_create_shader_callback));
+}
+
+void ResourceManager::update() {
+    /*
+      Update all animated materials
+    */
+    double dt = window_->delta_time();
+    MaterialManager::apply_func_to_objects(std::bind(&Material::update, std::placeholders::_1, dt));
+
+
+}
+
 Scene& ResourceManager::scene() {
     return window().scene();
 }
