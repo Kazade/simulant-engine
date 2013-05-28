@@ -42,16 +42,16 @@ public:
     void render();
     void update(double dt);
 
-    MaterialID default_material_id() const { return default_material_; }
-    TextureID default_texture_id() const { return default_texture_; }
+    MaterialID default_material_id() const;
+    TextureID default_texture_id() const;
 
     Pipeline& pipeline() { return *pipeline_; }
     GeomFactory& geom_factory() { return *geom_factory_; }
 
 private:
     SubSceneID default_subscene_;
-    TextureID default_texture_;
-    MaterialID default_material_;
+    TexturePtr default_texture_;
+    MaterialPtr default_material_;
 
     void initialize_defaults();
 

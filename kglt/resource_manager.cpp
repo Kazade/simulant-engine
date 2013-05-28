@@ -14,13 +14,18 @@ ResourceManager::ResourceManager(WindowBase* window, ResourceManager* parent):
 }
 
 void ResourceManager::update() {
+    //Garbage collect all the things
+    MeshManager::garbage_collect();
+    MaterialManager::garbage_collect();
+    //ShaderManager::garbage_collect();
+    //TextureManager::garbage_collect();
+    //SoundManager::garbage_collect();
+
     /*
       Update all animated materials
     */
     double dt = window_->delta_time();
     MaterialManager::apply_func_to_objects(std::bind(&Material::update, std::placeholders::_1, dt));
-
-
 }
 
 Scene& ResourceManager::scene() {

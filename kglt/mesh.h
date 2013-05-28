@@ -53,8 +53,8 @@ public:
     const VertexData& vertex_data() const;
     const IndexData& index_data() const;
 
-    const MaterialID material_id() const { return material_; }
-    void set_material_id(MaterialID mat) { material_ = mat; }
+    const MaterialID material_id() const;
+    void set_material_id(MaterialID mat);
 
     const MeshArrangement arrangement() const { return arrangement_; }
 
@@ -68,7 +68,7 @@ public:
     void transform_vertices(const kmMat4& transformation);
 private:
     Mesh& parent_;
-    MaterialID material_;
+    MaterialPtr material_;
     MeshArrangement arrangement_;
     bool uses_shared_data_;
 
@@ -117,7 +117,7 @@ public:
 private:
     VertexData shared_data_;
     std::vector<SubMesh::ptr> submeshes_;
-    std::tr1::unordered_map<SubMeshIndex, SubMesh::ptr> submeshes_by_index_;
+    std::unordered_map<SubMeshIndex, SubMesh::ptr> submeshes_by_index_;
 
     SubMeshIndex normal_debug_mesh_;
 };

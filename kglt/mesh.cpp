@@ -5,6 +5,7 @@
 #include "resource_manager.h"
 #include "mesh.h"
 #include "loader.h"
+#include "scene.h"
 
 namespace kglt {
 
@@ -106,12 +107,27 @@ SubMesh& Mesh::submesh(SubMeshIndex index) {
 SubMesh::SubMesh(
     Mesh& parent, MaterialID material, MeshArrangement arrangement, bool uses_shared_vertices):
     parent_(parent),
-    material_(material),
     arrangement_(arrangement),
     uses_shared_data_(uses_shared_vertices) {
 
+    if(!material) {
+        //Set the material to the default one
+        material_ = parent_.resource_manager().material(parent_.resource_manager().scene().default_material_id()).lock();
+    } else {
+        set_material_id(material);
+    }
+
     vrecalc_ = vertex_data().signal_update_complete().connect(sigc::mem_fun(this, &SubMesh::recalc_bounds));
     irecalc_ = index_data().signal_update_complete().connect(sigc::mem_fun(this, &SubMesh::recalc_bounds));
+}
+
+const MaterialID SubMesh::material_id() const {
+    return material_->id();
+}
+
+void SubMesh::set_material_id(MaterialID mat) {
+    //Set the material
+    material_ = parent_.resource_manager().material(mat).lock();
 }
 
 void SubMesh::transform_vertices(const kmMat4& transformation) {

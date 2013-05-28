@@ -2,6 +2,7 @@
 #define REFCOUNT_MANAGER_H
 
 #include "manager_base.h"
+#include "../kazbase/list_utils.h"
 
 namespace kglt {
 namespace generic {
@@ -82,6 +83,15 @@ public:
     //Internal!
     std::unordered_map<ObjectIDType, std::shared_ptr<ObjectType> > __objects() {
         return objects_;
+    }
+
+    void garbage_collect() {
+        for(ObjectIDType key: container::keys(objects_)) {
+            if(objects_[key].unique()) {
+                objects_.erase(key);
+                L_DEBUG(_u("Garbage collected: {0}").format(key.value()));
+            }
+        }
     }
 
 private:

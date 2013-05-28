@@ -196,7 +196,7 @@ int32_t ShaderProgram::get_attrib_loc(const std::string& name) {
 }
 
 int32_t ShaderProgram::get_uniform_loc(const std::string& name) {
-    std::tr1::unordered_map<std::string, int32_t>::const_iterator it = cached_uniform_locations_.find(name);
+    auto it = cached_uniform_locations_.find(name);
     if(it != cached_uniform_locations_.end()) {
         return (*it).second;
     }

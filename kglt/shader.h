@@ -3,9 +3,9 @@
 
 #include <set>
 #include <string>
-#include <tr1/memory>
-#include <tr1/unordered_map>
-#include <tr1/functional>
+#include <memory>
+#include <unordered_map>
+#include <functional>
 
 #include "kglt/kazbase/list_utils.h"
 
@@ -112,26 +112,24 @@ const std::set<ShaderAvailableAttributes> SHADER_AVAILABLE_ATTRS = {
 }
 
 namespace std {
-    namespace tr1 {
-        using kglt::ShaderAvailableAttributes;
-        using kglt::ShaderAvailableAuto;
+    using kglt::ShaderAvailableAttributes;
+    using kglt::ShaderAvailableAuto;
 
-        template<>
-        struct hash<ShaderAvailableAuto> {
-            size_t operator()(const ShaderAvailableAuto& a) const {
-                hash<int32_t> make_hash;
-                return make_hash(int32_t(a));
-            }
-        };
+    template<>
+    struct hash<ShaderAvailableAuto> {
+        size_t operator()(const ShaderAvailableAuto& a) const {
+            hash<int32_t> make_hash;
+            return make_hash(int32_t(a));
+        }
+    };
 
-        template<>
-        struct hash<ShaderAvailableAttributes> {
-            size_t operator()(const ShaderAvailableAttributes& a) const {
-                hash<int32_t> make_hash;
-                return make_hash(int32_t(a));
-            }
-        };
-    }
+    template<>
+    struct hash<ShaderAvailableAttributes> {
+        size_t operator()(const ShaderAvailableAttributes& a) const {
+            hash<int32_t> make_hash;
+            return make_hash(int32_t(a));
+        }
+    };
 }
 
 namespace kglt {
@@ -179,8 +177,8 @@ public:
 private:
     ShaderProgram& program_;
 
-    std::tr1::unordered_map<ShaderAvailableAuto, std::string> auto_uniforms_;
-    std::tr1::unordered_map<ShaderAvailableAttributes, std::string> auto_attributes_;
+    std::unordered_map<ShaderAvailableAuto, std::string> auto_uniforms_;
+    std::unordered_map<ShaderAvailableAttributes, std::string> auto_attributes_;
 };
 
 enum ShaderType {
@@ -232,7 +230,7 @@ private:
     uint32_t program_id_;
     uint32_t shader_ids_[SHADER_TYPE_MAX];
 
-    std::tr1::unordered_map<std::string, int32_t> cached_uniform_locations_;
+    std::unordered_map<std::string, int32_t> cached_uniform_locations_;
 
     ShaderParams params_;
 

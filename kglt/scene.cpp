@@ -28,6 +28,14 @@ Scene::~Scene() {
     //TODO: Log the unfreed resources (textures, meshes, materials etc.)
 }
 
+MaterialID Scene::default_material_id() const {
+    return default_material_->id();
+}
+
+TextureID Scene::default_texture_id() const {
+    return default_texture_->id();
+}
+
 void Scene::initialize_defaults() {
     default_subscene_ = new_subscene(kglt::PARTITIONER_NULL);
 
@@ -35,21 +43,20 @@ void Scene::initialize_defaults() {
     pipeline_->add_stage(default_subscene_, subscene().camera().id());
 
     //Create the default blank texture
-    default_texture_ = new_texture();
-    TexturePtr tex = texture(default_texture_).lock();
-    tex->resize(1, 1);
-    tex->set_bpp(32);
+    default_texture_ = texture(new_texture()).lock();
+    default_texture_->resize(1, 1);
+    default_texture_->set_bpp(32);
 
-    tex->data()[0] = 255;
-    tex->data()[1] = 255;
-    tex->data()[2] = 255;
-    tex->data()[3] = 255;
-    tex->upload();
+    default_texture_->data()[0] = 255;
+    default_texture_->data()[1] = 255;
+    default_texture_->data()[2] = 255;
+    default_texture_->data()[3] = 255;
+    default_texture_->upload();
 
-    default_material_ = new_material_from_file("kglt/materials/multitexture_and_lighting.kglm");
+    default_material_ = material(new_material_from_file("kglt/materials/multitexture_and_lighting.kglm")).lock();
 
     //Set the default material's first texture to the default (white) texture
-    material(default_material_).lock()->technique().pass(0).set_texture_unit(0, default_texture_);
+    default_material_->technique().pass(0).set_texture_unit(0, default_texture_->id());
 }
 
 SubSceneID Scene::new_subscene(AvailablePartitioner partitioner) {
