@@ -37,9 +37,16 @@ Source::~Source() {
     alDeleteBuffers(2, buffers_);
 }
 
-void Source::play(SoundID sound_id, bool loop) {
-    SoundPtr sound = subscene_.sound(sound_id).lock();
-    sound->init_source_(*this);
+void Source::attach_sound(SoundID sound) {
+    sound_ = subscene_.sound(sound).lock();
+}
+
+void Source::play_sound(bool loop) {
+    if(!sound_) {
+        throw LogicError("No sound attached");
+    }
+
+    sound_->init_source_(*this);
 
     if(!al_source_) {
         alGenSources(1, &al_source_);
@@ -56,12 +63,12 @@ void Source::play(SoundID sound_id, bool loop) {
     alSourceQueueBuffers(al_source_, 2, buffers_);
     alSourcePlay(al_source_);
 
-    playing_sound_ = sound_id;
+    playing_ = true;
     loop_stream_ = loop;
 }
 
 void Source::update_source(float dt) {
-    if(!playing_sound_) {
+    if(!playing_) {
         return;
     }
 
@@ -79,11 +86,11 @@ void Source::update_source(float dt) {
             signal_stream_finished_();
 
             if(loop_stream_) {
-                play(playing_sound_, loop_stream_);
+                play_sound(loop_stream_);
             } else {
                 //Reset everything
                 stream_func_ = std::function<int32_t (ALuint)>();
-                playing_sound_ = SoundID();
+                playing_ = false;
             }
         }
         alSourceQueueBuffers(al_source_, 1, &buffer);
@@ -91,7 +98,7 @@ void Source::update_source(float dt) {
 }
 
 bool Source::is_playing_sound() const {
-    return bool(playing_sound_);
+    return playing_;
 }
 
 }

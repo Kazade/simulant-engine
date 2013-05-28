@@ -24,7 +24,8 @@ public:
 
         assert_false(subscene.camera().is_playing_sound());
 
-        subscene.camera().play(sound);
+        subscene.camera().attach_sound(sound);
+        subscene.camera().play_sound();
 
         assert_true(subscene.camera().is_playing_sound());
 
@@ -43,7 +44,8 @@ public:
 
         assert_false(entity.is_playing_sound());
 
-        entity.play(sound);
+        entity.attach_sound(sound);
+        entity.play_sound();
 
         assert_true(entity.is_playing_sound());
     }

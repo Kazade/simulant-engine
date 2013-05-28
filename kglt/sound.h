@@ -69,7 +69,8 @@ public:
     Source(SubScene& subscene);
     virtual ~Source();
 
-    void play(SoundID sound, bool loop=false);
+    void attach_sound(SoundID sound);
+    void play_sound(bool loop=false);
     bool is_playing_sound() const;
 
     void update_source(float dt);
@@ -84,8 +85,10 @@ private:
     ALuint buffers_[2];
 
     StreamFunc stream_func_;
-    SoundID playing_sound_;
-    bool loop_stream_;
+    SoundPtr sound_;
+
+    bool playing_ = false;
+    bool loop_stream_ = false;
 
     sigc::signal<void> signal_stream_finished_;
 

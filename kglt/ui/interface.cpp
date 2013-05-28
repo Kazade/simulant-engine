@@ -63,12 +63,8 @@ public:
         kglt::TexturePtr tex = manager().texture(manager().new_texture()).lock();
         window_.loader_for(source.CString())->into(*tex);
 
-        //FIXME: Passing around a reference isn't entirely safe...
-        //but at least this makes sure that the upload happens in the main thread
-        window_.idle().add_once([&]() {
-            tex->flip_vertically();
-            tex->upload(true, false, false, true);
-        });
+        tex->flip_vertically();
+        tex->upload(true, false, false, true);
 
         texture_handle = tex->id().value();
 
