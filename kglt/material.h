@@ -19,13 +19,16 @@
 namespace kglt {
 
 class Material;
+class MaterialPass;
 
 class TextureUnit {
 public:
-    TextureUnit();
+    TextureUnit(MaterialPass& pass);
+    TextureUnit(MaterialPass& pass, TextureID tex_id);
+    TextureUnit(MaterialPass& pass, std::vector<TextureID> textures, double duration);
 
-    TextureUnit(TextureID tex_id);
-    TextureUnit(std::vector<TextureID> textures, double duration);
+    TextureUnit(const TextureUnit& rhs) = default;
+    TextureUnit& operator=(const TextureUnit& rhs) = default;
 
     bool is_animated() const { return !animated_texture_units_.empty(); }
 
@@ -68,6 +71,8 @@ public:
     }
 
 private:
+    MaterialPass* pass_;
+
     std::vector<TextureID> animated_texture_units_;
     double animated_texture_duration_;
     double time_elapsed_;
@@ -141,6 +146,8 @@ public:
     void set_reflection_texture_unit(uint8_t i) { reflection_texture_unit_ = i; }
     uint8_t reflection_texture_unit() const { return reflection_texture_unit_; }
 
+    MaterialTechnique& technique() { return technique_;  }
+
 private:
     MaterialTechnique& technique_;
 
@@ -190,7 +197,10 @@ public:
 
     bool has_reflective_pass() const { return !reflective_passes_.empty(); }
 
+    Material& material() { return material_; }
 private:
+    Material& material_;
+
     friend class MaterialPass;
 
     std::string scheme_;

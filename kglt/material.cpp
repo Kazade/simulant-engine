@@ -8,7 +8,8 @@ namespace kglt {
 
 const uint32_t MAX_TEXTURE_UNITS = 8;
 
-TextureUnit::TextureUnit():
+TextureUnit::TextureUnit(MaterialPass &pass):
+    pass_(&pass),
     time_elapsed_(0),
     current_texture_(0),
     texture_unit_(0){
@@ -16,7 +17,8 @@ TextureUnit::TextureUnit():
     kmMat4Identity(&texture_matrix_);
 }
 
-TextureUnit::TextureUnit(TextureID tex_id):
+TextureUnit::TextureUnit(MaterialPass &pass, TextureID tex_id):
+    pass_(&pass),
     time_elapsed_(0),
     current_texture_(0),
     texture_unit_(tex_id) {
@@ -24,7 +26,8 @@ TextureUnit::TextureUnit(TextureID tex_id):
     kmMat4Identity(&texture_matrix_);
 }
 
-TextureUnit::TextureUnit(std::vector<TextureID> textures, double duration):
+TextureUnit::TextureUnit(MaterialPass &pass, std::vector<TextureID> textures, double duration):
+    pass_(&pass),
     animated_texture_units_(textures),
     animated_texture_duration_(duration),
     time_elapsed_(0),
@@ -58,10 +61,6 @@ MaterialTechnique& Material::new_technique(const std::string& scheme) {
     return technique(scheme);
 }
 
-MaterialTechnique::MaterialTechnique(Material& mat, const std::string& scheme) {
-    scheme_ = scheme;
-}
-
 uint32_t MaterialTechnique::new_pass(ShaderID shader) {
     passes_.push_back(MaterialPass::ptr(new MaterialPass(*this, shader)));
     return passes_.size() - 1; //Return the index
@@ -92,9 +91,9 @@ void MaterialPass::set_texture_unit(uint32_t texture_unit_id, TextureID tex) {
     }
 
     if(texture_units_.size() <= texture_unit_id) {
-        texture_units_.resize(texture_unit_id + 1);
+        texture_units_.resize(texture_unit_id + 1, TextureUnit(*this));
     }
-    texture_units_[texture_unit_id] = TextureUnit(tex);
+    texture_units_[texture_unit_id] = TextureUnit(*this, tex);
 }
 
 void MaterialPass::set_animated_texture_unit(uint32_t texture_unit_id, const std::vector<TextureID> textures, double duration) {
@@ -103,9 +102,9 @@ void MaterialPass::set_animated_texture_unit(uint32_t texture_unit_id, const std
     }
 
     if(texture_units_.size() <= texture_unit_id) {
-        texture_units_.resize(texture_unit_id + 1);
+        texture_units_.resize(texture_unit_id + 1, TextureUnit(*this));
     }
-    texture_units_[texture_unit_id] = TextureUnit(textures, duration);
+    texture_units_[texture_unit_id] = TextureUnit(*this, textures, duration);
 }
 
 void MaterialPass::set_iteration(IterationType iter_type, uint32_t max) {
@@ -123,12 +122,19 @@ void MaterialPass::set_albedo(float reflectiveness) {
 }
 
 //Assignment stuff
+MaterialTechnique::MaterialTechnique(Material& mat, const std::string& scheme):
+    material_(mat) {
+    scheme_ = scheme;
+}
 
-MaterialTechnique::MaterialTechnique(const MaterialTechnique& rhs) {
+MaterialTechnique::MaterialTechnique(const MaterialTechnique& rhs):
+    material_(rhs.material_){
+
     *this = rhs;
 }
 
 MaterialTechnique& MaterialTechnique::operator=(const MaterialTechnique& rhs) {
+    material_ = material_;
     scheme_ = rhs.scheme_;
     passes_.clear();
     reflective_passes_.clear();
