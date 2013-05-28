@@ -3,6 +3,7 @@
 
 #include "material.h"
 #include "resource_manager.h"
+#include "scene.h"
 
 namespace kglt {
 
@@ -11,30 +12,49 @@ const uint32_t MAX_TEXTURE_UNITS = 8;
 TextureUnit::TextureUnit(MaterialPass &pass):
     pass_(&pass),
     time_elapsed_(0),
-    current_texture_(0),
-    texture_unit_(0){
+    current_texture_(0) {
 
     kmMat4Identity(&texture_matrix_);
+
+    //Initialize the texture unit to the default texture
+    ResourceManager& rm = pass.technique().material().resource_manager();
+    texture_unit_ = rm.texture(rm.scene().default_texture_id()).lock();
 }
 
 TextureUnit::TextureUnit(MaterialPass &pass, TextureID tex_id):
     pass_(&pass),
     time_elapsed_(0),
-    current_texture_(0),
-    texture_unit_(tex_id) {
+    current_texture_(0) {
 
     kmMat4Identity(&texture_matrix_);
+
+    //Initialize the texture unit
+    ResourceManager& rm = pass.technique().material().resource_manager();
+    texture_unit_ = rm.texture(tex_id).lock();
 }
 
 TextureUnit::TextureUnit(MaterialPass &pass, std::vector<TextureID> textures, double duration):
     pass_(&pass),
-    animated_texture_units_(textures),
     animated_texture_duration_(duration),
     time_elapsed_(0),
     current_texture_(0),
     texture_unit_(0) {
 
     kmMat4Identity(&texture_matrix_);
+
+    ResourceManager& rm = pass.technique().material().resource_manager();
+
+    for(TextureID tid: textures) {
+        animated_texture_units_.push_back(rm.texture(tid).lock());
+    }
+}
+
+TextureID TextureUnit::texture_id() const {
+    if(is_animated()) {
+        return animated_texture_units_[current_texture_]->id();
+    } else {
+        return texture_unit_->id();
+    }
 }
 
 Material::Material(ResourceManager *resource_manager, MaterialID mat_id):

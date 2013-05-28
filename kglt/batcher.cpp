@@ -68,7 +68,7 @@ void RootGroup::insert(SubEntity &ent, uint8_t pass_number) {
     } else {
         //Add the texture-related branches of the tree under the shader(
         for(uint8_t tu = 0; tu < pass.texture_unit_count(); ++tu) {
-            RenderGroup* iteration_parent = &current->get_or_create<TextureGroup>(TextureGroupData(tu, pass.texture_unit(tu).texture())).
+            RenderGroup* iteration_parent = &current->get_or_create<TextureGroup>(TextureGroupData(tu, pass.texture_unit(tu).texture_id())).
                      get_or_create<TextureMatrixGroup>(TextureMatrixGroupData(tu, pass.texture_unit(tu).matrix()));
 
             generate_mesh_groups(iteration_parent, ent, pass);
@@ -86,8 +86,6 @@ void LightGroup::bind() {
     assert(active_shader);
 
     ShaderParams& params = active_shader->params();
-
-    RootGroup& root = static_cast<RootGroup&>(get_root());
 
     if(params.uses_auto(SP_AUTO_LIGHT_POSITION)) {
         Vec4 light_pos = Vec4(light->absolute_position(), (light->type() == LIGHT_TYPE_DIRECTIONAL) ? 0.0 : 1.0);

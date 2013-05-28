@@ -85,6 +85,7 @@ bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
         viewport(default_viewport_).set_size(this->width(), this->height());
 
         scene_ = Scene::create(this);
+        scene_->initialize_defaults();
 
         //This needs to happen after SDL or whatever is initialized
         input_controller_ = InputController::create();

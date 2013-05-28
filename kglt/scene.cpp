@@ -102,8 +102,6 @@ void Scene::delete_subscene(SubSceneID s) {
 bool Scene::init() {
     assert(glGetError() == GL_NO_ERROR);
 
-    initialize_defaults();
-
     return true;
 }
 

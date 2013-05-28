@@ -32,13 +32,7 @@ public:
 
     bool is_animated() const { return !animated_texture_units_.empty(); }
 
-    TextureID texture() const {
-        if(is_animated()) {
-            return animated_texture_units_[current_texture_];
-        } else {
-            return texture_unit_;
-        }
-    }
+    TextureID texture_id() const;
 
     void update(double dt) {
         if(!is_animated()) return;
@@ -73,12 +67,12 @@ public:
 private:
     MaterialPass* pass_;
 
-    std::vector<TextureID> animated_texture_units_;
+    std::vector<TexturePtr> animated_texture_units_;
     double animated_texture_duration_;
     double time_elapsed_;
     uint32_t current_texture_;
 
-    TextureID texture_unit_;
+    TexturePtr texture_unit_;
     kmMat4 texture_matrix_;
 };
 

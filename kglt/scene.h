@@ -57,6 +57,8 @@ private:
 
     std::shared_ptr<Pipeline> pipeline_;
     std::shared_ptr<GeomFactory> geom_factory_;
+
+    friend class WindowBase;
 };
 
 }
