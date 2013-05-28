@@ -75,6 +75,10 @@ public:
         }
     }
 
+    //Internal!
+    std::unordered_map<ObjectIDType, std::shared_ptr<ObjectType> > __objects() {
+        return objects_;
+    }
 private:
     sigc::signal<void, ObjectType&, ObjectIDType> signal_post_create_;
     sigc::signal<void, ObjectType&, ObjectIDType> signal_pre_delete_;

@@ -136,6 +136,10 @@ const SubSceneID DefaultSubSceneID = SubSceneID();
 
 const std::string DEFAULT_MATERIAL_SCHEME = "default";
 
+class SubScene;
+typedef std::weak_ptr<SubScene> SubSceneRef;
+typedef std::shared_ptr<SubScene> SubScenePtr;
+
 class Mesh;
 typedef std::weak_ptr<Mesh> MeshRef;
 typedef std::shared_ptr<Mesh> MeshPtr;

@@ -156,13 +156,23 @@ MaterialTechnique::MaterialTechnique(Material& mat, const std::string& scheme):
 }
 
 MaterialTechnique::MaterialTechnique(const MaterialTechnique& rhs):
-    material_(rhs.material_){
+    material_(rhs.material_) {
 
-    *this = rhs;
+    scheme_ = rhs.scheme_;
+    passes_.clear();
+    reflective_passes_.clear();
+
+    for(MaterialPass::ptr pass: rhs.passes_) {
+        passes_.push_back(MaterialPass::ptr(new MaterialPass(*pass)));
+
+        if(rhs.reflective_passes_.find(pass.get()) != rhs.reflective_passes_.end()) {
+            reflective_passes_.insert(passes_[passes_.size()-1].get());
+        }
+    }
 }
 
-MaterialTechnique& MaterialTechnique::operator=(const MaterialTechnique& rhs) {
-    material_ = material_;
+MaterialTechnique& MaterialTechnique::operator=(const MaterialTechnique& rhs){
+    material_ = rhs.material_;
     scheme_ = rhs.scheme_;
     passes_.clear();
     reflective_passes_.clear();
@@ -182,6 +192,7 @@ Material& Material::operator=(const Material& rhs) {
     techniques_.clear();
 
     for(auto p: rhs.techniques_) {
+        assert(p.second.get());
         techniques_[p.first] = MaterialTechnique::ptr(new MaterialTechnique(*p.second));
     }
 

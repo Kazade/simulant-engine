@@ -189,6 +189,13 @@ bool WindowBase::update() {
 
 }
 
+const Scene& WindowBase::scene() const {
+    if(!scene_) {
+        throw DoesNotExist<Scene>();
+    }
+    return *scene_;
+}
+
 Scene& WindowBase::scene() {
     if(!scene_) {
         throw DoesNotExist<Scene>();

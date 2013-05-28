@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
     std::vector<kglt::TextureID> frames = loader.load_frames();
 
     //Construct a Sprite object that takes care of handling materials, meshes etc.
-    Sprite::ptr sprite = Sprite::create(scene, subscene.id());
+    Sprite::ptr sprite = Sprite::create(scene.subscene_ref(subscene.id()));
     sprite->add_animation("running", container::slice(frames, 31, 35), 0.5);
     sprite->set_render_dimensions(1.5, 1.5);
     sprite->move_to(0.0, -2.0, -1.0);

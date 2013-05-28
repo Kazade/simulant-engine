@@ -16,7 +16,7 @@
 namespace kglt {
 
 Scene::Scene(WindowBase* window):
-    SceneBase(window, nullptr),
+    ResourceManagerImpl(window),
     default_texture_(0),
     default_material_(0),
     pipeline_(new Pipeline(*this)),
@@ -91,6 +91,13 @@ SubScene& Scene::subscene(SubSceneID s) {
     }
 
     return SubSceneManager::manager_get(s);
+}
+
+SubSceneRef Scene::subscene_ref(SubSceneID s) {
+    if(!SubSceneManager::manager_contains(s)) {
+        throw DoesNotExist<SubScene>();
+    }
+    return SubSceneManager::__objects()[s];
 }
 
 void Scene::delete_subscene(SubSceneID s) {

@@ -29,7 +29,7 @@ class Sprite :
 public:
     typedef std::shared_ptr<Sprite> ptr;
 
-    Sprite(Scene& scene, SubSceneID subscene=DefaultSubSceneID);
+    Sprite(SubSceneRef subscene);
     ~Sprite();
 
     void add_animation(const std::string& anim_name, const std::vector<TextureID>& frames, double duration);
@@ -45,8 +45,7 @@ public:
     MaterialID material();
 
 private:
-    Scene& scene_;
-    SubScene& subscene_;
+    SubSceneRef subscene_;
 
     std::string current_animation_;
     std::string next_animation_;

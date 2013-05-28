@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
     entity.move_to(0, 0, -30);
 
     //Just stash the skybox along with the scene
-    subscene.data().stash(kglt::extra::StarField::create(subscene), "skybox");
+    window->scene().data().stash(kglt::extra::StarField::create(subscene), "skybox");
 
     //Set the camera to follow the model
     subscene.camera().follow(entity.id(), kglt::Vec3(0, 5, 50));

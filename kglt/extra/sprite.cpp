@@ -9,12 +9,13 @@
 namespace kglt {
 namespace extra {
 
-Sprite::Sprite(Scene& scene, SubSceneID subscene):
-    scene_(scene),
-    subscene_(scene.subscene(subscene)),
+Sprite::Sprite(SubSceneRef subscene):
+    subscene_(subscene),
     entity_(nullptr) {
 
-    entity_ = &subscene_.entity(subscene_.new_entity(subscene_.new_mesh()));
+    SubScenePtr ss = subscene_.lock();
+
+    entity_ = &ss->entity(ss->new_entity(ss->new_mesh()));
 
     kglt::procedural::mesh::rectangle(
         entity_->mesh().lock(), 1.0, 1.0
@@ -26,7 +27,9 @@ Sprite::Sprite(Scene& scene, SubSceneID subscene):
 
 Sprite::~Sprite() {
     if(entity_) {
-        subscene_.delete_entity(entity_->id());
+        if(SubScenePtr ss = subscene_.lock()) {
+            ss->delete_entity(entity_->id());
+        }
         entity_ = nullptr;
     }
 }
@@ -40,13 +43,16 @@ void Sprite::add_animation(const std::string& anim_name, const std::vector<Textu
      * We need to hold MaterialPtr's directly in animations_ to maintain the ref-count as only one material
      * is bound at a time
      */
+
+    SubScenePtr ss = subscene_.lock();
+
     MaterialID new_material_id;
     {
         //RAII
-        MaterialPtr default_material = subscene_.material(subscene_.scene().default_material_id()).lock();
+        MaterialPtr default_material = ss->material(ss->scene().default_material_id()).lock();
         new_material_id = default_material->clone();
     }
-    MaterialPtr mat = subscene_.material(new_material_id).lock();
+    MaterialPtr mat = ss->material(new_material_id).lock();
     mat->technique().pass(0).set_animated_texture_unit(0, frames, duration);
     mat->technique().pass(0).set_blending(BLEND_ALPHA);
     animations_[anim_name] = mat;

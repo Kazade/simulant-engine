@@ -309,7 +309,6 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             //Clone the default material
             MaterialPtr def_mat = scene->material(scene->default_material_id()).lock();
             new_mat = scene->subscene().material(def_mat->clone()).lock();
-            new_mat->move_to_resource_manager(scene->subscene());
         }
         Material& mat = *new_mat;
 

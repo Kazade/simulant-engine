@@ -9,8 +9,6 @@
 #include "resource_manager.h"
 #include "generic/manager.h"
 
-#include "scene_base.h"
-
 namespace kglt {
 
 class WindowBase;
@@ -23,7 +21,7 @@ class GeomFactory;
 typedef generic::TemplatedManager<Scene, SubScene, SubSceneID> SubSceneManager;
 
 class Scene:
-    public SceneBase,
+    public ResourceManagerImpl,
     public Loadable,
     public SubSceneManager,
     public Managed<Scene> {
@@ -35,6 +33,8 @@ public:
     SubSceneID new_subscene(AvailablePartitioner partitioner=PARTITIONER_OCTREE);            
     SubScene& subscene() { return subscene(default_subscene_); }
     SubScene& subscene(SubSceneID s);
+    SubSceneRef subscene_ref(SubSceneID s);
+
     void delete_subscene(SubSceneID s);
     uint32_t subscene_count() const;
 

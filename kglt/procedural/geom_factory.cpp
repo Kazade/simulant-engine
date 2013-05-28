@@ -62,7 +62,12 @@ EntityID GeomFactory::new_rectangle_outline(SubSceneID ss, const float width, co
 }
 
 EntityID GeomFactory::new_rectangle(SubSceneID ss, const float width, const float height) {
-    throw NotImplementedError(__FILE__, __LINE__);
+    kglt::SubScene& subscene = scene_.subscene(ss);
+
+    kglt::MeshPtr mesh_ptr = subscene.mesh(subscene.new_mesh()).lock();
+    procedural::mesh::rectangle(mesh_ptr, width, height);
+
+    return subscene.new_entity(mesh_ptr->id());
 }
 
 EntityID GeomFactory::new_capsule(SubSceneID, const float diameter, const float length) {

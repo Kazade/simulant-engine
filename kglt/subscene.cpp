@@ -9,13 +9,8 @@
 
 namespace kglt {
 
-WindowBase& SubScene::window() {
-    return scene_.window();
-}
-
 SubScene::SubScene(Scene* parent, SubSceneID id):
     generic::Identifiable<SubSceneID>(id),
-    SceneBase(&parent->window(), parent),
     Object(nullptr),
     scene_(*parent),
     ambient_light_(1.0, 1.0, 1.0, 1.0){
