@@ -75,7 +75,7 @@ public:
     uint32_t height() const { return height_; }
     
     Scene& scene();
-    bool update(WindowUpdateCallback step=WindowUpdateCallback());
+    bool update();
 
     IdleTaskManager& idle() { return idle_; }
 

@@ -44,22 +44,26 @@ int main(int argc, char* argv[]) {
     float x_position = 0.0f;
     bool incrementing = true;
 
-    while(window->update()) {
-        entity.rotate_y(10.0 * window->delta_time());
+    window->signal_step().connect(
+        [&](double dt) {
+            entity.rotate_y(10.0 * dt);
 
-        x_position += ((incrementing) ? -10.0 : 10.0) * window->delta_time();
+            x_position += ((incrementing) ? -10.0 : 10.0) * dt;
 
-        if(x_position < -100) {
-            x_position += 0.1;
-            incrementing = !incrementing;
+            if(x_position < -100) {
+                x_position += 0.1;
+                incrementing = !incrementing;
+            }
+            if(x_position > 100) {
+                x_position -= 0.1;
+                incrementing = !incrementing;
+            }
+
+            light.move_to(x_position, 20.0, -50.0);
         }
-        if(x_position > 100) {
-            x_position -= 0.1;
-            incrementing = !incrementing;
-        }
+    );
 
-        light.move_to(x_position, 20.0, -50.0);
-    }
+    while(window->update()) {}
 
     return 0;
 }

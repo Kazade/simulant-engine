@@ -41,8 +41,10 @@ int main(int argc, char* argv[]) {
     */
     entity.move_to(0.0f, 0.0f, -5.0f);
 
-    while(window->update([&](float dt) { entity.rotate_y(20.0 * dt); })) {
+    //Set the entity to rotate each step
+    window->signal_step().connect([&](float dt) { entity.rotate_y(20.0 * dt); });
 
-    }
+    while(window->update()) {}
+
 	return 0;
 }

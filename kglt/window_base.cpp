@@ -129,7 +129,7 @@ void WindowBase::set_logging_level(LoggingLevel level) {
     logging::get_logger("/")->set_level((logging::LOG_LEVEL) level);
 }
 
-bool WindowBase::update(WindowUpdateCallback step) {
+bool WindowBase::update() {
     signal_frame_started_();
 
     ktiBindTimer(variable_timer_);
@@ -156,11 +156,6 @@ bool WindowBase::update(WindowUpdateCallback step) {
 
     while(ktiTimerCanUpdate()) {
         input_controller().update(fixed_step);
-
-        if(step) {
-            step(fixed_step);
-        }
-
         scene().update(fixed_step);
 
         signal_step_(fixed_step); //Trigger any steps
