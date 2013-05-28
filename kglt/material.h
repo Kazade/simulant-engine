@@ -100,7 +100,8 @@ public:
     Colour specular() const { return specular_; }
     float shininess() const { return shininess_; }
 
-    ShaderID shader() const { return shader_; }
+    ShaderID shader_id() const;
+    ShaderProgram* __shader() { return shader_.get(); }
 
     uint32_t texture_unit_count() const { return texture_units_.size(); }
     TextureUnit& texture_unit(uint32_t index) { return texture_units_.at(index); }
@@ -145,7 +146,7 @@ public:
 private:
     MaterialTechnique& technique_;
 
-    ShaderID shader_;
+    ShaderPtr shader_;
 
     Colour diffuse_;
     Colour ambient_;

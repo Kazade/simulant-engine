@@ -29,7 +29,7 @@ BackgroundLayer::BackgroundLayer(Background &bg, const std::string& image_path):
 
     if(pass_id_ >= mat->technique().pass_count()) {
         //Duplicate the first pass to create this one
-        mat->technique().new_pass(mat->technique().pass(0).shader());
+        mat->technique().new_pass(mat->technique().pass(0).shader_id());
 
         //All passes except the first should have alpha blending enabled
         mat->technique().pass(pass_id_).set_blending(BLEND_ALPHA);

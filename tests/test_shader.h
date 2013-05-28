@@ -23,7 +23,7 @@ public:
         kglt::ShaderID sid = scene.new_shader();
         assert_true(sid);
 
-        kglt::ShaderRef tmp = scene.shader(scene.material(scene.default_material_id()).lock()->technique().pass(0).shader());
+        kglt::ShaderRef tmp = scene.shader(scene.material(scene.default_material_id()).lock()->technique().pass(0).shader_id());
         kglt::ShaderProgram& s = *tmp.lock();
 
         kmMat4 ident;

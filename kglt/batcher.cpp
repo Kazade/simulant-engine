@@ -48,7 +48,7 @@ void RootGroup::insert(SubEntity &ent, uint8_t pass_number) {
     RenderGroup* current = this;
 
     //Add a shader node
-    current = &current->get_or_create<ShaderGroup>(ShaderGroupData(pass.shader()));
+    current = &current->get_or_create<ShaderGroup>(ShaderGroupData(pass.__shader()));
 
     //Add a node for depth settings
     current = &current->get_or_create<DepthGroup>(DepthGroupData(pass.depth_test_enabled(), pass.depth_write_enabled()));
@@ -154,7 +154,7 @@ void MeshGroup::unbind() {
 void ShaderGroup::bind() {
     RootGroup& root = static_cast<RootGroup&>(get_root());
 
-    ShaderPtr s = root.subscene().shader(data_.shader_id).lock();
+    ShaderProgram* s = data_.shader_;
     s->activate(); //Activate the shader
 
     //Pass in the global ambient here, as it's the earliest place
@@ -167,6 +167,13 @@ void ShaderGroup::bind() {
             root.subscene().ambient_light()
         );
     }
+}
+
+std::size_t ShaderGroupData::hash() const {
+    size_t seed = 0;
+    hash_combine(seed, typeid(ShaderGroupData).name());
+    hash_combine(seed, shader_->id().value());
+    return seed;
 }
 
 void ShaderGroup::unbind() {

@@ -47,6 +47,7 @@ public:
     void set_data(const std::vector<uint8_t>& data) { sound_data_ = data; }
 
     void set_source_init_function(std::tr1::function<void (Source&)> func) { init_source_ = func; }
+
 private:
     std::tr1::function<void (Source&)> init_source_;
 

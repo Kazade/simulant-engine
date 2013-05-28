@@ -202,17 +202,12 @@ private:
 };
 
 struct ShaderGroupData : public GroupData {
-    ShaderGroupData(ShaderID id):
-        shader_id(id) {}
+    ShaderGroupData(ShaderProgram* program):
+        shader_(program) {}
 
-    ShaderID shader_id;
+    ShaderProgram* shader_;
 
-    std::size_t hash() const {
-        size_t seed = 0;
-        hash_combine(seed, typeid(ShaderGroupData).name());
-        hash_combine(seed, shader_id.value());
-        return seed;
-    }
+    std::size_t hash() const;
 };
 
 class ShaderGroup : public RenderGroup {

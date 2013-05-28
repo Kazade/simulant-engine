@@ -92,7 +92,6 @@ MaterialPass& MaterialTechnique::pass(uint32_t index) {
 
 MaterialPass::MaterialPass(MaterialTechnique& technique, ShaderID shader):
     technique_(technique),
-    shader_(shader),
     shininess_(5.0),
     iteration_(ITERATE_ONCE),    
     max_iterations_(1),
@@ -102,7 +101,16 @@ MaterialPass::MaterialPass(MaterialTechnique& technique, ShaderID shader):
     point_size_(1),
     line_width_(1) {
 
+    if(!shader) {
+        throw LogicError("You must specify a shader for a material pass");
+    } else {
+        ResourceManager& rm = technique_.material().resource_manager();
+        shader_ = rm.shader(shader).lock();
+    }
+}
 
+ShaderID MaterialPass::shader_id() const {
+    return shader_->id();
 }
 
 void MaterialPass::set_texture_unit(uint32_t texture_unit_id, TextureID tex) {

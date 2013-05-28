@@ -71,7 +71,7 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
         }
 
         {
-            ShaderPtr shader = mat.resource_manager().shader(pass->shader()).lock();
+            ShaderPtr shader = mat.resource_manager().shader(pass->shader_id()).lock();
             std::string variable_name = str::strip(args[2], "\"");
             if(arg_1 == "POSITION") {
                 shader->params().register_attribute(SP_ATTR_VERTEX_POSITION, variable_name);
@@ -112,7 +112,7 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
         }
 
     } else if(type == "AUTO_UNIFORM") {
-        ShaderPtr shader = mat.resource_manager().shader(pass->shader()).lock();
+        ShaderPtr shader = mat.resource_manager().shader(pass->shader_id()).lock();
         std::string variable_name = str::strip(args[2], "\"");
 
         if(arg_1 == "VIEW_MATRIX") {
@@ -200,7 +200,7 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
 }
 
 void MaterialScript::handle_data_block(Material& mat, const std::string& data_type, const std::vector<std::string>& lines, MaterialPass* pass) {
-    ShaderPtr shader = mat.resource_manager().shader(pass->shader()).lock();
+    ShaderPtr shader = mat.resource_manager().shader(pass->shader_id()).lock();
 
     if(str::upper(data_type) == "VERTEX") {
         std::string source = str::join(lines, "\n");
@@ -310,7 +310,7 @@ void MaterialScript::handle_block(Material& mat,
             }
 
             if(end_block_type == "PASS") {
-                ShaderPtr shader = mat.resource_manager().shader(current_pass->shader()).lock();
+                ShaderPtr shader = mat.resource_manager().shader(current_pass->shader_id()).lock();
 
                 //Apply any staged uniforms
                 apply_staged_uniforms(*shader);

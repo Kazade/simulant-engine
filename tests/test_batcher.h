@@ -18,15 +18,12 @@ public:
 
     void test_group_creation() {
         assert_false(root_group_->exists<TextureGroup>(TextureGroupData(0, TextureID())));
-        assert_false(root_group_->exists<ShaderGroup>(ShaderGroupData(ShaderID())));
 
         root_group_->get_or_create<TextureGroup>(TextureGroupData(0, TextureID())).get_or_create<TextureGroup>(TextureGroupData(1, TextureID(1)));
-        root_group_->get_or_create<ShaderGroup>(ShaderGroupData(ShaderID()));
 
         assert_true(root_group_->exists<TextureGroup>(TextureGroupData(0, TextureID())));
         assert_true(root_group_->get<TextureGroup>(TextureGroupData(0, TextureID())).exists<TextureGroup>(TextureGroupData(1, TextureID(1))));
         assert_false(root_group_->get<TextureGroup>(TextureGroupData(0, TextureID())).exists<TextureGroup>(TextureGroupData(1, TextureID(2))));
-        assert_true(root_group_->exists<ShaderGroup>(ShaderGroupData(ShaderID())));
     }    
 
 private:

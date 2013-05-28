@@ -18,9 +18,8 @@ void ResourceManager::update() {
     MeshManager::garbage_collect();
     MaterialManager::garbage_collect();
     TextureManager::garbage_collect();
-
-    //ShaderManager::garbage_collect();
-    //SoundManager::garbage_collect();
+    ShaderManager::garbage_collect();
+    SoundManager::garbage_collect();
 
     /*
       Update all animated materials
