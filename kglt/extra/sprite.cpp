@@ -21,8 +21,8 @@ Sprite::Sprite(SubSceneRef subscene):
         entity_->mesh().lock(), 1.0, 1.0
     );
 
-    //FIXME: If the sprite doesn't work, this is why
-    //scene_.subscene(subscene_).entity(entity_id()).set_mesh(mesh_id_); //Rebuild the entity
+    //FIXME: Entities should be connected to mesh->signal_changed() and update automatically
+    entity_->set_mesh(entity_->mesh_id()); //Rebuild the entity
 }
 
 Sprite::~Sprite() {
@@ -79,7 +79,7 @@ void Sprite::set_render_dimensions(float width, float height) {
 
     //FIXME: This shouldn't be necessary! Changing a mesh should signal
     //the entity to rebuild
-    //subscene.entity(entity_id()).set_mesh(mesh_id_); //Rebuild the entity
+    entity_->set_mesh(entity_->mesh_id()); //Rebuild the entity
 
     set_active_animation(current_animation_); //Re-set the current animation
 }
