@@ -19,7 +19,7 @@ namespace kglt {
  *
  * Interpreter::ptr i = Interpreter::create();
  * i.register_class<Scene>();
- * i.register_class<SubScene>();
+ * i.register_class<Stage>();
  */
 class Interpreter:
     public Managed<Interpreter> {

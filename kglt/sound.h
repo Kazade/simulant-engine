@@ -66,7 +66,7 @@ typedef std::tr1::function<int32_t (ALuint)> StreamFunc;
 class Source {
 
 public:
-    Source(SubScene& subscene);
+    Source(Stage& subscene);
     virtual ~Source();
 
     void attach_sound(SoundID sound);
@@ -79,7 +79,7 @@ public:
 
     void set_stream_func(StreamFunc func) { stream_func_ = func; }
 private:
-    SubScene& subscene_;
+    Stage& subscene_;
 
     ALuint al_source_;
     ALuint buffers_[2];

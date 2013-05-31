@@ -20,7 +20,7 @@ BackgroundLayer::BackgroundLayer(Background &bg, const std::string& image_path):
     background_(bg),
     texture_id_(0) {
 
-    SubScene& subscene = background().subscene();
+    Stage& subscene = background().subscene();
 
     texture_id_ = kglt::create_texture_from_file(subscene, image_path);
     pass_id_ = background().layer_count();
@@ -46,7 +46,7 @@ void BackgroundLayer::scroll_x(double amount) {
      *  Scrolls the background layer on the x-axis by 'amount'.
      *  This is simply a thunk to manipulate the underlyng texture matrix
      */
-    SubScene& subscene = background().subscene();
+    Stage& subscene = background().subscene();
     MaterialPtr mat = subscene.material(background().material_id()).lock();
     mat->technique().pass(pass_id_).texture_unit(0).scroll_x(amount);
 }
@@ -56,13 +56,13 @@ void BackgroundLayer::scroll_y(double amount) {
      *  Scrolls the background layer on the y-axis by 'amount'.
      *  This is simply a thunk to manipulate the underlyng texture matrix
      */
-    SubScene& subscene = background().subscene();
+    Stage& subscene = background().subscene();
     MaterialPtr mat = subscene.material(background().material_id()).lock();
     mat->technique().pass(pass_id_).texture_unit(0).scroll_y(amount);
 }
 
 BackgroundLayer::~BackgroundLayer() {
-    SubScene& subscene = background().subscene();
+    Stage& subscene = background().subscene();
     kglt::MaterialPtr mat = subscene.material(background().material_id()).lock();
 
     //Unset the texture on the material (decrementing the ref-count)

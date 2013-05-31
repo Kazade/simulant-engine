@@ -136,9 +136,9 @@ const StageID DefaultStageID = StageID();
 
 const std::string DEFAULT_MATERIAL_SCHEME = "default";
 
-class SubScene;
-typedef std::weak_ptr<SubScene> SubSceneRef;
-typedef std::shared_ptr<SubScene> SubScenePtr;
+class Stage;
+typedef std::weak_ptr<Stage> StageRef;
+typedef std::shared_ptr<Stage> StagePtr;
 
 class Mesh;
 typedef std::weak_ptr<Mesh> MeshRef;
@@ -169,8 +169,8 @@ typedef std::shared_ptr<Light> LightPtr;
 class Scene;
 typedef std::shared_ptr<Scene> ScenePtr;
 
-class SubScene;
-typedef std::shared_ptr<SubScene> SubScenePtr;
+class Stage;
+typedef std::shared_ptr<Stage> StagePtr;
 
 class Camera;
 typedef std::shared_ptr<Camera> CameraPtr;

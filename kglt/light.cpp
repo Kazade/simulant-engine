@@ -3,7 +3,7 @@
 
 namespace kglt {
 
-Light::Light(SubScene* subscene, LightID lid):
+Light::Light(Stage* subscene, LightID lid):
     Object(subscene),
     generic::Identifiable<LightID>(lid),
     type_(LIGHT_TYPE_POINT),

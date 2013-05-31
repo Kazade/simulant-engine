@@ -3,7 +3,7 @@
 
 namespace kglt {
 
-SubScene& Renderer::current_subscene() { return scene().subscene(current_subscene_); }
+Stage& Renderer::current_subscene() { return scene().subscene(current_subscene_); }
 
 
 }

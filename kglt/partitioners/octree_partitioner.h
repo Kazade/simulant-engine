@@ -16,7 +16,7 @@ class OctreePartitioner :
     public Partitioner {
 
 public:
-    OctreePartitioner(SubScene& ss):
+    OctreePartitioner(Stage& ss):
         Partitioner(ss) {}
 
     void add_entity(EntityID obj);

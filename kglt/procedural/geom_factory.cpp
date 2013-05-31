@@ -13,7 +13,7 @@ GeomFactory::GeomFactory(Scene& scene):
 }
 
 EntityID GeomFactory::new_line(StageID ss, const kmVec3& start, const kmVec3& end) {
-    kglt::SubScene& subscene = scene_.subscene(ss);
+    kglt::Stage& subscene = scene_.subscene(ss);
 
     kglt::MeshPtr mesh_ptr = subscene.mesh(subscene.new_mesh()).lock();
     kglt::Mesh& mesh = *mesh_ptr;
@@ -53,7 +53,7 @@ EntityID GeomFactory::new_line(StageID ss, const kmVec3& start, const kmVec3& en
 }
 
 EntityID GeomFactory::new_rectangle_outline(StageID ss, const float width, const float height) {
-    kglt::SubScene& subscene = scene_.subscene(ss);
+    kglt::Stage& subscene = scene_.subscene(ss);
 
     kglt::MeshPtr mesh_ptr = subscene.mesh(subscene.new_mesh()).lock();
     procedural::mesh::rectangle_outline(mesh_ptr, width, height);
@@ -62,7 +62,7 @@ EntityID GeomFactory::new_rectangle_outline(StageID ss, const float width, const
 }
 
 EntityID GeomFactory::new_rectangle(StageID ss, const float width, const float height) {
-    kglt::SubScene& subscene = scene_.subscene(ss);
+    kglt::Stage& subscene = scene_.subscene(ss);
 
     kglt::MeshPtr mesh_ptr = subscene.mesh(subscene.new_mesh()).lock();
     procedural::mesh::rectangle(mesh_ptr, width, height);

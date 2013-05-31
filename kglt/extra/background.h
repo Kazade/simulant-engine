@@ -62,10 +62,10 @@ public:
 
     MaterialID material_id() const { return material_id_; }
 
-    SubScene& subscene() { return subscene_; }
+    Stage& subscene() { return subscene_; }
 
 private:
-    SubScene& subscene_;
+    Stage& subscene_;
 
     ViewportID viewport_;
     CameraID ortho_camera_;

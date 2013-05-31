@@ -15,15 +15,15 @@ class WindowBase;
 class UI;
 
 class Scene;
-class SubScene;
+class Stage;
 class GeomFactory;
 
-typedef generic::TemplatedManager<Scene, SubScene, StageID> SubSceneManager;
+typedef generic::TemplatedManager<Scene, Stage, StageID> StageManager;
 
 class Scene:
     public ResourceManagerImpl,
     public Loadable,
-    public SubSceneManager,
+    public StageManager,
     public Managed<Scene> {
 
 public:
@@ -31,9 +31,9 @@ public:
     ~Scene();
 
     StageID new_subscene(AvailablePartitioner partitioner=PARTITIONER_OCTREE);            
-    SubScene& subscene() { return subscene(default_subscene_); }
-    SubScene& subscene(StageID s);
-    SubSceneRef subscene_ref(StageID s);
+    Stage& subscene() { return subscene(default_subscene_); }
+    Stage& subscene(StageID s);
+    StageRef subscene_ref(StageID s);
 
     void delete_subscene(StageID s);
     uint32_t subscene_count() const;

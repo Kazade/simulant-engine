@@ -9,7 +9,7 @@ class SubEntity;
 
 class NullPartitioner : public Partitioner {
 public:
-    NullPartitioner(SubScene& ss):
+    NullPartitioner(Stage& ss):
         Partitioner(ss) {}
 
     void add_entity(EntityID obj) {

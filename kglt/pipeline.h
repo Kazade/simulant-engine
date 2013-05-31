@@ -14,8 +14,8 @@
 
 namespace kglt {
 
-class Stage:
-    public Managed<Stage> {
+class PipelineStage:
+    public Managed<PipelineStage> {
 
 public:
     ViewportID viewport_id() { return viewport_; }
@@ -26,7 +26,7 @@ public:
     void set_priority(int32_t priority) { priority_ = priority; }
 
 private:
-    Stage(Scene& scene, StageID ss, CameraID camera, ViewportID viewport, TextureID target);
+    PipelineStage(Scene& scene, StageID ss, CameraID camera, ViewportID viewport, TextureID target);
 
 private:
     int32_t priority_;
@@ -61,22 +61,22 @@ public:
 
     void run();
 
-    sigc::signal<void, Stage&>& signal_render_stage_started() { return signal_render_stage_started_; }
-    sigc::signal<void, Stage&>& signal_render_stage_finished() { return signal_render_stage_finished_; }
+    sigc::signal<void, PipelineStage&>& signal_render_stage_started() { return signal_render_stage_started_; }
+    sigc::signal<void, PipelineStage&>& signal_render_stage_finished() { return signal_render_stage_finished_; }
 
     RenderOptions render_options;
 
 private:    
-    void run_stage(Stage::ptr stage);
+    void run_stage(PipelineStage::ptr stage);
 
     Scene& scene_;
 
     Renderer::ptr renderer_;
 
-    std::vector<Stage::ptr> stages_;
+    std::vector<PipelineStage::ptr> stages_;
 
-    sigc::signal<void, Stage&> signal_render_stage_started_;
-    sigc::signal<void, Stage&> signal_render_stage_finished_;
+    sigc::signal<void, PipelineStage&> signal_render_stage_started_;
+    sigc::signal<void, PipelineStage&> signal_render_stage_finished_;
 
     friend class Scene;
 };

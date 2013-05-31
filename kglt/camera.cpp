@@ -7,7 +7,7 @@
 
 namespace kglt {
 
-Camera::Camera(SubScene *subscene, CameraID id):
+Camera::Camera(Stage *subscene, CameraID id):
     Object(subscene),    
     generic::Identifiable<CameraID>(id),
     Source(*subscene) {

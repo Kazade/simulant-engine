@@ -9,29 +9,29 @@
 
 namespace kglt {
 
-SubScene::SubScene(Scene* parent, StageID id):
+Stage::Stage(Scene* parent, StageID id):
     generic::Identifiable<StageID>(id),
     Object(nullptr),
     scene_(*parent),
     ambient_light_(1.0, 1.0, 1.0, 1.0){
 
-    EntityManager::signal_post_create().connect(sigc::mem_fun(this, &SubScene::post_create_callback<Entity, EntityID>));
-    CameraManager::signal_post_create().connect(sigc::mem_fun(this, &SubScene::post_create_callback<Camera, CameraID>));
-    LightManager::signal_post_create().connect(sigc::mem_fun(this, &SubScene::post_create_callback<Light, LightID>));
+    EntityManager::signal_post_create().connect(sigc::mem_fun(this, &Stage::post_create_callback<Entity, EntityID>));
+    CameraManager::signal_post_create().connect(sigc::mem_fun(this, &Stage::post_create_callback<Camera, CameraID>));
+    LightManager::signal_post_create().connect(sigc::mem_fun(this, &Stage::post_create_callback<Light, LightID>));
 }
 
-void SubScene::destroy() {
+void Stage::destroy() {
     scene().delete_subscene(id());
 }
 
-EntityID SubScene::new_entity() {
+EntityID Stage::new_entity() {
     EntityID result = EntityManager::manager_new();
     //Tell everyone about the new entity
     signal_entity_created_(result);
     return result;
 }
 
-EntityID SubScene::new_entity(MeshID mid) {
+EntityID Stage::new_entity(MeshID mid) {
     EntityID result = EntityManager::manager_new();
 
     //If a mesh was specified, set it
@@ -45,27 +45,27 @@ EntityID SubScene::new_entity(MeshID mid) {
     return result;
 }
 
-EntityID SubScene::new_entity_with_parent(Entity& parent) {
+EntityID Stage::new_entity_with_parent(Entity& parent) {
     Entity& ent = entity(new_entity());
     ent.set_parent(parent);
     return ent.id();
 }
 
-EntityID SubScene::new_entity_with_parent(Entity& parent, MeshID mid) {
+EntityID Stage::new_entity_with_parent(Entity& parent, MeshID mid) {
     Entity& ent = entity(new_entity(mid));
     ent.set_parent(parent);
     return ent.id();
 }
 
-bool SubScene::has_entity(EntityID m) const {
+bool Stage::has_entity(EntityID m) const {
     return EntityManager::manager_contains(m);
 }
 
-Entity& SubScene::entity(EntityID e) {
+Entity& Stage::entity(EntityID e) {
     return EntityManager::manager_get(e);
 }
 
-void SubScene::delete_entity(EntityID e) {
+void Stage::delete_entity(EntityID e) {
     signal_entity_destroyed_(e);
 
     entity(e).destroy_children();
@@ -73,7 +73,7 @@ void SubScene::delete_entity(EntityID e) {
     EntityManager::manager_delete(e);
 }
 
-LightID SubScene::new_light(LightType type) {
+LightID Stage::new_light(LightType type) {
     LightID lid = LightManager::manager_new();
 
     Light& l = light(lid);
@@ -83,7 +83,7 @@ LightID SubScene::new_light(LightType type) {
     return lid;
 }
 
-LightID SubScene::new_light(Object &parent, LightType type) {
+LightID Stage::new_light(Object &parent, LightType type) {
     LightID lid = LightManager::manager_new();
 
     Light& l = light(lid);
@@ -95,11 +95,11 @@ LightID SubScene::new_light(Object &parent, LightType type) {
     return lid;
 }
 
-Light& SubScene::light(LightID light_id) {
+Light& Stage::light(LightID light_id) {
     return LightManager::manager_get(light_id);
 }
 
-void SubScene::delete_light(LightID light_id) {
+void Stage::delete_light(LightID light_id) {
     Light& obj = light(light_id);
     signal_light_destroyed_(light_id);
 
@@ -108,17 +108,17 @@ void SubScene::delete_light(LightID light_id) {
 }
 
 
-CameraID SubScene::new_camera() {
+CameraID Stage::new_camera() {
     return CameraManager::manager_new();
 }
 
-CameraID SubScene::new_camera(Object& parent) {
+CameraID Stage::new_camera(Object& parent) {
     Camera& cam = camera(CameraManager::manager_new());
     cam.set_parent(&parent);
     return cam.id();
 }
 
-Camera& SubScene::camera(CameraID c) {
+Camera& Stage::camera(CameraID c) {
     if(c == CameraID()) {
         //Return the first camera, it's very likely this is the only one
         if(!CameraManager::manager_count()) {
@@ -129,13 +129,13 @@ Camera& SubScene::camera(CameraID c) {
     return CameraManager::manager_get(c);
 }
 
-void SubScene::delete_camera(CameraID cid) {
+void Stage::delete_camera(CameraID cid) {
     Camera& obj = camera(cid);
     obj.destroy_children();
     CameraManager::manager_delete(cid);
 }
 
-void SubScene::set_partitioner(Partitioner::ptr partitioner) {
+void Stage::set_partitioner(Partitioner::ptr partitioner) {
     assert(partitioner);
 
     partitioner_ = partitioner;

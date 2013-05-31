@@ -18,7 +18,7 @@ class Camera :
     public Managed<Camera>,
     public Source {
 public:
-    Camera(SubScene* subscene, CameraID id);
+    Camera(Stage* subscene, CameraID id);
 
     kmVec3 project_point(ViewportID vid, const kmVec3& point);
     void follow(EntityID entity, const kglt::Vec3& offset);

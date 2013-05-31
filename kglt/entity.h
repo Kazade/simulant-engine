@@ -22,8 +22,8 @@ class Entity :
     public Source {
 
 public:
-    Entity(SubScene* subscene, EntityID id);
-    Entity(SubScene* subscene, EntityID id, MeshID mesh);
+    Entity(Stage* subscene, EntityID id);
+    Entity(Stage* subscene, EntityID id, MeshID mesh);
 
     MeshID mesh_id() const { return (mesh_) ? mesh_->id() : MeshID(0); }
     MeshRef mesh() const { return mesh_; }

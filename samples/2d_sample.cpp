@@ -7,7 +7,7 @@ int main(int argc, char* argv[]) {
 	logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));
 
     kglt::Window::ptr window = kglt::Window::create();
-    kglt::SubScene& subscene = window->scene().subscene();
+    kglt::Stage& subscene = window->scene().subscene();
 
     window->set_title("KGLT Sprite Sample");
 

@@ -28,7 +28,7 @@ public:
     virtual void render_subentity(SubEntity& buffer, CameraID camera) = 0;
 
 protected:
-    SubScene& current_subscene();
+    Stage& current_subscene();
 
 private:    
     Scene& scene_;

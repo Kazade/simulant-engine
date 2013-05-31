@@ -3,7 +3,7 @@
 
 namespace kglt {
 
-Entity::Entity(SubScene* subscene, EntityID id):
+Entity::Entity(Stage* subscene, EntityID id):
     generic::Identifiable<EntityID>(id),
     Object(subscene),
     Source(*subscene),
@@ -11,7 +11,7 @@ Entity::Entity(SubScene* subscene, EntityID id):
 
 }
 
-Entity::Entity(SubScene* subscene, EntityID id, MeshID mesh):
+Entity::Entity(Stage* subscene, EntityID id, MeshID mesh):
     generic::Identifiable<EntityID>(id),
     Object(subscene),
     Source(*subscene),

@@ -60,7 +60,7 @@ void Scene::initialize_defaults() {
 }
 
 StageID Scene::new_subscene(AvailablePartitioner partitioner) {
-    SubScene& ss = subscene(SubSceneManager::manager_new());
+    Stage& ss = subscene(StageManager::manager_new());
 
     switch(partitioner) {
         case PARTITIONER_NULL:
@@ -82,28 +82,28 @@ StageID Scene::new_subscene(AvailablePartitioner partitioner) {
 }
 
 uint32_t Scene::subscene_count() const {
-    return SubSceneManager::manager_count();
+    return StageManager::manager_count();
 }
 
-SubScene& Scene::subscene(StageID s) {
+Stage& Scene::subscene(StageID s) {
     if(s == DefaultStageID) {
-        return SubSceneManager::manager_get(default_subscene_);
+        return StageManager::manager_get(default_subscene_);
     }
 
-    return SubSceneManager::manager_get(s);
+    return StageManager::manager_get(s);
 }
 
-SubSceneRef Scene::subscene_ref(StageID s) {
-    if(!SubSceneManager::manager_contains(s)) {
-        throw DoesNotExist<SubScene>();
+StageRef Scene::subscene_ref(StageID s) {
+    if(!StageManager::manager_contains(s)) {
+        throw DoesNotExist<Stage>();
     }
-    return SubSceneManager::__objects()[s];
+    return StageManager::__objects()[s];
 }
 
 void Scene::delete_subscene(StageID s) {
-    SubScene& ss = subscene(s);
+    Stage& ss = subscene(s);
     ss.destroy_children();
-    SubSceneManager::manager_delete(s);
+    StageManager::manager_delete(s);
 }
 
 bool Scene::init() {
@@ -114,7 +114,7 @@ bool Scene::init() {
 
 void Scene::update(double dt) {
     //Update the subscenes
-    SubSceneManager::apply_func_to_objects(std::bind(&Object::update, std::tr1::placeholders::_1, dt));
+    StageManager::apply_func_to_objects(std::bind(&Object::update, std::tr1::placeholders::_1, dt));
 }
 
 void Scene::render() {

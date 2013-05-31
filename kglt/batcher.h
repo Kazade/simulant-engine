@@ -16,7 +16,7 @@ inline void hash_combine(std::size_t& seed, const T& v)
     seed ^= hasher(v) + 0x9e3779b9 + (seed<<6) + (seed>>2);
 }
 
-class SubScene;
+class Stage;
 class SubEntity;
 class Camera;
 class MaterialPass;
@@ -145,7 +145,7 @@ public:
     typedef std::shared_ptr<RootGroup> ptr;
     typedef int data_type;
 
-    RootGroup(SubScene& subscene, Camera& camera):
+    RootGroup(Stage& subscene, Camera& camera):
         RenderGroup(nullptr),
         subscene_(subscene),
         camera_(camera){}
@@ -157,13 +157,13 @@ public:
         return *this;
     }
 
-    SubScene& subscene() { return subscene_; }
+    Stage& subscene() { return subscene_; }
     Camera& camera() { return camera_; }
 
     void insert(SubEntity& ent, uint8_t pass_number);
 
 private:
-    SubScene& subscene_;
+    Stage& subscene_;
     Camera& camera_;
 
     void generate_mesh_groups(RenderGroup* parent, SubEntity& ent, MaterialPass& pass);

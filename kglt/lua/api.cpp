@@ -63,15 +63,15 @@ void export_lua_api(lua_State* state) {
     ];
 
     luabind::module(state) [
-        luabind::class_<SubScene, luabind::bases<ResourceManager> >("SubScene")
-            .def("new_entity", (EntityID(SubScene::*)())&SubScene::new_entity)
-            .def("new_entity_from_mesh", (EntityID(SubScene::*)(MeshID))&SubScene::new_entity)
-            .def("entity", &SubScene::entity)
-            .def("delete_entity", &SubScene::delete_entity)
-            .property("scene", (Scene&(SubScene::*)())&SubScene::scene)
-            .property("entity_count", &SubScene::entity_count)
-            .property("light_count", &SubScene::light_count)
-            .property("id", &SubScene::id)
+        luabind::class_<Stage, luabind::bases<ResourceManager> >("Stage")
+            .def("new_entity", (EntityID(Stage::*)())&Stage::new_entity)
+            .def("new_entity_from_mesh", (EntityID(Stage::*)(MeshID))&Stage::new_entity)
+            .def("entity", &Stage::entity)
+            .def("delete_entity", &Stage::delete_entity)
+            .property("scene", (Scene&(Stage::*)())&Stage::scene)
+            .property("entity_count", &Stage::entity_count)
+            .property("light_count", &Stage::light_count)
+            .property("id", &Stage::id)
     ];
 
     /*
@@ -111,10 +111,10 @@ void export_lua_api(lua_State* state) {
         luabind::class_<Scene, luabind::bases<ResourceManager> >("Scene")
             .def("update", &Scene::update)
             .def("new_subscene", &Scene::new_subscene)
-            .def("subscene", (SubScene&(Scene::*)(StageID))&Scene::subscene)
+            .def("subscene", (Stage&(Scene::*)(StageID))&Scene::subscene)
             .def("delete_subscene", &Scene::delete_subscene)
             .property("subscene_count", &Scene::subscene_count)
-            .property("default_subscene", (SubScene&(Scene::*)())&Scene::subscene)
+            .property("default_subscene", (Stage&(Scene::*)())&Scene::subscene)
             .property("default_material_id", &Scene::default_material_id)
             .property("pipeline", &Scene::pipeline)
     ];

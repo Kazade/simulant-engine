@@ -26,7 +26,7 @@ Sound::Sound(ResourceManager *resource_manager, SoundID id):
 
 }
 
-Source::Source(SubScene& subscene):
+Source::Source(Stage& subscene):
     subscene_(subscene) {
 
 

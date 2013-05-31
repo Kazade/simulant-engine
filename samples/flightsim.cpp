@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
     kglt::Window::ptr window = kglt::Window::create(1024, 768);
     window->set_title("Flight Sim Camera");
 
-    kglt::SubScene& subscene = window->scene().subscene();
+    kglt::Stage& subscene = window->scene().subscene();
     subscene.set_ambient_light(kglt::Colour(1.0, 1.0, 1.0, 1.0));
     subscene.camera().set_perspective_projection(45.0, float(window->width()) / float(window->height()));
 

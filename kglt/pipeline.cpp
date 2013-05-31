@@ -16,7 +16,7 @@
 
 namespace kglt {
 
-Stage::Stage(Scene& scene, StageID ss, CameraID camera, ViewportID viewport, TextureID target):
+PipelineStage::PipelineStage(Scene& scene, StageID ss, CameraID camera, ViewportID viewport, TextureID target):
     priority_(0),
     scene_(scene),
     subscene_(ss),
@@ -41,7 +41,7 @@ void Pipeline::remove_all_stages() {
 }
 
 void Pipeline::add_stage(StageID subscene, CameraID camera, ViewportID viewport, TextureID target, int32_t priority) {
-    stages_.push_back(Stage::ptr(new Stage(scene_, subscene, camera, viewport, target)));
+    stages_.push_back(PipelineStage::ptr(new PipelineStage(scene_, subscene, camera, viewport, target)));
     stages_.at(stages_.size() - 1)->set_priority(priority);
 }
 
@@ -52,20 +52,20 @@ void Pipeline::set_renderer(Renderer::ptr renderer) {
 void Pipeline::run() {
     scene_.window().apply_func_to_objects(std::bind(&Viewport::clear, std::tr1::placeholders::_1));
 
-    std::vector<Stage::ptr> sorted(stages_.begin(), stages_.end());
-    std::sort(stages_.begin(), stages_.end(), [](Stage::ptr lhs, Stage::ptr rhs) { return lhs->priority() < rhs->priority(); });
+    std::vector<PipelineStage::ptr> sorted(stages_.begin(), stages_.end());
+    std::sort(stages_.begin(), stages_.end(), [](PipelineStage::ptr lhs, PipelineStage::ptr rhs) { return lhs->priority() < rhs->priority(); });
 
-    for(Stage::ptr stage: sorted) {
+    for(PipelineStage::ptr stage: sorted) {
         run_stage(stage);
     }
 }
 
-void Pipeline::run_stage(Stage::ptr stage) {
+void Pipeline::run_stage(PipelineStage::ptr stage) {
     scene_.window().viewport(stage->viewport_id()).apply(); //FIXME apply shouldn't exist
 
     signal_render_stage_started_(*stage);
 
-    SubScene& subscene = scene_.subscene(stage->subscene_id());
+    Stage& subscene = scene_.subscene(stage->subscene_id());
     Camera& camera = subscene.camera(stage->camera_id());
 
     std::vector<SubEntity::ptr> buffers = subscene.partitioner().geometry_visible_from(stage->camera_id());

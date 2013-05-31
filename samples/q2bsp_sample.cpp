@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
     kglt::Window::ptr window = kglt::Window::create(1024, 768);
     window->set_title("Quake 2 Renderer");
 
-    kglt::SubScene& subscene = window->scene().subscene();
+    kglt::Stage& subscene = window->scene().subscene();
     subscene.set_ambient_light(kglt::Colour(0.02, 0.02, 0.02, 1.0));
 
     subscene.camera().set_perspective_projection(

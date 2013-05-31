@@ -18,7 +18,7 @@ public:
     }
 
     void test_2d_sound_output() {
-        kglt::SubScene& subscene = window->scene().subscene();
+        kglt::Stage& subscene = window->scene().subscene();
 
         kglt::SoundID sound = subscene.new_sound_from_file("sample_data/test_sound.ogg");
 
@@ -35,7 +35,7 @@ public:
     }
 
     void test_3d_sound_output() {
-        kglt::SubScene& subscene = window->scene().subscene();
+        kglt::Stage& subscene = window->scene().subscene();
 
         kglt::SoundID sound = subscene.new_sound_from_file("sample_data/test_sound.ogg");
 

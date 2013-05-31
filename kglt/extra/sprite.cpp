@@ -9,11 +9,11 @@
 namespace kglt {
 namespace extra {
 
-Sprite::Sprite(SubSceneRef subscene):
+Sprite::Sprite(StageRef subscene):
     subscene_(subscene),
     entity_(nullptr) {
 
-    SubScenePtr ss = subscene_.lock();
+    StagePtr ss = subscene_.lock();
 
     entity_ = &ss->entity(ss->new_entity(ss->new_mesh()));
 
@@ -27,7 +27,7 @@ Sprite::Sprite(SubSceneRef subscene):
 
 Sprite::~Sprite() {
     if(entity_) {
-        if(SubScenePtr ss = subscene_.lock()) {
+        if(StagePtr ss = subscene_.lock()) {
             ss->delete_entity(entity_->id());
         }
         entity_ = nullptr;
@@ -44,7 +44,7 @@ void Sprite::add_animation(const std::string& anim_name, const std::vector<Textu
      * is bound at a time
      */
 
-    SubScenePtr ss = subscene_.lock();
+    StagePtr ss = subscene_.lock();
 
     MaterialID new_material_id;
     {

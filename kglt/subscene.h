@@ -13,12 +13,12 @@ namespace kglt {
 class Partitioner;
 class Scene;
 
-typedef generic::TemplatedManager<SubScene, Entity, EntityID> EntityManager;
-typedef generic::TemplatedManager<SubScene, Light, LightID> LightManager;
-typedef generic::TemplatedManager<SubScene, Camera, CameraID> CameraManager;
+typedef generic::TemplatedManager<Stage, Entity, EntityID> EntityManager;
+typedef generic::TemplatedManager<Stage, Light, LightID> LightManager;
+typedef generic::TemplatedManager<Stage, Camera, CameraID> CameraManager;
 
-class SubScene:
-    public Managed<SubScene>,
+class Stage:
+    public Managed<Stage>,
     public generic::Identifiable<StageID>,
     public ResourceManager,
     public Object,
@@ -28,7 +28,7 @@ class SubScene:
     public Loadable {
 
 public:
-    SubScene(Scene *parent, StageID id);
+    Stage(Scene *parent, StageID id);
 
     EntityID new_entity();
     EntityID new_entity(MeshID mid);

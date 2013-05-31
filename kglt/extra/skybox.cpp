@@ -13,7 +13,7 @@
 namespace kglt {
 namespace extra {
 
-SkyBox::SkyBox(kglt::SubScene& subscene, kglt::TextureID texture, float size, CameraID cam):
+SkyBox::SkyBox(kglt::Stage& subscene, kglt::TextureID texture, float size, CameraID cam):
     subscene_(subscene),
     camera_id_(cam) {
 
@@ -39,7 +39,7 @@ SkyBox::SkyBox(kglt::SubScene& subscene, kglt::TextureID texture, float size, Ca
     entity_->lock_rotation(0, 0, 1, 0);
 }
 
-StarField::StarField(SubScene& subscene, CameraID cam) {
+StarField::StarField(Stage& subscene, CameraID cam) {
     //Generate a starfield texture
     texture_id_ = subscene.new_texture();
     kglt::procedural::texture::starfield(subscene.texture(texture_id_).lock());

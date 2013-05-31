@@ -17,7 +17,7 @@ class Partitioner:
     public Managed<Partitioner> {
 
 public:
-    Partitioner(SubScene& ss):
+    Partitioner(Stage& ss):
         subscene_(ss) {}
 
     virtual void add_entity(EntityID obj) = 0;
@@ -30,10 +30,10 @@ public:
     virtual std::vector<std::shared_ptr<SubEntity>> geometry_visible_from(CameraID camera_id) = 0;
 
 protected:
-    SubScene& subscene() { return subscene_; }
+    Stage& subscene() { return subscene_; }
 
 private:
-    SubScene& subscene_;
+    Stage& subscene_;
 };
 
 }
