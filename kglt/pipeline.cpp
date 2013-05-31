@@ -16,7 +16,7 @@
 
 namespace kglt {
 
-Stage::Stage(Scene& scene, SubSceneID ss, CameraID camera, ViewportID viewport, TextureID target):
+Stage::Stage(Scene& scene, StageID ss, CameraID camera, ViewportID viewport, TextureID target):
     priority_(0),
     scene_(scene),
     subscene_(ss),
@@ -40,7 +40,7 @@ void Pipeline::remove_all_stages() {
     stages_.clear();
 }
 
-void Pipeline::add_stage(SubSceneID subscene, CameraID camera, ViewportID viewport, TextureID target, int32_t priority) {
+void Pipeline::add_stage(StageID subscene, CameraID camera, ViewportID viewport, TextureID target, int32_t priority) {
     stages_.push_back(Stage::ptr(new Stage(scene_, subscene, camera, viewport, target)));
     stages_.at(stages_.size() - 1)->set_priority(priority);
 }
@@ -112,7 +112,7 @@ void Pipeline::run_stage(Stage::ptr stage) {
             pass_group->traverse(f);
         }
     }
-    renderer_->set_current_subscene(SubSceneID());
+    renderer_->set_current_subscene(StageID());
 
     /*
      * At this point, we will have a render group tree for each priority level
@@ -128,7 +128,7 @@ void Pipeline::run_stage(Stage::ptr stage) {
     //TODO: Batched rendering
     renderer_->set_current_subscene(subscene.id());
         renderer_->render(buffers, stage->camera_id());
-    renderer_->set_current_subscene(SubSceneID());*/
+    renderer_->set_current_subscene(StageID());*/
 
     signal_render_stage_finished_(*stage);
 }

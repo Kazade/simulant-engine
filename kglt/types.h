@@ -127,12 +127,12 @@ typedef UniqueID<2> CameraID;
 typedef UniqueID<3> ShaderID;
 typedef UniqueID<4> MaterialID;
 typedef UniqueID<5> LightID;
-typedef UniqueID<6> SubSceneID;
+typedef UniqueID<6> StageID;
 typedef UniqueID<7> ViewportID;
 typedef UniqueID<8> EntityID;
 typedef UniqueID<9> SoundID;
 
-const SubSceneID DefaultSubSceneID = SubSceneID();
+const StageID DefaultStageID = StageID();
 
 const std::string DEFAULT_MATERIAL_SCHEME = "default";
 

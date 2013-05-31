@@ -21,7 +21,7 @@ public:
 
     Scene& scene() { return scene_; }
 
-    void set_current_subscene(SubSceneID subscene) {
+    void set_current_subscene(StageID subscene) {
         current_subscene_ = subscene;
     }
 
@@ -32,7 +32,7 @@ protected:
 
 private:    
     Scene& scene_;
-    SubSceneID current_subscene_;
+    StageID current_subscene_;
 
 
 };

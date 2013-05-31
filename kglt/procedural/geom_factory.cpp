@@ -12,7 +12,7 @@ GeomFactory::GeomFactory(Scene& scene):
 
 }
 
-EntityID GeomFactory::new_line(SubSceneID ss, const kmVec3& start, const kmVec3& end) {
+EntityID GeomFactory::new_line(StageID ss, const kmVec3& start, const kmVec3& end) {
     kglt::SubScene& subscene = scene_.subscene(ss);
 
     kglt::MeshPtr mesh_ptr = subscene.mesh(subscene.new_mesh()).lock();
@@ -52,7 +52,7 @@ EntityID GeomFactory::new_line(SubSceneID ss, const kmVec3& start, const kmVec3&
     return subscene.new_entity(mesh.id());
 }
 
-EntityID GeomFactory::new_rectangle_outline(SubSceneID ss, const float width, const float height) {
+EntityID GeomFactory::new_rectangle_outline(StageID ss, const float width, const float height) {
     kglt::SubScene& subscene = scene_.subscene(ss);
 
     kglt::MeshPtr mesh_ptr = subscene.mesh(subscene.new_mesh()).lock();
@@ -61,7 +61,7 @@ EntityID GeomFactory::new_rectangle_outline(SubSceneID ss, const float width, co
     return subscene.new_entity(mesh_ptr->id());
 }
 
-EntityID GeomFactory::new_rectangle(SubSceneID ss, const float width, const float height) {
+EntityID GeomFactory::new_rectangle(StageID ss, const float width, const float height) {
     kglt::SubScene& subscene = scene_.subscene(ss);
 
     kglt::MeshPtr mesh_ptr = subscene.mesh(subscene.new_mesh()).lock();
@@ -70,15 +70,15 @@ EntityID GeomFactory::new_rectangle(SubSceneID ss, const float width, const floa
     return subscene.new_entity(mesh_ptr->id());
 }
 
-EntityID GeomFactory::new_capsule(SubSceneID, const float diameter, const float length) {
+EntityID GeomFactory::new_capsule(StageID, const float diameter, const float length) {
     throw NotImplementedError(__FILE__, __LINE__);
 }
 
-EntityID GeomFactory::new_sphere(SubSceneID ss, const kmVec3& position, const float diameter) {
+EntityID GeomFactory::new_sphere(StageID ss, const kmVec3& position, const float diameter) {
     throw NotImplementedError(__FILE__, __LINE__);
 }
 
-EntityID GeomFactory::new_cube(SubSceneID ss, const kmVec3& position, const float diameter) {
+EntityID GeomFactory::new_cube(StageID ss, const kmVec3& position, const float diameter) {
     throw NotImplementedError(__FILE__, __LINE__);
 }
 

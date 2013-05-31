@@ -18,7 +18,7 @@ class Scene;
 class SubScene;
 class GeomFactory;
 
-typedef generic::TemplatedManager<Scene, SubScene, SubSceneID> SubSceneManager;
+typedef generic::TemplatedManager<Scene, SubScene, StageID> SubSceneManager;
 
 class Scene:
     public ResourceManagerImpl,
@@ -30,12 +30,12 @@ public:
     Scene(WindowBase* window);
     ~Scene();
 
-    SubSceneID new_subscene(AvailablePartitioner partitioner=PARTITIONER_OCTREE);            
+    StageID new_subscene(AvailablePartitioner partitioner=PARTITIONER_OCTREE);            
     SubScene& subscene() { return subscene(default_subscene_); }
-    SubScene& subscene(SubSceneID s);
-    SubSceneRef subscene_ref(SubSceneID s);
+    SubScene& subscene(StageID s);
+    SubSceneRef subscene_ref(StageID s);
 
-    void delete_subscene(SubSceneID s);
+    void delete_subscene(StageID s);
     uint32_t subscene_count() const;
 
     bool init();
@@ -49,7 +49,7 @@ public:
     GeomFactory& geom_factory() { return *geom_factory_; }
 
 private:
-    SubSceneID default_subscene_;
+    StageID default_subscene_;
     TexturePtr default_texture_;
     MaterialPtr default_material_;
 

@@ -19,7 +19,7 @@ typedef generic::TemplatedManager<SubScene, Camera, CameraID> CameraManager;
 
 class SubScene:
     public Managed<SubScene>,
-    public generic::Identifiable<SubSceneID>,
+    public generic::Identifiable<StageID>,
     public ResourceManager,
     public Object,
     public EntityManager,
@@ -28,7 +28,7 @@ class SubScene:
     public Loadable {
 
 public:
-    SubScene(Scene *parent, SubSceneID id);
+    SubScene(Scene *parent, StageID id);
 
     EntityID new_entity();
     EntityID new_entity(MeshID mid);

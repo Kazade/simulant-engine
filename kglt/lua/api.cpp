@@ -6,9 +6,9 @@ namespace kglt {
 
 void export_lua_api(lua_State* state) {
     luabind::module(state) [
-        luabind::class_<SubSceneID>("SubSceneID")
+        luabind::class_<StageID>("StageID")
             .def(luabind::constructor<int>())
-            .property("value", &SubSceneID::value)
+            .property("value", &StageID::value)
     ];
 
     luabind::module(state) [
@@ -111,7 +111,7 @@ void export_lua_api(lua_State* state) {
         luabind::class_<Scene, luabind::bases<ResourceManager> >("Scene")
             .def("update", &Scene::update)
             .def("new_subscene", &Scene::new_subscene)
-            .def("subscene", (SubScene&(Scene::*)(SubSceneID))&Scene::subscene)
+            .def("subscene", (SubScene&(Scene::*)(StageID))&Scene::subscene)
             .def("delete_subscene", &Scene::delete_subscene)
             .property("subscene_count", &Scene::subscene_count)
             .property("default_subscene", (SubScene&(Scene::*)())&Scene::subscene)

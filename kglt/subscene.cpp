@@ -9,8 +9,8 @@
 
 namespace kglt {
 
-SubScene::SubScene(Scene* parent, SubSceneID id):
-    generic::Identifiable<SubSceneID>(id),
+SubScene::SubScene(Scene* parent, StageID id):
+    generic::Identifiable<StageID>(id),
     Object(nullptr),
     scene_(*parent),
     ambient_light_(1.0, 1.0, 1.0, 1.0){

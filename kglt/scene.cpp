@@ -59,7 +59,7 @@ void Scene::initialize_defaults() {
     default_material_->technique().pass(0).set_texture_unit(0, default_texture_->id());
 }
 
-SubSceneID Scene::new_subscene(AvailablePartitioner partitioner) {
+StageID Scene::new_subscene(AvailablePartitioner partitioner) {
     SubScene& ss = subscene(SubSceneManager::manager_new());
 
     switch(partitioner) {
@@ -85,22 +85,22 @@ uint32_t Scene::subscene_count() const {
     return SubSceneManager::manager_count();
 }
 
-SubScene& Scene::subscene(SubSceneID s) {
-    if(s == DefaultSubSceneID) {
+SubScene& Scene::subscene(StageID s) {
+    if(s == DefaultStageID) {
         return SubSceneManager::manager_get(default_subscene_);
     }
 
     return SubSceneManager::manager_get(s);
 }
 
-SubSceneRef Scene::subscene_ref(SubSceneID s) {
+SubSceneRef Scene::subscene_ref(StageID s) {
     if(!SubSceneManager::manager_contains(s)) {
         throw DoesNotExist<SubScene>();
     }
     return SubSceneManager::__objects()[s];
 }
 
-void Scene::delete_subscene(SubSceneID s) {
+void Scene::delete_subscene(StageID s) {
     SubScene& ss = subscene(s);
     ss.destroy_children();
     SubSceneManager::manager_delete(s);
