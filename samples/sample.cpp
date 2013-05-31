@@ -7,8 +7,8 @@ int main(int argc, char* argv[]) {
     kglt::Window::ptr window = kglt::Window::create();
     window->set_title("KGLT Sample");
 
-    kglt::Stage& subscene = window->scene().subscene();
-    subscene.camera().set_perspective_projection(
+    kglt::Stage& stage = window->scene().stage();
+    stage.camera().set_perspective_projection(
         45.0,
         float(window->width()) / float(window->height()),
         1.0,
@@ -27,12 +27,12 @@ int main(int argc, char* argv[]) {
     */
 
     ///Shortcut function for loading images
-    kglt::TextureID tid = kglt::create_texture_from_file(subscene, "sample_data/sample.tga");
-    kglt::MaterialID matid = kglt::create_material_from_texture(subscene, tid);
+    kglt::TextureID tid = kglt::create_texture_from_file(stage, "sample_data/sample.tga");
+    kglt::MaterialID matid = kglt::create_material_from_texture(stage, tid);
 
-    subscene.set_ambient_light(kglt::Colour::white);
+    stage.set_ambient_light(kglt::Colour::white);
 
-    kglt::Entity& entity = subscene.entity(window->scene().geom_factory().new_capsule(subscene.id()));
+    kglt::Entity& entity = stage.entity(window->scene().geom_factory().new_capsule(stage.id()));
     entity.mesh().lock()->set_material_id(matid);
 
     /**

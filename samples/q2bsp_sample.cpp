@@ -18,10 +18,10 @@ int main(int argc, char* argv[]) {
     kglt::Window::ptr window = kglt::Window::create(1024, 768);
     window->set_title("Quake 2 Renderer");
 
-    kglt::Stage& subscene = window->scene().subscene();
-    subscene.set_ambient_light(kglt::Colour(0.02, 0.02, 0.02, 1.0));
+    kglt::Stage& stage = window->scene().stage();
+    stage.set_ambient_light(kglt::Colour(0.02, 0.02, 0.02, 1.0));
 
-    subscene.camera().set_perspective_projection(
+    stage.camera().set_perspective_projection(
         45.0,
         float(window->width()) / float(window->height()),
         0.1,
@@ -42,18 +42,18 @@ int main(int argc, char* argv[]) {
 
     while(window->update()) {
         if(keys[kglt::KEY_CODE_LEFT]) {
-            subscene.camera().rotate_y(-4.0 * window->delta_time());
+            stage.camera().rotate_y(-4.0 * window->delta_time());
         }
 
         if(keys[kglt::KEY_CODE_RIGHT]) {
-            subscene.camera().rotate_y(4.0 * window->delta_time());
+            stage.camera().rotate_y(4.0 * window->delta_time());
         }
 
         if(keys[kglt::KEY_CODE_UP]) {
-            subscene.camera().move_forward(100.0 * window->delta_time());
+            stage.camera().move_forward(100.0 * window->delta_time());
         }
         if(keys[kglt::KEY_CODE_DOWN]) {
-            subscene.camera().move_forward(-100.0 * window->delta_time());
+            stage.camera().move_forward(-100.0 * window->delta_time());
         }
     }
     return 0;

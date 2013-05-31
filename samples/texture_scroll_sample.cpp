@@ -7,7 +7,7 @@ int main(int argc, char* argv[]) {
     kglt::Window::ptr window = kglt::Window::create();
     window->set_title("KGLT Sample");
 
-    kglt::Stage& subscene = window->scene().subscene();
+    kglt::Stage& stage = window->scene().stage();
 
     /**
         Generate a mesh and build a 2D square
@@ -21,10 +21,10 @@ int main(int argc, char* argv[]) {
     */
 
     ///Shortcut function for loading images
-    kglt::TextureID tid = kglt::create_texture_from_file(subscene, "sample_data/sample.tga");
-    kglt::MaterialID matid = kglt::create_material_from_texture(subscene, tid);
+    kglt::TextureID tid = kglt::create_texture_from_file(stage, "sample_data/sample.tga");
+    kglt::MaterialID matid = kglt::create_material_from_texture(stage, tid);
 
-    kglt::Entity& entity = subscene.entity(window->scene().geom_factory().new_rectangle(subscene.id(), 1.0, 1.0));
+    kglt::Entity& entity = stage.entity(window->scene().geom_factory().new_rectangle(stage.id(), 1.0, 1.0));
     entity.mesh().lock()->set_material_id(matid);
 
     /**
@@ -33,10 +33,10 @@ int main(int argc, char* argv[]) {
     */
     entity.move_to(0.0f, 0.0f, -5.0f);
 
-    subscene.camera().set_orthographic_projection_from_height(2.0, (float) window->width() / (float)window->height());
+    stage.camera().set_orthographic_projection_from_height(2.0, (float) window->width() / (float)window->height());
 
     while(window->update()) {
-        subscene.material(matid).lock()->technique().pass(0).texture_unit(0).scroll_x(0.5 * window->delta_time());
+        stage.material(matid).lock()->technique().pass(0).texture_unit(0).scroll_x(0.5 * window->delta_time());
     }
 	return 0;
 }

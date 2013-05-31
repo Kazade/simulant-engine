@@ -15,20 +15,20 @@ int main(int argc, char* argv[]) {
     window->set_title("KGLT Parallax Sample");
 
     kglt::Scene& scene = window->scene();
-    kglt::Stage& subscene = scene.subscene();
+    kglt::Stage& stage = scene.stage();
 
     //Automatically calculate an orthographic projection, taking into account the aspect ratio
     //and the passed height. For example, passing a height of 2.0 would mean the view would extend
     //+1 and -1 in the vertical direction, -1.0 - +1.0 near/far, and width would be calculated from the aspect
     //window.scene().pass().viewport().configure(kglt::VIEWPORT_TYPE_BLACKBAR_16_BY_9);
-    subscene.camera().set_orthographic_projection_from_height((float) 224 / (float) 40, 16.0 / 9.0);
+    stage.camera().set_orthographic_projection_from_height((float) 224 / (float) 40, 16.0 / 9.0);
 
     //Load the strip of sprites into separate textures
-    SpriteStripLoader loader(subscene, "sample_data/sonic.png", 64);
+    SpriteStripLoader loader(stage, "sample_data/sonic.png", 64);
     std::vector<kglt::TextureID> frames = loader.load_frames();
 
     //Construct a Sprite object that takes care of handling materials, meshes etc.
-    Sprite::ptr sprite = Sprite::create(scene.subscene_ref(subscene.id()));
+    Sprite::ptr sprite = Sprite::create(scene.stage_ref(stage.id()));
     sprite->add_animation("running", container::slice(frames, 31, 35), 0.5);
     sprite->set_render_dimensions(1.5, 1.5);
     sprite->move_to(0.0, -2.0, -1.0);

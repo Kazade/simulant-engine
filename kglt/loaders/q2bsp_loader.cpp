@@ -7,7 +7,7 @@
 #include <kazmath/mat4.h>
 
 #include "../window.h"
-#include "../subscene.h"
+#include "../stage.h"
 #include "../scene.h"
 #include "../mesh.h"
 #include "../types.h"
@@ -188,7 +188,7 @@ void add_lights_to_scene(Scene& scene, const std::vector<EntityProperties>& enti
             std::istringstream origin(props["origin"]);
             origin >> pos.x >> pos.y >> pos.z;
 
-            kglt::Light& new_light = scene.subscene().light(scene.subscene().new_light());
+            kglt::Light& new_light = scene.stage().light(scene.stage().new_light());
 
             kmVec3Transform(&pos, &pos, &rotation);
             new_light.move_to(pos.x, pos.y, pos.z);
@@ -236,8 +236,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         throw std::runtime_error("Not a valid Q2 map");
     }
 
-    MeshID mid = scene->subscene().new_mesh();
-    MeshPtr mesh_ptr = scene->subscene().mesh(mid).lock();
+    MeshID mid = scene->stage().new_mesh();
+    MeshPtr mesh_ptr = scene->stage().mesh(mid).lock();
     Mesh& mesh = *mesh_ptr;
 
     std::vector<char> entity_buffer(header.lumps[Q2::LumpType::ENTITIES].length);
@@ -250,7 +250,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     parse_entities(entity_string, entities);
     kmVec3 cam_pos = find_player_spawn_point(entities);
     kmVec3Transform(&cam_pos, &cam_pos, &rotation);
-    scene->subscene().camera().move_to(cam_pos);
+    scene->stage().camera().move_to(cam_pos);
 
     add_lights_to_scene(*scene, entities);
 
@@ -308,7 +308,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         {
             //Clone the default material
             MaterialPtr def_mat = scene->material(scene->default_material_id()).lock();
-            new_mat = scene->subscene().material(def_mat->clone()).lock();
+            new_mat = scene->stage().material(def_mat->clone()).lock();
         }
         Material& mat = *new_mat;
 
@@ -329,8 +329,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         if(tex_lookup.find(tex.texture_name) != tex_lookup.end()) {
             tid = tex_lookup[tex.texture_name];
         } else {
-            tid = scene->subscene().new_texture();
-            TexturePtr texture = scene->subscene().texture(tid).lock();
+            tid = scene->stage().new_texture();
+            TexturePtr texture = scene->stage().texture(tid).lock();
 
             //HACK!
             scene->window().loader_for("textures/" + std::string(tex.texture_name) + ".tga")->into(*texture);
@@ -458,7 +458,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     }
 
     //Finally, create an entity from the world mesh
-    scene->subscene().new_entity(mid);
+    scene->stage().new_entity(mid);
 }
 
 }

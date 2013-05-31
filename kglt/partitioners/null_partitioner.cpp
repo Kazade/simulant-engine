@@ -1,4 +1,4 @@
-#include "../subscene.h"
+#include "../stage.h"
 #include "../camera.h"
 #include "../entity.h"
 #include "../light.h"
@@ -11,7 +11,7 @@ std::vector<LightID> NullPartitioner::lights_within_range(const kmVec3& location
 
     //Find all the lights within range of the location
     for(LightID light_id: all_lights_) {
-        Light& light = subscene().light(light_id);
+        Light& light = stage().light(light_id);
 
         kmVec3 diff;
         kmVec3Subtract(&diff, &location, &light.position());
@@ -36,12 +36,12 @@ std::vector<LightID> NullPartitioner::lights_within_range(const kmVec3& location
 std::vector<SubEntity::ptr> NullPartitioner::geometry_visible_from(CameraID camera_id) {
     std::vector<SubEntity::ptr> result;
 
-    //Just return all of the meshes in the subscene
+    //Just return all of the meshes in the stage
     for(EntityID eid: all_entities_) {
-        std::vector<SubEntity::ptr> subentities = subscene().entity(eid)._subentities();
+        std::vector<SubEntity::ptr> subentities = stage().entity(eid)._subentities();
 
         for(SubEntity::ptr ent: subentities) {
-            if(subscene().camera(camera_id).frustum().intersects_aabb(ent->absolute_bounds())) {
+            if(stage().camera(camera_id).frustum().intersects_aabb(ent->absolute_bounds())) {
                 result.push_back(ent);
             }
         }

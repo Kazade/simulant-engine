@@ -14,11 +14,11 @@ class SkyBox :
     public Managed<SkyBox> {
 
 public:
-    SkyBox(Stage& subscene, TextureID texture, float size=500.0f, CameraID cam=CameraID());
-    SkyBox(Stage& subscene, TextureID front, TextureID back, TextureID left, TextureID right, TextureID top, TextureID bottom);
+    SkyBox(Stage& stage, TextureID texture, float size=500.0f, CameraID cam=CameraID());
+    SkyBox(Stage& stage, TextureID front, TextureID back, TextureID left, TextureID right, TextureID top, TextureID bottom);
 
 private:
-    Stage& subscene_;
+    Stage& stage_;
 
     MaterialID material_id_;
     Entity* entity_;
@@ -30,7 +30,7 @@ class StarField :
     public Managed<StarField> {
 
 public:
-    StarField(Stage& subscene, CameraID cam=CameraID());
+    StarField(Stage& stage, CameraID cam=CameraID());
 
 private:
     SkyBox::ptr skybox_;

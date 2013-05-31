@@ -20,7 +20,7 @@ class PipelineStage:
 public:
     ViewportID viewport_id() { return viewport_; }
     CameraID camera_id() { return camera_; }
-    StageID subscene_id() { return subscene_; }
+    StageID stage_id() { return stage_; }
 
     int32_t priority() const { return priority_; }
     void set_priority(int32_t priority) { priority_ = priority; }
@@ -31,7 +31,7 @@ private:
 private:
     int32_t priority_;
     Scene& scene_;
-    StageID subscene_;
+    StageID stage_;
     TextureID target_;
     CameraID camera_;
 
@@ -54,7 +54,7 @@ public:
     Pipeline(Scene& scene);
 
     void remove_all_stages();
-    void add_stage(StageID subscene, CameraID camera, ViewportID viewport=ViewportID(), TextureID target=TextureID(), int32_t priority=0);
+    void add_stage(StageID stage, CameraID camera, ViewportID viewport=ViewportID(), TextureID target=TextureID(), int32_t priority=0);
 
     //void set_batcher(Batcher::ptr batcher);
     void set_renderer(Renderer::ptr renderer);

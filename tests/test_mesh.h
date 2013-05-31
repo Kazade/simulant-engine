@@ -65,7 +65,7 @@ public:
     }
 
     void test_user_data_works() {
-        kglt::Stage& scene = window->scene().subscene();
+        kglt::Stage& scene = window->scene().stage();
 
         kglt::EntityID mid = scene.new_entity();
         kglt::Entity& entity = scene.entity(mid);
@@ -83,7 +83,7 @@ public:
     }
 
     void test_deleting_entities_deletes_children() {
-        kglt::Stage& scene = window->scene().subscene();
+        kglt::Stage& scene = window->scene().stage();
 
         kglt::EntityID mid = scene.new_entity(); //Create the root mesh        
         kglt::EntityID cid1 = scene.new_entity_with_parent(scene.entity(mid)); //Create a child
@@ -100,7 +100,7 @@ public:
     }
 
     void test_procedural_rectangle_outline() {
-        kglt::Stage& scene = window->scene().subscene();
+        kglt::Stage& scene = window->scene().stage();
 
         kglt::MeshID mid = scene.new_mesh();
         kglt::MeshPtr mesh = scene.mesh(mid).lock();
@@ -114,7 +114,7 @@ public:
     }
 
     void test_basic_usage() {
-        kglt::Stage& scene = window->scene().subscene();
+        kglt::Stage& scene = window->scene().stage();
         kglt::MeshPtr mesh = scene.mesh(generate_test_mesh(scene)).lock();
 
         kglt::VertexData& data = mesh->shared_data();
@@ -134,7 +134,7 @@ public:
     }
 
     void test_entity_from_mesh() {
-        kglt::Stage& scene = window->scene().subscene();
+        kglt::Stage& scene = window->scene().stage();
 
         kglt::MeshPtr mesh = scene.mesh(generate_test_mesh(scene)).lock();
 
@@ -168,7 +168,7 @@ public:
     }
 
     void test_scene_methods() {
-        kglt::Stage& scene = window->scene().subscene();
+        kglt::Stage& scene = window->scene().stage();
 
         kglt::MeshPtr mesh = scene.mesh(scene.new_mesh()).lock(); //Create a mesh
         kglt::Entity& entity = scene.entity(scene.new_entity(mesh->id()));

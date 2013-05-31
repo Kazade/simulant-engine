@@ -11,9 +11,9 @@ namespace kglt {
 
 uint64_t Object::object_counter = 0;
 
-Object::Object(Stage *subscene):
+Object::Object(Stage *stage):
     uuid_(++object_counter),
-    subscene_(subscene),
+    stage_(stage),
     is_visible_(true),
     rotation_locked_(false),
     position_locked_(false) {

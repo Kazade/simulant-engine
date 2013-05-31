@@ -1,7 +1,7 @@
 #include "sprite.h"
 
 #include "../scene.h"
-#include "../subscene.h"
+#include "../stage.h"
 #include "../procedural/mesh.h"
 #include "../shortcuts.h"
 #include "../entity.h"
@@ -9,11 +9,11 @@
 namespace kglt {
 namespace extra {
 
-Sprite::Sprite(StageRef subscene):
-    subscene_(subscene),
+Sprite::Sprite(StageRef stage):
+    stage_(stage),
     entity_(nullptr) {
 
-    StagePtr ss = subscene_.lock();
+    StagePtr ss = stage_.lock();
 
     entity_ = &ss->entity(ss->new_entity(ss->new_mesh()));
 
@@ -27,7 +27,7 @@ Sprite::Sprite(StageRef subscene):
 
 Sprite::~Sprite() {
     if(entity_) {
-        if(StagePtr ss = subscene_.lock()) {
+        if(StagePtr ss = stage_.lock()) {
             ss->delete_entity(entity_->id());
         }
         entity_ = nullptr;
@@ -44,7 +44,7 @@ void Sprite::add_animation(const std::string& anim_name, const std::vector<Textu
      * is bound at a time
      */
 
-    StagePtr ss = subscene_.lock();
+    StagePtr ss = stage_.lock();
 
     MaterialID new_material_id;
     {

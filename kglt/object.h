@@ -74,8 +74,8 @@ public:
     virtual void _initialize() {}
     virtual void do_update(double dt) {}
 
-    Stage& subscene() { return *subscene_; }
-    const Stage& subscene() const { return *subscene_; }
+    Stage& stage() { return *stage_; }
+    const Stage& stage() const { return *stage_; }
 
     virtual void destroy() = 0;
 
@@ -91,7 +91,7 @@ private:
     static uint64_t object_counter;
     uint64_t uuid_;
 
-    Stage* subscene_; //Each object is owned by a scene
+    Stage* stage_; //Each object is owned by a scene
 
 
     kmVec3 absolute_position_;

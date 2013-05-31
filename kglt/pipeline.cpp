@@ -2,7 +2,7 @@
 
 #include "pipeline.h"
 #include "scene.h"
-#include "subscene.h"
+#include "stage.h"
 #include "entity.h"
 #include "mesh.h"
 #include "light.h"
@@ -19,7 +19,7 @@ namespace kglt {
 PipelineStage::PipelineStage(Scene& scene, StageID ss, CameraID camera, ViewportID viewport, TextureID target):
     priority_(0),
     scene_(scene),
-    subscene_(ss),
+    stage_(ss),
     target_(target),
     camera_(camera),
     viewport_(viewport) {
@@ -40,8 +40,8 @@ void Pipeline::remove_all_stages() {
     stages_.clear();
 }
 
-void Pipeline::add_stage(StageID subscene, CameraID camera, ViewportID viewport, TextureID target, int32_t priority) {
-    stages_.push_back(PipelineStage::ptr(new PipelineStage(scene_, subscene, camera, viewport, target)));
+void Pipeline::add_stage(StageID stage, CameraID camera, ViewportID viewport, TextureID target, int32_t priority) {
+    stages_.push_back(PipelineStage::ptr(new PipelineStage(scene_, stage, camera, viewport, target)));
     stages_.at(stages_.size() - 1)->set_priority(priority);
 }
 
@@ -60,15 +60,15 @@ void Pipeline::run() {
     }
 }
 
-void Pipeline::run_stage(PipelineStage::ptr stage) {
-    scene_.window().viewport(stage->viewport_id()).apply(); //FIXME apply shouldn't exist
+void Pipeline::run_stage(PipelineStage::ptr pipeline_stage) {
+    scene_.window().viewport(pipeline_stage->viewport_id()).apply(); //FIXME apply shouldn't exist
 
-    signal_render_stage_started_(*stage);
+    signal_render_stage_started_(*pipeline_stage);
 
-    Stage& subscene = scene_.subscene(stage->subscene_id());
-    Camera& camera = subscene.camera(stage->camera_id());
+    Stage& stage = scene_.stage(pipeline_stage->stage_id());
+    Camera& camera = stage.camera(pipeline_stage->camera_id());
 
-    std::vector<SubEntity::ptr> buffers = subscene.partitioner().geometry_visible_from(stage->camera_id());
+    std::vector<SubEntity::ptr> buffers = stage.partitioner().geometry_visible_from(pipeline_stage->camera_id());
 
 
     /*
@@ -85,13 +85,13 @@ void Pipeline::run_stage(PipelineStage::ptr stage) {
         //Get the priority queue for this entity (e.g. RENDER_PRIORITY_BACKGROUND)
         QueueGroups::mapped_type& priority_queue = queues[(uint32_t)ent->_parent().render_priority()];
 
-        MaterialPtr mat = subscene.material(ent->material_id()).lock();
+        MaterialPtr mat = stage.material(ent->material_id()).lock();
         //Go through the entities material passes
         for(uint8_t pass = 0; pass < mat->technique().pass_count(); ++pass) {
             //Create a new render group if necessary
             RootGroup::ptr group;
             if(priority_queue.size() <= pass) {
-                group = RootGroup::ptr(new RootGroup(subscene, camera));
+                group = RootGroup::ptr(new RootGroup(stage, camera));
                 priority_queue.push_back(group);
             } else {
                 group = priority_queue[pass];
@@ -102,17 +102,17 @@ void Pipeline::run_stage(PipelineStage::ptr stage) {
         }
     }
 
-    renderer_->set_current_subscene(subscene.id());
+    renderer_->set_current_stage(stage.id());
     for(RenderPriority priority: RENDER_PRIORITIES) {
         QueueGroups::mapped_type& priority_queue = queues[priority];
         for(RootGroup::ptr pass_group: priority_queue) {
             std::function<void (SubEntity&)> f = [=](SubEntity& subentity) {
-                renderer_->render_subentity(subentity, stage->camera_id());
+                renderer_->render_subentity(subentity, pipeline_stage->camera_id());
             };
             pass_group->traverse(f);
         }
     }
-    renderer_->set_current_subscene(StageID());
+    renderer_->set_current_stage(StageID());
 
     /*
      * At this point, we will have a render group tree for each priority level
@@ -126,11 +126,11 @@ void Pipeline::run_stage(PipelineStage::ptr stage) {
     });
 
     //TODO: Batched rendering
-    renderer_->set_current_subscene(subscene.id());
+    renderer_->set_current_stage(stage.id());
         renderer_->render(buffers, stage->camera_id());
-    renderer_->set_current_subscene(StageID());*/
+    renderer_->set_current_stage(StageID());*/
 
-    signal_render_stage_finished_(*stage);
+    signal_render_stage_finished_(*pipeline_stage);
 }
 
 }

@@ -5,7 +5,7 @@
 
 #include "../window_base.h"
 #include "../scene.h"
-#include "../subscene.h"
+#include "../stage.h"
 #include "../keyboard.h"
 #include "../ui/interface.h"
 #include "../input_controller.h"

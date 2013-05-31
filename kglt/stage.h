@@ -1,5 +1,5 @@
-#ifndef SUBSCENE_H
-#define SUBSCENE_H
+#ifndef STAGE_H
+#define STAGE_H
 
 #include "generic/managed.h"
 #include "generic/manager.h"
@@ -61,7 +61,7 @@ public:
     sigc::signal<void, LightID>& signal_light_destroyed() { return signal_light_destroyed_; }
 
     void move(float x, float y, float z) {
-        throw std::logic_error("You cannot move the subscene");
+        throw std::logic_error("You cannot move the stage");
     }
 
     template<typename T, typename ID>

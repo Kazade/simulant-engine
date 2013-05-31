@@ -4,7 +4,7 @@
 
 #include "../entity.h"
 #include "../shader.h"
-#include "../subscene.h"
+#include "../stage.h"
 #include "../camera.h"
 #include "../light.h"
 #include "../partitioner.h"
@@ -26,7 +26,7 @@ void GenericRenderer::set_auto_uniforms_on_shader(
     kmMat4 modelview_projection;
     kmMat4 modelview;
 
-    kglt::Camera& cam = current_subscene().camera(camera);
+    kglt::Camera& cam = current_stage().camera(camera);
 
     const kmMat4 model = subentity._parent().absolute_transformation();
     const kmMat4& view = cam.view_matrix();

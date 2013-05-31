@@ -18,28 +18,28 @@ public:
     }
 
     void test_2d_sound_output() {
-        kglt::Stage& subscene = window->scene().subscene();
+        kglt::Stage& stage = window->scene().stage();
 
-        kglt::SoundID sound = subscene.new_sound_from_file("sample_data/test_sound.ogg");
+        kglt::SoundID sound = stage.new_sound_from_file("sample_data/test_sound.ogg");
 
-        assert_false(subscene.camera().is_playing_sound());
+        assert_false(stage.camera().is_playing_sound());
 
-        subscene.camera().attach_sound(sound);
-        subscene.camera().play_sound();
+        stage.camera().attach_sound(sound);
+        stage.camera().play_sound();
 
-        assert_true(subscene.camera().is_playing_sound());
+        assert_true(stage.camera().is_playing_sound());
 
-        while(subscene.camera().is_playing_sound()) {
-            subscene.camera().update(0.1);
+        while(stage.camera().is_playing_sound()) {
+            stage.camera().update(0.1);
         }
     }
 
     void test_3d_sound_output() {
-        kglt::Stage& subscene = window->scene().subscene();
+        kglt::Stage& stage = window->scene().stage();
 
-        kglt::SoundID sound = subscene.new_sound_from_file("sample_data/test_sound.ogg");
+        kglt::SoundID sound = stage.new_sound_from_file("sample_data/test_sound.ogg");
 
-        kglt::Entity& entity = subscene.entity(subscene.new_entity());
+        kglt::Entity& entity = stage.entity(stage.new_entity());
         entity.move_to(10, 0, 0);
 
         assert_false(entity.is_playing_sound());

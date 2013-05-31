@@ -145,9 +145,9 @@ public:
     typedef std::shared_ptr<RootGroup> ptr;
     typedef int data_type;
 
-    RootGroup(Stage& subscene, Camera& camera):
+    RootGroup(Stage& stage, Camera& camera):
         RenderGroup(nullptr),
-        subscene_(subscene),
+        stage_(stage),
         camera_(camera){}
 
     void bind();
@@ -157,13 +157,13 @@ public:
         return *this;
     }
 
-    Stage& subscene() { return subscene_; }
+    Stage& stage() { return stage_; }
     Camera& camera() { return camera_; }
 
     void insert(SubEntity& ent, uint8_t pass_number);
 
 private:
-    Stage& subscene_;
+    Stage& stage_;
     Camera& camera_;
 
     void generate_mesh_groups(RenderGroup* parent, SubEntity& ent, MaterialPass& pass);

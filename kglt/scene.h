@@ -30,13 +30,13 @@ public:
     Scene(WindowBase* window);
     ~Scene();
 
-    StageID new_subscene(AvailablePartitioner partitioner=PARTITIONER_OCTREE);            
-    Stage& subscene() { return subscene(default_subscene_); }
-    Stage& subscene(StageID s);
-    StageRef subscene_ref(StageID s);
+    StageID new_stage(AvailablePartitioner partitioner=PARTITIONER_OCTREE);            
+    Stage& stage() { return stage(default_stage_); }
+    Stage& stage(StageID s);
+    StageRef stage_ref(StageID s);
 
-    void delete_subscene(StageID s);
-    uint32_t subscene_count() const;
+    void delete_stage(StageID s);
+    uint32_t stage_count() const;
 
     bool init();
     void render();
@@ -49,7 +49,7 @@ public:
     GeomFactory& geom_factory() { return *geom_factory_; }
 
 private:
-    StageID default_subscene_;
+    StageID default_stage_;
     TexturePtr default_texture_;
     MaterialPtr default_material_;
 

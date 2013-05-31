@@ -1,4 +1,4 @@
-#include "subscene.h"
+#include "stage.h"
 #include "window_base.h"
 #include "scene.h"
 #include "partitioner.h"
@@ -21,7 +21,7 @@ Stage::Stage(Scene* parent, StageID id):
 }
 
 void Stage::destroy() {
-    scene().delete_subscene(id());
+    scene().delete_stage(id());
 }
 
 EntityID Stage::new_entity() {

@@ -18,7 +18,7 @@ public:
     }
 
     void test_project_point() {
-        kglt::Stage& scene = window->scene().subscene();
+        kglt::Stage& scene = window->scene().stage();
 
         scene.camera().set_perspective_projection(45.0, float(window->width()) / float(window->height()));
 

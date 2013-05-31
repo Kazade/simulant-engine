@@ -110,11 +110,11 @@ void export_lua_api(lua_State* state) {
     luabind::module(state) [
         luabind::class_<Scene, luabind::bases<ResourceManager> >("Scene")
             .def("update", &Scene::update)
-            .def("new_subscene", &Scene::new_subscene)
-            .def("subscene", (Stage&(Scene::*)(StageID))&Scene::subscene)
-            .def("delete_subscene", &Scene::delete_subscene)
-            .property("subscene_count", &Scene::subscene_count)
-            .property("default_subscene", (Stage&(Scene::*)())&Scene::subscene)
+            .def("new_stage", &Scene::new_stage)
+            .def("stage", (Stage&(Scene::*)(StageID))&Scene::stage)
+            .def("delete_stage", &Scene::delete_stage)
+            .property("stage_count", &Scene::stage_count)
+            .property("default_stage", (Stage&(Scene::*)())&Scene::stage)
             .property("default_material_id", &Scene::default_material_id)
             .property("pipeline", &Scene::pipeline)
     ];

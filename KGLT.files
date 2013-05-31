@@ -251,8 +251,8 @@ kglt/lua/console.h
 kglt/lua/interpreter.cpp
 kglt/lua/console.cpp
 kglt/lua/types.h
-kglt/subscene.h
-kglt/subscene.cpp
+kglt/stage.h
+kglt/stage.cpp
 kglt/loaders/obj_loader.h
 kglt/loaders/obj_loader.cpp
 tests/test_obj_loader.h

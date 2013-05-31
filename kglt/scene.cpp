@@ -6,7 +6,7 @@
 #include "pipeline.h"
 #include "procedural/geom_factory.h"
 #include "loader.h"
-#include "subscene.h"
+#include "stage.h"
 #include "partitioners/null_partitioner.h"
 #include "partitioners/octree_partitioner.h"
 
@@ -37,10 +37,10 @@ TextureID Scene::default_texture_id() const {
 }
 
 void Scene::initialize_defaults() {
-    default_subscene_ = new_subscene(kglt::PARTITIONER_NULL);
+    default_stage_ = new_stage(kglt::PARTITIONER_NULL);
 
-    //Create a default stage for the default subscene with it's default camera
-    pipeline_->add_stage(default_subscene_, subscene().camera().id());
+    //Create a default stage for the default stage with it's default camera
+    pipeline_->add_stage(default_stage_, stage().camera().id());
 
     //Create the default blank texture
     default_texture_ = texture(new_texture()).lock();
@@ -59,8 +59,8 @@ void Scene::initialize_defaults() {
     default_material_->technique().pass(0).set_texture_unit(0, default_texture_->id());
 }
 
-StageID Scene::new_subscene(AvailablePartitioner partitioner) {
-    Stage& ss = subscene(StageManager::manager_new());
+StageID Scene::new_stage(AvailablePartitioner partitioner) {
+    Stage& ss = stage(StageManager::manager_new());
 
     switch(partitioner) {
         case PARTITIONER_NULL:
@@ -70,38 +70,38 @@ StageID Scene::new_subscene(AvailablePartitioner partitioner) {
         ss.set_partitioner(Partitioner::ptr(new OctreePartitioner(ss)));
         break;
         default: {
-            delete_subscene(ss.id());
+            delete_stage(ss.id());
             throw std::logic_error("Invalid partitioner type specified");
         }
     }
 
-    //All subscenes should have at least one camera
+    //All stages should have at least one camera
     ss.new_camera();
 
     return ss.id();
 }
 
-uint32_t Scene::subscene_count() const {
+uint32_t Scene::stage_count() const {
     return StageManager::manager_count();
 }
 
-Stage& Scene::subscene(StageID s) {
+Stage& Scene::stage(StageID s) {
     if(s == DefaultStageID) {
-        return StageManager::manager_get(default_subscene_);
+        return StageManager::manager_get(default_stage_);
     }
 
     return StageManager::manager_get(s);
 }
 
-StageRef Scene::subscene_ref(StageID s) {
+StageRef Scene::stage_ref(StageID s) {
     if(!StageManager::manager_contains(s)) {
         throw DoesNotExist<Stage>();
     }
     return StageManager::__objects()[s];
 }
 
-void Scene::delete_subscene(StageID s) {
-    Stage& ss = subscene(s);
+void Scene::delete_stage(StageID s) {
+    Stage& ss = stage(s);
     ss.destroy_children();
     StageManager::manager_delete(s);
 }
@@ -113,7 +113,7 @@ bool Scene::init() {
 }
 
 void Scene::update(double dt) {
-    //Update the subscenes
+    //Update the stages
     StageManager::apply_func_to_objects(std::bind(&Object::update, std::tr1::placeholders::_1, dt));
 }
 

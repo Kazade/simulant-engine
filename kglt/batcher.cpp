@@ -5,7 +5,7 @@
 
 #include "light.h"
 #include "material.h"
-#include "subscene.h"
+#include "stage.h"
 #include "shader.h"
 #include "camera.h"
 #include "partitioner.h"
@@ -17,7 +17,7 @@ void RootGroup::bind() {
 
 void RootGroup::generate_mesh_groups(RenderGroup* parent, SubEntity& ent, MaterialPass& pass) {
     Vec3 pos;
-    std::vector<LightID> lights = subscene().partitioner().lights_within_range(pos);
+    std::vector<LightID> lights = stage().partitioner().lights_within_range(pos);
     uint32_t iteration_count = 1;
     if(pass.iteration() == ITERATE_N) {
         iteration_count = pass.max_iterations();
@@ -28,7 +28,7 @@ void RootGroup::generate_mesh_groups(RenderGroup* parent, SubEntity& ent, Materi
     } else if (pass.iteration() == ITERATE_ONCE_PER_LIGHT) {
         iteration_count = std::min<uint32_t>(lights.size(), pass.max_iterations());
         for(uint8_t i = 0; i < iteration_count; ++i) {
-            parent->get_or_create<LightGroup>(LightGroupData(&subscene().light(lights[i]))).
+            parent->get_or_create<LightGroup>(LightGroupData(&stage().light(lights[i]))).
                     get_or_create<MeshGroup>(MeshGroupData(ent._parent().mesh_id(), ent.submesh_id())).add(&ent);
         }
     } else {
@@ -40,7 +40,7 @@ void RootGroup::insert(SubEntity &ent, uint8_t pass_number) {
     if(!ent._parent().is_visible()) return;
 
     //Get the material for the entity, this is used to build the tree
-    MaterialPtr mat = subscene().material(ent.material_id()).lock();
+    MaterialPtr mat = stage().material(ent.material_id()).lock();
 
     MaterialPass& pass = mat->technique().pass(pass_number);
 
@@ -164,7 +164,7 @@ void ShaderGroup::bind() {
     if(params.uses_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT)) {
         params.set_colour(
             params.auto_uniform_variable_name(SP_AUTO_LIGHT_GLOBAL_AMBIENT),
-            root.subscene().ambient_light()
+            root.stage().ambient_light()
         );
     }
 }
@@ -203,7 +203,7 @@ void DepthGroup::unbind() {
 void TextureGroup::bind() {
     glActiveTexture(GL_TEXTURE0 + data_.unit);
     RootGroup& root = static_cast<RootGroup&>(get_root());
-    glBindTexture(GL_TEXTURE_2D, root.subscene().texture(data_.texture_id).lock()->gl_tex());
+    glBindTexture(GL_TEXTURE_2D, root.stage().texture(data_.texture_id).lock()->gl_tex());
 }
 
 void TextureGroup::unbind() {

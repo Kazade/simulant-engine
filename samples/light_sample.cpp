@@ -6,32 +6,32 @@ int main(int argc, char* argv[]) {
 
     kglt::Window::ptr window = kglt::Window::create();
     kglt::Scene& scene = window->scene();
-    kglt::Stage& subscene = scene.subscene();
+    kglt::Stage& stage = scene.stage();
 
     window->set_title("Lighting Sample");
-    subscene.camera().set_perspective_projection(
+    stage.camera().set_perspective_projection(
         45.0,
         float(window->width()) / float(window->height()),
         0.1,
         1000.0
     );
 
-    subscene.set_ambient_light(kglt::Colour(0.2, 0.2, 0.2, 1.0));
+    stage.set_ambient_light(kglt::Colour(0.2, 0.2, 0.2, 1.0));
 
-    kglt::Entity& entity = subscene.entity(scene.geom_factory().new_cube(subscene.id(), kglt::Vec3(), 2.0));
+    kglt::Entity& entity = stage.entity(scene.geom_factory().new_cube(stage.id(), kglt::Vec3(), 2.0));
     entity.move_to(0.0, 0.0, -5.0);
 
-    kglt::Light& light = subscene.light(subscene.new_light());
+    kglt::Light& light = stage.light(stage.new_light());
     light.move_to(5.0, 0.0, -5.0);
     light.set_diffuse(kglt::Colour::green);
     light.set_attenuation_from_range(10.0);
 
-    kglt::Light& light2 = subscene.light(subscene.new_light());
+    kglt::Light& light2 = stage.light(stage.new_light());
     light2.move_to(-5.0, 0.0, -5.0);
     light2.set_diffuse(kglt::Colour::blue);
     light2.set_attenuation_from_range(50.0);
 
-    kglt::Light& light3 = subscene.light(subscene.new_light());
+    kglt::Light& light3 = stage.light(stage.new_light());
     light3.move_to(0.0, 15.0, -5.0);
     light3.set_diffuse(kglt::Colour::red);
     light3.set_attenuation_from_range(50.0);

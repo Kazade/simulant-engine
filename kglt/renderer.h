@@ -21,18 +21,18 @@ public:
 
     Scene& scene() { return scene_; }
 
-    void set_current_subscene(StageID subscene) {
-        current_subscene_ = subscene;
+    void set_current_stage(StageID stage) {
+        current_stage_ = stage;
     }
 
     virtual void render_subentity(SubEntity& buffer, CameraID camera) = 0;
 
 protected:
-    Stage& current_subscene();
+    Stage& current_stage();
 
 private:    
     Scene& scene_;
-    StageID current_subscene_;
+    StageID current_stage_;
 
 
 };

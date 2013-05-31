@@ -16,29 +16,29 @@ int main(int argc, char* argv[]) {
     window->set_logging_level(kglt::LOG_LEVEL_DEBUG);
     window->set_title("KGLT Model viewer");
 
-    kglt::Stage& subscene = window->scene().subscene();
-    subscene.set_ambient_light(kglt::Colour(1.0, 1.0, 1.0, 1.0));
-    subscene.camera().set_perspective_projection(
+    kglt::Stage& stage = window->scene().stage();
+    stage.set_ambient_light(kglt::Colour(1.0, 1.0, 1.0, 1.0));
+    stage.camera().set_perspective_projection(
         45.0,
         float(window->width()) / float(window->height()),
         1.0,
         1000.0
     );
 
-    kglt::Light& light = subscene.light(subscene.new_light());
+    kglt::Light& light = stage.light(stage.new_light());
     //light.set_direction(-1, 0, 0);
     light.set_diffuse(kglt::Colour::yellow);
     light.set_attenuation_from_range(100.0);
 
-    kglt::Light& light2 = subscene.light(subscene.new_light());
+    kglt::Light& light2 = stage.light(stage.new_light());
     light2.set_diffuse(kglt::Colour::red);
     light2.set_attenuation_from_range(100.0);
     light2.move_to(20, -20, -50);
 
-    subscene.set_ambient_light(kglt::Colour(0.2, 0.2, 0.2, 0.2));
+    stage.set_ambient_light(kglt::Colour(0.2, 0.2, 0.2, 0.2));
 
-    kglt::MeshID mid = subscene.new_mesh_from_file(filename);
-    kglt::Entity& entity = subscene.entity(subscene.new_entity(mid));
+    kglt::MeshID mid = stage.new_mesh_from_file(filename);
+    kglt::Entity& entity = stage.entity(stage.new_entity(mid));
     entity.move_to(0, 0, -50);
 
     float x_position = 0.0f;

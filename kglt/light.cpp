@@ -1,10 +1,10 @@
-#include "subscene.h"
+#include "stage.h"
 #include "light.h"
 
 namespace kglt {
 
-Light::Light(Stage* subscene, LightID lid):
-    Object(subscene),
+Light::Light(Stage* stage, LightID lid):
+    Object(stage),
     generic::Identifiable<LightID>(lid),
     type_(LIGHT_TYPE_POINT),
     range_(100.0) {
@@ -46,7 +46,7 @@ void Light::set_attenuation_from_range(float range) {
 }
 
 void Light::destroy() {
-    subscene().delete_light(id());
+    stage().delete_light(id());
 }
 
 }

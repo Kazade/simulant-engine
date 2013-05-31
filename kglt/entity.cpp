@@ -1,20 +1,20 @@
-#include "subscene.h"
+#include "stage.h"
 #include "entity.h"
 
 namespace kglt {
 
-Entity::Entity(Stage* subscene, EntityID id):
+Entity::Entity(Stage* stage, EntityID id):
     generic::Identifiable<EntityID>(id),
-    Object(subscene),
-    Source(*subscene),
+    Object(stage),
+    Source(*stage),
     render_priority_(RENDER_PRIORITY_MAIN) {
 
 }
 
-Entity::Entity(Stage* subscene, EntityID id, MeshID mesh):
+Entity::Entity(Stage* stage, EntityID id, MeshID mesh):
     generic::Identifiable<EntityID>(id),
-    Object(subscene),
-    Source(*subscene),
+    Object(stage),
+    Source(*stage),
     render_priority_(RENDER_PRIORITY_MAIN) {
 
     set_mesh(mesh);
@@ -26,7 +26,7 @@ const VertexData& Entity::shared_data() const {
 
 void Entity::set_mesh(MeshID mesh) {
     //Increment the ref-count on this mesh
-    mesh_ = subscene().mesh(mesh).lock();
+    mesh_ = stage().mesh(mesh).lock();
 
     subentities_.clear();
     for(SubMeshIndex idx: mesh_->submesh_ids()) {
@@ -37,7 +37,7 @@ void Entity::set_mesh(MeshID mesh) {
 }
 
 void Entity::destroy() {
-    subscene().delete_entity(id());
+    stage().delete_entity(id());
 }
 
 }

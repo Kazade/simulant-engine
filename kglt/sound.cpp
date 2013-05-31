@@ -1,4 +1,4 @@
-#include "subscene.h"
+#include "stage.h"
 #include "sound.h"
 
 namespace kglt {
@@ -26,8 +26,8 @@ Sound::Sound(ResourceManager *resource_manager, SoundID id):
 
 }
 
-Source::Source(Stage& subscene):
-    subscene_(subscene) {
+Source::Source(Stage& stage):
+    stage_(stage) {
 
 
 }
@@ -38,7 +38,7 @@ Source::~Source() {
 }
 
 void Source::attach_sound(SoundID sound) {
-    sound_ = subscene_.sound(sound).lock();
+    sound_ = stage_.sound(sound).lock();
 }
 
 void Source::play_sound(bool loop) {

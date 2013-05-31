@@ -1,16 +1,16 @@
 #include "entity.h"
 #include "camera.h"
 #include "scene.h"
-#include "subscene.h"
+#include "stage.h"
 #include "window_base.h"
 #include "kazbase/unicode.h"
 
 namespace kglt {
 
-Camera::Camera(Stage *subscene, CameraID id):
-    Object(subscene),    
+Camera::Camera(Stage *stage, CameraID id):
+    Object(stage),    
     generic::Identifiable<CameraID>(id),
-    Source(*subscene) {
+    Source(*stage) {
 
     kmMat4Identity(&projection_matrix_); //Initialize the projection matrix
     kmMat4Identity(&view_matrix_);
@@ -46,7 +46,7 @@ double Camera::set_orthographic_projection_from_height(double desired_height_in_
 }
 
 void Camera::destroy() {
-    subscene().delete_camera(id());
+    stage().delete_camera(id());
 }
 
 void Camera::follow(EntityID entity, const kglt::Vec3& offset) {
@@ -58,8 +58,8 @@ void Camera::do_update(double dt) {
     update_source(dt);
 
     if(following_entity_) {
-        kmQuaternion entity_rotation = subscene().entity(following_entity_).absolute_rotation();
-        kmVec3 entity_position = subscene().entity(following_entity_).absolute_position();
+        kmQuaternion entity_rotation = stage().entity(following_entity_).absolute_rotation();
+        kmVec3 entity_position = stage().entity(following_entity_).absolute_position();
 
         kmVec3 entity_forward;
         kmQuaternionGetForwardVec3RH(&entity_forward, &entity_rotation);
@@ -80,7 +80,7 @@ void Camera::do_update(double dt) {
 }
 
 kmVec3 Camera::project_point(ViewportID vid, const kmVec3& point) {
-    kglt::Viewport& viewport = subscene().scene().window().viewport(vid);
+    kglt::Viewport& viewport = stage().scene().window().viewport(vid);
 
     kmVec3 tmp;
     kmVec3Fill(&tmp, point.x, point.y, point.z);

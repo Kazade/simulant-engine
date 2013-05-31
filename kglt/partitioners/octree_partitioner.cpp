@@ -1,6 +1,6 @@
 #include "octree_partitioner.h"
 
-#include "../subscene.h"
+#include "../stage.h"
 #include "../light.h"
 #include "../entity.h"
 #include "../camera.h"
@@ -16,7 +16,7 @@ void OctreePartitioner::event_entity_changed(EntityID ent) {
 void OctreePartitioner::add_entity(EntityID obj) {
     L_DEBUG("Adding entity to the partitioner");
 
-    Entity& ent = subscene().entity(obj);
+    Entity& ent = stage().entity(obj);
     for(uint16_t i = 0; i < ent.subentity_count(); ++i) {
         //All subentities are boundable
         Boundable* boundable = dynamic_cast<Boundable*>(&ent.subentity(i));        
@@ -48,7 +48,7 @@ void OctreePartitioner::remove_entity(EntityID obj) {
 }
 
 void OctreePartitioner::add_light(LightID obj) {
-    Light& light = subscene().light(obj);
+    Light& light = stage().light(obj);
     Boundable* boundable = dynamic_cast<Boundable*>(&light);
     assert(boundable);
     tree_.grow(boundable);
@@ -56,7 +56,7 @@ void OctreePartitioner::add_light(LightID obj) {
 }
 
 void OctreePartitioner::remove_light(LightID obj) {
-    Light& light = subscene().light(obj);
+    Light& light = stage().light(obj);
     Boundable* boundable = dynamic_cast<Boundable*>(&light);
     assert(boundable);
     tree_.shrink(boundable);
@@ -71,7 +71,7 @@ std::vector<SubEntity::ptr> OctreePartitioner::geometry_visible_from(CameraID ca
         return results;
     }
 
-    Camera& cam = subscene().camera(camera_id);
+    Camera& cam = stage().camera(camera_id);
 
     /**
      *  FIXME: A tree_->objects_visible_from(cam.frustum()); would be faster
