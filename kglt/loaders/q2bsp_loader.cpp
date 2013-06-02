@@ -304,12 +304,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     std::map<MaterialID, SubMeshIndex> material_to_submesh;
 
     for(Q2::TextureInfo& tex: textures) {
-        MaterialPtr new_mat;
-        {
-            //Clone the default material
-            MaterialPtr def_mat = scene->material(scene->default_material_id()).lock();
-            new_mat = scene->stage().material(def_mat->clone()).lock();
-        }
+        MaterialPtr new_mat = scene->material(scene->clone_default_material()).lock();
         Material& mat = *new_mat;
 
         kmVec3 u_axis, v_axis;
