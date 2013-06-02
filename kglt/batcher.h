@@ -37,12 +37,12 @@ public:
 
     }
 
-    ///Traverses the tree and calls the callback on each subentity we encounter
+    ///Traverses the tree and calls the callback on each subactor we encounter
     void traverse(std::function<void (SubActor&)> callback) {
         bind();
 
-        for(SubActor* entity: subentities_) {
-            callback(*entity);
+        for(SubActor* actor: subentities_) {
+            callback(*actor);
         }
 
         for(std::pair<std::size_t, RenderGroups> groups: this->children_) {
@@ -117,8 +117,8 @@ public:
         }
     }
 
-    void add(SubActor* subentity) {
-        subentities_.push_back(subentity);
+    void add(SubActor* subactor) {
+        subentities_.push_back(subactor);
     }
 
     virtual void bind() = 0;

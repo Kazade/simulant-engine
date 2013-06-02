@@ -7,7 +7,7 @@
 #include "../procedural/mesh.h"
 #include "../procedural/texture.h"
 #include "../window_base.h"
-#include "../entity.h"
+#include "../actor.h"
 #include "../loader.h"
 
 namespace kglt {
@@ -17,9 +17,9 @@ SkyBox::SkyBox(kglt::Stage& stage, kglt::TextureID texture, float size, CameraID
     stage_(stage),
     camera_id_(cam) {
 
-    entity_ = &stage.entity(stage.new_entity(stage.new_mesh()));
+    actor_ = &stage.actor(stage.new_actor(stage.new_mesh()));
 
-    kglt::MeshPtr mesh = entity_->mesh().lock();
+    kglt::MeshPtr mesh = actor_->mesh().lock();
     kglt::procedural::mesh::cube(mesh, size);
 
     kglt::MaterialPtr mat = stage.material(stage.new_material()).lock();
@@ -32,11 +32,11 @@ SkyBox::SkyBox(kglt::Stage& stage, kglt::TextureID texture, float size, CameraID
     mesh->set_material_id(mat->id());
     mesh->reverse_winding();
 
-    entity_->set_render_priority(RENDER_PRIORITY_BACKGROUND);
-    entity_->attach_to_camera(cam);
+    actor_->set_render_priority(RENDER_PRIORITY_BACKGROUND);
+    actor_->attach_to_camera(cam);
 
     //Skyboxes shouldn't rotate based on their parent (e.g. the camera)
-    entity_->lock_rotation(0, 0, 1, 0);
+    actor_->lock_rotation(0, 0, 1, 0);
 }
 
 StarField::StarField(Stage& stage, CameraID cam) {

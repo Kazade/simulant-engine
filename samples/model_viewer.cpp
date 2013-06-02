@@ -38,15 +38,15 @@ int main(int argc, char* argv[]) {
     stage.set_ambient_light(kglt::Colour(0.2, 0.2, 0.2, 0.2));
 
     kglt::MeshID mid = stage.new_mesh_from_file(filename);
-    kglt::Actor& entity = stage.entity(stage.new_entity(mid));
-    entity.move_to(0, 0, -50);
+    kglt::Actor& actor = stage.actor(stage.new_actor(mid));
+    actor.move_to(0, 0, -50);
 
     float x_position = 0.0f;
     bool incrementing = true;
 
     window->signal_step().connect(
         [&](double dt) {
-            entity.rotate_y(10.0 * dt);
+            actor.rotate_y(10.0 * dt);
 
             x_position += ((incrementing) ? -10.0 : 10.0) * dt;
 

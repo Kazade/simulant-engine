@@ -1,4 +1,4 @@
-#include "entity.h"
+#include "actor.h"
 #include "camera.h"
 #include "scene.h"
 #include "stage.h"
@@ -53,35 +53,35 @@ void Camera::destroy() {
     scene_->delete_camera(id());
 }
 
-void Camera::follow(ActorRef entity, const kglt::Vec3& offset) {
-    following_entity_ = entity;
+void Camera::follow(ActorRef actor, const kglt::Vec3& offset) {
+    following_actor_ = actor;
     following_offset_ = offset;
 }
 
 void Camera::do_update(double dt) {
-    ActorPtr following_entity = following_entity_.lock();
-    if(following_entity) {
-        kmQuaternion entity_rotation = following_entity->absolute_rotation();
-        kmVec3 entity_position = following_entity->absolute_position();
+    ActorPtr following_actor = following_actor_.lock();
+    if(following_actor) {
+        kmQuaternion actor_rotation = following_actor->absolute_rotation();
+        kmVec3 actor_position = following_actor->absolute_position();
 
-        kmVec3 entity_forward;
-        kmQuaternionGetForwardVec3RH(&entity_forward, &entity_rotation);
+        kmVec3 actor_forward;
+        kmQuaternionGetForwardVec3RH(&actor_forward, &actor_rotation);
 
         kmQuaternion initial_rotation;
         kmQuaternionAssign(&initial_rotation, &rotation_);
-        kmQuaternionSlerp(&rotation_, &initial_rotation, &entity_rotation, dt);
+        kmQuaternionSlerp(&rotation_, &initial_rotation, &actor_rotation, dt);
 
         kmVec3 rotated_offset;
         kmQuaternionMultiplyVec3(&rotated_offset, &rotation_, &following_offset_);
 
         //kmMat4RotationQuaternion(&new_rotation_matrix, &rotation_);
         //kmVec3MultiplyMat4(&rotated_offset, &following_offset_, &new_rotation_matrix);
-        kmVec3Add(&position_, &rotated_offset, &entity_position);
+        kmVec3Add(&position_, &rotated_offset, &actor_position);
 
         update_from_parent();
     } else {
-        //The entity was destroyed, so reset
-        following_entity_ = ActorRef();
+        //The actor was destroyed, so reset
+        following_actor_ = ActorRef();
     }
 }
 

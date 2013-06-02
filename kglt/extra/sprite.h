@@ -52,7 +52,7 @@ private:
 
     std::map<std::string, MaterialPtr> animations_;
 
-    Actor* entity_;
+    Actor* actor_;
 };
 
 }

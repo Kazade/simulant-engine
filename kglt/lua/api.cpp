@@ -64,12 +64,12 @@ void export_lua_api(lua_State* state) {
 
     luabind::module(state) [
         luabind::class_<Stage, luabind::bases<ResourceManager> >("Stage")
-            .def("new_entity", (ActorID(Stage::*)())&Stage::new_entity)
-            .def("new_entity_from_mesh", (ActorID(Stage::*)(MeshID))&Stage::new_entity)
-            .def("entity", &Stage::entity)
-            .def("delete_entity", &Stage::delete_entity)
+            .def("new_actor", (ActorID(Stage::*)())&Stage::new_actor)
+            .def("new_actor_from_mesh", (ActorID(Stage::*)(MeshID))&Stage::new_actor)
+            .def("actor", &Stage::actor)
+            .def("delete_actor", &Stage::delete_actor)
             .property("scene", (Scene&(Stage::*)())&Stage::scene)
-            .property("entity_count", &Stage::entity_count)
+            .property("actor_count", &Stage::actor_count)
             .property("light_count", &Stage::light_count)
             .property("id", &Stage::id)
     ];

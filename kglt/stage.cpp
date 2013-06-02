@@ -2,7 +2,7 @@
 #include "window_base.h"
 #include "scene.h"
 #include "partitioner.h"
-#include "entity.h"
+#include "actor.h"
 #include "light.h"
 
 #include "procedural/geom_factory.h"
@@ -24,58 +24,58 @@ void Stage::destroy() {
     scene().delete_stage(id());
 }
 
-ActorID Stage::new_entity() {
+ActorID Stage::new_actor() {
     ActorID result = ActorManager::manager_new();
-    //Tell everyone about the new entity
-    signal_entity_created_(result);
+    //Tell everyone about the new actor
+    signal_actor_created_(result);
     return result;
 }
 
-ActorID Stage::new_entity(MeshID mid) {
+ActorID Stage::new_actor(MeshID mid) {
     ActorID result = ActorManager::manager_new();
 
     //If a mesh was specified, set it
     if(mid) {
-        entity(result).set_mesh(mid);
+        actor(result).set_mesh(mid);
     }
 
-    //Tell everyone about the new entity
-    signal_entity_created_(result);
+    //Tell everyone about the new actor
+    signal_actor_created_(result);
 
     return result;
 }
 
-ActorID Stage::new_entity_with_parent(Actor& parent) {
-    Actor& ent = entity(new_entity());
+ActorID Stage::new_actor_with_parent(Actor& parent) {
+    Actor& ent = actor(new_actor());
     ent.set_parent(parent);
     return ent.id();
 }
 
-ActorID Stage::new_entity_with_parent(Actor& parent, MeshID mid) {
-    Actor& ent = entity(new_entity(mid));
+ActorID Stage::new_actor_with_parent(Actor& parent, MeshID mid) {
+    Actor& ent = actor(new_actor(mid));
     ent.set_parent(parent);
     return ent.id();
 }
 
-bool Stage::has_entity(ActorID m) const {
+bool Stage::has_actor(ActorID m) const {
     return ActorManager::manager_contains(m);
 }
 
-Actor& Stage::entity(ActorID e) {
+Actor& Stage::actor(ActorID e) {
     return ActorManager::manager_get(e);
 }
 
-ActorRef Stage::entity_ref(ActorID e) {
+ActorRef Stage::actor_ref(ActorID e) {
     if(!ActorManager::manager_contains(e)) {
         throw DoesNotExist<Stage>();
     }
     return ActorManager::__objects()[e];
 }
 
-void Stage::delete_entity(ActorID e) {
-    signal_entity_destroyed_(e);
+void Stage::delete_actor(ActorID e) {
+    signal_actor_destroyed_(e);
 
-    entity(e).destroy_children();
+    actor(e).destroy_children();
 
     ActorManager::manager_delete(e);
 }
@@ -122,8 +122,8 @@ void Stage::set_partitioner(Partitioner::ptr partitioner) {
     assert(partitioner_);
 
     //Keep the partitioner updated with new meshes and lights
-    signal_entity_created().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::add_entity));
-    signal_entity_destroyed().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::remove_entity));
+    signal_actor_created().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::add_actor));
+    signal_actor_destroyed().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::remove_actor));
 
     signal_light_created().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::add_light));
     signal_light_destroyed().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::remove_light));

@@ -12,11 +12,11 @@ public:
     NullPartitioner(Stage& ss):
         Partitioner(ss) {}
 
-    void add_entity(ActorID obj) {
+    void add_actor(ActorID obj) {
         all_entities_.insert(obj);
     }
 
-    void remove_entity(ActorID obj) {
+    void remove_actor(ActorID obj) {
         all_entities_.erase(obj);
     }
 

@@ -4,38 +4,38 @@
 #include "../stage.h"
 #include "../procedural/mesh.h"
 #include "../shortcuts.h"
-#include "../entity.h"
+#include "../actor.h"
 
 namespace kglt {
 namespace extra {
 
 Sprite::Sprite(StageRef stage):
     stage_(stage),
-    entity_(nullptr) {
+    actor_(nullptr) {
 
     StagePtr ss = stage_.lock();
 
-    entity_ = &ss->entity(ss->new_entity(ss->new_mesh()));
+    actor_ = &ss->actor(ss->new_actor(ss->new_mesh()));
 
     kglt::procedural::mesh::rectangle(
-        entity_->mesh().lock(), 1.0, 1.0
+        actor_->mesh().lock(), 1.0, 1.0
     );
 
     //FIXME: Entities should be connected to mesh->signal_changed() and update automatically
-    entity_->set_mesh(entity_->mesh_id()); //Rebuild the entity
+    actor_->set_mesh(actor_->mesh_id()); //Rebuild the actor
 }
 
 Sprite::~Sprite() {
-    if(entity_) {
+    if(actor_) {
         if(StagePtr ss = stage_.lock()) {
-            ss->delete_entity(entity_->id());
+            ss->delete_actor(actor_->id());
         }
-        entity_ = nullptr;
+        actor_ = nullptr;
     }
 }
 
 void Sprite::set_visible(bool value) {
-    entity_->set_visible(value);
+    actor_->set_visible(value);
 }
 
 void Sprite::add_animation(const std::string& anim_name, const std::vector<TextureID>& frames, double duration) {
@@ -65,8 +65,8 @@ void Sprite::add_animation(const std::string& anim_name, const std::vector<Textu
 void Sprite::set_active_animation(const std::string &anim_name) {
     current_animation_ = anim_name;
 
-    //FIXME: Use override_material_id on the subentity
-    kglt::MeshPtr mesh = entity_->mesh().lock();
+    //FIXME: Use override_material_id on the subactor
+    kglt::MeshPtr mesh = actor_->mesh().lock();
 
     mesh->submesh(
         mesh->submesh_ids()[0]
@@ -74,22 +74,22 @@ void Sprite::set_active_animation(const std::string &anim_name) {
 }
 
 void Sprite::set_render_dimensions(float width, float height) {
-    kglt::MeshPtr mesh = entity_->mesh().lock();
+    kglt::MeshPtr mesh = actor_->mesh().lock();
     kglt::procedural::mesh::rectangle(mesh, width, height);
 
     //FIXME: This shouldn't be necessary! Changing a mesh should signal
-    //the entity to rebuild
-    entity_->set_mesh(entity_->mesh_id()); //Rebuild the entity
+    //the actor to rebuild
+    actor_->set_mesh(actor_->mesh_id()); //Rebuild the actor
 
     set_active_animation(current_animation_); //Re-set the current animation
 }
 
 void Sprite::move_to(float x, float y, float z) {
-    entity_->move_to(x, y, z);
+    actor_->move_to(x, y, z);
 }
 
 void Sprite::rotate_to(float angle, float x, float y, float z) {
-    entity_->rotate_to(angle, x, y, z);
+    actor_->rotate_to(angle, x, y, z);
 }
 
 }

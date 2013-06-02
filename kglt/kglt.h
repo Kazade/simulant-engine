@@ -11,7 +11,7 @@
 #include "material.h"
 #include "shader.h"
 #include "camera.h"
-#include "entity.h"
+#include "actor.h"
 #include "sound.h"
 #include "pipeline.h"
 #include "light.h"

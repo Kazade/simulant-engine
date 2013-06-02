@@ -3,7 +3,7 @@
 #include "pipeline.h"
 #include "scene.h"
 #include "stage.h"
-#include "entity.h"
+#include "actor.h"
 #include "mesh.h"
 #include "light.h"
 
@@ -73,7 +73,7 @@ void Pipeline::run_stage(PipelineStage::ptr pipeline_stage) {
 
     /*
      * Go through the visible objects, sort into queues and for
-     * each material pass add the subentity. The result is that a tree
+     * each material pass add the subactor. The result is that a tree
      * of material properties (uniforms) will be created with the child nodes
      * being the meshes
      */
@@ -82,7 +82,7 @@ void Pipeline::run_stage(PipelineStage::ptr pipeline_stage) {
 
     //Go through the visible entities
     for(SubActor::ptr ent: buffers) {
-        //Get the priority queue for this entity (e.g. RENDER_PRIORITY_BACKGROUND)
+        //Get the priority queue for this actor (e.g. RENDER_PRIORITY_BACKGROUND)
         QueueGroups::mapped_type& priority_queue = queues[(uint32_t)ent->_parent().render_priority()];
 
         MaterialPtr mat = stage.material(ent->material_id()).lock();
@@ -97,7 +97,7 @@ void Pipeline::run_stage(PipelineStage::ptr pipeline_stage) {
                 group = priority_queue[pass];
             }
 
-            //Insert the entity into the RenderGroup tree
+            //Insert the actor into the RenderGroup tree
             group->insert(*ent, pass);
         }
     }
@@ -106,8 +106,8 @@ void Pipeline::run_stage(PipelineStage::ptr pipeline_stage) {
     for(RenderPriority priority: RENDER_PRIORITIES) {
         QueueGroups::mapped_type& priority_queue = queues[priority];
         for(RootGroup::ptr pass_group: priority_queue) {
-            std::function<void (SubActor&)> f = [=](SubActor& subentity) {
-                renderer_->render_subentity(subentity, pipeline_stage->camera_id());
+            std::function<void (SubActor&)> f = [=](SubActor& subactor) {
+                renderer_->render_subactor(subactor, pipeline_stage->camera_id());
             };
             pass_group->traverse(f);
         }

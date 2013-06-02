@@ -21,7 +21,7 @@ public:
     Camera(Scene* scene, CameraID id);
 
     kmVec3 project_point(ViewportID vid, const kmVec3& point);
-    void follow(ActorRef entity, const kglt::Vec3& offset);
+    void follow(ActorRef actor, const kglt::Vec3& offset);
 
     const kmMat4& view_matrix() { return view_matrix_; }
     const kmMat4& projection_matrix() const { return projection_matrix_; }
@@ -41,7 +41,7 @@ private:
     kmMat4 view_matrix_;
     kmMat4 projection_matrix_;
 
-    ActorRef following_entity_;
+    ActorRef following_actor_;
     Vec3 following_offset_;
 
     void update_frustum();

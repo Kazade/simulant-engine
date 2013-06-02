@@ -32,13 +32,13 @@ public:
 
     const VertexData& shared_data() const;
 
-    const uint16_t subentity_count() const {
+    const uint16_t subactor_count() const {
         return subentities_.size();
     }
 
     void override_material_id(MaterialID mat);
 
-    SubActor& subentity(uint16_t idx) {
+    SubActor& subactor(uint16_t idx) {
         return *subentities_.at(idx);
     }
 
@@ -116,8 +116,8 @@ public:
     }
 
     const kmVec3 centre() const {
-        // Return the centre point of the absolute bounds of this subentity
-        // which is the submesh().bounds() transformed by the parent entity's
+        // Return the centre point of the absolute bounds of this subactor
+        // which is the submesh().bounds() transformed by the parent actor's
         // location
         kmVec3 centre;
         kmAABB abs_bounds = absolute_bounds();

@@ -25,7 +25,7 @@ public:
         current_stage_ = stage;
     }
 
-    virtual void render_subentity(SubActor& buffer, CameraID camera) = 0;
+    virtual void render_subactor(SubActor& buffer, CameraID camera) = 0;
 
 protected:
     Stage& current_stage();

@@ -1,6 +1,6 @@
 #include <GLee.h>
 
-#include "entity.h"
+#include "actor.h"
 #include "batcher.h"
 
 #include "light.h"
@@ -39,7 +39,7 @@ void RootGroup::generate_mesh_groups(RenderGroup* parent, SubActor& ent, Materia
 void RootGroup::insert(SubActor &ent, uint8_t pass_number) {
     if(!ent._parent().is_visible()) return;
 
-    //Get the material for the entity, this is used to build the tree
+    //Get the material for the actor, this is used to build the tree
     MaterialPtr mat = stage().material(ent.material_id()).lock();
 
     MaterialPass& pass = mat->technique().pass(pass_number);

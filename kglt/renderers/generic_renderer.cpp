@@ -2,7 +2,7 @@
 
 #include "generic_renderer.h"
 
-#include "../entity.h"
+#include "../actor.h"
 #include "../shader.h"
 #include "../stage.h"
 #include "../camera.h"
@@ -20,7 +20,7 @@ namespace kglt {
 void GenericRenderer::set_auto_uniforms_on_shader(
     ShaderProgram& s,
     CameraID camera,
-    SubActor& subentity) {
+    SubActor& subactor) {
 
     //Calculate the modelview-projection matrix
     kmMat4 modelview_projection;
@@ -28,7 +28,7 @@ void GenericRenderer::set_auto_uniforms_on_shader(
 
     kglt::Camera& cam = scene().camera(camera);
 
-    const kmMat4 model = subentity._parent().absolute_transformation();
+    const kmMat4 model = subactor._parent().absolute_transformation();
     const kmMat4& view = cam.view_matrix();
     const kmMat4& projection = cam.projection_matrix();
 
@@ -185,7 +185,7 @@ void GenericRenderer::set_blending_mode(BlendType type) {
     }
 }
 
-void GenericRenderer::render_subentity(SubActor& buffer, CameraID camera) {
+void GenericRenderer::render_subactor(SubActor& buffer, CameraID camera) {
 
     ShaderProgram* active_shader = ShaderProgram::active_shader();
     if(!active_shader) {

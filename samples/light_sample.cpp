@@ -18,8 +18,8 @@ int main(int argc, char* argv[]) {
 
     stage.set_ambient_light(kglt::Colour(0.2, 0.2, 0.2, 1.0));
 
-    kglt::Actor& entity = stage.entity(stage.geom_factory().new_cube(kglt::Vec3(), 2.0));
-    entity.move_to(0.0, 0.0, -5.0);
+    kglt::Actor& actor = stage.actor(stage.geom_factory().new_cube(kglt::Vec3(), 2.0));
+    actor.move_to(0.0, 0.0, -5.0);
 
     kglt::Light& light = stage.light(stage.new_light());
     light.move_to(5.0, 0.0, -5.0);
@@ -37,9 +37,9 @@ int main(int argc, char* argv[]) {
     light3.set_attenuation_from_range(50.0);
 
     while(window->update()) {
-        entity.rotate_x(window->delta_time() * 20.0);
-        entity.rotate_y(window->delta_time() * 15.0);
-        entity.rotate_z(window->delta_time() * 25.0);
+        actor.rotate_x(window->delta_time() * 20.0);
+        actor.rotate_y(window->delta_time() * 15.0);
+        actor.rotate_z(window->delta_time() * 25.0);
     }
 
     return 0;

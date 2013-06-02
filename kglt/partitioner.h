@@ -20,8 +20,8 @@ public:
     Partitioner(Stage& ss):
         stage_(ss) {}
 
-    virtual void add_entity(ActorID obj) = 0;
-    virtual void remove_entity(ActorID obj) = 0;
+    virtual void add_actor(ActorID obj) = 0;
+    virtual void remove_actor(ActorID obj) = 0;
 
     virtual void add_light(LightID obj) = 0;
     virtual void remove_light(LightID obj) = 0;

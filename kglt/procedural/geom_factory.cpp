@@ -49,7 +49,7 @@ ActorID GeomFactory::new_line(const kmVec3& start, const kmVec3& end) {
     mesh.submesh(sm).index_data().index(1);
     mesh.submesh(sm).index_data().done();
 
-    return stage.new_entity(mesh.id());
+    return stage.new_actor(mesh.id());
 }
 
 ActorID GeomFactory::new_rectangle_outline(const float width, const float height) {
@@ -58,7 +58,7 @@ ActorID GeomFactory::new_rectangle_outline(const float width, const float height
     kglt::MeshPtr mesh_ptr = stage.mesh(stage.new_mesh()).lock();
     procedural::mesh::rectangle_outline(mesh_ptr, width, height);
 
-    return stage.new_entity(mesh_ptr->id());
+    return stage.new_actor(mesh_ptr->id());
 }
 
 ActorID GeomFactory::new_rectangle(const float width, const float height) {
@@ -67,7 +67,7 @@ ActorID GeomFactory::new_rectangle(const float width, const float height) {
     kglt::MeshPtr mesh_ptr = stage.mesh(stage.new_mesh()).lock();
     procedural::mesh::rectangle(mesh_ptr, width, height);
 
-    return stage.new_entity(mesh_ptr->id());
+    return stage.new_actor(mesh_ptr->id());
 }
 
 ActorID GeomFactory::new_capsule(const float diameter, const float length) {

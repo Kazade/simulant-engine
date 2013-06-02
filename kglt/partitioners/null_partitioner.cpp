@@ -1,6 +1,6 @@
 #include "../stage.h"
 #include "../camera.h"
-#include "../entity.h"
+#include "../actor.h"
 #include "../light.h"
 #include "null_partitioner.h"
 
@@ -38,7 +38,7 @@ std::vector<SubActor::ptr> NullPartitioner::geometry_visible_from(CameraID camer
 
     //Just return all of the meshes in the stage
     for(ActorID eid: all_entities_) {
-        std::vector<SubActor::ptr> subentities = stage().entity(eid)._subentities();
+        std::vector<SubActor::ptr> subentities = stage().actor(eid)._subentities();
 
         for(SubActor::ptr ent: subentities) {
             if(stage().scene().camera(camera_id).frustum().intersects_aabb(ent->absolute_bounds())) {

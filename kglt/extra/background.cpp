@@ -3,7 +3,7 @@
 #include "../kazbase/logging.h"
 #include "background.h"
 
-#include "../entity.h"
+#include "../actor.h"
 #include "../pipeline.h"
 #include "../camera.h"
 #include "../shortcuts.h"
@@ -106,7 +106,7 @@ Background::Background(Scene& scene, ViewportID viewport, BGResizeStyle style):
     //FIXME: priority = -1000
     scene.pipeline().add_stage(stage_.id(), ortho_camera_.lock()->id(), viewport_, TextureID(), -100);
 
-    entity_ = stage_.entity_ref(stage_.new_entity(stage_.new_mesh()));
+    actor_ = stage_.actor_ref(stage_.new_actor(stage_.new_mesh()));
 
     material_ = stage_.material(stage_.new_material());
     MaterialPtr mat = material_.lock();
@@ -115,15 +115,15 @@ Background::Background(Scene& scene, ViewportID viewport, BGResizeStyle style):
     scene.window().loader_for("kglt/materials/background.kglm")->into(*mat);
 
     SubMeshIndex index = kglt::procedural::mesh::rectangle(
-        entity_.lock()->mesh().lock(),
+        actor_.lock()->mesh().lock(),
         1,
         1,
         0.5,
         0.5
     );
 
-    entity_.lock()->set_mesh(entity_.lock()->mesh_id()); //FIXME: This is a workaround
-    entity_.lock()->override_material_id(mat->id());
+    actor_.lock()->set_mesh(actor_.lock()->mesh_id()); //FIXME: This is a workaround
+    actor_.lock()->override_material_id(mat->id());
 }
 
 MaterialID Background::material_id() const {
@@ -132,9 +132,9 @@ MaterialID Background::material_id() const {
 
 Background::~Background() {
     try {
-        ActorPtr entity = entity_.lock();
-        if(entity) {
-            stage_.delete_entity(entity->id());
+        ActorPtr actor = actor_.lock();
+        if(actor) {
+            stage_.delete_actor(actor->id());
         }
 
         CameraPtr camera = ortho_camera_.lock();

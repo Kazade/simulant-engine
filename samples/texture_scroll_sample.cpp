@@ -24,14 +24,14 @@ int main(int argc, char* argv[]) {
     kglt::TextureID tid = kglt::create_texture_from_file(stage, "sample_data/sample.tga");
     kglt::MaterialID matid = kglt::create_material_from_texture(stage, tid);
 
-    kglt::Actor& entity = stage.entity(stage.geom_factory().new_rectangle(1.0, 1.0));
-    entity.mesh().lock()->set_material_id(matid);
+    kglt::Actor& actor = stage.actor(stage.geom_factory().new_rectangle(1.0, 1.0));
+    actor.mesh().lock()->set_material_id(matid);
 
     /**
         Once we have the reference to a base object, we can
         manipulate it easily
     */
-    entity.move_to(0.0f, 0.0f, -5.0f);
+    actor.move_to(0.0f, 0.0f, -5.0f);
 
     window->scene().camera().set_orthographic_projection_from_height(2.0, (float) window->width() / (float)window->height());
 

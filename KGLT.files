@@ -148,8 +148,8 @@ kglt/extra/sprite_strip_loader.cpp
 kglt/extra/sprite.cpp
 kglt/extra/background.cpp
 kglt/generic/managed.h
-kglt/entity.h
-kglt/entity.cpp
+kglt/actor.h
+kglt/actor.cpp
 kglt/generic/unique_id.h
 kglt/vertex_data.h
 kglt/vertex_data.cpp

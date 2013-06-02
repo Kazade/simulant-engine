@@ -8,7 +8,7 @@
 class MatrixStack {
 public:
     MatrixStack() {
-        push(); //Push the identity matrix
+        push(); //Push the idactor matrix
     }
     
     void push() {
@@ -17,7 +17,7 @@ public:
         if(!stack_.empty()) {
             kmMat4Assign(&new_matrix, &top());
         } else {
-            kmMat4Identity(&new_matrix);
+            kmMat4Idactor(&new_matrix);
         }
         stack_.push(new_matrix);
     }

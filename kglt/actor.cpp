@@ -1,5 +1,5 @@
 #include "stage.h"
-#include "entity.h"
+#include "actor.h"
 
 namespace kglt {
 
@@ -43,7 +43,7 @@ void Actor::set_mesh(MeshID mesh) {
 }
 
 void Actor::destroy() {
-    stage().delete_entity(id());
+    stage().delete_actor(id());
 }
 
 const MaterialID SubActor::material_id() const {

@@ -32,17 +32,17 @@ int main(int argc, char* argv[]) {
 
     stage.set_ambient_light(kglt::Colour::white);
 
-    kglt::Actor& entity = stage.entity(stage.geom_factory().new_capsule());
-    entity.mesh().lock()->set_material_id(matid);
+    kglt::Actor& actor = stage.actor(stage.geom_factory().new_capsule());
+    actor.mesh().lock()->set_material_id(matid);
 
     /**
         Once we have the reference to a base object, we can
         manipulate it easily
     */
-    entity.move_to(0.0f, 0.0f, -5.0f);
+    actor.move_to(0.0f, 0.0f, -5.0f);
 
-    //Set the entity to rotate each step
-    window->signal_step().connect([&](float dt) { entity.rotate_y(20.0 * dt); });
+    //Set the actor to rotate each step
+    window->signal_step().connect([&](float dt) { actor.rotate_y(20.0 * dt); });
 
     while(window->update()) {}
 

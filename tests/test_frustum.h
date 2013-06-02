@@ -23,7 +23,7 @@ public:
 
         this->assert_true(!frustum.initialized());
 
-        //Create an orthographic projection, and a modelview identity matrix
+        //Create an orthographic projection, and a modelview idactor matrix
         kmMat4 projection, modelview;
         kmMat4OrthographicProjection(&projection, -1.0, 1.0, -1.0, 1.0, 1.0, 10.0);
         kmMat4Identity(&modelview);

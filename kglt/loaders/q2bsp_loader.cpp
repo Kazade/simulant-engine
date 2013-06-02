@@ -105,19 +105,19 @@ struct Header {
 
 typedef std::map<std::string, std::string> ActorProperties;
 
-void parse_entities(const std::string& entity_string, std::vector<ActorProperties>& entities) {
-    bool inside_entity = false;
+void parse_entities(const std::string& actor_string, std::vector<ActorProperties>& entities) {
+    bool inside_actor = false;
     ActorProperties current;
     std::string key, value;
     bool inside_key = false, inside_value = false, key_done_for_this_line = false;
-    for(char c: entity_string) {
-        if(c == '{' && !inside_entity) {
-            inside_entity = true;
+    for(char c: actor_string) {
+        if(c == '{' && !inside_actor) {
+            inside_actor = true;
             current.clear();
         }
-        else if(c == '}' && inside_entity) {
-            assert(inside_entity);
-            inside_entity = false;
+        else if(c == '}' && inside_actor) {
+            assert(inside_actor);
+            inside_actor = false;
             entities.push_back(current);
         }
         else if(c == '\n' || c == '\r') {
@@ -240,14 +240,14 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     MeshPtr mesh_ptr = scene->stage().mesh(mid).lock();
     Mesh& mesh = *mesh_ptr;
 
-    std::vector<char> entity_buffer(header.lumps[Q2::LumpType::ENTITIES].length);
+    std::vector<char> actor_buffer(header.lumps[Q2::LumpType::ENTITIES].length);
     file.seekg(header.lumps[Q2::LumpType::ENTITIES].offset);
-    file.read(&entity_buffer[0], sizeof(char) * header.lumps[Q2::LumpType::ENTITIES].length);
-    std::string entity_string(entity_buffer.begin(), entity_buffer.end());
+    file.read(&actor_buffer[0], sizeof(char) * header.lumps[Q2::LumpType::ENTITIES].length);
+    std::string actor_string(actor_buffer.begin(), actor_buffer.end());
 
 
     std::vector<ActorProperties> entities;
-    parse_entities(entity_string, entities);
+    parse_entities(actor_string, entities);
     kmVec3 cam_pos = find_player_spawn_point(entities);
     kmVec3Transform(&cam_pos, &cam_pos, &rotation);
     scene->camera().move_to(cam_pos);
@@ -457,8 +457,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         mesh.submesh(i).index_data().done();
     }
 
-    //Finally, create an entity from the world mesh
-    scene->stage().new_entity(mid);
+    //Finally, create an actor from the world mesh
+    scene->stage().new_actor(mid);
 }
 
 }
