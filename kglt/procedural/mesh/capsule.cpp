@@ -6,8 +6,10 @@ namespace kglt {
 namespace procedural {
 namespace mesh {
 
-SubMeshIndex capsule(kglt::Mesh& mesh, float diameter, float height,
+SubMeshIndex capsule(kglt::MeshPtr mesh_ptr, float diameter, float height,
     uint32_t segment_count, uint32_t vertical_segment_count, uint32_t ring_count, const kglt::Vec3& pos_offset) {
+
+    kglt::Mesh& mesh = *mesh_ptr;
 
     float radius = diameter * 0.5f;
 

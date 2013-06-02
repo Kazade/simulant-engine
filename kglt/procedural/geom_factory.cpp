@@ -71,7 +71,9 @@ ActorID GeomFactory::new_rectangle(const float width, const float height) {
 }
 
 ActorID GeomFactory::new_capsule(const float diameter, const float length) {
-    throw NotImplementedError(__FILE__, __LINE__);
+    kglt::MeshPtr mesh_ptr = stage_.mesh(stage_.new_mesh()).lock();
+    procedural::mesh::capsule(mesh_ptr, diameter, length);
+    return stage_.new_actor(mesh_ptr->id());
 }
 
 ActorID GeomFactory::new_sphere(const kmVec3& position, const float diameter) {
