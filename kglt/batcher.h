@@ -41,7 +41,7 @@ public:
     void traverse(std::function<void (SubActor&)> callback) {
         bind();
 
-        for(SubActor* actor: subentities_) {
+        for(SubActor* actor: subactors_) {
             callback(*actor);
         }
 
@@ -118,7 +118,7 @@ public:
     }
 
     void add(SubActor* subactor) {
-        subentities_.push_back(subactor);
+        subactors_.push_back(subactor);
     }
 
     virtual void bind() = 0;
@@ -137,7 +137,7 @@ private:
 
     RenderGroupChildren children_;
 
-    std::list<SubActor*> subentities_;
+    std::list<SubActor*> subactors_;
 };
 
 class RootGroup : public RenderGroup {

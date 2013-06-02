@@ -13,11 +13,11 @@ public:
         Partitioner(ss) {}
 
     void add_actor(ActorID obj) {
-        all_entities_.insert(obj);
+        all_actors_.insert(obj);
     }
 
     void remove_actor(ActorID obj) {
-        all_entities_.erase(obj);
+        all_actors_.erase(obj);
     }
 
     void add_light(LightID obj) {
@@ -32,7 +32,7 @@ public:
     std::vector<std::shared_ptr<SubActor>> geometry_visible_from(CameraID camera_id);
 
 private:
-    std::set<ActorID> all_entities_;
+    std::set<ActorID> all_actors_;
     std::set<LightID> all_lights_;
 };
 

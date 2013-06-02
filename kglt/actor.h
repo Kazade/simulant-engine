@@ -33,16 +33,16 @@ public:
     const VertexData& shared_data() const;
 
     const uint16_t subactor_count() const {
-        return subentities_.size();
+        return subactors_.size();
     }
 
     void override_material_id(MaterialID mat);
 
     SubActor& subactor(uint16_t idx) {
-        return *subentities_.at(idx);
+        return *subactors_.at(idx);
     }
 
-    const std::vector<std::shared_ptr<SubActor> >& _subentities() { return subentities_; }
+    const std::vector<std::shared_ptr<SubActor> >& _subactors() { return subactors_; }
 
     sigc::signal<void, ActorID>& signal_mesh_changed() { return signal_mesh_changed_; }
 
@@ -52,7 +52,7 @@ public:
     void set_render_priority(RenderPriority value) { render_priority_ = value;}
 private:
     MeshPtr mesh_;
-    std::vector<std::shared_ptr<SubActor> > subentities_;
+    std::vector<std::shared_ptr<SubActor> > subactors_;
 
     RenderPriority render_priority_;
 
@@ -93,7 +93,7 @@ public:
 
     /**
      * @brief absolute_bounds
-     * @return the bounds of the linked submesh, transformed by the entities absolute
+     * @return the bounds of the linked submesh, transformed by the actors absolute
      * transformation matrix.
      */
     const kmAABB absolute_bounds() const {

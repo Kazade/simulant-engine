@@ -32,7 +32,7 @@ public:
 private:
     Octree tree_;
 
-    std::map<ActorID, std::vector<Boundable*> > actor_to_registered_subentities_;
+    std::map<ActorID, std::vector<Boundable*> > actor_to_registered_subactors_;
 
     std::map<ActorID, sigc::connection> actor_changed_connections_;
     std::map<const Boundable*, SubActorPtr> boundable_to_subactor_;

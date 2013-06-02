@@ -21,7 +21,7 @@ Actor::Actor(Stage* stage, ActorID id, MeshID mesh):
 }
 
 void Actor::override_material_id(MaterialID mat) {
-    for(SubActor::ptr se: subentities_) {
+    for(SubActor::ptr se: subactors_) {
         se->override_material_id(mat);
     }
 }
@@ -34,9 +34,9 @@ void Actor::set_mesh(MeshID mesh) {
     //Increment the ref-count on this mesh
     mesh_ = stage().mesh(mesh).lock();
 
-    subentities_.clear();
+    subactors_.clear();
     for(SubMeshIndex idx: mesh_->submesh_ids()) {
-        subentities_.push_back(SubActor::create(*this, idx));
+        subactors_.push_back(SubActor::create(*this, idx));
     }
 
     signal_mesh_changed_(id());

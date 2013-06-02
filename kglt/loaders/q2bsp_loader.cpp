@@ -105,7 +105,7 @@ struct Header {
 
 typedef std::map<std::string, std::string> ActorProperties;
 
-void parse_entities(const std::string& actor_string, std::vector<ActorProperties>& entities) {
+void parse_actors(const std::string& actor_string, std::vector<ActorProperties>& actors) {
     bool inside_actor = false;
     ActorProperties current;
     std::string key, value;
@@ -118,7 +118,7 @@ void parse_entities(const std::string& actor_string, std::vector<ActorProperties
         else if(c == '}' && inside_actor) {
             assert(inside_actor);
             inside_actor = false;
-            entities.push_back(current);
+            actors.push_back(current);
         }
         else if(c == '\n' || c == '\r') {
             key_done_for_this_line = false;
@@ -160,8 +160,8 @@ void parse_entities(const std::string& actor_string, std::vector<ActorProperties
 
 }
 
-kmVec3 find_player_spawn_point(std::vector<ActorProperties>& entities) {
-    for(ActorProperties p: entities) {
+kmVec3 find_player_spawn_point(std::vector<ActorProperties>& actors) {
+    for(ActorProperties p: actors) {
         std::cout << p["classname"] << std::endl;
         if(p["classname"] == "info_player_start") {
             kmVec3 pos;
@@ -177,12 +177,12 @@ kmVec3 find_player_spawn_point(std::vector<ActorProperties>& entities) {
     return none;
 }
 
-void add_lights_to_scene(Scene& scene, const std::vector<ActorProperties>& entities) {
+void add_lights_to_scene(Scene& scene, const std::vector<ActorProperties>& actors) {
     //Needed because the Quake 2 coord system is weird
     kmMat4 rotation;
     kmMat4RotationX(&rotation, kmDegreesToRadians(-90.0f));
 
-    for(ActorProperties props: entities) {
+    for(ActorProperties props: actors) {
         if(props["classname"] == "light") {
             kmVec3 pos;
             std::istringstream origin(props["origin"]);
@@ -246,13 +246,13 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     std::string actor_string(actor_buffer.begin(), actor_buffer.end());
 
 
-    std::vector<ActorProperties> entities;
-    parse_entities(actor_string, entities);
-    kmVec3 cam_pos = find_player_spawn_point(entities);
+    std::vector<ActorProperties> actors;
+    parse_actors(actor_string, actors);
+    kmVec3 cam_pos = find_player_spawn_point(actors);
     kmVec3Transform(&cam_pos, &cam_pos, &rotation);
     scene->camera().move_to(cam_pos);
 
-    add_lights_to_scene(*scene, entities);
+    add_lights_to_scene(*scene, actors);
 
     int32_t num_vertices = header.lumps[Q2::LumpType::VERTICES].length / sizeof(Q2::Point3f);
     std::vector<Q2::Point3f> vertices(num_vertices);

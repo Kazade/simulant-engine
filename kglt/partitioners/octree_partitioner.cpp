@@ -18,12 +18,12 @@ void OctreePartitioner::add_actor(ActorID obj) {
 
     Actor& ent = stage().actor(obj);
     for(uint16_t i = 0; i < ent.subactor_count(); ++i) {
-        //All subentities are boundable
+        //All subactors are boundable
         Boundable* boundable = dynamic_cast<Boundable*>(&ent.subactor(i));        
         tree_.grow(boundable);
 
-        actor_to_registered_subentities_[obj].push_back(boundable);
-        boundable_to_subactor_[boundable] = ent._subentities().at(i);
+        actor_to_registered_subactors_[obj].push_back(boundable);
+        boundable_to_subactor_[boundable] = ent._subactors().at(i);
     }
 
     //Connect the changed signal
@@ -33,14 +33,14 @@ void OctreePartitioner::add_actor(ActorID obj) {
 void OctreePartitioner::remove_actor(ActorID obj) {
     L_DEBUG("Removing actor from the partitioner");
 
-    //Remove all boundable subentities that were linked to the actor
-    for(Boundable* boundable: actor_to_registered_subentities_[obj]) {
+    //Remove all boundable subactors that were linked to the actor
+    for(Boundable* boundable: actor_to_registered_subactors_[obj]) {
         tree_.shrink(boundable);
         boundable_to_subactor_.erase(boundable);
     }
 
-    //Erase the list of subentities linked to this actor
-    actor_to_registered_subentities_.erase(obj);
+    //Erase the list of subactors linked to this actor
+    actor_to_registered_subactors_.erase(obj);
 
     //Disconnect the changed signal
     actor_changed_connections_[obj].disconnect();
@@ -82,7 +82,7 @@ std::vector<SubActor::ptr> OctreePartitioner::geometry_visible_from(CameraID cam
         //Go through the objects
         for(const Boundable* obj: node->objects()) {
             if(container::contains(boundable_to_subactor_, obj)) {
-                //Build a list of visible subentities
+                //Build a list of visible subactors
                 results.push_back(boundable_to_subactor_[obj]);
             }
         }
@@ -99,7 +99,7 @@ std::vector<LightID> OctreePartitioner::lights_within_range(const kmVec3& locati
         //Go through the objects
         for(const Boundable* obj: node->objects()) {
             if(container::contains(boundable_to_light_, obj)) {
-                //Build a list of visible subentities
+                //Build a list of visible subactors
                 results.push_back(boundable_to_light_[obj]);
             }
         }

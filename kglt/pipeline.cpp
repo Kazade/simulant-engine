@@ -80,13 +80,13 @@ void Pipeline::run_stage(PipelineStage::ptr pipeline_stage) {
     typedef std::tr1::unordered_map<uint32_t, std::vector<RootGroup::ptr> > QueueGroups;
     QueueGroups queues;
 
-    //Go through the visible entities
+    //Go through the visible actors
     for(SubActor::ptr ent: buffers) {
         //Get the priority queue for this actor (e.g. RENDER_PRIORITY_BACKGROUND)
         QueueGroups::mapped_type& priority_queue = queues[(uint32_t)ent->_parent().render_priority()];
 
         MaterialPtr mat = stage.material(ent->material_id()).lock();
-        //Go through the entities material passes
+        //Go through the actors material passes
         for(uint8_t pass = 0; pass < mat->technique().pass_count(); ++pass) {
             //Create a new render group if necessary
             RootGroup::ptr group;
