@@ -6,6 +6,7 @@
 #include "mesh.h"
 #include "loader.h"
 #include "scene.h"
+#include "material.h"
 
 namespace kglt {
 
@@ -23,6 +24,10 @@ void Mesh::clear() {
     }
     submeshes_.clear();
     shared_data().clear();
+}
+
+Scene& Mesh::scene() {
+    return resource_manager().scene();
 }
 
 void Mesh::enable_debug(bool value) {
@@ -96,6 +101,12 @@ void Mesh::set_material_id(MaterialID material) {
 void Mesh::reverse_winding() {
     for(SubMesh::ptr sm: submeshes_) {
         sm->reverse_winding();
+    }
+}
+
+void Mesh::set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass) {
+    for(SubMesh::ptr sm: submeshes_) {
+        sm->set_texture_on_material(unit, tex, pass);
     }
 }
 
@@ -205,6 +216,10 @@ const VertexData& SubMesh::vertex_data() const {
 
 const IndexData& SubMesh::index_data() const {
     return index_data_;
+}
+
+void SubMesh::set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass) {
+    material_->technique().pass(pass).set_texture_unit(unit, tex);
 }
 
 SubMesh::~SubMesh() {

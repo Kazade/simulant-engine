@@ -57,7 +57,7 @@ SubMeshIndex rectangle(kglt::MeshPtr mesh_ptr, float width, float height, float 
 
     //Create a submesh that uses the shared data
     SubMeshIndex sm = mesh.new_submesh(
-        mesh.resource_manager().scene().default_material_id(),
+        mesh.scene().clone_default_material(),
         MESH_ARRANGEMENT_TRIANGLES,
         true
     );
@@ -108,7 +108,7 @@ SubMeshIndex rectangle_outline(kglt::MeshPtr mesh_ptr, float width, float height
     mesh.shared_data().done();
     
     SubMeshIndex sm = mesh.new_submesh(
-        mesh.resource_manager().scene().default_material_id(),
+        mesh.scene().clone_default_material(),
         MESH_ARRANGEMENT_LINE_STRIP,
         true
     );

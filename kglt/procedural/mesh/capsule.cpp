@@ -12,7 +12,7 @@ SubMeshIndex capsule(kglt::Mesh& mesh, float diameter, float height,
     float radius = diameter * 0.5f;
 
     SubMeshIndex smi = mesh.new_submesh(
-        mesh.resource_manager().scene().default_material_id(),
+        mesh.scene().clone_default_material(),
         MESH_ARRANGEMENT_TRIANGLES,
         false
     );

@@ -78,8 +78,10 @@ ActorID GeomFactory::new_sphere(const kmVec3& position, const float diameter) {
     throw NotImplementedError(__FILE__, __LINE__);
 }
 
-ActorID GeomFactory::new_cube(const kmVec3& position, const float diameter) {
-    throw NotImplementedError(__FILE__, __LINE__);
+ActorID GeomFactory::new_cube(const float diameter) {
+    kglt::MeshPtr mesh_ptr = stage_.mesh(stage_.new_mesh()).lock();
+    procedural::mesh::cube(mesh_ptr, diameter);
+    return stage_.new_actor(mesh_ptr->id());
 }
 
 }

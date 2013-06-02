@@ -85,7 +85,7 @@ void sphere(kglt::Mesh& mesh, float diameter, int32_t slices, int32_t stacks) {
     mesh.shared_data().done();
 
     SubMeshIndex sm = mesh.new_submesh(
-        mesh.resource_manager().scene().default_material_id(),
+        mesh.scene().clone_default_material(),
         MESH_ARRANGEMENT_TRIANGLES,
         true
     );

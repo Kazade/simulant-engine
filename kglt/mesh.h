@@ -66,6 +66,8 @@ public:
 
     void reverse_winding();
     void transform_vertices(const kmMat4& transformation);
+    void set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass=0);
+
 private:
     Mesh& parent_;
     MaterialPtr material_;
@@ -113,7 +115,9 @@ public:
 
     void set_material_id(MaterialID material); ///< Apply material to all submeshes
     void reverse_winding(); ///< Reverse the winding of all submeshes
+    void set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass=0); ///< Replace the texture unit on all submesh materials
 
+    Scene& scene();
 private:
     VertexData shared_data_;
     std::vector<SubMesh::ptr> submeshes_;

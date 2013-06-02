@@ -22,5 +22,6 @@
 #include "loader.h"
 #include "ui/interface.h"
 #include "procedural/geom_factory.h"
+#include "texture.h"
 
 #endif

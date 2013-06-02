@@ -27,6 +27,10 @@ Scene::~Scene() {
     //TODO: Log the unfreed resources (textures, meshes, materials etc.)
 }
 
+MaterialID Scene::clone_default_material() const {
+    return default_material_->clone();
+}
+
 MaterialID Scene::default_material_id() const {
     return default_material_->id();
 }

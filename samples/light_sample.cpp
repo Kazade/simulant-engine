@@ -18,8 +18,11 @@ int main(int argc, char* argv[]) {
 
     stage.set_ambient_light(kglt::Colour(0.2, 0.2, 0.2, 1.0));
 
-    kglt::Actor& actor = stage.actor(stage.geom_factory().new_cube(kglt::Vec3(), 2.0));
+    kglt::Actor& actor = stage.actor(stage.geom_factory().new_cube(2.0));
     actor.move_to(0.0, 0.0, -5.0);
+
+    kglt::TextureID texture = stage.new_texture_from_file("sample_data/crate.png");
+    actor.mesh().lock()->set_texture_on_material(0, texture);
 
     kglt::Light& light = stage.light(stage.new_light());
     light.move_to(5.0, 0.0, -5.0);
