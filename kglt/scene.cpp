@@ -4,7 +4,6 @@
 #include "renderer.h"
 #include "camera.h"
 #include "pipeline.h"
-#include "procedural/geom_factory.h"
 #include "loader.h"
 #include "stage.h"
 #include "partitioners/null_partitioner.h"
@@ -19,8 +18,7 @@ Scene::Scene(WindowBase* window):
     ResourceManagerImpl(window),
     default_texture_(0),
     default_material_(0),
-    pipeline_(new Pipeline(*this)),
-    geom_factory_(new GeomFactory(*this)){
+    pipeline_(new Pipeline(*this)) {
 
     CameraManager::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Camera, CameraID>));
 }

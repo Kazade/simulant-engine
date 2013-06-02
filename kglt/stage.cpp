@@ -2,9 +2,10 @@
 #include "window_base.h"
 #include "scene.h"
 #include "partitioner.h"
-
 #include "entity.h"
 #include "light.h"
+
+#include "procedural/geom_factory.h"
 
 namespace kglt {
 
@@ -12,7 +13,8 @@ Stage::Stage(Scene* parent, StageID id):
     generic::Identifiable<StageID>(id),
     Object(nullptr),
     scene_(*parent),
-    ambient_light_(1.0, 1.0, 1.0, 1.0){
+    ambient_light_(1.0, 1.0, 1.0, 1.0),
+    geom_factory_(new GeomFactory(*this)) {
 
     EntityManager::signal_post_create().connect(sigc::mem_fun(this, &Stage::post_create_callback<Entity, EntityID>));    
     LightManager::signal_post_create().connect(sigc::mem_fun(this, &Stage::post_create_callback<Light, LightID>));

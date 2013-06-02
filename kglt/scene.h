@@ -48,7 +48,6 @@ public:
     TextureID default_texture_id() const;
 
     Pipeline& pipeline() { return *pipeline_; }
-    GeomFactory& geom_factory() { return *geom_factory_; }
 
     CameraID new_camera();
     Camera& camera(CameraID c=CameraID());
@@ -68,7 +67,6 @@ private:
     void initialize_defaults();
 
     std::shared_ptr<Pipeline> pipeline_;
-    std::shared_ptr<GeomFactory> geom_factory_;
 
     friend class WindowBase;
 };

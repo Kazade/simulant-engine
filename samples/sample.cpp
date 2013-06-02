@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
 
     stage.set_ambient_light(kglt::Colour::white);
 
-    kglt::Entity& entity = stage.entity(window->scene().geom_factory().new_capsule(stage.id()));
+    kglt::Entity& entity = stage.entity(stage.geom_factory().new_capsule());
     entity.mesh().lock()->set_material_id(matid);
 
     /**

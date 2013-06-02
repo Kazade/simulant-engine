@@ -66,7 +66,6 @@ Console::Console(WindowBase &window):
 
     interpreter_->add_global("window", window_);
     interpreter_->add_global("scene", window_.scene());
-    interpreter_->add_global("geom", window_.scene().geom_factory());
 
     lua_register(interpreter_->state(), "print", print);
 }

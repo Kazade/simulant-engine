@@ -12,16 +12,16 @@ class GeomFactory:
     public Managed<GeomFactory> {
 
 public:
-    GeomFactory(Scene& scene);
+    GeomFactory(Stage& scene);
 
-    EntityID new_line(StageID ss, const kmVec3& start, const kmVec3& end);
-    EntityID new_sphere(StageID ss, const kmVec3& position, const float diameter);
-    EntityID new_cube(StageID ss, const kmVec3& position, const float diameter);
-    EntityID new_rectangle_outline(StageID ss, const float width, const float height);
-    EntityID new_rectangle(StageID ss, const float width, const float height);
-    EntityID new_capsule(StageID, const float diameter=0.5, const float length=1.0);
+    EntityID new_line(const kmVec3& start, const kmVec3& end);
+    EntityID new_sphere(const kmVec3& position, const float diameter);
+    EntityID new_cube(const kmVec3& position, const float diameter);
+    EntityID new_rectangle_outline(const float width, const float height);
+    EntityID new_rectangle(const float width, const float height);
+    EntityID new_capsule(const float diameter=0.5, const float length=1.0);
 private:
-    Scene& scene_;
+    Stage& stage_;
 };
 
 }

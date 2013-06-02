@@ -132,6 +132,8 @@ public:
 
     virtual Scene& scene() { return scene_; }
     virtual const Scene& scene() const { return scene_; }
+
+    GeomFactory& geom_factory() { return *geom_factory_; }
 private:
     Scene& scene_;
 
@@ -146,6 +148,8 @@ private:
     std::shared_ptr<Partitioner> partitioner_;
 
     void set_partitioner(std::shared_ptr<Partitioner> partitioner);
+
+    std::shared_ptr<GeomFactory> geom_factory_;
 
     friend class Scene;
 };

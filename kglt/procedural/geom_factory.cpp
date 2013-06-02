@@ -7,13 +7,13 @@
 
 namespace kglt {
 
-GeomFactory::GeomFactory(Scene& scene):
-    scene_(scene) {
+GeomFactory::GeomFactory(Stage &stage):
+    stage_(stage) {
 
 }
 
-EntityID GeomFactory::new_line(StageID ss, const kmVec3& start, const kmVec3& end) {
-    kglt::Stage& stage = scene_.stage(ss);
+EntityID GeomFactory::new_line(const kmVec3& start, const kmVec3& end) {
+    kglt::Stage& stage = stage_;
 
     kglt::MeshPtr mesh_ptr = stage.mesh(stage.new_mesh()).lock();
     kglt::Mesh& mesh = *mesh_ptr;
@@ -52,8 +52,8 @@ EntityID GeomFactory::new_line(StageID ss, const kmVec3& start, const kmVec3& en
     return stage.new_entity(mesh.id());
 }
 
-EntityID GeomFactory::new_rectangle_outline(StageID ss, const float width, const float height) {
-    kglt::Stage& stage = scene_.stage(ss);
+EntityID GeomFactory::new_rectangle_outline(const float width, const float height) {
+    kglt::Stage& stage = stage_;
 
     kglt::MeshPtr mesh_ptr = stage.mesh(stage.new_mesh()).lock();
     procedural::mesh::rectangle_outline(mesh_ptr, width, height);
@@ -61,8 +61,8 @@ EntityID GeomFactory::new_rectangle_outline(StageID ss, const float width, const
     return stage.new_entity(mesh_ptr->id());
 }
 
-EntityID GeomFactory::new_rectangle(StageID ss, const float width, const float height) {
-    kglt::Stage& stage = scene_.stage(ss);
+EntityID GeomFactory::new_rectangle(const float width, const float height) {
+    kglt::Stage& stage = stage_;
 
     kglt::MeshPtr mesh_ptr = stage.mesh(stage.new_mesh()).lock();
     procedural::mesh::rectangle(mesh_ptr, width, height);
@@ -70,15 +70,15 @@ EntityID GeomFactory::new_rectangle(StageID ss, const float width, const float h
     return stage.new_entity(mesh_ptr->id());
 }
 
-EntityID GeomFactory::new_capsule(StageID, const float diameter, const float length) {
+EntityID GeomFactory::new_capsule(const float diameter, const float length) {
     throw NotImplementedError(__FILE__, __LINE__);
 }
 
-EntityID GeomFactory::new_sphere(StageID ss, const kmVec3& position, const float diameter) {
+EntityID GeomFactory::new_sphere(const kmVec3& position, const float diameter) {
     throw NotImplementedError(__FILE__, __LINE__);
 }
 
-EntityID GeomFactory::new_cube(StageID ss, const kmVec3& position, const float diameter) {
+EntityID GeomFactory::new_cube(const kmVec3& position, const float diameter) {
     throw NotImplementedError(__FILE__, __LINE__);
 }
 
