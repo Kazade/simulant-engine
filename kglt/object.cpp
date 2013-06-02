@@ -2,10 +2,11 @@
 #include <functional>
 
 #include "kazmath/mat3.h"
-
+#include "stage.h"
 #include "scene.h"
 #include "object.h"
 #include "object_visitor.h"
+#include "camera.h"
 
 namespace kglt {
 
@@ -31,6 +32,10 @@ Object::Object(Stage *stage):
 
 Object::~Object() {
     parent_changed_connection_.disconnect();
+}
+
+void Object::attach_to_camera(CameraID cam) {
+    set_parent(stage_->scene().camera(cam));
 }
 
 void Object::lock_rotation(float angle, float x, float y, float z) {

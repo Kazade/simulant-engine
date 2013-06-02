@@ -41,7 +41,7 @@ std::vector<SubEntity::ptr> NullPartitioner::geometry_visible_from(CameraID came
         std::vector<SubEntity::ptr> subentities = stage().entity(eid)._subentities();
 
         for(SubEntity::ptr ent: subentities) {
-            if(stage().camera(camera_id).frustum().intersects_aabb(ent->absolute_bounds())) {
+            if(stage().scene().camera(camera_id).frustum().intersects_aabb(ent->absolute_bounds())) {
                 result.push_back(ent);
             }
         }

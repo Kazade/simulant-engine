@@ -19,6 +19,7 @@
 namespace kglt {
 
 WindowBase::WindowBase():
+    Source(nullptr),
     initialized_(false),
     width_(-1),
     height_(-1),
@@ -147,6 +148,9 @@ bool WindowBase::update() {
         frame_counter_frames_ = 0;
         frame_counter_time_ = 0.0;
     }
+
+    //Update any playing sounds
+    update_source(delta_time_);
 
     ktiBindTimer(fixed_timer_);
     ktiUpdateFrameTime();

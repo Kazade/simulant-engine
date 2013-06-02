@@ -26,7 +26,7 @@ Sound::Sound(ResourceManager *resource_manager, SoundID id):
 
 }
 
-Source::Source(Stage& stage):
+Source::Source(Stage *stage):
     stage_(stage) {
 
 
@@ -38,7 +38,20 @@ Source::~Source() {
 }
 
 void Source::attach_sound(SoundID sound) {
-    sound_ = stage_.sound(sound).lock();
+    if(!can_attach_sound_by_id()) {
+        throw LogicError("Attaching a sound by ID is not supported here");
+    }
+
+    if(stage_) {
+        sound_ = stage_->sound(sound).lock();
+    }
+}
+
+void Source::attach_sound(SoundRef sound) {
+    SoundPtr ptr = sound.lock();
+    if(ptr) {
+        sound_ = ptr;
+    }
 }
 
 void Source::play_sound(bool loop) {

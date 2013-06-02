@@ -15,7 +15,6 @@ class Scene;
 
 typedef generic::TemplatedManager<Stage, Entity, EntityID> EntityManager;
 typedef generic::TemplatedManager<Stage, Light, LightID> LightManager;
-typedef generic::TemplatedManager<Stage, Camera, CameraID> CameraManager;
 
 class Stage:
     public Managed<Stage>,
@@ -24,7 +23,6 @@ class Stage:
     public Object,
     public EntityManager,
     public LightManager,
-    public CameraManager,
     public Loadable {
 
 public:
@@ -36,6 +34,8 @@ public:
     EntityID new_entity_with_parent(Entity& parent, MeshID mid);
 
     Entity& entity(EntityID e);
+    EntityRef entity_ref(EntityID e);
+
     bool has_entity(EntityID e) const;
     void delete_entity(EntityID e);
     uint32_t entity_count() const { return EntityManager::manager_count(); }
@@ -45,11 +45,6 @@ public:
     Light& light(LightID light);
     void delete_light(LightID light_id);
     uint32_t light_count() const { return LightManager::manager_count(); }
-
-    CameraID new_camera();
-    CameraID new_camera(Object& parent);
-    Camera& camera(CameraID c=CameraID());
-    void delete_camera(CameraID cid);
 
     kglt::Colour ambient_light() const { return ambient_light_; }
     void set_ambient_light(const kglt::Colour& c) { ambient_light_ = c; }

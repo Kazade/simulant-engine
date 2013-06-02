@@ -15,13 +15,13 @@ namespace kglt {
 class Camera :
     public Object,
     public generic::Identifiable<CameraID>,
-    public Managed<Camera>,
-    public Source {
+    public Managed<Camera> {
+
 public:
-    Camera(Stage* stage, CameraID id);
+    Camera(Scene* scene, CameraID id);
 
     kmVec3 project_point(ViewportID vid, const kmVec3& point);
-    void follow(EntityID entity, const kglt::Vec3& offset);
+    void follow(EntityRef entity, const kglt::Vec3& offset);
 
     const kmMat4& view_matrix() { return view_matrix_; }
     const kmMat4& projection_matrix() const { return projection_matrix_; }
@@ -34,18 +34,24 @@ public:
 
     void destroy();
 private:
+    Scene* scene_;
+
     Frustum frustum_;
 
     kmMat4 view_matrix_;
     kmMat4 projection_matrix_;
 
-    EntityID following_entity_;
+    EntityRef following_entity_;
     Vec3 following_offset_;
 
     void update_frustum();
     void transformation_changed() override { update_frustum(); }
 
     void do_update(double dt);
+
+    bool can_set_parent(Object* parent) override {
+        return false;
+    }
 };
 
 }

@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
 
     kglt::Stage& stage = window->scene().stage();
     stage.set_ambient_light(kglt::Colour(1.0, 1.0, 1.0, 1.0));
-    stage.camera().set_perspective_projection(
+    window->scene().camera().set_perspective_projection(
         45.0,
         float(window->width()) / float(window->height()),
         1.0,

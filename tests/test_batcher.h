@@ -13,7 +13,7 @@ public:
             window = kglt::Window::create();
             window->set_logging_level(LOG_LEVEL_NONE);
         }
-        root_group_.reset(new RootGroup(window->scene().stage(), window->scene().stage().camera()));
+        root_group_.reset(new RootGroup(window->scene().stage(), window->scene().camera()));
     }
 
     void test_group_creation() {

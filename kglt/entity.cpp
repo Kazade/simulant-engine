@@ -6,7 +6,7 @@ namespace kglt {
 Entity::Entity(Stage* stage, EntityID id):
     generic::Identifiable<EntityID>(id),
     Object(stage),
-    Source(*stage),
+    Source(stage),
     render_priority_(RENDER_PRIORITY_MAIN) {
 
 }
@@ -14,10 +14,16 @@ Entity::Entity(Stage* stage, EntityID id):
 Entity::Entity(Stage* stage, EntityID id, MeshID mesh):
     generic::Identifiable<EntityID>(id),
     Object(stage),
-    Source(*stage),
+    Source(stage),
     render_priority_(RENDER_PRIORITY_MAIN) {
 
     set_mesh(mesh);
+}
+
+void Entity::override_material_id(MaterialID mat) {
+    for(SubEntity::ptr se: subentities_) {
+        se->override_material_id(mat);
+    }
 }
 
 const VertexData& Entity::shared_data() const {
@@ -38,6 +44,18 @@ void Entity::set_mesh(MeshID mesh) {
 
 void Entity::destroy() {
     stage().delete_entity(id());
+}
+
+const MaterialID SubEntity::material_id() const {
+    if(material_) {
+        return material_->id();
+    }
+
+    return submesh().material_id();
+}
+
+void SubEntity::override_material_id(MaterialID material) {
+    material_ = parent_.stage().material(material).lock();
 }
 
 }

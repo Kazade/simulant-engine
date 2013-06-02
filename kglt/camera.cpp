@@ -7,10 +7,10 @@
 
 namespace kglt {
 
-Camera::Camera(Stage *stage, CameraID id):
-    Object(stage),    
+Camera::Camera(Scene *scene, CameraID id):
+    Object(nullptr),
     generic::Identifiable<CameraID>(id),
-    Source(*stage) {
+    scene_(scene) {
 
     kmMat4Identity(&projection_matrix_); //Initialize the projection matrix
     kmMat4Identity(&view_matrix_);
@@ -46,20 +46,23 @@ double Camera::set_orthographic_projection_from_height(double desired_height_in_
 }
 
 void Camera::destroy() {
-    stage().delete_camera(id());
+    if(!scene_) {
+        throw LogicError("Passes a nullptr for the camera's scene");
+    }
+
+    scene_->delete_camera(id());
 }
 
-void Camera::follow(EntityID entity, const kglt::Vec3& offset) {
+void Camera::follow(EntityRef entity, const kglt::Vec3& offset) {
     following_entity_ = entity;
     following_offset_ = offset;
 }
 
 void Camera::do_update(double dt) {
-    update_source(dt);
-
-    if(following_entity_) {
-        kmQuaternion entity_rotation = stage().entity(following_entity_).absolute_rotation();
-        kmVec3 entity_position = stage().entity(following_entity_).absolute_position();
+    EntityPtr following_entity = following_entity_.lock();
+    if(following_entity) {
+        kmQuaternion entity_rotation = following_entity->absolute_rotation();
+        kmVec3 entity_position = following_entity->absolute_position();
 
         kmVec3 entity_forward;
         kmQuaternionGetForwardVec3RH(&entity_forward, &entity_rotation);
@@ -76,11 +79,18 @@ void Camera::do_update(double dt) {
         kmVec3Add(&position_, &rotated_offset, &entity_position);
 
         update_from_parent();
+    } else {
+        //The entity was destroyed, so reset
+        following_entity_ = EntityRef();
     }
 }
 
 kmVec3 Camera::project_point(ViewportID vid, const kmVec3& point) {
-    kglt::Viewport& viewport = stage().scene().window().viewport(vid);
+    if(!scene_) {
+        throw LogicError("Passes a nullptr as a camera's Scene");
+    }
+
+    kglt::Viewport& viewport = scene_->window().viewport(vid);
 
     kmVec3 tmp;
     kmVec3Fill(&tmp, point.x, point.y, point.z);

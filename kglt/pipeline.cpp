@@ -66,7 +66,7 @@ void Pipeline::run_stage(PipelineStage::ptr pipeline_stage) {
     signal_render_stage_started_(*pipeline_stage);
 
     Stage& stage = scene_.stage(pipeline_stage->stage_id());
-    Camera& camera = stage.camera(pipeline_stage->camera_id());
+    Camera& camera = scene_.camera(pipeline_stage->camera_id());
 
     std::vector<SubEntity::ptr> buffers = stage.partitioner().geometry_visible_from(pipeline_stage->camera_id());
 

@@ -60,7 +60,7 @@ public:
         return std::shared_ptr<Background>(new Background(scene, viewport));
     }
 
-    MaterialID material_id() const { return material_id_; }
+    MaterialID material_id() const;
 
     Stage& stage() { return stage_; }
 
@@ -68,15 +68,15 @@ private:
     Stage& stage_;
 
     ViewportID viewport_;
-    CameraID ortho_camera_;
+    CameraRef ortho_camera_;
     BGResizeStyle style_;
 
     std::vector<BackgroundLayer::ptr> layers_;
 
     void destroy() {}
 
-    Entity* entity_;
-    MaterialID material_id_;
+    EntityRef entity_;
+    MaterialRef material_;
 
     friend class BackgroundLayer;
 };

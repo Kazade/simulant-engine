@@ -3,7 +3,6 @@
 #include "scene.h"
 #include "partitioner.h"
 
-#include "camera.h"
 #include "entity.h"
 #include "light.h"
 
@@ -15,8 +14,7 @@ Stage::Stage(Scene* parent, StageID id):
     scene_(*parent),
     ambient_light_(1.0, 1.0, 1.0, 1.0){
 
-    EntityManager::signal_post_create().connect(sigc::mem_fun(this, &Stage::post_create_callback<Entity, EntityID>));
-    CameraManager::signal_post_create().connect(sigc::mem_fun(this, &Stage::post_create_callback<Camera, CameraID>));
+    EntityManager::signal_post_create().connect(sigc::mem_fun(this, &Stage::post_create_callback<Entity, EntityID>));    
     LightManager::signal_post_create().connect(sigc::mem_fun(this, &Stage::post_create_callback<Light, LightID>));
 }
 
@@ -65,6 +63,13 @@ Entity& Stage::entity(EntityID e) {
     return EntityManager::manager_get(e);
 }
 
+EntityRef Stage::entity_ref(EntityID e) {
+    if(!EntityManager::manager_contains(e)) {
+        throw DoesNotExist<Stage>();
+    }
+    return EntityManager::__objects()[e];
+}
+
 void Stage::delete_entity(EntityID e) {
     signal_entity_destroyed_(e);
 
@@ -105,34 +110,6 @@ void Stage::delete_light(LightID light_id) {
 
     obj.destroy_children();
     LightManager::manager_delete(light_id);
-}
-
-
-CameraID Stage::new_camera() {
-    return CameraManager::manager_new();
-}
-
-CameraID Stage::new_camera(Object& parent) {
-    Camera& cam = camera(CameraManager::manager_new());
-    cam.set_parent(&parent);
-    return cam.id();
-}
-
-Camera& Stage::camera(CameraID c) {
-    if(c == CameraID()) {
-        //Return the first camera, it's very likely this is the only one
-        if(!CameraManager::manager_count()) {
-            throw std::logic_error("Attempted to retrieve a camera when none exist");
-        }
-        return CameraManager::manager_get(CameraManager::objects_.begin()->second->id());
-    }
-    return CameraManager::manager_get(c);
-}
-
-void Stage::delete_camera(CameraID cid) {
-    Camera& obj = camera(cid);
-    obj.destroy_children();
-    CameraManager::manager_delete(cid);
 }
 
 void Stage::set_partitioner(Partitioner::ptr partitioner) {

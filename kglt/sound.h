@@ -66,10 +66,12 @@ typedef std::tr1::function<int32_t (ALuint)> StreamFunc;
 class Source {
 
 public:
-    Source(Stage& stage);
+    Source(Stage* stage);
     virtual ~Source();
 
-    void attach_sound(SoundID sound);
+    virtual void attach_sound(SoundID sound);
+    virtual void attach_sound(SoundRef sound);
+
     void play_sound(bool loop=false);
     bool is_playing_sound() const;
 
@@ -78,8 +80,11 @@ public:
     sigc::signal<void>& signal_stream_finished() { return signal_stream_finished_; }
 
     void set_stream_func(StreamFunc func) { stream_func_ = func; }
+
 private:
-    Stage& stage_;
+    virtual bool can_attach_sound_by_id() const { return true; }
+
+    Stage* stage_;
 
     ALuint al_source_;
     ALuint buffers_[2];

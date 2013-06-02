@@ -36,6 +36,8 @@ public:
         return subentities_.size();
     }
 
+    void override_material_id(MaterialID mat);
+
     SubEntity& subentity(uint16_t idx) {
         return *subentities_.at(idx);
     }
@@ -75,17 +77,11 @@ public:
         material_(0) {
     }
 
-    const MaterialID material_id() const {
-        if(material_) {
-            return material_;
-        }
-
-        return submesh().material_id();
-    }
+    const MaterialID material_id() const;
 
     const SubMeshIndex submesh_id() const { return index_; }
 
-    void override_material_id(MaterialID material) { material_ = material; }
+    void override_material_id(MaterialID material);
 
     const VertexData& vertex_data() const { return submesh().vertex_data(); }
     const IndexData& index_data() const { return submesh().index_data(); }
@@ -132,7 +128,7 @@ public:
 private:
     Entity& parent_;
     SubMeshIndex index_;
-    MaterialID material_;
+    MaterialPtr material_;
 
     const SubMesh& submesh() const {
         return parent_.mesh().lock()->submesh(index_);

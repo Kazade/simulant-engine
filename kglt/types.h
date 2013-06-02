@@ -162,6 +162,7 @@ typedef std::shared_ptr<ShaderProgram> ShaderPtr;
 
 class Entity;
 typedef std::shared_ptr<Entity> EntityPtr;
+typedef std::weak_ptr<Entity> EntityRef;
 
 class Light;
 typedef std::shared_ptr<Light> LightPtr;
@@ -174,6 +175,7 @@ typedef std::shared_ptr<Stage> StagePtr;
 
 class Camera;
 typedef std::shared_ptr<Camera> CameraPtr;
+typedef std::weak_ptr<Camera> CameraRef;
 
 class Viewport;
 class Frustum;

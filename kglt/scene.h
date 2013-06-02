@@ -19,11 +19,13 @@ class Stage;
 class GeomFactory;
 
 typedef generic::TemplatedManager<Scene, Stage, StageID> StageManager;
+typedef generic::TemplatedManager<Scene, Camera, CameraID> CameraManager;
 
 class Scene:
     public ResourceManagerImpl,
     public Loadable,
     public StageManager,
+    public CameraManager,
     public Managed<Scene> {
 
 public:
@@ -48,6 +50,16 @@ public:
     Pipeline& pipeline() { return *pipeline_; }
     GeomFactory& geom_factory() { return *geom_factory_; }
 
+    CameraID new_camera();
+    Camera& camera(CameraID c=CameraID());
+    CameraRef camera_ref(CameraID c);
+    void delete_camera(CameraID cid);
+
+    template<typename T, typename ID>
+    void post_create_callback(T& obj, ID id) {
+        obj.set_parent(nullptr);
+        obj._initialize();
+    }
 private:
     StageID default_stage_;
     TexturePtr default_texture_;

@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
     //and the passed height. For example, passing a height of 2.0 would mean the view would extend
     //+1 and -1 in the vertical direction, -1.0 - +1.0 near/far, and width would be calculated from the aspect
     //window.scene().pass().viewport().configure(kglt::VIEWPORT_TYPE_BLACKBAR_16_BY_9);
-    stage.camera().set_orthographic_projection_from_height((float) 224 / (float) 40, 16.0 / 9.0);
+    window->scene().camera().set_orthographic_projection_from_height((float) 224 / (float) 40, 16.0 / 9.0);
 
     //Load the strip of sprites into separate textures
     SpriteStripLoader loader(stage, "sample_data/sonic.png", 64);

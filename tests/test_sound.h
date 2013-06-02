@@ -22,15 +22,15 @@ public:
 
         kglt::SoundID sound = stage.new_sound_from_file("sample_data/test_sound.ogg");
 
-        assert_false(stage.camera().is_playing_sound());
+        assert_false(window->is_playing_sound());
 
-        stage.camera().attach_sound(sound);
-        stage.camera().play_sound();
+        window->attach_sound(sound);
+        window->play_sound();
 
-        assert_true(stage.camera().is_playing_sound());
+        assert_true(window->is_playing_sound());
 
-        while(stage.camera().is_playing_sound()) {
-            stage.camera().update(0.1);
+        while(window->is_playing_sound()) {
+            window->update();
         }
     }
 

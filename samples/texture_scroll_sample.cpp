@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
     */
     entity.move_to(0.0f, 0.0f, -5.0f);
 
-    stage.camera().set_orthographic_projection_from_height(2.0, (float) window->width() / (float)window->height());
+    window->scene().camera().set_orthographic_projection_from_height(2.0, (float) window->width() / (float)window->height());
 
     while(window->update()) {
         stage.material(matid).lock()->technique().pass(0).texture_unit(0).scroll_x(0.5 * window->delta_time());

@@ -22,6 +22,7 @@ Scene::Scene(WindowBase* window):
     pipeline_(new Pipeline(*this)),
     geom_factory_(new GeomFactory(*this)){
 
+    CameraManager::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Camera, CameraID>));
 }
 
 Scene::~Scene() {
@@ -37,10 +38,12 @@ TextureID Scene::default_texture_id() const {
 }
 
 void Scene::initialize_defaults() {
+    new_camera(); //Create a default camera
+
     default_stage_ = new_stage(kglt::PARTITIONER_NULL);
 
-    //Create a default stage for the default stage with it's default camera
-    pipeline_->add_stage(default_stage_, stage().camera().id());
+    //Create a default stage for the default stage with the default camera
+    pipeline_->add_stage(default_stage_, camera().id());
 
     //Create the default blank texture
     default_texture_ = texture(new_texture()).lock();
@@ -75,9 +78,6 @@ StageID Scene::new_stage(AvailablePartitioner partitioner) {
         }
     }
 
-    //All stages should have at least one camera
-    ss.new_camera();
-
     return ss.id();
 }
 
@@ -104,6 +104,34 @@ void Scene::delete_stage(StageID s) {
     Stage& ss = stage(s);
     ss.destroy_children();
     StageManager::manager_delete(s);
+}
+
+CameraRef Scene::camera_ref(CameraID c) {
+    if(!CameraManager::manager_contains(c)) {
+        throw DoesNotExist<Camera>();
+    }
+    return CameraManager::__objects()[c];
+}
+
+CameraID Scene::new_camera() {
+    return CameraManager::manager_new();
+}
+
+Camera& Scene::camera(CameraID c) {
+    if(c == CameraID()) {
+        //Return the first camera, it's very likely this is the only one
+        if(!CameraManager::manager_count()) {
+            throw std::logic_error("Attempted to retrieve a camera when none exist");
+        }
+        return CameraManager::manager_get(CameraManager::objects_.begin()->second->id());
+    }
+    return CameraManager::manager_get(c);
+}
+
+void Scene::delete_camera(CameraID cid) {
+    Camera& obj = camera(cid);
+    obj.destroy_children();
+    CameraManager::manager_delete(cid);
 }
 
 bool Scene::init() {

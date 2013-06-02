@@ -16,6 +16,7 @@
 
 #include "types.h"
 #include "viewport.h"
+#include "sound.h"
 
 namespace kglt {
 
@@ -39,7 +40,8 @@ typedef std::shared_ptr<Loader> LoaderPtr;
 typedef std::shared_ptr<LoaderType> LoaderTypePtr;
 
 class WindowBase :
-    public generic::TemplatedManager<WindowBase, Viewport, ViewportID> {
+    public generic::TemplatedManager<WindowBase, Viewport, ViewportID>,
+    public Source {
 
 public:    
     typedef std::shared_ptr<WindowBase> ptr;
@@ -129,6 +131,8 @@ protected:
     WindowBase();
 
 private:    
+    bool can_attach_sound_by_id() const { return false; }
+
     bool initialized_;
 
     std::shared_ptr<Scene> scene_;

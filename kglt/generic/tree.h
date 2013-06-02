@@ -96,7 +96,7 @@ public:
     }
 
     void set_parent(T* new_parent) {
-        if(!can_set_parent(new_parent)) {
+        if(new_parent && !can_set_parent(new_parent)) {
             throw InvalidParentNodeError();
         }
 

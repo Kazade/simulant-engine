@@ -81,6 +81,8 @@ public:
 
     void destroy_children();
 
+    void attach_to_camera(CameraID cam);
+
 protected:
     void update_from_parent();
     void set_position(const kmVec3& pos);

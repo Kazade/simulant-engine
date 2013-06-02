@@ -71,7 +71,7 @@ std::vector<SubEntity::ptr> OctreePartitioner::geometry_visible_from(CameraID ca
         return results;
     }
 
-    Camera& cam = stage().camera(camera_id);
+    Camera& cam = stage().scene().camera(camera_id);
 
     /**
      *  FIXME: A tree_->objects_visible_from(cam.frustum()); would be faster
