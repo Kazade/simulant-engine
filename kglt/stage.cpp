@@ -16,7 +16,7 @@ Stage::Stage(Scene* parent, StageID id):
     ambient_light_(1.0, 1.0, 1.0, 1.0),
     geom_factory_(new GeomFactory(*this)) {
 
-    EntityManager::signal_post_create().connect(sigc::mem_fun(this, &Stage::post_create_callback<Entity, EntityID>));    
+    ActorManager::signal_post_create().connect(sigc::mem_fun(this, &Stage::post_create_callback<Actor, ActorID>));    
     LightManager::signal_post_create().connect(sigc::mem_fun(this, &Stage::post_create_callback<Light, LightID>));
 }
 
@@ -24,15 +24,15 @@ void Stage::destroy() {
     scene().delete_stage(id());
 }
 
-EntityID Stage::new_entity() {
-    EntityID result = EntityManager::manager_new();
+ActorID Stage::new_entity() {
+    ActorID result = ActorManager::manager_new();
     //Tell everyone about the new entity
     signal_entity_created_(result);
     return result;
 }
 
-EntityID Stage::new_entity(MeshID mid) {
-    EntityID result = EntityManager::manager_new();
+ActorID Stage::new_entity(MeshID mid) {
+    ActorID result = ActorManager::manager_new();
 
     //If a mesh was specified, set it
     if(mid) {
@@ -45,39 +45,39 @@ EntityID Stage::new_entity(MeshID mid) {
     return result;
 }
 
-EntityID Stage::new_entity_with_parent(Entity& parent) {
-    Entity& ent = entity(new_entity());
+ActorID Stage::new_entity_with_parent(Actor& parent) {
+    Actor& ent = entity(new_entity());
     ent.set_parent(parent);
     return ent.id();
 }
 
-EntityID Stage::new_entity_with_parent(Entity& parent, MeshID mid) {
-    Entity& ent = entity(new_entity(mid));
+ActorID Stage::new_entity_with_parent(Actor& parent, MeshID mid) {
+    Actor& ent = entity(new_entity(mid));
     ent.set_parent(parent);
     return ent.id();
 }
 
-bool Stage::has_entity(EntityID m) const {
-    return EntityManager::manager_contains(m);
+bool Stage::has_entity(ActorID m) const {
+    return ActorManager::manager_contains(m);
 }
 
-Entity& Stage::entity(EntityID e) {
-    return EntityManager::manager_get(e);
+Actor& Stage::entity(ActorID e) {
+    return ActorManager::manager_get(e);
 }
 
-EntityRef Stage::entity_ref(EntityID e) {
-    if(!EntityManager::manager_contains(e)) {
+ActorRef Stage::entity_ref(ActorID e) {
+    if(!ActorManager::manager_contains(e)) {
         throw DoesNotExist<Stage>();
     }
-    return EntityManager::__objects()[e];
+    return ActorManager::__objects()[e];
 }
 
-void Stage::delete_entity(EntityID e) {
+void Stage::delete_entity(ActorID e) {
     signal_entity_destroyed_(e);
 
     entity(e).destroy_children();
 
-    EntityManager::manager_delete(e);
+    ActorManager::manager_delete(e);
 }
 
 LightID Stage::new_light(LightType type) {

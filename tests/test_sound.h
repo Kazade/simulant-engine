@@ -39,7 +39,7 @@ public:
 
         kglt::SoundID sound = stage.new_sound_from_file("sample_data/test_sound.ogg");
 
-        kglt::Entity& entity = stage.entity(stage.new_entity());
+        kglt::Actor& entity = stage.entity(stage.new_entity());
         entity.move_to(10, 0, 0);
 
         assert_false(entity.is_playing_sound());

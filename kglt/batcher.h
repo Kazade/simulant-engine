@@ -17,7 +17,7 @@ inline void hash_combine(std::size_t& seed, const T& v)
 }
 
 class Stage;
-class SubEntity;
+class SubActor;
 class Camera;
 class MaterialPass;
 
@@ -38,10 +38,10 @@ public:
     }
 
     ///Traverses the tree and calls the callback on each subentity we encounter
-    void traverse(std::function<void (SubEntity&)> callback) {
+    void traverse(std::function<void (SubActor&)> callback) {
         bind();
 
-        for(SubEntity* entity: subentities_) {
+        for(SubActor* entity: subentities_) {
             callback(*entity);
         }
 
@@ -117,7 +117,7 @@ public:
         }
     }
 
-    void add(SubEntity* subentity) {
+    void add(SubActor* subentity) {
         subentities_.push_back(subentity);
     }
 
@@ -137,7 +137,7 @@ private:
 
     RenderGroupChildren children_;
 
-    std::list<SubEntity*> subentities_;
+    std::list<SubActor*> subentities_;
 };
 
 class RootGroup : public RenderGroup {
@@ -160,13 +160,13 @@ public:
     Stage& stage() { return stage_; }
     Camera& camera() { return camera_; }
 
-    void insert(SubEntity& ent, uint8_t pass_number);
+    void insert(SubActor& ent, uint8_t pass_number);
 
 private:
     Stage& stage_;
     Camera& camera_;
 
-    void generate_mesh_groups(RenderGroup* parent, SubEntity& ent, MaterialPass& pass);
+    void generate_mesh_groups(RenderGroup* parent, SubActor& ent, MaterialPass& pass);
 };
 
 

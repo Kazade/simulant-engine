@@ -20,7 +20,7 @@ namespace kglt {
 void GenericRenderer::set_auto_uniforms_on_shader(
     ShaderProgram& s,
     CameraID camera,
-    SubEntity& subentity) {
+    SubActor& subentity) {
 
     //Calculate the modelview-projection matrix
     kmMat4 modelview_projection;
@@ -146,7 +146,7 @@ void send_attribute(ShaderProgram& s,
     }
 }
 
-void GenericRenderer::set_auto_attributes_on_shader(ShaderProgram& s, SubEntity& buffer) {
+void GenericRenderer::set_auto_attributes_on_shader(ShaderProgram& s, SubActor& buffer) {
     /*
      *  Binding attributes generically is hard. So we have some template magic in the send_attribute
      *  function above that takes the VertexData member functions we need to provide the attribute
@@ -185,7 +185,7 @@ void GenericRenderer::set_blending_mode(BlendType type) {
     }
 }
 
-void GenericRenderer::render_subentity(SubEntity& buffer, CameraID camera) {
+void GenericRenderer::render_subentity(SubActor& buffer, CameraID camera) {
 
     ShaderProgram* active_shader = ShaderProgram::active_shader();
     if(!active_shader) {

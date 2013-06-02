@@ -68,7 +68,7 @@ void Pipeline::run_stage(PipelineStage::ptr pipeline_stage) {
     Stage& stage = scene_.stage(pipeline_stage->stage_id());
     Camera& camera = scene_.camera(pipeline_stage->camera_id());
 
-    std::vector<SubEntity::ptr> buffers = stage.partitioner().geometry_visible_from(pipeline_stage->camera_id());
+    std::vector<SubActor::ptr> buffers = stage.partitioner().geometry_visible_from(pipeline_stage->camera_id());
 
 
     /*
@@ -81,7 +81,7 @@ void Pipeline::run_stage(PipelineStage::ptr pipeline_stage) {
     QueueGroups queues;
 
     //Go through the visible entities
-    for(SubEntity::ptr ent: buffers) {
+    for(SubActor::ptr ent: buffers) {
         //Get the priority queue for this entity (e.g. RENDER_PRIORITY_BACKGROUND)
         QueueGroups::mapped_type& priority_queue = queues[(uint32_t)ent->_parent().render_priority()];
 
@@ -106,7 +106,7 @@ void Pipeline::run_stage(PipelineStage::ptr pipeline_stage) {
     for(RenderPriority priority: RENDER_PRIORITIES) {
         QueueGroups::mapped_type& priority_queue = queues[priority];
         for(RootGroup::ptr pass_group: priority_queue) {
-            std::function<void (SubEntity&)> f = [=](SubEntity& subentity) {
+            std::function<void (SubActor&)> f = [=](SubActor& subentity) {
                 renderer_->render_subentity(subentity, pipeline_stage->camera_id());
             };
             pass_group->traverse(f);
@@ -121,7 +121,7 @@ void Pipeline::run_stage(PipelineStage::ptr pipeline_stage) {
      */
 
 /*
-    std::sort(buffers.begin(), buffers.end(), [](SubEntity::ptr lhs, SubEntity::ptr rhs) {
+    std::sort(buffers.begin(), buffers.end(), [](SubActor::ptr lhs, SubActor::ptr rhs) {
         return lhs->_parent().render_priority() < rhs->_parent().render_priority();
     });
 

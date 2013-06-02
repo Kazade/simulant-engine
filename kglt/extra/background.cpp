@@ -132,7 +132,7 @@ MaterialID Background::material_id() const {
 
 Background::~Background() {
     try {
-        EntityPtr entity = entity_.lock();
+        ActorPtr entity = entity_.lock();
         if(entity) {
             stage_.delete_entity(entity->id());
         }

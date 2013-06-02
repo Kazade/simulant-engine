@@ -75,7 +75,7 @@ private:
 
     void destroy() {}
 
-    EntityRef entity_;
+    ActorRef entity_;
     MaterialRef material_;
 
     friend class BackgroundLayer;

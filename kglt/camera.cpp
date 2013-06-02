@@ -53,13 +53,13 @@ void Camera::destroy() {
     scene_->delete_camera(id());
 }
 
-void Camera::follow(EntityRef entity, const kglt::Vec3& offset) {
+void Camera::follow(ActorRef entity, const kglt::Vec3& offset) {
     following_entity_ = entity;
     following_offset_ = offset;
 }
 
 void Camera::do_update(double dt) {
-    EntityPtr following_entity = following_entity_.lock();
+    ActorPtr following_entity = following_entity_.lock();
     if(following_entity) {
         kmQuaternion entity_rotation = following_entity->absolute_rotation();
         kmVec3 entity_position = following_entity->absolute_position();
@@ -81,7 +81,7 @@ void Camera::do_update(double dt) {
         update_from_parent();
     } else {
         //The entity was destroyed, so reset
-        following_entity_ = EntityRef();
+        following_entity_ = ActorRef();
     }
 }
 

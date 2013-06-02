@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
     kglt::TextureID tid = kglt::create_texture_from_file(stage, "sample_data/sample.tga");
     kglt::MaterialID matid = kglt::create_material_from_texture(stage, tid);
 
-    kglt::Entity& entity = stage.entity(stage.geom_factory().new_rectangle(1.0, 1.0));
+    kglt::Actor& entity = stage.entity(stage.geom_factory().new_rectangle(1.0, 1.0));
     entity.mesh().lock()->set_material_id(matid);
 
     /**

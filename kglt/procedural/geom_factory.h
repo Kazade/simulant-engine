@@ -14,12 +14,12 @@ class GeomFactory:
 public:
     GeomFactory(Stage& scene);
 
-    EntityID new_line(const kmVec3& start, const kmVec3& end);
-    EntityID new_sphere(const kmVec3& position, const float diameter);
-    EntityID new_cube(const kmVec3& position, const float diameter);
-    EntityID new_rectangle_outline(const float width, const float height);
-    EntityID new_rectangle(const float width, const float height);
-    EntityID new_capsule(const float diameter=0.5, const float length=1.0);
+    ActorID new_line(const kmVec3& start, const kmVec3& end);
+    ActorID new_sphere(const kmVec3& position, const float diameter);
+    ActorID new_cube(const kmVec3& position, const float diameter);
+    ActorID new_rectangle_outline(const float width, const float height);
+    ActorID new_rectangle(const float width, const float height);
+    ActorID new_capsule(const float diameter=0.5, const float length=1.0);
 private:
     Stage& stage_;
 };

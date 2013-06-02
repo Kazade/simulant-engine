@@ -33,14 +33,14 @@ std::vector<LightID> NullPartitioner::lights_within_range(const kmVec3& location
     return result;
 }
 
-std::vector<SubEntity::ptr> NullPartitioner::geometry_visible_from(CameraID camera_id) {
-    std::vector<SubEntity::ptr> result;
+std::vector<SubActor::ptr> NullPartitioner::geometry_visible_from(CameraID camera_id) {
+    std::vector<SubActor::ptr> result;
 
     //Just return all of the meshes in the stage
-    for(EntityID eid: all_entities_) {
-        std::vector<SubEntity::ptr> subentities = stage().entity(eid)._subentities();
+    for(ActorID eid: all_entities_) {
+        std::vector<SubActor::ptr> subentities = stage().entity(eid)._subentities();
 
-        for(SubEntity::ptr ent: subentities) {
+        for(SubActor::ptr ent: subentities) {
             if(stage().scene().camera(camera_id).frustum().intersects_aabb(ent->absolute_bounds())) {
                 result.push_back(ent);
             }

@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
     window->scene().camera().set_perspective_projection(45.0, float(window->width()) / float(window->height()));
 
     kglt::MeshID mid = stage.new_mesh_from_file(filename);
-    kglt::Entity& entity = stage.entity(stage.new_entity(mid));
+    kglt::Actor& entity = stage.entity(stage.new_entity(mid));
     entity.move_to(0, 0, -30);
 
     //Just stash the skybox along with the scene

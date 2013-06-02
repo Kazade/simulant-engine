@@ -15,7 +15,7 @@ namespace kglt {
 void RootGroup::bind() {
 }
 
-void RootGroup::generate_mesh_groups(RenderGroup* parent, SubEntity& ent, MaterialPass& pass) {
+void RootGroup::generate_mesh_groups(RenderGroup* parent, SubActor& ent, MaterialPass& pass) {
     Vec3 pos;
     std::vector<LightID> lights = stage().partitioner().lights_within_range(pos);
     uint32_t iteration_count = 1;
@@ -36,7 +36,7 @@ void RootGroup::generate_mesh_groups(RenderGroup* parent, SubEntity& ent, Materi
     }
 }
 
-void RootGroup::insert(SubEntity &ent, uint8_t pass_number) {
+void RootGroup::insert(SubActor &ent, uint8_t pass_number) {
     if(!ent._parent().is_visible()) return;
 
     //Get the material for the entity, this is used to build the tree

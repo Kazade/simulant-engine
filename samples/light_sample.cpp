@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
 
     stage.set_ambient_light(kglt::Colour(0.2, 0.2, 0.2, 1.0));
 
-    kglt::Entity& entity = stage.entity(stage.geom_factory().new_cube(kglt::Vec3(), 2.0));
+    kglt::Actor& entity = stage.entity(stage.geom_factory().new_cube(kglt::Vec3(), 2.0));
     entity.move_to(0.0, 0.0, -5.0);
 
     kglt::Light& light = stage.light(stage.new_light());

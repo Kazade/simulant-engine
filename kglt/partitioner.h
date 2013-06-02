@@ -11,7 +11,7 @@
 
 namespace kglt {
 
-class SubEntity;
+class SubActor;
 
 class Partitioner:
     public Managed<Partitioner> {
@@ -20,14 +20,14 @@ public:
     Partitioner(Stage& ss):
         stage_(ss) {}
 
-    virtual void add_entity(EntityID obj) = 0;
-    virtual void remove_entity(EntityID obj) = 0;
+    virtual void add_entity(ActorID obj) = 0;
+    virtual void remove_entity(ActorID obj) = 0;
 
     virtual void add_light(LightID obj) = 0;
     virtual void remove_light(LightID obj) = 0;
 
     virtual std::vector<LightID> lights_within_range(const kmVec3& location) = 0;
-    virtual std::vector<std::shared_ptr<SubEntity>> geometry_visible_from(CameraID camera_id) = 0;
+    virtual std::vector<std::shared_ptr<SubActor>> geometry_visible_from(CameraID camera_id) = 0;
 
 protected:
     Stage& stage() { return stage_; }

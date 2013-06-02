@@ -12,7 +12,7 @@ GeomFactory::GeomFactory(Stage &stage):
 
 }
 
-EntityID GeomFactory::new_line(const kmVec3& start, const kmVec3& end) {
+ActorID GeomFactory::new_line(const kmVec3& start, const kmVec3& end) {
     kglt::Stage& stage = stage_;
 
     kglt::MeshPtr mesh_ptr = stage.mesh(stage.new_mesh()).lock();
@@ -52,7 +52,7 @@ EntityID GeomFactory::new_line(const kmVec3& start, const kmVec3& end) {
     return stage.new_entity(mesh.id());
 }
 
-EntityID GeomFactory::new_rectangle_outline(const float width, const float height) {
+ActorID GeomFactory::new_rectangle_outline(const float width, const float height) {
     kglt::Stage& stage = stage_;
 
     kglt::MeshPtr mesh_ptr = stage.mesh(stage.new_mesh()).lock();
@@ -61,7 +61,7 @@ EntityID GeomFactory::new_rectangle_outline(const float width, const float heigh
     return stage.new_entity(mesh_ptr->id());
 }
 
-EntityID GeomFactory::new_rectangle(const float width, const float height) {
+ActorID GeomFactory::new_rectangle(const float width, const float height) {
     kglt::Stage& stage = stage_;
 
     kglt::MeshPtr mesh_ptr = stage.mesh(stage.new_mesh()).lock();
@@ -70,15 +70,15 @@ EntityID GeomFactory::new_rectangle(const float width, const float height) {
     return stage.new_entity(mesh_ptr->id());
 }
 
-EntityID GeomFactory::new_capsule(const float diameter, const float length) {
+ActorID GeomFactory::new_capsule(const float diameter, const float length) {
     throw NotImplementedError(__FILE__, __LINE__);
 }
 
-EntityID GeomFactory::new_sphere(const kmVec3& position, const float diameter) {
+ActorID GeomFactory::new_sphere(const kmVec3& position, const float diameter) {
     throw NotImplementedError(__FILE__, __LINE__);
 }
 
-EntityID GeomFactory::new_cube(const kmVec3& position, const float diameter) {
+ActorID GeomFactory::new_cube(const kmVec3& position, const float diameter) {
     throw NotImplementedError(__FILE__, __LINE__);
 }
 

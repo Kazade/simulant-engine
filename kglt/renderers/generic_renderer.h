@@ -15,11 +15,11 @@ public:
         Renderer(scene) {}
 
 private:
-    void render_subentity(SubEntity& mesh, CameraID camera);
+    void render_subentity(SubActor& mesh, CameraID camera);
 
-    void set_auto_uniforms_on_shader(ShaderProgram& s, CameraID camera, SubEntity &subentity);
+    void set_auto_uniforms_on_shader(ShaderProgram& s, CameraID camera, SubActor &subentity);
 
-    void set_auto_attributes_on_shader(ShaderProgram& s, SubEntity &buffer);
+    void set_auto_attributes_on_shader(ShaderProgram& s, SubActor &buffer);
     void set_blending_mode(BlendType type);
 };
 

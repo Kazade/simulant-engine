@@ -129,7 +129,7 @@ typedef UniqueID<4> MaterialID;
 typedef UniqueID<5> LightID;
 typedef UniqueID<6> StageID;
 typedef UniqueID<7> ViewportID;
-typedef UniqueID<8> EntityID;
+typedef UniqueID<8> ActorID;
 typedef UniqueID<9> SoundID;
 
 const StageID DefaultStageID = StageID();
@@ -160,9 +160,9 @@ class ShaderProgram;
 typedef std::weak_ptr<ShaderProgram> ShaderRef;
 typedef std::shared_ptr<ShaderProgram> ShaderPtr;
 
-class Entity;
-typedef std::shared_ptr<Entity> EntityPtr;
-typedef std::weak_ptr<Entity> EntityRef;
+class Actor;
+typedef std::shared_ptr<Actor> ActorPtr;
+typedef std::weak_ptr<Actor> ActorRef;
 
 class Light;
 typedef std::shared_ptr<Light> LightPtr;

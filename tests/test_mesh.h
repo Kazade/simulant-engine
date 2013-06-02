@@ -67,8 +67,8 @@ public:
     void test_user_data_works() {
         kglt::Stage& scene = window->scene().stage();
 
-        kglt::EntityID mid = scene.new_entity();
-        kglt::Entity& entity = scene.entity(mid);
+        kglt::ActorID mid = scene.new_entity();
+        kglt::Actor& entity = scene.entity(mid);
 
         this->assert_true(entity.id() != 0); //Make sure we set an id for the mesh
         this->assert_true(entity.uuid() != 0); //Make sure we set a unique ID for the object
@@ -85,9 +85,9 @@ public:
     void test_deleting_entities_deletes_children() {
         kglt::Stage& scene = window->scene().stage();
 
-        kglt::EntityID mid = scene.new_entity(); //Create the root mesh        
-        kglt::EntityID cid1 = scene.new_entity_with_parent(scene.entity(mid)); //Create a child
-        kglt::EntityID cid2 = scene.new_entity_with_parent(scene.entity(cid1)); //Create a child of the child
+        kglt::ActorID mid = scene.new_entity(); //Create the root mesh        
+        kglt::ActorID cid1 = scene.new_entity_with_parent(scene.entity(mid)); //Create a child
+        kglt::ActorID cid2 = scene.new_entity_with_parent(scene.entity(cid1)); //Create a child of the child
 
         this->assert_equal((uint32_t)1, scene.entity(mid).child_count());
         this->assert_equal((uint32_t)1, scene.entity(cid1).child_count());
@@ -138,7 +138,7 @@ public:
 
         kglt::MeshPtr mesh = scene.mesh(generate_test_mesh(scene)).lock();
 
-        kglt::Entity& entity = scene.entity(scene.new_entity());
+        kglt::Actor& entity = scene.entity(scene.new_entity());
 
         assert_true(!entity.has_mesh());
 
@@ -171,7 +171,7 @@ public:
         kglt::Stage& scene = window->scene().stage();
 
         kglt::MeshPtr mesh = scene.mesh(scene.new_mesh()).lock(); //Create a mesh
-        kglt::Entity& entity = scene.entity(scene.new_entity(mesh->id()));
+        kglt::Actor& entity = scene.entity(scene.new_entity(mesh->id()));
 
         assert_true(mesh->id() == entity.mesh().lock()->id());
     }

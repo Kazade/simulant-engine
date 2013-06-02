@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
     stage.set_ambient_light(kglt::Colour(0.2, 0.2, 0.2, 0.2));
 
     kglt::MeshID mid = stage.new_mesh_from_file(filename);
-    kglt::Entity& entity = stage.entity(stage.new_entity(mid));
+    kglt::Actor& entity = stage.entity(stage.new_entity(mid));
     entity.move_to(0, 0, -50);
 
     float x_position = 0.0f;

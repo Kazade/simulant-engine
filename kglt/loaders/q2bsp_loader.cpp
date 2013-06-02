@@ -103,11 +103,11 @@ struct Header {
 
 }
 
-typedef std::map<std::string, std::string> EntityProperties;
+typedef std::map<std::string, std::string> ActorProperties;
 
-void parse_entities(const std::string& entity_string, std::vector<EntityProperties>& entities) {
+void parse_entities(const std::string& entity_string, std::vector<ActorProperties>& entities) {
     bool inside_entity = false;
-    EntityProperties current;
+    ActorProperties current;
     std::string key, value;
     bool inside_key = false, inside_value = false, key_done_for_this_line = false;
     for(char c: entity_string) {
@@ -160,8 +160,8 @@ void parse_entities(const std::string& entity_string, std::vector<EntityProperti
 
 }
 
-kmVec3 find_player_spawn_point(std::vector<EntityProperties>& entities) {
-    for(EntityProperties p: entities) {
+kmVec3 find_player_spawn_point(std::vector<ActorProperties>& entities) {
+    for(ActorProperties p: entities) {
         std::cout << p["classname"] << std::endl;
         if(p["classname"] == "info_player_start") {
             kmVec3 pos;
@@ -177,12 +177,12 @@ kmVec3 find_player_spawn_point(std::vector<EntityProperties>& entities) {
     return none;
 }
 
-void add_lights_to_scene(Scene& scene, const std::vector<EntityProperties>& entities) {
+void add_lights_to_scene(Scene& scene, const std::vector<ActorProperties>& entities) {
     //Needed because the Quake 2 coord system is weird
     kmMat4 rotation;
     kmMat4RotationX(&rotation, kmDegreesToRadians(-90.0f));
 
-    for(EntityProperties props: entities) {
+    for(ActorProperties props: entities) {
         if(props["classname"] == "light") {
             kmVec3 pos;
             std::istringstream origin(props["origin"]);
@@ -246,7 +246,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     std::string entity_string(entity_buffer.begin(), entity_buffer.end());
 
 
-    std::vector<EntityProperties> entities;
+    std::vector<ActorProperties> entities;
     parse_entities(entity_string, entities);
     kmVec3 cam_pos = find_player_spawn_point(entities);
     kmVec3Transform(&cam_pos, &cam_pos, &rotation);

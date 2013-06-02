@@ -7,16 +7,16 @@
 
 namespace kglt {
 
-void OctreePartitioner::event_entity_changed(EntityID ent) {
-    L_DEBUG("Entity changed, updating partitioner");
+void OctreePartitioner::event_entity_changed(ActorID ent) {
+    L_DEBUG("Actor changed, updating partitioner");
     remove_entity(ent);
     add_entity(ent);
 }
 
-void OctreePartitioner::add_entity(EntityID obj) {
+void OctreePartitioner::add_entity(ActorID obj) {
     L_DEBUG("Adding entity to the partitioner");
 
-    Entity& ent = stage().entity(obj);
+    Actor& ent = stage().entity(obj);
     for(uint16_t i = 0; i < ent.subentity_count(); ++i) {
         //All subentities are boundable
         Boundable* boundable = dynamic_cast<Boundable*>(&ent.subentity(i));        
@@ -30,7 +30,7 @@ void OctreePartitioner::add_entity(EntityID obj) {
     entity_changed_connections_[obj] = ent.signal_mesh_changed().connect(sigc::mem_fun(this, &OctreePartitioner::event_entity_changed));
 }
 
-void OctreePartitioner::remove_entity(EntityID obj) {
+void OctreePartitioner::remove_entity(ActorID obj) {
     L_DEBUG("Removing entity from the partitioner");
 
     //Remove all boundable subentities that were linked to the entity
@@ -63,8 +63,8 @@ void OctreePartitioner::remove_light(LightID obj) {
     boundable_to_light_.erase(boundable);
 }
 
-std::vector<SubEntity::ptr> OctreePartitioner::geometry_visible_from(CameraID camera_id) {
-    std::vector<SubEntity::ptr> results;
+std::vector<SubActor::ptr> OctreePartitioner::geometry_visible_from(CameraID camera_id) {
+    std::vector<SubActor::ptr> results;
 
     //If the tree has no root then we return nothing
     if(!tree_.has_root()) {

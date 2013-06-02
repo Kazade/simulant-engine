@@ -13,7 +13,7 @@ namespace kglt {
 class Partitioner;
 class Scene;
 
-typedef generic::TemplatedManager<Stage, Entity, EntityID> EntityManager;
+typedef generic::TemplatedManager<Stage, Actor, ActorID> ActorManager;
 typedef generic::TemplatedManager<Stage, Light, LightID> LightManager;
 
 class Stage:
@@ -21,24 +21,24 @@ class Stage:
     public generic::Identifiable<StageID>,
     public ResourceManager,
     public Object,
-    public EntityManager,
+    public ActorManager,
     public LightManager,
     public Loadable {
 
 public:
     Stage(Scene *parent, StageID id);
 
-    EntityID new_entity();
-    EntityID new_entity(MeshID mid);
-    EntityID new_entity_with_parent(Entity& parent);
-    EntityID new_entity_with_parent(Entity& parent, MeshID mid);
+    ActorID new_entity();
+    ActorID new_entity(MeshID mid);
+    ActorID new_entity_with_parent(Actor& parent);
+    ActorID new_entity_with_parent(Actor& parent, MeshID mid);
 
-    Entity& entity(EntityID e);
-    EntityRef entity_ref(EntityID e);
+    Actor& entity(ActorID e);
+    ActorRef entity_ref(ActorID e);
 
-    bool has_entity(EntityID e) const;
-    void delete_entity(EntityID e);
-    uint32_t entity_count() const { return EntityManager::manager_count(); }
+    bool has_entity(ActorID e) const;
+    void delete_entity(ActorID e);
+    uint32_t entity_count() const { return ActorManager::manager_count(); }
 
     LightID new_light(LightType type=LIGHT_TYPE_POINT);
     LightID new_light(Object& parent, LightType type=LIGHT_TYPE_POINT);
@@ -49,8 +49,8 @@ public:
     kglt::Colour ambient_light() const { return ambient_light_; }
     void set_ambient_light(const kglt::Colour& c) { ambient_light_ = c; }
 
-    sigc::signal<void, EntityID>& signal_entity_created() { return signal_entity_created_; }
-    sigc::signal<void, EntityID>& signal_entity_destroyed() { return signal_entity_destroyed_; }
+    sigc::signal<void, ActorID>& signal_entity_created() { return signal_entity_created_; }
+    sigc::signal<void, ActorID>& signal_entity_destroyed() { return signal_entity_destroyed_; }
 
     sigc::signal<void, LightID>& signal_light_created() { return signal_light_created_; }
     sigc::signal<void, LightID>& signal_light_destroyed() { return signal_light_destroyed_; }
@@ -139,8 +139,8 @@ private:
 
     kglt::Colour ambient_light_;
 
-    sigc::signal<void, EntityID> signal_entity_created_;
-    sigc::signal<void, EntityID> signal_entity_destroyed_;
+    sigc::signal<void, ActorID> signal_entity_created_;
+    sigc::signal<void, ActorID> signal_entity_destroyed_;
 
     sigc::signal<void, LightID> signal_light_created_;
     sigc::signal<void, LightID> signal_light_destroyed_;

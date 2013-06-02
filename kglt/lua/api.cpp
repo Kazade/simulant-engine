@@ -18,9 +18,9 @@ void export_lua_api(lua_State* state) {
     ];
 
     luabind::module(state) [
-        luabind::class_<EntityID>("EntityID")
+        luabind::class_<ActorID>("ActorID")
             .def(luabind::constructor<int>())
-            .property("value", &EntityID::value)
+            .property("value", &ActorID::value)
     ];
 
     luabind::module(state) [
@@ -64,8 +64,8 @@ void export_lua_api(lua_State* state) {
 
     luabind::module(state) [
         luabind::class_<Stage, luabind::bases<ResourceManager> >("Stage")
-            .def("new_entity", (EntityID(Stage::*)())&Stage::new_entity)
-            .def("new_entity_from_mesh", (EntityID(Stage::*)(MeshID))&Stage::new_entity)
+            .def("new_entity", (ActorID(Stage::*)())&Stage::new_entity)
+            .def("new_entity_from_mesh", (ActorID(Stage::*)(MeshID))&Stage::new_entity)
             .def("entity", &Stage::entity)
             .def("delete_entity", &Stage::delete_entity)
             .property("scene", (Scene&(Stage::*)())&Stage::scene)
@@ -98,8 +98,8 @@ void export_lua_api(lua_State* state) {
     ];
 
     luabind::module(state) [
-        luabind::class_<Entity, Object>("Entity")
-            .property("id", &Entity::id)
+        luabind::class_<Actor, Object>("Actor")
+            .property("id", &Actor::id)
     ];
 
     luabind::module(state)[

@@ -10,7 +10,7 @@
 
 namespace kglt {
 
-class SubEntity;
+class SubActor;
 
 class Renderer {
 public:
@@ -25,7 +25,7 @@ public:
         current_stage_ = stage;
     }
 
-    virtual void render_subentity(SubEntity& buffer, CameraID camera) = 0;
+    virtual void render_subentity(SubActor& buffer, CameraID camera) = 0;
 
 protected:
     Stage& current_stage();

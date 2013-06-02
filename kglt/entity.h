@@ -12,18 +12,18 @@
 
 namespace kglt {
 
-class SubEntity;
+class SubActor;
 
-class Entity :
+class Actor :
     public MeshInterface,
-    public Managed<Entity>,
-    public generic::Identifiable<EntityID>,
+    public Managed<Actor>,
+    public generic::Identifiable<ActorID>,
     public Object,
     public Source {
 
 public:
-    Entity(Stage* stage, EntityID id);
-    Entity(Stage* stage, EntityID id, MeshID mesh);
+    Actor(Stage* stage, ActorID id);
+    Actor(Stage* stage, ActorID id, MeshID mesh);
 
     MeshID mesh_id() const { return (mesh_) ? mesh_->id() : MeshID(0); }
     MeshRef mesh() const { return mesh_; }
@@ -38,13 +38,13 @@ public:
 
     void override_material_id(MaterialID mat);
 
-    SubEntity& subentity(uint16_t idx) {
+    SubActor& subentity(uint16_t idx) {
         return *subentities_.at(idx);
     }
 
-    const std::vector<std::shared_ptr<SubEntity> >& _subentities() { return subentities_; }
+    const std::vector<std::shared_ptr<SubActor> >& _subentities() { return subentities_; }
 
-    sigc::signal<void, EntityID>& signal_mesh_changed() { return signal_mesh_changed_; }
+    sigc::signal<void, ActorID>& signal_mesh_changed() { return signal_mesh_changed_; }
 
     void destroy();
 
@@ -52,26 +52,26 @@ public:
     void set_render_priority(RenderPriority value) { render_priority_ = value;}
 private:
     MeshPtr mesh_;
-    std::vector<std::shared_ptr<SubEntity> > subentities_;
+    std::vector<std::shared_ptr<SubActor> > subentities_;
 
     RenderPriority render_priority_;
 
-    sigc::signal<void, EntityID> signal_mesh_changed_;
+    sigc::signal<void, ActorID> signal_mesh_changed_;
 
     void do_update(double dt) {
         update_source(dt);
     }
 
-    friend class SubEntity;
+    friend class SubActor;
 };
 
-class SubEntity :
+class SubActor :
     public SubMeshInterface,
-    public Managed<SubEntity>,
+    public Managed<SubActor>,
     public Boundable {
 
 public:
-    SubEntity(Entity& parent, SubMeshIndex idx):
+    SubActor(Actor& parent, SubMeshIndex idx):
         parent_(parent),
         index_(idx),
         material_(0) {
@@ -87,7 +87,7 @@ public:
     const IndexData& index_data() const { return submesh().index_data(); }
     const MeshArrangement arrangement() const { return submesh().arrangement(); }
 
-    Entity& _parent() { return parent_; }
+    Actor& _parent() { return parent_; }
 
     /* Boundable interface implementation */
 
@@ -126,7 +126,7 @@ public:
     }
 
 private:
-    Entity& parent_;
+    Actor& parent_;
     SubMeshIndex index_;
     MaterialPtr material_;
 
