@@ -46,6 +46,7 @@ public:
 
     MaterialID default_material_id() const;
     TextureID default_texture_id() const;
+    CameraID default_camera_id() const;
 
     Pipeline& pipeline() { return *pipeline_; }
 
@@ -61,6 +62,8 @@ public:
     }
 private:
     StageID default_stage_;
+    CameraID default_camera_;
+
     TexturePtr default_texture_;
     MaterialPtr default_material_;
 

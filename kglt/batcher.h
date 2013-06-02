@@ -128,6 +128,15 @@ public:
         return parent_->get_root();
     }
 
+    void clear() {
+        subactors_.clear();
+        for(auto groups: children_) {
+            for(auto group: groups.second) {
+                group.second->clear();
+            }
+        }
+    }
+
 protected:
     RenderGroup* parent_;
 

@@ -78,7 +78,14 @@ void Pipeline::run_stage(PipelineStage::ptr pipeline_stage) {
      * being the meshes
      */
     typedef std::tr1::unordered_map<uint32_t, std::vector<RootGroup::ptr> > QueueGroups;
-    QueueGroups queues;
+    static QueueGroups queues;
+
+    //Empty the queues
+    for(auto queue: queues) {
+        for(auto group: queue.second) {
+            group->clear();
+        }
+    }
 
     //Go through the visible actors
     for(SubActor::ptr ent: buffers) {

@@ -36,12 +36,12 @@ TextureID Scene::default_texture_id() const {
 }
 
 void Scene::initialize_defaults() {
-    new_camera(); //Create a default camera
+    default_camera_ = new_camera(); //Create a default camera
 
     default_stage_ = new_stage(kglt::PARTITIONER_NULL);
 
     //Create a default stage for the default stage with the default camera
-    pipeline_->add_stage(default_stage_, camera().id());
+    pipeline_->add_stage(default_stage_, default_camera_);
 
     //Create the default blank texture
     default_texture_ = texture(new_texture()).lock();
@@ -117,11 +117,8 @@ CameraID Scene::new_camera() {
 
 Camera& Scene::camera(CameraID c) {
     if(c == CameraID()) {
-        //Return the first camera, it's very likely this is the only one
-        if(!CameraManager::manager_count()) {
-            throw std::logic_error("Attempted to retrieve a camera when none exist");
-        }
-        return CameraManager::manager_get(CameraManager::objects_.begin()->second->id());
+        //Return the default camera
+        return CameraManager::manager_get(default_camera_);
     }
     return CameraManager::manager_get(c);
 }
@@ -141,6 +138,7 @@ bool Scene::init() {
 void Scene::update(double dt) {
     //Update the stages
     StageManager::apply_func_to_objects(std::bind(&Object::update, std::tr1::placeholders::_1, dt));
+    CameraManager::apply_func_to_objects(std::bind(&Object::update, std::tr1::placeholders::_1, dt));
 }
 
 void Scene::render() {

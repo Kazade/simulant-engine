@@ -18,7 +18,10 @@ bool Frustum::intersects_aabb(const kmAABB &aabb) const {
         );
 
         kglt::Vec4 v1(pv, 1.0f);
+        kmVec4Normalize(&v1, &v1);
+
         kglt::Vec4 v2(plane.a, plane.b, plane.c, plane.d);
+        kmVec4Normalize(&v2, &v2);
 
         const float n = kmVec4Dot(&v1, &v2);
 
