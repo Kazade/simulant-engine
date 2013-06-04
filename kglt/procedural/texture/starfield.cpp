@@ -47,7 +47,7 @@ void starfield(kglt::TexturePtr texture_ptr, uint32_t width, uint32_t height) {
     texture.resize(width, height);
     texture.set_bpp();
 
-    const float GLOBAL_DENSITY = 0.03f;
+    const float GLOBAL_DENSITY = 0.01f;
     const float MAX_SIZE = 2.0;
     const float MAX_BRIGHTNESS = 255;
 
@@ -60,14 +60,16 @@ void starfield(kglt::TexturePtr texture_ptr, uint32_t width, uint32_t height) {
             if(random_float(0, 1) < this_density * GLOBAL_DENSITY) {
                 float weight = random_float(0, 1) * this_density;
                 float size = std::max(1.0f, weight * MAX_SIZE);
-                float brightness = std::min(1.0f, weight * 2) * MAX_BRIGHTNESS;
+                float brightness = weight * MAX_BRIGHTNESS;
 
                 kglt::Colour colour = kglt::Colour::white;
                 float col_rand = random_float(0, 1);
-                if(col_rand < 0.03) {
+                if(col_rand < 0.05) {
                     colour = kglt::Colour::orange;
-                } else if(col_rand < 0.05) {
+                } else if(col_rand < 0.07) {
                     colour = kglt::Colour::yellow;
+                } else if(col_rand < 0.1) {
+                    colour = kglt::Colour::blue;
                 }
                 draw_circle(texture_ptr, x, y, size, brightness, colour);
             }
