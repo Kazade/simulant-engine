@@ -1,4 +1,5 @@
 #include "kglt/kglt.h"
+#include "kglt/extra/skybox.h"
 
 #include "kglt/kazbase/string.h"
 
@@ -36,6 +37,12 @@ int main(int argc, char* argv[]) {
     light2.move_to(20, -20, -50);
 
     stage.set_ambient_light(kglt::Colour(0.2, 0.2, 0.2, 0.2));
+
+    kglt::TextureID star_texture = stage.new_texture();
+    kglt::procedural::texture::starfield(stage.texture(star_texture).lock());
+    stage.texture(star_texture).lock()->upload();
+
+    kglt::extra::SkyBox::ptr skybox = kglt::extra::SkyBox::create(stage, star_texture);
 
     kglt::MeshID mid = stage.new_mesh_from_file(filename);
     kglt::Actor& actor = stage.actor(stage.new_actor(mid));

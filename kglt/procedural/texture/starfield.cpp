@@ -59,8 +59,8 @@ void starfield(kglt::TexturePtr texture_ptr, uint32_t width, uint32_t height) {
 
             if(random_float(0, 1) < this_density * GLOBAL_DENSITY) {
                 float weight = random_float(0, 1) * this_density;
-                float size = weight * MAX_SIZE;
-                float brightness = weight * MAX_BRIGHTNESS;
+                float size = std::max(1.0f, weight * MAX_SIZE);
+                float brightness = std::min(1.0f, weight * 2) * MAX_BRIGHTNESS;
 
                 kglt::Colour colour = kglt::Colour::white;
                 float col_rand = random_float(0, 1);

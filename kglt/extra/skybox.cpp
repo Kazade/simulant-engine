@@ -9,6 +9,7 @@
 #include "../window_base.h"
 #include "../actor.h"
 #include "../loader.h"
+#include "../procedural/geom_factory.h"
 
 namespace kglt {
 namespace extra {
@@ -17,20 +18,16 @@ SkyBox::SkyBox(kglt::Stage& stage, kglt::TextureID texture, float size, CameraID
     stage_(stage),
     camera_id_(cam) {
 
-    actor_ = &stage.actor(stage.new_actor(stage.new_mesh()));
+    actor_ = &stage.actor(stage.geom_factory().new_cube(size));
 
-    kglt::MeshPtr mesh = actor_->mesh().lock();
-    kglt::procedural::mesh::cube(mesh, size);
-
-    kglt::MaterialPtr mat = stage.material(stage.new_material()).lock();
-    stage.window().loader_for("kglt/materials/generic_multitexture.kglm")->into(*mat);
+    kglt::MaterialPtr mat = stage.material(stage.new_material_from_file("kglt/materials/generic_multitexture.kglm")).lock();
 
     mat->technique().pass(0).set_texture_unit(0, texture);
     mat->technique().pass(0).set_depth_test_enabled(false);
     mat->technique().pass(0).set_depth_write_enabled(false);
 
-    mesh->set_material_id(mat->id());
-    mesh->reverse_winding();
+    actor_->mesh().lock()->set_material_id(mat->id());
+    actor_->mesh().lock()->reverse_winding();
 
     actor_->set_render_priority(RENDER_PRIORITY_BACKGROUND);
     actor_->attach_to_camera(cam);
