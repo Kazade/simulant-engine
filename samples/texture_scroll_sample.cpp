@@ -21,22 +21,24 @@ int main(int argc, char* argv[]) {
     */
 
     ///Shortcut function for loading images
-    kglt::TextureID tid = kglt::create_texture_from_file(stage, "sample_data/sample.tga");
-    kglt::MaterialID matid = kglt::create_material_from_texture(stage, tid);
+    kglt::TextureID tid = stage.new_texture();
+    kglt::procedural::texture::starfield(stage.texture(tid).lock());
+    kglt::Actor& actor = stage.actor(stage.geom_factory().new_rectangle(2.0, 2.0));
+    actor.mesh().lock()->set_texture_on_material(0, tid);
 
-    kglt::Actor& actor = stage.actor(stage.geom_factory().new_rectangle(1.0, 1.0));
-    actor.mesh().lock()->set_material_id(matid);
+    kglt::MeshPtr mesh = actor.mesh().lock();
+    kglt::MaterialID matid = mesh->submesh(mesh->submesh_ids()[0]).material_id();
 
     /**
         Once we have the reference to a base object, we can
         manipulate it easily
     */
-    actor.move_to(0.0f, 0.0f, -5.0f);
+    actor.move_to(0.0f, 0.0f, -2.0f);
 
     window->scene().camera().set_orthographic_projection_from_height(2.0, (float) window->width() / (float)window->height());
 
     while(window->update()) {
-        stage.material(matid).lock()->technique().pass(0).texture_unit(0).scroll_x(0.5 * window->delta_time());
+      //  stage.material(matid).lock()->technique().pass(0).texture_unit(0).scroll_x(0.5 * window->delta_time());
     }
 	return 0;
 }

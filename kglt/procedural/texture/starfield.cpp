@@ -1,5 +1,5 @@
 #include "../../texture.h"
-#include "../utils/simplex_noise.h"
+#include "../../utils/simplex.h"
 #include "starfield.h"
 #include "../../kazbase/random.h"
 
@@ -44,24 +44,19 @@ void starfield(kglt::TexturePtr texture_ptr, uint32_t width, uint32_t height) {
 
     seed();
 
-    std::vector<float> density(width * height, 0);
-
     texture.resize(width, height);
     texture.set_bpp();
 
-    const float GLOBAL_DENSITY = 0.01f;
+    const float GLOBAL_DENSITY = 0.03f;
     const float MAX_SIZE = 2.0;
     const float MAX_BRIGHTNESS = 255;
 
-    for(uint32_t y = 0; y < height; ++y) {
-        for(uint32_t x = 0; x < width; ++x) {
-            density[(y * width) + x] = fabs(Simplex::noise(float(x), float(y)));
-        }
-    }
+    Simplex::ptr noise = Simplex::create(width, height);
 
     for(uint32_t y = 0; y < height; ++y) {
         for(uint32_t x = 0; x < width; ++x) {
-            float this_density = density[(y * width) + x];
+            float this_density = (noise->get(x, y) + 1.0) / 2.0;
+
             if(random_float(0, 1) < this_density * GLOBAL_DENSITY) {
                 float weight = random_float(0, 1) * this_density;
                 float size = weight * MAX_SIZE;

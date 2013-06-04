@@ -200,8 +200,6 @@ kglt/procedural/mesh/sphere.h
 kglt/procedural/mesh/sphere.cpp
 kglt/procedural/texture/starfield.h
 kglt/procedural/texture/starfield.cpp
-kglt/procedural/utils/simplex_noise.h
-kglt/procedural/utils/simplex_noise.cpp
 kglt/procedural/texture.h
 kglt/kazbase/random.h
 kglt/kazbase/random.cpp
@@ -271,3 +269,5 @@ kglt/generic/refcount_manager.h
 kglt/generic/manager_base.h
 kglt/generic/cloneable.h
 kglt/resource.cpp
+kglt/utils/simplex.h
+kglt/utils/simplex.cpp
