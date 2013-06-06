@@ -271,3 +271,7 @@ kglt/generic/cloneable.h
 kglt/resource.cpp
 kglt/utils/simplex.h
 kglt/utils/simplex.cpp
+kglt/screens/loading.h
+kglt/application.h
+kglt/application.cpp
+kglt/screens/loading.cpp

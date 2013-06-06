@@ -24,6 +24,10 @@ namespace ui {
     class Interface;
 }
 
+namespace screens {
+    class Loading;
+}
+
 class InputController;
 class Keyboard;
 class Mouse;
@@ -101,6 +105,7 @@ public:
     sigc::signal<void>& signal_frame_finished() { return signal_frame_finished_; }
     sigc::signal<void>& signal_pre_swap() { return signal_pre_swap_; }
     sigc::signal<void, double>& signal_step() { return signal_step_; }
+    sigc::signal<void>& signal_shutdown() { return signal_shutdown_; }
 
     ui::Interface& ui() { return *interface_; }
     void load_ui(const std::string& rml_file);
@@ -113,6 +118,9 @@ public:
         }
         return *watcher_;
     }
+
+    screens::Loading& loading() { return *loading_; }
+
 protected:
 
     void set_width(uint32_t width) { 
@@ -165,10 +173,13 @@ private:
     sigc::signal<void> signal_pre_swap_;
     sigc::signal<void> signal_frame_finished_;
     sigc::signal<void, double> signal_step_;
+    sigc::signal<void> signal_shutdown_;
 
     std::shared_ptr<ui::Interface> interface_;
     std::shared_ptr<Console> console_;
     std::shared_ptr<Watcher> watcher_;
+
+    std::shared_ptr<screens::Loading> loading_;
 };
 
 }

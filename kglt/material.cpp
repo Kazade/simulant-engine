@@ -205,4 +205,13 @@ MaterialID Material::do_clone() {
     return new_mat->id();
 }
 
+void Material::update(double dt) {
+    for(auto it = techniques_.begin(); it != techniques_.end(); ++it) {
+        assert((*it).second);
+
+        (*it).second->update(dt);
+    }
+}
+
+
 }

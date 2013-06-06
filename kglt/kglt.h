@@ -24,4 +24,6 @@
 #include "procedural/geom_factory.h"
 #include "texture.h"
 
+#include "application.h"
+
 #endif

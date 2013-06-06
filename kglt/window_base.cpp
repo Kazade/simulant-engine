@@ -16,6 +16,8 @@
 #include "lua/console.h"
 #include "watcher.h"
 
+#include "screens/loading.h"
+
 namespace kglt {
 
 WindowBase::WindowBase():
@@ -87,6 +89,9 @@ bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
 
         scene_ = Scene::create(this);
         scene_->initialize_defaults();
+
+        loading_ = screens::Loading::create(this->scene());
+        signal_step().connect(std::bind(&screens::Loading::update, loading_, std::placeholders::_1));
 
         //This needs to happen after SDL or whatever is initialized
         input_controller_ = InputController::create();
@@ -180,6 +185,8 @@ bool WindowBase::update() {
     signal_frame_finished_();
 
     if(!is_running_) {
+        signal_shutdown_();
+
         watcher_.reset();
 
         //Shutdown the input controller

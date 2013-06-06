@@ -219,12 +219,7 @@ public:
 
     uint32_t technique_count() const { return techniques_.size(); }
 
-    void update(double dt) {
-        std::tr1::unordered_map<std::string, MaterialTechnique::ptr>::iterator it =  techniques_.begin();
-        for(; it != techniques_.end(); ++it) {
-            (*it).second->update(dt);
-        }
-    }
+    void update(double dt);
 
     Material& operator=(const Material& rhs);
 

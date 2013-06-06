@@ -14,10 +14,19 @@ ResourceManagerImpl::ResourceManagerImpl(WindowBase* window):
 
 void ResourceManagerImpl::update() {
     //Garbage collect all the things
+    L_DEBUG("Collecting meshes");
     MeshManager::garbage_collect();
+
+    L_DEBUG("Collecting materials");
     MaterialManager::garbage_collect();
+
+    L_DEBUG("Collecting textures");
     TextureManager::garbage_collect();
+
+    L_DEBUG("Collecting shaders");
     ShaderManager::garbage_collect();
+
+    L_DEBUG("Collecting sounds");
     SoundManager::garbage_collect();
 
     /*

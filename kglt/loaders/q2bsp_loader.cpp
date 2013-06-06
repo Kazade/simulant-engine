@@ -13,7 +13,7 @@
 #include "../types.h"
 #include "../light.h"
 #include "../camera.h"
-
+#include "../procedural/texture.h"
 #include "../kazbase/logging.h"
 #include "../kazbase/string.h"
 #include "q2bsp_loader.h"
@@ -324,17 +324,27 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         if(tex_lookup.find(tex.texture_name) != tex_lookup.end()) {
             tid = tex_lookup[tex.texture_name];
         } else {
-            tid = scene->stage().new_texture();
-            TexturePtr texture = scene->stage().texture(tid).lock();
+            std::string texture_filename = "textures/" + std::string(tex.texture_name) + ".tga";
+            TexturePtr texture;
+            try {
+                tid = scene->stage().new_texture_from_file(texture_filename);
+                texture = scene->stage().texture(tid).lock();
+            } catch(IOError& e) {
+                //Fallback texture
+                L_ERROR("Unable to find texture required by BSP file: " + texture_filename);
+                tid = scene->stage().new_texture();
+                texture = scene->stage().texture(tid).lock();
 
-            //HACK!
-            scene->window().loader_for("textures/" + std::string(tex.texture_name) + ".tga")->into(*texture);
+                //FIXME: Should be checkerboard, not starfield
+                kglt::procedural::texture::starfield(texture, 64, 64);
+            }
+
+            scene->window().idle().add_once(std::bind(&Texture::upload, texture, false, true, false, false));
 
             //We need to store this to divide the texture coordinates later
             texture_dimensions[tex.texture_name].first = texture->width();
             texture_dimensions[tex.texture_name].second = texture->height();
 
-            texture->upload();
             tex_lookup[tex.texture_name] = tid;
         }
 
