@@ -4,7 +4,7 @@
 #include "background.h"
 
 #include "../actor.h"
-#include "../pipeline.h"
+#include "../render_sequence.h"
 #include "../camera.h"
 #include "../shortcuts.h"
 #include "../procedural/mesh.h"
@@ -104,7 +104,13 @@ Background::Background(Scene& scene, ViewportID viewport, BGResizeStyle style):
 
     //Add a pass for this background
     //FIXME: priority = -1000
-    scene.pipeline().add_stage(stage_.id(), ortho_camera_.lock()->id(), viewport_, TextureID(), -100);
+    pipeline_ = scene.render_sequence().new_pipeline(
+        stage_.id(),
+        ortho_camera_.lock()->id(),
+        viewport_,
+        TextureID(),
+        -100
+    );
 
     actor_ = stage_.actor_ref(stage_.new_actor(stage_.new_mesh()));
 

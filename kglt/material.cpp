@@ -189,12 +189,19 @@ MaterialTechnique& MaterialTechnique::operator=(const MaterialTechnique& rhs){
 }
 
 Material& Material::operator=(const Material& rhs) {
-    techniques_.clear();
+    if(this == &rhs) {
+        return *this;
+    }
+
+    std::tr1::unordered_map<std::string, MaterialTechnique::ptr> new_techniques;
 
     for(auto p: rhs.techniques_) {
         assert(p.second.get());
-        techniques_[p.first] = MaterialTechnique::ptr(new MaterialTechnique(*p.second));
+        new_techniques[p.first] = MaterialTechnique::ptr(new MaterialTechnique(*p.second));
     }
+
+    //Use std::swap to make reentrant
+    std::swap(techniques_, new_techniques);
 
     return *this;
 }

@@ -3,7 +3,7 @@
 #include "scene.h"
 #include "renderer.h"
 #include "camera.h"
-#include "pipeline.h"
+#include "render_sequence.h"
 #include "loader.h"
 #include "stage.h"
 #include "partitioners/null_partitioner.h"
@@ -18,7 +18,7 @@ Scene::Scene(WindowBase* window):
     ResourceManagerImpl(window),
     default_texture_(0),
     default_material_(0),
-    pipeline_(new Pipeline(*this)) {
+    render_sequence_(new RenderSequence(*this)) {
 
     CameraManager::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Camera, CameraID>));
 }
@@ -45,7 +45,7 @@ void Scene::initialize_defaults() {
     default_stage_ = new_stage(kglt::PARTITIONER_NULL);
 
     //Create a default stage for the default stage with the default camera
-    pipeline_->add_stage(default_stage_, default_camera_);
+    render_sequence_->new_pipeline(default_stage_, default_camera_);
 
     //Create the default blank texture
     default_texture_ = texture(new_texture()).lock();
@@ -146,7 +146,7 @@ void Scene::update(double dt) {
 }
 
 void Scene::render() {
-    pipeline_->run();
+    render_sequence_->run();
 }
 
 }

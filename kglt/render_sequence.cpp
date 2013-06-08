@@ -1,6 +1,6 @@
 #include <tr1/unordered_map>
 
-#include "pipeline.h"
+#include "render_sequence.h"
 #include "scene.h"
 #include "stage.h"
 #include "actor.h"
@@ -16,16 +16,17 @@
 
 namespace kglt {
 
-PipelineStage::PipelineStage(Scene& scene, StageID ss, CameraID camera, ViewportID viewport, TextureID target):
+Pipeline::Pipeline(
+        RenderSequence* render_sequence,
+        PipelineID id):
+    generic::Identifiable<PipelineID>(id),
+    sequence_(render_sequence),
     priority_(0),
-    scene_(scene),
-    stage_(ss),
-    target_(target),
-    camera_(camera),
-    viewport_(viewport) {
+    is_active_(true) {
+
 }
 
-Pipeline::Pipeline(Scene& scene):
+RenderSequence::RenderSequence(Scene& scene):
     scene_(scene),
     renderer_(new GenericRenderer(scene)) {
 
@@ -36,34 +37,72 @@ Pipeline::Pipeline(Scene& scene):
     render_options.point_size = 1;
 }
 
-void Pipeline::remove_all_stages() {
-    stages_.clear();
-}
-
-void Pipeline::add_stage(StageID stage, CameraID camera, ViewportID viewport, TextureID target, int32_t priority) {
-    stages_.push_back(PipelineStage::ptr(new PipelineStage(scene_, stage, camera, viewport, target)));
-    stages_.at(stages_.size() - 1)->set_priority(priority);
-}
-
-void Pipeline::set_renderer(Renderer::ptr renderer) {
-    renderer_ = renderer;
-}
-
-void Pipeline::run() {
-    scene_.window().apply_func_to_objects(std::bind(&Viewport::clear, std::tr1::placeholders::_1));
-
-    std::vector<PipelineStage::ptr> sorted(stages_.begin(), stages_.end());
-    std::sort(stages_.begin(), stages_.end(), [](PipelineStage::ptr lhs, PipelineStage::ptr rhs) { return lhs->priority() < rhs->priority(); });
-
-    for(PipelineStage::ptr stage: sorted) {
-        run_stage(stage);
+void RenderSequence::activate_pipelines(const std::vector<PipelineID>& pipelines) {
+    for(Pipeline::ptr p: ordered_pipelines_) {
+        p->activate();
     }
 }
 
-void Pipeline::run_stage(PipelineStage::ptr pipeline_stage) {
+std::vector<PipelineID> RenderSequence::active_pipelines() const {
+    std::vector<PipelineID> result;
+
+    for(Pipeline::ptr p: ordered_pipelines_) {
+        if(p->is_active()) {
+            result.push_back(p->id());
+        }
+    }
+
+    return result;
+}
+
+void RenderSequence::deactivate_all_pipelines() {
+    for(Pipeline::ptr p: ordered_pipelines_) {
+        p->deactivate();
+    }
+}
+
+Pipeline& RenderSequence::pipeline(PipelineID pipeline) {
+    return PipelineManager::manager_get(pipeline);
+}
+
+void RenderSequence::delete_pipeline(PipelineID pipeline) {
+    PipelineManager::manager_delete(pipeline);
+}
+
+PipelineID RenderSequence::new_pipeline(StageID stage, CameraID camera, ViewportID viewport, TextureID target, int32_t priority) {
+    PipelineID new_p = PipelineManager::manager_new();
+
+    ordered_pipelines_.push_back(PipelineManager::__objects()[new_p]);
+
+    ordered_pipelines_.back()->set_stage(stage);
+    ordered_pipelines_.back()->set_camera(camera);
+    ordered_pipelines_.back()->set_viewport(viewport);
+    ordered_pipelines_.back()->set_target(target);
+    ordered_pipelines_.back()->set_priority(priority);
+
+    ordered_pipelines_.sort(
+        [](Pipeline::ptr lhs, Pipeline::ptr rhs) { return lhs->priority() < rhs->priority(); }
+    );
+
+    return new_p;
+}
+
+void RenderSequence::set_renderer(Renderer::ptr renderer) {
+    renderer_ = renderer;
+}
+
+void RenderSequence::run() {
+    scene_.window().apply_func_to_objects(std::bind(&Viewport::clear, std::tr1::placeholders::_1));
+
+    for(Pipeline::ptr pipeline: ordered_pipelines_) {
+        run_pipeline(pipeline);
+    }
+}
+
+void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
     scene_.window().viewport(pipeline_stage->viewport_id()).apply(); //FIXME apply shouldn't exist
 
-    signal_render_stage_started_(*pipeline_stage);
+    signal_pipeline_started_(*pipeline_stage);
 
     Stage& stage = scene_.stage(pipeline_stage->stage_id());
     Camera& camera = scene_.camera(pipeline_stage->camera_id());
@@ -137,7 +176,7 @@ void Pipeline::run_stage(PipelineStage::ptr pipeline_stage) {
         renderer_->render(buffers, stage->camera_id());
     renderer_->set_current_stage(StageID());*/
 
-    signal_render_stage_finished_(*pipeline_stage);
+    signal_pipeline_finished_(*pipeline_stage);
 }
 
 }

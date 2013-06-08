@@ -15,7 +15,7 @@
 #include "../window_base.h"
 #include "../scene.h"
 #include "../camera.h"
-#include "../pipeline.h"
+#include "../render_sequence.h"
 
 #include "interface.h"
 #include "ui_private.h"

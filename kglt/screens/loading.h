@@ -1,7 +1,10 @@
 #ifndef LOADING_H
 #define LOADING_H
 
+#include <vector>
+
 #include "../generic/managed.h"
+#include "../types.h"
 
 namespace kglt {
 
@@ -14,6 +17,7 @@ class Loading:
 
 public:
     Loading(Scene& scene);
+    ~Loading();
 
     void activate();
     void deactivate();
@@ -25,6 +29,13 @@ public:
 private:
     Scene& scene_;
     bool is_active_;
+
+    StageID stage_;
+    CameraID camera_;
+
+    PipelineID pipeline_;
+
+    std::vector<PipelineID> stashed_pipelines_;
 };
 
 }

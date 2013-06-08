@@ -116,7 +116,7 @@ void export_lua_api(lua_State* state) {
             .property("stage_count", &Scene::stage_count)
             .property("default_stage", (Stage&(Scene::*)())&Scene::stage)
             .property("default_material_id", &Scene::default_material_id)
-            .property("pipeline", &Scene::pipeline)
+            .property("render_sequence", &Scene::render_sequence)
     ];
 
     luabind::module(state) [

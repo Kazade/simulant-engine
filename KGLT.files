@@ -133,8 +133,6 @@ kglt/procedural/mesh/cube.cpp
 kglt/shaders/default_shaders.h
 kglt/generic/relation.h
 samples/new_pipeline_sample.cpp
-kglt/pipeline.h
-kglt/pipeline.cpp
 kglt/renderer.h
 kglt/renderers/generic_renderer.h
 kglt/renderers/generic_renderer.cpp
@@ -275,3 +273,5 @@ kglt/screens/loading.h
 kglt/application.h
 kglt/application.cpp
 kglt/screens/loading.cpp
+kglt/render_sequence.h
+kglt/render_sequence.cpp

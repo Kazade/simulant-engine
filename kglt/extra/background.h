@@ -67,6 +67,7 @@ public:
 private:
     Stage& stage_;
 
+    PipelineID pipeline_;
     ViewportID viewport_;
     CameraRef ortho_camera_;
     BGResizeStyle style_;

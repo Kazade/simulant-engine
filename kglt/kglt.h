@@ -13,7 +13,7 @@
 #include "camera.h"
 #include "actor.h"
 #include "sound.h"
-#include "pipeline.h"
+#include "render_sequence.h"
 #include "light.h"
 #include "mesh.h"
 #include "procedural/mesh.h"

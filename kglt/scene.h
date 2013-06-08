@@ -49,7 +49,7 @@ public:
     TextureID default_texture_id() const;
     CameraID default_camera_id() const;
 
-    Pipeline& pipeline() { return *pipeline_; }
+    RenderSequence& render_sequence() { return *render_sequence_; }
 
     CameraID new_camera();
     Camera& camera(CameraID c=CameraID());
@@ -70,7 +70,7 @@ private:
 
     void initialize_defaults();
 
-    std::shared_ptr<Pipeline> pipeline_;
+    std::shared_ptr<RenderSequence> render_sequence_;
 
     friend class WindowBase;
 };

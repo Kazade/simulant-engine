@@ -131,6 +131,7 @@ typedef UniqueID<6> StageID;
 typedef UniqueID<7> ViewportID;
 typedef UniqueID<8> ActorID;
 typedef UniqueID<9> SoundID;
+typedef UniqueID<10> PipelineID;
 
 const StageID DefaultStageID = StageID();
 
@@ -180,7 +181,7 @@ typedef std::weak_ptr<Camera> CameraRef;
 class Viewport;
 class Frustum;
 class WindowBase;
-class Pipeline;
+class RenderSequence;
 class Partitioner;
 
 

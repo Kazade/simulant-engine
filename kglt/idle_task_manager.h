@@ -3,8 +3,9 @@
 
 #include <cstdint>
 #include <sigc++/sigc++.h>
-#include <tr1/functional>
+#include <functional>
 #include <map>
+#include <mutex>
 
 namespace kglt {
 
@@ -14,16 +15,19 @@ class IdleTaskManager {
 public:
     IdleTaskManager();
 
-    ConnectionID add(std::tr1::function<bool ()> callback);
-    ConnectionID add_once(std::tr1::function<void ()> callback);
+    ConnectionID add(std::function<bool ()> callback);
+    ConnectionID add_once(std::function<void ()> callback);
     
     void remove(ConnectionID connection);
 
     void execute();
 
 private:
-    std::map<ConnectionID, std::tr1::function<bool ()> > signals_;
-    std::map<ConnectionID, std::tr1::function<void ()> > signals_once_;
+    std::map<ConnectionID, std::function<bool ()> > signals_;
+    std::map<ConnectionID, std::function<void ()> > signals_once_;
+
+    std::mutex signals_mutex_;
+    std::mutex signals_once_mutex_;
 
 };
 
