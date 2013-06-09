@@ -28,7 +28,8 @@ Scene::~Scene() {
 }
 
 MaterialID Scene::clone_default_material() const {
-    return default_material_->clone();
+    auto mat = material(default_material_->id()); //Lock
+    return mat->clone();
 }
 
 MaterialID Scene::default_material_id() const {
@@ -58,7 +59,8 @@ void Scene::initialize_defaults() {
     default_texture_->data()[3] = 255;
     default_texture_->upload();
 
-    default_material_ = material(new_material_from_file("kglt/materials/multitexture_and_lighting.kglm")).lock();
+    //Maintain ref-count
+    default_material_ = material(new_material_from_file("kglt/materials/multitexture_and_lighting.kglm")).__object;
 
     //Set the default material's first texture to the default (white) texture
     default_material_->technique().pass(0).set_texture_unit(0, default_texture_->id());

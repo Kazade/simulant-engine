@@ -22,6 +22,36 @@ typedef generic::RefCountedTemplatedManager<ResourceManagerImpl, Material, Mater
 typedef generic::RefCountedTemplatedManager<ResourceManagerImpl, Texture, TextureID> TextureManager;
 typedef generic::RefCountedTemplatedManager<ResourceManagerImpl, Sound, SoundID> SoundManager;
 
+template<typename T>
+struct ProtectedPtr {
+    typedef std::lock_guard<std::recursive_mutex> guard_type;
+
+    std::shared_ptr<T> __object;
+
+    ProtectedPtr(std::weak_ptr<T> ref):
+        __object(ref.lock()),
+        lock_(__object ?
+            std::make_shared<guard_type>(__object->mutex()) :
+            std::shared_ptr<guard_type>()
+        ) {
+
+    }
+
+    ~ProtectedPtr() {
+        __object.reset(); //Release reference
+        lock_.reset(); //Unlock
+    }
+
+    T* operator->() { return __object.get(); }
+    T& operator*() { return *__object; }
+
+    explicit operator bool() const {
+        return __object.get() != nullptr;
+    }
+
+private:
+    std::shared_ptr<guard_type> lock_;
+};
 
 class ResourceManager {
 public:
@@ -74,8 +104,8 @@ public:
     virtual MaterialID new_material() = 0;
     virtual MaterialID new_material_from_file(const unicode& path) = 0;
 
-    virtual MaterialRef material(MaterialID t) = 0;
-    virtual const MaterialRef material(MaterialID t) const = 0;
+    virtual ProtectedPtr<Material> material(MaterialID t) = 0;
+    virtual const ProtectedPtr<Material> material(MaterialID t) const = 0;
 
     virtual bool has_material(MaterialID m) const = 0;
     virtual uint32_t material_count() const = 0;
@@ -125,8 +155,8 @@ public:
     MaterialID new_material();
     MaterialID new_material_from_file(const unicode& path);
 
-    MaterialRef material(MaterialID material);
-    const MaterialRef material(MaterialID material) const;
+    ProtectedPtr<Material> material(MaterialID material);
+    const ProtectedPtr<Material> material(MaterialID material) const;
     bool has_material(MaterialID m) const;
     uint32_t material_count() const;
 
@@ -157,6 +187,14 @@ private:
     std::map<std::string, ShaderID> shader_lookup_;
 
     generic::DataCarrier data_carrier_;
+
+    template<typename Func>
+    void apply_func_to_materials(Func func) {
+        for(auto p: MaterialManager::__objects()) {
+            auto mat = material(p.first);
+            std::bind(func, mat.__object)();
+        }
+    }
 };
 
 

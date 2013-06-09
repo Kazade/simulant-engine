@@ -399,7 +399,7 @@ MaterialReloader::MaterialReloader(ResourceManager& rm, MaterialID material):
 }
 
 void MaterialReloader::reload(const unicode& path, WatchEvent evt) {
-    MaterialPtr mat = rm_.material(material_).lock();
+    auto mat = rm_.material(material_);
 
     try {
         rm_.window().loader_for(path.encode())->into(*mat);

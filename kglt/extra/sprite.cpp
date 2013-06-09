@@ -49,13 +49,13 @@ void Sprite::add_animation(const std::string& anim_name, const std::vector<Textu
     MaterialID new_material_id;
     {
         //RAII
-        MaterialPtr default_material = ss->material(ss->scene().default_material_id()).lock();
+        auto default_material = ss->material(ss->scene().default_material_id());
         new_material_id = default_material->clone();
     }
-    MaterialPtr mat = ss->material(new_material_id).lock();
+    auto mat = ss->material(new_material_id);
     mat->technique().pass(0).set_animated_texture_unit(0, frames, duration);
     mat->technique().pass(0).set_blending(BLEND_ALPHA);
-    animations_[anim_name] = mat;
+    animations_[anim_name] = mat.__object; //Maintain the ref-count
 
     if(animations_.size() == 1 && current_animation_.empty()) {
         set_active_animation(anim_name);

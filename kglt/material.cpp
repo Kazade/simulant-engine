@@ -191,7 +191,7 @@ MaterialTechnique& MaterialTechnique::operator=(const MaterialTechnique& rhs){
     return *this;
 }
 
-Material& Material::operator=(const Material& rhs) {
+Material& Material::operator=(const Material& rhs) {        
     if(this == &rhs) {
         return *this;
     }
@@ -210,7 +210,7 @@ Material& Material::operator=(const Material& rhs) {
 }
 
 MaterialID Material::do_clone() {
-    MaterialPtr new_mat = resource_manager().material(resource_manager().new_material()).lock();
+    auto new_mat = resource_manager().material(resource_manager().new_material());
     *new_mat = *this;
     return new_mat->id();
 }

@@ -20,7 +20,7 @@ SkyBox::SkyBox(kglt::Stage& stage, kglt::TextureID texture, float size, CameraID
 
     actor_ = &stage.actor(stage.geom_factory().new_cube(size));
 
-    kglt::MaterialPtr mat = stage.material(stage.new_material_from_file("kglt/materials/generic_multitexture.kglm")).lock();
+    auto mat = stage.material(stage.new_material_from_file("kglt/materials/generic_multitexture.kglm"));
 
     mat->technique().pass(0).set_texture_unit(0, texture);
     mat->technique().pass(0).set_depth_test_enabled(false);

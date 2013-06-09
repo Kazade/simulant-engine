@@ -32,7 +32,9 @@ Scene& Mesh::scene() {
 
 void Mesh::enable_debug(bool value) {
     if(value) {
-        kglt::MaterialPtr material_ptr = resource_manager().material(resource_manager().new_material()).lock();
+        //This maintains a lock on the material
+        auto material_ptr = resource_manager().material(resource_manager().new_material());
+
         kglt::Material& material = *material_ptr;
 
         resource_manager().window().loader_for("kglt/materials/diffuse_render.kglm")->into(material);
@@ -122,8 +124,8 @@ SubMesh::SubMesh(
     uses_shared_data_(uses_shared_vertices) {
 
     if(!material) {
-        //Set the material to the default one
-        material_ = parent_.resource_manager().material(parent_.resource_manager().scene().default_material_id()).lock();
+        //Set the material to the default one (store the pointer to increment the ref-count)
+        material_ = parent_.resource_manager().material(parent_.resource_manager().scene().default_material_id()).__object;
     } else {
         set_material_id(material);
     }
@@ -137,8 +139,8 @@ const MaterialID SubMesh::material_id() const {
 }
 
 void SubMesh::set_material_id(MaterialID mat) {
-    //Set the material
-    material_ = parent_.resource_manager().material(mat).lock();
+    //Set the material, store the shared_ptr to increment the ref count
+    material_ = parent_.resource_manager().material(mat).__object;
 }
 
 void SubMesh::transform_vertices(const kmMat4& transformation) {

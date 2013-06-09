@@ -73,14 +73,6 @@ public:
     sigc::signal<void, ObjectType&, ObjectIDType>& signal_post_create() { return signal_post_create_; }
     sigc::signal<void, ObjectType&, ObjectIDType>& signal_pre_delete() { return signal_pre_delete_; }
 
-    template<typename Func>
-    void apply_func_to_objects(Func func) {
-        for(std::pair<ObjectIDType, typename ObjectType::ptr> p: objects_) {
-            assert(p.second);
-            std::bind(func, p.second.get())();
-        }
-    }
-
     //Internal!
     std::unordered_map<ObjectIDType, std::shared_ptr<ObjectType> > __objects() {
         return objects_;

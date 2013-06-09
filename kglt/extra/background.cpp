@@ -25,7 +25,7 @@ BackgroundLayer::BackgroundLayer(Background &bg, const std::string& image_path):
     texture_id_ = kglt::create_texture_from_file(stage, image_path);
     pass_id_ = background().layer_count();
 
-    kglt::MaterialPtr mat = stage.material(background().material_id()).lock();
+    auto mat = stage.material(background().material_id());
 
     if(pass_id_ >= mat->technique().pass_count()) {
         //Duplicate the first pass to create this one
@@ -47,7 +47,7 @@ void BackgroundLayer::scroll_x(double amount) {
      *  This is simply a thunk to manipulate the underlyng texture matrix
      */
     Stage& stage = background().stage();
-    MaterialPtr mat = stage.material(background().material_id()).lock();
+    auto mat = stage.material(background().material_id());
     mat->technique().pass(pass_id_).texture_unit(0).scroll_x(amount);
 }
 
@@ -57,12 +57,13 @@ void BackgroundLayer::scroll_y(double amount) {
      *  This is simply a thunk to manipulate the underlyng texture matrix
      */
     Stage& stage = background().stage();
-    MaterialPtr mat = stage.material(background().material_id()).lock();
+    auto mat = stage.material(background().material_id());
     mat->technique().pass(pass_id_).texture_unit(0).scroll_y(amount);
 }
 
 BackgroundLayer::~BackgroundLayer() {    
-    kglt::MaterialPtr mat = background().material_.lock();
+    Stage& stage = background().stage();
+    auto mat = stage.material(background().material_id());
     if(mat) {
         //Unset the texture on the material (decrementing the ref-count)
         mat->technique().pass(pass_id_).set_texture_unit(0, TextureID());
@@ -114,8 +115,8 @@ Background::Background(Scene& scene, ViewportID viewport, BGResizeStyle style):
 
     actor_ = stage_.actor_ref(stage_.new_actor(stage_.new_mesh()));
 
-    material_ = stage_.material(stage_.new_material());
-    MaterialPtr mat = material_.lock();
+    material_ = stage_.new_material();
+    auto mat = stage_.material(material_);
 
     //Load the background material
     scene.window().loader_for("kglt/materials/background.kglm")->into(*mat);
@@ -133,7 +134,7 @@ Background::Background(Scene& scene, ViewportID viewport, BGResizeStyle style):
 }
 
 MaterialID Background::material_id() const {
-    return material_.lock()->id();
+    return material_;
 }
 
 Background::~Background() {

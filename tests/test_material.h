@@ -20,7 +20,7 @@ public:
     void test_material_initialization() {
         kglt::Scene& scene = window->scene();
 
-        kglt::MaterialPtr mat = scene.material(scene.new_material()).lock();
+        auto mat = scene.material(scene.new_material());
 
         this->assert_equal((uint32_t)1, mat->technique_count()); //Should return the default technique
         this->assert_equal(kglt::DEFAULT_MATERIAL_SCHEME, mat->technique().scheme());
@@ -46,11 +46,12 @@ public:
         kglt::Scene& scene = window->scene();
 
         kglt::MaterialID mid = scene.new_material();
-        uint32_t pass_id = scene.material(mid).lock()->technique().new_pass(ShaderID());
-        kglt::MaterialPass& pass = scene.material(mid).lock()->technique().pass(pass_id);
+        auto mat = scene.material(mid);
+        uint32_t pass_id = mat->technique().new_pass(ShaderID());
+        kglt::MaterialPass& pass = mat->technique().pass(pass_id);
 
         assert_false(pass.is_reflective());
-        assert_false(scene.material(mid).lock()->technique().has_reflective_pass());
+        assert_false(mat->technique().has_reflective_pass());
         assert_equal(0.0, pass.albedo());
         assert_equal(0, pass.reflection_texture_unit());
 
@@ -58,7 +59,7 @@ public:
 
         assert_equal(0.5, pass.albedo());
         assert_true(pass.is_reflective());
-        assert_true(scene.material(mid).lock()->technique().has_reflective_pass());
+        assert_true(mat->technique().has_reflective_pass());
     }
 };
 

@@ -121,8 +121,8 @@ public:
     virtual MaterialID new_material() { return scene().new_material(); }
     virtual MaterialID new_material_from_file(const unicode& path) { return scene().new_material_from_file(path); }
 
-    virtual MaterialRef material(MaterialID m) { return scene().material(m); }
-    virtual const MaterialRef material(MaterialID m) const { return scene().material(m); }
+    virtual ProtectedPtr<Material> material(MaterialID m) { return scene().material(m); }
+    virtual const ProtectedPtr<Material> material(MaterialID m) const { return scene().material(m); }
 
     virtual bool has_material(MaterialID m) const { return scene().has_material(m); }
     virtual uint32_t material_count() const { return scene().material_count(); }

@@ -33,7 +33,7 @@ void ResourceManagerImpl::update() {
       Update all animated materials
     */
     double dt = window_->delta_time();
-    MaterialManager::apply_func_to_objects(std::bind(&Material::update, std::placeholders::_1, dt));
+    apply_func_to_materials(std::bind(&Material::update, std::placeholders::_1, dt));
 }
 
 Scene& ResourceManagerImpl::scene() {
@@ -79,17 +79,17 @@ MaterialID ResourceManagerImpl::new_material() {
 
 MaterialID ResourceManagerImpl::new_material_from_file(const unicode& path) {
     //Load the material
-    MaterialPtr mat = material(new_material()).lock();
+    auto mat = material(new_material());
     window().loader_for(path.encode())->into(*mat);
     return mat->id();
 }
 
-MaterialRef ResourceManagerImpl::material(MaterialID mid) {
-    return MaterialManager::manager_get(mid);
+ProtectedPtr<Material> ResourceManagerImpl::material(MaterialID mid) {
+    return ProtectedPtr<Material>(MaterialManager::manager_get(mid));
 }
 
-const MaterialRef ResourceManagerImpl::material(MaterialID mid) const {
-    return MaterialManager::manager_get(mid);
+const ProtectedPtr<Material> ResourceManagerImpl::material(MaterialID mid) const {
+    return ProtectedPtr<Material>(MaterialManager::manager_get(mid));
 }
 
 bool ResourceManagerImpl::has_material(MaterialID m) const {

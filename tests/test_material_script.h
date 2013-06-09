@@ -39,7 +39,7 @@ public:
             END(technique)
         )";
 
-        kglt::MaterialPtr mat = window->scene().material(window->scene().new_material()).lock();
+        auto mat = window->scene().material(window->scene().new_material());
         kglt::MaterialScript script((MaterialLanguageText(text))); //Most vexing parse \o/
         script.generate(*mat);
 

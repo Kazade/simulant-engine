@@ -2,6 +2,7 @@
 #define RESOURCE_H
 
 #include <cassert>
+#include <mutex>
 
 namespace kglt {
 
@@ -16,8 +17,12 @@ public:
 
     ResourceManager& resource_manager() { assert(manager_); return *manager_; }
 
+    std::recursive_mutex& mutex() { return mutex_; }
+
 private:
     ResourceManager* manager_;
+
+    std::recursive_mutex mutex_;
 };
 
 }

@@ -40,7 +40,7 @@ void RootGroup::insert(SubActor &ent, uint8_t pass_number) {
     if(!ent._parent().is_visible()) return;
 
     //Get the material for the actor, this is used to build the tree
-    MaterialPtr mat = stage().material(ent.material_id()).lock();
+    auto mat = stage().material(ent.material_id());
 
     MaterialPass& pass = mat->technique().pass(pass_number);
 
