@@ -158,6 +158,8 @@ MaterialTechnique::MaterialTechnique(Material& mat, const std::string& scheme):
 MaterialTechnique::MaterialTechnique(const MaterialTechnique& rhs):
     material_(rhs.material_) {
 
+    //FIXME: Make this reentrant (call operator=?)
+
     scheme_ = rhs.scheme_;
     passes_.clear();
     reflective_passes_.clear();
@@ -172,6 +174,7 @@ MaterialTechnique::MaterialTechnique(const MaterialTechnique& rhs):
 }
 
 MaterialTechnique& MaterialTechnique::operator=(const MaterialTechnique& rhs){
+    //FIXME: Make this rentrant
     material_ = rhs.material_;
     scheme_ = rhs.scheme_;
     passes_.clear();

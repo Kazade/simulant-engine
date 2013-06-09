@@ -2,6 +2,7 @@
 #include "../stage.h"
 #include "../procedural/geom_factory.h"
 #include "../render_sequence.h"
+#include "../actor.h"
 
 #include "loading.h"
 
@@ -15,7 +16,7 @@ Loading::Loading(Scene &scene):
     //Create a stage
     stage_ = scene.new_stage();
 
-    scene_.stage(stage_).geom_factory().new_cube(1.0);
+    scene_.stage(stage_).actor(scene_.stage(stage_).geom_factory().new_cube(1.0)).move_to(0, 0, -10);
 
     //Create an orthographic camera
     camera_ = scene.new_camera();
