@@ -48,8 +48,10 @@ void Scene::initialize_defaults() {
     //Create a default stage for the default stage with the default camera
     render_sequence_->new_pipeline(default_stage_, default_camera_);
 
+    //FIXME: Should lock the default texture and material during construction!
+
     //Create the default blank texture
-    default_texture_ = texture(new_texture()).lock();
+    default_texture_ = texture(new_texture()).__object;
     default_texture_->resize(1, 1);
     default_texture_->set_bpp(32);
 

@@ -480,14 +480,9 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
     for(Texture tex: textures) {
         if(container::contains(texture_name_to_id, tex.name)) continue;
 
-        /*
-         * FIXME: This is dirty, it loads the texture and material but doesn't bind them to the lifetime of the
-         * mesh. This means they will be left behind if the user deletes the mesh, and the user has no easy way
-         * to delete them (aside from inspecting the mesh itself)
-         */
         texture_name_to_id[tex.name] = mesh->resource_manager().new_texture();
 
-        kglt::TexturePtr new_tex = mesh->resource_manager().texture(texture_name_to_id[tex.name]).lock();
+        auto new_tex = mesh->resource_manager().texture(texture_name_to_id[tex.name]);
         new_tex->resize(tex.width, tex.height);
         new_tex->set_bpp(tex.bytes_per_pixel * 8);
         new_tex->data().assign(tex.data.begin(), tex.data.end());

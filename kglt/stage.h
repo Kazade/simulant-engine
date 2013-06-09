@@ -89,8 +89,8 @@ public:
     virtual TextureID new_texture() { return scene().new_texture(); }
     virtual TextureID new_texture_from_file(const unicode& path) { return scene().new_texture_from_file(path); }
 
-    virtual TextureRef texture(TextureID t) { return scene().texture(t); }
-    virtual const TextureRef texture(TextureID t) const { return scene().texture(t); }
+    virtual ProtectedPtr<Texture> texture(TextureID t) { return scene().texture(t); }
+    virtual const ProtectedPtr<Texture> texture(TextureID t) const { return scene().texture(t); }
 
     virtual bool has_texture(TextureID t) const { return scene().has_texture(t); }
     virtual uint32_t texture_count() const { return scene().texture_count(); }

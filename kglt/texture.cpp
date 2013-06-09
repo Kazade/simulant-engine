@@ -5,6 +5,7 @@
 
 #include "kazbase/logging.h"
 
+#include "window_base.h"
 #include "texture.h"
 #include "scene.h"
 
@@ -30,7 +31,8 @@ void Texture::resize(uint32_t width, uint32_t height) {
 }
 
 void Texture::sub_texture(TextureID src, uint16_t offset_x, uint16_t offset_y) {
-    TexturePtr source_ptr = resource_manager().texture(src).lock();
+    auto source_ptr = resource_manager().texture(src); //Lock
+
     Texture& source = *source_ptr;
 
     if(offset_x + source.width() > width() ||
@@ -56,11 +58,12 @@ void Texture::sub_texture(TextureID src, uint16_t offset_x, uint16_t offset_y) {
         }
     }
 
+    //FIXME: Should attach to idle() so it happensin the main thread!
     //FIXME: SHould use glTexSubImage
     upload();
 }
 
-void Texture::upload(bool free_after, bool generate_mipmaps, bool repeat, bool linear) {
+void Texture::__do_upload(bool free_after, bool generate_mipmaps, bool repeat, bool linear) {
     assert(glGetError() == GL_NO_ERROR);
 
     if(!gl_tex()) {
@@ -106,6 +109,13 @@ void Texture::upload(bool free_after, bool generate_mipmaps, bool repeat, bool l
     if(free_after) {
         free();
     }
+}
+
+void Texture::upload(bool free_after, bool generate_mipmaps, bool repeat, bool linear) {
+    resource_manager().window().idle().add_once([=] {
+        auto tex = resource_manager().texture(this->id());
+        tex->__do_upload(free_after, generate_mipmaps, repeat, linear);
+    });
 }
 
 void Texture::flip_vertically() {

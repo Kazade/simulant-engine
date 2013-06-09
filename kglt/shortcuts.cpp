@@ -5,12 +5,17 @@
 namespace kglt {
 
 TextureID create_texture_from_file(ResourceManager& rm, const std::string& filename, bool upload) {
-    kglt::TexturePtr tex = rm.texture(rm.new_texture()).lock();
+    auto tex = rm.texture(rm.new_texture());
+    TextureID tex_id = tex->id();
+
     rm.window().loader_for(filename)->into(*tex);
 
     if(upload) {
         //Upload the texture in the main thread, regardless of where this was called from
-        rm.window().idle().add_once(std::bind(&kglt::Texture::upload, tex, true, true, true, false));
+        rm.window().idle().add_once([&] () {
+            auto tex = rm.texture(tex_id);
+            tex->upload(true, true, true, false);
+        });
     }
 
     return tex->id();

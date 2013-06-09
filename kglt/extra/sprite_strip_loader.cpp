@@ -18,7 +18,7 @@ SpriteStripLoader::SpriteStripLoader(ResourceManager& rm, const std::string& fil
 
 std::vector<TextureID> SpriteStripLoader::load_frames() {
     //Load texture, but don't upload to OpenGL
-    kglt::TexturePtr tmp = rm_.texture(kglt::create_texture_from_file(rm_, filename_, false)).lock();
+    auto tmp = rm_.texture(rm_.new_texture_from_file(filename_));
 
     if(tmp->width() % frame_width_ != 0) {
         throw IOError("Invalid texture width. Should be a multiple of: " + boost::lexical_cast<std::string>(frame_width_));
@@ -50,13 +50,12 @@ std::vector<TextureID> SpriteStripLoader::load_frames() {
 
     std::vector<TextureID> results;
     for(Texture::Data& data: frame_data) {
-        kglt::TexturePtr tex = rm_.texture(rm_.new_texture()).lock();
+        auto tex = rm_.texture(rm_.new_texture());
+
         tex->set_bpp(tmp->bpp()); //Set the bpp
         tex->resize(frame_width_, tmp->height()); //Resize the texture
         tex->data().assign(data.begin(), data.end()); //Copy the frame data
-
-        //Upload the texture in the idle handler
-        rm_.window().idle().add_once(std::bind(&kglt::Texture::upload, tex, true, true, false, false));
+        tex->upload(true, true, false, false);
 
         results.push_back(tex->id());
     }

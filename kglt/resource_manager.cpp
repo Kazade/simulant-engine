@@ -106,18 +106,18 @@ TextureID ResourceManagerImpl::new_texture() {
 
 TextureID ResourceManagerImpl::new_texture_from_file(const unicode& path) {
     //Load the texture
-    TexturePtr tex = texture(new_texture()).lock();
+    auto tex = texture(new_texture());
     window().loader_for(path.encode())->into(*tex);
-    window().idle().add_once(std::bind(&Texture::upload, tex, false, true, true, false));
+    tex->upload(false, true, true, false);
     return tex->id();
 }
 
-TextureRef ResourceManagerImpl::texture(TextureID t) {
-    return TextureManager::manager_get(t);
+ProtectedPtr<Texture> ResourceManagerImpl::texture(TextureID t) {
+    return ProtectedPtr<Texture>(TextureManager::manager_get(t).lock());
 }
 
-const TextureRef ResourceManagerImpl::texture(TextureID t) const {
-    return TextureManager::manager_get(t);
+const ProtectedPtr<Texture> ResourceManagerImpl::texture(TextureID t) const {
+    return ProtectedPtr<Texture>(TextureManager::manager_get(t).lock());
 }
 
 bool ResourceManagerImpl::has_texture(TextureID t) const {

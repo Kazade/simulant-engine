@@ -24,6 +24,8 @@ public:
             objects_.insert(std::make_pair(id, typename ObjectType::ptr(new ObjectType((Derived*)this, id))));
         }
 
+        creation_times_[id] = std::chrono::system_clock::now();
+
         signal_post_create_(*objects_[id], id);
 
         return id;
@@ -81,14 +83,35 @@ public:
     void garbage_collect() {
         for(ObjectIDType key: container::keys(objects_)) {
             if(objects_[key].unique()) {
-                objects_.erase(key);
-                L_DEBUG(_u("Garbage collected: {0}").format(key.value()));
+                date_time now = std::chrono::system_clock::now();
+
+                /* Little hacky maybe? We give objects a grace period of
+                 * 1 second to store a reference. This should be plenty of time!
+                 *
+                 * This feels really dirty, but the only alternative is to return
+                 * a ProtectedPtr<T> or shared_ptr<T> from new_X() which is even more horrible..
+                 *
+                 */
+
+                int lifetime_in_seconds = std::chrono::duration_cast<std::chrono::seconds>(
+                    now-creation_times_[key]
+                ).count();
+
+                if(lifetime_in_seconds > 1) {
+                    objects_.erase(key);
+                    creation_times_.erase(key);
+
+                    L_DEBUG(_u("Garbage collected: {0}").format(key.value()));
+                }
             }
         }
     }
 
 private:
+    typedef std::chrono::time_point<std::chrono::system_clock> date_time;
+
     std::unordered_map<ObjectIDType, std::shared_ptr<ObjectType> > objects_;
+    std::unordered_map<ObjectIDType, date_time> creation_times_;
 
     sigc::signal<void, ObjectType&, ObjectIDType> signal_post_create_;
     sigc::signal<void, ObjectType&, ObjectIDType> signal_pre_delete_;

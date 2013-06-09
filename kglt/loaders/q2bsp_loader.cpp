@@ -325,21 +325,21 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             tid = tex_lookup[tex.texture_name];
         } else {
             std::string texture_filename = "textures/" + std::string(tex.texture_name) + ".tga";
-            TexturePtr texture;
+            ProtectedPtr<Texture> texture;
             try {
                 tid = scene->stage().new_texture_from_file(texture_filename);
-                texture = scene->stage().texture(tid).lock();
+                texture = scene->stage().texture(tid);
             } catch(IOError& e) {
                 //Fallback texture
                 L_ERROR("Unable to find texture required by BSP file: " + texture_filename);
                 tid = scene->stage().new_texture();
-                texture = scene->stage().texture(tid).lock();
+                texture = scene->stage().texture(tid);
 
                 //FIXME: Should be checkerboard, not starfield
-                kglt::procedural::texture::starfield(texture, 64, 64);
+                kglt::procedural::texture::starfield(texture.__object, 64, 64);
             }
 
-            scene->window().idle().add_once(std::bind(&Texture::upload, texture, false, true, false, false));
+            texture->upload(false, true, false, false);
 
             //We need to store this to divide the texture coordinates later
             texture_dimensions[tex.texture_name].first = texture->width();

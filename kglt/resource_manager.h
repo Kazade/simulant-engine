@@ -28,6 +28,8 @@ struct ProtectedPtr {
 
     std::shared_ptr<T> __object;
 
+    ProtectedPtr() = default;
+
     ProtectedPtr(std::weak_ptr<T> ref):
         __object(ref.lock()),
         lock_(__object ?
@@ -72,8 +74,8 @@ public:
     virtual TextureID new_texture() = 0;
     virtual TextureID new_texture_from_file(const unicode& path) = 0;
 
-    virtual TextureRef texture(TextureID t) = 0;
-    virtual const TextureRef texture(TextureID t) const = 0;
+    virtual ProtectedPtr<Texture> texture(TextureID t) = 0;
+    virtual const ProtectedPtr<Texture> texture(TextureID t) const = 0;
 
     virtual bool has_texture(TextureID m) const = 0;
     virtual uint32_t texture_count() const = 0;
@@ -139,8 +141,8 @@ public:
 
     TextureID new_texture();
     TextureID new_texture_from_file(const unicode& path);
-    TextureRef texture(TextureID t);
-    const TextureRef texture(TextureID t) const;
+    ProtectedPtr<Texture> texture(TextureID t);
+    const ProtectedPtr<Texture> texture(TextureID t) const;
     bool has_texture(TextureID t) const;
     uint32_t texture_count() const;
 

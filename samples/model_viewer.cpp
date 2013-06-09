@@ -39,8 +39,10 @@ int main(int argc, char* argv[]) {
     stage.set_ambient_light(kglt::Colour(0.2, 0.2, 0.2, 0.2));
 
     kglt::TextureID star_texture = stage.new_texture();
-    kglt::procedural::texture::starfield(stage.texture(star_texture).lock());
-    stage.texture(star_texture).lock()->upload();
+    auto tex = stage.texture(star_texture);
+
+    kglt::procedural::texture::starfield(tex.__object);
+    tex->upload();
 
     kglt::extra::SkyBox::ptr skybox = kglt::extra::SkyBox::create(stage, star_texture);
 

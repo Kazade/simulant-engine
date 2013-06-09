@@ -203,7 +203,7 @@ void DepthGroup::unbind() {
 void TextureGroup::bind() {
     glActiveTexture(GL_TEXTURE0 + data_.unit);
     RootGroup& root = static_cast<RootGroup&>(get_root());
-    glBindTexture(GL_TEXTURE_2D, root.stage().texture(data_.texture_id).lock()->gl_tex());
+    glBindTexture(GL_TEXTURE_2D, root.stage().texture(data_.texture_id)->gl_tex());
 }
 
 void TextureGroup::unbind() {

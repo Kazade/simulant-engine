@@ -22,7 +22,9 @@ int main(int argc, char* argv[]) {
 
     ///Shortcut function for loading images
     kglt::TextureID tid = stage.new_texture();
-    kglt::procedural::texture::starfield(stage.texture(tid).lock());
+    auto tex = stage.texture(tid);
+    kglt::procedural::texture::starfield(tex.__object);
+
     kglt::Actor& actor = stage.actor(stage.geom_factory().new_rectangle(2.0, 2.0));
     actor.mesh().lock()->set_texture_on_material(0, tid);
 

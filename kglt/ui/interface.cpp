@@ -60,7 +60,7 @@ public:
     }
 
     bool LoadTexture(Rocket::Core::TextureHandle& texture_handle, Rocket::Core::Vector2i& texture_dimensions, const Rocket::Core::String& source) {
-        kglt::TexturePtr tex = manager().texture(manager().new_texture()).lock();
+        auto tex = manager().texture(manager().new_texture());
         window_.loader_for(source.CString())->into(*tex);
 
         tex->flip_vertically();
@@ -68,12 +68,12 @@ public:
 
         texture_handle = tex->id().value();
 
-        textures_[texture_handle] = tex; //Hold for ref-counting
+        textures_[texture_handle] = tex.__object; //Hold for ref-counting
         return true;
     }
 
     bool GenerateTexture(Rocket::Core::TextureHandle& texture_handle, const Rocket::Core::byte* source, const Rocket::Core::Vector2i& dimensions) {
-        kglt::TexturePtr tex = manager().texture(manager().new_texture()).lock();
+        auto tex = manager().texture(manager().new_texture());
 
         uint32_t data_size = (dimensions.x * dimensions.y * 4);
         tex->resize(dimensions.x, dimensions.y);
@@ -84,7 +84,7 @@ public:
 
         texture_handle = tex->id().value();
 
-        textures_[texture_handle] = tex; //Hold for ref-counting
+        textures_[texture_handle] = tex.__object; //Hold for ref-counting
         return true;
     }
 

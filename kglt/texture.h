@@ -38,6 +38,9 @@ public:
                 bool generate_mipmaps=true,
                 bool repeat=true,
                 bool linear=false); //Upload to GL, initializes the tex ID
+
+    void __do_upload(bool free_after, bool generate_mipmaps, bool repeat, bool linear);
+
     void flip_vertically();
     void free(); //Frees the data used to construct the texture
 

@@ -18,7 +18,7 @@ TextureUnit::TextureUnit(MaterialPass &pass):
 
     //Initialize the texture unit to the default texture
     ResourceManager& rm = pass.technique().material().resource_manager();
-    texture_unit_ = rm.texture(rm.scene().default_texture_id()).lock();
+    texture_unit_ = rm.texture(rm.scene().default_texture_id()).__object;
 }
 
 TextureUnit::TextureUnit(MaterialPass &pass, TextureID tex_id):
@@ -30,7 +30,7 @@ TextureUnit::TextureUnit(MaterialPass &pass, TextureID tex_id):
 
     //Initialize the texture unit
     ResourceManager& rm = pass.technique().material().resource_manager();
-    texture_unit_ = rm.texture(tex_id).lock();
+    texture_unit_ = rm.texture(tex_id).__object;
 }
 
 TextureUnit::TextureUnit(MaterialPass &pass, std::vector<TextureID> textures, double duration):
@@ -45,7 +45,7 @@ TextureUnit::TextureUnit(MaterialPass &pass, std::vector<TextureID> textures, do
     ResourceManager& rm = pass.technique().material().resource_manager();
 
     for(TextureID tid: textures) {
-        animated_texture_units_.push_back(rm.texture(tid).lock());
+        animated_texture_units_.push_back(rm.texture(tid).__object);
     }
 }
 
@@ -211,6 +211,8 @@ Material& Material::operator=(const Material& rhs) {
 
 MaterialID Material::do_clone() {
     auto new_mat = resource_manager().material(resource_manager().new_material());
+    assert(new_mat);
+
     *new_mat = *this;
     return new_mat->id();
 }
