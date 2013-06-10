@@ -194,6 +194,8 @@ private:
     void apply_func_to_materials(Func func) {
         for(auto p: MaterialManager::__objects()) {
             auto mat = material(p.first);
+            assert(mat);
+
             std::bind(func, mat.__object)();
         }
     }

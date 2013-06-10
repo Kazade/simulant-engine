@@ -303,8 +303,13 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     std::map<MaterialID, SubMeshIndex> material_to_submesh;
 
+    //We need to hold references here until the materials are attached to the mesh
+    std::vector<MaterialPtr> ref_count_holder_;
+
     for(Q2::TextureInfo& tex: textures) {
         auto new_mat = scene->material(scene->clone_default_material());
+        ref_count_holder_.push_back(new_mat.__object); //Prevent GC until we are done
+
         Material& mat = *new_mat;
 
         kmVec3 u_axis, v_axis;
@@ -320,24 +325,25 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         tex.v_axis.y = v_axis.y;
         tex.v_axis.z = v_axis.z;
 
+        ProtectedPtr<Texture> texture;
         kglt::TextureID tid;
         if(tex_lookup.find(tex.texture_name) != tex_lookup.end()) {
             tid = tex_lookup[tex.texture_name];
         } else {
             std::string texture_filename = "textures/" + std::string(tex.texture_name) + ".tga";
-            ProtectedPtr<Texture> texture;
+
             try {
-                tid = scene->stage().new_texture_from_file(texture_filename);
-                texture = scene->stage().texture(tid);
+                texture = scene->stage().texture(scene->stage().new_texture_from_file(texture_filename));
             } catch(IOError& e) {
                 //Fallback texture
                 L_ERROR("Unable to find texture required by BSP file: " + texture_filename);
-                tid = scene->stage().new_texture();
-                texture = scene->stage().texture(tid);
+                texture = scene->stage().texture(scene->stage().new_texture());
 
                 //FIXME: Should be checkerboard, not starfield
                 kglt::procedural::texture::starfield(texture.__object, 64, 64);
             }
+
+            tid = texture->id();
 
             texture->upload(false, true, false, false);
 
