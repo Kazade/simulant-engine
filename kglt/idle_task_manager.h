@@ -23,8 +23,11 @@ public:
     void execute();
 
 private:
-    std::map<ConnectionID, std::function<bool ()> > signals_;
-    std::map<ConnectionID, std::function<void ()> > signals_once_;
+    typedef std::map<ConnectionID, std::function<bool ()> > SignalMap;
+    typedef std::map<ConnectionID, std::function<void ()> > SignalOnceMap;
+
+    SignalMap signals_;
+    SignalOnceMap signals_once_;
 
     std::mutex signals_mutex_;
     std::mutex signals_once_mutex_;

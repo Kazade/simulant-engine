@@ -22,9 +22,9 @@ public:
             std::lock_guard<std::recursive_mutex> lock(manager_lock_);
             id = NewIDGenerator()();
             objects_.insert(std::make_pair(id, typename ObjectType::ptr(new ObjectType((Derived*)this, id))));
+            creation_times_[id] = std::chrono::system_clock::now();
+            uncollected_.insert(id);
         }
-
-        creation_times_[id] = std::chrono::system_clock::now();
 
         signal_post_create_(*objects_[id], id);
 
@@ -43,6 +43,8 @@ public:
             throw NoSuchObjectError(typeid(ObjectType).name());
         }
 
+        uncollected_.erase(id);
+
         return std::weak_ptr<ObjectType>(it->second);
     }
 
@@ -54,6 +56,8 @@ public:
             throw NoSuchObjectError(typeid(ObjectType).name());
         }
 
+        uncollected_.erase(id);
+
         return it->second.get();
     }
 
@@ -64,6 +68,9 @@ public:
         if(it == objects_.end()) {
             throw NoSuchObjectError(typeid(ObjectType).name());
         }
+
+        //Mark the object as collected (and now eligible for GC)
+        uncollected_.erase(id);
 
         return std::weak_ptr<ObjectType>(it->second);
     }
@@ -82,22 +89,31 @@ public:
 
     void garbage_collect() {
         for(ObjectIDType key: container::keys(objects_)) {
-            if(objects_[key].unique()) {
-                date_time now = std::chrono::system_clock::now();
+            if(objects_[key].unique()) {                
+                auto it = uncollected_.find(key);
+                bool ok_to_delete = false;
 
-                /* Little hacky maybe? We give objects a grace period of
-                 * 1 second to store a reference. This should be plenty of time!
-                 *
-                 * This feels really dirty, but the only alternative is to return
-                 * a ProtectedPtr<T> or shared_ptr<T> from new_X() which is even more horrible..
-                 *
-                 */
+                if(it == uncollected_.end()) {
+                    //If the object has been accessed, then we can assume
+                    //that it's been used and no longer needed
+                    ok_to_delete = true;
+                } else {
+                    //Otherwise, if the object hasn't been accessed after 10 seconds
+                    //of being alive then delete it.
+                    date_time now = std::chrono::system_clock::now();
 
-                int lifetime_in_seconds = std::chrono::duration_cast<std::chrono::seconds>(
-                    now-creation_times_[key]
-                ).count();
+                    int lifetime_in_seconds = std::chrono::duration_cast<std::chrono::seconds>(
+                        now-creation_times_[key]
+                    ).count();
 
-                if(lifetime_in_seconds > 1) {
+                    ok_to_delete = lifetime_in_seconds > 10;
+
+                    if(ok_to_delete) {
+                        L_WARN("Deleting unclaimed resource");
+                    }
+                }
+
+                if(ok_to_delete) {
                     objects_.erase(key);
                     creation_times_.erase(key);
 
@@ -112,6 +128,7 @@ private:
 
     std::unordered_map<ObjectIDType, std::shared_ptr<ObjectType> > objects_;
     std::unordered_map<ObjectIDType, date_time> creation_times_;
+    mutable std::set<ObjectIDType> uncollected_;
 
     sigc::signal<void, ObjectType&, ObjectIDType> signal_post_create_;
     sigc::signal<void, ObjectType&, ObjectIDType> signal_pre_delete_;

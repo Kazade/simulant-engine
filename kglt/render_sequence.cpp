@@ -38,8 +38,8 @@ RenderSequence::RenderSequence(Scene& scene):
 }
 
 void RenderSequence::activate_pipelines(const std::vector<PipelineID>& pipelines) {
-    for(Pipeline::ptr p: ordered_pipelines_) {
-        p->activate();
+    for(PipelineID p: pipelines) {
+        pipeline(p).activate();
     }
 }
 
@@ -100,6 +100,10 @@ void RenderSequence::run() {
 }
 
 void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
+    if(!pipeline_stage->is_active()) {
+        return;
+    }
+
     scene_.window().viewport(pipeline_stage->viewport_id()).apply(); //FIXME apply shouldn't exist
 
     signal_pipeline_started_(*pipeline_stage);

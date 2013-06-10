@@ -16,7 +16,8 @@ Loading::Loading(Scene &scene):
     //Create a stage
     stage_ = scene.new_stage();
 
-    scene_.stage(stage_).actor(scene_.stage(stage_).geom_factory().new_cube(1.0)).move_to(0, 0, -10);
+    cube_ = scene_.stage(stage_).geom_factory().new_cube(1.0);
+    scene_.stage(stage_).actor(cube_).move_to(0, 0, -10);
 
     //Create an orthographic camera
     camera_ = scene.new_camera();
@@ -60,6 +61,8 @@ void Loading::deactivate() {
 
 void Loading::update(float dt) {
     if(!is_active()) return;
+
+    scene_.stage(stage_).actor(cube_).rotate_z(-720 * dt);
 }
 
 bool Loading::is_active() const {

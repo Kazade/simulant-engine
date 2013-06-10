@@ -32,6 +32,7 @@ private:
 
     StageID stage_;
     CameraID camera_;
+    ActorID cube_;
 
     PipelineID pipeline_;
 

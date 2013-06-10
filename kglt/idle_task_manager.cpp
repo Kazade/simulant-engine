@@ -29,6 +29,7 @@ ConnectionID IdleTaskManager::add_once(std::function<void ()> callback) {
 
 void IdleTaskManager::execute() {
     {
+        //FIXME: If (*it).second tries to queue on idle this will deadlock
         std::lock_guard<std::mutex> lock(signals_mutex_);
         for(auto it = signals_.begin(); it != signals_.end();) {
             bool result = (*it).second();
@@ -41,14 +42,17 @@ void IdleTaskManager::execute() {
         }
     }
 
+    SignalOnceMap to_iter; //Create an empty map
     {
+        //Lock the signals once mutex and then swap to clear
         std::lock_guard<std::mutex> lock(signals_once_mutex_);
+        std::swap(to_iter, signals_once_);
+    }
 
-        for(auto p: signals_once_) {
-            L_DEBUG("Executing one-off idle task");
-            p.second();
-        }
-        signals_once_.clear();
+    //Iterate over the copy
+    for(auto p: to_iter) {
+        L_DEBUG("Executing one-off idle task");
+        p.second();
     }
 }
 
