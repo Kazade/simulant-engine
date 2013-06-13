@@ -2,6 +2,8 @@
 #include "kglt/shortcuts.h"
 #include "kglt/additional.h"
 
+using namespace kglt::extra;
+
 class Sample2D: public kglt::App {
 public:
     Sample2D():
@@ -12,17 +14,16 @@ public:
 
 private:
     bool do_init() {
-        //FIXME: This is rubbish, sprites should operator on strips!
-        kglt::extra::SpriteStripLoader loader(stage(), "sample_data/sonic.png", 64);
-
-        //Load the strip of sprites into separate textures
-        std::vector<kglt::TextureID> frames = loader.load_frames();
-
         //Construct a Sprite object that takes care of handling materials, meshes etc.
-        kglt::extra::Sprite::ptr sprite = kglt::extra::Sprite::create(scene().stage_ref(stage().id()));
-        sprite->add_animation("stand", container::slice(frames, 4, 6), 0.5);
-        sprite->set_render_dimensions(1.5, 1.5);
-        sprite->move_to(0.0, 0.0, -1.0);
+        sprite_ = Sprite::create(
+            scene().stage_ref(stage().id()),
+            "sample_data/sonic.png",
+            FrameSize(64, 64)
+        );
+
+        sprite_->add_animation("stand", FrameRange(4, 6), 0.5);
+        sprite_->set_render_dimensions(1.5, 1.5);
+        sprite_->move_to(0.0, 0.0, -1.0);
 
         //Automatically calculate an orthographic projection, taking into account the aspect ratio
         //and the passed height. For example, passing a height of 2.0 would mean the view would extend
@@ -35,6 +36,8 @@ private:
 
     void do_step(float dt) {}
     void do_cleanup() {}
+
+    Sprite::ptr sprite_;
 };
 
 

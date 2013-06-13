@@ -1,7 +1,7 @@
 #ifndef ADDITIONAL_SPRITE_H
 #define ADDITIONAL_SPRITE_H
 
-#include <map>
+#include <unordered_map>
 #include "../generic/managed.h"
 #include "../types.h"
 
@@ -14,14 +14,31 @@ namespace extra {
 /**
   USAGE:
 
-  //Split a texture into parts, 64 pixels wide
-  kglt::helper::SpriteStripLoader loader(scene, "animation.png", 64);
-  MaterialID running_anim = kglt::create_material_from_textures(scene, loader.load_frames());
+  TextureID tex = stage.new_texture_from_file("sprite.png");
 
-  Sprite::ptr sprite = Sprite::create();
-  sprite->add_animation("running", running_anim);
+  //Split a texture into parts, 64 pixels wide
+  Sprite::ptr sprite = Sprite::create(stage, tex, FrameSize(64, 64));
+  sprite->add_animation("running", FrameRange(0, 15), 5.0);
   sprite->update(window.deltatime());
 */
+
+struct FrameSize {
+    FrameSize(uint32_t width, uint32_t height):
+        width(width),
+        height(height) {}
+
+    uint32_t width;
+    uint32_t height;
+};
+
+struct FrameRange {
+    FrameRange(uint32_t start, uint32_t end):
+        start(start),
+        end(end) {}
+
+    uint32_t start;
+    uint32_t end;
+};
 
 class Sprite :
     public Managed<Sprite> {
@@ -29,10 +46,14 @@ class Sprite :
 public:
     typedef std::shared_ptr<Sprite> ptr;
 
-    Sprite(StageRef stage);
+    Sprite(StageRef stage, const std::string &image_path, const FrameSize& frame_size);
     ~Sprite();
 
-    void add_animation(const std::string& anim_name, const std::vector<TextureID>& frames, double duration);
+    void add_animation(
+        const std::string& anim_name,
+        const FrameRange& frames,
+        double duration
+    );
 
     void set_next_animation(const std::string& anim_name);
     void set_active_animation(const std::string& anim_name);
@@ -44,15 +65,34 @@ public:
 
     MaterialID material();
 
+    void update(double dt);
 private:
+    struct Animation {
+        Animation(double duration, const FrameRange& frames):
+            duration(duration),
+            frames(frames) {}
+
+        double duration;
+        FrameRange frames;
+    };
+
+    std::unordered_map<std::string, Animation> animations_;
+
     StageRef stage_;
+    ActorID actor_id_;
+    MaterialID material_id_;
+    FrameSize frame_size_;
+
+    uint32_t current_frame_ = 0;
+    uint32_t next_frame_ = 0;
+    double interp_ = 0.0;
+    uint32_t image_width_ = 0;
+    uint32_t image_height_ = 0;
 
     std::string current_animation_;
     std::string next_animation_;
 
-    std::map<std::string, MaterialPtr> animations_;
-
-    Actor* actor_;
+    void update_texture_coordinates();
 };
 
 }

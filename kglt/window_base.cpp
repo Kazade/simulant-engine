@@ -161,7 +161,6 @@ bool WindowBase::update() {
     ktiUpdateFrameTime();
     double fixed_step = ktiGetDeltaTime();
 
-    idle_.execute(); //Execute idle tasks first
     check_events();
 
     while(ktiTimerCanUpdate()) {
@@ -170,6 +169,8 @@ bool WindowBase::update() {
 
         signal_step_(fixed_step); //Trigger any steps
     }
+
+    idle_.execute(); //Execute idle tasks before render
 
     glViewport(0, 0, width(), height());
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);

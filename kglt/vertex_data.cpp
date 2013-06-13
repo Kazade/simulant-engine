@@ -1,6 +1,8 @@
 #include <GLee.h>
 #include <stdexcept>
 #include "vertex_data.h"
+#include "scene.h"
+#include "window_base.h"
 
 namespace kglt {
 
@@ -12,7 +14,8 @@ void VertexData::check_or_add_attribute(AttributeBitMask attr) {
     enabled_bitmask_ |= attr;
 }
 
-VertexData::VertexData():
+VertexData::VertexData(Scene &scene):
+    scene_(scene),
     enabled_bitmask_(0),
     cursor_position_(0),
     buffer_object_(BUFFER_OBJECT_VERTEX_DATA) {
@@ -259,14 +262,16 @@ void VertexData::reset(BufferObjectUsage usage) {
 }
 
 void VertexData::done() {
-    assert(glGetError() == GL_NO_ERROR);
-    buffer_object_.create(data_.size() * sizeof(Vertex), &data_[0]);
-    assert(glGetError() == GL_NO_ERROR);
+    scene_.window().idle().add_once([&](){
+        buffer_object_.create(data_.size() * sizeof(Vertex), &data_[0]);
+        assert(glGetError() == GL_NO_ERROR);
 
-    signal_update_complete_();
+        signal_update_complete_();
+    });
 }
 
-IndexData::IndexData():
+IndexData::IndexData(Scene& scene):
+    scene_(scene),
     buffer_object_(BUFFER_OBJECT_INDEX_DATA) {
 
 }
@@ -277,10 +282,13 @@ void IndexData::reset(BufferObjectUsage usage) {
 }
 
 void IndexData::done() {
-    buffer_object_.create(indices_.size() * sizeof(uint16_t), &indices_[0]);
-    assert(glGetError() == GL_NO_ERROR);
+    //Ensure we only call GL stuff from the main thread
+    scene_.window().idle().add_once([&](){
+        buffer_object_.create(indices_.size() * sizeof(uint16_t), &indices_[0]);
+        assert(glGetError() == GL_NO_ERROR);
 
-    signal_update_complete_();
+        signal_update_complete_();
+    });
 }
 
 }

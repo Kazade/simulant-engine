@@ -13,6 +13,7 @@ namespace kglt {
 Mesh::Mesh(ResourceManager *resource_manager, MeshID id):
     Resource(resource_manager),
     generic::Identifiable<MeshID>(id),
+    shared_data_(resource_manager->scene()),
     normal_debug_mesh_(0) {
 
 }
@@ -121,7 +122,9 @@ SubMesh::SubMesh(
     Mesh& parent, MaterialID material, MeshArrangement arrangement, bool uses_shared_vertices):
     parent_(parent),
     arrangement_(arrangement),
-    uses_shared_data_(uses_shared_vertices) {
+    uses_shared_data_(uses_shared_vertices),
+    vertex_data_(parent.scene()),
+    index_data_(parent.scene()) {
 
     if(!material) {
         //Set the material to the default one (store the pointer to increment the ref-count)

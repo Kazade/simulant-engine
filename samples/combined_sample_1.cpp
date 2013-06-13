@@ -23,13 +23,15 @@ int main(int argc, char* argv[]) {
     //window.scene().pass().viewport().configure(kglt::VIEWPORT_TYPE_BLACKBAR_16_BY_9);
     window->scene().camera().set_orthographic_projection_from_height((float) 224 / (float) 40, 16.0 / 9.0);
 
-    //Load the strip of sprites into separate textures
-    SpriteStripLoader loader(stage, "sample_data/sonic.png", 64);
-    std::vector<kglt::TextureID> frames = loader.load_frames();
+    using namespace kglt::extra;
 
-    //Construct a Sprite object that takes care of handling materials, meshes etc.
-    Sprite::ptr sprite = Sprite::create(scene.stage_ref(stage.id()));
-    sprite->add_animation("running", container::slice(frames, 31, 35), 0.5);
+    Sprite::ptr sprite = Sprite::create(
+        scene.stage_ref(stage.id()),
+        "sample_data/sonic.png",
+        FrameSize(64, 64)
+    );
+
+    sprite->add_animation("running", FrameRange(31, 35), 0.5);
     sprite->set_render_dimensions(1.5, 1.5);
     sprite->move_to(0.0, -2.0, -1.0);
 /*

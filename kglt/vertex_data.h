@@ -15,6 +15,8 @@
 
 namespace kglt {
 
+class Scene;
+
 enum AttributeBitMask {
     BM_POSITIONS = 1,
     BM_NORMALS = 2,
@@ -41,7 +43,7 @@ class VertexData :
     public Managed<VertexData> {
 
 public:
-    VertexData();
+    VertexData(Scene& scene);
 
     void reset(BufferObjectUsage usage=MODIFY_ONCE_USED_FOR_RENDERING);
     void set_texture_coordinate_dimensions(uint8_t coord_index, uint8_t count);
@@ -190,6 +192,8 @@ public:
     sigc::signal<void>& signal_update_complete() { return signal_update_complete_; }
 
 private:
+    Scene& scene_;
+
     int32_t enabled_bitmask_;
     uint8_t tex_coord_dimensions_[8];
 
@@ -233,7 +237,7 @@ private:
 
 class IndexData {
 public:
-    IndexData();
+    IndexData(Scene &scene_);
 
     void reset(BufferObjectUsage usage=MODIFY_ONCE_USED_FOR_RENDERING);
     void clear() { indices_.clear(); }
@@ -264,6 +268,8 @@ public:
     sigc::signal<void>& signal_update_complete() { return signal_update_complete_; }
 
 private:
+    Scene& scene_;
+
     std::vector<uint16_t> indices_;
     BufferObject buffer_object_;
 

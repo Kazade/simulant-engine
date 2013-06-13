@@ -20,9 +20,7 @@ BufferObject::BufferObject(BufferObjectType type, BufferObjectUsage usage):
         break;
         default:
             L_WARN("We don't yet support this shizzle");
-    }
-
-    glGenBuffers(1, &buffer_id_);
+    }    
 }
 
 BufferObject::~BufferObject() {
@@ -31,10 +29,17 @@ BufferObject::~BufferObject() {
 
 void BufferObject::bind() const {
     assert(initialized_);
+    assert(buffer_id_);
     glBindBuffer(gl_target_, buffer_id_);
 }
 
 void BufferObject::create(uint32_t byte_size, const void* data) {
+    if(!buffer_id_) {
+        glGenBuffers(1, &buffer_id_);
+    }
+
+    assert(buffer_id_);
+
     GLenum usage;
     switch(usage_) {
         case MODIFY_ONCE_USED_FOR_LIMITED_RENDERING:
@@ -69,11 +74,15 @@ void BufferObject::create(uint32_t byte_size, const void* data) {
     }
 
     glBindBuffer(gl_target_, buffer_id_);
+    assert(glGetError() == 0);
     glBufferData(gl_target_, byte_size, data, usage);
+    assert(glGetError() == 0);
     initialized_ = true;
 }
 
 void BufferObject::modify(uint32_t offset, uint32_t byte_size, const void* data) {
+    assert(buffer_id_);
+
     glBindBuffer(gl_target_, buffer_id_);
     glBufferSubData(gl_target_, offset, byte_size, data);
 }
