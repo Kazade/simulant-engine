@@ -51,7 +51,6 @@ void IdleTaskManager::execute() {
 
     //Iterate over the copy
     for(auto p: to_iter) {
-        L_DEBUG("Executing one-off idle task");
         p.second();
     }
 }

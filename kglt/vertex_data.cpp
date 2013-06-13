@@ -265,9 +265,9 @@ void VertexData::done() {
     scene_.window().idle().add_once([&](){
         buffer_object_.create(data_.size() * sizeof(Vertex), &data_[0]);
         assert(glGetError() == GL_NO_ERROR);
-
-        signal_update_complete_();
     });
+
+    signal_update_complete_();
 }
 
 IndexData::IndexData(Scene& scene):
@@ -286,9 +286,9 @@ void IndexData::done() {
     scene_.window().idle().add_once([&](){
         buffer_object_.create(indices_.size() * sizeof(uint16_t), &indices_[0]);
         assert(glGetError() == GL_NO_ERROR);
-
-        signal_update_complete_();
     });
+
+    signal_update_complete_();
 }
 
 }
