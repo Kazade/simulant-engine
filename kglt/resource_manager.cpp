@@ -84,6 +84,11 @@ MaterialID ResourceManagerImpl::new_material_from_file(const unicode& path) {
     return mat->id();
 }
 
+MaterialID ResourceManagerImpl::clone_material(MaterialID mat) {
+    MaterialID result = MaterialManager::manager_clone(mat);
+    return result;
+}
+
 ProtectedPtr<Material> ResourceManagerImpl::material(MaterialID mid) {
     return ProtectedPtr<Material>(MaterialManager::manager_get(mid));
 }

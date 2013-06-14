@@ -12,20 +12,6 @@
 namespace kglt {
 namespace generic  {
 
-class NoSuchObjectError : public std::logic_error {
-public:
-    NoSuchObjectError(const std::string& type_name):
-        std::logic_error("The manager does not contain an object with the specified ID: " + type_name) {}
-};
-
-class BaseManager {
-public:
-    virtual ~BaseManager() {}
-
-protected:
-    mutable std::recursive_mutex manager_lock_;
-};
-
 template<typename T>
 class IncrementalGetNextID {
 public:

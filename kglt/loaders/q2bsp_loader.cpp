@@ -6,6 +6,9 @@
 #include <kazmath/vec3.h>
 #include <kazmath/mat4.h>
 
+#include "../kazbase/logging.h"
+#include "../kazbase/unicode.h"
+
 #include "../window.h"
 #include "../stage.h"
 #include "../scene.h"
@@ -14,7 +17,6 @@
 #include "../light.h"
 #include "../camera.h"
 #include "../procedural/texture.h"
-#include "../kazbase/logging.h"
 #include "../kazbase/string.h"
 #include "q2bsp_loader.h"
 
@@ -364,6 +366,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         tex_info_to_material[texinfo_idx] = mat.id();
         texinfo_idx++;
 
+        L_DEBUG(_u("Associated material: {0}").format(mat.id().value()));
         material_to_submesh[mat.id()] = mesh.new_submesh(mat.id(), MESH_ARRANGEMENT_TRIANGLES, true);
     }
 
@@ -473,8 +476,9 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         mesh.submesh(i).index_data().done();
     }
 
+    L_DEBUG(_u("Created an actor for mesh").format(mesh.id()));
     //Finally, create an actor from the world mesh
-    scene->stage().new_actor(mid);
+    scene->stage().new_actor(mesh.id());
 }
 
 }

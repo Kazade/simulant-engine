@@ -156,6 +156,7 @@ public:
 
     MaterialID new_material();
     MaterialID new_material_from_file(const unicode& path);
+    MaterialID clone_material(MaterialID mat);
 
     ProtectedPtr<Material> material(MaterialID material);
     const ProtectedPtr<Material> material(MaterialID material) const;
@@ -192,11 +193,20 @@ private:
 
     template<typename Func>
     void apply_func_to_materials(Func func) {
-        for(auto p: MaterialManager::__objects()) {
-            auto mat = material(p.first);
-            assert(mat);
+        MaterialManager::ObjectMap copy;
+        {
+            std::lock_guard<std::mutex> lock(MaterialManager::manager_lock_);
+            copy = MaterialManager::__objects();
+        }
 
-            std::bind(func, mat.__object)();
+        for(auto p: copy) {
+            try {
+                auto mat = material(p.first);
+                assert(mat);
+                std::bind(func, mat.__object)();
+            } catch(DoesNotExist<Material>& e) {
+                continue;
+            }
         }
     }
 };

@@ -206,8 +206,7 @@ private:
 class Material :
     public Resource,
     public Loadable,
-    public generic::Identifiable<MaterialID>,
-    public Cloneable<MaterialID> {
+    public generic::Identifiable<MaterialID> {
 
 public:
     typedef std::shared_ptr<Material> ptr;
@@ -225,8 +224,6 @@ public:
 
 private:
     std::tr1::unordered_map<std::string, MaterialTechnique::ptr> techniques_;
-
-    MaterialID do_clone() override;
 };
 
 }

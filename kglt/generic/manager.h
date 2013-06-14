@@ -9,7 +9,10 @@ namespace kglt {
 namespace generic {
 
 template<typename Derived, typename ObjectType, typename ObjectIDType, typename NewIDGenerator=IncrementalGetNextID<ObjectIDType> >
-class TemplatedManager : public virtual BaseManager {
+class TemplatedManager {
+protected:
+    mutable std::recursive_mutex manager_lock_;
+
 public:
     ObjectIDType manager_new() {
         ObjectIDType id(0);
@@ -46,7 +49,7 @@ public:
 
         auto it = objects_.find(id);
         if(it == objects_.end()) {
-            throw NoSuchObjectError(typeid(ObjectType).name());
+            throw DoesNotExist<ObjectType>(typeid(ObjectType).name());
         }
         return *(it->second);
     }
@@ -56,7 +59,7 @@ public:
 
         auto it = objects_.find(id);
         if(it == objects_.end()) {
-            throw NoSuchObjectError(typeid(ObjectType).name());
+            throw DoesNotExist<ObjectType>(typeid(ObjectType).name());
         }
         return *(it->second);
     }

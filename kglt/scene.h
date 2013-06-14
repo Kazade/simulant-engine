@@ -44,7 +44,7 @@ public:
     void render();
     void update(double dt);
 
-    MaterialID clone_default_material() const;
+    MaterialID clone_default_material();
     MaterialID default_material_id() const;
     TextureID default_texture_id() const;
     CameraID default_camera_id() const;

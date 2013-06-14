@@ -209,14 +209,6 @@ Material& Material::operator=(const Material& rhs) {
     return *this;
 }
 
-MaterialID Material::do_clone() {
-    auto new_mat = resource_manager().material(resource_manager().new_material());
-    assert(new_mat);
-
-    *new_mat = *this;
-    return new_mat->id();
-}
-
 void Material::update(double dt) {
     for(auto it = techniques_.begin(); it != techniques_.end(); ++it) {
         assert((*it).second);
