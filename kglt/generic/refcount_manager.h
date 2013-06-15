@@ -18,6 +18,10 @@ protected:
     mutable std::mutex manager_lock_;
 
 public:
+    void mark_as_uncollected(ObjectIDType id) {
+        uncollected_.insert(id);
+    }
+
     ObjectIDType manager_new() {
         ObjectIDType id(0);
         {

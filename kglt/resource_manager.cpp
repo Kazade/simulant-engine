@@ -105,6 +105,10 @@ uint32_t ResourceManagerImpl::material_count() const {
     return MaterialManager::manager_count();
 }
 
+void ResourceManagerImpl::mark_material_as_uncollected(MaterialID t) {
+    MaterialManager::mark_as_uncollected(t);
+}
+
 TextureID ResourceManagerImpl::new_texture() {
     return TextureManager::manager_new();
 }
@@ -131,6 +135,10 @@ bool ResourceManagerImpl::has_texture(TextureID t) const {
 
 uint32_t ResourceManagerImpl::texture_count() const {
     return TextureManager::manager_count();
+}
+
+void ResourceManagerImpl::mark_texture_as_uncollected(TextureID t) {
+    TextureManager::mark_as_uncollected(t);
 }
 
 ShaderRef ResourceManagerImpl::shader(ShaderID s) {

@@ -79,7 +79,7 @@ public:
 
     virtual bool has_texture(TextureID m) const = 0;
     virtual uint32_t texture_count() const = 0;
-
+    virtual void mark_texture_as_uncollected(TextureID t) = 0;
 
     //Shader functions
     virtual ShaderID new_shader() = 0;
@@ -111,6 +111,7 @@ public:
 
     virtual bool has_material(MaterialID m) const = 0;
     virtual uint32_t material_count() const = 0;
+    virtual void mark_material_as_uncollected(MaterialID m) = 0;
 
     virtual WindowBase& window() = 0;
     virtual const WindowBase& window() const = 0;
@@ -145,6 +146,7 @@ public:
     const ProtectedPtr<Texture> texture(TextureID t) const;
     bool has_texture(TextureID t) const;
     uint32_t texture_count() const;
+    void mark_texture_as_uncollected(TextureID t) override;
 
     ShaderID new_shader();
     ShaderRef shader(ShaderID s);
@@ -162,6 +164,7 @@ public:
     const ProtectedPtr<Material> material(MaterialID material) const;
     bool has_material(MaterialID m) const;
     uint32_t material_count() const;
+    void mark_material_as_uncollected(MaterialID t) override;
 
     SoundID new_sound();
     SoundID new_sound_from_file(const unicode& path);

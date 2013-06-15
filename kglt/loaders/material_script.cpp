@@ -273,7 +273,7 @@ void MaterialScript::handle_block(Material& mat,
 
         //If we hit another BEGIN block, process it
         if(str::starts_with(line, "BEGIN_DATA")) {
-            L_DEBUG("Found BEGIN_DATA block");
+            //L_DEBUG("Found BEGIN_DATA block");
             std::string data_type = str::strip(str::split(line, "(")[1], ")");
 
             //FIXME: Read all lines up to the end into a single string and then pass that
@@ -296,10 +296,10 @@ void MaterialScript::handle_block(Material& mat,
                 throw SyntaxError(unicode("Line: {0}. Block does not accept BEGIN_DATA commands").format(current_line).encode());
             }
         } else if(str::starts_with(line, "BEGIN")) {
-            L_DEBUG("Found BEGIN block");
+           // L_DEBUG("Found BEGIN block");
             handle_block(mat, lines, current_line, block_type, current_technique, current_pass);
         } else if(str::starts_with(line, "END")) {
-            L_DEBUG("Found END block");
+           // L_DEBUG("Found END block");
             //If we hit an END block, the type must match the BEGIN
             std::string end_block_type = str::upper(str::strip(str::split(line, "(")[1], ")"));
 
@@ -320,7 +320,7 @@ void MaterialScript::handle_block(Material& mat,
             }
             return; //Exit this function, we are done with this block
         } else if(str::starts_with(line, "SET")) {
-            L_DEBUG("Found SET command block");
+         //   L_DEBUG("Found SET command block");
             std::string args_part = str::strip(str::split(line, "(")[1], ")");
             std::vector<std::string> args = str::split(args_part, " ");
 

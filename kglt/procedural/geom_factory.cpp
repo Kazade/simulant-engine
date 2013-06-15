@@ -72,7 +72,7 @@ ActorID GeomFactory::new_rectangle(const float width, const float height) {
 
 ActorID GeomFactory::new_capsule(const float diameter, const float length) {
     kglt::MeshPtr mesh_ptr = stage_.mesh(stage_.new_mesh()).lock();
-    procedural::mesh::capsule(mesh_ptr, diameter, length);
+    procedural::mesh::capsule(*mesh_ptr, diameter, length);
     return stage_.new_actor(mesh_ptr->id());
 }
 

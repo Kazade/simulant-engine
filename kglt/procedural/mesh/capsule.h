@@ -7,7 +7,8 @@ namespace kglt {
 namespace procedural {
 namespace mesh {
 
-SubMeshIndex capsule(kglt::MeshPtr mesh,
+SubMeshIndex capsule(
+    kglt::Mesh& mesh,
     float diameter=0.5,
     float height=1.0,
     uint32_t segment_count=10,

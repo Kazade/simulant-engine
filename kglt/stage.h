@@ -94,7 +94,7 @@ public:
 
     virtual bool has_texture(TextureID t) const { return scene().has_texture(t); }
     virtual uint32_t texture_count() const { return scene().texture_count(); }
-
+    virtual void mark_texture_as_uncollected(TextureID t) { scene().mark_texture_as_uncollected(t); }
 
     //Shader functions
     virtual ShaderID new_shader() { return scene().new_shader(); }
@@ -126,6 +126,7 @@ public:
 
     virtual bool has_material(MaterialID m) const { return scene().has_material(m); }
     virtual uint32_t material_count() const { return scene().material_count(); }
+    virtual void mark_material_as_uncollected(MaterialID t) { scene().mark_material_as_uncollected(t); }
 
     virtual WindowBase& window() { return scene().window(); }
     const WindowBase& window() const { return scene().window(); }
