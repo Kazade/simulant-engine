@@ -5,6 +5,7 @@
 #include "../generic/managed.h"
 #include "../kazbase/unicode.h"
 #include "types.h"
+#include "../types.h"
 
 namespace kglt {
 
@@ -22,6 +23,10 @@ public:
 
     bool entry(const kglt::KeyEvent& code);
 private:
+    UIStageID ui_stage_;
+    CameraID ui_camera_;
+    PipelineID ui_pipeline_;
+
     void init_widget();
 
     WindowBase& window_;

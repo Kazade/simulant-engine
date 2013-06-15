@@ -20,12 +20,14 @@ class GeomFactory;
 
 typedef generic::TemplatedManager<Scene, Stage, StageID> StageManager;
 typedef generic::TemplatedManager<Scene, Camera, CameraID> CameraManager;
+typedef generic::TemplatedManager<Scene, UIStage, UIStageID> UIStageManager;
 
 class Scene:
     public ResourceManagerImpl,
     public Loadable,
     public StageManager,
     public CameraManager,
+    public UIStageManager,
     public Managed<Scene> {
 
 public:
@@ -39,6 +41,14 @@ public:
 
     void delete_stage(StageID s);
     uint32_t stage_count() const;
+
+    //UI Stages
+    UIStageID new_ui_stage();
+    ProtectedPtr<UIStage> ui_stage();
+    ProtectedPtr<UIStage> ui_stage(UIStageID s);
+    void delete_ui_stage(UIStageID s);
+    uint32_t ui_stage_count() const;
+
 
     bool init();
     void render();
@@ -61,9 +71,13 @@ public:
         obj.set_parent(nullptr);
         obj._initialize();
     }
+
 private:
     StageID default_stage_;
     CameraID default_camera_;
+
+    UIStageID default_ui_stage_;
+    CameraID default_ui_camera_;
 
     TexturePtr default_texture_;
     MaterialPtr default_material_;

@@ -120,16 +120,11 @@ bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
             );
         });
 
-        interface_ = ui::Interface::create(*this, width, height);
         console_ = Console::create(*this);
 
         initialized_ = true;
     }
     return result;
-}
-
-void WindowBase::load_ui(const std::string& rml_file) {
-    loader_for(rml_file)->into(*interface_);
 }
 
 void WindowBase::set_logging_level(LoggingLevel level) {
@@ -192,7 +187,6 @@ bool WindowBase::update() {
 
         //Shutdown the input controller
         input_controller_.reset();
-        interface_.reset(); //Destroy the UI
         //Destroy the scene
         scene_.reset();
     }

@@ -94,11 +94,13 @@ class Interface :
     public Loadable {
 
 public:
-    Interface(WindowBase& window, uint32_t width_in_pixels, uint32_t height_in_pixels);
+    Interface(Scene& scene);
     ~Interface();
 
-    uint16_t width_in_pixels() const { return width_; }
-    uint16_t height_in_pixels() const { return height_; }
+    uint16_t width() const;
+    uint16_t height() const;
+
+    void set_dimensions(uint16_t width, uint16_t height);
 
     RocketImpl* impl() { return impl_.get(); }
 
@@ -113,10 +115,7 @@ public:
 private:    
     std::string locate_font(const std::string& filename);
 
-    WindowBase& window_;
-
-    uint32_t width_;
-    uint32_t height_;
+    Scene& scene_;
 
     std::unique_ptr<RocketImpl> impl_;
 };

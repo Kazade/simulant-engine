@@ -31,6 +31,7 @@ public:
     ViewportID viewport_id() { return viewport_; }
     CameraID camera_id() { return camera_; }
     StageID stage_id() { return stage_; }
+    UIStageID ui_stage_id() { return ui_stage_; }
 
     int32_t priority() const { return priority_; }
     void set_priority(int32_t priority) { priority_ = priority; }
@@ -44,6 +45,7 @@ private:
     void set_camera(CameraID c) { camera_ = c; }
     void set_viewport(ViewportID v) { viewport_ = v; }
     void set_target(TextureID t) { target_ = t; }
+    void set_ui_stage(UIStageID s) { ui_stage_ = s; }
 
 private:
     RenderSequence* sequence_;
@@ -52,6 +54,8 @@ private:
     TextureID target_;
     CameraID camera_;
     ViewportID viewport_;
+    UIStageID ui_stage_;
+
     bool is_active_;
 
     friend class RenderSequence;
@@ -75,6 +79,14 @@ public:
 
     PipelineID new_pipeline(
         StageID stage,
+        CameraID camera,
+        ViewportID viewport=ViewportID(),
+        TextureID target=TextureID(),
+        int32_t priority=0
+    );
+
+    PipelineID new_pipeline(
+        UIStageID stage,
         CameraID camera,
         ViewportID viewport=ViewportID(),
         TextureID target=TextureID(),

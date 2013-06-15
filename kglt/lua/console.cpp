@@ -10,6 +10,9 @@
 #include "../ui/interface.h"
 #include "../input_controller.h"
 #include "../procedural/geom_factory.h"
+#include "../camera.h"
+#include "../render_sequence.h"
+#include "../ui_stage.h"
 
 #include "interpreter.h"
 #include "api.h"
@@ -71,13 +74,32 @@ Console::Console(WindowBase &window):
 }
 
 void Console::init_widget() {
-    //If we can't find an element for the lua console
-    if(window_.ui()._("#lua-console").empty()) {
-        //...then create one
-        window_.ui().append("<div>").id("lua-console");
-        assert(!window_.ui()._("#lua-console").empty());
+    if(ui_stage_) {
+        return;
+    }
 
-        ui::ElementList l = window_.ui()._("#lua-console");
+    Scene& scene = window_.scene();
+
+    ui_stage_ = scene.new_ui_stage();
+    ui_camera_ = scene.new_camera();
+
+    scene.camera(ui_camera_).set_orthographic_projection(
+        0, window_.width(), window_.height(), 0
+    );
+
+    ui_pipeline_ = scene.render_sequence().new_pipeline(
+        ui_stage_, ui_camera_
+    );
+
+    ProtectedPtr<UIStage> stage = scene.ui_stage(ui_stage_);
+
+    //If we can't find an element for the lua console
+    if(stage->$("#lua-console").empty()) {
+        //...then create one
+        stage->append("<div>").id("lua-console");
+        assert(!stage->$("#lua-console").empty());
+
+        ui::ElementList l = stage->$("#lua-console");
         l.css("position", "absolute");
         l.css("width", "100%");
         l.css("height", "200px");
@@ -97,13 +119,15 @@ void Console::init_widget() {
 
 bool Console::entry(const kglt::KeyEvent& event) {
     if(event.code == KEY_CODE_BACKQUOTE) {
+        ProtectedPtr<UIStage> stage = window_.scene().ui_stage(ui_stage_);
+
         if(!active_) {
             init_widget(); //Make sure there is something to show!
 
-            window_.ui()._("#lua-console").show();
+            stage->$("#lua-console").show();
             active_ = true;
         } else {
-            window_.ui()._("#lua-console").hide();
+            stage->$("#lua-console").hide();
             active_ = false;
         }
     }
@@ -150,9 +174,11 @@ bool Console::entry(const kglt::KeyEvent& event) {
 }
 
 void Console::update_output() {
+    ProtectedPtr<UIStage> stage = window_.scene().ui_stage(ui_stage_);
+
     unicode past = _u("\n").join(history_);
-    window_.ui()._("#lua-console").text(past);
-    window_.ui()._("#lua-console").scroll_to_bottom();
+    stage->$("#lua-console").text(past);
+    stage->$("#lua-console").scroll_to_bottom();
 }
 
 LuaResult Console::execute(const unicode &command, unicode &output) {  

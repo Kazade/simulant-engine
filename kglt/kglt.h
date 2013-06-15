@@ -6,6 +6,7 @@
 #include "input_controller.h"
 #include "scene.h"
 #include "stage.h"
+#include "ui_stage.h"
 #include "viewport.h"
 #include "frustum.h"
 #include "material.h"

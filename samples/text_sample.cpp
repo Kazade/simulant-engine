@@ -5,10 +5,10 @@ int main(int argc, char* argv[]) {
     kglt::Window::ptr window = kglt::Window::create();
     window->set_title("KGLT Text Sample");
 
-    kglt::ui::Interface& ui = window->ui();
-    ui.set_styles("body { font-family: \"Ubuntu\"; } .thing { color: red; };");
-    ui.append("<p>").text("Hello world!");
-    ui._("p").add_class("thing");
+    auto ui = window->scene().ui_stage();
+    ui->set_styles("body { font-family: \"Ubuntu\"; } .thing { color: red; };");
+    ui->append("<p>").text("Hello world!");
+    ui->$("p").add_class("thing");
 
     while(window->update()) {}
 

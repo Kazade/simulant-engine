@@ -6,6 +6,8 @@
 #include "render_sequence.h"
 #include "loader.h"
 #include "stage.h"
+#include "ui_stage.h"
+
 #include "partitioners/null_partitioner.h"
 #include "partitioners/octree_partitioner.h"
 
@@ -41,11 +43,24 @@ TextureID Scene::default_texture_id() const {
 
 void Scene::initialize_defaults() {
     default_camera_ = new_camera(); //Create a default camera
-
     default_stage_ = new_stage(kglt::PARTITIONER_NULL);
+
+    default_ui_stage_ = new_ui_stage();
+    default_ui_camera_ = new_camera();
+
+    camera(default_ui_camera_).set_orthographic_projection(
+        0, window().width(), window().height(), 0, -1, 1
+    );
 
     //Create a default stage for the default stage with the default camera
     render_sequence_->new_pipeline(default_stage_, default_camera_);
+
+    //Add a pipeline for the default UI stage to render
+    //after the main pipeline
+    render_sequence_->new_pipeline(
+        default_ui_stage_, default_ui_camera_,
+        ViewportID(), TextureID(), 100
+    );
 
     //FIXME: Should lock the default texture and material during construction!
 
@@ -109,6 +124,31 @@ void Scene::delete_stage(StageID s) {
     Stage& ss = stage(s);
     ss.destroy_children();
     StageManager::manager_delete(s);
+}
+
+
+UIStageID Scene::new_ui_stage() {
+    return UIStageManager::manager_new();
+}
+
+ProtectedPtr<UIStage> Scene::ui_stage() {
+    return ui_stage(default_ui_stage_);
+}
+
+ProtectedPtr<UIStage> Scene::ui_stage(UIStageID s) {
+    if(!s) {
+        return UIStageManager::manager_get_ref(default_ui_stage_);
+    } else {
+        return UIStageManager::manager_get_ref(s);
+    }
+}
+
+void Scene::delete_ui_stage(UIStageID s) {
+    UIStageManager::manager_delete(s);
+}
+
+uint32_t Scene::ui_stage_count() const {
+    return UIStageManager::manager_count();
 }
 
 CameraRef Scene::camera_ref(CameraID c) {

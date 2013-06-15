@@ -54,6 +54,16 @@ public:
         return *(it->second);
     }
 
+    std::weak_ptr<ObjectType> manager_get_ref(ObjectIDType id) {
+        std::lock_guard<std::recursive_mutex> lock(manager_lock_);
+
+        auto it = objects_.find(id);
+        if(it == objects_.end()) {
+            throw DoesNotExist<ObjectType>(typeid(ObjectType).name());
+        }
+        return it->second;
+    }
+
     const ObjectType& manager_get(ObjectIDType id) const {
         std::lock_guard<std::recursive_mutex> lock(manager_lock_);
 

@@ -107,9 +107,6 @@ public:
     sigc::signal<void, double>& signal_step() { return signal_step_; }
     sigc::signal<void>& signal_shutdown() { return signal_shutdown_; }
 
-    ui::Interface& ui() { return *interface_; }
-    void load_ui(const std::string& rml_file);
-
     void stop_running() { is_running_ = false; }
 
     Watcher& watcher() {
@@ -175,7 +172,6 @@ private:
     sigc::signal<void, double> signal_step_;
     sigc::signal<void> signal_shutdown_;
 
-    std::shared_ptr<ui::Interface> interface_;
     std::shared_ptr<Console> console_;
     std::shared_ptr<Watcher> watcher_;
 

@@ -25,13 +25,13 @@ namespace ui {
 
 class RocketSystemInterface : public Rocket::Core::SystemInterface {
 public:
-    RocketSystemInterface(WindowBase& window):
-        window_(window) {
+    RocketSystemInterface(Scene& scene):
+        scene_(scene) {
 
     }
 
     virtual float GetElapsedTime() {
-        return window_.total_time();
+        return scene_.window().total_time();
     }
 
     //The default interface is weird and strips the leading slash from absolute paths
@@ -46,22 +46,18 @@ public:
     }
 
 private:
-    WindowBase& window_;
+    Scene& scene_;
 };
 
 class RocketRenderInterface : public Rocket::Core::RenderInterface {
 public:
-    RocketRenderInterface(WindowBase& window):
-        window_(window) {
-
-        //At the start of each frame, clear out any rendered geometry
-        window_.signal_frame_started().connect(sigc::mem_fun(this, &RocketRenderInterface::clear_objects));
+    RocketRenderInterface(Scene& scene):
+        scene_(scene) {
 
     }
 
     bool LoadTexture(Rocket::Core::TextureHandle& texture_handle, Rocket::Core::Vector2i& texture_dimensions, const Rocket::Core::String& source) {
-        auto tex = manager().texture(manager().new_texture());
-        window_.loader_for(source.CString())->into(*tex);
+        auto tex = manager().texture(manager().new_texture_from_file(source.CString()));
 
         tex->flip_vertically();
         tex->upload(true, false, false, true);
@@ -100,15 +96,6 @@ public:
         Rocket::Core::TextureHandle texture,
         const Rocket::Core::Vector2f& translation) {
 
-        kmMat4 projection;
-        kmMat4OrthographicProjection(&projection, 0, window_.width(), window_.height(), 0, -1, 1);
-
-        glPushMatrix();
-        glMatrixMode(GL_PROJECTION);
-        glLoadMatrixf(projection.mat);
-
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
         glTranslatef(translation.x, translation.y, 0.0);
 
         glUseProgram(0);
@@ -145,8 +132,6 @@ public:
             glVertex2f(v->position.x, v->position.y);
         }
         glEnd();
-
-        glPopMatrix();
     }
 
 
@@ -159,19 +144,16 @@ public:
     }
 
     void SetScissorRegion(int x, int y, int width, int height) {
-        glScissor(x, window_.height() - (y + height), width, height);
+        glScissor(x, scene_.window().height() - (y + height), width, height);
     }
 
-    void clear_objects() {
-
-    }
 
     ResourceManager& manager() {
-        return window_.scene();
+        return scene_;
     }
 
 private:
-    WindowBase& window_;
+    Scene& scene_;
 
     std::map<Rocket::Core::TextureHandle, TexturePtr> textures_;
 };
@@ -180,21 +162,18 @@ private:
 static std::shared_ptr<RocketSystemInterface> rocket_system_interface_;
 static std::shared_ptr<RocketRenderInterface> rocket_render_interface_;
 
-Interface::Interface(WindowBase& window, uint32_t width_in_pixels, uint32_t height_in_pixels):
-    window_(window),
-    width_(width_in_pixels),
-    height_(height_in_pixels),
+Interface::Interface(Scene &scene):
+    scene_(scene),
     impl_(new RocketImpl()) {
 
-    window.signal_pre_swap().connect(sigc::mem_fun(this, &Interface::render));
 }
 
 bool Interface::init() {
     if(!rocket_system_interface_) {
-        rocket_system_interface_.reset(new RocketSystemInterface(window_));
+        rocket_system_interface_.reset(new RocketSystemInterface(scene_));
         Rocket::Core::SetSystemInterface(rocket_system_interface_.get());
 
-        rocket_render_interface_.reset(new RocketRenderInterface(window_));
+        rocket_render_interface_.reset(new RocketRenderInterface(scene_));
         Rocket::Core::SetRenderInterface(rocket_render_interface_.get());
 
         Rocket::Core::Initialise();
@@ -225,8 +204,11 @@ bool Interface::init() {
         }
     }
 
-    //FIXME: Change name for each interface
-    impl_->context_ = Rocket::Core::CreateContext("default", Rocket::Core::Vector2i(width_, height_));
+    //Change name for each interface using this (dirty, but works)
+    impl_->context_ = Rocket::Core::CreateContext(
+        _u("context_{0}").format(int64_t(this)).encode().c_str(),
+        Rocket::Core::Vector2i(640, 480)
+    );
     impl_->document_ = impl_->context_->CreateDocument();
     set_styles("body { font-family: \"Ubuntu\"; }");
 
@@ -245,7 +227,7 @@ std::string Interface::locate_font(const std::string& filename) {
     };
 
 
-    return window_.resource_locator().locate_file(filename).encode();
+    return scene_.window().resource_locator().locate_file(filename).encode();
 
 /*
     for(std::string font_dir: paths) {
@@ -265,6 +247,18 @@ void Interface::update(float dt) {
 
 void Interface::render() {
     impl_->context_->Render();
+}
+
+void Interface::set_dimensions(uint16_t width, uint16_t height) {
+    impl_->context_->SetDimensions(Rocket::Core::Vector2i(width, height));
+}
+
+uint16_t Interface::width() const {
+    return impl_->context_->GetDimensions().x;
+}
+
+uint16_t Interface::height() const {
+    return impl_->context_->GetDimensions().x;
 }
 
 Element Interface::append(const std::string& tag) {
