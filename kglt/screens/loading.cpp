@@ -3,6 +3,9 @@
 #include "../procedural/geom_factory.h"
 #include "../render_sequence.h"
 #include "../actor.h"
+#include "../ui_stage.h"
+#include "../camera.h"
+#include "../window_base.h"
 
 #include "loading.h"
 
@@ -14,13 +17,46 @@ Loading::Loading(Scene &scene):
     is_active_(false) {
 
     //Create a stage
-    stage_ = scene.new_stage();
+    stage_ = scene.new_ui_stage();
 
-    cube_ = scene_.stage(stage_).geom_factory().new_cube(1.0);
-    scene_.stage(stage_).actor(cube_).move_to(0, 0, -10);
+    auto stage = scene.ui_stage(stage_);
+
+    stage->set_styles(R"X(
+        body {
+            font-family: "Ubuntu";
+            display: block;
+            height: 100%;
+            width: 100%;
+            background-color: #000000FF;
+            vertical-align: middle;
+        }
+        p, div {
+            display: block;
+        }
+
+        .thing {
+            position: absolute;
+
+            color: white;
+            font-size: 16px;
+            width: 100%;
+            height: 100%;
+
+            top: 48%;
+            text-align: center;
+        }
+
+    )X");
+
+    stage->append("<p>").text("Loading");
+    stage->$("p").add_class("thing");
 
     //Create an orthographic camera
     camera_ = scene.new_camera();
+
+    scene.camera(camera_).set_orthographic_projection(
+        0, scene_.window().width(), scene_.window().height(), 0
+    );
 
     //Create an inactive pipeline
     pipeline_ = scene.render_sequence().new_pipeline(
@@ -34,7 +70,7 @@ Loading::Loading(Scene &scene):
 Loading::~Loading() {
     //Clean up
     scene_.render_sequence().delete_pipeline(pipeline_);
-    scene_.delete_stage(stage_);
+    scene_.delete_ui_stage(stage_);
     scene_.delete_camera(camera_);
 }
 
@@ -61,8 +97,6 @@ void Loading::deactivate() {
 
 void Loading::update(float dt) {
     if(!is_active()) return;
-
-    scene_.stage(stage_).actor(cube_).rotate_z(-720 * dt);
 }
 
 bool Loading::is_active() const {

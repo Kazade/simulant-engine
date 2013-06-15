@@ -30,9 +30,8 @@ private:
     Scene& scene_;
     bool is_active_;
 
-    StageID stage_;
+    UIStageID stage_;
     CameraID camera_;
-    ActorID cube_;
 
     PipelineID pipeline_;
 
