@@ -96,6 +96,7 @@ public:
         Rocket::Core::TextureHandle texture,
         const Rocket::Core::Vector2f& translation) {
 
+        glPushMatrix();
         glTranslatef(translation.x, translation.y, 0.0);
 
         glUseProgram(0);
@@ -132,6 +133,7 @@ public:
             glVertex2f(v->position.x, v->position.y);
         }
         glEnd();
+        glPopMatrix();
     }
 
 
@@ -207,7 +209,7 @@ bool Interface::init() {
     //Change name for each interface using this (dirty, but works)
     impl_->context_ = Rocket::Core::CreateContext(
         _u("context_{0}").format(int64_t(this)).encode().c_str(),
-        Rocket::Core::Vector2i(640, 480)
+        Rocket::Core::Vector2i(scene_.window().width(), scene_.window().height())
     );
     impl_->document_ = impl_->context_->CreateDocument();
     set_styles("body { font-family: \"Ubuntu\"; }");

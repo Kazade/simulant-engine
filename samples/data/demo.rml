@@ -1,40 +1,143 @@
 <rml>
-
 <head>
-    <title>This is a test</title>
-    
-    <style> 
+    <style>
         body {
-            font-family: "Liberation Sans";
-            color: yellow;
-            font-size: 16px;
+            font-family: "Ubuntu";
+            font-size: 14px;            
+            height: 100%;
         }
-                
+
+        p {
+            display: block;
+        }        
+        
         div {
             display: block;
         }
         
-        p { 
-            display: block;
-            padding-left: 5px;
+        #health-gauge {
+            position: absolute;
+            top: 20px;
+            left: 20px;        
+            
+            height: 90px;
+            width: 64px;
         }
         
-        i {
-            font-style: italic;
+        .good-fighter-birdseye {
+            width: 64px;
+            height: 64px;           
+            margin-left: 16px;
+                                   
+            background-decorator: image;
+            background-image: "textures/ships/good_fighter.png";
+        }
+
+        #health-gauge .good-fighter-birdseye {
+            position: relative;
+            top: -80px;
         }
         
-        b {
+        #health-gauge .front-shield {            
+            width: 96px;
+            height: 96px;
+            background-decorator: image;            
+            background-image: "textures/shield-good.png";            
+        }
+        
+        #health-gauge .rear-shield {
+            width: 96px;
+            height: 96px;
+
+            position: relative;
+            top: -152px;
+            
+            background-decorator: image;
+            background-image: "textures/shield-good.png" 1 1 0 0;                                  
+        }        
+        
+        #laser-gauge {
+            bottom: 20px;
+            left: 20px;
+            height: 8px;
+            width: 128px;
+            position: absolute;            
+            border-color: white;
+            border-width: 1px;
+        }
+        
+        #laser-gauge-bar {
+            background-color: #FF9900;            
+            height: 100%;
+            width: 128px;
+        }
+        
+        div#torpedo-row {
+            position: absolute;
+            left: 20px;
+            bottom: 35px;
+            height: 32px;
+        }
+        
+        div#torpedo-row img {
+            width: 32px;
+            height:32px;
+        }
+        
+        div#targetter {
+            width: 128px;
+            height: 64px;
+            background-color: #00336699;
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-size: 10px;
+        }  
+                
+        div#torpedo-row span {
+            line-height: 16px;
+            font-size: 16px;
             font-weight: bold;
+            vertical-align: 50%;
+            padding-left: 2px;            
+        }      
+    
+        #targetted-name {
+            position: relative;
+            left: 0px;
+            top: 0px;
+            padding: 5px;
+            width: 64px;
+        }    
+        
+        #targetter img {
+            position: absolute;
+            right: 0px;
+            top: 0px;
+            width: 64px;
+            height: 64px;    
+            visibility: hidden;        
         }
     </style>
 </head>
-<body>    
-    <p class="thing">
-        <b><i>Score:</i></b> 1234567
-    </p>
-    <p class="thing">
-        <b><i>Rings:</i></b> 10
-    </p>
+<body>
+<div id="health-gauge">
+    <div class="front-shield"></div>
+    <div class="good-fighter-birdseye"></div>
+    <div class="rear-shield"></div>   
+</div>
+
+<div id="torpedo-row">
+    <img src="textures/torpedo.png" /><span>x 5</span>
+</div>
+<div id="laser-gauge">    
+    <div id="laser-gauge-bar"></div>    
+</div>
+
+<div id="targetter">
+    <p id="targetted-name">No target</p>
+    <img id="targetted-image" src="textures/ships/good_fighter.png" />
+</div>
 </body>
 
 </rml>

@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="32"
+   height="32"
+   id="svg2985"
+   version="1.1"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="torpedo.svg"
+   inkscape:export-filename="/home/kazade/Git/Fighters/data/textures/torpedo.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
+  <defs
+     id="defs2987">
+    <linearGradient
+       id="linearGradient3762">
+      <stop
+         style="stop-color:#0000ff;stop-opacity:1;"
+         offset="0"
+         id="stop3764" />
+      <stop
+         style="stop-color:#0000ff;stop-opacity:0;"
+         offset="1"
+         id="stop3766" />
+    </linearGradient>
+    <radialGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient3762"
+       id="radialGradient3768"
+       cx="16"
+       cy="16"
+       fx="16"
+       fy="16"
+       r="16.1"
+       gradientUnits="userSpaceOnUse" />
+    <radialGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient3762-2"
+       id="radialGradient3768-7"
+       cx="16"
+       cy="16"
+       fx="16"
+       fy="16"
+       r="16.1"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       id="linearGradient3762-2">
+      <stop
+         style="stop-color:#0000ff;stop-opacity:1;"
+         offset="0"
+         id="stop3764-1" />
+      <stop
+         style="stop-color:#0000ff;stop-opacity:0;"
+         offset="1"
+         id="stop3766-1" />
+    </linearGradient>
+    <filter
+       inkscape:collect="always"
+       id="filter3767">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="1.0923731"
+         id="feGaussianBlur3769" />
+    </filter>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="11.098901"
+     inkscape:cx="-19.782404"
+     inkscape:cy="18.41869"
+     inkscape:current-layer="layer1"
+     showgrid="true"
+     inkscape:grid-bbox="true"
+     inkscape:document-units="px"
+     inkscape:showpageshadow="false"
+     inkscape:window-width="1680"
+     inkscape:window-height="996"
+     inkscape:window-x="0"
+     inkscape:window-y="25"
+     inkscape:window-maximized="1">
+    <inkscape:grid
+       type="xygrid"
+       id="grid2993"
+       empspacing="4"
+       visible="true"
+       enabled="true"
+       snapvisiblegridlinesonly="true" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata2990">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     id="layer1"
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     transform="translate(0,16)">
+    <path
+       sodipodi:type="arc"
+       style="fill:url(#radialGradient3768);fill-opacity:1;stroke:none;stroke-width:0.20000000000000001;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none"
+       id="path2992"
+       sodipodi:cx="16"
+       sodipodi:cy="16"
+       sodipodi:rx="16"
+       sodipodi:ry="16"
+       d="M 32,16 C 32,24.836556 24.836556,32 16,32 7.163444,32 0,24.836556 0,16 0,7.163444 7.163444,0 16,0 24.836555,0 31.999999,7.163443 32,15.999998"
+       transform="matrix(0.87412032,0,0,0.86285794,2.0591243,-13.760677)"
+       sodipodi:start="0"
+       sodipodi:end="6.2831852"
+       sodipodi:open="true" />
+    <path
+       sodipodi:type="arc"
+       style="fill:#0000ff;fill-opacity:1;stroke:none;filter:url(#filter3767)"
+       id="path2992-3"
+       sodipodi:cx="16"
+       sodipodi:cy="16"
+       sodipodi:rx="16"
+       sodipodi:ry="16"
+       d="m 32,16 a 16,16 0 1 1 0,-2e-6"
+       transform="matrix(0.5383304,0,0,0.5355475,7.4609708,-9.1806409)"
+       sodipodi:start="0"
+       sodipodi:end="6.2831852"
+       sodipodi:open="true" />
+  </g>
+</svg>
