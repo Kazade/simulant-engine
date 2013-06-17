@@ -1,6 +1,7 @@
 #ifndef TEST_MESH_H
 #define TEST_MESH_H
 
+#include "kglt/kazbase/logging.h"
 #include "kglt/kazbase/testing.h"
 
 #include "kglt/kglt.h"
@@ -11,13 +12,13 @@ public:
     void set_up() {
         if(!window) {
             window = kglt::Window::create();
-            window->set_logging_level(LOG_LEVEL_NONE);
+            window->set_logging_level(kglt::LOG_LEVEL_NONE);
         }
 
         //window->reset();
     }
 
-    MeshID generate_test_mesh(kglt::Stage& scene) {
+    kglt::MeshID generate_test_mesh(kglt::Stage& scene) {
         kglt::MeshID mid = scene.new_mesh();
         kglt::MeshPtr mesh = scene.mesh(mid).lock();
 
@@ -37,7 +38,7 @@ public:
 
         data.done();
 
-        kglt::SubMesh& submesh = mesh->submesh(mesh->new_submesh(MaterialID()));
+        kglt::SubMesh& submesh = mesh->submesh(mesh->new_submesh(kglt::MaterialID()));
 
         submesh.index_data().index(0);
         submesh.index_data().index(1);
@@ -164,7 +165,7 @@ public:
         //We should be able to override the material on a subactor though
         actor.subactor(0).override_material_id(kglt::MaterialID(1));
 
-        assert_equal(MaterialID(1), actor.subactor(0).material_id());
+        assert_equal(kglt::MaterialID(1), actor.subactor(0).material_id());
     }
 
     void test_scene_methods() {

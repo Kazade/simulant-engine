@@ -1,4 +1,4 @@
-#include <GL/GLee.h>
+#include <GLee.h>
 #include <tr1/unordered_map>
 
 #include "render_sequence.h"
