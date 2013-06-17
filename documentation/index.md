@@ -8,7 +8,7 @@
 
 This section covers the base subsystems and usages of KGLT. 
 
- - Managing objects: [Manual managers](manual_managers.md) | [Refcounted managers](refcount_managers).md | [ProtectedPtr<T>](protected_ptr.md)
+ - Managing objects: [Manual managers](manual_managers.md) | [Refcounted managers](refcount_managers.md) | [ProtectedPtr<T>](protected_ptr.md)
  - Core systems: [The Window](window.md) | [Idle Manager](idle.md) | [Viewports](viewport.md) | [Threading](threading.md)
 
 ## The Rendering System
