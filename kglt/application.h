@@ -41,7 +41,7 @@ private:
     std::shared_ptr<WindowBase> window_;
 
     virtual bool do_init() = 0;
-    virtual void do_step(float dt) = 0;
+    virtual void do_step(double dt) = 0;
     virtual void do_cleanup() = 0;
 
     std::list<std::shared_future<bool> > load_tasks_;

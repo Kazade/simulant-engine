@@ -17,7 +17,7 @@ private:
         return true;
     }
 
-    void do_step(float dt) {}
+    void do_step(double dt) {}
     void do_cleanup() {}
 };
 
