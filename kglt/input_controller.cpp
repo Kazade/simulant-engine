@@ -242,6 +242,12 @@ InputConnection Joypad::button_released_connect(Button button, JoypadButtonCallb
     return c;
 }
 
+InputConnection Joypad::hat_changed_connect(Hat hat, JoypadHatCallback callback) {
+    InputConnection c = new_input_connection();
+    hat_changed_signals_[hat][c] = callback;
+    return c;
+}
+
 void Joypad::_handle_button_down_event(Button button) {
     if(container::contains(button_pressed_signals_, button)) {
         for(ButtonSignalEntry entry: button_pressed_signals_[button]) {
@@ -266,6 +272,14 @@ void Joypad::_handle_axis_changed_event(Axis axis, int32_t value) {
     }
 
     axis_state_[axis] = value;
+}
+
+void Joypad::_handle_hat_changed_event(Hat hat, HatPosition position) {
+    if(container::contains(hat_changed_signals_, hat)) {
+        for(HatSignalEntry entry: hat_changed_signals_[hat]) {
+            entry.second(position, hat);
+        }
+    }
 }
 
 void Joypad::_update() {
@@ -340,6 +354,9 @@ void InputController::handle_event(SDL_Event &event) {
         break;
         case SDL_JOYBUTTONUP:
             joypad(event.jbutton.which)._handle_button_up_event(event.jbutton.button);
+        break;
+        case SDL_JOYHATMOTION:
+            joypad(event.jhat.which)._handle_hat_changed_event(event.jhat.hat, (HatPosition)event.jhat.value);
         break;
         default:
             break;

@@ -28,6 +28,18 @@ enum XBoxButtons {
     RightStick
 };
 
+// enum XBoxHat {
+//     Centered = 0,
+//     Up = 1,
+//     Right = 2,
+//     Down = 4,
+//     Left = 8,
+//     RightUp = Right + Up,
+//     RightDown = Right + Down,
+//     LeftUp = Left + Up,
+//     LeftDown = Left + Down
+// };
+
 kglt::ActorID actor_id;
 kmVec3 pos = { 0.f, 0.f, -5.f };
 kmVec2 rot = { 1.f, 0.5f };
@@ -104,7 +116,7 @@ int main(int argc, const char *argv[]) {
     kglt::Joypad& joypad = window->joypad(0);
 
     // Currently A button on XBOX Controller
-    joypad.button_pressed_connect(XBoxButtons::Right, [=](kglt::Button button) mutable {
+    joypad.button_pressed_connect(XBoxButtons::RightStick, [=](kglt::Button button) mutable {
             rot.x = -rot.x;
             rot.y = -rot.y;
     });
@@ -128,8 +140,16 @@ int main(int argc, const char *argv[]) {
             if (range > 0)
                 std::cout << (float) range << std::endl;
     });
+
     // Triggers should work too
     // NOTE: horizontal axis have an even number..
+    // Hat experimental
+    joypad.hat_changed_connect(0, [=](kglt::HatPosition position, kglt::Hat hat) mutable {
+            std::cout << "Hat: " << (int) hat << std::endl;
+            std::cout << "Position " << (int) position << std::endl;
+            if (position == kglt::HatPosition::Down)
+                std::cout << "LeftDown" << std::endl;
+    });
 
     while(window->update()) {
         auto dt = window->delta_time();
