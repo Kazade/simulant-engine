@@ -1,17 +1,39 @@
 #include <kglt/kglt.h>
 #include <kglt/shortcuts.h>
+#include <iostream>
 
-kglt::Actor* g_actor;
+enum XBoxAxis { 
+    // Left Thumbstick
+    AxisX, // LXAxis,
+    AxisY, // LYAxis,
+    // Right Thumbstick
+    Axis4, // RXAxis,
+    Axis5, // RYAxis,
+    // Triggers
+    RightTrigger, // Axis3
+    LeftTrigger // Axis3
+};
+
+enum XBoxButtons { 
+    A, // Face Buttons
+    B,
+    X,
+    Y,
+    LB, // Left Bumper
+    RB, // Right Bumper
+    Back,
+    Start,
+    Home, // Guide - The big X
+    LeftStick,
+    RightStick
+};
+
+kglt::ActorID actor_id;
 kmVec3 pos = { 0.f, 0.f, -5.f };
-kmVec2 rot = { 0.f, 0.f };
+kmVec2 rot = { 1.f, 0.5f };
 const float sensibility = 50.f;
 
 void joypad_button(kglt::Button button) {
-    /* Reset positions and rotations */
-    pos = { 0, 0, -5.f };
-    rot = { 0, 0 };
-
-    g_actor->rotate_to(0, 0, 0, pos.z);
 }
 
 void joypad_axis_left(kglt::AxisRange axis_range, kglt::Axis axis) {
@@ -20,7 +42,7 @@ void joypad_axis_left(kglt::AxisRange axis_range, kglt::Axis axis) {
     else
         pos.x += axis_range / sensibility;
 
-    g_actor->move_to(pos);
+    // g_actor->move_to(pos);
 }
 
 void joypad_axis_right(kglt::AxisRange axis_range, kglt::Axis axis) {
@@ -29,8 +51,8 @@ void joypad_axis_right(kglt::AxisRange axis_range, kglt::Axis axis) {
     else
         rot.x += axis_range / sensibility;
 
-    g_actor->rotate_x(rot.y);
-    g_actor->rotate_y(rot.x);
+    // g_actor->rotate_x(rot.y);
+    // g_actor->rotate_y(rot.x);
 }
 
 int main(int argc, const char *argv[]) {
@@ -48,26 +70,6 @@ int main(int argc, const char *argv[]) {
         1.0,
         1000.0
     );
-
-    // It would be nice to check if a joypad is connected
-    // and the create the reference..
-    //
-    //if (window->joypad_count() > 0)
-    kglt::Joypad& joypad = window->joypad(0);
-
-    // Currently A button on XBOX Controller
-    joypad.button_pressed_connect(0, joypad_button);
-    // Left x-axis
-    joypad.axis_while_nonzero_connect(0, joypad_axis_left);
-    // Left y-axis
-    joypad.axis_while_nonzero_connect(1, joypad_axis_left);
-    // Right x-axis
-    joypad.axis_while_nonzero_connect(2, joypad_axis_right);
-    // Right y-axis
-    joypad.axis_while_nonzero_connect(3, joypad_axis_right);
-    // Triggers should work too
-    // NOTE: horizontal axis have an even number..
-
 
     // Thanks to other samples
     auto ui = window->scene().ui_stage();
@@ -88,14 +90,54 @@ int main(int argc, const char *argv[]) {
     light.set_attenuation_from_range(10.0);
 
     // NOTE: I don't know yet how to manage this kind of pointer-reference system
-    g_actor = &stage.actor(stage.geom_factory().new_capsule());
-    g_actor->mesh().lock()->set_material_id(matid);
+    actor_id = stage.geom_factory().new_cube(2);
+    // actor_id = stage.geom_factory().new_capsule(1,4);
+    kglt::Actor& actor = stage.actor(actor_id);
+    actor.mesh().lock()->set_material_id(matid);
 
-    g_actor->move_to(pos);
+    actor.move_to(pos);
+
+    // It would be nice to check if a joypad is connected
+    // and the create the reference..
+    //
+    //if (window->joypad_count() > 0)
+    kglt::Joypad& joypad = window->joypad(0);
+
+    // Currently A button on XBOX Controller
+    joypad.button_pressed_connect(XBoxButtons::Right, [=](kglt::Button button) mutable {
+            rot.x = -rot.x;
+            rot.y = -rot.y;
+    });
+    joypad.button_pressed_connect(1, [=](kglt::Button button) mutable {
+            /* Reset positions and rotations */
+            pos = { 0, 0, -5.f };
+            // rot = { 0, 0 };
+
+            actor.rotate_to(0, 0, 0, pos.z);
+            actor.move_to(pos);
+    });
+
+    // Left x-axis
+    joypad.axis_while_nonzero_connect(0, joypad_axis_left);
+    // Left y-axis
+    joypad.axis_while_nonzero_connect(1, joypad_axis_left);
+    // Right x-axis
+    joypad.axis_while_nonzero_connect(2, joypad_axis_right);
+    // Right y-axis
+    joypad.axis_while_nonzero_connect(4, [=](kglt::AxisRange range, kglt::Axis) mutable {
+            if (range > 0)
+                std::cout << (float) range << std::endl;
+    });
+    // Triggers should work too
+    // NOTE: horizontal axis have an even number..
 
     while(window->update()) {
-
+        auto dt = window->delta_time();
+        actor.rotate_x(rot.y*dt*10);
+        actor.rotate_y(rot.x*dt*10);
     }
+
+    stage.delete_actor(actor_id);
 
     return 0;
 }

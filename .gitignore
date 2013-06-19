@@ -5,3 +5,4 @@
 build
 tests/main.cpp
 *.swp
+.ycm_extra_conf.py*
