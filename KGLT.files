@@ -279,3 +279,4 @@ kglt/ui_stage.h
 kglt/ui_stage.cpp
 kglt/kazbase/os/stat.h
 kglt/kazbase/os/stat.cpp
+samples/joypad_sample.cpp
