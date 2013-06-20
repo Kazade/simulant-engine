@@ -64,7 +64,7 @@ unicode ResourceLocator::find_executable_directory() {
 }
 
 unicode ResourceLocator::find_working_directory() {
-    return os::path::working_directory();
+    return os::path::get_cwd();
 }
 
 }

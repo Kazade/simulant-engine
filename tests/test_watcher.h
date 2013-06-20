@@ -46,7 +46,7 @@ public:
 
         assert_equal(0, delete_counter);
 
-        os::delete_path(test_file);
+        os::remove(test_file);
         watcher->update();
 
         assert_equal(1, delete_counter);
