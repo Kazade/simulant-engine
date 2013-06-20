@@ -1,6 +1,8 @@
 #ifndef KGLT_KEYBOARD_H
 #define KGLT_KEYBOARD_H
 
+#include <boost/cstdint.hpp>
+
 namespace kglt {
 	
 /*
