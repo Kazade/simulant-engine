@@ -92,9 +92,25 @@ class Mouse :
 typedef uint8_t Axis;
 typedef uint8_t Button;
 typedef float AxisRange;
+typedef uint8_t Hat;
+// typedef uint8_t HatPosition;
+// Match SDL codes
+enum HatPosition {
+    Centered = 0,
+    Up = 1,
+    Right = 2,
+    Down = 4,
+    Left = 8,
+    RightUp = Right + Up,
+    RightDown = Right + Down,
+    LeftUp = Left + Up,
+    LeftDown = Left + Down
+};
+
 
 typedef std::function<void (AxisRange, Axis)> JoypadCallback;
 typedef std::function<void (uint8_t)> JoypadButtonCallback;
+typedef std::function<void (HatPosition, Hat)> JoypadHatCallback;
 
 class Joypad :
     public Device,
@@ -110,13 +126,17 @@ public:
     InputConnection button_pressed_connect(Button button, JoypadButtonCallback callback);
     InputConnection button_released_connect(Button button, JoypadButtonCallback callback);
 
+    InputConnection hat_changed_connect(Hat hat, JoypadHatCallback callback);
+
 private:
     typedef std::pair<InputConnection, JoypadCallback> AxisSignalEntry;
     typedef std::pair<InputConnection, JoypadButtonCallback> ButtonSignalEntry;
+    typedef std::pair<InputConnection, JoypadHatCallback> HatSignalEntry;
 
     void _handle_axis_changed_event(Axis axis, int32_t value);
     void _handle_button_down_event(Button button);
     void _handle_button_up_event(Button button);
+    void _handle_hat_changed_event(Hat hat, HatPosition value);
 
     void _update();
     void _disconnect(const InputConnection &connection);
@@ -132,6 +152,8 @@ private:
 
     std::map<Button, std::map<InputConnection, JoypadButtonCallback> > button_pressed_signals_;
     std::map<Button, std::map<InputConnection, JoypadButtonCallback> > button_released_signals_;
+
+    std::map<Hat, std::map<InputConnection, JoypadHatCallback> > hat_changed_signals_;
 
     friend class InputController;
 };

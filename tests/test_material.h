@@ -11,7 +11,7 @@ public:
     void set_up() {
         if(!window) {
             window = kglt::Window::create();
-            window->set_logging_level(LOG_LEVEL_NONE);
+            window->set_logging_level(kglt::LOG_LEVEL_NONE);
         }
 
         //window->reset();
@@ -24,7 +24,7 @@ public:
 
         this->assert_equal((uint32_t)1, mat->technique_count()); //Should return the default technique
         this->assert_equal(kglt::DEFAULT_MATERIAL_SCHEME, mat->technique().scheme());
-        mat->technique().new_pass(ShaderID()); //Create a pass
+        mat->technique().new_pass(kglt::ShaderID()); //Create a pass
         this->assert_equal((uint32_t)1, mat->technique().pass_count()); //Should return the default pass
         this->assert_true(kglt::Colour::white == mat->technique().pass(0).diffuse()); //this->assert_true the default pass sets white as the default
         this->assert_true(kglt::Colour::white == mat->technique().pass(0).ambient()); //this->assert_true the default pass sets white as the default
@@ -47,7 +47,7 @@ public:
 
         kglt::MaterialID mid = scene.new_material();
         auto mat = scene.material(mid);
-        uint32_t pass_id = mat->technique().new_pass(ShaderID());
+        uint32_t pass_id = mat->technique().new_pass(kglt::ShaderID());
         kglt::MaterialPass& pass = mat->technique().pass(pass_id);
 
         assert_false(pass.is_reflective());

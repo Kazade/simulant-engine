@@ -11,14 +11,14 @@ public:
     void set_up() {
         if(!window) {
             window = kglt::Window::create();
-            window->set_logging_level(LOG_LEVEL_NONE);
+            window->set_logging_level(kglt::LOG_LEVEL_NONE);
         }
 
         //window->reset();
     }
 
     void test_offsets() {
-        VertexData::ptr data = VertexData::create(window->scene());
+        kglt::VertexData::ptr data = kglt::VertexData::create(window->scene());
 
         assert_equal(0, (int32_t) data->position_offset());
         assert_equal(sizeof(float) * 3, data->normal_offset());

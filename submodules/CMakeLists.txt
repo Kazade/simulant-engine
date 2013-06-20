@@ -1,4 +1,4 @@
 
 
 INCLUDE_DIRECTORIES(luabind)
-ADD_SUBDIRECTORY(luabind/src)
+#ADD_SUBDIRECTORY(luabind/src)

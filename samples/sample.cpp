@@ -3,7 +3,7 @@
 
 int main(int argc, char* argv[]) {
     logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));
-    
+
     kglt::Window::ptr window = kglt::Window::create();
     window->set_title("KGLT Sample");
 
