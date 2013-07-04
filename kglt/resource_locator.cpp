@@ -60,7 +60,7 @@ std::vector<std::string> ResourceLocator::read_file_lines(const unicode &filenam
 }
 
 unicode ResourceLocator::find_executable_directory() {
-    return os::path::exe_path();
+    return os::path::exe_dirname();
 }
 
 unicode ResourceLocator::find_working_directory() {

@@ -280,3 +280,5 @@ kglt/ui_stage.cpp
 kglt/kazbase/os/stat.h
 kglt/kazbase/os/stat.cpp
 samples/joypad_sample.cpp
+kglt/kazbase/json/json.h
+kglt/kazbase/json/json.cpp
