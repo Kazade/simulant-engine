@@ -69,7 +69,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     SubMesh& sm = mesh->submesh(smi);
 
     //Read all the file content
-    std::string file_content = file_utils::read(filename_.encode());
+    std::string file_content = file_utils::read(filename_).encode();
 
     //Split on newlines
     std::vector<std::string> lines = str::split(file_content, "\n");
