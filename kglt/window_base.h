@@ -176,6 +176,7 @@ private:
     std::shared_ptr<Watcher> watcher_;
 
     std::shared_ptr<screens::Loading> loading_;
+    sigc::connection loading_update_connection_;
 };
 
 }

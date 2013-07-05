@@ -94,7 +94,7 @@ bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
         scene_->initialize_defaults();
 
         loading_ = screens::Loading::create(this->scene());
-        signal_step().connect(std::bind(&screens::Loading::update, loading_, std::placeholders::_1));
+        loading_update_connection_ = signal_step().connect(std::bind(&screens::Loading::update, loading_, std::placeholders::_1));
 
         //This needs to happen after SDL or whatever is initialized
         input_controller_ = InputController::create();
@@ -187,6 +187,9 @@ bool WindowBase::update() {
         signal_shutdown_();
 
         watcher_.reset();
+
+        loading_update_connection_.disconnect();
+        loading_.reset();
 
         //Shutdown the input controller
         input_controller_.reset();

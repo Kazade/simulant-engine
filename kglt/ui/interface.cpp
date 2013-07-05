@@ -161,8 +161,8 @@ private:
 };
 
 
-static std::shared_ptr<RocketSystemInterface> rocket_system_interface_;
-static std::shared_ptr<RocketRenderInterface> rocket_render_interface_;
+static RocketSystemInterface* rocket_system_interface_;
+static RocketRenderInterface* rocket_render_interface_;
 
 Interface::Interface(Scene &scene):
     scene_(scene),
@@ -170,13 +170,17 @@ Interface::Interface(Scene &scene):
 
 }
 
-bool Interface::init() {
-    if(!rocket_system_interface_) {
-        rocket_system_interface_.reset(new RocketSystemInterface(scene_));
-        Rocket::Core::SetSystemInterface(rocket_system_interface_.get());
+static int32_t interface_count = 0;
 
-        rocket_render_interface_.reset(new RocketRenderInterface(scene_));
-        Rocket::Core::SetRenderInterface(rocket_render_interface_.get());
+bool Interface::init() {
+    interface_count++;
+
+    if(!rocket_system_interface_) {
+        rocket_system_interface_ = new RocketSystemInterface(scene_);
+        Rocket::Core::SetSystemInterface(rocket_system_interface_);
+
+        rocket_render_interface_ = new RocketRenderInterface(scene_);
+        Rocket::Core::SetRenderInterface(rocket_render_interface_);
 
         Rocket::Core::Initialise();
 
@@ -310,7 +314,12 @@ void Interface::set_styles(const std::string& stylesheet_content) {
 Interface::~Interface() {
     impl_->context_->RemoveReference();
 
-    Rocket::Core::Shutdown();
+    //Shutdown if this is the last interface
+    if(interface_count-- == 0) {
+        rocket_system_interface_->RemoveReference();
+        rocket_render_interface_->RemoveReference();
+        Rocket::Core::Shutdown();
+    }
 }
 
 }
