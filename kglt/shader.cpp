@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <boost/format.hpp>
 
+#include "utils/gl_thread_check.h"
 #include "utils/gl_error.h"
 #include "kazbase/logging.h"
 #include "kglt/kazbase/exceptions.h"
@@ -72,6 +73,8 @@ ShaderProgram::ShaderProgram(ResourceManager* resource_manager, ShaderID id):
 }
 
 ShaderProgram::~ShaderProgram() {
+    GLThreadCheck::check();
+
     try {
         for(uint32_t i = 0; i < ShaderType::SHADER_TYPE_MAX; ++i) {
             if(shader_ids_[i] != 0) {
@@ -87,6 +90,8 @@ ShaderProgram::~ShaderProgram() {
 }
 
 void ShaderProgram::activate() {
+    GLThreadCheck::check();
+
     glUseProgram(program_id_);
     check_and_log_error(__FILE__, __LINE__);
 
@@ -94,16 +99,22 @@ void ShaderProgram::activate() {
 }
 
 void ShaderProgram::deactivate() {
+    GLThreadCheck::check();
+
     glUseProgram(0);
     active_shader_ = nullptr;
 }
 
 void ShaderProgram::bind_attrib(uint32_t idx, const std::string& name) {
+    GLThreadCheck::check();
+
     glBindAttribLocation(program_id_, idx, name.c_str());
     check_and_log_error(__FILE__, __LINE__);
 }
 
 void ShaderProgram::add_and_compile(ShaderType type, const std::string& source) {
+    GLThreadCheck::check();
+
     check_and_log_error(__FILE__, __LINE__);
 
     if(program_id_ == 0) {
@@ -145,8 +156,13 @@ void ShaderProgram::add_and_compile(ShaderType type, const std::string& source) 
     GLint compiled = 0;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
     if(!compiled) {
-        GLint length;
+        GLint length;                
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
+
+        if(length < 0) {
+            L_ERROR("Unable to get the info log for the errornous shader, are you calling from the right thread?");
+            throw RuntimeError("CRITICAL: Unable to get GLSL log");
+        }
 
         std::vector<char> log;
         log.resize(length);
@@ -166,6 +182,8 @@ void ShaderProgram::add_and_compile(ShaderType type, const std::string& source) 
 }
 
 void ShaderProgram::relink() {
+    GLThreadCheck::check();
+
     GLint linked = 0;
 
     glLinkProgram(program_id_);
@@ -187,6 +205,8 @@ void ShaderProgram::relink() {
 }
 
 int32_t ShaderProgram::get_attrib_loc(const std::string& name) {
+    GLThreadCheck::check();
+
     GLint location = glGetAttribLocation(program_id_, name.c_str());
     if(location < 0) {
         L_WARN("No attribute with name: " + name);
@@ -196,6 +216,8 @@ int32_t ShaderProgram::get_attrib_loc(const std::string& name) {
 }
 
 int32_t ShaderProgram::get_uniform_loc(const std::string& name) {
+    GLThreadCheck::check();
+
     auto it = cached_uniform_locations_.find(name);
     if(it != cached_uniform_locations_.end()) {
         return (*it).second;
@@ -216,6 +238,8 @@ bool ShaderProgram::has_uniform(const std::string& name) {
 }
 
 void ShaderProgram::set_uniform(const std::string& name, const float x) {
+    GLThreadCheck::check();
+
     activate();
     int32_t loc = get_uniform_loc(name);
     if(loc > -1) {
@@ -224,6 +248,8 @@ void ShaderProgram::set_uniform(const std::string& name, const float x) {
 }
 
 void ShaderProgram::set_uniform(const std::string& name, const int32_t x) {
+    GLThreadCheck::check();
+
     activate();
     int32_t loc = get_uniform_loc(name);
     if(loc > -1) {
@@ -232,6 +258,8 @@ void ShaderProgram::set_uniform(const std::string& name, const int32_t x) {
 }
 
 void ShaderProgram::set_uniform(const std::string& name, const kmMat4* matrix) {
+    GLThreadCheck::check();
+
     activate();
     GLint loc = get_uniform_loc(name);
     if(loc > -1) {
@@ -243,6 +271,8 @@ void ShaderProgram::set_uniform(const std::string& name, const kmMat4* matrix) {
 }
 
 void ShaderProgram::set_uniform(const std::string& name, const kmMat3* matrix) {
+    GLThreadCheck::check();
+
     activate();
     GLint loc = get_uniform_loc(name);
     if(loc > -1) {
@@ -254,6 +284,8 @@ void ShaderProgram::set_uniform(const std::string& name, const kmMat3* matrix) {
 }
 
 void ShaderProgram::set_uniform(const std::string& name, const kmVec3* vec) {
+    GLThreadCheck::check();
+
     activate();
     GLint loc = get_uniform_loc(name);
     if(loc >= 0) {
@@ -262,6 +294,8 @@ void ShaderProgram::set_uniform(const std::string& name, const kmVec3* vec) {
 }
 
 void ShaderProgram::set_uniform(const std::string& name, const kmVec4* vec) {
+    GLThreadCheck::check();
+
     activate();
     GLint loc = get_uniform_loc(name);
     if(loc >= 0) {
@@ -270,6 +304,8 @@ void ShaderProgram::set_uniform(const std::string& name, const kmVec4* vec) {
 }
 
 void ShaderProgram::set_uniform(const std::string& name, const std::vector<kmMat4>& matrices) {
+    GLThreadCheck::check();
+
     activate();
     GLint loc = get_uniform_loc(name);
     if(loc >= 0) {

@@ -17,6 +17,7 @@
 #include "watcher.h"
 
 #include "screens/loading.h"
+#include "utils/gl_thread_check.h"
 
 namespace kglt {
 
@@ -63,6 +64,8 @@ LoaderPtr WindowBase::loader_for(const unicode &filename) {
 }
 
 bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
+    GLThreadCheck::init();
+
     set_width(width);
     set_height(height);
 

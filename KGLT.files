@@ -282,3 +282,5 @@ kglt/kazbase/os/stat.cpp
 samples/joypad_sample.cpp
 kglt/kazbase/json/json.h
 kglt/kazbase/json/json.cpp
+kglt/utils/gl_thread_check.h
+kglt/utils/gl_thread_check.cpp
