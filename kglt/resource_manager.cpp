@@ -2,6 +2,8 @@
 #include "resource_manager.h"
 #include "loader.h"
 
+#include "kazbase/datetime.h"
+
 namespace kglt {
 
 ResourceManagerImpl::ResourceManagerImpl(WindowBase* window):
@@ -13,21 +15,27 @@ ResourceManagerImpl::ResourceManagerImpl(WindowBase* window):
 }
 
 void ResourceManagerImpl::update() {
-    //Garbage collect all the things
-    //L_DEBUG("Collecting meshes");
-    MeshManager::garbage_collect();
+    static datetime::DateTime last_collection = datetime::now();
 
-    //L_DEBUG("Collecting materials");
-    MaterialManager::garbage_collect();
+    if(datetime::timedelta_in_seconds(datetime::now() - last_collection) >= 5) {
+        //Garbage collect all the things
+        L_DEBUG("Collecting meshes");
+        MeshManager::garbage_collect();
 
-    //L_DEBUG("Collecting textures");
-    TextureManager::garbage_collect();
+        L_DEBUG("Collecting materials");
+        MaterialManager::garbage_collect();
 
-    //L_DEBUG("Collecting shaders");
-    ShaderManager::garbage_collect();
+        L_DEBUG("Collecting textures");
+        TextureManager::garbage_collect();
 
-    //L_DEBUG("Collecting sounds");
-    SoundManager::garbage_collect();
+        L_DEBUG("Collecting shaders");
+        ShaderManager::garbage_collect();
+
+        L_DEBUG("Collecting sounds");
+        SoundManager::garbage_collect();
+
+        last_collection = datetime::now();
+    }
 
     /*
       Update all animated materials
