@@ -6,6 +6,7 @@
 #include <functional>
 #include <map>
 #include <mutex>
+#include <condition_variable>
 
 namespace kglt {
 
@@ -22,6 +23,8 @@ public:
 
     void execute();
 
+    void wait();
+
 private:
     typedef std::map<ConnectionID, std::function<bool ()> > SignalMap;
     typedef std::map<ConnectionID, std::function<void ()> > SignalOnceMap;
@@ -32,6 +35,8 @@ private:
     std::mutex signals_mutex_;
     std::mutex signals_once_mutex_;
 
+    std::mutex cv_mutex_;
+    std::condition_variable cv_;
 };
 
 }

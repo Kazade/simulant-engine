@@ -27,6 +27,15 @@ public:
         GL_thread->do_check();
     }
 
+    static bool is_current() {
+        try {
+            GL_thread->do_check();
+            return true;
+        } catch(WrongThreadError& e) {
+            return false;
+        }
+    }
+
 private:
     GLThreadCheck(std::thread::id render_thread):
         render_thread_id_(render_thread) {}

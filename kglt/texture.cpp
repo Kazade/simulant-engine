@@ -2,7 +2,7 @@
 #include <cassert>
 #include <stdexcept>
 #include <boost/lexical_cast.hpp>
-
+#include "utils/gl_thread_check.h"
 #include "kazbase/logging.h"
 
 #include "window_base.h"
@@ -112,10 +112,18 @@ void Texture::__do_upload(bool free_after, bool generate_mipmaps, bool repeat, b
 }
 
 void Texture::upload(bool free_after, bool generate_mipmaps, bool repeat, bool linear) {
-    resource_manager().window().idle().add_once([=] {
-        auto tex = resource_manager().texture(this->id());
-        tex->__do_upload(free_after, generate_mipmaps, repeat, linear);
-    });
+    if(GLThreadCheck::is_current()) {
+        __do_upload(free_after, generate_mipmaps, repeat, linear);
+    } else {
+        resource_manager().window().idle().add_once([=] {
+            this->__do_upload(free_after, generate_mipmaps, repeat, linear);
+        });
+
+        //FIXME: recursively unlock the mutex?
+
+        //Wait for the main thread to process the upload
+        resource_manager().window().idle().wait();
+    }
 }
 
 void Texture::flip_vertically() {

@@ -27,6 +27,11 @@ ConnectionID IdleTaskManager::add_once(std::function<void ()> callback) {
     return new_id;
 }
 
+void IdleTaskManager::wait() {
+    std::unique_lock<std::mutex> lk(cv_mutex_);
+    cv_.wait(lk);
+}
+
 void IdleTaskManager::execute() {
     {
         //FIXME: If (*it).second tries to queue on idle this will deadlock
@@ -53,6 +58,8 @@ void IdleTaskManager::execute() {
     for(auto p: to_iter) {
         p.second();
     }
+
+    cv_.notify_all(); //Unblock any threads waiting
 }
 
 void IdleTaskManager::remove(ConnectionID connection) {
