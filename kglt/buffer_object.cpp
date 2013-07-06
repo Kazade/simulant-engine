@@ -1,6 +1,7 @@
 #include <GLee.h>
 #include "kazbase/logging.h"
 #include "buffer_object.h"
+#include "utils/gl_thread_check.h"
 
 namespace kglt {
 
@@ -28,12 +29,16 @@ BufferObject::~BufferObject() {
 }
 
 void BufferObject::bind() const {
+    GLThreadCheck::check();
+
     assert(initialized_);
     assert(buffer_id_);
     glBindBuffer(gl_target_, buffer_id_);
 }
 
 void BufferObject::create(uint32_t byte_size, const void* data) {
+    GLThreadCheck::check();
+
     if(!buffer_id_) {
         glGenBuffers(1, &buffer_id_);
     }
@@ -81,6 +86,8 @@ void BufferObject::create(uint32_t byte_size, const void* data) {
 }
 
 void BufferObject::modify(uint32_t offset, uint32_t byte_size, const void* data) {
+    GLThreadCheck::check();
+
     assert(buffer_id_);
 
     glBindBuffer(gl_target_, buffer_id_);
