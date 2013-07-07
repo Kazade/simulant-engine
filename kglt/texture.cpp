@@ -115,11 +115,13 @@ void Texture::upload(bool free_after, bool generate_mipmaps, bool repeat, bool l
     if(GLThreadCheck::is_current()) {
         __do_upload(free_after, generate_mipmaps, repeat, linear);
     } else {
+
+        //FIXME: This might get hairy if more than one thread is messing with the texture
+        //as we do an unlocked access here (which is fine when it's only this thread and the
+        //main thread, but if there's another one then, that could be bad news)
         resource_manager().window().idle().add_once([=] {
             this->__do_upload(free_after, generate_mipmaps, repeat, linear);
         });
-
-        //FIXME: recursively unlock the mutex?
 
         //Wait for the main thread to process the upload
         resource_manager().window().idle().wait();

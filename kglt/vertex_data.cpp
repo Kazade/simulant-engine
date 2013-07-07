@@ -3,6 +3,7 @@
 #include "vertex_data.h"
 #include "scene.h"
 #include "window_base.h"
+#include "utils/gl_thread_check.h"
 
 namespace kglt {
 
@@ -282,11 +283,16 @@ void IndexData::reset(BufferObjectUsage usage) {
 }
 
 void IndexData::done() {
-    //Ensure we only call GL stuff from the main thread
-    scene_.window().idle().add_once([&](){
+    if(GLThreadCheck::is_current()) {
         buffer_object_.create(indices_.size() * sizeof(uint16_t), &indices_[0]);
-        assert(glGetError() == GL_NO_ERROR);
-    });
+    } else {
+        //Ensure we only call GL stuff from the main thread
+        scene_.window().idle().add_once([&](){
+            buffer_object_.create(indices_.size() * sizeof(uint16_t), &indices_[0]);
+        });
+
+        scene_.window().idle().wait();
+    }
 
     signal_update_complete_();
 }
