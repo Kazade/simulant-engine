@@ -34,6 +34,8 @@ public:
 
     void destroy();
 private:
+    void update_following(double t);
+
     Scene* scene_;
 
     Frustum frustum_;

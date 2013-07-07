@@ -56,9 +56,11 @@ void Camera::destroy() {
 void Camera::follow(ActorRef actor, const kglt::Vec3& offset) {
     following_actor_ = actor;
     following_offset_ = offset;
+
+    update_following(1.0);
 }
 
-void Camera::do_update(double dt) {
+void Camera::update_following(double t) {
     ActorPtr following_actor = following_actor_.lock();
     if(following_actor) {
         kmQuaternion actor_rotation = following_actor->absolute_rotation();
@@ -69,7 +71,7 @@ void Camera::do_update(double dt) {
 
         kmQuaternion initial_rotation;
         kmQuaternionAssign(&initial_rotation, &rotation_);
-        kmQuaternionSlerp(&rotation_, &initial_rotation, &actor_rotation, dt);
+        kmQuaternionSlerp(&rotation_, &initial_rotation, &actor_rotation, t);
 
         kmVec3 rotated_offset;
         kmQuaternionMultiplyVec3(&rotated_offset, &rotation_, &following_offset_);
@@ -83,6 +85,10 @@ void Camera::do_update(double dt) {
         //The actor was destroyed, so reset
         following_actor_ = ActorRef();
     }
+}
+
+void Camera::do_update(double dt) {
+    update_following(dt);
 }
 
 kmVec3 Camera::project_point(ViewportID vid, const kmVec3& point) {
