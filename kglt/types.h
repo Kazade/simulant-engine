@@ -59,6 +59,10 @@ struct Vec3 : public kmVec3 {
     Vec3(const kmVec3& v) {
         kmVec3Fill(this, v.x, v.y, v.z);
     }
+
+    Vec3 operator+(const Vec3& rhs) const {
+        return Vec3(x + rhs.x, y + rhs.y, z + rhs.z);
+    }
 };
 
 enum BlendType {
