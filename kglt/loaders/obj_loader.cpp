@@ -68,18 +68,15 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     SubMesh& sm = mesh->submesh(smi);
 
-    //Read all the file content
-    std::string file_content = file_utils::read(filename_).encode();
-
     //Split on newlines
-    std::vector<std::string> lines = str::split(file_content, "\n");
+    std::vector<unicode> lines = file_utils::read_lines(filename_);
 
     std::vector<Vec3> vertices;
     std::vector<Vec2> tex_coords;
     std::vector<Vec3> normals;
 
     bool has_materials = false;
-    for(std::string tmp: lines) {
+    for(unicode tmp: lines) {
         unicode line(tmp); //Unicode has nicer methods
 
         //Ignore comments
@@ -87,7 +84,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             continue;
         }
 
-        std::vector<unicode> parts = line.strip().split(" \t"); //Split on whitespace
+        std::vector<unicode> parts = line.strip().split("", -1, false); //Split on whitespace
         if(parts[0] == "v") {
             if(parts.size() != 4) {
                 throw IOError(_u("Found {0} components for vertex, expected 3").format(parts.size()));
