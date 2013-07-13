@@ -63,6 +63,33 @@ struct Vec3 : public kmVec3 {
     Vec3 operator+(const Vec3& rhs) const {
         return Vec3(x + rhs.x, y + rhs.y, z + rhs.z);
     }
+
+    Vec3 operator-(const Vec3& rhs) const {
+        return Vec3(x - rhs.x, y - rhs.y, z - rhs.z);
+    }
+
+    Vec3 operator*(float rhs) const {
+        return Vec3(x * rhs, y * rhs, z * rhs);
+    }
+
+    float length() const {
+        return kmVec3Length(this);
+    }
+
+    void normalize() {
+        kmVec3Normalize(this, this);
+    }
+
+    float dot(const kglt::Vec3& rhs) const {
+        return kmVec3Dot(this, &rhs);
+    }
+
+    void limit(float l) {
+        if(length() > l) {
+            normalize();
+            kmVec3Scale(this, this, l);
+        }
+    }
 };
 
 enum BlendType {
