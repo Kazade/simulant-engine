@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>db/gWtbj - vpaste.net</title>
+<meta name="Generator" content="Vim/7.3" />
+<meta name="plugin-version" content="vim7.3_v12" />
+<meta name="syntax" content="none" />
+<meta name="settings" content="no_progress,dynamic_folds,use_xhtml,use_css" />
+<style type="text/css">
+
+pre { font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+.FoldColumn { color: #0000c0; background-color: #a8a8a8; }
+.FoldColumn { text-decoration: none; white-space: pre; }
+.open-fold   .Folded      { display: none; }
+.open-fold   .fulltext      { display: inline; }
+.open-fold   .toggle-open   { display: none; }
+.closed-fold .toggle-closed { display: inline; }
+
+.closed-fold .fulltext      { display: none; }
+.closed-fold .Folded      { display: inline; }
+.closed-fold .toggle-open   { display: inline; }
+.closed-fold .toggle-closed { display: none; }
+
+</style>
+
+<script type='text/javascript'>
+//<![CDATA[
+function toggleFold(objID)
+{
+  var fold;
+  fold = document.getElementById(objID);
+  if(fold.className == 'closed-fold')
+  {
+    fold.className = 'open-fold';
+  }
+  else if (fold.className == 'open-fold')
+  {
+    fold.className = 'closed-fold';
+  }
+}
+//]]>
+</script>
+</head>
+<body>
+<pre>
+<a name="1"></a># Blender MTL File: 'None'
+<a name="2"></a># Material Count: 1
+<a name="3"></a>
+<a name="4"></a>newmtl None
+<a name="5"></a>Ns 0
+<a name="6"></a>Ka 0.000000 0.000000 0.000000
+<a name="7"></a>Kd 0.8 0.8 0.8
+<a name="8"></a>Ks 0.8 0.8 0.8
+<a name="9"></a>d 1
+<a name="10"></a>illum 2
+</pre>
+</body>
+</html>

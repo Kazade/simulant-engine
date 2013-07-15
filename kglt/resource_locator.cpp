@@ -11,6 +11,10 @@ ResourceLocator::ResourceLocator() {
     resource_path_.push_back("/usr/share"); //Look in /usr/share (kglt files might be installed to /usr/share/kglt)
 }
 
+void ResourceLocator::add_search_path(const unicode& path) {
+    resource_path_.push_back(path);
+}
+
 unicode ResourceLocator::locate_file(const unicode &filename) {
     /**
       Locates a file on one of the resource paths, throws an IOError if the file
