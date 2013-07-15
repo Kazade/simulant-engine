@@ -53,14 +53,15 @@ void Camera::destroy() {
     scene_->delete_camera(id());
 }
 
-void Camera::follow(ActorRef actor, const kglt::Vec3& offset) {
+void Camera::follow(ActorRef actor, const kglt::Vec3& offset, float lag_in_seconds) {
     following_actor_ = actor;
     following_offset_ = offset;
+    following_lag_ = lag_in_seconds;
 
     update_following(1.0);
 }
 
-void Camera::update_following(double t) {
+void Camera::update_following(double dt) {
     ActorPtr following_actor = following_actor_.lock();
     if(following_actor) {
         kmQuaternion actor_rotation = following_actor->absolute_rotation();
@@ -71,6 +72,8 @@ void Camera::update_following(double t) {
 
         kmQuaternion initial_rotation;
         kmQuaternionAssign(&initial_rotation, &rotation_);
+
+        float t = ((following_lag_ == 0) ? 1.0 : dt * (1.0 / following_lag_));
         kmQuaternionSlerp(&rotation_, &initial_rotation, &actor_rotation, t);
 
         kmVec3 rotated_offset;
