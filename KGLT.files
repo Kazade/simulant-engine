@@ -288,3 +288,5 @@ samples/path_following.cpp
 kglt/extra/ai/path_follower.h
 kglt/extra/ai/path.h
 kglt/base.h
+kglt/extra/ai/path_follower.cpp
+kglt/extra/ai/path.cpp

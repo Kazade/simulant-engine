@@ -7,17 +7,41 @@
 using namespace kglt::extra;
 
 class Car:
-    public kglt::ActorHolder {
+    public kglt::ActorHolder,
+    public Managed<Car> {
 
 public:
-    Car(Scene& scene):
-        kglt::ActorHolder(scene) {
+    Car(kglt::Scene& scene, kglt::StageID stage):
+        kglt::ActorHolder(scene),
+        stage_(stage) {
 
+        //Pass a reference to this to the PathFollower
         follower_.reset(new PathFollower(this));
     }
 
+    bool init() {
+        actor_ = stage()->geom_factory().new_cube(1);
+
+        Path p;
+
+        p.add_point(kglt::Vec3(-10, -10, -50));
+        p.add_point(kglt::Vec3( 10, -10, -50));
+        p.add_point(kglt::Vec3( 10,  10, -50));
+        p.add_point(kglt::Vec3(-10,  10, -50));
+
+        follower_->follow(p);
+        follower_->enable_debug();
+
+        return true;
+    }
+
+    kglt::ActorID actor_id() const { return actor_; }
+    kglt::StageID stage_id() const { return stage_; }
 private:
     PathFollower::ptr follower_;
+
+    kglt::StageID stage_;
+    kglt::ActorID actor_;
 };
 
 
@@ -31,16 +55,21 @@ public:
 
 private:
     bool do_init() {
+        car_ = Car::create(scene(), stage().id());
 
+        scene().camera().set_perspective_projection(
+            45.0,
+            float(window().width()) / float(window().height()),
+            1.0,
+            1000.0
+        );
         return true;
     }
 
     void do_step(double dt) {}
     void do_cleanup() {}
 
-    Sprite::ptr sprite_;
-
-
+    Car::ptr car_;
 };
 
 
