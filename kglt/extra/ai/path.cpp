@@ -4,7 +4,8 @@
 namespace kglt {
 namespace extra {
 
-Path::Path() {
+Path::Path(float radius):
+    radius_(radius) {
 
 }
 

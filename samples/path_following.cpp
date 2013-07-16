@@ -16,7 +16,7 @@ public:
         stage_(stage) {
 
         //Pass a reference to this to the PathFollower
-        follower_.reset(new PathFollower(this));
+        follower_.reset(new PathFollower(this, 1, 1));
     }
 
     bool init() {
@@ -33,6 +33,10 @@ public:
         follower_->enable_debug();
 
         return true;
+    }
+
+    void update(double dt) {
+        actor()->move_to(kglt::Vec3(actor()->absolute_position()) + (follower_->force_to_apply() * dt));
     }
 
     kglt::ActorID actor_id() const { return actor_; }
@@ -66,7 +70,12 @@ private:
         return true;
     }
 
-    void do_step(double dt) {}
+    void do_step(double dt) {
+        if(initialized()) {
+            car_->update(dt);
+        }
+    }
+
     void do_cleanup() {}
 
     Car::ptr car_;
