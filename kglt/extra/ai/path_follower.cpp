@@ -20,7 +20,7 @@ float map(float value, float min, float max, float new_min, float new_max) {
     return new_min + ((new_max - new_min) * percent);
 }
 
-kglt::Vec3 PathFollower::force_to_apply() const {
+kglt::Vec3 PathFollower::force_to_apply(const Vec3 &velocity) const {
     return force_to_apply_;
 }
 

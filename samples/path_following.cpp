@@ -35,14 +35,21 @@ public:
         return true;
     }
 
-    void update(double dt) {
-        actor()->move_to(kglt::Vec3(actor()->absolute_position()) + (follower_->force_to_apply() * dt));
+    void update(double dt) {        
+        velocity_ += follower_->force_to_apply(velocity_);
+        velocity_.limit(1.0);
+
+        actor()->move_to(kglt::Vec3(actor()->absolute_position()) + (velocity_ * dt));
     }
 
     kglt::ActorID actor_id() const { return actor_; }
     kglt::StageID stage_id() const { return stage_; }
+
 private:
     PathFollower::ptr follower_;
+
+    kglt::Vec3 velocity_;
+    kglt::Vec3 acceleration_;
 
     kglt::StageID stage_;
     kglt::ActorID actor_;
