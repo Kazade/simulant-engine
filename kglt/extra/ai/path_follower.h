@@ -14,31 +14,27 @@ class PathFollower:
     public Managed<PathFollower> {
 public:
     PathFollower(ActorHolder* parent, float max_speed, float max_force);
-    void follow(Path path);
+    void follow(Path path, bool loop=false);
     void enable_debug(bool value=true);
-
-    void _update(double dt);
 
     kglt::Vec3 force_to_apply(const kglt::Vec3& velocity) const;
 
 private:
-    void seek(const kglt::Vec3& target);
-
-    kglt::Vec3 get_normal_point(const kglt::Vec3& p, const kglt::Vec3& a, const kglt::Vec3& b);
-    bool point_on_line(const kglt::Vec3& p, const kglt::Vec3& a, const kglt::Vec3& b);
-
-    kglt::Vec3 forward();
+    kglt::Vec3 seek(const kglt::Vec3& target, const Vec3 &velocity) const;
 
     ActorHolder* actor_;
     float max_speed_;
     float max_force_;
 
     Path path_;
+    bool loop_ = false;
 
     kglt::MeshID debug_mesh_;
     kglt::ActorID debug_actor_;
+    kglt::SubMeshIndex normal_points_mesh_;
 
-    kglt::Vec3 force_to_apply_;
+    mutable std::vector<kglt::Vec3> normal_points_;
+    void update_debug_mesh() const;
 };
 
 }

@@ -22,12 +22,16 @@ public:
     bool init() {
         actor_ = stage()->geom_factory().new_cube(1);
 
-        Path p;
+        Path p(0.5);
 
         p.add_point(kglt::Vec3(-10, -10, -50));
         p.add_point(kglt::Vec3( 10, -10, -50));
         p.add_point(kglt::Vec3( 10,  10, -50));
         p.add_point(kglt::Vec3(-10,  10, -50));
+        p.add_point(kglt::Vec3(-9,  7, -50));
+        p.add_point(kglt::Vec3(-12,  5, -50));
+        p.add_point(kglt::Vec3(-5,  3, -50));
+        p.add_point(kglt::Vec3(-10, -10, -50));
 
         follower_->follow(p);
         follower_->enable_debug();
@@ -36,8 +40,8 @@ public:
     }
 
     void update(double dt) {        
-        velocity_ += follower_->force_to_apply(velocity_);
-        velocity_.limit(1.0);
+        velocity_ = velocity_ + follower_->force_to_apply(velocity_);
+        velocity_.limit(5.0);
 
         actor()->move_to(kglt::Vec3(actor()->absolute_position()) + (velocity_ * dt));
     }
@@ -48,7 +52,7 @@ public:
 private:
     PathFollower::ptr follower_;
 
-    kglt::Vec3 velocity_;
+    kglt::Vec3 velocity_ = kglt::Vec3(1, 0, 0);
     kglt::Vec3 acceleration_;
 
     kglt::StageID stage_;
