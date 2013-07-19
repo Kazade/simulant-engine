@@ -1,3 +1,5 @@
+#include "./OpenSteer/SteerLibrary.h"
+
 #include "../../scene.h"
 #include "../../window.h"
 #include "../../actor.h"
