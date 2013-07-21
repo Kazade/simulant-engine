@@ -79,6 +79,11 @@ struct Vec3 : public kmVec3 {
         return result;
     }
 
+    Vec3& operator*=(float rhs) {
+        kmVec3Scale(this, this, rhs);
+        return *this;
+    }
+
     Vec3 operator/(float rhs) const {
         Vec3 result;
         kmVec3Scale(&result, this, 1.0 / rhs);
@@ -130,7 +135,26 @@ struct Vec3 : public kmVec3 {
     static float distance(const kglt::Vec3& lhs, const kglt::Vec3& rhs) {
         return (rhs - lhs).length();
     }
+
+
+    //Necesary for OpenSteer
+    inline Vec3 parallel_component(const Vec3& unit_basis) const {
+        const float projection = this->dot(unit_basis);
+        return unit_basis * projection;
+    }
+
+    // return component of vector perpendicular to a unit basis vector
+    // (IMPORTANT NOTE: assumes "basis" has unit magnitude (length==1))
+
+    inline Vec3 perpendicular_component (const Vec3& unit_basis) const {
+        return (*this) - parallel_component(unit_basis);
+    }
 };
+
+kglt::Vec3 operator*(float lhs, const kglt::Vec3& rhs);
+kglt::Vec3 operator/(float lhs, const kglt::Vec3& rhs);
+kglt::Vec3 operator-(const kglt::Vec3& vec);
+
 
 enum BlendType {
     BLEND_NONE,
@@ -259,18 +283,6 @@ class WindowBase;
 class RenderSequence;
 class Partitioner;
 
-}
-
-kglt::Vec3 operator*(float lhs, const kglt::Vec3& rhs) {
-    kglt::Vec3 result;
-    kmVec3Scale(&result, &rhs, lhs);
-    return result;
-}
-
-kglt::Vec3 operator/(float lhs, const kglt::Vec3& rhs) {
-    kglt::Vec3 result;
-    kmVec3Scale(&result, &rhs, 1.0 / lhs);
-    return result;
 }
 
 #endif // TYPES_H_INCLUDED

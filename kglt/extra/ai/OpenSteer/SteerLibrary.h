@@ -561,7 +561,7 @@ steerToAvoidObstacles (const float minTimeToCollision,
         // forward direction), set length to maxForce, add a bit of forward
         // component (in capture the flag, we never want to slow down)
         const kglt::Vec3 offset = Super::position() - nearest.obstacle->center;
-        avoidance = offset.perpendicularComponent (Super::forward());
+        avoidance = offset.perpendicular_component(Super::forward());
         avoidance = avoidance.normalize ();
         avoidance *= Super::maxForce ();
         avoidance += Super::forward() * Super::maxForce () * 0.75;
@@ -774,7 +774,7 @@ steerToAvoidCloseNeighbors (const float minSeparationDistance,
             if (currentDistance < minCenterToCenter)
             {
                 annotateAvoidCloseNeighbor (other, minSeparationDistance);
-                return (-offset).perpendicularComponent (Super::forward());
+                return (-offset).perpendicular_component(Super::forward());
             }
         }
     }

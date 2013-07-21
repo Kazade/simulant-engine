@@ -36,9 +36,9 @@
 //
 // ----------------------------------------------------------------------------
 
-
+#include <cfloat>
 #include "OpenSteer/Pathway.h"
-
+#include "OpenSteer/Utilities.h"
 
 // ----------------------------------------------------------------------------
 // construct a PolylinePathway given the number of points (vertices),
@@ -46,7 +46,7 @@
 
 
 OpenSteer::PolylinePathway::PolylinePathway (const int _pointCount,
-                                  const Vec3 _points[],
+                                  const kglt::Vec3 _points[],
                                   const float _radius,
                                   const bool _cyclic)
 {
@@ -60,7 +60,7 @@ OpenSteer::PolylinePathway::PolylinePathway (const int _pointCount,
 
 void 
 OpenSteer::PolylinePathway::initialize (const int _pointCount,
-                                        const Vec3 _points[],
+                                        const kglt::Vec3 _points[],
                                         const float _radius,
                                         const bool _cyclic)
 {
@@ -71,8 +71,8 @@ OpenSteer::PolylinePathway::initialize (const int _pointCount,
     totalPathLength = 0;
     if (cyclic) pointCount++;
     lengths = new float    [pointCount];
-    points  = new Vec3 [pointCount];
-    normals = new Vec3 [pointCount];
+    points  = new kglt::Vec3 [pointCount];
+    normals = new kglt::Vec3 [pointCount];
 
     // loop over all points
     for (int i = 0; i < pointCount; i++)
@@ -106,14 +106,14 @@ OpenSteer::PolylinePathway::initialize (const int _pointCount,
 // that a negative distance indicates A is inside the Pathway.
 
 
-OpenSteer::Vec3 
-OpenSteer::PolylinePathway::mapPointToPath (const Vec3& point,
-                                            Vec3& tangent,
+kglt::Vec3
+OpenSteer::PolylinePathway::mapPointToPath (const kglt::Vec3& point,
+                                            kglt::Vec3& tangent,
                                             float& outside)
 {
     float d;
     float minDistance = FLT_MAX;
-    Vec3 onPath;
+    kglt::Vec3 onPath;
 
     // loop over all segments, find the one nearest to the given point
     for (int i = 1; i < pointCount; i++)
@@ -130,7 +130,7 @@ OpenSteer::PolylinePathway::mapPointToPath (const Vec3& point,
     }
 
     // measure how far original point is outside the Pathway's "tube"
-    outside = Vec3::distance (onPath, point) - radius;
+    outside = kglt::Vec3::distance (onPath, point) - radius;
 
     // return point on path
     return onPath;
@@ -142,7 +142,7 @@ OpenSteer::PolylinePathway::mapPointToPath (const Vec3& point,
 
 
 float 
-OpenSteer::PolylinePathway::mapPointToPathDistance (const Vec3& point)
+OpenSteer::PolylinePathway::mapPointToPathDistance (const kglt::Vec3& point)
 {
     float d;
     float minDistance = FLT_MAX;
@@ -171,7 +171,7 @@ OpenSteer::PolylinePathway::mapPointToPathDistance (const Vec3& point)
 // given a distance along the path, convert it to a point on the path
 
 
-OpenSteer::Vec3 
+kglt::Vec3
 OpenSteer::PolylinePathway::mapPathDistanceToPoint (float pathDistance)
 {
     // clip or wrap given path distance according to cyclic flag
@@ -189,7 +189,7 @@ OpenSteer::PolylinePathway::mapPathDistanceToPoint (float pathDistance)
     // step through segments, subtracting off segment lengths until
     // locating the segment that contains the original pathDistance.
     // Interpolate along that segment to find 3d point value to return.
-    Vec3 result;
+    kglt::Vec3 result;
     for (int i = 1; i < pointCount; i++)
     {
         segmentLength = lengths[i];
@@ -216,9 +216,9 @@ OpenSteer::PolylinePathway::mapPathDistanceToPoint (float pathDistance)
 
 
 float 
-OpenSteer::PolylinePathway::pointToSegmentDistance (const Vec3& point,
-                                                    const Vec3& ep0,
-                                                    const Vec3& ep1)
+OpenSteer::PolylinePathway::pointToSegmentDistance (const kglt::Vec3& point,
+                                                    const kglt::Vec3& ep0,
+                                                    const kglt::Vec3& ep1)
 {
     // convert the test point to be "local" to ep0
     local = point - ep0;
@@ -232,19 +232,19 @@ OpenSteer::PolylinePathway::pointToSegmentDistance (const Vec3& point,
     {
         chosen = ep0;
         segmentProjection = 0;
-        return Vec3::distance (point, ep0);
+        return kglt::Vec3::distance (point, ep0);
     }
     if (segmentProjection > segmentLength)
     {
         chosen = ep1;
         segmentProjection = segmentLength;
-        return Vec3::distance (point, ep1);
+        return kglt::Vec3::distance (point, ep1);
     }
 
     // otherwise nearest point is projection point on segment
     chosen = segmentNormal * segmentProjection;
     chosen +=  ep0;
-    return Vec3::distance (point, chosen);
+    return kglt::Vec3::distance (point, chosen);
 }
 
 
