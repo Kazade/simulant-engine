@@ -64,7 +64,7 @@
 #define OPENSTEER_LOCALSPACE_H
 
 
-#include "Vec3.h"
+#include "../../../types.h"
 
 
 // ----------------------------------------------------------------------------
@@ -78,14 +78,14 @@ namespace OpenSteer {
     public:
 
         // accessors (get and set) for side, up, forward and position
-        virtual Vec3 side (void) const = 0;
-        virtual Vec3 setSide (Vec3 s) = 0;
-        virtual Vec3 up (void) const = 0;
-        virtual Vec3 setUp (Vec3 u) = 0;
-        virtual Vec3 forward (void) const = 0;
-        virtual Vec3 setForward (Vec3 f) = 0;
-        virtual Vec3 position (void) const = 0;
-        virtual Vec3 setPosition (Vec3 p) = 0;
+        virtual kglt::Vec3 side (void) const = 0;
+        virtual kglt::Vec3 setSide (kglt::Vec3 s) = 0;
+        virtual kglt::Vec3 up (void) const = 0;
+        virtual kglt::Vec3 setUp (kglt::Vec3 u) = 0;
+        virtual kglt::Vec3 forward (void) const = 0;
+        virtual kglt::Vec3 setForward (kglt::Vec3 f) = 0;
+        virtual kglt::Vec3 position (void) const = 0;
+        virtual kglt::Vec3 setPosition (kglt::Vec3 p) = 0;
 
         // use right-(or left-)handed coordinate space
         virtual bool rightHanded (void) const = 0;
@@ -94,34 +94,34 @@ namespace OpenSteer {
         virtual void resetLocalSpace (void) = 0;
 
         // transform a direction in global space to its equivalent in local space
-        virtual Vec3 localizeDirection (const Vec3& globalDirection) const = 0;
+        virtual kglt::Vec3 localizeDirection (const kglt::Vec3& globalDirection) const = 0;
 
         // transform a point in global space to its equivalent in local space
-        virtual Vec3 localizePosition (const Vec3& globalPosition) const = 0;
+        virtual kglt::Vec3 localizePosition (const kglt::Vec3& globalPosition) const = 0;
 
         // transform a point in local space to its equivalent in global space
-        virtual Vec3 globalizePosition (const Vec3& localPosition) const = 0;
+        virtual kglt::Vec3 globalizePosition (const kglt::Vec3& localPosition) const = 0;
 
         // transform a direction in local space to its equivalent in global space
-        virtual Vec3 globalizeDirection (const Vec3& localDirection) const = 0;
+        virtual kglt::Vec3 globalizeDirection (const kglt::Vec3& localDirection) const = 0;
 
         // set "side" basis vector to normalized cross product of forward and up
         virtual void setUnitSideFromForwardAndUp (void) = 0;
 
         // regenerate the orthonormal basis vectors given a new forward
         // (which is expected to have unit length)
-        virtual void regenerateOrthonormalBasisUF (const Vec3& newUnitForward) = 0;
+        virtual void regenerateOrthonormalBasisUF (const kglt::Vec3& newUnitForward) = 0;
 
         // for when the new forward is NOT of unit length
-        virtual void regenerateOrthonormalBasis (const Vec3& newForward) = 0;
+        virtual void regenerateOrthonormalBasis (const kglt::Vec3& newForward) = 0;
 
         // for supplying both a new forward and and new up
-        virtual void regenerateOrthonormalBasis (const Vec3& newForward,
-                                                 const Vec3& newUp) = 0;
+        virtual void regenerateOrthonormalBasis (const kglt::Vec3& newForward,
+                                                 const kglt::Vec3& newUp) = 0;
 
         // rotate 90 degrees in the direction implied by rightHanded()
-        virtual Vec3 localRotateForwardToSide (const Vec3& v) const = 0;
-        virtual Vec3 globalRotateForwardToSide (const Vec3& globalForward) const=0;
+        virtual kglt::Vec3 localRotateForwardToSide (const kglt::Vec3& v) const = 0;
+        virtual kglt::Vec3 globalRotateForwardToSide (const kglt::Vec3& globalForward) const=0;
     };
 
 
@@ -139,26 +139,26 @@ namespace OpenSteer {
 
     private:
 
-        Vec3 _side;     //    side-pointing unit basis vector
-        Vec3 _up;       //  upward-pointing unit basis vector
-        Vec3 _forward;  // forward-pointing unit basis vector
-        Vec3 _position; // origin of local space
+        kglt::Vec3 _side;     //    side-pointing unit basis vector
+        kglt::Vec3 _up;       //  upward-pointing unit basis vector
+        kglt::Vec3 _forward;  // forward-pointing unit basis vector
+        kglt::Vec3 _position; // origin of local space
 
     public:
 
         // accessors (get and set) for side, up, forward and position
-        Vec3 side     (void) const {return _side;};
-        Vec3 up       (void) const {return _up;};
-        Vec3 forward  (void) const {return _forward;};
-        Vec3 position (void) const {return _position;};
-        Vec3 setSide     (Vec3 s) {return _side = s;};
-        Vec3 setUp       (Vec3 u) {return _up = u;};
-        Vec3 setForward  (Vec3 f) {return _forward = f;};
-        Vec3 setPosition (Vec3 p) {return _position = p;};
-        Vec3 setSide     (float x, float y, float z){return _side.set    (x,y,z);};
-        Vec3 setUp       (float x, float y, float z){return _up.set      (x,y,z);};
-        Vec3 setForward  (float x, float y, float z){return _forward.set (x,y,z);};
-        Vec3 setPosition (float x, float y, float z){return _position.set(x,y,z);};
+        kglt::Vec3 side     (void) const {return _side;}
+        kglt::Vec3 up       (void) const {return _up;}
+        kglt::Vec3 forward  (void) const {return _forward;}
+        kglt::Vec3 position (void) const {return _position;}
+        kglt::Vec3 setSide     (kglt::Vec3 s) {return _side = s;}
+        kglt::Vec3 setUp       (kglt::Vec3 u) {return _up = u;}
+        kglt::Vec3 setForward  (kglt::Vec3 f) {return _forward = f;}
+        kglt::Vec3 setPosition (kglt::Vec3 p) {return _position = p;}
+        kglt::Vec3 setSide     (float x, float y, float z){return _side.set    (x,y,z);}
+        kglt::Vec3 setUp       (float x, float y, float z){return _up.set      (x,y,z);}
+        kglt::Vec3 setForward  (float x, float y, float z){return _forward.set (x,y,z);}
+        kglt::Vec3 setPosition (float x, float y, float z){return _position.set(x,y,z);}
 
 
         // ------------------------------------------------------------------------
@@ -178,10 +178,10 @@ namespace OpenSteer {
             resetLocalSpace ();
         };
 
-        LocalSpaceMixin (const Vec3& Side,
-                         const Vec3& Up,
-                         const Vec3& Forward,
-                         const Vec3& Position)
+        LocalSpaceMixin (const kglt::Vec3& Side,
+                         const kglt::Vec3& Up,
+                         const kglt::Vec3& Forward,
+                         const kglt::Vec3& Position)
         {
             _side = Side;
             _up = Up;
@@ -190,9 +190,9 @@ namespace OpenSteer {
         };
 
 
-        LocalSpaceMixin (const Vec3& Up,
-                         const Vec3& Forward,
-                         const Vec3& Position)
+        LocalSpaceMixin (const kglt::Vec3& Up,
+                         const kglt::Vec3& Forward,
+                         const kglt::Vec3& Position)
         {
             _up = Up;
             _forward = Forward;
@@ -218,56 +218,56 @@ namespace OpenSteer {
             _side = localRotateForwardToSide (_forward);
             _up.set (0, 1, 0);
             _position.set (0, 0, 0);
-        };
+        }
 
 
         // ------------------------------------------------------------------------
         // transform a direction in global space to its equivalent in local space
 
 
-        Vec3 localizeDirection (const Vec3& globalDirection) const
+        kglt::Vec3 localizeDirection (const kglt::Vec3& globalDirection) const
         {
             // dot offset with local basis vectors to obtain local coordiantes
-            return Vec3 (globalDirection.dot (_side),
+            return kglt::Vec3 (globalDirection.dot (_side),
                          globalDirection.dot (_up),
                          globalDirection.dot (_forward));
-        };
+        }
 
 
         // ------------------------------------------------------------------------
         // transform a point in global space to its equivalent in local space
 
 
-        Vec3 localizePosition (const Vec3& globalPosition) const
+        kglt::Vec3 localizePosition (const kglt::Vec3& globalPosition) const
         {
             // global offset from local origin
-            Vec3 globalOffset = globalPosition - _position;
+            kglt::Vec3 globalOffset = globalPosition - _position;
 
             // dot offset with local basis vectors to obtain local coordiantes
             return localizeDirection (globalOffset);
-        };
+        }
 
 
         // ------------------------------------------------------------------------
         // transform a point in local space to its equivalent in global space
 
 
-        Vec3 globalizePosition (const Vec3& localPosition) const
+        kglt::Vec3 globalizePosition (const kglt::Vec3& localPosition) const
         {
             return _position + globalizeDirection (localPosition);
-        };
+        }
 
 
         // ------------------------------------------------------------------------
         // transform a direction in local space to its equivalent in global space
 
 
-        Vec3 globalizeDirection (const Vec3& localDirection) const
+        kglt::Vec3 globalizeDirection (const kglt::Vec3& localDirection) const
         {
             return ((_side    * localDirection.x) +
                     (_up      * localDirection.y) +
                     (_forward * localDirection.z));
-        };
+        }
 
 
         // ------------------------------------------------------------------------
@@ -278,9 +278,9 @@ namespace OpenSteer {
         {
             // derive new unit side basis vector from forward and up
             if (rightHanded())
-                _side.cross (_forward, _up);
+                _side = _forward.cross(_up);
             else
-                _side.cross (_up, _forward);
+                _side = _up.cross(_forward);
             _side = _side.normalize ();
         }
 
@@ -290,7 +290,7 @@ namespace OpenSteer {
         // (which is expected to have unit length)
 
 
-        void regenerateOrthonormalBasisUF (const Vec3& newUnitForward)
+        void regenerateOrthonormalBasisUF (const kglt::Vec3& newUnitForward)
         {
             _forward = newUnitForward;
 
@@ -301,27 +301,27 @@ namespace OpenSteer {
             // (should have unit length since Side and Forward are
             // perpendicular and unit length)
             if (rightHanded())
-                _up.cross (_side, _forward);
+                _up = _side.cross(_forward);
             else
-                _up.cross (_forward, _side);
+                _up = _forward.cross(_side);
         }
 
 
         // for when the new forward is NOT know to have unit length
 
-        void regenerateOrthonormalBasis (const Vec3& newForward)
+        void regenerateOrthonormalBasis (const kglt::Vec3& newForward)
         {
-            regenerateOrthonormalBasisUF (newForward.normalize());
+            regenerateOrthonormalBasisUF (kglt::Vec3(newForward).normalize());
         }
 
 
         // for supplying both a new forward and and new up
 
-        void regenerateOrthonormalBasis (const Vec3& newForward,
-                                         const Vec3& newUp)
+        void regenerateOrthonormalBasis (const kglt::Vec3& newForward,
+                                         const kglt::Vec3& newUp)
         {
             _up = newUp;
-            regenerateOrthonormalBasis (newForward.normalize());
+            regenerateOrthonormalBasis (kglt::Vec3(newForward).normalize());
         }
 
 
@@ -330,19 +330,19 @@ namespace OpenSteer {
         // "forward" (+Z) direction to the "side" (+/-X) direction
 
 
-        Vec3 localRotateForwardToSide (const Vec3& v) const
+        kglt::Vec3 localRotateForwardToSide (const kglt::Vec3& v) const
         {
-            return Vec3 (rightHanded () ? -v.z : +v.z,
+            return kglt::Vec3 (rightHanded () ? -v.z : +v.z,
                          v.y,
                          v.x);
         }
 
         // not currently used, just added for completeness
 
-        Vec3 globalRotateForwardToSide (const Vec3& globalForward) const
+        kglt::Vec3 globalRotateForwardToSide (const kglt::Vec3& globalForward) const
         {
-            const Vec3 localForward = localizeDirection (globalForward);
-            const Vec3 localSide = localRotateForwardToSide (localForward);
+            const kglt::Vec3 localForward = localizeDirection (globalForward);
+            const kglt::Vec3 localSide = localRotateForwardToSide (localForward);
             return globalizeDirection (localSide);
         }
     };

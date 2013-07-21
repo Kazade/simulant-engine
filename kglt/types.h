@@ -43,7 +43,7 @@ struct Vec2 : public kmVec2 {
     }
 };
 
-struct Vec3 : public kmVec3 {
+struct Vec3 : public kmVec3 {        
     Vec3() {
         kmVec3Zero(this);
     }
@@ -64,24 +64,60 @@ struct Vec3 : public kmVec3 {
         return Vec3(x + rhs.x, y + rhs.y, z + rhs.z);
     }
 
+    Vec3& operator+=(const Vec3& rhs) {
+        kmVec3Add(this, this, &rhs);
+        return *this;
+    }
+
     Vec3 operator-(const Vec3& rhs) const {
         return Vec3(x - rhs.x, y - rhs.y, z - rhs.z);
     }
 
     Vec3 operator*(float rhs) const {
-        return Vec3(x * rhs, y * rhs, z * rhs);
+        Vec3 result;
+        kmVec3Scale(&result, this, rhs);
+        return result;
     }
 
-    float length() const {
+    Vec3 operator/(float rhs) const {
+        Vec3 result;
+        kmVec3Scale(&result, this, 1.0 / rhs);
+        return result;
+    }
+
+    bool operator==(const Vec3& rhs) const {
+        return kmVec3AreEqual(this, &rhs);
+    }
+
+    bool operator!=(const Vec3& rhs) const {
+        return !(*this == rhs);
+    }
+
+    void set(float x, float y, float z) {
+        kmVec3Fill(this, x, y, z);
+    }
+
+    float length() const {        
         return kmVec3Length(this);
     }
 
-    void normalize() {
+    float length_squared() const {
+        return kmVec3LengthSq(this);
+    }
+
+    const kglt::Vec3& normalize() {
         kmVec3Normalize(this, this);
+        return *this;
     }
 
     float dot(const kglt::Vec3& rhs) const {
         return kmVec3Dot(this, &rhs);
+    }
+
+    kglt::Vec3 cross(const kglt::Vec3& rhs) const {
+        kglt::Vec3 result;
+        kmVec3Cross(&result, this, &rhs);
+        return result;
     }
 
     void limit(float l) {
@@ -89,6 +125,10 @@ struct Vec3 : public kmVec3 {
             normalize();
             kmVec3Scale(this, this, l);
         }
+    }
+
+    static float distance(const kglt::Vec3& lhs, const kglt::Vec3& rhs) {
+        return (rhs - lhs).length();
     }
 };
 
@@ -219,7 +259,18 @@ class WindowBase;
 class RenderSequence;
 class Partitioner;
 
+}
 
+kglt::Vec3 operator*(float lhs, const kglt::Vec3& rhs) {
+    kglt::Vec3 result;
+    kmVec3Scale(&result, &rhs, lhs);
+    return result;
+}
+
+kglt::Vec3 operator/(float lhs, const kglt::Vec3& rhs) {
+    kglt::Vec3 result;
+    kmVec3Scale(&result, &rhs, 1.0 / lhs);
+    return result;
 }
 
 #endif // TYPES_H_INCLUDED

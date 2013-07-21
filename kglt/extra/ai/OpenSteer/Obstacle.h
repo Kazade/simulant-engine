@@ -50,7 +50,7 @@
 #define OPENSTEER_OBSTACLE_H
 
 
-#include "Vec3.h"
+#include "../../../types.h"
 
 // XXX 4-23-03: Temporary work around (see comment above)
 #include "AbstractVehicle.h"
@@ -74,7 +74,7 @@ namespace OpenSteer {
         virtual void setSeenFrom (seenFromState s) = 0;
 
         // XXX 4-23-03: Temporary work around (see comment above)
-        virtual Vec3 steerToAvoid (const AbstractVehicle& v,
+        virtual kglt::Vec3 steerToAvoid (const AbstractVehicle& v,
                                    const float minTimeToCollision) const = 0;
     };
 
@@ -93,11 +93,11 @@ namespace OpenSteer {
     {
     public:
         float radius;
-        Vec3 center;
+        kglt::Vec3 center;
 
         // constructors
-        SphericalObstacle (float r, Vec3 c) : radius(r), center (c) {}
-        SphericalObstacle (void) : radius(1), center (Vec3::zero) {}
+        SphericalObstacle (float r, kglt::Vec3 c) : radius(r), center (c) {}
+        SphericalObstacle (void) : radius(1), center (kglt::Vec3()) {}
 
         seenFromState seenFrom (void) const {return _seenFrom;}
         void setSeenFrom (seenFromState s) {_seenFrom = s;}
@@ -117,7 +117,7 @@ namespace OpenSteer {
         //
         // xxx couldn't this be made more compact using localizePosition?
 
-        Vec3 steerToAvoid (const AbstractVehicle& v,
+        kglt::Vec3 steerToAvoid (const AbstractVehicle& v,
                            const float minTimeToCollision) const
         {
             // minimum distance to obstacle before avoidance is required
@@ -128,14 +128,14 @@ namespace OpenSteer {
             const float totalRadius = radius + v.radius ();
 
             // obstacle center relative to vehicle position
-            const Vec3 localOffset = center - v.position ();
+            const kglt::Vec3 localOffset = center - v.position ();
 
             // distance along vehicle's forward axis to obstacle's center
             const float forwardComponent = localOffset.dot (v.forward ());
-            const Vec3 forwardOffset = forwardComponent * v.forward ();
+            const kglt::Vec3 forwardOffset = forwardComponent * v.forward ();
 
             // offset from forward axis to obstacle's center
-            const Vec3 offForwardOffset = localOffset - forwardOffset;
+            const kglt::Vec3 offForwardOffset = localOffset - forwardOffset;
 
             // test to see if sphere overlaps with obstacle-free corridor
             const bool inCylinder = offForwardOffset.length() < totalRadius;
@@ -149,7 +149,7 @@ namespace OpenSteer {
             }
             else
             {
-                return Vec3::zero;
+                return kglt::Vec3();
             }
         }
 

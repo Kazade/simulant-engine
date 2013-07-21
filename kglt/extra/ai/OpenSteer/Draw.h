@@ -52,40 +52,40 @@
 #define OPENSTEER_DRAW_H
 
 
-#include "Vec3.h"
+#include "../../../types.h"
 #include "AbstractVehicle.h"
 
 
 // ------------------------------------------------------------------------
-// for convenience, names of a few common RGB colors as Vec3 values
+// for convenience, names of a few common RGB colors as kglt::Vec3 values
 // (XXX I know, I know, there should be a separate "Color" class XXX)
 
 namespace OpenSteer {
 
 
-    const Vec3 gBlack   (0, 0, 0);
-    const Vec3 gWhite   (1, 1, 1);
+    const kglt::Vec3 gBlack   (0, 0, 0);
+    const kglt::Vec3 gWhite   (1, 1, 1);
 
-    const Vec3 gRed     (1, 0, 0);
-    const Vec3 gYellow  (1, 1, 0);
-    const Vec3 gGreen   (0, 1, 0);
-    const Vec3 gCyan    (0, 1, 1);
-    const Vec3 gBlue    (0, 0, 1);
-    const Vec3 gMagenta (1, 0, 1);
+    const kglt::Vec3 gRed     (1, 0, 0);
+    const kglt::Vec3 gYellow  (1, 1, 0);
+    const kglt::Vec3 gGreen   (0, 1, 0);
+    const kglt::Vec3 gCyan    (0, 1, 1);
+    const kglt::Vec3 gBlue    (0, 0, 1);
+    const kglt::Vec3 gMagenta (1, 0, 1);
 
-    const Vec3 gOrange (1, 0.5f, 0);
+    const kglt::Vec3 gOrange (1, 0.5f, 0);
 
-    inline Vec3 grayColor (const float g) {return Vec3 (g, g, g);}
+    inline kglt::Vec3 grayColor (const float g) {return kglt::Vec3 (g, g, g);}
 
-    const Vec3 gGray10 = grayColor (0.1f);
-    const Vec3 gGray20 = grayColor (0.2f);
-    const Vec3 gGray30 = grayColor (0.3f);
-    const Vec3 gGray40 = grayColor (0.4f);
-    const Vec3 gGray50 = grayColor (0.5f);
-    const Vec3 gGray60 = grayColor (0.6f);
-    const Vec3 gGray70 = grayColor (0.7f);
-    const Vec3 gGray80 = grayColor (0.8f);
-    const Vec3 gGray90 = grayColor (0.9f);
+    const kglt::Vec3 gGray10 = grayColor (0.1f);
+    const kglt::Vec3 gGray20 = grayColor (0.2f);
+    const kglt::Vec3 gGray30 = grayColor (0.3f);
+    const kglt::Vec3 gGray40 = grayColor (0.4f);
+    const kglt::Vec3 gGray50 = grayColor (0.5f);
+    const kglt::Vec3 gGray60 = grayColor (0.6f);
+    const kglt::Vec3 gGray70 = grayColor (0.7f);
+    const kglt::Vec3 gGray80 = grayColor (0.8f);
+    const kglt::Vec3 gGray90 = grayColor (0.9f);
 
 } // namespace OpenSteer
 

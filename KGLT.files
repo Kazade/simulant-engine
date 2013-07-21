@@ -299,10 +299,8 @@ kglt/extra/ai/OpenSteer/Pathway.h
 kglt/extra/ai/OpenSteer/PlugIn.h
 kglt/extra/ai/OpenSteer/Proximity.h
 kglt/extra/ai/OpenSteer/SteerLibrary.h
-kglt/extra/ai/OpenSteer/Vec3.h
 kglt/extra/ai/OpenSteer/Utilities.h
 kglt/extra/ai/OpenSteer/lq.c
 kglt/extra/ai/OpenSteer/Pathway.cpp
 kglt/extra/ai/OpenSteer/PlugIn.cpp
-kglt/extra/ai/OpenSteer/Vec3.cpp
 kglt/extra/ai/OpenSteer/Draw.h

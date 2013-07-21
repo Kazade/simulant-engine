@@ -65,7 +65,7 @@ namespace OpenSteer {
         virtual float setRadius (float) = 0;
 
         // velocity of vehicle
-        virtual Vec3 velocity (void) const = 0;
+        virtual kglt::Vec3 velocity (void) const = 0;
 
         // speed of vehicle  (may be faster than taking magnitude of velocity)
         virtual float speed (void) const = 0;
@@ -77,7 +77,7 @@ namespace OpenSteer {
 
         // predict position of this vehicle at some time in the future
         // (assumes velocity remains constant)
-        virtual Vec3 predictFuturePosition (const float predictionTime) const = 0;
+        virtual kglt::Vec3 predictFuturePosition (const float predictionTime) const = 0;
 
         // ----------------------------------------------------------------------
         // XXX this vehicle-model-specific functionality functionality seems out
