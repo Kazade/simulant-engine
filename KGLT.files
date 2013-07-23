@@ -305,3 +305,4 @@ kglt/extra/ai/OpenSteer/Pathway.cpp
 kglt/extra/ai/OpenSteer/PlugIn.cpp
 kglt/extra/ai/OpenSteer/Draw.h
 kglt/types.cpp
+kglt/base.cpp

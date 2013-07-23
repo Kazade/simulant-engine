@@ -9,7 +9,7 @@
 namespace kglt {
 namespace extra {
 
-PathFollower::PathFollower(ActorHolder *parent, float max_speed, float max_force):
+PathFollower::PathFollower(MoveableActorHolder *parent, float max_speed, float max_force):
     actor_(parent),
     max_speed_(max_speed),
     max_force_(max_force) {
@@ -42,7 +42,10 @@ bool point_on_line(const kglt::Vec3& p, const kglt::Vec3& a, const kglt::Vec3& b
     return kmAlmostEqual(ab, (ap + pb));
 }
 
-kglt::Vec3 PathFollower::force_to_apply(const Vec3 &velocity) const {
+kglt::Vec3 PathFollower::force_to_apply(const Vec3 &velocity) {
+    return steerToFollowPath(1, actor_->stage()->window().delta_time(), path_);
+
+
     /**
       This is loosely based on http://natureofcode.com/book/chapter-6-autonomous-agents/#chapter06_section8
       but with handles the case where the velocity is at right angles to the path. It does this by
@@ -138,11 +141,10 @@ Vec3 PathFollower::seek(const kglt::Vec3& target, const kglt::Vec3& velocity) co
     return steer;
 }
 
-void PathFollower::follow(Path path, bool loop) {
+void PathFollower::follow(Path path) {
     assert(actor_);
 
     path_ = path;
-    loop_ = loop;
 
     //Move the actor directly to the first waypoint
     actor_->actor()->move_to(path_.point(0));

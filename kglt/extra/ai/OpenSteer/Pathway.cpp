@@ -64,15 +64,20 @@ OpenSteer::PolylinePathway::initialize (const int _pointCount,
                                         const float _radius,
                                         const bool _cyclic)
 {
+
     // set data members, allocate arrays
     radius = _radius;
     cyclic = _cyclic;
     pointCount = _pointCount;
     totalPathLength = 0;
-    if (cyclic) pointCount++;
-    lengths = new float    [pointCount];
-    points  = new kglt::Vec3 [pointCount];
-    normals = new kglt::Vec3 [pointCount];
+
+    if (cyclic) {
+        pointCount++;
+    }
+
+    lengths.resize(pointCount);
+    points.resize(pointCount);
+    normals.resize(pointCount);
 
     // loop over all points
     for (int i = 0; i < pointCount; i++)

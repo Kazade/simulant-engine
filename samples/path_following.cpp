@@ -7,12 +7,12 @@
 using namespace kglt::extra;
 
 class Car:
-    public kglt::ActorHolder,
+    public kglt::MoveableActorHolder,
     public Managed<Car> {
 
 public:
     Car(kglt::Scene& scene, kglt::StageID stage):
-        kglt::ActorHolder(scene),
+        kglt::MoveableActorHolder(scene),
         stage_(stage) {
 
         //Pass a reference to this to the PathFollower
@@ -34,6 +34,9 @@ public:
         p.add_point(kglt::Vec3(-10, -10, -50));
 
         follower_->follow(p);
+
+        set_velocity(kglt::Vec3(1, 0, 0));
+
         follower_->enable_debug();
 
         return true;

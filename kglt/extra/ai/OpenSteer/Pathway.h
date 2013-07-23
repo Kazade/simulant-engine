@@ -97,7 +97,7 @@ namespace OpenSteer {
     public:
 
         int pointCount;
-        kglt::Vec3* points;
+        std::vector<kglt::Vec3> points;
         float radius;
         bool cyclic;
 
@@ -137,7 +137,7 @@ namespace OpenSteer {
                                       const kglt::Vec3& ep1);
 
         // assessor for total path length;
-        float getTotalPathLength (void) {return totalPathLength;};
+        float getTotalPathLength (void) {return totalPathLength;}
 
     // XXX removed the "private" because it interfered with derived
     // XXX classes later this should all be rewritten and cleaned up
@@ -152,8 +152,9 @@ namespace OpenSteer {
         kglt::Vec3 chosen;
         kglt::Vec3 segmentNormal;
 
-        float* lengths;
-        kglt::Vec3* normals;
+        std::vector<float> lengths;
+        std::vector<kglt::Vec3> normals;
+
         float totalPathLength;
     };
 

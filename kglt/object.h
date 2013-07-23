@@ -66,8 +66,8 @@ public:
     const kmVec3& position() const { return position_; }
     const kmVec3& absolute_position() const { return absolute_position_; }
 
-    const kmQuaternion& rotation() { return rotation_; }
-    const kmQuaternion& absolute_rotation() { return absolute_orientation_; }
+    const kmQuaternion& rotation() const { return rotation_; }
+    const kmQuaternion& absolute_rotation() const { return absolute_orientation_; }
 
     uint64_t uuid() const { return uuid_; }
         
