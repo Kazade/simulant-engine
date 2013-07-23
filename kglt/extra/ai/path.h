@@ -4,13 +4,10 @@
 #include <vector>
 #include "../../types.h"
 
-#include "OpenSteer/Pathway.h"
-
 namespace kglt {
 namespace extra {
 
-class Path :
-    public OpenSteer::PolylinePathway {
+class Path {
 
 public:
     Path(float radius=0.5, bool cyclic=true);

@@ -1,5 +1,3 @@
-#include "./OpenSteer/SteerLibrary.h"
-
 #include "../../scene.h"
 #include "../../window.h"
 #include "../../actor.h"
@@ -43,8 +41,6 @@ bool point_on_line(const kglt::Vec3& p, const kglt::Vec3& a, const kglt::Vec3& b
 }
 
 kglt::Vec3 PathFollower::force_to_apply(const Vec3 &velocity) {
-    return steerToFollowPath(1, actor_->stage()->window().delta_time(), path_);
-
 
     /**
       This is loosely based on http://natureofcode.com/book/chapter-6-autonomous-agents/#chapter06_section8
