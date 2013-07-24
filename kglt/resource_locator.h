@@ -22,6 +22,7 @@ public:
     std::shared_ptr<std::stringstream> read_file(const unicode& filename);
     std::vector<std::string> read_file_lines(const unicode& filename);
 
+    void add_search_path(const unicode& path);
 private:
     unicode find_executable_directory();
     unicode find_working_directory();

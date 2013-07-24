@@ -5,7 +5,7 @@
 
 namespace kglt {
 
-App::App(const unicode &title, uint16_t width, uint16_t height, uint8_t bpp, bool fullscreen) {
+App::App(const unicode &title, uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen) {
     window_ = Window::create(width, height, bpp, fullscreen);
     window_->set_title(title.encode());
 

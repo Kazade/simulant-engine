@@ -23,8 +23,11 @@ public:
 
 class App {
 public:
-    App(const unicode& title=_u("KGLT Application"), uint16_t width=640, uint16_t height=480,
-            uint8_t bpp=0, bool fullscreen=false);
+    App(const unicode& title=_u("KGLT Application"),
+        uint32_t width=640,
+        uint32_t height=480,
+        uint32_t bpp=0,
+        bool fullscreen=false);
 
     //Create the window, start do_initialization in a thread, show the loading screen
     //when thread completes, hide the loading screen and run the main loop
