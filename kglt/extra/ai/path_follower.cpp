@@ -114,8 +114,16 @@ kglt::Vec3 PathFollower::force_to_apply(const Vec3 &velocity) {
     return velocity;
 }
 
-Vec3 PathFollower::seek(const kglt::Vec3& target, const kglt::Vec3& velocity) const {
-    kglt::Vec3 desired_velocity = (target - actor_->position()).normalize() * actor_->max_speed();
+Vec3 PathFollower::seek(const kglt::Vec3& target, const kglt::Vec3& velocity, float slowing_radius) const {
+    kglt::Vec3 desired_velocity = (target - actor_->position());
+
+    float distance = desired_velocity.length();
+    if(distance < slowing_radius) {
+        desired_velocity = desired_velocity.normalize() * actor_->max_speed() * (distance / slowing_radius);
+    } else {
+        desired_velocity = desired_velocity.normalize() * actor_->max_speed();
+    }
+
     kglt::Vec3 steering = desired_velocity - velocity;
 
     steering.limit(actor_->max_force());

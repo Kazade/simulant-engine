@@ -22,7 +22,7 @@ public:
 
     kglt::Vec3 force_to_apply(const kglt::Vec3& velocity);
 
-    kglt::Vec3 seek(const kglt::Vec3& target, const Vec3 &velocity) const;
+    kglt::Vec3 seek(const kglt::Vec3& target, const Vec3 &velocity, float slowing_radius=2.0) const;
 
 private:
     MoveableActorHolder* actor_;
