@@ -22,21 +22,10 @@ public:
 
     kglt::Vec3 force_to_apply(const kglt::Vec3& velocity);
 
-    //Pass throughs to the actor
-    kglt::Vec3 position() const { return actor_->position(); }
-    kglt::Vec3 setPosition(kglt::Vec3 p) { actor_->set_position(p); return position();  }
-    kglt::Vec3 velocity() const { return actor_->velocity(); }
-    float maxForce() const { return actor_->max_force(); }
-    float speed() const { return velocity().length(); }
-    float maxSpeed() const { return actor_->max_speed(); }
-    float radius() const { return actor_->radius(); }
-    float mass() const { return actor_->mass(); }
-private:
     kglt::Vec3 seek(const kglt::Vec3& target, const Vec3 &velocity) const;
 
+private:
     MoveableActorHolder* actor_;
-    float max_speed_;
-    float max_force_;
 
     Path path_;
     bool loop_ = false;

@@ -6,12 +6,12 @@
 
 using namespace kglt::extra;
 
-class Car:
+class Dot:
     public kglt::MoveableActorHolder,
-    public Managed<Car> {
+    public Managed<Dot> {
 
 public:
-    Car(kglt::Scene& scene, kglt::StageID stage):
+    Dot(kglt::Scene& scene, kglt::StageID stage):
         kglt::MoveableActorHolder(scene),
         stage_(stage) {
 
@@ -21,34 +21,24 @@ public:
 
     bool init() {
         actor_ = stage()->geom_factory().new_cube(1);
-
-        Path p(0.5);
-
-        p.add_point(kglt::Vec3(-10, -10, -50));
-        p.add_point(kglt::Vec3( 10, -10, -50));
-        p.add_point(kglt::Vec3( 10,  10, -50));
-        p.add_point(kglt::Vec3(-10,  10, -50));
-        p.add_point(kglt::Vec3(-9,  7, -50));
-        p.add_point(kglt::Vec3(-12,  5, -50));
-        p.add_point(kglt::Vec3(-5,  3, -50));
-        p.add_point(kglt::Vec3(-10, -10, -50));
-
-        follower_->follow(p);
-
-        set_velocity(kglt::Vec3(5, 0, 0));
-        set_max_speed(10.0);
-        set_max_force(10.0);
-
         follower_->enable_debug();
+
+        set_position(kglt::Vec3(-10, 0, -50));
+        set_velocity(kglt::Vec3(10, 0, 0));
+        set_max_speed(10.0);
 
         return true;
     }
 
-    void update(double dt) {        
-        velocity_ = velocity_ + follower_->force_to_apply(velocity_);
-        velocity_.limit(5.0);
+    void update(double dt) {
+        set_velocity(follower_->seek(target, velocity()));
 
-        actor()->move_to(kglt::Vec3(actor()->absolute_position()) + (velocity_ * dt));
+        actor()->move_to(position() + (velocity() * dt));
+
+        //Keep moving the target when we reach it
+        if((position() - target).length() < 0.01) {
+            target.x = -target.x;
+        }
     }
 
     kglt::ActorID actor_id() const { return actor_; }
@@ -57,25 +47,24 @@ public:
 private:
     PathFollower::ptr follower_;
 
-    kglt::Vec3 velocity_ = kglt::Vec3(1, 0, 0);
-    kglt::Vec3 acceleration_;
-
     kglt::StageID stage_;
     kglt::ActorID actor_;
+
+    kglt::Vec3 target = kglt::Vec3(10, 0, -50);
 };
 
 
-class PathFollowing: public kglt::App {
+class SeekSample: public kglt::App {
 public:
-    PathFollowing():
-        App("KGLT Sprite Sample") {
+    SeekSample():
+        App("KGLT Seek Behaviour") {
 
         window().set_logging_level(kglt::LOG_LEVEL_DEBUG);
     }
 
 private:
     bool do_init() {
-        car_ = Car::create(scene(), stage().id());
+        dot_ = Dot::create(scene(), stage().id());
 
         scene().camera().set_perspective_projection(
             45.0,
@@ -88,18 +77,19 @@ private:
 
     void do_step(double dt) {
         if(initialized()) {
-            car_->update(dt);
+            dot_->update(dt);
         }
     }
 
     void do_cleanup() {}
 
-    Car::ptr car_;
+    Dot::ptr dot_;
 };
 
 
 int main(int argc, char* argv[]) {
-    PathFollowing app;
+    SeekSample app;
     return app.run();
 }
+
 

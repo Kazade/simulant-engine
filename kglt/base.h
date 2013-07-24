@@ -57,10 +57,10 @@ public:
 
 private:
     kglt::Vec3 velocity_;
-    float mass_;
-    float max_speed_;
-    float max_force_;
-    float radius_;
+    float mass_ = 1.0;
+    float max_speed_ = 1.0;
+    float max_force_ = 1.0;
+    float radius_ = 1.0;
 };
 
 }

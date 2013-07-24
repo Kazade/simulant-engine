@@ -8,9 +8,7 @@ namespace kglt {
 namespace extra {
 
 PathFollower::PathFollower(MoveableActorHolder *parent, float max_speed, float max_force):
-    actor_(parent),
-    max_speed_(max_speed),
-    max_force_(max_force) {
+    actor_(parent) {
 
 }
 
@@ -39,6 +37,7 @@ bool point_on_line(const kglt::Vec3& p, const kglt::Vec3& a, const kglt::Vec3& b
 
     return kmAlmostEqual(ab, (ap + pb));
 }
+
 
 kglt::Vec3 PathFollower::force_to_apply(const Vec3 &velocity) {
 
@@ -116,25 +115,15 @@ kglt::Vec3 PathFollower::force_to_apply(const Vec3 &velocity) {
 }
 
 Vec3 PathFollower::seek(const kglt::Vec3& target, const kglt::Vec3& velocity) const {
-    kglt::Vec3 desired = target - actor_->actor()->absolute_position();
+    kglt::Vec3 desired_velocity = (target - actor_->position()).normalize() * actor_->max_speed();
+    kglt::Vec3 steering = desired_velocity - velocity;
 
-    float d = desired.length();
-    desired.normalize();
+    steering.limit(actor_->max_force());
+    steering = steering / actor_->mass();
 
-    float slow_down_radius = path_.radius();
-    if(d < slow_down_radius) {
-        //Slow down as we approach the target
-        float m = map(d, 0, slow_down_radius, 0, max_speed_);
-        desired = desired * m;
-    } else {
-        desired = desired * max_speed_;
-    }
-
-    kglt::Vec3 steer = desired - velocity;
-
-    steer.limit(max_force_);
-
-    return steer;
+    kglt::Vec3 new_velocity = velocity + steering;
+    new_velocity.limit(actor_->max_speed());
+    return new_velocity;
 }
 
 void PathFollower::follow(Path path) {
