@@ -54,10 +54,13 @@ Vec3 PathFollower::seek(const kglt::Vec3& target, float slowing_radius) const {
     kglt::Vec3 desired_velocity = (target - actor_->position());
 
     float distance = desired_velocity.length();
+    desired_velocity.normalize();
+
     if(distance < slowing_radius) {
-        desired_velocity = desired_velocity.normalize() * actor_->max_speed() * (distance / slowing_radius);
+        float m = map(distance, 0, slowing_radius, actor_->min_speed(), actor_->max_speed());
+        desired_velocity = desired_velocity * m;
     } else {
-        desired_velocity = desired_velocity.normalize() * actor_->max_speed();
+        desired_velocity = desired_velocity * actor_->max_speed();
     }
 
     kglt::Vec3 steering = desired_velocity - actor_->velocity();
@@ -105,7 +108,7 @@ kglt::Vec3 PathFollower::steer_to_path() {
         }
     }
 
-    return seek(target);
+    return seek(target, path_.radius());
 }
 
 void PathFollower::update_debug_mesh() const {

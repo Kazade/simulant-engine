@@ -46,6 +46,9 @@ public:
     virtual void set_mass(float mass);
     virtual float mass() const;
 
+    virtual void set_min_speed(float speed);
+    virtual float min_speed() const;
+
     virtual void set_max_speed(float speed);
     virtual float max_speed() const;
 
@@ -59,6 +62,7 @@ private:
     kglt::Vec3 velocity_;
     float mass_ = 1.0;
     float max_speed_ = 1.0;
+    float min_speed_ = 0.0;
     float max_force_ = 1.0;
     float radius_ = 1.0;
 };

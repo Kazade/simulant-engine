@@ -48,6 +48,14 @@ float MoveableActorHolder::max_speed() const {
     return max_speed_;
 }
 
+void MoveableActorHolder::set_min_speed(float speed) {
+    min_speed_ = speed;
+}
+
+float MoveableActorHolder::min_speed() const {
+    return min_speed_;
+}
+
 void MoveableActorHolder::set_max_force(float force) {
     max_force_ = force;
 }

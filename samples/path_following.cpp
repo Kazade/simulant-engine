@@ -22,7 +22,7 @@ public:
     bool init() {
         actor_ = stage()->geom_factory().new_cube(1);
 
-        Path p(0.5);
+        Path p(2.0);
 
         p.add_point(kglt::Vec3(-10, -10, -50));
         p.add_point(kglt::Vec3( 10, -10, -50));
@@ -36,8 +36,8 @@ public:
         follower_->follow(p);
 
         set_velocity(kglt::Vec3(5, 0, 0));
+        set_min_speed(5.0);
         set_max_speed(10.0);
-        set_max_force(10.0);
 
         follower_->enable_debug();
 
