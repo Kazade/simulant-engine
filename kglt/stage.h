@@ -34,6 +34,8 @@ public:
     ActorID new_actor_with_parent(Actor& parent, MeshID mid);
 
     Actor& actor(ActorID e);
+    const Actor& actor(ActorID e) const;
+
     ActorRef actor_ref(ActorID e);
 
     bool has_actor(ActorID e) const;

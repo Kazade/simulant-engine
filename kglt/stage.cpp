@@ -61,6 +61,10 @@ bool Stage::has_actor(ActorID m) const {
     return ActorManager::manager_contains(m);
 }
 
+const Actor& Stage::actor(ActorID e) const {
+    return ActorManager::manager_get(e);
+}
+
 Actor& Stage::actor(ActorID e) {
     return ActorManager::manager_get(e);
 }

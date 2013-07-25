@@ -35,14 +35,20 @@ public:
 
     WindowBase& window() { return *window_; }
 
+    bool initialized() const { return initialized_; }
 protected:
     Scene& scene();
     Stage& stage(StageID stage=StageID());
 
     void load_async(std::function<bool ()> func);
 
+    bool init() {
+        initialized_ = do_init();
+        return initialized_;
+    }
 private:
     std::shared_ptr<WindowBase> window_;
+    bool initialized_ = false;
 
     virtual bool do_init() = 0;
     virtual void do_step(double dt) = 0;
