@@ -38,83 +38,19 @@ bool point_on_line(const kglt::Vec3& p, const kglt::Vec3& a, const kglt::Vec3& b
     return kmAlmostEqual(ab, (ap + pb));
 }
 
-
-kglt::Vec3 PathFollower::force_to_apply(const Vec3 &velocity) {
-
-    /**
-      This is loosely based on http://natureofcode.com/book/chapter-6-autonomous-agents/#chapter06_section8
-      but with handles the case where the velocity is at right angles to the path. It does this by
-      first checking the normal point is on the line, then moving the normal point very slightly
-      along the path. This solves two problems:
-
-      1. We stop considering the current path segment when we approach the end of it
-      2. We'll never hit a path segment at a right angle and get stuck as the force
-         to apply is the reverse of the velocity because the slight offset means that there
-         will always be a bias towards the direction of the path.
-
-      The other change that's been made is that when the object reaches the last point on the
-      path, it will slow to a stop.
-    */
-
-    if(path_.empty()) {
-        return kglt::Vec3(0, 0, 0);
-    }
-
-    kglt::Vec3 predict = velocity;
-    predict.normalize();
-
-    kglt::Vec3 pos = actor_->actor()->absolute_position();
-    kglt::Vec3 predict_loc = pos + predict;
-
-    kglt::Vec3 target;
-    float closest = 100000;
-
-    normal_points_.clear();
-    for(int i = 0; i < path_.length() - 1; ++i) {
-        kglt::Vec3 a = path_.point(i);
-        kglt::Vec3 b = path_.point(i+1);
-        kglt::Vec3 path_dir = b - a;
-        path_dir.normalize();
-
-        path_dir = path_dir * 0.0001;
-
-        kglt::Vec3 normal_point = get_normal_point(predict_loc, a, b);
-
-        if(!point_on_line(normal_point, a, b)) {
-            normal_point = b;
-        }
-
-        normal_point = normal_point + path_dir;
-        if(!point_on_line(normal_point, a, b)) {
-            //We're near the end of the line, so don't consider
-            //this path anymore, unless this is the last path segment
-            if(i + 2 != path_.length() && !loop_)
-                continue;
-        }
-
-        normal_points_.push_back(normal_point);
-
-        float dist = (predict_loc - normal_point).length();
-        std::cout << i << " - " << dist;
-        std::cout << "(" << normal_point.x << "," << normal_point.y << "," << normal_point.z << ")" << std::endl;
-        if(dist < closest) {
-            target = normal_point;
-            closest = dist;
-        }
-    }
-
-    float distance = (target - predict_loc).length();
-
-    update_debug_mesh();
-
-    if(distance > path_.radius()) {
-        return seek(target, velocity);
-    }
-
-    return velocity;
+Vec3 PathFollower::pursue(const kglt::Vec3& target, const kglt::Vec3& target_velocity, const float target_max_speed) const {
+    float T = kglt::Vec3::distance(target, actor_->position()) / target_max_speed;
+    kglt::Vec3 target_location = target + (target_velocity * T);
+    return seek(target_location);
 }
 
-Vec3 PathFollower::seek(const kglt::Vec3& target, const kglt::Vec3& velocity, float slowing_radius) const {
+kglt::Vec3 PathFollower::evade(const Vec3& target, const Vec3& target_velocity, const float target_max_speed) const {
+    float T = kglt::Vec3::distance(target, actor_->position()) / target_max_speed;
+    kglt::Vec3 target_location = target + (target_velocity * T);
+    return flee(target_location);
+}
+
+Vec3 PathFollower::seek(const kglt::Vec3& target, float slowing_radius) const {
     kglt::Vec3 desired_velocity = (target - actor_->position());
 
     float distance = desired_velocity.length();
@@ -124,12 +60,24 @@ Vec3 PathFollower::seek(const kglt::Vec3& target, const kglt::Vec3& velocity, fl
         desired_velocity = desired_velocity.normalize() * actor_->max_speed();
     }
 
-    kglt::Vec3 steering = desired_velocity - velocity;
+    kglt::Vec3 steering = desired_velocity - actor_->velocity();
 
     steering.limit(actor_->max_force());
     steering = steering / actor_->mass();
 
-    kglt::Vec3 new_velocity = velocity + steering;
+    kglt::Vec3 new_velocity = actor_->velocity() + steering;
+    new_velocity.limit(actor_->max_speed());
+    return new_velocity;
+}
+
+kglt::Vec3 PathFollower::flee(const Vec3& target) const {
+    kglt::Vec3 desired_velocity = (actor_->position() - target);
+    kglt::Vec3 steering = desired_velocity - actor_->velocity();
+
+    steering.limit(actor_->max_force());
+    steering = steering / actor_->mass();
+
+    kglt::Vec3 new_velocity = actor_->velocity() + steering;
     new_velocity.limit(actor_->max_speed());
     return new_velocity;
 }
@@ -138,9 +86,26 @@ void PathFollower::follow(Path path) {
     assert(actor_);
 
     path_ = path;
+    current_node_ = 0;
 
     //Move the actor directly to the first waypoint
     actor_->actor()->move_to(path_.point(0));
+}
+
+kglt::Vec3 PathFollower::steer_to_path() {
+    if(path_.empty() || current_node_ >= path_.length()) {
+        return kglt::Vec3();
+    }
+
+    kglt::Vec3 target = path_.point(current_node_);
+    if(kglt::Vec3::distance(actor_->position(), target) < path_.radius()) {
+        current_node_ += 1;
+        if(path_.cyclic() && current_node_ == path_.length()) {
+            current_node_ = 0;
+        }
+    }
+
+    return seek(target);
 }
 
 void PathFollower::update_debug_mesh() const {

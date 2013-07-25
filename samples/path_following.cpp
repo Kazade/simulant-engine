@@ -45,10 +45,8 @@ public:
     }
 
     void update(double dt) {        
-        velocity_ = velocity_ + follower_->force_to_apply(velocity_);
-        velocity_.limit(5.0);
-
-        actor()->move_to(kglt::Vec3(actor()->absolute_position()) + (velocity_ * dt));
+        set_velocity(follower_->steer_to_path());
+        actor()->move_to(position() + (velocity() * dt));
     }
 
     kglt::ActorID actor_id() const { return actor_; }

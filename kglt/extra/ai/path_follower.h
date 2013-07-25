@@ -20,14 +20,18 @@ public:
     void follow(Path path);
     void enable_debug(bool value=true);
 
-    kglt::Vec3 force_to_apply(const kglt::Vec3& velocity);
-
-    kglt::Vec3 seek(const kglt::Vec3& target, const Vec3 &velocity, float slowing_radius=2.0) const;
+    kglt::Vec3 steer_to_path();
+    kglt::Vec3 seek(const Vec3& target, float slowing_radius=2.0) const;
+    kglt::Vec3 flee(const Vec3& target) const;
+    kglt::Vec3 pursue(const Vec3& target, const Vec3& target_velocity, const float target_max_speed) const;
+    kglt::Vec3 evade(const Vec3& target, const Vec3& target_velocity, const float target_max_speed) const;
 
 private:
     MoveableActorHolder* actor_;
 
     Path path_;
+    int32_t current_node_ = 0;
+
     bool loop_ = false;
 
     kglt::MeshID debug_mesh_;

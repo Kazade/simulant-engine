@@ -31,7 +31,7 @@ public:
     }
 
     void update(double dt) {
-        set_velocity(follower_->seek(target, velocity()));
+        set_velocity(follower_->seek(target));
 
         actor()->move_to(position() + (velocity() * dt));
 
