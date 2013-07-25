@@ -2,12 +2,12 @@
 #include "../../window.h"
 #include "../../actor.h"
 
-#include "path_follower.h"
+#include "boid.h"
 
 namespace kglt {
 namespace extra {
 
-PathFollower::PathFollower(MoveableActorHolder *parent, float max_speed, float max_force):
+Boid::Boid(MoveableActorHolder *parent, float max_speed, float max_force):
     actor_(parent) {
 
 }
@@ -38,19 +38,19 @@ bool point_on_line(const kglt::Vec3& p, const kglt::Vec3& a, const kglt::Vec3& b
     return kmAlmostEqual(ab, (ap + pb));
 }
 
-Vec3 PathFollower::pursue(const kglt::Vec3& target, const kglt::Vec3& target_velocity, const float target_max_speed) const {
+Vec3 Boid::pursue(const kglt::Vec3& target, const kglt::Vec3& target_velocity, const float target_max_speed) const {
     float T = kglt::Vec3::distance(target, actor_->position()) / target_max_speed;
     kglt::Vec3 target_location = target + (target_velocity * T);
     return seek(target_location);
 }
 
-kglt::Vec3 PathFollower::evade(const Vec3& target, const Vec3& target_velocity, const float target_max_speed) const {
+kglt::Vec3 Boid::evade(const Vec3& target, const Vec3& target_velocity, const float target_max_speed) const {
     float T = kglt::Vec3::distance(target, actor_->position()) / target_max_speed;
     kglt::Vec3 target_location = target + (target_velocity * T);
     return flee(target_location);
 }
 
-Vec3 PathFollower::seek(const kglt::Vec3& target, float slowing_radius) const {
+Vec3 Boid::seek(const kglt::Vec3& target, float slowing_radius) const {
     kglt::Vec3 desired_velocity = (target - actor_->position());
 
     float distance = desired_velocity.length();
@@ -73,7 +73,7 @@ Vec3 PathFollower::seek(const kglt::Vec3& target, float slowing_radius) const {
     return new_velocity;
 }
 
-kglt::Vec3 PathFollower::flee(const Vec3& target) const {
+kglt::Vec3 Boid::flee(const Vec3& target) const {
     kglt::Vec3 desired_velocity = (actor_->position() - target);
     kglt::Vec3 steering = desired_velocity - actor_->velocity();
 
@@ -85,7 +85,7 @@ kglt::Vec3 PathFollower::flee(const Vec3& target) const {
     return new_velocity;
 }
 
-void PathFollower::follow(Path path) {
+void Boid::follow(Path path) {
     assert(actor_);
 
     path_ = path;
@@ -95,7 +95,7 @@ void PathFollower::follow(Path path) {
     actor_->actor()->move_to(path_.point(0));
 }
 
-kglt::Vec3 PathFollower::steer_to_path() {
+kglt::Vec3 Boid::steer_to_path() {
     if(path_.empty() || current_node_ >= path_.length()) {
         return kglt::Vec3();
     }
@@ -111,7 +111,7 @@ kglt::Vec3 PathFollower::steer_to_path() {
     return seek(target, path_.radius());
 }
 
-void PathFollower::update_debug_mesh() const {
+void Boid::update_debug_mesh() const {
     Stage* stage = actor_->stage();
     assert(stage);
 
@@ -141,7 +141,7 @@ void PathFollower::update_debug_mesh() const {
     vd.done();
 }
 
-void PathFollower::enable_debug(bool value) {
+void Boid::enable_debug(bool value) {
     assert(actor_);
     Stage* stage = actor_->stage();
     assert(stage);

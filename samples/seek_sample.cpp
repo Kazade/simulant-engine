@@ -2,7 +2,7 @@
 #include "kglt/base.h"
 #include "kglt/shortcuts.h"
 #include "kglt/additional.h"
-#include "kglt/extra/ai/path_follower.h"
+#include "kglt/extra/ai/boid.h"
 
 using namespace kglt::extra;
 
@@ -16,7 +16,7 @@ public:
         stage_(stage) {
 
         //Pass a reference to this to the PathFollower
-        follower_.reset(new PathFollower(this, 1, 1));
+        follower_.reset(new Boid(this, 1, 1));
     }
 
     bool init() {
@@ -45,7 +45,7 @@ public:
     kglt::StageID stage_id() const { return stage_; }
 
 private:
-    PathFollower::ptr follower_;
+    Boid::ptr follower_;
 
     kglt::StageID stage_;
     kglt::ActorID actor_;

@@ -1,5 +1,5 @@
-#ifndef PATH_FOLLOWER_H
-#define PATH_FOLLOWER_H
+#ifndef BOID_H
+#define BOID_H
 
 #include "../../kazbase/exceptions.h"
 #include "../../generic/managed.h"
@@ -12,11 +12,11 @@ namespace extra {
 
 class Path;
 
-class PathFollower:
-    public Managed<PathFollower> {
+class Boid:
+    public Managed<Boid> {
 
 public:
-    PathFollower(MoveableActorHolder* parent, float max_speed, float max_force);
+    Boid(MoveableActorHolder* parent, float max_speed, float max_force);
     void follow(Path path);
     void enable_debug(bool value=true);
 
