@@ -284,3 +284,12 @@ kglt/kazbase/json/json.h
 kglt/kazbase/json/json.cpp
 kglt/utils/gl_thread_check.h
 kglt/utils/gl_thread_check.cpp
+samples/path_following.cpp
+kglt/extra/ai/boid.h
+kglt/extra/ai/path.h
+kglt/base.h
+kglt/extra/ai/boid.cpp
+kglt/extra/ai/path.cpp
+kglt/types.cpp
+kglt/base.cpp
+samples/seek_sample.cpp
