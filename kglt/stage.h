@@ -29,7 +29,10 @@ public:
     Stage(Scene *parent, StageID id);
 
     ActorID new_actor();
+    ActorID new_actor(bool create_body);
     ActorID new_actor(MeshID mid);
+    ActorID new_actor(MeshID mid, bool create_body);
+
     ActorID new_actor_with_parent(Actor& parent);
     ActorID new_actor_with_parent(Actor& parent, MeshID mid);
 

@@ -8,6 +8,7 @@
 #include "types.h"
 #include "resource_manager.h"
 #include "generic/manager.h"
+#include "physics/physics_engine.h"
 
 namespace kglt {
 
@@ -34,6 +35,18 @@ public:
     Scene(WindowBase* window);
     ~Scene();
 
+    void enable_physics(std::shared_ptr<PhysicsEngine> engine) {
+        physics_engine_ = engine;
+    }
+
+    PhysicsEngine* physics_engine() const {
+        return physics_engine_.get();
+    }
+
+    bool physics_enabled() const {
+        return bool(physics_engine_);
+    }
+
     StageID new_stage(AvailablePartitioner partitioner=PARTITIONER_OCTREE);            
     Stage& stage() { return stage(default_stage_); }
     Stage& stage(StageID s);
@@ -48,7 +61,6 @@ public:
     ProtectedPtr<UIStage> ui_stage(UIStageID s);
     void delete_ui_stage(UIStageID s);
     uint32_t ui_stage_count() const;
-
 
     bool init();
     void render();
@@ -85,6 +97,7 @@ private:
     void initialize_defaults();
 
     std::shared_ptr<RenderSequence> render_sequence_;
+    std::shared_ptr<PhysicsEngine> physics_engine_;
 
     friend class WindowBase;
 };

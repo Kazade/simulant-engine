@@ -13,10 +13,13 @@
 #include <kazmath/vec3.h>
 #include <kazmath/vec2.h>
 #include <kazmath/vec4.h>
+#include <kazmath/quaternion.h>
 
 #include "generic/unique_id.h"
 
 namespace kglt {
+
+struct Quaternion : public kmQuaternion {};
 
 struct Vec4 : public kmVec4 {
     Vec4() {

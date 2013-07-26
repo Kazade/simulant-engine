@@ -10,6 +10,8 @@
 #include "mesh.h"
 #include "sound.h"
 
+#include "physics/physics_body.h"
+
 namespace kglt {
 
 class SubActor;
@@ -50,6 +52,35 @@ public:
 
     RenderPriority render_priority() const { return render_priority_; }
     void set_render_priority(RenderPriority value) { render_priority_ = value;}
+
+    void set_body(std::shared_ptr<PhysicsBody> body) {
+        body_ = body;
+    }
+
+    PhysicsBody* body() { return body_.get(); }
+    const PhysicsBody* body() const { return body_.get(); }
+
+    //Override the Object moving functions to take into account
+    //the possiblity of a body
+    virtual void move_to(float x, float y, float z) {
+        if(!body()) {
+            Object::move_to(x, y, z);
+        } else {
+            body()->set_position(kglt::Vec3(x, y, z));
+        }
+    }
+    virtual void move_to(const kmVec3& pos) { move_to(pos.x, pos.y, pos.z); }
+
+    virtual kmVec3 absolute_position() const {
+        if(!body()) {
+            return Object::absolute_position();
+        } else {
+            return (kmVec3) body()->position();
+        }
+    }
+
+    //FIXME: Override more!
+
 private:
     MeshPtr mesh_;
     std::vector<std::shared_ptr<SubActor> > subactors_;
@@ -61,6 +92,8 @@ private:
     void do_update(double dt) {
         update_source(dt);
     }
+
+    std::shared_ptr<PhysicsBody> body_;
 
     friend class SubActor;
 };

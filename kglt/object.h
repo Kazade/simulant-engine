@@ -43,6 +43,9 @@ public:
 	void set_visible(bool value=true) { is_visible_ = value; }
 	bool is_visible() const { return is_visible_; }
 
+
+    //FIXME: rename move_to -> set_absolute_position
+    // add set_relative_position
     virtual void move_to(float x, float y, float z);
     virtual void move_to(const kmVec3& pos) { move_to(pos.x, pos.y, pos.z); }
     virtual void move_forward(float amount);
@@ -63,11 +66,13 @@ public:
 
     kmMat4 absolute_transformation();
 
+    //FIXME: rename position -> relative_position
     const kmVec3& position() const { return position_; }
-    const kmVec3& absolute_position() const { return absolute_position_; }
+
+    virtual kmVec3 absolute_position() const { return absolute_position_; }
 
     const kmQuaternion& rotation() const { return rotation_; }
-    const kmQuaternion& absolute_rotation() const { return absolute_orientation_; }
+    virtual const kmQuaternion& absolute_rotation() const { return absolute_orientation_; }
 
     uint64_t uuid() const { return uuid_; }
         

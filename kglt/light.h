@@ -70,7 +70,8 @@ public:
     /** Boundable interface **/
     const kmAABB absolute_bounds() const {
         kmAABB result;
-        kmAABBInitialize(&result, &absolute_position(), range(), range(), range());
+        kmVec3 abs_pos = absolute_position();
+        kmAABBInitialize(&result, &abs_pos, range(), range(), range());
         return result;
     }
 
