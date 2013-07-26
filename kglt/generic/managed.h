@@ -18,107 +18,17 @@ public:
     typedef std::shared_ptr<T> ptr;
     typedef std::tr1::weak_ptr<T> wptr;
 
+    template<typename... Args>
+    static typename Managed<T>::ptr create(Args&&... args) {
+        typename Managed<T>::ptr instance = std::make_shared<T>(std::forward<Args>(args)...);
+        if(!instance->init()) {
+            throw InstanceInitializationError();
+        }
+        return instance;
+    }
+
     static typename Managed<T>::ptr create() {
         typename Managed<T>::ptr instance = typename Managed<T>::ptr(new T());
-        if(!instance->init()) {
-            throw InstanceInitializationError();
-        }
-        return instance;
-    }
-
-    template<typename U>
-    static typename Managed<T>::ptr create(U& p1) {
-        typename Managed<T>::ptr instance = typename Managed<T>::ptr(new T(p1));
-        if(!instance->init()) {
-            throw InstanceInitializationError();
-        }
-        return instance;
-    }
-
-    template<typename U>
-    static typename Managed<T>::ptr create(const U& p1) {
-        typename Managed<T>::ptr instance = typename Managed<T>::ptr(new T(p1));
-        if(!instance->init()) {
-            throw InstanceInitializationError();
-        }
-        return instance;
-    }
-
-    template<typename U, typename V>
-    static typename Managed<T>::ptr create(U& p1, V& p2) {
-        typename Managed<T>::ptr instance = typename Managed<T>::ptr(new T(p1, p2));
-        if(!instance->init()) {
-            throw InstanceInitializationError();
-        }
-        return instance;
-    }
-
-    template<typename U, typename V>
-    static typename Managed<T>::ptr create(U& p1, const V& p2) {
-        typename Managed<T>::ptr instance = typename Managed<T>::ptr(new T(p1, p2));
-        if(!instance->init()) {
-            throw InstanceInitializationError();
-        }
-        return instance;
-    }
-
-    template<typename U, typename V>
-    static typename Managed<T>::ptr create(const U& p1, const V& p2) {
-        typename Managed<T>::ptr instance = typename Managed<T>::ptr(new T(p1, p2));
-        if(!instance->init()) {
-            throw InstanceInitializationError();
-        }
-        return instance;
-    }
-
-    template<typename U, typename V, typename W>
-    static typename Managed<T>::ptr create(U& p1, V& p2, W& p3) {
-        typename Managed<T>::ptr instance = typename Managed<T>::ptr(new T(p1, p2, p3));
-        if(!instance->init()) {
-            throw InstanceInitializationError();
-        }
-        return instance;
-    }
-
-    template<typename U, typename V, typename W>
-    static typename Managed<T>::ptr create(const U& p1, V& p2, W& p3) {
-        typename Managed<T>::ptr instance = typename Managed<T>::ptr(new T(p1, p2, p3));
-        if(!instance->init()) {
-            throw InstanceInitializationError();
-        }
-        return instance;
-    }
-
-    template<typename U, typename V, typename W>
-    static typename Managed<T>::ptr create(const U& p1, const V& p2, const W& p3) {
-        typename Managed<T>::ptr instance = typename Managed<T>::ptr(new T(p1, p2, p3));
-        if(!instance->init()) {
-            throw InstanceInitializationError();
-        }
-        return instance;
-    }
-
-    template<typename U, typename V, typename W>
-    static typename Managed<T>::ptr create(U& p1, const V& p2, const W& p3) {
-        typename Managed<T>::ptr instance = typename Managed<T>::ptr(new T(p1, p2, p3));
-        if(!instance->init()) {
-            throw InstanceInitializationError();
-        }
-        return instance;
-    }
-
-    template<typename U, typename V, typename W, typename X>
-    static typename Managed<T>::ptr create(U& p1, V& p2, W& p3, X& p4) {
-        typename Managed<T>::ptr instance = typename Managed<T>::ptr(new T(p1, p2, p3, p4));
-        if(!instance->init()) {
-            throw InstanceInitializationError();
-        }
-        return instance;
-    }
-
-    template<typename U, typename V, typename W, typename X>
-    static typename Managed<T>::ptr create(const U& p1, const V& p2, const W& p3, const X& p4) {
-        typename Managed<T>::ptr instance = typename Managed<T>::ptr(new T(p1, p2, p3, p4));
         if(!instance->init()) {
             throw InstanceInitializationError();
         }
@@ -129,7 +39,8 @@ public:
     virtual bool init() { return true; }
 
 protected:
-    Managed() {}
+    template<typename...Args>
+    Managed(Args&&... args) {}
 
 };
 
