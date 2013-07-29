@@ -17,6 +17,15 @@ public:
         //window->reset();
     }
 
+    void test_set_absolute_rotation() {
+        kglt::ActorID act = window->scene().stage().new_actor();
+        kglt::Actor* actor = &window->scene().stage().actor(act);
+
+        actor->set_absolute_rotation(10, 0, 0, 1);
+
+        assert_equal(actor->relative_rotation(), actor->absolute_rotation());
+    }
+
     void test_set_absolute_position() {
         kglt::ActorID act = window->scene().stage().new_actor();
         kglt::Actor* actor = &window->scene().stage().actor(act);

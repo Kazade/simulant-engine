@@ -201,6 +201,7 @@ struct Vec3 : public kmVec3 {
 
 
 std::ostream& operator<<(std::ostream& stream, const Vec3& vec);
+std::ostream& operator<<(std::ostream& stream, const Quaternion& quat);
 
 kglt::Vec3 operator*(float lhs, const kglt::Vec3& rhs);
 kglt::Vec3 operator/(float lhs, const kglt::Vec3& rhs);

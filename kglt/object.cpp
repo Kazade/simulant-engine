@@ -81,11 +81,13 @@ void Object::set_absolute_rotation(const Quaternion& quat) {
     }
 
     kglt::Quaternion parent_rot;
+    kmQuaternionIdentity(&parent_rot);
+
     if(has_parent()) {
         parent_rot = parent().absolute_rotation();
     }
 
-    set_relative_rotation(quat - parent_rot);
+    set_relative_rotation(quat * parent_rot);
 }
 
 void Object::set_relative_position(float x, float y, float z) {
@@ -197,7 +199,7 @@ void Object::update_from_parent() {
             absolute_position_ = parent().absolute_position() + relative_position();
         }
         if(!rotation_locked_) {
-            absolute_rotation_ = relative_rotation() * absolute_rotation();
+            absolute_rotation_ = relative_rotation() * parent().absolute_rotation();
             absolute_rotation_.normalize();
         }
     }
