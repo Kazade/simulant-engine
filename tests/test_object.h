@@ -24,6 +24,22 @@ public:
         actor->set_absolute_rotation(10, 0, 0, 1);
 
         assert_equal(actor->relative_rotation(), actor->absolute_rotation());
+
+        kglt::ActorID act2 = window->scene().stage().new_actor();
+        kglt::Actor* actor2 = &window->scene().stage().actor(act2);
+
+        actor2->set_parent(actor);
+
+        assert_equal(actor2->absolute_rotation(), actor->absolute_rotation());
+
+        actor2->set_absolute_rotation(20, 0, 0, 1);
+
+        kglt::Quaternion expected_rel, expected_abs;
+        kmQuaternionRotationAxisAngle(&expected_abs, &KM_VEC3_POS_Z, kmDegreesToRadians(20));
+        kmQuaternionRotationAxisAngle(&expected_rel, &KM_VEC3_POS_Z, kmDegreesToRadians(10));
+
+        assert_equal(expected_abs, actor2->absolute_rotation());
+        assert_equal(expected_rel, actor2->relative_rotation());
     }
 
     void test_set_absolute_position() {

@@ -97,6 +97,8 @@ void Object::set_relative_position(float x, float y, float z) {
 
 void Object::set_relative_rotation(const Quaternion &quaternion) {
     relative_rotation_ = quaternion;
+    relative_rotation_.normalize();
+
     update_from_parent();
 }
 
@@ -132,7 +134,6 @@ void Object::rotate_absolute_x(float amount) {
     kmQuaternionRotationAxisAngle(&rot, &axis, kmDegreesToRadians(amount));
 
     set_absolute_rotation(absolute_rotation() * rot);
-    absolute_rotation_.normalize();
 
     update_from_parent();
 }
