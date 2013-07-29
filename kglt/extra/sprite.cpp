@@ -115,11 +115,11 @@ void Sprite::set_render_dimensions(float width, float height) {
 }
 
 void Sprite::move_to(float x, float y, float z) {
-    actor()->move_to(x, y, z);
+    actor()->set_absolute_position(x, y, z);
 }
 
 void Sprite::rotate_to(float angle, float x, float y, float z) {
-    actor()->rotate_to(angle, x, y, z);
+    actor()->set_absolute_rotation(angle, x, y, z);
 }
 
 void Sprite::update_texture_coordinates() {

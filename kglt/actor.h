@@ -62,16 +62,17 @@ public:
 
     //Override the Object moving functions to take into account
     //the possiblity of a body
-    virtual void move_to(float x, float y, float z) {
+    virtual void set_absolute_position(float x, float y, float z) override {
         if(!body()) {
-            Object::move_to(x, y, z);
+            Object::set_absolute_position(x, y, z);
         } else {
             body()->set_position(kglt::Vec3(x, y, z));
         }
     }
-    virtual void move_to(const kmVec3& pos) { move_to(pos.x, pos.y, pos.z); }
 
-    virtual kmVec3 absolute_position() const {
+    virtual void set_absolute_position(const Vec3& pos) override { set_absolute_position(pos.x, pos.y, pos.z); }
+
+    virtual Vec3 absolute_position() const override {
         if(!body()) {
             return Object::absolute_position();
         } else {
@@ -148,11 +149,11 @@ public:
         return submesh().bounds();
     }
 
-    const kmVec3 centre() const {
+    const Vec3 centre() const {
         // Return the centre point of the absolute bounds of this subactor
         // which is the submesh().bounds() transformed by the parent actor's
         // location
-        kmVec3 centre;
+        Vec3 centre;
         kmAABB abs_bounds = absolute_bounds();
         kmAABBCentre(&abs_bounds, &centre);
         return centre;

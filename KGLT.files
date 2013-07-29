@@ -297,3 +297,4 @@ kglt/physics/physics_engine.h
 kglt/physics/physics_body.h
 kglt/physics/bullet_engine.h
 kglt/physics/bullet_body.h
+tests/test_object.h

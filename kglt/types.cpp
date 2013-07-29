@@ -19,4 +19,9 @@ kglt::Vec3 operator-(const kglt::Vec3& vec) {
     return kglt::Vec3(-vec.x, -vec.y, -vec.z);
 }
 
+std::ostream& operator<<(std::ostream& stream, const Vec3& vec) {
+    stream << "(" << vec.x << "," << vec.y << "," << vec.z << ")";
+    return stream;
+}
+
 }

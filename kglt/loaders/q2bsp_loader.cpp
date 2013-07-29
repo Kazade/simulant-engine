@@ -193,7 +193,7 @@ void add_lights_to_scene(Scene& scene, const std::vector<ActorProperties>& actor
             kglt::Light& new_light = scene.stage().light(scene.stage().new_light());
 
             kmVec3Transform(&pos, &pos, &rotation);
-            new_light.move_to(pos.x, pos.y, pos.z);
+            new_light.set_absolute_position(pos.x, pos.y, pos.z);
 
             float range = 300; //Default in Q2
             if(container::contains(props, std::string("light"))) {
@@ -252,7 +252,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     parse_actors(actor_string, actors);
     kmVec3 cam_pos = find_player_spawn_point(actors);
     kmVec3Transform(&cam_pos, &cam_pos, &rotation);
-    scene->camera().move_to(cam_pos);
+    scene->camera().set_absolute_position(cam_pos);
 
     add_lights_to_scene(*scene, actors);
 

@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
 
     window->signal_step().connect(
         [&](double dt) {
-            actor.rotate_y(10.0 * dt);
+            actor.rotate_absolute_y(10.0 * dt);
 
             x_position += ((incrementing) ? -10.0 : 10.0) * dt;
 

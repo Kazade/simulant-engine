@@ -25,7 +25,7 @@ public:
     void add_light(LightID obj);
     void remove_light(LightID obj);
 
-    std::vector<LightID> lights_within_range(const kmVec3& location);
+    std::vector<LightID> lights_within_range(const Vec3& location);
     std::vector<SubActorPtr> geometry_visible_from(CameraID camera_id);
 
     void event_actor_changed(ActorID ent);

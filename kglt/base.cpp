@@ -9,18 +9,18 @@ MoveableActorHolder::MoveableActorHolder(Scene& scene):
 }
 
 void MoveableActorHolder::set_position(const Vec3& position) {
-    actor()->move_to(position);
+    actor()->set_absolute_position(position);
 }
 
 Vec3 MoveableActorHolder::position() const {
     return actor()->absolute_position();
 }
 
-void MoveableActorHolder::set_rotation(const kmQuaternion &quaternion) {
-    actor()->rotate_to(quaternion);
+void MoveableActorHolder::set_rotation(const Quaternion &quaternion) {
+    actor()->set_absolute_rotation(quaternion);
 }
 
-kmQuaternion MoveableActorHolder::rotation() const {
+Quaternion MoveableActorHolder::rotation() const {
     return actor()->absolute_rotation();
 }
 

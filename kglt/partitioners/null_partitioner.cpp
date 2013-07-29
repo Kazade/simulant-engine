@@ -6,16 +6,15 @@
 
 namespace kglt {
 
-std::vector<LightID> NullPartitioner::lights_within_range(const kmVec3& location) {
+std::vector<LightID> NullPartitioner::lights_within_range(const Vec3& location) {
     std::vector<std::pair<LightID, float> > lights_in_range;
 
     //Find all the lights within range of the location
     for(LightID light_id: all_lights_) {
         Light& light = stage().light(light_id);
 
-        kmVec3 diff;
-        kmVec3Subtract(&diff, &location, &light.position());
-        float dist = kmVec3Length(&diff);
+        Vec3 diff = location - light.absolute_position();
+        float dist = diff.length();
         //if(dist < light.range()) {
             lights_in_range.push_back(std::make_pair(light_id, dist));
         //}

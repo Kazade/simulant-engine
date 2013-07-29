@@ -91,7 +91,7 @@ std::vector<SubActor::ptr> OctreePartitioner::geometry_visible_from(CameraID cam
     return results;
 }
 
-std::vector<LightID> OctreePartitioner::lights_within_range(const kmVec3& location) {
+std::vector<LightID> OctreePartitioner::lights_within_range(const Vec3& location) {
     std::vector<LightID> lights;
 /*
     //Go through the visible nodes

@@ -152,7 +152,7 @@ private:
             return local;
         }
 
-        const kmVec3 centre() const {
+        const kglt::Vec3 centre() const {
             return centre_;
         }
     private:

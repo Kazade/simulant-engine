@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
 
     kglt::MeshID mid = stage.new_mesh_from_file(filename);
     kglt::Actor& actor = stage.actor(stage.new_actor(mid));
-    actor.move_to(0, 0, -30);
+    actor.set_absolute_position(0, 0, -30);
 
     //Just stash the skybox along with the scene
     window->scene().data().stash(kglt::extra::StarField::create(stage), "skybox");
@@ -38,27 +38,27 @@ int main(int argc, char* argv[]) {
 
     //Connect keyboard signals
     window->keyboard().key_while_down_connect(kglt::KEY_CODE_LEFT, [=](kglt::KeyEvent key, double dt) mutable {
-        window->scene().stage().actor(actor.id()).rotate_y(-20.0 * dt);
+        window->scene().stage().actor(actor.id()).rotate_absolute_y(-20.0 * dt);
     });
 
     window->keyboard().key_while_down_connect(kglt::KEY_CODE_RIGHT, [=](kglt::KeyEvent key, double dt) mutable {
-        window->scene().stage().actor(actor.id()).rotate_y(20.0 * dt);
+        window->scene().stage().actor(actor.id()).rotate_absolute_y(20.0 * dt);
     });
 
     window->keyboard().key_while_down_connect(kglt::KEY_CODE_UP, [=](kglt::KeyEvent key, double dt) mutable {
-        window->scene().stage().actor(actor.id()).rotate_x(20.0 * dt);
+        window->scene().stage().actor(actor.id()).rotate_absolute_x(20.0 * dt);
     });
 
     window->keyboard().key_while_down_connect(kglt::KEY_CODE_DOWN, [=](kglt::KeyEvent key, double dt) mutable {
-        window->scene().stage().actor(actor.id()).rotate_x(-20.0 * dt);
+        window->scene().stage().actor(actor.id()).rotate_absolute_x(-20.0 * dt);
     });
 
     window->keyboard().key_while_down_connect(kglt::KEY_CODE_a, [=](kglt::KeyEvent key, double dt) mutable {
-        window->scene().stage().actor(actor.id()).rotate_z(-60.0 * dt);
+        window->scene().stage().actor(actor.id()).rotate_absolute_z(-60.0 * dt);
     });
 
     window->keyboard().key_while_down_connect(kglt::KEY_CODE_d, [=](kglt::KeyEvent key, double dt) mutable {
-        window->scene().stage().actor(actor.id()).rotate_z(60.0 * dt);
+        window->scene().stage().actor(actor.id()).rotate_absolute_z(60.0 * dt);
     });
 
     window->keyboard().key_while_down_connect(kglt::KEY_CODE_s, [=](kglt::KeyEvent key, double dt) mutable {

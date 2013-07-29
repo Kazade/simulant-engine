@@ -43,36 +43,75 @@ public:
 	void set_visible(bool value=true) { is_visible_ = value; }
 	bool is_visible() const { return is_visible_; }
 
+    virtual void set_absolute_position(float x, float y, float z);
+    virtual void set_absolute_position(const kglt::Vec3& pos) { set_absolute_position(pos.x, pos.y, pos.z); }
+    virtual kglt::Vec3 absolute_position() const { return absolute_position_; }
 
-    //FIXME: rename move_to -> set_absolute_position
-    // add set_relative_position
-    virtual void move_to(float x, float y, float z);
-    virtual void move_to(const kmVec3& pos) { move_to(pos.x, pos.y, pos.z); }
-    virtual void move_forward(float amount);
-    
-    virtual void rotate_x(float amount);        
-    virtual void rotate_y(float amount);
-    virtual void rotate_z(float amount);
-    virtual void rotate_to(float angle, float x, float y, float z);
-    virtual void rotate_to(const kmQuaternion& quat);
+    //Syntactic sugar
+    void move_to(const kglt::Vec3& pos) {
+        set_absolute_position(pos);
+    }
+
+    void move_to(float x, float y, float z) {
+        set_absolute_position(x, y, z);
+    }
+
+    void rotate_to(const kglt::Quaternion& q) {
+        set_absolute_rotation(q);
+    }
+
+    void rotate_to(float angle, float x, float y, float z) {
+        set_absolute_rotation(angle, x, y, z);
+    }
+
+    void rotate_x(float angle) { rotate_absolute_x(angle); }
+    void rotate_y(float angle) { rotate_absolute_y(angle); }
+    void rotate_z(float angle) { rotate_absolute_z(angle); }
+
+    virtual void set_relative_position(float x, float y, float z);
+    virtual void set_relative_position(const kglt::Vec3& pos) { set_relative_position(pos.x, pos.y, pos.z); }
+    virtual kglt::Vec3 relative_position() const { return relative_position_; }
+
+    virtual void set_absolute_rotation(const kglt::Quaternion& quaternion);
+    virtual void set_absolute_rotation(float angle, float x, float y, float z);
+    virtual kglt::Quaternion absolute_rotation() const { return absolute_rotation_; }
+
+    virtual void set_relative_rotation(const kglt::Quaternion& quaternion);
+    virtual kglt::Quaternion relative_rotation() const { return relative_rotation_; }
+
+    virtual void rotate_absolute_x(float amount);
+    virtual void rotate_absolute_y(float amount);
+    virtual void rotate_absolute_z(float amount);
+
+    Vec3 right() const {
+        Vec3 result;
+        kmQuaternionGetRightVec3(&result, &absolute_rotation_);
+        return result;
+    }
+
+    Vec3 up() const {
+        Vec3 result;
+        kmQuaternionGetUpVec3(&result, &absolute_rotation_);
+        return result;
+    }
+
+    Vec3 forward() const {
+        Vec3 result;
+        kmQuaternionGetForwardVec3RH(&result, &absolute_rotation_);
+        return result;
+    }
+
+    void move_forward(float amount);
+
+    kglt::Mat4 absolute_transformation() const;
 
     //Make this object ignore parent rotations or rotate commands until unlocked
-    void lock_rotation(float angle, float x, float y, float z);
+    void lock_rotation();
     void unlock_rotation();
 
     //Make this object ignore parent translations or move commands until unlocked
-    void lock_position(float x, float y, float z);
+    void lock_position();
     void unlock_position();
-
-    kmMat4 absolute_transformation();
-
-    //FIXME: rename position -> relative_position
-    const kmVec3& position() const { return position_; }
-
-    virtual kmVec3 absolute_position() const { return absolute_position_; }
-
-    const kmQuaternion& rotation() const { return rotation_; }
-    virtual const kmQuaternion& absolute_rotation() const { return absolute_orientation_; }
 
     uint64_t uuid() const { return uuid_; }
         
@@ -90,19 +129,18 @@ public:
 
 protected:
     void update_from_parent();
-    void set_position(const kmVec3& pos);
 
-    kmVec3 position_;
-    kmQuaternion rotation_;
 private:
     static uint64_t object_counter;
     uint64_t uuid_;
 
     Stage* stage_; //Each object is owned by a scene
 
+    kglt::Vec3 relative_position_;
+    kglt::Quaternion relative_rotation_;
 
-    kmVec3 absolute_position_;
-    kmQuaternion absolute_orientation_;
+    kglt::Vec3 absolute_position_;
+    kglt::Quaternion absolute_rotation_;
 
     sigc::connection parent_changed_connection_;
 

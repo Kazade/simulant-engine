@@ -80,20 +80,20 @@ void export_lua_api(lua_State* state) {
 
     luabind::module(state) [
         luabind::class_<Object>("Object")
-            .def("move_to", (void(Object::*)(float, float, float))&Object::move_to)
-            .def("move_forward", &Object::move_forward)
-            .def("rotate_x", &Object::rotate_x)
-            .def("rotate_y", &Object::rotate_y)
-            .def("rotate_z", &Object::rotate_z)
-            .def("rotate_to", (void(Object::*)(float, float, float, float))&Object::rotate_to)
+            .def("move_to", (void(Object::*)(float, float, float))&Object::set_absolute_position)
+//            .def("move_forward", &Object::move_forward)
+            .def("rotate_x", &Object::rotate_absolute_x)
+            .def("rotate_y", &Object::rotate_absolute_y)
+            .def("rotate_z", &Object::rotate_absolute_z)
+            .def("rotate_to", (void(Object::*)(float, float, float, float))&Object::set_absolute_rotation)
             .def("lock_rotation", &Object::lock_rotation)
             .def("unlock_rotation", &Object::unlock_rotation)
             .def("lock_position", &Object::lock_position)
             .def("unlock_position", &Object::unlock_position)
             .property("uuid", &Object::uuid)
-            .property("position", &Object::position)
+            .property("relative_position", &Object::relative_position)
             .property("absolute_position", &Object::absolute_position)
-            .property("rotation", &Object::rotation)
+            .property("relative_rotation", &Object::relative_rotation)
             .property("absolute_rotation", &Object::absolute_rotation)
     ];
 

@@ -33,7 +33,8 @@ SkyBox::SkyBox(kglt::Stage& stage, kglt::TextureID texture, float size, CameraID
     actor_->attach_to_camera(cam);
 
     //Skyboxes shouldn't rotate based on their parent (e.g. the camera)
-    actor_->lock_rotation(0, 0, 1, 0);
+    actor_->set_absolute_rotation(0, 0, 1, 0);
+    actor_->lock_rotation();
 }
 
 StarField::StarField(Stage& stage, CameraID cam) {

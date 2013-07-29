@@ -28,7 +28,7 @@ public:
         all_lights_.erase(obj);
     }
 
-    std::vector<LightID> lights_within_range(const kmVec3& location);
+    std::vector<LightID> lights_within_range(const Vec3& location);
     std::vector<std::shared_ptr<SubActor>> geometry_visible_from(CameraID camera_id);
 
 private:

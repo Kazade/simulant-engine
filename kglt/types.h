@@ -1,6 +1,7 @@
 #ifndef TYPES_H_INCLUDED
 #define TYPES_H_INCLUDED
 
+#include <iostream>
 #include <memory>
 
 #include <lua.hpp>
@@ -14,12 +15,49 @@
 #include <kazmath/vec2.h>
 #include <kazmath/vec4.h>
 #include <kazmath/quaternion.h>
+#include <kazmath/mat4.h>
 
 #include "generic/unique_id.h"
 
 namespace kglt {
 
-struct Quaternion : public kmQuaternion {};
+struct Quaternion : public kmQuaternion {
+    Quaternion() {
+        kmQuaternionIdentity(this);
+    }
+
+    Quaternion operator-(const Quaternion& quat) const {
+        Quaternion result;
+        kmQuaternionSubtract(&result, this, &quat);
+        return result;
+    }
+
+    Quaternion operator*(const Quaternion& quat) const {
+        Quaternion result;
+        kmQuaternionMultiply(&result, this, &quat);
+        return result;
+    }
+
+    const Quaternion& normalize() {
+        kmQuaternionNormalize(this, this);
+        return *this;
+    }
+
+    bool operator==(const Quaternion& rhs) const {
+        return kmQuaternionAreEqual(this, &rhs);
+    }
+
+    bool operator!=(const Quaternion& rhs) const {
+        return !(*this == rhs);
+    }
+
+    const Quaternion& slerp(const Quaternion& rhs, float t) {
+        kmQuaternionSlerp(this, this, &rhs, t);
+        return *this;
+    }
+};
+
+struct Mat4 : public kmMat4 {};
 
 struct Vec4 : public kmVec4 {
     Vec4() {
@@ -118,6 +156,11 @@ struct Vec3 : public kmVec3 {
         return *this;
     }
 
+    const Vec3& rotate(const Quaternion& q) {
+        kmQuaternionMultiplyVec3(this, &q, this);
+        return *this;
+    }
+
     float dot(const kglt::Vec3& rhs) const {
         return kmVec3Dot(this, &rhs);
     }
@@ -140,7 +183,7 @@ struct Vec3 : public kmVec3 {
     }
 
 
-    //Necesary for OpenSteer
+    //Neccesary for OpenSteer
     inline Vec3 parallel_component(const Vec3& unit_basis) const {
         const float projection = this->dot(unit_basis);
         return unit_basis * projection;
@@ -152,7 +195,12 @@ struct Vec3 : public kmVec3 {
     inline Vec3 perpendicular_component (const Vec3& unit_basis) const {
         return (*this) - parallel_component(unit_basis);
     }
+
+    friend std::ostream& operator<<(std::ostream& stream, const Vec3& vec);
 };
+
+
+std::ostream& operator<<(std::ostream& stream, const Vec3& vec);
 
 kglt::Vec3 operator*(float lhs, const kglt::Vec3& rhs);
 kglt::Vec3 operator/(float lhs, const kglt::Vec3& rhs);

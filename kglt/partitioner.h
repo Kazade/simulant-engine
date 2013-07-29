@@ -26,7 +26,7 @@ public:
     virtual void add_light(LightID obj) = 0;
     virtual void remove_light(LightID obj) = 0;
 
-    virtual std::vector<LightID> lights_within_range(const kmVec3& location) = 0;
+    virtual std::vector<LightID> lights_within_range(const Vec3& location) = 0;
     virtual std::vector<std::shared_ptr<SubActor>> geometry_visible_from(CameraID camera_id) = 0;
 
 protected:

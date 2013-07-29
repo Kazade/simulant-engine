@@ -97,7 +97,7 @@ int main(int argc, const char *argv[]) {
 
     stage.set_ambient_light(kglt::Colour::white);
     kglt::Light& light = stage.light(stage.new_light());
-    light.move_to(5.0, 0.0, -5.0);
+    light.set_absolute_position(5.0, 0.0, -5.0);
     light.set_diffuse(kglt::Colour::green);
     light.set_attenuation_from_range(10.0);
 
@@ -107,7 +107,7 @@ int main(int argc, const char *argv[]) {
     kglt::Actor& actor = stage.actor(actor_id);
     actor.mesh().lock()->set_material_id(matid);
 
-    actor.move_to(pos);
+    actor.set_absolute_position(pos);
 
     // It would be nice to check if a joypad is connected
     // and the create the reference..
@@ -125,8 +125,8 @@ int main(int argc, const char *argv[]) {
             pos = { 0, 0, -5.f };
             // rot = { 0, 0 };
 
-            actor.rotate_to(0, 0, 0, pos.z);
-            actor.move_to(pos);
+            actor.set_absolute_rotation(0, 0, 0, pos.z);
+            actor.set_absolute_position(pos);
     });
 
     // Left x-axis
@@ -153,8 +153,8 @@ int main(int argc, const char *argv[]) {
 
     while(window->update()) {
         auto dt = window->delta_time();
-        actor.rotate_x(rot.y*dt*10);
-        actor.rotate_y(rot.x*dt*10);
+        actor.rotate_absolute_x(rot.y*dt*10);
+        actor.rotate_absolute_y(rot.x*dt*10);
     }
 
     stage.delete_actor(actor_id);
