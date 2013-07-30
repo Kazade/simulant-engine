@@ -87,7 +87,8 @@ void Object::set_absolute_rotation(const Quaternion& quat) {
         parent_rot = parent().absolute_rotation();
     }
 
-    set_relative_rotation(quat * parent_rot);
+    parent_rot.inverse();
+    set_relative_rotation(parent_rot * quat);
 }
 
 void Object::set_relative_position(float x, float y, float z) {
@@ -102,15 +103,17 @@ void Object::set_relative_rotation(const Quaternion &quaternion) {
     update_from_parent();
 }
 
-void Object::set_absolute_rotation(float angle, float x, float y, float z) {
-    if(rotation_locked_) return;
+void Object::set_absolute_rotation(const Degrees &angle, float x, float y, float z) {
+    if(rotation_locked_) {
+        return;
+    }
 
     kglt::Quaternion rot;
     kmVec3 axis;
     kmVec3Fill(&axis, x, y, z);    
-    kmQuaternionRotationAxisAngle(&rot, &axis, kmDegreesToRadians(angle));
+    kmQuaternionRotationAxisAngle(&rot, &axis, kmDegreesToRadians(angle.value_));
+
     set_absolute_rotation(rot);
-    update_from_parent();
 }
 
 void Object::move_forward(float amount) {

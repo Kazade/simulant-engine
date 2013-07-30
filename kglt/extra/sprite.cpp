@@ -118,7 +118,7 @@ void Sprite::move_to(float x, float y, float z) {
     actor()->set_absolute_position(x, y, z);
 }
 
-void Sprite::rotate_to(float angle, float x, float y, float z) {
+void Sprite::rotate_to(const Degrees &angle, float x, float y, float z) {
     actor()->set_absolute_rotation(angle, x, y, z);
 }
 

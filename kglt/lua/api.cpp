@@ -85,7 +85,7 @@ void export_lua_api(lua_State* state) {
             .def("rotate_x", &Object::rotate_absolute_x)
             .def("rotate_y", &Object::rotate_absolute_y)
             .def("rotate_z", &Object::rotate_absolute_z)
-            .def("rotate_to", (void(Object::*)(float, float, float, float))&Object::set_absolute_rotation)
+            .def("rotate_to", (void(Object::*)(const Degrees&, float, float, float))&Object::set_absolute_rotation)
             .def("lock_rotation", &Object::lock_rotation)
             .def("unlock_rotation", &Object::unlock_rotation)
             .def("lock_position", &Object::lock_position)

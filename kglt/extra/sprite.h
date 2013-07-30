@@ -60,7 +60,7 @@ public:
     void set_next_animation(const std::string& anim_name);
     void set_active_animation(const std::string& anim_name);
     void move_to(float x, float y, float z);
-    void rotate_to(float angle, float x, float y, float z);
+    void rotate_to(const Degrees& angle, float x, float y, float z);
 
     void set_render_dimensions(float width, float height);
     void set_visible(bool value=true);

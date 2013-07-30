@@ -26,6 +26,10 @@ struct Quaternion : public kmQuaternion {
         kmQuaternionIdentity(this);
     }
 
+    Quaternion(float x, float y, float z, float w) {
+        kmQuaternionFill(this, x, y, z, w);
+    }
+
     Quaternion operator-(const Quaternion& quat) const {
         Quaternion result;
         kmQuaternionSubtract(&result, this, &quat);
@@ -40,6 +44,11 @@ struct Quaternion : public kmQuaternion {
 
     const Quaternion& normalize() {
         kmQuaternionNormalize(this, this);
+        return *this;
+    }
+
+    const Quaternion& inverse() {
+        kmQuaternionInverse(this, this);
         return *this;
     }
 
@@ -206,6 +215,7 @@ std::ostream& operator<<(std::ostream& stream, const Quaternion& quat);
 kglt::Vec3 operator*(float lhs, const kglt::Vec3& rhs);
 kglt::Vec3 operator/(float lhs, const kglt::Vec3& rhs);
 kglt::Vec3 operator-(const kglt::Vec3& vec);
+kglt::Quaternion operator-(const kglt::Quaternion& q);
 
 
 enum BlendType {

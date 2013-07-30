@@ -125,7 +125,7 @@ int main(int argc, const char *argv[]) {
             pos = { 0, 0, -5.f };
             // rot = { 0, 0 };
 
-            actor.set_absolute_rotation(0, 0, 0, pos.z);
+            actor.set_absolute_rotation(kglt::Degrees(0), 0, 0, pos.z);
             actor.set_absolute_position(pos);
     });
 

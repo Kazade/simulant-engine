@@ -22,6 +22,20 @@ namespace kglt {
 
 class Scene;
 
+struct Degrees {
+    explicit Degrees(float value):
+        value_(value) {}
+
+    float value_;
+};
+
+struct Radians {
+    explicit Radians(float value):
+        value_(value) {}
+
+    float value_;
+};
+
 class Object :
     public generic::TreeNode<Object>, //Objects form a tree
     public generic::DataCarrier,
@@ -60,7 +74,7 @@ public:
         set_absolute_rotation(q);
     }
 
-    void rotate_to(float angle, float x, float y, float z) {
+    void rotate_to(const Degrees& angle, float x, float y, float z) {
         set_absolute_rotation(angle, x, y, z);
     }
 
@@ -73,7 +87,7 @@ public:
     virtual kglt::Vec3 relative_position() const { return relative_position_; }
 
     virtual void set_absolute_rotation(const kglt::Quaternion& quaternion);
-    virtual void set_absolute_rotation(float angle, float x, float y, float z);
+    virtual void set_absolute_rotation(const Degrees& angle, float x, float y, float z);
     virtual kglt::Quaternion absolute_rotation() const { return absolute_rotation_; }
 
     virtual void set_relative_rotation(const kglt::Quaternion& quaternion);
