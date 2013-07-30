@@ -50,6 +50,7 @@ public:
     virtual void set_linear_velocity(const kglt::Vec3& velocity) = 0;
     virtual kglt::Vec3 linear_velocity() const = 0;
 
+    Actor* owner() { return owner_; }
 private:
     Actor* owner_;
 };

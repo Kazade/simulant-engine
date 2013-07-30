@@ -8,8 +8,8 @@ class Actor;
 
 class PhysicsEngine {
 public:
-    bool init();
-    void cleanup();
+    virtual bool init() = 0;
+    virtual void cleanup() = 0;
 
     virtual void step(double dt) = 0;
 
