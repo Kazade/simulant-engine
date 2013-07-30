@@ -1,6 +1,6 @@
-#include "../actor.h"
-#include "../stage.h"
-#include "../scene.h"
+#include "../../actor.h"
+#include "../../stage.h"
+#include "../../scene.h"
 
 #include "ode_body.h"
 #include "ode_engine.h"

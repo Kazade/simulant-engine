@@ -3,7 +3,7 @@
 
 #include <memory>
 #include <ode/ode.h>
-#include "physics_engine.h"
+#include "../physics_engine.h"
 
 namespace kglt {
 namespace physics {

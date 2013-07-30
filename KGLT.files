@@ -298,7 +298,7 @@ kglt/physics/physics_body.h
 kglt/physics/bullet_engine.h
 kglt/physics/bullet_body.h
 tests/test_object.h
-kglt/physics/ode_body.h
-kglt/physics/ode_engine.h
-kglt/physics/ode_body.cpp
-kglt/physics/ode_engine.cpp
+kglt/physics/ode/ode_body.h
+kglt/physics/ode/ode_engine.h
+kglt/physics/ode/ode_body.cpp
+kglt/physics/ode/ode_engine.cpp
