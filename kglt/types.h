@@ -345,6 +345,12 @@ class WindowBase;
 class RenderSequence;
 class Partitioner;
 
+namespace physics {
+    class ODEEngine;
+}
+
+typedef physics::ODEEngine DefaultPhysicsEngine;
+
 }
 
 #endif // TYPES_H_INCLUDED

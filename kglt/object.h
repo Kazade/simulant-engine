@@ -18,6 +18,8 @@
 #include "kazmath/quaternion.h"
 #include "types.h"
 
+#include "physics/physics_body.h"
+
 namespace kglt {
 
 class Scene;
@@ -141,6 +143,19 @@ public:
 
     void attach_to_camera(CameraID cam);
 
+    //Physics stuff
+
+    void make_responsive();
+
+    PhysicsBody& responsive_body() {
+        if(!is_responsive()) {
+            throw std::logic_error("Tried to access a responsive body on a non-responsive object");
+        }
+
+        return *responsive_body_.get();
+    }
+    bool is_responsive() const { return bool(responsive_body_); }
+
 protected:
     void update_from_parent();
 
@@ -165,6 +180,8 @@ private:
     bool is_visible_;
     bool rotation_locked_;
     bool position_locked_;
+
+    std::shared_ptr<PhysicsBody> responsive_body_;
 
     virtual void transformation_changed() {}
 };

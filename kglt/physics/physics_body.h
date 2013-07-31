@@ -5,11 +5,11 @@
 
 namespace kglt {
 
-class Actor;
+class Object;
 
 class PhysicsBody {
 public:
-    PhysicsBody(Actor* owner):
+    PhysicsBody(Object* owner):
         owner_(owner) {}
 
     virtual ~PhysicsBody() {}
@@ -50,9 +50,10 @@ public:
     virtual void set_linear_velocity(const kglt::Vec3& velocity) = 0;
     virtual kglt::Vec3 linear_velocity() const = 0;
 
-    Actor* owner() { return owner_; }
+    Object* owner() { return owner_; }
+
 private:
-    Actor* owner_;
+    Object* owner_;
 };
 
 }

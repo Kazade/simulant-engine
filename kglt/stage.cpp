@@ -28,12 +28,12 @@ ActorID Stage::new_actor() {
     return new_actor(false);
 }
 
-ActorID Stage::new_actor(bool create_body) {
+ActorID Stage::new_actor(bool make_responsive) {
     ActorID result = ActorManager::manager_new();
 
-    if(create_body && scene().physics_enabled()) {
+    if(make_responsive) {
         Actor* act = &actor(result);
-        act->set_body(scene().physics_engine()->new_body(act));
+        act->make_responsive();
     }
 
     //Tell everyone about the new actor
@@ -45,7 +45,7 @@ ActorID Stage::new_actor(MeshID mid) {
     return new_actor(mid, false);
 }
 
-ActorID Stage::new_actor(MeshID mid, bool create_body) {
+ActorID Stage::new_actor(MeshID mid, bool make_responsive) {
     ActorID result = ActorManager::manager_new();
 
     //If a mesh was specified, set it
@@ -53,9 +53,9 @@ ActorID Stage::new_actor(MeshID mid, bool create_body) {
         actor(result).set_mesh(mid);
     }
 
-    if(create_body && scene().physics_enabled()) {
+    if(make_responsive) {
         Actor* act = &actor(result);
-        act->set_body(scene().physics_engine()->new_body(act));
+        act->make_responsive();
     }
 
     //Tell everyone about the new actor

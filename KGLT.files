@@ -302,3 +302,5 @@ kglt/physics/ode/ode_body.h
 kglt/physics/ode/ode_engine.h
 kglt/physics/ode/ode_body.cpp
 kglt/physics/ode/ode_engine.cpp
+tests/test_responsive.h
+kglt/physics/ode/ode_private.h

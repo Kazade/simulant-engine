@@ -4,7 +4,7 @@
 namespace kglt {
 
 class PhysicsBody;
-class Actor;
+class Object;
 
 class PhysicsEngine {
 public:
@@ -14,7 +14,7 @@ public:
     virtual void step(double dt) = 0;
 
     //Factory function
-    virtual std::shared_ptr<PhysicsBody> new_body(Actor* owner) = 0;
+    virtual std::shared_ptr<PhysicsBody> new_body(Object* owner) = 0;
 };
 
 }

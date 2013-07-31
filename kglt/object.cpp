@@ -29,6 +29,15 @@ Object::~Object() {
     parent_changed_connection_.disconnect();
 }
 
+void Object::make_responsive() {
+    PhysicsEngine* engine = stage().scene().physics_engine();
+    if(!engine) {
+        throw std::logic_error("Tried to make an object responsive when no physics engine is enabled");
+    }
+
+    responsive_body_ = engine->new_body(this);
+}
+
 void Object::attach_to_camera(CameraID cam) {
     set_parent(stage_->scene().camera(cam));
 }
@@ -69,7 +78,6 @@ void Object::set_absolute_position(float x, float y, float z) {
     kglt::Vec3 parent_pos;
     if(has_parent()) {
         parent_pos = parent().absolute_position();
-
     }
 
     set_relative_position(kglt::Vec3(x, y, z) - parent_pos);
@@ -201,10 +209,16 @@ void Object::update_from_parent() {
     } else {
         if(!position_locked_) {
             absolute_position_ = parent().absolute_position() + relative_position();
+            if(is_responsive()) {
+                responsive_body().set_position(absolute_position_);
+            }
         }
         if(!rotation_locked_) {
             absolute_rotation_ = relative_rotation() * parent().absolute_rotation();
             absolute_rotation_.normalize();
+            if(is_responsive()) {
+                responsive_body().set_rotation(absolute_rotation_);
+            }
         }
     }
 

@@ -3,6 +3,8 @@
 
 #include <memory>
 #include <ode/ode.h>
+
+#include "../../generic/managed.h"
 #include "../physics_engine.h"
 
 namespace kglt {
@@ -10,7 +12,10 @@ namespace physics {
 
 class ODEBody;
 
-class ODEEngine : public PhysicsEngine {
+class ODEEngine :
+    public PhysicsEngine,
+    public Managed<ODEEngine> {
+
 public:
     bool init() {
         dInitODE2(0);
@@ -28,7 +33,7 @@ public:
     }
 
     //Factory function
-    std::shared_ptr<PhysicsBody> new_body(Actor* owner);
+    std::shared_ptr<PhysicsBody> new_body(kglt::Object *owner);
 
     friend class ODEBody;
 private:

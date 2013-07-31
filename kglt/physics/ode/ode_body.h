@@ -3,6 +3,7 @@
 
 #include <ode/ode.h>
 
+#include "../../kazbase/exceptions.h"
 #include "../physics_body.h"
 
 namespace kglt {
@@ -10,7 +11,7 @@ namespace physics {
 
 class ODEBody : public PhysicsBody {
 public:
-    ODEBody(Actor* owner):
+    ODEBody(Object* owner):
         PhysicsBody(owner) {}
 
     bool init();
@@ -48,6 +49,9 @@ public:
 
     virtual void set_linear_velocity(const kglt::Vec3& velocity);
     virtual kglt::Vec3 linear_velocity() const;
+
+    virtual void add_cube(float width) { throw NotImplementedError(__FILE__, __LINE__); }
+    virtual void add_sphere(float radius) { throw NotImplementedError(__FILE__, __LINE__); }
 
 private:
     dBodyID body_;

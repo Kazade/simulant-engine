@@ -53,35 +53,6 @@ public:
     RenderPriority render_priority() const { return render_priority_; }
     void set_render_priority(RenderPriority value) { render_priority_ = value;}
 
-    void set_body(std::shared_ptr<PhysicsBody> body) {
-        body_ = body;
-    }
-
-    PhysicsBody* body() { return body_.get(); }
-    const PhysicsBody* body() const { return body_.get(); }
-
-    //Override the Object moving functions to take into account
-    //the possiblity of a body
-    virtual void set_absolute_position(float x, float y, float z) override {
-        if(!body()) {
-            Object::set_absolute_position(x, y, z);
-        } else {
-            body()->set_position(kglt::Vec3(x, y, z));
-        }
-    }
-
-    virtual void set_absolute_position(const Vec3& pos) override { set_absolute_position(pos.x, pos.y, pos.z); }
-
-    virtual Vec3 absolute_position() const override {
-        if(!body()) {
-            return Object::absolute_position();
-        } else {
-            return (kmVec3) body()->position();
-        }
-    }
-
-    //FIXME: Override more!
-
 private:
     MeshPtr mesh_;
     std::vector<std::shared_ptr<SubActor> > subactors_;
