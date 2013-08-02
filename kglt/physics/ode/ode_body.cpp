@@ -60,31 +60,12 @@ float ODEBody::mass() const {
     return mass_.mass;
 }
 
-//FIXME: Don't know if these belong here, depends if physics engines
-// support limiting things like this...
-void ODEBody::set_max_speed(float speed_limit) {
-
-}
-
-float ODEBody::max_speed() const {
-
-}
-
-void ODEBody::set_min_speed(float speed_limit) {
-
-}
-
-float ODEBody::min_speed() const {
-
-}
-//ENDFIXME
-
 void ODEBody::apply_linear_force_global(const kglt::Vec3& force) {
-
+    dBodyAddForce(body_, force.x, force.y, force.z);
 }
 
 void ODEBody::apply_linear_force_local(const kglt::Vec3& force) {
-
+    dBodyAddRelForce(body_, force.x, force.y, force.z);
 }
 
 void ODEBody::apply_angular_force_global(const kglt::Vec3& force) {
@@ -95,22 +76,26 @@ void ODEBody::apply_angular_force_local(const kglt::Vec3& force) {
     dBodyAddRelTorque(body_, force.x, force.y, force.z);
 }
 
-void ODEBody::set_angular_damping(const float amount) {}
+void ODEBody::set_angular_damping(const float amount) {
+    dBodySetAngularDamping(body_, amount);
+}
 
 void ODEBody::set_angular_velocity(const kglt::Vec3& velocity) {
-
+    dBodySetAngularVel(body_, velocity.x, velocity.y, velocity.z);
 }
 
 kglt::Vec3 ODEBody::angular_velocity() const {
-
+    const dReal* pos = dBodyGetAngularVel(body_);
+    return kglt::Vec3(pos[0], pos[1], pos[2]);
 }
 
-void ODEBody::set_linear_velocity(const kglt::Vec3& velocity) {
-
+void ODEBody::set_linear_velocity(const kglt::Vec3& vel) {
+    dBodySetLinearVel(body_, vel.x, vel.y, vel.z);
 }
 
 kglt::Vec3 ODEBody::linear_velocity() const {
-
+    const dReal* pos = dBodyGetLinearVel(body_);
+    return kglt::Vec3(pos[0], pos[1], pos[2]);
 }
 
 ConstraintID ODEBody::create_fixed_constaint(PhysicsBody& other) {

@@ -30,15 +30,6 @@ public:
     virtual void set_mass(float mass) = 0;
     virtual float mass() const = 0;
 
-    //FIXME: Don't know if these belong here, depends if physics engines
-    // support limiting things like this...
-    virtual void set_max_speed(float speed_limit) = 0;
-    virtual float max_speed() const = 0;
-
-    virtual void set_min_speed(float speed_limit) = 0;
-    virtual float min_speed() const = 0;
-    //ENDFIXME
-
     virtual void apply_linear_force_global(const kglt::Vec3& force) = 0;
     virtual void apply_linear_force_local(const kglt::Vec3& force) = 0;
 

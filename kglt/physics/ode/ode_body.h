@@ -28,15 +28,6 @@ public:
     virtual void set_mass(float mass);
     virtual float mass() const;
 
-    //FIXME: Don't know if these belong here, depends if physics engines
-    // support limiting things like this...
-    virtual void set_max_speed(float speed_limit);
-    virtual float max_speed() const;
-
-    virtual void set_min_speed(float speed_limit);
-    virtual float min_speed() const;
-    //ENDFIXME
-
     virtual void apply_linear_force_global(const kglt::Vec3& force);
     virtual void apply_linear_force_local(const kglt::Vec3& force);
 
@@ -48,11 +39,8 @@ public:
     virtual void set_angular_velocity(const kglt::Vec3& velocity);
     virtual kglt::Vec3 angular_velocity() const;
 
-    virtual void set_linear_velocity(const kglt::Vec3& velocity);
+    virtual void set_linear_velocity(const kglt::Vec3& vel);
     virtual kglt::Vec3 linear_velocity() const;
-
-    virtual void add_cube(float width) { throw NotImplementedError(__FILE__, __LINE__); }
-    virtual void add_sphere(float radius) { throw NotImplementedError(__FILE__, __LINE__); }
 
     virtual ConstraintID create_fixed_constaint(PhysicsBody& other);
     virtual void destroy_constraint(ConstraintID c);
