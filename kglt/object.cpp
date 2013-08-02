@@ -313,7 +313,9 @@ void Object::rotate_absolute_y(float amount) {
 Mat4 Object::absolute_transformation() const {
     Mat4 rot_matrix, trans_matrix, final;
 
-    kmMat4RotationQuaternion(&rot_matrix, &absolute_rotation_);
+    Quaternion abs_rot = absolute_rotation();
+
+    kmMat4RotationQuaternion(&rot_matrix, &abs_rot);
     kmMat4Translation(&trans_matrix, absolute_position().x, absolute_position().y, absolute_position().z);
 
     kmMat4Multiply(&final, &trans_matrix, &rot_matrix);

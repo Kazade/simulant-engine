@@ -87,8 +87,13 @@ void ODEBody::apply_linear_force_local(const kglt::Vec3& force) {
 
 }
 
-void ODEBody::apply_angular_force_global(const kglt::Vec3& force) {}
-void ODEBody::apply_angular_force_local(const kglt::Vec3& force) {}
+void ODEBody::apply_angular_force_global(const kglt::Vec3& force) {
+    dBodyAddTorque(body_, force.x, force.y, force.z);
+}
+
+void ODEBody::apply_angular_force_local(const kglt::Vec3& force) {
+    dBodyAddRelTorque(body_, force.x, force.y, force.z);
+}
 
 void ODEBody::set_angular_damping(const float amount) {}
 
