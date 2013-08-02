@@ -183,6 +183,11 @@ bool Scene::init() {
 }
 
 void Scene::update(double dt) {
+    PhysicsEngine* engine = physics_engine();
+    if(engine) {
+        engine->step(dt);
+    }
+
     //Update the stages
     StageManager::apply_func_to_objects(std::bind(&Object::update, std::tr1::placeholders::_1, dt));
     CameraManager::apply_func_to_objects(std::bind(&Object::update, std::tr1::placeholders::_1, dt));

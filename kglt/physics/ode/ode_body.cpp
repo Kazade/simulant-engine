@@ -1,12 +1,15 @@
 #include "../../actor.h"
 #include "../../stage.h"
 #include "../../scene.h"
+#include "../../object.h"
 
 #include "ode_body.h"
 #include "ode_engine.h"
 
 namespace kglt {
 namespace physics {
+
+static int32_t constraint_counter = 1;
 
 bool ODEBody::init() {
     ODEEngine* engine = dynamic_cast<ODEEngine*>(owner()->stage().scene().physics_engine());
@@ -103,6 +106,35 @@ void ODEBody::set_linear_velocity(const kglt::Vec3& velocity) {
 
 kglt::Vec3 ODEBody::linear_velocity() const {
 
+}
+
+ConstraintID ODEBody::create_fixed_constaint(PhysicsBody& other) {
+    ODEEngine* engine = dynamic_cast<ODEEngine*>(owner()->stage().scene().physics_engine());
+
+    dJointID new_joint = dJointCreateFixed(engine->world(), 0);
+    dJointAttach(new_joint, body_, dynamic_cast<ODEBody&>(other).body_);
+    dJointSetFixed(new_joint);
+
+    ConstraintID new_id(constraint_counter++);
+
+    constraints_[new_id] = new_joint;
+
+    enable_constraint(new_id);
+
+    return new_id;
+}
+
+void ODEBody::destroy_constraint(ConstraintID c) {
+    dJointDestroy(constraints_.at(c));
+    constraints_.erase(c);
+}
+
+void ODEBody::enable_constraint(ConstraintID c) {
+    dJointEnable(constraints_.at(c));
+}
+
+void ODEBody::disable_constraint(ConstraintID c) {
+    dJointDisable(constraints_.at(c));
 }
 
 }

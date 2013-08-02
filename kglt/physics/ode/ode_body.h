@@ -2,6 +2,7 @@
 #define ODE_BODY_H
 
 #include <ode/ode.h>
+#include <unordered_map>
 
 #include "../../kazbase/exceptions.h"
 #include "../physics_body.h"
@@ -53,7 +54,13 @@ public:
     virtual void add_cube(float width) { throw NotImplementedError(__FILE__, __LINE__); }
     virtual void add_sphere(float radius) { throw NotImplementedError(__FILE__, __LINE__); }
 
+    virtual ConstraintID create_fixed_constaint(PhysicsBody& other);
+    virtual void destroy_constraint(ConstraintID c);
+    virtual void enable_constraint(ConstraintID c);
+    virtual void disable_constraint(ConstraintID c);
 private:
+    std::unordered_map<ConstraintID, dJointID> constraints_;
+
     dBodyID body_;
     dMass mass_;
 };

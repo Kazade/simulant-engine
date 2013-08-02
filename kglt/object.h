@@ -61,7 +61,7 @@ public:
 
     virtual void set_absolute_position(float x, float y, float z);
     virtual void set_absolute_position(const kglt::Vec3& pos) { set_absolute_position(pos.x, pos.y, pos.z); }
-    virtual kglt::Vec3 absolute_position() const { return absolute_position_; }
+    virtual kglt::Vec3 absolute_position() const;
 
     //Syntactic sugar
     void move_to(const kglt::Vec3& pos) {
@@ -86,14 +86,14 @@ public:
 
     virtual void set_relative_position(float x, float y, float z);
     virtual void set_relative_position(const kglt::Vec3& pos) { set_relative_position(pos.x, pos.y, pos.z); }
-    virtual kglt::Vec3 relative_position() const { return relative_position_; }
+    virtual kglt::Vec3 relative_position() const;
 
     virtual void set_absolute_rotation(const kglt::Quaternion& quaternion);
     virtual void set_absolute_rotation(const Degrees& angle, float x, float y, float z);
-    virtual kglt::Quaternion absolute_rotation() const { return absolute_rotation_; }
+    virtual kglt::Quaternion absolute_rotation() const;
 
     virtual void set_relative_rotation(const kglt::Quaternion& quaternion);
-    virtual kglt::Quaternion relative_rotation() const { return relative_rotation_; }
+    virtual kglt::Quaternion relative_rotation() const;
 
     virtual void rotate_absolute_x(float amount);
     virtual void rotate_absolute_y(float amount);
@@ -154,7 +154,20 @@ public:
 
         return *responsive_body_.get();
     }
+
+    const PhysicsBody& responsive_body() const {
+        if(!is_responsive()) {
+            throw std::logic_error("Tried to access a responsive body on a non-responsive object");
+        }
+
+        return *responsive_body_.get();
+    }
+
     bool is_responsive() const { return bool(responsive_body_); }
+
+    bool parent_is_root() const {        
+        return has_parent() && (&parent() == &root());
+    }
 
 protected:
     void update_from_parent();
@@ -173,9 +186,7 @@ private:
 
     sigc::connection parent_changed_connection_;
 
-    void parent_changed_callback(Object* old_parent, Object* new_parent) {
-        update_from_parent();
-    }
+    void parent_changed_callback(Object* old_parent, Object* new_parent);
 
     bool is_visible_;
     bool rotation_locked_;
@@ -184,6 +195,8 @@ private:
     std::shared_ptr<PhysicsBody> responsive_body_;
 
     virtual void transformation_changed() {}
+
+    ConstraintID responsive_parental_constraint_;
 };
 
 }
