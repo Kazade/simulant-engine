@@ -10,7 +10,7 @@
 #include "mesh.h"
 #include "sound.h"
 
-#include "physics/physics_body.h"
+#include "physics/responsive_body.h"
 
 namespace kglt {
 
@@ -65,7 +65,7 @@ private:
         update_source(dt);
     }
 
-    std::shared_ptr<PhysicsBody> body_;
+    std::shared_ptr<ResponsiveBody> body_;
 
     friend class SubActor;
 };

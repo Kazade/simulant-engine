@@ -33,7 +33,7 @@ public:
     }
 
     //Factory function
-    std::shared_ptr<PhysicsBody> new_body(kglt::Object *owner);
+    std::shared_ptr<ResponsiveBody> new_body(kglt::Object *owner);
 
     friend class ODEBody;
 private:

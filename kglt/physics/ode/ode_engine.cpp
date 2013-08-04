@@ -6,7 +6,7 @@
 namespace kglt {
 namespace physics {
 
-std::shared_ptr<PhysicsBody> ODEEngine::new_body(Object* owner) {
+std::shared_ptr<ResponsiveBody> ODEEngine::new_body(Object* owner) {
     auto result = std::make_shared<ODEBody>(owner);
     if(!result->init()) {
         throw InstanceInitializationError();

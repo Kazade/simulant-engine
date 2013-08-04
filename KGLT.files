@@ -294,7 +294,7 @@ kglt/types.cpp
 kglt/base.cpp
 samples/seek_sample.cpp
 kglt/physics/physics_engine.h
-kglt/physics/physics_body.h
+kglt/physics/responsive_body.h
 kglt/physics/bullet_engine.h
 kglt/physics/bullet_body.h
 tests/test_object.h

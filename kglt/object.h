@@ -18,7 +18,7 @@
 #include "kazmath/quaternion.h"
 #include "types.h"
 
-#include "physics/physics_body.h"
+#include "physics/responsive_body.h"
 
 namespace kglt {
 
@@ -147,7 +147,7 @@ public:
 
     void make_responsive();
 
-    PhysicsBody& responsive_body() {
+    ResponsiveBody& responsive_body() {
         if(!is_responsive()) {
             throw std::logic_error("Tried to access a responsive body on a non-responsive object");
         }
@@ -155,7 +155,7 @@ public:
         return *responsive_body_.get();
     }
 
-    const PhysicsBody& responsive_body() const {
+    const ResponsiveBody& responsive_body() const {
         if(!is_responsive()) {
             throw std::logic_error("Tried to access a responsive body on a non-responsive object");
         }
@@ -192,7 +192,7 @@ private:
     bool rotation_locked_;
     bool position_locked_;
 
-    std::shared_ptr<PhysicsBody> responsive_body_;
+    std::shared_ptr<ResponsiveBody> responsive_body_;
 
     virtual void transformation_changed() {}
 

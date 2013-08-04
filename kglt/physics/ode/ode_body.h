@@ -5,15 +5,15 @@
 #include <unordered_map>
 
 #include "../../kazbase/exceptions.h"
-#include "../physics_body.h"
+#include "../responsive_body.h"
 
 namespace kglt {
 namespace physics {
 
-class ODEBody : public PhysicsBody {
+class ODEBody : public ResponsiveBody {
 public:
     ODEBody(Object* owner):
-        PhysicsBody(owner) {}
+        ResponsiveBody(owner) {}
 
     bool init();
     void cleanup();
@@ -42,7 +42,7 @@ public:
     virtual void set_linear_velocity(const kglt::Vec3& vel);
     virtual kglt::Vec3 linear_velocity() const;
 
-    virtual ConstraintID create_fixed_constaint(PhysicsBody& other);
+    virtual ConstraintID create_fixed_constaint(ResponsiveBody& other);
     virtual void destroy_constraint(ConstraintID c);
     virtual void enable_constraint(ConstraintID c);
     virtual void disable_constraint(ConstraintID c);

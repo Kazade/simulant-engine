@@ -98,7 +98,7 @@ kglt::Vec3 ODEBody::linear_velocity() const {
     return kglt::Vec3(pos[0], pos[1], pos[2]);
 }
 
-ConstraintID ODEBody::create_fixed_constaint(PhysicsBody& other) {
+ConstraintID ODEBody::create_fixed_constaint(ResponsiveBody &other) {
     ODEEngine* engine = dynamic_cast<ODEEngine*>(owner()->stage().scene().physics_engine());
 
     dJointID new_joint = dJointCreateFixed(engine->world(), 0);

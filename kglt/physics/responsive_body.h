@@ -1,5 +1,5 @@
-#ifndef PHYSICS_BODY_H
-#define PHYSICS_BODY_H
+#ifndef RESPONSIVE_BODY_H
+#define RESPONSIVE_BODY_H
 
 #include "../generic/unique_id.h"
 #include "../types.h"
@@ -10,12 +10,12 @@ class Object;
 
 typedef UniqueID<5000> ConstraintID;
 
-class PhysicsBody {
+class ResponsiveBody {
 public:
-    PhysicsBody(Object* owner):
+    ResponsiveBody(Object* owner):
         owner_(owner) {}
 
-    virtual ~PhysicsBody() {}
+    virtual ~ResponsiveBody() {}
 
     bool init();
     void cleanup();
@@ -46,8 +46,8 @@ public:
 
     Object* owner() { return owner_; }
 
-    virtual ConstraintID create_fixed_constaint(PhysicsBody& other) = 0;
-    virtual ConstraintID create_pivot_constraint(PhysicsBody& other, const kglt::Vec3& pivot) {
+    virtual ConstraintID create_fixed_constaint(ResponsiveBody& other) = 0;
+    virtual ConstraintID create_pivot_constraint(ResponsiveBody& other, const kglt::Vec3& pivot) {
         throw NotImplementedError(__FILE__, __LINE__);
     }
 
