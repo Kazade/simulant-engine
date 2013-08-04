@@ -2,8 +2,11 @@
 #define ODE_ENGINE_H
 
 #include <memory>
+#include <unordered_map>
+
 #include <ode/ode.h>
 
+#include "../types.h"
 #include "../../generic/managed.h"
 #include "../physics_engine.h"
 
@@ -37,6 +40,9 @@ public:
     std::shared_ptr<ResponsiveBody> new_responsive_body(kglt::Object *owner);
     std::shared_ptr<Collidable> new_collidable(kglt::Object *owner);
 
+    ShapeID create_plane(float a, float b, float c, float d);
+    void set_gravity(const Vec3& gravity);
+
     friend class ODEBody;
     friend class ODECollidable;
 private:
@@ -45,6 +51,8 @@ private:
 
     dWorldID world_;
     dSpaceID space_;
+
+    std::unordered_map<ShapeID, dGeomID> shapes_;
 };
 
 }

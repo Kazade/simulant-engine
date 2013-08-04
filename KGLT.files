@@ -310,3 +310,5 @@ kglt/physics/types.h
 kglt/physics/ode/ode_collidable.h
 kglt/physics/ode/ode_collidable.cpp
 kglt/physics/collidable.cpp
+samples/box_drop_sample.cpp
+kglt/physics/physics_engine.cpp
