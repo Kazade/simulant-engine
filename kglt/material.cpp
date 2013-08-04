@@ -196,7 +196,7 @@ Material& Material::operator=(const Material& rhs) {
         return *this;
     }
 
-    std::tr1::unordered_map<std::string, MaterialTechnique::ptr> new_techniques;
+    std::unordered_map<std::string, MaterialTechnique::ptr> new_techniques;
 
     for(auto p: rhs.techniques_) {
         assert(p.second.get());

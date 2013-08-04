@@ -56,7 +56,7 @@ void init_source(Sound* self, Source& source) {
      */
 
     StreamWrapper::ptr stream(new StreamWrapper(stb_vorbis_open_memory(&self->data()[0], self->data().size(), nullptr, nullptr)));
-    source.set_stream_func(std::tr1::bind(&queue_buffer, self, stream, std::tr1::placeholders::_1));
+    source.set_stream_func(std::bind(&queue_buffer, self, stream, std::placeholders::_1));
 }
 
 
@@ -87,7 +87,7 @@ void OGGLoader::into(Loadable& resource, const LoaderOptions& options) {
     sound->set_data(data);
     sound->set_channels(info.channels);
     sound->set_format((info.channels == 2) ? AL_FORMAT_STEREO16 : AL_FORMAT_MONO16);
-    sound->set_source_init_function(std::tr1::bind(&init_source, sound, std::tr1::placeholders::_1));
+    sound->set_source_init_function(std::bind(&init_source, sound, std::placeholders::_1));
 }
 
 

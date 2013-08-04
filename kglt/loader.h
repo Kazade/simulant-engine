@@ -3,7 +3,7 @@
 
 #include <stdexcept>
 #include <string>
-#include <tr1/memory>
+#include <memory>
 #include "loadable.h"
 
 #include "kazbase/exceptions.h"

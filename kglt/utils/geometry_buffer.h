@@ -2,7 +2,7 @@
 #define GEOMETRY_BUFFER_H
 
 #include <cstdint>
-#include <tr1/memory>
+#include <memory>
 #include <vector>
 
 #include "../types.h"

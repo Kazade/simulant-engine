@@ -10,6 +10,8 @@
 namespace kglt {
 namespace physics {
 
+class ODECollidable;
+
 class ODEBody : public ResponsiveBody {
 public:
     ODEBody(Object* owner):
@@ -46,6 +48,8 @@ public:
     virtual void destroy_constraint(ConstraintID c);
     virtual void enable_constraint(ConstraintID c);
     virtual void disable_constraint(ConstraintID c);
+
+    friend class ODECollidable;
 private:
     std::unordered_map<ConstraintID, dJointID> constraints_;
 

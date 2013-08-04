@@ -55,7 +55,20 @@ void Object::make_responsive() {
         throw std::logic_error("Tried to make an object responsive when no physics engine is enabled");
     }
 
-    responsive_body_ = engine->new_body(this);
+    responsive_body_ = engine->new_responsive_body(this);
+
+    signal_made_responsive_();
+}
+
+void Object::make_collidable() {
+    PhysicsEngine* engine = stage().scene().physics_engine();
+    if(!engine) {
+        throw std::logic_error("Tried to make an object collidable when no physics engine is enabled");
+    }
+
+    collidable_ = engine->new_collidable(this);
+
+    signal_made_collidable_();
 }
 
 void Object::attach_to_camera(CameraID cam) {

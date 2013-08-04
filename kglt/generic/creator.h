@@ -1,7 +1,7 @@
 #ifndef CREATOR_H
 #define CREATOR_H
 
-#include <tr1/memory>
+#include <memory>
 
 namespace kglt {
 namespace generic {

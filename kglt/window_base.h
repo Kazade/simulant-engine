@@ -1,7 +1,7 @@
 #ifndef KGLT_WINDOW_BASE_H
 #define KGLT_WINDOW_BASE_H
 
-#include <tr1/memory>
+#include <memory>
 
 #include <sigc++/sigc++.h>
 #include <kaztimer/kaztimer.h>
@@ -39,7 +39,7 @@ class LoaderType;
 
 class Watcher;
 
-typedef std::tr1::function<void (double)> WindowUpdateCallback;
+typedef std::function<void (double)> WindowUpdateCallback;
 typedef std::shared_ptr<Loader> LoaderPtr;
 typedef std::shared_ptr<LoaderType> LoaderTypePtr;
 

@@ -4,7 +4,7 @@
 #include <iosfwd>
 #include <cassert>
 #include <vector>
-#include <tr1/memory>
+#include <memory>
 #include <stdexcept>
 #include <boost/any.hpp>
 #include <sigc++/sigc++.h>
@@ -19,6 +19,7 @@
 #include "types.h"
 
 #include "physics/responsive_body.h"
+#include "physics/collidable.h"
 
 namespace kglt {
 
@@ -144,8 +145,8 @@ public:
     void attach_to_camera(CameraID cam);
 
     //Physics stuff
-
     void make_responsive();
+    void make_collidable();
 
     ResponsiveBody& responsive_body() {
         if(!is_responsive()) {
@@ -163,11 +164,31 @@ public:
         return *responsive_body_.get();
     }
 
+    Collidable& collidable() {
+        if(!is_collidable()) {
+            throw std::logic_error("Tried to access a collidable on a non-collidable object");
+        }
+
+        return *collidable_.get();
+    }
+
+    const Collidable& collidable() const {
+        if(!is_collidable()) {
+            throw std::logic_error("Tried to access a collidable on a non-collidable object");
+        }
+
+        return *collidable_.get();
+    }
+
     bool is_responsive() const { return bool(responsive_body_); }
+    bool is_collidable() const { return bool(collidable_); }
 
     bool parent_is_root() const {        
         return has_parent() && (&parent() == &root());
     }
+
+    sigc::signal<void> signal_made_responsive() { return signal_made_responsive_; }
+    sigc::signal<void> signal_made_collidable() { return signal_made_collidable_; }
 
 protected:
     void update_from_parent();
@@ -193,10 +214,14 @@ private:
     bool position_locked_;
 
     std::shared_ptr<ResponsiveBody> responsive_body_;
+    std::shared_ptr<Collidable> collidable_;
 
     virtual void transformation_changed() {}
 
     ConstraintID responsive_parental_constraint_;
+
+    sigc::signal<void> signal_made_responsive_;
+    sigc::signal<void> signal_made_collidable_;
 };
 
 }

@@ -305,3 +305,8 @@ kglt/physics/ode/ode_engine.cpp
 tests/test_responsive.h
 kglt/physics/ode/ode_private.h
 samples/spinner_sample.cpp
+kglt/physics/collidable.h
+kglt/physics/types.h
+kglt/physics/ode/ode_collidable.h
+kglt/physics/ode/ode_collidable.cpp
+kglt/physics/collidable.cpp

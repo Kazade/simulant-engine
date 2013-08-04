@@ -4,7 +4,7 @@
 #include <boost/iterator/iterator_facade.hpp>
 #include <stdexcept>
 #include <vector>
-#include <tr1/memory>
+#include <memory>
 #include <sigc++/sigc++.h>
 
 #include "../kazbase/logging.h"

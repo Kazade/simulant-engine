@@ -1,7 +1,7 @@
 #ifndef PARTITIONER_H
 #define PARTITIONER_H
 
-#include <tr1/memory>
+#include <memory>
 #include <set>
 #include <vector>
 

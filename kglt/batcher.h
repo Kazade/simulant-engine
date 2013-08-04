@@ -2,8 +2,8 @@
 #define BATCHER_H_INCLUDED
 
 #include <list>
-#include <tr1/unordered_map>
-#include <tr1/memory>
+#include <unordered_map>
+#include <memory>
 #include "kglt/kazbase/exceptions.h"
 #include "kglt/types.h"
 
@@ -141,8 +141,8 @@ protected:
     RenderGroup* parent_;
 
 private:
-    typedef std::tr1::unordered_map<std::size_t, std::shared_ptr<RenderGroup> > RenderGroups;
-    typedef std::tr1::unordered_map<std::size_t, RenderGroups> RenderGroupChildren;
+    typedef std::unordered_map<std::size_t, std::shared_ptr<RenderGroup> > RenderGroups;
+    typedef std::unordered_map<std::size_t, RenderGroups> RenderGroupChildren;
 
     RenderGroupChildren children_;
 

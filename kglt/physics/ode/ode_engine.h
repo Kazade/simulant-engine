@@ -11,6 +11,7 @@ namespace kglt {
 namespace physics {
 
 class ODEBody;
+class ODECollidable;
 
 class ODEEngine :
     public PhysicsEngine,
@@ -33,9 +34,11 @@ public:
     }
 
     //Factory function
-    std::shared_ptr<ResponsiveBody> new_body(kglt::Object *owner);
+    std::shared_ptr<ResponsiveBody> new_responsive_body(kglt::Object *owner);
+    std::shared_ptr<Collidable> new_collidable(kglt::Object *owner);
 
     friend class ODEBody;
+    friend class ODECollidable;
 private:
     //Used by ODEBody
     dWorldID world() const { return world_; }

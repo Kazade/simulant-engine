@@ -353,4 +353,6 @@ typedef physics::ODEEngine DefaultPhysicsEngine;
 
 }
 
+#include "physics/types.h"
+
 #endif // TYPES_H_INCLUDED

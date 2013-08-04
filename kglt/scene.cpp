@@ -189,8 +189,8 @@ void Scene::update(double dt) {
     }
 
     //Update the stages
-    StageManager::apply_func_to_objects(std::bind(&Object::update, std::tr1::placeholders::_1, dt));
-    CameraManager::apply_func_to_objects(std::bind(&Object::update, std::tr1::placeholders::_1, dt));
+    StageManager::apply_func_to_objects(std::bind(&Object::update, std::placeholders::_1, dt));
+    CameraManager::apply_func_to_objects(std::bind(&Object::update, std::placeholders::_1, dt));
 }
 
 void Scene::render() {

@@ -3,7 +3,7 @@
 
 #include <string>
 #include <vector>
-#include <tr1/memory>
+#include <memory>
 #include <cstdint>
 #include <kazmath/mat4.h>
 

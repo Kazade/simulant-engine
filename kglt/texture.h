@@ -2,7 +2,7 @@
 #define TEXTURE_H_INCLUDED
 
 #include <cstdint>
-#include <tr1/memory>
+#include <memory>
 #include <vector>
 #include "generic/identifiable.h"
 #include "loadable.h"

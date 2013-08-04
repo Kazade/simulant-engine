@@ -5,8 +5,8 @@
 #include <map>
 #include <vector>
 #include <string>
-#include <tr1/memory>
-#include <tr1/unordered_map>
+#include <memory>
+#include <unordered_map>
 #include <set>
 
 #include "kazmath/mat4.h"
@@ -223,7 +223,7 @@ public:
     Material& operator=(const Material& rhs);
 
 private:
-    std::tr1::unordered_map<std::string, MaterialTechnique::ptr> techniques_;
+    std::unordered_map<std::string, MaterialTechnique::ptr> techniques_;
 };
 
 }

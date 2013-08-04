@@ -3,7 +3,7 @@
 
 #include <set>
 #include <vector>
-#include <tr1/memory>
+#include <memory>
 
 #include "types.h"
 #include "utils/geometry_buffer.h"

@@ -1,7 +1,7 @@
 #ifndef INTERFACE_H
 #define INTERFACE_H
 
-#include <tr1/memory>
+#include <memory>
 
 #include "../kazbase/unicode.h"
 #include "../generic/managed.h"

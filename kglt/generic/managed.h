@@ -2,7 +2,7 @@
 #define MANAGED_H
 
 #include <stdexcept>
-#include <tr1/memory>
+#include <memory>
 
 class InstanceInitializationError :
     public std::runtime_error {
@@ -16,7 +16,7 @@ template<typename T>
 class Managed {
 public:
     typedef std::shared_ptr<T> ptr;
-    typedef std::tr1::weak_ptr<T> wptr;
+    typedef std::weak_ptr<T> wptr;
 
     template<typename... Args>
     static typename Managed<T>::ptr create(Args&&... args) {

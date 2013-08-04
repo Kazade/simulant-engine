@@ -8,8 +8,6 @@ namespace kglt {
 
 class Object;
 
-typedef UniqueID<5000> ConstraintID;
-
 class ResponsiveBody {
 public:
     ResponsiveBody(Object* owner):
@@ -17,8 +15,8 @@ public:
 
     virtual ~ResponsiveBody() {}
 
-    bool init();
-    void cleanup();
+    virtual bool init() = 0;
+    virtual void cleanup() = 0;
 
     virtual void set_position(const kglt::Vec3& position) = 0;
     virtual kglt::Vec3 position() const = 0;
