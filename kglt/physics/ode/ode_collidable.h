@@ -30,10 +30,19 @@ public:
 
     virtual void attach_to_responsive_body(ResponsiveBody& body);
 
+    virtual void set_bounciness(float value);
+    virtual float bounciness() const;
+
+    virtual void set_friction(int32_t friction);
+    virtual int32_t friction() const;
+
 private:
     std::unordered_map<ShapeID, dGeomID> shapes_;
 
     dSpaceID get_space();
+
+    float bounciness_;
+    int32_t friction_;
 };
 
 }

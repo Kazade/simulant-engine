@@ -32,10 +32,7 @@ public:
         dCloseODE();
     }
 
-    void step(double dt) {
-        dWorldStep(world_, dt);
-    }
-
+    void step(double dt);
     //Factory function
     std::shared_ptr<ResponsiveBody> new_responsive_body(kglt::Object *owner);
     std::shared_ptr<Collidable> new_collidable(kglt::Object *owner);
@@ -45,6 +42,7 @@ public:
 
     friend class ODEBody;
     friend class ODECollidable;
+
 private:
     //Used by ODEBody
     dWorldID world() const { return world_; }

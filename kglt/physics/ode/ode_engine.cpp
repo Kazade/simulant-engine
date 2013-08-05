@@ -9,6 +9,12 @@
 namespace kglt {
 namespace physics {
 
+static void near_callback(void *data, dGeomID o1, dGeomID o2) {
+    ODEEngine* _this = (ODEEngine*) data;
+
+    //int collision_count = dCollide(o1, o2, MAX_CONTACTS, )
+}
+
 std::shared_ptr<ResponsiveBody> ODEEngine::new_responsive_body(Object* owner) {
     auto result = std::make_shared<ODEBody>(owner);
     if(!result->init()) {
@@ -35,6 +41,11 @@ ShapeID ODEEngine::create_plane(float a, float b, float c, float d) {
 
 void ODEEngine::set_gravity(const Vec3& gravity) {
     dWorldSetGravity(world_, gravity.x, gravity.y, gravity.z);
+}
+
+void ODEEngine::step(double dt) {
+    dSpaceCollide(space_, this, &near_callback);
+    dWorldStep(world_, dt);
 }
 
 }

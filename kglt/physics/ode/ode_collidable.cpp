@@ -48,23 +48,43 @@ ShapeID ODECollidable::add_box(float width, float height, float depth) {
 }
 
 ShapeID ODECollidable::add_capsule(float radius, float length) {
+    dGeomID new_geom = dCreateCapsule(get_space(), radius, length);
+    ShapeID new_id = get_next_shape_id();
 
+    shapes_.insert(std::make_pair(new_id, new_geom));
+    return new_id;
 }
 
 void ODECollidable::set_relative_position(ShapeID shape, const Vec3& pos) {
-
+    throw NotImplementedError(__FILE__, __LINE__);
 }
 
 void ODECollidable::set_absolute_position(ShapeID shape, const Vec3& pos) {
-
+    throw NotImplementedError(__FILE__, __LINE__);
 }
 
 void ODECollidable::set_relative_rotation(ShapeID shape, const Quaternion& quat) {
-
+    throw NotImplementedError(__FILE__, __LINE__);
 }
 
 void ODECollidable::set_absolute_rotation(ShapeID shape, const Quaternion& quat) {
+    throw NotImplementedError(__FILE__, __LINE__);
+}
 
+void ODECollidable::set_bounciness(float value) {
+    bounciness_ = value;
+}
+
+void ODECollidable::set_friction(int32_t friction) {
+    friction_ = friction;
+}
+
+float ODECollidable::bounciness() const {
+    return bounciness_;
+}
+
+int32_t ODECollidable::friction() const {
+    return friction_;
 }
 
 }
