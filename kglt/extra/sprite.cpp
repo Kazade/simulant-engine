@@ -22,7 +22,7 @@ bool Sprite::init() {
     actor_id_ = stage()->new_actor(stage()->new_mesh());
 
     kglt::procedural::mesh::rectangle(
-        actor()->mesh().lock(), 1.0, 1.0
+        actor()->mesh(), 1.0, 1.0
     );
 
     //FIXME: Entities should be connected to mesh->signal_changed() and update automatically
@@ -42,7 +42,7 @@ bool Sprite::init() {
     mat->technique().pass(0).set_blending(BLEND_ALPHA);
 
     //Finally set the material on the mesh
-    actor()->mesh().lock()->set_material_id(material_id_);
+    actor()->mesh()->set_material_id(material_id_);
 
     update_texture_coordinates();
 
@@ -104,14 +104,11 @@ void Sprite::set_active_animation(const std::string &anim_name) {
 }
 
 void Sprite::set_render_dimensions(float width, float height) {
-    kglt::MeshPtr mesh = actor()->mesh().lock();
-
-    //FIXME:
-    //kglt::procedural::mesh::rectangle(mesh, width, height);
+    kglt::procedural::mesh::rectangle(actor()->mesh(), width, height);
 
     //FIXME: This shouldn't be necessary! Changing a mesh should signal
     //the actor to rebuild
-    //actor.set_mesh(actor.mesh_id()); //Rebuild the actor
+    actor()->set_mesh(actor()->mesh_id()); //Rebuild the actor
 
     set_active_animation(current_animation_); //Re-set the current animation
 }
@@ -131,21 +128,23 @@ void Sprite::update_texture_coordinates() {
     double u = (1.0 / double(across)) * (current_frame_ % across);
     double v = (1.0 / double(down)) * (current_frame_ / across);
 
-    kglt::MeshPtr mesh = actor()->mesh().lock();
+    {
+        auto mesh = actor()->mesh();
 
-    mesh->shared_data().move_to_start();
-    mesh->shared_data().tex_coord0(u, v);
+        mesh->shared_data().move_to_start();
+        mesh->shared_data().tex_coord0(u, v);
 
-    mesh->shared_data().move_next();
-    mesh->shared_data().tex_coord0(u + (1.0 / double(across)) , v);
+        mesh->shared_data().move_next();
+        mesh->shared_data().tex_coord0(u + (1.0 / double(across)) , v);
 
-    mesh->shared_data().move_next();
-    mesh->shared_data().tex_coord0(u + (1.0 / double(across)) , v + (1.0 / double(down)));
+        mesh->shared_data().move_next();
+        mesh->shared_data().tex_coord0(u + (1.0 / double(across)) , v + (1.0 / double(down)));
 
-    mesh->shared_data().move_next();
-    mesh->shared_data().tex_coord0(u, v + (1.0 / double(down)));
+        mesh->shared_data().move_next();
+        mesh->shared_data().tex_coord0(u, v + (1.0 / double(down)));
 
-    mesh->shared_data().done();
+        mesh->shared_data().done();
+    }
 }
 
 }

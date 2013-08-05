@@ -29,7 +29,9 @@ public:
     Actor(Stage* stage, ActorID id, MeshID mesh);
 
     MeshID mesh_id() const { return (mesh_) ? mesh_->id() : MeshID(0); }
-    MeshRef mesh() const { return mesh_; }
+
+    ProtectedPtr<Mesh> mesh() const;
+
     bool has_mesh() const { return bool(mesh_); }
     void set_mesh(MeshID mesh);
 
@@ -136,9 +138,7 @@ private:
     SubMeshIndex index_;
     MaterialPtr material_;
 
-    const SubMesh& submesh() const {
-        return parent_.mesh().lock()->submesh(index_);
-    }
+    const SubMesh& submesh() const;
 };
 
 }

@@ -115,7 +115,7 @@ void Boid::update_debug_mesh() const {
     Stage* stage = actor_->stage();
     assert(stage);
 
-    auto mesh = stage->mesh(debug_mesh_).lock();
+    auto mesh = stage->mesh(debug_mesh_);
 
     auto& vd = mesh->submesh(normal_points_mesh_).vertex_data();
     auto& id = mesh->submesh(normal_points_mesh_).index_data();
@@ -151,7 +151,7 @@ void Boid::enable_debug(bool value) {
             debug_mesh_ = stage->new_mesh();
         }
 
-        auto mesh = stage->mesh(debug_mesh_).lock();
+        auto mesh = stage->mesh(debug_mesh_);
         mesh->clear();
 
         auto smi = mesh->new_submesh(kglt::MaterialID(), MESH_ARRANGEMENT_LINE_STRIP, false);

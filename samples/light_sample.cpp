@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
     stage.actor(actor_id)->move_to(0.0, 0.0, -5.0);
 
     kglt::TextureID texture = stage.new_texture_from_file("sample_data/crate.png");
-    stage.actor(actor_id)->mesh().lock()->set_texture_on_material(0, texture);
+    stage.actor(actor_id)->mesh()->set_texture_on_material(0, texture);
 
     kglt::Light& light = stage.light(stage.new_light());
     light.move_to(5.0, 0.0, -5.0);

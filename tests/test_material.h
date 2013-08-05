@@ -37,7 +37,7 @@ public:
 
         kglt::MaterialID mid = scene.new_material();
         kglt::MeshID mesh_id = scene.new_mesh();
-        kglt::MeshPtr mesh = scene.mesh(mesh_id).lock();
+        auto mesh = scene.mesh(mesh_id);
         kglt::SubMeshIndex idx = mesh->new_submesh(mid);
         this->assert_equal(mid, mesh->submesh(idx).material_id());
     }

@@ -105,7 +105,7 @@ int main(int argc, const char *argv[]) {
     actor_id = stage.geom_factory().new_cube(2);
     // actor_id = stage.geom_factory().new_capsule(1,4);
 
-    stage.actor(actor_id)->mesh().lock()->set_material_id(matid);
+    stage.actor(actor_id)->mesh()->set_material_id(matid);
     stage.actor(actor_id)->set_absolute_position(pos);
 
     // It would be nice to check if a joypad is connected

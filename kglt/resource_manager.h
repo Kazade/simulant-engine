@@ -33,8 +33,8 @@ public:
     virtual MeshID new_mesh() = 0;
     virtual MeshID new_mesh_from_file(const unicode& path) = 0;
 
-    virtual MeshRef mesh(MeshID m) = 0;
-    virtual const MeshRef mesh(MeshID m) const = 0;
+    virtual ProtectedPtr<Mesh> mesh(MeshID m) = 0;
+    virtual const ProtectedPtr<Mesh> mesh(MeshID m) const = 0;
 
     virtual bool has_mesh(MeshID m) const = 0;
     virtual uint32_t mesh_count() const = 0;
@@ -104,8 +104,8 @@ public:
     MeshID new_mesh();
     MeshID new_mesh_from_file(const unicode& path);
 
-    MeshRef mesh(MeshID m);
-    const MeshRef mesh(MeshID m) const;
+    ProtectedPtr<Mesh> mesh(MeshID m);
+    const ProtectedPtr<Mesh> mesh(MeshID m) const;
 
     bool has_mesh(MeshID m) const;
     uint32_t mesh_count() const;

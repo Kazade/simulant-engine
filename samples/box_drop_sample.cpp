@@ -21,8 +21,8 @@ private:
 
         texture_id_ = stage().new_texture_from_file("sample_data/sample.tga");
         mesh_ = stage().new_mesh();
-        procedural::mesh::cube(stage().mesh(mesh_).lock(), 1.0);
-        stage().mesh(mesh_).lock()->set_texture_on_material(0, texture_id_);
+        procedural::mesh::cube(stage().mesh(mesh_), 1.0);
+        stage().mesh(mesh_)->set_texture_on_material(0, texture_id_);
 
         return true;
     }

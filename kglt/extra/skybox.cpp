@@ -28,8 +28,8 @@ SkyBox::SkyBox(kglt::Stage& stage, kglt::TextureID texture, float size, CameraID
 
     {
         auto actor = stage.actor(actor_);
-        actor->mesh().lock()->set_material_id(mat->id());
-        actor->mesh().lock()->reverse_winding();
+        actor->mesh()->set_material_id(mat->id());
+        actor->mesh()->reverse_winding();
 
         actor->set_render_priority(RENDER_PRIORITY_BACKGROUND);
         actor->attach_to_camera(cam);

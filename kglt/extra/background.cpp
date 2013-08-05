@@ -121,7 +121,7 @@ Background::Background(Scene& scene, ViewportID viewport, BGResizeStyle style):
     scene.window().loader_for("kglt/materials/background.kglm")->into(stage_.material(material_));
 
     SubMeshIndex index = kglt::procedural::mesh::rectangle(
-        stage().actor(actor_)->mesh().lock(),
+        stage().actor(actor_)->mesh(),
         1,
         1,
         0.5,

@@ -20,8 +20,8 @@ private:
         kglt::TextureID tid = stage().new_texture_from_file("sample_data/sample.tga");
 
         MeshID m1 = stage().new_mesh();
-        procedural::mesh::cube(stage().mesh(m1).lock(), 1.0);
-        stage().mesh(m1).lock()->set_texture_on_material(0, tid);
+        procedural::mesh::cube(stage().mesh(m1), 1.0);
+        stage().mesh(m1)->set_texture_on_material(0, tid);
 
         parent_ = stage().new_actor(m1, true);
         stage().actor(parent_)->move_to(Vec3(0, 0, -30));

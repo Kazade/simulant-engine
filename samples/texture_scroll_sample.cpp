@@ -26,10 +26,13 @@ int main(int argc, char* argv[]) {
     kglt::procedural::texture::starfield(tex.__object);
 
     kglt::ActorID actor_id = stage.geom_factory().new_rectangle(2.0, 2.0);
-    stage.actor(actor_id)->mesh().lock()->set_texture_on_material(0, tid);
+    stage.actor(actor_id)->mesh()->set_texture_on_material(0, tid);
 
-    kglt::MeshPtr mesh = stage.actor(actor_id)->mesh().lock();
-    kglt::MaterialID matid = mesh->submesh(mesh->submesh_ids()[0]).material_id();
+    kglt::MaterialID matid;
+    {
+        auto mesh = stage.actor(actor_id)->mesh();
+        matid = mesh->submesh(mesh->submesh_ids()[0]).material_id();
+    }
 
     /**
         Once we have the reference to a base object, we can

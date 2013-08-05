@@ -2,20 +2,24 @@
 #define RECTANGLE_H_INCLUDED
 
 #include "kglt/mesh.h"
+#include "../../generic/protected_ptr.h"
 
 namespace kglt {
+
+class Mesh;
+
 namespace procedural {
 namespace mesh {
 
 SubMeshIndex rectangle(
-    kglt::MeshPtr mesh,
+    ProtectedPtr<Mesh> mesh,
     float width, float height,
     float x_offset=0.0, float y_offset=0.0, float z_offset=0.0,
     bool clear=true
 );
 
 SubMeshIndex rectangle_outline(
-    kglt::MeshPtr mesh,
+    ProtectedPtr<Mesh> mesh,
     float width, float height,
     float x_offset=0.0, float y_offset=0.0, float z_offset=0.0,
     bool clear=true

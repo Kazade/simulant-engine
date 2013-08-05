@@ -20,7 +20,7 @@ public:
 
     kglt::MeshID generate_test_mesh(kglt::Stage& scene) {
         kglt::MeshID mid = scene.new_mesh();
-        kglt::MeshPtr mesh = scene.mesh(mid).lock();
+        auto mesh = scene.mesh(mid);
 
         kglt::VertexData& data = mesh->shared_data();
 
@@ -104,7 +104,7 @@ public:
         kglt::Stage& scene = window->scene().stage();
 
         kglt::MeshID mid = scene.new_mesh();
-        kglt::MeshPtr mesh = scene.mesh(mid).lock();
+        auto mesh = scene.mesh(mid);
 
         this->assert_equal(0, mesh->shared_data().count());
         kglt::SubMeshIndex idx = kglt::procedural::mesh::rectangle_outline(mesh, 1.0, 1.0);
@@ -116,7 +116,7 @@ public:
 
     void test_basic_usage() {
         kglt::Stage& scene = window->scene().stage();
-        kglt::MeshPtr mesh = scene.mesh(generate_test_mesh(scene)).lock();
+        auto mesh = scene.mesh(generate_test_mesh(scene));
 
         kglt::VertexData& data = mesh->shared_data();
 
@@ -137,7 +137,7 @@ public:
     void test_actor_from_mesh() {
         kglt::Stage& scene = window->scene().stage();
 
-        kglt::MeshPtr mesh = scene.mesh(generate_test_mesh(scene)).lock();
+        auto mesh = scene.mesh(generate_test_mesh(scene));
 
         auto actor = scene.actor(scene.new_actor());
 
@@ -148,7 +148,7 @@ public:
         assert_true(actor->has_mesh());
 
         //The actor's MeshID should match the mesh we set
-        assert_true(mesh->id() == actor->mesh().lock()->id());
+        assert_true(mesh->id() == actor->mesh()->id());
 
         //The actor should report the same data as the mesh, the same subactor count
         //as well as the same shared vertex data
@@ -171,10 +171,10 @@ public:
     void test_scene_methods() {
         kglt::Stage& scene = window->scene().stage();
 
-        kglt::MeshPtr mesh = scene.mesh(scene.new_mesh()).lock(); //Create a mesh
-        auto actor = scene.actor(scene.new_actor(mesh->id()));
+        kglt::MeshID mesh_id = scene.new_mesh(); //Create a mesh
+        auto actor = scene.actor(scene.new_actor(mesh_id));
 
-        assert_true(mesh->id() == actor->mesh().lock()->id());
+        assert_true(mesh_id == actor->mesh()->id());
     }
 };
 

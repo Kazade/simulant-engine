@@ -52,11 +52,11 @@ const Scene& ResourceManagerImpl::scene() const {
     return window().scene();
 }
 
-MeshRef ResourceManagerImpl::mesh(MeshID m) {
+ProtectedPtr<Mesh> ResourceManagerImpl::mesh(MeshID m) {
     return MeshManager::manager_get(m);
 }
 
-const MeshRef ResourceManagerImpl::mesh(MeshID m) const {
+const ProtectedPtr<Mesh> ResourceManagerImpl::mesh(MeshID m) const {
     return MeshManager::manager_get(m);
 }
 
@@ -67,9 +67,9 @@ MeshID ResourceManagerImpl::new_mesh() {
 
 MeshID ResourceManagerImpl::new_mesh_from_file(const unicode& path) {
     //Load the material
-    MeshPtr m = mesh(new_mesh()).lock();
-    window().loader_for(path.encode())->into(m);
-    return m->id();
+    kglt::MeshID mesh_id = new_mesh();
+    window().loader_for(path.encode())->into(mesh(mesh_id));
+    return mesh_id;
 }
 
 bool ResourceManagerImpl::has_mesh(MeshID m) const {

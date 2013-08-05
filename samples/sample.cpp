@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
     kglt::ActorID actor_id = stage.geom_factory().new_capsule();
     {
         auto actor = stage.actor(actor_id);
-        actor->mesh().lock()->set_material_id(matid);
+        actor->mesh()->set_material_id(matid);
         actor->move_to(0.0f, 0.0f, -5.0f);
     }
 

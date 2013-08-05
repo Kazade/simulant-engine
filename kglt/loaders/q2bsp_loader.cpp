@@ -238,10 +238,6 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         throw std::runtime_error("Not a valid Q2 map");
     }
 
-    MeshID mid = scene->stage().new_mesh();
-    MeshPtr mesh_ptr = scene->stage().mesh(mid).lock();
-    Mesh& mesh = *mesh_ptr;
-
     std::vector<char> actor_buffer(header.lumps[Q2::LumpType::ENTITIES].length);
     file.seekg(header.lumps[Q2::LumpType::ENTITIES].offset);
     file.read(&actor_buffer[0], sizeof(char) * header.lumps[Q2::LumpType::ENTITIES].length);
@@ -302,6 +298,9 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     /**
      *  Load the textures and generate materials
      */
+
+    MeshID mid = scene->stage().new_mesh();
+    auto mesh = scene->stage().mesh(mid);
 
     std::map<MaterialID, SubMeshIndex> material_to_submesh;
 
@@ -365,11 +364,11 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         texinfo_idx++;
 
         L_DEBUG(_u("Associated material: {0}").format(mat->id().value()));
-        material_to_submesh[mat->id()] = mesh.new_submesh(mat->id(), MESH_ARRANGEMENT_TRIANGLES, true);
+        material_to_submesh[mat->id()] = mesh->new_submesh(mat->id(), MESH_ARRANGEMENT_TRIANGLES, true);
     }
 
     std::cout << "Num textures: " << tex_lookup.size() << std::endl;
-    std::cout << "Num submeshes: " << mesh.submesh_ids().size() << std::endl;
+    std::cout << "Num submeshes: " << mesh->submesh_ids().size() << std::endl;
 
     for(Q2::Face& f: faces) {
         std::vector<uint32_t> indexes;
@@ -388,7 +387,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         }
 
         //Add a submesh for this face
-        SubMesh& sm = mesh.submesh(material_to_submesh[tex_info_to_material[f.texture_info]]);
+        SubMesh& sm = mesh->submesh(material_to_submesh[tex_info_to_material[f.texture_info]]);
         Q2::TextureInfo& tex = textures[f.texture_info];
 
         kmVec3 normal;
@@ -449,34 +448,34 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
                 float w = float(texture_dimensions[tex.texture_name].first);
                 float h = float(texture_dimensions[tex.texture_name].second);
 
-                mesh.shared_data().position(pos);
-                mesh.shared_data().normal(normal);
-                mesh.shared_data().diffuse(kglt::Colour::white);
-                mesh.shared_data().tex_coord0(u / w, v / h);
-                mesh.shared_data().tex_coord1(u / w, v / h);
-                mesh.shared_data().move_next();
+                mesh->shared_data().position(pos);
+                mesh->shared_data().normal(normal);
+                mesh->shared_data().diffuse(kglt::Colour::white);
+                mesh->shared_data().tex_coord0(u / w, v / h);
+                mesh->shared_data().tex_coord1(u / w, v / h);
+                mesh->shared_data().move_next();
 
-                sm.index_data().index(mesh.shared_data().count() - 1);
+                sm.index_data().index(mesh->shared_data().count() - 1);
 
                 //Cache this new vertex in the lookup
-                index_lookup[tri_idx[j]] = mesh.shared_data().count() - 1;
+                index_lookup[tri_idx[j]] = mesh->shared_data().count() - 1;
             }
         }
     }        
 
-    mesh.shared_data().done();
-    for(SubMeshIndex i: mesh.submesh_ids()) {
+    mesh->shared_data().done();
+    for(SubMeshIndex i: mesh->submesh_ids()) {
         //Delete empty submeshes
-        if(!mesh.submesh(i).index_data().count()) {
-            mesh.delete_submesh(i);
+        if(!mesh->submesh(i).index_data().count()) {
+            mesh->delete_submesh(i);
             continue;
         }
-        mesh.submesh(i).index_data().done();
+        mesh->submesh(i).index_data().done();
     }
 
-    L_DEBUG(_u("Created an actor for mesh").format(mesh.id()));
+    L_DEBUG(_u("Created an actor for mesh").format(mid));
     //Finally, create an actor from the world mesh
-    scene->stage().new_actor(mesh.id());
+    scene->stage().new_actor(mid);
 }
 
 }

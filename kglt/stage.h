@@ -83,8 +83,8 @@ public:
     virtual MeshID new_mesh() { return scene().new_mesh(); }
     virtual MeshID new_mesh_from_file(const unicode& path) { return scene().new_mesh_from_file(path); }
 
-    virtual MeshRef mesh(MeshID m) { return scene().mesh(m); }
-    virtual const MeshRef mesh(MeshID m) const { return scene().mesh(m); }
+    virtual ProtectedPtr<Mesh> mesh(MeshID m) { return scene().mesh(m); }
+    virtual const ProtectedPtr<Mesh> mesh(MeshID m) const { return scene().mesh(m); }
 
     virtual bool has_mesh(MeshID m) const { return scene().has_mesh(m); }
     virtual uint32_t mesh_count() const { return scene().mesh_count(); }
