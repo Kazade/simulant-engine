@@ -11,6 +11,7 @@
 #include "sound.h"
 
 #include "physics/responsive_body.h"
+#include "utils/parent_setter_mixin.h"
 
 namespace kglt {
 
@@ -20,7 +21,7 @@ class Actor :
     public MeshInterface,
     public Managed<Actor>,
     public generic::Identifiable<ActorID>,
-    public Object,
+    public ParentSetterMixin<Object>,
     public Source {
 
 public:

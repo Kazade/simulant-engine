@@ -41,7 +41,7 @@ public:
 
         auto mat = window->scene().material(window->scene().new_material());
         kglt::MaterialScript script((MaterialLanguageText(text))); //Most vexing parse \o/
-        script.generate(*mat);
+        script.generate(*mat.__object);
 
         this->assert_equal((uint32_t)2, mat->technique_count());
         this->assert_true(mat->has_technique(DEFAULT_MATERIAL_SCHEME));

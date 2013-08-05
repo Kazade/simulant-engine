@@ -18,11 +18,11 @@ int main(int argc, char* argv[]) {
 
     stage.set_ambient_light(kglt::Colour(0.2, 0.2, 0.2, 1.0));
 
-    kglt::Actor& actor = stage.actor(stage.geom_factory().new_cube(2.0));
-    actor.move_to(0.0, 0.0, -5.0);
+    kglt::ActorID actor_id = stage.geom_factory().new_cube(2.0);
+    stage.actor(actor_id)->move_to(0.0, 0.0, -5.0);
 
     kglt::TextureID texture = stage.new_texture_from_file("sample_data/crate.png");
-    actor.mesh().lock()->set_texture_on_material(0, texture);
+    stage.actor(actor_id)->mesh().lock()->set_texture_on_material(0, texture);
 
     kglt::Light& light = stage.light(stage.new_light());
     light.move_to(5.0, 0.0, -5.0);
@@ -40,9 +40,9 @@ int main(int argc, char* argv[]) {
     light3.set_attenuation_from_range(50.0);
 
     while(window->update()) {
-        actor.rotate_absolute_x(window->delta_time() * 20.0);
-        actor.rotate_absolute_y(window->delta_time() * 15.0);
-        actor.rotate_absolute_z(window->delta_time() * 25.0);
+        stage.actor(actor_id)->rotate_absolute_x(window->delta_time() * 20.0);
+        stage.actor(actor_id)->rotate_absolute_y(window->delta_time() * 15.0);
+        stage.actor(actor_id)->rotate_absolute_z(window->delta_time() * 25.0);
     }
 
     return 0;

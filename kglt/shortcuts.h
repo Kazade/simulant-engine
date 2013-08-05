@@ -10,7 +10,6 @@
 
 namespace kglt {
 
-TextureID create_texture_from_file(ResourceManager& rm, const std::string& filename, bool upload=true);
 MaterialID create_material_from_texture(ResourceManager& scene, TextureID tex);
 
 }

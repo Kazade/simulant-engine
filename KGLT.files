@@ -312,3 +312,5 @@ kglt/physics/ode/ode_collidable.cpp
 kglt/physics/collidable.cpp
 samples/box_drop_sample.cpp
 kglt/physics/physics_engine.cpp
+kglt/generic/protected_ptr.h
+kglt/utils/parent_setter_mixin.h

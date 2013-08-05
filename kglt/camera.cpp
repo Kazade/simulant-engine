@@ -53,8 +53,8 @@ void Camera::destroy() {
     scene_->delete_camera(id());
 }
 
-void Camera::follow(ActorRef actor, const kglt::Vec3& offset, float lag_in_seconds) {
-    following_actor_ = actor;
+void Camera::follow(ActorID actor, const kglt::Vec3& offset, float lag_in_seconds) {
+    following_actor_ = stage().actor(actor).__object;
     following_offset_ = offset;
     following_lag_ = lag_in_seconds;
 

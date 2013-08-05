@@ -4,20 +4,6 @@
 
 namespace kglt {
 
-TextureID create_texture_from_file(ResourceManager& rm, const std::string& filename, bool upload) {
-    auto tex = rm.texture(rm.new_texture());
-
-    rm.window().loader_for(filename)->into(*tex);
-
-    if(upload) {
-        tex->upload(true, true, true, false);
-    }
-
-    //Release ownership of this so it doesn't get GC'd
-    rm.mark_texture_as_uncollected(tex->id());
-    return tex->id();
-}
-
 MaterialID create_material_from_texture(ResourceManager& scene, TextureID tex) {
 
 

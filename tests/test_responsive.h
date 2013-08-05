@@ -18,44 +18,47 @@ public:
     }
 
     void test_set_absolute_rotation() {
-        kglt::ActorID act = window->scene().stage().new_actor(true);
-        kglt::Actor* actor = &window->scene().stage().actor(act);
+        kglt::ActorID act = window->scene().stage().new_actor(true, false);
 
-        actor->set_absolute_rotation(kglt::Degrees(10), 0, 0, 1);
+        {
+            auto actor = window->scene().stage().actor(act);
+            actor->set_absolute_rotation(kglt::Degrees(10), 0, 0, 1);
 
-        assert_equal(actor->relative_rotation(), actor->absolute_rotation());
-        assert_equal(actor->absolute_rotation(), actor->responsive_body().rotation());
+            assert_equal(actor->relative_rotation(), actor->absolute_rotation());
+            assert_equal(actor->absolute_rotation(), actor->responsive_body().rotation());
+        }
 
-        kglt::ActorID act2 = window->scene().stage().new_actor(true);
-        kglt::Actor* actor2 = &window->scene().stage().actor(act2);
+        kglt::ActorID act2 = window->scene().stage().new_actor(true, false);
+        {
+            auto actor = window->scene().stage().actor(act);
+            auto actor2 = window->scene().stage().actor(act2);
+            actor2->set_parent(act);
+            assert_equal(actor2->absolute_rotation(), actor->absolute_rotation());
 
-        actor2->set_parent(actor);
+            actor2->set_absolute_rotation(kglt::Degrees(20), 0, 0, 1);
 
-        assert_equal(actor2->absolute_rotation(), actor->absolute_rotation());
+            kglt::Quaternion expected_rel, expected_abs;
+            kmQuaternionRotationAxisAngle(&expected_abs, &KM_VEC3_POS_Z, kmDegreesToRadians(20));
+            kmQuaternionRotationAxisAngle(&expected_rel, &KM_VEC3_POS_Z, kmDegreesToRadians(10));
 
-        actor2->set_absolute_rotation(kglt::Degrees(20), 0, 0, 1);
-
-        kglt::Quaternion expected_rel, expected_abs;
-        kmQuaternionRotationAxisAngle(&expected_abs, &KM_VEC3_POS_Z, kmDegreesToRadians(20));
-        kmQuaternionRotationAxisAngle(&expected_rel, &KM_VEC3_POS_Z, kmDegreesToRadians(10));
-
-        assert_equal(expected_abs, actor2->absolute_rotation());
-        assert_equal(expected_rel, actor2->relative_rotation());
+            assert_equal(expected_abs, actor2->absolute_rotation());
+            assert_equal(expected_rel, actor2->relative_rotation());
+        }
     }
 
     void test_set_absolute_position() {
-        kglt::ActorID act = window->scene().stage().new_actor(true);
-        kglt::Actor* actor = &window->scene().stage().actor(act);
+        kglt::ActorID act = window->scene().stage().new_actor(true, false);
+        auto actor = window->scene().stage().actor(act);
 
         actor->set_absolute_position(10, 10, 10);
 
         assert_equal(kglt::Vec3(10, 10, 10), actor->absolute_position());
         assert_equal(actor->absolute_position(), actor->responsive_body().position());
 
-        kglt::ActorID act2 = window->scene().stage().new_actor(true);
-        kglt::Actor* actor2 = &window->scene().stage().actor(act2);
+        kglt::ActorID act2 = window->scene().stage().new_actor(true, false);
+        auto actor2 = window->scene().stage().actor(act2);
 
-        actor2->set_parent(actor);
+        actor2->set_parent(act);
 
         //Should be the same as its parent
         assert_equal(actor2->absolute_position(), actor->absolute_position());
@@ -72,8 +75,8 @@ public:
     }
 
     void test_set_relative_position() {
-        kglt::ActorID act = window->scene().stage().new_actor(true);
-        kglt::Actor* actor = &window->scene().stage().actor(act);
+        kglt::ActorID act = window->scene().stage().new_actor(true, false);
+        auto actor = window->scene().stage().actor(act);
 
         actor->set_relative_position(10, 10, 10);
 
@@ -81,10 +84,10 @@ public:
         assert_equal(kglt::Vec3(10, 10, 10), actor->relative_position());
         assert_equal(kglt::Vec3(10, 10, 10), actor->absolute_position());
 
-        kglt::ActorID act2 = window->scene().stage().new_actor(true);
-        kglt::Actor* actor2 = &window->scene().stage().actor(act2);
+        kglt::ActorID act2 = window->scene().stage().new_actor(true, false);
+        auto actor2 = window->scene().stage().actor(act2);
 
-        actor2->set_parent(actor);
+        actor2->set_parent(act);
 
         actor2->set_relative_position(kglt::Vec3(10, 0, 0));
 

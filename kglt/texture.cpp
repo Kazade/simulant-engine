@@ -33,7 +33,8 @@ void Texture::resize(uint32_t width, uint32_t height) {
 void Texture::sub_texture(TextureID src, uint16_t offset_x, uint16_t offset_y) {
     auto source_ptr = resource_manager().texture(src); //Lock
 
-    Texture& source = *source_ptr;
+    //Bad things...
+    Texture& source = *source_ptr.__object;
 
     if(offset_x + source.width() > width() ||
         offset_y + source.height() > height()) {
@@ -58,7 +59,6 @@ void Texture::sub_texture(TextureID src, uint16_t offset_x, uint16_t offset_y) {
         }
     }
 
-    //FIXME: Should attach to idle() so it happensin the main thread!
     //FIXME: SHould use glTexSubImage
     upload();
 }

@@ -107,10 +107,10 @@ uint32_t Scene::stage_count() const {
 
 Stage& Scene::stage(StageID s) {
     if(s == DefaultStageID) {
-        return StageManager::manager_get(default_stage_);
+        return *(StageManager::manager_get(default_stage_)).lock();
     }
 
-    return StageManager::manager_get(s);
+    return *(StageManager::manager_get(s)).lock();
 }
 
 StageRef Scene::stage_ref(StageID s) {
@@ -137,9 +137,9 @@ ProtectedPtr<UIStage> Scene::ui_stage() {
 
 ProtectedPtr<UIStage> Scene::ui_stage(UIStageID s) {
     if(!s) {
-        return UIStageManager::manager_get_ref(default_ui_stage_);
+        return UIStageManager::manager_get(default_ui_stage_);
     } else {
-        return UIStageManager::manager_get_ref(s);
+        return UIStageManager::manager_get(s);
     }
 }
 
@@ -165,9 +165,9 @@ CameraID Scene::new_camera() {
 Camera& Scene::camera(CameraID c) {
     if(c == CameraID()) {
         //Return the default camera
-        return CameraManager::manager_get(default_camera_);
+        return *(CameraManager::manager_get(default_camera_).lock());
     }
-    return CameraManager::manager_get(c);
+    return *(CameraManager::manager_get(c).lock());
 }
 
 void Scene::delete_camera(CameraID cid) {

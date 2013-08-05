@@ -22,7 +22,7 @@ BackgroundLayer::BackgroundLayer(Background &bg, const std::string& image_path):
 
     Stage& stage = background().stage();
 
-    texture_id_ = kglt::create_texture_from_file(stage, image_path);
+    texture_id_ = stage.new_texture_from_file(image_path);
     pass_id_ = background().layer_count();
 
     auto mat = stage.material(background().material_id());
@@ -113,24 +113,23 @@ Background::Background(Scene& scene, ViewportID viewport, BGResizeStyle style):
         -100
     );
 
-    actor_ = stage_.actor_ref(stage_.new_actor(stage_.new_mesh()));
+    actor_ = stage_.new_actor(stage_.new_mesh());
 
     material_ = stage_.new_material();
-    auto mat = stage_.material(material_);
 
     //Load the background material
-    scene.window().loader_for("kglt/materials/background.kglm")->into(*mat);
+    scene.window().loader_for("kglt/materials/background.kglm")->into(stage_.material(material_));
 
     SubMeshIndex index = kglt::procedural::mesh::rectangle(
-        actor_.lock()->mesh().lock(),
+        stage().actor(actor_)->mesh().lock(),
         1,
         1,
         0.5,
         0.5
     );
 
-    actor_.lock()->set_mesh(actor_.lock()->mesh_id()); //FIXME: This is a workaround
-    actor_.lock()->override_material_id(mat->id());
+    stage().actor(actor_)->set_mesh(stage().actor(actor_)->mesh_id()); //FIXME: This is a workaround
+    stage().actor(actor_)->override_material_id(material_);
 }
 
 MaterialID Background::material_id() const {
@@ -139,9 +138,8 @@ MaterialID Background::material_id() const {
 
 Background::~Background() {
     try {
-        ActorPtr actor = actor_.lock();
-        if(actor) {
-            stage_.delete_actor(actor->id());
+        if(actor_) {
+            stage_.delete_actor(actor_);
         }
 
         CameraPtr camera = ortho_camera_.lock();

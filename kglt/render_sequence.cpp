@@ -64,7 +64,7 @@ void RenderSequence::deactivate_all_pipelines() {
 }
 
 Pipeline& RenderSequence::pipeline(PipelineID pipeline) {
-    return PipelineManager::manager_get(pipeline);
+    return *(PipelineManager::manager_get(pipeline).lock());
 }
 
 void RenderSequence::delete_pipeline(PipelineID pipeline) {

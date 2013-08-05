@@ -43,8 +43,10 @@ typedef std::function<void (double)> WindowUpdateCallback;
 typedef std::shared_ptr<Loader> LoaderPtr;
 typedef std::shared_ptr<LoaderType> LoaderTypePtr;
 
+typedef generic::TemplatedManager<WindowBase, Viewport, ViewportID> ViewportManager;
+
 class WindowBase :
-    public generic::TemplatedManager<WindowBase, Viewport, ViewportID>,
+    public ViewportManager,
     public Source {
 
 public:    

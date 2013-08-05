@@ -37,7 +37,7 @@ std::vector<SubActor::ptr> NullPartitioner::geometry_visible_from(CameraID camer
 
     //Just return all of the meshes in the stage
     for(ActorID eid: all_actors_) {
-        std::vector<SubActor::ptr> subactors = stage().actor(eid)._subactors();
+        std::vector<SubActor::ptr> subactors = stage().actor(eid)->_subactors();
 
         for(SubActor::ptr ent: subactors) {
             if(stage().scene().camera(camera_id).frustum().intersects_aabb(ent->absolute_bounds())) {

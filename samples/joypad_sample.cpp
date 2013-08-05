@@ -92,7 +92,7 @@ int main(int argc, const char *argv[]) {
     ui->$("p").add_class("thing");
 
     ///Shortcut function for loading images
-    kglt::TextureID tid = kglt::create_texture_from_file(stage, "sample_data/sample.tga");
+    kglt::TextureID tid = stage.new_texture_from_file("sample_data/sample.tga");
     kglt::MaterialID matid = kglt::create_material_from_texture(stage, tid);
 
     stage.set_ambient_light(kglt::Colour::white);
@@ -104,10 +104,9 @@ int main(int argc, const char *argv[]) {
     // NOTE: I don't know yet how to manage this kind of pointer-reference system
     actor_id = stage.geom_factory().new_cube(2);
     // actor_id = stage.geom_factory().new_capsule(1,4);
-    kglt::Actor& actor = stage.actor(actor_id);
-    actor.mesh().lock()->set_material_id(matid);
 
-    actor.set_absolute_position(pos);
+    stage.actor(actor_id)->mesh().lock()->set_material_id(matid);
+    stage.actor(actor_id)->set_absolute_position(pos);
 
     // It would be nice to check if a joypad is connected
     // and the create the reference..
@@ -120,13 +119,13 @@ int main(int argc, const char *argv[]) {
             rot.x = -rot.x;
             rot.y = -rot.y;
     });
-    joypad.button_pressed_connect(1, [=](kglt::Button button) mutable {
+    joypad.button_pressed_connect(1, [&](kglt::Button button) mutable {
             /* Reset positions and rotations */
             pos = { 0, 0, -5.f };
             // rot = { 0, 0 };
 
-            actor.set_absolute_rotation(kglt::Degrees(0), 0, 0, pos.z);
-            actor.set_absolute_position(pos);
+            stage.actor(actor_id)->set_absolute_rotation(kglt::Degrees(0), 0, 0, pos.z);
+            stage.actor(actor_id)->set_absolute_position(pos);
     });
 
     // Left x-axis
@@ -153,8 +152,11 @@ int main(int argc, const char *argv[]) {
 
     while(window->update()) {
         auto dt = window->delta_time();
-        actor.rotate_absolute_x(rot.y*dt*10);
-        actor.rotate_absolute_y(rot.x*dt*10);
+        {
+            auto actor = stage.actor(actor_id);
+            actor->rotate_absolute_x(rot.y*dt*10);
+            actor->rotate_absolute_y(rot.x*dt*10);
+        }
     }
 
     stage.delete_actor(actor_id);

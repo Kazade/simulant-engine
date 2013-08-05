@@ -4,6 +4,8 @@
 #include <stdexcept>
 #include <memory>
 
+#include "protected_ptr.h"
+
 class InstanceInitializationError :
     public std::runtime_error {
 
@@ -13,7 +15,7 @@ public:
 };
 
 template<typename T>
-class Managed {
+class Managed : public virtual Protectable {
 public:
     typedef std::shared_ptr<T> ptr;
     typedef std::weak_ptr<T> wptr;

@@ -224,18 +224,18 @@ void WindowBase::register_loader(LoaderTypePtr loader) {
 }
 
 ViewportID WindowBase::new_viewport() {
-    return TemplatedManager<WindowBase, Viewport, ViewportID>::manager_new();
+    return ViewportManager::manager_new();
 }
 
 Viewport& WindowBase::viewport(ViewportID viewport) {
     if(viewport == 0) {
-        return TemplatedManager<WindowBase, Viewport, ViewportID>::manager_get(default_viewport_);
+        return *(ViewportManager::manager_get(default_viewport_).lock());
     }
-    return TemplatedManager<WindowBase, Viewport, ViewportID>::manager_get(viewport);
+    return *(ViewportManager::manager_get(viewport).lock());
 }
 
 void WindowBase::delete_viewport(ViewportID viewport) {
-    TemplatedManager<WindowBase, Viewport, ViewportID>::manager_delete(viewport);
+    ViewportManager::manager_delete(viewport);
 }
 
 Keyboard& WindowBase::keyboard() {

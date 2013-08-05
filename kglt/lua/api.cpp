@@ -66,7 +66,7 @@ void export_lua_api(lua_State* state) {
         luabind::class_<Stage, luabind::bases<ResourceManager> >("Stage")
             .def("new_actor", (ActorID(Stage::*)())&Stage::new_actor)
             .def("new_actor_from_mesh", (ActorID(Stage::*)(MeshID))&Stage::new_actor)
-            .def("actor", (Actor&(Stage::*)(ActorID))&Stage::actor)
+            .def("actor", (ProtectedPtr<Actor>(Stage::*)(ActorID))&Stage::actor)
             .def("delete_actor", &Stage::delete_actor)
             .property("scene", (Scene&(Stage::*)())&Stage::scene)
             .property("actor_count", &Stage::actor_count)

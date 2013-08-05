@@ -19,10 +19,10 @@ public:
     virtual ActorID actor_id() const = 0;
 
     Stage* stage() { return &scene_.stage(stage_id()); }
-    Actor* actor() { return &stage()->actor(actor_id()); }
+    ProtectedPtr<Actor> actor() { return stage()->actor(actor_id()); }
 
     const Stage* stage() const { return &scene_.stage(stage_id()); }
-    const Actor* actor() const { return &stage()->actor(actor_id()); }
+    const ProtectedPtr<Actor> actor() const { return stage()->actor(actor_id()); }
 
 private:
     Scene& scene_;

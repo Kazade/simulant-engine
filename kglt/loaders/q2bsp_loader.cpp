@@ -310,10 +310,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     std::vector<TexturePtr> tex_ref_count_holder_;
 
     for(Q2::TextureInfo& tex: textures) {
-        auto new_mat = scene->material(scene->clone_default_material());
-        mat_ref_count_holder_.push_back(new_mat.__object); //Prevent GC until we are done
-
-        Material& mat = *new_mat;
+        auto mat = scene->material(scene->clone_default_material());
+        mat_ref_count_holder_.push_back(mat.__object); //Prevent GC until we are done
 
         kmVec3 u_axis, v_axis;
         kmVec3Fill(&u_axis, tex.u_axis.x, tex.u_axis.y, tex.u_axis.z);
@@ -360,14 +358,14 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         }
 
         //Set the texture for unit 0
-        mat.technique().pass(0).set_texture_unit(0, tid);
-        mat.technique().pass(0).set_blending(BLEND_NONE);
+        mat->technique().pass(0).set_texture_unit(0, tid);
+        mat->technique().pass(0).set_blending(BLEND_NONE);
 
-        tex_info_to_material[texinfo_idx] = mat.id();
+        tex_info_to_material[texinfo_idx] = mat->id();
         texinfo_idx++;
 
-        L_DEBUG(_u("Associated material: {0}").format(mat.id().value()));
-        material_to_submesh[mat.id()] = mesh.new_submesh(mat.id(), MESH_ARRANGEMENT_TRIANGLES, true);
+        L_DEBUG(_u("Associated material: {0}").format(mat->id().value()));
+        material_to_submesh[mat->id()] = mesh.new_submesh(mat->id(), MESH_ARRANGEMENT_TRIANGLES, true);
     }
 
     std::cout << "Num textures: " << tex_lookup.size() << std::endl;

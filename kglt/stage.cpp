@@ -25,15 +25,18 @@ void Stage::destroy() {
 }
 
 ActorID Stage::new_actor() {
-    return new_actor(false);
+    return new_actor(false, false);
 }
 
-ActorID Stage::new_actor(bool make_responsive) {
+ActorID Stage::new_actor(bool make_responsive, bool make_collidable) {
     ActorID result = ActorManager::manager_new();
 
     if(make_responsive) {
-        Actor* act = &actor(result);
-        act->make_responsive();
+        actor(result)->make_responsive();
+    }
+
+    if(make_collidable) {
+        actor(result)->make_collidable();
     }
 
     //Tell everyone about the new actor
@@ -42,20 +45,23 @@ ActorID Stage::new_actor(bool make_responsive) {
 }
 
 ActorID Stage::new_actor(MeshID mid) {
-    return new_actor(mid, false);
+    return new_actor(mid, false, false);
 }
 
-ActorID Stage::new_actor(MeshID mid, bool make_responsive) {
+ActorID Stage::new_actor(MeshID mid, bool make_responsive, bool make_collidable) {
     ActorID result = ActorManager::manager_new();
 
     //If a mesh was specified, set it
     if(mid) {
-        actor(result).set_mesh(mid);
+        actor(result)->set_mesh(mid);
     }
 
     if(make_responsive) {
-        Actor* act = &actor(result);
-        act->make_responsive();
+        actor(result)->make_responsive();
+    }
+
+    if(make_collidable) {
+        actor(result)->make_collidable();
     }
 
     //Tell everyone about the new actor
@@ -64,41 +70,34 @@ ActorID Stage::new_actor(MeshID mid, bool make_responsive) {
     return result;
 }
 
-ActorID Stage::new_actor_with_parent(Actor& parent) {
-    Actor& ent = actor(new_actor());
-    ent.set_parent(parent);
-    return ent.id();
+ActorID Stage::new_actor_with_parent(ActorID parent) {
+    ActorID new_id = new_actor();
+    actor(new_id)->set_parent(parent);
+    return new_id;
 }
 
-ActorID Stage::new_actor_with_parent(Actor& parent, MeshID mid) {
-    Actor& ent = actor(new_actor(mid));
-    ent.set_parent(parent);
-    return ent.id();
+ActorID Stage::new_actor_with_parent(ActorID parent, MeshID mid) {
+    ActorID new_id = new_actor(mid);
+    actor(new_id)->set_parent(parent);
+    return new_id;
 }
 
 bool Stage::has_actor(ActorID m) const {
     return ActorManager::manager_contains(m);
 }
 
-const Actor& Stage::actor(ActorID e) const {
-    return ActorManager::manager_get(e);
+ProtectedPtr<Actor> Stage::actor(ActorID e) {
+    return ProtectedPtr<Actor>(ActorManager::manager_get(e));
 }
 
-Actor& Stage::actor(ActorID e) {
-    return ActorManager::manager_get(e);
-}
-
-ActorRef Stage::actor_ref(ActorID e) {
-    if(!ActorManager::manager_contains(e)) {
-        throw DoesNotExist<Stage>();
-    }
-    return ActorManager::__objects()[e];
+const ProtectedPtr<Actor> Stage::actor(ActorID e) const {
+    return ProtectedPtr<Actor>(ActorManager::manager_get(e));
 }
 
 void Stage::delete_actor(ActorID e) {
     signal_actor_destroyed_(e);
 
-    actor(e).destroy_children();
+    actor(e)->destroy_children();
 
     ActorManager::manager_delete(e);
 }
@@ -126,7 +125,7 @@ LightID Stage::new_light(Object &parent, LightType type) {
 }
 
 Light& Stage::light(LightID light_id) {
-    return LightManager::manager_get(light_id);
+    return *(LightManager::manager_get(light_id).lock());
 }
 
 void Stage::delete_light(LightID light_id) {

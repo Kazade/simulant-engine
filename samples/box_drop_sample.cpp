@@ -33,18 +33,16 @@ private:
 
             //Spawn a new cube every second
             if(time_since_last_spawn_ >= 1.0) {
-                ActorID new_actor = stage().new_actor(mesh_);
-
-                Actor* actor = &stage().actor(new_actor);
 
                 //Make the new actor both responsive, and collidable
-                actor->make_responsive();
-                actor->make_collidable();
+                ActorID new_actor = stage().new_actor(mesh_, true, true);
+                {
+                    auto actor = stage().actor(new_actor);
 
-                //Add a cube shape to the collidable
-                actor->collidable().add_box(1.0, 1.0, 1.0);
-
-                actor->move_to(Vec3(0, 3, -30));
+                    //Add a cube shape to the collidable
+                    actor->collidable().add_box(1.0, 1.0, 1.0);
+                    actor->move_to(Vec3(0, 3, -30));
+                };
 
                 time_since_last_spawn_ = 0.0;
             }

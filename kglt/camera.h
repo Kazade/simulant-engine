@@ -21,7 +21,7 @@ public:
     Camera(Scene* scene, CameraID id);
 
     kmVec3 project_point(ViewportID vid, const kmVec3& point);
-    void follow(ActorRef actor, const kglt::Vec3& offset, float lag_in_seconds=0.0);
+    void follow(ActorID actor, const kglt::Vec3& offset, float lag_in_seconds=0.0);
 
     const kmMat4& view_matrix() { return view_matrix_; }
     const kmMat4& projection_matrix() const { return projection_matrix_; }

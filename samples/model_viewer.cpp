@@ -47,15 +47,15 @@ int main(int argc, char* argv[]) {
     kglt::extra::SkyBox::ptr skybox = kglt::extra::SkyBox::create(stage, star_texture);
 
     kglt::MeshID mid = stage.new_mesh_from_file(filename);
-    kglt::Actor& actor = stage.actor(stage.new_actor(mid));
-    actor.move_to(0, 0, -50);
+    kglt::ActorID actor_id = stage.new_actor(mid);
+    stage.actor(actor_id)->move_to(0, 0, -50);
 
     float x_position = 0.0f;
     bool incrementing = true;
 
     window->signal_step().connect(
         [&](double dt) {
-            actor.rotate_absolute_y(10.0 * dt);
+            stage.actor(actor_id)->rotate_absolute_y(10.0 * dt);
 
             x_position += ((incrementing) ? -10.0 : 10.0) * dt;
 

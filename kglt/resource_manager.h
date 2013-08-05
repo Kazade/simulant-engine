@@ -6,6 +6,8 @@
 
 #include "generic/refcount_manager.h"
 #include "generic/data_carrier.h"
+#include "generic/protected_ptr.h"
+
 #include "texture.h"
 #include "shader.h"
 #include "mesh.h"
@@ -22,38 +24,6 @@ typedef generic::RefCountedTemplatedManager<ResourceManagerImpl, Material, Mater
 typedef generic::RefCountedTemplatedManager<ResourceManagerImpl, Texture, TextureID> TextureManager;
 typedef generic::RefCountedTemplatedManager<ResourceManagerImpl, Sound, SoundID> SoundManager;
 
-template<typename T>
-struct ProtectedPtr {
-    typedef std::lock_guard<std::recursive_mutex> guard_type;
-
-    std::shared_ptr<T> __object;
-
-    ProtectedPtr() = default;
-
-    ProtectedPtr(std::weak_ptr<T> ref):
-        __object(ref.lock()),
-        lock_(__object ?
-            std::make_shared<guard_type>(__object->mutex()) :
-            std::shared_ptr<guard_type>()
-        ) {
-
-    }
-
-    ~ProtectedPtr() {
-        __object.reset(); //Release reference
-        lock_.reset(); //Unlock
-    }
-
-    T* operator->() { return __object.get(); }
-    T& operator*() { return *__object; }
-
-    explicit operator bool() const {
-        return __object.get() != nullptr;
-    }
-
-private:
-    std::shared_ptr<guard_type> lock_;
-};
 
 class ResourceManager {
 public:

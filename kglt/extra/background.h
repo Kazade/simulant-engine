@@ -76,7 +76,7 @@ private:
 
     void destroy() {}
 
-    ActorRef actor_;
+    ActorID actor_;
     MaterialID material_;
 
     friend class BackgroundLayer;
