@@ -10,8 +10,8 @@ namespace kglt {
 namespace physics {
 
 dSpaceID ODECollidable::get_space() {
-    ODEEngine* engine = dynamic_cast<ODEEngine*>(owner()->stage().scene().physics_engine());
-    return engine->space_;
+    ODEEngine* e = dynamic_cast<ODEEngine*>(engine());
+    return e->space_;
 }
 
 bool ODECollidable::init() {
@@ -20,7 +20,10 @@ bool ODECollidable::init() {
 }
 
 void ODECollidable::cleanup() {
-
+    for(auto p: shapes_) {
+        dGeomDestroy(p.second);
+    }
+    shapes_.clear();
 }
 
 void ODECollidable::attach_to_responsive_body(ResponsiveBody& reponsive) {
@@ -31,8 +34,19 @@ void ODECollidable::attach_to_responsive_body(ResponsiveBody& reponsive) {
     }
 }
 
+ShapeID ODECollidable::add_plane(float a, float b, float c, float d) {
+    dGeomID new_geom = dCreatePlane(get_space(), a, b, c, d);
+    dGeomSetData(new_geom, this);
+    ShapeID new_id = get_next_shape_id();
+
+    shapes_.insert(std::make_pair(new_id, new_geom));
+    return new_id;
+}
+
 ShapeID ODECollidable::add_sphere(float radius) {
     dGeomID new_geom = dCreateSphere(get_space(), radius);
+    dGeomSetData(new_geom, this);
+
     ShapeID new_id = get_next_shape_id();
 
     shapes_.insert(std::make_pair(new_id, new_geom));
@@ -41,14 +55,22 @@ ShapeID ODECollidable::add_sphere(float radius) {
 
 ShapeID ODECollidable::add_box(float width, float height, float depth) {
     dGeomID new_geom = dCreateBox(get_space(), width, height, depth);
+    dGeomSetData(new_geom, this);
+
     ShapeID new_id = get_next_shape_id();
 
     shapes_.insert(std::make_pair(new_id, new_geom));
+
+    if(owner() && owner()->is_responsive()) {
+        attach_to_responsive_body(owner()->responsive_body());
+    }
     return new_id;
 }
 
 ShapeID ODECollidable::add_capsule(float radius, float length) {
     dGeomID new_geom = dCreateCapsule(get_space(), radius, length);
+    dGeomSetData(new_geom, this);
+
     ShapeID new_id = get_next_shape_id();
 
     shapes_.insert(std::make_pair(new_id, new_geom));

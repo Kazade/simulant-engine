@@ -10,13 +10,15 @@ namespace kglt {
 
 class Object;
 class ResponsiveBody;
+class PhysicsEngine;
 
 class Collidable {
 public:
-    Collidable(Object* owner);
+    Collidable(Object* owner, PhysicsEngine* engine);
     virtual ~Collidable() {}
 
     Object* owner() { return owner_; }
+    PhysicsEngine* engine() { return engine_; }
 
     virtual bool init() = 0;
     virtual void cleanup() = 0;
@@ -24,6 +26,7 @@ public:
     virtual ShapeID add_sphere(float radius) = 0;
     virtual ShapeID add_box(float width, float height, float depth) = 0;
     virtual ShapeID add_capsule(float radius, float length) = 0;
+    virtual ShapeID add_plane(float a, float b, float c, float d) = 0;
 
     virtual void set_relative_position(ShapeID shape, const Vec3& pos) = 0;
     virtual void set_absolute_position(ShapeID shape, const Vec3& pos) = 0;
@@ -44,6 +47,9 @@ public:
     bool has_infinite_friction() const { return friction() == -1; }
 
 private:
+    friend class PhysicsEngine;
+
+    PhysicsEngine* engine_;
     Object* owner_;
 
 protected:

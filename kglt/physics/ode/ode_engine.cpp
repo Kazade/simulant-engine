@@ -9,10 +9,38 @@
 namespace kglt {
 namespace physics {
 
-static void near_callback(void *data, dGeomID o1, dGeomID o2) {
+static const int MAX_CONTACTS = 3;
+
+static void global_near_callback(void *data, dGeomID o1, dGeomID o2) {
     ODEEngine* _this = (ODEEngine*) data;
 
-    //int collision_count = dCollide(o1, o2, MAX_CONTACTS, )
+    _this->near_callback(o1, o2);
+}
+
+void ODEEngine::near_callback(dGeomID o1, dGeomID o2) {
+    ODECollidable* c1 = (ODECollidable*) dGeomGetData(o1);
+    ODECollidable* c2 = (ODECollidable*) dGeomGetData(o2);
+
+    dContact contact[MAX_CONTACTS];
+
+    int collision_count = dCollide(o1, o2, MAX_CONTACTS, &contact[0].geom, sizeof(dContact));
+
+    for(int32_t i = 0; i < collision_count; ++i) {
+        contact[i].surface.mode = dContactBounce;
+        contact[i].surface.bounce = c1->bounciness() * c2->bounciness();
+
+        if(c1->has_infinite_friction() || c2->has_infinite_friction()) {
+            contact[i].surface.mu = dInfinity;
+        } else {
+            contact[i].surface.mu = c1->friction() * c2->friction();
+        }
+
+        dBodyID body1 = dGeomGetBody(contact[i].geom.g1);
+        dBodyID body2 = dGeomGetBody(contact[i].geom.g2);
+
+        dJointID c = dJointCreateContact(world(), contact_group_, &contact[i]);
+        dJointAttach(c, body1, body2);
+    }
 }
 
 std::shared_ptr<ResponsiveBody> ODEEngine::new_responsive_body(Object* owner) {
@@ -24,7 +52,7 @@ std::shared_ptr<ResponsiveBody> ODEEngine::new_responsive_body(Object* owner) {
 }
 
 std::shared_ptr<Collidable> ODEEngine::new_collidable(Object* owner) {
-    auto result = std::make_shared<ODECollidable>(owner);
+    auto result = std::make_shared<ODECollidable>(owner, this);
     if(!result->init()) {
         throw InstanceInitializationError();
     }
@@ -32,10 +60,11 @@ std::shared_ptr<Collidable> ODEEngine::new_collidable(Object* owner) {
 }
 
 ShapeID ODEEngine::create_plane(float a, float b, float c, float d) {
-    ShapeID new_id = get_next_shape_id();
-    dGeomID new_geom = dCreatePlane(space_, a, b, c, d);
+    auto new_c = new_collidable(nullptr);
 
-    shapes_.insert(std::make_pair(new_id, new_geom));
+    ShapeID new_id = new_c->add_plane(a, b, c, d);
+
+    shapes_[new_id] = new_c;
     return new_id;
 }
 
@@ -44,8 +73,9 @@ void ODEEngine::set_gravity(const Vec3& gravity) {
 }
 
 void ODEEngine::step(double dt) {
-    dSpaceCollide(space_, this, &near_callback);
-    dWorldStep(world_, dt);
+    dJointGroupEmpty(contact_group_);
+    dSpaceCollide(space_, this, &global_near_callback);
+    dWorldStep(world_, dt);    
 }
 
 }

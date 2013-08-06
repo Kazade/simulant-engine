@@ -16,7 +16,7 @@ public:
 private:
     bool do_init() {
         scene().enable_physics(DefaultPhysicsEngine::create());
-        scene().physics_engine()->create_plane(0, 1, 0, 0);
+        scene().physics_engine()->create_plane(0, 1, 0, -4);
         scene().physics_engine()->set_gravity(Vec3(0, -7.8, 0));
 
         texture_id_ = stage().new_texture_from_file("sample_data/sample.tga");
@@ -41,7 +41,7 @@ private:
 
                     //Add a cube shape to the collidable
                     actor->collidable().add_box(1.0, 1.0, 1.0);
-                    actor->move_to(Vec3(0, 3, -30));
+                    actor->move_to(Vec3(0, 10, -10));
                 };
 
                 time_since_last_spawn_ = 0.0;

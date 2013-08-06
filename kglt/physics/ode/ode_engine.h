@@ -25,6 +25,7 @@ public:
         dInitODE2(0);
         world_ = dWorldCreate();
         space_ = dHashSpaceCreate(0);
+        contact_group_ = dJointGroupCreate(0);
         return true;
     }
 
@@ -43,14 +44,16 @@ public:
     friend class ODEBody;
     friend class ODECollidable;
 
+    void near_callback(dGeomID o1, dGeomID o2);
 private:
     //Used by ODEBody
     dWorldID world() const { return world_; }
 
     dWorldID world_;
     dSpaceID space_;
+    dJointGroupID contact_group_;
 
-    std::unordered_map<ShapeID, dGeomID> shapes_;
+    std::unordered_map<ShapeID, std::shared_ptr<Collidable> > shapes_;
 };
 
 }

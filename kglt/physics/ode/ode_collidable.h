@@ -12,8 +12,8 @@ namespace physics {
 
 class ODECollidable : public Collidable {
 public:
-    ODECollidable(Object* owner):
-        Collidable(owner) {}
+    ODECollidable(Object* owner, PhysicsEngine* engine):
+        Collidable(owner, engine) {}
 
     virtual bool init();
     virtual void cleanup();
@@ -21,6 +21,7 @@ public:
     virtual ShapeID add_sphere(float radius);
     virtual ShapeID add_box(float width, float height, float depth);
     virtual ShapeID add_capsule(float radius, float length);
+    virtual ShapeID add_plane(float a, float b, float c, float d);
 
     virtual void set_relative_position(ShapeID shape, const Vec3& pos);
     virtual void set_absolute_position(ShapeID shape, const Vec3& pos);
@@ -37,12 +38,14 @@ public:
     virtual int32_t friction() const;
 
 private:
+    friend class ODEEngine;
+
     std::unordered_map<ShapeID, dGeomID> shapes_;
 
     dSpaceID get_space();
 
-    float bounciness_;
-    int32_t friction_;
+    float bounciness_ = 0.5;
+    int32_t friction_ = 100000;
 };
 
 }
