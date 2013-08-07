@@ -8,7 +8,7 @@ using namespace kglt;
 class BoxDrop: public kglt::App {
 public:
     BoxDrop():
-        App("KGLT BoxDrop Sample") {
+        App("KGLT BoxDrop Sample", 0, 0, 0, true) {
 
         window().set_logging_level(kglt::LOG_LEVEL_DEBUG);
     }

@@ -4,6 +4,7 @@
 #include <sigc++/sigc++.h>
 
 #include "../generic/unique_id.h"
+#include "../kazbase/base/taggable_object.h"
 #include "../types.h"
 
 namespace kglt {
@@ -12,7 +13,7 @@ class Object;
 class ResponsiveBody;
 class PhysicsEngine;
 
-class Collidable {
+class Collidable : public base::TaggableObject {
 public:
     Collidable(Object* owner, PhysicsEngine* engine);
     virtual ~Collidable() {}
