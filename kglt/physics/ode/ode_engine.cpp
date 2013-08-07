@@ -25,12 +25,6 @@ void ODEEngine::near_callback(dGeomID o1, dGeomID o2) {
 
     int collision_count = dCollide(o1, o2, MAX_CONTACTS, &contact[0].geom, sizeof(dContact));
 
-    if(collision_count) {
-        //Fire the collision signal
-        c1->signal_collided_(*c2);
-        c2->signal_collided_(*c1);
-    }
-
     if(c1->is_ghost() || c2->is_ghost()) {
         //Don't respond if we're not supposed to (e.g. we're a hit zone or something)
         return;
@@ -54,6 +48,12 @@ void ODEEngine::near_callback(dGeomID o1, dGeomID o2) {
         if(body1 == body2) {
             //Don't collide the same body against itself
             continue;
+        }
+
+        if(i == 0) {
+            //Fire the collision signal on the first loop only
+            c1->signal_collided_(*c2);
+            c2->signal_collided_(*c1);
         }
 
         dJointID c = dJointCreateContact(world(), contact_group_, &contact[i]);
