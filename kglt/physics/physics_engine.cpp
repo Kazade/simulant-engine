@@ -10,6 +10,41 @@ ShapeID get_next_shape_id() {
     return ShapeID(++counter);
 }
 
+bool PhysicsEngine::init() {
+    std::lock_guard<std::recursive_mutex> guard(this->mutex());
+    return do_init();
+}
+
+void PhysicsEngine::cleanup() {
+    std::lock_guard<std::recursive_mutex> guard(this->mutex());
+    do_cleanup();
+}
+
+void PhysicsEngine::step(double dt) {
+    std::lock_guard<std::recursive_mutex> guard(this->mutex());
+    do_step(dt);
+}
+
+std::shared_ptr<ResponsiveBody> PhysicsEngine::new_responsive_body(Object* owner) {
+    std::lock_guard<std::recursive_mutex> guard(this->mutex());
+    return do_new_responsive_body(owner);
+}
+
+std::shared_ptr<Collidable> PhysicsEngine::new_collidable(Object* owner) {
+    std::lock_guard<std::recursive_mutex> guard(this->mutex());
+    return do_new_collidable(owner);
+}
+
+ShapeID PhysicsEngine::create_plane(float a, float b, float c, float d) {
+    std::lock_guard<std::recursive_mutex> guard(this->mutex());
+    return do_create_plane(a, b, c, d);
+}
+
+void PhysicsEngine::set_gravity(const kglt::Vec3& gravity) {
+    std::lock_guard<std::recursive_mutex> guard(this->mutex());
+    do_set_gravity(gravity);
+}
+
 void PhysicsEngine::fire_collision_signals_for(Collidable& lhs, Collidable& rhs) {
     base::TagList tags1 = lhs.get_tags();
     base::TagList tags2 = rhs.get_tags();

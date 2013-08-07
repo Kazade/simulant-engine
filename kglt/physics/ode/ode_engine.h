@@ -21,7 +21,11 @@ class ODEEngine :
     public Managed<ODEEngine> {
 
 public:
-    bool init() {
+    void near_callback(dGeomID o1, dGeomID o2);
+
+    using PhysicsEngine::init;
+private:
+    bool do_init() {
         dInitODE2(0);
         world_ = dWorldCreate();
         space_ = dHashSpaceCreate(0);
@@ -29,23 +33,21 @@ public:
         return true;
     }
 
-    void cleanup() {
+    void do_cleanup() {
         dCloseODE();
     }
 
-    void step(double dt);
+    void do_step(double dt);
     //Factory function
-    std::shared_ptr<ResponsiveBody> new_responsive_body(kglt::Object *owner);
-    std::shared_ptr<Collidable> new_collidable(kglt::Object *owner);
+    std::shared_ptr<ResponsiveBody> do_new_responsive_body(kglt::Object *owner);
+    std::shared_ptr<Collidable> do_new_collidable(kglt::Object *owner);
 
-    ShapeID create_plane(float a, float b, float c, float d);
-    void set_gravity(const Vec3& gravity);
+    ShapeID do_create_plane(float a, float b, float c, float d);
+    void do_set_gravity(const Vec3& gravity);
 
     friend class ODEBody;
     friend class ODECollidable;
 
-    void near_callback(dGeomID o1, dGeomID o2);
-private:
     //Used by ODEBody
     dWorldID world() const { return world_; }
 

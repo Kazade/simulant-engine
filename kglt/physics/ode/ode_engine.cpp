@@ -64,7 +64,7 @@ void ODEEngine::near_callback(dGeomID o1, dGeomID o2) {
     }
 }
 
-std::shared_ptr<ResponsiveBody> ODEEngine::new_responsive_body(Object* owner) {
+std::shared_ptr<ResponsiveBody> ODEEngine::do_new_responsive_body(Object* owner) {
     auto result = std::make_shared<ODEBody>(owner);
     if(!result->init()) {
         throw InstanceInitializationError();
@@ -72,7 +72,7 @@ std::shared_ptr<ResponsiveBody> ODEEngine::new_responsive_body(Object* owner) {
     return result;
 }
 
-std::shared_ptr<Collidable> ODEEngine::new_collidable(Object* owner) {
+std::shared_ptr<Collidable> ODEEngine::do_new_collidable(Object* owner) {
     auto result = std::make_shared<ODECollidable>(owner, this);
     if(!result->init()) {
         throw InstanceInitializationError();
@@ -80,7 +80,7 @@ std::shared_ptr<Collidable> ODEEngine::new_collidable(Object* owner) {
     return result;
 }
 
-ShapeID ODEEngine::create_plane(float a, float b, float c, float d) {
+ShapeID ODEEngine::do_create_plane(float a, float b, float c, float d) {
     auto new_c = new_collidable(nullptr);
 
     ShapeID new_id = new_c->add_plane(a, b, c, d);
@@ -89,11 +89,11 @@ ShapeID ODEEngine::create_plane(float a, float b, float c, float d) {
     return new_id;
 }
 
-void ODEEngine::set_gravity(const Vec3& gravity) {
+void ODEEngine::do_set_gravity(const Vec3& gravity) {
     dWorldSetGravity(world_, gravity.x, gravity.y, gravity.z);
 }
 
-void ODEEngine::step(double dt) {
+void ODEEngine::do_step(double dt) {
     dJointGroupEmpty(contact_group_);
     dSpaceCollide(space_, this, &global_near_callback);
     dWorldStep(world_, dt);    
