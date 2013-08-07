@@ -46,11 +46,17 @@ public:
 
     bool has_infinite_friction() const { return friction() == -1; }
 
+    //If a collidable is a ghost, it triggers collision signals but objects
+    //pass through it
+    void set_is_ghost(bool val=true) { is_ghost_ = val; }
+    bool is_ghost() const { return is_ghost_; }
+
 private:
     friend class PhysicsEngine;
 
     PhysicsEngine* engine_;
     Object* owner_;
+    bool is_ghost_ = false;
 
 protected:
     sigc::signal<void, Collidable&> signal_collided_;

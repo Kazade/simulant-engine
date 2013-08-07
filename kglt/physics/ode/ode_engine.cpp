@@ -25,7 +25,20 @@ void ODEEngine::near_callback(dGeomID o1, dGeomID o2) {
 
     int collision_count = dCollide(o1, o2, MAX_CONTACTS, &contact[0].geom, sizeof(dContact));
 
+    if(collision_count) {
+        //Fire the collision signal
+        c1->signal_collided_(*c2);
+        c2->signal_collided_(*c1);
+    }
+
+    if(c1->is_ghost() || c2->is_ghost()) {
+        //Don't respond if we're not supposed to (e.g. we're a hit zone or something)
+        return;
+    }
+
     for(int32_t i = 0; i < collision_count; ++i) {
+        //Calculate combined surface values to build contact joints
+
         contact[i].surface.mode = dContactBounce;
         contact[i].surface.bounce = c1->bounciness() * c2->bounciness();
 
@@ -37,6 +50,11 @@ void ODEEngine::near_callback(dGeomID o1, dGeomID o2) {
 
         dBodyID body1 = dGeomGetBody(contact[i].geom.g1);
         dBodyID body2 = dGeomGetBody(contact[i].geom.g2);
+
+        if(body1 == body2) {
+            //Don't collide the same body against itself
+            continue;
+        }
 
         dJointID c = dJointCreateContact(world(), contact_group_, &contact[i]);
         dJointAttach(c, body1, body2);
