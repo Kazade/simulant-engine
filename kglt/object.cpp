@@ -61,7 +61,7 @@ void Object::make_responsive() {
     signal_made_responsive_();
 }
 
-void Object::make_collidable() {
+void Object::make_shape() {
     if(!stage().scene().physics_enabled()) {
         throw std::logic_error("Tried to make an object collidable when no physics engine is enabled");
     }

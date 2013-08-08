@@ -146,7 +146,7 @@ public:
 
     //Physics stuff
     void make_responsive();
-    void make_collidable();
+    void make_shape();
 
     ResponsiveBody& body() {
         if(!is_responsive()) {
@@ -164,16 +164,16 @@ public:
         return *responsive_body_.get();
     }
 
-    Collidable& collidable() {
-        if(!is_collidable()) {
+    Collidable& shape() {
+        if(!is_shape()) {
             throw std::logic_error("Tried to access a collidable on a non-collidable object");
         }
 
         return *collidable_.get();
     }
 
-    const Collidable& collidable() const {
-        if(!is_collidable()) {
+    const Collidable& shape() const {
+        if(!is_shape()) {
             throw std::logic_error("Tried to access a collidable on a non-collidable object");
         }
 
@@ -181,14 +181,14 @@ public:
     }
 
     bool is_responsive() const { return bool(responsive_body_); }
-    bool is_collidable() const { return bool(collidable_); }
+    bool is_shape() const { return bool(collidable_); }
 
     bool parent_is_root() const {        
         return has_parent() && (&parent() == &root());
     }
 
     sigc::signal<void> signal_made_responsive() { return signal_made_responsive_; }
-    sigc::signal<void> signal_made_collidable() { return signal_made_collidable_; }
+    sigc::signal<void> signal_made_shape() { return signal_made_collidable_; }
 
 protected:
     void update_from_parent();
