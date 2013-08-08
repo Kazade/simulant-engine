@@ -39,8 +39,11 @@ public:
         physics_engine_ = engine;
     }
 
-    PhysicsEngine* physics_engine() const {
-        return physics_engine_.get();
+    PhysicsEngine& physics() const {
+        if(!physics_engine_) {
+            throw std::logic_error("Tried to access the physics engine when one has not been enabled");
+        }
+        return *physics_engine_.get();
     }
 
     bool physics_enabled() const {

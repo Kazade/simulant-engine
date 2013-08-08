@@ -5,8 +5,8 @@
 namespace kglt {
 
 Collidable::Collidable(Object* owner, PhysicsEngine* engine):
-    owner_(owner),
-    engine_(engine) {
+    engine_(engine),
+    owner_(owner) {
 
     assert(owner_ || engine_);
 
@@ -16,7 +16,7 @@ Collidable::Collidable(Object* owner, PhysicsEngine* engine):
         });
 
         if(!engine_) {
-            engine_ = owner_->stage().scene().physics_engine();
+            engine_ = &owner_->stage().scene().physics();
         }
     }
 

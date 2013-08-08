@@ -50,23 +50,25 @@ void Object::parent_changed_callback(Object* old_parent, Object* new_parent) {
 }
 
 void Object::make_responsive() {
-    PhysicsEngine* engine = stage().scene().physics_engine();
-    if(!engine) {
+    if(!stage().scene().physics_enabled()) {
         throw std::logic_error("Tried to make an object responsive when no physics engine is enabled");
     }
 
-    responsive_body_ = engine->new_responsive_body(this);
+    PhysicsEngine& engine = stage().scene().physics();
+
+    responsive_body_ = engine.new_responsive_body(this);
 
     signal_made_responsive_();
 }
 
 void Object::make_collidable() {
-    PhysicsEngine* engine = stage().scene().physics_engine();
-    if(!engine) {
+    if(!stage().scene().physics_enabled()) {
         throw std::logic_error("Tried to make an object collidable when no physics engine is enabled");
     }
 
-    collidable_ = engine->new_collidable(this);
+    PhysicsEngine& engine = stage().scene().physics();
+
+    collidable_ = engine.new_collidable(this);
 
     signal_made_collidable_();
 }

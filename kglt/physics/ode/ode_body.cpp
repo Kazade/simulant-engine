@@ -12,9 +12,9 @@ namespace physics {
 static int32_t constraint_counter = 1;
 
 bool ODEBody::init() {
-    ODEEngine* engine = dynamic_cast<ODEEngine*>(owner()->stage().scene().physics_engine());
+    ODEEngine& engine = dynamic_cast<ODEEngine&>(owner()->stage().scene().physics());
 
-    body_ = dBodyCreate(engine->world());
+    body_ = dBodyCreate(engine.world());
 
     //Initialize spherical mass of 1.0
     set_mass_sphere(1.0, 1.0);
@@ -88,9 +88,9 @@ kglt::Vec3 ODEBody::linear_velocity() const {
 }
 
 ConstraintID ODEBody::create_fixed_constaint(ResponsiveBody &other) {
-    ODEEngine* engine = dynamic_cast<ODEEngine*>(owner()->stage().scene().physics_engine());
+    ODEEngine& engine = dynamic_cast<ODEEngine&>(owner()->stage().scene().physics());
 
-    dJointID new_joint = dJointCreateFixed(engine->world(), 0);
+    dJointID new_joint = dJointCreateFixed(engine.world(), 0);
     dJointAttach(new_joint, body_, dynamic_cast<ODEBody&>(other).body_);
     dJointSetFixed(new_joint);
 
