@@ -36,7 +36,7 @@ ActorID Stage::new_actor(bool make_responsive, bool make_collidable) {
     }
 
     if(make_collidable) {
-        actor(result)->make_shape();
+        actor(result)->make_collidable();
     }
 
     //Tell everyone about the new actor
@@ -61,7 +61,7 @@ ActorID Stage::new_actor(MeshID mid, bool make_responsive, bool make_collidable)
     }
 
     if(make_collidable) {
-        actor(result)->make_shape();
+        actor(result)->make_collidable();
     }
 
     //Tell everyone about the new actor

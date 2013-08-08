@@ -146,7 +146,7 @@ public:
 
     //Physics stuff
     void make_responsive();
-    void make_shape();
+    void make_collidable();
 
     ResponsiveBody& body() {
         if(!is_responsive()) {
@@ -165,7 +165,7 @@ public:
     }
 
     Collidable& shape() {
-        if(!is_shape()) {
+        if(!is_collidable()) {
             throw std::logic_error("Tried to access a collidable on a non-collidable object");
         }
 
@@ -173,7 +173,7 @@ public:
     }
 
     const Collidable& shape() const {
-        if(!is_shape()) {
+        if(!is_collidable()) {
             throw std::logic_error("Tried to access a collidable on a non-collidable object");
         }
 
@@ -181,7 +181,7 @@ public:
     }
 
     bool is_responsive() const { return bool(responsive_body_); }
-    bool is_shape() const { return bool(collidable_); }
+    bool is_collidable() const { return bool(collidable_); }
 
     bool parent_is_root() const {        
         return has_parent() && (&parent() == &root());
