@@ -36,14 +36,14 @@ void Object::parent_changed_callback(Object* old_parent, Object* new_parent) {
 
     if(is_responsive()) {
         if(responsive_parental_constraint_) {
-            responsive_body().destroy_constraint(responsive_parental_constraint_);
+            body().destroy_constraint(responsive_parental_constraint_);
             responsive_parental_constraint_ = ConstraintID();
         }
 
-        responsive_body().set_position(parent().responsive_body().position());
-        responsive_body().set_rotation(parent().responsive_body().rotation());
+        body().set_position(parent().body().position());
+        body().set_rotation(parent().body().rotation());
 
-        responsive_parental_constraint_ = responsive_body().create_fixed_constaint(new_parent->responsive_body());
+        responsive_parental_constraint_ = body().create_fixed_constaint(new_parent->body());
     }
 
     update_from_parent();
@@ -111,15 +111,15 @@ void Object::set_absolute_position(float x, float y, float z) {
     if(is_responsive()) {
         if(responsive_parental_constraint_) {
             //Destroy the existing constraint
-            responsive_body().destroy_constraint(responsive_parental_constraint_);
+            body().destroy_constraint(responsive_parental_constraint_);
         }
 
         //Set the new absolute position
-        responsive_body().set_position(kglt::Vec3(x, y, z));
+        body().set_position(kglt::Vec3(x, y, z));
 
         if(has_parent() && !parent_is_root()) {
             //Recreate the constraint with the parent (as long as the parent isn't the stage itself)
-            responsive_parental_constraint_ = responsive_body().create_fixed_constaint(parent().responsive_body());
+            responsive_parental_constraint_ = body().create_fixed_constaint(parent().body());
         }
     } else {
         kglt::Vec3 parent_pos;
@@ -139,15 +139,15 @@ void Object::set_relative_position(float x, float y, float z) {
     if(is_responsive()) {
         if(responsive_parental_constraint_) {
             //Destroy the existing constraint
-            responsive_body().destroy_constraint(responsive_parental_constraint_);
+            body().destroy_constraint(responsive_parental_constraint_);
         }
 
         //Set the new absolute position
-        responsive_body().set_position(parent().absolute_position() + Vec3(x, y, z));
+        body().set_position(parent().absolute_position() + Vec3(x, y, z));
 
         if(has_parent() && !parent_is_root()) {
             //Recreate the constraint with the parent (as long as the parent isn't the stage itself)
-            responsive_parental_constraint_ = responsive_body().create_fixed_constaint(parent().responsive_body());
+            responsive_parental_constraint_ = body().create_fixed_constaint(parent().body());
         }
     } else {
         update_from_parent();
@@ -156,7 +156,7 @@ void Object::set_relative_position(float x, float y, float z) {
 
 kglt::Vec3 Object::absolute_position() const {
     if(is_responsive()) {
-        return responsive_body().position();
+        return body().position();
     }
 
     return absolute_position_;
@@ -172,7 +172,7 @@ kglt::Vec3 Object::relative_position() const {
 
 kglt::Quaternion Object::absolute_rotation() const {
     if(is_responsive()) {
-        return responsive_body().rotation();
+        return body().rotation();
     } else {
         return absolute_rotation_;
     }
@@ -182,7 +182,7 @@ kglt::Quaternion Object::relative_rotation() const {
     if(is_responsive()) {
         Quaternion parent_rot = parent().absolute_rotation();
         parent_rot.inverse();
-        return parent_rot * responsive_body().rotation();
+        return parent_rot * body().rotation();
     }
 
     return relative_rotation_;
@@ -197,16 +197,16 @@ void Object::set_absolute_rotation(const Quaternion& quat) {
     if(is_responsive()) {
         if(responsive_parental_constraint_) {
             //Destroy the existing constraint
-            responsive_body().destroy_constraint(responsive_parental_constraint_);
+            body().destroy_constraint(responsive_parental_constraint_);
             responsive_parental_constraint_ = ConstraintID();
         }
 
         //Set the new rotation
-        responsive_body().set_rotation(quat);
+        body().set_rotation(quat);
 
         if(has_parent() && !parent_is_root()) {
             //Recreate the constraint with the parent (as long as the parent isn't the stage itself)
-            responsive_parental_constraint_ = responsive_body().create_fixed_constaint(parent().responsive_body());
+            responsive_parental_constraint_ = body().create_fixed_constaint(parent().body());
         }
     } else {
         kglt::Quaternion parent_rot;
@@ -230,15 +230,15 @@ void Object::set_relative_rotation(const Quaternion &quaternion) {
     if(is_responsive()) {
         if(responsive_parental_constraint_) {
             //Destroy the existing constraint
-            responsive_body().destroy_constraint(responsive_parental_constraint_);
+            body().destroy_constraint(responsive_parental_constraint_);
         }
 
         //Set the new rotation
-        responsive_body().set_rotation(parent().absolute_rotation() * quaternion);
+        body().set_rotation(parent().absolute_rotation() * quaternion);
 
         if(has_parent() && !parent_is_root()) {
             //Recreate the constraint with the parent (as long as the parent isn't the stage itself)
-            responsive_parental_constraint_ = responsive_body().create_fixed_constaint(parent().responsive_body());
+            responsive_parental_constraint_ = body().create_fixed_constaint(parent().body());
         }
     } else {
         update_from_parent();

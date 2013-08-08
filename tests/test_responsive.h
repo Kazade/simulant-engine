@@ -25,7 +25,7 @@ public:
             actor->set_absolute_rotation(kglt::Degrees(10), 0, 0, 1);
 
             assert_equal(actor->relative_rotation(), actor->absolute_rotation());
-            assert_equal(actor->absolute_rotation(), actor->responsive_body().rotation());
+            assert_equal(actor->absolute_rotation(), actor->body().rotation());
         }
 
         kglt::ActorID act2 = window->scene().stage().new_actor(true, false);
@@ -53,7 +53,7 @@ public:
         actor->set_absolute_position(10, 10, 10);
 
         assert_equal(kglt::Vec3(10, 10, 10), actor->absolute_position());
-        assert_equal(actor->absolute_position(), actor->responsive_body().position());
+        assert_equal(actor->absolute_position(), actor->body().position());
 
         kglt::ActorID act2 = window->scene().stage().new_actor(true, false);
         auto actor2 = window->scene().stage().actor(act2);
@@ -62,7 +62,7 @@ public:
 
         //Should be the same as its parent
         assert_equal(actor2->absolute_position(), actor->absolute_position());
-        assert_equal(actor2->absolute_position(), actor2->responsive_body().position());
+        assert_equal(actor2->absolute_position(), actor2->body().position());
 
         //Make sure relative position is correctly calculated
         actor2->set_absolute_position(20, 10, 10);

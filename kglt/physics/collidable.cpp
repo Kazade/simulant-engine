@@ -12,7 +12,7 @@ Collidable::Collidable(Object* owner, PhysicsEngine* engine):
 
     if(owner_) {
         owner->signal_made_responsive().connect([=]() {
-            attach_to_responsive_body(owner->responsive_body());
+            attach_to_responsive_body(owner->body());
         });
 
         if(!engine_) {

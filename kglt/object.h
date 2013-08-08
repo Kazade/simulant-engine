@@ -148,7 +148,7 @@ public:
     void make_responsive();
     void make_collidable();
 
-    ResponsiveBody& responsive_body() {
+    ResponsiveBody& body() {
         if(!is_responsive()) {
             throw std::logic_error("Tried to access a responsive body on a non-responsive object");
         }
@@ -156,7 +156,7 @@ public:
         return *responsive_body_.get();
     }
 
-    const ResponsiveBody& responsive_body() const {
+    const ResponsiveBody& body() const {
         if(!is_responsive()) {
             throw std::logic_error("Tried to access a responsive body on a non-responsive object");
         }
