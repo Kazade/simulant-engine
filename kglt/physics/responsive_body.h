@@ -24,9 +24,15 @@ public:
     virtual void set_rotation(const kglt::Quaternion& rotation) = 0;
     virtual kglt::Quaternion rotation() const = 0;
 
-    //FIXME: mass distribution?
-    virtual void set_mass(float mass) = 0;
-    virtual float mass() const = 0;
+    void set_mass_sphere(float total_mass, float radius) {
+        //FIXME: Lock
+        do_set_mass_sphere(total_mass, radius);
+    }
+
+    void set_mass_box(float total_mass, float width, float height, float depth) {
+        //FIXME: Lock
+        do_set_mass_box(total_mass, width, height, depth);
+    }
 
     virtual void apply_linear_force_global(const kglt::Vec3& force) = 0;
     virtual void apply_linear_force_local(const kglt::Vec3& force) = 0;
@@ -55,6 +61,9 @@ public:
 
 private:
     Object* owner_;
+
+    virtual void do_set_mass_sphere(float total_mass, float radius) = 0;
+    virtual void do_set_mass_box(float total_mass, float width, float height, float depth) = 0;
 };
 
 }

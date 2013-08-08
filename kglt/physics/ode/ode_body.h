@@ -26,10 +26,6 @@ public:
     virtual void set_rotation(const kglt::Quaternion& rotation);
     virtual kglt::Quaternion rotation() const;
 
-    //FIXME: mass distribution?
-    virtual void set_mass(float mass);
-    virtual float mass() const;
-
     virtual void apply_linear_force_global(const kglt::Vec3& force);
     virtual void apply_linear_force_local(const kglt::Vec3& force);
 
@@ -50,11 +46,15 @@ public:
     virtual void disable_constraint(ConstraintID c);
 
     friend class ODECollidable;
+
 private:
     std::unordered_map<ConstraintID, dJointID> constraints_;
 
     dBodyID body_;
     dMass mass_;
+
+    void do_set_mass_sphere(float total_mass, float radius);
+    void do_set_mass_box(float total_mass, float width, float height, float depth);
 };
 
 }

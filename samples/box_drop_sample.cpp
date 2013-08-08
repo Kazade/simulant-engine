@@ -46,6 +46,7 @@ private:
                     auto actor = stage().actor(new_actor);
 
                     //Add a cube shape to the collidable
+                    actor->responsive_body().set_mass_box(1.0, 1.0, 1.0, 1.0);
                     actor->collidable().add_box(1.0, 1.0, 1.0);
                     actor->move_to(Vec3(0, 10, -10));
                 };
