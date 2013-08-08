@@ -6,17 +6,17 @@ namespace kglt {
 namespace procedural {
 namespace mesh {
 
-SubMeshIndex capsule(kglt::Mesh& mesh, float diameter, float height,
+SubMeshIndex capsule(ProtectedPtr<Mesh> mesh, float diameter, float height,
     uint32_t segment_count, uint32_t vertical_segment_count, uint32_t ring_count, const kglt::Vec3& pos_offset) {
 
     float radius = diameter * 0.5f;
 
-    SubMeshIndex smi = mesh.new_submesh(
-        mesh.scene().clone_default_material(),
+    SubMeshIndex smi = mesh->new_submesh(
+        mesh->scene().clone_default_material(),
         MESH_ARRANGEMENT_TRIANGLES,
         false
     );
-    kglt::SubMesh& submesh = mesh.submesh(smi);
+    kglt::SubMesh& submesh = mesh->submesh(smi);
 
     kglt::VertexData& vdata = submesh.vertex_data();
     kglt::IndexData& idata = submesh.index_data();

@@ -19,4 +19,19 @@ kglt::Vec3 operator-(const kglt::Vec3& vec) {
     return kglt::Vec3(-vec.x, -vec.y, -vec.z);
 }
 
+kglt::Quaternion operator-(const kglt::Quaternion& q) {
+    return kglt::Quaternion(-q.x, -q.y, -q.z, -q.w);
+}
+
+std::ostream& operator<<(std::ostream& stream, const Vec3& vec) {
+    stream << "(" << vec.x << "," << vec.y << "," << vec.z << ")";
+    return stream;
+}
+
+std::ostream& operator<<(std::ostream& stream, const Quaternion& quat) {
+    stream << "(" << quat.x << "," << quat.y << "," << quat.z << "," << quat.w << ")";
+    return stream;
+}
+
+
 }

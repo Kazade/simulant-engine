@@ -2,7 +2,7 @@
 #define PIPELINE_H
 
 #include <vector>
-#include <tr1/memory>
+#include <memory>
 #include <sigc++/sigc++.h>
 
 #include "generic/managed.h"

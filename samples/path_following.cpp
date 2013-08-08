@@ -21,6 +21,7 @@ public:
 
     bool init() {
         actor_ = stage()->geom_factory().new_cube(1);
+        actor()->make_responsive();
 
         Path p(2.0);
 
@@ -44,7 +45,7 @@ public:
         return true;
     }
 
-    void update(double dt) {        
+    void update(double dt) {
         set_velocity(follower_->steer_to_path());
         actor()->move_to(position() + (velocity() * dt));
     }
@@ -73,8 +74,8 @@ public:
 
 private:
     bool do_init() {
+        scene().enable_physics(kglt::DefaultPhysicsEngine::create());
         car_ = Car::create(scene(), stage().id());
-
         scene().camera().set_perspective_projection(
             45.0,
             float(window().width()) / float(window().height()),

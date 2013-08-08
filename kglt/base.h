@@ -19,10 +19,10 @@ public:
     virtual ActorID actor_id() const = 0;
 
     Stage* stage() { return &scene_.stage(stage_id()); }
-    Actor* actor() { return &stage()->actor(actor_id()); }
+    ProtectedPtr<Actor> actor() { return stage()->actor(actor_id()); }
 
     const Stage* stage() const { return &scene_.stage(stage_id()); }
-    const Actor* actor() const { return &stage()->actor(actor_id()); }
+    const ProtectedPtr<Actor> actor() const { return stage()->actor(actor_id()); }
 
 private:
     Scene& scene_;
@@ -37,8 +37,8 @@ public:
     void set_position(const kglt::Vec3& position);
     kglt::Vec3 position() const;
 
-    void set_rotation(const kmQuaternion& quaternion);
-    kmQuaternion rotation() const;
+    void set_rotation(const Quaternion &quaternion);
+    Quaternion rotation() const;
 
     virtual void set_velocity(const kglt::Vec3& vel);
     virtual kglt::Vec3 velocity() const;

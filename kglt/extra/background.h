@@ -3,7 +3,7 @@
 
 #include <string>
 #include <vector>
-#include <tr1/memory>
+#include <memory>
 #include <cstdint>
 #include <kazmath/mat4.h>
 
@@ -76,7 +76,7 @@ private:
 
     void destroy() {}
 
-    ActorRef actor_;
+    ActorID actor_;
     MaterialID material_;
 
     friend class BackgroundLayer;

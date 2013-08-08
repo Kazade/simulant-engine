@@ -4,7 +4,7 @@
 #include <iosfwd>
 #include <cassert>
 #include <vector>
-#include <tr1/memory>
+#include <memory>
 #include <stdexcept>
 #include <boost/any.hpp>
 #include <sigc++/sigc++.h>
@@ -18,9 +18,26 @@
 #include "kazmath/quaternion.h"
 #include "types.h"
 
+#include "physics/responsive_body.h"
+#include "physics/collidable.h"
+
 namespace kglt {
 
 class Scene;
+
+struct Degrees {
+    explicit Degrees(float value):
+        value_(value) {}
+
+    float value_;
+};
+
+struct Radians {
+    explicit Radians(float value):
+        value_(value) {}
+
+    float value_;
+};
 
 class Object :
     public generic::TreeNode<Object>, //Objects form a tree
@@ -43,31 +60,75 @@ public:
 	void set_visible(bool value=true) { is_visible_ = value; }
 	bool is_visible() const { return is_visible_; }
 
-    virtual void move_to(float x, float y, float z);
-    virtual void move_to(const kmVec3& pos) { move_to(pos.x, pos.y, pos.z); }
-    virtual void move_forward(float amount);
-    
-    virtual void rotate_x(float amount);        
-    virtual void rotate_y(float amount);
-    virtual void rotate_z(float amount);
-    virtual void rotate_to(float angle, float x, float y, float z);
-    virtual void rotate_to(const kmQuaternion& quat);
+    virtual void set_absolute_position(float x, float y, float z);
+    virtual void set_absolute_position(const kglt::Vec3& pos) { set_absolute_position(pos.x, pos.y, pos.z); }
+    virtual kglt::Vec3 absolute_position() const;
+
+    //Syntactic sugar
+    void move_to(const kglt::Vec3& pos) {
+        set_absolute_position(pos);
+    }
+
+    void move_to(float x, float y, float z) {
+        set_absolute_position(x, y, z);
+    }
+
+    void rotate_to(const kglt::Quaternion& q) {
+        set_absolute_rotation(q);
+    }
+
+    void rotate_to(const Degrees& angle, float x, float y, float z) {
+        set_absolute_rotation(angle, x, y, z);
+    }
+
+    void rotate_x(float angle) { rotate_absolute_x(angle); }
+    void rotate_y(float angle) { rotate_absolute_y(angle); }
+    void rotate_z(float angle) { rotate_absolute_z(angle); }
+
+    virtual void set_relative_position(float x, float y, float z);
+    virtual void set_relative_position(const kglt::Vec3& pos) { set_relative_position(pos.x, pos.y, pos.z); }
+    virtual kglt::Vec3 relative_position() const;
+
+    virtual void set_absolute_rotation(const kglt::Quaternion& quaternion);
+    virtual void set_absolute_rotation(const Degrees& angle, float x, float y, float z);
+    virtual kglt::Quaternion absolute_rotation() const;
+
+    virtual void set_relative_rotation(const kglt::Quaternion& quaternion);
+    virtual kglt::Quaternion relative_rotation() const;
+
+    virtual void rotate_absolute_x(float amount);
+    virtual void rotate_absolute_y(float amount);
+    virtual void rotate_absolute_z(float amount);
+
+    Vec3 right() const {
+        Vec3 result;
+        kmQuaternionGetRightVec3(&result, &absolute_rotation_);
+        return result;
+    }
+
+    Vec3 up() const {
+        Vec3 result;
+        kmQuaternionGetUpVec3(&result, &absolute_rotation_);
+        return result;
+    }
+
+    Vec3 forward() const {
+        Vec3 result;
+        kmQuaternionGetForwardVec3RH(&result, &absolute_rotation_);
+        return result;
+    }
+
+    void move_forward(float amount);
+
+    kglt::Mat4 absolute_transformation() const;
 
     //Make this object ignore parent rotations or rotate commands until unlocked
-    void lock_rotation(float angle, float x, float y, float z);
+    void lock_rotation();
     void unlock_rotation();
 
     //Make this object ignore parent translations or move commands until unlocked
-    void lock_position(float x, float y, float z);
+    void lock_position();
     void unlock_position();
-
-    kmMat4 absolute_transformation();
-
-    const kmVec3& position() const { return position_; }
-    const kmVec3& absolute_position() const { return absolute_position_; }
-
-    const kmQuaternion& rotation() const { return rotation_; }
-    const kmQuaternion& absolute_rotation() const { return absolute_orientation_; }
 
     uint64_t uuid() const { return uuid_; }
         
@@ -83,33 +144,84 @@ public:
 
     void attach_to_camera(CameraID cam);
 
+    //Physics stuff
+    void make_responsive();
+    void make_collidable();
+
+    ResponsiveBody& responsive_body() {
+        if(!is_responsive()) {
+            throw std::logic_error("Tried to access a responsive body on a non-responsive object");
+        }
+
+        return *responsive_body_.get();
+    }
+
+    const ResponsiveBody& responsive_body() const {
+        if(!is_responsive()) {
+            throw std::logic_error("Tried to access a responsive body on a non-responsive object");
+        }
+
+        return *responsive_body_.get();
+    }
+
+    Collidable& collidable() {
+        if(!is_collidable()) {
+            throw std::logic_error("Tried to access a collidable on a non-collidable object");
+        }
+
+        return *collidable_.get();
+    }
+
+    const Collidable& collidable() const {
+        if(!is_collidable()) {
+            throw std::logic_error("Tried to access a collidable on a non-collidable object");
+        }
+
+        return *collidable_.get();
+    }
+
+    bool is_responsive() const { return bool(responsive_body_); }
+    bool is_collidable() const { return bool(collidable_); }
+
+    bool parent_is_root() const {        
+        return has_parent() && (&parent() == &root());
+    }
+
+    sigc::signal<void> signal_made_responsive() { return signal_made_responsive_; }
+    sigc::signal<void> signal_made_collidable() { return signal_made_collidable_; }
+
 protected:
     void update_from_parent();
-    void set_position(const kmVec3& pos);
 
-    kmVec3 position_;
-    kmQuaternion rotation_;
 private:
     static uint64_t object_counter;
     uint64_t uuid_;
 
     Stage* stage_; //Each object is owned by a scene
 
+    kglt::Vec3 relative_position_;
+    kglt::Quaternion relative_rotation_;
 
-    kmVec3 absolute_position_;
-    kmQuaternion absolute_orientation_;
+    kglt::Vec3 absolute_position_;
+    kglt::Quaternion absolute_rotation_;
 
     sigc::connection parent_changed_connection_;
 
-    void parent_changed_callback(Object* old_parent, Object* new_parent) {
-        update_from_parent();
-    }
+    void parent_changed_callback(Object* old_parent, Object* new_parent);
 
     bool is_visible_;
     bool rotation_locked_;
     bool position_locked_;
 
+    std::shared_ptr<ResponsiveBody> responsive_body_;
+    std::shared_ptr<Collidable> collidable_;
+
     virtual void transformation_changed() {}
+
+    ConstraintID responsive_parental_constraint_;
+
+    sigc::signal<void> signal_made_responsive_;
+    sigc::signal<void> signal_made_collidable_;
 };
 
 }

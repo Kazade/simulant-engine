@@ -89,7 +89,7 @@ public:
         assert_equal(&b1, a3.b.get());
         assert_equal((uint32_t)3, b1.a_set.all().size());
 
-        std::tr1::shared_ptr<C> new_c(new C());
+        std::shared_ptr<C> new_c(new C());
         a1.c = *new_c;
         assert_true(a1.c.get());
         new_c.reset();

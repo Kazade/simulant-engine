@@ -92,7 +92,7 @@ void Boid::follow(Path path) {
     current_node_ = 0;
 
     //Move the actor directly to the first waypoint
-    actor_->actor()->move_to(path_.point(0));
+    actor_->actor()->set_absolute_position(path_.point(0));
 }
 
 kglt::Vec3 Boid::steer_to_path() {
@@ -115,7 +115,7 @@ void Boid::update_debug_mesh() const {
     Stage* stage = actor_->stage();
     assert(stage);
 
-    auto mesh = stage->mesh(debug_mesh_).lock();
+    auto mesh = stage->mesh(debug_mesh_);
 
     auto& vd = mesh->submesh(normal_points_mesh_).vertex_data();
     auto& id = mesh->submesh(normal_points_mesh_).index_data();
@@ -151,7 +151,7 @@ void Boid::enable_debug(bool value) {
             debug_mesh_ = stage->new_mesh();
         }
 
-        auto mesh = stage->mesh(debug_mesh_).lock();
+        auto mesh = stage->mesh(debug_mesh_);
         mesh->clear();
 
         auto smi = mesh->new_submesh(kglt::MaterialID(), MESH_ARRANGEMENT_LINE_STRIP, false);

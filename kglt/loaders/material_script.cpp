@@ -52,7 +52,7 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
     std::string arg_1 = str::upper(args[1]);
 
     if(type == "TEXTURE_UNIT") {
-        TextureID tex_id = kglt::create_texture_from_file(mat.resource_manager(), str::strip(args[1], "\""));
+        TextureID tex_id = mat.resource_manager().new_texture_from_file(str::strip(args[1], "\""));
         pass->set_texture_unit(pass->texture_unit_count(), tex_id);
     } else if(type == "ITERATION") {
         if(arg_1 == "ONCE") {
@@ -399,10 +399,8 @@ MaterialReloader::MaterialReloader(ResourceManager& rm, MaterialID material):
 }
 
 void MaterialReloader::reload(const unicode& path, WatchEvent evt) {
-    auto mat = rm_.material(material_);
-
     try {
-        rm_.window().loader_for(path.encode())->into(*mat);
+        rm_.window().loader_for(path.encode())->into(rm_.material(material_));
     } catch(SyntaxError& e) {
         L_WARN("Unable to reload material as the syntax is incorrect");
     } catch(RuntimeError& e) {

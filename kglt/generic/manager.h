@@ -44,17 +44,7 @@ public:
         return objects_.size();
     }
 
-    ObjectType& manager_get(ObjectIDType id) {
-        std::lock_guard<std::recursive_mutex> lock(manager_lock_);
-
-        auto it = objects_.find(id);
-        if(it == objects_.end()) {
-            throw DoesNotExist<ObjectType>(typeid(ObjectType).name());
-        }
-        return *(it->second);
-    }
-
-    std::weak_ptr<ObjectType> manager_get_ref(ObjectIDType id) {
+    std::weak_ptr<ObjectType> manager_get(ObjectIDType id) {
         std::lock_guard<std::recursive_mutex> lock(manager_lock_);
 
         auto it = objects_.find(id);
@@ -64,14 +54,14 @@ public:
         return it->second;
     }
 
-    const ObjectType& manager_get(ObjectIDType id) const {
+    std::weak_ptr<ObjectType> manager_get(ObjectIDType id) const {
         std::lock_guard<std::recursive_mutex> lock(manager_lock_);
 
         auto it = objects_.find(id);
         if(it == objects_.end()) {
             throw DoesNotExist<ObjectType>(typeid(ObjectType).name());
         }
-        return *(it->second);
+        return it->second;
     }
 
     bool manager_contains(ObjectIDType id) const {

@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include "../generic/managed.h"
 #include "../types.h"
+#include "../base.h"
 
 namespace kglt {
 
@@ -41,12 +42,13 @@ struct FrameRange {
 };
 
 class Sprite :
-    public Managed<Sprite> {
+    public Managed<Sprite>,
+    public MoveableActorHolder {
 
 public:
     typedef std::shared_ptr<Sprite> ptr;
 
-    Sprite(StageRef stage, const std::string &image_path, const FrameSize& frame_size);
+    Sprite(Scene& scene, StageID stage_id, const std::string &image_path, const FrameSize& frame_size);
     ~Sprite();
 
     void add_animation(
@@ -58,7 +60,7 @@ public:
     void set_next_animation(const std::string& anim_name);
     void set_active_animation(const std::string& anim_name);
     void move_to(float x, float y, float z);
-    void rotate_to(float angle, float x, float y, float z);
+    void rotate_to(const Degrees& angle, float x, float y, float z);
 
     void set_render_dimensions(float width, float height);
     void set_visible(bool value=true);
@@ -66,6 +68,11 @@ public:
     MaterialID material();
 
     void update(double dt);
+
+    ActorID actor_id() const { return actor_id_; }
+    StageID stage_id() const { return stage_id_; }
+
+    bool init();
 private:
     struct Animation {
         Animation(double duration, const FrameRange& frames):
@@ -77,9 +84,10 @@ private:
     };
 
     std::unordered_map<std::string, Animation> animations_;
-
-    StageRef stage_;
+    std::string image_path_;
+    StageID stage_id_;
     ActorID actor_id_;
+
     MaterialID material_id_;
     FrameSize frame_size_;
 

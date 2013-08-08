@@ -1,6 +1,8 @@
 #ifndef STAGE_H
 #define STAGE_H
 
+#include <functional>
+
 #include "generic/managed.h"
 #include "generic/manager.h"
 #include "object.h"
@@ -29,14 +31,15 @@ public:
     Stage(Scene *parent, StageID id);
 
     ActorID new_actor();
+    ActorID new_actor(bool make_responsive, bool make_collidable);
     ActorID new_actor(MeshID mid);
-    ActorID new_actor_with_parent(Actor& parent);
-    ActorID new_actor_with_parent(Actor& parent, MeshID mid);
+    ActorID new_actor(MeshID mid, bool make_responsive, bool make_collidable);
 
-    Actor& actor(ActorID e);
-    const Actor& actor(ActorID e) const;
+    ActorID new_actor_with_parent(ActorID parent);
+    ActorID new_actor_with_parent(ActorID parent, MeshID mid);
 
-    ActorRef actor_ref(ActorID e);
+    ProtectedPtr<Actor> actor(ActorID e);
+    const ProtectedPtr<Actor> actor(ActorID e) const;
 
     bool has_actor(ActorID e) const;
     void delete_actor(ActorID e);
@@ -80,8 +83,8 @@ public:
     virtual MeshID new_mesh() { return scene().new_mesh(); }
     virtual MeshID new_mesh_from_file(const unicode& path) { return scene().new_mesh_from_file(path); }
 
-    virtual MeshRef mesh(MeshID m) { return scene().mesh(m); }
-    virtual const MeshRef mesh(MeshID m) const { return scene().mesh(m); }
+    virtual ProtectedPtr<Mesh> mesh(MeshID m) { return scene().mesh(m); }
+    virtual const ProtectedPtr<Mesh> mesh(MeshID m) const { return scene().mesh(m); }
 
     virtual bool has_mesh(MeshID m) const { return scene().has_mesh(m); }
     virtual uint32_t mesh_count() const { return scene().mesh_count(); }

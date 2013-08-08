@@ -3,10 +3,11 @@
 
 #include <stdexcept>
 #include <string>
-#include <tr1/memory>
+#include <memory>
 #include "loadable.h"
 
 #include "kazbase/exceptions.h"
+#include "generic/protected_ptr.h"
 
 namespace kglt {
 
@@ -21,8 +22,18 @@ public:
     Loader(const unicode& filename):
         filename_(filename) {}
 
-    virtual ~Loader();
-    virtual void into(Loadable& resource, const LoaderOptions& options = LoaderOptions()) = 0;
+    virtual ~Loader();    
+    void into(const ProtectedPtr<Loadable>& resource, const LoaderOptions& options = LoaderOptions()) {
+        into(*resource.__object, options);
+    }
+
+    void into(std::shared_ptr<Loadable> resource, const LoaderOptions& options=LoaderOptions()) {
+        into(*resource, options);
+    }
+
+    void into(Scene& scene, const LoaderOptions& options=LoaderOptions()) {
+        into((Loadable&) scene, options);
+    }
 
 protected:
     unicode filename_;
@@ -36,6 +47,9 @@ protected:
 
         return thing;
     }
+
+private:
+    virtual void into(Loadable& resource, const LoaderOptions& options = LoaderOptions()) = 0;
 };
 
 class LoaderType {

@@ -18,7 +18,7 @@ SkyBox::SkyBox(kglt::Stage& stage, kglt::TextureID texture, float size, CameraID
     stage_(stage),
     camera_id_(cam) {
 
-    actor_ = &stage.actor(stage.geom_factory().new_cube(size));
+    actor_ = stage.geom_factory().new_cube(size);
 
     auto mat = stage.material(stage.new_material_from_file("kglt/materials/generic_multitexture.kglm"));
 
@@ -26,14 +26,18 @@ SkyBox::SkyBox(kglt::Stage& stage, kglt::TextureID texture, float size, CameraID
     mat->technique().pass(0).set_depth_test_enabled(false);
     mat->technique().pass(0).set_depth_write_enabled(false);
 
-    actor_->mesh().lock()->set_material_id(mat->id());
-    actor_->mesh().lock()->reverse_winding();
+    {
+        auto actor = stage.actor(actor_);
+        actor->mesh()->set_material_id(mat->id());
+        actor->mesh()->reverse_winding();
 
-    actor_->set_render_priority(RENDER_PRIORITY_BACKGROUND);
-    actor_->attach_to_camera(cam);
+        actor->set_render_priority(RENDER_PRIORITY_BACKGROUND);
+        actor->attach_to_camera(cam);
 
-    //Skyboxes shouldn't rotate based on their parent (e.g. the camera)
-    actor_->lock_rotation(0, 0, 1, 0);
+        //Skyboxes shouldn't rotate based on their parent (e.g. the camera)
+        actor->set_absolute_rotation(Degrees(0), 0, 1, 0);
+        actor->lock_rotation();
+    }
 }
 
 StarField::StarField(Stage& stage, CameraID cam) {

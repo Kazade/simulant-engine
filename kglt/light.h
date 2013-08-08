@@ -27,10 +27,8 @@ public:
      *
      *  Direction is stored reversed in the position.
      */
-    kmVec3 direction() const {
-        kmVec3 result;
-        kmVec3Fill(&result, position().x, position().y, position().z);
-        return result;
+    Vec3 direction() const {
+        return absolute_position();
     }
 
     void set_direction(float x, float y, float z) {
@@ -39,7 +37,7 @@ public:
 
     void set_direction(const kmVec3& dir) {
         set_type(LIGHT_TYPE_DIRECTIONAL);
-        move_to(-dir.x, -dir.y, -dir.z);
+        set_absolute_position(-dir.x, -dir.y, -dir.z);
     }
 
     void set_diffuse(const kglt::Colour& colour) {
@@ -70,7 +68,8 @@ public:
     /** Boundable interface **/
     const kmAABB absolute_bounds() const {
         kmAABB result;
-        kmAABBInitialize(&result, &absolute_position(), range(), range(), range());
+        kmVec3 abs_pos = absolute_position();
+        kmAABBInitialize(&result, &abs_pos, range(), range(), range());
         return result;
     }
 
@@ -80,8 +79,8 @@ public:
         return result;
     }
 
-    const kmVec3 centre() const {
-        return position();
+    const Vec3 centre() const {
+        return absolute_position();
     }
 
     void destroy();

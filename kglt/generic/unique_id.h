@@ -2,7 +2,7 @@
 #define UNIQUE_ID_H
 
 #include <cstdint>
-#include <tr1/functional>
+#include <functional>
 
 #include "safe_bool.h"
 

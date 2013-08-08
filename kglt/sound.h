@@ -46,10 +46,10 @@ public:
     std::vector<uint8_t>& data() { return sound_data_; }
     void set_data(const std::vector<uint8_t>& data) { sound_data_ = data; }
 
-    void set_source_init_function(std::tr1::function<void (Source&)> func) { init_source_ = func; }
+    void set_source_init_function(std::function<void (Source&)> func) { init_source_ = func; }
 
 private:
-    std::tr1::function<void (Source&)> init_source_;
+    std::function<void (Source&)> init_source_;
 
     std::vector<uint8_t> sound_data_;
 
@@ -61,7 +61,7 @@ private:
     friend class Source;
 };
 
-typedef std::tr1::function<int32_t (ALuint)> StreamFunc;
+typedef std::function<int32_t (ALuint)> StreamFunc;
 
 class Source {
 

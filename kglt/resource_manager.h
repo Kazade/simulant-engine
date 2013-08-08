@@ -6,6 +6,8 @@
 
 #include "generic/refcount_manager.h"
 #include "generic/data_carrier.h"
+#include "generic/protected_ptr.h"
+
 #include "texture.h"
 #include "shader.h"
 #include "mesh.h"
@@ -22,38 +24,6 @@ typedef generic::RefCountedTemplatedManager<ResourceManagerImpl, Material, Mater
 typedef generic::RefCountedTemplatedManager<ResourceManagerImpl, Texture, TextureID> TextureManager;
 typedef generic::RefCountedTemplatedManager<ResourceManagerImpl, Sound, SoundID> SoundManager;
 
-template<typename T>
-struct ProtectedPtr {
-    typedef std::lock_guard<std::recursive_mutex> guard_type;
-
-    std::shared_ptr<T> __object;
-
-    ProtectedPtr() = default;
-
-    ProtectedPtr(std::weak_ptr<T> ref):
-        __object(ref.lock()),
-        lock_(__object ?
-            std::make_shared<guard_type>(__object->mutex()) :
-            std::shared_ptr<guard_type>()
-        ) {
-
-    }
-
-    ~ProtectedPtr() {
-        __object.reset(); //Release reference
-        lock_.reset(); //Unlock
-    }
-
-    T* operator->() { return __object.get(); }
-    T& operator*() { return *__object; }
-
-    explicit operator bool() const {
-        return __object.get() != nullptr;
-    }
-
-private:
-    std::shared_ptr<guard_type> lock_;
-};
 
 class ResourceManager {
 public:
@@ -63,8 +33,8 @@ public:
     virtual MeshID new_mesh() = 0;
     virtual MeshID new_mesh_from_file(const unicode& path) = 0;
 
-    virtual MeshRef mesh(MeshID m) = 0;
-    virtual const MeshRef mesh(MeshID m) const = 0;
+    virtual ProtectedPtr<Mesh> mesh(MeshID m) = 0;
+    virtual const ProtectedPtr<Mesh> mesh(MeshID m) const = 0;
 
     virtual bool has_mesh(MeshID m) const = 0;
     virtual uint32_t mesh_count() const = 0;
@@ -134,8 +104,8 @@ public:
     MeshID new_mesh();
     MeshID new_mesh_from_file(const unicode& path);
 
-    MeshRef mesh(MeshID m);
-    const MeshRef mesh(MeshID m) const;
+    ProtectedPtr<Mesh> mesh(MeshID m);
+    const ProtectedPtr<Mesh> mesh(MeshID m) const;
 
     bool has_mesh(MeshID m) const;
     uint32_t mesh_count() const;

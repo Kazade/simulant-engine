@@ -16,7 +16,8 @@ private:
     bool do_init() {
         //Construct a Sprite object that takes care of handling materials, meshes etc.
         sprite_ = Sprite::create(
-            scene().stage_ref(stage().id()),
+            scene(),
+            stage().id(),
             "sample_data/sonic.png",
             FrameSize(64, 64)
         );
@@ -35,7 +36,9 @@ private:
     }
 
     void do_step(double dt) {}
-    void do_cleanup() {}
+    void do_cleanup() {
+        sprite_.reset();
+    }
 
     Sprite::ptr sprite_;
 };

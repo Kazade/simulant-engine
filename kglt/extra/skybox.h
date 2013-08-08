@@ -21,7 +21,7 @@ private:
     Stage& stage_;
 
     MaterialID material_id_;
-    Actor* actor_;
+    ActorID actor_;
 
     CameraID camera_id_;
 };

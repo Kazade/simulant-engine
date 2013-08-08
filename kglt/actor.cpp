@@ -5,7 +5,7 @@ namespace kglt {
 
 Actor::Actor(Stage* stage, ActorID id):
     generic::Identifiable<ActorID>(id),
-    Object(stage),
+    ParentSetterMixin<Object>(stage),
     Source(stage),
     render_priority_(RENDER_PRIORITY_MAIN) {
 
@@ -13,7 +13,7 @@ Actor::Actor(Stage* stage, ActorID id):
 
 Actor::Actor(Stage* stage, ActorID id, MeshID mesh):
     generic::Identifiable<ActorID>(id),
-    Object(stage),
+    ParentSetterMixin<Object>(stage),
     Source(stage),
     render_priority_(RENDER_PRIORITY_MAIN) {
 
@@ -32,7 +32,7 @@ const VertexData& Actor::shared_data() const {
 
 void Actor::set_mesh(MeshID mesh) {
     //Increment the ref-count on this mesh
-    mesh_ = stage().mesh(mesh).lock();
+    mesh_ = stage().mesh(mesh).__object;
 
     subactors_.clear();
     for(SubMeshIndex idx: mesh_->submesh_ids()) {
@@ -57,6 +57,14 @@ const MaterialID SubActor::material_id() const {
 void SubActor::override_material_id(MaterialID material) {
     //Store the pointer to maintain the ref-count
     material_ = parent_.stage().material(material).__object;
+}
+
+ProtectedPtr<Mesh> Actor::mesh() const {
+    return stage().mesh(mesh_id());
+}
+
+const SubMesh& SubActor::submesh() const {
+    return parent_.mesh()->submesh(index_);
 }
 
 }

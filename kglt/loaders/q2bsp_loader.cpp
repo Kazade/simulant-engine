@@ -193,7 +193,7 @@ void add_lights_to_scene(Scene& scene, const std::vector<ActorProperties>& actor
             kglt::Light& new_light = scene.stage().light(scene.stage().new_light());
 
             kmVec3Transform(&pos, &pos, &rotation);
-            new_light.move_to(pos.x, pos.y, pos.z);
+            new_light.set_absolute_position(pos.x, pos.y, pos.z);
 
             float range = 300; //Default in Q2
             if(container::contains(props, std::string("light"))) {
@@ -238,10 +238,6 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         throw std::runtime_error("Not a valid Q2 map");
     }
 
-    MeshID mid = scene->stage().new_mesh();
-    MeshPtr mesh_ptr = scene->stage().mesh(mid).lock();
-    Mesh& mesh = *mesh_ptr;
-
     std::vector<char> actor_buffer(header.lumps[Q2::LumpType::ENTITIES].length);
     file.seekg(header.lumps[Q2::LumpType::ENTITIES].offset);
     file.read(&actor_buffer[0], sizeof(char) * header.lumps[Q2::LumpType::ENTITIES].length);
@@ -252,7 +248,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     parse_actors(actor_string, actors);
     kmVec3 cam_pos = find_player_spawn_point(actors);
     kmVec3Transform(&cam_pos, &cam_pos, &rotation);
-    scene->camera().move_to(cam_pos);
+    scene->camera().set_absolute_position(cam_pos);
 
     add_lights_to_scene(*scene, actors);
 
@@ -303,6 +299,9 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
      *  Load the textures and generate materials
      */
 
+    MeshID mid = scene->stage().new_mesh();
+    auto mesh = scene->stage().mesh(mid);
+
     std::map<MaterialID, SubMeshIndex> material_to_submesh;
 
     //We need to hold references here until the materials are attached to the mesh
@@ -310,10 +309,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     std::vector<TexturePtr> tex_ref_count_holder_;
 
     for(Q2::TextureInfo& tex: textures) {
-        auto new_mat = scene->material(scene->clone_default_material());
-        mat_ref_count_holder_.push_back(new_mat.__object); //Prevent GC until we are done
-
-        Material& mat = *new_mat;
+        auto mat = scene->material(scene->clone_default_material());
+        mat_ref_count_holder_.push_back(mat.__object); //Prevent GC until we are done
 
         kmVec3 u_axis, v_axis;
         kmVec3Fill(&u_axis, tex.u_axis.x, tex.u_axis.y, tex.u_axis.z);
@@ -360,18 +357,18 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         }
 
         //Set the texture for unit 0
-        mat.technique().pass(0).set_texture_unit(0, tid);
-        mat.technique().pass(0).set_blending(BLEND_NONE);
+        mat->technique().pass(0).set_texture_unit(0, tid);
+        mat->technique().pass(0).set_blending(BLEND_NONE);
 
-        tex_info_to_material[texinfo_idx] = mat.id();
+        tex_info_to_material[texinfo_idx] = mat->id();
         texinfo_idx++;
 
-        L_DEBUG(_u("Associated material: {0}").format(mat.id().value()));
-        material_to_submesh[mat.id()] = mesh.new_submesh(mat.id(), MESH_ARRANGEMENT_TRIANGLES, true);
+        L_DEBUG(_u("Associated material: {0}").format(mat->id().value()));
+        material_to_submesh[mat->id()] = mesh->new_submesh(mat->id(), MESH_ARRANGEMENT_TRIANGLES, true);
     }
 
     std::cout << "Num textures: " << tex_lookup.size() << std::endl;
-    std::cout << "Num submeshes: " << mesh.submesh_ids().size() << std::endl;
+    std::cout << "Num submeshes: " << mesh->submesh_ids().size() << std::endl;
 
     for(Q2::Face& f: faces) {
         std::vector<uint32_t> indexes;
@@ -390,7 +387,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         }
 
         //Add a submesh for this face
-        SubMesh& sm = mesh.submesh(material_to_submesh[tex_info_to_material[f.texture_info]]);
+        SubMesh& sm = mesh->submesh(material_to_submesh[tex_info_to_material[f.texture_info]]);
         Q2::TextureInfo& tex = textures[f.texture_info];
 
         kmVec3 normal;
@@ -451,34 +448,34 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
                 float w = float(texture_dimensions[tex.texture_name].first);
                 float h = float(texture_dimensions[tex.texture_name].second);
 
-                mesh.shared_data().position(pos);
-                mesh.shared_data().normal(normal);
-                mesh.shared_data().diffuse(kglt::Colour::white);
-                mesh.shared_data().tex_coord0(u / w, v / h);
-                mesh.shared_data().tex_coord1(u / w, v / h);
-                mesh.shared_data().move_next();
+                mesh->shared_data().position(pos);
+                mesh->shared_data().normal(normal);
+                mesh->shared_data().diffuse(kglt::Colour::white);
+                mesh->shared_data().tex_coord0(u / w, v / h);
+                mesh->shared_data().tex_coord1(u / w, v / h);
+                mesh->shared_data().move_next();
 
-                sm.index_data().index(mesh.shared_data().count() - 1);
+                sm.index_data().index(mesh->shared_data().count() - 1);
 
                 //Cache this new vertex in the lookup
-                index_lookup[tri_idx[j]] = mesh.shared_data().count() - 1;
+                index_lookup[tri_idx[j]] = mesh->shared_data().count() - 1;
             }
         }
     }        
 
-    mesh.shared_data().done();
-    for(SubMeshIndex i: mesh.submesh_ids()) {
+    mesh->shared_data().done();
+    for(SubMeshIndex i: mesh->submesh_ids()) {
         //Delete empty submeshes
-        if(!mesh.submesh(i).index_data().count()) {
-            mesh.delete_submesh(i);
+        if(!mesh->submesh(i).index_data().count()) {
+            mesh->delete_submesh(i);
             continue;
         }
-        mesh.submesh(i).index_data().done();
+        mesh->submesh(i).index_data().done();
     }
 
-    L_DEBUG(_u("Created an actor for mesh").format(mesh.id()));
+    L_DEBUG(_u("Created an actor for mesh").format(mid));
     //Finally, create an actor from the world mesh
-    scene->stage().new_actor(mesh.id());
+    scene->stage().new_actor(mid);
 }
 
 }

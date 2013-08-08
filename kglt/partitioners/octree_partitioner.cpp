@@ -16,18 +16,18 @@ void OctreePartitioner::event_actor_changed(ActorID ent) {
 void OctreePartitioner::add_actor(ActorID obj) {
     L_DEBUG("Adding actor to the partitioner");
 
-    Actor& ent = stage().actor(obj);
-    for(uint16_t i = 0; i < ent.subactor_count(); ++i) {
+    auto ent = stage().actor(obj);
+    for(uint16_t i = 0; i < ent->subactor_count(); ++i) {
         //All subactors are boundable
-        Boundable* boundable = dynamic_cast<Boundable*>(&ent.subactor(i));        
+        Boundable* boundable = dynamic_cast<Boundable*>(&ent->subactor(i));
         tree_.grow(boundable);
 
         actor_to_registered_subactors_[obj].push_back(boundable);
-        boundable_to_subactor_[boundable] = ent._subactors().at(i);
+        boundable_to_subactor_[boundable] = ent->_subactors().at(i);
     }
 
     //Connect the changed signal
-    actor_changed_connections_[obj] = ent.signal_mesh_changed().connect(sigc::mem_fun(this, &OctreePartitioner::event_actor_changed));
+    actor_changed_connections_[obj] = ent->signal_mesh_changed().connect(sigc::mem_fun(this, &OctreePartitioner::event_actor_changed));
 }
 
 void OctreePartitioner::remove_actor(ActorID obj) {
@@ -91,7 +91,7 @@ std::vector<SubActor::ptr> OctreePartitioner::geometry_visible_from(CameraID cam
     return results;
 }
 
-std::vector<LightID> OctreePartitioner::lights_within_range(const kmVec3& location) {
+std::vector<LightID> OctreePartitioner::lights_within_range(const Vec3& location) {
     std::vector<LightID> lights;
 /*
     //Go through the visible nodes

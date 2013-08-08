@@ -29,7 +29,7 @@ void UIStage::set_styles(const std::string& styles) {
 }
 
 void UIStage::load_rml(const unicode& path) {
-    scene_.window().loader_for(path)->into(*interface_);
+    scene_.window().loader_for(path)->into(interface_);
 }
 
 void UIStage::__resize(uint32_t width, uint32_t height) {

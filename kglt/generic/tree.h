@@ -4,7 +4,7 @@
 #include <boost/iterator/iterator_facade.hpp>
 #include <stdexcept>
 #include <vector>
-#include <tr1/memory>
+#include <memory>
 #include <sigc++/sigc++.h>
 
 #include "../kazbase/logging.h"
@@ -81,7 +81,8 @@ public:
     typedef tree_iterator<TreeNode<T> > iterator;
 
     TreeNode():
-        parent_(nullptr) {}
+        parent_(nullptr),
+        root_(nullptr) {}
 
     virtual ~TreeNode() {
         try {
@@ -108,10 +109,12 @@ public:
 
         if(old_parent) {
             old_parent->detach_child((T*)this);
+            root_ = nullptr;
         }
 
         if(new_parent) {
             new_parent->attach_child((T*)this);
+            root_ = (new_parent->root_) ? new_parent->root_ : new_parent;
         }
 
         on_parent_set(old_parent);
@@ -129,7 +132,10 @@ public:
     bool has_parent() const { return parent_ != nullptr; }
     bool has_children() const { return !children_.empty(); }
 
+    T& root() { assert(root_); return *root_; }
     T& parent() { assert(parent_); return *parent_; }
+
+    const T& root() const { assert(root_); return *root_; }
     const T& parent() const { assert(parent_); return *parent_; }
 
     template<typename Derived>
@@ -170,6 +176,8 @@ protected:
 
 private:
     T* parent_;
+    T* root_;
+
     std::vector<T*> children_;
 
     sigc::signal<void, T*, T*> signal_parent_changed_;

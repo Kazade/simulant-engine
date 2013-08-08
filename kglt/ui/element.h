@@ -2,7 +2,7 @@
 #define ELEMENT_H
 
 #include <string>
-#include <tr1/memory>
+#include <memory>
 #include "../kazbase/unicode.h"
 
 namespace kglt {

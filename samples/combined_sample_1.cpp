@@ -26,7 +26,8 @@ int main(int argc, char* argv[]) {
     using namespace kglt::extra;
 
     Sprite::ptr sprite = Sprite::create(
-        scene.stage_ref(stage.id()),
+        scene,
+        stage.id(),
         "sample_data/sonic.png",
         FrameSize(64, 64)
     );

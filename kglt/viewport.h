@@ -1,7 +1,7 @@
 #ifndef KGLT_VIEWPORT_H
 #define KGLT_VIEWPORT_H
 
-#include <tr1/memory>
+#include <memory>
 #include <cstdint>
 #include "kazmath/mat4.h"
 #include "types.h"

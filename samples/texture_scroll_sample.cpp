@@ -25,22 +25,25 @@ int main(int argc, char* argv[]) {
     auto tex = stage.texture(tid);
     kglt::procedural::texture::starfield(tex.__object);
 
-    kglt::Actor& actor = stage.actor(stage.geom_factory().new_rectangle(2.0, 2.0));
-    actor.mesh().lock()->set_texture_on_material(0, tid);
+    kglt::ActorID actor_id = stage.geom_factory().new_rectangle(2.0, 2.0);
+    stage.actor(actor_id)->mesh()->set_texture_on_material(0, tid);
 
-    kglt::MeshPtr mesh = actor.mesh().lock();
-    kglt::MaterialID matid = mesh->submesh(mesh->submesh_ids()[0]).material_id();
+    kglt::MaterialID matid;
+    {
+        auto mesh = stage.actor(actor_id)->mesh();
+        matid = mesh->submesh(mesh->submesh_ids()[0]).material_id();
+    }
 
     /**
         Once we have the reference to a base object, we can
         manipulate it easily
     */
-    actor.move_to(0.0f, 0.0f, -2.0f);
+    stage.actor(actor_id)->move_to(0.0f, 0.0f, -2.0f);
 
     window->scene().camera().set_orthographic_projection_from_height(2.0, (float) window->width() / (float)window->height());
 
     while(window->update()) {
-      //  stage.material(matid).lock()->technique().pass(0).texture_unit(0).scroll_x(0.5 * window->delta_time());
+        stage.material(matid)->technique().pass(0).texture_unit(0).scroll_x(0.5 * window->delta_time());
     }
 	return 0;
 }

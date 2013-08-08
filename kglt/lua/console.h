@@ -1,7 +1,7 @@
 #ifndef CONSOLE_H
 #define CONSOLE_H
 
-#include <tr1/memory>
+#include <memory>
 #include "../generic/managed.h"
 #include "../kazbase/unicode.h"
 #include "types.h"

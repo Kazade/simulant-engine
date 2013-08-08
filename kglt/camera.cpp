@@ -53,8 +53,8 @@ void Camera::destroy() {
     scene_->delete_camera(id());
 }
 
-void Camera::follow(ActorRef actor, const kglt::Vec3& offset, float lag_in_seconds) {
-    following_actor_ = actor;
+void Camera::follow(ActorID actor, const kglt::Vec3& offset, float lag_in_seconds) {
+    following_actor_ = stage().actor(actor).__object;
     following_offset_ = offset;
     following_lag_ = lag_in_seconds;
 
@@ -64,24 +64,22 @@ void Camera::follow(ActorRef actor, const kglt::Vec3& offset, float lag_in_secon
 void Camera::update_following(double dt) {
     ActorPtr following_actor = following_actor_.lock();
     if(following_actor) {
-        kmQuaternion actor_rotation = following_actor->absolute_rotation();
-        kmVec3 actor_position = following_actor->absolute_position();
+        Quaternion actor_rotation = following_actor->absolute_rotation();
+        Vec3 actor_position = following_actor->absolute_position();
 
-        kmVec3 actor_forward;
+        Vec3 actor_forward;
         kmQuaternionGetForwardVec3RH(&actor_forward, &actor_rotation);
 
-        kmQuaternion initial_rotation;
-        kmQuaternionAssign(&initial_rotation, &rotation_);
+        Quaternion initial_rotation = absolute_rotation();
 
         float t = ((following_lag_ == 0) ? 1.0 : dt * (1.0 / following_lag_));
-        kmQuaternionSlerp(&rotation_, &initial_rotation, &actor_rotation, t);
 
-        kmVec3 rotated_offset;
-        kmQuaternionMultiplyVec3(&rotated_offset, &rotation_, &following_offset_);
+        set_absolute_rotation(
+            initial_rotation.slerp(actor_rotation, t)
+        );
 
-        //kmMat4RotationQuaternion(&new_rotation_matrix, &rotation_);
-        //kmVec3MultiplyMat4(&rotated_offset, &following_offset_, &new_rotation_matrix);
-        kmVec3Add(&position_, &rotated_offset, &actor_position);
+        Vec3 rotated_offset = following_offset_.rotate(absolute_rotation());
+        set_absolute_position(rotated_offset + actor_position);
 
         update_from_parent();
     } else {

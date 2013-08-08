@@ -19,11 +19,6 @@ Object::Object(Stage *stage):
     rotation_locked_(false),
     position_locked_(false) {
 
-    kmVec3Fill(&position_, 0.0, 0.0, 0.0);
-    kmQuaternionIdentity(&rotation_);
-    kmVec3Fill(&absolute_position_, 0.0, 0.0, 0.0);
-    kmQuaternionIdentity(&absolute_orientation_);
-
     update_from_parent();
 
     //When the parent changes, update the position/orientation
@@ -34,16 +29,53 @@ Object::~Object() {
     parent_changed_connection_.disconnect();
 }
 
+void Object::parent_changed_callback(Object* old_parent, Object* new_parent) {
+    if(new_parent->is_responsive() != is_responsive()) {
+        throw std::logic_error("Tried to connect a responsive object to a non-responsive object");
+    }
+
+    if(is_responsive()) {
+        if(responsive_parental_constraint_) {
+            responsive_body().destroy_constraint(responsive_parental_constraint_);
+            responsive_parental_constraint_ = ConstraintID();
+        }
+
+        responsive_body().set_position(parent().responsive_body().position());
+        responsive_body().set_rotation(parent().responsive_body().rotation());
+
+        responsive_parental_constraint_ = responsive_body().create_fixed_constaint(new_parent->responsive_body());
+    }
+
+    update_from_parent();
+}
+
+void Object::make_responsive() {
+    PhysicsEngine* engine = stage().scene().physics_engine();
+    if(!engine) {
+        throw std::logic_error("Tried to make an object responsive when no physics engine is enabled");
+    }
+
+    responsive_body_ = engine->new_responsive_body(this);
+
+    signal_made_responsive_();
+}
+
+void Object::make_collidable() {
+    PhysicsEngine* engine = stage().scene().physics_engine();
+    if(!engine) {
+        throw std::logic_error("Tried to make an object collidable when no physics engine is enabled");
+    }
+
+    collidable_ = engine->new_collidable(this);
+
+    signal_made_collidable_();
+}
+
 void Object::attach_to_camera(CameraID cam) {
     set_parent(stage_->scene().camera(cam));
 }
 
-void Object::lock_rotation(float angle, float x, float y, float z) {
-    kmVec3 axis;
-    kmVec3Fill(&axis, x, y, z);
-    kmQuaternionRotationAxisAngle(&rotation_, &axis, kmDegreesToRadians(angle));
-    kmQuaternionAssign(&absolute_orientation_, &rotation_);
-    transformation_changed();
+void Object::lock_rotation() {
     rotation_locked_ = true;
 }
 
@@ -52,8 +84,7 @@ void Object::unlock_rotation() {
     update_from_parent();
 }
 
-void Object::lock_position(float x, float y, float z) {
-    move_to(x, y, z);
+void Object::lock_position() {
     position_locked_ = true;
 }
 
@@ -62,114 +93,269 @@ void Object::unlock_position() {
     update_from_parent();
 }
 
-void Object::move_to(float x, float y, float z) {
-    if(position_locked_) return;
+/**
+ * @brief Object::set_absolute_position
+ *
+ * Sets the absolute position of this object, if the object has a parent
+ * then set the relative position required to absolutely position this object
+ *
+ * @param x
+ * @param y
+ * @param z
+ */
+void Object::set_absolute_position(float x, float y, float z) {
+    if(position_locked_) {
+        return;
+    }
 
-    position_.x = x;
-    position_.y = y;
-    position_.z = z;
+    if(is_responsive()) {
+        if(responsive_parental_constraint_) {
+            //Destroy the existing constraint
+            responsive_body().destroy_constraint(responsive_parental_constraint_);
+        }
 
-    update_from_parent();
+        //Set the new absolute position
+        responsive_body().set_position(kglt::Vec3(x, y, z));
+
+        if(has_parent() && !parent_is_root()) {
+            //Recreate the constraint with the parent (as long as the parent isn't the stage itself)
+            responsive_parental_constraint_ = responsive_body().create_fixed_constaint(parent().responsive_body());
+        }
+    } else {
+        kglt::Vec3 parent_pos;
+        if(has_parent()) {
+            parent_pos = parent().absolute_position();
+        }
+
+        set_relative_position(kglt::Vec3(x, y, z) - parent_pos);
+    }
+}
+
+void Object::set_relative_position(float x, float y, float z) {
+    //Always store the relative_position_ even for responsive bodies
+    //as they only deal with absolute
+    relative_position_ = Vec3(x, y, z);
+
+    if(is_responsive()) {
+        if(responsive_parental_constraint_) {
+            //Destroy the existing constraint
+            responsive_body().destroy_constraint(responsive_parental_constraint_);
+        }
+
+        //Set the new absolute position
+        responsive_body().set_position(parent().absolute_position() + Vec3(x, y, z));
+
+        if(has_parent() && !parent_is_root()) {
+            //Recreate the constraint with the parent (as long as the parent isn't the stage itself)
+            responsive_parental_constraint_ = responsive_body().create_fixed_constaint(parent().responsive_body());
+        }
+    } else {
+        update_from_parent();
+    }
+}
+
+kglt::Vec3 Object::absolute_position() const {
+    if(is_responsive()) {
+        return responsive_body().position();
+    }
+
+    return absolute_position_;
+}
+
+kglt::Vec3 Object::relative_position() const {
+    if(is_responsive()) {
+        return absolute_position() - parent().absolute_position();
+    }
+
+    return relative_position_;
+}
+
+kglt::Quaternion Object::absolute_rotation() const {
+    if(is_responsive()) {
+        return responsive_body().rotation();
+    } else {
+        return absolute_rotation_;
+    }
+}
+
+kglt::Quaternion Object::relative_rotation() const {
+    if(is_responsive()) {
+        Quaternion parent_rot = parent().absolute_rotation();
+        parent_rot.inverse();
+        return parent_rot * responsive_body().rotation();
+    }
+
+    return relative_rotation_;
+}
+
+
+void Object::set_absolute_rotation(const Quaternion& quat) {
+    if(rotation_locked_) {
+        return;
+    }
+
+    if(is_responsive()) {
+        if(responsive_parental_constraint_) {
+            //Destroy the existing constraint
+            responsive_body().destroy_constraint(responsive_parental_constraint_);
+            responsive_parental_constraint_ = ConstraintID();
+        }
+
+        //Set the new rotation
+        responsive_body().set_rotation(quat);
+
+        if(has_parent() && !parent_is_root()) {
+            //Recreate the constraint with the parent (as long as the parent isn't the stage itself)
+            responsive_parental_constraint_ = responsive_body().create_fixed_constaint(parent().responsive_body());
+        }
+    } else {
+        kglt::Quaternion parent_rot;
+        kmQuaternionIdentity(&parent_rot);
+
+        if(has_parent()) {
+            parent_rot = parent().absolute_rotation();
+        }
+
+        parent_rot.inverse();
+        set_relative_rotation(parent_rot * quat);
+    }
+}
+
+void Object::set_relative_rotation(const Quaternion &quaternion) {
+    //Always store the relative rotation, even for responsive bodies
+    //as they only deal with absolute
+    relative_rotation_ = quaternion;
+    relative_rotation_.normalize();
+
+    if(is_responsive()) {
+        if(responsive_parental_constraint_) {
+            //Destroy the existing constraint
+            responsive_body().destroy_constraint(responsive_parental_constraint_);
+        }
+
+        //Set the new rotation
+        responsive_body().set_rotation(parent().absolute_rotation() * quaternion);
+
+        if(has_parent() && !parent_is_root()) {
+            //Recreate the constraint with the parent (as long as the parent isn't the stage itself)
+            responsive_parental_constraint_ = responsive_body().create_fixed_constaint(parent().responsive_body());
+        }
+    } else {
+        update_from_parent();
+    }
+}
+
+void Object::set_absolute_rotation(const Degrees &angle, float x, float y, float z) {
+    if(rotation_locked_) {
+        return;
+    }
+
+    kglt::Quaternion rot;
+    kmVec3 axis;
+    kmVec3Fill(&axis, x, y, z);
+    kmQuaternionRotationAxisAngle(&rot, &axis, kmDegreesToRadians(angle.value_));
+
+    set_absolute_rotation(rot);
 }
 
 void Object::move_forward(float amount) {
-    if(position_locked_) return;
-
-    kmVec3 forward;
-    kmQuaternionGetForwardVec3RH(&forward, &absolute_rotation());
-    kmVec3Scale(&forward, &forward, amount);
-    kmVec3Add(&position_, &position_, &forward);
-
-    update_from_parent();
+    set_absolute_position(
+        absolute_position() + (forward() * amount)
+    );
 }
 
-void Object::rotate_to(const kmQuaternion& quat) {
-    if(rotation_locked_) return;
+void Object::rotate_absolute_x(float amount) {
+    if(rotation_locked_) {
+        return;
+    }
 
-    kmQuaternionAssign(&rotation_, &quat);
-    update_from_parent();
-}
+    if(fabs(amount) < kmEpsilon) {
+        return;
+    }
 
-void Object::rotate_to(float angle, float x, float y, float z) {
-    if(rotation_locked_) return;
-
-    kmVec3 axis;
-    kmVec3Fill(&axis, x, y, z);
-    kmQuaternionRotationAxisAngle(&rotation_, &axis, kmDegreesToRadians(angle));
-    update_from_parent();
-}
-
-void Object::rotate_x(float amount) {
-    if(rotation_locked_) return;
-    if(fabs(amount) < kmEpsilon) return;
-
-    kmQuaternion rot;
+    Quaternion rot;
     kmVec3 axis;
     kmVec3Fill(&axis, 1, 0, 0);
     kmQuaternionRotationAxisAngle(&rot, &axis, kmDegreesToRadians(amount));
-    kmQuaternionMultiply(&rotation_, &rotation_, &rot);
-    kmQuaternionNormalize(&rotation_, &rotation_);
+
+    set_absolute_rotation(absolute_rotation() * rot);
 
     update_from_parent();
 }
 
-void Object::rotate_z(float amount) {
-    if(rotation_locked_) return;
-    if(fabs(amount) < kmEpsilon) return;
+void Object::rotate_absolute_z(float amount) {
+    if(rotation_locked_) {
+        return;
+    }
 
-    kmQuaternion rot;
+    if(fabs(amount) < kmEpsilon) {
+        return;
+    }
+
+    Quaternion rot;
     kmVec3 axis;
     kmVec3Fill(&axis, 0, 0, 1);
     kmQuaternionRotationAxisAngle(&rot, &axis, kmDegreesToRadians(amount));
-    kmQuaternionMultiply(&rotation_, &rotation_, &rot);
-    kmQuaternionNormalize(&rotation_, &rotation_);
+
+    set_absolute_rotation(absolute_rotation() * rot);
+    absolute_rotation_.normalize();
 
     update_from_parent();
 }
 
-void Object::rotate_y(float amount) {
-    if(rotation_locked_) return;
-    if(fabs(amount) < kmEpsilon) return;
+void Object::rotate_absolute_y(float amount) {
+    if(rotation_locked_) {
+        return;
+    }
 
-    kmQuaternion rot;
-    float rads = kmDegreesToRadians(amount);
-    kmQuaternionRotationAxisAngle(&rot, &KM_VEC3_POS_Y, rads);
-    kmQuaternionMultiply(&rotation_, &rotation_, &rot);
-    kmQuaternionNormalize(&rotation_, &rotation_);
+    if(fabs(amount) < kmEpsilon) {
+        return;
+    }
+
+    Quaternion rot;
+    kmVec3 axis;
+    kmVec3Fill(&axis, 0, 1, 0);
+    kmQuaternionRotationAxisAngle(&rot, &axis, kmDegreesToRadians(amount));
+
+    set_absolute_rotation(absolute_rotation() * rot);
+    absolute_rotation_.normalize();
 
     update_from_parent();
 }
 
-kmMat4 Object::absolute_transformation() {
-    kmMat4 rot_matrix, trans_matrix, final;
+Mat4 Object::absolute_transformation() const {
+    Mat4 rot_matrix, trans_matrix, final;
 
-    kmMat4RotationQuaternion(&rot_matrix, &absolute_orientation_);
+    Quaternion abs_rot = absolute_rotation();
+
+    kmMat4RotationQuaternion(&rot_matrix, &abs_rot);
     kmMat4Translation(&trans_matrix, absolute_position().x, absolute_position().y, absolute_position().z);
 
     kmMat4Multiply(&final, &trans_matrix, &rot_matrix);
     return final;
 }
 
-void Object::set_position(const kmVec3& pos) {
-    kmVec3Assign(&position_, &pos);
-}
-
 void Object::update_from_parent() {
+    Vec3 orig_pos = absolute_position();
+    Quaternion orig_rot = absolute_rotation();
+
     if(!has_parent()) {
-        kmVec3Assign(&absolute_position_, &position_);
-        kmQuaternionAssign(&absolute_orientation_, &rotation_);
-        transformation_changed();
+        absolute_position_ = relative_position();
+        absolute_rotation_ = relative_rotation();
     } else {
         if(!position_locked_) {
-            kmVec3Add(&absolute_position_, &parent().absolute_position_, &position_);
+            absolute_position_ = parent().absolute_position() + relative_position();
         }
         if(!rotation_locked_) {
-            kmQuaternionMultiply(&absolute_orientation_, &rotation_, &parent().absolute_orientation_);
-            kmQuaternionNormalize(&absolute_orientation_, &absolute_orientation_);
+            absolute_rotation_ = relative_rotation() * parent().absolute_rotation();
+            absolute_rotation_.normalize();
         }
     }
 
-    transformation_changed(); //FIXME: Did it though?
+    //Only signal that the transformation changed if it did
+    if(orig_pos != absolute_position() || orig_rot != absolute_rotation()) {
+        transformation_changed();
+    }
 
     std::for_each(children().begin(), children().end(), [](Object* x) { x->update_from_parent(); });    
 }

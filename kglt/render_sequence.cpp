@@ -1,5 +1,5 @@
 #include <GLee.h>
-#include <tr1/unordered_map>
+#include <unordered_map>
 
 #include "render_sequence.h"
 #include "scene.h"
@@ -64,7 +64,7 @@ void RenderSequence::deactivate_all_pipelines() {
 }
 
 Pipeline& RenderSequence::pipeline(PipelineID pipeline) {
-    return PipelineManager::manager_get(pipeline);
+    return *(PipelineManager::manager_get(pipeline).lock());
 }
 
 void RenderSequence::delete_pipeline(PipelineID pipeline) {
@@ -112,7 +112,7 @@ void RenderSequence::set_renderer(Renderer::ptr renderer) {
 }
 
 void RenderSequence::run() {
-    scene_.window().apply_func_to_objects(std::bind(&Viewport::clear, std::tr1::placeholders::_1));
+    scene_.window().apply_func_to_objects(std::bind(&Viewport::clear, std::placeholders::_1));
 
     for(Pipeline::ptr pipeline: ordered_pipelines_) {
         run_pipeline(pipeline);
@@ -161,7 +161,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
          * of material properties (uniforms) will be created with the child nodes
          * being the meshes
          */
-        typedef std::tr1::unordered_map<uint32_t, std::vector<RootGroup::ptr> > QueueGroups;
+        typedef std::unordered_map<uint32_t, std::vector<RootGroup::ptr> > QueueGroups;
         static QueueGroups queues;
 
         //Empty the queues

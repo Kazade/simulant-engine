@@ -27,22 +27,20 @@ int main(int argc, char* argv[]) {
     */
 
     ///Shortcut function for loading images
-    kglt::TextureID tid = kglt::create_texture_from_file(stage, "sample_data/sample.tga");
+    kglt::TextureID tid = stage.new_texture_from_file("sample_data/sample.tga");
     kglt::MaterialID matid = kglt::create_material_from_texture(stage, tid);
 
     stage.set_ambient_light(kglt::Colour::white);
 
-    kglt::Actor& actor = stage.actor(stage.geom_factory().new_capsule());
-    actor.mesh().lock()->set_material_id(matid);
-
-    /**
-        Once we have the reference to a base object, we can
-        manipulate it easily
-    */
-    actor.move_to(0.0f, 0.0f, -5.0f);
+    kglt::ActorID actor_id = stage.geom_factory().new_capsule();
+    {
+        auto actor = stage.actor(actor_id);
+        actor->mesh()->set_material_id(matid);
+        actor->move_to(0.0f, 0.0f, -5.0f);
+    }
 
     //Set the actor to rotate each step
-    window->signal_step().connect([&](float dt) { actor.rotate_y(20.0 * dt); });
+    window->signal_step().connect([&](float dt) { stage.actor(actor_id)->rotate_y(20.0 * dt); });
 
     while(window->update()) {}
 

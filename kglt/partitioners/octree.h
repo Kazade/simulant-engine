@@ -5,7 +5,7 @@
 #include <map>
 #include <stdexcept>
 #include <vector>
-#include <tr1/memory>
+#include <memory>
 #include <kazmath/kazmath.h>
 
 #include "../generic/managed.h"

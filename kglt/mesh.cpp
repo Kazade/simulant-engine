@@ -34,13 +34,13 @@ Scene& Mesh::scene() {
 void Mesh::enable_debug(bool value) {
     if(value) {
         //This maintains a lock on the material
-        auto material_ptr = resource_manager().material(resource_manager().new_material());
+        MaterialID mid = resource_manager().new_material();
 
-        kglt::Material& material = *material_ptr;
+        resource_manager().window().loader_for(
+            "kglt/materials/diffuse_render.kglm"
+        )->into(resource_manager().material(mid));
 
-        resource_manager().window().loader_for("kglt/materials/diffuse_render.kglm")->into(material);
-
-        normal_debug_mesh_ = new_submesh(material.id(), MESH_ARRANGEMENT_LINES, false);
+        normal_debug_mesh_ = new_submesh(mid, MESH_ARRANGEMENT_LINES, false);
 
         //Go through the submeshes, and for each index draw a normal line
         for(SubMeshIndex smi: submesh_ids()) {

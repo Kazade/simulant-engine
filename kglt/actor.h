@@ -10,6 +10,9 @@
 #include "mesh.h"
 #include "sound.h"
 
+#include "physics/responsive_body.h"
+#include "utils/parent_setter_mixin.h"
+
 namespace kglt {
 
 class SubActor;
@@ -18,7 +21,7 @@ class Actor :
     public MeshInterface,
     public Managed<Actor>,
     public generic::Identifiable<ActorID>,
-    public Object,
+    public ParentSetterMixin<Object>,
     public Source {
 
 public:
@@ -26,7 +29,9 @@ public:
     Actor(Stage* stage, ActorID id, MeshID mesh);
 
     MeshID mesh_id() const { return (mesh_) ? mesh_->id() : MeshID(0); }
-    MeshRef mesh() const { return mesh_; }
+
+    ProtectedPtr<Mesh> mesh() const;
+
     bool has_mesh() const { return bool(mesh_); }
     void set_mesh(MeshID mesh);
 
@@ -50,6 +55,7 @@ public:
 
     RenderPriority render_priority() const { return render_priority_; }
     void set_render_priority(RenderPriority value) { render_priority_ = value;}
+
 private:
     MeshPtr mesh_;
     std::vector<std::shared_ptr<SubActor> > subactors_;
@@ -61,6 +67,8 @@ private:
     void do_update(double dt) {
         update_source(dt);
     }
+
+    std::shared_ptr<ResponsiveBody> body_;
 
     friend class SubActor;
 };
@@ -115,11 +123,11 @@ public:
         return submesh().bounds();
     }
 
-    const kmVec3 centre() const {
+    const Vec3 centre() const {
         // Return the centre point of the absolute bounds of this subactor
         // which is the submesh().bounds() transformed by the parent actor's
         // location
-        kmVec3 centre;
+        Vec3 centre;
         kmAABB abs_bounds = absolute_bounds();
         kmAABBCentre(&abs_bounds, &centre);
         return centre;
@@ -130,9 +138,7 @@ private:
     SubMeshIndex index_;
     MaterialPtr material_;
 
-    const SubMesh& submesh() const {
-        return parent_.mesh().lock()->submesh(index_);
-    }
+    const SubMesh& submesh() const;
 };
 
 }
