@@ -32,6 +32,9 @@ public:
     //Mesh functions
     virtual MeshID new_mesh() = 0;
     virtual MeshID new_mesh_from_file(const unicode& path) = 0;
+    virtual MeshID new_mesh_as_cube(float width) = 0;
+    virtual MeshID new_mesh_as_sphere(float diameter) = 0;
+    //FIXME: More factory methods
 
     virtual ProtectedPtr<Mesh> mesh(MeshID m) = 0;
     virtual const ProtectedPtr<Mesh> mesh(MeshID m) const = 0;
@@ -103,6 +106,8 @@ public:
 
     MeshID new_mesh();
     MeshID new_mesh_from_file(const unicode& path);
+    MeshID new_mesh_as_cube(float width);
+    MeshID new_mesh_as_sphere(float diameter);
 
     ProtectedPtr<Mesh> mesh(MeshID m);
     const ProtectedPtr<Mesh> mesh(MeshID m) const;

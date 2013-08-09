@@ -82,6 +82,8 @@ public:
     //Mesh functions
     virtual MeshID new_mesh() { return scene().new_mesh(); }
     virtual MeshID new_mesh_from_file(const unicode& path) { return scene().new_mesh_from_file(path); }
+    virtual MeshID new_mesh_as_cube(float width) { return scene().new_mesh_as_cube(width); }
+    virtual MeshID new_mesh_as_sphere(float diameter) { return scene().new_mesh_as_sphere(diameter); }
 
     virtual ProtectedPtr<Mesh> mesh(MeshID m) { return scene().mesh(m); }
     virtual const ProtectedPtr<Mesh> mesh(MeshID m) const { return scene().mesh(m); }

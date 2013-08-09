@@ -4,6 +4,7 @@
 #include "generic/identifiable.h"
 #include "generic/managed.h"
 #include "generic/relation.h"
+#include "generic/protected_ptr.h"
 
 #include "boundable.h"
 #include "object.h"
@@ -22,7 +23,8 @@ class Actor :
     public Managed<Actor>,
     public generic::Identifiable<ActorID>,
     public ParentSetterMixin<Object>,
-    public Source {
+    public Source,
+    public Protectable {
 
 public:
     Actor(Stage* stage, ActorID id);
