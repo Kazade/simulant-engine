@@ -11,9 +11,7 @@ std::vector<LightID> NullPartitioner::lights_within_range(const Vec3& location) 
 
     //Find all the lights within range of the location
     for(LightID light_id: all_lights_) {
-        Light& light = stage().light(light_id);
-
-        Vec3 diff = location - light.absolute_position();
+        Vec3 diff = location - stage().light(light_id)->absolute_position();
         float dist = diff.length();
         //if(dist < light.range()) {
             lights_in_range.push_back(std::make_pair(light_id, dist));

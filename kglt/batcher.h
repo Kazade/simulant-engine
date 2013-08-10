@@ -404,15 +404,15 @@ private:
 };
 
 struct LightGroupData : public GroupData {
-    LightGroupData(Light* light):
-        light(light) {}
+    LightGroupData(LightID light_id):
+        light_id(light_id) {}
 
-    Light* light;
+    LightID light_id;
 
     std::size_t hash() const {
         size_t seed = 0;
         hash_combine(seed, typeid(LightGroupData).name());
-        hash_combine(seed, light);
+        hash_combine(seed, light_id);
         return seed;
     }
 };

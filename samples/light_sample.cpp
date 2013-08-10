@@ -24,21 +24,22 @@ int main(int argc, char* argv[]) {
     kglt::TextureID texture = stage.new_texture_from_file("sample_data/crate.png");
     stage.actor(actor_id)->mesh()->set_texture_on_material(0, texture);
 
-    kglt::Light& light = stage.light(stage.new_light());
-    light.move_to(5.0, 0.0, -5.0);
-    light.set_diffuse(kglt::Colour::green);
-    light.set_attenuation_from_range(10.0);
+    {
+        auto light = stage.light(stage.new_light());
+        light->move_to(5.0, 0.0, -5.0);
+        light->set_diffuse(kglt::Colour::green);
+        light->set_attenuation_from_range(10.0);
 
-    kglt::Light& light2 = stage.light(stage.new_light());
-    light2.move_to(-5.0, 0.0, -5.0);
-    light2.set_diffuse(kglt::Colour::blue);
-    light2.set_attenuation_from_range(50.0);
+        auto light2 = stage.light(stage.new_light());
+        light2->move_to(-5.0, 0.0, -5.0);
+        light2->set_diffuse(kglt::Colour::blue);
+        light2->set_attenuation_from_range(50.0);
 
-    kglt::Light& light3 = stage.light(stage.new_light());
-    light3.move_to(0.0, 15.0, -5.0);
-    light3.set_diffuse(kglt::Colour::red);
-    light3.set_attenuation_from_range(50.0);
-
+        auto light3 = stage.light(stage.new_light());
+        light3->move_to(0.0, 15.0, -5.0);
+        light3->set_diffuse(kglt::Colour::red);
+        light3->set_attenuation_from_range(50.0);
+    }
     while(window->update()) {
         stage.actor(actor_id)->rotate_absolute_x(window->delta_time() * 20.0);
         stage.actor(actor_id)->rotate_absolute_y(window->delta_time() * 15.0);

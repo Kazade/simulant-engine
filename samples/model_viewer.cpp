@@ -26,15 +26,20 @@ int main(int argc, char* argv[]) {
         1000.0
     );
 
-    kglt::Light& light = stage.light(stage.new_light());
-    //light.set_direction(-1, 0, 0);
-    light.set_diffuse(kglt::Colour::yellow);
-    light.set_attenuation_from_range(100.0);
+    kglt::LightID light_id = stage.new_light();
+    {
+        auto light = stage.light(light_id);
+        //light.set_direction(-1, 0, 0);
+        light->set_diffuse(kglt::Colour::yellow);
+        light->set_attenuation_from_range(100.0);
+    }
 
-    kglt::Light& light2 = stage.light(stage.new_light());
-    light2.set_diffuse(kglt::Colour::red);
-    light2.set_attenuation_from_range(100.0);
-    light2.move_to(20, -20, -50);
+    {
+        auto light2 = stage.light(stage.new_light());
+        light2->set_diffuse(kglt::Colour::red);
+        light2->set_attenuation_from_range(100.0);
+        light2->move_to(20, -20, -50);
+    }
 
     stage.set_ambient_light(kglt::Colour(0.2, 0.2, 0.2, 0.2));
 
@@ -68,7 +73,7 @@ int main(int argc, char* argv[]) {
                 incrementing = !incrementing;
             }
 
-            light.move_to(x_position, 20.0, -50.0);
+            stage.light(light_id)->move_to(x_position, 20.0, -50.0);
         }
     );
 

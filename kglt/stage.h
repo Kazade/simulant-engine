@@ -47,7 +47,7 @@ public:
 
     LightID new_light(LightType type=LIGHT_TYPE_POINT);
     LightID new_light(Object& parent, LightType type=LIGHT_TYPE_POINT);
-    Light& light(LightID light);
+    ProtectedPtr<Light> light(LightID light);
     void delete_light(LightID light_id);
     uint32_t light_count() const { return LightManager::manager_count(); }
 

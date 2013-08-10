@@ -190,29 +190,30 @@ void add_lights_to_scene(Scene& scene, const std::vector<ActorProperties>& actor
             std::istringstream origin(props["origin"]);
             origin >> pos.x >> pos.y >> pos.z;
 
-            kglt::Light& new_light = scene.stage().light(scene.stage().new_light());
+            {
+                auto new_light = scene.stage().light(scene.stage().new_light());
+                new_light->set_absolute_position(pos.x, pos.y, pos.z);
+                kmVec3Transform(&pos, &pos, &rotation);
 
-            kmVec3Transform(&pos, &pos, &rotation);
-            new_light.set_absolute_position(pos.x, pos.y, pos.z);
+                float range = 300; //Default in Q2
+                if(container::contains(props, std::string("light"))) {
+                    std::string tmp = props["light"];
+                    std::istringstream value(tmp);
+                    value >> range;
+                }
 
-            float range = 300; //Default in Q2
-            if(container::contains(props, std::string("light"))) {
-                std::string tmp = props["light"];
-                std::istringstream value(tmp);
-                value >> range;
+                if(container::contains(props, std::string("_color"))) {
+                    kglt::Colour diffuse;
+                    std::istringstream value(props["_color"]);
+                    value >> diffuse.r >> diffuse.g >> diffuse.b;
+                    diffuse.a = 1.0;
+                    new_light->set_diffuse(diffuse);
+                }
+
+
+                std::cout << "Creating light at: " << pos.x << ", " << pos.y << ", " << pos.z << std::endl;
+                new_light->set_attenuation_from_range(range);
             }
-
-            if(container::contains(props, std::string("_color"))) {
-                kglt::Colour diffuse;
-                std::istringstream value(props["_color"]);
-                value >> diffuse.r >> diffuse.g >> diffuse.b;
-                diffuse.a = 1.0;
-                new_light.set_diffuse(diffuse);
-            }
-
-
-            std::cout << "Creating light at: " << pos.x << ", " << pos.y << ", " << pos.z << std::endl;
-            new_light.set_attenuation_from_range(range);
         }
     }
 }
