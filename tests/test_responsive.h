@@ -10,10 +10,10 @@ public:
     void set_up() {
         if(!window) {
             window = kglt::Window::create();
-            window->set_logging_level(LOG_LEVEL_NONE);
+            window->set_logging_level(kglt::LOG_LEVEL_NONE);
         }
 
-        window->scene().enable_physics(DefaultPhysicsEngine::create());
+        window->scene().enable_physics(kglt::DefaultPhysicsEngine::create());
         //window->reset();
     }
 
