@@ -88,6 +88,13 @@ void Camera::update_following(double dt) {
     }
 }
 
+void Camera::look_at(const Vec3& direction) {
+    Vec3 pEye = absolute_position();
+    Vec3 pUp = up();
+
+    kmMat4LookAt(&view_matrix_, &pEye, &direction, &pUp);
+}
+
 void Camera::do_update(double dt) {
     update_following(dt);
 }

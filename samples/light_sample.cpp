@@ -16,6 +16,9 @@ int main(int argc, char* argv[]) {
         1000.0
     );
 
+    // Test Camera::look_at function
+    window->scene().camera().look_at(0, 0, -5.0);
+
     stage.set_ambient_light(kglt::Colour(0.2, 0.2, 0.2, 1.0));
 
     kglt::ActorID actor_id = stage.geom_factory().new_cube(2.0);
@@ -40,6 +43,19 @@ int main(int argc, char* argv[]) {
         light3->set_diffuse(kglt::Colour::red);
         light3->set_attenuation_from_range(50.0);
     }
+
+    float xpos = 0;
+    window->keyboard().key_while_down_connect(kglt::KEY_CODE_a, [&](kglt::KeyEvent key, double dt) mutable {
+            xpos -= 0.2;
+            scene.camera().set_absolute_position(xpos, 2, 1);
+            window->scene().camera().look_at(stage.actor(actor_id)->absolute_position());
+    });
+    window->keyboard().key_while_down_connect(kglt::KEY_CODE_d, [&](kglt::KeyEvent key, double dt) mutable {
+            xpos += 0.2;
+            scene.camera().set_absolute_position(xpos, 2, 1);
+            window->scene().camera().look_at(stage.actor(actor_id)->absolute_position());
+    });
+
     while(window->update()) {
         stage.actor(actor_id)->rotate_absolute_x(window->delta_time() * 20.0);
         stage.actor(actor_id)->rotate_absolute_y(window->delta_time() * 15.0);
