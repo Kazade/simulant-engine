@@ -3,6 +3,7 @@
 
 #include "object.h"
 #include "generic/identifiable.h"
+#include "generic/protected_ptr.h"
 #include "types.h"
 #include "boundable.h"
 
@@ -13,7 +14,8 @@ namespace kglt {
 class Light :
     public Object,
     public generic::Identifiable<LightID>,
-    public Boundable {
+    public Boundable,
+    public Protectable {
 
 public:
     typedef std::shared_ptr<Light> ptr;

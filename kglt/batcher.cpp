@@ -28,7 +28,7 @@ void RootGroup::generate_mesh_groups(RenderGroup* parent, SubActor& ent, Materia
     } else if (pass.iteration() == ITERATE_ONCE_PER_LIGHT) {
         iteration_count = std::min<uint32_t>(lights.size(), pass.max_iterations());
         for(uint8_t i = 0; i < iteration_count; ++i) {
-            parent->get_or_create<LightGroup>(LightGroupData(&stage().light(lights[i]))).
+            parent->get_or_create<LightGroup>(LightGroupData(lights[i])).
                     get_or_create<MeshGroup>(MeshGroupData(ent._parent().mesh_id(), ent.submesh_id())).add(&ent);
         }
     } else {
@@ -77,10 +77,12 @@ void RootGroup::insert(SubActor &ent, uint8_t pass_number) {
 }
 
 void LightGroup::bind() {
-    Light* light = data_.light;
-    if(!light) {
+    if(!data_.light_id) {
         return;
     }
+
+    RootGroup& root = static_cast<RootGroup&>(get_root());
+    auto light = root.stage().light(data_.light_id);
 
     ShaderProgram* active_shader = ShaderProgram::active_shader();
     assert(active_shader);

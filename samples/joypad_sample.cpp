@@ -96,10 +96,12 @@ int main(int argc, const char *argv[]) {
     kglt::MaterialID matid = kglt::create_material_from_texture(stage, tid);
 
     stage.set_ambient_light(kglt::Colour::white);
-    kglt::Light& light = stage.light(stage.new_light());
-    light.set_absolute_position(5.0, 0.0, -5.0);
-    light.set_diffuse(kglt::Colour::green);
-    light.set_attenuation_from_range(10.0);
+    {
+        auto light = stage.light(stage.new_light());
+        light->set_absolute_position(5.0, 0.0, -5.0);
+        light->set_diffuse(kglt::Colour::green);
+        light->set_attenuation_from_range(10.0);
+    }
 
     // NOTE: I don't know yet how to manage this kind of pointer-reference system
     actor_id = stage.geom_factory().new_cube(2);

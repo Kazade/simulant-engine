@@ -104,10 +104,7 @@ void Stage::delete_actor(ActorID e) {
 
 LightID Stage::new_light(LightType type) {
     LightID lid = LightManager::manager_new();
-
-    Light& l = light(lid);
-    l.set_type(type);
-
+    light(lid)->set_type(type);
     signal_light_created_(lid);
     return lid;
 }
@@ -115,24 +112,24 @@ LightID Stage::new_light(LightType type) {
 LightID Stage::new_light(Object &parent, LightType type) {
     LightID lid = LightManager::manager_new();
 
-    Light& l = light(lid);
-    l.set_type(type);
-    l.set_parent(&parent);
+    {
+        auto l = light(lid);
+        l->set_type(type);
+        l->set_parent(&parent);
+    }
 
     signal_light_created_(lid);
 
     return lid;
 }
 
-Light& Stage::light(LightID light_id) {
-    return *(LightManager::manager_get(light_id).lock());
+ProtectedPtr<Light> Stage::light(LightID light_id) {
+    return ProtectedPtr<Light>(LightManager::manager_get(light_id));
 }
 
 void Stage::delete_light(LightID light_id) {
-    Light& obj = light(light_id);
     signal_light_destroyed_(light_id);
-
-    obj.destroy_children();
+    light(light_id)->destroy_children();
     LightManager::manager_delete(light_id);
 }
 

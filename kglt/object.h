@@ -148,7 +148,7 @@ public:
     void make_responsive();
     void make_collidable();
 
-    ResponsiveBody& responsive_body() {
+    ResponsiveBody& body() {
         if(!is_responsive()) {
             throw std::logic_error("Tried to access a responsive body on a non-responsive object");
         }
@@ -156,7 +156,7 @@ public:
         return *responsive_body_.get();
     }
 
-    const ResponsiveBody& responsive_body() const {
+    const ResponsiveBody& body() const {
         if(!is_responsive()) {
             throw std::logic_error("Tried to access a responsive body on a non-responsive object");
         }
@@ -164,7 +164,7 @@ public:
         return *responsive_body_.get();
     }
 
-    Collidable& collidable() {
+    Collidable& shape() {
         if(!is_collidable()) {
             throw std::logic_error("Tried to access a collidable on a non-collidable object");
         }
@@ -172,7 +172,7 @@ public:
         return *collidable_.get();
     }
 
-    const Collidable& collidable() const {
+    const Collidable& shape() const {
         if(!is_collidable()) {
             throw std::logic_error("Tried to access a collidable on a non-collidable object");
         }
@@ -188,7 +188,7 @@ public:
     }
 
     sigc::signal<void> signal_made_responsive() { return signal_made_responsive_; }
-    sigc::signal<void> signal_made_collidable() { return signal_made_collidable_; }
+    sigc::signal<void> signal_made_shape() { return signal_made_collidable_; }
 
 protected:
     void update_from_parent();

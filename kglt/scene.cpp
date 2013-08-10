@@ -183,9 +183,8 @@ bool Scene::init() {
 }
 
 void Scene::update(double dt) {
-    PhysicsEngine* engine = physics_engine();
-    if(engine) {
-        engine->step(dt);
+    if(physics_enabled()) {
+        physics().step(dt);
     }
 
     //Update the stages

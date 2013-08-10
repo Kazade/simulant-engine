@@ -11,21 +11,26 @@ Frustum::Frustum():
 
 bool Frustum::intersects_aabb(const kmAABB &aabb) const {
     for(const kmPlane& plane: planes_) {
-        const kglt::Vec3 pv(
-            plane.a > 0 ? aabb.max.x : aabb.min.x,
-            plane.b > 0 ? aabb.max.y : aabb.min.y,
-            plane.c > 0 ? aabb.max.z : aabb.min.z
-        );
+        kglt::Vec3 points[] = {
+            Vec3(aabb.min.x, aabb.min.y, aabb.min.z),
+            Vec3(aabb.max.x, aabb.min.y, aabb.min.z),
+            Vec3(aabb.max.x, aabb.max.y, aabb.min.z),
+            Vec3(aabb.max.x, aabb.max.y, aabb.max.z),
+            Vec3(aabb.min.x, aabb.max.y, aabb.min.z),
+            Vec3(aabb.min.x, aabb.max.y, aabb.max.z),
+            Vec3(aabb.max.x, aabb.min.y, aabb.max.z),
+            Vec3(aabb.min.x, aabb.min.y, aabb.max.z)
+        };
 
-        kglt::Vec4 v1(pv, 1.0f);
-        kmVec4Normalize(&v1, &v1);
+        int32_t points_behind = 0;
+        for(Vec3& p: points) {
+            KM_POINT_CLASSIFICATION classify = kmPlaneClassifyPoint(&plane, &p);
+            if(classify == POINT_BEHIND_PLANE) {
+                points_behind++;
+            }
+        }
 
-        kglt::Vec4 v2(plane.a, plane.b, plane.c, plane.d);
-        kmVec4Normalize(&v2, &v2);
-
-        const float n = kmVec4Dot(&v1, &v2);
-
-        if (n < 0) {
+        if(points_behind == 8) {
             return false;
         }
     }

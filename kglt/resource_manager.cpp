@@ -2,6 +2,8 @@
 #include "resource_manager.h"
 #include "loader.h"
 
+#include "procedural/mesh.h"
+
 #include "kazbase/datetime.h"
 
 namespace kglt {
@@ -70,6 +72,18 @@ MeshID ResourceManagerImpl::new_mesh_from_file(const unicode& path) {
     kglt::MeshID mesh_id = new_mesh();
     window().loader_for(path.encode())->into(mesh(mesh_id));
     return mesh_id;
+}
+
+MeshID ResourceManagerImpl::new_mesh_as_cube(float width) {
+    MeshID m = new_mesh();
+    kglt::procedural::mesh::cube(mesh(m), width);
+    return m;
+}
+
+MeshID ResourceManagerImpl::new_mesh_as_sphere(float diameter) {
+    MeshID m = new_mesh();
+    kglt::procedural::mesh::sphere(mesh(m), diameter);
+    return m;
 }
 
 bool ResourceManagerImpl::has_mesh(MeshID m) const {

@@ -12,13 +12,12 @@ namespace physics {
 static int32_t constraint_counter = 1;
 
 bool ODEBody::init() {
-    ODEEngine* engine = dynamic_cast<ODEEngine*>(owner()->stage().scene().physics_engine());
+    ODEEngine& engine = dynamic_cast<ODEEngine&>(owner()->stage().scene().physics());
 
-    body_ = dBodyCreate(engine->world());
+    body_ = dBodyCreate(engine.world());
 
     //Initialize spherical mass of 1.0
-    dMassSetSphereTotal(&mass_, 1.0, 1.0);
-    dBodySetMass(body_, &mass_);
+    set_mass_sphere(1.0, 1.0);
 
     return true;
 }
@@ -48,16 +47,6 @@ void ODEBody::set_rotation(const kglt::Quaternion& quat) {
 kglt::Quaternion ODEBody::rotation() const {
     const dReal* rot = dBodyGetQuaternion(body_);
     return Quaternion(rot[1], rot[2], rot[3], rot[0]);
-}
-
-
-void ODEBody::set_mass(float mass) {
-    dMassSetSphereTotal(&mass_, mass, 1.0);
-    dBodySetMass(body_, &mass_);
-}
-
-float ODEBody::mass() const {
-    return mass_.mass;
 }
 
 void ODEBody::apply_linear_force_global(const kglt::Vec3& force) {
@@ -99,9 +88,9 @@ kglt::Vec3 ODEBody::linear_velocity() const {
 }
 
 ConstraintID ODEBody::create_fixed_constaint(ResponsiveBody &other) {
-    ODEEngine* engine = dynamic_cast<ODEEngine*>(owner()->stage().scene().physics_engine());
+    ODEEngine& engine = dynamic_cast<ODEEngine&>(owner()->stage().scene().physics());
 
-    dJointID new_joint = dJointCreateFixed(engine->world(), 0);
+    dJointID new_joint = dJointCreateFixed(engine.world(), 0);
     dJointAttach(new_joint, body_, dynamic_cast<ODEBody&>(other).body_);
     dJointSetFixed(new_joint);
 
@@ -125,6 +114,16 @@ void ODEBody::enable_constraint(ConstraintID c) {
 
 void ODEBody::disable_constraint(ConstraintID c) {
     dJointDisable(constraints_.at(c));
+}
+
+void ODEBody::do_set_mass_sphere(float total_mass, float radius) {
+    dMassSetSphereTotal(&mass_, total_mass, radius);
+    dBodySetMass(body_, &mass_);
+}
+
+void ODEBody::do_set_mass_box(float total_mass, float width, float height, float depth) {
+    dMassSetBoxTotal(&mass_, total_mass, width, height, depth);
+    dBodySetMass(body_, &mass_);
 }
 
 }

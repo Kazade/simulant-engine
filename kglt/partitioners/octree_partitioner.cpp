@@ -48,16 +48,17 @@ void OctreePartitioner::remove_actor(ActorID obj) {
 }
 
 void OctreePartitioner::add_light(LightID obj) {
-    Light& light = stage().light(obj);
-    Boundable* boundable = dynamic_cast<Boundable*>(&light);
+    //FIXME: THis is nasty and dangerous
+    auto light = stage().light(obj);
+    Boundable* boundable = dynamic_cast<Boundable*>(light.__object.get());
     assert(boundable);
     tree_.grow(boundable);
     boundable_to_light_[boundable] = obj;
 }
 
 void OctreePartitioner::remove_light(LightID obj) {
-    Light& light = stage().light(obj);
-    Boundable* boundable = dynamic_cast<Boundable*>(&light);
+    auto light = stage().light(obj);
+    Boundable* boundable = dynamic_cast<Boundable*>(light.__object.get());
     assert(boundable);
     tree_.shrink(boundable);
     boundable_to_light_.erase(boundable);

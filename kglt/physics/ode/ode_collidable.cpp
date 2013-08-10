@@ -62,7 +62,7 @@ ShapeID ODECollidable::add_box(float width, float height, float depth) {
     shapes_.insert(std::make_pair(new_id, new_geom));
 
     if(owner() && owner()->is_responsive()) {
-        attach_to_responsive_body(owner()->responsive_body());
+        attach_to_responsive_body(owner()->body());
     }
     return new_id;
 }
