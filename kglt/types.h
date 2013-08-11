@@ -16,6 +16,7 @@
 #include <kazmath/vec4.h>
 #include <kazmath/quaternion.h>
 #include <kazmath/mat4.h>
+#include <kazmath/mat3.h>
 
 #include "generic/unique_id.h"
 
@@ -67,6 +68,7 @@ struct Quaternion : public kmQuaternion {
 };
 
 struct Mat4 : public kmMat4 {};
+struct Mat3 : public kmMat3 {};
 
 struct Vec4 : public kmVec4 {
     Vec4() {

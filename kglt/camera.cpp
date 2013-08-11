@@ -88,6 +88,14 @@ void Camera::update_following(double dt) {
     }
 }
 
+void Camera::look_at(const Vec3& right, const Vec3& u, const Vec3& dir) {
+    throw NotImplementedError(__FILE__, __LINE__);
+}
+
+void Camera::look_at(const Vec3& position) {
+    throw NotImplementedError(__FILE__, __LINE__);
+}
+
 void Camera::do_update(double dt) {
     update_following(dt);
 }

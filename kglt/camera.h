@@ -23,6 +23,13 @@ public:
     kmVec3 project_point(ViewportID vid, const kmVec3& point);
     void follow(ActorID actor, const kglt::Vec3& offset, float lag_in_seconds=0.0);
 
+    void set_direction(const kglt::Vec3& dir);
+    void look_at(const Vec3& right, const Vec3& up, const Vec3& dir);
+    void look_at(const kglt::Vec3& position);
+    void look_at(float x, float y, float z) {
+        return look_at(kglt::Vec3(x, y, z));
+    }
+
     const kmMat4& view_matrix() { return view_matrix_; }
     const kmMat4& projection_matrix() const { return projection_matrix_; }
 
