@@ -31,17 +31,17 @@ int main(int argc, char* argv[]) {
         auto light = stage.light(stage.new_light());
         light->move_to(5.0, 0.0, -5.0);
         light->set_diffuse(kglt::Colour::green);
-        light->set_attenuation_from_range(10.0);
+        light->set_attenuation_from_range(5.0);
 
         auto light2 = stage.light(stage.new_light());
         light2->move_to(-5.0, 0.0, -5.0);
         light2->set_diffuse(kglt::Colour::blue);
-        light2->set_attenuation_from_range(50.0);
+        light2->set_attenuation_from_range(10.0);
 
         auto light3 = stage.light(stage.new_light());
         light3->move_to(0.0, 15.0, -5.0);
         light3->set_diffuse(kglt::Colour::red);
-        light3->set_attenuation_from_range(50.0);
+        light3->set_attenuation_from_range(20.0);
     }
 
     float xpos = 0;

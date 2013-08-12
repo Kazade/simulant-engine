@@ -148,10 +148,10 @@ private:
 
     ShaderPtr shader_;
 
-    Colour diffuse_;
-    Colour ambient_;
-    Colour specular_;
-    float shininess_;
+    Colour diffuse_ = Colour(1.0, 1.0, 1.0, 1.0);
+    Colour ambient_ = Colour(1.0, 1.0, 1.0, 1.0);
+    Colour specular_ = Colour(1.0, 1.0, 1.0, 1.0);
+    float shininess_ = 0.00001;
 
     std::vector<TextureUnit> texture_units_;
 
