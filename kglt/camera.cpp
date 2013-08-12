@@ -88,34 +88,6 @@ void Camera::update_following(double dt) {
     }
 }
 
-void Camera::look_at(const Vec3& right, const Vec3& u, const Vec3& dir) {
-    throw NotImplementedError(__FILE__, __LINE__);
-}
-
-void Camera::look_at(const Vec3& position) {
-    Vec3 forward = (position - absolute_position()).normalize();
-
-    float dot = Vec3(0, 0, -1).dot(forward);
-
-    if(fabs(dot - (-1.0)) < 0.00000001f) {
-        //Rotate 180 degrees around up
-        rotate_absolute_y(180.0);
-        return;
-    }
-
-    if(fabs(dot - 1.0) < 0.00000001f) {
-        return;
-    }
-
-    float rot_angle = acosf(dot);
-    Vec3 rot_axis = Vec3(0, 0, -1).cross(forward).normalize();
-
-    Quaternion q;
-    kmQuaternionRotationAxisAngle(&q, &rot_axis, rot_angle);
-
-    set_absolute_rotation(q);
-}
-
 void Camera::do_update(double dt) {
     update_following(dt);
 }

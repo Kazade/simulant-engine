@@ -100,6 +100,11 @@ public:
     virtual void rotate_absolute_y(float amount);
     virtual void rotate_absolute_z(float amount);
 
+    void look_at(const kglt::Vec3& position);
+    void look_at(float x, float y, float z) {
+        return look_at(kglt::Vec3(x, y, z));
+    }
+
     Vec3 right() const {
         Vec3 result;
         kmQuaternionGetRightVec3(&result, &absolute_rotation_);
