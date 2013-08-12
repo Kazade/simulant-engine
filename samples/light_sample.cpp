@@ -46,12 +46,12 @@ int main(int argc, char* argv[]) {
 
     float xpos = 0;
     window->keyboard().key_while_down_connect(kglt::KEY_CODE_a, [&](kglt::KeyEvent key, double dt) mutable {
-            xpos -= 2.0 * dt;
+            xpos -= 20.0 * dt;
             scene.camera().set_absolute_position(xpos, 2, 0);
             scene.camera().look_at(stage.actor(actor_id)->absolute_position());
     });
     window->keyboard().key_while_down_connect(kglt::KEY_CODE_d, [&](kglt::KeyEvent key, double dt) mutable {
-            xpos += 2.0 * dt;
+            xpos += 20.0 * dt;
             scene.camera().set_absolute_position(xpos, 2, 0);
             scene.camera().look_at(stage.actor(actor_id)->absolute_position());
     });
