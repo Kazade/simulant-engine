@@ -43,7 +43,7 @@ void Object::parent_changed_callback(Object* old_parent, Object* new_parent) {
         body().set_position(parent().body().position());
         body().set_rotation(parent().body().rotation());
 
-        responsive_parental_constraint_ = body().create_fixed_constaint(new_parent->body());
+        responsive_parental_constraint_ = body().create_fixed_constraint(new_parent->body());
     }
 
     update_from_parent();
@@ -121,7 +121,7 @@ void Object::set_absolute_position(float x, float y, float z) {
 
         if(has_parent() && !parent_is_root()) {
             //Recreate the constraint with the parent (as long as the parent isn't the stage itself)
-            responsive_parental_constraint_ = body().create_fixed_constaint(parent().body());
+            responsive_parental_constraint_ = body().create_fixed_constraint(parent().body());
         }
     } else {
         kglt::Vec3 parent_pos;
@@ -149,7 +149,7 @@ void Object::set_relative_position(float x, float y, float z) {
 
         if(has_parent() && !parent_is_root()) {
             //Recreate the constraint with the parent (as long as the parent isn't the stage itself)
-            responsive_parental_constraint_ = body().create_fixed_constaint(parent().body());
+            responsive_parental_constraint_ = body().create_fixed_constraint(parent().body());
         }
     } else {
         update_from_parent();
@@ -208,7 +208,7 @@ void Object::set_absolute_rotation(const Quaternion& quat) {
 
         if(has_parent() && !parent_is_root()) {
             //Recreate the constraint with the parent (as long as the parent isn't the stage itself)
-            responsive_parental_constraint_ = body().create_fixed_constaint(parent().body());
+            responsive_parental_constraint_ = body().create_fixed_constraint(parent().body());
         }
     } else {
         kglt::Quaternion parent_rot;
@@ -240,7 +240,7 @@ void Object::set_relative_rotation(const Quaternion &quaternion) {
 
         if(has_parent() && !parent_is_root()) {
             //Recreate the constraint with the parent (as long as the parent isn't the stage itself)
-            responsive_parental_constraint_ = body().create_fixed_constaint(parent().body());
+            responsive_parental_constraint_ = body().create_fixed_constraint(parent().body());
         }
     } else {
         update_from_parent();

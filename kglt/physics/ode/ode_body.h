@@ -17,34 +17,6 @@ public:
     ODEBody(Object* owner):
         ResponsiveBody(owner) {}
 
-    bool init();
-    void cleanup();
-
-    virtual void set_position(const kglt::Vec3& position);
-    virtual kglt::Vec3 position() const;
-
-    virtual void set_rotation(const kglt::Quaternion& rotation);
-    virtual kglt::Quaternion rotation() const;
-
-    virtual void apply_linear_force_global(const kglt::Vec3& force);
-    virtual void apply_linear_force_local(const kglt::Vec3& force);
-
-    virtual void apply_angular_force_global(const kglt::Vec3& force);
-    virtual void apply_angular_force_local(const kglt::Vec3& force);
-
-    virtual void set_angular_damping(const float amount);
-
-    virtual void set_angular_velocity(const kglt::Vec3& velocity);
-    virtual kglt::Vec3 angular_velocity() const;
-
-    virtual void set_linear_velocity(const kglt::Vec3& vel);
-    virtual kglt::Vec3 linear_velocity() const;
-
-    virtual ConstraintID create_fixed_constaint(ResponsiveBody& other);
-    virtual void destroy_constraint(ConstraintID c);
-    virtual void enable_constraint(ConstraintID c);
-    virtual void disable_constraint(ConstraintID c);
-
     friend class ODECollidable;
 
 private:
@@ -53,8 +25,36 @@ private:
     dBodyID body_;
     dMass mass_;
 
+    bool do_init();
+    void do_cleanup();
+
+    virtual void do_set_position(const kglt::Vec3& position);
+    virtual kglt::Vec3 do_position() const;
+
+    virtual void do_set_rotation(const kglt::Quaternion& rotation);
+    virtual kglt::Quaternion do_rotation() const;
+
+    virtual void do_apply_linear_force_global(const kglt::Vec3& force);
+    virtual void do_apply_linear_force_local(const kglt::Vec3& force);
+
+    virtual void do_apply_angular_force_global(const kglt::Vec3& force);
+    virtual void do_apply_angular_force_local(const kglt::Vec3& force);
+
+    virtual void do_set_angular_damping(const float amount);
+
+    virtual void do_set_angular_velocity(const kglt::Vec3& velocity);
+    virtual kglt::Vec3 do_angular_velocity() const;
+
+    virtual void do_set_linear_velocity(const kglt::Vec3& vel);
+    virtual kglt::Vec3 do_linear_velocity() const;
+
     void do_set_mass_sphere(float total_mass, float radius);
     void do_set_mass_box(float total_mass, float width, float height, float depth);
+
+    virtual ConstraintID do_create_fixed_constraint(ResponsiveBody& other);
+    virtual void do_destroy_constraint(ConstraintID c);
+    virtual void do_enable_constraint(ConstraintID c);
+    virtual void do_disable_constraint(ConstraintID c);
 };
 
 }

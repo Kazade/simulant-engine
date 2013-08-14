@@ -140,8 +140,15 @@ public:
     virtual void _initialize() {}
     virtual void do_update(double dt) {}
 
-    Stage& stage() { return *stage_; }
-    const Stage& stage() const { return *stage_; }
+    Stage& stage() {
+        assert(stage_);
+        return *stage_;
+    }
+
+    const Stage& stage() const {
+        assert(stage_);
+        return *stage_;
+    }
 
     virtual void destroy() = 0;
 

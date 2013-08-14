@@ -91,8 +91,12 @@ void Boid::follow(Path path) {
     path_ = path;
     current_node_ = 0;
 
-    //Move the actor directly to the first waypoint
-    actor_->actor()->set_absolute_position(path_.point(0));
+
+    int32_t path_length = path_.length();
+    if(path_length > 0) {
+        //Move the actor directly to the first waypoint
+        actor_->actor()->set_absolute_position(path_.point(0));
+    }
 }
 
 kglt::Vec3 Boid::steer_to_path() {

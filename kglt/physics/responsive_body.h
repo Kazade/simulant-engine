@@ -7,63 +7,87 @@
 namespace kglt {
 
 class Object;
+class PhysicsEngine;
 
 class ResponsiveBody {
 public:
-    ResponsiveBody(Object* owner):
-        owner_(owner) {}
-
+    ResponsiveBody(Object* owner);
     virtual ~ResponsiveBody() {}
 
-    virtual bool init() = 0;
-    virtual void cleanup() = 0;
+    bool init();
+    void cleanup();
 
-    virtual void set_position(const kglt::Vec3& position) = 0;
-    virtual kglt::Vec3 position() const = 0;
+    void set_position(const kglt::Vec3& position);
+    kglt::Vec3 position() const;
 
-    virtual void set_rotation(const kglt::Quaternion& rotation) = 0;
-    virtual kglt::Quaternion rotation() const = 0;
+    void set_rotation(const kglt::Quaternion& rotation);
+    kglt::Quaternion rotation() const;
 
-    void set_mass_sphere(float total_mass, float radius) {
-        //FIXME: Lock
-        do_set_mass_sphere(total_mass, radius);
-    }
+    void set_mass_sphere(float total_mass, float radius);
+    void set_mass_box(float total_mass, float width, float height, float depth);
 
-    void set_mass_box(float total_mass, float width, float height, float depth) {
-        //FIXME: Lock
-        do_set_mass_box(total_mass, width, height, depth);
-    }
+    void apply_linear_force_global(const kglt::Vec3& force);
+    void apply_linear_force_local(const kglt::Vec3& force);
 
-    virtual void apply_linear_force_global(const kglt::Vec3& force) = 0;
-    virtual void apply_linear_force_local(const kglt::Vec3& force) = 0;
+    void apply_angular_force_global(const kglt::Vec3& force);
+    void apply_angular_force_local(const kglt::Vec3& force);
 
-    virtual void apply_angular_force_global(const kglt::Vec3& force) = 0;
-    virtual void apply_angular_force_local(const kglt::Vec3& force) = 0;
+    void set_angular_damping(const float amount);
 
-    virtual void set_angular_damping(const float amount) = 0;
+    void set_angular_velocity(const kglt::Vec3& velocity);
+    kglt::Vec3 angular_velocity() const;
 
-    virtual void set_angular_velocity(const kglt::Vec3& velocity) = 0;
-    virtual kglt::Vec3 angular_velocity() const = 0;
-
-    virtual void set_linear_velocity(const kglt::Vec3& velocity) = 0;
-    virtual kglt::Vec3 linear_velocity() const = 0;
+    void set_linear_velocity(const kglt::Vec3& velocity);
+    kglt::Vec3 linear_velocity() const;
 
     Object* owner() { return owner_; }
+    PhysicsEngine* engine() { return engine_; }
 
-    virtual ConstraintID create_fixed_constaint(ResponsiveBody& other) = 0;
-    virtual ConstraintID create_pivot_constraint(ResponsiveBody& other, const kglt::Vec3& pivot) {
-        throw NotImplementedError(__FILE__, __LINE__);
-    }
+    ConstraintID create_fixed_constraint(ResponsiveBody& other);
+    ConstraintID create_pivot_constraint(ResponsiveBody& other, const kglt::Vec3& pivot);
+    void destroy_constraint(ConstraintID c);
+    void enable_constraint(ConstraintID c);
+    void disable_constraint(ConstraintID c);
 
-    virtual void destroy_constraint(ConstraintID c) = 0;
-    virtual void enable_constraint(ConstraintID c) = 0;
-    virtual void disable_constraint(ConstraintID c) = 0;
-
-private:
+private:    
     Object* owner_;
+    PhysicsEngine* engine_;
+
+    virtual bool do_init() = 0;
+    virtual void do_cleanup() = 0;
+
+    virtual void do_set_position(const kglt::Vec3& position) = 0;
+    virtual kglt::Vec3 do_position() const = 0;
+
+    virtual void do_set_rotation(const kglt::Quaternion& rotation) = 0;
+    virtual kglt::Quaternion do_rotation() const = 0;
 
     virtual void do_set_mass_sphere(float total_mass, float radius) = 0;
     virtual void do_set_mass_box(float total_mass, float width, float height, float depth) = 0;
+
+    virtual void do_apply_linear_force_global(const kglt::Vec3& force) = 0;
+    virtual void do_apply_linear_force_local(const kglt::Vec3& force) = 0;
+
+    virtual void do_apply_angular_force_global(const kglt::Vec3& force) = 0;
+    virtual void do_apply_angular_force_local(const kglt::Vec3& force) = 0;
+
+    virtual void do_set_angular_damping(const float amount) = 0;
+
+    virtual void do_set_angular_velocity(const kglt::Vec3& velocity) = 0;
+    virtual kglt::Vec3 do_angular_velocity() const = 0;
+
+    virtual void do_set_linear_velocity(const kglt::Vec3& velocity) = 0;
+    virtual kglt::Vec3 do_linear_velocity() const = 0;
+
+    virtual ConstraintID do_create_fixed_constraint(ResponsiveBody& other) = 0;
+    virtual ConstraintID do_create_pivot_constraint(ResponsiveBody& other, const kglt::Vec3& pivot) {
+        throw NotImplementedError(__FILE__, __LINE__);
+    }
+
+    virtual void do_destroy_constraint(ConstraintID c) = 0;
+    virtual void do_enable_constraint(ConstraintID c) = 0;
+    virtual void do_disable_constraint(ConstraintID c) = 0;
+
 };
 
 }
