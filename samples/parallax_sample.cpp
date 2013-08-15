@@ -26,6 +26,9 @@ int main(int argc, char* argv[]) {
     background->add_layer("sample_data/parallax/middle_layer.png");
     background->add_layer("sample_data/parallax/front_layer.png");
 
+    //I don't like this, it would be nice if it was automatic
+    window->signal_shutdown().connect([&]() { background.reset(); });
+
     while(window->update()) {
         background->layer(0).scroll_x(0.1 * window->delta_time());
         background->layer(1).scroll_x(0.2 * window->delta_time());

@@ -73,10 +73,6 @@ void Object::make_collidable() {
     signal_made_collidable_();
 }
 
-void Object::attach_to_camera(CameraID cam) {
-    set_parent(stage_->scene().camera(cam));
-}
-
 void Object::lock_rotation() {
     rotation_locked_ = true;
 }

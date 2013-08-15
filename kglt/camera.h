@@ -4,6 +4,7 @@
 #include "kazmath/mat4.h"
 #include "generic/identifiable.h"
 #include "generic/managed.h"
+#include "generic/protected_ptr.h"
 
 #include "object.h"
 #include "frustum.h"
@@ -12,8 +13,32 @@
 
 namespace kglt {
 
-class Camera :
+class Camera;
+
+class CameraProxy:
     public Object,
+    public generic::Identifiable<CameraID>,
+    public Managed<CameraProxy>,
+    public Protectable {
+
+public:
+    CameraProxy(Stage* stage, CameraID camera_id);
+    ~CameraProxy();
+
+    void follow(ActorID actor, const kglt::Vec3& offset, float lag_in_seconds=0.0);
+    void destroy();
+private:
+    ActorID following_actor_;
+    Vec3 following_offset_;
+    float following_lag_ = 0.0;
+
+    void update_following(double dt);
+    void do_update(double dt);
+
+    Camera& camera();
+};
+
+class Camera:
     public generic::Identifiable<CameraID>,
     public Managed<Camera> {
 
@@ -21,7 +46,6 @@ public:
     Camera(Scene* scene, CameraID id);
 
     kmVec3 project_point(ViewportID vid, const kmVec3& point);
-    void follow(ActorID actor, const kglt::Vec3& offset, float lag_in_seconds=0.0);
 
     const kmMat4& view_matrix() { return view_matrix_; }
     const kmMat4& projection_matrix() const { return projection_matrix_; }
@@ -32,29 +56,27 @@ public:
     void set_orthographic_projection(double left, double right, double bottom, double top, double near=-1.0, double far=1.0);
     double set_orthographic_projection_from_height(double desired_height_in_units, double ratio);
 
-    void destroy();
-private:
-    void update_following(double t);
+    void set_transform(const kglt::Mat4& transform);
 
+    bool has_proxy() const { return bool(proxy_); }
+    void set_proxy(CameraProxy* proxy) { proxy_ = proxy; }
+
+    CameraProxy& proxy() {
+        assert(proxy_);
+        return *proxy_;
+    }
+
+private:
     Scene* scene_;
+    CameraProxy* proxy_;
 
     Frustum frustum_;
 
+    kglt::Mat4 transform_;
     kmMat4 view_matrix_;
     kmMat4 projection_matrix_;
 
-    ActorRef following_actor_;
-    Vec3 following_offset_;
-    float following_lag_ = 0.0;
-
-    void update_frustum();
-    void transformation_changed() override { update_frustum(); }
-
-    void do_update(double dt);
-
-    bool can_set_parent(Object* parent) override {
-        return false;
-    }
+    void update_frustum(const Mat4 &transform);
 };
 
 }

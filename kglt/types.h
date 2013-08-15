@@ -335,6 +335,8 @@ class Stage;
 typedef std::shared_ptr<Stage> StagePtr;
 
 class Camera;
+class CameraProxy;
+
 typedef std::shared_ptr<Camera> CameraPtr;
 typedef std::weak_ptr<Camera> CameraRef;
 

@@ -22,11 +22,15 @@ Scene::Scene(WindowBase* window):
     default_material_(0),
     render_sequence_(new RenderSequence(*this)) {
 
-    CameraManager::signal_post_create().connect(sigc::mem_fun(this, &Scene::post_create_callback<Camera, CameraID>));
 }
 
 Scene::~Scene() {
-    //TODO: Log the unfreed resources (textures, meshes, materials etc.)
+    //TODO: Log the unfreed resources (textures, meshes, materials etc.)    
+
+    //Clear the stages first, they may hold references to cameras, materials
+    //etc.
+    StageManager::__objects().clear();
+    CameraManager::__objects().clear();
 }
 
 MaterialID Scene::clone_default_material() {
@@ -41,9 +45,15 @@ TextureID Scene::default_texture_id() const {
     return default_texture_->id();
 }
 
+CameraID Scene::default_camera_id() const {
+    return default_camera_;
+}
+
 void Scene::initialize_defaults() {
     default_camera_ = new_camera(); //Create a default camera
     default_stage_ = new_stage(kglt::PARTITIONER_NULL);
+
+    stage(default_stage_).host_camera(default_camera_);
 
     default_ui_stage_ = new_ui_stage();
     default_ui_camera_ = new_camera();
@@ -159,7 +169,9 @@ CameraRef Scene::camera_ref(CameraID c) {
 }
 
 CameraID Scene::new_camera() {
-    return CameraManager::manager_new();
+    CameraID new_camera = CameraManager::manager_new();
+
+    return new_camera;
 }
 
 Camera& Scene::camera(CameraID c) {
@@ -171,8 +183,11 @@ Camera& Scene::camera(CameraID c) {
 }
 
 void Scene::delete_camera(CameraID cid) {
-    Camera& obj = camera(cid);
-    obj.destroy_children();
+    //Remove any associated proxy
+    if(camera(cid).has_proxy()) {
+        camera(cid).proxy().stage().evict_camera(cid);
+    }
+
     CameraManager::manager_delete(cid);
 }
 
@@ -189,7 +204,6 @@ void Scene::update(double dt) {
 
     //Update the stages
     StageManager::apply_func_to_objects(std::bind(&Object::update, std::placeholders::_1, dt));
-    CameraManager::apply_func_to_objects(std::bind(&Object::update, std::placeholders::_1, dt));
 }
 
 void Scene::render() {

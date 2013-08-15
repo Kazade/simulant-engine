@@ -32,7 +32,7 @@ SkyBox::SkyBox(kglt::Stage& stage, kglt::TextureID texture, float size, CameraID
         actor->mesh()->reverse_winding();
 
         actor->set_render_priority(RENDER_PRIORITY_BACKGROUND);
-        actor->attach_to_camera(cam);
+        actor->set_parent(CameraID());
 
         //Skyboxes shouldn't rotate based on their parent (e.g. the camera)
         actor->set_absolute_rotation(Degrees(0), 0, 1, 0);

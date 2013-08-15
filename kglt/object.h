@@ -154,8 +154,6 @@ public:
 
     void destroy_children();
 
-    void attach_to_camera(CameraID cam);
-
     //Physics stuff
     void make_responsive();
     void make_collidable();

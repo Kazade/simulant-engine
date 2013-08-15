@@ -4,6 +4,7 @@
 #include "partitioner.h"
 #include "actor.h"
 #include "light.h"
+#include "camera.h"
 
 #include "procedural/geom_factory.h"
 
@@ -131,6 +132,37 @@ void Stage::delete_light(LightID light_id) {
     signal_light_destroyed_(light_id);
     light(light_id)->destroy_children();
     LightManager::manager_delete(light_id);
+}
+
+void Stage::host_camera(CameraID c) {
+    if(!c) {
+        c = scene().default_camera_id();
+    }
+
+    if(scene().camera(c).has_proxy()) {
+        //Destroy any existing proxy
+        scene().camera(c).proxy().stage().evict_camera(c);
+    }
+
+    //Create a camera proxy for the camera ID
+    CameraProxyManager::manager_new(c);
+}
+
+void Stage::evict_camera(CameraID c) {
+    if(!c) {
+        c = scene().default_camera_id();
+    }
+
+    //Delete the camera proxy
+    CameraProxyManager::manager_delete(c);
+}
+
+ProtectedPtr<CameraProxy> Stage::camera(CameraID c) {
+    if(!c) {
+        c = scene().default_camera_id();
+    }
+
+    return ProtectedPtr<CameraProxy>(CameraProxyManager::manager_get(c));
 }
 
 void Stage::set_partitioner(Partitioner::ptr partitioner) {

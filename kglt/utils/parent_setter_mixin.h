@@ -22,7 +22,7 @@ public:
     }
 
     void set_parent(CameraID camera) {
-        T::set_parent(T::stage().camera(camera));
+        T::set_parent(*T::stage().camera(camera).__object);
     }
 
 private:

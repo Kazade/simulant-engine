@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
     stage.actor(actor_id)->mesh()->set_texture_on_material(0, texture);
 
     // Test Camera::look_at function
-    window->scene().camera().look_at(stage.actor(actor_id)->absolute_position());
+    stage.camera()->look_at(stage.actor(actor_id)->absolute_position());
 
     {
         auto light = stage.light(stage.new_light());
@@ -47,13 +47,13 @@ int main(int argc, char* argv[]) {
     float xpos = 0;
     window->keyboard().key_while_down_connect(kglt::KEY_CODE_a, [&](kglt::KeyEvent key, double dt) mutable {
             xpos -= 20.0 * dt;
-            scene.camera().set_absolute_position(xpos, 2, 0);
-            scene.camera().look_at(stage.actor(actor_id)->absolute_position());
+            stage.camera()->set_absolute_position(xpos, 2, 0);
+            stage.camera()->look_at(stage.actor(actor_id)->absolute_position());
     });
     window->keyboard().key_while_down_connect(kglt::KEY_CODE_d, [&](kglt::KeyEvent key, double dt) mutable {
             xpos += 20.0 * dt;
-            scene.camera().set_absolute_position(xpos, 2, 0);
-            scene.camera().look_at(stage.actor(actor_id)->absolute_position());
+            stage.camera()->set_absolute_position(xpos, 2, 0);
+            stage.camera()->look_at(stage.actor(actor_id)->absolute_position());
     });
 
     while(window->update()) {

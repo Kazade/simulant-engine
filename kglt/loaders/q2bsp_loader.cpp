@@ -249,7 +249,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     parse_actors(actor_string, actors);
     kmVec3 cam_pos = find_player_spawn_point(actors);
     kmVec3Transform(&cam_pos, &cam_pos, &rotation);
-    scene->camera().set_absolute_position(cam_pos);
+    scene->stage().camera()->set_absolute_position(cam_pos);
 
     add_lights_to_scene(*scene, actors);
 

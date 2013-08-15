@@ -7,65 +7,44 @@
 
 namespace kglt {
 
-Camera::Camera(Scene *scene, CameraID id):
-    Object(nullptr),
-    generic::Identifiable<CameraID>(id),
-    scene_(scene) {
+CameraProxy::CameraProxy(Stage *stage, CameraID camera_id):
+    Object(stage),
+    generic::Identifiable<CameraID>(camera_id) {
 
-    kmMat4Identity(&projection_matrix_); //Initialize the projection matrix
-    kmMat4Identity(&view_matrix_);
+    assert(stage);
 
-    set_perspective_projection(45.0, 16.0 / 9.0);
+    //Set the camera's proxy to this
+    stage->scene().camera(camera_id).set_proxy(this);
 }
 
-void Camera::update_frustum() {
-    //Recalculate the view matrix
-    kmMat4 transform = this->absolute_transformation();
-    kmMat4Inverse(&view_matrix_, &transform);
-
-    kmMat4 mvp;
-    kmMat4Multiply(&mvp, &projection_matrix(), &view_matrix());
-
-    frustum_.build(&mvp); //Update the frustum for this camera
-}
-
-void Camera::set_perspective_projection(double fov, double aspect, double near, double far) {
-    kmMat4PerspectiveProjection(&projection_matrix_, fov, aspect, near, far);
-    update_frustum();
-}
-
-void Camera::set_orthographic_projection(double left, double right, double bottom, double top, double near, double far) {
-    kmMat4OrthographicProjection(&projection_matrix_, left, right, bottom, top, near, far);
-    update_frustum();
-}
-
-double Camera::set_orthographic_projection_from_height(double desired_height_in_units, double ratio) {
-    double width = desired_height_in_units * ratio;
-    set_orthographic_projection(-width / 2.0, width / 2.0, -desired_height_in_units / 2.0, desired_height_in_units / 2.0, -10.0, 10.0);
-    return width;
-}
-
-void Camera::destroy() {
-    if(!scene_) {
-        throw LogicError("Passes a nullptr for the camera's scene");
+CameraProxy::~CameraProxy() {
+    //Set the camera's proxy to null
+    if(&stage().scene().camera(id()).proxy() == this) {
+        stage().scene().camera(id()).set_proxy(nullptr);
     }
-
-    scene_->delete_camera(id());
 }
 
-void Camera::follow(ActorID actor, const kglt::Vec3& offset, float lag_in_seconds) {
-    following_actor_ = stage().actor(actor).__object;
+void CameraProxy::destroy() {
+    destroy_children();
+    stage().evict_camera(id());
+}
+
+Camera& CameraProxy::camera() {
+    return stage().scene().camera(id());
+}
+
+void CameraProxy::follow(ActorID actor, const kglt::Vec3& offset, float lag_in_seconds) {
+    following_actor_ = actor;
     following_offset_ = offset;
     following_lag_ = lag_in_seconds;
 
     update_following(1.0);
 }
 
-void Camera::update_following(double dt) {
-    ActorPtr following_actor = following_actor_.lock();
-    if(following_actor) {
-        Quaternion actor_rotation = following_actor->absolute_rotation();
-        Vec3 actor_position = following_actor->absolute_position();
+void CameraProxy::update_following(double dt) {
+    if(following_actor_ && stage().has_actor(following_actor_)) {
+        Quaternion actor_rotation = stage().actor(following_actor_)->absolute_rotation();
+        Vec3 actor_position = stage().actor(following_actor_)->absolute_position();
 
         Vec3 actor_forward;
         kmQuaternionGetForwardVec3RH(&actor_forward, &actor_rotation);
@@ -84,12 +63,58 @@ void Camera::update_following(double dt) {
         update_from_parent();
     } else {
         //The actor was destroyed, so reset
-        following_actor_ = ActorRef();
+        following_actor_ = ActorID();
     }
 }
 
-void Camera::do_update(double dt) {
+void CameraProxy::do_update(double dt) {
     update_following(dt);
+
+    //Update the associated camera
+    camera().set_transform(absolute_transformation());
+}
+
+
+Camera::Camera(Scene *scene, CameraID id):
+    generic::Identifiable<CameraID>(id),
+    scene_(scene),
+    proxy_(nullptr) {
+
+    kmMat4Identity(&projection_matrix_); //Initialize the projection matrix
+    kmMat4Identity(&view_matrix_);
+
+    set_perspective_projection(45.0, 16.0 / 9.0);
+}
+
+void Camera::set_transform(const kglt::Mat4& transform) {
+    transform_ = transform;
+    update_frustum(transform_);
+}
+
+void Camera::update_frustum(const kglt::Mat4& transform) {
+    //Recalculate the view matrix
+    kmMat4Inverse(&view_matrix_, &transform);
+
+    kmMat4 mvp;
+    kmMat4Multiply(&mvp, &projection_matrix(), &view_matrix());
+
+    frustum_.build(&mvp); //Update the frustum for this camera
+}
+
+void Camera::set_perspective_projection(double fov, double aspect, double near, double far) {
+    kmMat4PerspectiveProjection(&projection_matrix_, fov, aspect, near, far);
+    update_frustum(transform_);
+}
+
+void Camera::set_orthographic_projection(double left, double right, double bottom, double top, double near, double far) {
+    kmMat4OrthographicProjection(&projection_matrix_, left, right, bottom, top, near, far);
+    update_frustum(transform_);
+}
+
+double Camera::set_orthographic_projection_from_height(double desired_height_in_units, double ratio) {
+    double width = desired_height_in_units * ratio;
+    set_orthographic_projection(-width / 2.0, width / 2.0, -desired_height_in_units / 2.0, desired_height_in_units / 2.0, -10.0, 10.0);
+    return width;
 }
 
 kmVec3 Camera::project_point(ViewportID vid, const kmVec3& point) {

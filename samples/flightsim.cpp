@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
     window->scene().data().stash(kglt::extra::StarField::create(stage), "skybox");
 
     //Set the camera to follow the model
-    window->scene().camera().follow(actor_id, kglt::Vec3(0, 5, 50));
+    stage.camera()->follow(actor_id, kglt::Vec3(0, 5, 50));
 
 
     //Connect keyboard signals

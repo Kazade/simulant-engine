@@ -31,11 +31,16 @@ public:
         assert_equal(window->height() / 2, p1.y);
     }
 
-    void test_look_at() {
+    void test_look_at() {       
         Vec3 pos(0, 0, -1);
 
-        window->scene().camera().look_at(pos);
-        kglt::Quaternion q = window->scene().camera().absolute_rotation();
+
+        kglt::Stage& stage = window->scene().stage();
+
+        stage.host_camera();
+        stage.camera()->look_at(pos);
+
+        kglt::Quaternion q = stage.camera()->absolute_rotation();
         assert_true(kmQuaternionIsIdentity(&q));
 
         //Just double check that kazmath actually works
@@ -48,9 +53,9 @@ public:
         assert_true(kmQuaternionAreEqual(&q, &other));
 
         pos = Vec3(0, -1, 0);
-        window->scene().camera().look_at(pos);
+        stage.camera()->look_at(pos);
 
-        assert_equal(Vec3(0, 0, -1), window->scene().camera().up());
+        assert_equal(Vec3(0, 0, -1), stage.camera()->up());
 
     }
 };

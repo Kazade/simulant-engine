@@ -129,7 +129,7 @@ Background::Background(Scene& scene, ViewportID viewport, BGResizeStyle style):
     );
 
     stage().actor(actor_)->set_mesh(stage().actor(actor_)->mesh_id()); //FIXME: This is a workaround
-    stage().actor(actor_)->override_material_id(material_);
+    stage().actor(actor_)->override_material_id(material_);        
 }
 
 MaterialID Background::material_id() const {
@@ -137,6 +137,9 @@ MaterialID Background::material_id() const {
 }
 
 Background::~Background() {
+
+    layers_.clear();
+
     try {
         if(actor_) {
             stage_.delete_actor(actor_);

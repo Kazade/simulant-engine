@@ -17,6 +17,7 @@ class Scene;
 
 typedef generic::TemplatedManager<Stage, Actor, ActorID> ActorManager;
 typedef generic::TemplatedManager<Stage, Light, LightID> LightManager;
+typedef generic::TemplatedManager<Stage, CameraProxy, CameraID> CameraProxyManager;
 
 class Stage:
     public Managed<Stage>,
@@ -25,6 +26,7 @@ class Stage:
     public Object,
     public ActorManager,
     public LightManager,
+    public CameraProxyManager,
     public Loadable {
 
 public:
@@ -50,6 +52,10 @@ public:
     ProtectedPtr<Light> light(LightID light);
     void delete_light(LightID light_id);
     uint32_t light_count() const { return LightManager::manager_count(); }
+
+    void host_camera(CameraID c=CameraID()); ///< Create a representation (CameraProxy) of the designated camera
+    void evict_camera(CameraID c=CameraID()); ///< Remove the representation of the camera
+    ProtectedPtr<CameraProxy> camera(CameraID c=CameraID());
 
     kglt::Colour ambient_light() const { return ambient_light_; }
     void set_ambient_light(const kglt::Colour& c) { ambient_light_ = c; }
@@ -160,6 +166,9 @@ private:
     std::shared_ptr<GeomFactory> geom_factory_;
 
     friend class Scene;
+
+    CameraID new_camera_proxy(CameraID cam);
+    void delete_camera_proxy(CameraID cam);
 };
 
 

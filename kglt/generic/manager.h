@@ -14,11 +14,12 @@ protected:
     mutable std::recursive_mutex manager_lock_;
 
 public:
-    ObjectIDType manager_new() {
-        ObjectIDType id(0);
+    ObjectIDType manager_new(ObjectIDType id=ObjectIDType()) {
         {
             std::lock_guard<std::recursive_mutex> lock(manager_lock_);
-            id = NewIDGenerator()();
+            if(!id) {
+                id = NewIDGenerator()();
+            }
             objects_.insert(std::make_pair(id, typename ObjectType::ptr(new ObjectType((Derived*)this, id))));
         }
 
@@ -80,7 +81,7 @@ public:
     }
 
     //Internal!
-    std::unordered_map<ObjectIDType, std::shared_ptr<ObjectType> > __objects() {
+    std::unordered_map<ObjectIDType, std::shared_ptr<ObjectType> >& __objects() {
         return objects_;
     }
 private:
