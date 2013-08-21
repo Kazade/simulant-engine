@@ -69,9 +69,6 @@ void CameraProxy::update_following(double dt) {
 
 void CameraProxy::do_update(double dt) {
     update_following(dt);
-
-    //Update the associated camera
-    camera().set_transform(absolute_transformation());
 }
 
 
@@ -80,6 +77,7 @@ Camera::Camera(Scene *scene, CameraID id):
     scene_(scene),
     proxy_(nullptr) {
 
+    kmMat4Identity(&transform_);
     kmMat4Identity(&projection_matrix_); //Initialize the projection matrix
     kmMat4Identity(&view_matrix_);
 
@@ -88,12 +86,12 @@ Camera::Camera(Scene *scene, CameraID id):
 
 void Camera::set_transform(const kglt::Mat4& transform) {
     transform_ = transform;
-    update_frustum(transform_);
+    update_frustum();
 }
 
-void Camera::update_frustum(const kglt::Mat4& transform) {
+void Camera::update_frustum() {
     //Recalculate the view matrix
-    kmMat4Inverse(&view_matrix_, &transform);
+    kmMat4Inverse(&view_matrix_, &transform_);
 
     kmMat4 mvp;
     kmMat4Multiply(&mvp, &projection_matrix(), &view_matrix());
@@ -103,12 +101,12 @@ void Camera::update_frustum(const kglt::Mat4& transform) {
 
 void Camera::set_perspective_projection(double fov, double aspect, double near, double far) {
     kmMat4PerspectiveProjection(&projection_matrix_, fov, aspect, near, far);
-    update_frustum(transform_);
+    update_frustum();
 }
 
 void Camera::set_orthographic_projection(double left, double right, double bottom, double top, double near, double far) {
     kmMat4OrthographicProjection(&projection_matrix_, left, right, bottom, top, near, far);
-    update_frustum(transform_);
+    update_frustum();
 }
 
 double Camera::set_orthographic_projection_from_height(double desired_height_in_units, double ratio) {

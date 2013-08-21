@@ -146,6 +146,8 @@ void Stage::host_camera(CameraID c) {
 
     //Create a camera proxy for the camera ID
     CameraProxyManager::manager_new(c);
+
+    camera(c)->set_parent(this);
 }
 
 void Stage::evict_camera(CameraID c) {

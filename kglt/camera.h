@@ -66,6 +66,7 @@ public:
         return *proxy_;
     }
 
+    const Mat4& transform() const { return transform_; }
 private:
     Scene* scene_;
     CameraProxy* proxy_;
@@ -76,7 +77,7 @@ private:
     kmMat4 view_matrix_;
     kmMat4 projection_matrix_;
 
-    void update_frustum(const Mat4 &transform);
+    void update_frustum();
 };
 
 }

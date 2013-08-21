@@ -13,8 +13,8 @@ int main(int argc, char* argv[]) {
 
     std::string filename = argv[1];
 
-    if(!str::contains(str::lower(filename), ".opt")) {
-        std::cout << "Please specify a file with a .opt extension" << std::endl;
+    if(!str::contains(str::lower(filename), ".opt") && !(str::contains(str::lower(filename), ".obj"))) {
+        std::cout << "Please specify a file with a .opt or .obj extension" << std::endl;
         return 2;
     }
 

@@ -125,6 +125,12 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
     }
 
     Camera& camera = scene_.camera(pipeline_stage->camera_id());
+
+    if(camera.has_proxy()) {
+        //Update the associated camera
+        camera.set_transform(camera.proxy().absolute_transformation());
+    }
+
     Viewport& viewport = scene_.window().viewport(pipeline_stage->viewport_id());
     viewport.apply(); //FIXME apply shouldn't exist
 
