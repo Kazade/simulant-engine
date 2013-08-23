@@ -61,9 +61,10 @@ struct Quaternion : public kmQuaternion {
         return !(*this == rhs);
     }
 
-    const Quaternion& slerp(const Quaternion& rhs, float t) {
-        kmQuaternionSlerp(this, this, &rhs, t);
-        return *this;
+    Quaternion slerp(const Quaternion& rhs, float t) {
+        Quaternion result;
+        kmQuaternionSlerp(&result, this, &rhs, t);
+        return result;
     }
 };
 
@@ -167,9 +168,10 @@ struct Vec3 : public kmVec3 {
         return *this;
     }
 
-    const Vec3& rotate(const Quaternion& q) {
-        kmQuaternionMultiplyVec3(this, &q, this);
-        return *this;
+    Vec3 rotated_by(const Quaternion& q) {
+        Vec3 result;
+        kmQuaternionMultiplyVec3(&result, &q, this);
+        return result;
     }
 
     float dot(const kglt::Vec3& rhs) const {

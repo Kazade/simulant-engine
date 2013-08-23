@@ -58,6 +58,25 @@ public:
         assert_equal(Vec3(0, 0, -1), stage.camera()->up());
 
     }
+
+    void test_following() {
+        kglt::Stage& stage = window->scene().stage();
+        stage.host_camera();
+
+        ActorID a = stage.new_actor();
+        stage.actor(a)->set_absolute_position(kglt::Vec3());
+
+        stage.camera()->follow(a, kglt::Vec3(0, 0, 10));
+
+        assert_equal(Vec3(0, 0, 10), stage.camera()->absolute_position());
+
+        stage.actor(a)->set_absolute_rotation(Degrees(90), 0, -1, 0);
+        stage.camera()->_update_following(1.0);
+
+        //FIXME: THis should be closer I think, I'm not sure what's wrong
+        assert_equal(Vec3(-10, 0, 0), stage.camera()->absolute_position());
+        assert_equal(stage.actor(a)->absolute_rotation(), stage.camera()->absolute_rotation());
+    }
 };
 
 #endif

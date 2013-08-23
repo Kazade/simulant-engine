@@ -38,10 +38,10 @@ void CameraProxy::follow(ActorID actor, const kglt::Vec3& offset, float lag_in_s
     following_offset_ = offset;
     following_lag_ = lag_in_seconds;
 
-    update_following(1.0);
+    _update_following(1.0);
 }
 
-void CameraProxy::update_following(double dt) {
+void CameraProxy::_update_following(double dt) {
     if(following_actor_ && stage().has_actor(following_actor_)) {
         Quaternion actor_rotation = stage().actor(following_actor_)->absolute_rotation();
         Vec3 actor_position = stage().actor(following_actor_)->absolute_position();
@@ -57,8 +57,11 @@ void CameraProxy::update_following(double dt) {
             initial_rotation.slerp(actor_rotation, t)
         );
 
-        Vec3 rotated_offset = following_offset_.rotate(absolute_rotation());
-        set_absolute_position(rotated_offset + actor_position);
+        Vec3 rotated_offset = following_offset_.rotated_by(absolute_rotation());
+
+        Vec3 new_absolute = rotated_offset + actor_position;
+        set_absolute_position(new_absolute);
+        assert(new_absolute == absolute_position());
 
         update_from_parent();
     } else {
@@ -68,7 +71,7 @@ void CameraProxy::update_following(double dt) {
 }
 
 void CameraProxy::do_update(double dt) {
-    update_following(dt);
+    _update_following(dt);
 }
 
 
