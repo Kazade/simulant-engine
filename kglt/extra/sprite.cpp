@@ -25,26 +25,32 @@ bool Sprite::init() {
         actor()->mesh(), 1.0, 1.0
     );
 
-    //FIXME: Entities should be connected to mesh->signal_changed() and update automatically
-    actor()->set_mesh(actor()->mesh_id()); //Rebuild the actor
-
     //Load the image
-    auto tex = stage()->texture(stage()->new_texture_from_file(image_path_));
-    image_width_ = tex->width();
-    image_height_ = tex->height();
+    kglt::TextureID tex_id = stage()->new_texture_from_file(image_path_);
+    {
+        auto tex = stage()->texture(tex_id);
 
-    //Hold a reference to the new material
-    auto mat = stage()->material(stage()->scene().clone_default_material());
-    material_id_ = mat->id();
+        image_width_ = tex->width();
+        image_height_ = tex->height();
 
-    //Set the texture on the material
-    mat->technique().pass(0).set_texture_unit(0, tex->id());
-    mat->technique().pass(0).set_blending(BLEND_ALPHA);
+        //Hold a reference to the new material
+        material_id_ = create_material_from_texture(stage()->scene(), tex_id);
+    }
 
-    //Finally set the material on the mesh
-    actor()->mesh()->set_material_id(material_id_);
+
+    {
+        auto mat = stage()->material(material_id_);
+        //Set the texture on the material
+        mat->technique().pass(0).set_blending(BLEND_ALPHA);
+
+        //Finally set the material on the mesh
+        actor()->mesh()->set_material_id(material_id_);
+    }
 
     update_texture_coordinates();
+
+    //FIXME: Entities should be connected to mesh->signal_changed() and update automatically
+    actor()->set_mesh(actor()->mesh_id()); //Rebuild the actor
 
     stage()->window().signal_step().connect(std::bind(&Sprite::update, this, std::placeholders::_1));
     return true;
@@ -104,7 +110,23 @@ void Sprite::set_active_animation(const std::string &anim_name) {
 }
 
 void Sprite::set_render_dimensions(float width, float height) {
-    kglt::procedural::mesh::rectangle(actor()->mesh(), width, height);
+    {
+        auto mesh = actor()->mesh();
+
+        mesh->shared_data().move_to_start();
+        mesh->shared_data().position((-width / 2.0), (-height / 2.0), 0);
+
+        mesh->shared_data().move_next();
+        mesh->shared_data().position((width / 2.0), (-height / 2.0), 0);
+
+        mesh->shared_data().move_next();
+        mesh->shared_data().position((width / 2.0),  (height / 2.0), 0);
+
+        mesh->shared_data().move_next();
+        mesh->shared_data().position((-width / 2.0),  (height / 2.0), 0);
+
+        mesh->shared_data().done();
+    }
 
     //FIXME: This shouldn't be necessary! Changing a mesh should signal
     //the actor to rebuild
