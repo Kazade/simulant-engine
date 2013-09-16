@@ -49,9 +49,6 @@ bool Sprite::init() {
 
     update_texture_coordinates();
 
-    //FIXME: Entities should be connected to mesh->signal_changed() and update automatically
-    actor()->set_mesh(actor()->mesh_id()); //Rebuild the actor
-
     stage()->window().signal_step().connect(std::bind(&Sprite::update, this, std::placeholders::_1));
     return true;
 }
@@ -127,10 +124,6 @@ void Sprite::set_render_dimensions(float width, float height) {
 
         mesh->shared_data().done();
     }
-
-    //FIXME: This shouldn't be necessary! Changing a mesh should signal
-    //the actor to rebuild
-    actor()->set_mesh(actor()->mesh_id()); //Rebuild the actor
 
     set_active_animation(current_animation_); //Re-set the current animation
 }

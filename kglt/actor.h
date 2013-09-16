@@ -72,6 +72,9 @@ private:
 
     std::shared_ptr<ResponsiveBody> body_;
 
+    void rebuild_subactors();
+    sigc::connection submeshes_changed_connection_;
+
     friend class SubActor;
 };
 

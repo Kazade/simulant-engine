@@ -118,12 +118,17 @@ public:
     void set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass=0); ///< Replace the texture unit on all submesh materials
 
     Scene& scene();
+
+    sigc::signal<void>& signal_submeshes_changed() { return signal_submeshes_changed_; }
+
 private:
     VertexData shared_data_;
     std::vector<SubMesh::ptr> submeshes_;
     std::unordered_map<SubMeshIndex, SubMesh::ptr> submeshes_by_index_;
 
     SubMeshIndex normal_debug_mesh_;
+
+    sigc::signal<void> signal_submeshes_changed_;
 };
 
 }
