@@ -10,10 +10,6 @@ Interpreter::Interpreter():
     luaL_openlibs(state_);
     luabind::open(state_);
     luabind::bind_class_info(state_);
-    luaopen_base(state_);
-    luaopen_io(state_);
-    luaopen_table(state_);
-    luaopen_math(state_);
 
     std::string dir_command = R"x(
         function dir(obj)
