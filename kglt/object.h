@@ -107,19 +107,22 @@ public:
 
     Vec3 right() const {
         Vec3 result;
-        kmQuaternionGetRightVec3(&result, &absolute_rotation_);
+        Quaternion rot = absolute_rotation();
+        kmQuaternionGetRightVec3(&result, &rot);
         return result;
     }
 
     Vec3 up() const {
         Vec3 result;
-        kmQuaternionGetUpVec3(&result, &absolute_rotation_);
+        Quaternion rot = absolute_rotation();
+        kmQuaternionGetUpVec3(&result, &rot);
         return result;
     }
 
     Vec3 forward() const {
         Vec3 result;
-        kmQuaternionGetForwardVec3RH(&result, &absolute_rotation_);
+        Quaternion rot = absolute_rotation();
+        kmQuaternionGetForwardVec3RH(&result, &rot);
         return result;
     }
 
