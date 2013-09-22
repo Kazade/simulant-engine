@@ -1,6 +1,5 @@
 #include <GLee.h>
 
-#include <SDL/SDL.h>
 #include "kazbase/unicode.h"
 #include "input_controller.h"
 #include "window.h"
@@ -12,11 +11,13 @@ Window::Window() {
 }
 
 Window::~Window() {
-	SDL_Quit();
+    SDL_GL_DeleteContext(context_);
 }
 
 void Window::set_title(const std::string& title) {
-    SDL_WM_SetCaption(title.c_str(), NULL);
+    if(screen_) {
+        SDL_SetWindowTitle(screen_, title.c_str());
+    }
 }
 
 void Window::show_cursor(bool value) {
@@ -33,11 +34,7 @@ void Window::check_events() {
     while(SDL_PollEvent(&event)) {
         input_controller().handle_event(event);
 
-        switch(event.type) {
-            case SDL_ACTIVEEVENT:
-                break;
-            case SDL_VIDEORESIZE:
-                break;
+        switch(event.type) {            
             case SDL_QUIT:
                 stop_running();
                 break;
@@ -51,22 +48,29 @@ bool Window::create_window(int width, int height, int bpp, bool fullscreen) {
 //    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 //    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
-    if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
+    if(SDL_Init(SDL_INIT_EVERYTHING) != 0) {
         return false;
     }
 
 
-    int32_t flags = SDL_OPENGL;
+    int32_t flags = SDL_WINDOW_OPENGL;
     if(fullscreen) {
-        flags |= SDL_FULLSCREEN;
+        flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
     }
 
-    surface_ = SDL_SetVideoMode(width, height, bpp, flags);
+    screen_ = SDL_CreateWindow(
+        "",
+        SDL_WINDOWPOS_UNDEFINED,
+        SDL_WINDOWPOS_UNDEFINED,
+        width, height,
+        flags
+    );
+    assert(screen_);
+
+    context_ = SDL_GL_CreateContext(screen_);
 
     //Reset the width and height to whatever was actually created
-
-    width = surface_->w;
-    height = surface_->h;
+    SDL_GetWindowSize(screen_, &width, &height);
 
     set_width(width);
     set_height(height);
@@ -79,25 +83,24 @@ bool Window::create_window(int width, int height, int bpp, bool fullscreen) {
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-    SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 0);
-
-    SDL_EnableUNICODE(1); //Enable unicode conversion of key inputs
 
     SDL_ShowCursor(0);
 
-    assert(surface_);
     assert(GLEE_VERSION_2_1);
 
     L_DEBUG(unicode("{0} joysicks found").format(SDL_NumJoysticks()).encode());
     for(uint16_t i = 0; i < SDL_NumJoysticks(); i++) {
-        L_DEBUG(SDL_JoystickName(i));
+        if(SDL_IsGameController(i)) {
+            SDL_GameController* controller = SDL_GameControllerOpen(i);
+            L_DEBUG(SDL_GameControllerName(controller));
+        }
     }
 
     return true;
 }
 
 void Window::swap_buffers() {
-    SDL_GL_SwapBuffers();
+    SDL_GL_SwapWindow(screen_);
 }
 
 }

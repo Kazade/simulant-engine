@@ -341,7 +341,7 @@ InputController::~InputController() {
 void InputController::handle_event(SDL_Event &event) {
     switch(event.type) {
         case SDL_KEYDOWN:
-            keyboard()._handle_keydown_event((KeyCode)event.key.keysym.sym, event.key.keysym.unicode);
+            keyboard()._handle_keydown_event((KeyCode)event.key.keysym.sym, event.key.keysym.scancode);
         break;
         case SDL_KEYUP:
             keyboard()._handle_keyup_event((KeyCode)event.key.keysym.sym);

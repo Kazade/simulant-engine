@@ -5,7 +5,7 @@
 #include <vector>
 #include <map>
 #include <functional>
-#include <SDL/SDL.h>
+#include <SDL.h>
 
 #include "generic/managed.h"
 #include "generic/identifiable.h"

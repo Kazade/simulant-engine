@@ -1,11 +1,10 @@
-#ifndef WINDOW_H_INCLUDED
-#define WINDOW_H_INCLUDED
+#ifndef KGLT_WINDOW_H_INCLUDED
+#define KGLT_WINDOW_H_INCLUDED
+
+#include <SDL.h>
 
 #include "generic/managed.h"
 #include "window_base.h"
-
-struct SDL_keysym;
-struct SDL_Surface;
 
 namespace kglt {
 
@@ -28,7 +27,8 @@ public:
     sigc::signal<void, KeyCode>& signal_key_up() { return signal_key_released_; }
     
 private:
-    SDL_Surface* surface_;
+    SDL_Window* screen_;
+    SDL_GLContext context_;
 
     bool create_window(int width, int height, int bpp, bool fullscreen);
     void check_events();
