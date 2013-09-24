@@ -315,3 +315,4 @@ kglt/physics/physics_engine.cpp
 kglt/generic/protected_ptr.h
 kglt/utils/parent_setter_mixin.h
 kglt/physics/responsive_body.cpp
+tests/test_vector.h

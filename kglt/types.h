@@ -94,6 +94,22 @@ struct Vec2 : public kmVec2 {
     Vec2(float x, float y) {
         kmVec2Fill(this, x, y);
     }
+
+    Vec2 rotated_by(float degrees) const {
+        Vec2 result, zero;
+        kmVec2RotateBy(&result, this, degrees, &zero);
+        return result;
+    }
+
+    bool operator==(const Vec2& rhs) const {
+        return kmVec2AreEqual(this, &rhs);
+    }
+
+    bool operator!=(const Vec2& rhs) const {
+        return !(*this == rhs);
+    }
+
+    friend std::ostream& operator<<(std::ostream& stream, const Vec2& vec);
 };
 
 struct Vec3 : public kmVec3 {        
@@ -213,6 +229,7 @@ struct Vec3 : public kmVec3 {
 };
 
 
+std::ostream& operator<<(std::ostream& stream, const Vec2& vec);
 std::ostream& operator<<(std::ostream& stream, const Vec3& vec);
 std::ostream& operator<<(std::ostream& stream, const Quaternion& quat);
 
