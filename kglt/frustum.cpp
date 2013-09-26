@@ -119,7 +119,14 @@ std::vector<kmVec3> Frustum::far_corners() const {
 }
 
 bool Frustum::contains_point(const kmVec3& point) const {    
-    assert(0 && "Not implemented");
+    for(const kmPlane& plane: planes_) {
+        KM_POINT_CLASSIFICATION classify = kmPlaneClassifyPoint(&plane, &point);
+        if(classify == POINT_BEHIND_PLANE) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 }
