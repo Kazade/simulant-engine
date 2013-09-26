@@ -29,6 +29,9 @@ public:
     void destroy();
 
     void _update_following(double dt);
+
+    Frustum& frustum();
+    kmVec3 project_point(ViewportID vid, const kmVec3& point);
 private:
     ActorID following_actor_;
     Vec3 following_offset_;

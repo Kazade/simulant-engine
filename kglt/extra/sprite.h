@@ -60,6 +60,8 @@ public:
     void set_next_animation(const std::string& anim_name);
     void set_active_animation(const std::string& anim_name);
     void move_to(float x, float y, float z);
+    void move_to(const Vec3& v) { move_to(v.x, v.y, v.z); }
+
     void rotate_to(const Degrees& angle, float x, float y, float z);
 
     void set_render_dimensions(float width, float height);
