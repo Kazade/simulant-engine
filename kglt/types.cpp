@@ -3,6 +3,12 @@
 
 namespace kglt {
 
+kglt::Vec2 operator*(float lhs, const kglt::Vec2& rhs) {
+    kglt::Vec2 result;
+    kmVec2Scale(&result, &rhs, lhs);
+    return result;
+}
+
 kglt::Vec3 operator*(float lhs, const kglt::Vec3& rhs) {
     kglt::Vec3 result;
     kmVec3Scale(&result, &rhs, lhs);

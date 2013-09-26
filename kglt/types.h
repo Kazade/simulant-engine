@@ -109,6 +109,22 @@ struct Vec2 : public kmVec2 {
         return !(*this == rhs);
     }
 
+    Vec2 operator*(float rhs) const {
+        Vec2 result;
+        kmVec2Scale(&result, this, rhs);
+        return result;
+    }
+
+    Vec2& operator*=(float rhs) {
+        kmVec2Scale(this, this, rhs);
+        return *this;
+    }
+
+    Vec2& operator+=(const Vec2& rhs) {
+        kmVec2Add(this, this, &rhs);
+        return *this;
+    }
+
     friend std::ostream& operator<<(std::ostream& stream, const Vec2& vec);
 };
 
@@ -232,6 +248,8 @@ struct Vec3 : public kmVec3 {
 std::ostream& operator<<(std::ostream& stream, const Vec2& vec);
 std::ostream& operator<<(std::ostream& stream, const Vec3& vec);
 std::ostream& operator<<(std::ostream& stream, const Quaternion& quat);
+
+kglt::Vec2 operator*(float lhs, const kglt::Vec2& rhs);
 
 kglt::Vec3 operator*(float lhs, const kglt::Vec3& rhs);
 kglt::Vec3 operator/(float lhs, const kglt::Vec3& rhs);
