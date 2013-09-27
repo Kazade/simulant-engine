@@ -74,6 +74,13 @@ void CameraProxy::do_update(double dt) {
     _update_following(dt);
 }
 
+Frustum& CameraProxy::frustum() {
+    return camera().frustum();
+}
+
+kmVec3 CameraProxy::project_point(ViewportID vid, const kmVec3& point) {
+    return camera().project_point(vid, point);
+}
 
 Camera::Camera(Scene *scene, CameraID id):
     generic::Identifiable<CameraID>(id),
