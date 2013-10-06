@@ -83,7 +83,7 @@ SubMeshIndex Mesh::new_submesh(
     submeshes_.push_back(SubMesh::create(*this, material, arrangement, uses_shared_vertices));
     submeshes_by_index_[idx] = submeshes_[submeshes_.size()-1];
 
-    signal_submeshes_changed_();
+    signal_submeshes_changed_.emit();
 
     return idx;
 }
@@ -96,7 +96,7 @@ void Mesh::delete_submesh(SubMeshIndex index) {
     submeshes_.erase(std::remove(submeshes_.begin(), submeshes_.end(), submeshes_by_index_[index]), submeshes_.end());
     submeshes_by_index_.erase(index);
 
-    signal_submeshes_changed_();
+    signal_submeshes_changed_.emit();
 }
 
 void Mesh::set_material_id(MaterialID material) {
@@ -137,8 +137,8 @@ SubMesh::SubMesh(
         set_material_id(material);
     }
 
-    vrecalc_ = vertex_data().signal_update_complete().connect(sigc::mem_fun(this, &SubMesh::recalc_bounds));
-    irecalc_ = index_data().signal_update_complete().connect(sigc::mem_fun(this, &SubMesh::recalc_bounds));
+    vrecalc_ = vertex_data().signal_update_complete().connect(std::bind(&SubMesh::recalc_bounds, this));
+    irecalc_ = index_data().signal_update_complete().connect(std::bind(&SubMesh::recalc_bounds, this));
 }
 
 const MaterialID SubMesh::material_id() const {

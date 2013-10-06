@@ -3,7 +3,6 @@
 
 #include <memory>
 
-#include <sigc++/sigc++.h>
 #include <kaztimer/kaztimer.h>
 
 #include "keyboard.h"
@@ -67,8 +66,8 @@ public:
     
     void register_loader(LoaderTypePtr loader_type);
 
-    virtual sigc::signal<void, KeyCode>& signal_key_up() = 0;
-    virtual sigc::signal<void, KeyCode>& signal_key_down() = 0;
+    virtual sig::signal<void (KeyCode)>& signal_key_up() = 0;
+    virtual sig::signal<void (KeyCode)>& signal_key_down() = 0;
     
     virtual void set_title(const std::string& title) = 0;
     virtual void cursor_position(int32_t& mouse_x, int32_t& mouse_y) = 0;
@@ -103,11 +102,11 @@ public:
 
     void set_logging_level(LoggingLevel level);
 
-    sigc::signal<void>& signal_frame_started() { return signal_frame_started_; }
-    sigc::signal<void>& signal_frame_finished() { return signal_frame_finished_; }
-    sigc::signal<void>& signal_pre_swap() { return signal_pre_swap_; }
-    sigc::signal<void, double>& signal_step() { return signal_step_; }
-    sigc::signal<void>& signal_shutdown() { return signal_shutdown_; }
+    sig::signal<void ()>& signal_frame_started() { return signal_frame_started_; }
+    sig::signal<void ()>& signal_frame_finished() { return signal_frame_finished_; }
+    sig::signal<void ()>& signal_pre_swap() { return signal_pre_swap_; }
+    sig::signal<void (double)>& signal_step() { return signal_step_; }
+    sig::signal<void ()>& signal_shutdown() { return signal_shutdown_; }
 
     void stop_running() { is_running_ = false; }
 
@@ -168,17 +167,17 @@ private:
 
     double total_time_;
 
-    sigc::signal<void> signal_frame_started_;
-    sigc::signal<void> signal_pre_swap_;
-    sigc::signal<void> signal_frame_finished_;
-    sigc::signal<void, double> signal_step_;
-    sigc::signal<void> signal_shutdown_;
+    sig::signal<void ()> signal_frame_started_;
+    sig::signal<void ()> signal_pre_swap_;
+    sig::signal<void ()> signal_frame_finished_;
+    sig::signal<void (double)> signal_step_;
+    sig::signal<void ()> signal_shutdown_;
 
     std::shared_ptr<Console> console_;
     std::shared_ptr<Watcher> watcher_;
 
     std::shared_ptr<screens::Loading> loading_;
-    sigc::connection loading_update_connection_;
+    sig::connection loading_update_connection_;
 };
 
 }

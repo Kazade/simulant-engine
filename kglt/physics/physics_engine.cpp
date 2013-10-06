@@ -64,12 +64,12 @@ void PhysicsEngine::fire_collision_signals_for(Collidable& lhs, Collidable& rhs)
     for(auto key: combos) {
         auto it = collision_signals_.find(key);
         if(it != collision_signals_.end()) {
-            (*it).second(lhs, rhs);
+            (*it).second.emit(lhs, rhs);
         }
     }
 }
 
-PhysicsEngine::CombinedCollisionSignal PhysicsEngine::collision_signal_for(base::Tag obj_tag1, base::Tag obj_tag2) {
+PhysicsEngine::CombinedCollisionSignal& PhysicsEngine::collision_signal_for(base::Tag obj_tag1, base::Tag obj_tag2) {
     //Make sure the tags are in order
     if(obj_tag2 < obj_tag1) {
         std::swap(obj_tag1, obj_tag2);

@@ -17,8 +17,8 @@ Stage::Stage(Scene* parent, StageID id):
     ambient_light_(1.0, 1.0, 1.0, 1.0),
     geom_factory_(new GeomFactory(*this)) {
 
-    ActorManager::signal_post_create().connect(sigc::mem_fun(this, &Stage::post_create_callback<Actor, ActorID>));    
-    LightManager::signal_post_create().connect(sigc::mem_fun(this, &Stage::post_create_callback<Light, LightID>));
+    ActorManager::signal_post_create().connect(std::bind(&Stage::post_create_callback<Actor, ActorID>, this, std::placeholders::_1, std::placeholders::_2));
+    LightManager::signal_post_create().connect(std::bind(&Stage::post_create_callback<Light, LightID>, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void Stage::destroy() {
@@ -41,7 +41,7 @@ ActorID Stage::new_actor(bool make_responsive, bool make_collidable) {
     }
 
     //Tell everyone about the new actor
-    signal_actor_created_(result);
+    signal_actor_created_.emit(result);
     return result;
 }
 
@@ -66,7 +66,7 @@ ActorID Stage::new_actor(MeshID mid, bool make_responsive, bool make_collidable)
     }
 
     //Tell everyone about the new actor
-    signal_actor_created_(result);
+    signal_actor_created_.emit(result);
 
     return result;
 }
@@ -96,7 +96,7 @@ const ProtectedPtr<Actor> Stage::actor(ActorID e) const {
 }
 
 void Stage::delete_actor(ActorID e) {
-    signal_actor_destroyed_(e);
+    signal_actor_destroyed_.emit(e);
 
     actor(e)->destroy_children();
 
@@ -106,7 +106,7 @@ void Stage::delete_actor(ActorID e) {
 LightID Stage::new_light(LightType type) {
     LightID lid = LightManager::manager_new();
     light(lid)->set_type(type);
-    signal_light_created_(lid);
+    signal_light_created_.emit(lid);
     return lid;
 }
 
@@ -119,7 +119,7 @@ LightID Stage::new_light(Object &parent, LightType type) {
         l->set_parent(&parent);
     }
 
-    signal_light_created_(lid);
+    signal_light_created_.emit(lid);
 
     return lid;
 }
@@ -129,7 +129,7 @@ ProtectedPtr<Light> Stage::light(LightID light_id) {
 }
 
 void Stage::delete_light(LightID light_id) {
-    signal_light_destroyed_(light_id);
+    signal_light_destroyed_.emit(light_id);
     light(light_id)->destroy_children();
     LightManager::manager_delete(light_id);
 }
@@ -175,11 +175,11 @@ void Stage::set_partitioner(Partitioner::ptr partitioner) {
     assert(partitioner_);
 
     //Keep the partitioner updated with new meshes and lights
-    signal_actor_created().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::add_actor));
-    signal_actor_destroyed().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::remove_actor));
+    signal_actor_created().connect(std::bind(&Partitioner::add_actor, partitioner_.get(), std::placeholders::_1));
+    signal_actor_destroyed().connect(std::bind(&Partitioner::remove_actor, partitioner_.get(), std::placeholders::_1));
 
-    signal_light_created().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::add_light));
-    signal_light_destroyed().connect(sigc::mem_fun(partitioner_.get(), &Partitioner::remove_light));
+    signal_light_created().connect(std::bind(&Partitioner::add_light, partitioner_.get(), std::placeholders::_1));
+    signal_light_destroyed().connect(std::bind(&Partitioner::remove_light, partitioner_.get(), std::placeholders::_1));
 }
 
 

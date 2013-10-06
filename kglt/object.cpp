@@ -22,7 +22,7 @@ Object::Object(Stage *stage):
     update_from_parent();
 
     //When the parent changes, update the position/orientation
-    parent_changed_connection_ = signal_parent_changed().connect(sigc::mem_fun(this, &Object::parent_changed_callback));
+    parent_changed_connection_ = signal_parent_changed().connect(std::bind(&Object::parent_changed_callback, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 Object::~Object() {
@@ -58,7 +58,7 @@ void Object::make_responsive() {
 
     responsive_body_ = engine.new_responsive_body(this);
 
-    signal_made_responsive_();
+    signal_made_responsive_.emit();
 }
 
 void Object::make_collidable() {
@@ -70,7 +70,7 @@ void Object::make_collidable() {
 
     collidable_ = engine.new_collidable(this);
 
-    signal_made_collidable_();
+    signal_made_collidable_.emit();
 }
 
 void Object::lock_rotation() {

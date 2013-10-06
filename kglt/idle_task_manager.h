@@ -2,7 +2,6 @@
 #define IDLE_TASK_MANAGER_H
 
 #include <cstdint>
-#include <sigc++/sigc++.h>
 #include <functional>
 #include <map>
 #include <mutex>

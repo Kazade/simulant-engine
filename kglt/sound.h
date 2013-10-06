@@ -5,10 +5,11 @@
 
 #include <AL/al.h>
 #include <AL/alc.h>
-#include <sigc++/sigc++.h>
 
 #include "generic/managed.h"
 #include "generic/identifiable.h"
+
+#include "kazbase/signals3/signals3.hpp"
 
 #include "resource.h"
 #include "loadable.h"
@@ -77,7 +78,7 @@ public:
 
     void update_source(float dt);
 
-    sigc::signal<void>& signal_stream_finished() { return signal_stream_finished_; }
+    sig::signal<void ()>& signal_stream_finished() { return signal_stream_finished_; }
 
     void set_stream_func(StreamFunc func) { stream_func_ = func; }
 
@@ -95,7 +96,7 @@ private:
     bool playing_ = false;
     bool loop_stream_ = false;
 
-    sigc::signal<void> signal_stream_finished_;
+    sig::signal<void ()> signal_stream_finished_;
 
     friend class Sound;
 };

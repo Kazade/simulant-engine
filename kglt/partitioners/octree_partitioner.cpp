@@ -27,7 +27,7 @@ void OctreePartitioner::add_actor(ActorID obj) {
     }
 
     //Connect the changed signal
-    actor_changed_connections_[obj] = ent->signal_mesh_changed().connect(sigc::mem_fun(this, &OctreePartitioner::event_actor_changed));
+    actor_changed_connections_[obj] = ent->signal_mesh_changed().connect(std::bind(&OctreePartitioner::event_actor_changed, this, std::placeholders::_1));
 }
 
 void OctreePartitioner::remove_actor(ActorID obj) {

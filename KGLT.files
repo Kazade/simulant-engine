@@ -316,3 +316,13 @@ kglt/generic/protected_ptr.h
 kglt/utils/parent_setter_mixin.h
 kglt/physics/responsive_body.cpp
 tests/test_vector.h
+kglt/kazbase/signals3/README
+kglt/kazbase/signals3/slots.hpp
+kglt/kazbase/signals3/signals3.hpp
+kglt/kazbase/signals3/signal.hpp
+kglt/kazbase/signals3/optional_last_value.hpp
+kglt/kazbase/signals3/connection.hpp
+kglt/kazbase/signals3/detail/signal_base.hpp
+kglt/kazbase/signals3/detail/node_base.hpp
+kglt/kazbase/signals3/detail/extended_signature.hpp
+kglt/kazbase/signals3/detail/compiler_support.hpp

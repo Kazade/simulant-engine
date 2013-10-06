@@ -129,8 +129,8 @@ void send_attribute(ShaderProgram& s,
         return;
     }
 
-    auto get_has_attribute = sigc::mem_fun(data, exists_on_data_predicate);
-    auto get_offset = sigc::mem_fun(data, offset_func);
+    auto get_has_attribute = std::bind(exists_on_data_predicate, std::reference_wrapper<const VertexData>(data));
+    auto get_offset = std::bind(offset_func, std::reference_wrapper<const VertexData>(data));
     if(get_has_attribute()) {
         glEnableVertexAttribArray(loc);
         glVertexAttribPointer(

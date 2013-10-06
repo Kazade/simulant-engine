@@ -4,14 +4,14 @@
 #include <cstdint>
 #include <vector>
 
-#include <sigc++/sigc++.h>
-
 #include "generic/managed.h"
 #include "kazmath/vec2.h"
 #include "kazmath/vec3.h"
 #include "kazmath/vec4.h"
 #include "buffer_object.h"
 #include "colour.h"
+
+#include "kazbase/signals3/signals3.hpp"
 
 namespace kglt {
 
@@ -189,7 +189,7 @@ public:
         return tex_coord_dimensions_[which];
     }
 
-    sigc::signal<void>& signal_update_complete() { return signal_update_complete_; }
+    sig::signal<void ()>& signal_update_complete() { return signal_update_complete_; }
 
 private:
     Scene& scene_;
@@ -231,7 +231,7 @@ private:
     void tex_coordX(uint8_t which, float x, float y, float z, float w);
     void check_texcoord(uint8_t which);
 
-    sigc::signal<void> signal_update_complete_;
+    sig::signal<void ()> signal_update_complete_;
 };
 
 
@@ -265,7 +265,7 @@ public:
         return buffer_object_;
     }
 
-    sigc::signal<void>& signal_update_complete() { return signal_update_complete_; }
+    sig::signal<void ()>& signal_update_complete() { return signal_update_complete_; }
 
 private:
     Scene& scene_;
@@ -273,7 +273,7 @@ private:
     std::vector<uint16_t> indices_;
     BufferObject buffer_object_;
 
-    sigc::signal<void> signal_update_complete_;
+    sig::signal<void ()> signal_update_complete_;
 };
 
 

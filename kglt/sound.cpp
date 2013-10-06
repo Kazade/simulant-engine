@@ -96,7 +96,7 @@ void Source::update_source(float dt) {
         uint32_t bytes = stream_func_(buffer);
 
         if(!bytes) {
-            signal_stream_finished_();
+            signal_stream_finished_.emit();
 
             if(loop_stream_) {
                 play_sound(loop_stream_);

@@ -7,7 +7,6 @@
 #include <memory>
 #include <stdexcept>
 #include <boost/any.hpp>
-#include <sigc++/sigc++.h>
 
 #include "generic/tree.h"
 #include "generic/data_carrier.h"
@@ -200,8 +199,8 @@ public:
         return has_parent() && (&parent() == &root());
     }
 
-    sigc::signal<void> signal_made_responsive() { return signal_made_responsive_; }
-    sigc::signal<void> signal_made_shape() { return signal_made_collidable_; }
+    sig::signal<void ()>& signal_made_responsive() { return signal_made_responsive_; }
+    sig::signal<void ()>& signal_made_shape() { return signal_made_collidable_; }
 
 protected:
     void update_from_parent();
@@ -218,7 +217,7 @@ private:
     kglt::Vec3 absolute_position_;
     kglt::Quaternion absolute_rotation_;
 
-    sigc::connection parent_changed_connection_;
+    sig::connection parent_changed_connection_;
 
     void parent_changed_callback(Object* old_parent, Object* new_parent);
 
@@ -233,8 +232,8 @@ private:
 
     ConstraintID responsive_parental_constraint_;
 
-    sigc::signal<void> signal_made_responsive_;
-    sigc::signal<void> signal_made_collidable_;
+    sig::signal<void ()> signal_made_responsive_;
+    sig::signal<void ()> signal_made_collidable_;
 };
 
 }

@@ -268,7 +268,7 @@ void VertexData::done() {
         assert(glGetError() == GL_NO_ERROR);
     });
 
-    signal_update_complete_();
+    signal_update_complete_.emit();
 }
 
 IndexData::IndexData(Scene& scene):
@@ -294,7 +294,7 @@ void IndexData::done() {
         scene_.window().idle().wait();
     }
 
-    signal_update_complete_();
+    signal_update_complete_.emit();
 }
 
 }

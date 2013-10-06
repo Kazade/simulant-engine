@@ -13,7 +13,7 @@ ResourceManagerImpl::ResourceManagerImpl(WindowBase* window):
 
     window_->signal_frame_finished().connect(std::bind(&ResourceManagerImpl::update, this));
 
-    ShaderManager::signal_post_create().connect(sigc::mem_fun(this, &ResourceManagerImpl::post_create_shader_callback));
+    ShaderManager::signal_post_create().connect(std::bind(&ResourceManagerImpl::post_create_shader_callback, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void ResourceManagerImpl::update() {
