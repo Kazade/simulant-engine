@@ -7,11 +7,7 @@ namespace kglt {
 
 App::App(const unicode &title, uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen) {
     window_ = Window::create(width, height, bpp, fullscreen);
-    window_->set_title(title.encode());
-
-    window_->signal_frame_started().connect(std::bind(&App::check_tasks, this));
-    window_->signal_step().connect(std::bind(&App::do_step, this, std::placeholders::_1));
-    window_->signal_shutdown().connect(std::bind(&App::do_cleanup, this));
+    window_->set_title(title.encode());    
 }
 
 Scene& App::scene() {
@@ -46,6 +42,10 @@ void App::check_tasks() {
 }
 
 int32_t App::run() {
+    window_->signal_frame_started().push_back(std::bind(&App::check_tasks, this));
+    window_->signal_step().push_back(std::bind(&App::do_step, this, std::placeholders::_1));
+    window_->signal_shutdown().push_back(std::bind(&App::do_cleanup, this));
+
     load_async(std::bind(&App::init, this));
 
     while(window_->update()) {}
