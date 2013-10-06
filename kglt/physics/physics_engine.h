@@ -1,11 +1,11 @@
 #ifndef PHYSICS_ENGINE_H
 #define PHYSICS_ENGINE_H
 
-#include <sigc++/sigc++.h>
-
 #include "../types.h"
 #include "../kazbase/base/taggable_object.h"
 #include "../generic/protected_ptr.h"
+
+#include "../kazbase/signals3/signals3.hpp"
 
 namespace kglt {
 
@@ -16,7 +16,7 @@ class Object;
 
 class PhysicsEngine {
 public:
-    typedef sigc::signal<void, Collidable&, Collidable&> CombinedCollisionSignal;
+    typedef sig::signal<void (Collidable&, Collidable&)> CombinedCollisionSignal;
 
     bool init();
     void cleanup();
@@ -30,7 +30,7 @@ public:
     ShapeID create_plane(float a, float b, float c, float d);
     void set_gravity(const kglt::Vec3& gravity);
 
-    CombinedCollisionSignal collision_signal_for(base::Tag obj_tag1, base::Tag obj_tag2);
+    CombinedCollisionSignal& collision_signal_for(base::Tag obj_tag1, base::Tag obj_tag2);
 
     std::recursive_mutex& mutex() { return mutex_; }
 

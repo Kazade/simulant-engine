@@ -134,7 +134,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
     Viewport& viewport = scene_.window().viewport(pipeline_stage->viewport_id());
     viewport.apply(); //FIXME apply shouldn't exist
 
-    signal_pipeline_started_(*pipeline_stage);
+    signal_pipeline_started_.emit(*pipeline_stage);
 
     if(pipeline_stage->ui_stage_id()) {
         //This is a UI stage, so just render that
@@ -229,7 +229,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
         renderer_->render(buffers, stage->camera_id());
     renderer_->set_current_stage(StageID());*/
 
-    signal_pipeline_finished_(*pipeline_stage);
+    signal_pipeline_finished_.emit(*pipeline_stage);
 }
 
 }

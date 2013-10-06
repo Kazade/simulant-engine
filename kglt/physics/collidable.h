@@ -1,8 +1,6 @@
 #ifndef COLLIDABLE_BODY_H
 #define COLLIDABLE_BODY_H
 
-#include <sigc++/sigc++.h>
-
 #include "../generic/unique_id.h"
 #include "../kazbase/base/taggable_object.h"
 #include "../types.h"
@@ -37,7 +35,7 @@ public:
 
     virtual void attach_to_responsive_body(ResponsiveBody& body) = 0;
 
-    sigc::signal<void, Collidable&> signal_collided() { return signal_collided_; }
+    sig::signal<void (Collidable&)>& signal_collided() { return signal_collided_; }
 
     virtual void set_bounciness(float value) = 0;
     virtual float bounciness() const = 0;
@@ -60,7 +58,7 @@ private:
     bool is_ghost_ = false;
 
 protected:
-    sigc::signal<void, Collidable&> signal_collided_;
+    sig::signal<void (Collidable&)> signal_collided_;
 };
 
 }

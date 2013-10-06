@@ -5,9 +5,9 @@
 #include <stdexcept>
 #include <vector>
 #include <memory>
-#include <sigc++/sigc++.h>
 
 #include "../kazbase/logging.h"
+#include "../kazbase/signals3/signals3.hpp"
 
 namespace kglt {
 namespace generic {
@@ -119,7 +119,7 @@ public:
 
         on_parent_set(old_parent);
 
-        signal_parent_changed_(old_parent, new_parent); //Fire off a signal to indicate that the parent changed
+        signal_parent_changed_.emit(old_parent, new_parent); //Fire off a signal to indicate that the parent changed
     }
 
     void detach() {
@@ -164,7 +164,7 @@ public:
     virtual void on_parent_set(T* old_parent) {}
 
 
-    sigc::signal<void, T*, T*>& signal_parent_changed() { return signal_parent_changed_; }
+    sig::signal<void (T*, T*)>& signal_parent_changed() { return signal_parent_changed_; }
 
     tree_iterator<TreeNode<T> > begin() { return tree_iterator<TreeNode<T>>(*this); }
     tree_iterator<TreeNode<T> > end() { return tree_iterator<TreeNode<T> > (); }
@@ -180,7 +180,7 @@ private:
 
     std::vector<T*> children_;
 
-    sigc::signal<void, T*, T*> signal_parent_changed_;
+    sig::signal<void (T*, T*)> signal_parent_changed_;
 
     void attach_child(T* child) {
         if(child->has_parent()) {

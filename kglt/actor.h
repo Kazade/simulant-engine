@@ -6,6 +6,8 @@
 #include "generic/relation.h"
 #include "generic/protected_ptr.h"
 
+#include "kazbase/signals3/signals3.hpp"
+
 #include "boundable.h"
 #include "object.h"
 #include "mesh.h"
@@ -51,7 +53,7 @@ public:
 
     const std::vector<std::shared_ptr<SubActor> >& _subactors() { return subactors_; }
 
-    sigc::signal<void, ActorID>& signal_mesh_changed() { return signal_mesh_changed_; }
+    sig::signal<void (ActorID)>& signal_mesh_changed() { return signal_mesh_changed_; }
 
     void destroy();
 
@@ -64,7 +66,7 @@ private:
 
     RenderPriority render_priority_;
 
-    sigc::signal<void, ActorID> signal_mesh_changed_;
+    sig::signal<void (ActorID)> signal_mesh_changed_;
 
     void do_update(double dt) {
         update_source(dt);
@@ -73,7 +75,7 @@ private:
     std::shared_ptr<ResponsiveBody> body_;
 
     void rebuild_subactors();
-    sigc::connection submeshes_changed_connection_;
+    sig::connection submeshes_changed_connection_;
 
     friend class SubActor;
 };

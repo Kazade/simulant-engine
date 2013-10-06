@@ -60,11 +60,11 @@ public:
     kglt::Colour ambient_light() const { return ambient_light_; }
     void set_ambient_light(const kglt::Colour& c) { ambient_light_ = c; }
 
-    sigc::signal<void, ActorID>& signal_actor_created() { return signal_actor_created_; }
-    sigc::signal<void, ActorID>& signal_actor_destroyed() { return signal_actor_destroyed_; }
+    sig::signal<void (ActorID)>& signal_actor_created() { return signal_actor_created_; }
+    sig::signal<void (ActorID)>& signal_actor_destroyed() { return signal_actor_destroyed_; }
 
-    sigc::signal<void, LightID>& signal_light_created() { return signal_light_created_; }
-    sigc::signal<void, LightID>& signal_light_destroyed() { return signal_light_destroyed_; }
+    sig::signal<void (LightID)>& signal_light_created() { return signal_light_created_; }
+    sig::signal<void (LightID)>& signal_light_destroyed() { return signal_light_destroyed_; }
 
     void move(float x, float y, float z) {
         throw std::logic_error("You cannot move the stage");
@@ -153,11 +153,11 @@ private:
 
     kglt::Colour ambient_light_;
 
-    sigc::signal<void, ActorID> signal_actor_created_;
-    sigc::signal<void, ActorID> signal_actor_destroyed_;
+    sig::signal<void (ActorID)> signal_actor_created_;
+    sig::signal<void (ActorID)> signal_actor_destroyed_;
 
-    sigc::signal<void, LightID> signal_light_created_;
-    sigc::signal<void, LightID> signal_light_destroyed_;
+    sig::signal<void (LightID)> signal_light_created_;
+    sig::signal<void (LightID)> signal_light_destroyed_;
 
     std::shared_ptr<Partitioner> partitioner_;
 

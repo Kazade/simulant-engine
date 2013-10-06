@@ -1,10 +1,10 @@
 #ifndef OCTREE_PARTITIONER_H
 #define OCTREE_PARTITIONER_H
 
-#include <sigc++/sigc++.h>
-
 #include "../partitioner.h"
 #include "octree.h"
+
+#include "../kazbase/signals3/signals3.hpp"
 
 namespace kglt {
 
@@ -34,7 +34,7 @@ private:
 
     std::map<ActorID, std::vector<Boundable*> > actor_to_registered_subactors_;
 
-    std::map<ActorID, sigc::connection> actor_changed_connections_;
+    std::map<ActorID, sig::connection> actor_changed_connections_;
     std::map<const Boundable*, SubActorPtr> boundable_to_subactor_;
     std::map<const Boundable*, LightID> boundable_to_light_;
 };

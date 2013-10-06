@@ -1,7 +1,6 @@
 #ifndef SCENE_H_INCLUDED
 #define SCENE_H_INCLUDED
 
-#include <sigc++/sigc++.h>
 #include <stdexcept>
 #include <map>
 

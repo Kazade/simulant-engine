@@ -52,8 +52,8 @@ void ODEEngine::near_callback(dGeomID o1, dGeomID o2) {
 
         if(i == 0) {
             //Fire the collision signal on the first loop only
-            c1->signal_collided_(*c2);
-            c2->signal_collided_(*c1);
+            c1->signal_collided_.emit(*c2);
+            c2->signal_collided_.emit(*c1);
 
             //Fire any combined signals
             fire_collision_signals_for(*c1, *c2);

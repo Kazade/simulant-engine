@@ -3,7 +3,8 @@
 
 #include "manager_base.h"
 
-#include "kglt/kazbase/list_utils.h"
+#include "../kazbase/list_utils.h"
+#include "../kazbase/signals3/signals3.hpp"
 
 namespace kglt {
 namespace generic {
@@ -23,7 +24,7 @@ public:
             objects_.insert(std::make_pair(id, typename ObjectType::ptr(new ObjectType((Derived*)this, id))));
         }
 
-        signal_post_create_(*objects_[id], id);
+        signal_post_create_.emit(*objects_[id], id);
 
         return id;
     }
@@ -33,7 +34,7 @@ public:
             std::lock_guard<std::recursive_mutex> lock(manager_lock_);
 
             ObjectType& obj = *objects_[id];
-            signal_pre_delete_(obj, id);
+            signal_pre_delete_.emit(obj, id);
 
             if(manager_contains(id)) {
                 objects_.erase(id);
@@ -69,8 +70,8 @@ public:
         return objects_.find(id) != objects_.end();
     }
 
-    sigc::signal<void, ObjectType&, ObjectIDType>& signal_post_create() { return signal_post_create_; }
-    sigc::signal<void, ObjectType&, ObjectIDType>& signal_pre_delete() { return signal_pre_delete_; }
+    sig::signal<void (ObjectType&, ObjectIDType)>& signal_post_create() { return signal_post_create_; }
+    sig::signal<void (ObjectType&, ObjectIDType)>& signal_pre_delete() { return signal_pre_delete_; }
 
     template<typename Func>
     void apply_func_to_objects(Func func) {
@@ -85,8 +86,8 @@ public:
         return objects_;
     }
 private:
-    sigc::signal<void, ObjectType&, ObjectIDType> signal_post_create_;
-    sigc::signal<void, ObjectType&, ObjectIDType> signal_pre_delete_;
+    sig::signal<void (ObjectType&, ObjectIDType)> signal_post_create_;
+    sig::signal<void (ObjectType&, ObjectIDType)> signal_pre_delete_;
 
 protected:
     std::unordered_map<ObjectIDType, std::shared_ptr<ObjectType> > objects_;

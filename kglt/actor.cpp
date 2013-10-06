@@ -55,7 +55,7 @@ void Actor::set_mesh(MeshID mesh) {
     //Watch the mesh for changes to its submeshes so we can adapt to it
     submeshes_changed_connection_ = mesh_->signal_submeshes_changed().connect(std::bind(&Actor::rebuild_subactors, this));
 
-    signal_mesh_changed_(id());
+    signal_mesh_changed_.emit(id());
 }
 
 void Actor::destroy() {

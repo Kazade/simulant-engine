@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <memory>
-#include <sigc++/sigc++.h>
+#include <list>
 
 #include "generic/managed.h"
 #include "generic/manager.h"
@@ -105,8 +105,8 @@ public:
 
     void run();
 
-    sigc::signal<void, Pipeline&>& signal_pipeline_started() { return signal_pipeline_started_; }
-    sigc::signal<void, Pipeline&>& signal_pipeline_finished() { return signal_pipeline_finished_; }
+    sig::signal<void (Pipeline&)>& signal_pipeline_started() { return signal_pipeline_started_; }
+    sig::signal<void (Pipeline&)>& signal_pipeline_finished() { return signal_pipeline_finished_; }
 
     RenderOptions render_options;
 
@@ -118,8 +118,8 @@ private:
 
     std::list<Pipeline::ptr> ordered_pipelines_;
 
-    sigc::signal<void, Pipeline&> signal_pipeline_started_;
-    sigc::signal<void, Pipeline&> signal_pipeline_finished_;
+    sig::signal<void (Pipeline&)> signal_pipeline_started_;
+    sig::signal<void (Pipeline&)> signal_pipeline_finished_;
 
     friend class Scene;
 };

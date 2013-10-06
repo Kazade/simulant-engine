@@ -7,8 +7,6 @@
 #include <thread>
 #include <mutex>
 
-#include <sigc++/sigc++.h>
-
 namespace kglt {
 namespace generic  {
 

@@ -79,8 +79,8 @@ private:
 
     kmAABB bounds_;
 
-    sigc::connection vrecalc_;
-    sigc::connection irecalc_;
+    sig::connection vrecalc_;
+    sig::connection irecalc_;
 };
 
 class Mesh :
@@ -119,7 +119,7 @@ public:
 
     Scene& scene();
 
-    sigc::signal<void>& signal_submeshes_changed() { return signal_submeshes_changed_; }
+    sig::signal<void ()>& signal_submeshes_changed() { return signal_submeshes_changed_; }
 
 private:
     VertexData shared_data_;
@@ -128,7 +128,7 @@ private:
 
     SubMeshIndex normal_debug_mesh_;
 
-    sigc::signal<void> signal_submeshes_changed_;
+    sig::signal<void ()> signal_submeshes_changed_;
 };
 
 }

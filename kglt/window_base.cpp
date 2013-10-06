@@ -135,7 +135,7 @@ void WindowBase::set_logging_level(LoggingLevel level) {
 }
 
 bool WindowBase::update() {
-    signal_frame_started_();
+    signal_frame_started_.emit();
 
     ktiBindTimer(variable_timer_);
     ktiUpdateFrameTime();
@@ -165,7 +165,7 @@ bool WindowBase::update() {
         input_controller().update(fixed_step);
         scene().update(fixed_step);
 
-        signal_step_(fixed_step); //Trigger any steps
+        signal_step_.emit(fixed_step); //Trigger any steps
     }
 
     idle_.execute(); //Execute idle tasks before render
@@ -175,16 +175,16 @@ bool WindowBase::update() {
 
     scene().render();
 
-    signal_pre_swap_();
+    signal_pre_swap_.emit();
 
     swap_buffers();
 
     //std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-    signal_frame_finished_();
+    signal_frame_finished_.emit();
 
     if(!is_running_) {
-        signal_shutdown_();
+        signal_shutdown_.emit();
 
         watcher_.reset();
 
