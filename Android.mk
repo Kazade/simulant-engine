@@ -10,8 +10,26 @@ LOCAL_LDLIBS	+= -L -kazmath
 LOCAL_CFLAGS 	+= -I$(ROOT_PATH)/lib/kaztimer
 LOCAL_LDLIBS	+= -L -kaztimer
 
+#Add LUA
+LOCAL_CFLAGS 	+= -I$(ROOT_PATH)/lib/lua-5.2.2/src
+LOCAL_LDLIBS	+= -L -lua
+
+#OpenAL
+LOCAL_CFLAGS	+= -I$(ROOT_PATH)/lib/OpenAL/include
+LOCAL_LDLIBS	+= -L -lopenal
+
 LOCAL_CFLAGS 	+= -I$(ROOT_PATH)/lib/SDL2-2.0.0/include
 LOCAL_LDLIBS	+= -L -SDL2
+
+LOCAL_CFLAGS 	+= -I$(LOCAL_PATH)/kglt/ui/rocket/Include
+LOCAL_CFLAGS 	+= -I$(LOCAL_PATH)/submodules/luabind
+
+LOCAL_CFLAGS	+= -I$(ROOT_PATH)/lib/soil
+LOCAL_CFLAGS	+= -L -soil
+
+LOCAL_CFLAGS	+= -I$(ROOT_PATH)/lib/ode-0.12/include
+LOCAL_CFLAGS	+= -L -ode
+LOCAL_CPPFLAGS  += -DdSINGLE
 
 LOCAL_CPPFLAGS 	+= -fexceptions
 LOCAL_CPPFLAGS 	+= -frtti

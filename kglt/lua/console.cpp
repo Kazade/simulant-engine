@@ -1,5 +1,6 @@
 #include <locale>
 #include <functional>
+#include <iostream>
 
 #include "console.h"
 
@@ -196,7 +197,9 @@ void Console::update_output() {
 }
 
 LuaResult Console::execute(const unicode &command, unicode &output) {  
-    std::streambuf* stdout = std::cout.rdbuf();
+    std::streambuf* std_out;
+    std_out = std::cout.rdbuf();
+
     std::ostringstream tmp_out;
     std::cout.rdbuf(tmp_out.rdbuf());
 
@@ -206,7 +209,7 @@ LuaResult Console::execute(const unicode &command, unicode &output) {
     std::cout.flush();
     std::cerr.flush();
 
-    std::cout.rdbuf(stdout);
+    std::cout.rdbuf(std_out);
     output += unicode(tmp_out.str());
 
     return res;
