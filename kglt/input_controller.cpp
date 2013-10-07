@@ -22,61 +22,60 @@ InputConnection Keyboard::key_pressed_connect(GlobalKeyCallback callback) {
     return c;
 }
 
-InputConnection Keyboard::key_pressed_connect(KeyCode code, KeyCallback callback) {
+InputConnection Keyboard::key_pressed_connect(SDL_Scancode code, KeyCallback callback) {
     InputConnection c = new_input_connection();
     key_press_signals_[code][c] = callback;
     return c;
 }
 
-InputConnection Keyboard::key_while_down_connect(KeyCode code, KeyDownCallback callback) {
+InputConnection Keyboard::key_while_down_connect(SDL_Scancode code, KeyDownCallback callback) {
     InputConnection c = new_input_connection();
     key_while_down_signals_[code][c] = callback;
     return c;
 }
 
-InputConnection Keyboard::key_released_connect(KeyCode code, KeyCallback callback) {
+InputConnection Keyboard::key_released_connect(SDL_Scancode code, KeyCallback callback) {
     InputConnection c = new_input_connection();
     key_release_signals_[code][c] = callback;
     return c;
 }
 
 Keyboard::Keyboard() {
-    state_.resize(KEY_CODE_LAST, 0);
-    current_mods_ = KEY_MODIFIER_NONE;
+    current_mods_ = KMOD_NONE;
 }
 
-void Keyboard::_handle_keydown_event(KeyCode key, uint16_t unicode) {
+void Keyboard::_handle_keydown_event(SDL_Keysym key) {
     //Store modifiers
-    switch(key) {
-    case KEY_CODE_NUMLOCK:
-        current_mods_ |= KEY_MODIFIER_NUMLOCK;
+    switch(key.scancode) {
+    case SDL_SCANCODE_NUMLOCKCLEAR:
+        current_mods_ |= KMOD_NUM;
     break;
-    case KEY_CODE_CAPSLOCK:
-        current_mods_ |= KEY_MODIFIER_CAPSLOCK;
+    case SDL_SCANCODE_CAPSLOCK:
+        current_mods_ |= KMOD_CAPS;
     break;
-    case KEY_CODE_LCTRL: {
-        current_mods_ |= KEY_MODIFIER_LCTRL;
-        current_mods_ |= KEY_MODIFIER_CTRL;
+    case SDL_SCANCODE_LCTRL: {
+        current_mods_ |= KMOD_LCTRL;
+        current_mods_ |= KMOD_CTRL;
     } break;
-    case KEY_CODE_RCTRL: {
-        current_mods_ |= KEY_MODIFIER_RCTRL;
-        current_mods_ |= KEY_MODIFIER_CTRL;
+    case SDL_SCANCODE_RCTRL: {
+        current_mods_ |= KMOD_RCTRL;
+        current_mods_ |= KMOD_CTRL;
     } break;
-    case KEY_CODE_LSHIFT: {
-        current_mods_ |= KEY_MODIFIER_LSHIFT;
-        current_mods_ |= KEY_MODIFIER_SHIFT;
+    case SDL_SCANCODE_LSHIFT: {
+        current_mods_ |= KMOD_LSHIFT;
+        current_mods_ |= KMOD_SHIFT;
     } break;
-    case KEY_CODE_RSHIFT: {
-        current_mods_ |= KEY_MODIFIER_RSHIFT;
-        current_mods_ |= KEY_MODIFIER_SHIFT;
+    case SDL_SCANCODE_RSHIFT: {
+        current_mods_ |= KMOD_RSHIFT;
+        current_mods_ |= KMOD_SHIFT;
     } break;
-    case KEY_CODE_LALT: {
-        current_mods_ |= KEY_MODIFIER_LALT;
-        current_mods_ |= KEY_MODIFIER_ALT;
+    case SDL_SCANCODE_LALT: {
+        current_mods_ |= KMOD_LALT;
+        current_mods_ |= KMOD_ALT;
     } break;
-    case KEY_CODE_RALT: {
-        current_mods_ |= KEY_MODIFIER_RALT;
-        current_mods_ |= KEY_MODIFIER_ALT;
+    case SDL_SCANCODE_RALT: {
+        current_mods_ |= KMOD_RALT;
+        current_mods_ |= KMOD_ALT;
     } break;
     default:
         break;
@@ -86,7 +85,7 @@ void Keyboard::_handle_keydown_event(KeyCode key, uint16_t unicode) {
 
     //First trigger all global handlers
     for(GlobalKeySignalEntry entry: global_key_press_signals_) {
-        if(entry.second({ key, current_mods_, unicode })) {
+        if(entry.second(key)) {
             propagation_stopped = true;
         }
     }
@@ -94,107 +93,107 @@ void Keyboard::_handle_keydown_event(KeyCode key, uint16_t unicode) {
     //If a global handler returned true, we don't trigger any more
     //signals
     if(!propagation_stopped) {
-        if(container::contains(key_press_signals_, key)) {
-            for(KeySignalEntry entry: key_press_signals_[key]) {
-                entry.second({ key, current_mods_, unicode });
+        if(container::contains(key_press_signals_, key.scancode)) {
+            for(KeySignalEntry entry: key_press_signals_[key.scancode]) {
+                entry.second(key);
             }
         }
 
         //This is inside the IF because, otherwise while_key_pressed events will
         //trigger and we don't want that if the key down was handled... feels dirty
-        state_[key] = true;
+        state_[key.scancode] = true;
     }
 }
 
-bool modifier_is_set(uint32_t state, KeyModifier modifier) {
+bool modifier_is_set(uint32_t state, SDL_Keymod modifier) {
     return (state & modifier) == modifier;
 }
 
-void Keyboard::_handle_keyup_event(KeyCode key) {
+void Keyboard::_handle_keyup_event(SDL_Keysym key) {
 
     //Unset modifiers
-    switch(key) {
-    case KEY_CODE_NUMLOCK:
-        current_mods_ &= ~KEY_MODIFIER_NUMLOCK;
+    switch(key.scancode) {
+    case SDL_SCANCODE_NUMLOCKCLEAR:
+        current_mods_ &= ~KMOD_NUM;
     break;
-    case KEY_CODE_CAPSLOCK:
-        current_mods_ &= ~KEY_MODIFIER_CAPSLOCK;
+    case SDL_SCANCODE_CAPSLOCK:
+        current_mods_ &= ~KMOD_CAPS;
     break;
-    case KEY_CODE_LCTRL: {
-        current_mods_ &= ~KEY_MODIFIER_LCTRL;
+    case SDL_SCANCODE_LCTRL: {
+        current_mods_ &= ~KMOD_LCTRL;
         //If the RCTRL isn't set, remove the CTRL modifier
-        if(!modifier_is_set(current_mods_, KEY_MODIFIER_RCTRL)) {
-            current_mods_ &= ~KEY_MODIFIER_CTRL;
+        if(!modifier_is_set(current_mods_, KMOD_RCTRL)) {
+            current_mods_ &= ~KMOD_CTRL;
         }
     } break;
-    case KEY_CODE_RCTRL: {
-        current_mods_ &= ~KEY_MODIFIER_RCTRL;
+    case SDL_SCANCODE_RCTRL: {
+        current_mods_ &= ~KMOD_RCTRL;
         //If the LCTRL isn't set, remove the CTRL modifier
-        if(!modifier_is_set(current_mods_, KEY_MODIFIER_LCTRL)) {
-            current_mods_ &= ~KEY_MODIFIER_CTRL;
+        if(!modifier_is_set(current_mods_, KMOD_LCTRL)) {
+            current_mods_ &= ~KMOD_CTRL;
         }
     } break;
-    case KEY_CODE_LSHIFT: {
-        current_mods_ &= ~KEY_MODIFIER_LSHIFT;
-        if(!modifier_is_set(current_mods_, KEY_MODIFIER_RSHIFT)) {
-            current_mods_ &= ~KEY_MODIFIER_SHIFT;
+    case SDL_SCANCODE_LSHIFT: {
+        current_mods_ &= ~KMOD_LSHIFT;
+        if(!modifier_is_set(current_mods_, KMOD_RSHIFT)) {
+            current_mods_ &= ~KMOD_SHIFT;
         }
     } break;
-    case KEY_CODE_RSHIFT: {
-        current_mods_ &= ~KEY_MODIFIER_RSHIFT;
-        if(!modifier_is_set(current_mods_, KEY_MODIFIER_LSHIFT)) {
-            current_mods_ &= ~KEY_MODIFIER_SHIFT;
+    case SDL_SCANCODE_RSHIFT: {
+        current_mods_ &= ~KMOD_RSHIFT;
+        if(!modifier_is_set(current_mods_, KMOD_LSHIFT)) {
+            current_mods_ &= ~KMOD_SHIFT;
         }
     } break;
-    case KEY_CODE_LALT: {
-        current_mods_ &= ~KEY_MODIFIER_LALT;
-        if(!modifier_is_set(current_mods_, KEY_MODIFIER_RALT)) {
-            current_mods_ &= ~KEY_MODIFIER_ALT;
+    case SDL_SCANCODE_LALT: {
+        current_mods_ &= ~KMOD_LALT;
+        if(!modifier_is_set(current_mods_, KMOD_RALT)) {
+            current_mods_ &= ~KMOD_ALT;
         }
     } break;
-    case KEY_CODE_RALT: {
-        current_mods_ &= ~KEY_MODIFIER_RALT;
-        if(!modifier_is_set(current_mods_, KEY_MODIFIER_LALT)) {
-            current_mods_ &= ~KEY_MODIFIER_ALT;
+    case SDL_SCANCODE_RALT: {
+        current_mods_ &= ~KMOD_RALT;
+        if(!modifier_is_set(current_mods_, KMOD_LALT)) {
+            current_mods_ &= ~KMOD_ALT;
         }
     } break;
     default:
         break;
     }
 
-    if(container::contains(key_release_signals_, key)) {
-        for(KeySignalEntry entry: key_release_signals_[key]) {
-            entry.second({ key, current_mods_, 0}); //Key up doesn't carry unicode
+    if(container::contains(key_release_signals_, key.scancode)) {
+        for(KeySignalEntry entry: key_release_signals_[key.scancode]) {
+            entry.second(key);
         }
     }
-    state_[key] = false;
+    state_[key.scancode] = false;
 
 }
 
 void Keyboard::_update(double dt) {
-    for(std::pair<KeyCode, std::map<InputConnection, KeyDownCallback> > p: key_while_down_signals_) {
-        if(state_[p.first]) {
+    for(auto p: key_while_down_signals_) {
+        if(key_state(p.first)) {
             for(std::pair<InputConnection, KeyDownCallback> p2: p.second) {
-                p2.second({ p.first, current_mods_ }, dt);
+                p2.second(p.first, current_mods_, dt);
             }
         }
     }
 }
 
 void Keyboard::_disconnect(const InputConnection &connection) {
-    for(std::pair<KeyCode, std::map<InputConnection, KeyCallback> > p: key_press_signals_) {
+    for(auto p: key_press_signals_) {
         if(container::contains(p.second, connection)) {
             p.second.erase(connection);
         }
     }
 
-    for(std::pair<KeyCode, std::map<InputConnection, KeyDownCallback> > p: key_while_down_signals_) {
+    for(auto p: key_while_down_signals_) {
         if(container::contains(p.second, connection)) {
             p.second.erase(connection);
         }
     }
 
-    for(std::pair<KeyCode, std::map<InputConnection, KeyCallback> > p: key_release_signals_) {
+    for(auto p: key_release_signals_) {
         if(container::contains(p.second, connection)) {
             p.second.erase(connection);
         }
@@ -341,10 +340,10 @@ InputController::~InputController() {
 void InputController::handle_event(SDL_Event &event) {
     switch(event.type) {
         case SDL_KEYDOWN:
-            keyboard()._handle_keydown_event((KeyCode)event.key.keysym.sym, event.key.keysym.scancode);
+            keyboard()._handle_keydown_event(event.key.keysym);
         break;
         case SDL_KEYUP:
-            keyboard()._handle_keyup_event((KeyCode)event.key.keysym.sym);
+            keyboard()._handle_keyup_event(event.key.keysym);
         break;
         case SDL_JOYAXISMOTION:
             joypad(event.jaxis.which)._handle_axis_changed_event(event.jaxis.axis, event.jaxis.value);

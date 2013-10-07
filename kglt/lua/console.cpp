@@ -6,7 +6,6 @@
 #include "../window_base.h"
 #include "../scene.h"
 #include "../stage.h"
-#include "../keyboard.h"
 #include "../ui/interface.h"
 #include "../input_controller.h"
 #include "../procedural/geom_factory.h"
@@ -117,8 +116,10 @@ void Console::init_widget() {
     update_output();
 }
 
-bool Console::entry(const kglt::KeyEvent& event) {
-    if(event.code == KEY_CODE_BACKQUOTE) {
+bool Console::entry(SDL_Keysym keysym) {
+    SDL_Keycode code = keysym.scancode;
+
+    if(code == SDL_SCANCODE_GRAVE) {
         ProtectedPtr<UIStage> stage = window_.scene().ui_stage(ui_stage_);
 
         if(!active_) {
@@ -136,13 +137,13 @@ bool Console::entry(const kglt::KeyEvent& event) {
         return false; //Allow key signals to propagate
     }
 
-    if(event.code == KEY_CODE_BACKSPACE) {
+    if(code == SDL_SCANCODE_BACKSPACE) {
         unicode line = history_.at(history_.size() - 1);
         if(line.length() > 4) {
             line = line.slice(0, -1);
             history_.at(history_.size() - 1) = line;
         }
-    } else if (event.code == KEY_CODE_RETURN) {
+    } else if (code == SDL_SCANCODE_RETURN) {
         current_command_ += history_.at(history_.size() - 1).slice(4, nullptr);        
         command_history_.push_back(current_command_);
 
@@ -159,8 +160,8 @@ bool Console::entry(const kglt::KeyEvent& event) {
             history_.push_back(PROMPT_PREFIX);
             current_command_ = _u();
         }
-    } else if(std::isprint(event.code) && event.code != KEY_CODE_BACKQUOTE){
-        unicode new_char = unicode(1, (char16_t) event.unicode);
+    } else if(std::isprint(code) && code != SDL_SCANCODE_GRAVE){
+        unicode new_char = unicode(1, (char16_t) code);
         history_.at(history_.size() - 1) += new_char;
     } else {
         //Unhandled key press, we should pass this on to the code-specific signals

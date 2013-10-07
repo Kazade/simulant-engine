@@ -1,6 +1,8 @@
 #ifndef CONSOLE_H
 #define CONSOLE_H
 
+#include <SDL.h>
+
 #include <memory>
 #include "../generic/managed.h"
 #include "../kazbase/unicode.h"
@@ -21,7 +23,7 @@ public:
 
     Interpreter& lua();
 
-    bool entry(const kglt::KeyEvent& code);
+    bool entry(SDL_Keysym code);
 private:
     UIStageID ui_stage_;
     CameraID ui_camera_;

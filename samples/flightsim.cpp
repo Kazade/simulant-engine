@@ -41,31 +41,31 @@ int main(int argc, char* argv[]) {
 
 
     //Connect keyboard signals
-    window->keyboard().key_while_down_connect(kglt::KEY_CODE_LEFT, [=](kglt::KeyEvent key, double dt) mutable {
+    window->keyboard().key_while_down_connect(SDL_SCANCODE_LEFT, [=](SDL_Scancode key, uint32_t mod, double dt) mutable {
         window->scene().stage().actor(actor_id)->rotate_absolute_y(-20.0 * dt);
     });
 
-    window->keyboard().key_while_down_connect(kglt::KEY_CODE_RIGHT, [=](kglt::KeyEvent key, double dt) mutable {
+    window->keyboard().key_while_down_connect(SDL_SCANCODE_RIGHT, [=](SDL_Scancode key, uint32_t mod, double dt) mutable {
         window->scene().stage().actor(actor_id)->rotate_absolute_y(20.0 * dt);
     });
 
-    window->keyboard().key_while_down_connect(kglt::KEY_CODE_UP, [=](kglt::KeyEvent key, double dt) mutable {
+    window->keyboard().key_while_down_connect(SDL_SCANCODE_UP, [=](SDL_Scancode key, uint32_t mod, double dt) mutable {
         window->scene().stage().actor(actor_id)->rotate_absolute_x(20.0 * dt);
     });
 
-    window->keyboard().key_while_down_connect(kglt::KEY_CODE_DOWN, [=](kglt::KeyEvent key, double dt) mutable {
+    window->keyboard().key_while_down_connect(SDL_SCANCODE_DOWN, [=](SDL_Scancode key, uint32_t mod, double dt) mutable {
         window->scene().stage().actor(actor_id)->rotate_absolute_x(-20.0 * dt);
     });
 
-    window->keyboard().key_while_down_connect(kglt::KEY_CODE_a, [=](kglt::KeyEvent key, double dt) mutable {
+    window->keyboard().key_while_down_connect(SDL_SCANCODE_A, [=](SDL_Scancode key, uint32_t mod, double dt) mutable {
         window->scene().stage().actor(actor_id)->rotate_absolute_z(-60.0 * dt);
     });
 
-    window->keyboard().key_while_down_connect(kglt::KEY_CODE_d, [=](kglt::KeyEvent key, double dt) mutable {
+    window->keyboard().key_while_down_connect(SDL_SCANCODE_D, [=](SDL_Scancode key, uint32_t mod, double dt) mutable {
         window->scene().stage().actor(actor_id)->rotate_absolute_z(60.0 * dt);
     });
 
-    window->keyboard().key_while_down_connect(kglt::KEY_CODE_s, [=](kglt::KeyEvent key, double dt) mutable {
+    window->keyboard().key_while_down_connect(SDL_SCANCODE_S, [=](SDL_Scancode key, uint32_t mod, double dt) mutable {
         window->scene().stage().actor(actor_id)->move_forward(60 * dt);
     });
 

@@ -1,11 +1,11 @@
 #ifndef KGLT_WINDOW_BASE_H
 #define KGLT_WINDOW_BASE_H
 
-#include <memory>
+#include <SDL.h>
 
+#include <memory>
 #include <kaztimer/kaztimer.h>
 
-#include "keyboard.h"
 #include "resource_locator.h"
 
 #include "idle_task_manager.h"
@@ -66,8 +66,8 @@ public:
     
     void register_loader(LoaderTypePtr loader_type);
 
-    virtual sig::signal<void (KeyCode)>& signal_key_up() = 0;
-    virtual sig::signal<void (KeyCode)>& signal_key_down() = 0;
+    virtual sig::signal<void (SDL_Scancode)>& signal_key_up() = 0;
+    virtual sig::signal<void (SDL_Scancode)>& signal_key_down() = 0;
     
     virtual void set_title(const std::string& title) = 0;
     virtual void cursor_position(int32_t& mouse_x, int32_t& mouse_y) = 0;

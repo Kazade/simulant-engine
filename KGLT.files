@@ -71,7 +71,6 @@ kglt/camera.h
 kglt/CMakeLists.txt
 kglt/idle_task_manager.cpp
 kglt/idle_task_manager.h
-kglt/keyboard.h
 kglt/kglt.h
 kglt/light.h
 kglt/loadable.h

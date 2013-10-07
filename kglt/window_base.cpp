@@ -119,7 +119,7 @@ bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
         idle().add_once([=]() {
             //Bind the stop_running method to the ESCAPE key
             input_controller().keyboard().key_pressed_connect(
-                KEY_CODE_ESCAPE, bind(&WindowBase::stop_running, this)
+                SDL_SCANCODE_ESCAPE, bind(&WindowBase::stop_running, this)
             );
         });
 
