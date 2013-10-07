@@ -1,4 +1,9 @@
-#include <GL/glew.h>
+#ifndef __ANDROID__
+	#include <GL/glew.h>
+#else
+	#include <GLES2/gl2.h>
+#endif
+
 #include <Rocket/Core.h>
 #include <Rocket/Core/SystemInterface.h>
 #include <Rocket/Core/RenderInterface.h>

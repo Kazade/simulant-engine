@@ -1,4 +1,5 @@
 #include <cmath>
+#include <cstdlib>
 #include <kazmath/kazmath.h>
 
 #include "simplex.h"
