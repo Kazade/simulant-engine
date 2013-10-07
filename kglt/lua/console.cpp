@@ -61,8 +61,10 @@ Console::Console(WindowBase &window):
 
     init_widget();
 
-    GlobalKeyCallback cb = std::bind(&Console::entry, this, std::placeholders::_1);
+    GlobalKeyCallback cb = std::bind(&Console::key_down, this, std::placeholders::_1);
+    TextInputCallback inp = std::bind(&Console::entry, this, std::placeholders::_1);
     window_.keyboard().key_pressed_connect(cb);
+    window_.keyboard().text_input_connect(inp);
 
     export_lua_api(interpreter_->state());
 
@@ -116,8 +118,8 @@ void Console::init_widget() {
     update_output();
 }
 
-bool Console::entry(SDL_Keysym keysym) {
-    SDL_Keycode code = keysym.scancode;
+bool Console::key_down(SDL_Keysym key) {
+    SDL_Scancode code = key.scancode;
 
     if(code == SDL_SCANCODE_GRAVE) {
         ProtectedPtr<UIStage> stage = window_.scene().ui_stage(ui_stage_);
@@ -127,14 +129,14 @@ bool Console::entry(SDL_Keysym keysym) {
 
             stage->$("#lua-console").show();
             active_ = true;
+            SDL_StartTextInput();
+            ignore_next_input_ = true; //Dirty hack to preven the GRAVE appearing in the text
         } else {
             stage->$("#lua-console").hide();
             active_ = false;
+            SDL_StopTextInput();
         }
-    }
-
-    if(!active_) {
-        return false; //Allow key signals to propagate
+        return false;
     }
 
     if(code == SDL_SCANCODE_BACKSPACE) {
@@ -143,8 +145,10 @@ bool Console::entry(SDL_Keysym keysym) {
             line = line.slice(0, -1);
             history_.at(history_.size() - 1) = line;
         }
+        update_output();
+        return false;
     } else if (code == SDL_SCANCODE_RETURN) {
-        current_command_ += history_.at(history_.size() - 1).slice(4, nullptr);        
+        current_command_ += history_.at(history_.size() - 1).slice(4, nullptr);
         command_history_.push_back(current_command_);
 
         unicode output;
@@ -160,18 +164,27 @@ bool Console::entry(SDL_Keysym keysym) {
             history_.push_back(PROMPT_PREFIX);
             current_command_ = _u();
         }
-    } else if(std::isprint(code) && code != SDL_SCANCODE_GRAVE){
-        unicode new_char = unicode(1, (char16_t) code);
-        history_.at(history_.size() - 1) += new_char;
-    } else {
-        //Unhandled key press, we should pass this on to the code-specific signals
+        update_output();
         return false;
     }
 
-    update_output(); //Make sure the latest content is visible
-
-    //We are active so don't propagate keyboard signals
     return true;
+}
+
+void Console::entry(SDL_TextInputEvent event) {
+    if(!active_) {
+        return;
+    }
+
+    if(ignore_next_input_) {
+        ignore_next_input_ = false;
+        return;
+    }
+
+    unicode new_char = unicode(event.text);
+    history_.at(history_.size() - 1) += new_char;
+
+    update_output(); //Make sure the latest content is visible
 }
 
 void Console::update_output() {

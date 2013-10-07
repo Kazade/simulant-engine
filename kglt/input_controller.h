@@ -47,6 +47,7 @@ private:
 typedef std::function<bool (SDL_Keysym)> GlobalKeyCallback;
 typedef std::function<void (SDL_Keysym)> KeyCallback;
 typedef std::function<void (SDL_Scancode, uint32_t, double)> KeyDownCallback;
+typedef std::function<void (SDL_TextInputEvent)> TextInputCallback;
 
 class Keyboard :
     public Device,
@@ -59,6 +60,7 @@ public:
     InputConnection key_while_down_connect(SDL_Scancode code, KeyDownCallback callback);
     InputConnection key_released_connect(SDL_Scancode code, KeyCallback callback);
 
+    InputConnection text_input_connect(TextInputCallback callback);
 private:
     typedef std::pair<InputConnection, GlobalKeyCallback> GlobalKeySignalEntry;
     typedef std::pair<InputConnection, KeyCallback> KeySignalEntry;
@@ -66,16 +68,20 @@ private:
 
     void _handle_keydown_event(SDL_Keysym key);
     void _handle_keyup_event(SDL_Keysym key);
+    void _handle_text_input_event(SDL_TextInputEvent key);
+
     void _update(double dt);
     void _disconnect(const InputConnection &connection);
 
     std::map<SDL_Scancode, bool> state_;
 
     std::map<InputConnection, GlobalKeyCallback> global_key_press_signals_;
+    std::map<InputConnection, TextInputCallback> text_input_signals_;
 
     std::map<SDL_Scancode, std::map<InputConnection, KeyCallback> > key_press_signals_;
     std::map<SDL_Scancode, std::map<InputConnection, KeyDownCallback> > key_while_down_signals_;
     std::map<SDL_Scancode, std::map<InputConnection, KeyCallback> > key_release_signals_;
+
 
     friend class InputController;
 

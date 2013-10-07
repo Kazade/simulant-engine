@@ -23,7 +23,8 @@ public:
 
     Interpreter& lua();
 
-    bool entry(SDL_Keysym code);
+    void entry(SDL_TextInputEvent event);
+    bool key_down(SDL_Keysym key);
 private:
     UIStageID ui_stage_;
     CameraID ui_camera_;
@@ -41,6 +42,7 @@ private:
     std::shared_ptr<Interpreter> interpreter_;
 
     bool active_;
+    bool ignore_next_input_ = false;
 
     void update_output();
 

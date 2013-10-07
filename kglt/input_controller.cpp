@@ -40,6 +40,12 @@ InputConnection Keyboard::key_released_connect(SDL_Scancode code, KeyCallback ca
     return c;
 }
 
+InputConnection Keyboard::text_input_connect(TextInputCallback callback) {
+    InputConnection c = new_input_connection();
+    text_input_signals_[c] = callback;
+    return c;
+}
+
 Keyboard::Keyboard() {
     current_mods_ = KMOD_NONE;
 }
@@ -107,6 +113,12 @@ void Keyboard::_handle_keydown_event(SDL_Keysym key) {
 
 bool modifier_is_set(uint32_t state, SDL_Keymod modifier) {
     return (state & modifier) == modifier;
+}
+
+void Keyboard::_handle_text_input_event(SDL_TextInputEvent key) {
+    for(auto entry: text_input_signals_) {
+        entry.second(key);
+    }
 }
 
 void Keyboard::_handle_keyup_event(SDL_Keysym key) {
@@ -198,6 +210,9 @@ void Keyboard::_disconnect(const InputConnection &connection) {
             p.second.erase(connection);
         }
     }
+
+    text_input_signals_.erase(connection);
+    global_key_press_signals_.erase(connection);
 }
 
 Joypad::Joypad():
@@ -344,6 +359,9 @@ void InputController::handle_event(SDL_Event &event) {
         break;
         case SDL_KEYUP:
             keyboard()._handle_keyup_event(event.key.keysym);
+        break;
+        case SDL_TEXTINPUT:
+            keyboard()._handle_text_input_event(event.text);
         break;
         case SDL_JOYAXISMOTION:
             joypad(event.jaxis.which)._handle_axis_changed_event(event.jaxis.axis, event.jaxis.value);
