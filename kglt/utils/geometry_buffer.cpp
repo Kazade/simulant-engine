@@ -1,4 +1,4 @@
-#include <GLee.h>
+#include <GL/glew.h>
 
 #include "../kazbase/logging.h"
 #include "geometry_buffer.h"

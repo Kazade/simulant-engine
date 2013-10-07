@@ -1,4 +1,4 @@
-#include <GLee.h>
+#include <GL/glew.h>
 #include <stdexcept>
 #include "vertex_data.h"
 #include "scene.h"

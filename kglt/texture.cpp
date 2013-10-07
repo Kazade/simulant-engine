@@ -1,8 +1,11 @@
-#include <GLee.h>
+#include <GL/glew.h>
 #include <cassert>
 #include <stdexcept>
 #include <boost/lexical_cast.hpp>
+
 #include "utils/gl_thread_check.h"
+#include "utils/gl_error.h"
+
 #include "kazbase/logging.h"
 
 #include "window_base.h"
@@ -64,13 +67,30 @@ void Texture::sub_texture(TextureID src, uint16_t offset_x, uint16_t offset_y) {
 }
 
 void Texture::__do_upload(bool free_after, bool generate_mipmaps, bool repeat, bool linear) {
-    assert(glGetError() == GL_NO_ERROR);
+    check_and_log_error(__FILE__, __LINE__);
 
     if(!gl_tex()) {
         glGenTextures(1, &gl_tex_);
     }
 
+    check_and_log_error(__FILE__, __LINE__);
+
     glBindTexture(GL_TEXTURE_2D, gl_tex_);
+    check_and_log_error(__FILE__, __LINE__);
+
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0, (bpp_ == 32)? GL_RGBA: GL_RGB,
+        width_, height_, 0,
+        (bpp_ == 32) ? GL_RGBA : GL_RGB,
+        GL_UNSIGNED_BYTE, &data_[0]
+    );
+    check_and_log_error(__FILE__, __LINE__);
+
+    if(generate_mipmaps) {
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    check_and_log_error(__FILE__, __LINE__);
 
     if(repeat) {
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -80,6 +100,8 @@ void Texture::__do_upload(bool free_after, bool generate_mipmaps, bool repeat, b
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     }
 
+    check_and_log_error(__FILE__, __LINE__);
+
     if(!linear) {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -88,23 +110,8 @@ void Texture::__do_upload(bool free_after, bool generate_mipmaps, bool repeat, b
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     }
 
-    if(generate_mipmaps) {
-        glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
-    }
+    check_and_log_error(__FILE__, __LINE__);
 
-    assert(glGetError() == GL_NO_ERROR);
-    glTexImage2D(
-        GL_TEXTURE_2D,
-        0, (bpp_ == 32)? GL_RGBA: GL_RGB,
-        width_, height_, 0,
-        (bpp_ == 32) ? GL_RGBA : GL_RGB,
-        GL_UNSIGNED_BYTE, &data_[0]
-    );
-
-    int error = glGetError();
-    if(error != GL_NO_ERROR) {
-        throw std::runtime_error("OpenGL error: " + boost::lexical_cast<std::string>(error));
-    }
 
     if(free_after) {
         free();

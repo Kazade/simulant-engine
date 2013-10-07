@@ -1,4 +1,4 @@
-#include <GLee.h>
+#include <GL/glew.h>
 
 #include "scene.h"
 #include "renderer.h"

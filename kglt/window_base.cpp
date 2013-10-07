@@ -1,6 +1,7 @@
-#include <GLee.h>
+#include <GL/glew.h>
 #include <thread>
 
+#include "utils/gl_error.h"
 #include "window_base.h"
 #include "scene.h"
 #include "ui/interface.h"
@@ -65,6 +66,7 @@ LoaderPtr WindowBase::loader_for(const unicode &filename) {
 
 bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
     GLThreadCheck::init();
+    check_and_log_error(__FILE__, __LINE__);
 
     set_width(width);
     set_height(height);
@@ -103,14 +105,18 @@ bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
         glDepthFunc(GL_LEQUAL);
         glEnable(GL_MULTISAMPLE);
 
+        check_and_log_error(__FILE__, __LINE__);
+
         glHint(GL_LINE_SMOOTH_HINT, GL_NICEST );
         glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST );
 
+        check_and_log_error(__FILE__, __LINE__);
+
         glEnable(GL_POLYGON_SMOOTH);
         glEnable(GL_LINE_SMOOTH);
-        glEnable(GL_POINT_SMOOTH);
-
         glEnable(GL_CULL_FACE);
+
+        check_and_log_error(__FILE__, __LINE__);
 
         using std::bind;
 
@@ -127,6 +133,7 @@ bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
 
         initialized_ = true;
     }
+    check_and_log_error(__FILE__, __LINE__);
     return result;
 }
 
@@ -135,6 +142,8 @@ void WindowBase::set_logging_level(LoggingLevel level) {
 }
 
 bool WindowBase::update() {
+    check_and_log_error(__FILE__, __LINE__);
+
     signal_frame_started_.emit();
 
     ktiBindTimer(variable_timer_);
@@ -172,6 +181,7 @@ bool WindowBase::update() {
 
     glViewport(0, 0, width(), height());
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    check_and_log_error(__FILE__, __LINE__);
 
     scene().render();
 

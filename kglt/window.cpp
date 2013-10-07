@@ -1,5 +1,6 @@
-#include <GLee.h>
+#include <GL/glew.h>
 
+#include "utils/gl_error.h"
 #include "kazbase/unicode.h"
 #include "input_controller.h"
 #include "window.h"
@@ -67,14 +68,11 @@ bool Window::create_window(int width, int height, int bpp, bool fullscreen) {
     );
     assert(screen_);
 
-    context_ = SDL_GL_CreateContext(screen_);
+    //OpenGL 3.1 baby!
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
 
-    //Reset the width and height to whatever was actually created
-    SDL_GetWindowSize(screen_, &width, &height);
-
-    set_width(width);
-    set_height(height);
-            
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
@@ -84,9 +82,22 @@ bool Window::create_window(int width, int height, int bpp, bool fullscreen) {
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
-    SDL_ShowCursor(0);
+    context_ = SDL_GL_CreateContext(screen_);
+    check_and_log_error(__FILE__, __LINE__);
 
-    assert(GLEE_VERSION_2_1);
+    glewExperimental = true;
+    GLenum err = glewInit();
+    assert(err == GLEW_OK);
+    assert(GLEW_VERSION_3_1);
+    glGetError(); //Ignore stupid error from GLEW
+
+    //Reset the width and height to whatever was actually created
+    SDL_GetWindowSize(screen_, &width, &height);
+
+    set_width(width);
+    set_height(height);
+            
+    SDL_ShowCursor(0);
 
     L_DEBUG(unicode("{0} joysicks found").format(SDL_NumJoysticks()).encode());
     for(uint16_t i = 0; i < SDL_NumJoysticks(); i++) {
@@ -96,6 +107,7 @@ bool Window::create_window(int width, int height, int bpp, bool fullscreen) {
         }
     }
 
+    check_and_log_error(__FILE__, __LINE__);
     return true;
 }
 

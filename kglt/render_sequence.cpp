@@ -1,6 +1,7 @@
-#include <GLee.h>
+#include <GL/glew.h>
 #include <unordered_map>
 
+#include "utils/gl_error.h"
 #include "render_sequence.h"
 #include "scene.h"
 #include "stage.h"
@@ -120,6 +121,8 @@ void RenderSequence::run() {
 }
 
 void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
+    check_and_log_error(__FILE__, __LINE__);
+
     if(!pipeline_stage->is_active()) {
         return;
     }
@@ -141,12 +144,15 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
         auto ui_stage = scene_.ui_stage(pipeline_stage->ui_stage_id());
         ui_stage->__resize(viewport.width(), viewport.height());
 
+        check_and_log_error(__FILE__, __LINE__);
+
         //FIXME: GL 2.x rubbish
         glPushMatrix();
         glMatrixMode(GL_PROJECTION);
         glLoadMatrixf(camera.projection_matrix().mat);
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
+        check_and_log_error(__FILE__, __LINE__);
 
         ui_stage->__render();
 

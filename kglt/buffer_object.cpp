@@ -1,4 +1,4 @@
-#include <GLee.h>
+#include <GL/glew.h>
 #include "kazbase/logging.h"
 #include "buffer_object.h"
 #include "utils/gl_thread_check.h"

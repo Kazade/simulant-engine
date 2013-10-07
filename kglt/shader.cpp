@@ -1,4 +1,4 @@
-#include <GLee.h>
+#include <GL/glew.h>
 #include <stdexcept>
 #include <boost/format.hpp>
 
