@@ -106,17 +106,20 @@ public:
 
     bool init();
     void update(float dt);
-    void render();
+    void render(const Mat4& projection_matrix);
 
     Element append(const std::string& tag);
     void set_styles(const std::string& stylesheet_content);
     ElementList _(const std::string& selector);
 
+    Mat4 projection_matrix() const { return projection_matrix_; }
+
 private:    
+    void set_projection_matrix(const Mat4& mat) { projection_matrix_ = mat; }
     std::string locate_font(const std::string& filename);
 
     Scene& scene_;
-
+    Mat4 projection_matrix_;
     std::unique_ptr<RocketImpl> impl_;
 };
 

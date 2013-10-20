@@ -112,7 +112,7 @@ void ShaderProgram::bind_attrib(uint32_t idx, const std::string& name) {
     check_and_log_error(__FILE__, __LINE__);
 }
 
-void ShaderProgram::add_and_compile(ShaderType type, const std::string& source) {
+void ShaderProgram::add_and_compile(ShaderType type, const unicode &source) {
     GLThreadCheck::check();
 
     check_and_log_error(__FILE__, __LINE__);
@@ -146,7 +146,7 @@ void ShaderProgram::add_and_compile(ShaderType type, const std::string& source) 
     check_and_log_error(__FILE__, __LINE__);
     shader_ids_[type] = shader;
 
-    const char* c_str = source.c_str();
+    const char* c_str = source.encode().c_str();
     glShaderSource(shader, 1, &c_str, nullptr);
     check_and_log_error(__FILE__, __LINE__);
 

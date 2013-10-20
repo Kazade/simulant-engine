@@ -36,8 +36,8 @@ void UIStage::__resize(uint32_t width, uint32_t height) {
     interface_->set_dimensions(width, height);
 }
 
-void UIStage::__render() {
-    interface_->render();
+void UIStage::__render(const Mat4 &projection_matrix) {
+    interface_->render(projection_matrix);
 }
 
 void UIStage::__update(double dt) {

@@ -143,24 +143,11 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
         //This is a UI stage, so just render that
         auto ui_stage = scene_.ui_stage(pipeline_stage->ui_stage_id());
         ui_stage->__resize(viewport.width(), viewport.height());
-
         check_and_log_error(__FILE__, __LINE__);
 
-        //FIXME: GL 2.x rubbish
-        glPushMatrix();
-        glMatrixMode(GL_PROJECTION);
-        glLoadMatrixf(camera.projection_matrix().mat);
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
+        ui_stage->__render(camera.projection_matrix());
         check_and_log_error(__FILE__, __LINE__);
 
-        ui_stage->__render();
-
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-
-        glMatrixMode(GL_MODELVIEW);
-        glPopMatrix();
     } else {
         Stage& stage = scene_.stage(pipeline_stage->stage_id());
 

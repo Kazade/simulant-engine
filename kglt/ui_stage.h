@@ -30,7 +30,7 @@ public:
     //Internal functions
     //Called when added to a pipeline, and also before rendering
     void __resize(uint32_t width, uint32_t height);
-    void __render();
+    void __render(const Mat4& projection_matrix);
     void __update(double dt);
 
 private:

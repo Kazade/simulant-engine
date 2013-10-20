@@ -129,7 +129,6 @@ kglt/partitioners/null_partitioner.cpp
 samples/light_sample.cpp
 kglt/procedural/mesh/cube.h
 kglt/procedural/mesh/cube.cpp
-kglt/shaders/default_shaders.h
 kglt/generic/relation.h
 samples/new_pipeline_sample.cpp
 kglt/renderer.h
@@ -325,3 +324,7 @@ kglt/kazbase/signals3/detail/signal_base.hpp
 kglt/kazbase/signals3/detail/node_base.hpp
 kglt/kazbase/signals3/detail/extended_signature.hpp
 kglt/kazbase/signals3/detail/compiler_support.hpp
+kglt/shaders/ui.vert
+kglt/shaders/ui.frag
+kglt/materials/ui.vert
+kglt/materials/ui.frag

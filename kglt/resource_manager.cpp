@@ -187,6 +187,14 @@ ShaderID ResourceManagerImpl::new_shader() {
     return ShaderManager::manager_new();
 }
 
+ShaderID ResourceManagerImpl::new_shader_from_files(const unicode& vert_shader, const unicode& frag_shader) {
+    ShaderPtr shd = shader(new_shader()).lock();
+    shd->add_and_compile(SHADER_TYPE_VERTEX, vert_shader);
+    shd->add_and_compile(SHADER_TYPE_FRAGMENT, frag_shader);
+    return shd->id();
+}
+
+
 SoundID ResourceManagerImpl::new_sound() {
     return SoundManager::manager_new();
 }

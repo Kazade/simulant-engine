@@ -56,9 +56,14 @@ private:
 
 class RocketRenderInterface : public Rocket::Core::RenderInterface {
 public:
-    RocketRenderInterface(Scene& scene):
-        scene_(scene) {
+    RocketRenderInterface(Scene& scene, const Interface& interface):
+        scene_(scene),
+        interface_(interface) {
 
+        unicode vert_shader = scene.window().resource_locator().read_file("kglt/materials/ui.vert")->str();
+        unicode frag_shader = scene.window().resource_locator().read_file("kglt/materials/ui.frag")->str();
+
+        shader_ = scene_.new_shader_from_files(vert_shader, frag_shader);
     }
 
     bool LoadTexture(Rocket::Core::TextureHandle& texture_handle, Rocket::Core::Vector2i& texture_dimensions, const Rocket::Core::String& source) {
@@ -101,44 +106,68 @@ public:
         Rocket::Core::TextureHandle texture,
         const Rocket::Core::Vector2f& translation) {
 
-        glPushMatrix();
-        glTranslatef(translation.x, translation.y, 0.0);
+        /* FIXME: Translate by just adding the vector to the positions? or
+         * setting the modelview matrix? */
 
-        glUseProgram(0);
-        glActiveTexture(GL_TEXTURE0);
+        Mat4 transform;
+        kmMat4Translation(&transform, translation.x, translation.y, 0);
+
+        int pos_attrib = -1, colour_attrib = -1, texcoord_attrib = -1;
+
+        {
+            auto shader = scene_.shader(shader_).lock();
+            shader->params().set_mat4x4("modelview_projection", transform * interface_.projection_matrix());
+            pos_attrib = shader->get_attrib_loc("position");
+            colour_attrib = shader->get_attrib_loc("colour");
+            texcoord_attrib = shader->get_attrib_loc("texcoord");
+
+            assert(pos_attrib > -1);
+            assert(colour_attrib > -1);
+            assert(texcoord_attrib > -1);
+        }
+
+        glDisable(GL_DEPTH_TEST);
+        glEnable(GL_BLEND);
+        glEnable(GL_ALPHA_TEST);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        glEnableVertexAttribArray(pos_attrib);
+        glEnableVertexAttribArray(colour_attrib);
+
+        glVertexAttribPointer(
+            pos_attrib,
+            2, GL_FLOAT, GL_FALSE, sizeof(Rocket::Core::Vertex),
+            &vertices[0].position
+        );
+
+        glVertexAttribPointer(
+            colour_attrib,
+            4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Rocket::Core::Vertex),
+            &vertices[0].colour
+        );
 
         if(texture) {
             glEnable(GL_TEXTURE_2D);
             GLuint tex_id = textures_[texture]->gl_tex();
             glBindTexture(GL_TEXTURE_2D, tex_id);
             glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+            glEnableVertexAttribArray(texcoord_attrib);
+
+            glVertexAttribPointer(
+                texcoord_attrib,
+                2, GL_FLOAT, GL_FALSE, sizeof(Rocket::Core::Vertex),
+                &vertices[0].tex_coord
+            );
         } else {
             glDisable(GL_TEXTURE_2D);
+            glDisableVertexAttribArray(texcoord_attrib);
         }
 
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnable(GL_ALPHA_TEST);
+        glDrawElements(GL_TRIANGLES, num_indices, GL_UNSIGNED_INT, indices);
 
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_LIGHTING);
-
-        glBegin(GL_TRIANGLES);
-        for(int32_t i = 0; i < num_indices; ++i) {
-            Rocket::Core::Vertex* v = vertices + indices[i];
-            glColor4ub(
-                v->colour.red,
-                v->colour.green,
-                v->colour.blue,
-                v->colour.alpha
-            );
-            glTexCoord2f(v->tex_coord.x, v->tex_coord.y);
-            glVertex2f(v->position.x, v->position.y);
-        }
-        glEnd();
-        glPopMatrix();
+        glDisable(GL_BLEND);
+        glEnable(GL_DEPTH_TEST);
     }
 
 
@@ -161,6 +190,8 @@ public:
 
 private:
     Scene& scene_;
+    const Interface& interface_;
+    ShaderID shader_ = ShaderID();
 
     std::map<Rocket::Core::TextureHandle, TexturePtr> textures_;
 };
@@ -184,7 +215,7 @@ bool Interface::init() {
         rocket_system_interface_ = new RocketSystemInterface(scene_);
         Rocket::Core::SetSystemInterface(rocket_system_interface_);
 
-        rocket_render_interface_ = new RocketRenderInterface(scene_);
+        rocket_render_interface_ = new RocketRenderInterface(scene_, *this);
         Rocket::Core::SetRenderInterface(rocket_render_interface_);
 
         Rocket::Core::Initialise();
@@ -256,8 +287,10 @@ void Interface::update(float dt) {
     impl_->context_->Update();
 }
 
-void Interface::render() {
+void Interface::render(const Mat4 &projection_matrix) {
+    set_projection_matrix(projection_matrix); //Set the projection matrix
     impl_->context_->Render();
+    set_projection_matrix(Mat4()); //Reset to identity
 }
 
 void Interface::set_dimensions(uint16_t width, uint16_t height) {

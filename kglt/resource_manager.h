@@ -56,6 +56,7 @@ public:
 
     //Shader functions
     virtual ShaderID new_shader() = 0;
+    virtual ShaderID new_shader_from_files(const unicode& vert_shader, const unicode& frag_shader) = 0;
 
     virtual ShaderRef shader(ShaderID t) = 0;
     virtual const ShaderRef shader(ShaderID t) const = 0;
@@ -124,6 +125,8 @@ public:
     void mark_texture_as_uncollected(TextureID t) override;
 
     ShaderID new_shader();
+    ShaderID new_shader_from_files(const unicode& vert_shader, const unicode& frag_shader);
+
     ShaderRef shader(ShaderID s);
     const ShaderRef shader(ShaderID s) const;
     uint32_t shader_count() const;

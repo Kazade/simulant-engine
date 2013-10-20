@@ -201,7 +201,7 @@ public:
     void activate();
     void deactivate();
 
-    void add_and_compile(ShaderType type, const std::string& source);
+    void add_and_compile(ShaderType type, const unicode& source);
 
     void relink();
 

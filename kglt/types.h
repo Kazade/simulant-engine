@@ -68,7 +68,18 @@ struct Quaternion : public kmQuaternion {
     }
 };
 
-struct Mat4 : public kmMat4 {};
+struct Mat4 : public kmMat4 {
+    Mat4() {
+        kmMat4Identity(this);
+    }
+
+    Mat4 operator*(const Mat4& rhs) const {
+        Mat4 result;
+        kmMat4Multiply(&result, this, &rhs);
+        return result;
+    }
+};
+
 struct Mat3 : public kmMat3 {};
 
 struct Vec4 : public kmVec4 {

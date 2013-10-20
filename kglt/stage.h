@@ -111,6 +111,9 @@ public:
 
     //Shader functions
     virtual ShaderID new_shader() { return scene().new_shader(); }
+    virtual ShaderID new_shader_from_files(const unicode &vert_shader, const unicode &frag_shader) {
+        return scene().new_shader_from_files(vert_shader, frag_shader);
+    }
 
     virtual ShaderRef shader(ShaderID s) { return scene().shader(s); }
     virtual const ShaderRef shader(ShaderID s) const { return scene().shader(s); }
