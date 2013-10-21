@@ -405,6 +405,18 @@ typedef physics::ODEEngine DefaultPhysicsEngine;
 
 }
 
+namespace std {
+
+//Until C++14 :/
+template<typename T, typename ...Args>
+::std::unique_ptr<T> make_unique( Args&& ...args )
+{
+    return ::std::unique_ptr<T>( new T( ::std::forward<Args>(args)... ) );
+}
+
+}
+
+
 #include "physics/types.h"
 
 #endif // TYPES_H_INCLUDED

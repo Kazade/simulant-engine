@@ -25,7 +25,17 @@ BufferObject::BufferObject(BufferObjectType type, BufferObjectUsage usage):
 }
 
 BufferObject::~BufferObject() {
+    try {
+        release();
+    } catch(...) {
+        return;
+    }
+}
 
+void BufferObject::release() {
+    if(buffer_id_) {
+        glDeleteBuffers(1, &buffer_id_);
+    }
 }
 
 void BufferObject::bind() const {

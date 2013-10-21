@@ -28,7 +28,7 @@ public:
     void bind() const;
     void create(uint32_t byte_size, const void* data);
     void modify(uint32_t offset, uint32_t byte_size, const void* data);
-
+    void release();
 private:
     BufferObjectUsage usage_;
 

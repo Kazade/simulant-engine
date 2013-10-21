@@ -92,6 +92,7 @@ ShaderProgram::~ShaderProgram() {
 void ShaderProgram::activate() {
     GLThreadCheck::check();
 
+    check_and_log_error(__FILE__, __LINE__);
     glUseProgram(program_id_);
     check_and_log_error(__FILE__, __LINE__);
 
@@ -146,7 +147,8 @@ void ShaderProgram::add_and_compile(ShaderType type, const unicode &source) {
     check_and_log_error(__FILE__, __LINE__);
     shader_ids_[type] = shader;
 
-    const char* c_str = source.encode().c_str();
+    std::string encoded_string = source.encode();
+    const char* c_str = encoded_string.c_str();
     glShaderSource(shader, 1, &c_str, nullptr);
     check_and_log_error(__FILE__, __LINE__);
 

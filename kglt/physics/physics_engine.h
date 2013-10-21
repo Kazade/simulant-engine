@@ -1,6 +1,8 @@
 #ifndef PHYSICS_ENGINE_H
 #define PHYSICS_ENGINE_H
 
+#include <memory>
+
 #include "../types.h"
 #include "../kazbase/base/taggable_object.h"
 #include "../generic/protected_ptr.h"
