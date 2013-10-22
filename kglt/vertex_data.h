@@ -39,13 +39,36 @@ enum AttributeBitMask {
  *  attribute in use. Similarly, texture coordinates should only take up the correct size in the
  *  buffer object and not always the full 4 floats.
  */
+
+struct Vertex {
+    kmVec3 position;
+    kmVec3 normal;
+    kmVec4 tex_coords[8];
+    Colour diffuse;
+    Colour specular;
+
+    bool operator==(const Vertex& other) const {
+        for(uint8_t i = 0; i < 8; ++i) {
+
+            if(!kmVec4AreEqual(&this->tex_coords[i], &other.tex_coords[i])) {
+                return false;
+            }
+        }
+
+        return kmVec3AreEqual(&this->position, &other.position) &&
+               kmVec3AreEqual(&this->normal, &other.normal) &&
+                this->diffuse == other.diffuse &&
+                this->specular == other.specular;
+    }
+};
+
 class VertexData :
     public Managed<VertexData> {
 
 public:
     VertexData(Scene& scene);
 
-    void reset(BufferObjectUsage usage=MODIFY_ONCE_USED_FOR_RENDERING);
+    void reset();
     void set_texture_coordinate_dimensions(uint8_t coord_index, uint8_t count);
 
     void clear();
@@ -174,14 +197,6 @@ public:
         return uint64_t(&vert.specular) - uint64_t(&vert);
     }
 
-    BufferObject& buffer_object() {
-        return buffer_object_;
-    }
-
-    const BufferObject& buffer_object() const {
-        return buffer_object_;
-    }
-
     uint8_t texcoord_size(uint8_t which) const {
         if(which >= 8) {
             throw std::out_of_range("Invalid tex coordinate index");
@@ -191,37 +206,15 @@ public:
 
     sig::signal<void ()>& signal_update_complete() { return signal_update_complete_; }
 
+    Vertex* _raw_data() { return &data_[0]; }
 private:
     Scene& scene_;
 
     int32_t enabled_bitmask_;
     uint8_t tex_coord_dimensions_[8];
 
-    struct Vertex {
-        kmVec3 position;
-        kmVec3 normal;
-        kmVec4 tex_coords[8];
-        Colour diffuse;
-        Colour specular;
-
-        bool operator==(const Vertex& other) const {
-            for(uint8_t i = 0; i < 8; ++i) {
-
-                if(!kmVec4AreEqual(&this->tex_coords[i], &other.tex_coords[i])) {
-                    return false;
-                }
-            }
-
-            return kmVec3AreEqual(&this->position, &other.position) &&
-                   kmVec3AreEqual(&this->normal, &other.normal) &&
-                    this->diffuse == other.diffuse &&
-                    this->specular == other.specular;
-        }
-    };
-
     std::vector<Vertex> data_;
     int32_t cursor_position_;
-    BufferObject buffer_object_;
 
     void check_or_add_attribute(AttributeBitMask attr);
 
@@ -239,7 +232,7 @@ class IndexData {
 public:
     IndexData(Scene &scene_);
 
-    void reset(BufferObjectUsage usage=MODIFY_ONCE_USED_FOR_RENDERING);
+    void reset();
     void clear() { indices_.clear(); }
     void reserve(uint16_t size) { indices_.reserve(size); }
     void index(uint16_t idx) { indices_.push_back(idx); }
@@ -257,21 +250,13 @@ public:
         return !(*this == other);
     }
 
-    BufferObject& buffer_object() {
-        return buffer_object_;
-    }
-
-    const BufferObject& buffer_object() const {
-        return buffer_object_;
-    }
-
     sig::signal<void ()>& signal_update_complete() { return signal_update_complete_; }
 
+    uint16_t* _raw_data() { return &indices_[0]; }
 private:
     Scene& scene_;
 
     std::vector<uint16_t> indices_;
-    BufferObject buffer_object_;
 
     sig::signal<void ()> signal_update_complete_;
 };

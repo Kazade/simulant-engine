@@ -198,13 +198,12 @@ void GenericRenderer::render_subactor(SubActor& buffer, CameraID camera) {
     }
 
     if(!buffer.index_data().count()) {
+        L_WARN("Tried to render an actor with no indices");
         return;
     }
 
-    buffer.vertex_data().buffer_object().bind();
-    buffer.index_data().buffer_object().bind();
-
-    check_and_log_error(__FILE__, __LINE__);
+    buffer._update_vertex_array_object();
+    buffer._bind_vertex_array_object();
 
     //Attributes don't change per-iteration of a pass
     set_auto_attributes_on_shader(*active_shader, buffer);

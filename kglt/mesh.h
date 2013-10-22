@@ -37,6 +37,9 @@ public:
     virtual const IndexData& index_data() const = 0;
     virtual const MaterialID material_id() const = 0;
     virtual const MeshArrangement arrangement() const = 0;
+
+    virtual void _update_vertex_array_object() = 0;
+    virtual void _bind_vertex_array_object() = 0;
 };
 
 class SubMesh :
@@ -62,11 +65,13 @@ public:
         return bounds_;
     }
 
-    void recalc_bounds();
-
     void reverse_winding();
     void transform_vertices(const kmMat4& transformation);
     void set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass=0);
+
+    void _recalc_bounds();
+    void _update_vertex_array_object();
+    void _bind_vertex_array_object();
 
 private:
     Mesh& parent_;
@@ -76,6 +81,10 @@ private:
 
     VertexData vertex_data_;
     IndexData index_data_;
+    VertexArrayObject vertex_array_object_;
+
+    bool vertex_data_dirty_ = false;
+    bool index_data_dirty_ = false;
 
     kmAABB bounds_;
 

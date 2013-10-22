@@ -79,6 +79,10 @@ ProtectedPtr<Mesh> Actor::mesh() const {
     return stage().mesh(mesh_id());
 }
 
+SubMesh& SubActor::submesh() {
+    return parent_.mesh()->submesh(index_);
+}
+
 const SubMesh& SubActor::submesh() const {
     return parent_.mesh()->submesh(index_);
 }

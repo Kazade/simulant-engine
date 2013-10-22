@@ -4,6 +4,11 @@
 #include <string>
 #include <functional>
 
+#include "../kazbase/exceptions.h"
+#include "../kazbase/unicode.h"
+#include "../kazbase/logging.h"
+#include "gl_thread_check.h"
+
 void check_and_log_error(std::string file, int lineno);
 
 namespace GLChecker {
@@ -37,8 +42,32 @@ struct Checker<void, Func> {
 
 template<typename Res=void, typename Func, typename... Args>
 Res GLCheck(Func&& func, Args&&... args) {
+    GLThreadCheck::check();
     return GLChecker::Checker<Res, Func, Args...>::run(std::forward<Func>(func), std::forward<Args>(args)...);
 }
 
+class GLStateStash {
+public:
+    GLStateStash(GLenum state):
+        state_(state) {
+
+        glGetIntegerv(state, &original_value_);
+    }
+
+    ~GLStateStash() {
+        switch(state_) {
+            case GL_VERTEX_ARRAY_BINDING:
+            GLCheck(glBindVertexArray, original_value_);
+            break;
+        default:
+            L_ERROR(_u("Unhandled state: {0}").format(state_));
+            throw NotImplementedError(__FILE__, __LINE__);
+        }
+    }
+
+private:
+    GLenum state_;
+    GLint original_value_;
+};
 
 #endif

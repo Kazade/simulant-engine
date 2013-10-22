@@ -102,6 +102,9 @@ public:
     const IndexData& index_data() const { return submesh().index_data(); }
     const MeshArrangement arrangement() const { return submesh().arrangement(); }
 
+    void _update_vertex_array_object() { submesh()._update_vertex_array_object(); }
+    void _bind_vertex_array_object() { submesh()._bind_vertex_array_object(); }
+
     Actor& _parent() { return parent_; }
 
     /* Boundable interface implementation */
@@ -145,6 +148,7 @@ private:
     SubMeshIndex index_;
     MaterialPtr material_;
 
+    SubMesh& submesh();
     const SubMesh& submesh() const;
 };
 

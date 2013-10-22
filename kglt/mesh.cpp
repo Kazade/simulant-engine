@@ -137,8 +137,32 @@ SubMesh::SubMesh(
         set_material_id(material);
     }
 
-    vrecalc_ = vertex_data().signal_update_complete().connect(std::bind(&SubMesh::recalc_bounds, this));
-    irecalc_ = index_data().signal_update_complete().connect(std::bind(&SubMesh::recalc_bounds, this));
+    vrecalc_ = vertex_data().signal_update_complete().connect(std::bind(&SubMesh::_recalc_bounds, this));
+    irecalc_ = index_data().signal_update_complete().connect(std::bind(&SubMesh::_recalc_bounds, this));
+
+    vertex_data().signal_update_complete().connect([&]{
+        this->vertex_data_dirty_ = true;
+    });
+
+    index_data().signal_update_complete().connect([&]{
+        this->index_data_dirty_ = true;
+    });
+}
+
+void SubMesh::_bind_vertex_array_object() {
+    vertex_array_object_.bind();
+}
+
+void SubMesh::_update_vertex_array_object() {
+    if(vertex_data_dirty_) {
+        vertex_array_object_.vertex_buffer_update(vertex_data().count() * sizeof(Vertex), vertex_data()._raw_data());
+        vertex_data_dirty_ = false;
+    }
+
+    if(index_data_dirty_) {
+        vertex_array_object_.index_buffer_update(index_data().count() * sizeof(uint16_t), index_data()._raw_data());
+        index_data_dirty_ = false;
+    }
 }
 
 const MaterialID SubMesh::material_id() const {
@@ -186,7 +210,7 @@ void SubMesh::reverse_winding() {
  * vertices that make up the submesh and so is potentially quite slow. This happens automatically
  * when vertex_data().done() or index_data().done() are called.
  */
-void SubMesh::recalc_bounds() {
+void SubMesh::_recalc_bounds() {
     //Set the min bounds to the max
     kmVec3Fill(&bounds_.min, std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
     //Set the max bounds to the min

@@ -18,8 +18,7 @@ void VertexData::check_or_add_attribute(AttributeBitMask attr) {
 VertexData::VertexData(Scene &scene):
     scene_(scene),
     enabled_bitmask_(0),
-    cursor_position_(0),
-    buffer_object_(BUFFER_OBJECT_VERTEX_DATA) {
+    cursor_position_(0) {
 
     //Default to u,v for all tex coords
     for(uint8_t i = 0; i < 8; ++i) {
@@ -257,42 +256,24 @@ uint16_t VertexData::move_next() {
     return cursor_position_;
 }
 
-void VertexData::reset(BufferObjectUsage usage) {
-    buffer_object_ = BufferObject(BUFFER_OBJECT_VERTEX_DATA, usage);
+void VertexData::reset() {
     clear();
 }
 
 void VertexData::done() {
-    scene_.window().idle().add_once([&](){
-        buffer_object_.create(data_.size() * sizeof(Vertex), &data_[0]);
-    });
-
     signal_update_complete_.emit();
 }
 
 IndexData::IndexData(Scene& scene):
-    scene_(scene),
-    buffer_object_(BUFFER_OBJECT_INDEX_DATA) {
+    scene_(scene) {
 
 }
 
-void IndexData::reset(BufferObjectUsage usage) {
-    buffer_object_ = BufferObject(BUFFER_OBJECT_INDEX_DATA, usage);
+void IndexData::reset() {
     clear();
 }
 
 void IndexData::done() {
-    if(GLThreadCheck::is_current()) {
-        buffer_object_.create(indices_.size() * sizeof(uint16_t), &indices_[0]);
-    } else {
-        //Ensure we only call GL stuff from the main thread
-        scene_.window().idle().add_once([&](){
-            buffer_object_.create(indices_.size() * sizeof(uint16_t), &indices_[0]);
-        });
-
-        scene_.window().idle().wait();
-    }
-
     signal_update_complete_.emit();
 }
 

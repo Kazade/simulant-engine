@@ -37,6 +37,25 @@ private:
     bool initialized_;
 };
 
+class VertexArrayObject {
+public:
+    VertexArrayObject(BufferObjectUsage vertex_usage=MODIFY_ONCE_USED_FOR_RENDERING, BufferObjectUsage index_usage=MODIFY_ONCE_USED_FOR_RENDERING);
+    ~VertexArrayObject();
+
+    void bind();
+
+    void vertex_buffer_update(uint32_t byte_size, const void* data);
+    void vertex_buffer_update_partial(uint32_t offset, uint32_t byte_size, const void* data);
+
+    void index_buffer_update(uint32_t byte_size, const void* data);
+    void index_buffer_update_partial(uint32_t offset, uint32_t byte_size, const void* data);
+
+private:
+    BufferObject vertex_buffer_;
+    BufferObject index_buffer_;
+    uint32_t id_ = 0;
+};
+
 }
 
 #endif // BUFFER_OBJECT_H
