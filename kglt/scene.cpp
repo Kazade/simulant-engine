@@ -192,8 +192,6 @@ void Scene::delete_camera(CameraID cid) {
 }
 
 bool Scene::init() {
-    assert(glGetError() == GL_NO_ERROR);
-
     return true;
 }
 

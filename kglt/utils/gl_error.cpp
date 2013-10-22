@@ -8,6 +8,7 @@
 
 #include "../kazbase/logging.h"
 #include "../kazbase/exceptions.h"
+#include "../kazbase/unicode.h"
 
 void check_and_log_error(std::string file, int lineno) {
     GLuint error = glGetError();
@@ -37,7 +38,12 @@ void check_and_log_error(std::string file, int lineno) {
             break;
         }
 
-        L_ERROR((boost::format("An OpenGL error occurred: %s:%d - %d") % file % lineno % error).str());
+        if(!file.empty()) {
+            L_ERROR((boost::format("An OpenGL error occurred: %s:%d - %d") % file % lineno % error).str());
+        } else {
+            L_ERROR(_u("An OpenGL error occurred: {0}").format(error));
+        }
+
         throw RuntimeError(_u("GL ERROR: {0}").format(error_string).encode());
     }
 }

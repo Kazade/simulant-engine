@@ -97,8 +97,7 @@ MaterialPass::MaterialPass(MaterialTechnique& technique, ShaderID shader):
     blend_(BLEND_NONE),
     depth_writes_enabled_(true),
     depth_test_enabled_(true),
-    point_size_(1),
-    line_width_(1) {
+    point_size_(1) {
 
     if(!shader) {
         throw LogicError("You must specify a shader for a material pass");

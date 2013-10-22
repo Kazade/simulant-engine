@@ -130,10 +130,8 @@ public:
     bool depth_test_enabled() const { return depth_test_enabled_; }
 
     void set_point_size(float ps) { point_size_ = ps; }
-    void set_line_width(float lw) { line_width_ = lw; }
 
     float point_size() const { return point_size_; }
-    float line_width() const { return line_width_; }
 
     void set_albedo(float reflectiveness);
     float albedo() const { return albedo_; }
@@ -164,7 +162,6 @@ private:
     bool depth_test_enabled_;    
 
     float point_size_;
-    float line_width_;
 
     float albedo_;
     uint8_t reflection_texture_unit_;

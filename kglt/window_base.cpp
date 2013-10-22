@@ -101,20 +101,20 @@ bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
         //This needs to happen after SDL or whatever is initialized
         input_controller_ = InputController::create();
 
-        glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LEQUAL);
-        glEnable(GL_MULTISAMPLE);
+        GLCheck(glEnable, GL_DEPTH_TEST);
+        GLCheck(glDepthFunc, GL_LEQUAL);
+        GLCheck(glEnable, GL_MULTISAMPLE);
 
         check_and_log_error(__FILE__, __LINE__);
 
-        glHint(GL_LINE_SMOOTH_HINT, GL_NICEST );
-        glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST );
+        GLCheck(glHint, GL_LINE_SMOOTH_HINT, GL_NICEST );
+        GLCheck(glHint, GL_POLYGON_SMOOTH_HINT, GL_NICEST );
 
         check_and_log_error(__FILE__, __LINE__);
 
-        glEnable(GL_POLYGON_SMOOTH);
-        glEnable(GL_LINE_SMOOTH);
-        glEnable(GL_CULL_FACE);
+        GLCheck(glEnable, GL_POLYGON_SMOOTH);
+        GLCheck(glEnable, GL_LINE_SMOOTH);
+        GLCheck(glEnable, GL_CULL_FACE);
 
         check_and_log_error(__FILE__, __LINE__);
 
@@ -179,8 +179,8 @@ bool WindowBase::update() {
 
     idle_.execute(); //Execute idle tasks before render
 
-    glViewport(0, 0, width(), height());
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    GLCheck(glViewport, 0, 0, width(), height());
+    GLCheck(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     check_and_log_error(__FILE__, __LINE__);
 
     scene().render();

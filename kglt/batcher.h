@@ -465,17 +465,14 @@ private:
 };
 
 struct RenderSettingsData : public GroupData {
-    RenderSettingsData(float line_width, float point_size):
-        line_width(line_width),
+    RenderSettingsData(float point_size):
         point_size(point_size) {}
 
-    float line_width;
     float point_size;
 
     std::size_t hash() const {
         size_t seed = 0;
         hash_combine(seed, typeid(RenderSettingsData).name());
-        hash_combine(seed, line_width);
         hash_combine(seed, point_size);
         return seed;
     }

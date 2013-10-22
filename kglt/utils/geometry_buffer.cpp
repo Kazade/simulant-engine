@@ -6,6 +6,7 @@
 
 #include "../kazbase/logging.h"
 #include "geometry_buffer.h"
+#include "../utils/gl_error.h"
 
 namespace kglt {
 
@@ -121,16 +122,16 @@ uint32_t GeometryBuffer::count() const {
 
 GLuint GeometryBuffer::vbo() {
     if(!vertex_buffer_) {
-        glGenBuffers(1, &vertex_buffer_);
-        glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_);
+        GLCheck(glGenBuffers, 1, &vertex_buffer_);
+        GLCheck(glBindBuffer, GL_ARRAY_BUFFER, vertex_buffer_);
         if(!buffer_.empty()) {
-            glBufferData(GL_ARRAY_BUFFER, buffer_.size() * sizeof(float), &buffer_[0], GL_STATIC_DRAW);
+            GLCheck(glBufferData, GL_ARRAY_BUFFER, buffer_.size() * sizeof(float), &buffer_[0], GL_STATIC_DRAW);
         } else {
             L_WARN("Tried to create a VBO with no data");
         }
     } else {
-        glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_);
-        //glBufferData(GL_ARRAY_BUFFER, buffer_.size() * sizeof(float), &buffer_[0], GL_STATIC_DRAW);
+        GLCheck(glBindBuffer, GL_ARRAY_BUFFER, vertex_buffer_);
+        //GLCheck(glBufferData, GL_ARRAY_BUFFER, buffer_.size() * sizeof(float), &buffer_[0], GL_STATIC_DRAW);
     }
 
     return vertex_buffer_;

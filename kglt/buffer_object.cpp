@@ -2,6 +2,7 @@
 #include "kazbase/logging.h"
 #include "buffer_object.h"
 #include "utils/gl_thread_check.h"
+#include "utils/gl_error.h"
 
 namespace kglt {
 
@@ -34,7 +35,7 @@ BufferObject::~BufferObject() {
 
 void BufferObject::release() {
     if(buffer_id_) {
-        glDeleteBuffers(1, &buffer_id_);
+        GLCheck(glDeleteBuffers, 1, &buffer_id_);
     }
 }
 
@@ -43,14 +44,14 @@ void BufferObject::bind() const {
 
     assert(initialized_);
     assert(buffer_id_);
-    glBindBuffer(gl_target_, buffer_id_);
+    GLCheck(glBindBuffer, gl_target_, buffer_id_);
 }
 
 void BufferObject::create(uint32_t byte_size, const void* data) {
     GLThreadCheck::check();
 
     if(!buffer_id_) {
-        glGenBuffers(1, &buffer_id_);
+        GLCheck(glGenBuffers, 1, &buffer_id_);
     }
 
     assert(buffer_id_);
@@ -88,10 +89,8 @@ void BufferObject::create(uint32_t byte_size, const void* data) {
             throw std::logic_error("What the...?");
     }
 
-    glBindBuffer(gl_target_, buffer_id_);
-    assert(glGetError() == 0);
-    glBufferData(gl_target_, byte_size, data, usage);
-    assert(glGetError() == 0);
+    GLCheck(glBindBuffer, gl_target_, buffer_id_);
+    GLCheck(glBufferData, gl_target_, byte_size, data, usage);
     initialized_ = true;
 }
 
@@ -100,8 +99,8 @@ void BufferObject::modify(uint32_t offset, uint32_t byte_size, const void* data)
 
     assert(buffer_id_);
 
-    glBindBuffer(gl_target_, buffer_id_);
-    glBufferSubData(gl_target_, offset, byte_size, data);
+    GLCheck(glBindBuffer, gl_target_, buffer_id_);
+    GLCheck(glBufferSubData, gl_target_, offset, byte_size, data);
 }
 
 }

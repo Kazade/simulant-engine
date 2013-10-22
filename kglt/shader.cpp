@@ -78,12 +78,12 @@ ShaderProgram::~ShaderProgram() {
     try {
         for(uint32_t i = 0; i < ShaderType::SHADER_TYPE_MAX; ++i) {
             if(shader_ids_[i] != 0) {
-                glDeleteShader(shader_ids_[i]);
+                GLCheck(glDeleteShader, shader_ids_[i]);
             }
         }
 
         if(program_id_) {
-            glDeleteProgram(program_id_);
+            GLCheck(glDeleteProgram, program_id_);
         }
         check_and_log_error(__FILE__, __LINE__);
     } catch (...) { }
@@ -93,7 +93,7 @@ void ShaderProgram::activate() {
     GLThreadCheck::check();
 
     check_and_log_error(__FILE__, __LINE__);
-    glUseProgram(program_id_);
+    GLCheck(glUseProgram, program_id_);
     check_and_log_error(__FILE__, __LINE__);
 
     active_shader_ = this;
@@ -102,14 +102,14 @@ void ShaderProgram::activate() {
 void ShaderProgram::deactivate() {
     GLThreadCheck::check();
 
-    glUseProgram(0);
+    GLCheck(glUseProgram, 0);
     active_shader_ = nullptr;
 }
 
 void ShaderProgram::bind_attrib(uint32_t idx, const std::string& name) {
     GLThreadCheck::check();
 
-    glBindAttribLocation(program_id_, idx, name.c_str());
+    GLCheck(glBindAttribLocation, program_id_, idx, name.c_str());
     check_and_log_error(__FILE__, __LINE__);
 }
 
@@ -119,12 +119,12 @@ void ShaderProgram::add_and_compile(ShaderType type, const unicode &source) {
     check_and_log_error(__FILE__, __LINE__);
 
     if(program_id_ == 0) {
-        program_id_ = glCreateProgram();
+        program_id_ = GLCheck<GLuint>(glCreateProgram);
         check_and_log_error(__FILE__, __LINE__);
     }
 
     if(shader_ids_[type] != 0) {
-        glDeleteShader(shader_ids_[type]);
+        GLCheck(glDeleteShader, shader_ids_[type]);
         shader_ids_[type] = 0;
         check_and_log_error(__FILE__, __LINE__);
     }
@@ -143,23 +143,23 @@ void ShaderProgram::add_and_compile(ShaderType type, const unicode &source) {
             throw std::logic_error("Invalid shader type");
     }
     check_and_log_error(__FILE__, __LINE__);
-    GLuint shader = glCreateShader(shader_type);
+    GLuint shader = GLCheck<GLuint>(glCreateShader, shader_type);
     check_and_log_error(__FILE__, __LINE__);
     shader_ids_[type] = shader;
 
     std::string encoded_string = source.encode();
     const char* c_str = encoded_string.c_str();
-    glShaderSource(shader, 1, &c_str, nullptr);
+    GLCheck(glShaderSource, shader, 1, &c_str, nullptr);
     check_and_log_error(__FILE__, __LINE__);
 
-    glCompileShader(shader);
+    GLCheck(glCompileShader, shader);
     check_and_log_error(__FILE__, __LINE__);
 
     GLint compiled = 0;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+    GLCheck(glGetShaderiv, shader, GL_COMPILE_STATUS, &compiled);
     if(!compiled) {
         GLint length;                
-        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
+        GLCheck(glGetShaderiv, shader, GL_INFO_LOG_LENGTH, &length);
 
         if(length < 0) {
             L_ERROR("Unable to get the info log for the errornous shader, are you calling from the right thread?");
@@ -169,7 +169,7 @@ void ShaderProgram::add_and_compile(ShaderType type, const unicode &source) {
         std::vector<char> log;
         log.resize(length);
 
-        glGetShaderInfoLog(shader, length, NULL, &log[0]);
+        GLCheck<void>(glGetShaderInfoLog, shader, length, (GLsizei*)NULL, &log[0]);
         throw RuntimeError(std::string(log.begin(), log.end()));
     }
 
@@ -177,7 +177,7 @@ void ShaderProgram::add_and_compile(ShaderType type, const unicode &source) {
     assert(shader);
 
     check_and_log_error(__FILE__, __LINE__);
-    glAttachShader(program_id_, shader);
+    GLCheck(glAttachShader, program_id_, shader);
     check_and_log_error(__FILE__, __LINE__);
 
     relink();
@@ -188,19 +188,19 @@ void ShaderProgram::relink() {
 
     GLint linked = 0;
 
-    glLinkProgram(program_id_);
+    GLCheck(glLinkProgram, program_id_);
     check_and_log_error(__FILE__, __LINE__);
 
-    glGetProgramiv(program_id_, GL_LINK_STATUS, &linked);
+    GLCheck(glGetProgramiv, program_id_, GL_LINK_STATUS, &linked);
 
     if(!linked) {
         GLint length;
-        glGetProgramiv(program_id_, GL_INFO_LOG_LENGTH, &length);
+        GLCheck(glGetProgramiv, program_id_, GL_INFO_LOG_LENGTH, &length);
 
         std::vector<char> log;
         log.resize(length);
 
-        glGetProgramInfoLog(program_id_, length, NULL, &log[0]);
+        GLCheck(glGetProgramInfoLog, program_id_, length, (GLsizei*)NULL, &log[0]);
         L_ERROR(std::string(log.begin(), log.end()));
     }
     assert(linked);
@@ -209,7 +209,7 @@ void ShaderProgram::relink() {
 int32_t ShaderProgram::get_attrib_loc(const std::string& name) {
     GLThreadCheck::check();
 
-    GLint location = glGetAttribLocation(program_id_, name.c_str());
+    GLint location = GLCheck<GLint>(glGetAttribLocation, program_id_, name.c_str());
     if(location < 0) {
         L_WARN("No attribute with name: " + name);
     }
@@ -225,7 +225,7 @@ int32_t ShaderProgram::get_uniform_loc(const std::string& name) {
         return (*it).second;
     }
 
-    GLint location = glGetUniformLocation(program_id_, name.c_str());
+    GLint location = GLCheck<GLint>(glGetUniformLocation, program_id_, name.c_str());
     if(location < 0) {
         L_WARN("No uniform with name: " + name);
         return -1;
@@ -245,7 +245,7 @@ void ShaderProgram::set_uniform(const std::string& name, const float x) {
     activate();
     int32_t loc = get_uniform_loc(name);
     if(loc > -1) {
-        glUniform1f(loc, x);
+        GLCheck(glUniform1f, loc, x);
     }
 }
 
@@ -255,7 +255,7 @@ void ShaderProgram::set_uniform(const std::string& name, const int32_t x) {
     activate();
     int32_t loc = get_uniform_loc(name);
     if(loc > -1) {
-        glUniform1i(loc, x);
+        GLCheck(glUniform1i, loc, x);
     }
 }
 
@@ -268,7 +268,7 @@ void ShaderProgram::set_uniform(const std::string& name, const kmMat4* matrix) {
         float mat[16];
         unsigned char i = 16;
         while(i--) { mat[i] = (float) matrix->mat[i]; }
-        glUniformMatrix4fv(loc, 1, false, (GLfloat*)mat);
+        GLCheck(glUniformMatrix4fv, loc, 1, false, (GLfloat*)mat);
     }
 }
 
@@ -281,7 +281,7 @@ void ShaderProgram::set_uniform(const std::string& name, const kmMat3* matrix) {
         float mat[9];
         unsigned char i = 9;
         while(i--) { mat[i] = (float) matrix->mat[i]; }
-        glUniformMatrix3fv(loc, 1, false, (GLfloat*)mat);
+        GLCheck(glUniformMatrix3fv, loc, 1, false, (GLfloat*)mat);
     }
 }
 
@@ -291,7 +291,7 @@ void ShaderProgram::set_uniform(const std::string& name, const kmVec3* vec) {
     activate();
     GLint loc = get_uniform_loc(name);
     if(loc >= 0) {
-        glUniform3fv(loc, 1, (GLfloat*) vec);
+        GLCheck(glUniform3fv, loc, 1, (GLfloat*) vec);
     }
 }
 
@@ -301,7 +301,7 @@ void ShaderProgram::set_uniform(const std::string& name, const kmVec4* vec) {
     activate();
     GLint loc = get_uniform_loc(name);
     if(loc >= 0) {
-        glUniform4fv(loc, 1, (GLfloat*) vec);
+        GLCheck(glUniform4fv, loc, 1, (GLfloat*) vec);
     }
 }
 
@@ -311,7 +311,7 @@ void ShaderProgram::set_uniform(const std::string& name, const std::vector<kmMat
     activate();
     GLint loc = get_uniform_loc(name);
     if(loc >= 0) {
-        glUniformMatrix4fv(loc, matrices.size(), false, (GLfloat*) &matrices[0]);
+        GLCheck(glUniformMatrix4fv, loc, matrices.size(), false, (GLfloat*) &matrices[0]);
     }
 }
 

@@ -16,7 +16,7 @@ namespace kglt {
 
 Texture::~Texture() {
     if(gl_tex_) {
-        glDeleteTextures(1, &gl_tex_);
+        GLCheck(glDeleteTextures, 1, &gl_tex_);
     }
 }
 
@@ -70,15 +70,15 @@ void Texture::__do_upload(bool free_after, bool generate_mipmaps, bool repeat, b
     check_and_log_error(__FILE__, __LINE__);
 
     if(!gl_tex()) {
-        glGenTextures(1, &gl_tex_);
+        GLCheck(glGenTextures, 1, &gl_tex_);
     }
 
     check_and_log_error(__FILE__, __LINE__);
 
-    glBindTexture(GL_TEXTURE_2D, gl_tex_);
+    GLCheck(glBindTexture, GL_TEXTURE_2D, gl_tex_);
     check_and_log_error(__FILE__, __LINE__);
 
-    glTexImage2D(
+    GLCheck(glTexImage2D, 
         GL_TEXTURE_2D,
         0, (bpp_ == 32)? GL_RGBA: GL_RGB,
         width_, height_, 0,
@@ -88,26 +88,26 @@ void Texture::__do_upload(bool free_after, bool generate_mipmaps, bool repeat, b
     check_and_log_error(__FILE__, __LINE__);
 
     if(generate_mipmaps) {
-        glGenerateMipmap(GL_TEXTURE_2D);
+        GLCheck(glGenerateMipmap, GL_TEXTURE_2D);
     }
     check_and_log_error(__FILE__, __LINE__);
 
     if(repeat) {
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        GLCheck(glTexParameterf, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        GLCheck(glTexParameterf, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     } else {
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        GLCheck(glTexParameterf, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        GLCheck(glTexParameterf, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     }
 
     check_and_log_error(__FILE__, __LINE__);
 
     if(!linear) {
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     } else {
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     }
 
     check_and_log_error(__FILE__, __LINE__);

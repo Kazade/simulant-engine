@@ -265,7 +265,6 @@ void VertexData::reset(BufferObjectUsage usage) {
 void VertexData::done() {
     scene_.window().idle().add_once([&](){
         buffer_object_.create(data_.size() * sizeof(Vertex), &data_[0]);
-        assert(glGetError() == GL_NO_ERROR);
     });
 
     signal_update_complete_.emit();

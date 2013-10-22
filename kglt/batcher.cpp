@@ -10,6 +10,8 @@
 #include "camera.h"
 #include "partitioner.h"
 
+#include "utils/gl_error.h"
+
 namespace kglt {
 
 void RootGroup::bind() {
@@ -60,7 +62,7 @@ void RootGroup::insert(SubActor &ent, uint8_t pass_number) {
     current = &current->get_or_create<BlendGroup>(BlendGroupData(pass.blending()));
 
     //Add a node for the render settings
-    current = &current->get_or_create<RenderSettingsGroup>(RenderSettingsData(pass.line_width(), pass.point_size()));
+    current = &current->get_or_create<RenderSettingsGroup>(RenderSettingsData(pass.point_size()));
 
     //FIXME: This code is duplicated below and that's bollocks
     if(!pass.texture_unit_count()) {
@@ -184,33 +186,33 @@ void ShaderGroup::unbind() {
 
 void DepthGroup::bind() {
     if(data_.depth_test) {
-        glEnable(GL_DEPTH_TEST);
+        GLCheck(glEnable, GL_DEPTH_TEST);
     } else {
-        glDisable(GL_DEPTH_TEST);
+        GLCheck(glDisable, GL_DEPTH_TEST);
     }
 
     if(data_.depth_write) {
-        glDepthMask(GL_TRUE);
+        GLCheck(glDepthMask, GL_TRUE);
     } else {
-        glDepthMask(GL_FALSE);
+        GLCheck(glDepthMask, GL_FALSE);
     }
 }
 
 void DepthGroup::unbind() {
     if(data_.depth_test) {
-        glDisable(GL_DEPTH_TEST);
+        GLCheck(glDisable, GL_DEPTH_TEST);
     }
 }
 
 void TextureGroup::bind() {
-    glActiveTexture(GL_TEXTURE0 + data_.unit);
+    GLCheck(glActiveTexture, GL_TEXTURE0 + data_.unit);
     RootGroup& root = static_cast<RootGroup&>(get_root());
-    glBindTexture(GL_TEXTURE_2D, root.stage().texture(data_.texture_id)->gl_tex());
+    GLCheck(glBindTexture, GL_TEXTURE_2D, root.stage().texture(data_.texture_id)->gl_tex());
 }
 
 void TextureGroup::unbind() {
-    glActiveTexture(GL_TEXTURE0 + data_.unit);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    GLCheck(glActiveTexture, GL_TEXTURE0 + data_.unit);
+    GLCheck(glBindTexture, GL_TEXTURE_2D, 0);
 }
 
 void TextureMatrixGroup::bind() {
@@ -280,21 +282,21 @@ void MaterialGroup::unbind() {
 
 void BlendGroup::bind() {
     if(data_.type == BLEND_NONE) {
-        glDisable(GL_BLEND);
+        GLCheck(glDisable, GL_BLEND);
         return;
     }
 
-    glEnable(GL_BLEND);
+    GLCheck(glEnable, GL_BLEND);
     switch(data_.type) {
-        case BLEND_ADD: glBlendFunc(GL_ONE, GL_ONE);
+        case BLEND_ADD: GLCheck(glBlendFunc, GL_ONE, GL_ONE);
         break;
-        case BLEND_ALPHA: glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        case BLEND_ALPHA: GLCheck(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         break;
-        case BLEND_COLOUR: glBlendFunc(GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
+        case BLEND_COLOUR: GLCheck(glBlendFunc, GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
         break;
-        case BLEND_MODULATE: glBlendFunc(GL_DST_COLOR, GL_ZERO);
+        case BLEND_MODULATE: GLCheck(glBlendFunc, GL_DST_COLOR, GL_ZERO);
         break;
-        case BLEND_ONE_ONE_MINUS_ALPHA: glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        case BLEND_ONE_ONE_MINUS_ALPHA: GLCheck(glBlendFunc, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         break;
     default:
         throw ValueError("Invalid blend type specified");
@@ -302,17 +304,15 @@ void BlendGroup::bind() {
 }
 
 void BlendGroup::unbind() {
-    glDisable(GL_BLEND);
+    GLCheck(glDisable, GL_BLEND);
 }
 
 void RenderSettingsGroup::bind() {
-    glPointSize(data_.point_size);
-    glLineWidth(data_.line_width);
+    GLCheck(glPointSize, data_.point_size);
 }
 
 void RenderSettingsGroup::unbind() {
-    glPointSize(1);
-    glLineWidth(1);
+    GLCheck(glPointSize, 1);
 }
 
 }

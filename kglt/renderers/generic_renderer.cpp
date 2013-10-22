@@ -136,8 +136,8 @@ void send_attribute(ShaderProgram& s,
     auto get_has_attribute = std::bind(exists_on_data_predicate, std::reference_wrapper<const VertexData>(data));
     auto get_offset = std::bind(offset_func, std::reference_wrapper<const VertexData>(data));
     if(get_has_attribute()) {
-        glEnableVertexAttribArray(loc);
-        glVertexAttribPointer(
+        GLCheck(glEnableVertexAttribArray, loc);
+        GLCheck(glVertexAttribPointer, 
             loc,
             SHADER_ATTRIBUTE_SIZES.find(attr)->second,
             GL_FLOAT,
@@ -168,21 +168,21 @@ void GenericRenderer::set_auto_attributes_on_shader(ShaderProgram& s, SubActor& 
 
 void GenericRenderer::set_blending_mode(BlendType type) {
     if(type == BLEND_NONE) {
-        glDisable(GL_BLEND);
+        GLCheck(glDisable, GL_BLEND);
         return;
     }
 
-    glEnable(GL_BLEND);
+    GLCheck(glEnable, GL_BLEND);
     switch(type) {
-        case BLEND_ADD: glBlendFunc(GL_ONE, GL_ONE);
+        case BLEND_ADD: GLCheck(glBlendFunc, GL_ONE, GL_ONE);
         break;
-        case BLEND_ALPHA: glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        case BLEND_ALPHA: GLCheck(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         break;
-        case BLEND_COLOUR: glBlendFunc(GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
+        case BLEND_COLOUR: GLCheck(glBlendFunc, GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
         break;
-        case BLEND_MODULATE: glBlendFunc(GL_DST_COLOR, GL_ZERO);
+        case BLEND_MODULATE: GLCheck(glBlendFunc, GL_DST_COLOR, GL_ZERO);
         break;
-        case BLEND_ONE_ONE_MINUS_ALPHA: glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        case BLEND_ONE_ONE_MINUS_ALPHA: GLCheck(glBlendFunc, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         break;
     default:
         throw ValueError("Invalid blend type specified");
@@ -212,30 +212,30 @@ void GenericRenderer::render_subactor(SubActor& buffer, CameraID camera) {
 
     //Render the mesh, once for each iteration of the pass
     if(buffer.arrangement() == MESH_ARRANGEMENT_POINTS) {
-        glDrawElements(GL_POINTS, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+        GLCheck(glDrawElements, GL_POINTS, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
     } else if(buffer.arrangement() == MESH_ARRANGEMENT_LINES) {
-        glDrawElements(GL_LINES, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+        GLCheck(glDrawElements, GL_LINES, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
     } else if(buffer.arrangement() == MESH_ARRANGEMENT_LINE_STRIP) {
-        glDrawElements(GL_LINE_STRIP, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+        GLCheck(glDrawElements, GL_LINE_STRIP, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
     } else if(buffer.arrangement() == MESH_ARRANGEMENT_TRIANGLES) {
-        glDrawElements(GL_TRIANGLES, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+        GLCheck(glDrawElements, GL_TRIANGLES, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
     } else if(buffer.arrangement() == MESH_ARRANGEMENT_TRIANGLE_STRIP)  {
-        glDrawElements(GL_TRIANGLE_STRIP, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+        GLCheck(glDrawElements, GL_TRIANGLE_STRIP, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
     } else if(buffer.arrangement() == MESH_ARRANGEMENT_TRIANGLE_FAN)  {
-        glDrawElements(GL_TRIANGLE_FAN, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+        GLCheck(glDrawElements, GL_TRIANGLE_FAN, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
     }
     else {
         assert(0);
     }
 
 
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
-    glDisableVertexAttribArray(2);
-    glDisableVertexAttribArray(3);
-    glDisableVertexAttribArray(4);
-    glDisableVertexAttribArray(5);
-    glDisableVertexAttribArray(6);
+    GLCheck(glDisableVertexAttribArray, 0);
+    GLCheck(glDisableVertexAttribArray, 1);
+    GLCheck(glDisableVertexAttribArray, 2);
+    GLCheck(glDisableVertexAttribArray, 3);
+    GLCheck(glDisableVertexAttribArray, 4);
+    GLCheck(glDisableVertexAttribArray, 5);
+    GLCheck(glDisableVertexAttribArray, 6);
 
     check_and_log_error(__FILE__, __LINE__);
 

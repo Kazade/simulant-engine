@@ -85,7 +85,7 @@ public:
 
         shader_ = scene_.new_shader_from_files(vert_shader, frag_shader);
 
-        glGenVertexArrays(1, &tmp_vao_);
+        GLCheck(glGenVertexArrays, 1, &tmp_vao_);
     }
 
     bool LoadTexture(Rocket::Core::TextureHandle& texture_handle, Rocket::Core::Vector2i& texture_dimensions, const Rocket::Core::String& source) {
@@ -142,7 +142,7 @@ public:
         new_group->num_indices = num_indices;
         new_group->num_vertices = num_vertices;
 
-        glGenVertexArrays(1, &new_group->vao);
+        GLCheck(glGenVertexArrays, 1, &new_group->vao);
 
         /*FIXME: WARNING: This is a cast from pointer to an unsigned long, might not be portable! */
         Rocket::Core::CompiledGeometryHandle res = (unsigned long) new_group.get();
@@ -158,7 +158,7 @@ public:
             int num_indices, Rocket::Core::TextureHandle texture,
             const Rocket::Core::Vector2f& translation) {
 
-        glBindVertexArray(tmp_vao_);
+        GLCheck(glBindVertexArray, tmp_vao_);
 
         //Update the buffers
         tmp_vertex_buffer_.create(num_vertices * sizeof(Rocket::Core::Vertex), vertices);
@@ -174,20 +174,20 @@ public:
 
         check_and_log_error(__FILE__, __LINE__);
 
-        glVertexAttribPointer(
+        GLCheck(glVertexAttribPointer, 
             pos_attrib,
             2, GL_FLOAT, GL_FALSE, sizeof(Rocket::Core::Vertex),
             BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, position))
         );
 
-        glVertexAttribPointer(
+        GLCheck(glVertexAttribPointer, 
             colour_attrib,
             4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Rocket::Core::Vertex),
             BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, colour))
         );
 
         if(texture) {
-            glVertexAttribPointer(
+            GLCheck(glVertexAttribPointer, 
                 texcoord_attrib,
                 2, GL_FLOAT, GL_FALSE, sizeof(Rocket::Core::Vertex),
                 BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, tex_coord))
@@ -196,11 +196,11 @@ public:
 
         check_and_log_error(__FILE__, __LINE__);
 
-        glDrawElements(GL_TRIANGLES, num_indices, GL_UNSIGNED_INT, BUFFER_OFFSET(0));
+        GLCheck(glDrawElements, GL_TRIANGLES, num_indices, GL_UNSIGNED_INT, BUFFER_OFFSET(0));
 
         unset_render_state();
 
-        glBindVertexArray(0);
+        GLCheck(glBindVertexArray, 0);
     }
 
     void prepare_shader(const Rocket::Core::Vector2f& translation, Rocket::Core::TextureHandle texture, int& pos_attrib, int& colour_attrib, int& texcoord_attrib) {
@@ -219,34 +219,34 @@ public:
             assert(texcoord_attrib > -1);
         }
 
-        glEnableVertexAttribArray(pos_attrib);
-        glEnableVertexAttribArray(colour_attrib);
+        GLCheck(glEnableVertexAttribArray, pos_attrib);
+        GLCheck(glEnableVertexAttribArray, colour_attrib);
 
         check_and_log_error(__FILE__, __LINE__);
 
         if(texture) {
             GLuint tex_id = textures_[texture]->gl_tex();
-            glBindTexture(GL_TEXTURE_2D, tex_id);
+            GLCheck(glBindTexture, GL_TEXTURE_2D, tex_id);
 
-            glEnableVertexAttribArray(texcoord_attrib);
+            GLCheck(glEnableVertexAttribArray, texcoord_attrib);
 
         } else {
-            glDisableVertexAttribArray(texcoord_attrib);
+            GLCheck(glDisableVertexAttribArray, texcoord_attrib);
         }
 
         check_and_log_error(__FILE__, __LINE__);
     }
 
     void set_render_state() {
-        glDisable(GL_DEPTH_TEST);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        GLCheck(glDisable, GL_DEPTH_TEST);
+        GLCheck(glEnable, GL_BLEND);
+        GLCheck(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         check_and_log_error(__FILE__, __LINE__);
     }
 
     void unset_render_state() {
-        glDisable(GL_BLEND);
-        glEnable(GL_DEPTH_TEST);
+        GLCheck(glDisable, GL_BLEND);
+        GLCheck(glEnable, GL_DEPTH_TEST);
 
         check_and_log_error(__FILE__, __LINE__);
     }
@@ -264,14 +264,14 @@ public:
         prepare_shader(translation, geom->texture, pos_attrib, colour_attrib, texcoord_attrib);
         set_render_state();
 
-        glBindVertexArray(geom->vao);
+        GLCheck(glBindVertexArray, geom->vao);
 
         geom->vertex_buffer->bind();
         geom->index_buffer->bind();
 
         check_and_log_error(__FILE__, __LINE__);
 
-        glVertexAttribPointer(
+        GLCheck(glVertexAttribPointer, 
             pos_attrib,
             2, GL_FLOAT, GL_FALSE, sizeof(Rocket::Core::Vertex),
             BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, position))
@@ -279,7 +279,7 @@ public:
 
         check_and_log_error(__FILE__, __LINE__);
 
-        glVertexAttribPointer(
+        GLCheck(glVertexAttribPointer, 
             colour_attrib,
             4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Rocket::Core::Vertex),
             BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, colour))
@@ -288,7 +288,7 @@ public:
         check_and_log_error(__FILE__, __LINE__);
 
         if(geom->texture) {
-            glVertexAttribPointer(
+            GLCheck(glVertexAttribPointer, 
                 texcoord_attrib,
                 2, GL_FLOAT, GL_FALSE, sizeof(Rocket::Core::Vertex),
                 BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, tex_coord))
@@ -297,11 +297,11 @@ public:
 
         check_and_log_error(__FILE__, __LINE__);
 
-        glDrawElements(GL_TRIANGLES, geom->num_indices, GL_UNSIGNED_INT, BUFFER_OFFSET(0));
+        GLCheck(glDrawElements, GL_TRIANGLES, geom->num_indices, GL_UNSIGNED_INT, BUFFER_OFFSET(0));
 
         unset_render_state();
 
-        glBindVertexArray(0);
+        GLCheck(glBindVertexArray, 0);
     }
 
     void ReleaseCompiledGeometry(Rocket::Core::CompiledGeometryHandle geometry) {
@@ -313,21 +313,21 @@ public:
         (*it).second->vertex_buffer->release();
         (*it).second->index_buffer->release();
 
-        glDeleteVertexArrays(1, &(*it).second->vao);
+        GLCheck(glDeleteVertexArrays, 1, &(*it).second->vao);
 
         compiled_geoms_.erase(it);
     }
 
     void EnableScissorRegion(bool enable) {
         if(enable) {
-            glEnable(GL_SCISSOR_TEST);
+            GLCheck(glEnable, GL_SCISSOR_TEST);
         } else {
-            glDisable(GL_SCISSOR_TEST);
+            GLCheck(glDisable, GL_SCISSOR_TEST);
         }
     }
 
     void SetScissorRegion(int x, int y, int width, int height) {
-        glScissor(x, scene_.window().height() - (y + height), width, height);
+        GLCheck(glScissor, x, scene_.window().height() - (y + height), width, height);
     }
 
 

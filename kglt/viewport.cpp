@@ -5,6 +5,7 @@
 #include "scene.h"
 
 #include "kglt/kazbase/exceptions.h"
+#include "utils/gl_error.h"
 
 namespace kglt {
 
@@ -54,14 +55,14 @@ void Viewport::set_orthographic_projection_from_height(float desired_height_in_u
 void Viewport::clear() {
     apply();
 
-    glClearColor(colour_.r, colour_.g, colour_.b, colour_.a);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    GLCheck(glClearColor, colour_.r, colour_.g, colour_.b, colour_.a);
+    GLCheck(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void Viewport::apply() const {
     double x, y, width, height;
 
-	glDisable(GL_SCISSOR_TEST);
+	GLCheck(glDisable, GL_SCISSOR_TEST);
 	switch(type_) {
 		case VIEWPORT_TYPE_CUSTOM: {
 			x = x_;
@@ -99,9 +100,9 @@ void Viewport::apply() const {
 			assert(0 && "Not Implemented");
 	}
 
-    glEnable(GL_SCISSOR_TEST);
-    glScissor(x, y, width, height);
-    glViewport(x, y, width, height);
+    GLCheck(glEnable, GL_SCISSOR_TEST);
+    GLCheck(glScissor, x, y, width, height);
+    GLCheck(glViewport, x, y, width, height);
 }
 
 }

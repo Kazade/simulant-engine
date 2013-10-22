@@ -87,9 +87,9 @@ bool Window::create_window(int width, int height, int bpp, bool fullscreen) {
 
     glewExperimental = true;
     GLenum err = glewInit();
+    glGetError(); //Sigh, sets this regardless
     assert(err == GLEW_OK);
     assert(GLEW_VERSION_3_1);
-    glGetError(); //Ignore stupid error from GLEW
 
     //Reset the width and height to whatever was actually created
     SDL_GetWindowSize(screen_, &width, &height);
