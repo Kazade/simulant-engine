@@ -139,15 +139,11 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
 
     signal_pipeline_started_.emit(*pipeline_stage);
 
-    if(pipeline_stage->ui_stage_id()) {
+    if(pipeline_stage->ui_stage_id()) {        
         //This is a UI stage, so just render that
         auto ui_stage = scene_.ui_stage(pipeline_stage->ui_stage_id());
         ui_stage->__resize(viewport.width(), viewport.height());
-        check_and_log_error(__FILE__, __LINE__);
-
         ui_stage->__render(camera.projection_matrix());
-        check_and_log_error(__FILE__, __LINE__);
-
     } else {
         Stage& stage = scene_.stage(pipeline_stage->stage_id());
 

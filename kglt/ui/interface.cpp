@@ -56,36 +56,30 @@ private:
 };
 
 struct CompiledGroup {
-    std::unique_ptr<BufferObject> vertex_buffer;
-    std::unique_ptr<BufferObject> index_buffer;
+    std::unique_ptr<VertexArrayObject> vao;
     Rocket::Core::TextureHandle texture;
 
     int num_indices;
     int num_vertices;
-    uint32_t vao;
 };
 
 class RocketRenderInterface : public Rocket::Core::RenderInterface {
 private:
     std::unordered_map<Rocket::Core::CompiledGeometryHandle, std::shared_ptr<CompiledGroup>> compiled_geoms_;
 
-    BufferObject tmp_vertex_buffer_;
-    BufferObject tmp_index_buffer_;
-    uint32_t tmp_vao_;
+    VertexArrayObject tmp_vao_;
 
 public:
     RocketRenderInterface(Scene& scene, const Interface& interface):
         scene_(scene),
         interface_(interface),
-        tmp_vertex_buffer_(BUFFER_OBJECT_VERTEX_DATA, MODIFY_REPEATEDLY_USED_FOR_RENDERING),
-        tmp_index_buffer_(BUFFER_OBJECT_INDEX_DATA, MODIFY_REPEATEDLY_USED_FOR_RENDERING) {
+        tmp_vao_(MODIFY_REPEATEDLY_USED_FOR_RENDERING, MODIFY_REPEATEDLY_USED_FOR_RENDERING) {
 
         unicode vert_shader = scene.window().resource_locator().read_file("kglt/materials/ui.vert")->str();
         unicode frag_shader = scene.window().resource_locator().read_file("kglt/materials/ui.frag")->str();
 
         shader_ = scene_.new_shader_from_files(vert_shader, frag_shader);
-
-        GLCheck(glGenVertexArrays, 1, &tmp_vao_);
+        shader_reference_ = scene_.shader(shader_).lock(); //Prevent GC
     }
 
     bool LoadTexture(Rocket::Core::TextureHandle& texture_handle, Rocket::Core::Vector2i& texture_dimensions, const Rocket::Core::String& source) {
@@ -101,7 +95,6 @@ public:
     }
 
     bool GenerateTexture(Rocket::Core::TextureHandle& texture_handle, const Rocket::Core::byte* source, const Rocket::Core::Vector2i& dimensions) {
-        check_and_log_error(__FILE__, __LINE__);
         auto tex = manager().texture(manager().new_texture());
 
         uint32_t data_size = (dimensions.x * dimensions.y * 4);
@@ -109,14 +102,11 @@ public:
         tex->set_bpp(32);
 
         tex->data().assign(source, source + data_size);
-        check_and_log_error(__FILE__, __LINE__);
         tex->upload(true, false, false, true);
 
         texture_handle = tex->id().value();
 
         textures_[texture_handle] = tex.__object; //Hold for ref-counting
-
-        check_and_log_error(__FILE__, __LINE__);
         return true;
     }
 
@@ -131,18 +121,51 @@ public:
             int num_indices,
             Rocket::Core::TextureHandle texture) {
 
+        GLStateStash s1(GL_VERTEX_ARRAY_BINDING);
+
         auto new_group = std::make_shared<CompiledGroup>();
-        new_group->vertex_buffer = std::make_unique<BufferObject>(BUFFER_OBJECT_VERTEX_DATA);
-        new_group->index_buffer = std::make_unique<BufferObject>(BUFFER_OBJECT_INDEX_DATA);
+        new_group->vao = std::make_unique<VertexArrayObject>();
+
         new_group->texture = texture;
 
-        new_group->vertex_buffer->create(sizeof(Rocket::Core::Vertex) * num_vertices, vertices);
-        new_group->index_buffer->create(sizeof(int) * num_indices, indices);
+        new_group->vao->vertex_buffer_update(sizeof(Rocket::Core::Vertex) * num_vertices, vertices);
+        new_group->vao->index_buffer_update(sizeof(int) * num_indices, indices);
 
         new_group->num_indices = num_indices;
         new_group->num_vertices = num_vertices;
 
-        GLCheck(glGenVertexArrays, 1, &new_group->vao);
+        new_group->vao->bind();
+        new_group->vao->vertex_buffer_bind();
+        new_group->vao->index_buffer_bind();
+
+        int pos_attrib = -1, colour_attrib = -1, texcoord_attrib = -1;
+        {
+            auto shader = scene_.shader(shader_).lock();
+            pos_attrib = shader->get_attrib_loc("position");
+            colour_attrib = shader->get_attrib_loc("colour");
+            texcoord_attrib = shader->get_attrib_loc("tex_coord");
+        }
+
+        GLCheck(glEnableVertexAttribArray, pos_attrib);
+        GLCheck(glVertexAttribPointer,
+            pos_attrib,
+            2, GL_FLOAT, GL_FALSE, sizeof(Rocket::Core::Vertex),
+            BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, position))
+        );
+
+        GLCheck(glEnableVertexAttribArray, colour_attrib);
+        GLCheck(glVertexAttribPointer,
+            colour_attrib,
+            4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Rocket::Core::Vertex),
+            BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, colour))
+        );
+
+        GLCheck(glEnableVertexAttribArray, texcoord_attrib);
+        GLCheck(glVertexAttribPointer,
+            texcoord_attrib,
+            2, GL_FLOAT, GL_FALSE, sizeof(Rocket::Core::Vertex),
+            BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, tex_coord))
+        );
 
         /*FIXME: WARNING: This is a cast from pointer to an unsigned long, might not be portable! */
         Rocket::Core::CompiledGeometryHandle res = (unsigned long) new_group.get();
@@ -158,150 +181,104 @@ public:
             int num_indices, Rocket::Core::TextureHandle texture,
             const Rocket::Core::Vector2f& translation) {
 
-        GLCheck(glBindVertexArray, tmp_vao_);
+        GLStateStash s1(GL_VERTEX_ARRAY_BINDING);
+        GLStateStash s2(GL_DEPTH_TEST);
+        GLStateStash s3(GL_BLEND);
+        GLStateStash s4(GL_CURRENT_PROGRAM);
+        GLStateStash s5(GL_TEXTURE_BINDING_2D);
 
         //Update the buffers
-        tmp_vertex_buffer_.create(num_vertices * sizeof(Rocket::Core::Vertex), vertices);
-        tmp_index_buffer_.create(num_indices * sizeof(int), indices);
+        tmp_vao_.vertex_buffer_update(num_vertices * sizeof(Rocket::Core::Vertex), vertices);
+        tmp_vao_.index_buffer_update(num_indices * sizeof(int), indices);
+        tmp_vao_.bind();
+        tmp_vao_.vertex_buffer_bind();
+        tmp_vao_.index_buffer_bind();
 
-        tmp_vertex_buffer_.bind();
-        tmp_index_buffer_.bind();
+        GLCheck(glDisable, GL_DEPTH_TEST);
+        GLCheck(glEnable, GL_BLEND);
+        GLCheck(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        prepare_shader(translation);
 
         int pos_attrib = -1, colour_attrib = -1, texcoord_attrib = -1;
-        prepare_shader(translation, texture, pos_attrib, colour_attrib, texcoord_attrib);
+        {
+            auto shader = scene_.shader(shader_).lock();
+            pos_attrib = shader->get_attrib_loc("position");
+            colour_attrib = shader->get_attrib_loc("colour");
+            texcoord_attrib = shader->get_attrib_loc("tex_coord");
+        }
 
-        set_render_state();
-
-        check_and_log_error(__FILE__, __LINE__);
-
+        GLCheck(glEnableVertexAttribArray, pos_attrib);
         GLCheck(glVertexAttribPointer, 
             pos_attrib,
             2, GL_FLOAT, GL_FALSE, sizeof(Rocket::Core::Vertex),
             BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, position))
         );
 
+        GLCheck(glEnableVertexAttribArray, colour_attrib);
         GLCheck(glVertexAttribPointer, 
             colour_attrib,
             4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Rocket::Core::Vertex),
             BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, colour))
         );
 
-        if(texture) {
-            GLCheck(glVertexAttribPointer, 
-                texcoord_attrib,
-                2, GL_FLOAT, GL_FALSE, sizeof(Rocket::Core::Vertex),
-                BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, tex_coord))
-            );
-        }
+        GLCheck(glEnableVertexAttribArray, texcoord_attrib);
+        GLCheck(glVertexAttribPointer,
+            texcoord_attrib,
+            2, GL_FLOAT, GL_FALSE, sizeof(Rocket::Core::Vertex),
+            BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, tex_coord))
+        );
 
-        check_and_log_error(__FILE__, __LINE__);
-
-        GLCheck(glDrawElements, GL_TRIANGLES, num_indices, GL_UNSIGNED_INT, BUFFER_OFFSET(0));
-
-        unset_render_state();
-
-        GLCheck(glBindVertexArray, 0);
-    }
-
-    void prepare_shader(const Rocket::Core::Vector2f& translation, Rocket::Core::TextureHandle texture, int& pos_attrib, int& colour_attrib, int& texcoord_attrib) {
-        Mat4 transform;
-        kmMat4Translation(&transform, translation.x, translation.y, 0);
-
-        {
-            auto shader = scene_.shader(shader_).lock();
-            shader->params().set_mat4x4("modelview_projection", transform * interface_.projection_matrix());
-            pos_attrib = shader->get_attrib_loc("position");
-            colour_attrib = shader->get_attrib_loc("colour");
-            texcoord_attrib = shader->get_attrib_loc("tex_coord");
-
-            assert(pos_attrib > -1);
-            assert(colour_attrib > -1);
-            assert(texcoord_attrib > -1);
-        }
-
-        GLCheck(glEnableVertexAttribArray, pos_attrib);
-        GLCheck(glEnableVertexAttribArray, colour_attrib);
-
-        check_and_log_error(__FILE__, __LINE__);
-
+        GLCheck(glActiveTexture, GL_TEXTURE0);
         if(texture) {
             GLuint tex_id = textures_[texture]->gl_tex();
             GLCheck(glBindTexture, GL_TEXTURE_2D, tex_id);
-
-            GLCheck(glEnableVertexAttribArray, texcoord_attrib);
-
         } else {
-            GLCheck(glDisableVertexAttribArray, texcoord_attrib);
+            GLCheck(glBindTexture, GL_TEXTURE_2D, scene_.texture(scene_.default_texture_id())->gl_tex());
         }
 
-        check_and_log_error(__FILE__, __LINE__);
+        GLCheck(glDrawElements, GL_TRIANGLES, num_indices, GL_UNSIGNED_INT, BUFFER_OFFSET(0));
     }
 
-    void set_render_state() {
-        GLCheck(glDisable, GL_DEPTH_TEST);
-        GLCheck(glEnable, GL_BLEND);
-        GLCheck(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        check_and_log_error(__FILE__, __LINE__);
-    }
+    void prepare_shader(const Rocket::Core::Vector2f& translation) {
+        Mat4 transform;
+        kmMat4Translation(&transform, translation.x, translation.y, 0);
 
-    void unset_render_state() {
-        GLCheck(glDisable, GL_BLEND);
-        GLCheck(glEnable, GL_DEPTH_TEST);
-
-        check_and_log_error(__FILE__, __LINE__);
+        auto shader = scene_.shader(shader_).lock();
+        shader->activate();
+        shader->params().set_mat4x4("modelview_projection", interface_.projection_matrix() * transform);
+        shader->params().set_int("texture_unit", 0);
     }
 
     void RenderCompiledGeometry(Rocket::Core::CompiledGeometryHandle geometry, const Rocket::Core::Vector2f& translation) {
         auto it = compiled_geoms_.find(geometry);
-        if(it == compiled_geoms_.end()) {
-            return;
-        }
+        assert(it != compiled_geoms_.end());
 
         auto geom = (*it).second;
 
-        int pos_attrib = -1, colour_attrib = -1, texcoord_attrib = -1;
+        GLStateStash s1(GL_VERTEX_ARRAY_BINDING);
+        GLStateStash s2(GL_DEPTH_TEST);
+        GLStateStash s3(GL_BLEND);
+        GLStateStash s4(GL_CURRENT_PROGRAM);
+        GLStateStash s5(GL_TEXTURE_BINDING_2D);
 
-        prepare_shader(translation, geom->texture, pos_attrib, colour_attrib, texcoord_attrib);
-        set_render_state();
+        GLCheck(glDisable, GL_DEPTH_TEST);
+        GLCheck(glEnable, GL_BLEND);
+        GLCheck(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        GLCheck(glBindVertexArray, geom->vao);
+        geom->vao->bind();
 
-        geom->vertex_buffer->bind();
-        geom->index_buffer->bind();
-
-        check_and_log_error(__FILE__, __LINE__);
-
-        GLCheck(glVertexAttribPointer, 
-            pos_attrib,
-            2, GL_FLOAT, GL_FALSE, sizeof(Rocket::Core::Vertex),
-            BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, position))
-        );
-
-        check_and_log_error(__FILE__, __LINE__);
-
-        GLCheck(glVertexAttribPointer, 
-            colour_attrib,
-            4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Rocket::Core::Vertex),
-            BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, colour))
-        );
-
-        check_and_log_error(__FILE__, __LINE__);
-
+        GLCheck(glActiveTexture, GL_TEXTURE0);
         if(geom->texture) {
-            GLCheck(glVertexAttribPointer, 
-                texcoord_attrib,
-                2, GL_FLOAT, GL_FALSE, sizeof(Rocket::Core::Vertex),
-                BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, tex_coord))
-            );
+            GLuint tex_id = textures_[geom->texture]->gl_tex();
+            GLCheck(glBindTexture, GL_TEXTURE_2D, tex_id);
+        } else {
+            GLCheck(glBindTexture, GL_TEXTURE_2D, scene_.texture(scene_.default_texture_id())->gl_tex());
         }
 
-        check_and_log_error(__FILE__, __LINE__);
+        prepare_shader(translation);
 
         GLCheck(glDrawElements, GL_TRIANGLES, geom->num_indices, GL_UNSIGNED_INT, BUFFER_OFFSET(0));
-
-        unset_render_state();
-
-        GLCheck(glBindVertexArray, 0);
     }
 
     void ReleaseCompiledGeometry(Rocket::Core::CompiledGeometryHandle geometry) {
@@ -309,11 +286,6 @@ public:
         if(it == compiled_geoms_.end()) {
             return;
         }
-
-        (*it).second->vertex_buffer->release();
-        (*it).second->index_buffer->release();
-
-        GLCheck(glDeleteVertexArrays, 1, &(*it).second->vao);
 
         compiled_geoms_.erase(it);
     }
@@ -338,7 +310,9 @@ public:
 private:
     Scene& scene_;
     const Interface& interface_;
+
     ShaderID shader_ = ShaderID();
+    ShaderProgram::ptr shader_reference_;
 
     std::map<Rocket::Core::TextureHandle, TexturePtr> textures_;
 };
@@ -436,7 +410,6 @@ void Interface::update(float dt) {
 
 void Interface::render(const Mat4 &projection_matrix) {
     set_projection_matrix(projection_matrix); //Set the projection matrix
-    check_and_log_error(__FILE__, __LINE__);
     impl_->context_->Render();
     set_projection_matrix(Mat4()); //Reset to identity
 }

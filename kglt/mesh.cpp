@@ -151,6 +151,9 @@ SubMesh::SubMesh(
 
 void SubMesh::_bind_vertex_array_object() {
     vertex_array_object_.bind();
+
+    vertex_array_object_.vertex_buffer_bind();
+    vertex_array_object_.index_buffer_bind();
 }
 
 void SubMesh::_update_vertex_array_object() {

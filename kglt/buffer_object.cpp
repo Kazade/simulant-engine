@@ -105,7 +105,8 @@ void BufferObject::modify(uint32_t offset, uint32_t byte_size, const void* data)
 
 VertexArrayObject::VertexArrayObject(BufferObjectUsage vertex_usage, BufferObjectUsage index_usage):
     vertex_buffer_(BUFFER_OBJECT_VERTEX_DATA, vertex_usage),
-    index_buffer_(BUFFER_OBJECT_INDEX_DATA, index_usage) {
+    index_buffer_(BUFFER_OBJECT_INDEX_DATA, index_usage),
+    id_(0) {
 }
 
 VertexArrayObject::~VertexArrayObject() {
@@ -153,7 +154,7 @@ void VertexArrayObject::index_buffer_update_partial(uint32_t offset, uint32_t by
 
     bind();
 
-    vertex_buffer_.modify(offset, byte_size, data);
+    index_buffer_.modify(offset, byte_size, data);
 }
 
 }

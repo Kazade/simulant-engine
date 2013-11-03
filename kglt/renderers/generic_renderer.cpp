@@ -202,6 +202,10 @@ void GenericRenderer::render_subactor(SubActor& buffer, CameraID camera) {
         return;
     }
 
+    GLStateStash s1(GL_VERTEX_ARRAY_BINDING);
+    GLStateStash s2(GL_ELEMENT_ARRAY_BUFFER_BINDING);
+    GLStateStash s3(GL_ARRAY_BUFFER_BINDING);
+
     buffer._update_vertex_array_object();
     buffer._bind_vertex_array_object();
 
@@ -210,34 +214,28 @@ void GenericRenderer::render_subactor(SubActor& buffer, CameraID camera) {
     set_auto_uniforms_on_shader(*active_shader, camera, buffer);
 
     //Render the mesh, once for each iteration of the pass
-    if(buffer.arrangement() == MESH_ARRANGEMENT_POINTS) {
-        GLCheck(glDrawElements, GL_POINTS, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
-    } else if(buffer.arrangement() == MESH_ARRANGEMENT_LINES) {
-        GLCheck(glDrawElements, GL_LINES, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
-    } else if(buffer.arrangement() == MESH_ARRANGEMENT_LINE_STRIP) {
-        GLCheck(glDrawElements, GL_LINE_STRIP, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
-    } else if(buffer.arrangement() == MESH_ARRANGEMENT_TRIANGLES) {
-        GLCheck(glDrawElements, GL_TRIANGLES, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
-    } else if(buffer.arrangement() == MESH_ARRANGEMENT_TRIANGLE_STRIP)  {
-        GLCheck(glDrawElements, GL_TRIANGLE_STRIP, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
-    } else if(buffer.arrangement() == MESH_ARRANGEMENT_TRIANGLE_FAN)  {
-        GLCheck(glDrawElements, GL_TRIANGLE_FAN, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+    switch(buffer.arrangement()) {
+        case MESH_ARRANGEMENT_POINTS:
+            GLCheck(glDrawElements, GL_POINTS, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+        break;
+        case MESH_ARRANGEMENT_LINES:
+            GLCheck(glDrawElements, GL_LINES, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+        break;
+        case MESH_ARRANGEMENT_LINE_STRIP:
+            GLCheck(glDrawElements, GL_LINE_STRIP, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+        break;
+        case MESH_ARRANGEMENT_TRIANGLES:
+            GLCheck(glDrawElements, GL_TRIANGLES, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+        break;
+        case MESH_ARRANGEMENT_TRIANGLE_STRIP:
+            GLCheck(glDrawElements, GL_TRIANGLE_STRIP, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+        break;
+        case MESH_ARRANGEMENT_TRIANGLE_FAN:
+            GLCheck(glDrawElements, GL_TRIANGLE_FAN, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+        break;
+        default:
+            throw NotImplementedError(__FILE__, __LINE__);
     }
-    else {
-        assert(0);
-    }
-
-
-    GLCheck(glDisableVertexAttribArray, 0);
-    GLCheck(glDisableVertexAttribArray, 1);
-    GLCheck(glDisableVertexAttribArray, 2);
-    GLCheck(glDisableVertexAttribArray, 3);
-    GLCheck(glDisableVertexAttribArray, 4);
-    GLCheck(glDisableVertexAttribArray, 5);
-    GLCheck(glDisableVertexAttribArray, 6);
-
-    check_and_log_error(__FILE__, __LINE__);
-
 }
 
 }
