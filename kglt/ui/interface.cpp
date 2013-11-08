@@ -70,9 +70,8 @@ private:
     VertexArrayObject tmp_vao_;
 
 public:
-    RocketRenderInterface(Scene& scene, const Interface& interface):
+    RocketRenderInterface(Scene& scene):
         scene_(scene),
-        interface_(interface),
         tmp_vao_(MODIFY_REPEATEDLY_USED_FOR_RENDERING, MODIFY_REPEATEDLY_USED_FOR_RENDERING) {
 
         unicode vert_shader = scene.window().resource_locator().read_file("kglt/materials/ui.vert")->str();
@@ -243,10 +242,11 @@ public:
     void prepare_shader(const Rocket::Core::Vector2f& translation) {
         Mat4 transform;
         kmMat4Translation(&transform, translation.x, translation.y, 0);
+        transform = this->_projection_matrix * transform;
 
         auto shader = scene_.shader(shader_).lock();
         shader->activate();
-        shader->params().set_mat4x4("modelview_projection", interface_.projection_matrix() * transform);
+        shader->params().set_mat4x4("modelview_projection", transform);
         shader->params().set_int("texture_unit", 0);
     }
 
@@ -307,9 +307,10 @@ public:
         return scene_;
     }
 
+
+    Mat4 _projection_matrix;
 private:
     Scene& scene_;
-    const Interface& interface_;
 
     ShaderID shader_ = ShaderID();
     ShaderProgram::ptr shader_reference_;
@@ -336,7 +337,7 @@ bool Interface::init() {
         rocket_system_interface_ = new RocketSystemInterface(scene_);
         Rocket::Core::SetSystemInterface(rocket_system_interface_);
 
-        rocket_render_interface_ = new RocketRenderInterface(scene_, *this);
+        rocket_render_interface_ = new RocketRenderInterface(scene_);
         Rocket::Core::SetRenderInterface(rocket_render_interface_);
 
         Rocket::Core::Initialise();
@@ -410,7 +411,11 @@ void Interface::update(float dt) {
 
 void Interface::render(const Mat4 &projection_matrix) {
     set_projection_matrix(projection_matrix); //Set the projection matrix
+    RocketRenderInterface* iface = dynamic_cast<RocketRenderInterface*>(impl_->context_->GetRenderInterface());
+
+    iface->_projection_matrix = projection_matrix;
     impl_->context_->Render();
+
     set_projection_matrix(Mat4()); //Reset to identity
 }
 

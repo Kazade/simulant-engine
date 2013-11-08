@@ -90,7 +90,8 @@ void Console::init_widget() {
     );
 
     ui_pipeline_ = scene.render_sequence().new_pipeline(
-        ui_stage_, ui_camera_
+        ui_stage_, ui_camera_,
+        ViewportID(), TextureID(), 101
     );
 
     ProtectedPtr<UIStage> stage = scene.ui_stage(ui_stage_);
