@@ -1,6 +1,8 @@
 #ifndef KGLT_GL_ERROR_H
 #define KGLT_GL_ERROR_H
 
+#include "glcompat.h"
+
 #include <string>
 #include <functional>
 

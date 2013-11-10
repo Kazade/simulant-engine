@@ -1,4 +1,4 @@
-#include <GL/glew.h>
+#include "utils/glcompat.h"
 
 #include "actor.h"
 #include "batcher.h"
@@ -308,11 +308,19 @@ void BlendGroup::unbind() {
 }
 
 void RenderSettingsGroup::bind() {
+#ifndef __ANDROID__
     GLCheck(glPointSize, data_.point_size);
+#else
+    L_WARN("On GLES glPointSize doesn't exist");
+#endif
 }
 
 void RenderSettingsGroup::unbind() {
+#ifndef __ANDROID__
     GLCheck(glPointSize, 1);
+#else
+    L_WARN("On GLES glPointSize doesn't exist");
+#endif
 }
 
 }

@@ -1,6 +1,8 @@
 #ifndef GL_THREAD_CHECK_H
 #define GL_THREAD_CHECK_H
 
+#include "glcompat.h"
+
 #include <stdexcept>
 #include <thread>
 #include <memory>

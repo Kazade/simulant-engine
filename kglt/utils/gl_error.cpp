@@ -1,7 +1,7 @@
 #ifndef __ANDROID__
 	#include <GL/glew.h>
 #else
-	#include <GLES2/gl2.h>
+	#include <GLES3/gl3.h>
 #endif
 
 #include <boost/format.hpp>
@@ -30,12 +30,14 @@ void check_and_log_error(std::string file, int lineno) {
         case GL_OUT_OF_MEMORY:
             error_string = "GL_OUT_OF_MEMORY";
             break;
+#ifndef __ANDROID__
         case GL_STACK_OVERFLOW:
             error_string = "GL_STACK_OVERFLOW";
             break;
         case GL_STACK_UNDERFLOW:
             error_string = "GL_STACK_UNDERFLOW";
             break;
+#endif
         }
 
         if(!file.empty()) {

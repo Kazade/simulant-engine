@@ -1,4 +1,5 @@
-#include <GL/glew.h>
+#include "utils/glcompat.h"
+
 #include <cassert>
 #include <stdexcept>
 #include <boost/lexical_cast.hpp>

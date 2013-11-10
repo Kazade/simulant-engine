@@ -1,5 +1,4 @@
-#include <GL/glew.h>
-
+#include "utils/glcompat.h"
 #include "viewport.h"
 #include "window.h"
 #include "scene.h"

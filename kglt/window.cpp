@@ -1,5 +1,4 @@
-#include <GL/glew.h>
-
+#include "utils/glcompat.h"
 #include "utils/gl_error.h"
 #include "kazbase/unicode.h"
 #include "input_controller.h"
@@ -85,12 +84,13 @@ bool Window::create_window(int width, int height, int bpp, bool fullscreen) {
     context_ = SDL_GL_CreateContext(screen_);
     check_and_log_error(__FILE__, __LINE__);
 
+#ifndef __ANDROID__
     glewExperimental = true;
     GLenum err = glewInit();
     glGetError(); //Sigh, sets this regardless
     assert(err == GLEW_OK);
     assert(GLEW_VERSION_3_1);
-
+#endif
     //Reset the width and height to whatever was actually created
     SDL_GetWindowSize(screen_, &width, &height);
 

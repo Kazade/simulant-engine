@@ -1,4 +1,5 @@
-#include <GL/glew.h>
+#include "utils/glcompat.h"
+
 #include <thread>
 
 #include "utils/gl_error.h"
@@ -103,17 +104,6 @@ bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
 
         GLCheck(glEnable, GL_DEPTH_TEST);
         GLCheck(glDepthFunc, GL_LEQUAL);
-        GLCheck(glEnable, GL_MULTISAMPLE);
-
-        check_and_log_error(__FILE__, __LINE__);
-
-        GLCheck(glHint, GL_LINE_SMOOTH_HINT, GL_NICEST );
-        GLCheck(glHint, GL_POLYGON_SMOOTH_HINT, GL_NICEST );
-
-        check_and_log_error(__FILE__, __LINE__);
-
-        GLCheck(glEnable, GL_POLYGON_SMOOTH);
-        GLCheck(glEnable, GL_LINE_SMOOTH);
         GLCheck(glEnable, GL_CULL_FACE);
 
         check_and_log_error(__FILE__, __LINE__);

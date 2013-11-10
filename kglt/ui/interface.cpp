@@ -1,7 +1,7 @@
 #ifndef __ANDROID__
 	#include <GL/glew.h>
 #else
-	#include <GLES2/gl2.h>
+	#include <GLES3/gl3.h>
 #endif
 
 #include <Rocket/Core.h>

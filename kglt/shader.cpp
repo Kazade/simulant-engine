@@ -1,4 +1,5 @@
-#include <GL/glew.h>
+#include "utils/glcompat.h"
+
 #include <stdexcept>
 #include <boost/format.hpp>
 

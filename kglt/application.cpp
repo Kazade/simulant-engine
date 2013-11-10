@@ -18,9 +18,9 @@ Stage& App::stage(StageID stage) {
     return window().scene().stage(stage);
 }
 
-void App::load_async(std::function<bool ()> func) {
+void App::load_async(boost::function<bool ()> func) {
     //Start the task loading in the background
-    std::shared_future<bool> future = std::async(std::launch::async, func);
+    boost::shared_future<bool> future = boost::async(boost::launch::async, func);
     load_tasks_.push_back(future);
 
     window_->loading().activate(); //Activate the loading screen
@@ -29,7 +29,7 @@ void App::load_async(std::function<bool ()> func) {
 void App::check_tasks() {
     //Run any background loading tasks
     for(auto it = load_tasks_.begin(); it != load_tasks_.end(); ++it) {
-        if((*it).wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+        if((*it).wait_for(boost::chrono::seconds(0)) == boost::future_status::ready) {
             if(!(*it).get()) {
                 throw BackgroundLoadException();
             }

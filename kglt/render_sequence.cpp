@@ -1,4 +1,4 @@
-#include <GL/glew.h>
+#include "utils/glcompat.h"
 #include <unordered_map>
 
 #include "utils/gl_error.h"

@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <memory>
 #include <list>
-#include <future>
+#include <boost/thread.hpp>
 
 #include "types.h"
 #include "kazbase/unicode.h"
@@ -40,7 +40,7 @@ protected:
     Scene& scene();
     Stage& stage(StageID stage=StageID());
 
-    void load_async(std::function<bool ()> func);
+    void load_async(boost::function<bool ()> func);
 
     bool init() {
         initialized_ = do_init();
@@ -54,7 +54,7 @@ private:
     virtual void do_step(double dt) = 0;
     virtual void do_cleanup() = 0;
 
-    std::list<std::shared_future<bool> > load_tasks_;
+    std::list<boost::shared_future<bool> > load_tasks_;
     void check_tasks();
 };
 
