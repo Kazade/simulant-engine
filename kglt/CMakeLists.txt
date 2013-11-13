@@ -20,5 +20,11 @@ INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/../cmake_modules/KGLTConfig.cmake DEST
 FILE(GLOB materials "${CMAKE_CURRENT_SOURCE_DIR}/materials/*.kglm")
 INSTALL(FILES ${materials} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/kglt/materials)
 
+FILE(GLOB materials "${CMAKE_CURRENT_SOURCE_DIR}/materials/*.vert")
+INSTALL(FILES ${materials} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/kglt/materials)
+
+FILE(GLOB materials "${CMAKE_CURRENT_SOURCE_DIR}/materials/*.frag")
+INSTALL(FILES ${materials} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/kglt/materials)
+
 FILE(GLOB fonts "${CMAKE_CURRENT_SOURCE_DIR}/fonts/ubuntu/*.ttf")
 INSTALL(FILES ${fonts} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/kglt/fonts/ubuntu)

@@ -165,6 +165,10 @@ void SubMesh::_update_vertex_array_object() {
     if(index_data_dirty_) {
         vertex_array_object_.index_buffer_update(index_data().count() * sizeof(uint16_t), index_data()._raw_data());
         index_data_dirty_ = false;
+
+        if(vertex_data().empty()) {
+            L_WARN("Uploading index data to GL without any vertices");
+        }
     }
 }
 

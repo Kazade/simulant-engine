@@ -207,6 +207,8 @@ public:
     sig::signal<void ()>& signal_update_complete() { return signal_update_complete_; }
 
     Vertex* _raw_data() { return &data_[0]; }
+
+    bool empty() const { return data_.empty(); }
 private:
     Scene& scene_;
 

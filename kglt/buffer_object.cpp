@@ -10,8 +10,7 @@ namespace kglt {
 BufferObject::BufferObject(BufferObjectType type, BufferObjectUsage usage):
     usage_(usage),
     gl_target_(0),
-    buffer_id_(0),
-    initialized_(false) {
+    buffer_id_(0) {
 
     //FIXME: Totally need to support more than this
     switch(type) {
@@ -40,11 +39,13 @@ void BufferObject::release() {
     }
 }
 
-void BufferObject::bind() const {
+void BufferObject::bind() {
     GLThreadCheck::check();
 
-    assert(initialized_);
-    assert(buffer_id_);
+    if(!buffer_id_) {
+        GLCheck(glGenBuffers, 1, &buffer_id_);
+    }
+
     GLCheck(glBindBuffer, gl_target_, buffer_id_);
 }
 
@@ -92,7 +93,6 @@ void BufferObject::create(uint32_t byte_size, const void* data) {
 
     GLCheck(glBindBuffer, gl_target_, buffer_id_);
     GLCheck(glBufferData, gl_target_, byte_size, data, usage);
-    initialized_ = true;
 }
 
 void BufferObject::modify(uint32_t offset, uint32_t byte_size, const void* data) {

@@ -25,7 +25,7 @@ public:
     BufferObject(BufferObjectType type, BufferObjectUsage usage=MODIFY_ONCE_USED_FOR_RENDERING);
     ~BufferObject();
 
-    void bind() const;
+    void bind();
     void create(uint32_t byte_size, const void* data);
     void modify(uint32_t offset, uint32_t byte_size, const void* data);
     void release();
@@ -34,7 +34,6 @@ private:
 
     uint32_t gl_target_;
     uint32_t buffer_id_;
-    bool initialized_;
 };
 
 class VertexArrayObject {

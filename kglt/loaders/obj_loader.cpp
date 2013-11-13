@@ -84,6 +84,10 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             continue;
         }
 
+        if(line.strip().empty()) {
+            continue;
+        }
+
         std::vector<unicode> parts = line.strip().split("", -1, false); //Split on whitespace
         if(parts[0] == "v") {
             if(parts.size() != 4) {
