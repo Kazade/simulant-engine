@@ -139,7 +139,7 @@ SubMesh::SubMesh(
 
     //The vertex data might already have been set up, so mark it as
     //dirty if we are using shared data.
-    this->vertex_data_dirty_ = uses_shared_data_;
+    this->vertex_data_dirty_ = uses_shared_data_ && !vertex_data().empty();
 
     vrecalc_ = vertex_data().signal_update_complete().connect(std::bind(&SubMesh::_recalc_bounds, this));
     irecalc_ = index_data().signal_update_complete().connect(std::bind(&SubMesh::_recalc_bounds, this));
