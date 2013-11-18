@@ -106,12 +106,13 @@ void Console::init_widget() {
         l.css("position", "absolute");
         l.css("width", "100%");
         l.css("height", "200px");
-        l.css("background-color", "#00000088");
+        l.css("background-color", "#00003388");
         l.css("color", "white");
         l.css("display", "block");
         l.css("white-space", "pre");
         l.css("padding-left", "2px");
         l.css("overflow-y", "scroll");
+        l.css("overflow-x", "none");
         l.css("z-index", "100");
         l.css("font-family", "Ubuntu Mono");
         l.css("font-weight", "normal");
