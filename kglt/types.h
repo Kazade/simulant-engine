@@ -22,6 +22,8 @@
 
 namespace kglt {
 
+struct Vec3;
+
 struct Quaternion : public kmQuaternion {
     Quaternion() {
         kmQuaternionIdentity(this);
@@ -66,6 +68,8 @@ struct Quaternion : public kmQuaternion {
         kmQuaternionSlerp(&result, this, &rhs, t);
         return result;
     }
+
+    static Quaternion look_rotation(const Vec3& direction, const Vec3& up);
 };
 
 struct Mat4 : public kmMat4 {

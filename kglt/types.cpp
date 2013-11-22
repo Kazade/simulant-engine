@@ -44,5 +44,10 @@ std::ostream& operator<<(std::ostream& stream, const Quaternion& quat) {
     return stream;
 }
 
+Quaternion Quaternion::look_rotation(const Vec3& direction, const Vec3& up=Vec3(0, 1, 0)) {
+    Quaternion res;
+    kmQuaternionLookRotation(&res, &direction, &up);
+    return res;
+}
 
 }
