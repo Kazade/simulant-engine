@@ -23,9 +23,6 @@ public:
     bool init() override;
 
 private:
-    void create_stage_and_element();
-    void update(float dt);
-
     enum MessageType {
         NOTIFY_LEFT = 0,
         NOTIFY_RIGHT,
@@ -38,6 +35,10 @@ private:
         MessageType type;
         unicode text;
     };
+
+    void display_message(Message next_message);
+    void create_stage_and_element();
+    void update(float dt);
 
     WindowBase& window_;
     std::queue<Message> message_queue_;

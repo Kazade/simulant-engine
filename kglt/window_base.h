@@ -32,7 +32,7 @@ class Keyboard;
 class Mouse;
 class Joypad;
 class Console;
-
+class MessageBar;
 class Loader;
 class LoaderType;
 
@@ -99,6 +99,8 @@ public:
     Mouse& mouse();
     Joypad& joypad(uint8_t idx);
     uint8_t joypad_count() const;
+
+    MessageBar& message_bar() { return *message_bar_; }
 
     void set_logging_level(LoggingLevel level);
 
@@ -178,6 +180,8 @@ private:
 
     std::shared_ptr<screens::Loading> loading_;
     sig::connection loading_update_connection_;
+
+    std::shared_ptr<MessageBar> message_bar_;
 };
 
 }

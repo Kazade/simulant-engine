@@ -17,6 +17,7 @@
 #include "sound.h"
 #include "lua/console.h"
 #include "watcher.h"
+#include "message_bar.h"
 
 #include "screens/loading.h"
 #include "utils/gl_thread_check.h"
@@ -46,7 +47,7 @@ WindowBase::WindowBase():
 
     set_logging_level(LOG_LEVEL_NONE);
 
-    logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));   
+    logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));       
 }
 
 WindowBase::~WindowBase() {
@@ -95,6 +96,8 @@ bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
 
         scene_ = Scene::create(this);
         scene_->initialize_defaults();
+
+        message_bar_ = MessageBar::create(*this);
 
         loading_ = screens::Loading::create(this->scene());
         loading_update_connection_ = signal_step().connect(std::bind(&screens::Loading::update, loading_, std::placeholders::_1));

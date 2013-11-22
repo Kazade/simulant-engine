@@ -35,7 +35,13 @@ private:
         return true;
     }
 
-    void do_step(double dt) {}
+    void do_step(double dt) {
+        static bool shown = false;
+        if(initialized() && !shown) {
+            shown = true;
+            window().message_bar().inform("Sample demonstrating 2D sprites");
+        }
+    }
     void do_cleanup() {
         sprite_.reset();
     }

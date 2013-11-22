@@ -25,7 +25,7 @@ Interpreter::Interpreter():
 
             table.sort(output)
 
-            print(table.concat(output, ", "))
+            print(table.concat(output, "\n"))
         end
     )x";
 
