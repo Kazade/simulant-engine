@@ -8,6 +8,8 @@
 namespace kglt {
 namespace ui {
 
+const std::string HIDDEN = "1";
+const std::string VISIBLE = "0";
 
 Element::Element(std::shared_ptr<ElementImpl> impl):
     impl_(impl) {
@@ -26,7 +28,7 @@ void Element::add_class(const std::string& cl) {
     impl_->add_class(cl);
 }
 
-std::string Element::css(const std::string& property) {
+std::string Element::css(const std::string& property) const {
     return impl_->css(property);
 }
 
@@ -44,6 +46,11 @@ void Element::id(const std::string& id) {
 
 void Element::scroll_to_bottom() {
     impl_->scroll_to_bottom();
+}
+
+bool Element::is_visible() const {
+    auto visibility = css("visibility");
+    return visibility != HIDDEN;
 }
 
 }
