@@ -19,6 +19,7 @@
 #include <kazmath/mat3.h>
 
 #include "generic/unique_id.h"
+#include "kazbase/unicode.h"
 
 namespace kglt {
 
@@ -259,6 +260,10 @@ struct Vec3 : public kmVec3 {
     }
 
     friend std::ostream& operator<<(std::ostream& stream, const Vec3& vec);
+
+    unicode to_string() const {
+        return _u("({0},{1},{2})").format(x, y, z);
+    }
 };
 
 

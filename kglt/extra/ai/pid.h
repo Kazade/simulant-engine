@@ -7,14 +7,15 @@
 namespace kglt {
 namespace extra {
 
-class Vec3PIDController : public Managed<Vec3PIDController> {
+template<typename T>
+class PIDController : public Managed<PIDController<T> > {
 public:
-    Vec3PIDController(float p, float i, float d):
+    PIDController(float p, float i, float d):
         p_(p),
         i_(i),
         d_(d) {}
 
-    kglt::Vec3 update(const kglt::Vec3& current_error, float time_frame) {
+    T update(const T& current_error, double time_frame) {
         integral_ += current_error * time_frame;
         auto deriv = (current_error - last_error_) / time_frame;
         last_error_ = current_error;
@@ -26,9 +27,13 @@ private:
     float i_;
     float d_;
 
-    kglt::Vec3 integral_;
-    kglt::Vec3 last_error_;
+    T integral_;
+    T last_error_;
 };
+
+typedef PIDController<kglt::Vec3> Vec3PIDController;
+typedef PIDController<float> FloatPIDController;
+typedef PIDController<double> DoublePIDController;
 
 }
 }
