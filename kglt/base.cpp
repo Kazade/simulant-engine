@@ -25,10 +25,17 @@ Quaternion MoveableActorHolder::rotation() const {
 }
 
 void MoveableActorHolder::set_velocity(const kglt::Vec3& vel) {
+    if(actor()->is_responsive()) {
+        actor()->body().set_linear_velocity(vel);
+        return;
+    }
     velocity_ = vel;
 }
 
 kglt::Vec3 MoveableActorHolder::velocity() const {
+    if(actor()->is_responsive()) {
+        return actor()->body().linear_velocity();
+    }
     return velocity_;
 }
 

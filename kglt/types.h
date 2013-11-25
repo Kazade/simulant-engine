@@ -231,11 +231,13 @@ struct Vec3 : public kmVec3 {
         return result;
     }
 
-    void limit(float l) {
+    kglt::Vec3 limit(float l) {
         if(length() > l) {
             normalize();
             kmVec3Scale(this, this, l);
         }
+
+        return *this;
     }
 
     static float distance(const kglt::Vec3& lhs, const kglt::Vec3& rhs) {

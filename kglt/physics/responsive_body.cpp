@@ -79,6 +79,12 @@ void ResponsiveBody::set_angular_damping(const float amount) {
     do_set_angular_damping(amount);
 }
 
+void ResponsiveBody::set_linear_damping(const float amount) {
+    std::lock_guard<std::recursive_mutex> lock(engine_->mutex());
+    do_set_linear_damping(amount);
+}
+
+
 void ResponsiveBody::set_angular_velocity(const kglt::Vec3& velocity) {
     std::lock_guard<std::recursive_mutex> lock(engine_->mutex());
     do_set_angular_velocity(velocity);

@@ -68,6 +68,10 @@ void ODEBody::do_set_angular_damping(const float amount) {
     dBodySetAngularDamping(body_, amount);
 }
 
+void ODEBody::do_set_linear_damping(const float amount) {
+    dBodySetLinearDamping(body_, amount);
+}
+
 void ODEBody::do_set_angular_velocity(const kglt::Vec3& velocity) {
     dBodySetAngularVel(body_, velocity.x, velocity.y, velocity.z);
 }

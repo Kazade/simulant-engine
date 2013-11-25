@@ -330,3 +330,4 @@ kglt/materials/ui.vert
 kglt/materials/ui.frag
 kglt/message_bar.h
 kglt/message_bar.cpp
+kglt/extra/ai/vec3_pid_controller.h

@@ -33,6 +33,7 @@ public:
     void apply_angular_force_local(const kglt::Vec3& force);
 
     void set_angular_damping(const float amount);
+    void set_linear_damping(const float amount);
 
     void set_angular_velocity(const kglt::Vec3& velocity);
     kglt::Vec3 angular_velocity() const;
@@ -72,6 +73,7 @@ private:
     virtual void do_apply_angular_force_local(const kglt::Vec3& force) = 0;
 
     virtual void do_set_angular_damping(const float amount) = 0;
+    virtual void do_set_linear_damping(const float amount) = 0;
 
     virtual void do_set_angular_velocity(const kglt::Vec3& velocity) = 0;
     virtual kglt::Vec3 do_angular_velocity() const = 0;
