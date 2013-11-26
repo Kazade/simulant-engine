@@ -26,9 +26,9 @@ public:
         this->assert_equal(kglt::DEFAULT_MATERIAL_SCHEME, mat->technique().scheme());
         mat->technique().new_pass(kglt::ShaderID()); //Create a pass
         this->assert_equal((uint32_t)1, mat->technique().pass_count()); //Should return the default pass
-        this->assert_true(kglt::Colour::white == mat->technique().pass(0).diffuse()); //this->assert_true the default pass sets white as the default
-        this->assert_true(kglt::Colour::white == mat->technique().pass(0).ambient()); //this->assert_true the default pass sets white as the default
-        this->assert_true(kglt::Colour::white == mat->technique().pass(0).specular()); //this->assert_true the default pass sets white as the default
+        this->assert_true(kglt::Colour::WHITE == mat->technique().pass(0).diffuse()); //this->assert_true the default pass sets white as the default
+        this->assert_true(kglt::Colour::WHITE == mat->technique().pass(0).ambient()); //this->assert_true the default pass sets white as the default
+        this->assert_true(kglt::Colour::WHITE == mat->technique().pass(0).specular()); //this->assert_true the default pass sets white as the default
         this->assert_equal(0.0, mat->technique().pass(0).shininess());
     }
 

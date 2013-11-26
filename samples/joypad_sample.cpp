@@ -95,11 +95,11 @@ int main(int argc, const char *argv[]) {
     kglt::TextureID tid = stage.new_texture_from_file("sample_data/sample.tga");
     kglt::MaterialID matid = kglt::create_material_from_texture(stage, tid);
 
-    stage.set_ambient_light(kglt::Colour::white);
+    stage.set_ambient_light(kglt::Colour::WHITE);
     {
         auto light = stage.light(stage.new_light());
         light->set_absolute_position(5.0, 0.0, -5.0);
-        light->set_diffuse(kglt::Colour::green);
+        light->set_diffuse(kglt::Colour::GREEN);
         light->set_attenuation_from_range(10.0);
     }
 

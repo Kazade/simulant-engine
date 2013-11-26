@@ -53,12 +53,12 @@ void Mesh::enable_debug(bool value) {
                 kmVec3Add(&pos2, &pos1, &n);
 
                 submesh(normal_debug_mesh_).vertex_data().position(pos1);
-                submesh(normal_debug_mesh_).vertex_data().diffuse(kglt::Colour::red);
+                submesh(normal_debug_mesh_).vertex_data().diffuse(kglt::Colour::RED);
                 int16_t next_index = submesh(normal_debug_mesh_).vertex_data().move_next();
                 submesh(normal_debug_mesh_).index_data().index(next_index - 1);
 
                 submesh(normal_debug_mesh_).vertex_data().position(pos2);
-                submesh(normal_debug_mesh_).vertex_data().diffuse(kglt::Colour::red);
+                submesh(normal_debug_mesh_).vertex_data().diffuse(kglt::Colour::RED);
                 next_index = submesh(normal_debug_mesh_).vertex_data().move_next();
                 submesh(normal_debug_mesh_).index_data().index(next_index - 1);
             }

@@ -58,7 +58,7 @@ SubMeshIndex capsule(ProtectedPtr<Mesh> mesh, float diameter, float height,
             vdata.tex_coord2(new_tex);
             vdata.tex_coord3(new_tex);
             vdata.normal(new_normal);
-            vdata.diffuse(kglt::Colour::white);
+            vdata.diffuse(kglt::Colour::WHITE);
             vdata.move_next();
 
             // each vertex (except the last) has six indices pointing to it
@@ -105,7 +105,7 @@ SubMeshIndex capsule(ProtectedPtr<Mesh> mesh, float diameter, float height,
             vdata.tex_coord2(new_tex);
             vdata.tex_coord3(new_tex);
             vdata.normal(new_normal);
-            vdata.diffuse(kglt::Colour::white);
+            vdata.diffuse(kglt::Colour::WHITE);
             vdata.move_next();
 
             idata.index(offset + segment_count + 1);
@@ -152,7 +152,7 @@ SubMeshIndex capsule(ProtectedPtr<Mesh> mesh, float diameter, float height,
             vdata.tex_coord2(new_tex);
             vdata.tex_coord3(new_tex);
             vdata.normal(new_normal);
-            vdata.diffuse(kglt::Colour::white);
+            vdata.diffuse(kglt::Colour::WHITE);
             vdata.move_next();
 
             if (ring != ring_count) {

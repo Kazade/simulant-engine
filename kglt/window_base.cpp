@@ -94,7 +94,12 @@ bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
         viewport(default_viewport_).set_position(0, 0);
         viewport(default_viewport_).set_size(this->width(), this->height());
 
-        scene_ = Scene::create(this);
+        scene_ = Scene::create(this);        
+
+        /*FIXME: This should be called in Scene::init, but because Scene subclasses ResourceManagerImpl,
+         * which takes a WindowBase, rather than a Scene, we try to do window().scene() which crashes because
+         * that isn't set until create returns (above). ResourceManagerImpl should probably take a Scene*
+         * and do window lookups with scene()->window() instead of the reverse. */
         scene_->initialize_defaults();
 
         message_bar_ = MessageBar::create(*this);

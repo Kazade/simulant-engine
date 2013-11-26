@@ -31,7 +31,7 @@ SubMeshIndex circle(kglt::Mesh& mesh, float diameter, int32_t point_count, float
         float v = sin(rads) * 0.5 + 0.5f;
 
         vdata.position(x_offset + x, y_offset + y, z_offset);
-        vdata.diffuse(kglt::Colour::white);
+        vdata.diffuse(kglt::Colour::WHITE);
         vdata.tex_coord0(u, v);
         vdata.tex_coord1(u, v);
         vdata.tex_coord2(u, v);
@@ -71,7 +71,7 @@ SubMeshIndex circle_outline(kglt::Mesh& mesh, float diameter, int32_t point_coun
         float v = sin(rads) * 0.5 + 0.5f;
 
         vdata.position(x_offset + x, y_offset + y, z_offset);
-        vdata.diffuse(kglt::Colour::white);
+        vdata.diffuse(kglt::Colour::WHITE);
         vdata.tex_coord0(u, v);
         vdata.tex_coord1(u, v);
         vdata.tex_coord2(u, v);

@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
     kglt::TextureID tid = stage.new_texture_from_file("sample_data/sample.tga");
     kglt::MaterialID matid = kglt::create_material_from_texture(stage, tid);
 
-    stage.set_ambient_light(kglt::Colour::white);
+    stage.set_ambient_light(kglt::Colour::WHITE);
 
     kglt::ActorID actor_id = stage.geom_factory().new_capsule();
     {

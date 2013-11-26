@@ -32,6 +32,9 @@ private:
         //window.scene().pass().viewport().configure(kglt::VIEWPORT_TYPE_BLACKBAR_16_BY_9);
         scene().camera().set_orthographic_projection_from_height((float) 224 / (float) 40, 16.0 / 9.0);
 
+        scene().debug().draw_ray(kglt::Vec3(0, 0, -1), kglt::Vec3(5, 0, -1), kglt::Colour::WHITE, 5.0);
+        scene().debug().draw_point(kglt::Vec3(0, 0, -1), kglt::Colour::RED, 8.0);
+
         return true;
     }
 

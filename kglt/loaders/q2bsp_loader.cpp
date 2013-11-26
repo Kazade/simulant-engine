@@ -451,7 +451,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
                 mesh->shared_data().position(pos);
                 mesh->shared_data().normal(normal);
-                mesh->shared_data().diffuse(kglt::Colour::white);
+                mesh->shared_data().diffuse(kglt::Colour::WHITE);
                 mesh->shared_data().tex_coord0(u / w, v / h);
                 mesh->shared_data().tex_coord1(u / w, v / h);
                 mesh->shared_data().move_next();

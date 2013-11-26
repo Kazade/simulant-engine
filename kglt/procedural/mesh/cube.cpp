@@ -26,28 +26,28 @@ void cube(ProtectedPtr<Mesh> mesh, float width) {
             mesh->shared_data().position(-1 * r, -1 * r, z * r);
             mesh->shared_data().tex_coord0(0, 0);
             mesh->shared_data().tex_coord1(0, 0);
-            mesh->shared_data().diffuse(kglt::Colour::white);
+            mesh->shared_data().diffuse(kglt::Colour::WHITE);
             mesh->shared_data().normal(0, 0, z);
             mesh->shared_data().move_next();
 
             mesh->shared_data().position( 1 * r, -1 * r, z * r);
             mesh->shared_data().tex_coord0(1, 0);
             mesh->shared_data().tex_coord1(1, 0);
-            mesh->shared_data().diffuse(kglt::Colour::white);
+            mesh->shared_data().diffuse(kglt::Colour::WHITE);
             mesh->shared_data().normal(0, 0, z);
             mesh->shared_data().move_next();
 
             mesh->shared_data().position( 1 * r,  1 * r, z * r);
             mesh->shared_data().tex_coord0(1, 1);
             mesh->shared_data().tex_coord1(1, 1);
-            mesh->shared_data().diffuse(kglt::Colour::white);
+            mesh->shared_data().diffuse(kglt::Colour::WHITE);
             mesh->shared_data().normal(0, 0, z);
             mesh->shared_data().move_next();
 
             mesh->shared_data().position(-1 * r,  1 * r, z * r);
             mesh->shared_data().tex_coord0(0, 1);
             mesh->shared_data().tex_coord1(0, 1);
-            mesh->shared_data().diffuse(kglt::Colour::white);
+            mesh->shared_data().diffuse(kglt::Colour::WHITE);
             mesh->shared_data().normal(0, 0, z);
             mesh->shared_data().move_next();
 
@@ -79,28 +79,28 @@ void cube(ProtectedPtr<Mesh> mesh, float width) {
             mesh->shared_data().position( x * r, -1 * r, -1 * r);
             mesh->shared_data().tex_coord0(0, 0);
             mesh->shared_data().tex_coord1(0, 0);
-            mesh->shared_data().diffuse(kglt::Colour::white);
+            mesh->shared_data().diffuse(kglt::Colour::WHITE);
             mesh->shared_data().normal(x, 0, 0);
             mesh->shared_data().move_next();
 
             mesh->shared_data().position( x * r,  1 * r, -1 * r);
             mesh->shared_data().tex_coord0(1, 0);
             mesh->shared_data().tex_coord1(1, 0);
-            mesh->shared_data().diffuse(kglt::Colour::white);
+            mesh->shared_data().diffuse(kglt::Colour::WHITE);
             mesh->shared_data().normal(x, 0, 0);
             mesh->shared_data().move_next();
 
             mesh->shared_data().position( x * r,  1 * r, 1 * r);
             mesh->shared_data().tex_coord0(1, 1);
             mesh->shared_data().tex_coord1(1, 1);
-            mesh->shared_data().diffuse(kglt::Colour::white);
+            mesh->shared_data().diffuse(kglt::Colour::WHITE);
             mesh->shared_data().normal(x, 0, 0);
             mesh->shared_data().move_next();
 
             mesh->shared_data().position(x * r, -1 * r, 1 * r);
             mesh->shared_data().tex_coord0(0, 1);
             mesh->shared_data().tex_coord1(0, 1);
-            mesh->shared_data().diffuse(kglt::Colour::white);
+            mesh->shared_data().diffuse(kglt::Colour::WHITE);
             mesh->shared_data().normal(x, 0, 0);
             mesh->shared_data().move_next();
 
@@ -132,28 +132,28 @@ void cube(ProtectedPtr<Mesh> mesh, float width) {
             mesh->shared_data().position( 1 * r, y * r, -1 * r);
             mesh->shared_data().tex_coord0(0, 0);
             mesh->shared_data().tex_coord1(0, 0);
-            mesh->shared_data().diffuse(kglt::Colour::white);
+            mesh->shared_data().diffuse(kglt::Colour::WHITE);
             mesh->shared_data().normal(0, y, 0);
             mesh->shared_data().move_next();
 
             mesh->shared_data().position( -1 * r,  y * r, -1 * r);
             mesh->shared_data().tex_coord0(1, 0);
             mesh->shared_data().tex_coord1(1, 0);
-            mesh->shared_data().diffuse(kglt::Colour::white);
+            mesh->shared_data().diffuse(kglt::Colour::WHITE);
             mesh->shared_data().normal(0, y, 0);
             mesh->shared_data().move_next();
 
             mesh->shared_data().position( -1 * r,  y * r, 1 * r);
             mesh->shared_data().tex_coord0(1, 1);
             mesh->shared_data().tex_coord1(1, 1);
-            mesh->shared_data().diffuse(kglt::Colour::white);
+            mesh->shared_data().diffuse(kglt::Colour::WHITE);
             mesh->shared_data().normal(0, y, 0);
             mesh->shared_data().move_next();
 
             mesh->shared_data().position( 1 * r, y * r, 1 * r);
             mesh->shared_data().tex_coord0(0, 1);
             mesh->shared_data().tex_coord1(0, 1);
-            mesh->shared_data().diffuse(kglt::Colour::white);
+            mesh->shared_data().diffuse(kglt::Colour::WHITE);
             mesh->shared_data().normal(0, y, 0);
             mesh->shared_data().move_next();
 

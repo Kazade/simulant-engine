@@ -88,7 +88,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             continue;
         }
 
-        std::vector<unicode> parts = line.strip().split("", -1, false); //Split on whitespace
+        std::vector<unicode> parts = line.strip().split("", -1, false); //Split on WHITEspace
         if(parts[0] == "v") {
             if(parts.size() != 4) {
                 throw IOError(_u("Found {0} components for vertex, expected 3").format(parts.size()));
@@ -147,7 +147,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                 sm.vertex_data().normal(kglt::Vec3());
             }
 
-            sm.vertex_data().diffuse(kglt::Colour::white);
+            sm.vertex_data().diffuse(kglt::Colour::WHITE);
             sm.vertex_data().move_next();
 
             parts = std::vector<unicode>(parts.begin() + 1, parts.end()); //Strip off the first bit
@@ -163,14 +163,14 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                 sm.vertex_data().tex_coord0((vt1 > -1) ? tex_coords[vt1] : kglt::Vec2());
                 sm.vertex_data().tex_coord1((vt1 > -1) ? tex_coords[vt1] : kglt::Vec2());
                 sm.vertex_data().normal((vn1 > -1) ? normals[vn1] : kglt::Vec3());
-                sm.vertex_data().diffuse(kglt::Colour::white);
+                sm.vertex_data().diffuse(kglt::Colour::WHITE);
                 sm.vertex_data().move_next();
 
                 sm.vertex_data().position(vertices[v2]); //Read the position
                 sm.vertex_data().tex_coord0((vt2 > -1) ? tex_coords[vt2] : kglt::Vec2());
                 sm.vertex_data().tex_coord1((vt2 > -1) ? tex_coords[vt2] : kglt::Vec2());
                 sm.vertex_data().normal((vn2 > -1) ? normals[vn2] : kglt::Vec3());
-                sm.vertex_data().diffuse(kglt::Colour::white);
+                sm.vertex_data().diffuse(kglt::Colour::WHITE);
                 sm.vertex_data().move_next();
 
                 //Add the triangle

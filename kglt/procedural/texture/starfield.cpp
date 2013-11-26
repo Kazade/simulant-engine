@@ -62,14 +62,14 @@ void starfield(kglt::TexturePtr texture_ptr, uint32_t width, uint32_t height) {
                 float size = std::max(1.0f, weight * MAX_SIZE);
                 float brightness = weight * MAX_BRIGHTNESS;
 
-                kglt::Colour colour = kglt::Colour::white;
+                kglt::Colour colour = kglt::Colour::WHITE;
                 float col_rand = random_float(0, 1);
                 if(col_rand < 0.05) {
-                    colour = kglt::Colour::orange;
+                    colour = kglt::Colour::ORANGE;
                 } else if(col_rand < 0.07) {
-                    colour = kglt::Colour::yellow;
+                    colour = kglt::Colour::YELLOW;
                 } else if(col_rand < 0.1) {
-                    colour = kglt::Colour::blue;
+                    colour = kglt::Colour::BLUE;
                 }
                 draw_circle(texture_ptr, x, y, size, brightness, colour);
             }

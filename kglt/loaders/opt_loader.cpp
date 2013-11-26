@@ -528,7 +528,7 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
             submesh.vertex_data().position(pos.x / 33.3, pos.y / 33.3, pos.z / 33.3);
             submesh.vertex_data().tex_coord0(tex_coord);
             submesh.vertex_data().tex_coord1(tex_coord.x, tex_coord.y);
-            submesh.vertex_data().diffuse(kglt::Colour::white);
+            submesh.vertex_data().diffuse(kglt::Colour::WHITE);
             submesh.vertex_data().normal(normal.x, normal.y, normal.z);
             submesh.vertex_data().move_next();
             submesh.index_data().index(submesh.vertex_data().count()-1);

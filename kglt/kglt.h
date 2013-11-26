@@ -26,6 +26,7 @@
 #include "texture.h"
 #include "application.h"
 #include "message_bar.h"
+#include "debug.h"
 
 //FIXME: These includes should be conditional
 #include "physics/ode/ode_engine.h"

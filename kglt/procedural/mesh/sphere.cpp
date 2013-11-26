@@ -58,7 +58,7 @@ void sphere(ProtectedPtr<Mesh> mesh, float diameter, int32_t slices, int32_t sta
             mesh->shared_data().tex_coord0(u, v);
             mesh->shared_data().tex_coord1(u, v);
             mesh->shared_data().normal(n);
-            mesh->shared_data().diffuse(kglt::Colour::white);
+            mesh->shared_data().diffuse(kglt::Colour::WHITE);
             mesh->shared_data().move_next();
         }
     }
@@ -69,7 +69,7 @@ void sphere(ProtectedPtr<Mesh> mesh, float diameter, int32_t slices, int32_t sta
     mesh->shared_data().position(pos);
     mesh->shared_data().tex_coord0(u, v);
     mesh->shared_data().tex_coord1(u, v);
-    mesh->shared_data().diffuse(kglt::Colour::white);
+    mesh->shared_data().diffuse(kglt::Colour::WHITE);
     mesh->shared_data().move_next();
 
     kmVec3Fill(&pos, 0, -1 * radius, 0);
@@ -79,7 +79,7 @@ void sphere(ProtectedPtr<Mesh> mesh, float diameter, int32_t slices, int32_t sta
     mesh->shared_data().position(pos);
     mesh->shared_data().tex_coord0(u, v);
     mesh->shared_data().tex_coord1(u, v);
-    mesh->shared_data().diffuse(kglt::Colour::white);
+    mesh->shared_data().diffuse(kglt::Colour::WHITE);
     mesh->shared_data().move_next();
 
     mesh->shared_data().done();

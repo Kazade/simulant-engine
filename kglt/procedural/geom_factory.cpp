@@ -20,7 +20,7 @@ ActorID GeomFactory::new_line(const kmVec3& start, const kmVec3& end) {
         auto mesh = stage.mesh(mesh_id);
 
         mesh->shared_data().position(start);
-        mesh->shared_data().diffuse(kglt::Colour::white);
+        mesh->shared_data().diffuse(kglt::Colour::WHITE);
         mesh->shared_data().tex_coord0(0.0, 0.0);
         mesh->shared_data().tex_coord1(0.0, 0.0);
         mesh->shared_data().tex_coord2(0.0, 0.0);
@@ -29,7 +29,7 @@ ActorID GeomFactory::new_line(const kmVec3& start, const kmVec3& end) {
         mesh->shared_data().move_next();
 
         mesh->shared_data().position(end);
-        mesh->shared_data().diffuse(kglt::Colour::white);
+        mesh->shared_data().diffuse(kglt::Colour::WHITE);
         mesh->shared_data().tex_coord0(0.0, 0.0);
         mesh->shared_data().tex_coord1(0.0, 0.0);
         mesh->shared_data().tex_coord2(0.0, 0.0);

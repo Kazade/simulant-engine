@@ -36,15 +36,15 @@ struct Colour {
         return false;
     }
 
-    static const Colour white;
-    static const Colour black;
-    static const Colour grey;
-    static const Colour red;
-    static const Colour green;
-    static const Colour blue;
-    static const Colour yellow;
-    static const Colour purple;
-    static const Colour orange;
+    static const Colour WHITE;
+    static const Colour BLACK;
+    static const Colour GREY;
+    static const Colour RED;
+    static const Colour GREEN;
+    static const Colour BLUE;
+    static const Colour YELLOW;
+    static const Colour PURPLE;
+    static const Colour ORANGE;
 };
 
 }

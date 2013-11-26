@@ -331,3 +331,5 @@ kglt/materials/ui.frag
 kglt/message_bar.h
 kglt/message_bar.cpp
 kglt/extra/ai/pid.h
+kglt/debug.h
+kglt/debug.cpp

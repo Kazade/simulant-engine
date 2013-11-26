@@ -17,6 +17,7 @@ class UI;
 class Scene;
 class Stage;
 class GeomFactory;
+class Debug;
 
 typedef generic::TemplatedManager<Scene, Stage, StageID> StageManager;
 typedef generic::TemplatedManager<Scene, Camera, CameraID> CameraManager;
@@ -86,6 +87,8 @@ public:
         obj._initialize();
     }
 
+    Debug& debug() { assert(debug_); return *debug_; }
+
 private:
     StageID default_stage_;
     CameraID default_camera_;
@@ -100,6 +103,7 @@ private:
 
     std::shared_ptr<RenderSequence> render_sequence_;
     std::shared_ptr<PhysicsEngine> physics_engine_;
+    std::shared_ptr<Debug> debug_;
 
     friend class WindowBase;
 };

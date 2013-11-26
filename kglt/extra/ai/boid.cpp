@@ -132,7 +132,7 @@ void Boid::update_debug_mesh() const {
     int i = 0;
     for(kglt::Vec3 p: normal_points_) {
         vd.position(p);
-        vd.diffuse(kglt::Colour::red);
+        vd.diffuse(kglt::Colour::RED);
         vd.tex_coord0(kglt::Vec2());
         vd.tex_coord1(kglt::Vec2());
         vd.normal(kglt::Vec3());
@@ -168,7 +168,7 @@ void Boid::enable_debug(bool value) {
 
         for(uint32_t i = 0; i < path_.length(); ++i) {
             mesh->submesh(smi).vertex_data().position(path_.point(i));
-            mesh->submesh(smi).vertex_data().diffuse(kglt::Colour::blue);
+            mesh->submesh(smi).vertex_data().diffuse(kglt::Colour::BLUE);
             mesh->submesh(smi).vertex_data().tex_coord0(kglt::Vec2());
             mesh->submesh(smi).vertex_data().tex_coord1(kglt::Vec2());
             mesh->submesh(smi).vertex_data().normal(kglt::Vec3());

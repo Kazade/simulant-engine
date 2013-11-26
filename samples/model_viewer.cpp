@@ -30,13 +30,13 @@ int main(int argc, char* argv[]) {
     {
         auto light = stage.light(light_id);
         //light.set_direction(-1, 0, 0);
-        light->set_diffuse(kglt::Colour::yellow);
+        light->set_diffuse(kglt::Colour::YELLOW);
         light->set_attenuation_from_range(100.0);
     }
 
     {
         auto light2 = stage.light(stage.new_light());
-        light2->set_diffuse(kglt::Colour::red);
+        light2->set_diffuse(kglt::Colour::RED);
         light2->set_attenuation_from_range(100.0);
         light2->move_to(20, -20, -50);
     }

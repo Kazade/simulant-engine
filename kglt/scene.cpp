@@ -7,6 +7,7 @@
 #include "loader.h"
 #include "stage.h"
 #include "ui_stage.h"
+#include "debug.h"
 
 #include "partitioners/null_partitioner.h"
 #include "partitioners/octree_partitioner.h"
@@ -191,7 +192,9 @@ void Scene::delete_camera(CameraID cid) {
     CameraManager::manager_delete(cid);
 }
 
-bool Scene::init() {
+bool Scene::init() {    
+    debug_ = Debug::create(*this);
+
     return true;
 }
 
