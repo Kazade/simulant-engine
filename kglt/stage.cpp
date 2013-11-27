@@ -5,20 +5,30 @@
 #include "actor.h"
 #include "light.h"
 #include "camera.h"
-
+#include "debug.h"
+#include "partitioners/null_partitioner.h"
+#include "partitioners/octree_partitioner.h"
 #include "procedural/geom_factory.h"
 
 namespace kglt {
 
-Stage::Stage(Scene* parent, StageID id):
+Stage::Stage(Scene* parent, StageID id, AvailablePartitioner partitioner):
     generic::Identifiable<StageID>(id),
     Object(nullptr),
     scene_(*parent),
     ambient_light_(1.0, 1.0, 1.0, 1.0),
     geom_factory_(new GeomFactory(*this)) {
 
+    set_partitioner(partitioner);
+
     ActorManager::signal_post_create().connect(std::bind(&Stage::post_create_callback<Actor, ActorID>, this, std::placeholders::_1, std::placeholders::_2));
     LightManager::signal_post_create().connect(std::bind(&Stage::post_create_callback<Light, LightID>, this, std::placeholders::_1, std::placeholders::_2));
+}
+
+bool Stage::init() {
+    debug_ = Debug::create(*this);
+
+    return true;
 }
 
 void Stage::destroy() {
@@ -167,10 +177,18 @@ ProtectedPtr<CameraProxy> Stage::camera(CameraID c) {
     return ProtectedPtr<CameraProxy>(CameraProxyManager::manager_get(c));
 }
 
-void Stage::set_partitioner(Partitioner::ptr partitioner) {
-    assert(partitioner);
-
-    partitioner_ = partitioner;
+void Stage::set_partitioner(AvailablePartitioner partitioner) {
+    switch(partitioner) {
+        case PARTITIONER_NULL:
+            partitioner_ = Partitioner::ptr(new NullPartitioner(*this));
+        break;
+        case PARTITIONER_OCTREE:
+            partitioner_ = Partitioner::ptr(new OctreePartitioner(*this));
+        break;
+        default: {
+            throw std::logic_error("Invalid partitioner type specified");
+        }
+    }
 
     assert(partitioner_);
 

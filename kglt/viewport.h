@@ -6,6 +6,7 @@
 #include "kazmath/mat4.h"
 #include "types.h"
 #include "generic/identifiable.h"
+#include "generic/managed.h"
 
 namespace kglt {
 
@@ -35,7 +36,10 @@ enum ViewportType {
 	VIEWPORT_TYPE_CUSTOM
 };
 
-class Viewport : public generic::Identifiable<ViewportID> {
+class Viewport :
+    public generic::Identifiable<ViewportID>,
+    public Managed<Viewport> {
+
 public:
     typedef std::shared_ptr<Viewport> ptr;
 

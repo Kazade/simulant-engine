@@ -15,13 +15,18 @@ protected:
     mutable std::recursive_mutex manager_lock_;
 
 public:
-    ObjectIDType manager_new(ObjectIDType id=ObjectIDType()) {
+    ObjectIDType manager_new() {
+        return manager_new(ObjectIDType());
+    }
+
+    template<typename... Args>
+    ObjectIDType manager_new(ObjectIDType id, Args&&... args) {
         {
             std::lock_guard<std::recursive_mutex> lock(manager_lock_);
             if(!id) {
                 id = NewIDGenerator()();
             }
-            objects_.insert(std::make_pair(id, typename ObjectType::ptr(new ObjectType((Derived*)this, id))));
+            objects_.insert(std::make_pair(id, ObjectType::create((Derived*)this, id, std::forward<Args>(args)...)));
         }
 
         signal_post_create_.emit(*objects_[id], id);

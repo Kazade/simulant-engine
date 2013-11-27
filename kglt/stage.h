@@ -14,6 +14,7 @@ namespace kglt {
 
 class Partitioner;
 class Scene;
+class Debug;
 
 typedef generic::TemplatedManager<Stage, Actor, ActorID> ActorManager;
 typedef generic::TemplatedManager<Stage, Light, LightID> LightManager;
@@ -30,12 +31,14 @@ class Stage:
     public Loadable {
 
 public:
-    Stage(Scene *parent, StageID id);
+    Stage(Scene *parent, StageID id, AvailablePartitioner partitioner);
 
     ActorID new_actor();
     ActorID new_actor(bool make_responsive, bool make_collidable);
-    ActorID new_actor(MeshID mid);
-    ActorID new_actor(MeshID mid, bool make_responsive, bool make_collidable);
+    ActorID new_actor(MeshID mid); //FIXME: Deprecate
+    ActorID new_actor(MeshID mid, bool make_responsive, bool make_collidable); //FIXME: deprecate
+
+    ActorID new_actor_with_mesh(MeshID mid) { return new_actor(mid); }
 
     ActorID new_actor_with_parent(ActorID parent);
     ActorID new_actor_with_parent(ActorID parent, MeshID mid);
@@ -151,6 +154,10 @@ public:
     virtual const Scene& scene() const { return scene_; }
 
     GeomFactory& geom_factory() { return *geom_factory_; }
+
+    Debug& debug() { assert(debug_); return *debug_; }
+
+    bool init();
 private:
     Scene& scene_;
 
@@ -164,9 +171,10 @@ private:
 
     std::shared_ptr<Partitioner> partitioner_;
 
-    void set_partitioner(std::shared_ptr<Partitioner> partitioner);
+    void set_partitioner(AvailablePartitioner partitioner);
 
     std::shared_ptr<GeomFactory> geom_factory_;
+    std::shared_ptr<Debug> debug_;
 
     friend class Scene;
 

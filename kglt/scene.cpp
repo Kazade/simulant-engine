@@ -7,8 +7,6 @@
 #include "loader.h"
 #include "stage.h"
 #include "ui_stage.h"
-#include "debug.h"
-
 #include "partitioners/null_partitioner.h"
 #include "partitioners/octree_partitioner.h"
 
@@ -94,20 +92,7 @@ void Scene::initialize_defaults() {
 }
 
 StageID Scene::new_stage(AvailablePartitioner partitioner) {
-    Stage& ss = stage(StageManager::manager_new());
-
-    switch(partitioner) {
-        case PARTITIONER_NULL:
-        ss.set_partitioner(Partitioner::ptr(new NullPartitioner(ss)));
-        break;
-        case PARTITIONER_OCTREE:
-        ss.set_partitioner(Partitioner::ptr(new OctreePartitioner(ss)));
-        break;
-        default: {
-            delete_stage(ss.id());
-            throw std::logic_error("Invalid partitioner type specified");
-        }
-    }
+    Stage& ss = stage(StageManager::manager_new(StageID(), partitioner));
 
     return ss.id();
 }
@@ -193,8 +178,6 @@ void Scene::delete_camera(CameraID cid) {
 }
 
 bool Scene::init() {    
-    debug_ = Debug::create(*this);
-
     return true;
 }
 

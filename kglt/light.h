@@ -1,6 +1,7 @@
 #ifndef LIGHT_H_INCLUDED
 #define LIGHT_H_INCLUDED
 
+#include "generic/managed.h"
 #include "object.h"
 #include "generic/identifiable.h"
 #include "generic/protected_ptr.h"
@@ -15,7 +16,8 @@ class Light :
     public Object,
     public generic::Identifiable<LightID>,
     public Boundable,
-    public Protectable {
+    public Protectable,
+    public Managed<Light> {
 
 public:
     typedef std::shared_ptr<Light> ptr;

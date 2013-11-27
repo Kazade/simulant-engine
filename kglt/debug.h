@@ -3,12 +3,13 @@
 
 #include "types.h"
 #include "generic/managed.h"
+#include "mesh.h"
 
 namespace kglt {
 
 class Debug : public Managed<Debug> {
 public:
-    Debug(Scene& scene);
+    Debug(Stage& stage);
 
     void draw_ray(
         const Vec3& start,
@@ -34,8 +35,11 @@ public:
         bool depth_test=true
     );
 
+    bool init() override;
 private:
-    Scene& scene_;
+    void update();
+
+    Stage& stage_;
 
     enum DebugElementType {
         DET_LINE,
@@ -48,9 +52,14 @@ private:
         Colour colour = Colour::WHITE;
         bool depth_test = true;
         double duration = 0.0;
+        SubMeshIndex submesh;
     };
 
     std::vector<DebugElement> elements_;
+
+    MeshID mesh_;
+    ActorID actor_;
+    MaterialID material_;
 };
 
 }
