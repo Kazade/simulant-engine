@@ -15,7 +15,7 @@ public:
 private:
     bool do_init() {
         //Construct a Sprite object that takes care of handling materials, meshes etc.
-        /*sprite_ = Sprite::create(
+        sprite_ = Sprite::create(
             scene(),
             stage().id(),
             "sample_data/sonic.png",
@@ -24,16 +24,13 @@ private:
 
         sprite_->add_animation("stand", FrameRange(4, 6), 0.5);
         sprite_->set_render_dimensions(1.5, 1.5);
-        sprite_->move_to(0.0, 0.0, -1.0);*/
+        sprite_->move_to(0.0, 0.0, -1.0);
 
         //Automatically calculate an orthographic projection, taking into account the aspect ratio
         //and the passed height. For example, passing a height of 2.0 would mean the view would extend
         //+1 and -1 in the vertical direction, -1.0 - +1.0 near/far, and width would be calculated from the aspect
         //window.scene().pass().viewport().configure(kglt::VIEWPORT_TYPE_BLACKBAR_16_BY_9);
         scene().camera().set_orthographic_projection_from_height((float) 224 / (float) 40, 16.0 / 9.0);
-
-        stage().debug().draw_ray(kglt::Vec3(0, 0, -1.0), kglt::Vec3(1, 0, -1.0), kglt::Colour::WHITE, 5.0);
-        stage().debug().draw_point(kglt::Vec3(0, 0, -1.0), kglt::Colour::RED, 8.0);
 
         return true;
     }
