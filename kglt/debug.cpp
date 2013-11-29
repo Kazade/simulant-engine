@@ -31,7 +31,9 @@ void Debug::update() {
 bool Debug::init() {
     mesh_ = stage_.new_mesh();
     actor_ = stage_.new_actor_with_mesh(mesh_);
-    material_ = stage_.new_material_from_file("kglt/materials/diffuse_render.kglm");
+
+    //Don't GC the material, if there are no debug lines then it won't be attached to the mesh
+    material_ = stage_.new_material_from_file("kglt/materials/diffuse_render.kglm", /*garbage_collect=*/false);
 
     //Connect regular updates so we can remove debug lines after their duration
     stage_.window().signal_frame_finished().connect(

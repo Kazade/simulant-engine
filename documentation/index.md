@@ -1,5 +1,7 @@
 # KGLT Documentation
 
+[Massive Amounts of TODO](todo.md)
+
 ## First Steps
 
 ## The App

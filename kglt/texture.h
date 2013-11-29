@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 #include "generic/identifiable.h"
+#include "generic/managed.h"
 #include "loadable.h"
 #include "types.h"
 #include "resource.h"
@@ -14,7 +15,8 @@ namespace kglt {
 class Texture :
     public Resource,
     public Loadable,
-    public generic::Identifiable<TextureID> {
+    public generic::Identifiable<TextureID>,
+    public Managed<Texture> {
 
 public:
     typedef std::shared_ptr<Texture> ptr;

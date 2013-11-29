@@ -62,26 +62,26 @@ const ProtectedPtr<Mesh> ResourceManagerImpl::mesh(MeshID m) const {
     return MeshManager::manager_get(m);
 }
 
-MeshID ResourceManagerImpl::new_mesh() {
-    MeshID result = MeshManager::manager_new();
+MeshID ResourceManagerImpl::new_mesh(bool garbage_collect) {
+    MeshID result = MeshManager::manager_new(garbage_collect);
     return result;
 }
 
-MeshID ResourceManagerImpl::new_mesh_from_file(const unicode& path) {
+MeshID ResourceManagerImpl::new_mesh_from_file(const unicode& path, bool garbage_collect) {
     //Load the material
-    kglt::MeshID mesh_id = new_mesh();
+    kglt::MeshID mesh_id = new_mesh(garbage_collect);
     window().loader_for(path.encode())->into(mesh(mesh_id));
     return mesh_id;
 }
 
-MeshID ResourceManagerImpl::new_mesh_as_cube(float width) {
-    MeshID m = new_mesh();
+MeshID ResourceManagerImpl::new_mesh_as_cube(float width, bool garbage_collect) {
+    MeshID m = new_mesh(garbage_collect);
     kglt::procedural::mesh::cube(mesh(m), width);
     return m;
 }
 
-MeshID ResourceManagerImpl::new_mesh_as_sphere(float diameter) {
-    MeshID m = new_mesh();
+MeshID ResourceManagerImpl::new_mesh_as_sphere(float diameter, bool garbage_collect) {
+    MeshID m = new_mesh(garbage_collect);
     kglt::procedural::mesh::sphere(mesh(m), diameter);
     return m;
 }
@@ -94,14 +94,14 @@ uint32_t ResourceManagerImpl::mesh_count() const {
     return MeshManager::manager_count();
 }
 
-MaterialID ResourceManagerImpl::new_material() {
-    MaterialID result = MaterialManager::manager_new();
+MaterialID ResourceManagerImpl::new_material(bool garbage_collect) {
+    MaterialID result = MaterialManager::manager_new(garbage_collect);
     return result;
 }
 
-MaterialID ResourceManagerImpl::new_material_from_file(const unicode& path) {
+MaterialID ResourceManagerImpl::new_material_from_file(const unicode& path, bool garbage_collect) {
     //Load the material
-    auto mat = material(new_material());
+    auto mat = material(new_material(garbage_collect));
     window().loader_for(path.encode())->into(mat);
     return mat->id();
 }
@@ -131,13 +131,13 @@ void ResourceManagerImpl::mark_material_as_uncollected(MaterialID t) {
     MaterialManager::mark_as_uncollected(t);
 }
 
-TextureID ResourceManagerImpl::new_texture() {
-    return TextureManager::manager_new();
+TextureID ResourceManagerImpl::new_texture(bool garbage_collect) {
+    return TextureManager::manager_new(garbage_collect);
 }
 
-TextureID ResourceManagerImpl::new_texture_from_file(const unicode& path) {
+TextureID ResourceManagerImpl::new_texture_from_file(const unicode& path, bool garbage_collect) {
     //Load the texture
-    auto tex = texture(new_texture());
+    auto tex = texture(new_texture(garbage_collect));
     window().loader_for(path.encode())->into(tex);
     tex->upload(false, true, true, false);
     return tex->id();
@@ -183,25 +183,25 @@ uint32_t ResourceManagerImpl::shader_count() const {
     return ShaderManager::manager_count();
 }
 
-ShaderID ResourceManagerImpl::new_shader() {
-    return ShaderManager::manager_new();
+ShaderID ResourceManagerImpl::new_shader(bool garbage_collect) {
+    return ShaderManager::manager_new(garbage_collect);
 }
 
-ShaderID ResourceManagerImpl::new_shader_from_files(const unicode& vert_shader, const unicode& frag_shader) {
-    ShaderPtr shd = shader(new_shader()).lock();
+ShaderID ResourceManagerImpl::new_shader_from_files(const unicode& vert_shader, const unicode& frag_shader, bool garbage_collect) {
+    ShaderPtr shd = shader(new_shader(garbage_collect)).lock();
     shd->add_and_compile(SHADER_TYPE_VERTEX, vert_shader);
     shd->add_and_compile(SHADER_TYPE_FRAGMENT, frag_shader);
     return shd->id();
 }
 
 
-SoundID ResourceManagerImpl::new_sound() {
-    return SoundManager::manager_new();
+SoundID ResourceManagerImpl::new_sound(bool garbage_collect) {
+    return SoundManager::manager_new(garbage_collect);
 }
 
-SoundID ResourceManagerImpl::new_sound_from_file(const unicode& path) {
+SoundID ResourceManagerImpl::new_sound_from_file(const unicode& path, bool garbage_collect) {
     //Load the sound
-    SoundPtr snd = sound(new_sound()).lock();
+    SoundPtr snd = sound(new_sound(garbage_collect)).lock();
     window().loader_for(path.encode())->into(snd);
     return snd->id();
 }

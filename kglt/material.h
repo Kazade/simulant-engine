@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <set>
 
+#include "generic/managed.h"
 #include "kazmath/mat4.h"
 #include "resource.h"
 #include "loadable.h"
@@ -203,11 +204,10 @@ private:
 class Material :
     public Resource,
     public Loadable,
-    public generic::Identifiable<MaterialID> {
+    public generic::Identifiable<MaterialID>,
+    public Managed<Material> {
 
 public:
-    typedef std::shared_ptr<Material> ptr;
-
     Material(ResourceManager* resource_manager, MaterialID mat_id);
     MaterialTechnique& technique(const std::string& scheme=DEFAULT_MATERIAL_SCHEME);
     MaterialTechnique& new_technique(const std::string& scheme);

@@ -18,6 +18,7 @@
 #include "resource.h"
 #include "loadable.h"
 #include "generic/identifiable.h"
+#include "generic/managed.h"
 #include "types.h"
 
 namespace kglt {
@@ -190,11 +191,10 @@ enum ShaderType {
 class ShaderProgram :
     public Resource,
     public Loadable,
-    public generic::Identifiable<ShaderID> {
+    public generic::Identifiable<ShaderID>,
+    public Managed<ShaderProgram> {
 
 public:
-    typedef std::shared_ptr<ShaderProgram> ptr;
-
     ShaderProgram(ResourceManager* resource_manager, ShaderID id);
     ~ShaderProgram();
 

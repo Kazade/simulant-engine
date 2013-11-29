@@ -38,10 +38,15 @@ public:
     virtual ~Managed() {}
     virtual bool init() { return true; }
 
+    bool uses_gc() const { return uses_gc_; }
+    void enable_gc(bool value) { uses_gc_ = value; }
+
 protected:
     template<typename...Args>
     Managed(Args&&... args) {}
 
+private:
+    bool uses_gc_ = true;
 };
 
 #endif // MANAGED_H

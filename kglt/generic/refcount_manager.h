@@ -23,15 +23,23 @@ public:
         uncollected_.insert(id);
     }
 
-    ObjectIDType manager_new() {
-        ObjectIDType id(0);
-        {
-            std::lock_guard<std::mutex> lock(manager_lock_);
+    ObjectIDType manager_new(bool garbage_collect) {
+        return manager_new(ObjectIDType(), garbage_collect);
+    }
+
+    template<typename ...Args>
+    ObjectIDType manager_new(ObjectIDType id, bool garbage_collect, Args&&... args) {
+        std::lock_guard<std::mutex> lock(manager_lock_);
+        if(!id) {
             id = NewIDGenerator()();
-            objects_.insert(std::make_pair(id, typename ObjectType::ptr(new ObjectType((Derived*)this, id))));
-            creation_times_[id] = std::chrono::system_clock::now();
-            uncollected_.insert(id);
         }
+
+        auto obj = ObjectType::create((Derived*)this, id, std::forward<Args>(args)...);
+        obj->enable_gc(garbage_collect);
+
+        objects_.insert(std::make_pair(id, obj));
+        creation_times_[id] = std::chrono::system_clock::now();
+        uncollected_.insert(id);
 
         signal_post_create_.emit(*objects_[id], id);
 
@@ -109,7 +117,7 @@ public:
         std::lock_guard<std::mutex> lock(manager_lock_);
 
         for(ObjectIDType key: container::keys(objects_)) {
-            if(objects_[key].unique()) {                
+            if(objects_[key].unique() && objects_[key]->uses_gc()) {
                 auto it = uncollected_.find(key);
                 bool ok_to_delete = false;
 

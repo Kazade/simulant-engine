@@ -89,10 +89,19 @@ public:
      */
 
     //Mesh functions
-    virtual MeshID new_mesh() { return scene().new_mesh(); }
-    virtual MeshID new_mesh_from_file(const unicode& path) { return scene().new_mesh_from_file(path); }
-    virtual MeshID new_mesh_as_cube(float width) { return scene().new_mesh_as_cube(width); }
-    virtual MeshID new_mesh_as_sphere(float diameter) { return scene().new_mesh_as_sphere(diameter); }
+    virtual MeshID new_mesh(bool garbage_collect=true) override { return scene().new_mesh(garbage_collect); }
+
+    virtual MeshID new_mesh_from_file(const unicode& path, bool garbage_collect=true) override {
+        return scene().new_mesh_from_file(path, garbage_collect);
+    }
+
+    virtual MeshID new_mesh_as_cube(float width, bool garbage_collect=true) {
+        return scene().new_mesh_as_cube(width, garbage_collect);
+    }
+
+    virtual MeshID new_mesh_as_sphere(float diameter, bool garbage_collect=true) {
+        return scene().new_mesh_as_sphere(diameter, garbage_collect);
+    }
 
     virtual ProtectedPtr<Mesh> mesh(MeshID m) { return scene().mesh(m); }
     virtual const ProtectedPtr<Mesh> mesh(MeshID m) const { return scene().mesh(m); }
@@ -102,8 +111,10 @@ public:
 
 
     //Texture functions
-    virtual TextureID new_texture() { return scene().new_texture(); }
-    virtual TextureID new_texture_from_file(const unicode& path) { return scene().new_texture_from_file(path); }
+    virtual TextureID new_texture(bool garbage_collect=true) override { return scene().new_texture(garbage_collect); }
+    virtual TextureID new_texture_from_file(const unicode& path, bool garbage_collect=true) {
+        return scene().new_texture_from_file(path, garbage_collect);
+    }
 
     virtual ProtectedPtr<Texture> texture(TextureID t) { return scene().texture(t); }
     virtual const ProtectedPtr<Texture> texture(TextureID t) const { return scene().texture(t); }
@@ -113,9 +124,12 @@ public:
     virtual void mark_texture_as_uncollected(TextureID t) { scene().mark_texture_as_uncollected(t); }
 
     //Shader functions
-    virtual ShaderID new_shader() { return scene().new_shader(); }
-    virtual ShaderID new_shader_from_files(const unicode &vert_shader, const unicode &frag_shader) {
-        return scene().new_shader_from_files(vert_shader, frag_shader);
+    virtual ShaderID new_shader(bool garbage_collect=true) {
+        return scene().new_shader(garbage_collect);
+    }
+
+    virtual ShaderID new_shader_from_files(const unicode &vert_shader, const unicode &frag_shader, bool garbage_collect=true) {
+        return scene().new_shader_from_files(vert_shader, frag_shader, garbage_collect);
     }
 
     virtual ShaderRef shader(ShaderID s) { return scene().shader(s); }
@@ -126,8 +140,10 @@ public:
 
 
     //Sound functions
-    virtual SoundID new_sound() { return scene().new_sound(); }
-    virtual SoundID new_sound_from_file(const unicode& path) { return scene().new_sound_from_file(path); }
+    virtual SoundID new_sound(bool garbage_collect=true) override { return scene().new_sound(garbage_collect); }
+    virtual SoundID new_sound_from_file(const unicode& path, bool garbage_collect=true) override {
+        return scene().new_sound_from_file(path, garbage_collect);
+    }
 
     virtual SoundRef sound(SoundID s) { return scene().sound(s); }
     virtual const SoundRef sound(SoundID s) const { return scene().sound(s); }
@@ -137,8 +153,10 @@ public:
 
 
     //Material functions
-    virtual MaterialID new_material() { return scene().new_material(); }
-    virtual MaterialID new_material_from_file(const unicode& path) { return scene().new_material_from_file(path); }
+    virtual MaterialID new_material(bool garbage_collect=true) { return scene().new_material(garbage_collect); }
+    virtual MaterialID new_material_from_file(const unicode& path, bool garbage_collect=true) {
+        return scene().new_material_from_file(path, garbage_collect);
+    }
 
     virtual ProtectedPtr<Material> material(MaterialID m) { return scene().material(m); }
     virtual const ProtectedPtr<Material> material(MaterialID m) const { return scene().material(m); }

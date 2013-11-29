@@ -71,6 +71,6 @@ to delete the objects with a delete call:
 
     stage.delete_actor(actor_id);
     
-For more information see [Ref-counted Managers](refcount_managers.md) and 
+For more information see [Refcounted Managers](refcount_managers.md) and 
 [Manual Managers](manual_managers.md)
 

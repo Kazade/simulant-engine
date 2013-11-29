@@ -30,10 +30,10 @@ public:
     virtual ~ResourceManager() {}
 
     //Mesh functions
-    virtual MeshID new_mesh() = 0;
-    virtual MeshID new_mesh_from_file(const unicode& path) = 0;
-    virtual MeshID new_mesh_as_cube(float width) = 0;
-    virtual MeshID new_mesh_as_sphere(float diameter) = 0;
+    virtual MeshID new_mesh(bool garbage_collect=true) = 0;
+    virtual MeshID new_mesh_from_file(const unicode& path, bool garbage_collect=true) = 0;
+    virtual MeshID new_mesh_as_cube(float width, bool garbage_collect=true) = 0;
+    virtual MeshID new_mesh_as_sphere(float diameter, bool garbage_collect=true) = 0;
     //FIXME: More factory methods
 
     virtual ProtectedPtr<Mesh> mesh(MeshID m) = 0;
@@ -44,8 +44,8 @@ public:
 
 
     //Texture functions
-    virtual TextureID new_texture() = 0;
-    virtual TextureID new_texture_from_file(const unicode& path) = 0;
+    virtual TextureID new_texture(bool garbage_collect=true) = 0;
+    virtual TextureID new_texture_from_file(const unicode& path, bool garbage_collect=true) = 0;
 
     virtual ProtectedPtr<Texture> texture(TextureID t) = 0;
     virtual const ProtectedPtr<Texture> texture(TextureID t) const = 0;
@@ -55,8 +55,8 @@ public:
     virtual void mark_texture_as_uncollected(TextureID t) = 0;
 
     //Shader functions
-    virtual ShaderID new_shader() = 0;
-    virtual ShaderID new_shader_from_files(const unicode& vert_shader, const unicode& frag_shader) = 0;
+    virtual ShaderID new_shader(bool garbage_collect=true) = 0;
+    virtual ShaderID new_shader_from_files(const unicode& vert_shader, const unicode& frag_shader, bool garbage_collect=true) = 0;
 
     virtual ShaderRef shader(ShaderID t) = 0;
     virtual const ShaderRef shader(ShaderID t) const = 0;
@@ -66,8 +66,8 @@ public:
 
 
     //Sound functions
-    virtual SoundID new_sound() = 0;
-    virtual SoundID new_sound_from_file(const unicode& path) = 0;
+    virtual SoundID new_sound(bool garbage_collect=true) = 0;
+    virtual SoundID new_sound_from_file(const unicode& path, bool garbage_collect=true) = 0;
 
     virtual SoundRef sound(SoundID t) = 0;
     virtual const SoundRef sound(SoundID t) const = 0;
@@ -77,8 +77,8 @@ public:
 
 
     //Material functions
-    virtual MaterialID new_material() = 0;
-    virtual MaterialID new_material_from_file(const unicode& path) = 0;
+    virtual MaterialID new_material(bool garbage_collect=true) = 0;
+    virtual MaterialID new_material_from_file(const unicode& path, bool garbage_collect=true) = 0;
 
     virtual ProtectedPtr<Material> material(MaterialID t) = 0;
     virtual const ProtectedPtr<Material> material(MaterialID t) const = 0;
@@ -105,10 +105,10 @@ class ResourceManagerImpl:
 public:
     ResourceManagerImpl(WindowBase* window);
 
-    MeshID new_mesh();
-    MeshID new_mesh_from_file(const unicode& path);
-    MeshID new_mesh_as_cube(float width);
-    MeshID new_mesh_as_sphere(float diameter);
+    MeshID new_mesh(bool garbage_collect=true) override;
+    MeshID new_mesh_from_file(const unicode& path, bool garbage_collect=true) override;
+    MeshID new_mesh_as_cube(float width, bool garbage_collect=true) override;
+    MeshID new_mesh_as_sphere(float diameter, bool garbage_collect=true) override;
 
     ProtectedPtr<Mesh> mesh(MeshID m);
     const ProtectedPtr<Mesh> mesh(MeshID m) const;
@@ -116,16 +116,16 @@ public:
     bool has_mesh(MeshID m) const;
     uint32_t mesh_count() const;
 
-    TextureID new_texture();
-    TextureID new_texture_from_file(const unicode& path);
+    TextureID new_texture(bool garbage_collect=true) override;
+    TextureID new_texture_from_file(const unicode& path, bool garbage_collect=true) override;
     ProtectedPtr<Texture> texture(TextureID t);
     const ProtectedPtr<Texture> texture(TextureID t) const;
     bool has_texture(TextureID t) const;
     uint32_t texture_count() const;
     void mark_texture_as_uncollected(TextureID t) override;
 
-    ShaderID new_shader();
-    ShaderID new_shader_from_files(const unicode& vert_shader, const unicode& frag_shader);
+    ShaderID new_shader(bool garbage_collect=true) override;
+    ShaderID new_shader_from_files(const unicode& vert_shader, const unicode& frag_shader, bool garbage_collect=true) override;
 
     ShaderRef shader(ShaderID s);
     const ShaderRef shader(ShaderID s) const;
@@ -134,8 +134,8 @@ public:
 
     bool has_shader(ShaderID s) const;
 
-    MaterialID new_material();
-    MaterialID new_material_from_file(const unicode& path);
+    MaterialID new_material(bool garbage_collect=true) override;
+    MaterialID new_material_from_file(const unicode& path, bool garbage_collect=true) override;
     MaterialID clone_material(MaterialID mat);
 
     ProtectedPtr<Material> material(MaterialID material);
@@ -144,8 +144,8 @@ public:
     uint32_t material_count() const;
     void mark_material_as_uncollected(MaterialID t) override;
 
-    SoundID new_sound();
-    SoundID new_sound_from_file(const unicode& path);
+    SoundID new_sound(bool garbage_collect=true);
+    SoundID new_sound_from_file(const unicode& path, bool garbage_collect=true);
     SoundRef sound(SoundID sound);
     const SoundRef sound(SoundID sound) const;
     bool has_sound(SoundID s) const;
