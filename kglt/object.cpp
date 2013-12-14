@@ -322,7 +322,7 @@ void Object::rotate_absolute_y(float amount) {
 }
 
 void Object::look_at(const Vec3& position) {
-    Vec3 forward = (position - absolute_position()).normalize();
+    Vec3 forward = (position - absolute_position()).normalized();
 
     float dot = Vec3(0, 0, -1).dot(forward);
 
@@ -337,7 +337,7 @@ void Object::look_at(const Vec3& position) {
     }
 
     float rot_angle = acosf(dot);
-    Vec3 rot_axis = Vec3(0, 0, -1).cross(forward).normalize();
+    Vec3 rot_axis = Vec3(0, 0, -1).cross(forward).normalized();
 
     Quaternion q;
     kmQuaternionRotationAxisAngle(&q, &rot_axis, rot_angle);

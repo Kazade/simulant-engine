@@ -46,9 +46,14 @@ struct Quaternion : public kmQuaternion {
         return result;
     }
 
-    const Quaternion& normalize() {
+    void normalize() {
         kmQuaternionNormalize(this, this);
-        return *this;
+    }
+
+    const Quaternion normalized() {
+        Quaternion result;
+        kmQuaternionNormalize(&result, this);
+        return result;
     }
 
     const Quaternion& inverse() {
@@ -211,9 +216,14 @@ struct Vec3 : public kmVec3 {
         return kmVec3LengthSq(this);
     }
 
-    const kglt::Vec3& normalize() {
+    const kglt::Vec3 normalized() {
+        kglt::Vec3 result;
+        kmVec3Normalize(&result, this);
+        return result;
+    }
+
+    void normalize() {
         kmVec3Normalize(this, this);
-        return *this;
     }
 
     Vec3 rotated_by(const Quaternion& q) {

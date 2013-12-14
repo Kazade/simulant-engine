@@ -333,3 +333,4 @@ kglt/message_bar.cpp
 kglt/extra/ai/pid.h
 kglt/debug.h
 kglt/debug.cpp
+kglt/extra/ai/curve.h
