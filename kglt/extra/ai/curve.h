@@ -20,16 +20,16 @@ public:
         end_pos_(end_pos),
         end_dir_(end_dir) {}
 
-    void position(double t) {
+    kglt::Vec3 position(double t) {
         return kglt::Vec3(
-            scalar_position(start_pos_.x, start_dir_.x, end_dir_.x, end_pos.x, t),
-            scalar_position(start_pos_.y, start_dir_.y, end_dir_.y, end_pos.y, t),
-            scalar_position(start_pos_.z, start_dir_.z, end_dir_.z, end_pos.z, t)
+            scalar_position(start_pos_.x, start_dir_.x, end_dir_.x, end_pos_.x, t),
+            scalar_position(start_pos_.y, start_dir_.y, end_dir_.y, end_pos_.y, t),
+            scalar_position(start_pos_.z, start_dir_.z, end_dir_.z, end_pos_.z, t)
         );
     }
 
 private:
-    void scalar_position(double A,  // Start value
+    double scalar_position(double A,  // Start value
                          double B,  // First control value
                          double C,  // Second control value
                          double D,  // Ending value
