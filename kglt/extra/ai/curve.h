@@ -21,11 +21,22 @@ public:
         end_dir_(end_dir) {}
 
     kglt::Vec3 position(double t) {
-        return kglt::Vec3(
-            scalar_position(start_pos_.x, start_dir_.x, end_dir_.x, end_pos_.x, t),
-            scalar_position(start_pos_.y, start_dir_.y, end_dir_.y, end_pos_.y, t),
-            scalar_position(start_pos_.z, start_dir_.z, end_dir_.z, end_pos_.z, t)
-        );
+        if(t > 1.0) t = 1.0;
+        if(t < 0.0) t = 0.0;
+
+
+        float u = 1 - t;
+        float tt = t * t;
+        float uu = u * u;
+        float ttt = tt * t;
+        float uuu = uu * u;
+
+        kglt::Vec3 p = uuu * start_pos_;
+        p += 3 * uu * t * (start_pos_ + start_dir_);
+        p += 3 * u * tt * (end_pos_ + end_dir_);
+        p += ttt * end_pos_;
+
+        return p;
     }
 
 private:

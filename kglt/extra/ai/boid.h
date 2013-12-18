@@ -26,6 +26,8 @@ public:
     kglt::Vec3 pursue(const Vec3& target, const Vec3& target_velocity, const float target_max_speed) const;
     kglt::Vec3 evade(const Vec3& target, const Vec3& target_velocity, const float target_max_speed) const;
 
+    kglt::Vec3 separate(const std::vector<Boid::ptr> others);
+
 private:
     MoveableActorHolder* actor_;
 

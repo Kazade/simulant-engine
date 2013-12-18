@@ -85,6 +85,34 @@ kglt::Vec3 Boid::flee(const Vec3& target) const {
     return new_velocity;
 }
 
+kglt::Vec3 Boid::separate(const std::vector<Boid::ptr> others) {
+    float desired_sep = actor_->radius() * 2;
+    kglt::Vec3 sum;
+    int32_t count = 0;
+    for(auto other: others) {
+        float d = kglt::Vec3::distance(actor_->position(), other->actor_->position());
+        if((d > 0) && (d < desired_sep)) {
+            kglt::Vec3 diff = actor_->position() - other->actor_->position();
+            diff.normalize();
+            diff /= d;
+            sum += diff;
+            count++;
+        }
+    }
+
+    if(count > 0) {
+        sum /= count;
+        sum.normalize();
+        sum *= actor_->max_speed();
+
+        kglt::Vec3 steer = sum - actor_->velocity();
+        steer.limit(actor_->max_force());
+        return steer;
+    }
+
+    return kglt::Vec3();
+}
+
 void Boid::follow(Path path) {
     assert(actor_);
 

@@ -334,3 +334,4 @@ kglt/extra/ai/pid.h
 kglt/debug.h
 kglt/debug.cpp
 kglt/extra/ai/curve.h
+tests/test_curve.h

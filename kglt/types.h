@@ -190,6 +190,11 @@ struct Vec3 : public kmVec3 {
         return *this;
     }
 
+    Vec3& operator/=(float rhs) {
+        kmVec3Scale(this, this, 1.0 / rhs);
+        return *this;
+    }
+
     Vec3 operator/(float rhs) const {
         Vec3 result;
         kmVec3Scale(&result, this, 1.0 / rhs);
