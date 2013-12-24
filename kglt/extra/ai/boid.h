@@ -44,6 +44,8 @@ private:
     void update_debug_mesh() const;
 };
 
+float map(float value, float min, float max, float new_min, float new_max);
+
 }
 }
 
