@@ -8,6 +8,10 @@ namespace kglt {
 App::App(const unicode &title, uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen) {
     window_ = Window::create(width, height, bpp, fullscreen);
     window_->set_title(title.encode());    
+
+    window_->signal_frame_started().connect(std::bind(&App::check_tasks, this));
+    window_->signal_step().connect(std::bind(&App::do_step, this, std::placeholders::_1));
+    window_->signal_shutdown().connect(std::bind(&App::do_cleanup, this));
 }
 
 Scene& App::scene() {
@@ -29,7 +33,8 @@ void App::load_async(boost::function<bool ()> func) {
 void App::check_tasks() {
     //Run any background loading tasks
     for(auto it = load_tasks_.begin(); it != load_tasks_.end(); ++it) {
-        if((*it).wait_for(boost::chrono::seconds(0)) == boost::future_status::ready) {
+        auto result = (*it).wait_for(boost::chrono::seconds(0));
+        if(result == boost::future_status::ready) {
             if(!(*it).get()) {
                 throw BackgroundLoadException();
             }
@@ -42,10 +47,6 @@ void App::check_tasks() {
 }
 
 int32_t App::run() {
-    window_->signal_frame_started().push_back(std::bind(&App::check_tasks, this));
-    window_->signal_step().push_back(std::bind(&App::do_step, this, std::placeholders::_1));
-    window_->signal_shutdown().push_back(std::bind(&App::do_cleanup, this));
-
     load_async(std::bind(&App::init, this));
 
     while(window_->update()) {}
