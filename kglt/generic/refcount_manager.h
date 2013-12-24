@@ -41,7 +41,7 @@ public:
         creation_times_[id] = std::chrono::system_clock::now();
         uncollected_.insert(id);
 
-        signal_post_create_.emit(*objects_[id], id);
+        signal_post_create_(*objects_[id], id);
 
         return id;
     }
@@ -62,7 +62,7 @@ public:
             *new_obj = *manager_unlocked_get(orig).lock();
         }
 
-        signal_post_create_.emit(*objects_[id], id);
+        signal_post_create_(*objects_[id], id);
         return id;
     }
 

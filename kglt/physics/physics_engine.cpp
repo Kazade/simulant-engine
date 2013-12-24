@@ -64,7 +64,7 @@ void PhysicsEngine::fire_collision_signals_for(Collidable& lhs, Collidable& rhs)
     for(auto key: combos) {
         auto it = collision_signals_.find(key);
         if(it != collision_signals_.end()) {
-            (*it).second.emit(lhs, rhs);
+            (*it).second(lhs, rhs);
         }
     }
 }

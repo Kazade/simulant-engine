@@ -262,7 +262,7 @@ void VertexData::reset() {
 }
 
 void VertexData::done() {
-    signal_update_complete_.emit();
+    signal_update_complete_();
 }
 
 IndexData::IndexData(Scene& scene):
@@ -275,7 +275,7 @@ void IndexData::reset() {
 }
 
 void IndexData::done() {
-    signal_update_complete_.emit();
+    signal_update_complete_();
 }
 
 }

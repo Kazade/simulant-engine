@@ -51,7 +51,7 @@ ActorID Stage::new_actor(bool make_responsive, bool make_collidable) {
     }
 
     //Tell everyone about the new actor
-    signal_actor_created_.emit(result);
+    signal_actor_created_(result);
     return result;
 }
 
@@ -76,7 +76,7 @@ ActorID Stage::new_actor(MeshID mid, bool make_responsive, bool make_collidable)
     }
 
     //Tell everyone about the new actor
-    signal_actor_created_.emit(result);
+    signal_actor_created_(result);
 
     return result;
 }
@@ -106,7 +106,7 @@ const ProtectedPtr<Actor> Stage::actor(ActorID e) const {
 }
 
 void Stage::delete_actor(ActorID e) {
-    signal_actor_destroyed_.emit(e);
+    signal_actor_destroyed_(e);
 
     actor(e)->destroy_children();
 
@@ -116,7 +116,7 @@ void Stage::delete_actor(ActorID e) {
 LightID Stage::new_light(LightType type) {
     LightID lid = LightManager::manager_new();
     light(lid)->set_type(type);
-    signal_light_created_.emit(lid);
+    signal_light_created_(lid);
     return lid;
 }
 
@@ -129,7 +129,7 @@ LightID Stage::new_light(Object &parent, LightType type) {
         l->set_parent(&parent);
     }
 
-    signal_light_created_.emit(lid);
+    signal_light_created_(lid);
 
     return lid;
 }
@@ -139,7 +139,7 @@ ProtectedPtr<Light> Stage::light(LightID light_id) {
 }
 
 void Stage::delete_light(LightID light_id) {
-    signal_light_destroyed_.emit(light_id);
+    signal_light_destroyed_(light_id);
     light(light_id)->destroy_children();
     LightManager::manager_delete(light_id);
 }

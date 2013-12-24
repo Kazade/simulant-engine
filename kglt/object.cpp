@@ -58,7 +58,7 @@ void Object::make_responsive() {
 
     responsive_body_ = engine.new_responsive_body(this);
 
-    signal_made_responsive_.emit();
+    signal_made_responsive_();
 }
 
 void Object::make_collidable() {
@@ -70,7 +70,7 @@ void Object::make_collidable() {
 
     collidable_ = engine.new_collidable(this);
 
-    signal_made_collidable_.emit();
+    signal_made_collidable_();
 }
 
 void Object::lock_rotation() {

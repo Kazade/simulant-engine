@@ -83,7 +83,7 @@ SubMeshIndex Mesh::new_submesh(
     submeshes_.push_back(SubMesh::create(*this, material, arrangement, uses_shared_vertices));
     submeshes_by_index_[idx] = submeshes_[submeshes_.size()-1];
 
-    signal_submeshes_changed_.emit();
+    signal_submeshes_changed_();
 
     return idx;
 }
@@ -96,7 +96,7 @@ void Mesh::delete_submesh(SubMeshIndex index) {
     submeshes_.erase(std::remove(submeshes_.begin(), submeshes_.end(), submeshes_by_index_[index]), submeshes_.end());
     submeshes_by_index_.erase(index);
 
-    signal_submeshes_changed_.emit();
+    signal_submeshes_changed_();
 }
 
 void Mesh::set_material_id(MaterialID material) {

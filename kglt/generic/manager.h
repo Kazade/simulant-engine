@@ -29,7 +29,7 @@ public:
             objects_.insert(std::make_pair(id, ObjectType::create((Derived*)this, id, std::forward<Args>(args)...)));
         }
 
-        signal_post_create_.emit(*objects_[id], id);
+        signal_post_create_(*objects_[id], id);
 
         return id;
     }
@@ -39,7 +39,7 @@ public:
             std::lock_guard<std::recursive_mutex> lock(manager_lock_);
 
             ObjectType& obj = *objects_[id];
-            signal_pre_delete_.emit(obj, id);
+            signal_pre_delete_(obj, id);
 
             if(manager_contains(id)) {
                 objects_.erase(id);

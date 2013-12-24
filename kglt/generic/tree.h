@@ -119,7 +119,7 @@ public:
 
         on_parent_set(old_parent);
 
-        signal_parent_changed_.emit(old_parent, new_parent); //Fire off a signal to indicate that the parent changed
+        signal_parent_changed_(old_parent, new_parent); //Fire off a signal to indicate that the parent changed
     }
 
     void detach() {
