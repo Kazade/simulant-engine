@@ -2,7 +2,7 @@
 #define TEST_VECTOR_H
 
 #include "kglt/kglt.h"
-#include "kglt/extra/ai/vec3_pid_controller.h"
+#include "kglt/extra/ai/pid.h"
 #include "kglt/kazbase/testing.h"
 
 class VectorTest : public TestCase {
