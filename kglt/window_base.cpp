@@ -39,7 +39,7 @@ WindowBase::WindowBase():
 
     ktiGenTimers(1, &fixed_timer_);
     ktiBindTimer(fixed_timer_);
-    ktiStartFixedStepTimer(30);
+    ktiStartFixedStepTimer(WindowBase::STEPS_PER_SECOND);
 
     ktiGenTimers(1, &variable_timer_);
     ktiBindTimer(variable_timer_);

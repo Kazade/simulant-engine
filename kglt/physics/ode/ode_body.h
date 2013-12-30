@@ -34,11 +34,13 @@ private:
     virtual void do_set_rotation(const kglt::Quaternion& rotation);
     virtual kglt::Quaternion do_rotation() const;
 
-    virtual void do_apply_linear_force_global(const kglt::Vec3& force);
-    virtual void do_apply_linear_force_local(const kglt::Vec3& force);
+    virtual void do_apply_linear_force_global(const kglt::Vec3& force) override;
+    virtual void do_apply_linear_force_local(const kglt::Vec3& force) override;
+    virtual void do_apply_linear_impulse_global(const kglt::Vec3& impulse) override;
 
-    virtual void do_apply_angular_force_global(const kglt::Vec3& force);
-    virtual void do_apply_angular_force_local(const kglt::Vec3& force);
+    virtual void do_apply_angular_force_global(const kglt::Vec3& force) override;
+    virtual void do_apply_angular_force_local(const kglt::Vec3& force) override;
+    virtual void do_apply_angular_impulse_global(const kglt::Vec3& impulse) override;
 
     virtual void do_set_angular_damping(const float amount);
     virtual void do_set_linear_damping(const float amount);

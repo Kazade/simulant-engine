@@ -54,6 +54,16 @@ void ResponsiveBody::set_mass_box(float total_mass, float width, float height, f
     do_set_mass_box(total_mass, width, height, depth);
 }
 
+void ResponsiveBody::apply_linear_impulse_global(const kglt::Vec3& impulse) {
+    std::lock_guard<std::recursive_mutex> lock(engine_->mutex());
+    do_apply_linear_impulse_global(impulse);
+}
+
+void ResponsiveBody::apply_angular_impulse_global(const kglt::Vec3& impulse) {
+    std::lock_guard<std::recursive_mutex> lock(engine_->mutex());
+    do_apply_angular_impulse_global(impulse);
+}
+
 void ResponsiveBody::apply_linear_force_global(const kglt::Vec3& force) {
     std::lock_guard<std::recursive_mutex> lock(engine_->mutex());
     do_apply_linear_force_global(force);
