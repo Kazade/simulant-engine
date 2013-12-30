@@ -50,6 +50,7 @@ class WindowBase :
 
 public:    
     typedef std::shared_ptr<WindowBase> ptr;
+    static const int STEPS_PER_SECOND = 60;
 
     template<typename T>
     static std::shared_ptr<WindowBase> create(int width=640, int height=480, int bpp=0, bool fullscreen=false) {

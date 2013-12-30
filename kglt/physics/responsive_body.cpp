@@ -43,6 +43,7 @@ kglt::Quaternion ResponsiveBody::rotation() const {
     return do_rotation();
 }
 
+
 void ResponsiveBody::set_mass_sphere(float total_mass, float radius) {
     std::lock_guard<std::recursive_mutex> lock(engine_->mutex());
     do_set_mass_sphere(total_mass, radius);
@@ -56,6 +57,26 @@ void ResponsiveBody::set_mass_box(float total_mass, float width, float height, f
 void ResponsiveBody::set_mass(float total_mass, kglt::Vec3 inertia) {
     std::lock_guard<std::recursive_mutex> lock(engine_->mutex());
     do_set_mass(total_mass, inertia);
+}
+
+void ResponsiveBody::apply_linear_impulse_global(const kglt::Vec3& impulse) {
+    std::lock_guard<std::recursive_mutex> lock(engine_->mutex());
+    do_apply_linear_impulse_global(impulse);
+}
+
+void ResponsiveBody::apply_angular_impulse_global(const kglt::Vec3& impulse) {
+    std::lock_guard<std::recursive_mutex> lock(engine_->mutex());
+    do_apply_angular_impulse_global(impulse);
+}
+
+void ResponsiveBody::apply_angular_impulse_local(const Vec3 &impulse) {
+    std::lock_guard<std::recursive_mutex> lock(engine_->mutex());
+    do_apply_angular_impulse_local(impulse);
+}
+
+void ResponsiveBody::apply_linear_impulse_local(const Vec3 &impulse) {
+    std::lock_guard<std::recursive_mutex> lock(engine_->mutex());
+    do_apply_linear_impulse_local(impulse);
 }
 
 void ResponsiveBody::apply_linear_force_global(const kglt::Vec3& force) {

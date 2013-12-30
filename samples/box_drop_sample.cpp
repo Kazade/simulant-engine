@@ -53,6 +53,7 @@ private:
                     actor->shape().add_box(1.0, 1.0, 1.0);
                     actor->body().set_mass_box(1.0, 1.0, 1.0, 1.0);
                     actor->move_to(Vec3(0, 6, -20));
+                    actor->body().apply_angular_impulse_global(kglt::Vec3(0, 1, 0));
                 };
 
                 time_since_last_spawn_ = 0.0;

@@ -2,6 +2,7 @@
 #include "../../stage.h"
 #include "../../scene.h"
 #include "../../object.h"
+#include "../../window_base.h"
 
 #include "ode_body.h"
 #include "ode_engine.h"
@@ -48,6 +49,20 @@ kglt::Quaternion ODEBody::do_rotation() const {
     return Quaternion(rot[1], rot[2], rot[3], rot[0]);
 }
 
+void ODEBody::do_apply_linear_impulse_global(const kglt::Vec3& impulse) {
+    dVector3 force;
+    ODEEngine& eng = dynamic_cast<ODEEngine&>(*engine());
+    dWorldImpulseToForce(eng.world(), 1.0 / double(WindowBase::STEPS_PER_SECOND), impulse.x, impulse.y, impulse.z, force);
+    dBodyAddForce(body_, force[0], force[1], force[2]);
+}
+
+void ODEBody::do_apply_linear_impulse_local(const kglt::Vec3& impulse) {
+    dVector3 force;
+    ODEEngine& eng = dynamic_cast<ODEEngine&>(*engine());
+    dWorldImpulseToForce(eng.world(), 1.0 / double(WindowBase::STEPS_PER_SECOND), impulse.x, impulse.y, impulse.z, force);
+    dBodyAddRelForce(body_, force[0], force[1], force[2]);
+}
+
 void ODEBody::do_apply_linear_force_global(const kglt::Vec3& force) {
     dBodyAddForce(body_, force.x, force.y, force.z);
 }
@@ -62,6 +77,20 @@ void ODEBody::do_apply_angular_force_global(const kglt::Vec3& force) {
 
 void ODEBody::do_apply_angular_force_local(const kglt::Vec3& force) {
     dBodyAddRelTorque(body_, force.x, force.y, force.z);
+}
+
+void ODEBody::do_apply_angular_impulse_global(const kglt::Vec3& impulse) {
+    dVector3 force;
+    ODEEngine& eng = dynamic_cast<ODEEngine&>(*engine());
+    dWorldImpulseToForce(eng.world(), 1.0 / double(WindowBase::STEPS_PER_SECOND), impulse.x, impulse.y, impulse.z, force);
+    dBodyAddTorque(body_, force[0], force[1], force[2]);
+}
+
+void ODEBody::do_apply_angular_impulse_local(const kglt::Vec3& impulse) {
+    dVector3 force;
+    ODEEngine& eng = dynamic_cast<ODEEngine&>(*engine());
+    dWorldImpulseToForce(eng.world(), 1.0 / double(WindowBase::STEPS_PER_SECOND), impulse.x, impulse.y, impulse.z, force);
+    dBodyAddRelTorque(body_, force[0], force[1], force[2]);
 }
 
 void ODEBody::do_set_angular_damping(const float amount) {

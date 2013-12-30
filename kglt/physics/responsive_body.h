@@ -27,6 +27,11 @@ public:
     void set_mass_sphere(float total_mass, float radius);
     void set_mass_box(float total_mass, float width, float height, float depth);
 
+    void apply_linear_impulse_global(const kglt::Vec3& impulse);
+    void apply_angular_impulse_global(const kglt::Vec3& impulse);
+    void apply_linear_impulse_local(const kglt::Vec3& impulse);
+    void apply_angular_impulse_local(const kglt::Vec3& impulse);
+
     void apply_linear_force_global(const kglt::Vec3& force);
     void apply_linear_force_local(const kglt::Vec3& force);
 
@@ -69,10 +74,14 @@ private:
     virtual void do_set_mass_box(float total_mass, float width, float height, float depth) = 0;
 
     virtual void do_apply_linear_force_global(const kglt::Vec3& force) = 0;
+    virtual void do_apply_linear_impulse_global(const kglt::Vec3& impulse) = 0;
     virtual void do_apply_linear_force_local(const kglt::Vec3& force) = 0;
+    virtual void do_apply_linear_impulse_local(const kglt::Vec3& impulse) = 0;
 
     virtual void do_apply_angular_force_global(const kglt::Vec3& force) = 0;
     virtual void do_apply_angular_force_local(const kglt::Vec3& force) = 0;
+    virtual void do_apply_angular_impulse_global(const kglt::Vec3& impulse) = 0;
+    virtual void do_apply_angular_impulse_local(const kglt::Vec3& impulse) = 0;
 
     virtual void do_set_angular_damping(const float amount) = 0;
     virtual void do_set_linear_damping(const float amount) = 0;
