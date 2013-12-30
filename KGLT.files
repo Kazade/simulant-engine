@@ -293,8 +293,6 @@ kglt/base.cpp
 samples/seek_sample.cpp
 kglt/physics/physics_engine.h
 kglt/physics/responsive_body.h
-kglt/physics/bullet_engine.h
-kglt/physics/bullet_body.h
 tests/test_object.h
 kglt/physics/ode/ode_body.h
 kglt/physics/ode/ode_engine.h
@@ -335,3 +333,10 @@ kglt/debug.h
 kglt/debug.cpp
 kglt/extra/ai/curve.h
 tests/test_curve.h
+kglt/physics/bullet/bullet_body.h
+kglt/physics/bullet/bullet_collidable.h
+kglt/physics/bullet/bullet_engine.h
+kglt/physics/bullet/bullet_private.h
+kglt/physics/bullet/bullet_body.cpp
+kglt/physics/bullet/bullet_engine.cpp
+kglt/physics/bullet/bullet_collidable.cpp

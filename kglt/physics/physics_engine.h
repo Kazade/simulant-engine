@@ -13,7 +13,7 @@ namespace kglt {
 
 class ResponsiveBody;
 class Collidable;
-
+class Scene;
 class Object;
 
 class PhysicsEngine {
@@ -41,19 +41,31 @@ private:
 
 protected:
     void fire_collision_signals_for(Collidable& lhs, Collidable& rhs);
+    Scene& scene() { assert(scene_); return *scene_; }
 
 private:
+    void set_scene(Scene* scene) {
+        scene_ = scene;
+        if(scene_) {
+            on_scene_set(*scene_);
+        }
+    }
+
     typedef std::map< std::pair<base::Tag, base::Tag>, CombinedCollisionSignal> SignalMap;
     SignalMap collision_signals_;
+    Scene* scene_ = nullptr;
 
     virtual bool do_init() = 0;
     virtual void do_cleanup() = 0;
     virtual void do_step(double dt) = 0;
     virtual std::shared_ptr<ResponsiveBody> do_new_responsive_body(Object* owner) = 0;
     virtual std::shared_ptr<Collidable> do_new_collidable(Object* owner) = 0;
+    virtual void on_scene_set(Scene& scene) {}
 
     virtual ShapeID do_create_plane(float a, float b, float c, float d) = 0;
     virtual void do_set_gravity(const kglt::Vec3& gravity) = 0;
+
+    friend class Scene;
 };
 
 ShapeID get_next_shape_id();

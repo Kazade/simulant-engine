@@ -1,0 +1,4 @@
+#ifndef BULLET_PRIVATE_H
+#define BULLET_PRIVATE_H
+
+#endif // BULLET_PRIVATE_H

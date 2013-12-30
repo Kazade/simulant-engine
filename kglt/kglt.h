@@ -32,6 +32,7 @@
 #include "physics/ode/ode_engine.h"
 #include "physics/ode/ode_body.h"
 
-
+#include "physics/bullet/bullet_engine.h"
+#include "physics/bullet/bullet_body.h"
 
 #endif

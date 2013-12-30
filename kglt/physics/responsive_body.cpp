@@ -43,7 +43,6 @@ kglt::Quaternion ResponsiveBody::rotation() const {
     return do_rotation();
 }
 
-
 void ResponsiveBody::set_mass_sphere(float total_mass, float radius) {
     std::lock_guard<std::recursive_mutex> lock(engine_->mutex());
     do_set_mass_sphere(total_mass, radius);
@@ -52,6 +51,11 @@ void ResponsiveBody::set_mass_sphere(float total_mass, float radius) {
 void ResponsiveBody::set_mass_box(float total_mass, float width, float height, float depth) {
     std::lock_guard<std::recursive_mutex> lock(engine_->mutex());
     do_set_mass_box(total_mass, width, height, depth);
+}
+
+void ResponsiveBody::set_mass(float total_mass, kglt::Vec3 inertia) {
+    std::lock_guard<std::recursive_mutex> lock(engine_->mutex());
+    do_set_mass(total_mass, inertia);
 }
 
 void ResponsiveBody::apply_linear_force_global(const kglt::Vec3& force) {

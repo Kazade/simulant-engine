@@ -36,6 +36,9 @@ public:
 
     void enable_physics(std::shared_ptr<PhysicsEngine> engine) {
         physics_engine_ = engine;
+        if(physics_engine_) {
+            physics_engine_->set_scene(this);
+        }
     }
 
     PhysicsEngine& physics() const {

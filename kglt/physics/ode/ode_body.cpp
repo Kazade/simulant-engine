@@ -119,6 +119,10 @@ void ODEBody::do_disable_constraint(ConstraintID c) {
     dJointDisable(constraints_.at(c));
 }
 
+void ODEBody::do_set_mass(float total_mass, kglt::Vec3 inertia) {
+    L_WARN("Setting mass with inertia is not yet supported in the ODE backend and will have no effect");
+}
+
 void ODEBody::do_set_mass_sphere(float total_mass, float radius) {    
     dMassSetSphereTotal(&mass_, total_mass, radius);
     dBodySetMass(body_, &mass_);

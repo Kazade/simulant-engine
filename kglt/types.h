@@ -424,10 +424,10 @@ class RenderSequence;
 class Partitioner;
 
 namespace physics {
-    class ODEEngine;
+    class BulletEngine;
 }
 
-typedef physics::ODEEngine DefaultPhysicsEngine;
+typedef physics::BulletEngine DefaultPhysicsEngine;
 
 }
 

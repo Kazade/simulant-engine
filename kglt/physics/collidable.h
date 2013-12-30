@@ -3,6 +3,7 @@
 
 #include "../generic/unique_id.h"
 #include "../kazbase/base/taggable_object.h"
+#include "../kazbase/signals3/signals3.hpp"
 #include "../types.h"
 
 namespace kglt {

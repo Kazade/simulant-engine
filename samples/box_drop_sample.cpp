@@ -50,9 +50,9 @@ private:
                     auto actor = stage().actor(new_actor);
 
                     //Add a cube shape to the collidable
-                    actor->body().set_mass_box(1.0, 1.0, 1.0, 1.0);
                     actor->shape().add_box(1.0, 1.0, 1.0);
-                    actor->move_to(Vec3(0, 6, -10));
+                    actor->body().set_mass_box(1.0, 1.0, 1.0, 1.0);
+                    actor->move_to(Vec3(0, 6, -20));
                 };
 
                 time_since_last_spawn_ = 0.0;

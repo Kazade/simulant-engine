@@ -168,6 +168,8 @@ bool WindowBase::update() {
 
     check_events();
 
+    signal_update_(delta_time_);
+
     while(ktiTimerCanUpdate()) {
         input_controller().update(fixed_step);
         scene().update(fixed_step);

@@ -23,6 +23,7 @@ public:
     void set_rotation(const kglt::Quaternion& rotation);
     kglt::Quaternion rotation() const;
 
+    void set_mass(float mass, kglt::Vec3 inertia=kglt::Vec3());
     void set_mass_sphere(float total_mass, float radius);
     void set_mass_box(float total_mass, float width, float height, float depth);
 
@@ -63,6 +64,7 @@ private:
     virtual void do_set_rotation(const kglt::Quaternion& rotation) = 0;
     virtual kglt::Quaternion do_rotation() const = 0;
 
+    virtual void do_set_mass(float mass, kglt::Vec3 inertia=kglt::Vec3()) = 0;
     virtual void do_set_mass_sphere(float total_mass, float radius) = 0;
     virtual void do_set_mass_box(float total_mass, float width, float height, float depth) = 0;
 

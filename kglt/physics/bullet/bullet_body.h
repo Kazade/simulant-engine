@@ -1,8 +1,7 @@
-#ifndef ODE_BODY_H
-#define ODE_BODY_H
+#ifndef BULLET_BODY_H
+#define BULLET_BODY_H
 
-#include <ode/ode.h>
-#include <unordered_map>
+#include <btBulletDynamicsCommon.h>
 
 #include "../../kazbase/exceptions.h"
 #include "../responsive_body.h"
@@ -10,21 +9,14 @@
 namespace kglt {
 namespace physics {
 
-class ODECollidable;
+class BulletCollidable;
 
-class ODEBody : public ResponsiveBody {
+class BulletBody : public ResponsiveBody {
 public:
-    ODEBody(Object* owner):
+    BulletBody(Object* owner):
         ResponsiveBody(owner) {}
 
-    friend class ODECollidable;
-
 private:
-    std::unordered_map<ConstraintID, dJointID> constraints_;
-
-    dBodyID body_;
-    dMass mass_;
-
     bool do_init();
     void do_cleanup();
 
@@ -49,7 +41,7 @@ private:
     virtual void do_set_linear_velocity(const kglt::Vec3& vel);
     virtual kglt::Vec3 do_linear_velocity() const;
 
-    void do_set_mass(float total_mass, kglt::Vec3 inertia=kglt::Vec3());
+    void do_set_mass(float mass, kglt::Vec3 inertia=kglt::Vec3());
     void do_set_mass_sphere(float total_mass, float radius);
     void do_set_mass_box(float total_mass, float width, float height, float depth);
 
@@ -57,9 +49,15 @@ private:
     virtual void do_destroy_constraint(ConstraintID c);
     virtual void do_enable_constraint(ConstraintID c);
     virtual void do_disable_constraint(ConstraintID c);
+
+    std::unique_ptr<btDefaultMotionState> motion_state_;
+    std::unique_ptr<btCompoundShape> compound_shape_;
+    std::unique_ptr<btRigidBody> body_;
+
+    friend class BulletCollidable;
 };
 
 }
 }
 
-#endif // ODE_BODY_H
+#endif // BULLET_BODY_H
