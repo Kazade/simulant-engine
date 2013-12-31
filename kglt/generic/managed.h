@@ -39,7 +39,7 @@ public:
     virtual bool init() { return true; }
 
     bool uses_gc() const { return uses_gc_; }
-    void enable_gc(bool value) { uses_gc_ = value; }
+    void enable_gc(bool value=true) { uses_gc_ = value; }
 
 protected:
     template<typename...Args>

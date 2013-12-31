@@ -69,12 +69,17 @@ public:
     virtual SoundID new_sound(bool garbage_collect=true) = 0;
     virtual SoundID new_sound_from_file(const unicode& path, bool garbage_collect=true) = 0;
 
-    virtual SoundRef sound(SoundID t) = 0;
-    virtual const SoundRef sound(SoundID t) const = 0;
+    virtual SoundID new_sound_with_name(const unicode& name, bool garbage_collect=true) = 0;
+    virtual SoundID new_sound_with_name_from_file(const unicode& name, const unicode& path, bool garbage_collect=true) = 0;
+    virtual SoundID get_sound_with_name(const unicode& name) = 0;
+
+    virtual ProtectedPtr<Sound> sound(SoundID t) = 0;
+    virtual const ProtectedPtr<Sound> sound(SoundID t) const = 0;
 
     virtual bool has_sound(SoundID m) const = 0;
     virtual uint32_t sound_count() const = 0;
 
+    virtual void delete_sound(SoundID t) = 0;
 
     //Material functions
     virtual MaterialID new_material(bool garbage_collect=true) = 0;
@@ -146,8 +151,15 @@ public:
 
     SoundID new_sound(bool garbage_collect=true);
     SoundID new_sound_from_file(const unicode& path, bool garbage_collect=true);
-    SoundRef sound(SoundID sound);
-    const SoundRef sound(SoundID sound) const;
+
+    SoundID new_sound_with_name(const unicode& name, bool garbage_collect=true);
+    SoundID new_sound_with_name_from_file(const unicode& name, const unicode& path, bool garbage_collect=true);
+    SoundID get_sound_with_name(const unicode& name);
+
+    void delete_sound(SoundID t);
+
+    ProtectedPtr<Sound> sound(SoundID sound);
+    const ProtectedPtr<Sound> sound(SoundID sound) const;
     bool has_sound(SoundID s) const;
     uint32_t sound_count() const;
 

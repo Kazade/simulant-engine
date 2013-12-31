@@ -145,8 +145,22 @@ public:
         return scene().new_sound_from_file(path, garbage_collect);
     }
 
-    virtual SoundRef sound(SoundID s) { return scene().sound(s); }
-    virtual const SoundRef sound(SoundID s) const { return scene().sound(s); }
+    virtual SoundID new_sound_with_name(const unicode& name, bool garbage_collect=true) override {
+        return scene().new_sound_with_name(name, garbage_collect);
+    }
+
+    virtual SoundID new_sound_with_name_from_file(const unicode& name, const unicode& path, bool garbage_collect=true) override {
+        return scene().new_sound_with_name_from_file(name, path, garbage_collect);
+    }
+
+    virtual SoundID get_sound_with_name(const unicode& name) {
+        return scene().get_sound_with_name(name);
+    }
+
+    virtual void delete_sound(SoundID t) { scene().delete_sound(t); }
+
+    virtual ProtectedPtr<Sound> sound(SoundID s) { return scene().sound(s); }
+    virtual const ProtectedPtr<Sound> sound(SoundID s) const { return scene().sound(s); }
 
     virtual bool has_sound(SoundID s) const { return scene().has_sound(s); }
     virtual uint32_t sound_count() const { return scene().sound_count(); }

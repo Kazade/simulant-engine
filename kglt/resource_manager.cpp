@@ -201,16 +201,42 @@ SoundID ResourceManagerImpl::new_sound(bool garbage_collect) {
 
 SoundID ResourceManagerImpl::new_sound_from_file(const unicode& path, bool garbage_collect) {
     //Load the sound
-    SoundPtr snd = sound(new_sound(garbage_collect)).lock();
+    auto snd = sound(new_sound(garbage_collect));
     window().loader_for(path.encode())->into(snd);
     return snd->id();
 }
 
-SoundRef ResourceManagerImpl::sound(SoundID s) {
+SoundID ResourceManagerImpl::new_sound_with_name(const unicode& name, bool garbage_collect) {
+    SoundID s = new_sound(garbage_collect);
+    try {
+        SoundManager::manager_store_name(name, s);
+    } catch(...) {
+        delete_sound(s);
+        throw;
+    }
+    return s;
+}
+
+SoundID ResourceManagerImpl::new_sound_with_name_from_file(const unicode& name, const unicode& path, bool garbage_collect) {
+    SoundID s = new_sound_from_file(path, garbage_collect);
+    try {
+        SoundManager::manager_store_name(name, s);
+    } catch(...) {
+        delete_sound(s);
+        throw;
+    }
+    return s;
+}
+
+SoundID ResourceManagerImpl::get_sound_with_name(const unicode& name) {
+    return SoundManager::manager_get_by_name(name);
+}
+
+ProtectedPtr<Sound> ResourceManagerImpl::sound(SoundID s) {
     return SoundManager::manager_get(s);
 }
 
-const SoundRef ResourceManagerImpl::sound(SoundID s) const {
+const ProtectedPtr<Sound> ResourceManagerImpl::sound(SoundID s) const {
     return SoundManager::manager_get(s);
 }
 
@@ -220,6 +246,10 @@ uint32_t ResourceManagerImpl::sound_count() const {
 
 bool ResourceManagerImpl::has_sound(SoundID s) const {
     return SoundManager::manager_contains(s);
+}
+
+void ResourceManagerImpl::delete_sound(SoundID t) {
+    sound(t)->enable_gc();
 }
 
 std::pair<ShaderID, bool> ResourceManagerImpl::find_shader(const std::string& name) {

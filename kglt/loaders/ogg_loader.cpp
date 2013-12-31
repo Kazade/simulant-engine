@@ -22,13 +22,14 @@ private:
 };
 
 int32_t queue_buffer(Sound* self, StreamWrapper::ptr stream, ALuint buffer) {
-    ALshort pcm[self->buffer_size()];
+    std::vector<ALshort> pcm;
+    pcm.resize(self->buffer_size());
 
     int size = 0;
     int result = 0;
 
     while(size < self->buffer_size()) {
-        result = stb_vorbis_get_samples_short_interleaved(stream->get(), self->channels(), pcm+size, self->buffer_size() - size);
+        result = stb_vorbis_get_samples_short_interleaved(stream->get(), self->channels(), &pcm[0] + size, self->buffer_size() - size);
         if(result > 0)  {
             size += result * self->channels();
         } else {
@@ -40,7 +41,7 @@ int32_t queue_buffer(Sound* self, StreamWrapper::ptr stream, ALuint buffer) {
         return 0;
     }
 
-    alBufferData(buffer, self->format(), pcm, size * sizeof(ALshort), self->sample_rate());
+    alBufferData(buffer, self->format(), &pcm[0], size * sizeof(ALshort), self->sample_rate());
 
     return size;
 }

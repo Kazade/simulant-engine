@@ -27,7 +27,9 @@ Sound::Sound(ResourceManager *resource_manager, SoundID id):
 }
 
 Source::Source(Stage *stage):
-    stage_(stage) {
+    stage_(stage),
+    al_source_(0),
+    buffers_{0, 0} {
 
 
 }
@@ -42,16 +44,8 @@ void Source::attach_sound(SoundID sound) {
         throw LogicError("Attaching a sound by ID is not supported here");
     }
 
-    if(stage_) {
-        sound_ = stage_->sound(sound).lock();
-    }
-}
-
-void Source::attach_sound(SoundRef sound) {
-    SoundPtr ptr = sound.lock();
-    if(ptr) {
-        sound_ = ptr;
-    }
+    assert(stage_);
+    sound_ = sound;
 }
 
 void Source::play_sound(bool loop) {
@@ -59,7 +53,8 @@ void Source::play_sound(bool loop) {
         throw LogicError("No sound attached");
     }
 
-    sound_->init_source_(*this);
+    auto sound = stage_->sound(sound_);
+    sound->init_source_(*this);
 
     if(!al_source_) {
         alGenSources(1, &al_source_);
@@ -70,11 +65,18 @@ void Source::play_sound(bool loop) {
     }
 
     //Fill up two buffers to begin with
-    stream_func_(buffers_[0]);
-    stream_func_(buffers_[1]);
+    auto bs1 = stream_func_(buffers_[0]);
+    auto bs2 = stream_func_(buffers_[1]);
 
-    alSourceQueueBuffers(al_source_, 2, buffers_);
+    assert(alGetError() == AL_NO_ERROR);
+
+    int to_queue = (bs1 && bs2) ? 2 : (bs1 || bs2)? 1 : 0;
+
+    alSourceQueueBuffers(al_source_, to_queue, buffers_);
+    assert(alGetError() == AL_NO_ERROR);
+
     alSourcePlay(al_source_);
+    assert(alGetError() == AL_NO_ERROR);
 
     playing_ = true;
     loop_stream_ = loop;
@@ -87,7 +89,11 @@ void Source::update_source(float dt) {
 
     ALint processed = 0;
 
+    assert(alGetError() == AL_NO_ERROR);
+
     alGetSourcei(al_source_, AL_BUFFERS_PROCESSED, &processed);
+
+    assert(alGetError() == AL_NO_ERROR);
 
     while(processed--) {
         ALuint buffer = 0;
@@ -105,8 +111,9 @@ void Source::update_source(float dt) {
                 stream_func_ = std::function<int32_t (ALuint)>();
                 playing_ = false;
             }
+        } else {
+            alSourceQueueBuffers(al_source_, 1, &buffer);
         }
-        alSourceQueueBuffers(al_source_, 1, &buffer);
     }
 }
 

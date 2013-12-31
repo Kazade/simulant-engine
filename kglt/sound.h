@@ -71,7 +71,6 @@ public:
     virtual ~Source();
 
     virtual void attach_sound(SoundID sound);
-    virtual void attach_sound(SoundRef sound);
 
     void play_sound(bool loop=false);
     bool is_playing_sound() const;
@@ -91,7 +90,7 @@ private:
     ALuint buffers_[2];
 
     StreamFunc stream_func_;
-    SoundPtr sound_;
+    SoundID sound_;
 
     bool playing_ = false;
     bool loop_stream_ = false;
