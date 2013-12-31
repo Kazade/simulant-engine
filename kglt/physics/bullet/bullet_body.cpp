@@ -24,7 +24,7 @@ bool BulletBody::do_init() {
     );
 
     btRigidBody::btRigidBodyConstructionInfo c_info(
-        1, motion_state_.get(), compound_shape_.get(),btVector3(0,0,0)
+        1.0, motion_state_.get(), compound_shape_.get(),btVector3(0,0,0)
     );
 
     body_ = std::make_unique<btRigidBody>(c_info);
@@ -34,9 +34,6 @@ bool BulletBody::do_init() {
 
     body_->forceActivationState(DISABLE_DEACTIVATION);
     body_->activate();
-
-    //Initialize spherical mass of 1.0
-    set_mass_sphere(1.0, 1.0);
 
     return true;
 }
@@ -55,7 +52,6 @@ void BulletBody::do_set_position(const kglt::Vec3& position) {
 
     body_->getMotionState()->setWorldTransform(transform);
     body_->setCenterOfMassTransform(transform);
-    //body_->setCollisionFlags(body_->getCollisionFlags() & ~(btCollisionObject::CF_KINEMATIC_OBJECT));
 }
 
 kglt::Vec3 BulletBody::do_position() const {
@@ -208,9 +204,9 @@ void BulletBody::do_set_mass(float total_mass, kglt::Vec3 inertia) {
         compound_shape_->calculateLocalInertia(m, i);
     }
     BulletEngine& eng = dynamic_cast<BulletEngine&>(*engine());
-    eng.world_->removeRigidBody(body_.get());
+    //eng.world_->removeRigidBody(body_.get());
     body_->setMassProps(m, i);
-    eng.world_->addRigidBody(body_.get());
+    //eng.world_->addRigidBody(body_.get());
 }
 
 void BulletBody::do_set_mass_sphere(float total_mass, float radius) {
@@ -222,9 +218,9 @@ void BulletBody::do_set_mass_sphere(float total_mass, float radius) {
     compound_shape_->calculateLocalInertia(m, i);
 
     BulletEngine& eng = dynamic_cast<BulletEngine&>(*engine());
-    eng.world_->removeRigidBody(body_.get());
+    //eng.world_->removeRigidBody(body_.get());
     body_->setMassProps(m, i);
-    eng.world_->addRigidBody(body_.get());
+    //eng.world_->addRigidBody(body_.get());
 }
 
 void BulletBody::do_set_mass_box(float total_mass, float width, float height, float depth) {
@@ -237,9 +233,9 @@ void BulletBody::do_set_mass_box(float total_mass, float width, float height, fl
 
     BulletEngine& eng = dynamic_cast<BulletEngine&>(*engine());
 
-    eng.world_->removeRigidBody(body_.get());
+    //eng.world_->removeRigidBody(body_.get());
     body_->setMassProps(m, i);
-    eng.world_->addRigidBody(body_.get());
+    //eng.world_->addRigidBody(body_.get());
 }
 
 }

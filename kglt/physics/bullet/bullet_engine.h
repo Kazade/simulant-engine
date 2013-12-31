@@ -47,6 +47,23 @@ private:
     std::unique_ptr<btDiscreteDynamicsWorld> world_;
 
     void on_scene_set(Scene &scene) override;
+
+    struct KinematicObject {
+        btRigidBody* body;
+        btCollisionShape* shape;
+        btDefaultMotionState* motion_state;
+
+        KinematicObject():
+            body(nullptr), shape(nullptr), motion_state(nullptr) {}
+
+        ~KinematicObject() {
+            delete motion_state;
+            delete shape;
+            delete body;
+        }
+    };
+
+    std::unordered_map<ShapeID, std::shared_ptr<KinematicObject>> static_objects_;
 };
 
 }

@@ -39,7 +39,7 @@ void BulletEngine::on_scene_set(Scene &scene) {
 }
 
 void BulletEngine::do_update(double dt) {
-    world_->stepSimulation(dt, 1, 1.0 / double(WindowBase::STEPS_PER_SECOND));
+    world_->stepSimulation(dt, 10, 1.0 / double(WindowBase::STEPS_PER_SECOND));
 }
 
 void BulletEngine::do_step(double dt) {
@@ -48,8 +48,29 @@ void BulletEngine::do_step(double dt) {
 }
 
 ShapeID BulletEngine::do_create_plane(float a, float b, float c, float d) {
-    L_WARN("Creating a plane in the bullet engine backend isn't implemented yet");
-    return ShapeID(0);
+    /*
+     *  Create a KinematicObject representing the plane
+     */
+    auto obj = std::make_shared<KinematicObject>();
+    obj->motion_state = new btDefaultMotionState(btTransform(btQuaternion(0,0,0,1),btVector3(0,0,0)));
+    obj->shape = new btStaticPlaneShape(btVector3(a, b, c), d);
+
+    btRigidBody::btRigidBodyConstructionInfo c_info(
+        0, obj->motion_state, obj->shape, btVector3(0,0,0)
+    );
+
+    obj->body = new btRigidBody(c_info);
+
+    world_->addRigidBody(obj->body);
+
+    obj->body->forceActivationState(DISABLE_DEACTIVATION);
+    obj->body->activate();
+
+    ShapeID new_id = get_next_shape_id();
+
+    static_objects_.insert(std::make_pair(new_id, obj));
+
+    return new_id;
 }
 
 void BulletEngine::do_set_gravity(const Vec3& gravity) {

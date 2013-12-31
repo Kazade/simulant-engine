@@ -16,7 +16,7 @@ public:
 private:
     bool do_init() {
         scene().enable_physics(DefaultPhysicsEngine::create());
-       // scene().physics().create_plane(0, 1, 0, -3.5);
+        scene().physics().create_plane(0, 1, 0, -3.5);
         scene().physics().set_gravity(Vec3(0, -7.8, 0));
 
         texture_id_ = stage().new_texture_from_file("sample_data/crate.png", false);
@@ -33,6 +33,7 @@ private:
             light->set_specular(kglt::Colour(0, 0, 0, 0));
         }
 
+        stage().camera()->move_to(0, 0, 20);
         return true;
     }
 
@@ -51,8 +52,8 @@ private:
                     //Add a cube shape to the collidable
                     actor->shape().add_box(1.0, 1.0, 1.0);
                     actor->body().set_mass_box(1.0, 1.0, 1.0, 1.0);
-                    actor->move_to(Vec3(0, 6, -15));
-                    actor->body().set_angular_velocity(kglt::Vec3(0, 1, 0));
+                    //actor->move_to(Vec3(0, 6, -15));
+                    //actor->body().set_angular_velocity(kglt::Vec3(0, 1, 0));
                 };
 
                 time_since_last_spawn_ = 0.0;
