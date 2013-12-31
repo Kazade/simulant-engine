@@ -26,7 +26,11 @@ bool BulletEngine::do_init() {
 }
 
 void BulletEngine::do_cleanup() {
-
+    broadphase_.reset();
+    collision_configuration_.reset();
+    dispatcher_.reset();
+    solver_.reset();
+    world_.reset();
 }
 
 void BulletEngine::on_scene_set(Scene &scene) {
@@ -35,7 +39,7 @@ void BulletEngine::on_scene_set(Scene &scene) {
 }
 
 void BulletEngine::do_update(double dt) {
-    world_->stepSimulation(dt, 10);
+    world_->stepSimulation(dt, 1, 1.0 / double(WindowBase::STEPS_PER_SECOND));
 }
 
 void BulletEngine::do_step(double dt) {

@@ -8,7 +8,7 @@ using namespace kglt;
 class BoxDrop: public kglt::App {
 public:
     BoxDrop():
-        App("KGLT BoxDrop Sample") {
+        App("KGLT BoxDrop Sample", 1024, 768) {
 
         window().set_logging_level(kglt::LOG_LEVEL_DEBUG);
     }
@@ -16,11 +16,11 @@ public:
 private:
     bool do_init() {
         scene().enable_physics(DefaultPhysicsEngine::create());
-        scene().physics().create_plane(0, 1, 0, -3.5);
+       // scene().physics().create_plane(0, 1, 0, -3.5);
         scene().physics().set_gravity(Vec3(0, -7.8, 0));
 
-        texture_id_ = stage().new_texture_from_file("sample_data/crate.png");
-        mesh_ = stage().new_mesh_as_cube(1.0);
+        texture_id_ = stage().new_texture_from_file("sample_data/crate.png", false);
+        mesh_ = stage().new_mesh_as_cube(1.0, false);
         stage().mesh(mesh_)->set_texture_on_material(0, texture_id_);
 
         stage().set_ambient_light(kglt::Colour(0.3, 0.3, 0.3, 0.3));
@@ -32,7 +32,6 @@ private:
             light->set_diffuse(kglt::Colour(0.1, 0.1, 0.1, 0.1));
             light->set_specular(kglt::Colour(0, 0, 0, 0));
         }
-
 
         return true;
     }
@@ -52,8 +51,8 @@ private:
                     //Add a cube shape to the collidable
                     actor->shape().add_box(1.0, 1.0, 1.0);
                     actor->body().set_mass_box(1.0, 1.0, 1.0, 1.0);
-                    actor->move_to(Vec3(0, 6, -20));
-                    actor->body().apply_angular_impulse_global(kglt::Vec3(0, 1, 0));
+                    actor->move_to(Vec3(0, 6, -15));
+                    actor->body().set_angular_velocity(kglt::Vec3(0, 1, 0));
                 };
 
                 time_since_last_spawn_ = 0.0;

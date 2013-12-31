@@ -8,6 +8,14 @@ namespace physics {
 
 static int32_t constraint_counter = 1;
 
+kglt::Vec3 to_Vec3(const btVector3& in) {
+    return kglt::Vec3(in.x(), in.y(), in.z());
+}
+
+btVector3 to_btVector3(const kglt::Vec3& in) {
+    return btVector3(in.x, in.y, in.z);
+}
+
 bool BulletBody::do_init() {
     compound_shape_ = std::make_unique<btCompoundShape>();
 
@@ -24,7 +32,8 @@ bool BulletBody::do_init() {
     BulletEngine& eng = dynamic_cast<BulletEngine&>(*engine());
     eng.world_->addRigidBody(body_.get());
 
-    body_->setActivationState(DISABLE_DEACTIVATION);
+    body_->forceActivationState(DISABLE_DEACTIVATION);
+    body_->activate();
 
     //Initialize spherical mass of 1.0
     set_mass_sphere(1.0, 1.0);
@@ -33,23 +42,26 @@ bool BulletBody::do_init() {
 }
 
 void BulletBody::do_cleanup() {
-
+    motion_state_.reset();
+    compound_shape_.reset();
+    body_.reset();
 }
 
 void BulletBody::do_set_position(const kglt::Vec3& position) {
-    //FIXME: Should deactivate, move, then reactivate
-    auto orig_flags = body_->getCollisionFlags();
-    body_->setCollisionFlags(orig_flags | btCollisionObject::CF_KINEMATIC_OBJECT);
-
     btTransform transform = body_->getCenterOfMassTransform();
-    transform.setOrigin(btVector3(position.x, position.y, position.z));
+
+    btVector3 bt_pos(position.x, position.y, position.z);
+    transform.setOrigin(bt_pos);
+
+    body_->getMotionState()->setWorldTransform(transform);
     body_->setCenterOfMassTransform(transform);
-    body_->clearForces();
-    body_->setCollisionFlags(orig_flags);
+    //body_->setCollisionFlags(body_->getCollisionFlags() & ~(btCollisionObject::CF_KINEMATIC_OBJECT));
 }
 
 kglt::Vec3 BulletBody::do_position() const {
-    btVector3 pos = body_->getWorldTransform().getOrigin();
+    btTransform t;
+    body_->getMotionState()->getWorldTransform(t);
+    btVector3 pos = t.getOrigin();
     return kglt::Vec3(pos.x(), pos.y(), pos.z());
 }
 
@@ -60,12 +72,43 @@ void BulletBody::do_set_rotation(const kglt::Quaternion& quat) {
 
     btTransform transform = body_->getCenterOfMassTransform();
     transform.setRotation(btQuaternion(quat.x, quat.y, quat.z, quat.w));
-//    body_->setCenterOfMassTransform(transform);
+
+    body_->getMotionState()->setWorldTransform(transform);
+    body_->setCenterOfMassTransform(transform);
 }
 
 kglt::Quaternion BulletBody::do_rotation() const {
-    btQuaternion rot = body_->getWorldTransform().getRotation();
+    btTransform t;
+    body_->getMotionState()->getWorldTransform(t);
+    btQuaternion rot = t.getRotation();
     return Quaternion(rot.x(), rot.y(), rot.z(), rot.w());
+}
+
+void BulletBody::do_apply_angular_impulse_local(const Vec3 &impulse) {
+    btVector3 torque(impulse.x, impulse.y, impulse.z);
+
+    //Transform the torque to local space
+    torque = body_->getInvInertiaTensorWorld().inverse() * (body_->getWorldTransform().getBasis() * torque);
+    body_->applyTorqueImpulse(torque);
+}
+
+void BulletBody::do_apply_angular_impulse_global(const Vec3 &impulse) {
+    btVector3 linear(impulse.x, impulse.y, impulse.z);
+    body_->applyTorqueImpulse(linear);
+}
+
+void BulletBody::do_apply_linear_impulse_local(const Vec3 &impulse) {
+    btTransform t;
+    body_->getMotionState()->getWorldTransform(t);
+    t.setOrigin(btVector3(0,0,0));
+
+    btVector3 local_force(impulse.x, impulse.y, impulse.z);
+    body_->applyCentralImpulse(t * local_force);
+}
+
+void BulletBody::do_apply_linear_impulse_global(const Vec3 &impulse) {
+    btVector3 linear(impulse.x, impulse.y, impulse.z);
+    body_->applyCentralImpulse(linear);
 }
 
 void BulletBody::do_apply_linear_force_global(const kglt::Vec3& force) {
@@ -84,8 +127,7 @@ void BulletBody::do_apply_linear_force_local(const kglt::Vec3& force) {
 }
 
 void BulletBody::do_apply_angular_force_global(const kglt::Vec3& force) {
-    btVector3 torque(force.x, force.y, force.z);
-    body_->applyTorque(torque);
+    body_->applyTorque(to_btVector3(force));
 }
 
 void BulletBody::do_apply_angular_force_local(const kglt::Vec3& force) {
@@ -165,7 +207,10 @@ void BulletBody::do_set_mass(float total_mass, kglt::Vec3 inertia) {
     if(!i.length()) {
         compound_shape_->calculateLocalInertia(m, i);
     }
+    BulletEngine& eng = dynamic_cast<BulletEngine&>(*engine());
+    eng.world_->removeRigidBody(body_.get());
     body_->setMassProps(m, i);
+    eng.world_->addRigidBody(body_.get());
 }
 
 void BulletBody::do_set_mass_sphere(float total_mass, float radius) {
@@ -193,7 +238,6 @@ void BulletBody::do_set_mass_box(float total_mass, float width, float height, fl
     BulletEngine& eng = dynamic_cast<BulletEngine&>(*engine());
 
     eng.world_->removeRigidBody(body_.get());
-    body_->setCollisionFlags(body_->getCollisionFlags() |btCollisionObject::CF_KINEMATIC_OBJECT);
     body_->setMassProps(m, i);
     eng.world_->addRigidBody(body_.get());
 }
