@@ -139,7 +139,7 @@ bool Console::key_down(SDL_Keysym key) {
             active_ = false;
             SDL_StopTextInput();
         }
-        return false;
+        return true;
     }
 
     if(code == SDL_SCANCODE_BACKSPACE) {
@@ -149,7 +149,7 @@ bool Console::key_down(SDL_Keysym key) {
             history_.at(history_.size() - 1) = line;
         }
         update_output();
-        return false;
+        return true;
     } else if (code == SDL_SCANCODE_RETURN) {
         current_command_ += history_.at(history_.size() - 1).slice(4, nullptr);
         command_history_.push_back(current_command_);
@@ -168,10 +168,10 @@ bool Console::key_down(SDL_Keysym key) {
             current_command_ = _u();
         }
         update_output();
-        return false;
+        return true;
     }
 
-    return true;
+    return false;
 }
 
 void Console::entry(SDL_TextInputEvent event) {
