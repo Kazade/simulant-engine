@@ -6,6 +6,13 @@
 
 #include "kazbase/datetime.h"
 
+
+/** FIXME
+ *
+ * - Write tests to show that all new_X_from_file methods mark resources as uncollected before returning
+ * - Think of better GC logic, perhaps collect on every frame?
+ */
+
 namespace kglt {
 
 ResourceManagerImpl::ResourceManagerImpl(WindowBase* window):
@@ -140,7 +147,38 @@ TextureID ResourceManagerImpl::new_texture_from_file(const unicode& path, bool g
     auto tex = texture(new_texture(garbage_collect));
     window().loader_for(path.encode())->into(tex);
     tex->upload(false, true, true, false);
+    mark_texture_as_uncollected(tex->id());
     return tex->id();
+}
+
+void ResourceManagerImpl::delete_texture(TextureID t) {
+    texture(t)->enable_gc();
+}
+
+TextureID ResourceManagerImpl::new_texture_with_name(const unicode& name, bool garbage_collect) {
+    TextureID t = new_texture(garbage_collect);
+    try {
+        TextureManager::manager_store_name(name, t);
+    } catch(...) {
+        delete_texture(t);
+        throw;
+    }
+    return t;
+}
+
+TextureID ResourceManagerImpl::new_texture_with_name_from_file(const unicode& name, const unicode& path, bool garbage_collect) {
+    TextureID t = new_texture_from_file(path, garbage_collect);
+    try {
+        TextureManager::manager_store_name(name, t);
+    } catch(...) {
+        delete_texture(t);
+        throw;
+    }
+    return t;
+}
+
+TextureID ResourceManagerImpl::get_texture_with_name(const unicode& name) {
+    return TextureManager::manager_get_by_name(name);
 }
 
 ProtectedPtr<Texture> ResourceManagerImpl::texture(TextureID t) {
