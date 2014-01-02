@@ -34,6 +34,15 @@ public:
     virtual MeshID new_mesh_from_file(const unicode& path, bool garbage_collect=true) = 0;
     virtual MeshID new_mesh_as_cube(float width, bool garbage_collect=true) = 0;
     virtual MeshID new_mesh_as_sphere(float diameter, bool garbage_collect=true) = 0;
+
+    virtual MeshID new_mesh_with_name(const unicode& name, bool garbage_collect=true) = 0;
+    virtual MeshID new_mesh_with_name_from_file(const unicode& name, const unicode &path, bool garbage_collect=true) = 0;
+    virtual MeshID new_mesh_with_name_as_cube(const unicode& name, float width, bool garbage_collect=true) = 0;
+    virtual MeshID new_mesh_with_name_as_sphere(const unicode& name, float diameter, bool garbage_collect=true) = 0;
+    virtual MeshID get_mesh_with_name(const unicode& name) = 0;
+
+    virtual void delete_mesh(MeshID m) = 0;
+
     //FIXME: More factory methods
 
     virtual ProtectedPtr<Mesh> mesh(MeshID m) = 0;
@@ -119,11 +128,19 @@ public:
     MeshID new_mesh_as_cube(float width, bool garbage_collect=true) override;
     MeshID new_mesh_as_sphere(float diameter, bool garbage_collect=true) override;
 
+    MeshID new_mesh_with_name(const unicode& name, bool garbage_collect=true) override;
+    MeshID new_mesh_with_name_from_file(const unicode& name, const unicode &path, bool garbage_collect=true) override;
+    MeshID new_mesh_with_name_as_cube(const unicode& name, float width, bool garbage_collect=true) override;
+    MeshID new_mesh_with_name_as_sphere(const unicode& name, float diameter, bool garbage_collect=true) override;
+    MeshID get_mesh_with_name(const unicode& name) override;
+
     ProtectedPtr<Mesh> mesh(MeshID m);
     const ProtectedPtr<Mesh> mesh(MeshID m) const;
 
     bool has_mesh(MeshID m) const;
     uint32_t mesh_count() const;
+    void delete_mesh(MeshID m) override;
+
 
     TextureID new_texture(bool garbage_collect=true) override;
     TextureID new_texture_from_file(const unicode& path, bool garbage_collect=true) override;

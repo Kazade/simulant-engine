@@ -93,6 +93,58 @@ MeshID ResourceManagerImpl::new_mesh_as_sphere(float diameter, bool garbage_coll
     return m;
 }
 
+MeshID ResourceManagerImpl::new_mesh_with_name(const unicode& name, bool garbage_collect) {
+    MeshID m = new_mesh(garbage_collect);
+    try {
+        MeshManager::manager_store_name(name, m);
+    } catch(...) {
+        delete_mesh(m);
+        throw;
+    }
+    return m;
+}
+
+MeshID ResourceManagerImpl::new_mesh_with_name_from_file(const unicode& name, const unicode& path, bool garbage_collect) {
+    MeshID m = new_mesh_from_file(path, garbage_collect);
+    try {
+        MeshManager::manager_store_name(name, m);
+    } catch(...) {
+        delete_mesh(m);
+        throw;
+    }
+    return m;
+}
+
+MeshID ResourceManagerImpl::new_mesh_with_name_as_cube(const unicode& name, float width, bool garbage_collect) {
+    MeshID m = new_mesh_as_cube(width, garbage_collect);
+    try {
+        MeshManager::manager_store_name(name, m);
+    } catch(...) {
+        delete_mesh(m);
+        throw;
+    }
+    return m;
+}
+
+MeshID ResourceManagerImpl::new_mesh_with_name_as_sphere(const unicode& name, float diameter, bool garbage_collect) {
+    MeshID m = new_mesh_as_sphere(diameter, garbage_collect);
+    try {
+        MeshManager::manager_store_name(name, m);
+    } catch(...) {
+        delete_mesh(m);
+        throw;
+    }
+    return m;
+}
+
+MeshID ResourceManagerImpl::get_mesh_with_name(const unicode& name) {
+    return MeshManager::manager_get_by_name(name);
+}
+
+void ResourceManagerImpl::delete_mesh(MeshID m) {
+    mesh(m)->enable_gc();
+}
+
 bool ResourceManagerImpl::has_mesh(MeshID m) const {
     return MeshManager::manager_contains(m);
 }

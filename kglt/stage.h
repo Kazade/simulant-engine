@@ -103,6 +103,30 @@ public:
         return scene().new_mesh_as_sphere(diameter, garbage_collect);
     }
 
+    MeshID new_mesh_with_name(const unicode& name, bool garbage_collect=true) override {
+        return scene().new_mesh_with_name(name, garbage_collect);
+    }
+
+    MeshID new_mesh_with_name_from_file(const unicode& name, const unicode &path, bool garbage_collect=true) override {
+        return scene().new_mesh_with_name_from_file(name, path, garbage_collect);
+    }
+
+    MeshID new_mesh_with_name_as_cube(const unicode& name, float width, bool garbage_collect=true) override {
+        return scene().new_mesh_with_name_as_cube(name, width, garbage_collect);
+    }
+
+    MeshID new_mesh_with_name_as_sphere(const unicode& name, float diameter, bool garbage_collect=true) override {
+        return scene().new_mesh_with_name_as_sphere(name, diameter, garbage_collect);
+    }
+
+    MeshID get_mesh_with_name(const unicode& name) override {
+        return scene().get_mesh_with_name(name);
+    }
+
+    void delete_mesh(MeshID m) {
+        scene().delete_mesh(m);
+    }
+
     virtual ProtectedPtr<Mesh> mesh(MeshID m) { return scene().mesh(m); }
     virtual const ProtectedPtr<Mesh> mesh(MeshID m) const { return scene().mesh(m); }
 
