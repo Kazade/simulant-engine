@@ -1,6 +1,7 @@
 #include "ogg_loader.h"
 #include "stb_vorbis.h"
 
+#include "../utils/al_error.h"
 #include "../sound.h"
 
 namespace kglt {
@@ -41,12 +42,11 @@ int32_t queue_buffer(Sound* self, StreamWrapper::ptr stream, ALuint buffer) {
         return 0;
     }
 
-    alBufferData(buffer, self->format(), &pcm[0], size * sizeof(ALshort), self->sample_rate());
-
+    ALCheck(alBufferData, buffer, self->format(), &pcm[0], size * sizeof(ALshort), self->sample_rate());
     return size;
 }
 
-void init_source(Sound* self, Source& source) {
+void init_source(Sound* self, SourceInstance& source) {
     /*
      *  This is either smart or crazy and I haven't worked out which yet...
      *

@@ -22,14 +22,13 @@ public:
 
         kglt::SoundID sound = stage.new_sound_from_file("sample_data/test_sound.ogg");
 
-        assert_false(window->is_playing_sound());
+        assert_false(window->playing_sound_count());
 
-        window->attach_sound(sound);
-        window->play_sound();
+        window->play_sound(sound);
 
-        assert_true(window->is_playing_sound());
+        assert_true(window->playing_sound_count());
 
-        while(window->is_playing_sound()) {
+        while(window->playing_sound_count()) {
             window->update();
         }
     }
@@ -42,12 +41,11 @@ public:
         auto actor = stage.actor(stage.new_actor());
         actor->move_to(10, 0, 0);
 
-        assert_false(actor->is_playing_sound());
+        assert_false(actor->playing_sound_count());
 
-        actor->attach_sound(sound);
-        actor->play_sound();
+        actor->play_sound(sound);
 
-        assert_true(actor->is_playing_sound());
+        assert_true(actor->playing_sound_count());
     }
 
 };
