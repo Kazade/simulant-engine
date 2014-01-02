@@ -1,5 +1,5 @@
 #include "utils/al_error.h"
-
+#include "window_base.h"
 #include "stage.h"
 #include "sound.h"
 
@@ -89,8 +89,15 @@ void SourceInstance::update(float dt) {
     }
 }
 
+Source::Source(WindowBase *window):
+    stage_(nullptr),
+    window_(window) {
+
+}
+
 Source::Source(Stage *stage):
-    stage_(stage) {
+    stage_(stage),
+    window_(nullptr) {
 
 
 }
@@ -106,8 +113,13 @@ void Source::play_sound(SoundID sound, bool loop) {
 
     SourceInstance::ptr new_source = SourceInstance::create(*this, sound, loop);
 
-    auto s = stage_->sound(sound);
-    s->init_source_(*new_source);
+    if(stage_) {
+        auto s = stage_->sound(sound);
+        s->init_source_(*new_source);
+    } else {
+        auto s = window_->scene().sound(sound);
+        s->init_source_(*new_source);
+    }
 
     new_source->start();
 

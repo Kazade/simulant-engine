@@ -97,6 +97,7 @@ public:
 
 class Source {
 public:
+    Source(WindowBase* window);
     Source(Stage* stage);
     virtual ~Source();
 
@@ -109,6 +110,7 @@ public:
 
 private:
     Stage* stage_;
+    WindowBase* window_;
 
     std::list<SourceInstance::ptr> instances_;
     sig::signal<void ()> signal_stream_finished_;
