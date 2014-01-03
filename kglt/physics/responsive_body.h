@@ -12,7 +12,7 @@ class PhysicsEngine;
 class ResponsiveBody {
 public:
     ResponsiveBody(Object* owner);
-    virtual ~ResponsiveBody() {}
+    virtual ~ResponsiveBody() { }
 
     bool init();
     void cleanup();

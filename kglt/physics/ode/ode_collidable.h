@@ -15,6 +15,12 @@ public:
     ODECollidable(Object* owner, PhysicsEngine* engine):
         Collidable(owner, engine) {}
 
+    ~ODECollidable() {
+        try {
+            cleanup();
+        } catch(...) {}
+    }
+
     virtual bool init();
     virtual void cleanup();
 

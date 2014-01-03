@@ -124,6 +124,7 @@ enum HatPosition {
 
 typedef std::function<void (AxisRange, Axis)> JoypadCallback;
 typedef std::function<void (uint8_t)> JoypadButtonCallback;
+typedef std::function<void (uint8_t, double)> JoypadButtonDownCallback;
 typedef std::function<void (HatPosition, Hat)> JoypadHatCallback;
 
 class Joypad :
@@ -139,6 +140,7 @@ public:
 
     InputConnection button_pressed_connect(Button button, JoypadButtonCallback callback);
     InputConnection button_released_connect(Button button, JoypadButtonCallback callback);
+    InputConnection button_while_down_connect(Button button, JoypadButtonDownCallback callback);
 
     InputConnection hat_changed_connect(Hat hat, JoypadHatCallback callback);
 
@@ -152,12 +154,13 @@ private:
     void _handle_button_up_event(Button button);
     void _handle_hat_changed_event(Hat hat, HatPosition value);
 
-    void _update();
+    void _update(double dt);
     void _disconnect(const InputConnection &connection);
 
     uint8_t jitter_value_;
 
     std::map<Axis, int32_t> axis_state_;
+    std::map<Button, bool> button_state_;
 
     std::map<Axis, std::map<InputConnection, JoypadCallback> > axis_changed_signals_;
     std::map<Axis, std::map<InputConnection, JoypadCallback> > axis_while_nonzero_signals_;
@@ -166,6 +169,7 @@ private:
 
     std::map<Button, std::map<InputConnection, JoypadButtonCallback> > button_pressed_signals_;
     std::map<Button, std::map<InputConnection, JoypadButtonCallback> > button_released_signals_;
+    std::map<Button, std::map<InputConnection, JoypadButtonDownCallback>> button_down_signals_;
 
     std::map<Hat, std::map<InputConnection, JoypadHatCallback> > hat_changed_signals_;
 

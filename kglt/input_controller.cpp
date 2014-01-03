@@ -256,6 +256,12 @@ InputConnection Joypad::button_released_connect(Button button, JoypadButtonCallb
     return c;
 }
 
+InputConnection Joypad::button_while_down_connect(Button button, JoypadButtonDownCallback callback) {
+    InputConnection c = new_input_connection();
+    button_down_signals_[button][c] = callback;
+    return c;
+}
+
 InputConnection Joypad::hat_changed_connect(Hat hat, JoypadHatCallback callback) {
     InputConnection c = new_input_connection();
     hat_changed_signals_[hat][c] = callback;
@@ -268,6 +274,8 @@ void Joypad::_handle_button_down_event(Button button) {
             entry.second(button);
         }
     }
+
+    button_state_[button] = true;
 }
 
 void Joypad::_handle_button_up_event(Button button) {
@@ -276,6 +284,8 @@ void Joypad::_handle_button_up_event(Button button) {
             entry.second(button);
         }
     }
+
+    button_state_[button] = false;
 }
 
 void Joypad::_handle_axis_changed_event(Axis axis, int32_t value) {
@@ -296,7 +306,7 @@ void Joypad::_handle_hat_changed_event(Hat hat, HatPosition position) {
     }
 }
 
-void Joypad::_update() {
+void Joypad::_update(double dt) {
     for(std::pair<Axis, int32_t> p: axis_state_) {
         Axis axis = p.first;
         int32_t axis_state = p.second;
@@ -315,6 +325,14 @@ void Joypad::_update() {
         if(axis_state < -jitter_value_) {
             for(AxisSignalEntry entry: axis_while_below_zero_signals_[axis]) {
                 entry.second(float(axis_state) / float(32768), axis);
+            }
+        }
+    }
+
+    for(auto state: button_state_) {
+        if(state.second) {
+            for(auto signal: button_down_signals_[state.first]) {
+                signal.second(state.first, dt);
             }
         }
     }
@@ -383,7 +401,7 @@ void InputController::handle_event(SDL_Event &event) {
 void InputController::update(double dt) {
     keyboard_->_update(dt);
     for(Joypad::ptr j: joypads_) {
-        j->_update();
+        j->_update(dt);
     }
 }
 

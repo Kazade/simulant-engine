@@ -50,6 +50,10 @@ public:
     void set_is_ghost(bool val=true) { is_ghost_ = val; }
     bool is_ghost() const { return is_ghost_; }
 
+    void set_response_test_callback(std::function<bool (Collidable&)> func) {
+        should_respond_callback_ = func;
+    }
+
 private:
     friend class PhysicsEngine;
 
@@ -59,6 +63,8 @@ private:
 
 protected:
     sig::signal<void (Collidable&)> signal_collided_;
+
+    std::function<bool (Collidable&)> should_respond_callback_;
 };
 
 }
