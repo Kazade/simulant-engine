@@ -39,24 +39,22 @@ bool BulletBody::do_init() {
 }
 
 void BulletBody::do_cleanup() {
+    BulletEngine& eng = dynamic_cast<BulletEngine&>(*engine());
+    eng.world_->removeRigidBody(body_.get());
+
     motion_state_.reset();
     compound_shape_.reset();
     body_.reset();
 }
 
 void BulletBody::do_set_position(const kglt::Vec3& position) {
-    btTransform transform = body_->getCenterOfMassTransform();
-
-    btVector3 bt_pos(position.x, position.y, position.z);
-    transform.setOrigin(bt_pos);
-
-    body_->getMotionState()->setWorldTransform(transform);
-    body_->setCenterOfMassTransform(transform);
+    btTransform transform = body_->getWorldTransform();
+    transform.setOrigin(to_btVector3(position));
+    body_->setWorldTransform(transform);
 }
 
 kglt::Vec3 BulletBody::do_position() const {
-    btTransform t;
-    body_->getMotionState()->getWorldTransform(t);
+    btTransform t = body_->getWorldTransform();
     btVector3 pos = t.getOrigin();
     return kglt::Vec3(pos.x(), pos.y(), pos.z());
 }
@@ -66,16 +64,13 @@ void BulletBody::do_set_rotation(const kglt::Quaternion& quat) {
     //body->setCollisionFlags(body->getCollisionFlags()|btCollisionObject::CF_KINEMATIC_OBJECT);
     //body->setActivationState(DISABLE_DEACTIVATION);
 
-    btTransform transform = body_->getCenterOfMassTransform();
+    btTransform transform = body_->getWorldTransform();
     transform.setRotation(btQuaternion(quat.x, quat.y, quat.z, quat.w));
-
-    body_->getMotionState()->setWorldTransform(transform);
-    body_->setCenterOfMassTransform(transform);
+    body_->setWorldTransform(transform);
 }
 
 kglt::Quaternion BulletBody::do_rotation() const {
-    btTransform t;
-    body_->getMotionState()->getWorldTransform(t);
+    btTransform t = body_->getWorldTransform();
     btQuaternion rot = t.getRotation();
     return Quaternion(rot.x(), rot.y(), rot.z(), rot.w());
 }
@@ -199,43 +194,23 @@ void BulletBody::do_disable_constraint(ConstraintID c) {
 
 void BulletBody::do_set_mass(float total_mass, kglt::Vec3 inertia) {
     btScalar m = total_mass;
-    btVector3 i(inertia.x, inertia.y, inertia.z);
-    if(!i.length()) {
-        compound_shape_->calculateLocalInertia(m, i);
-    }
-    BulletEngine& eng = dynamic_cast<BulletEngine&>(*engine());
-    //eng.world_->removeRigidBody(body_.get());
+    btVector3 i(inertia.x, inertia.y, inertia.z);    
+    compound_shape_->calculateLocalInertia(m, i);
     body_->setMassProps(m, i);
-    //eng.world_->addRigidBody(body_.get());
 }
 
 void BulletBody::do_set_mass_sphere(float total_mass, float radius) {
     //FIXME: Calculate inertia correctly
     L_WARN("Spherical inertia is not yet calculated, using AABB");
 
-    btScalar m = total_mass;
-    btVector3 i;
-    compound_shape_->calculateLocalInertia(m, i);
-
-    BulletEngine& eng = dynamic_cast<BulletEngine&>(*engine());
-    //eng.world_->removeRigidBody(body_.get());
-    body_->setMassProps(m, i);
-    //eng.world_->addRigidBody(body_.get());
+    do_set_mass(total_mass, kglt::Vec3());
 }
 
 void BulletBody::do_set_mass_box(float total_mass, float width, float height, float depth) {
     //FIXME: Calculate inertia correctly
     L_WARN("User-defined box inertia is not yet calculated, using AABB");
 
-    btScalar m = total_mass;
-    btVector3 i;
-    compound_shape_->calculateLocalInertia(m, i);
-
-    BulletEngine& eng = dynamic_cast<BulletEngine&>(*engine());
-
-    //eng.world_->removeRigidBody(body_.get());
-    body_->setMassProps(m, i);
-    //eng.world_->addRigidBody(body_.get());
+    do_set_mass(total_mass, kglt::Vec3());
 }
 
 }

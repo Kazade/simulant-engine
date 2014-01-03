@@ -22,6 +22,7 @@ class BulletEngine :
 
 public:
     using PhysicsEngine::init;
+    using PhysicsEngine::cleanup;
 
 private:
     bool do_init();

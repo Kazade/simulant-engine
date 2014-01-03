@@ -21,7 +21,6 @@ bool BulletEngine::do_init() {
         collision_configuration_.get()
     );
 
-
     return true;
 }
 
@@ -39,7 +38,7 @@ void BulletEngine::on_scene_set(Scene &scene) {
 }
 
 void BulletEngine::do_update(double dt) {
-    world_->stepSimulation(dt, 10, 1.0 / double(WindowBase::STEPS_PER_SECOND));
+    world_->stepSimulation(dt, 10);
 }
 
 void BulletEngine::do_step(double dt) {

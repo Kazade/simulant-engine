@@ -52,7 +52,7 @@ private:
                     //Add a cube shape to the collidable
                     actor->shape().add_box(1.0, 1.0, 1.0);
                     actor->body().set_mass_box(1.0, 1.0, 1.0, 1.0);
-                    //actor->move_to(Vec3(0, 6, -15));
+                    actor->move_to(Vec3(0, 6, -15));
                     //actor->body().set_angular_velocity(kglt::Vec3(0, 1, 0));
                 };
 
