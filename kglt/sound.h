@@ -19,6 +19,7 @@
 namespace kglt {
 
 class Source;
+class SourceInstance;
 
 class Sound :
     public Managed<Sound>,
@@ -47,10 +48,10 @@ public:
     std::vector<uint8_t>& data() { return sound_data_; }
     void set_data(const std::vector<uint8_t>& data) { sound_data_ = data; }
 
-    void set_source_init_function(std::function<void (Source&)> func) { init_source_ = func; }
+    void set_source_init_function(std::function<void (SourceInstance&)> func) { init_source_ = func; }
 
 private:
-    std::function<void (Source&)> init_source_;
+    std::function<void (SourceInstance&)> init_source_;
 
     std::vector<uint8_t> sound_data_;
 
@@ -60,45 +61,62 @@ private:
     std::size_t buffer_size_;
 
     friend class Source;
+    friend class SourceInstance;
 };
 
 typedef std::function<int32_t (ALuint)> StreamFunc;
 
-class Source {
+class Source;
+
+class SourceInstance:
+    public Managed<SourceInstance> {
+
+private:
+    Source& parent_;
+
+    ALuint source_;
+    ALuint buffers_[2];
+    SoundID sound_;
+    StreamFunc stream_func_;
+
+    bool loop_stream_;
+    bool is_dead_;
 
 public:
+    SourceInstance(Source& parent, SoundID sound, bool loop_stream);
+    ~SourceInstance();
+
+    void start();
+    void update(float dt);
+
+    bool is_playing() const;
+    void set_stream_func(StreamFunc func) { stream_func_ = func; }
+
+    bool is_dead() const { return is_dead_; }
+};
+
+class Source {
+public:
+    Source(WindowBase* window);
     Source(Stage* stage);
     virtual ~Source();
 
-    virtual void attach_sound(SoundID sound);
-    virtual void attach_sound(SoundRef sound);
-
-    void play_sound(bool loop=false);
-    bool is_playing_sound() const;
+    void play_sound(SoundID sound, bool loop=false);
+    int32_t playing_sound_count() const;
 
     void update_source(float dt);
 
     sig::signal<void ()>& signal_stream_finished() { return signal_stream_finished_; }
 
-    void set_stream_func(StreamFunc func) { stream_func_ = func; }
-
 private:
-    virtual bool can_attach_sound_by_id() const { return true; }
-
     Stage* stage_;
+    WindowBase* window_;
 
-    ALuint al_source_;
-    ALuint buffers_[2];
-
-    StreamFunc stream_func_;
-    SoundPtr sound_;
-
-    bool playing_ = false;
-    bool loop_stream_ = false;
-
+    std::list<SourceInstance::ptr> instances_;
     sig::signal<void ()> signal_stream_finished_;
 
     friend class Sound;
+    friend class SourceInstance;
 };
 
 }

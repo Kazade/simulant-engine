@@ -13,6 +13,12 @@ public:
 };
 
 template<typename T>
+void deleter(T* obj) {
+    obj->cleanup();
+    delete obj;
+}
+
+template<typename T>
 class Managed {
 public:
     typedef std::shared_ptr<T> ptr;
@@ -20,7 +26,11 @@ public:
 
     template<typename... Args>
     static typename Managed<T>::ptr create(Args&&... args) {
-        typename Managed<T>::ptr instance = std::make_shared<T>(std::forward<Args>(args)...);
+        typename Managed<T>::ptr instance = typename Managed<T>::ptr(
+            new T(std::forward<Args>(args)...),
+            std::bind(&deleter<T>, std::placeholders::_1)
+        );
+
         if(!instance->init()) {
             throw InstanceInitializationError();
         }
@@ -28,7 +38,11 @@ public:
     }
 
     static typename Managed<T>::ptr create() {
-        typename Managed<T>::ptr instance = typename Managed<T>::ptr(new T());
+        typename Managed<T>::ptr instance = typename Managed<T>::ptr(
+            new T(),
+            std::bind(&deleter<T>, std::placeholders::_1)
+        );
+
         if(!instance->init()) {
             throw InstanceInitializationError();
         }
@@ -37,9 +51,10 @@ public:
 
     virtual ~Managed() {}
     virtual bool init() { return true; }
+    virtual void cleanup() {}
 
     bool uses_gc() const { return uses_gc_; }
-    void enable_gc(bool value) { uses_gc_ = value; }
+    void enable_gc(bool value=true) { uses_gc_ = value; }
 
 protected:
     template<typename...Args>

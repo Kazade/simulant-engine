@@ -25,7 +25,7 @@
 namespace kglt {
 
 WindowBase::WindowBase():
-    Source(nullptr),
+    Source(this),
     initialized_(false),
     width_(-1),
     height_(-1),

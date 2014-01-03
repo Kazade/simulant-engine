@@ -103,6 +103,30 @@ public:
         return scene().new_mesh_as_sphere(diameter, garbage_collect);
     }
 
+    MeshID new_mesh_with_name(const unicode& name, bool garbage_collect=true) override {
+        return scene().new_mesh_with_name(name, garbage_collect);
+    }
+
+    MeshID new_mesh_with_name_from_file(const unicode& name, const unicode &path, bool garbage_collect=true) override {
+        return scene().new_mesh_with_name_from_file(name, path, garbage_collect);
+    }
+
+    MeshID new_mesh_with_name_as_cube(const unicode& name, float width, bool garbage_collect=true) override {
+        return scene().new_mesh_with_name_as_cube(name, width, garbage_collect);
+    }
+
+    MeshID new_mesh_with_name_as_sphere(const unicode& name, float diameter, bool garbage_collect=true) override {
+        return scene().new_mesh_with_name_as_sphere(name, diameter, garbage_collect);
+    }
+
+    MeshID get_mesh_with_name(const unicode& name) override {
+        return scene().get_mesh_with_name(name);
+    }
+
+    void delete_mesh(MeshID m) {
+        scene().delete_mesh(m);
+    }
+
     virtual ProtectedPtr<Mesh> mesh(MeshID m) { return scene().mesh(m); }
     virtual const ProtectedPtr<Mesh> mesh(MeshID m) const { return scene().mesh(m); }
 
@@ -114,6 +138,18 @@ public:
     virtual TextureID new_texture(bool garbage_collect=true) override { return scene().new_texture(garbage_collect); }
     virtual TextureID new_texture_from_file(const unicode& path, bool garbage_collect=true) {
         return scene().new_texture_from_file(path, garbage_collect);
+    }
+    virtual TextureID new_texture_with_name(const unicode& name, bool garbage_collect=true) override {
+        return scene().new_texture_with_name(name, garbage_collect);
+    }
+    virtual TextureID new_texture_with_name_from_file(const unicode& name, const unicode& path, bool garbage_collect=true) override {
+        return scene().new_texture_with_name_from_file(name, path, garbage_collect);
+    }
+    virtual TextureID get_texture_with_name(const unicode& name) override {
+        return scene().get_texture_with_name(name);
+    }
+    virtual void delete_texture(TextureID t) override {
+        scene().delete_texture(t);
     }
 
     virtual ProtectedPtr<Texture> texture(TextureID t) { return scene().texture(t); }
@@ -145,8 +181,22 @@ public:
         return scene().new_sound_from_file(path, garbage_collect);
     }
 
-    virtual SoundRef sound(SoundID s) { return scene().sound(s); }
-    virtual const SoundRef sound(SoundID s) const { return scene().sound(s); }
+    virtual SoundID new_sound_with_name(const unicode& name, bool garbage_collect=true) override {
+        return scene().new_sound_with_name(name, garbage_collect);
+    }
+
+    virtual SoundID new_sound_with_name_from_file(const unicode& name, const unicode& path, bool garbage_collect=true) override {
+        return scene().new_sound_with_name_from_file(name, path, garbage_collect);
+    }
+
+    virtual SoundID get_sound_with_name(const unicode& name) {
+        return scene().get_sound_with_name(name);
+    }
+
+    virtual void delete_sound(SoundID t) { scene().delete_sound(t); }
+
+    virtual ProtectedPtr<Sound> sound(SoundID s) { return scene().sound(s); }
+    virtual const ProtectedPtr<Sound> sound(SoundID s) const { return scene().sound(s); }
 
     virtual bool has_sound(SoundID s) const { return scene().has_sound(s); }
     virtual uint32_t sound_count() const { return scene().sound_count(); }

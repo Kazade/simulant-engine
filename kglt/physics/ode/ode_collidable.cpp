@@ -44,6 +44,11 @@ ShapeID ODECollidable::add_plane(float a, float b, float c, float d) {
     ShapeID new_id = get_next_shape_id();
 
     shapes_.insert(std::make_pair(new_id, new_geom));
+
+    if(owner() && owner()->is_responsive()) {
+        attach_to_responsive_body(owner()->body());
+    }
+
     return new_id;
 }
 
@@ -56,6 +61,11 @@ ShapeID ODECollidable::add_sphere(float radius) {
     ShapeID new_id = get_next_shape_id();
 
     shapes_.insert(std::make_pair(new_id, new_geom));
+
+    if(owner() && owner()->is_responsive()) {
+        attach_to_responsive_body(owner()->body());
+    }
+
     return new_id;
 }
 
@@ -84,6 +94,10 @@ ShapeID ODECollidable::add_capsule(float radius, float length) {
     ShapeID new_id = get_next_shape_id();
 
     shapes_.insert(std::make_pair(new_id, new_geom));
+
+    if(owner() && owner()->is_responsive()) {
+        attach_to_responsive_body(owner()->body());
+    }
     return new_id;
 }
 

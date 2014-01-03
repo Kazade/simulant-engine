@@ -333,6 +333,7 @@ kglt/debug.h
 kglt/debug.cpp
 kglt/extra/ai/curve.h
 tests/test_curve.h
+kglt/utils/al_error.h
 kglt/physics/bullet/bullet_body.h
 kglt/physics/bullet/bullet_collidable.h
 kglt/physics/bullet/bullet_engine.h
@@ -340,3 +341,4 @@ kglt/physics/bullet/bullet_private.h
 kglt/physics/bullet/bullet_body.cpp
 kglt/physics/bullet/bullet_engine.cpp
 kglt/physics/bullet/bullet_collidable.cpp
+kglt/utils/al_error.cpp

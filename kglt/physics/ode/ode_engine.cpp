@@ -25,11 +25,6 @@ void ODEEngine::near_callback(dGeomID o1, dGeomID o2) {
 
     int collision_count = dCollide(o1, o2, MAX_CONTACTS, &contact[0].geom, sizeof(dContact));
 
-    if(c1->is_ghost() || c2->is_ghost()) {
-        //Don't respond if we're not supposed to (e.g. we're a hit zone or something)
-        return;
-    }
-
     for(int32_t i = 0; i < collision_count; ++i) {
         //Calculate combined surface values to build contact joints
 
@@ -57,6 +52,21 @@ void ODEEngine::near_callback(dGeomID o1, dGeomID o2) {
 
             //Fire any combined signals
             fire_collision_signals_for(*c1, *c2);
+        }
+
+        //Check to see if we should create response joints, or just ignore the collision
+
+        if(c1->is_ghost() || c2->is_ghost()) {
+            //Don't respond if we're not supposed to (e.g. we're a hit zone or something)
+            continue;
+        }
+
+        if(c1->should_respond_callback_ && !c1->should_respond_callback_(*c2)) {
+            continue;
+        }
+
+        if(c2->should_respond_callback_ && !c2->should_respond_callback_(*c1)) {
+            continue;
         }
 
         dJointID c = dJointCreateContact(world(), contact_group_, &contact[i]);

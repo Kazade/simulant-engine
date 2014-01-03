@@ -24,6 +24,8 @@ public:
     void near_callback(dGeomID o1, dGeomID o2);
 
     using PhysicsEngine::init;
+    using PhysicsEngine::cleanup;
+
 private:
     bool do_init() {
         dInitODE2(0);

@@ -1,3 +1,5 @@
+#include "utils/al_error.h"
+#include "window_base.h"
 #include "stage.h"
 #include "sound.h"
 
@@ -26,92 +28,128 @@ Sound::Sound(ResourceManager *resource_manager, SoundID id):
 
 }
 
+SourceInstance::SourceInstance(Source &parent, SoundID sound, bool loop_stream):
+    parent_(parent),
+    source_(0),
+    buffers_{0, 0},
+    sound_(sound),
+    loop_stream_(loop_stream),
+    is_dead_(false) {
+
+    alGenSources(1, &source_);
+    alGenBuffers(2, buffers_);
+}
+
+SourceInstance::~SourceInstance() {
+    alDeleteSources(1, &source_);
+    alDeleteBuffers(2, buffers_);
+}
+
+void SourceInstance::start() {
+    //Fill up two buffers to begin with
+    auto bs1 = stream_func_(buffers_[0]);
+    auto bs2 = stream_func_(buffers_[1]);
+
+    int to_queue = (bs1 && bs2) ? 2 : (bs1 || bs2)? 1 : 0;
+
+    ALCheck(alSourceQueueBuffers, source_, to_queue, buffers_);
+    ALCheck(alSourcePlay, source_);
+}
+
+bool SourceInstance::is_playing() const {
+    ALint val;
+    ALCheck(alGetSourcei, source_, AL_SOURCE_STATE, &val);
+    return val == AL_PLAYING;
+}
+
+void SourceInstance::update(float dt) {
+    ALint processed = 0;
+
+    ALCheck(alGetSourcei, source_, AL_BUFFERS_PROCESSED, &processed);
+
+    while(processed--) {
+        ALuint buffer = 0;
+        ALCheck(alSourceUnqueueBuffers, source_, 1, &buffer);
+        uint32_t bytes = stream_func_(buffer);
+
+        if(!bytes) {
+            parent_.signal_stream_finished_();
+            if(loop_stream_) {
+                //Restart the sound
+                auto sound = parent_.stage_->sound(sound_);
+                sound->init_source_(*this);
+                start();
+            } else {
+                //Mark as dead
+                is_dead_ = true;
+            }
+        } else {
+            ALCheck(alSourceQueueBuffers, source_, 1, &buffer);
+        }
+    }
+}
+
+Source::Source(WindowBase *window):
+    stage_(nullptr),
+    window_(window) {
+
+}
+
 Source::Source(Stage *stage):
-    stage_(stage) {
+    stage_(stage),
+    window_(nullptr) {
 
 
 }
 
 Source::~Source() {
-    alDeleteSources(1, &al_source_);
-    alDeleteBuffers(2, buffers_);
+
 }
 
-void Source::attach_sound(SoundID sound) {
-    if(!can_attach_sound_by_id()) {
-        throw LogicError("Attaching a sound by ID is not supported here");
+void Source::play_sound(SoundID sound, bool loop) {
+    if(!sound) {
+        throw LogicError("Not a valid SoundID");
     }
+
+    SourceInstance::ptr new_source = SourceInstance::create(*this, sound, loop);
 
     if(stage_) {
-        sound_ = stage_->sound(sound).lock();
-    }
-}
-
-void Source::attach_sound(SoundRef sound) {
-    SoundPtr ptr = sound.lock();
-    if(ptr) {
-        sound_ = ptr;
-    }
-}
-
-void Source::play_sound(bool loop) {
-    if(!sound_) {
-        throw LogicError("No sound attached");
+        auto s = stage_->sound(sound);
+        s->init_source_(*new_source);
+    } else {
+        auto s = window_->scene().sound(sound);
+        s->init_source_(*new_source);
     }
 
-    sound_->init_source_(*this);
+    new_source->start();
 
-    if(!al_source_) {
-        alGenSources(1, &al_source_);
-    }
-
-    if(!buffers_[0]) {
-        alGenBuffers(2, buffers_);
-    }
-
-    //Fill up two buffers to begin with
-    stream_func_(buffers_[0]);
-    stream_func_(buffers_[1]);
-
-    alSourceQueueBuffers(al_source_, 2, buffers_);
-    alSourcePlay(al_source_);
-
-    playing_ = true;
-    loop_stream_ = loop;
+    instances_.push_back(new_source);
 }
 
 void Source::update_source(float dt) {
-    if(!playing_) {
-        return;
+    for(auto instance: instances_) {
+        instance->update(dt);
     }
 
-    ALint processed = 0;
-
-    alGetSourcei(al_source_, AL_BUFFERS_PROCESSED, &processed);
-
-    while(processed--) {
-        ALuint buffer = 0;
-        alSourceUnqueueBuffers(al_source_, 1, &buffer);
-
-        uint32_t bytes = stream_func_(buffer);
-
-        if(!bytes) {
-            signal_stream_finished_();
-
-            if(loop_stream_) {
-                play_sound(loop_stream_);
-            } else {
-                //Reset everything
-                stream_func_ = std::function<int32_t (ALuint)>();
-                playing_ = false;
-            }
-        }
-        alSourceQueueBuffers(al_source_, 1, &buffer);
-    }
+    //Remove any instances that have finished playing
+    instances_.erase(
+        std::remove_if(
+            instances_.begin(),
+            instances_.end(),
+            std::bind(&SourceInstance::is_dead, std::placeholders::_1)
+        ),
+        instances_.end()
+    );
 }
 
-bool Source::is_playing_sound() const {
-    return playing_;
+int32_t Source::playing_sound_count() const {
+    int32_t i = 0;
+    for(auto instance: instances_) {
+        if(instance->is_playing()) {
+            i++;
+        }
+    }
+    return i;
 }
 
 }

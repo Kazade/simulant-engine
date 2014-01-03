@@ -17,6 +17,12 @@ public:
     ODEBody(Object* owner):
         ResponsiveBody(owner) {}
 
+    ~ODEBody() {
+        try {
+            cleanup();
+        } catch(...) {}
+    }
+
     friend class ODECollidable;
 
 private:
