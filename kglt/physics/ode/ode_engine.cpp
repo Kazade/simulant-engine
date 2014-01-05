@@ -106,7 +106,7 @@ void ODEEngine::do_set_gravity(const Vec3& gravity) {
 void ODEEngine::do_step(double dt) {
     dJointGroupEmpty(contact_group_);
     dSpaceCollide(space_, this, &global_near_callback);
-    dWorldStep(world_, dt);    
+    dWorldStep(world_, dt);
 }
 
 }

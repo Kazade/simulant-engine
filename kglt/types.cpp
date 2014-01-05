@@ -3,6 +3,14 @@
 
 namespace kglt {
 
+float to_radians(float degrees) {
+    return kmDegreesToRadians(degrees);
+}
+
+float to_degrees(float radians) {
+    return kmRadiansToDegrees(radians);
+}
+
 kglt::Vec2 operator*(float lhs, const kglt::Vec2& rhs) {
     kglt::Vec2 result;
     kmVec2Scale(&result, &rhs, lhs);

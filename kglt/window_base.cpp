@@ -51,6 +51,12 @@ WindowBase::WindowBase():
 }
 
 WindowBase::~WindowBase() {
+    //FIXME: Make WindowBase Managed<> and put this in cleanup()
+    loading_.reset();
+    message_bar_.reset();
+    console_.reset();
+    watcher_.reset();
+
     Sound::shutdown_openal();
 }
 
@@ -105,7 +111,10 @@ bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
         message_bar_ = MessageBar::create(*this);
 
         loading_ = screens::Loading::create(this->scene());
-        loading_update_connection_ = signal_step().connect(std::bind(&screens::Loading::update, loading_, std::placeholders::_1));
+
+        //Weirdly, I had to pass the raw loading pointer here, otherwise some reference was held somewhere even after calling disconnect on the
+        //signal and wiping out the connection.
+        loading_update_connection_ = signal_step().connect(std::bind(&screens::Loading::update, loading_.get(), std::placeholders::_1));
 
         //This needs to happen after SDL or whatever is initialized
         input_controller_ = InputController::create();
@@ -197,10 +206,12 @@ bool WindowBase::update() {
         watcher_.reset();
 
         loading_update_connection_.disconnect();
+        loading_update_connection_ = sig::connection();
+
         loading_.reset();
 
         //Shutdown the input controller
-        input_controller_.reset();
+        input_controller_.reset();        
         //Destroy the scene
         scene_.reset();
     }

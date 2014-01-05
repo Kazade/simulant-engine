@@ -17,7 +17,6 @@ class Loading:
 
 public:
     Loading(Scene& scene);
-    ~Loading();
 
     void activate();
     void deactivate();
@@ -26,6 +25,8 @@ public:
 
     bool is_active() const;
 
+    bool init() override;
+    void cleanup() override;
 private:
     Scene& scene_;
     bool is_active_;

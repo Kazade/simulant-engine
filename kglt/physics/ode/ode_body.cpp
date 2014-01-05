@@ -15,6 +15,8 @@ static int32_t constraint_counter = 1;
 bool ODEBody::do_init() {
     ODEEngine& eng = dynamic_cast<ODEEngine&>(*engine());
     body_ = dBodyCreate(eng.world());
+    dBodySetGyroscopicMode(body_, 0);
+    dBodySetFiniteRotationMode(body_, 1);
 
     //Initialize spherical mass of 1.0
     set_mass_sphere(1.0, 1.0);

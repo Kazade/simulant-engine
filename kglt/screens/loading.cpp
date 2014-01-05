@@ -16,10 +16,13 @@ Loading::Loading(Scene &scene):
     scene_(scene),
     is_active_(false) {
 
-    //Create a stage
-    stage_ = scene.new_ui_stage();
+}
 
-    auto stage = scene.ui_stage(stage_);
+bool Loading::init() {
+    //Create a stage
+    stage_ = scene_.new_ui_stage();
+
+    auto stage = scene_.ui_stage(stage_);
 
     stage->set_styles(R"X(
         body {
@@ -52,22 +55,23 @@ Loading::Loading(Scene &scene):
     stage->$("p").add_class("thing");
 
     //Create an orthographic camera
-    camera_ = scene.new_camera();
+    camera_ = scene_.new_camera();
 
-    scene.camera(camera_).set_orthographic_projection(
+    scene_.camera(camera_).set_orthographic_projection(
         0, scene_.window().width(), scene_.window().height(), 0
     );
 
     //Create an inactive pipeline
-    pipeline_ = scene.render_sequence().new_pipeline(
+    pipeline_ = scene_.render_sequence().new_pipeline(
         stage_,
         camera_
     );
 
-    scene.render_sequence().pipeline(pipeline_).deactivate();
+    scene_.render_sequence().pipeline(pipeline_).deactivate();
+    return true;
 }
 
-Loading::~Loading() {
+void Loading::cleanup() {
     //Clean up
     scene_.render_sequence().delete_pipeline(pipeline_);
     scene_.delete_ui_stage(stage_);

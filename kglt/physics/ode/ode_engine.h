@@ -32,6 +32,9 @@ private:
         world_ = dWorldCreate();
         space_ = dHashSpaceCreate(0);
         contact_group_ = dJointGroupCreate(0);
+
+        dWorldSetERP(world_, 0.2);
+        dWorldSetCFM(world_, 1e-5);
         return true;
     }
 

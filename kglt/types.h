@@ -17,6 +17,7 @@
 #include <kazmath/quaternion.h>
 #include <kazmath/mat4.h>
 #include <kazmath/mat3.h>
+#include <kazmath/utility.h>
 
 #include "generic/unique_id.h"
 #include "kazbase/unicode.h"
@@ -293,6 +294,10 @@ kglt::Vec3 operator/(float lhs, const kglt::Vec3& rhs);
 kglt::Vec3 operator-(const kglt::Vec3& vec);
 kglt::Quaternion operator-(const kglt::Quaternion& q);
 
+float to_radians(float degrees);
+float to_degrees(float radians);
+
+const float PI = kmPI;
 
 enum BlendType {
     BLEND_NONE,
