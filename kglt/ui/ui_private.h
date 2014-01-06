@@ -57,6 +57,10 @@ public:
         elem_->SetClass(cl.c_str(), true);
     }
 
+    void remove_class(const std::string& cl) {
+        elem_->SetClass(cl.c_str(), false);
+    }
+
     std::string css(const std::string& property) {
         return elem_->GetProperty<Rocket::Core::String>(property.c_str()).CString();
     }

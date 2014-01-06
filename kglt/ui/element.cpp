@@ -24,6 +24,10 @@ const unicode Element::text() const {
     return impl_->text();
 }
 
+void Element::remove_class(const std::string &cl) {
+    impl_->remove_class(cl);
+}
+
 void Element::add_class(const std::string& cl) {
     impl_->add_class(cl);
 }

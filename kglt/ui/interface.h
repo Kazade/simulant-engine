@@ -36,6 +36,12 @@ public:
         }
     }
 
+    void remove_class(const std::string& cl) {
+        for(Element& e: elements_) {
+            e.remove_class(cl);
+        }
+    }
+
     void css(const std::string& property, const std::string& value) {
         for(Element& e: elements_) {
             e.css(property, value);
