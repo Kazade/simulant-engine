@@ -10,13 +10,15 @@
 namespace kglt {
 
 typedef uint32_t ConnectionID;
+class WindowBase;
 
 class IdleTaskManager {
 public:
-    IdleTaskManager();
+    IdleTaskManager(WindowBase& window);
 
     ConnectionID add(std::function<bool ()> callback);
     ConnectionID add_once(std::function<void ()> callback);
+    ConnectionID add_timeout(float seconds, std::function<void()> callback);
     
     void remove(ConnectionID connection);
 
@@ -27,6 +29,8 @@ public:
 private:
     typedef std::map<ConnectionID, std::function<bool ()> > SignalMap;
     typedef std::map<ConnectionID, std::function<void ()> > SignalOnceMap;
+
+    WindowBase& window_;
 
     SignalMap signals_;
     SignalOnceMap signals_once_;

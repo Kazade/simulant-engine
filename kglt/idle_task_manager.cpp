@@ -2,12 +2,14 @@
 #include <functional>
 #include "kazbase/logging.h"
 #include "idle_task_manager.h"
+#include "window_base.h"
 
 namespace kglt {
 
 static ConnectionID connection_counter = 0;
 
-IdleTaskManager::IdleTaskManager() {
+IdleTaskManager::IdleTaskManager(WindowBase &window):
+    window_(window) {
 
 }
 
@@ -25,6 +27,29 @@ ConnectionID IdleTaskManager::add_once(std::function<void ()> callback) {
     ConnectionID new_id = ++connection_counter;
     signals_once_.insert(std::make_pair(new_id, callback));
     return new_id;
+}
+
+struct TimedTrigger {
+    TimedTrigger(float time, std::function<void ()> callback):
+        time_left_(time),
+        callback_(callback) {}
+
+    bool update(kglt::WindowBase* window) {
+        time_left_ -= window->delta_time();
+        if(time_left_ <= 0.0) {
+            callback_();
+            return false;
+        }
+        return true;
+    }
+
+    float time_left_ = 0.0;
+    std::function<void ()> callback_;
+};
+
+ConnectionID IdleTaskManager::add_timeout(float seconds, std::function<void()> callback) {
+    TimedTrigger trigger(seconds, callback);
+    return add(std::bind(&TimedTrigger::update, trigger, &this->window_));
 }
 
 void IdleTaskManager::wait() {

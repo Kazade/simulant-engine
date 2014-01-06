@@ -30,6 +30,7 @@ WindowBase::WindowBase():
     width_(-1),
     height_(-1),
     is_running_(true),
+    idle_(*this),
     default_viewport_(0),
     resource_locator_(ResourceLocator::create()),
     frame_counter_time_(0),
