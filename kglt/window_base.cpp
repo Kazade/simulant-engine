@@ -123,8 +123,6 @@ bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
         GLCheck(glDepthFunc, GL_LEQUAL);
         GLCheck(glEnable, GL_CULL_FACE);
 
-        check_and_log_error(__FILE__, __LINE__);
-
         using std::bind;
 
         //C++11 lambda awesomeness! input_controller isn't initialized yet

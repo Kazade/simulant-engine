@@ -337,3 +337,5 @@ kglt/extra/ai/curve.h
 tests/test_curve.h
 kglt/utils/al_error.h
 kglt/utils/al_error.cpp
+kglt/particles.h
+tests/test_kazbase.h

@@ -476,7 +476,13 @@ void Interface::set_styles(const std::string& stylesheet_content) {
 }
 
 Interface::~Interface() {
-    impl_->context_->RemoveReference();
+    try {
+        if(impl_ && impl_->context_) {
+            impl_->context_->RemoveReference();
+        }
+    } catch(...) {
+        L_ERROR("Error removing reference to the context");
+    }
 
     //Shutdown if this is the last interface
     if(interface_count-- == 0) {
