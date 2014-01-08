@@ -6,8 +6,8 @@
 
 #include "texture_loader.h"
 
-#include "../kazbase/exceptions.h"
-#include "../kazbase/list_utils.h"
+#include <kazbase/exceptions.h>
+#include <kazbase/list_utils.h>
 #include "../texture.h"
 
 namespace kglt {

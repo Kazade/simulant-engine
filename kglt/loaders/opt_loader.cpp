@@ -8,7 +8,7 @@
 #include "../resource_manager.h"
 #include "../shortcuts.h"
 
-#include "../kazbase/unicode.h"
+#include <kazbase/unicode.h>
 #include "opt_loader.h"
 
 namespace kglt {

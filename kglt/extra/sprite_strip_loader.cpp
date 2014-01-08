@@ -1,7 +1,7 @@
 #include <boost/lexical_cast.hpp>
 
-#include "kglt/kazbase/exceptions.h"
-#include "kglt/kazbase/os/path.h"
+#include <kazbase/exceptions.h>
+#include <kazbase/os/path.h>
 #include "sprite_strip_loader.h"
 
 #include "../scene.h"

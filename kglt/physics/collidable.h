@@ -2,7 +2,7 @@
 #define COLLIDABLE_BODY_H
 
 #include "../generic/unique_id.h"
-#include "../kazbase/base/taggable_object.h"
+#include <kazbase/base/taggable_object.h>
 #include "../types.h"
 
 namespace kglt {

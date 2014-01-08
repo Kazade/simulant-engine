@@ -1,7 +1,7 @@
 #include "kglt/kglt.h"
 #include "kglt/extra/skybox.h"
 
-#include "kglt/kazbase/string.h"
+#include <kazbase/string.h>
 
 int main(int argc, char* argv[]) {        
     logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));

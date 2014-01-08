@@ -1,8 +1,8 @@
 #ifndef TEST_WATCHER_H
 #define TEST_WATCHER_H
 
-#include "kglt/kazbase/testing.h"
-#include "kglt/kazbase/os.h"
+#include <kaztest/kaztest.h>
+#include <kazbase/os.h>
 #include "kglt/watcher.h"
 
 

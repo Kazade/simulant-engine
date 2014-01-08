@@ -2,7 +2,7 @@
 #define TEST_SHADER_H
 
 #include "kglt/kglt.h"
-#include "kglt/kazbase/testing.h"
+#include <kaztest/kaztest.h>
 
 #include "global.h"
 

@@ -2,7 +2,7 @@
 #define TEST_VERTEX_DATA_H
 
 #include "kglt/kglt.h"
-#include "kglt/kazbase/testing.h"
+#include <kaztest/kaztest.h>
 
 #include "global.h"
 

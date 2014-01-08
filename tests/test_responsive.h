@@ -1,8 +1,9 @@
 #ifndef TEST_RESPONSIVE_H
 #define TEST_RESPONSIVE_H
 
+#include <kaztest/kaztest.h>
+
 #include "kglt/kglt.h"
-#include "kglt/kazbase/testing.h"
 #include "global.h"
 
 class ResponsiveTest : public TestCase {

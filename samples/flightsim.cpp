@@ -1,6 +1,7 @@
+#include <kazbase/string.h>
+
 #include "kglt/kglt.h"
 #include "kglt/shortcuts.h"
-#include "kglt/kazbase/string.h"
 #include "kglt/extra/skybox.h"
 
 int main(int argc, char* argv[]) {        

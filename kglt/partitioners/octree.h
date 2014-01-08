@@ -12,7 +12,7 @@
 #include "../boundable.h"
 #include "../types.h"
 
-#include "kglt/kazbase/list_utils.h"
+#include <kazbase/list_utils.h>
 /*
  * BANTER FOLLOWS!
  *

@@ -15,8 +15,8 @@
 #include <kazmath/mat4.h>
 
 #include "../loader.h"
-#include "../kazbase/string.h"
-#include "../kazbase/os/path.h"
+#include <kazbase/string.h>
+#include <kazbase/os/path.h>
 #include "../window_base.h"
 #include "../scene.h"
 #include "../camera.h"

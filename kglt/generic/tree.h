@@ -6,8 +6,8 @@
 #include <vector>
 #include <memory>
 
-#include "../kazbase/logging.h"
-#include "../kazbase/signals3/signals3.hpp"
+#include <kazbase/logging.h>
+#include <kazbase/signals3/signals3.hpp>
 
 namespace kglt {
 namespace generic {

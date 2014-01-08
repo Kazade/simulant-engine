@@ -6,8 +6,8 @@
 #include <kazmath/vec3.h>
 #include <kazmath/mat4.h>
 
-#include "../kazbase/logging.h"
-#include "../kazbase/unicode.h"
+#include <kazbase/logging.h>
+#include <kazbase/unicode.h>
 
 #include "../window.h"
 #include "../stage.h"
@@ -17,7 +17,7 @@
 #include "../light.h"
 #include "../camera.h"
 #include "../procedural/texture.h"
-#include "../kazbase/string.h"
+#include <kazbase/string.h>
 #include "q2bsp_loader.h"
 
 #include "kglt/shortcuts.h"

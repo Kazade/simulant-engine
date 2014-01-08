@@ -1,7 +1,8 @@
 #ifndef CURVE_H
 #define CURVE_H
 
-#include "../../kazbase/exceptions.h"
+#include <kazbase/exceptions.h>
+
 #include "../../generic/managed.h"
 #include "../../types.h"
 

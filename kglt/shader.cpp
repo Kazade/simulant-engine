@@ -1,13 +1,14 @@
 #include "utils/glcompat.h"
 
+#include <kazbase/logging.h>
+#include <kazbase/exceptions.h>
+#include <kazbase/list_utils.h>
 #include <stdexcept>
 #include <boost/format.hpp>
 
 #include "utils/gl_thread_check.h"
 #include "utils/gl_error.h"
-#include "kazbase/logging.h"
-#include "kglt/kazbase/exceptions.h"
-#include "kglt/kazbase/list_utils.h"
+
 #include "types.h"
 #include "shader.h"
 

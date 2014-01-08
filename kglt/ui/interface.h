@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include "../kazbase/unicode.h"
+#include <kazbase/unicode.h>
 #include "../generic/managed.h"
 #include"../types.h"
 #include "../loadable.h"

@@ -1,9 +1,9 @@
+#include <kazbase/exceptions.h>
+
 #include "utils/glcompat.h"
 #include "viewport.h"
 #include "window.h"
 #include "scene.h"
-
-#include "kglt/kazbase/exceptions.h"
 #include "utils/gl_error.h"
 
 namespace kglt {

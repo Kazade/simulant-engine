@@ -6,9 +6,9 @@
 #include <string>
 #include <functional>
 
-#include "../kazbase/exceptions.h"
-#include "../kazbase/unicode.h"
-#include "../kazbase/logging.h"
+#include <kazbase/exceptions.h>
+#include <kazbase/unicode.h>
+#include <kazbase/logging.h>
 #include "gl_thread_check.h"
 
 void check_and_log_error(std::string file, int lineno);

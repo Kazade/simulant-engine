@@ -9,8 +9,8 @@
 #include "generic/managed.h"
 #include "generic/identifiable.h"
 
-#include "kazmath/kazmath.h"
-#include "kglt/kazbase/list_utils.h"
+#include <kazmath/kazmath.h>
+#include <kazbase/list_utils.h>
 
 #include "loadable.h"
 #include "resource.h"

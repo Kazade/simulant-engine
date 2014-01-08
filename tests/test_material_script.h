@@ -1,7 +1,8 @@
 #ifndef TEST_MATERIAL_SCRIPT_H
 #define TEST_MATERIAL_SCRIPT_H
 
-#include "kglt/kazbase/testing.h"
+#include <kaztest/kaztest.h>
+
 #include "kglt/kglt.h"
 #include "global.h"
 #include "kglt/loaders/material_script.h"

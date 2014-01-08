@@ -3,9 +3,9 @@
 #include <AL/al.h>
 #include <AL/alc.h>
 
-#include "../kazbase/logging.h"
-#include "../kazbase/exceptions.h"
-#include "../kazbase/unicode.h"
+#include <kazbase/logging.h>
+#include <kazbase/exceptions.h>
+#include <kazbase/unicode.h>
 
 namespace ALChecker {
 void al_check_and_log_error() {

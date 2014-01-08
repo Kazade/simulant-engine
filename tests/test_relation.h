@@ -1,7 +1,7 @@
 #ifndef TEST_RELATION_H
 #define TEST_RELATION_H
 
-#include "kglt/kazbase/testing.h"
+#include <kaztest/kaztest.h>
 
 #include "kglt/kglt.h"
 #include "global.h"

@@ -1,4 +1,4 @@
-#include "../kazbase/exceptions.h"
+#include <kazbase/exceptions.h>
 #include "../scene.h"
 #include "../stage.h"
 

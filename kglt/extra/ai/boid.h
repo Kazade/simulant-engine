@@ -1,7 +1,8 @@
 #ifndef BOID_H
 #define BOID_H
 
-#include "../../kazbase/exceptions.h"
+#include <kazbase/exceptions.h>
+
 #include "../../generic/managed.h"
 #include "../../base.h"
 #include "path.h"

@@ -1,5 +1,5 @@
-#include "kglt/kazbase/os/path.h"
-#include "kglt/kazbase/exceptions.h"
+#include <kazbase/os/path.h>
+#include <kazbase/exceptions.h>
 #include "resource_locator.h"
 
 namespace kglt {

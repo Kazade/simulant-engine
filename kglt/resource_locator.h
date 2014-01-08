@@ -6,7 +6,7 @@
 #include <string>
 
 #include "generic/managed.h"
-#include "kazbase/unicode.h"
+#include <kazbase/unicode.h>
 
 namespace kglt {
 

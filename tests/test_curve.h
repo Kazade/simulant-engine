@@ -1,7 +1,8 @@
 #ifndef TEST_CURVE_H
 #define TEST_CURVE_H
 
-#include "kglt/kazbase/testing.h"
+#include <kaztest/kaztest.h>
+
 #include "kglt/extra/ai/curve.h"
 
 class CurveTest : public TestCase {

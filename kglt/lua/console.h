@@ -5,7 +5,7 @@
 
 #include <memory>
 #include "../generic/managed.h"
-#include "../kazbase/unicode.h"
+#include <kazbase/unicode.h>
 #include "types.h"
 #include "../types.h"
 

@@ -1,8 +1,9 @@
 #ifndef TEST_FRUSTUM_H
 #define TEST_FRUSTUM_H
 
+#include <kaztest/kaztest.h>
+
 #include "kglt/kglt.h"
-#include "kglt/kazbase/testing.h"
 #include "global.h"
 
 using namespace kglt;

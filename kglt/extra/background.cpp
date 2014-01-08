@@ -1,6 +1,6 @@
 #include <boost/format.hpp>
 
-#include "../kazbase/logging.h"
+#include <kazbase/logging.h>
 #include "background.h"
 
 #include "../actor.h"

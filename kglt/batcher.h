@@ -4,7 +4,7 @@
 #include <list>
 #include <unordered_map>
 #include <memory>
-#include "kglt/kazbase/exceptions.h"
+#include <kazbase/exceptions.h>
 #include "kglt/types.h"
 
 namespace kglt {

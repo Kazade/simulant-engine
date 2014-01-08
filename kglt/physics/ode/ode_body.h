@@ -3,8 +3,8 @@
 
 #include <ode/ode.h>
 #include <unordered_map>
+#include <kazbase/exceptions.h>
 
-#include "../../kazbase/exceptions.h"
 #include "../responsive_body.h"
 
 namespace kglt {

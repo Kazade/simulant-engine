@@ -4,7 +4,7 @@
 	#include <GLES3/gl3.h>
 #endif
 
-#include "../kazbase/logging.h"
+#include <kazbase/logging.h>
 #include "geometry_buffer.h"
 #include "../utils/gl_error.h"
 

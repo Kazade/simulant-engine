@@ -2,8 +2,8 @@
 
 #include "octree.h"
 
-#include "../kazbase/logging.h"
-#include "../kazbase/list_utils.h"
+#include <kazbase/logging.h>
+#include <kazbase/list_utils.h>
 #include "../frustum.h"
 
 namespace kglt {

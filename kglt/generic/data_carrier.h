@@ -2,8 +2,8 @@
 #define USER_DATA_CARRIER_H
 
 #include <boost/any.hpp>
-#include "../kazbase/exceptions.h"
-#include "../kazbase/list_utils.h"
+#include <kazbase/exceptions.h>
+#include <kazbase/list_utils.h>
 
 namespace kglt {
 namespace generic {

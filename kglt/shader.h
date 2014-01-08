@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <functional>
 
-#include "kglt/kazbase/list_utils.h"
+#include <kazbase/list_utils.h>
 
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 

@@ -3,7 +3,7 @@
 
 #include <string>
 #include <memory>
-#include "../kazbase/unicode.h"
+#include <kazbase/unicode.h>
 
 namespace kglt {
 namespace ui {
