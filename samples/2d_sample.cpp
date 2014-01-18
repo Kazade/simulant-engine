@@ -1,6 +1,6 @@
 #include "kglt/kglt.h"
 #include "kglt/shortcuts.h"
-#include "kglt/additional.h"
+#include "kglt/extra.h"
 
 using namespace kglt::extra;
 
@@ -14,17 +14,8 @@ public:
 
 private:
     bool do_init() {
-        //Construct a Sprite object that takes care of handling materials, meshes etc.
-        sprite_ = Sprite::create(
-            scene(),
-            stage().id(),
-            "sample_data/sonic.png",
-            FrameSize(64, 64)
-        );
-
-        sprite_->add_animation("stand", FrameRange(4, 6), 0.5);
-        sprite_->set_render_dimensions(1.5, 1.5);
-        sprite_->move_to(0.0, 0.0, -1.0);
+        //Load a sprite grid, from the 'Testing Name 1' layer in a tmx file
+        sprite_grid_ = SpriteGrid::new_from_file(scene(), kglt::StageID(), "sample_data/tiled/example.tmx", "Testing Name 1");
 
         //Automatically calculate an orthographic projection, taking into account the aspect ratio
         //and the passed height. For example, passing a height of 2.0 would mean the view would extend
@@ -43,10 +34,10 @@ private:
         }
     }
     void do_cleanup() {
-        sprite_.reset();
+        sprite_grid_.reset();
     }
 
-    Sprite::ptr sprite_;
+    SpriteGrid::ptr sprite_grid_;
 };
 
 

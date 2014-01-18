@@ -121,7 +121,7 @@ kglt/material.h
 kglt/material.cpp
 kglt/colour.h
 kglt/colour.cpp
-kglt/additional.h
+kglt/extra.h
 kglt/light.cpp
 kglt/partitioner.h
 kglt/partitioners/null_partitioner.h
@@ -339,3 +339,6 @@ kglt/utils/al_error.h
 kglt/utils/al_error.cpp
 kglt/particles.h
 tests/test_kazbase.h
+kglt/extra/sprite_grid.h
+kglt/extra/sprite_grid.cpp
+cmake_modules/FindTinyXML.cmake
