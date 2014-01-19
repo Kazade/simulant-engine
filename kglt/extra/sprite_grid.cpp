@@ -34,7 +34,7 @@ bool GridChunk::init() {
                     parent_->tile_render_size_,
                     parent_->tile_render_size_,
                     x * parent_->tile_render_size_,
-                    y * parent_->tile_render_size_
+                    (CHUNK_WIDTH_IN_TILES - y) * parent_->tile_render_size_
                 );
             }
         }
@@ -54,16 +54,16 @@ void GridChunk::set_tile_texture_info(int32_t tile_index, TextureID texture_id, 
     submesh.set_texture_on_material(0, texture_id);
 
     submesh.vertex_data().move_to(0);
-    submesh.vertex_data().tex_coord0(kglt::Vec2(x0, y0));
-
-    submesh.vertex_data().move_next();
-    submesh.vertex_data().tex_coord0(kglt::Vec2(x1, y0));
+    submesh.vertex_data().tex_coord0(kglt::Vec2(x0, y1));
 
     submesh.vertex_data().move_next();
     submesh.vertex_data().tex_coord0(kglt::Vec2(x1, y1));
 
     submesh.vertex_data().move_next();
-    submesh.vertex_data().tex_coord0(kglt::Vec2(x0, y1));
+    submesh.vertex_data().tex_coord0(kglt::Vec2(x1, y0));
+
+    submesh.vertex_data().move_next();
+    submesh.vertex_data().tex_coord0(kglt::Vec2(x0, y0));
 
     submesh.vertex_data().done();
 }

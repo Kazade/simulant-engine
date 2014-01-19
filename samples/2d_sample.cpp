@@ -19,7 +19,7 @@ private:
         //and the passed height. For example, passing a height of 2.0 would mean the view would extend
         //+1 and -1 in the vertical direction, -1.0 - +1.0 near/far, and width would be calculated from the aspect
         //window.scene().pass().viewport().configure(kglt::VIEWPORT_TYPE_BLACKBAR_16_BY_9);
-        scene().camera().set_orthographic_projection_from_height(16, float(window().width()) / float(window().height()));
+        scene().camera().set_orthographic_projection_from_height(32, float(window().width()) / float(window().height()));
 
         return true;
     }
