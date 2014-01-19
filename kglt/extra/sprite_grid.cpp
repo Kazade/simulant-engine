@@ -147,7 +147,7 @@ SpriteGrid::ptr SpriteGrid::new_from_file(Scene& scene, StageID stage, const uni
             int32_t y_offset = tile_id / num_tiles_wide;
 
             float x0 = x_offset * (tileset.tile_width + tileset.spacing) + tileset.margin;
-            float y0 = tileset.total_height - y_offset * (tileset.tile_height + tileset.spacing) + tileset.margin;
+            float y0 = tileset.total_height - y_offset * (tileset.tile_height + tileset.spacing) - tileset.margin;
 
             float x1 = x0 + tileset.tile_width;
             float y1 = y0 - tileset.tile_height;
@@ -164,8 +164,6 @@ SpriteGrid::ptr SpriteGrid::new_from_file(Scene& scene, StageID stage, const uni
             );
         }
     }
-
-    //TODO: Load the actual map in'it
 
     return new_grid;
 }
