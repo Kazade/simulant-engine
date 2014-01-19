@@ -24,6 +24,14 @@ typedef generic::RefCountedTemplatedManager<ResourceManagerImpl, Material, Mater
 typedef generic::RefCountedTemplatedManager<ResourceManagerImpl, Texture, TextureID> TextureManager;
 typedef generic::RefCountedTemplatedManager<ResourceManagerImpl, Sound, SoundID> SoundManager;
 
+enum TextureFlag {
+    TEXTURE_OPTION_CLAMP_TO_EDGE = 1,
+    TEXTURE_OPTION_FLIP_VERTICALLY = 2,
+    TEXTURE_OPTION_DISABLE_MIPMAPS = 4,
+    TEXTURE_OPTION_NEAREST_FILTER = 8
+};
+
+typedef uint32_t TextureFlags;
 
 class ResourceManager {
 public:
@@ -54,9 +62,9 @@ public:
 
     //Texture functions
     virtual TextureID new_texture(bool garbage_collect=true) = 0;
-    virtual TextureID new_texture_from_file(const unicode& path, bool garbage_collect=true) = 0;
+    virtual TextureID new_texture_from_file(const unicode& path, TextureFlags flags=0, bool garbage_collect=true) = 0;
     virtual TextureID new_texture_with_name(const unicode& name, bool garbage_collect=true) = 0;
-    virtual TextureID new_texture_with_name_from_file(const unicode& name, const unicode& path, bool garbage_collect=true) = 0;
+    virtual TextureID new_texture_with_name_from_file(const unicode& name, const unicode& path, TextureFlags flags=0, bool garbage_collect=true) = 0;
     virtual TextureID get_texture_with_name(const unicode& name) = 0;
 
     virtual ProtectedPtr<Texture> texture(TextureID t) = 0;
@@ -143,10 +151,10 @@ public:
 
 
     TextureID new_texture(bool garbage_collect=true) override;
-    TextureID new_texture_from_file(const unicode& path, bool garbage_collect=true) override;
+    TextureID new_texture_from_file(const unicode& path, TextureFlags flags=0, bool garbage_collect=true) override;
 
     TextureID new_texture_with_name(const unicode& name, bool garbage_collect=true) override;
-    TextureID new_texture_with_name_from_file(const unicode& name, const unicode& path, bool garbage_collect=true) override;
+    TextureID new_texture_with_name_from_file(const unicode& name, const unicode& path, TextureFlags flags=0, bool garbage_collect=true) override;
     TextureID get_texture_with_name(const unicode& name) override;
 
     ProtectedPtr<Texture> texture(TextureID t);

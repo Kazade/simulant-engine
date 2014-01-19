@@ -194,11 +194,22 @@ TextureID ResourceManagerImpl::new_texture(bool garbage_collect) {
     return TextureManager::manager_new(garbage_collect);
 }
 
-TextureID ResourceManagerImpl::new_texture_from_file(const unicode& path, bool garbage_collect) {
+TextureID ResourceManagerImpl::new_texture_from_file(const unicode& path, TextureFlags flags, bool garbage_collect) {
     //Load the texture
     auto tex = texture(new_texture(garbage_collect));
     window().loader_for(path.encode())->into(tex);
-    tex->upload(false, true, true, false);
+
+    if((flags & TEXTURE_OPTION_FLIP_VERTICALLY) == TEXTURE_OPTION_FLIP_VERTICALLY) {
+        tex->flip_vertically();
+    }
+
+    tex->upload(
+        false,
+        (flags & TEXTURE_OPTION_DISABLE_MIPMAPS) != TEXTURE_OPTION_DISABLE_MIPMAPS,
+        (flags & TEXTURE_OPTION_CLAMP_TO_EDGE) != TEXTURE_OPTION_CLAMP_TO_EDGE,
+        (flags & TEXTURE_OPTION_NEAREST_FILTER) != TEXTURE_OPTION_NEAREST_FILTER
+    );
+
     mark_texture_as_uncollected(tex->id());
     return tex->id();
 }
@@ -218,8 +229,8 @@ TextureID ResourceManagerImpl::new_texture_with_name(const unicode& name, bool g
     return t;
 }
 
-TextureID ResourceManagerImpl::new_texture_with_name_from_file(const unicode& name, const unicode& path, bool garbage_collect) {
-    TextureID t = new_texture_from_file(path, garbage_collect);
+TextureID ResourceManagerImpl::new_texture_with_name_from_file(const unicode& name, const unicode& path, TextureFlags flags, bool garbage_collect) {
+    TextureID t = new_texture_from_file(path, flags, garbage_collect);
     try {
         TextureManager::manager_store_name(name, t);
     } catch(...) {

@@ -136,14 +136,14 @@ public:
 
     //Texture functions
     virtual TextureID new_texture(bool garbage_collect=true) override { return scene().new_texture(garbage_collect); }
-    virtual TextureID new_texture_from_file(const unicode& path, bool garbage_collect=true) {
-        return scene().new_texture_from_file(path, garbage_collect);
+    virtual TextureID new_texture_from_file(const unicode& path, TextureFlags flags=0, bool garbage_collect=true) {
+        return scene().new_texture_from_file(path, flags, garbage_collect);
     }
     virtual TextureID new_texture_with_name(const unicode& name, bool garbage_collect=true) override {
         return scene().new_texture_with_name(name, garbage_collect);
     }
-    virtual TextureID new_texture_with_name_from_file(const unicode& name, const unicode& path, bool garbage_collect=true) override {
-        return scene().new_texture_with_name_from_file(name, path, garbage_collect);
+    virtual TextureID new_texture_with_name_from_file(const unicode& name, const unicode& path, TextureFlags flags=0, bool garbage_collect=true) override {
+        return scene().new_texture_with_name_from_file(name, path, flags, garbage_collect);
     }
     virtual TextureID get_texture_with_name(const unicode& name) override {
         return scene().get_texture_with_name(name);

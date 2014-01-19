@@ -1,3 +1,6 @@
+#include <kazbase/utils.h>
+
+#include "../procedural/mesh.h"
 #include "sprite_grid.h"
 #include "../window_base.h"
 
@@ -6,44 +9,190 @@
 namespace kglt {
 namespace extra {
 
-TileInfo& GridChunk::tile(int32_t x_pos, int32_t y_pos) {
-    return tiles_.at((y_pos * 16) + x_pos);
+static const uint32_t CHUNK_WIDTH_IN_TILES = 16;
+
+GridChunk::GridChunk(SpriteGrid *parent):
+    parent_(parent) {
+
+    tiles_.resize(CHUNK_WIDTH_IN_TILES * CHUNK_WIDTH_IN_TILES);
 }
 
-SpriteGrid::ptr SpriteGrid::new_from_file(Scene& scene, StageID stage, const unicode& filename, const unicode& layer) {
+bool GridChunk::init() {
+    //Create a mesh for the chunk
+    mesh_id_ = parent_->stage().new_mesh();
+
+    {
+        auto mesh = parent_->stage().mesh(mesh_id_);
+
+        //Generate a rectangle submesh for all tiles in the chunk
+        for(uint32_t y = 0; y < CHUNK_WIDTH_IN_TILES; ++y) {
+            for(uint32_t x = 0; x < CHUNK_WIDTH_IN_TILES; ++x) {
+                int32_t tile_info_index = (y * CHUNK_WIDTH_IN_TILES) + x;
+
+                tiles_.at(tile_info_index).submesh = procedural::mesh::new_rectangle_submesh(
+                    mesh,
+                    parent_->tile_render_size_,
+                    parent_->tile_render_size_,
+                    x * parent_->tile_render_size_,
+                    y * parent_->tile_render_size_
+                );
+            }
+        }
+    }
+
+    actor_id_ = parent_->stage().new_actor(mesh_id_);
+    return true;
+}
+
+void GridChunk::cleanup() {
+
+}
+
+void GridChunk::set_tile_texture_info(int32_t tile_index, TextureID texture_id, float x0, float y0, float x1, float y1) {
+    auto mesh = parent_->stage().mesh(mesh_id_);
+    auto& submesh = mesh->submesh(tiles_.at(tile_index).submesh);
+    submesh.set_texture_on_material(0, texture_id);
+
+    submesh.vertex_data().move_to(0);
+    submesh.vertex_data().tex_coord0(kglt::Vec2(x0, y0));
+
+    submesh.vertex_data().move_next();
+    submesh.vertex_data().tex_coord0(kglt::Vec2(x1, y0));
+
+    submesh.vertex_data().move_next();
+    submesh.vertex_data().tex_coord0(kglt::Vec2(x1, y1));
+
+    submesh.vertex_data().move_next();
+    submesh.vertex_data().tex_coord0(kglt::Vec2(x0, y1));
+
+    submesh.vertex_data().done();
+}
+
+TileInfo& GridChunk::tile(int32_t x_pos, int32_t y_pos) {
+    return tiles_.at((y_pos * CHUNK_WIDTH_IN_TILES) + x_pos);
+}
+
+struct TilesetInfo {
+    uint32_t total_width;
+    uint32_t total_height;
+
+    uint32_t tile_width;
+    uint32_t tile_height;
+
+    uint32_t spacing;
+    uint32_t margin;
+
+    uint32_t num_tiles_wide() const {
+        return (total_width - (margin * 2) + spacing) / (tile_width + spacing);
+    }
+
+    uint32_t num_tiles_high() const {
+        return (total_height - (margin * 2) + spacing) / (tile_height + spacing);
+    }
+};
+
+SpriteGrid::ptr SpriteGrid::new_from_file(Scene& scene, StageID stage, const unicode& filename, const unicode& layer_name) {
     Tmx::Map map;
 
     map.ParseFile(scene.window().resource_locator().locate_file(filename).encode());
 
-    auto new_grid = SpriteGrid::create(scene, stage, map.GetWidth(), map.GetHeight());
+    auto layers = map.GetLayers();
+    auto it = std::find_if(layers.begin(), layers.end(), [=](Tmx::Layer* layer) { return layer->GetName() == layer_name.encode(); });
+
+    if(it == layers.end()) {
+        throw RuntimeError(_u("Unable to find the layer with name: {0}").format(layer_name).encode());
+    }
+
+    Tmx::Layer* layer = (*it);
+
+    SpriteGrid::ptr new_grid = SpriteGrid::create(scene, stage, layer->GetWidth(), layer->GetHeight());
+
+    unicode parent_dir = os::path::abs_path(os::path::dir_name(filename));
+
+    std::map<int32_t, TilesetInfo> tileset_info;
+
+    //Load all of the tilesets from the map
+    for(int32_t i = 0; i < map.GetNumTilesets(); ++i) {
+        const Tmx::Tileset* tileset = map.GetTileset(i);
+        const Tmx::Image* image = tileset->GetImage();
+        unicode rel_path = image->GetSource();
+
+        unicode final_path = os::path::join(parent_dir, rel_path);
+        L_DEBUG(_u("Loading tileset from: {0}").format(final_path));
+        new_grid->add_tileset(i, new_grid->stage().new_texture_from_file(
+            final_path,
+            TEXTURE_OPTION_CLAMP_TO_EDGE | TEXTURE_OPTION_DISABLE_MIPMAPS | TEXTURE_OPTION_NEAREST_FILTER
+        ));
+
+        TilesetInfo& info = tileset_info[i];
+        info.margin = tileset->GetMargin();
+        info.spacing = tileset->GetSpacing();
+        info.tile_height = tileset->GetTileHeight();
+        info.tile_width = tileset->GetTileWidth();
+        info.total_height = image->GetHeight();
+        info.total_width = image->GetWidth();
+    }
+
+    for(int32_t y = 0; y < 16; /*layer->GetHeight();*/ ++y) {
+        for(int32_t x = 0; x < 16; /*layer->GetWidth();*/ ++x) {
+            int32_t tileset_index = layer->GetTileTilesetIndex(x, y);
+
+            TilesetInfo& tileset = tileset_info[tileset_index];
+
+            int32_t tile_id = layer->GetTileId(x, y);
+
+            int32_t num_tiles_wide = tileset.num_tiles_wide();
+
+            int32_t x_offset = tile_id % num_tiles_wide;
+            int32_t y_offset = tile_id / num_tiles_wide;
+
+            float x0 = x_offset * (tileset.tile_width + tileset.spacing) + tileset.margin;
+            float y0 = tileset.total_height - y_offset * (tileset.tile_height + tileset.spacing) + tileset.margin;
+
+            float x1 = x0 + tileset.tile_width;
+            float y1 = y0 - tileset.tile_height;
+
+            auto chunk_and_index = new_grid->chunk_tile_index(x, y);
+
+            chunk_and_index.first->set_tile_texture_info(
+                chunk_and_index.second,
+                new_grid->tilesets_[tileset_index],
+                x0 / tileset.total_width,
+                y0 / tileset.total_height,
+                x1 / tileset.total_width,
+                y1 / tileset.total_height
+            );
+        }
+    }
 
     //TODO: Load the actual map in'it
 
     return new_grid;
 }
 
-SpriteGrid::SpriteGrid(Scene &scene, StageID stage, int32_t tiles_wide, int32_t tiles_high):
+SpriteGrid::SpriteGrid(Scene &scene, StageID stage, int32_t tiles_wide, int32_t tiles_high, float tile_render_size):
     scene_(scene),
-    stage_id_(stage) {
+    stage_id_(stage),
+    tile_render_size_(tile_render_size) {
 
-    if((tiles_wide % 16) != 0 || (tiles_high % 16) != 0) {
-        throw LogicError("SpriteGrid width and height must be divisible by 16");
+    if((tiles_wide % CHUNK_WIDTH_IN_TILES) != 0 || (tiles_high % CHUNK_WIDTH_IN_TILES) != 0) {
+        throw LogicError(_u("SpriteGrid width and height must be divisible by {0}").format(CHUNK_WIDTH_IN_TILES).encode());
     }
 
     tiles_wide_ = tiles_wide;
     tiles_high_ = tiles_high;
 
-    chunks_wide_ = tiles_wide_ / 16;
-    chunks_high_ = tiles_high_ / 16;
+    chunks_wide_ = tiles_wide_ / CHUNK_WIDTH_IN_TILES;
+    chunks_high_ = tiles_high_ / CHUNK_WIDTH_IN_TILES;
+}
 
+bool SpriteGrid::init() {        
     chunks_.resize(chunks_wide_ * chunks_high_);
 
     for(uint32_t i = 0; i < chunks_.size(); ++i) {
-        chunks_[i] = GridChunk::create();
+        chunks_[i] = GridChunk::create(this);
     }
-}
 
-bool SpriteGrid::init() {
     return true;
 }
 
@@ -51,15 +200,30 @@ void SpriteGrid::cleanup() {
 
 }
 
-GridChunk::ptr SpriteGrid::chunk(int32_t x_pos, int32_t y_pos) {
-    return chunks_.at((y_pos * chunks_wide_) + x_pos);
+Stage& SpriteGrid::stage() {
+    return scene_.stage(stage_id_);
+}
+
+GridChunk::ptr SpriteGrid::chunk(int32_t tile_x_pos, int32_t tile_y_pos) {
+    int32_t chunk_x = tile_x_pos / CHUNK_WIDTH_IN_TILES;
+    int32_t chunk_y = tile_y_pos / CHUNK_WIDTH_IN_TILES;
+    int32_t final_index = (chunk_y * chunks_wide_) + chunk_x;
+
+    return chunks_.at(final_index);
+}
+
+std::pair<GridChunk::ptr, uint32_t> SpriteGrid::chunk_tile_index(int32_t tile_x_pos, int32_t tile_y_pos) {
+    int32_t x = tile_x_pos % CHUNK_WIDTH_IN_TILES;
+    int32_t y = tile_y_pos % CHUNK_WIDTH_IN_TILES;
+    int32_t index = (y * CHUNK_WIDTH_IN_TILES) + x;
+    return std::make_pair(chunk(tile_x_pos, tile_y_pos), index);
 }
 
 TileInfo& SpriteGrid::tile_info(int32_t x_pos, int32_t y_pos) {
-    int32_t chunk_x = x_pos / 16;
-    int32_t chunk_y = y_pos / 16;
+    int32_t chunk_x = x_pos / CHUNK_WIDTH_IN_TILES;
+    int32_t chunk_y = y_pos / CHUNK_WIDTH_IN_TILES;
 
-    return chunk(chunk_x, chunk_y)->tile(x_pos % 16, y_pos % 16);
+    return chunk(chunk_x, chunk_y)->tile(x_pos % CHUNK_WIDTH_IN_TILES, y_pos % CHUNK_WIDTH_IN_TILES);
 }
 
 }

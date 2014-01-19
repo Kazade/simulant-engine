@@ -1,48 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" width="10" height="10" tilewidth="32" tileheight="32">
+<map version="1.0" orientation="orthogonal" width="32" height="16" tilewidth="32" tileheight="32" backgroundcolor="#cccccc">
  <tileset firstgid="1" name="tmw_desert_spacing" tilewidth="32" tileheight="32" spacing="1" margin="1">
-  <image source="tmw_desert_spacing.png" trans="ffffff" width="265" height="199"/>
-  <tile id="0">
-   <properties>
-    <property name="Property A" value="Hello World"/>
-    <property name="Property B" value="666"/>
-   </properties>
-  </tile>
+  <image source="tmw_desert_spacing.png" width="265" height="199"/>
  </tileset>
- <layer name="Testing Name 1" width="10" height="10">
+ <layer name="Layer 1" width="32" height="16">
   <data encoding="base64" compression="zlib">
-   eJzTY2BokGNgYFBgYDgAokfxwGIAR7UNCw==
+   eJyTY2BgkBtgrDYI3ADDjEDMRAAz09B+QSAWIoCF0fToD4JwGw6YUNwTE+/Y4kKBSPs5gVgER5yLAjE3GX5SQMLE2A+yQwkLhsmRaz8xeZwW9pOCh5r9eoPc//Jk2C/DgD3vydIh/AmVvejl7nDAANitNv4=
   </data>
  </layer>
- <layer name="Testing Name 2" width="10" height="10">
-  <data encoding="base64" compression="zlib">
-   eJxjYKAMSAKxFBBLE1CnCMRKQKxMQJ0mEGsBsfYA2zVQAAArdgJl
-  </data>
- </layer>
- <layer name="Testing Name 3" width="10" height="10">
-  <data encoding="base64" compression="zlib">
-   eJxjYCAdiACxKBHqZIBYlgzzRzIAAH0YAGM=
-  </data>
- </layer>
- <layer name="Testing Name 4" width="10" height="10">
-  <data encoding="base64" compression="zlib">
-   eJxjYGBgkGcgDgwmdYxAzATEzATUcQIxFxBzE1AnCMRCQCxMJfeRqw4APA8BkQ==
-  </data>
- </layer>
- <layer name="Testing Name 5" width="10" height="10">
-  <data encoding="base64" compression="zlib">
-   eJxjYBgFgwkAAAGQAAE=
-  </data>
- </layer>
- <objectgroup name="Polygon Testing" width="10" height="10">
-  <object x="93" y="49">
-   <polygon points="0,0 51,6 9,56"/>
-  </object>
-  <object x="114" y="176">
-   <polygon points="0,0 51,-24 60,33"/>
-  </object>
-  <object x="228" y="88">
-   <polyline points="0,0 54,95 -3,183 -131,201"/>
-  </object>
- </objectgroup>
 </map>
