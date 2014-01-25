@@ -2,6 +2,7 @@
 #include "scene.h"
 #include "application.h"
 #include "screens/loading.h"
+#include "input_controller.h"
 
 namespace kglt {
 
@@ -12,6 +13,10 @@ App::App(const unicode &title, uint32_t width, uint32_t height, uint32_t bpp, bo
     window_->signal_frame_started().connect(std::bind(&App::check_tasks, this));
     window_->signal_step().connect(std::bind(&App::do_step, this, std::placeholders::_1));
     window_->signal_shutdown().connect(std::bind(&App::do_cleanup, this));
+
+    window_->keyboard().key_pressed_connect(std::bind(&App::on_key_press, this, std::placeholders::_1));
+    window_->keyboard().key_released_connect(std::bind(&App::on_key_release, this, std::placeholders::_1));
+    window_->keyboard().key_while_pressed_connect(std::bind(&App::while_key_pressed, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 Scene& App::scene() {

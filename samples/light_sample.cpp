@@ -45,12 +45,12 @@ int main(int argc, char* argv[]) {
     }
 
     float xpos = 0;
-    window->keyboard().key_while_down_connect(SDL_SCANCODE_A, [&](SDL_Scancode key, uint32_t mod, double dt) mutable {
+    window->keyboard().key_while_pressed_connect(SDL_SCANCODE_A, [&](SDL_Keysym key, double dt) mutable {
             xpos -= 20.0 * dt;
             stage.camera()->set_absolute_position(xpos, 2, 0);
             stage.camera()->look_at(stage.actor(actor_id)->absolute_position());
     });
-    window->keyboard().key_while_down_connect(SDL_SCANCODE_D, [&](SDL_Scancode key, uint32_t mod, double dt) mutable {
+    window->keyboard().key_while_pressed_connect(SDL_SCANCODE_D, [&](SDL_Keysym key, double dt) mutable {
             xpos += 20.0 * dt;
             stage.camera()->set_absolute_position(xpos, 2, 0);
             stage.camera()->look_at(stage.actor(actor_id)->absolute_position());

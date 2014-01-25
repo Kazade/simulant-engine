@@ -56,6 +56,10 @@ private:
 
     std::list<boost::shared_future<bool> > load_tasks_;
     void check_tasks();
+
+    virtual bool while_key_pressed(SDL_Keysym key, double) { return false; }
+    virtual bool on_key_press(SDL_Keysym key) { return false; }
+    virtual bool on_key_release(SDL_Keysym key) { return false; }
 };
 
 }
