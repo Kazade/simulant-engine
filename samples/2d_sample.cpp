@@ -18,8 +18,21 @@ private:
         //Automatically calculate an orthographic projection, taking into account the aspect ratio
         //and the passed height. For example, passing a height of 2.0 would mean the view would extend
         //+1 and -1 in the vertical direction, -1.0 - +1.0 near/far, and width would be calculated from the aspect
-        //window.scene().pass().viewport().configure(kglt::VIEWPORT_TYPE_BLACKBAR_16_BY_9);
-        scene().camera().set_orthographic_projection_from_height(32, float(window().width()) / float(window().height()));
+        float render_height = 16.0;
+        float render_width = scene().camera().set_orthographic_projection_from_height(render_height, float(window().width()) / float(window().height()));
+
+        //Load a sprite grid, from the 'Layer 1' layer in a tmx file
+        sprite_grid_ = SpriteGrid::new_from_file(scene(), kglt::StageID(), "sample_data/tiled/example.tmx", "Layer 1");
+
+        //Constrain the camera to the area where the sprite grid is rendered
+        scene().stage().camera()->constrain_to(
+            kglt::Vec3(render_width / 2, render_height / 2, 0),
+            kglt::Vec3(
+                sprite_grid_->render_dimensions().x - render_width / 2,
+                sprite_grid_->render_dimensions().y - render_height / 2,
+                0
+            )
+        );
 
         return true;
     }
@@ -28,8 +41,6 @@ private:
         static bool shown = false;
         if(initialized() && !shown) {
             shown = true;
-            //Load a sprite grid, from the 'Testing Name 1' layer in a tmx file
-            sprite_grid_ = SpriteGrid::new_from_file(scene(), kglt::StageID(), "sample_data/tiled/example.tmx", "Layer 1");
             window().message_bar().inform("Sample demonstrating 2D sprites");
         }
     }

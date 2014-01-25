@@ -26,19 +26,28 @@ public:
     ~CameraProxy();
 
     void follow(ActorID actor, const kglt::Vec3& offset, float lag_in_seconds=1.0);
+
+    std::pair<Vec3, Vec3> constraint() const;
+    bool is_constrained() const;
+    void constrain_to(const Vec3& min, const Vec3& max);
+    void disable_constraint();
+
     void destroy();
 
     void _update_following(double dt);
 
     Frustum& frustum();
     kmVec3 project_point(ViewportID vid, const kmVec3& point);
+
 private:
     ActorID following_actor_;
     Vec3 following_offset_;
     float following_lag_ = 0.0;
 
+    std::unique_ptr<std::pair<Vec3, Vec3>> constraint_;
 
     void do_update(double dt);
+    void _update_constraint();
 
     Camera& camera();
 };

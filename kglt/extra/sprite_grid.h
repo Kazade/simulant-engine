@@ -25,7 +25,7 @@ class GridChunk:
     public Managed<GridChunk> {
 
 public:
-    GridChunk(SpriteGrid* parent);
+    GridChunk(SpriteGrid* parent, const Vec2& offset);
     TileInfo& tile(int32_t x_pos, int32_t y_pos);
 
     bool init();
@@ -39,6 +39,8 @@ public:
 
 private:
     SpriteGrid* parent_;
+    Vec2 offset_;
+
     ActorID actor_id_;
     MeshID mesh_id_;
 
@@ -69,6 +71,8 @@ public:
      *  the tile appears.
      */
     std::pair<GridChunk::ptr, uint32_t> chunk_tile_index(int32_t tile_x_pos, int32_t tile_y_pos);
+
+    Vec2 render_dimensions() const;
 
 private:
     Stage& stage();

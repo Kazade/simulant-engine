@@ -3,6 +3,7 @@
 #include "../procedural/mesh.h"
 #include "sprite_grid.h"
 #include "../window_base.h"
+#include "../actor.h"
 
 #include "tiled/TmxParser/Tmx.h"
 
@@ -11,8 +12,9 @@ namespace extra {
 
 static const uint32_t CHUNK_WIDTH_IN_TILES = 16;
 
-GridChunk::GridChunk(SpriteGrid *parent):
-    parent_(parent) {
+GridChunk::GridChunk(SpriteGrid *parent, const Vec2& offset):
+    parent_(parent),
+    offset_(offset) {
 
     tiles_.resize(CHUNK_WIDTH_IN_TILES * CHUNK_WIDTH_IN_TILES);
 }
@@ -33,14 +35,15 @@ bool GridChunk::init() {
                     mesh,
                     parent_->tile_render_size_,
                     parent_->tile_render_size_,
-                    x * parent_->tile_render_size_,
-                    (CHUNK_WIDTH_IN_TILES - y) * parent_->tile_render_size_
+                    x * parent_->tile_render_size_ + (parent_->tile_render_size_ / 2),
+                    (CHUNK_WIDTH_IN_TILES - y) * parent_->tile_render_size_ - (parent_->tile_render_size_ / 2)
                 );
             }
         }
     }
 
     actor_id_ = parent_->stage().new_actor(mesh_id_);
+    parent_->stage().actor(actor_id_)->move_to(offset_.x, offset_.y, 0);
     return true;
 }
 
@@ -133,8 +136,8 @@ SpriteGrid::ptr SpriteGrid::new_from_file(Scene& scene, StageID stage, const uni
         info.total_width = image->GetWidth();
     }
 
-    for(int32_t y = 0; y < 16; /*layer->GetHeight();*/ ++y) {
-        for(int32_t x = 0; x < 16; /*layer->GetWidth();*/ ++x) {
+    for(int32_t y = 0; y < layer->GetHeight(); ++y) {
+        for(int32_t x = 0; x < layer->GetWidth(); ++x) {
             int32_t tileset_index = layer->GetTileTilesetIndex(x, y);
 
             TilesetInfo& tileset = tileset_info[tileset_index];
@@ -184,11 +187,25 @@ SpriteGrid::SpriteGrid(Scene &scene, StageID stage, int32_t tiles_wide, int32_t 
     chunks_high_ = tiles_high_ / CHUNK_WIDTH_IN_TILES;
 }
 
+Vec2 SpriteGrid::render_dimensions() const {
+    return Vec2(
+        chunks_wide_ * CHUNK_WIDTH_IN_TILES * tile_render_size_,
+        chunks_high_ * CHUNK_WIDTH_IN_TILES * tile_render_size_
+    );
+}
+
 bool SpriteGrid::init() {        
     chunks_.resize(chunks_wide_ * chunks_high_);
 
-    for(uint32_t i = 0; i < chunks_.size(); ++i) {
-        chunks_[i] = GridChunk::create(this);
+    for(uint32_t y = 0; y < chunks_high_; ++y) {
+        for(uint32_t x = 0; x < chunks_wide_; ++x) {
+            chunks_[(chunks_wide_ * y) + x] = GridChunk::create(
+                this, Vec2(
+                    x * CHUNK_WIDTH_IN_TILES * tile_render_size_,
+                    y * CHUNK_WIDTH_IN_TILES * tile_render_size_
+                )
+            );
+        }
     }
 
     return true;
