@@ -1,7 +1,7 @@
 #include "kglt/kglt.h"
 #include "kglt/base.h"
 #include "kglt/shortcuts.h"
-#include "kglt/additional.h"
+#include "kglt/extra.h"
 #include "kglt/extra/ai/boid.h"
 
 using namespace kglt::extra;

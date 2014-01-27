@@ -1,6 +1,6 @@
 #include "kglt/kglt.h"
 #include "kglt/shortcuts.h"
-#include "kglt/additional.h"
+#include "kglt/extra.h"
 
 using kglt::extra::Background;
 

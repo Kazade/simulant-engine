@@ -6,6 +6,10 @@
 #include "kglt/kglt.h"
 #include "global.h"
 
+namespace {
+
+using namespace kglt;
+
 class BatcherTest : public TestCase {
 public:
     void set_up() {
@@ -29,5 +33,7 @@ public:
 private:
     kglt::RootGroup::ptr root_group_;
 };
+
+}
 
 #endif // TEST_BATCHER_H

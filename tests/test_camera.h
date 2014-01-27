@@ -6,6 +6,10 @@
 #include "kglt/kglt.h"
 #include "global.h"
 
+namespace {
+
+using namespace kglt;
+
 class CameraTest : public TestCase {
 public:
     void set_up() {
@@ -78,5 +82,7 @@ public:
         assert_equal(stage.actor(a)->absolute_rotation(), stage.camera()->absolute_rotation());
     }
 };
+
+}
 
 #endif
