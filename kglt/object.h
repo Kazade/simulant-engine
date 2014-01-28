@@ -72,6 +72,18 @@ public:
         set_absolute_position(x, y, z);
     }
 
+    void move_to(float x, float y) {
+        move_to(x, y, 0);
+    }
+
+    void move_to(const kglt::Vec2& pos) {
+        move_to(pos.x, pos.y);
+    }
+
+    void rotate_to(const Degrees degrees) {
+        set_absolute_rotation(degrees, 0, 0, 1);
+    }
+
     void rotate_to(const kglt::Quaternion& q) {
         set_absolute_rotation(q);
     }
