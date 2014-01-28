@@ -158,12 +158,45 @@ MaterialID ResourceManagerImpl::new_material(bool garbage_collect) {
     return result;
 }
 
+void ResourceManagerImpl::delete_material(MaterialID m) {
+    material(m)->enable_gc();
+}
+
 MaterialID ResourceManagerImpl::new_material_from_file(const unicode& path, bool garbage_collect) {
     //Load the material
     auto mat = material(new_material(garbage_collect));
     window().loader_for(path.encode())->into(mat);
+    mark_material_as_uncollected(mat->id());
     return mat->id();
 }
+
+MaterialID ResourceManagerImpl::new_material_with_name(const unicode& name, bool garbage_collect) {
+    MaterialID m = new_material(garbage_collect);
+
+    try {
+        MaterialManager::manager_store_name(name, m);
+    } catch(...) {
+        delete_material(m);
+        throw;
+    }
+    return m;
+}
+
+MaterialID ResourceManagerImpl::new_material_with_name_from_file(const unicode& name, const unicode& path, bool garbage_collect) {
+    MaterialID m = new_material_from_file(path, garbage_collect);
+    try {
+        MaterialManager::manager_store_name(name, m);
+    } catch(...) {
+        delete_material(m);
+        throw;
+    }
+    return m;
+}
+
+MaterialID ResourceManagerImpl::get_material_with_name(const unicode& name) {
+    return MaterialManager::manager_get_by_name(name);
+}
+
 
 MaterialID ResourceManagerImpl::clone_material(MaterialID mat) {
     MaterialID result = MaterialManager::manager_clone(mat);

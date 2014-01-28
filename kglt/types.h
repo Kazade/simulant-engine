@@ -359,6 +359,12 @@ enum LoggingLevel {
     LOG_LEVEL_DEBUG = 4
 };
 
+enum PolygonMode {
+    POLYGON_MODE_FILL,
+    POLYGON_MODE_LINE,
+    POLYGON_MODE_POINT
+};
+
 typedef UniqueID<0> MeshID;
 typedef UniqueID<1> TextureID;
 typedef UniqueID<2> CameraID;

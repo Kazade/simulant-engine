@@ -127,6 +127,22 @@ public:
         scene().delete_mesh(m);
     }
 
+    MaterialID new_material_with_name(const unicode& name, bool garbage_collect=true) override {
+        return scene().new_material_with_name(name, garbage_collect);
+    }
+
+    MaterialID new_material_with_name_from_file(const unicode& name, const unicode& path, bool garbage_collect=true) override {
+        return scene().new_material_with_name_from_file(name, path, garbage_collect);
+    }
+
+    MaterialID get_material_with_name(const unicode& name) override {
+        return scene().get_material_with_name(name);
+    }
+
+    void delete_material(MaterialID m) {
+        scene().delete_material(m);
+    }
+
     virtual ProtectedPtr<Mesh> mesh(MeshID m) { return scene().mesh(m); }
     virtual const ProtectedPtr<Mesh> mesh(MeshID m) const { return scene().mesh(m); }
 

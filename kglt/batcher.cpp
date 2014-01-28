@@ -62,7 +62,7 @@ void RootGroup::insert(SubActor &ent, uint8_t pass_number) {
     current = &current->get_or_create<BlendGroup>(BlendGroupData(pass.blending()));
 
     //Add a node for the render settings
-    current = &current->get_or_create<RenderSettingsGroup>(RenderSettingsData(pass.point_size()));
+    current = &current->get_or_create<RenderSettingsGroup>(RenderSettingsData(pass.point_size(), pass.polygon_mode()));
 
     //FIXME: This code is duplicated below and that's bollocks
     if(!pass.texture_unit_count()) {
@@ -313,6 +313,18 @@ void RenderSettingsGroup::bind() {
 #else
     L_WARN("On GLES glPointSize doesn't exist");
 #endif
+
+    switch(data_.polygon_mode) {
+        case POLYGON_MODE_FILL: GLCheck(glPolygonMode, GL_FRONT_AND_BACK, GL_FILL);
+        break;
+        case POLYGON_MODE_LINE: GLCheck(glPolygonMode, GL_FRONT_AND_BACK, GL_LINE);
+        break;
+        case POLYGON_MODE_POINT: GLCheck(glPolygonMode, GL_FRONT_AND_BACK, GL_POINT);
+        break;
+    default:
+        throw ValueError("Invalid polygon mode specified");
+    }
+
 }
 
 void RenderSettingsGroup::unbind() {
@@ -321,6 +333,8 @@ void RenderSettingsGroup::unbind() {
 #else
     L_WARN("On GLES glPointSize doesn't exist");
 #endif
+
+    GLCheck(glPolygonMode, GL_FRONT_AND_BACK, GL_FILL);
 }
 
 }

@@ -83,8 +83,6 @@ enum IterationType {
     ITERATE_ONCE_PER_LIGHT
 };
 
-
-
 class MaterialTechnique;
 
 class MaterialPass {
@@ -139,6 +137,8 @@ public:
     bool is_reflective() const { return albedo_ > 0.0; }
     void set_reflection_texture_unit(uint8_t i) { reflection_texture_unit_ = i; }
     uint8_t reflection_texture_unit() const { return reflection_texture_unit_; }
+    void set_polygon_mode(PolygonMode mode) { polygon_mode_ = mode; }
+    PolygonMode polygon_mode() const { return polygon_mode_; }
 
     MaterialTechnique& technique() { return technique_;  }
 
@@ -166,6 +166,8 @@ private:
 
     float albedo_;
     uint8_t reflection_texture_unit_;
+
+    PolygonMode polygon_mode_ = POLYGON_MODE_FILL;
 };
 
 class MaterialTechnique {

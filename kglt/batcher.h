@@ -465,15 +465,18 @@ private:
 };
 
 struct RenderSettingsData : public GroupData {
-    RenderSettingsData(float point_size):
-        point_size(point_size) {}
+    RenderSettingsData(float point_size, PolygonMode polygon_mode):
+        point_size(point_size),
+        polygon_mode(polygon_mode) {}
 
     float point_size;
+    PolygonMode polygon_mode;
 
     std::size_t hash() const {
         size_t seed = 0;
         hash_combine(seed, typeid(RenderSettingsData).name());
         hash_combine(seed, point_size);
+        hash_combine(seed, (uint32_t)polygon_mode);
         return seed;
     }
 };

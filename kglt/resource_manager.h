@@ -105,6 +105,9 @@ public:
     //Material functions
     virtual MaterialID new_material(bool garbage_collect=true) = 0;
     virtual MaterialID new_material_from_file(const unicode& path, bool garbage_collect=true) = 0;
+    virtual MaterialID new_material_with_name(const unicode& name, bool garbage_collect=true) = 0;
+    virtual MaterialID new_material_with_name_from_file(const unicode& name, const unicode& path, bool garbage_collect=true) = 0;
+    virtual MaterialID get_material_with_name(const unicode& name) = 0;
 
     virtual ProtectedPtr<Material> material(MaterialID t) = 0;
     virtual const ProtectedPtr<Material> material(MaterialID t) const = 0;
@@ -112,6 +115,7 @@ public:
     virtual bool has_material(MaterialID m) const = 0;
     virtual uint32_t material_count() const = 0;
     virtual void mark_material_as_uncollected(MaterialID m) = 0;
+    virtual void delete_material(MaterialID m) = 0;
 
     virtual WindowBase& window() = 0;
     virtual const WindowBase& window() const = 0;
@@ -176,6 +180,10 @@ public:
 
     MaterialID new_material(bool garbage_collect=true) override;
     MaterialID new_material_from_file(const unicode& path, bool garbage_collect=true) override;
+    MaterialID new_material_with_name(const unicode& name, bool garbage_collect=true) override;
+    MaterialID new_material_with_name_from_file(const unicode& name, const unicode& path, bool garbage_collect=true) override;
+    MaterialID get_material_with_name(const unicode& name) override;
+
     MaterialID clone_material(MaterialID mat);
 
     ProtectedPtr<Material> material(MaterialID material);
@@ -183,6 +191,7 @@ public:
     bool has_material(MaterialID m) const;
     uint32_t material_count() const;
     void mark_material_as_uncollected(MaterialID t) override;
+    void delete_material(MaterialID m) override;
 
     SoundID new_sound(bool garbage_collect=true);
     SoundID new_sound_from_file(const unicode& path, bool garbage_collect=true);
