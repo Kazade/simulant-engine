@@ -63,6 +63,14 @@ void VertexData::position(float x, float y, float z) {
     vert.position.z = z;
 }
 
+void VertexData::position(float x, float y) {
+    position(x, y, 0);
+}
+
+void VertexData::position(const kmVec2 &pos) {
+    position(pos.x, pos.y);
+}
+
 void VertexData::position(const kmVec3& pos) {
     position(pos.x, pos.y, pos.z);
 }

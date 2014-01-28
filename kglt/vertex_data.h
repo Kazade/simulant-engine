@@ -81,7 +81,9 @@ public:
     void done();
 
     void position(float x, float y, float z);
+    void position(float x, float y);
     void position(const kmVec3& pos);
+    void position(const kmVec2& pos);
 
     kmVec3 position_at(uint16_t idx) {
         return data_.at(idx).position;
