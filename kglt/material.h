@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <set>
 
+#include "kazbase/signals3/signals3.hpp"
 #include "generic/managed.h"
 #include "kazmath/mat4.h"
 #include "resource.h"
@@ -211,6 +212,8 @@ class Material :
 
 public:
     Material(ResourceManager* resource_manager, MaterialID mat_id);
+    ~Material();
+
     MaterialTechnique& technique(const std::string& scheme=DEFAULT_MATERIAL_SCHEME);
     MaterialTechnique& new_technique(const std::string& scheme);
     bool has_technique(const std::string& scheme) const { return techniques_.find(scheme) != techniques_.end(); }
@@ -223,6 +226,8 @@ public:
 
 private:
     std::unordered_map<std::string, MaterialTechnique::ptr> techniques_;
+
+    sig::connection update_connection_;
 };
 
 }

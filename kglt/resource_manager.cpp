@@ -45,12 +45,6 @@ void ResourceManagerImpl::update() {
 
         last_collection = datetime::now();
     }
-
-    /*
-      Update all animated materials
-    */
-    double dt = window_->delta_time();
-    apply_func_to_materials(std::bind(&Material::update, std::placeholders::_1, dt));
 }
 
 Scene& ResourceManagerImpl::scene() {

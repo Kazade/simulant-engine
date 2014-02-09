@@ -8,6 +8,7 @@
 #include "../scene.h"
 #include "../shortcuts.h"
 #include "../resource_manager.h"
+#include "../utils/gl_thread_check.h"
 
 namespace kglt {
 
@@ -202,15 +203,20 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
 void MaterialScript::handle_data_block(Material& mat, const std::string& data_type, const std::vector<std::string>& lines, MaterialPass* pass) {
     ShaderPtr shader = mat.resource_manager().shader(pass->shader_id()).lock();
 
-    if(str::upper(data_type) == "VERTEX") {
-        std::string source = str::join(lines, "\n");
-        shader->add_and_compile(SHADER_TYPE_VERTEX, source);
-    } else if(str::upper(data_type) == "FRAGMENT") {
-        std::string source = str::join(lines, "\n");
-        shader->add_and_compile(SHADER_TYPE_FRAGMENT, source);
-    } else {
-        throw SyntaxError("Invalid BEGIN_DATA block: " + data_type);
-    }
+    auto do_handle_data_block = [&]() {
+        if(str::upper(data_type) == "VERTEX") {
+            std::string source = str::join(lines, "\n");
+            shader->add_and_compile(SHADER_TYPE_VERTEX, source);
+        } else if(str::upper(data_type) == "FRAGMENT") {
+            std::string source = str::join(lines, "\n");
+            shader->add_and_compile(SHADER_TYPE_FRAGMENT, source);
+        } else {
+            throw SyntaxError("Invalid BEGIN_DATA block: " + data_type);
+        }
+    };
+
+    //Run in the main thread
+    mat.resource_manager().window().idle().run_sync(do_handle_data_block);
 }
 
 void MaterialScript::handle_block(Material& mat,
@@ -315,8 +321,8 @@ void MaterialScript::handle_block(Material& mat,
                 //Apply any staged uniforms
                 apply_staged_uniforms(*shader);
 
-                //At the end of the pass, relink the shader
-                shader->relink();
+                //At the end of the pass, relink the shader in main thread
+                mat.resource_manager().window().idle().run_sync(std::bind(&ShaderProgram::relink, shader));
             }
             return; //Exit this function, we are done with this block
         } else if(str::starts_with(line, "SET")) {

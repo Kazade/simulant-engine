@@ -227,25 +227,6 @@ private:
     std::map<std::string, ShaderID> shader_lookup_;
 
     generic::DataCarrier data_carrier_;
-
-    template<typename Func>
-    void apply_func_to_materials(Func func) {
-        MaterialManager::ObjectMap copy;
-        {
-            std::lock_guard<std::mutex> lock(MaterialManager::manager_lock_);
-            copy = MaterialManager::__objects();
-        }
-
-        for(auto p: copy) {
-            try {
-                auto mat = material(p.first);
-                assert(mat);
-                std::bind(func, mat.__object)();
-            } catch(DoesNotExist<Material>& e) {
-                continue;
-            }
-        }
-    }
 };
 
 

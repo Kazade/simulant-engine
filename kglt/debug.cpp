@@ -36,9 +36,9 @@ bool Debug::init() {
     material_ = stage_.new_material_from_file("kglt/materials/diffuse_render.kglm", /*garbage_collect=*/false);
 
     //Connect regular updates so we can remove debug lines after their duration
-    stage_.window().signal_frame_finished().connect(
+    /*stage_.window().signal_frame_finished().connect(
         std::bind(&Debug::update, this)
-    );
+    );*/
 
     return true;
 }

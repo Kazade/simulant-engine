@@ -1,6 +1,7 @@
 #include <stdexcept>
 #include <cassert>
 
+#include "window_base.h"
 #include "material.h"
 #include "resource_manager.h"
 #include "scene.h"
@@ -62,6 +63,12 @@ Material::Material(ResourceManager *resource_manager, MaterialID mat_id):
     generic::Identifiable<MaterialID>(mat_id) {
 
     new_technique(DEFAULT_MATERIAL_SCHEME); //Create the default technique
+
+    update_connection_ = resource_manager->window().signal_step().connect(std::bind(&Material::update, this, std::placeholders::_1));
+}
+
+Material::~Material() {
+    update_connection_.disconnect();
 }
 
 MaterialTechnique& Material::technique(const std::string& scheme) {

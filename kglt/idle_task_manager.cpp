@@ -3,6 +3,7 @@
 #include "kazbase/logging.h"
 #include "idle_task_manager.h"
 #include "window_base.h"
+#include "utils/gl_thread_check.h"
 
 namespace kglt {
 
@@ -27,6 +28,20 @@ ConnectionID IdleTaskManager::add_once(std::function<void ()> callback) {
     ConnectionID new_id = ++connection_counter;
     signals_once_.insert(std::make_pair(new_id, callback));
     return new_id;
+}
+
+void IdleTaskManager::run_sync(std::function<void()> callback) {
+    /*
+     *  If the current thread is not the main thread, then add the task to idle, and
+     *  don't return until it runs. Otherwise, run the function immediately.
+     */
+
+    if(GLThreadCheck::is_current()) { //Shouldn't abuse the GL thread check like this really but GL thread == main
+        callback();
+    } else {
+        add_once(callback);
+        wait();
+    }
 }
 
 struct TimedTrigger {
