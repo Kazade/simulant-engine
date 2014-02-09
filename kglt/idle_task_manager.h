@@ -20,6 +20,8 @@ public:
     ConnectionID add_once(std::function<void ()> callback);
     ConnectionID add_timeout(float seconds, std::function<void()> callback);
     
+    void run_sync(std::function<void()> callback);
+
     void remove(ConnectionID connection);
 
     void execute();
