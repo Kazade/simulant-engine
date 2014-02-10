@@ -343,3 +343,5 @@ kglt/extra/sprite_grid.h
 kglt/extra/sprite_grid.cpp
 cmake_modules/FindTinyXML.cmake
 tests/test_spritegrid.h
+kglt/sprite.h
+kglt/sprite.cpp
