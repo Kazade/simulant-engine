@@ -94,6 +94,13 @@ struct TilesetInfo {
     }
 };
 
+kglt::Vec2 SpriteGrid::transform_position(const kglt::Vec2& position) {
+    return Vec2(
+        position.x / float(map_tile_width_),
+        render_dimensions().y - (position.y / float(map_tile_height_))
+    );
+}
+
 SpriteGrid::ptr SpriteGrid::new_from_file(Scene& scene, StageID stage, const unicode& filename, const unicode& layer_name) {
     Tmx::Map map;
 
@@ -167,6 +174,10 @@ SpriteGrid::ptr SpriteGrid::new_from_file(Scene& scene, StageID stage, const uni
             );
         }
     }
+
+    new_grid->map_tile_height_ = map.GetTileHeight();
+    new_grid->map_tile_width_ = map.GetTileWidth();
+
 
     return new_grid;
 }

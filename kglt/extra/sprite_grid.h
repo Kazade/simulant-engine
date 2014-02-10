@@ -74,11 +74,16 @@ public:
 
     Vec2 render_dimensions() const;
 
+    Vec2 transform_position(const kglt::Vec2& position);
+
 private:
     Stage& stage();
 
     Scene& scene_;
     StageID stage_id_;
+
+    int32_t map_tile_height_;
+    int32_t map_tile_width_;
 
     int32_t tiles_wide_;
     int32_t tiles_high_;
