@@ -377,6 +377,7 @@ typedef UniqueID<8> ActorID;
 typedef UniqueID<9> SoundID;
 typedef UniqueID<10> PipelineID;
 typedef UniqueID<11> UIStageID;
+typedef UniqueID<12> SpriteID;
 
 const StageID DefaultStageID = StageID();
 

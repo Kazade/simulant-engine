@@ -2,8 +2,6 @@
 #include "kglt/shortcuts.h"
 #include "kglt/extra.h"
 
-using kglt::extra::Sprite;
-using kglt::extra::SpriteStripLoader;
 using kglt::extra::Background;
 using namespace kglt::extra;
 
@@ -23,18 +21,12 @@ int main(int argc, char* argv[]) {
     //window.scene().pass().viewport().configure(kglt::VIEWPORT_TYPE_BLACKBAR_16_BY_9);
     window->scene().camera().set_orthographic_projection_from_height((float) 224 / (float) 40, 16.0 / 9.0);
 
-    using namespace kglt::extra;
 
-    Sprite::ptr sprite = Sprite::create(
-        scene,
-        stage.id(),
-        "sample_data/sonic.png",
-        FrameSize(64, 64)
-    );
+    kglt::SpriteID sprite = stage.new_sprite_from_file("sample_data/sonic.png", 64, 64);
+    stage.sprite(sprite)->add_animation("running", 31, 35, 0.5);
+    stage.sprite(sprite)->set_render_dimensions_from_height(1.5);
+    stage.sprite(sprite)->move_to(0, -2.0, -1.0);
 
-    sprite->add_animation("running", FrameRange(31, 35), 0.5);
-    sprite->set_render_dimensions(1.5, 1.5);
-    sprite->move_to(0.0, -2.0, -1.0);
 /*
     ui::Interface::ptr interface = ui::Interface::create(scene, 800, 600);  
     interface->load_font("sample_data/sample.ttf", 12);

@@ -72,18 +72,28 @@ MeshID ResourceManagerImpl::new_mesh_from_file(const unicode& path, bool garbage
     //Load the material
     kglt::MeshID mesh_id = new_mesh(garbage_collect);
     window().loader_for(path.encode())->into(mesh(mesh_id));
+    MeshManager::mark_as_uncollected(mesh_id);
     return mesh_id;
 }
 
 MeshID ResourceManagerImpl::new_mesh_as_cube(float width, bool garbage_collect) {
     MeshID m = new_mesh(garbage_collect);
     kglt::procedural::mesh::cube(mesh(m), width);
+    MeshManager::mark_as_uncollected(m);
     return m;
 }
 
 MeshID ResourceManagerImpl::new_mesh_as_sphere(float diameter, bool garbage_collect) {
     MeshID m = new_mesh(garbage_collect);
     kglt::procedural::mesh::sphere(mesh(m), diameter);
+    MeshManager::mark_as_uncollected(m);
+    return m;
+}
+
+MeshID ResourceManagerImpl::new_mesh_as_rectangle(float width, float height, bool garbage_collect) {
+    MeshID m = new_mesh(garbage_collect);
+    kglt::procedural::mesh::rectangle(mesh(m), width, height);
+    MeshManager::mark_as_uncollected(m);
     return m;
 }
 
@@ -122,6 +132,17 @@ MeshID ResourceManagerImpl::new_mesh_with_name_as_cube(const unicode& name, floa
 
 MeshID ResourceManagerImpl::new_mesh_with_name_as_sphere(const unicode& name, float diameter, bool garbage_collect) {
     MeshID m = new_mesh_as_sphere(diameter, garbage_collect);
+    try {
+        MeshManager::manager_store_name(name, m);
+    } catch(...) {
+        delete_mesh(m);
+        throw;
+    }
+    return m;
+}
+
+MeshID ResourceManagerImpl::new_mesh_with_name_as_rectangle(const unicode &name, float width, float height, bool garbage_collect) {
+    MeshID m = new_mesh_as_rectangle(width, height, garbage_collect);
     try {
         MeshManager::manager_store_name(name, m);
     } catch(...) {

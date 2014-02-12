@@ -345,3 +345,4 @@ cmake_modules/FindTinyXML.cmake
 tests/test_spritegrid.h
 kglt/sprite.h
 kglt/sprite.cpp
+kglt/interfaces.h

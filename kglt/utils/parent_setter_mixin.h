@@ -25,7 +25,11 @@ public:
         T::set_parent(*T::stage().camera(camera).__object);
     }
 
-private:
+    void set_parent(SpriteID sprite) {
+        T::set_parent(*T::stage().sprite(sprite).__object);
+    }
+
+protected:
     using T::set_parent;
 
     friend class Stage;

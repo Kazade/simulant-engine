@@ -15,10 +15,12 @@ namespace kglt {
 class Partitioner;
 class Scene;
 class Debug;
+class Sprite;
 
 typedef generic::TemplatedManager<Stage, Actor, ActorID> ActorManager;
 typedef generic::TemplatedManager<Stage, Light, LightID> LightManager;
 typedef generic::TemplatedManager<Stage, CameraProxy, CameraID> CameraProxyManager;
+typedef generic::TemplatedManager<Stage, Sprite, SpriteID> SpriteManager;
 
 class Stage:
     public Managed<Stage>,
@@ -27,6 +29,7 @@ class Stage:
     public Object,
     public ActorManager,
     public LightManager,
+    public SpriteManager,
     public CameraProxyManager,
     public Loadable {
 
@@ -41,7 +44,9 @@ public:
     ActorID new_actor_with_mesh(MeshID mid) { return new_actor(mid); }
 
     ActorID new_actor_with_parent(ActorID parent);
-    ActorID new_actor_with_parent(ActorID parent, MeshID mid);
+    ActorID new_actor_with_parent(ActorID parent, MeshID mid); //FIXME: deprecate
+    ActorID new_actor_with_parent_and_mesh(ActorID parent, MeshID mid);
+    ActorID new_actor_with_parent_and_mesh(SpriteID parent, MeshID mid);
 
     ProtectedPtr<Actor> actor(ActorID e);
     const ProtectedPtr<Actor> actor(ActorID e) const;
@@ -49,6 +54,14 @@ public:
     bool has_actor(ActorID e) const;
     void delete_actor(ActorID e);
     uint32_t actor_count() const { return ActorManager::manager_count(); }
+
+    SpriteID new_sprite();
+    SpriteID new_sprite_from_file(const unicode& filename, uint32_t frame_Width, uint32_t frame_height, uint32_t margin=0, uint32_t spacing=0);
+    ProtectedPtr<Sprite> sprite(SpriteID s);
+    bool has_sprite(SpriteID s) const;
+    void delete_sprite(SpriteID s);
+    uint32_t sprite_count() const;
+
 
     LightID new_light(LightType type=LIGHT_TYPE_POINT);
     LightID new_light(Object& parent, LightType type=LIGHT_TYPE_POINT);
@@ -68,6 +81,9 @@ public:
 
     sig::signal<void (LightID)>& signal_light_created() { return signal_light_created_; }
     sig::signal<void (LightID)>& signal_light_destroyed() { return signal_light_destroyed_; }
+
+    sig::signal<void (SpriteID)>& signal_sprite_created() { return signal_sprite_created_; }
+    sig::signal<void (SpriteID)>& signal_sprite_destroyed() { return signal_sprite_destroyed_; }
 
     void move(float x, float y, float z) {
         throw std::logic_error("You cannot move the stage");
@@ -103,6 +119,10 @@ public:
         return scene().new_mesh_as_sphere(diameter, garbage_collect);
     }
 
+    MeshID new_mesh_as_rectangle(float width, float height, bool garbage_collect=true) override {
+        return scene().new_mesh_as_rectangle(width, height, garbage_collect);
+    }
+
     MeshID new_mesh_with_name(const unicode& name, bool garbage_collect=true) override {
         return scene().new_mesh_with_name(name, garbage_collect);
     }
@@ -117,6 +137,10 @@ public:
 
     MeshID new_mesh_with_name_as_sphere(const unicode& name, float diameter, bool garbage_collect=true) override {
         return scene().new_mesh_with_name_as_sphere(name, diameter, garbage_collect);
+    }
+
+    MeshID new_mesh_with_name_as_rectangle(const unicode &name, float width, float height, bool garbage_collect) override {
+        return scene().new_mesh_with_name_as_rectangle(name, width, height, garbage_collect);
     }
 
     MeshID get_mesh_with_name(const unicode& name) override {
@@ -252,6 +276,9 @@ private:
 
     sig::signal<void (LightID)> signal_light_created_;
     sig::signal<void (LightID)> signal_light_destroyed_;
+
+    sig::signal<void (SpriteID)> signal_sprite_created_;
+    sig::signal<void (SpriteID)> signal_sprite_destroyed_;
 
     std::shared_ptr<Partitioner> partitioner_;
 

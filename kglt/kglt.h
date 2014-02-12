@@ -28,6 +28,7 @@
 #include "message_bar.h"
 #include "debug.h"
 #include "base.h"
+#include "sprite.h"
 
 //FIXME: These includes should be conditional
 #include "physics/ode/ode_engine.h"

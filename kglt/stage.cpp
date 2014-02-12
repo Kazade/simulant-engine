@@ -6,6 +6,7 @@
 #include "light.h"
 #include "camera.h"
 #include "debug.h"
+#include "sprite.h"
 #include "partitioners/null_partitioner.h"
 #include "partitioners/octree_partitioner.h"
 #include "procedural/geom_factory.h"
@@ -93,6 +94,18 @@ ActorID Stage::new_actor_with_parent(ActorID parent, MeshID mid) {
     return new_id;
 }
 
+ActorID Stage::new_actor_with_parent_and_mesh(SpriteID parent, MeshID mid) {
+    ActorID new_id = new_actor(mid);
+    actor(new_id)->set_parent(parent);
+    return new_id;
+}
+
+ActorID Stage::new_actor_with_parent_and_mesh(ActorID parent, MeshID mid) {
+    ActorID new_id = new_actor(mid);
+    actor(new_id)->set_parent(parent);
+    return new_id;
+}
+
 bool Stage::has_actor(ActorID m) const {
     return ActorManager::manager_contains(m);
 }
@@ -112,6 +125,45 @@ void Stage::delete_actor(ActorID e) {
 
     ActorManager::manager_delete(e);
 }
+
+//=============== SPRITES ===================
+
+SpriteID Stage::new_sprite() {
+    SpriteID s = SpriteManager::manager_new();
+    signal_sprite_created_(s);
+    return s;
+}
+
+SpriteID Stage::new_sprite_from_file(const unicode& filename, uint32_t frame_width, uint32_t frame_height, uint32_t margin, uint32_t spacing) {
+    SpriteID s = new_sprite();
+    TextureID t = new_texture_from_file(filename);
+    try {
+        sprite(s)->set_spritesheet(t, frame_width, frame_height, margin, spacing);
+    } catch(...) {
+        delete_sprite(s);
+        throw;
+    }
+
+    return s;
+}
+
+ProtectedPtr<Sprite> Stage::sprite(SpriteID s) {
+    return SpriteManager::manager_get(s);
+}
+
+bool Stage::has_sprite(SpriteID s) const {
+    return SpriteManager::manager_contains(s);
+}
+
+void Stage::delete_sprite(SpriteID s) {
+    SpriteManager::manager_delete(s);
+}
+
+uint32_t Stage::sprite_count() const {
+    return SpriteManager::manager_count();
+}
+
+//============== END SPRITES ================
 
 LightID Stage::new_light(LightType type) {
     LightID lid = LightManager::manager_new();
