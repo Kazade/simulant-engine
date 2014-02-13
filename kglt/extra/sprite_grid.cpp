@@ -44,6 +44,7 @@ bool GridChunk::init() {
 
     actor_id_ = parent_->stage().new_actor(mesh_id_);
     parent_->stage().actor(actor_id_)->move_to(offset_.x, offset_.y, 0);
+    parent_->stage().actor(actor_id_)->set_render_priority(RENDER_PRIORITY_BACKGROUND);
     return true;
 }
 
