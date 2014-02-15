@@ -97,12 +97,12 @@ struct TilesetInfo {
 
 kglt::Vec2 SpriteGrid::transform_position(const kglt::Vec2& position) {
     return Vec2(
-        position.x / float(map_tile_width_),
-        render_dimensions().y - (position.y / float(map_tile_height_))
+        (position.x / float(map_tile_width_)) * tile_render_size_,
+        (position.y / float(map_tile_height_)) * tile_render_size_
     );
 }
 
-SpriteGrid::ptr SpriteGrid::new_from_file(Scene& scene, StageID stage, const unicode& filename, const unicode& layer_name) {
+SpriteGrid::ptr SpriteGrid::new_from_file(Scene& scene, StageID stage, const unicode& filename, const unicode& layer_name, float tile_render_size) {
     Tmx::Map map;
 
     map.ParseFile(scene.window().resource_locator().locate_file(filename).encode());
@@ -116,7 +116,7 @@ SpriteGrid::ptr SpriteGrid::new_from_file(Scene& scene, StageID stage, const uni
 
     Tmx::Layer* layer = (*it);
 
-    SpriteGrid::ptr new_grid = SpriteGrid::create(scene, stage, layer->GetWidth(), layer->GetHeight());
+    SpriteGrid::ptr new_grid = SpriteGrid::create(scene, stage, layer->GetWidth(), layer->GetHeight(), tile_render_size);
 
     unicode parent_dir = os::path::abs_path(os::path::dir_name(filename));
 

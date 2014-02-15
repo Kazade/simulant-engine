@@ -77,8 +77,8 @@ private:
     };
 
     std::unordered_map<unicode, Animation> animations_;
-    Animation current_animation_;
-    Animation next_animation_;
+    Animation* current_animation_ = nullptr;
+    Animation* next_animation_ = nullptr;
 
     uint32_t current_frame_ = 0;
     uint32_t next_frame_ = 0;

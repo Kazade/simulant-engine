@@ -38,18 +38,21 @@ void Sprite::update(double dt) {
         return;
     }
 
-    double change_per_second = double(fabs(current_animation_.frames.second - current_animation_.frames.first)) / current_animation_.duration;
+    interp_ += dt;
 
-    interp_ += change_per_second * dt;
-
-    if(interp_ >= 1.0) {
+    int diff = abs(current_animation_->frames.second - current_animation_->frames.first);
+    if((diff && interp_ >= (current_animation_->duration / double(diff))) || diff == 0) {
         interp_ = 0.0;
         current_frame_ = next_frame_;
         next_frame_++;
 
         //FIXME: Add and handle loop=false
-        if(next_frame_ >= current_animation_.frames.second) {
-            next_frame_ = current_animation_.frames.first;
+        if(next_frame_ >= current_animation_->frames.second) {
+            if(next_animation_) {
+                current_animation_ = next_animation_;
+                next_animation_ = nullptr;
+            }
+            next_frame_ = current_animation_->frames.first;
         }
         update_texture_coordinates();
     }
@@ -62,10 +65,10 @@ void Sprite::add_animation(const unicode &name, uint32_t start_frame, uint32_t e
     anim.duration = duration;
 
     if(animations_.size() == 1) {
-        current_animation_ = next_animation_ = anim;
-        current_frame_ = current_animation_.frames.first;
+        current_animation_ = next_animation_ = &anim;
+        current_frame_ = current_animation_->frames.first;
         next_frame_ = current_frame_ + 1;
-        if(next_frame_ >= current_animation_.frames.second) {
+        if(next_frame_ >= current_animation_->frames.second) {
             next_frame_ = current_frame_;
         }
         update_texture_coordinates();
@@ -78,7 +81,7 @@ void Sprite::set_next_animation(const unicode &name) {
         throw DoesNotExist<Animation>();
     }
 
-    next_animation_ = (*it).second;
+    next_animation_ = &(*it).second;
 }
 
 void Sprite::set_current_animation(const unicode &name) {
@@ -87,8 +90,8 @@ void Sprite::set_current_animation(const unicode &name) {
         throw DoesNotExist<Animation>();
     }
 
-    current_animation_ = (*it).second;
-    next_frame_ = current_animation_.frames.first;
+    current_animation_ = &(*it).second;
+    next_frame_ = current_animation_->frames.first;
 }
 
 void Sprite::update_texture_coordinates() {
