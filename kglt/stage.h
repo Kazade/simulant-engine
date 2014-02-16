@@ -266,6 +266,7 @@ public:
     Debug& debug() { assert(debug_); return *debug_; }
 
     bool init();
+    void cleanup() override;
 private:
     Scene& scene_;
 

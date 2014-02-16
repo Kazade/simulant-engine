@@ -9,6 +9,8 @@ Sprite::Sprite(Stage *stage, SpriteID id):
     generic::Identifiable<SpriteID>(id),
     ParentSetterMixin<Object>(stage),
     Source(stage) {
+
+    sprite_sheet_padding_ = std::make_pair(0, 0);
 }
 
 bool Sprite::init() {
@@ -96,35 +98,49 @@ void Sprite::set_current_animation(const unicode &name) {
 
 void Sprite::update_texture_coordinates() {
     uint8_t across = image_width_ / frame_width_;
-    uint8_t down = image_height_ / frame_height_;
 
-    double u = (1.0 / double(across)) * (current_frame_ % across);
-    double v = (1.0 / double(down)) * (current_frame_ / across);
+    int x = current_frame_ % across;
+    int y = current_frame_ / across;
+
+    float x0 = sprite_sheet_margin_ + (x * (sprite_sheet_spacing_ + frame_width_)) + sprite_sheet_padding_.first;
+    float x1 = x0 + (frame_width_ - sprite_sheet_padding_.first);
+    float y0 = sprite_sheet_margin_ + (y * (sprite_sheet_spacing_ + frame_height_)) + sprite_sheet_padding_.second;
+    float y1 = y0 + (frame_height_ - sprite_sheet_padding_.second);
+
+    x0 = x0 / float(image_width_);
+    x1 = x1 / float(image_width_);
+    y0 = y0 / float(image_height_);
+    y1 = y1 / float(image_height_);
 
     {
         auto mesh = stage().mesh(mesh_id_);
 
         mesh->shared_data().move_to_start();
-        mesh->shared_data().tex_coord0(u, v);
+        mesh->shared_data().tex_coord0(x0, y0);
 
         mesh->shared_data().move_next();
-        mesh->shared_data().tex_coord0(u + (1.0 / double(across)) , v);
+        mesh->shared_data().tex_coord0(x1, y0);
 
         mesh->shared_data().move_next();
-        mesh->shared_data().tex_coord0(u + (1.0 / double(across)) , v + (1.0 / double(down)));
+        mesh->shared_data().tex_coord0(x1, y1);
 
         mesh->shared_data().move_next();
-        mesh->shared_data().tex_coord0(u, v + (1.0 / double(down)));
+        mesh->shared_data().tex_coord0(x0, y1);
 
         mesh->shared_data().done();
     }
 }
 
-void Sprite::set_spritesheet(TextureID texture_id, uint32_t frame_width, uint32_t frame_height, uint32_t margin, uint32_t spacing) {
+void Sprite::set_spritesheet(TextureID texture_id, uint32_t frame_width,
+    uint32_t frame_height, uint32_t margin, uint32_t spacing,
+    std::pair<uint32_t, uint32_t> padding
+) {
+
     frame_width_ = frame_width;
     frame_height_ = frame_height;
     sprite_sheet_margin_ = margin;
     sprite_sheet_spacing_ = spacing;
+    sprite_sheet_padding_ = padding;
 
     image_width_ = stage().texture(texture_id)->width();
     image_height_ = stage().texture(texture_id)->height();

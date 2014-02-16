@@ -37,7 +37,8 @@ public:
         TextureID texture_id,
         uint32_t frame_width,
         uint32_t frame_height,
-        uint32_t margin=0, uint32_t spacing=0
+        uint32_t margin=0, uint32_t spacing=0,
+        std::pair<uint32_t, uint32_t> padding=std::make_pair(0, 0)
     );
 
 
@@ -51,6 +52,7 @@ private:
     float frame_height_ = 0;
     float sprite_sheet_margin_ = 0;
     float sprite_sheet_spacing_ = 0;
+    std::pair<uint32_t, uint32_t> sprite_sheet_padding_;
     float render_width_ = 1.0;
     float render_height_ = -1;
     ActorID actor_id_;

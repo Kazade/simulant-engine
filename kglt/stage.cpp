@@ -32,6 +32,13 @@ bool Stage::init() {
     return true;
 }
 
+void Stage::cleanup() {
+    SpriteManager::objects_.clear();
+    LightManager::objects_.clear();
+    ActorManager::objects_.clear();
+    CameraProxyManager::objects_.clear();
+}
+
 void Stage::destroy() {
     scene().delete_stage(id());
 }
