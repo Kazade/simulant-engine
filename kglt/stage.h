@@ -56,7 +56,12 @@ public:
     uint32_t actor_count() const { return ActorManager::manager_count(); }
 
     SpriteID new_sprite();
-    SpriteID new_sprite_from_file(const unicode& filename, uint32_t frame_Width, uint32_t frame_height, uint32_t margin=0, uint32_t spacing=0);
+    SpriteID new_sprite_from_file(
+        const unicode& filename,
+        uint32_t frame_Width, uint32_t frame_height,
+        uint32_t margin=0, uint32_t spacing=0,
+        std::pair<uint32_t, uint32_t> padding=std::make_pair(0, 0)
+    );
     ProtectedPtr<Sprite> sprite(SpriteID s);
     bool has_sprite(SpriteID s) const;
     void delete_sprite(SpriteID s);

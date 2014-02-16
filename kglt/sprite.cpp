@@ -1,3 +1,4 @@
+#include <functional>
 #include "sprite.h"
 #include "stage.h"
 #include "actor.h"
@@ -11,6 +12,9 @@ Sprite::Sprite(Stage *stage, SpriteID id):
     Source(stage) {
 
     sprite_sheet_padding_ = std::make_pair(0, 0);
+
+    std::function<void (double)> update = std::bind(&Sprite::update, this, std::placeholders::_1);
+    stage->window().signal_step().connect(update);
 }
 
 bool Sprite::init() {
@@ -21,7 +25,6 @@ bool Sprite::init() {
     //we make sure we are set as the parent on each update. Not ideal, but still.
     actor_id_ = stage().new_actor_with_mesh(mesh_id_);
 
-    stage().window().signal_step().connect(std::bind(&Sprite::update, this, std::placeholders::_1));
     return true;
 }
 
@@ -49,7 +52,7 @@ void Sprite::update(double dt) {
         next_frame_++;
 
         //FIXME: Add and handle loop=false
-        if(next_frame_ >= current_animation_->frames.second) {
+        if(next_frame_ > current_animation_->frames.second) {
             if(next_animation_) {
                 current_animation_ = next_animation_;
                 next_animation_ = nullptr;
@@ -67,7 +70,7 @@ void Sprite::add_animation(const unicode &name, uint32_t start_frame, uint32_t e
     anim.duration = duration;
 
     if(animations_.size() == 1) {
-        current_animation_ = next_animation_ = &anim;
+        current_animation_ = &anim;
         current_frame_ = current_animation_->frames.first;
         next_frame_ = current_frame_ + 1;
         if(next_frame_ >= current_animation_->frames.second) {
