@@ -80,7 +80,7 @@ void Sprite::add_animation(const unicode &name, uint32_t start_frame, uint32_t e
     }
 }
 
-void Sprite::set_next_animation(const unicode &name) {
+void Sprite::queue_next_animation(const unicode &name) {
     auto it = animations_.find(name);
     if(it == animations_.end()) {
         throw DoesNotExist<Animation>();
@@ -89,7 +89,7 @@ void Sprite::set_next_animation(const unicode &name) {
     next_animation_ = &(*it).second;
 }
 
-void Sprite::set_current_animation(const unicode &name) {
+void Sprite::play_animation(const unicode &name) {
     auto it = animations_.find(name);
     if(it == animations_.end()) {
         throw DoesNotExist<Animation>();
@@ -101,6 +101,24 @@ void Sprite::set_current_animation(const unicode &name) {
 
     current_animation_ = &(*it).second;
     next_frame_ = current_animation_->frames.first;
+}
+
+void Sprite::add_sequence(const unicode &name, const std::vector<AnimationSequenceStage> &stages) {
+    throw NotImplementedError(__FILE__, __LINE__);
+}
+
+void Sprite::play_sequence(const unicode &name) {
+    throw NotImplementedError(__FILE__, __LINE__);
+}
+
+void Sprite::flip_horizontally() {
+    flipped_horizontally_ = !flipped_horizontally_;
+    update_texture_coordinates();
+}
+
+void Sprite::flip_vertically() {
+    flipped_vertically_ = !flipped_vertically_;
+    update_texture_coordinates();
 }
 
 void Sprite::update_texture_coordinates() {
@@ -118,6 +136,16 @@ void Sprite::update_texture_coordinates() {
     x1 = x1 / float(image_width_);
     y0 = y0 / float(image_height_);
     y1 = y1 / float(image_height_);
+
+    if(flipped_horizontally_) {
+        x0 *= -1;
+        x1 *= -1;
+    }
+
+    if(flipped_vertically_) {
+        y0 *= -1;
+        y1 *= -1;
+    }
 
     {
         auto mesh = stage().mesh(mesh_id_);

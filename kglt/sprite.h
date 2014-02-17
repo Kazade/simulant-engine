@@ -41,12 +41,16 @@ public:
         std::pair<uint32_t, uint32_t> padding=std::make_pair(0, 0)
     );
 
+    void flip_vertically();
+    void flip_horizontally();
 
     //KeyFrameAnimated overrides
     void add_animation(const unicode &name, uint32_t start_frame, uint32_t end_frame, float duration) override;
-    void set_next_animation(const unicode &name) override;
-    void set_current_animation(const unicode &name) override;
+    void play_animation(const unicode &name) override;
+    void queue_next_animation(const unicode &name) override;
 
+    void add_sequence(const unicode& name, const std::vector<AnimationSequenceStage>& stages) override;
+    void play_sequence(const unicode& name) override;
 private:
     float frame_width_ = 0;
     float frame_height_ = 0;
@@ -86,6 +90,8 @@ private:
     uint32_t next_frame_ = 0;
     double interp_ = 0.0;
 
+    bool flipped_vertically_ = false;
+    bool flipped_horizontally_ = false;
 };
 
 }
