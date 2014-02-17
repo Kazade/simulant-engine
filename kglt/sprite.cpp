@@ -95,6 +95,10 @@ void Sprite::set_current_animation(const unicode &name) {
         throw DoesNotExist<Animation>();
     }
 
+    if(current_animation_ == &(*it).second) {
+        return;
+    }
+
     current_animation_ = &(*it).second;
     next_frame_ = current_animation_->frames.first;
 }
