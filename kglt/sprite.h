@@ -41,8 +41,8 @@ public:
         std::pair<uint32_t, uint32_t> padding=std::make_pair(0, 0)
     );
 
-    void flip_vertically();
-    void flip_horizontally();
+    void flip_vertically(bool value=true);
+    void flip_horizontally(bool value=true);
 
     //KeyFrameAnimated overrides
     void add_animation(const unicode &name, uint32_t start_frame, uint32_t end_frame, float duration) override;

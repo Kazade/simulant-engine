@@ -122,13 +122,17 @@ void Sprite::play_sequence(const unicode &name) {
     throw NotImplementedError(__FILE__, __LINE__);
 }
 
-void Sprite::flip_horizontally() {
-    flipped_horizontally_ = !flipped_horizontally_;
+void Sprite::flip_horizontally(bool value) {
+    if(value == flipped_horizontally_) return;
+
+    flipped_horizontally_ = value;
     update_texture_coordinates();
 }
 
-void Sprite::flip_vertically() {
-    flipped_vertically_ = !flipped_vertically_;
+void Sprite::flip_vertically(bool value) {
+    if(value == flipped_vertically_) return;
+
+    flipped_vertically_ = value;
     update_texture_coordinates();
 }
 
@@ -149,13 +153,11 @@ void Sprite::update_texture_coordinates() {
     y1 = y1 / float(image_height_);
 
     if(flipped_horizontally_) {
-        x0 *= -1;
-        x1 *= -1;
+        std::swap(x0, x1);
     }
 
     if(flipped_vertically_) {
-        y0 *= -1;
-        y1 *= -1;
+        std::swap(y0, y1);
     }
 
     {
