@@ -73,9 +73,10 @@ void Sprite::add_animation(const unicode &name, uint32_t start_frame, uint32_t e
         current_animation_ = &anim;
         current_frame_ = current_animation_->frames.first;
         next_frame_ = current_frame_ + 1;
-        if(next_frame_ >= current_animation_->frames.second) {
+        if(next_frame_ > current_animation_->frames.second) {
             next_frame_ = current_frame_;
         }
+        interp_ = 0.0;
         update_texture_coordinates();
     }
 }
@@ -100,7 +101,17 @@ void Sprite::play_animation(const unicode &name) {
     }
 
     current_animation_ = &(*it).second;
-    next_frame_ = current_animation_->frames.first;
+    next_animation_ = nullptr; //Wipe out the next animation, otherwise we'll get unexpected behaviour
+
+    //Set the current frame and next frame appropriately
+    current_frame_ = current_animation_->frames.first;
+    next_frame_ = current_frame_ + 1;
+    if(next_frame_ > current_animation_->frames.second) {
+        //Handle the case where the animation is just a single frame
+        next_frame_ = current_frame_;
+    }
+    interp_ = 0.0;
+    update_texture_coordinates();
 }
 
 void Sprite::add_sequence(const unicode &name, const std::vector<AnimationSequenceStage> &stages) {
