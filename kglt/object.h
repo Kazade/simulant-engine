@@ -49,6 +49,7 @@ public:
 
 	virtual void update(double dt) {
 		do_update(dt);
+        _update_constraint();
 		
         for(uint32_t i = 0; i < child_count(); ++i) {
             Object& c = child(i);
@@ -62,6 +63,11 @@ public:
     virtual void set_absolute_position(float x, float y, float z);
     virtual void set_absolute_position(const kglt::Vec3& pos) { set_absolute_position(pos.x, pos.y, pos.z); }
     virtual kglt::Vec3 absolute_position() const;
+
+    std::pair<Vec3, Vec3> constraint() const;
+    bool is_constrained() const;
+    void constrain_to(const Vec3& min, const Vec3& max);
+    void disable_constraint();
 
     //Syntactic sugar
     void move_to(const kglt::Vec3& pos) {
@@ -246,6 +252,9 @@ private:
 
     sig::signal<void ()> signal_made_responsive_;
     sig::signal<void ()> signal_made_collidable_;
+
+    std::unique_ptr<std::pair<Vec3, Vec3>> constraint_;
+    void _update_constraint();
 };
 
 }
