@@ -168,10 +168,10 @@ SpriteGrid::ptr SpriteGrid::new_from_file(Scene& scene, StageID stage, const uni
             chunk_and_index.first->set_tile_texture_info(
                 chunk_and_index.second,
                 new_grid->tilesets_[tileset_index],
-                x0 / tileset.total_width,
-                y0 / tileset.total_height,
-                x1 / tileset.total_width,
-                y1 / tileset.total_height
+                x0 / tileset.total_width + (0.5 / tileset.total_width),
+                y0 / tileset.total_height - (0.5 / tileset.total_height),
+                x1 / tileset.total_width - (0.5 / tileset.total_width),
+                y1 / tileset.total_height + (0.5 / tileset.total_height)
             );
         }
     }

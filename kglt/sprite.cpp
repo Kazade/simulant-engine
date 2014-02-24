@@ -152,6 +152,12 @@ void Sprite::update_texture_coordinates() {
     y0 = y0 / float(image_height_);
     y1 = y1 / float(image_height_);
 
+    x0 += 0.5 / image_width_;
+    x1 -= 0.5 / image_width_;
+
+    y0 += 0.5 / image_height_;
+    y1 -= 0.5 / image_height_;
+
     if(flipped_horizontally_) {
         std::swap(x0, x1);
     }
