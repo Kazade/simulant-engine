@@ -33,26 +33,6 @@ Camera& CameraProxy::camera() {
     return stage().scene().camera(id());
 }
 
-void CameraProxy::constrain_to(const Vec3 &min, const Vec3 &max) {
-    constraint_.reset(new std::pair<Vec3, Vec3>(min, max));
-}
-
-std::pair<Vec3, Vec3> CameraProxy::constraint() const {
-    if(!is_constrained()) {
-        throw LogicError("Tried to get constraint on unconstrained camera");
-    }
-
-    return *constraint_;
-}
-
-bool CameraProxy::is_constrained() const {
-    return bool(constraint_);
-}
-
-void CameraProxy::disable_constraint() {
-    constraint_.reset();
-}
-
 void CameraProxy::follow(ActorID actor, const kglt::Vec3& offset, float lag_in_seconds) {
     following_actor_ = actor;
     following_offset_ = offset;
@@ -90,29 +70,8 @@ void CameraProxy::_update_following(double dt) {
     }
 }
 
-void CameraProxy::_update_constraint() {
-    if(!is_constrained()) {
-        return;
-    }
-
-    Vec3 new_position = absolute_position();
-
-    if(new_position.x < constraint_->first.x) new_position.x = constraint_->first.x;
-    if(new_position.y < constraint_->first.y) new_position.y = constraint_->first.y;
-    if(new_position.z < constraint_->first.z) new_position.z = constraint_->first.z;
-
-    if(new_position.x > constraint_->second.x) new_position.x = constraint_->second.x;
-    if(new_position.y > constraint_->second.y) new_position.y = constraint_->second.y;
-    if(new_position.z > constraint_->second.z) new_position.z = constraint_->second.z;
-
-    if(new_position != absolute_position()) {
-        move_to(new_position);
-    }
-}
-
 void CameraProxy::do_update(double dt) {
     _update_following(dt);
-    _update_constraint();
 }
 
 Frustum& CameraProxy::frustum() {

@@ -29,6 +29,47 @@ Object::~Object() {
     parent_changed_connection_.disconnect();
 }
 
+void Object::_update_constraint() {
+    if(!is_constrained()) {
+        return;
+    }
+
+    Vec3 new_position = absolute_position();
+
+    if(new_position.x < constraint_->first.x) new_position.x = constraint_->first.x;
+    if(new_position.y < constraint_->first.y) new_position.y = constraint_->first.y;
+    if(new_position.z < constraint_->first.z) new_position.z = constraint_->first.z;
+
+    if(new_position.x > constraint_->second.x) new_position.x = constraint_->second.x;
+    if(new_position.y > constraint_->second.y) new_position.y = constraint_->second.y;
+    if(new_position.z > constraint_->second.z) new_position.z = constraint_->second.z;
+
+    if(new_position != absolute_position()) {
+        move_to(new_position);
+    }
+}
+
+void Object::constrain_to(const Vec3 &min, const Vec3 &max) {
+    constraint_.reset(new std::pair<Vec3, Vec3>(min, max));
+}
+
+std::pair<Vec3, Vec3> Object::constraint() const {
+    if(!is_constrained()) {
+        throw LogicError("Tried to get constraint on unconstrained camera");
+    }
+
+    return *constraint_;
+}
+
+bool Object::is_constrained() const {
+    return bool(constraint_);
+}
+
+void Object::disable_constraint() {
+    constraint_.reset();
+}
+
+
 void Object::parent_changed_callback(Object* old_parent, Object* new_parent) {
     if(new_parent->is_responsive() != is_responsive()) {
         throw std::logic_error("Tried to connect a responsive object to a non-responsive object");
@@ -217,6 +258,8 @@ void Object::set_absolute_rotation(const Quaternion& quat) {
         parent_rot.inverse();
         set_relative_rotation(parent_rot * quat);
     }
+
+    _update_constraint();
 }
 
 void Object::set_relative_rotation(const Quaternion &quaternion) {
