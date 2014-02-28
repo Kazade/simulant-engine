@@ -51,6 +51,7 @@ public:
 
     void add_sequence(const unicode& name, const std::vector<AnimationSequenceStage>& stages) override;
     void play_sequence(const unicode& name) override;
+    void override_playing_animation_duration(const float new_duration) override;
 private:
     float frame_width_ = 0;
     float frame_height_ = 0;
@@ -85,6 +86,8 @@ private:
     std::unordered_map<unicode, Animation> animations_;
     Animation* current_animation_ = nullptr;
     Animation* next_animation_ = nullptr;
+    float current_animation_duration_ = 0.0;
+
 
     uint32_t current_frame_ = 0;
     uint32_t next_frame_ = 0;

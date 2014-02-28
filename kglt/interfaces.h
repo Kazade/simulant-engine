@@ -21,6 +21,8 @@ public:
 
     virtual void play_animation(const unicode& name) = 0;
     virtual void queue_next_animation(const unicode& name) = 0;
+    virtual void override_playing_animation_duration(const float new_duration) = 0;
+
 
     virtual void update(double dt) = 0;
 };

@@ -46,7 +46,7 @@ void Sprite::update(double dt) {
     interp_ += dt;
 
     int diff = abs(current_animation_->frames.second - current_animation_->frames.first);
-    if((diff && interp_ >= (current_animation_->duration / double(diff))) || diff == 0) {
+    if((diff && interp_ >= (current_animation_duration_ / double(diff))) || diff == 0) {
         interp_ = 0.0;
         current_frame_ = next_frame_;
         next_frame_++;
@@ -55,6 +55,7 @@ void Sprite::update(double dt) {
         if(next_frame_ > current_animation_->frames.second) {
             if(next_animation_) {
                 current_animation_ = next_animation_;
+                current_animation_duration_ = current_animation_->duration;
                 next_animation_ = nullptr;
             }
             next_frame_ = current_animation_->frames.first;
@@ -71,6 +72,7 @@ void Sprite::add_animation(const unicode &name, uint32_t start_frame, uint32_t e
 
     if(animations_.size() == 1) {
         current_animation_ = &anim;
+        current_animation_duration_ = current_animation_->duration;
         current_frame_ = current_animation_->frames.first;
         next_frame_ = current_frame_ + 1;
         if(next_frame_ > current_animation_->frames.second) {
@@ -90,6 +92,10 @@ void Sprite::queue_next_animation(const unicode &name) {
     next_animation_ = &(*it).second;
 }
 
+void Sprite::override_playing_animation_duration(const float new_duration) {
+    current_animation_duration_ = new_duration;
+}
+
 void Sprite::play_animation(const unicode &name) {
     auto it = animations_.find(name);
     if(it == animations_.end()) {
@@ -101,6 +107,7 @@ void Sprite::play_animation(const unicode &name) {
     }
 
     current_animation_ = &(*it).second;
+    current_animation_duration_ = current_animation_->duration;
     next_animation_ = nullptr; //Wipe out the next animation, otherwise we'll get unexpected behaviour
 
     //Set the current frame and next frame appropriately
