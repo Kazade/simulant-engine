@@ -18,6 +18,7 @@ This section covers the base subsystems and usages of KGLT.
  
  - The rendering process: [The Render Sequence](render_sequence.md) | [Pipelines](pipeline.md)
  - User interfaces: [UI Stages](ui_stage.md) | [libRocket](librocket.md)
+ - Cameras: [Cameras and Camera Proxies](cameras.md)
 
 ## The Scene
 

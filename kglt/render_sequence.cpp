@@ -131,6 +131,11 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
 
     if(camera.has_proxy()) {
         //Update the associated camera
+        if(camera.proxy().is_constrained()) {
+            //FIXME: THis might work for cameras but we need a more generic place
+            //to do this for all objects before render
+            camera.proxy()._update_constraint();
+        }
         camera.set_transform(camera.proxy().absolute_transformation());
     }
 

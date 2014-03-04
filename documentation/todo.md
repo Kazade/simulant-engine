@@ -7,7 +7,12 @@ the engine are flakey, untested, or just downright badly thought out!
 My aim is that, if I keep hacking as and when I can, eventually it will be a useful,
 easy to use game engine. Until then, here are some of the things that need doing:
 
+ - Make all object accessors return a std::shared_ptr typedef, or ProtectedPtr for consistency, no more references
+ - Clean up the material cloning stuff which is ugly and error prone
+ - Increase the use of shared abstract interfaces. Add them to interfaces.h
+ - Speed up the rendering pipeline stuff, try to make it more understandable and the API nicer (e.g. rename/replace add_pipeline)
  - Animated meshes (keyframe and skeletal), probably means big changes to the Mesh structure
+ - Extend the "Screen" concept that the loading screen uses, make it easy to background load multiple screens and switch between them
  - Shadows
  - Lighting (half-complete)
  - Reflections

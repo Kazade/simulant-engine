@@ -220,6 +220,7 @@ public:
     sig::signal<void ()>& signal_made_responsive() { return signal_made_responsive_; }
     sig::signal<void ()>& signal_made_shape() { return signal_made_collidable_; }
 
+    void _update_constraint();
 protected:
     void update_from_parent();
 
@@ -254,7 +255,6 @@ private:
     sig::signal<void ()> signal_made_collidable_;
 
     std::unique_ptr<std::pair<Vec3, Vec3>> constraint_;
-    void _update_constraint();
 };
 
 }

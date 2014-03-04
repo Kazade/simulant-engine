@@ -34,7 +34,7 @@ ProtectedPtr is a wrapper around both a std::shared_ptr<T> and a std::lock_guard
 you hold on to the reference for too long, you will deadlock other threads that
 need access to the actor. 
 
-The recommended approach is to wrap accesses to resources in curly braces, for example:
+The recommended approach is to wrap accesses to resources in curly braces or to get a reference and use it in a single line, for example:
 
     // ... code ...
 
@@ -42,6 +42,9 @@ The recommended approach is to wrap accesses to resources in curly braces, for e
         auto actor = stage.actor(actor_id);
         actor->move_to(10, 10, 10);
     } //End of scope, releases the lock on the actor
+
+    // ... or ...
+    stage.actor(actor_id)->move_to(10, 10, 10);
 
 This minimizes the amount of time the lock is held and so reduces the chance of a deadlock.
 
