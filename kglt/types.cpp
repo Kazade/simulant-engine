@@ -3,12 +3,12 @@
 
 namespace kglt {
 
-float to_radians(float degrees) {
-    return kmDegreesToRadians(degrees);
+Radians to_radians(const Degrees& degrees) {
+    return Radians(kmDegreesToRadians(degrees.value_));
 }
 
-float to_degrees(float radians) {
-    return kmRadiansToDegrees(radians);
+Degrees to_degrees(const Radians& radians) {
+    return Degrees(kmRadiansToDegrees(radians.value_));
 }
 
 kglt::Vec2 operator*(float lhs, const kglt::Vec2& rhs) {

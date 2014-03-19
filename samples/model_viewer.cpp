@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
 
     window->signal_step().connect(
         [&](double dt) {
-            stage.actor(actor_id)->rotate_absolute_y(10.0 * dt);
+            stage.actor(actor_id)->rotate_y(kglt::Degrees(10.0 * dt));
 
             x_position += ((incrementing) ? -10.0 : 10.0) * dt;
 

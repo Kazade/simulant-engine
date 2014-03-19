@@ -20,28 +20,17 @@
 #include "physics/responsive_body.h"
 #include "physics/collidable.h"
 
+#include "interfaces.h"
+
 namespace kglt {
 
 class Scene;
 
-struct Degrees {
-    explicit Degrees(float value):
-        value_(value) {}
-
-    float value_;
-};
-
-struct Radians {
-    explicit Radians(float value):
-        value_(value) {}
-
-    float value_;
-};
-
 class Object :
     public generic::TreeNode<Object>, //Objects form a tree
-    public generic::DataCarrier,
-    public generic::VisitableBase<Object> { //And they allow additional data to be attached
+    public generic::DataCarrier, //And they allow additional data to be attached
+    public generic::VisitableBase<Object>,
+    public Transformable {
 
 public:
     Object(Stage* parent_scene);
@@ -69,38 +58,49 @@ public:
     void constrain_to(const Vec3& min, const Vec3& max);
     void disable_constraint();
 
-    //Syntactic sugar
-    void move_to(const kglt::Vec3& pos) {
+    ///Transformable interface
+    void move_to(const kglt::Vec3& pos) override {
         set_absolute_position(pos);
     }
 
-    void move_to(float x, float y, float z) {
+    void move_to(float x, float y, float z) override {
         set_absolute_position(x, y, z);
     }
 
-    void move_to(float x, float y) {
+    void move_to(float x, float y) override {
         move_to(x, y, 0);
     }
 
-    void move_to(const kglt::Vec2& pos) {
+    void move_to(const kglt::Vec2& pos) override {
         move_to(pos.x, pos.y);
     }
 
-    void rotate_to(const Degrees degrees) {
+    void rotate_to(const Degrees& degrees) override {
         set_absolute_rotation(degrees, 0, 0, 1);
     }
 
-    void rotate_to(const kglt::Quaternion& q) {
+    void rotate_to(const kglt::Quaternion& q) override {
         set_absolute_rotation(q);
     }
 
-    void rotate_to(const Degrees& angle, float x, float y, float z) {
+    void rotate_to(const Degrees& angle, float x, float y, float z) override {
         set_absolute_rotation(angle, x, y, z);
     }
 
-    void rotate_x(float angle) { rotate_absolute_x(angle); }
-    void rotate_y(float angle) { rotate_absolute_y(angle); }
-    void rotate_z(float angle) { rotate_absolute_z(angle); }
+    void rotate_to(const Degrees& angle, const kglt::Vec3& axis) override {
+        rotate_to(angle, axis.x, axis.y, axis.z);
+    }
+
+    void rotate_x(const Degrees& angle) override { rotate_absolute_x(angle.value_); }
+    void rotate_y(const Degrees& angle) override { rotate_absolute_y(angle.value_); }
+    void rotate_z(const Degrees& angle) override { rotate_absolute_z(angle.value_); }
+
+    void look_at(const kglt::Vec3& position);
+    void look_at(float x, float y, float z) {
+        return look_at(kglt::Vec3(x, y, z));
+    }
+
+    // End Transformable Interface
 
     virtual void set_relative_position(float x, float y, float z);
     virtual void set_relative_position(const kglt::Vec3& pos) { set_relative_position(pos.x, pos.y, pos.z); }
@@ -112,15 +112,6 @@ public:
 
     virtual void set_relative_rotation(const kglt::Quaternion& quaternion);
     virtual kglt::Quaternion relative_rotation() const;
-
-    virtual void rotate_absolute_x(float amount);
-    virtual void rotate_absolute_y(float amount);
-    virtual void rotate_absolute_z(float amount);
-
-    void look_at(const kglt::Vec3& position);
-    void look_at(float x, float y, float z) {
-        return look_at(kglt::Vec3(x, y, z));
-    }
 
     Vec3 right() const {
         Vec3 result;
@@ -255,6 +246,11 @@ private:
     sig::signal<void ()> signal_made_collidable_;
 
     std::unique_ptr<std::pair<Vec3, Vec3>> constraint_;
+
+    virtual void rotate_absolute_x(float amount);
+    virtual void rotate_absolute_y(float amount);
+    virtual void rotate_absolute_z(float amount);
+
 };
 
 }

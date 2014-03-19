@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
     }
 
     //Set the actor to rotate each step
-    window->signal_step().connect([&](float dt) { stage.actor(actor_id)->rotate_y(20.0 * dt); });
+    window->signal_step().connect([&](float dt) { stage.actor(actor_id)->rotate_y(kglt::Degrees(20.0 * dt)); });
 
     while(window->update()) {}
 

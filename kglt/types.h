@@ -302,8 +302,22 @@ kglt::Vec3 operator/(float lhs, const kglt::Vec3& rhs);
 kglt::Vec3 operator-(const kglt::Vec3& vec);
 kglt::Quaternion operator-(const kglt::Quaternion& q);
 
-float to_radians(float degrees);
-float to_degrees(float radians);
+struct Degrees {
+    explicit Degrees(float value):
+        value_(value) {}
+
+    float value_;
+};
+
+struct Radians {
+    explicit Radians(float value):
+        value_(value) {}
+
+    float value_;
+};
+
+Radians to_radians(const Degrees& degrees);
+Degrees to_degrees(const Radians& radians);
 
 const float PI = kmPI;
 

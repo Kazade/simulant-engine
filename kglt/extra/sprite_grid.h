@@ -5,6 +5,7 @@
 
 #include "../base.h"
 #include "../generic/managed.h"
+#include "../interfaces.h"
 
 namespace kglt {
 namespace extra {

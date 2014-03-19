@@ -156,8 +156,8 @@ int main(int argc, const char *argv[]) {
         auto dt = window->delta_time();
         {
             auto actor = stage.actor(actor_id);
-            actor->rotate_absolute_x(rot.y*dt*10);
-            actor->rotate_absolute_y(rot.x*dt*10);
+            actor->rotate_x(kglt::Degrees(rot.y * dt * 10));
+            actor->rotate_y(kglt::Degrees(rot.x * dt * 10));
         }
     }
 
