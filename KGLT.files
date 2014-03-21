@@ -346,3 +346,6 @@ tests/test_spritegrid.h
 kglt/sprite.h
 kglt/sprite.cpp
 kglt/interfaces.h
+kglt/generic/generic_tree.h
+tests/test_generic_tree.h
+kglt/generic/generic_tree.cpp
