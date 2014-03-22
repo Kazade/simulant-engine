@@ -11,6 +11,7 @@
 #include "generic/tree.h"
 #include "generic/data_carrier.h"
 #include "generic/visitor.h"
+#include "generic/generic_tree.h"
 
 #include "kazmath/mat4.h"
 #include "kazmath/vec3.h"
@@ -27,10 +28,13 @@ namespace kglt {
 class Scene;
 
 class Object :
-    public generic::TreeNode<Object>, //Objects form a tree
+    public GenericTreeNode, //Objects form a tree
     public generic::DataCarrier, //And they allow additional data to be attached
     public generic::VisitableBase<Object>,
-    public Transformable {
+    public Transformable,
+    public Ownable,
+    public Locateable,
+    public Updateable {
 
 public:
     Object(Stage* parent_scene);
@@ -39,11 +43,6 @@ public:
 	virtual void update(double dt) {
 		do_update(dt);
         _update_constraint();
-		
-        for(uint32_t i = 0; i < child_count(); ++i) {
-            Object& c = child(i);
-            c.update(dt);
-		}
 	}
 
 	void set_visible(bool value=true) { is_visible_ = value; }
@@ -101,6 +100,13 @@ public:
     }
 
     // End Transformable Interface
+
+    // Locateable Interface
+    Vec3 position() const override { return absolute_position(); }
+    Vec2 position_2d() const override { return Vec2(position().x, position().y); }
+    Quaternion rotation() const override { return absolute_rotation(); }
+    // End Locateable Interface
+
 
     virtual void set_relative_position(float x, float y, float z);
     virtual void set_relative_position(const kglt::Vec3& pos) { set_relative_position(pos.x, pos.y, pos.z); }
@@ -161,8 +167,6 @@ public:
         return *stage_;
     }
 
-    virtual void destroy() = 0;
-
     void destroy_children();
 
     //Physics stuff
@@ -205,7 +209,7 @@ public:
     bool is_collidable() const { return bool(collidable_); }
 
     bool parent_is_root() const {        
-        return has_parent() && (&parent() == &root());
+        return has_parent() && !parent()->has_parent();
     }
 
     sig::signal<void ()>& signal_made_responsive() { return signal_made_responsive_; }
@@ -229,7 +233,7 @@ private:
 
     sig::connection parent_changed_connection_;
 
-    void parent_changed_callback(Object* old_parent, Object* new_parent);
+    void parent_changed_callback(GenericTreeNode* old_parent, GenericTreeNode* new_parent);
 
     bool is_visible_;
     bool rotation_locked_;

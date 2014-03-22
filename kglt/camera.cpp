@@ -8,7 +8,7 @@
 namespace kglt {
 
 CameraProxy::CameraProxy(Stage *stage, CameraID camera_id):
-    Object(stage),
+    ParentSetterMixin<Object>(stage),
     generic::Identifiable<CameraID>(camera_id) {
 
     assert(stage);
@@ -24,8 +24,7 @@ CameraProxy::~CameraProxy() {
     }
 }
 
-void CameraProxy::destroy() {
-    destroy_children();
+void CameraProxy::ask_owner_for_destruction() {
     stage().evict_camera(id());
 }
 

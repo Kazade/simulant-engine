@@ -55,7 +55,7 @@ public:
 
     sig::signal<void (ActorID)>& signal_mesh_changed() { return signal_mesh_changed_; }
 
-    void destroy();
+    void ask_owner_for_destruction();
 
     RenderPriority render_priority() const { return render_priority_; }
     void set_render_priority(RenderPriority value) { render_priority_ = value;}

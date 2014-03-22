@@ -72,6 +72,30 @@ public:
     virtual kglt::Quaternion rotation() const = 0;
 };
 
+/**
+ * @brief The Owned class
+ *
+ * An interface that describes objects that are owned by a parent
+ */
+class Ownable {
+public:
+    virtual ~Ownable() {}
+    virtual void ask_owner_for_destruction() = 0;
+};
+
+
+/**
+ * @brief The Updateable class
+ *
+ * Any object that can be updated using a deltatime value
+ *
+ */
+class Updateable {
+public:
+    virtual ~Updateable() {}
+    virtual void update(double dt) = 0;
+};
+
 }
 
 #endif // INTERFACES_H

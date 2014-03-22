@@ -21,11 +21,12 @@ class Sprite :
     public Protectable {
 
 public:
+    //Ownable interface (inherited through ParentSetterMixin)
+    void ask_owner_for_destruction();
+
     bool init() override;
     void cleanup() override;
     void update(double dt);
-
-    void destroy() override;
 
     Sprite(Stage* stage, SpriteID id);
 

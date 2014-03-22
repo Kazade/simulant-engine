@@ -14,7 +14,7 @@ public:
         T(stage) {}
 
     void set_parent(ActorID actor) {
-        T::set_parent(*(T::stage().actor(actor).__object));
+        T::set_parent(T::stage().actor(actor).__object.get());
     }
 
     void set_parent(LightID light) {
@@ -22,11 +22,11 @@ public:
     }
 
     void set_parent(CameraID camera) {
-        T::set_parent(*T::stage().camera(camera).__object);
+        T::set_parent(T::stage().camera(camera).__object.get());
     }
 
     void set_parent(SpriteID sprite) {
-        T::set_parent(*T::stage().sprite(sprite).__object);
+        T::set_parent(T::stage().sprite(sprite).__object.get());
     }
 
 protected:

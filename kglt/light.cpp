@@ -4,7 +4,7 @@
 namespace kglt {
 
 Light::Light(Stage* stage, LightID lid):
-    Object(stage),
+    ParentSetterMixin<Object>(stage),
     generic::Identifiable<LightID>(lid),
     type_(LIGHT_TYPE_POINT),
     range_(100.0) {
@@ -45,7 +45,7 @@ void Light::set_attenuation_from_range(float range) {
     quadratic_attenuation_ = 75.0 / (range * range);
 }
 
-void Light::destroy() {
+void Light::ask_owner_for_destruction() {
     stage().delete_light(id());
 }
 

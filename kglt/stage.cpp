@@ -15,7 +15,6 @@ namespace kglt {
 
 Stage::Stage(Scene* parent, StageID id, AvailablePartitioner partitioner):
     generic::Identifiable<StageID>(id),
-    Object(nullptr),
     scene_(*parent),
     ambient_light_(1.0, 1.0, 1.0, 1.0),
     geom_factory_(new GeomFactory(*this)) {
@@ -39,7 +38,7 @@ void Stage::cleanup() {
     CameraProxyManager::objects_.clear();
 }
 
-void Stage::destroy() {
+void Stage::ask_owner_for_destruction() {
     scene().delete_stage(id());
 }
 
@@ -259,5 +258,9 @@ void Stage::set_partitioner(AvailablePartitioner partitioner) {
     signal_light_destroyed().connect(std::bind(&Partitioner::remove_light, partitioner_.get(), std::placeholders::_1));
 }
 
+
+void Stage::update(double dt) {
+
+}
 
 }

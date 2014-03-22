@@ -7,6 +7,7 @@
 #include "object.h"
 #include "object_visitor.h"
 #include "camera.h"
+#include "utils/ownable.h"
 
 namespace kglt {
 
@@ -70,8 +71,14 @@ void Object::disable_constraint() {
 }
 
 
-void Object::parent_changed_callback(Object* old_parent, Object* new_parent) {
-    if(new_parent->is_responsive() != is_responsive()) {
+void Object::parent_changed_callback(GenericTreeNode *old_parent, GenericTreeNode *new_parent) {
+    Object* new_p = dynamic_cast<Object*>(new_parent);
+
+    if(!new_p) {
+        return;
+    }
+
+    if(new_p->is_responsive() != is_responsive()) {
         throw std::logic_error("Tried to connect a responsive object to a non-responsive object");
     }
 
@@ -81,10 +88,10 @@ void Object::parent_changed_callback(Object* old_parent, Object* new_parent) {
             responsive_parental_constraint_ = ConstraintID();
         }
 
-        body().set_position(parent().body().position());
-        body().set_rotation(parent().body().rotation());
+        body().set_position(new_p->body().position());
+        body().set_rotation(new_p->body().rotation());
 
-        responsive_parental_constraint_ = body().create_fixed_constraint(new_parent->body());
+        responsive_parental_constraint_ = body().create_fixed_constraint(new_p->body());
     }
 
     update_from_parent();
@@ -158,12 +165,12 @@ void Object::set_absolute_position(float x, float y, float z) {
 
         if(has_parent() && !parent_is_root()) {
             //Recreate the constraint with the parent (as long as the parent isn't the stage itself)
-            responsive_parental_constraint_ = body().create_fixed_constraint(parent().body());
+            responsive_parental_constraint_ = body().create_fixed_constraint(parent()->as<Object>()->body());
         }
     } else {
         kglt::Vec3 parent_pos;
         if(has_parent()) {
-            parent_pos = parent().absolute_position();
+            parent_pos = parent()->as<Locateable>()->position();
         }
 
         set_relative_position(kglt::Vec3(x, y, z) - parent_pos);
@@ -182,11 +189,11 @@ void Object::set_relative_position(float x, float y, float z) {
         }
 
         //Set the new absolute position
-        body().set_position(parent().absolute_position() + Vec3(x, y, z));
+        body().set_position(parent()->as<Locateable>()->position() + Vec3(x, y, z));
 
         if(has_parent() && !parent_is_root()) {
             //Recreate the constraint with the parent (as long as the parent isn't the stage itself)
-            responsive_parental_constraint_ = body().create_fixed_constraint(parent().body());
+            responsive_parental_constraint_ = body().create_fixed_constraint(parent()->as<Object>()->body());
         }
     } else {
         update_from_parent();
@@ -203,7 +210,7 @@ kglt::Vec3 Object::absolute_position() const {
 
 kglt::Vec3 Object::relative_position() const {
     if(is_responsive()) {
-        return absolute_position() - parent().absolute_position();
+        return absolute_position() - parent()->as<Locateable>()->position();
     }
 
     return relative_position_;
@@ -219,7 +226,7 @@ kglt::Quaternion Object::absolute_rotation() const {
 
 kglt::Quaternion Object::relative_rotation() const {
     if(is_responsive()) {
-        Quaternion parent_rot = parent().absolute_rotation();
+        Quaternion parent_rot = parent()->as<Locateable>()->rotation();
         parent_rot.inverse();
         return parent_rot * body().rotation();
     }
@@ -245,14 +252,14 @@ void Object::set_absolute_rotation(const Quaternion& quat) {
 
         if(has_parent() && !parent_is_root()) {
             //Recreate the constraint with the parent (as long as the parent isn't the stage itself)
-            responsive_parental_constraint_ = body().create_fixed_constraint(parent().body());
+            responsive_parental_constraint_ = body().create_fixed_constraint(parent()->as<Object>()->body());
         }
     } else {
         kglt::Quaternion parent_rot;
         kmQuaternionIdentity(&parent_rot);
 
         if(has_parent()) {
-            parent_rot = parent().absolute_rotation();
+            parent_rot = parent()->as<Locateable>()->rotation();
         }
 
         parent_rot.inverse();
@@ -275,11 +282,11 @@ void Object::set_relative_rotation(const Quaternion &quaternion) {
         }
 
         //Set the new rotation
-        body().set_rotation(parent().absolute_rotation() * quaternion);
+        body().set_rotation(parent()->as<Locateable>()->rotation() * quaternion);
 
         if(has_parent() && !parent_is_root()) {
             //Recreate the constraint with the parent (as long as the parent isn't the stage itself)
-            responsive_parental_constraint_ = body().create_fixed_constraint(parent().body());
+            responsive_parental_constraint_ = body().create_fixed_constraint(parent()->as<Object>()->body());
         }
     } else {
         update_from_parent();
@@ -410,10 +417,10 @@ void Object::update_from_parent() {
         absolute_rotation_ = relative_rotation();
     } else {
         if(!position_locked_) {
-            absolute_position_ = parent().absolute_position() + relative_position();
+            absolute_position_ = parent()->as<Locateable>()->position() + relative_position();
         }
         if(!rotation_locked_) {
-            absolute_rotation_ = relative_rotation() * parent().absolute_rotation();
+            absolute_rotation_ = relative_rotation() * parent()->as<Locateable>()->rotation();
             absolute_rotation_.normalize();
         }
     }
@@ -423,19 +430,18 @@ void Object::update_from_parent() {
         transformation_changed();
     }
 
-    std::for_each(children().begin(), children().end(), [](Object* x) { x->update_from_parent(); });    
+    apply_recursively([](GenericTreeNode* x) {
+        x->as<Object>()->update_from_parent();
+    }, false);
 }
 
 void Object::destroy_children() {
-    //If this looks weird, it's because when you destroy
-    //children the index changes so you need to gather them
-    //up first and then destroy them
-    std::vector<Object*> to_destroy;
-    for(uint32_t i = 0; i < child_count(); ++i) {
-        to_destroy.push_back(&child(i));
-    }
-    for(Object* o: to_destroy) {
-        o->destroy();
+    auto childs = children();
+
+    detach_children();
+
+    for(auto child: childs) {
+        child->apply_recursively(&ownable_tree_node_destroy);
     }
 }
 

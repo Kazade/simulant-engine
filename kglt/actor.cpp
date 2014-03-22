@@ -58,7 +58,7 @@ void Actor::set_mesh(MeshID mesh) {
     signal_mesh_changed_(id());
 }
 
-void Actor::destroy() {
+void Actor::ask_owner_for_destruction() {
     stage().delete_actor(id());
 }
 

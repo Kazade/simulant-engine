@@ -60,6 +60,8 @@ bool GenericTreeNode::has_parent() const {
 }
 
 void GenericTreeNode::set_parent(GenericTreeNode* node) {
+    GenericTreeNode* old_parent = parent();
+
     detach();
 
     if(!node) {
@@ -76,6 +78,10 @@ void GenericTreeNode::set_parent(GenericTreeNode* node) {
 
     this->parent_ = node;
     this->parent_->children_.push_back(this);
+
+    if(old_parent != parent_) {
+        signal_parent_changed_(old_parent, parent_);
+    }
 }
 
 GenericTreeNode* GenericTreeNode::parent() const {
@@ -102,5 +108,16 @@ void GenericTreeNode::detach_children() {
     std::list<GenericTreeNode*> children = children_;
     for(GenericTreeNode* child: children) {
         child->detach();
+    }
+}
+
+
+void GenericTreeNode::apply_recursively(std::function<void (GenericTreeNode*)> func, bool include_this) {
+    if(include_this) {
+        func(this);
+    }
+
+    for(auto child: children_) {
+        child->apply_recursively(func, true);
     }
 }

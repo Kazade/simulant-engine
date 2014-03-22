@@ -2,6 +2,11 @@
 #define GENERIC_TREE_H
 
 #include <list>
+#include <kazbase/signals3/signals3.hpp>
+
+class GenericTreeNode;
+
+typedef sig::signal<void (GenericTreeNode*, GenericTreeNode*)> ParentChangedSignal;
 
 class GenericTreeNode {
 public:
@@ -27,12 +32,22 @@ public:
     GenericTreeNode* left_sibling() const;
     GenericTreeNode* right_sibling() const;
 
+    template<typename T>
+    T* as() {
+        return dynamic_cast<T*>(this);
+    }
+
+    ParentChangedSignal& signal_parent_changed() { return signal_parent_changed_; }
+
+    void apply_recursively(std::function<void (GenericTreeNode*)> func, bool include_this=true);
 private:
     GenericTreeNode* parent_;
     std::list<GenericTreeNode*> children_;
 
     GenericTreeNode* left_;
     GenericTreeNode* right_;
+
+    ParentChangedSignal signal_parent_changed_;
 };
 
 

@@ -90,9 +90,9 @@ public:
         kglt::ActorID cid1 = scene.new_actor_with_parent(mid); //Create a child
         kglt::ActorID cid2 = scene.new_actor_with_parent(cid1); //Create a child of the child
 
-        this->assert_equal((uint32_t)1, scene.actor(mid)->child_count());
-        this->assert_equal((uint32_t)1, scene.actor(cid1)->child_count());
-        this->assert_equal((uint32_t)0, scene.actor(cid2)->child_count());
+        this->assert_equal((uint32_t)1, scene.actor(mid)->children().size());
+        this->assert_equal((uint32_t)1, scene.actor(cid1)->children().size());
+        this->assert_equal((uint32_t)0, scene.actor(cid2)->children().size());
 
         scene.delete_actor(mid);
         this->assert_true(!scene.has_actor(mid));

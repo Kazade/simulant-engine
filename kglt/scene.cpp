@@ -1,4 +1,5 @@
 #include "utils/glcompat.h"
+#include "utils/ownable.h"
 
 #include "scene.h"
 #include "renderer.h"
@@ -118,7 +119,10 @@ StageRef Scene::stage_ref(StageID s) {
 
 void Scene::delete_stage(StageID s) {
     Stage& ss = stage(s);
-    ss.destroy_children();
+
+    //Recurse through the tree, destroying all children
+    ss.apply_recursively(&ownable_tree_node_destroy);
+
     StageManager::manager_delete(s);
 }
 
@@ -187,7 +191,11 @@ void Scene::update(double dt) {
     }
 
     //Update the stages
-    StageManager::apply_func_to_objects(std::bind(&Object::update, std::placeholders::_1, dt));        
+    for(auto stage_pair: StageManager::__objects()) {
+        stage(stage_pair.first).apply_recursively([=](GenericTreeNode* node) -> void {
+            node->as<Updateable>()->update(dt);
+        });
+    }
 }
 
 void Scene::render() {

@@ -5,6 +5,8 @@
 
 #include "generic/managed.h"
 #include "generic/manager.h"
+#include "generic/generic_tree.h"
+
 #include "object.h"
 #include "types.h"
 #include "resource_manager.h"
@@ -26,12 +28,15 @@ class Stage:
     public Managed<Stage>,
     public generic::Identifiable<StageID>,
     public ResourceManager,
-    public Object,
+    public GenericTreeNode,
     public ActorManager,
     public LightManager,
     public SpriteManager,
     public CameraProxyManager,
-    public Loadable {
+    public Loadable,
+    public Updateable,
+    public Ownable,
+    public Locateable {
 
 public:
     Stage(Scene *parent, StageID id, AvailablePartitioner partitioner);
@@ -102,7 +107,7 @@ public:
 
     Partitioner& partitioner() { return *partitioner_; }
 
-    void destroy();
+    void ask_owner_for_destruction();
 
     /*
      *  ResourceManager interface follows
@@ -272,6 +277,17 @@ public:
 
     bool init();
     void cleanup() override;
+
+    // Updateable interface
+
+    void update(double dt);
+
+    // Locateable interface
+
+    Vec3 position() const override { return Vec3(); }
+    Vec2 position_2d() const override { return Vec2(); }
+    Quaternion rotation() const override { return Quaternion(); }
+
 private:
     Scene& scene_;
 

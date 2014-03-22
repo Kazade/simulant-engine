@@ -8,12 +8,14 @@
 #include "types.h"
 #include "boundable.h"
 
+#include "utils/parent_setter_mixin.h"
+
 #include "kazmath/vec4.h"
 
 namespace kglt {
 
 class Light :
-    public Object,
+    public ParentSetterMixin<Object>,
     public generic::Identifiable<LightID>,
     public Boundable,
     public Protectable,
@@ -87,7 +89,7 @@ public:
         return absolute_position();
     }
 
-    void destroy();
+    void ask_owner_for_destruction();
 
 private:
     LightType type_;

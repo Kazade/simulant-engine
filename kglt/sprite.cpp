@@ -32,7 +32,7 @@ void Sprite::cleanup() {
     stage().delete_actor(actor_id_);
 }
 
-void Sprite::destroy() {
+void Sprite::ask_owner_for_destruction() {
     stage().delete_sprite(id());
 }
 

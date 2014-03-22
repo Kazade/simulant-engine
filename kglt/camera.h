@@ -6,6 +6,8 @@
 #include "generic/managed.h"
 #include "generic/protected_ptr.h"
 
+#include "utils/parent_setter_mixin.h"
+
 #include "object.h"
 #include "frustum.h"
 #include "renderer.h"
@@ -16,7 +18,7 @@ namespace kglt {
 class Camera;
 
 class CameraProxy:
-    public Object,
+    public ParentSetterMixin<Object>,
     public generic::Identifiable<CameraID>,
     public Managed<CameraProxy>,
     public Protectable {
@@ -26,7 +28,7 @@ public:
     ~CameraProxy();
 
     void follow(ActorID actor, const kglt::Vec3& offset, float lag_in_seconds=1.0);
-    void destroy();
+    void ask_owner_for_destruction();
 
     void _update_following(double dt);
 
