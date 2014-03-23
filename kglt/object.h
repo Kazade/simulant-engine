@@ -11,7 +11,6 @@
 #include "generic/tree.h"
 #include "generic/data_carrier.h"
 #include "generic/visitor.h"
-#include "generic/generic_tree.h"
 
 #include "kazmath/mat4.h"
 #include "kazmath/vec3.h"
@@ -21,6 +20,7 @@
 #include "physics/responsive_body.h"
 #include "physics/collidable.h"
 
+#include "scene_node.h"
 #include "interfaces.h"
 
 namespace kglt {
@@ -28,13 +28,9 @@ namespace kglt {
 class Scene;
 
 class Object :
-    public GenericTreeNode, //Objects form a tree
     public generic::DataCarrier, //And they allow additional data to be attached
-    public generic::VisitableBase<Object>,
     public Transformable,
-    public Ownable,
-    public Locateable,
-    public Updateable {
+    public SceneNode {
 
 public:
     Object(Stage* parent_scene);

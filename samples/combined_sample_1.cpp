@@ -39,6 +39,10 @@ int main(int argc, char* argv[]) {
 */
     Background::ptr background = Background::create(scene);
 
+    window->signal_shutdown().connect([&]() {
+        background.reset();
+    });
+
     //Alternatively window.scene().background().add_layer("sample_data/parallax/back_layer.png", BACKGROUND_FILL);
     background->add_layer("sample_data/parallax/back_layer.png");
     background->add_layer("sample_data/parallax/middle_layer.png");

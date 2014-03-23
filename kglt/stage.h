@@ -5,7 +5,7 @@
 
 #include "generic/managed.h"
 #include "generic/manager.h"
-#include "generic/generic_tree.h"
+#include "scene_node.h"
 
 #include "object.h"
 #include "types.h"
@@ -28,15 +28,12 @@ class Stage:
     public Managed<Stage>,
     public generic::Identifiable<StageID>,
     public ResourceManager,
-    public GenericTreeNode,
     public ActorManager,
     public LightManager,
     public SpriteManager,
     public CameraProxyManager,
     public Loadable,
-    public Updateable,
-    public Ownable,
-    public Locateable {
+    public SceneNode {
 
 public:
     Stage(Scene *parent, StageID id, AvailablePartitioner partitioner);
@@ -129,8 +126,8 @@ public:
         return scene().new_mesh_as_sphere(diameter, garbage_collect);
     }
 
-    MeshID new_mesh_as_rectangle(float width, float height, bool garbage_collect=true) override {
-        return scene().new_mesh_as_rectangle(width, height, garbage_collect);
+    MeshID new_mesh_as_rectangle(float width, float height, const Vec2& offset=Vec2(), bool garbage_collect=true) override {
+        return scene().new_mesh_as_rectangle(width, height, offset, garbage_collect);
     }
 
     MeshID new_mesh_with_name(const unicode& name, bool garbage_collect=true) override {
@@ -149,8 +146,8 @@ public:
         return scene().new_mesh_with_name_as_sphere(name, diameter, garbage_collect);
     }
 
-    MeshID new_mesh_with_name_as_rectangle(const unicode &name, float width, float height, bool garbage_collect) override {
-        return scene().new_mesh_with_name_as_rectangle(name, width, height, garbage_collect);
+    MeshID new_mesh_with_name_as_rectangle(const unicode &name, float width, float height, const Vec2& offset=Vec2(), bool garbage_collect=true) override {
+        return scene().new_mesh_with_name_as_rectangle(name, width, height, offset, garbage_collect);
     }
 
     MeshID get_mesh_with_name(const unicode& name) override {

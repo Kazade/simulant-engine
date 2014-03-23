@@ -28,6 +28,10 @@ void CameraProxy::ask_owner_for_destruction() {
     stage().evict_camera(id());
 }
 
+void CameraProxy::set_orthographic_projection(double left, double right, double bottom, double top, double near, double far) {
+    camera().set_orthographic_projection(left, right, bottom, top, near, far);
+}
+
 Camera& CameraProxy::camera() {
     return stage().scene().camera(id());
 }

@@ -35,6 +35,7 @@ public:
     Frustum& frustum();
     kmVec3 project_point(ViewportID vid, const kmVec3& point);
 
+    void set_orthographic_projection(double left, double right, double bottom, double top, double near=-1.0, double far=1.0);
 private:
     ActorID following_actor_;
     Vec3 following_offset_;

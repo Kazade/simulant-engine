@@ -7,7 +7,9 @@
 #include "types.h"
 #include "resource_manager.h"
 #include "generic/manager.h"
+#include "generic/generic_tree.h"
 #include "physics/physics_engine.h"
+#include "interfaces.h"
 
 namespace kglt {
 
