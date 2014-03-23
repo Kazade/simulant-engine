@@ -72,6 +72,7 @@ void export_lua_api(lua_State* state) {
             .property("actor_count", &Stage::actor_count)
             .property("light_count", &Stage::light_count)
             .property("id", &Stage::id)
+            .property("__unicode__", &Stage::__unicode__)
     ];
 
     /*
@@ -117,6 +118,7 @@ void export_lua_api(lua_State* state) {
             .property("default_stage", (Stage&(Scene::*)())&Scene::stage)
             .property("default_material_id", &Scene::default_material_id)
             .property("render_sequence", &Scene::render_sequence)
+            .def("render_tree", (void(Scene::*)(void))&Scene::render_tree)
     ];
 
     luabind::module(state) [

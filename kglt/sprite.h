@@ -53,6 +53,11 @@ public:
     void add_sequence(const unicode& name, const std::vector<AnimationSequenceStage>& stages) override;
     void play_sequence(const unicode& name) override;
     void override_playing_animation_duration(const float new_duration) override;
+
+    //Printable interface
+    unicode __unicode__() const {
+        return _u("Sprite {0}").format(this->id());
+    }
 private:
     float frame_width_ = 0;
     float frame_height_ = 0;

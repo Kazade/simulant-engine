@@ -352,3 +352,4 @@ kglt/generic/generic_tree.cpp
 kglt/utils/ownable.h
 kglt/utils/ownable.cpp
 kglt/scene_node.h
+kglt/interfaces.cpp

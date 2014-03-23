@@ -60,6 +60,9 @@ public:
     RenderPriority render_priority() const { return render_priority_; }
     void set_render_priority(RenderPriority value) { render_priority_ = value;}
 
+    unicode __unicode__() const {
+        return _u("Actor {0}").format(this->id());
+    }
 private:
     MeshPtr mesh_;
     std::vector<std::shared_ptr<SubActor> > subactors_;

@@ -285,6 +285,10 @@ public:
     Vec2 position_2d() const override { return Vec2(); }
     Quaternion rotation() const override { return Quaternion(); }
 
+    // Printable interface
+    unicode __unicode__() const {
+        return _u("Stage {0}").format(this->id());
+    }
 private:
     Scene& scene_;
 

@@ -96,6 +96,15 @@ public:
     virtual void update(double dt) = 0;
 };
 
+class Printable {
+public:
+    virtual unicode __unicode__() const = 0;
+
+    friend std::ostream& operator<< (std::ostream& o, Printable const& instance);
+};
+
+std::ostream& operator<< (std::ostream& o, Printable const& instance);
+
 }
 
 #endif // INTERFACES_H
