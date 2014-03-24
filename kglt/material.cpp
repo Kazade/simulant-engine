@@ -8,7 +8,7 @@
 
 namespace kglt {
 
-const uint32_t MAX_TEXTURE_UNITS = 8;
+static const uint32_t MAX_TEXTURE_UNITS = 8;
 
 TextureUnit::TextureUnit(MaterialPass &pass):
     pass_(&pass),
@@ -120,13 +120,14 @@ ShaderID MaterialPass::shader_id() const {
 
 void MaterialPass::set_texture_unit(uint32_t texture_unit_id, TextureID tex) {
     if(texture_unit_id >= MAX_TEXTURE_UNITS) {
-        throw std::logic_error("Texture unit ID is too high");
+        L_ERROR(_u("Texture unit ID is too high. {0} >= {1}").format(texture_unit_id, MAX_TEXTURE_UNITS));
+        throw LogicError(_u("Texture unit ID is too high. {0} >= {1}").format(texture_unit_id, MAX_TEXTURE_UNITS).encode());
     }
 
-    if(texture_units_.size() <= texture_unit_id) {
+    if(texture_unit_id >= texture_units_.size()) {
         texture_units_.resize(texture_unit_id + 1, TextureUnit(*this));
     }
-    texture_units_[texture_unit_id] = TextureUnit(*this, tex);
+    texture_units_.at(texture_unit_id) = TextureUnit(*this, tex);
 }
 
 void MaterialPass::set_animated_texture_unit(uint32_t texture_unit_id, const std::vector<TextureID> textures, double duration) {

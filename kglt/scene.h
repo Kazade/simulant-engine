@@ -7,7 +7,9 @@
 #include "types.h"
 #include "resource_manager.h"
 #include "generic/manager.h"
+#include "generic/generic_tree.h"
 #include "physics/physics_engine.h"
+#include "interfaces.h"
 
 namespace kglt {
 
@@ -86,7 +88,23 @@ public:
         obj._initialize();
     }
 
-private:
+    void render_tree();
+
+private:    
+    void render_tree(GenericTreeNode* node, uint32_t& level) {
+        for(uint32_t i = 0; i < level; ++i) {
+            std::cout << "\t";
+        }
+
+        std::cout << *dynamic_cast<Printable*>(node) << std::endl;
+
+        level += 1;
+        for(auto child: node->children()) {
+            render_tree(child, level);
+        }
+        level -= 1;
+    }
+
     StageID default_stage_;
     CameraID default_camera_;
 

@@ -91,6 +91,9 @@ public:
 
     void ask_owner_for_destruction();
 
+    unicode __unicode__() const {
+        return _u("Light {0}").format(this->id());
+    }
 private:
     LightType type_;
 

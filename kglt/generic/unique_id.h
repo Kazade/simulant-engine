@@ -32,6 +32,10 @@ public:
         return !(*this == other);
     }
 
+    friend std::ostream& operator<< (std::ostream& o, UniqueID<T> const& instance) {
+        return o << instance.value();
+    }
+
 public:
     bool boolean_test() const {
         return id_ != 0;

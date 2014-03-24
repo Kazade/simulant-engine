@@ -63,8 +63,9 @@ void BackgroundLayer::scroll_y(double amount) {
 
 BackgroundLayer::~BackgroundLayer() {    
     Stage& stage = background().stage();
-    auto mat = stage.material(background().material_id());
-    if(mat) {
+
+    if(background().material_id()) {
+        auto mat = stage.material(background().material_id());
         //Unset the texture on the material (decrementing the ref-count)
         mat->technique().pass(pass_id_).set_texture_unit(0, TextureID());
     }
@@ -75,11 +76,20 @@ Background::Background(Scene& scene, ViewportID viewport, BGResizeStyle style):
     viewport_(viewport),
     style_(style) {
 
-    ortho_camera_ = scene.camera_ref(scene.new_camera()); //Create an ortho cam
+
+}
+
+MaterialID Background::material_id() const {
+    return material_;
+}
+
+bool Background::init() {
+    ortho_camera_ = stage_.scene().new_camera(); //Create an ortho cam
+    stage_.host_camera(ortho_camera_);
 
     float width, height;
     if(style_ == BG_RESIZE_ZOOM) {
-        Viewport& vp = scene.window().viewport(viewport);
+        Viewport& vp = stage_.window().viewport(viewport_);
 
         if(vp.width() > vp.height()) {
             width = 1.0;
@@ -93,9 +103,8 @@ Background::Background(Scene& scene, ViewportID viewport, BGResizeStyle style):
         height = 1.0;
     }
 
-
     //Set the camera to the visible dimensions
-    ortho_camera_.lock()->set_orthographic_projection(
+    stage_.camera(ortho_camera_)->set_orthographic_projection(
         0,
         width,
         0,
@@ -105,53 +114,38 @@ Background::Background(Scene& scene, ViewportID viewport, BGResizeStyle style):
 
     //Add a pass for this background
     //FIXME: priority = -1000
-    pipeline_ = scene.render_sequence().new_pipeline(
+    pipeline_ = stage_.scene().render_sequence().new_pipeline(
         stage_.id(),
-        ortho_camera_.lock()->id(),
+        ortho_camera_,
         viewport_,
         TextureID(),
         -100
     );
 
-    actor_ = stage_.new_actor(stage_.new_mesh());
-
-    material_ = stage_.new_material();
+    actor_ = stage_.new_actor(stage_.new_mesh_as_rectangle(1, 1, Vec2(0.5, 0.5)));
 
     //Load the background material
-    scene.window().loader_for("kglt/materials/background.kglm")->into(stage_.material(material_));
-
-    SubMeshIndex index = kglt::procedural::mesh::rectangle(
-        stage().actor(actor_)->mesh(),
-        1,
-        1,
-        0.5,
-        0.5
-    );
+    material_ = stage_.new_material_from_file("kglt/materials/background.kglm");
 
     stage().actor(actor_)->set_mesh(stage().actor(actor_)->mesh_id()); //FIXME: This is a workaround
-    stage().actor(actor_)->override_material_id(material_);        
+    stage().actor(actor_)->override_material_id(material_);
+
+    return true;
 }
 
-MaterialID Background::material_id() const {
-    return material_;
-}
-
-Background::~Background() {
-
+void Background::cleanup() {
     layers_.clear();
 
-    try {
-        if(actor_) {
-            stage_.delete_actor(actor_);
-        }
-
-        CameraPtr camera = ortho_camera_.lock();
-        if(camera) {
-            stage_.scene().delete_camera(camera->id());
-        }
-    } catch(...) {
-        L_WARN("Error while destroying background");
+    if(actor_) {
+        stage_.delete_actor(actor_);
     }
+
+    if(ortho_camera_) {
+        stage_.evict_camera(ortho_camera_);
+        stage_.scene().delete_camera(ortho_camera_);
+    }
+
+    material_ = MaterialID();
 }
 
 void Background::add_layer(const std::string &image_path) {

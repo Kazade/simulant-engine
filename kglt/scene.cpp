@@ -33,6 +33,13 @@ Scene::~Scene() {
     CameraManager::__objects().clear();
 }
 
+void Scene::render_tree() {
+    for(auto stage: StageManager::objects_) {
+        uint32_t counter = 0;
+        render_tree(stage.second.get(), counter);
+    }
+}
+
 MaterialID Scene::clone_default_material() {
     return MaterialManager::manager_clone(default_material_->id());
 }

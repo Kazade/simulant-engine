@@ -129,8 +129,8 @@ public:
         return scene().new_mesh_as_sphere(diameter, garbage_collect);
     }
 
-    MeshID new_mesh_as_rectangle(float width, float height, bool garbage_collect=true) override {
-        return scene().new_mesh_as_rectangle(width, height, garbage_collect);
+    MeshID new_mesh_as_rectangle(float width, float height, const Vec2& offset=Vec2(), bool garbage_collect=true) override {
+        return scene().new_mesh_as_rectangle(width, height, offset, garbage_collect);
     }
 
     MeshID new_mesh_with_alias(const unicode& alias, bool garbage_collect=true) override {
@@ -149,8 +149,8 @@ public:
         return scene().new_mesh_with_alias_as_sphere(alias, diameter, garbage_collect);
     }
 
-    MeshID new_mesh_with_alias_as_rectangle(const unicode& alias, float width, float height, bool garbage_collect) override {
-        return scene().new_mesh_with_alias_as_rectangle(alias, width, height, garbage_collect);
+    MeshID new_mesh_with_alias_as_rectangle(const unicode &alias, float width, float height, const Vec2& offset=Vec2(), bool garbage_collect=true) override {
+        return scene().new_mesh_with_alias_as_rectangle(alias, width, height, offset, garbage_collect);
     }
 
     MeshID get_mesh_with_alias(const unicode& alias) override {
@@ -288,6 +288,10 @@ public:
     Vec2 position_2d() const override { return Vec2(); }
     Quaternion rotation() const override { return Quaternion(); }
 
+    // Printable interface
+    unicode __unicode__() const {
+        return _u("Stage {0}").format(this->id());
+    }
 private:
     Scene& scene_;
 

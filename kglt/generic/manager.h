@@ -15,6 +15,8 @@ protected:
     mutable std::recursive_mutex manager_lock_;
 
 public:
+    typedef NewIDGenerator GeneratorType;
+
     ObjectIDType manager_new() {
         return manager_new(ObjectIDType());
     }
@@ -24,7 +26,7 @@ public:
         {
             std::lock_guard<std::recursive_mutex> lock(manager_lock_);
             if(!id) {
-                id = NewIDGenerator()();
+                id = generator_();
             }
             objects_.insert(std::make_pair(id, ObjectType::create((Derived*)this, id, std::forward<Args>(args)...)));
         }
@@ -94,6 +96,8 @@ private:
     sig::signal<void (ObjectType&, ObjectIDType)> signal_post_create_;
     sig::signal<void (ObjectType&, ObjectIDType)> signal_pre_delete_;
 
+    static NewIDGenerator generator_;
+
 protected:
     std::unordered_map<ObjectIDType, std::shared_ptr<ObjectType> > objects_;
 
@@ -107,6 +111,10 @@ protected:
         return ObjectIDType();
     }
 };
+
+template <typename Derived, typename ObjectType, typename ObjectIDType, typename NewIDGenerator>
+NewIDGenerator TemplatedManager<Derived, ObjectType, ObjectIDType, NewIDGenerator>::generator_;
+
 
 }
 }

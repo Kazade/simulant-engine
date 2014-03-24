@@ -90,9 +90,9 @@ MeshID ResourceManagerImpl::new_mesh_as_sphere(float diameter, bool garbage_coll
     return m;
 }
 
-MeshID ResourceManagerImpl::new_mesh_as_rectangle(float width, float height, bool garbage_collect) {
+MeshID ResourceManagerImpl::new_mesh_as_rectangle(float width, float height, const Vec2& offset, bool garbage_collect) {
     MeshID m = new_mesh(garbage_collect);
-    kglt::procedural::mesh::rectangle(mesh(m), width, height);
+    kglt::procedural::mesh::rectangle(mesh(m), width, height, offset.x, offset.y);
     MeshManager::mark_as_uncollected(m);
     return m;
 }
@@ -141,8 +141,8 @@ MeshID ResourceManagerImpl::new_mesh_with_alias_as_sphere(const unicode& alias, 
     return m;
 }
 
-MeshID ResourceManagerImpl::new_mesh_with_alias_as_rectangle(const unicode& alias, float width, float height, bool garbage_collect) {
-    MeshID m = new_mesh_as_rectangle(width, height, garbage_collect);
+MeshID ResourceManagerImpl::new_mesh_with_alias_as_rectangle(const unicode& alias, float width, float height, const Vec2& offset, bool garbage_collect) {
+    MeshID m = new_mesh_as_rectangle(width, height, offset, garbage_collect);
     try {
         MeshManager::manager_store_alias(alias, m);
     } catch(...) {
