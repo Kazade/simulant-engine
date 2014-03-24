@@ -154,30 +154,30 @@ public:
     typedef std::unordered_map<ObjectIDType, std::shared_ptr<ObjectType>> ObjectMap;
 
 protected:
-    void manager_store_name(const unicode& name, ObjectIDType id) {
-        auto it = object_names_.find(name);
+    void manager_store_alias(const unicode& alias, ObjectIDType id) {
+        auto it = object_names_.find(alias);
         if(it != object_names_.end()) {
             if((*it).second == id) {
                 //Don't throw if it's the same thing
                 return;
             }
-            throw LogicError("Attempted to add a duplicate resource with the name name");
+            throw LogicError(_u("Attempted to add a duplicate resource with the alias: {0}").format(alias).encode());
         }
 
-        object_names_[name] = id;
+        object_names_[alias] = id;
     }
 
-    ObjectIDType manager_get_by_name(const unicode& name) {
-        auto it = object_names_.find(name);
+    ObjectIDType manager_get_by_alias(const unicode& alias) {
+        auto it = object_names_.find(alias);
         if(it == object_names_.end()) {
-            throw DoesNotExist<ObjectIDType>(_u("Object with name {0} does not exist").format(name));
+            throw DoesNotExist<ObjectIDType>(_u("Object with alias {0} does not exist").format(alias));
         }
 
         return (*it).second;
     }
 
-    void manage_remove_name(const unicode& name) {
-        object_names_.erase(name);
+    void manage_remove_alias(const unicode& alias) {
+        object_names_.erase(alias);
     }
 
 private:

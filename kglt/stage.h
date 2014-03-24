@@ -133,44 +133,44 @@ public:
         return scene().new_mesh_as_rectangle(width, height, garbage_collect);
     }
 
-    MeshID new_mesh_with_name(const unicode& name, bool garbage_collect=true) override {
-        return scene().new_mesh_with_name(name, garbage_collect);
+    MeshID new_mesh_with_alias(const unicode& alias, bool garbage_collect=true) override {
+        return scene().new_mesh_with_alias(alias, garbage_collect);
     }
 
-    MeshID new_mesh_with_name_from_file(const unicode& name, const unicode &path, bool garbage_collect=true) override {
-        return scene().new_mesh_with_name_from_file(name, path, garbage_collect);
+    MeshID new_mesh_with_alias_from_file(const unicode& alias, const unicode &path, bool garbage_collect=true) override {
+        return scene().new_mesh_with_alias_from_file(alias, path, garbage_collect);
     }
 
-    MeshID new_mesh_with_name_as_cube(const unicode& name, float width, bool garbage_collect=true) override {
-        return scene().new_mesh_with_name_as_cube(name, width, garbage_collect);
+    MeshID new_mesh_with_alias_as_cube(const unicode& alias, float width, bool garbage_collect=true) override {
+        return scene().new_mesh_with_alias_as_cube(alias, width, garbage_collect);
     }
 
-    MeshID new_mesh_with_name_as_sphere(const unicode& name, float diameter, bool garbage_collect=true) override {
-        return scene().new_mesh_with_name_as_sphere(name, diameter, garbage_collect);
+    MeshID new_mesh_with_alias_as_sphere(const unicode& alias, float diameter, bool garbage_collect=true) override {
+        return scene().new_mesh_with_alias_as_sphere(alias, diameter, garbage_collect);
     }
 
-    MeshID new_mesh_with_name_as_rectangle(const unicode &name, float width, float height, bool garbage_collect) override {
-        return scene().new_mesh_with_name_as_rectangle(name, width, height, garbage_collect);
+    MeshID new_mesh_with_alias_as_rectangle(const unicode& alias, float width, float height, bool garbage_collect) override {
+        return scene().new_mesh_with_alias_as_rectangle(alias, width, height, garbage_collect);
     }
 
-    MeshID get_mesh_with_name(const unicode& name) override {
-        return scene().get_mesh_with_name(name);
+    MeshID get_mesh_with_alias(const unicode& alias) override {
+        return scene().get_mesh_with_alias(alias);
     }
 
     void delete_mesh(MeshID m) {
         scene().delete_mesh(m);
     }
 
-    MaterialID new_material_with_name(const unicode& name, bool garbage_collect=true) override {
-        return scene().new_material_with_name(name, garbage_collect);
+    MaterialID new_material_with_alias(const unicode& alias, bool garbage_collect=true) override {
+        return scene().new_material_with_alias(alias, garbage_collect);
     }
 
-    MaterialID new_material_with_name_from_file(const unicode& name, const unicode& path, bool garbage_collect=true) override {
-        return scene().new_material_with_name_from_file(name, path, garbage_collect);
+    MaterialID new_material_with_alias_from_file(const unicode& alias, const unicode& path, bool garbage_collect=true) override {
+        return scene().new_material_with_alias_from_file(alias, path, garbage_collect);
     }
 
-    MaterialID get_material_with_name(const unicode& name) override {
-        return scene().get_material_with_name(name);
+    MaterialID get_material_with_alias(const unicode& alias) override {
+        return scene().get_material_with_alias(alias);
     }
 
     void delete_material(MaterialID m) {
@@ -189,14 +189,14 @@ public:
     virtual TextureID new_texture_from_file(const unicode& path, TextureFlags flags=0, bool garbage_collect=true) {
         return scene().new_texture_from_file(path, flags, garbage_collect);
     }
-    virtual TextureID new_texture_with_name(const unicode& name, bool garbage_collect=true) override {
-        return scene().new_texture_with_name(name, garbage_collect);
+    virtual TextureID new_texture_with_alias(const unicode& alias, bool garbage_collect=true) override {
+        return scene().new_texture_with_alias(alias, garbage_collect);
     }
-    virtual TextureID new_texture_with_name_from_file(const unicode& name, const unicode& path, TextureFlags flags=0, bool garbage_collect=true) override {
-        return scene().new_texture_with_name_from_file(name, path, flags, garbage_collect);
+    virtual TextureID new_texture_with_alias_from_file(const unicode& alias, const unicode& path, TextureFlags flags=0, bool garbage_collect=true) override {
+        return scene().new_texture_with_alias_from_file(alias, path, flags, garbage_collect);
     }
-    virtual TextureID get_texture_with_name(const unicode& name) override {
-        return scene().get_texture_with_name(name);
+    virtual TextureID get_texture_with_alias(const unicode& alias) override {
+        return scene().get_texture_with_alias(alias);
     }
     virtual void delete_texture(TextureID t) override {
         scene().delete_texture(t);
@@ -231,16 +231,16 @@ public:
         return scene().new_sound_from_file(path, garbage_collect);
     }
 
-    virtual SoundID new_sound_with_name(const unicode& name, bool garbage_collect=true) override {
-        return scene().new_sound_with_name(name, garbage_collect);
+    virtual SoundID new_sound_with_alias(const unicode& alias, bool garbage_collect=true) override {
+        return scene().new_sound_with_alias(alias, garbage_collect);
     }
 
-    virtual SoundID new_sound_with_name_from_file(const unicode& name, const unicode& path, bool garbage_collect=true) override {
-        return scene().new_sound_with_name_from_file(name, path, garbage_collect);
+    virtual SoundID new_sound_with_alias_from_file(const unicode& alias, const unicode& path, bool garbage_collect=true) override {
+        return scene().new_sound_with_alias_from_file(alias, path, garbage_collect);
     }
 
-    virtual SoundID get_sound_with_name(const unicode& name) {
-        return scene().get_sound_with_name(name);
+    virtual SoundID get_sound_with_alias(const unicode& alias) {
+        return scene().get_sound_with_alias(alias);
     }
 
     virtual void delete_sound(SoundID t) { scene().delete_sound(t); }

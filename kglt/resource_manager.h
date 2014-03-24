@@ -44,12 +44,12 @@ public:
     virtual MeshID new_mesh_as_sphere(float diameter, bool garbage_collect=true) = 0;
     virtual MeshID new_mesh_as_rectangle(float width, float height, bool garbage_collect=true) = 0;
 
-    virtual MeshID new_mesh_with_name(const unicode& name, bool garbage_collect=true) = 0;
-    virtual MeshID new_mesh_with_name_from_file(const unicode& name, const unicode &path, bool garbage_collect=true) = 0;
-    virtual MeshID new_mesh_with_name_as_cube(const unicode& name, float width, bool garbage_collect=true) = 0;
-    virtual MeshID new_mesh_with_name_as_sphere(const unicode& name, float diameter, bool garbage_collect=true) = 0;
-    virtual MeshID new_mesh_with_name_as_rectangle(const unicode& name, float width, float height, bool garbage_collect=true) = 0;
-    virtual MeshID get_mesh_with_name(const unicode& name) = 0;
+    virtual MeshID new_mesh_with_alias(const unicode& alias, bool garbage_collect=true) = 0;
+    virtual MeshID new_mesh_with_alias_from_file(const unicode& alias, const unicode &path, bool garbage_collect=true) = 0;
+    virtual MeshID new_mesh_with_alias_as_cube(const unicode& alias, float width, bool garbage_collect=true) = 0;
+    virtual MeshID new_mesh_with_alias_as_sphere(const unicode& alias, float diameter, bool garbage_collect=true) = 0;
+    virtual MeshID new_mesh_with_alias_as_rectangle(const unicode& alias, float width, float height, bool garbage_collect=true) = 0;
+    virtual MeshID get_mesh_with_alias(const unicode& alias) = 0;
 
     virtual void delete_mesh(MeshID m) = 0;
 
@@ -65,9 +65,9 @@ public:
     //Texture functions
     virtual TextureID new_texture(bool garbage_collect=true) = 0;
     virtual TextureID new_texture_from_file(const unicode& path, TextureFlags flags=0, bool garbage_collect=true) = 0;
-    virtual TextureID new_texture_with_name(const unicode& name, bool garbage_collect=true) = 0;
-    virtual TextureID new_texture_with_name_from_file(const unicode& name, const unicode& path, TextureFlags flags=0, bool garbage_collect=true) = 0;
-    virtual TextureID get_texture_with_name(const unicode& name) = 0;
+    virtual TextureID new_texture_with_alias(const unicode& alias, bool garbage_collect=true) = 0;
+    virtual TextureID new_texture_with_alias_from_file(const unicode& alias, const unicode& path, TextureFlags flags=0, bool garbage_collect=true) = 0;
+    virtual TextureID get_texture_with_alias(const unicode& alias) = 0;
 
     virtual ProtectedPtr<Texture> texture(TextureID t) = 0;
     virtual const ProtectedPtr<Texture> texture(TextureID t) const = 0;
@@ -92,9 +92,9 @@ public:
     virtual SoundID new_sound(bool garbage_collect=true) = 0;
     virtual SoundID new_sound_from_file(const unicode& path, bool garbage_collect=true) = 0;
 
-    virtual SoundID new_sound_with_name(const unicode& name, bool garbage_collect=true) = 0;
-    virtual SoundID new_sound_with_name_from_file(const unicode& name, const unicode& path, bool garbage_collect=true) = 0;
-    virtual SoundID get_sound_with_name(const unicode& name) = 0;
+    virtual SoundID new_sound_with_alias(const unicode& alias, bool garbage_collect=true) = 0;
+    virtual SoundID new_sound_with_alias_from_file(const unicode& alias, const unicode& path, bool garbage_collect=true) = 0;
+    virtual SoundID get_sound_with_alias(const unicode& alias) = 0;
 
     virtual ProtectedPtr<Sound> sound(SoundID t) = 0;
     virtual const ProtectedPtr<Sound> sound(SoundID t) const = 0;
@@ -107,9 +107,9 @@ public:
     //Material functions
     virtual MaterialID new_material(bool garbage_collect=true) = 0;
     virtual MaterialID new_material_from_file(const unicode& path, bool garbage_collect=true) = 0;
-    virtual MaterialID new_material_with_name(const unicode& name, bool garbage_collect=true) = 0;
-    virtual MaterialID new_material_with_name_from_file(const unicode& name, const unicode& path, bool garbage_collect=true) = 0;
-    virtual MaterialID get_material_with_name(const unicode& name) = 0;
+    virtual MaterialID new_material_with_alias(const unicode& alias, bool garbage_collect=true) = 0;
+    virtual MaterialID new_material_with_alias_from_file(const unicode& alias, const unicode& path, bool garbage_collect=true) = 0;
+    virtual MaterialID get_material_with_alias(const unicode& alias) = 0;
 
     virtual ProtectedPtr<Material> material(MaterialID t) = 0;
     virtual const ProtectedPtr<Material> material(MaterialID t) const = 0;
@@ -143,12 +143,12 @@ public:
     MeshID new_mesh_as_sphere(float diameter, bool garbage_collect=true) override;
     MeshID new_mesh_as_rectangle(float width, float height, bool garbage_collect=true) override;
 
-    MeshID new_mesh_with_name(const unicode& name, bool garbage_collect=true) override;
-    MeshID new_mesh_with_name_from_file(const unicode& name, const unicode &path, bool garbage_collect=true) override;
-    MeshID new_mesh_with_name_as_cube(const unicode& name, float width, bool garbage_collect=true) override;
-    MeshID new_mesh_with_name_as_sphere(const unicode& name, float diameter, bool garbage_collect=true) override;
-    MeshID new_mesh_with_name_as_rectangle(const unicode &name, float width, float height, bool garbage_collect=true) override;
-    MeshID get_mesh_with_name(const unicode& name) override;
+    MeshID new_mesh_with_alias(const unicode& alias, bool garbage_collect=true) override;
+    MeshID new_mesh_with_alias_from_file(const unicode& alias, const unicode &path, bool garbage_collect=true) override;
+    MeshID new_mesh_with_alias_as_cube(const unicode& alias, float width, bool garbage_collect=true) override;
+    MeshID new_mesh_with_alias_as_sphere(const unicode& alias, float diameter, bool garbage_collect=true) override;
+    MeshID new_mesh_with_alias_as_rectangle(const unicode &name, float width, float height, bool garbage_collect=true) override;
+    MeshID get_mesh_with_alias(const unicode& alias) override;
 
     ProtectedPtr<Mesh> mesh(MeshID m);
     const ProtectedPtr<Mesh> mesh(MeshID m) const;
@@ -161,9 +161,9 @@ public:
     TextureID new_texture(bool garbage_collect=true) override;
     TextureID new_texture_from_file(const unicode& path, TextureFlags flags=0, bool garbage_collect=true) override;
 
-    TextureID new_texture_with_name(const unicode& name, bool garbage_collect=true) override;
-    TextureID new_texture_with_name_from_file(const unicode& name, const unicode& path, TextureFlags flags=0, bool garbage_collect=true) override;
-    TextureID get_texture_with_name(const unicode& name) override;
+    TextureID new_texture_with_alias(const unicode& alias, bool garbage_collect=true) override;
+    TextureID new_texture_with_alias_from_file(const unicode& alias, const unicode& path, TextureFlags flags=0, bool garbage_collect=true) override;
+    TextureID get_texture_with_alias(const unicode& alias) override;
 
     ProtectedPtr<Texture> texture(TextureID t);
     const ProtectedPtr<Texture> texture(TextureID t) const;
@@ -184,9 +184,9 @@ public:
 
     MaterialID new_material(bool garbage_collect=true) override;
     MaterialID new_material_from_file(const unicode& path, bool garbage_collect=true) override;
-    MaterialID new_material_with_name(const unicode& name, bool garbage_collect=true) override;
-    MaterialID new_material_with_name_from_file(const unicode& name, const unicode& path, bool garbage_collect=true) override;
-    MaterialID get_material_with_name(const unicode& name) override;
+    MaterialID new_material_with_alias(const unicode& alias, bool garbage_collect=true) override;
+    MaterialID new_material_with_alias_from_file(const unicode& alias, const unicode& path, bool garbage_collect=true) override;
+    MaterialID get_material_with_alias(const unicode& alias) override;
 
     MaterialID clone_material(MaterialID mat);
 
@@ -200,9 +200,9 @@ public:
     SoundID new_sound(bool garbage_collect=true);
     SoundID new_sound_from_file(const unicode& path, bool garbage_collect=true);
 
-    SoundID new_sound_with_name(const unicode& name, bool garbage_collect=true);
-    SoundID new_sound_with_name_from_file(const unicode& name, const unicode& path, bool garbage_collect=true);
-    SoundID get_sound_with_name(const unicode& name);
+    SoundID new_sound_with_alias(const unicode& alias, bool garbage_collect=true);
+    SoundID new_sound_with_alias_from_file(const unicode& alias, const unicode& path, bool garbage_collect=true);
+    SoundID get_sound_with_alias(const unicode& alias);
 
     void delete_sound(SoundID t);
 

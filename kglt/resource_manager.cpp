@@ -97,10 +97,10 @@ MeshID ResourceManagerImpl::new_mesh_as_rectangle(float width, float height, boo
     return m;
 }
 
-MeshID ResourceManagerImpl::new_mesh_with_name(const unicode& name, bool garbage_collect) {
+MeshID ResourceManagerImpl::new_mesh_with_alias(const unicode& alias, bool garbage_collect) {
     MeshID m = new_mesh(garbage_collect);
     try {
-        MeshManager::manager_store_name(name, m);
+        MeshManager::manager_store_alias(alias, m);
     } catch(...) {
         delete_mesh(m);
         throw;
@@ -108,10 +108,10 @@ MeshID ResourceManagerImpl::new_mesh_with_name(const unicode& name, bool garbage
     return m;
 }
 
-MeshID ResourceManagerImpl::new_mesh_with_name_from_file(const unicode& name, const unicode& path, bool garbage_collect) {
+MeshID ResourceManagerImpl::new_mesh_with_alias_from_file(const unicode& alias, const unicode& path, bool garbage_collect) {
     MeshID m = new_mesh_from_file(path, garbage_collect);
     try {
-        MeshManager::manager_store_name(name, m);
+        MeshManager::manager_store_alias(alias, m);
     } catch(...) {
         delete_mesh(m);
         throw;
@@ -119,10 +119,10 @@ MeshID ResourceManagerImpl::new_mesh_with_name_from_file(const unicode& name, co
     return m;
 }
 
-MeshID ResourceManagerImpl::new_mesh_with_name_as_cube(const unicode& name, float width, bool garbage_collect) {
+MeshID ResourceManagerImpl::new_mesh_with_alias_as_cube(const unicode& alias, float width, bool garbage_collect) {
     MeshID m = new_mesh_as_cube(width, garbage_collect);
     try {
-        MeshManager::manager_store_name(name, m);
+        MeshManager::manager_store_alias(alias, m);
     } catch(...) {
         delete_mesh(m);
         throw;
@@ -130,10 +130,10 @@ MeshID ResourceManagerImpl::new_mesh_with_name_as_cube(const unicode& name, floa
     return m;
 }
 
-MeshID ResourceManagerImpl::new_mesh_with_name_as_sphere(const unicode& name, float diameter, bool garbage_collect) {
+MeshID ResourceManagerImpl::new_mesh_with_alias_as_sphere(const unicode& alias, float diameter, bool garbage_collect) {
     MeshID m = new_mesh_as_sphere(diameter, garbage_collect);
     try {
-        MeshManager::manager_store_name(name, m);
+        MeshManager::manager_store_alias(alias, m);
     } catch(...) {
         delete_mesh(m);
         throw;
@@ -141,10 +141,10 @@ MeshID ResourceManagerImpl::new_mesh_with_name_as_sphere(const unicode& name, fl
     return m;
 }
 
-MeshID ResourceManagerImpl::new_mesh_with_name_as_rectangle(const unicode &name, float width, float height, bool garbage_collect) {
+MeshID ResourceManagerImpl::new_mesh_with_alias_as_rectangle(const unicode& alias, float width, float height, bool garbage_collect) {
     MeshID m = new_mesh_as_rectangle(width, height, garbage_collect);
     try {
-        MeshManager::manager_store_name(name, m);
+        MeshManager::manager_store_alias(alias, m);
     } catch(...) {
         delete_mesh(m);
         throw;
@@ -152,8 +152,8 @@ MeshID ResourceManagerImpl::new_mesh_with_name_as_rectangle(const unicode &name,
     return m;
 }
 
-MeshID ResourceManagerImpl::get_mesh_with_name(const unicode& name) {
-    return MeshManager::manager_get_by_name(name);
+MeshID ResourceManagerImpl::get_mesh_with_alias(const unicode& alias) {
+    return MeshManager::manager_get_by_alias(alias);
 }
 
 void ResourceManagerImpl::delete_mesh(MeshID m) {
@@ -185,11 +185,11 @@ MaterialID ResourceManagerImpl::new_material_from_file(const unicode& path, bool
     return mat->id();
 }
 
-MaterialID ResourceManagerImpl::new_material_with_name(const unicode& name, bool garbage_collect) {
+MaterialID ResourceManagerImpl::new_material_with_alias(const unicode& alias, bool garbage_collect) {
     MaterialID m = new_material(garbage_collect);
 
     try {
-        MaterialManager::manager_store_name(name, m);
+        MaterialManager::manager_store_alias(alias, m);
     } catch(...) {
         delete_material(m);
         throw;
@@ -197,10 +197,10 @@ MaterialID ResourceManagerImpl::new_material_with_name(const unicode& name, bool
     return m;
 }
 
-MaterialID ResourceManagerImpl::new_material_with_name_from_file(const unicode& name, const unicode& path, bool garbage_collect) {
+MaterialID ResourceManagerImpl::new_material_with_alias_from_file(const unicode& alias, const unicode& path, bool garbage_collect) {
     MaterialID m = new_material_from_file(path, garbage_collect);
     try {
-        MaterialManager::manager_store_name(name, m);
+        MaterialManager::manager_store_alias(alias, m);
     } catch(...) {
         delete_material(m);
         throw;
@@ -208,8 +208,8 @@ MaterialID ResourceManagerImpl::new_material_with_name_from_file(const unicode& 
     return m;
 }
 
-MaterialID ResourceManagerImpl::get_material_with_name(const unicode& name) {
-    return MaterialManager::manager_get_by_name(name);
+MaterialID ResourceManagerImpl::get_material_with_alias(const unicode& alias) {
+    return MaterialManager::manager_get_by_alias(alias);
 }
 
 
@@ -266,10 +266,10 @@ void ResourceManagerImpl::delete_texture(TextureID t) {
     texture(t)->enable_gc();
 }
 
-TextureID ResourceManagerImpl::new_texture_with_name(const unicode& name, bool garbage_collect) {
+TextureID ResourceManagerImpl::new_texture_with_alias(const unicode& alias, bool garbage_collect) {
     TextureID t = new_texture(garbage_collect);
     try {
-        TextureManager::manager_store_name(name, t);
+        TextureManager::manager_store_alias(alias, t);
     } catch(...) {
         delete_texture(t);
         throw;
@@ -277,10 +277,10 @@ TextureID ResourceManagerImpl::new_texture_with_name(const unicode& name, bool g
     return t;
 }
 
-TextureID ResourceManagerImpl::new_texture_with_name_from_file(const unicode& name, const unicode& path, TextureFlags flags, bool garbage_collect) {
+TextureID ResourceManagerImpl::new_texture_with_alias_from_file(const unicode& alias, const unicode& path, TextureFlags flags, bool garbage_collect) {
     TextureID t = new_texture_from_file(path, flags, garbage_collect);
     try {
-        TextureManager::manager_store_name(name, t);
+        TextureManager::manager_store_alias(alias, t);
     } catch(...) {
         delete_texture(t);
         throw;
@@ -288,8 +288,8 @@ TextureID ResourceManagerImpl::new_texture_with_name_from_file(const unicode& na
     return t;
 }
 
-TextureID ResourceManagerImpl::get_texture_with_name(const unicode& name) {
-    return TextureManager::manager_get_by_name(name);
+TextureID ResourceManagerImpl::get_texture_with_alias(const unicode& alias) {
+    return TextureManager::manager_get_by_alias(alias);
 }
 
 ProtectedPtr<Texture> ResourceManagerImpl::texture(TextureID t) {
@@ -355,10 +355,10 @@ SoundID ResourceManagerImpl::new_sound_from_file(const unicode& path, bool garba
     return snd->id();
 }
 
-SoundID ResourceManagerImpl::new_sound_with_name(const unicode& name, bool garbage_collect) {
+SoundID ResourceManagerImpl::new_sound_with_alias(const unicode& alias, bool garbage_collect) {
     SoundID s = new_sound(garbage_collect);
     try {
-        SoundManager::manager_store_name(name, s);
+        SoundManager::manager_store_alias(alias, s);
     } catch(...) {
         delete_sound(s);
         throw;
@@ -366,10 +366,10 @@ SoundID ResourceManagerImpl::new_sound_with_name(const unicode& name, bool garba
     return s;
 }
 
-SoundID ResourceManagerImpl::new_sound_with_name_from_file(const unicode& name, const unicode& path, bool garbage_collect) {
+SoundID ResourceManagerImpl::new_sound_with_alias_from_file(const unicode& alias, const unicode& path, bool garbage_collect) {
     SoundID s = new_sound_from_file(path, garbage_collect);
     try {
-        SoundManager::manager_store_name(name, s);
+        SoundManager::manager_store_alias(alias, s);
     } catch(...) {
         delete_sound(s);
         throw;
@@ -377,8 +377,8 @@ SoundID ResourceManagerImpl::new_sound_with_name_from_file(const unicode& name, 
     return s;
 }
 
-SoundID ResourceManagerImpl::get_sound_with_name(const unicode& name) {
-    return SoundManager::manager_get_by_name(name);
+SoundID ResourceManagerImpl::get_sound_with_alias(const unicode& alias) {
+    return SoundManager::manager_get_by_alias(alias);
 }
 
 ProtectedPtr<Sound> ResourceManagerImpl::sound(SoundID s) {
