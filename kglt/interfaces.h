@@ -96,6 +96,20 @@ public:
     virtual void update(double dt) = 0;
 };
 
+
+/**
+ * @brief The Nameable class
+ *
+ * Any object that can be given a user-friendly name
+ */
+class Nameable {
+public:
+    virtual ~Nameable() {}
+
+    virtual void set_name(const unicode& name) = 0;
+    virtual const unicode name() const = 0;
+};
+
 }
 
 #endif // INTERFACES_H
