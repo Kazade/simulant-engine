@@ -28,15 +28,12 @@ class Stage:
     public Managed<Stage>,
     public generic::Identifiable<StageID>,
     public ResourceManager,
-    public GenericTreeNode,
     public ActorManager,
     public LightManager,
     public SpriteManager,
     public CameraProxyManager,
     public Loadable,
-    public Updateable,
-    public Ownable,
-    public Locateable {
+    public SceneNode {
 
 public:
     Stage(Scene *parent, StageID id, AvailablePartitioner partitioner);
@@ -292,6 +289,11 @@ public:
     unicode __unicode__() const {
         return _u("Stage {0}").format(this->id());
     }
+
+    // Nameable interface
+    void set_name(const unicode& name) { name_ = name; }
+    const unicode name() const { return name_; }
+    const bool has_name() const { return !name_.empty(); }
 private:
     Scene& scene_;
 
@@ -317,6 +319,8 @@ private:
 
     CameraID new_camera_proxy(CameraID cam);
     void delete_camera_proxy(CameraID cam);
+
+    unicode name_;
 };
 
 

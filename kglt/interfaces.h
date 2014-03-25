@@ -117,6 +117,7 @@ public:
 
     virtual void set_name(const unicode& name) = 0;
     virtual const unicode name() const = 0;
+    virtual const bool has_name() const = 0;
 };
 
 }

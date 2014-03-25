@@ -12,7 +12,8 @@ class SceneNode:
     public Updateable,
     public GenericTreeNode,
     public Ownable,
-    public Printable {
+    public Printable,
+    public Nameable {
 
 };
 

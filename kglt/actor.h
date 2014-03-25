@@ -61,7 +61,11 @@ public:
     void set_render_priority(RenderPriority value) { render_priority_ = value;}
 
     unicode __unicode__() const {
-        return _u("Actor {0}").format(this->id());
+        if(has_name()) {
+            return name();
+        } else {
+            return _u("Actor {0}").format(this->id());
+        }
     }
 private:
     MeshPtr mesh_;

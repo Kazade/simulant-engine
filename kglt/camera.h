@@ -38,7 +38,11 @@ public:
     void set_orthographic_projection(double left, double right, double bottom, double top, double near=-1.0, double far=1.0);
 
     unicode __unicode__() const {
-        return _u("Camera {0}").format(this->id());
+        if(has_name()) {
+            return name();
+        } else {
+            return _u("Camera {0}").format(this->id());
+        }
     }
 private:
     ActorID following_actor_;

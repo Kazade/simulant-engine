@@ -103,6 +103,10 @@ public:
     Quaternion rotation() const override { return absolute_rotation(); }
     // End Locateable Interface
 
+    // Nameable interface
+    void set_name(const unicode &name) { name_ = name; }
+    const unicode name() const { return name_; }
+    const bool has_name() const { return !name_.empty(); }
 
     virtual void set_relative_position(float x, float y, float z);
     virtual void set_relative_position(const kglt::Vec3& pos) { set_relative_position(pos.x, pos.y, pos.z); }
@@ -251,6 +255,7 @@ private:
     virtual void rotate_absolute_y(float amount);
     virtual void rotate_absolute_z(float amount);
 
+    unicode name_;
 };
 
 }
