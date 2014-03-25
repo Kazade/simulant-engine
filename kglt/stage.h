@@ -287,7 +287,11 @@ public:
 
     // Printable interface
     unicode __unicode__() const {
-        return _u("Stage {0}").format(this->id());
+        if(has_name()) {
+            return name();
+        } else {
+            return _u("Stage {0}").format(this->id());
+        }
     }
 
     // Nameable interface

@@ -93,7 +93,7 @@ public:
 private:    
     void render_tree(GenericTreeNode* node, uint32_t& level) {
         for(uint32_t i = 0; i < level; ++i) {
-            std::cout << "\t";
+            std::cout << "    ";
         }
 
         std::cout << *dynamic_cast<Printable*>(node) << std::endl;
