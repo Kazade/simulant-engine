@@ -13,8 +13,6 @@ Sprite::Sprite(Stage *stage, SpriteID id):
 
     sprite_sheet_padding_ = std::make_pair(0, 0);
 
-    std::function<void (double)> update = std::bind(&Sprite::update, this, std::placeholders::_1);
-    stage->window().signal_step().connect(update);
 }
 
 bool Sprite::init() {

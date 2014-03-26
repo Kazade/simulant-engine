@@ -177,10 +177,12 @@ bool WindowBase::update() {
     check_events();
 
     while(ktiTimerCanUpdate()) {
+        idle_.execute(); //Execute idle tasks before render
+
         input_controller().update(fixed_step);
         scene().update(fixed_step);
 
-        signal_step_(fixed_step); //Trigger any steps
+        signal_step_(fixed_step); //Trigger any steps        
     }
 
     idle_.execute(); //Execute idle tasks before render
