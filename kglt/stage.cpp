@@ -68,6 +68,7 @@ ActorID Stage::new_actor(MeshID mid) {
 
 ActorID Stage::new_actor(MeshID mid, bool make_responsive, bool make_collidable) {
     ActorID result = ActorManager::manager_new();
+    actor(result)->set_parent(this);
 
     //If a mesh was specified, set it
     if(mid) {
@@ -136,6 +137,7 @@ void Stage::delete_actor(ActorID e) {
 
 SpriteID Stage::new_sprite() {
     SpriteID s = SpriteManager::manager_new();
+    sprite(s)->set_parent(this);
     signal_sprite_created_(s);
     return s;
 }
@@ -174,6 +176,7 @@ uint32_t Stage::sprite_count() const {
 LightID Stage::new_light(LightType type) {
     LightID lid = LightManager::manager_new();
     light(lid)->set_type(type);
+    light(lid)->set_parent(this);
     signal_light_created_(lid);
     return lid;
 }

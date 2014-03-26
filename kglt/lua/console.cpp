@@ -55,10 +55,11 @@ Console::Console(WindowBase &window):
     interpreter_(Interpreter::create()),
     active_(false) {
 
-    history_.push_back(_u("KGLT {0} Console").format(LUA_RELEASE));
-    history_.push_back(_u("Type \"help\" for more information"));
+    commands_.push_back("");
+    current_line_type_ = LINE_TYPE_PROMPT;
 
-    history_.push_back(PROMPT_PREFIX);
+    buffer_.push_back(std::make_pair(LINE_TYPE_RESULT, _u("KGLT {0} Console").format(LUA_RELEASE)));
+    buffer_.push_back(std::make_pair(LINE_TYPE_RESULT, _u("Type \"help\" for more information")));
 
     init_widget();
 
@@ -105,7 +106,7 @@ void Console::init_widget() {
         ui::ElementList l = stage->$("#lua-console");
         l.css("position", "absolute");
         l.css("width", "100%");
-        l.css("height", "200px");
+        l.css("height", _u("{0}px").format(window_.height() * 0.75).encode());
         l.css("background-color", "#00003388");
         l.css("color", "white");
         l.css("display", "block");
@@ -143,31 +144,51 @@ bool Console::key_down(SDL_Keysym key) {
     }
 
     if(code == SDL_SCANCODE_BACKSPACE) {
-        unicode line = history_.at(history_.size() - 1);
-        if(line.length() > 4) {
+        unicode line = commands_.at(command_being_edited_);
+        if(line.length()) {
             line = line.slice(0, -1);
-            history_.at(history_.size() - 1) = line;
+            commands_.at(command_being_edited_) = line;
+            update_output();
+        }        
+        return true;
+    } else if (code == SDL_SCANCODE_RETURN) {
+        if(command_being_edited_ != commands_.size() - 1) {
+            commands_.push_back(commands_.at(command_being_edited_));
+        }
+
+        unicode output;
+        unicode command = commands_.at(command_being_edited_);
+        LuaResult r = execute(command, output);
+
+        buffer_.push_back(std::make_pair(current_line_type_, command));
+        if(!command.empty()) {
+            commands_.push_back(""); //Add a blank line for the current command
+            command_being_edited_ = commands_.size() - 1;
+        }
+
+        if(r == LUA_RESULT_EOF) {
+            current_line_type_ = LINE_TYPE_CONTINUATION;
+        } else if(r == LUA_RESULT_SUCCESS || r == LUA_RESULT_ERROR) {
+            for(unicode line: output.split("\n")) {
+                buffer_.push_back(std::make_pair(LINE_TYPE_RESULT, line));
+            }
+            current_line_type_ = LINE_TYPE_PROMPT;
+        } else {
+            throw ValueError("Unknown result type");
         }
         update_output();
         return true;
-    } else if (code == SDL_SCANCODE_RETURN) {
-        current_command_ += history_.at(history_.size() - 1).slice(4, nullptr);
-        command_history_.push_back(current_command_);
-
-        unicode output;
-        LuaResult r = execute(current_command_, output);
-        if(r == LUA_RESULT_EOF) {
-            history_.push_back(CONTINUE_PREFIX);
-        } else if(r == LUA_RESULT_SUCCESS) {
-            history_.push_back(output);
-            history_.push_back(PROMPT_PREFIX);
-            current_command_ = _u();
-        } else if(r == LUA_RESULT_ERROR) {
-            history_.push_back(output);
-            history_.push_back(PROMPT_PREFIX);
-            current_command_ = _u();
+    } else if(code == SDL_SCANCODE_UP) {
+        if(command_being_edited_ > 0) {
+            command_being_edited_ -= 1;
+            update_output();
         }
-        update_output();
+        return true;
+    } else if(code == SDL_SCANCODE_DOWN) {
+        if(command_being_edited_ < commands_.size() - 1) {
+            command_being_edited_ += 1;
+            update_output();
+        }
         return true;
     }
 
@@ -185,7 +206,7 @@ void Console::entry(SDL_TextInputEvent event) {
     }
 
     unicode new_char = unicode(event.text);
-    history_.at(history_.size() - 1) += new_char;
+    commands_.at(command_being_edited_) += new_char;
 
     update_output(); //Make sure the latest content is visible
 }
@@ -193,7 +214,26 @@ void Console::entry(SDL_TextInputEvent event) {
 void Console::update_output() {
     ProtectedPtr<UIStage> stage = window_.scene().ui_stage(ui_stage_);
 
-    unicode past = _u("\n").join(history_);
+    std::vector<unicode> lines;
+    for(auto p: buffer_) {
+        if(p.first == LINE_TYPE_PROMPT) {
+            lines.push_back(_u("{0}{1}").format(PROMPT_PREFIX, p.second));
+        } else if(p.first == LINE_TYPE_CONTINUATION) {
+            lines.push_back(_u("{0}{1}").format(CONTINUE_PREFIX, p.second));
+        } else {
+            lines.push_back(p.second);
+        }
+    }
+
+    if(current_line_type_ == LINE_TYPE_PROMPT) {
+        lines.push_back(_u("{0}{1}").format(PROMPT_PREFIX, commands_.at(command_being_edited_)));
+    } else if(current_line_type_ == LINE_TYPE_CONTINUATION){
+        lines.push_back(_u("{0}{1}").format(CONTINUE_PREFIX, commands_.at(command_being_edited_)));
+    } else {
+        lines.push_back(commands_.at(command_being_edited_));
+    }
+
+    unicode past = _u("\n").join(lines);
     stage->$("#lua-console").text(past);
     stage->$("#lua-console").scroll_to_bottom();
 }

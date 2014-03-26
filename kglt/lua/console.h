@@ -15,6 +15,12 @@ class WindowBase;
 class Interpreter;
 struct KeyEvent;
 
+enum LineType {
+    LINE_TYPE_PROMPT,
+    LINE_TYPE_CONTINUATION,
+    LINE_TYPE_RESULT
+};
+
 class Console:
     public Managed<Console> {
 
@@ -25,6 +31,7 @@ public:
 
     void entry(SDL_TextInputEvent event);
     bool key_down(SDL_Keysym key);
+
 private:
     UIStageID ui_stage_;
     CameraID ui_camera_;
@@ -34,10 +41,10 @@ private:
 
     WindowBase& window_;
 
-    std::vector<unicode> history_;
-    std::vector<unicode> command_history_;
-
-    unicode current_command_;
+    std::vector<std::pair<LineType, unicode>> buffer_;
+    std::vector<unicode> commands_;
+    uint32_t command_being_edited_ = 0;
+    LineType current_line_type_ = LINE_TYPE_PROMPT;
 
     std::shared_ptr<Interpreter> interpreter_;
 

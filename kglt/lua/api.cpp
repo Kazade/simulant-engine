@@ -24,6 +24,12 @@ void export_lua_api(lua_State* state) {
     ];
 
     luabind::module(state) [
+        luabind::class_<SpriteID>("SpriteID")
+            .def(luabind::constructor<int>())
+            .property("value", &SpriteID::value)
+    ];
+
+    luabind::module(state) [
         luabind::class_<MeshID>("MeshID")
             .def(luabind::constructor<int>())
             .property("value", &MeshID::value)
@@ -68,8 +74,11 @@ void export_lua_api(lua_State* state) {
             .def("new_actor_from_mesh", (ActorID(Stage::*)(MeshID))&Stage::new_actor)
             .def("actor", (ProtectedPtr<Actor>(Stage::*)(ActorID))&Stage::actor)
             .def("delete_actor", &Stage::delete_actor)
+            .def("sprite", (ProtectedPtr<Sprite>(Stage::*)(SpriteID))&Stage::sprite)
+            .def("delete_sprite", &Stage::delete_sprite)
             .property("scene", (Scene&(Stage::*)())&Stage::scene)
             .property("actor_count", &Stage::actor_count)
+            .property("sprite_count", &Stage::sprite_count)
             .property("light_count", &Stage::light_count)
             .property("id", &Stage::id)
             .property("__unicode__", &Stage::__unicode__)
@@ -101,6 +110,11 @@ void export_lua_api(lua_State* state) {
     luabind::module(state) [
         luabind::class_<Actor, Object>("Actor")
             .property("id", &Actor::id)
+    ];
+
+    luabind::module(state) [
+        luabind::class_<Sprite, Object>("Sprite")
+            .property("id", &Sprite::id)
     ];
 
     luabind::module(state)[
