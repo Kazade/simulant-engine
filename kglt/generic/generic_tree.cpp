@@ -111,13 +111,24 @@ void GenericTreeNode::detach_children() {
     }
 }
 
+void GenericTreeNode::apply_recursively_leaf_first(std::function<void (GenericTreeNode*)> func, bool include_this) {
+    auto copy = children_;
+    for(auto child: copy) {
+        child->apply_recursively_leaf_first(func, true);
+    }
+
+    if(include_this) {
+        func(this);
+    }
+}
 
 void GenericTreeNode::apply_recursively(std::function<void (GenericTreeNode*)> func, bool include_this) {
     if(include_this) {
         func(this);
     }
 
-    for(auto child: children_) {
+    auto copy = children_;
+    for(auto child: copy) {
         child->apply_recursively(func, true);
     }
 }

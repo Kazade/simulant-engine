@@ -76,12 +76,12 @@ void export_lua_api(lua_State* state) {
             .def("delete_actor", &Stage::delete_actor)
             .def("sprite", (ProtectedPtr<Sprite>(Stage::*)(SpriteID))&Stage::sprite)
             .def("delete_sprite", &Stage::delete_sprite)
+            .def("tostring", &Stage::__unicode__)
             .property("scene", (Scene&(Stage::*)())&Stage::scene)
             .property("actor_count", &Stage::actor_count)
             .property("sprite_count", &Stage::sprite_count)
             .property("light_count", &Stage::light_count)
-            .property("id", &Stage::id)
-            .property("__unicode__", &Stage::__unicode__)
+            .property("id", &Stage::id)            
     ];
 
     /*

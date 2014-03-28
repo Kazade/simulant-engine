@@ -128,7 +128,7 @@ void Scene::delete_stage(StageID s) {
     Stage& ss = stage(s);
 
     //Recurse through the tree, destroying all children
-    ss.apply_recursively(&ownable_tree_node_destroy);
+    ss.apply_recursively_leaf_first(&ownable_tree_node_destroy, false);
 
     StageManager::manager_delete(s);
 }

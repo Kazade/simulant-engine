@@ -40,6 +40,7 @@ public:
     ParentChangedSignal& signal_parent_changed() { return signal_parent_changed_; }
 
     void apply_recursively(std::function<void (GenericTreeNode*)> func, bool include_this=true);
+    void apply_recursively_leaf_first(std::function<void (GenericTreeNode*)> func, bool include_this=true);
 private:
     GenericTreeNode* parent_;
     std::list<GenericTreeNode*> children_;

@@ -10,6 +10,7 @@
 #include "partitioners/null_partitioner.h"
 #include "partitioners/octree_partitioner.h"
 #include "procedural/geom_factory.h"
+#include "utils/ownable.h"
 
 namespace kglt {
 
@@ -163,7 +164,9 @@ bool Stage::has_sprite(SpriteID s) const {
     return SpriteManager::manager_contains(s);
 }
 
-void Stage::delete_sprite(SpriteID s) {
+void Stage::delete_sprite(SpriteID s) {   
+    sprite(s)->apply_recursively_leaf_first(&ownable_tree_node_destroy, false);
+    sprite(s)->detach();
     SpriteManager::manager_delete(s);
 }
 
