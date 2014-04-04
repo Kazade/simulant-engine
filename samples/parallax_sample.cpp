@@ -2,8 +2,6 @@
 #include "kglt/shortcuts.h"
 #include "kglt/extra.h"
 
-using kglt::extra::Background;
-
 int main(int argc, char* argv[]) {
 	//Set up logging to stdio
 	logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));
@@ -21,18 +19,12 @@ int main(int argc, char* argv[]) {
     window->scene().camera().set_orthographic_projection_from_height((float) 224 / (float) 40, 16.0 / 9.0);
 	
     //Create a background and add 3 layers to it
-    Background::ptr background = Background::create(scene);
-    background->add_layer("sample_data/parallax/back_layer.png");
-    background->add_layer("sample_data/parallax/middle_layer.png");
-    background->add_layer("sample_data/parallax/front_layer.png");
-
-    //I don't like this, it would be nice if it was automatic
-    window->signal_shutdown().connect([&]() { background.reset(); });
+    window->scene().new_background_from_file("sample_data/parallax/back_layer.png", 0.1);
+    window->scene().new_background_from_file("sample_data/parallax/middle_layer.png", 0.2);
+    window->scene().new_background_from_file("sample_data/parallax/front_layer.png", 1.0);
 
     while(window->update()) {
-        background->layer(0).scroll_x(0.1 * window->delta_time());
-        background->layer(1).scroll_x(0.2 * window->delta_time());
-        background->layer(2).scroll_x(1.0 * window->delta_time());
+
 	}
 
 	return 0;
