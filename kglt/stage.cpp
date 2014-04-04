@@ -7,6 +7,7 @@
 #include "camera.h"
 #include "debug.h"
 #include "sprite.h"
+
 #include "partitioners/null_partitioner.h"
 #include "partitioners/octree_partitioner.h"
 #include "procedural/geom_factory.h"
@@ -175,6 +176,7 @@ uint32_t Stage::sprite_count() const {
 }
 
 //============== END SPRITES ================
+
 
 LightID Stage::new_light(LightType type) {
     LightID lid = LightManager::manager_new();

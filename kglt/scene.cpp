@@ -1,5 +1,6 @@
 #include "utils/glcompat.h"
 #include "utils/ownable.h"
+#include "background.h"
 
 #include "scene.h"
 #include "renderer.h"
@@ -188,6 +189,46 @@ void Scene::delete_camera(CameraID cid) {
     CameraManager::manager_delete(cid);
 }
 
+//============== START BACKGROUNDS ==========
+
+BackgroundID Scene::new_background() {
+    BackgroundID bid = BackgroundManager::manager_new();
+    return bid;
+}
+
+BackgroundID Scene::new_background_from_file(const unicode& filename, float scroll_x, float scroll_y) {
+    BackgroundID result = new_background();
+    try {
+        background(result)->set_texture(new_texture_from_file(filename));
+        background(result)->set_horizontal_scroll_rate(scroll_x);
+        background(result)->set_vertical_scroll_rate(scroll_y);
+    } catch(...) {
+        delete_background(result);
+        throw;
+    }
+
+    return result;
+}
+
+ProtectedPtr<Background> Scene::background(BackgroundID bid) {
+    return BackgroundManager::manager_get(bid);
+}
+
+bool Scene::has_background(BackgroundID bid) const {
+    return BackgroundManager::manager_contains(bid);
+}
+
+void Scene::delete_background(BackgroundID bid) {
+    BackgroundManager::manager_delete(bid);
+}
+
+uint32_t Scene::background_count() const {
+    return BackgroundManager::manager_count();
+}
+
+//============== END BACKGROUNDS ============
+
+
 bool Scene::init() {    
     return true;
 }
@@ -195,6 +236,12 @@ bool Scene::init() {
 void Scene::update(double dt) {
     if(physics_enabled()) {
         physics().step(dt);
+    }
+
+    //Update the backgrounds
+    for(auto background_pair: BackgroundManager::__objects()) {
+        auto* bg = background_pair.second.get();
+        bg->update(dt);
     }
 
     //Update the stages

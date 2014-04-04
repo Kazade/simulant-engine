@@ -69,7 +69,6 @@ public:
     void delete_sprite(SpriteID s);
     uint32_t sprite_count() const;
 
-
     LightID new_light(LightType type=LIGHT_TYPE_POINT);
     LightID new_light(Object& parent, LightType type=LIGHT_TYPE_POINT);
     ProtectedPtr<Light> light(LightID light);

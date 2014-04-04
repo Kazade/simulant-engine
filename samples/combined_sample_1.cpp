@@ -21,40 +21,16 @@ int main(int argc, char* argv[]) {
     //window.scene().pass().viewport().configure(kglt::VIEWPORT_TYPE_BLACKBAR_16_BY_9);
     window->scene().camera().set_orthographic_projection_from_height((float) 224 / (float) 40, 16.0 / 9.0);
 
-
     kglt::SpriteID sprite = stage.new_sprite_from_file("sample_data/sonic.png", 64, 64);
-    stage.sprite(sprite)->add_animation("running", 31, 35, 0.5);
+    stage.sprite(sprite)->add_animation("running", 31, 34, 0.5);
     stage.sprite(sprite)->set_render_dimensions_from_height(1.5);
     stage.sprite(sprite)->move_to(0, -2.0, -1.0);
 
-/*
-    ui::Interface::ptr interface = ui::Interface::create(scene, 800, 600);  
-    interface->load_font("sample_data/sample.ttf", 12);
+    window->scene().new_background_from_file("sample_data/parallax/back_layer.png", 0.1);
+    window->scene().new_background_from_file("sample_data/parallax/middle_layer.png", 0.2);
+    window->scene().new_background_from_file("sample_data/parallax/front_layer.png", 1.0);
 
-    ui::LabelID l = interface->new_label();
-    interface->label(l).set_text("Score: 12345");
-    interface->label(l).set_position(ui::Ratio(0.1), ui::Ratio(0.8));
-    interface->label(l).set_size(ui::Ratio(0.4), ui::Ratio(0.1));
-    interface->label(l).set_foreground_colour(kglt::Colour::red);
-*/
-    Background::ptr background = Background::create(scene);
-
-    window->signal_shutdown().connect([&]() {
-        background.reset();
-    });
-
-    //Alternatively window.scene().background().add_layer("sample_data/parallax/back_layer.png", BACKGROUND_FILL);
-    background->add_layer("sample_data/parallax/back_layer.png");
-    background->add_layer("sample_data/parallax/middle_layer.png");
-    background->add_layer("sample_data/parallax/front_layer.png");
-
-    scene.render_tree();
-
-    while(window->update()) {
-        background->layer(0).scroll_x(0.1 * window->delta_time());
-        background->layer(1).scroll_x(0.2 * window->delta_time());
-        background->layer(2).scroll_x(1.0 * window->delta_time());
-    }
+    while(window->update()) {    }
 
     return 0;
 }

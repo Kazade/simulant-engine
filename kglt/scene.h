@@ -19,10 +19,12 @@ class UI;
 class Scene;
 class Stage;
 class GeomFactory;
+class Background;
 
 typedef generic::TemplatedManager<Scene, Stage, StageID> StageManager;
 typedef generic::TemplatedManager<Scene, Camera, CameraID> CameraManager;
 typedef generic::TemplatedManager<Scene, UIStage, UIStageID> UIStageManager;
+typedef generic::TemplatedManager<Scene, Background, BackgroundID> BackgroundManager;
 
 class Scene:
     public ResourceManagerImpl,
@@ -30,6 +32,7 @@ class Scene:
     public StageManager,
     public CameraManager,
     public UIStageManager,
+    public BackgroundManager,
     public Managed<Scene> {
 
 public:
@@ -89,6 +92,15 @@ public:
     }
 
     void render_tree();
+
+    //Background functions
+    BackgroundID new_background();
+    BackgroundID new_background_from_file(const unicode& filename, float scroll_x=0.0, float scroll_y=0.0);
+    ProtectedPtr<Background> background(BackgroundID bid);
+    bool has_background(BackgroundID bid) const;
+    void delete_background(BackgroundID bid);
+    uint32_t background_count() const;
+    // End background
 
 private:    
     void render_tree(GenericTreeNode* node, uint32_t& level) {

@@ -400,6 +400,7 @@ typedef UniqueID<9> SoundID;
 typedef UniqueID<10> PipelineID;
 typedef UniqueID<11> UIStageID;
 typedef UniqueID<12> SpriteID;
+typedef UniqueID<13> BackgroundID;
 
 const StageID DefaultStageID = StageID();
 

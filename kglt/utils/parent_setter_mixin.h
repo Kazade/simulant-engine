@@ -29,6 +29,10 @@ public:
         T::set_parent(T::stage().sprite(sprite).__object.get());
     }
 
+    void set_parent(BackgroundID background) {
+        T::set_parent(T::stage().background(background).__object.get());
+    }
+
 protected:
     using T::set_parent;
 

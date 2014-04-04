@@ -123,11 +123,8 @@ bool Background::init() {
     );
 
     actor_ = stage_.new_actor(stage_.new_mesh_as_rectangle(1, 1, Vec2(0.5, 0.5)));
-
     //Load the background material
     material_ = stage_.new_material_from_file("kglt/materials/background.kglm");
-
-    stage().actor(actor_)->set_mesh(stage().actor(actor_)->mesh_id()); //FIXME: This is a workaround
     stage().actor(actor_)->override_material_id(material_);
 
     return true;
