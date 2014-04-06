@@ -3,7 +3,7 @@
 
 namespace kglt {
 
-AutoWeakPtr<Stage> Renderer::current_stage() { return scene().stage(current_stage_); }
+StagePtr Renderer::current_stage() { return scene().stage(current_stage_); }
 
 
 }

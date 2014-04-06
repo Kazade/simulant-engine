@@ -56,8 +56,8 @@ public:
     }
 
     StageID new_stage(AvailablePartitioner partitioner=PARTITIONER_OCTREE);            
-    AutoWeakPtr<Stage> stage();
-    AutoWeakPtr<Stage> stage(StageID s);
+    StagePtr stage();
+    StagePtr stage(StageID s);
     void delete_stage(StageID s);
     uint32_t stage_count() const;
 

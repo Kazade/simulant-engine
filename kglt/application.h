@@ -38,7 +38,7 @@ public:
     bool initialized() const { return initialized_; }
 protected:
     Scene& scene();
-    AutoWeakPtr<Stage> stage(StageID stage=StageID());
+    StagePtr stage(StageID stage=StageID());
 
     void load_async(boost::function<bool ()> func);
 

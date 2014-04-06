@@ -15,11 +15,11 @@ class SkyBox :
     public Managed<SkyBox> {
 
 public:
-    SkyBox(AutoWeakPtr<Stage> stage, TextureID texture, float size=500.0f, CameraID cam=CameraID());
-    SkyBox(AutoWeakPtr<Stage> stage, TextureID front, TextureID back, TextureID left, TextureID right, TextureID top, TextureID bottom);
+    SkyBox(StagePtr stage, TextureID texture, float size=500.0f, CameraID cam=CameraID());
+    SkyBox(StagePtr stage, TextureID front, TextureID back, TextureID left, TextureID right, TextureID top, TextureID bottom);
 
 private:
-    AutoWeakPtr<Stage> stage_;
+    StagePtr stage_;
 
     MaterialID material_id_;
     ActorID actor_;
@@ -31,7 +31,7 @@ class StarField :
     public Managed<StarField> {
 
 public:
-    StarField(AutoWeakPtr<Stage> stage, CameraID cam=CameraID());
+    StarField(StagePtr stage, CameraID cam=CameraID());
 
 private:
     SkyBox::ptr skybox_;

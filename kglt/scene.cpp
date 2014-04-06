@@ -121,11 +121,11 @@ uint32_t Scene::stage_count() const {
  * threading issues as other objects as they are the highest level object. Returning a weak_ptr means that
  * we retain ownership, and calling code won't die if the stage goes missing.
  */
-AutoWeakPtr<Stage> Scene::stage() {
+StagePtr Scene::stage() {
     return StageManager::manager_get(default_stage_);
 }
 
-AutoWeakPtr<Stage> Scene::stage(StageID s) {
+StagePtr Scene::stage(StageID s) {
     return StageManager::manager_get(s);
 }
 

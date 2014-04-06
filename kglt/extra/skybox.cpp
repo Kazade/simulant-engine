@@ -14,7 +14,7 @@
 namespace kglt {
 namespace extra {
 
-SkyBox::SkyBox(AutoWeakPtr<Stage> stage, kglt::TextureID texture, float size, CameraID cam):
+SkyBox::SkyBox(StagePtr stage, kglt::TextureID texture, float size, CameraID cam):
     stage_(stage),
     camera_id_(cam) {
 
@@ -40,7 +40,7 @@ SkyBox::SkyBox(AutoWeakPtr<Stage> stage, kglt::TextureID texture, float size, Ca
     }
 }
 
-StarField::StarField(AutoWeakPtr<Stage> stage, CameraID cam) {
+StarField::StarField(StagePtr stage, CameraID cam) {
     //Generate a starfield texture
     texture_id_ = stage->new_texture();
     auto tex = stage->texture(texture_id_);

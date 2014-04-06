@@ -30,7 +30,7 @@ public:
     virtual void render_subactor(SubActor& buffer, CameraID camera) = 0;
 
 protected:
-    AutoWeakPtr<Stage> current_stage();
+    StagePtr current_stage();
 
 private:    
     Scene& scene_;

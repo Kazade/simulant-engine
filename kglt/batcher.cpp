@@ -22,7 +22,7 @@ ProtectedPtr<CameraProxy> RootGroup::camera() {
     return stage()->camera(camera_id_);
 }
 
-AutoWeakPtr<Stage> RootGroup::stage() {
+StagePtr RootGroup::stage() {
     return window_.scene().stage(stage_id_);
 }
 

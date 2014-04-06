@@ -227,7 +227,7 @@ void SpriteGrid::cleanup() {
 
 }
 
-AutoWeakPtr<Stage> SpriteGrid::stage() {
+StagePtr SpriteGrid::stage() {
     return scene_.stage(stage_id_);
 }
 
