@@ -3,6 +3,7 @@
 
 #include "../types.h"
 #include "../generic/managed.h"
+#include "../generic/auto_weakptr.h"
 
 namespace kglt{
 
@@ -14,11 +15,11 @@ class SkyBox :
     public Managed<SkyBox> {
 
 public:
-    SkyBox(Stage& stage, TextureID texture, float size=500.0f, CameraID cam=CameraID());
-    SkyBox(Stage& stage, TextureID front, TextureID back, TextureID left, TextureID right, TextureID top, TextureID bottom);
+    SkyBox(AutoWeakPtr<Stage> stage, TextureID texture, float size=500.0f, CameraID cam=CameraID());
+    SkyBox(AutoWeakPtr<Stage> stage, TextureID front, TextureID back, TextureID left, TextureID right, TextureID top, TextureID bottom);
 
 private:
-    Stage& stage_;
+    AutoWeakPtr<Stage> stage_;
 
     MaterialID material_id_;
     ActorID actor_;
@@ -30,7 +31,7 @@ class StarField :
     public Managed<StarField> {
 
 public:
-    StarField(Stage& stage, CameraID cam=CameraID());
+    StarField(AutoWeakPtr<Stage> stage, CameraID cam=CameraID());
 
 private:
     SkyBox::ptr skybox_;

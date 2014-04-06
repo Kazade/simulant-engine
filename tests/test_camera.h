@@ -39,12 +39,12 @@ public:
         Vec3 pos(0, 0, -1);
 
 
-        kglt::Stage& stage = window->scene().stage();
+        auto stage = window->scene().stage();
 
-        stage.host_camera();
-        stage.camera()->look_at(pos);
+        stage->host_camera();
+        stage->camera()->look_at(pos);
 
-        kglt::Quaternion q = stage.camera()->absolute_rotation();
+        kglt::Quaternion q = stage->camera()->absolute_rotation();
         assert_true(kmQuaternionIsIdentity(&q));
 
         //Just double check that kazmath actually works
@@ -57,29 +57,29 @@ public:
         assert_true(kmQuaternionAreEqual(&q, &other));
 
         pos = Vec3(0, -1, 0);
-        stage.camera()->look_at(pos);
+        stage->camera()->look_at(pos);
 
-        assert_equal(Vec3(0, 0, -1), stage.camera()->up());
+        assert_equal(Vec3(0, 0, -1), stage->camera()->up());
 
     }
 
     void test_following() {
-        kglt::Stage& stage = window->scene().stage();
-        stage.host_camera();
+        auto stage = window->scene().stage();
+        stage->host_camera();
 
-        ActorID a = stage.new_actor();
-        stage.actor(a)->set_absolute_position(kglt::Vec3());
+        ActorID a = stage->new_actor();
+        stage->actor(a)->set_absolute_position(kglt::Vec3());
 
-        stage.camera()->follow(a, kglt::Vec3(0, 0, 10));
+        stage->camera()->follow(a, kglt::Vec3(0, 0, 10));
 
-        assert_equal(Vec3(0, 0, 10), stage.camera()->absolute_position());
+        assert_equal(Vec3(0, 0, 10), stage->camera()->absolute_position());
 
-        stage.actor(a)->set_absolute_rotation(Degrees(90), 0, -1, 0);
-        stage.camera()->_update_following(1.0);
+        stage->actor(a)->set_absolute_rotation(Degrees(90), 0, -1, 0);
+        stage->camera()->_update_following(1.0);
 
         //FIXME: THis should be closer I think, I'm not sure what's wrong
-        assert_equal(Vec3(-10, 0, 0), stage.camera()->absolute_position());
-        assert_equal(stage.actor(a)->absolute_rotation(), stage.camera()->absolute_rotation());
+        assert_equal(Vec3(-10, 0, 0), stage->camera()->absolute_position());
+        assert_equal(stage->actor(a)->absolute_rotation(), stage->camera()->absolute_rotation());
     }
 };
 

@@ -38,7 +38,7 @@ public:
     bool initialized() const { return initialized_; }
 protected:
     Scene& scene();
-    Stage& stage(StageID stage=StageID());
+    AutoWeakPtr<Stage> stage(StageID stage=StageID());
 
     void load_async(boost::function<bool ()> func);
 
@@ -72,7 +72,7 @@ private:
 
   private:
     bool do_init() {
-        cube_ = stage.actor(stage().geom_factory().new_cube(1.0));
+        cube_ = stage.actor(stage()->geom_factory().new_cube(1.0));
         return true;
     }
 

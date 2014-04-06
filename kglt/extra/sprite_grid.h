@@ -78,7 +78,7 @@ public:
     Vec2 transform_position(const kglt::Vec2& position);
 
 private:
-    Stage& stage();
+    AutoWeakPtr<kglt::Stage> stage();
 
     Scene& scene_;
     StageID stage_id_;

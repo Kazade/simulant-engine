@@ -8,7 +8,6 @@ int main(int argc, char* argv[]) {
 
     kglt::Window::ptr window = kglt::Window::create();    
     kglt::Scene& scene = window->scene();
-    kglt::Stage& stage = scene.stage();
 
     window->set_title("KGLT Parallax Sample");
 

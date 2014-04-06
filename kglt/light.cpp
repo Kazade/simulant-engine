@@ -46,7 +46,7 @@ void Light::set_attenuation_from_range(float range) {
 }
 
 void Light::ask_owner_for_destruction() {
-    stage().delete_light(id());
+    stage()->delete_light(id());
 }
 
 }

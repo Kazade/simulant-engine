@@ -18,9 +18,9 @@ public:
     }
 
     void test_2d_sound_output() {
-        kglt::Stage& stage = window->scene().stage();
+        auto stage = window->scene().stage();
 
-        kglt::SoundID sound = stage.new_sound_from_file("sample_data/test_sound.ogg");
+        kglt::SoundID sound = stage->new_sound_from_file("sample_data/test_sound.ogg");
 
         assert_false(window->playing_sound_count());
 
@@ -34,11 +34,11 @@ public:
     }
 
     void test_3d_sound_output() {
-        kglt::Stage& stage = window->scene().stage();
+        auto stage = window->scene().stage();
 
-        kglt::SoundID sound = stage.new_sound_from_file("sample_data/test_sound.ogg");
+        kglt::SoundID sound = stage->new_sound_from_file("sample_data/test_sound.ogg");
 
-        auto actor = stage.actor(stage.new_actor());
+        auto actor = stage->actor(stage->new_actor());
         actor->move_to(10, 0, 0);
 
         assert_false(actor->playing_sound_count());

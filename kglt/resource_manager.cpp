@@ -1,7 +1,7 @@
 #include "window_base.h"
 #include "resource_manager.h"
 #include "loader.h"
-
+#include "scene.h"
 #include "procedural/mesh.h"
 
 #include "kazbase/datetime.h"
@@ -205,6 +205,13 @@ MaterialID ResourceManagerImpl::new_material_with_alias_from_file(const unicode&
         delete_material(m);
         throw;
     }
+    return m;
+}
+
+MaterialID ResourceManagerImpl::new_material_from_texture(TextureID texture_id, bool garbage_collect) {
+    MaterialID m = new_material_from_file(scene().default_material_filename(), garbage_collect);
+    material(m)->technique().pass(0).set_texture_unit(0, texture_id);
+    mark_material_as_uncollected(m); //FIXME: Race-y
     return m;
 }
 

@@ -18,7 +18,7 @@ public:
 
     std::list<unicode>& resource_path() { return resource_path_; }
 
-    unicode locate_file(const unicode& filename);
+    unicode locate_file(const unicode& filename) const;
     std::shared_ptr<std::stringstream> read_file(const unicode& filename);
     std::vector<std::string> read_file_lines(const unicode& filename);
 

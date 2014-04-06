@@ -440,9 +440,6 @@ typedef std::shared_ptr<Light> LightPtr;
 class Scene;
 typedef std::shared_ptr<Scene> ScenePtr;
 
-class Stage;
-typedef std::shared_ptr<Stage> StagePtr;
-
 class Camera;
 class CameraProxy;
 

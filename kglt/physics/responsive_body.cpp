@@ -8,7 +8,7 @@ namespace kglt {
 
 ResponsiveBody::ResponsiveBody(Object* owner):
     owner_(owner),
-    engine_(&owner->stage().scene().physics()){
+    engine_(&owner->stage()->scene().physics()){
 
     assert(engine_);
 }

@@ -98,11 +98,11 @@ void Object::parent_changed_callback(GenericTreeNode *old_parent, GenericTreeNod
 }
 
 void Object::make_responsive() {
-    if(!stage().scene().physics_enabled()) {
+    if(!stage()->scene().physics_enabled()) {
         throw std::logic_error("Tried to make an object responsive when no physics engine is enabled");
     }
 
-    PhysicsEngine& engine = stage().scene().physics();
+    PhysicsEngine& engine = stage()->scene().physics();
 
     responsive_body_ = engine.new_responsive_body(this);
 
@@ -110,11 +110,11 @@ void Object::make_responsive() {
 }
 
 void Object::make_collidable() {
-    if(!stage().scene().physics_enabled()) {
+    if(!stage()->scene().physics_enabled()) {
         throw std::logic_error("Tried to make an object collidable when no physics engine is enabled");
     }
 
-    PhysicsEngine& engine = stage().scene().physics();
+    PhysicsEngine& engine = stage()->scene().physics();
 
     collidable_ = engine.new_collidable(this);
 

@@ -14,20 +14,20 @@
 namespace kglt {
 namespace extra {
 
-SkyBox::SkyBox(kglt::Stage& stage, kglt::TextureID texture, float size, CameraID cam):
+SkyBox::SkyBox(AutoWeakPtr<Stage> stage, kglt::TextureID texture, float size, CameraID cam):
     stage_(stage),
     camera_id_(cam) {
 
-    actor_ = stage.geom_factory().new_cube(size);
+    actor_ = stage->geom_factory().new_cube(size);
 
-    auto mat = stage.material(stage.new_material_from_file("kglt/materials/generic_multitexture.kglm"));
+    auto mat = stage->material(stage->new_material_from_file("kglt/materials/generic_multitexture.kglm"));
 
     mat->technique().pass(0).set_texture_unit(0, texture);
     mat->technique().pass(0).set_depth_test_enabled(false);
     mat->technique().pass(0).set_depth_write_enabled(false);
 
     {
-        auto actor = stage.actor(actor_);
+        auto actor = stage->actor(actor_);
         actor->mesh()->set_material_id(mat->id());
         actor->mesh()->reverse_winding();
 
@@ -40,10 +40,10 @@ SkyBox::SkyBox(kglt::Stage& stage, kglt::TextureID texture, float size, CameraID
     }
 }
 
-StarField::StarField(Stage& stage, CameraID cam) {
+StarField::StarField(AutoWeakPtr<Stage> stage, CameraID cam) {
     //Generate a starfield texture
-    texture_id_ = stage.new_texture();
-    auto tex = stage.texture(texture_id_);
+    texture_id_ = stage->new_texture();
+    auto tex = stage->texture(texture_id_);
     kglt::procedural::texture::starfield(tex.__object);
     skybox_.reset(new SkyBox(stage, texture_id_, 500.0f, cam));
 }

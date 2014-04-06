@@ -16,7 +16,7 @@ void OctreePartitioner::event_actor_changed(ActorID ent) {
 void OctreePartitioner::add_actor(ActorID obj) {
     L_DEBUG("Adding actor to the partitioner");
 
-    auto ent = stage().actor(obj);
+    auto ent = stage()->actor(obj);
     for(uint16_t i = 0; i < ent->subactor_count(); ++i) {
         //All subactors are boundable
         Boundable* boundable = dynamic_cast<Boundable*>(&ent->subactor(i));
@@ -49,7 +49,7 @@ void OctreePartitioner::remove_actor(ActorID obj) {
 
 void OctreePartitioner::add_light(LightID obj) {
     //FIXME: THis is nasty and dangerous
-    auto light = stage().light(obj);
+    auto light = stage()->light(obj);
     Boundable* boundable = dynamic_cast<Boundable*>(light.__object.get());
     assert(boundable);
     tree_.grow(boundable);
@@ -57,7 +57,7 @@ void OctreePartitioner::add_light(LightID obj) {
 }
 
 void OctreePartitioner::remove_light(LightID obj) {
-    auto light = stage().light(obj);
+    auto light = stage()->light(obj);
     Boundable* boundable = dynamic_cast<Boundable*>(light.__object.get());
     assert(boundable);
     tree_.shrink(boundable);
@@ -77,7 +77,7 @@ std::vector<SubActor::ptr> OctreePartitioner::geometry_visible_from(CameraID cam
      */
 
     //Go through the visible nodes
-    for(OctreeNode* node: tree_.nodes_visible_from(stage().camera(camera_id)->frustum())) {
+    for(OctreeNode* node: tree_.nodes_visible_from(stage()->camera(camera_id)->frustum())) {
         //Go through the objects
         for(const Boundable* obj: node->objects()) {
             if(container::contains(boundable_to_subactor_, obj)) {

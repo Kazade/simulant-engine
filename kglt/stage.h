@@ -33,7 +33,8 @@ class Stage:
     public SpriteManager,
     public CameraProxyManager,
     public Loadable,
-    public SceneNode {
+    public SceneNode,
+    public Protectable {
 
 public:
     Stage(Scene *parent, StageID id, AvailablePartitioner partitioner);
@@ -163,6 +164,10 @@ public:
 
     MaterialID new_material_with_alias_from_file(const unicode& alias, const unicode& path, bool garbage_collect=true) override {
         return scene().new_material_with_alias_from_file(alias, path, garbage_collect);
+    }
+
+    MaterialID new_material_from_texture(TextureID texture, bool garbage_collect=true) override {
+        return scene().new_material_from_texture(texture, garbage_collect);
     }
 
     MaterialID get_material_with_alias(const unicode& alias) override {

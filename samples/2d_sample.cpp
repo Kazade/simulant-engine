@@ -25,7 +25,7 @@ private:
         sprite_grid_ = SpriteGrid::new_from_file(scene(), kglt::StageID(), "sample_data/tiled/example.tmx", "Layer 1");
 
         //Constrain the camera to the area where the sprite grid is rendered
-        scene().stage().camera()->constrain_to(
+        scene().stage()->camera()->constrain_to(
             kglt::Vec3(render_width / 2, render_height / 2, 0),
             kglt::Vec3(
                 sprite_grid_->render_dimensions().x - render_width / 2,

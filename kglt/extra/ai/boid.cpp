@@ -144,10 +144,7 @@ kglt::Vec3 Boid::steer_to_path() {
 }
 
 void Boid::update_debug_mesh() const {
-    Stage* stage = actor_->stage();
-    assert(stage);
-
-    auto mesh = stage->mesh(debug_mesh_);
+    auto mesh = actor_->stage()->mesh(debug_mesh_);
 
     auto& vd = mesh->submesh(normal_points_mesh_).vertex_data();
     auto& id = mesh->submesh(normal_points_mesh_).index_data();
@@ -175,22 +172,20 @@ void Boid::update_debug_mesh() const {
 
 void Boid::enable_debug(bool value) {
     assert(actor_);
-    Stage* stage = actor_->stage();
-    assert(stage);
 
     if(value) {
         if(!debug_mesh_) {
-            debug_mesh_ = stage->new_mesh();
+            debug_mesh_ = actor_->stage()->new_mesh();
         }
 
-        auto mesh = stage->mesh(debug_mesh_);
+        auto mesh = actor_->stage()->mesh(debug_mesh_);
         mesh->clear();
 
         auto smi = mesh->new_submesh(kglt::MaterialID(), MESH_ARRANGEMENT_LINE_STRIP, false);
         normal_points_mesh_ = mesh->new_submesh(kglt::MaterialID(), MESH_ARRANGEMENT_POINTS, false);
 
         {
-            auto mat = stage->material(mesh->submesh(normal_points_mesh_).material_id());
+            auto mat = actor_->stage()->material(mesh->submesh(normal_points_mesh_).material_id());
             mat->technique().pass(0).set_point_size(5);
         }
 
@@ -209,10 +204,10 @@ void Boid::enable_debug(bool value) {
         mesh->submesh(smi).index_data().done();
 
         if(!debug_actor_) {
-            debug_actor_ = stage->new_actor(debug_mesh_);
+            debug_actor_ = actor_->stage()->new_actor(debug_mesh_);
         }
     } else {
-        stage->delete_actor(debug_actor_);
+        actor_->stage()->delete_actor(debug_actor_);
 
         debug_actor_ = kglt::ActorID();
         debug_mesh_ = kglt::MeshID();

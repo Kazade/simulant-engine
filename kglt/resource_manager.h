@@ -110,6 +110,7 @@ public:
     virtual MaterialID new_material_with_alias(const unicode& alias, bool garbage_collect=true) = 0;
     virtual MaterialID new_material_with_alias_from_file(const unicode& alias, const unicode& path, bool garbage_collect=true) = 0;
     virtual MaterialID get_material_with_alias(const unicode& alias) = 0;
+    virtual MaterialID new_material_from_texture(TextureID texture, bool garbage_collect=true) = 0;
 
     virtual ProtectedPtr<Material> material(MaterialID t) = 0;
     virtual const ProtectedPtr<Material> material(MaterialID t) const = 0;
@@ -186,7 +187,8 @@ public:
     MaterialID new_material_from_file(const unicode& path, bool garbage_collect=true) override;
     MaterialID new_material_with_alias(const unicode& alias, bool garbage_collect=true) override;
     MaterialID new_material_with_alias_from_file(const unicode& alias, const unicode& path, bool garbage_collect=true) override;
-    MaterialID get_material_with_alias(const unicode& alias) override;
+    MaterialID new_material_from_texture(TextureID texture, bool garbage_collect=true) override;
+    MaterialID get_material_with_alias(const unicode& alias) override;    
 
     MaterialID clone_material(MaterialID mat);
 

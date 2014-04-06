@@ -18,10 +18,10 @@ public:
     virtual StageID stage_id() const = 0;
     virtual ActorID actor_id() const = 0;
 
-    Stage* stage() { return &scene_.stage(stage_id()); }
+    AutoWeakPtr<Stage> stage() { return scene_.stage(stage_id()); }
     ProtectedPtr<Actor> actor() { return stage()->actor(actor_id()); }
 
-    const Stage* stage() const { return &scene_.stage(stage_id()); }
+    const AutoWeakPtr<Stage> stage() const { return scene_.stage(stage_id()); }
     const ProtectedPtr<Actor> actor() const { return stage()->actor(actor_id()); }
 
 private:

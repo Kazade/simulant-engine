@@ -6,6 +6,7 @@
 #include <memory>
 #include <kazbase/exceptions.h>
 #include "kglt/types.h"
+#include "generic/auto_weakptr.h"
 
 namespace kglt {
 
@@ -154,9 +155,10 @@ public:
     typedef std::shared_ptr<RootGroup> ptr;
     typedef int data_type;
 
-    RootGroup(Stage& stage, CameraID camera):
+    RootGroup(WindowBase& window, StageID stage, CameraID camera):
         RenderGroup(nullptr),
-        stage_(stage),
+        window_(window),
+        stage_id_(stage),
         camera_id_(camera){}
 
     void bind();
@@ -166,13 +168,14 @@ public:
         return *this;
     }
 
-    Stage& stage() { return stage_; }
+    AutoWeakPtr<kglt::Stage> stage();
     ProtectedPtr<CameraProxy> camera();
 
     void insert(SubActor& ent, uint8_t pass_number);
 
 private:
-    Stage& stage_;
+    WindowBase& window_;
+    StageID stage_id_;
     CameraID camera_id_;
 
     void generate_mesh_groups(RenderGroup* parent, SubActor& ent, MaterialPass& pass);

@@ -19,13 +19,13 @@ CameraProxy::CameraProxy(Stage *stage, CameraID camera_id):
 
 CameraProxy::~CameraProxy() {
     //Set the camera's proxy to null
-    if(&stage().scene().camera(id())->proxy() == this) {
-        stage().scene().camera(id())->set_proxy(nullptr);
+    if(&stage()->scene().camera(id())->proxy() == this) {
+        stage()->scene().camera(id())->set_proxy(nullptr);
     }
 }
 
 void CameraProxy::ask_owner_for_destruction() {
-    stage().evict_camera(id());
+    stage()->evict_camera(id());
 }
 
 void CameraProxy::set_orthographic_projection(double left, double right, double bottom, double top, double near, double far) {
@@ -33,7 +33,7 @@ void CameraProxy::set_orthographic_projection(double left, double right, double 
 }
 
 ProtectedPtr<Camera> CameraProxy::camera() {
-    return stage().scene().camera(id());
+    return stage()->scene().camera(id());
 }
 
 void CameraProxy::follow(ActorID actor, const kglt::Vec3& offset, float lag_in_seconds) {
@@ -45,9 +45,9 @@ void CameraProxy::follow(ActorID actor, const kglt::Vec3& offset, float lag_in_s
 }
 
 void CameraProxy::_update_following(double dt) {
-    if(following_actor_ && stage().has_actor(following_actor_)) {
-        Quaternion actor_rotation = stage().actor(following_actor_)->absolute_rotation();
-        Vec3 actor_position = stage().actor(following_actor_)->absolute_position();
+    if(following_actor_ && stage()->has_actor(following_actor_)) {
+        Quaternion actor_rotation = stage()->actor(following_actor_)->absolute_rotation();
+        Vec3 actor_position = stage()->actor(following_actor_)->absolute_position();
 
         Vec3 actor_forward;
         kmQuaternionGetForwardVec3RH(&actor_forward, &actor_rotation);

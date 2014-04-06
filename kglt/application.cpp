@@ -23,7 +23,7 @@ Scene& App::scene() {
     return window().scene();
 }
 
-Stage& App::stage(StageID stage) {
+AutoWeakPtr<Stage> App::stage(StageID stage) {
     return window().scene().stage(stage);
 }
 

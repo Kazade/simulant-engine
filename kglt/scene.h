@@ -7,6 +7,7 @@
 #include "types.h"
 #include "resource_manager.h"
 #include "generic/manager.h"
+#include "generic/auto_weakptr.h"
 #include "generic/generic_tree.h"
 #include "physics/physics_engine.h"
 #include "interfaces.h"
@@ -55,10 +56,8 @@ public:
     }
 
     StageID new_stage(AvailablePartitioner partitioner=PARTITIONER_OCTREE);            
-    Stage& stage() { return stage(default_stage_); }
-    Stage& stage(StageID s);
-    StageRef stage_ref(StageID s);
-
+    AutoWeakPtr<Stage> stage();
+    AutoWeakPtr<Stage> stage(StageID s);
     void delete_stage(StageID s);
     uint32_t stage_count() const;
 
@@ -104,6 +103,8 @@ public:
     void delete_background(BackgroundID bid);
     uint32_t background_count() const;
     // End background
+
+    unicode default_material_filename() const;
 
 private:    
     void render_tree(GenericTreeNode* node, uint32_t& level) {

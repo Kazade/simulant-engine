@@ -59,17 +59,17 @@ bool Background::init() {
         -100
     );
 
-    actor_id_ = scene_->stage(stage_id_).new_actor();
+    actor_id_ = scene_->stage(stage_id_)->new_actor();
     //Load the background material
-    material_id_ = scene_->stage(stage_id_).new_material_from_file("kglt/materials/background.kglm");
+    material_id_ = scene_->stage(stage_id_)->new_material_from_file("kglt/materials/background.kglm");
 
-    auto mesh = scene_->stage(stage_id_).new_mesh_as_rectangle(1, 1, Vec2(0.5, 0.5));
-    scene_->stage(stage_id_).actor(actor_id_)->set_mesh(mesh);
-    scene_->stage(stage_id_).mesh(mesh)->set_material_id(material_id_);
+    auto mesh = scene_->stage(stage_id_)->new_mesh_as_rectangle(1, 1, Vec2(0.5, 0.5));
+    scene_->stage(stage_id_)->actor(actor_id_)->set_mesh(mesh);
+    scene_->stage(stage_id_)->mesh(mesh)->set_material_id(material_id_);
 
-    scene_->stage(stage_id_).material(material_id_)->technique().pass(0).set_blending(BLEND_ALPHA);
-    scene_->stage(stage_id_).material(material_id_)->technique().pass(0).set_depth_test_enabled(false);
-    scene_->stage(stage_id_).material(material_id_)->technique().pass(0).set_depth_write_enabled(false);
+    scene_->stage(stage_id_)->material(material_id_)->technique().pass(0).set_blending(BLEND_ALPHA);
+    scene_->stage(stage_id_)->material(material_id_)->technique().pass(0).set_depth_test_enabled(false);
+    scene_->stage(stage_id_)->material(material_id_)->technique().pass(0).set_depth_write_enabled(false);
     return true;
 }
 
@@ -81,8 +81,8 @@ void Background::cleanup() {
 }
 
 void Background::update(double dt) {
-    scene_->stage(stage_id_).material(material_id_)->technique().pass(0).texture_unit(0).scroll_x(x_rate_ * dt);
-    scene_->stage(stage_id_).material(material_id_)->technique().pass(0).texture_unit(0).scroll_y(y_rate_ * dt);
+    scene_->stage(stage_id_)->material(material_id_)->technique().pass(0).texture_unit(0).scroll_x(x_rate_ * dt);
+    scene_->stage(stage_id_)->material(material_id_)->technique().pass(0).texture_unit(0).scroll_y(y_rate_ * dt);
 }
 
 void Background::set_horizontal_scroll_rate(float x_rate) {
@@ -94,7 +94,7 @@ void Background::set_vertical_scroll_rate(float y_rate) {
 }
 
 void Background::set_texture(TextureID tex) {
-    scene_->stage(stage_id_).material(material_id_)->technique().pass(0).set_texture_unit(0, tex);
+    scene_->stage(stage_id_)->material(material_id_)->technique().pass(0).set_texture_unit(0, tex);
 }
 
 void Background::set_resize_style(BackgroundResizeStyle style) {

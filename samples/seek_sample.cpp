@@ -64,7 +64,7 @@ public:
 
 private:
     bool do_init() {
-        dot_ = Dot::create(scene(), stage().id());
+        dot_ = Dot::create(scene(), stage()->id());
 
         scene().camera()->set_perspective_projection(
             45.0,

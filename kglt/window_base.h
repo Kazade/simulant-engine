@@ -95,6 +95,7 @@ public:
     ViewportID default_viewport() const { return default_viewport_; }
 
     ResourceLocator& resource_locator() { return *resource_locator_; }
+    const ResourceLocator& resource_locator() const { return *resource_locator_; }
 
     Keyboard& keyboard();
     Mouse& mouse();

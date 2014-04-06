@@ -30,7 +30,7 @@ public:
     virtual std::vector<std::shared_ptr<SubActor>> geometry_visible_from(CameraID camera_id) = 0;
 
 protected:
-    Stage& stage() { return stage_; }
+    Stage* stage() { return &stage_; }
 
 private:
     Stage& stage_;

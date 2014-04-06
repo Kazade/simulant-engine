@@ -18,9 +18,9 @@ public:
         //window->reset();
     }
 
-    kglt::MeshID generate_test_mesh(kglt::Stage& scene) {
-        kglt::MeshID mid = scene.new_mesh();
-        auto mesh = scene.mesh(mid);
+    kglt::MeshID generate_test_mesh(AutoWeakPtr<kglt::Stage> stage) {
+        kglt::MeshID mid = stage->new_mesh();
+        auto mesh = stage->mesh(mid);
 
         kglt::VertexData& data = mesh->shared_data();
 
@@ -66,10 +66,10 @@ public:
     }
 
     void test_user_data_works() {
-        kglt::Stage& scene = window->scene().stage();
+        auto stage = window->scene().stage();
 
-        kglt::ActorID mid = scene.new_actor();
-        auto actor = scene.actor(mid);
+        kglt::ActorID mid = stage->new_actor();
+        auto actor = stage->actor(mid);
 
         this->assert_true(actor->id() != 0); //Make sure we set an id for the mesh
         this->assert_true(actor->uuid() != 0); //Make sure we set a unique ID for the object
@@ -78,33 +78,33 @@ public:
         this->assert_true(actor->exists("data"));
         this->assert_equal((int)0xDEADBEEF, actor->get<int>("data"));
 
-        scene.delete_actor(mid);
+        stage->delete_actor(mid);
 
-        this->assert_true(!scene.has_actor(mid));
+        this->assert_true(!stage->has_actor(mid));
     }
 
     void test_deleting_entities_deletes_children() {
-        kglt::Stage& scene = window->scene().stage();
+        auto stage = window->scene().stage();
 
-        kglt::ActorID mid = scene.new_actor(); //Create the root mesh        
-        kglt::ActorID cid1 = scene.new_actor_with_parent(mid); //Create a child
-        kglt::ActorID cid2 = scene.new_actor_with_parent(cid1); //Create a child of the child
+        kglt::ActorID mid = stage->new_actor(); //Create the root mesh
+        kglt::ActorID cid1 = stage->new_actor_with_parent(mid); //Create a child
+        kglt::ActorID cid2 = stage->new_actor_with_parent(cid1); //Create a child of the child
 
-        this->assert_equal((uint32_t)1, scene.actor(mid)->children().size());
-        this->assert_equal((uint32_t)1, scene.actor(cid1)->children().size());
-        this->assert_equal((uint32_t)0, scene.actor(cid2)->children().size());
+        this->assert_equal((uint32_t)1, stage->actor(mid)->children().size());
+        this->assert_equal((uint32_t)1, stage->actor(cid1)->children().size());
+        this->assert_equal((uint32_t)0, stage->actor(cid2)->children().size());
 
-        scene.delete_actor(mid);
-        this->assert_true(!scene.has_actor(mid));
-        this->assert_true(!scene.has_actor(cid1));
-        this->assert_true(!scene.has_actor(cid2));
+        stage->delete_actor(mid);
+        this->assert_true(!stage->has_actor(mid));
+        this->assert_true(!stage->has_actor(cid1));
+        this->assert_true(!stage->has_actor(cid2));
     }
 
     void test_procedural_rectangle_outline() {
-        kglt::Stage& scene = window->scene().stage();
+        auto stage = window->scene().stage();
 
-        kglt::MeshID mid = scene.new_mesh();
-        auto mesh = scene.mesh(mid);
+        kglt::MeshID mid = stage->new_mesh();
+        auto mesh = stage->mesh(mid);
 
         this->assert_equal(0, mesh->shared_data().count());
         kglt::SubMeshIndex idx = kglt::procedural::mesh::rectangle_outline(mesh, 1.0, 1.0);
@@ -115,8 +115,8 @@ public:
     }
 
     void test_basic_usage() {
-        kglt::Stage& scene = window->scene().stage();
-        auto mesh = scene.mesh(generate_test_mesh(scene));
+        auto stage = window->scene().stage();
+        auto mesh = stage->mesh(generate_test_mesh(stage));
 
         kglt::VertexData& data = mesh->shared_data();
 
@@ -135,11 +135,11 @@ public:
     }
 
     void test_actor_from_mesh() {
-        kglt::Stage& scene = window->scene().stage();
+        auto stage = window->scene().stage();
 
-        auto mesh = scene.mesh(generate_test_mesh(scene));
+        auto mesh = stage->mesh(generate_test_mesh(stage));
 
-        auto actor = scene.actor(scene.new_actor());
+        auto actor = stage->actor(stage->new_actor());
 
         assert_true(!actor->has_mesh());
 
@@ -169,10 +169,10 @@ public:
     }
 
     void test_scene_methods() {
-        kglt::Stage& scene = window->scene().stage();
+        auto stage = window->scene().stage();
 
-        kglt::MeshID mesh_id = scene.new_mesh(); //Create a mesh
-        auto actor = scene.actor(scene.new_actor(mesh_id));
+        kglt::MeshID mesh_id = stage->new_mesh(); //Create a mesh
+        auto actor = stage->actor(stage->new_actor(mesh_id));
 
         assert_true(mesh_id == actor->mesh()->id());
     }

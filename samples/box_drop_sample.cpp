@@ -19,15 +19,15 @@ private:
         scene().physics().create_plane(0, 1, 0, -3.5);
         scene().physics().set_gravity(Vec3(0, -7.8, 0));
 
-        texture_id_ = stage().new_texture_from_file("sample_data/crate.png");
-        mesh_ = stage().new_mesh_as_cube(1.0);
-        stage().mesh(mesh_)->set_texture_on_material(0, texture_id_);
+        texture_id_ = stage()->new_texture_from_file("sample_data/crate.png");
+        mesh_ = stage()->new_mesh_as_cube(1.0);
+        stage()->mesh(mesh_)->set_texture_on_material(0, texture_id_);
 
-        stage().set_ambient_light(kglt::Colour(0.3, 0.3, 0.3, 0.3));
+        stage()->set_ambient_light(kglt::Colour(0.3, 0.3, 0.3, 0.3));
 
-        LightID lid = stage().new_light();
+        LightID lid = stage()->new_light();
         {
-            auto light = stage().light(lid);
+            auto light = stage()->light(lid);
             light->set_direction(-1, 0, 0);
             light->set_diffuse(kglt::Colour(0.1, 0.1, 0.1, 0.1));
             light->set_specular(kglt::Colour(0, 0, 0, 0));
@@ -45,9 +45,9 @@ private:
             if(time_since_last_spawn_ >= 1.0) {
 
                 //Make the new actor both responsive, and collidable
-                ActorID new_actor = stage().new_actor(mesh_, true, true);
+                ActorID new_actor = stage()->new_actor(mesh_, true, true);
                 {
-                    auto actor = stage().actor(new_actor);
+                    auto actor = stage()->actor(new_actor);
 
                     //Add a cube shape to the collidable
                     actor->body().set_mass_box(1.0, 1.0, 1.0, 1.0);

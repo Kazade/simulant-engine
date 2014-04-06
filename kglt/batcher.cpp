@@ -9,7 +9,8 @@
 #include "shader.h"
 #include "camera.h"
 #include "partitioner.h"
-
+#include "window_base.h"
+#include "scene.h"
 #include "utils/gl_error.h"
 
 namespace kglt {
@@ -18,12 +19,16 @@ void RootGroup::bind() {
 }
 
 ProtectedPtr<CameraProxy> RootGroup::camera() {
-    return stage().camera(camera_id_);
+    return stage()->camera(camera_id_);
+}
+
+AutoWeakPtr<Stage> RootGroup::stage() {
+    return window_.scene().stage(stage_id_);
 }
 
 void RootGroup::generate_mesh_groups(RenderGroup* parent, SubActor& ent, MaterialPass& pass) {
     Vec3 pos;
-    std::vector<LightID> lights = stage().partitioner().lights_within_range(pos);
+    std::vector<LightID> lights = stage()->partitioner().lights_within_range(pos);
     uint32_t iteration_count = 1;
     if(pass.iteration() == ITERATE_N) {
         iteration_count = pass.max_iterations();
@@ -46,7 +51,7 @@ void RootGroup::insert(SubActor &ent, uint8_t pass_number) {
     if(!ent._parent().is_visible()) return;
 
     //Get the material for the actor, this is used to build the tree
-    auto mat = stage().material(ent.material_id());
+    auto mat = stage()->material(ent.material_id());
 
     MaterialPass& pass = mat->technique().pass(pass_number);
 
@@ -88,7 +93,7 @@ void LightGroup::bind() {
     }
 
     RootGroup& root = static_cast<RootGroup&>(get_root());
-    auto light = root.stage().light(data_.light_id);
+    auto light = root.stage()->light(data_.light_id);
 
     ShaderProgram* active_shader = ShaderProgram::active_shader();
     assert(active_shader);
@@ -172,7 +177,7 @@ void ShaderGroup::bind() {
     if(params.uses_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT)) {
         params.set_colour(
             params.auto_uniform_variable_name(SP_AUTO_LIGHT_GLOBAL_AMBIENT),
-            root.stage().ambient_light()
+            root.stage()->ambient_light()
         );
     }
 }
@@ -211,7 +216,7 @@ void DepthGroup::unbind() {
 void TextureGroup::bind() {
     GLCheck(glActiveTexture, GL_TEXTURE0 + data_.unit);
     RootGroup& root = static_cast<RootGroup&>(get_root());
-    GLCheck(glBindTexture, GL_TEXTURE_2D, root.stage().texture(data_.texture_id)->gl_tex());
+    GLCheck(glBindTexture, GL_TEXTURE_2D, root.stage()->texture(data_.texture_id)->gl_tex());
 }
 
 void TextureGroup::unbind() {

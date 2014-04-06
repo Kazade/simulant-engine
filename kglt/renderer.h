@@ -5,8 +5,10 @@
 #include <vector>
 #include <memory>
 
+#include "generic/protected_ptr.h"
 #include "types.h"
 #include "utils/geometry_buffer.h"
+#include "generic/auto_weakptr.h"
 
 namespace kglt {
 
@@ -28,7 +30,7 @@ public:
     virtual void render_subactor(SubActor& buffer, CameraID camera) = 0;
 
 protected:
-    Stage& current_stage();
+    AutoWeakPtr<Stage> current_stage();
 
 private:    
     Scene& scene_;

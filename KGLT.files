@@ -355,3 +355,4 @@ kglt/scene_node.h
 kglt/interfaces.cpp
 kglt/background.h
 kglt/background.cpp
+kglt/generic/auto_weakptr.h

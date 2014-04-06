@@ -58,11 +58,15 @@ CameraID Scene::default_camera_id() const {
     return default_camera_;
 }
 
+unicode Scene::default_material_filename() const {
+    return window().resource_locator().locate_file("kglt/materials/multitexture_and_lighting.kglm");
+}
+
 void Scene::initialize_defaults() {
     default_camera_ = new_camera(); //Create a default camera
     default_stage_ = new_stage(kglt::PARTITIONER_NULL);
 
-    stage(default_stage_).host_camera(default_camera_);
+    stage(default_stage_)->host_camera(default_camera_);
 
     default_ui_stage_ = new_ui_stage();
     default_ui_camera_ = new_camera();
@@ -95,42 +99,39 @@ void Scene::initialize_defaults() {
     default_texture_->upload();
 
     //Maintain ref-count
-    default_material_ = material(new_material_from_file("kglt/materials/multitexture_and_lighting.kglm")).__object;
+    default_material_ = material(new_material_from_file(default_material_filename())).__object;
 
     //Set the default material's first texture to the default (white) texture
     default_material_->technique().pass(0).set_texture_unit(0, default_texture_->id());
 }
 
 StageID Scene::new_stage(AvailablePartitioner partitioner) {
-    Stage& ss = stage(StageManager::manager_new(StageID(), partitioner));
-
-    return ss.id();
+    return StageManager::manager_new(StageID(), partitioner);
 }
 
 uint32_t Scene::stage_count() const {
     return StageManager::manager_count();
 }
 
-Stage& Scene::stage(StageID s) {
-    if(s == DefaultStageID) {
-        return *(StageManager::manager_get(default_stage_)).lock();
-    }
-
-    return *(StageManager::manager_get(s)).lock();
+/**
+ * @brief Scene::stage
+ * @return A shared_ptr to the default stage
+ *
+ * We don't return a ProtectedPtr because it makes usage a nightmare. Stages don't suffer the same potential
+ * threading issues as other objects as they are the highest level object. Returning a weak_ptr means that
+ * we retain ownership, and calling code won't die if the stage goes missing.
+ */
+AutoWeakPtr<Stage> Scene::stage() {
+    return StageManager::manager_get(default_stage_);
 }
 
-StageRef Scene::stage_ref(StageID s) {
-    if(!StageManager::manager_contains(s)) {
-        throw DoesNotExist<Stage>();
-    }
-    return StageManager::__objects()[s];
+AutoWeakPtr<Stage> Scene::stage(StageID s) {
+    return StageManager::manager_get(s);
 }
 
 void Scene::delete_stage(StageID s) {
-    Stage& ss = stage(s);
-
     //Recurse through the tree, destroying all children
-    ss.apply_recursively_leaf_first(&ownable_tree_node_destroy, false);
+    stage(s)->apply_recursively_leaf_first(&ownable_tree_node_destroy, false);
 
     StageManager::manager_delete(s);
 }
@@ -175,7 +176,7 @@ ProtectedPtr<Camera> Scene::camera(CameraID c) {
 void Scene::delete_camera(CameraID cid) {
     //Remove any associated proxy
     if(camera(cid)->has_proxy()) {
-        camera(cid)->proxy().stage().evict_camera(cid);
+        camera(cid)->proxy().stage()->evict_camera(cid);
     }
 
     CameraManager::manager_delete(cid);

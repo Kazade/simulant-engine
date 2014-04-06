@@ -157,14 +157,14 @@ public:
     virtual void _initialize() {}
     virtual void do_update(double dt) {}
 
-    Stage& stage() {
+    Stage* stage() {
         assert(stage_);
-        return *stage_;
+        return stage_;
     }
 
-    const Stage& stage() const {
+    const Stage* stage() const {
         assert(stage_);
-        return *stage_;
+        return stage_;
     }
 
     void destroy_children();

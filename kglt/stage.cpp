@@ -217,7 +217,7 @@ void Stage::host_camera(CameraID c) {
 
     if(scene().camera(c)->has_proxy()) {
         //Destroy any existing proxy
-        scene().camera(c)->proxy().stage().evict_camera(c);
+        scene().camera(c)->proxy().stage()->evict_camera(c);
     }
 
     //Create a camera proxy for the camera ID

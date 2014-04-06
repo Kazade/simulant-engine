@@ -11,7 +11,7 @@ std::vector<LightID> NullPartitioner::lights_within_range(const Vec3& location) 
 
     //Find all the lights within range of the location
     for(LightID light_id: all_lights_) {
-        Vec3 diff = location - stage().light(light_id)->absolute_position();
+        Vec3 diff = location - stage()->light(light_id)->absolute_position();
         float dist = diff.length();
         //if(dist < light.range()) {
             lights_in_range.push_back(std::make_pair(light_id, dist));
@@ -35,10 +35,10 @@ std::vector<SubActor::ptr> NullPartitioner::geometry_visible_from(CameraID camer
 
     //Just return all of the meshes in the stage
     for(ActorID eid: all_actors_) {
-        std::vector<SubActor::ptr> subactors = stage().actor(eid)->_subactors();
+        std::vector<SubActor::ptr> subactors = stage()->actor(eid)->_subactors();
 
         for(SubActor::ptr ent: subactors) {
-            if(stage().scene().camera(camera_id)->frustum().intersects_aabb(ent->absolute_bounds())) {
+            if(stage()->scene().camera(camera_id)->frustum().intersects_aabb(ent->absolute_bounds())) {
                 result.push_back(ent);
             }
         }

@@ -13,7 +13,7 @@ public:
 private:
     bool do_init() {
         window().loader_for("sample_data/sample.bsp")->into(scene());
-        stage().set_ambient_light(kglt::Colour(0.02, 0.02, 0.02, 1.0));
+        stage()->set_ambient_light(kglt::Colour(0.02, 0.02, 0.02, 1.0));
         return true;
     }
 

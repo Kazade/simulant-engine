@@ -15,7 +15,7 @@ void ResourceLocator::add_search_path(const unicode& path) {
     resource_path_.push_back(path);
 }
 
-unicode ResourceLocator::locate_file(const unicode &filename) {
+unicode ResourceLocator::locate_file(const unicode &filename) const {
     /**
       Locates a file on one of the resource paths, throws an IOError if the file
       cannot be found

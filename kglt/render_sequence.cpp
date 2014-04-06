@@ -150,15 +150,17 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
 
     signal_pipeline_started_(*pipeline_stage);
 
+    CameraID camera_id = pipeline_stage->camera_id();
+    StageID stage_id = pipeline_stage->stage_id();
+
     if(pipeline_stage->ui_stage_id()) {        
         //This is a UI stage, so just render that
         auto ui_stage = scene_.ui_stage(pipeline_stage->ui_stage_id());
         ui_stage->__resize(viewport.width(), viewport.height());
         ui_stage->__render(camera_projection);
     } else {
-        Stage& stage = scene_.stage(pipeline_stage->stage_id());
-
-        std::vector<SubActor::ptr> buffers = stage.partitioner().geometry_visible_from(pipeline_stage->camera_id());
+        std::vector<SubActor::ptr> buffers = scene_.stage(stage_id
+            )->partitioner().geometry_visible_from(camera_id);
 
 
         /*
@@ -182,14 +184,14 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
             //Get the priority queue for this actor (e.g. RENDER_PRIORITY_BACKGROUND)
             QueueGroups::mapped_type& priority_queue = queues[(uint32_t)ent->_parent().render_priority()];
 
-            auto mat = stage.material(ent->material_id());
+            auto mat = scene_.stage(pipeline_stage->stage_id())->material(ent->material_id());
 
             //Go through the actors material passes
             for(uint8_t pass = 0; pass < mat->technique().pass_count(); ++pass) {
                 //Create a new render group if necessary
                 RootGroup::ptr group;
                 if(priority_queue.size() <= pass) {
-                    group = RootGroup::ptr(new RootGroup(stage, pipeline_stage->camera_id()));
+                    group = RootGroup::ptr(new RootGroup(scene_.window(), stage_id, camera_id));
                     priority_queue.push_back(group);
                 } else {
                     group = priority_queue[pass];
@@ -205,7 +207,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
          * when we render, we can apply the uniforms/textures/shaders etc. by traversing the
          * tree and calling bind()/unbind() at each level
          */
-        renderer_->set_current_stage(stage.id());
+        renderer_->set_current_stage(stage_id);
         for(RenderPriority priority: RENDER_PRIORITIES) {
             QueueGroups::mapped_type& priority_queue = queues[priority];
             for(RootGroup::ptr pass_group: priority_queue) {

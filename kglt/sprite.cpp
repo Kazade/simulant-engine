@@ -16,26 +16,26 @@ Sprite::Sprite(Stage *stage, SpriteID id):
 }
 
 bool Sprite::init() {
-    mesh_id_ = stage().new_mesh_as_rectangle(1.0, 1.0);
+    mesh_id_ = stage()->new_mesh_as_rectangle(1.0, 1.0);
 
     //Annoyingly, we can't use new_actor_with_parent_and_mesh here, because that looks
     //up our ID in the stage, which doesn't exist until this function returns. So instead
     //we make sure we are set as the parent on each update. Not ideal, but still.
-    actor_id_ = stage().new_actor_with_mesh(mesh_id_);
+    actor_id_ = stage()->new_actor_with_mesh(mesh_id_);
 
     return true;
 }
 
 void Sprite::cleanup() {
-    stage().delete_actor(actor_id_);
+    stage()->delete_actor(actor_id_);
 }
 
 void Sprite::ask_owner_for_destruction() {
-    stage().delete_sprite(id());
+    stage()->delete_sprite(id());
 }
 
 void Sprite::update(double dt) {
-    stage().actor(actor_id_)->set_parent(id()); //Make sure every frame that our actor stays attached to us!
+    stage()->actor(actor_id_)->set_parent(id()); //Make sure every frame that our actor stays attached to us!
 
     if(animations_.empty()){
         return;
@@ -172,7 +172,7 @@ void Sprite::update_texture_coordinates() {
     }
 
     {
-        auto mesh = stage().mesh(mesh_id_);
+        auto mesh = stage()->mesh(mesh_id_);
 
         mesh->shared_data().move_to_start();
         mesh->shared_data().tex_coord0(x0, y0);
@@ -201,15 +201,15 @@ void Sprite::set_spritesheet(TextureID texture_id, uint32_t frame_width,
     sprite_sheet_spacing_ = spacing;
     sprite_sheet_padding_ = padding;
 
-    image_width_ = stage().texture(texture_id)->width();
-    image_height_ = stage().texture(texture_id)->height();
+    image_width_ = stage()->texture(texture_id)->width();
+    image_height_ = stage()->texture(texture_id)->height();
 
     //Hold a reference to the new material
-    material_id_ = stage().scene().clone_default_material();
+    material_id_ = stage()->scene().clone_default_material();
 
-    stage().mesh(mesh_id_)->set_material_id(material_id_);
-    stage().material(material_id_)->technique().pass(0).set_texture_unit(0, texture_id);
-    stage().material(material_id_)->technique().pass(0).set_blending(BLEND_ALPHA);
+    stage()->mesh(mesh_id_)->set_material_id(material_id_);
+    stage()->material(material_id_)->technique().pass(0).set_texture_unit(0, texture_id);
+    stage()->material(material_id_)->technique().pass(0).set_blending(BLEND_ALPHA);
 
     update_texture_coordinates();
 }
@@ -241,7 +241,7 @@ void Sprite::set_render_dimensions(float width, float height) {
     render_height_ = height;
 
     //Rebuild the mesh
-    auto mesh = stage().mesh(mesh_id_);
+    auto mesh = stage()->mesh(mesh_id_);
 
     mesh->shared_data().move_to_start();
     mesh->shared_data().position((-width / 2.0), (-height / 2.0), 0);

@@ -21,10 +21,10 @@ GridChunk::GridChunk(SpriteGrid *parent, const Vec2& offset):
 
 bool GridChunk::init() {
     //Create a mesh for the chunk
-    mesh_id_ = parent_->stage().new_mesh();
+    mesh_id_ = parent_->stage()->new_mesh();
 
     {
-        auto mesh = parent_->stage().mesh(mesh_id_);
+        auto mesh = parent_->stage()->mesh(mesh_id_);
 
         //Generate a rectangle submesh for all tiles in the chunk
         for(uint32_t y = 0; y < CHUNK_WIDTH_IN_TILES; ++y) {
@@ -42,9 +42,9 @@ bool GridChunk::init() {
         }
     }
 
-    actor_id_ = parent_->stage().new_actor(mesh_id_);
-    parent_->stage().actor(actor_id_)->move_to(offset_.x, offset_.y, 0);
-    parent_->stage().actor(actor_id_)->set_render_priority(RENDER_PRIORITY_BACKGROUND);
+    actor_id_ = parent_->stage()->new_actor(mesh_id_);
+    parent_->stage()->actor(actor_id_)->move_to(offset_.x, offset_.y, 0);
+    parent_->stage()->actor(actor_id_)->set_render_priority(RENDER_PRIORITY_BACKGROUND);
     return true;
 }
 
@@ -53,7 +53,7 @@ void GridChunk::cleanup() {
 }
 
 void GridChunk::set_tile_texture_info(int32_t tile_index, TextureID texture_id, float x0, float y0, float x1, float y1) {
-    auto mesh = parent_->stage().mesh(mesh_id_);
+    auto mesh = parent_->stage()->mesh(mesh_id_);
     auto& submesh = mesh->submesh(tiles_.at(tile_index).submesh);
     submesh.set_texture_on_material(0, texture_id);
 
@@ -130,7 +130,7 @@ SpriteGrid::ptr SpriteGrid::new_from_file(Scene& scene, StageID stage, const uni
 
         unicode final_path = os::path::join(parent_dir, rel_path);
         L_DEBUG(_u("Loading tileset from: {0}").format(final_path));
-        new_grid->add_tileset(i, new_grid->stage().new_texture_from_file(
+        new_grid->add_tileset(i, new_grid->stage()->new_texture_from_file(
             final_path,
             TEXTURE_OPTION_CLAMP_TO_EDGE | TEXTURE_OPTION_DISABLE_MIPMAPS | TEXTURE_OPTION_NEAREST_FILTER
         ));
@@ -227,7 +227,7 @@ void SpriteGrid::cleanup() {
 
 }
 
-Stage& SpriteGrid::stage() {
+AutoWeakPtr<Stage> SpriteGrid::stage() {
     return scene_.stage(stage_id_);
 }
 
