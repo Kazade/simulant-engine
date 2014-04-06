@@ -8,7 +8,7 @@ int main(int argc, char* argv[]) {
     window->set_title("KGLT Sample");
 
     kglt::Stage& stage = window->scene().stage();
-    window->scene().camera().set_perspective_projection(
+    window->scene().camera()->set_perspective_projection(
         45.0,
         float(window->width()) / float(window->height()),
         1.0,

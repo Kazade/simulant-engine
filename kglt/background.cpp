@@ -32,7 +32,7 @@ void Background::update_camera() {
         height = 1.0;
     }
 
-    scene_->camera(camera_id_).set_orthographic_projection(
+    scene_->camera(camera_id_)->set_orthographic_projection(
         0,
         width,
         0,

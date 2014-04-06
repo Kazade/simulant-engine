@@ -76,7 +76,7 @@ private:
     bool do_init() {
         scene().enable_physics(kglt::DefaultPhysicsEngine::create());
         car_ = Car::create(scene(), stage().id());
-        scene().camera().set_perspective_projection(
+        scene().camera()->set_perspective_projection(
             45.0,
             float(window().width()) / float(window().height()),
             1.0,

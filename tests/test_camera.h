@@ -22,14 +22,14 @@ public:
     }
 
     void test_project_point() {
-        window->scene().camera().set_perspective_projection(45.0, float(window->width()) / float(window->height()));
+        window->scene().camera()->set_perspective_projection(45.0, float(window->width()) / float(window->height()));
 
-        kmVec3 p1 = window->scene().camera().project_point(kglt::ViewportID(), kglt::Vec3(0, 0, -10));
+        kmVec3 p1 = window->scene().camera()->project_point(kglt::ViewportID(), kglt::Vec3(0, 0, -10));
 
         assert_equal(window->width() / 2, p1.x);
         assert_equal(window->height() / 2, p1.y);
 
-        p1 = window->scene().camera().project_point(kglt::ViewportID(), kglt::Vec3(1, 0, -10));
+        p1 = window->scene().camera()->project_point(kglt::ViewportID(), kglt::Vec3(1, 0, -10));
 
         assert_true(p1.x > (window->width() / 2));
         assert_equal(window->height() / 2, p1.y);

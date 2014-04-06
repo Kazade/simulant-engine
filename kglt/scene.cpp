@@ -30,7 +30,8 @@ Scene::~Scene() {
 
     //Clear the stages first, they may hold references to cameras, materials
     //etc.
-    StageManager::__objects().clear();
+    BackgroundManager::__objects().clear();
+    StageManager::__objects().clear();    
     CameraManager::__objects().clear();
 }
 
@@ -66,7 +67,7 @@ void Scene::initialize_defaults() {
     default_ui_stage_ = new_ui_stage();
     default_ui_camera_ = new_camera();
 
-    camera(default_ui_camera_).set_orthographic_projection(
+    camera(default_ui_camera_)->set_orthographic_projection(
         0, window().width(), window().height(), 0, -1, 1
     );
 
@@ -144,11 +145,7 @@ ProtectedPtr<UIStage> Scene::ui_stage() {
 }
 
 ProtectedPtr<UIStage> Scene::ui_stage(UIStageID s) {
-    if(!s) {
-        return UIStageManager::manager_get(default_ui_stage_);
-    } else {
-        return UIStageManager::manager_get(s);
-    }
+    return UIStageManager::manager_get(s);
 }
 
 void Scene::delete_ui_stage(UIStageID s) {
@@ -159,12 +156,7 @@ uint32_t Scene::ui_stage_count() const {
     return UIStageManager::manager_count();
 }
 
-CameraRef Scene::camera_ref(CameraID c) {
-    if(!CameraManager::manager_contains(c)) {
-        throw DoesNotExist<Camera>();
-    }
-    return CameraManager::__objects()[c];
-}
+//=============== START CAMERAS ============
 
 CameraID Scene::new_camera() {
     CameraID new_camera = CameraManager::manager_new();
@@ -172,23 +164,27 @@ CameraID Scene::new_camera() {
     return new_camera;
 }
 
-Camera& Scene::camera(CameraID c) {
-    if(c == CameraID()) {
-        //Return the default camera
-        return *(CameraManager::manager_get(default_camera_).lock());
-    }
-    return *(CameraManager::manager_get(c).lock());
+ProtectedPtr<Camera> Scene::camera() {
+    return CameraManager::manager_get(default_camera_);
+}
+
+ProtectedPtr<Camera> Scene::camera(CameraID c) {
+    return CameraManager::manager_get(c);
 }
 
 void Scene::delete_camera(CameraID cid) {
     //Remove any associated proxy
-    if(camera(cid).has_proxy()) {
-        camera(cid).proxy().stage().evict_camera(cid);
+    if(camera(cid)->has_proxy()) {
+        camera(cid)->proxy().stage().evict_camera(cid);
     }
 
     CameraManager::manager_delete(cid);
 }
 
+uint32_t Scene::camera_count() const {
+    return CameraManager::manager_count();
+}
+//============== END CAMERAS ================
 //============== START BACKGROUNDS ==========
 
 BackgroundID Scene::new_background() {

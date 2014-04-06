@@ -14,13 +14,13 @@ CameraProxy::CameraProxy(Stage *stage, CameraID camera_id):
     assert(stage);
 
     //Set the camera's proxy to this
-    stage->scene().camera(camera_id).set_proxy(this);
+    stage->scene().camera(camera_id)->set_proxy(this);
 }
 
 CameraProxy::~CameraProxy() {
     //Set the camera's proxy to null
-    if(&stage().scene().camera(id()).proxy() == this) {
-        stage().scene().camera(id()).set_proxy(nullptr);
+    if(&stage().scene().camera(id())->proxy() == this) {
+        stage().scene().camera(id())->set_proxy(nullptr);
     }
 }
 
@@ -29,10 +29,10 @@ void CameraProxy::ask_owner_for_destruction() {
 }
 
 void CameraProxy::set_orthographic_projection(double left, double right, double bottom, double top, double near, double far) {
-    camera().set_orthographic_projection(left, right, bottom, top, near, far);
+    camera()->set_orthographic_projection(left, right, bottom, top, near, far);
 }
 
-Camera& CameraProxy::camera() {
+ProtectedPtr<Camera> CameraProxy::camera() {
     return stage().scene().camera(id());
 }
 
@@ -78,11 +78,11 @@ void CameraProxy::do_update(double dt) {
 }
 
 Frustum& CameraProxy::frustum() {
-    return camera().frustum();
+    return camera()->frustum();
 }
 
 kmVec3 CameraProxy::project_point(ViewportID vid, const kmVec3& point) {
-    return camera().project_point(vid, point);
+    return camera()->project_point(vid, point);
 }
 
 Camera::Camera(Scene *scene, CameraID id):

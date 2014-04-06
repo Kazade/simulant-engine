@@ -72,14 +72,12 @@ std::vector<SubActor::ptr> OctreePartitioner::geometry_visible_from(CameraID cam
         return results;
     }
 
-    Camera& cam = stage().scene().camera(camera_id);
-
     /**
      *  FIXME: A tree_->objects_visible_from(cam.frustum()); would be faster
      */
 
     //Go through the visible nodes
-    for(OctreeNode* node: tree_.nodes_visible_from(cam.frustum())) {
+    for(OctreeNode* node: tree_.nodes_visible_from(stage().camera(camera_id)->frustum())) {
         //Go through the objects
         for(const Boundable* obj: node->objects()) {
             if(container::contains(boundable_to_subactor_, obj)) {

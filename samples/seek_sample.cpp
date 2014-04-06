@@ -66,7 +66,7 @@ private:
     bool do_init() {
         dot_ = Dot::create(scene(), stage().id());
 
-        scene().camera().set_perspective_projection(
+        scene().camera()->set_perspective_projection(
             45.0,
             float(window().width()) / float(window().height()),
             1.0,

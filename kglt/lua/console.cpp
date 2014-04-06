@@ -86,7 +86,7 @@ void Console::init_widget() {
     ui_stage_ = scene.new_ui_stage();
     ui_camera_ = scene.new_camera();
 
-    scene.camera(ui_camera_).set_orthographic_projection(
+    scene.camera(ui_camera_)->set_orthographic_projection(
         0, window_.width(), window_.height(), 0, -1, 1
     );
 

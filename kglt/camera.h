@@ -52,12 +52,13 @@ private:
     void do_update(double dt);
 
 
-    Camera& camera();
+    ProtectedPtr<Camera> camera();
 };
 
 class Camera:
     public generic::Identifiable<CameraID>,
-    public Managed<Camera> {
+    public Managed<Camera>,
+    public Protectable {
 
 public:
     Camera(Scene* scene, CameraID id);

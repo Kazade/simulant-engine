@@ -57,7 +57,7 @@ bool Loading::init() {
     //Create an orthographic camera
     camera_ = scene_.new_camera();
 
-    scene_.camera(camera_).set_orthographic_projection(
+    scene_.camera(camera_)->set_orthographic_projection(
         0, scene_.window().width(), scene_.window().height(), 0
     );
 

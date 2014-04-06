@@ -17,6 +17,10 @@ namespace kglt {
 void RootGroup::bind() {
 }
 
+ProtectedPtr<CameraProxy> RootGroup::camera() {
+    return stage().camera(camera_id_);
+}
+
 void RootGroup::generate_mesh_groups(RenderGroup* parent, SubActor& ent, MaterialPass& pass) {
     Vec3 pos;
     std::vector<LightID> lights = stage().partitioner().lights_within_range(pos);

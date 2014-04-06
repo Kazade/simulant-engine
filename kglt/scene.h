@@ -80,10 +80,13 @@ public:
 
     RenderSequence& render_sequence() { return *render_sequence_; }
 
+    //Camera functions
     CameraID new_camera();
-    Camera& camera(CameraID c=CameraID());
-    CameraRef camera_ref(CameraID c);
+    ProtectedPtr<Camera> camera();
+    ProtectedPtr<Camera> camera(CameraID c);
     void delete_camera(CameraID cid);
+    uint32_t camera_count() const;
+    //End camera
 
     template<typename T, typename ID>
     void post_create_callback(T& obj, ID id) {

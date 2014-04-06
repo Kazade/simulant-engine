@@ -120,6 +120,20 @@ void RenderSequence::run() {
     }
 }
 
+void RenderSequence::update_camera_constraint(CameraID cid) {
+    auto camera = scene_.camera(cid);
+
+    if(camera->has_proxy()) {
+        //Update the associated camera
+        if(camera->proxy().is_constrained()) {
+            //FIXME: THis might work for cameras but we need a more generic place
+            //to do this for all objects before render
+            camera->proxy()._update_constraint();
+        }
+        camera->set_transform(camera->proxy().absolute_transformation());
+    }
+}
+
 void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
     check_and_log_error(__FILE__, __LINE__);
 
@@ -127,17 +141,9 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
         return;
     }
 
-    Camera& camera = scene_.camera(pipeline_stage->camera_id());
+    update_camera_constraint(pipeline_stage->camera_id());
 
-    if(camera.has_proxy()) {
-        //Update the associated camera
-        if(camera.proxy().is_constrained()) {
-            //FIXME: THis might work for cameras but we need a more generic place
-            //to do this for all objects before render
-            camera.proxy()._update_constraint();
-        }
-        camera.set_transform(camera.proxy().absolute_transformation());
-    }
+    Mat4 camera_projection = scene_.camera(pipeline_stage->camera_id())->projection_matrix();
 
     Viewport& viewport = scene_.window().viewport(pipeline_stage->viewport_id());
     viewport.apply(); //FIXME apply shouldn't exist
@@ -148,7 +154,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
         //This is a UI stage, so just render that
         auto ui_stage = scene_.ui_stage(pipeline_stage->ui_stage_id());
         ui_stage->__resize(viewport.width(), viewport.height());
-        ui_stage->__render(camera.projection_matrix());
+        ui_stage->__render(camera_projection);
     } else {
         Stage& stage = scene_.stage(pipeline_stage->stage_id());
 
@@ -183,7 +189,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
                 //Create a new render group if necessary
                 RootGroup::ptr group;
                 if(priority_queue.size() <= pass) {
-                    group = RootGroup::ptr(new RootGroup(stage, camera));
+                    group = RootGroup::ptr(new RootGroup(stage, pipeline_stage->camera_id()));
                     priority_queue.push_back(group);
                 } else {
                     group = priority_queue[pass];
