@@ -247,7 +247,7 @@ ViewportID WindowBase::new_viewport() {
     return ViewportManager::manager_new();
 }
 
-AutoWeakPtr<Viewport> WindowBase::viewport(ViewportID viewport) {
+ViewportPtr WindowBase::viewport(ViewportID viewport) {
     if(!viewport) {
         return ViewportManager::manager_get(default_viewport_);
     }

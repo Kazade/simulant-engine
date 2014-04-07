@@ -450,6 +450,8 @@ class UIStage;
 typedef std::weak_ptr<UIStage> UIStageRef;
 
 class Viewport;
+typedef AutoWeakPtr<Viewport> ViewportPtr;
+
 class Frustum;
 class WindowBase;
 class RenderSequence;
