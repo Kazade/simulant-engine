@@ -21,9 +21,9 @@ public:
         std::runtime_error("An error occurred while running a background task") {}
 };
 
-class App {
+class Application {
 public:
-    App(const unicode& title=_u("KGLT Application"),
+    Application(const unicode& title=_u("KGLT Application"),
         uint32_t width=640,
         uint32_t height=480,
         uint32_t bpp=0,

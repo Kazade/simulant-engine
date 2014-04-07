@@ -54,10 +54,10 @@ private:
 };
 
 
-class SeekSample: public kglt::App {
+class SeekSample: public kglt::Application {
 public:
     SeekSample():
-        App("KGLT Seek Behaviour") {
+        Application("KGLT Seek Behaviour") {
 
         window().set_logging_level(kglt::LOG_LEVEL_DEBUG);
     }

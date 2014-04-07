@@ -4,10 +4,10 @@
 
 using namespace kglt::extra;
 
-class Sample2D: public kglt::App {
+class Sample2D: public kglt::Application {
 public:
     Sample2D():
-        App("KGLT Sprite Sample") {
+        Application("KGLT Sprite Sample") {
 
         window().set_logging_level(kglt::LOG_LEVEL_DEBUG);
     }

@@ -5,10 +5,10 @@
 using namespace kglt::extra;
 using namespace kglt;
 
-class BoxDrop: public kglt::App {
+class BoxDrop: public kglt::Application {
 public:
     BoxDrop():
-        App("KGLT BoxDrop Sample") {
+        Application("KGLT BoxDrop Sample") {
 
         window().set_logging_level(kglt::LOG_LEVEL_DEBUG);
     }

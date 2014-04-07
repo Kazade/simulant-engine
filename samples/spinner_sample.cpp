@@ -5,10 +5,10 @@
 using namespace kglt::extra;
 using namespace kglt;
 
-class Spinner: public kglt::App {
+class Spinner: public kglt::Application {
 public:
     Spinner():
-        App("KGLT Spinner Sample") {
+        Application("KGLT Spinner Sample") {
 
         window().set_logging_level(kglt::LOG_LEVEL_DEBUG);
     }

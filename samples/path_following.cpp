@@ -64,10 +64,10 @@ private:
 };
 
 
-class PathFollowing: public kglt::App {
+class PathFollowing: public kglt::Application {
 public:
     PathFollowing():
-        App("KGLT Sprite Sample") {
+        Application("KGLT Sprite Sample") {
 
         window().set_logging_level(kglt::LOG_LEVEL_DEBUG);
     }

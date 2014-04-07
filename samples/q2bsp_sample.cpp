@@ -1,11 +1,11 @@
 #include "kglt/kglt.h"
 #include "kglt/shortcuts.h"
 
-class Q2Sample: public kglt::App {
+class Q2Sample: public kglt::Application {
 
 public:
     Q2Sample():
-        App("Quake 2 Renderer") {
+        Application("Quake 2 Renderer") {
 
         window().set_logging_level(kglt::LOG_LEVEL_DEBUG);
     }
