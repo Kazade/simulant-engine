@@ -126,6 +126,10 @@ StagePtr Scene::stage() {
 }
 
 StagePtr Scene::stage(StageID s) {
+    if(!s) {
+        return stage();
+    }
+
     return StageManager::manager_get(s);
 }
 
@@ -142,10 +146,13 @@ UIStageID Scene::new_ui_stage() {
 }
 
 ProtectedPtr<UIStage> Scene::ui_stage() {
-    return ui_stage(default_ui_stage_);
+    return UIStageManager::manager_get(default_ui_stage_);
 }
 
 ProtectedPtr<UIStage> Scene::ui_stage(UIStageID s) {
+    if(!s) {
+        return ui_stage();
+    }
     return UIStageManager::manager_get(s);
 }
 
@@ -170,6 +177,11 @@ ProtectedPtr<Camera> Scene::camera() {
 }
 
 ProtectedPtr<Camera> Scene::camera(CameraID c) {
+    if(!c) {
+        //Return the default camera if we are passed a null ID
+        return camera();
+    }
+
     return CameraManager::manager_get(c);
 }
 
