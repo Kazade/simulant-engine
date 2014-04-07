@@ -98,8 +98,8 @@ bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
 
         //Create a default viewport
         default_viewport_ = new_viewport();
-        viewport(default_viewport_).set_position(0, 0);
-        viewport(default_viewport_).set_size(this->width(), this->height());
+        viewport(default_viewport_)->set_position(0, 0);
+        viewport(default_viewport_)->set_size(this->width(), this->height());
 
         scene_ = Scene::create(this);        
 
@@ -247,11 +247,11 @@ ViewportID WindowBase::new_viewport() {
     return ViewportManager::manager_new();
 }
 
-Viewport& WindowBase::viewport(ViewportID viewport) {
-    if(viewport == 0) {
-        return *(ViewportManager::manager_get(default_viewport_).lock());
+AutoWeakPtr<Viewport> WindowBase::viewport(ViewportID viewport) {
+    if(!viewport) {
+        return ViewportManager::manager_get(default_viewport_);
     }
-    return *(ViewportManager::manager_get(viewport).lock());
+    return ViewportManager::manager_get(viewport);
 }
 
 void WindowBase::delete_viewport(ViewportID viewport) {

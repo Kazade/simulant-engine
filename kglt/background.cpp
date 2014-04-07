@@ -15,8 +15,8 @@ Background::Background(Scene *scene, BackgroundID background_id):
 
 void Background::update_camera() {
     //FIXME: Viewport should probably be overridable
-    float vp_width = scene_->window().viewport().width();
-    float vp_height = scene_->window().viewport().height();
+    float vp_width = scene_->window().viewport()->width();
+    float vp_height = scene_->window().viewport()->height();
 
     float width, height;
     if(style_ == BACKGROUND_RESIZE_ZOOM) {

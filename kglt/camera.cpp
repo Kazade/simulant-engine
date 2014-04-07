@@ -133,7 +133,7 @@ kmVec3 Camera::project_point(ViewportID vid, const kmVec3& point) {
         throw LogicError("Passes a nullptr as a camera's Scene");
     }
 
-    kglt::Viewport& viewport = scene_->window().viewport(vid);
+    auto viewport = scene_->window().viewport(vid);
 
     kmVec3 tmp;
     kmVec3Fill(&tmp, point.x, point.y, point.z);
@@ -146,8 +146,8 @@ kmVec3 Camera::project_point(ViewportID vid, const kmVec3& point) {
     tmp.x /= tmp.z;
     tmp.y /= tmp.z;
 
-    float vp_width = viewport.width();
-    float vp_height = viewport.height();
+    float vp_width = viewport->width();
+    float vp_height = viewport->height();
 
     result.x = (tmp.x + 1) * vp_width / 2.0;
     result.y = (tmp.y + 1) * vp_height / 2.0;

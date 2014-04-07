@@ -145,8 +145,8 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
 
     Mat4 camera_projection = scene_.camera(pipeline_stage->camera_id())->projection_matrix();
 
-    Viewport& viewport = scene_.window().viewport(pipeline_stage->viewport_id());
-    viewport.apply(); //FIXME apply shouldn't exist
+    auto viewport = scene_.window().viewport(pipeline_stage->viewport_id());
+    viewport->apply(); //FIXME apply shouldn't exist
 
     signal_pipeline_started_(*pipeline_stage);
 
@@ -156,7 +156,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
     if(pipeline_stage->ui_stage_id()) {        
         //This is a UI stage, so just render that
         auto ui_stage = scene_.ui_stage(pipeline_stage->ui_stage_id());
-        ui_stage->__resize(viewport.width(), viewport.height());
+        ui_stage->__resize(viewport->width(), viewport->height());
         ui_stage->__render(camera_projection);
     } else {
         std::vector<SubActor::ptr> buffers = scene_.stage(stage_id
