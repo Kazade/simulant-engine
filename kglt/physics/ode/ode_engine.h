@@ -18,7 +18,8 @@ class ODECollidable;
 
 class ODEEngine :
     public PhysicsEngine,
-    public Managed<ODEEngine> {
+    public Managed<ODEEngine>,
+    public std::enable_shared_from_this<ODEEngine> {
 
 public:
     void near_callback(dGeomID o1, dGeomID o2);

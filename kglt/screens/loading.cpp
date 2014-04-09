@@ -62,18 +62,18 @@ bool Loading::init() {
     );
 
     //Create an inactive pipeline
-    pipeline_ = scene_.render_sequence().new_pipeline(
+    pipeline_ = scene_.window().render_sequence()->new_pipeline(
         stage_,
         camera_
     );
 
-    scene_.render_sequence().pipeline(pipeline_).deactivate();
+    scene_.window().render_sequence()->pipeline(pipeline_).deactivate();
     return true;
 }
 
 void Loading::cleanup() {
     //Clean up
-    scene_.render_sequence().delete_pipeline(pipeline_);
+    scene_.window().render_sequence()->delete_pipeline(pipeline_);
     scene_.delete_ui_stage(stage_);
     scene_.delete_camera(camera_);
 }
@@ -81,20 +81,20 @@ void Loading::cleanup() {
 void Loading::activate() {
     is_active_ = true;
 
-    stashed_pipelines_ = scene_.render_sequence().active_pipelines();
+    stashed_pipelines_ = scene_.window().render_sequence()->active_pipelines();
 
-    scene_.render_sequence().deactivate_all_pipelines();
-    scene_.render_sequence().pipeline(pipeline_).activate();
+    scene_.window().render_sequence()->deactivate_all_pipelines();
+    scene_.window().render_sequence()->pipeline(pipeline_).activate();
 }
 
 void Loading::deactivate() {
     is_active_ = false;
 
     //Deactivate the loading pipeline
-    scene_.render_sequence().pipeline(pipeline_).deactivate();
+    scene_.window().render_sequence()->pipeline(pipeline_).deactivate();
 
     //Activate the stashed pipelines
-    scene_.render_sequence().activate_pipelines(stashed_pipelines_);
+    scene_.window().render_sequence()->activate_pipelines(stashed_pipelines_);
 
     stashed_pipelines_.clear();
 }

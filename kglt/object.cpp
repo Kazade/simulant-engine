@@ -8,6 +8,7 @@
 #include "object_visitor.h"
 #include "camera.h"
 #include "utils/ownable.h"
+#include "physics/physics_engine.h"
 
 namespace kglt {
 
@@ -98,25 +99,25 @@ void Object::parent_changed_callback(GenericTreeNode *old_parent, GenericTreeNod
 }
 
 void Object::make_responsive() {
-    if(!stage()->scene().physics_enabled()) {
+    if(!stage()->scene().has_physics_engine()) {
         throw std::logic_error("Tried to make an object responsive when no physics engine is enabled");
     }
 
-    PhysicsEngine& engine = stage()->scene().physics();
+    auto engine = stage()->scene().physics();
 
-    responsive_body_ = engine.new_responsive_body(this);
+    responsive_body_ = engine->new_responsive_body(this);
 
     signal_made_responsive_();
 }
 
 void Object::make_collidable() {
-    if(!stage()->scene().physics_enabled()) {
+    if(!stage()->scene().has_physics_engine()) {
         throw std::logic_error("Tried to make an object collidable when no physics engine is enabled");
     }
 
-    PhysicsEngine& engine = stage()->scene().physics();
+    auto engine = stage()->scene().physics();
 
-    collidable_ = engine.new_collidable(this);
+    collidable_ = engine->new_collidable(this);
 
     signal_made_collidable_();
 }

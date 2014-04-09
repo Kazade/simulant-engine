@@ -10,7 +10,7 @@ namespace kglt {
 namespace physics {
 
 dSpaceID ODECollidable::get_space() {
-    ODEEngine* e = dynamic_cast<ODEEngine*>(engine());
+    auto e = engine().as<ODEEngine>();
     return e->space_;
 }
 

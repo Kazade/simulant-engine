@@ -51,7 +51,7 @@ bool Background::init() {
 
     //Add a pass for this background
     //FIXME: priority = -1000
-    pipeline_id_ = scene_->render_sequence().new_pipeline(
+    pipeline_id_ = scene_->window().render_sequence()->new_pipeline(
         stage_id_,
         camera_id_,
         ViewportID(), //FIXME: Should be overridable
@@ -76,7 +76,7 @@ bool Background::init() {
 void Background::cleanup() {
     //Remove the pipeline and delete the camera, everything else is cleaned
     //up automatically when the node is detached from the scene tree
-    scene_->render_sequence().delete_pipeline(pipeline_id_);
+    scene_->window().render_sequence()->delete_pipeline(pipeline_id_);
     scene_->delete_camera(camera_id_);
 }
 

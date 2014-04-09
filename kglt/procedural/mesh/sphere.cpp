@@ -85,7 +85,7 @@ void sphere(ProtectedPtr<Mesh> mesh, float diameter, int32_t slices, int32_t sta
     mesh->shared_data().done();
 
     SubMeshIndex sm = mesh->new_submesh(
-        mesh->scene().clone_default_material(),
+        mesh->scene().new_material_from_file(mesh->scene().default_material_filename()),
         MESH_ARRANGEMENT_TRIANGLES,
         true
     );

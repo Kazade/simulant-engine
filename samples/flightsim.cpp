@@ -35,8 +35,8 @@ int main(int argc, char* argv[]) {
         actor->set_absolute_position(0, 0, -30);
     }
 
-    //Just stash the skybox along with the scene
-    window->scene().data().stash(kglt::extra::StarField::create(stage), "skybox");
+    //Just stash the skybox with the window so we always have access to it
+    window->data().stash(kglt::extra::StarField::create(stage), "skybox");
 
     //Set the camera to follow the model
     stage->camera()->follow(actor_id, kglt::Vec3(0, 5, 50));

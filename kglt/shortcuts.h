@@ -10,7 +10,6 @@
 
 namespace kglt {
 
-MaterialID create_material_from_texture(ResourceManager& scene, TextureID tex);
 
 }
 

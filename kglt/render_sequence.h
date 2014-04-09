@@ -75,7 +75,7 @@ class RenderSequence:
     public PipelineManager {
 
 public:
-    RenderSequence(Scene& scene);
+    RenderSequence(WindowBase& window);
 
     PipelineID new_pipeline(
         StageID stage,
@@ -113,7 +113,7 @@ public:
 private:    
     void run_pipeline(Pipeline::ptr stage);
 
-    Scene& scene_;
+    WindowBase& window_;
     Renderer::ptr renderer_;
 
     std::list<Pipeline::ptr> ordered_pipelines_;

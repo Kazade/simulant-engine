@@ -2,30 +2,29 @@
 #include "utils/ownable.h"
 #include "background.h"
 
+#include "render_sequence.h"
 #include "scene.h"
 #include "renderer.h"
 #include "camera.h"
-#include "render_sequence.h"
 #include "loader.h"
 #include "stage.h"
 #include "ui_stage.h"
 #include "partitioners/null_partitioner.h"
 #include "partitioners/octree_partitioner.h"
-
+#include "physics/physics_engine.h"
 #include "shaders/default_shaders.h"
 #include "window_base.h"
 
 namespace kglt {
 
-Scene::Scene(WindowBase* window):
+SceneImpl::SceneImpl(WindowBase* window):
     ResourceManagerImpl(window),
     default_texture_(0),
-    default_material_(0),
-    render_sequence_(new RenderSequence(*this)) {
+    default_material_(0) {
 
 }
 
-Scene::~Scene() {
+SceneImpl::~SceneImpl() {
     //TODO: Log the unfreed resources (textures, meshes, materials etc.)    
 
     //Clear the stages first, they may hold references to cameras, materials
@@ -35,34 +34,49 @@ Scene::~Scene() {
     CameraManager::__objects().clear();
 }
 
-void Scene::render_tree() {
+void SceneImpl::enable_physics(std::shared_ptr<PhysicsEngine> engine) {
+    physics_engine_ = engine;
+}
+
+PhysicsEnginePtr SceneImpl::physics() {
+    if(!physics_engine_) {
+        throw std::logic_error("Tried to access the physics engine when one has not been enabled");
+    }
+    return physics_engine_;
+}
+
+const bool SceneImpl::has_physics_engine() const {
+    return bool(physics_engine_);
+}
+
+void SceneImpl::print_tree() {
     for(auto stage: StageManager::objects_) {
         uint32_t counter = 0;
-        render_tree(stage.second.get(), counter);
+        print_tree(stage.second.get(), counter);
     }
 }
 
-MaterialID Scene::clone_default_material() {
-    return MaterialManager::manager_clone(default_material_->id());
+StageID SceneImpl::default_stage_id() const {
+    return default_stage_;
 }
 
-MaterialID Scene::default_material_id() const {
+MaterialID SceneImpl::default_material_id() const {
     return default_material_->id();
 }
 
-TextureID Scene::default_texture_id() const {
+TextureID SceneImpl::default_texture_id() const {
     return default_texture_->id();
 }
 
-CameraID Scene::default_camera_id() const {
+CameraID SceneImpl::default_camera_id() const {
     return default_camera_;
 }
 
-unicode Scene::default_material_filename() const {
+unicode SceneImpl::default_material_filename() const {
     return window().resource_locator().locate_file("kglt/materials/multitexture_and_lighting.kglm");
 }
 
-void Scene::initialize_defaults() {
+void SceneImpl::initialize_defaults() {
     default_camera_ = new_camera(); //Create a default camera
     default_stage_ = new_stage(kglt::PARTITIONER_NULL);
 
@@ -76,11 +90,11 @@ void Scene::initialize_defaults() {
     );
 
     //Create a default stage for the default stage with the default camera
-    render_sequence_->new_pipeline(default_stage_, default_camera_);
+    window().render_sequence()->new_pipeline(default_stage_, default_camera_);
 
     //Add a pipeline for the default UI stage to render
     //after the main pipeline
-    render_sequence_->new_pipeline(
+    window().render_sequence()->new_pipeline(
         default_ui_stage_, default_ui_camera_,
         ViewportID(), TextureID(), 100
     );
@@ -105,27 +119,27 @@ void Scene::initialize_defaults() {
     default_material_->technique().pass(0).set_texture_unit(0, default_texture_->id());
 }
 
-StageID Scene::new_stage(AvailablePartitioner partitioner) {
+StageID SceneImpl::new_stage(AvailablePartitioner partitioner) {
     return StageManager::manager_new(StageID(), partitioner);
 }
 
-uint32_t Scene::stage_count() const {
+uint32_t SceneImpl::stage_count() const {
     return StageManager::manager_count();
 }
 
 /**
- * @brief Scene::stage
+ * @brief SceneImpl::stage
  * @return A shared_ptr to the default stage
  *
  * We don't return a ProtectedPtr because it makes usage a nightmare. Stages don't suffer the same potential
  * threading issues as other objects as they are the highest level object. Returning a weak_ptr means that
  * we retain ownership, and calling code won't die if the stage goes missing.
  */
-StagePtr Scene::stage() {
+StagePtr SceneImpl::stage() {
     return StageManager::manager_get(default_stage_);
 }
 
-StagePtr Scene::stage(StageID s) {
+StagePtr SceneImpl::stage(StageID s) {
     if(!s) {
         return stage();
     }
@@ -133,7 +147,7 @@ StagePtr Scene::stage(StageID s) {
     return StageManager::manager_get(s);
 }
 
-void Scene::delete_stage(StageID s) {
+void SceneImpl::delete_stage(StageID s) {
     //Recurse through the tree, destroying all children
     stage(s)->apply_recursively_leaf_first(&ownable_tree_node_destroy, false);
 
@@ -141,42 +155,42 @@ void Scene::delete_stage(StageID s) {
 }
 
 
-UIStageID Scene::new_ui_stage() {
+UIStageID SceneImpl::new_ui_stage() {
     return UIStageManager::manager_new();
 }
 
-ProtectedPtr<UIStage> Scene::ui_stage() {
+UIStagePtr SceneImpl::ui_stage() {
     return UIStageManager::manager_get(default_ui_stage_);
 }
 
-ProtectedPtr<UIStage> Scene::ui_stage(UIStageID s) {
+UIStagePtr SceneImpl::ui_stage(UIStageID s) {
     if(!s) {
         return ui_stage();
     }
     return UIStageManager::manager_get(s);
 }
 
-void Scene::delete_ui_stage(UIStageID s) {
+void SceneImpl::delete_ui_stage(UIStageID s) {
     UIStageManager::manager_delete(s);
 }
 
-uint32_t Scene::ui_stage_count() const {
+uint32_t SceneImpl::ui_stage_count() const {
     return UIStageManager::manager_count();
 }
 
 //=============== START CAMERAS ============
 
-CameraID Scene::new_camera() {
+CameraID SceneImpl::new_camera() {
     CameraID new_camera = CameraManager::manager_new();
 
     return new_camera;
 }
 
-ProtectedPtr<Camera> Scene::camera() {
+CameraPtr SceneImpl::camera() {
     return CameraManager::manager_get(default_camera_);
 }
 
-ProtectedPtr<Camera> Scene::camera(CameraID c) {
+CameraPtr SceneImpl::camera(CameraID c) {
     if(!c) {
         //Return the default camera if we are passed a null ID
         return camera();
@@ -185,7 +199,7 @@ ProtectedPtr<Camera> Scene::camera(CameraID c) {
     return CameraManager::manager_get(c);
 }
 
-void Scene::delete_camera(CameraID cid) {
+void SceneImpl::delete_camera(CameraID cid) {
     //Remove any associated proxy
     if(camera(cid)->has_proxy()) {
         camera(cid)->proxy().stage()->evict_camera(cid);
@@ -194,18 +208,18 @@ void Scene::delete_camera(CameraID cid) {
     CameraManager::manager_delete(cid);
 }
 
-uint32_t Scene::camera_count() const {
+uint32_t SceneImpl::camera_count() const {
     return CameraManager::manager_count();
 }
 //============== END CAMERAS ================
 //============== START BACKGROUNDS ==========
 
-BackgroundID Scene::new_background() {
+BackgroundID SceneImpl::new_background() {
     BackgroundID bid = BackgroundManager::manager_new();
     return bid;
 }
 
-BackgroundID Scene::new_background_from_file(const unicode& filename, float scroll_x, float scroll_y) {
+BackgroundID SceneImpl::new_background_from_file(const unicode& filename, float scroll_x, float scroll_y) {
     BackgroundID result = new_background();
     try {
         background(result)->set_texture(new_texture_from_file(filename));
@@ -219,32 +233,32 @@ BackgroundID Scene::new_background_from_file(const unicode& filename, float scro
     return result;
 }
 
-ProtectedPtr<Background> Scene::background(BackgroundID bid) {
+BackgroundPtr SceneImpl::background(BackgroundID bid) {
     return BackgroundManager::manager_get(bid);
 }
 
-bool Scene::has_background(BackgroundID bid) const {
+bool SceneImpl::has_background(BackgroundID bid) const {
     return BackgroundManager::manager_contains(bid);
 }
 
-void Scene::delete_background(BackgroundID bid) {
+void SceneImpl::delete_background(BackgroundID bid) {
     BackgroundManager::manager_delete(bid);
 }
 
-uint32_t Scene::background_count() const {
+uint32_t SceneImpl::background_count() const {
     return BackgroundManager::manager_count();
 }
 
 //============== END BACKGROUNDS ============
 
 
-bool Scene::init() {    
+bool SceneImpl::init() {
     return true;
 }
 
-void Scene::update(double dt) {
-    if(physics_enabled()) {
-        physics().step(dt);
+void SceneImpl::update(double dt) {
+    if(has_physics_engine()) {
+        physics()->step(dt);
     }
 
     //Update the backgrounds
@@ -260,10 +274,6 @@ void Scene::update(double dt) {
             node->as<Updateable>()->update(dt);
         });
     }
-}
-
-void Scene::render() {
-    render_sequence_->run();
 }
 
 }

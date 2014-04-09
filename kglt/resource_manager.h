@@ -5,7 +5,6 @@
 #include <map>
 
 #include "generic/refcount_manager.h"
-#include "generic/data_carrier.h"
 #include "generic/protected_ptr.h"
 
 #include "texture.h"
@@ -128,7 +127,7 @@ public:
 };
 
 class ResourceManagerImpl:
-    public ResourceManager,
+    public virtual ResourceManager,
     public MeshManager,
     public ShaderManager,
     public MaterialManager,
@@ -226,13 +225,9 @@ public:
 
     void update();
 
-    generic::DataCarrier& data() { return data_carrier_; }
-
 private:
     WindowBase* window_;
     std::map<std::string, ShaderID> shader_lookup_;
-
-    generic::DataCarrier data_carrier_;
 };
 
 

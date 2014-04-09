@@ -119,7 +119,7 @@ SubMeshIndex rectangle(ProtectedPtr<Mesh> mesh, float width, float height, float
 
     //Create a submesh that uses the shared data
     SubMeshIndex sm = mesh->new_submesh(
-        mesh->scene().clone_default_material(),
+        mesh->scene().new_material_from_file(mesh->scene().default_material_filename()),
         MESH_ARRANGEMENT_TRIANGLES,
         true
     );
@@ -168,7 +168,7 @@ SubMeshIndex rectangle_outline(ProtectedPtr<Mesh> mesh, float width, float heigh
     mesh->shared_data().done();
     
     SubMeshIndex sm = mesh->new_submesh(
-        mesh->scene().clone_default_material(),
+        mesh->scene().new_material_from_file(mesh->scene().default_material_filename()),
         MESH_ARRANGEMENT_LINE_STRIP,
         true
     );

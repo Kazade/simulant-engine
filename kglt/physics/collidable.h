@@ -13,11 +13,11 @@ class PhysicsEngine;
 
 class Collidable : public base::TaggableObject {
 public:
-    Collidable(Object* owner, PhysicsEngine* engine);
+    Collidable(Object* owner, PhysicsEnginePtr engine);
     virtual ~Collidable() {}
 
     Object* owner() { return owner_; }
-    PhysicsEngine* engine() { return engine_; }
+    PhysicsEnginePtr engine() { return engine_; }
 
     virtual bool init() = 0;
     virtual void cleanup() = 0;
@@ -57,7 +57,7 @@ public:
 private:
     friend class PhysicsEngine;
 
-    PhysicsEngine* engine_;
+    PhysicsEnginePtr engine_;
     Object* owner_;
     bool is_ghost_ = false;
 

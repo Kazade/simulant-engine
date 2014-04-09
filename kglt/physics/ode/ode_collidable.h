@@ -12,7 +12,7 @@ namespace physics {
 
 class ODECollidable : public Collidable {
 public:
-    ODECollidable(Object* owner, PhysicsEngine* engine):
+    ODECollidable(Object* owner, PhysicsEnginePtr engine):
         Collidable(owner, engine) {}
 
     ~ODECollidable() {

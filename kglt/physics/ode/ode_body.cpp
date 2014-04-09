@@ -13,8 +13,8 @@ namespace physics {
 static int32_t constraint_counter = 1;
 
 bool ODEBody::do_init() {
-    ODEEngine& eng = dynamic_cast<ODEEngine&>(*engine());
-    body_ = dBodyCreate(eng.world());
+    auto eng = engine().as<ODEEngine>();
+    body_ = dBodyCreate(eng->world());
     dBodySetGyroscopicMode(body_, 0);
     dBodySetFiniteRotationMode(body_, 1);
 
@@ -53,15 +53,15 @@ kglt::Quaternion ODEBody::do_rotation() const {
 
 void ODEBody::do_apply_linear_impulse_global(const kglt::Vec3& impulse) {
     dVector3 force;
-    ODEEngine& eng = dynamic_cast<ODEEngine&>(*engine());
-    dWorldImpulseToForce(eng.world(), 1.0 / double(WindowBase::STEPS_PER_SECOND), impulse.x, impulse.y, impulse.z, force);
+    auto eng = engine().as<ODEEngine>();
+    dWorldImpulseToForce(eng->world(), 1.0 / double(WindowBase::STEPS_PER_SECOND), impulse.x, impulse.y, impulse.z, force);
     dBodyAddForce(body_, force[0], force[1], force[2]);
 }
 
 void ODEBody::do_apply_linear_impulse_local(const kglt::Vec3& impulse) {
     dVector3 force;
-    ODEEngine& eng = dynamic_cast<ODEEngine&>(*engine());
-    dWorldImpulseToForce(eng.world(), 1.0 / double(WindowBase::STEPS_PER_SECOND), impulse.x, impulse.y, impulse.z, force);
+    auto eng = engine().as<ODEEngine>();
+    dWorldImpulseToForce(eng->world(), 1.0 / double(WindowBase::STEPS_PER_SECOND), impulse.x, impulse.y, impulse.z, force);
     dBodyAddRelForce(body_, force[0], force[1], force[2]);
 }
 
@@ -83,15 +83,15 @@ void ODEBody::do_apply_angular_force_local(const kglt::Vec3& force) {
 
 void ODEBody::do_apply_angular_impulse_global(const kglt::Vec3& impulse) {
     dVector3 force;
-    ODEEngine& eng = dynamic_cast<ODEEngine&>(*engine());
-    dWorldImpulseToForce(eng.world(), 1.0 / double(WindowBase::STEPS_PER_SECOND), impulse.x, impulse.y, impulse.z, force);
+    auto eng = engine().as<ODEEngine>();
+    dWorldImpulseToForce(eng->world(), 1.0 / double(WindowBase::STEPS_PER_SECOND), impulse.x, impulse.y, impulse.z, force);
     dBodyAddTorque(body_, force[0], force[1], force[2]);
 }
 
 void ODEBody::do_apply_angular_impulse_local(const kglt::Vec3& impulse) {
     dVector3 force;
-    ODEEngine& eng = dynamic_cast<ODEEngine&>(*engine());
-    dWorldImpulseToForce(eng.world(), 1.0 / double(WindowBase::STEPS_PER_SECOND), impulse.x, impulse.y, impulse.z, force);
+    auto eng = engine().as<ODEEngine>();
+    dWorldImpulseToForce(eng->world(), 1.0 / double(WindowBase::STEPS_PER_SECOND), impulse.x, impulse.y, impulse.z, force);
     dBodyAddRelTorque(body_, force[0], force[1], force[2]);
 }
 
@@ -122,9 +122,9 @@ kglt::Vec3 ODEBody::do_linear_velocity() const {
 }
 
 ConstraintID ODEBody::do_create_fixed_constraint(ResponsiveBody &other) {
-    ODEEngine& eng = dynamic_cast<ODEEngine&>(*engine());
+    auto eng = engine().as<ODEEngine>();
 
-    dJointID new_joint = dJointCreateFixed(eng.world(), 0);
+    dJointID new_joint = dJointCreateFixed(eng->world(), 0);
     dJointAttach(new_joint, body_, dynamic_cast<ODEBody&>(other).body_);
     dJointSetFixed(new_joint);
 

@@ -9,7 +9,6 @@
 #include "generic/manager.h"
 #include "generic/auto_weakptr.h"
 #include "generic/generic_tree.h"
-#include "physics/physics_engine.h"
 #include "interfaces.h"
 
 namespace kglt {
@@ -18,42 +17,85 @@ class WindowBase;
 class UI;
 
 class Scene;
+class SceneImpl;
 class Stage;
 class GeomFactory;
 class Background;
 
-typedef generic::TemplatedManager<Scene, Stage, StageID> StageManager;
-typedef generic::TemplatedManager<Scene, Camera, CameraID> CameraManager;
-typedef generic::TemplatedManager<Scene, UIStage, UIStageID> UIStageManager;
-typedef generic::TemplatedManager<Scene, Background, BackgroundID> BackgroundManager;
+typedef generic::TemplatedManager<SceneImpl, Stage, StageID> StageManager;
+typedef generic::TemplatedManager<SceneImpl, Camera, CameraID> CameraManager;
+typedef generic::TemplatedManager<SceneImpl, UIStage, UIStageID> UIStageManager;
+typedef generic::TemplatedManager<SceneImpl, Background, BackgroundID> BackgroundManager;
 
-class Scene:
+class Scene :
+    public virtual ResourceManager,
+    public virtual Updateable {
+
+public:
+    virtual ~Scene() {}
+
+    virtual CameraID default_camera_id() const = 0;
+    virtual TextureID default_texture_id() const = 0;
+    virtual MaterialID default_material_id() const = 0;
+    virtual StageID default_stage_id() const = 0;
+
+    virtual unicode default_material_filename() const = 0;
+
+    virtual void enable_physics(std::shared_ptr<PhysicsEngine> engine) = 0;
+    virtual PhysicsEnginePtr physics() = 0;
+    virtual const bool has_physics_engine() const = 0;
+
+    //Camera functions
+    virtual CameraID new_camera() = 0;
+    virtual CameraPtr camera() = 0;
+    virtual CameraPtr camera(CameraID c) = 0;
+    virtual void delete_camera(CameraID cid) = 0;
+    virtual uint32_t camera_count() const = 0;
+    //End camera
+
+    virtual StageID new_stage(AvailablePartitioner partitioner=PARTITIONER_OCTREE) = 0;
+    virtual StagePtr stage() = 0;
+    virtual StagePtr stage(StageID stage_id) = 0;
+    virtual void delete_stage(StageID stage_id) = 0;
+    virtual uint32_t stage_count() const = 0;
+
+    virtual UIStageID new_ui_stage() = 0;
+    virtual UIStagePtr ui_stage() = 0;
+    virtual UIStagePtr ui_stage(UIStageID s) = 0;
+    virtual void delete_ui_stage(UIStageID s) = 0;
+    virtual uint32_t ui_stage_count() const = 0;
+
+    //Background functions
+    virtual BackgroundID new_background() = 0;
+    virtual BackgroundID new_background_from_file(const unicode& filename, float scroll_x=0.0, float scroll_y=0.0) = 0;
+    virtual BackgroundPtr background(BackgroundID bid) = 0;
+    virtual bool has_background(BackgroundID bid) const = 0;
+    virtual void delete_background(BackgroundID bid) = 0;
+    virtual uint32_t background_count() const = 0;
+    // End background
+
+    virtual void print_tree() = 0;
+
+    virtual MaterialID clone_default_material() = 0;
+};
+
+class SceneImpl:
+    public Scene,
     public ResourceManagerImpl,
     public Loadable,
     public StageManager,
     public CameraManager,
     public UIStageManager,
     public BackgroundManager,
-    public Managed<Scene> {
+    public Managed<SceneImpl> {
 
 public:
-    Scene(WindowBase* window);
-    ~Scene();
+    SceneImpl(WindowBase* window);
+    ~SceneImpl();
 
-    void enable_physics(std::shared_ptr<PhysicsEngine> engine) {
-        physics_engine_ = engine;
-    }
-
-    PhysicsEngine& physics() const {
-        if(!physics_engine_) {
-            throw std::logic_error("Tried to access the physics engine when one has not been enabled");
-        }
-        return *physics_engine_.get();
-    }
-
-    bool physics_enabled() const {
-        return bool(physics_engine_);
-    }
+    void enable_physics(std::shared_ptr<PhysicsEngine> engine);
+    PhysicsEnginePtr physics();
+    const bool has_physics_engine() const;
 
     StageID new_stage(AvailablePartitioner partitioner=PARTITIONER_OCTREE);            
     StagePtr stage();
@@ -63,26 +105,23 @@ public:
 
     //UI Stages
     UIStageID new_ui_stage();
-    ProtectedPtr<UIStage> ui_stage();
-    ProtectedPtr<UIStage> ui_stage(UIStageID s);
+    UIStagePtr ui_stage();
+    UIStagePtr ui_stage(UIStageID s);
     void delete_ui_stage(UIStageID s);
     uint32_t ui_stage_count() const;
 
     bool init();
-    void render();
     void update(double dt);
 
-    MaterialID clone_default_material();
     MaterialID default_material_id() const;
     TextureID default_texture_id() const;
     CameraID default_camera_id() const;
-
-    RenderSequence& render_sequence() { return *render_sequence_; }
+    StageID default_stage_id() const;
 
     //Camera functions
     CameraID new_camera();
-    ProtectedPtr<Camera> camera();
-    ProtectedPtr<Camera> camera(CameraID c);
+    CameraPtr camera();
+    CameraPtr camera(CameraID c);
     void delete_camera(CameraID cid);
     uint32_t camera_count() const;
     //End camera
@@ -93,12 +132,12 @@ public:
         obj._initialize();
     }
 
-    void render_tree();
+    void print_tree();
 
     //Background functions
     BackgroundID new_background();
     BackgroundID new_background_from_file(const unicode& filename, float scroll_x=0.0, float scroll_y=0.0);
-    ProtectedPtr<Background> background(BackgroundID bid);
+    BackgroundPtr background(BackgroundID bid);
     bool has_background(BackgroundID bid) const;
     void delete_background(BackgroundID bid);
     uint32_t background_count() const;
@@ -106,8 +145,12 @@ public:
 
     unicode default_material_filename() const;
 
+    MaterialID clone_default_material() {
+        return new_material_from_file(default_material_filename());
+    }
+
 private:    
-    void render_tree(GenericTreeNode* node, uint32_t& level) {
+    void print_tree(GenericTreeNode* node, uint32_t& level) {
         for(uint32_t i = 0; i < level; ++i) {
             std::cout << "    ";
         }
@@ -116,7 +159,7 @@ private:
 
         level += 1;
         for(auto child: node->children()) {
-            render_tree(child, level);
+            print_tree(child, level);
         }
         level -= 1;
     }
@@ -132,7 +175,6 @@ private:
 
     void initialize_defaults();
 
-    std::shared_ptr<RenderSequence> render_sequence_;
     std::shared_ptr<PhysicsEngine> physics_engine_;
 
     friend class WindowBase;

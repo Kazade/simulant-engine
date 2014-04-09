@@ -2,13 +2,14 @@
 #include "../stage.h"
 #include "../scene.h"
 
+#include "physics_engine.h"
 #include "responsive_body.h"
 
 namespace kglt {
 
 ResponsiveBody::ResponsiveBody(Object* owner):
     owner_(owner),
-    engine_(&owner->stage()->scene().physics()){
+    engine_(owner->stage()->scene().physics()){
 
     assert(engine_);
 }

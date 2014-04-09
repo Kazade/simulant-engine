@@ -63,7 +63,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     //Create a submesh with the default material
     SubMeshIndex smi = mesh->new_submesh(
-        mesh->scene().clone_default_material()
+        mesh->scene().new_material_from_file(mesh->scene().default_material_filename())
     );
 
     SubMesh& sm = mesh->submesh(smi);
@@ -200,10 +200,10 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
         for(const unicode& p: possible_diffuse_maps) {
             if(os::path::exists(p.encode())) {
                 //Create a material from it and apply it to the submesh
-                MaterialID mat = create_material_from_texture(
-                    mesh->resource_manager(),
+                MaterialID mat = mesh->resource_manager().new_material_from_texture(
                     mesh->resource_manager().new_texture_from_file(p.encode())
                 );
+
                 sm.set_material_id(mat);
                 break;
             }

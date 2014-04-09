@@ -29,9 +29,9 @@ Pipeline::Pipeline(
 
 }
 
-RenderSequence::RenderSequence(Scene& scene):
-    scene_(scene),
-    renderer_(new GenericRenderer(scene)) {
+RenderSequence::RenderSequence(WindowBase &window):
+    window_(window),
+    renderer_(new GenericRenderer(window)) {
 
     //Set up the default render options
     render_options.wireframe_enabled = false;
@@ -113,7 +113,7 @@ void RenderSequence::set_renderer(Renderer::ptr renderer) {
 }
 
 void RenderSequence::run() {
-    scene_.window().apply_func_to_objects(std::bind(&Viewport::clear, std::placeholders::_1));
+    window_.apply_func_to_objects(std::bind(&Viewport::clear, std::placeholders::_1));
 
     for(Pipeline::ptr pipeline: ordered_pipelines_) {
         run_pipeline(pipeline);
@@ -121,7 +121,7 @@ void RenderSequence::run() {
 }
 
 void RenderSequence::update_camera_constraint(CameraID cid) {
-    auto camera = scene_.camera(cid);
+    auto camera = window_.scene().camera(cid);
 
     if(camera->has_proxy()) {
         //Update the associated camera
@@ -143,9 +143,9 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
 
     update_camera_constraint(pipeline_stage->camera_id());
 
-    Mat4 camera_projection = scene_.camera(pipeline_stage->camera_id())->projection_matrix();
+    Mat4 camera_projection = window_.scene().camera(pipeline_stage->camera_id())->projection_matrix();
 
-    auto viewport = scene_.window().viewport(pipeline_stage->viewport_id());
+    auto viewport = window_.viewport(pipeline_stage->viewport_id());
     viewport->apply(); //FIXME apply shouldn't exist
 
     signal_pipeline_started_(*pipeline_stage);
@@ -155,11 +155,11 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
 
     if(pipeline_stage->ui_stage_id()) {        
         //This is a UI stage, so just render that
-        auto ui_stage = scene_.ui_stage(pipeline_stage->ui_stage_id());
+        auto ui_stage = window_.scene().ui_stage(pipeline_stage->ui_stage_id());
         ui_stage->__resize(viewport->width(), viewport->height());
         ui_stage->__render(camera_projection);
     } else {
-        std::vector<SubActor::ptr> buffers = scene_.stage(stage_id
+        std::vector<SubActor::ptr> buffers = window_.scene().stage(stage_id
             )->partitioner().geometry_visible_from(camera_id);
 
 
@@ -184,14 +184,14 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
             //Get the priority queue for this actor (e.g. RENDER_PRIORITY_BACKGROUND)
             QueueGroups::mapped_type& priority_queue = queues[(uint32_t)ent->_parent().render_priority()];
 
-            auto mat = scene_.stage(pipeline_stage->stage_id())->material(ent->material_id());
+            auto mat = window_.scene().stage(pipeline_stage->stage_id())->material(ent->material_id());
 
             //Go through the actors material passes
             for(uint8_t pass = 0; pass < mat->technique().pass_count(); ++pass) {
                 //Create a new render group if necessary
                 RootGroup::ptr group;
                 if(priority_queue.size() <= pass) {
-                    group = RootGroup::ptr(new RootGroup(scene_.window(), stage_id, camera_id));
+                    group = RootGroup::ptr(new RootGroup(window_, stage_id, camera_id));
                     priority_queue.push_back(group);
                 } else {
                     group = priority_queue[pass];

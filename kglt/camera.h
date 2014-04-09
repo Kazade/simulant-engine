@@ -52,7 +52,7 @@ private:
     void do_update(double dt);
 
 
-    ProtectedPtr<Camera> camera();
+    CameraPtr camera();
 };
 
 class Camera:

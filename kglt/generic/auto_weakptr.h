@@ -20,6 +20,16 @@ public:
         weak_ptr_(other.weak_ptr_) {
     }
 
+    template<typename U>
+    AutoWeakPtr(const std::shared_ptr<U>& other):
+        weak_ptr_(std::dynamic_pointer_cast<T>(other)) {
+
+    }
+
+    template<typename U>
+    AutoWeakPtr(const std::weak_ptr<U>& other):
+        weak_ptr_(other) {}
+
     std::shared_ptr<T> operator->() {
         if(weak_ptr_.expired()) {
             throw ObjectDestroyedError("Unable to get a lock on the object");
@@ -37,6 +47,11 @@ public:
 
     explicit operator bool() const {
         return !weak_ptr_.expired();
+    }
+
+    template<typename U>
+    AutoWeakPtr<U> as() const {
+        return AutoWeakPtr<U>(std::dynamic_pointer_cast<U>(weak_ptr_.lock()));
     }
 
 private:

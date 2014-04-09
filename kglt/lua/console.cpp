@@ -90,12 +90,12 @@ void Console::init_widget() {
         0, window_.width(), window_.height(), 0, -1, 1
     );
 
-    ui_pipeline_ = scene.render_sequence().new_pipeline(
+    ui_pipeline_ = window_.render_sequence()->new_pipeline(
         ui_stage_, ui_camera_,
         ViewportID(), TextureID(), 101
     );
 
-    ProtectedPtr<UIStage> stage = scene.ui_stage(ui_stage_);
+    UIStagePtr stage = scene.ui_stage(ui_stage_);
 
     //If we can't find an element for the lua console
     if(stage->$("#lua-console").empty()) {
@@ -126,7 +126,7 @@ bool Console::key_down(SDL_Keysym key) {
     SDL_Scancode code = key.scancode;
 
     if(code == SDL_SCANCODE_GRAVE) {
-        ProtectedPtr<UIStage> stage = window_.scene().ui_stage(ui_stage_);
+        UIStagePtr stage = window_.scene().ui_stage(ui_stage_);
 
         if(!active_) {
             init_widget(); //Make sure there is something to show!
@@ -212,7 +212,7 @@ void Console::entry(SDL_TextInputEvent event) {
 }
 
 void Console::update_output() {
-    ProtectedPtr<UIStage> stage = window_.scene().ui_stage(ui_stage_);
+    UIStagePtr stage = window_.scene().ui_stage(ui_stage_);
 
     std::vector<unicode> lines;
     for(auto p: buffer_) {

@@ -9,6 +9,7 @@
 #include "types.h"
 #include "utils/geometry_buffer.h"
 #include "generic/auto_weakptr.h"
+#include "window_base.h"
 
 namespace kglt {
 
@@ -18,10 +19,10 @@ class Renderer {
 public:
     typedef std::shared_ptr<Renderer> ptr;
 
-    Renderer(Scene& scene):
-        scene_(scene) {}
+    Renderer(WindowBase& window):
+        window_(window) {}
 
-    Scene& scene() { return scene_; }
+    Scene& scene() { return window_.scene(); }
 
     void set_current_stage(StageID stage) {
         current_stage_ = stage;
@@ -33,7 +34,7 @@ protected:
     StagePtr current_stage();
 
 private:    
-    Scene& scene_;
+    WindowBase& window_;
     StageID current_stage_;
 
 

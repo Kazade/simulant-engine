@@ -407,9 +407,6 @@ const StageID DefaultStageID = StageID();
 
 const std::string DEFAULT_MATERIAL_SCHEME = "default";
 
-class Stage;
-typedef AutoWeakPtr<Stage> StagePtr;
-
 class Mesh;
 typedef std::weak_ptr<Mesh> MeshRef;
 typedef std::shared_ptr<Mesh> MeshPtr;
@@ -443,18 +440,28 @@ typedef std::shared_ptr<Scene> ScenePtr;
 class Camera;
 class CameraProxy;
 
-typedef std::shared_ptr<Camera> CameraPtr;
-typedef std::weak_ptr<Camera> CameraRef;
+typedef AutoWeakPtr<Camera> CameraPtr;
 
 class UIStage;
-typedef std::weak_ptr<UIStage> UIStageRef;
+typedef AutoWeakPtr<UIStage> UIStagePtr;
 
 class Viewport;
 typedef AutoWeakPtr<Viewport> ViewportPtr;
 
+class Background;
+typedef AutoWeakPtr<Background> BackgroundPtr;
+
+class Stage;
+typedef AutoWeakPtr<Stage> StagePtr;
+
+class PhysicsEngine;
+typedef AutoWeakPtr<PhysicsEngine> PhysicsEnginePtr;
+
+class RenderSequence;
+typedef AutoWeakPtr<RenderSequence> RenderSequencePtr;
+
 class Frustum;
 class WindowBase;
-class RenderSequence;
 class Partitioner;
 
 namespace physics {

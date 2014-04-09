@@ -18,6 +18,7 @@
 #include "lua/console.h"
 #include "watcher.h"
 #include "message_bar.h"
+#include "render_sequence.h"
 
 #include "screens/loading.h"
 #include "utils/gl_thread_check.h"
@@ -36,7 +37,8 @@ WindowBase::WindowBase():
     frame_counter_time_(0),
     frame_counter_frames_(0),
     frame_time_in_milliseconds_(0),
-    total_time_(0) {
+    total_time_(0),
+    render_sequence_(new RenderSequence(*this)) {
 
     ktiGenTimers(1, &fixed_timer_);
     ktiBindTimer(fixed_timer_);
@@ -59,6 +61,10 @@ WindowBase::~WindowBase() {
     watcher_.reset();
 
     Sound::shutdown_openal();
+}
+
+RenderSequencePtr WindowBase::render_sequence() {
+    return render_sequence_;
 }
 
 LoaderPtr WindowBase::loader_for(const unicode &filename) {
@@ -101,7 +107,7 @@ bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
         viewport(default_viewport_)->set_position(0, 0);
         viewport(default_viewport_)->set_size(this->width(), this->height());
 
-        scene_ = Scene::create(this);        
+        scene_ = SceneImpl::create(this);
 
         /*FIXME: This should be called in Scene::init, but because Scene subclasses ResourceManagerImpl,
          * which takes a WindowBase, rather than a Scene, we try to do window().scene() which crashes because
@@ -191,7 +197,7 @@ bool WindowBase::update() {
     GLCheck(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     check_and_log_error(__FILE__, __LINE__);
 
-    scene().render();
+    render_sequence()->run();
 
     signal_pre_swap_();
 

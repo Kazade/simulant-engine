@@ -4,7 +4,7 @@
 
 namespace kglt {
 
-Collidable::Collidable(Object* owner, PhysicsEngine* engine):
+Collidable::Collidable(Object* owner, PhysicsEnginePtr engine):
     engine_(engine),
     owner_(owner) {
 
@@ -16,7 +16,7 @@ Collidable::Collidable(Object* owner, PhysicsEngine* engine):
         });
 
         if(!engine_) {
-            engine_ = &owner_->stage()->scene().physics();
+            engine_ = owner_->stage()->scene().physics();
         }
     }
 

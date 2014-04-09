@@ -12,7 +12,7 @@ SubMeshIndex capsule(ProtectedPtr<Mesh> mesh, float diameter, float height,
     float radius = diameter * 0.5f;
 
     SubMeshIndex smi = mesh->new_submesh(
-        mesh->scene().clone_default_material(),
+        mesh->scene().new_material_from_file(mesh->scene().default_material_filename()),
         MESH_ARRANGEMENT_TRIANGLES,
         false
     );

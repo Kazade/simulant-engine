@@ -83,7 +83,7 @@ std::shared_ptr<ResponsiveBody> ODEEngine::do_new_responsive_body(Object* owner)
 }
 
 std::shared_ptr<Collidable> ODEEngine::do_new_collidable(Object* owner) {
-    auto result = std::make_shared<ODECollidable>(owner, this);
+    auto result = std::make_shared<ODECollidable>(owner, shared_from_this());
     if(!result->init()) {
         throw InstanceInitializationError();
     }

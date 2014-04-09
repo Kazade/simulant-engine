@@ -32,7 +32,7 @@ void CameraProxy::set_orthographic_projection(double left, double right, double 
     camera()->set_orthographic_projection(left, right, bottom, top, near, far);
 }
 
-ProtectedPtr<Camera> CameraProxy::camera() {
+CameraPtr CameraProxy::camera() {
     return stage()->scene().camera(id());
 }
 

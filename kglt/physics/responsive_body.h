@@ -47,7 +47,7 @@ public:
     kglt::Vec3 linear_velocity() const;
 
     Object* owner() { return owner_; }
-    PhysicsEngine* engine() { return engine_; }
+    PhysicsEnginePtr engine() { return engine_; }
 
     ConstraintID create_fixed_constraint(ResponsiveBody& other);
     ConstraintID create_pivot_constraint(ResponsiveBody& other, const kglt::Vec3& pivot);
@@ -57,7 +57,7 @@ public:
 
 private:    
     Object* owner_;
-    PhysicsEngine* engine_;
+    PhysicsEnginePtr engine_;
 
     virtual bool do_init() = 0;
     virtual void do_cleanup() = 0;

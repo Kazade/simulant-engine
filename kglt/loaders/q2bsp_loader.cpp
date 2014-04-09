@@ -310,7 +310,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     std::vector<TexturePtr> tex_ref_count_holder_;
 
     for(Q2::TextureInfo& tex: textures) {
-        auto mat = scene->material(scene->clone_default_material());
+        MaterialID mat_id = scene->new_material_from_file(scene->default_material_filename());
+        auto mat = scene->material(mat_id);
         mat_ref_count_holder_.push_back(mat.__object); //Prevent GC until we are done
 
         kmVec3 u_axis, v_axis;

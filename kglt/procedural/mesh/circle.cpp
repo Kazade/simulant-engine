@@ -9,7 +9,7 @@ SubMeshIndex circle(kglt::Mesh& mesh, float diameter, int32_t point_count, float
     float radius = diameter * 0.5f;
 
     SubMeshIndex smi = mesh.new_submesh(
-        mesh.scene().clone_default_material(),
+        mesh.scene().new_material_from_file(mesh.scene().default_material_filename()),
         MESH_ARRANGEMENT_TRIANGLE_FAN,
         false
     );

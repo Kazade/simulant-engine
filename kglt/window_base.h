@@ -10,9 +10,10 @@
 
 #include "idle_task_manager.h"
 
+#include "generic/auto_weakptr.h"
 #include "kazbase/logging.h"
 #include "generic/manager.h"
-
+#include "generic/data_carrier.h"
 #include "types.h"
 #include "viewport.h"
 #include "sound.h"
@@ -35,7 +36,8 @@ class Console;
 class MessageBar;
 class Loader;
 class LoaderType;
-
+class RenderSequence;
+class SceneImpl;
 class Watcher;
 
 typedef std::function<void (double)> WindowUpdateCallback;
@@ -123,6 +125,9 @@ public:
 
     screens::Loading& loading() { return *loading_; }
 
+    RenderSequencePtr render_sequence();
+    generic::DataCarrier& data() { return data_carrier_; }
+
 protected:
 
     void set_width(uint32_t width) { 
@@ -145,7 +150,7 @@ private:
 
     bool initialized_;
 
-    std::shared_ptr<Scene> scene_;
+    std::shared_ptr<SceneImpl> scene_;
     int32_t width_;
     int32_t height_;
 
@@ -184,6 +189,8 @@ private:
     sig::connection loading_update_connection_;
 
     std::shared_ptr<MessageBar> message_bar_;
+    std::shared_ptr<kglt::RenderSequence> render_sequence_;
+    generic::DataCarrier data_carrier_;
 };
 
 }

@@ -55,6 +55,7 @@ void export_lua_api(lua_State* state) {
         luabind::class_<WindowBase>("WindowBase")
             .def("set_title", &WindowBase::set_title)
             .def("quit", &WindowBase::stop_running)
+            .property("render_sequence", &WindowBase::render_sequence)
             .property("scene", (Scene&(WindowBase::*)())&WindowBase::scene)
             .property("width", &WindowBase::width)
             .property("height", &WindowBase::height)
@@ -131,8 +132,7 @@ void export_lua_api(lua_State* state) {
             .property("stage_count", &Scene::stage_count)
             .property("default_stage", (StagePtr(Scene::*)())&Scene::stage)
             .property("default_material_id", &Scene::default_material_id)
-            .property("render_sequence", &Scene::render_sequence)
-            .def("render_tree", (void(Scene::*)(void))&Scene::render_tree)
+            .def("print_tree", (void(Scene::*)(void))&Scene::print_tree)
     ];
 
     luabind::module(state) [

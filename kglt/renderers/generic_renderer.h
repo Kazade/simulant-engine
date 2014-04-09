@@ -11,8 +11,8 @@ namespace kglt {
 
 class GenericRenderer : public Renderer {
 public:
-    GenericRenderer(Scene& scene):
-        Renderer(scene) {}
+    GenericRenderer(WindowBase& window):
+        Renderer(window) {}
 
 private:
     void render_subactor(SubActor& mesh, CameraID camera);
