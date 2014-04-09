@@ -54,7 +54,7 @@ void Application::check_tasks() {
 int32_t Application::run() {
     load_async(std::bind(&Application::init, this));
 
-    while(window_->update()) {}
+    while(window_->run_frame()) {}
 
     return 0;
 }

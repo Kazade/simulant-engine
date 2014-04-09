@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
         actor->move_to(0.0, 0.0, -5.0);
     }
 	
-    while(window->update()) {}
+    while(window->run_frame()) {}
 	
 	return 0;
 }

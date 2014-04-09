@@ -151,7 +151,7 @@ int main(int argc, const char *argv[]) {
                 std::cout << "LeftDown" << std::endl;
     });
 
-    while(window->update()) {
+    while(window->run_frame()) {
         auto dt = window->delta_time();
         {
             auto actor = window->scene().stage()->actor(actor_id);

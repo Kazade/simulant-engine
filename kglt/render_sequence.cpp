@@ -113,7 +113,7 @@ void RenderSequence::set_renderer(Renderer::ptr renderer) {
 }
 
 void RenderSequence::run() {
-    window_.apply_func_to_objects(std::bind(&Viewport::clear, std::placeholders::_1));
+    window_.ViewportManager::apply_func_to_objects(std::bind(&Viewport::clear, std::placeholders::_1));
 
     for(Pipeline::ptr pipeline: ordered_pipelines_) {
         run_pipeline(pipeline);

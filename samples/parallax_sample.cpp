@@ -18,11 +18,11 @@ int main(int argc, char* argv[]) {
     window->scene().camera()->set_orthographic_projection_from_height((float) 224 / (float) 40, 16.0 / 9.0);
 	
     //Create a background and add 3 layers to it
-    window->scene().new_background_from_file("sample_data/parallax/back_layer.png", 0.1);
-    window->scene().new_background_from_file("sample_data/parallax/middle_layer.png", 0.2);
-    window->scene().new_background_from_file("sample_data/parallax/front_layer.png", 1.0);
+    window->new_background_from_file("sample_data/parallax/back_layer.png", 0.1);
+    window->new_background_from_file("sample_data/parallax/middle_layer.png", 0.2);
+    window->new_background_from_file("sample_data/parallax/front_layer.png", 1.0);
 
-    while(window->update()) {
+    while(window->run_frame()) {
 
 	}
 

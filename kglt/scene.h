@@ -6,10 +6,10 @@
 
 #include "types.h"
 #include "resource_manager.h"
-#include "generic/manager.h"
 #include "generic/auto_weakptr.h"
 #include "generic/generic_tree.h"
 #include "interfaces.h"
+#include "generic/manager.h"
 
 namespace kglt {
 
@@ -25,7 +25,6 @@ class Background;
 typedef generic::TemplatedManager<SceneImpl, Stage, StageID> StageManager;
 typedef generic::TemplatedManager<SceneImpl, Camera, CameraID> CameraManager;
 typedef generic::TemplatedManager<SceneImpl, UIStage, UIStageID> UIStageManager;
-typedef generic::TemplatedManager<SceneImpl, Background, BackgroundID> BackgroundManager;
 
 class Scene :
     public virtual ResourceManager,
@@ -65,15 +64,6 @@ public:
     virtual void delete_ui_stage(UIStageID s) = 0;
     virtual uint32_t ui_stage_count() const = 0;
 
-    //Background functions
-    virtual BackgroundID new_background() = 0;
-    virtual BackgroundID new_background_from_file(const unicode& filename, float scroll_x=0.0, float scroll_y=0.0) = 0;
-    virtual BackgroundPtr background(BackgroundID bid) = 0;
-    virtual bool has_background(BackgroundID bid) const = 0;
-    virtual void delete_background(BackgroundID bid) = 0;
-    virtual uint32_t background_count() const = 0;
-    // End background
-
     virtual void print_tree() = 0;
 
     virtual MaterialID clone_default_material() = 0;
@@ -86,7 +76,6 @@ class SceneImpl:
     public StageManager,
     public CameraManager,
     public UIStageManager,
-    public BackgroundManager,
     public Managed<SceneImpl> {
 
 public:
@@ -133,15 +122,6 @@ public:
     }
 
     void print_tree();
-
-    //Background functions
-    BackgroundID new_background();
-    BackgroundID new_background_from_file(const unicode& filename, float scroll_x=0.0, float scroll_y=0.0);
-    BackgroundPtr background(BackgroundID bid);
-    bool has_background(BackgroundID bid) const;
-    void delete_background(BackgroundID bid);
-    uint32_t background_count() const;
-    // End background
 
     unicode default_material_filename() const;
 

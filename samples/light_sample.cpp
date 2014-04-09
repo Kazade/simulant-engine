@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
 
 
 
-    while(window->update()) {
+    while(window->run_frame()) {
         scene.stage()->actor(actor_id)->rotate_x(kglt::Degrees(window->delta_time() * 20.0));
         scene.stage()->actor(actor_id)->rotate_y(kglt::Degrees(window->delta_time() * 15.0));
         scene.stage()->actor(actor_id)->rotate_z(kglt::Degrees(window->delta_time() * 25.0));

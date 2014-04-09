@@ -29,7 +29,7 @@ public:
         assert_true(window->playing_sound_count());
 
         while(window->playing_sound_count()) {
-            window->update();
+            window->run_frame();
         }
     }
 

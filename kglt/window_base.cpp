@@ -27,6 +27,7 @@ namespace kglt {
 
 WindowBase::WindowBase():
     Source(this),
+    BackgroundManager(this),
     initialized_(false),
     width_(-1),
     height_(-1),
@@ -153,7 +154,7 @@ void WindowBase::set_logging_level(LoggingLevel level) {
     logging::get_logger("/")->set_level((logging::LOG_LEVEL) level);
 }
 
-bool WindowBase::update() {
+bool WindowBase::run_frame() {
     check_and_log_error(__FILE__, __LINE__);
 
     signal_frame_started_();
@@ -186,6 +187,9 @@ bool WindowBase::update() {
         idle_.execute(); //Execute idle tasks before render
 
         input_controller().update(fixed_step);
+
+        update(fixed_step); //Update this
+
         scene().update(fixed_step);
 
         signal_step_(fixed_step); //Trigger any steps        

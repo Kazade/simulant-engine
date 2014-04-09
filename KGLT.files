@@ -356,3 +356,5 @@ kglt/interfaces.cpp
 kglt/background.h
 kglt/background.cpp
 kglt/generic/auto_weakptr.h
+kglt/managers.h
+kglt/managers.cpp

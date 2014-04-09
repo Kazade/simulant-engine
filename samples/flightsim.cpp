@@ -83,7 +83,7 @@ int main(int argc, char* argv[]) {
         });
     }*/
 
-    while(window->update()) {}
+    while(window->run_frame()) {}
 
     return 0;
 }

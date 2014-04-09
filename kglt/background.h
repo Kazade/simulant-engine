@@ -23,7 +23,7 @@ class Background:
     public Printable {
 
 public:
-    Background(Scene *scene, BackgroundID background_id);
+    Background(WindowBase *window, BackgroundID background_id);
 
     bool init() override;
     void cleanup() override;
@@ -44,8 +44,10 @@ public:
     const bool has_name() const;
     void set_name(const unicode &name);
     const unicode name() const;
+
+    WindowBase& window() { return *window_; }
 private:
-    Scene* scene_;
+    WindowBase* window_;
     unicode name_;
 
     void update_camera();

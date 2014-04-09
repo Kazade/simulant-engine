@@ -17,6 +17,7 @@
 #include "types.h"
 #include "viewport.h"
 #include "sound.h"
+#include "managers.h"
 
 namespace kglt {
 
@@ -48,7 +49,8 @@ typedef generic::TemplatedManager<WindowBase, Viewport, ViewportID> ViewportMana
 
 class WindowBase :
     public ViewportManager,
-    public Source {
+    public Source,
+    public BackgroundManager {
 
 public:    
     typedef std::shared_ptr<WindowBase> ptr;
@@ -87,7 +89,7 @@ public:
     Scene& scene();
     const Scene& scene() const;
 
-    bool update();
+    bool run_frame();
 
     IdleTaskManager& idle() { return idle_; }
 

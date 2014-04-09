@@ -9,7 +9,7 @@ int main(int argc, char* argv[]) {
     window->set_title("KGLT UI Sample");
     window->scene().ui_stage()->load_rml("sample_data/demo.rml");
 
-    while(window->update()) {}
+    while(window->run_frame()) {}
 
     return 0;
 }

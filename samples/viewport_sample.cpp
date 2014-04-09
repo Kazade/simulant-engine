@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
     //Add another pass to render to the second viewport
     window->render_sequence()->new_pipeline(scene.stage()->id(), kglt::CameraID(), second);
 		
-    while(window->update()) {}
+    while(window->run_frame()) {}
 	
 	return 0;
 }

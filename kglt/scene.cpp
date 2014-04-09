@@ -29,7 +29,6 @@ SceneImpl::~SceneImpl() {
 
     //Clear the stages first, they may hold references to cameras, materials
     //etc.
-    BackgroundManager::__objects().clear();
     StageManager::__objects().clear();    
     CameraManager::__objects().clear();
 }
@@ -212,44 +211,6 @@ uint32_t SceneImpl::camera_count() const {
     return CameraManager::manager_count();
 }
 //============== END CAMERAS ================
-//============== START BACKGROUNDS ==========
-
-BackgroundID SceneImpl::new_background() {
-    BackgroundID bid = BackgroundManager::manager_new();
-    return bid;
-}
-
-BackgroundID SceneImpl::new_background_from_file(const unicode& filename, float scroll_x, float scroll_y) {
-    BackgroundID result = new_background();
-    try {
-        background(result)->set_texture(new_texture_from_file(filename));
-        background(result)->set_horizontal_scroll_rate(scroll_x);
-        background(result)->set_vertical_scroll_rate(scroll_y);
-    } catch(...) {
-        delete_background(result);
-        throw;
-    }
-
-    return result;
-}
-
-BackgroundPtr SceneImpl::background(BackgroundID bid) {
-    return BackgroundManager::manager_get(bid);
-}
-
-bool SceneImpl::has_background(BackgroundID bid) const {
-    return BackgroundManager::manager_contains(bid);
-}
-
-void SceneImpl::delete_background(BackgroundID bid) {
-    BackgroundManager::manager_delete(bid);
-}
-
-uint32_t SceneImpl::background_count() const {
-    return BackgroundManager::manager_count();
-}
-
-//============== END BACKGROUNDS ============
 
 
 bool SceneImpl::init() {
@@ -259,12 +220,6 @@ bool SceneImpl::init() {
 void SceneImpl::update(double dt) {
     if(has_physics_engine()) {
         physics()->step(dt);
-    }
-
-    //Update the backgrounds
-    for(auto background_pair: BackgroundManager::__objects()) {
-        auto* bg = background_pair.second.get();
-        bg->update(dt);
     }
 
     //Update the stages

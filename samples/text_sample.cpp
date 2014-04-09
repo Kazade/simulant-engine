@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) {
     ui->append("<p>").text("Hello world!");
     ui->$("p").add_class("thing");
 
-    while(window->update()) {}
+    while(window->run_frame()) {}
 
     return 0;
 }
