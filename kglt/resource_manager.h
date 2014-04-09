@@ -121,9 +121,6 @@ public:
 
     virtual WindowBase& window() = 0;
     virtual const WindowBase& window() const = 0;
-
-    virtual Scene& scene() = 0;
-    virtual const Scene& scene() const = 0;
 };
 
 class ResourceManagerImpl:

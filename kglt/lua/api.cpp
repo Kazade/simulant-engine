@@ -55,12 +55,18 @@ void export_lua_api(lua_State* state) {
         luabind::class_<WindowBase>("WindowBase")
             .def("set_title", &WindowBase::set_title)
             .def("quit", &WindowBase::stop_running)
+            .def("new_stage", &WindowBase::new_stage)
+            .def("stage", (StagePtr(WindowBase::*)(StageID))&WindowBase::stage)
+            .def("delete_stage", &WindowBase::delete_stage)
+            .property("default_stage", (StagePtr(WindowBase::*)())&WindowBase::stage)
+            .property("stage_count", &WindowBase::stage_count)
             .property("render_sequence", &WindowBase::render_sequence)
             .property("scene", (Scene&(WindowBase::*)())&WindowBase::scene)
             .property("width", &WindowBase::width)
             .property("height", &WindowBase::height)
             .property("total_time", &WindowBase::total_time)
             .property("delta_time", &WindowBase::delta_time)
+            .def("print_tree", (void(WindowBase::*)(void))&WindowBase::print_tree)
     ];
 
     luabind::module(state) [
@@ -78,7 +84,7 @@ void export_lua_api(lua_State* state) {
             .def("sprite", (ProtectedPtr<Sprite>(Stage::*)(SpriteID))&Stage::sprite)
             .def("delete_sprite", &Stage::delete_sprite)
             .def("tostring", &Stage::__unicode__)
-            .property("scene", (Scene&(Stage::*)())&Stage::scene)
+            .property("window", (WindowBase&(Stage::*)())&Stage::window)
             .property("actor_count", &Stage::actor_count)
             .property("sprite_count", &Stage::sprite_count)
             .property("light_count", &Stage::light_count)
@@ -125,14 +131,8 @@ void export_lua_api(lua_State* state) {
 
     luabind::module(state) [
         luabind::class_<Scene, luabind::bases<ResourceManager> >("Scene")
-            .def("update", &Scene::update)
-            .def("new_stage", &Scene::new_stage)
-            .def("stage", (StagePtr(Scene::*)(StageID))&Scene::stage)
-            .def("delete_stage", &Scene::delete_stage)
-            .property("stage_count", &Scene::stage_count)
-            .property("default_stage", (StagePtr(Scene::*)())&Scene::stage)
-            .property("default_material_id", &Scene::default_material_id)
-            .def("print_tree", (void(Scene::*)(void))&Scene::print_tree)
+            .def("update", &Scene::update)            
+            .property("default_material_id", &Scene::default_material_id)            
     ];
 
     luabind::module(state) [

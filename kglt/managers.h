@@ -1,6 +1,7 @@
 #ifndef MANAGERS_H
 #define MANAGERS_H
 
+#include "generic/generic_tree.h"
 #include "generic/manager.h"
 #include "types.h"
 #include "interfaces.h"
@@ -28,6 +29,32 @@ private:
     WindowBase* window_;
 };
 
+class StageManager:
+    public generic::TemplatedManager<WindowBase, Stage, StageID>,
+    public virtual Updateable {
+
+public:
+    StageManager(WindowBase* window);
+
+    StageID new_stage(AvailablePartitioner partitioner=PARTITIONER_OCTREE);
+    StagePtr stage();
+    StagePtr stage(StageID s);
+    void delete_stage(StageID s);
+    uint32_t stage_count() const;
+
+    void print_tree();
+
+    StageID default_stage_id() const { return default_stage_id_; }
+
+    void update(double dt) override;
+
+private:
+    void print_tree(GenericTreeNode* node, uint32_t& level);
+
+    WindowBase* window_;
+
+    StageID default_stage_id_;
+};
 
 }
 

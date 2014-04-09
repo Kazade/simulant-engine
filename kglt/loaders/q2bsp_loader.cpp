@@ -191,7 +191,7 @@ void add_lights_to_scene(Scene& scene, const std::vector<ActorProperties>& actor
             origin >> pos.x >> pos.y >> pos.z;
 
             {
-                auto new_light = scene.stage()->light(scene.stage()->new_light());
+                auto new_light = scene.window().stage()->light(scene.window().stage()->new_light());
                 new_light->set_absolute_position(pos.x, pos.y, pos.z);
                 kmVec3Transform(&pos, &pos, &rotation);
 
@@ -249,7 +249,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     parse_actors(actor_string, actors);
     kmVec3 cam_pos = find_player_spawn_point(actors);
     kmVec3Transform(&cam_pos, &cam_pos, &rotation);
-    scene->stage()->camera()->set_absolute_position(cam_pos);
+    scene->window().stage()->camera()->set_absolute_position(cam_pos);
 
     add_lights_to_scene(*scene, actors);
 
@@ -300,8 +300,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
      *  Load the textures and generate materials
      */
 
-    MeshID mid = scene->stage()->new_mesh();
-    auto mesh = scene->stage()->mesh(mid);
+    MeshID mid = scene->window().stage()->new_mesh();
+    auto mesh = scene->window().stage()->mesh(mid);
 
     std::map<MaterialID, SubMeshIndex> material_to_submesh;
 
@@ -335,12 +335,12 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             std::string texture_filename = "textures/" + std::string(tex.texture_name) + ".tga";
 
             try {
-                texture = scene->stage()->texture(scene->stage()->new_texture_from_file(texture_filename));
+                texture = scene->window().stage()->texture(scene->window().stage()->new_texture_from_file(texture_filename));
                 tex_ref_count_holder_.push_back(texture.__object);
             } catch(IOError& e) {
                 //Fallback texture
                 L_ERROR("Unable to find texture required by BSP file: " + texture_filename);
-                texture = scene->stage()->texture(scene->stage()->new_texture());
+                texture = scene->window().stage()->texture(scene->window().stage()->new_texture());
                 tex_ref_count_holder_.push_back(texture.__object);
 
                 //FIXME: Should be checkerboard, not starfield
@@ -477,7 +477,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     L_DEBUG(_u("Created an actor for mesh").format(mid));
     //Finally, create an actor from the world mesh
-    scene->stage()->new_actor(mid);
+    scene->window().stage()->new_actor(mid);
 }
 
 }

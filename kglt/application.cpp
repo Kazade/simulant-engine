@@ -24,7 +24,7 @@ Scene& Application::scene() {
 }
 
 StagePtr Application::stage(StageID stage) {
-    return window().scene().stage(stage);
+    return window().stage(stage);
 }
 
 void Application::load_async(boost::function<bool ()> func) {

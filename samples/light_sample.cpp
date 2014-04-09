@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
     );
 
 
-    auto stage = scene.stage();
+    auto stage = window->stage();
     stage->set_ambient_light(kglt::Colour(0.2, 0.2, 0.2, 1.0));
 
     kglt::ActorID actor_id = stage->geom_factory().new_cube(2.0);
@@ -48,22 +48,22 @@ int main(int argc, char* argv[]) {
     float xpos = 0;
     window->keyboard().key_while_pressed_connect(SDL_SCANCODE_A, [&](SDL_Keysym key, double dt) mutable {
             xpos -= 20.0 * dt;
-            scene.stage()->camera()->set_absolute_position(xpos, 2, 0);
-            scene.stage()->camera()->look_at(scene.stage()->actor(actor_id)->absolute_position());
+            window->stage()->camera()->set_absolute_position(xpos, 2, 0);
+            window->stage()->camera()->look_at(window->stage()->actor(actor_id)->absolute_position());
     });
     window->keyboard().key_while_pressed_connect(SDL_SCANCODE_D, [&](SDL_Keysym key, double dt) mutable {
             xpos += 20.0 * dt;
-            scene.stage()->camera()->set_absolute_position(xpos, 2, 0);
-            scene.stage()->camera()->look_at(stage->actor(actor_id)->absolute_position());
+            window->stage()->camera()->set_absolute_position(xpos, 2, 0);
+            window->stage()->camera()->look_at(stage->actor(actor_id)->absolute_position());
     });
 
 
 
 
     while(window->run_frame()) {
-        scene.stage()->actor(actor_id)->rotate_x(kglt::Degrees(window->delta_time() * 20.0));
-        scene.stage()->actor(actor_id)->rotate_y(kglt::Degrees(window->delta_time() * 15.0));
-        scene.stage()->actor(actor_id)->rotate_z(kglt::Degrees(window->delta_time() * 25.0));
+        window->stage()->actor(actor_id)->rotate_x(kglt::Degrees(window->delta_time() * 20.0));
+        window->stage()->actor(actor_id)->rotate_y(kglt::Degrees(window->delta_time() * 15.0));
+        window->stage()->actor(actor_id)->rotate_z(kglt::Degrees(window->delta_time() * 25.0));
     }
 
     return 0;

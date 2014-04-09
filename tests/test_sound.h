@@ -18,7 +18,7 @@ public:
     }
 
     void test_2d_sound_output() {
-        auto stage = window->scene().stage();
+        auto stage = window->stage();
 
         kglt::SoundID sound = stage->new_sound_from_file("sample_data/test_sound.ogg");
 
@@ -34,7 +34,7 @@ public:
     }
 
     void test_3d_sound_output() {
-        auto stage = window->scene().stage();
+        auto stage = window->stage();
 
         kglt::SoundID sound = stage->new_sound_from_file("sample_data/test_sound.ogg");
 

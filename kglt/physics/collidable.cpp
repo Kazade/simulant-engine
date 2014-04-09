@@ -16,7 +16,7 @@ Collidable::Collidable(Object* owner, PhysicsEnginePtr engine):
         });
 
         if(!engine_) {
-            engine_ = owner_->stage()->scene().physics();
+            engine_ = owner_->stage()->window().scene().physics();
         }
     }
 

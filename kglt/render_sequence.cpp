@@ -159,7 +159,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
         ui_stage->__resize(viewport->width(), viewport->height());
         ui_stage->__render(camera_projection);
     } else {
-        std::vector<SubActor::ptr> buffers = window_.scene().stage(stage_id
+        std::vector<SubActor::ptr> buffers = window_.stage(stage_id
             )->partitioner().geometry_visible_from(camera_id);
 
 
@@ -184,7 +184,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
             //Get the priority queue for this actor (e.g. RENDER_PRIORITY_BACKGROUND)
             QueueGroups::mapped_type& priority_queue = queues[(uint32_t)ent->_parent().render_priority()];
 
-            auto mat = window_.scene().stage(pipeline_stage->stage_id())->material(ent->material_id());
+            auto mat = window_.stage(pipeline_stage->stage_id())->material(ent->material_id());
 
             //Go through the actors material passes
             for(uint8_t pass = 0; pass < mat->technique().pass_count(); ++pass) {

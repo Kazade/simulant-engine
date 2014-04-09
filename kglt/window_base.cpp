@@ -28,6 +28,7 @@ namespace kglt {
 WindowBase::WindowBase():
     Source(this),
     BackgroundManager(this),
+    StageManager(this),
     initialized_(false),
     width_(-1),
     height_(-1),
@@ -152,6 +153,11 @@ bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
 
 void WindowBase::set_logging_level(LoggingLevel level) {
     logging::get_logger("/")->set_level((logging::LOG_LEVEL) level);
+}
+
+void WindowBase::update(double dt) {
+    BackgroundManager::update(dt);
+    StageManager::update(dt);
 }
 
 bool WindowBase::run_frame() {

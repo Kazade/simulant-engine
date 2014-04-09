@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
     window->viewport(second)->set_background_colour(kglt::Colour(0, 1.0, 0, 0));
 
     //Add another pass to render to the second viewport
-    window->render_sequence()->new_pipeline(scene.stage()->id(), kglt::CameraID(), second);
+    window->render_sequence()->new_pipeline(window->stage()->id(), kglt::CameraID(), second);
 		
     while(window->run_frame()) {}
 	

@@ -39,7 +39,7 @@ public:
         Vec3 pos(0, 0, -1);
 
 
-        auto stage = window->scene().stage();
+        auto stage = window->stage();
 
         stage->host_camera();
         stage->camera()->look_at(pos);
@@ -64,7 +64,7 @@ public:
     }
 
     void test_following() {
-        auto stage = window->scene().stage();
+        auto stage = window->stage();
         stage->host_camera();
 
         ActorID a = stage->new_actor();

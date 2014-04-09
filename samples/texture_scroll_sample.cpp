@@ -7,7 +7,7 @@ int main(int argc, char* argv[]) {
     kglt::Window::ptr window = kglt::Window::create();
     window->set_title("KGLT Sample");
 
-    auto stage = window->scene().stage();
+    auto stage = window->stage();
 
     /**
         Generate a mesh and build a 2D square

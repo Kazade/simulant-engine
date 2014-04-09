@@ -50,7 +50,8 @@ typedef generic::TemplatedManager<WindowBase, Viewport, ViewportID> ViewportMana
 class WindowBase :
     public ViewportManager,
     public Source,
-    public BackgroundManager {
+    public BackgroundManager,
+    public StageManager {
 
 public:    
     typedef std::shared_ptr<WindowBase> ptr;
@@ -90,6 +91,7 @@ public:
     const Scene& scene() const;
 
     bool run_frame();
+    void update(double dt) override;
 
     IdleTaskManager& idle() { return idle_; }
 

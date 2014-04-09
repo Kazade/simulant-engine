@@ -91,23 +91,23 @@ int main(int argc, const char *argv[]) {
     ui->$("p").add_class("thing");
 
     ///Shortcut function for loading images
-    kglt::TextureID tid = window->scene().stage()->new_texture_from_file("sample_data/sample.tga");
-    kglt::MaterialID matid = window->scene().stage()->new_material_from_texture(tid);
+    kglt::TextureID tid = window->stage()->new_texture_from_file("sample_data/sample.tga");
+    kglt::MaterialID matid = window->stage()->new_material_from_texture(tid);
 
-    window->scene().stage()->set_ambient_light(kglt::Colour::WHITE);
+    window->stage()->set_ambient_light(kglt::Colour::WHITE);
     {
-        auto light = window->scene().stage()->light(window->scene().stage()->new_light());
+        auto light = window->stage()->light(window->stage()->new_light());
         light->set_absolute_position(5.0, 0.0, -5.0);
         light->set_diffuse(kglt::Colour::GREEN);
         light->set_attenuation_from_range(10.0);
     }
 
     // NOTE: I don't know yet how to manage this kind of pointer-reference system
-    actor_id = window->scene().stage()->geom_factory().new_cube(2);
+    actor_id = window->stage()->geom_factory().new_cube(2);
     // actor_id = stage.geom_factory().new_capsule(1,4);
 
-    window->scene().stage()->actor(actor_id)->mesh()->set_material_id(matid);
-    window->scene().stage()->actor(actor_id)->set_absolute_position(pos);
+    window->stage()->actor(actor_id)->mesh()->set_material_id(matid);
+    window->stage()->actor(actor_id)->set_absolute_position(pos);
 
     // It would be nice to check if a joypad is connected
     // and the create the reference..
@@ -125,8 +125,8 @@ int main(int argc, const char *argv[]) {
             pos = { 0, 0, -5.f };
             // rot = { 0, 0 };
 
-            window->scene().stage()->actor(actor_id)->set_absolute_rotation(kglt::Degrees(0), 0, 0, pos.z);
-            window->scene().stage()->actor(actor_id)->set_absolute_position(pos);
+            window->stage()->actor(actor_id)->set_absolute_rotation(kglt::Degrees(0), 0, 0, pos.z);
+            window->stage()->actor(actor_id)->set_absolute_position(pos);
     });
 
     // Left x-axis
@@ -154,7 +154,7 @@ int main(int argc, const char *argv[]) {
     while(window->run_frame()) {
         auto dt = window->delta_time();
         {
-            auto actor = window->scene().stage()->actor(actor_id);
+            auto actor = window->stage()->actor(actor_id);
             actor->rotate_x(kglt::Degrees(rot.y * dt * 10));
             actor->rotate_y(kglt::Degrees(rot.x * dt * 10));
         }

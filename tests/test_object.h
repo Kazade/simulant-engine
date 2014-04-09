@@ -18,15 +18,15 @@ public:
     }
 
     void test_set_absolute_rotation() {
-        kglt::ActorID act = window->scene().stage()->new_actor();
-        auto actor = window->scene().stage()->actor(act);
+        kglt::ActorID act = window->stage()->new_actor();
+        auto actor = window->stage()->actor(act);
 
         actor->set_absolute_rotation(kglt::Degrees(10), 0, 0, 1);
 
         assert_equal(actor->relative_rotation(), actor->absolute_rotation());
 
-        kglt::ActorID act2 = window->scene().stage()->new_actor();
-        auto actor2 = window->scene().stage()->actor(act2);
+        kglt::ActorID act2 = window->stage()->new_actor();
+        auto actor2 = window->stage()->actor(act2);
 
         actor2->set_parent(act);
 
@@ -43,15 +43,15 @@ public:
     }
 
     void test_set_absolute_position() {
-        kglt::ActorID act = window->scene().stage()->new_actor();
-        auto actor = window->scene().stage()->actor(act);
+        kglt::ActorID act = window->stage()->new_actor();
+        auto actor = window->stage()->actor(act);
 
         actor->set_absolute_position(10, 10, 10);
 
         assert_equal(kglt::Vec3(10, 10, 10), actor->absolute_position());
 
-        kglt::ActorID act2 = window->scene().stage()->new_actor();
-        auto actor2 = window->scene().stage()->actor(act2);
+        kglt::ActorID act2 = window->stage()->new_actor();
+        auto actor2 = window->stage()->actor(act2);
 
         actor2->set_parent(act);
 
@@ -69,8 +69,8 @@ public:
     }
 
     void test_set_relative_position() {
-        kglt::ActorID act = window->scene().stage()->new_actor();
-        auto actor = window->scene().stage()->actor(act);
+        kglt::ActorID act = window->stage()->new_actor();
+        auto actor = window->stage()->actor(act);
 
         actor->set_relative_position(10, 10, 10);
 
@@ -78,8 +78,8 @@ public:
         assert_equal(kglt::Vec3(10, 10, 10), actor->relative_position());
         assert_equal(kglt::Vec3(10, 10, 10), actor->absolute_position());
 
-        kglt::ActorID act2 = window->scene().stage()->new_actor();
-        auto actor2 = window->scene().stage()->actor(act2);
+        kglt::ActorID act2 = window->stage()->new_actor();
+        auto actor2 = window->stage()->actor(act2);
 
         actor2->set_parent(act);
 

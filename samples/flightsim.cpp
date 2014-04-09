@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
     kglt::Window::ptr window = kglt::Window::create(1024, 768);
     window->set_title("Flight Sim Camera");
 
-    auto stage = window->scene().stage();
+    auto stage = window->stage();
 
     stage->set_ambient_light(kglt::Colour(1.0, 1.0, 1.0, 1.0));
     window->scene().camera()->set_perspective_projection(45.0, float(window->width()) / float(window->height()));
@@ -44,42 +44,42 @@ int main(int argc, char* argv[]) {
 
     //Connect keyboard signals
     window->keyboard().key_while_pressed_connect(SDL_SCANCODE_LEFT, [=](SDL_Keysym key, double dt) mutable {
-        window->scene().stage()->actor(actor_id)->rotate_y(kglt::Degrees(-20.0 * dt));
+        window->stage()->actor(actor_id)->rotate_y(kglt::Degrees(-20.0 * dt));
     });
 
     window->keyboard().key_while_pressed_connect(SDL_SCANCODE_RIGHT, [=](SDL_Keysym key, double dt) mutable {
-        window->scene().stage()->actor(actor_id)->rotate_y(kglt::Degrees(20.0 * dt));
+        window->stage()->actor(actor_id)->rotate_y(kglt::Degrees(20.0 * dt));
     });
 
     window->keyboard().key_while_pressed_connect(SDL_SCANCODE_UP, [=](SDL_Keysym key, double dt) mutable {
-        window->scene().stage()->actor(actor_id)->rotate_x(kglt::Degrees(20.0 * dt));
+        window->stage()->actor(actor_id)->rotate_x(kglt::Degrees(20.0 * dt));
     });
 
     window->keyboard().key_while_pressed_connect(SDL_SCANCODE_DOWN, [=](SDL_Keysym key, double dt) mutable {
-        window->scene().stage()->actor(actor_id)->rotate_x(kglt::Degrees(-20.0 * dt));
+        window->stage()->actor(actor_id)->rotate_x(kglt::Degrees(-20.0 * dt));
     });
 
     window->keyboard().key_while_pressed_connect(SDL_SCANCODE_A, [=](SDL_Keysym key, double dt) mutable {
-        window->scene().stage()->actor(actor_id)->rotate_z(kglt::Degrees(-60.0 * dt));
+        window->stage()->actor(actor_id)->rotate_z(kglt::Degrees(-60.0 * dt));
     });
 
     window->keyboard().key_while_pressed_connect(SDL_SCANCODE_D, [=](SDL_Keysym key, double dt) mutable {
-        window->scene().stage()->actor(actor_id)->rotate_z(kglt::Degrees(60.0 * dt));
+        window->stage()->actor(actor_id)->rotate_z(kglt::Degrees(60.0 * dt));
     });
 
     window->keyboard().key_while_pressed_connect(SDL_SCANCODE_S, [=](SDL_Keysym key, double dt) mutable {
-        window->scene().stage()->actor(actor_id)->move_forward(60 * dt);
+        window->stage()->actor(actor_id)->move_forward(60 * dt);
     });
 
     /*if(window->joypad_count()) {
         window->joypad(0).axis_while_nonzero_connect(0, [=](kglt::AxisRange range, kglt::Axis) mutable {
             float dt = window->delta_time();
-            window->scene().stage()->actor(actor.id()).rotate_y((range * 30) * dt);
+            window->stage()->actor(actor.id()).rotate_y((range * 30) * dt);
         });
 
         window->joypad(0).axis_while_nonzero_connect(1, [=](kglt::AxisRange range, kglt::Axis) mutable {
             float dt = window->delta_time();
-            window->scene().stage()->actor(actor.id()).rotate_x((range * -30) * dt);
+            window->stage()->actor(actor.id()).rotate_x((range * -30) * dt);
         });
     }*/
 

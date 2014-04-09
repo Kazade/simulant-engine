@@ -228,7 +228,7 @@ void SpriteGrid::cleanup() {
 }
 
 StagePtr SpriteGrid::stage() {
-    return scene_.stage(stage_id_);
+    return scene_.window().stage(stage_id_);
 }
 
 GridChunk::ptr SpriteGrid::chunk(int32_t tile_x_pos, int32_t tile_y_pos) {

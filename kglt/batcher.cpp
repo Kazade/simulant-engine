@@ -23,7 +23,7 @@ ProtectedPtr<CameraProxy> RootGroup::camera() {
 }
 
 StagePtr RootGroup::stage() {
-    return window_.scene().stage(stage_id_);
+    return window_.stage(stage_id_);
 }
 
 void RootGroup::generate_mesh_groups(RenderGroup* parent, SubActor& ent, MaterialPass& pass) {

@@ -59,7 +59,7 @@ Console::Console(WindowBase &window):
     current_line_type_ = LINE_TYPE_PROMPT;
 
     buffer_.push_back(std::make_pair(LINE_TYPE_RESULT, _u("KGLT {0} Console").format(LUA_RELEASE)));
-    buffer_.push_back(std::make_pair(LINE_TYPE_RESULT, _u("Type \"help\" for more information")));
+    //buffer_.push_back(std::make_pair(LINE_TYPE_RESULT, _u("Type \"help\" for more information")));
 
     init_widget();
 

@@ -13,7 +13,7 @@ namespace kglt {
 Mesh::Mesh(ResourceManager *resource_manager, MeshID id):
     Resource(resource_manager),
     generic::Identifiable<MeshID>(id),
-    shared_data_(resource_manager->scene()),
+    shared_data_(resource_manager->window().scene()),
     normal_debug_mesh_(0) {
 
 }
@@ -28,7 +28,7 @@ void Mesh::clear() {
 }
 
 Scene& Mesh::scene() {
-    return resource_manager().scene();
+    return resource_manager().window().scene();
 }
 
 void Mesh::enable_debug(bool value) {
@@ -132,7 +132,7 @@ SubMesh::SubMesh(
 
     if(!material) {
         //Set the material to the default one (store the pointer to increment the ref-count)
-        material_ = parent_.resource_manager().material(parent_.resource_manager().scene().default_material_id()).__object;
+        material_ = parent_.resource_manager().material(parent_.resource_manager().window().scene().default_material_id()).__object;
     } else {
         set_material_id(material);
     }

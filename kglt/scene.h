@@ -22,7 +22,6 @@ class Stage;
 class GeomFactory;
 class Background;
 
-typedef generic::TemplatedManager<SceneImpl, Stage, StageID> StageManager;
 typedef generic::TemplatedManager<SceneImpl, Camera, CameraID> CameraManager;
 typedef generic::TemplatedManager<SceneImpl, UIStage, UIStageID> UIStageManager;
 
@@ -52,19 +51,11 @@ public:
     virtual uint32_t camera_count() const = 0;
     //End camera
 
-    virtual StageID new_stage(AvailablePartitioner partitioner=PARTITIONER_OCTREE) = 0;
-    virtual StagePtr stage() = 0;
-    virtual StagePtr stage(StageID stage_id) = 0;
-    virtual void delete_stage(StageID stage_id) = 0;
-    virtual uint32_t stage_count() const = 0;
-
     virtual UIStageID new_ui_stage() = 0;
     virtual UIStagePtr ui_stage() = 0;
     virtual UIStagePtr ui_stage(UIStageID s) = 0;
     virtual void delete_ui_stage(UIStageID s) = 0;
     virtual uint32_t ui_stage_count() const = 0;
-
-    virtual void print_tree() = 0;
 
     virtual MaterialID clone_default_material() = 0;
 };
@@ -73,7 +64,6 @@ class SceneImpl:
     public Scene,
     public ResourceManagerImpl,
     public Loadable,
-    public StageManager,
     public CameraManager,
     public UIStageManager,
     public Managed<SceneImpl> {
@@ -86,11 +76,6 @@ public:
     PhysicsEnginePtr physics();
     const bool has_physics_engine() const;
 
-    StageID new_stage(AvailablePartitioner partitioner=PARTITIONER_OCTREE);            
-    StagePtr stage();
-    StagePtr stage(StageID s);
-    void delete_stage(StageID s);
-    uint32_t stage_count() const;
 
     //UI Stages
     UIStageID new_ui_stage();
@@ -121,8 +106,6 @@ public:
         obj._initialize();
     }
 
-    void print_tree();
-
     unicode default_material_filename() const;
 
     MaterialID clone_default_material() {
@@ -130,20 +113,6 @@ public:
     }
 
 private:    
-    void print_tree(GenericTreeNode* node, uint32_t& level) {
-        for(uint32_t i = 0; i < level; ++i) {
-            std::cout << "    ";
-        }
-
-        std::cout << *dynamic_cast<Printable*>(node) << std::endl;
-
-        level += 1;
-        for(auto child: node->children()) {
-            print_tree(child, level);
-        }
-        level -= 1;
-    }
-
     StageID default_stage_;
     CameraID default_camera_;
 

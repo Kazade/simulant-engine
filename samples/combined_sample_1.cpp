@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
     window->scene().camera()->set_orthographic_projection_from_height((float) 224 / (float) 40, 16.0 / 9.0);
 
     {
-        auto stage = scene.stage();
+        auto stage = window->stage();
 
         kglt::SpriteID sprite = stage->new_sprite_from_file("sample_data/sonic.png", 64, 64);
         stage->sprite(sprite)->add_animation("running", 31, 34, 0.5);

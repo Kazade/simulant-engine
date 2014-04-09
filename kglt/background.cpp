@@ -43,7 +43,7 @@ void Background::update_camera() {
 
 bool Background::init() {
     //Create a stage to add to the render pipeline
-    stage_id_ = window().scene().new_stage(PARTITIONER_NULL);
+    stage_id_ = window().new_stage(PARTITIONER_NULL);
 
     //We need to create an orthographic camera
     camera_id_ = window().scene().new_camera();
@@ -59,17 +59,17 @@ bool Background::init() {
         -100
     );
 
-    actor_id_ = window().scene().stage(stage_id_)->new_actor();
+    actor_id_ = window().stage(stage_id_)->new_actor();
     //Load the background material
-    material_id_ = window().scene().stage(stage_id_)->new_material_from_file("kglt/materials/background.kglm");
+    material_id_ = window().stage(stage_id_)->new_material_from_file("kglt/materials/background.kglm");
 
-    auto mesh = window().scene().stage(stage_id_)->new_mesh_as_rectangle(1, 1, Vec2(0.5, 0.5));
-    window().scene().stage(stage_id_)->actor(actor_id_)->set_mesh(mesh);
-    window().scene().stage(stage_id_)->mesh(mesh)->set_material_id(material_id_);
+    auto mesh = window().stage(stage_id_)->new_mesh_as_rectangle(1, 1, Vec2(0.5, 0.5));
+    window().stage(stage_id_)->actor(actor_id_)->set_mesh(mesh);
+    window().stage(stage_id_)->mesh(mesh)->set_material_id(material_id_);
 
-    window().scene().stage(stage_id_)->material(material_id_)->technique().pass(0).set_blending(BLEND_ALPHA);
-    window().scene().stage(stage_id_)->material(material_id_)->technique().pass(0).set_depth_test_enabled(false);
-    window().scene().stage(stage_id_)->material(material_id_)->technique().pass(0).set_depth_write_enabled(false);
+    window().stage(stage_id_)->material(material_id_)->technique().pass(0).set_blending(BLEND_ALPHA);
+    window().stage(stage_id_)->material(material_id_)->technique().pass(0).set_depth_test_enabled(false);
+    window().stage(stage_id_)->material(material_id_)->technique().pass(0).set_depth_write_enabled(false);
     return true;
 }
 
@@ -81,8 +81,8 @@ void Background::cleanup() {
 }
 
 void Background::update(double dt) {
-    window().scene().stage(stage_id_)->material(material_id_)->technique().pass(0).texture_unit(0).scroll_x(x_rate_ * dt);
-    window().scene().stage(stage_id_)->material(material_id_)->technique().pass(0).texture_unit(0).scroll_y(y_rate_ * dt);
+    window().stage(stage_id_)->material(material_id_)->technique().pass(0).texture_unit(0).scroll_x(x_rate_ * dt);
+    window().stage(stage_id_)->material(material_id_)->technique().pass(0).texture_unit(0).scroll_y(y_rate_ * dt);
 }
 
 void Background::set_horizontal_scroll_rate(float x_rate) {
@@ -94,7 +94,7 @@ void Background::set_vertical_scroll_rate(float y_rate) {
 }
 
 void Background::set_texture(TextureID tex) {
-    window().scene().stage(stage_id_)->material(material_id_)->technique().pass(0).set_texture_unit(0, tex);
+    window().stage(stage_id_)->material(material_id_)->technique().pass(0).set_texture_unit(0, tex);
 }
 
 void Background::set_resize_style(BackgroundResizeStyle style) {
