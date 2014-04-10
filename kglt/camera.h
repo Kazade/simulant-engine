@@ -61,7 +61,7 @@ class Camera:
     public Protectable {
 
 public:
-    Camera(Scene* scene, CameraID id);
+    Camera(WindowBase* window, CameraID id);
 
     kmVec3 project_point(ViewportID vid, const kmVec3& point);
 
@@ -86,7 +86,7 @@ public:
 
     const Mat4& transform() const { return transform_; }
 private:
-    Scene* scene_;
+    WindowBase* window_;
     CameraProxy* proxy_;
 
     Frustum frustum_;

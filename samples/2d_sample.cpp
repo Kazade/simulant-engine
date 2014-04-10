@@ -19,7 +19,7 @@ private:
         //and the passed height. For example, passing a height of 2.0 would mean the view would extend
         //+1 and -1 in the vertical direction, -1.0 - +1.0 near/far, and width would be calculated from the aspect
         float render_height = 16.0;
-        float render_width = scene().camera()->set_orthographic_projection_from_height(render_height, float(window().width()) / float(window().height()));
+        float render_width = window().camera()->set_orthographic_projection_from_height(render_height, float(window().width()) / float(window().height()));
 
         //Load a sprite grid, from the 'Layer 1' layer in a tmx file
         sprite_grid_ = SpriteGrid::new_from_file(scene(), stage()->id(), "sample_data/tiled/example.tmx", "Layer 1");

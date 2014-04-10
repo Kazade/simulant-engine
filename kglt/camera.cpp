@@ -14,13 +14,13 @@ CameraProxy::CameraProxy(Stage *stage, CameraID camera_id):
     assert(stage);
 
     //Set the camera's proxy to this
-    stage->window().scene().camera(camera_id)->set_proxy(this);
+    stage->window().camera(camera_id)->set_proxy(this);
 }
 
 CameraProxy::~CameraProxy() {
     //Set the camera's proxy to null
-    if(&stage()->window().scene().camera(id())->proxy() == this) {
-        stage()->window().scene().camera(id())->set_proxy(nullptr);
+    if(&stage()->window().camera(id())->proxy() == this) {
+        stage()->window().camera(id())->set_proxy(nullptr);
     }
 }
 
@@ -33,7 +33,7 @@ void CameraProxy::set_orthographic_projection(double left, double right, double 
 }
 
 CameraPtr CameraProxy::camera() {
-    return stage()->window().scene().camera(id());
+    return stage()->window().camera(id());
 }
 
 void CameraProxy::follow(ActorID actor, const kglt::Vec3& offset, float lag_in_seconds) {
@@ -85,9 +85,9 @@ kmVec3 CameraProxy::project_point(ViewportID vid, const kmVec3& point) {
     return camera()->project_point(vid, point);
 }
 
-Camera::Camera(Scene *scene, CameraID id):
+Camera::Camera(WindowBase *window, CameraID id):
     generic::Identifiable<CameraID>(id),
-    scene_(scene),
+    window_(window),
     proxy_(nullptr) {
 
     kmMat4Identity(&transform_);
@@ -129,11 +129,11 @@ double Camera::set_orthographic_projection_from_height(double desired_height_in_
 }
 
 kmVec3 Camera::project_point(ViewportID vid, const kmVec3& point) {
-    if(!scene_) {
-        throw LogicError("Passes a nullptr as a camera's Scene");
+    if(!window_) {
+        throw LogicError("Passed a nullptr as a camera's window");
     }
 
-    auto viewport = scene_->window().viewport(vid);
+    auto viewport = window_->viewport(vid);
 
     kmVec3 tmp;
     kmVec3Fill(&tmp, point.x, point.y, point.z);

@@ -31,8 +31,8 @@ void GenericRenderer::set_auto_uniforms_on_shader(
     kmMat4 modelview;
 
     const kmMat4 model = subactor._parent().absolute_transformation();
-    const kmMat4& view = scene().camera(camera)->view_matrix();
-    const kmMat4& projection = scene().camera(camera)->projection_matrix();
+    const kmMat4& view = window().camera(camera)->view_matrix();
+    const kmMat4& projection = window().camera(camera)->projection_matrix();
 
     kmMat4Multiply(&modelview, &view, &model);
     kmMat4Multiply(&modelview_projection, &projection, &modelview);

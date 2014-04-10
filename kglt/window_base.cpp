@@ -29,6 +29,7 @@ WindowBase::WindowBase():
     Source(this),
     BackgroundManager(this),
     StageManager(this),
+    CameraManager(this),
     initialized_(false),
     width_(-1),
     height_(-1),
@@ -119,7 +120,7 @@ bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
 
         message_bar_ = MessageBar::create(*this);
 
-        loading_ = screens::Loading::create(this->scene());
+        loading_ = screens::Loading::create(*this);
 
         //Weirdly, I had to pass the raw loading pointer here, otherwise some reference was held somewhere even after calling disconnect on the
         //signal and wiping out the connection.

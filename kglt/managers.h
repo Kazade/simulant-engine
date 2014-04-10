@@ -29,6 +29,26 @@ private:
     WindowBase* window_;
 };
 
+class CameraManager:
+    public generic::TemplatedManager<WindowBase, Camera, CameraID> {
+
+public:
+    CameraManager(WindowBase* window);
+
+    CameraID new_camera();
+    CameraPtr camera();
+    CameraPtr camera(CameraID c);
+    void delete_camera(CameraID cid);
+    uint32_t camera_count() const;
+
+    CameraID default_camera_id() const { return default_camera_id_; }
+
+private:
+    WindowBase* window_;
+
+    CameraID default_camera_id_;
+};
+
 class StageManager:
     public generic::TemplatedManager<WindowBase, Stage, StageID>,
     public virtual Updateable {

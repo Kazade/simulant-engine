@@ -30,6 +30,7 @@ public:
 
     virtual void render_subactor(SubActor& buffer, CameraID camera) = 0;
 
+    WindowBase& window() { return window_; }
 protected:
     StagePtr current_stage();
 

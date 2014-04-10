@@ -16,7 +16,7 @@ class Loading:
     public Managed<Loading> {
 
 public:
-    Loading(Scene& scene);
+    Loading(WindowBase& window);
 
     void activate();
     void deactivate();
@@ -27,8 +27,12 @@ public:
 
     bool init() override;
     void cleanup() override;
+
+protected:
+    WindowBase& window() { return window_; }
+
 private:
-    Scene& scene_;
+    WindowBase& window_;
     bool is_active_;
 
     UIStageID stage_;

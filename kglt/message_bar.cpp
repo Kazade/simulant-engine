@@ -77,9 +77,9 @@ void MessageBar::create_stage_and_element() {
     }
 
     stage_ = window_.scene().new_ui_stage();
-    camera_ = window_.scene().new_camera();
+    camera_ = window_.new_camera();
 
-    window_.scene().camera(camera_)->set_orthographic_projection(0, window_.width(), window_.height(), 0, -1, 1);
+    window_.camera(camera_)->set_orthographic_projection(0, window_.width(), window_.height(), 0, -1, 1);
 
     {
         auto ui = window_.scene().ui_stage(stage_);

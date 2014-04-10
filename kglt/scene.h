@@ -22,7 +22,6 @@ class Stage;
 class GeomFactory;
 class Background;
 
-typedef generic::TemplatedManager<SceneImpl, Camera, CameraID> CameraManager;
 typedef generic::TemplatedManager<SceneImpl, UIStage, UIStageID> UIStageManager;
 
 class Scene :
@@ -32,7 +31,6 @@ class Scene :
 public:
     virtual ~Scene() {}
 
-    virtual CameraID default_camera_id() const = 0;
     virtual TextureID default_texture_id() const = 0;
     virtual MaterialID default_material_id() const = 0;
     virtual StageID default_stage_id() const = 0;
@@ -42,14 +40,6 @@ public:
     virtual void enable_physics(std::shared_ptr<PhysicsEngine> engine) = 0;
     virtual PhysicsEnginePtr physics() = 0;
     virtual const bool has_physics_engine() const = 0;
-
-    //Camera functions
-    virtual CameraID new_camera() = 0;
-    virtual CameraPtr camera() = 0;
-    virtual CameraPtr camera(CameraID c) = 0;
-    virtual void delete_camera(CameraID cid) = 0;
-    virtual uint32_t camera_count() const = 0;
-    //End camera
 
     virtual UIStageID new_ui_stage() = 0;
     virtual UIStagePtr ui_stage() = 0;
@@ -64,7 +54,6 @@ class SceneImpl:
     public Scene,
     public ResourceManagerImpl,
     public Loadable,
-    public CameraManager,
     public UIStageManager,
     public Managed<SceneImpl> {
 
@@ -91,14 +80,6 @@ public:
     TextureID default_texture_id() const;
     CameraID default_camera_id() const;
     StageID default_stage_id() const;
-
-    //Camera functions
-    CameraID new_camera();
-    CameraPtr camera();
-    CameraPtr camera(CameraID c);
-    void delete_camera(CameraID cid);
-    uint32_t camera_count() const;
-    //End camera
 
     template<typename T, typename ID>
     void post_create_callback(T& obj, ID id) {

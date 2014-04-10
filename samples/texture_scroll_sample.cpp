@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
     */
     stage->actor(actor_id)->move_to(0.0f, 0.0f, -2.0f);
 
-    window->scene().camera()->set_orthographic_projection_from_height(2.0, (float) window->width() / (float)window->height());
+    window->camera()->set_orthographic_projection_from_height(2.0, (float) window->width() / (float)window->height());
 
     while(window->run_frame()) {
         stage->material(matid)->technique().pass(0).texture_unit(0).scroll_x(0.5 * window->delta_time());

@@ -51,7 +51,8 @@ class WindowBase :
     public ViewportManager,
     public Source,
     public BackgroundManager,
-    public StageManager {
+    public StageManager,
+    public CameraManager {
 
 public:    
     typedef std::shared_ptr<WindowBase> ptr;

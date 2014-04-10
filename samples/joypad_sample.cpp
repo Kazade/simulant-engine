@@ -75,7 +75,7 @@ int main(int argc, const char *argv[]) {
 
     window->set_title("KGLT Joypad Sample");
 
-    window->scene().camera()->set_perspective_projection(
+    window->camera()->set_perspective_projection(
         45.0,
         float(window->width()) / float(window->height()),
         1.0,

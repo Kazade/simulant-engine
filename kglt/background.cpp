@@ -32,7 +32,7 @@ void Background::update_camera() {
         height = 1.0;
     }
 
-    window().scene().camera(camera_id_)->set_orthographic_projection(
+    window().camera(camera_id_)->set_orthographic_projection(
         0,
         width,
         0,
@@ -46,12 +46,12 @@ bool Background::init() {
     stage_id_ = window().new_stage(PARTITIONER_NULL);
 
     //We need to create an orthographic camera
-    camera_id_ = window().scene().new_camera();
+    camera_id_ = window().new_camera();
     update_camera();
 
     //Add a pass for this background
     //FIXME: priority = -1000
-    pipeline_id_ = window().scene().window().render_sequence()->new_pipeline(
+    pipeline_id_ = window().render_sequence()->new_pipeline(
         stage_id_,
         camera_id_,
         ViewportID(), //FIXME: Should be overridable
@@ -76,8 +76,8 @@ bool Background::init() {
 void Background::cleanup() {
     //Remove the pipeline and delete the camera, everything else is cleaned
     //up automatically when the node is detached from the scene tree
-    window().scene().window().render_sequence()->delete_pipeline(pipeline_id_);
-    window().scene().delete_camera(camera_id_);
+    window().render_sequence()->delete_pipeline(pipeline_id_);
+    window().delete_camera(camera_id_);
 }
 
 void Background::update(double dt) {

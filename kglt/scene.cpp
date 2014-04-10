@@ -5,7 +5,6 @@
 #include "render_sequence.h"
 #include "scene.h"
 #include "renderer.h"
-#include "camera.h"
 #include "loader.h"
 #include "stage.h"
 #include "ui_stage.h"
@@ -14,6 +13,7 @@
 #include "physics/physics_engine.h"
 #include "shaders/default_shaders.h"
 #include "window_base.h"
+#include "camera.h"
 
 namespace kglt {
 
@@ -25,11 +25,7 @@ SceneImpl::SceneImpl(WindowBase* window):
 }
 
 SceneImpl::~SceneImpl() {
-    //TODO: Log the unfreed resources (textures, meshes, materials etc.)    
 
-    //Clear the stages first, they may hold references to cameras, materials
-    //etc.
-    CameraManager::__objects().clear();
 }
 
 void SceneImpl::enable_physics(std::shared_ptr<PhysicsEngine> engine) {
@@ -60,23 +56,17 @@ TextureID SceneImpl::default_texture_id() const {
     return default_texture_->id();
 }
 
-CameraID SceneImpl::default_camera_id() const {
-    return default_camera_;
-}
-
 unicode SceneImpl::default_material_filename() const {
     return window().resource_locator().locate_file("kglt/materials/multitexture_and_lighting.kglm");
 }
 
 void SceneImpl::initialize_defaults() {
-    default_camera_ = new_camera(); //Create a default camera
-
-    window().stage()->host_camera(default_camera_);
+    window().stage()->host_camera(window().default_camera_id());
 
     default_ui_stage_ = new_ui_stage();
-    default_ui_camera_ = new_camera();
+    default_ui_camera_ = window().new_camera();
 
-    camera(default_ui_camera_)->set_orthographic_projection(
+    window().camera(default_ui_camera_)->set_orthographic_projection(
         0, window().width(), window().height(), 0, -1, 1
     );
 
@@ -133,42 +123,6 @@ void SceneImpl::delete_ui_stage(UIStageID s) {
 uint32_t SceneImpl::ui_stage_count() const {
     return UIStageManager::manager_count();
 }
-
-//=============== START CAMERAS ============
-
-CameraID SceneImpl::new_camera() {
-    CameraID new_camera = CameraManager::manager_new();
-
-    return new_camera;
-}
-
-CameraPtr SceneImpl::camera() {
-    return CameraManager::manager_get(default_camera_);
-}
-
-CameraPtr SceneImpl::camera(CameraID c) {
-    if(!c) {
-        //Return the default camera if we are passed a null ID
-        return camera();
-    }
-
-    return CameraManager::manager_get(c);
-}
-
-void SceneImpl::delete_camera(CameraID cid) {
-    //Remove any associated proxy
-    if(camera(cid)->has_proxy()) {
-        camera(cid)->proxy().stage()->evict_camera(cid);
-    }
-
-    CameraManager::manager_delete(cid);
-}
-
-uint32_t SceneImpl::camera_count() const {
-    return CameraManager::manager_count();
-}
-//============== END CAMERAS ================
-
 
 bool SceneImpl::init() {
     return true;

@@ -4,7 +4,7 @@
 #include "window_base.h"
 #include "scene.h"
 #include "stage.h"
-
+#include "camera.h"
 #include "utils/ownable.h"
 
 namespace kglt {
@@ -59,6 +59,47 @@ uint32_t BackgroundManager::background_count() const {
 }
 
 //============== END BACKGROUNDS ============
+
+//=============== START CAMERAS ============
+
+CameraManager::CameraManager(WindowBase *window):
+    window_(window) {
+
+    default_camera_id_ = new_camera();
+}
+
+CameraID CameraManager::new_camera() {
+    CameraID new_camera = CameraManager::manager_new();
+
+    return new_camera;
+}
+
+CameraPtr CameraManager::camera() {
+    return CameraManager::manager_get(default_camera_id_);
+}
+
+CameraPtr CameraManager::camera(CameraID c) {
+    if(!c) {
+        //Return the default camera if we are passed a null ID
+        return camera();
+    }
+
+    return CameraManager::manager_get(c);
+}
+
+void CameraManager::delete_camera(CameraID cid) {
+    //Remove any associated proxy
+    if(camera(cid)->has_proxy()) {
+        camera(cid)->proxy().stage()->evict_camera(cid);
+    }
+
+    CameraManager::manager_delete(cid);
+}
+
+uint32_t CameraManager::camera_count() const {
+    return CameraManager::manager_count();
+}
+//============== END CAMERAS ================
 
 
 //=========== START STAGES ==================

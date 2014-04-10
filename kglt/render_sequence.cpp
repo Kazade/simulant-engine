@@ -121,7 +121,7 @@ void RenderSequence::run() {
 }
 
 void RenderSequence::update_camera_constraint(CameraID cid) {
-    auto camera = window_.scene().camera(cid);
+    auto camera = window_.camera(cid);
 
     if(camera->has_proxy()) {
         //Update the associated camera
@@ -143,7 +143,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
 
     update_camera_constraint(pipeline_stage->camera_id());
 
-    Mat4 camera_projection = window_.scene().camera(pipeline_stage->camera_id())->projection_matrix();
+    Mat4 camera_projection = window_.camera(pipeline_stage->camera_id())->projection_matrix();
 
     auto viewport = window_.viewport(pipeline_stage->viewport_id());
     viewport->apply(); //FIXME apply shouldn't exist

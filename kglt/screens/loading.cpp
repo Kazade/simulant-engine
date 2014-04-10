@@ -12,17 +12,17 @@
 namespace kglt {
 namespace screens {
 
-Loading::Loading(Scene &scene):
-    scene_(scene),
+Loading::Loading(WindowBase& window):
+    window_(window),
     is_active_(false) {
 
 }
 
 bool Loading::init() {
     //Create a stage
-    stage_ = scene_.new_ui_stage();
+    stage_ = window().scene().new_ui_stage();
 
-    auto stage = scene_.ui_stage(stage_);
+    auto stage = window().scene().ui_stage(stage_);
 
     stage->set_styles(R"X(
         body {
@@ -55,46 +55,46 @@ bool Loading::init() {
     stage->$("p").add_class("thing");
 
     //Create an orthographic camera
-    camera_ = scene_.new_camera();
+    camera_ = window().new_camera();
 
-    scene_.camera(camera_)->set_orthographic_projection(
-        0, scene_.window().width(), scene_.window().height(), 0
+    window().camera(camera_)->set_orthographic_projection(
+        0, window().width(), window().height(), 0
     );
 
     //Create an inactive pipeline
-    pipeline_ = scene_.window().render_sequence()->new_pipeline(
+    pipeline_ = window().render_sequence()->new_pipeline(
         stage_,
         camera_
     );
 
-    scene_.window().render_sequence()->pipeline(pipeline_).deactivate();
+    window().render_sequence()->pipeline(pipeline_).deactivate();
     return true;
 }
 
 void Loading::cleanup() {
     //Clean up
-    scene_.window().render_sequence()->delete_pipeline(pipeline_);
-    scene_.delete_ui_stage(stage_);
-    scene_.delete_camera(camera_);
+    window().render_sequence()->delete_pipeline(pipeline_);
+    window().scene().delete_ui_stage(stage_);
+    window().delete_camera(camera_);
 }
 
 void Loading::activate() {
     is_active_ = true;
 
-    stashed_pipelines_ = scene_.window().render_sequence()->active_pipelines();
+    stashed_pipelines_ = window().render_sequence()->active_pipelines();
 
-    scene_.window().render_sequence()->deactivate_all_pipelines();
-    scene_.window().render_sequence()->pipeline(pipeline_).activate();
+    window().render_sequence()->deactivate_all_pipelines();
+    window().render_sequence()->pipeline(pipeline_).activate();
 }
 
 void Loading::deactivate() {
     is_active_ = false;
 
     //Deactivate the loading pipeline
-    scene_.window().render_sequence()->pipeline(pipeline_).deactivate();
+    window().render_sequence()->pipeline(pipeline_).deactivate();
 
     //Activate the stashed pipelines
-    scene_.window().render_sequence()->activate_pipelines(stashed_pipelines_);
+    window().render_sequence()->activate_pipelines(stashed_pipelines_);
 
     stashed_pipelines_.clear();
 }
