@@ -43,11 +43,6 @@ const bool SceneImpl::has_physics_engine() const {
     return bool(physics_engine_);
 }
 
-
-StageID SceneImpl::default_stage_id() const {
-    return default_stage_;
-}
-
 MaterialID SceneImpl::default_material_id() const {
     return default_material_->id();
 }
@@ -69,9 +64,6 @@ void SceneImpl::initialize_defaults() {
     window().camera(default_ui_camera_)->set_orthographic_projection(
         0, window().width(), window().height(), 0, -1, 1
     );
-
-    //Create a default stage for the default stage with the default camera
-    window().render_sequence()->new_pipeline(default_stage_, default_camera_);
 
     //Add a pipeline for the default UI stage to render
     //after the main pipeline

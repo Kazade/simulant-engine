@@ -110,6 +110,9 @@ bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
         viewport(default_viewport_)->set_position(0, 0);
         viewport(default_viewport_)->set_size(this->width(), this->height());
 
+        //Create a default pipeline for the default stage with the default camera
+        render_sequence()->new_pipeline(default_stage_id(), default_camera_id());
+
         scene_ = SceneImpl::create(this);
 
         /*FIXME: This should be called in Scene::init, but because Scene subclasses ResourceManagerImpl,

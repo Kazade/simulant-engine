@@ -33,7 +33,6 @@ public:
 
     virtual TextureID default_texture_id() const = 0;
     virtual MaterialID default_material_id() const = 0;
-    virtual StageID default_stage_id() const = 0;
 
     virtual unicode default_material_filename() const = 0;
 
@@ -78,8 +77,6 @@ public:
 
     MaterialID default_material_id() const;
     TextureID default_texture_id() const;
-    CameraID default_camera_id() const;
-    StageID default_stage_id() const;
 
     template<typename T, typename ID>
     void post_create_callback(T& obj, ID id) {
@@ -94,9 +91,6 @@ public:
     }
 
 private:    
-    StageID default_stage_;
-    CameraID default_camera_;
-
     UIStageID default_ui_stage_;
     CameraID default_ui_camera_;
 
