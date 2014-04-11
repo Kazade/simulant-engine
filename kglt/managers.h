@@ -76,6 +76,24 @@ private:
     StageID default_stage_id_;
 };
 
+class UIStageManager:
+    public generic::TemplatedManager<WindowBase, UIStage, UIStageID> {
+
+public:
+    UIStageManager(WindowBase* window);
+
+    UIStageID new_ui_stage();
+    UIStagePtr ui_stage();
+    UIStagePtr ui_stage(UIStageID s);
+    void delete_ui_stage(UIStageID s);
+    uint32_t ui_stage_count() const;
+
+    UIStageID default_ui_stage_id() const { return default_ui_stage_id_; }
+private:
+    WindowBase* window_;
+    UIStageID default_ui_stage_id_;
+};
+
 }
 
 #endif // MANAGERS_H

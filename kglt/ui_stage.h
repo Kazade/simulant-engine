@@ -20,7 +20,7 @@ public:
      *  and not 2D/3D scenes
      */
 
-    UIStage(Scene *parent, UIStageID id);
+    UIStage(WindowBase *parent, UIStageID id);
 
     ui::Element append(const std::string& tag);
     ui::ElementList $(const std::string& selector);
@@ -34,7 +34,7 @@ public:
     void __update(double dt);
 
 private:
-    Scene& scene_;
+    WindowBase& window_;
 
     std::shared_ptr<ui::Interface> interface_;
 };

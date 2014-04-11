@@ -22,8 +22,6 @@ class Stage;
 class GeomFactory;
 class Background;
 
-typedef generic::TemplatedManager<SceneImpl, UIStage, UIStageID> UIStageManager;
-
 class Scene :
     public virtual ResourceManager,
     public virtual Updateable {
@@ -40,12 +38,6 @@ public:
     virtual PhysicsEnginePtr physics() = 0;
     virtual const bool has_physics_engine() const = 0;
 
-    virtual UIStageID new_ui_stage() = 0;
-    virtual UIStagePtr ui_stage() = 0;
-    virtual UIStagePtr ui_stage(UIStageID s) = 0;
-    virtual void delete_ui_stage(UIStageID s) = 0;
-    virtual uint32_t ui_stage_count() const = 0;
-
     virtual MaterialID clone_default_material() = 0;
 };
 
@@ -53,7 +45,6 @@ class SceneImpl:
     public Scene,
     public ResourceManagerImpl,
     public Loadable,
-    public UIStageManager,
     public Managed<SceneImpl> {
 
 public:
@@ -66,12 +57,6 @@ public:
 
 
     //UI Stages
-    UIStageID new_ui_stage();
-    UIStagePtr ui_stage();
-    UIStagePtr ui_stage(UIStageID s);
-    void delete_ui_stage(UIStageID s);
-    uint32_t ui_stage_count() const;
-
     bool init();
     void update(double dt);
 
@@ -91,9 +76,6 @@ public:
     }
 
 private:    
-    UIStageID default_ui_stage_;
-    CameraID default_ui_camera_;
-
     TexturePtr default_texture_;
     MaterialPtr default_material_;
 

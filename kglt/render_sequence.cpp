@@ -155,7 +155,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
 
     if(pipeline_stage->ui_stage_id()) {        
         //This is a UI stage, so just render that
-        auto ui_stage = window_.scene().ui_stage(pipeline_stage->ui_stage_id());
+        auto ui_stage = window_.ui_stage(pipeline_stage->ui_stage_id());
         ui_stage->__resize(viewport->width(), viewport->height());
         ui_stage->__render(camera_projection);
     } else {

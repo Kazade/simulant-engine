@@ -4,6 +4,7 @@
 #include "window_base.h"
 #include "scene.h"
 #include "stage.h"
+#include "ui_stage.h"
 #include "camera.h"
 #include "utils/ownable.h"
 
@@ -179,4 +180,36 @@ void StageManager::print_tree(GenericTreeNode* node, uint32_t& level) {
 
 // ============= END STAGES ===========
 
+// ============= UI STAGES ============
+
+UIStageManager::UIStageManager(WindowBase *window):
+    window_(window) {
+
+    default_ui_stage_id_ = new_ui_stage();
+}
+
+UIStageID UIStageManager::new_ui_stage() {
+    return UIStageManager::manager_new();
+}
+
+UIStagePtr UIStageManager::ui_stage() {
+    return UIStageManager::manager_get(default_ui_stage_id_);
+}
+
+UIStagePtr UIStageManager::ui_stage(UIStageID s) {
+    if(!s) {
+        return ui_stage();
+    }
+    return UIStageManager::manager_get(s);
+}
+
+void UIStageManager::delete_ui_stage(UIStageID s) {
+    UIStageManager::manager_delete(s);
+}
+
+uint32_t UIStageManager::ui_stage_count() const {
+    return UIStageManager::manager_count();
+}
+
+// =========== END UI STAGES ==========
 }

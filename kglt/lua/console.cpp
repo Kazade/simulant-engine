@@ -83,7 +83,7 @@ void Console::init_widget() {
 
     Scene& scene = window_.scene();
 
-    ui_stage_ = scene.new_ui_stage();
+    ui_stage_ = window_.new_ui_stage();
     ui_camera_ = window_.new_camera();
 
     window_.camera(ui_camera_)->set_orthographic_projection(
@@ -95,7 +95,7 @@ void Console::init_widget() {
         ViewportID(), TextureID(), 101
     );
 
-    UIStagePtr stage = scene.ui_stage(ui_stage_);
+    UIStagePtr stage = window_.ui_stage(ui_stage_);
 
     //If we can't find an element for the lua console
     if(stage->$("#lua-console").empty()) {
@@ -126,7 +126,7 @@ bool Console::key_down(SDL_Keysym key) {
     SDL_Scancode code = key.scancode;
 
     if(code == SDL_SCANCODE_GRAVE) {
-        UIStagePtr stage = window_.scene().ui_stage(ui_stage_);
+        UIStagePtr stage = window_.ui_stage(ui_stage_);
 
         if(!active_) {
             init_widget(); //Make sure there is something to show!
@@ -212,7 +212,7 @@ void Console::entry(SDL_TextInputEvent event) {
 }
 
 void Console::update_output() {
-    UIStagePtr stage = window_.scene().ui_stage(ui_stage_);
+    UIStagePtr stage = window_.ui_stage(ui_stage_);
 
     std::vector<unicode> lines;
     for(auto p: buffer_) {

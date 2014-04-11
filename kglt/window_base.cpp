@@ -15,6 +15,7 @@
 #include "loaders/rml_loader.h"
 #include "loaders/obj_loader.h"
 #include "sound.h"
+#include "camera.h"
 #include "lua/console.h"
 #include "watcher.h"
 #include "message_bar.h"
@@ -29,6 +30,7 @@ WindowBase::WindowBase():
     Source(this),
     BackgroundManager(this),
     StageManager(this),
+    UIStageManager(this),
     CameraManager(this),
     initialized_(false),
     width_(-1),
@@ -112,6 +114,19 @@ bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
 
         //Create a default pipeline for the default stage with the default camera
         render_sequence()->new_pipeline(default_stage_id(), default_camera_id());
+
+        default_ui_camera_id_ = new_camera();
+
+        camera(default_ui_camera_id_)->set_orthographic_projection(
+            0, this->width(), this->height(), 0, -1, 1
+        );
+
+        //Add a pipeline for the default UI stage to render
+        //after the main pipeline
+        render_sequence()->new_pipeline(
+            default_ui_stage_id(), default_ui_camera_id_,
+            ViewportID(), TextureID(), 100
+        );
 
         scene_ = SceneImpl::create(this);
 

@@ -58,19 +58,6 @@ unicode SceneImpl::default_material_filename() const {
 void SceneImpl::initialize_defaults() {
     window().stage()->host_camera(window().default_camera_id());
 
-    default_ui_stage_ = new_ui_stage();
-    default_ui_camera_ = window().new_camera();
-
-    window().camera(default_ui_camera_)->set_orthographic_projection(
-        0, window().width(), window().height(), 0, -1, 1
-    );
-
-    //Add a pipeline for the default UI stage to render
-    //after the main pipeline
-    window().render_sequence()->new_pipeline(
-        default_ui_stage_, default_ui_camera_,
-        ViewportID(), TextureID(), 100
-    );
 
     //FIXME: Should lock the default texture and material during construction!
 
@@ -92,29 +79,6 @@ void SceneImpl::initialize_defaults() {
     default_material_->technique().pass(0).set_texture_unit(0, default_texture_->id());
 }
 
-
-UIStageID SceneImpl::new_ui_stage() {
-    return UIStageManager::manager_new();
-}
-
-UIStagePtr SceneImpl::ui_stage() {
-    return UIStageManager::manager_get(default_ui_stage_);
-}
-
-UIStagePtr SceneImpl::ui_stage(UIStageID s) {
-    if(!s) {
-        return ui_stage();
-    }
-    return UIStageManager::manager_get(s);
-}
-
-void SceneImpl::delete_ui_stage(UIStageID s) {
-    UIStageManager::manager_delete(s);
-}
-
-uint32_t SceneImpl::ui_stage_count() const {
-    return UIStageManager::manager_count();
-}
 
 bool SceneImpl::init() {
     return true;

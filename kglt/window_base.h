@@ -52,6 +52,7 @@ class WindowBase :
     public Source,
     public BackgroundManager,
     public StageManager,
+    public UIStageManager,
     public CameraManager {
 
 public:    
@@ -151,6 +152,8 @@ protected:
     WindowBase();
 
 private:    
+    CameraID default_ui_camera_id_;
+
     bool can_attach_sound_by_id() const { return false; }
 
     bool initialized_;

@@ -20,9 +20,9 @@ Loading::Loading(WindowBase& window):
 
 bool Loading::init() {
     //Create a stage
-    stage_ = window().scene().new_ui_stage();
+    stage_ = window().new_ui_stage();
 
-    auto stage = window().scene().ui_stage(stage_);
+    auto stage = window().ui_stage(stage_);
 
     stage->set_styles(R"X(
         body {
@@ -74,7 +74,7 @@ bool Loading::init() {
 void Loading::cleanup() {
     //Clean up
     window().render_sequence()->delete_pipeline(pipeline_);
-    window().scene().delete_ui_stage(stage_);
+    window().delete_ui_stage(stage_);
     window().delete_camera(camera_);
 }
 

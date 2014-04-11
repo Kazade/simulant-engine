@@ -31,13 +31,13 @@ namespace ui {
 
 class RocketSystemInterface : public Rocket::Core::SystemInterface {
 public:
-    RocketSystemInterface(Scene& scene):
-        scene_(scene) {
+    RocketSystemInterface(WindowBase& window):
+        window_(window) {
 
     }
 
     virtual float GetElapsedTime() {
-        return scene_.window().total_time();
+        return window_.total_time();
     }
 
     //The default interface is weird and strips the leading slash from absolute paths
@@ -52,7 +52,7 @@ public:
     }
 
 private:
-    Scene& scene_;
+    WindowBase& window_;
 };
 
 struct CompiledGroup {
@@ -70,15 +70,15 @@ private:
     VertexArrayObject tmp_vao_;
 
 public:
-    RocketRenderInterface(Scene& scene):
-        scene_(scene),
+    RocketRenderInterface(WindowBase& window):
+        window_(window),
         tmp_vao_(MODIFY_REPEATEDLY_USED_FOR_RENDERING, MODIFY_REPEATEDLY_USED_FOR_RENDERING) {
 
-        unicode vert_shader = scene.window().resource_locator().read_file("kglt/materials/ui.vert")->str();
-        unicode frag_shader = scene.window().resource_locator().read_file("kglt/materials/ui.frag")->str();
+        unicode vert_shader = window_.resource_locator().read_file("kglt/materials/ui.vert")->str();
+        unicode frag_shader = window_.resource_locator().read_file("kglt/materials/ui.frag")->str();
 
-        shader_ = scene_.new_shader_from_files(vert_shader, frag_shader);
-        shader_reference_ = scene_.shader(shader_).lock(); //Prevent GC
+        shader_ = window_.scene().new_shader_from_files(vert_shader, frag_shader);
+        shader_reference_ = window_.scene().shader(shader_).lock(); //Prevent GC
     }
 
     bool LoadTexture(Rocket::Core::TextureHandle& texture_handle, Rocket::Core::Vector2i& texture_dimensions, const Rocket::Core::String& source) {
@@ -139,7 +139,7 @@ public:
 
         int pos_attrib = -1, colour_attrib = -1, texcoord_attrib = -1;
         {
-            auto shader = scene_.shader(shader_).lock();
+            auto shader = window_.scene().shader(shader_).lock();
             pos_attrib = shader->get_attrib_loc("position");
             colour_attrib = shader->get_attrib_loc("colour");
             texcoord_attrib = shader->get_attrib_loc("tex_coord");
@@ -201,7 +201,7 @@ public:
 
         int pos_attrib = -1, colour_attrib = -1, texcoord_attrib = -1;
         {
-            auto shader = scene_.shader(shader_).lock();
+            auto shader = window_.scene().shader(shader_).lock();
             pos_attrib = shader->get_attrib_loc("position");
             colour_attrib = shader->get_attrib_loc("colour");
             texcoord_attrib = shader->get_attrib_loc("tex_coord");
@@ -233,7 +233,7 @@ public:
             GLuint tex_id = textures_[texture]->gl_tex();
             GLCheck(glBindTexture, GL_TEXTURE_2D, tex_id);
         } else {
-            GLCheck(glBindTexture, GL_TEXTURE_2D, scene_.texture(scene_.default_texture_id())->gl_tex());
+            GLCheck(glBindTexture, GL_TEXTURE_2D, window_.scene().texture(window_.scene().default_texture_id())->gl_tex());
         }
 
         GLCheck(glDrawElements, GL_TRIANGLES, num_indices, GL_UNSIGNED_INT, BUFFER_OFFSET(0));
@@ -244,7 +244,7 @@ public:
         kmMat4Translation(&transform, translation.x, translation.y, 0);
         transform = this->_projection_matrix * transform;
 
-        auto shader = scene_.shader(shader_).lock();
+        auto shader = window_.scene().shader(shader_).lock();
         shader->activate();
         shader->params().set_mat4x4("modelview_projection", transform);
         shader->params().set_int("texture_unit", 0);
@@ -273,7 +273,7 @@ public:
             GLuint tex_id = textures_[geom->texture]->gl_tex();
             GLCheck(glBindTexture, GL_TEXTURE_2D, tex_id);
         } else {
-            GLCheck(glBindTexture, GL_TEXTURE_2D, scene_.texture(scene_.default_texture_id())->gl_tex());
+            GLCheck(glBindTexture, GL_TEXTURE_2D, window_.scene().texture(window_.scene().default_texture_id())->gl_tex());
         }
 
         prepare_shader(translation);
@@ -299,18 +299,18 @@ public:
     }
 
     void SetScissorRegion(int x, int y, int width, int height) {
-        GLCheck(glScissor, x, scene_.window().height() - (y + height), width, height);
+        GLCheck(glScissor, x, window_.height() - (y + height), width, height);
     }
 
 
     ResourceManager& manager() {
-        return scene_;
+        return window_.scene();
     }
 
 
     Mat4 _projection_matrix;
 private:
-    Scene& scene_;
+    WindowBase& window_;
 
     ShaderID shader_ = ShaderID();
     ShaderProgram::ptr shader_reference_;
@@ -322,8 +322,8 @@ private:
 static RocketSystemInterface* rocket_system_interface_;
 static RocketRenderInterface* rocket_render_interface_;
 
-Interface::Interface(Scene &scene):
-    scene_(scene),
+Interface::Interface(WindowBase &window):
+    window_(window),
     impl_(new RocketImpl()) {
 
 }
@@ -334,10 +334,10 @@ bool Interface::init() {
     interface_count++;
 
     if(!rocket_system_interface_) {
-        rocket_system_interface_ = new RocketSystemInterface(scene_);
+        rocket_system_interface_ = new RocketSystemInterface(window_);
         Rocket::Core::SetSystemInterface(rocket_system_interface_);
 
-        rocket_render_interface_ = new RocketRenderInterface(scene_);
+        rocket_render_interface_ = new RocketRenderInterface(window_);
         Rocket::Core::SetRenderInterface(rocket_render_interface_);
 
         Rocket::Core::Initialise();
@@ -371,7 +371,7 @@ bool Interface::init() {
     //Change name for each interface using this (dirty, but works)
     impl_->context_ = Rocket::Core::CreateContext(
         _u("context_{0}").format(int64_t(this)).encode().c_str(),
-        Rocket::Core::Vector2i(scene_.window().width(), scene_.window().height())
+        Rocket::Core::Vector2i(window_.width(), window_.height())
     );
     impl_->document_ = impl_->context_->CreateDocument();
     set_styles("body { font-family: \"Ubuntu\"; }");
@@ -391,7 +391,7 @@ std::string Interface::locate_font(const std::string& filename) {
     };
 
 
-    return scene_.window().resource_locator().locate_file(filename).encode();
+    return window_.resource_locator().locate_file(filename).encode();
 
 /*
     for(std::string font_dir: paths) {

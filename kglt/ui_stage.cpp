@@ -5,13 +5,13 @@
 
 namespace kglt {
 
-UIStage::UIStage(Scene *parent, UIStageID id):
+UIStage::UIStage(WindowBase *parent, UIStageID id):
     generic::Identifiable<UIStageID>(id),
-    Resource(parent),
-    scene_(*parent),
+    Resource(&parent->scene()),
+    window_(*parent),
     interface_(ui::Interface::create(*parent)){
 
-    scene_.window().signal_step().connect(
+    window_.signal_step().connect(
         std::bind(&UIStage::__update, this, std::placeholders::_1)
     );
 }
@@ -29,7 +29,7 @@ void UIStage::set_styles(const std::string& styles) {
 }
 
 void UIStage::load_rml(const unicode& path) {
-    scene_.window().loader_for(path)->into(interface_);
+    window_.loader_for(path)->into(interface_);
 }
 
 void UIStage::__resize(uint32_t width, uint32_t height) {

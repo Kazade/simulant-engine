@@ -100,7 +100,7 @@ class Interface :
     public Loadable {
 
 public:
-    Interface(Scene& scene);
+    Interface(WindowBase& window);
     ~Interface();
 
     uint16_t width() const;
@@ -124,7 +124,7 @@ private:
     void set_projection_matrix(const Mat4& mat) { projection_matrix_ = mat; }
     std::string locate_font(const std::string& filename);
 
-    Scene& scene_;
+    WindowBase& window_;
     Mat4 projection_matrix_;
     std::unique_ptr<RocketImpl> impl_;
 };

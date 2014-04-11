@@ -7,7 +7,7 @@ int main(int argc, char* argv[]) {
     kglt::Window::ptr window = kglt::Window::create();
 
     window->set_title("KGLT UI Sample");
-    window->scene().ui_stage()->load_rml("sample_data/demo.rml");
+    window->ui_stage()->load_rml("sample_data/demo.rml");
 
     while(window->run_frame()) {}
 

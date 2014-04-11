@@ -83,7 +83,7 @@ int main(int argc, const char *argv[]) {
     );
 
     // Thanks to other samples
-    auto ui = window->scene().ui_stage();
+    auto ui = window->ui_stage();
     ui->set_styles("body { font-family: \"Ubuntu\"; } .thing { font-size: 14; padding-left: 10;};");
     ui->append("<p>").text("Left x-y axis move the capsule.");
     ui->append("<p>").text("Right x-y axis rotate the capsule.");
