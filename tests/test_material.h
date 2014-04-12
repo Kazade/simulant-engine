@@ -18,9 +18,7 @@ public:
     }
 
     void test_material_initialization() {
-        kglt::Scene& scene = window->scene();
-
-        auto mat = scene.material(scene.new_material());
+        auto mat = window->material(window->new_material());
 
         this->assert_equal((uint32_t)1, mat->technique_count()); //Should return the default technique
         this->assert_equal(kglt::DEFAULT_MATERIAL_SCHEME, mat->technique().scheme());
@@ -33,20 +31,16 @@ public:
     }
 
     void test_material_applies_to_mesh() {
-        kglt::Scene& scene = window->scene();
-
-        kglt::MaterialID mid = scene.new_material();
-        kglt::MeshID mesh_id = scene.new_mesh();
-        auto mesh = scene.mesh(mesh_id);
+        kglt::MaterialID mid = window->new_material();
+        kglt::MeshID mesh_id = window->new_mesh();
+        auto mesh = window->mesh(mesh_id);
         kglt::SubMeshIndex idx = mesh->new_submesh(mid);
         this->assert_equal(mid, mesh->submesh(idx).material_id());
     }
 
     void test_reflectiveness() {
-        kglt::Scene& scene = window->scene();
-
-        kglt::MaterialID mid = scene.new_material();
-        auto mat = scene.material(mid);
+        kglt::MaterialID mid = window->new_material();
+        auto mat = window->material(mid);
         uint32_t pass_id = mat->technique().new_pass(kglt::ShaderID());
         kglt::MaterialPass& pass = mat->technique().pass(pass_id);
 

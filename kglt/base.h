@@ -10,29 +10,27 @@ namespace kglt {
 
 class ActorHolder {
 public:
-    ActorHolder(Scene& scene):
-        scene_(scene) {}
-
-    Scene& scene() { return scene_; }
+    ActorHolder(WindowBase& window):
+        window_(window) {}
 
     virtual StageID stage_id() const = 0;
     virtual ActorID actor_id() const = 0;
 
-    StagePtr stage() { return scene_.window().stage(stage_id()); }
+    StagePtr stage() { return window_.stage(stage_id()); }
     ProtectedPtr<Actor> actor() { return stage()->actor(actor_id()); }
 
-    const StagePtr stage() const { return scene_.window().stage(stage_id()); }
+    const StagePtr stage() const { return window_.stage(stage_id()); }
     const ProtectedPtr<Actor> actor() const { return stage()->actor(actor_id()); }
 
 private:
-    Scene& scene_;
+    WindowBase& window_;
 };
 
 class MoveableActorHolder:
     public ActorHolder {
 
 public:
-    MoveableActorHolder(Scene& scene);
+    MoveableActorHolder(WindowBase &window);
 
     void set_position(const kglt::Vec3& position);
     kglt::Vec3 position() const;

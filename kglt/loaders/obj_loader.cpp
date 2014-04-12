@@ -63,7 +63,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     //Create a submesh with the default material
     SubMeshIndex smi = mesh->new_submesh(
-        mesh->scene().new_material_from_file(mesh->scene().default_material_filename())
+        mesh->resource_manager().new_material_from_file(mesh->resource_manager().default_material_filename())
     );
 
     SubMesh& sm = mesh->submesh(smi);

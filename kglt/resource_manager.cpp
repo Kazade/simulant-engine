@@ -21,6 +21,28 @@ ResourceManagerImpl::ResourceManagerImpl(WindowBase* window):
     window_->signal_frame_finished().connect(std::bind(&ResourceManagerImpl::update, this));
 
     ShaderManager::signal_post_create().connect(std::bind(&ResourceManagerImpl::post_create_shader_callback, this, std::placeholders::_1, std::placeholders::_2));
+
+    //FIXME: Should lock the default texture and material during construction!
+
+    //Create the default blank texture
+    default_texture_id_ = new_texture(false);
+
+    auto tex = texture(default_texture_id_);
+
+    tex->resize(1, 1);
+    tex->set_bpp(32);
+
+    tex->data()[0] = 255;
+    tex->data()[1] = 255;
+    tex->data()[2] = 255;
+    tex->data()[3] = 255;
+    tex->upload();
+
+    //Maintain ref-count
+    default_material_id_ = new_material_from_file(default_material_filename(), false);
+
+    //Set the default material's first texture to the default (white) texture
+    material(default_material_id_)->technique().pass(0).set_texture_unit(0, default_texture_id_);
 }
 
 void ResourceManagerImpl::update() {
@@ -209,7 +231,7 @@ MaterialID ResourceManagerImpl::new_material_with_alias_from_file(const unicode&
 }
 
 MaterialID ResourceManagerImpl::new_material_from_texture(TextureID texture_id, bool garbage_collect) {
-    MaterialID m = new_material_from_file(scene().default_material_filename(), garbage_collect);
+    MaterialID m = new_material_from_file(default_material_filename(), garbage_collect);
     material(m)->technique().pass(0).set_texture_unit(0, texture_id);
     mark_material_as_uncollected(m); //FIXME: Race-y
     return m;
@@ -415,6 +437,18 @@ std::pair<ShaderID, bool> ResourceManagerImpl::find_shader(const std::string& na
     }
 
     return std::make_pair((*it).second, true);
+}
+
+TextureID ResourceManagerImpl::default_texture_id() const {
+    return default_texture_id_;
+}
+
+MaterialID ResourceManagerImpl::default_material_id() const {
+    return default_material_id_;
+}
+
+unicode ResourceManagerImpl::default_material_filename() const {
+    return window().resource_locator().locate_file("kglt/materials/multitexture_and_lighting.kglm");
 }
 
 }

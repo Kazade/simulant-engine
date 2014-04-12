@@ -16,8 +16,7 @@ void VertexData::check_or_add_attribute(AttributeBitMask attr) {
     enabled_bitmask_ |= attr;
 }
 
-VertexData::VertexData(Scene &scene):
-    scene_(scene),
+VertexData::VertexData():
     enabled_bitmask_(0),
     cursor_position_(0) {
 
@@ -273,8 +272,7 @@ void VertexData::done() {
     signal_update_complete_();
 }
 
-IndexData::IndexData(Scene& scene):
-    scene_(scene) {
+IndexData::IndexData() {
 
 }
 

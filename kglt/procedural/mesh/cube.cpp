@@ -13,7 +13,7 @@ void cube(ProtectedPtr<Mesh> mesh, float width) {
     float r = width * 0.5f;
 
     SubMeshIndex sm = mesh->new_submesh(
-        mesh->scene().new_material_from_file(mesh->scene().default_material_filename()),
+        mesh->resource_manager().new_material_from_file(mesh->resource_manager().default_material_filename()),
         MESH_ARRANGEMENT_TRIANGLES,
         true
     );

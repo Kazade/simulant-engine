@@ -63,7 +63,7 @@ public:
         window->resource_locator().add_search_path(path);
 
         //Shouldn't throw
-        kglt::MeshID mid = window->scene().new_mesh_from_file("cube.obj");
+        kglt::MeshID mid = window->new_mesh_from_file("cube.obj");
     }
 };
 

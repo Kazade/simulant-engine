@@ -20,7 +20,7 @@
 #include "watcher.h"
 #include "message_bar.h"
 #include "render_sequence.h"
-
+#include "stage.h"
 #include "screens/loading.h"
 #include "utils/gl_thread_check.h"
 
@@ -32,6 +32,7 @@ WindowBase::WindowBase():
     StageManager(this),
     UIStageManager(this),
     CameraManager(this),
+    ResourceManagerImpl(this),
     initialized_(false),
     width_(-1),
     height_(-1),
@@ -111,6 +112,9 @@ bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
         default_viewport_ = new_viewport();
         viewport(default_viewport_)->set_position(0, 0);
         viewport(default_viewport_)->set_size(this->width(), this->height());
+
+        //Host the defaut camera in the default stage
+        stage()->host_camera(default_camera_id());
 
         //Create a default pipeline for the default stage with the default camera
         render_sequence()->new_pipeline(default_stage_id(), default_camera_id());

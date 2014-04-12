@@ -14,6 +14,7 @@
 #include "kazbase/logging.h"
 #include "generic/manager.h"
 #include "generic/data_carrier.h"
+#include "resource_manager.h"
 #include "types.h"
 #include "viewport.h"
 #include "sound.h"
@@ -53,7 +54,8 @@ class WindowBase :
     public BackgroundManager,
     public StageManager,
     public UIStageManager,
-    public CameraManager {
+    public CameraManager,
+    public ResourceManagerImpl {
 
 public:    
     typedef std::shared_ptr<WindowBase> ptr;

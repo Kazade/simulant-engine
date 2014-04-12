@@ -52,7 +52,7 @@ void export_lua_api(lua_State* state) {
     ];
 
     luabind::module(state) [
-        luabind::class_<WindowBase>("WindowBase")
+        luabind::class_<WindowBase, luabind::bases<ResourceManager> >("WindowBase")
             .def("set_title", &WindowBase::set_title)
             .def("quit", &WindowBase::stop_running)
             .def("new_stage", &WindowBase::new_stage)
@@ -127,12 +127,6 @@ void export_lua_api(lua_State* state) {
     luabind::module(state)[
         luabind::class_<Mesh>("Mesh")
             .property("id", &Mesh::id)
-    ];
-
-    luabind::module(state) [
-        luabind::class_<Scene, luabind::bases<ResourceManager> >("Scene")
-            .def("update", &Scene::update)            
-            .property("default_material_id", &Scene::default_material_id)            
     ];
 
     luabind::module(state) [

@@ -102,10 +102,10 @@ kglt::Vec2 SpriteGrid::transform_position(const kglt::Vec2& position) {
     );
 }
 
-SpriteGrid::ptr SpriteGrid::new_from_file(Scene& scene, StageID stage, const unicode& filename, const unicode& layer_name, float tile_render_size) {
+SpriteGrid::ptr SpriteGrid::new_from_file(WindowBase& window, StageID stage, const unicode& filename, const unicode& layer_name, float tile_render_size) {
     Tmx::Map map;
 
-    map.ParseFile(scene.window().resource_locator().locate_file(filename).encode());
+    map.ParseFile(window.resource_locator().locate_file(filename).encode());
 
     auto layers = map.GetLayers();
     auto it = std::find_if(layers.begin(), layers.end(), [=](Tmx::Layer* layer) { return layer->GetName() == layer_name.encode(); });
@@ -116,7 +116,7 @@ SpriteGrid::ptr SpriteGrid::new_from_file(Scene& scene, StageID stage, const uni
 
     Tmx::Layer* layer = (*it);
 
-    SpriteGrid::ptr new_grid = SpriteGrid::create(scene, stage, layer->GetWidth(), layer->GetHeight(), tile_render_size);
+    SpriteGrid::ptr new_grid = SpriteGrid::create(window, stage, layer->GetWidth(), layer->GetHeight(), tile_render_size);
 
     unicode parent_dir = os::path::abs_path(os::path::dir_name(filename));
 
@@ -183,8 +183,8 @@ SpriteGrid::ptr SpriteGrid::new_from_file(Scene& scene, StageID stage, const uni
     return new_grid;
 }
 
-SpriteGrid::SpriteGrid(Scene &scene, StageID stage, int32_t tiles_wide, int32_t tiles_high, float tile_render_size):
-    scene_(scene),
+SpriteGrid::SpriteGrid(WindowBase& window, StageID stage, int32_t tiles_wide, int32_t tiles_high, float tile_render_size):
+    window_(window),
     stage_id_(stage),
     tile_render_size_(tile_render_size) {
 
@@ -228,7 +228,7 @@ void SpriteGrid::cleanup() {
 }
 
 StagePtr SpriteGrid::stage() {
-    return scene_.window().stage(stage_id_);
+    return window_.stage(stage_id_);
 }
 
 GridChunk::ptr SpriteGrid::chunk(int32_t tile_x_pos, int32_t tile_y_pos) {

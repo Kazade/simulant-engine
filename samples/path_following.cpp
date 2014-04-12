@@ -11,8 +11,8 @@ class Car:
     public Managed<Car> {
 
 public:
-    Car(kglt::Scene& scene, kglt::StageID stage):
-        kglt::MoveableActorHolder(scene),
+    Car(kglt::WindowBase& window, kglt::StageID stage):
+        kglt::MoveableActorHolder(window),
         stage_(stage) {
 
         //Pass a reference to this to the PathFollower
@@ -75,7 +75,7 @@ public:
 private:
     bool do_init() {
         scene().enable_physics(kglt::DefaultPhysicsEngine::create());
-        car_ = Car::create(scene(), stage()->id());
+        car_ = Car::create(window(), stage()->id());
         window().camera()->set_perspective_projection(
             45.0,
             float(window().width()) / float(window().height()),

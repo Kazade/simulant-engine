@@ -179,7 +179,7 @@ kmVec3 find_player_spawn_point(std::vector<ActorProperties>& actors) {
     return none;
 }
 
-void add_lights_to_scene(Scene& scene, const std::vector<ActorProperties>& actors) {
+void add_lights_to_scene(WindowBase& window, const std::vector<ActorProperties>& actors) {
     //Needed because the Quake 2 coord system is weird
     kmMat4 rotation;
     kmMat4RotationX(&rotation, kmDegreesToRadians(-90.0f));
@@ -191,7 +191,7 @@ void add_lights_to_scene(Scene& scene, const std::vector<ActorProperties>& actor
             origin >> pos.x >> pos.y >> pos.z;
 
             {
-                auto new_light = scene.window().stage()->light(scene.window().stage()->new_light());
+                auto new_light = window.stage()->light(window.stage()->new_light());
                 new_light->set_absolute_position(pos.x, pos.y, pos.z);
                 kmVec3Transform(&pos, &pos, &rotation);
 
@@ -220,8 +220,8 @@ void add_lights_to_scene(Scene& scene, const std::vector<ActorProperties>& actor
 
 void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     Loadable* res_ptr = &resource;
-    Scene* scene = dynamic_cast<Scene*>(res_ptr);
-    assert(scene && "You passed a Resource that is not a scene to the Scene loader");
+    WindowBase* window = dynamic_cast<Window*>(res_ptr);
+    assert(window && "You passed a Resource that is not a window to the QBSP loader");
 
     std::ifstream file(filename_.encode().c_str(), std::ios::binary);
     if(!file.good()) {
@@ -249,9 +249,9 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     parse_actors(actor_string, actors);
     kmVec3 cam_pos = find_player_spawn_point(actors);
     kmVec3Transform(&cam_pos, &cam_pos, &rotation);
-    scene->window().stage()->camera()->set_absolute_position(cam_pos);
+    window->stage()->camera()->set_absolute_position(cam_pos);
 
-    add_lights_to_scene(*scene, actors);
+    add_lights_to_scene(*window, actors);
 
     int32_t num_vertices = header.lumps[Q2::LumpType::VERTICES].length / sizeof(Q2::Point3f);
     std::vector<Q2::Point3f> vertices(num_vertices);
@@ -300,8 +300,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
      *  Load the textures and generate materials
      */
 
-    MeshID mid = scene->window().stage()->new_mesh();
-    auto mesh = scene->window().stage()->mesh(mid);
+    MeshID mid = window->stage()->new_mesh();
+    auto mesh = window->stage()->mesh(mid);
 
     std::map<MaterialID, SubMeshIndex> material_to_submesh;
 
@@ -310,8 +310,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     std::vector<TexturePtr> tex_ref_count_holder_;
 
     for(Q2::TextureInfo& tex: textures) {
-        MaterialID mat_id = scene->new_material_from_file(scene->default_material_filename());
-        auto mat = scene->material(mat_id);
+        MaterialID mat_id = window->new_material_from_file(window->default_material_filename());
+        auto mat = window->material(mat_id);
         mat_ref_count_holder_.push_back(mat.__object); //Prevent GC until we are done
 
         kmVec3 u_axis, v_axis;
@@ -335,12 +335,12 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             std::string texture_filename = "textures/" + std::string(tex.texture_name) + ".tga";
 
             try {
-                texture = scene->window().stage()->texture(scene->window().stage()->new_texture_from_file(texture_filename));
+                texture = window->stage()->texture(window->stage()->new_texture_from_file(texture_filename));
                 tex_ref_count_holder_.push_back(texture.__object);
             } catch(IOError& e) {
                 //Fallback texture
                 L_ERROR("Unable to find texture required by BSP file: " + texture_filename);
-                texture = scene->window().stage()->texture(scene->window().stage()->new_texture());
+                texture = window->stage()->texture(window->stage()->new_texture());
                 tex_ref_count_holder_.push_back(texture.__object);
 
                 //FIXME: Should be checkerboard, not starfield
@@ -477,7 +477,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     L_DEBUG(_u("Created an actor for mesh").format(mid));
     //Finally, create an actor from the world mesh
-    scene->window().stage()->new_actor(mid);
+    window->stage()->new_actor(mid);
 }
 
 }

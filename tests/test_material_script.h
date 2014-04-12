@@ -40,7 +40,7 @@ public:
             END(technique)
         )";
 
-        auto mat = window->scene().material(window->scene().new_material());
+        auto mat = window->material(window->new_material());
         kglt::MaterialScript script((MaterialLanguageText(text))); //Most vexing parse \o/
         script.generate(*mat.__object);
 

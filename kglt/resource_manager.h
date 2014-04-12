@@ -121,6 +121,14 @@ public:
 
     virtual WindowBase& window() = 0;
     virtual const WindowBase& window() const = 0;
+
+    virtual MaterialID clone_default_material() = 0;
+
+    virtual TextureID default_texture_id() const = 0;
+    virtual MaterialID default_material_id() const = 0;
+
+    virtual unicode default_material_filename() const = 0;
+
 };
 
 class ResourceManagerImpl:
@@ -222,9 +230,21 @@ public:
 
     void update();
 
+    unicode default_material_filename() const;
+
+    MaterialID clone_default_material() {
+        return new_material_from_file(default_material_filename());
+    }
+
+    MaterialID default_material_id() const;
+    TextureID default_texture_id() const;
+
 private:
     WindowBase* window_;
     std::map<std::string, ShaderID> shader_lookup_;
+
+    MaterialID default_material_id_;
+    TextureID default_texture_id_;
 };
 
 

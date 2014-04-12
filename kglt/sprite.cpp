@@ -205,7 +205,7 @@ void Sprite::set_spritesheet(TextureID texture_id, uint32_t frame_width,
     image_height_ = stage()->texture(texture_id)->height();
 
     //Hold a reference to the new material
-    material_id_ = stage()->window().scene().clone_default_material();
+    material_id_ = stage()->window().clone_default_material();
 
     stage()->mesh(mesh_id_)->set_material_id(material_id_);
     stage()->material(material_id_)->technique().pass(0).set_texture_unit(0, texture_id);

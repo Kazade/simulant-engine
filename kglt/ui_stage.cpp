@@ -7,7 +7,7 @@ namespace kglt {
 
 UIStage::UIStage(WindowBase *parent, UIStageID id):
     generic::Identifiable<UIStageID>(id),
-    Resource(&parent->scene()),
+    Resource(parent),
     window_(*parent),
     interface_(ui::Interface::create(*parent)){
 

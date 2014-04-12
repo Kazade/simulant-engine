@@ -19,7 +19,7 @@ TextureUnit::TextureUnit(MaterialPass &pass):
 
     //Initialize the texture unit to the default texture
     ResourceManager& rm = pass.technique().material().resource_manager();
-    texture_unit_ = rm.texture(rm.window().scene().default_texture_id()).__object;
+    texture_unit_ = rm.texture(rm.default_texture_id()).__object;
 }
 
 TextureUnit::TextureUnit(MaterialPass &pass, TextureID tex_id):

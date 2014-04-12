@@ -3,8 +3,8 @@
 
 namespace kglt {
 
-MoveableActorHolder::MoveableActorHolder(Scene& scene):
-    ActorHolder(scene) {
+MoveableActorHolder::MoveableActorHolder(WindowBase& window):
+    ActorHolder(window) {
 
 }
 

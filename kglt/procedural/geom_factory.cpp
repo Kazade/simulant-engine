@@ -41,7 +41,7 @@ ActorID GeomFactory::new_line(const kmVec3& start, const kmVec3& end) {
 
         //Create a submesh that uses the shared data
         SubMeshIndex sm = mesh->new_submesh(
-            mesh->resource_manager().window().scene().default_material_id(),
+            mesh->resource_manager().default_material_id(),
             MESH_ARRANGEMENT_LINES,
             true
         );

@@ -1,5 +1,6 @@
 #include "circle.h"
 #include "../../scene.h"
+#include "../../resource_manager.h"
 
 namespace kglt {
 namespace procedural {
@@ -9,7 +10,7 @@ SubMeshIndex circle(kglt::Mesh& mesh, float diameter, int32_t point_count, float
     float radius = diameter * 0.5f;
 
     SubMeshIndex smi = mesh.new_submesh(
-        mesh.scene().new_material_from_file(mesh.scene().default_material_filename()),
+        mesh.resource_manager().new_material_from_file(mesh.resource_manager().default_material_filename()),
         MESH_ARRANGEMENT_TRIANGLE_FAN,
         false
     );

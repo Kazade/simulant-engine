@@ -126,8 +126,6 @@ public:
     void reverse_winding(); ///< Reverse the winding of all submeshes
     void set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass=0); ///< Replace the texture unit on all submesh materials
 
-    Scene& scene();
-
     sig::signal<void ()>& signal_submeshes_changed() { return signal_submeshes_changed_; }
 
 private:

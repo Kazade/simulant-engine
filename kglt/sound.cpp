@@ -117,7 +117,7 @@ void Source::play_sound(SoundID sound, bool loop) {
         auto s = stage_->sound(sound);
         s->init_source_(*new_source);
     } else {
-        auto s = window_->scene().sound(sound);
+        auto s = window_->sound(sound);
         s->init_source_(*new_source);
     }
 

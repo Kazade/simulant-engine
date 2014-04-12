@@ -77,8 +77,8 @@ public:
         unicode vert_shader = window_.resource_locator().read_file("kglt/materials/ui.vert")->str();
         unicode frag_shader = window_.resource_locator().read_file("kglt/materials/ui.frag")->str();
 
-        shader_ = window_.scene().new_shader_from_files(vert_shader, frag_shader);
-        shader_reference_ = window_.scene().shader(shader_).lock(); //Prevent GC
+        shader_ = window_.new_shader_from_files(vert_shader, frag_shader);
+        shader_reference_ = window_.shader(shader_).lock(); //Prevent GC
     }
 
     bool LoadTexture(Rocket::Core::TextureHandle& texture_handle, Rocket::Core::Vector2i& texture_dimensions, const Rocket::Core::String& source) {
@@ -139,7 +139,7 @@ public:
 
         int pos_attrib = -1, colour_attrib = -1, texcoord_attrib = -1;
         {
-            auto shader = window_.scene().shader(shader_).lock();
+            auto shader = window_.shader(shader_).lock();
             pos_attrib = shader->get_attrib_loc("position");
             colour_attrib = shader->get_attrib_loc("colour");
             texcoord_attrib = shader->get_attrib_loc("tex_coord");
@@ -201,7 +201,7 @@ public:
 
         int pos_attrib = -1, colour_attrib = -1, texcoord_attrib = -1;
         {
-            auto shader = window_.scene().shader(shader_).lock();
+            auto shader = window_.shader(shader_).lock();
             pos_attrib = shader->get_attrib_loc("position");
             colour_attrib = shader->get_attrib_loc("colour");
             texcoord_attrib = shader->get_attrib_loc("tex_coord");
@@ -233,7 +233,7 @@ public:
             GLuint tex_id = textures_[texture]->gl_tex();
             GLCheck(glBindTexture, GL_TEXTURE_2D, tex_id);
         } else {
-            GLCheck(glBindTexture, GL_TEXTURE_2D, window_.scene().texture(window_.scene().default_texture_id())->gl_tex());
+            GLCheck(glBindTexture, GL_TEXTURE_2D, window_.texture(window_.default_texture_id())->gl_tex());
         }
 
         GLCheck(glDrawElements, GL_TRIANGLES, num_indices, GL_UNSIGNED_INT, BUFFER_OFFSET(0));
@@ -244,7 +244,7 @@ public:
         kmMat4Translation(&transform, translation.x, translation.y, 0);
         transform = this->_projection_matrix * transform;
 
-        auto shader = window_.scene().shader(shader_).lock();
+        auto shader = window_.shader(shader_).lock();
         shader->activate();
         shader->params().set_mat4x4("modelview_projection", transform);
         shader->params().set_int("texture_unit", 0);
@@ -273,7 +273,7 @@ public:
             GLuint tex_id = textures_[geom->texture]->gl_tex();
             GLCheck(glBindTexture, GL_TEXTURE_2D, tex_id);
         } else {
-            GLCheck(glBindTexture, GL_TEXTURE_2D, window_.scene().texture(window_.scene().default_texture_id())->gl_tex());
+            GLCheck(glBindTexture, GL_TEXTURE_2D, window_.texture(window_.default_texture_id())->gl_tex());
         }
 
         prepare_shader(translation);
@@ -304,7 +304,7 @@ public:
 
 
     ResourceManager& manager() {
-        return window_.scene();
+        return window_;
     }
 
 

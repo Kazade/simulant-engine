@@ -22,7 +22,7 @@ private:
         float render_width = window().camera()->set_orthographic_projection_from_height(render_height, float(window().width()) / float(window().height()));
 
         //Load a sprite grid, from the 'Layer 1' layer in a tmx file
-        sprite_grid_ = SpriteGrid::new_from_file(scene(), stage()->id(), "sample_data/tiled/example.tmx", "Layer 1");
+        sprite_grid_ = SpriteGrid::new_from_file(window(), stage()->id(), "sample_data/tiled/example.tmx", "Layer 1");
 
         //Constrain the camera to the area where the sprite grid is rendered
         window().stage()->camera()->constrain_to(

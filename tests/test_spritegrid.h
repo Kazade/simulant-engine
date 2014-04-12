@@ -19,7 +19,7 @@ public:
             window->set_logging_level(LOG_LEVEL_NONE);
         }
 
-        grid_ = extra::SpriteGrid::create(window->scene(), StageID(), 64, 32);
+        grid_ = extra::SpriteGrid::create(*window, StageID(), 64, 32);
     }
 
     void test_chunk() {

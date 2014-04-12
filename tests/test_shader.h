@@ -18,13 +18,11 @@ public:
     }
 
     void test_shader_params() {
-        kglt::Scene& scene = window->scene();
-
-        kglt::ShaderID sid = scene.new_shader();
+        kglt::ShaderID sid = window->new_shader();
         assert_true(sid);
 
-        auto material = scene.material(scene.default_material_id());
-        kglt::ShaderRef tmp = scene.shader(material->technique().pass(0).shader_id());
+        auto material = window->material(window->default_material_id());
+        kglt::ShaderRef tmp = window->shader(material->technique().pass(0).shader_id());
         kglt::ShaderProgram& s = *tmp.lock();
 
         kmMat4 ident;

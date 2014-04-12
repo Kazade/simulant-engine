@@ -18,7 +18,7 @@ public:
     }
 
     void test_offsets() {
-        kglt::VertexData::ptr data = kglt::VertexData::create(window->scene());
+        kglt::VertexData::ptr data = kglt::VertexData::create();
 
         assert_equal(0, (int32_t) data->position_offset());
         assert_equal(sizeof(float) * 3, data->normal_offset());

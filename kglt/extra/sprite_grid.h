@@ -56,8 +56,8 @@ class SpriteGrid:
     public Managed<SpriteGrid> {
 
 public:
-    static SpriteGrid::ptr new_from_file(Scene& scene, StageID, const unicode& filename, const unicode& layer, float tile_render_size=1.0);
-    SpriteGrid(Scene& scene, StageID stage, int32_t tiles_wide, int32_t tiles_high, float tile_render_size=1.0);
+    static SpriteGrid::ptr new_from_file(WindowBase& window, StageID, const unicode& filename, const unicode& layer, float tile_render_size=1.0);
+    SpriteGrid(WindowBase& window, StageID stage, int32_t tiles_wide, int32_t tiles_high, float tile_render_size=1.0);
 
     bool init();
     void cleanup();
@@ -80,7 +80,7 @@ public:
 private:
     AutoWeakPtr<kglt::Stage> stage();
 
-    Scene& scene_;
+    WindowBase& window_;
     StageID stage_id_;
 
     int32_t map_tile_height_;

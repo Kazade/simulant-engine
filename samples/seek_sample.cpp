@@ -11,8 +11,8 @@ class Dot:
     public Managed<Dot> {
 
 public:
-    Dot(kglt::Scene& scene, kglt::StageID stage):
-        kglt::MoveableActorHolder(scene),
+    Dot(kglt::WindowBase& window, kglt::StageID stage):
+        kglt::MoveableActorHolder(window),
         stage_(stage) {
 
         //Pass a reference to this to the PathFollower
@@ -64,7 +64,7 @@ public:
 
 private:
     bool do_init() {
-        dot_ = Dot::create(scene(), stage()->id());
+        dot_ = Dot::create(window(), stage()->id());
 
         window().camera()->set_perspective_projection(
             45.0,
