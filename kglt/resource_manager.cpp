@@ -18,10 +18,12 @@ namespace kglt {
 ResourceManagerImpl::ResourceManagerImpl(WindowBase* window):
     window_(window) {
 
-    window_->signal_frame_finished().connect(std::bind(&ResourceManagerImpl::update, this));
-
     ShaderManager::signal_post_create().connect(std::bind(&ResourceManagerImpl::post_create_shader_callback, this, std::placeholders::_1, std::placeholders::_2));
 
+
+}
+
+bool ResourceManagerImpl::init() {
     //FIXME: Should lock the default texture and material during construction!
 
     //Create the default blank texture
@@ -43,6 +45,8 @@ ResourceManagerImpl::ResourceManagerImpl(WindowBase* window):
 
     //Set the default material's first texture to the default (white) texture
     material(default_material_id_)->technique().pass(0).set_texture_unit(0, default_texture_id_);
+
+    return true;
 }
 
 void ResourceManagerImpl::update() {

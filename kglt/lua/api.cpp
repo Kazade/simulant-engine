@@ -52,6 +52,12 @@ void export_lua_api(lua_State* state) {
     ];
 
     luabind::module(state) [
+        luabind::class_<ResourceManager>("ResourceManager")
+//            .def("mesh", (Mesh&(ResourceManager::*)(MeshID))&ResourceManager::mesh)
+            .property("mesh_count", &ResourceManager::mesh_count)
+    ];
+
+    luabind::module(state) [
         luabind::class_<WindowBase, luabind::bases<ResourceManager> >("WindowBase")
             .def("set_title", &WindowBase::set_title)
             .def("quit", &WindowBase::stop_running)
@@ -67,12 +73,6 @@ void export_lua_api(lua_State* state) {
             .property("total_time", &WindowBase::total_time)
             .property("delta_time", &WindowBase::delta_time)
             .def("print_tree", (void(WindowBase::*)(void))&WindowBase::print_tree)
-    ];
-
-    luabind::module(state) [
-        luabind::class_<ResourceManager>("ResourceManager")
-//            .def("mesh", (Mesh&(ResourceManager::*)(MeshID))&ResourceManager::mesh)
-            .property("mesh_count", &ResourceManager::mesh_count)
     ];
 
     luabind::module(state) [

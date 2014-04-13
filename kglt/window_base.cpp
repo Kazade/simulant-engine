@@ -85,18 +85,17 @@ LoaderPtr WindowBase::loader_for(const unicode &filename) {
     throw DoesNotExist<Loader>((_u("Unable to find a loader for: ") + filename).encode());
 }
 
-bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
+bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
     GLThreadCheck::init();
-    check_and_log_error(__FILE__, __LINE__);
 
     set_width(width);
     set_height(height);
 
     bool result = create_window(width, height, bpp, fullscreen);        
 
-    Sound::init_openal();
-
     if(result && !initialized_) {
+        create_default_ui_stage();
+
         watcher_ = Watcher::create(*this);
 
         //Register the default resource loaders
@@ -107,6 +106,9 @@ bool WindowBase::init(int width, int height, int bpp, bool fullscreen) {
         register_loader(std::make_shared<kglt::loaders::RMLLoaderType>());
         register_loader(std::make_shared<kglt::loaders::Q2BSPLoaderType>());
         register_loader(std::make_shared<kglt::loaders::OBJLoaderType>());
+
+        Sound::init_openal();
+        ResourceManagerImpl::init();
 
         //Create a default viewport
         default_viewport_ = new_viewport();
@@ -238,6 +240,7 @@ bool WindowBase::run_frame() {
 
     //std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
+    ResourceManagerImpl::update();
     signal_frame_finished_();
 
     if(!is_running_) {

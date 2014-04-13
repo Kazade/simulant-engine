@@ -89,6 +89,10 @@ public:
     uint32_t ui_stage_count() const;
 
     UIStageID default_ui_stage_id() const { return default_ui_stage_id_; }
+
+protected:
+    void create_default_ui_stage();
+
 private:
     WindowBase* window_;
     UIStageID default_ui_stage_id_;

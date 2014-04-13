@@ -137,10 +137,13 @@ class ResourceManagerImpl:
     public ShaderManager,
     public MaterialManager,
     public TextureManager,
-    public SoundManager {
+    public SoundManager,
+    public Managed<ResourceManagerImpl> {
 
 public:
     ResourceManagerImpl(WindowBase* window);
+
+    bool init() override;
 
     MeshID new_mesh(bool garbage_collect=true) override;
     MeshID new_mesh_from_file(const unicode& path, bool garbage_collect=true) override;

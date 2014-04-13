@@ -185,6 +185,13 @@ void StageManager::print_tree(GenericTreeNode* node, uint32_t& level) {
 UIStageManager::UIStageManager(WindowBase *window):
     window_(window) {
 
+}
+
+void UIStageManager::create_default_ui_stage() {
+    if(default_ui_stage_id_) {
+        return;
+    }
+
     default_ui_stage_id_ = new_ui_stage();
 }
 

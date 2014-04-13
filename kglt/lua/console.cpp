@@ -71,7 +71,6 @@ Console::Console(WindowBase &window):
     export_lua_api(interpreter_->state());
 
     interpreter_->add_global("window", window_);
-    interpreter_->add_global("scene", window_.scene());
 
     lua_register(interpreter_->state(), "print", print);
 }

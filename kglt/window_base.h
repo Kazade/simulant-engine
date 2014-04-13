@@ -64,7 +64,7 @@ public:
     template<typename T>
     static std::shared_ptr<WindowBase> create(int width=640, int height=480, int bpp=0, bool fullscreen=false) {
         std::shared_ptr<WindowBase> window(new T());
-        if(!window->init(width, height, bpp, fullscreen)) {
+        if(!window->_init(width, height, bpp, fullscreen)) {
             throw InstanceInitializationError();
         }
         return window;
@@ -146,7 +146,7 @@ protected:
         height_ = height; 
     }
 
-    bool init(int width, int height, int bpp, bool fullscreen);
+    bool _init(int width, int height, int bpp, bool fullscreen);
     virtual bool create_window(int width, int height, int bpp, bool fullscreen) = 0;
 
     InputController& input_controller() { assert(input_controller_); return *input_controller_; }
