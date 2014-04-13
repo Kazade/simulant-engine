@@ -3,9 +3,7 @@
 
 #include "kazmath/mat3.h"
 #include "stage.h"
-#include "scene.h"
 #include "object.h"
-#include "object_visitor.h"
 #include "camera.h"
 #include "utils/ownable.h"
 #include "physics/physics_engine.h"
@@ -99,11 +97,11 @@ void Object::parent_changed_callback(GenericTreeNode *old_parent, GenericTreeNod
 }
 
 void Object::make_responsive() {
-    if(!stage()->window().scene().has_physics_engine()) {
+    if(!stage()->window().has_physics_engine()) {
         throw std::logic_error("Tried to make an object responsive when no physics engine is enabled");
     }
 
-    auto engine = stage()->window().scene().physics();
+    auto engine = stage()->window().physics();
 
     responsive_body_ = engine->new_responsive_body(this);
 
@@ -111,11 +109,11 @@ void Object::make_responsive() {
 }
 
 void Object::make_collidable() {
-    if(!stage()->window().scene().has_physics_engine()) {
+    if(!stage()->window().has_physics_engine()) {
         throw std::logic_error("Tried to make an object collidable when no physics engine is enabled");
     }
 
-    auto engine = stage()->window().scene().physics();
+    auto engine = stage()->window().physics();
 
     collidable_ = engine->new_collidable(this);
 

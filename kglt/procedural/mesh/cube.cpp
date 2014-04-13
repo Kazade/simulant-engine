@@ -1,6 +1,4 @@
 #include "../../resource_manager.h"
-#include "../../scene.h"
-
 #include "cube.h"
 
 namespace kglt {

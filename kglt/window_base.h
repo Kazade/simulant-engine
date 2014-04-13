@@ -55,7 +55,8 @@ class WindowBase :
     public StageManager,
     public UIStageManager,
     public CameraManager,
-    public ResourceManagerImpl {
+    public ResourceManagerImpl,
+    public Loadable {
 
 public:    
     typedef std::shared_ptr<WindowBase> ptr;
@@ -91,9 +92,6 @@ public:
     uint32_t width() const { return width_; }
     uint32_t height() const { return height_; }
     
-    Scene& scene();
-    const Scene& scene() const;
-
     bool run_frame();
     void update(double dt) override;
 
@@ -136,6 +134,10 @@ public:
     RenderSequencePtr render_sequence();
     generic::DataCarrier& data() { return data_carrier_; }
 
+    void enable_physics(std::shared_ptr<PhysicsEngine> engine);
+    PhysicsEnginePtr physics();
+    const bool has_physics_engine() const;
+
 protected:
 
     void set_width(uint32_t width) { 
@@ -160,7 +162,6 @@ private:
 
     bool initialized_;
 
-    std::shared_ptr<SceneImpl> scene_;
     int32_t width_;
     int32_t height_;
 
@@ -201,6 +202,8 @@ private:
     std::shared_ptr<MessageBar> message_bar_;
     std::shared_ptr<kglt::RenderSequence> render_sequence_;
     generic::DataCarrier data_carrier_;
+
+    std::shared_ptr<PhysicsEngine> physics_engine_;
 };
 
 }

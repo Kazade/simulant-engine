@@ -1,6 +1,5 @@
 #include "actor.h"
 #include "camera.h"
-#include "scene.h"
 #include "stage.h"
 #include "window_base.h"
 #include "kazbase/unicode.h"

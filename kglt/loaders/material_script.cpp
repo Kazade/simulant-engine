@@ -5,7 +5,6 @@
 #include <kazbase/logging.h>
 #include "../types.h"
 #include "../material.h"
-#include "../scene.h"
 #include "../shortcuts.h"
 #include "../resource_manager.h"
 #include "../utils/gl_thread_check.h"

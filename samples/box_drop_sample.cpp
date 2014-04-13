@@ -15,9 +15,9 @@ public:
 
 private:
     bool do_init() {
-        scene().enable_physics(DefaultPhysicsEngine::create());
-        scene().physics()->create_plane(0, 1, 0, -3.5);
-        scene().physics()->set_gravity(Vec3(0, -7.8, 0));
+        window().enable_physics(DefaultPhysicsEngine::create());
+        window().physics()->create_plane(0, 1, 0, -3.5);
+        window().physics()->set_gravity(Vec3(0, -7.8, 0));
 
         texture_id_ = stage()->new_texture_from_file("sample_data/crate.png");
         mesh_ = stage()->new_mesh_as_cube(1.0);

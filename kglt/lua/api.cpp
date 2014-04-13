@@ -67,7 +67,6 @@ void export_lua_api(lua_State* state) {
             .property("default_stage", (StagePtr(WindowBase::*)())&WindowBase::stage)
             .property("stage_count", &WindowBase::stage_count)
             .property("render_sequence", &WindowBase::render_sequence)
-            .property("scene", (Scene&(WindowBase::*)())&WindowBase::scene)
             .property("width", &WindowBase::width)
             .property("height", &WindowBase::height)
             .property("total_time", &WindowBase::total_time)

@@ -1,7 +1,6 @@
 #include "obj_loader.h"
 
 #include "../mesh.h"
-#include "../scene.h"
 #include "../resource_manager.h"
 #include <kazbase/unicode.h>
 #include <kazbase/string.h>

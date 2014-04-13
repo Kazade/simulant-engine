@@ -1,7 +1,6 @@
 #include <kazmath/kazmath.h>
 #include "sphere.h"
 #include "../../resource_manager.h"
-#include "../../scene.h"
 #include "../../mesh.h"
 
 namespace kglt {

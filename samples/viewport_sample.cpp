@@ -3,10 +3,7 @@
 
 int main(int argc, char* argv[]) {
     kglt::Window::ptr window = kglt::Window::create();
-    kglt::Scene& scene = window->scene();
-	
-	//scene.pass().viewport().configure(VIEWPORT_16_BY_9);
-	
+		
     kglt::ViewportID first = window->viewport()->id(); //Get the default viewport ID
     kglt::ViewportID second = window->new_viewport();
 

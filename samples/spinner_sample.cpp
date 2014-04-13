@@ -15,7 +15,7 @@ public:
 
 private:
     bool do_init() {
-        scene().enable_physics(DefaultPhysicsEngine::create());
+        window().enable_physics(DefaultPhysicsEngine::create());
 
         kglt::TextureID tid = stage()->new_texture_from_file("sample_data/sample.tga");
 

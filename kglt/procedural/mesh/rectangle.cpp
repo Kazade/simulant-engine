@@ -1,5 +1,4 @@
 #include "../../resource_manager.h"
-#include "../../scene.h"
 #include "rectangle.h"
 
 namespace kglt {

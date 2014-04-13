@@ -80,8 +80,6 @@ kglt/object.cpp
 kglt/object.h
 kglt/option_list.cpp
 kglt/option_list.h
-kglt/scene.cpp
-kglt/scene.h
 kglt/shader.cpp
 kglt/shader.h
 kglt/shortcuts.cpp

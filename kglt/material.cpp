@@ -4,7 +4,6 @@
 #include "window_base.h"
 #include "material.h"
 #include "resource_manager.h"
-#include "scene.h"
 
 namespace kglt {
 

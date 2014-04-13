@@ -1,6 +1,5 @@
 #include "../../object.h"
 #include "../../stage.h"
-#include "../../scene.h"
 
 #include "ode_collidable.h"
 #include "ode_body.h"

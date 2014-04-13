@@ -4,7 +4,6 @@
 #include "types.h"
 #include "window.h"
 #include "input_controller.h"
-#include "scene.h"
 #include "stage.h"
 #include "ui_stage.h"
 #include "viewport.h"

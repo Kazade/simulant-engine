@@ -7,8 +7,6 @@ int main(int argc, char* argv[]) {
 	logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));
 
     kglt::Window::ptr window = kglt::Window::create();    
-    kglt::Scene& scene = window->scene();
-
     window->set_title("KGLT Parallax Sample");
 
 	//Automatically calculate an orthographic projection, taking into account the aspect ratio

@@ -4,7 +4,6 @@
 
 #include "utils/gl_error.h"
 #include "window_base.h"
-#include "scene.h"
 #include "ui/interface.h"
 #include "input_controller.h"
 #include "loaders/texture_loader.h"
@@ -21,6 +20,7 @@
 #include "message_bar.h"
 #include "render_sequence.h"
 #include "stage.h"
+#include "physics/physics_engine.h"
 #include "screens/loading.h"
 #include "utils/gl_thread_check.h"
 
@@ -134,14 +134,6 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
             ViewportID(), TextureID(), 100
         );
 
-        scene_ = SceneImpl::create(this);
-
-        /*FIXME: This should be called in Scene::init, but because Scene subclasses ResourceManagerImpl,
-         * which takes a WindowBase, rather than a Scene, we try to do window().scene() which crashes because
-         * that isn't set until create returns (above). ResourceManagerImpl should probably take a Scene*
-         * and do window lookups with scene()->window() instead of the reverse. */
-        scene_->initialize_defaults();
-
         message_bar_ = MessageBar::create(*this);
 
         loading_ = screens::Loading::create(*this);
@@ -183,6 +175,10 @@ void WindowBase::set_logging_level(LoggingLevel level) {
 void WindowBase::update(double dt) {
     BackgroundManager::update(dt);
     StageManager::update(dt);
+
+    if(has_physics_engine()) {
+        physics()->step(dt);
+    }
 }
 
 bool WindowBase::run_frame() {
@@ -221,8 +217,6 @@ bool WindowBase::run_frame() {
 
         update(fixed_step); //Update this
 
-        scene().update(fixed_step);
-
         signal_step_(fixed_step); //Trigger any steps        
     }
 
@@ -255,26 +249,10 @@ bool WindowBase::run_frame() {
 
         //Shutdown the input controller
         input_controller_.reset();        
-        //Destroy the scene
-        scene_.reset();
     }
 
     return is_running_;
 
-}
-
-const Scene& WindowBase::scene() const {
-    if(!scene_) {
-        throw DoesNotExist<Scene>();
-    }
-    return *scene_;
-}
-
-Scene& WindowBase::scene() {
-    if(!scene_) {
-        throw DoesNotExist<Scene>();
-    }
-    return *scene_;
 }
 
 void WindowBase::register_loader(LoaderTypePtr loader) {
@@ -314,6 +292,21 @@ Joypad& WindowBase::joypad(uint8_t idx) {
 
 uint8_t WindowBase::joypad_count() const {
     return input_controller_->joypad_count();
+}
+
+void WindowBase::enable_physics(std::shared_ptr<PhysicsEngine> engine) {
+    physics_engine_ = engine;
+}
+
+PhysicsEnginePtr WindowBase::physics() {
+    if(!physics_engine_) {
+        throw std::logic_error("Tried to access the physics engine when one has not been enabled");
+    }
+    return physics_engine_;
+}
+
+const bool WindowBase::has_physics_engine() const {
+    return bool(physics_engine_);
 }
 
 }

@@ -1,4 +1,3 @@
-#include "../../scene.h"
 #include "../../window.h"
 #include "../../actor.h"
 

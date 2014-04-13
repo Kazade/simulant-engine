@@ -2,7 +2,6 @@
 
 #include <stdexcept>
 #include "vertex_data.h"
-#include "scene.h"
 #include "window_base.h"
 #include "utils/gl_thread_check.h"
 

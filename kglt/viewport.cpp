@@ -3,7 +3,6 @@
 #include "utils/glcompat.h"
 #include "viewport.h"
 #include "window.h"
-#include "scene.h"
 #include "utils/gl_error.h"
 
 namespace kglt {

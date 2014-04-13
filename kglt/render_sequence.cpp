@@ -3,7 +3,6 @@
 
 #include "utils/gl_error.h"
 #include "render_sequence.h"
-#include "scene.h"
 #include "stage.h"
 #include "ui_stage.h"
 #include "actor.h"

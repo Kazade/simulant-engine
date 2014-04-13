@@ -10,8 +10,6 @@
 
 namespace kglt {
 
-class Scene;
-
 namespace extra {
 
 class SpriteStripLoader :

@@ -8,7 +8,7 @@
 
 namespace kglt {
 
-class Scene;
+
 
 namespace screens {
 

@@ -1,5 +1,4 @@
 #include "window.h"
-#include "scene.h"
 #include "application.h"
 #include "screens/loading.h"
 #include "input_controller.h"
@@ -17,10 +16,6 @@ Application::Application(const unicode &title, uint32_t width, uint32_t height, 
     window_->keyboard().key_pressed_connect(std::bind(&Application::on_key_press, this, std::placeholders::_1));
     window_->keyboard().key_released_connect(std::bind(&Application::on_key_release, this, std::placeholders::_1));
     window_->keyboard().key_while_pressed_connect(std::bind(&Application::while_key_pressed, this, std::placeholders::_1, std::placeholders::_2));
-}
-
-Scene& Application::scene() {
-    return window().scene();
 }
 
 StagePtr Application::stage(StageID stage) {

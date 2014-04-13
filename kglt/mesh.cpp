@@ -5,7 +5,6 @@
 #include "resource_manager.h"
 #include "mesh.h"
 #include "loader.h"
-#include "scene.h"
 #include "material.h"
 
 namespace kglt {

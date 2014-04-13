@@ -1,7 +1,6 @@
 #include "window_base.h"
 #include "resource_manager.h"
 #include "loader.h"
-#include "scene.h"
 #include "procedural/mesh.h"
 
 #include "kazbase/datetime.h"
@@ -71,14 +70,6 @@ void ResourceManagerImpl::update() {
 
         last_collection = datetime::now();
     }
-}
-
-Scene& ResourceManagerImpl::scene() {
-    return window().scene();
-}
-
-const Scene& ResourceManagerImpl::scene() const {
-    return window().scene();
 }
 
 ProtectedPtr<Mesh> ResourceManagerImpl::mesh(MeshID m) {

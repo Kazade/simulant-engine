@@ -10,7 +10,7 @@
 
 namespace kglt {
 
-class Scene;
+
 
 enum AspectRatio {
     ASPECT_RATIO_CUSTOM,

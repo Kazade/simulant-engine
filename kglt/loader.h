@@ -8,10 +8,9 @@
 
 #include "kazbase/exceptions.h"
 #include "generic/protected_ptr.h"
+#include "types.h"
 
 namespace kglt {
-
-class Scene;
 
 typedef std::map<unicode, unicode> LoaderOptions;
 
@@ -31,8 +30,8 @@ public:
         into(*resource, options);
     }
 
-    void into(Scene& scene, const LoaderOptions& options=LoaderOptions()) {
-        into((Loadable&) scene, options);
+    void into(WindowBase& window, const LoaderOptions& options=LoaderOptions()) {
+        into((Loadable&) window, options);
     }
 
 protected:

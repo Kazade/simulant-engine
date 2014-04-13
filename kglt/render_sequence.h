@@ -121,8 +121,6 @@ private:
     sig::signal<void (Pipeline&)> signal_pipeline_started_;
     sig::signal<void (Pipeline&)> signal_pipeline_finished_;
 
-    friend class Scene;
-
     void update_camera_constraint(CameraID cid);
 };
 

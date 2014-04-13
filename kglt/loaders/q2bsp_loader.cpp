@@ -11,7 +11,6 @@
 
 #include "../window.h"
 #include "../stage.h"
-#include "../scene.h"
 #include "../mesh.h"
 #include "../types.h"
 #include "../light.h"

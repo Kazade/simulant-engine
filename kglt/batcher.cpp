@@ -10,7 +10,6 @@
 #include "camera.h"
 #include "partitioner.h"
 #include "window_base.h"
-#include "scene.h"
 #include "utils/gl_error.h"
 
 namespace kglt {

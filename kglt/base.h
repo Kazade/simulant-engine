@@ -1,7 +1,6 @@
 #ifndef BASE_H
 #define BASE_H
 
-#include "scene.h"
 #include "stage.h"
 #include "window_base.h"
 #include "types.h"

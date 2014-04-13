@@ -25,8 +25,6 @@
 
 namespace kglt {
 
-class Scene;
-
 class Object :
     public generic::DataCarrier, //And they allow additional data to be attached
     public Transformable,

@@ -11,8 +11,6 @@ int main(int argc, char* argv[]) {
     kglt::Window::ptr window = kglt::Window::create();
     window->set_title("KGLT Parallax Sample");
 
-    kglt::Scene& scene = window->scene();
-
     //Automatically calculate an orthographic projection, taking into account the aspect ratio
     //and the passed height. For example, passing a height of 2.0 would mean the view would extend
     //+1 and -1 in the vertical direction, -1.0 - +1.0 near/far, and width would be calculated from the aspect

@@ -1,4 +1,3 @@
-#include "../scene.h"
 #include "../stage.h"
 #include "../procedural/geom_factory.h"
 #include "../render_sequence.h"

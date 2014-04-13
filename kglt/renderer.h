@@ -22,8 +22,6 @@ public:
     Renderer(WindowBase& window):
         window_(window) {}
 
-    Scene& scene() { return window_.scene(); }
-
     void set_current_stage(StageID stage) {
         current_stage_ = stage;
     }

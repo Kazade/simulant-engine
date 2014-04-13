@@ -1,5 +1,4 @@
 #include "ui_stage.h"
-#include "scene.h"
 #include "window_base.h"
 #include "loader.h"
 

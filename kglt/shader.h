@@ -23,7 +23,7 @@
 
 namespace kglt {
 
-class Scene;
+
 
 /*
   Automatic uniforms that are set by the renderer

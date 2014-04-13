@@ -2,7 +2,6 @@
 #include "managers.h"
 #include "background.h"
 #include "window_base.h"
-#include "scene.h"
 #include "stage.h"
 #include "ui_stage.h"
 #include "camera.h"

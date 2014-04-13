@@ -1,5 +1,4 @@
 #include "window_base.h"
-#include "scene.h"
 #include "message_bar.h"
 #include "render_sequence.h"
 #include "ui_stage.h"

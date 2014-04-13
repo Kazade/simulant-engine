@@ -1,5 +1,4 @@
 #include "renderer.h"
-#include "scene.h"
 
 namespace kglt {
 

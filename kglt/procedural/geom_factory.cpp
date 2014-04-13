@@ -1,5 +1,4 @@
 #include <kazbase/exceptions.h>
-#include "../scene.h"
 #include "../stage.h"
 
 #include "mesh.h"

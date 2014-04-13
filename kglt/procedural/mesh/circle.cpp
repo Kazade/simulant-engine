@@ -1,5 +1,4 @@
 #include "circle.h"
-#include "../../scene.h"
 #include "../../resource_manager.h"
 
 namespace kglt {

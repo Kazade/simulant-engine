@@ -6,7 +6,7 @@
 
 namespace kglt {
 
-class Scene;
+
 
 class GeomFactory:
     public Managed<GeomFactory> {

@@ -4,7 +4,6 @@
 #include <kazbase/os/path.h>
 #include "sprite_strip_loader.h"
 
-#include "../scene.h"
 #include "../shortcuts.h"
 
 namespace kglt {

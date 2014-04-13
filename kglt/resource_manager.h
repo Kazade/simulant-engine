@@ -228,9 +228,6 @@ public:
     WindowBase& window() { assert(window_); return *window_; }
     const WindowBase& window() const { return *window_; }
 
-    Scene& scene();
-    const Scene& scene() const;
-
     void update();
 
     unicode default_material_filename() const;

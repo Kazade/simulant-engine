@@ -14,7 +14,7 @@ public:
             window->set_logging_level(kglt::LOG_LEVEL_NONE);
         }
 
-        window->scene().enable_physics(kglt::DefaultPhysicsEngine::create());
+        window->enable_physics(kglt::DefaultPhysicsEngine::create());
         //window->reset();
     }
 

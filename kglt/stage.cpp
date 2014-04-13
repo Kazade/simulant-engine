@@ -1,6 +1,5 @@
 #include "stage.h"
 #include "window_base.h"
-#include "scene.h"
 #include "partitioner.h"
 #include "actor.h"
 #include "light.h"

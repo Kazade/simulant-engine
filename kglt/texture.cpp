@@ -11,7 +11,6 @@
 
 #include "window_base.h"
 #include "texture.h"
-#include "scene.h"
 
 namespace kglt {
 

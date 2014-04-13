@@ -434,9 +434,6 @@ typedef std::weak_ptr<Actor> ActorRef;
 class Light;
 typedef std::shared_ptr<Light> LightPtr;
 
-class Scene;
-typedef std::shared_ptr<Scene> ScenePtr;
-
 class Camera;
 class CameraProxy;
 

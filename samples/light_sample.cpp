@@ -5,7 +5,6 @@ int main(int argc, char* argv[]) {
     logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));
 
     kglt::Window::ptr window = kglt::Window::create();
-    kglt::Scene& scene = window->scene();
 
     window->set_title("Lighting Sample");
     window->camera()->set_perspective_projection(

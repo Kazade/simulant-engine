@@ -13,7 +13,6 @@ namespace kglt {
 
 class WindowBase;
 class Stage;
-class Scene;
 
 class BackgroundLoadException : public std::runtime_error {
 public:
@@ -36,8 +35,8 @@ public:
     WindowBase& window() { return *window_; }
 
     bool initialized() const { return initialized_; }
+
 protected:
-    Scene& scene();
     StagePtr stage(StageID stage=StageID());
 
     void load_async(boost::function<bool ()> func);
@@ -46,6 +45,7 @@ protected:
         initialized_ = do_init();
         return initialized_;
     }
+
 private:
     std::shared_ptr<WindowBase> window_;
     bool initialized_ = false;

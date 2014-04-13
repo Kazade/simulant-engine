@@ -5,7 +5,6 @@
 #include "console.h"
 
 #include "../window_base.h"
-#include "../scene.h"
 #include "../stage.h"
 #include "../ui/interface.h"
 #include "../input_controller.h"
@@ -79,8 +78,6 @@ void Console::init_widget() {
     if(ui_stage_) {
         return;
     }
-
-    Scene& scene = window_.scene();
 
     ui_stage_ = window_.new_ui_stage();
     ui_camera_ = window_.new_camera();

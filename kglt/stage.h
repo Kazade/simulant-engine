@@ -7,16 +7,17 @@
 #include "generic/manager.h"
 #include "generic/generic_tree.h"
 
+#include "procedural/geom_factory.h"
+
 #include "object.h"
 #include "types.h"
 #include "resource_manager.h"
-#include "scene.h"
 #include "window_base.h"
 
 namespace kglt {
 
 class Partitioner;
-class Scene;
+
 class Debug;
 class Sprite;
 
@@ -330,7 +331,7 @@ private:
     std::shared_ptr<GeomFactory> geom_factory_;
     std::shared_ptr<Debug> debug_;
 
-    friend class Scene;
+    friend 
 
     CameraID new_camera_proxy(CameraID cam);
     void delete_camera_proxy(CameraID cam);
