@@ -22,7 +22,7 @@ public:
 
         this->assert_equal((uint32_t)1, mat->technique_count()); //Should return the default technique
         this->assert_equal(kglt::DEFAULT_MATERIAL_SCHEME, mat->technique().scheme());
-        mat->technique().new_pass(kglt::ShaderID()); //Create a pass
+        mat->technique().new_pass(); //Create a pass
         this->assert_equal((uint32_t)1, mat->technique().pass_count()); //Should return the default pass
         this->assert_true(kglt::Colour::WHITE == mat->technique().pass(0).diffuse()); //this->assert_true the default pass sets white as the default
         this->assert_true(kglt::Colour::WHITE == mat->technique().pass(0).ambient()); //this->assert_true the default pass sets white as the default
@@ -41,7 +41,7 @@ public:
     void test_reflectiveness() {
         kglt::MaterialID mid = window->new_material();
         auto mat = window->material(mid);
-        uint32_t pass_id = mat->technique().new_pass(kglt::ShaderID());
+        uint32_t pass_id = mat->technique().new_pass();
         kglt::MaterialPass& pass = mat->technique().pass(pass_id);
 
         assert_false(pass.is_reflective());

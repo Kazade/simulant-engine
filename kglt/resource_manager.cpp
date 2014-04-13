@@ -362,8 +362,10 @@ ShaderID ResourceManagerImpl::new_shader(bool garbage_collect) {
 
 ShaderID ResourceManagerImpl::new_shader_from_files(const unicode& vert_shader, const unicode& frag_shader, bool garbage_collect) {
     ShaderPtr shd = shader(new_shader(garbage_collect)).lock();
-    shd->add_and_compile(SHADER_TYPE_VERTEX, vert_shader);
-    shd->add_and_compile(SHADER_TYPE_FRAGMENT, frag_shader);
+    shd->add(SHADER_TYPE_VERTEX, vert_shader);
+    shd->add(SHADER_TYPE_FRAGMENT, frag_shader);
+    shd->compile_all();
+
     return shd->id();
 }
 

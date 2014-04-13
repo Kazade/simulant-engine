@@ -200,22 +200,15 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
 }
 
 void MaterialScript::handle_data_block(Material& mat, const std::string& data_type, const std::vector<std::string>& lines, MaterialPass* pass) {
-    ShaderPtr shader = mat.resource_manager().shader(pass->shader_id()).lock();
-
-    auto do_handle_data_block = [&]() {
-        if(str::upper(data_type) == "VERTEX") {
-            std::string source = str::join(lines, "\n");
-            shader->add_and_compile(SHADER_TYPE_VERTEX, source);
-        } else if(str::upper(data_type) == "FRAGMENT") {
-            std::string source = str::join(lines, "\n");
-            shader->add_and_compile(SHADER_TYPE_FRAGMENT, source);
-        } else {
-            throw SyntaxError("Invalid BEGIN_DATA block: " + data_type);
-        }
-    };
-
-    //Run in the main thread
-    mat.resource_manager().window().idle().run_sync(do_handle_data_block);
+    if(str::upper(data_type) == "VERTEX") {
+        std::string source = str::join(lines, "\n");
+        pass->__shader()->add(SHADER_TYPE_VERTEX, source);
+    } else if(str::upper(data_type) == "FRAGMENT") {
+        std::string source = str::join(lines, "\n");
+        pass->__shader()->add(SHADER_TYPE_FRAGMENT, source);
+    } else {
+        throw SyntaxError("Invalid BEGIN_DATA block: " + data_type);
+    }
 }
 
 void MaterialScript::handle_block(Material& mat,
@@ -269,7 +262,7 @@ void MaterialScript::handle_block(Material& mat,
         assert(current_technique); //Shouldn't happen, should be caught by parent check above
 
         //Create the pass with the default shader
-        uint32_t pass_number = current_technique->new_pass(mat.resource_manager().new_shader());
+        uint32_t pass_number = current_technique->new_pass();
         current_pass = &current_technique->pass(pass_number);
     }
 
@@ -315,13 +308,12 @@ void MaterialScript::handle_block(Material& mat,
             }
 
             if(end_block_type == "PASS") {
-                ShaderPtr shader = mat.resource_manager().shader(current_pass->shader_id()).lock();
-
-                //Apply any staged uniforms
-                apply_staged_uniforms(*shader);
-
-                //At the end of the pass, relink the shader in main thread
-                mat.resource_manager().window().idle().run_sync(std::bind(&ShaderProgram::relink, shader));
+                L_INFO(_u("Shader pass added {0}").format(mat.id()));
+                //Do OpenGL stuff with the pass
+                mat.resource_manager().window().idle().run_sync([&]() {
+                    current_pass->prepare_shaders();
+                    apply_staged_uniforms(*current_pass->__shader());
+                });
             }
             return; //Exit this function, we are done with this block
         } else if(str::starts_with(line, "SET")) {

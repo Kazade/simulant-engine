@@ -87,8 +87,8 @@ MaterialTechnique& Material::new_technique(const std::string& scheme) {
     return technique(scheme);
 }
 
-uint32_t MaterialTechnique::new_pass(ShaderID shader) {
-    passes_.push_back(MaterialPass::ptr(new MaterialPass(*this, shader)));
+uint32_t MaterialTechnique::new_pass() {
+    passes_.push_back(MaterialPass::ptr(new MaterialPass(*this)));
     return passes_.size() - 1; //Return the index
 }
 
@@ -96,7 +96,7 @@ MaterialPass& MaterialTechnique::pass(uint32_t index) {
     return *passes_.at(index);
 }
 
-MaterialPass::MaterialPass(MaterialTechnique& technique, ShaderID shader):
+MaterialPass::MaterialPass(MaterialTechnique& technique):
     technique_(technique),
     iteration_(ITERATE_ONCE),    
     max_iterations_(1),
@@ -105,12 +105,26 @@ MaterialPass::MaterialPass(MaterialTechnique& technique, ShaderID shader):
     depth_test_enabled_(true),
     point_size_(1) {
 
-    if(!shader) {
-        throw LogicError("You must specify a shader for a material pass");
-    } else {
-        ResourceManager& rm = technique_.material().resource_manager();
-        shader_ = rm.shader(shader).lock();
+    ResourceManager& rm = this->technique().material().resource_manager();
+
+    auto shader_id =  rm.new_shader();
+    shader_ = rm.shader(shader_id).lock(); //Store a pointer to the shader object so it doesn't get GC'd
+}
+
+void MaterialPass::set_shader_source(ShaderType type, const unicode &source) {
+    shader_sources_[type] = source;
+}
+
+/**
+ * Goes through all supplied shader sources and uploads the shaders to GL
+ */
+void MaterialPass::prepare_shaders() {
+    for(auto p: shader_sources_) {
+        shader_->add(p.first, p.second);
     }
+
+    shader_->compile_all();
+    shader_->relink();
 }
 
 ShaderID MaterialPass::shader_id() const {
@@ -196,7 +210,9 @@ MaterialTechnique& MaterialTechnique::operator=(const MaterialTechnique& rhs){
     return *this;
 }
 
-Material& Material::operator=(const Material& rhs) {        
+Material& Material::operator=(const Material& rhs) {
+    assert(0);
+
     if(this == &rhs) {
         return *this;
     }

@@ -388,6 +388,12 @@ enum PolygonMode {
     POLYGON_MODE_POINT
 };
 
+enum ShaderType {
+    SHADER_TYPE_VERTEX,
+    SHADER_TYPE_FRAGMENT,
+    SHADER_TYPE_MAX
+};
+
 typedef UniqueID<0> MeshID;
 typedef UniqueID<1> TextureID;
 typedef UniqueID<2> CameraID;

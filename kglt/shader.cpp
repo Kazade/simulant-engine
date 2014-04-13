@@ -115,20 +115,38 @@ void ShaderProgram::bind_attrib(uint32_t idx, const std::string& name) {
     check_and_log_error(__FILE__, __LINE__);
 }
 
-void ShaderProgram::add_and_compile(ShaderType type, const unicode &source) {
+void ShaderProgram::add(ShaderType type, const unicode& source) {
+    shader_sources_.insert(std::make_pair(type, ShaderState(source)));
+}
+
+void ShaderProgram::compile_all() {
     GLThreadCheck::check();
 
-    check_and_log_error(__FILE__, __LINE__);
+    for(auto p: shader_sources_) {
+        auto type = p.first;
+
+        if(!p.second.compiled) {
+            compile(type);
+        }
+    }
+
+    relink();
+}
+
+void ShaderProgram::compile(ShaderType type) {
+    auto source = shader_sources_.at(type).source;
+
+    if(shader_sources_.at(type).compiled) {
+        return;
+    }
 
     if(program_id_ == 0) {
         program_id_ = GLCheck<GLuint>(glCreateProgram);
-        check_and_log_error(__FILE__, __LINE__);
     }
 
     if(shader_ids_[type] != 0) {
         GLCheck(glDeleteShader, shader_ids_[type]);
         shader_ids_[type] = 0;
-        check_and_log_error(__FILE__, __LINE__);
     }
 
     GLuint shader_type;
@@ -144,23 +162,20 @@ void ShaderProgram::add_and_compile(ShaderType type, const unicode &source) {
         default:
             throw std::logic_error("Invalid shader type");
     }
-    check_and_log_error(__FILE__, __LINE__);
+
     GLuint shader = GLCheck<GLuint>(glCreateShader, shader_type);
-    check_and_log_error(__FILE__, __LINE__);
+
     shader_ids_[type] = shader;
 
     std::string encoded_string = source.encode();
     const char* c_str = encoded_string.c_str();
     GLCheck(glShaderSource, shader, 1, &c_str, nullptr);
-    check_and_log_error(__FILE__, __LINE__);
-
     GLCheck(glCompileShader, shader);
-    check_and_log_error(__FILE__, __LINE__);
 
     GLint compiled = 0;
     GLCheck(glGetShaderiv, shader, GL_COMPILE_STATUS, &compiled);
     if(!compiled) {
-        GLint length;                
+        GLint length;
         GLCheck(glGetShaderiv, shader, GL_INFO_LOG_LENGTH, &length);
 
         if(length < 0) {
@@ -175,14 +190,14 @@ void ShaderProgram::add_and_compile(ShaderType type, const unicode &source) {
         throw RuntimeError(std::string(log.begin(), log.end()));
     }
 
-    assert(program_id_);
-    assert(shader);
+    shader_sources_.at(type).compiled = true;
 
-    check_and_log_error(__FILE__, __LINE__);
     GLCheck(glAttachShader, program_id_, shader);
-    check_and_log_error(__FILE__, __LINE__);
+}
 
-    relink();
+void ShaderProgram::add_and_compile(ShaderType type, const unicode &source) {
+    add(type, source);
+    compile(type);
 }
 
 void ShaderProgram::relink() {

@@ -19,11 +19,8 @@
 #include "loadable.h"
 #include "generic/identifiable.h"
 #include "generic/managed.h"
-#include "types.h"
 
 namespace kglt {
-
-
 
 /*
   Automatic uniforms that are set by the renderer
@@ -136,6 +133,7 @@ namespace std {
 namespace kglt {
 
 class ShaderProgram;
+enum ShaderType;
 
 class ShaderParams {
 public:
@@ -182,12 +180,6 @@ private:
     std::unordered_map<ShaderAvailableAttributes, std::string> auto_attributes_;
 };
 
-enum ShaderType {
-    SHADER_TYPE_VERTEX,
-    SHADER_TYPE_FRAGMENT,
-    SHADER_TYPE_MAX
-};
-
 class ShaderProgram :
     public Resource,
     public Loadable,
@@ -200,6 +192,10 @@ public:
 
     void activate();
     void deactivate();
+
+    void add(ShaderType type, const unicode& source);
+    void compile(ShaderType type);
+    void compile_all();
 
     void add_and_compile(ShaderType type, const unicode& source);
 
@@ -237,6 +233,20 @@ private:
     friend class ShaderParams;
 
     static ShaderProgram* active_shader_;
+
+    struct ShaderState {
+        ShaderState(const ShaderState& other):
+            source(other.source),
+            compiled(other.compiled) {}
+
+        ShaderState(const unicode& source):
+            source(source) {}
+
+        unicode source;
+        bool compiled = false;
+    };
+
+    std::map<kglt::ShaderType, ShaderState> shader_sources_;
 };
 
 }

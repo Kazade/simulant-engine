@@ -90,7 +90,7 @@ class MaterialPass {
 public:
     typedef std::shared_ptr<MaterialPass> ptr;
 
-    MaterialPass(MaterialTechnique& technique, ShaderID shader);
+    MaterialPass(MaterialTechnique& technique);
 
     void set_texture_unit(uint32_t texture_unit_id, TextureID tex);
     void set_animated_texture_unit(uint32_t texture_unit_id, const std::vector<TextureID> textures, double duration);
@@ -143,6 +143,9 @@ public:
 
     MaterialTechnique& technique() { return technique_;  }
 
+    void set_shader_source(ShaderType type, const unicode& source);
+    void prepare_shaders();
+
 private:
     MaterialTechnique& technique_;
 
@@ -169,6 +172,8 @@ private:
     uint8_t reflection_texture_unit_;
 
     PolygonMode polygon_mode_ = POLYGON_MODE_FILL;
+
+    std::map<kglt::ShaderType, unicode> shader_sources_;
 };
 
 class MaterialTechnique {
@@ -179,7 +184,8 @@ public:
     MaterialTechnique(const MaterialTechnique& rhs);
     MaterialTechnique& operator=(const MaterialTechnique& rhs);
 
-    uint32_t new_pass(ShaderID shader);
+    uint32_t new_pass();
+
     MaterialPass& pass(uint32_t index);
     uint32_t pass_count() const { return passes_.size(); }
 
