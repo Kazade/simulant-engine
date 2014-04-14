@@ -17,36 +17,37 @@ public:
         //window->reset();
     }
 
-    void test_shader_params() {
-        kglt::ShaderID sid = window->new_shader();
-        assert_true(sid);
+    void test_shader() {
+        GPUProgram s;
 
-        auto material = window->material(window->default_material_id());
-        kglt::ShaderRef tmp = window->shader(material->technique().pass(0).shader_id());
-        kglt::ShaderProgram& s = *tmp.lock();
+        kglt::Mat4 ident;
 
-        kmMat4 ident;
-        kmMat4Identity(&ident);
+        assert_false(s.is_complete());
 
-        //Register the auto uniforms that the shader requires
-        s.params().register_auto(kglt::SP_AUTO_MODELVIEW_PROJECTION_MATRIX, "modelview_projection");
-        s.params().register_auto(kglt::SP_AUTO_MATERIAL_DIFFUSE, "diffuse_colour");
+        s.set_shader_source(SHADER_TYPE_VERTEX, "void main(){}");
+        s.set_shader_source(SHADER_TYPE_FRAGMENT, "void main(){}");
 
-        //Register the vertex attributes the shader needs
-        s.params().register_attribute(kglt::SP_ATTR_VERTEX_POSITION, "vertex_position");
-        s.params().register_attribute(kglt::SP_ATTR_VERTEX_NORMAL, "vertex_normal");
+        assert_false(s.is_compiled(SHADER_TYPE_VERTEX));
+        assert_false(s.is_compiled(SHADER_TYPE_FRAGMENT));
 
-        //Finally set some uniform constants manually
-        s.params().set_int("texture_1", 0);
-        s.params().set_mat4x4("matrix", ident);
+        s.compile(SHADER_TYPE_VERTEX);
 
-        assert_true(s.params().uses_auto(kglt::SP_AUTO_MODELVIEW_PROJECTION_MATRIX));
-        assert_true(s.params().uses_auto(kglt::SP_AUTO_MATERIAL_DIFFUSE));
-        assert_false(s.params().uses_auto(kglt::SP_AUTO_MATERIAL_SPECULAR));
+        assert_true(s.is_compiled(SHADER_TYPE_VERTEX));
+        assert_false(s.is_compiled(SHADER_TYPE_FRAGMENT));
 
-        assert_true(s.params().uses_attribute(kglt::SP_ATTR_VERTEX_NORMAL));
-        assert_true(s.params().uses_attribute(kglt::SP_ATTR_VERTEX_POSITION));
-        assert_false(s.params().uses_attribute(kglt::SP_ATTR_VERTEX_DIFFUSE));
+        s.build();
+
+        assert_true(s.is_compiled(SHADER_TYPE_VERTEX));
+        assert_true(s.is_compiled(SHADER_TYPE_FRAGMENT));
+        assert_true(s.is_complete());
+
+        s.uniforms().set_int("texture_1", 0);
+        s.uniforms().set_mat4x4("matrix", ident);
+
+        s.attributes().set_location("modelview_projection", 1);
+        auto loc = s.attributes().get_location("modelview_projection");
+
+        assert_equal(1, loc);
     }
 
 };
