@@ -52,7 +52,7 @@ void RootGroup::insert(SubActor &ent, uint8_t pass_number) {
     //Get the material for the actor, this is used to build the tree
     auto mat = stage()->material(ent.material_id());
 
-    MaterialPass& pass = mat->technique().pass(pass_number);
+    MaterialPass& pass = mat->pass(pass_number);
 
     //First, let's build the texture units
     RenderGroup* current = this;

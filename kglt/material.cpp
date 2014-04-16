@@ -17,7 +17,7 @@ TextureUnit::TextureUnit(MaterialPass &pass):
     kmMat4Identity(&texture_matrix_);
 
     //Initialize the texture unit to the default texture
-    ResourceManager& rm = pass.technique().material().resource_manager();
+    ResourceManager& rm = pass.material().resource_manager();
     texture_unit_ = rm.texture(rm.default_texture_id()).__object;
 }
 
@@ -29,7 +29,7 @@ TextureUnit::TextureUnit(MaterialPass &pass, TextureID tex_id):
     kmMat4Identity(&texture_matrix_);
 
     //Initialize the texture unit
-    ResourceManager& rm = pass.technique().material().resource_manager();
+    ResourceManager& rm = pass.material().resource_manager();
     texture_unit_ = rm.texture(tex_id).__object;
 }
 
@@ -42,7 +42,7 @@ TextureUnit::TextureUnit(MaterialPass &pass, std::vector<TextureID> textures, do
 
     kmMat4Identity(&texture_matrix_);
 
-    ResourceManager& rm = pass.technique().material().resource_manager();
+    ResourceManager& rm = pass.material().resource_manager();
 
     for(TextureID tid: textures) {
         animated_texture_units_.push_back(rm.texture(tid).__object);
@@ -61,8 +61,6 @@ Material::Material(ResourceManager *resource_manager, MaterialID mat_id):
     Resource(resource_manager),
     generic::Identifiable<MaterialID>(mat_id) {
 
-    new_technique(DEFAULT_MATERIAL_SCHEME); //Create the default technique
-
     update_connection_ = resource_manager->window().signal_step().connect(std::bind(&Material::update, this, std::placeholders::_1));
 }
 
@@ -70,34 +68,17 @@ Material::~Material() {
     update_connection_.disconnect();
 }
 
-MaterialTechnique& Material::technique(const std::string& scheme) {
-    if(!has_technique(scheme)) {
-        throw std::logic_error("No such technique with scheme: " + scheme);
-    }
-
-    return *techniques_[scheme];
-}
-
-MaterialTechnique& Material::new_technique(const std::string& scheme) {
-    if(has_technique(scheme)) {
-        throw std::logic_error("Technique with scheme already exists: " + scheme);
-    }
-
-    techniques_[scheme].reset(new MaterialTechnique(*this, scheme));
-    return technique(scheme);
-}
-
-uint32_t MaterialTechnique::new_pass() {
+uint32_t Material::new_pass() {
     passes_.push_back(MaterialPass::ptr(new MaterialPass(*this)));
     return passes_.size() - 1; //Return the index
 }
 
-MaterialPass& MaterialTechnique::pass(uint32_t index) {
+MaterialPass& Material::pass(uint32_t index) {
     return *passes_.at(index);
 }
 
-MaterialPass::MaterialPass(MaterialTechnique& technique):
-    technique_(technique),
+MaterialPass::MaterialPass(Material &material):
+    material_(material),
     iteration_(ITERATE_ONCE),    
     max_iterations_(1),
     blend_(BLEND_NONE),
@@ -105,7 +86,7 @@ MaterialPass::MaterialPass(MaterialTechnique& technique):
     depth_test_enabled_(true),
     point_size_(1) {
 
-    ResourceManager& rm = this->technique().material().resource_manager();
+    ResourceManager& rm = this->material().resource_manager();
 
     auto shader_id =  rm.new_shader();
     shader_ = rm.shader(shader_id).lock(); //Store a pointer to the shader object so it doesn't get GC'd
@@ -162,79 +143,15 @@ void MaterialPass::set_iteration(IterationType iter_type, uint32_t max) {
 void MaterialPass::set_albedo(float reflectiveness) {
     albedo_ = reflectiveness;
     if(is_reflective()) {
-        technique_.reflective_passes_.insert(this);
+        material().reflective_passes_.insert(this);
     } else {
-        technique_.reflective_passes_.erase(this);
+        material().reflective_passes_.erase(this);
     }
-}
-
-//Assignment stuff
-MaterialTechnique::MaterialTechnique(Material& mat, const std::string& scheme):
-    material_(mat) {
-    scheme_ = scheme;
-}
-
-MaterialTechnique::MaterialTechnique(const MaterialTechnique& rhs):
-    material_(rhs.material_) {
-
-    //FIXME: Make this reentrant (call operator=?)
-
-    scheme_ = rhs.scheme_;
-    passes_.clear();
-    reflective_passes_.clear();
-
-    for(MaterialPass::ptr pass: rhs.passes_) {
-        passes_.push_back(MaterialPass::ptr(new MaterialPass(*pass)));
-
-        if(rhs.reflective_passes_.find(pass.get()) != rhs.reflective_passes_.end()) {
-            reflective_passes_.insert(passes_[passes_.size()-1].get());
-        }
-    }
-}
-
-MaterialTechnique& MaterialTechnique::operator=(const MaterialTechnique& rhs){
-    //FIXME: Make this rentrant
-    material_ = rhs.material_;
-    scheme_ = rhs.scheme_;
-    passes_.clear();
-    reflective_passes_.clear();
-
-    for(MaterialPass::ptr pass: rhs.passes_) {
-        passes_.push_back(MaterialPass::ptr(new MaterialPass(*pass)));
-
-        if(rhs.reflective_passes_.find(pass.get()) != rhs.reflective_passes_.end()) {
-            reflective_passes_.insert(passes_[passes_.size()-1].get());
-        }
-    }
-
-    return *this;
-}
-
-Material& Material::operator=(const Material& rhs) {
-    assert(0);
-
-    if(this == &rhs) {
-        return *this;
-    }
-
-    std::unordered_map<std::string, MaterialTechnique::ptr> new_techniques;
-
-    for(auto p: rhs.techniques_) {
-        assert(p.second.get());
-        new_techniques[p.first] = MaterialTechnique::ptr(new MaterialTechnique(*p.second));
-    }
-
-    //Use std::swap to make reentrant
-    std::swap(techniques_, new_techniques);
-
-    return *this;
 }
 
 void Material::update(double dt) {
-    for(auto it = techniques_.begin(); it != techniques_.end(); ++it) {
-        assert((*it).second);
-
-        (*it).second->update(dt);
+    for(auto& p: passes_) {
+        p->update(dt);
     }
 }
 

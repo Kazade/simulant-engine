@@ -186,7 +186,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
             auto mat = window_.stage(pipeline_stage->stage_id())->material(ent->material_id());
 
             //Go through the actors material passes
-            for(uint8_t pass = 0; pass < mat->technique().pass_count(); ++pass) {
+            for(uint8_t pass = 0; pass < mat->pass_count(); ++pass) {
                 //Create a new render group if necessary
                 RootGroup::ptr group;
                 if(priority_queue.size() <= pass) {

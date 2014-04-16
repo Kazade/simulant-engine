@@ -43,7 +43,7 @@ bool ResourceManagerImpl::init() {
     default_material_id_ = new_material_from_file(default_material_filename(), false);
 
     //Set the default material's first texture to the default (white) texture
-    material(default_material_id_)->technique().pass(0).set_texture_unit(0, default_texture_id_);
+    material(default_material_id_)->pass(0).set_texture_unit(0, default_texture_id_);
 
     return true;
 }
@@ -227,19 +227,13 @@ MaterialID ResourceManagerImpl::new_material_with_alias_from_file(const unicode&
 
 MaterialID ResourceManagerImpl::new_material_from_texture(TextureID texture_id, bool garbage_collect) {
     MaterialID m = new_material_from_file(default_material_filename(), garbage_collect);
-    material(m)->technique().pass(0).set_texture_unit(0, texture_id);
+    material(m)->pass(0).set_texture_unit(0, texture_id);
     mark_material_as_uncollected(m); //FIXME: Race-y
     return m;
 }
 
 MaterialID ResourceManagerImpl::get_material_with_alias(const unicode& alias) {
     return MaterialManager::manager_get_by_alias(alias);
-}
-
-
-MaterialID ResourceManagerImpl::clone_material(MaterialID mat) {
-    MaterialID result = MaterialManager::manager_clone(mat);
-    return result;
 }
 
 ProtectedPtr<Material> ResourceManagerImpl::material(MaterialID mid) {

@@ -255,7 +255,7 @@ const IndexData& SubMesh::index_data() const {
 }
 
 void SubMesh::set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass) {
-    material_->technique().pass(pass).set_texture_unit(unit, tex);
+    material_->pass(pass).set_texture_unit(unit, tex);
 }
 
 SubMesh::~SubMesh() {

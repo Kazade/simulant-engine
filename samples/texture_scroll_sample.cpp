@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
     window->camera()->set_orthographic_projection_from_height(2.0, (float) window->width() / (float)window->height());
 
     while(window->run_frame()) {
-        stage->material(matid)->technique().pass(0).texture_unit(0).scroll_x(0.5 * window->delta_time());
+        stage->material(matid)->pass(0).texture_unit(0).scroll_x(0.5 * window->delta_time());
     }
 	return 0;
 }

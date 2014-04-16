@@ -17,6 +17,7 @@
 #include "generic/identifiable.h"
 #include "generic/cloneable.h"
 #include "types.h"
+#include "interfaces.h"
 
 namespace kglt {
 
@@ -86,11 +87,10 @@ enum IterationType {
 
 class MaterialTechnique;
 
-class MaterialPass {
+class MaterialPass:
+    public Managed<MaterialPass> {
 public:
-    typedef std::shared_ptr<MaterialPass> ptr;
-
-    MaterialPass(MaterialTechnique& technique);
+    MaterialPass(Material& material);
 
     void set_texture_unit(uint32_t texture_unit_id, TextureID tex);
     void set_animated_texture_unit(uint32_t texture_unit_id, const std::vector<TextureID> textures, double duration);
@@ -141,13 +141,13 @@ public:
     void set_polygon_mode(PolygonMode mode) { polygon_mode_ = mode; }
     PolygonMode polygon_mode() const { return polygon_mode_; }
 
-    MaterialTechnique& technique() { return technique_;  }
+    Material& material() { return material_;  }
 
     void set_shader_source(ShaderType type, const unicode& source);
     void prepare_shaders();
 
 private:
-    MaterialTechnique& technique_;
+    Material& material_;
 
     ShaderPtr shader_;
 
@@ -176,64 +176,31 @@ private:
     std::map<kglt::ShaderType, unicode> shader_sources_;
 };
 
-class MaterialTechnique {
-public:
-    typedef std::shared_ptr<MaterialTechnique> ptr;
-
-    MaterialTechnique(Material& mat, const std::string& scheme=DEFAULT_MATERIAL_SCHEME);
-    MaterialTechnique(const MaterialTechnique& rhs);
-    MaterialTechnique& operator=(const MaterialTechnique& rhs);
-
-    uint32_t new_pass();
-
-    MaterialPass& pass(uint32_t index);
-    uint32_t pass_count() const { return passes_.size(); }
-
-    const std::string& scheme() const { return scheme_; }
-
-    void update(double dt) {
-        for(MaterialPass::ptr& p: passes_) {
-            p->update(dt);
-        }
-    }
-
-    bool has_reflective_pass() const { return !reflective_passes_.empty(); }
-
-    Material& material() { return material_; }
-private:
-    Material& material_;
-
-    friend class MaterialPass;
-
-    std::string scheme_;
-    std::vector<MaterialPass::ptr> passes_;
-    std::set<MaterialPass*> reflective_passes_;
-};
-
 class Material :
     public Resource,
     public Loadable,
     public generic::Identifiable<MaterialID>,
-    public Managed<Material> {
+    public Managed<Material>,
+    public Updateable {
 
 public:
     Material(ResourceManager* resource_manager, MaterialID mat_id);
     ~Material();
 
-    MaterialTechnique& technique(const std::string& scheme=DEFAULT_MATERIAL_SCHEME);
-    MaterialTechnique& new_technique(const std::string& scheme);
-    bool has_technique(const std::string& scheme) const { return techniques_.find(scheme) != techniques_.end(); }
-
-    uint32_t technique_count() const { return techniques_.size(); }
-
     void update(double dt);
+        bool has_reflective_pass() const { return !reflective_passes_.empty(); }
 
-    Material& operator=(const Material& rhs);
+    uint32_t new_pass();
+    MaterialPass& pass(uint32_t index);
+    uint32_t pass_count() const { return passes_.size(); }
 
 private:
-    std::unordered_map<std::string, MaterialTechnique::ptr> techniques_;
+    std::vector<MaterialPass::ptr> passes_;
+    std::set<MaterialPass*> reflective_passes_;
 
     sig::connection update_connection_;
+
+    friend class MaterialPass;
 };
 
 }

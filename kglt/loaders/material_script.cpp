@@ -215,7 +215,7 @@ void MaterialScript::handle_block(Material& mat,
         const std::vector<std::string>& lines,
         uint16_t& current_line,
         const std::string& parent_block_type,
-        MaterialTechnique* current_technique, MaterialPass* current_pass) {
+        MaterialPass* current_pass) {
 
     std::string line = str::strip(lines[current_line]);
     current_line++;
@@ -226,44 +226,25 @@ void MaterialScript::handle_block(Material& mat,
     std::string block_type = str::upper(block_args[0]);
 
     const std::vector<std::string> VALID_BLOCKS = {
-        "PASS",
-        "TECHNIQUE"
+        "PASS"
     };
 
     if(!container::contains(VALID_BLOCKS, block_type)) {
         throw SyntaxError("Line: " + boost::lexical_cast<std::string>(current_line) + ". Invalid block type: " + block_type);
     }
 
-    if(block_type == "TECHNIQUE") {
+    if (block_type == "PASS") {
         if(!parent_block_type.empty()) {
-            throw SyntaxError("Line: " + boost::lexical_cast<std::string>(current_line) + ". Technique must be the top level block");
-        }
-
-        if(block_args.size() != 2) {
-            throw SyntaxError("Line: " + boost::lexical_cast<std::string>(current_line) + ". Techniques require a name argument");
-        }
-
-        std::string technique_name = str::strip(block_args[1], "\"");
-        if(!mat.has_technique(technique_name)) {
-            //Create the technique, strip quotes from the name
-            mat.new_technique(technique_name);
-        }
-        current_technique = &mat.technique(technique_name);
-
-    } else if (block_type == "PASS") {
-        if(parent_block_type != "TECHNIQUE") {
-            throw SyntaxError("Line: " + boost::lexical_cast<std::string>(current_line) + ". Passes must be a child of a technique");
+            throw SyntaxError("Line: " + boost::lexical_cast<std::string>(current_line) + ". Unexpected PASS block");
         }
 
         if(block_args.size() > 1) {
             throw SyntaxError("Line: " + boost::lexical_cast<std::string>(current_line) + ". Wrong number of arguments");
         }
 
-        assert(current_technique); //Shouldn't happen, should be caught by parent check above
-
         //Create the pass with the default shader
-        uint32_t pass_number = current_technique->new_pass();
-        current_pass = &current_technique->pass(pass_number);
+        uint32_t pass_number = mat.new_pass();
+        current_pass = &mat.pass(pass_number);
     }
 
     for(uint16_t i = current_line; current_line != lines.size(); ++i) {
@@ -295,7 +276,7 @@ void MaterialScript::handle_block(Material& mat,
             }
         } else if(str::starts_with(line, "BEGIN")) {
            // L_DEBUG("Found BEGIN block");
-            handle_block(mat, lines, current_line, block_type, current_technique, current_pass);
+            handle_block(mat, lines, current_line, block_type, current_pass);
         } else if(str::starts_with(line, "END")) {
            // L_DEBUG("Found END block");
             //If we hit an END block, the type must match the BEGIN
@@ -321,9 +302,7 @@ void MaterialScript::handle_block(Material& mat,
             std::string args_part = str::strip(str::split(line, "(")[1], ")");
             std::vector<std::string> args = str::split(args_part, " ");
 
-            if(block_type == "TECHNIQUE") {
-                handle_technique_set_command(mat, args, current_technique);
-            } else if (block_type == "PASS") {
+            if (block_type == "PASS") {
                 handle_pass_set_command(mat, args, current_pass);
             } else {
                 throw SyntaxError(unicode("Line: {0}. Block does not accept SET commands").format(current_line).encode());

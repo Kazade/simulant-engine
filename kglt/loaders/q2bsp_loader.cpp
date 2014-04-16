@@ -358,8 +358,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         }
 
         //Set the texture for unit 0
-        mat->technique().pass(0).set_texture_unit(0, tid);
-        mat->technique().pass(0).set_blending(BLEND_NONE);
+        mat->pass(0).set_texture_unit(0, tid);
+        mat->pass(0).set_blending(BLEND_NONE);
 
         tex_info_to_material[texinfo_idx] = mat->id();
         texinfo_idx++;

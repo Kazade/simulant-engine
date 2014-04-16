@@ -67,9 +67,9 @@ bool Background::init() {
     window().stage(stage_id_)->actor(actor_id_)->set_mesh(mesh);
     window().stage(stage_id_)->mesh(mesh)->set_material_id(material_id_);
 
-    window().stage(stage_id_)->material(material_id_)->technique().pass(0).set_blending(BLEND_ALPHA);
-    window().stage(stage_id_)->material(material_id_)->technique().pass(0).set_depth_test_enabled(false);
-    window().stage(stage_id_)->material(material_id_)->technique().pass(0).set_depth_write_enabled(false);
+    window().stage(stage_id_)->material(material_id_)->pass(0).set_blending(BLEND_ALPHA);
+    window().stage(stage_id_)->material(material_id_)->pass(0).set_depth_test_enabled(false);
+    window().stage(stage_id_)->material(material_id_)->pass(0).set_depth_write_enabled(false);
     return true;
 }
 
@@ -81,8 +81,8 @@ void Background::cleanup() {
 }
 
 void Background::update(double dt) {
-    window().stage(stage_id_)->material(material_id_)->technique().pass(0).texture_unit(0).scroll_x(x_rate_ * dt);
-    window().stage(stage_id_)->material(material_id_)->technique().pass(0).texture_unit(0).scroll_y(y_rate_ * dt);
+    window().stage(stage_id_)->material(material_id_)->pass(0).texture_unit(0).scroll_x(x_rate_ * dt);
+    window().stage(stage_id_)->material(material_id_)->pass(0).texture_unit(0).scroll_y(y_rate_ * dt);
 }
 
 void Background::set_horizontal_scroll_rate(float x_rate) {
@@ -94,7 +94,7 @@ void Background::set_vertical_scroll_rate(float y_rate) {
 }
 
 void Background::set_texture(TextureID tex) {
-    window().stage(stage_id_)->material(material_id_)->technique().pass(0).set_texture_unit(0, tex);
+    window().stage(stage_id_)->material(material_id_)->pass(0).set_texture_unit(0, tex);
 }
 
 void Background::set_resize_style(BackgroundResizeStyle style) {

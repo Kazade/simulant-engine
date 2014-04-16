@@ -43,12 +43,10 @@ private:
     unicode filename_;
     MaterialLanguageText text_;
 
-    void handle_block(
-            Material& mat,
+    void handle_block(Material& mat,
             const std::vector<std::string>& lines,
             uint16_t& current_line,
             const std::string& parent_block_type,
-            MaterialTechnique* current_technique=nullptr,
             MaterialPass* current_pass=nullptr);
 
     void handle_technique_set_command(Material& mat , const std::vector<std::string>& args, MaterialTechnique* technique);

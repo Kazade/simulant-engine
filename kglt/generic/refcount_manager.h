@@ -46,26 +46,6 @@ public:
         return id;
     }
 
-    ObjectIDType manager_clone(ObjectIDType orig) {
-        ObjectIDType id(0);
-        {
-            std::lock_guard<std::mutex> lock(manager_lock_);
-            id = NewIDGenerator()();
-
-            typename ObjectType::ptr new_obj(new ObjectType((Derived*)this, id));
-            objects_.insert(std::make_pair(id, new_obj));
-
-            creation_times_[id] = std::chrono::system_clock::now();
-            uncollected_.insert(id);
-
-            //Copy the original object
-            *new_obj = *manager_unlocked_get(orig).lock();
-        }
-
-        signal_post_create_(*objects_[id], id);
-        return id;
-    }
-
     uint32_t manager_count() const {
         return objects_.size();
     }

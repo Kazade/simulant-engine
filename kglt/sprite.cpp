@@ -208,8 +208,8 @@ void Sprite::set_spritesheet(TextureID texture_id, uint32_t frame_width,
     material_id_ = stage()->window().clone_default_material();
 
     stage()->mesh(mesh_id_)->set_material_id(material_id_);
-    stage()->material(material_id_)->technique().pass(0).set_texture_unit(0, texture_id);
-    stage()->material(material_id_)->technique().pass(0).set_blending(BLEND_ALPHA);
+    stage()->material(material_id_)->pass(0).set_texture_unit(0, texture_id);
+    stage()->material(material_id_)->pass(0).set_blending(BLEND_ALPHA);
 
     update_texture_coordinates();
 }

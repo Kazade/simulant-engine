@@ -185,7 +185,7 @@ void Boid::enable_debug(bool value) {
 
         {
             auto mat = actor_->stage()->material(mesh->submesh(normal_points_mesh_).material_id());
-            mat->technique().pass(0).set_point_size(5);
+            mat->pass(0).set_point_size(5);
         }
 
         for(uint32_t i = 0; i < path_.length(); ++i) {
