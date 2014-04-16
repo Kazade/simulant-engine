@@ -356,3 +356,5 @@ kglt/background.cpp
 kglt/generic/auto_weakptr.h
 kglt/managers.h
 kglt/managers.cpp
+kglt/gpu_program.h
+kglt/gpu_program.cpp

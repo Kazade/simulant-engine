@@ -6,6 +6,8 @@
 
 #include "global.h"
 
+#include "kglt/gpu_program.h"
+
 class ShaderTest : public TestCase {
 public:
     void set_up() {
@@ -18,34 +20,34 @@ public:
     }
 
     void test_shader() {
-        GPUProgram s;
+        GPUProgram::ptr s = GPUProgram::create();
 
         kglt::Mat4 ident;
 
-        assert_false(s.is_complete());
+        assert_false(s->is_complete());
 
-        s.set_shader_source(SHADER_TYPE_VERTEX, "void main(){}");
-        s.set_shader_source(SHADER_TYPE_FRAGMENT, "void main(){}");
+        s->set_shader_source(SHADER_TYPE_VERTEX, "uniform vec3 c; attribute vec3 tns; void main(){ gl_Position = vec4(c, tns.x); }");
+        s->set_shader_source(SHADER_TYPE_FRAGMENT, "void main(){ gl_FragColor = vec4(1.0); }");
 
-        assert_false(s.is_compiled(SHADER_TYPE_VERTEX));
-        assert_false(s.is_compiled(SHADER_TYPE_FRAGMENT));
+        assert_false(s->is_compiled(SHADER_TYPE_VERTEX));
+        assert_false(s->is_compiled(SHADER_TYPE_FRAGMENT));
 
-        s.compile(SHADER_TYPE_VERTEX);
+        s->compile(SHADER_TYPE_VERTEX);
 
-        assert_true(s.is_compiled(SHADER_TYPE_VERTEX));
-        assert_false(s.is_compiled(SHADER_TYPE_FRAGMENT));
+        assert_true(s->is_compiled(SHADER_TYPE_VERTEX));
+        assert_false(s->is_compiled(SHADER_TYPE_FRAGMENT));
 
-        s.build();
+        s->build();
 
-        assert_true(s.is_compiled(SHADER_TYPE_VERTEX));
-        assert_true(s.is_compiled(SHADER_TYPE_FRAGMENT));
-        assert_true(s.is_complete());
+        assert_true(s->is_compiled(SHADER_TYPE_VERTEX));
+        assert_true(s->is_compiled(SHADER_TYPE_FRAGMENT));
+        assert_true(s->is_complete());
 
-        s.uniforms().set_int("texture_1", 0);
-        s.uniforms().set_mat4x4("matrix", ident);
+        s->activate();
+        s->uniforms().set_vec3("c", kglt::Vec3());
 
-        s.attributes().set_location("modelview_projection", 1);
-        auto loc = s.attributes().get_location("modelview_projection");
+        s->attributes().set_location("tns", 1);
+        auto loc = s->attributes().get_location("tns");
 
         assert_equal(1, loc);
     }
