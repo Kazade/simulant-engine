@@ -8,7 +8,6 @@
 #include "generic/protected_ptr.h"
 
 #include "texture.h"
-#include "shader.h"
 #include "mesh.h"
 #include "material.h"
 #include "sound.h"
@@ -18,7 +17,6 @@ namespace kglt {
 class ResourceManagerImpl;
 
 typedef generic::RefCountedTemplatedManager<ResourceManagerImpl, Mesh, MeshID> MeshManager;
-typedef generic::RefCountedTemplatedManager<ResourceManagerImpl, ShaderProgram, ShaderID> ShaderManager;
 typedef generic::RefCountedTemplatedManager<ResourceManagerImpl, Material, MaterialID> MaterialManager;
 typedef generic::RefCountedTemplatedManager<ResourceManagerImpl, Texture, TextureID> TextureManager;
 typedef generic::RefCountedTemplatedManager<ResourceManagerImpl, Sound, SoundID> SoundManager;
@@ -76,17 +74,6 @@ public:
     virtual void mark_texture_as_uncollected(TextureID t) = 0;
     virtual void delete_texture(TextureID t) = 0;
 
-    //Shader functions
-    virtual ShaderID new_shader(bool garbage_collect=true) = 0;
-    virtual ShaderID new_shader_from_files(const unicode& vert_shader, const unicode& frag_shader, bool garbage_collect=true) = 0;
-
-    virtual ShaderRef shader(ShaderID t) = 0;
-    virtual const ShaderRef shader(ShaderID t) const = 0;
-
-    virtual bool has_shader(ShaderID m) const = 0;
-    virtual uint32_t shader_count() const = 0;
-
-
     //Sound functions
     virtual SoundID new_sound(bool garbage_collect=true) = 0;
     virtual SoundID new_sound_from_file(const unicode& path, bool garbage_collect=true) = 0;
@@ -134,7 +121,6 @@ public:
 class ResourceManagerImpl:
     public virtual ResourceManager,
     public MeshManager,
-    public ShaderManager,
     public MaterialManager,
     public TextureManager,
     public SoundManager,
@@ -180,16 +166,6 @@ public:
     void mark_texture_as_uncollected(TextureID t) override;
     void delete_texture(TextureID t) override;
 
-    ShaderID new_shader(bool garbage_collect=true) override;
-    ShaderID new_shader_from_files(const unicode& vert_shader, const unicode& frag_shader, bool garbage_collect=true) override;
-
-    ShaderRef shader(ShaderID s);
-    const ShaderRef shader(ShaderID s) const;
-    uint32_t shader_count() const;
-    ShaderProgram* __shader(ShaderID s);    
-
-    bool has_shader(ShaderID s) const;
-
     MaterialID new_material(bool garbage_collect=true) override;
     MaterialID new_material_from_file(const unicode& path, bool garbage_collect=true) override;
     MaterialID new_material_with_alias(const unicode& alias, bool garbage_collect=true) override;
@@ -220,11 +196,6 @@ public:
     bool has_sound(SoundID s) const;
     uint32_t sound_count() const;
 
-    std::pair<ShaderID, bool> find_shader(const std::string& name);
-    void post_create_shader_callback(ShaderProgram& obj, ShaderID id) {
-        shader_lookup_[obj.name()] = id;
-    }
-
     WindowBase& window() { assert(window_); return *window_; }
     const WindowBase& window() const { return *window_; }
 
@@ -241,7 +212,6 @@ public:
 
 private:
     WindowBase* window_;
-    std::map<std::string, ShaderID> shader_lookup_;
 
     MaterialID default_material_id_;
     TextureID default_texture_id_;

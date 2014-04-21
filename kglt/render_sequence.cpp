@@ -210,8 +210,12 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
         for(RenderPriority priority: RENDER_PRIORITIES) {
             QueueGroups::mapped_type& priority_queue = queues[priority];
             for(RootGroup::ptr pass_group: priority_queue) {
-                std::function<void (SubActor&)> f = [=](SubActor& subactor) {
-                    renderer_->render_subactor(subactor, pipeline_stage->camera_id());
+                std::function<void (SubActor&, MaterialPass&)> f = [=](SubActor& subactor, MaterialPass& pass) {
+                    renderer_->render_subactor(
+                        subactor,
+                        pipeline_stage->camera_id(),
+                        pass_group->get_root().current_program()
+                    );
                 };
                 pass_group->traverse(f);
             }

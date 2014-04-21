@@ -39,11 +39,14 @@ public:
     }
 
     ///Traverses the tree and calls the callback on each subactor we encounter
-    void traverse(std::function<void (SubActor&)> callback) {
-        bind();
+    void traverse(std::function<void (SubActor&, MaterialPass&)> callback) {
+        bind(get_root().current_program());
 
-        for(SubActor* actor: subactors_) {
-            callback(*actor);
+        for(auto& p: subactors_) {
+            assert(p.first);
+            assert(p.second);
+
+            callback(*p.first, *p.second);
         }
 
         for(std::pair<std::size_t, RenderGroups> groups: this->children_) {
@@ -52,7 +55,7 @@ public:
             }
         }
 
-        unbind();
+        unbind(get_root().current_program());
     }
 
     template<typename RenderGroupType>
@@ -118,12 +121,12 @@ public:
         }
     }
 
-    void add(SubActor* subactor) {
-        subactors_.push_back(subactor);
+    void add(SubActor* subactor, MaterialPass* pass) {
+        subactors_.push_back(std::make_pair(subactor, pass));
     }
 
-    virtual void bind() = 0;
-    virtual void unbind() = 0;
+    virtual void bind(GPUProgram* program) = 0;
+    virtual void unbind(GPUProgram* program) = 0;
 
     virtual RenderGroup& get_root() {
         return parent_->get_root();
@@ -138,6 +141,9 @@ public:
         }
     }
 
+    void set_current_program(GPUProgram* program) { current_program_ = program; }
+    GPUProgram* current_program() const { return current_program_; }
+
 protected:
     RenderGroup* parent_;
 
@@ -147,7 +153,9 @@ private:
 
     RenderGroupChildren children_;
 
-    std::list<SubActor*> subactors_;
+    std::list<std::pair<SubActor*, MaterialPass*> > subactors_;
+
+    GPUProgram* current_program_ = nullptr;
 };
 
 class RootGroup : public RenderGroup {
@@ -161,8 +169,8 @@ public:
         stage_id_(stage),
         camera_id_(camera){}
 
-    void bind();
-    void unbind() {}
+    void bind(GPUProgram* program);
+    void unbind(GPUProgram* program) {}
 
     RenderGroup& get_root() {
         return *this;
@@ -206,18 +214,18 @@ public:
         RenderGroup(parent),
         data_(data) {}
 
-    void bind();
-    void unbind();
+    void bind(GPUProgram* program);
+    void unbind(GPUProgram* program);
 
 private:
     DepthGroupData data_;
 };
 
 struct ShaderGroupData : public GroupData {
-    ShaderGroupData(ShaderProgram* program):
+    ShaderGroupData(GPUProgram* program):
         shader_(program) {}
 
-    ShaderProgram* shader_;
+    GPUProgram* shader_;
 
     std::size_t hash() const;
 };
@@ -232,8 +240,8 @@ public:
 
     }
 
-    void bind();
-    void unbind();
+    void bind(GPUProgram* program);
+    void unbind(GPUProgram* program);
 
 private:
     ShaderGroupData data_;
@@ -266,8 +274,8 @@ public:
 
     }
 
-    void bind();
-    void unbind();
+    void bind(GPUProgram* program);
+    void unbind(GPUProgram* program);
 
 private:
     MeshGroupData data_;
@@ -329,8 +337,8 @@ public:
 
     }
 
-    void bind();
-    void unbind();
+    void bind(GPUProgram* program);
+    void unbind(GPUProgram* program);
 
 private:
     MaterialGroupData data_;
@@ -363,20 +371,20 @@ public:
 
     }
 
-    void bind();
-    void unbind();
+    void bind(GPUProgram* program);
+    void unbind(GPUProgram* program);
 
 private:
     TextureGroupData data_;
 };
 
 struct TextureMatrixGroupData : public GroupData {
-    TextureMatrixGroupData(uint8_t texture_unit, kmMat4 matrix):
+    TextureMatrixGroupData(uint8_t texture_unit, Mat4 matrix):
         unit(texture_unit),
         matrix(matrix) {}
 
     uint8_t unit;
-    kmMat4 matrix;
+    Mat4 matrix;
 
     std::size_t hash() const {
         size_t seed = 0;
@@ -399,8 +407,8 @@ public:
 
     }
 
-    void bind();
-    void unbind();
+    void bind(GPUProgram* program);
+    void unbind(GPUProgram* program);
 
 private:
     TextureMatrixGroupData data_;
@@ -430,8 +438,8 @@ public:
 
     }
 
-    void bind();
-    void unbind();
+    void bind(GPUProgram* program);
+    void unbind(GPUProgram* program);
 
 private:
     LightGroupData data_;
@@ -460,8 +468,8 @@ public:
         RenderGroup(parent),
         data_(data) {}
 
-    void bind();
-    void unbind();
+    void bind(GPUProgram* program);
+    void unbind(GPUProgram* program);
 
 private:
     BlendGroupData data_;
@@ -492,8 +500,8 @@ public:
         RenderGroup(parent),
         data_(data) {}
 
-    void bind();
-    void unbind();
+    void bind(GPUProgram* program);
+    void unbind(GPUProgram* program);
 
 private:
     RenderSettingsData data_;

@@ -1,4 +1,5 @@
 #include <kazbase/exceptions.h>
+#include <kazbase/hash/md5.h>
 
 #include "utils/gl_error.h"
 #include "gpu_program.h"
@@ -12,7 +13,7 @@ UniformManager::UniformManager(GPUProgram &program):
     program.signal_linked().connect(std::bind(&UniformManager::clear_uniform_cache, this));
 }
 
-int32_t UniformManager::locate_uniform(const unicode& uniform_name) {
+int32_t UniformManager::locate(const unicode& uniform_name) {
     GLThreadCheck::check();
     if(!program_.is_current()) {
         throw LogicError("Attempted to modify GPU program object without making it active");
@@ -38,17 +39,17 @@ int32_t UniformManager::locate_uniform(const unicode& uniform_name) {
 }
 
 void UniformManager::set_int(const unicode& uniform_name, const int32_t value) {
-    int32_t loc = locate_uniform(uniform_name);
+    int32_t loc = locate(uniform_name);
     GLCheck(glUniform1i, loc, value);
 }
 
 void UniformManager::set_float(const unicode& uniform_name, const float value) {
-    int32_t loc = locate_uniform(uniform_name);
+    int32_t loc = locate(uniform_name);
     GLCheck(glUniform1f, loc, value);
 }
 
 void UniformManager::set_mat4x4(const unicode& uniform_name, const Mat4& matrix) {
-    int32_t loc = locate_uniform(uniform_name);
+    int32_t loc = locate(uniform_name);
     float mat[16];
     unsigned char i = 16;
     while(i--) { mat[i] = (float) matrix.mat[i]; }
@@ -56,7 +57,7 @@ void UniformManager::set_mat4x4(const unicode& uniform_name, const Mat4& matrix)
 }
 
 void UniformManager::set_mat3x3(const unicode& uniform_name, const Mat3& matrix) {
-    int32_t loc = locate_uniform(uniform_name);
+    int32_t loc = locate(uniform_name);
     float mat[9];
     unsigned char i = 9;
     while(i--) { mat[i] = (float) matrix.mat[i]; }
@@ -64,12 +65,12 @@ void UniformManager::set_mat3x3(const unicode& uniform_name, const Mat3& matrix)
 }
 
 void UniformManager::set_vec3(const unicode& uniform_name, const Vec3& values) {
-    int32_t loc = locate_uniform(uniform_name);
+    int32_t loc = locate(uniform_name);
     GLCheck(glUniform3fv, loc, 1, (GLfloat*) &values);
 }
 
 void UniformManager::set_vec4(const unicode& uniform_name, const Vec4& values) {
-    int32_t loc = locate_uniform(uniform_name);
+    int32_t loc = locate(uniform_name);
     GLCheck(glUniform4fv, loc, 1, (GLfloat*) &values);
 }
 
@@ -80,7 +81,7 @@ void UniformManager::set_colour(const unicode& uniform_name, const Colour& value
 }
 
 void UniformManager::set_mat4x4_array(const unicode& uniform_name, const std::vector<Mat4>& matrices) {
-    int32_t loc = locate_uniform(uniform_name);
+    int32_t loc = locate(uniform_name);
     GLCheck(glUniformMatrix4fv, loc, matrices.size(), false, (GLfloat*) &matrices[0]);
 }
 
@@ -88,12 +89,16 @@ void UniformManager::clear_uniform_cache() {
     uniform_cache_.clear();
 }
 
+void UniformManager::register_auto(ShaderAvailableAuto uniform, const unicode &var_name) {
+    auto_uniforms_[uniform] = var_name;
+}
+
 //===================== END UNIFORMS =======================================
 
 AttributeManager::AttributeManager(GPUProgram &program):
     program_(program) {}
 
-int32_t AttributeManager::get_location(const unicode& attribute) {
+int32_t AttributeManager::locate(const unicode& attribute) {
     GLThreadCheck::check();
 
     if(!program_.is_complete()) {
@@ -125,6 +130,10 @@ void AttributeManager::set_location(const unicode& attribute, int32_t location) 
     //Is this always true? Can we just assume that the location was given to that attribute?
     //The docs don't seem to suggest that it can fail...
     attribute_cache_[attribute] = location;
+}
+
+void AttributeManager::register_auto(ShaderAvailableAttributes attr, const unicode &var_name) {
+    auto_attributes_[attr] = var_name;
 }
 
 //===================== END ATTRIBS ========================================
@@ -182,6 +191,8 @@ void GPUProgram::set_shader_source(ShaderType type, const unicode& source) {
 
     is_linked_ = false; //We're no longer linked
     shaders_[type] = new_shader;
+    shader_hashes_[type] = hashlib::MD5(source.encode()).hex_digest();
+    rebuild_hash();
 }
 
 
@@ -251,6 +262,16 @@ const bool GPUProgram::is_complete() const {
 
 const bool GPUProgram::is_compiled(ShaderType type) const {
     return shaders_.at(type).is_compiled;
+}
+
+void GPUProgram::rebuild_hash() {
+    hashlib::MD5 combined_hash;
+
+    for(auto p: shader_hashes_) {
+        combined_hash.update(p.second.encode());
+    }
+
+    md5_shader_hash_ = combined_hash.hex_digest();
 }
 
 void GPUProgram::link() {

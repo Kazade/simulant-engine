@@ -65,7 +65,7 @@ public:
 
     kmVec3 project_point(ViewportID vid, const kmVec3& point);
 
-    const kmMat4& view_matrix() { return view_matrix_; }
+    const Mat4& view_matrix() { return view_matrix_; }
     const Mat4& projection_matrix() const { return projection_matrix_; }
 
     Frustum& frustum() { return frustum_; }
@@ -92,7 +92,7 @@ private:
     Frustum frustum_;
 
     kglt::Mat4 transform_;
-    kmMat4 view_matrix_;
+    Mat4 view_matrix_;
     Mat4 projection_matrix_;
 
     void update_frustum();

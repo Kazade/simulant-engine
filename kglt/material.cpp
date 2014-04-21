@@ -4,8 +4,30 @@
 #include "window_base.h"
 #include "material.h"
 #include "resource_manager.h"
+#include "gpu_program.h"
 
 namespace kglt {
+
+static const unicode DEFAULT_VERT_SHADER = R"(
+    attribute vec3 vertex_position;
+    attribute vec4 vertex_diffuse;
+
+    uniform mat4 modelview_projection;
+
+    varying vec4 diffuse;
+
+    void main() {
+        diffuse = vertex_diffuse;
+        gl_Position = (modelview_projection * vec4(vertex_position, 1.0));
+    }
+)";
+
+static const unicode DEFAULT_FRAG_SHADER = R"(
+    varying vec4 diffuse;
+    void main() {
+        gl_FragColor = diffuse;
+    }
+)";
 
 static const uint32_t MAX_TEXTURE_UNITS = 8;
 
@@ -86,30 +108,10 @@ MaterialPass::MaterialPass(Material &material):
     depth_test_enabled_(true),
     point_size_(1) {
 
-    ResourceManager& rm = this->material().resource_manager();
-
-    auto shader_id =  rm.new_shader();
-    shader_ = rm.shader(shader_id).lock(); //Store a pointer to the shader object so it doesn't get GC'd
-}
-
-void MaterialPass::set_shader_source(ShaderType type, const unicode &source) {
-    shader_sources_[type] = source;
-}
-
-/**
- * Goes through all supplied shader sources and uploads the shaders to GL
- */
-void MaterialPass::prepare_shaders() {
-    for(auto p: shader_sources_) {
-        shader_->add(p.first, p.second);
-    }
-
-    shader_->compile_all();
-    shader_->relink();
-}
-
-ShaderID MaterialPass::shader_id() const {
-    return shader_->id();
+    //Create and build the default GPUProgram
+    program_ = GPUProgram::create();
+    program_->set_shader_source(SHADER_TYPE_VERTEX, DEFAULT_VERT_SHADER);
+    program_->set_shader_source(SHADER_TYPE_FRAGMENT, DEFAULT_FRAG_SHADER);
 }
 
 void MaterialPass::set_texture_unit(uint32_t texture_unit_id, TextureID tex) {

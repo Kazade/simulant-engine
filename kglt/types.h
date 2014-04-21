@@ -397,7 +397,6 @@ enum ShaderType {
 typedef UniqueID<0> MeshID;
 typedef UniqueID<1> TextureID;
 typedef UniqueID<2> CameraID;
-typedef UniqueID<3> ShaderID;
 typedef UniqueID<4> MaterialID;
 typedef UniqueID<5> LightID;
 typedef UniqueID<6> StageID;
@@ -428,10 +427,6 @@ typedef std::shared_ptr<Texture> TexturePtr;
 class Sound;
 typedef std::weak_ptr<Sound> SoundRef;
 typedef std::shared_ptr<Sound> SoundPtr;
-
-class ShaderProgram;
-typedef std::weak_ptr<ShaderProgram> ShaderRef;
-typedef std::shared_ptr<ShaderProgram> ShaderPtr;
 
 class Actor;
 typedef std::shared_ptr<Actor> ActorPtr;
@@ -466,6 +461,9 @@ typedef AutoWeakPtr<RenderSequence> RenderSequencePtr;
 class Frustum;
 class WindowBase;
 class Partitioner;
+
+class GPUProgram;
+typedef std::shared_ptr<GPUProgram> GPUProgramPtr;
 
 namespace physics {
     class ODEEngine;

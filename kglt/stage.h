@@ -214,22 +214,6 @@ public:
     virtual uint32_t texture_count() const { return window().texture_count(); }
     virtual void mark_texture_as_uncollected(TextureID t) { window().mark_texture_as_uncollected(t); }
 
-    //Shader functions
-    virtual ShaderID new_shader(bool garbage_collect=true) {
-        return window().new_shader(garbage_collect);
-    }
-
-    virtual ShaderID new_shader_from_files(const unicode &vert_shader, const unicode &frag_shader, bool garbage_collect=true) {
-        return window().new_shader_from_files(vert_shader, frag_shader, garbage_collect);
-    }
-
-    virtual ShaderRef shader(ShaderID s) { return window().shader(s); }
-    virtual const ShaderRef shader(ShaderID s) const { return window().shader(s); }
-
-    virtual bool has_shader(ShaderID s) const { return window().has_shader(s); }
-    virtual uint32_t shader_count() const { return window().shader_count(); }
-
-
     //Sound functions
     virtual SoundID new_sound(bool garbage_collect=true) override { return window().new_sound(garbage_collect); }
     virtual SoundID new_sound_from_file(const unicode& path, bool garbage_collect=true) override {

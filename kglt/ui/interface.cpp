@@ -76,8 +76,9 @@ public:
         unicode vert_shader = window_.resource_locator().read_file("kglt/materials/ui.vert")->str();
         unicode frag_shader = window_.resource_locator().read_file("kglt/materials/ui.frag")->str();
 
-        shader_ = window_.new_shader_from_files(vert_shader, frag_shader);
-        shader_reference_ = window_.shader(shader_).lock(); //Prevent GC
+        shader_ = GPUProgram::create();
+        shader_->set_shader_source(SHADER_TYPE_VERTEX, vert_shader);
+        shader_->set_shader_source(SHADER_TYPE_FRAGMENT, frag_shader);
     }
 
     bool LoadTexture(Rocket::Core::TextureHandle& texture_handle, Rocket::Core::Vector2i& texture_dimensions, const Rocket::Core::String& source) {
@@ -136,13 +137,9 @@ public:
         new_group->vao->vertex_buffer_bind();
         new_group->vao->index_buffer_bind();
 
-        int pos_attrib = -1, colour_attrib = -1, texcoord_attrib = -1;
-        {
-            auto shader = window_.shader(shader_).lock();
-            pos_attrib = shader->get_attrib_loc("position");
-            colour_attrib = shader->get_attrib_loc("colour");
-            texcoord_attrib = shader->get_attrib_loc("tex_coord");
-        }
+        int pos_attrib = shader_->attributes().locate("position");
+        int colour_attrib = shader_->attributes().locate("colour");
+        int texcoord_attrib = shader_->attributes().locate("tex_coord");
 
         GLCheck(glEnableVertexAttribArray, pos_attrib);
         GLCheck(glVertexAttribPointer,
@@ -198,13 +195,9 @@ public:
 
         prepare_shader(translation);
 
-        int pos_attrib = -1, colour_attrib = -1, texcoord_attrib = -1;
-        {
-            auto shader = window_.shader(shader_).lock();
-            pos_attrib = shader->get_attrib_loc("position");
-            colour_attrib = shader->get_attrib_loc("colour");
-            texcoord_attrib = shader->get_attrib_loc("tex_coord");
-        }
+        int pos_attrib = shader_->attributes().locate("position");
+        int colour_attrib = shader_->attributes().locate("colour");
+        int texcoord_attrib = shader_->attributes().locate("tex_coord");
 
         GLCheck(glEnableVertexAttribArray, pos_attrib);
         GLCheck(glVertexAttribPointer, 
@@ -243,10 +236,11 @@ public:
         kmMat4Translation(&transform, translation.x, translation.y, 0);
         transform = this->_projection_matrix * transform;
 
-        auto shader = window_.shader(shader_).lock();
-        shader->activate();
-        shader->params().set_mat4x4("modelview_projection", transform);
-        shader->params().set_int("texture_unit", 0);
+        shader_->build(); //Build if necessary
+
+        shader_->activate();
+        shader_->uniforms().set_mat4x4("modelview_projection", transform);
+        shader_->uniforms().set_int("texture_unit", 0);
     }
 
     void RenderCompiledGeometry(Rocket::Core::CompiledGeometryHandle geometry, const Rocket::Core::Vector2f& translation) {
@@ -311,8 +305,7 @@ public:
 private:
     WindowBase& window_;
 
-    ShaderID shader_ = ShaderID();
-    ShaderProgram::ptr shader_reference_;
+    GPUProgram::ptr shader_;
 
     std::map<Rocket::Core::TextureHandle, TexturePtr> textures_;
 };

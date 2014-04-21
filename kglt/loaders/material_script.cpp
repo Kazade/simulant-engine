@@ -31,19 +31,6 @@ void MaterialScript::handle_technique_set_command(Material& mat, const std::vect
     throw SyntaxError("Invalid SET command for technique: " + type);
 }
 
-void MaterialScript::apply_staged_uniforms(ShaderProgram& program) {
-    /*
-     *  Because the material script will probably define the uniforms before the
-     *  shader code is available, we need to stage any uniform params and apply them
-     *  at the end of the pass block.
-     */
-    for(std::pair<std::string, int32_t> p: staged_integer_uniforms_) {
-        program.params().set_int(p.first, p.second);
-    }
-
-    staged_integer_uniforms_.clear();
-}
-
 void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<std::string>& args, MaterialPass* pass) {
     if(args.size() < 2) {
         throw SyntaxError("Wrong number of arguments for SET command");
@@ -71,22 +58,23 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
         }
 
         {
-            ShaderPtr shader = mat.resource_manager().shader(pass->shader_id()).lock();
+            auto shader = pass->program();
+
             std::string variable_name = str::strip(args[2], "\"");
             if(arg_1 == "POSITION") {
-                shader->params().register_attribute(SP_ATTR_VERTEX_POSITION, variable_name);
+                shader->attributes().register_auto(SP_ATTR_VERTEX_POSITION, variable_name);
             } else if(arg_1 == "TEXCOORD0") {
-                shader->params().register_attribute(SP_ATTR_VERTEX_TEXCOORD0, variable_name);
+                shader->attributes().register_auto(SP_ATTR_VERTEX_TEXCOORD0, variable_name);
             } else if(arg_1 == "TEXCOORD1") {
-                shader->params().register_attribute(SP_ATTR_VERTEX_TEXCOORD1, variable_name);
+                shader->attributes().register_auto(SP_ATTR_VERTEX_TEXCOORD1, variable_name);
             } else if(arg_1 == "TEXCOORD2") {
-                shader->params().register_attribute(SP_ATTR_VERTEX_TEXCOORD2, variable_name);
+                shader->attributes().register_auto(SP_ATTR_VERTEX_TEXCOORD2, variable_name);
             } else if(arg_1 == "TEXCOORD3") {
-                shader->params().register_attribute(SP_ATTR_VERTEX_TEXCOORD3, variable_name);
+                shader->attributes().register_auto(SP_ATTR_VERTEX_TEXCOORD3, variable_name);
             } else if(arg_1 == "NORMAL") {
-                shader->params().register_attribute(SP_ATTR_VERTEX_NORMAL, variable_name);
+                shader->attributes().register_auto(SP_ATTR_VERTEX_NORMAL, variable_name);
             } else if(arg_1 == "DIFFUSE") {
-                shader->params().register_attribute(SP_ATTR_VERTEX_DIFFUSE, variable_name);
+                shader->attributes().register_auto(SP_ATTR_VERTEX_DIFFUSE, variable_name);
             } else {
                 throw SyntaxError("Unhandled attribute: " + arg_1);
             }
@@ -106,57 +94,56 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
                 throw SyntaxError("Invalid INT value passed to SET(UNIFORM)");
             }
 
-            stage_uniform(variable_name, value);
+            pass->stage_uniform(variable_name, value);
         } else {
             throw SyntaxError("Unhandled type passed to SET(UNIFORM)");
         }
 
     } else if(type == "AUTO_UNIFORM") {
-        ShaderPtr shader = mat.resource_manager().shader(pass->shader_id()).lock();
         std::string variable_name = str::strip(args[2], "\"");
 
         if(arg_1 == "VIEW_MATRIX") {
-            shader->params().register_auto(SP_AUTO_VIEW_MATRIX, variable_name);
+            pass->program()->uniforms().register_auto(SP_AUTO_VIEW_MATRIX, variable_name);
         } else if(arg_1 == "MODELVIEW_MATRIX") {
-            shader->params().register_auto(SP_AUTO_MODELVIEW_MATRIX, variable_name);
+            pass->program()->uniforms().register_auto(SP_AUTO_MODELVIEW_MATRIX, variable_name);
         } else if(arg_1 == "MODELVIEW_PROJECTION_MATRIX") {
-            shader->params().register_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX, variable_name);
+            pass->program()->uniforms().register_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX, variable_name);
         } else if(arg_1 == "INVERSE_TRANSPOSE_MODELVIEW_PROJECTION_MATRIX" || arg_1 == "NORMAL_MATRIX") {
-            shader->params().register_auto(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX, variable_name);
+            pass->program()->uniforms().register_auto(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX, variable_name);
         } else if(arg_1 == "TEXTURE_MATRIX0") {
-            shader->params().register_auto(SP_AUTO_MATERIAL_TEX_MATRIX0, variable_name);
+            pass->program()->uniforms().register_auto(SP_AUTO_MATERIAL_TEX_MATRIX0, variable_name);
         } else if(arg_1 == "TEXTURE_MATRIX1") {
-            shader->params().register_auto(SP_AUTO_MATERIAL_TEX_MATRIX1, variable_name);
+            pass->program()->uniforms().register_auto(SP_AUTO_MATERIAL_TEX_MATRIX1, variable_name);
         } else if(arg_1 == "TEXTURE_MATRIX2") {
-            shader->params().register_auto(SP_AUTO_MATERIAL_TEX_MATRIX2, variable_name);
+            pass->program()->uniforms().register_auto(SP_AUTO_MATERIAL_TEX_MATRIX2, variable_name);
         } else if(arg_1 == "TEXTURE_MATRIX3") {
-            shader->params().register_auto(SP_AUTO_MATERIAL_TEX_MATRIX3, variable_name);
+            pass->program()->uniforms().register_auto(SP_AUTO_MATERIAL_TEX_MATRIX3, variable_name);
         } else if(arg_1 == "LIGHT_GLOBAL_AMBIENT") {            
-            shader->params().register_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT, variable_name);
+            pass->program()->uniforms().register_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT, variable_name);
         } else if(arg_1 == "LIGHT_POSITION") {
-            shader->params().register_auto(SP_AUTO_LIGHT_POSITION, variable_name);
+            pass->program()->uniforms().register_auto(SP_AUTO_LIGHT_POSITION, variable_name);
         } else if(arg_1 == "LIGHT_AMBIENT") {
-            shader->params().register_auto(SP_AUTO_LIGHT_AMBIENT, variable_name);
+            pass->program()->uniforms().register_auto(SP_AUTO_LIGHT_AMBIENT, variable_name);
         } else if(arg_1 == "LIGHT_DIFFUSE") {
-            shader->params().register_auto(SP_AUTO_LIGHT_DIFFUSE, variable_name);
+            pass->program()->uniforms().register_auto(SP_AUTO_LIGHT_DIFFUSE, variable_name);
         } else if(arg_1 == "LIGHT_SPECULAR") {
-            shader->params().register_auto(SP_AUTO_LIGHT_SPECULAR, variable_name);
+            pass->program()->uniforms().register_auto(SP_AUTO_LIGHT_SPECULAR, variable_name);
         } else if(arg_1 == "LIGHT_CONSTANT_ATTENUATION") {
-            shader->params().register_auto(SP_AUTO_LIGHT_CONSTANT_ATTENUATION, variable_name);
+            pass->program()->uniforms().register_auto(SP_AUTO_LIGHT_CONSTANT_ATTENUATION, variable_name);
         } else if(arg_1 == "LIGHT_LINEAR_ATTENUATION") {
-            shader->params().register_auto(SP_AUTO_LIGHT_LINEAR_ATTENUATION, variable_name);
+            pass->program()->uniforms().register_auto(SP_AUTO_LIGHT_LINEAR_ATTENUATION, variable_name);
         } else if(arg_1 == "LIGHT_QUADRATIC_ATTENUATION") {
-            shader->params().register_auto(SP_AUTO_LIGHT_QUADRATIC_ATTENUATION, variable_name);
+            pass->program()->uniforms().register_auto(SP_AUTO_LIGHT_QUADRATIC_ATTENUATION, variable_name);
         } else if(arg_1 == "MATERIAL_SHININESS") {
-            shader->params().register_auto(SP_AUTO_MATERIAL_SHININESS, variable_name);
+            pass->program()->uniforms().register_auto(SP_AUTO_MATERIAL_SHININESS, variable_name);
         } else if(arg_1 == "MATERIAL_AMBIENT") {
-            shader->params().register_auto(SP_AUTO_MATERIAL_AMBIENT, variable_name);
+            pass->program()->uniforms().register_auto(SP_AUTO_MATERIAL_AMBIENT, variable_name);
         } else if(arg_1 == "MATERIAL_DIFFUSE") {
-            shader->params().register_auto(SP_AUTO_MATERIAL_DIFFUSE, variable_name);
+            pass->program()->uniforms().register_auto(SP_AUTO_MATERIAL_DIFFUSE, variable_name);
         } else if(arg_1 == "MATERIAL_SPECULAR") {
-            shader->params().register_auto(SP_AUTO_MATERIAL_SPECULAR, variable_name);
+            pass->program()->uniforms().register_auto(SP_AUTO_MATERIAL_SPECULAR, variable_name);
         } else if(arg_1 == "ACTIVE_TEXTURE_UNITS") {
-            shader->params().register_auto(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS, variable_name);
+            pass->program()->uniforms().register_auto(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS, variable_name);
         } else {
             throw SyntaxError("Unhandled auto-uniform: " + arg_1);
         }
@@ -202,10 +189,10 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
 void MaterialScript::handle_data_block(Material& mat, const std::string& data_type, const std::vector<std::string>& lines, MaterialPass* pass) {
     if(str::upper(data_type) == "VERTEX") {
         std::string source = str::join(lines, "\n");
-        pass->__shader()->add(SHADER_TYPE_VERTEX, source);
+        pass->program()->set_shader_source(SHADER_TYPE_VERTEX, source);
     } else if(str::upper(data_type) == "FRAGMENT") {
         std::string source = str::join(lines, "\n");
-        pass->__shader()->add(SHADER_TYPE_FRAGMENT, source);
+        pass->program()->set_shader_source(SHADER_TYPE_FRAGMENT, source);
     } else {
         throw SyntaxError("Invalid BEGIN_DATA block: " + data_type);
     }
@@ -290,11 +277,6 @@ void MaterialScript::handle_block(Material& mat,
 
             if(end_block_type == "PASS") {
                 L_INFO(_u("Shader pass added {0}").format(mat.id()));
-                //Do OpenGL stuff with the pass
-                mat.resource_manager().window().idle().run_sync([&]() {
-                    current_pass->prepare_shaders();
-                    apply_staged_uniforms(*current_pass->__shader());
-                });
             }
             return; //Exit this function, we are done with this block
         } else if(str::starts_with(line, "SET")) {

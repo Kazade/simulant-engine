@@ -6,7 +6,7 @@
 #include "light.h"
 #include "material.h"
 #include "stage.h"
-#include "shader.h"
+#include "gpu_program.h"
 #include "camera.h"
 #include "partitioner.h"
 #include "window_base.h"
@@ -14,7 +14,7 @@
 
 namespace kglt {
 
-void RootGroup::bind() {
+void RootGroup::bind(GPUProgram *program) {
 }
 
 ProtectedPtr<CameraProxy> RootGroup::camera() {
@@ -33,16 +33,16 @@ void RootGroup::generate_mesh_groups(RenderGroup* parent, SubActor& ent, Materia
         iteration_count = pass.max_iterations();
         for(uint8_t i = 0; i < iteration_count; ++i) {
             //FIXME: What exactly is this for? Should we pass an iteration counter to the shader?
-            parent->get_or_create<MeshGroup>(MeshGroupData(ent._parent().mesh_id(), ent.submesh_id())).add(&ent);
+            parent->get_or_create<MeshGroup>(MeshGroupData(ent._parent().mesh_id(), ent.submesh_id())).add(&ent, &pass);
         }
     } else if (pass.iteration() == ITERATE_ONCE_PER_LIGHT) {
         iteration_count = std::min<uint32_t>(lights.size(), pass.max_iterations());
         for(uint8_t i = 0; i < iteration_count; ++i) {
             parent->get_or_create<LightGroup>(LightGroupData(lights[i])).
-                    get_or_create<MeshGroup>(MeshGroupData(ent._parent().mesh_id(), ent.submesh_id())).add(&ent);
+                    get_or_create<MeshGroup>(MeshGroupData(ent._parent().mesh_id(), ent.submesh_id())).add(&ent, &pass);
         }
     } else {
-        parent->get_or_create<MeshGroup>(MeshGroupData(ent._parent().mesh_id(), ent.submesh_id())).add(&ent);
+        parent->get_or_create<MeshGroup>(MeshGroupData(ent._parent().mesh_id(), ent.submesh_id())).add(&ent, &pass);
     }
 }
 
@@ -58,21 +58,29 @@ void RootGroup::insert(SubActor &ent, uint8_t pass_number) {
     RenderGroup* current = this;
 
     //Add a shader node
-    current = &current->get_or_create<ShaderGroup>(ShaderGroupData(pass.__shader()));
+    current = &current->get_or_create<ShaderGroup>(ShaderGroupData(pass.program().get()));
 
     //Add a node for depth settings
-    current = &current->get_or_create<DepthGroup>(DepthGroupData(pass.depth_test_enabled(), pass.depth_write_enabled()));
+    current = &current->get_or_create<DepthGroup>(
+        DepthGroupData(pass.depth_test_enabled(), pass.depth_write_enabled())
+    );
 
     //Add a node for the material properties
-    current = &current->get_or_create<MaterialGroup>(MaterialGroupData(pass.ambient(), pass.diffuse(), pass.specular(), pass.shininess(), pass.texture_unit_count()));
+    current = &current->get_or_create<MaterialGroup>(
+        MaterialGroupData(
+            pass.ambient(), pass.diffuse(), pass.specular(),
+            pass.shininess(), pass.texture_unit_count())
+    );
 
     //Add a node for the blending type
     current = &current->get_or_create<BlendGroup>(BlendGroupData(pass.blending()));
 
     //Add a node for the render settings
-    current = &current->get_or_create<RenderSettingsGroup>(RenderSettingsData(pass.point_size(), pass.polygon_mode()));
+    current = &current->get_or_create<RenderSettingsGroup>(
+        RenderSettingsData(pass.point_size(), pass.polygon_mode())
+    );
 
-    //FIXME: This code is duplicated below and that's bollocks
+    //FIXME: This code is duplicated below
     if(!pass.texture_unit_count()) {
         generate_mesh_groups(current, ent, pass);
     } else {
@@ -86,7 +94,7 @@ void RootGroup::insert(SubActor &ent, uint8_t pass_number) {
     }
 }
 
-void LightGroup::bind() {
+void LightGroup::bind(GPUProgram* program) {
     if(!data_.light_id) {
         return;
     }
@@ -94,88 +102,84 @@ void LightGroup::bind() {
     RootGroup& root = static_cast<RootGroup&>(get_root());
     auto light = root.stage()->light(data_.light_id);
 
-    ShaderProgram* active_shader = ShaderProgram::active_shader();
-    assert(active_shader);
-
-    ShaderParams& params = active_shader->params();
-
-    if(params.uses_auto(SP_AUTO_LIGHT_POSITION)) {
+    if(program->uniforms().uses_auto(SP_AUTO_LIGHT_POSITION)) {
         Vec4 light_pos = Vec4(light->absolute_position(), (light->type() == LIGHT_TYPE_DIRECTIONAL) ? 0.0 : 1.0);
 
-        params.set_vec4(
-            params.auto_uniform_variable_name(SP_AUTO_LIGHT_POSITION),
+        program->uniforms().set_vec4(
+            program->uniforms().auto_variable_name(SP_AUTO_LIGHT_POSITION),
             light_pos
         );
     }
 
-    if(params.uses_auto(SP_AUTO_LIGHT_AMBIENT)) {
-        params.set_colour(
-            params.auto_uniform_variable_name(SP_AUTO_LIGHT_AMBIENT),
+    if(program->uniforms().uses_auto(SP_AUTO_LIGHT_AMBIENT)) {
+        program->uniforms().set_colour(
+            program->uniforms().auto_variable_name(SP_AUTO_LIGHT_AMBIENT),
             light->ambient()
         );
     }
 
-    if(params.uses_auto(SP_AUTO_LIGHT_DIFFUSE)) {
-        params.set_colour(
-            params.auto_uniform_variable_name(SP_AUTO_LIGHT_DIFFUSE),
+    if(program->uniforms().uses_auto(SP_AUTO_LIGHT_DIFFUSE)) {
+        program->uniforms().set_colour(
+            program->uniforms().auto_variable_name(SP_AUTO_LIGHT_DIFFUSE),
             light->diffuse()
         );
     }
 
-    if(params.uses_auto(SP_AUTO_LIGHT_SPECULAR)) {
-        params.set_colour(
-            params.auto_uniform_variable_name(SP_AUTO_LIGHT_SPECULAR),
+    if(program->uniforms().uses_auto(SP_AUTO_LIGHT_SPECULAR)) {
+        program->uniforms().set_colour(
+            program->uniforms().auto_variable_name(SP_AUTO_LIGHT_SPECULAR),
             light->specular()
         );
     }
 
-    if(params.uses_auto(SP_AUTO_LIGHT_CONSTANT_ATTENUATION)) {
-        params.set_float(
-            params.auto_uniform_variable_name(SP_AUTO_LIGHT_CONSTANT_ATTENUATION),
+    if(program->uniforms().uses_auto(SP_AUTO_LIGHT_CONSTANT_ATTENUATION)) {
+        program->uniforms().set_float(
+            program->uniforms().auto_variable_name(SP_AUTO_LIGHT_CONSTANT_ATTENUATION),
             light->constant_attenuation()
         );
     }
 
-    if(params.uses_auto(SP_AUTO_LIGHT_LINEAR_ATTENUATION)) {
-        params.set_float(
-            params.auto_uniform_variable_name(SP_AUTO_LIGHT_LINEAR_ATTENUATION),
+    if(program->uniforms().uses_auto(SP_AUTO_LIGHT_LINEAR_ATTENUATION)) {
+        program->uniforms().set_float(
+            program->uniforms().auto_variable_name(SP_AUTO_LIGHT_LINEAR_ATTENUATION),
             light->linear_attenuation()
         );
     }
 
-    if(params.uses_auto(SP_AUTO_LIGHT_QUADRATIC_ATTENUATION)) {
-        params.set_float(
-            params.auto_uniform_variable_name(SP_AUTO_LIGHT_QUADRATIC_ATTENUATION),
+    if(program->uniforms().uses_auto(SP_AUTO_LIGHT_QUADRATIC_ATTENUATION)) {
+        program->uniforms().set_float(
+            program->uniforms().auto_variable_name(SP_AUTO_LIGHT_QUADRATIC_ATTENUATION),
             light->quadratic_attenuation()
         );
     }
 }
 
-void LightGroup::unbind() {
+void LightGroup::unbind(GPUProgram* program) {
 
 }
 
-void MeshGroup::bind() {
+void MeshGroup::bind(GPUProgram* program) {
 
 }
 
-void MeshGroup::unbind() {
+void MeshGroup::unbind(GPUProgram* program) {
 
 }
 
-void ShaderGroup::bind() {
+void ShaderGroup::bind(GPUProgram* program) {
     RootGroup& root = static_cast<RootGroup&>(get_root());
 
-    ShaderProgram* s = data_.shader_;
-    s->activate(); //Activate the shader
+    program = data_.shader_;
+    root.set_current_program(program);
+    program->activate();
 
     //Pass in the global ambient here, as it's the earliest place
     //in the tree we can, and it's a global value
-    ShaderParams& params = s->params();
+    auto& params = program->uniforms();
 
-    if(params.uses_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT)) {
-        params.set_colour(
-            params.auto_uniform_variable_name(SP_AUTO_LIGHT_GLOBAL_AMBIENT),
+    if(program->uniforms().uses_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT)) {
+        program->uniforms().set_colour(
+            program->uniforms().auto_variable_name(SP_AUTO_LIGHT_GLOBAL_AMBIENT),
             root.stage()->ambient_light()
         );
     }
@@ -184,15 +188,15 @@ void ShaderGroup::bind() {
 std::size_t ShaderGroupData::hash() const {
     size_t seed = 0;
     hash_combine(seed, typeid(ShaderGroupData).name());
-    hash_combine(seed, shader_->id().value());
+    hash_combine(seed, shader_->md5().encode());
     return seed;
 }
 
-void ShaderGroup::unbind() {
+void ShaderGroup::unbind(GPUProgram *program) {
 
 }
 
-void DepthGroup::bind() {
+void DepthGroup::bind(GPUProgram *program) {
     if(data_.depth_test) {
         GLCheck(glEnable, GL_DEPTH_TEST);
     } else {
@@ -206,89 +210,78 @@ void DepthGroup::bind() {
     }
 }
 
-void DepthGroup::unbind() {
+void DepthGroup::unbind(GPUProgram *program) {
     if(data_.depth_test) {
         GLCheck(glDisable, GL_DEPTH_TEST);
     }
 }
 
-void TextureGroup::bind() {
+void TextureGroup::bind(GPUProgram* program) {
     GLCheck(glActiveTexture, GL_TEXTURE0 + data_.unit);
     RootGroup& root = static_cast<RootGroup&>(get_root());
     GLCheck(glBindTexture, GL_TEXTURE_2D, root.stage()->texture(data_.texture_id)->gl_tex());
 }
 
-void TextureGroup::unbind() {
+void TextureGroup::unbind(GPUProgram *program) {
     GLCheck(glActiveTexture, GL_TEXTURE0 + data_.unit);
     GLCheck(glBindTexture, GL_TEXTURE_2D, 0);
 }
 
-void TextureMatrixGroup::bind() {
-    ShaderProgram* active_shader = ShaderProgram::active_shader();
-    assert(active_shader);
-
-    ShaderParams& params = active_shader->params();
-
-    if(params.uses_auto(ShaderAvailableAuto(SP_AUTO_MATERIAL_TEX_MATRIX0 + data_.unit))) {
-        params.set_mat4x4(
-            params.auto_uniform_variable_name(ShaderAvailableAuto(SP_AUTO_MATERIAL_TEX_MATRIX0 + data_.unit)),
+void TextureMatrixGroup::bind(GPUProgram *program) {
+    if(program->uniforms().uses_auto(ShaderAvailableAuto(SP_AUTO_MATERIAL_TEX_MATRIX0 + data_.unit))) {
+        program->uniforms().set_mat4x4(
+            program->uniforms().auto_variable_name(ShaderAvailableAuto(SP_AUTO_MATERIAL_TEX_MATRIX0 + data_.unit)),
             data_.matrix
         );
     }
 }
 
-void TextureMatrixGroup::unbind() {
+void TextureMatrixGroup::unbind(GPUProgram* program) {
 
 }
 
-void MaterialGroup::bind() {
-    ShaderProgram* active_shader = ShaderProgram::active_shader();
-    assert(active_shader);
-
-    ShaderParams& params = active_shader->params();
-
-
-    if(params.uses_auto(SP_AUTO_MATERIAL_AMBIENT)) {
-        params.set_colour(
-            params.auto_uniform_variable_name(SP_AUTO_MATERIAL_AMBIENT),
+void MaterialGroup::bind(GPUProgram* program) {
+    if(program->uniforms().uses_auto(SP_AUTO_MATERIAL_AMBIENT)) {
+        program->uniforms().set_colour(
+            program->uniforms().auto_variable_name(SP_AUTO_MATERIAL_AMBIENT),
             data_.ambient
         );
     }
 
-    if(params.uses_auto(SP_AUTO_MATERIAL_DIFFUSE)) {
-        params.set_colour(
-            params.auto_uniform_variable_name(SP_AUTO_MATERIAL_DIFFUSE),
+    if(program->uniforms().uses_auto(SP_AUTO_MATERIAL_DIFFUSE)) {
+        program->uniforms().set_colour(
+            program->uniforms().auto_variable_name(SP_AUTO_MATERIAL_DIFFUSE),
             data_.diffuse
         );
     }
 
-    if(params.uses_auto(SP_AUTO_MATERIAL_SPECULAR)) {
-        params.set_colour(
-            params.auto_uniform_variable_name(SP_AUTO_MATERIAL_SPECULAR),
+    if(program->uniforms().uses_auto(SP_AUTO_MATERIAL_SPECULAR)) {
+        program->uniforms().set_colour(
+            program->uniforms().auto_variable_name(SP_AUTO_MATERIAL_SPECULAR),
             data_.specular
         );
     }
 
-    if(params.uses_auto(SP_AUTO_MATERIAL_SHININESS)) {
-        params.set_float(
-            params.auto_uniform_variable_name(SP_AUTO_MATERIAL_SHININESS),
+    if(program->uniforms().uses_auto(SP_AUTO_MATERIAL_SHININESS)) {
+        program->uniforms().set_float(
+            program->uniforms().auto_variable_name(SP_AUTO_MATERIAL_SHININESS),
             data_.shininess
         );
     }
 
-    if(params.uses_auto(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS)) {
-        params.set_int(
-            params.auto_uniform_variable_name(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS),
+    if(program->uniforms().uses_auto(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS)) {
+        program->uniforms().set_int(
+            program->uniforms().auto_variable_name(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS),
             data_.active_texture_count
         );
     }
 }
 
-void MaterialGroup::unbind() {
+void MaterialGroup::unbind(GPUProgram *program) {
 
 }
 
-void BlendGroup::bind() {
+void BlendGroup::bind(GPUProgram* program) {
     if(data_.type == BLEND_NONE) {
         GLCheck(glDisable, GL_BLEND);
         return;
@@ -311,11 +304,11 @@ void BlendGroup::bind() {
     }
 }
 
-void BlendGroup::unbind() {
+void BlendGroup::unbind(GPUProgram *program) {
     GLCheck(glDisable, GL_BLEND);
 }
 
-void RenderSettingsGroup::bind() {
+void RenderSettingsGroup::bind(GPUProgram* program) {
 #ifndef __ANDROID__
     GLCheck(glPointSize, data_.point_size);
 #else
@@ -335,7 +328,7 @@ void RenderSettingsGroup::bind() {
 
 }
 
-void RenderSettingsGroup::unbind() {
+void RenderSettingsGroup::unbind(GPUProgram *program) {
 #ifndef __ANDROID__
     GLCheck(glPointSize, 1);
 #else

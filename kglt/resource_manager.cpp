@@ -17,9 +17,6 @@ namespace kglt {
 ResourceManagerImpl::ResourceManagerImpl(WindowBase* window):
     window_(window) {
 
-    ShaderManager::signal_post_create().connect(std::bind(&ResourceManagerImpl::post_create_shader_callback, this, std::placeholders::_1, std::placeholders::_2));
-
-
 }
 
 bool ResourceManagerImpl::init() {
@@ -61,9 +58,6 @@ void ResourceManagerImpl::update() {
 
         L_DEBUG("Collecting textures");
         TextureManager::garbage_collect();
-
-        L_DEBUG("Collecting shaders");
-        ShaderManager::garbage_collect();
 
         L_DEBUG("Collecting sounds");
         SoundManager::garbage_collect();
@@ -330,40 +324,6 @@ void ResourceManagerImpl::mark_texture_as_uncollected(TextureID t) {
     TextureManager::mark_as_uncollected(t);
 }
 
-ShaderRef ResourceManagerImpl::shader(ShaderID s) {
-    return ShaderManager::manager_get(s);
-}
-
-const ShaderRef ResourceManagerImpl::shader(ShaderID s) const {
-    return ShaderManager::manager_get(s);
-}
-
-ShaderProgram* ResourceManagerImpl::__shader(ShaderID s) {
-    return ShaderManager::manager_get_unsafe(s);
-}
-
-bool ResourceManagerImpl::has_shader(ShaderID s) const {
-    return ShaderManager::manager_contains(s);
-}
-
-uint32_t ResourceManagerImpl::shader_count() const {
-    return ShaderManager::manager_count();
-}
-
-ShaderID ResourceManagerImpl::new_shader(bool garbage_collect) {
-    return ShaderManager::manager_new(garbage_collect);
-}
-
-ShaderID ResourceManagerImpl::new_shader_from_files(const unicode& vert_shader, const unicode& frag_shader, bool garbage_collect) {
-    ShaderPtr shd = shader(new_shader(garbage_collect)).lock();
-    shd->add(SHADER_TYPE_VERTEX, vert_shader);
-    shd->add(SHADER_TYPE_FRAGMENT, frag_shader);
-    shd->compile_all();
-
-    return shd->id();
-}
-
-
 SoundID ResourceManagerImpl::new_sound(bool garbage_collect) {
     return SoundManager::manager_new(garbage_collect);
 }
@@ -419,15 +379,6 @@ bool ResourceManagerImpl::has_sound(SoundID s) const {
 
 void ResourceManagerImpl::delete_sound(SoundID t) {
     sound(t)->enable_gc();
-}
-
-std::pair<ShaderID, bool> ResourceManagerImpl::find_shader(const std::string& name) {
-    std::map<std::string, ShaderID>::const_iterator it = shader_lookup_.find(name);
-    if(it == shader_lookup_.end()) {
-        return std::make_pair(ShaderID(), false);
-    }
-
-    return std::make_pair((*it).second, true);
 }
 
 TextureID ResourceManagerImpl::default_texture_id() const {

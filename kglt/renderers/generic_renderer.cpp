@@ -7,7 +7,6 @@
 #include "generic_renderer.h"
 
 #include "../actor.h"
-#include "../shader.h"
 #include "../stage.h"
 #include "../camera.h"
 #include "../light.h"
@@ -22,110 +21,110 @@ namespace kglt {
  * FIXME: Stupid argument ordering
  */
 void GenericRenderer::set_auto_uniforms_on_shader(
-    ShaderProgram& s,
+    GPUProgram& program,
     CameraID camera,
     SubActor& subactor) {
 
     //Calculate the modelview-projection matrix
-    kmMat4 modelview_projection;
-    kmMat4 modelview;
+    Mat4 modelview_projection;
+    Mat4 modelview;
 
-    const kmMat4 model = subactor._parent().absolute_transformation();
-    const kmMat4& view = window().camera(camera)->view_matrix();
-    const kmMat4& projection = window().camera(camera)->projection_matrix();
+    const Mat4 model = subactor._parent().absolute_transformation();
+    const Mat4& view = window().camera(camera)->view_matrix();
+    const Mat4& projection = window().camera(camera)->projection_matrix();
 
     kmMat4Multiply(&modelview, &view, &model);
     kmMat4Multiply(&modelview_projection, &projection, &modelview);
 
-    if(s.params().uses_auto(SP_AUTO_VIEW_MATRIX)) {
-        s.params().set_mat4x4(
-            s.params().auto_uniform_variable_name(SP_AUTO_VIEW_MATRIX),
+    if(program.uniforms().uses_auto(SP_AUTO_VIEW_MATRIX)) {
+        program.uniforms().set_mat4x4(
+            program.uniforms().auto_variable_name(SP_AUTO_VIEW_MATRIX),
             view
         );
     }
 
-    if(s.params().uses_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX)) {
-        s.params().set_mat4x4(
-            s.params().auto_uniform_variable_name(SP_AUTO_MODELVIEW_PROJECTION_MATRIX),
+    if(program.uniforms().uses_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX)) {
+        program.uniforms().set_mat4x4(
+            program.uniforms().auto_variable_name(SP_AUTO_MODELVIEW_PROJECTION_MATRIX),
             modelview_projection
         );
     }
 
-    if(s.params().uses_auto(SP_AUTO_MODELVIEW_MATRIX)) {
-        s.params().set_mat4x4(
-            s.params().auto_uniform_variable_name(SP_AUTO_MODELVIEW_MATRIX),
+    if(program.uniforms().uses_auto(SP_AUTO_MODELVIEW_MATRIX)) {
+        program.uniforms().set_mat4x4(
+            program.uniforms().auto_variable_name(SP_AUTO_MODELVIEW_MATRIX),
             modelview
         );
     }
 
-    if(s.params().uses_auto(SP_AUTO_PROJECTION_MATRIX)) {
-        s.params().set_mat4x4(
-            s.params().auto_uniform_variable_name(SP_AUTO_PROJECTION_MATRIX),
+    if(program.uniforms().uses_auto(SP_AUTO_PROJECTION_MATRIX)) {
+        program.uniforms().set_mat4x4(
+            program.uniforms().auto_variable_name(SP_AUTO_PROJECTION_MATRIX),
             projection
         );
     }
 
-    if(s.params().uses_auto(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX)) {
-        kmMat3 inverse_transpose_modelview;
+    if(program.uniforms().uses_auto(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX)) {
+        Mat3 inverse_transpose_modelview;
 
         kmMat3AssignMat4(&inverse_transpose_modelview, &modelview);
         kmMat3Inverse(&inverse_transpose_modelview, &inverse_transpose_modelview);
         kmMat3Transpose(&inverse_transpose_modelview, &inverse_transpose_modelview);
 
-        s.params().set_mat3x3(
-            s.params().auto_uniform_variable_name(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX),
+        program.uniforms().set_mat3x3(
+            program.uniforms().auto_variable_name(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX),
             inverse_transpose_modelview
         );
     }
 /*
-    if(s.params().uses_auto(SP_AUTO_MATERIAL_AMBIENT)) {
-        s.params().set_colour(
-            s.params().auto_uniform_variable_name(SP_AUTO_MATERIAL_AMBIENT),
+    if(pass.uses_auto_uniform(SP_AUTO_MATERIAL_AMBIENT)) {
+        pass.program()->uniforms().set_colour(
+            pass.auto_uniform_variable_name(SP_AUTO_MATERIAL_AMBIENT),
             pass.ambient()
         );
     }
 
-    if(s.params().uses_auto(SP_AUTO_MATERIAL_DIFFUSE)) {
-        s.params().set_colour(
-            s.params().auto_uniform_variable_name(SP_AUTO_MATERIAL_DIFFUSE),
+    if(pass.uses_auto_uniform(SP_AUTO_MATERIAL_DIFFUSE)) {
+        pass.program()->uniforms().set_colour(
+            pass.auto_uniform_variable_name(SP_AUTO_MATERIAL_DIFFUSE),
             pass.diffuse()
         );
     }
 
-    if(s.params().uses_auto(SP_AUTO_MATERIAL_SPECULAR)) {
-        s.params().set_colour(
-            s.params().auto_uniform_variable_name(SP_AUTO_MATERIAL_SPECULAR),
+    if(pass.uses_auto_uniform(SP_AUTO_MATERIAL_SPECULAR)) {
+        pass.program()->uniforms().set_colour(
+            pass.auto_uniform_variable_name(SP_AUTO_MATERIAL_SPECULAR),
             pass.specular()
         );
     }
 
-    if(s.params().uses_auto(SP_AUTO_MATERIAL_SHININESS)) {
-        s.params().set_float(
-            s.params().auto_uniform_variable_name(SP_AUTO_MATERIAL_SHININESS),
+    if(pass.uses_auto_uniform(SP_AUTO_MATERIAL_SHININESS)) {
+        pass.program()->uniforms().set_float(
+            pass.auto_uniform_variable_name(SP_AUTO_MATERIAL_SHININESS),
             pass.shininess()
         );
     }
 
-    if(s.params().uses_auto(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS)) {
-        s.params().set_int(
-            s.params().auto_uniform_variable_name(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS),
+    if(pass.uses_auto_uniform(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS)) {
+        pass.program()->uniforms().set_int(
+            pass.auto_uniform_variable_name(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS),
             pass.texture_unit_count()
         );
     }*/
 }
 
 template<typename EnabledMethod, typename OffsetMethod>
-void send_attribute(ShaderProgram& s,
+void send_attribute(GPUProgram& program,
                     ShaderAvailableAttributes attr,
                     const VertexData& data,
                     EnabledMethod exists_on_data_predicate,
                     OffsetMethod offset_func) {
 
-    if(!s.params().uses_attribute(attr)) {
+    if(!program.attributes().uses_auto(attr)) {
         return;
     }
 
-    int32_t loc = s.get_attrib_loc(s.params().attribute_variable_name(attr));
+    int32_t loc = program.attributes().locate(program.attributes().variable_name(attr));
     if(loc < 0) {
         L_WARN("Couldn't locate attribute, on the shader");
         return;
@@ -148,20 +147,20 @@ void send_attribute(ShaderProgram& s,
     }
 }
 
-void GenericRenderer::set_auto_attributes_on_shader(ShaderProgram& s, SubActor& buffer) {
+void GenericRenderer::set_auto_attributes_on_shader(GPUProgram& program, SubActor& buffer) {
     /*
      *  Binding attributes generically is hard. So we have some template magic in the send_attribute
      *  function above that takes the VertexData member functions we need to provide the attribute
      *  and just makes the whole thing generic. Before this was 100s of lines of boilerplate. Thank god
      *  for templates!
      */
-    send_attribute(s, SP_ATTR_VERTEX_POSITION, buffer.vertex_data(), &VertexData::has_positions, &VertexData::position_offset);
-    send_attribute(s, SP_ATTR_VERTEX_TEXCOORD0, buffer.vertex_data(), &VertexData::has_texcoord0, &VertexData::texcoord0_offset);
-    send_attribute(s, SP_ATTR_VERTEX_TEXCOORD1, buffer.vertex_data(), &VertexData::has_texcoord1, &VertexData::texcoord1_offset);
-    send_attribute(s, SP_ATTR_VERTEX_TEXCOORD2, buffer.vertex_data(), &VertexData::has_texcoord2, &VertexData::texcoord2_offset);
-    send_attribute(s, SP_ATTR_VERTEX_TEXCOORD3, buffer.vertex_data(), &VertexData::has_texcoord3, &VertexData::texcoord3_offset);
-    send_attribute(s, SP_ATTR_VERTEX_DIFFUSE, buffer.vertex_data(), &VertexData::has_diffuse, &VertexData::diffuse_offset);
-    send_attribute(s, SP_ATTR_VERTEX_NORMAL, buffer.vertex_data(), &VertexData::has_normals, &VertexData::normal_offset);
+    send_attribute(program, SP_ATTR_VERTEX_POSITION, buffer.vertex_data(), &VertexData::has_positions, &VertexData::position_offset);
+    send_attribute(program, SP_ATTR_VERTEX_TEXCOORD0, buffer.vertex_data(), &VertexData::has_texcoord0, &VertexData::texcoord0_offset);
+    send_attribute(program, SP_ATTR_VERTEX_TEXCOORD1, buffer.vertex_data(), &VertexData::has_texcoord1, &VertexData::texcoord1_offset);
+    send_attribute(program, SP_ATTR_VERTEX_TEXCOORD2, buffer.vertex_data(), &VertexData::has_texcoord2, &VertexData::texcoord2_offset);
+    send_attribute(program, SP_ATTR_VERTEX_TEXCOORD3, buffer.vertex_data(), &VertexData::has_texcoord3, &VertexData::texcoord3_offset);
+    send_attribute(program, SP_ATTR_VERTEX_DIFFUSE, buffer.vertex_data(), &VertexData::has_diffuse, &VertexData::diffuse_offset);
+    send_attribute(program, SP_ATTR_VERTEX_NORMAL, buffer.vertex_data(), &VertexData::has_normals, &VertexData::normal_offset);
 }
 
 void GenericRenderer::set_blending_mode(BlendType type) {
@@ -187,10 +186,9 @@ void GenericRenderer::set_blending_mode(BlendType type) {
     }
 }
 
-void GenericRenderer::render_subactor(SubActor& buffer, CameraID camera) {
+void GenericRenderer::render_subactor(SubActor& buffer, CameraID camera, GPUProgram* program) {
 
-    ShaderProgram* active_shader = ShaderProgram::active_shader();
-    if(!active_shader) {
+    if(!program) {
         L_ERROR("No shader is bound, so nothing will be rendered");
         return;
     }
@@ -208,8 +206,8 @@ void GenericRenderer::render_subactor(SubActor& buffer, CameraID camera) {
     buffer._bind_vertex_array_object();
 
     //Attributes don't change per-iteration of a pass
-    set_auto_attributes_on_shader(*active_shader, buffer);
-    set_auto_uniforms_on_shader(*active_shader, camera, buffer);
+    set_auto_attributes_on_shader(*program, buffer);
+    set_auto_uniforms_on_shader(*program, camera, buffer);
 
     //Render the mesh, once for each iteration of the pass
     switch(buffer.arrangement()) {

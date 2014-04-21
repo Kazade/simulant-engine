@@ -18,6 +18,7 @@
 #include "generic/cloneable.h"
 #include "types.h"
 #include "interfaces.h"
+#include "gpu_program.h"
 
 namespace kglt {
 
@@ -52,18 +53,18 @@ public:
     }
 
     void scroll_x(float amount) {
-        kmMat4 diff;
+        Mat4 diff;
         kmMat4Translation(&diff, amount, 0, 0);
         kmMat4Multiply(&texture_matrix_, &texture_matrix_, &diff);
     }
 
     void scroll_y(float amount) {
-        kmMat4 diff;
+        Mat4 diff;
         kmMat4Translation(&diff, 0, amount, 0);
         kmMat4Multiply(&texture_matrix_, &texture_matrix_, &diff);
     }
 
-    kmMat4& matrix() {
+    Mat4& matrix() {
         return texture_matrix_;
     }
 
@@ -76,7 +77,7 @@ private:
     uint32_t current_texture_;
 
     TexturePtr texture_unit_;
-    kmMat4 texture_matrix_;
+    Mat4 texture_matrix_;
 };
 
 enum IterationType {
@@ -99,9 +100,6 @@ public:
     Colour ambient() const { return ambient_; }
     Colour specular() const { return specular_; }
     float shininess() const { return shininess_; }
-
-    ShaderID shader_id() const;
-    ShaderProgram* __shader() { return shader_.get(); }
 
     uint32_t texture_unit_count() const { return texture_units_.size(); }
     TextureUnit& texture_unit(uint32_t index) { return texture_units_.at(index); }
@@ -143,13 +141,28 @@ public:
 
     Material& material() { return material_;  }
 
-    void set_shader_source(ShaderType type, const unicode& source);
-    void prepare_shaders();
+    GPUProgram::ptr program() { return program_; }
+
+
+
+    void stage_uniform(const unicode& name, const int& value) {
+        int_uniforms_[name] = value;
+    }
+
+    void stage_uniform(const unicode& name, const float& value) {
+        float_uniforms_[name] = value;
+    }
+
+
+    void apply_staged_uniforms();
 
 private:
+    std::unordered_map<unicode, float> float_uniforms_;
+    std::unordered_map<unicode, int> int_uniforms_;
+
     Material& material_;
 
-    ShaderPtr shader_;
+    GPUProgram::ptr program_;
 
     Colour diffuse_ = Colour(1.0, 1.0, 1.0, 1.0);
     Colour ambient_ = Colour(1.0, 1.0, 1.0, 1.0);
@@ -174,6 +187,8 @@ private:
     PolygonMode polygon_mode_ = POLYGON_MODE_FILL;
 
     std::map<kglt::ShaderType, unicode> shader_sources_;
+
+
 };
 
 class Material :

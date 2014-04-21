@@ -4,7 +4,6 @@
 #include <string>
 #include "window.h"
 #include "types.h"
-#include "shader.h"
 #include "texture.h"
 #include "material.h"
 
