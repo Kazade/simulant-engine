@@ -140,6 +140,7 @@ void AttributeManager::register_auto(ShaderAvailableAttributes attr, const unico
 
 
 GPUProgram::GPUProgram():
+    program_object_(0),
     uniforms_(*this),
     attributes_(*this) {}
 
@@ -157,16 +158,24 @@ void GPUProgram::activate() {
     GLCheck(glUseProgram, program_object_);
 }
 
-bool GPUProgram::init() {
+void GPUProgram::prepare_program() {
     GLThreadCheck::check();
 
-    program_object_ = GLCheck<GLuint>(glCreateProgram);
+    if(program_object_) {
+        return;
+    }
 
+    program_object_ = GLCheck<GLuint>(glCreateProgram);
+}
+
+bool GPUProgram::init() {
     return true;
 }
 
 void GPUProgram::cleanup()  {
-    GLCheck(glDeleteProgram, program_object_);
+    if(GLThreadCheck::is_current() && program_object_) {
+        GLCheck(glDeleteProgram, program_object_);
+    }
 }
 
 GLenum shader_type_to_glenum(ShaderType type) {
@@ -181,14 +190,6 @@ GLenum shader_type_to_glenum(ShaderType type) {
 void GPUProgram::set_shader_source(ShaderType type, const unicode& source) {
     ShaderInfo new_shader;
     new_shader.source = source;
-
-    auto existing = shaders_.find(type);
-    if(existing != shaders_.end()) {
-        GLCheck(glDeleteShader, (*existing).second.object);
-    } else {
-        new_shader.object = GLCheck<GLuint>(glCreateShader, shader_type_to_glenum(type));
-    }
-
     is_linked_ = false; //We're no longer linked
     shaders_[type] = new_shader;
     shader_hashes_[type] = hashlib::MD5(source.encode()).hex_digest();
@@ -200,6 +201,10 @@ void GPUProgram::compile(ShaderType type) {
     auto& info = shaders_.at(type);
     if(info.is_compiled) {
         return;
+    }
+
+    if(!info.object) {
+        info.object = GLCheck<GLuint>(glCreateShader, shader_type_to_glenum(type));
     }
 
     assert(info.object); //Make sure we have a shader object
@@ -231,11 +236,15 @@ void GPUProgram::compile(ShaderType type) {
         throw RuntimeError("Unable to compile shader, check the error log for details");
     }
 
+    prepare_program(); //Make sure we have a program object before attaching the shader
+
     GLCheck(glAttachShader, program_object_, info.object);
     info.is_compiled = true;
 }
 
 void GPUProgram::build() {
+    prepare_program();
+
     for(auto p: shaders_) {
         compile(p.first); //Compile each shader if necessary
     }
@@ -245,7 +254,7 @@ void GPUProgram::build() {
 
 const bool GPUProgram::is_complete() const {
     //Vertex and Fragment shader are required
-    if(!shaders_.count(SHADER_TYPE_VERTEX) || !shaders_.count(SHADER_TYPE_FRAGMENT)) {
+    if(!program_object_ || !shaders_.count(SHADER_TYPE_VERTEX) || !shaders_.count(SHADER_TYPE_FRAGMENT)) {
         return false;
     }
 
@@ -275,6 +284,8 @@ void GPUProgram::rebuild_hash() {
 }
 
 void GPUProgram::link() {
+    prepare_program();
+
     assert(shaders_.at(SHADER_TYPE_VERTEX).is_compiled);
     assert(shaders_.at(SHADER_TYPE_FRAGMENT).is_compiled);
 

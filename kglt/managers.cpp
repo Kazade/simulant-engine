@@ -107,7 +107,7 @@ uint32_t CameraManager::camera_count() const {
 StageManager::StageManager(WindowBase *window):
     window_(window) {
 
-    default_stage_id_ = new_stage(); //Create the default stage
+    default_stage_id_ = new_stage(PARTITIONER_NULL); //Create the default stage
 }
 
 StageID StageManager::new_stage(AvailablePartitioner partitioner) {

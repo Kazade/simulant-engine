@@ -229,6 +229,8 @@ private:
     friend class UniformManager;
     friend class AttributeManager;
 
+    void prepare_program();
+
     struct ShaderInfo {
         uint32_t object = 0;
         bool is_compiled = false;

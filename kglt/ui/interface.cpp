@@ -79,6 +79,8 @@ public:
         shader_ = GPUProgram::create();
         shader_->set_shader_source(SHADER_TYPE_VERTEX, vert_shader);
         shader_->set_shader_source(SHADER_TYPE_FRAGMENT, frag_shader);
+
+        window.idle().run_sync(std::bind(&GPUProgram::build, shader_.get()));
     }
 
     bool LoadTexture(Rocket::Core::TextureHandle& texture_handle, Rocket::Core::Vector2i& texture_dimensions, const Rocket::Core::String& source) {

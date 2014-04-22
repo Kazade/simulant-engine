@@ -171,15 +171,16 @@ void ShaderGroup::bind(GPUProgram* program) {
 
     program = data_.shader_;
     root.set_current_program(program);
+    program->build();
     program->activate();
 
     //Pass in the global ambient here, as it's the earliest place
     //in the tree we can, and it's a global value
     auto& params = program->uniforms();
 
-    if(program->uniforms().uses_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT)) {
-        program->uniforms().set_colour(
-            program->uniforms().auto_variable_name(SP_AUTO_LIGHT_GLOBAL_AMBIENT),
+    if(params.uses_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT)) {
+        params.set_colour(
+            params.auto_variable_name(SP_AUTO_LIGHT_GLOBAL_AMBIENT),
             root.stage()->ambient_light()
         );
     }
