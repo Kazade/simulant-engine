@@ -93,7 +93,7 @@ public:
 class Updateable {
 public:
     virtual ~Updateable() {}
-    virtual void update(double dt) = 0;
+    virtual void update(double step) = 0;
 };
 
 class Printable {

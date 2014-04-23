@@ -243,6 +243,11 @@ void GPUProgram::compile(ShaderType type) {
 }
 
 void GPUProgram::build() {
+    //Important! Do nothing if we're already built
+    if(is_complete()) {
+        return;
+    }
+
     prepare_program();
 
     for(auto p: shaders_) {

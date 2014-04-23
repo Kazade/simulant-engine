@@ -143,15 +143,16 @@ void Texture::flip_vertically() {
     /**
      *  Flips the texture data vertically
      */
+
     for(uint32_t j = 0; j * 2 < (uint32_t) height(); ++j)
     {
         int index1 = j * width() * channels();
         int index2 = (height() - 1 - j) * width() * channels();
         for(uint32_t i = width() * channels(); i > 0; --i )
         {
-            uint8_t temp = data()[index1];
-            data()[index1] = data()[index2];
-            data()[index2] = temp;
+            uint8_t temp = data_[index1];
+            data_[index1] = data_[index2];
+            data_[index2] = temp;
             ++index1;
             ++index2;
         }

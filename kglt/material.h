@@ -25,7 +25,8 @@ namespace kglt {
 class Material;
 class MaterialPass;
 
-class TextureUnit {
+class TextureUnit:
+    public Updateable {
 public:
     TextureUnit(MaterialPass& pass);
     TextureUnit(MaterialPass& pass, TextureID tex_id);
@@ -89,7 +90,8 @@ enum IterationType {
 class MaterialTechnique;
 
 class MaterialPass:
-    public Managed<MaterialPass> {
+    public Managed<MaterialPass>,
+    public Updateable {
 public:
     MaterialPass(Material& material);
 
@@ -202,8 +204,8 @@ public:
     Material(ResourceManager* resource_manager, MaterialID mat_id);
     ~Material();
 
-    void update(double dt);
-        bool has_reflective_pass() const { return !reflective_passes_.empty(); }
+    void update(double dt) override;
+    bool has_reflective_pass() const { return !reflective_passes_.empty(); }
 
     uint32_t new_pass();
     MaterialPass& pass(uint32_t index);

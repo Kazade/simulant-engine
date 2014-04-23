@@ -99,6 +99,11 @@ void CameraManager::delete_camera(CameraID cid) {
 uint32_t CameraManager::camera_count() const {
     return CameraManager::manager_count();
 }
+
+const bool CameraManager::has_camera(CameraID id) const {
+    return CameraManager::manager_contains(id);
+}
+
 //============== END CAMERAS ================
 
 

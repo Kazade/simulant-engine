@@ -43,6 +43,7 @@ public:
 
     CameraID default_camera_id() const { return default_camera_id_; }
 
+    const bool has_camera(CameraID id) const;
 private:
     WindowBase* window_;
 

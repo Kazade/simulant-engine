@@ -88,6 +88,8 @@ public:
 
     double delta_time() const { return delta_time_; }
     double total_time() const { return total_time_; }
+    double fixed_step() const { return 1.0 / double(WindowBase::STEPS_PER_SECOND); }
+    double fixed_step_interp() const;
 
     uint32_t width() const { return width_; }
     uint32_t height() const { return height_; }
@@ -121,6 +123,7 @@ public:
     sig::signal<void (void)>& signal_shutdown() { return signal_shutdown_; }
 
     void stop_running() { is_running_ = false; }
+    const bool is_shutting_down() const { return is_running_ == false; }
 
     Watcher& watcher() {
         if(!watcher_) {
@@ -173,6 +176,7 @@ private:
     KTIuint fixed_timer_;
     KTIuint variable_timer_;
     double delta_time_;
+    double fixed_step_interp_ = 0.0;
 
     void destroy() {}
 

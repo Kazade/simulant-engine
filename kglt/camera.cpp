@@ -18,8 +18,12 @@ CameraProxy::CameraProxy(Stage *stage, CameraID camera_id):
 
 CameraProxy::~CameraProxy() {
     //Set the camera's proxy to null
-    if(&stage()->window().camera(id())->proxy() == this) {
-        stage()->window().camera(id())->set_proxy(nullptr);
+    if(!stage()->window().is_shutting_down() &&
+        stage()->window().has_camera(id())) {
+
+        if(&stage()->window().camera(id())->proxy() == this) {
+            stage()->window().camera(id())->set_proxy(nullptr);
+        }
     }
 }
 

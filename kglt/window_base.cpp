@@ -220,6 +220,8 @@ bool WindowBase::run_frame() {
         signal_step_(fixed_step); //Trigger any steps        
     }
 
+    fixed_step_interp_ = ktiGetAccumulatorValue();
+
     idle_.execute(); //Execute idle tasks before render
 
     GLCheck(glViewport, 0, 0, width(), height());
@@ -307,6 +309,10 @@ PhysicsEnginePtr WindowBase::physics() {
 
 const bool WindowBase::has_physics_engine() const {
     return bool(physics_engine_);
+}
+
+double WindowBase::fixed_step_interp() const {
+    return fixed_step_interp_;
 }
 
 }
