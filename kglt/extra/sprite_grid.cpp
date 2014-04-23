@@ -95,7 +95,7 @@ struct TilesetInfo {
     }
 };
 
-kglt::Vec2 SpriteGrid::transform_position(const kglt::Vec2& position) {
+kglt::Vec2 SpriteGrid::pixel_to_world(const kglt::Vec2& position) {
     return Vec2(
         (position.x / float(map_tile_width_)) * tile_render_size_,
         (position.y / float(map_tile_height_)) * tile_render_size_

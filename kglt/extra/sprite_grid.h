@@ -73,9 +73,8 @@ public:
      */
     std::pair<GridChunk::ptr, uint32_t> chunk_tile_index(int32_t tile_x_pos, int32_t tile_y_pos);
 
-    Vec2 render_dimensions() const;
-
-    Vec2 transform_position(const kglt::Vec2& position);
+    Vec2 render_dimensions() const;   
+    Vec2 pixel_to_world(const kglt::Vec2& position);
 
 private:
     AutoWeakPtr<kglt::Stage> stage();
