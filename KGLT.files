@@ -334,10 +334,7 @@ kglt/utils/al_error.h
 kglt/utils/al_error.cpp
 kglt/particles.h
 tests/test_kazbase.h
-kglt/extra/sprite_grid.h
-kglt/extra/sprite_grid.cpp
 cmake_modules/FindTinyXML.cmake
-tests/test_spritegrid.h
 kglt/sprite.h
 kglt/sprite.cpp
 kglt/interfaces.h
