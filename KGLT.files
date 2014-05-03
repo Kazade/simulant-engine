@@ -357,3 +357,5 @@ kglt/gpu_program.h
 kglt/gpu_program.cpp
 kglt/loaders/tiled_loader.h
 kglt/loaders/tiled_loader.cpp
+kglt/utils/tiled.h
+kglt/utils/tiled.cpp

@@ -81,6 +81,12 @@ void TiledLoader::into(Loadable &resource, const LoaderOptions &options) {
         info.total_width = image->GetWidth();
     }
 
+    //Store useful information on the mesh
+    mesh->stash(layer->GetHeight(), "TILED_LAYER_HEIGHT");
+    mesh->stash(layer->GetWidth(), "TILED_LAYER_WIDTH");
+    mesh->stash(map.GetTileWidth(), "TILED_MAP_TILE_WIDTH");
+    mesh->stash(map.GetTileHeight(), "TILED_MAP_TILE_HEIGHT");
+
     /*
       Now go through the layer and build up a tile submesh for each grid square. Originally I chunked these
       tiles into groups for nicer culling but this is the wrong place for that. If rendering a lot of submeshes

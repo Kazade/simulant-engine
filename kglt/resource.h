@@ -5,12 +5,16 @@
 #include <mutex>
 
 #include "generic/protected_ptr.h"
+#include "generic/data_carrier.h"
 
 namespace kglt {
 
 class ResourceManager;
 
-class Resource : public virtual Protectable {
+class Resource :
+    public virtual Protectable,
+    public virtual generic::DataCarrier {
+
 public:
     Resource(ResourceManager* manager):
         manager_(manager) {
