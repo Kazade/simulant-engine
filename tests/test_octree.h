@@ -107,7 +107,7 @@ public:
     }
 private:
     class Object :
-        public kglt::Boundable {
+        public kglt::BoundableEntity {
 
     public:
         Object(float width, float height, float depth) {
@@ -136,12 +136,12 @@ private:
             );
         }
 
-        const kmAABB absolute_bounds() const {
+        const kglt::AABB transformed_aabb() const {
             return absolute_bounds_;
         }
 
-        const kmAABB local_bounds() const {
-            kmAABB local;
+        const kglt::AABB aabb() const {
+            kglt::AABB local;
             kmAABBInitialize(
                 &local,
                 nullptr,
@@ -156,8 +156,8 @@ private:
             return centre_;
         }
     private:
-        kmAABB absolute_bounds_;
-        kmVec3 centre_;
+        kglt::AABB absolute_bounds_;
+        kglt::Vec3 centre_;
 
     };
 };

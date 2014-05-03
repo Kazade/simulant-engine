@@ -19,7 +19,7 @@ void OctreePartitioner::add_actor(ActorID obj) {
     auto ent = stage()->actor(obj);
     for(uint16_t i = 0; i < ent->subactor_count(); ++i) {
         //All subactors are boundable
-        Boundable* boundable = dynamic_cast<Boundable*>(&ent->subactor(i));
+        BoundableEntity* boundable = &ent->subactor(i);
         tree_.grow(boundable);
 
         actor_to_registered_subactors_[obj].push_back(boundable);
@@ -34,7 +34,7 @@ void OctreePartitioner::remove_actor(ActorID obj) {
     L_DEBUG("Removing actor from the partitioner");
 
     //Remove all boundable subactors that were linked to the actor
-    for(Boundable* boundable: actor_to_registered_subactors_[obj]) {
+    for(BoundableEntity* boundable: actor_to_registered_subactors_[obj]) {
         tree_.shrink(boundable);
         boundable_to_subactor_.erase(boundable);
     }
@@ -50,7 +50,7 @@ void OctreePartitioner::remove_actor(ActorID obj) {
 void OctreePartitioner::add_light(LightID obj) {
     //FIXME: THis is nasty and dangerous
     auto light = stage()->light(obj);
-    Boundable* boundable = dynamic_cast<Boundable*>(light.__object.get());
+    BoundableEntity* boundable = light.__object.get();
     assert(boundable);
     tree_.grow(boundable);
     boundable_to_light_[boundable] = obj;
@@ -58,7 +58,7 @@ void OctreePartitioner::add_light(LightID obj) {
 
 void OctreePartitioner::remove_light(LightID obj) {
     auto light = stage()->light(obj);
-    Boundable* boundable = dynamic_cast<Boundable*>(light.__object.get());
+    BoundableEntity* boundable = light.__object.get();
     assert(boundable);
     tree_.shrink(boundable);
     boundable_to_light_.erase(boundable);
@@ -79,7 +79,7 @@ std::vector<SubActor::ptr> OctreePartitioner::geometry_visible_from(CameraID cam
     //Go through the visible nodes
     for(OctreeNode* node: tree_.nodes_visible_from(stage()->camera(camera_id)->frustum())) {
         //Go through the objects
-        for(const Boundable* obj: node->objects()) {
+        for(const BoundableEntity* obj: node->objects()) {
             if(container::contains(boundable_to_subactor_, obj)) {
                 //Build a list of visible subactors
                 results.push_back(boundable_to_subactor_[obj]);

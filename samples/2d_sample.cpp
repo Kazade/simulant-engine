@@ -22,14 +22,17 @@ private:
         float render_width = window().camera()->set_orthographic_projection_from_height(render_height, float(window().width()) / float(window().height()));
 
         //Load a sprite grid, from the 'Layer 1' layer in a tmx file
-        sprite_grid_ = SpriteGrid::new_from_file(window(), stage()->id(), "sample_data/tiled/example.tmx", "Layer 1");
+        kglt::MeshID mesh_id = window().stage()->new_mesh_from_tmx_file("sample_data/tiled/example.tmx", "Layer 1");
+        window().stage()->new_actor_with_mesh(mesh_id);
+
+        auto bounds = window().stage()->mesh(mesh_id)->aabb();
 
         //Constrain the camera to the area where the sprite grid is rendered
         window().stage()->camera()->constrain_to(
             kglt::Vec3(render_width / 2, render_height / 2, 0),
             kglt::Vec3(
-                sprite_grid_->render_dimensions().x - render_width / 2,
-                sprite_grid_->render_dimensions().y - render_height / 2,
+                bounds.width() - render_width / 2,
+                bounds.height() - render_height / 2,
                 0
             )
         );
@@ -45,10 +48,7 @@ private:
         }
     }
     void do_cleanup() {
-        sprite_grid_.reset();
     }
-
-    SpriteGrid::ptr sprite_grid_;
 };
 
 

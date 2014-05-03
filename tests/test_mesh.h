@@ -59,8 +59,9 @@ public:
         kmVec3Fill(&expected_min, -1.0, -1.0, 0.0);
         kmVec3Fill(&expected_max, 1.0, -1.0, 0.0);
 
-        assert_true(kmVec3AreEqual(&sm.bounds().min, &expected_min));
-        assert_true(kmVec3AreEqual(&sm.bounds().max, &expected_max));
+        auto box = sm.aabb();
+        assert_true(kmVec3AreEqual(&box.min, &expected_min));
+        assert_true(kmVec3AreEqual(&box.max, &expected_max));
 
         return mid;
     }

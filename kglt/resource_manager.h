@@ -21,15 +21,6 @@ typedef generic::RefCountedTemplatedManager<ResourceManagerImpl, Material, Mater
 typedef generic::RefCountedTemplatedManager<ResourceManagerImpl, Texture, TextureID> TextureManager;
 typedef generic::RefCountedTemplatedManager<ResourceManagerImpl, Sound, SoundID> SoundManager;
 
-enum TextureFlag {
-    TEXTURE_OPTION_CLAMP_TO_EDGE = 1,
-    TEXTURE_OPTION_FLIP_VERTICALLY = 2,
-    TEXTURE_OPTION_DISABLE_MIPMAPS = 4,
-    TEXTURE_OPTION_NEAREST_FILTER = 8
-};
-
-typedef uint32_t TextureFlags;
-
 class ResourceManager {
 public:
     virtual ~ResourceManager() {}
@@ -37,6 +28,8 @@ public:
     //Mesh functions
     virtual MeshID new_mesh(bool garbage_collect=true) = 0;
     virtual MeshID new_mesh_from_file(const unicode& path, bool garbage_collect=true) = 0;
+    virtual MeshID new_mesh_from_tmx_file(const unicode& tmx_file, const unicode& layer_name, bool garbage_collect=true) = 0;
+
     virtual MeshID new_mesh_as_cube(float width, bool garbage_collect=true) = 0;
     virtual MeshID new_mesh_as_sphere(float diameter, bool garbage_collect=true) = 0;
     virtual MeshID new_mesh_as_rectangle(float width, float height, const Vec2& offset=Vec2(), bool garbage_collect=true) = 0;
@@ -133,6 +126,7 @@ public:
 
     MeshID new_mesh(bool garbage_collect=true) override;
     MeshID new_mesh_from_file(const unicode& path, bool garbage_collect=true) override;
+    MeshID new_mesh_from_tmx_file(const unicode& tmx_file, const unicode& layer_name, bool garbage_collect=true) override;
     MeshID new_mesh_as_cube(float width, bool garbage_collect=true) override;
     MeshID new_mesh_as_sphere(float diameter, bool garbage_collect=true) override;
     MeshID new_mesh_as_rectangle(float width, float height, const Vec2& offset=Vec2(), bool garbage_collect=true) override;

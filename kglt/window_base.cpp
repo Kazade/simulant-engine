@@ -13,6 +13,7 @@
 #include "loaders/ogg_loader.h"
 #include "loaders/rml_loader.h"
 #include "loaders/obj_loader.h"
+#include "loaders/tiled_loader.h"
 #include "sound.h"
 #include "camera.h"
 #include "lua/console.h"
@@ -106,6 +107,7 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
         register_loader(std::make_shared<kglt::loaders::RMLLoaderType>());
         register_loader(std::make_shared<kglt::loaders::Q2BSPLoaderType>());
         register_loader(std::make_shared<kglt::loaders::OBJLoaderType>());
+        register_loader(std::make_shared<kglt::loaders::TiledLoaderType>());
 
         Sound::init_openal();
         ResourceManagerImpl::init();

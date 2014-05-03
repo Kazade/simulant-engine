@@ -6,7 +6,6 @@
 #include "generic/identifiable.h"
 #include "generic/protected_ptr.h"
 #include "types.h"
-#include "boundable.h"
 
 #include "utils/parent_setter_mixin.h"
 
@@ -17,7 +16,7 @@ namespace kglt {
 class Light :
     public ParentSetterMixin<Object>,
     public generic::Identifiable<LightID>,
-    public Boundable,
+    public BoundableEntity,
     public Protectable,
     public Managed<Light> {
 
@@ -72,21 +71,17 @@ public:
     float quadratic_attenuation() const { return quadratic_attenuation_; }
 
     /** Boundable interface **/
-    const kmAABB absolute_bounds() const {
-        kmAABB result;
-        kmVec3 abs_pos = absolute_position();
+    const AABB transformed_aabb() const {
+        AABB result;
+        Vec3 abs_pos = absolute_position();
         kmAABBInitialize(&result, &abs_pos, range(), range(), range());
         return result;
     }
 
-    const kmAABB local_bounds() const {
-        kmAABB result;
+    const AABB aabb() const {
+        AABB result;
         kmAABBInitialize(&result, nullptr, range(), range(), range());
         return result;
-    }
-
-    const Vec3 centre() const {
-        return absolute_position();
     }
 
     void ask_owner_for_destruction();

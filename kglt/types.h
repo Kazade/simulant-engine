@@ -18,6 +18,7 @@
 #include <kazmath/mat4.h>
 #include <kazmath/mat3.h>
 #include <kazmath/utility.h>
+#include <kazmath/aabb.h>
 
 #include "generic/auto_weakptr.h"
 #include "generic/unique_id.h"
@@ -292,6 +293,25 @@ struct Vec3 : public kmVec3 {
 };
 
 
+struct AABB : public kmAABB {
+    AABB() {
+        kmVec3Zero(&this->min);
+        kmVec3Zero(&this->max);
+    }
+
+    const float width() const {
+        return fabs(max.x - min.x);
+    }
+
+    const float height() const {
+        return fabs(max.y - min.y);
+    }
+
+    const float depth() const  {
+        return fabs(max.z - min.z);
+    }
+};
+
 std::ostream& operator<<(std::ostream& stream, const Vec2& vec);
 std::ostream& operator<<(std::ostream& stream, const Vec3& vec);
 std::ostream& operator<<(std::ostream& stream, const Quaternion& quat);
@@ -393,6 +413,15 @@ enum ShaderType {
     SHADER_TYPE_FRAGMENT,
     SHADER_TYPE_MAX
 };
+
+enum TextureFlag {
+    TEXTURE_OPTION_CLAMP_TO_EDGE = 1,
+    TEXTURE_OPTION_FLIP_VERTICALLY = 2,
+    TEXTURE_OPTION_DISABLE_MIPMAPS = 4,
+    TEXTURE_OPTION_NEAREST_FILTER = 8
+};
+
+typedef uint32_t TextureFlags;
 
 typedef UniqueID<0> MeshID;
 typedef UniqueID<1> TextureID;

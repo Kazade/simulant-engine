@@ -25,6 +25,18 @@ void Mesh::clear() {
     shared_data().clear();
 }
 
+const AABB Mesh::aabb() const {
+    //FIXME: This should totally be cached for speed
+    AABB result;
+
+    for(auto mesh: submeshes_) {
+        AABB submesh_aabb = mesh->aabb();
+        kmAABBExpandToContain(&result, &result, &submesh_aabb);
+    }
+
+    return result;
+}
+
 void Mesh::enable_debug(bool value) {
     if(value) {
         //This maintains a lock on the material

@@ -4,7 +4,7 @@
 #include "sprite_grid.h"
 #include "../window_base.h"
 #include "../actor.h"
-
+#include "../stage.h"
 #include "tiled/TmxParser/Tmx.h"
 
 namespace kglt {
@@ -42,7 +42,7 @@ bool GridChunk::init() {
         }
     }
 
-    actor_id_ = parent_->stage()->new_actor(mesh_id_);
+    actor_id_ = parent_->stage()->new_actor_with_parent_and_mesh(parent_->group_actor_id_, mesh_id_);
     parent_->stage()->actor(actor_id_)->move_to(offset_.x, offset_.y, 0);
     parent_->stage()->actor(actor_id_)->set_render_priority(RENDER_PRIORITY_BACKGROUND);
     return true;
@@ -197,6 +197,9 @@ SpriteGrid::SpriteGrid(WindowBase& window, StageID stage, int32_t tiles_wide, in
 
     chunks_wide_ = tiles_wide_ / CHUNK_WIDTH_IN_TILES;
     chunks_high_ = tiles_high_ / CHUNK_WIDTH_IN_TILES;
+
+    //Initialize the parent actor that all chunks are nested under
+    group_actor_id_ = window.stage(stage)->new_actor();
 }
 
 Vec2 SpriteGrid::render_dimensions() const {
@@ -227,6 +230,10 @@ void SpriteGrid::cleanup() {
 
 }
 
+StagePtr SpriteGrid::stage() const {
+    return window_.stage(stage_id_);
+}
+
 StagePtr SpriteGrid::stage() {
     return window_.stage(stage_id_);
 }
@@ -251,6 +258,72 @@ TileInfo& SpriteGrid::tile_info(int32_t x_pos, int32_t y_pos) {
     int32_t chunk_y = y_pos / CHUNK_WIDTH_IN_TILES;
 
     return chunk(chunk_x, chunk_y)->tile(x_pos % CHUNK_WIDTH_IN_TILES, y_pos % CHUNK_WIDTH_IN_TILES);
+}
+
+//Moveable interface
+void SpriteGrid::move_to(const kglt::Vec3& pos) {
+    stage()->actor(group_actor_id_)->move_to(pos);
+}
+
+void SpriteGrid::move_to(const kglt::Vec2& pos) {
+    stage()->actor(group_actor_id_)->move_to(pos);
+}
+
+void SpriteGrid::move_to(float x, float y, float z) {
+    stage()->actor(group_actor_id_)->move_to(x, y, z);
+}
+
+void SpriteGrid::move_to(float x, float y) {
+    stage()->actor(group_actor_id_)->move_to(x, y);
+}
+
+void SpriteGrid::rotate_to(const kglt::Degrees& angle) {
+    stage()->actor(group_actor_id_)->rotate_to(angle);
+}
+
+void SpriteGrid::rotate_to(const kglt::Degrees& angle, float axis_x, float axis_y, float axis_z) {
+    stage()->actor(group_actor_id_)->rotate_to(angle, axis_x, axis_y, axis_z);
+}
+
+void SpriteGrid::rotate_to(const kglt::Degrees& angle, const kglt::Vec3& axis) {
+    stage()->actor(group_actor_id_)->rotate_to(angle, axis);
+}
+
+void SpriteGrid::rotate_to(const kglt::Quaternion& rotation) {
+    stage()->actor(group_actor_id_)->rotate_to(rotation);
+}
+
+void SpriteGrid::rotate_x(const Degrees &angle) {
+    stage()->actor(group_actor_id_)->rotate_x(angle);
+}
+
+void SpriteGrid::rotate_y(const Degrees &angle) {
+    stage()->actor(group_actor_id_)->rotate_y(angle);
+
+}
+
+void SpriteGrid::rotate_z(const Degrees &angle) {
+    stage()->actor(group_actor_id_)->rotate_z(angle);
+}
+
+void SpriteGrid::look_at(const kglt::Vec3& target) {
+    stage()->actor(group_actor_id_)->look_at(target);
+}
+
+void SpriteGrid::look_at(float x, float y, float z) {
+    stage()->actor(group_actor_id_)->look_at(x, y, z);
+}
+
+Vec3 SpriteGrid::position() const {
+    return stage()->actor(group_actor_id_)->position();
+}
+
+Vec2 SpriteGrid::position_2d() const {
+    return stage()->actor(group_actor_id_)->position_2d();
+}
+
+Quaternion SpriteGrid::rotation() const {
+    return stage()->actor(group_actor_id_)->rotation();
 }
 
 }

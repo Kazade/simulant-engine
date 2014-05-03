@@ -154,7 +154,6 @@ kglt/partitioners/octree_partitioner.h
 kglt/partitioners/octree.h
 kglt/partitioners/octree.cpp
 kglt/partitioners/octree_partitioner.cpp
-kglt/boundable.h
 samples/texture_scroll_sample.cpp
 kglt/resource_locator.h
 kglt/resource_locator.cpp
@@ -356,3 +355,5 @@ kglt/managers.h
 kglt/managers.cpp
 kglt/gpu_program.h
 kglt/gpu_program.cpp
+kglt/loaders/tiled_loader.h
+kglt/loaders/tiled_loader.cpp

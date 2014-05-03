@@ -16,6 +16,7 @@
 #include "resource.h"
 #include "vertex_data.h"
 #include "types.h"
+#include "interfaces.h"
 
 namespace kglt {
 
@@ -23,13 +24,17 @@ class ResourceManager;
 
 typedef uint16_t SubMeshIndex;
 
-class MeshInterface {
+class MeshInterface:
+    public Boundable {
+
 public:
     virtual ~MeshInterface() {}
     virtual const VertexData& shared_data() const = 0;
 };
 
-class SubMeshInterface {
+class SubMeshInterface:
+    public Boundable {
+
 public:
     virtual ~SubMeshInterface() {}
 
@@ -61,7 +66,7 @@ public:
 
     const MeshArrangement arrangement() const { return arrangement_; }
 
-    const kmAABB& bounds() const {
+    const AABB aabb() const {
         return bounds_;
     }
 
@@ -86,7 +91,7 @@ private:
     bool vertex_data_dirty_ = false;
     bool index_data_dirty_ = false;
 
-    kmAABB bounds_;
+    AABB bounds_;
 
     sig::connection vrecalc_;
     sig::connection irecalc_;
@@ -128,6 +133,7 @@ public:
 
     sig::signal<void ()>& signal_submeshes_changed() { return signal_submeshes_changed_; }
 
+    const AABB aabb() const;
 private:
     VertexData shared_data_;
     std::vector<SubMesh::ptr> submeshes_;

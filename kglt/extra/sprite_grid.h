@@ -53,7 +53,9 @@ private:
  */
 
 class SpriteGrid:
-    public Managed<SpriteGrid> {
+    public Managed<SpriteGrid>,
+    public Locateable,
+    public Transformable {
 
 public:
     static SpriteGrid::ptr new_from_file(WindowBase& window, StageID, const unicode& filename, const unicode& layer, float tile_render_size=1.0);
@@ -76,11 +78,36 @@ public:
     Vec2 render_dimensions() const;   
     Vec2 pixel_to_world(const kglt::Vec2& position);
 
+    //Locateable interface
+    Vec3 position() const override;
+    Vec2 position_2d() const override;
+    Quaternion rotation() const override;
+
+    //Moveable interface
+    void move_to(const kglt::Vec3& pos);
+    void move_to(const kglt::Vec2& pos);
+    void move_to(float x, float y, float z);
+    void move_to(float x, float y);
+
+    void rotate_to(const kglt::Degrees& angle);
+    void rotate_to(const kglt::Degrees& angle, float axis_x, float axis_y, float axis_z);
+    void rotate_to(const kglt::Degrees& angle, const kglt::Vec3& axis);
+    void rotate_to(const kglt::Quaternion& rotation);
+
+    void rotate_x(const Degrees &angle);
+    void rotate_y(const Degrees &angle);
+    void rotate_z(const Degrees &angle);
+
+    void look_at(const kglt::Vec3& target);
+    void look_at(float x, float y, float z);
+
 private:
     AutoWeakPtr<kglt::Stage> stage();
+    kglt::StagePtr stage() const;
 
     WindowBase& window_;
     StageID stage_id_;
+    ActorID group_actor_id_; //Only used for transforming the child chunks
 
     int32_t map_tile_height_;
     int32_t map_tile_width_;

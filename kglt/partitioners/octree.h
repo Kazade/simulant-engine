@@ -9,7 +9,7 @@
 #include <kazmath/kazmath.h>
 
 #include "../generic/managed.h"
-#include "../boundable.h"
+#include "../interfaces.h"
 #include "../types.h"
 
 #include <kazbase/list_utils.h>
@@ -107,25 +107,25 @@ public:
         return kmAABBDiameterX(&strict_bounds_);
     }
 
-    const std::set<const Boundable*>& objects() const { return objects_; }
+    const std::set<const BoundableEntity*>& objects() const { return objects_; }
 private:
     OctreeNode* parent_;
     std::map<OctreePosition, std::shared_ptr<OctreeNode> > children_;
-    std::set<const Boundable*> objects_;
+    std::set<const BoundableEntity*> objects_;
 
-    kmAABB strict_bounds_;
-    kmAABB loose_bounds_;
-    kmVec3 centre_;
+    AABB strict_bounds_;
+    AABB loose_bounds_;
+    Vec3 centre_;
 
     OctreeNode& create_child(OctreePosition pos);
 
-    OctreeNode& insert_into_subtree(const Boundable* obj);
+    OctreeNode& insert_into_subtree(const BoundableEntity *obj);
 
-    void add_object(const Boundable* obj) {
+    void add_object(const BoundableEntity* obj) {
         objects_.insert(obj);
     }
 
-    void remove_object(const Boundable* obj) {
+    void remove_object(const BoundableEntity* obj) {
         objects_.erase(obj);
     }
 
@@ -172,11 +172,11 @@ public:
 
     bool has_root() const { return root_ != nullptr; }
 
-    void grow(const Boundable* object);
-    void shrink(const Boundable* object);
-    void relocate(const Boundable* object);
+    void grow(const BoundableEntity* object);
+    void shrink(const BoundableEntity* object);
+    void relocate(const BoundableEntity* object);
 
-    OctreeNode& find(const Boundable* object);
+    OctreeNode& find(const BoundableEntity *object);
 
     std::vector<OctreeNode*> nodes_visible_from(const Frustum& frustum);
 
@@ -187,15 +187,15 @@ private:
     void _increment_node_count();
     void _decrement_node_count();
 
-    void _register_object(OctreeNode* node, const Boundable* obj) {
+    void _register_object(OctreeNode* node, const BoundableEntity* obj) {
         object_node_lookup_[obj] = node;
     }
 
-    void _unregister_object(const Boundable* obj) {
+    void _unregister_object(const BoundableEntity* obj) {
         object_node_lookup_.erase(obj);
     }
 
-    std::map<const Boundable*, OctreeNode*> object_node_lookup_;
+    std::map<const BoundableEntity*, OctreeNode*> object_node_lookup_;
 
     friend class OctreeNode;
 };

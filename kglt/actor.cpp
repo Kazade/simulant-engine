@@ -58,6 +58,23 @@ void Actor::set_mesh(MeshID mesh) {
     signal_mesh_changed_(id());
 }
 
+const AABB Actor::aabb() const {
+    if(has_mesh()) {
+        return mesh()->aabb();
+    }
+
+    return AABB();
+}
+
+const AABB Actor::transformed_aabb() const {
+    AABB box = aabb(); //Get the untransformed one
+
+    auto pos = absolute_position();
+    kmVec3Add(&box.min, &box.min, &pos);
+    kmVec3Add(&box.max, &box.max, &pos);
+    return box;
+}
+
 void Actor::ask_owner_for_destruction() {
     stage()->delete_actor(id());
 }

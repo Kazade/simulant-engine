@@ -8,7 +8,7 @@
 
 #include "kazbase/signals3/signals3.hpp"
 
-#include "boundable.h"
+#include "interfaces.h"
 #include "object.h"
 #include "mesh.h"
 #include "sound.h"
@@ -22,6 +22,7 @@ class SubActor;
 
 class Actor :
     public MeshInterface,
+    public virtual BoundableEntity,
     public Managed<Actor>,
     public generic::Identifiable<ActorID>,
     public ParentSetterMixin<Object>,
@@ -67,6 +68,9 @@ public:
             return _u("Actor {0}").format(this->id());
         }
     }
+
+    const AABB aabb() const;
+    const AABB transformed_aabb() const;
 private:
     MeshPtr mesh_;
     std::vector<std::shared_ptr<SubActor> > subactors_;
@@ -89,8 +93,8 @@ private:
 
 class SubActor :
     public SubMeshInterface,
-    public Managed<SubActor>,
-    public Boundable {
+    public virtual BoundableEntity,
+    public Managed<SubActor> {
 
 public:
     SubActor(Actor& parent, SubMeshIndex idx):
@@ -114,16 +118,11 @@ public:
 
     Actor& _parent() { return parent_; }
 
-    /* Boundable interface implementation */
+    /* BoundableAndTransformable interface implementation */
 
-    /**
-     * @brief absolute_bounds
-     * @return the bounds of the linked submesh, transformed by the actors absolute
-     * transformation matrix.
-     */
-    const kmAABB absolute_bounds() const {
-        kmAABB local = local_bounds();
-        kmMat4 transform = parent_.absolute_transformation();
+    const AABB transformed_aabb() const {
+        AABB local = aabb();
+        Mat4 transform = parent_.absolute_transformation();
 
         //Transform local by the transformation matrix of the parent
         kmVec3Transform(&local.min, &local.min, &transform);
@@ -132,22 +131,8 @@ public:
         return local;
     }
 
-    /**
-     * @brief local_bounds
-     * @return the bounds of the associated submesh
-     */
-    const kmAABB local_bounds() const {
-        return submesh().bounds();
-    }
-
-    const Vec3 centre() const {
-        // Return the centre point of the absolute bounds of this subactor
-        // which is the submesh().bounds() transformed by the parent actor's
-        // location
-        Vec3 centre;
-        kmAABB abs_bounds = absolute_bounds();
-        kmAABBCentre(&abs_bounds, &centre);
-        return centre;
+    const AABB aabb() const {
+        return submesh().aabb();
     }
 
 private:

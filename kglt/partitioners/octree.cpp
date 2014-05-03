@@ -12,7 +12,7 @@ Octree::Octree() {
 
 }
 
-OctreeNode& Octree::find(const Boundable* object) {
+OctreeNode& Octree::find(const BoundableEntity* object) {
     if(!container::contains(object_node_lookup_, object)) {
         throw std::logic_error("Object does not exist in the tree");
     }
@@ -44,7 +44,7 @@ std::vector<OctreeNode*> Octree::nodes_visible_from(const Frustum& frustum) {
     return result;
 }
 
-void Octree::shrink(const Boundable* object) {
+void Octree::shrink(const BoundableEntity* object) {
     assert(object);
 
     if(!container::contains(this->object_node_lookup_, object)) {
@@ -61,17 +61,11 @@ void Octree::shrink(const Boundable* object) {
     _unregister_object(object);
 }
 
-void Octree::grow(const Boundable *object) {
+void Octree::grow(const BoundableEntity *object) {
     assert(object);
 
-    kmAABB obj_bounds = object->absolute_bounds();
-    float obj_diameter = std::max(
-        kmAABBDiameterX(&obj_bounds),
-        std::max(
-            kmAABBDiameterY(&obj_bounds),
-            kmAABBDiameterZ(&obj_bounds)
-        )
-    );
+    AABB obj_bounds = object->transformed_aabb();
+    float obj_diameter = object->diameter();
 
     if(obj_diameter < kmEpsilon) {
         L_DEBUG("Not adding object to the octree because it has no volume");
@@ -322,16 +316,9 @@ kmAABB OctreeNode::calculate_child_strict_bounds(OctreePosition pos) {
  * node that can fit the object. If the object doesn't fit inside any
  * nodes then an ObjectDoesNotFitError() is thrown.
  */
-OctreeNode& OctreeNode::insert_into_subtree(const Boundable* obj) {
-    kmAABB obj_bounds = obj->absolute_bounds();
-
-    float obj_diameter = std::max(
-        kmAABBDiameterX(&obj_bounds),
-        std::max(
-            kmAABBDiameterY(&obj_bounds),
-            kmAABBDiameterZ(&obj_bounds)
-        )
-    );
+OctreeNode& OctreeNode::insert_into_subtree(const BoundableEntity* obj) {
+    AABB obj_bounds = obj->transformed_aabb();
+    float obj_diameter = obj->diameter();
 
     if(obj_diameter < this->strict_diameter() / 2) {
         //Object will fit into child
