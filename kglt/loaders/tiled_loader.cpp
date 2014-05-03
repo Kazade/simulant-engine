@@ -115,7 +115,7 @@ void TiledLoader::into(Loadable &resource, const LoaderOptions &options) {
             float y1 = y0 - tileset.tile_height;
 
             Vec3 offset;
-            offset.x = (float(x) * tile_render_size) - (0.5 * tile_render_size);
+            offset.x = (float(x) * tile_render_size) + (0.5 * tile_render_size);
             offset.y = (float(layer->GetHeight() - y) * tile_render_size) - (0.5 * tile_render_size);
 
             //Create the submesh as a rectangle, the offset determines the location on the map
