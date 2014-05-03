@@ -3,6 +3,7 @@
 #include "../mesh.h"
 
 namespace kglt {
+namespace tiled {
 
 Vec2 pixel_to_world(const MeshPtr& mesh, const Vec2& pixel_position) {
     //FIXME: If the mesh has been scaled this won't work...
@@ -16,4 +17,5 @@ Vec2 pixel_to_world(const MeshPtr& mesh, const Vec2& pixel_position) {
     );
 }
 
+}
 }
