@@ -94,8 +94,8 @@ SubMeshIndex Mesh::new_submesh(
     return idx;
 }
 
-SubMeshIndex Mesh::new_submesh_as_rectangle(MaterialID material, float width, float height, const kglt::Vec3& offset, bool uses_shared_vertices) {
-    SubMeshIndex ret = new_submesh(material, MESH_ARRANGEMENT_TRIANGLES, uses_shared_vertices);
+SubMeshIndex Mesh::new_submesh_as_rectangle(MaterialID material, float width, float height, const kglt::Vec3& offset) {
+    SubMeshIndex ret = new_submesh(material, MESH_ARRANGEMENT_TRIANGLES, false);
 
     auto& sm = submesh(ret);
 
