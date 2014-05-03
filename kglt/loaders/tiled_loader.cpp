@@ -39,6 +39,7 @@ void TiledLoader::into(Loadable &resource, const LoaderOptions &options) {
     map.ParseFile(this->filename_.encode());
 
     unicode layer_name = options.at("layer");
+    float tile_render_size = unicode(options.at("render_size")).to_float();
 
     auto layers = map.GetLayers();
     auto it = std::find_if(layers.begin(), layers.end(), [=](Tmx::Layer* layer) { return layer->GetName() == layer_name.encode(); });
@@ -86,6 +87,7 @@ void TiledLoader::into(Loadable &resource, const LoaderOptions &options) {
     mesh->stash(layer->GetWidth(), "TILED_LAYER_WIDTH");
     mesh->stash(map.GetTileWidth(), "TILED_MAP_TILE_WIDTH");
     mesh->stash(map.GetTileHeight(), "TILED_MAP_TILE_HEIGHT");
+    mesh->stash(tile_render_size, "TILED_TILE_RENDER_SIZE");
 
     /*
       Now go through the layer and build up a tile submesh for each grid square. Originally I chunked these
@@ -113,11 +115,11 @@ void TiledLoader::into(Loadable &resource, const LoaderOptions &options) {
             float y1 = y0 - tileset.tile_height;
 
             Vec3 offset;
-            offset.x = float(x) - 0.5;
-            offset.y = float(layer->GetHeight() - y) - 0.5;
+            offset.x = (float(x) * tile_render_size) - (0.5 * tile_render_size);
+            offset.y = (float(layer->GetHeight() - y) * tile_render_size) - (0.5 * tile_render_size);
 
             //Create the submesh as a rectangle, the offset determines the location on the map
-            auto sidx = mesh->new_submesh_as_rectangle(tileset_materials.at(tileset_index), 1.0, 1.0, Vec3(offset.x, offset.y, 0));
+            auto sidx = mesh->new_submesh_as_rectangle(tileset_materials.at(tileset_index), tile_render_size, tile_render_size, Vec3(offset.x, offset.y, 0));
 
             //Set texture coordinates appropriately for the tileset
             float tx0 = x0 / tileset.total_width + (0.5 / tileset.total_width);

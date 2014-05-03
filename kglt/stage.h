@@ -122,8 +122,8 @@ public:
         return window().new_mesh_from_file(path, garbage_collect);
     }
 
-    MeshID new_mesh_from_tmx_file(const unicode& tmx_file, const unicode& layer_name, bool garbage_collect=true) override {
-        return window().new_mesh_from_tmx_file(tmx_file, layer_name, garbage_collect);
+    MeshID new_mesh_from_tmx_file(const unicode& tmx_file, const unicode& layer_name, float tile_render_size=1.0, bool garbage_collect=true) override {
+        return window().new_mesh_from_tmx_file(tmx_file, layer_name, tile_render_size, garbage_collect);
     }
 
     virtual MeshID new_mesh_as_cube(float width, bool garbage_collect=true) {

@@ -87,9 +87,12 @@ MeshID ResourceManagerImpl::new_mesh_from_file(const unicode& path, bool garbage
     return mesh_id;
 }
 
-MeshID ResourceManagerImpl::new_mesh_from_tmx_file(const unicode& tmx_file, const unicode& layer_name, bool garbage_collect) {
+MeshID ResourceManagerImpl::new_mesh_from_tmx_file(const unicode& tmx_file, const unicode& layer_name, float tile_render_size, bool garbage_collect) {
     kglt::MeshID mesh_id = new_mesh(garbage_collect);
-    window().loader_for(tmx_file.encode())->into(mesh(mesh_id), { {"layer", layer_name } });
+    window().loader_for(tmx_file.encode())->into(mesh(mesh_id), {
+        {"layer", layer_name},
+        {"render_size", _u("{0}").format(tile_render_size)}
+    });
     MeshManager::mark_as_uncollected(mesh_id);
     return mesh_id;
 }

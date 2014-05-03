@@ -28,7 +28,7 @@ public:
     //Mesh functions
     virtual MeshID new_mesh(bool garbage_collect=true) = 0;
     virtual MeshID new_mesh_from_file(const unicode& path, bool garbage_collect=true) = 0;
-    virtual MeshID new_mesh_from_tmx_file(const unicode& tmx_file, const unicode& layer_name, bool garbage_collect=true) = 0;
+    virtual MeshID new_mesh_from_tmx_file(const unicode& tmx_file, const unicode& layer_name, float tile_render_size=1.0, bool garbage_collect=true) = 0;
 
     virtual MeshID new_mesh_as_cube(float width, bool garbage_collect=true) = 0;
     virtual MeshID new_mesh_as_sphere(float diameter, bool garbage_collect=true) = 0;
@@ -126,7 +126,7 @@ public:
 
     MeshID new_mesh(bool garbage_collect=true) override;
     MeshID new_mesh_from_file(const unicode& path, bool garbage_collect=true) override;
-    MeshID new_mesh_from_tmx_file(const unicode& tmx_file, const unicode& layer_name, bool garbage_collect=true) override;
+    MeshID new_mesh_from_tmx_file(const unicode& tmx_file, const unicode& layer_name, float tile_render_size=1.0, bool garbage_collect=true) override;
     MeshID new_mesh_as_cube(float width, bool garbage_collect=true) override;
     MeshID new_mesh_as_sphere(float diameter, bool garbage_collect=true) override;
     MeshID new_mesh_as_rectangle(float width, float height, const Vec2& offset=Vec2(), bool garbage_collect=true) override;
