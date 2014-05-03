@@ -107,7 +107,7 @@ void TiledLoader::into(Loadable &resource, const LoaderOptions &options) {
             float y1 = y0 - tileset.tile_height;
 
             //Create the submesh as a rectangle, the offset determines the location on the map
-            auto sidx = mesh->new_submesh_as_rectangle(tileset_materials.at(tileset_index), 1.0, 1.0, Vec2(-0.5, -0.5));
+            auto sidx = mesh->new_submesh_as_rectangle(tileset_materials.at(tileset_index), 1.0, 1.0, Vec3(-0.5, -0.5, 0));
 
             //Set texture coordinates appropriately for the tileset
             float tx0 = x0 / tileset.total_width + (0.5 / tileset.total_width);

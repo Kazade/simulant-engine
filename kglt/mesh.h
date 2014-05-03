@@ -116,6 +116,8 @@ public:
     }
 
     SubMeshIndex new_submesh(MaterialID material, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool uses_shared_vertices=true);
+    SubMeshIndex new_submesh_as_rectangle(MaterialID material, float width, float height, const Vec3& offset=Vec3(), bool uses_shared_vertices=true);
+
     SubMesh& submesh(SubMeshIndex index);
     void delete_submesh(SubMeshIndex index);
     void clear();

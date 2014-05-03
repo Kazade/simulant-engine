@@ -94,6 +94,65 @@ SubMeshIndex Mesh::new_submesh(
     return idx;
 }
 
+SubMeshIndex Mesh::new_submesh_as_rectangle(MaterialID material, float width, float height, const kglt::Vec3& offset, bool uses_shared_vertices) {
+    SubMeshIndex ret = new_submesh(material, MESH_ARRANGEMENT_TRIANGLES, uses_shared_vertices);
+
+    auto& sm = submesh(ret);
+
+    float x_offset = offset.x;
+    float y_offset = offset.y;
+    float z_offset = offset.z;
+
+    //Build some shared vertex data
+    sm.vertex_data().position(x_offset + (-width / 2.0), y_offset + (-height / 2.0), z_offset);
+    sm.vertex_data().diffuse(kglt::Colour::WHITE);
+    sm.vertex_data().tex_coord0(0.0, 0.0);
+    sm.vertex_data().tex_coord1(0.0, 0.0);
+    sm.vertex_data().tex_coord2(0.0, 0.0);
+    sm.vertex_data().tex_coord3(0.0, 0.0);
+    sm.vertex_data().normal(0, 0, 1);
+    sm.vertex_data().move_next();
+
+    sm.vertex_data().position(x_offset + (width / 2.0), y_offset + (-height / 2.0), z_offset);
+    sm.vertex_data().diffuse(kglt::Colour::WHITE);
+    sm.vertex_data().tex_coord0(1.0, 0.0);
+    sm.vertex_data().tex_coord1(1.0, 0.0);
+    sm.vertex_data().tex_coord2(1.0, 0.0);
+    sm.vertex_data().tex_coord3(1.0, 0.0);
+    sm.vertex_data().normal(0, 0, 1);
+    sm.vertex_data().move_next();
+
+    sm.vertex_data().position(x_offset + (width / 2.0),  y_offset + (height / 2.0), z_offset);
+    sm.vertex_data().diffuse(kglt::Colour::WHITE);
+    sm.vertex_data().tex_coord0(1.0, 1.0);
+    sm.vertex_data().tex_coord1(1.0, 1.0);
+    sm.vertex_data().tex_coord2(1.0, 1.0);
+    sm.vertex_data().tex_coord3(1.0, 1.0);
+    sm.vertex_data().normal(0, 0, 1);
+    sm.vertex_data().move_next();
+
+    sm.vertex_data().position(x_offset + (-width / 2.0),  y_offset + (height / 2.0), z_offset);
+    sm.vertex_data().diffuse(kglt::Colour::WHITE);
+    sm.vertex_data().tex_coord0(0.0, 1.0);
+    sm.vertex_data().tex_coord1(0.0, 1.0);
+    sm.vertex_data().tex_coord2(0.0, 1.0);
+    sm.vertex_data().tex_coord3(0.0, 1.0);
+    sm.vertex_data().normal(0, 0, 1);
+    sm.vertex_data().move_next();
+    sm.vertex_data().done();
+
+    sm.index_data().index(0);
+    sm.index_data().index(1);
+    sm.index_data().index(2);
+
+    sm.index_data().index(0);
+    sm.index_data().index(2);
+    sm.index_data().index(3);
+    sm.index_data().done();
+
+    return ret;
+}
+
 void Mesh::delete_submesh(SubMeshIndex index) {
     if(!container::contains(submeshes_by_index_, index)) {
         throw std::out_of_range("Tried to delete a submesh that doesn't exist");
