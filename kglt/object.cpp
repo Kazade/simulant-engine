@@ -53,6 +53,10 @@ void Object::constrain_to(const Vec3 &min, const Vec3 &max) {
     constraint_.reset(new std::pair<Vec3, Vec3>(min, max));
 }
 
+void Object::constrain_to(const AABB& box) {
+    constrain_to(box.min, box.max);
+}
+
 std::pair<Vec3, Vec3> Object::constraint() const {
     if(!is_constrained()) {
         throw LogicError("Tried to get constraint on unconstrained camera");

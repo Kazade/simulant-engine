@@ -49,6 +49,7 @@ public:
     std::pair<Vec3, Vec3> constraint() const;
     bool is_constrained() const;
     void constrain_to(const Vec3& min, const Vec3& max);
+    void constrain_to(const AABB& box);
     void disable_constraint();
 
     ///Transformable interface
