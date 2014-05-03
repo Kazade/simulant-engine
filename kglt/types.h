@@ -20,6 +20,7 @@
 #include <kazmath/utility.h>
 #include <kazmath/aabb.h>
 
+#include "generic/protected_ptr.h"
 #include "generic/auto_weakptr.h"
 #include "generic/unique_id.h"
 #include "kazbase/unicode.h"
@@ -442,8 +443,7 @@ const StageID DefaultStageID = StageID();
 const std::string DEFAULT_MATERIAL_SCHEME = "default";
 
 class Mesh;
-typedef std::weak_ptr<Mesh> MeshRef;
-typedef std::shared_ptr<Mesh> MeshPtr;
+typedef ProtectedPtr<Mesh> MeshPtr;
 
 class Material;
 typedef std::weak_ptr<Material> MaterialRef;

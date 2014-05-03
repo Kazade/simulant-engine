@@ -72,7 +72,7 @@ public:
     const AABB aabb() const;
     const AABB transformed_aabb() const;
 private:
-    MeshPtr mesh_;
+    std::shared_ptr<Mesh> mesh_;
     std::vector<std::shared_ptr<SubActor> > subactors_;
 
     RenderPriority render_priority_;
