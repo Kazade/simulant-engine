@@ -10,12 +10,16 @@ Vec2 pixel_to_world(const MeshPtr& mesh, const Vec2& pixel_position) {
 
     int map_tile_width = mesh->get<int>("TILED_MAP_TILE_WIDTH");
     int map_tile_height = mesh->get<int>("TILED_MAP_TILE_HEIGHT");
-    float render_size = mesh->get<float>("TILED_TILE_RENDER_SIZE");
+    float render_size = get_tile_render_size(mesh);
 
     return Vec2(
         ((pixel_position.x / float(map_tile_width)) * render_size),
         ((pixel_position.y / float(map_tile_height)) * render_size)
     );
+}
+
+float get_tile_render_size(const MeshPtr& mesh) {
+    return mesh->get<float>("TILED_TILE_RENDER_SIZE");
 }
 
 }
