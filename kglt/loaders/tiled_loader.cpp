@@ -98,6 +98,9 @@ void TiledLoader::into(Loadable &resource, const LoaderOptions &options) {
     for(int32_t y = 0; y < layer->GetHeight(); ++y) {
         for(int32_t x = 0; x < layer->GetWidth(); ++x) {
             int32_t tileset_index = layer->GetTileTilesetIndex(x, y);
+            if(tileset_index < 0) {
+                continue;
+            }
 
             TilesetInfo& tileset = tileset_info[tileset_index];
 
