@@ -1,6 +1,8 @@
 #include "kglt/kglt.h"
 #include "kglt/shortcuts.h"
 
+#include <kazbase/noise.h>
+
 int main(int argc, char* argv[]) {
     logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));
     
@@ -23,7 +25,28 @@ int main(int argc, char* argv[]) {
     ///Shortcut function for loading images
     kglt::TextureID tid = stage->new_texture();
     auto tex = stage->texture(tid);
-    kglt::procedural::texture::starfield(tex.__object);
+    tex->resize(512, 512);
+
+    auto perlin = noise::PerlinOctave(5);
+
+    auto& data = tex->data();
+    for(int y = 0; y < 512; ++y) {
+        for(int x = 0; x < 512; ++x) {
+            double X = (double)x/((double)512);
+            double Y = (double)y/((double)512);
+
+            double d = perlin.noise(X, Y, 0) + 0.5;
+            d = std::min(d, 1.0);
+            d = std::max(d, 0.0);
+
+            data[((y * 512) + x) * 4] = int(d * 255.0);
+            data[((y * 512) + x) * 4 + 1] = int(d * 255.0);
+            data[((y * 512) + x) * 4 + 2] = int(d * 255.0);
+            data[((y * 512) + x) * 4 + 3] = 255;
+        }
+    }
+
+    tex->upload();
 
     kglt::ActorID actor_id = stage->geom_factory().new_rectangle(2.0, 2.0);
     stage->actor(actor_id)->mesh()->set_texture_on_material(0, tid);
