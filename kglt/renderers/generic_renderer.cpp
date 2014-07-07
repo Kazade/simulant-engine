@@ -143,7 +143,7 @@ void send_attribute(GPUProgram& program,
             BUFFER_OFFSET(get_offset())
         );
     } else {
-        L_WARN("Couldn't locate attribute on the mesh: " + boost::lexical_cast<std::string>(attr));
+        L_WARN(_u("Couldn't locate attribute on the mesh: {0}").format(attr));
     }
 }
 

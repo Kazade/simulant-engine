@@ -461,6 +461,9 @@ class Actor;
 typedef std::shared_ptr<Actor> ActorPtr;
 typedef std::weak_ptr<Actor> ActorRef;
 
+class Sprite;
+typedef ProtectedPtr<Sprite> SpritePtr;
+
 class Light;
 typedef std::shared_ptr<Light> LightPtr;
 
@@ -480,6 +483,9 @@ typedef AutoWeakPtr<Background> BackgroundPtr;
 
 class Stage;
 typedef AutoWeakPtr<Stage> StagePtr;
+
+class ResourceManager;
+typedef AutoWeakPtr<ResourceManager> ResourceManagerPtr;
 
 class PhysicsEngine;
 typedef AutoWeakPtr<PhysicsEngine> PhysicsEnginePtr;

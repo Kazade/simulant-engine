@@ -7,6 +7,7 @@
 #include <functional>
 #include <SDL.h>
 #include <set>
+#include <cassert>
 
 #include "generic/managed.h"
 #include "generic/identifiable.h"

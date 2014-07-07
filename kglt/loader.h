@@ -1,6 +1,7 @@
 #ifndef KGLT_LOADER_H
 #define KGLT_LOADER_H
 
+#include <unordered_map>
 #include <stdexcept>
 #include <string>
 #include <memory>
@@ -12,7 +13,7 @@
 
 namespace kglt {
 
-typedef std::map<unicode, unicode> LoaderOptions;
+typedef std::unordered_map<unicode, unicode> LoaderOptions;
 
 class Loader {
 public:

@@ -15,7 +15,6 @@
 #include <kazmath/mat4.h>
 
 #include "../loader.h"
-#include <kazbase/string.h>
 #include <kazbase/os/path.h>
 #include "../window_base.h"
 #include "../camera.h"
@@ -426,9 +425,9 @@ uint16_t Interface::height() const {
 }
 
 Element Interface::append(const std::string& tag) {
-    std::string tag_name = str::strip(tag);
+    unicode tag_name = unicode(tag).strip();
 
-    Rocket::Core::Element* elem = impl_->document_->CreateElement(tag_name.c_str());
+    Rocket::Core::Element* elem = impl_->document_->CreateElement(tag_name.encode().c_str());
     impl_->document_->AppendChild(elem);
 
     Element result = Element(
@@ -445,10 +444,10 @@ Element Interface::append(const std::string& tag) {
 ElementList Interface::_(const std::string& selector) {
     std::vector<Element> result;
     Rocket::Core::ElementList elements;
-    if(str::starts_with(selector, ".")) {
-        impl_->document_->GetElementsByClassName(elements, str::strip(selector, ".").c_str());
-    } else if(str::starts_with(selector, "#")) {
-        Rocket::Core::Element* elem = impl_->document_->GetElementById(str::strip(selector, "#").c_str());
+    if(unicode(selector).starts_with(".")) {
+        impl_->document_->GetElementsByClassName(elements, unicode(selector).strip(".").encode().c_str());
+    } else if(unicode(selector).starts_with("#")) {
+        Rocket::Core::Element* elem = impl_->document_->GetElementById(unicode(selector).strip("#").encode().c_str());
         if(elem) {
             result.push_back(
                 Element(std::shared_ptr<ElementImpl>(new ElementImpl(elem)))

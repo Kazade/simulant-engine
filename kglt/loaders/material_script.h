@@ -15,8 +15,8 @@ namespace kglt {
 
 class SyntaxError : public std::logic_error {
 public:
-    SyntaxError(const std::string& what):
-        std::logic_error(what) {}
+    SyntaxError(const unicode& what):
+        std::logic_error(what.encode()) {}
 };
 
 /*
@@ -44,14 +44,14 @@ private:
     MaterialLanguageText text_;
 
     void handle_block(Material& mat,
-            const std::vector<std::string>& lines,
+            const std::vector<unicode> &lines,
             uint16_t& current_line,
-            const std::string& parent_block_type,
+            const unicode& parent_block_type,
             MaterialPass* current_pass=nullptr);
 
     void handle_technique_set_command(Material& mat , const std::vector<std::string>& args, MaterialTechnique* technique);
-    void handle_pass_set_command(Material& mat, const std::vector<std::string>& args, MaterialPass* pass);
-    void handle_data_block(Material& mat, const std::string& data_type, const std::vector<std::string>& lines, MaterialPass* pass);
+    void handle_pass_set_command(Material& mat, const std::vector<unicode> &args, MaterialPass* pass);
+    void handle_data_block(Material& mat, const unicode &data_type, const std::vector<unicode>& lines, MaterialPass* pass);
 };
 
 namespace loaders {

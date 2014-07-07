@@ -86,7 +86,7 @@ void Octree::grow(const BoundableEntity *object) {
             object->centre()
         ));
 
-        L_DEBUG("Root node created with strict width of: " + boost::lexical_cast<std::string>(node_size));
+        L_DEBUG(_u("Root node created with strict width of: {0}").format(node_size));
     }
 
     //While the object is too big for the root

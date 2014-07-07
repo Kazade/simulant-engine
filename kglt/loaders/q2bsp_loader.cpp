@@ -16,7 +16,6 @@
 #include "../light.h"
 #include "../camera.h"
 #include "../procedural/texture.h"
-#include <kazbase/string.h>
 #include "q2bsp_loader.h"
 
 #include "kglt/shortcuts.h"

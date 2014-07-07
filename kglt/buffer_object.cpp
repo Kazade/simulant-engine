@@ -1,3 +1,5 @@
+#include <cassert>
+
 #include "utils/glcompat.h"
 
 #include "kazbase/logging.h"

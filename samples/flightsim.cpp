@@ -1,5 +1,3 @@
-#include <kazbase/string.h>
-
 #include "kglt/kglt.h"
 #include "kglt/shortcuts.h"
 #include "kglt/extra/skybox.h"
@@ -12,9 +10,10 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    std::string filename = argv[1];
+    unicode filename = argv[1];
+    filename = filename.lower();
 
-    if(!str::contains(str::lower(filename), ".opt") && !(str::contains(str::lower(filename), ".obj"))) {
+    if(!filename.ends_with(".opt") && !filename.ends_with(".obj")) {
         std::cout << "Please specify a file with a .opt or .obj extension" << std::endl;
         return 2;
     }

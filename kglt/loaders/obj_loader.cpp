@@ -3,7 +3,6 @@
 #include "../mesh.h"
 #include "../resource_manager.h"
 #include <kazbase/unicode.h>
-#include <kazbase/string.h>
 #include <kazbase/file_utils.h>
 #include <kazbase/os.h>
 #include "../shortcuts.h"

@@ -1,6 +1,5 @@
 #include "material_script.h"
 #include <kazbase/exceptions.h>
-#include <kazbase/string.h>
 #include <kazbase/unicode.h>
 #include <kazbase/logging.h>
 #include "../types.h"
@@ -27,19 +26,20 @@ void MaterialScript::handle_technique_set_command(Material& mat, const std::vect
         throw SyntaxError("Wrong number of arguments for SET command");
     }
 
-    std::string type = str::upper(args[0]);
-    throw SyntaxError("Invalid SET command for technique: " + type);
+    unicode type = unicode(args[0]).upper();
+    throw SyntaxError(_u("Invalid SET command for technique: {0}").format(type));
 }
 
-void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<std::string>& args, MaterialPass* pass) {
+void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<unicode>& args, MaterialPass* pass) {
     if(args.size() < 2) {
         throw SyntaxError("Wrong number of arguments for SET command");
     }
-    std::string type = str::upper(args[0]);
-    std::string arg_1 = str::upper(args[1]);
+
+    unicode type = unicode(args[0]).upper();
+    unicode arg_1 = unicode(args[1]);
 
     if(type == "TEXTURE_UNIT") {
-        TextureID tex_id = mat.resource_manager().new_texture_from_file(str::strip(args[1], "\""));
+        TextureID tex_id = mat.resource_manager().new_texture_from_file(arg_1.strip("\""));
         pass->set_texture_unit(pass->texture_unit_count(), tex_id);
     } else if(type == "ITERATION") {
         if(arg_1 == "ONCE") {
@@ -47,7 +47,7 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
         } else if(arg_1 == "ONCE_PER_LIGHT") {
             pass->set_iteration(ITERATE_ONCE_PER_LIGHT, pass->max_iterations());
         } else {
-            throw SyntaxError("Invalid argument to SET(ITERATION): " + args[1]);
+            throw SyntaxError(_u("Invalid argument to SET(ITERATION): ") + args[1]);
         }
     } else if (type == "MAX_ITERATIONS") {
         int count = unicode(arg_1).to_int();
@@ -60,7 +60,7 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
         {
             auto shader = pass->program();
 
-            std::string variable_name = str::strip(args[2], "\"");
+            std::string variable_name = unicode(args[2]).strip("\"").encode();
             if(arg_1 == "POSITION") {
                 shader->attributes().register_auto(SP_ATTR_VERTEX_POSITION, variable_name);
             } else if(arg_1 == "TEXCOORD0") {
@@ -76,7 +76,7 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
             } else if(arg_1 == "DIFFUSE") {
                 shader->attributes().register_auto(SP_ATTR_VERTEX_DIFFUSE, variable_name);
             } else {
-                throw SyntaxError("Unhandled attribute: " + arg_1);
+                throw SyntaxError(_u("Unhandled attribute: {0}").format(arg_1));
             }
         }
     } else if(type == "UNIFORM") {
@@ -84,13 +84,13 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
             throw SyntaxError("Wrong number of arguments to SET(UNIFORM)");
         }
 
-        std::string variable_name = str::strip(args[2], "\"");
+        std::string variable_name = unicode(args[2]).strip("\"").encode();
 
         if(arg_1 == "INT") {
             int32_t value = 0;
             try {
-                value = boost::lexical_cast<int>(args[3]);
-            } catch(boost::bad_lexical_cast& e) {
+                value = unicode(args[3]).to_int();
+            } catch(std::exception& e) { //FIXME: Should be a specific exception
                 throw SyntaxError("Invalid INT value passed to SET(UNIFORM)");
             }
 
@@ -100,7 +100,7 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
         }
 
     } else if(type == "AUTO_UNIFORM") {
-        std::string variable_name = str::strip(args[2], "\"");
+        std::string variable_name = unicode(args[2]).strip("\"").encode();
 
         if(arg_1 == "VIEW_MATRIX") {
             pass->program()->uniforms().register_auto(SP_AUTO_VIEW_MATRIX, variable_name);
@@ -145,10 +145,10 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
         } else if(arg_1 == "ACTIVE_TEXTURE_UNITS") {
             pass->program()->uniforms().register_auto(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS, variable_name);
         } else {
-            throw SyntaxError("Unhandled auto-uniform: " + arg_1);
+            throw SyntaxError(_u("Unhandled auto-uniform: {0}").format(arg_1));
         }
     } else if (type == "FLAG") {
-        std::string arg_2 = str::upper(args[2]);
+        std::string arg_2 = unicode(args[2]).upper().encode();
 
         if(arg_1 == "DEPTH_WRITE") {
             if(arg_2 == "ON") {
@@ -179,54 +179,54 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<st
                 throw SyntaxError("Invalid argument passed to SET(FLAG BLEND):" + arg_2);
             }
         } else {
-            throw SyntaxError("Invalid argument passed to SET(FLAG): " + arg_1);
+            throw SyntaxError(_u("Invalid argument passed to SET(FLAG): {0}").format(arg_1));
         }
     } else {
-        throw SyntaxError("Invalid SET command for pass: " + type);
+        throw SyntaxError(_u("Invalid SET command for pass: {0}").format(type));
     }
 }
 
-void MaterialScript::handle_data_block(Material& mat, const std::string& data_type, const std::vector<std::string>& lines, MaterialPass* pass) {
-    if(str::upper(data_type) == "VERTEX") {
-        std::string source = str::join(lines, "\n");
+void MaterialScript::handle_data_block(Material& mat, const unicode& data_type, const std::vector<unicode> &lines, MaterialPass* pass) {
+    if(data_type.upper() == "VERTEX") {
+        unicode source = _u("\n").join(lines);
         pass->program()->set_shader_source(SHADER_TYPE_VERTEX, source);
-    } else if(str::upper(data_type) == "FRAGMENT") {
-        std::string source = str::join(lines, "\n");
+    } else if(data_type.upper() == "FRAGMENT") {
+        unicode source = _u("\n").join(lines);
         pass->program()->set_shader_source(SHADER_TYPE_FRAGMENT, source);
     } else {
-        throw SyntaxError("Invalid BEGIN_DATA block: " + data_type);
+        throw SyntaxError(_u("Invalid BEGIN_DATA block: ") + data_type);
     }
 }
 
 void MaterialScript::handle_block(Material& mat,
-        const std::vector<std::string>& lines,
+        const std::vector<unicode>& lines,
         uint16_t& current_line,
-        const std::string& parent_block_type,
+        const unicode &parent_block_type,
         MaterialPass* current_pass) {
 
-    std::string line = str::strip(lines[current_line]);
+    unicode line = unicode(lines[current_line]).strip();
     current_line++;
 
-    assert(str::starts_with(line, "BEGIN"));
+    assert(unicode(line).starts_with("BEGIN"));
 
-    std::vector<std::string> block_args = str::split(str::strip(str::split(line, "(")[1], ")"), " ");
-    std::string block_type = str::upper(block_args[0]);
+    std::vector<unicode> block_args = line.split("(")[1].strip(")").split(" ");
+    unicode block_type = block_args[0].upper();
 
-    const std::vector<std::string> VALID_BLOCKS = {
+    const std::vector<unicode> VALID_BLOCKS = {
         "PASS"
     };
 
     if(!container::contains(VALID_BLOCKS, block_type)) {
-        throw SyntaxError("Line: " + boost::lexical_cast<std::string>(current_line) + ". Invalid block type: " + block_type);
+        throw SyntaxError(_u("Line: {0}. Invalid block type: {1}").format(current_line, block_type));
     }
 
     if (block_type == "PASS") {
         if(!parent_block_type.empty()) {
-            throw SyntaxError("Line: " + boost::lexical_cast<std::string>(current_line) + ". Unexpected PASS block");
+            throw SyntaxError(_u("Line: {0}. Unexpected PASS block").format(current_line));
         }
 
         if(block_args.size() > 1) {
-            throw SyntaxError("Line: " + boost::lexical_cast<std::string>(current_line) + ". Wrong number of arguments");
+            throw SyntaxError(_u("Line: {0}. Wrong number of arguments.").format(current_line));
         }
 
         //Create the pass with the default shader
@@ -238,17 +238,17 @@ void MaterialScript::handle_block(Material& mat,
         line = lines[current_line];
 
         //If we hit another BEGIN block, process it
-        if(str::starts_with(line, "BEGIN_DATA")) {
+        if(line.starts_with("BEGIN_DATA")) {
             //L_DEBUG("Found BEGIN_DATA block");
-            std::string data_type = str::strip(str::split(line, "(")[1], ")");
+            unicode data_type = line.split("(")[1].strip(")");
 
             //FIXME: Read all lines up to the end into a single string and then pass that
-            std::vector<std::string> data;
+            std::vector<unicode> data;
 
             while(current_line < lines.size()) {
                 current_line++;
-                std::string new_line = lines[current_line];
-                if(str::starts_with(new_line, "END_DATA")) {
+                unicode new_line = lines[current_line];
+                if(new_line.starts_with("END_DATA")) {
                     //FIXME: Check END_DATA type is the same as the start
                     break;
                 } else {
@@ -261,28 +261,27 @@ void MaterialScript::handle_block(Material& mat,
             } else {
                 throw SyntaxError(unicode("Line: {0}. Block does not accept BEGIN_DATA commands").format(current_line).encode());
             }
-        } else if(str::starts_with(line, "BEGIN")) {
+        } else if(line.starts_with("BEGIN")) {
            // L_DEBUG("Found BEGIN block");
             handle_block(mat, lines, current_line, block_type, current_pass);
-        } else if(str::starts_with(line, "END")) {
+        } else if(line.starts_with("END")) {
            // L_DEBUG("Found END block");
             //If we hit an END block, the type must match the BEGIN
-            std::string end_block_type = str::upper(str::strip(str::split(line, "(")[1], ")"));
+            unicode end_block_type = line.split("(")[1].strip(")").upper();
 
             if(end_block_type != block_type) {
                 throw SyntaxError(
-                    "Line: " + boost::lexical_cast<std::string>(current_line) +
-                            ". Expected END(" + block_type + ") but found END(" + end_block_type + ")");
+                    _u("Line: {0}. Expected END({1}) but found END({2})").format(current_line, block_type, end_block_type));
             }
 
             if(end_block_type == "PASS") {
                 L_INFO(_u("Shader pass added {0}").format(mat.id()));
             }
             return; //Exit this function, we are done with this block
-        } else if(str::starts_with(line, "SET")) {
+        } else if(line.starts_with("SET")) {
          //   L_DEBUG("Found SET command block");
-            std::string args_part = str::strip(str::split(line, "(")[1], ")");
-            std::vector<std::string> args = str::split(args_part, " ");
+            unicode args_part = line.split("(")[1].strip(")");
+            std::vector<unicode> args = args_part.split(" ");
 
             if (block_type == "PASS") {
                 handle_pass_set_command(mat, args, current_pass);
@@ -297,7 +296,7 @@ void MaterialScript::handle_block(Material& mat,
 }
 
 void MaterialScript::generate(Material& material) {
-    std::vector<std::string> lines;
+    std::vector<unicode> lines;
 
     if(!filename_.empty()) {
         std::ifstream file_in(filename_.encode().c_str());
@@ -307,13 +306,12 @@ void MaterialScript::generate(Material& material) {
 
         std::string line;
         while(std::getline(file_in, line)) {
-            line = str::strip(line); //Strip any indentation
-            lines.push_back(line);
+            lines.push_back(_u(line).strip()); //Strip any indentation
         }
     } else if (!text_.text().empty()) {
-        lines = str::split(text_.text(), "\n");
+        lines = _u(text_.text()).split("\n");
         for(uint16_t i = 0; i < lines.size(); ++i) {
-            lines[i] = str::strip(lines[i]);
+            lines[i] = lines[i].strip();
         }
     } else {
         throw std::logic_error("Filename or text must be specified");
@@ -324,8 +322,8 @@ void MaterialScript::generate(Material& material) {
     uint16_t current_line = 0;
     //Go through the lines in the file
     while(current_line < lines.size()) {
-        std::string line = lines[current_line];
-        if(str::starts_with(line, "BEGIN")) {
+        unicode line = lines[current_line];
+        if(line.starts_with("BEGIN")) {
             handle_block(material, lines, current_line, "");
         }
         current_line++;
