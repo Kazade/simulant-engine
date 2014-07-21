@@ -5,12 +5,14 @@
 int main(int argc, char* argv[]) {        
     logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));
 
-    if(argc < 2) {
-        std::cout << "USAGE: flightsim filename" << std::endl;
-        return 1;
-    }
+    kglt::Window::ptr window = kglt::Window::create(1024, 768);
 
-    unicode filename = argv[1];
+    unicode filename;
+    if(argc < 2) {
+        filename = "sample_data/fighter_good/space_frigate_6.obj";
+    } else {
+        filename = argv[1];
+    }
     filename = filename.lower();
 
     if(!filename.ends_with(".opt") && !filename.ends_with(".obj")) {
@@ -18,7 +20,7 @@ int main(int argc, char* argv[]) {
         return 2;
     }
 
-    kglt::Window::ptr window = kglt::Window::create(1024, 768);
+
     window->set_title("Flight Sim Camera");
 
     auto stage = window->stage();
@@ -33,6 +35,9 @@ int main(int argc, char* argv[]) {
         auto actor = stage->actor(actor_id);
         actor->set_absolute_position(0, 0, -30);
     }
+
+    //Load a particle system and attach it to the actor
+    stage->new_particle_system_with_parent_from_file(actor_id, "sample_data/rocket_trail.kglp");
 
     //Just stash the skybox with the window so we always have access to it
     window->data().stash(kglt::extra::StarField::create(stage), "skybox");

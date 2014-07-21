@@ -356,3 +356,6 @@ kglt/loaders/tiled_loader.h
 kglt/loaders/tiled_loader.cpp
 kglt/utils/tiled.h
 kglt/utils/tiled.cpp
+kglt/particles.cpp
+kglt/loaders/particle_script.h
+kglt/loaders/particle_script.cpp

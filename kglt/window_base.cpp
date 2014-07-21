@@ -14,6 +14,8 @@
 #include "loaders/rml_loader.h"
 #include "loaders/obj_loader.h"
 #include "loaders/tiled_loader.h"
+#include "loaders/particle_script.h"
+
 #include "sound.h"
 #include "camera.h"
 #include "lua/console.h"
@@ -102,6 +104,7 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
         //Register the default resource loaders
         register_loader(std::make_shared<kglt::loaders::TextureLoaderType>());
         register_loader(std::make_shared<kglt::loaders::MaterialScriptLoaderType>());
+        register_loader(std::make_shared<kglt::loaders::KGLPLoaderType>());
         register_loader(std::make_shared<kglt::loaders::OPTLoaderType>());
         register_loader(std::make_shared<kglt::loaders::OGGLoaderType>());
         register_loader(std::make_shared<kglt::loaders::RMLLoaderType>());

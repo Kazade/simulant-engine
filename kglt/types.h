@@ -460,6 +460,7 @@ typedef UniqueID<10> PipelineID;
 typedef UniqueID<11> UIStageID;
 typedef UniqueID<12> SpriteID;
 typedef UniqueID<13> BackgroundID;
+typedef UniqueID<14> ParticleSystemID;
 
 const StageID DefaultStageID = StageID();
 
@@ -483,6 +484,9 @@ typedef std::shared_ptr<Sound> SoundPtr;
 class Actor;
 typedef std::shared_ptr<Actor> ActorPtr;
 typedef std::weak_ptr<Actor> ActorRef;
+
+class ParticleSystem;
+typedef ProtectedPtr<ParticleSystem> ParticleSystemPtr;
 
 class Sprite;
 typedef ProtectedPtr<Sprite> SpritePtr;

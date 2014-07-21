@@ -6,7 +6,9 @@
 #include "camera.h"
 #include "debug.h"
 #include "sprite.h"
+#include "particles.h"
 
+#include "loader.h"
 #include "partitioners/null_partitioner.h"
 #include "partitioners/octree_partitioner.h"
 #include "procedural/geom_factory.h"
@@ -133,6 +135,45 @@ void Stage::delete_actor(ActorID e) {
     actor(e)->destroy_children();
 
     ActorManager::manager_delete(e);
+}
+
+//=============== PARTICLES =================
+
+ParticleSystemID Stage::new_particle_system() {
+    ParticleSystemID new_id = ParticleSystemManager::manager_new();
+    return new_id;
+}
+
+ParticleSystemID Stage::new_particle_system_from_file(const unicode& filename) {
+    ParticleSystemID new_id = new_particle_system();
+
+    auto ps = particle_system(new_id);
+    window().loader_for(filename)->into(ps);
+
+    return new_id;
+}
+
+ParticleSystemID Stage::new_particle_system_with_parent_from_file(ActorID parent, const unicode& filename) {
+    ParticleSystemID new_id = new_particle_system();
+
+    auto ps = particle_system(new_id);
+    ps->set_parent(parent);
+
+    window().loader_for(filename)->into(ps);
+
+    return new_id;
+}
+
+ParticleSystemPtr Stage::particle_system(ParticleSystemID pid) {
+    return ParticleSystemManager::manager_get(pid);
+}
+
+bool Stage::has_particle_system(ParticleSystemID pid) const {
+    return ParticleSystemManager::manager_contains(pid);
+}
+
+void Stage::delete_particle_system(ParticleSystemID pid) {
+    ParticleSystemManager::manager_delete(pid);
 }
 
 //=============== SPRITES ===================

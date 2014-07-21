@@ -25,12 +25,14 @@ typedef generic::TemplatedManager<Stage, Actor, ActorID> ActorManager;
 typedef generic::TemplatedManager<Stage, Light, LightID> LightManager;
 typedef generic::TemplatedManager<Stage, CameraProxy, CameraID> CameraProxyManager;
 typedef generic::TemplatedManager<Stage, Sprite, SpriteID> SpriteManager;
+typedef generic::TemplatedManager<Stage, ParticleSystem, ParticleSystemID> ParticleSystemManager;
 
 class Stage:
     public Managed<Stage>,
     public generic::Identifiable<StageID>,
     public ResourceManager,
     public ActorManager,
+    public ParticleSystemManager,
     public LightManager,
     public SpriteManager,
     public CameraProxyManager,
@@ -59,6 +61,13 @@ public:
     bool has_actor(ActorID e) const;
     void delete_actor(ActorID e);
     uint32_t actor_count() const { return ActorManager::manager_count(); }
+
+    ParticleSystemID new_particle_system();
+    ParticleSystemID new_particle_system_from_file(const unicode& filename);
+    ParticleSystemID new_particle_system_with_parent_from_file(ActorID parent, const unicode& filename);
+    ParticleSystemPtr particle_system(ParticleSystemID pid);
+    bool has_particle_system(ParticleSystemID pid) const;
+    void delete_particle_system(ParticleSystemID pid);
 
     SpriteID new_sprite();
     SpriteID new_sprite_from_file(
