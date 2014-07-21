@@ -126,6 +126,23 @@ struct Vec2 : public kmVec2 {
         return result;
     }
 
+    float length() const {
+        return kmVec2Length(this);
+    }
+
+    void normalize() {
+        kmVec2Normalize(this, this);
+    }
+
+    Vec2 limit(float l) {
+        if(length() > l) {
+            normalize();
+            kmVec2Scale(this, this, l);
+        }
+
+        return *this;
+    }
+
     bool operator==(const Vec2& rhs) const {
         return kmVec2AreEqual(this, &rhs);
     }
@@ -329,6 +346,12 @@ struct Degrees {
         value_(value) {}
 
     float value_;
+
+    Degrees operator-() const {
+        Degrees ret = *this;
+        ret.value_ = -ret.value_;
+        return ret;
+    }
 };
 
 struct Radians {

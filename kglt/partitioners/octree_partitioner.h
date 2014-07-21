@@ -4,7 +4,7 @@
 #include "../partitioner.h"
 #include "octree.h"
 
-#include <kazbase/signals3/signals3.hpp>
+#include <kazbase/signals.h>
 
 namespace kglt {
 

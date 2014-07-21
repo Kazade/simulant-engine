@@ -223,6 +223,7 @@ bool WindowBase::run_frame() {
     }
 
     fixed_step_interp_ = ktiGetAccumulatorValue();
+    signal_post_step_(fixed_step_interp_);
 
     idle_.execute(); //Execute idle tasks before render
 

@@ -120,6 +120,7 @@ public:
     sig::signal<void (void)>& signal_frame_finished() { return signal_frame_finished_; }
     sig::signal<void (void)>& signal_pre_swap() { return signal_pre_swap_; }
     sig::signal<void (double)>& signal_step() { return signal_step_; }
+    sig::signal<void (double)>& signal_post_step() { return signal_post_step_; }
     sig::signal<void (void)>& signal_shutdown() { return signal_shutdown_; }
 
     void stop_running() { is_running_ = false; }
@@ -195,6 +196,7 @@ private:
     sig::signal<void ()> signal_pre_swap_;
     sig::signal<void ()> signal_frame_finished_;
     sig::signal<void (double)> signal_step_;
+    sig::signal<void (double)> signal_post_step_;
     sig::signal<void ()> signal_shutdown_;
 
     std::shared_ptr<Console> console_;

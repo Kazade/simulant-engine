@@ -118,6 +118,51 @@ MeshID ResourceManagerImpl::new_mesh_as_rectangle(float width, float height, con
     return m;
 }
 
+MeshID ResourceManagerImpl::new_mesh_from_vertices(const std::vector<Vec2> &vertices, MeshArrangement arrangement, bool garbage_collect) {
+    MeshID m = new_mesh(garbage_collect);
+
+    auto new_mesh = mesh(m);
+    auto smi = new_mesh->new_submesh(this->clone_default_material(), arrangement);
+    int i = 0;
+    for(auto v: vertices) {
+        new_mesh->shared_data().position(v);
+        new_mesh->shared_data().diffuse(kglt::Colour::WHITE);
+        new_mesh->shared_data().normal(kglt::Vec3());
+        new_mesh->shared_data().tex_coord0(kglt::Vec2());
+        new_mesh->shared_data().move_next();
+        new_mesh->submesh(smi).index_data().index(i++);
+    }
+
+    new_mesh->shared_data().done();
+    new_mesh->submesh(smi).index_data().done();
+
+    MeshManager::mark_as_uncollected(m);
+
+    return m;
+}
+
+MeshID ResourceManagerImpl::new_mesh_from_vertices(const std::vector<Vec3> &vertices, MeshArrangement arrangement, bool garbage_collect) {
+    //FIXME: THis is literally a copy/paste of the function above, we can templatize this
+    MeshID m = new_mesh(garbage_collect);
+
+    auto new_mesh = mesh(m);
+    auto smi = new_mesh->new_submesh(this->clone_default_material(), arrangement);
+    int i = 0;
+    for(auto v: vertices) {
+        new_mesh->shared_data().position(v);
+        new_mesh->shared_data().diffuse(kglt::Colour::WHITE);
+        new_mesh->shared_data().normal(kglt::Vec3());
+        new_mesh->shared_data().tex_coord0(kglt::Vec2());
+        new_mesh->shared_data().move_next();
+        new_mesh->submesh(smi).index_data().index(i++);
+    }
+
+    new_mesh->shared_data().done();
+    new_mesh->submesh(smi).index_data().done();
+    MeshManager::mark_as_uncollected(m);
+    return m;
+}
+
 MeshID ResourceManagerImpl::new_mesh_with_alias(const unicode& alias, bool garbage_collect) {
     MeshID m = new_mesh(garbage_collect);
     try {

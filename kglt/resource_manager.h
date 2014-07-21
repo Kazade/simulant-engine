@@ -33,6 +33,8 @@ public:
     virtual MeshID new_mesh_as_cube(float width, bool garbage_collect=true) = 0;
     virtual MeshID new_mesh_as_sphere(float diameter, bool garbage_collect=true) = 0;
     virtual MeshID new_mesh_as_rectangle(float width, float height, const Vec2& offset=Vec2(), bool garbage_collect=true) = 0;
+    virtual MeshID new_mesh_from_vertices(const std::vector<kglt::Vec2>& vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool garbage_collect=true) = 0;
+    virtual MeshID new_mesh_from_vertices(const std::vector<kglt::Vec3>& vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool garbage_collect=true) = 0;
 
     virtual MeshID new_mesh_with_alias(const unicode& alias, bool garbage_collect=true) = 0;
     virtual MeshID new_mesh_with_alias_from_file(const unicode& alias, const unicode &path, bool garbage_collect=true) = 0;
@@ -130,6 +132,8 @@ public:
     MeshID new_mesh_as_cube(float width, bool garbage_collect=true) override;
     MeshID new_mesh_as_sphere(float diameter, bool garbage_collect=true) override;
     MeshID new_mesh_as_rectangle(float width, float height, const Vec2& offset=Vec2(), bool garbage_collect=true) override;
+    MeshID new_mesh_from_vertices(const std::vector<kglt::Vec2>& vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool garbage_collect=true) override;
+    MeshID new_mesh_from_vertices(const std::vector<kglt::Vec3>& vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool garbage_collect=true) override;
 
     MeshID new_mesh_with_alias(const unicode& alias, bool garbage_collect=true) override;
     MeshID new_mesh_with_alias_from_file(const unicode& alias, const unicode &path, bool garbage_collect=true) override;

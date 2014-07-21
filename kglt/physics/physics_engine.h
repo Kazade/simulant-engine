@@ -7,7 +7,7 @@
 #include <kazbase/base/taggable_object.h>
 #include "../generic/protected_ptr.h"
 
-#include <kazbase/signals3/signals3.hpp>
+#include <kazbase/signals.h>
 
 namespace kglt {
 

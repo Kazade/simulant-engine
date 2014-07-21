@@ -11,6 +11,7 @@ Application::Application(const unicode &title, uint32_t width, uint32_t height, 
 
     window_->signal_frame_started().connect(std::bind(&Application::check_tasks, this));
     window_->signal_step().connect(std::bind(&Application::do_step, this, std::placeholders::_1));
+    window_->signal_post_step().connect(std::bind(&Application::do_post_step, this, std::placeholders::_1));
     window_->signal_shutdown().connect(std::bind(&Application::do_cleanup, this));
 
     window_->keyboard().key_pressed_connect(std::bind(&Application::on_key_press, this, std::placeholders::_1));

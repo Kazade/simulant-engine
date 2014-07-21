@@ -2,8 +2,9 @@
 #define GPU_PROGRAM_H
 
 #include <set>
+#include <map>
 #include <unordered_map>
-#include <kazbase/signals3/signals3.hpp>
+#include <kazbase/signals.h>
 
 #include "types.h"
 #include "generic/managed.h"

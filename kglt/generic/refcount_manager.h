@@ -3,7 +3,7 @@
 
 #include "manager_base.h"
 #include <kazbase/list_utils.h>
-#include <kazbase/signals3/signals3.hpp>
+#include <kazbase/signals.h>
 
 namespace kglt {
 namespace generic {

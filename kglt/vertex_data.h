@@ -11,7 +11,7 @@
 #include "buffer_object.h"
 #include "colour.h"
 
-#include "kazbase/signals3/signals3.hpp"
+#include <kazbase/signals.h>
 
 namespace kglt {
 

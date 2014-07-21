@@ -52,6 +52,7 @@ private:
 
     virtual bool do_init() = 0;
     virtual void do_step(double dt) = 0;
+    virtual void do_post_step(double dt) {}
     virtual void do_cleanup() = 0;
 
     std::list<boost::shared_future<bool> > load_tasks_;

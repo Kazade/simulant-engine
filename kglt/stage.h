@@ -138,6 +138,14 @@ public:
         return window().new_mesh_as_rectangle(width, height, offset, garbage_collect);
     }
 
+    MeshID new_mesh_from_vertices(const std::vector<Vec2> &vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool garbage_collect=true) override {
+        return window().new_mesh_from_vertices(vertices, arrangement, garbage_collect);
+    }
+
+    MeshID new_mesh_from_vertices(const std::vector<Vec3> &vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool garbage_collect=true) override {
+        return window().new_mesh_from_vertices(vertices, arrangement, garbage_collect);
+    }
+
     MeshID new_mesh_with_alias(const unicode& alias, bool garbage_collect=true) override {
         return window().new_mesh_with_alias(alias, garbage_collect);
     }

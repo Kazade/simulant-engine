@@ -2,6 +2,7 @@
 #define SOUND_H
 
 #include <vector>
+#include <list>
 
 #include <AL/al.h>
 #include <AL/alc.h>
@@ -9,7 +10,7 @@
 #include "generic/managed.h"
 #include "generic/identifiable.h"
 
-#include "kazbase/signals3/signals3.hpp"
+#include <kazbase/signals.h>
 
 #include "resource.h"
 #include "loadable.h"
