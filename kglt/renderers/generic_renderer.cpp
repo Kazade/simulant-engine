@@ -20,16 +20,15 @@ namespace kglt {
 /*
  * FIXME: Stupid argument ordering
  */
-void GenericRenderer::set_auto_uniforms_on_shader(
-    GPUProgram& program,
+void GenericRenderer::set_auto_uniforms_on_shader(GPUProgram& program,
     CameraID camera,
-    SubActor& subactor) {
+    Renderable &subactor) {
 
     //Calculate the modelview-projection matrix
     Mat4 modelview_projection;
     Mat4 modelview;
 
-    const Mat4 model = subactor._parent().absolute_transformation();
+    const Mat4 model = subactor.final_transformation();
     const Mat4& view = window().camera(camera)->view_matrix();
     const Mat4& projection = window().camera(camera)->projection_matrix();
 
@@ -147,7 +146,7 @@ void send_attribute(GPUProgram& program,
     }
 }
 
-void GenericRenderer::set_auto_attributes_on_shader(GPUProgram& program, SubActor& buffer) {
+void GenericRenderer::set_auto_attributes_on_shader(GPUProgram& program, Renderable &buffer) {
     /*
      *  Binding attributes generically is hard. So we have some template magic in the send_attribute
      *  function above that takes the VertexData member functions we need to provide the attribute
@@ -186,7 +185,7 @@ void GenericRenderer::set_blending_mode(BlendType type) {
     }
 }
 
-void GenericRenderer::render_subactor(SubActor& buffer, CameraID camera, GPUProgram* program) {
+void GenericRenderer::render(Renderable& buffer, CameraID camera, GPUProgram* program) {
 
     if(!program) {
         L_ERROR("No shader is bound, so nothing will be rendered");

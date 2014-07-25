@@ -25,29 +25,55 @@ StagePtr RootGroup::stage() {
     return window_.stage(stage_id_);
 }
 
-void RootGroup::generate_mesh_groups(RenderGroup* parent, SubActor& ent, MaterialPass& pass) {
+void RootGroup::generate_mesh_groups(RenderGroup* parent, Renderable &ent, MaterialPass& pass) {
+    /*
+     *  Here we add the entities to the leaves of the tree. If the Renderable can return an instanced_mesh_id we create an
+     *  InstancedMeshGroup, otherwise a simple basic RenderableGroup. At the moment THERE IS NO DIFFERENCE BETWEEN THESE TWO THINGS,
+     *  but it does pave the way for proper geometry instancing.
+     */
+
     Vec3 pos;
     std::vector<LightID> lights = stage()->partitioner().lights_within_range(pos);
     uint32_t iteration_count = 1;
+
+    auto mesh_id = ent.instanced_mesh_id();
+    auto submesh_id = ent.instanced_submesh_id();
+
+    bool supports_instancing = bool(mesh_id);
+
     if(pass.iteration() == ITERATE_N) {
         iteration_count = pass.max_iterations();
         for(uint8_t i = 0; i < iteration_count; ++i) {
             //FIXME: What exactly is this for? Should we pass an iteration counter to the shader?
-            parent->get_or_create<MeshGroup>(MeshGroupData(ent._parent().mesh_id(), ent.submesh_id())).add(&ent, &pass);
+
+            if(supports_instancing) {
+                parent->get_or_create<InstancedMeshGroup>(MeshGroupData(mesh_id, submesh_id)).add(&ent, &pass);
+            } else {
+                parent->get_or_create<RenderableGroup>(RenderableGroupData()).add(&ent, &pass);
+            }
         }
     } else if (pass.iteration() == ITERATE_ONCE_PER_LIGHT) {
         iteration_count = std::min<uint32_t>(lights.size(), pass.max_iterations());
         for(uint8_t i = 0; i < iteration_count; ++i) {
-            parent->get_or_create<LightGroup>(LightGroupData(lights[i])).
-                    get_or_create<MeshGroup>(MeshGroupData(ent._parent().mesh_id(), ent.submesh_id())).add(&ent, &pass);
+
+            auto& light_node = parent->get_or_create<LightGroup>(LightGroupData(lights[i]));
+            if(supports_instancing) {
+                light_node.get_or_create<InstancedMeshGroup>(MeshGroupData(mesh_id, submesh_id)).add(&ent, &pass);
+            } else {
+                light_node.get_or_create<RenderableGroup>(RenderableGroupData()).add(&ent, &pass);
+            }
         }
     } else {
-        parent->get_or_create<MeshGroup>(MeshGroupData(ent._parent().mesh_id(), ent.submesh_id())).add(&ent, &pass);
+        if(supports_instancing) {
+            parent->get_or_create<InstancedMeshGroup>(MeshGroupData(mesh_id, submesh_id)).add(&ent, &pass);
+        } else {
+            parent->get_or_create<RenderableGroup>(RenderableGroupData()).add(&ent, &pass);
+        }
     }
 }
 
-void RootGroup::insert(SubActor &ent, uint8_t pass_number) {
-    if(!ent._parent().is_visible()) return;
+void RootGroup::insert(Renderable &ent, uint8_t pass_number) {
+    if(!ent.is_visible()) return;
 
     //Get the material for the actor, this is used to build the tree
     auto mat = stage()->material(ent.material_id());
@@ -158,13 +184,8 @@ void LightGroup::unbind(GPUProgram* program) {
 
 }
 
-void MeshGroup::bind(GPUProgram* program) {
-
-}
-
-void MeshGroup::unbind(GPUProgram* program) {
-
-}
+void InstancedMeshGroup::bind(GPUProgram* program) {}
+void InstancedMeshGroup::unbind(GPUProgram* program) {}
 
 void ShaderGroup::bind(GPUProgram* program) {
     RootGroup& root = static_cast<RootGroup&>(get_root());

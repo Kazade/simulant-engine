@@ -37,7 +37,8 @@ int main(int argc, char* argv[]) {
     }
 
     //Load a particle system and attach it to the actor
-    stage->new_particle_system_with_parent_from_file(actor_id, "sample_data/rocket_trail.kglp");
+    auto ps_id = stage->new_particle_system_with_parent_from_file(actor_id, "sample_data/rocket_trail.kglp");
+    stage->particle_system(ps_id)->move_to(0, 0, -10);
 
     //Just stash the skybox with the window so we always have access to it
     window->data().stash(kglt::extra::StarField::create(stage), "skybox");
@@ -87,7 +88,9 @@ int main(int argc, char* argv[]) {
         });
     }*/
 
-    while(window->run_frame()) {}
+    while(window->run_frame()) {
+
+    }
 
     return 0;
 }

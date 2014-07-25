@@ -97,6 +97,9 @@ public:
     sig::signal<void (ActorID)>& signal_actor_created() { return signal_actor_created_; }
     sig::signal<void (ActorID)>& signal_actor_destroyed() { return signal_actor_destroyed_; }
 
+    sig::signal<void (ParticleSystemID)>& signal_particle_system_created() { return signal_particle_system_created_; }
+    sig::signal<void (ParticleSystemID)>& signal_particle_system_destroyed() { return signal_particle_system_destroyed_; }
+
     sig::signal<void (LightID)>& signal_light_created() { return signal_light_created_; }
     sig::signal<void (LightID)>& signal_light_destroyed() { return signal_light_destroyed_; }
 
@@ -325,6 +328,9 @@ private:
 
     sig::signal<void (LightID)> signal_light_created_;
     sig::signal<void (LightID)> signal_light_destroyed_;
+
+    sig::signal<void (ParticleSystemID)> signal_particle_system_created_;
+    sig::signal<void (ParticleSystemID)> signal_particle_system_destroyed_;
 
     sig::signal<void (SpriteID)> signal_sprite_created_;
     sig::signal<void (SpriteID)> signal_sprite_destroyed_;

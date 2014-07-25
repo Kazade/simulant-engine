@@ -14,6 +14,7 @@
 #include "object.h"
 #include "interfaces.h"
 #include "types.h"
+#include "vertex_data.h"
 
 namespace kglt {
 
@@ -27,8 +28,19 @@ const std::unordered_map<unicode, ParticleEmitterType> EMITTER_LOOKUP = {
     { "box", PARTICLE_EMITTER_BOX }
 };
 
+struct Particle {
+    kglt::Vec3 position;
+    kglt::Vec3 velocity;
+    float ttl;
+};
+
+class ParticleSystem;
+
 class ParticleEmitter {
 public:
+    ParticleEmitter(ParticleSystem& system):
+        system_(system) {}
+
     void set_type(ParticleEmitterType type) { type_ = type; }
     ParticleEmitterType type() const { return type_; }
 
@@ -67,7 +79,11 @@ public:
         return emission_rate_;
     }
 
+    std::vector<Particle> do_emit(double dt, uint32_t max_to_emit);
+
+    ParticleSystem& system() { return system_; }
 private:
+    ParticleSystem& system_;
     ParticleEmitterType type_ = PARTICLE_EMITTER_POINT;
     kglt::Vec3 relative_position_ = kglt::Vec3();
     kglt::Vec3 direction_ = kglt::Vec3(1, 0, 0);
@@ -76,6 +92,8 @@ private:
     Degrees angle_ = Degrees(0);
     kglt::Colour colour_ = kglt::Colour::WHITE;
     int emission_rate_ = 10;
+
+    float emission_accumulator_ = 0.0;
 };
 
 typedef std::shared_ptr<ParticleEmitter> EmitterPtr;
@@ -88,7 +106,8 @@ class ParticleSystem :
     public ParentSetterMixin<Object>,
     public Source,
     public Protectable,
-    public Loadable {
+    public Loadable,
+    public Renderable {
 
 public:
     ParticleSystem(Stage* stage, ParticleSystemID id);
@@ -97,7 +116,10 @@ public:
     const bool has_name() const { return !name_.empty(); }
     const unicode name() const { return name_; }
 
-    void set_quota(int quota) { quota_ = quota; }
+    void set_quota(int quota) {
+        quota_ = quota;
+    }
+
     int32_t quota() const { return quota_; }
 
     void set_particle_width(float width) { particle_width_ = width; }
@@ -121,14 +143,50 @@ public:
     unicode __unicode__() const { return name_; }
 
     void ask_owner_for_destruction();
+
+    //Renderable stuff
+
+    const MeshArrangement arrangement() const { return MESH_ARRANGEMENT_POINTS; }
+
+    virtual void _update_vertex_array_object();
+    virtual void _bind_vertex_array_object();
+
+    void set_render_priority(RenderPriority priority) { render_priority_ = priority; }
+    virtual RenderPriority render_priority() const { return render_priority_; }
+    virtual Mat4 final_transformation() const {
+        return Mat4(); //Particles are absolutely positioned in the world
+    }
+
+    void set_material_id(MaterialID mat_id);
+    virtual const MaterialID material_id() const { return material_id_; }
+    virtual const bool is_visible() const { return Object::is_visible(); }
+
+    virtual MeshID instanced_mesh_id() const { return MeshID(); } //We don't support instancing
+    virtual SubMeshIndex instanced_submesh_id() const { return 0; } //We don't support instancing
+
+    const VertexData& vertex_data() const { return vertex_data_; }
+    const IndexData& index_data() const { return index_data_; }
+
 private:
     unicode name_;
     int quota_ = 10;
     float particle_width_ = 100.0;
     float particle_height_ = 100.0;
     bool cull_each_ = false;
+    RenderPriority render_priority_ = RENDER_PRIORITY_MAIN;
+
+    MaterialID material_id_;
+    MaterialPtr material_ref_;
 
     std::vector<EmitterPtr> emitters_;
+    std::list<Particle> particles_;
+
+    void do_update(double dt);
+
+    VertexData vertex_data_;
+    IndexData index_data_;
+
+    VertexArrayObject vao_;
 };
 
 }

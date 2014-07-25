@@ -2,6 +2,8 @@
 #include "../camera.h"
 #include "../actor.h"
 #include "../light.h"
+#include "../particles.h"
+
 #include "null_partitioner.h"
 
 namespace kglt {
@@ -30,17 +32,25 @@ std::vector<LightID> NullPartitioner::lights_within_range(const Vec3& location) 
     return result;
 }
 
-std::vector<SubActor::ptr> NullPartitioner::geometry_visible_from(CameraID camera_id) {
-    std::vector<SubActor::ptr> result;
+std::vector<RenderablePtr> NullPartitioner::geometry_visible_from(CameraID camera_id) {
+    std::vector<RenderablePtr> result;
 
     //Just return all of the meshes in the stage
     for(ActorID eid: all_actors_) {
-        std::vector<SubActor::ptr> subactors = stage()->actor(eid)->_subactors();
+        auto subactors = stage()->actor(eid)->_subactors();
 
-        for(SubActor::ptr ent: subactors) {
+        for(auto ent: subactors) {
             if(stage()->window().camera(camera_id)->frustum().intersects_aabb(ent->transformed_aabb())) {
                 result.push_back(ent);
             }
+        }
+    }
+
+    for(ParticleSystemID ps: all_particle_systems_) {
+        auto system = stage()->particle_system(ps);
+        AABB aabb = system->transformed_aabb();
+        if(stage()->window().camera(camera_id)->frustum().intersects_aabb(aabb)) {
+            result.push_back(system.__object);
         }
     }
 

@@ -28,6 +28,7 @@
 #include "debug.h"
 #include "base.h"
 #include "sprite.h"
+#include "particles.h"
 
 //FIXME: These includes should be conditional
 #include "physics/ode/ode_engine.h"

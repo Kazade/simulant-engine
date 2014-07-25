@@ -22,8 +22,6 @@ namespace kglt {
 
 class ResourceManager;
 
-typedef uint16_t SubMeshIndex;
-
 class MeshInterface:
     public Boundable {
 

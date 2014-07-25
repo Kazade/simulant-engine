@@ -28,10 +28,19 @@ public:
         all_lights_.erase(obj);
     }
 
+    void add_particle_system(ParticleSystemID ps) {
+        all_particle_systems_.insert(ps);
+    }
+
+    void remove_particle_system(ParticleSystemID ps) {
+        all_particle_systems_.erase(ps);
+    }
+
     std::vector<LightID> lights_within_range(const Vec3& location);
-    std::vector<std::shared_ptr<SubActor>> geometry_visible_from(CameraID camera_id);
+    std::vector<std::shared_ptr<Renderable>> geometry_visible_from(CameraID camera_id);
 
 private:
+    std::set<ParticleSystemID> all_particle_systems_;
     std::set<ActorID> all_actors_;
     std::set<LightID> all_lights_;
 };

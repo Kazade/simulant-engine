@@ -158,7 +158,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
         ui_stage->__resize(viewport->width(), viewport->height());
         ui_stage->__render(camera_projection);
     } else {
-        std::vector<SubActor::ptr> buffers = window_.stage(stage_id
+        std::vector<RenderablePtr> buffers = window_.stage(stage_id
             )->partitioner().geometry_visible_from(camera_id);
 
 
@@ -179,9 +179,9 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
         }
 
         //Go through the visible actors
-        for(SubActor::ptr ent: buffers) {
+        for(RenderablePtr ent: buffers) {
             //Get the priority queue for this actor (e.g. RENDER_PRIORITY_BACKGROUND)
-            QueueGroups::mapped_type& priority_queue = queues[(uint32_t)ent->_parent().render_priority()];
+            QueueGroups::mapped_type& priority_queue = queues[(uint32_t)ent->render_priority()];
 
             auto mat = window_.stage(pipeline_stage->stage_id())->material(ent->material_id());
 
@@ -210,9 +210,9 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
         for(RenderPriority priority: RENDER_PRIORITIES) {
             QueueGroups::mapped_type& priority_queue = queues[priority];
             for(RootGroup::ptr pass_group: priority_queue) {
-                std::function<void (SubActor&, MaterialPass&)> f = [=](SubActor& subactor, MaterialPass& pass) {
-                    renderer_->render_subactor(
-                        subactor,
+                std::function<void (Renderable&, MaterialPass&)> f = [=](Renderable& renderable, MaterialPass& pass) {
+                    renderer_->render(
+                        renderable,
                         pipeline_stage->camera_id(),
                         pass_group->get_root().current_program()
                     );

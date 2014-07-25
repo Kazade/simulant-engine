@@ -178,6 +178,8 @@ struct Vec2 : public kmVec2 {
     friend std::ostream& operator<<(std::ostream& stream, const Vec2& vec);
 };
 
+struct Degrees;
+
 struct Vec3 : public kmVec3 {        
     Vec3() {
         kmVec3Zero(this);
@@ -308,6 +310,9 @@ struct Vec3 : public kmVec3 {
     unicode to_string() const {
         return _u("({0},{1},{2})").format(x, y, z);
     }
+
+    Vec3 perpendicular() const;
+    Vec3 random_deviant(const Degrees& angle, const Vec3 up=Vec3()) const;
 };
 
 
@@ -341,9 +346,12 @@ kglt::Vec3 operator/(float lhs, const kglt::Vec3& rhs);
 kglt::Vec3 operator-(const kglt::Vec3& vec);
 kglt::Quaternion operator-(const kglt::Quaternion& q);
 
+struct Radians;
 struct Degrees {
     explicit Degrees(float value):
         value_(value) {}
+
+    Degrees(const Radians& rhs);
 
     float value_;
 
@@ -357,6 +365,8 @@ struct Degrees {
 struct Radians {
     explicit Radians(float value):
         value_(value) {}
+
+    Radians(const Degrees& rhs);
 
     float value_;
 };
@@ -466,6 +476,8 @@ const StageID DefaultStageID = StageID();
 
 const std::string DEFAULT_MATERIAL_SCHEME = "default";
 
+typedef uint16_t SubMeshIndex;
+
 class Mesh;
 typedef ProtectedPtr<Mesh> MeshPtr;
 
@@ -482,8 +494,7 @@ typedef std::weak_ptr<Sound> SoundRef;
 typedef std::shared_ptr<Sound> SoundPtr;
 
 class Actor;
-typedef std::shared_ptr<Actor> ActorPtr;
-typedef std::weak_ptr<Actor> ActorRef;
+typedef ProtectedPtr<Actor> ActorPtr;
 
 class ParticleSystem;
 typedef ProtectedPtr<ParticleSystem> ParticleSystemPtr;

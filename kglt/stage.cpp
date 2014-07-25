@@ -141,6 +141,8 @@ void Stage::delete_actor(ActorID e) {
 
 ParticleSystemID Stage::new_particle_system() {
     ParticleSystemID new_id = ParticleSystemManager::manager_new();
+
+    signal_particle_system_created_(new_id);
     return new_id;
 }
 
@@ -173,6 +175,10 @@ bool Stage::has_particle_system(ParticleSystemID pid) const {
 }
 
 void Stage::delete_particle_system(ParticleSystemID pid) {
+    signal_particle_system_destroyed_(pid);
+
+    particle_system(pid)->destroy_children();
+
     ParticleSystemManager::manager_delete(pid);
 }
 
@@ -305,6 +311,9 @@ void Stage::set_partitioner(AvailablePartitioner partitioner) {
 
     signal_light_created().connect(std::bind(&Partitioner::add_light, partitioner_.get(), std::placeholders::_1));
     signal_light_destroyed().connect(std::bind(&Partitioner::remove_light, partitioner_.get(), std::placeholders::_1));
+
+    signal_particle_system_created().connect(std::bind(&Partitioner::add_particle_system, partitioner_.get(), std::placeholders::_1));
+    signal_particle_system_destroyed().connect(std::bind(&Partitioner::remove_particle_system, partitioner_.get(), std::placeholders::_1));
 }
 
 

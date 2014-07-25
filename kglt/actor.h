@@ -94,7 +94,8 @@ private:
 class SubActor :
     public SubMeshInterface,
     public virtual BoundableEntity,
-    public Managed<SubActor> {
+    public Managed<SubActor>,
+    public Renderable {
 
 public:
     SubActor(Actor& parent, SubMeshIndex idx):
@@ -116,7 +117,12 @@ public:
     void _update_vertex_array_object() { submesh()._update_vertex_array_object(); }
     void _bind_vertex_array_object() { submesh()._bind_vertex_array_object(); }
 
-    Actor& _parent() { return parent_; }
+    RenderPriority render_priority() const { return parent_.render_priority(); }
+    Mat4 final_transformation() const { return parent_.absolute_transformation(); }
+    const bool is_visible() const { return parent_.is_visible(); }
+
+    MeshID instanced_mesh_id() const { return parent_.mesh_id(); }
+    SubMeshIndex instanced_submesh_id() const { return submesh_id(); }
 
     /* BoundableAndTransformable interface implementation */
 

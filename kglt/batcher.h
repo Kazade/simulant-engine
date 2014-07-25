@@ -39,10 +39,10 @@ public:
     }
 
     ///Traverses the tree and calls the callback on each subactor we encounter
-    void traverse(std::function<void (SubActor&, MaterialPass&)> callback) {
+    void traverse(std::function<void (Renderable&, MaterialPass&)> callback) {
         bind(get_root().current_program());
 
-        for(auto& p: subactors_) {
+        for(auto& p: renderables_) {
             assert(p.first);
             assert(p.second);
 
@@ -121,8 +121,8 @@ public:
         }
     }
 
-    void add(SubActor* subactor, MaterialPass* pass) {
-        subactors_.push_back(std::make_pair(subactor, pass));
+    void add(Renderable* renderable, MaterialPass* pass) {
+        renderables_.push_back(std::make_pair(renderable, pass));
     }
 
     virtual void bind(GPUProgram* program) = 0;
@@ -133,7 +133,7 @@ public:
     }
 
     void clear() {
-        subactors_.clear();
+        renderables_.clear();
         for(auto groups: children_) {
             for(auto group: groups.second) {
                 group.second->clear();
@@ -153,7 +153,7 @@ private:
 
     RenderGroupChildren children_;
 
-    std::list<std::pair<SubActor*, MaterialPass*> > subactors_;
+    std::list<std::pair<Renderable*, MaterialPass*> > renderables_;
 
     GPUProgram* current_program_ = nullptr;
 };
@@ -179,14 +179,14 @@ public:
     AutoWeakPtr<kglt::Stage> stage();
     ProtectedPtr<CameraProxy> camera();
 
-    void insert(SubActor& ent, uint8_t pass_number);
+    void insert(Renderable& ent, uint8_t pass_number);
 
 private:
     WindowBase& window_;
     StageID stage_id_;
     CameraID camera_id_;
 
-    void generate_mesh_groups(RenderGroup* parent, SubActor& ent, MaterialPass& pass);
+    void generate_mesh_groups(RenderGroup* parent, Renderable& ent, MaterialPass& pass);
 };
 
 
@@ -247,6 +247,22 @@ private:
     ShaderGroupData data_;
 };
 
+struct RenderableGroupData : public GroupData {
+    std::size_t hash() const {
+        return 1;
+    }
+};
+
+class RenderableGroup : public RenderGroup {
+public:
+    typedef RenderableGroupData data_type;
+    RenderableGroup(RenderGroup* parent, RenderableGroupData data):
+        RenderGroup(parent) {}
+
+    void bind(GPUProgram *program) {}
+    void unbind(GPUProgram* program) {}
+};
+
 struct MeshGroupData : public GroupData {
     MeshGroupData(MeshID id, SubMeshIndex smi):
         mesh_id(id),
@@ -264,11 +280,11 @@ struct MeshGroupData : public GroupData {
     }
 };
 
-class MeshGroup : public RenderGroup {
+class InstancedMeshGroup : public RenderGroup {
 public:
     typedef MeshGroupData data_type;
 
-    MeshGroup(RenderGroup* parent, MeshGroupData data):
+    InstancedMeshGroup(RenderGroup* parent, MeshGroupData data):
         RenderGroup(parent),
         data_(data) {
 

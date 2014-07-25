@@ -8,6 +8,7 @@
 #include "generic/managed.h"
 #include "utils/geometry_buffer.h"
 #include "types.h"
+#include "interfaces.h"
 
 namespace kglt {
 
@@ -20,6 +21,9 @@ public:
     Partitioner(Stage& ss):
         stage_(ss) {}
 
+    virtual void add_particle_system(ParticleSystemID ps) = 0;
+    virtual void remove_particle_system(ParticleSystemID ps) = 0;
+
     virtual void add_actor(ActorID obj) = 0;
     virtual void remove_actor(ActorID obj) = 0;
 
@@ -27,7 +31,7 @@ public:
     virtual void remove_light(LightID obj) = 0;
 
     virtual std::vector<LightID> lights_within_range(const Vec3& location) = 0;
-    virtual std::vector<std::shared_ptr<SubActor>> geometry_visible_from(CameraID camera_id) = 0;
+    virtual std::vector<std::shared_ptr<Renderable>> geometry_visible_from(CameraID camera_id) = 0;
 
 protected:
     Stage* stage() { return &stage_; }
