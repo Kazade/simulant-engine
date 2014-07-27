@@ -1,0 +1,28 @@
+{
+    "name": "Rocket Trail",
+    "quota": 50,
+    "particle_width": 1,
+    "particle_height": 1,
+    "cull_each": false,
+
+    "emitters": [
+        {
+            "type": "point",
+            "direction": "0 1 0",
+            "velocity": 10,
+            "ttl": 1.0,
+            "angle": 15,
+            "colour": "1 0 0 1",
+            "emission_rate": 10
+        }
+    ],
+
+    "affectors": [
+        {
+            "type": "colour_fader",
+            "red": -0.25,
+            "green": -0.25,
+            "blue": -0.25
+        }
+    ]
+}
