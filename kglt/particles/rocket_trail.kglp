@@ -10,10 +10,13 @@
             "type": "point",
             "direction": "0 1 0",
             "velocity": 10,
-            "ttl": 1.0,
+            "ttl_min": 0.1,
+            "ttl_max": 2.5,
             "angle": 15,
             "colour": "1 0 0 1",
-            "emission_rate": 10
+            "emission_rate": 10,
+            "duration": 5.0,
+            "repeat_delay": 2.0
         }
     ],
 

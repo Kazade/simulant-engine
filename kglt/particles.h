@@ -54,16 +54,6 @@ public:
         return direction_;
     }
 
-    void set_velocity(float vel) { velocity_ = vel; }
-    float velocity() const {
-        return velocity_;
-    }
-
-    void set_ttl(float ttl) { ttl_ = ttl; }
-    float ttl() const {
-        return ttl_;
-    }
-
     void set_angle(const Degrees& degs) { angle_ = degs; }
     Degrees angle() const {
         return angle_;
@@ -79,21 +69,53 @@ public:
         return emission_rate_;
     }
 
+    void set_ttl(float seconds);
+    void set_ttl_range(float min_seconds, float max_seconds);
+    std::pair<float, float> ttl_range() const;
+
+    void set_repeat_delay(float seconds);
+    void set_repeat_delay_range(float min_seconds, float max_seconds);
+    std::pair<float, float> repeat_delay_range() const;
+
+    void set_velocity(float vel);
+    void set_velocity_range(float min_vel, float max_vel);
+    std::pair<float, float> velocity_range() const;
+
+    void set_duration(float seconds);
+    void set_duration_range(float min_seconds, float max_seconds);
+    std::pair<float, float> duration_range() const;
+
     std::vector<Particle> do_emit(double dt, uint32_t max_to_emit);
 
     ParticleSystem& system() { return system_; }
+
+    void update(double dt);
+
+    void activate();
+    void deactivate();
+    bool is_active() const { return is_active_; }
+
 private:
     ParticleSystem& system_;
     ParticleEmitterType type_ = PARTICLE_EMITTER_POINT;
     kglt::Vec3 relative_position_ = kglt::Vec3();
     kglt::Vec3 direction_ = kglt::Vec3(1, 0, 0);
-    float velocity_ = 1.0;
-    float ttl_ = 5.0;
+
+    std::pair<float, float> duration_range_ = std::make_pair(0.0, 0.0);
+    std::pair<float, float> repeat_delay_range_ = std::make_pair(0.0, 0.0);
+    std::pair<float, float> velocity_range_ = std::make_pair(1.0, 1.0);
+    std::pair<float, float> ttl_range_ = std::make_pair(5.0, 5.0);
+
     Degrees angle_ = Degrees(0);
     kglt::Colour colour_ = kglt::Colour::WHITE;
     int emission_rate_ = 10;
 
     float emission_accumulator_ = 0.0;
+
+    float time_active_ = 0.0;
+    float current_duration_ = 0.0;
+
+    bool is_active_ = true;
 };
 
 typedef std::shared_ptr<ParticleEmitter> EmitterPtr;
@@ -166,6 +188,8 @@ public:
 
     const VertexData& vertex_data() const { return vertex_data_; }
     const IndexData& index_data() const { return index_data_; }
+
+    WindowBase& window();
 
 private:
     unicode name_;

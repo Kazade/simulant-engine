@@ -91,12 +91,43 @@ void ParticleSystem::ask_owner_for_destruction() {
     stage()->delete_particle_system(id());
 }
 
+void ParticleEmitter::activate() {
+    is_active_ = true;
+    time_active_ = 0.0;
+}
+
+void ParticleEmitter::deactivate() {
+    is_active_ = false;
+}
+
+void ParticleEmitter::update(double dt) {
+    time_active_ += dt;
+
+    if(current_duration_ && time_active_ >= current_duration_) {
+        deactivate();
+
+        float repeat_delay = random_float(repeat_delay_range_.first, repeat_delay_range_.second);
+        system().window().idle().add_timeout(repeat_delay, std::bind(&ParticleEmitter::activate, this));
+    }
+}
+
+
+WindowBase& ParticleSystem::window() {
+    return stage()->window();
+}
+
 void ParticleSystem::do_update(double dt) {
     update_source(dt); //Update any sounds attached to this particle system
 
     auto current_particle_count = particles_.size();
 
     for(auto emitter: emitters_) {
+        emitter->update(dt);
+
+        if(!emitter->is_active()) {
+            continue;
+        }
+
         auto max_can_emit = quota_ - current_particle_count;
         auto new_particles = emitter->do_emit(dt, max_can_emit);
         for(auto particle: new_particles) {
@@ -119,7 +150,7 @@ void ParticleSystem::do_update(double dt) {
     }
 
     vertex_data_.move_to_start();
-
+    vertex_data_.clear();
     for(auto particle: particles_) {
         vertex_data_.position(particle.position);
         vertex_data_.diffuse(kglt::Colour::WHITE);
@@ -164,8 +195,15 @@ std::vector<Particle> ParticleEmitter::do_emit(double dt, uint32_t max) {
             dir = dir.random_deviant(ang);
         }
 
-        p.velocity = dir;
-        p.ttl = ttl();
+        p.velocity = dir.normalized() * random_float(velocity_range().first, velocity_range().second);
+
+        //We have to rotate the velocity by the system, because if the particle system is attached to something (e.g. the back of a spaceship)
+        //when that entity rotates we want the velocity to stay pointing relative to the entity
+        auto rot = system().absolute_rotation();
+        kmQuaternionMultiplyVec3(&p.velocity, &rot, &p.velocity);
+
+        p.ttl = random_float(ttl_range().first, ttl_range().second);
+
         //FIXME: Initialize other properties
         new_particles.push_back(p);
 
@@ -178,5 +216,60 @@ std::vector<Particle> ParticleEmitter::do_emit(double dt, uint32_t max) {
 
     return new_particles;
 }
+
+
+void ParticleEmitter::set_ttl(float seconds) {
+    ttl_range_ = std::make_pair(seconds, seconds);
+}
+
+void ParticleEmitter::set_ttl_range(float min_seconds, float max_seconds) {
+    if(min_seconds > max_seconds) {
+        throw ValueError("min_seconds can't be greater than max_seconds");
+    }
+
+    ttl_range_ = std::make_pair(min_seconds, max_seconds);
+}
+
+std::pair<float, float> ParticleEmitter::ttl_range() const {
+    return ttl_range_;
+}
+
+void ParticleEmitter::set_repeat_delay(float seconds) {
+    set_repeat_delay_range(seconds, seconds);
+}
+
+void ParticleEmitter::set_repeat_delay_range(float min_seconds, float max_seconds) {
+    repeat_delay_range_ = std::make_pair(min_seconds, max_seconds);
+}
+
+std::pair<float, float> ParticleEmitter::repeat_delay_range() const {
+    return repeat_delay_range_;
+}
+
+void ParticleEmitter::set_velocity(float vel) {
+    set_velocity_range(vel, vel);
+}
+
+void ParticleEmitter::set_velocity_range(float min_vel, float max_vel) {
+    velocity_range_ = std::make_pair(min_vel, max_vel);
+}
+
+std::pair<float, float> ParticleEmitter::velocity_range() const {
+    return velocity_range_;
+}
+
+void ParticleEmitter::set_duration(float seconds) {
+    set_duration_range(seconds, seconds);
+}
+
+void ParticleEmitter::set_duration_range(float min_seconds, float max_seconds) {
+    duration_range_ = std::make_pair(min_seconds, max_seconds);
+    current_duration_ = random_float(duration_range_.first, duration_range_.second);
+}
+
+std::pair<float, float> ParticleEmitter::duration_range() const {
+    return duration_range_;
+}
+
 
 }

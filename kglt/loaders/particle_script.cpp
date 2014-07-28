@@ -44,6 +44,22 @@ void KGLPLoader::into(Loadable &resource, const LoaderOptions &options) {
 
             if(emitter.has_key("ttl")) {
                 new_emitter->set_ttl(emitter["ttl"]);
+            } else {
+                if(emitter.has_key("ttl_min")) {
+                    new_emitter->set_ttl_range(emitter["ttl_min"], new_emitter->ttl_range().second);
+                }
+
+                if(emitter.has_key("ttl_max")) {
+                    new_emitter->set_ttl_range(new_emitter->ttl_range().first, emitter["ttl_max"]);
+                }
+            }
+
+            if(emitter.has_key("duration")) {
+                new_emitter->set_duration(emitter["duration"]);
+            }
+
+            if(emitter.has_key("repeat_delay")) {
+                new_emitter->set_repeat_delay(emitter["repeat_delay"]);
             }
 
             if(emitter.has_key("angle")) {

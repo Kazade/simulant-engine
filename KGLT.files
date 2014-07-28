@@ -360,3 +360,4 @@ kglt/particles.cpp
 kglt/loaders/particle_script.h
 kglt/loaders/particle_script.cpp
 samples/data/rocket_trail.kglp
+kglt/particles/rocket_trail.kglp
