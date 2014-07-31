@@ -1,0 +1,41 @@
+{
+    "name": "Pixel Explosion",
+    "quota": 100,
+    "particle_width": 1,
+    "particle_height": 1,
+    "cull_each": false,
+
+    "emitters": [
+        {
+            "type": "point",
+            "direction": "0 1 0",
+            "velocity": 6,
+            "ttl_min": 0.1,
+            "ttl_max": 1.0,
+            "angle": 180,
+            "colour": "1 1 1 1",
+            "emission_rate": 500,
+            "duration": 0.1
+        },
+        {
+            "type": "point",
+            "direction": "0 -1 0",
+            "velocity": 6,
+            "ttl_min": 0.1,
+            "ttl_max": 1.0,
+            "angle": 180,
+            "colour": "1 1 1 1",
+            "emission_rate": 500,
+            "duration": 0.1
+        }
+    ],
+
+    "affectors": [
+        {
+            "type": "colour_fader",
+            "red": -0.25,
+            "green": -0.25,
+            "blue": -0.25
+        }
+    ]
+}

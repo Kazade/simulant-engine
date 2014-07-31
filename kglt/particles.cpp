@@ -107,7 +107,9 @@ void ParticleEmitter::update(double dt) {
         deactivate();
 
         float repeat_delay = random_float(repeat_delay_range_.first, repeat_delay_range_.second);
-        system().window().idle().add_timeout(repeat_delay, std::bind(&ParticleEmitter::activate, this));
+        if(repeat_delay > 0) {
+            system().window().idle().add_timeout(repeat_delay, std::bind(&ParticleEmitter::activate, this));
+        }
     }
 }
 

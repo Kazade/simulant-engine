@@ -1,5 +1,5 @@
 {
-    "name": "Rocket Trail",
+    "name": "Pixel Trail",
     "quota": 50,
     "particle_width": 1,
     "particle_height": 1,
@@ -9,14 +9,12 @@
         {
             "type": "point",
             "direction": "0 1 0",
-            "velocity": 10,
+            "velocity": 5,
             "ttl_min": 0.1,
-            "ttl_max": 2.5,
-            "angle": 15,
+            "ttl_max": 0.5,
+            "angle": 35,
             "colour": "1 0 0 1",
-            "emission_rate": 10,
-            "duration": 5.0,
-            "repeat_delay": 2.0
+            "emission_rate": 20
         }
     ],
 

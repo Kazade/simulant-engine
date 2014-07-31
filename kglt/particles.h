@@ -191,6 +191,9 @@ public:
 
     WindowBase& window();
 
+    void deactivate_emitters() { for(auto emitter: emitters_) { emitter->deactivate(); }; }
+    void activate_emitters() { for(auto emitter: emitters_) { emitter->activate(); }; }
+
 private:
     unicode name_;
     int quota_ = 10;
