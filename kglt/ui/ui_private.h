@@ -1,6 +1,8 @@
 #ifndef UI_PRIVATE_H
 #define UI_PRIVATE_H
 
+#include <mutex>
+
 namespace Rocket {
 namespace Core {
 
@@ -11,40 +13,21 @@ class ElementDocument;
 }
 
 namespace kglt {
+
+class RocketImpl;
+
 namespace ui {
 
 class ElementImpl {
 public:
-    ElementImpl(Rocket::Core::Element* elem):
+    ElementImpl(RocketImpl& rocket_impl, Rocket::Core::Element* elem):
+        rocket_impl_(rocket_impl),
         elem_(elem),
         text_(nullptr) {
 
     }
 
-    void set_text(const unicode& text) {
-        /*
-         *  Element objects simply wrap the underlying Rocket::Core::Element*
-         *  and so when we call set text we need to look and see if there is a
-         *  text node for this element. If not, we create it.
-         *
-         *  Then we set the text.
-         */
-        if(!text_) {
-            Rocket::Core::ElementList elements;
-            elem_->GetElementsByTagName(elements, "#text");
-            if(elements.empty()) {
-                text_ = elem_->GetOwnerDocument()->CreateTextNode(text.encode().c_str());
-                elem_->AppendChild(text_);
-            } else {
-                text_ = dynamic_cast<Rocket::Core::ElementText*>(elements[0]);
-                text_->SetText(text.encode().c_str());
-            }
-
-        } else {
-            text_->SetText(text.encode().c_str());
-        }
-    }
-
+    void set_text(const unicode& text);
     const unicode text() const {
         if(!text_) {
             return unicode("");
@@ -82,6 +65,7 @@ public:
     }
 
 private:
+    RocketImpl& rocket_impl_;
     Rocket::Core::Element* elem_;
     Rocket::Core::ElementText* text_;
 };
@@ -95,6 +79,7 @@ struct RocketImpl {
 
     Rocket::Core::Context* context_;
     Rocket::Core::ElementDocument* document_;
+    std::recursive_mutex mutex_;
 };
 }
 

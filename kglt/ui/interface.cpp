@@ -13,6 +13,7 @@
 #include <Rocket/Core/String.h>
 
 #include <kazmath/mat4.h>
+#include <thread>
 
 #include "../loader.h"
 #include <kazbase/os/path.h>
@@ -399,6 +400,7 @@ std::string Interface::locate_font(const std::string& filename) {
 }
 
 void Interface::update(float dt) {
+    std::lock_guard<std::recursive_mutex> lck(impl_->mutex_);
     impl_->context_->Update();
 }
 
@@ -407,24 +409,32 @@ void Interface::render(const Mat4 &projection_matrix) {
     RocketRenderInterface* iface = dynamic_cast<RocketRenderInterface*>(impl_->context_->GetRenderInterface());
 
     iface->_projection_matrix = projection_matrix;
-    impl_->context_->Render();
+    {
+        std::lock_guard<std::recursive_mutex> lck(impl_->mutex_);
+        impl_->context_->Render();
+    }
 
     set_projection_matrix(Mat4()); //Reset to identity
 }
 
 void Interface::set_dimensions(uint16_t width, uint16_t height) {
+    std::lock_guard<std::recursive_mutex> lck(impl_->mutex_);
     impl_->context_->SetDimensions(Rocket::Core::Vector2i(width, height));
 }
 
 uint16_t Interface::width() const {
+    std::lock_guard<std::recursive_mutex> lck(impl_->mutex_);
     return impl_->context_->GetDimensions().x;
 }
 
 uint16_t Interface::height() const {
+    std::lock_guard<std::recursive_mutex> lck(impl_->mutex_);
     return impl_->context_->GetDimensions().x;
 }
 
 Element Interface::append(const std::string& tag) {
+    std::lock_guard<std::recursive_mutex> lck(impl_->mutex_);
+
     unicode tag_name = unicode(tag).strip();
 
     Rocket::Core::Element* elem = impl_->document_->CreateElement(tag_name.encode().c_str());
@@ -432,7 +442,7 @@ Element Interface::append(const std::string& tag) {
 
     Element result = Element(
         std::shared_ptr<ElementImpl>(
-            new ElementImpl(elem)
+            new ElementImpl(*this->impl_, elem)
         )
     );
 
@@ -442,6 +452,8 @@ Element Interface::append(const std::string& tag) {
 }
 
 ElementList Interface::_(const std::string& selector) {
+    std::lock_guard<std::recursive_mutex> lck(impl_->mutex_);
+
     std::vector<Element> result;
     Rocket::Core::ElementList elements;
     if(unicode(selector).starts_with(".")) {
@@ -450,7 +462,7 @@ ElementList Interface::_(const std::string& selector) {
         Rocket::Core::Element* elem = impl_->document_->GetElementById(unicode(selector).strip("#").encode().c_str());
         if(elem) {
             result.push_back(
-                Element(std::shared_ptr<ElementImpl>(new ElementImpl(elem)))
+                Element(std::shared_ptr<ElementImpl>(new ElementImpl(*this->impl_, elem)))
             );
         }
     } else {
@@ -458,19 +470,21 @@ ElementList Interface::_(const std::string& selector) {
     }
 
     for(Rocket::Core::Element* elem: elements) {
-        result.push_back(Element(std::shared_ptr<ElementImpl>(new ElementImpl(elem))));
+        result.push_back(Element(std::shared_ptr<ElementImpl>(new ElementImpl(*this->impl_, elem))));
     }
 
     return ElementList(result);
 }
 
 void Interface::set_styles(const std::string& stylesheet_content) {
+    std::lock_guard<std::recursive_mutex> lck(impl_->mutex_);
     impl_->document_->SetStyleSheet(Rocket::Core::Factory::InstanceStyleSheetString(stylesheet_content.c_str()));
 }
 
 Interface::~Interface() {
     try {
         if(impl_ && impl_->context_) {
+            std::lock_guard<std::recursive_mutex> lck(impl_->mutex_);
             impl_->context_->RemoveReference();
         }
     } catch(...) {
