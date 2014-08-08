@@ -324,6 +324,24 @@ Interface::Interface(WindowBase &window):
 
 static int32_t interface_count = 0;
 
+std::vector<unicode> Interface::find_fonts() {
+    const unicode ROOT_PATH = window_.resource_locator().locate_file("kglt/fonts");
+
+    std::vector<unicode> results;
+    for(unicode folder: os::path::list_dir(ROOT_PATH)) {
+        unicode folder_path = os::path::join(ROOT_PATH, folder);
+        if(os::path::is_dir(folder_path)) {
+            for(unicode file: os::path::list_dir(folder_path)) {
+                unicode file_path = os::path::join(folder_path, file);
+                if(os::path::is_file(file_path) && os::path::split_ext(file_path).second.lower() == ".ttf") {
+                    results.push_back(file_path);
+                }
+            }
+        }
+    }
+    return results;
+}
+
 bool Interface::init() {
     interface_count++;
 
@@ -337,18 +355,9 @@ bool Interface::init() {
         Rocket::Core::Initialise();
 
         bool font_found = false;
-        for(std::string font: {
-            "kglt/fonts/ubuntu/Ubuntu-R.ttf",
-            "kglt/fonts/ubuntu/Ubuntu-B.ttf",
-            "kglt/fonts/ubuntu/Ubuntu-I.ttf",
-            "kglt/fonts/ubuntu/Ubuntu-BI.ttf"
-            "kglt/fonts/ubuntu/UbuntuMono-R.ttf",
-            "kglt/fonts/ubuntu/UbuntuMono-B.ttf",
-            "kglt/fonts/ubuntu/UbuntuMono-I.ttf",
-            "kglt/fonts/ubuntu/UbuntuMono-BI.ttf"
-        }) {
+        for(unicode font: find_fonts()) {
             try {
-                if(!Rocket::Core::FontDatabase::LoadFontFace(locate_font(font).c_str())) {
+                if(!Rocket::Core::FontDatabase::LoadFontFace(locate_font(font).encode().c_str())) {
                     throw IOError("Couldn't load the font");
                 }
                 font_found = true;
@@ -373,7 +382,7 @@ bool Interface::init() {
     return true;
 }
 
-std::string Interface::locate_font(const std::string& filename) {
+unicode Interface::locate_font(const unicode& filename) {
     //FIXME: Should be %WINDIR% not C:\Windows
     //FIXME: Should look recursively in /usr/share/fonts
     std::vector<std::string> paths = {

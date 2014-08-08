@@ -122,7 +122,9 @@ public:
 
 private:    
     void set_projection_matrix(const Mat4& mat) { projection_matrix_ = mat; }
-    std::string locate_font(const std::string& filename);
+    std::vector<unicode> find_fonts();
+
+    unicode locate_font(const unicode& filename);
 
     WindowBase& window_;
     Mat4 projection_matrix_;
