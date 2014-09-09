@@ -139,6 +139,7 @@ public:
                 group.second->clear();
             }
         }
+        children_.clear();
     }
 
     void set_current_program(GPUProgram* program) { current_program_ = program; }

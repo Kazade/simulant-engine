@@ -168,14 +168,15 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
          * of material properties (uniforms) will be created with the child nodes
          * being the meshes
          */
-        typedef std::unordered_map<uint32_t, std::vector<RootGroup::ptr> > QueueGroups;
+        typedef std::unordered_map<int32_t, std::vector<RootGroup::ptr> > QueueGroups;
         static QueueGroups queues;
 
         //Empty the queues
-        for(auto queue: queues) {
-            for(auto group: queue.second) {
+        for(auto& queue: queues) {
+            for(auto& group: queue.second) {
                 group->clear();
             }
+            queue.second.clear();
         }
 
         //Go through the visible actors
