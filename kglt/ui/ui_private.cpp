@@ -10,6 +10,21 @@
 namespace kglt {
 namespace ui {
 
+Element ElementImpl::append(const std::string& tag) {
+    std::lock_guard<std::recursive_mutex> lck(rocket_impl_.mutex_);
+
+    Rocket::Core::Element* elem = elem_->GetOwnerDocument()->CreateElement(tag.c_str());
+    elem_->AppendChild(elem);
+
+    Element result = Element(
+        std::shared_ptr<ElementImpl>(
+            new ElementImpl(rocket_impl_, elem)
+        )
+    );
+
+    return result;
+}
+
 void ElementImpl::set_text(const unicode& text) {
     /*
      *  Element objects simply wrap the underlying Rocket::Core::Element*

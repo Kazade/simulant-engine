@@ -2,6 +2,7 @@
 #define UI_PRIVATE_H
 
 #include <mutex>
+#include "element.h"
 
 namespace Rocket {
 namespace Core {
@@ -63,6 +64,8 @@ public:
     void scroll_to_bottom() {
         elem_->SetScrollTop(elem_->GetScrollHeight());
     }
+
+    kglt::ui::Element append(const std::string& tag);
 
 private:
     RocketImpl& rocket_impl_;

@@ -37,6 +37,8 @@ public:
     void scroll_to_bottom();
 
     bool is_visible() const;
+
+    Element append(const std::string& tag);
 private:
     std::shared_ptr<ElementImpl> impl_;
 };

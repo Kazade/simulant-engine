@@ -16,6 +16,10 @@ Element::Element(std::shared_ptr<ElementImpl> impl):
 
 }
 
+Element Element::append(const std::string& tag) {
+    return impl_->append(tag);
+}
+
 void Element::text(const unicode& text) {
     impl_->set_text(text);
 }
