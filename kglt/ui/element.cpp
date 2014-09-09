@@ -28,12 +28,16 @@ const unicode Element::text() const {
     return impl_->text();
 }
 
-void Element::remove_class(const std::string &cl) {
-    impl_->remove_class(cl);
+void Element::remove_class(const unicode &cl) {
+    for(auto cls: cl.split(" ")) {
+        impl_->remove_class(cls.encode());
+    }
 }
 
-void Element::add_class(const std::string& cl) {
-    impl_->add_class(cl);
+void Element::add_class(const unicode &cl) {
+    for(auto cls: cl.split(" ")) {
+        impl_->add_class(cls.encode());
+    }
 }
 
 std::string Element::css(const std::string& property) const {

@@ -22,7 +22,7 @@ public:
 
     UIStage(WindowBase *parent, UIStageID id);
 
-    ui::Element append(const std::string& tag);
+    ui::ElementList append(const std::string& tag);
     ui::ElementList $(const std::string& selector);
     void set_styles(const std::string& styles);
     void load_rml(const unicode& path);

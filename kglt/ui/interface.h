@@ -30,16 +30,29 @@ public:
         }
     }
 
-    void add_class(const std::string& cl) {
+    ElementList append(const std::string& tag) {
+        std::vector<Element> new_elements;
+        for(Element& e: elements_) {
+            new_elements.push_back(e.append(tag));
+        }
+
+        return ElementList(new_elements);
+    }
+
+    ElementList add_class(const unicode& cl) {
         for(Element& e: elements_) {
             e.add_class(cl);
         }
+
+        return *this;
     }
 
-    void remove_class(const std::string& cl) {
+    ElementList remove_class(const unicode& cl) {
         for(Element& e: elements_) {
             e.remove_class(cl);
         }
+
+        return *this;
     }
 
     void css(const std::string& property, const std::string& value) {
@@ -114,7 +127,7 @@ public:
     void update(float dt);
     void render(const Mat4& projection_matrix);
 
-    Element append(const std::string& tag);
+    ElementList append(const std::string& tag);
     void set_styles(const std::string& stylesheet_content);
     ElementList _(const std::string& selector);
 

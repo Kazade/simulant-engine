@@ -17,8 +17,8 @@ public:
     void text(const unicode& content);
     const unicode text() const;
 
-    void add_class(const std::string& cl);
-    void remove_class(const std::string& cl);
+    void add_class(const unicode& cl);
+    void remove_class(const unicode &cl);
 
     std::string css(const std::string& property) const;
     void css(const std::string& property, const std::string& value);

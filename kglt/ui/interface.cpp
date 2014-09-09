@@ -441,7 +441,7 @@ uint16_t Interface::height() const {
     return impl_->context_->GetDimensions().x;
 }
 
-Element Interface::append(const std::string& tag) {
+ElementList Interface::append(const std::string& tag) {
     std::lock_guard<std::recursive_mutex> lck(impl_->mutex_);
 
     unicode tag_name = unicode(tag).strip();
@@ -457,7 +457,7 @@ Element Interface::append(const std::string& tag) {
 
     impl_->document_->Show();
 
-    return result;
+    return ElementList({result});
 }
 
 ElementList Interface::_(const std::string& selector) {

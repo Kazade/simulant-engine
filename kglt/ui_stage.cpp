@@ -15,7 +15,7 @@ UIStage::UIStage(WindowBase *parent, UIStageID id):
     );
 }
 
-ui::Element UIStage::append(const std::string& tag) {
+ui::ElementList UIStage::append(const std::string& tag) {
     return interface_->append(tag);
 }
 
