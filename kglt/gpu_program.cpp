@@ -145,8 +145,10 @@ GPUProgram::GPUProgram():
     attributes_(*this) {}
 
 const bool GPUProgram::is_current() const {
+    GLThreadCheck::check();
+
     GLint current = 0;
-    glGetIntegerv(GL_CURRENT_PROGRAM, &current);
+    GLCheck(glGetIntegerv, GL_CURRENT_PROGRAM, &current);
     return current == program_object_;
 }
 
@@ -173,8 +175,22 @@ bool GPUProgram::init() {
 }
 
 void GPUProgram::cleanup()  {
-    if(GLThreadCheck::is_current() && program_object_) {
+    if(GLThreadCheck::is_current() && program_object_) {        
+        for(auto obj: this->shaders_) {
+            if(obj.second.object) {
+                GLCheck(glDeleteShader, obj.second.object);
+                obj.second.object = 0;
+            }
+        }
+
+        if(is_current()) {
+            //If we are currently using this program, then switch back to no program!
+            GLCheck(glUseProgram, 0);
+        }
+
         GLCheck(glDeleteProgram, program_object_);
+
+        program_object_ = 0;
     }
 }
 
@@ -198,6 +214,8 @@ void GPUProgram::set_shader_source(ShaderType type, const unicode& source) {
 
 
 void GPUProgram::compile(ShaderType type) {
+    GLThreadCheck::check();
+
     auto& info = shaders_.at(type);
     if(info.is_compiled) {
         return;
@@ -289,6 +307,8 @@ void GPUProgram::rebuild_hash() {
 }
 
 void GPUProgram::link() {
+    GLThreadCheck::check();
+
     prepare_program();
 
     assert(shaders_.at(SHADER_TYPE_VERTEX).is_compiled);

@@ -51,7 +51,9 @@ Res GLCheck(Func&& func, Args&&... args) {
 class GLStateStash {
 public:
     GLStateStash(GLenum state):
-        state_(state) {
+        state_(state),
+        int_value_(0),
+        boolean_value_(false) {
 
         switch(state) {
             case GL_VERTEX_ARRAY_BINDING:
@@ -65,12 +67,13 @@ public:
             case GL_DEPTH_TEST:
                 GLCheck(glGetBooleanv, state, &boolean_value_);
             break;
+        default:
+            L_ERROR(_u("Unhandled state: {0}").format(state_));
+            throw NotImplementedError(__FILE__, __LINE__);
         }
-
-
     }
 
-    ~GLStateStash() {
+    ~GLStateStash() {        
         switch(state_) {
             case GL_VERTEX_ARRAY_BINDING:
             GLCheck(glBindVertexArray, int_value_);

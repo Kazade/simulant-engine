@@ -83,6 +83,11 @@ public:
         window.idle().run_sync(std::bind(&GPUProgram::build, shader_.get()));
     }
 
+    ~RocketRenderInterface() {
+        shader_.reset();
+        textures_.clear();
+    }
+
     bool LoadTexture(Rocket::Core::TextureHandle& texture_handle, Rocket::Core::Vector2i& texture_dimensions, const Rocket::Core::String& source) {
         auto tex = manager().texture(manager().new_texture_from_file(source.CString()));
 
@@ -238,6 +243,8 @@ public:
         kmMat4Translation(&transform, translation.x, translation.y, 0);
         transform = this->_projection_matrix * transform;
 
+        assert(shader_);
+
         shader_->build(); //Build if necessary
 
         shader_->activate();
@@ -247,7 +254,10 @@ public:
 
     void RenderCompiledGeometry(Rocket::Core::CompiledGeometryHandle geometry, const Rocket::Core::Vector2f& translation) {
         auto it = compiled_geoms_.find(geometry);
-        assert(it != compiled_geoms_.end());
+
+        if(it == compiled_geoms_.end()) {
+            throw ValueError("Tried to render invalid UI geometry");
+        }
 
         auto geom = (*it).second;
 
@@ -265,7 +275,12 @@ public:
 
         GLCheck(glActiveTexture, GL_TEXTURE0);
         if(geom->texture) {
-            GLuint tex_id = textures_[geom->texture]->gl_tex();
+            auto tex = textures_.find(geom->texture);
+            if(tex == textures_.end()) {
+                throw ValueError("Tried to bind invalid UI texture");
+            }
+
+            GLuint tex_id = (*tex).second->gl_tex();
             GLCheck(glBindTexture, GL_TEXTURE_2D, tex_id);
         } else {
             GLCheck(glBindTexture, GL_TEXTURE_2D, window_.texture(window_.default_texture_id())->gl_tex());
@@ -309,7 +324,7 @@ private:
 
     GPUProgram::ptr shader_;
 
-    std::map<Rocket::Core::TextureHandle, TexturePtr> textures_;
+    std::unordered_map<Rocket::Core::TextureHandle, TexturePtr> textures_;
 };
 
 

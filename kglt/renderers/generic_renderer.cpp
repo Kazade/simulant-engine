@@ -231,6 +231,7 @@ void GenericRenderer::render(Renderable& buffer, CameraID camera, GPUProgram* pr
         default:
             throw NotImplementedError(__FILE__, __LINE__);
     }
+
 }
 
 }
