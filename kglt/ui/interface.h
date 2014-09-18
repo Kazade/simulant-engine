@@ -129,7 +129,7 @@ public:
 
     ElementList append(const std::string& tag);
     void set_styles(const std::string& stylesheet_content);
-    ElementList _(const std::string& selector);
+    ElementList _(const unicode& selector);
 
     Mat4 projection_matrix() const { return projection_matrix_; }
 
