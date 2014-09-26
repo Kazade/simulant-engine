@@ -475,22 +475,22 @@ ElementList Interface::append(const std::string& tag) {
     return ElementList({result});
 }
 
-ElementList Interface::_(const std::string& selector) {
+ElementList Interface::_(const unicode &selector) {
     std::lock_guard<std::recursive_mutex> lck(impl_->mutex_);
 
     std::vector<Element> result;
     Rocket::Core::ElementList elements;
-    if(unicode(selector).starts_with(".")) {
-        impl_->document_->GetElementsByClassName(elements, unicode(selector).strip(".").encode().c_str());
-    } else if(unicode(selector).starts_with("#")) {
-        Rocket::Core::Element* elem = impl_->document_->GetElementById(unicode(selector).strip("#").encode().c_str());
+    if(selector.starts_with(".")) {
+        impl_->document_->GetElementsByClassName(elements, selector.lstrip(".").encode().c_str());
+    } else if(selector.starts_with("#")) {
+        Rocket::Core::Element* elem = impl_->document_->GetElementById(selector.lstrip("#").encode().c_str());
         if(elem) {
             result.push_back(
                 Element(std::shared_ptr<ElementImpl>(new ElementImpl(*this->impl_, elem)))
             );
         }
     } else {
-        impl_->document_->GetElementsByTagName(elements, ("<" + selector + ">").c_str());
+        impl_->document_->GetElementsByTagName(elements, _u("<{0}>").format(selector).encode().c_str());
     }
 
     for(Rocket::Core::Element* elem: elements) {
