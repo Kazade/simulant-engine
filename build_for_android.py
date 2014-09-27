@@ -32,42 +32,46 @@ LIBRARIES = [
     {
         "name": "pcre",
         "repo": "https://github.com/Kazade/pcre.git",
-        "include": "pcre"
     },
     {
         "name": "kazmath",
         "repo": "https://github.com/Kazade/kazmath.git",
-        "include": "kazmath/kazmath"
     },
     {
         "name": "kaztimer",
         "repo": "https://github.com/Kazade/kaztimer.git",
-        "include": "kaztimer/kaztimer"
     },
     {
         "name": "kazbase",
         "repo": "https://github.com/Kazade/kazbase.git",
-        "include": "kazbase/kazbase"
     },
     {
         "name": "sdl",
         "zip": "https://www.libsdl.org/release/SDL2-2.0.3.zip",
-        "include": "sdl/include"
     },
     {
         "name": "soil",
         "repo": "https://github.com/Kazade/soil.git",
-        "include": "soil/include"
+    },
+    {
+        "name": "openal",
+        "repo": "https://github.com/Kazade/openal-soft.git",
+    },
+    {
+        "name": "freetype2",
+        "repo": "https://github.com/Kazade/freetype2.git"
     }
 ]
 
 if __name__ == "__main__":
+    #First, symlink kglt into the .android folder (so that it's with all the others)
 
-    includes = []
+    kglt_link = os.path.join(OUTPUT_DIRECTORY, "kglt")
+    if not os.path.exists(kglt_link):
+        os.symlink(os.path.dirname(os.path.abspath("__file__")), kglt_link)
+
     for library in LIBRARIES:
         print "Downloading %s" % library["name"]
-
-        includes.append(library["include"])
 
         library_output_dir = os.path.join(OUTPUT_DIRECTORY, library["name"])
         if os.path.exists(library_output_dir):
@@ -97,7 +101,7 @@ if __name__ == "__main__":
 
     ##Make an Android.mk file
     with open(ANDROID_MK_PATH, "w") as make_file:
-        make_file.write(MAKE_FILE_DATA.format(include_dirs=" ".join(includes)))
+        make_file.write(MAKE_FILE_DATA)
 
     with open(ANDROID_APP_MK_PATH, "w") as make_file:
         make_file.write(APPLICATION_FILE_DATA)

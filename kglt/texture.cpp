@@ -2,7 +2,6 @@
 
 #include <cassert>
 #include <stdexcept>
-#include <boost/lexical_cast.hpp>
 
 #include "utils/gl_thread_check.h"
 #include "utils/gl_error.h"
@@ -78,7 +77,7 @@ void Texture::__do_upload(bool free_after, bool generate_mipmaps, bool repeat, b
     GLCheck(glBindTexture, GL_TEXTURE_2D, gl_tex_);
     check_and_log_error(__FILE__, __LINE__);
 
-    GLCheck(glTexImage2D, 
+    GLCheck(glTexImage2D,
         GL_TEXTURE_2D,
         0, (bpp_ == 32)? GL_RGBA: GL_RGB,
         width_, height_, 0,
@@ -111,7 +110,7 @@ void Texture::__do_upload(bool free_after, bool generate_mipmaps, bool repeat, b
         } else {
             GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         }
-        GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);        
+        GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     }
 
     check_and_log_error(__FILE__, __LINE__);

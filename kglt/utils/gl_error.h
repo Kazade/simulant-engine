@@ -4,7 +4,6 @@
 #include "glcompat.h"
 
 #include <string>
-#include <functional>
 
 #include <kazbase/exceptions.h>
 #include <kazbase/unicode.h>
@@ -18,7 +17,7 @@ namespace GLChecker {
 template<typename Res, typename Func, typename... Args>
 struct Checker {
     static Res run(Func&& func, Args&&... args) {
-        Res result = std::bind(std::forward<Func>(func), std::forward<Args>(args)...)();
+        Res result = func(std::forward<Args>(args)...);
         check_and_log_error("", 0);
         return result;
     }
@@ -27,7 +26,7 @@ struct Checker {
 template<typename Func, typename... Args>
 struct Checker<void, Func, Args...> {
     static void run(Func&& func, Args&&... args) {
-        std::bind(std::forward<Func>(func), std::forward<Args>(args)...)();
+        func(std::forward<Args>(args)...);
         check_and_log_error("", 0);
     }
 };
@@ -73,7 +72,7 @@ public:
         }
     }
 
-    ~GLStateStash() {        
+    ~GLStateStash() {
         switch(state_) {
             case GL_VERTEX_ARRAY_BINDING:
             GLCheck(glBindVertexArray, int_value_);

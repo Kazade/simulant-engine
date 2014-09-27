@@ -1,7 +1,6 @@
-#include <boost/lexical_cast.hpp>
-
 #include <kazbase/exceptions.h>
 #include <kazbase/os/path.h>
+#include <kazbase/unicode.h>
 #include "sprite_strip_loader.h"
 
 #include "../shortcuts.h"
@@ -20,7 +19,7 @@ std::vector<TextureID> SpriteStripLoader::load_frames() {
     auto tmp = rm_.texture(rm_.new_texture_from_file(filename_));
 
     if(tmp->width() % frame_width_ != 0) {
-        throw IOError("Invalid texture width. Should be a multiple of: " + boost::lexical_cast<std::string>(frame_width_));
+        throw IOError(_u("Invalid texture width. Should be a multiple of: {0}").format(frame_width_));
     }
 
     std::vector< Texture::Data > frame_data;
@@ -32,7 +31,7 @@ std::vector<TextureID> SpriteStripLoader::load_frames() {
     */
     uint32_t bytes = tmp->bpp() / 8;
     for(uint32_t y = 0; y < tmp->height(); ++y) {
-        uint32_t current_frame = 0;        
+        uint32_t current_frame = 0;
 
         for(uint32_t x = 0; x < tmp->width(); ++x) {
             uint32_t idx = ((y * bytes) * tmp->width()) + (x * bytes);
