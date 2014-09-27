@@ -3,6 +3,7 @@
 import os
 import subprocess
 import shutil
+import multiprocessing
 
 from StringIO import StringIO
 from zipfile import ZipFile
@@ -25,7 +26,8 @@ NDK_TOOLCHAIN_VERSION   := 4.8
 APP_GNUSTL_CPP_FEATURES := rtti exceptions
 APP_CFLAGS              := %%s
 APP_STL                 := gnustl_static
-APP_PLATFORM            := android-19
+APP_PLATFORM            := android-18
+APP_ABI                 := armeabi-v7a
 """.lstrip() % OUTPUT_DIRECTORY
 
 LIBRARIES = [
@@ -73,6 +75,16 @@ LIBRARIES = [
         "name": "ode",
         "repo": "https://github.com/Kazade/ode.git",
         "include": "ode/include"
+    },
+    {
+        "name": "lua",
+        "repo": "https://github.com/Kazade/lua.git",
+        "include": "lua/src"
+    },
+    {
+        "name": "tinyxml",
+        "repo": "https://github.com/Kazade/tinyxml.git",
+        "include": "tinyxml"
     }
 ]
 
@@ -130,5 +142,5 @@ if __name__ == "__main__":
     os.chdir(OUTPUT_DIRECTORY)
 
     subprocess.check_call([
-        "ndk-build", "NDK_APPLICATION_MK=%s" % ANDROID_APP_MK_PATH
+        "ndk-build", "NDK_APPLICATION_MK=%s" % ANDROID_APP_MK_PATH, "--jobs", str(multiprocessing.cpu_count())
     ])

@@ -337,6 +337,7 @@ void RenderSettingsGroup::bind(GPUProgram* program) {
     L_WARN("On GLES glPointSize doesn't exist");
 #endif
 
+#ifndef __ANDROID__
     switch(data_.polygon_mode) {
         case POLYGON_MODE_FILL: GLCheck(glPolygonMode, GL_FRONT_AND_BACK, GL_FILL);
         break;
@@ -347,17 +348,21 @@ void RenderSettingsGroup::bind(GPUProgram* program) {
     default:
         throw ValueError("Invalid polygon mode specified");
     }
+#else
+    const GLuint GL_FILL = 0x1B02;
+    if(data_.polygon_mode != GL_FILL) {
+        L_WARN("On GLES glPolygonMode doesn't exist");
+    }
+#endif
 
 }
 
 void RenderSettingsGroup::unbind(GPUProgram *program) {
 #ifndef __ANDROID__
     GLCheck(glPointSize, 1);
-#else
-    L_WARN("On GLES glPointSize doesn't exist");
+    GLCheck(glPolygonMode, GL_FRONT_AND_BACK, GL_FILL);
 #endif
 
-    GLCheck(glPolygonMode, GL_FRONT_AND_BACK, GL_FILL);
 }
 
 }

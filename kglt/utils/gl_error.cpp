@@ -4,8 +4,6 @@
 	#include <GLES3/gl3.h>
 #endif
 
-#include <boost/format.hpp>
-
 #include <kazbase/logging.h>
 #include <kazbase/exceptions.h>
 #include <kazbase/unicode.h>
@@ -41,7 +39,7 @@ void check_and_log_error(std::string file, int lineno) {
         }
 
         if(!file.empty()) {
-            L_ERROR((boost::format("An OpenGL error occurred: %s:%d - %d") % file % lineno % error).str());
+            L_ERROR(_u("An OpenGL error occurred: {0}:{1} - {2}").format(file, lineno, error));
         } else {
             L_ERROR(_u("An OpenGL error occurred: {0}").format(error));
         }
@@ -49,4 +47,3 @@ void check_and_log_error(std::string file, int lineno) {
         throw RuntimeError(_u("GL ERROR: {0}").format(error_string).encode());
     }
 }
-

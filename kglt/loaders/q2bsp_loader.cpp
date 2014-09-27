@@ -2,7 +2,6 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include <boost/algorithm/string/trim.hpp>
 #include <kazmath/vec3.h>
 #include <kazmath/mat4.h>
 
@@ -108,7 +107,7 @@ typedef std::map<std::string, std::string> ActorProperties;
 void parse_actors(const std::string& actor_string, std::vector<ActorProperties>& actors) {
     bool inside_actor = false;
     ActorProperties current;
-    std::string key, value;
+    unicode key, value;
     bool inside_key = false, inside_value = false, key_done_for_this_line = false;
     for(char c: actor_string) {
         if(c == '{' && !inside_actor) {
@@ -123,14 +122,14 @@ void parse_actors(const std::string& actor_string, std::vector<ActorProperties>&
         else if(c == '\n' || c == '\r') {
             key_done_for_this_line = false;
             if(!key.empty() && !value.empty()) {
-                boost::algorithm::trim(key);
-                boost::algorithm::trim(value);
+                key = key.strip();
+                value = value.strip();
 
-                current[key] = value;
+                current[key.encode()] = value.encode();
                 std::cout << "Storing {" << key << " : " << value << "}" << std::endl;
             }
-            key.clear();
-            value.clear();
+            key = "";
+            value = "";
         }
         else if (c == '"') {
             if(!inside_key && !inside_value) {
@@ -461,7 +460,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
                 index_lookup[tri_idx[j]] = mesh->shared_data().count() - 1;
             }
         }
-    }        
+    }
 
     mesh->shared_data().done();
     for(SubMeshIndex i: mesh->submesh_ids()) {

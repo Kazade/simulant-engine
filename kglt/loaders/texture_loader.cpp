@@ -2,7 +2,13 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+
+//This is a hack, it should really be fixed in the build system :(
+#ifndef __ANDROID__
 #include <SOIL/SOIL.h>
+#else
+#include <SOIL.h>
+#endif
 
 #include "texture_loader.h"
 
@@ -31,41 +37,41 @@ void TextureLoader::into(Loadable& resource, const LoaderOptions& options) {
 
     if(!data && !dont_fallback) {
         std::cout << "Falling back to checkerboard" << std::endl;
-        
+
         //FIXME: Don't generate this each time!
         channels = 4;
         tex->set_bpp(channels * 8);
         tex->resize(64, 64);
         uint32_t j = 0;
         uint32_t switch_counter = 0;
-        bool black = true;                
+        bool black = true;
         for(uint32_t i = 0; i < 64 * 64; ++i) {
             if(j++ == 7) {
-                black = !black;                
-                j = 0;                
+                black = !black;
+                j = 0;
             }
-            
+
             if(i % 64 == 0) {
                 switch_counter++;
                 if(switch_counter == 8) {
-                    black = !black;                
+                    black = !black;
                     switch_counter = 0;
                 }
             }
-            
+
             if(black) {
                 tex->data()[i * channels] = 0;
                 tex->data()[(i * channels) + 1] = 0;
-                tex->data()[(i * channels) + 2] = 0;                                
-                tex->data()[(i * channels) + 3] = 255;                
+                tex->data()[(i * channels) + 2] = 0;
+                tex->data()[(i * channels) + 3] = 255;
             } else {
                 tex->data()[i * channels] = 255;
                 tex->data()[(i * channels) + 1] = 255;
-                tex->data()[(i * channels) + 2] = 255;                                
-                tex->data()[(i * channels) + 3] = 255;                            
+                tex->data()[(i * channels) + 2] = 255;
+                tex->data()[(i * channels) + 3] = 255;
             }
         }
-        
+
     } else if (!data) {
         throw IOError("Couldn't load the file: " + filename_.encode());
     } else {

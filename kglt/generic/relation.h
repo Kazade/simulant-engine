@@ -6,7 +6,8 @@
 #include <map>
 #include <set>
 #include <stdexcept>
-#include <boost/any.hpp>
+#include <vector>
+#include <algorithm>
 
 namespace kglt {
 
@@ -216,7 +217,7 @@ private:
 }
 
 
-#endif 
+#endif
 
 /*
 
@@ -225,10 +226,10 @@ class B;
 class A {
 public:
     Relation<B> b;
-    
+
     A():
         b(*this, "a_set") {
-        
+
     }
 };
 
@@ -236,11 +237,11 @@ public:
 class B : public Relatable {
 public:
     ReverseRelation<A> a_set;
-    
+
     B() {
       register_field(&a_set, "a_set");
     }
-    
+
 };
 
 

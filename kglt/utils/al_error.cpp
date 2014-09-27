@@ -1,5 +1,3 @@
-#include <boost/format.hpp>
-
 #include <AL/al.h>
 #include <AL/alc.h>
 
@@ -35,5 +33,3 @@ void al_check_and_log_error() {
     }
 }
 }
-
-

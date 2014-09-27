@@ -7,7 +7,8 @@
 #include <memory>
 #include <stdexcept>
 
-#include "generic/tree.h"
+#include <kazbase/signals.h>
+
 #include "generic/data_carrier.h"
 #include "generic/visitor.h"
 
