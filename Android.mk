@@ -9,6 +9,9 @@ LOCAL_SHARED_LIBRARIES := kazmath
 LOCAL_CFLAGS 	+= -I$(PARENT_PATH)/kaztimer
 LOCAL_SHARED_LIBRARIES += kaztimer
 
+LOCAL_CFLAGS 	+= -I$(PARENT_PATH)/kazbase
+LOCAL_SHARED_LIBRARIES += kazbase
+
 #Add LUA
 #LOCAL_CFLAGS 	+= -I$(PARENT_PATH)/lua-5.2.2/src
 #LOCAL_SHARED_LIBRARIES += lua
@@ -23,18 +26,19 @@ LOCAL_SHARED_LIBRARIES += freetype
 LOCAL_CFLAGS 	+= -I$(PARENT_PATH)/sdl/include
 LOCAL_SHARED_LIBRARIES += SDL2
 
-LOCAL_CFLAGS 	+= -I$(LOCAL_PATH)/kglt/ui/rocket/Include
-LOCAL_CFLAGS 	+= -I$(LOCAL_PATH)/submodules/luabind
-
 LOCAL_CFLAGS	+= -I$(PARENT_PATH)/soil
 LOCAL_SHARED_LIBRARIES += soil
 
-#LOCAL_C_INCLUDES := $(PARENT_PATH)/ode-0.12/include $(PARENT_PATH)/boost/include/boost-1_53
-#LOCAL_CPPFLAGS  += -DdSINGLE
+LOCAL_CFLAGS	+= -I$(PARENT_PATH)/ode/ode/include
+LOCAL_SHARED_LIBRARIES += ode
+
+LOCAL_CFLAGS 	+= -I$(LOCAL_PATH)/kglt/ui/rocket/Include
+LOCAL_CFLAGS 	+= -I$(LOCAL_PATH)/submodules/luabind
 
 LOCAL_CPPFLAGS 	+= -fexceptions
 LOCAL_CPPFLAGS 	+= -frtti
 LOCAL_CPPFLAGS  += -std=c++11
+LOCAL_CPPFLAGS  += -DdSINGLE #For ODE
 
 LOCAL_MODULE	:= kglt
 

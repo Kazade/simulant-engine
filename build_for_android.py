@@ -19,47 +19,60 @@ include $(call all-subdir-makefiles)
 """.strip()
 
 APPLICATION_FILE_DATA = """
-APP_BUILD_SCRIPT		:= Android.mk
-APP_PROJECT_PATH		:= {}
-NDK_TOOLCHAIN_VERSION 	:= clang
+APP_BUILD_SCRIPT        := Android.mk
+APP_PROJECT_PATH        := %s
+NDK_TOOLCHAIN_VERSION   := 4.8
 APP_GNUSTL_CPP_FEATURES := rtti exceptions
-APP_C_INCLUDES          := {}/pcre
+APP_CFLAGS              := %%s
 APP_STL                 := gnustl_static
 APP_PLATFORM            := android-19
-""".format(OUTPUT_DIRECTORY, OUTPUT_DIRECTORY)
+""".lstrip() % OUTPUT_DIRECTORY
 
 LIBRARIES = [
     {
         "name": "pcre",
         "repo": "https://github.com/Kazade/pcre.git",
+        "include": "pcre"
     },
     {
         "name": "kazmath",
         "repo": "https://github.com/Kazade/kazmath.git",
+        "include": "kazmath"
     },
     {
         "name": "kaztimer",
         "repo": "https://github.com/Kazade/kaztimer.git",
+        "include": "kaztimer"
     },
     {
         "name": "kazbase",
         "repo": "https://github.com/Kazade/kazbase.git",
+        "include": "kazbase"
     },
     {
         "name": "sdl",
         "zip": "https://www.libsdl.org/release/SDL2-2.0.3.zip",
+        "include": "sdl/include"
     },
     {
         "name": "soil",
         "repo": "https://github.com/Kazade/soil.git",
+        "include": "soil/src"
     },
     {
         "name": "openal",
         "repo": "https://github.com/Kazade/openal-soft.git",
+        "include": "openal/OpenAL/include"
     },
     {
         "name": "freetype2",
-        "repo": "https://github.com/Kazade/freetype2.git"
+        "repo": "https://github.com/Kazade/freetype2.git",
+        "include": "freetype2/include"
+    },
+    {
+        "name": "ode",
+        "repo": "https://github.com/Kazade/ode.git",
+        "include": "ode/include"
     }
 ]
 
@@ -70,14 +83,19 @@ if __name__ == "__main__":
     if not os.path.exists(kglt_link):
         os.symlink(os.path.dirname(os.path.abspath("__file__")), kglt_link)
 
+    includes = []
     for library in LIBRARIES:
-        print "Downloading %s" % library["name"]
+
+        if "include" in library:
+            includes.append(library["include"])
 
         library_output_dir = os.path.join(OUTPUT_DIRECTORY, library["name"])
         if os.path.exists(library_output_dir):
             if "precompile" in library:
                 library["precompile"]()
             continue
+        else:
+            print "Downloading %s" % library["name"]
 
         if "repo" in library:
             subprocess.check_call([
@@ -104,7 +122,7 @@ if __name__ == "__main__":
         make_file.write(MAKE_FILE_DATA)
 
     with open(ANDROID_APP_MK_PATH, "w") as make_file:
-        make_file.write(APPLICATION_FILE_DATA)
+        make_file.write(APPLICATION_FILE_DATA % " ".join(["-I{}".format(x) for x in includes ]))
 
     with open(ANDROID_MANIFEST_PATH, "w") as make_file:
         make_file.write("\n")

@@ -3,7 +3,7 @@
 
 #include <sys/inotify.h>
 #include <fcntl.h>
-
+#include <unistd.h>
 #include "kazbase/os.h"
 
 namespace kglt {

@@ -6,7 +6,6 @@
 #include <vector>
 #include <memory>
 #include <stdexcept>
-#include <boost/any.hpp>
 
 #include "generic/tree.h"
 #include "generic/data_carrier.h"
@@ -152,7 +151,7 @@ public:
     void unlock_position();
 
     uint64_t uuid() const { return uuid_; }
-        
+
     virtual void _initialize() {}
     virtual void do_update(double dt) {}
 
@@ -207,7 +206,7 @@ public:
     bool is_responsive() const { return bool(responsive_body_); }
     bool is_collidable() const { return bool(collidable_); }
 
-    bool parent_is_root() const {        
+    bool parent_is_root() const {
         return has_parent() && !parent()->has_parent();
     }
 

@@ -2,7 +2,7 @@
 #define USER_DATA_CARRIER_H
 
 #include <unordered_map>
-#include <boost/any.hpp>
+#include <kazbase/any/any.h>
 #include <kazbase/exceptions.h>
 #include <kazbase/list_utils.h>
 
@@ -15,7 +15,7 @@ public:
 
     template<typename T>
     void stash(T thing, const std::string& identifier) {
-        things_[identifier] = boost::any(thing);
+        things_[identifier] = core::any(thing);
     }
 
     bool exists(const std::string& identifier) const {
@@ -27,7 +27,7 @@ public:
         if(!exists(identifier)) {
             throw DoesNotExist<T>();
         }
-        return boost::any_cast<T>(things_.at(identifier));
+        return core::any_cast<T>(things_.at(identifier));
     }
 
     void unstash(const std::string& identifier) {
@@ -37,7 +37,7 @@ public:
     }
 
 private:
-    std::unordered_map<std::string, boost::any> things_;
+    std::unordered_map<std::string, core::any> things_;
 };
 
 }
