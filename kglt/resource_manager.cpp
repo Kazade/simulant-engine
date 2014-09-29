@@ -245,6 +245,8 @@ void ResourceManagerImpl::delete_material(MaterialID m) {
 
 MaterialID ResourceManagerImpl::new_material_from_file(const unicode& path, bool garbage_collect) {
     //Load the material
+    L_INFO(_u("Loading material {0}").format(path));
+
     auto mat = material(new_material(garbage_collect));
     window().loader_for(path.encode())->into(mat);
     mark_material_as_uncollected(mat->id());

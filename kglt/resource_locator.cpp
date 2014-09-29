@@ -2,6 +2,8 @@
 #include <kazbase/exceptions.h>
 #include "resource_locator.h"
 
+#include <SDL_rwops.h>
+
 namespace kglt {
 
 ResourceLocator::ResourceLocator() {
@@ -20,6 +22,17 @@ unicode ResourceLocator::locate_file(const unicode &filename) const {
       Locates a file on one of the resource paths, throws an IOError if the file
       cannot be found
     */
+#ifdef __ANDROID__
+    //On Android we use SDL_RWops which reads from the APK
+    SDL_RWops* ops = SDL_RWFromFile(filename.encode().c_str(), "r");
+    if(ops) {
+        //If we could open the file, return the filename
+        SDL_FreeRW(ops);
+        return filename;
+    }
+
+#else
+
     if(os::path::exists(filename)) { //Absolute path
         return os::path::abs_path(filename);
     }
@@ -30,11 +43,34 @@ unicode ResourceLocator::locate_file(const unicode &filename) const {
             return os::path::abs_path(full_path);
         }
     }
-
+#endif
     throw IOError(_u("Unable to find file: ") + filename);
 }
 
 std::shared_ptr<std::stringstream> ResourceLocator::read_file(const unicode& filename) {
+#ifdef __ANDROID__
+    //If we're on Android, don't bother trying to locate the file, just try to load it from the APK
+    std::shared_ptr<std::stringstream> result = std::make_shared<std::stringstream>();
+    SDL_RWops* ops = SDL_RWFromFile(filename.encode().c_str(), "r");
+    if(ops) {
+        //If we could open the file, return the filename
+        SDL_RWseek(ops, 0, SEEK_END);
+        int length = SDL_RWtell(ops);
+        SDL_RWseek(ops, 0, SEEK_SET);
+
+        std::vector<unsigned char> data(length); //Make room for all the data
+        SDL_RWread(ops, &data[0], sizeof(unsigned char), length);
+        SDL_FreeRW(ops);
+
+        std::string str(data.begin(), data.end());
+        //Populate the stringstream
+        (*result) << str;
+        return result;
+    } else {
+        throw IOError(_u("Unable to load file: ") + filename);
+    }
+    SDL_FreeRW(ops);
+#else
     unicode path = locate_file(filename);
 
     std::ifstream file_in(path.encode());
@@ -45,6 +81,7 @@ std::shared_ptr<std::stringstream> ResourceLocator::read_file(const unicode& fil
     std::shared_ptr<std::stringstream> result(new std::stringstream);
     (*result) << file_in.rdbuf();
     return result;
+#endif
 }
 
 std::vector<std::string> ResourceLocator::read_file_lines(const unicode &filename) {

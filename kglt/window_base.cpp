@@ -57,9 +57,9 @@ WindowBase::WindowBase():
     ktiBindTimer(variable_timer_);
     ktiStartGameTimer();
 
-    set_logging_level(LOG_LEVEL_NONE);
+    set_logging_level(LOG_LEVEL_DEBUG);
 
-    logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));       
+    logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));
 }
 
 WindowBase::~WindowBase() {
@@ -94,12 +94,14 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
     set_width(width);
     set_height(height);
 
-    bool result = create_window(width, height, bpp, fullscreen);        
+    bool result = create_window(width, height, bpp, fullscreen);
 
     if(result && !initialized_) {
         create_default_ui_stage();
 
         watcher_ = Watcher::create(*this);
+
+        L_INFO("Registering loaders");
 
         //Register the default resource loaders
         register_loader(std::make_shared<kglt::loaders::TextureLoaderType>());
@@ -112,7 +114,10 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
         register_loader(std::make_shared<kglt::loaders::OBJLoaderType>());
         register_loader(std::make_shared<kglt::loaders::TiledLoaderType>());
 
+        L_INFO("Initializing OpenAL");
         Sound::init_openal();
+
+        L_INFO("Initializing the default resources");
         ResourceManagerImpl::init();
 
         //Create a default viewport
@@ -222,7 +227,7 @@ bool WindowBase::run_frame() {
 
         update(fixed_step); //Update this
 
-        signal_step_(fixed_step); //Trigger any steps        
+        signal_step_(fixed_step); //Trigger any steps
     }
 
     fixed_step_interp_ = ktiGetAccumulatorValue();
@@ -256,7 +261,7 @@ bool WindowBase::run_frame() {
         loading_.reset();
 
         //Shutdown the input controller
-        input_controller_.reset();        
+        input_controller_.reset();
     }
 
     return is_running_;

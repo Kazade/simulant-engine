@@ -349,8 +349,7 @@ void RenderSettingsGroup::bind(GPUProgram* program) {
         throw ValueError("Invalid polygon mode specified");
     }
 #else
-    const GLuint GL_FILL = 0x1B02;
-    if(data_.polygon_mode != GL_FILL) {
+    if(data_.polygon_mode != POLYGON_MODE_FILL) {
         L_WARN("On GLES glPolygonMode doesn't exist");
     }
 #endif

@@ -1,3 +1,4 @@
+#include <kazbase/logging.h>
 #include "utils/glcompat.h"
 #include "utils/gl_error.h"
 #include "kazbase/unicode.h"
@@ -34,7 +35,7 @@ void Window::check_events() {
     while(SDL_PollEvent(&event)) {
         input_controller().handle_event(event);
 
-        switch(event.type) {            
+        switch(event.type) {
             case SDL_QUIT:
                 stop_running();
                 break;
@@ -49,6 +50,7 @@ bool Window::create_window(int width, int height, int bpp, bool fullscreen) {
 //    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
     if(SDL_Init(SDL_INIT_EVERYTHING) != 0) {
+        L_ERROR(_u("Unable to initialize SDL {0}").format(SDL_GetError()));
         return false;
     }
 
@@ -67,10 +69,15 @@ bool Window::create_window(int width, int height, int bpp, bool fullscreen) {
     );
     assert(screen_);
 
+#ifndef __ANDROID__
     //OpenGL 3.1 baby!
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
+#else
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+#endif
 
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
@@ -96,7 +103,7 @@ bool Window::create_window(int width, int height, int bpp, bool fullscreen) {
 
     set_width(width);
     set_height(height);
-            
+
     SDL_ShowCursor(0);
 
     L_DEBUG(unicode("{0} joysicks found").format(SDL_NumJoysticks()).encode());

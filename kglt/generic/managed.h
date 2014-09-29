@@ -3,6 +3,7 @@
 
 #include <stdexcept>
 #include <memory>
+#include <kazbase/unicode.h>
 
 class InstanceInitializationError :
     public std::runtime_error {
@@ -10,6 +11,11 @@ class InstanceInitializationError :
 public:
     InstanceInitializationError():
         std::runtime_error("Couldn't initialize the instance") {}
+
+    InstanceInitializationError(const unicode& type):
+        std::runtime_error((type + " could not be initialized").encode()) {
+
+    }
 };
 
 template<typename T>
@@ -32,7 +38,7 @@ public:
         );
 
         if(!instance->init()) {
-            throw InstanceInitializationError();
+            throw InstanceInitializationError(typeid(T).name());
         }
         return instance;
     }
@@ -44,7 +50,7 @@ public:
         );
 
         if(!instance->init()) {
-            throw InstanceInitializationError();
+            throw InstanceInitializationError(typeid(T).name());
         }
         return instance;
     }

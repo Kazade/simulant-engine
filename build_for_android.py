@@ -22,12 +22,13 @@ include $(call all-subdir-makefiles)
 APPLICATION_FILE_DATA = """
 APP_BUILD_SCRIPT        := Android.mk
 APP_PROJECT_PATH        := %s
-NDK_TOOLCHAIN_VERSION   := 4.8
+NDK_TOOLCHAIN_VERSION   := clang
 APP_GNUSTL_CPP_FEATURES := rtti exceptions
 APP_CFLAGS              := %%s
-APP_STL                 := gnustl_static
+APP_STL                 := c++_shared
 APP_PLATFORM            := android-18
 APP_ABI                 := armeabi-v7a
+APP_OPTIM               := debug
 """.lstrip() % OUTPUT_DIRECTORY
 
 LIBRARIES = [

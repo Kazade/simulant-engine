@@ -39,7 +39,7 @@ LOCAL_CFLAGS 	+= -I$(LOCAL_PATH)/submodules/luabind
 
 LOCAL_CPPFLAGS 	+= -fexceptions
 LOCAL_CPPFLAGS 	+= -frtti
-LOCAL_CPPFLAGS  += -std=c++11
+LOCAL_CPPFLAGS  += -std=c++11 -g
 LOCAL_CPPFLAGS  += -DdIDESINGLE #For ODE
 
 LOCAL_MODULE	:= kglt
