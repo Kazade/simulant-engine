@@ -1,13 +1,16 @@
 #ifndef __ANDROID__
 	#include <GL/glew.h>
+    #include <SDL2/SDL_rwops.h>
 #else
     #include <GLES2/gl2.h>
+    #include <SDL_rwops.h>
 #endif
 
 #include <Rocket/Core.h>
 #include <Rocket/Core/SystemInterface.h>
 #include <Rocket/Core/RenderInterface.h>
 #include <Rocket/Core/FontDatabase.h>
+#include <Rocket/Core/FileInterface.h>
 #include <Rocket/Core/Vertex.h>
 #include <Rocket/Core/Types.h>
 #include <Rocket/Core/String.h>
@@ -27,6 +30,41 @@
 
 namespace kglt {
 namespace ui {
+
+class RocketFileInterface : public Rocket::Core::FileInterface {
+public:
+    // Opens a file.
+    Rocket::Core::FileHandle Open(const Rocket::Core::String& path) {
+        SDL_RWops* ops = SDL_RWFromFile(path.CString(), "r");
+        return (Rocket::Core::FileHandle) ops; //Dirty cast
+    }
+
+    // Closes a previously opened file.
+    void Close(Rocket::Core::FileHandle file) {
+        SDL_RWops* ops = (SDL_RWops*) file; //Dirty cast
+        SDL_RWclose(ops);
+    }
+
+    // Reads data from a previously opened file.
+    size_t Read(void* buffer, size_t size, Rocket::Core::FileHandle file) {
+        SDL_RWops* ops = (SDL_RWops*) file; //Dirty cast
+        return SDL_RWread(ops, buffer, size, 1);
+    }
+
+    // Seeks to a point in a previously opened file.
+    bool Seek(Rocket::Core::FileHandle file, long offset, int origin) {
+        SDL_RWops* ops = (SDL_RWops*) file; //Dirty cast
+        SDL_RWseek(ops, offset, origin);
+        return true;
+    }
+
+    // Returns the current position of the file pointer.
+    size_t Tell(Rocket::Core::FileHandle file)  {
+        SDL_RWops* ops = (SDL_RWops*) file; //Dirty cast
+        return SDL_RWtell(ops);
+    }
+
+};
 
 class RocketSystemInterface : public Rocket::Core::SystemInterface {
 public:
@@ -332,6 +370,7 @@ private:
 
 static RocketSystemInterface* rocket_system_interface_;
 static RocketRenderInterface* rocket_render_interface_;
+static RocketFileInterface* rocket_file_interface_;
 
 Interface::Interface(WindowBase &window):
     window_(window),
@@ -342,20 +381,43 @@ Interface::Interface(WindowBase &window):
 static int32_t interface_count = 0;
 
 std::vector<unicode> Interface::find_fonts() {
-    const unicode ROOT_PATH = window_.resource_locator().locate_file("kglt/fonts");
+    /*
+     * Unfortunately, because Android doesn't easily let you list folders in a portable way
+     * we have to hard code the list of fonts. Bummer.
+     */
+
+    const std::vector<unicode> FONT_PATHS = {
+        "kglt/fonts/opensans/OpenSans-BoldItalic.ttf",
+        "kglt/fonts/opensans/OpenSans-Bold.ttf",
+        "kglt/fonts/opensans/OpenSans-ExtraBoldItalic.ttf",
+        "kglt/fonts/opensans/OpenSans-ExtraBold.ttf",
+        "kglt/fonts/opensans/OpenSans-Italic.ttf",
+        "kglt/fonts/opensans/OpenSans-LightItalic.ttf",
+        "kglt/fonts/opensans/OpenSans-Light.ttf",
+        "kglt/fonts/opensans/OpenSans-Regular.ttf",
+        "kglt/fonts/opensans/OpenSans-SemiboldItalic.ttf",
+        "kglt/fonts/opensans/OpenSans-Semibold.ttf",
+        "kglt/fonts/ubuntu/Ubuntu-BI.ttf",
+        "kglt/fonts/ubuntu/Ubuntu-B.ttf",
+        "kglt/fonts/ubuntu/Ubuntu-C.ttf",
+        "kglt/fonts/ubuntu/Ubuntu-LI.ttf",
+        "kglt/fonts/ubuntu/Ubuntu-L.ttf",
+        "kglt/fonts/ubuntu/Ubuntu-MI.ttf",
+        "kglt/fonts/ubuntu/Ubuntu-M.ttf",
+        "kglt/fonts/ubuntu/Ubuntu-RI.ttf",
+        "kglt/fonts/ubuntu/Ubuntu-R.ttf",
+        "kglt/fonts/ubuntu/UbuntuMono-BI.ttf",
+        "kglt/fonts/ubuntu/UbuntuMono-B.ttf",
+        "kglt/fonts/ubuntu/UbuntuMono-RI.ttf",
+        "kglt/fonts/ubuntu/UbuntuMono-R.ttf",
+    };
 
     std::vector<unicode> results;
-    for(unicode folder: os::path::list_dir(ROOT_PATH)) {
-        unicode folder_path = os::path::join(ROOT_PATH, folder);
-        if(os::path::is_dir(folder_path)) {
-            for(unicode file: os::path::list_dir(folder_path)) {
-                unicode file_path = os::path::join(folder_path, file);
-                if(os::path::is_file(file_path) && os::path::split_ext(file_path).second.lower() == ".ttf") {
-                    results.push_back(file_path);
-                }
-            }
-        }
+    for(unicode font: FONT_PATHS) {
+        const unicode path = window_.resource_locator().locate_file(font);
+        results.push_back(path);
     }
+
     return results;
 }
 
@@ -368,6 +430,9 @@ bool Interface::init() {
 
         rocket_render_interface_ = new RocketRenderInterface(window_);
         Rocket::Core::SetRenderInterface(rocket_render_interface_);
+
+        rocket_file_interface_ = new RocketFileInterface();
+        Rocket::Core::SetFileInterface(rocket_file_interface_);
 
         Rocket::Core::Initialise();
 
