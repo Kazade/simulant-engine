@@ -19,8 +19,9 @@ class Loader {
 public:
     typedef std::shared_ptr<Loader> ptr;
 
-    Loader(const unicode& filename):
-        filename_(filename) {}
+    Loader(const unicode& filename, std::shared_ptr<std::stringstream> data):
+        filename_(filename),
+        data_(data) {}
 
     virtual ~Loader();    
     void into(const ProtectedPtr<Loadable>& resource, const LoaderOptions& options = LoaderOptions()) {
@@ -37,6 +38,7 @@ public:
 
 protected:
     unicode filename_;
+    std::shared_ptr<std::stringstream> data_;
 
     template<typename T>
     T* loadable_to(Loadable& loadable) {
@@ -60,7 +62,7 @@ public:
 
     virtual unicode name() = 0;
     virtual bool supports(const unicode& filename) const = 0;
-    virtual Loader::ptr loader_for(const unicode& filename) const = 0;
+    virtual Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::stringstream> data) const = 0;
 };
 
 }

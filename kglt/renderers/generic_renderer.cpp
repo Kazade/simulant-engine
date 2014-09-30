@@ -1,7 +1,7 @@
 #ifndef __ANDROID__
 	#include <GL/glew.h>
 #else
-	#include <GLES3/gl3.h>
+    #include <GLES2/gl2.h>
 #endif
 
 #include "generic_renderer.h"

@@ -8,8 +8,8 @@ namespace loaders {
 
 class TiledLoader : public Loader {
 public:
-    TiledLoader(const unicode& filename):
-        Loader(filename) {}
+    TiledLoader(const unicode& filename, std::shared_ptr<std::stringstream> data):
+        Loader(filename, data) {}
 
     void into(Loadable& resource, const LoaderOptions& options = LoaderOptions());
 };
@@ -28,8 +28,8 @@ public:
         return ret;
     }
 
-    Loader::ptr loader_for(const unicode& filename) const {
-        return Loader::ptr(new TiledLoader(filename));
+    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::stringstream> data) const {
+        return Loader::ptr(new TiledLoader(filename, data));
     }
 };
 

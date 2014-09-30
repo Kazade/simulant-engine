@@ -81,7 +81,7 @@ LoaderPtr WindowBase::loader_for(const unicode &filename) {
 
     for(LoaderTypePtr loader_type: loaders_) {
         if(loader_type->supports(final_file)) {
-            return loader_type->loader_for(final_file.encode());
+            return loader_type->loader_for(final_file, resource_locator().read_file(final_file));
         }
     }
 
@@ -96,7 +96,8 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
 
     bool result = create_window(width, height, bpp, fullscreen);
 
-    if(result && !initialized_) {
+    if(result && !initialized_) {        
+        L_INFO("Initializing the default UI stage");
         create_default_ui_stage();
 
         watcher_ = Watcher::create(*this);

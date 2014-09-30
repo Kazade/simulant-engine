@@ -54,7 +54,7 @@ endef
 LOCAL_SRC_FILES := $(call all-cpp-files-under, kglt)
 LOCAL_SRC_FILES += $(call all-cpp-files-under, submodules/luabind/src)
 LOCAL_SRC_FILES += kglt/loaders/stb_vorbis.c
-
-LOCAL_LDLIBS    += -lGLESv3 -lz
+LOCAL_CFLAGS += -DGL_GLEXT_PROTOTYPES
+LOCAL_LDLIBS    += -lGLESv1_CM -lGLESv2 -lz -ldl -lEGL
 
 include $(BUILD_SHARED_LIBRARY)

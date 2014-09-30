@@ -36,7 +36,7 @@ class MaterialScript :
     public Managed<MaterialScript> {
 public:
     MaterialScript(const MaterialLanguageText& text);
-    MaterialScript(const unicode& path);
+    MaterialScript(std::shared_ptr<std::stringstream> data);
     void generate(Material& material);
 
 private:
@@ -70,9 +70,9 @@ class MaterialScriptLoader:
     public Loader {
 
 public:
-    MaterialScriptLoader(const unicode& filename):
-        Loader(filename) {
-        parser_ = MaterialScript::create(filename);
+    MaterialScriptLoader(const unicode& filename, std::shared_ptr<std::stringstream> data):
+        Loader(filename, data) {
+        parser_ = MaterialScript::create(data);
     }
 
     void into(Loadable& resource, const LoaderOptions& options) override;
@@ -88,8 +88,8 @@ public:
         return filename.lower().contains(".kglm");
     }
 
-    Loader::ptr loader_for(const unicode& filename) const {
-        return Loader::ptr(new MaterialScriptLoader(filename));
+    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::stringstream> data) const {
+        return Loader::ptr(new MaterialScriptLoader(filename, data));
     }
 };
 

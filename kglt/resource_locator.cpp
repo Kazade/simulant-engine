@@ -2,7 +2,9 @@
 #include <kazbase/exceptions.h>
 #include "resource_locator.h"
 
+#ifdef __ANDROID__
 #include <SDL_rwops.h>
+#endif
 
 namespace kglt {
 

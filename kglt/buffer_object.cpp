@@ -7,6 +7,17 @@
 #include "utils/gl_thread_check.h"
 #include "utils/gl_error.h"
 
+#ifdef __ANDROID__
+
+#include <EGL/egl.h>
+#include <GLES2/gl2ext.h>
+
+PFNGLGENVERTEXARRAYSOESPROC glGenVertexArrays = nullptr;
+PFNGLBINDVERTEXARRAYOESPROC glBindVertexArray = nullptr;
+PFNGLDELETEVERTEXARRAYSOESPROC glDeleteVertexArrays = nullptr;
+
+#endif
+
 namespace kglt {
 
 BufferObject::BufferObject(BufferObjectType type, BufferObjectUsage usage):
@@ -25,6 +36,19 @@ BufferObject::BufferObject(BufferObjectType type, BufferObjectUsage usage):
         default:
             L_WARN("We don't yet support this shizzle");
     }    
+
+
+#ifdef __ANDROID__
+    if(!glGenVertexArrays) {
+        glGenVertexArrays = (PFNGLGENVERTEXARRAYSOESPROC) eglGetProcAddress("glGenVertexArraysOES");
+        glBindVertexArray = (PFNGLBINDVERTEXARRAYOESPROC) eglGetProcAddress("glBindVertexArrayOES");
+        glDeleteVertexArrays = (PFNGLDELETEVERTEXARRAYSOESPROC) eglGetProcAddress("glDeleteVertexArraysOES");
+
+        if(!(glGenVertexArrays && glBindVertexArray && glDeleteVertexArrays)) {
+            throw RuntimeError("glGenVertexArraysOES is not supported on this device");
+        }
+    }
+#endif
 }
 
 BufferObject::~BufferObject() {

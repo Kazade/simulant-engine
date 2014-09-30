@@ -10,9 +10,8 @@
 
 namespace kglt {
 
-MaterialScript::MaterialScript(const unicode &filename):
-    filename_(filename),
-    text_(MaterialLanguageText("")){
+MaterialScript::MaterialScript(std::shared_ptr<std::stringstream> data):
+    text_(MaterialLanguageText(data->str())) {
 
 }
 
@@ -298,23 +297,13 @@ void MaterialScript::handle_block(Material& mat,
 void MaterialScript::generate(Material& material) {
     std::vector<unicode> lines;
 
-    if(!filename_.empty()) {
-        std::ifstream file_in(filename_.encode().c_str());
-        if(!file_in.good()) {
-            throw IOError("Couldn't open file: " + filename_.encode());
-        }
-
-        std::string line;
-        while(std::getline(file_in, line)) {
-            lines.push_back(_u(line).strip()); //Strip any indentation
-        }
-    } else if (!text_.text().empty()) {
+    if(!text_.text().empty()) {
         lines = _u(text_.text()).split("\n");
         for(uint16_t i = 0; i < lines.size(); ++i) {
             lines[i] = lines[i].strip();
         }
     } else {
-        throw std::logic_error("Filename or text must be specified");
+        throw std::logic_error("Text must be specified");
     }
 
     //FIXME: Parse INCLUDE commands and insert associated files into the lines

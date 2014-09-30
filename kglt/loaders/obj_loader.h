@@ -8,8 +8,8 @@ namespace loaders {
 
 class OBJLoader : public Loader {
 public:
-    OBJLoader(const unicode& filename):
-        Loader(filename) {}
+    OBJLoader(const unicode& filename, std::shared_ptr<std::stringstream> data):
+        Loader(filename, data) {}
 
     void into(Loadable& resource, const LoaderOptions& options = LoaderOptions());
 };
@@ -29,8 +29,8 @@ public:
         return filename.lower().contains(".obj");
     }
 
-    Loader::ptr loader_for(const unicode& filename) const {
-        return Loader::ptr(new OBJLoader(filename));
+    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::stringstream> data) const {
+        return Loader::ptr(new OBJLoader(filename, data));
     }
 };
 

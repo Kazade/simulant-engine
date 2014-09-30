@@ -8,8 +8,8 @@ namespace loaders {
 
 class RMLLoader : public Loader {
 public:
-    RMLLoader(const unicode& filename):
-        Loader(filename) {}
+    RMLLoader(const unicode& filename, std::shared_ptr<std::stringstream> data):
+        Loader(filename, data) {}
 
     void into(Loadable& resource, const LoaderOptions& options = LoaderOptions());
 };
@@ -21,8 +21,8 @@ public:
         return filename.lower().contains(".rml");
     }
 
-    Loader::ptr loader_for(const unicode& filename) const {
-        return Loader::ptr(new RMLLoader(filename));
+    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::stringstream> data) const {
+        return Loader::ptr(new RMLLoader(filename, data));
     }
 };
 

@@ -211,8 +211,8 @@ void GPUProgram::set_shader_source(ShaderType type, const unicode& source) {
     ShaderInfo new_shader;
     new_shader.source = source;
     is_linked_ = false; //We're no longer linked
-    shaders_.insert(std::make_pair(type, new_shader));
-    shader_hashes_.insert(std::make_pair(type, hashlib::MD5(source.encode()).hex_digest()));
+    shaders_[type] = new_shader;
+    shader_hashes_[type] = hashlib::MD5(source.encode()).hex_digest();
     rebuild_hash();
 }
 

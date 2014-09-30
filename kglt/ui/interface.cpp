@@ -1,7 +1,7 @@
 #ifndef __ANDROID__
 	#include <GL/glew.h>
 #else
-	#include <GLES3/gl3.h>
+    #include <GLES2/gl2.h>
 #endif
 
 #include <Rocket/Core.h>
@@ -73,10 +73,8 @@ public:
         window_(window),
         tmp_vao_(MODIFY_REPEATEDLY_USED_FOR_RENDERING, MODIFY_REPEATEDLY_USED_FOR_RENDERING) {
 
-        auto vert_stream = window_.resource_locator().read_file("kglt/materials/ui.vert");
-        auto frag_stream = window_.resource_locator().read_file("kglt/materials/ui.frag");
-        std::string vert_shader = vert_stream->str();
-        std::string frag_shader = frag_stream->str();
+        unicode vert_shader = window_.resource_locator().read_file("kglt/materials/ui.vert")->str();
+        unicode frag_shader = window_.resource_locator().read_file("kglt/materials/ui.frag")->str();
 
         L_INFO("UI shaders loaded, creating GPU program");
 
