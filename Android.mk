@@ -55,6 +55,7 @@ LOCAL_SRC_FILES := $(call all-cpp-files-under, kglt)
 LOCAL_SRC_FILES += $(call all-cpp-files-under, submodules/luabind/src)
 LOCAL_SRC_FILES += kglt/loaders/stb_vorbis.c
 LOCAL_CFLAGS += -DGL_GLEXT_PROTOTYPES
-LOCAL_LDLIBS    += -lGLESv1_CM -lGLESv2 -lz -ldl -lEGL
+LOCAL_LDLIBS    += -lGLESv1_CM -lGLESv2 -lz -ldl -lEGL -llog -landroid
+LOCAL_EXPORT_LDLIBS := -ldl -lGLESv1_CM -lGLESv2 -lEGL -llog -landroid -lz
 
 include $(BUILD_SHARED_LIBRARY)
