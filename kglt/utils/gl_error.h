@@ -43,6 +43,7 @@ struct Checker<void, Func> {
 
 template<typename Res=void, typename Func, typename... Args>
 Res GLCheck(Func&& func, Args&&... args) {
+    L_ERROR(typeid(func).name());
     GLThreadCheck::check();
     return GLChecker::Checker<Res, Func, Args...>::run(std::forward<Func>(func), std::forward<Args>(args)...);
 }

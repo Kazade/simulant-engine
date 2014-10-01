@@ -26,10 +26,10 @@ unicode ResourceLocator::locate_file(const unicode &filename) const {
     */
 #ifdef __ANDROID__
     //On Android we use SDL_RWops which reads from the APK
-    SDL_RWops* ops = SDL_RWFromFile(filename.encode().c_str(), "r");
+    SDL_RWops* ops = SDL_RWFromFile(filename.encode().c_str(), "rb");
     if(ops) {
         //If we could open the file, return the filename
-        SDL_FreeRW(ops);
+        SDL_RWclose(ops);
         return filename;
     }
 
