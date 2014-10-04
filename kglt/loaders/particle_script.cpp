@@ -8,7 +8,7 @@ namespace loaders {
 
 void KGLPLoader::into(Loadable &resource, const LoaderOptions &options) {
     ParticleSystem* ps = loadable_to<ParticleSystem>(resource);
-    json::JSON js = json::loads(file_utils::read(filename_));
+    json::JSON js = json::loads(data_->str());
 
     ps->set_name((js.has_key("name")) ? _u(js.dict_value("name")): "");
 
