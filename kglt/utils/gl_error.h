@@ -9,44 +9,48 @@
 #include <kazbase/unicode.h>
 #include <kazbase/logging.h>
 #include "gl_thread_check.h"
+#include "../buffer_object.h"
 
-void check_and_log_error(std::string file, int lineno);
+void check_and_log_error(const std::string& function_name);
 
 namespace GLChecker {
 
 template<typename Res, typename Func, typename... Args>
 struct Checker {
-    static Res run(Func&& func, Args&&... args) {
+    static Res run(const std::string& function_name, Func&& func, Args&&... args) {
         Res result = func(std::forward<Args>(args)...);
-        check_and_log_error("", 0);
+        check_and_log_error(function_name);
         return result;
     }
 };
 
 template<typename Func, typename... Args>
 struct Checker<void, Func, Args...> {
-    static void run(Func&& func, Args&&... args) {
+    static void run(const std::string& function_name, Func&& func, Args&&... args) {
         func(std::forward<Args>(args)...);
-        check_and_log_error("", 0);
+        check_and_log_error(function_name);
     }
 };
 
 template<typename Func>
 struct Checker<void, Func> {
-    static void run(Func&& func) {
+    static void run(const std::string& function_name, Func&& func) {
         func();
-        check_and_log_error("", 0);
+        check_and_log_error(function_name);
     }
 };
 
 }
 
 template<typename Res=void, typename Func, typename... Args>
-Res GLCheck(Func&& func, Args&&... args) {
-    L_ERROR(typeid(func).name());
+Res _GLCheck(const std::string& function_name, Func&& func, Args&&... args) {
     GLThreadCheck::check();
-    return GLChecker::Checker<Res, Func, Args...>::run(std::forward<Func>(func), std::forward<Args>(args)...);
+    return GLChecker::Checker<Res, Func, Args...>::run(function_name, std::forward<Func>(func), std::forward<Args>(args)...);
 }
+
+#ifndef GLCheck
+#define GLCheck(...) _GLCheck(__func__, __VA_ARGS__)
+#endif
 
 class GLStateStash {
 public:
@@ -54,6 +58,10 @@ public:
         state_(state),
         int_value_(0),
         boolean_value_(false) {
+
+        if(!kglt::VertexArrayObject::VAO_SUPPORTED && state == GL_VERTEX_ARRAY_BINDING) {
+            return;
+        }
 
         switch(state) {
             case GL_VERTEX_ARRAY_BINDING:
@@ -74,6 +82,10 @@ public:
     }
 
     ~GLStateStash() {
+        if(!kglt::VertexArrayObject::VAO_SUPPORTED && state_ == GL_VERTEX_ARRAY_BINDING) {
+            return;
+        }
+
         switch(state_) {
             case GL_VERTEX_ARRAY_BINDING:
             GLCheck(glBindVertexArray, int_value_);

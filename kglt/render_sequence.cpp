@@ -134,8 +134,6 @@ void RenderSequence::update_camera_constraint(CameraID cid) {
 }
 
 void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
-    check_and_log_error(__FILE__, __LINE__);
-
     if(!pipeline_stage->is_active()) {
         return;
     }

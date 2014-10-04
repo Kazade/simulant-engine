@@ -363,3 +363,4 @@ samples/data/rocket_trail.kglp
 kglt/particles/pixel_trail.kglp
 kglt/particles/pixel_explosion.kglp
 kglt/ui/ui_private.cpp
+kglt/utils/glcompat.h

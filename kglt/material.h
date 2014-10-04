@@ -103,7 +103,7 @@ public:
     Colour specular() const { return specular_; }
     float shininess() const { return shininess_; }
 
-    uint32_t texture_unit_count() const { return texture_units_.size(); }
+    int32_t texture_unit_count() const { return (int) texture_units_.size(); }
     TextureUnit& texture_unit(uint32_t index) { return texture_units_.at(index); }
 
     void update(double dt) {

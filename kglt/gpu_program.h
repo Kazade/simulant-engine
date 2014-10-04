@@ -131,6 +131,12 @@ class GPUProgram;
 typedef sig::signal<void ()> ProgramLinkedSignal;
 typedef sig::signal<void (ShaderType)> ShaderCompiledSignal;
 
+struct UniformInfo {
+    unicode name;
+    GLenum type;
+    GLsizei size;
+};
+
 class UniformManager {
 public:
     void set_int(const unicode& uniform_name, const int32_t value);
@@ -156,15 +162,21 @@ public:
     }
 
     void register_auto(ShaderAvailableAuto uniform, const unicode& var_name);
+    void clear_cache() {
+        uniform_cache_.clear();
+    }
+
+    UniformInfo info(const unicode& uniform_name);
 
 private:
     friend class GPUProgram;
     GPUProgram& program_;
 
     UniformManager(GPUProgram& program);
-    int32_t locate(const unicode& uniform_name);
+    GLint locate(const unicode& uniform_name);
 
-    std::unordered_map<unicode, int32_t> uniform_cache_;
+    std::unordered_map<unicode, UniformInfo> uniform_info_;
+    std::unordered_map<unicode, GLint> uniform_cache_;
 
     void clear_uniform_cache();
 
@@ -189,6 +201,10 @@ public:
 
     bool uses_auto(ShaderAvailableAttributes attr) const {
         return auto_attributes_.find(attr) != auto_attributes_.end();
+    }
+
+    void clear_cache() {
+        attribute_cache_.clear();
     }
 
 private:

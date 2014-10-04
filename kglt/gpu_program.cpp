@@ -13,13 +13,28 @@ UniformManager::UniformManager(GPUProgram &program):
     program.signal_linked().connect(std::bind(&UniformManager::clear_uniform_cache, this));
 }
 
-int32_t UniformManager::locate(const unicode& uniform_name) {
+UniformInfo UniformManager::info(const unicode& uniform_name) {
+    /*
+     *  Returns information about the named uniform
+     */
+    auto it = uniform_info_.find(uniform_name);
+
+    if(it == uniform_info_.end()) {
+        throw DoesNotExist<UniformInfo>(_u("Couldn't find info for {0}").format(uniform_name));
+    }
+
+    return (*it).second;
+}
+
+GLint UniformManager::locate(const unicode& uniform_name) {
     GLThreadCheck::check();
     if(!program_.is_current()) {
+        L_ERROR("Attempted to modify a uniform without making the program active");
         throw LogicError("Attempted to modify GPU program object without making it active");
     }
 
     if(!program_.is_complete()) {
+        L_ERROR("Attempted to modify a uniform without making the program complete");
         throw LogicError("Attempted to access uniform on a GPU program that is not complete");
     }
 
@@ -28,7 +43,10 @@ int32_t UniformManager::locate(const unicode& uniform_name) {
         return (*it).second;
     }
 
-    GLint location = GLCheck<GLint>(glGetUniformLocation, program_.program_object_, uniform_name.encode().c_str());
+    std::string name = uniform_name.encode();
+
+    L_DEBUG(_u("Looking up uniform with name {0} in program {1}").format(name, program_.program_object_));
+    GLint location = _GLCheck<GLint>(__func__, glGetUniformLocation, program_.program_object_, name.c_str());
 
     if(location < 0) {
         throw LogicError(_u("Couldn't find uniform {0}. Has it been optimized into non-existence?").format(uniform_name).encode());
@@ -39,7 +57,7 @@ int32_t UniformManager::locate(const unicode& uniform_name) {
 }
 
 void UniformManager::set_int(const unicode& uniform_name, const int32_t value) {
-    int32_t loc = locate(uniform_name);
+    GLint loc = locate(uniform_name);
     GLCheck(glUniform1i, loc, value);
 }
 
@@ -110,8 +128,9 @@ int32_t AttributeManager::locate(const unicode& attribute) {
         return (*it).second;
     }
 
-    GLint location = GLCheck<GLint>(glGetAttribLocation, program_.program_object_, attribute.encode().c_str());
+    GLint location = _GLCheck<GLint>(__func__, glGetAttribLocation, program_.program_object_, attribute.encode().c_str());
     if(location < 0) {
+        L_ERROR(_u("Unable to find attribute with name {0}").format(attribute));
         throw LogicError(_u("Couldn't find attribute {0}").format(attribute).encode());
     }
 
@@ -149,7 +168,7 @@ const bool GPUProgram::is_current() const {
 
     GLint current = 0;
     GLCheck(glGetIntegerv, GL_CURRENT_PROGRAM, &current);
-    return current == program_object_;
+    return program_object_ && current == program_object_;
 }
 
 void GPUProgram::activate() {
@@ -158,6 +177,8 @@ void GPUProgram::activate() {
     assert(program_object_);
 
     GLCheck(glUseProgram, program_object_);
+
+    L_DEBUG(_u("Activated program {0}").format(program_object_));
 }
 
 void GPUProgram::prepare_program() {
@@ -167,7 +188,8 @@ void GPUProgram::prepare_program() {
         return;
     }
 
-    program_object_ = GLCheck<GLuint>(glCreateProgram);
+    program_object_ = _GLCheck<GLuint>(__func__, glCreateProgram);
+    L_DEBUG(_u("Created program {0}").format(program_object_));
 }
 
 bool GPUProgram::init() {
@@ -209,7 +231,27 @@ void GPUProgram::set_shader_source(ShaderType type, const unicode& source) {
     }
 
     ShaderInfo new_shader;
+
+    /*
+        TERRIBLE TEMPORARY HACK, MAKE SHADER GLES COMPATIBLE
+        The correct way to do this is to load different shader files
+    */
+#ifdef __ANDROID__
+    int version_index = 0;
+    auto lines = source.split("\n");
+    for(uint32_t i = 0; i < lines.size(); ++i) {
+        if(lines[i].starts_with("#version 120")) {
+            lines[i] = "#version 100";
+            version_index = i;
+        }
+    }
+
+    lines.insert(lines.begin() + (version_index + 1), "precision mediump float;");
+    new_shader.source = _u("\n").join(lines);
+#else
     new_shader.source = source;
+#endif
+
     is_linked_ = false; //We're no longer linked
     shaders_[type] = new_shader;
     shader_hashes_[type] = hashlib::MD5(source.encode()).hex_digest();
@@ -226,7 +268,7 @@ void GPUProgram::compile(ShaderType type) {
     }
 
     if(!info.object) {
-        info.object = GLCheck<GLuint>(glCreateShader, shader_type_to_glenum(type));
+        info.object = _GLCheck<GLuint>(__func__, glCreateShader, shader_type_to_glenum(type));
     }
 
     assert(info.object); //Make sure we have a shader object
@@ -251,7 +293,7 @@ void GPUProgram::compile(ShaderType type) {
         std::vector<char> log;
         log.resize(length);
 
-        GLCheck<void>(glGetShaderInfoLog, info.object, length, (GLsizei*)NULL, &log[0]);
+        GLCheck(glGetShaderInfoLog, info.object, length, (GLsizei*)NULL, &log[0]);
         std::string error_log(log.begin(), log.end());
 
         L_ERROR(error_log);
@@ -261,7 +303,7 @@ void GPUProgram::compile(ShaderType type) {
     prepare_program(); //Make sure we have a program object before attaching the shader
 
     GLCheck(glAttachShader, program_object_, info.object);
-    info.is_compiled = true;
+    info.is_compiled = true;    
 }
 
 void GPUProgram::build() {
@@ -310,6 +352,7 @@ void GPUProgram::rebuild_hash() {
     md5_shader_hash_ = combined_hash.hex_digest();
 }
 
+
 void GPUProgram::link() {
     GLThreadCheck::check();
 
@@ -340,8 +383,35 @@ void GPUProgram::link() {
         throw RuntimeError("Couldn't link the GPU program. See error log for details.");
     }
 
+    L_DEBUG(_u("Linked program {0}").format(program_object_));
+
     is_linked_ = true;
     signal_linked_();
+
+    //DEBUG info!
+    GLint count;
+    glGetProgramiv(program_object_, GL_ACTIVE_UNIFORMS, &count);
+
+    uniforms().uniform_info_.clear();
+
+    char buf[256];
+    GLsizei buf_count;
+    GLint size;
+    GLenum type;
+    for(int i = 0; i < count; ++i) {
+        glGetActiveUniform(program_object_, (GLuint) i,  256,  &buf_count,  &size,  &type,  buf);
+
+        std::string name(buf, buf + buf_count);
+
+        UniformInfo info;
+        info.name = name;
+        info.size = size;
+        info.type = type;
+
+        uniforms().uniform_info_[info.name] = info;
+
+        L_DEBUG(_u("UNIFORM {0} with size {1} and type {2}").format(std::string(buf, buf+buf_count), size, type));
+    }
 }
 
 }

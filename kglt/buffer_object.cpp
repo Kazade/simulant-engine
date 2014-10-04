@@ -7,18 +7,9 @@
 #include "utils/gl_thread_check.h"
 #include "utils/gl_error.h"
 
-#ifdef __ANDROID__
-
-#include <EGL/egl.h>
-#include <GLES2/gl2ext.h>
-
-PFNGLGENVERTEXARRAYSOESPROC glGenVertexArrays = nullptr;
-PFNGLBINDVERTEXARRAYOESPROC glBindVertexArray = nullptr;
-PFNGLDELETEVERTEXARRAYSOESPROC glDeleteVertexArrays = nullptr;
-
-#endif
-
 namespace kglt {
+
+bool VertexArrayObject::VAO_SUPPORTED = false;
 
 BufferObject::BufferObject(BufferObjectType type, BufferObjectUsage usage):
     usage_(usage),
@@ -36,19 +27,6 @@ BufferObject::BufferObject(BufferObjectType type, BufferObjectUsage usage):
         default:
             L_WARN("We don't yet support this shizzle");
     }    
-
-
-#ifdef __ANDROID__
-    if(!glGenVertexArrays) {
-        glGenVertexArrays = (PFNGLGENVERTEXARRAYSOESPROC) eglGetProcAddress("glGenVertexArraysOES");
-        glBindVertexArray = (PFNGLBINDVERTEXARRAYOESPROC) eglGetProcAddress("glBindVertexArrayOES");
-        glDeleteVertexArrays = (PFNGLDELETEVERTEXARRAYSOESPROC) eglGetProcAddress("glDeleteVertexArraysOES");
-
-        if(!(glGenVertexArrays && glBindVertexArray && glDeleteVertexArrays)) {
-            throw RuntimeError("glGenVertexArraysOES is not supported on this device");
-        }
-    }
-#endif
 }
 
 BufferObject::~BufferObject() {
@@ -75,15 +53,7 @@ void BufferObject::bind() {
     GLCheck(glBindBuffer, gl_target_, buffer_id_);
 }
 
-void BufferObject::create(uint32_t byte_size, const void* data) {
-    GLThreadCheck::check();
-
-    if(!buffer_id_) {
-        GLCheck(glGenBuffers, 1, &buffer_id_);
-    }
-
-    assert(buffer_id_);
-
+GLenum BufferObject::usage() const {
     GLenum usage;
     switch(usage_) {
         case MODIFY_ONCE_USED_FOR_LIMITED_RENDERING:
@@ -117,8 +87,20 @@ void BufferObject::create(uint32_t byte_size, const void* data) {
             throw std::logic_error("What the...?");
     }
 
+    return usage;
+}
+
+void BufferObject::create(uint32_t byte_size, const void* data) {
+    GLThreadCheck::check();
+
+    if(!buffer_id_) {
+        GLCheck(glGenBuffers, 1, &buffer_id_);
+    }
+
+    assert(buffer_id_);
+
     GLCheck(glBindBuffer, gl_target_, buffer_id_);
-    GLCheck(glBufferData, gl_target_, byte_size, data, usage);
+    GLCheck(glBufferData, gl_target_, byte_size, data, usage());
 }
 
 void BufferObject::modify(uint32_t offset, uint32_t byte_size, const void* data) {
@@ -134,28 +116,44 @@ VertexArrayObject::VertexArrayObject(BufferObjectUsage vertex_usage, BufferObjec
     vertex_buffer_(BUFFER_OBJECT_VERTEX_DATA, vertex_usage),
     index_buffer_(BUFFER_OBJECT_INDEX_DATA, index_usage),
     id_(0) {
+
+#ifdef __ANDROID__
+    VAO_SUPPORTED = false;
+#else
+    VAO_SUPPORTED = true;
+#endif
+
 }
 
 VertexArrayObject::~VertexArrayObject() {
-    try {
-        if(id_) {
-            GLCheck(glDeleteVertexArrays, 1, &id_);
-        }
-    } catch(...) {}
+    if(VertexArrayObject::VAO_SUPPORTED) {
+        try {
+            if(id_) {
+                GLCheck(glDeleteVertexArrays, 1, &id_);
+            }
+        } catch(...) {}
+    }
 }
 
 void VertexArrayObject::bind() {
-    if(id_ == 0) {
-        GLCheck(glGenVertexArrays, 1, &id_);
-        assert(id_);
+    if(VertexArrayObject::VAO_SUPPORTED) {
+        if(id_ == 0) {
+            GLCheck(glGenVertexArrays, 1, &id_);
+            assert(id_);
+        }
+        GLCheck(glBindVertexArray, id_);
+    } else {
+        vertex_buffer_bind();
+        index_buffer_bind();
     }
-    GLCheck(glBindVertexArray, id_);
 }
 
 void VertexArrayObject::vertex_buffer_update(uint32_t byte_size, const void* data) {
     GLStateStash stash(GL_VERTEX_ARRAY_BINDING); //Store the current VAO binding
 
-    bind();
+    if(VertexArrayObject::VAO_SUPPORTED) {
+        bind();
+    }
 
     vertex_buffer_.create(byte_size, data);
 }
@@ -163,7 +161,9 @@ void VertexArrayObject::vertex_buffer_update(uint32_t byte_size, const void* dat
 void VertexArrayObject::vertex_buffer_update_partial(uint32_t offset, uint32_t byte_size, const void* data) {
     GLStateStash stash(GL_VERTEX_ARRAY_BINDING); //Store the current VAO binding
 
-    bind();
+    if(VertexArrayObject::VAO_SUPPORTED) {
+        bind();
+    }
 
     vertex_buffer_.modify(offset, byte_size, data);
 }
@@ -171,7 +171,9 @@ void VertexArrayObject::vertex_buffer_update_partial(uint32_t offset, uint32_t b
 void VertexArrayObject::index_buffer_update(uint32_t byte_size, const void* data) {
     GLStateStash stash(GL_VERTEX_ARRAY_BINDING); //Store the current VAO binding
 
-    bind();
+    if(VertexArrayObject::VAO_SUPPORTED) {
+        bind();
+    }
 
     index_buffer_.create(byte_size, data);
 }
@@ -179,7 +181,9 @@ void VertexArrayObject::index_buffer_update(uint32_t byte_size, const void* data
 void VertexArrayObject::index_buffer_update_partial(uint32_t offset, uint32_t byte_size, const void* data) {
     GLStateStash stash(GL_VERTEX_ARRAY_BINDING); //Store the current VAO binding
 
-    bind();
+    if(VertexArrayObject::VAO_SUPPORTED) {
+        bind();
+    }
 
     index_buffer_.modify(offset, byte_size, data);
 }

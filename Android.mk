@@ -1,35 +1,33 @@
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
-PARENT_PATH = $(LOCAL_PATH)/..
-
-LOCAL_CFLAGS 	+= -I$(PARENT_PATH)/kazmath
+LOCAL_CFLAGS 	+= -I$(LOCAL_PATH)/kazmath
 LOCAL_SHARED_LIBRARIES := libkazmath
 
-LOCAL_CFLAGS 	+= -I$(PARENT_PATH)/kaztimer
+LOCAL_CFLAGS 	+= -I$(LOCAL_PATH)/kaztimer
 LOCAL_SHARED_LIBRARIES += libkaztimer
 
-LOCAL_CFLAGS 	+= -I$(PARENT_PATH)/kazbase
+LOCAL_CFLAGS 	+= -I$(LOCAL_PATH)/kazbase
 LOCAL_SHARED_LIBRARIES += libkazbase
 
 #Add LUA
-#LOCAL_CFLAGS 	+= -I$(PARENT_PATH)/lua-5.2.2/src
+#LOCAL_CFLAGS 	+= -I$(LOCAL_PATH)/lua-5.2.2/src
 #LOCAL_SHARED_LIBRARIES += lua
 
 #OpenAL
-LOCAL_CFLAGS	+= -I$(PARENT_PATH)/openal/OpenAL/include
+LOCAL_CFLAGS	+= -I$(LOCAL_PATH)/openal/OpenAL/include
 LOCAL_SHARED_LIBRARIES += libopenal
 
-LOCAL_CFLAGS	+= -I$(PARENT_PATH)/freetype2/include
+LOCAL_CFLAGS	+= -I$(LOCAL_PATH)/freetype2/include
 LOCAL_SHARED_LIBRARIES += libfreetype2
 
-LOCAL_CFLAGS 	+= -I$(PARENT_PATH)/sdl/include
+LOCAL_CFLAGS 	+= -I$(LOCAL_PATH)/sdl/include
 LOCAL_SHARED_LIBRARIES += libSDL2
 
-LOCAL_CFLAGS	+= -I$(PARENT_PATH)/soil
+LOCAL_CFLAGS	+= -I$(LOCAL_PATH)/soil
 LOCAL_SHARED_LIBRARIES += libsoil
 
-LOCAL_CFLAGS	+= -I$(PARENT_PATH)/ode/ode/include
+LOCAL_CFLAGS	+= -I$(LOCAL_PATH)/ode/ode/include
 LOCAL_SHARED_LIBRARIES += libode
 
 LOCAL_SHARED_LIBRARIES += libtinyxml liblua

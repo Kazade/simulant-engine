@@ -66,17 +66,11 @@ void Texture::sub_texture(TextureID src, uint16_t offset_x, uint16_t offset_y) {
 }
 
 void Texture::__do_upload(bool free_after, bool generate_mipmaps, bool repeat, bool linear) {
-    check_and_log_error(__FILE__, __LINE__);
-
     if(!gl_tex()) {
         GLCheck(glGenTextures, 1, &gl_tex_);
     }
 
-    check_and_log_error(__FILE__, __LINE__);
-
     GLCheck(glBindTexture, GL_TEXTURE_2D, gl_tex_);
-    check_and_log_error(__FILE__, __LINE__);
-
     GLCheck(glTexImage2D,
         GL_TEXTURE_2D,
         0, (bpp_ == 32)? GL_RGBA: GL_RGB,
@@ -84,13 +78,9 @@ void Texture::__do_upload(bool free_after, bool generate_mipmaps, bool repeat, b
         (bpp_ == 32) ? GL_RGBA : GL_RGB,
         GL_UNSIGNED_BYTE, &data_[0]
     );
-    check_and_log_error(__FILE__, __LINE__);
-
     if(generate_mipmaps) {
         GLCheck(glGenerateMipmap, GL_TEXTURE_2D);
     }
-    check_and_log_error(__FILE__, __LINE__);
-
     if(repeat) {
         GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -98,8 +88,6 @@ void Texture::__do_upload(bool free_after, bool generate_mipmaps, bool repeat, b
         GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     }
-
-    check_and_log_error(__FILE__, __LINE__);
 
     if(!linear) {
         GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -112,9 +100,6 @@ void Texture::__do_upload(bool free_after, bool generate_mipmaps, bool repeat, b
         }
         GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     }
-
-    check_and_log_error(__FILE__, __LINE__);
-
 
     if(free_after) {
         free();

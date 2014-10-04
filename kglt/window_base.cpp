@@ -100,7 +100,7 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
         L_INFO("Initializing the default UI stage");
         create_default_ui_stage();
 
-        watcher_ = Watcher::create(*this);
+        //watcher_ = Watcher::create(*this);
 
         L_INFO("Registering loaders");
 
@@ -175,7 +175,7 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
 
         initialized_ = true;
     }
-    check_and_log_error(__FILE__, __LINE__);
+
     return result;
 }
 
@@ -193,8 +193,6 @@ void WindowBase::update(double dt) {
 }
 
 bool WindowBase::run_frame() {
-    check_and_log_error(__FILE__, __LINE__);
-
     signal_frame_started_();
 
     ktiBindTimer(variable_timer_);
@@ -238,7 +236,6 @@ bool WindowBase::run_frame() {
 
     GLCheck(glViewport, 0, 0, width(), height());
     GLCheck(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    check_and_log_error(__FILE__, __LINE__);
 
     render_sequence()->run();
 

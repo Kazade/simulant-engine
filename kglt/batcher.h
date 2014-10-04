@@ -304,7 +304,7 @@ struct MaterialGroupData : public GroupData {
         const kglt::Colour& diffuse,
         const kglt::Colour& specular,
         float shininess,
-        uint8_t active_texture_count):
+        int32_t active_texture_count):
         ambient(ambient),
         diffuse(diffuse),
         specular(specular),
@@ -317,7 +317,7 @@ struct MaterialGroupData : public GroupData {
     kglt::Colour diffuse;
     kglt::Colour specular;
     float shininess;
-    uint8_t active_texture_count;
+    int32_t active_texture_count;
 
     std::size_t hash() const {
         size_t seed = 0;

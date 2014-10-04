@@ -330,11 +330,11 @@ void MaterialScriptLoader::into(Loadable& resource, const LoaderOptions& options
         mat->resource_manager(),
         mat->id())
     );
-
+/*
     mat->resource_manager().window().watcher().watch(
         filename_,
         std::bind(&MaterialReloader::reload, reloader, std::placeholders::_1, std::placeholders::_2)
-    );
+    );*/
 }
 
 MaterialReloader::MaterialReloader(ResourceManager& rm, MaterialID material):

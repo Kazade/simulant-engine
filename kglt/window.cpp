@@ -86,7 +86,6 @@ bool Window::create_window(int width, int height, int bpp, bool fullscreen) {
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
     context_ = SDL_GL_CreateContext(screen_);
-    check_and_log_error(__FILE__, __LINE__);
 
 #ifndef __ANDROID__
     glewExperimental = true;
@@ -111,7 +110,6 @@ bool Window::create_window(int width, int height, int bpp, bool fullscreen) {
         }
     }
 
-    check_and_log_error(__FILE__, __LINE__);
     return true;
 }
 

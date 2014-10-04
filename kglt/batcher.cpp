@@ -263,6 +263,8 @@ void TextureMatrixGroup::unbind(GPUProgram* program) {
 }
 
 void MaterialGroup::bind(GPUProgram* program) {
+    L_DEBUG("Binding material uniforms");
+
     if(program->uniforms().uses_auto(SP_AUTO_MATERIAL_AMBIENT)) {
         program->uniforms().set_colour(
             program->uniforms().auto_variable_name(SP_AUTO_MATERIAL_AMBIENT),
@@ -292,10 +294,27 @@ void MaterialGroup::bind(GPUProgram* program) {
     }
 
     if(program->uniforms().uses_auto(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS)) {
-        program->uniforms().set_int(
-            program->uniforms().auto_variable_name(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS),
-            data_.active_texture_count
-        );
+        auto uniform_name = program->uniforms().auto_variable_name(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS);
+
+        auto info = program->uniforms().info(uniform_name);
+        if(info.type == GL_FLOAT) {
+            static bool logged = false;
+
+            if(!logged) {
+                L_WARN("Working around weird Adreno bug that makes int uniforms floats (?)");
+                logged = true;
+            }
+
+            program->uniforms().set_float(
+                uniform_name,
+                data_.active_texture_count
+            );
+        } else {
+            program->uniforms().set_int(
+                uniform_name,
+                data_.active_texture_count
+            );
+        }
     }
 }
 

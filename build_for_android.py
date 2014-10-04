@@ -90,8 +90,10 @@ LIBRARIES = [
 ]
 
 if __name__ == "__main__":
-    #First, symlink kglt into the .android folder (so that it's with all the others)
+    if not os.path.exists(OUTPUT_DIRECTORY):
+        os.mkdir(OUTPUT_DIRECTORY)
 
+    #First, symlink kglt into the .android folder (so that it's with all the others)
     kglt_link = os.path.join(OUTPUT_DIRECTORY, "kglt")
     if not os.path.exists(kglt_link):
         os.symlink(os.path.dirname(os.path.abspath("__file__")), kglt_link)

@@ -8,7 +8,7 @@
 #include <kazbase/exceptions.h>
 #include <kazbase/unicode.h>
 
-void check_and_log_error(std::string file, int lineno) {
+void check_and_log_error(const std::string &function_name) {
     GLuint error = glGetError();
     if(error != GL_NO_ERROR) {
         unicode error_string;
@@ -38,11 +38,7 @@ void check_and_log_error(std::string file, int lineno) {
 #endif
         }
 
-        if(!file.empty()) {
-            L_ERROR(_u("An OpenGL error occurred: {0}:{1} - {2}").format(file, lineno, error));
-        } else {
-            L_ERROR(_u("An OpenGL error occurred: {0}").format(error));
-        }
+        L_ERROR(_u("An OpenGL error occurred: {0} - {1}").format(function_name, error_string));
 
         throw RuntimeError(_u("GL ERROR: {0}").format(error_string).encode());
     }
