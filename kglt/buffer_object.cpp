@@ -7,6 +7,14 @@
 #include "utils/gl_thread_check.h"
 #include "utils/gl_error.h"
 
+#ifdef __ANDROID__
+#include <EGL/egl.h>
+PFNGLGENVERTEXARRAYSOESPROC glGenVertexArrays;
+PFNGLBINDVERTEXARRAYOESPROC glBindVertexArray;
+PFNGLDELETEVERTEXARRAYSOESPROC glDeleteVertexArrays;
+PFNGLISVERTEXARRAYOESPROC glIsVertexArray;
+#endif
+
 namespace kglt {
 
 bool VertexArrayObject::VAO_SUPPORTED = false;
@@ -60,28 +68,52 @@ GLenum BufferObject::usage() const {
             usage = GL_STREAM_DRAW;
         break;
         case MODIFY_ONCE_USED_FOR_LIMITED_QUERYING:
+#ifndef __ANDROID__
             usage = GL_STREAM_READ;
+#else
+            usage = GL_STREAM_DRAW;
+#endif
         break;
         case MODIFY_ONCE_USED_FOR_LIMITED_QUERYING_AND_RENDERING:
+#ifndef __ANDROID__
             usage = GL_STREAM_COPY;
+#else
+            usage = GL_STREAM_DRAW;
+#endif
         break;
         case MODIFY_ONCE_USED_FOR_RENDERING:
             usage = GL_STATIC_DRAW;
         break;
         case MODIFY_ONCE_USED_FOR_QUERYING:
+#ifndef __ANDROID__
             usage = GL_STATIC_READ;
+#else
+            usage = GL_STATIC_DRAW;
+#endif
         break;
         case MODIFY_ONCE_USED_FOR_QUERYING_AND_RENDERING:
+#ifndef __ANDROID__
             usage = GL_STATIC_COPY;
+#else
+            usage = GL_STATIC_DRAW;
+#endif
         break;
         case MODIFY_REPEATEDLY_USED_FOR_RENDERING:
             usage = GL_DYNAMIC_DRAW;
         break;
         case MODIFY_REPEATEDLY_USED_FOR_QUERYING:
+#ifndef __ANDROID__
             usage = GL_DYNAMIC_READ;
+#else
+            usage = GL_DYNAMIC_DRAW;
+#endif
         break;
         case MODIFY_REPEATEDLY_USED_FOR_QUERYING_AND_RENDERING:
+#ifndef __ANDROID__
             usage = GL_DYNAMIC_COPY;
+#else
+            usage = GL_DYNAMIC_DRAW;
+#endif
         break;
         default:
             throw std::logic_error("What the...?");
@@ -119,6 +151,11 @@ VertexArrayObject::VertexArrayObject(BufferObjectUsage vertex_usage, BufferObjec
 
 #ifdef __ANDROID__
     VAO_SUPPORTED = false;
+
+    glGenVertexArrays = (PFNGLGENVERTEXARRAYSOESPROC)eglGetProcAddress ( "glGenVertexArraysOES" );
+    glBindVertexArray = (PFNGLBINDVERTEXARRAYOESPROC)eglGetProcAddress ( "glBindVertexArrayOES" );
+    glDeleteVertexArrays = (PFNGLDELETEVERTEXARRAYSOESPROC)eglGetProcAddress ( "glDeleteVertexArraysOES" );
+    glIsVertexArray = (PFNGLISVERTEXARRAYOESPROC)eglGetProcAddress ( "glIsVertexArrayOES" );
 #else
     VAO_SUPPORTED = true;
 #endif
