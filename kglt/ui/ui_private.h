@@ -28,7 +28,7 @@ const std::vector<unicode> STANDARD_EVENTS = {
 
 class ElementImpl : public Rocket::Core::EventListener {
 public:
-    ElementImpl(RocketImpl& rocket_impl, Rocket::Core::Element* elem):
+    ElementImpl(RocketImpl* rocket_impl, Rocket::Core::Element* elem):
         rocket_impl_(rocket_impl),
         elem_(elem),
         text_(nullptr) {
@@ -86,14 +86,32 @@ public:
 
     void set_event_callback(const unicode& event_type, std::function<bool ()> func);
 
+    void _set_rocket_impl(RocketImpl* impl) { rocket_impl_ = impl; }
 private:
-    RocketImpl& rocket_impl_;
+    RocketImpl* rocket_impl_ = nullptr;
     Rocket::Core::Element* elem_;
     Rocket::Core::ElementText* text_;
 
     void ProcessEvent(Rocket::Core::Event& event);
 
     std::unordered_map<unicode, std::function<bool ()> > event_callbacks_;
+};
+
+class CustomDocument : public Rocket::Core::ElementDocument {
+public:
+    CustomDocument(const Rocket::Core::String& tag);
+
+    void set_impl(RocketImpl* impl);
+
+    std::shared_ptr<ElementImpl> get_impl_for_element(Rocket::Core::Element* element);
+
+protected:
+    virtual void OnChildAdd(Rocket::Core::Element* element);
+
+    virtual void OnChildRemove(Rocket::Core::Element* element);
+private:
+    RocketImpl* impl_ = nullptr;
+    std::unordered_map<Rocket::Core::Element*, std::shared_ptr<ElementImpl>> element_impls_;
 };
 
 }
@@ -104,7 +122,7 @@ struct RocketImpl {
         document_(nullptr) {}
 
     Rocket::Core::Context* context_;
-    Rocket::Core::ElementDocument* document_;
+    kglt::ui::CustomDocument* document_;
     std::recursive_mutex mutex_;
 };
 }

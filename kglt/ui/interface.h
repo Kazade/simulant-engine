@@ -2,7 +2,7 @@
 #define INTERFACE_H
 
 #include <memory>
-
+#include <unordered_map>
 #include <kazbase/unicode.h>
 #include "../generic/managed.h"
 #include"../types.h"

@@ -32,46 +32,7 @@
 namespace kglt {
 namespace ui {
 
-class CustomDocument : public Rocket::Core::ElementDocument {
-public:
-    CustomDocument(const Rocket::Core::String& tag):
-        Rocket::Core::ElementDocument(tag) {
 
-        std::cout << "Creating custom document" << std::endl;
-    }
-
-    void set_impl(RocketImpl* impl) {
-        impl_ = impl;
-    }
-
-protected:
-    virtual void OnChildAdd(Rocket::Core::Element* element) {
-        assert(impl_);
-
-        auto it = element_impls_.find(element);
-        if(it == element_impls_.end()) {
-            element_impls_[element] = std::make_shared<ElementImpl>(*impl_, element);
-        } else {
-            L_WARN("ChildAdd called for the same element twice");
-        }
-
-        Rocket::Core::ElementDocument::OnChildAdd(element);
-    }
-
-    virtual void OnChildRemove(Rocket::Core::Element* element) {
-        Rocket::Core::ElementDocument::OnChildRemove(element);
-
-        auto it = element_impls_.find(element);
-        if(it != element_impls_.end()) {
-            element_impls_.erase(it);
-        } else {
-            L_WARN("ChildRemove called on an element we didn't know about");
-        }
-    }
-private:
-    RocketImpl* impl_ = nullptr;
-    std::unordered_map<Rocket::Core::Element*, std::shared_ptr<ElementImpl>> element_impls_;
-};
 
 class RocketFileInterface : public Rocket::Core::FileInterface {
 public:
@@ -476,11 +437,11 @@ bool Interface::init() {
         rocket_file_interface_ = new RocketFileInterface();
         Rocket::Core::SetFileInterface(rocket_file_interface_);
 
+        Rocket::Core::Initialise();
+
         Rocket::Core::ElementInstancer* element_instancer = new Rocket::Core::ElementInstancerGeneric<CustomDocument>();
         Rocket::Core::Factory::RegisterElementInstancer("body", element_instancer);
         element_instancer->RemoveReference();
-
-        Rocket::Core::Initialise();
 
         bool font_found = false;
         for(unicode font: find_fonts()) {
@@ -504,11 +465,9 @@ bool Interface::init() {
         _u("context_{0}").format(int64_t(this)).encode().c_str(),
         Rocket::Core::Vector2i(window_.width(), window_.height())
     );
-    impl_->document_ = impl_->context_->CreateDocument();
-
-    auto doc = dynamic_cast<CustomDocument*>(impl_->document_);
-    assert(doc);
-    doc->set_impl(impl_.get());
+    impl_->document_ = dynamic_cast<CustomDocument*>(impl_->context_->CreateDocument());
+    assert(impl_->document_);
+    impl_->document_->set_impl(impl_.get());
 
     set_styles("body { font-family: \"Ubuntu\"; }");
 
@@ -582,11 +541,7 @@ ElementList Interface::append(const unicode &tag) {
     Rocket::Core::Element* elem = impl_->document_->CreateElement(tag_name.encode().c_str());
     impl_->document_->AppendChild(elem);
 
-    Element result = Element(
-        std::shared_ptr<ElementImpl>(
-            new ElementImpl(*this->impl_, elem)
-        )
-    );
+    Element result = Element(impl_->document_->get_impl_for_element(elem));
 
     impl_->document_->Show();
 
@@ -603,16 +558,14 @@ ElementList Interface::_(const unicode &selector) {
     } else if(selector.starts_with("#")) {
         Rocket::Core::Element* elem = impl_->document_->GetElementById(selector.lstrip("#").encode().c_str());
         if(elem) {
-            result.push_back(
-                Element(std::shared_ptr<ElementImpl>(new ElementImpl(*this->impl_, elem)))
-            );
+            result.push_back(Element(impl_->document_->get_impl_for_element(elem)));
         }
     } else {
         impl_->document_->GetElementsByTagName(elements, _u("<{0}>").format(selector).encode().c_str());
     }
 
     for(Rocket::Core::Element* elem: elements) {
-        result.push_back(Element(std::shared_ptr<ElementImpl>(new ElementImpl(*this->impl_, elem))));
+        result.push_back(Element(impl_->document_->get_impl_for_element(elem)));
     }
 
     return ElementList(result);

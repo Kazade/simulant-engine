@@ -12,7 +12,7 @@ void RMLLoader::into(Loadable& resource, const LoaderOptions &options) {
     ui::Interface* iface = dynamic_cast<ui::Interface*>(res_ptr);
     assert(iface && "You passed a Resource that is not a Interface to the RML loader");
 
-    iface->impl()->document_ = iface->impl()->context_->LoadDocument(filename_.encode().c_str());
+    iface->impl()->document_ = dynamic_cast<kglt::ui::CustomDocument*>(iface->impl()->context_->LoadDocument(filename_.encode().c_str()));
     if(!iface->impl()->document_) {
         throw IOError("Unable to load the RML document");
     } else {
