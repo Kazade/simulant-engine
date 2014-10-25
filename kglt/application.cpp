@@ -40,6 +40,7 @@ void Application::check_tasks() {
         auto result = (*it).wait_for(std::chrono::seconds(0));
         if(result == std::future_status::ready) {
             if(!(*it).get()) {
+                L_ERROR("Background loading failed, terminating application");
                 throw BackgroundLoadException();
             }
             it = load_tasks_.erase(it);

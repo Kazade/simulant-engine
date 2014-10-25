@@ -10,6 +10,7 @@
 #include <kazbase/logging.h>
 #include "gl_thread_check.h"
 #include "../buffer_object.h"
+#include "vao_abstraction.h"
 
 void check_and_log_error(const std::string& function_name);
 
@@ -59,12 +60,10 @@ public:
         int_value_(0),
         boolean_value_(false) {
 
-        if(!kglt::VertexArrayObject::VAO_SUPPORTED && state == GL_VERTEX_ARRAY_BINDING) {
-            return;
-        }
-
         switch(state) {
             case GL_VERTEX_ARRAY_BINDING:
+                vaoGetIntegerv(state, &int_value_);
+            break;
             case GL_ARRAY_BUFFER_BINDING:
             case GL_ELEMENT_ARRAY_BUFFER_BINDING:
             case GL_CURRENT_PROGRAM:
@@ -82,13 +81,9 @@ public:
     }
 
     ~GLStateStash() {
-        if(!kglt::VertexArrayObject::VAO_SUPPORTED && state_ == GL_VERTEX_ARRAY_BINDING) {
-            return;
-        }
-
         switch(state_) {
             case GL_VERTEX_ARRAY_BINDING:
-            GLCheck(glBindVertexArray, int_value_);
+            GLCheck(vaoBindVertexArray, int_value_);
             break;
             case GL_ARRAY_BUFFER_BINDING:
             GLCheck(glBindBuffer, GL_ARRAY_BUFFER, int_value_);
@@ -109,8 +104,7 @@ public:
             (boolean_value_) ? GLCheck(glEnable, GL_DEPTH_TEST) : GLCheck(glDisable, GL_DEPTH_TEST);
             break;
         default:
-            L_ERROR(_u("Unhandled state: {0}").format(state_));
-            throw NotImplementedError(__FILE__, __LINE__);
+            L_ERROR(_u("Unable to restore unhandled state: {0}").format(state_));
         }
     }
 

@@ -1,9 +1,3 @@
-#ifndef __ANDROID__
-	#include <GL/glew.h>
-#else
-    #include <GLES2/gl2.h>
-#endif
-
 #include "generic_renderer.h"
 
 #include "../actor.h"
@@ -13,7 +7,9 @@
 #include "../partitioner.h"
 
 #include "kazmath/mat4.h"
+#include "../utils/glcompat.h"
 #include "../utils/gl_error.h"
+#include "../utils/vao_abstraction.h"
 
 namespace kglt {
 
@@ -133,7 +129,7 @@ void send_attribute(GPUProgram& program,
     auto get_offset = std::bind(offset_func, std::reference_wrapper<const VertexData>(data));
     if(get_has_attribute()) {
         GLCheck(glEnableVertexAttribArray, loc);
-        GLCheck(glVertexAttribPointer, 
+        GLCheck(vaoVertexAttribPointer,
             loc,
             SHADER_ATTRIBUTE_SIZES.find(attr)->second,
             GL_FLOAT,

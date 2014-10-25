@@ -24,12 +24,54 @@
 #include "../camera.h"
 #include "../render_sequence.h"
 #include "../utils/gl_error.h"
+#include "../utils/vao_abstraction.h"
 
 #include "interface.h"
 #include "ui_private.h"
 
 namespace kglt {
 namespace ui {
+
+class CustomDocument : public Rocket::Core::ElementDocument {
+public:
+    CustomDocument(const Rocket::Core::String& tag):
+        Rocket::Core::ElementDocument(tag) {
+
+        std::cout << "Creating custom document" << std::endl;
+    }
+
+    void set_impl(RocketImpl* impl) {
+        impl_ = impl;
+    }
+
+protected:
+    virtual void OnChildAdd(Rocket::Core::Element* element) {
+        assert(impl_);
+
+        auto it = element_impls_.find(element);
+        if(it == element_impls_.end()) {
+            element_impls_[element] = std::make_shared<ElementImpl>(*impl_, element);
+        } else {
+            L_WARN("ChildAdd called for the same element twice");
+        }
+
+        Rocket::Core::ElementDocument::OnChildAdd(element);
+    }
+
+    virtual void OnChildRemove(Rocket::Core::Element* element) {
+        Rocket::Core::ElementDocument::OnChildRemove(element);
+
+        auto it = element_impls_.find(element);
+        if(it != element_impls_.end()) {
+            element_impls_.erase(it);
+        } else {
+            L_WARN("ChildRemove called on an element we didn't know about");
+        }
+    }
+private:
+    RocketImpl* impl_ = nullptr;
+    std::unordered_map<Rocket::Core::Element*, std::shared_ptr<ElementImpl>> element_impls_;
+};
 
 class RocketFileInterface : public Rocket::Core::FileInterface {
 public:
@@ -168,6 +210,7 @@ public:
             Rocket::Core::TextureHandle texture) {
 
         GLStateStash s1(GL_VERTEX_ARRAY_BINDING);
+        GLStateStash s6(GL_ARRAY_BUFFER_BINDING);
 
         auto new_group = std::make_shared<CompiledGroup>();
         new_group->vao = std::make_unique<VertexArrayObject>();
@@ -181,29 +224,27 @@ public:
         new_group->num_vertices = num_vertices;
 
         new_group->vao->bind();
-        new_group->vao->vertex_buffer_bind();
-        new_group->vao->index_buffer_bind();
 
         int pos_attrib = shader_->attributes().locate("position");
         int colour_attrib = shader_->attributes().locate("colour");
         int texcoord_attrib = shader_->attributes().locate("tex_coord");
 
         GLCheck(glEnableVertexAttribArray, pos_attrib);
-        GLCheck(glVertexAttribPointer,
+        GLCheck(vaoVertexAttribPointer,
             pos_attrib,
             2, GL_FLOAT, GL_FALSE, sizeof(Rocket::Core::Vertex),
             BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, position))
         );
 
         GLCheck(glEnableVertexAttribArray, colour_attrib);
-        GLCheck(glVertexAttribPointer,
+        GLCheck(vaoVertexAttribPointer,
             colour_attrib,
             4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Rocket::Core::Vertex),
             BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, colour))
         );
 
         GLCheck(glEnableVertexAttribArray, texcoord_attrib);
-        GLCheck(glVertexAttribPointer,
+        GLCheck(vaoVertexAttribPointer,
             texcoord_attrib,
             2, GL_FLOAT, GL_FALSE, sizeof(Rocket::Core::Vertex),
             BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, tex_coord))
@@ -228,6 +269,7 @@ public:
         GLStateStash s3(GL_BLEND);
         GLStateStash s4(GL_CURRENT_PROGRAM);
         GLStateStash s5(GL_TEXTURE_BINDING_2D);
+        GLStateStash s6(GL_ARRAY_BUFFER_BINDING);
 
         //Update the buffers
         tmp_vao_.vertex_buffer_update(num_vertices * sizeof(Rocket::Core::Vertex), vertices);
@@ -247,21 +289,21 @@ public:
         int texcoord_attrib = shader_->attributes().locate("tex_coord");
 
         GLCheck(glEnableVertexAttribArray, pos_attrib);
-        GLCheck(glVertexAttribPointer, 
+        GLCheck(vaoVertexAttribPointer,
             pos_attrib,
             2, GL_FLOAT, GL_FALSE, sizeof(Rocket::Core::Vertex),
             BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, position))
         );
 
         GLCheck(glEnableVertexAttribArray, colour_attrib);
-        GLCheck(glVertexAttribPointer, 
+        GLCheck(vaoVertexAttribPointer,
             colour_attrib,
             4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Rocket::Core::Vertex),
             BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, colour))
         );
 
         GLCheck(glEnableVertexAttribArray, texcoord_attrib);
-        GLCheck(glVertexAttribPointer,
+        GLCheck(vaoVertexAttribPointer,
             texcoord_attrib,
             2, GL_FLOAT, GL_FALSE, sizeof(Rocket::Core::Vertex),
             BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, tex_coord))
@@ -434,6 +476,10 @@ bool Interface::init() {
         rocket_file_interface_ = new RocketFileInterface();
         Rocket::Core::SetFileInterface(rocket_file_interface_);
 
+        Rocket::Core::ElementInstancer* element_instancer = new Rocket::Core::ElementInstancerGeneric<CustomDocument>();
+        Rocket::Core::Factory::RegisterElementInstancer("body", element_instancer);
+        element_instancer->RemoveReference();
+
         Rocket::Core::Initialise();
 
         bool font_found = false;
@@ -459,6 +505,11 @@ bool Interface::init() {
         Rocket::Core::Vector2i(window_.width(), window_.height())
     );
     impl_->document_ = impl_->context_->CreateDocument();
+
+    auto doc = dynamic_cast<CustomDocument*>(impl_->document_);
+    assert(doc);
+    doc->set_impl(impl_.get());
+
     set_styles("body { font-family: \"Ubuntu\"; }");
 
     return true;
@@ -523,10 +574,10 @@ uint16_t Interface::height() const {
     return impl_->context_->GetDimensions().x;
 }
 
-ElementList Interface::append(const std::string& tag) {
+ElementList Interface::append(const unicode &tag) {
     std::lock_guard<std::recursive_mutex> lck(impl_->mutex_);
 
-    unicode tag_name = unicode(tag).strip();
+    unicode tag_name = tag.strip();
 
     Rocket::Core::Element* elem = impl_->document_->CreateElement(tag_name.encode().c_str());
     impl_->document_->AppendChild(elem);

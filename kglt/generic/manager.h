@@ -83,8 +83,8 @@ public:
     template<typename Func>
     void apply_func_to_objects(Func func) {
         for(std::pair<ObjectIDType, typename ObjectType::ptr> p: objects_) {
-            assert(p.second);
-            std::bind(func, p.second.get())();
+            auto thing = manager_get(p.first); //Make sure we lock the object
+            std::bind(func, thing.lock().get())();
         }
     }
 

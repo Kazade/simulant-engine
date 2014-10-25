@@ -1,6 +1,6 @@
 #include <mutex>
 #include <thread>
-
+#include <iostream>
 #include <kazbase/unicode.h>
 #include <Rocket/Core/Element.h>
 #include <Rocket/Core/ElementText.h>
@@ -10,10 +10,10 @@
 namespace kglt {
 namespace ui {
 
-Element ElementImpl::append(const std::string& tag) {
+Element ElementImpl::append(const unicode& tag) {
     std::lock_guard<std::recursive_mutex> lck(rocket_impl_.mutex_);
 
-    Rocket::Core::Element* elem = elem_->GetOwnerDocument()->CreateElement(tag.c_str());
+    Rocket::Core::Element* elem = elem_->GetOwnerDocument()->CreateElement(tag.encode().c_str());
     elem_->AppendChild(elem);
 
     Element result = Element(
@@ -23,6 +23,22 @@ Element ElementImpl::append(const std::string& tag) {
     );
 
     return result;
+}
+
+void ElementImpl::set_event_callback(const unicode& event_type, std::function<bool ()> func) {
+    event_callbacks_[event_type] = func;
+}
+
+void ElementImpl::ProcessEvent(Rocket::Core::Event& event) {
+    unicode event_type = event.GetType().CString();
+    std::cout << event_type << std::endl;
+    auto it = event_callbacks_.find(event_type);
+    if(it != event_callbacks_.end()) {
+        bool ret = (*it).second();
+        if(ret) {
+            event.StopPropagation();
+        }
+    }
 }
 
 void ElementImpl::set_text(const unicode& text) {

@@ -38,9 +38,12 @@ public:
 
     bool is_visible() const;
 
-    Element append(const std::string& tag);
+    Element append(const unicode& tag);
+
+    void set_event_callback(const unicode& event_type, std::function<bool ()> func);
 private:
     std::shared_ptr<ElementImpl> impl_;
+
 };
 
 }

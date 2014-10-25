@@ -1,0 +1,150 @@
+#include <kazbase/logging.h>
+#include <kazbase/unicode.h>
+
+#include "virtual_gamepad.h"
+#include "window_base.h"
+#include "ui_stage.h"
+#include "ui/interface.h"
+#include "render_sequence.h"
+
+namespace kglt {
+
+unicode layout = R"(
+<rml>
+    <head>
+        <style>
+            body {
+                height: 100%;
+                font-family: Ubuntu;
+                font-weight: bold;
+                font-size: 2em;
+            }
+            div {
+                display: block;
+            }
+
+            .controls {
+                position: absolute;
+                height: 75px;
+                bottom: 0px;
+                left: 0px;
+                right: 0px;
+            }
+
+            .buttons {
+                width: 150px;
+                float: right;
+                margin-right: 10px;
+            }
+
+            .dpad {
+                position: absolute;
+                left: 0px;
+            }
+
+            .dpad, .button {
+                display: none;
+            }
+
+            .dpad_two {
+                background-image: "kglt/materials/left_right.png";
+                background-decorator: image;
+                width: 128px;
+                height: 64px;
+                margin-left: 10px;
+            }
+
+            .button {
+                width: 64px;
+                height: 64px;
+                text-align: center;
+                vertical-align: middle;
+                background-decorator: image;
+                background-image: "kglt/materials/button.png";
+                margin-left: 5px;
+                margin-right: 5px;
+            }
+
+            .button_text { display: none; }
+
+        </style>
+    </head>
+    <body>
+        <div class="controls">
+            <div class="dpad dpad_two">
+            </div>
+            <div class="dpad dpad_four">
+
+            </div>
+            <div class="dpad dpad_eight">
+
+            </div>
+
+            <div class="buttons">
+                <div class="button button_one">
+                    <span class="button_text">1</span>
+                </div>
+                <div class="button button_two">
+                    <span class="button_text">2</span>
+                </div>
+                <div class="button button_three">
+                    <span class="button_text">3</span>
+                </div>
+            </div>
+        </div>
+    </body>
+</rml>
+)";
+
+
+VirtualGamepad::VirtualGamepad(WindowBase &window, VirtualDPadDirections directions, int button_count):
+    window_(window),
+    directions_(directions),
+    button_count_(button_count) {
+
+}
+
+bool VirtualGamepad::init() {
+    L_DEBUG(_u("Initializing virtual gamepad with {0} buttons").format(button_count_));
+
+    ui_stage_ = window_.new_ui_stage(); //Create a UI stage to hold the controller buttons
+
+    auto stage = window_.ui_stage(ui_stage_);
+    stage->load_rml_from_string(layout);
+
+    if(this->directions_ == VIRTUAL_DPAD_DIRECTIONS_TWO) {
+        stage->$(".dpad_two").css("display", "inline-block");
+    }
+
+    //Make the buttons visible that need to be
+    for(int i = 1; i < button_count_ + 1; ++i) {
+        unicode klass = _u(".button_{0}").format(humanize(i));
+        stage->$(klass).css("display", "inline-block");
+
+        stage->$(klass).set_event_callback("mousedown", []() -> bool {
+            std::cout << "Button clicked" << std::endl;
+            return true;
+        });
+    }
+
+
+    camera_id_ = window_.new_camera_with_orthographic_projection();
+
+    //Finally add to the render sequence, give a ridiculously high priority
+    window_.render_sequence()->new_pipeline(ui_stage_, camera_id_, kglt::ViewportID(), kglt::TextureID(), 100000);
+
+    return true;
+}
+
+void VirtualGamepad::cleanup() {
+    L_DEBUG("Destroying virtual gamepad");
+
+    window_.delete_camera(camera_id_);
+    window_.delete_ui_stage(ui_stage_);
+}
+
+void VirtualGamepad::flip() {
+
+}
+
+}

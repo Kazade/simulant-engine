@@ -6,6 +6,7 @@
 #include "ui_stage.h"
 #include "camera.h"
 #include "utils/ownable.h"
+#include "render_sequence.h"
 
 namespace kglt {
 
@@ -72,6 +73,26 @@ CameraID CameraManager::new_camera() {
     CameraID new_camera = CameraManager::manager_new();
 
     return new_camera;
+}
+
+CameraID CameraManager::new_camera_with_orthographic_projection(double left, double right, double bottom, double top, double near, double far) {
+    /*
+     *  Instantiates a camera with an orthographic projection. If both left and right are zero then they default to 0 and window.width()
+     *  respectively. If bottom and top are zero, then they default to window.height() and 0 respectively. So top left is 0,0
+     */
+    CameraID new_camera_id = new_camera();
+
+    if(!left && !right) {
+        right = window_->width();
+    }
+
+    if(!bottom && !top) {
+        bottom = window_->height();
+    }
+
+    camera(new_camera_id)->set_orthographic_projection(left, right, bottom, top, near, far);
+
+    return new_camera_id;
 }
 
 CameraPtr CameraManager::camera() {

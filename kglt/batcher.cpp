@@ -263,8 +263,6 @@ void TextureMatrixGroup::unbind(GPUProgram* program) {
 }
 
 void MaterialGroup::bind(GPUProgram* program) {
-    L_DEBUG("Binding material uniforms");
-
     if(program->uniforms().uses_auto(SP_AUTO_MATERIAL_AMBIENT)) {
         program->uniforms().set_colour(
             program->uniforms().auto_variable_name(SP_AUTO_MATERIAL_AMBIENT),

@@ -7,6 +7,8 @@
 #include <thread>
 #include <memory>
 
+#include <kazbase/logging.h>
+
 class WrongThreadError:
     public std::runtime_error {
 
@@ -25,9 +27,7 @@ public:
         GL_thread.reset(new GLThreadCheck(std::this_thread::get_id()));
     }
 
-    static void check() {
-        GL_thread->do_check();
-    }
+    static void check(const unicode& message="");
 
     static bool is_current() {
         try {

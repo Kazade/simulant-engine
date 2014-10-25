@@ -41,6 +41,7 @@ class LoaderType;
 class RenderSequence;
 class SceneImpl;
 class Watcher;
+class VirtualGamepad;
 
 typedef std::function<void (double)> WindowUpdateCallback;
 typedef std::shared_ptr<Loader> LoaderPtr;
@@ -90,6 +91,7 @@ public:
     double total_time() const { return total_time_; }
     double fixed_step() const { return 1.0 / double(WindowBase::STEPS_PER_SECOND); }
     double fixed_step_interp() const;
+    bool is_paused() const { return is_paused_; }
 
     uint32_t width() const { return width_; }
     uint32_t height() const { return height_; }
@@ -142,6 +144,9 @@ public:
     PhysicsEnginePtr physics();
     const bool has_physics_engine() const;
 
+    void enable_virtual_gamepad(VirtualDPadDirections directions, int button_count, bool flipped=false);
+    void disable_virtual_gamepad();
+
 protected:
 
     void set_width(uint32_t width) { 
@@ -159,6 +164,15 @@ protected:
 
     WindowBase();
 
+    void set_paused(bool value=true);
+    void set_has_context(bool value=true);
+
+    bool has_context() const { return has_context_; }
+    std::mutex& context_lock() { return context_lock_; }
+
+    void handle_mouse_motion(int x, int y);
+    void handle_mouse_button_down(int button);
+    void handle_mouse_button_up(int button);
 private:    
     CameraID default_ui_camera_id_;
 
@@ -178,6 +192,15 @@ private:
     KTIuint variable_timer_;
     double delta_time_;
     double fixed_step_interp_ = 0.0;
+    bool is_paused_ = false;
+    bool has_context_ = false;
+
+    /*
+     *  Sometimes we need to destroy or recreate the GL context, if that happens while we are rendering in the
+     *  main thread, then bad things happen. This lock exists so that we don't destroy the context while we are rendering.
+     *  We obtain the lock before rendering, and release it after. Likewise we obtain the lock while destroying the context
+     *  (we can use has_context to make sure we don't start rendering when there is no context) */
+    std::mutex context_lock_;
 
     void destroy() {}
 
@@ -210,6 +233,8 @@ private:
     generic::DataCarrier data_carrier_;
 
     std::shared_ptr<PhysicsEngine> physics_engine_;
+
+    std::shared_ptr<VirtualGamepad> virtual_gamepad_;
 };
 
 }

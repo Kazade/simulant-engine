@@ -30,7 +30,7 @@ public:
         }
     }
 
-    ElementList append(const std::string& tag) {
+    ElementList append(const unicode& tag) {
         std::vector<Element> new_elements;
         for(Element& e: elements_) {
             new_elements.push_back(e.append(tag));
@@ -42,6 +42,14 @@ public:
     ElementList add_class(const unicode& cl) {
         for(Element& e: elements_) {
             e.add_class(cl);
+        }
+
+        return *this;
+    }
+
+    ElementList set_event_callback(const unicode& event_type, std::function<bool ()> func) {
+        for(Element& e: elements_) {
+            e.set_event_callback(event_type, func);
         }
 
         return *this;
@@ -127,7 +135,7 @@ public:
     void update(float dt);
     void render(const Mat4& projection_matrix);
 
-    ElementList append(const std::string& tag);
+    ElementList append(const unicode& tag);
     void set_styles(const std::string& stylesheet_content);
     ElementList _(const unicode& selector);
 
@@ -141,7 +149,7 @@ private:
 
     WindowBase& window_;
     Mat4 projection_matrix_;
-    std::unique_ptr<RocketImpl> impl_;
+    std::unique_ptr<RocketImpl> impl_;   
 };
 
 }

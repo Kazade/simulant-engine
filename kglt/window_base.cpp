@@ -23,9 +23,12 @@
 #include "message_bar.h"
 #include "render_sequence.h"
 #include "stage.h"
+#include "ui_stage.h"
+#include "virtual_gamepad.h"
 #include "physics/physics_engine.h"
 #include "screens/loading.h"
 #include "utils/gl_thread_check.h"
+#include "utils/vao_abstraction.h"
 
 namespace kglt {
 
@@ -95,6 +98,8 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
     set_height(height);
 
     bool result = create_window(width, height, bpp, fullscreen);
+
+    vao_init(); //Initialize our VAO abstraction layer
 
     if(result && !initialized_) {        
         L_INFO("Initializing the default UI stage");
@@ -184,6 +189,11 @@ void WindowBase::set_logging_level(LoggingLevel level) {
 }
 
 void WindowBase::update(double dt) {
+    if(is_paused()) {
+        dt = 0.0; //If the application window is not displayed, don't send a deltatime down
+        //it's still accessible through get_deltatime if the user needs it
+    }
+
     BackgroundManager::update(dt);
     StageManager::update(dt);
 
@@ -234,18 +244,26 @@ bool WindowBase::run_frame() {
 
     idle_.execute(); //Execute idle tasks before render
 
-    GLCheck(glViewport, 0, 0, width(), height());
-    GLCheck(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    /* Don't run the render sequence if we don't have a context, and don't update the resource
+     * manager either because that probably needs a context too! */
+    {
+        std::lock_guard<std::mutex> rendering_lock(context_lock_);
+        if(has_context()) {
+            GLCheck(glViewport, 0, 0, width(), height());
+            GLCheck(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    render_sequence()->run();
+            render_sequence()->run();
 
-    signal_pre_swap_();
+            signal_pre_swap_();
 
-    swap_buffers();
+            swap_buffers();
 
-    //std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            //std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-    ResourceManagerImpl::update();
+            ResourceManagerImpl::update();
+        }
+    }
+
     signal_frame_finished_();
 
     if(!is_running_) {
@@ -322,6 +340,57 @@ const bool WindowBase::has_physics_engine() const {
 
 double WindowBase::fixed_step_interp() const {
     return fixed_step_interp_;
+}
+
+void WindowBase::set_paused(bool value) {
+    if(value == is_paused_) return;
+
+    if(value) {
+        L_INFO("Pausing application");
+    } else {
+        L_INFO("Unpausing application");
+    }
+
+    is_paused_ = value;
+}
+
+void WindowBase::set_has_context(bool value) {
+    if(value == has_context_) return;
+
+    has_context_ = value;
+}
+
+void WindowBase::enable_virtual_gamepad(VirtualDPadDirections directions, int button_count, bool flipped) {
+    if(virtual_gamepad_) {
+        virtual_gamepad_.reset();
+    }
+
+    virtual_gamepad_ = VirtualGamepad::create(*this, directions, button_count);
+    if(flipped) {
+        virtual_gamepad_->flip();
+    }
+}
+
+void WindowBase::disable_virtual_gamepad() {
+    virtual_gamepad_.reset();
+}
+
+void WindowBase::handle_mouse_motion(int x, int y) {
+    UIStageManager::apply_func_to_objects([=](UIStage* object) {
+        object->__handle_mouse_move(x, y);
+    });
+}
+
+void WindowBase::handle_mouse_button_down(int button) {
+    UIStageManager::apply_func_to_objects([=](UIStage* object) {
+        object->__handle_mouse_down(button);
+    });
+}
+
+void WindowBase::handle_mouse_button_up(int button) {
+    UIStageManager::apply_func_to_objects([=](UIStage* object) {
+        object->__handle_mouse_up(button);
+    });
 }
 
 }

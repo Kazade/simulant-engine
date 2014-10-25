@@ -7,13 +7,7 @@
 #include "utils/gl_thread_check.h"
 #include "utils/gl_error.h"
 
-#ifdef __ANDROID__
-#include <EGL/egl.h>
-PFNGLGENVERTEXARRAYSOESPROC glGenVertexArrays;
-PFNGLBINDVERTEXARRAYOESPROC glBindVertexArray;
-PFNGLDELETEVERTEXARRAYSOESPROC glDeleteVertexArrays;
-PFNGLISVERTEXARRAYOESPROC glIsVertexArray;
-#endif
+#include "utils/vao_abstraction.h"
 
 namespace kglt {
 
@@ -52,7 +46,7 @@ void BufferObject::release() {
 }
 
 void BufferObject::bind() {
-    GLThreadCheck::check();
+    GLThreadCheck::check("BufferObject::bind");
 
     if(!buffer_id_) {
         GLCheck(glGenBuffers, 1, &buffer_id_);
@@ -123,7 +117,7 @@ GLenum BufferObject::usage() const {
 }
 
 void BufferObject::create(uint32_t byte_size, const void* data) {
-    GLThreadCheck::check();
+    GLThreadCheck::check("BufferObject::create");
 
     if(!buffer_id_) {
         GLCheck(glGenBuffers, 1, &buffer_id_);
@@ -136,7 +130,7 @@ void BufferObject::create(uint32_t byte_size, const void* data) {
 }
 
 void BufferObject::modify(uint32_t offset, uint32_t byte_size, const void* data) {
-    GLThreadCheck::check();
+    GLThreadCheck::check("BufferObject::modify");
 
     assert(buffer_id_);
 
@@ -148,49 +142,29 @@ VertexArrayObject::VertexArrayObject(BufferObjectUsage vertex_usage, BufferObjec
     vertex_buffer_(BUFFER_OBJECT_VERTEX_DATA, vertex_usage),
     index_buffer_(BUFFER_OBJECT_INDEX_DATA, index_usage),
     id_(0) {
-
-#ifdef __ANDROID__
-    VAO_SUPPORTED = false;
-
-    glGenVertexArrays = (PFNGLGENVERTEXARRAYSOESPROC)eglGetProcAddress ( "glGenVertexArraysOES" );
-    glBindVertexArray = (PFNGLBINDVERTEXARRAYOESPROC)eglGetProcAddress ( "glBindVertexArrayOES" );
-    glDeleteVertexArrays = (PFNGLDELETEVERTEXARRAYSOESPROC)eglGetProcAddress ( "glDeleteVertexArraysOES" );
-    glIsVertexArray = (PFNGLISVERTEXARRAYOESPROC)eglGetProcAddress ( "glIsVertexArrayOES" );
-#else
-    VAO_SUPPORTED = true;
-#endif
-
 }
 
 VertexArrayObject::~VertexArrayObject() {
-    if(VertexArrayObject::VAO_SUPPORTED) {
-        try {
-            if(id_) {
-                GLCheck(glDeleteVertexArrays, 1, &id_);
-            }
-        } catch(...) {}
-    }
+    try {
+        if(id_) {
+            GLCheck(vaoDeleteVertexArrays, 1, &id_);
+        }
+    } catch(...) {}
 }
 
 void VertexArrayObject::bind() {
-    if(VertexArrayObject::VAO_SUPPORTED) {
-        if(id_ == 0) {
-            GLCheck(glGenVertexArrays, 1, &id_);
-            assert(id_);
-        }
-        GLCheck(glBindVertexArray, id_);
-    } else {
-        vertex_buffer_bind();
-        index_buffer_bind();
+    if(id_ == 0) {
+        GLCheck(vaoGenVertexArrays, 1, &id_);
+        assert(id_);
     }
+    GLCheck(vaoBindVertexArray, id_);
+
 }
 
 void VertexArrayObject::vertex_buffer_update(uint32_t byte_size, const void* data) {
     GLStateStash stash(GL_VERTEX_ARRAY_BINDING); //Store the current VAO binding
 
-    if(VertexArrayObject::VAO_SUPPORTED) {
-        bind();
-    }
+    bind();
 
     vertex_buffer_.create(byte_size, data);
 }
@@ -198,9 +172,7 @@ void VertexArrayObject::vertex_buffer_update(uint32_t byte_size, const void* dat
 void VertexArrayObject::vertex_buffer_update_partial(uint32_t offset, uint32_t byte_size, const void* data) {
     GLStateStash stash(GL_VERTEX_ARRAY_BINDING); //Store the current VAO binding
 
-    if(VertexArrayObject::VAO_SUPPORTED) {
-        bind();
-    }
+    bind();
 
     vertex_buffer_.modify(offset, byte_size, data);
 }
@@ -208,9 +180,7 @@ void VertexArrayObject::vertex_buffer_update_partial(uint32_t offset, uint32_t b
 void VertexArrayObject::index_buffer_update(uint32_t byte_size, const void* data) {
     GLStateStash stash(GL_VERTEX_ARRAY_BINDING); //Store the current VAO binding
 
-    if(VertexArrayObject::VAO_SUPPORTED) {
-        bind();
-    }
+    bind();
 
     index_buffer_.create(byte_size, data);
 }
@@ -218,9 +188,7 @@ void VertexArrayObject::index_buffer_update(uint32_t byte_size, const void* data
 void VertexArrayObject::index_buffer_update_partial(uint32_t offset, uint32_t byte_size, const void* data) {
     GLStateStash stash(GL_VERTEX_ARRAY_BINDING); //Store the current VAO binding
 
-    if(VertexArrayObject::VAO_SUPPORTED) {
-        bind();
-    }
+    bind();
 
     index_buffer_.modify(offset, byte_size, data);
 }

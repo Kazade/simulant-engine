@@ -16,7 +16,7 @@ Element::Element(std::shared_ptr<ElementImpl> impl):
 
 }
 
-Element Element::append(const std::string& tag) {
+Element Element::append(const unicode &tag) {
     return impl_->append(tag);
 }
 
@@ -63,6 +63,10 @@ void Element::scroll_to_bottom() {
 bool Element::is_visible() const {
     auto visibility = css("visibility");
     return visibility != HIDDEN;
+}
+
+void Element::set_event_callback(const unicode& event_type, std::function<bool ()> func) {
+    impl_->set_event_callback(event_type, func);
 }
 
 }

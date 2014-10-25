@@ -364,3 +364,7 @@ kglt/particles/pixel_trail.kglp
 kglt/particles/pixel_explosion.kglp
 kglt/ui/ui_private.cpp
 kglt/utils/glcompat.h
+kglt/utils/vao_abstraction.h
+kglt/utils/vao_abstraction.cpp
+kglt/virtual_gamepad.h
+kglt/virtual_gamepad.cpp

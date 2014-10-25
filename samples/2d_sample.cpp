@@ -37,6 +37,8 @@ private:
             )
         );
 
+        window().enable_virtual_gamepad(kglt::VIRTUAL_DPAD_DIRECTIONS_TWO, 2);
+
         return true;
     }
 

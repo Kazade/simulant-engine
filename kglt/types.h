@@ -455,6 +455,12 @@ enum TextureFlag {
     TEXTURE_OPTION_NEAREST_FILTER = 8
 };
 
+enum VirtualDPadDirections {
+    VIRTUAL_DPAD_DIRECTIONS_TWO,
+    VIRUTAL_DPAD_DIRECTIONS_FOUR,
+    VIRUTAL_DPAD_DIRECTIONS_EIGHT
+};
+
 typedef uint32_t TextureFlags;
 
 typedef UniqueID<0> MeshID;
