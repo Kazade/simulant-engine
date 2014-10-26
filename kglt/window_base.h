@@ -144,9 +144,10 @@ public:
     PhysicsEnginePtr physics();
     const bool has_physics_engine() const;
 
-    void enable_virtual_gamepad(VirtualDPadDirections directions, int button_count, bool flipped=false);
-    void disable_virtual_gamepad();
-
+    void enable_virtual_joypad(VirtualDPadDirections directions, int button_count, bool flipped=false);
+    void disable_virtual_joypad();
+    bool has_virtual_joypad() const { return bool(virtual_gamepad_); }
+    VirtualGamepad* virtual_joypad() { return virtual_gamepad_.get(); }
 protected:
 
     void set_width(uint32_t width) { 

@@ -2,6 +2,8 @@
 #include "kazbase/unicode.h"
 #include "kazbase/logging.h"
 #include "input_controller.h"
+#include "window_base.h"
+#include "virtual_gamepad.h"
 
 namespace kglt {
 
@@ -290,7 +292,8 @@ void Joypad::_disconnect(const InputConnection &connection) {
     }
 }
 
-InputController::InputController():
+InputController::InputController(WindowBase& window):
+    window_(window),
     keyboard_(new Keyboard()) {
 
     SDL_JoystickEventState(SDL_ENABLE);
@@ -347,6 +350,42 @@ void InputController::update(double dt) {
     for(Joypad::ptr j: joypads_) {
         j->_update(dt);
     }
+
+    if(virtual_joypad_) {
+        virtual_joypad_->_update(dt);
+    }
+}
+
+void InputController::init_virtual_joypad() {
+    if(virtual_joypad_) {
+        return;
+    }
+
+    virtual_joypad_ = std::make_shared<Joypad>();
+    window_.virtual_joypad()->signal_button_down().connect([=](int btn) {
+        joypad(joypads_.size())._handle_button_down_event(btn);
+    });
+    window_.virtual_joypad()->signal_button_up().connect([=](int btn) {
+        joypad(joypads_.size())._handle_button_up_event(btn);
+    });
+    //FIXME: Connect signals to window virtual joypad
+}
+
+Joypad& InputController::joypad(uint8_t idx) {
+    if(idx == joypads_.size() && window_.has_virtual_joypad()) {
+        init_virtual_joypad();
+        return *virtual_joypad_;
+    }
+    return *joypads_.at(idx);
+}
+
+uint8_t InputController::joypad_count() const {
+    auto ret = joypads_.size();
+    if(window_.has_virtual_joypad()) {
+        ++ret;
+    }
+
+    return ret;
 }
 
 }

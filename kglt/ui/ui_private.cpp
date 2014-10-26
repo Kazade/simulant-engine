@@ -28,7 +28,7 @@ void ElementImpl::set_event_callback(const unicode& event_type, std::function<bo
 
 void ElementImpl::ProcessEvent(Rocket::Core::Event& event) {
     unicode event_type = event.GetType().CString();
-    std::cout << event_type << std::endl;
+
     auto it = event_callbacks_.find(event_type);
     if(it != event_callbacks_.end()) {
         bool ret = (*it).second();

@@ -23,7 +23,7 @@ class RocketImpl;
 namespace ui {
 
 const std::vector<unicode> STANDARD_EVENTS = {
-    "click", "mousemove", "show", "hide", "resize", "scroll", "focus", "blur"
+    "click", "mousedown", "mouseup", "mousemove", "show", "hide", "resize", "scroll", "focus", "blur"
 };
 
 class ElementImpl : public Rocket::Core::EventListener {

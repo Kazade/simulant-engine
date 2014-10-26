@@ -19,6 +19,7 @@ typedef UniqueID<300> InputConnectionID;
 
 class InputController;
 class InputConnection;
+class WindowBase;
 
 class Device {
 public:
@@ -186,23 +187,28 @@ class InputController:
     public Managed<InputController> {
 
 public:
-    InputController();
+    InputController(WindowBase& window);
     ~InputController();
 
     Keyboard& keyboard() { assert(keyboard_); return *keyboard_; }
     Mouse& mouse() { assert(mouse_); return *mouse_; }
-    Joypad& joypad(uint8_t idx=0) { return *joypads_.at(idx); }
-    uint8_t joypad_count() const { return joypads_.size(); }
+    Joypad& joypad(uint8_t idx=0);
+    uint8_t joypad_count() const;
 
     void update(double dt);
     void handle_event(SDL_Event& event);
 
 private:
+    WindowBase& window_;
+
     Keyboard::ptr keyboard_;
     Mouse::ptr mouse_;
 
+    Joypad::ptr virtual_joypad_;
     std::vector<Joypad::ptr> joypads_;
     std::vector<SDL_Joystick*> sdl_joysticks_;
+
+    void init_virtual_joypad();
 };
 
 }

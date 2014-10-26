@@ -121,8 +121,13 @@ bool VirtualGamepad::init() {
         unicode klass = _u(".button_{0}").format(humanize(i));
         stage->$(klass).css("display", "inline-block");
 
-        stage->$(klass).set_event_callback("mousedown", []() -> bool {
-            std::cout << "Button clicked" << std::endl;
+        //Forward the events from the UI on to the signals
+        stage->$(klass).set_event_callback("mousedown", [=]() -> bool {
+            signal_button_down_(i - 1);
+            return true;
+        });
+        stage->$(klass).set_event_callback("mouseup", [=]() -> bool {
+            signal_button_up_(i - 1);
             return true;
         });
     }

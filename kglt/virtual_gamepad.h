@@ -1,6 +1,7 @@
 #ifndef VIRTUAL_GAMEPAD_H
 #define VIRTUAL_GAMEPAD_H
 
+#include <kazbase/signals.h>
 #include "generic/managed.h"
 #include "types.h"
 
@@ -15,6 +16,9 @@ public:
 
     void flip();
 
+    sig::signal<void (int)>& signal_button_down() { return signal_button_down_; }
+    sig::signal<void (int)>& signal_button_up() { return signal_button_up_; }
+
 private:
     WindowBase& window_;
     VirtualDPadDirections directions_ = VIRTUAL_DPAD_DIRECTIONS_TWO;
@@ -22,6 +26,9 @@ private:
 
     UIStageID ui_stage_;
     CameraID camera_id_;
+
+    sig::signal<void (int)> signal_button_down_;
+    sig::signal<void (int)> signal_button_up_;
 };
 
 }

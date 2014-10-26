@@ -159,7 +159,7 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
         loading_update_connection_ = signal_step().connect(std::bind(&screens::Loading::update, loading_.get(), std::placeholders::_1));
 
         //This needs to happen after SDL or whatever is initialized
-        input_controller_ = InputController::create();
+        input_controller_ = InputController::create(*this);
 
         GLCheck(glEnable, GL_DEPTH_TEST);
         GLCheck(glDepthFunc, GL_LEQUAL);
@@ -360,7 +360,7 @@ void WindowBase::set_has_context(bool value) {
     has_context_ = value;
 }
 
-void WindowBase::enable_virtual_gamepad(VirtualDPadDirections directions, int button_count, bool flipped) {
+void WindowBase::enable_virtual_joypad(VirtualDPadDirections directions, int button_count, bool flipped) {
     if(virtual_gamepad_) {
         virtual_gamepad_.reset();
     }
@@ -371,7 +371,7 @@ void WindowBase::enable_virtual_gamepad(VirtualDPadDirections directions, int bu
     }
 }
 
-void WindowBase::disable_virtual_gamepad() {
+void WindowBase::disable_virtual_joypad() {
     virtual_gamepad_.reset();
 }
 
