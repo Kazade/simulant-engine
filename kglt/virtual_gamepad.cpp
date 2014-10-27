@@ -38,20 +38,33 @@ unicode layout = R"(
             }
 
             .dpad {
-                position: absolute;
-                left: 0px;
+                width: 200px;
+                float: left;
+                margin-left: 10px;
             }
 
             .dpad, .button {
                 display: none;
             }
 
-            .dpad_two {
-                background-image: "kglt/materials/left_right.png";
-                background-decorator: image;
-                width: 128px;
+            .dpad_left {
+                width: 64px;
                 height: 64px;
-                margin-left: 10px;
+                background-image: "kglt/materials/left.png";
+                background-decorator: image;
+                margin-left: 5px;
+                margin-right: 5px;
+                float: left;
+            }
+
+            .dpad_right {
+                width: 64px;
+                height: 64px;
+                background-image: "kglt/materials/right.png";
+                background-decorator: image;
+                margin-left: 5px;
+                margin-right: 5px;
+                float: left;
             }
 
             .button {
@@ -72,6 +85,8 @@ unicode layout = R"(
     <body>
         <div class="controls">
             <div class="dpad dpad_two">
+                <div class="dpad_left"></div>
+                <div class="dpad_right"></div>
             </div>
             <div class="dpad dpad_four">
 

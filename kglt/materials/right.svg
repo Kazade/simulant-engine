@@ -14,8 +14,8 @@
    id="svg2987"
    version="1.1"
    inkscape:version="0.48.5 r10040"
-   sodipodi:docname="left.svg"
-   inkscape:export-filename="/home/lukeb/Git/kglt/kglt/materials/left.png"
+   sodipodi:docname="right.svg"
+   inkscape:export-filename="/home/lukeb/Git/kglt/kglt/materials/right.png"
    inkscape:export-xdpi="90"
    inkscape:export-ydpi="90">
   <defs
@@ -27,9 +27,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="11"
-     inkscape:cx="22.660245"
-     inkscape:cy="30.515676"
+     inkscape:zoom="13.265625"
+     inkscape:cx="32"
+     inkscape:cy="32"
      inkscape:current-layer="layer1"
      showgrid="true"
      inkscape:document-units="px"
@@ -57,7 +57,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -66,8 +66,8 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer">
     <path
-       style="fill:#ffffff;stroke:#ffffff;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;fill-opacity:0.19215687000000001"
-       d="M 3,32 61,3 61,61 z"
+       style="fill:#ffffff;fill-opacity:0.19215687000000001;stroke:#ffffff;stroke-width:1.50000000000000000;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="M 61,32 3,3 3,61 z"
        id="path3775"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cccc" />
