@@ -129,6 +129,26 @@ bool VirtualGamepad::init() {
 
     if(this->directions_ == VIRTUAL_DPAD_DIRECTIONS_TWO) {
         stage->$(".dpad_two").css("display", "inline-block");
+
+        stage->$(".dpad_left").set_event_callback("mousedown", [=]() -> bool {
+            signal_left_down_();
+            return true;
+        });
+
+        stage->$(".dpad_left").set_event_callback("mouseup", [=]() -> bool {
+            signal_left_up_();
+            return true;
+        });
+
+        stage->$(".dpad_right").set_event_callback("mousedown", [=]() -> bool {
+            signal_right_down_();
+            return true;
+        });
+
+        stage->$(".dpad_right").set_event_callback("mouseup", [=]() -> bool {
+            signal_right_up_();
+            return true;
+        });
     }
 
     //Make the buttons visible that need to be
