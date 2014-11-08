@@ -25,22 +25,24 @@ unicode layout = R"(
 
             .controls {
                 position: absolute;
-                height: 75px;
                 bottom: 0px;
                 left: 0px;
                 right: 0px;
             }
 
             .buttons {
-                width: 150px;
+                width: {2}px;
                 float: right;
-                margin-right: 10px;
+                margin-right: {3}px;
+                text-align: right;
+                margin-bottom: {3}px;
             }
 
             .dpad {
-                width: 200px;
+                width: {2}px;
                 float: left;
-                margin-left: 10px;
+                margin-left: {3}px;
+                margin-bottom: {3}px;
             }
 
             .dpad, .button {
@@ -48,34 +50,34 @@ unicode layout = R"(
             }
 
             .dpad_left {
-                width: 64px;
-                height: 64px;
+                width: {0}px;
+                height: {0}px;
                 background-image: "kglt/materials/left.png";
                 background-decorator: image;
-                margin-left: 5px;
-                margin-right: 5px;
+                margin-left: {1}px;
+                margin-right: {1}px;
                 float: left;
             }
 
             .dpad_right {
-                width: 64px;
-                height: 64px;
+                width: {0}px;
+                height: {0}px;
                 background-image: "kglt/materials/right.png";
                 background-decorator: image;
-                margin-left: 5px;
-                margin-right: 5px;
+                margin-left: {1}px;
+                margin-right: {1}px;
                 float: left;
             }
 
             .button {
-                width: 64px;
-                height: 64px;
+                width: {0}px;
+                height: {0}px;
                 text-align: center;
                 vertical-align: middle;
                 background-decorator: image;
                 background-image: "kglt/materials/button.png";
-                margin-left: 5px;
-                margin-right: 5px;
+                margin-left: {1}px;
+                margin-right: {1}px;
             }
 
             .button_text { display: none; }
@@ -124,8 +126,13 @@ bool VirtualGamepad::init() {
 
     ui_stage_ = window_.new_ui_stage(); //Create a UI stage to hold the controller buttons
 
+    uint32_t button_size = int(float(window_.width() / 10.0));
+    uint32_t dpad_margin = int(float(window_.width() * (5.0 / 640.0)));
+    uint32_t area_width = int(float(window_.width() * (200.0 / 640.0)));
+    uint32_t outside_padding = int(float(window_.width() * (10.0 / 640.0)));
+
     auto stage = window_.ui_stage(ui_stage_);
-    stage->load_rml_from_string(layout);
+    stage->load_rml_from_string(layout.format(button_size, dpad_margin, area_width, outside_padding));
 
     if(this->directions_ == VIRTUAL_DPAD_DIRECTIONS_TWO) {
         stage->$(".dpad_two").css("display", "inline-block");
