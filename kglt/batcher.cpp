@@ -351,7 +351,7 @@ void RenderSettingsGroup::bind(GPUProgram* program) {
 #ifndef __ANDROID__
     GLCheck(glPointSize, data_.point_size);
 #else
-    L_WARN("On GLES glPointSize doesn't exist");
+    L_WARN_ONCE("On GLES glPointSize doesn't exist");
 #endif
 
 #ifndef __ANDROID__
@@ -367,7 +367,7 @@ void RenderSettingsGroup::bind(GPUProgram* program) {
     }
 #else
     if(data_.polygon_mode != POLYGON_MODE_FILL) {
-        L_WARN("On GLES glPolygonMode doesn't exist");
+        L_WARN_ONCE("On GLES glPolygonMode doesn't exist");
     }
 #endif
 

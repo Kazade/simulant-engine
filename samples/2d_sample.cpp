@@ -7,7 +7,7 @@ using namespace kglt::extra;
 class Sample2D: public kglt::Application {
 public:
     Sample2D():
-        Application("KGLT Sprite Sample") {
+        Application("KGLT Sprite Sample", 1024, 768) {
 
         window().set_logging_level(kglt::LOG_LEVEL_DEBUG);
     }

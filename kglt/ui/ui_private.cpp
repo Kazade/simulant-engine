@@ -69,7 +69,6 @@ void ElementImpl::set_text(const unicode& text) {
 CustomDocument::CustomDocument(const Rocket::Core::String& tag):
     Rocket::Core::ElementDocument(tag) {
 
-    std::cout << "Creating custom document" << std::endl;
 }
 
 void CustomDocument::set_impl(RocketImpl* impl) {

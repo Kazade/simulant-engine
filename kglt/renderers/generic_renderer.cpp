@@ -138,7 +138,7 @@ void send_attribute(GPUProgram& program,
             BUFFER_OFFSET(get_offset())
         );
     } else {
-        L_WARN(_u("Couldn't locate attribute on the mesh: {0}").format(attr));
+        L_WARN_ONCE(_u("Couldn't locate attribute on the mesh: {0}").format(attr));
     }
 }
 
