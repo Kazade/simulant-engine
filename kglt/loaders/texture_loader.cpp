@@ -24,9 +24,13 @@ void TextureLoader::into(Loadable& resource, const LoaderOptions& options) {
     Texture* tex = dynamic_cast<Texture*>(res_ptr);
     assert(tex && "You passed a Resource that is not a texture to the texture loader");
 
+    auto str = this->data_->str();
+    std::vector<unsigned char> buffer(str.begin(), str.end());
+
     int width, height, channels;
-    unsigned char* data = SOIL_load_image(
-        filename_.encode().c_str(),
+    unsigned char* data = SOIL_load_image_from_memory(
+        &buffer[0],
+        buffer.size(),
         &width,
         &height,
         &channels,
@@ -34,6 +38,7 @@ void TextureLoader::into(Loadable& resource, const LoaderOptions& options) {
     );
 
     if (!data) {
+        L_ERROR(_u("Unable to load texture with name: {0}").format(filename_));
         throw IOError("Couldn't load the file: " + filename_.encode());
     } else {
         tex->set_bpp(channels * 8);
