@@ -375,7 +375,12 @@ void WindowBase::disable_virtual_joypad() {
     virtual_gamepad_.reset();
 }
 
-void WindowBase::handle_mouse_motion(int x, int y) {
+void WindowBase::handle_mouse_motion(int x, int y, bool pos_normalized) {
+    if(pos_normalized) {
+        x *= width();
+        y *= height();
+    }
+
     UIStageManager::apply_func_to_objects([=](UIStage* object) {
         object->__handle_mouse_move(x, y);
     });

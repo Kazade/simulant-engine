@@ -171,7 +171,7 @@ protected:
     bool has_context() const { return has_context_; }
     std::mutex& context_lock() { return context_lock_; }
 
-    void handle_mouse_motion(int x, int y);
+    void handle_mouse_motion(int x, int y, bool pos_normalized=false);
     void handle_mouse_button_down(int button);
     void handle_mouse_button_up(int button);
 private:    

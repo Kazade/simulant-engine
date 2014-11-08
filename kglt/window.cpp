@@ -99,13 +99,19 @@ void Window::check_events() {
             case SDL_MOUSEBUTTONDOWN: {
                 handle_mouse_button_down(event.button.button);
             } break;
-            case SDL_FINGERDOWN: {
-                handle_mouse_motion(event.tfinger.x, event.tfinger.y);
-                handle_mouse_button_down(event.tfinger.fingerId);
-            } break;
             case SDL_MOUSEBUTTONUP: {
                 handle_mouse_button_up(event.button.button);
             } break;
+/*            case SDL_FINGERDOWN: {
+                handle_mouse_button_down(event.tfinger.fingerId);
+            } break;
+            case SDL_FINGERMOTION: {
+                handle_mouse_motion(event.tfinger.x, event.tfinger.y);
+            } break;
+            case SDL_FINGERUP: {
+                handle_mouse_button_up(event.tfinger.fingerId);
+            } break;*/
+
             default:
                 L_DEBUG(_u("Unhandled event {0}").format(event.type));
                 break;
