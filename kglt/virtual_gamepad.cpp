@@ -138,22 +138,22 @@ bool VirtualGamepad::init() {
         stage->$(".dpad_two").css("display", "inline-block");
 
         stage->$(".dpad_left").set_event_callback("mousedown", [=]() -> bool {
-            signal_left_down_();
+            signal_hat_changed_(HAT_POSITION_LEFT);
             return true;
         });
 
         stage->$(".dpad_left").set_event_callback("mouseup", [=]() -> bool {
-            signal_left_up_();
+            signal_hat_changed_(HAT_POSITION_CENTERED);
             return true;
         });
 
         stage->$(".dpad_right").set_event_callback("mousedown", [=]() -> bool {
-            signal_right_down_();
+            signal_hat_changed_(HAT_POSITION_RIGHT);
             return true;
         });
 
         stage->$(".dpad_right").set_event_callback("mouseup", [=]() -> bool {
-            signal_right_up_();
+            signal_hat_changed_(HAT_POSITION_CENTERED);
             return true;
         });
     }
@@ -173,7 +173,6 @@ bool VirtualGamepad::init() {
             return true;
         });
     }
-
 
     camera_id_ = window_.new_camera_with_orthographic_projection();
 

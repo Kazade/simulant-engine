@@ -368,6 +368,11 @@ void InputController::init_virtual_joypad() {
     window_.virtual_joypad()->signal_button_up().connect([=](int btn) {
         joypad(joypads_.size())._handle_button_up_event(btn);
     });
+
+    window_.virtual_joypad()->signal_hat_changed().connect([=](HatPosition pos) {
+        joypad(joypads_.size())._handle_hat_changed_event(0, pos);
+    });
+
     //FIXME: Connect signals to window virtual joypad
 }
 

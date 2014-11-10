@@ -117,15 +117,15 @@ typedef uint8_t Hat;
 // typedef uint8_t HatPosition;
 // Match SDL codes
 enum HatPosition {
-    Centered = 0,
-    Up = 1,
-    Right = 2,
-    Down = 4,
-    Left = 8,
-    RightUp = Right + Up,
-    RightDown = Right + Down,
-    LeftUp = Left + Up,
-    LeftDown = Left + Down
+    HAT_POSITION_CENTERED = 0,
+    HAT_POSITION_UP = 1,
+    HAT_POSITION_RIGHT = 2,
+    HAT_POSITION_DOWN = 4,
+    HAT_POSITION_LEFT = 8,
+    HAT_POSITION_RIGHT_UP = HAT_POSITION_RIGHT | HAT_POSITION_UP,
+    HAT_POSITION_RIGHT_DOWN = HAT_POSITION_RIGHT | HAT_POSITION_DOWN,
+    HAT_POSITION_LEFT_UP = HAT_POSITION_LEFT | HAT_POSITION_UP,
+    HAT_POSITION_LEFT_DOWN = HAT_POSITION_LEFT | HAT_POSITION_DOWN
 };
 
 

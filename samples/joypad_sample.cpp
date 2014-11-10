@@ -147,7 +147,7 @@ int main(int argc, const char *argv[]) {
     joypad.hat_changed_connect(0, [=](kglt::HatPosition position, kglt::Hat hat) mutable {
             std::cout << "Hat: " << (int) hat << std::endl;
             std::cout << "Position " << (int) position << std::endl;
-            if (position == kglt::HatPosition::Down)
+            if (position == kglt::HAT_POSITION_DOWN)
                 std::cout << "LeftDown" << std::endl;
     });
 
