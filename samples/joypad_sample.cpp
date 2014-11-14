@@ -85,9 +85,9 @@ int main(int argc, const char *argv[]) {
     // Thanks to other samples
     auto ui = window->ui_stage();
     ui->set_styles("body { font-family: \"Ubuntu\"; } .thing { font-size: 14; padding-left: 10;};");
-    ui->append("<p>").text("Left x-y axis move the capsule.");
-    ui->append("<p>").text("Right x-y axis rotate the capsule.");
-    ui->append("<p>").text("Button 0 (A) reset the capsule.");
+    ui->append("<p>").text("Left x-y axis move the cube.");
+    ui->append("<p>").text("Right x-y axis rotate the cube.");
+    ui->append("<p>").text("Button 0 (A) reset the cube.");
     ui->$("p").add_class("thing");
 
     ///Shortcut function for loading images
@@ -102,9 +102,7 @@ int main(int argc, const char *argv[]) {
         light->set_attenuation_from_range(10.0);
     }
 
-    // NOTE: I don't know yet how to manage this kind of pointer-reference system
     actor_id = window->stage()->geom_factory().new_cube(2);
-    // actor_id = stage.geom_factory().new_capsule(1,4);
 
     window->stage()->actor(actor_id)->mesh()->set_material_id(matid);
     window->stage()->actor(actor_id)->set_absolute_position(pos);
@@ -112,44 +110,50 @@ int main(int argc, const char *argv[]) {
     // It would be nice to check if a joypad is connected
     // and the create the reference..
     //
-    //if (window->joypad_count() > 0)
-    kglt::Joypad& joypad = window->joypad(0);
 
-    // Currently A button on XBOX Controller
-    joypad.button_pressed_connect(XBoxButtons::RightStick, [=](kglt::Button button) mutable {
-            rot.x = -rot.x;
-            rot.y = -rot.y;
-    });
-    joypad.button_pressed_connect(1, [&](kglt::Button button) mutable {
-            /* Reset positions and rotations */
-            pos = { 0, 0, -5.f };
-            // rot = { 0, 0 };
+    window->enable_virtual_joypad(kglt::VIRTUAL_DPAD_DIRECTIONS_TWO, 2);
 
-            window->stage()->actor(actor_id)->set_absolute_rotation(kglt::Degrees(0), 0, 0, pos.z);
-            window->stage()->actor(actor_id)->set_absolute_position(pos);
-    });
+    for(int i = 0; i < window->joypad_count(); ++i) {
+        kglt::Joypad& joypad = window->joypad(i);
 
-    // Left x-axis
-    joypad.axis_while_nonzero_connect(0, joypad_axis_left);
-    // Left y-axis
-    joypad.axis_while_nonzero_connect(1, joypad_axis_left);
-    // Right x-axis
-    joypad.axis_while_nonzero_connect(2, joypad_axis_right);
-    // Right y-axis
-    joypad.axis_while_nonzero_connect(4, [=](kglt::AxisRange range, kglt::Axis) mutable {
-            if (range > 0)
-                std::cout << (float) range << std::endl;
-    });
+        // Currently A button on XBOX Controller
+        joypad.button_pressed_connect(XBoxButtons::RightStick, [=](kglt::Button button) mutable {
+                rot.x = -rot.x;
+                rot.y = -rot.y;
+        });
+        joypad.button_pressed_connect(1, [&](kglt::Button button) mutable {
+                /* Reset positions and rotations */
+                pos = { 0, 0, -5.f };
+                // rot = { 0, 0 };
 
-    // Triggers should work too
-    // NOTE: horizontal axis have an even number..
-    // Hat experimental
-    joypad.hat_changed_connect(0, [=](kglt::HatPosition position, kglt::Hat hat) mutable {
+                window->stage()->actor(actor_id)->set_absolute_rotation(kglt::Degrees(0), 0, 0, pos.z);
+                window->stage()->actor(actor_id)->set_absolute_position(pos);
+        });
+
+        // Left x-axis
+        joypad.axis_while_nonzero_connect(0, joypad_axis_left);
+        // Left y-axis
+        joypad.axis_while_nonzero_connect(1, joypad_axis_left);
+        // Right x-axis
+        joypad.axis_while_nonzero_connect(2, joypad_axis_right);
+        // Right y-axis
+        joypad.axis_while_nonzero_connect(4, [=](kglt::AxisRange range, kglt::Axis) mutable {
+                if (range > 0)
+                    std::cout << (float) range << std::endl;
+        });
+
+
+        auto hat_cb = [=](kglt::HatPosition position, kglt::Hat hat) mutable {
             std::cout << "Hat: " << (int) hat << std::endl;
             std::cout << "Position " << (int) position << std::endl;
-            if (position == kglt::HAT_POSITION_DOWN)
-                std::cout << "LeftDown" << std::endl;
-    });
+        };
+
+        // Triggers should work too
+        // NOTE: horizontal axis have an even number..
+        // Hat experimental
+        joypad.hat_changed_connect(0, hat_cb);
+        joypad.hat_while_not_centered_connect(0, hat_cb);
+    }
 
     while(window->run_frame()) {
         auto dt = window->delta_time();

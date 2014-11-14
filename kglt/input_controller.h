@@ -150,6 +150,7 @@ public:
     InputConnection button_while_down_connect(Button button, JoypadButtonDownCallback callback);
 
     InputConnection hat_changed_connect(Hat hat, JoypadHatCallback callback);
+    InputConnection hat_while_not_centered_connect(Hat hat, JoypadHatCallback callback);
 
 private:
     typedef std::pair<InputConnection, JoypadCallback> AxisSignalEntry;
@@ -168,6 +169,7 @@ private:
 
     std::map<Axis, int32_t> axis_state_;
     std::map<Button, bool> button_state_;
+    std::map<Hat, HatPosition> hat_state_;
 
     std::map<Axis, std::map<InputConnection, JoypadCallback> > axis_changed_signals_;
     std::map<Axis, std::map<InputConnection, JoypadCallback> > axis_while_nonzero_signals_;
@@ -179,6 +181,7 @@ private:
     std::map<Button, std::map<InputConnection, JoypadButtonDownCallback>> button_down_signals_;
 
     std::map<Hat, std::map<InputConnection, JoypadHatCallback> > hat_changed_signals_;
+    std::map<Hat, std::map<InputConnection, JoypadHatCallback> > hat_while_not_centered_signals_;
 
     friend class InputController;
 };

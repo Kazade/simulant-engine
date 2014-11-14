@@ -214,6 +214,12 @@ InputConnection Joypad::hat_changed_connect(Hat hat, JoypadHatCallback callback)
     return c;
 }
 
+InputConnection Joypad::hat_while_not_centered_connect(Hat hat, JoypadHatCallback callback) {
+    InputConnection c = new_input_connection();
+    hat_while_not_centered_signals_[hat][c] = callback;
+    return c;
+}
+
 void Joypad::_handle_button_down_event(Button button) {
     if(container::contains(button_pressed_signals_, button)) {
         for(ButtonSignalEntry entry: button_pressed_signals_[button]) {
@@ -250,6 +256,8 @@ void Joypad::_handle_hat_changed_event(Hat hat, HatPosition position) {
             entry.second(position, hat);
         }
     }
+
+    hat_state_[hat] = position;
 }
 
 void Joypad::_update(double dt) {
@@ -271,6 +279,15 @@ void Joypad::_update(double dt) {
         if(axis_state < -jitter_value_) {
             for(AxisSignalEntry entry: axis_while_below_zero_signals_[axis]) {
                 entry.second(float(axis_state) / float(32768), axis);
+            }
+        }
+    }
+
+    for(std::pair<Hat, HatPosition> p: hat_state_) {
+        HatPosition pos = p.second;
+        if(p.second != HAT_POSITION_CENTERED) {
+            for(auto entry: hat_while_not_centered_signals_[p.first]) {
+                entry.second(pos, p.first);
             }
         }
     }
