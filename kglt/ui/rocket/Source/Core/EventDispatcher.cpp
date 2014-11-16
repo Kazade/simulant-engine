@@ -14,7 +14,7 @@
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,10 +27,10 @@
 
 #include "precompiled.h"
 #include "EventDispatcher.h"
-#include <Rocket/Core/Element.h>
-#include <Rocket/Core/Event.h>
-#include <Rocket/Core/EventListener.h>
-#include <Rocket/Core/Factory.h>
+#include "../../Include/Rocket/Core/Element.h"
+#include "../../Include/Rocket/Core/Event.h"
+#include "../../Include/Rocket/Core/EventListener.h"
+#include "../../Include/Rocket/Core/Factory.h"
 
 namespace Rocket {
 namespace Core {
@@ -122,7 +122,7 @@ bool EventDispatcher::DispatchEvent(Element* target_element, const String& name,
 	Elements elements;
 
 	Element* walk_element = target_element->GetParentNode();
-	while (walk_element)
+	while (walk_element) 
 	{
 		elements.push_back(walk_element);
 		walk_element = walk_element->GetParentNode();
@@ -131,7 +131,7 @@ bool EventDispatcher::DispatchEvent(Element* target_element, const String& name,
 	event->SetPhase(Event::PHASE_CAPTURE);
 	// Capture phase - root, to target (only events that have registered as capture events)
 	// Note: We walk elements in REVERSE as they're placed in the list from the elements parent to the root
-	for (int i = elements.size() - 1; i >= 0 && event->IsPropagating(); i--)
+	for (int i = (int)elements.size() - 1; i >= 0 && event->IsPropagating(); i--) 
 	{
 		EventDispatcher* dispatcher = elements[i]->GetEventDispatcher();
 		event->SetCurrentElement(elements[i]);
@@ -139,18 +139,18 @@ bool EventDispatcher::DispatchEvent(Element* target_element, const String& name,
 	}
 
 	// Target phase - direct at the target
-	if (event->IsPropagating())
+	if (event->IsPropagating()) 
 	{
 		event->SetPhase(Event::PHASE_TARGET);
 		event->SetCurrentElement(target_element);
 		TriggerEvents(event);
 	}
 
-	if (event->IsPropagating())
+	if (event->IsPropagating()) 
 	{
 		event->SetPhase(Event::PHASE_BUBBLE);
 		// Bubble phase - target to root (normal event bindings)
-		for (size_t i = 0; i < elements.size() && event->IsPropagating(); i++)
+		for (size_t i = 0; i < elements.size() && event->IsPropagating(); i++) 
 		{
 			EventDispatcher* dispatcher = elements[i]->GetEventDispatcher();
 			event->SetCurrentElement(elements[i]);
@@ -175,7 +175,7 @@ void EventDispatcher::TriggerEvents(Event* event)
 		if (event->GetPhase() == Event::PHASE_TARGET)
 		{
 			// Fire all listeners waiting for bubble events before we send the event to the target itself.
-			for (size_t i = 0; i < listeners.size() && event->IsPropagating(); i++)
+			for (size_t i = 0; i < listeners.size() && event->IsPropagating(); i++) 
 			{
 				if (!listeners[i].in_capture_phase)
 				{
@@ -188,7 +188,7 @@ void EventDispatcher::TriggerEvents(Event* event)
 				element->ProcessEvent(*event);
 
 			// Fire all listeners waiting for capture events.
-			for (size_t i = 0; i < listeners.size() && event->IsPropagating(); i++)
+			for (size_t i = 0; i < listeners.size() && event->IsPropagating(); i++) 
 			{
 				if (listeners[i].in_capture_phase)
 					listeners[i].listener->ProcessEvent(*event);
@@ -200,7 +200,7 @@ void EventDispatcher::TriggerEvents(Event* event)
 		{
 			bool in_capture_phase = event->GetPhase() == Event::PHASE_CAPTURE;
 
-			for (size_t i = 0; i < listeners.size() && event->IsPropagating(); i++)
+			for (size_t i = 0; i < listeners.size() && event->IsPropagating(); i++) 
 			{
 				// If we're in the correct phase, fire the event
 				if (listeners[i].in_capture_phase == in_capture_phase)

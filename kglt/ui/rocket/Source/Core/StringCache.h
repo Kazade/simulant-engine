@@ -28,7 +28,7 @@
 #ifndef ROCKETCORESTRINGCACHE_H
 #define ROCKETCORESTRINGCACHE_H
 
-#include <Rocket/Core/String.h>
+#include "../../Include/Rocket/Core/String.h"
 
 namespace Rocket {
 namespace Core {
@@ -118,6 +118,12 @@ extern const String DRAGOUT;
 extern const String DRAGEND;
 extern const String DRAGOVER;
 extern const String RESIZE;
+
+extern const String TOUCHDOWN;
+extern const String TOUCHUP;
+extern const String TOUCHOVER;
+extern const String TOUCHOUT;
+extern const String TOUCHMOVE;
 
 }
 }

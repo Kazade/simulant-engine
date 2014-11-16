@@ -25,41 +25,47 @@
  *
  */
 
-#include "precompiled.h"
-#include <Rocket/Core/Types.h>
+#ifndef ROCKETCOREPYTHONELEMENTDOCUMENTWRAPPER_H
+#define ROCKETCOREPYTHONELEMENTDOCUMENTWRAPPER_H
+
+#include "../../../Include/Rocket/Core/Python/ElementWrapper.h"
+#include "../../../Include/Rocket/Core/ElementDocument.h"
 
 namespace Rocket {
 namespace Core {
+namespace Python {
 
-Vector2i operator*(int lhs, const Vector2i& rhs)
+/**
+	Document Element Wrapper
+
+	Adds support for inline scripts within a document.
+
+	@author Lloyd Weehuizen
+ */
+
+class ElementDocumentWrapper : public ElementWrapper< ElementDocument >
 {
-	return Vector2i(lhs * rhs.x, lhs * rhs.y);
-}
+public:
+	ElementDocumentWrapper(PyObject* self, const char* tag);
+	virtual ~ElementDocumentWrapper();
 
-Vector2f operator*(float lhs, const Vector2f& rhs)
-{
-	return Vector2f(lhs * rhs.x, lhs * rhs.y);
-}
+	/// Load a python script into this document
+	virtual void LoadScript(Rocket::Core::Stream* stream, const Rocket::Core::String& source_name);
 
-template <>
-Vector2< float > Vector2< float >::Normalise() const
-{
-	float magnitude = Magnitude();
-	if (Math::IsZero(magnitude))
-		return *this;
+	/// Get the namespace for this module
+	PyObject* GetModuleNamespace();
 
-	return *this / magnitude;
-}
+private:
+	// Python module that represents this document
+	PyObject* module;
+	PyObject* module_namespace;
 
-template <>
-Vector2< float > Vector2< float >::Rotate(float theta) const
-{
-	float cos_theta = Math::Cos(theta);
-	float sin_theta = Math::Sin(theta);
-
-	return Vector2< float >(cos_theta * x - sin_theta * y,
-							sin_theta * x + cos_theta * y);
-}
+	// Preprocess the python code
+	void PreprocessCode(Rocket::Core::String& code, Rocket::Core::Stream* stream);
+};
 
 }
 }
+}
+
+#endif
