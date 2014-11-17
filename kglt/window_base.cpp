@@ -398,4 +398,22 @@ void WindowBase::handle_mouse_button_up(int button) {
     });
 }
 
+void WindowBase::handle_touch_down(int finger_id, int x, int y) {
+    UIStageManager::apply_func_to_objects([=](UIStage* object) {
+        object->__handle_touch_down(finger_id, x, y);
+    });
+}
+
+void WindowBase::handle_touch_motion(int finger_id, int x, int y) {
+    UIStageManager::apply_func_to_objects([=](UIStage* object) {
+        object->__handle_touch_motion(finger_id, x, y);
+    });
+}
+
+void WindowBase::handle_touch_up(int finger_id, int x, int y) {
+    UIStageManager::apply_func_to_objects([=](UIStage* object) {
+        object->__handle_touch_up(finger_id, x, y);
+    });
+}
+
 }

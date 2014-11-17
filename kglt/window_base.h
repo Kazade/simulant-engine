@@ -174,6 +174,10 @@ protected:
     void handle_mouse_motion(int x, int y, bool pos_normalized=false);
     void handle_mouse_button_down(int button);
     void handle_mouse_button_up(int button);
+
+    void handle_touch_down(int finger_id, int x, int y);
+    void handle_touch_motion(int finger_id, int x, int y);
+    void handle_touch_up(int finger_id, int x, int y);
 private:    
     CameraID default_ui_camera_id_;
 

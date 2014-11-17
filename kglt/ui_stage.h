@@ -37,6 +37,10 @@ public:
     void __handle_mouse_move(int x, int y);
     void __handle_mouse_down(int button);
     void __handle_mouse_up(int button);
+
+    void __handle_touch_up(int finger_id, int x, int y);
+    void __handle_touch_motion(int finger_id, int x, int y);
+    void __handle_touch_down(int finger_id, int x, int y);
 private:
     WindowBase& window_;
 
