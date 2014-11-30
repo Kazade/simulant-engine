@@ -1,3 +1,4 @@
+#include <kazbase/exceptions.h>
 #include <kazbase/logging.h>
 #include "utils/glcompat.h"
 #include "utils/gl_error.h"
@@ -40,21 +41,31 @@ int event_filter(void* user_data, SDL_Event* event) {
             _this->stop_running();
         break;
         case SDL_APP_WILLENTERBACKGROUND: {
-            L_INFO("Application is entering the background, destroying context");
+            unicode sdl_err = SDL_GetError();
+            if(!sdl_err.empty()) {
+                L_ERROR(_u("Something went wrong with SDL: ") + sdl_err);
+            }
+
+            L_INFO("Application is entering the background, disabling rendering");
+
+
             _this->set_paused(true);
             {
                 //See WindowBase::context_lock_ for details
                 std::lock_guard<std::mutex> context_lock(_this->context_lock());
                 _this->set_has_context(false);
-            //    SDL_GL_DeleteContext(_this->context_);
             }
         } break;
         case SDL_APP_DIDENTERFOREGROUND: {
-            L_INFO("Application is entering the foreground, creating context");
+            unicode sdl_err = SDL_GetError();
+            if(!sdl_err.empty()) {
+                L_ERROR(_u("Something went wrong with SDL: ") + sdl_err);
+            }
+
+            L_INFO("Application is entering the foreground, enabling rendering");
             {
                 //See WindowBase::context_lock_ for details
                 std::lock_guard<std::mutex> context_lock(_this->context_lock());
-           //     _this->context_ = SDL_GL_CreateContext(_this->screen_);
                 _this->set_has_context(true);
             }
             //FIXME: Reload textures and shaders
@@ -120,23 +131,15 @@ void Window::check_events() {
 }
 
 bool Window::create_window(int width, int height, int bpp, bool fullscreen) {
-//    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-//    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-
     if(SDL_Init(SDL_INIT_EVERYTHING) != 0) {
         L_ERROR(_u("Unable to initialize SDL {0}").format(SDL_GetError()));
         return false;
     }
 
-
     int32_t flags = SDL_WINDOW_OPENGL;
     if(fullscreen) {
         flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
     }
-
-#ifdef __ANDROID__
-    flags |= SDL_WINDOW_BORDERLESS | SDL_WINDOW_RESIZABLE;
-#endif
 
     screen_ = SDL_CreateWindow(
         "",
@@ -148,13 +151,8 @@ bool Window::create_window(int width, int height, int bpp, bool fullscreen) {
     assert(screen_);
 
 #ifndef __ANDROID__
-    //OpenGL 3.1 baby!
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
-#else
-    SDL_GL_SetAttribute (SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-#endif
 
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
@@ -163,6 +161,11 @@ bool Window::create_window(int width, int height, int bpp, bool fullscreen) {
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+
+    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
+#else
+    SDL_GL_SetAttribute (SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+#endif
 
     context_ = SDL_GL_CreateContext(screen_);
 
