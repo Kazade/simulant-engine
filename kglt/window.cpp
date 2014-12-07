@@ -108,18 +108,23 @@ void Window::check_events() {
                 handle_mouse_motion(event.motion.x, event.motion.y);
             } break;
             case SDL_MOUSEBUTTONDOWN: {
+                L_INFO(_u("MOUSEDOWN received: {0}").format(event.button.button));
                 handle_mouse_button_down(event.button.button);
             } break;
             case SDL_MOUSEBUTTONUP: {
+                L_INFO(_u("MOUSEUP received: {0}").format(event.button.button));
                 handle_mouse_button_up(event.button.button);
             } break;
             case SDL_FINGERDOWN: {
+                L_INFO(_u("FINGERDOWN received: {0}, {1}").format(event.tfinger.x, event.tfinger.y));
                 handle_touch_down(event.tfinger.fingerId, event.tfinger.x, event.tfinger.y);
             } break;
             case SDL_FINGERMOTION: {
+                L_INFO(_u("FINGERMOTION received: {0}, {1}").format(event.tfinger.x, event.tfinger.y));
                 handle_touch_motion(event.tfinger.fingerId, event.tfinger.x, event.tfinger.y);
             } break;
             case SDL_FINGERUP: {
+                L_INFO(_u("FINGERUP received: {0}, {1}").format(event.tfinger.x, event.tfinger.y));
                 handle_touch_up(event.tfinger.fingerId, event.tfinger.x, event.tfinger.y);
             } break;
 

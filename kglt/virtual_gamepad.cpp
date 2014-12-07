@@ -137,22 +137,22 @@ bool VirtualGamepad::init() {
     if(this->directions_ == VIRTUAL_DPAD_DIRECTIONS_TWO) {
         stage->$(".dpad_two").css("display", "inline-block");
 
-        stage->$(".dpad_left").set_event_callback("mousedown", [=]() -> bool {
+        stage->$(".dpad_left").set_event_callback("touchdown", [=]() -> bool {
             signal_hat_changed_(HAT_POSITION_LEFT);
             return true;
         });
 
-        stage->$(".dpad_left").set_event_callback("mouseup", [=]() -> bool {
+        stage->$(".dpad_left").set_event_callback("touchup", [=]() -> bool {
             signal_hat_changed_(HAT_POSITION_CENTERED);
             return true;
         });
 
-        stage->$(".dpad_right").set_event_callback("mousedown", [=]() -> bool {
+        stage->$(".dpad_right").set_event_callback("touchdown", [=]() -> bool {
             signal_hat_changed_(HAT_POSITION_RIGHT);
             return true;
         });
 
-        stage->$(".dpad_right").set_event_callback("mouseup", [=]() -> bool {
+        stage->$(".dpad_right").set_event_callback("touchup", [=]() -> bool {
             signal_hat_changed_(HAT_POSITION_CENTERED);
             return true;
         });
@@ -164,11 +164,11 @@ bool VirtualGamepad::init() {
         stage->$(klass).css("display", "inline-block");
 
         //Forward the events from the UI on to the signals
-        stage->$(klass).set_event_callback("mousedown", [=]() -> bool {
+        stage->$(klass).set_event_callback("touchdown", [=]() -> bool {
             signal_button_down_(i - 1);
             return true;
         });
-        stage->$(klass).set_event_callback("mouseup", [=]() -> bool {
+        stage->$(klass).set_event_callback("touchup", [=]() -> bool {
             signal_button_up_(i - 1);
             return true;
         });

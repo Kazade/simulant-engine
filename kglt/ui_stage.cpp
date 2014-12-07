@@ -73,15 +73,15 @@ void UIStage::__handle_mouse_up(int button) {
 }
 
 void UIStage::__handle_touch_up(int finger_id, int x, int y) {
-    interface_->impl()->context_->ProcessTouchUp(finger_id - 1, x, y, 0);
+    interface_->impl()->context_->ProcessTouchUp(finger_id, x, y, 0);
 }
 
 void UIStage::__handle_touch_motion(int finger_id, int x, int y) {
-    interface_->impl()->context_->ProcessTouchMove(finger_id - 1, x, y, 0);
+    interface_->impl()->context_->ProcessTouchMove(finger_id, x, y, 0);
 }
 
 void UIStage::__handle_touch_down(int finger_id, int x, int y) {
-    interface_->impl()->context_->ProcessTouchDown(finger_id - 1, x, y, 0);
+    interface_->impl()->context_->ProcessTouchDown(finger_id, x, y, 0);
 }
 
 }

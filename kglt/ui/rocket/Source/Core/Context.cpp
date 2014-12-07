@@ -14,7 +14,7 @@
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -34,6 +34,7 @@
 #include "../../Include/Rocket/Core/StreamMemory.h"
 #include <algorithm>
 #include <iterator>
+#include <kazbase/logging.h>
 
 namespace Rocket {
 namespace Core {
@@ -121,7 +122,7 @@ void Context::SetDimensions(const Vector2i& _dimensions)
 				document->UpdatePosition();
 			}
 		}
-		
+
 		clip_dimensions = dimensions;
 	}
 }
@@ -217,7 +218,7 @@ ElementDocument* Context::CreateDocument(const String& tag)
 
 // Load a document into the context.
 ElementDocument* Context::LoadDocument(const String& document_path)
-{	
+{
 	// Open the stream based on the file path
 	StreamFile* stream = new StreamFile();
 	if (!stream->Open(document_path))
@@ -630,18 +631,18 @@ void Context::ProcessMouseMove(int x, int y, int key_modifier_state)
 		}
 	}
 }
-	
+
 static Element* FindFocusElement(Element* element)
 {
 	ElementDocument* owner_document = element->GetOwnerDocument();
 	if (!owner_document || owner_document->GetProperty< int >(FOCUS) == FOCUS_NONE)
 		return NULL;
-	
+
 	while (element && element->GetProperty< int >(FOCUS) == FOCUS_NONE)
 	{
 		element = element->GetParentNode();
 	}
-	
+
 	return element;
 }
 
@@ -655,7 +656,7 @@ void Context::ProcessMouseButtonDown(int button_index, int key_modifier_state)
 	if (button_index == 0)
 	{
 		Element* new_focus = *hover;
-		
+
 		// Set the currently hovered element to focus if it isn't already the focus.
 		if (hover)
 		{
@@ -671,7 +672,7 @@ void Context::ProcessMouseButtonDown(int button_index, int key_modifier_state)
 		active = new_focus;
 
 		bool propogate = true;
-		
+
 		// Call 'onmousedown' on every item in the hover chain, and copy the hover chain to the active chain.
 		if (hover)
 			propogate = hover->DispatchEvent(MOUSEDOWN, parameters, true);
@@ -694,7 +695,7 @@ void Context::ProcessMouseButtonDown(int button_index, int key_modifier_state)
 			{
 				last_click_element = *active;
 				last_click_time = click_time;
-			
+
 			}
 		}
 
@@ -837,6 +838,9 @@ void Context::ProcessTouchMove(int finger_id, int x, int y, int key_modifier_sta
 	GenerateTouchEventParameters(parameters, finger_id);
 	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
 
+
+       L_DEBUG(_u("Processing hover chain for finger: {0}").format(finger_id));
+
 	// Update the current hover chain. This will send all necessary 'ontouchout' and 'ontouchover' messages.
 	UpdateTouchHoverChain(finger_id, parameters);
 
@@ -845,6 +849,8 @@ void Context::ProcessTouchMove(int finger_id, int x, int y, int key_modifier_sta
 	{
 		if (info.hover)
 		{
+
+		        L_DEBUG(_u("Dispatching touch move event"));
 			info.hover->DispatchEvent(TOUCHMOVE, parameters, true);
 		}
 	}
@@ -931,6 +937,7 @@ void Context::ProcessTouchUp(int finger_id, int x, int y, int key_modifier_state
 		// The elements in the new hover chain have the 'onmouseup' event called on them.
 		if (info.hover)
 		{
+		        L_DEBUG(_u("Dispatching touch up event"));
 			hover->DispatchEvent(TOUCHUP, parameters, true);
 		}
 
@@ -951,6 +958,7 @@ void Context::ProcessTouchUp(int finger_id, int x, int y, int key_modifier_state
 		// Not the first finger, so we're not doing any special processing.
 		if (info.hover)
 		{
+		        L_DEBUG(_u("Dispatching touch up event"));
 			info.hover->DispatchEvent(TOUCHUP, parameters, true);
 		}
 	}
@@ -961,19 +969,19 @@ RenderInterface* Context::GetRenderInterface() const
 {
 	return render_interface;
 }
-	
+
 // Gets the current clipping region for the render traversal
 bool Context::GetActiveClipRegion(Vector2i& origin, Vector2i& dimensions) const
 {
 	if (clip_dimensions.x < 0 || clip_dimensions.y < 0)
 		return false;
-	
+
 	origin = clip_origin;
 	dimensions = clip_dimensions;
-	
+
 	return true;
 }
-	
+
 // Sets the current clipping region for the render traversal
 void Context::SetActiveClipRegion(const Vector2i& origin, const Vector2i& dimensions)
 {
@@ -986,7 +994,7 @@ void Context::SetInstancer(ContextInstancer* _instancer)
 {
 	ROCKET_ASSERT(instancer == NULL);
 	instancer = _instancer;
-	instancer->AddReference();	
+	instancer->AddReference();
 }
 
 // Internal callback for when an element is removed from the hierarchy.
@@ -1380,7 +1388,7 @@ void Context::GenerateKeyModifierEventParameters(Dictionary& parameters, int key
 
 // Builds the parameters for a drag event.
 void Context::GenerateDragEventParameters(Dictionary& parameters)
-{	
+{
 	parameters.Set("drag_element", (void*) *drag);
 }
 
