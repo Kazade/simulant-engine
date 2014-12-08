@@ -867,60 +867,53 @@ void Context::ProcessTouchDown(int finger_id, int x, int y, int key_modifier_sta
 	GenerateTouchEventParameters(parameters, finger_id);
 	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
 
-	if (finger_id == 0)
+	Element* new_focus = *info.hover;
+
+	// Set the currently hovered element to focus if it isn't already the focus.
+	if (info.hover)
 	{
-		Element* new_focus = *info.hover;
-
-		// Set the currently hovered element to focus if it isn't already the focus.
-		if (info.hover)
+		new_focus = FindFocusElement(*info.hover);
+		if (new_focus && new_focus != *focus)
 		{
-			new_focus = FindFocusElement(*info.hover);
-			if (new_focus && new_focus != *focus)
-			{
-				if (!new_focus->Focus())
-					return;
-			}
+			if (!new_focus->Focus())
+				return;
 		}
-
-		// Save the just-pressed-on element as the pressed element.
-		active = new_focus;
-
-		bool propogate = true;
-
-		// Call 'ontouchdown' on every item in the hover chain, and copy the hover chain to the active chain.
-		if (info.hover)
-			propogate = hover->DispatchEvent(TOUCHDOWN, parameters, true);
-
-		if (propogate)
-		{
-			// Check for a double-click on an element; if one has occured, we send the 'dblclick' event to the hover
-			// element. If not, we'll start a timer to catch the next one.
-			float click_time = GetSystemInterface()->GetElapsedTime();
-			if (active == info.last_click_element &&
-				click_time - info.last_click_time < DOUBLE_CLICK_TIME)
-			{
-				if (info.hover)
-					propogate = info.hover->DispatchEvent(DBLCLICK, parameters, true);
-
-				info.last_click_element = NULL;
-				info.last_click_time = 0;
-			}
-			else
-			{
-				info.last_click_element = *active;
-				info.last_click_time = click_time;
-			}
-		}
-
-		for (ElementSet::iterator itr = info.hover_chain.begin(); itr != info.hover_chain.end(); ++itr)
-			active_chain.push_back((*itr));
 	}
-	else
+
+	// Save the just-pressed-on element as the pressed element.
+	active = new_focus;
+
+	bool propogate = true;
+
+	// Call 'ontouchdown' on every item in the hover chain, and copy the hover chain to the active chain.
+	if (info.hover)
+		propogate = hover->DispatchEvent(TOUCHDOWN, parameters, true);
+
+	if (propogate)
 	{
-		// Not the primary finger, so we're not doing any special processing.
-		if (info.hover)
-			info.hover->DispatchEvent(TOUCHDOWN, parameters, true);
+		// Check for a double-click on an element; if one has occured, we send the 'dblclick' event to the hover
+		// element. If not, we'll start a timer to catch the next one.
+		float click_time = GetSystemInterface()->GetElapsedTime();
+		if (active == info.last_click_element &&
+			click_time - info.last_click_time < DOUBLE_CLICK_TIME)
+		{
+			if (info.hover)
+				propogate = info.hover->DispatchEvent(DBLCLICK, parameters, true);
+
+			info.last_click_element = NULL;
+			info.last_click_time = 0;
+		}
+		else
+		{
+			info.last_click_element = *active;
+			info.last_click_time = click_time;
+		}
 	}
+
+	for (ElementSet::iterator itr = info.hover_chain.begin(); itr != info.hover_chain.end(); ++itr) {
+		info.active_chain.push_back((*itr));
+	}
+
 }
 
 void Context::ProcessTouchUp(int finger_id, int x, int y, int key_modifier_state)
@@ -931,37 +924,26 @@ void Context::ProcessTouchUp(int finger_id, int x, int y, int key_modifier_state
 	GenerateTouchEventParameters(parameters, finger_id);
 	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
 
-	// Process primary click.
-	if (finger_id == 0)
-	{
-		// The elements in the new hover chain have the 'onmouseup' event called on them.
-		if (info.hover)
-		{
-		        L_DEBUG(_u("Dispatching touch up event"));
-			hover->DispatchEvent(TOUCHUP, parameters, true);
-		}
 
-		// If the active element (the one that was being hovered over when the finger was pressed) is still being
-		// hovered over, we click it.
-		if (info.hover && active && active == FindFocusElement(*info.hover))
-		{
-			active->DispatchEvent(CLICK, parameters, true);
-		}
-
-		// Unset the 'active' pseudo-class on all the elements in the active chain; because they may not necessarily
-		// have had 'onmouseup' called on them, we can't guarantee this has happened already.
-		std::for_each(active_chain.begin(), active_chain.end(), PseudoClassFunctor("active", false));
-		active_chain.clear();
-	}
-	else
+	// The elements in the new hover chain have the 'ontouchup' event called on them.
+	if (info.hover)
 	{
-		// Not the first finger, so we're not doing any special processing.
-		if (info.hover)
-		{
-		        L_DEBUG(_u("Dispatching touch up event"));
-			info.hover->DispatchEvent(TOUCHUP, parameters, true);
-		}
+		L_DEBUG(_u("Dispatching touch up event"));
+		hover->DispatchEvent(TOUCHUP, parameters, true);
 	}
+
+	// If the active element (the one that was being hovered over when the finger was pressed) is still being
+	// hovered over, we click it.
+	if (info.hover && active && active == FindFocusElement(*info.hover))
+	{
+		active->DispatchEvent(CLICK, parameters, true);
+	}
+
+	// Unset the 'active' pseudo-class on all the elements in the active chain; because they may not necessarily
+	// have had 'ontouchup' called on them, we can't guarantee this has happened already.
+	std::for_each(info.active_chain.begin(), info.active_chain.end(), PseudoClassFunctor("active", false));
+	info.active_chain.clear();
+
 }
 
 // Gets the context's render interface.

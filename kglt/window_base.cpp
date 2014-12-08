@@ -416,4 +416,14 @@ void WindowBase::handle_touch_up(int finger_id, int x, int y) {
     });
 }
 
+/**
+ * @brief WindowBase::reset
+ *
+ * Destroys all stages, and UI stages, and releases all loadables. Then resets the
+ * window to its original state.
+ */
+void WindowBase::reset() {
+
+}
+
 }

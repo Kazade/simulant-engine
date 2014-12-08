@@ -148,6 +148,8 @@ public:
     void disable_virtual_joypad();
     bool has_virtual_joypad() const { return bool(virtual_gamepad_); }
     VirtualGamepad* virtual_joypad() { return virtual_gamepad_.get(); }
+
+    void reset();
 protected:
 
     void set_width(uint32_t width) { 

@@ -137,25 +137,30 @@ bool VirtualGamepad::init() {
     if(this->directions_ == VIRTUAL_DPAD_DIRECTIONS_TWO) {
         stage->$(".dpad_two").css("display", "inline-block");
 
-        stage->$(".dpad_left").set_event_callback("touchdown", [=]() -> bool {
-            signal_hat_changed_(HAT_POSITION_LEFT);
-            return true;
-        });
 
-        stage->$(".dpad_left").set_event_callback("touchup", [=]() -> bool {
-            signal_hat_changed_(HAT_POSITION_CENTERED);
-            return true;
-        });
+        for(auto evt: { "touchdown", "touchover"}) {
+            stage->$(".dpad_left").set_event_callback(evt, [=]() -> bool {
+                signal_hat_changed_(HAT_POSITION_LEFT);
+                return true;
+            });
 
-        stage->$(".dpad_right").set_event_callback("touchdown", [=]() -> bool {
-            signal_hat_changed_(HAT_POSITION_RIGHT);
-            return true;
-        });
+            stage->$(".dpad_right").set_event_callback(evt, [=]() -> bool {
+                signal_hat_changed_(HAT_POSITION_RIGHT);
+                return true;
+            });
+        }
 
-        stage->$(".dpad_right").set_event_callback("touchup", [=]() -> bool {
-            signal_hat_changed_(HAT_POSITION_CENTERED);
-            return true;
-        });
+        for(auto evt: { "touchup", "touchout"}) {
+            stage->$(".dpad_left").set_event_callback(evt, [=]() -> bool {
+                signal_hat_changed_(HAT_POSITION_CENTERED);
+                return true;
+            });
+
+            stage->$(".dpad_right").set_event_callback(evt, [=]() -> bool {
+                signal_hat_changed_(HAT_POSITION_CENTERED);
+                return true;
+            });
+        }
     }
 
     //Make the buttons visible that need to be
@@ -163,15 +168,20 @@ bool VirtualGamepad::init() {
         unicode klass = _u(".button_{0}").format(humanize(i));
         stage->$(klass).css("display", "inline-block");
 
-        //Forward the events from the UI on to the signals
-        stage->$(klass).set_event_callback("touchdown", [=]() -> bool {
-            signal_button_down_(i - 1);
-            return true;
-        });
-        stage->$(klass).set_event_callback("touchup", [=]() -> bool {
-            signal_button_up_(i - 1);
-            return true;
-        });
+        for(auto evt: { "touchdown", "touchover"}) {
+            //Forward the events from the UI on to the signals
+            stage->$(klass).set_event_callback(evt, [=]() -> bool {
+                signal_button_down_(i - 1);
+                return true;
+            });
+        }
+
+        for(auto evt: { "touchup", "touchout"}) {
+            stage->$(klass).set_event_callback(evt, [=]() -> bool {
+                signal_button_up_(i - 1);
+                return true;
+            });
+        }
     }
 
     camera_id_ = window_.new_camera_with_orthographic_projection();

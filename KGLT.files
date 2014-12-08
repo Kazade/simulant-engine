@@ -368,3 +368,4 @@ kglt/utils/vao_abstraction.h
 kglt/utils/vao_abstraction.cpp
 kglt/virtual_gamepad.h
 kglt/virtual_gamepad.cpp
+tests/test_virtual_gamepad.h
