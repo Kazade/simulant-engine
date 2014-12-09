@@ -93,7 +93,7 @@ can build complex scenes.
 
 # Documentation
 
-## The Window, Scenes and the RenderSequence
+## The Window, Stages and the RenderSequence
 
 The _Window_ owns everything (pretty much). You can do the following with a Window:
 
