@@ -7,17 +7,8 @@
 #include "global.h"
 #include "kglt/loaders/material_script.h"
 
-class MaterialScriptTest : public TestCase {
+class MaterialScriptTest : public KGLTTestCase {
 public:
-    void set_up() {
-        if(!window) {
-            window = kglt::Window::create();
-            window->set_logging_level(LOG_LEVEL_NONE);
-        }
-
-        //window->reset();
-    }
-
     void test_basic_material_script_parsing() {
         const std::string text = R"(
                 BEGIN(pass)

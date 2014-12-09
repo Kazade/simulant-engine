@@ -111,8 +111,8 @@ private:
 
 public:
     RocketRenderInterface(WindowBase& window):
-        window_(window),
-        tmp_vao_(MODIFY_REPEATEDLY_USED_FOR_RENDERING, MODIFY_REPEATEDLY_USED_FOR_RENDERING) {
+        tmp_vao_(MODIFY_REPEATEDLY_USED_FOR_RENDERING, MODIFY_REPEATEDLY_USED_FOR_RENDERING),
+        window_(window) {
 
         unicode vert_shader = window_.resource_locator().read_file("kglt/materials/ui.vert")->str();
         unicode frag_shader = window_.resource_locator().read_file("kglt/materials/ui.frag")->str();

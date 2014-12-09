@@ -6,17 +6,8 @@
 #include "kglt/kglt.h"
 #include "global.h"
 
-class MaterialTest : public TestCase {
+class MaterialTest : public KGLTTestCase {
 public:
-    void set_up() {
-        if(!window) {
-            window = kglt::Window::create();
-            window->set_logging_level(kglt::LOG_LEVEL_NONE);
-        }
-
-        //window->reset();
-    }
-
     void test_material_initialization() {
         auto mat = window->material(window->new_material());
 

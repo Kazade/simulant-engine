@@ -9,17 +9,8 @@
 #include "kglt/partitioners/octree.h"
 #include "kglt/types.h"
 
-class OctreeTest : public TestCase {
+class OctreeTest : public KGLTTestCase {
 public:
-    void set_up() {
-        if(!window) {
-            window = kglt::Window::create();
-            window->set_logging_level(LOG_LEVEL_NONE);
-        }
-
-        //window->reset();
-    }
-
     void test_moving_objects() {
         kglt::Octree tree;
 

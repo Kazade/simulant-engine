@@ -8,17 +8,8 @@
 
 using namespace kglt;
 
-class FrustumTest : public TestCase {
+class FrustumTest : public KGLTTestCase {
 public:
-    void set_up() {
-        if(!window) {
-            window = kglt::Window::create();
-            window->set_logging_level(LOG_LEVEL_NONE);
-        }
-
-        //window->reset();
-    }
-
     void test_frustum_generation() {
         Frustum frustum;
 

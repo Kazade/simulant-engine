@@ -8,17 +8,8 @@
 
 #include "kglt/gpu_program.h"
 
-class ShaderTest : public TestCase {
+class ShaderTest : public KGLTTestCase {
 public:
-    void set_up() {
-        if(!window) {
-            window = kglt::Window::create();
-            window->set_logging_level(kglt::LOG_LEVEL_NONE);
-        }
-
-        //window->reset();
-    }
-
     void test_shader() {
         kglt::GPUProgram::ptr s = kglt::GPUProgram::create();
 

@@ -6,17 +6,8 @@
 
 #include "global.h"
 
-class VertexDataTest : public TestCase {
+class VertexDataTest : public KGLTTestCase {
 public:
-    void set_up() {
-        if(!window) {
-            window = kglt::Window::create();
-            window->set_logging_level(kglt::LOG_LEVEL_NONE);
-        }
-
-        //window->reset();
-    }
-
     void test_offsets() {
         kglt::VertexData::ptr data = kglt::VertexData::create();
 

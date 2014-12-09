@@ -7,17 +7,8 @@
 #include "kglt/kglt.h"
 #include "global.h"
 
-class MeshTest : public TestCase {
+class MeshTest : public KGLTTestCase {
 public:
-    void set_up() {
-        if(!window) {
-            window = kglt::Window::create();
-            window->set_logging_level(kglt::LOG_LEVEL_NONE);
-        }
-
-        //window->reset();
-    }
-
     kglt::MeshID generate_test_mesh(AutoWeakPtr<kglt::Stage> stage) {
         kglt::MeshID mid = stage->new_mesh();
         auto mesh = stage->mesh(mid);

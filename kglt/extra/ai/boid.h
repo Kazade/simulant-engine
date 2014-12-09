@@ -35,8 +35,6 @@ private:
     Path path_;
     int32_t current_node_ = 0;
 
-    bool loop_ = false;
-
     kglt::MeshID debug_mesh_;
     kglt::ActorID debug_actor_;
     kglt::SubMeshIndex normal_points_mesh_;

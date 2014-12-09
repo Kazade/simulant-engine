@@ -5,12 +5,8 @@
 
 #include "kglt/extra/ai/curve.h"
 
-class CurveTest : public TestCase {
+class CurveTest : public KGLTTestCase {
 public:
-    void set_up() {
-
-    }
-
     void test_bezier() {
         kglt::Vec3 start_pos(-1, 0, 0);
         kglt::Vec3 start_dir(0, 1, 0);

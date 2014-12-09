@@ -36,6 +36,14 @@ public:
         return id;
     }
 
+    void manager_delete_all() {
+        for(auto p: objects_) {
+            signal_pre_delete_(*p.second, p.first);
+        }
+
+        objects_.clear();
+    }
+
     void manager_delete(ObjectIDType id) {
         if(manager_contains(id)) {
             std::lock_guard<std::recursive_mutex> lock(manager_lock_);

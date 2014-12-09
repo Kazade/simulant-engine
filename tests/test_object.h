@@ -6,17 +6,8 @@
 
 #include "global.h"
 
-class ObjectTest : public TestCase {
+class ObjectTest : public KGLTTestCase {
 public:
-    void set_up() {
-        if(!window) {
-            window = kglt::Window::create();
-            window->set_logging_level(LOG_LEVEL_NONE);
-        }
-
-        //window->reset();
-    }
-
     void test_set_absolute_rotation() {
         kglt::ActorID act = window->stage()->new_actor();
         auto actor = window->stage()->actor(act);

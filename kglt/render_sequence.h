@@ -95,6 +95,7 @@ public:
 
     Pipeline& pipeline(PipelineID pipeline);
     void delete_pipeline(PipelineID pipeline);
+    void delete_all_pipelines();
 
     void activate_pipelines(const std::vector<PipelineID>& pipelines);
     std::vector<PipelineID> active_pipelines() const;

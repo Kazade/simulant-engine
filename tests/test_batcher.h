@@ -10,13 +10,11 @@ namespace {
 
 using namespace kglt;
 
-class BatcherTest : public TestCase {
+class BatcherTest : public KGLTTestCase {
 public:
     void set_up() {
-        if(!window) {
-            window = kglt::Window::create();
-            window->set_logging_level(LOG_LEVEL_NONE);
-        }
+        KGLTTestCase::set_up();
+
         root_group_.reset(new RootGroup(*window, StageID(), CameraID()));
     }
 

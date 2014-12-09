@@ -45,6 +45,10 @@ public:
     CameraID default_camera_id() const { return default_camera_id_; }
 
     const bool has_camera(CameraID id) const;
+
+protected:
+    void create_default_camera();
+
 private:
     WindowBase* window_;
 
@@ -69,6 +73,10 @@ public:
     StageID default_stage_id() const { return default_stage_id_; }
 
     void update(double dt) override;
+
+
+protected:
+    void create_default_stage();
 
 private:
     void print_tree(GenericTreeNode* node, uint32_t& level);

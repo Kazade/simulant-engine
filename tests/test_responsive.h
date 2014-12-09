@@ -6,16 +6,11 @@
 #include "kglt/kglt.h"
 #include "global.h"
 
-class ResponsiveTest : public TestCase {
+class ResponsiveTest : public KGLTTestCase {
 public:
     void set_up() {
-        if(!window) {
-            window = kglt::Window::create();
-            window->set_logging_level(kglt::LOG_LEVEL_NONE);
-        }
-
+        KGLTTestCase::set_up();
         window->enable_physics(kglt::DefaultPhysicsEngine::create());
-        //window->reset();
     }
 
     void test_set_absolute_rotation() {

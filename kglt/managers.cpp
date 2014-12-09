@@ -66,8 +66,13 @@ uint32_t BackgroundManager::background_count() const {
 CameraManager::CameraManager(WindowBase *window):
     window_(window) {
 
+    create_default_camera();
+}
+
+void CameraManager::create_default_camera() {
     default_camera_id_ = new_camera();
 }
+
 
 CameraID CameraManager::new_camera() {
     CameraID new_camera = CameraManager::manager_new();
@@ -133,6 +138,10 @@ const bool CameraManager::has_camera(CameraID id) const {
 StageManager::StageManager(WindowBase *window):
     window_(window) {
 
+    create_default_stage();
+}
+
+void StageManager::create_default_stage() {
     default_stage_id_ = new_stage(PARTITIONER_NULL); //Create the default stage
 }
 

@@ -6,17 +6,8 @@
 
 #include "global.h"
 
-class SoundTest : public TestCase {
+class SoundTest : public KGLTTestCase {
 public:
-    void set_up() {
-        if(!window) {
-            window = kglt::Window::create();
-            window->set_logging_level(LOG_LEVEL_NONE);
-        }
-
-        //window->reset();
-    }
-
     void test_2d_sound_output() {
         auto stage = window->stage();
 

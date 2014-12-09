@@ -181,6 +181,8 @@ protected:
     void handle_touch_motion(int finger_id, int x, int y);
     void handle_touch_up(int finger_id, int x, int y);
 private:    
+    void create_defaults();
+
     CameraID default_ui_camera_id_;
 
     bool can_attach_sound_by_id() const { return false; }
