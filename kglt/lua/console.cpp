@@ -109,7 +109,7 @@ void Console::init_widget() {
         l.css("white-space", "pre");
         l.css("padding-left", "2px");
         l.css("overflow-y", "scroll");
-        l.css("overflow-x", "none");
+        l.css("overflow-x", "hidden");
         l.css("z-index", "100");
         l.css("font-family", "Ubuntu Mono");
         l.css("font-weight", "normal");

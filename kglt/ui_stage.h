@@ -1,6 +1,7 @@
 #ifndef UI_STAGE_H
 #define UI_STAGE_H
 
+#include <kazbase/signals.h>
 #include "generic/managed.h"
 #include "generic/identifiable.h"
 
@@ -21,6 +22,7 @@ public:
      */
 
     UIStage(WindowBase *parent, UIStageID id);
+    ~UIStage();
 
     ui::ElementList append(const unicode& tag);
     ui::ElementList $(const unicode& selector);
@@ -45,6 +47,7 @@ private:
     WindowBase& window_;
 
     std::shared_ptr<ui::Interface> interface_;
+    sig::connection update_conn_;
 };
 
 }

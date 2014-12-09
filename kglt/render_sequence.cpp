@@ -73,6 +73,7 @@ void RenderSequence::delete_pipeline(PipelineID pipeline) {
 
 void RenderSequence::delete_all_pipelines() {
     PipelineManager::manager_delete_all();
+    ordered_pipelines_.clear();
 }
 
 PipelineID RenderSequence::new_pipeline(StageID stage, CameraID camera, ViewportID viewport, TextureID target, int32_t priority) {

@@ -12,6 +12,7 @@ class WindowBase;
 class MessageBar : public Managed<MessageBar> {
 public:
     MessageBar(WindowBase& parent);
+    ~MessageBar();
 
     void notify_left(const unicode& message);
     void notify_right(const unicode& message);
@@ -47,6 +48,8 @@ private:
     CameraID camera_;
 
     float time_message_visible_ = 0.0;
+
+    sig::connection update_conn_;
 };
 
 }

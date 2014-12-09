@@ -60,8 +60,6 @@ WindowBase::WindowBase():
     ktiBindTimer(variable_timer_);
     ktiStartGameTimer();
 
-    set_logging_level(LOG_LEVEL_DEBUG);
-
     logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));
 }
 
@@ -118,6 +116,23 @@ void WindowBase::create_defaults() {
         default_ui_stage_id(), default_ui_camera_id_,
         ViewportID(), TextureID(), 100
     );
+
+    message_bar_ = MessageBar::create(*this);
+
+    loading_ = screens::Loading::create(*this);
+
+    //Weirdly, I had to pass the raw loading pointer here, otherwise some reference was held somewhere even after calling disconnect on the
+    //signal and wiping out the connection.
+    if(loading_update_connection_.is_connected()) {
+        loading_update_connection_.disconnect();
+    }
+
+    loading_update_connection_ = signal_step().connect(std::bind(&screens::Loading::update, loading_.get(), std::placeholders::_1));
+
+    //This needs to happen after SDL or whatever is initialized
+    input_controller_ = InputController::create(*this);
+
+    console_ = Console::create(*this);
 }
 
 bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
@@ -156,17 +171,6 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
 
         create_defaults();
 
-        message_bar_ = MessageBar::create(*this);
-
-        loading_ = screens::Loading::create(*this);
-
-        //Weirdly, I had to pass the raw loading pointer here, otherwise some reference was held somewhere even after calling disconnect on the
-        //signal and wiping out the connection.
-        loading_update_connection_ = signal_step().connect(std::bind(&screens::Loading::update, loading_.get(), std::placeholders::_1));
-
-        //This needs to happen after SDL or whatever is initialized
-        input_controller_ = InputController::create(*this);
-
         GLCheck(glEnable, GL_DEPTH_TEST);
         GLCheck(glDepthFunc, GL_LEQUAL);
         GLCheck(glEnable, GL_CULL_FACE);
@@ -181,8 +185,6 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
                 SDL_SCANCODE_ESCAPE, bind(&WindowBase::stop_running, this)
             );
         });
-
-        console_ = Console::create(*this);
 
         initialized_ = true;
     }
@@ -437,9 +439,10 @@ void WindowBase::reset() {
     ViewportManager::manager_delete_all();
     BackgroundManager::manager_delete_all();
 
+    //render_sequence_.reset(new RenderSequence(*this));
+
     create_default_stage();
     create_default_camera();
-
     create_defaults();
 }
 

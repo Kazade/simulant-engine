@@ -166,25 +166,25 @@ private:
 
     GPUProgram::ptr program_;
 
-    Colour diffuse_ = Colour(1.0, 1.0, 1.0, 1.0);
-    Colour ambient_ = Colour(1.0, 1.0, 1.0, 1.0);
-    Colour specular_ = Colour(1.0, 1.0, 1.0, 1.0);
-    float shininess_ = 0.00001;
+    Colour diffuse_ = Colour::WHITE;
+    Colour ambient_ = Colour::WHITE;
+    Colour specular_ = Colour::WHITE;
+    float shininess_ = 0.0;
 
     std::vector<TextureUnit> texture_units_;
 
-    IterationType iteration_;
-    uint32_t max_iterations_;
+    IterationType iteration_ = ITERATE_ONCE;
+    uint32_t max_iterations_ = 0;
 
     BlendType blend_;
 
-    bool depth_writes_enabled_;
-    bool depth_test_enabled_;    
+    bool depth_writes_enabled_ = true;
+    bool depth_test_enabled_ = true;
 
     float point_size_;
 
-    float albedo_;
-    uint8_t reflection_texture_unit_;
+    float albedo_ = 0.0;
+    uint8_t reflection_texture_unit_ = 0;
 
     PolygonMode polygon_mode_ = POLYGON_MODE_FILL;
 

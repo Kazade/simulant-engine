@@ -16,9 +16,15 @@ UIStage::UIStage(WindowBase *parent, UIStageID id):
     window_(*parent),
     interface_(ui::Interface::create(*parent)){
 
-    window_.signal_step().connect(
+    update_conn_ = window_.signal_step().connect(
         std::bind(&UIStage::__update, this, std::placeholders::_1)
     );
+}
+
+UIStage::~UIStage() {
+    try {
+        update_conn_.disconnect();
+    } catch(...) {}
 }
 
 ui::ElementList UIStage::append(const unicode &tag) {

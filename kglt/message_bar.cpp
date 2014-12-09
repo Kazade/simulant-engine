@@ -9,7 +9,13 @@ namespace kglt {
 MessageBar::MessageBar(WindowBase& parent):
     window_(parent) {
 
-    parent.signal_step().connect(std::bind(&MessageBar::update, this, std::placeholders::_1));
+    update_conn_ = parent.signal_step().connect(std::bind(&MessageBar::update, this, std::placeholders::_1));
+}
+
+MessageBar::~MessageBar() {
+    try {
+        update_conn_.disconnect();
+    } catch(...) {}
 }
 
 bool MessageBar::init() {

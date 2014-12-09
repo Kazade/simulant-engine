@@ -501,6 +501,10 @@ unicode Interface::locate_font(const unicode& filename) {
 }
 
 void Interface::update(float dt) {
+    if(!impl_) {
+        return;
+    }
+
     std::lock_guard<std::recursive_mutex> lck(impl_->mutex_);
     impl_->context_->Update();
 }
