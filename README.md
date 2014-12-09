@@ -67,6 +67,7 @@ class MyApp : public kglt::Application {
 public:
     bool do_init() {
         MeshID mesh_id = window().stage()->new_mesh_as_rectangle(10.0, 5.0);
+        ActorID actor_id = window().stage().new_actor_with_mesh(mesh_id);
         return true;
     }
 
