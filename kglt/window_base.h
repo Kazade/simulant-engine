@@ -150,6 +150,16 @@ public:
     VirtualGamepad* virtual_joypad() { return virtual_gamepad_.get(); }
 
     void reset();
+
+    // Only public for testing purposes. DO NOT USE!
+    void handle_mouse_motion(int x, int y, bool pos_normalized=false);
+    void handle_mouse_button_down(int button);
+    void handle_mouse_button_up(int button);
+
+    void handle_touch_down(int finger_id, int x, int y);
+    void handle_touch_motion(int finger_id, int x, int y);
+    void handle_touch_up(int finger_id, int x, int y);
+
 protected:
 
     void set_width(uint32_t width) { 
@@ -173,13 +183,6 @@ protected:
     bool has_context() const { return has_context_; }
     std::mutex& context_lock() { return context_lock_; }
 
-    void handle_mouse_motion(int x, int y, bool pos_normalized=false);
-    void handle_mouse_button_down(int button);
-    void handle_mouse_button_up(int button);
-
-    void handle_touch_down(int finger_id, int x, int y);
-    void handle_touch_motion(int finger_id, int x, int y);
-    void handle_touch_up(int finger_id, int x, int y);
 private:    
     void create_defaults();
 

@@ -121,6 +121,34 @@ VirtualGamepad::VirtualGamepad(WindowBase &window, VirtualDPadDirections directi
 
 }
 
+Dimensions VirtualGamepad::button_dimensions(int button) {
+    if(button >= button_count_) {
+        throw ValueError(_u("Invalid button: {0}").format(button));
+    }
+
+    button++; //Buttons are 1-indexed in the UI element classes
+
+    auto document = window_.ui_stage(ui_stage_);
+
+    unicode klass = _u(".button_{0}").format(humanize(button));
+
+    ui::ElementList list = document->$(klass);
+    if(list.empty()) {
+        throw ValueError(_u("Unable to find button: {0}").format(button));
+    }
+
+    ui::Element element = list[0];
+
+    Dimensions dim;
+
+    dim.left = element.left();
+    dim.top = element.top();
+    dim.width = element.width();
+    dim.height = element.height();
+
+    return dim;
+}
+
 bool VirtualGamepad::init() {
     L_DEBUG(_u("Initializing virtual gamepad with {0} buttons").format(button_count_));
 
@@ -139,24 +167,24 @@ bool VirtualGamepad::init() {
 
 
         for(auto evt: { "touchdown", "touchover"}) {
-            stage->$(".dpad_left").set_event_callback(evt, [=]() -> bool {
+            stage->$(".dpad_left").set_event_callback(evt, [=](ui::Event evt) -> bool {
                 signal_hat_changed_(HAT_POSITION_LEFT);
                 return true;
             });
 
-            stage->$(".dpad_right").set_event_callback(evt, [=]() -> bool {
+            stage->$(".dpad_right").set_event_callback(evt, [=](ui::Event evt) -> bool {
                 signal_hat_changed_(HAT_POSITION_RIGHT);
                 return true;
             });
         }
 
         for(auto evt: { "touchup", "touchout"}) {
-            stage->$(".dpad_left").set_event_callback(evt, [=]() -> bool {
+            stage->$(".dpad_left").set_event_callback(evt, [=](ui::Event evt) -> bool {
                 signal_hat_changed_(HAT_POSITION_CENTERED);
                 return true;
             });
 
-            stage->$(".dpad_right").set_event_callback(evt, [=]() -> bool {
+            stage->$(".dpad_right").set_event_callback(evt, [=](ui::Event evt) -> bool {
                 signal_hat_changed_(HAT_POSITION_CENTERED);
                 return true;
             });
@@ -165,20 +193,28 @@ bool VirtualGamepad::init() {
 
     //Make the buttons visible that need to be
     for(int i = 1; i < button_count_ + 1; ++i) {
+        int idx = i - 1;
+
         unicode klass = _u(".button_{0}").format(humanize(i));
         stage->$(klass).css("display", "inline-block");
 
         for(auto evt: { "touchdown", "touchover"}) {
             //Forward the events from the UI on to the signals
-            stage->$(klass).set_event_callback(evt, [=]() -> bool {
-                signal_button_down_(i - 1);
+            stage->$(klass).set_event_callback(evt, [=](ui::Event evt) -> bool {
+                this->button_touches_[idx].insert(evt.touch.finger_id);
+                if(this->button_touches_[idx].size() == 1) {
+                    signal_button_down_(idx);
+                }
                 return true;
             });
         }
 
         for(auto evt: { "touchup", "touchout"}) {
-            stage->$(klass).set_event_callback(evt, [=]() -> bool {
-                signal_button_up_(i - 1);
+            stage->$(klass).set_event_callback(evt, [=](ui::Event evt) -> bool {
+                this->button_touches_[idx].erase(evt.touch.finger_id);
+                if(this->button_touches_[idx].size() == 0) {
+                    signal_button_up_(i - 1);
+                }
                 return true;
             });
         }

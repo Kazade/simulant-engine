@@ -65,8 +65,24 @@ bool Element::is_visible() const {
     return visibility != HIDDEN;
 }
 
-void Element::set_event_callback(const unicode& event_type, std::function<bool ()> func) {
+void Element::set_event_callback(const unicode& event_type, std::function<bool (Event)> func) {
     impl_->set_event_callback(event_type, func);
+}
+
+float Element::left() const {
+    return impl_->left();
+}
+
+float Element::top() const {
+    return impl_->top();
+}
+
+float Element::width() const {
+    return impl_->width();
+}
+
+float Element::height() const {
+    return impl_->height();
 }
 
 }

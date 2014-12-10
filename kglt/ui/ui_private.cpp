@@ -22,16 +22,38 @@ Element ElementImpl::append(const unicode& tag) {
     return result;
 }
 
-void ElementImpl::set_event_callback(const unicode& event_type, std::function<bool ()> func) {
+float ElementImpl::left() const {
+    return elem_->GetAbsoluteLeft();
+}
+
+float ElementImpl::top() const {
+    return elem_->GetAbsoluteTop();
+}
+
+float ElementImpl::width() const {
+    return elem_->GetOffsetWidth();
+}
+
+float ElementImpl::height() const {
+    return elem_->GetOffsetHeight();
+}
+
+void ElementImpl::set_event_callback(const unicode& event_type, std::function<bool (Event)> func) {
     event_callbacks_[event_type] = func;
 }
 
 void ElementImpl::ProcessEvent(Rocket::Core::Event& event) {
     unicode event_type = event.GetType().CString();
 
+    ui::Event evt;
+    if(event_type == "touchover" || event_type == "touchout" || event_type == "touchdown" || event_type == "touchup") {
+        evt.type = EVENT_TYPE_TOUCH;
+        evt.touch.finger_id = event.GetParameter<int>("finger_id", 0);
+    }
+
     auto it = event_callbacks_.find(event_type);
     if(it != event_callbacks_.end()) {
-        bool ret = (*it).second();
+        bool ret = (*it).second(evt);
         if(ret) {
             event.StopPropagation();
         }

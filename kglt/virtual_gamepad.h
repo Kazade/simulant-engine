@@ -1,6 +1,7 @@
 #ifndef VIRTUAL_GAMEPAD_H
 #define VIRTUAL_GAMEPAD_H
 
+#include <unordered_map>
 #include <kazbase/signals.h>
 #include "generic/managed.h"
 #include "types.h"
@@ -8,6 +9,13 @@
 #include "input_controller.h"
 
 namespace kglt {
+
+struct Dimensions {
+    float top;
+    float left;
+    float width;
+    float height;
+};
 
 class VirtualGamepad : public Managed<VirtualGamepad> {
 public:
@@ -24,10 +32,14 @@ public:
     sig::signal<void (HatPosition)>& signal_hat_changed() { return signal_hat_changed_; }
     sig::signal<void (Axis, int)>& signal_axis_changed() { return signal_axis_changed_; }
 
+    Dimensions button_dimensions(int button);
+
 private:
     WindowBase& window_;
     VirtualDPadDirections directions_ = VIRTUAL_DPAD_DIRECTIONS_TWO;
     int button_count_ = 0;
+
+    std::unordered_map<int, std::set<int>> button_touches_;
 
     UIStageID ui_stage_;
     CameraID camera_id_;
@@ -35,7 +47,7 @@ private:
     sig::signal<void (int)> signal_button_down_;
     sig::signal<void (int)> signal_button_up_;
     sig::signal<void (HatPosition)> signal_hat_changed_;
-    sig::signal<void (Axis, int)> signal_axis_changed_;
+    sig::signal<void (Axis, int)> signal_axis_changed_;    
 };
 
 }

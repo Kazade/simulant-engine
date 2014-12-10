@@ -86,9 +86,14 @@ public:
 
     kglt::ui::Element append(const unicode& tag);
 
-    void set_event_callback(const unicode& event_type, std::function<bool ()> func);
+    void set_event_callback(const unicode& event_type, std::function<bool (Event)> func);
 
     void _set_rocket_impl(RocketImpl* impl) { rocket_impl_ = impl; }
+
+    float left() const;
+    float top() const;
+    float width() const;
+    float height() const;
 private:
     RocketImpl* rocket_impl_ = nullptr;
     Rocket::Core::Element* elem_;
@@ -96,7 +101,7 @@ private:
 
     void ProcessEvent(Rocket::Core::Event& event);
 
-    std::unordered_map<unicode, std::function<bool ()> > event_callbacks_;
+    std::unordered_map<unicode, std::function<bool (Event)> > event_callbacks_;
 };
 
 class CustomDocument : public Rocket::Core::ElementDocument {

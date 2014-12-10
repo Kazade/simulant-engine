@@ -47,7 +47,7 @@ public:
         return *this;
     }
 
-    ElementList set_event_callback(const unicode& event_type, std::function<bool ()> func) {
+    ElementList set_event_callback(const unicode& event_type, std::function<bool (Event)> func) {
         for(Element& e: elements_) {
             e.set_event_callback(event_type, func);
         }

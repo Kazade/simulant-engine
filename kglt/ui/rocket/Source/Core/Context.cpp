@@ -838,9 +838,6 @@ void Context::ProcessTouchMove(int finger_id, int x, int y, int key_modifier_sta
 	GenerateTouchEventParameters(parameters, finger_id);
 	GenerateKeyModifierEventParameters(parameters, key_modifier_state);
 
-
-       L_DEBUG(_u("Processing hover chain for finger: {0}").format(finger_id));
-
 	// Update the current hover chain. This will send all necessary 'ontouchout' and 'ontouchover' messages.
 	UpdateTouchHoverChain(finger_id, parameters);
 
@@ -849,8 +846,6 @@ void Context::ProcessTouchMove(int finger_id, int x, int y, int key_modifier_sta
 	{
 		if (info.hover)
 		{
-
-		        L_DEBUG(_u("Dispatching touch move event"));
 			info.hover->DispatchEvent(TOUCHMOVE, parameters, true);
 		}
 	}
@@ -881,20 +876,22 @@ void Context::ProcessTouchDown(int finger_id, int x, int y, int key_modifier_sta
 	}
 
 	// Save the just-pressed-on element as the pressed element.
-	active = new_focus;
+    info.active = new_focus;
 
 	bool propogate = true;
 
 	// Call 'ontouchdown' on every item in the hover chain, and copy the hover chain to the active chain.
 	if (info.hover)
-		propogate = hover->DispatchEvent(TOUCHDOWN, parameters, true);
+    {
+        propogate = info.hover->DispatchEvent(TOUCHDOWN, parameters, true);
+    }
 
 	if (propogate)
 	{
 		// Check for a double-click on an element; if one has occured, we send the 'dblclick' event to the hover
 		// element. If not, we'll start a timer to catch the next one.
 		float click_time = GetSystemInterface()->GetElapsedTime();
-		if (active == info.last_click_element &&
+        if (info.active == info.last_click_element &&
 			click_time - info.last_click_time < DOUBLE_CLICK_TIME)
 		{
 			if (info.hover)
@@ -905,12 +902,13 @@ void Context::ProcessTouchDown(int finger_id, int x, int y, int key_modifier_sta
 		}
 		else
 		{
-			info.last_click_element = *active;
+            info.last_click_element = *info.active;
 			info.last_click_time = click_time;
 		}
 	}
 
-	for (ElementSet::iterator itr = info.hover_chain.begin(); itr != info.hover_chain.end(); ++itr) {
+    for (ElementSet::iterator itr = info.hover_chain.begin(); itr != info.hover_chain.end(); ++itr)
+    {
 		info.active_chain.push_back((*itr));
 	}
 
@@ -929,14 +927,14 @@ void Context::ProcessTouchUp(int finger_id, int x, int y, int key_modifier_state
 	if (info.hover)
 	{
 		L_DEBUG(_u("Dispatching touch up event"));
-		hover->DispatchEvent(TOUCHUP, parameters, true);
+        info.hover->DispatchEvent(TOUCHUP, parameters, true);
 	}
 
 	// If the active element (the one that was being hovered over when the finger was pressed) is still being
 	// hovered over, we click it.
-	if (info.hover && active && active == FindFocusElement(*info.hover))
+    if (info.hover && info.active && info.active == FindFocusElement(*info.hover))
 	{
-		active->DispatchEvent(CLICK, parameters, true);
+        info.active->DispatchEvent(CLICK, parameters, true);
 	}
 
 	// Unset the 'active' pseudo-class on all the elements in the active chain; because they may not necessarily
@@ -1107,11 +1105,11 @@ void Context::UpdateTouchHoverChain(int finger_id, const Dictionary& parameters)
 	}
 
 	// Send mouseout / mouseover events.
-	SendEvents(hover_chain, new_hover_chain, TOUCHOUT, parameters, true);
-	SendEvents(new_hover_chain, hover_chain, TOUCHOVER, parameters, true);
+    SendEvents(info.hover_chain, new_hover_chain, TOUCHOUT, parameters, true);
+    SendEvents(new_hover_chain, info.hover_chain, TOUCHOVER, parameters, true);
 
 	// Swap the new chain in.
-	hover_chain.swap(new_hover_chain);
+    info.hover_chain.swap(new_hover_chain);
 }
 
 // Updates the current hover elements, sending required events.
@@ -1348,7 +1346,7 @@ void Context::GenerateTouchEventParameters(Dictionary& parameters, int finger_id
 
 	parameters.Set("touch_x", info.position.x);
 	parameters.Set("touch_y", info.position.y);
-	parameters.Set("finger", finger_id);
+    parameters.Set("finger_id", finger_id);
 }
 
 // Builds the parameters for the key modifier state.

@@ -270,6 +270,7 @@ private:
 		float last_click_time;
 		ElementReference hover;
 		ElementSet hover_chain;
+        ElementReference active;
 		ElementList active_chain;
 		Vector2i position;
 	};

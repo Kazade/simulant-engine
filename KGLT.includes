@@ -24,3 +24,14 @@
 kglt/utils
 kglt
 tests
+kglt/ui/rocket/Include/Rocket/Core/Python
+kglt/ui/rocket/Include/Rocket/Controls/Lua
+kglt/ui
+kglt/ui/rocket/Include/Rocket/Core/Lua
+kglt/ui/rocket/Source/Core
+kglt/ui/rocket/Include/Rocket/Core
+kglt/ui/rocket/Include/Rocket/Controls
+kglt/ui/rocket/Include/Rocket/Debugger
+kglt/ui/rocket/Include/Rocket
+kglt/ui/rocket/Source/Controls
+kglt/ui/rocket/Source/Debugger

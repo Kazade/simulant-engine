@@ -29,6 +29,7 @@
 #include "base.h"
 #include "sprite.h"
 #include "particles.h"
+#include "virtual_gamepad.h"
 
 //FIXME: These includes should be conditional
 #include "physics/ode/ode_engine.h"

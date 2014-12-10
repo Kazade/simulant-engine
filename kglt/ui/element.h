@@ -10,6 +10,20 @@ namespace ui {
 
 class ElementImpl;
 
+struct TouchEvent {
+    int finger_id;
+};
+
+enum EventType {
+    EVENT_TYPE_NONE,
+    EVENT_TYPE_TOUCH,
+};
+
+union Event {
+    EventType type = EVENT_TYPE_NONE;
+    TouchEvent touch;
+};
+
 class Element {
 public:
     Element(std::shared_ptr<ElementImpl> impl);
@@ -40,7 +54,13 @@ public:
 
     Element append(const unicode& tag);
 
-    void set_event_callback(const unicode& event_type, std::function<bool ()> func);
+    void set_event_callback(const unicode& event_type, std::function<bool (Event)> func);
+
+    float left() const;
+    float top() const;
+    float width() const;
+    float height() const;
+
 private:
     std::shared_ptr<ElementImpl> impl_;
 
