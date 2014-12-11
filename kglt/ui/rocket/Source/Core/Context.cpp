@@ -34,7 +34,6 @@
 #include "../../Include/Rocket/Core/StreamMemory.h"
 #include <algorithm>
 #include <iterator>
-#include <kazbase/logging.h>
 
 namespace Rocket {
 namespace Core {
@@ -926,7 +925,6 @@ void Context::ProcessTouchUp(int finger_id, int x, int y, int key_modifier_state
 	// The elements in the new hover chain have the 'ontouchup' event called on them.
 	if (info.hover)
 	{
-		L_DEBUG(_u("Dispatching touch up event"));
         info.hover->DispatchEvent(TOUCHUP, parameters, true);
 	}
 

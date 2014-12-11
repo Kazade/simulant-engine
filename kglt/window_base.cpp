@@ -431,15 +431,13 @@ void WindowBase::handle_touch_up(int finger_id, int x, int y) {
  * window to its original state.
  */
 void WindowBase::reset() {
-    render_sequence()->delete_all_pipelines();
-
     CameraManager::manager_delete_all();
     UIStageManager::manager_delete_all();
     StageManager::manager_delete_all();
     ViewportManager::manager_delete_all();
     BackgroundManager::manager_delete_all();
 
-    //render_sequence_.reset(new RenderSequence(*this));
+    render_sequence()->delete_all_pipelines();
 
     create_default_stage();
     create_default_camera();

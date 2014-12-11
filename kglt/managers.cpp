@@ -228,10 +228,6 @@ UIStageManager::UIStageManager(WindowBase *window):
 }
 
 void UIStageManager::create_default_ui_stage() {
-    if(default_ui_stage_id_) {
-        return;
-    }
-
     default_ui_stage_id_ = new_ui_stage();
 }
 

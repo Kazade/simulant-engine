@@ -79,6 +79,14 @@ public:
         window->handle_touch_down(1, x, y);
         assert_true(b2_pressed);
         assert_true(b1_pressed);
+
+        window->handle_touch_motion(1, x, y);
+        assert_true(b2_pressed);
+        assert_true(b1_pressed);
+
+        window->handle_touch_motion(1, 0, 0);
+        assert_false(b2_pressed);
+        assert_true(b1_pressed);
     }
 
     void test_touchup_event_triggers_signal() {
@@ -136,9 +144,57 @@ public:
         window->handle_touch_up(0, 0, 0);
 
         assert_false(b2_pressed);
+    }
+};
 
+class VirtualGamepadInputTests : public KGLTTestCase {
+public:
+    void set_up() {
+        KGLTTestCase::set_up();
+        window->enable_virtual_joypad(VIRTUAL_DPAD_DIRECTIONS_TWO, 2);
     }
 
+    void tear_down() {
+        KGLTTestCase::tear_down();
+    }
+
+    void test_input_controller_signals_fire() {
+        bool button_pressed = false;
+
+        int virtual_joypad = window->joypad_count() - 1;
+        window->joypad(virtual_joypad).button_pressed_connect(0, [&](int btn) {
+            assert_equal(0, btn);
+            button_pressed = true;
+        });
+
+        auto b1 = window->virtual_joypad()->button_dimensions(0);
+
+        int x = b1.left + 1;
+        int y = b1.top + 1;
+
+        window->handle_touch_down(0, x, y);
+
+        assert_true(button_pressed);
+    }
+
+    void test_while_down() {
+        bool button_pressed = false;
+
+        auto b1 = window->virtual_joypad()->button_dimensions(0);
+
+        int x = b1.left + 1;
+        int y = b1.top + 1;
+
+        window->joypad(window->joypad_count() - 1).button_while_down_connect(0, [&](int btn, double dt) {
+            button_pressed = true;
+            window->handle_touch_up(0, x, y);
+        });
+
+        window->handle_touch_down(0, x, y);
+        window->run_frame();
+
+        assert_true(button_pressed);
+    }
 };
 
 }
