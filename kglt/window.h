@@ -40,6 +40,8 @@ private:
     sig::signal<void (SDL_Scancode)> signal_key_released_;
 
     friend int event_filter(void* user_data, SDL_Event* event);
+
+    void denormalize(float x, float y, int& xout, int& yout);
 };
 
 }

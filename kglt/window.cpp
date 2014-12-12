@@ -117,15 +117,21 @@ void Window::check_events() {
             } break;
             case SDL_FINGERDOWN: {
                 L_INFO(_u("FINGERDOWN received: {0} - {1}, {2}").format(event.tfinger.fingerId, event.tfinger.x, event.tfinger.y));
-                handle_touch_down(event.tfinger.fingerId, event.tfinger.x, event.tfinger.y);
+                int x, y;
+                denormalize(event.tfinger.x, event.tfinger.y, x, y);
+                handle_touch_down(event.tfinger.fingerId, x, y);
             } break;
             case SDL_FINGERMOTION: {
                 L_INFO(_u("FINGERMOTION received: {0}, {1}").format(event.tfinger.x, event.tfinger.y));
-                handle_touch_motion(event.tfinger.fingerId, event.tfinger.x, event.tfinger.y);
+                int x, y;
+                denormalize(event.tfinger.x, event.tfinger.y, x, y);
+                handle_touch_motion(event.tfinger.fingerId, x, y);
             } break;
             case SDL_FINGERUP: {
                 L_INFO(_u("FINGERUP received: {0} - {1}, {2}").format(event.tfinger.fingerId, event.tfinger.x, event.tfinger.y));
-                handle_touch_up(event.tfinger.fingerId, event.tfinger.x, event.tfinger.y);
+                int x, y;
+                denormalize(event.tfinger.x, event.tfinger.y, x, y);
+                handle_touch_up(event.tfinger.fingerId, x, y);
             } break;
 
             default:
@@ -133,6 +139,15 @@ void Window::check_events() {
                 break;
         }
     }
+}
+
+void Window::denormalize(float x, float y, int& xout, int& yout) {
+    /**
+        Given normalized screen coordinates, outputs the absolute position
+    */
+
+    xout = (int) (x * float(width()));
+    yout = (int) (y * float(height()));
 }
 
 bool Window::create_window(int width, int height, int bpp, bool fullscreen) {
