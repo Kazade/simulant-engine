@@ -145,6 +145,27 @@ public:
 
         assert_false(b2_pressed);
     }
+
+    void test_mouse_clicks_dont_interfere() {
+        auto b1 = window->virtual_joypad()->button_dimensions(0);
+
+        int x = b1.left + 1;
+        int y = b1.top + 1;
+
+        window->handle_mouse_motion(x, y);
+        window->handle_mouse_button_down(0);
+        window->handle_touch_down(0, x, y);
+
+        assert_true(b1_pressed);
+
+        window->handle_mouse_button_up(0);
+
+        assert_true(b1_pressed);
+
+        window->handle_touch_up(0, x, y);
+
+        assert_false(b1_pressed);
+    }
 };
 
 class VirtualGamepadInputTests : public KGLTTestCase {
