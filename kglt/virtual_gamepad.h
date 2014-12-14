@@ -40,6 +40,7 @@ private:
     int button_count_ = 0;
 
     std::unordered_map<int, std::set<int>> button_touches_;
+    std::unordered_map<std::string, std::set<int>> dpad_button_touches_;
 
     UIStageID ui_stage_;
     CameraID camera_id_;

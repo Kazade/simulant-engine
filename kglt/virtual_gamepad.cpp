@@ -168,24 +168,36 @@ bool VirtualGamepad::init() {
 
         for(auto evt: { "touchdown", "touchover"}) {
             stage->$(".dpad_left").set_event_callback(evt, [=](ui::Event evt) -> bool {
-                signal_hat_changed_(HAT_POSITION_LEFT);
+                dpad_button_touches_["left"].insert(evt.touch.finger_id);
+                if(dpad_button_touches_["left"].size() == 1) {
+                    signal_hat_changed_(HAT_POSITION_LEFT);
+                }
                 return true;
             });
 
             stage->$(".dpad_right").set_event_callback(evt, [=](ui::Event evt) -> bool {
-                signal_hat_changed_(HAT_POSITION_RIGHT);
+                dpad_button_touches_["right"].insert(evt.touch.finger_id);
+                if(dpad_button_touches_["right"].size() == 1) {
+                    signal_hat_changed_(HAT_POSITION_RIGHT);
+                }
                 return true;
             });
         }
 
         for(auto evt: { "touchup", "touchout"}) {
             stage->$(".dpad_left").set_event_callback(evt, [=](ui::Event evt) -> bool {
-                signal_hat_changed_(HAT_POSITION_CENTERED);
+                dpad_button_touches_["left"].erase(evt.touch.finger_id);
+                if(dpad_button_touches_["left"].size() == 0) {
+                    signal_hat_changed_(HAT_POSITION_CENTERED);
+                }
                 return true;
             });
 
             stage->$(".dpad_right").set_event_callback(evt, [=](ui::Event evt) -> bool {
-                signal_hat_changed_(HAT_POSITION_CENTERED);
+                dpad_button_touches_["right"].erase(evt.touch.finger_id);
+                if(dpad_button_touches_["right"].size() == 0) {
+                    signal_hat_changed_(HAT_POSITION_CENTERED);
+                }
                 return true;
             });
         }

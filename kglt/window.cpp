@@ -146,6 +146,7 @@ void Window::denormalize(float x, float y, int& xout, int& yout) {
         Given normalized screen coordinates, outputs the absolute position
     */
 
+    //FIXME: This should use SDL_GetTouch and a touchID to get the device dimensions
     xout = (int) (x * float(width()));
     yout = (int) (y * float(height()));
 }
