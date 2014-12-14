@@ -13,6 +13,7 @@ namespace kglt {
 
 class WindowBase;
 class Stage;
+class ScreenManager;
 
 class BackgroundLoadException : public std::runtime_error {
 public:
@@ -48,6 +49,8 @@ protected:
 
 private:
     std::shared_ptr<WindowBase> window_;
+    std::shared_ptr<ScreenManager> routes_;
+
     bool initialized_ = false;
 
     virtual bool do_init() = 0;

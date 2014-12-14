@@ -775,3 +775,7 @@ kglt/ui/interface.h
 kglt/ui/types.h
 kglt/ui/ui_private.cpp
 kglt/ui/ui_private.h
+kglt/screens/screen.h
+kglt/screens/screen.cpp
+kglt/screens/screen_manager.h
+kglt/screens/screen_manager.cpp
