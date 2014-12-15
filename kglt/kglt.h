@@ -30,6 +30,7 @@
 #include "sprite.h"
 #include "particles.h"
 #include "virtual_gamepad.h"
+#include "screens/screen_manager.h"
 
 //FIXME: These includes should be conditional
 #include "physics/ode/ode_engine.h"

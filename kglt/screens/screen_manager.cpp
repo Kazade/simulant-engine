@@ -1,5 +1,5 @@
 #include "screen_manager.h"
-#include "window_base.h"
+#include "../window_base.h"
 
 namespace kglt {
 
@@ -8,7 +8,7 @@ ScreenManager::ScreenManager(WindowBase &window):
 
 }
 
-Screen::ptr ScreenManager::get_or_create_route(const unicode& route) {
+ScreenBase::ptr ScreenManager::get_or_create_route(const unicode& route) {
     auto it = routes_.find(route);
     if(it == routes_.end()) {
         auto factory = screen_factories_.find(route);
@@ -24,6 +24,10 @@ Screen::ptr ScreenManager::get_or_create_route(const unicode& route) {
 
 void ScreenManager::redirect(const unicode& route) {
     auto new_screen = get_or_create_route(route);
+
+    if(new_screen == current_screen_) {
+        return;
+    }
 
     new_screen->load();
 
@@ -41,7 +45,7 @@ void ScreenManager::background_load(const unicode& route) {
     //Create a background task for loading the screen
     auto new_task = std::shared_ptr<BackgroundTask>(new BackgroundTask{
         route,
-        std::async(std::launch::async, std::bind(&Screen::load, screen))
+        std::async(std::launch::async, std::bind(&ScreenBase::load, screen))
     });
 
     // Add an idle task to check for when the background task completes
@@ -53,7 +57,7 @@ void ScreenManager::background_load(const unicode& route) {
         }
 
         try {
-            future.get();
+            new_task->future.get();
         } catch(...) {
             L_ERROR("There was an error while loading route: " + route);
             throw;
@@ -79,5 +83,12 @@ bool ScreenManager::is_loaded(const unicode& route) const {
     }
 }
 
+bool ScreenManager::has_route(const unicode& route) const {
+    return screen_factories_.find(route) != screen_factories_.end();
+}
+
+ScreenBase::ptr ScreenManager::resolve(const unicode& route) {
+    return get_or_create_route(route);
+}
 
 }

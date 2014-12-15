@@ -779,3 +779,4 @@ kglt/screens/screen.h
 kglt/screens/screen.cpp
 kglt/screens/screen_manager.h
 kglt/screens/screen_manager.cpp
+tests/test_screens.h

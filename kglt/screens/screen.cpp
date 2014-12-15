@@ -1,38 +1,36 @@
 #include "screen.h"
-#include "window_base.h"
+#include "../window_base.h"
 
 namespace kglt {
 
-Screen::Screen(WindowBase &window):
+ScreenBase::ScreenBase(WindowBase &window):
     window_(window) {
 
 }
 
-Screen::~Screen() {
-    try {
-        unload();
-    } catch(...) {}
+ScreenBase::~ScreenBase() {
+
 }
 
-void Screen::load() {
+void ScreenBase::load() {
     do_load();
     is_loaded_ = true;
 }
 
-void Screen::unload() {
+void ScreenBase::unload() {
     do_unload();
     is_loaded_ = false;
 }
 
-void Screen::activate() {
+void ScreenBase::activate() {
     do_activate();
 }
 
-void Screen::deactivate() {
+void ScreenBase::deactivate() {
     do_deactivate();
 }
 
-void Screen::update(double dt) {
+void ScreenBase::update(double dt) {
     do_update(dt);
 }
 

@@ -30,12 +30,12 @@ class WindowBase;
 
 class ScreenLoadException : public RuntimeError {};
 
-class Screen:
-    public Managed<Screen> {
-
+class ScreenBase {
 public:
-    Screen(WindowBase& window);
-    virtual ~Screen();
+    typedef std::shared_ptr<ScreenBase> ptr;
+
+    ScreenBase(WindowBase& window);
+    virtual ~ScreenBase();
 
     void load();
     void unload();
@@ -60,7 +60,16 @@ private:
     bool is_loaded_ = false;
 };
 
+template<typename T>
+class Screen : public ScreenBase, public Managed<T> {
+public:
+    Screen(WindowBase& window):
+        ScreenBase(window) {}
 
+    void cleanup() override {
+        do_unload();
+    }
+};
 
 }
 
