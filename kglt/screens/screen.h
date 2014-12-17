@@ -43,7 +43,7 @@ public:
     void activate();
     void deactivate();
 
-    void update(double dt);
+    void step(double dt);
 
     bool is_loaded() const { return is_loaded_; }
 protected:
@@ -53,7 +53,7 @@ protected:
     virtual void do_unload() {}
     virtual void do_activate() {}
     virtual void do_deactivate() {}
-    virtual void do_update(double dt) {}
+    virtual void do_step(double dt) {}
 
 private:
     WindowBase& window_;

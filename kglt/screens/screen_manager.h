@@ -63,6 +63,10 @@ private:
         unicode route;
         std::future<void> future;
     };
+
+    sig::connection step_conn_;
+
+    void step(double dt);
 };
 
 }

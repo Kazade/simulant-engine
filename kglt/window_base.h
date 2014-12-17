@@ -238,7 +238,6 @@ private:
     std::shared_ptr<Watcher> watcher_;
 
     std::shared_ptr<screens::Loading> loading_;
-    sig::connection loading_update_connection_;
 
     std::shared_ptr<MessageBar> message_bar_;
     std::shared_ptr<kglt::RenderSequence> render_sequence_;

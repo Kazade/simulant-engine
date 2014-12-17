@@ -30,8 +30,8 @@ void ScreenBase::deactivate() {
     do_deactivate();
 }
 
-void ScreenBase::update(double dt) {
-    do_update(dt);
+void ScreenBase::step(double dt) {
+    do_step(dt);
 }
 
 }
