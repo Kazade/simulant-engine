@@ -50,9 +50,9 @@ protected:
     WindowBase& window() { return window_; }
 
     virtual void do_load() = 0;
-    virtual void do_unload() = 0;
-    virtual void do_activate() = 0;
-    virtual void do_deactivate() = 0;
+    virtual void do_unload() {}
+    virtual void do_activate() {}
+    virtual void do_deactivate() {}
     virtual void do_update(double dt) {}
 
 private:

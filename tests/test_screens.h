@@ -49,45 +49,45 @@ public:
     }
 
     void test_route() {
-        assert_false(manager_->has_route("/"));
-        assert_false(manager_->has_route("/test"));
+        assert_false(manager_->has_screen("/"));
+        assert_false(manager_->has_screen("/test"));
 
-        manager_->add_route<TestScreen>("/test");
+        manager_->register_screen("/test", screen_factory<TestScreen>());
 
-        assert_true(manager_->has_route("/test"));
-        assert_false(manager_->has_route("/"));
+        assert_true(manager_->has_screen("/test"));
+        assert_false(manager_->has_screen("/"));
     }
 
-    void test_redirect() {
-        assert_raises(ValueError, std::bind(&ScreenManager::redirect, manager_, "/"));
+    void test_activate_screen() {
+        assert_raises(ValueError, std::bind(&ScreenManager::activate_screen, manager_, "/"));
 
-        manager_->add_route<TestScreen>("/");
+        manager_->register_screen("/", screen_factory<TestScreen>());
 
-        manager_->redirect("/");
+        manager_->activate_screen("/");
 
-        TestScreen* scr = dynamic_cast<TestScreen*>(manager_->resolve("/").get());
-
-        assert_true(scr->load_called);
-        assert_true(scr->activate_called);
-        assert_false(scr->deactivate_called);
-        assert_false(scr->unload_called);
-
-        manager_->redirect("/"); //Redirecting to the same place should do nothing
+        TestScreen* scr = dynamic_cast<TestScreen*>(manager_->resolve_screen("/").get());
 
         assert_true(scr->load_called);
         assert_true(scr->activate_called);
         assert_false(scr->deactivate_called);
         assert_false(scr->unload_called);
 
-        manager_->add_route<TestScreen>("/test");
-        manager_->redirect("/test");
+        manager_->activate_screen("/"); //activate_screening to the same place should do nothing
+
+        assert_true(scr->load_called);
+        assert_true(scr->activate_called);
+        assert_false(scr->deactivate_called);
+        assert_false(scr->unload_called);
+
+        manager_->register_screen("/test", screen_factory<TestScreen>());
+        manager_->activate_screen("/test");
 
         assert_true(scr->load_called);
         assert_true(scr->activate_called);
         assert_true(scr->deactivate_called); //Should've been deactivated
         assert_false(scr->unload_called);
 
-        TestScreen* scr2 = dynamic_cast<TestScreen*>(manager_->resolve("/test").get());
+        TestScreen* scr2 = dynamic_cast<TestScreen*>(manager_->resolve_screen("/test").get());
 
         assert_true(scr2->load_called);
         assert_true(scr2->activate_called);
@@ -96,11 +96,11 @@ public:
     }
 
     void test_background_load() {
-        manager_->add_route<TestScreen>("/");
+        manager_->register_screen("/", screen_factory<TestScreen>());
 
-        TestScreen* scr = dynamic_cast<TestScreen*>(manager_->resolve("/").get());
+        TestScreen* scr = dynamic_cast<TestScreen*>(manager_->resolve_screen("/").get());
         assert_false(scr->load_called);
-        manager_->background_load("/");
+        manager_->load_screen_in_background("/");
         assert_false(scr->load_called);
 
         window->idle().execute();

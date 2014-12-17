@@ -4,17 +4,12 @@
 
 using namespace kglt::extra;
 
-class Sample2D: public kglt::Application {
+class GameScreen : public kglt::Screen<GameScreen> {
 public:
-    Sample2D():
-        Application("KGLT Sprite Sample", 1024, 768) {
+    GameScreen(kglt::WindowBase& window):
+        kglt::Screen<GameScreen>(window) {}
 
-        window().set_logging_level(kglt::LOG_LEVEL_DEBUG);
-    }
-
-private:
-    bool do_init() {
-
+    void do_load() {
         //Automatically calculate an orthographic projection, taking into account the aspect ratio
         //and the passed height. For example, passing a height of 2.0 would mean the view would extend
         //+1 and -1 in the vertical direction, -1.0 - +1.0 near/far, and width would be calculated from the aspect
@@ -36,20 +31,22 @@ private:
                 0
             )
         );
+    }
 
+    void do_activate() {
         window().enable_virtual_joypad(kglt::VIRTUAL_DPAD_DIRECTIONS_TWO, 2);
+        window().message_bar().inform("Sample demonstrating 2D sprites");
+    }
+};
 
+
+class Sample2D: public kglt::Application {
+private:
+    bool do_init() {
+        register_screen("/", kglt::screen_factory<GameScreen>());
+        load_screen_in_background("/", true); //Do loading in a background thread, but show immediately when done
+        activate_screen("/loading"); // Show the loading screen in the meantime
         return true;
-    }
-
-    void do_step(double dt) {
-        static bool shown = false;
-        if(initialized() && !shown) {
-            shown = true;
-            window().message_bar().inform("Sample demonstrating 2D sprites");
-        }
-    }
-    void do_cleanup() {
     }
 };
 

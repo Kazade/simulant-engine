@@ -67,8 +67,9 @@ Pipeline& RenderSequence::pipeline(PipelineID pipeline) {
     return *(PipelineManager::manager_get(pipeline).lock());
 }
 
-void RenderSequence::delete_pipeline(PipelineID pipeline) {
-    PipelineManager::manager_delete(pipeline);
+void RenderSequence::delete_pipeline(PipelineID pipeline_id) {
+    PipelineManager::manager_delete(pipeline_id);
+    ordered_pipelines_.remove_if([=](Pipeline::ptr pipeline) -> bool { return pipeline->id() == pipeline_id;});
 }
 
 void RenderSequence::delete_all_pipelines() {

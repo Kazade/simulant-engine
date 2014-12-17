@@ -22,7 +22,15 @@ ScreenBase::ptr ScreenManager::get_or_create_route(const unicode& route) {
     return it->second;
 }
 
-void ScreenManager::redirect(const unicode& route) {
+void ScreenManager::register_screen(const unicode& route, ScreenFactory factory) {
+    screen_factories_[route] = std::bind(factory, std::reference_wrapper<WindowBase>(window_));
+}
+
+ScreenBase::ptr ScreenManager::active_screen() const {
+    return current_screen_;
+}
+
+void ScreenManager::activate_screen(const unicode& route) {
     auto new_screen = get_or_create_route(route);
 
     if(new_screen == current_screen_) {
@@ -39,7 +47,7 @@ void ScreenManager::redirect(const unicode& route) {
     current_screen_->activate();
 }
 
-void ScreenManager::background_load(const unicode& route) {
+void ScreenManager::load_screen_in_background(const unicode& route, bool redirect_after) {
     auto screen = get_or_create_route(route);
 
     //Create a background task for loading the screen
@@ -58,6 +66,9 @@ void ScreenManager::background_load(const unicode& route) {
 
         try {
             new_task->future.get();
+            if(redirect_after) {
+                activate_screen(route);
+            }
         } catch(...) {
             L_ERROR("There was an error while loading route: " + route);
             throw;
@@ -67,14 +78,14 @@ void ScreenManager::background_load(const unicode& route) {
     });
 }
 
-void ScreenManager::unload(const unicode& route) {
+void ScreenManager::unload_screen(const unicode& route) {
     auto it = routes_.find(route);
     if(it != routes_.end()) {
         it->second->unload();
     }
 }
 
-bool ScreenManager::is_loaded(const unicode& route) const {
+bool ScreenManager::is_screen_loaded(const unicode& route) const {
     auto it = routes_.find(route);
     if(it == routes_.end()) {
         return false;
@@ -83,12 +94,20 @@ bool ScreenManager::is_loaded(const unicode& route) const {
     }
 }
 
-bool ScreenManager::has_route(const unicode& route) const {
+bool ScreenManager::has_screen(const unicode& route) const {
     return screen_factories_.find(route) != screen_factories_.end();
 }
 
-ScreenBase::ptr ScreenManager::resolve(const unicode& route) {
+ScreenBase::ptr ScreenManager::resolve_screen(const unicode& route) {
     return get_or_create_route(route);
+}
+
+void ScreenManager::reset() {
+    for(auto p: routes_) {
+        p.second->unload();
+    }
+    routes_.clear();
+    screen_factories_.clear();
 }
 
 }
