@@ -235,7 +235,7 @@ bool VirtualGamepad::init() {
     camera_id_ = window_.new_camera_with_orthographic_projection();
 
     //Finally add to the render sequence, give a ridiculously high priority
-    window_.render_sequence()->new_pipeline(ui_stage_, camera_id_, kglt::ViewportID(), kglt::TextureID(), 100000);
+    pipeline_id_ = window_.render_sequence()->new_pipeline(ui_stage_, camera_id_, kglt::ViewportID(), kglt::TextureID(), 100000);
 
     return true;
 }
@@ -243,8 +243,10 @@ bool VirtualGamepad::init() {
 void VirtualGamepad::cleanup() {
     L_DEBUG("Destroying virtual gamepad");
 
+    window_.render_sequence()->delete_pipeline(pipeline_id_);
     window_.delete_camera(camera_id_);
     window_.delete_ui_stage(ui_stage_);
+
 }
 
 void VirtualGamepad::flip() {

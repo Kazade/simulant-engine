@@ -66,7 +66,7 @@ public:
 
         auto it = objects_.find(id);
         if(it == objects_.end()) {
-            throw DoesNotExist<ObjectType>(typeid(ObjectType).name());
+            throw DoesNotExist<ObjectType>(typeid(ObjectType).name() + _u(" with ID: {0}").format(id));
         }
         return it->second;
     }
@@ -76,7 +76,7 @@ public:
 
         auto it = objects_.find(id);
         if(it == objects_.end()) {
-            throw DoesNotExist<ObjectType>(typeid(ObjectType).name());
+            throw DoesNotExist<ObjectType>(typeid(ObjectType).name() + _u(" with ID: {0}").format(id));
         }
         return it->second;
     }

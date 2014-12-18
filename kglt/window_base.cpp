@@ -121,14 +121,6 @@ void WindowBase::create_defaults() {
 
     loading_ = screens::Loading::create(*this);
 
-    //Weirdly, I had to pass the raw loading pointer here, otherwise some reference was held somewhere even after calling disconnect on the
-    //signal and wiping out the connection.
-    if(loading_update_connection_.is_connected()) {
-        loading_update_connection_.disconnect();
-    }
-
-    loading_update_connection_ = signal_step().connect(std::bind(&screens::Loading::update, loading_.get(), std::placeholders::_1));
-
     //This needs to happen after SDL or whatever is initialized
     input_controller_ = InputController::create(*this);
 
@@ -278,9 +270,6 @@ bool WindowBase::run_frame() {
         signal_shutdown_();
 
         watcher_.reset();
-
-        loading_update_connection_.disconnect();
-        loading_update_connection_ = sig::connection();
 
         loading_.reset();
 

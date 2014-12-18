@@ -5,42 +5,30 @@
 
 #include "../generic/managed.h"
 #include "../types.h"
+#include "screen.h"
 
 namespace kglt {
-
 
 
 namespace screens {
 
 class Loading:
-    public Managed<Loading> {
+    public Screen<Loading> {
 
 public:
-    Loading(WindowBase& window);
-
-    void activate();
-    void deactivate();
-
-    void update(float dt);
-
-    bool is_active() const;
-
-    bool init() override;
-    void cleanup() override;
-
-protected:
-    WindowBase& window() { return window_; }
+    Loading(WindowBase& window):
+        Screen<Loading>(window) {}
 
 private:
-    WindowBase& window_;
-    bool is_active_;
+    void do_activate() override;
+    void do_deactivate() override;
+
+    void do_load() override;
+    void do_unload() override;
 
     UIStageID stage_;
     CameraID camera_;
-
     PipelineID pipeline_;
-
-    std::vector<PipelineID> stashed_pipelines_;
 };
 
 }

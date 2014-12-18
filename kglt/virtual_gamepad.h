@@ -44,6 +44,7 @@ private:
 
     UIStageID ui_stage_;
     CameraID camera_id_;
+    PipelineID pipeline_id_;
 
     sig::signal<void (int)> signal_button_down_;
     sig::signal<void (int)> signal_button_up_;

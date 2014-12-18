@@ -8,11 +8,13 @@
 #include <future>
 #include "types.h"
 #include "kazbase/unicode.h"
+#include "screens/screen_manager.h"
 
 namespace kglt {
 
 class WindowBase;
 class Stage;
+class ScreenManager;
 
 class BackgroundLoadException : public std::runtime_error {
 public:
@@ -20,7 +22,7 @@ public:
         std::runtime_error("An error occurred while running a background task") {}
 };
 
-class Application {
+class Application : public ScreenManagerInterface {
 public:
     Application(const unicode& title=_u("KGLT Application"),
         uint32_t width=640,
@@ -36,27 +38,31 @@ public:
 
     bool initialized() const { return initialized_; }
 
+    /* ScreenManager interface */
+    virtual void register_screen(const unicode& route, ScreenFactory factory) { routes_->register_screen(route, factory); }
+    virtual bool has_screen(const unicode& route) const { return routes_->has_screen(route); }
+    virtual ScreenBase::ptr resolve_screen(const unicode& route) { return routes_->resolve_screen(route); }
+    virtual void activate_screen(const unicode& route) { routes_->activate_screen(route); }
+    virtual void load_screen_in_background(const unicode& route, bool redirect_after=true) { routes_->load_screen_in_background(route, redirect_after); }
+    virtual void unload_screen(const unicode& route) { routes_->unload_screen(route); }
+    virtual bool is_screen_loaded(const unicode& route) const { return routes_->is_screen_loaded(route); }
+    virtual ScreenBase::ptr active_screen() const { return routes_->active_screen(); }
+    /* End ScreenManager interface */
 protected:
     StagePtr stage(StageID stage=StageID());
 
-    void load_async(std::function<bool ()> func);
 
-    bool init() {
-        initialized_ = do_init();
-        return initialized_;
-    }
-
+    bool init();
 private:
     std::shared_ptr<WindowBase> window_;
+    std::shared_ptr<ScreenManager> routes_;
+
     bool initialized_ = false;
 
     virtual bool do_init() = 0;
-    virtual void do_step(double dt) = 0;
+    virtual void do_step(double dt) {}
     virtual void do_post_step(double dt) {}
-    virtual void do_cleanup() = 0;
-
-    std::list<std::shared_future<bool> > load_tasks_;
-    void check_tasks();
+    virtual void do_cleanup() {}
 
     virtual bool while_key_pressed(SDL_Keysym key, double) { return false; }
     virtual bool on_key_press(SDL_Keysym key) { return false; }
