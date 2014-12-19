@@ -46,19 +46,25 @@ void IdleTaskManager::run_sync(std::function<void()> callback) {
 
 struct TimedTrigger {
     TimedTrigger(float time, std::function<void ()> callback):
-        time_left_(time),
-        callback_(callback) {}
+        timeout_(time),
+        callback_(callback) {
+    }
 
     bool update(kglt::WindowBase* window) {
-        time_left_ -= window->delta_time();
-        if(time_left_ <= 0.0) {
+        auto now = window->total_time();
+        if(!start_time_) {
+            start_time_ = now;
+        }
+
+        if((now - start_time_) > timeout_) {
             callback_();
             return false;
         }
         return true;
     }
 
-    float time_left_ = 0.0;
+    float timeout_ = 0.0;
+    float start_time_ = 0.0;
     std::function<void ()> callback_;
 };
 
