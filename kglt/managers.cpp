@@ -100,6 +100,10 @@ CameraID CameraManager::new_camera_with_orthographic_projection(double left, dou
     return new_camera_id;
 }
 
+CameraID CameraManager::new_camera_for_ui() {
+    return new_camera_with_orthographic_projection(0, window_->width(), window_->height(), 0, -1, 1);
+}
+
 CameraPtr CameraManager::camera() {
     return CameraManager::manager_get(default_camera_id_);
 }

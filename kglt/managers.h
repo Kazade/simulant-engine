@@ -37,6 +37,7 @@ public:
 
     CameraID new_camera();
     CameraID new_camera_with_orthographic_projection(double left=0, double right=0, double bottom=0, double top=0, double near=-1.0, double far=1.0);
+    CameraID new_camera_for_ui();
     CameraPtr camera();
     CameraPtr camera(CameraID c);
     void delete_camera(CameraID cid);
