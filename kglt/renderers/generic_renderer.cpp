@@ -189,7 +189,6 @@ void GenericRenderer::render(Renderable& buffer, CameraID camera, GPUProgram* pr
     }
 
     if(!buffer.index_data().count()) {
-        L_WARN("Tried to render an actor with no indices");
         return;
     }
 
