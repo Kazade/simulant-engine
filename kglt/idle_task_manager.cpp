@@ -80,15 +80,26 @@ void IdleTaskManager::wait() {
 
 void IdleTaskManager::execute() {
     {
-        //FIXME: If (*it).second tries to queue on idle this will deadlock
-        std::lock_guard<std::mutex> lock(signals_mutex_);
-        for(auto it = signals_.begin(); it != signals_.end();) {
-            bool result = (*it).second();
+        SignalMap signals_copy;
+        {
+            std::lock_guard<std::mutex> lock(signals_mutex_);
+            signals_copy = signals_;
+        }
+
+        std::vector<ConnectionID> to_erase;
+
+        for(auto pair: signals_copy) {
+            bool result = pair.second();
             if(!result) {
                 L_DEBUG("Idle task returned false. Removing.");
-                it = signals_.erase(it);
-            } else {
-                ++it;
+                to_erase.push_back(pair.first);
+            }
+        }
+
+        {
+            std::lock_guard<std::mutex> lock(signals_mutex_);
+            for(auto conn: to_erase) {
+                signals_.erase(conn);
             }
         }
     }
