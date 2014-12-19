@@ -41,7 +41,7 @@ RenderSequence::RenderSequence(WindowBase &window):
 
 void RenderSequence::activate_pipelines(const std::vector<PipelineID>& pipelines) {
     for(PipelineID p: pipelines) {
-        pipeline(p).activate();
+        pipeline(p)->activate();
     }
 }
 
@@ -63,8 +63,8 @@ void RenderSequence::deactivate_all_pipelines() {
     }
 }
 
-Pipeline& RenderSequence::pipeline(PipelineID pipeline) {
-    return *(PipelineManager::manager_get(pipeline).lock());
+PipelinePtr RenderSequence::pipeline(PipelineID pipeline) {
+    return PipelineManager::manager_get(pipeline);
 }
 
 void RenderSequence::delete_pipeline(PipelineID pipeline_id) {

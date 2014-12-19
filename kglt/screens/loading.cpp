@@ -56,28 +56,24 @@ void Loading::do_load() {
     );
 
     //Create an inactive pipeline
-    pipeline_ = window().render_sequence()->new_pipeline(
-        stage_,
-        camera_
-    );
-
-    window().render_sequence()->pipeline(pipeline_).deactivate();
+    pipeline_ = window().render(stage_, camera_);
+    window().disable_pipeline(pipeline_);
 }
 
 void Loading::do_unload() {
     //Clean up
-    window().render_sequence()->delete_pipeline(pipeline_);
+    window().delete_pipeline(pipeline_);
     window().delete_ui_stage(stage_);
     window().delete_camera(camera_);
 }
 
 void Loading::do_activate() {
-    window().render_sequence()->pipeline(pipeline_).activate();
+    window().enable_pipeline(pipeline_);
 }
 
 void Loading::do_deactivate() {
     //Deactivate the loading pipeline
-    window().render_sequence()->pipeline(pipeline_).deactivate();
+    window().disable_pipeline(pipeline_);
 }
 
 }

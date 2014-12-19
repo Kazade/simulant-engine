@@ -413,11 +413,13 @@ enum LightType {
 };
 
 enum RenderPriority {
+    RENDER_PRIORITY_ABSOLUTE_BACKGROUND = -150,
     RENDER_PRIORITY_BACKGROUND = -100,
     RENDER_PRIORITY_DISTANT = -50,
     RENDER_PRIORITY_MAIN = 0,
     RENDER_PRIORITY_NEAR = 50,
-    RENDER_PRIORITY_FOREGROUND = 100
+    RENDER_PRIORITY_FOREGROUND = 100,
+    RENDER_PRIORITY_ABSOLUTE_FOREGROUND = 150
 };
 
 const std::vector<RenderPriority> RENDER_PRIORITIES = {
@@ -537,6 +539,9 @@ typedef AutoWeakPtr<PhysicsEngine> PhysicsEnginePtr;
 
 class RenderSequence;
 typedef AutoWeakPtr<RenderSequence> RenderSequencePtr;
+
+class Pipeline;
+typedef AutoWeakPtr<Pipeline> PipelinePtr;
 
 class Frustum;
 class WindowBase;

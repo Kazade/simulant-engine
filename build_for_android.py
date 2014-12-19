@@ -1,6 +1,7 @@
 #!/bin/env python
 
 import os
+import sys
 import subprocess
 import shutil
 import multiprocessing
@@ -89,6 +90,24 @@ LIBRARIES = [
     }
 ]
 
+def gather_headers(output_dir):
+    file_list = []
+    for library in LIBRARIES + [ {"name": "kglt", "include": "kglt/kglt"}]:
+        library_include_root = os.path.join(OUTPUT_DIRECTORY, library["include"])
+        for root, subFolders, files in os.walk(library_include_root):
+            for f in files:
+                if f.endswith(".h"):
+                    path = os.path.join(root,f)
+                    output = os.path.join(output_dir, library["name"] + path.replace(library_include_root, ""))
+
+                    file_list.append((path, output))
+
+    for src, dest in file_list:
+        folder = os.path.dirname(dest)
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+        shutil.copy(src, dest)
+
 if __name__ == "__main__":
     if not os.path.exists(OUTPUT_DIRECTORY):
         os.mkdir(OUTPUT_DIRECTORY)
@@ -132,18 +151,21 @@ if __name__ == "__main__":
         if "precompile" in library:
             library["precompile"]()
 
-    ##Make an Android.mk file
-    with open(ANDROID_MK_PATH, "w") as make_file:
-        make_file.write(MAKE_FILE_DATA)
+    if len(sys.argv) > 1 and sys.argv[1] == "gather_headers":
+        gather_headers(sys.argv[2])
+    else:
+        ##Make an Android.mk file
+        with open(ANDROID_MK_PATH, "w") as make_file:
+            make_file.write(MAKE_FILE_DATA)
 
-    with open(ANDROID_APP_MK_PATH, "w") as make_file:
-        make_file.write(APPLICATION_FILE_DATA % " ".join(["-I{}".format(x) for x in includes ]))
+        with open(ANDROID_APP_MK_PATH, "w") as make_file:
+            make_file.write(APPLICATION_FILE_DATA % " ".join(["-I{}".format(x) for x in includes ]))
 
-    with open(ANDROID_MANIFEST_PATH, "w") as make_file:
-        make_file.write("\n")
+        with open(ANDROID_MANIFEST_PATH, "w") as make_file:
+            make_file.write("\n")
 
-    os.chdir(OUTPUT_DIRECTORY)
+        os.chdir(OUTPUT_DIRECTORY)
 
-    subprocess.check_call([
-        "ndk-build", "NDK_APPLICATION_MK=%s" % ANDROID_APP_MK_PATH, "--jobs", str(multiprocessing.cpu_count())
-    ])
+        subprocess.check_call([
+            "ndk-build", "NDK_APPLICATION_MK=%s" % ANDROID_APP_MK_PATH, "--jobs", str(multiprocessing.cpu_count())
+        ])

@@ -32,10 +32,10 @@ public:
     void do_activate() override { activate_called = true; }
     void do_deactivate() override { deactivate_called = true; }
 
-    bool load_called = false;
-    bool unload_called = false;
-    bool activate_called = false;
-    bool deactivate_called = false;
+    volatile bool load_called = false;
+    volatile bool unload_called = false;
+    volatile bool activate_called = false;
+    volatile bool deactivate_called = false;
 };
 
 class ScreenManagerTests : public KGLTTestCase {
@@ -103,6 +103,7 @@ public:
         manager_->load_screen_in_background("/");
         assert_false(scr->load_called);
 
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
         window->idle().execute();
         assert_true(scr->load_called);
     }

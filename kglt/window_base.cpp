@@ -420,6 +420,8 @@ void WindowBase::handle_touch_up(int finger_id, int x, int y) {
  * window to its original state.
  */
 void WindowBase::reset() {
+    idle().execute(); //Execute any idle tasks before we go deleting things
+
     CameraManager::manager_delete_all();
     UIStageManager::manager_delete_all();
     StageManager::manager_delete_all();
@@ -432,5 +434,45 @@ void WindowBase::reset() {
     create_default_camera();
     create_defaults();
 }
+
+/* PipelineHelperAPIInterface */
+PipelinePtr WindowBase::pipeline(PipelineID pid){
+    return render_sequence_->pipeline(pid);
+}
+
+bool WindowBase::enable_pipeline(PipelineID pid) {
+    /*
+     * Enables the specified pipeline, returns true if the pipeline
+     * was enabled, or false if it was already enabled
+     */
+    auto pipeline = render_sequence_->pipeline(pid);
+    bool state = pipeline->is_active();
+    pipeline->activate();
+    return state != pipeline->is_active();
+}
+
+bool WindowBase::disable_pipeline(PipelineID pid) {
+    /*
+     * Disables the specified pipeline, returns true if the pipeline
+     * was disabled, or false if it was already disabled
+     */
+    auto pipeline = render_sequence_->pipeline(pid);
+    bool state = pipeline->is_active();
+    pipeline->deactivate();
+    return state != pipeline->is_active();
+}
+
+void WindowBase::delete_pipeline(PipelineID pid) {
+    render_sequence_->delete_pipeline(pid);
+}
+
+bool WindowBase::has_pipeline(PipelineID pid) const {
+    return render_sequence_->manager_contains(pid);
+}
+
+bool WindowBase::is_pipeline_enabled(PipelineID pid) const {
+    return render_sequence_->pipeline(pid)->is_active();
+}
+/* End PipelineHelperAPIInterface */
 
 }

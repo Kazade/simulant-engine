@@ -86,10 +86,7 @@ void Console::init_widget() {
         0, window_.width(), window_.height(), 0, -1, 1
     );
 
-    ui_pipeline_ = window_.render_sequence()->new_pipeline(
-        ui_stage_, ui_camera_,
-        ViewportID(), TextureID(), 101
-    );
+    ui_pipeline_ = window_.render(ui_stage_, ui_camera_).with_priority(kglt::RENDER_PRIORITY_FOREGROUND);
 
     UIStagePtr stage = window_.ui_stage(ui_stage_);
 

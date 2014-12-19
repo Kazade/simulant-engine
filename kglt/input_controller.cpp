@@ -18,6 +18,10 @@ InputConnection Device::new_input_connection() {
     return InputConnection(InputConnectionID(idx), *this);
 }
 
+void InputConnection::disconnect() {
+    device_.disconnect(*this);
+}
+
 InputConnection Keyboard::key_pressed_connect(GlobalKeyCallback callback) {
     InputConnection c = new_input_connection();
     global_key_press_signals_[c] = callback;

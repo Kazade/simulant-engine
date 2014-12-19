@@ -32,6 +32,7 @@ public:
     CameraID camera_id() { return camera_; }
     StageID stage_id() { return stage_; }
     UIStageID ui_stage_id() { return ui_stage_; }
+    TextureID target_id() { return target_; }
 
     int32_t priority() const { return priority_; }
     void set_priority(int32_t priority) { priority_ = priority; }
@@ -40,7 +41,6 @@ public:
     void activate() { is_active_ = true; }
     bool is_active() const { return is_active_; }
 
-private:
     void set_stage(StageID s) { stage_ = s; }
     void set_camera(CameraID c) { camera_ = c; }
     void set_viewport(ViewportID v) { viewport_ = v; }
@@ -93,7 +93,7 @@ public:
         int32_t priority=0
     );
 
-    Pipeline& pipeline(PipelineID pipeline);
+    PipelinePtr pipeline(PipelineID pipeline);
     void delete_pipeline(PipelineID pipeline);
     void delete_all_pipelines();
 

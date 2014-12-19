@@ -50,15 +50,7 @@ bool Background::init() {
     update_camera();
 
     //Add a pass for this background
-    //FIXME: priority = -1000
-    pipeline_id_ = window().render_sequence()->new_pipeline(
-        stage_id_,
-        camera_id_,
-        ViewportID(), //FIXME: Should be overridable
-        TextureID(),
-        -100
-    );
-
+    pipeline_id_ = window().render(stage_id_, camera_id_).with_priority(kglt::RENDER_PRIORITY_BACKGROUND);
     actor_id_ = window().stage(stage_id_)->new_actor();
     //Load the background material
     material_id_ = window().stage(stage_id_)->new_material_from_file("kglt/materials/background.kglm");
@@ -76,7 +68,7 @@ bool Background::init() {
 void Background::cleanup() {
     //Remove the pipeline and delete the camera, everything else is cleaned
     //up automatically when the node is detached from the scene tree
-    window().render_sequence()->delete_pipeline(pipeline_id_);
+    window().delete_pipeline(pipeline_id_);
     window().delete_camera(camera_id_);
 }
 

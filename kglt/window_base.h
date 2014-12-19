@@ -19,6 +19,7 @@
 #include "viewport.h"
 #include "sound.h"
 #include "managers.h"
+#include "pipeline_helper.h"
 
 namespace kglt {
 
@@ -57,7 +58,8 @@ class WindowBase :
     public UIStageManager,
     public CameraManager,
     public ResourceManagerImpl,
-    public Loadable {
+    public Loadable,
+    public PipelineHelperAPIInterface {
 
 public:    
     typedef std::shared_ptr<WindowBase> ptr;
@@ -135,9 +137,6 @@ public:
         return *watcher_;
     }
 
-    screens::Loading& loading() { return *loading_; }
-
-    RenderSequencePtr render_sequence();
     generic::DataCarrier& data() { return data_carrier_; }
 
     void enable_physics(std::shared_ptr<PhysicsEngine> engine);
@@ -160,7 +159,25 @@ public:
     void handle_touch_motion(int finger_id, int x, int y);
     void handle_touch_up(int finger_id, int x, int y);
 
+    /* PipelineHelperAPIInterface */
+
+    virtual PipelineHelper render(StageID stage_id, CameraID camera_id) {
+        return new_pipeline_helper(render_sequence_, stage_id, camera_id);
+    }
+
+    virtual PipelineHelper render(UIStageID stage_id, CameraID camera_id) {
+        return new_pipeline_helper(render_sequence_, stage_id, camera_id);
+    }
+
+    virtual PipelinePtr pipeline(PipelineID pid);
+    virtual bool enable_pipeline(PipelineID pid);
+    virtual bool disable_pipeline(PipelineID pid);
+    virtual void delete_pipeline(PipelineID pid);
+    virtual bool has_pipeline(PipelineID pid) const;
+    virtual bool is_pipeline_enabled(PipelineID pid) const;
+
 protected:
+    RenderSequencePtr render_sequence();
 
     void set_width(uint32_t width) { 
         width_ = width; 

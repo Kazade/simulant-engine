@@ -39,6 +39,7 @@ class ScreenManager :
 
 public:
     ScreenManager(WindowBase& window);
+    ~ScreenManager();
 
     void register_screen(const unicode& route, ScreenFactory factory);
     bool has_screen(const unicode& route) const;

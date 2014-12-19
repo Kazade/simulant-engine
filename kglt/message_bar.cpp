@@ -95,7 +95,7 @@ void MessageBar::create_stage_and_element() {
         $element.hide();
     }
 
-    window_.render_sequence()->new_pipeline(stage_, camera_, ViewportID(), TextureID(), 1000);
+    window_.render(stage_, camera_).with_priority(kglt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
 }
 
 void MessageBar::notify_left(const unicode& message) {

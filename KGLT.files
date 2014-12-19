@@ -780,3 +780,6 @@ kglt/screens/screen.cpp
 kglt/screens/screen_manager.h
 kglt/screens/screen_manager.cpp
 tests/test_screens.h
+tests/test_render_chain.h
+kglt/pipeline_helper.h
+kglt/pipeline_helper.cpp

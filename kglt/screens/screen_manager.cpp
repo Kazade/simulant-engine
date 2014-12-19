@@ -9,6 +9,10 @@ ScreenManager::ScreenManager(WindowBase &window):
     step_conn_ = window.signal_step().connect(std::bind(&ScreenManager::step, this, std::placeholders::_1));
 }
 
+ScreenManager::~ScreenManager() {
+    step_conn_.disconnect();
+}
+
 void ScreenManager::step(double dt) {
     if(active_screen()) {
         active_screen()->step(dt);
