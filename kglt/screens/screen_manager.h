@@ -1,13 +1,16 @@
 #ifndef SCREEN_MANAGER_H
 #define SCREEN_MANAGER_H
 
+#include <kazbase/signals.h>
+
 #include <unordered_map>
 #include <functional>
 #include <future>
 #include "screen.h"
-#include "../window_base.h"
 
 namespace kglt {
+
+class WindowBase;
 
 typedef std::function<ScreenBase::ptr (WindowBase&)> ScreenFactory;
 

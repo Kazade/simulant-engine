@@ -50,7 +50,8 @@ WindowBase::WindowBase():
     frame_counter_frames_(0),
     frame_time_in_milliseconds_(0),
     total_time_(0),
-    render_sequence_(new RenderSequence(*this)) {
+    render_sequence_(new RenderSequence(*this)),
+    routes_(new ScreenManager(*this)) {
 
     ktiGenTimers(1, &fixed_timer_);
     ktiBindTimer(fixed_timer_);

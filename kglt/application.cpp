@@ -10,7 +10,7 @@ namespace kglt {
 
 Application::Application(const unicode &title, uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen) {
     window_ = Window::create(width, height, bpp, fullscreen);
-    routes_ = std::make_shared<ScreenManager>(window());
+
     window_->set_title(title.encode());
 
     window_->signal_step().connect(std::bind(&Application::do_step, this, std::placeholders::_1));
