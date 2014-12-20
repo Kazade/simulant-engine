@@ -13,11 +13,19 @@ ScreenBase::~ScreenBase() {
 }
 
 void ScreenBase::load() {
+    if(is_loaded_) {
+        return;
+    }
+
     do_load();
     is_loaded_ = true;
 }
 
 void ScreenBase::unload() {
+    if(!is_loaded_) {
+        return;
+    }
+
     do_unload();
     is_loaded_ = false;
 }
