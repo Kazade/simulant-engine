@@ -254,7 +254,7 @@ private:
     int32_t frame_counter_frames_;
     double frame_time_in_milliseconds_;
 
-    double total_time_;
+    double total_time_ = 0.0;
 
     sig::signal<void ()> signal_frame_started_;
     sig::signal<void ()> signal_pre_swap_;

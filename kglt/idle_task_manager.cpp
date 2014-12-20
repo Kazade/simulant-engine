@@ -69,7 +69,7 @@ struct TimedTrigger {
 };
 
 ConnectionID IdleTaskManager::add_timeout(float seconds, std::function<void()> callback) {
-    TimedTrigger trigger(seconds, callback);
+    std::shared_ptr<TimedTrigger> trigger(new TimedTrigger(seconds, callback));
     return add(std::bind(&TimedTrigger::update, trigger, &this->window_));
 }
 
