@@ -1,48 +1,73 @@
 #include "kglt/kglt.h"
-#include "kglt/shortcuts.h"
 
-int main(int argc, char* argv[]) {
-    logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));
+using namespace kglt;
 
-    kglt::Window::ptr window = kglt::Window::create();
-    window->set_title("KGLT Sample");
+class GameScreen : public kglt::Screen<GameScreen> {
+public:
+    GameScreen(WindowBase& window):
+        kglt::Screen<GameScreen>(window) {}
 
-    auto stage = window->stage();
-    window->camera()->set_perspective_projection(
-        45.0,
-        float(window->width()) / float(window->height()),
-        1.0,
-        1000.0
-    );
+    void do_load() {
+        prepare_basic_scene(stage_id_, camera_id_);
 
-    /**
-        Generate a mesh and build a 2D square
+        auto stage = window().stage(stage_id_);
+        window().camera(camera_id_)->set_perspective_projection(
+            45.0,
+            float(window().width()) / float(window().height()),
+            1.0,
+            1000.0
+        );
 
-        Base objects are always created with new_X() and can
-        be destroyed with delete_X(). They are held by the object
-        that spawned them. For example, meshes are held by the stage->
+        /**
+            Generate a mesh and build a 2D square
 
-        Creating an object gives you an ID, this can then be exchanged
-        for a reference to an object.
-    */
+            Base objects are always created with new_X() and can
+            be destroyed with delete_X(). They are held by the object
+            that spawned them. For example, meshes are held by the stage->
 
-    ///Shortcut function for loading images
-    kglt::TextureID tid = stage->new_texture_from_file("sample_data/sample.tga");
-    kglt::MaterialID matid = stage->new_material_from_texture(tid);
+            Creating an object gives you an ID, this can then be exchanged
+            for a reference to an object.
+        */
 
-    stage->set_ambient_light(kglt::Colour::WHITE);
+        ///Shortcut function for loading images
+        kglt::TextureID tid = stage->new_texture_from_file("sample_data/sample.tga");
+        kglt::MaterialID matid = stage->new_material_from_texture(tid);
 
-    kglt::ActorID actor_id = stage->geom_factory().new_capsule();
-    {
-        auto actor = stage->actor(actor_id);
-        actor->mesh()->set_material_id(matid);
-        actor->move_to(0.0f, 0.0f, -5.0f);
+        stage->set_ambient_light(kglt::Colour::WHITE);
+
+        actor_id_ = stage->geom_factory().new_capsule();
+        {
+            auto actor = stage->actor(actor_id_);
+            actor->mesh()->set_material_id(matid);
+            actor->move_to(0.0f, 0.0f, -5.0f);
+        }
     }
 
-    //Set the actor to rotate each step
-    window->signal_step().connect([&](float dt) { stage->actor(actor_id)->rotate_y(kglt::Degrees(20.0 * dt)); });
+    void do_step(double dt) {
+        auto stage = window().stage(stage_id_);
+        stage->actor(actor_id_)->rotate_y(kglt::Degrees(20.0 * dt));
+    }
 
-    while(window->run_frame()) {}
+private:
+    CameraID camera_id_;
+    StageID stage_id_;
+    ActorID actor_id_;
+};
 
-	return 0;
+class Sample: public kglt::Application {
+public:
+    Sample():
+        Application("KGLT Combined Sample") {
+    }
+
+private:
+    bool do_init() {
+        register_screen("/", screen_factory<GameScreen>());
+        return true;
+    }
+};
+
+int main(int argc, char* argv[]) {
+    Sample app;
+    return app.run();
 }

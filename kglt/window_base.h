@@ -217,8 +217,6 @@ protected:
 private:    
     void create_defaults();
 
-    CameraID default_ui_camera_id_;
-
     bool can_attach_sound_by_id() const { return false; }
 
     bool initialized_;

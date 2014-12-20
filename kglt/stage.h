@@ -87,9 +87,9 @@ public:
     void delete_light(LightID light_id);
     uint32_t light_count() const { return LightManager::manager_count(); }
 
-    void host_camera(CameraID c=CameraID()); ///< Create a representation (CameraProxy) of the designated camera
-    void evict_camera(CameraID c=CameraID()); ///< Remove the representation of the camera
-    ProtectedPtr<CameraProxy> camera(CameraID c=CameraID());
+    void host_camera(CameraID c); ///< Create a representation (CameraProxy) of the designated camera
+    void evict_camera(CameraID c); ///< Remove the representation of the camera
+    ProtectedPtr<CameraProxy> camera(CameraID c);
 
     kglt::Colour ambient_light() const { return ambient_light_; }
     void set_ambient_light(const kglt::Colour& c) { ambient_light_ = c; }

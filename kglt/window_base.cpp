@@ -8,7 +8,6 @@
 #include "input_controller.h"
 #include "loaders/texture_loader.h"
 #include "loaders/material_script.h"
-#include "loaders/q2bsp_loader.h"
 #include "loaders/opt_loader.h"
 #include "loaders/ogg_loader.h"
 #include "loaders/rml_loader.h"
@@ -91,35 +90,12 @@ LoaderPtr WindowBase::loader_for(const unicode &filename) {
 }
 
 void WindowBase::create_defaults() {
-    L_INFO("Initializing the default UI stage");
-    create_default_ui_stage();
-
     //Create a default viewport
     default_viewport_ = new_viewport();
     viewport(default_viewport_)->set_position(0, 0);
     viewport(default_viewport_)->set_size(this->width(), this->height());
 
-    //Host the defaut camera in the default stage
-    stage()->host_camera(default_camera_id());
-
-    //Create a default pipeline for the default stage with the default camera
-    render_sequence()->new_pipeline(default_stage_id(), default_camera_id());
-
-    default_ui_camera_id_ = new_camera();
-
-    camera(default_ui_camera_id_)->set_orthographic_projection(
-        0, this->width(), this->height(), 0, -1, 1
-    );
-
-    //Add a pipeline for the default UI stage to render
-    //after the main pipeline
-    render_sequence()->new_pipeline(
-        default_ui_stage_id(), default_ui_camera_id_,
-        ViewportID(), TextureID(), 100
-    );
-
     message_bar_ = MessageBar::create(*this);
-
     loading_ = screens::Loading::create(*this);
 
     //This needs to happen after SDL or whatever is initialized
@@ -152,7 +128,6 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
         register_loader(std::make_shared<kglt::loaders::OPTLoaderType>());
         register_loader(std::make_shared<kglt::loaders::OGGLoaderType>());
         register_loader(std::make_shared<kglt::loaders::RMLLoaderType>());
-        register_loader(std::make_shared<kglt::loaders::Q2BSPLoaderType>());
         register_loader(std::make_shared<kglt::loaders::OBJLoaderType>());
         register_loader(std::make_shared<kglt::loaders::TiledLoaderType>());
 
@@ -431,8 +406,6 @@ void WindowBase::reset() {
 
     render_sequence()->delete_all_pipelines();
 
-    create_default_stage();
-    create_default_camera();
     create_defaults();
 }
 

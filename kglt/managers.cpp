@@ -66,13 +66,7 @@ uint32_t BackgroundManager::background_count() const {
 CameraManager::CameraManager(WindowBase *window):
     window_(window) {
 
-    create_default_camera();
 }
-
-void CameraManager::create_default_camera() {
-    default_camera_id_ = new_camera();
-}
-
 
 CameraID CameraManager::new_camera() {
     CameraID new_camera = CameraManager::manager_new();
@@ -104,16 +98,7 @@ CameraID CameraManager::new_camera_for_ui() {
     return new_camera_with_orthographic_projection(0, window_->width(), window_->height(), 0, -1, 1);
 }
 
-CameraPtr CameraManager::camera() {
-    return CameraManager::manager_get(default_camera_id_);
-}
-
 CameraPtr CameraManager::camera(CameraID c) {
-    if(!c) {
-        //Return the default camera if we are passed a null ID
-        return camera();
-    }
-
     return CameraManager::manager_get(c);
 }
 
@@ -148,11 +133,6 @@ const bool CameraManager::has_camera(CameraID id) const {
 StageManager::StageManager(WindowBase *window):
     window_(window) {
 
-    create_default_stage();
-}
-
-void StageManager::create_default_stage() {
-    default_stage_id_ = new_stage(PARTITIONER_NULL); //Create the default stage
 }
 
 StageID StageManager::new_stage(AvailablePartitioner partitioner) {
@@ -165,21 +145,14 @@ uint32_t StageManager::stage_count() const {
 
 /**
  * @brief StageManager::stage
- * @return A shared_ptr to the default stage
+ * @return A shared_ptr to the stage
  *
  * We don't return a ProtectedPtr because it makes usage a nightmare. Stages don't suffer the same potential
  * threading issues as other objects as they are the highest level object. Returning a weak_ptr means that
  * we retain ownership, and calling code won't die if the stage goes missing.
  */
-StagePtr StageManager::stage() {
-    return StageManager::manager_get(default_stage_id_);
-}
 
 StagePtr StageManager::stage(StageID s) {
-    if(!s) {
-        return stage();
-    }
-
     return StageManager::manager_get(s);
 }
 
@@ -231,22 +204,11 @@ UIStageManager::UIStageManager(WindowBase *window):
 
 }
 
-void UIStageManager::create_default_ui_stage() {
-    default_ui_stage_id_ = new_ui_stage();
-}
-
 UIStageID UIStageManager::new_ui_stage() {
     return UIStageManager::manager_new();
 }
 
-UIStagePtr UIStageManager::ui_stage() {
-    return UIStageManager::manager_get(default_ui_stage_id_);
-}
-
 UIStagePtr UIStageManager::ui_stage(UIStageID s) {
-    if(!s) {
-        return ui_stage();
-    }
     return UIStageManager::manager_get(s);
 }
 

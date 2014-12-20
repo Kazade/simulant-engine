@@ -5,24 +5,25 @@
  *  Allows you to register different screens of gameplay, and
  *  easily switch between them.
  *
- *  manager->add_route<LoadingScreen>("/");
- *  manager->add_route<MenuScreen>("/menu");
- *  manager->add_route<GameScreen>("/game");
+ *  manager->register_screen("/", screen_factory<LoadingScreen());
+ *  manager->register_screen("/menu", screen_factory<MenuScreen());
+ *  manager->register_screen("/ingame", screen_factory<GameScreen());
  *
- *  manager->redirect("/");
- *  manager->background_load("/menu");
+ *  manager->activate_screen("/");
+ *  manager->load_screen_in_background("/menu");
  *  if(manager->is_loaded("/menu")) {
- *      manager->redirect("/menu");
+ *      manager->activate_screen("/menu");
  *  }
  *  manager->unload("/");
- *  manager->redirect("/"); // Will cause loading to happen again
+ *  manager->activate_screen("/"); // Will cause loading to happen again
  *
  */
 
-
-#include "../generic/managed.h"
 #include <kazbase/unicode.h>
 #include <kazbase/exceptions.h>
+
+#include "../types.h"
+#include "../generic/managed.h"
 
 namespace kglt {
 
@@ -55,6 +56,10 @@ protected:
     virtual void do_deactivate() {}
     virtual void do_step(double dt) {}
 
+    PipelineID prepare_basic_scene(StageID& new_stage, CameraID& new_camera);
+    std::pair<PipelineID, PipelineID> prepare_basic_scene_with_overlay(
+        StageID& new_stage, CameraID& new_camera, UIStageID& new_ui, CameraID& new_ui_camera
+    );
 private:
     WindowBase& window_;
     bool is_loaded_ = false;

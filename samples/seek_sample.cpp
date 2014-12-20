@@ -4,6 +4,7 @@
 #include "kglt/extra.h"
 #include "kglt/extra/ai/boid.h"
 
+using namespace kglt;
 using namespace kglt::extra;
 
 class Dot:
@@ -53,6 +54,33 @@ private:
     kglt::Vec3 target = kglt::Vec3(10, 0, -50);
 };
 
+class GameScreen : public kglt::Screen<GameScreen> {
+public:
+    GameScreen(WindowBase& window):
+        kglt::Screen<GameScreen>(window) {}
+
+    void do_load() {
+        prepare_basic_scene(stage_id_, camera_id_);
+
+        dot_ = Dot::create(window(), stage_id_);
+
+        window().camera(camera_id_)->set_perspective_projection(
+            45.0,
+            float(window().width()) / float(window().height()),
+            1.0,
+            1000.0
+        );
+    }
+
+    void do_step(double dt) {
+        dot_->update(dt);
+    }
+
+private:
+    StageID stage_id_;
+    CameraID camera_id_;
+    Dot::ptr dot_;
+};
 
 class SeekSample: public kglt::Application {
 public:
@@ -64,26 +92,9 @@ public:
 
 private:
     bool do_init() {
-        dot_ = Dot::create(window(), stage()->id());
-
-        window().camera()->set_perspective_projection(
-            45.0,
-            float(window().width()) / float(window().height()),
-            1.0,
-            1000.0
-        );
+        register_screen("/", screen_factory<GameScreen>());
         return true;
     }
-
-    void do_step(double dt) {
-        if(initialized()) {
-            dot_->update(dt);
-        }
-    }
-
-    void do_cleanup() {}
-
-    Dot::ptr dot_;
 };
 
 

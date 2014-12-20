@@ -9,6 +9,18 @@
 
 class MeshTest : public KGLTTestCase {
 public:
+    void set_up() {
+        KGLTTestCase::set_up();
+        camera_id_ = window->new_camera();
+        stage_id_ = window->new_stage();
+    }
+
+    void tear_down() {
+        KGLTTestCase::tear_down();
+        window->delete_camera(camera_id_);
+        window->delete_stage(stage_id_);
+    }
+
     kglt::MeshID generate_test_mesh(AutoWeakPtr<kglt::Stage> stage) {
         kglt::MeshID mid = stage->new_mesh();
         auto mesh = stage->mesh(mid);
@@ -58,7 +70,7 @@ public:
     }
 
     void test_user_data_works() {
-        auto stage = window->stage();
+        auto stage = window->stage(stage_id_);
 
         kglt::ActorID mid = stage->new_actor();
         auto actor = stage->actor(mid);
@@ -76,7 +88,7 @@ public:
     }
 
     void test_deleting_entities_deletes_children() {
-        auto stage = window->stage();
+        auto stage = window->stage(stage_id_);
 
         kglt::ActorID mid = stage->new_actor(); //Create the root mesh
         kglt::ActorID cid1 = stage->new_actor_with_parent(mid); //Create a child
@@ -93,7 +105,7 @@ public:
     }
 
     void test_procedural_rectangle_outline() {
-        auto stage = window->stage();
+        auto stage = window->stage(stage_id_);
 
         kglt::MeshID mid = stage->new_mesh();
         auto mesh = stage->mesh(mid);
@@ -107,7 +119,7 @@ public:
     }
 
     void test_basic_usage() {
-        auto stage = window->stage();
+        auto stage = window->stage(stage_id_);
         auto mesh = stage->mesh(generate_test_mesh(stage));
 
         kglt::VertexData& data = mesh->shared_data();
@@ -127,7 +139,7 @@ public:
     }
 
     void test_actor_from_mesh() {
-        auto stage = window->stage();
+        auto stage = window->stage(stage_id_);
 
         auto mesh = stage->mesh(generate_test_mesh(stage));
 
@@ -161,13 +173,18 @@ public:
     }
 
     void test_scene_methods() {
-        auto stage = window->stage();
+        auto stage = window->stage(stage_id_);
 
         kglt::MeshID mesh_id = stage->new_mesh(); //Create a mesh
         auto actor = stage->actor(stage->new_actor(mesh_id));
 
         assert_true(mesh_id == actor->mesh()->id());
     }
+
+
+private:
+    CameraID camera_id_;
+    StageID stage_id_;
 };
 
 #endif // TEST_MESH_H

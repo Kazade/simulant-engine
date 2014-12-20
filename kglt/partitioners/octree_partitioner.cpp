@@ -98,7 +98,7 @@ std::vector<RenderablePtr> OctreePartitioner::geometry_visible_from(CameraID cam
      */
 
     //Go through the visible nodes
-    for(OctreeNode* node: tree_.nodes_visible_from(stage()->camera(camera_id)->frustum())) {
+    for(OctreeNode* node: tree_.nodes_visible_from(stage()->window().camera(camera_id)->frustum())) {
         //Go through the objects
         for(const BoundableEntity* obj: node->objects()) {
             if(container::contains(boundable_to_renderable_, obj)) {

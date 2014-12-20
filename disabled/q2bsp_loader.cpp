@@ -217,7 +217,7 @@ void add_lights_to_scene(WindowBase& window, const std::vector<ActorProperties>&
 
 void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     Loadable* res_ptr = &resource;
-    WindowBase* window = dynamic_cast<Window*>(res_ptr);
+    Stage* stage = dynamic_cast<Stage*>(res_ptr);
     assert(window && "You passed a Resource that is not a window to the QBSP loader");
 
     std::ifstream file(filename_.encode().c_str(), std::ios::binary);

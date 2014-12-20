@@ -11,19 +11,22 @@ public:
         kglt::Screen<GameScreen>(window) {}
 
     void do_load() {
+        prepare_basic_scene(stage_id_, camera_id_);
+
         window().enable_physics(DefaultPhysicsEngine::create());
         window().physics()->create_plane(0, 1, 0, -3.5);
         window().physics()->set_gravity(Vec3(0, -7.8, 0));
 
-        texture_id_ = window().stage()->new_texture_from_file("sample_data/crate.png");
-        mesh_ = window().stage()->new_mesh_as_cube(1.0);
-        window().stage()->mesh(mesh_)->set_texture_on_material(0, texture_id_);
+        auto stage = main_stage();
+        texture_id_ = stage->new_texture_from_file("sample_data/crate.png");
+        mesh_ = stage->new_mesh_as_cube(1.0);
+        stage->mesh(mesh_)->set_texture_on_material(0, texture_id_);
 
-        window().stage()->set_ambient_light(kglt::Colour(0.3, 0.3, 0.3, 0.3));
+        stage->set_ambient_light(kglt::Colour(0.3, 0.3, 0.3, 0.3));
 
-        LightID lid = window().stage()->new_light();
+        LightID lid = stage->new_light();
         {
-            auto light = window().stage()->light(lid);
+            auto light = stage->light(lid);
             light->set_direction(-1, 0, 0);
             light->set_diffuse(kglt::Colour(0.1, 0.1, 0.1, 0.1));
             light->set_specular(kglt::Colour(0, 0, 0, 0));
@@ -35,11 +38,11 @@ public:
 
         //Spawn a new cube every second
         if(time_since_last_spawn_ >= 1.0) {
-
+            auto stage = main_stage();
             //Make the new actor both responsive, and collidable
-            ActorID new_actor = window().stage()->new_actor(mesh_, true, true);
+            ActorID new_actor = stage->new_actor(mesh_, true, true);
             {
-                auto actor = window().stage()->actor(new_actor);
+                auto actor = stage->actor(new_actor);
 
                 //Add a cube shape to the collidable
                 actor->body().set_mass_box(1.0, 1.0, 1.0, 1.0);
@@ -53,11 +56,16 @@ public:
     }
 
 private:
+    kglt::CameraID camera_id_;
+    kglt::StageID stage_id_;
+
     kglt::TextureID texture_id_;
     kglt::MeshID mesh_;
     std::vector<ActorID> actors_;
 
     float time_since_last_spawn_ = 0.0;
+
+    StagePtr main_stage() { return window().stage(stage_id_); }
 };
 
 class BoxDrop: public kglt::Application {

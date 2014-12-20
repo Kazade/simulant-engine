@@ -258,10 +258,6 @@ void Stage::delete_light(LightID light_id) {
 }
 
 void Stage::host_camera(CameraID c) {
-    if(!c) {
-        c = window().default_camera_id();
-    }
-
     if(window().camera(c)->has_proxy()) {
         //Destroy any existing proxy
         window().camera(c)->proxy().stage()->evict_camera(c);
@@ -274,19 +270,11 @@ void Stage::host_camera(CameraID c) {
 }
 
 void Stage::evict_camera(CameraID c) {
-    if(!c) {
-        c = window().default_camera_id();
-    }
-
     //Delete the camera proxy
     CameraProxyManager::manager_delete(c);
 }
 
 ProtectedPtr<CameraProxy> Stage::camera(CameraID c) {
-    if(!c) {
-        c = window().default_camera_id();
-    }
-
     return ProtectedPtr<CameraProxy>(CameraProxyManager::manager_get(c));
 }
 

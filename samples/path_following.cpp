@@ -4,6 +4,7 @@
 #include "kglt/extra.h"
 #include "kglt/extra/ai/boid.h"
 
+using namespace kglt;
 using namespace kglt::extra;
 
 class Car:
@@ -74,9 +75,12 @@ public:
 
 private:
     bool do_init() {
+        stage_id_ = window().new_stage();
+        camera_id_ = window().new_camera();
+
         window().enable_physics(kglt::DefaultPhysicsEngine::create());
-        car_ = Car::create(window(), stage()->id());
-        window().camera()->set_perspective_projection(
+        car_ = Car::create(window(), stage_id_);
+        window().camera(camera_id_)->set_perspective_projection(
             45.0,
             float(window().width()) / float(window().height()),
             1.0,
@@ -94,6 +98,8 @@ private:
     void do_cleanup() {}
 
     Car::ptr car_;
+    StageID stage_id_;
+    CameraID camera_id_;
 };
 
 

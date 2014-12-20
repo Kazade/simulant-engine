@@ -93,8 +93,6 @@ kglt/window_base.cpp
 kglt/window_base.h
 samples/2d_sample.cpp
 samples/CMakeLists.txt
-samples/outline_sample.cpp
-samples/parallax_sample.cpp
 samples/q2bsp_sample.cpp
 samples/sample.cpp
 samples/selection_sample.cpp
@@ -103,8 +101,6 @@ tests/CMakeLists.txt
 tests/main.cpp
 CMakeLists.txt
 samples/combined_sample_1.cpp
-samples/ui_sample.cpp
-samples/text_sample.cpp
 kglt/frustum.h
 kglt/frustum.cpp
 kglt/generic/visitor.h
@@ -154,7 +150,6 @@ kglt/partitioners/octree_partitioner.h
 kglt/partitioners/octree.h
 kglt/partitioners/octree.cpp
 kglt/partitioners/octree_partitioner.cpp
-samples/texture_scroll_sample.cpp
 kglt/resource_locator.h
 kglt/resource_locator.cpp
 kglt/loaders/material_script.h
@@ -199,7 +194,6 @@ kglt/extra/skybox.cpp
 kglt/materials/multitexture_and_lighting.kglm
 kglt/input_controller.h
 kglt/input_controller.cpp
-samples/model_viewer.cpp
 kglt/testing/mock_window.h
 kglt/procedural/mesh/circle.h
 kglt/procedural/mesh/circle.cpp
