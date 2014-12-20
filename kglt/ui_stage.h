@@ -29,6 +29,7 @@ public:
     void set_styles(const std::string& styles);
     void load_rml(const unicode& path);
     void load_rml_from_string(const unicode& data);
+    void register_font_globally(const unicode& ttf_file);
 
     //Internal functions
     //Called when added to a pipeline, and also before rendering

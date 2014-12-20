@@ -474,6 +474,12 @@ bool Interface::init() {
     return true;
 }
 
+void Interface::load_font(const unicode &ttf_file) {
+    if(!Rocket::Core::FontDatabase::LoadFontFace(locate_font(ttf_file).encode().c_str())) {
+        throw IOError("Couldn't load the font");
+    }
+}
+
 unicode Interface::locate_font(const unicode& filename) {
     //FIXME: Should be %WINDIR% not C:\Windows
     //FIXME: Should look recursively in /usr/share/fonts

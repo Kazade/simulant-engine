@@ -43,6 +43,10 @@ void UIStage::load_rml(const unicode& path) {
     window_.loader_for(path)->into(interface_);
 }
 
+void UIStage::register_font_globally(const unicode& ttf_file) {
+    this->interface_->load_font(ttf_file);
+}
+
 void UIStage::load_rml_from_string(const unicode& data) {
     interface_->impl()->document_ = dynamic_cast<kglt::ui::CustomDocument*>(interface_->impl()->context_->LoadDocumentFromMemory(data.encode().c_str()));
     if(!interface_->impl()->document_) {
