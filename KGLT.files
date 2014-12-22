@@ -777,3 +777,4 @@ tests/test_screens.h
 tests/test_render_chain.h
 kglt/pipeline_helper.h
 kglt/pipeline_helper.cpp
+kglt/ui/rocket/Include/Rocket/Core/ElementInstancerGeneric.inl

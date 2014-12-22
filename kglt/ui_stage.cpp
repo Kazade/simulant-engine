@@ -48,7 +48,7 @@ void UIStage::register_font_globally(const unicode& ttf_file) {
 }
 
 void UIStage::load_rml_from_string(const unicode& data) {
-    interface_->impl()->document_ = dynamic_cast<kglt::ui::CustomDocument*>(interface_->impl()->context_->LoadDocumentFromMemory(data.encode().c_str()));
+    interface_->impl()->document_->SetInnerRML(data.encode().c_str());
     if(!interface_->impl()->document_) {
         throw ValueError("Unable to load RML file from data");
     } else {

@@ -3,6 +3,8 @@
 
 #include <mutex>
 #include <unordered_map>
+#include <kazbase/exceptions.h>
+
 #include "element.h"
 
 #include <Rocket/Core/EventListener.h>
@@ -34,7 +36,6 @@ public:
         rocket_impl_(rocket_impl),
         elem_(elem),
         text_(nullptr) {
-
 
         for(auto evt: STANDARD_EVENTS) {
             elem_->AddEventListener(evt.encode().c_str(), this);
@@ -96,8 +97,8 @@ public:
     float height() const;
 private:
     RocketImpl* rocket_impl_ = nullptr;
-    Rocket::Core::Element* elem_;
-    Rocket::Core::ElementText* text_;
+    Rocket::Core::Element* elem_ = nullptr;
+    Rocket::Core::ElementText* text_ = nullptr;
 
     void ProcessEvent(Rocket::Core::Event& event);
 

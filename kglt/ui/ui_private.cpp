@@ -68,6 +68,11 @@ void ElementImpl::set_text(const unicode& text) {
      *
      *  Then we set the text.
      */
+
+    if(!rocket_impl_) {
+        throw ValueError("rocket_impl_ has not been set");
+    }
+
     if(!text_) {
         std::lock_guard<std::recursive_mutex> lck(rocket_impl_->mutex_);
 
@@ -93,8 +98,22 @@ CustomDocument::CustomDocument(const Rocket::Core::String& tag):
 
 }
 
+void find_all_children(Rocket::Core::Element* parent, std::vector<Rocket::Core::Element*> children) {
+    for(int i = 0; i < parent->GetNumChildren(); ++i) {
+        children.push_back(parent->GetChild(i));
+        find_all_children(children.back(), children);
+    }
+}
+
 void CustomDocument::set_impl(RocketImpl* impl) {
     impl_ = impl;
+
+    std::vector<Rocket::Core::Element*> children;
+    find_all_children(this->impl_->document_, children);
+
+    for(auto child: children) {
+        OnChildAdd(child);
+    }
 
     for(auto p: element_impls_) {
         p.second->_set_rocket_impl(impl);
@@ -117,9 +136,12 @@ void CustomDocument::OnChildAdd(Rocket::Core::Element* element) {
 
     auto it = element_impls_.find(element);
     if(it == element_impls_.end()) {
+        if(!impl_ && element != this) {
+            throw ValueError("impl_ has not been set");
+        }
         element_impls_[element] = std::make_shared<ElementImpl>(impl_, element);
     } else {
-        L_WARN("ChildAdd called for the same element twice");
+        return;
     }
 
     Rocket::Core::ElementDocument::OnChildAdd(element);
