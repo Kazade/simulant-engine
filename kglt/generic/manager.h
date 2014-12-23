@@ -16,6 +16,7 @@ protected:
 
 public:
     typedef NewIDGenerator GeneratorType;
+    typedef ObjectType Type;
 
     ObjectIDType manager_new() {
         return manager_new(ObjectIDType());

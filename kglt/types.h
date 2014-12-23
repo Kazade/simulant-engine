@@ -23,6 +23,7 @@
 #include "generic/protected_ptr.h"
 #include "generic/auto_weakptr.h"
 #include "generic/unique_id.h"
+#include "generic/manager_lookup_ptr.h"
 #include "kazbase/unicode.h"
 
 namespace kglt {
@@ -533,7 +534,9 @@ class Background;
 typedef AutoWeakPtr<Background> BackgroundPtr;
 
 class Stage;
-typedef AutoWeakPtr<Stage> StagePtr;
+class WindowBase;
+typedef generic::TemplatedManager<WindowBase, Stage, StageID> BaseStageManager;
+typedef ManagerLookupPtr<BaseStageManager, StageID> StagePtr;
 
 class ResourceManager;
 typedef AutoWeakPtr<ResourceManager> ResourceManagerPtr;

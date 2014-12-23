@@ -153,7 +153,7 @@ uint32_t StageManager::stage_count() const {
  */
 
 StagePtr StageManager::stage(StageID s) {
-    return StageManager::manager_get(s);
+    return StagePtr(*this, s);
 }
 
 void StageManager::delete_stage(StageID s) {

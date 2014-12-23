@@ -779,3 +779,4 @@ kglt/pipeline_helper.h
 kglt/pipeline_helper.cpp
 kglt/ui/rocket/Include/Rocket/Core/ElementInstancerGeneric.inl
 kglt/loaders/stb_vorbis.c
+kglt/generic/manager_lookup_ptr.h

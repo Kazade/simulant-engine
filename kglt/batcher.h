@@ -177,7 +177,7 @@ public:
         return *this;
     }
 
-    AutoWeakPtr<kglt::Stage> stage();
+    StagePtr stage();
     ProtectedPtr<CameraProxy> camera();
 
     void insert(Renderable& ent, uint8_t pass_number);

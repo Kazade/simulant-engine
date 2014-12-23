@@ -48,7 +48,7 @@ private:
 };
 
 class StageManager:
-    public generic::TemplatedManager<WindowBase, Stage, StageID>,
+    public BaseStageManager,
     public virtual Updateable {
 
 public:

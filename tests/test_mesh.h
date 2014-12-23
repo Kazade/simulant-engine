@@ -21,7 +21,7 @@ public:
         window->delete_stage(stage_id_);
     }
 
-    kglt::MeshID generate_test_mesh(AutoWeakPtr<kglt::Stage> stage) {
+    kglt::MeshID generate_test_mesh(StagePtr stage) {
         kglt::MeshID mid = stage->new_mesh();
         auto mesh = stage->mesh(mid);
 
