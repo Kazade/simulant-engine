@@ -145,7 +145,7 @@ public:
             });
 
 
-            auto hat_cb = [=](kglt::HatPosition position, kglt::Hat hat) mutable {
+            auto hat_cb = [=](kglt::HatPosition position, kglt::Hat hat, double dt) mutable {
                 std::cout << "Hat: " << (int) hat << std::endl;
                 std::cout << "Position " << (int) position << std::endl;
             };
@@ -153,7 +153,7 @@ public:
             // Triggers should work too
             // NOTE: horizontal axis have an even number..
             // Hat experimental
-            joypad.hat_changed_connect(0, hat_cb);
+            joypad.hat_changed_connect(0, std::bind(hat_cb, std::placeholders::_1, std::placeholders::_2, 0));
             joypad.hat_while_not_centered_connect(0, hat_cb);
         }
     }

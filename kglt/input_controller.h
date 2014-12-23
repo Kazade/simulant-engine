@@ -133,6 +133,7 @@ typedef std::function<void (AxisRange, Axis)> JoypadCallback;
 typedef std::function<void (uint8_t)> JoypadButtonCallback;
 typedef std::function<void (uint8_t, double)> JoypadButtonDownCallback;
 typedef std::function<void (HatPosition, Hat)> JoypadHatCallback;
+typedef std::function<void (HatPosition, Hat, double)> JoypadHatDownCallback;
 
 class Joypad :
     public Device,
@@ -150,7 +151,7 @@ public:
     InputConnection button_while_down_connect(Button button, JoypadButtonDownCallback callback);
 
     InputConnection hat_changed_connect(Hat hat, JoypadHatCallback callback);
-    InputConnection hat_while_not_centered_connect(Hat hat, JoypadHatCallback callback);
+    InputConnection hat_while_not_centered_connect(Hat hat, JoypadHatDownCallback callback);
 
 private:
     typedef std::pair<InputConnection, JoypadCallback> AxisSignalEntry;
@@ -181,7 +182,7 @@ private:
     std::map<Button, std::map<InputConnection, JoypadButtonDownCallback>> button_down_signals_;
 
     std::map<Hat, std::map<InputConnection, JoypadHatCallback> > hat_changed_signals_;
-    std::map<Hat, std::map<InputConnection, JoypadHatCallback> > hat_while_not_centered_signals_;
+    std::map<Hat, std::map<InputConnection, JoypadHatDownCallback> > hat_while_not_centered_signals_;
 
     friend class InputController;
 };

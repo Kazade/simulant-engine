@@ -218,7 +218,7 @@ InputConnection Joypad::hat_changed_connect(Hat hat, JoypadHatCallback callback)
     return c;
 }
 
-InputConnection Joypad::hat_while_not_centered_connect(Hat hat, JoypadHatCallback callback) {
+InputConnection Joypad::hat_while_not_centered_connect(Hat hat, JoypadHatDownCallback callback) {
     InputConnection c = new_input_connection();
     hat_while_not_centered_signals_[hat][c] = callback;
     return c;
@@ -291,7 +291,7 @@ void Joypad::_update(double dt) {
         HatPosition pos = p.second;
         if(p.second != HAT_POSITION_CENTERED) {
             for(auto entry: hat_while_not_centered_signals_[p.first]) {
-                entry.second(pos, p.first);
+                entry.second(pos, p.first, dt);
             }
         }
     }
