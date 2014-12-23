@@ -27,6 +27,12 @@ public:
     }
 
     template<typename U>
+    AutoWeakPtr& operator=(const AutoWeakPtr<U>& other) {
+        this->weak_ptr_ = other.weak_ptr_;
+        return *this;
+    }
+
+    template<typename U>
     AutoWeakPtr(const std::weak_ptr<U>& other):
         weak_ptr_(other) {}
 

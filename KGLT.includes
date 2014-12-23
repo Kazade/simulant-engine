@@ -36,3 +36,4 @@ kglt/ui/rocket/Include/Rocket
 kglt/ui/rocket/Source/Controls
 kglt/ui/rocket/Source/Debugger
 kglt/screens
+kglt/loaders

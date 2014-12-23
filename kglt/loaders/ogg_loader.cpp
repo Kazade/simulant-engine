@@ -24,7 +24,8 @@ private:
 
 int32_t queue_buffer(Sound* self, StreamWrapper::ptr stream, ALuint buffer) {
     std::vector<ALshort> pcm;
-    pcm.resize(self->buffer_size());
+    int s = self->buffer_size();
+    pcm.resize(s);
 
     int size = 0;
     int result = 0;

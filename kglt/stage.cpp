@@ -52,6 +52,7 @@ ActorID Stage::new_actor() {
 
 ActorID Stage::new_actor(bool make_responsive, bool make_collidable) {
     ActorID result = ActorManager::manager_new();
+    actor(result)->set_parent(this);
 
     if(make_responsive) {
         actor(result)->make_responsive();
@@ -150,6 +151,7 @@ ParticleSystemID Stage::new_particle_system_from_file(const unicode& filename) {
     ParticleSystemID new_id = new_particle_system();
 
     auto ps = particle_system(new_id);
+    ps->set_parent(this);
     window().loader_for(filename)->into(ps);
 
     return new_id;

@@ -33,6 +33,10 @@ public:
         T::set_parent(T::stage()->background(background).__object.get());
     }
 
+    void set_parent(ParticleSystemID particles) {
+        T::set_parent(T::stage()->particle_system(particles).__object.get());
+    }
+
 protected:
     using T::set_parent;
 
