@@ -8,6 +8,7 @@
 #include <SDL.h>
 #include <set>
 #include <cassert>
+#include <kazbase/signals.h>
 
 #include "generic/managed.h"
 #include "generic/identifiable.h"
@@ -213,6 +214,9 @@ private:
     std::vector<SDL_Joystick*> sdl_joysticks_;
 
     void init_virtual_joypad();
+    std::vector<sig::connection> virtual_joypad_connections_;
+
+    friend class WindowBase;
 };
 
 }

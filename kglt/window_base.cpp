@@ -339,6 +339,8 @@ void WindowBase::enable_virtual_joypad(VirtualDPadDirections directions, int but
     }
 
     virtual_gamepad_ = VirtualGamepad::create(*this, directions, button_count);
+    input_controller().init_virtual_joypad();
+
     if(flipped) {
         virtual_gamepad_->flip();
     }

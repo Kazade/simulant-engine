@@ -29,7 +29,7 @@ APP_CFLAGS              := %%s
 APP_STL                 := c++_shared
 APP_PLATFORM            := android-19
 APP_ABI                 := armeabi-v7a x86
-APP_OPTIM               := release
+APP_OPTIM               := debug
 """.lstrip() % OUTPUT_DIRECTORY
 
 LIBRARIES = [

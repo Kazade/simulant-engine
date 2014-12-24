@@ -378,23 +378,34 @@ void InputController::update(double dt) {
 }
 
 void InputController::init_virtual_joypad() {
-    if(virtual_joypad_) {
-        return;
+    if(!virtual_joypad_) {
+        virtual_joypad_ = std::make_shared<Joypad>();
     }
 
-    virtual_joypad_ = std::make_shared<Joypad>();
-    window_.virtual_joypad()->signal_button_down().connect([=](int btn) {
-        joypad(joypads_.size())._handle_button_down_event(btn);
-    });
-    window_.virtual_joypad()->signal_button_up().connect([=](int btn) {
-        joypad(joypads_.size())._handle_button_up_event(btn);
-    });
+    auto vpad = window_.virtual_joypad();
 
-    window_.virtual_joypad()->signal_hat_changed().connect([=](HatPosition pos) {
-        joypad(joypads_.size())._handle_hat_changed_event(0, pos);
-    });
+    for(auto conn: virtual_joypad_connections_) {
+        conn.disconnect();
+    }
+    virtual_joypad_connections_.clear();
 
-    //FIXME: Connect signals to window virtual joypad
+    virtual_joypad_connections_.push_back(
+        vpad->signal_button_down().connect([=](int btn) {
+            joypad(joypads_.size())._handle_button_down_event(btn);
+        })
+    );
+
+    virtual_joypad_connections_.push_back(
+        vpad->signal_button_up().connect([=](int btn) {
+            joypad(joypads_.size())._handle_button_up_event(btn);
+        })
+    );
+
+    virtual_joypad_connections_.push_back(
+        vpad->signal_hat_changed().connect([=](HatPosition pos) {
+            joypad(joypads_.size())._handle_hat_changed_event(0, pos);
+        })
+    );
 }
 
 Joypad& InputController::joypad(uint8_t idx) {
