@@ -38,7 +38,8 @@ class Stage:
     public CameraProxyManager,
     public Loadable,
     public SceneNode,
-    public Protectable {
+    public Protectable,
+    public RenderableStage {
 
 public:
     Stage(WindowBase *parent, StageID id, AvailablePartitioner partitioner);
@@ -318,6 +319,10 @@ public:
     TextureID default_texture_id() const { return window_.default_texture_id(); }
     MaterialID clone_default_material() { return window_.clone_default_material(); }
     unicode default_material_filename() const { return window_.default_material_filename(); }
+
+    // RenderableStage
+    void on_render_started() {}
+    void on_render_stopped() {}
 private:
     WindowBase& window_;
 
