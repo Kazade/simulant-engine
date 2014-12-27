@@ -34,6 +34,7 @@ public:
 
     Dimensions button_dimensions(int button);
 
+    void _disable_rendering();
 private:
     WindowBase& window_;
     VirtualDPadDirections directions_ = VIRTUAL_DPAD_DIRECTIONS_TWO;

@@ -166,6 +166,21 @@ public:
 
         assert_false(b1_pressed);
     }
+
+    void test_deactivation_releases_buttons() {
+        auto b1 = window->virtual_joypad()->button_dimensions(0);
+
+        int x = b1.left + 1;
+        int y = b1.top + 1;
+
+        window->handle_touch_down(0, x, y);
+
+        assert_true(b1_pressed);
+
+        window->disable_virtual_joypad();
+
+        assert_false(b1_pressed);
+    }
 };
 
 class VirtualGamepadInputTests : public KGLTTestCase {

@@ -49,12 +49,15 @@ public:
 
     // RenderableStage
     void on_render_started() {}
-    void on_render_stopped() {}
+    void on_render_stopped();
 private:
     WindowBase& window_;
 
     std::shared_ptr<ui::Interface> interface_;
     sig::connection update_conn_;
+
+    std::set<int> mouse_buttons_down_;
+    std::set<int> fingers_down_;
 };
 
 }

@@ -240,13 +240,16 @@ bool VirtualGamepad::init() {
     return true;
 }
 
+void VirtualGamepad::_disable_rendering() {
+    window_.disable_pipeline(pipeline_id_);
+}
+
 void VirtualGamepad::cleanup() {
     L_DEBUG("Destroying virtual gamepad");
 
     window_.delete_pipeline(pipeline_id_);
     window_.delete_camera(camera_id_);
     window_.delete_ui_stage(ui_stage_);
-
 }
 
 void VirtualGamepad::flip() {

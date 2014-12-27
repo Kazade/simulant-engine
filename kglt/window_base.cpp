@@ -347,7 +347,20 @@ void WindowBase::enable_virtual_joypad(VirtualDPadDirections directions, int but
 }
 
 void WindowBase::disable_virtual_joypad() {
-    virtual_gamepad_.reset();
+    /*
+     * This is a little hacky, but basically when we disable the virtual gamepad's
+     * UI, it triggers a series of events that release any buttons which are currently
+     * held down. That inevitably calls has_virtual_gamepad, so if we trigger that whole
+     * series just by calling reset() has_virtual_gamepad then returns false and the world ends.
+     *
+     * So, here we disable the gamepad's pipeline before wiping it out, so those events are triggered
+     * while the virtual gamepad still exists. Then the pipeline is deleted by reset()
+     */
+
+    if(virtual_gamepad_) {
+        virtual_gamepad_->_disable_rendering();
+        virtual_gamepad_.reset();
+    }
 }
 
 void WindowBase::handle_mouse_motion(int x, int y, bool pos_normalized) {

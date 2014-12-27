@@ -75,15 +75,21 @@ void UIStage::__handle_mouse_move(int x, int y) {
 void UIStage::__handle_mouse_down(int button) {
     //FIXME: Again, pass down modifiers
     interface_->impl()->context_->ProcessMouseButtonDown(button - 1, 0); //Buttons are zero-based in Rocket land
+
+    mouse_buttons_down_.insert(button);
 }
 
 void UIStage::__handle_mouse_up(int button) {
     //FIXME: Again, pass down modifiers
     interface_->impl()->context_->ProcessMouseButtonUp(button - 1, 0);
+
+    mouse_buttons_down_.erase(button);
 }
 
 void UIStage::__handle_touch_up(int finger_id, int x, int y) {
     interface_->impl()->context_->ProcessTouchUp(finger_id, x, y, 0);
+
+    fingers_down_.erase(finger_id);
 }
 
 void UIStage::__handle_touch_motion(int finger_id, int x, int y) {
@@ -92,6 +98,23 @@ void UIStage::__handle_touch_motion(int finger_id, int x, int y) {
 
 void UIStage::__handle_touch_down(int finger_id, int x, int y) {
     interface_->impl()->context_->ProcessTouchDown(finger_id, x, y, 0);
+
+    fingers_down_.insert(finger_id);
+}
+
+void UIStage::on_render_stopped() {
+    // When rendering stops, we need to release all of the touches and buttons (as if the document
+    // had been destroyed)
+
+    auto mtmp = mouse_buttons_down_;
+    for(auto btn: mtmp) {
+        __handle_mouse_up(btn);
+    }
+
+    auto ftmp = fingers_down_;
+    for(auto finger: ftmp) {
+        __handle_touch_up(finger, 0, 0); //FIXME: Perhaps we should maintain the position?
+    }
 }
 
 }
