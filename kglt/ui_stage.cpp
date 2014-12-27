@@ -69,34 +69,46 @@ void UIStage::__update(double dt) {
 }
 
 void UIStage::__handle_mouse_move(int x, int y) {
+    if(!is_being_rendered()) return;
+
     interface_->impl()->context_->ProcessMouseMove(x, y, 0); //FIXME pass down modifiers from the Window event
 }
 
 void UIStage::__handle_mouse_down(int button) {
+    if(!is_being_rendered()) return;
+
     //FIXME: Again, pass down modifiers
     interface_->impl()->context_->ProcessMouseButtonDown(button - 1, 0); //Buttons are zero-based in Rocket land
 
     mouse_buttons_down_.insert(button);
 }
 
-void UIStage::__handle_mouse_up(int button) {
+void UIStage::__handle_mouse_up(int button, bool check_rendered) {
+    if(check_rendered && !is_being_rendered()) return;
+
     //FIXME: Again, pass down modifiers
     interface_->impl()->context_->ProcessMouseButtonUp(button - 1, 0);
 
     mouse_buttons_down_.erase(button);
 }
 
-void UIStage::__handle_touch_up(int finger_id, int x, int y) {
+void UIStage::__handle_touch_up(int finger_id, int x, int y, bool check_rendered) {
+    if(check_rendered && !is_being_rendered()) return;
+
     interface_->impl()->context_->ProcessTouchUp(finger_id, x, y, 0);
 
     fingers_down_.erase(finger_id);
 }
 
 void UIStage::__handle_touch_motion(int finger_id, int x, int y) {
+    if(!is_being_rendered()) return;
+
     interface_->impl()->context_->ProcessTouchMove(finger_id, x, y, 0);
 }
 
 void UIStage::__handle_touch_down(int finger_id, int x, int y) {
+    if(!is_being_rendered()) return;
+
     interface_->impl()->context_->ProcessTouchDown(finger_id, x, y, 0);
 
     fingers_down_.insert(finger_id);
@@ -108,12 +120,12 @@ void UIStage::on_render_stopped() {
 
     auto mtmp = mouse_buttons_down_;
     for(auto btn: mtmp) {
-        __handle_mouse_up(btn);
+        __handle_mouse_up(btn, false);
     }
 
     auto ftmp = fingers_down_;
     for(auto finger: ftmp) {
-        __handle_touch_up(finger, 0, 0); //FIXME: Perhaps we should maintain the position?
+        __handle_touch_up(finger, 0, 0, false); //FIXME: Perhaps we should maintain the position?
     }
 }
 
