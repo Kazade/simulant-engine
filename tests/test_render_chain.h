@@ -57,6 +57,37 @@ public:
         window->enable_pipeline(pid1);
         assert_true(window->is_pipeline_enabled(pid1));
     }
+
+    void test_rendering_flag() {
+        StageID stage = window->new_stage();
+        CameraID cam = window->new_camera();
+
+        assert_false(window->stage(stage)->is_being_rendered());
+
+        PipelineID pid1 = window->render(stage, cam);
+
+        assert_true(window->stage(stage)->is_being_rendered());
+
+        window->disable_pipeline(pid1);
+
+        assert_false(window->stage(stage)->is_being_rendered());
+
+        PipelineID pid2 = window->render(stage, cam);
+
+        assert_true(window->stage(stage)->is_being_rendered());
+
+        window->delete_pipeline(pid2);
+
+        assert_false(window->stage(stage)->is_being_rendered());
+
+        window->enable_pipeline(pid1);
+
+        assert_true(window->stage(stage)->is_being_rendered());
+
+        window->delete_pipeline(pid1);
+
+        assert_false(window->stage(stage)->is_being_rendered());
+    }
 };
 
 

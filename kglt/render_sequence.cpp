@@ -24,8 +24,36 @@ Pipeline::Pipeline(
     generic::Identifiable<PipelineID>(id),
     sequence_(render_sequence),
     priority_(0),
-    is_active_(true) {
+    is_active_(false) {
 
+}
+
+Pipeline::~Pipeline() {
+    deactivate();
+}
+
+void Pipeline::deactivate() {
+    if(!is_active_) return;
+
+    is_active_ = false;
+
+    if(stage_) {
+        sequence_->window_.stage(stage_)->decrement_render_count();
+    } else if(ui_stage_) {
+        sequence_->window_.ui_stage(ui_stage_)->decrement_render_count();
+    }
+}
+
+void Pipeline::activate() {
+    if(is_active_) return;
+
+    is_active_ = true;
+
+    if(stage_) {
+        sequence_->window_.stage(stage_)->increment_render_count();
+    } else if(ui_stage_) {
+        sequence_->window_.ui_stage(ui_stage_)->increment_render_count();
+    }
 }
 
 RenderSequence::RenderSequence(WindowBase &window):
@@ -41,7 +69,10 @@ RenderSequence::RenderSequence(WindowBase &window):
 
 void RenderSequence::activate_pipelines(const std::vector<PipelineID>& pipelines) {
     for(PipelineID p: pipelines) {
-        pipeline(p)->activate();
+        auto pip = pipeline(p);
+        if(!pip->is_active()) {
+            pip->activate();
+        }
     }
 }
 
@@ -59,7 +90,9 @@ std::vector<PipelineID> RenderSequence::active_pipelines() const {
 
 void RenderSequence::deactivate_all_pipelines() {
     for(Pipeline::ptr p: ordered_pipelines_) {
-        p->deactivate();
+        if(p->is_active()) {
+            p->deactivate();
+        }
     }
 }
 
@@ -68,12 +101,28 @@ PipelinePtr RenderSequence::pipeline(PipelineID pipeline) {
 }
 
 void RenderSequence::delete_pipeline(PipelineID pipeline_id) {
+    if(!PipelineManager::manager_contains(pipeline_id)) {
+        return;
+    }
+
+    auto pip = pipeline(pipeline_id);
+    if(pip->is_active()) {
+        pip->deactivate();
+    }
+
     PipelineManager::manager_delete(pipeline_id);
     ordered_pipelines_.remove_if([=](Pipeline::ptr pipeline) -> bool { return pipeline->id() == pipeline_id;});
 }
 
 void RenderSequence::delete_all_pipelines() {
     PipelineManager::manager_delete_all();
+
+    for(auto pip: ordered_pipelines_) {
+        if(pip->is_active()) {
+            pip->deactivate();
+        }
+    }
+
     ordered_pipelines_.clear();
 }
 
@@ -87,6 +136,7 @@ PipelineID RenderSequence::new_pipeline(StageID stage, CameraID camera, Viewport
     ordered_pipelines_.back()->set_viewport(viewport);
     ordered_pipelines_.back()->set_target(target);
     ordered_pipelines_.back()->set_priority(priority);
+    ordered_pipelines_.back()->activate();
 
     ordered_pipelines_.sort(
         [](Pipeline::ptr lhs, Pipeline::ptr rhs) { return lhs->priority() < rhs->priority(); }
@@ -105,6 +155,7 @@ PipelineID RenderSequence::new_pipeline(UIStageID stage, CameraID camera, Viewpo
     ordered_pipelines_.back()->set_viewport(viewport);
     ordered_pipelines_.back()->set_target(target);
     ordered_pipelines_.back()->set_priority(priority);
+    ordered_pipelines_.back()->activate();
 
     ordered_pipelines_.sort(
         [](Pipeline::ptr lhs, Pipeline::ptr rhs) { return lhs->priority() < rhs->priority(); }

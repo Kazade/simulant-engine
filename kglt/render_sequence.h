@@ -15,7 +15,6 @@
 
 namespace kglt {
 
-
 class RenderSequence;
 
 class Pipeline:
@@ -28,6 +27,8 @@ public:
         PipelineID id
     );
 
+    ~Pipeline();
+
     ViewportID viewport_id() { return viewport_; }
     CameraID camera_id() { return camera_; }
     StageID stage_id() { return stage_; }
@@ -37,8 +38,8 @@ public:
     int32_t priority() const { return priority_; }
     void set_priority(int32_t priority) { priority_ = priority; }
 
-    void deactivate(){ is_active_ = false; }
-    void activate() { is_active_ = true; }
+    void deactivate();
+    void activate();
     bool is_active() const { return is_active_; }
 
     void set_stage(StageID s) { stage_ = s; }
@@ -123,6 +124,8 @@ private:
     sig::signal<void (Pipeline&)> signal_pipeline_finished_;
 
     void update_camera_constraint(CameraID cid);
+
+    friend class Pipeline;
 };
 
 }

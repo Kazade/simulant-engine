@@ -400,13 +400,13 @@ void WindowBase::handle_touch_up(int finger_id, int x, int y) {
 void WindowBase::reset() {
     idle().execute(); //Execute any idle tasks before we go deleting things
 
+    render_sequence()->delete_all_pipelines();
+
     CameraManager::manager_delete_all();
     UIStageManager::manager_delete_all();
     StageManager::manager_delete_all();
     ViewportManager::manager_delete_all();
     BackgroundManager::manager_delete_all();
-
-    render_sequence()->delete_all_pipelines();
 
     create_defaults();
 }
