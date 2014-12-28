@@ -67,8 +67,12 @@ void OGGLoader::into(Loadable& resource, const LoaderOptions& options) {
     Sound* sound = dynamic_cast<Sound*>(res_ptr);
     assert(sound && "You passed a Resource that is not a Sound to the OGG loader");
 
-    std::string buf = data_->str();
-    std::vector<uint8_t> data(buf.begin(), buf.end());
+    auto str = this->data_->str();
+
+    assert(!str.empty());
+
+    L_DEBUG(_u("Stream size: {0}").format(str.length()));
+    std::vector<unsigned char> data(str.begin(), str.end());
 
     StreamWrapper stream(stb_vorbis_open_memory(&data[0], data.size(),nullptr, nullptr));
 
