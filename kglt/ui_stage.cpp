@@ -86,18 +86,26 @@ void UIStage::__handle_mouse_down(int button) {
 void UIStage::__handle_mouse_up(int button, bool check_rendered) {
     if(check_rendered && !is_being_rendered()) return;
 
-    //FIXME: Again, pass down modifiers
-    interface_->impl()->context_->ProcessMouseButtonUp(button - 1, 0);
-
-    mouse_buttons_down_.erase(button);
+    /* We have this check because we forcibly call mouse up when we stop rendering
+     * and without it we might end up triggering a click twice!
+     */
+    if(mouse_buttons_down_.find(button) != mouse_buttons_down_.end()) {
+        //FIXME: Again, pass down modifiers
+        interface_->impl()->context_->ProcessMouseButtonUp(button - 1, 0);
+        mouse_buttons_down_.erase(button);
+    }
 }
 
 void UIStage::__handle_touch_up(int finger_id, int x, int y, bool check_rendered) {
     if(check_rendered && !is_being_rendered()) return;
 
-    interface_->impl()->context_->ProcessTouchUp(finger_id, x, y, 0);
-
-    fingers_down_.erase(finger_id);
+    /* We have this check because we forcibly call touch up when we stop rendering
+     * and without it we might end up triggering a click twice!
+     */
+    if(fingers_down_.find(finger_id) != fingers_down_.end()) {
+        interface_->impl()->context_->ProcessTouchUp(finger_id, x, y, 0);
+        fingers_down_.erase(finger_id);
+    }
 }
 
 void UIStage::__handle_touch_motion(int finger_id, int x, int y) {
