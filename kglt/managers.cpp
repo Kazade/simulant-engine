@@ -157,8 +157,12 @@ StagePtr StageManager::stage(StageID s) {
 }
 
 void StageManager::delete_stage(StageID s) {
-    //Recurse through the tree, destroying all children
-    stage(s)->apply_recursively_leaf_first(&ownable_tree_node_destroy, false);
+    try {
+        //Recurse through the tree, destroying all children
+        stage(s)->apply_recursively_leaf_first(&ownable_tree_node_destroy, false);
+    } catch(DoesNotExist<Stage>&) {
+        return;
+    }
 
     StageManager::manager_delete(s);
 }
