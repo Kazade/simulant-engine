@@ -85,6 +85,16 @@ public:
         elem_->SetScrollTop(elem_->GetScrollHeight());
     }
 
+    void remove_children() {
+        while(elem_->HasChildNodes()) {
+            elem_->RemoveChild(elem_->GetLastChild());
+        }
+    }
+
+    void inner_rml(const unicode& rml) {
+        elem_->SetInnerRML(rml.encode().c_str());
+    }
+
     kglt::ui::Element append(const unicode& tag);
 
     void set_event_callback(const unicode& event_type, std::function<bool (Event)> func);

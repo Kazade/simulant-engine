@@ -112,6 +112,18 @@ public:
         }
     }
 
+    void remove_children() {
+        for(Element& e: elements_) {
+            e.remove_children();
+        }
+    }
+
+    void inner_rml(const unicode& rml) {
+        for(Element& e: elements_) {
+            e.inner_rml(rml);
+        }
+    }
+
 private:
     std::vector<Element> elements_;
 };

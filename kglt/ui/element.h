@@ -61,6 +61,8 @@ public:
     float width() const;
     float height() const;
 
+    void remove_children();
+    void inner_rml(const unicode& rml);
 private:
     std::shared_ptr<ElementImpl> impl_;
 

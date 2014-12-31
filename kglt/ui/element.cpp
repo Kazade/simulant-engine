@@ -40,6 +40,14 @@ void Element::add_class(const unicode &cl) {
     }
 }
 
+void Element::remove_children() {
+    impl_->remove_children();
+}
+
+void Element::inner_rml(const unicode& rml) {
+    impl_->inner_rml(rml);
+}
+
 std::string Element::css(const std::string& property) const {
     return impl_->css(property);
 }
