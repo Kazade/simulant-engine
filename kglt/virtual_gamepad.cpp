@@ -26,8 +26,8 @@ unicode layout = R"(
             .controls {
                 position: absolute;
                 bottom: 12%;
-                padding-left: 5%;
-                padding-right: 5%;
+                padding-left: 2%;
+                padding-right: 2%;
             }
 
             .buttons {
