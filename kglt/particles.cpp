@@ -132,9 +132,7 @@ void ParticleSystem::do_update(double dt) {
 
         auto max_can_emit = quota_ - current_particle_count;
         auto new_particles = emitter->do_emit(dt, max_can_emit);
-        for(auto particle: new_particles) {
-            particles_.push_back(particle); //FIXME this can be done in a single insert
-        }
+        particles_.insert(particles_.end(), new_particles.begin(), new_particles.end());
         current_particle_count += new_particles.size();
     }
 
