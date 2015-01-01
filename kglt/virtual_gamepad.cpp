@@ -17,7 +17,7 @@ unicode layout = R"(
                 height: 100%;
                 font-family: Ubuntu;
                 font-weight: bold;
-                font-size: 2em;
+                font-size: {4}px;
                 color: #ffffff88;
             }
             div {
@@ -59,6 +59,7 @@ unicode layout = R"(
                 margin-right: {1}px;
                 text-align: center;
                 line-height: {0}px;
+                font-size: 2em;
                 float: left;
             }
 
@@ -71,6 +72,7 @@ unicode layout = R"(
                 margin-right: {1}px;
                 text-align: center;
                 line-height: {0}px;
+                font-size: 2em;
                 float: left;
             }
 
@@ -84,6 +86,7 @@ unicode layout = R"(
                 background-image: "kglt/materials/button.png";
                 margin-left: {1}px;
                 margin-right: {1}px;
+                font-size: 2em;
             }
 
             .button_text { display: none; }
@@ -158,9 +161,9 @@ bool VirtualGamepad::init() {
     uint32_t dpad_margin = int(float(window_.width() * (5.0 / 640.0)));
     uint32_t area_width = int(float(window_.width() * (200.0 / 640.0)));
     uint32_t outside_padding = int(float(window_.width() * (10.0 / 640.0)));
-
+    uint32_t font_size = window_.height() / 50;
     auto stage = window_.ui_stage(ui_stage_);
-    stage->load_rml_from_string(layout.format(button_size, dpad_margin, area_width, outside_padding));
+    stage->load_rml_from_string(layout.format(button_size, dpad_margin, area_width, outside_padding, font_size));
 
     if(this->directions_ == VIRTUAL_DPAD_DIRECTIONS_TWO) {
         stage->$(".dpad_two").css("display", "inline-block");
