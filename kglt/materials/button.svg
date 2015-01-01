@@ -10,8 +10,8 @@
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="64px"
-   height="64px"
+   width="128"
+   height="128"
    id="svg2985"
    version="1.1"
    inkscape:version="0.48.5 r10040"
@@ -28,7 +28,7 @@
          offset="0"
          id="stop3775" />
       <stop
-         style="stop-color:#fcfcfc;stop-opacity:0.18367347;"
+         style="stop-color:#fcfcfc;stop-opacity:0.09803922;"
          offset="1"
          id="stop3777" />
     </linearGradient>
@@ -50,9 +50,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:zoom="11"
-     inkscape:cx="-35.130234"
-     inkscape:cy="27.302332"
+     inkscape:zoom="5.5"
+     inkscape:cx="22.948017"
+     inkscape:cy="60.051102"
      inkscape:current-layer="layer1"
      showgrid="true"
      inkscape:document-units="px"
@@ -78,17 +78,18 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
   <g
      id="layer1"
      inkscape:label="Layer 1"
-     inkscape:groupmode="layer">
+     inkscape:groupmode="layer"
+     transform="translate(0,64)">
     <path
        sodipodi:type="arc"
-       style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-opacity:1;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none"
+       style="fill:none;stroke:#ffffff;stroke-width:1;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
        id="path2997"
        sodipodi:cx="32"
        sodipodi:cy="32"
@@ -97,10 +98,11 @@
        d="m 63,32 a 31,31 0 1 1 0,-3e-6"
        sodipodi:start="0"
        sodipodi:end="6.2831852"
-       sodipodi:open="true" />
+       sodipodi:open="true"
+       transform="matrix(2,0,0,2,-0.5,-63.5)" />
     <path
        sodipodi:type="arc"
-       style="fill:url(#radialGradient3779);fill-opacity:1.0;stroke:none"
+       style="fill:url(#radialGradient3779);fill-opacity:1;stroke:none"
        id="path3771"
        sodipodi:cx="32"
        sodipodi:cy="32"
@@ -110,6 +112,6 @@
        sodipodi:start="0"
        sodipodi:end="6.2831852"
        sodipodi:open="true"
-       transform="matrix(1.4,0,0,1.4,-12.8,-12.8)" />
+       transform="matrix(2.8,0,0,2.8,-26.1,-89.100001)" />
   </g>
 </svg>
