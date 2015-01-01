@@ -42,6 +42,18 @@ void KGLPLoader::into(Loadable &resource, const LoaderOptions &options) {
                 new_emitter->set_velocity(emitter["velocity"]);
             }
 
+            if(emitter.has_key("width")) {
+                new_emitter->set_width(emitter["width"]);
+            }
+
+            if(emitter.has_key("height")) {
+                new_emitter->set_height(emitter["height"]);
+            }
+
+            if(emitter.has_key("depth")) {
+                new_emitter->set_depth(emitter["depth"]);
+            }
+
             if(emitter.has_key("ttl")) {
                 new_emitter->set_ttl(emitter["ttl"]);
             } else {

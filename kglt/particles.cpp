@@ -187,7 +187,15 @@ std::vector<Particle> ParticleEmitter::do_emit(double dt, uint32_t max) {
         if(type() == PARTICLE_EMITTER_POINT) {
             p.position = system().absolute_position() + relative_position();
         } else {
-            throw NotImplementedError(__FILE__, __LINE__);
+            p.position = system().absolute_position() + relative_position();
+
+            float hw = dimensions_.x * 0.5;
+            float hh = dimensions_.y * 0.5;
+            float hd = dimensions_.z * 0.5;
+
+            p.position.x += random_float(-hw, hw);
+            p.position.y += random_float(-hh, hh);
+            p.position.z += random_float(-hd, hd);
         }
 
         Vec3 dir = direction();

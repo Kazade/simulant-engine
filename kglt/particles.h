@@ -69,6 +69,10 @@ public:
         return emission_rate_;
     }
 
+    void set_width(float w) { dimensions_.x = w; }
+    void set_height(float h) { dimensions_.y = h; }
+    void set_depth(float d) { dimensions_.z = d; }
+
     void set_ttl(float seconds);
     void set_ttl_range(float min_seconds, float max_seconds);
     std::pair<float, float> ttl_range() const;
@@ -100,6 +104,7 @@ private:
     ParticleEmitterType type_ = PARTICLE_EMITTER_POINT;
     kglt::Vec3 relative_position_ = kglt::Vec3();
     kglt::Vec3 direction_ = kglt::Vec3(1, 0, 0);
+    kglt::Vec3 dimensions_ = kglt::Vec3(100, 100, 100);
 
     std::pair<float, float> duration_range_ = std::make_pair(0.0, 0.0);
     std::pair<float, float> repeat_delay_range_ = std::make_pair(0.0, 0.0);
