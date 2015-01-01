@@ -111,6 +111,14 @@ void UIStage::__handle_touch_up(int finger_id, int x, int y, bool check_rendered
 void UIStage::__handle_touch_motion(int finger_id, int x, int y) {
     if(!is_being_rendered()) return;
 
+    /*
+     * We don't want to pass down motion events if they weren't preceded by a touch down. This can
+     * happen if we stop rendering a UIStage, and we forcibly send touch up messages. This if statement
+     * prevents actions being triggered if the UIStage starts rendering when the user has their finger on
+     * the screen
+     */
+    if(fingers_down_.find(finger_id) == fingers_down_.end()) return;
+
     interface_->impl()->context_->ProcessTouchMove(finger_id, x, y, 0);
 }
 
