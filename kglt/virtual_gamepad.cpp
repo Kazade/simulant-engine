@@ -18,6 +18,7 @@ unicode layout = R"(
                 font-family: Ubuntu;
                 font-weight: bold;
                 font-size: 2em;
+                color: #ffffff88;
             }
             div {
                 display: block;
@@ -52,20 +53,24 @@ unicode layout = R"(
             .dpad_left {
                 width: {0}px;
                 height: {0}px;
-                background-image: "kglt/materials/left.png";
+                background-image: "kglt/materials/button.png";
                 background-decorator: image;
                 margin-left: {1}px;
                 margin-right: {1}px;
+                text-align: center;
+                line-height: {0}px;
                 float: left;
             }
 
             .dpad_right {
                 width: {0}px;
                 height: {0}px;
-                background-image: "kglt/materials/right.png";
+                background-image: "kglt/materials/button.png";
                 background-decorator: image;
                 margin-left: {1}px;
                 margin-right: {1}px;
+                text-align: center;
+                line-height: {0}px;
                 float: left;
             }
 
@@ -73,6 +78,7 @@ unicode layout = R"(
                 width: {0}px;
                 height: {0}px;
                 text-align: center;
+                line-height: {0}px;
                 vertical-align: middle;
                 background-decorator: image;
                 background-image: "kglt/materials/button.png";
@@ -87,8 +93,8 @@ unicode layout = R"(
     <body>
         <div class="controls">
             <div class="dpad dpad_two">
-                <div class="dpad_left"></div>
-                <div class="dpad_right"></div>
+                <div class="dpad_left">L</div>
+                <div class="dpad_right">R</div>
             </div>
             <div class="dpad dpad_four">
 
@@ -98,15 +104,9 @@ unicode layout = R"(
             </div>
 
             <div class="buttons">
-                <div class="button button_one">
-                    <span class="button_text">1</span>
-                </div>
-                <div class="button button_two">
-                    <span class="button_text">2</span>
-                </div>
-                <div class="button button_three">
-                    <span class="button_text">3</span>
-                </div>
+                <div class="button button_one">1</div>
+                <div class="button button_two">2</div>
+                <div class="button button_three">3</div>
             </div>
         </div>
     </body>
