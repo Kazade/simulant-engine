@@ -59,45 +59,16 @@ void Viewport::clear(const RenderTarget &target, uint32_t clear_flags) {
 }
 
 void Viewport::apply(const RenderTarget& target) {
-    double x, y, width, height;
+    if(type_ != VIEWPORT_TYPE_CUSTOM) {
+        calculate_ratios_from_viewport(type_, x_, y_, width_, height_);
+    }
 
 	GLCheck(glDisable, GL_SCISSOR_TEST);
-	switch(type_) {
-		case VIEWPORT_TYPE_CUSTOM: {
-            x = x_ * target.width();
-            y = y_ * target.height();
-            width = width_ * target.width();
-            height = height_ * target.height();
-		}
-		break;
-		case VIEWPORT_TYPE_FULL: {
-			x = 0; y = 0;
-            width = target.width();
-            height = target.height();
-		}
-		break;
-		case VIEWPORT_TYPE_BLACKBAR_16_BY_9: {
-            float desired_height = target.width() / (16.0 / 9.0);
-            float y_offset = (target.height() - desired_height) / 2.0;
-			x = 0; 
-			y = y_offset;
-            width = target.width();
-			height = desired_height;			
-		}
-		break;
-		case VIEWPORT_TYPE_VERTICAL_SPLIT_LEFT: {
-			x = 0; y = 0;
-            width = target.width() / 2.0;
-            height = target.height();
-		} break;
-		case VIEWPORT_TYPE_VERTICAL_SPLIT_RIGHT: {
-            x = target.width() / 2.0; y = 0;
-            width = target.width() / 2.0;
-            height = target.height();
-		} break;		
-		default:
-            throw NotImplementedError(__FILE__, __LINE__);
-	}
+
+    double x = x_ * target.width();
+    double y = y_ * target.height();
+    double width = width_ * target.width();
+    double height = height_ * target.height();
 
     GLCheck(glEnable, GL_SCISSOR_TEST);
     GLCheck(glScissor, x, y, width, height);
@@ -112,5 +83,34 @@ uint32_t Viewport::height_in_pixels(const kglt::RenderTarget& target) const {
     return height_ * target.height();
 }
 
+void calculate_ratios_from_viewport(ViewportType type, float& x, float& y, float& width, float& height) {
+    switch(type) {
+        case VIEWPORT_TYPE_FULL:
+            x = 0; y = 0; width = 1.0; height = 1.0;
+        break;
+        case VIEWPORT_TYPE_HORIZONTAL_SPLIT_BOTTOM:
+            x = 0; y = 0.0; width = 1.0; height = 0.5;
+        break;
+        case VIEWPORT_TYPE_HORIZONTAL_SPLIT_TOP:
+            x = 0; y = 0.5; width = 1.0; height = 0.5;
+        break;
+        case VIEWPORT_TYPE_VERTICAL_SPLIT_LEFT:
+            x = 0; y = 0; width = 0.5; height = 1.0;
+        break;
+        case VIEWPORT_TYPE_VERTICAL_SPLIT_RIGHT:
+            x = 0.5; y = 0; width = 0.5; height = 1.0;
+        break;
+        case VIEWPORT_TYPE_BLACKBAR_16_BY_9:
+            x = 0; width = 1.0; height = (9.0 / 16.0);
+            y = (1.0 - height) / 2.0;
+        break;
+        case VIEWPORT_TYPE_BLACKBAR_4_BY_3:
+            x = 0; width = 1.0; height = (3.0 / 4.0);
+            y = (1.0 - height) / 2.0;
+        break;
+        default:
+            throw NotImplementedError(__FILE__, __LINE__);
+    }
+}
 
 }

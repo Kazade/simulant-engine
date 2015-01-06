@@ -22,6 +22,8 @@ enum ViewportType {
 	VIEWPORT_TYPE_CUSTOM
 };
 
+void calculate_ratios_from_viewport(ViewportType type, float& x, float& y, float& width, float& height);
+
 class Viewport : public Managed<Viewport> {
 public:
     Viewport();
@@ -41,6 +43,8 @@ public:
 
     uint32_t width_in_pixels(const RenderTarget& target) const;
     uint32_t height_in_pixels(const RenderTarget& target) const;
+
+    ViewportType type() const { return type_; }
 private:
     Ratio x_;
     Ratio y_;

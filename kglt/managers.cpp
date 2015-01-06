@@ -94,6 +94,16 @@ CameraID CameraManager::new_camera_with_orthographic_projection(double left, dou
     return new_camera_id;
 }
 
+CameraID CameraManager::new_camera_for_viewport(const Viewport& vp) {
+    float x, y, width, height;
+    calculate_ratios_from_viewport(vp.type(), x, y, width, height);
+
+    CameraID cid = new_camera();
+    camera(cid)->set_perspective_projection(45.0, width / height);
+
+    return cid;
+}
+
 CameraID CameraManager::new_camera_for_ui() {
     return new_camera_with_orthographic_projection(0, window_->width(), window_->height(), 0, -1, 1);
 }

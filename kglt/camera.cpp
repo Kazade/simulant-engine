@@ -97,7 +97,7 @@ Camera::Camera(WindowBase *window, CameraID id):
     kmMat4Identity(&projection_matrix_); //Initialize the projection matrix
     kmMat4Identity(&view_matrix_);
 
-    set_perspective_projection(45.0, 16.0 / 9.0);
+    set_perspective_projection(45.0, float(window->width()) / float(window->height()));
 }
 
 void Camera::set_transform(const kglt::Mat4& transform) {
