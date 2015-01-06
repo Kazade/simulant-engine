@@ -3,26 +3,12 @@
 
 #include <memory>
 #include <cstdint>
-#include "kazmath/mat4.h"
-#include "types.h"
-#include "generic/identifiable.h"
 #include "generic/managed.h"
+#include "kazmath/mat4.h"
+#include "interfaces.h"
+#include "types.h"
 
 namespace kglt {
-
-
-
-enum AspectRatio {
-    ASPECT_RATIO_CUSTOM,
-    ASPECT_RATIO_4_BY_3,
-    ASPECT_RATIO_16_BY_9,
-    ASPECT_RATIO_16_BY_10
-};
-
-enum ProjectionType {
-    PROJECTION_TYPE_PERSPECTIVE,
-    PROJECTION_TYPE_ORTHOGRAPHIC
-};
 
 enum ViewportType {
 	VIEWPORT_TYPE_FULL,	
@@ -36,37 +22,30 @@ enum ViewportType {
 	VIEWPORT_TYPE_CUSTOM
 };
 
-class Viewport :
-    public generic::Identifiable<ViewportID>,
-    public Managed<Viewport> {
-
+class Viewport : public Managed<Viewport> {
 public:
-    typedef std::shared_ptr<Viewport> ptr;
+    Viewport();
+    Viewport(const Viewport& rhs) = default;
+    Viewport& operator=(const Viewport& rhs) = default;
 
-    Viewport(WindowBase* parent, ViewportID id);
+    Viewport(ViewportType type, const Colour& colour=kglt::Colour::BLACK);
+    Viewport(Ratio x, Ratio y, Ratio width, Ratio height, const Colour& colour=kglt::Colour::BLACK);
 
-	void configure(ViewportType viewport);
+    const Ratio x() const { return x_; }
+    const Ratio y() const { return y_; }
+    const Ratio width() const { return width_; }
+    const Ratio height() const { return height_; }
 
-    void set_size(uint32_t width, uint32_t height);
-    void set_position(uint32_t left, uint32_t top);
+    void clear(const RenderTarget& target, uint32_t clear_flags);
+    void apply(const RenderTarget& target);
 
-	void set_background_colour(const Colour& colour) {
-		colour_ = colour;
-	}
-
-    void clear();
-    void apply() const;
-
-    uint32_t width() const { return width_; }
-    uint32_t height() const { return height_; }
-
+    uint32_t width_in_pixels(const RenderTarget& target) const;
+    uint32_t height_in_pixels(const RenderTarget& target) const;
 private:
-    WindowBase* parent_;
-
-    uint32_t x_;
-    uint32_t y_;
-    uint32_t width_;
-    uint32_t height_;
+    Ratio x_;
+    Ratio y_;
+    Ratio width_;
+    Ratio height_;
     
 	ViewportType type_;
 	Colour colour_;

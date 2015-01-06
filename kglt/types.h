@@ -417,22 +417,45 @@ enum LightType {
     LIGHT_TYPE_SPOT_LIGHT
 };
 
+enum AspectRatio {
+    ASPECT_RATIO_CUSTOM,
+    ASPECT_RATIO_4_BY_3,
+    ASPECT_RATIO_16_BY_9,
+    ASPECT_RATIO_16_BY_10
+};
+
+typedef float Ratio; //FIXME: Custom type to restrict between 0 and 1
+
+enum ProjectionType {
+    PROJECTION_TYPE_PERSPECTIVE,
+    PROJECTION_TYPE_ORTHOGRAPHIC
+};
+
+enum BufferClearFlag {
+    BUFFER_CLEAR_COLOUR_BUFFER = 0x1,
+    BUFFER_CLEAR_DEPTH_BUFFER = 0x2,
+    BUFFER_CLEAR_STENCIL_BUFFER = 0x4,
+    BUFFER_CLEAR_ALL = BUFFER_CLEAR_COLOUR_BUFFER | BUFFER_CLEAR_DEPTH_BUFFER | BUFFER_CLEAR_STENCIL_BUFFER
+};
+
 enum RenderPriority {
-    RENDER_PRIORITY_ABSOLUTE_BACKGROUND = -150,
+    RENDER_PRIORITY_ABSOLUTE_BACKGROUND = -1000,
     RENDER_PRIORITY_BACKGROUND = -100,
     RENDER_PRIORITY_DISTANT = -50,
     RENDER_PRIORITY_MAIN = 0,
     RENDER_PRIORITY_NEAR = 50,
     RENDER_PRIORITY_FOREGROUND = 100,
-    RENDER_PRIORITY_ABSOLUTE_FOREGROUND = 150
+    RENDER_PRIORITY_ABSOLUTE_FOREGROUND = 1000
 };
 
 const std::vector<RenderPriority> RENDER_PRIORITIES = {
+    RENDER_PRIORITY_ABSOLUTE_BACKGROUND,
     RENDER_PRIORITY_BACKGROUND,
     RENDER_PRIORITY_DISTANT,
     RENDER_PRIORITY_MAIN,
     RENDER_PRIORITY_NEAR,
-    RENDER_PRIORITY_FOREGROUND
+    RENDER_PRIORITY_FOREGROUND,
+    RENDER_PRIORITY_ABSOLUTE_FOREGROUND
 };
 
 enum LoggingLevel {
@@ -477,7 +500,6 @@ typedef UniqueID<2> CameraID;
 typedef UniqueID<4> MaterialID;
 typedef UniqueID<5> LightID;
 typedef UniqueID<6> StageID;
-typedef UniqueID<7> ViewportID;
 typedef UniqueID<8> ActorID;
 typedef UniqueID<9> SoundID;
 typedef UniqueID<10> PipelineID;
@@ -528,7 +550,6 @@ class UIStage;
 typedef AutoWeakPtr<UIStage> UIStagePtr;
 
 class Viewport;
-typedef AutoWeakPtr<Viewport> ViewportPtr;
 
 class Background;
 typedef AutoWeakPtr<Background> BackgroundPtr;

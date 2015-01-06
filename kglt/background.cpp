@@ -13,10 +13,9 @@ Background::Background(WindowBase *window, BackgroundID background_id):
 
 }
 
-void Background::update_camera() {
-    //FIXME: Viewport should probably be overridable
-    float vp_width = window().viewport()->width();
-    float vp_height = window().viewport()->height();
+void Background::update_camera(const Viewport &viewport) {
+    float vp_width = viewport.width();
+    float vp_height = viewport.height();
 
     float width, height;
     if(style_ == BACKGROUND_RESIZE_ZOOM) {
@@ -47,7 +46,7 @@ bool Background::init() {
 
     //We need to create an orthographic camera
     camera_id_ = window().new_camera();
-    update_camera();
+    update_camera(Viewport()); //FIXME: Only fullscreen??
 
     //Add a pass for this background
     pipeline_id_ = window().render(stage_id_, camera_id_).with_priority(kglt::RENDER_PRIORITY_BACKGROUND);

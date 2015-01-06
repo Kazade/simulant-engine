@@ -50,7 +50,7 @@ private:
     WindowBase* window_;
     unicode name_;
 
-    void update_camera();
+    void update_camera(const Viewport& viewport);
 
     StageID stage_id_;
     CameraID camera_id_;

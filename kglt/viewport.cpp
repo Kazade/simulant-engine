@@ -7,100 +7,110 @@
 
 namespace kglt {
 
-Viewport::Viewport(WindowBase* parent, ViewportID id):
-    generic::Identifiable<ViewportID>(id),
-	parent_(parent),
+Viewport::Viewport():
+    x_(0),
+    y_(0),
+    width_(1),
+    height_(1),
+    type_(VIEWPORT_TYPE_CUSTOM),
+    colour_(kglt::Colour::BLACK) {
+
+}
+
+Viewport::Viewport(ViewportType type, const Colour& colour):
     x_(0),
     y_(0),
     width_(0),
     height_(0),
-    type_(VIEWPORT_TYPE_FULL),
-    colour_(Colour(0.5, 0.5, 0.5, 0.5)) {
+    type_(type),
+    colour_(colour) {
     
 }
 
-void Viewport::configure(ViewportType type) {
-	type_ = type;
+Viewport::Viewport(Ratio x, Ratio y, Ratio width, Ratio height, const Colour &colour):
+    x_(x),
+    y_(y),
+    width_(width),
+    height_(height),
+    type_(VIEWPORT_TYPE_CUSTOM),
+    colour_(colour) {
+
 }
 
-void Viewport::set_size(uint32_t width, uint32_t height) {
-    width_ = width;
-    height_ = height;
-}
-
-void Viewport::set_position(uint32_t left, uint32_t top) {
-    x_ = left;
-    y_ = top;
-}
-
-/*
-void Viewport::set_perspective_projection(double fov, double near, double far) {
-    projection_type_ = PROJECTION_TYPE_PERSPECTIVE;
-
-    kmMat4PerspectiveProjection(&projection_, fov, aspect_, near, far);
-}
-
-void Viewport::set_orthographic_projection(double left, double right, double bottom, double top, double near, double far) {
-    projection_type_ = PROJECTION_TYPE_ORTHOGRAPHIC;
-    kmMat4OrthographicProjection(&projection_, left, right, bottom, top, near, far);
-}
-
-void Viewport::set_orthographic_projection_from_height(float desired_height_in_units) {
-    float width = desired_height_in_units * aspect_;
-    set_orthographic_projection(-width / 2.0, width / 2.0, -desired_height_in_units / 2.0, desired_height_in_units / 2.0, -10.0, 10.0);
-}*/
-
-void Viewport::clear() {
-    apply();
+void Viewport::clear(const RenderTarget &target, uint32_t clear_flags) {
+    apply(target);
 
     GLCheck(glClearColor, colour_.r, colour_.g, colour_.b, colour_.a);
-    GLCheck(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    uint32_t gl_clear_flags = 0;
+    if((clear_flags & BUFFER_CLEAR_COLOUR_BUFFER) == BUFFER_CLEAR_COLOUR_BUFFER) {
+        gl_clear_flags |= GL_COLOR_BUFFER_BIT;
+    }
+
+    if((clear_flags & BUFFER_CLEAR_DEPTH_BUFFER) == BUFFER_CLEAR_DEPTH_BUFFER) {
+        gl_clear_flags |= GL_DEPTH_BUFFER_BIT;
+    }
+
+    if((clear_flags & BUFFER_CLEAR_STENCIL_BUFFER) == BUFFER_CLEAR_STENCIL_BUFFER) {
+        gl_clear_flags |= GL_STENCIL_BUFFER_BIT;
+    }
+
+    GLCheck(glClear, gl_clear_flags);
 }
 
-void Viewport::apply() const {
+void Viewport::apply(const RenderTarget& target) {
     double x, y, width, height;
 
 	GLCheck(glDisable, GL_SCISSOR_TEST);
 	switch(type_) {
 		case VIEWPORT_TYPE_CUSTOM: {
-			x = x_;
-			y = y_;
-			width = width_;
-			height = height_;
+            x = x_ * target.width();
+            y = y_ * target.height();
+            width = width_ * target.width();
+            height = height_ * target.height();
 		}
 		break;
 		case VIEWPORT_TYPE_FULL: {
 			x = 0; y = 0;
-            width = parent_->width();
-            height = parent_->height();
+            width = target.width();
+            height = target.height();
 		}
 		break;
 		case VIEWPORT_TYPE_BLACKBAR_16_BY_9: {
-            float desired_height = parent_->width() / (16.0 / 9.0);
-            float y_offset = (parent_->height() - desired_height) / 2.0;
+            float desired_height = target.width() / (16.0 / 9.0);
+            float y_offset = (target.height() - desired_height) / 2.0;
 			x = 0; 
 			y = y_offset;
-            width = parent_->width();
+            width = target.width();
 			height = desired_height;			
 		}
 		break;
 		case VIEWPORT_TYPE_VERTICAL_SPLIT_LEFT: {
 			x = 0; y = 0;
-            width = parent_->width() / 2.0;
-            height = parent_->height();
+            width = target.width() / 2.0;
+            height = target.height();
 		} break;
 		case VIEWPORT_TYPE_VERTICAL_SPLIT_RIGHT: {
-            x = parent_->width() / 2.0; y = 0;
-            width = parent_->width() / 2.0;
-            height = parent_->height();
+            x = target.width() / 2.0; y = 0;
+            width = target.width() / 2.0;
+            height = target.height();
 		} break;		
 		default:
-			assert(0 && "Not Implemented");
+            throw NotImplementedError(__FILE__, __LINE__);
 	}
 
     GLCheck(glEnable, GL_SCISSOR_TEST);
     GLCheck(glScissor, x, y, width, height);
     GLCheck(glViewport, x, y, width, height);
 }
+
+uint32_t Viewport::width_in_pixels(const kglt::RenderTarget& target) const {
+    return width_ * target.width();
+}
+
+uint32_t Viewport::height_in_pixels(const kglt::RenderTarget& target) const {
+    return height_ * target.height();
+}
+
 
 }

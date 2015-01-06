@@ -232,6 +232,23 @@ private:
     virtual void on_render_stopped() = 0;
 };
 
+
+class RenderTarget {
+public:
+    virtual ~RenderTarget() {}
+
+    virtual uint32_t width() const = 0;
+    virtual uint32_t height() const = 0;
+
+    virtual void set_clear_every_frame(uint32_t clear_flags=BUFFER_CLEAR_ALL, const kglt::Colour& colour=kglt::Colour::BLACK) { clear_flags_ = clear_flags; }
+    virtual uint32_t clear_every_frame_flags() const { return clear_flags_; }
+    virtual kglt::Colour clear_every_frame_colour() const { return clear_colour_; }
+
+private:
+    uint32_t clear_flags_ = BUFFER_CLEAR_ALL;
+    kglt::Colour clear_colour_ = kglt::Colour::BLACK;
+};
+
 }
 
 #endif // INTERFACES_H

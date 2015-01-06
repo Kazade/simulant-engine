@@ -43,7 +43,6 @@ WindowBase::WindowBase():
     height_(-1),
     is_running_(true),
     idle_(*this),
-    default_viewport_(0),
     resource_locator_(ResourceLocator::create()),
     frame_counter_time_(0),
     frame_counter_frames_(0),
@@ -90,11 +89,6 @@ LoaderPtr WindowBase::loader_for(const unicode &filename) {
 }
 
 void WindowBase::create_defaults() {
-    //Create a default viewport
-    default_viewport_ = new_viewport();
-    viewport(default_viewport_)->set_position(0, 0);
-    viewport(default_viewport_)->set_size(this->width(), this->height());
-
     message_bar_ = MessageBar::create(*this);
     loading_ = screens::Loading::create(*this);
 
@@ -225,9 +219,6 @@ bool WindowBase::run_frame() {
     {
         std::lock_guard<std::mutex> rendering_lock(context_lock_);
         if(has_context()) {
-            GLCheck(glViewport, 0, 0, width(), height());
-            GLCheck(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
             render_sequence()->run();
 
             signal_pre_swap_();
@@ -263,21 +254,6 @@ void WindowBase::register_loader(LoaderTypePtr loader) {
     }
 
     loaders_.push_back(loader);
-}
-
-ViewportID WindowBase::new_viewport() {
-    return ViewportManager::manager_new();
-}
-
-ViewportPtr WindowBase::viewport(ViewportID viewport) {
-    if(!viewport) {
-        return ViewportManager::manager_get(default_viewport_);
-    }
-    return ViewportManager::manager_get(viewport);
-}
-
-void WindowBase::delete_viewport(ViewportID viewport) {
-    ViewportManager::manager_delete(viewport);
 }
 
 Keyboard& WindowBase::keyboard() {
@@ -418,7 +394,6 @@ void WindowBase::reset() {
     CameraManager::manager_delete_all();
     UIStageManager::manager_delete_all();
     StageManager::manager_delete_all();
-    ViewportManager::manager_delete_all();
     BackgroundManager::manager_delete_all();
 
     create_defaults();

@@ -5,6 +5,9 @@
 #include <kazbase/os.h>
 #include "kglt/watcher.h"
 
+namespace {
+
+using namespace kglt;
 
 class WatcherTest : public TestCase {
 public:
@@ -60,5 +63,7 @@ private:
     int move_counter;
 };
 
+
+}
 
 #endif // TEST_WATCHER_H

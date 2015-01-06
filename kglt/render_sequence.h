@@ -29,11 +29,12 @@ public:
 
     ~Pipeline();
 
-    ViewportID viewport_id() { return viewport_; }
+    Viewport viewport() { return viewport_; }
     CameraID camera_id() { return camera_; }
     StageID stage_id() { return stage_; }
     UIStageID ui_stage_id() { return ui_stage_; }
     TextureID target_id() { return target_; }
+    uint32_t clear_flags() const { return clear_mask_; }
 
     int32_t priority() const { return priority_; }
     void set_priority(int32_t priority) { priority_ = priority; }
@@ -44,22 +45,24 @@ public:
 
     void set_stage(StageID s) { stage_ = s; }
     void set_camera(CameraID c) { camera_ = c; }
-    void set_viewport(ViewportID v) { viewport_ = v; }
+    void set_viewport(const Viewport& v) { viewport_ = v; }
     void set_target(TextureID t) { target_ = t; }
     void set_ui_stage(UIStageID s) { ui_stage_ = s; }
-
+    void set_clear_flags(uint32_t viewport_clear_flags) { clear_mask_ = viewport_clear_flags; }
 private:
     RenderSequence* sequence_;
     int32_t priority_;
     StageID stage_;
     TextureID target_;
     CameraID camera_;
-    ViewportID viewport_;
+    Viewport viewport_;
     UIStageID ui_stage_;
+
+    uint32_t clear_mask_ = 0;
 
     bool is_active_;
 
-    friend class RenderSequence;
+    friend class RenderSequence;        
 };
 
 struct RenderOptions {
@@ -81,7 +84,7 @@ public:
     PipelineID new_pipeline(
         StageID stage,
         CameraID camera,
-        ViewportID viewport=ViewportID(),
+        const Viewport& viewport=Viewport(),
         TextureID target=TextureID(),
         int32_t priority=0
     );
@@ -89,7 +92,7 @@ public:
     PipelineID new_pipeline(
         UIStageID stage,
         CameraID camera,
-        ViewportID viewport=ViewportID(),
+        const Viewport& viewport=Viewport(),
         TextureID target=TextureID(),
         int32_t priority=0
     );
@@ -126,6 +129,8 @@ private:
     void update_camera_constraint(CameraID cid);
 
     friend class Pipeline;
+
+    std::set<RenderTarget*> targets_rendered_this_frame_;
 };
 
 }

@@ -16,7 +16,6 @@
 #include "generic/data_carrier.h"
 #include "resource_manager.h"
 #include "types.h"
-#include "viewport.h"
 #include "sound.h"
 #include "managers.h"
 #include "pipeline_helper.h"
@@ -49,10 +48,7 @@ typedef std::function<void (double)> WindowUpdateCallback;
 typedef std::shared_ptr<Loader> LoaderPtr;
 typedef std::shared_ptr<LoaderType> LoaderTypePtr;
 
-typedef generic::TemplatedManager<WindowBase, Viewport, ViewportID> ViewportManager;
-
 class WindowBase :
-    public ViewportManager,
     public Source,
     public BackgroundManager,
     public StageManager,
@@ -61,7 +57,8 @@ class WindowBase :
     public ResourceManagerImpl,
     public Loadable,
     public PipelineHelperAPIInterface,
-    public ScreenManagerInterface {
+    public ScreenManagerInterface,
+    public RenderTarget {
 
 public:    
     typedef std::shared_ptr<WindowBase> ptr;
@@ -105,11 +102,6 @@ public:
     void update(double dt) override;
 
     IdleTaskManager& idle() { return idle_; }
-
-    ViewportID new_viewport();
-    ViewportPtr viewport(ViewportID viewport=ViewportID());
-    void delete_viewport(ViewportID viewport);
-    ViewportID default_viewport() const { return default_viewport_; }
 
     ResourceLocator& resource_locator() { return *resource_locator_; }
     const ResourceLocator& resource_locator() const { return *resource_locator_; }
@@ -245,8 +237,6 @@ private:
     std::mutex context_lock_;
 
     void destroy() {}
-
-    ViewportID default_viewport_;
 
     ResourceLocator::ptr resource_locator_;
     std::shared_ptr<InputController> input_controller_;

@@ -1,15 +1,17 @@
 #ifndef PIPELINE_HELPER_H
 #define PIPELINE_HELPER_H
 
+#include "viewport.h"
 #include "types.h"
 
 namespace kglt {
 
 class PipelineHelper {
 public:
-    PipelineHelper to_framebuffer(ViewportID view=ViewportID());
-    PipelineHelper to_texture(TextureID tex, ViewportID view=ViewportID());
+    PipelineHelper to_framebuffer(const Viewport& view=Viewport());
+    PipelineHelper to_texture(TextureID tex, const Viewport& view=Viewport());
     PipelineHelper with_priority(kglt::RenderPriority priority);
+    PipelineHelper with_clear(uint32_t viewport_clear_flags=BUFFER_CLEAR_ALL);
 
     PipelineHelper(const PipelineHelper&) = default;
     PipelineHelper& operator=(PipelineHelper& rhs) = default;

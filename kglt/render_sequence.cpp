@@ -126,7 +126,7 @@ void RenderSequence::delete_all_pipelines() {
     ordered_pipelines_.clear();
 }
 
-PipelineID RenderSequence::new_pipeline(StageID stage, CameraID camera, ViewportID viewport, TextureID target, int32_t priority) {
+PipelineID RenderSequence::new_pipeline(StageID stage, CameraID camera, const Viewport& viewport, TextureID target, int32_t priority) {
     PipelineID new_p = PipelineManager::manager_new();
 
     ordered_pipelines_.push_back(PipelineManager::__objects()[new_p]);
@@ -145,7 +145,7 @@ PipelineID RenderSequence::new_pipeline(StageID stage, CameraID camera, Viewport
     return new_p;
 }
 
-PipelineID RenderSequence::new_pipeline(UIStageID stage, CameraID camera, ViewportID viewport, TextureID target, int32_t priority) {
+PipelineID RenderSequence::new_pipeline(UIStageID stage, CameraID camera, const Viewport& viewport, TextureID target, int32_t priority) {
     PipelineID new_p = PipelineManager::manager_new();
 
     ordered_pipelines_.push_back(PipelineManager::__objects()[new_p]);
@@ -169,7 +169,7 @@ void RenderSequence::set_renderer(Renderer::ptr renderer) {
 }
 
 void RenderSequence::run() {
-    window_.ViewportManager::apply_func_to_objects(std::bind(&Viewport::clear, std::placeholders::_1));
+    targets_rendered_this_frame_.clear();
 
     for(Pipeline::ptr pipeline: ordered_pipelines_) {
         run_pipeline(pipeline);
@@ -199,8 +199,30 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
 
     Mat4 camera_projection = window_.camera(pipeline_stage->camera_id())->projection_matrix();
 
-    auto viewport = window_.viewport(pipeline_stage->viewport_id());
-    viewport->apply(); //FIXME apply shouldn't exist
+    RenderTarget& target = window_; //FIXME: Should be window or texture
+
+    /*
+     *  Render targets can specify whether their buffer should be cleared at the start of each frame. We do this the first
+     *  time we hit a render target when processing the pipelines. We keep track of the targets that have been rendered each frame
+     *  and this list is cleared at the start of run().
+     */
+    if(targets_rendered_this_frame_.find(&target) == targets_rendered_this_frame_.end()) {
+        if(target.clear_every_frame_flags()) {
+            Viewport view(kglt::VIEWPORT_TYPE_FULL, target.clear_every_frame_colour());
+            view.clear(target, target.clear_every_frame_flags());
+        }
+
+        targets_rendered_this_frame_.insert(&target);
+    }
+
+    auto viewport = pipeline_stage->viewport();
+
+    uint32_t clear = pipeline_stage->clear_flags();
+    if(clear) {
+        viewport.clear(target, clear); //Implicitly calls apply
+    } else {
+        viewport.apply(target); //FIXME apply shouldn't exist, it ties Viewport to OpenGL...
+    }
 
     signal_pipeline_started_(*pipeline_stage);
 
@@ -210,7 +232,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
     if(pipeline_stage->ui_stage_id()) {        
         //This is a UI stage, so just render that
         auto ui_stage = window_.ui_stage(pipeline_stage->ui_stage_id());
-        ui_stage->__resize(viewport->width(), viewport->height());
+        ui_stage->__resize(viewport.width_in_pixels(target), viewport.height_in_pixels(target));
         ui_stage->__render(camera_projection);
     } else {
         std::vector<RenderablePtr> buffers = window_.stage(stage_id

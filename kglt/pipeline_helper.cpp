@@ -3,15 +3,20 @@
 
 namespace kglt {
 
-PipelineHelper PipelineHelper::to_framebuffer(ViewportID view) {
+PipelineHelper PipelineHelper::to_framebuffer(const Viewport &view) {
     sequence_->pipeline(pipeline_id_)->set_viewport(view);
     sequence_->pipeline(pipeline_id_)->set_target(TextureID());
     return *this;
 }
 
-PipelineHelper PipelineHelper::to_texture(TextureID tex, ViewportID view) {
+PipelineHelper PipelineHelper::to_texture(TextureID tex, const Viewport& view) {
     sequence_->pipeline(pipeline_id_)->set_target(tex);
     sequence_->pipeline(pipeline_id_)->set_viewport(view);
+    return *this;
+}
+
+PipelineHelper PipelineHelper::with_clear(uint32_t viewport_clear_flags) {
+    sequence_->pipeline(pipeline_id_)->set_clear_flags(viewport_clear_flags);
     return *this;
 }
 

@@ -9,6 +9,7 @@
 #include "loadable.h"
 #include "types.h"
 #include "resource.h"
+#include "interfaces.h"
 
 namespace kglt {
 
@@ -16,7 +17,8 @@ class Texture :
     public Resource,
     public Loadable,
     public generic::Identifiable<TextureID>,
-    public Managed<Texture> {
+    public Managed<Texture>,
+    public RenderTarget {
 
 public:
     typedef std::shared_ptr<Texture> ptr;

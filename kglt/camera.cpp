@@ -84,8 +84,8 @@ Frustum& CameraProxy::frustum() {
     return camera()->frustum();
 }
 
-kmVec3 CameraProxy::project_point(ViewportID vid, const kmVec3& point) {
-    return camera()->project_point(vid, point);
+kmVec3 CameraProxy::project_point(const RenderTarget& target, const Viewport &viewport, const kmVec3& point) {
+    return camera()->project_point(target, viewport, point);
 }
 
 Camera::Camera(WindowBase *window, CameraID id):
@@ -131,12 +131,10 @@ double Camera::set_orthographic_projection_from_height(double desired_height_in_
     return width;
 }
 
-kmVec3 Camera::project_point(ViewportID vid, const kmVec3& point) {
+kmVec3 Camera::project_point(const RenderTarget &target, const Viewport &viewport, const kmVec3& point) {
     if(!window_) {
         throw LogicError("Passed a nullptr as a camera's window");
     }
-
-    auto viewport = window_->viewport(vid);
 
     kmVec3 tmp;
     kmVec3Fill(&tmp, point.x, point.y, point.z);
@@ -149,8 +147,8 @@ kmVec3 Camera::project_point(ViewportID vid, const kmVec3& point) {
     tmp.x /= tmp.z;
     tmp.y /= tmp.z;
 
-    float vp_width = viewport->width();
-    float vp_height = viewport->height();
+    float vp_width = viewport.width_in_pixels(target);
+    float vp_height = viewport.height_in_pixels(target);
 
     result.x = (tmp.x + 1) * vp_width / 2.0;
     result.y = (tmp.y + 1) * vp_height / 2.0;

@@ -13,9 +13,9 @@ using namespace kglt;
 class RenderChainTests : public KGLTTestCase {
 public:
     void test_basic_usage() {
+        Viewport view;
         StageID stage = window->new_stage();
         CameraID cam = window->new_camera();
-        ViewportID view = window->new_viewport();
         TextureID tex = window->new_texture();
 
         PipelineID pid1 = window->render(stage, cam);

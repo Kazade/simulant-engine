@@ -33,7 +33,7 @@ public:
     void _update_following(double dt);
 
     Frustum& frustum();
-    kmVec3 project_point(ViewportID vid, const kmVec3& point);
+    kmVec3 project_point(const RenderTarget &target, const Viewport& viewport, const kmVec3& point);
 
     void set_orthographic_projection(double left, double right, double bottom, double top, double near=-1.0, double far=1.0);
 
@@ -63,7 +63,7 @@ class Camera:
 public:
     Camera(WindowBase* window, CameraID id);
 
-    kmVec3 project_point(ViewportID vid, const kmVec3& point);
+    kmVec3 project_point(const RenderTarget& target, const Viewport& viewport, const kmVec3& point);
 
     const Mat4& view_matrix() { return view_matrix_; }
     const Mat4& projection_matrix() const { return projection_matrix_; }
