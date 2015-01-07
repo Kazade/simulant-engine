@@ -199,6 +199,11 @@ public:
     void deactivate_emitters() { for(auto emitter: emitters_) { emitter->deactivate(); }; }
     void activate_emitters() { for(auto emitter: emitters_) { emitter->activate(); }; }
 
+    void set_destroy_on_completion(bool value=true) { destroy_on_completion_ = value; }
+    bool destroy_on_completion() const { return destroy_on_completion_; }
+
+    bool has_repeating_emitters() const;
+    bool has_active_emitters() const;
 private:
     unicode name_;
     int quota_ = 10;
@@ -219,6 +224,8 @@ private:
     IndexData index_data_;
 
     VertexArrayObject vao_;
+
+    bool destroy_on_completion_ = false;
 };
 
 }

@@ -64,8 +64,8 @@ public:
     uint32_t actor_count() const { return ActorManager::manager_count(); }
 
     ParticleSystemID new_particle_system();
-    ParticleSystemID new_particle_system_from_file(const unicode& filename);
-    ParticleSystemID new_particle_system_with_parent_from_file(ActorID parent, const unicode& filename);
+    ParticleSystemID new_particle_system_from_file(const unicode& filename, bool destroy_on_completion=false);
+    ParticleSystemID new_particle_system_with_parent_from_file(ActorID parent, const unicode& filename, bool destroy_on_completion=false);
     ParticleSystemPtr particle_system(ParticleSystemID pid);
     bool has_particle_system(ParticleSystemID pid) const;
     void delete_particle_system(ParticleSystemID pid);

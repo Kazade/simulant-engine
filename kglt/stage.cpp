@@ -147,21 +147,24 @@ ParticleSystemID Stage::new_particle_system() {
     return new_id;
 }
 
-ParticleSystemID Stage::new_particle_system_from_file(const unicode& filename) {
+ParticleSystemID Stage::new_particle_system_from_file(const unicode& filename, bool destroy_on_completion) {
     ParticleSystemID new_id = new_particle_system();
 
     auto ps = particle_system(new_id);
     ps->set_parent(this);
+    ps->set_destroy_on_completion(destroy_on_completion);
+
     window().loader_for(filename)->into(ps);
 
     return new_id;
 }
 
-ParticleSystemID Stage::new_particle_system_with_parent_from_file(ActorID parent, const unicode& filename) {
+ParticleSystemID Stage::new_particle_system_with_parent_from_file(ActorID parent, const unicode& filename, bool destroy_on_completion) {
     ParticleSystemID new_id = new_particle_system();
 
     auto ps = particle_system(new_id);
     ps->set_parent(parent);
+    ps->set_destroy_on_completion(destroy_on_completion);
 
     window().loader_for(filename)->into(ps);
 

@@ -87,6 +87,27 @@ const AABB ParticleSystem::transformed_aabb() const {
     return box;
 }
 
+bool ParticleSystem::has_repeating_emitters() const {
+    for(auto e: emitters_) {
+        auto range = e->repeat_delay_range();
+        if(range.first || range.second) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool ParticleSystem::has_active_emitters() const {
+    for(auto e: emitters_) {
+        if(e->is_active()) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void ParticleSystem::ask_owner_for_destruction() {
     stage()->delete_particle_system(id());
 }
@@ -146,6 +167,16 @@ void ParticleSystem::do_update(double dt) {
             it = particles_.erase(it);
         } else {
             ++it;
+        }
+    }
+
+    if(particles_.empty() && !has_repeating_emitters() && !has_active_emitters()) {
+        // If the particles are gone, and we don't have repeating emitters and all the emitters are inactive
+        // Then destroy the particle system if that's what we've been told to do
+        if(destroy_on_completion()) {
+            ask_owner_for_destruction();
+            // No point doing anything else!
+            return;
         }
     }
 
