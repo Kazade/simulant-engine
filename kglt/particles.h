@@ -32,6 +32,7 @@ struct Particle {
     kglt::Vec3 position;
     kglt::Vec3 velocity;
     float ttl;
+    kglt::Colour colour;
 };
 
 class ParticleSystem;
@@ -72,6 +73,10 @@ public:
     void set_width(float w) { dimensions_.x = w; }
     void set_height(float h) { dimensions_.y = h; }
     void set_depth(float d) { dimensions_.z = d; }
+
+    float width() const { return dimensions_.x; }
+    float height() const { return dimensions_.y; }
+    float depth() const { return dimensions_.z; }
 
     void set_ttl(float seconds);
     void set_ttl_range(float min_seconds, float max_seconds);

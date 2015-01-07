@@ -43,9 +43,9 @@ const AABB ParticleSystem::aabb() const {
     AABB result;
     bool first = true;
     for(auto emitter: emitters_) {
-        if(emitter->type() == PARTICLE_EMITTER_POINT) {
-            auto pos = emitter->relative_position();
+        auto pos = emitter->relative_position();
 
+        if(emitter->type() == PARTICLE_EMITTER_POINT) {            
             if(pos.x > result.max.x || first) result.max.x = pos.x;
             if(pos.y > result.max.y || first) result.max.y = pos.y;
             if(pos.z > result.max.z || first) result.max.z = pos.z;
@@ -54,7 +54,27 @@ const AABB ParticleSystem::aabb() const {
             if(pos.y < result.min.x || first) result.min.y = pos.y;
             if(pos.z < result.min.x || first) result.min.z = pos.z;
         } else {
-           throw NotImplementedError(__FILE__, __LINE__);
+            // If this is not a point emitter, then calculate the max/min possible for
+            // each emitter using their dimensions.
+
+            float hw = (emitter->width() / 2.0);
+            float hh = (emitter->height() / 2.0);
+            float hd = (emitter->depth() / 2.0);
+
+            float minx = pos.x - hw;
+            float maxx = pos.x + hw;
+            float miny = pos.y - hh;
+            float maxy = pos.y + hh;
+            float minz = pos.z - hd;
+            float maxz = pos.z + hd;
+
+            if(maxx > result.max.x || first) result.max.x = maxx;
+            if(maxy > result.max.y || first) result.max.y = maxy;
+            if(maxz > result.max.z || first) result.max.z = maxz;
+
+            if(minx > result.min.x || first) result.min.x = minx;
+            if(miny > result.min.y || first) result.min.y = miny;
+            if(minz > result.min.z || first) result.min.z = minz;
         }
 
         first = false;
@@ -184,7 +204,7 @@ void ParticleSystem::do_update(double dt) {
     vertex_data_.clear();
     for(auto particle: particles_) {
         vertex_data_.position(particle.position);
-        vertex_data_.diffuse(kglt::Colour::WHITE);
+        vertex_data_.diffuse(particle.colour);
         vertex_data_.move_next();
     }
     vertex_data_.done();
@@ -242,6 +262,7 @@ std::vector<Particle> ParticleEmitter::do_emit(double dt, uint32_t max) {
         kmQuaternionMultiplyVec3(&p.velocity, &rot, &p.velocity);
 
         p.ttl = random_float(ttl_range().first, ttl_range().second);
+        p.colour = colour();
 
         //FIXME: Initialize other properties
         new_particles.push_back(p);
