@@ -13,8 +13,7 @@ void KGLPLoader::into(Loadable &resource, const LoaderOptions &options) {
     ps->set_name((js.has_key("name")) ? _u(js.dict_value("name")): "");
 
     if(js.has_key("quota")) ps->set_quota(js.dict_value("quota").get_number());
-    if(js.has_key("particle_width")) ps->set_particle_width(js.dict_value("particle_width").get_number());
-    if(js.has_key("particle_height")) ps->set_particle_height(js.dict_value("particle_height").get_number());
+    if(js.has_key("particle_width")) ps->set_particle_width(js.dict_value("particle_width").get_number());    
     if(js.has_key("cull_each")) ps->set_cull_each(js.dict_value("cull_each").get_bool());
 
     if(js.has_key("emitters")) {

@@ -117,6 +117,8 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<un
             pass->program()->uniforms().register_auto(SP_AUTO_MATERIAL_TEX_MATRIX2, variable_name);
         } else if(arg_1 == "TEXTURE_MATRIX3") {
             pass->program()->uniforms().register_auto(SP_AUTO_MATERIAL_TEX_MATRIX3, variable_name);
+        } else if(arg_1 == "POINT_SIZE") {
+            pass->program()->uniforms().register_auto(SP_AUTO_MATERIAL_POINT_SIZE, variable_name);
         } else if(arg_1 == "LIGHT_GLOBAL_AMBIENT") {            
             pass->program()->uniforms().register_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT, variable_name);
         } else if(arg_1 == "LIGHT_POSITION") {

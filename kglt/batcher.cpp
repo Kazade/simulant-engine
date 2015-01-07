@@ -95,7 +95,7 @@ void RootGroup::insert(Renderable &ent, uint8_t pass_number) {
     current = &current->get_or_create<MaterialGroup>(
         MaterialGroupData(
             pass.ambient(), pass.diffuse(), pass.specular(),
-            pass.shininess(), pass.texture_unit_count())
+            pass.shininess(), pass.texture_unit_count(), pass.point_size())
     );
 
     //Add a node for the blending type
@@ -288,6 +288,13 @@ void MaterialGroup::bind(GPUProgram* program) {
         program->uniforms().set_float(
             program->uniforms().auto_variable_name(SP_AUTO_MATERIAL_SHININESS),
             data_.shininess
+        );
+    }
+
+    if(program->uniforms().uses_auto(SP_AUTO_MATERIAL_POINT_SIZE)) {
+        program->uniforms().set_float(
+            program->uniforms().auto_variable_name(SP_AUTO_MATERIAL_POINT_SIZE),
+            data_.point_size
         );
     }
 

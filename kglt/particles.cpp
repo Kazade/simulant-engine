@@ -10,7 +10,7 @@ ParticleSystem::ParticleSystem(Stage* stage, ParticleSystemID id):
     Source(stage),
     vao_(MODIFY_REPEATEDLY_USED_FOR_RENDERING, MODIFY_REPEATEDLY_USED_FOR_RENDERING){
 
-    set_material_id(stage->clone_default_material());
+    set_material_id(stage->clone_default_material());       
 }
 
 void ParticleSystem::set_material_id(MaterialID mat_id) {
@@ -331,5 +331,9 @@ std::pair<float, float> ParticleEmitter::duration_range() const {
     return duration_range_;
 }
 
+void ParticleSystem::set_particle_width(float width) {
+    Object::stage()->material(material_id())->pass(0).set_point_size(width);
+    particle_width_ = width;
+}
 
 }

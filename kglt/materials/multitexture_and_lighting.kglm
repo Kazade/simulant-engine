@@ -13,6 +13,7 @@ BEGIN(PASS)
     SET(AUTO_UNIFORM LIGHT_GLOBAL_AMBIENT "global_ambient")
     SET(AUTO_UNIFORM ACTIVE_TEXTURE_UNITS "active_texture_count")
     SET(AUTO_UNIFORM MATERIAL_AMBIENT "material_ambient")
+    SET(AUTO_UNIFORM POINT_SIZE "point_size")
 
     SET(UNIFORM INT "textures[0]" 0)
     SET(UNIFORM INT "textures[1]" 1)
@@ -26,6 +27,7 @@ BEGIN(PASS)
 
         uniform mat4 modelview_projection;
         uniform mat4 texture_matrix[2];
+        uniform float point_size;
 
         varying vec2 frag_texcoord0;
         varying vec2 frag_texcoord1;
@@ -37,6 +39,7 @@ BEGIN(PASS)
             frag_diffuse = vertex_diffuse;
 
             gl_Position = (modelview_projection * vec4(vertex_position, 1.0));
+            gl_PointSize = point_size;
         }
     END_DATA(VERTEX)
 

@@ -154,11 +154,8 @@ public:
 
     int32_t quota() const { return quota_; }
 
-    void set_particle_width(float width) { particle_width_ = width; }
+    void set_particle_width(float width);
     float particle_width() const { return particle_width_; }
-
-    void set_particle_height(float height) { particle_height_ = height; }
-    float particle_height() const { return particle_height_; }
 
     void set_cull_each(bool val=true) { cull_each_ = val; }
     bool cull_each() const { return cull_each_; }
@@ -213,7 +210,6 @@ private:
     unicode name_;
     int quota_ = 10;
     float particle_width_ = 100.0;
-    float particle_height_ = 100.0;
     bool cull_each_ = false;
     RenderPriority render_priority_ = RENDER_PRIORITY_MAIN;
 
