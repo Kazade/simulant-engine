@@ -209,6 +209,10 @@ void StageManager::print_tree(GenericTreeNode* node, uint32_t& level) {
     level -= 1;
 }
 
+bool StageManager::has_stage(StageID stage_id) const {
+    return manager_contains(stage_id);
+}
+
 // ============= END STAGES ===========
 
 // ============= UI STAGES ============
@@ -232,6 +236,10 @@ void UIStageManager::delete_ui_stage(UIStageID s) {
 
 uint32_t UIStageManager::ui_stage_count() const {
     return UIStageManager::manager_count();
+}
+
+bool UIStageManager::has_ui_stage(UIStageID ui_stage) const {
+    return UIStageManager::manager_contains(ui_stage);
 }
 
 // =========== END UI STAGES ==========

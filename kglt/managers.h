@@ -59,6 +59,7 @@ public:
     StagePtr stage(StageID s);
     void delete_stage(StageID s);
     uint32_t stage_count() const;
+    bool has_stage(StageID stage_id) const;
 
     void print_tree();
     void update(double dt) override;
@@ -80,6 +81,7 @@ public:
     void delete_ui_stage(UIStageID s);
     uint32_t ui_stage_count() const;
 
+    bool has_ui_stage(UIStageID ui_stage) const;
 private:
     WindowBase* window_;
 
