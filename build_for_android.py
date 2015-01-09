@@ -28,8 +28,8 @@ APP_GNUSTL_CPP_FEATURES := rtti exceptions
 APP_CFLAGS              := %%s
 APP_STL                 := c++_shared
 APP_PLATFORM            := android-18
-APP_ABI                 := armeabi-v7a x86
-APP_OPTIM               := debug
+APP_ABI                 := armeabi armeabi-v7a x86
+APP_OPTIM               := release
 """.lstrip() % OUTPUT_DIRECTORY
 
 LIBRARIES = [
