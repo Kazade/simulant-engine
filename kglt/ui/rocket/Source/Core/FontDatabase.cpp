@@ -104,7 +104,7 @@ bool FontDatabase::LoadFontFace(const String& file_name)
 
 	if (instance->AddFace(ft_face, ft_face->family_name, style, weight, true))
 	{
-		Log::Message(Log::LT_INFO, "Loaded font face %s %s (from %s).", ft_face->family_name, ft_face->style_name, file_name.CString());
+		//Log::Message(Log::LT_INFO, "Loaded font face %s %s (from %s).", ft_face->family_name, ft_face->style_name, file_name.CString());
 		return true;
 	}
 	else
