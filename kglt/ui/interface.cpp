@@ -178,8 +178,12 @@ public:
 
         new_group->texture = texture;
 
+        // We have to convert to shorts for GLES compatibility
+        std::vector<uint16_t> short_indices(num_indices);
+        std::copy(indices, indices + num_indices, &short_indices[0]);
+
         new_group->vao->vertex_buffer_update(sizeof(Rocket::Core::Vertex) * num_vertices, vertices);
-        new_group->vao->index_buffer_update(sizeof(int) * num_indices, indices);
+        new_group->vao->index_buffer_update(sizeof(uint16_t) * num_indices, &short_indices[0]);
 
         new_group->num_indices = num_indices;
         new_group->num_vertices = num_vertices;
@@ -232,9 +236,13 @@ public:
         GLStateStash s5(GL_TEXTURE_BINDING_2D);
         GLStateStash s6(GL_ARRAY_BUFFER_BINDING);
 
+        // We have to convert to shorts for GLES compatibility
+        std::vector<uint16_t> short_indices(num_indices);
+        std::copy(indices, indices + num_indices, &short_indices[0]);
+
         //Update the buffers
         tmp_vao_.vertex_buffer_update(num_vertices * sizeof(Rocket::Core::Vertex), vertices);
-        tmp_vao_.index_buffer_update(num_indices * sizeof(int), indices);
+        tmp_vao_.index_buffer_update(num_indices * sizeof(uint16_t), &short_indices[0]);
         tmp_vao_.bind();
         tmp_vao_.vertex_buffer_bind();
         tmp_vao_.index_buffer_bind();
@@ -278,7 +286,7 @@ public:
             GLCheck(glBindTexture, GL_TEXTURE_2D, window_.texture(window_.default_texture_id())->gl_tex());
         }
 
-        GLCheck(glDrawElements, GL_TRIANGLES, num_indices, GL_UNSIGNED_INT, BUFFER_OFFSET(0));
+        GLCheck(glDrawElements, GL_TRIANGLES, num_indices, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
     }
 
     void prepare_shader(const Rocket::Core::Vector2f& translation) {
@@ -331,7 +339,7 @@ public:
 
         prepare_shader(translation);
 
-        GLCheck(glDrawElements, GL_TRIANGLES, geom->num_indices, GL_UNSIGNED_INT, BUFFER_OFFSET(0));
+        GLCheck(glDrawElements, GL_TRIANGLES, geom->num_indices, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
     }
 
     void ReleaseCompiledGeometry(Rocket::Core::CompiledGeometryHandle geometry) {
