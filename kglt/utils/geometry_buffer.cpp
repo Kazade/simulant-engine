@@ -113,7 +113,8 @@ int32_t GeometryBuffer::offset(VertexAttribute attr) {
         offset += sizeof(float) * 4;
     }
 
-    assert(0 && "Something is wrong");
+    // Something weird happened if we got here!
+    throw NotImplementedError(__FILE__, __LINE__);
 }
 
 uint32_t GeometryBuffer::count() const {
