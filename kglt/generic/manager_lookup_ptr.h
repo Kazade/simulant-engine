@@ -7,6 +7,8 @@
 template<typename Manager, typename ID>
 class ManagerLookupPtr {
 public:
+    ManagerLookupPtr() = default;
+
     ManagerLookupPtr(Manager& manager, ID identifier):
         manager_(&manager),
         identifier_(identifier) {}
@@ -28,7 +30,7 @@ public:
     }
 
     explicit operator bool() const {
-        return manager_->manager_contains(identifier_);
+        return manager_ && manager_->manager_contains(identifier_);
     }
 private:
     Manager* manager_ = nullptr;
