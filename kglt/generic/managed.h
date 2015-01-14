@@ -20,7 +20,7 @@ public:
 
 template<typename T>
 void deleter(T* obj) {
-    obj->cleanup();
+    obj->template Managed<T>::cleanup();
     delete obj;
 }
 
@@ -37,7 +37,7 @@ public:
             std::bind(&deleter<T>, std::placeholders::_1)
         );
 
-        if(!instance->init()) {
+        if(!instance->Managed<T>::init()) {
             throw InstanceInitializationError(typeid(T).name());
         }
         return instance;
@@ -49,7 +49,7 @@ public:
             std::bind(&deleter<T>, std::placeholders::_1)
         );
 
-        if(!instance->init()) {
+        if(!instance->Managed<T>::init()) {
             throw InstanceInitializationError(typeid(T).name());
         }
         return instance;
