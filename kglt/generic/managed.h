@@ -18,6 +18,8 @@ public:
     }
 };
 
+template<typename T> class Managed;
+
 template<typename T>
 void deleter(T* obj) {
     obj->template Managed<T>::cleanup();
