@@ -24,8 +24,16 @@ void deleter(T* obj) {
     delete obj;
 }
 
+class ManagedBase {
+public:
+    virtual ~ManagedBase() {}
+
+    virtual bool init() { return true; }
+    virtual void cleanup() {}
+};
+
 template<typename T>
-class Managed {
+class Managed : public virtual ManagedBase {
 public:
     typedef std::shared_ptr<T> ptr;
     typedef std::weak_ptr<T> wptr;
@@ -56,8 +64,6 @@ public:
     }
 
     virtual ~Managed() {}
-    virtual bool init() { return true; }
-    virtual void cleanup() {}
 
     bool uses_gc() const { return uses_gc_; }
     void enable_gc(bool value=true) { uses_gc_ = value; }
