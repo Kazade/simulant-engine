@@ -32,6 +32,7 @@ public:
     void entry(SDL_TextInputEvent event);
     bool key_down(SDL_Keysym key);
 
+    bool init();
 private:
     UIStageID ui_stage_;
     CameraID ui_camera_;

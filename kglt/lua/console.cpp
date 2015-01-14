@@ -54,6 +54,10 @@ Console::Console(WindowBase &window):
     interpreter_(Interpreter::create()),
     active_(false) {
 
+
+}
+
+bool Console::init() {
     commands_.push_back("");
     current_line_type_ = LINE_TYPE_PROMPT;
 
@@ -72,6 +76,8 @@ Console::Console(WindowBase &window):
     interpreter_->add_global("window", window_);
 
     lua_register(interpreter_->state(), "print", print);
+
+    return true;
 }
 
 void Console::init_widget() {
@@ -89,6 +95,8 @@ void Console::init_widget() {
     ui_pipeline_ = window_.render(ui_stage_, ui_camera_).with_priority(kglt::RENDER_PRIORITY_FOREGROUND);
 
     UIStagePtr stage = window_.ui_stage(ui_stage_);
+
+    assert(stage);
 
     //If we can't find an element for the lua console
     if(stage->$("#lua-console").empty()) {
