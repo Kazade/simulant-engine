@@ -31,7 +31,7 @@ const AABB Mesh::aabb() const {
 
     for(auto mesh: submeshes_) {
         AABB submesh_aabb = mesh->aabb();
-        kmAABBExpandToContain(&result, &result, &submesh_aabb);
+        kmAABB3ExpandToContain(&result, &result, &submesh_aabb);
     }
 
     return result;
@@ -291,7 +291,7 @@ void SubMesh::_recalc_bounds() {
     kmVec3Fill(&bounds_.max, -1000000, -1000000, -1000000);
 
     if(!index_data().count()) {
-        kmAABBInitialize(&bounds_, nullptr, 0, 0, 0);
+        kmAABB3Initialize(&bounds_, nullptr, 0, 0, 0);
         return;
     }
 

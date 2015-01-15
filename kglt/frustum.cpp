@@ -9,7 +9,7 @@ Frustum::Frustum():
 
 }
 
-bool Frustum::intersects_aabb(const kmAABB &aabb) const {
+bool Frustum::intersects_aabb(const kmAABB3 &aabb) const {
     for(const kmPlane& plane: planes_) {
         kglt::Vec3 points[] = {
             Vec3(aabb.min.x, aabb.min.y, aabb.min.z),

@@ -103,11 +103,11 @@ private:
     public:
         Object(float width, float height, float depth) {
             kmVec3Zero(&centre_);
-            kmAABBInitialize(&absolute_bounds_, nullptr, width, height, depth);
+            kmAABB3Initialize(&absolute_bounds_, nullptr, width, height, depth);
         }
 
         void set_bounds(float width, float height, float depth) {
-            kmAABBInitialize(&absolute_bounds_,
+            kmAABB3Initialize(&absolute_bounds_,
                 &centre_,
                 width,
                 height,
@@ -119,11 +119,11 @@ private:
             //Reinitialize the AABB with the same dimensions but a different
             //central point.
             kmVec3Assign(&centre_, &centre);
-            kmAABBInitialize(&absolute_bounds_,
+            kmAABB3Initialize(&absolute_bounds_,
                 &centre_,
-                kmAABBDiameterX(&absolute_bounds_),
-                kmAABBDiameterY(&absolute_bounds_),
-                kmAABBDiameterZ(&absolute_bounds_)
+                kmAABB3DiameterX(&absolute_bounds_),
+                kmAABB3DiameterY(&absolute_bounds_),
+                kmAABB3DiameterZ(&absolute_bounds_)
             );
         }
 
@@ -133,12 +133,12 @@ private:
 
         const kglt::AABB aabb() const {
             kglt::AABB local;
-            kmAABBInitialize(
+            kmAABB3Initialize(
                 &local,
                 nullptr,
-                kmAABBDiameterX(&absolute_bounds_),
-                kmAABBDiameterY(&absolute_bounds_),
-                kmAABBDiameterZ(&absolute_bounds_)
+                kmAABB3DiameterX(&absolute_bounds_),
+                kmAABB3DiameterY(&absolute_bounds_),
+                kmAABB3DiameterZ(&absolute_bounds_)
             );
             return local;
         }

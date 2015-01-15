@@ -18,7 +18,7 @@
 #include <kazmath/mat4.h>
 #include <kazmath/mat3.h>
 #include <kazmath/utility.h>
-#include <kazmath/aabb.h>
+#include <kazmath/aabb3.h>
 
 #include "generic/protected_ptr.h"
 #include "generic/auto_weakptr.h"
@@ -321,7 +321,7 @@ struct Vec3 : public kmVec3 {
 };
 
 
-struct AABB : public kmAABB {
+struct AABB : public kmAABB3 {
     AABB() {
         kmVec3Zero(&this->min);
         kmVec3Zero(&this->max);

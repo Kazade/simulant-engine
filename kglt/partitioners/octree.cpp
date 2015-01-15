@@ -1,4 +1,4 @@
-#include <kazmath/aabb.h>
+#include <kazmath/aabb3.h>
 
 #include "octree.h"
 
@@ -90,7 +90,7 @@ void Octree::grow(const BoundableEntity *object) {
     }
 
     //While the object is too big for the root
-    while(kmAABBContainsAABB(&root().absolute_strict_bounds(), &obj_bounds) != KM_CONTAINS_ALL) {
+    while(kmAABB3ContainsAABB(&root().absolute_strict_bounds(), &obj_bounds) != KM_CONTAINS_ALL) {
         L_DEBUG("Root node cannot contain object, growing upwards");
 
         /*
@@ -103,7 +103,7 @@ void Octree::grow(const BoundableEntity *object) {
          */
 
         kmVec3 new_centre, obj_centre;
-        kmAABBCentre(&obj_bounds, &obj_centre);
+        kmAABB3Centre(&obj_bounds, &obj_centre);
         kmVec3Assign(&new_centre, &root().centre());
         float half_current = root().strict_diameter() / 2;
         new_centre.x += (obj_centre.x < root().centre().x) ? -half_current : half_current;
@@ -160,8 +160,8 @@ void Octree::grow(const BoundableEntity *object) {
     this->_register_object(&root().insert_into_subtree(object), object);
 }
 
-kmAABB OctreeNode::calculate_child_bounds(OctreePosition pos, float child_width) {
-    kmAABB result;
+kmAABB3 OctreeNode::calculate_child_bounds(OctreePosition pos, float child_width) {
+    kmAABB3 result;
     kmVec3 child_centre;
     kmScalar quarter_strict = strict_diameter() / 4;
 
@@ -174,7 +174,7 @@ kmAABB OctreeNode::calculate_child_bounds(OctreePosition pos, float child_width)
             centre().y - quarter_strict,
             centre().z - quarter_strict
         );
-        kmAABBInitialize(
+        kmAABB3Initialize(
             &result,
             &child_centre,
             child_width, child_width, child_width
@@ -188,7 +188,7 @@ kmAABB OctreeNode::calculate_child_bounds(OctreePosition pos, float child_width)
             centre().y - quarter_strict,
             centre().z - quarter_strict
         );
-        kmAABBInitialize(
+        kmAABB3Initialize(
             &result,
             &child_centre,
             child_width, child_width, child_width
@@ -202,7 +202,7 @@ kmAABB OctreeNode::calculate_child_bounds(OctreePosition pos, float child_width)
             centre().y + quarter_strict,
             centre().z - quarter_strict
         );
-        kmAABBInitialize(
+        kmAABB3Initialize(
             &result,
             &child_centre,
             child_width, child_width, child_width
@@ -216,7 +216,7 @@ kmAABB OctreeNode::calculate_child_bounds(OctreePosition pos, float child_width)
             centre().y + quarter_strict,
             centre().z - quarter_strict
         );
-        kmAABBInitialize(
+        kmAABB3Initialize(
             &result,
             &child_centre,
             child_width, child_width, child_width
@@ -230,7 +230,7 @@ kmAABB OctreeNode::calculate_child_bounds(OctreePosition pos, float child_width)
             centre().y - quarter_strict,
             centre().z + quarter_strict
         );
-        kmAABBInitialize(
+        kmAABB3Initialize(
             &result,
             &child_centre,
             child_width, child_width, child_width
@@ -244,7 +244,7 @@ kmAABB OctreeNode::calculate_child_bounds(OctreePosition pos, float child_width)
             centre().y - quarter_strict,
             centre().z + quarter_strict
         );
-        kmAABBInitialize(
+        kmAABB3Initialize(
             &result,
             &child_centre,
             child_width, child_width, child_width
@@ -258,7 +258,7 @@ kmAABB OctreeNode::calculate_child_bounds(OctreePosition pos, float child_width)
             centre().y + quarter_strict,
             centre().z + quarter_strict
         );
-        kmAABBInitialize(
+        kmAABB3Initialize(
             &result,
             &child_centre,
             child_width, child_width, child_width
@@ -272,7 +272,7 @@ kmAABB OctreeNode::calculate_child_bounds(OctreePosition pos, float child_width)
             centre().y + quarter_strict,
             centre().z + quarter_strict
         );
-        kmAABBInitialize(
+        kmAABB3Initialize(
             &result,
             &child_centre,
             child_width, child_width, child_width
@@ -290,20 +290,20 @@ OctreeNode& OctreeNode::create_child(OctreePosition pos) {
         return child(pos);
     }
 
-    kmAABB bounds = calculate_child_strict_bounds(pos);
+    kmAABB3 bounds = calculate_child_strict_bounds(pos);
     kmVec3 centre;
-    kmAABBCentre(&bounds, &centre);
+    kmAABB3Centre(&bounds, &centre);
 
-    children_[pos].reset(new OctreeNode(this, kmAABBDiameterX(&bounds), centre));
+    children_[pos].reset(new OctreeNode(this, kmAABB3DiameterX(&bounds), centre));
 
     return *children_[pos];
 }
 
-kmAABB OctreeNode::calculate_child_loose_bounds(OctreePosition pos) {
+kmAABB3 OctreeNode::calculate_child_loose_bounds(OctreePosition pos) {
     return calculate_child_bounds(pos, this->strict_diameter());
 }
 
-kmAABB OctreeNode::calculate_child_strict_bounds(OctreePosition pos) {
+kmAABB3 OctreeNode::calculate_child_strict_bounds(OctreePosition pos) {
     return calculate_child_bounds(pos, this->strict_diameter() / 2.0);
 }
 
@@ -326,9 +326,9 @@ OctreeNode& OctreeNode::insert_into_subtree(const BoundableEntity* obj) {
 
         L_DEBUG("Object will fit into child, traversing next level");
         for(uint8_t i = 0; i < 8; ++i) {
-            kmAABB bounds = calculate_child_strict_bounds((OctreePosition)i);
+            kmAABB3 bounds = calculate_child_strict_bounds((OctreePosition)i);
 
-            if(kmAABBContainsPoint(&bounds, &centre)) {
+            if(kmAABB3ContainsPoint(&bounds, &centre)) {
                 OctreeNode& child = create_child((OctreePosition) i);
                 return child.insert_into_subtree(obj);
             }
@@ -348,8 +348,8 @@ OctreeNode::OctreeNode(OctreeNode* parent, float strict_diameter, const kmVec3& 
     parent_(parent),
     centre_(centre) {
 
-    kmAABBInitialize(&strict_bounds_, &centre_, strict_diameter, strict_diameter, strict_diameter);
-    kmAABBInitialize(&loose_bounds_, &centre_, strict_diameter * 2, strict_diameter * 2, strict_diameter * 2);
+    kmAABB3Initialize(&strict_bounds_, &centre_, strict_diameter, strict_diameter, strict_diameter);
+    kmAABB3Initialize(&loose_bounds_, &centre_, strict_diameter * 2, strict_diameter * 2, strict_diameter * 2);
 }
 
 }

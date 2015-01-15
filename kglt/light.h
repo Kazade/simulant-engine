@@ -74,13 +74,13 @@ public:
     const AABB transformed_aabb() const {
         AABB result;
         Vec3 abs_pos = absolute_position();
-        kmAABBInitialize(&result, &abs_pos, range(), range(), range());
+        kmAABB3Initialize(&result, &abs_pos, range(), range(), range());
         return result;
     }
 
     const AABB aabb() const {
         AABB result;
-        kmAABBInitialize(&result, nullptr, range(), range(), range());
+        kmAABB3Initialize(&result, nullptr, range(), range(), range());
         return result;
     }
 

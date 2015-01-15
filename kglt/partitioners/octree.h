@@ -95,16 +95,16 @@ public:
 
     bool is_root() const { return !parent_; }
 
-    const kmAABB& absolute_loose_bounds() const { return loose_bounds_; }
-    const kmAABB& absolute_strict_bounds() const { return strict_bounds_; }
+    const kmAABB3& absolute_loose_bounds() const { return loose_bounds_; }
+    const kmAABB3& absolute_strict_bounds() const { return strict_bounds_; }
 
     const float loose_diameter() const {
         //Any dimension will do...
-        return kmAABBDiameterX(&loose_bounds_);
+        return kmAABB3DiameterX(&loose_bounds_);
     }
     const float strict_diameter() const {
         //Any dimension will do...
-        return kmAABBDiameterX(&strict_bounds_);
+        return kmAABB3DiameterX(&strict_bounds_);
     }
 
     const std::set<const BoundableEntity*>& objects() const { return objects_; }
@@ -129,9 +129,9 @@ private:
         objects_.erase(obj);
     }
 
-    kmAABB calculate_child_loose_bounds(OctreePosition pos);
-    kmAABB calculate_child_strict_bounds(OctreePosition pos);
-    kmAABB calculate_child_bounds(OctreePosition pos, float child_width);
+    kmAABB3 calculate_child_loose_bounds(OctreePosition pos);
+    kmAABB3 calculate_child_strict_bounds(OctreePosition pos);
+    kmAABB3 calculate_child_bounds(OctreePosition pos, float child_width);
 
     friend class Octree;
 
