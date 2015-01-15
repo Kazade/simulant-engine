@@ -90,7 +90,7 @@ void Octree::grow(const BoundableEntity *object) {
     }
 
     //While the object is too big for the root
-    while(!kmAABBContainsAABB(&root().absolute_strict_bounds(), &obj_bounds)) {
+    while(kmAABBContainsAABB(&root().absolute_strict_bounds(), &obj_bounds) != KM_CONTAINS_ALL) {
         L_DEBUG("Root node cannot contain object, growing upwards");
 
         /*
@@ -322,10 +322,12 @@ OctreeNode& OctreeNode::insert_into_subtree(const BoundableEntity* obj) {
 
     if(obj_diameter < this->strict_diameter() / 2) {
         //Object will fit into child
+        kmVec3 centre = obj->centre();
+
         L_DEBUG("Object will fit into child, traversing next level");
         for(uint8_t i = 0; i < 8; ++i) {
             kmAABB bounds = calculate_child_strict_bounds((OctreePosition)i);
-            kmVec3 centre = obj->centre();
+
             if(kmAABBContainsPoint(&bounds, &centre)) {
                 OctreeNode& child = create_child((OctreePosition) i);
                 return child.insert_into_subtree(obj);
