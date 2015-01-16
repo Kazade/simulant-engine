@@ -68,8 +68,9 @@ public:
         return bounds_;
     }
 
+    bool uses_shared_vertices() const { return uses_shared_data_; }
     void reverse_winding();
-    void transform_vertices(const kmMat4& transformation);
+    void transform_vertices(const Mat4 &transformation);
     void set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass=0);
 
     void _recalc_bounds();
@@ -134,6 +135,8 @@ public:
     sig::signal<void ()>& signal_submeshes_changed() { return signal_submeshes_changed_; }
 
     const AABB aabb() const;
+    void normalize(); //Scales the mesh so it has a radius of 1.0
+    void transform_vertices(const kglt::Mat4& transform, bool include_submeshes=true);
 private:
     VertexData shared_data_;
     std::vector<SubMesh::ptr> submeshes_;

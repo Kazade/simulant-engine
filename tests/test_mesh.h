@@ -69,6 +69,21 @@ public:
         return mid;
     }
 
+    void test_mesh_normalization() {
+        /*
+         *  The normalize function scales the mesh so that it has a diameter of 1
+         *  at its widest point. Useful for programmatically scaling stuff to the right
+         *  size relative to other models
+         */
+
+        auto stage = window->stage(stage_id_);
+        auto mesh = stage->mesh(generate_test_mesh(stage));
+
+        assert_close(2.0, mesh->diameter(), 0.00001);
+        mesh->normalize();
+        assert_close(1.0, mesh->diameter(), 0.00001);
+    }
+
     void test_user_data_works() {
         auto stage = window->stage(stage_id_);
 

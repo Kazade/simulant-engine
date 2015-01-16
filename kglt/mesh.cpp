@@ -29,9 +29,20 @@ const AABB Mesh::aabb() const {
     //FIXME: This should totally be cached for speed
     AABB result;
 
+    float max = std::numeric_limits<float>::max();
+    float min = std::numeric_limits<float>::min();
+
+    result.min = kglt::Vec3(max, max, max);
+    result.max = kglt::Vec3(min, min, min);
+
     for(auto mesh: submeshes_) {
-        AABB submesh_aabb = mesh->aabb();
-        kmAABB3ExpandToContain(&result, &result, &submesh_aabb);
+        if(mesh->aabb().min.x < result.min.x) result.min.x = mesh->aabb().min.x;
+        if(mesh->aabb().min.y < result.min.y) result.min.y = mesh->aabb().min.y;
+        if(mesh->aabb().min.z < result.min.z) result.min.z = mesh->aabb().min.z;
+
+        if(mesh->aabb().max.x > result.max.x) result.max.x = mesh->aabb().max.x;
+        if(mesh->aabb().max.y > result.max.y) result.max.y = mesh->aabb().max.y;
+        if(mesh->aabb().max.z > result.max.z) result.max.z = mesh->aabb().max.z;
     }
 
     return result;
@@ -170,6 +181,35 @@ void Mesh::set_material_id(MaterialID material) {
     }
 }
 
+void Mesh::transform_vertices(const kglt::Mat4& transform, bool include_submeshes) {
+    shared_data().move_to_start();
+    for(int i = 0; i < shared_data().count(); ++i) {
+        kglt::Vec3 v = shared_data().position_at(i);
+        kmVec3MultiplyMat4(&v, &v, &transform);
+        shared_data().position(v);
+        shared_data().move_next();
+    }
+    shared_data().done();
+
+    if(include_submeshes) {
+        for(auto mesh: submeshes_) {
+            if(!mesh->uses_shared_vertices()) {
+                mesh->transform_vertices(transform);
+            }
+        }
+    }
+}
+
+void Mesh::normalize() {
+    float dia = this->diameter();
+    float scaling = 1.0 / dia;
+
+    kglt::Mat4 scale_matrix;
+    kmMat4Scaling(&scale_matrix, scaling, scaling, scaling);
+
+    transform_vertices(scale_matrix);
+}
+
 void Mesh::reverse_winding() {
     for(SubMesh::ptr sm: submeshes_) {
         sm->reverse_winding();
@@ -248,10 +288,14 @@ void SubMesh::set_material_id(MaterialID mat) {
     material_ = parent_.resource_manager().material(mat).__object;
 }
 
-void SubMesh::transform_vertices(const kmMat4& transformation) {
+void SubMesh::transform_vertices(const kglt::Mat4& transformation) {
+    if(uses_shared_data_) {
+        throw LogicError("Tried to transform shared_data, use Mesh::transform_vertices instead");
+    }
+
     vertex_data().move_to_start();
     for(uint16_t i = 0; i < vertex_data().count(); ++i) {
-        kmVec3 v = vertex_data().position_at(i);
+        kglt::Vec3 v = vertex_data().position_at(i);
 
         kmVec3MultiplyMat4(&v, &v, &transformation);
 
