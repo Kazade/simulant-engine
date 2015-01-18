@@ -1,6 +1,8 @@
 #ifndef COLOUR_H
 #define COLOUR_H
 
+#include <cstdint>
+
 namespace kglt {
 
 struct Colour {
@@ -8,6 +10,10 @@ struct Colour {
 
     Colour():
         r(1.0), g(1.0), b(1.0), a(1.0) {}
+
+    static Colour from_bytes(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+        return Colour(float(r) / 255.0, float(g) / 255.0, float(b) / 255.0, float(a) / 255.0);
+    }
 
     Colour(float r, float g, float b, float a):
         r(r), g(g), b(b), a(a) {}
