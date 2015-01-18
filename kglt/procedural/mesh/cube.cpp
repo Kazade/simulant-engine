@@ -5,10 +5,12 @@ namespace kglt {
 namespace procedural {
 namespace mesh {
 
-void cube(ProtectedPtr<Mesh> mesh, float width) {
+void box(ProtectedPtr<Mesh> mesh, float width, float height, float depth) {
     mesh->clear();
 
-    float r = width * 0.5f;
+    float rx = width * 0.5f;
+    float ry = height * 0.5f;
+    float rz = depth * 0.5f;
 
     SubMeshIndex sm = mesh->new_submesh(
         mesh->resource_manager().new_material_from_file(mesh->resource_manager().default_material_filename()),
@@ -21,28 +23,28 @@ void cube(ProtectedPtr<Mesh> mesh, float width) {
         for(int32_t i = 0; i < 2; ++i) {
             uint32_t count = mesh->shared_data().count();
 
-            mesh->shared_data().position(-1 * r, -1 * r, z * r);
+            mesh->shared_data().position(-1 * rx, -1 * ry, z * rz);
             mesh->shared_data().tex_coord0(0, 0);
             mesh->shared_data().tex_coord1(0, 0);
             mesh->shared_data().diffuse(kglt::Colour::WHITE);
             mesh->shared_data().normal(0, 0, z);
             mesh->shared_data().move_next();
 
-            mesh->shared_data().position( 1 * r, -1 * r, z * r);
+            mesh->shared_data().position( 1 * rx, -1 * ry, z * rz);
             mesh->shared_data().tex_coord0(1, 0);
             mesh->shared_data().tex_coord1(1, 0);
             mesh->shared_data().diffuse(kglt::Colour::WHITE);
             mesh->shared_data().normal(0, 0, z);
             mesh->shared_data().move_next();
 
-            mesh->shared_data().position( 1 * r,  1 * r, z * r);
+            mesh->shared_data().position( 1 * rx,  1 * ry, z * rz);
             mesh->shared_data().tex_coord0(1, 1);
             mesh->shared_data().tex_coord1(1, 1);
             mesh->shared_data().diffuse(kglt::Colour::WHITE);
             mesh->shared_data().normal(0, 0, z);
             mesh->shared_data().move_next();
 
-            mesh->shared_data().position(-1 * r,  1 * r, z * r);
+            mesh->shared_data().position(-1 * rx,  1 * ry, z * rz);
             mesh->shared_data().tex_coord0(0, 1);
             mesh->shared_data().tex_coord1(0, 1);
             mesh->shared_data().diffuse(kglt::Colour::WHITE);
@@ -74,28 +76,28 @@ void cube(ProtectedPtr<Mesh> mesh, float width) {
         for(int32_t i = 0; i < 2; ++i) {
             uint32_t count = mesh->shared_data().count();
 
-            mesh->shared_data().position( x * r, -1 * r, -1 * r);
+            mesh->shared_data().position( x * rx, -1 * ry, -1 * rz);
             mesh->shared_data().tex_coord0(0, 0);
             mesh->shared_data().tex_coord1(0, 0);
             mesh->shared_data().diffuse(kglt::Colour::WHITE);
             mesh->shared_data().normal(x, 0, 0);
             mesh->shared_data().move_next();
 
-            mesh->shared_data().position( x * r,  1 * r, -1 * r);
+            mesh->shared_data().position( x * rx,  1 * ry, -1 * rz);
             mesh->shared_data().tex_coord0(1, 0);
             mesh->shared_data().tex_coord1(1, 0);
             mesh->shared_data().diffuse(kglt::Colour::WHITE);
             mesh->shared_data().normal(x, 0, 0);
             mesh->shared_data().move_next();
 
-            mesh->shared_data().position( x * r,  1 * r, 1 * r);
+            mesh->shared_data().position( x * rx,  1 * ry, 1 * rz);
             mesh->shared_data().tex_coord0(1, 1);
             mesh->shared_data().tex_coord1(1, 1);
             mesh->shared_data().diffuse(kglt::Colour::WHITE);
             mesh->shared_data().normal(x, 0, 0);
             mesh->shared_data().move_next();
 
-            mesh->shared_data().position(x * r, -1 * r, 1 * r);
+            mesh->shared_data().position(x * rx, -1 * ry, 1 * rz);
             mesh->shared_data().tex_coord0(0, 1);
             mesh->shared_data().tex_coord1(0, 1);
             mesh->shared_data().diffuse(kglt::Colour::WHITE);
@@ -127,28 +129,28 @@ void cube(ProtectedPtr<Mesh> mesh, float width) {
         for(int32_t i = 0; i < 2; ++i) {
             uint32_t count = mesh->shared_data().count();
 
-            mesh->shared_data().position( 1 * r, y * r, -1 * r);
+            mesh->shared_data().position( 1 * rx, y * ry, -1 * rz);
             mesh->shared_data().tex_coord0(0, 0);
             mesh->shared_data().tex_coord1(0, 0);
             mesh->shared_data().diffuse(kglt::Colour::WHITE);
             mesh->shared_data().normal(0, y, 0);
             mesh->shared_data().move_next();
 
-            mesh->shared_data().position( -1 * r,  y * r, -1 * r);
+            mesh->shared_data().position( -1 * rx,  y * ry, -1 * rz);
             mesh->shared_data().tex_coord0(1, 0);
             mesh->shared_data().tex_coord1(1, 0);
             mesh->shared_data().diffuse(kglt::Colour::WHITE);
             mesh->shared_data().normal(0, y, 0);
             mesh->shared_data().move_next();
 
-            mesh->shared_data().position( -1 * r,  y * r, 1 * r);
+            mesh->shared_data().position( -1 * rx,  y * ry, 1 * rz);
             mesh->shared_data().tex_coord0(1, 1);
             mesh->shared_data().tex_coord1(1, 1);
             mesh->shared_data().diffuse(kglt::Colour::WHITE);
             mesh->shared_data().normal(0, y, 0);
             mesh->shared_data().move_next();
 
-            mesh->shared_data().position( 1 * r, y * r, 1 * r);
+            mesh->shared_data().position( 1 * rx, y * ry, 1 * rz);
             mesh->shared_data().tex_coord0(0, 1);
             mesh->shared_data().tex_coord1(0, 1);
             mesh->shared_data().diffuse(kglt::Colour::WHITE);
@@ -177,6 +179,10 @@ void cube(ProtectedPtr<Mesh> mesh, float width) {
 
     mesh->shared_data().done();
     mesh->submesh(sm).index_data().done();
+}
+
+void cube(ProtectedPtr<Mesh> mesh, float width) {
+    box(mesh, width, width, width);
 }
 
 }

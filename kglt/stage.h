@@ -143,6 +143,10 @@ public:
         return window().new_mesh_as_cube(width, garbage_collect);
     }
 
+    virtual MeshID new_mesh_as_box(float width, float height, float depth, bool garbage_collect=true) {
+        return window().new_mesh_as_box(width, height, depth, garbage_collect);
+    }
+
     virtual MeshID new_mesh_as_sphere(float diameter, bool garbage_collect=true) {
         return window().new_mesh_as_sphere(diameter, garbage_collect);
     }

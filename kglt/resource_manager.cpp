@@ -104,6 +104,13 @@ MeshID ResourceManagerImpl::new_mesh_as_cube(float width, bool garbage_collect) 
     return m;
 }
 
+MeshID ResourceManagerImpl::new_mesh_as_box(float width, float height, float depth, bool garbage_collect) {
+    MeshID m = new_mesh(garbage_collect);
+    kglt::procedural::mesh::box(mesh(m), width, height, depth);
+    MeshManager::mark_as_uncollected(m);
+    return m;
+}
+
 MeshID ResourceManagerImpl::new_mesh_as_sphere(float diameter, bool garbage_collect) {
     MeshID m = new_mesh(garbage_collect);
     kglt::procedural::mesh::sphere(mesh(m), diameter);

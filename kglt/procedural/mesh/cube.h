@@ -8,6 +8,7 @@ namespace procedural {
 namespace mesh {
 
 void cube(ProtectedPtr<Mesh> mesh, float width);
+void box(ProtectedPtr<Mesh> mesh, float width, float height, float depth);
 
 }
 }
