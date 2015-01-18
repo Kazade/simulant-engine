@@ -62,6 +62,8 @@ public:
     const MaterialID material_id() const;
     void set_material_id(MaterialID mat);
 
+    void set_diffuse(const kglt::Colour& colour);
+
     const MeshArrangement arrangement() const { return arrangement_; }
 
     const AABB aabb() const {
@@ -129,6 +131,8 @@ public:
     void enable_debug(bool value);
 
     void set_material_id(MaterialID material); ///< Apply material to all submeshes
+    void set_diffuse(const kglt::Colour& colour, bool include_submeshes=true); ///< Override vertex colour on all vertices
+
     void reverse_winding(); ///< Reverse the winding of all submeshes
     void set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass=0); ///< Replace the texture unit on all submesh materials
 

@@ -183,10 +183,16 @@ void Mesh::set_material_id(MaterialID material) {
 
 void Mesh::transform_vertices(const kglt::Mat4& transform, bool include_submeshes) {
     shared_data().move_to_start();
+
     for(int i = 0; i < shared_data().count(); ++i) {
         kglt::Vec3 v = shared_data().position_at(i);
         kmVec3MultiplyMat4(&v, &v, &transform);
         shared_data().position(v);
+
+        kglt::Vec3 n = shared_data().normal_at(i);
+        kmVec3MultiplyMat4(&n, &n, &transform);
+        shared_data().normal(n.normalized());
+
         shared_data().move_next();
     }
     shared_data().done();
@@ -195,6 +201,23 @@ void Mesh::transform_vertices(const kglt::Mat4& transform, bool include_submeshe
         for(auto mesh: submeshes_) {
             if(!mesh->uses_shared_vertices()) {
                 mesh->transform_vertices(transform);
+            }
+        }
+    }
+}
+
+void Mesh::set_diffuse(const kglt::Colour& colour, bool include_submeshes) {
+    shared_data().move_to_start();
+    for(int i = 0; i < shared_data().count(); ++i) {
+        shared_data().diffuse(colour);
+        shared_data().move_next();
+    }
+    shared_data().done();
+
+    if(include_submeshes) {
+        for(auto mesh: submeshes_) {
+            if(!mesh->uses_shared_vertices()) {
+                mesh->set_diffuse(colour);
             }
         }
     }
@@ -300,6 +323,24 @@ void SubMesh::transform_vertices(const kglt::Mat4& transformation) {
         kmVec3MultiplyMat4(&v, &v, &transformation);
 
         vertex_data().position(v);
+
+        kglt::Vec3 n = vertex_data().normal_at(i);
+        kmVec3MultiplyMat4(&n, &n, &transformation);
+        vertex_data().normal(n.normalized());
+
+        vertex_data().move_next();
+    }
+    vertex_data().done();
+}
+
+void SubMesh::set_diffuse(const kglt::Colour& colour) {
+    if(uses_shared_data_) {
+        throw LogicError("Tried to set the diffuse colour on shared_data, use Mesh::set_diffuse instead");
+    }
+
+    vertex_data().move_to_start();
+    for(uint16_t i = 0; i < vertex_data().count(); ++i) {
+        vertex_data().diffuse(colour);
         vertex_data().move_next();
     }
     vertex_data().done();
