@@ -15,7 +15,7 @@ InputConnection::InputConnection(InputConnectionID id, Device &device):
 
 InputConnection Device::new_input_connection() {
     static uint32_t idx = 0;
-    return InputConnection(InputConnectionID(idx), *this);
+    return InputConnection(InputConnectionID(++idx), *this);
 }
 
 void InputConnection::disconnect() {
@@ -24,18 +24,28 @@ void InputConnection::disconnect() {
 
 InputConnection Keyboard::key_pressed_connect(GlobalKeyCallback callback) {
     InputConnection c = new_input_connection();
+
+    if(global_key_press_signals_.find(c) != global_key_press_signals_.end()) {
+        throw ValueError("Something went wrong when generating the connection ID");
+    }
+
     global_key_press_signals_[c] = callback;
     return c;
 }
 
 InputConnection Keyboard::key_pressed_connect(SDL_Scancode code, KeyCallback callback) {
-    InputConnection c = new_input_connection();
+    InputConnection c = new_input_connection();    
     key_press_signals_[code][c] = callback;
     return c;
 }
 
 InputConnection Keyboard::key_while_pressed_connect(GlobalKeyDownCallback callback) {
     InputConnection c = new_input_connection();
+
+    if(global_while_key_pressed_signals_.find(c) != global_while_key_pressed_signals_.end()) {
+        throw ValueError("Something went wrong when generating the connection ID");
+    }
+
     global_while_key_pressed_signals_[c] = callback;
     return c;
 }
