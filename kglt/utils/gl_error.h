@@ -16,11 +16,23 @@ void check_and_log_error(const std::string& function_name);
 
 namespace GLChecker {
 
+/*
+ * glGetError is ridiculously slow, so what we do is call it once per frame,
+ * if that call returns an error, then we enable it for every call and die
+ * when we get an error on the next frame. Make sense?
+ */
+
+extern bool USE_GL_GET_ERROR;
+
+void end_of_frame_check();
+
 template<typename Res, typename Func, typename... Args>
 struct Checker {
     static Res run(const std::string& function_name, Func&& func, Args&&... args) {
         Res result = func(std::forward<Args>(args)...);
-        check_and_log_error(function_name);
+        if(USE_GL_GET_ERROR) {
+            check_and_log_error(function_name);
+        }
         return result;
     }
 };
@@ -29,7 +41,9 @@ template<typename Func, typename... Args>
 struct Checker<void, Func, Args...> {
     static void run(const std::string& function_name, Func&& func, Args&&... args) {
         func(std::forward<Args>(args)...);
-        check_and_log_error(function_name);
+        if(USE_GL_GET_ERROR) {
+            check_and_log_error(function_name);
+        }
     }
 };
 
@@ -37,7 +51,9 @@ template<typename Func>
 struct Checker<void, Func> {
     static void run(const std::string& function_name, Func&& func) {
         func();
-        check_and_log_error(function_name);
+        if(USE_GL_GET_ERROR) {
+            check_and_log_error(function_name);
+        }
     }
 };
 

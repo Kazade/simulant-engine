@@ -8,6 +8,18 @@
 #include <kazbase/exceptions.h>
 #include <kazbase/unicode.h>
 
+namespace GLChecker {
+
+bool USE_GL_GET_ERROR = false;
+
+void end_of_frame_check() {
+    if(glGetError() != GL_NO_ERROR) {
+        USE_GL_GET_ERROR = true;
+    }
+}
+
+}
+
 void check_and_log_error(const std::string &function_name) {
     GLuint error = glGetError();
     if(error != GL_NO_ERROR) {

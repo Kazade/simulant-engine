@@ -28,6 +28,7 @@
 #include "screens/loading.h"
 #include "utils/gl_thread_check.h"
 #include "utils/vao_abstraction.h"
+#include "utils/gl_error.h"
 
 namespace kglt {
 
@@ -226,6 +227,7 @@ bool WindowBase::run_frame() {
             signal_pre_swap_();
 
             swap_buffers();
+            GLChecker::end_of_frame_check();
 
             //std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
