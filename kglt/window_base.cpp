@@ -185,6 +185,8 @@ bool WindowBase::run_frame() {
     frame_counter_frames_++;
 
     if(frame_counter_time_ >= 1.0) {
+        console_->set_stats_fps(frame_counter_frames_);
+
         frame_time_in_milliseconds_ = 1000.0 / double(frame_counter_frames_);
         frame_counter_frames_ = 0;
         frame_counter_time_ = 0.0;

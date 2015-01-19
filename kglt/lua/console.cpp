@@ -80,6 +80,12 @@ bool Console::init() {
     return true;
 }
 
+void Console::set_stats_fps(float fps) {
+    UIStagePtr stage = window_.ui_stage(ui_stage_);
+    auto elem = stage->$("#stats-fps");
+    elem.text(_u("FPS: {0}").format(fps));
+}
+
 void Console::init_widget() {
     if(ui_stage_) {
         return;
@@ -108,7 +114,7 @@ void Console::init_widget() {
         l.css("position", "absolute");
         l.css("width", "100%");
         l.css("height", _u("{0}px").format(window_.height() * 0.75).encode());
-        l.css("background-color", "#00003388");
+        l.css("background-color", "#000033BB");
         l.css("color", "white");
         l.css("display", "block");
         l.css("white-space", "pre");
@@ -119,6 +125,23 @@ void Console::init_widget() {
         l.css("font-family", "Ubuntu Mono");
         l.css("font-weight", "normal");
         l.hide();
+
+        // Append our stats div
+        stage->append("<div>").id("stats");
+
+        auto stats = stage->$("#stats");
+
+        stats.css("width", "100px");
+        stats.css("position", "absolute");
+        stats.css("right", "0px");
+        stats.css("top", "0px");
+        stats.css("font-family", "Ubuntu Mono");
+        stats.css("z-index", "90");
+        stats.css("font-size", "2em");
+
+        stats[0].append("<div>").id("stats-fps");
+
+        set_stats_fps(0);
     }
     update_output();
 }

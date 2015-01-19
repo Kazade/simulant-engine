@@ -33,6 +33,9 @@ public:
     bool key_down(SDL_Keysym key);
 
     bool init();
+
+    void set_stats_fps(float fps);
+
 private:
     UIStageID ui_stage_;
     CameraID ui_camera_;
