@@ -54,7 +54,8 @@ public:
             return unicode("");
         }
 
-        return unicode((char16_t*)text_->GetText().CString());
+        Rocket::Core::String str;
+        return unicode(text_->GetText().ToUTF8(str).CString(), "utf8");
     }
 
     void add_class(const std::string& cl) {

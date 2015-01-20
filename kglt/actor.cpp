@@ -33,8 +33,9 @@ const VertexData& Actor::shared_data() const {
 
 void Actor::rebuild_subactors() {
     subactors_.clear();
+
     for(SubMeshIndex idx: mesh_->submesh_ids()) {
-        subactors_.push_back(SubActor::create(*this, idx));
+        subactors_.push_back(SubActor::create(*this, &mesh_->submesh(idx)));
     }
 }
 
@@ -96,12 +97,28 @@ ProtectedPtr<Mesh> Actor::mesh() const {
     return stage()->mesh(mesh_id());
 }
 
+const SubMeshIndex SubActor::submesh_id() const {
+    if(!submesh_) {
+        throw ValueError("Submesh was not initialized");
+    }
+
+    return submesh_->id();
+}
+
 SubMesh& SubActor::submesh() {
-    return parent_.mesh()->submesh(index_);
+    if(!submesh_) {
+        throw ValueError("Submesh was not initialized");
+    }
+
+    return *submesh_;
 }
 
 const SubMesh& SubActor::submesh() const {
-    return parent_.mesh()->submesh(index_);
+    if(!submesh_) {
+        throw ValueError("Submesh was not initialized");
+    }
+
+    return *submesh_;
 }
 
 }

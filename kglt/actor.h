@@ -49,7 +49,7 @@ public:
     void override_material_id(MaterialID mat);
 
     SubActor& subactor(uint16_t idx) {
-        return *subactors_.at(idx);
+        return *subactors_[idx];
     }
 
     const std::vector<std::shared_ptr<SubActor> >& _subactors() { return subactors_; }
@@ -98,15 +98,9 @@ class SubActor :
     public Renderable {
 
 public:
-    SubActor(Actor& parent, SubMeshIndex idx):
-        parent_(parent),
-        index_(idx),
-        material_(0) {
-    }
-
     const MaterialID material_id() const;
 
-    const SubMeshIndex submesh_id() const { return index_; }
+    const SubMeshIndex submesh_id() const;
 
     void override_material_id(MaterialID material);
 
@@ -141,9 +135,15 @@ public:
         return submesh().aabb();
     }
 
+    SubActor(Actor& parent, SubMesh* submesh):
+        parent_(parent),
+        submesh_(submesh),
+        material_(0) {
+    }
+
 private:
     Actor& parent_;
-    SubMeshIndex index_;
+    SubMesh* submesh_ = nullptr;
     MaterialPtr material_;
 
     SubMesh& submesh();

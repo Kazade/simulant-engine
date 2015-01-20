@@ -27,7 +27,7 @@ public:
         GL_thread.reset(new GLThreadCheck(std::this_thread::get_id()));
     }
 
-    static void check(const unicode& message="");
+    static void check();
 
     static bool is_current() {
         try {

@@ -27,7 +27,6 @@ UniformInfo UniformManager::info(const unicode& uniform_name) {
 }
 
 GLint UniformManager::locate(const unicode& uniform_name) {
-    GLThreadCheck::check("UniformManager::locate");
     if(!program_.is_current()) {
         L_ERROR("Attempted to modify a uniform without making the program active");
         throw LogicError("Attempted to modify GPU program object without making it active");
@@ -117,8 +116,6 @@ AttributeManager::AttributeManager(GPUProgram &program):
     program_(program) {}
 
 int32_t AttributeManager::locate(const unicode& attribute) {
-    GLThreadCheck::check("AttributeManager::locate");
-
     if(!program_.is_complete()) {
         throw LogicError("Attempted to access attribute on a GPU program that is not complete");
     }
@@ -140,8 +137,6 @@ int32_t AttributeManager::locate(const unicode& attribute) {
 }
 
 void AttributeManager::set_location(const unicode& attribute, int32_t location) {
-    GLThreadCheck::check("AttributeManager::set_location");
-
     //No completeness check, glBindAttribLocation can be called at any time
 
     GLCheck(glBindAttribLocation, program_.program_object_, location, attribute.encode().c_str());
@@ -164,24 +159,18 @@ GPUProgram::GPUProgram():
     attributes_(*this) {}
 
 const bool GPUProgram::is_current() const {
-    GLThreadCheck::check("GPUProgram::is_current");
-
     GLint current = 0;
     GLCheck(glGetIntegerv, GL_CURRENT_PROGRAM, &current);
     return program_object_ && current == program_object_;
 }
 
 void GPUProgram::activate() {
-    GLThreadCheck::check("GPUProgram::activate");
-
     assert(program_object_);
 
     GLCheck(glUseProgram, program_object_);
 }
 
 void GPUProgram::prepare_program() {
-    GLThreadCheck::check("GPUProgram::prepare_program");
-
     if(program_object_) {
         return;
     }
@@ -258,8 +247,6 @@ void GPUProgram::set_shader_source(ShaderType type, const unicode& source) {
 
 
 void GPUProgram::compile(ShaderType type) {
-    GLThreadCheck::check("GPUProgram::compile");
-
     auto& info = shaders_.at(type);
     if(info.is_compiled) {
         return;
@@ -356,8 +343,6 @@ void GPUProgram::rebuild_hash() {
 
 
 void GPUProgram::link() {
-    GLThreadCheck::check("GPUProgram::link");
-
     prepare_program();
 
     assert(shaders_.at(SHADER_TYPE_VERTEX).is_compiled);

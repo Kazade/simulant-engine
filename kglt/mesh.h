@@ -50,7 +50,7 @@ class SubMesh :
     public Managed<SubMesh> {
 
 public:
-    SubMesh(Mesh& parent, MaterialID material, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool uses_shared_vertices=true);
+    SubMesh(Mesh& parent, SubMeshIndex idx, MaterialID material, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool uses_shared_vertices=true);
     virtual ~SubMesh();
 
     VertexData& vertex_data();
@@ -79,8 +79,11 @@ public:
     void _update_vertex_array_object();
     void _bind_vertex_array_object();
 
+    SubMeshIndex id() const { return id_; }
 private:
     Mesh& parent_;
+    SubMeshIndex id_;
+
     MaterialPtr material_;
     MeshArrangement arrangement_;
     bool uses_shared_data_;

@@ -97,7 +97,7 @@ SubMeshIndex Mesh::new_submesh(
 
     SubMeshIndex idx = ++counter;
 
-    submeshes_.push_back(SubMesh::create(*this, material, arrangement, uses_shared_vertices));
+    submeshes_.push_back(SubMesh::create(*this, idx, material, arrangement, uses_shared_vertices));
     submeshes_by_index_[idx] = submeshes_[submeshes_.size()-1];
 
     signal_submeshes_changed_();
@@ -251,8 +251,9 @@ SubMesh& Mesh::submesh(SubMeshIndex index) {
 }
 
 SubMesh::SubMesh(
-    Mesh& parent, MaterialID material, MeshArrangement arrangement, bool uses_shared_vertices):
+    Mesh& parent, SubMeshIndex idx, MaterialID material, MeshArrangement arrangement, bool uses_shared_vertices):
     parent_(parent),
+    id_(idx),
     arrangement_(arrangement),
     uses_shared_data_(uses_shared_vertices) {
 

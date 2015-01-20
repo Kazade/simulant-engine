@@ -46,8 +46,6 @@ void BufferObject::release() {
 }
 
 void BufferObject::bind() {
-    GLThreadCheck::check("BufferObject::bind");
-
     if(!buffer_id_) {
         GLCheck(glGenBuffers, 1, &buffer_id_);
     }
@@ -117,8 +115,6 @@ GLenum BufferObject::usage() const {
 }
 
 void BufferObject::create(uint32_t byte_size, const void* data) {
-    GLThreadCheck::check("BufferObject::create");
-
     if(!buffer_id_) {
         GLCheck(glGenBuffers, 1, &buffer_id_);
     }
@@ -130,8 +126,6 @@ void BufferObject::create(uint32_t byte_size, const void* data) {
 }
 
 void BufferObject::modify(uint32_t offset, uint32_t byte_size, const void* data) {
-    GLThreadCheck::check("BufferObject::modify");
-
     assert(buffer_id_);
 
     GLCheck(glBindBuffer, gl_target_, buffer_id_);
