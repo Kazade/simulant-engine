@@ -15,6 +15,7 @@
 #include "renderers/generic_renderer.h"
 #include "batcher.h"
 #include "loader.h"
+#include "lua/console.h"
 
 namespace kglt {
 
@@ -171,9 +172,12 @@ void RenderSequence::set_renderer(Renderer::ptr renderer) {
 void RenderSequence::run() {
     targets_rendered_this_frame_.clear();
 
+    int actors_rendered = 0;
     for(Pipeline::ptr pipeline: ordered_pipelines_) {
-        run_pipeline(pipeline);
+        run_pipeline(pipeline, actors_rendered);
     }
+
+    window_.console()->set_stats_subactors_rendered(actors_rendered);
 }
 
 void RenderSequence::update_camera_constraint(CameraID cid) {
@@ -190,7 +194,7 @@ void RenderSequence::update_camera_constraint(CameraID cid) {
     }
 }
 
-void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
+void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rendered) {
     if(!pipeline_stage->is_active()) {
         return;
     }
@@ -279,6 +283,8 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
                 //Insert the actor into the RenderGroup tree
                 group->insert(*ent, pass, lights);
             }
+
+            actors_rendered++;
         }
 
         /*
@@ -302,7 +308,6 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
         }
         renderer_->set_current_stage(StageID());
     }
-
 
 /*
     std::sort(buffers.begin(), buffers.end(), [](SubActor::ptr lhs, SubActor::ptr rhs) {

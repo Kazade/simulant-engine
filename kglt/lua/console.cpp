@@ -86,6 +86,12 @@ void Console::set_stats_fps(float fps) {
     elem.text(_u("FPS: {0}").format(fps));
 }
 
+void Console::set_stats_subactors_rendered(int count) {
+    UIStagePtr stage = window_.ui_stage(ui_stage_);
+    auto elem = stage->$("#stats-subactors");
+    elem.text(_u("Subactors: {0}").format(count));
+}
+
 void Console::init_widget() {
     if(ui_stage_) {
         return;
@@ -137,11 +143,13 @@ void Console::init_widget() {
         stats.css("top", "0px");
         stats.css("font-family", "Ubuntu Mono");
         stats.css("z-index", "90");
-        stats.css("font-size", "2em");
+        stats.css("font-size", "1.2em");
 
         stats[0].append("<div>").id("stats-fps");
+        stats[0].append("<div>").id("stats-subactors");
 
         set_stats_fps(0);
+        set_stats_subactors_rendered(0);
     }
     update_output();
 }

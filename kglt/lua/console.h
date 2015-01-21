@@ -35,6 +35,7 @@ public:
     bool init();
 
     void set_stats_fps(float fps);
+    void set_stats_subactors_rendered(int count);
 
 private:
     UIStageID ui_stage_;

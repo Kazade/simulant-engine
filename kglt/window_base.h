@@ -183,6 +183,7 @@ public:
     virtual ScreenBase::ptr active_screen() const { return routes_->active_screen(); }
     /* End ScreenManager interface */
 
+    Console* console() { return console_.get(); }
 protected:
     RenderSequencePtr render_sequence();
 
@@ -206,6 +207,7 @@ protected:
 
     bool has_context() const { return has_context_; }
     std::mutex& context_lock() { return context_lock_; }
+
 
 private:    
     void create_defaults();

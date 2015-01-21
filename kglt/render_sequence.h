@@ -116,7 +116,7 @@ public:
     RenderOptions render_options;
 
 private:    
-    void run_pipeline(Pipeline::ptr stage);
+    void run_pipeline(Pipeline::ptr stage, int& actors_rendered);
 
     WindowBase& window_;
     Renderer::ptr renderer_;
