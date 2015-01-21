@@ -111,20 +111,8 @@ std::vector<RenderablePtr> OctreePartitioner::geometry_visible_from(CameraID cam
     return results;
 }
 
-std::vector<LightID> OctreePartitioner::lights_within_range(const Vec3& location) {
+std::vector<LightID> OctreePartitioner::lights_visible_from(CameraID camera_id) {
     std::vector<LightID> lights;
-/*
-    //Go through the visible nodes
-    for(OctreeNode* node: tree_.nodes_visible_from(cam.frustum())) {
-        //Go through the objects
-        for(const Boundable* obj: node->objects()) {
-            if(container::contains(boundable_to_light_, obj)) {
-                //Build a list of visible subactors
-                results.push_back(boundable_to_light_[obj]);
-            }
-        }
-    }*/
-
     return lights;
 }
 

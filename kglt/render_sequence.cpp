@@ -238,6 +238,8 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
         std::vector<RenderablePtr> buffers = window_.stage(stage_id
             )->partitioner().geometry_visible_from(camera_id);
 
+        std::vector<LightID> lights = window_.stage(stage_id)->partitioner().lights_visible_from(camera_id);
+
 
         /*
          * Go through the visible objects, sort into queues and for
@@ -275,7 +277,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage) {
                 }
 
                 //Insert the actor into the RenderGroup tree
-                group->insert(*ent, pass);
+                group->insert(*ent, pass, lights);
             }
         }
 

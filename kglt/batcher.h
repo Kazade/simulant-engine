@@ -180,14 +180,14 @@ public:
     StagePtr stage();
     ProtectedPtr<CameraProxy> camera();
 
-    void insert(Renderable& ent, uint8_t pass_number);
+    void insert(Renderable& ent, uint8_t pass_number, const std::vector<kglt::LightID> &lights);
 
 private:
     WindowBase& window_;
     StageID stage_id_;
     CameraID camera_id_;
 
-    void generate_mesh_groups(RenderGroup* parent, Renderable& ent, MaterialPass& pass);
+    void generate_mesh_groups(RenderGroup* parent, Renderable& ent, MaterialPass& pass, const std::vector<kglt::LightID> &lights);
 };
 
 

@@ -28,7 +28,7 @@ public:
     void add_particle_system(ParticleSystemID ps);
     void remove_particle_system(ParticleSystemID ps);
 
-    std::vector<LightID> lights_within_range(const Vec3& location);
+    std::vector<LightID> lights_visible_from(CameraID camera_id);
     std::vector<RenderablePtr> geometry_visible_from(CameraID camera_id);
 
     void event_actor_changed(ActorID ent);

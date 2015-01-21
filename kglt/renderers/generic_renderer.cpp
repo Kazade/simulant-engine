@@ -115,19 +115,23 @@ void send_attribute(GPUProgram& program,
                     EnabledMethod exists_on_data_predicate,
                     OffsetMethod offset_func) {
 
-    if(!program.attributes().uses_auto(attr)) {
+    auto attributes = program.attributes();
+
+    if(!attributes.uses_auto(attr)) {
         return;
     }
 
-    int32_t loc = program.attributes().locate(program.attributes().variable_name(attr));
+    int32_t loc = attributes.locate(attributes.variable_name(attr));
     if(loc < 0) {
         L_WARN("Couldn't locate attribute, on the shader");
         return;
     }
 
     auto get_has_attribute = std::bind(exists_on_data_predicate, std::reference_wrapper<const VertexData>(data));
-    auto get_offset = std::bind(offset_func, std::reference_wrapper<const VertexData>(data));
+
     if(get_has_attribute()) {
+        auto get_offset = std::bind(offset_func, std::reference_wrapper<const VertexData>(data));
+
         GLCheck(glEnableVertexAttribArray, loc);
         GLCheck(vaoVertexAttribPointer,
             loc,

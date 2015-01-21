@@ -25,15 +25,13 @@ StagePtr RootGroup::stage() {
     return window_.stage(stage_id_);
 }
 
-void RootGroup::generate_mesh_groups(RenderGroup* parent, Renderable &ent, MaterialPass& pass) {
+void RootGroup::generate_mesh_groups(RenderGroup* parent, Renderable &ent, MaterialPass& pass, const std::vector<LightID>& lights) {
     /*
      *  Here we add the entities to the leaves of the tree. If the Renderable can return an instanced_mesh_id we create an
      *  InstancedMeshGroup, otherwise a simple basic RenderableGroup. At the moment THERE IS NO DIFFERENCE BETWEEN THESE TWO THINGS,
      *  but it does pave the way for proper geometry instancing.
      */
 
-    Vec3 pos;
-    std::vector<LightID> lights = stage()->partitioner().lights_within_range(pos);
     uint32_t iteration_count = 1;
 
     auto mesh_id = ent.instanced_mesh_id();
@@ -72,7 +70,7 @@ void RootGroup::generate_mesh_groups(RenderGroup* parent, Renderable &ent, Mater
     }
 }
 
-void RootGroup::insert(Renderable &ent, uint8_t pass_number) {
+void RootGroup::insert(Renderable &ent, uint8_t pass_number, const std::vector<LightID>& lights) {
     if(!ent.is_visible()) return;
 
     //Get the material for the actor, this is used to build the tree
@@ -108,14 +106,14 @@ void RootGroup::insert(Renderable &ent, uint8_t pass_number) {
 
     //FIXME: This code is duplicated below
     if(!pass.texture_unit_count()) {
-        generate_mesh_groups(current, ent, pass);
+        generate_mesh_groups(current, ent, pass, lights);
     } else {
         //Add the texture-related branches of the tree under the shader(
         for(uint8_t tu = 0; tu < pass.texture_unit_count(); ++tu) {
             RenderGroup* iteration_parent = &current->get_or_create<TextureGroup>(TextureGroupData(tu, pass.texture_unit(tu).texture_id())).
                      get_or_create<TextureMatrixGroup>(TextureMatrixGroupData(tu, pass.texture_unit(tu).matrix()));
 
-            generate_mesh_groups(iteration_parent, ent, pass);
+            generate_mesh_groups(iteration_parent, ent, pass, lights);
         }
     }
 }

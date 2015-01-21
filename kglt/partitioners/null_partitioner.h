@@ -36,7 +36,7 @@ public:
         all_particle_systems_.erase(ps);
     }
 
-    std::vector<LightID> lights_within_range(const Vec3& location);
+    std::vector<LightID> lights_visible_from(CameraID camera_id);
     std::vector<std::shared_ptr<Renderable>> geometry_visible_from(CameraID camera_id);
 
 private:
