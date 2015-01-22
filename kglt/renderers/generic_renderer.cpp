@@ -115,7 +115,7 @@ void send_attribute(GPUProgram& program,
                     EnabledMethod exists_on_data_predicate,
                     OffsetMethod offset_func) {
 
-    auto attributes = program.attributes();
+    auto& attributes = program.attributes();
 
     if(!attributes.uses_auto(attr)) {
         return;

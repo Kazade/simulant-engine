@@ -187,12 +187,12 @@ private:
 
 class AttributeManager {
 public:
-    int32_t locate(const unicode& attribute);
-    void set_location(const unicode& attribute, int32_t location);
+    int32_t locate(const std::string &attribute);
+    void set_location(const std::string& attribute, int32_t location);
 
-    void register_auto(ShaderAvailableAttributes attr, const unicode& var_name);
+    void register_auto(ShaderAvailableAttributes attr, const std::string &var_name);
 
-    unicode variable_name(ShaderAvailableAttributes attr_name) const {
+    std::string variable_name(ShaderAvailableAttributes attr_name) const {
         auto it = auto_attributes_.find(attr_name);
         if(it == auto_attributes_.end()) {
             throw std::logic_error("Specified attribute is not registered");
@@ -215,8 +215,8 @@ private:
     AttributeManager(GPUProgram& program);
 
     GPUProgram& program_;
-    std::unordered_map<unicode, int32_t> attribute_cache_;
-    std::unordered_map<ShaderAvailableAttributes, unicode> auto_attributes_;
+    std::unordered_map<std::string, int32_t> attribute_cache_;
+    std::unordered_map<ShaderAvailableAttributes, std::string> auto_attributes_;
 };
 
 class GPUProgram:

@@ -115,7 +115,7 @@ void UniformManager::register_auto(ShaderAvailableAuto uniform, const unicode &v
 AttributeManager::AttributeManager(GPUProgram &program):
     program_(program) {}
 
-int32_t AttributeManager::locate(const unicode& attribute) {
+int32_t AttributeManager::locate(const std::string& attribute) {
     if(!program_.is_complete()) {
         throw LogicError("Attempted to access attribute on a GPU program that is not complete");
     }
@@ -125,7 +125,7 @@ int32_t AttributeManager::locate(const unicode& attribute) {
         return (*it).second;
     }
 
-    GLint location = _GLCheck<GLint>(__func__, glGetAttribLocation, program_.program_object_, attribute.encode().c_str());
+    GLint location = _GLCheck<GLint>(__func__, glGetAttribLocation, program_.program_object_, attribute.c_str());
     if(location < 0) {
         L_ERROR(_u("Unable to find attribute with name {0}").format(attribute));
         throw LogicError(_u("Couldn't find attribute {0}").format(attribute).encode());
@@ -136,17 +136,17 @@ int32_t AttributeManager::locate(const unicode& attribute) {
     return location;
 }
 
-void AttributeManager::set_location(const unicode& attribute, int32_t location) {
+void AttributeManager::set_location(const std::string &attribute, int32_t location) {
     //No completeness check, glBindAttribLocation can be called at any time
 
-    GLCheck(glBindAttribLocation, program_.program_object_, location, attribute.encode().c_str());
+    GLCheck(glBindAttribLocation, program_.program_object_, location, attribute.c_str());
 
     //Is this always true? Can we just assume that the location was given to that attribute?
     //The docs don't seem to suggest that it can fail...
     attribute_cache_[attribute] = location;
 }
 
-void AttributeManager::register_auto(ShaderAvailableAttributes attr, const unicode &var_name) {
+void AttributeManager::register_auto(ShaderAvailableAttributes attr, const std::string &var_name) {
     auto_attributes_[attr] = var_name;
 }
 
