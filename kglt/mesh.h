@@ -90,7 +90,7 @@ private:
 
     VertexData vertex_data_;
     IndexData index_data_;
-    VertexArrayObject vertex_array_object_;
+    VertexArrayObject::ptr vertex_array_object_;
 
     bool vertex_data_dirty_ = false;
     bool index_data_dirty_ = false;
@@ -144,8 +144,15 @@ public:
     const AABB aabb() const;
     void normalize(); //Scales the mesh so it has a radius of 1.0
     void transform_vertices(const kglt::Mat4& transform, bool include_submeshes=true);
+
 private:
+    friend class SubMesh;
+    void _update_buffer_object();
+
+    bool shared_data_dirty_ = false;
     VertexData shared_data_;
+    BufferObject::ptr shared_data_buffer_object_;
+
     std::vector<SubMesh::ptr> submeshes_;
     std::unordered_map<SubMeshIndex, SubMesh::ptr> submeshes_by_index_;
 

@@ -142,7 +142,7 @@ VertexArrayObject::VertexArrayObject(BufferObject::ptr vertex_buffer, BufferObje
     id_(0) {
 
     assert(vertex_buffer);
-    assert(vertex_buffer->target() == BUFFER_OBJECT_VERTEX_DATA);
+    assert(vertex_buffer->target() == GL_ARRAY_BUFFER);
 
     index_buffer_ = BufferObject::create(BUFFER_OBJECT_INDEX_DATA, index_usage);
 }

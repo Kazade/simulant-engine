@@ -14,6 +14,12 @@ Mesh::Mesh(ResourceManager *resource_manager, MeshID id):
     generic::Identifiable<MeshID>(id),
     normal_debug_mesh_(0) {
 
+    //FIXME: Somehow we need to specify if the shared data is modified repeatedly etc.
+    shared_data_buffer_object_ = BufferObject::create(BUFFER_OBJECT_VERTEX_DATA, MODIFY_ONCE_USED_FOR_RENDERING);
+
+    shared_data().signal_update_complete().connect([&]{
+        this->shared_data_dirty_ = true;
+    });
 }
 
 void Mesh::clear() {
@@ -245,6 +251,13 @@ void Mesh::set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass) {
     }
 }
 
+void Mesh::_update_buffer_object() {
+    if(shared_data_dirty_) {
+        shared_data_buffer_object_->build(shared_data().count() * sizeof(Vertex), shared_data()._raw_data());
+        shared_data_dirty_ = false;
+    }
+}
+
 SubMesh& Mesh::submesh(SubMeshIndex index) {
     assert(index > 0);
     return *submeshes_by_index_[index];
@@ -257,6 +270,16 @@ SubMesh::SubMesh(
     arrangement_(arrangement),
     uses_shared_data_(uses_shared_vertices) {
 
+    /*
+     * If we use shared vertices then we must reuse the buffer object from the mesh,
+     * otherwise the VAO creates its own VBO
+     */
+    if(uses_shared_data_) {
+        vertex_array_object_ = VertexArrayObject::create(parent_.shared_data_buffer_object_);
+    } else {
+        vertex_array_object_ = VertexArrayObject::create();
+    }
+
     if(!material) {
         //Set the material to the default one (store the pointer to increment the ref-count)
         material_ = parent_.resource_manager().material(parent_.resource_manager().default_material_id()).__object;
@@ -264,16 +287,14 @@ SubMesh::SubMesh(
         set_material_id(material);
     }
 
-    //The vertex data might already have been set up, so mark it as
-    //dirty if we are using shared data.
-    this->vertex_data_dirty_ = uses_shared_data_ && !vertex_data().empty();
-
     vrecalc_ = vertex_data().signal_update_complete().connect(std::bind(&SubMesh::_recalc_bounds, this));
     irecalc_ = index_data().signal_update_complete().connect(std::bind(&SubMesh::_recalc_bounds, this));
 
-    vertex_data().signal_update_complete().connect([&]{
-        this->vertex_data_dirty_ = true;
-    });
+    if(!uses_shared_data_) {
+        vertex_data().signal_update_complete().connect([&]{
+            this->vertex_data_dirty_ = true;
+        });
+    }
 
     index_data().signal_update_complete().connect([&]{
         this->index_data_dirty_ = true;
@@ -281,20 +302,22 @@ SubMesh::SubMesh(
 }
 
 void SubMesh::_bind_vertex_array_object() {
-    vertex_array_object_.bind();
+    vertex_array_object_->bind();
 
-    vertex_array_object_.vertex_buffer_bind();
-    vertex_array_object_.index_buffer_bind();
+    vertex_array_object_->vertex_buffer_bind();
+    vertex_array_object_->index_buffer_bind();
 }
 
 void SubMesh::_update_vertex_array_object() {
-    if(vertex_data_dirty_) {
-        vertex_array_object_.vertex_buffer_update(vertex_data().count() * sizeof(Vertex), vertex_data()._raw_data());
+    if(uses_shared_vertices()) {
+        parent_._update_buffer_object();
+    } else if(vertex_data_dirty_) {
+        vertex_array_object_->vertex_buffer_update(vertex_data().count() * sizeof(Vertex), vertex_data()._raw_data());
         vertex_data_dirty_ = false;
     }
 
     if(index_data_dirty_) {
-        vertex_array_object_.index_buffer_update(index_data().count() * sizeof(uint16_t), index_data()._raw_data());
+        vertex_array_object_->index_buffer_update(index_data().count() * sizeof(uint16_t), index_data()._raw_data());
         index_data_dirty_ = false;
 
         if(vertex_data().empty()) {

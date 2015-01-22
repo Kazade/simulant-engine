@@ -50,7 +50,7 @@ private:
     std::vector<uint8_t> offline_data_;
 };
 
-class VertexArrayObject {
+class VertexArrayObject : public Managed<VertexArrayObject> {
 public:
     VertexArrayObject(BufferObjectUsage vertex_usage=MODIFY_ONCE_USED_FOR_RENDERING, BufferObjectUsage index_usage=MODIFY_ONCE_USED_FOR_RENDERING);
     VertexArrayObject(BufferObject::ptr vertex_buffer, BufferObjectUsage index_usage=MODIFY_ONCE_USED_FOR_RENDERING);
