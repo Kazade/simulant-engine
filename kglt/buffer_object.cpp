@@ -114,7 +114,7 @@ GLenum BufferObject::usage() const {
     return usage;
 }
 
-void BufferObject::create(uint32_t byte_size, const void* data) {
+void BufferObject::build(uint32_t byte_size, const void* data) {
     if(!buffer_id_) {
         GLCheck(glGenBuffers, 1, &buffer_id_);
     }
@@ -132,10 +132,19 @@ void BufferObject::modify(uint32_t offset, uint32_t byte_size, const void* data)
     GLCheck(glBufferSubData, gl_target_, offset, byte_size, data);
 }
 
-VertexArrayObject::VertexArrayObject(BufferObjectUsage vertex_usage, BufferObjectUsage index_usage):
-    vertex_buffer_(BUFFER_OBJECT_VERTEX_DATA, vertex_usage),
-    index_buffer_(BUFFER_OBJECT_INDEX_DATA, index_usage),
+VertexArrayObject::VertexArrayObject(BufferObjectUsage vertex_usage, BufferObjectUsage index_usage){
+    vertex_buffer_ = BufferObject::create(BUFFER_OBJECT_VERTEX_DATA, vertex_usage);
+    index_buffer_ = BufferObject::create(BUFFER_OBJECT_INDEX_DATA, index_usage);
+}
+
+VertexArrayObject::VertexArrayObject(BufferObject::ptr vertex_buffer, BufferObjectUsage index_usage):
+    vertex_buffer_(vertex_buffer),
     id_(0) {
+
+    assert(vertex_buffer);
+    assert(vertex_buffer->target() == BUFFER_OBJECT_VERTEX_DATA);
+
+    index_buffer_ = BufferObject::create(BUFFER_OBJECT_INDEX_DATA, index_usage);
 }
 
 VertexArrayObject::~VertexArrayObject() {
@@ -160,7 +169,7 @@ void VertexArrayObject::vertex_buffer_update(uint32_t byte_size, const void* dat
 
     bind();
 
-    vertex_buffer_.create(byte_size, data);
+    vertex_buffer_->build(byte_size, data);
 }
 
 void VertexArrayObject::vertex_buffer_update_partial(uint32_t offset, uint32_t byte_size, const void* data) {
@@ -168,7 +177,7 @@ void VertexArrayObject::vertex_buffer_update_partial(uint32_t offset, uint32_t b
 
     bind();
 
-    vertex_buffer_.modify(offset, byte_size, data);
+    vertex_buffer_->modify(offset, byte_size, data);
 }
 
 void VertexArrayObject::index_buffer_update(uint32_t byte_size, const void* data) {
@@ -176,7 +185,7 @@ void VertexArrayObject::index_buffer_update(uint32_t byte_size, const void* data
 
     bind();
 
-    index_buffer_.create(byte_size, data);
+    index_buffer_->build(byte_size, data);
 }
 
 void VertexArrayObject::index_buffer_update_partial(uint32_t offset, uint32_t byte_size, const void* data) {
@@ -184,7 +193,7 @@ void VertexArrayObject::index_buffer_update_partial(uint32_t offset, uint32_t by
 
     bind();
 
-    index_buffer_.modify(offset, byte_size, data);
+    index_buffer_->modify(offset, byte_size, data);
 }
 
 }
