@@ -239,10 +239,10 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
         ui_stage->__resize(viewport.width_in_pixels(target), viewport.height_in_pixels(target));
         ui_stage->__render(camera_projection);
     } else {
-        std::vector<RenderablePtr> buffers = window_.stage(stage_id
-            )->partitioner().geometry_visible_from(camera_id);
+        auto stage = window_.stage(stage_id);
 
-        std::vector<LightID> lights = window_.stage(stage_id)->partitioner().lights_visible_from(camera_id);
+        std::vector<RenderablePtr> buffers = stage->partitioner().geometry_visible_from(camera_id);
+        std::vector<LightID> lights = stage->partitioner().lights_visible_from(camera_id);
 
 
         /*
@@ -262,12 +262,22 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
             queue.second.clear();
         }
 
+        std::vector<LightID> lights_intersecting_actor;
+
         //Go through the visible actors
         for(RenderablePtr ent: buffers) {
             //Get the priority queue for this actor (e.g. RENDER_PRIORITY_BACKGROUND)
             QueueGroups::mapped_type& priority_queue = queues[(uint32_t)ent->render_priority()];
 
-            auto mat = window_.stage(pipeline_stage->stage_id())->material(ent->material_id());
+            auto mat = stage->material(ent->material_id());
+
+            lights_intersecting_actor.clear();
+            for(auto lid: lights) {
+                auto light = stage->light(lid);
+                if(light->transformed_aabb().intersects(ent->transformed_aabb())) {
+                    lights_intersecting_actor.push_back(lid);
+                }
+            }
 
             //Go through the actors material passes
             for(uint8_t pass = 0; pass < mat->pass_count(); ++pass) {
@@ -281,7 +291,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
                 }
 
                 //Insert the actor into the RenderGroup tree
-                group->insert(*ent, pass, lights);
+                group->insert(*ent, pass, lights_intersecting_actor);
             }
 
             actors_rendered++;

@@ -338,6 +338,10 @@ struct AABB : public kmAABB3 {
     const float depth() const  {
         return fabs(max.z - min.z);
     }
+
+    bool intersects(const AABB& other) const {
+        return kmAABB3IntersectsAABB(this, &other);
+    }
 };
 
 std::ostream& operator<<(std::ostream& stream, const Vec2& vec);

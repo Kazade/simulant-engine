@@ -160,7 +160,7 @@ public:
  * can be positioned somewhere other than 0,0,0
  */
 class BoundableEntity:
-    public Boundable {
+    public virtual Boundable {
 
 public:
     virtual const AABB transformed_aabb() const = 0;
@@ -177,7 +177,7 @@ public:
 class VertexData;
 class IndexData;
 
-class Renderable {
+class Renderable : public virtual BoundableEntity {
 public:
     virtual ~Renderable() {}
 
