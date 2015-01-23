@@ -150,6 +150,7 @@ void Console::init_widget() {
 
         set_stats_fps(0);
         set_stats_subactors_rendered(0);
+        hide_stats(); //Hide the stats by default
     }
     update_output();
 }
@@ -200,6 +201,7 @@ bool Console::key_down(SDL_Keysym key) {
 
         unicode output;
         unicode command = commands_.at(command_being_edited_);
+
         LuaResult r = execute(command, output);
 
         buffer_.push_back(std::make_pair(current_line_type_, command));
@@ -221,16 +223,22 @@ bool Console::key_down(SDL_Keysym key) {
         update_output();
         return true;
     } else if(code == SDL_SCANCODE_UP) {
-        if(command_being_edited_ > 0) {
+        while(command_being_edited_ > 0) {
             command_being_edited_ -= 1;
-            update_output();
+            if(!commands_.at(command_being_edited_).empty()) {
+                break;
+            }
         }
+        update_output();
         return true;
-    } else if(code == SDL_SCANCODE_DOWN) {
-        if(command_being_edited_ < commands_.size() - 1) {
+    } else if(code == SDL_SCANCODE_DOWN) {        
+        while(command_being_edited_ < commands_.size() - 1) {
             command_being_edited_ += 1;
-            update_output();
+            if(!commands_.at(command_being_edited_).empty()) {
+                break;
+            }
         }
+        update_output();
         return true;
     }
 
