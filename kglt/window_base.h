@@ -184,6 +184,9 @@ public:
     /* End ScreenManager interface */
 
     Console* console() { return console_.get(); }
+
+    void show_stats();
+    void hide_stats();
 protected:
     RenderSequencePtr render_sequence();
 

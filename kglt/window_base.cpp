@@ -443,4 +443,7 @@ bool WindowBase::is_pipeline_enabled(PipelineID pid) const {
 }
 /* End PipelineHelperAPIInterface */
 
+void WindowBase::show_stats() { console()->show_stats(); }
+void WindowBase::hide_stats() { console()->hide_stats(); }
+
 }

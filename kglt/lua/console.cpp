@@ -154,6 +154,16 @@ void Console::init_widget() {
     update_output();
 }
 
+void Console::show_stats() {
+    UIStagePtr stage = window_.ui_stage(ui_stage_);
+    stage->$("#stats").show();
+}
+
+void Console::hide_stats() {
+    UIStagePtr stage = window_.ui_stage(ui_stage_);
+    stage->$("#stats").hide();
+}
+
 bool Console::key_down(SDL_Keysym key) {
     SDL_Scancode code = key.scancode;
 
