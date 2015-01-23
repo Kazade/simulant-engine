@@ -223,6 +223,7 @@ bool Console::key_down(SDL_Keysym key) {
         update_output();
         return true;
     } else if(code == SDL_SCANCODE_UP) {
+        // We iterate until we find a non-blank command
         while(command_being_edited_ > 0) {
             command_being_edited_ -= 1;
             if(!commands_.at(command_being_edited_).empty()) {
@@ -232,6 +233,7 @@ bool Console::key_down(SDL_Keysym key) {
         update_output();
         return true;
     } else if(code == SDL_SCANCODE_DOWN) {        
+        // We iterate until we find a non-blank command
         while(command_being_edited_ < commands_.size() - 1) {
             command_being_edited_ += 1;
             if(!commands_.at(command_being_edited_).empty()) {
