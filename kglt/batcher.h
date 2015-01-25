@@ -75,14 +75,10 @@ public:
 
         size_t identifier = typeid(RenderGroupType).hash_code();
 
-        RenderGroupChildren::iterator child_it = children_.find(identifier);
-        if(child_it == children_.end()) {
-            children_.insert(std::make_pair(identifier, RenderGroups()));
-        }
+        auto& container = children_[identifier];
 
-        const typename RenderGroupType::data_type& cast_data = dynamic_cast<const typename RenderGroupType::data_type&>(data);
+        const typename RenderGroupType::data_type& cast_data = static_cast<const typename RenderGroupType::data_type&>(data);
 
-        RenderGroups& container = children_[identifier];
         RenderGroups::const_iterator it = container.find(data.hash());
 
         if(it != container.end()) {

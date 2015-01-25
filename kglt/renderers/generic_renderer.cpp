@@ -192,7 +192,8 @@ void GenericRenderer::render(Renderable& buffer, CameraID camera, GPUProgram* pr
         return;
     }
 
-    if(!buffer.index_data().count()) {
+    std::size_t index_count = buffer.index_data().count();
+    if(!index_count) {
         return;
     }
 
@@ -210,22 +211,22 @@ void GenericRenderer::render(Renderable& buffer, CameraID camera, GPUProgram* pr
     //Render the mesh, once for each iteration of the pass
     switch(buffer.arrangement()) {
         case MESH_ARRANGEMENT_POINTS:
-            GLCheck(glDrawElements, GL_POINTS, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+            GLCheck(glDrawElements, GL_POINTS, index_count, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
         break;
         case MESH_ARRANGEMENT_LINES:
-            GLCheck(glDrawElements, GL_LINES, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+            GLCheck(glDrawElements, GL_LINES, index_count, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
         break;
         case MESH_ARRANGEMENT_LINE_STRIP:
-            GLCheck(glDrawElements, GL_LINE_STRIP, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+            GLCheck(glDrawElements, GL_LINE_STRIP, index_count, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
         break;
         case MESH_ARRANGEMENT_TRIANGLES:
-            GLCheck(glDrawElements, GL_TRIANGLES, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+            GLCheck(glDrawElements, GL_TRIANGLES, index_count, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
         break;
         case MESH_ARRANGEMENT_TRIANGLE_STRIP:
-            GLCheck(glDrawElements, GL_TRIANGLE_STRIP, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+            GLCheck(glDrawElements, GL_TRIANGLE_STRIP, index_count, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
         break;
         case MESH_ARRANGEMENT_TRIANGLE_FAN:
-            GLCheck(glDrawElements, GL_TRIANGLE_FAN, buffer.index_data().count(), GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+            GLCheck(glDrawElements, GL_TRIANGLE_FAN, index_count, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
         break;
         default:
             throw NotImplementedError(__FILE__, __LINE__);
