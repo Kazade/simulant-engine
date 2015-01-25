@@ -46,17 +46,6 @@ enum ShaderAvailableAuto {
     //TODO: cameras(?)
 };
 
-const std::set<ShaderAvailableAuto> SHADER_AVAILABLE_AUTOS = {
-    SP_AUTO_MODELVIEW_PROJECTION_MATRIX,
-    SP_AUTO_MODELVIEW_MATRIX,
-    SP_AUTO_PROJECTION_MATRIX,
-    SP_AUTO_MATERIAL_DIFFUSE,
-    SP_AUTO_MATERIAL_SPECULAR,
-    SP_AUTO_MATERIAL_AMBIENT,
-    SP_AUTO_MATERIAL_SHININESS,
-    SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS,
-    SP_AUTO_MATERIAL_POINT_SIZE,
-};
 
 enum ShaderAvailableAttributes {
     SP_ATTR_VERTEX_POSITION,
@@ -73,7 +62,55 @@ enum ShaderAvailableAttributes {
     SP_ATTR_VERTEX_COLOR = SP_ATTR_VERTEX_DIFFUSE
 };
 
-const std::map<ShaderAvailableAttributes, uint8_t> SHADER_ATTRIBUTE_SIZES = {
+}
+
+namespace std {
+    using kglt::ShaderAvailableAuto;
+
+    template<>
+    struct hash<ShaderAvailableAuto> {
+        size_t operator()(const ShaderAvailableAuto& a) const {
+            hash<int32_t> make_hash;
+            return make_hash(int32_t(a));
+        }
+    };
+
+    using kglt::ShaderAvailableAttributes;
+
+    template<>
+    struct hash<ShaderAvailableAttributes> {
+        size_t operator()(const ShaderAvailableAttributes& a) const {
+            hash<int32_t> make_hash;
+            return make_hash(int32_t(a));
+        }
+    };
+
+    using kglt::ShaderType;
+
+    template<>
+    struct hash<ShaderType> {
+        size_t operator()(const ShaderType& a) const {
+            hash<int32_t> make_hash;
+            return make_hash(int32_t(a));
+        }
+    };
+}
+
+namespace kglt {
+
+const std::set<ShaderAvailableAuto> SHADER_AVAILABLE_AUTOS = {
+    SP_AUTO_MODELVIEW_PROJECTION_MATRIX,
+    SP_AUTO_MODELVIEW_MATRIX,
+    SP_AUTO_PROJECTION_MATRIX,
+    SP_AUTO_MATERIAL_DIFFUSE,
+    SP_AUTO_MATERIAL_SPECULAR,
+    SP_AUTO_MATERIAL_AMBIENT,
+    SP_AUTO_MATERIAL_SHININESS,
+    SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS,
+    SP_AUTO_MATERIAL_POINT_SIZE,
+};
+
+const std::unordered_map<ShaderAvailableAttributes, uint8_t> SHADER_ATTRIBUTE_SIZES = {
     { SP_ATTR_VERTEX_POSITION, 3 },
     { SP_ATTR_VERTEX_DIFFUSE, 4 },
     { SP_ATTR_VERTEX_NORMAL, 3 },
@@ -102,28 +139,6 @@ const std::set<ShaderAvailableAttributes> SHADER_AVAILABLE_ATTRS = {
     SP_ATTR_VERTEX_TEXCOORD7
 };
 
-}
-
-namespace std {
-    using kglt::ShaderAvailableAuto;
-
-    template<>
-    struct hash<ShaderAvailableAuto> {
-        size_t operator()(const ShaderAvailableAuto& a) const {
-            hash<int32_t> make_hash;
-            return make_hash(int32_t(a));
-        }
-    };
-
-    using kglt::ShaderAvailableAttributes;
-
-    template<>
-    struct hash<ShaderAvailableAttributes> {
-        size_t operator()(const ShaderAvailableAttributes& a) const {
-            hash<int32_t> make_hash;
-            return make_hash(int32_t(a));
-        }
-    };
 }
 
 namespace kglt {
@@ -259,8 +274,8 @@ private:
     bool is_linked_ = false;
 
     uint32_t program_object_ = 0;
-    std::map<ShaderType, ShaderInfo> shaders_;
-    std::map<ShaderType, unicode> shader_hashes_;
+    std::unordered_map<ShaderType, ShaderInfo> shaders_;
+    std::unordered_map<ShaderType, unicode> shader_hashes_;
 
     ProgramLinkedSignal signal_linked_;
     ShaderCompiledSignal signal_shader_compiled_;
