@@ -34,7 +34,7 @@ public:
 
     template<typename T>
     T* as() {
-        return dynamic_cast<T*>(this);
+        return static_cast<T*>(this);
     }
 
     ParentChangedSignal& signal_parent_changed() { return signal_parent_changed_; }

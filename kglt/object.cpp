@@ -173,7 +173,7 @@ void Object::set_absolute_position(float x, float y, float z) {
     } else {
         kglt::Vec3 parent_pos;
         if(has_parent()) {
-            parent_pos = parent()->as<Locateable>()->position();
+            parent_pos = parent()->as<SceneNode>()->position();
         }
 
         set_relative_position(kglt::Vec3(x, y, z) - parent_pos);
@@ -192,7 +192,7 @@ void Object::set_relative_position(float x, float y, float z) {
         }
 
         //Set the new absolute position
-        body().set_position(parent()->as<Locateable>()->position() + Vec3(x, y, z));
+        body().set_position(parent()->as<SceneNode>()->position() + Vec3(x, y, z));
 
         if(has_parent() && !parent_is_root()) {
             //Recreate the constraint with the parent (as long as the parent isn't the stage itself)
@@ -213,7 +213,7 @@ kglt::Vec3 Object::absolute_position() const {
 
 kglt::Vec3 Object::relative_position() const {
     if(is_responsive()) {
-        return absolute_position() - parent()->as<Locateable>()->position();
+        return absolute_position() - parent()->as<SceneNode>()->position();
     }
 
     return relative_position_;
@@ -229,7 +229,7 @@ kglt::Quaternion Object::absolute_rotation() const {
 
 kglt::Quaternion Object::relative_rotation() const {
     if(is_responsive()) {
-        Quaternion parent_rot = parent()->as<Locateable>()->rotation();
+        Quaternion parent_rot = parent()->as<SceneNode>()->rotation();
         parent_rot.inverse();
         return parent_rot * body().rotation();
     }
@@ -262,7 +262,7 @@ void Object::set_absolute_rotation(const Quaternion& quat) {
         kmQuaternionIdentity(&parent_rot);
 
         if(has_parent()) {
-            parent_rot = parent()->as<Locateable>()->rotation();
+            parent_rot = parent()->as<SceneNode>()->rotation();
         }
 
         parent_rot.inverse();
@@ -285,7 +285,7 @@ void Object::set_relative_rotation(const Quaternion &quaternion) {
         }
 
         //Set the new rotation
-        body().set_rotation(parent()->as<Locateable>()->rotation() * quaternion);
+        body().set_rotation(parent()->as<SceneNode>()->rotation() * quaternion);
 
         if(has_parent() && !parent_is_root()) {
             //Recreate the constraint with the parent (as long as the parent isn't the stage itself)
@@ -420,10 +420,10 @@ void Object::update_from_parent() {
         absolute_rotation_ = relative_rotation();
     } else {
         if(!position_locked_) {
-            absolute_position_ = parent()->as<Locateable>()->position() + relative_position();
+            absolute_position_ = parent()->as<SceneNode>()->position() + relative_position();
         }
         if(!rotation_locked_) {
-            absolute_rotation_ = relative_rotation() * parent()->as<Locateable>()->rotation();
+            absolute_rotation_ = relative_rotation() * parent()->as<SceneNode>()->rotation();
             absolute_rotation_.normalize();
         }
     }
