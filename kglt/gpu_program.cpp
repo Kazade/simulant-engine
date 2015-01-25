@@ -67,18 +67,12 @@ void UniformManager::set_float(const unicode& uniform_name, const float value) {
 
 void UniformManager::set_mat4x4(const unicode& uniform_name, const Mat4& matrix) {
     int32_t loc = locate(uniform_name);
-    float mat[16];
-    unsigned char i = 16;
-    while(i--) { mat[i] = (float) matrix.mat[i]; }
-    GLCheck(glUniformMatrix4fv, loc, 1, false, (GLfloat*)mat);
+    GLCheck(glUniformMatrix4fv, loc, 1, false, (GLfloat*)matrix.mat);
 }
 
 void UniformManager::set_mat3x3(const unicode& uniform_name, const Mat3& matrix) {
     int32_t loc = locate(uniform_name);
-    float mat[9];
-    unsigned char i = 9;
-    while(i--) { mat[i] = (float) matrix.mat[i]; }
-    GLCheck(glUniformMatrix3fv, loc, 1, false, (GLfloat*)mat);
+    GLCheck(glUniformMatrix3fv, loc, 1, false, (GLfloat*)matrix.mat);
 }
 
 void UniformManager::set_vec3(const unicode& uniform_name, const Vec3& values) {
