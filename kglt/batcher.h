@@ -26,7 +26,18 @@ struct GroupData {
     typedef std::shared_ptr<GroupData> ptr;
 
     virtual ~GroupData() {}
-    virtual std::size_t hash() const = 0;
+
+    std::size_t hash(bool reset=false) const {
+        if(!hash_ || reset) {
+            hash_ = do_hash();
+        }
+
+        return hash_;
+    }
+
+private:
+    mutable std::size_t hash_ = 0;
+    virtual std::size_t do_hash() const = 0;
 };
 
 class RenderGroup {
@@ -199,7 +210,7 @@ struct DepthGroupData : public GroupData {
         depth_test(depth_testing),
         depth_write(depth_writes) {}
 
-    std::size_t hash() const {
+    std::size_t do_hash() const {
         size_t seed = 0;
         hash_combine(seed, depth_test);
         hash_combine(seed, depth_write);
@@ -228,7 +239,7 @@ struct ShaderGroupData : public GroupData {
 
     GPUProgram* shader_;
 
-    std::size_t hash() const;
+    std::size_t do_hash() const;
 };
 
 class ShaderGroup : public RenderGroup {
@@ -249,7 +260,7 @@ private:
 };
 
 struct RenderableGroupData : public GroupData {
-    std::size_t hash() const {
+    std::size_t do_hash() const {
         return 1;
     }
 };
@@ -272,7 +283,7 @@ struct MeshGroupData : public GroupData {
     MeshID mesh_id;
     SubMeshIndex smi;
 
-    std::size_t hash() const {
+    std::size_t do_hash() const {
         size_t seed = 0;
         hash_combine(seed, typeid(MeshGroupData).name());
         hash_combine(seed, mesh_id.value());
@@ -322,7 +333,7 @@ struct MaterialGroupData : public GroupData {
     int32_t active_texture_count;
     float point_size;
 
-    std::size_t hash() const {
+    std::size_t do_hash() const {
         size_t seed = 0;
 
         hash_combine(seed, ambient.r);
@@ -373,7 +384,7 @@ struct TextureGroupData : public GroupData {
     uint8_t unit;
     TextureID texture_id;
 
-    std::size_t hash() const {
+    std::size_t do_hash() const {
         size_t seed = 0;
         hash_combine(seed, typeid(TextureGroupData).name());
         hash_combine(seed, unit);
@@ -407,7 +418,7 @@ struct TextureMatrixGroupData : public GroupData {
     uint8_t unit;
     Mat4 matrix;
 
-    std::size_t hash() const {
+    std::size_t do_hash() const {
         size_t seed = 0;
         hash_combine(seed, typeid(TextureMatrixGroupData).name());
         hash_combine(seed, unit);
@@ -441,7 +452,7 @@ struct LightGroupData : public GroupData {
 
     LightID light_id;
 
-    std::size_t hash() const {
+    std::size_t do_hash() const {
         size_t seed = 0;
         hash_combine(seed, typeid(LightGroupData).name());
         hash_combine(seed, light_id);
@@ -473,7 +484,7 @@ struct BlendGroupData : public GroupData {
 
     BlendType type;
 
-    std::size_t hash() const {
+    std::size_t do_hash() const {
         size_t seed = 0;
         hash_combine(seed, typeid(BlendGroupData).name());
         hash_combine(seed, (uint32_t) type);
@@ -504,7 +515,7 @@ struct RenderSettingsData : public GroupData {
     float point_size;
     PolygonMode polygon_mode;
 
-    std::size_t hash() const {
+    std::size_t do_hash() const {
         size_t seed = 0;
         hash_combine(seed, typeid(RenderSettingsData).name());
         hash_combine(seed, point_size);

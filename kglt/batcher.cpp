@@ -205,10 +205,10 @@ void ShaderGroup::bind(GPUProgram* program) {
     }
 }
 
-std::size_t ShaderGroupData::hash() const {
+std::size_t ShaderGroupData::do_hash() const {
     size_t seed = 0;
     hash_combine(seed, typeid(ShaderGroupData).name());
-    hash_combine(seed, shader_->md5().encode());
+    hash_combine(seed, shader_->md5());
     return seed;
 }
 
