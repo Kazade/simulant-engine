@@ -24,7 +24,6 @@
 #include "../camera.h"
 #include "../render_sequence.h"
 #include "../utils/gl_error.h"
-#include "../utils/vao_abstraction.h"
 
 #include "interface.h"
 #include "ui_private.h"
@@ -170,9 +169,6 @@ public:
             int num_indices,
             Rocket::Core::TextureHandle texture) {
 
-        GLStateStash s1(GL_VERTEX_ARRAY_BINDING);
-        GLStateStash s6(GL_ARRAY_BUFFER_BINDING);
-
         auto new_group = std::make_shared<CompiledGroup>();
         new_group->vao = std::make_unique<VertexArrayObject>();
 
@@ -188,33 +184,6 @@ public:
         new_group->num_indices = num_indices;
         new_group->num_vertices = num_vertices;
 
-        new_group->vao->bind();
-
-        int pos_attrib = shader_->attributes().locate("position");
-        int colour_attrib = shader_->attributes().locate("colour");
-        int texcoord_attrib = shader_->attributes().locate("tex_coord");
-
-        GLCheck(glEnableVertexAttribArray, pos_attrib);
-        GLCheck(vaoVertexAttribPointer,
-            pos_attrib,
-            2, GL_FLOAT, GL_FALSE, sizeof(Rocket::Core::Vertex),
-            BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, position))
-        );
-
-        GLCheck(glEnableVertexAttribArray, colour_attrib);
-        GLCheck(vaoVertexAttribPointer,
-            colour_attrib,
-            4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Rocket::Core::Vertex),
-            BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, colour))
-        );
-
-        GLCheck(glEnableVertexAttribArray, texcoord_attrib);
-        GLCheck(vaoVertexAttribPointer,
-            texcoord_attrib,
-            2, GL_FLOAT, GL_FALSE, sizeof(Rocket::Core::Vertex),
-            BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, tex_coord))
-        );
-
         /*FIXME: WARNING: This is a cast from pointer to an unsigned long, might not be portable! */
         Rocket::Core::CompiledGeometryHandle res = (unsigned long) new_group.get();
 
@@ -229,7 +198,6 @@ public:
             int num_indices, Rocket::Core::TextureHandle texture,
             const Rocket::Core::Vector2f& translation) {
 
-        GLStateStash s1(GL_VERTEX_ARRAY_BINDING);
         GLStateStash s2(GL_DEPTH_TEST);
         GLStateStash s3(GL_BLEND);
         GLStateStash s4(GL_CURRENT_PROGRAM);
@@ -244,8 +212,6 @@ public:
         tmp_vao_.vertex_buffer_update(num_vertices * sizeof(Rocket::Core::Vertex), vertices);
         tmp_vao_.index_buffer_update(num_indices * sizeof(uint16_t), &short_indices[0]);
         tmp_vao_.bind();
-        tmp_vao_.vertex_buffer_bind();
-        tmp_vao_.index_buffer_bind();
 
         GLCheck(glDisable, GL_DEPTH_TEST);
         GLCheck(glEnable, GL_BLEND);
@@ -258,21 +224,21 @@ public:
         int texcoord_attrib = shader_->attributes().locate("tex_coord");
 
         GLCheck(glEnableVertexAttribArray, pos_attrib);
-        GLCheck(vaoVertexAttribPointer,
+        GLCheck(glVertexAttribPointer,
             pos_attrib,
             2, GL_FLOAT, GL_FALSE, sizeof(Rocket::Core::Vertex),
             BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, position))
         );
 
         GLCheck(glEnableVertexAttribArray, colour_attrib);
-        GLCheck(vaoVertexAttribPointer,
+        GLCheck(glVertexAttribPointer,
             colour_attrib,
             4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Rocket::Core::Vertex),
             BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, colour))
         );
 
         GLCheck(glEnableVertexAttribArray, texcoord_attrib);
-        GLCheck(vaoVertexAttribPointer,
+        GLCheck(glVertexAttribPointer,
             texcoord_attrib,
             2, GL_FLOAT, GL_FALSE, sizeof(Rocket::Core::Vertex),
             BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, tex_coord))
@@ -312,7 +278,6 @@ public:
 
         auto geom = (*it).second;
 
-        GLStateStash s1(GL_VERTEX_ARRAY_BINDING);
         GLStateStash s2(GL_DEPTH_TEST);
         GLStateStash s3(GL_BLEND);
         GLStateStash s4(GL_CURRENT_PROGRAM);
@@ -323,6 +288,31 @@ public:
         GLCheck(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         geom->vao->bind();
+
+        int pos_attrib = shader_->attributes().locate("position");
+        int colour_attrib = shader_->attributes().locate("colour");
+        int texcoord_attrib = shader_->attributes().locate("tex_coord");
+
+        GLCheck(glEnableVertexAttribArray, pos_attrib);
+        GLCheck(glVertexAttribPointer,
+            pos_attrib,
+            2, GL_FLOAT, GL_FALSE, sizeof(Rocket::Core::Vertex),
+            BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, position))
+        );
+
+        GLCheck(glEnableVertexAttribArray, colour_attrib);
+        GLCheck(glVertexAttribPointer,
+            colour_attrib,
+            4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Rocket::Core::Vertex),
+            BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, colour))
+        );
+
+        GLCheck(glEnableVertexAttribArray, texcoord_attrib);
+        GLCheck(glVertexAttribPointer,
+            texcoord_attrib,
+            2, GL_FLOAT, GL_FALSE, sizeof(Rocket::Core::Vertex),
+            BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, tex_coord))
+        );
 
         GLCheck(glActiveTexture, GL_TEXTURE0);
         if(geom->texture) {

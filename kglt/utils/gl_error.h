@@ -10,7 +10,6 @@
 #include <kazbase/logging.h>
 #include "gl_thread_check.h"
 #include "../buffer_object.h"
-#include "vao_abstraction.h"
 
 void check_and_log_error(const std::string& function_name);
 
@@ -77,9 +76,6 @@ public:
         boolean_value_(false) {
 
         switch(state) {
-            case GL_VERTEX_ARRAY_BINDING:
-                vaoGetIntegerv(state, &int_value_);
-            break;
             case GL_ARRAY_BUFFER_BINDING:
             case GL_ELEMENT_ARRAY_BUFFER_BINDING:
             case GL_CURRENT_PROGRAM:
@@ -98,9 +94,6 @@ public:
 
     ~GLStateStash() {
         switch(state_) {
-            case GL_VERTEX_ARRAY_BINDING:
-            GLCheck(vaoBindVertexArray, int_value_);
-            break;
             case GL_ARRAY_BUFFER_BINDING:
             GLCheck(glBindBuffer, GL_ARRAY_BUFFER, int_value_);
             break;

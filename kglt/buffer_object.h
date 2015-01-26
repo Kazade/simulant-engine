@@ -65,15 +65,12 @@ public:
     void index_buffer_update(uint32_t byte_size, const void* data);
     void index_buffer_update_partial(uint32_t offset, uint32_t byte_size, const void* data);
 
+private:
     void vertex_buffer_bind() { vertex_buffer_->bind(); }
     void index_buffer_bind() { index_buffer_->bind(); }
 
-    static bool VAO_SUPPORTED;
-
-private:
     BufferObject::ptr vertex_buffer_;
     BufferObject::ptr index_buffer_;
-    uint32_t id_ = 0;
 };
 
 }

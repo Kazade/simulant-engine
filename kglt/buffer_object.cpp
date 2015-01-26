@@ -7,11 +7,7 @@
 #include "utils/gl_thread_check.h"
 #include "utils/gl_error.h"
 
-#include "utils/vao_abstraction.h"
-
 namespace kglt {
-
-bool VertexArrayObject::VAO_SUPPORTED = false;
 
 BufferObject::BufferObject(BufferObjectType type, BufferObjectUsage usage):
     usage_(usage),
@@ -138,8 +134,7 @@ VertexArrayObject::VertexArrayObject(BufferObjectUsage vertex_usage, BufferObjec
 }
 
 VertexArrayObject::VertexArrayObject(BufferObject::ptr vertex_buffer, BufferObjectUsage index_usage):
-    vertex_buffer_(vertex_buffer),
-    id_(0) {
+    vertex_buffer_(vertex_buffer) {
 
     assert(vertex_buffer);
     assert(vertex_buffer->target() == GL_ARRAY_BUFFER);
@@ -148,51 +143,27 @@ VertexArrayObject::VertexArrayObject(BufferObject::ptr vertex_buffer, BufferObje
 }
 
 VertexArrayObject::~VertexArrayObject() {
-    try {
-        if(id_) {
-            GLCheck(vaoDeleteVertexArrays, 1, &id_);
-        }
-    } catch(...) {}
+
 }
 
 void VertexArrayObject::bind() {
-    if(id_ == 0) {
-        GLCheck(vaoGenVertexArrays, 1, &id_);
-        assert(id_);
-    }
-    GLCheck(vaoBindVertexArray, id_);
-
+    vertex_buffer_bind();
+    index_buffer_bind();
 }
 
 void VertexArrayObject::vertex_buffer_update(uint32_t byte_size, const void* data) {
-    GLStateStash stash(GL_VERTEX_ARRAY_BINDING); //Store the current VAO binding
-
-    bind();
-
     vertex_buffer_->build(byte_size, data);
 }
 
 void VertexArrayObject::vertex_buffer_update_partial(uint32_t offset, uint32_t byte_size, const void* data) {
-    GLStateStash stash(GL_VERTEX_ARRAY_BINDING); //Store the current VAO binding
-
-    bind();
-
     vertex_buffer_->modify(offset, byte_size, data);
 }
 
 void VertexArrayObject::index_buffer_update(uint32_t byte_size, const void* data) {
-    GLStateStash stash(GL_VERTEX_ARRAY_BINDING); //Store the current VAO binding
-
-    bind();
-
     index_buffer_->build(byte_size, data);
 }
 
 void VertexArrayObject::index_buffer_update_partial(uint32_t offset, uint32_t byte_size, const void* data) {
-    GLStateStash stash(GL_VERTEX_ARRAY_BINDING); //Store the current VAO binding
-
-    bind();
-
     index_buffer_->modify(offset, byte_size, data);
 }
 

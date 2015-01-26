@@ -27,7 +27,6 @@
 #include "physics/physics_engine.h"
 #include "screens/loading.h"
 #include "utils/gl_thread_check.h"
-#include "utils/vao_abstraction.h"
 #include "utils/gl_error.h"
 
 namespace kglt {
@@ -106,8 +105,6 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
     set_height(height);
 
     bool result = create_window(width, height, bpp, fullscreen);
-
-    vao_init(); //Initialize our VAO abstraction layer
 
     if(result && !initialized_) {        
 

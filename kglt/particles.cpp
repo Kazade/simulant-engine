@@ -94,9 +94,6 @@ void ParticleSystem::_update_vertex_array_object() {
 
 void ParticleSystem::_bind_vertex_array_object() {
     vao_.bind();
-
-    vao_.vertex_buffer_bind();
-    vao_.index_buffer_bind();
 }
 
 const AABB ParticleSystem::transformed_aabb() const {
