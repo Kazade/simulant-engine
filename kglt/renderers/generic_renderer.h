@@ -18,7 +18,7 @@ private:
     void render(Renderable& mesh, CameraID camera, GPUProgram *program);
 
     void set_auto_uniforms_on_shader(GPUProgram& pass, CameraID camera, Renderable &subactor);
-    void set_auto_attributes_on_shader(GPUProgram& shader, Renderable &buffer);
+    void set_auto_attributes_on_shader(Renderable &buffer);
     void set_blending_mode(BlendType type);
 };
 

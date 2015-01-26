@@ -109,23 +109,12 @@ void GenericRenderer::set_auto_uniforms_on_shader(GPUProgram& program,
 }
 
 template<typename EnabledMethod, typename OffsetMethod>
-void send_attribute(GPUProgram& program,
-                    ShaderAvailableAttributes attr,
+void send_attribute(ShaderAvailableAttributes attr,
                     const VertexData& data,
                     EnabledMethod exists_on_data_predicate,
                     OffsetMethod offset_func) {
 
-    auto& attributes = program.attributes();
-
-    if(!attributes.uses_auto(attr)) {
-        return;
-    }
-
-    int32_t loc = attributes.locate(attributes.variable_name(attr));
-    if(loc < 0) {
-        L_WARN("Couldn't locate attribute, on the shader");
-        return;
-    }
+    int32_t loc = (int32_t) attr;
 
     auto get_has_attribute = std::bind(exists_on_data_predicate, std::reference_wrapper<const VertexData>(data));
 
@@ -146,20 +135,20 @@ void send_attribute(GPUProgram& program,
     }
 }
 
-void GenericRenderer::set_auto_attributes_on_shader(GPUProgram& program, Renderable &buffer) {
+void GenericRenderer::set_auto_attributes_on_shader(Renderable &buffer) {
     /*
      *  Binding attributes generically is hard. So we have some template magic in the send_attribute
      *  function above that takes the VertexData member functions we need to provide the attribute
      *  and just makes the whole thing generic. Before this was 100s of lines of boilerplate. Thank god
      *  for templates!
      */
-    send_attribute(program, SP_ATTR_VERTEX_POSITION, buffer.vertex_data(), &VertexData::has_positions, &VertexData::position_offset);
-    send_attribute(program, SP_ATTR_VERTEX_TEXCOORD0, buffer.vertex_data(), &VertexData::has_texcoord0, &VertexData::texcoord0_offset);
-    send_attribute(program, SP_ATTR_VERTEX_TEXCOORD1, buffer.vertex_data(), &VertexData::has_texcoord1, &VertexData::texcoord1_offset);
-    send_attribute(program, SP_ATTR_VERTEX_TEXCOORD2, buffer.vertex_data(), &VertexData::has_texcoord2, &VertexData::texcoord2_offset);
-    send_attribute(program, SP_ATTR_VERTEX_TEXCOORD3, buffer.vertex_data(), &VertexData::has_texcoord3, &VertexData::texcoord3_offset);
-    send_attribute(program, SP_ATTR_VERTEX_DIFFUSE, buffer.vertex_data(), &VertexData::has_diffuse, &VertexData::diffuse_offset);
-    send_attribute(program, SP_ATTR_VERTEX_NORMAL, buffer.vertex_data(), &VertexData::has_normals, &VertexData::normal_offset);
+    send_attribute(SP_ATTR_VERTEX_POSITION, buffer.vertex_data(), &VertexData::has_positions, &VertexData::position_offset);
+    send_attribute(SP_ATTR_VERTEX_TEXCOORD0, buffer.vertex_data(), &VertexData::has_texcoord0, &VertexData::texcoord0_offset);
+    send_attribute(SP_ATTR_VERTEX_TEXCOORD1, buffer.vertex_data(), &VertexData::has_texcoord1, &VertexData::texcoord1_offset);
+    send_attribute(SP_ATTR_VERTEX_TEXCOORD2, buffer.vertex_data(), &VertexData::has_texcoord2, &VertexData::texcoord2_offset);
+    send_attribute(SP_ATTR_VERTEX_TEXCOORD3, buffer.vertex_data(), &VertexData::has_texcoord3, &VertexData::texcoord3_offset);
+    send_attribute(SP_ATTR_VERTEX_DIFFUSE, buffer.vertex_data(), &VertexData::has_diffuse, &VertexData::diffuse_offset);
+    send_attribute(SP_ATTR_VERTEX_NORMAL, buffer.vertex_data(), &VertexData::has_normals, &VertexData::normal_offset);
 }
 
 void GenericRenderer::set_blending_mode(BlendType type) {
@@ -205,7 +194,7 @@ void GenericRenderer::render(Renderable& buffer, CameraID camera, GPUProgram* pr
     buffer._bind_vertex_array_object();
 
     //Attributes don't change per-iteration of a pass
-    set_auto_attributes_on_shader(*program, buffer);
+    set_auto_attributes_on_shader(buffer);
     set_auto_uniforms_on_shader(*program, camera, buffer);
 
     //Render the mesh, once for each iteration of the pass

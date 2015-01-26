@@ -301,6 +301,14 @@ void GPUProgram::build() {
         compile(p.first); //Compile each shader if necessary
     }
 
+    // Set up the attribute locations once
+    for(auto attribute: SHADER_AVAILABLE_ATTRS) {
+        if(attributes().uses_auto(attribute)) {
+            auto varname = attributes().variable_name(attribute);
+            attributes().set_location(varname, (int32_t) attribute);
+        }
+    }
+
     link(); //Now link the program
 }
 
