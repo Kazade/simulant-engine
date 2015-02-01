@@ -186,6 +186,10 @@ bool Console::key_down(SDL_Keysym key) {
         return true;
     }
 
+    if(!active_) {
+        return false;
+    }
+
     if(code == SDL_SCANCODE_BACKSPACE) {
         unicode line = commands_.at(command_being_edited_);
         if(line.length()) {

@@ -267,7 +267,7 @@ struct Vec3 : public kmVec3 {
         kmVec3Normalize(this, this);
     }
 
-    Vec3 rotated_by(const Quaternion& q) {
+    Vec3 rotated_by(const Quaternion& q) const {
         Vec3 result;
         kmQuaternionMultiplyVec3(&result, &q, this);
         return result;
