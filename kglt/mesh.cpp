@@ -345,9 +345,11 @@ void SubMesh::transform_vertices(const kglt::Mat4& transformation) {
 
         vertex_data().position(v);
 
-        kglt::Vec3 n = vertex_data().normal_at(i);
-        kmVec3MultiplyMat4(&n, &n, &transformation);
-        vertex_data().normal(n.normalized());
+        if(vertex_data().has_normals()) {
+            kglt::Vec3 n = vertex_data().normal_at(i);
+            kmVec3MultiplyMat4(&n, &n, &transformation);
+            vertex_data().normal(n.normalized());
+        }
 
         vertex_data().move_next();
     }
