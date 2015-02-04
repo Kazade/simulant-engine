@@ -40,7 +40,7 @@ void UIStage::set_styles(const std::string& styles) {
 }
 
 void UIStage::load_rml(const unicode& path) {
-    window_.loader_for(path)->into(interface_);
+    window_.loader_for("rml_loader", path)->into(interface_);
 }
 
 void UIStage::register_font_globally(const unicode& ttf_file) {

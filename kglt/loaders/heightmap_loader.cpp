@@ -46,14 +46,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     const int patch_size = 100;
 
     int patches_across = tex->width() / patch_size;
-    if(tex->width() % patch_size) {
-        patches_across++;
-    }
-
     int patches_down = tex->height() / patch_size;
-    if(tex->height() % patch_size) {
-        patches_down++;
-    }
 
     int total_patches = patches_across * patches_down;
 
@@ -78,11 +71,14 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
                 final_pos,
                 (z * spacing) - z_offset
             );
+            mesh->shared_data().diffuse(kglt::Colour::WHITE);
+            mesh->shared_data().normal(kglt::Vec3(0, 1, 0));
+
             mesh->shared_data().move_next();
 
             if(z < tex->height() - 1 && x < tex->width() - 1) {
-                int patch_x = x / patches_across;
-                int patch_z = z / patches_down;
+                int patch_x = (x / patch_size);
+                int patch_z = (z / patch_size);
                 int patch_idx = (patch_z * patches_across) + patch_x;
 
                 auto& sm = mesh->submesh(submeshes.at(patch_idx));
@@ -90,11 +86,46 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
                 sm.index_data().index(idx + tex->width());
                 sm.index_data().index(idx + 1);
 
+
                 sm.index_data().index(idx + 1);
                 sm.index_data().index(idx + tex->width());
                 sm.index_data().index(idx + tex->width() + 1);
             }
         }
+    }
+
+    // The mesh don't have any normals, let's generate some!
+    std::unordered_map<int, kglt::Vec3> index_to_normal;
+
+    for(auto smi: submeshes) {
+        auto& sm = mesh->submesh(smi);
+        // Go through all the triangles, add the face normal to all the vertices
+        for(uint16_t i = 0; i < sm.index_data().count(); i+=3) {
+            uint16_t idx1 = sm.index_data().at(i);
+            uint16_t idx2 = sm.index_data().at(i+1);
+            uint16_t idx3 = sm.index_data().at(i+2);
+
+            kglt::Vec3 v1, v2, v3;
+            v1 = sm.vertex_data().position_at(idx1);
+            v2 = sm.vertex_data().position_at(idx2);
+            v3 = sm.vertex_data().position_at(idx3);
+
+            kglt::Vec3 normal = (v2 - v1).normalized().cross((v3 - v1).normalized()).normalized();
+
+            index_to_normal[idx1] += normal;
+            index_to_normal[idx2] += normal;
+            index_to_normal[idx3] += normal;
+        }
+    }
+
+    // Now set the normal on the vertex data
+    for(auto p: index_to_normal) {
+        mesh->shared_data().move_to(p.first);
+        mesh->shared_data().normal(p.second.normalized());
+    }
+
+    for(auto smi: submeshes) {
+        mesh->submesh(smi).index_data().done();
     }
     mesh->shared_data().done();
 

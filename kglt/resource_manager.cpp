@@ -99,7 +99,7 @@ MeshID ResourceManagerImpl::new_mesh_from_tmx_file(const unicode& tmx_file, cons
 
 MeshID ResourceManagerImpl::new_mesh_from_heightmap(const unicode& image_file, float spacing, float min_height, float max_height, bool garbage_collect) {
     kglt::MeshID mesh_id = new_mesh(garbage_collect);
-    window().loader_for(image_file)->into(mesh(mesh_id), {
+    window().loader_for("heightmap_loader", image_file)->into(mesh(mesh_id), {
         { "spacing", spacing},
         { "min_height", min_height},
         { "max_height", max_height}
@@ -332,7 +332,7 @@ TextureID ResourceManagerImpl::new_texture(bool garbage_collect) {
 TextureID ResourceManagerImpl::new_texture_from_file(const unicode& path, TextureFlags flags, bool garbage_collect) {
     //Load the texture
     auto tex = texture(new_texture(garbage_collect));
-    window().loader_for(path.encode())->into(tex);
+    window().loader_for("texture_loader", path.encode())->into(tex);
 
     if((flags & TEXTURE_OPTION_FLIP_VERTICALLY) == TEXTURE_OPTION_FLIP_VERTICALLY) {
         tex->flip_vertically();

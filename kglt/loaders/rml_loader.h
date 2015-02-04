@@ -16,7 +16,7 @@ public:
 
 class RMLLoaderType : public LoaderType {
 public:
-    unicode name() { return "texture_loader"; }
+    unicode name() { return "rml_loader"; }
     bool supports(const unicode& filename) const {
         return filename.lower().contains(".rml");
     }

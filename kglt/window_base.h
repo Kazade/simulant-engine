@@ -76,6 +76,7 @@ public:
     virtual ~WindowBase();
     
     LoaderPtr loader_for(const unicode& filename);
+    LoaderPtr loader_for(const unicode& loader_name, const unicode& filename);
     
     void register_loader(LoaderTypePtr loader_type);
 

@@ -60,6 +60,7 @@ void Mesh::enable_debug(bool value) {
         MaterialID mid = resource_manager().new_material();
 
         resource_manager().window().loader_for(
+            "material_loader",
             "kglt/materials/diffuse_render.kglm"
         )->into(resource_manager().material(mid));
 

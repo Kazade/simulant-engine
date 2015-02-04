@@ -14,6 +14,7 @@
 #include "loaders/obj_loader.h"
 #include "loaders/tiled_loader.h"
 #include "loaders/particle_script.h"
+#include "loaders/heightmap_loader.h"
 
 #include "sound.h"
 #include "camera.h"
@@ -79,9 +80,34 @@ RenderSequencePtr WindowBase::render_sequence() {
 LoaderPtr WindowBase::loader_for(const unicode &filename) {
     unicode final_file = resource_locator().locate_file(filename);
 
+    std::vector<LoaderPtr> possible_loaders;
+
     for(LoaderTypePtr loader_type: loaders_) {
         if(loader_type->supports(final_file)) {
-            return loader_type->loader_for(final_file, resource_locator().read_file(final_file));
+            possible_loaders.push_back(loader_type->loader_for(final_file, resource_locator().read_file(final_file)));
+        }
+    }
+
+    if(possible_loaders.size() == 1) {
+        return possible_loaders.front();
+    } else if(possible_loaders.size() > 1) {
+        throw LogicError(_u("More than one possible loader was found for '{0}'. Please specify a loader name.").format(filename));
+    }
+
+    throw DoesNotExist<Loader>((_u("Unable to find a loader for: ") + filename).encode());
+}
+
+
+LoaderPtr WindowBase::loader_for(const unicode& loader_name, const unicode &filename) {
+    unicode final_file = resource_locator().locate_file(filename);
+
+    for(LoaderTypePtr loader_type: loaders_) {
+        if(loader_type->name() == loader_name) {
+            if(loader_type->supports(final_file)) {
+                return loader_type->loader_for(final_file, resource_locator().read_file(final_file));
+            } else {
+                throw IOError(_u("Loader '{0}' does not support file '{1}'").format(loader_name, filename));
+            }
         }
     }
 
@@ -122,6 +148,7 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
         register_loader(std::make_shared<kglt::loaders::RMLLoaderType>());
         register_loader(std::make_shared<kglt::loaders::OBJLoaderType>());
         register_loader(std::make_shared<kglt::loaders::TiledLoaderType>());
+        register_loader(std::make_shared<kglt::loaders::HeightmapLoaderType>());
 
         L_INFO("Initializing OpenAL");
         Sound::init_openal();
