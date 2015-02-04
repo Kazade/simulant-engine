@@ -7,13 +7,14 @@
 #include <memory>
 #include "loadable.h"
 
+#include "kazbase/any/any.h"
 #include "kazbase/exceptions.h"
 #include "generic/protected_ptr.h"
 #include "types.h"
 
 namespace kglt {
 
-typedef std::unordered_map<unicode, unicode> LoaderOptions;
+typedef std::unordered_map<unicode, kazbase::any> LoaderOptions;
 
 class Loader {
 public:

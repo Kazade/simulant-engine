@@ -15,7 +15,7 @@ public:
 
     template<typename T>
     void stash(T thing, const std::string& identifier) {
-        things_[identifier] = core::any(thing);
+        things_[identifier] = kazbase::any(thing);
     }
 
     bool exists(const std::string& identifier) const {
@@ -27,7 +27,7 @@ public:
         if(!exists(identifier)) {
             throw DoesNotExist<T>();
         }
-        return core::any_cast<T>(things_.at(identifier));
+        return kazbase::any_cast<T>(things_.at(identifier));
     }
 
     void unstash(const std::string& identifier) {
@@ -37,7 +37,7 @@ public:
     }
 
 private:
-    std::unordered_map<std::string, core::any> things_;
+    std::unordered_map<std::string, kazbase::any> things_;
 };
 
 }

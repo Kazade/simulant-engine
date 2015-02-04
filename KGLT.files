@@ -780,3 +780,5 @@ kglt/pipeline_helper.cpp
 kglt/ui/rocket/Include/Rocket/Core/ElementInstancerGeneric.inl
 kglt/loaders/stb_vorbis.c
 kglt/generic/manager_lookup_ptr.h
+kglt/loaders/heightmap_loader.h
+kglt/loaders/heightmap_loader.cpp

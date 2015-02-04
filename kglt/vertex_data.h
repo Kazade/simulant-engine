@@ -240,6 +240,7 @@ public:
     void reserve(uint16_t size) { indices_.reserve(size); }
     void index(uint16_t idx) { indices_.push_back(idx); }
     void done();
+    uint16_t at(const uint16_t i) { return indices_.at(i); }
 
     uint16_t count() const { return indices_.size(); }
 

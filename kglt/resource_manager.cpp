@@ -91,7 +91,18 @@ MeshID ResourceManagerImpl::new_mesh_from_tmx_file(const unicode& tmx_file, cons
     kglt::MeshID mesh_id = new_mesh(garbage_collect);
     window().loader_for(tmx_file.encode())->into(mesh(mesh_id), {
         {"layer", layer_name},
-        {"render_size", _u("{0}").format(tile_render_size)}
+        {"render_size", tile_render_size}
+    });
+    MeshManager::mark_as_uncollected(mesh_id);
+    return mesh_id;
+}
+
+MeshID ResourceManagerImpl::new_mesh_from_heightmap(const unicode& image_file, float spacing, float min_height, float max_height, bool garbage_collect) {
+    kglt::MeshID mesh_id = new_mesh(garbage_collect);
+    window().loader_for(image_file)->into(mesh(mesh_id), {
+        { "spacing", spacing},
+        { "min_height", min_height},
+        { "max_height", max_height}
     });
     MeshManager::mark_as_uncollected(mesh_id);
     return mesh_id;

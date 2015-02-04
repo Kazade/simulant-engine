@@ -38,8 +38,8 @@ void TiledLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     map.ParseFile(this->filename_.encode());
 
-    unicode layer_name = options.at("layer");
-    float tile_render_size = unicode(options.at("render_size")).to_float();
+    unicode layer_name = kazbase::any_cast<unicode>(options.at("layer"));
+    float tile_render_size = kazbase::any_cast<float>(options.at("render_size"));
 
     auto layers = map.GetLayers();
     auto it = std::find_if(layers.begin(), layers.end(), [=](Tmx::Layer* layer) { return layer->GetName() == layer_name.encode(); });

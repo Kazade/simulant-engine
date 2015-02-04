@@ -150,6 +150,11 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
 
             parts = std::vector<unicode>(parts.begin() + 1, parts.end()); //Strip off the first bit
 
+            /*
+             * This loop looks weird because it builds a triangle fan
+             * from the face indexes, as there could be more than 3. It goes
+             * (0, 2, 1), (0, 3, 2) etc.
+             */
             for(uint32_t i = 1; i < parts.size(); i++) {
                 int32_t v1, vt1, vn1;
                 int32_t v2, vt2, vn2;
@@ -178,6 +183,36 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             }
         } else if(parts[0] == "newmtl") {
             has_materials = true;
+        }
+    }
+
+
+    if(normals.empty()) {
+        // The mesh didn't have any normals, let's generate some!
+        std::unordered_map<int, kglt::Vec3> index_to_normal;
+
+        // Go through all the triangles, add the face normal to all the vertices
+        for(uint16_t i = 0; i < sm.index_data().count(); i+=3) {
+            uint16_t idx1 = sm.index_data().at(i);
+            uint16_t idx2 = sm.index_data().at(i+1);
+            uint16_t idx3 = sm.index_data().at(i+2);
+
+            kglt::Vec3 v1, v2, v3;
+            v1 = sm.vertex_data().position_at(idx1);
+            v2 = sm.vertex_data().position_at(idx2);
+            v3 = sm.vertex_data().position_at(idx3);
+
+            kglt::Vec3 normal = (v2 - v1).normalized().cross((v3 - v1).normalized()).normalized();
+
+            index_to_normal[idx1] += normal;
+            index_to_normal[idx2] += normal;
+            index_to_normal[idx3] += normal;
+        }
+
+        // Now set the normal on the vertex data
+        for(auto p: index_to_normal) {
+            sm.vertex_data().move_to(p.first);
+            sm.vertex_data().normal(p.second.normalized());
         }
     }
 

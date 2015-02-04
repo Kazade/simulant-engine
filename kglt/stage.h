@@ -139,6 +139,10 @@ public:
         return window().new_mesh_from_tmx_file(tmx_file, layer_name, tile_render_size, garbage_collect);
     }
 
+    MeshID new_mesh_from_heightmap(const unicode& image_file, float spacing=1.0, float min_height=-64, float max_height=64.0, bool garbage_collect=true) override {
+        return window().new_mesh_from_heightmap(image_file, spacing, min_height, max_height, garbage_collect);
+    }
+
     virtual MeshID new_mesh_as_cube(float width, bool garbage_collect=true) {
         return window().new_mesh_as_cube(width, garbage_collect);
     }
