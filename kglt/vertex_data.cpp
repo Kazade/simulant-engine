@@ -43,6 +43,15 @@ void VertexData::clear() {
     enabled_bitmask_ = 0;
 }
 
+kglt::Vec3 VertexData::position() const {
+    if(cursor_position_ > (int32_t) data_.size()) {
+        throw std::out_of_range("Cursor moved out of range");
+    }
+
+    const Vertex& vert = data_.at(cursor_position_);
+    return vert.position;
+}
+
 void VertexData::position(float x, float y, float z) {
     check_or_add_attribute(BM_POSITIONS);
 
@@ -71,6 +80,16 @@ void VertexData::position(const kmVec2 &pos) {
 
 void VertexData::position(const kmVec3& pos) {
     position(pos.x, pos.y, pos.z);
+}
+
+
+kglt::Vec3 VertexData::normal() const {
+    if(cursor_position_ > (int32_t) data_.size()) {
+        throw std::out_of_range("Cursor moved out of range");
+    }
+
+    const Vertex& vert = data_.at(cursor_position_);
+    return vert.normal;
 }
 
 void VertexData::normal(float x, float y, float z) {

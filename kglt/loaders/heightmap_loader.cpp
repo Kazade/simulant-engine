@@ -6,6 +6,12 @@
 namespace kglt {
 namespace loaders {
 
+
+
+kglt::Colour colour_for_vertex(const kglt::Vec3& point, const kglt::Vec3& normal) {
+    return kglt::Colour::WHITE;
+}
+
 void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     Loadable* res_ptr = &resource;
     Mesh* mesh = dynamic_cast<Mesh*>(res_ptr);
@@ -30,6 +36,15 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
         max_height = kazbase::any_cast<float>(options.at("max_height"));
     }
 
+    HeightmapDiffuseGenerator diffuse_func;
+    if(options.count("diffuse_func")) {
+        diffuse_func = kazbase::any_cast<HeightmapDiffuseGenerator>(options.at("diffuse_func"));
+    }
+
+    if(!diffuse_func) {
+        diffuse_func = &colour_for_vertex;
+    }
+
     // Load the texture using the texture loader
     TextureID tid = mesh->resource_manager().new_texture();
     TextureLoader loader(this->filename_, this->data_);
@@ -37,6 +52,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     // Now generate the heightmap from it
     auto tex = mesh->resource_manager().texture(tid);
+    tex->flip_vertically();
 
     float range = max_height - min_height;
 
@@ -62,7 +78,9 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
         for(uint32_t x = 0; x < tex->width(); ++x) {
             uint32_t idx = (z * tex->width()) + x;
 
-            float normalized_height = float(tex->data()[idx]) / float(256.0);
+            float height_val = tex->data()[idx * (tex->bpp() / 8)];
+
+            float normalized_height = float(height_val) / float(256.0);
             float height = range * normalized_height;
             float final_pos = min_height + height;
 
@@ -122,6 +140,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     for(auto p: index_to_normal) {
         mesh->shared_data().move_to(p.first);
         mesh->shared_data().normal(p.second.normalized());
+        mesh->shared_data().diffuse(diffuse_func(mesh->shared_data().position(), mesh->shared_data().normal()));
     }
 
     for(auto smi: submeshes) {

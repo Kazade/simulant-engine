@@ -1,6 +1,7 @@
 #ifndef HEIGHTMAP_LOADER_H
 #define HEIGHTMAP_LOADER_H
 
+#include <functional>
 #include "../loader.h"
 
 namespace kglt {

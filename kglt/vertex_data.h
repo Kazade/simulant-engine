@@ -10,7 +10,7 @@
 #include "kazmath/vec4.h"
 #include "buffer_object.h"
 #include "colour.h"
-
+#include "types.h"
 #include <kazbase/signals.h>
 
 namespace kglt {
@@ -80,6 +80,7 @@ public:
 
     void done();
 
+    kglt::Vec3 position() const;
     void position(float x, float y, float z);
     void position(float x, float y);
     void position(const kmVec3& pos);
@@ -89,6 +90,7 @@ public:
         return data_.at(idx).position;
     }
 
+    kglt::Vec3 normal() const;
     void normal(float x, float y, float z);
     void normal(const kmVec3& n);
 
