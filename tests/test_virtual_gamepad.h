@@ -27,7 +27,7 @@ public:
 
         window->enable_virtual_joypad(VIRTUAL_DPAD_DIRECTIONS_TWO, 2);
 
-        conn1 = window->virtual_joypad()->signal_button_up().connect([&](int i) {
+        conn1 = window->virtual_joypad->signal_button_up().connect([&](int i) {
             if(i == 0) {
                 b1_pressed = false;
             } else {
@@ -35,7 +35,7 @@ public:
             }
         });
 
-        conn2 = window->virtual_joypad()->signal_button_down().connect([&](int i) {
+        conn2 = window->virtual_joypad->signal_button_down().connect([&](int i) {
             if(i == 0) {
                 b1_pressed = true;
             } else {
@@ -55,8 +55,8 @@ public:
     }
 
     void test_touchdown_event_triggers_signal() {
-        auto b1 = window->virtual_joypad()->button_dimensions(0);
-        auto b2 = window->virtual_joypad()->button_dimensions(1);
+        auto b1 = window->virtual_joypad->button_dimensions(0);
+        auto b2 = window->virtual_joypad->button_dimensions(1);
 
         int x = b1.left + 1;
         int y = b1.top + 1;
@@ -90,8 +90,8 @@ public:
     }
 
     void test_touchup_event_triggers_signal() {
-        auto b1 = window->virtual_joypad()->button_dimensions(0);
-        auto b2 = window->virtual_joypad()->button_dimensions(1);
+        auto b1 = window->virtual_joypad->button_dimensions(0);
+        auto b2 = window->virtual_joypad->button_dimensions(1);
 
 
         int x = b1.left + 1;
@@ -126,7 +126,7 @@ public:
          *  then releases finger 1, the button should remain pressed
          */
 
-        auto b1 = window->virtual_joypad()->button_dimensions(0);
+        auto b1 = window->virtual_joypad->button_dimensions(0);
 
 
         int x = b1.left + 1;
@@ -147,7 +147,7 @@ public:
     }
 
     void test_mouse_clicks_dont_interfere() {
-        auto b1 = window->virtual_joypad()->button_dimensions(0);
+        auto b1 = window->virtual_joypad->button_dimensions(0);
 
         int x = b1.left + 1;
         int y = b1.top + 1;
@@ -168,7 +168,7 @@ public:
     }
 
     void test_deactivation_releases_buttons() {
-        auto b1 = window->virtual_joypad()->button_dimensions(0);
+        auto b1 = window->virtual_joypad->button_dimensions(0);
 
         int x = b1.left + 1;
         int y = b1.top + 1;
@@ -203,7 +203,7 @@ public:
             button_pressed = true;
         });
 
-        auto b1 = window->virtual_joypad()->button_dimensions(0);
+        auto b1 = window->virtual_joypad->button_dimensions(0);
 
         int x = b1.left + 1;
         int y = b1.top + 1;
@@ -216,7 +216,7 @@ public:
     void test_while_down() {
         bool button_pressed = false;
 
-        auto b1 = window->virtual_joypad()->button_dimensions(0);
+        auto b1 = window->virtual_joypad->button_dimensions(0);
 
         int x = b1.left + 1;
         int y = b1.top + 1;

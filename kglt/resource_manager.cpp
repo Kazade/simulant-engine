@@ -466,7 +466,7 @@ MaterialID ResourceManagerImpl::default_material_id() const {
 }
 
 unicode ResourceManagerImpl::default_material_filename() const {
-    return window().resource_locator().locate_file("kglt/materials/multitexture_and_lighting.kglm");
+    return window().resource_locator->locate_file("kglt/materials/multitexture_and_lighting.kglm");
 }
 
 

@@ -782,3 +782,6 @@ kglt/loaders/stb_vorbis.c
 kglt/generic/manager_lookup_ptr.h
 kglt/loaders/heightmap_loader.h
 kglt/loaders/heightmap_loader.cpp
+samples/rtt_sample.cpp
+kglt/framebuffer.h
+kglt/generic/property.h

@@ -1,4 +1,5 @@
 #include "screen_manager.h"
+#include "screen.h"
 #include "../window_base.h"
 
 namespace kglt {

@@ -6,14 +6,16 @@
 #include <memory>
 #include <kaztimer/kaztimer.h>
 
+#include "generic/property.h"
+#include "generic/manager.h"
+#include "generic/data_carrier.h"
+
 #include "resource_locator.h"
 
 #include "idle_task_manager.h"
 
 #include "generic/auto_weakptr.h"
 #include "kazbase/logging.h"
-#include "generic/manager.h"
-#include "generic/data_carrier.h"
 #include "resource_manager.h"
 #include "types.h"
 #include "sound.h"
@@ -102,17 +104,10 @@ public:
     bool run_frame();
     void update(double dt) override;
 
-    IdleTaskManager& idle() { return idle_; }
-
-    ResourceLocator& resource_locator() { return *resource_locator_; }
-    const ResourceLocator& resource_locator() const { return *resource_locator_; }
-
     Keyboard& keyboard();
     Mouse& mouse();
     Joypad& joypad(uint8_t idx);
     uint8_t joypad_count() const;
-
-    MessageBar& message_bar() { return *message_bar_; }
 
     void set_logging_level(LoggingLevel level);
 
@@ -126,15 +121,6 @@ public:
     void stop_running() { is_running_ = false; }
     const bool is_shutting_down() const { return is_running_ == false; }
 
-    Watcher& watcher() {
-        if(!watcher_) {
-            throw RuntimeError("Watcher has not been initialized");
-        }
-        return *watcher_;
-    }
-
-    generic::DataCarrier& data() { return data_carrier_; }
-
     void enable_physics(std::shared_ptr<PhysicsEngine> engine);
     PhysicsEnginePtr physics();
     const bool has_physics_engine() const;
@@ -142,7 +128,6 @@ public:
     void enable_virtual_joypad(VirtualDPadDirections directions, int button_count, bool flipped=false);
     void disable_virtual_joypad();
     bool has_virtual_joypad() const { return bool(virtual_gamepad_); }
-    VirtualGamepad* virtual_joypad() { return virtual_gamepad_.get(); }
 
     void reset();
 
@@ -176,18 +161,53 @@ public:
     /* ScreenManager interface */
     virtual void register_screen(const unicode& route, ScreenFactory factory) { routes_->register_screen(route, factory); }
     virtual bool has_screen(const unicode& route) const { return routes_->has_screen(route); }
-    virtual ScreenBase::ptr resolve_screen(const unicode& route) { return routes_->resolve_screen(route); }
+    virtual ScreenBasePtr resolve_screen(const unicode& route) { return routes_->resolve_screen(route); }
     virtual void activate_screen(const unicode& route) { routes_->activate_screen(route); }
     virtual void load_screen_in_background(const unicode& route, bool redirect_after=true) { routes_->load_screen_in_background(route, redirect_after); }
     virtual void unload_screen(const unicode& route) { routes_->unload_screen(route); }
     virtual bool is_screen_loaded(const unicode& route) const { return routes_->is_screen_loaded(route); }
-    virtual ScreenBase::ptr active_screen() const { return routes_->active_screen(); }
+    virtual ScreenBasePtr active_screen() const { return routes_->active_screen(); }
     /* End ScreenManager interface */
-
-    Console* console() { return console_.get(); }
 
     void show_stats();
     void hide_stats();
+
+
+    //Read only properties
+    Property<WindowBase, Console> console = {
+        [this]() -> Console& { return *this->console_.get(); }
+    };
+
+    Property<WindowBase, VirtualGamepad> virtual_joypad = {
+        [this]() -> VirtualGamepad& { return *this->virtual_gamepad_.get(); }
+    };
+
+    Property<WindowBase, MessageBar> message_bar = {
+        [this]() -> MessageBar& { return *this->message_bar_.get(); }
+    };
+
+    Property<WindowBase, IdleTaskManager> idle = {
+        [this]() -> IdleTaskManager& { return this->idle_; }
+    };
+
+    Property<WindowBase, Watcher> watcher = {
+        [this]() -> Watcher& {
+            if(!watcher_) {
+                throw LogicError("Watcher has not been initialized");
+            } else {
+                return *watcher_.get();
+            }
+        }
+    };
+
+    Property<WindowBase, generic::DataCarrier> data = {
+        [this]() -> generic::DataCarrier& { return data_carrier_; }
+    };
+
+    Property<WindowBase, ResourceLocator> resource_locator = {
+        [this]() -> ResourceLocator& { return *resource_locator_; }
+    };
+
 protected:
     RenderSequencePtr render_sequence();
 

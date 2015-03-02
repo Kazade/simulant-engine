@@ -23,11 +23,11 @@
 #include <kazbase/exceptions.h>
 
 #include "../types.h"
+#include "../window_base.h"
 #include "../generic/managed.h"
+#include "../generic/property.h"
 
 namespace kglt {
-
-class WindowBase;
 
 class ScreenLoadException : public RuntimeError {};
 
@@ -47,8 +47,9 @@ public:
     void step(double dt);
 
     bool is_loaded() const { return is_loaded_; }
+
 protected:
-    WindowBase& window() { return window_; }
+    Property<ScreenBase, WindowBase> window = { [this]() -> WindowBase& { return this->window_; } };
 
     virtual void do_load() = 0;
     virtual void do_unload() {}

@@ -177,7 +177,7 @@ void RenderSequence::run() {
         run_pipeline(pipeline, actors_rendered);
     }
 
-    window_.console()->set_stats_subactors_rendered(actors_rendered);
+    window_.console->set_stats_subactors_rendered(actors_rendered);
 }
 
 void RenderSequence::update_camera_constraint(CameraID cid) {

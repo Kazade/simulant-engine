@@ -41,12 +41,12 @@ public:
     /* ScreenManager interface */
     virtual void register_screen(const unicode& route, ScreenFactory factory) { window_->register_screen(route, factory); }
     virtual bool has_screen(const unicode& route) const { return window_->has_screen(route); }
-    virtual ScreenBase::ptr resolve_screen(const unicode& route) { return window_->resolve_screen(route); }
+    virtual ScreenBasePtr resolve_screen(const unicode& route) { return window_->resolve_screen(route); }
     virtual void activate_screen(const unicode& route) { window_->activate_screen(route); }
     virtual void load_screen_in_background(const unicode& route, bool redirect_after=true) { window_->load_screen_in_background(route, redirect_after); }
     virtual void unload_screen(const unicode& route) { window_->unload_screen(route); }
     virtual bool is_screen_loaded(const unicode& route) const { return window_->is_screen_loaded(route); }
-    virtual ScreenBase::ptr active_screen() const { return window_->active_screen(); }
+    virtual ScreenBasePtr active_screen() const { return window_->active_screen(); }
     /* End ScreenManager interface */
 protected:
     StagePtr stage(StageID stage=StageID());
