@@ -52,7 +52,7 @@ void Watcher::start() {
     watching_ = true;
 
     if(window_) {
-        window_->idle().add(std::bind(&Watcher::update, this));
+        window_->idle->add(std::bind(&Watcher::update, this));
     }
 }
 

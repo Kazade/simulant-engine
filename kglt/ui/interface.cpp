@@ -113,8 +113,8 @@ public:
         tmp_vao_(MODIFY_REPEATEDLY_USED_FOR_RENDERING, MODIFY_REPEATEDLY_USED_FOR_RENDERING),
         window_(window) {
 
-        unicode vert_shader = window_.resource_locator().read_file("kglt/materials/ui.vert")->str();
-        unicode frag_shader = window_.resource_locator().read_file("kglt/materials/ui.frag")->str();
+        unicode vert_shader = window_.resource_locator->read_file("kglt/materials/ui.vert")->str();
+        unicode frag_shader = window_.resource_locator->read_file("kglt/materials/ui.frag")->str();
 
         L_INFO("UI shaders loaded, creating GPU program");
 
@@ -122,7 +122,7 @@ public:
         shader_->set_shader_source(SHADER_TYPE_VERTEX, vert_shader);
         shader_->set_shader_source(SHADER_TYPE_FRAGMENT, frag_shader);
 
-        window.idle().run_sync(std::bind(&GPUProgram::build, shader_.get()));
+        window.idle->run_sync(std::bind(&GPUProgram::build, shader_.get()));
     }
 
     ~RocketRenderInterface() {
@@ -415,7 +415,7 @@ std::vector<unicode> Interface::find_fonts() {
 
     std::vector<unicode> results;
     for(unicode font: FONT_PATHS) {
-        const unicode path = window_.resource_locator().locate_file(font);
+        const unicode path = window_.resource_locator->locate_file(font);
         results.push_back(path);
     }
 
@@ -490,7 +490,7 @@ unicode Interface::locate_font(const unicode& filename) {
     };
 
 
-    return window_.resource_locator().locate_file(filename).encode();
+    return window_.resource_locator->locate_file(filename).encode();
 
 /*
     for(std::string font_dir: paths) {

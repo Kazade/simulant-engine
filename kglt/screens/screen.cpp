@@ -43,9 +43,9 @@ void ScreenBase::step(double dt) {
 }
 
 PipelineID ScreenBase::prepare_basic_scene(StageID& new_stage, CameraID& new_camera) {
-    new_stage = window().new_stage(PARTITIONER_NULL);
-    new_camera = window().new_camera();
-    return window().render(new_stage, new_camera).with_clear();
+    new_stage = window->new_stage(PARTITIONER_NULL);
+    new_camera = window->new_camera();
+    return window->render(new_stage, new_camera).with_clear();
 }
 
 std::pair<PipelineID, PipelineID> ScreenBase::prepare_basic_scene_with_overlay(
@@ -54,10 +54,10 @@ std::pair<PipelineID, PipelineID> ScreenBase::prepare_basic_scene_with_overlay(
 
     PipelineID first = prepare_basic_scene(new_stage, new_camera);
 
-    new_ui = window().new_ui_stage();
-    new_ui_camera = window().new_camera_for_ui();
+    new_ui = window->new_ui_stage();
+    new_ui_camera = window->new_camera_for_ui();
 
-    PipelineID second = window().render(new_ui, new_ui_camera);
+    PipelineID second = window->render(new_ui, new_ui_camera);
 
     return std::make_pair(first, second);
 }

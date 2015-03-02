@@ -78,13 +78,13 @@ RenderSequencePtr WindowBase::render_sequence() {
 }
 
 LoaderPtr WindowBase::loader_for(const unicode &filename) {
-    unicode final_file = resource_locator().locate_file(filename);
+    unicode final_file = resource_locator->locate_file(filename);
 
     std::vector<LoaderPtr> possible_loaders;
 
     for(LoaderTypePtr loader_type: loaders_) {
         if(loader_type->supports(final_file)) {
-            possible_loaders.push_back(loader_type->loader_for(final_file, resource_locator().read_file(final_file)));
+            possible_loaders.push_back(loader_type->loader_for(final_file, resource_locator->read_file(final_file)));
         }
     }
 
@@ -99,12 +99,12 @@ LoaderPtr WindowBase::loader_for(const unicode &filename) {
 
 
 LoaderPtr WindowBase::loader_for(const unicode& loader_name, const unicode &filename) {
-    unicode final_file = resource_locator().locate_file(filename);
+    unicode final_file = resource_locator->locate_file(filename);
 
     for(LoaderTypePtr loader_type: loaders_) {
         if(loader_type->name() == loader_name) {
             if(loader_type->supports(final_file)) {
-                return loader_type->loader_for(final_file, resource_locator().read_file(final_file));
+                return loader_type->loader_for(final_file, resource_locator->read_file(final_file));
             } else {
                 throw IOError(_u("Loader '{0}' does not support file '{1}'").format(loader_name, filename));
             }
@@ -166,7 +166,7 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
 
         //C++11 lambda awesomeness! input_controller isn't initialized yet
         //so we connect ESCAPE in an idle task
-        idle().add_once([=]() {
+        idle->add_once([=]() {
             //Bind the stop_running method to the ESCAPE key
             input_controller().keyboard().key_pressed_connect(
                 SDL_SCANCODE_ESCAPE, bind(&WindowBase::stop_running, this)
@@ -415,7 +415,7 @@ void WindowBase::handle_touch_up(int finger_id, int x, int y) {
  * window to its original state.
  */
 void WindowBase::reset() {
-    idle().execute(); //Execute any idle tasks before we go deleting things
+    idle->execute(); //Execute any idle tasks before we go deleting things
 
     render_sequence()->delete_all_pipelines();
 

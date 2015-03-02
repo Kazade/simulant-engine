@@ -114,12 +114,12 @@ void Texture::upload(bool free_after, bool generate_mipmaps, bool repeat, bool l
         //FIXME: This might get hairy if more than one thread is messing with the texture
         //as we do an unlocked access here (which is fine when it's only this thread and the
         //main thread, but if there's another one then, that could be bad news)
-        resource_manager().window().idle().add_once([=] {
+        resource_manager().window().idle->add_once([=] {
             this->__do_upload(free_after, generate_mipmaps, repeat, linear);
         });
 
         //Wait for the main thread to process the upload
-        resource_manager().window().idle().wait();
+        resource_manager().window().idle->wait();
     }
 }
 

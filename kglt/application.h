@@ -9,6 +9,7 @@
 #include "types.h"
 #include "kazbase/unicode.h"
 #include "screens/screen_manager.h"
+#include "generic/property.h"
 
 namespace kglt {
 
@@ -34,7 +35,9 @@ public:
     //when thread completes, hide the loading screen and run the main loop
     int32_t run();
 
-    WindowBase& window() { return *window_; }
+    Property<Application, WindowBase> window = {
+        [this]() -> WindowBase& { return *window_; }
+    };
 
     bool initialized() const { return initialized_; }
 

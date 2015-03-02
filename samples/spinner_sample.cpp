@@ -10,12 +10,12 @@ public:
     Spinner():
         Application("KGLT Spinner Sample") {
 
-        window().set_logging_level(kglt::LOG_LEVEL_DEBUG);
+        window->set_logging_level(kglt::LOG_LEVEL_DEBUG);
     }
 
 private:
     bool do_init() {
-        window().enable_physics(DefaultPhysicsEngine::create());
+        window->enable_physics(DefaultPhysicsEngine::create());
 
         kglt::TextureID tid = stage()->new_texture_from_file("sample_data/sample.tga");
 

@@ -13,9 +13,9 @@ public:
     void do_load() {
         prepare_basic_scene(stage_id_, camera_id_);
 
-        window().enable_physics(DefaultPhysicsEngine::create());
-        window().physics()->create_plane(0, 1, 0, -3.5);
-        window().physics()->set_gravity(Vec3(0, -7.8, 0));
+        window->enable_physics(DefaultPhysicsEngine::create());
+        window->physics()->create_plane(0, 1, 0, -3.5);
+        window->physics()->set_gravity(Vec3(0, -7.8, 0));
 
         auto stage = main_stage();
         texture_id_ = stage->new_texture_from_file("sample_data/crate.png");
@@ -65,7 +65,7 @@ private:
 
     float time_since_last_spawn_ = 0.0;
 
-    StagePtr main_stage() { return window().stage(stage_id_); }
+    StagePtr main_stage() { return window->stage(stage_id_); }
 };
 
 class BoxDrop: public kglt::Application {
@@ -73,7 +73,7 @@ public:
     BoxDrop():
         Application("KGLT BoxDrop Sample") {
 
-        window().set_logging_level(kglt::LOG_LEVEL_DEBUG);
+        window->set_logging_level(kglt::LOG_LEVEL_DEBUG);
     }
 
 private:

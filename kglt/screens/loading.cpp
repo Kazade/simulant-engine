@@ -14,9 +14,9 @@ namespace screens {
 
 void Loading::do_load() {
     //Create a stage
-    stage_ = window().new_ui_stage();
+    stage_ = window->new_ui_stage();
 
-    auto stage = window().ui_stage(stage_);
+    auto stage = window->ui_stage(stage_);
 
     stage->set_styles(R"X(
         body {
@@ -49,31 +49,31 @@ void Loading::do_load() {
     stage->$("p").add_class("thing");
 
     //Create an orthographic camera
-    camera_ = window().new_camera();
+    camera_ = window->new_camera();
 
-    window().camera(camera_)->set_orthographic_projection(
-        0, window().width(), window().height(), 0
+    window->camera(camera_)->set_orthographic_projection(
+        0, window->width(), window->height(), 0
     );
 
     //Create an inactive pipeline
-    pipeline_ = window().render(stage_, camera_);
-    window().disable_pipeline(pipeline_);
+    pipeline_ = window->render(stage_, camera_);
+    window->disable_pipeline(pipeline_);
 }
 
 void Loading::do_unload() {
     //Clean up
-    window().delete_pipeline(pipeline_);
-    window().delete_ui_stage(stage_);
-    window().delete_camera(camera_);
+    window->delete_pipeline(pipeline_);
+    window->delete_ui_stage(stage_);
+    window->delete_camera(camera_);
 }
 
 void Loading::do_activate() {
-    window().enable_pipeline(pipeline_);
+    window->enable_pipeline(pipeline_);
 }
 
 void Loading::do_deactivate() {
     //Deactivate the loading pipeline
-    window().disable_pipeline(pipeline_);
+    window->disable_pipeline(pipeline_);
 }
 
 }

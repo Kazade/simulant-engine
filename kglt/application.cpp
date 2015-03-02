@@ -23,7 +23,7 @@ Application::Application(const unicode &title, uint32_t width, uint32_t height, 
 }
 
 StagePtr Application::stage(StageID stage) {
-    return window().stage(stage);
+    return window->stage(stage);
 }
 
 bool Application::init() {

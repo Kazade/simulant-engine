@@ -51,7 +51,7 @@ public:
 
     void test_loading_without_texture_coords() {
         unicode path = os::path::join(os::path::dir_name(__FILE__), "test-data");
-        window->resource_locator().add_search_path(path);
+        window->resource_locator->add_search_path(path);
 
         //Shouldn't throw
         kglt::MeshID mid = window->new_mesh_from_file("cube.obj");

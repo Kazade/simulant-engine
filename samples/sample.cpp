@@ -10,10 +10,10 @@ public:
     void do_load() {
         prepare_basic_scene(stage_id_, camera_id_);
 
-        auto stage = window().stage(stage_id_);
-        window().camera(camera_id_)->set_perspective_projection(
+        auto stage = window->stage(stage_id_);
+        window->camera(camera_id_)->set_perspective_projection(
             45.0,
-            float(window().width()) / float(window().height()),
+            float(window->width()) / float(window->height()),
             1.0,
             1000.0
         );
@@ -44,7 +44,7 @@ public:
     }
 
     void do_step(double dt) {
-        auto stage = window().stage(stage_id_);
+        auto stage = window->stage(stage_id_);
         stage->actor(actor_id_)->rotate_y(kglt::Degrees(20.0 * dt));
     }
 

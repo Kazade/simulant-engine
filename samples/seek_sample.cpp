@@ -62,11 +62,11 @@ public:
     void do_load() {
         prepare_basic_scene(stage_id_, camera_id_);
 
-        dot_ = Dot::create(window(), stage_id_);
+        dot_ = Dot::create(window, stage_id_);
 
-        window().camera(camera_id_)->set_perspective_projection(
+        window->camera(camera_id_)->set_perspective_projection(
             45.0,
-            float(window().width()) / float(window().height()),
+            float(window->width()) / float(window->height()),
             1.0,
             1000.0
         );
@@ -87,7 +87,7 @@ public:
     SeekSample():
         Application("KGLT Seek Behaviour") {
 
-        window().set_logging_level(kglt::LOG_LEVEL_DEBUG);
+        window->set_logging_level(kglt::LOG_LEVEL_DEBUG);
     }
 
 private:

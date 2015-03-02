@@ -70,19 +70,19 @@ public:
     PathFollowing():
         Application("KGLT Sprite Sample") {
 
-        window().set_logging_level(kglt::LOG_LEVEL_DEBUG);
+        window->set_logging_level(kglt::LOG_LEVEL_DEBUG);
     }
 
 private:
     bool do_init() {
-        stage_id_ = window().new_stage();
-        camera_id_ = window().new_camera();
+        stage_id_ = window->new_stage();
+        camera_id_ = window->new_camera();
 
-        window().enable_physics(kglt::DefaultPhysicsEngine::create());
-        car_ = Car::create(window(), stage_id_);
-        window().camera(camera_id_)->set_perspective_projection(
+        window->enable_physics(kglt::DefaultPhysicsEngine::create());
+        car_ = Car::create(window, stage_id_);
+        window->camera(camera_id_)->set_perspective_projection(
             45.0,
-            float(window().width()) / float(window().height()),
+            float(window->width()) / float(window->height()),
             1.0,
             1000.0
         );

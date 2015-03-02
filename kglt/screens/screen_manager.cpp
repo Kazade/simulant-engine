@@ -69,7 +69,7 @@ void ScreenManager::load_screen_in_background(const unicode& route, bool redirec
     });
 
     // Add an idle task to check for when the background task completes
-    window_.idle().add([=]() -> bool {
+    window_.idle->add([=]() -> bool {
         // Checks for complete or failed tasks
         auto status = new_task->future.wait_for(std::chrono::microseconds(0));
         if(status != std::future_status::ready) {

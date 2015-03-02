@@ -104,7 +104,7 @@ public:
         assert_false(scr->load_called);
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        window->idle().execute();
+        window->idle->execute();
         assert_true(scr->load_called);
     }
 

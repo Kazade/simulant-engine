@@ -10,9 +10,8 @@ public:
     }
 
     inline operator T() const { return getter_(); }
+    inline operator T&() const { return getter_(); }
 
-
-    T& operator()() { return getter_(); } // For backwards compatiblity
     inline T* operator->() { return &getter_(); }
     inline const T* operator->() const { return &getter_(); }
 private:

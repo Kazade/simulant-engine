@@ -77,15 +77,15 @@ public:
     void do_load() {
         prepare_basic_scene_with_overlay(stage_id_, camera_id_, overlay_id_, overlay_camera_id_);
 
-        window().camera(camera_id_)->set_perspective_projection(
+        window->camera(camera_id_)->set_perspective_projection(
             45.0,
-            float(window().width()) / float(window().height()),
+            float(window->width()) / float(window->height()),
             1.0,
             1000.0
         );
 
         // Thanks to other samples
-        auto ui = window().ui_stage(overlay_id_);
+        auto ui = window->ui_stage(overlay_id_);
         ui->set_styles("body { font-family: \"Ubuntu\"; } .thing { font-size: 14; padding-left: 10;};");
         ui->append("<p>").text("Left x-y axis move the cube.");
         ui->append("<p>").text("Right x-y axis rotate the cube.");
@@ -93,30 +93,30 @@ public:
         ui->$("p").add_class("thing");
 
         ///Shortcut function for loading images
-        kglt::TextureID tid = window().stage(stage_id_)->new_texture_from_file("sample_data/sample.tga");
-        kglt::MaterialID matid = window().stage(stage_id_)->new_material_from_texture(tid);
+        kglt::TextureID tid = window->stage(stage_id_)->new_texture_from_file("sample_data/sample.tga");
+        kglt::MaterialID matid = window->stage(stage_id_)->new_material_from_texture(tid);
 
-        window().stage(stage_id_)->set_ambient_light(kglt::Colour::WHITE);
+        window->stage(stage_id_)->set_ambient_light(kglt::Colour::WHITE);
         {
-            auto light = window().stage(stage_id_)->light(window().stage(stage_id_)->new_light());
+            auto light = window->stage(stage_id_)->light(window->stage(stage_id_)->new_light());
             light->set_absolute_position(5.0, 0.0, -5.0);
             light->set_diffuse(kglt::Colour::GREEN);
             light->set_attenuation_from_range(10.0);
         }
 
-        actor_id = window().stage(stage_id_)->geom_factory().new_cube(2);
+        actor_id = window->stage(stage_id_)->geom_factory().new_cube(2);
 
-        window().stage(stage_id_)->actor(actor_id)->mesh()->set_material_id(matid);
-        window().stage(stage_id_)->actor(actor_id)->set_absolute_position(pos);
+        window->stage(stage_id_)->actor(actor_id)->mesh()->set_material_id(matid);
+        window->stage(stage_id_)->actor(actor_id)->set_absolute_position(pos);
 
         // It would be nice to check if a joypad is connected
         // and the create the reference..
         //
 
-        window().enable_virtual_joypad(kglt::VIRTUAL_DPAD_DIRECTIONS_TWO, 2);
+        window->enable_virtual_joypad(kglt::VIRTUAL_DPAD_DIRECTIONS_TWO, 2);
 
-        for(int i = 0; i < window().joypad_count(); ++i) {
-            kglt::Joypad& joypad = window().joypad(i);
+        for(int i = 0; i < window->joypad_count(); ++i) {
+            kglt::Joypad& joypad = window->joypad(i);
 
             // Currently A button on XBOX Controller
             joypad.button_pressed_connect(XBoxButtons::RightStick, [=](kglt::Button button) mutable {
@@ -128,8 +128,8 @@ public:
                     pos = { 0, 0, -5.f };
                     // rot = { 0, 0 };
 
-                    window().stage(stage_id_)->actor(actor_id)->set_absolute_rotation(kglt::Degrees(0), 0, 0, pos.z);
-                    window().stage(stage_id_)->actor(actor_id)->set_absolute_position(pos);
+                    window->stage(stage_id_)->actor(actor_id)->set_absolute_rotation(kglt::Degrees(0), 0, 0, pos.z);
+                    window->stage(stage_id_)->actor(actor_id)->set_absolute_position(pos);
             });
 
             // Left x-axis
@@ -159,7 +159,7 @@ public:
     }
 
     void do_step(double dt) {
-        auto actor = window().stage(stage_id_)->actor(actor_id);
+        auto actor = window->stage(stage_id_)->actor(actor_id);
         actor->rotate_x(kglt::Degrees(rot.y * dt * 10));
         actor->rotate_y(kglt::Degrees(rot.x * dt * 10));
     }
