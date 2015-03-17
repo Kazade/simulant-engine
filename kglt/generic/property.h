@@ -9,7 +9,6 @@ public:
 
     }
 
-    inline operator T() const { return getter_(); }
     inline operator T&() const { return getter_(); }
 
     inline T* operator->() { return &getter_(); }
