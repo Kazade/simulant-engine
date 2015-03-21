@@ -135,6 +135,12 @@ struct Vec2 : public kmVec2 {
         kmVec2Normalize(this, this);
     }
 
+    Vec2 normalized() const {
+        Vec2 ret;
+        kmVec2Normalize(&ret, this);
+        return ret;
+    }
+
     Vec2 limit(float l) {
         if(length() > l) {
             normalize();
