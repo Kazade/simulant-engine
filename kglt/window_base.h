@@ -100,6 +100,7 @@ public:
 
     uint32_t width() const { return width_; }
     uint32_t height() const { return height_; }
+    float aspect_ratio() const { return float(width_) / float(height_); }
     
     bool run_frame();
     void update(double dt) override;
