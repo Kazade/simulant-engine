@@ -216,6 +216,26 @@ struct Vec3 : public kmVec3 {
         kmVec3Fill(this, v.x, v.y, v.z);
     }
 
+    Vec2 xy() const {
+        return kglt::Vec2(x, y);
+    }
+
+    Vec2 yx() const {
+        return kglt::Vec2(y, x);
+    }
+
+    Vec3 zyx() const {
+        return kglt::Vec3(z, y, x);
+    }
+
+    Vec2 xz() const {
+        return kglt::Vec2(x, z);
+    }
+
+    Vec2 zx() const {
+        return kglt::Vec2(z, x);
+    }
+
     Vec3 operator+(const Vec3& rhs) const {
         return Vec3(x + rhs.x, y + rhs.y, z + rhs.z);
     }
