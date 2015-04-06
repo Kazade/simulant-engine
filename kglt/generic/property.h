@@ -43,7 +43,6 @@ public:
 
     inline operator T&() const { return getter_(this_); }
     inline T* operator->() const { return &getter_(this_); }
-    inline operator T() const { return getter_(this_); }
 private:
     Container* this_ = nullptr;
     std::function<T& (Container*)> getter_;
