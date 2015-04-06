@@ -173,42 +173,6 @@ public:
     void show_stats();
     void hide_stats();
 
-
-    //Read only properties
-    Property<WindowBase, Console> console = {
-        [this]() -> Console& { return *this->console_.get(); }
-    };
-
-    Property<WindowBase, VirtualGamepad> virtual_joypad = {
-        [this]() -> VirtualGamepad& { return *this->virtual_gamepad_.get(); }
-    };
-
-    Property<WindowBase, MessageBar> message_bar = {
-        [this]() -> MessageBar& { return *this->message_bar_.get(); }
-    };
-
-    Property<WindowBase, IdleTaskManager> idle = {
-        [this]() -> IdleTaskManager& { return this->idle_; }
-    };
-
-    Property<WindowBase, Watcher> watcher = {
-        [this]() -> Watcher& {
-            if(!watcher_) {
-                throw LogicError("Watcher has not been initialized");
-            } else {
-                return *watcher_.get();
-            }
-        }
-    };
-
-    Property<WindowBase, generic::DataCarrier> data = {
-        [this]() -> generic::DataCarrier& { return data_carrier_; }
-    };
-
-    Property<WindowBase, ResourceLocator> resource_locator = {
-        [this]() -> ResourceLocator& { return *resource_locator_; }
-    };
-
 protected:
     RenderSequencePtr render_sequence();
 
@@ -295,6 +259,27 @@ private:
     std::shared_ptr<VirtualGamepad> virtual_gamepad_;
 
     std::shared_ptr<ScreenManager> routes_;
+
+public:
+
+    //Read only properties
+    Property<WindowBase, Console> console = { this, &WindowBase::console_ };
+    Property<WindowBase, VirtualGamepad> virtual_joypad = { this, &WindowBase::virtual_gamepad_ };
+    Property<WindowBase, MessageBar> message_bar = { this, &WindowBase::message_bar_ };
+
+    Property<WindowBase, Watcher> watcher = {
+        this, [](const WindowBase* self) -> Watcher& {
+            if(!self->watcher_) {
+                throw LogicError("Watcher has not been initialized");
+            } else {
+                return *self->watcher_.get();
+            }
+        }
+    };
+
+    Property<WindowBase, IdleTaskManager> idle = { this, &WindowBase::idle_ };
+    Property<WindowBase, generic::DataCarrier> data = { this, &WindowBase::data_carrier_ };
+    Property<WindowBase, ResourceLocator> resource_locator = { this, &WindowBase::resource_locator_ };
 };
 
 }

@@ -49,7 +49,7 @@ public:
     bool is_loaded() const { return is_loaded_; }
 
 protected:
-    Property<ScreenBase, WindowBase> window = { [this]() -> WindowBase& { return this->window_; } };
+    Property<ScreenBase, WindowBase> window = { this, &ScreenBase::window_ };
 
     virtual void do_load() = 0;
     virtual void do_unload() {}
@@ -62,7 +62,7 @@ protected:
         StageID& new_stage, CameraID& new_camera, UIStageID& new_ui, CameraID& new_ui_camera
     );
 private:
-    WindowBase& window_;
+    WindowBase* window_;
     bool is_loaded_ = false;
 };
 

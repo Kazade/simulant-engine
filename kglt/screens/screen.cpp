@@ -4,7 +4,7 @@
 namespace kglt {
 
 ScreenBase::ScreenBase(WindowBase &window):
-    window_(window) {
+    window_(&window) {
 
 }
 

@@ -35,9 +35,7 @@ public:
     //when thread completes, hide the loading screen and run the main loop
     int32_t run();
 
-    Property<Application, WindowBase> window = {
-        [this]() -> WindowBase& { return *window_; }
-    };
+    Property<Application, WindowBase> window = {this, &Application::window_ };
 
     bool initialized() const { return initialized_; }
 
