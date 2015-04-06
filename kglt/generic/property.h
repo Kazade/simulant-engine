@@ -31,12 +31,14 @@ public:
 
     }
 
-    Property(const Property& rhs):
-        getter_(rhs.getter_) {
-        // Intentionally don't transfer 'this_'
-    }
+    /*
+     *  We can't allow copy construction, because 'this_' will never be initialized
+     */
+    Property(const Property& rhs) = delete;
 
     Property operator=(const Property& rhs) {
+        assert(this_); //Make sure that this_ was initialized
+
         getter_ = rhs.getter_;
         // Intentionally don't transfer 'this_'
     }
