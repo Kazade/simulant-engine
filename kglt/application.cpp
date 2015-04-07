@@ -17,9 +17,9 @@ Application::Application(const unicode &title, uint32_t width, uint32_t height, 
     window_->signal_post_step().connect(std::bind(&Application::do_post_step, this, std::placeholders::_1));
     window_->signal_shutdown().connect(std::bind(&Application::do_cleanup, this));
 
-    window_->keyboard().key_pressed_connect(std::bind(&Application::on_key_press, this, std::placeholders::_1));
-    window_->keyboard().key_released_connect(std::bind(&Application::on_key_release, this, std::placeholders::_1));
-    window_->keyboard().key_while_pressed_connect(std::bind(&Application::while_key_pressed, this, std::placeholders::_1, std::placeholders::_2));
+    window_->keyboard->key_pressed_connect(std::bind(&Application::on_key_press, this, std::placeholders::_1));
+    window_->keyboard->key_released_connect(std::bind(&Application::on_key_release, this, std::placeholders::_1));
+    window_->keyboard->key_while_pressed_connect(std::bind(&Application::while_key_pressed, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 StagePtr Application::stage(StageID stage) {

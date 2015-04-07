@@ -13,7 +13,7 @@
 #include "resource_locator.h"
 
 #include "idle_task_manager.h"
-
+#include "input_controller.h"
 #include "generic/auto_weakptr.h"
 #include "kazbase/logging.h"
 #include "resource_manager.h"
@@ -105,7 +105,6 @@ public:
     bool run_frame();
     void update(double dt) override;
 
-    Keyboard& keyboard();
     Mouse& mouse();
     Joypad& joypad(uint8_t idx);
     uint8_t joypad_count() const;
@@ -280,6 +279,12 @@ public:
     Property<WindowBase, IdleTaskManager> idle = { this, &WindowBase::idle_ };
     Property<WindowBase, generic::DataCarrier> data = { this, &WindowBase::data_carrier_ };
     Property<WindowBase, ResourceLocator> resource_locator = { this, &WindowBase::resource_locator_ };
+
+    Property<WindowBase, Keyboard> keyboard = {
+        this, [](WindowBase* self) -> Keyboard& {
+            return self->input_controller_->keyboard();
+        }
+    };
 };
 
 }

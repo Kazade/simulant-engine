@@ -284,10 +284,6 @@ void WindowBase::register_loader(LoaderTypePtr loader) {
     loaders_.push_back(loader);
 }
 
-Keyboard& WindowBase::keyboard() {
-    return input_controller_->keyboard();
-}
-
 Mouse& WindowBase::mouse() {
     return input_controller_->mouse();
 }

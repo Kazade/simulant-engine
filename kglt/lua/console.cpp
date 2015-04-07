@@ -68,8 +68,8 @@ bool Console::init() {
 
     GlobalKeyCallback cb = std::bind(&Console::key_down, this, std::placeholders::_1);
     TextInputCallback inp = std::bind(&Console::entry, this, std::placeholders::_1);
-    window_.keyboard().key_pressed_connect(cb);
-    window_.keyboard().text_input_connect(inp);
+    window_.keyboard->key_pressed_connect(cb);
+    window_.keyboard->text_input_connect(inp);
 
     export_lua_api(interpreter_->state());
 
