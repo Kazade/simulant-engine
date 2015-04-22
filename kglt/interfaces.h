@@ -240,7 +240,10 @@ public:
     virtual uint32_t width() const = 0;
     virtual uint32_t height() const = 0;
 
-    virtual void set_clear_every_frame(uint32_t clear_flags=BUFFER_CLEAR_ALL, const kglt::Colour& colour=kglt::Colour::BLACK) { clear_flags_ = clear_flags; }
+    virtual void set_clear_every_frame(uint32_t clear_flags=BUFFER_CLEAR_ALL, const kglt::Colour& colour=kglt::Colour::BLACK) {
+        clear_flags_ = clear_flags;
+        clear_colour_ = colour;
+    }
     virtual uint32_t clear_every_frame_flags() const { return clear_flags_; }
     virtual kglt::Colour clear_every_frame_colour() const { return clear_colour_; }
 
