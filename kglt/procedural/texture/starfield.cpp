@@ -42,8 +42,6 @@ void draw_circle(kglt::TexturePtr texture_ptr, float x, float y, float size, flo
 void starfield(kglt::TexturePtr texture_ptr, uint32_t width, uint32_t height) {
     kglt::Texture& texture = *texture_ptr;
 
-    seed();
-
     texture.resize(width, height);
     texture.set_bpp();
 
@@ -57,13 +55,13 @@ void starfield(kglt::TexturePtr texture_ptr, uint32_t width, uint32_t height) {
         for(uint32_t x = 0; x < width; ++x) {
             float this_density = (noise->get(x, y) + 1.0) / 2.0;
 
-            if(random_float(0, 1) < this_density * GLOBAL_DENSITY) {
-                float weight = random_float(0, 1) * this_density;
+            if(random_gen::random_float(0, 1) < this_density * GLOBAL_DENSITY) {
+                float weight = random_gen::random_float(0, 1) * this_density;
                 float size = std::max(1.0f, weight * MAX_SIZE);
                 float brightness = weight * MAX_BRIGHTNESS;
 
                 kglt::Colour colour = kglt::Colour::WHITE;
-                float col_rand = random_float(0, 1);
+                float col_rand = random_gen::random_float(0, 1);
                 if(col_rand < 0.05) {
                     colour = kglt::Colour::ORANGE;
                 } else if(col_rand < 0.07) {

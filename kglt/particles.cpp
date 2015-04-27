@@ -144,7 +144,7 @@ void ParticleEmitter::update(double dt) {
     if(current_duration_ && time_active_ >= current_duration_) {
         deactivate();
 
-        float repeat_delay = random_float(repeat_delay_range_.first, repeat_delay_range_.second);
+        float repeat_delay = random_gen::random_float(repeat_delay_range_.first, repeat_delay_range_.second);
         if(repeat_delay > 0) {
             system().window().idle->add_timeout(repeat_delay, std::bind(&ParticleEmitter::activate, this));
         }
@@ -239,26 +239,26 @@ std::vector<Particle> ParticleEmitter::do_emit(double dt, uint32_t max) {
             float hh = dimensions_.y * 0.5;
             float hd = dimensions_.z * 0.5;
 
-            p.position.x += random_float(-hw, hw);
-            p.position.y += random_float(-hh, hh);
-            p.position.z += random_float(-hd, hd);
+            p.position.x += random_gen::random_float(-hw, hw);
+            p.position.y += random_gen::random_float(-hh, hh);
+            p.position.z += random_gen::random_float(-hd, hd);
         }
 
         Vec3 dir = direction();
         if(angle().value_ != 0) {
             Radians ang(angle()); //Convert from degress to radians
-            ang.value_ *= random_float(0, 1); //Multiply by a random unit float
+            ang.value_ *= random_gen::random_float(0, 1); //Multiply by a random unit float
             dir = dir.random_deviant(ang);
         }
 
-        p.velocity = dir.normalized() * random_float(velocity_range().first, velocity_range().second);
+        p.velocity = dir.normalized() * random_gen::random_float(velocity_range().first, velocity_range().second);
 
         //We have to rotate the velocity by the system, because if the particle system is attached to something (e.g. the back of a spaceship)
         //when that entity rotates we want the velocity to stay pointing relative to the entity
         auto rot = system().absolute_rotation();
         kmQuaternionMultiplyVec3(&p.velocity, &rot, &p.velocity);
 
-        p.ttl = random_float(ttl_range().first, ttl_range().second);
+        p.ttl = random_gen::random_float(ttl_range().first, ttl_range().second);
         p.colour = colour();
 
         //FIXME: Initialize other properties
@@ -321,7 +321,7 @@ void ParticleEmitter::set_duration(float seconds) {
 
 void ParticleEmitter::set_duration_range(float min_seconds, float max_seconds) {
     duration_range_ = std::make_pair(min_seconds, max_seconds);
-    current_duration_ = random_float(duration_range_.first, duration_range_.second);
+    current_duration_ = random_gen::random_float(duration_range_.first, duration_range_.second);
 }
 
 std::pair<float, float> ParticleEmitter::duration_range() const {

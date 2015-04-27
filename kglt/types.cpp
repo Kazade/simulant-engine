@@ -34,7 +34,7 @@ Vec3 Vec3::random_deviant(const Degrees& angle, const Vec3 up) const {
     Vec3 new_up = (up == Vec3()) ? perpendicular() : up;
 
     Quaternion q;
-    kmQuaternionRotationAxisAngle(&q, this, random_float(0, 1) * (PI * 2.0));
+    kmQuaternionRotationAxisAngle(&q, this, random_gen::random_float(0, 1) * (PI * 2.0));
     kmQuaternionMultiplyVec3(&new_up, &q, &new_up);
     kmQuaternionRotationAxisAngle(&q, &new_up, Radians(angle).value_);
 
