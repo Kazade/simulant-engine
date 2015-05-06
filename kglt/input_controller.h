@@ -68,6 +68,15 @@ public:
     InputConnection key_released_connect(SDL_Scancode code, KeyCallback callback);
 
     InputConnection text_input_connect(TextInputCallback callback);
+
+    bool key_state(SDL_Scancode code) {
+        auto it = state_.find(code);
+        if(it == state_.end()) {
+            return false;
+        }
+
+        return (*it).second;
+    }
 private:
     typedef std::pair<InputConnection, GlobalKeyCallback> GlobalKeySignalEntry;
     typedef std::pair<InputConnection, KeyCallback> KeySignalEntry;
@@ -94,15 +103,6 @@ private:
 
 
     friend class InputController;
-
-    bool key_state(SDL_Scancode code) {
-        auto it = state_.find(code);
-        if(it == state_.end()) {
-            return false;
-        }
-
-        return (*it).second;
-    }
 };
 
 class Mouse :
