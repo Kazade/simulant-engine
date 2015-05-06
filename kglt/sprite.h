@@ -58,6 +58,8 @@ public:
     unicode __unicode__() const {
         return _u("Sprite {0}").format(this->id());
     }
+
+    kglt::ActorID actor_id() const { return actor_id_; }
 private:
     float frame_width_ = 0;
     float frame_height_ = 0;
