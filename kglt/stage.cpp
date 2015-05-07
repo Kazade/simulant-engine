@@ -198,7 +198,10 @@ SpriteID Stage::new_sprite() {
 
 SpriteID Stage::new_sprite_from_file(const unicode& filename, uint32_t frame_width, uint32_t frame_height, uint32_t margin, uint32_t spacing, std::pair<uint32_t, uint32_t> padding) {
     SpriteID s = new_sprite();
-    TextureID t = new_texture_from_file(filename);
+    TextureID t = new_texture_from_file(
+        filename,
+        kglt::TEXTURE_OPTION_CLAMP_TO_EDGE | kglt::TEXTURE_OPTION_DISABLE_MIPMAPS | kglt::TEXTURE_OPTION_NEAREST_FILTER
+    );
     try {
         sprite(s)->set_spritesheet(t, frame_width, frame_height, margin, spacing, padding);
     } catch(...) {
