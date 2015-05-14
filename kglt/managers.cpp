@@ -7,6 +7,7 @@
 #include "camera.h"
 #include "utils/ownable.h"
 #include "render_sequence.h"
+#include "loader.h"
 
 namespace kglt {
 
@@ -224,6 +225,18 @@ UIStageManager::UIStageManager(WindowBase *window):
 
 UIStageID UIStageManager::new_ui_stage() {
     return UIStageManager::manager_new();
+}
+
+UIStageID UIStageManager::new_ui_stage_from_file(const unicode& rml_file) {
+    auto new_ui = new_ui_stage();
+    try {
+        window_->loader_for(rml_file.encode())->into(std::shared_ptr<UIStage>(ui_stage(new_ui)));
+    } catch(...) {
+        delete_ui_stage(new_ui);
+        throw;
+    }
+
+    return new_ui;
 }
 
 UIStagePtr UIStageManager::ui_stage(UIStageID s) {

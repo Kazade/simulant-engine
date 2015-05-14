@@ -7,6 +7,7 @@
 #include "interfaces.h"
 #include "ui/interface.h"
 #include "resource.h"
+#include "loadable.h"
 
 namespace kglt {
 
@@ -14,7 +15,8 @@ class UIStage:
     public Managed<UIStage>,
     public generic::Identifiable<UIStageID>,
     public Resource,
-    public RenderableStage {
+    public RenderableStage,
+    public Loadable {
 
 public:
     /*
@@ -46,6 +48,8 @@ public:
     void __handle_touch_up(int finger_id, int x, int y, bool check_rendered=true);
     void __handle_touch_motion(int finger_id, int x, int y);
     void __handle_touch_down(int finger_id, int x, int y);
+
+    ui::Interface* __interface() const { return interface_.get(); }
 
     // RenderableStage
     void on_render_started() {}
