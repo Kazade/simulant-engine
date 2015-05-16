@@ -7,6 +7,7 @@
 #include <Rocket/Core/ElementText.h>
 #include <Rocket/Core/ElementDocument.h>
 #include "ui_private.h"
+#include "interface.h"
 
 namespace kglt {
 namespace ui {
@@ -96,27 +97,14 @@ void ElementImpl::set_text(const unicode& text) {
 CustomDocument::CustomDocument(const Rocket::Core::String& tag):
     Rocket::Core::ElementDocument(tag) {
 
+    impl_ = get_active_impl();
+    assert(impl_);
 }
 
 void find_all_children(Rocket::Core::Element* parent, std::vector<Rocket::Core::Element*> children) {
     for(int i = 0; i < parent->GetNumChildren(); ++i) {
         children.push_back(parent->GetChild(i));
         find_all_children(children.back(), children);
-    }
-}
-
-void CustomDocument::set_impl(RocketImpl* impl) {
-    impl_ = impl;
-
-    std::vector<Rocket::Core::Element*> children;
-    find_all_children(this->impl_->document_, children);
-
-    for(auto child: children) {
-        OnChildAdd(child);
-    }
-
-    for(auto p: element_impls_) {
-        p.second->_set_rocket_impl(impl);
     }
 }
 

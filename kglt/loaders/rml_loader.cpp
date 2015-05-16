@@ -29,16 +29,19 @@ void RMLLoader::into(Loadable& resource, const LoaderOptions &options) {
 
 
 
+    ui::set_active_impl(iface->impl());
     auto doc = iface->impl()->context_->LoadDocumentFromMemory(str.c_str());
+    ui::set_active_impl(nullptr);
+
     if(!doc) {
         throw IOError("Unable to load specified document");
     }
 
     iface->impl()->document_ = dynamic_cast<kglt::ui::CustomDocument*>(doc);
+
     if(!iface->impl()->document_) {
         throw IOError("Unable to load the RML document");
     } else {
-        iface->impl()->document_->set_impl(iface->impl());
         iface->impl()->document_->Show();
     }
 }

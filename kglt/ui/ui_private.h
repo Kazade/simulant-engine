@@ -119,9 +119,6 @@ private:
 class CustomDocument : public Rocket::Core::ElementDocument {
 public:
     CustomDocument(const Rocket::Core::String& tag);
-
-    void set_impl(RocketImpl* impl);
-
     std::shared_ptr<ElementImpl> get_impl_for_element(Rocket::Core::Element* element);
 
 protected:

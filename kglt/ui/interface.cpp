@@ -368,10 +368,10 @@ private:
     std::unordered_map<Rocket::Core::TextureHandle, TexturePtr> textures_;
 };
 
-
-static RocketSystemInterface* rocket_system_interface_;
-static RocketRenderInterface* rocket_render_interface_;
-static RocketFileInterface* rocket_file_interface_;
+static RocketSystemInterface* rocket_system_interface_ = nullptr;
+static RocketRenderInterface* rocket_render_interface_ = nullptr;
+static RocketFileInterface* rocket_file_interface_ = nullptr;
+static RocketImpl* active_impl_ = nullptr;
 
 Interface::Interface(WindowBase &window):
     window_(window),
@@ -422,24 +422,13 @@ std::vector<unicode> Interface::find_fonts() {
     return results;
 }
 
-template<typename T>
-class ImplInstancerGeneric : public Rocket::Core::ElementInstancerGeneric<T> {
-public:
-    ImplInstancerGeneric(RocketImpl* impl):
-        Rocket::Core::ElementInstancerGeneric<T>(),
-        impl_(impl) {
+RocketImpl* get_active_impl() {
+    return active_impl_;
+}
 
-    }
-
-    Rocket::Core::Element* InstanceElement(Rocket::Core::Element* /*parent*/, const Rocket::Core::String& tag, const Rocket::Core::XMLAttributes& /*attributes*/)
-    {
-        CustomDocument* ret = dynamic_cast<CustomDocument*>(new T(tag));
-        ret->set_impl(impl_);
-        return ret;
-    }
-
-    RocketImpl* impl_ = nullptr;
-};
+void set_active_impl(RocketImpl* impl) {
+    active_impl_ = impl;
+}
 
 bool Interface::init() {
     interface_count++;
@@ -456,9 +445,8 @@ bool Interface::init() {
 
         Rocket::Core::Initialise();
 
-        Rocket::Core::ElementInstancer* element_instancer = new ImplInstancerGeneric<CustomDocument>(impl_.get());
-        Rocket::Core::Factory::RegisterElementInstancer("body", element_instancer);
-        element_instancer->RemoveReference();
+        auto instancer = new Rocket::Core::ElementInstancerGeneric<CustomDocument>();
+        Rocket::Core::Factory::RegisterElementInstancer("body", instancer);
 
         bool font_found = false;
         for(unicode font: find_fonts()) {
@@ -477,14 +465,16 @@ bool Interface::init() {
         }
     }
 
+    set_active_impl(impl_.get());
     //Change name for each interface using this (dirty, but works)
     impl_->context_ = Rocket::Core::CreateContext(
         _u("context_{0}").format(int64_t(this)).encode().c_str(),
         Rocket::Core::Vector2i(window_.width(), window_.height())
     );
     impl_->document_ = dynamic_cast<CustomDocument*>(impl_->context_->CreateDocument());
+    set_active_impl(nullptr);
+
     assert(impl_->document_);
-    impl_->document_->set_impl(impl_.get());
 
     set_styles("body { font-family: \"Ubuntu\"; }");
 
