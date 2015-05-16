@@ -128,6 +128,10 @@ private:
     std::vector<Element> elements_;
 };
 
+
+void set_active_impl(RocketImpl* impl);
+RocketImpl* get_active_impl();
+
 class Interface :
     public Managed<Interface>,
     public Loadable {

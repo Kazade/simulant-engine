@@ -32,6 +32,10 @@ public:
         return *this;
     }
 
+    operator std::shared_ptr<T>() const {
+        return this->weak_ptr_.lock();
+    }
+
     template<typename U>
     AutoWeakPtr(const std::weak_ptr<U>& other):
         weak_ptr_(other) {}

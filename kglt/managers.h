@@ -77,6 +77,8 @@ public:
     UIStageManager(WindowBase* window);
 
     UIStageID new_ui_stage();
+    UIStageID new_ui_stage_from_file(const unicode& rml_file);
+
     UIStagePtr ui_stage(UIStageID s);
     void delete_ui_stage(UIStageID s);
     uint32_t ui_stage_count() const;
