@@ -22,10 +22,23 @@ void RMLLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     assert(iface && "You passed a Resource that is not a Interface to the RML loader");
 
-    iface->impl()->document_ = dynamic_cast<kglt::ui::CustomDocument*>(iface->impl()->context_->LoadDocument(filename_.encode().c_str()));
+    auto str = data_->str();
+    if(str.empty()) {
+        throw IOError("Couldn't load specified RML");
+    }
+
+
+
+    auto doc = iface->impl()->context_->LoadDocumentFromMemory(str.c_str());
+    if(!doc) {
+        throw IOError("Unable to load specified document");
+    }
+
+    iface->impl()->document_ = dynamic_cast<kglt::ui::CustomDocument*>(doc);
     if(!iface->impl()->document_) {
         throw IOError("Unable to load the RML document");
     } else {
+        iface->impl()->document_->set_impl(iface->impl());
         iface->impl()->document_->Show();
     }
 }

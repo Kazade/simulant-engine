@@ -422,6 +422,25 @@ std::vector<unicode> Interface::find_fonts() {
     return results;
 }
 
+template<typename T>
+class ImplInstancerGeneric : public Rocket::Core::ElementInstancerGeneric<T> {
+public:
+    ImplInstancerGeneric(RocketImpl* impl):
+        Rocket::Core::ElementInstancerGeneric<T>(),
+        impl_(impl) {
+
+    }
+
+    Rocket::Core::Element* InstanceElement(Rocket::Core::Element* /*parent*/, const Rocket::Core::String& tag, const Rocket::Core::XMLAttributes& /*attributes*/)
+    {
+        CustomDocument* ret = dynamic_cast<CustomDocument*>(new T(tag));
+        ret->set_impl(impl_);
+        return ret;
+    }
+
+    RocketImpl* impl_ = nullptr;
+};
+
 bool Interface::init() {
     interface_count++;
 
@@ -437,7 +456,7 @@ bool Interface::init() {
 
         Rocket::Core::Initialise();
 
-        Rocket::Core::ElementInstancer* element_instancer = new Rocket::Core::ElementInstancerGeneric<CustomDocument>();
+        Rocket::Core::ElementInstancer* element_instancer = new ImplInstancerGeneric<CustomDocument>(impl_.get());
         Rocket::Core::Factory::RegisterElementInstancer("body", element_instancer);
         element_instancer->RemoveReference();
 

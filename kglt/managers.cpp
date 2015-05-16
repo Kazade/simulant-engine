@@ -229,8 +229,9 @@ UIStageID UIStageManager::new_ui_stage() {
 
 UIStageID UIStageManager::new_ui_stage_from_file(const unicode& rml_file) {
     auto new_ui = new_ui_stage();
+    window_->loader_for(rml_file.encode())->into(std::shared_ptr<UIStage>(ui_stage(new_ui)));
     try {
-        window_->loader_for(rml_file.encode())->into(std::shared_ptr<UIStage>(ui_stage(new_ui)));
+
     } catch(...) {
         delete_ui_stage(new_ui);
         throw;
