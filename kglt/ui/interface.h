@@ -39,6 +39,20 @@ public:
         return ElementList(new_elements);
     }
 
+    bool is(const std::string& selector) {
+        if(selector != ":visible") {
+            throw ValueError("Unsupported selector: " + selector);
+        }
+
+        for(Element& e: elements_) {
+            if(e.is_visible()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     ElementList add_class(const unicode& cl) {
         for(Element& e: elements_) {
             e.add_class(cl);
