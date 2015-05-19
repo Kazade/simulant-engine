@@ -44,7 +44,8 @@ namespace Font
 	{
 		WEIGHT_NORMAL = 0,
 		WEIGHT_BOLD = 1,
-		NUM_WEIGHTS = 2
+        WEIGHT_LIGHT = 2,
+        NUM_WEIGHTS = 3
 	};
 
 	enum Line

@@ -66,6 +66,7 @@ const int FONT_STYLE_ITALIC = 1;
 
 const int FONT_WEIGHT_NORMAL = 0;
 const int FONT_WEIGHT_BOLD = 1;
+const int FONT_WEIGHT_LIGHT = 2;
 
 const int TEXT_ALIGN_LEFT = 0;
 const int TEXT_ALIGN_RIGHT = 1;

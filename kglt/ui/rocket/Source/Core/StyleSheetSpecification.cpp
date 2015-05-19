@@ -242,7 +242,7 @@ void StyleSheetSpecification::RegisterDefaultProperties()
 	RegisterProperty(FONT_FAMILY, "", true, true).AddParser("string");
 	RegisterProperty(FONT_CHARSET, "U+0020-007E", true, false).AddParser("string");
 	RegisterProperty(FONT_STYLE, "normal", true, true).AddParser("keyword", "normal, italic");
-	RegisterProperty(FONT_WEIGHT, "normal", true, true).AddParser("keyword", "normal, bold");
+    RegisterProperty(FONT_WEIGHT, "normal", true, true).AddParser("keyword", "normal, bold, light");
 	RegisterProperty(FONT_SIZE, "12", true, true).AddParser("number");
 	RegisterShorthand(FONT, "font-style, font-weight, font-size, font-family, font-charset");
 
