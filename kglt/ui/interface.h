@@ -102,9 +102,9 @@ public:
 
     bool empty() const { return elements_.empty(); }
 
-    void show() {
+    void show(const std::string& transition="") {
         for(Element& e: elements_) {
-            e.show();
+            e.show(transition);
         }
     }
 
@@ -172,6 +172,8 @@ public:
     Mat4 projection_matrix() const { return projection_matrix_; }
 
     void load_font(const unicode& ttf_file);
+
+    WindowBase* window() { return &window_; }
 private:    
     void set_projection_matrix(const Mat4& mat) { projection_matrix_ = mat; }
     std::vector<unicode> find_fonts();

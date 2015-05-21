@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <kazbase/unicode.h>
+#include "../idle_task_manager.h"
 
 namespace kglt {
 namespace ui {
@@ -38,10 +39,7 @@ public:
     void css(const std::string& property, const std::string& value);
     void attr(const std::string& property, const std::string& value);
 
-    void show() {
-        css("visibility", "visible");
-    }
-
+    void show(const std::string& transition="");
     void hide() {
         css("visibility", "hidden");
     }
@@ -66,6 +64,7 @@ public:
 private:
     std::shared_ptr<ElementImpl> impl_;
 
+    IdleTaskManager& idle();
 };
 
 }

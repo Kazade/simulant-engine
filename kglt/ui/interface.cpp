@@ -375,7 +375,7 @@ static RocketImpl* active_impl_ = nullptr;
 
 Interface::Interface(WindowBase &window):
     window_(window),
-    impl_(new RocketImpl()) {
+    impl_(new RocketImpl(this)) {
 
 }
 

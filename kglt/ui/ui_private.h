@@ -106,6 +106,8 @@ public:
     float top() const;
     float width() const;
     float height() const;
+
+    RocketImpl* _rocket_impl() const { return rocket_impl_; }
 private:
     RocketImpl* rocket_impl_ = nullptr;
     Rocket::Core::Element* elem_ = nullptr;
@@ -130,16 +132,25 @@ private:
     std::unordered_map<Rocket::Core::Element*, std::shared_ptr<ElementImpl>> element_impls_;
 };
 
+class Interface;
+
 }
 
+
+
 struct RocketImpl {
-    RocketImpl():
+    RocketImpl(ui::Interface* interface):
         context_(nullptr),
-        document_(nullptr) {}
+        document_(nullptr),
+        interface_(interface) {}
 
     Rocket::Core::Context* context_;
     kglt::ui::CustomDocument* document_;
     std::recursive_mutex mutex_;
+
+    ui::Interface* interface() const { return interface_; }
+private:
+    ui::Interface* interface_ = nullptr;
 };
 }
 

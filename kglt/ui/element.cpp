@@ -4,6 +4,7 @@
 
 #include "interface.h"
 #include "ui_private.h"
+#include "../window_base.h"
 
 namespace kglt {
 namespace ui {
@@ -66,6 +67,36 @@ void Element::id(const std::string& id) {
 
 void Element::scroll_to_bottom() {
     impl_->scroll_to_bottom();
+}
+
+void Element::show(const std::string& transition) {
+    if(transition == "fade") {
+        css("opacity", "0"); // Make transparent
+
+        // Wrap a new refrence to the impl
+        Element copy(impl_);
+
+        // Trigger a task to increase the opacity in the background
+        idle().add([copy]() mutable -> bool {
+            auto current = unicode(copy.css("opacity")).to_float();
+            current += 0.01;
+            if(current >= 1.0) {
+                copy.css("opacity", "1");
+                // Make visible
+                return false;
+            }
+            copy.css("opacity", std::to_string(current));
+            return true;
+        });
+    }
+    // Make visible
+    css("visibility", "visible");
+}
+
+IdleTaskManager& Element::idle() {
+    // Sigh...
+    auto* window = this->impl_->_rocket_impl()->interface()->window();
+    return window->idle;
 }
 
 bool Element::is_visible() const {
