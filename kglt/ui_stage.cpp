@@ -13,10 +13,10 @@ namespace kglt {
 UIStage::UIStage(WindowBase *parent, UIStageID id):
     generic::Identifiable<UIStageID>(id),
     Resource(parent),
-    window_(*parent),
+    window_(parent),
     interface_(ui::Interface::create(*parent)){
 
-    update_conn_ = window_.signal_step().connect(
+    update_conn_ = window_->signal_step().connect(
         std::bind(&UIStage::__update, this, std::placeholders::_1)
     );
 }
@@ -40,7 +40,7 @@ void UIStage::set_styles(const std::string& styles) {
 }
 
 void UIStage::load_rml(const unicode& path) {
-    window_.loader_for("rml_loader", path)->into(interface_);
+    window_->loader_for("rml_loader", path)->into(interface_);
 }
 
 void UIStage::register_font_globally(const unicode& ttf_file) {

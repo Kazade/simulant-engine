@@ -411,6 +411,9 @@ std::vector<unicode> Interface::find_fonts() {
         "kglt/fonts/ubuntu/UbuntuMono-B.ttf",
         "kglt/fonts/ubuntu/UbuntuMono-RI.ttf",
         "kglt/fonts/ubuntu/UbuntuMono-R.ttf",
+        "kglt/fonts/fontawesome/fontawesome-webfont.ttf",
+        "kglt/fonts/probe/PROBE_10PX_TTF.ttf",
+        "kglt/fonts/probe/PROBE_10PX_TTF Bold.ttf",
     };
 
     std::vector<unicode> results;

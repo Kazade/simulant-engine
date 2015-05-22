@@ -4,10 +4,12 @@
 #include <kazbase/signals.h>
 #include "generic/managed.h"
 #include "generic/identifiable.h"
+#include "generic/property.h"
 #include "interfaces.h"
 #include "ui/interface.h"
 #include "resource.h"
 #include "loadable.h"
+#include "window_base.h"
 
 namespace kglt {
 
@@ -56,8 +58,11 @@ public:
     // RenderableStage
     void on_render_started() {}
     void on_render_stopped();
+
+    Property<UIStage, WindowBase> window = { this, &UIStage::window_ };
+
 private:
-    WindowBase& window_;
+    WindowBase* window_ = nullptr;
 
     std::shared_ptr<ui::Interface> interface_;
     sig::connection update_conn_;
