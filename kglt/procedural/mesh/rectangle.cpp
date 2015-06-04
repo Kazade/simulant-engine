@@ -1,4 +1,5 @@
 #include "../../resource_manager.h"
+#include "../../window_base.h"
 #include "rectangle.h"
 
 namespace kglt {
@@ -69,7 +70,12 @@ SubMeshIndex new_rectangle_submesh(
     return sm;
 }
 
-SubMeshIndex rectangle(ProtectedPtr<Mesh> mesh, float width, float height, float x_offset, float y_offset, float z_offset, bool clear) {
+SubMeshIndex rectangle(
+        ProtectedPtr<Mesh> mesh,
+        float width, float height,
+        float x_offset, float y_offset, float z_offset,
+        bool clear, kglt::MaterialID material) {
+
     if(clear) {
         mesh->clear();
     }
@@ -116,9 +122,13 @@ SubMeshIndex rectangle(ProtectedPtr<Mesh> mesh, float width, float height, float
     mesh->shared_data().move_next();
     mesh->shared_data().done();
 
+    if(!material) {
+        material = mesh->resource_manager().window().clone_default_material();
+    }
+
     //Create a submesh that uses the shared data
     SubMeshIndex sm = mesh->new_submesh(
-        mesh->resource_manager().new_material_from_file(mesh->resource_manager().default_material_filename()),
+        material,
         MESH_ARRANGEMENT_TRIANGLES,
         true
     );
@@ -134,7 +144,11 @@ SubMeshIndex rectangle(ProtectedPtr<Mesh> mesh, float width, float height, float
     return sm;
 }
 
-SubMeshIndex rectangle_outline(ProtectedPtr<Mesh> mesh, float width, float height, float x_offset, float y_offset, float z_offset, bool clear) {
+SubMeshIndex rectangle_outline(
+        ProtectedPtr<Mesh> mesh,
+        float width, float height,
+        float x_offset, float y_offset, float z_offset,
+        bool clear, kglt::MaterialID material) {
     if(clear) {
         mesh->clear();
     }
@@ -166,8 +180,11 @@ SubMeshIndex rectangle_outline(ProtectedPtr<Mesh> mesh, float width, float heigh
     mesh->shared_data().move_next();
     mesh->shared_data().done();
     
+    if(!material) {
+        material = mesh->resource_manager().window().clone_default_material();
+    }
     SubMeshIndex sm = mesh->new_submesh(
-        mesh->resource_manager().new_material_from_file(mesh->resource_manager().default_material_filename()),
+        material,
         MESH_ARRANGEMENT_LINE_STRIP,
         true
     );

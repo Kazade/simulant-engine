@@ -276,7 +276,7 @@ void MaterialScript::handle_block(Material& mat,
             }
 
             if(end_block_type == "PASS") {
-                L_DEBUG(_u("Shader pass added {0}").format(mat.id()));
+                //L_DEBUG(_u("Shader pass added {0}").format(mat.id()));
             }
             return; //Exit this function, we are done with this block
         } else if(line.starts_with("SET")) {
