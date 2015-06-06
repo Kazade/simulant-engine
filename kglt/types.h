@@ -174,6 +174,11 @@ struct Vec2 : public kmVec2 {
         return *this;
     }
 
+    Vec2& operator-=(const Vec2& rhs) {
+        kmVec2Subtract(this, this, &rhs);
+        return *this;
+    }
+
     Vec2 operator+(const Vec2& rhs) const {
         return Vec2(x + rhs.x, y + rhs.y);
     }
