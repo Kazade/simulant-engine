@@ -183,6 +183,17 @@ struct Vec2 : public kmVec2 {
         return Vec2(x + rhs.x, y + rhs.y);
     }
 
+    Vec2& operator/=(float rhs) {
+        kmVec2Scale(this, this, 1.0 / rhs);
+        return *this;
+    }
+
+    Vec2 operator/(float rhs) const {
+        Vec2 result;
+        kmVec2Scale(&result, this, 1.0 / rhs);
+        return result;
+    }
+
     Vec2 operator-() const {
         return Vec2(-x, -y);
     }
