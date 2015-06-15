@@ -141,8 +141,7 @@ const bool CameraManager::has_camera(CameraID id) const {
 
 //=========== START STAGES ==================
 
-StageManager::StageManager(WindowBase *window):
-    window_(window) {
+StageManager::StageManager() {
 
 }
 

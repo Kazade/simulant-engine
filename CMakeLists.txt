@@ -24,7 +24,7 @@ FIND_PACKAGE(SOIL REQUIRED)
 FIND_PACKAGE(OpenAL REQUIRED)
 FIND_PACKAGE(TinyXML REQUIRED)
 
-ADD_DEFINITIONS("-Wall -g -Wno-mismatched-tags -DdSINGLE")
+ADD_DEFINITIONS("-Wall -g -Wno-mismatched-tags -DdSINGLE -Winconsistent-missing-override")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread")
 #ADD_DEFINITIONS("-DBOOST_NO_RVALUE_REFERENCES") #https://svn.boost.org/trac/boost/ticket/4521
 
