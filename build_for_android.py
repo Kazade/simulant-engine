@@ -74,11 +74,6 @@ LIBRARIES = [
         "include": "freetype2/include"
     },
     {
-        "name": "ode",
-        "repo": "https://github.com/Kazade/ode.git",
-        "include": "ode/include"
-    },
-    {
         "name": "lua",
         "repo": "https://github.com/Kazade/lua.git",
         "include": "lua/src"
