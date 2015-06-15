@@ -618,9 +618,6 @@ typedef ManagerLookupPtr<BaseStageManager, StageID> StagePtr;
 class ResourceManager;
 typedef AutoWeakPtr<ResourceManager> ResourceManagerPtr;
 
-class PhysicsEngine;
-typedef AutoWeakPtr<PhysicsEngine> PhysicsEnginePtr;
-
 class RenderSequence;
 typedef AutoWeakPtr<RenderSequence> RenderSequencePtr;
 
@@ -633,12 +630,6 @@ class Partitioner;
 
 class GPUProgram;
 typedef std::shared_ptr<GPUProgram> GPUProgramPtr;
-
-namespace physics {
-    class ODEEngine;
-}
-
-typedef physics::ODEEngine DefaultPhysicsEngine;
 
 }
 
@@ -653,7 +644,5 @@ template<typename T, typename ...Args>
 
 }
 
-
-#include "physics/types.h"
 
 #endif // TYPES_H_INCLUDED

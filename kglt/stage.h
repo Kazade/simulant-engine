@@ -45,7 +45,6 @@ public:
     Stage(WindowBase *parent, StageID id, AvailablePartitioner partitioner);
 
     ActorID new_actor();
-    ActorID new_actor(bool make_responsive, bool make_collidable);
     ActorID new_actor(MeshID mid); //FIXME: Deprecate
     ActorID new_actor(MeshID mid, bool make_responsive, bool make_collidable); //FIXME: deprecate
 

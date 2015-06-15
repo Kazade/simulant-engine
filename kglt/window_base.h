@@ -121,10 +121,6 @@ public:
     void stop_running() { is_running_ = false; }
     const bool is_shutting_down() const { return is_running_ == false; }
 
-    void enable_physics(std::shared_ptr<PhysicsEngine> engine);
-    PhysicsEnginePtr physics();
-    const bool has_physics_engine() const;
-
     void enable_virtual_joypad(VirtualDPadDirections directions, int button_count, bool flipped=false);
     void disable_virtual_joypad();
     bool has_virtual_joypad() const { return bool(virtual_gamepad_); }
@@ -252,8 +248,6 @@ private:
     std::shared_ptr<MessageBar> message_bar_;
     std::shared_ptr<kglt::RenderSequence> render_sequence_;
     generic::DataCarrier data_carrier_;
-
-    std::shared_ptr<PhysicsEngine> physics_engine_;
 
     std::shared_ptr<VirtualGamepad> virtual_gamepad_;
 

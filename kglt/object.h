@@ -17,9 +17,6 @@
 #include "kazmath/quaternion.h"
 #include "types.h"
 
-#include "physics/responsive_body.h"
-#include "physics/collidable.h"
-
 #include "scene_node.h"
 #include "interfaces.h"
 
@@ -168,51 +165,9 @@ public:
 
     void destroy_children();
 
-    //Physics stuff
-    void make_responsive();
-    void make_collidable();
-
-    ResponsiveBody& body() {
-        if(!is_responsive()) {
-            throw std::logic_error("Tried to access a responsive body on a non-responsive object");
-        }
-
-        return *responsive_body_.get();
-    }
-
-    const ResponsiveBody& body() const {
-        if(!is_responsive()) {
-            throw std::logic_error("Tried to access a responsive body on a non-responsive object");
-        }
-
-        return *responsive_body_.get();
-    }
-
-    Collidable& shape() {
-        if(!is_collidable()) {
-            throw std::logic_error("Tried to access a collidable on a non-collidable object");
-        }
-
-        return *collidable_.get();
-    }
-
-    const Collidable& shape() const {
-        if(!is_collidable()) {
-            throw std::logic_error("Tried to access a collidable on a non-collidable object");
-        }
-
-        return *collidable_.get();
-    }
-
-    bool is_responsive() const { return bool(responsive_body_); }
-    bool is_collidable() const { return bool(collidable_); }
-
     bool parent_is_root() const {
         return has_parent() && !parent()->has_parent();
     }
-
-    sig::signal<void ()>& signal_made_responsive() { return signal_made_responsive_; }
-    sig::signal<void ()>& signal_made_shape() { return signal_made_collidable_; }
 
     void _update_constraint();
 protected:
@@ -238,15 +193,7 @@ private:
     bool rotation_locked_;
     bool position_locked_;
 
-    std::shared_ptr<ResponsiveBody> responsive_body_;
-    std::shared_ptr<Collidable> collidable_;
-
     virtual void transformation_changed() {}
-
-    ConstraintID responsive_parental_constraint_;
-
-    sig::signal<void ()> signal_made_responsive_;
-    sig::signal<void ()> signal_made_collidable_;
 
     std::unique_ptr<std::pair<Vec3, Vec3>> constraint_;
 

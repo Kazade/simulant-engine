@@ -33,10 +33,4 @@
 #include "screens/screen_manager.h"
 #include "screens/screen.h"
 
-//FIXME: These includes should be conditional
-#include "physics/ode/ode_engine.h"
-#include "physics/ode/ode_body.h"
-
-
-
 #endif
