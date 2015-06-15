@@ -25,7 +25,6 @@
 #include "stage.h"
 #include "ui_stage.h"
 #include "virtual_gamepad.h"
-#include "physics/physics_engine.h"
 #include "screens/loading.h"
 #include "utils/gl_thread_check.h"
 #include "utils/gl_error.h"
@@ -191,10 +190,6 @@ void WindowBase::update(double dt) {
 
     BackgroundManager::update(dt);
     StageManager::update(dt);
-
-    if(has_physics_engine()) {
-        physics()->step(dt);
-    }
 }
 
 bool WindowBase::run_frame() {
@@ -294,21 +289,6 @@ Joypad& WindowBase::joypad(uint8_t idx) {
 
 uint8_t WindowBase::joypad_count() const {
     return input_controller_->joypad_count();
-}
-
-void WindowBase::enable_physics(std::shared_ptr<PhysicsEngine> engine) {
-    physics_engine_ = engine;
-}
-
-PhysicsEnginePtr WindowBase::physics() {
-    if(!physics_engine_) {
-        throw std::logic_error("Tried to access the physics engine when one has not been enabled");
-    }
-    return physics_engine_;
-}
-
-const bool WindowBase::has_physics_engine() const {
-    return bool(physics_engine_);
 }
 
 double WindowBase::fixed_step_interp() const {

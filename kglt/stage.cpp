@@ -47,20 +47,8 @@ void Stage::ask_owner_for_destruction() {
 }
 
 ActorID Stage::new_actor() {
-    return new_actor(false, false);
-}
-
-ActorID Stage::new_actor(bool make_responsive, bool make_collidable) {
     ActorID result = ActorManager::manager_new();
     actor(result)->set_parent(this);
-
-    if(make_responsive) {
-        actor(result)->make_responsive();
-    }
-
-    if(make_collidable) {
-        actor(result)->make_collidable();
-    }
 
     //Tell everyone about the new actor
     signal_actor_created_(result);
@@ -78,14 +66,6 @@ ActorID Stage::new_actor(MeshID mid, bool make_responsive, bool make_collidable)
     //If a mesh was specified, set it
     if(mid) {
         actor(result)->set_mesh(mid);
-    }
-
-    if(make_responsive) {
-        actor(result)->make_responsive();
-    }
-
-    if(make_collidable) {
-        actor(result)->make_collidable();
     }
 
     //Tell everyone about the new actor

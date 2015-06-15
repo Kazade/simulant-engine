@@ -22,7 +22,6 @@ public:
 
     bool init() {
         actor_ = stage()->geom_factory().new_cube(1);
-        actor()->make_responsive();
 
         Path p(2.0);
 
@@ -78,7 +77,6 @@ private:
         stage_id_ = window->new_stage();
         camera_id_ = window->new_camera();
 
-        window->enable_physics(kglt::DefaultPhysicsEngine::create());
         car_ = Car::create(window, stage_id_);
         window->camera(camera_id_)->set_perspective_projection(
             45.0,

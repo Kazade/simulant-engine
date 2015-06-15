@@ -13,7 +13,6 @@
 #include "mesh.h"
 #include "sound.h"
 
-#include "physics/responsive_body.h"
 #include "utils/parent_setter_mixin.h"
 
 namespace kglt {
@@ -82,8 +81,6 @@ private:
     void do_update(double dt) {
         update_source(dt);
     }
-
-    std::shared_ptr<ResponsiveBody> body_;
 
     void rebuild_subactors();
     sig::connection submeshes_changed_connection_;

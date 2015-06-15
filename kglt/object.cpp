@@ -6,7 +6,6 @@
 #include "object.h"
 #include "camera.h"
 #include "utils/ownable.h"
-#include "physics/physics_engine.h"
 
 namespace kglt {
 
@@ -81,47 +80,7 @@ void Object::parent_changed_callback(GenericTreeNode *old_parent, GenericTreeNod
         return;
     }
 
-    if(new_p->is_responsive() != is_responsive()) {
-        throw std::logic_error("Tried to connect a responsive object to a non-responsive object");
-    }
-
-    if(is_responsive()) {
-        if(responsive_parental_constraint_) {
-            body().destroy_constraint(responsive_parental_constraint_);
-            responsive_parental_constraint_ = ConstraintID();
-        }
-
-        body().set_position(new_p->body().position());
-        body().set_rotation(new_p->body().rotation());
-
-        responsive_parental_constraint_ = body().create_fixed_constraint(new_p->body());
-    }
-
     update_from_parent();
-}
-
-void Object::make_responsive() {
-    if(!stage()->window().has_physics_engine()) {
-        throw std::logic_error("Tried to make an object responsive when no physics engine is enabled");
-    }
-
-    auto engine = stage()->window().physics();
-
-    responsive_body_ = engine->new_responsive_body(this);
-
-    signal_made_responsive_();
-}
-
-void Object::make_collidable() {
-    if(!stage()->window().has_physics_engine()) {
-        throw std::logic_error("Tried to make an object collidable when no physics engine is enabled");
-    }
-
-    auto engine = stage()->window().physics();
-
-    collidable_ = engine->new_collidable(this);
-
-    signal_made_collidable_();
 }
 
 void Object::lock_rotation() {
@@ -157,83 +116,34 @@ void Object::set_absolute_position(float x, float y, float z) {
         return;
     }
 
-    if(is_responsive()) {
-        if(responsive_parental_constraint_) {
-            //Destroy the existing constraint
-            body().destroy_constraint(responsive_parental_constraint_);
-        }
-
-        //Set the new absolute position
-        body().set_position(kglt::Vec3(x, y, z));
-
-        if(has_parent() && !parent_is_root()) {
-            //Recreate the constraint with the parent (as long as the parent isn't the stage itself)
-            responsive_parental_constraint_ = body().create_fixed_constraint(parent()->as<Object>()->body());
-        }
-    } else {
-        kglt::Vec3 parent_pos;
-        if(has_parent()) {
-            parent_pos = parent()->as<SceneNode>()->position();
-        }
-
-        set_relative_position(kglt::Vec3(x, y, z) - parent_pos);
+    kglt::Vec3 parent_pos;
+    if(has_parent()) {
+        parent_pos = parent()->as<SceneNode>()->position();
     }
+
+    set_relative_position(kglt::Vec3(x, y, z) - parent_pos);
 }
 
 void Object::set_relative_position(float x, float y, float z) {
     //Always store the relative_position_ even for responsive bodies
     //as they only deal with absolute
     relative_position_ = Vec3(x, y, z);
-
-    if(is_responsive()) {
-        if(responsive_parental_constraint_) {
-            //Destroy the existing constraint
-            body().destroy_constraint(responsive_parental_constraint_);
-        }
-
-        //Set the new absolute position
-        body().set_position(parent()->as<SceneNode>()->position() + Vec3(x, y, z));
-
-        if(has_parent() && !parent_is_root()) {
-            //Recreate the constraint with the parent (as long as the parent isn't the stage itself)
-            responsive_parental_constraint_ = body().create_fixed_constraint(parent()->as<Object>()->body());
-        }
-    } else {
-        update_from_parent();
-    }
+    update_from_parent();
 }
 
 kglt::Vec3 Object::absolute_position() const {
-    if(is_responsive()) {
-        return body().position();
-    }
-
     return absolute_position_;
 }
 
 kglt::Vec3 Object::relative_position() const {
-    if(is_responsive()) {
-        return absolute_position() - parent()->as<SceneNode>()->position();
-    }
-
     return relative_position_;
 }
 
 kglt::Quaternion Object::absolute_rotation() const {
-    if(is_responsive()) {
-        return body().rotation();
-    } else {
-        return absolute_rotation_;
-    }
+    return absolute_rotation_;
 }
 
 kglt::Quaternion Object::relative_rotation() const {
-    if(is_responsive()) {
-        Quaternion parent_rot = parent()->as<SceneNode>()->rotation();
-        parent_rot.inverse();
-        return parent_rot * body().rotation();
-    }
-
     return relative_rotation_;
 }
 
@@ -243,32 +153,15 @@ void Object::set_absolute_rotation(const Quaternion& quat) {
         return;
     }
 
-    if(is_responsive()) {
-        if(responsive_parental_constraint_) {
-            //Destroy the existing constraint
-            body().destroy_constraint(responsive_parental_constraint_);
-            responsive_parental_constraint_ = ConstraintID();
-        }
+    kglt::Quaternion parent_rot;
+    kmQuaternionIdentity(&parent_rot);
 
-        //Set the new rotation
-        body().set_rotation(quat);
-
-        if(has_parent() && !parent_is_root()) {
-            //Recreate the constraint with the parent (as long as the parent isn't the stage itself)
-            responsive_parental_constraint_ = body().create_fixed_constraint(parent()->as<Object>()->body());
-        }
-    } else {
-        kglt::Quaternion parent_rot;
-        kmQuaternionIdentity(&parent_rot);
-
-        if(has_parent()) {
-            parent_rot = parent()->as<SceneNode>()->rotation();
-        }
-
-        parent_rot.inverse();
-        set_relative_rotation(parent_rot * quat);
+    if(has_parent()) {
+        parent_rot = parent()->as<SceneNode>()->rotation();
     }
 
+    parent_rot.inverse();
+    set_relative_rotation(parent_rot * quat);
     _update_constraint();
 }
 
@@ -277,23 +170,7 @@ void Object::set_relative_rotation(const Quaternion &quaternion) {
     //as they only deal with absolute
     relative_rotation_ = quaternion;
     relative_rotation_.normalize();
-
-    if(is_responsive()) {
-        if(responsive_parental_constraint_) {
-            //Destroy the existing constraint
-            body().destroy_constraint(responsive_parental_constraint_);
-        }
-
-        //Set the new rotation
-        body().set_rotation(parent()->as<SceneNode>()->rotation() * quaternion);
-
-        if(has_parent() && !parent_is_root()) {
-            //Recreate the constraint with the parent (as long as the parent isn't the stage itself)
-            responsive_parental_constraint_ = body().create_fixed_constraint(parent()->as<Object>()->body());
-        }
-    } else {
-        update_from_parent();
-    }
+    update_from_parent();
 }
 
 void Object::set_absolute_rotation(const Degrees &angle, float x, float y, float z) {
