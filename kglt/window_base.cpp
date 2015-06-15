@@ -34,7 +34,7 @@ namespace kglt {
 WindowBase::WindowBase():
     Source(this),
     BackgroundManager(this),
-    StageManager(this),
+    StageManager(),
     UIStageManager(this),
     CameraManager(this),
     ResourceManagerImpl(this),

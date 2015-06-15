@@ -43,7 +43,7 @@ void Sprite::update(double dt) {
 
     interp_ += dt;
 
-    int diff = abs(current_animation_->frames.second - current_animation_->frames.first);
+    int diff = current_animation_->frames.second - current_animation_->frames.first;
     if((diff && interp_ >= (current_animation_duration_ / double(diff))) || diff == 0) {
         interp_ = 0.0;
         current_frame_ = next_frame_;

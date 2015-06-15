@@ -53,7 +53,7 @@ class StageManager:
     public virtual Updateable {
 
 public:
-    StageManager(WindowBase* window);
+    StageManager();
 
     StageID new_stage(AvailablePartitioner partitioner=PARTITIONER_OCTREE);
     StagePtr stage(StageID s);
@@ -66,8 +66,6 @@ public:
 
 private:
     void print_tree(GenericTreeNode* node, uint32_t& level);
-
-    WindowBase* window_;
 };
 
 class UIStageManager:
