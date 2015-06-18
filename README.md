@@ -1,5 +1,7 @@
 # Kazade's GL Toolkit
 
+[![Join the chat at https://gitter.im/Kazade/KGLT](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Kazade/KGLT?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 ## What is it?
 
 While working on reverse engineering some obscure 3D model format, I needed a
