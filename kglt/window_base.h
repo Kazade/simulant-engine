@@ -138,11 +138,11 @@ public:
 
     /* PipelineHelperAPIInterface */
 
-    virtual PipelineHelper render(StageID stage_id, CameraID camera_id) {
+    virtual PipelineHelper render(StageID stage_id, CameraID camera_id) override {
         return new_pipeline_helper(render_sequence_, stage_id, camera_id);
     }
 
-    virtual PipelineHelper render(UIStageID stage_id, CameraID camera_id) {
+    virtual PipelineHelper render(UIStageID stage_id, CameraID camera_id) override {
         return new_pipeline_helper(render_sequence_, stage_id, camera_id);
     }
 

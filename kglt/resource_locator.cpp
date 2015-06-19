@@ -49,6 +49,7 @@ unicode ResourceLocator::locate_file(const unicode &filename) const {
         }
     }
 #endif
+    L_ERROR("Unable to find the specified file: " + filename.encode());
     throw IOError(_u("Unable to find file: ") + filename);
 }
 
@@ -72,6 +73,7 @@ std::shared_ptr<std::stringstream> ResourceLocator::read_file(const unicode& fil
         (*result) << str;
         return result;
     } else {
+        L_ERROR("There was an error loading the specified file");
         throw IOError(_u("Unable to load file: ") + filename);
     }
     SDL_FreeRW(ops);

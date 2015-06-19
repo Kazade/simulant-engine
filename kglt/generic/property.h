@@ -1,6 +1,8 @@
 #ifndef PROPERTY_H
 #define PROPERTY_H
 
+#include <functional>
+
 template<typename Container, typename T>
 class Property {
 public:
