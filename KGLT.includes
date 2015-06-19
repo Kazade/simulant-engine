@@ -39,3 +39,5 @@ kglt/screens
 kglt/loaders
 kglt/generic
 samples
+submodules/luabind/luabind
+submodules/luabind/luabind/detail
