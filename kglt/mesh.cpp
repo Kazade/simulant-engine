@@ -112,6 +112,193 @@ SubMeshIndex Mesh::new_submesh(
     return idx;
 }
 
+SubMeshIndex Mesh::new_submesh_as_box(MaterialID material, float width, float height, float depth, const Vec3& offset) {
+    SubMeshIndex ret = new_submesh(material, MESH_ARRANGEMENT_TRIANGLES, false);
+
+    auto& sm = submesh(ret);
+    auto& vd = sm.vertex_data();
+    auto& id = sm.index_data();
+
+    float x_offset = offset.x;
+    float y_offset = offset.y;
+    float z_offset = offset.z;
+
+    float rx = width * 0.5f;
+    float ry = height * 0.5f;
+    float rz = depth * 0.5f;
+
+    //front and back
+    for(int32_t z: { -1, 1 }) {
+        for(int32_t i = 0; i < 2; ++i) {
+            uint32_t count = vd.count();
+
+            vd.position(-1 * rx, -1 * ry, z * rz);
+            vd.tex_coord0(0, 0);
+            vd.tex_coord1(0, 0);
+            vd.diffuse(kglt::Colour::WHITE);
+            vd.normal(0, 0, z);
+            vd.move_next();
+
+            vd.position( 1 * rx, -1 * ry, z * rz);
+            vd.tex_coord0(1, 0);
+            vd.tex_coord1(1, 0);
+            vd.diffuse(kglt::Colour::WHITE);
+            vd.normal(0, 0, z);
+            vd.move_next();
+
+            vd.position( 1 * rx,  1 * ry, z * rz);
+            vd.tex_coord0(1, 1);
+            vd.tex_coord1(1, 1);
+            vd.diffuse(kglt::Colour::WHITE);
+            vd.normal(0, 0, z);
+            vd.move_next();
+
+            vd.position(-1 * rx,  1 * ry, z * rz);
+            vd.tex_coord0(0, 1);
+            vd.tex_coord1(0, 1);
+            vd.diffuse(kglt::Colour::WHITE);
+            vd.normal(0, 0, z);
+            vd.move_next();
+
+            if(z > 0) {
+                id.index(count);
+                id.index(count + 1);
+                id.index(count + 2);
+
+                id.index(count);
+                id.index(count + 2);
+                id.index(count + 3);
+            } else {
+                id.index(count);
+                id.index(count + 2);
+                id.index(count + 1);
+
+                id.index(count);
+                id.index(count + 3);
+                id.index(count + 2);
+            }
+        }
+    }
+
+    //left and right
+    for(int32_t x: { -1, 1 }) {
+        for(int32_t i = 0; i < 2; ++i) {
+            uint32_t count = vd.count();
+
+            vd.position( x * rx, -1 * ry, -1 * rz);
+            vd.tex_coord0(0, 0);
+            vd.tex_coord1(0, 0);
+            vd.diffuse(kglt::Colour::WHITE);
+            vd.normal(x, 0, 0);
+            vd.move_next();
+
+            vd.position( x * rx,  1 * ry, -1 * rz);
+            vd.tex_coord0(1, 0);
+            vd.tex_coord1(1, 0);
+            vd.diffuse(kglt::Colour::WHITE);
+            vd.normal(x, 0, 0);
+            vd.move_next();
+
+            vd.position( x * rx,  1 * ry, 1 * rz);
+            vd.tex_coord0(1, 1);
+            vd.tex_coord1(1, 1);
+            vd.diffuse(kglt::Colour::WHITE);
+            vd.normal(x, 0, 0);
+            vd.move_next();
+
+            vd.position(x * rx, -1 * ry, 1 * rz);
+            vd.tex_coord0(0, 1);
+            vd.tex_coord1(0, 1);
+            vd.diffuse(kglt::Colour::WHITE);
+            vd.normal(x, 0, 0);
+            vd.move_next();
+
+            if(x > 0) {
+                id.index(count);
+                id.index(count + 1);
+                id.index(count + 2);
+
+                id.index(count);
+                id.index(count + 2);
+                id.index(count + 3);
+            } else {
+                id.index(count);
+                id.index(count + 2);
+                id.index(count + 1);
+
+                id.index(count);
+                id.index(count + 3);
+                id.index(count + 2);
+            }
+        }
+    }
+
+    //top and bottom
+    for(int32_t y: { -1, 1 }) {
+        for(int32_t i = 0; i < 2; ++i) {
+            uint32_t count = vd.count();
+
+            vd.position( 1 * rx, y * ry, -1 * rz);
+            vd.tex_coord0(0, 0);
+            vd.tex_coord1(0, 0);
+            vd.diffuse(kglt::Colour::WHITE);
+            vd.normal(0, y, 0);
+            vd.move_next();
+
+            vd.position( -1 * rx,  y * ry, -1 * rz);
+            vd.tex_coord0(1, 0);
+            vd.tex_coord1(1, 0);
+            vd.diffuse(kglt::Colour::WHITE);
+            vd.normal(0, y, 0);
+            vd.move_next();
+
+            vd.position( -1 * rx,  y * ry, 1 * rz);
+            vd.tex_coord0(1, 1);
+            vd.tex_coord1(1, 1);
+            vd.diffuse(kglt::Colour::WHITE);
+            vd.normal(0, y, 0);
+            vd.move_next();
+
+            vd.position( 1 * rx, y * ry, 1 * rz);
+            vd.tex_coord0(0, 1);
+            vd.tex_coord1(0, 1);
+            vd.diffuse(kglt::Colour::WHITE);
+            vd.normal(0, y, 0);
+            vd.move_next();
+
+            if(y > 0) {
+                id.index(count);
+                id.index(count + 1);
+                id.index(count + 2);
+
+                id.index(count);
+                id.index(count + 2);
+                id.index(count + 3);
+            } else {
+                id.index(count);
+                id.index(count + 2);
+                id.index(count + 1);
+
+                id.index(count);
+                id.index(count + 3);
+                id.index(count + 2);
+            }
+        }
+    }
+
+    // Apply offset
+    vd.move_to_start();
+    for(uint16_t i = 0; i < vd.count(); ++i) {
+        vd.position(vd.position_at(i) + kglt::Vec3(x_offset, y_offset, z_offset));
+        vd.move_next();
+    }
+
+    vd.done();
+    id.done();
+
+    return ret;
+}
+
 SubMeshIndex Mesh::new_submesh_as_rectangle(MaterialID material, float width, float height, const kglt::Vec3& offset) {
     SubMeshIndex ret = new_submesh(material, MESH_ARRANGEMENT_TRIANGLES, false);
 

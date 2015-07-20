@@ -41,9 +41,9 @@ enum AttributeBitMask {
  */
 
 struct Vertex {
-    kmVec3 position;
-    kmVec3 normal;
-    kmVec4 tex_coords[8];
+    kglt::Vec3 position;
+    kglt::Vec3 normal;
+    kglt::Vec4 tex_coords[8];
     Colour diffuse;
     Colour specular;
 
@@ -86,7 +86,7 @@ public:
     void position(const kmVec3& pos);
     void position(const kmVec2& pos);
 
-    kmVec3 position_at(uint16_t idx) {
+    kglt::Vec3 position_at(uint16_t idx) {
         return data_.at(idx).position;
     }
 
