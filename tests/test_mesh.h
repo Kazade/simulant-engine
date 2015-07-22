@@ -196,6 +196,28 @@ public:
         assert_true(mesh_id == actor->mesh()->id());
     }
 
+    void test_cubic_texture_generation() {
+        auto stage = window->stage(stage_id_);
+
+        auto mesh_id = stage->new_mesh();
+        auto smi = stage->mesh(mesh_id)->new_submesh_as_box(stage->clone_default_material(), 10.0, 10.0, 10.0);
+        auto& sm = stage->mesh(mesh_id)->submesh(smi);
+        sm.generate_texture_coordinates_cube();
+
+        auto& vd = sm.vertex_data();
+
+        // Neg Z
+        assert_equal(kglt::Vec4((1.0 / 3.0), 0, 0, 1), vd.texcoord0_at(0));
+        assert_equal(kglt::Vec4((2.0 / 3.0), 0, 0, 1), vd.texcoord0_at(1));
+        assert_equal(kglt::Vec4((2.0 / 3.0), (1.0 / 4.0), 0, 1), vd.texcoord0_at(2));
+        assert_equal(kglt::Vec4((1.0 / 3.0), (1.0 / 4.0), 0, 1), vd.texcoord0_at(3));
+
+        // Pos Z
+        assert_equal(kglt::Vec4((1.0 / 3.0), (2.0 / 4.0), 0, 1), vd.texcoord0_at(4));
+        assert_equal(kglt::Vec4((2.0 / 3.0), (2.0 / 4.0), 0, 1), vd.texcoord0_at(5));
+        assert_equal(kglt::Vec4((2.0 / 3.0), (3.0 / 4.0), 0, 1), vd.texcoord0_at(6));
+        assert_equal(kglt::Vec4((1.0 / 3.0), (3.0 / 4.0), 0, 1), vd.texcoord0_at(7));
+    }
 
 private:
     CameraID camera_id_;

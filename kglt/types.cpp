@@ -74,6 +74,11 @@ std::ostream& operator<<(std::ostream& stream, const Vec3& vec) {
     return stream;
 }
 
+std::ostream& operator<<(std::ostream& stream, const Vec4& vec) {
+    stream << "(" << vec.x << "," << vec.y << "," << vec.z << "," << vec.w << ")";
+    return stream;
+}
+
 std::ostream& operator<<(std::ostream& stream, const Quaternion& quat) {
     stream << "(" << quat.x << "," << quat.y << "," << quat.z << "," << quat.w << ")";
     return stream;

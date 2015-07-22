@@ -109,6 +109,14 @@ struct Vec4 : public kmVec4 {
     Vec4(const kmVec3& v, float w) {
         kmVec4Fill(this, v.x, v.y, v.z, w);
     }
+
+    bool operator==(const Vec4& rhs) const {
+        return kmVec4AreEqual(this, &rhs);
+    }
+
+    bool operator!=(const Vec4& rhs) const {
+        return !(*this == rhs);
+    }
 };
 
 struct Vec2 : public kmVec2 {
@@ -396,6 +404,7 @@ struct AABB : public kmAABB3 {
 
 std::ostream& operator<<(std::ostream& stream, const Vec2& vec);
 std::ostream& operator<<(std::ostream& stream, const Vec3& vec);
+std::ostream& operator<<(std::ostream& stream, const Vec4& vec);
 std::ostream& operator<<(std::ostream& stream, const Quaternion& quat);
 
 kglt::Vec2 operator*(float lhs, const kglt::Vec2& rhs);

@@ -379,14 +379,17 @@ void Mesh::transform_vertices(const kglt::Mat4& transform, bool include_submeshe
     shared_data().move_to_start();
 
     for(int i = 0; i < shared_data().count(); ++i) {
-        kglt::Vec3 v = shared_data().position_at(i);
-        kmVec3MultiplyMat4(&v, &v, &transform);
-        shared_data().position(v);
+        if(shared_data().has_positions()) {
+            kglt::Vec3 v = shared_data().position_at(i);
+            kmVec3MultiplyMat4(&v, &v, &transform);
+            shared_data().position(v);
+        }
 
-        kglt::Vec3 n = shared_data().normal_at(i);
-        kmVec3MultiplyMat4(&n, &n, &transform);
-        shared_data().normal(n.normalized());
-
+        if(shared_data().has_normals()) {
+            kglt::Vec3 n = shared_data().normal_at(i);
+            kmVec3MultiplyMat4(&n, &n, &transform);
+            shared_data().normal(n.normalized());
+        }
         shared_data().move_next();
     }
     shared_data().done();
@@ -682,7 +685,7 @@ void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
 
         // Finally, offset the uv coordinate to the right 'square' of the cubic texture
         if(x) {
-            if(v.x >= 0) {
+            if(dir.x >= 0) {
                 final.x = 2.0 / 3.0 + (final.x / 3.0);
                 final.y = 2.0 / 4.0 + (final.y / 4.0);
             } else {
@@ -690,7 +693,7 @@ void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
                 final.y = 2.0 / 4.0 + (final.y / 4.0);
             }
         } else if(y) {
-            if(v.y >= 0) {
+            if(dir.y >= 0) {
                 final.x = 1.0 / 3.0 + (final.x / 3.0);
                 final.y = 3.0 / 4.0 + (final.y / 4.0);
             } else {
@@ -698,7 +701,7 @@ void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
                 final.y = 1.0 / 4.0 + (final.y / 4.0);
             }
         } else {
-            if(v.z >= 0) {
+            if(dir.z >= 0) {
                 final.x = 1.0 / 3.0 + (final.x / 3.0);
                 final.y = 2.0 / 4.0 + (final.y / 4.0);
             } else {
@@ -709,9 +712,15 @@ void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
 
         switch(texture) {
             case 0: vd.tex_coord0(final.x, final.y);
+                break;
             case 1: vd.tex_coord1(final.x, final.y);
+                break;
             case 2: vd.tex_coord2(final.x, final.y);
+                break;
             case 3: vd.tex_coord3(final.x, final.y);
+                break;
+            default:
+                break;
         }
         vd.move_next();
     }

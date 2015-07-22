@@ -104,6 +104,10 @@ public:
     void tex_coord0(float x, float y, float z, float w);
     void tex_coord0(const kmVec2& vec) { tex_coord0(vec.x, vec.y); }
 
+    kglt::Vec4 texcoord0_at(uint16_t idx) {
+        return data_.at(idx).tex_coords[0];
+    }
+
     void tex_coord1(float u);
     void tex_coord1(float u, float v);
     void tex_coord1(float u, float v, float w);
