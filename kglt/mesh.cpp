@@ -625,6 +625,101 @@ void SubMesh::set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass)
     material_->pass(pass).set_texture_unit(unit, tex);
 }
 
+/**
+ * @brief SubMesh::generate_texture_coordinates_cube
+ * @param texture - which texture unit to generate coordinates for
+ *
+ * Generates cube coordinates.
+ *
+ * WARNING: Will not duplicate vertices. If you share vertices across polygons this
+ * will currently not give correct results. In future a "duplicate_vertices" argument
+ * might be added.
+ */
+void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
+    auto& vd = vertex_data();
+
+    float box_size = std::max(bounds_.width(), std::max(bounds_.height(), bounds_.depth()));
+
+    vd.move_to_start();
+    for(uint16_t i = 0; i < vd.count(); ++i) {
+        auto v = vd.normal_at(i); // Get the vertex normal
+
+        // Work out the component with the largest value
+        float absx = fabs(v.x);
+        float absy = fabs(v.y);
+        float absz = fabs(v.z);
+
+        bool x = (absx > absy && absx > absz);
+        bool y = (absy > absx && absy > absz);
+
+        // Generate a orthagonal direction vector
+
+        kglt::Vec3 dir(0, 0, 0);
+
+        if(x) {
+            dir.x = (v.x < 0) ? -1 : 1;
+        } else if(y) {
+            dir.y = (v.y < 0) ? -1 : 1;
+        } else {
+            dir.z = (v.z < 0) ? -1 : 1;
+        }
+
+        // Create a plane at the origin with the opposite direction
+        kmPlane plane;
+        kmPlaneFill(&plane, -dir.x, -dir.y, -dir.z, 0);
+
+        kglt::Vec3 v1 = vd.position_at(i) - bounds_.min;
+        kglt::Vec3 v2 = v1 + dir;
+
+        // Project the vertex position onto the plane
+        kglt::Vec3 final;
+        kmPlaneIntersectLine(&final, &plane, &v1, &v2);
+
+        //Scale the final position on the plane by the size of the box
+        // and subtract the lower corner so that everything is relative to 0,0,0
+        // and scaled between 0 and 1
+        final /= box_size;
+
+        // Finally, offset the uv coordinate to the right 'square' of the cubic texture
+        if(x) {
+            if(v.x >= 0) {
+                final.x = 2.0 / 3.0 + (final.x / 3.0);
+                final.y = 2.0 / 4.0 + (final.y / 4.0);
+            } else {
+                final.x = final.x / 3.0;
+                final.y = 2.0 / 4.0 + (final.y / 4.0);
+            }
+        } else if(y) {
+            if(v.y >= 0) {
+                final.x = 1.0 / 3.0 + (final.x / 3.0);
+                final.y = 3.0 / 4.0 + (final.y / 4.0);
+            } else {
+                final.x = 1.0 / 3.0 + (final.x / 3.0);
+                final.y = 1.0 / 4.0 + (final.y / 4.0);
+            }
+        } else {
+            if(v.z >= 0) {
+                final.x = 1.0 / 3.0 + (final.x / 3.0);
+                final.y = 2.0 / 4.0 + (final.y / 4.0);
+            } else {
+                final.x = 1.0 / 3.0 + (final.x / 3.0);
+                final.y = (final.y / 4.0);
+            }
+        }
+
+        switch(texture) {
+            case 0: vd.tex_coord0(final.x, final.y);
+            case 1: vd.tex_coord1(final.x, final.y);
+            case 2: vd.tex_coord2(final.x, final.y);
+            case 3: vd.tex_coord3(final.x, final.y);
+        }
+        vd.move_next();
+    }
+
+    vd.done();
+
+}
+
 SubMesh::~SubMesh() {
     vrecalc_.disconnect();
     irecalc_.disconnect();

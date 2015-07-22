@@ -80,6 +80,8 @@ public:
     void _bind_vertex_array_object();
 
     SubMeshIndex id() const { return id_; }
+
+    void generate_texture_coordinates_cube(uint32_t texture=0);
 private:
     Mesh& parent_;
     SubMeshIndex id_;
