@@ -25,12 +25,12 @@ APP_BUILD_SCRIPT        := Android.mk
 APP_PROJECT_PATH        := %s
 NDK_TOOLCHAIN_VERSION   := clang
 APP_GNUSTL_CPP_FEATURES := rtti exceptions
-APP_CFLAGS              := %%s
+APP_CFLAGS              := %s
 APP_STL                 := c++_shared
 APP_PLATFORM            := android-18
 APP_ABI                 := armeabi armeabi-v7a x86
-APP_OPTIM               := debug
-""".lstrip() % OUTPUT_DIRECTORY
+APP_OPTIM               := %s
+""".lstrip()
 
 LIBRARIES = [
     {
@@ -85,46 +85,50 @@ LIBRARIES = [
     }
 ]
 
-def gather_headers(output_dir):
-    file_list = []
-    for library in LIBRARIES + [ {"name": "kglt", "include": "kglt/kglt"}]:
-        library_include_root = os.path.join(OUTPUT_DIRECTORY, library["include"])
-        for root, subFolders, files in os.walk(library_include_root):
-            for f in files:
-                if f.endswith(".h"):
-                    path = os.path.join(root,f)
-                    output = os.path.join(output_dir, library["name"] + path.replace(library_include_root, ""))
+BUILD_TYPES = ("debug", "release")
 
-                    file_list.append((path, output))
 
-    for src, dest in file_list:
-        folder = os.path.dirname(dest)
-        if not os.path.exists(folder):
-            os.makedirs(folder)
-        shutil.copy(src, dest)
+from os.path import join, exists
 
-if __name__ == "__main__":
-    if not os.path.exists(OUTPUT_DIRECTORY):
-        os.mkdir(OUTPUT_DIRECTORY)
+def prepare_tree(output_dir):
+    # First, let's make the directories we require
 
-    #First, symlink kglt into the .android folder (so that it's with all the others)
-    kglt_link = os.path.join(OUTPUT_DIRECTORY, "kglt")
-    if not os.path.exists(kglt_link):
-        os.symlink(os.path.dirname(os.path.abspath("__file__")), kglt_link)
+    dirs = os.listdir(output_dir)
 
-    includes = []
+    if "output" not in dirs:
+        os.makedirs(join(output_dir, "output"))
+
+    if "dependencies" not in dirs:
+        os.makedirs(join(output_dir, "dependencies"))
+
+    if "build" not in dirs:
+        os.makedirs(join(output_dir, "build"))
+
+    # Now symlink KGLT to the right place
+    symlinks = (
+        ("kglt", join(output_dir, "build", "kglt")),
+        ("submodules", join(output_dir, "build", "submodules"))
+
+    )
+
+    this_dir = os.path.dirname(os.path.abspath("__file__"))
+    for target, link_name in symlinks:
+        if not exists(link_name):
+            os.symlink(join(this_dir, target), join(this_dir, link_name))
+
+
+def download_dependencies(root):
+    deps_dir = join(root, "dependencies")
+
+    downloaded = []
+
     for library in LIBRARIES:
+        library_output_dir = join(deps_dir, library["name"])
 
-        if "include" in library:
-            includes.append(library["include"])
-
-        library_output_dir = os.path.join(OUTPUT_DIRECTORY, library["name"])
-        if os.path.exists(library_output_dir):
-            if "precompile" in library:
-                library["precompile"]()
+        if exists(library_output_dir):
             continue
-        else:
-            print "Downloading %s" % library["name"]
+
+        print "Downloading %s" % library["name"]
 
         if "repo" in library:
             subprocess.check_call([
@@ -143,24 +147,49 @@ if __name__ == "__main__":
         else:
             raise ValueError("Unable to handle this library")
 
-        if "precompile" in library:
-            library["precompile"]()
+        downloaded.append(library["name"])
 
-    if len(sys.argv) > 1 and sys.argv[1] == "gather_headers":
-        gather_headers(sys.argv[2])
-    else:
-        ##Make an Android.mk file
-        with open(ANDROID_MK_PATH, "w") as make_file:
-            make_file.write(MAKE_FILE_DATA)
+    return downloaded
 
-        with open(ANDROID_APP_MK_PATH, "w") as make_file:
-            make_file.write(APPLICATION_FILE_DATA % " ".join(["-I{}".format(x) for x in includes ]))
+def build_dependencies(root, to_build, build_type):
+    deps_dir = join(root, "dependencies")
 
-        with open(ANDROID_MANIFEST_PATH, "w") as make_file:
-            make_file.write("\n")
+    if not to_build:
+        to_build = [ x["name"] for x in LIBRARIES ]
 
-        os.chdir(OUTPUT_DIRECTORY)
+    for library in to_build:
+        print("Building: %s" % library)
+        library_dir = join(deps_dir, library)
 
-        subprocess.check_call([
-            "ndk-build", "NDK_APPLICATION_MK=%s" % ANDROID_APP_MK_PATH, "--jobs", str(multiprocessing.cpu_count())
-        ])
+        # If there exists an application.mk in the library
+        # then remove it
+        application_mk = join(library_dir, "Application.mk")
+        if exists(application_mk):
+            os.remove(application_mk)
+
+        # Generate a new one for this release
+        with open(application_mk, "wt") as f:
+            f.write(APPLICATION_FILE_DATA % (library_dir, '', build_type))
+
+        subprocess.check_call(
+            [ "NDK_PROJECT_PATH=.", "ndk-build" ],
+            cwd=library_dir
+        )
+
+
+def run():
+    prepare_tree(OUTPUT_DIRECTORY)
+    downloaded = download_dependencies(OUTPUT_DIRECTORY)
+
+    if downloaded or "--build-deps" in sys.argv:
+        for build_type in BUILD_TYPES:
+            build_dependencies(OUTPUT_DIRECTORY, downloaded, build_type)
+
+    return 0
+
+    build()
+
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(run())
