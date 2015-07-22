@@ -62,8 +62,8 @@ protected:
         StageID& new_stage, CameraID& new_camera, UIStageID& new_ui, CameraID& new_ui_camera
     );
 
-private:
     WindowBase* window_;
+private:
     bool is_loaded_ = false;
 };
 
