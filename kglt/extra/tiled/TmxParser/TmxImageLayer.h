@@ -78,9 +78,13 @@ namespace Tmx
 		// Set the zorder of the ImageLayer.
 		void SetZOrder( int z ) { zOrder = z; }
 
-	private:
+	protected:
+		// Protected to silence warnings about it
+		// being unused. I mean it probably is but
+		// could be useful in future
 		const Tmx::Map *map;
 
+	private:
 		std::string name;
 		
 		int width;

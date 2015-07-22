@@ -40,10 +40,10 @@ namespace Tmx
 		, name()
 		, width(0)
 		, height(0)
-		, image(NULL)
 		, opacity(0)
 		, visible(0)
 		, zOrder(0)
+		, image(NULL)
 
 	{
 	}
