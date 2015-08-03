@@ -682,11 +682,11 @@ void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
         // Finally, offset the uv coordinate to the right 'square' of the cubic texture
         if(x) {
             if(dir.x >= 0) {
-                final.x = 2.0 / 3.0 + (final.x / 3.0);
-                final.y = 2.0 / 4.0 + (final.y / 4.0);
+                final.x = 2.0 / 3.0 + (final.y / 3.0);
+                final.y = 2.0 / 4.0 + (final.z / 4.0);
             } else {
-                final.x = final.x / 3.0;
-                final.y = 2.0 / 4.0 + (final.y / 4.0);
+                final.x = final.y / 3.0;
+                final.y = 2.0 / 4.0 + (final.z / 4.0);
             }
         } else if(y) {
             if(dir.y >= 0) {

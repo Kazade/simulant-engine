@@ -217,6 +217,12 @@ public:
         assert_equal(kglt::Vec4((2.0 / 3.0), (2.0 / 4.0), 0, 1), vd.texcoord0_at(5));
         assert_equal(kglt::Vec4((2.0 / 3.0), (3.0 / 4.0), 0, 1), vd.texcoord0_at(6));
         assert_equal(kglt::Vec4((1.0 / 3.0), (3.0 / 4.0), 0, 1), vd.texcoord0_at(7));
+
+        // Neg X
+        assert_equal(kglt::Vec4(0, 2.0 / 4.0, 0, 1), vd.texcoord0_at(8));
+        assert_equal(kglt::Vec4(1.0 / 3.0, 2.0 / 4.0, 0, 1), vd.texcoord0_at(9));
+        assert_equal(kglt::Vec4(1.0 / 3.0, 3.0 / 4.0, 0, 1), vd.texcoord0_at(10));
+        assert_equal(kglt::Vec4(0, 3.0 / 4.0, 0, 1), vd.texcoord0_at(11));
     }
 
 private:
