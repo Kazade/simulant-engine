@@ -637,8 +637,6 @@ void SubMesh::set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass)
 void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
     auto& vd = vertex_data();
 
-    float box_size = std::max(bounds_.width(), std::max(bounds_.height(), bounds_.depth()));
-
     vd.move_to_start();
     for(uint16_t i = 0; i < vd.count(); ++i) {
         auto v = vd.normal_at(i); // Get the vertex normal
@@ -677,7 +675,9 @@ void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
         //Scale the final position on the plane by the size of the box
         // and subtract the lower corner so that everything is relative to 0,0,0
         // and scaled between 0 and 1
-        final /= box_size;
+        final.x /= bounds_.width();
+        final.y /= bounds_.height();
+        final.z /= bounds_.depth();
 
         // Finally, offset the uv coordinate to the right 'square' of the cubic texture
         if(x) {
@@ -690,11 +690,11 @@ void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
             }
         } else if(y) {
             if(dir.y >= 0) {
-                final.x = 1.0 / 3.0 + (final.x / 3.0);
-                final.y = 3.0 / 4.0 + (final.y / 4.0);
+                final.x = 1.0 / 3.0 + (final.z / 3.0);
+                final.y = 3.0 / 4.0 + (final.x / 4.0);
             } else {
-                final.x = 1.0 / 3.0 + (final.x / 3.0);
-                final.y = 1.0 / 4.0 + (final.y / 4.0);
+                final.x = 1.0 / 3.0 + (final.z / 3.0);
+                final.y = 1.0 / 4.0 + (final.x / 4.0);
             }
         } else {
             if(dir.z >= 0) {

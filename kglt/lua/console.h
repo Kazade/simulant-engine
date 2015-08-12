@@ -2,12 +2,15 @@
 #define CONSOLE_H
 
 #include <SDL.h>
-
 #include <memory>
-#include "../generic/managed.h"
 #include <kazbase/unicode.h>
-#include "types.h"
+
+#include "interpreter.h"
+
 #include "../types.h"
+#include "../generic/managed.h"
+#include "../generic/property.h"
+
 
 namespace kglt {
 
@@ -27,8 +30,6 @@ class Console:
 public:
     Console(WindowBase& window);
 
-    Interpreter& lua();
-
     void entry(SDL_TextInputEvent event);
     bool key_down(SDL_Keysym key);
 
@@ -38,6 +39,10 @@ public:
     void set_stats_subactors_rendered(int count);
     void show_stats();
     void hide_stats();
+
+public:
+    // Properties
+    Property<Console, Interpreter> interpreter = { this, &Console::interpreter_ };
 
 private:
     UIStageID ui_stage_;

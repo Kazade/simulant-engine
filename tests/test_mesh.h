@@ -223,6 +223,24 @@ public:
         assert_equal(kglt::Vec4(1.0 / 3.0, 2.0 / 4.0, 0, 1), vd.texcoord0_at(9));
         assert_equal(kglt::Vec4(1.0 / 3.0, 3.0 / 4.0, 0, 1), vd.texcoord0_at(10));
         assert_equal(kglt::Vec4(0, 3.0 / 4.0, 0, 1), vd.texcoord0_at(11));
+
+        // Pos X
+        assert_equal(kglt::Vec4(2.0 / 3.0, 2.0 / 4.0, 0, 1), vd.texcoord0_at(12));
+        assert_equal(kglt::Vec4(3.0 / 3.0, 2.0 / 4.0, 0, 1), vd.texcoord0_at(13));
+        assert_equal(kglt::Vec4(3.0 / 3.0, 3.0 / 4.0, 0, 1), vd.texcoord0_at(14));
+        assert_equal(kglt::Vec4(2.0 / 3.0, 3.0 / 4.0, 0, 1), vd.texcoord0_at(15));
+
+        // Neg Y
+        assert_equal(kglt::Vec4(1.0 / 3.0, 1.0 / 4.0, 0, 1), vd.texcoord0_at(16));
+        assert_equal(kglt::Vec4(2.0 / 3.0, 1.0 / 4.0, 0, 1), vd.texcoord0_at(17));
+        assert_equal(kglt::Vec4(2.0 / 3.0, 2.0 / 4.0, 0, 1), vd.texcoord0_at(18));
+        assert_equal(kglt::Vec4(1.0 / 3.0, 2.0 / 4.0, 0, 1), vd.texcoord0_at(19));
+
+        // Pos Y
+        assert_equal(kglt::Vec4(1.0 / 3.0, 3.0 / 4.0, 0, 1), vd.texcoord0_at(20));
+        assert_equal(kglt::Vec4(2.0 / 3.0, 3.0 / 4.0, 0, 1), vd.texcoord0_at(21));
+        assert_equal(kglt::Vec4(2.0 / 3.0, 4.0 / 4.0, 0, 1), vd.texcoord0_at(22));
+        assert_equal(kglt::Vec4(1.0 / 3.0, 4.0 / 4.0, 0, 1), vd.texcoord0_at(23));
     }
 
 private:

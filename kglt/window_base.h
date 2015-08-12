@@ -11,7 +11,7 @@
 #include "generic/data_carrier.h"
 
 #include "resource_locator.h"
-
+#include "lua/console.h"
 #include "idle_task_manager.h"
 #include "input_controller.h"
 #include "generic/auto_weakptr.h"
@@ -37,7 +37,7 @@ class InputController;
 class Keyboard;
 class Mouse;
 class Joypad;
-class Console;
+class Interpreter;
 class MessageBar;
 class Loader;
 class LoaderType;
@@ -259,6 +259,16 @@ public:
     Property<WindowBase, Console> console = { this, &WindowBase::console_ };
     Property<WindowBase, VirtualGamepad> virtual_joypad = { this, &WindowBase::virtual_gamepad_ };
     Property<WindowBase, MessageBar> message_bar = { this, &WindowBase::message_bar_ };
+
+    Property<WindowBase, Interpreter> interpreter = {
+        this, [](const WindowBase* self) -> Interpreter& {
+            if(!self->console_) {
+                throw LogicError("Tried to access interpreter without initializing the console");
+            } else {
+                return self->console->interpreter;
+            }
+        }
+    };
 
     Property<WindowBase, Watcher> watcher = {
         this, [](const WindowBase* self) -> Watcher& {

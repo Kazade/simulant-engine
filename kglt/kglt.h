@@ -32,5 +32,5 @@
 #include "virtual_gamepad.h"
 #include "screens/screen_manager.h"
 #include "screens/screen.h"
-
+#include "lua/console.h"
 #endif

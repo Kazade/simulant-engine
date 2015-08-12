@@ -13,7 +13,6 @@
 #include "../render_sequence.h"
 #include "../ui_stage.h"
 
-#include "interpreter.h"
 #include "api.h"
 
 namespace kglt {
