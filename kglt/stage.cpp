@@ -216,6 +216,14 @@ uint32_t Stage::sprite_count() const {
 LightID Stage::new_light(LightType type) {
     LightID lid = LightManager::manager_new();
     light(lid)->set_type(type);
+
+    // If this is a new directional light, make sure we set a decent
+    // direction to start with so that users can get a decent
+    // effect without doing anything
+    if(type == LIGHT_TYPE_DIRECTIONAL) {
+        light(lid)->set_direction(kglt::Vec3(-1, -0.5, 0).normalized());
+    }
+
     light(lid)->set_parent(this);
     signal_light_created_(lid);
     return lid;
