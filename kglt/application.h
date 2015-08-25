@@ -26,8 +26,8 @@ public:
 class Application : public ScreenManagerInterface {
 public:
     Application(const unicode& title=_u("KGLT Application"),
-        uint32_t width=640,
-        uint32_t height=480,
+        uint32_t width=800,
+        uint32_t height=600,
         uint32_t bpp=0,
         bool fullscreen=false);
 
