@@ -59,19 +59,19 @@ void parse_face(const unicode& input, int32_t& vertex_index, int32_t& tex_index,
 void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     Mesh* mesh = loadable_to<Mesh>(resource);
 
-    //Create a submesh with the default material
-    SubMeshIndex smi = mesh->new_submesh(
-        mesh->resource_manager().new_material_from_file(mesh->resource_manager().default_material_filename())
-    );
-
-    SubMesh& sm = mesh->submesh(smi);
-
     //Split on newlines
     std::vector<unicode> lines = file_utils::read_lines(filename_);
 
     std::vector<Vec3> vertices;
     std::vector<Vec2> tex_coords;
     std::vector<Vec3> normals;
+
+    std::unordered_map<unicode, kglt::MaterialID> materials;
+    std::unordered_map<unicode, SubMeshIndex> material_submeshes;
+
+    SubMesh* sm = nullptr;
+
+    unicode current_material;
 
     bool has_materials = false;
     for(uint32_t l = 0; l < lines.size(); ++l) {
@@ -122,31 +122,38 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             kmVec3Normalize(&n, &n);
             normals.push_back(n);
         } else if(parts[0] == "f") {
+            if(!sm) {
+                // We have an .obj file which has no materials or we hit faces before a
+                // usemtl statement. Let's just make a new default submesh
+                SubMeshIndex smi = mesh->new_submesh(mesh->resource_manager().clone_default_material());
+                sm = &mesh->submesh(smi);
+            }
+
             //Faces are a pain in the arse to parse
             parts = std::vector<unicode>(parts.begin() + 1, parts.end()); //Strip off the first bit
 
             int32_t first_v, first_vt, first_vn;
             parse_face(parts[0], first_v, first_vt, first_vn);
 
-            int32_t first_index = sm.vertex_data().count(); //Store the index of this vertex
+            int32_t first_index = sm->vertex_data().count(); //Store the index of this vertex
 
-            sm.vertex_data().position(vertices[first_v]); //Read the position
+            sm->vertex_data().position(vertices[first_v]); //Read the position
             if(first_vt > -1) {
-                sm.vertex_data().tex_coord0(tex_coords[first_vt]);
-                sm.vertex_data().tex_coord1(tex_coords[first_vt]);
+                sm->vertex_data().tex_coord0(tex_coords[first_vt]);
+                sm->vertex_data().tex_coord1(tex_coords[first_vt]);
             } else {
-                sm.vertex_data().tex_coord0(kglt::Vec2());
-                sm.vertex_data().tex_coord1(kglt::Vec2());
+                sm->vertex_data().tex_coord0(kglt::Vec2());
+                sm->vertex_data().tex_coord1(kglt::Vec2());
             }
 
             if(first_vn > -1) {
-                sm.vertex_data().normal(normals[first_vn]);
+                sm->vertex_data().normal(normals[first_vn]);
             } else {
-                sm.vertex_data().normal(kglt::Vec3());
+                sm->vertex_data().normal(kglt::Vec3());
             }
 
-            sm.vertex_data().diffuse(kglt::Colour::WHITE);
-            sm.vertex_data().move_next();
+            sm->vertex_data().diffuse(kglt::Colour::WHITE);
+            sm->vertex_data().move_next();
 
             parts = std::vector<unicode>(parts.begin() + 1, parts.end()); //Strip off the first bit
 
@@ -162,27 +169,45 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                 parse_face(parts[i-1], v1, vt1, vn1);
                 parse_face(parts[i], v2, vt2, vn2);
 
-                sm.vertex_data().position(vertices[v1]); //Read the position
-                sm.vertex_data().tex_coord0((vt1 > -1) ? tex_coords[vt1] : kglt::Vec2());
-                sm.vertex_data().tex_coord1((vt1 > -1) ? tex_coords[vt1] : kglt::Vec2());
-                sm.vertex_data().normal((vn1 > -1) ? normals[vn1] : kglt::Vec3());
-                sm.vertex_data().diffuse(kglt::Colour::WHITE);
-                sm.vertex_data().move_next();
+                sm->vertex_data().position(vertices[v1]); //Read the position
+                sm->vertex_data().tex_coord0((vt1 > -1) ? tex_coords[vt1] : kglt::Vec2());
+                sm->vertex_data().tex_coord1((vt1 > -1) ? tex_coords[vt1] : kglt::Vec2());
+                sm->vertex_data().normal((vn1 > -1) ? normals[vn1] : kglt::Vec3());
+                sm->vertex_data().diffuse(kglt::Colour::WHITE);
+                sm->vertex_data().move_next();
 
-                sm.vertex_data().position(vertices[v2]); //Read the position
-                sm.vertex_data().tex_coord0((vt2 > -1) ? tex_coords[vt2] : kglt::Vec2());
-                sm.vertex_data().tex_coord1((vt2 > -1) ? tex_coords[vt2] : kglt::Vec2());
-                sm.vertex_data().normal((vn2 > -1) ? normals[vn2] : kglt::Vec3());
-                sm.vertex_data().diffuse(kglt::Colour::WHITE);
-                sm.vertex_data().move_next();
+                sm->vertex_data().position(vertices[v2]); //Read the position
+                sm->vertex_data().tex_coord0((vt2 > -1) ? tex_coords[vt2] : kglt::Vec2());
+                sm->vertex_data().tex_coord1((vt2 > -1) ? tex_coords[vt2] : kglt::Vec2());
+                sm->vertex_data().normal((vn2 > -1) ? normals[vn2] : kglt::Vec3());
+                sm->vertex_data().diffuse(kglt::Colour::WHITE);
+                sm->vertex_data().move_next();
 
                 //Add the triangle
-                sm.index_data().index(first_index);
-                sm.index_data().index(sm.vertex_data().count() - 2);
-                sm.index_data().index(sm.vertex_data().count() - 1);
+                sm->index_data().index(first_index);
+                sm->index_data().index(sm->vertex_data().count() - 2);
+                sm->index_data().index(sm->vertex_data().count() - 1);
             }
         } else if(parts[0] == "newmtl") {
+            auto material_name = parts[1];
+
+            // Clone the default material
+            materials[material_name] = mesh->resource_manager().clone_default_material();
+            current_material = material_name;
+
             has_materials = true;
+        } else if(parts[0] == "usemtl") {
+            current_material = parts[1];
+
+            // If there is no submesh for this material yet, make it.
+            if(!material_submeshes.count(current_material)) {
+                material_submeshes.insert(
+                    std::make_pair(current_material, mesh->new_submesh(materials.at(current_material)))
+                );
+            }
+
+            // Make this submesh current
+            sm = &mesh->submesh(material_submeshes.at(current_material));
         } else if(parts[0] == "mtllib") {
             /*
              * If we find a mtllib command, we load the material file and insert its
@@ -197,6 +222,29 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
              } else {
                  L_DEBUG(_u("mtllib {0} not found. Skipping.").format(filename));
              }
+        } else if(parts[0] == "Ns") {
+            auto mat = mesh->resource_manager().material(materials.at(current_material));
+            mat->pass(0).set_shininess(parts[1].to_float());
+        } else if(parts[0] == "Ka") {
+
+        } else if(parts[0] == "Kd") {
+
+        } else if(parts[0] == "Ks") {
+
+        } else if(parts[0] == "Ni") {
+
+        } else if(parts[0] == "d") {
+
+        } else if(parts[0] == "illum") {
+
+        } else if(parts[0] == "map_Kd") {
+            auto mat = mesh->resource_manager().material(materials.at(current_material));
+            auto texture_file = os::path::join(os::path::dir_name(filename_), parts[1]);
+            if(os::path::exists(texture_file)) {
+                mat->pass(0).set_texture_unit(0, mesh->resource_manager().new_texture_from_file(texture_file));
+            } else {
+                L_WARN(_u("Unable to locate texture {0}").format(texture_file));
+            }
         }
     }
 
@@ -206,15 +254,15 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
         std::unordered_map<int, kglt::Vec3> index_to_normal;
 
         // Go through all the triangles, add the face normal to all the vertices
-        for(uint16_t i = 0; i < sm.index_data().count(); i+=3) {
-            uint16_t idx1 = sm.index_data().at(i);
-            uint16_t idx2 = sm.index_data().at(i+1);
-            uint16_t idx3 = sm.index_data().at(i+2);
+        for(uint16_t i = 0; i < sm->index_data().count(); i+=3) {
+            uint16_t idx1 = sm->index_data().at(i);
+            uint16_t idx2 = sm->index_data().at(i+1);
+            uint16_t idx3 = sm->index_data().at(i+2);
 
             kglt::Vec3 v1, v2, v3;
-            v1 = sm.vertex_data().position_at(idx1);
-            v2 = sm.vertex_data().position_at(idx2);
-            v3 = sm.vertex_data().position_at(idx3);
+            v1 = sm->vertex_data().position_at(idx1);
+            v2 = sm->vertex_data().position_at(idx2);
+            v3 = sm->vertex_data().position_at(idx3);
 
             kglt::Vec3 normal = (v2 - v1).normalized().cross((v3 - v1).normalized()).normalized();
 
@@ -225,8 +273,8 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
 
         // Now set the normal on the vertex data
         for(auto p: index_to_normal) {
-            sm.vertex_data().move_to(p.first);
-            sm.vertex_data().normal(p.second.normalized());
+            sm->vertex_data().move_to(p.first);
+            sm->vertex_data().normal(p.second.normalized());
         }
     }
 
@@ -254,14 +302,14 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                     mesh->resource_manager().new_texture_from_file(p.encode())
                 );
 
-                sm.set_material_id(mat);
+                sm->set_material_id(mat);
                 break;
             }
         }
     }
 
-    sm.vertex_data().done();
-    sm.index_data().done();
+    sm->vertex_data().done();
+    sm->index_data().done();
 }
 
 }

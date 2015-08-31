@@ -95,6 +95,7 @@ class MaterialPass:
 public:
     MaterialPass(Material& material);
 
+    void set_shininess(float s) { shininess_ = s; }
     void set_texture_unit(uint32_t texture_unit_id, TextureID tex);
     void set_animated_texture_unit(uint32_t texture_unit_id, const std::vector<TextureID> textures, double duration);
 
