@@ -31,6 +31,10 @@ namespace kglt {
 struct Vec3;
 
 struct Quaternion : public kmQuaternion {
+    Quaternion(const kmQuaternion& other) {
+        kmQuaternionAssign(this, &other);
+    }
+
     Quaternion() {
         kmQuaternionIdentity(this);
     }
