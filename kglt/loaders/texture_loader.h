@@ -24,7 +24,7 @@ public:
 
     unicode name() { return "texture_loader"; }
     bool supports(const unicode& filename) const override {
-        return filename.lower().contains(".tga") || filename.lower().contains(".png") || filename.lower().contains(".jpg");
+        return filename.lower().contains(".tga") || filename.lower().contains(".png") || filename.lower().contains(".jpg") || filename.lower().contains(".dds");
     }
 
     Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::stringstream> data) const {

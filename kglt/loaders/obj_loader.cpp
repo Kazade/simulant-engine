@@ -242,6 +242,9 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             parts.first + ".png",
             parts.first + "_color.png",
             parts.first + "_diffuse.png",
+            parts.first + ".dds",
+            parts.first + "_color.dds",
+            parts.first + "_diffuse.dds",
         };
 
         for(const unicode& p: possible_diffuse_maps) {
