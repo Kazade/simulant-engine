@@ -74,8 +74,8 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     std::vector<Vec3> normals;
 
     bool has_materials = false;
-    for(unicode tmp: lines) {
-        unicode line(tmp); //Unicode has nicer methods
+    for(uint32_t l = 0; l < lines.size(); ++l) {
+        unicode line = lines[l];
 
         //Ignore comments
         if(line.strip().starts_with("#")) {
@@ -183,6 +183,20 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             }
         } else if(parts[0] == "newmtl") {
             has_materials = true;
+        } else if(parts[0] == "mtllib") {
+            /*
+             * If we find a mtllib command, we load the material file and insert its
+             * lines into this position. This makes it so it's like the materials are embedded
+             * in the current file which makes parsing the same as if they were!
+             */
+             auto filename = parts[1];
+             filename = os::path::join(os::path::dir_name(filename_), filename);
+             if(os::path::exists(filename)) {
+                 std::vector<unicode> material_lines = file_utils::read_lines(filename);
+                 lines.insert(lines.begin() + l + 1, material_lines.begin(), material_lines.end());
+             } else {
+                 L_DEBUG(_u("mtllib {0} not found. Skipping.").format(filename));
+             }
         }
     }
 
