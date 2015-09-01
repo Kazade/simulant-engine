@@ -226,11 +226,29 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             auto mat = mesh->resource_manager().material(materials.at(current_material));
             mat->pass(0).set_shininess(parts[1].to_float());
         } else if(parts[0] == "Ka") {
+            auto mat = mesh->resource_manager().material(materials.at(current_material));
 
+            float r = parts[1].to_float();
+            float g = parts[2].to_float();
+            float b = parts[3].to_float();
+
+            mat->pass(0).set_ambient(kglt::Colour(r, g, b, 1.0));
         } else if(parts[0] == "Kd") {
+            auto mat = mesh->resource_manager().material(materials.at(current_material));
 
+            float r = parts[1].to_float();
+            float g = parts[2].to_float();
+            float b = parts[3].to_float();
+
+            mat->pass(0).set_diffuse(kglt::Colour(r, g, b, 1.0));
         } else if(parts[0] == "Ks") {
+            auto mat = mesh->resource_manager().material(materials.at(current_material));
 
+            float r = parts[1].to_float();
+            float g = parts[2].to_float();
+            float b = parts[3].to_float();
+
+            mat->pass(0).set_specular(kglt::Colour(r, g, b, 1.0));
         } else if(parts[0] == "Ni") {
 
         } else if(parts[0] == "d") {
@@ -309,7 +327,13 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     }
 
     sm->vertex_data().done();
-    sm->index_data().done();
+    if(material_submeshes.empty()) {
+        sm->index_data().done();
+    } else {
+        for(auto& p: material_submeshes) {
+            mesh->submesh(p.second).index_data().done();
+        }
+    }
 }
 
 }
