@@ -100,8 +100,6 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
         } else if(parts[0] == "vt") {
             if(parts.size() < 3) {
                 throw IOError(_u("Found {0} components for texture coordinate, expected 2").format(parts.size() - 1));
-            } else if(parts.size() > 2) {
-                L_WARN("Ignoring extra components on texture coordinate");
             }
 
             float x = parts[1].to_float();
@@ -201,9 +199,11 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
 
             // If there is no submesh for this material yet, make it.
             if(!material_submeshes.count(current_material)) {
+                auto mat_id = materials.at(current_material);
                 material_submeshes.insert(
-                    std::make_pair(current_material, mesh->new_submesh(materials.at(current_material)))
+                    std::make_pair(current_material, mesh->new_submesh(mat_id))
                 );
+                mesh->submesh(material_submeshes[current_material]).set_material_id(mat_id);
             }
 
             // Make this submesh current
@@ -256,10 +256,12 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
         } else if(parts[0] == "illum") {
 
         } else if(parts[0] == "map_Kd") {
+            auto texture_name = parts[1];
             auto mat = mesh->resource_manager().material(materials.at(current_material));
-            auto texture_file = os::path::join(os::path::dir_name(filename_), parts[1]);
+            auto texture_file = os::path::join(os::path::dir_name(filename_), texture_name);
             if(os::path::exists(texture_file)) {
-                mat->pass(0).set_texture_unit(0, mesh->resource_manager().new_texture_from_file(texture_file));
+                auto tex_id = mesh->resource_manager().new_texture_from_file(texture_file);
+                mat->pass(0).set_texture_unit(0, tex_id);
             } else {
                 L_WARN(_u("Unable to locate texture {0}").format(texture_file));
             }

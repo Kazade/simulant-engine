@@ -57,14 +57,14 @@ BEGIN(PASS)
 
         void main() {
             if(active_texture_count == 0) {
-                gl_FragColor = frag_diffuse * global_ambient * material_ambient;
+                gl_FragColor = frag_diffuse * (global_ambient + material_ambient);
             } else {
                 vec4 t1 = texture2D(textures[0], frag_texcoord0.st);
                 vec4 t2 = texture2D(textures[1], frag_texcoord1.st);
                 if(active_texture_count < 2) {
                     t2 = vec4(1.0, 1.0, 1.0, 0.0);
                 }
-                gl_FragColor = (((1.0 - t2.a) * t1) + (t2.a * t2)) * frag_diffuse * global_ambient * material_ambient;
+                gl_FragColor = (((1.0 - t2.a) * t1) + (t2.a * t2)) * frag_diffuse * (global_ambient + material_ambient);
             }
         }
     END_DATA(FRAGMENT)
