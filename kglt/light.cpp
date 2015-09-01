@@ -9,9 +9,9 @@ Light::Light(Stage* stage, LightID lid):
     type_(LIGHT_TYPE_POINT),
     range_(100.0) {
 
-    set_ambient(kglt::Colour(0.1f, 0.1f, 0.1f, 0.1f));
-    set_diffuse(kglt::Colour(0.2f, 0.2f, 0.2f, 0.2f));
-    set_specular(kglt::Colour(0.1f, 0.1f, 0.1f, 1.0f));
+    set_ambient(kglt::Colour(0.3f, 0.3f, 0.3f, 1.0f));
+    set_diffuse(kglt::Colour(0.9f, 0.9f, 1.0f, 1.0f));
+    set_specular(kglt::Colour(0.01f, 0.01f, 0.01f, 1.0f));
     set_attenuation_from_range(100.0);
 }
 

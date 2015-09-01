@@ -179,6 +179,13 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<un
             } else {
                 throw SyntaxError("Invalid argument passed to SET(FLAG BLEND):" + arg_2);
             }
+        } else if(arg_1 == "PREVENT_TEXTURES") {
+            // Safety, don't allow code to set a texture unit on this pass
+            if(arg_2 == "ON") {
+                pass->set_prevent_textures(true);
+            } else {
+                pass->set_prevent_textures(false);
+            }
         } else {
             throw SyntaxError(_u("Invalid argument passed to SET(FLAG): {0}").format(arg_1));
         }

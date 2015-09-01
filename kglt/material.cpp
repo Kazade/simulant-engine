@@ -115,6 +115,10 @@ MaterialPass::MaterialPass(Material &material):
 }
 
 void MaterialPass::set_texture_unit(uint32_t texture_unit_id, TextureID tex) {
+    if(!allow_textures_) {
+        throw LogicError("Attempted to set a texture on a pass which prevents them");
+    }
+
     if(texture_unit_id >= MAX_TEXTURE_UNITS) {
         L_ERROR(_u("Texture unit ID is too high. {0} >= {1}").format(texture_unit_id, MAX_TEXTURE_UNITS));
         throw LogicError(_u("Texture unit ID is too high. {0} >= {1}").format(texture_unit_id, MAX_TEXTURE_UNITS).encode());
@@ -148,6 +152,12 @@ void MaterialPass::set_albedo(float reflectiveness) {
         material().reflective_passes_.insert(this);
     } else {
         material().reflective_passes_.erase(this);
+    }
+}
+
+void Material::set_texture_unit_on_all_passes(uint32_t texture_unit_id, TextureID tex) {
+    for(auto& p: passes_) {
+        p->set_texture_unit(texture_unit_id, tex);
     }
 }
 

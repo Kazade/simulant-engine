@@ -160,9 +160,8 @@ public:
         float_uniforms_[name] = value;
     }
 
-
     void apply_staged_uniforms();
-
+    void set_prevent_textures(bool value) { allow_textures_ = !value; }
 private:
     std::unordered_map<unicode, float> float_uniforms_;
     std::unordered_map<unicode, int> int_uniforms_;
@@ -175,6 +174,7 @@ private:
     Colour ambient_ = Colour::WHITE;
     Colour specular_ = Colour::WHITE;
     float shininess_ = 0.0;
+    bool allow_textures_ = true;
 
     std::vector<TextureUnit> texture_units_;
 
@@ -216,6 +216,7 @@ public:
     MaterialPass& pass(uint32_t index);
     uint32_t pass_count() const { return passes_.size(); }
 
+    void set_texture_unit_on_all_passes(uint32_t texture_unit_id, TextureID tex);
 private:
     std::vector<MaterialPass::ptr> passes_;
     std::set<MaterialPass*> reflective_passes_;

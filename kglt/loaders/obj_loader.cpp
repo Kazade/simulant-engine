@@ -261,7 +261,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             auto texture_file = os::path::join(os::path::dir_name(filename_), texture_name);
             if(os::path::exists(texture_file)) {
                 auto tex_id = mesh->resource_manager().new_texture_from_file(texture_file);
-                mat->pass(0).set_texture_unit(0, tex_id);
+                mat->set_texture_unit_on_all_passes(0, tex_id);
             } else {
                 L_WARN(_u("Unable to locate texture {0}").format(texture_file));
             }
