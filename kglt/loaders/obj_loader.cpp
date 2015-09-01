@@ -86,7 +86,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             continue;
         }
 
-        std::vector<unicode> parts = line.strip().split("", -1, false); //Split on WHITEspace
+        std::vector<unicode> parts = line.strip().split("", -1, false); //Split on whitespace
         if(parts[0] == "v") {
             if(parts.size() != 4) {
                 throw IOError(_u("Found {0} components for vertex, expected 3").format(parts.size()));
@@ -252,7 +252,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
         } else if(parts[0] == "Ni") {
 
         } else if(parts[0] == "d") {
-
+            // Dissolved == Transparency... apparently
         } else if(parts[0] == "illum") {
 
         } else if(parts[0] == "map_Kd") {
