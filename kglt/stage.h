@@ -148,6 +148,10 @@ public:
         return window().new_mesh_as_cube(width, garbage_collect);
     }
 
+    virtual MeshID new_mesh_as_cylinder(float diameter, float length, int segments=20, int stacks=20, bool garbage_collect=true) {
+        return window().new_mesh_as_cylinder(diameter, length, segments, stacks, garbage_collect);
+    }
+
     virtual MeshID new_mesh_as_box(float width, float height, float depth, bool garbage_collect=true) {
         return window().new_mesh_as_box(width, height, depth, garbage_collect);
     }
@@ -186,6 +190,10 @@ public:
 
     MeshID new_mesh_with_alias_as_rectangle(const unicode &alias, float width, float height, const Vec2& offset=Vec2(), MaterialID material=MaterialID(), bool garbage_collect=true) override {
         return window().new_mesh_with_alias_as_rectangle(alias, width, height, offset, material, garbage_collect);
+    }
+
+    virtual MeshID new_mesh_with_alias_as_cylinder(const unicode& alias, float diameter, float length, int segments=20, int stacks=20, bool garbage_collect=true) {
+        return window().new_mesh_with_alias_as_cylinder(alias, diameter, length, segments, stacks, garbage_collect);
     }
 
     MeshID get_mesh_with_alias(const unicode& alias) override {

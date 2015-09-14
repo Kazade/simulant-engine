@@ -137,6 +137,13 @@ MeshID ResourceManagerImpl::new_mesh_as_rectangle(float width, float height, con
     return m;
 }
 
+MeshID ResourceManagerImpl::new_mesh_as_cylinder(float diameter, float length, int segments, int stacks, bool garbage_collect) {
+    MeshID m = new_mesh(garbage_collect);
+    kglt::procedural::mesh::cylinder(mesh(m), diameter, length, segments, stacks);
+    MeshManager::mark_as_uncollected(m);
+    return m;
+}
+
 MeshID ResourceManagerImpl::new_mesh_from_vertices(const std::vector<Vec2> &vertices, MeshArrangement arrangement, bool garbage_collect) {
     MeshID m = new_mesh(garbage_collect);
 
@@ -234,6 +241,18 @@ MeshID ResourceManagerImpl::new_mesh_with_alias_as_rectangle(const unicode& alia
         delete_mesh(m);
         throw;
     }
+    return m;
+}
+
+MeshID ResourceManagerImpl::new_mesh_with_alias_as_cylinder(const unicode &alias, float diameter, float length, int segments, int stacks, bool garbage_collect) {
+    MeshID m = new_mesh_as_cylinder(diameter, length, segments, stacks, garbage_collect);
+    try {
+        MeshManager::manager_store_alias(alias, m);
+    } catch(...) {
+        delete_mesh(m);
+        throw;
+    }
+
     return m;
 }
 

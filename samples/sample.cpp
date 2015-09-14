@@ -34,6 +34,7 @@ public:
         kglt::MaterialID matid = stage->new_material_from_texture(tid);
 
         stage->set_ambient_light(kglt::Colour::WHITE);
+        stage->new_light(kglt::LIGHT_TYPE_DIRECTIONAL);
 
         actor_id_ = stage->geom_factory().new_capsule();
         {

@@ -869,3 +869,5 @@ submodules/luabind/luabind/detail/signature_match.hpp
 submodules/luabind/luabind/detail/stack_utils.hpp
 submodules/luabind/luabind/detail/typetraits.hpp
 submodules/luabind/luabind/detail/yes_no.hpp
+kglt/procedural/mesh/cylinder.h
+kglt/procedural/mesh/cylinder.cpp

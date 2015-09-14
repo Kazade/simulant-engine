@@ -86,4 +86,9 @@ ActorID GeomFactory::new_cube(const float diameter) {
     return stage_.new_actor(mesh_id);
 }
 
+ActorID GeomFactory::new_cylinder(const float diameter, const float length) {
+    auto mesh_id = stage_.new_mesh_as_cylinder(diameter, length);
+    return stage_.new_actor(mesh_id);
+}
+
 }

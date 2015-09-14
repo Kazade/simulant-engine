@@ -20,6 +20,7 @@ public:
     ActorID new_rectangle_outline(const float width, const float height);
     ActorID new_rectangle(const float width, const float height);
     ActorID new_capsule(const float diameter=0.5, const float length=1.0);
+    ActorID new_cylinder(const float diameter=0.5, const float length=1.0);
 private:
     Stage& stage_;
 };
