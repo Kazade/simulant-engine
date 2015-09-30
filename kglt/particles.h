@@ -132,7 +132,6 @@ typedef std::shared_ptr<ParticleEmitter> EmitterPtr;
 
 class ParticleSystem :
     public virtual BoundableEntity,
-    public Nameable,
     public Managed<ParticleSystem>,
     public generic::Identifiable<ParticleSystemID>,
     public ParentSetterMixin<Object>,

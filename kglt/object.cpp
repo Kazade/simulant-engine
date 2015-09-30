@@ -18,6 +18,11 @@ Object::Object(Stage *stage):
     rotation_locked_(false),
     position_locked_(false) {
 
+    absolute_position_ = Vec3(0, 0, 0);
+    absolute_rotation_ = Quaternion(0, 0, 0, 1);
+    relative_position_ = Vec3(0, 0, 0);
+    relative_rotation_ = Quaternion(0, 0, 0, 1);
+
     update_from_parent();
 
     //When the parent changes, update the position/orientation
@@ -309,6 +314,10 @@ void Object::update_from_parent() {
     if(orig_pos != absolute_position() || orig_rot != absolute_rotation()) {
         transformation_changed();
     }
+
+    assert(!isnan(absolute_position_.x));
+    assert(!isnan(absolute_position_.y));
+    assert(!isnan(absolute_position_.z));
 
     apply_recursively([](GenericTreeNode* x) {
         x->as<Object>()->update_from_parent();

@@ -18,7 +18,7 @@ void KGLPLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     if(js.has_key("emitters")) {
         json::Node& emitters = js.dict_value("emitters");
-        for(int i = 0; i < emitters.length(); ++i) {
+        for(uint32_t i = 0; i < emitters.length(); ++i) {
             json::Node& emitter = emitters.array_value(i);
 
             auto new_emitter = ps->push_emitter();
