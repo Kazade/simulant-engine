@@ -383,7 +383,7 @@ void Mesh::transform_vertices(const kglt::Mat4& transform, bool include_submeshe
 
         if(shared_data().has_normals()) {
             kglt::Vec3 n = shared_data().normal_at(i);
-            kmVec3MultiplyMat4(&n, &n, &transform);
+            kmVec3TransformNormal(&n, &n, &transform);
             shared_data().normal(n.normalized());
         }
         shared_data().move_next();

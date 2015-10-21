@@ -28,9 +28,8 @@ Stage::Stage(WindowBase *parent, StageID id, AvailablePartitioner partitioner):
     LightManager::signal_post_create().connect(std::bind(&Stage::post_create_callback<Light, LightID>, this, std::placeholders::_1, std::placeholders::_2));
 }
 
-bool Stage::init() {
-    //DISABLED UNTIL Scene is destroyed
-    //debug_ = Debug::create(*this);
+bool Stage::init() {    
+    debug_ = Debug::create(*this);
 
     return true;
 }

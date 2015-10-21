@@ -158,7 +158,7 @@ BEGIN(PASS)
             vec4 n_eye = normalize(vertex_normal_eye);
             vec4 s_eye = normalize(light_dir);
             vec4 v_eye = normalize(-vertex_position_eye);
-            vec4 h_eye = v_eye + s_eye;
+            vec4 h_eye = normalize(v_eye + s_eye);
 
             vec4 color = vec4(0);
 
@@ -178,7 +178,7 @@ BEGIN(PASS)
 
                 color += attenuation * (light_diffuse * material_diffuse * intensity);
                 float spec = max(dot(h_eye, n_eye), 0.0);
-                color += attenuation * (light_specular * material_specular) * pow(spec, material_shininess);
+                color += attenuation * (light_specular * material_specular) * pow(spec, material_shininess) * intensity;
             }
 
             if(active_texture_count == 0) {

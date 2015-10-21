@@ -15,7 +15,7 @@ std::vector<LightID> NullPartitioner::lights_visible_from(CameraID camera_id) {
     for(LightID lid: all_lights_) {
         auto light = stage()->light(lid);
         AABB aabb = light->transformed_aabb();
-        if(frustum.intersects_aabb(aabb)) {
+        if(light->type() == LIGHT_TYPE_DIRECTIONAL || frustum.intersects_aabb(aabb)) {
             result.push_back(lid);
         }
     }

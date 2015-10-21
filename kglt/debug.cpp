@@ -8,6 +8,9 @@ namespace kglt {
 Debug::Debug(Stage &stage):
     stage_(stage) {
 
+    stage_.window().signal_frame_finished().connect(
+        std::bind(&Debug::update, this)
+    );
 }
 
 void Debug::update() {

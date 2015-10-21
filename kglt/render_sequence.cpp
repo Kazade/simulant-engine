@@ -274,7 +274,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
             lights_intersecting_actor.clear();
             for(auto lid: lights) {
                 auto light = stage->light(lid);
-                if(light->transformed_aabb().intersects(ent->transformed_aabb())) {
+                if(light->type() == LIGHT_TYPE_DIRECTIONAL || light->transformed_aabb().intersects(ent->transformed_aabb())) {
                     lights_intersecting_actor.push_back(lid);
                 }
             }
