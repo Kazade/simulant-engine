@@ -39,10 +39,11 @@ CameraPtr CameraProxy::camera() {
     return stage()->window().camera(id());
 }
 
-void CameraProxy::follow(ActorID actor, const kglt::Vec3& offset, float lag_in_seconds) {
+void CameraProxy::follow(ActorID actor, const kglt::Vec3& offset, float lag_in_seconds, bool follow_roll) {
     following_actor_ = actor;
     following_offset_ = offset;
     following_lag_ = lag_in_seconds;
+    follow_roll_ = follow_roll;
 
     _update_following(1.0);
 }
@@ -56,8 +57,12 @@ void CameraProxy::_update_following(double dt) {
         kmQuaternionGetForwardVec3RH(&actor_forward, &actor_rotation);
 
         Quaternion initial_rotation = absolute_rotation();
-
         float t = ((following_lag_ == 0) ? 1.0 : dt * (1.0 / following_lag_));
+
+        Quaternion target_rotation = actor_rotation;
+        if(!follow_roll_) {
+            kmQuaternionLookRotation(&target_rotation, &actor_position, &KM_VEC3_POS_Y);
+        }
 
         set_absolute_rotation(
             initial_rotation.slerp(actor_rotation, t)

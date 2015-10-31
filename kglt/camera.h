@@ -27,7 +27,7 @@ public:
     CameraProxy(Stage* stage, CameraID camera_id);
     ~CameraProxy();
 
-    void follow(ActorID actor, const kglt::Vec3& offset, float lag_in_seconds=1.0);
+    void follow(ActorID actor, const kglt::Vec3& offset, float lag_in_seconds=1.0, bool follow_roll=true);
     void ask_owner_for_destruction();
 
     void _update_following(double dt);
@@ -47,6 +47,7 @@ public:
 private:
     ActorID following_actor_;
     Vec3 following_offset_;
+    bool follow_roll_ = true;
     float following_lag_ = 0.0;
 
     void do_update(double dt);
