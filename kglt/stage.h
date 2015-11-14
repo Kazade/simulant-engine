@@ -334,7 +334,7 @@ public:
     // Default stuff
     MaterialID default_material_id() const { return window_.default_material_id(); }
     TextureID default_texture_id() const { return window_.default_texture_id(); }
-    MaterialID clone_default_material() { return window_.clone_default_material(); }
+    MaterialID clone_default_material(bool garbage_collect=true) { return window_.clone_default_material(garbage_collect); }
     unicode default_material_filename() const { return window_.default_material_filename(); }
 
     // RenderableStage

@@ -49,7 +49,6 @@ private:
             const unicode& parent_block_type,
             MaterialPass* current_pass=nullptr);
 
-    void handle_technique_set_command(Material& mat , const std::vector<std::string>& args, MaterialTechnique* technique);
     void handle_pass_set_command(Material& mat, const std::vector<unicode> &args, MaterialPass* pass);
     void handle_data_block(Material& mat, const unicode &data_type, const std::vector<unicode>& lines, MaterialPass* pass);
 };

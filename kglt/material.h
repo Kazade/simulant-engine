@@ -79,6 +79,9 @@ private:
 
     TexturePtr texture_unit_;
     Mat4 texture_matrix_;
+
+    friend class MaterialPass;
+    TextureUnit new_clone(MaterialPass& owner) const;
 };
 
 enum IterationType {
@@ -87,7 +90,6 @@ enum IterationType {
     ITERATE_ONCE_PER_LIGHT
 };
 
-class MaterialTechnique;
 
 class MaterialPass:
     public Managed<MaterialPass>,
@@ -163,10 +165,10 @@ public:
     void apply_staged_uniforms();
     void set_prevent_textures(bool value) { allow_textures_ = !value; }
 private:
+    Material& material_;
+
     std::unordered_map<unicode, float> float_uniforms_;
     std::unordered_map<unicode, int> int_uniforms_;
-
-    Material& material_;
 
     GPUProgram::ptr program_;
 
@@ -195,7 +197,8 @@ private:
 
     std::map<kglt::ShaderType, unicode> shader_sources_;
 
-
+    friend class Material;
+    MaterialPass::ptr new_clone(Material& owner) const;
 };
 
 class Material :
@@ -217,6 +220,8 @@ public:
     uint32_t pass_count() const { return passes_.size(); }
 
     void set_texture_unit_on_all_passes(uint32_t texture_unit_id, TextureID tex);
+
+    MaterialID new_clone(bool garbage_collect=true) const;
 private:
     std::vector<MaterialPass::ptr> passes_;
     std::set<MaterialPass*> reflective_passes_;

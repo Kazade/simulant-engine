@@ -24,6 +24,7 @@ public:
     virtual ~Resource() {}
 
     ResourceManager& resource_manager() { assert(manager_); return *manager_; }
+    const ResourceManager& resource_manager() const { assert(manager_); return *manager_; }
 
     int age() const {
         return std::chrono::duration_cast<std::chrono::seconds>(

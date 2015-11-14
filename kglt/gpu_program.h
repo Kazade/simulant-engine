@@ -185,6 +185,10 @@ public:
 
     UniformInfo info(const unicode& uniform_name);
 
+    const std::unordered_map<ShaderAvailableAuto, unicode>& auto_uniforms() const {
+        return auto_uniforms_;
+    }
+
 private:
     friend class GPUProgram;
     GPUProgram& program_;
@@ -224,6 +228,10 @@ public:
         attribute_cache_.clear();
     }
 
+    const std::unordered_map<ShaderAvailableAttributes, std::string>& auto_attributes() const {
+        return auto_attributes_;
+    }
+
 private:
     friend class GPUProgram;
 
@@ -259,17 +267,20 @@ public:
     ShaderCompiledSignal& signal_shader_compiled() { return signal_shader_compiled_; }
 
     unicode md5() { return md5_shader_hash_; }
-private:
-    friend class UniformManager;
-    friend class AttributeManager;
-
-    void prepare_program();
 
     struct ShaderInfo {
         uint32_t object = 0;
         bool is_compiled = false;
         unicode source;
     };
+
+    const std::unordered_map<ShaderType, ShaderInfo> shader_infos() const { return shaders_; }
+private:
+    friend class UniformManager;
+    friend class AttributeManager;
+
+    void prepare_program();
+
 
     bool is_linked_ = false;
 

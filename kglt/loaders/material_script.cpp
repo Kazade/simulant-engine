@@ -20,15 +20,6 @@ MaterialScript::MaterialScript(const MaterialLanguageText& text):
 
 }
 
-void MaterialScript::handle_technique_set_command(Material& mat, const std::vector<std::string>& args, MaterialTechnique* technique) {
-    if(args.size() < 2) {
-        throw SyntaxError("Wrong number of arguments for SET command");
-    }
-
-    unicode type = unicode(args[0]).upper();
-    throw SyntaxError(_u("Invalid SET command for technique: {0}").format(type));
-}
-
 void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<unicode>& args, MaterialPass* pass) {
     if(args.size() < 2) {
         throw SyntaxError("Wrong number of arguments for SET command");

@@ -167,5 +167,86 @@ void Material::update(double dt) {
     }
 }
 
+TextureUnit TextureUnit::new_clone(MaterialPass& owner) const {
+    TextureUnit ret(owner);
+
+    ret.animated_texture_units_ = animated_texture_units_;
+    ret.animated_texture_duration_ = animated_texture_duration_;
+    ret.time_elapsed_ = time_elapsed_;
+    ret.current_texture_ = current_texture_;
+    ret.texture_unit_ = texture_unit_;
+    ret.texture_matrix_ = texture_matrix_;
+
+    return ret;
+}
+
+MaterialPass::ptr MaterialPass::new_clone(Material& owner) const {
+    MaterialPass::ptr ret = MaterialPass::create(owner);
+
+    ret->float_uniforms_ = float_uniforms_;
+    ret->int_uniforms_ = int_uniforms_;
+
+    auto clone_gpu_program = [](GPUProgram::ptr prog) -> GPUProgram::ptr {
+        GPUProgram::ptr ret = GPUProgram::create();
+
+        for(auto& p: prog->shader_infos()) {
+            ret->set_shader_source(p.first, p.second.source);
+        }
+
+        for(auto& p: prog->uniforms().auto_uniforms()) {
+            ret->uniforms().register_auto(p.first, p.second);
+        }
+
+        for(auto& p: prog->attributes().auto_attributes()) {
+            ret->attributes().register_auto(p.first, p.second);
+        }
+
+        ret->build();
+        return ret;
+    };
+
+    ret->program_ = clone_gpu_program(program_);
+
+    ret->diffuse_ = diffuse_;
+    ret->ambient_ = ambient_;
+    ret->specular_ = specular_;
+    ret->shininess_ = shininess_;
+
+    ret->allow_textures_ = allow_textures_;
+
+    for(auto& unit: texture_units_) {
+        ret->texture_units_.push_back(unit.new_clone(*ret));
+    }
+
+    ret->iteration_ = iteration_;
+    ret->max_iterations_ = max_iterations_;
+    ret->blend_ = blend_;
+    ret->depth_writes_enabled_ = depth_writes_enabled_;
+    ret->depth_test_enabled_ = depth_test_enabled_;
+    ret->point_size_ = point_size_;
+    ret->albedo_ = albedo_;
+    ret->reflection_texture_unit_ = reflection_texture_unit_;
+    ret->polygon_mode_ = polygon_mode_;
+    ret->shader_sources_ = shader_sources_;
+    return ret;
+}
+
+MaterialID Material::new_clone(bool garbage_collect) const {
+
+    // Probably the only legit use of const_cast I've ever done! The const-ness applies
+    // to the source material, not the resource manager, and there's no other way to get
+    // a non-const resource manager reference unless we pass it in as an argument and that
+    // is nasty
+    ResourceManager& tmp = const_cast<ResourceManager&>(resource_manager());
+
+    MaterialID ret = tmp.new_material(garbage_collect);
+    auto mat = tmp.material(ret);
+
+    for(auto pass: passes_) {
+        mat->passes_.push_back(pass->new_clone(*mat.__object));
+    }
+
+    return ret;
+}
 
 }

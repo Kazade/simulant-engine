@@ -113,7 +113,7 @@ public:
     virtual WindowBase& window() = 0;
     virtual const WindowBase& window() const = 0;
 
-    virtual MaterialID clone_default_material() = 0;
+    virtual MaterialID clone_default_material(bool garbage_collect=true) = 0;
 
     virtual TextureID default_texture_id() const = 0;
     virtual MaterialID default_material_id() const = 0;
@@ -218,8 +218,8 @@ public:
 
     unicode default_material_filename() const;
 
-    MaterialID clone_default_material() {
-        return new_material_from_file(default_material_filename());
+    MaterialID clone_default_material(bool garbage_collect=true) {
+        return material(default_material_id_)->new_clone(garbage_collect);
     }
 
     MaterialID default_material_id() const;
