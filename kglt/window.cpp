@@ -8,7 +8,8 @@
 
 namespace kglt {
 
-Window::Window() {
+Window::Window(GPUCapsLevel level):
+    WindowBase(level) {
 
 }
 

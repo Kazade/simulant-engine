@@ -18,7 +18,7 @@ public:
         return WindowBase::create<Window>(width, height, bpp, fullscreen);
     }
 
-    Window();
+    Window(GPUCapsLevel level);
     virtual ~Window();
 
     void set_title(const std::string& title);

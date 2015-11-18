@@ -106,7 +106,6 @@ public:
     void deactivate_all_pipelines();
 
     //void set_batcher(Batcher::ptr batcher);
-    void set_renderer(Renderer::ptr renderer);
 
     void run();
 
@@ -119,7 +118,6 @@ private:
     void run_pipeline(Pipeline::ptr stage, int& actors_rendered);
 
     WindowBase& window_;
-    Renderer::ptr renderer_;
 
     std::list<Pipeline::ptr> ordered_pipelines_;
 

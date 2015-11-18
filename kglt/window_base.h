@@ -45,6 +45,7 @@ class RenderSequence;
 class SceneImpl;
 class Watcher;
 class VirtualGamepad;
+class Renderer;
 
 typedef std::function<void (double)> WindowUpdateCallback;
 typedef std::shared_ptr<Loader> LoaderPtr;
@@ -67,8 +68,8 @@ public:
     static const int STEPS_PER_SECOND = 60;
 
     template<typename T>
-    static std::shared_ptr<WindowBase> create(int width=640, int height=480, int bpp=0, bool fullscreen=false) {
-        std::shared_ptr<WindowBase> window(new T());
+    static std::shared_ptr<WindowBase> create(int width=640, int height=480, int bpp=0, bool fullscreen=false, GPUCapsLevel level=GPU_CAPABILITIES_NORMAL) {
+        std::shared_ptr<WindowBase> window(new T(level));
         if(!window->_init(width, height, bpp, fullscreen)) {
             throw InstanceInitializationError();
         }
@@ -184,7 +185,7 @@ protected:
 
     InputController& input_controller() { assert(input_controller_); return *input_controller_; }
 
-    WindowBase();
+    WindowBase(GPUCapsLevel level);
 
     void set_paused(bool value=true);
     void set_has_context(bool value=true);
@@ -253,6 +254,8 @@ private:
 
     std::shared_ptr<ScreenManager> routes_;
 
+    std::shared_ptr<Renderer> renderer_;
+
 public:
 
     //Read only properties
@@ -289,6 +292,8 @@ public:
             return self->input_controller_->keyboard();
         }
     };
+
+    Property<WindowBase, Renderer> renderer = { this, &WindowBase::renderer_ };
 };
 
 }

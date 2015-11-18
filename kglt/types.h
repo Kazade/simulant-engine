@@ -561,6 +561,11 @@ enum VirtualDPadDirections {
     VIRTUAL_DPAD_DIRECTIONS_ANALOG
 };
 
+enum GPUCapsLevel {
+    GPU_CAPABILITIES_LEGACY, //Dreamcast. GL 1.x
+    GPU_CAPABILITIES_NORMAL
+};
+
 typedef uint32_t TextureFlags;
 
 typedef UniqueID<0> MeshID;

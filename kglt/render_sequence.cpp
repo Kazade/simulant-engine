@@ -58,8 +58,7 @@ void Pipeline::activate() {
 }
 
 RenderSequence::RenderSequence(WindowBase &window):
-    window_(window),
-    renderer_(new GenericRenderer(window)) {
+    window_(window) {
 
     //Set up the default render options
     render_options.wireframe_enabled = false;
@@ -163,10 +162,6 @@ PipelineID RenderSequence::new_pipeline(UIStageID stage, CameraID camera, const 
     );
 
     return new_p;
-}
-
-void RenderSequence::set_renderer(Renderer::ptr renderer) {
-    renderer_ = renderer;
 }
 
 void RenderSequence::run() {
@@ -302,12 +297,12 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
          * when we render, we can apply the uniforms/textures/shaders etc. by traversing the
          * tree and calling bind()/unbind() at each level
          */
-        renderer_->set_current_stage(stage_id);
+        window_.renderer->set_current_stage(stage_id);
         for(RenderPriority priority: RENDER_PRIORITIES) {
             QueueGroups::mapped_type& priority_queue = queues[priority];
             for(RootGroup::ptr pass_group: priority_queue) {
                 std::function<void (Renderable&, MaterialPass&)> f = [=](Renderable& renderable, MaterialPass& pass) {
-                    renderer_->render(
+                    window_.renderer->render(
                         renderable,
                         pipeline_stage->camera_id(),
                         pass_group->get_root().current_program()
@@ -316,7 +311,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
                 pass_group->traverse(f);
             }
         }
-        renderer_->set_current_stage(StageID());
+        window_.renderer->set_current_stage(StageID());
     }
 
 /*

@@ -15,6 +15,7 @@
 #include "loaders/tiled_loader.h"
 #include "loaders/particle_script.h"
 #include "loaders/heightmap_loader.h"
+#include "renderers/generic_renderer.h"
 
 #include "sound.h"
 #include "camera.h"
@@ -31,7 +32,7 @@
 
 namespace kglt {
 
-WindowBase::WindowBase():
+WindowBase::WindowBase(GPUCapsLevel level):
     Source(this),
     BackgroundManager(this),
     StageManager(),
@@ -58,6 +59,13 @@ WindowBase::WindowBase():
     ktiGenTimers(1, &variable_timer_);
     ktiBindTimer(variable_timer_);
     ktiStartGameTimer();
+
+    if(level == GPU_CAPABILITIES_NORMAL) {
+        renderer_ = GenericRenderer::create(*this);
+    } else {
+        throw NotImplementedError(__FILE__, __LINE__);
+    }
+
 
     logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));
 }
