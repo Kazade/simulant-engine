@@ -349,6 +349,12 @@ struct Vec3 : public kmVec3 {
         kmVec3Normalize(this, this);
     }
 
+    Vec3 lerp(const Vec3& end, const float t) {
+        Vec3 ret;
+        kmVec3Lerp(&ret, this, &end, t);
+        return ret;
+    }
+
     Vec3 rotated_by(const Quaternion& q) const {
         Vec3 result;
         kmQuaternionMultiplyVec3(&result, &q, this);

@@ -53,21 +53,34 @@ void CameraProxy::_update_following(double dt) {
         float t = ((following_lag_ == 0) ? 1.0 : dt * (1.0 / following_lag_));
 
         auto actor = stage()->actor(following_actor_);
-        Vec3 up_dir = KM_VEC3_POS_Y;
 
         Vec3 avatar_position = actor->absolute_position();
         Quaternion avatar_rotation = actor->absolute_rotation();
         Quaternion initial_rotation = absolute_rotation();
+        Vec3 initial_position = absolute_position();
+
+        Vec3 destination_position;
+        Quaternion destination_rotation;
 
         if(following_mode_ == CAMERA_FOLLOW_MODE_DIRECT) {
-            Vec3 destination_point = following_offset_.rotated_by(avatar_rotation) + avatar_position;
-            set_absolute_position(destination_point);
-            set_absolute_rotation(initial_rotation.slerp(avatar_rotation, t));
+            destination_position = following_offset_.rotated_by(avatar_rotation) + avatar_position;
+            destination_rotation = avatar_rotation;
         } else if(following_mode_ == CAMERA_FOLLOW_MODE_THIRD_PERSON) {
-
+            float yaw = kmQuaternionGetYaw(&avatar_rotation);
+            kmQuaternionRotationPitchYawRoll(&destination_rotation, 0, yaw, 0);
+            destination_position = following_offset_.rotated_by(destination_rotation) + avatar_position;
         } else {
             throw ValueError("Unknown camera follow mode");
         }
+
+        // If we're close, just position directly
+        if((destination_position - initial_position).length_squared() < 0.1f) {
+            set_absolute_position(destination_position);
+        } else {
+            set_absolute_position(initial_position.lerp(destination_position, t));
+        }
+
+        set_absolute_rotation(initial_rotation.slerp(destination_rotation, t));
 
         update_from_parent();
     } else {
