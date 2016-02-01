@@ -39,18 +39,17 @@ CameraPtr CameraProxy::camera() {
     return stage()->window().camera(id());
 }
 
-void CameraProxy::follow(ActorID actor, const kglt::Vec3& offset, float lag_in_seconds, bool follow_roll) {
+void CameraProxy::follow(ActorID actor, CameraFollowMode mode, const kglt::Vec3& offset, float lag_in_seconds) {
     following_actor_ = actor;
     following_offset_ = offset;
     following_lag_ = lag_in_seconds;
-    follow_roll_ = follow_roll;
+    following_mode_ = mode;
 
     _update_following(1.0);
 }
 
 void CameraProxy::_update_following(double dt) {
     if(following_actor_ && stage()->has_actor(following_actor_)) {
-
         float t = ((following_lag_ == 0) ? 1.0 : dt * (1.0 / following_lag_));
 
         auto actor = stage()->actor(following_actor_);
@@ -58,44 +57,18 @@ void CameraProxy::_update_following(double dt) {
 
         Vec3 avatar_position = actor->absolute_position();
         Quaternion avatar_rotation = actor->absolute_rotation();
-
-        kmQuaternionExtractRotationAroundAxis(&avatar_rotation, &up_dir, &avatar_rotation);
-
-        Vec3 transformed_reference = following_offset_.rotated_by(avatar_rotation);
-        Vec3 camera_position = avatar_position + transformed_reference;
-
-        Vec3 direction = (avatar_position - camera_position).normalized();
-
-        Quaternion rot;
-        kmQuaternionLookRotation(&rot, &direction, &up_dir);
-        set_absolute_rotation(rot);
-        set_absolute_position(camera_position);
-
-/*
-        Quaternion actor_rotation = stage()->actor(following_actor_)->absolute_rotation();
-        Vec3 actor_position = stage()->actor(following_actor_)->absolute_position();
-
-        Vec3 actor_forward;
-        kmQuaternionGetForwardVec3RH(&actor_forward, &actor_rotation);
-
         Quaternion initial_rotation = absolute_rotation();
-        float t = ((following_lag_ == 0) ? 1.0 : dt * (1.0 / following_lag_));
 
-        Quaternion target_rotation = actor_rotation;
-        if(!follow_roll_) {
-            kmQuaternionLookRotation(&target_rotation, &actor_position, &KM_VEC3_POS_Y);
+        if(following_mode_ == CAMERA_FOLLOW_MODE_DIRECT) {
+            Vec3 destination_point = following_offset_.rotated_by(avatar_rotation) + avatar_position;
+            set_absolute_position(destination_point);
+            set_absolute_rotation(initial_rotation.slerp(avatar_rotation, t));
+        } else if(following_mode_ == CAMERA_FOLLOW_MODE_THIRD_PERSON) {
+
+        } else {
+            throw ValueError("Unknown camera follow mode");
         }
 
-        set_absolute_rotation(
-            initial_rotation.slerp(actor_rotation, t)
-        );
-
-        Vec3 rotated_offset = following_offset_.rotated_by(absolute_rotation());
-
-        Vec3 new_absolute = rotated_offset + actor_position;
-        set_absolute_position(new_absolute);
-        assert(new_absolute == absolute_position());
-*/
         update_from_parent();
     } else {
         //The actor was destroyed, so reset

@@ -73,7 +73,7 @@ public:
         ActorID a = stage->new_actor();
         stage->actor(a)->set_absolute_position(kglt::Vec3());
 
-        stage->camera(camera_id_)->follow(a, kglt::Vec3(0, 0, 10));
+        stage->camera(camera_id_)->follow(a, kglt::CAMERA_FOLLOW_MODE_DIRECT, kglt::Vec3(0, 0, 10));
 
         assert_equal(Vec3(0, 0, 10), stage->camera(camera_id_)->absolute_position());
 

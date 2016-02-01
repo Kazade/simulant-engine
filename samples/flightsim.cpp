@@ -36,7 +36,7 @@ public:
         window->data->stash(kglt::extra::StarField::create(stage, camera_id_), "skybox");
 
         //Set the camera to follow the model
-        stage->camera(camera_id_)->follow(actor_id, kglt::Vec3(0, 5, 50));
+        stage->camera(camera_id_)->follow(actor_id, kglt::CAMERA_FOLLOW_MODE_DIRECT, kglt::Vec3(0, 5, 50));
 
 
         //Connect keyboard signals

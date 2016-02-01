@@ -17,6 +17,12 @@ namespace kglt {
 
 class Camera;
 
+enum CameraFollowMode {
+    CAMERA_FOLLOW_MODE_THIRD_PERSON,
+    CAMERA_FOLLOW_MODE_DIRECT
+};
+
+
 class CameraProxy:
     public ParentSetterMixin<Object>,
     public generic::Identifiable<CameraID>,
@@ -27,7 +33,7 @@ public:
     CameraProxy(Stage* stage, CameraID camera_id);
     ~CameraProxy();
 
-    void follow(ActorID actor, const kglt::Vec3& offset, float lag_in_seconds=1.0, bool follow_roll=true);
+    void follow(ActorID actor, CameraFollowMode mode, const kglt::Vec3& offset=kglt::Vec3(0, 0, -10), float lag_in_seconds=1.0);
     void ask_owner_for_destruction();
 
     void _update_following(double dt);
@@ -47,7 +53,7 @@ public:
 private:
     ActorID following_actor_;
     Vec3 following_offset_;
-    bool follow_roll_ = true;
+    CameraFollowMode following_mode_;
     float following_lag_ = 0.0;
 
     void do_update(double dt);
