@@ -87,7 +87,39 @@ std::ostream& operator<<(std::ostream& stream, const Quaternion& quat) {
 Quaternion Quaternion::look_rotation(const Vec3& direction, const Vec3& up=Vec3(0, 1, 0)) {
     Quaternion res;
     kmQuaternionLookRotation(&res, &direction, &up);
+    kmQuaternionNormalize(&res, &res);
     return res;
+}
+
+void Mat4::extract_rotation_and_translation(Quaternion& rotation, Vec3& translation) {
+    Mat3 rot;
+    kmMat4ExtractRotationMat3(this, &rot);
+    kmQuaternionRotationMatrix(&rotation, &rot);
+    kmMat4ExtractTranslationVec3(this, &translation);
+}
+
+Mat3 Mat3::from_rotation_x(float pitch) {
+    Mat3 ret;
+    kmMat3FromRotationX(&ret, pitch);
+    return ret;
+}
+
+Mat3 Mat3::from_rotation_y(float yaw) {
+    Mat3 ret;
+    kmMat3FromRotationY(&ret, yaw);
+    return ret;
+}
+
+Mat3 Mat3::from_rotation_z(float roll) {
+    Mat3 ret;
+    kmMat3FromRotationZ(&ret, roll);
+    return ret;
+}
+
+Mat4 Mat4::from_lookat(const Vec3& eye, const Vec3& target, const Vec3& up) {
+    Mat4 ret;
+    kmMat4LookAt(&ret, &eye, &target, &up);
+    return ret;
 }
 
 Degrees::Degrees(const Radians &rhs) {

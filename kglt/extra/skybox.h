@@ -13,7 +13,7 @@ class SkyBox :
     public Managed<SkyBox> {
 
 public:
-    SkyBox(StagePtr stage, TextureID texture, float size=500.0f, CameraID cam=CameraID());
+    SkyBox(StagePtr stage, TextureID texture, CameraID cam, float size=500.0f);
     SkyBox(StagePtr stage, TextureID front, TextureID back, TextureID left, TextureID right, TextureID top, TextureID bottom);
 
 private:
@@ -29,7 +29,7 @@ class StarField :
     public Managed<StarField> {
 
 public:
-    StarField(StagePtr stage, CameraID cam=CameraID());
+    StarField(StagePtr stage, CameraID cam);
 
 private:
     SkyBox::ptr skybox_;

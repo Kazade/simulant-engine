@@ -155,7 +155,7 @@ GPUProgram::GPUProgram():
 const bool GPUProgram::is_current() const {
     GLint current = 0;
     GLCheck(glGetIntegerv, GL_CURRENT_PROGRAM, &current);
-    return program_object_ && current == program_object_;
+    return program_object_ && GLuint(current) == program_object_;
 }
 
 void GPUProgram::activate() {

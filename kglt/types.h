@@ -84,6 +84,18 @@ struct Quaternion : public kmQuaternion {
         return result;
     }
 
+    const float pitch() const {
+        return kmQuaternionGetPitch(this);
+    }
+
+    const float yaw() const {
+        return kmQuaternionGetYaw(this);
+    }
+
+    const float roll() const {
+        return kmQuaternionGetRoll(this);
+    }
+
     static Quaternion look_rotation(const Vec3& direction, const Vec3& up);
 };
 
@@ -97,9 +109,17 @@ struct Mat4 : public kmMat4 {
         kmMat4Multiply(&result, this, &rhs);
         return result;
     }
+
+    void extract_rotation_and_translation(Quaternion& rotation, Vec3& translation);
+    static Mat4 from_lookat(const Vec3& eye, const Vec3& target, const Vec3& up);
+
 };
 
-struct Mat3 : public kmMat3 {};
+struct Mat3 : public kmMat3 {
+    static Mat3 from_rotation_x(float pitch);
+    static Mat3 from_rotation_y(float yaw);
+    static Mat3 from_rotation_z(float roll);
+};
 
 struct Vec4 : public kmVec4 {
     Vec4() {
@@ -332,6 +352,12 @@ struct Vec3 : public kmVec3 {
     Vec3 rotated_by(const Quaternion& q) const {
         Vec3 result;
         kmQuaternionMultiplyVec3(&result, &q, this);
+        return result;
+    }
+
+    Vec3 rotated_by(const Mat3& rot) const {
+        Vec3 result;
+        kmVec3MultiplyMat3(&result, this, &rot);
         return result;
     }
 

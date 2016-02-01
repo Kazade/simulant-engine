@@ -33,7 +33,7 @@ public:
         stage->particle_system(ps_id)->move_to(0, 0, -10);
 
         //Just stash the skybox with the window so we always have access to it
-        window->data->stash(kglt::extra::StarField::create(stage), "skybox");
+        window->data->stash(kglt::extra::StarField::create(stage, camera_id_), "skybox");
 
         //Set the camera to follow the model
         stage->camera(camera_id_)->follow(actor_id, kglt::Vec3(0, 5, 50));

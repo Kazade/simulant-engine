@@ -50,6 +50,28 @@ void CameraProxy::follow(ActorID actor, const kglt::Vec3& offset, float lag_in_s
 
 void CameraProxy::_update_following(double dt) {
     if(following_actor_ && stage()->has_actor(following_actor_)) {
+
+        float t = ((following_lag_ == 0) ? 1.0 : dt * (1.0 / following_lag_));
+
+        auto actor = stage()->actor(following_actor_);
+        Vec3 up_dir = KM_VEC3_POS_Y;
+
+        Vec3 avatar_position = actor->absolute_position();
+        Quaternion avatar_rotation = actor->absolute_rotation();
+
+        kmQuaternionExtractRotationAroundAxis(&avatar_rotation, &up_dir, &avatar_rotation);
+
+        Vec3 transformed_reference = following_offset_.rotated_by(avatar_rotation);
+        Vec3 camera_position = avatar_position + transformed_reference;
+
+        Vec3 direction = (avatar_position - camera_position).normalized();
+
+        Quaternion rot;
+        kmQuaternionLookRotation(&rot, &direction, &up_dir);
+        set_absolute_rotation(rot);
+        set_absolute_position(camera_position);
+
+/*
         Quaternion actor_rotation = stage()->actor(following_actor_)->absolute_rotation();
         Vec3 actor_position = stage()->actor(following_actor_)->absolute_position();
 
@@ -73,7 +95,7 @@ void CameraProxy::_update_following(double dt) {
         Vec3 new_absolute = rotated_offset + actor_position;
         set_absolute_position(new_absolute);
         assert(new_absolute == absolute_position());
-
+*/
         update_from_parent();
     } else {
         //The actor was destroyed, so reset

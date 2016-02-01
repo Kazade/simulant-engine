@@ -14,7 +14,7 @@
 namespace kglt {
 namespace extra {
 
-SkyBox::SkyBox(StagePtr stage, kglt::TextureID texture, float size, CameraID cam):
+SkyBox::SkyBox(StagePtr stage, kglt::TextureID texture, CameraID cam, float size):
     stage_(stage),
     camera_id_(cam) {
 
@@ -32,7 +32,7 @@ SkyBox::SkyBox(StagePtr stage, kglt::TextureID texture, float size, CameraID cam
         actor->mesh()->reverse_winding();
 
         actor->set_render_priority(RENDER_PRIORITY_BACKGROUND);
-        actor->set_parent(CameraID());
+        actor->set_parent(camera_id_);
 
         //Skyboxes shouldn't rotate based on their parent (e.g. the camera)
         actor->set_absolute_rotation(Degrees(0), 0, 1, 0);
@@ -45,7 +45,7 @@ StarField::StarField(StagePtr stage, CameraID cam) {
     texture_id_ = stage->new_texture();
     auto tex = stage->texture(texture_id_);
     kglt::procedural::texture::starfield(tex.__object);
-    skybox_.reset(new SkyBox(stage, texture_id_, 500.0f, cam));
+    skybox_.reset(new SkyBox(stage, texture_id_, cam));
 }
 
 
