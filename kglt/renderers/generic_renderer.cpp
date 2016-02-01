@@ -61,7 +61,7 @@ void GenericRenderer::set_auto_uniforms_on_shader(GPUProgram& program,
     if(program.uniforms().uses_auto(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX)) {
         Mat3 inverse_transpose_modelview;
 
-        kmMat3AssignMat4(&inverse_transpose_modelview, &modelview);
+        kmMat4ExtractRotationMat3(&modelview, &inverse_transpose_modelview);
         kmMat3Inverse(&inverse_transpose_modelview, &inverse_transpose_modelview);
         kmMat3Transpose(&inverse_transpose_modelview, &inverse_transpose_modelview);
 

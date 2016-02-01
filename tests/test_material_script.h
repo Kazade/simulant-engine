@@ -30,7 +30,7 @@ public:
         )";
 
         auto mat = window->material(window->new_material());
-        kglt::MaterialScript script((MaterialLanguageText(text))); //Most vexing parse \o/
+        kglt::MaterialScript script((kglt::MaterialLanguageText(text))); //Most vexing parse \o/
         script.generate(*mat.__object);
 
         this->assert_equal((uint32_t)1, mat->pass_count());

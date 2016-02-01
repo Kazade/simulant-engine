@@ -52,7 +52,7 @@ public:
 
         //Just double check that kazmath actually works
         kglt::Mat3 rot;
-        kmMat3RotationQuaternion(&rot, &q);
+        kmMat3FromRotationQuaternion(&rot, &q);
 
         kglt::Quaternion other;
         kmQuaternionRotationMatrix(&other, &rot);
