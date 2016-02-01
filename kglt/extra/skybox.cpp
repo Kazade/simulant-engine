@@ -18,7 +18,7 @@ SkyBox::SkyBox(StagePtr stage, kglt::TextureID texture, CameraID cam, float size
     stage_(stage),
     camera_id_(cam) {
 
-    actor_ = stage->geom_factory().new_cube(size);
+    actor_ = stage->new_actor_with_mesh(stage->new_mesh_as_cube(size));
 
     auto mat = stage->material(stage->new_material_from_file("kglt/materials/generic_multitexture.kglm"));
 

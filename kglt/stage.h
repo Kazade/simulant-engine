@@ -7,8 +7,6 @@
 #include "generic/manager.h"
 #include "generic/generic_tree.h"
 
-#include "procedural/geom_factory.h"
-
 #include "object.h"
 #include "types.h"
 #include "resource_manager.h"
@@ -164,6 +162,10 @@ public:
         return window().new_mesh_as_rectangle(width, height, offset, material, garbage_collect);
     }
 
+    MeshID new_mesh_as_capsule(float diameter, float length, int segments=20, int stacks=20, bool garbage_collect=true) {
+        return window().new_mesh_as_capsule(diameter, length, segments, stacks, garbage_collect);
+    }
+
     MeshID new_mesh_from_vertices(const std::vector<Vec2> &vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool garbage_collect=true) override {
         return window().new_mesh_from_vertices(vertices, arrangement, garbage_collect);
     }
@@ -299,9 +301,7 @@ public:
     virtual WindowBase& window() { return window_; }
     const WindowBase& window() const { return window_; }
 
-    GeomFactory& geom_factory() { return *geom_factory_; }
-
-    Debug& debug() { assert(debug_); return *debug_; }
+    Property<Stage, Debug> debug = { this, &Stage::debug_ };
 
     bool init();
     void cleanup() override;
@@ -361,7 +361,6 @@ private:
 
     void set_partitioner(AvailablePartitioner partitioner);
 
-    std::shared_ptr<GeomFactory> geom_factory_;
     std::shared_ptr<Debug> debug_;
 
     friend 

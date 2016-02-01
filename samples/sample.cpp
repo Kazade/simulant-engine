@@ -36,7 +36,7 @@ public:
         stage->set_ambient_light(kglt::Colour::WHITE);
         stage->new_light(kglt::LIGHT_TYPE_DIRECTIONAL);
 
-        actor_id_ = stage->geom_factory().new_capsule();
+        actor_id_ = stage->new_actor_with_mesh(stage->new_mesh_as_capsule(0.5, 1.0));
         {
             auto actor = stage->actor(actor_id_);
             actor->mesh()->set_material_id(matid);

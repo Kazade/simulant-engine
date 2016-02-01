@@ -21,7 +21,7 @@ public:
     }
 
     bool init() {
-        actor_ = stage()->geom_factory().new_cube(1);
+        actor_ = stage()->new_actor_with_mesh(stage()->new_mesh_as_cube(2));
         follower_->enable_debug();
 
         set_position(kglt::Vec3(-10, 0, -50));

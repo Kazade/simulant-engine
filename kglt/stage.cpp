@@ -11,7 +11,6 @@
 #include "loader.h"
 #include "partitioners/null_partitioner.h"
 #include "partitioners/octree_partitioner.h"
-#include "procedural/geom_factory.h"
 #include "utils/ownable.h"
 
 namespace kglt {
@@ -19,8 +18,7 @@ namespace kglt {
 Stage::Stage(WindowBase *parent, StageID id, AvailablePartitioner partitioner):
     generic::Identifiable<StageID>(id),
     window_(*parent),
-    ambient_light_(1.0, 1.0, 1.0, 1.0),
-    geom_factory_(new GeomFactory(*this)) {
+    ambient_light_(1.0, 1.0, 1.0, 1.0) {
 
     set_partitioner(partitioner);
 

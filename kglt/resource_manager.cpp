@@ -144,6 +144,13 @@ MeshID ResourceManagerImpl::new_mesh_as_cylinder(float diameter, float length, i
     return m;
 }
 
+MeshID ResourceManagerImpl::new_mesh_as_capsule(float diameter, float length, int segments, int stacks, bool garbage_collect) {
+    MeshID m = new_mesh(garbage_collect);
+    kglt::procedural::mesh::capsule(mesh(m), diameter, length, segments, 1, stacks);
+    MeshManager::mark_as_uncollected(m);
+    return m;
+}
+
 MeshID ResourceManagerImpl::new_mesh_from_vertices(const std::vector<Vec2> &vertices, MeshArrangement arrangement, bool garbage_collect) {
     MeshID m = new_mesh(garbage_collect);
 

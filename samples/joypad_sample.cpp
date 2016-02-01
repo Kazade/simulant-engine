@@ -104,7 +104,9 @@ public:
             light->set_attenuation_from_range(10.0);
         }
 
-        actor_id = window->stage(stage_id_)->geom_factory().new_cube(2);
+        auto stage = window->stage(stage_id_);
+
+        actor_id = stage->new_actor_with_mesh(stage->new_mesh_as_cube(2));
 
         window->stage(stage_id_)->actor(actor_id)->mesh()->set_material_id(matid);
         window->stage(stage_id_)->actor(actor_id)->set_absolute_position(pos);
