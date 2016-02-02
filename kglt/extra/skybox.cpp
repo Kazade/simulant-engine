@@ -9,7 +9,6 @@
 #include "../window_base.h"
 #include "../actor.h"
 #include "../loader.h"
-#include "../procedural/geom_factory.h"
 
 namespace kglt {
 namespace extra {

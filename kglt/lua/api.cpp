@@ -127,11 +127,6 @@ void export_lua_api(lua_State* state) {
         luabind::class_<Mesh>("Mesh")
             .property("id", &Mesh::id)
     ];
-
-    luabind::module(state) [
-        luabind::class_<GeomFactory>("GeomFactory")
-            .def("new_line", &GeomFactory::new_line)
-    ];
 }
 
 }

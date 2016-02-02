@@ -247,8 +247,6 @@ kglt/kazbase/os/core.cpp
 kglt/kazbase/os.h
 kglt/lua/api.h
 kglt/lua/api.cpp
-kglt/procedural/geom_factory.h
-kglt/procedural/geom_factory.cpp
 kglt/generic/refcount_manager.h
 kglt/generic/manager_base.h
 kglt/generic/cloneable.h

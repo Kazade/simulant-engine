@@ -21,7 +21,6 @@
 #include "batcher.h"
 #include "loader.h"
 #include "ui/interface.h"
-#include "procedural/geom_factory.h"
 #include "texture.h"
 #include "application.h"
 #include "message_bar.h"

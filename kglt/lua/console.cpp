@@ -8,7 +8,6 @@
 #include "../stage.h"
 #include "../ui/interface.h"
 #include "../input_controller.h"
-#include "../procedural/geom_factory.h"
 #include "../camera.h"
 #include "../render_sequence.h"
 #include "../ui_stage.h"
