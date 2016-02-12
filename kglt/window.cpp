@@ -8,7 +8,9 @@
 
 namespace kglt {
 
-Window::Window() {
+Window::Window():
+    WindowHolder(this),
+    ResourceManager(this) {
 
 }
 

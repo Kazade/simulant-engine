@@ -37,6 +37,11 @@ public:
         return id;
     }
 
+    template<typename... Args>
+    ObjectIDType manager_new(Args&&... args) {
+        return manager_new(ObjectIDType(), args...);
+    }
+
     void manager_delete_all() {
         for(auto p: objects_) {
             signal_pre_delete_(*p.second, p.first);
@@ -72,6 +77,30 @@ public:
         return it->second;
     }
 
+    /**
+     * @brief manager_any
+     * @return Returns an unspecified item from the manager. This is useful in tests.
+     * It's not neccessarily random but effectively it is as far as you care.
+     */
+    std::weak_ptr<ObjectType> manager_any() const {
+        return objects_.begin()->second;
+    }
+
+    /**
+     * @brief manager_only
+     * @return Returns the only item in the container, or throws a LogicError
+     * if there is more than one item or DoesNotExist<ObjectType> if the manager is empty
+     */
+    std::weak_ptr<ObjectType> manager_only() const {
+        if(manager_count() != 1) {
+            if(manager_count() == 0) {
+                throw DoesNotExist<ObjectType>("Container does not contain any objects");
+            }
+            throw LogicError("Used only() on manager with more than one item");
+        }
+        return manager_any();
+    }
+
     std::weak_ptr<ObjectType> manager_get(ObjectIDType id) const {
         std::lock_guard<std::recursive_mutex> lock(manager_lock_);
 
@@ -90,7 +119,7 @@ public:
     sig::signal<void (ObjectType&, ObjectIDType)>& signal_pre_delete() { return signal_pre_delete_; }
 
     template<typename Func>
-    void apply_func_to_objects(Func func) {
+    void apply_func_to_objects(Func func) const {
         for(std::pair<ObjectIDType, typename ObjectType::ptr> p: objects_) {
             auto thing = manager_get(p.first); //Make sure we lock the object
             std::bind(func, thing.lock().get())();

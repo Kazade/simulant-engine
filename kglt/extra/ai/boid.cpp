@@ -145,8 +145,8 @@ kglt::Vec3 Boid::steer_to_path() {
 void Boid::update_debug_mesh() const {
     auto mesh = actor_->stage()->mesh(debug_mesh_);
 
-    auto& vd = mesh->submesh(normal_points_mesh_).vertex_data();
-    auto& id = mesh->submesh(normal_points_mesh_).index_data();
+    auto& vd = mesh->submesh(normal_points_mesh_)->vertex_data();
+    auto& id = mesh->submesh(normal_points_mesh_)->index_data();
 
     vd.clear();
     id.clear();
@@ -180,27 +180,27 @@ void Boid::enable_debug(bool value) {
         auto mesh = actor_->stage()->mesh(debug_mesh_);
         mesh->clear();
 
-        auto smi = mesh->new_submesh(kglt::MaterialID(), MESH_ARRANGEMENT_LINE_STRIP, false);
-        normal_points_mesh_ = mesh->new_submesh(kglt::MaterialID(), MESH_ARRANGEMENT_POINTS, false);
+        auto smi = mesh->new_submesh(kglt::MaterialID(), MESH_ARRANGEMENT_LINE_STRIP, VERTEX_SHARING_MODE_INDEPENDENT);
+        normal_points_mesh_ = mesh->new_submesh(kglt::MaterialID(), MESH_ARRANGEMENT_POINTS, VERTEX_SHARING_MODE_INDEPENDENT);
 
         {
-            auto mat = actor_->stage()->material(mesh->submesh(normal_points_mesh_).material_id());
+            auto mat = actor_->stage()->material(mesh->submesh(normal_points_mesh_)->material_id());
             mat->pass(0).set_point_size(5);
         }
 
         for(uint32_t i = 0; i < path_.length(); ++i) {
-            mesh->submesh(smi).vertex_data().position(path_.point(i));
-            mesh->submesh(smi).vertex_data().diffuse(kglt::Colour::BLUE);
-            mesh->submesh(smi).vertex_data().tex_coord0(kglt::Vec2());
-            mesh->submesh(smi).vertex_data().tex_coord1(kglt::Vec2());
-            mesh->submesh(smi).vertex_data().normal(kglt::Vec3());
-            mesh->submesh(smi).vertex_data().move_next();
+            mesh->submesh(smi)->vertex_data().position(path_.point(i));
+            mesh->submesh(smi)->vertex_data().diffuse(kglt::Colour::BLUE);
+            mesh->submesh(smi)->vertex_data().tex_coord0(kglt::Vec2());
+            mesh->submesh(smi)->vertex_data().tex_coord1(kglt::Vec2());
+            mesh->submesh(smi)->vertex_data().normal(kglt::Vec3());
+            mesh->submesh(smi)->vertex_data().move_next();
 
-            mesh->submesh(smi).index_data().index(i);
+            mesh->submesh(smi)->index_data().index(i);
         }
 
-        mesh->submesh(smi).vertex_data().done();
-        mesh->submesh(smi).index_data().done();
+        mesh->submesh(smi)->vertex_data().done();
+        mesh->submesh(smi)->index_data().done();
 
         if(!debug_actor_) {
             debug_actor_ = actor_->stage()->new_actor(debug_mesh_);

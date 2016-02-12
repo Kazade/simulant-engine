@@ -33,10 +33,12 @@ namespace kglt {
 
 WindowBase::WindowBase():
     Source(this),
+    ResourceManager(this),
     BackgroundManager(this),
     StageManager(),
-    UIStageManager(this),
+    UIStageManager(this),    
     CameraManager(this),
+    WindowHolder(this),
     ResourceManagerImpl(this),
     initialized_(false),
     width_(-1),
@@ -111,6 +113,15 @@ LoaderPtr WindowBase::loader_for(const unicode& loader_name, const unicode &file
     }
 
     throw DoesNotExist<Loader>((_u("Unable to find a loader for: ") + filename).encode());
+}
+
+LoaderTypePtr WindowBase::loader_type(const unicode& loader_name) const {
+    for(LoaderTypePtr loader_type: loaders_) {
+        if(loader_type->name() == loader_name) {
+            return loader_type;
+        }
+    }
+    throw DoesNotExist<LoaderType>((_u("Unable to find a loader type with name: ") + loader_name).encode());
 }
 
 void WindowBase::create_defaults() {

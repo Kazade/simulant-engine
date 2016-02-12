@@ -5,16 +5,16 @@ namespace kglt {
 namespace procedural {
 namespace mesh {
 
-SubMeshIndex circle(kglt::Mesh& mesh, float diameter, int32_t point_count, float x_offset, float y_offset, float z_offset) {
+SubMeshID circle(kglt::Mesh& mesh, float diameter, int32_t point_count, float x_offset, float y_offset, float z_offset) {
     float radius = diameter * 0.5f;
 
-    SubMeshIndex smi = mesh.new_submesh(
+    SubMeshID smi = mesh.new_submesh(
         mesh.resource_manager().new_material_from_file(mesh.resource_manager().default_material_filename()),
         MESH_ARRANGEMENT_TRIANGLE_FAN,
-        false
+        VERTEX_SHARING_MODE_INDEPENDENT
     );
 
-    kglt::SubMesh& submesh = mesh.submesh(smi);
+    kglt::SubMesh& submesh = *mesh.submesh(smi);
 
     kglt::VertexData& vdata = submesh.vertex_data();
     kglt::IndexData& idata = submesh.index_data();
@@ -50,11 +50,11 @@ SubMeshIndex circle(kglt::Mesh& mesh, float diameter, int32_t point_count, float
     return smi;
 }
 
-SubMeshIndex circle_outline(kglt::Mesh& mesh, float diameter, int32_t point_count, float x_offset, float y_offset, float z_offset) {
+SubMeshID circle_outline(kglt::Mesh& mesh, float diameter, int32_t point_count, float x_offset, float y_offset, float z_offset) {
     float radius = diameter * 0.5f;
 
-    SubMeshIndex smi = mesh.new_submesh(MaterialID(), MESH_ARRANGEMENT_LINE_STRIP, false);
-    kglt::SubMesh& submesh = mesh.submesh(smi);
+    SubMeshID smi = mesh.new_submesh(MaterialID(), MESH_ARRANGEMENT_LINE_STRIP, VERTEX_SHARING_MODE_INDEPENDENT);
+    kglt::SubMesh& submesh = *mesh.submesh(smi);
 
     kglt::VertexData& vdata = submesh.vertex_data();
     kglt::IndexData& idata = submesh.index_data();

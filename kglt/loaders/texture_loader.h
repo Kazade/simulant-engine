@@ -22,7 +22,7 @@ public:
 
     ~TextureLoaderType() {}
 
-    unicode name() { return "texture_loader"; }
+    unicode name() { return "texture"; }
     bool supports(const unicode& filename) const override {
         return filename.lower().contains(".tga") || filename.lower().contains(".png") || filename.lower().contains(".jpg") || filename.lower().contains(".dds");
     }

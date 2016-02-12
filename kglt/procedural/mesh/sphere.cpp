@@ -83,35 +83,34 @@ void sphere(ProtectedPtr<Mesh> mesh, float diameter, int32_t slices, int32_t sta
 
     mesh->shared_data().done();
 
-    SubMeshIndex sm = mesh->new_submesh(
+    SubMeshID sm = mesh->new_submesh(
         mesh->resource_manager().new_material_from_file(mesh->resource_manager().default_material_filename()),
-        MESH_ARRANGEMENT_TRIANGLES,
-        true
+        MESH_ARRANGEMENT_TRIANGLES
     );
 
     for(int32_t current_stack = 0; current_stack < stacks - 3; current_stack++) {
         for(int32_t current_slice = 0; current_slice < slices - 1; current_slice++) {
-            mesh->submesh(sm).index_data().index(current_stack * slices + current_slice);
-            mesh->submesh(sm).index_data().index((current_stack + 1) * slices + current_slice + 1);
-            mesh->submesh(sm).index_data().index(current_stack * slices + current_slice + 1);
+            mesh->submesh(sm)->index_data().index(current_stack * slices + current_slice);
+            mesh->submesh(sm)->index_data().index((current_stack + 1) * slices + current_slice + 1);
+            mesh->submesh(sm)->index_data().index(current_stack * slices + current_slice + 1);
 
-            mesh->submesh(sm).index_data().index(current_stack * slices + current_slice);
-            mesh->submesh(sm).index_data().index((current_stack + 1) * slices + current_slice);
-            mesh->submesh(sm).index_data().index((current_stack + 1) * slices + current_slice + 1);
+            mesh->submesh(sm)->index_data().index(current_stack * slices + current_slice);
+            mesh->submesh(sm)->index_data().index((current_stack + 1) * slices + current_slice);
+            mesh->submesh(sm)->index_data().index((current_stack + 1) * slices + current_slice + 1);
         }
     }
 
     for(int32_t i = 0; i < slices - 1; ++i) {
-        mesh->submesh(sm).index_data().index((stacks - 2) * slices);
-        mesh->submesh(sm).index_data().index(i);
-        mesh->submesh(sm).index_data().index(i + 1);
+        mesh->submesh(sm)->index_data().index((stacks - 2) * slices);
+        mesh->submesh(sm)->index_data().index(i);
+        mesh->submesh(sm)->index_data().index(i + 1);
 
-        mesh->submesh(sm).index_data().index((stacks - 2) * slices + 1);
-        mesh->submesh(sm).index_data().index((stacks - 3) * slices + i + 1);
-        mesh->submesh(sm).index_data().index((stacks - 3) * slices + i);
+        mesh->submesh(sm)->index_data().index((stacks - 2) * slices + 1);
+        mesh->submesh(sm)->index_data().index((stacks - 3) * slices + i + 1);
+        mesh->submesh(sm)->index_data().index((stacks - 3) * slices + i);
     }
 
-    mesh->submesh(sm).index_data().done();
+    mesh->submesh(sm)->index_data().done();
 }
 
 }

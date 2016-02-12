@@ -15,7 +15,7 @@ void cylinder(ProtectedPtr<Mesh> mesh, float diameter, float length, int32_t seg
     int offset = 0;
 
     auto smi = mesh->new_submesh(mesh->resource_manager().clone_default_material());
-    auto& buffer = mesh->submesh(smi);
+    auto* buffer = mesh->submesh(smi);
 
     for(auto i = 0; i <= stacks; ++i) {
         for(auto j = 0; j <= segments; ++j) {
@@ -33,12 +33,12 @@ void cylinder(ProtectedPtr<Mesh> mesh, float diameter, float length, int32_t seg
             mesh->shared_data().move_next();
 
             if(i != stacks) {
-                buffer.index_data().index(offset + segments + 1);
-                buffer.index_data().index(offset);
-                buffer.index_data().index(offset + segments);
-                buffer.index_data().index(offset + segments + 1);
-                buffer.index_data().index(offset + 1);
-                buffer.index_data().index(offset);
+                buffer->index_data().index(offset + segments + 1);
+                buffer->index_data().index(offset);
+                buffer->index_data().index(offset + segments);
+                buffer->index_data().index(offset + segments + 1);
+                buffer->index_data().index(offset + 1);
+                buffer->index_data().index(offset);
             }
             ++offset;
         }
@@ -68,9 +68,9 @@ void cylinder(ProtectedPtr<Mesh> mesh, float diameter, float length, int32_t seg
         mesh->shared_data().move_next();
 
         if(j != segments) {
-            buffer.index_data().index(center_index);
-            buffer.index_data().index(offset);
-            buffer.index_data().index(offset + 1);
+            buffer->index_data().index(center_index);
+            buffer->index_data().index(offset);
+            buffer->index_data().index(offset + 1);
         }
     }
 
@@ -96,14 +96,14 @@ void cylinder(ProtectedPtr<Mesh> mesh, float diameter, float length, int32_t seg
         mesh->shared_data().move_next();
 
         if(j != segments) {
-            buffer.index_data().index(center_index);
-            buffer.index_data().index(offset + 1);
-            buffer.index_data().index(offset);
+            buffer->index_data().index(center_index);
+            buffer->index_data().index(offset + 1);
+            buffer->index_data().index(offset);
         }
     }
 
     mesh->shared_data().done();
-    buffer.index_data().done();
+    buffer->index_data().done();
 }
 
 }

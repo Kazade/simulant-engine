@@ -7,6 +7,9 @@
 #include "generic/manager.h"
 #include "generic/generic_tree.h"
 
+#include "managers/window_holder.h"
+#include "managers/skybox_manager.h"
+
 #include "object.h"
 #include "types.h"
 #include "resource_manager.h"
@@ -34,10 +37,12 @@ class Stage:
     public LightManager,
     public SpriteManager,
     public CameraProxyManager,
+    public SkyboxManager,
     public Loadable,
     public SceneNode,
     public Protectable,
-    public RenderableStage {
+    public RenderableStage,
+    public virtual WindowHolder {
 
 public:
     Stage(WindowBase *parent, StageID id, AvailablePartitioner partitioner);
@@ -125,181 +130,178 @@ public:
 
     //Mesh functions
     virtual MeshID new_mesh(bool garbage_collect=true) override {
-        return window().new_mesh(garbage_collect);
+        return window->new_mesh(garbage_collect);
     }
 
     virtual MeshID new_mesh_from_file(const unicode& path, bool garbage_collect=true) override {
-        return window().new_mesh_from_file(path, garbage_collect);
+        return window->new_mesh_from_file(path, garbage_collect);
     }
 
     MeshID new_mesh_from_tmx_file(const unicode& tmx_file, const unicode& layer_name, float tile_render_size=1.0, bool garbage_collect=true) override {
-        return window().new_mesh_from_tmx_file(tmx_file, layer_name, tile_render_size, garbage_collect);
+        return window->new_mesh_from_tmx_file(tmx_file, layer_name, tile_render_size, garbage_collect);
     }
 
     MeshID new_mesh_from_heightmap(
         const unicode& image_file, float spacing=1.0, float min_height=-64,
         float max_height=64.0, const HeightmapDiffuseGenerator& generator=HeightmapDiffuseGenerator(), bool garbage_collect=true) override {
-        return window().new_mesh_from_heightmap(image_file, spacing, min_height, max_height, generator, garbage_collect);
+        return window->new_mesh_from_heightmap(image_file, spacing, min_height, max_height, generator, garbage_collect);
     }
 
     virtual MeshID new_mesh_as_cube(float width, bool garbage_collect=true) {
-        return window().new_mesh_as_cube(width, garbage_collect);
+        return window->new_mesh_as_cube(width, garbage_collect);
     }
 
     virtual MeshID new_mesh_as_cylinder(float diameter, float length, int segments=20, int stacks=20, bool garbage_collect=true) {
-        return window().new_mesh_as_cylinder(diameter, length, segments, stacks, garbage_collect);
+        return window->new_mesh_as_cylinder(diameter, length, segments, stacks, garbage_collect);
     }
 
     virtual MeshID new_mesh_as_box(float width, float height, float depth, bool garbage_collect=true) {
-        return window().new_mesh_as_box(width, height, depth, garbage_collect);
+        return window->new_mesh_as_box(width, height, depth, garbage_collect);
     }
 
     virtual MeshID new_mesh_as_sphere(float diameter, bool garbage_collect=true) {
-        return window().new_mesh_as_sphere(diameter, garbage_collect);
+        return window->new_mesh_as_sphere(diameter, garbage_collect);
     }
 
     MeshID new_mesh_as_rectangle(float width, float height, const Vec2& offset=Vec2(), MaterialID material=MaterialID(), bool garbage_collect=true) override {
-        return window().new_mesh_as_rectangle(width, height, offset, material, garbage_collect);
+        return window->new_mesh_as_rectangle(width, height, offset, material, garbage_collect);
     }
 
     MeshID new_mesh_as_capsule(float diameter, float length, int segments=20, int stacks=20, bool garbage_collect=true) {
-        return window().new_mesh_as_capsule(diameter, length, segments, stacks, garbage_collect);
+        return window->new_mesh_as_capsule(diameter, length, segments, stacks, garbage_collect);
     }
 
     MeshID new_mesh_from_vertices(const std::vector<Vec2> &vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool garbage_collect=true) override {
-        return window().new_mesh_from_vertices(vertices, arrangement, garbage_collect);
+        return window->new_mesh_from_vertices(vertices, arrangement, garbage_collect);
     }
 
     MeshID new_mesh_from_vertices(const std::vector<Vec3> &vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool garbage_collect=true) override {
-        return window().new_mesh_from_vertices(vertices, arrangement, garbage_collect);
+        return window->new_mesh_from_vertices(vertices, arrangement, garbage_collect);
     }
 
     MeshID new_mesh_with_alias(const unicode& alias, bool garbage_collect=true) override {
-        return window().new_mesh_with_alias(alias, garbage_collect);
+        return window->new_mesh_with_alias(alias, garbage_collect);
     }
 
     MeshID new_mesh_with_alias_from_file(const unicode& alias, const unicode &path, bool garbage_collect=true) override {
-        return window().new_mesh_with_alias_from_file(alias, path, garbage_collect);
+        return window->new_mesh_with_alias_from_file(alias, path, garbage_collect);
     }
 
     MeshID new_mesh_with_alias_as_cube(const unicode& alias, float width, bool garbage_collect=true) override {
-        return window().new_mesh_with_alias_as_cube(alias, width, garbage_collect);
+        return window->new_mesh_with_alias_as_cube(alias, width, garbage_collect);
     }
 
     MeshID new_mesh_with_alias_as_sphere(const unicode& alias, float diameter, bool garbage_collect=true) override {
-        return window().new_mesh_with_alias_as_sphere(alias, diameter, garbage_collect);
+        return window->new_mesh_with_alias_as_sphere(alias, diameter, garbage_collect);
     }
 
     MeshID new_mesh_with_alias_as_rectangle(const unicode &alias, float width, float height, const Vec2& offset=Vec2(), MaterialID material=MaterialID(), bool garbage_collect=true) override {
-        return window().new_mesh_with_alias_as_rectangle(alias, width, height, offset, material, garbage_collect);
+        return window->new_mesh_with_alias_as_rectangle(alias, width, height, offset, material, garbage_collect);
     }
 
     virtual MeshID new_mesh_with_alias_as_cylinder(const unicode& alias, float diameter, float length, int segments=20, int stacks=20, bool garbage_collect=true) {
-        return window().new_mesh_with_alias_as_cylinder(alias, diameter, length, segments, stacks, garbage_collect);
+        return window->new_mesh_with_alias_as_cylinder(alias, diameter, length, segments, stacks, garbage_collect);
     }
 
     MeshID get_mesh_with_alias(const unicode& alias) override {
-        return window().get_mesh_with_alias(alias);
+        return window->get_mesh_with_alias(alias);
     }
 
     void delete_mesh(MeshID m) {
-        window().delete_mesh(m);
+        window->delete_mesh(m);
     }
 
     MaterialID new_material_with_alias(const unicode& alias, bool garbage_collect=true) override {
-        return window().new_material_with_alias(alias, garbage_collect);
+        return window->new_material_with_alias(alias, garbage_collect);
     }
 
     MaterialID new_material_with_alias_from_file(const unicode& alias, const unicode& path, bool garbage_collect=true) override {
-        return window().new_material_with_alias_from_file(alias, path, garbage_collect);
+        return window->new_material_with_alias_from_file(alias, path, garbage_collect);
     }
 
     MaterialID new_material_from_texture(TextureID texture, bool garbage_collect=true) override {
-        return window().new_material_from_texture(texture, garbage_collect);
+        return window->new_material_from_texture(texture, garbage_collect);
     }
 
     MaterialID get_material_with_alias(const unicode& alias) override {
-        return window().get_material_with_alias(alias);
+        return window->get_material_with_alias(alias);
     }
 
     void delete_material(MaterialID m) {
-        window().delete_material(m);
+        window->delete_material(m);
     }
 
-    virtual ProtectedPtr<Mesh> mesh(MeshID m) { return window().mesh(m); }
-    virtual const ProtectedPtr<Mesh> mesh(MeshID m) const { return window().mesh(m); }
+    virtual ProtectedPtr<Mesh> mesh(MeshID m) { return window->mesh(m); }
+    virtual const ProtectedPtr<Mesh> mesh(MeshID m) const { return window->mesh(m); }
 
-    virtual bool has_mesh(MeshID m) const { return window().has_mesh(m); }
-    virtual uint32_t mesh_count() const { return window().mesh_count(); }
+    virtual bool has_mesh(MeshID m) const { return window->has_mesh(m); }
+    virtual uint32_t mesh_count() const { return window->mesh_count(); }
 
 
     //Texture functions
-    virtual TextureID new_texture(bool garbage_collect=true) override { return window().new_texture(garbage_collect); }
+    virtual TextureID new_texture(bool garbage_collect=true) override { return window->new_texture(garbage_collect); }
     virtual TextureID new_texture_from_file(const unicode& path, TextureFlags flags=0, bool garbage_collect=true) {
-        return window().new_texture_from_file(path, flags, garbage_collect);
+        return window->new_texture_from_file(path, flags, garbage_collect);
     }
     virtual TextureID new_texture_with_alias(const unicode& alias, bool garbage_collect=true) override {
-        return window().new_texture_with_alias(alias, garbage_collect);
+        return window->new_texture_with_alias(alias, garbage_collect);
     }
     virtual TextureID new_texture_with_alias_from_file(const unicode& alias, const unicode& path, TextureFlags flags=0, bool garbage_collect=true) override {
-        return window().new_texture_with_alias_from_file(alias, path, flags, garbage_collect);
+        return window->new_texture_with_alias_from_file(alias, path, flags, garbage_collect);
     }
     virtual TextureID get_texture_with_alias(const unicode& alias) override {
-        return window().get_texture_with_alias(alias);
+        return window->get_texture_with_alias(alias);
     }
     virtual void delete_texture(TextureID t) override {
-        window().delete_texture(t);
+        window->delete_texture(t);
     }
 
-    virtual ProtectedPtr<Texture> texture(TextureID t) { return window().texture(t); }
-    virtual const ProtectedPtr<Texture> texture(TextureID t) const { return window().texture(t); }
+    virtual ProtectedPtr<Texture> texture(TextureID t) { return window->texture(t); }
+    virtual const ProtectedPtr<Texture> texture(TextureID t) const { return window->texture(t); }
 
-    virtual bool has_texture(TextureID t) const { return window().has_texture(t); }
-    virtual uint32_t texture_count() const { return window().texture_count(); }
-    virtual void mark_texture_as_uncollected(TextureID t) { window().mark_texture_as_uncollected(t); }
+    virtual bool has_texture(TextureID t) const { return window->has_texture(t); }
+    virtual uint32_t texture_count() const { return window->texture_count(); }
+    virtual void mark_texture_as_uncollected(TextureID t) { window->mark_texture_as_uncollected(t); }
 
     //Sound functions
-    virtual SoundID new_sound(bool garbage_collect=true) override { return window().new_sound(garbage_collect); }
+    virtual SoundID new_sound(bool garbage_collect=true) override { return window->new_sound(garbage_collect); }
     virtual SoundID new_sound_from_file(const unicode& path, bool garbage_collect=true) override {
-        return window().new_sound_from_file(path, garbage_collect);
+        return window->new_sound_from_file(path, garbage_collect);
     }
 
     virtual SoundID new_sound_with_alias(const unicode& alias, bool garbage_collect=true) override {
-        return window().new_sound_with_alias(alias, garbage_collect);
+        return window->new_sound_with_alias(alias, garbage_collect);
     }
 
     virtual SoundID new_sound_with_alias_from_file(const unicode& alias, const unicode& path, bool garbage_collect=true) override {
-        return window().new_sound_with_alias_from_file(alias, path, garbage_collect);
+        return window->new_sound_with_alias_from_file(alias, path, garbage_collect);
     }
 
     virtual SoundID get_sound_with_alias(const unicode& alias) {
-        return window().get_sound_with_alias(alias);
+        return window->get_sound_with_alias(alias);
     }
 
-    virtual void delete_sound(SoundID t) { window().delete_sound(t); }
+    virtual void delete_sound(SoundID t) { window->delete_sound(t); }
 
-    virtual ProtectedPtr<Sound> sound(SoundID s) { return window().sound(s); }
-    virtual const ProtectedPtr<Sound> sound(SoundID s) const { return window().sound(s); }
+    virtual ProtectedPtr<Sound> sound(SoundID s) { return window->sound(s); }
+    virtual const ProtectedPtr<Sound> sound(SoundID s) const { return window->sound(s); }
 
-    virtual bool has_sound(SoundID s) const { return window().has_sound(s); }
-    virtual uint32_t sound_count() const { return window().sound_count(); }
+    virtual bool has_sound(SoundID s) const { return window->has_sound(s); }
+    virtual uint32_t sound_count() const { return window->sound_count(); }
 
 
     //Material functions
-    virtual MaterialID new_material(bool garbage_collect=true) { return window().new_material(garbage_collect); }
+    virtual MaterialID new_material(bool garbage_collect=true) { return window->new_material(garbage_collect); }
     virtual MaterialID new_material_from_file(const unicode& path, bool garbage_collect=true) {
-        return window().new_material_from_file(path, garbage_collect);
+        return window->new_material_from_file(path, garbage_collect);
     }
 
-    virtual ProtectedPtr<Material> material(MaterialID m) { return window().material(m); }
-    virtual const ProtectedPtr<Material> material(MaterialID m) const { return window().material(m); }
+    virtual ProtectedPtr<Material> material(MaterialID m) { return window->material(m); }
+    virtual const ProtectedPtr<Material> material(MaterialID m) const { return window->material(m); }
 
-    virtual bool has_material(MaterialID m) const { return window().has_material(m); }
-    virtual uint32_t material_count() const { return window().material_count(); }
-    virtual void mark_material_as_uncollected(MaterialID t) { window().mark_material_as_uncollected(t); }
-
-    virtual WindowBase& window() { return window_; }
-    const WindowBase& window() const { return window_; }
+    virtual bool has_material(MaterialID m) const { return window->has_material(m); }
+    virtual uint32_t material_count() const { return window->material_count(); }
+    virtual void mark_material_as_uncollected(MaterialID t) { window->mark_material_as_uncollected(t); }
 
     Property<Stage, Debug> debug = { this, &Stage::debug_ };
 
@@ -332,17 +334,15 @@ public:
 
 
     // Default stuff
-    MaterialID default_material_id() const { return window_.default_material_id(); }
-    TextureID default_texture_id() const { return window_.default_texture_id(); }
-    MaterialID clone_default_material(bool garbage_collect=true) { return window_.clone_default_material(garbage_collect); }
-    unicode default_material_filename() const { return window_.default_material_filename(); }
+    MaterialID default_material_id() const { return window->default_material_id(); }
+    TextureID default_texture_id() const { return window->default_texture_id(); }
+    MaterialID clone_default_material(bool garbage_collect=true) { return window->clone_default_material(garbage_collect); }
+    unicode default_material_filename() const { return window->default_material_filename(); }
 
     // RenderableStage
     void on_render_started() {}
     void on_render_stopped() {}
 private:
-    WindowBase& window_;
-
     kglt::Colour ambient_light_;
 
     sig::signal<void (ActorID)> signal_actor_created_;

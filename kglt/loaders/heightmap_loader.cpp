@@ -68,7 +68,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     // We divide the heightmap into patches for more efficient rendering
     kglt::MaterialID mat = mesh->resource_manager().clone_default_material();
-    std::vector<kglt::SubMeshIndex> submeshes;
+    std::vector<kglt::SubMeshID> submeshes;
     for(int i = 0; i < total_patches; ++i) {
         submeshes.push_back(mesh->new_submesh(mat));
     }
@@ -99,15 +99,15 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
                 int patch_z = (z / patch_size);
                 int patch_idx = (patch_z * patches_across) + patch_x;
 
-                auto& sm = mesh->submesh(submeshes.at(patch_idx));
-                sm.index_data().index(idx);
-                sm.index_data().index(idx + tex->width());
-                sm.index_data().index(idx + 1);
+                auto sm = mesh->submesh(submeshes.at(patch_idx));
+                sm->index_data().index(idx);
+                sm->index_data().index(idx + tex->width());
+                sm->index_data().index(idx + 1);
 
 
-                sm.index_data().index(idx + 1);
-                sm.index_data().index(idx + tex->width());
-                sm.index_data().index(idx + tex->width() + 1);
+                sm->index_data().index(idx + 1);
+                sm->index_data().index(idx + tex->width());
+                sm->index_data().index(idx + tex->width() + 1);
             }
         }
     }
@@ -116,17 +116,17 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     std::unordered_map<int, kglt::Vec3> index_to_normal;
 
     for(auto smi: submeshes) {
-        auto& sm = mesh->submesh(smi);
+        auto sm = mesh->submesh(smi);
         // Go through all the triangles, add the face normal to all the vertices
-        for(uint16_t i = 0; i < sm.index_data().count(); i+=3) {
-            uint16_t idx1 = sm.index_data().at(i);
-            uint16_t idx2 = sm.index_data().at(i+1);
-            uint16_t idx3 = sm.index_data().at(i+2);
+        for(uint16_t i = 0; i < sm->index_data().count(); i+=3) {
+            uint16_t idx1 = sm->index_data().at(i);
+            uint16_t idx2 = sm->index_data().at(i+1);
+            uint16_t idx3 = sm->index_data().at(i+2);
 
             kglt::Vec3 v1, v2, v3;
-            v1 = sm.vertex_data().position_at(idx1);
-            v2 = sm.vertex_data().position_at(idx2);
-            v3 = sm.vertex_data().position_at(idx3);
+            v1 = sm->vertex_data().position_at(idx1);
+            v2 = sm->vertex_data().position_at(idx2);
+            v3 = sm->vertex_data().position_at(idx3);
 
             kglt::Vec3 normal = (v2 - v1).normalized().cross((v3 - v1).normalized()).normalized();
 
@@ -144,7 +144,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     }
 
     for(auto smi: submeshes) {
-        mesh->submesh(smi).index_data().done();
+        mesh->submesh(smi)->index_data().done();
     }
     mesh->shared_data().done();
 

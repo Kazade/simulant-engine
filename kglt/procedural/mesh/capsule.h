@@ -7,7 +7,7 @@ namespace kglt {
 namespace procedural {
 namespace mesh {
 
-SubMeshIndex capsule(
+SubMeshID capsule(
     ProtectedPtr<Mesh> mesh,
     float diameter=0.5,
     float height=1.0,

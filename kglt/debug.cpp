@@ -8,13 +8,18 @@ namespace kglt {
 Debug::Debug(Stage &stage):
     stage_(stage) {
 
-    stage_.window().signal_frame_finished().connect(
+    update_connection_ = stage_.window->signal_frame_finished().connect(
         std::bind(&Debug::update, this)
     );
 }
 
+Debug::~Debug() {
+    // Make sure we disconnect otherwise crashes happen
+    update_connection_.disconnect();
+}
+
 void Debug::update() {
-    double dt = stage_.window().delta_time();
+    double dt = stage_.window->delta_time();
 
     std::vector<DebugElement> to_keep;
 
@@ -51,13 +56,13 @@ void Debug::draw_line(const Vec3 &start, const Vec3 &end, const Colour &colour, 
     auto mesh = stage_.mesh(mesh_);
 
     DebugElement element;
-    element.submesh = mesh->new_submesh(material_, MESH_ARRANGEMENT_LINE_STRIP, /*shares_vertices=*/ false);
+    element.submesh = mesh->new_submesh(material_, MESH_ARRANGEMENT_LINE_STRIP, VERTEX_SHARING_MODE_INDEPENDENT);
     element.colour = colour;
     element.duration = duration;
     element.depth_test = depth_test;
     element.type = DebugElementType::DET_LINE;
 
-    auto& submesh = mesh->submesh(element.submesh);
+    auto& submesh = *mesh->submesh(element.submesh);
 
     submesh.vertex_data().move_to_start();
     submesh.vertex_data().position(start);

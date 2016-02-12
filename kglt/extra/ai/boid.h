@@ -37,7 +37,7 @@ private:
 
     kglt::MeshID debug_mesh_;
     kglt::ActorID debug_actor_;
-    kglt::SubMeshIndex normal_points_mesh_;
+    kglt::SubMeshID normal_points_mesh_;
 
     mutable std::vector<kglt::Vec3> normal_points_;
     void update_debug_mesh() const;

@@ -82,7 +82,7 @@ private:
 
 class MaterialScriptLoaderType : public LoaderType {
 public:
-    unicode name() { return "material_loader"; }
+    unicode name() { return "material"; }
     bool supports(const unicode& filename) const {
         return filename.lower().contains(".kglm");
     }

@@ -20,7 +20,7 @@ public:
 
 class OGGLoaderType : public LoaderType {
 public:
-    unicode name() { return "ogg_loader"; }
+    unicode name() { return "ogg"; }
     bool supports(const unicode& filename) const {
         //FIXME: check magic
         return filename.lower().contains(".ogg");

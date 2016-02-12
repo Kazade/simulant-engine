@@ -17,7 +17,9 @@ namespace kglt {
 
 Stage::Stage(WindowBase *parent, StageID id, AvailablePartitioner partitioner):
     generic::Identifiable<StageID>(id),
-    window_(*parent),
+    WindowHolder(parent),
+    ResourceManager(parent),
+    SkyboxManager(parent, this),
     ambient_light_(1.0, 1.0, 1.0, 1.0) {
 
     set_partitioner(partitioner);
@@ -40,7 +42,7 @@ void Stage::cleanup() {
 }
 
 void Stage::ask_owner_for_destruction() {
-    window().delete_stage(id());
+    window->delete_stage(id());
 }
 
 ActorID Stage::new_actor() {
@@ -131,7 +133,7 @@ ParticleSystemID Stage::new_particle_system_from_file(const unicode& filename, b
     ps->set_parent(this);
     ps->set_destroy_on_completion(destroy_on_completion);
 
-    window().loader_for(filename)->into(ps);
+    window->loader_for(filename)->into(ps);
 
     return new_id;
 }
@@ -143,7 +145,7 @@ ParticleSystemID Stage::new_particle_system_with_parent_from_file(ActorID parent
     ps->set_parent(parent);
     ps->set_destroy_on_completion(destroy_on_completion);
 
-    window().loader_for(filename)->into(ps);
+    window->loader_for(filename)->into(ps);
 
     return new_id;
 }
@@ -251,9 +253,9 @@ void Stage::delete_light(LightID light_id) {
 }
 
 void Stage::host_camera(CameraID c) {
-    if(window().camera(c)->has_proxy()) {
+    if(window->camera(c)->has_proxy()) {
         //Destroy any existing proxy
-        window().camera(c)->proxy().stage()->evict_camera(c);
+        window->camera(c)->proxy().stage()->evict_camera(c);
     }
 
     //Create a camera proxy for the camera ID

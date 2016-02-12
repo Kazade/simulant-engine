@@ -11,7 +11,7 @@ class Mesh;
 namespace procedural {
 namespace mesh {
 
-SubMeshIndex new_rectangle_submesh(
+SubMeshID new_rectangle_submesh(
     ProtectedPtr<Mesh>& mesh,
     float width,
     float height,
@@ -19,12 +19,12 @@ SubMeshIndex new_rectangle_submesh(
     MaterialID material_id=MaterialID()
 );
 
-SubMeshIndex rectangle(ProtectedPtr<Mesh> mesh,
+SubMeshID rectangle(ProtectedPtr<Mesh> mesh,
     float width, float height,
     float x_offset=0.0, float y_offset=0.0, float z_offset=0.0,
     bool clear=true, kglt::MaterialID material=kglt::MaterialID());
 
-SubMeshIndex rectangle_outline(
+SubMeshID rectangle_outline(
     ProtectedPtr<Mesh> mesh,
     float width, float height,
     float x_offset=0.0, float y_offset=0.0, float z_offset=0.0,

@@ -45,7 +45,7 @@ private:
     std::vector<Texture> textures;
     std::string current_texture;
 
-    std::map<std::string, SubMeshIndex> texture_submesh;
+    std::map<std::string, SubMeshID> texture_submesh;
     std::map<std::string, TextureID> texture_name_to_id;
 
     struct Triangle {
@@ -62,7 +62,7 @@ private:
 
 class OPTLoaderType : public LoaderType {
 public:
-    unicode name() { return "opt_loader"; }
+    unicode name() { return "opt"; }
     bool supports(const unicode& filename) const {
         //FIXME: check magic
         return filename.lower().contains(".opt");

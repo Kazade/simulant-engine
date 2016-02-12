@@ -272,12 +272,12 @@ public:
 };
 
 struct MeshGroupData : public GroupData {
-    MeshGroupData(MeshID id, SubMeshIndex smi):
+    MeshGroupData(MeshID id, SubMeshID smi):
         mesh_id(id),
         smi(smi) {}
 
     MeshID mesh_id;
-    SubMeshIndex smi;
+    SubMeshID smi;
 
     std::size_t do_hash() const {
         size_t seed = 0;

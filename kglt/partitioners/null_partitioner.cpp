@@ -9,7 +9,7 @@
 namespace kglt {
 
 std::vector<LightID> NullPartitioner::lights_visible_from(CameraID camera_id) {
-    auto frustum = stage()->window().camera(camera_id)->frustum();
+    auto frustum = stage()->window->camera(camera_id)->frustum();
 
     std::vector<LightID> result;
     for(LightID lid: all_lights_) {
@@ -26,11 +26,12 @@ std::vector<LightID> NullPartitioner::lights_visible_from(CameraID camera_id) {
 std::vector<RenderablePtr> NullPartitioner::geometry_visible_from(CameraID camera_id) {
     std::vector<RenderablePtr> result;
 
-    auto frustum = stage()->window().camera(camera_id)->frustum();
+    auto frustum = stage()->window->camera(camera_id)->frustum();
 
     //Just return all of the meshes in the stage
     for(ActorID eid: all_actors_) {
-        auto subactors = stage()->actor(eid)->_subactors();
+        auto actor = stage()->actor(eid);
+        auto subactors = actor->_subactors();
 
         for(auto ent: subactors) {
             if(frustum.intersects_aabb(ent->transformed_aabb())) {

@@ -41,28 +41,29 @@ public:
 
         data.done();
 
-        kglt::SubMesh& submesh = mesh->submesh(mesh->new_submesh(kglt::MaterialID()));
+        first_mesh_ = mesh->new_submesh(kglt::MaterialID());
+        kglt::SubMesh* submesh = mesh->submesh(first_mesh_);
 
-        submesh.index_data().index(0);
-        submesh.index_data().index(1);
-        submesh.index_data().index(2);
+        submesh->index_data().index(0);
+        submesh->index_data().index(1);
+        submesh->index_data().index(2);
 
-        submesh.index_data().index(0);
-        submesh.index_data().index(2);
-        submesh.index_data().index(3);
-        submesh.index_data().done();
+        submesh->index_data().index(0);
+        submesh->index_data().index(2);
+        submesh->index_data().index(3);
+        submesh->index_data().done();
 
         //Draw a line between the first two vertices
-        kglt::SubMesh& sm = mesh->submesh(mesh->new_submesh(kglt::MaterialID(), kglt::MESH_ARRANGEMENT_LINES));
-        sm.index_data().index(0);
-        sm.index_data().index(1);
-        sm.index_data().done();
+        kglt::SubMesh* sm = mesh->submesh(mesh->new_submesh(kglt::MaterialID(), kglt::MESH_ARRANGEMENT_LINES));
+        sm->index_data().index(0);
+        sm->index_data().index(1);
+        sm->index_data().done();
 
         kmVec3 expected_min, expected_max;
         kmVec3Fill(&expected_min, -1.0, -1.0, 0.0);
         kmVec3Fill(&expected_max, 1.0, -1.0, 0.0);
 
-        auto box = sm.aabb();
+        auto box = sm->aabb();
         assert_true(kmVec3AreEqual(&box.min, &expected_min));
         assert_true(kmVec3AreEqual(&box.max, &expected_max));
 
@@ -126,11 +127,11 @@ public:
         auto mesh = stage->mesh(mid);
 
         this->assert_equal(0, mesh->shared_data().count());
-        kglt::SubMeshIndex idx = kglt::procedural::mesh::rectangle_outline(mesh, 1.0, 1.0);
+        kglt::SubMeshID idx = kglt::procedural::mesh::rectangle_outline(mesh, 1.0, 1.0);
 
-        this->assert_equal(kglt::MESH_ARRANGEMENT_LINE_STRIP, mesh->submesh(idx).arrangement());
+        this->assert_equal(kglt::MESH_ARRANGEMENT_LINE_STRIP, mesh->submesh(idx)->arrangement());
         this->assert_equal(4, mesh->shared_data().count());
-        this->assert_equal(5, mesh->submesh(idx).index_data().count());
+        this->assert_equal(5, mesh->submesh(idx)->index_data().count());
     }
 
     void test_basic_usage() {
@@ -150,7 +151,7 @@ public:
         assert_true(!data.has_specular());
         assert_equal(4, data.count());
 
-        assert_equal((uint32_t)2, mesh->submesh_ids().size());
+        assert_equal((uint32_t)2, mesh->submesh_count());
     }
 
     void test_actor_from_mesh() {
@@ -171,15 +172,15 @@ public:
 
         //The actor should report the same data as the mesh, the same subactor count
         //as well as the same shared vertex data
-        assert_equal(mesh->submesh_ids().size(), actor->subactor_count());
+        assert_equal(mesh->submesh_count(), actor->subactor_count());
         assert_true(mesh->shared_data().count() == actor->shared_data().count());
 
-        kglt::SubMeshIndex idx = mesh->submesh_ids()[0];
+        kglt::SubMesh* sm = mesh->submesh(first_mesh_);
 
         //Likewise for subentities, they should just proxy to the submesh
-        assert_equal(mesh->submesh(idx).material_id(), actor->subactor(0).material_id());
-        assert_true(mesh->submesh(idx).index_data() == actor->subactor(0).index_data());
-        assert_true(mesh->submesh(idx).vertex_data() == actor->subactor(0).vertex_data());
+        assert_equal(sm->material_id(), actor->subactor(0).material_id());
+        assert_true(sm->index_data() == actor->subactor(0).index_data());
+        assert_true(sm->vertex_data() == actor->subactor(0).vertex_data());
 
         //We should be able to override the material on a subactor though
         actor->subactor(0).override_material_id(kglt::MaterialID(1));
@@ -201,10 +202,10 @@ public:
 
         auto mesh_id = stage->new_mesh();
         auto smi = stage->mesh(mesh_id)->new_submesh_as_box(stage->clone_default_material(), 10.0, 10.0, 10.0);
-        auto& sm = stage->mesh(mesh_id)->submesh(smi);
-        sm.generate_texture_coordinates_cube();
+        auto sm = stage->mesh(mesh_id)->submesh(smi);
+        sm->generate_texture_coordinates_cube();
 
-        auto& vd = sm.vertex_data();
+        auto& vd = sm->vertex_data();
 
         // Neg Z
         assert_equal(kglt::Vec4((1.0 / 3.0), 0, 0, 1), vd.texcoord0_at(0));
@@ -246,6 +247,8 @@ public:
 private:
     CameraID camera_id_;
     StageID stage_id_;
+
+    SubMeshID first_mesh_;
 };
 
 #endif // TEST_MESH_H

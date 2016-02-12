@@ -190,12 +190,10 @@ public:
     virtual const bool is_visible() const { return Object::is_visible(); }
 
     virtual MeshID instanced_mesh_id() const { return MeshID(); } //We don't support instancing
-    virtual SubMeshIndex instanced_submesh_id() const { return 0; } //We don't support instancing
+    virtual SubMeshID instanced_submesh_id() const { return SubMeshID(0); } //We don't support instancing
 
     const VertexData& vertex_data() const { return vertex_data_; }
     const IndexData& index_data() const { return index_data_; }
-
-    WindowBase& window();
 
     void deactivate_emitters() { for(auto emitter: emitters_) { emitter->deactivate(); }; }
     void activate_emitters() { for(auto emitter: emitters_) { emitter->activate(); }; }

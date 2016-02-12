@@ -195,7 +195,7 @@ public:
     virtual const bool is_visible() const = 0;
 
     virtual MeshID instanced_mesh_id() const = 0;
-    virtual SubMeshIndex instanced_submesh_id() const = 0;
+    virtual SubMeshID instanced_submesh_id() const = 0;
 };
 
 typedef std::shared_ptr<Renderable> RenderablePtr;

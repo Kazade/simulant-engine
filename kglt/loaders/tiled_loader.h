@@ -22,7 +22,7 @@ public:
 
     ~TiledLoaderType() {}
 
-    unicode name() { return "tiled_loader"; }
+    unicode name() { return "tiled"; }
     bool supports(const unicode& filename) const override {        
         bool ret = filename.lower().ends_with(".tmx");
         return ret;

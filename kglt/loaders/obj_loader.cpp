@@ -67,7 +67,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     std::vector<Vec3> normals;
 
     std::unordered_map<unicode, kglt::MaterialID> materials;
-    std::unordered_map<unicode, SubMeshIndex> material_submeshes;
+    std::unordered_map<unicode, SubMeshID> material_submeshes;
 
     SubMesh* sm = nullptr;
 
@@ -123,8 +123,8 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             if(!sm) {
                 // We have an .obj file which has no materials or we hit faces before a
                 // usemtl statement. Let's just make a new default submesh
-                SubMeshIndex smi = mesh->new_submesh(mesh->resource_manager().clone_default_material());
-                sm = &mesh->submesh(smi);
+                SubMeshID smi = mesh->new_submesh(mesh->resource_manager().clone_default_material());
+                sm = mesh->submesh(smi);
             }
 
             //Faces are a pain in the arse to parse
@@ -203,11 +203,11 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                 material_submeshes.insert(
                     std::make_pair(current_material, mesh->new_submesh(mat_id))
                 );
-                mesh->submesh(material_submeshes[current_material]).set_material_id(mat_id);
+                mesh->submesh(material_submeshes[current_material])->set_material_id(mat_id);
             }
 
             // Make this submesh current
-            sm = &mesh->submesh(material_submeshes.at(current_material));
+            sm = mesh->submesh(material_submeshes.at(current_material));
         } else if(parts[0] == "mtllib") {
             /*
              * If we find a mtllib command, we load the material file and insert its
@@ -333,7 +333,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
         sm->index_data().done();
     } else {
         for(auto& p: material_submeshes) {
-            mesh->submesh(p.second).index_data().done();
+            mesh->submesh(p.second)->index_data().done();
         }
     }
 }

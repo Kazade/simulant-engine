@@ -13,16 +13,16 @@ CameraProxy::CameraProxy(Stage *stage, CameraID camera_id):
     assert(stage);
 
     //Set the camera's proxy to this
-    stage->window().camera(camera_id)->set_proxy(this);
+    stage->window->camera(camera_id)->set_proxy(this);
 }
 
 CameraProxy::~CameraProxy() {
     //Set the camera's proxy to null
-    if(!stage()->window().is_shutting_down() &&
-        stage()->window().has_camera(id())) {
+    if(!stage()->window->is_shutting_down() &&
+        stage()->window->has_camera(id())) {
 
-        if(&stage()->window().camera(id())->proxy() == this) {
-            stage()->window().camera(id())->set_proxy(nullptr);
+        if(&stage()->window->camera(id())->proxy() == this) {
+            stage()->window->camera(id())->set_proxy(nullptr);
         }
     }
 }
@@ -36,7 +36,7 @@ void CameraProxy::set_orthographic_projection(double left, double right, double 
 }
 
 CameraPtr CameraProxy::camera() {
-    return stage()->window().camera(id());
+    return stage()->window->camera(id());
 }
 
 void CameraProxy::follow(ActorID actor, CameraFollowMode mode, const kglt::Vec3& offset, float lag_in_seconds) {

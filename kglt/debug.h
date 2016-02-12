@@ -10,6 +10,7 @@ namespace kglt {
 class Debug : public Managed<Debug> {
 public:
     Debug(Stage& stage);
+    ~Debug();
 
     void draw_ray(
         const Vec3& start,
@@ -52,7 +53,7 @@ private:
         Colour colour = Colour::WHITE;
         bool depth_test = true;
         double duration = 0.0;
-        SubMeshIndex submesh;
+        SubMeshID submesh;
     };
 
     std::vector<DebugElement> elements_;
@@ -60,6 +61,8 @@ private:
     MeshID mesh_;
     ActorID actor_;
     MaterialID material_;
+
+    sig::Connection update_connection_;
 };
 
 }

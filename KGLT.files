@@ -869,3 +869,7 @@ submodules/luabind/luabind/detail/typetraits.hpp
 submodules/luabind/luabind/detail/yes_no.hpp
 kglt/procedural/mesh/cylinder.h
 kglt/procedural/mesh/cylinder.cpp
+kglt/managers/skybox_manager.h
+kglt/managers/skybox_manager.cpp
+kglt/managers/window_holder.h
+kglt/procedural/constants.h

@@ -15,7 +15,8 @@
 namespace kglt {
 
 ResourceManagerImpl::ResourceManagerImpl(WindowBase* window):
-    window_(window) {
+    WindowHolder(window),
+    ResourceManager(window) {
 
 }
 
@@ -82,14 +83,14 @@ MeshID ResourceManagerImpl::new_mesh(bool garbage_collect) {
 MeshID ResourceManagerImpl::new_mesh_from_file(const unicode& path, bool garbage_collect) {
     //Load the material
     kglt::MeshID mesh_id = new_mesh(garbage_collect);
-    window().loader_for(path.encode())->into(mesh(mesh_id));
+    window->loader_for(path.encode())->into(mesh(mesh_id));
     MeshManager::mark_as_uncollected(mesh_id);
     return mesh_id;
 }
 
 MeshID ResourceManagerImpl::new_mesh_from_tmx_file(const unicode& tmx_file, const unicode& layer_name, float tile_render_size, bool garbage_collect) {
     kglt::MeshID mesh_id = new_mesh(garbage_collect);
-    window().loader_for(tmx_file.encode())->into(mesh(mesh_id), {
+    window->loader_for(tmx_file.encode())->into(mesh(mesh_id), {
         {"layer", layer_name},
         {"render_size", tile_render_size}
     });
@@ -99,7 +100,7 @@ MeshID ResourceManagerImpl::new_mesh_from_tmx_file(const unicode& tmx_file, cons
 
 MeshID ResourceManagerImpl::new_mesh_from_heightmap(const unicode& image_file, float spacing, float min_height, float max_height, const HeightmapDiffuseGenerator &generator, bool garbage_collect) {
     kglt::MeshID mesh_id = new_mesh(garbage_collect);
-    window().loader_for("heightmap_loader", image_file)->into(mesh(mesh_id), {
+    window->loader_for("heightmap_loader", image_file)->into(mesh(mesh_id), {
         { "spacing", spacing},
         { "min_height", min_height},
         { "max_height", max_height},
@@ -163,11 +164,11 @@ MeshID ResourceManagerImpl::new_mesh_from_vertices(const std::vector<Vec2> &vert
         new_mesh->shared_data().normal(kglt::Vec3());
         new_mesh->shared_data().tex_coord0(kglt::Vec2());
         new_mesh->shared_data().move_next();
-        new_mesh->submesh(smi).index_data().index(i++);
+        new_mesh->submesh(smi)->index_data().index(i++);
     }
 
     new_mesh->shared_data().done();
-    new_mesh->submesh(smi).index_data().done();
+    new_mesh->submesh(smi)->index_data().done();
 
     MeshManager::mark_as_uncollected(m);
 
@@ -187,11 +188,11 @@ MeshID ResourceManagerImpl::new_mesh_from_vertices(const std::vector<Vec3> &vert
         new_mesh->shared_data().normal(kglt::Vec3());
         new_mesh->shared_data().tex_coord0(kglt::Vec2());
         new_mesh->shared_data().move_next();
-        new_mesh->submesh(smi).index_data().index(i++);
+        new_mesh->submesh(smi)->index_data().index(i++);
     }
 
     new_mesh->shared_data().done();
-    new_mesh->submesh(smi).index_data().done();
+    new_mesh->submesh(smi)->index_data().done();
     MeshManager::mark_as_uncollected(m);
     return m;
 }
@@ -293,7 +294,7 @@ MaterialID ResourceManagerImpl::new_material_from_file(const unicode& path, bool
     L_INFO(_u("Loading material {0}").format(path));
 
     auto mat = material(new_material(garbage_collect));
-    window().loader_for(path.encode())->into(mat);
+    window->loader_for(path.encode())->into(mat);
     mark_material_as_uncollected(mat->id());
     return mat->id();
 }
@@ -359,7 +360,7 @@ TextureID ResourceManagerImpl::new_texture(bool garbage_collect) {
 TextureID ResourceManagerImpl::new_texture_from_file(const unicode& path, TextureFlags flags, bool garbage_collect) {
     //Load the texture
     auto tex = texture(new_texture(garbage_collect));
-    window().loader_for("texture_loader", path.encode())->into(tex);
+    window->loader_for("texture", path.encode())->into(tex);
 
     if((flags & TEXTURE_OPTION_FLIP_VERTICALLY) == TEXTURE_OPTION_FLIP_VERTICALLY) {
         tex->flip_vertically();
@@ -433,7 +434,7 @@ SoundID ResourceManagerImpl::new_sound(bool garbage_collect) {
 SoundID ResourceManagerImpl::new_sound_from_file(const unicode& path, bool garbage_collect) {
     //Load the sound
     auto snd = sound(new_sound(garbage_collect));
-    window().loader_for(path.encode())->into(snd);
+    window->loader_for(path.encode())->into(snd);
     return snd->id();
 }
 
@@ -492,7 +493,7 @@ MaterialID ResourceManagerImpl::default_material_id() const {
 }
 
 unicode ResourceManagerImpl::default_material_filename() const {
-    return window().resource_locator->locate_file("kglt/materials/multitexture_and_lighting.kglm");
+    return window->resource_locator->locate_file("kglt/materials/multitexture_and_lighting.kglm");
 }
 
 

@@ -45,12 +45,26 @@ public:
     virtual void _bind_vertex_array_object() = 0;
 };
 
+enum VertexSharingMode {
+    VERTEX_SHARING_MODE_SHARED,
+    VERTEX_SHARING_MODE_INDEPENDENT
+};
+
 class SubMesh :
     public SubMeshInterface,
-    public Managed<SubMesh> {
+    public Managed<SubMesh>,
+    public generic::Identifiable<SubMeshID> {
 
 public:
-    SubMesh(Mesh& parent, SubMeshIndex idx, MaterialID material, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool uses_shared_vertices=true);
+    SubMesh(
+        Mesh* parent,
+        SubMeshID id,
+        const std::string& name,
+        MaterialID material,
+        MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES,
+        VertexSharingMode vertex_sharing=VERTEX_SHARING_MODE_SHARED
+    );
+
     virtual ~SubMesh();
 
     VertexData& vertex_data();
@@ -79,12 +93,9 @@ public:
     void _update_vertex_array_object();
     void _bind_vertex_array_object();
 
-    SubMeshIndex id() const { return id_; }
-
     void generate_texture_coordinates_cube(uint32_t texture=0);
 private:
-    Mesh& parent_;
-    SubMeshIndex id_;
+    Mesh* parent_;
 
     MaterialPtr material_;
     MeshArrangement arrangement_;
@@ -103,12 +114,15 @@ private:
     sig::connection irecalc_;
 };
 
+typedef generic::TemplatedManager<Mesh, SubMesh, SubMeshID> TemplatedSubMeshManager;
+
 class Mesh :
     public MeshInterface,
     public Resource,
     public Loadable,
     public Managed<Mesh>,
-    public generic::Identifiable<MeshID> {
+    public generic::Identifiable<MeshID>,
+    public TemplatedSubMeshManager {
 
 public:
     Mesh(ResourceManager* resource_manager, MeshID id);
@@ -121,18 +135,22 @@ public:
         return shared_data_;
     }
 
-    SubMeshIndex new_submesh(MaterialID material, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool uses_shared_vertices=true);
-    SubMeshIndex new_submesh_as_rectangle(MaterialID material, float width, float height, const Vec3& offset=Vec3());
-    SubMeshIndex new_submesh_as_box(MaterialID material, float width, float height, float depth, const Vec3& offset=Vec3());
+    SubMeshID new_submesh(
+        MaterialID material,
+        MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES,
+        VertexSharingMode vertex_sharing=VERTEX_SHARING_MODE_SHARED
+    );
 
-    SubMesh& submesh(SubMeshIndex index);
-    void delete_submesh(SubMeshIndex index);
+    SubMeshID new_submesh_as_rectangle(MaterialID material, float width, float height, const Vec3& offset=Vec3());
+    SubMeshID new_submesh_as_box(MaterialID material, float width, float height, float depth, const Vec3& offset=Vec3());
+    uint32_t submesh_count() const { return TemplatedSubMeshManager::manager_count(); }
+
+    SubMesh* submesh(SubMeshID index);
+    SubMesh* any_submesh() const;
+    SubMesh* only_submesh() const;
+
+    void delete_submesh(SubMeshID index);
     void clear();
-
-    std::vector<SubMeshIndex> submesh_ids() {
-        std::set<SubMeshIndex> keys = container::keys(submeshes_by_index_);
-        return std::vector<SubMeshIndex>(keys.begin(), keys.end());
-    }
 
     void enable_debug(bool value);
 
@@ -156,10 +174,7 @@ private:
     VertexData shared_data_;
     BufferObject::ptr shared_data_buffer_object_;
 
-    std::vector<SubMesh::ptr> submeshes_;
-    std::unordered_map<SubMeshIndex, SubMesh::ptr> submeshes_by_index_;
-
-    SubMeshIndex normal_debug_mesh_;
+    SubMeshID normal_debug_mesh_;
 
     sig::signal<void ()> signal_submeshes_changed_;
 };

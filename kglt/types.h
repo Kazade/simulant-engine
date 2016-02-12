@@ -596,8 +596,9 @@ enum VirtualDPadDirections {
 typedef uint32_t TextureFlags;
 
 typedef UniqueID<0> MeshID;
-typedef UniqueID<1> TextureID;
-typedef UniqueID<2> CameraID;
+typedef UniqueID<1> SubMeshID;
+typedef UniqueID<2> TextureID;
+typedef UniqueID<3> CameraID;
 typedef UniqueID<4> MaterialID;
 typedef UniqueID<5> LightID;
 typedef UniqueID<6> StageID;
@@ -608,12 +609,11 @@ typedef UniqueID<11> UIStageID;
 typedef UniqueID<12> SpriteID;
 typedef UniqueID<13> BackgroundID;
 typedef UniqueID<14> ParticleSystemID;
+typedef UniqueID<15> SkyboxID;
 
 const StageID DefaultStageID = StageID();
 
 const std::string DEFAULT_MATERIAL_SCHEME = "default";
-
-typedef uint16_t SubMeshIndex;
 
 class Mesh;
 typedef ProtectedPtr<Mesh> MeshPtr;

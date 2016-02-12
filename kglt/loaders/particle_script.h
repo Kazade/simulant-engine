@@ -22,7 +22,7 @@ public:
 
     ~KGLPLoaderType() {}
 
-    unicode name() { return "kglp_loader"; }
+    unicode name() { return "particle"; }
     bool supports(const unicode& filename) const override {
         return filename.lower().contains(".kglp");
     }

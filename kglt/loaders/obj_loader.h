@@ -24,7 +24,7 @@ public:
 
     ~OBJLoaderType() {}
 
-    unicode name() { return "obj_loader"; }
+    unicode name() { return "obj"; }
     bool supports(const unicode& filename) const override {
         return filename.lower().contains(".obj");
     }

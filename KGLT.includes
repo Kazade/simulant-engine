@@ -42,3 +42,5 @@ samples
 submodules/luabind/luabind
 submodules/luabind/luabind/detail
 kglt/procedural/mesh
+kglt/managers
+kglt/procedural

@@ -97,7 +97,7 @@ class SubActor :
 public:
     const MaterialID material_id() const;
 
-    const SubMeshIndex submesh_id() const;
+    const SubMeshID submesh_id() const;
 
     void override_material_id(MaterialID material);
 
@@ -113,7 +113,7 @@ public:
     const bool is_visible() const { return parent_.is_visible(); }
 
     MeshID instanced_mesh_id() const { return parent_.mesh_id(); }
-    SubMeshIndex instanced_submesh_id() const { return submesh_id(); }
+    SubMeshID instanced_submesh_id() const { return submesh_id(); }
 
     /* BoundableAndTransformable interface implementation */
 

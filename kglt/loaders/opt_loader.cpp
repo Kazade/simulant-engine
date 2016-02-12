@@ -492,7 +492,7 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
         texture_submesh[tex.name] = mesh->new_submesh(
             mesh->resource_manager().new_material_from_texture(new_tex->id()),
             MESH_ARRANGEMENT_TRIANGLES,
-            false
+            VERTEX_SHARING_MODE_INDEPENDENT
         );
     }
 
@@ -503,7 +503,7 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
                     format(tri.texture_name).encode());
             continue;
         }
-        SubMesh& submesh = mesh->submesh(texture_submesh[tri.texture_name]);
+        SubMesh& submesh = *mesh->submesh(texture_submesh[tri.texture_name]);
 
         submesh.vertex_data().move_to_end();
 
@@ -533,9 +533,9 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
     }
 
     for(Texture tex: textures) {
-        mesh->submesh(texture_submesh[tex.name]).vertex_data().done();
-        mesh->submesh(texture_submesh[tex.name]).index_data().done();
-        mesh->submesh(texture_submesh[tex.name]).reverse_winding();
+        mesh->submesh(texture_submesh[tex.name])->vertex_data().done();
+        mesh->submesh(texture_submesh[tex.name])->index_data().done();
+        mesh->submesh(texture_submesh[tex.name])->reverse_winding();
     }
 }
 

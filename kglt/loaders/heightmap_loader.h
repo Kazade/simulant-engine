@@ -23,7 +23,7 @@ public:
 
     ~HeightmapLoaderType() {}
 
-    unicode name() { return "heightmap_loader"; }
+    unicode name() { return "heightmap"; }
     bool supports(const unicode& filename) const override {
         return filename.lower().ends_with(".tga") || filename.lower().ends_with(".png");
     }

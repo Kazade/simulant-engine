@@ -83,7 +83,7 @@ Material::Material(ResourceManager *resource_manager, MaterialID mat_id):
     Resource(resource_manager),
     generic::Identifiable<MaterialID>(mat_id) {
 
-    update_connection_ = resource_manager->window().signal_step().connect(std::bind(&Material::update, this, std::placeholders::_1));
+    update_connection_ = resource_manager->window->signal_step().connect(std::bind(&Material::update, this, std::placeholders::_1));
 }
 
 Material::~Material() {

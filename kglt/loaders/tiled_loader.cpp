@@ -130,19 +130,19 @@ void TiledLoader::into(Loadable &resource, const LoaderOptions &options) {
             float tx1 = x1 / tileset.total_width - (0.5 / tileset.total_width);
             float ty1 = y1 / tileset.total_height + (0.5 / tileset.total_height);
 
-            mesh->submesh(sidx).vertex_data().move_to(0);
-            mesh->submesh(sidx).vertex_data().tex_coord0(kglt::Vec2(tx0, ty1));
+            mesh->submesh(sidx)->vertex_data().move_to(0);
+            mesh->submesh(sidx)->vertex_data().tex_coord0(kglt::Vec2(tx0, ty1));
 
-            mesh->submesh(sidx).vertex_data().move_next();
-            mesh->submesh(sidx).vertex_data().tex_coord0(kglt::Vec2(tx1, ty1));
+            mesh->submesh(sidx)->vertex_data().move_next();
+            mesh->submesh(sidx)->vertex_data().tex_coord0(kglt::Vec2(tx1, ty1));
 
-            mesh->submesh(sidx).vertex_data().move_next();
-            mesh->submesh(sidx).vertex_data().tex_coord0(kglt::Vec2(tx1, ty0));
+            mesh->submesh(sidx)->vertex_data().move_next();
+            mesh->submesh(sidx)->vertex_data().tex_coord0(kglt::Vec2(tx1, ty0));
 
-            mesh->submesh(sidx).vertex_data().move_next();
-            mesh->submesh(sidx).vertex_data().tex_coord0(kglt::Vec2(tx0, ty0));
+            mesh->submesh(sidx)->vertex_data().move_next();
+            mesh->submesh(sidx)->vertex_data().tex_coord0(kglt::Vec2(tx0, ty0));
 
-            mesh->submesh(sidx).vertex_data().done();
+            mesh->submesh(sidx)->vertex_data().done();
         }
     }
 }

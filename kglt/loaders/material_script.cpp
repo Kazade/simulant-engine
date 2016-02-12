@@ -345,7 +345,7 @@ MaterialReloader::MaterialReloader(ResourceManager& rm, MaterialID material):
 
 void MaterialReloader::reload(const unicode& path, WatchEvent evt) {
     try {
-        rm_.window().loader_for(path.encode())->into(rm_.material(material_));
+        rm_.window->loader_for(path.encode())->into(rm_.material(material_));
     } catch(SyntaxError& e) {
         L_WARN("Unable to reload material as the syntax is incorrect");
     } catch(RuntimeError& e) {

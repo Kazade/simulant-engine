@@ -79,6 +79,7 @@ public:
     
     LoaderPtr loader_for(const unicode& filename);
     LoaderPtr loader_for(const unicode& loader_name, const unicode& filename);
+    LoaderTypePtr loader_type(const unicode& loader_name) const;
     
     void register_loader(LoaderTypePtr loader_type);
 

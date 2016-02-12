@@ -6,6 +6,7 @@
 
 #include "generic/refcount_manager.h"
 #include "generic/protected_ptr.h"
+#include "managers/window_holder.h"
 
 #include "texture.h"
 #include "mesh.h"
@@ -21,8 +22,11 @@ typedef generic::RefCountedTemplatedManager<ResourceManagerImpl, Material, Mater
 typedef generic::RefCountedTemplatedManager<ResourceManagerImpl, Texture, TextureID> TextureManager;
 typedef generic::RefCountedTemplatedManager<ResourceManagerImpl, Sound, SoundID> SoundManager;
 
-class ResourceManager {
+class ResourceManager : public virtual WindowHolder {
 public:
+    ResourceManager(WindowBase* window):
+        WindowHolder(window) {}
+
     virtual ~ResourceManager() {}
 
     //Mesh functions
@@ -110,9 +114,6 @@ public:
     virtual uint32_t material_count() const = 0;
     virtual void mark_material_as_uncollected(MaterialID m) = 0;
     virtual void delete_material(MaterialID m) = 0;
-
-    virtual WindowBase& window() = 0;
-    virtual const WindowBase& window() const = 0;
 
     virtual MaterialID clone_default_material(bool garbage_collect=true) = 0;
 
@@ -213,9 +214,6 @@ public:
     bool has_sound(SoundID s) const;
     uint32_t sound_count() const;
 
-    WindowBase& window() { assert(window_); return *window_; }
-    const WindowBase& window() const { return *window_; }
-
     void update();
 
     unicode default_material_filename() const;
@@ -228,8 +226,6 @@ public:
     TextureID default_texture_id() const;
 
 private:
-    WindowBase* window_;
-
     MaterialID default_material_id_;
     TextureID default_texture_id_;
 };
