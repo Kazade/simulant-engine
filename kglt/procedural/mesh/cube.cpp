@@ -17,17 +17,11 @@ void box(ProtectedPtr<Mesh> mesh, float width, float height, float depth, MeshSt
 
     if(style == MESH_STYLE_SUBMESH_PER_FACE) {
         for(uint8_t i = 0; i < 6; ++i) {
-            SubMeshID sm = mesh->new_submesh(
-                mesh->resource_manager().clone_default_material(),
-                MESH_ARRANGEMENT_TRIANGLES
-            );
+            SubMeshID sm = mesh->new_submesh(MESH_ARRANGEMENT_TRIANGLES);
             submeshes[i] = mesh->submesh(sm);
         }
     } else {
-        SubMeshID sm = mesh->new_submesh(
-            mesh->resource_manager().clone_default_material(),
-            MESH_ARRANGEMENT_TRIANGLES
-        );
+        SubMeshID sm = mesh->new_submesh(MESH_ARRANGEMENT_TRIANGLES);
 
         for(uint8_t i = 0; i < 6; ++i) {
             submeshes[i] = mesh->submesh(sm);

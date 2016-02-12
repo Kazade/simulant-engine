@@ -123,7 +123,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             if(!sm) {
                 // We have an .obj file which has no materials or we hit faces before a
                 // usemtl statement. Let's just make a new default submesh
-                SubMeshID smi = mesh->new_submesh(mesh->resource_manager().clone_default_material());
+                SubMeshID smi = mesh->new_submesh();
                 sm = mesh->submesh(smi);
             }
 

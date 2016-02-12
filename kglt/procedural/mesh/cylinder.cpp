@@ -14,7 +14,7 @@ void cylinder(ProtectedPtr<Mesh> mesh, float diameter, float length, int32_t seg
     float delta_height = length / (float) stacks;
     int offset = 0;
 
-    auto smi = mesh->new_submesh(mesh->resource_manager().clone_default_material());
+    auto smi = mesh->new_submesh();
     auto* buffer = mesh->submesh(smi);
 
     for(auto i = 0; i <= stacks; ++i) {

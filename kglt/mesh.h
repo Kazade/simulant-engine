@@ -141,6 +141,11 @@ public:
         VertexSharingMode vertex_sharing=VERTEX_SHARING_MODE_SHARED
     );
 
+    SubMeshID new_submesh(
+        MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES,
+        VertexSharingMode vertex_sharing=VERTEX_SHARING_MODE_SHARED
+    );
+
     SubMeshID new_submesh_as_rectangle(MaterialID material, float width, float height, const Vec3& offset=Vec3());
     SubMeshID new_submesh_as_box(MaterialID material, float width, float height, float depth, const Vec3& offset=Vec3());
     uint32_t submesh_count() const { return TemplatedSubMeshManager::manager_count(); }

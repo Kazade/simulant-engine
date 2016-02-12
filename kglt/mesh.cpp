@@ -104,6 +104,13 @@ SubMeshID Mesh::new_submesh(MaterialID material, MeshArrangement arrangement, Ve
     return id;
 }
 
+SubMeshID Mesh::new_submesh(MeshArrangement arrangement, VertexSharingMode vertex_sharing) {
+    return new_submesh(
+        resource_manager().clone_default_material(),
+        arrangement, vertex_sharing
+    );
+}
+
 SubMeshID Mesh::new_submesh_as_box(MaterialID material, float width, float height, float depth, const Vec3& offset) {
     SubMeshID ret = new_submesh(material, MESH_ARRANGEMENT_TRIANGLES, VERTEX_SHARING_MODE_INDEPENDENT);
 
