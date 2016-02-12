@@ -18,7 +18,6 @@
 
 #include "sound.h"
 #include "camera.h"
-#include "lua/console.h"
 #include "watcher.h"
 #include "message_bar.h"
 #include "render_sequence.h"
@@ -68,7 +67,6 @@ WindowBase::~WindowBase() {
     //FIXME: Make WindowBase Managed<> and put this in cleanup()
     loading_.reset();
     message_bar_.reset();
-    console_.reset();
     watcher_.reset();
 
     Sound::shutdown_openal();
@@ -130,8 +128,6 @@ void WindowBase::create_defaults() {
 
     //This needs to happen after SDL or whatever is initialized
     input_controller_ = InputController::create(*this);
-
-    console_ = Console::create(*this);
 }
 
 bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
@@ -216,7 +212,7 @@ bool WindowBase::run_frame() {
     frame_counter_frames_++;
 
     if(frame_counter_time_ >= 1.0) {
-        console_->set_stats_fps(frame_counter_frames_);
+        stats->set_frames_per_second(frame_counter_frames_);
 
         frame_time_in_milliseconds_ = 1000.0 / double(frame_counter_frames_);
         frame_counter_frames_ = 0;
@@ -454,7 +450,5 @@ bool WindowBase::is_pipeline_enabled(PipelineID pid) const {
 }
 /* End PipelineHelperAPIInterface */
 
-void WindowBase::show_stats() { console->show_stats(); }
-void WindowBase::hide_stats() { console->hide_stats(); }
 
 }

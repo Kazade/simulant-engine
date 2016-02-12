@@ -11,7 +11,6 @@
 #include "generic/data_carrier.h"
 
 #include "resource_locator.h"
-#include "lua/console.h"
 #include "idle_task_manager.h"
 #include "input_controller.h"
 #include "generic/auto_weakptr.h"
@@ -37,7 +36,6 @@ class InputController;
 class Keyboard;
 class Mouse;
 class Joypad;
-class Interpreter;
 class MessageBar;
 class Loader;
 class LoaderType;
@@ -49,6 +47,22 @@ class VirtualGamepad;
 typedef std::function<void (double)> WindowUpdateCallback;
 typedef std::shared_ptr<Loader> LoaderPtr;
 typedef std::shared_ptr<LoaderType> LoaderTypePtr;
+
+class Stats {
+public:
+    uint32_t subactors_rendered() const { return subactors_renderered_; }
+    void set_subactors_rendered(uint32_t value) {
+        subactors_renderered_ = value;
+    }
+
+    uint32_t frames_per_second() const { return frames_per_second_; }
+    void set_frames_per_second(uint32_t value) {
+        frames_per_second_ = value;
+    }
+private:
+    uint32_t subactors_renderered_;
+    uint32_t frames_per_second_;
+};
 
 class WindowBase :
     public Source,
@@ -166,9 +180,6 @@ public:
     virtual ScreenBasePtr active_screen() const { return routes_->active_screen(); }
     /* End ScreenManager interface */
 
-    void show_stats();
-    void hide_stats();
-
 protected:
     RenderSequencePtr render_sequence();
 
@@ -241,7 +252,6 @@ private:
     sig::signal<void (double)> signal_post_step_;
     sig::signal<void ()> signal_shutdown_;
 
-    std::shared_ptr<Console> console_;
     std::shared_ptr<Watcher> watcher_;
 
     std::shared_ptr<screens::Loading> loading_;
@@ -254,22 +264,13 @@ private:
 
     std::shared_ptr<ScreenManager> routes_;
 
+    Stats stats_;
+
 public:
 
     //Read only properties
-    Property<WindowBase, Console> console = { this, &WindowBase::console_ };
     Property<WindowBase, VirtualGamepad> virtual_joypad = { this, &WindowBase::virtual_gamepad_ };
     Property<WindowBase, MessageBar> message_bar = { this, &WindowBase::message_bar_ };
-
-    Property<WindowBase, Interpreter> interpreter = {
-        this, [](const WindowBase* self) -> Interpreter& {
-            if(!self->console_) {
-                throw LogicError("Tried to access interpreter without initializing the console");
-            } else {
-                return self->console->interpreter;
-            }
-        }
-    };
 
     Property<WindowBase, Watcher> watcher = {
         this, [](const WindowBase* self) -> Watcher& {
@@ -290,6 +291,8 @@ public:
             return self->input_controller_->keyboard();
         }
     };
+
+    Property<WindowBase, Stats> stats = { this, &WindowBase::stats_ };
 };
 
 }

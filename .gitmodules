@@ -1,6 +1,3 @@
 [submodule "kglt/kazbase"]
 	path = kglt/kazbase
 	url = https://github.com/Kazade/kazbase.git
-[submodule "submodules/luabind"]
-	path = submodules/luabind
-	url = https://github.com/Kazade/luabind-deboostified.git

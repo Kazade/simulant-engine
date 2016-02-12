@@ -4,8 +4,6 @@
 #include <iostream>
 #include <memory>
 
-#include <lua.hpp>
-
 #include <cstdint>
 #include <string>
 #include <vector>
