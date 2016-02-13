@@ -84,7 +84,6 @@ void sphere(ProtectedPtr<Mesh> mesh, float diameter, int32_t slices, int32_t sta
     mesh->shared_data().done();
 
     SubMeshID sm = mesh->new_submesh(
-        mesh->resource_manager().new_material_from_file(mesh->resource_manager().default_material_filename()),
         MESH_ARRANGEMENT_TRIANGLES
     );
 

@@ -489,7 +489,7 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
         new_tex->upload(true, true);
 
         //Create a submesh for each texture. Don't share the vertex data between submeshes
-        texture_submesh[tex.name] = mesh->new_submesh(
+        texture_submesh[tex.name] = mesh->new_submesh_with_material(
             mesh->resource_manager().new_material_from_texture(new_tex->id()),
             MESH_ARRANGEMENT_TRIANGLES,
             VERTEX_SHARING_MODE_INDEPENDENT

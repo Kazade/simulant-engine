@@ -180,8 +180,8 @@ void Boid::enable_debug(bool value) {
         auto mesh = actor_->stage()->mesh(debug_mesh_);
         mesh->clear();
 
-        auto smi = mesh->new_submesh(kglt::MaterialID(), MESH_ARRANGEMENT_LINE_STRIP, VERTEX_SHARING_MODE_INDEPENDENT);
-        normal_points_mesh_ = mesh->new_submesh(kglt::MaterialID(), MESH_ARRANGEMENT_POINTS, VERTEX_SHARING_MODE_INDEPENDENT);
+        auto smi = mesh->new_submesh(MESH_ARRANGEMENT_LINE_STRIP, VERTEX_SHARING_MODE_INDEPENDENT);
+        normal_points_mesh_ = mesh->new_submesh(MESH_ARRANGEMENT_POINTS, VERTEX_SHARING_MODE_INDEPENDENT);
 
         {
             auto mat = actor_->stage()->material(mesh->submesh(normal_points_mesh_)->material_id());

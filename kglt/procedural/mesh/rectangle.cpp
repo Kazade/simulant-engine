@@ -11,7 +11,7 @@ SubMeshID new_rectangle_submesh(
     float x_offset, float y_offset, float z_offset, MaterialID material_id) {
 
     //Create a submesh
-    SubMeshID sm = mesh->new_submesh(
+    SubMeshID sm = mesh->new_submesh_with_material(
         (material_id) ? material_id : mesh->resource_manager().clone_default_material(),
         MESH_ARRANGEMENT_TRIANGLES,
         VERTEX_SHARING_MODE_INDEPENDENT
@@ -127,7 +127,7 @@ SubMeshID rectangle(
     }
 
     //Create a submesh that uses the shared data
-    SubMeshID sm = mesh->new_submesh(
+    SubMeshID sm = mesh->new_submesh_with_material(
         material,
         MESH_ARRANGEMENT_TRIANGLES
     );
@@ -182,7 +182,7 @@ SubMeshID rectangle_outline(
     if(!material) {
         material = mesh->resource_manager().window->clone_default_material();
     }
-    SubMeshID sm = mesh->new_submesh(
+    SubMeshID sm = mesh->new_submesh_with_material(
         material,
         MESH_ARRANGEMENT_LINE_STRIP
     );

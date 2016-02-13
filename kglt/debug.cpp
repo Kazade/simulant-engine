@@ -56,7 +56,7 @@ void Debug::draw_line(const Vec3 &start, const Vec3 &end, const Colour &colour, 
     auto mesh = stage_.mesh(mesh_);
 
     DebugElement element;
-    element.submesh = mesh->new_submesh(material_, MESH_ARRANGEMENT_LINE_STRIP, VERTEX_SHARING_MODE_INDEPENDENT);
+    element.submesh = mesh->new_submesh_with_material(material_, MESH_ARRANGEMENT_LINE_STRIP, VERTEX_SHARING_MODE_INDEPENDENT);
     element.colour = colour;
     element.duration = duration;
     element.depth_test = depth_test;

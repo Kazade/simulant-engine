@@ -156,7 +156,7 @@ MeshID ResourceManagerImpl::new_mesh_from_vertices(const std::vector<Vec2> &vert
     MeshID m = new_mesh(garbage_collect);
 
     auto new_mesh = mesh(m);
-    auto smi = new_mesh->new_submesh(this->clone_default_material(), arrangement);
+    auto smi = new_mesh->new_submesh(arrangement);
     int i = 0;
     for(auto v: vertices) {
         new_mesh->shared_data().position(v);
@@ -180,7 +180,7 @@ MeshID ResourceManagerImpl::new_mesh_from_vertices(const std::vector<Vec3> &vert
     MeshID m = new_mesh(garbage_collect);
 
     auto new_mesh = mesh(m);
-    auto smi = new_mesh->new_submesh(this->clone_default_material(), arrangement);
+    auto smi = new_mesh->new_submesh(arrangement);
     int i = 0;
     for(auto v: vertices) {
         new_mesh->shared_data().position(v);

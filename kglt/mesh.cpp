@@ -61,7 +61,7 @@ void Mesh::enable_debug(bool value) {
             "kglt/materials/diffuse_render.kglm"
         )->into(resource_manager().material(mid));
 
-        normal_debug_mesh_ = new_submesh(mid, MESH_ARRANGEMENT_LINES, VERTEX_SHARING_MODE_INDEPENDENT);
+        normal_debug_mesh_ = new_submesh_with_material(mid, MESH_ARRANGEMENT_LINES, VERTEX_SHARING_MODE_INDEPENDENT);
 
         //Go through the submeshes, and for each index draw a normal line
         apply_func_to_objects([=](SubMesh* mesh) {
@@ -95,7 +95,7 @@ void Mesh::enable_debug(bool value) {
     }
 }
 
-SubMeshID Mesh::new_submesh(MaterialID material, MeshArrangement arrangement, VertexSharingMode vertex_sharing) {
+SubMeshID Mesh::new_submesh_with_material(MaterialID material, MeshArrangement arrangement, VertexSharingMode vertex_sharing) {
 
     SubMeshID id = TemplatedSubMeshManager::manager_new("", material, arrangement, vertex_sharing);
 
@@ -105,14 +105,14 @@ SubMeshID Mesh::new_submesh(MaterialID material, MeshArrangement arrangement, Ve
 }
 
 SubMeshID Mesh::new_submesh(MeshArrangement arrangement, VertexSharingMode vertex_sharing) {
-    return new_submesh(
+    return new_submesh_with_material(
         resource_manager().clone_default_material(),
         arrangement, vertex_sharing
     );
 }
 
 SubMeshID Mesh::new_submesh_as_box(MaterialID material, float width, float height, float depth, const Vec3& offset) {
-    SubMeshID ret = new_submesh(material, MESH_ARRANGEMENT_TRIANGLES, VERTEX_SHARING_MODE_INDEPENDENT);
+    SubMeshID ret = new_submesh_with_material(material, MESH_ARRANGEMENT_TRIANGLES, VERTEX_SHARING_MODE_INDEPENDENT);
 
     auto& sm = *submesh(ret);
     auto& vd = sm.vertex_data();
@@ -295,7 +295,7 @@ SubMeshID Mesh::new_submesh_as_box(MaterialID material, float width, float heigh
 }
 
 SubMeshID Mesh::new_submesh_as_rectangle(MaterialID material, float width, float height, const kglt::Vec3& offset) {
-    SubMeshID ret = new_submesh(material, MESH_ARRANGEMENT_TRIANGLES, VERTEX_SHARING_MODE_INDEPENDENT);
+    SubMeshID ret = new_submesh_with_material(material, MESH_ARRANGEMENT_TRIANGLES, VERTEX_SHARING_MODE_INDEPENDENT);
 
     auto& sm = *submesh(ret);
 

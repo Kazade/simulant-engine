@@ -11,7 +11,6 @@ SubMeshID capsule(ProtectedPtr<Mesh> mesh, float diameter, float height,
     float radius = diameter * 0.5f;
 
     SubMeshID smi = mesh->new_submesh(
-        mesh->resource_manager().new_material_from_file(mesh->resource_manager().default_material_filename()),
         MESH_ARRANGEMENT_TRIANGLES,
         VERTEX_SHARING_MODE_INDEPENDENT
     );

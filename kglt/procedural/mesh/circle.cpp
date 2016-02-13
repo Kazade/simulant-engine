@@ -9,7 +9,6 @@ SubMeshID circle(kglt::Mesh& mesh, float diameter, int32_t point_count, float x_
     float radius = diameter * 0.5f;
 
     SubMeshID smi = mesh.new_submesh(
-        mesh.resource_manager().new_material_from_file(mesh.resource_manager().default_material_filename()),
         MESH_ARRANGEMENT_TRIANGLE_FAN,
         VERTEX_SHARING_MODE_INDEPENDENT
     );
@@ -53,7 +52,7 @@ SubMeshID circle(kglt::Mesh& mesh, float diameter, int32_t point_count, float x_
 SubMeshID circle_outline(kglt::Mesh& mesh, float diameter, int32_t point_count, float x_offset, float y_offset, float z_offset) {
     float radius = diameter * 0.5f;
 
-    SubMeshID smi = mesh.new_submesh(MaterialID(), MESH_ARRANGEMENT_LINE_STRIP, VERTEX_SHARING_MODE_INDEPENDENT);
+    SubMeshID smi = mesh.new_submesh(MESH_ARRANGEMENT_LINE_STRIP, VERTEX_SHARING_MODE_INDEPENDENT);
     kglt::SubMesh& submesh = *mesh.submesh(smi);
 
     kglt::VertexData& vdata = submesh.vertex_data();

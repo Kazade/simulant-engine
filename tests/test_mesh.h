@@ -41,7 +41,7 @@ public:
 
         data.done();
 
-        first_mesh_ = mesh->new_submesh(kglt::MaterialID());
+        first_mesh_ = mesh->new_submesh();
         kglt::SubMesh* submesh = mesh->submesh(first_mesh_);
 
         submesh->index_data().index(0);
@@ -54,7 +54,7 @@ public:
         submesh->index_data().done();
 
         //Draw a line between the first two vertices
-        kglt::SubMesh* sm = mesh->submesh(mesh->new_submesh(kglt::MaterialID(), kglt::MESH_ARRANGEMENT_LINES));
+        kglt::SubMesh* sm = mesh->submesh(mesh->new_submesh(kglt::MESH_ARRANGEMENT_LINES));
         sm->index_data().index(0);
         sm->index_data().index(1);
         sm->index_data().done();

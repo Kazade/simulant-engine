@@ -201,7 +201,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             if(!material_submeshes.count(current_material)) {
                 auto mat_id = materials.at(current_material);
                 material_submeshes.insert(
-                    std::make_pair(current_material, mesh->new_submesh(mat_id))
+                    std::make_pair(current_material, mesh->new_submesh_with_material(mat_id))
                 );
                 mesh->submesh(material_submeshes[current_material])->set_material_id(mat_id);
             }

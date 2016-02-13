@@ -23,7 +23,7 @@ public:
         kglt::MaterialID mid = window->new_material();
         kglt::MeshID mesh_id = window->new_mesh();
         auto mesh = window->mesh(mesh_id);
-        kglt::SubMeshID idx = mesh->new_submesh(mid);
+        kglt::SubMeshID idx = mesh->new_submesh_with_material(mid);
         this->assert_equal(mid, mesh->submesh(idx)->material_id());
     }
 

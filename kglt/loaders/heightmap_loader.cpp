@@ -70,7 +70,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     kglt::MaterialID mat = mesh->resource_manager().clone_default_material();
     std::vector<kglt::SubMeshID> submeshes;
     for(int i = 0; i < total_patches; ++i) {
-        submeshes.push_back(mesh->new_submesh(mat));
+        submeshes.push_back(mesh->new_submesh_with_material(mat));
     }
 
     // Generate the vertices from the heightmap

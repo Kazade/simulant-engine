@@ -135,7 +135,7 @@ public:
         return shared_data_;
     }
 
-    SubMeshID new_submesh(
+    SubMeshID new_submesh_with_material(
         MaterialID material,
         MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES,
         VertexSharingMode vertex_sharing=VERTEX_SHARING_MODE_SHARED
