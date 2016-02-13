@@ -175,7 +175,8 @@ public:
         assert_equal(mesh->submesh_count(), actor->subactor_count());
         assert_true(mesh->shared_data().count() == actor->shared_data().count());
 
-        kglt::SubMesh* sm = mesh->submesh(first_mesh_);
+        kglt::SubMeshID smid = actor->subactor(0).submesh_id();
+        kglt::SubMesh* sm = mesh->submesh(smid);
 
         //Likewise for subentities, they should just proxy to the submesh
         assert_equal(sm->material_id(), actor->subactor(0).material_id());
