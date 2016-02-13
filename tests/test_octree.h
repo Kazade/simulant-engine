@@ -54,10 +54,6 @@ public:
          * first one. This should have grown the tree upwards, the root
          * should now have 2 child nodes. The original root, and a new
          * child containing obj2
-         *
-         * The original root went from 7.5 to 12.5 on each axis (centred at 10, 10, 10)
-         *
-         * The new root should go from 7.5 to 17.5 on the z-axis
         */
 
         assert_equal(10, tree.root().strict_diameter());
