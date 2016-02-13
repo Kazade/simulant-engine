@@ -257,19 +257,6 @@ void Object::rotate_absolute_y(float amount) {
 }
 
 void Object::look_at(const Vec3& position) {
-    Mat4 result;
-    auto u = up();
-    auto t = absolute_position();
-    kmMat4LookAt(&result, &t, &position, &u);
-
-    kmMat3 rot;
-    kmMat4ExtractRotationMat3(&result, &rot);
-
-    Quaternion q;
-    kmQuaternionRotationMatrix(&q, &rot);
-    set_absolute_rotation(q);
-    return;
-/*
     Vec3 forward = (position - absolute_position()).normalized();
 
     float dot = Vec3(0, 0, -1).dot(forward);
@@ -290,7 +277,7 @@ void Object::look_at(const Vec3& position) {
     Quaternion q;
     kmQuaternionRotationAxisAngle(&q, &rot_axis, rot_angle);
 
-    set_absolute_rotation(q);*/
+    set_absolute_rotation(q);
 }
 
 
