@@ -11,6 +11,15 @@ Degrees to_degrees(const Radians& radians) {
     return Degrees(kmRadiansToDegrees(radians.value_));
 }
 
+bool operator==(const Vec2& lhs, const Vec2& rhs) {
+    auto ret = kmVec2AreEqual(&lhs, &rhs);
+    return ret;
+}
+
+bool operator!=(const Vec2& lhs, const Vec2& rhs) {
+    return !(lhs == rhs);
+}
+
 kglt::Vec2 operator*(float lhs, const kglt::Vec2& rhs) {
     kglt::Vec2 result;
     kmVec2Scale(&result, &rhs, lhs);

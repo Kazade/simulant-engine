@@ -16,8 +16,8 @@
 namespace kglt {
 
 Stage::Stage(WindowBase *parent, StageID id, AvailablePartitioner partitioner):
-    generic::Identifiable<StageID>(id),
     WindowHolder(parent),
+    generic::Identifiable<StageID>(id),
     ResourceManager(parent),
     SkyboxManager(parent, this),
     ambient_light_(1.0, 1.0, 1.0, 1.0) {

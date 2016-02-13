@@ -31,13 +31,13 @@
 namespace kglt {
 
 WindowBase::WindowBase():
-    Source(this),
+    WindowHolder(this),
     ResourceManager(this),
+    Source(this),
     BackgroundManager(this),
     StageManager(),
     UIStageManager(this),    
     CameraManager(this),
-    WindowHolder(this),
     ResourceManagerImpl(this),
     initialized_(false),
     width_(-1),

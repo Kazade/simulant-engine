@@ -180,14 +180,6 @@ struct Vec2 : public kmVec2 {
         return *this;
     }
 
-    bool operator==(const Vec2& rhs) const {
-        return kmVec2AreEqual(this, &rhs);
-    }
-
-    bool operator!=(const Vec2& rhs) const {
-        return !(*this == rhs);
-    }
-
     Vec2 operator*(float rhs) const {
         Vec2 result;
         kmVec2Scale(&result, this, rhs);
@@ -242,6 +234,9 @@ struct Vec2 : public kmVec2 {
 
     friend std::ostream& operator<<(std::ostream& stream, const Vec2& vec);
 };
+
+bool operator==(const Vec2& lhs, const Vec2& rhs);
+bool operator!=(const Vec2& lhs, const Vec2& rhs);
 
 struct Degrees;
 
