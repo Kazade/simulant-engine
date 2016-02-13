@@ -101,10 +101,7 @@ public:
         TestScreen* scr = dynamic_cast<TestScreen*>(manager_->resolve_screen("/").get());
         assert_false(scr->load_called);
         manager_->load_screen_in_background("/");
-        assert_false(scr->load_called);
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        window->idle->execute();
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));        
         assert_true(scr->load_called);
     }
 
