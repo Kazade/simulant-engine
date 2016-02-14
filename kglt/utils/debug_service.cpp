@@ -44,7 +44,7 @@ void DebugService::run() {
         tv.tv_sec = 0;
         tv.tv_usec = 0;
 
-        return select(socket, &rfds, NULL, NULL, &tv) == 1;
+        return select(socket + 1, &rfds, NULL, NULL, &tv);
     };
 
     running_ = true;
@@ -55,30 +55,42 @@ void DebugService::run() {
     int slot = 0;
 
     // Signify there is no connection in each slot
-    for(uint32_t i = 0; i < MAX_CLIENTS; ++i) {
-        clients_[i] = -1;
+    {
+        std::lock_guard<std::mutex> lock(client_lock_);
+        for(uint32_t i = 0; i < MAX_CLIENTS; ++i) {
+            clients_[i] = -1;
+        }
     }
 
     while(running_) {
         addrlen = sizeof(clientaddr);
 
+        int new_socket = 0;
         if(ready(listen_fd_)) {
-            clients_[slot] = accept(
+            std::lock_guard<std::mutex> lock(client_lock_);
+            new_socket = clients_[slot] = accept(
                 listen_fd_, (struct sockaddr*) &clientaddr, &addrlen
             );
+            L_DEBUG("DebugService: Accepted client");
         } else {
             continue;
         }
 
-        if(clients_[slot] < 0) {
+        if(new_socket < 0) {
             L_WARN("DebugService: error with connection");
         } else {
             L_DEBUG("DebugService: Client connected");
             // Start a thread to respond to the client
-            client_threads_[slot] = std::async(std::launch::async, [&]() {
-                respond(slot);
-                client_threads_[slot].get();
-                client_threads_.erase(slot);
+            client_threads_[slot] = std::async(std::launch::async, [=]() {
+                respond(new_socket);
+
+                L_DEBUG("DebugService: Freeing client");
+
+                shutdown(new_socket, SHUT_RDWR);
+                close(new_socket);
+
+                std::lock_guard<std::mutex> lock(client_lock_);
+                this->clients_[slot] = -1;
             });
         }
     }
@@ -101,7 +113,7 @@ bool DebugService::start_server() {
     }
 
     for(p = res; p != nullptr; p = p->ai_next) {
-        listen_fd_ = socket(p->ai_family, p->ai_socktype, 0);
+        listen_fd_ = socket(p->ai_family, p->ai_socktype, IPPROTO_TCP);
         if(listen_fd_ == -1) continue;
         if(bind(listen_fd_, p->ai_addr, p->ai_addrlen) == 0) break;
     }
@@ -113,7 +125,7 @@ bool DebugService::start_server() {
 
     freeaddrinfo(res);
 
-    if(listen(listen_fd_, 1000000) != 0) {
+    if(listen(listen_fd_, 10) != 0) {
         L_ERROR("DebugService: listen() error");
         return false;
     }
@@ -121,11 +133,13 @@ bool DebugService::start_server() {
     return true;
 }
 
-void DebugService::respond(int client_id) {
+void DebugService::respond(int client_socket) {
+    L_DEBUG("DebugService: Handling request");
+
     const int MAX_LENGTH = 1024 * 1024;
     char msg[MAX_LENGTH] = {0};
 
-    int rcvd = recv(clients_[client_id], msg, MAX_LENGTH, 0);
+    int rcvd = recv(client_socket, msg, MAX_LENGTH, 0);
     if(rcvd < 0) {
         L_WARN("DebugService: Error receiving from client");
     } else if(rcvd == 0) {
@@ -133,10 +147,6 @@ void DebugService::respond(int client_id) {
     } else {
         // Handle message
     }
-
-    shutdown(clients_[client_id], SHUT_RDWR);
-    close(clients_[client_id]);
-    clients_[client_id] = -1;
 }
 
 }

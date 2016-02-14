@@ -14,7 +14,7 @@ class WindowBase;
  */
 class DebugService {
 public:
-    const static int PORT = 112358;
+    const static int PORT = 11235;
     const static int MAX_CLIENTS = 1;
 
     DebugService(WindowBase* window):
@@ -40,8 +40,11 @@ private:
     void respond(int client_id);
 
     volatile bool running_ = false;
+
     std::future<void> handle_;
     std::map<int, std::future<void>> client_threads_;
+
+    std::mutex client_lock_;
 
     void run();
 };
