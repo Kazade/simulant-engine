@@ -10,22 +10,45 @@
 
 namespace kglt {
 
+DebugService::~DebugService() {
+    stop();
+}
+
 void DebugService::start() {
-    if(!start_server()) {
+    if(running_) {
         return;
     }
 
-    running_ = true;
+    if(!start_server()) {
+        return;
+    }
 
     handle_ = std::async(std::launch::async, std::bind(&DebugService::run, this));
 }
 
 void DebugService::stop() {
     running_ = false;
-    handle_.wait();
+    if(handle_.valid()) {
+        handle_.get();
+    }
 }
 
 void DebugService::run() {
+    auto ready = [](int socket) -> bool {
+        fd_set rfds;
+        struct timeval tv;
+
+        FD_ZERO(&rfds);
+        FD_SET(socket, &rfds);
+
+        tv.tv_sec = 0;
+        tv.tv_usec = 0;
+
+        return select(socket, &rfds, NULL, NULL, &tv) == 1;
+    };
+
+    running_ = true;
+
     struct sockaddr_in clientaddr;
     socklen_t addrlen;
 
@@ -38,19 +61,29 @@ void DebugService::run() {
 
     while(running_) {
         addrlen = sizeof(clientaddr);
-        clients_[slot] = accept(
-            listen_fd_, (struct sockaddr*) &clientaddr, &addrlen
-        );
+
+        if(ready(listen_fd_)) {
+            clients_[slot] = accept(
+                listen_fd_, (struct sockaddr*) &clientaddr, &addrlen
+            );
+        } else {
+            continue;
+        }
 
         if(clients_[slot] < 0) {
             L_WARN("DebugService: error with connection");
         } else {
+            L_DEBUG("DebugService: Client connected");
             // Start a thread to respond to the client
-            std::async(std::launch::async, [=]() {
+            client_threads_[slot] = std::async(std::launch::async, [&]() {
                 respond(slot);
+                client_threads_[slot].get();
+                client_threads_.erase(slot);
             });
         }
     }
+
+    L_DEBUG("DebugService: Thread finished");
 }
 
 bool DebugService::start_server() {

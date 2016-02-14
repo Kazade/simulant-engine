@@ -2,6 +2,7 @@
 #define DEBUG_SERVICE_H
 
 #include <future>
+#include <map>
 
 namespace kglt {
 
@@ -16,12 +17,17 @@ public:
     const static int PORT = 112358;
     const static int MAX_CLIENTS = 1;
 
-    DebugService(WindowBase* window);
+    DebugService(WindowBase* window):
+        window_(window) {}
+
+    ~DebugService();
 
     void start();
     void stop();
 
 private:
+    WindowBase* window_;
+
     std::string command_screens(); // Screen info
     std::string command_stages(); // Stage info including actors etc.
     std::string command_pipelines(); // Details on the render sequence
@@ -33,8 +39,9 @@ private:
     bool start_server();
     void respond(int client_id);
 
-    bool running_ = false;
+    volatile bool running_ = false;
     std::future<void> handle_;
+    std::map<int, std::future<void>> client_threads_;
 
     void run();
 };

@@ -43,6 +43,7 @@ class RenderSequence;
 class SceneImpl;
 class Watcher;
 class VirtualGamepad;
+class DebugService;
 
 typedef std::function<void (double)> WindowUpdateCallback;
 typedef std::shared_ptr<Loader> LoaderPtr;
@@ -261,8 +262,8 @@ private:
     generic::DataCarrier data_carrier_;
 
     std::shared_ptr<VirtualGamepad> virtual_gamepad_;
-
     std::shared_ptr<ScreenManager> routes_;
+    std::unique_ptr<DebugService> debug_service_;
 
     Stats stats_;
 

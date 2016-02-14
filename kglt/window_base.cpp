@@ -27,6 +27,8 @@
 #include "screens/loading.h"
 #include "utils/gl_thread_check.h"
 #include "utils/gl_error.h"
+#include "utils/debug_service.h"
+
 
 namespace kglt {
 
@@ -50,7 +52,8 @@ WindowBase::WindowBase():
     frame_time_in_milliseconds_(0),
     total_time_(0),
     render_sequence_(new RenderSequence(*this)),
-    routes_(new ScreenManager(*this)) {
+    routes_(new ScreenManager(*this)),
+    debug_service_(new DebugService(this)) {
 
     ktiGenTimers(1, &fixed_timer_);
     ktiBindTimer(fixed_timer_);
@@ -179,6 +182,9 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
             );
         });
 
+        // Initialize the debug service
+        debug_service_->start();
+
         initialized_ = true;
     }
 
@@ -267,11 +273,12 @@ bool WindowBase::run_frame() {
         signal_shutdown_();
 
         watcher_.reset();
-
         loading_.reset();
 
         //Shutdown the input controller
         input_controller_.reset();
+
+        debug_service_->stop();
     }
 
     return is_running_;

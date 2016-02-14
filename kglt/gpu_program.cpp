@@ -44,7 +44,7 @@ GLint UniformManager::locate(const unicode& uniform_name) {
 
     std::string name = uniform_name.encode();
 
-    L_DEBUG(_u("Looking up uniform with name {0} in program {1}").format(name, program_.program_object_));
+    //L_DEBUG(_u("Looking up uniform with name {0} in program {1}").format(name, program_.program_object_));
     GLint location = _GLCheck<GLint>(__func__, glGetUniformLocation, program_.program_object_, name.c_str());
 
     if(location < 0) {
@@ -399,7 +399,7 @@ void GPUProgram::link() {
 
         uniforms().uniform_info_[info.name] = info;
 
-        L_DEBUG(_u("UNIFORM {0} with size {1} and type {2}").format(std::string(buf, buf+buf_count), size, type));
+        //L_DEBUG(_u("UNIFORM {0} with size {1} and type {2}").format(std::string(buf, buf+buf_count), size, type));
     }
 }
 
