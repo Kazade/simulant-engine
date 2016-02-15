@@ -33,6 +33,16 @@ void DebugService::stop() {
     }
 }
 
+struct Always {
+    Always(std::function<void ()> func):
+        func_(func) {}
+
+    ~Always() {
+        func_();
+    }
+    std::function<void ()> func_;
+};
+
 void DebugService::run() {
     auto ready = [](int socket) -> bool {
         fd_set rfds;
@@ -82,15 +92,19 @@ void DebugService::run() {
             L_DEBUG("DebugService: Client connected");
             // Start a thread to respond to the client
             client_threads_[slot] = std::async(std::launch::async, [=]() {
+                //(ab)use RAII to ensure no matter what happens we release the client
+                Always __([=]() {
+                    L_DEBUG("DebugService: Freeing client");
+
+                    shutdown(new_socket, SHUT_RDWR);
+                    close(new_socket);
+
+                    std::lock_guard<std::mutex> lock(client_lock_);
+                    this->clients_[slot] = -1;
+                    this->client_threads_.erase(slot);
+                });
+
                 respond(new_socket);
-
-                L_DEBUG("DebugService: Freeing client");
-
-                shutdown(new_socket, SHUT_RDWR);
-                close(new_socket);
-
-                std::lock_guard<std::mutex> lock(client_lock_);
-                this->clients_[slot] = -1;
             });
         }
     }
