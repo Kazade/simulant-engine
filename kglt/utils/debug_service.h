@@ -47,6 +47,7 @@ private:
     std::mutex client_lock_;
 
     void run();
+    void cleanup_threads();
 };
 
 }

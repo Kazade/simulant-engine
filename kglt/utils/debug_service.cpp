@@ -43,6 +43,16 @@ struct Always {
     std::function<void ()> func_;
 };
 
+void DebugService::cleanup_threads() {
+    for(auto it = client_threads_.begin(); it != client_threads_.end();) {
+        if(clients_[it->first] == -1) {
+            client_threads_.erase(it++);
+        } else {
+            ++it;
+        }
+    }
+}
+
 void DebugService::run() {
     auto ready = [](int socket) -> bool {
         fd_set rfds;
@@ -73,6 +83,7 @@ void DebugService::run() {
     }
 
     while(running_) {
+        cleanup_threads();
         addrlen = sizeof(clientaddr);
 
         int new_socket = 0;
@@ -101,7 +112,6 @@ void DebugService::run() {
 
                     std::lock_guard<std::mutex> lock(client_lock_);
                     this->clients_[slot] = -1;
-                    this->client_threads_.erase(slot);
                 });
 
                 respond(new_socket);
@@ -147,6 +157,17 @@ bool DebugService::start_server() {
     return true;
 }
 
+std::string make_response(unicode content, int status=200) {
+    unicode templ = "HTTP/1.1 {0} OK\r\nContent-Type: application/json\r\nContent-Length: {2}\r\n\r\n{1}";
+
+    return templ.format(
+        status,
+        content,
+        content.length()
+    ).encode();
+}
+
+
 void DebugService::respond(int client_socket) {
     L_DEBUG("DebugService: Handling request");
 
@@ -160,6 +181,35 @@ void DebugService::respond(int client_socket) {
         L_WARN("DebugService: Client disconnected");
     } else {
         // Handle message
+        auto request = _u(msg);
+
+        auto lines = request.split("\n");
+        auto first_line = lines[0].strip().split(" ");
+        if(first_line.size() != 3) {
+            L_WARN(_u("Unable to deal with {0}").format(lines[0]).encode());
+            return;
+        }
+
+        auto method = first_line[0];
+        auto path = first_line[1];
+        auto protocol = first_line[2];
+
+        std::string response;
+        if(path == "/screens/") {
+            response = make_response("{ \"screens\": [] }");
+        } else if(path == "/stages/") {
+            response = make_response("{ \"stages\": [] }");
+        } else if(path == "/pipelines/") {
+            response = make_response("{ \"pipelines\": [] }");
+        } else if(path == "/rendertree/") {
+            response = make_response("{ \"rendertree\": [] }");
+        } else {
+            response = make_response("NOT FOUND", 404);
+        }
+
+        if(send(client_socket, response.c_str(), response.size(), 0) == 0) {
+            L_WARN("DebugService: No bytes were sent while sending response to the client");
+        }
     }
 }
 
