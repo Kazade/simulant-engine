@@ -17,7 +17,7 @@ class Loading:
 
 public:
     Loading(WindowBase& window):
-        Screen<Loading>(window) {}
+        Screen<Loading>(window, "loading") {}
 
 private:
     void do_activate() override;

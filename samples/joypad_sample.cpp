@@ -72,7 +72,7 @@ void joypad_axis_right(kglt::AxisRange axis_range, kglt::Axis axis) {
 class GameScreen : public kglt::Screen<GameScreen> {
 public:
     GameScreen(WindowBase& window):
-        kglt::Screen<GameScreen>(window) {}
+        kglt::Screen<GameScreen>(window, "game_screen") {}
 
     void do_load() {
         prepare_basic_scene_with_overlay(stage_id_, camera_id_, overlay_id_, overlay_camera_id_);

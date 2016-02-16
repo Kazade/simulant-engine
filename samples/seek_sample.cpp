@@ -57,7 +57,7 @@ private:
 class GameScreen : public kglt::Screen<GameScreen> {
 public:
     GameScreen(WindowBase& window):
-        kglt::Screen<GameScreen>(window) {}
+        kglt::Screen<GameScreen>(window, "game_screen") {}
 
     void do_load() {
         prepare_basic_scene(stage_id_, camera_id_);

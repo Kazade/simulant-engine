@@ -1,4 +1,5 @@
 #include <kazbase/logging.h>
+#include <kazbase/json/json.h>
 
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -6,6 +7,9 @@
 #include <netdb.h>
 #include <unistd.h>
 
+#include "../application.h"
+#include "../window_base.h"
+#include "../screens/screen.h"
 #include "./debug_service.h"
 
 namespace kglt {
@@ -46,6 +50,7 @@ struct Always {
 void DebugService::cleanup_threads() {
     for(auto it = client_threads_.begin(); it != client_threads_.end();) {
         if(clients_[it->first] == -1) {
+            it->second.get(); // Trigger any exceptions
             client_threads_.erase(it++);
         } else {
             ++it;
@@ -196,7 +201,7 @@ void DebugService::respond(int client_socket) {
 
         std::string response;
         if(path == "/screens/") {
-            response = make_response("{ \"screens\": [] }");
+            response = make_response(command_screens());
         } else if(path == "/stages/") {
             response = make_response("{ \"stages\": [] }");
         } else if(path == "/pipelines/") {
@@ -207,10 +212,24 @@ void DebugService::respond(int client_socket) {
             response = make_response("NOT FOUND", 404);
         }
 
+        L_DEBUG(_u("DebugService: response was - {0}").format(response).encode());
         if(send(client_socket, response.c_str(), response.size(), 0) == 0) {
             L_WARN("DebugService: No bytes were sent while sending response to the client");
         }
     }
+}
+
+std::string DebugService::command_screens() {
+    json::JSON result;
+
+    auto& screens = result.insert_array("screens");
+    for(auto& p: window_->application->routes()) {
+        auto& result = screens.append_dict();
+        result.insert_value("route").set(p.first);
+        result.insert_value("name").set(p.second->name());
+    }
+
+    return json::dumps(result).encode();
 }
 
 }

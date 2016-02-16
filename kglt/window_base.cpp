@@ -52,7 +52,6 @@ WindowBase::WindowBase():
     frame_time_in_milliseconds_(0),
     total_time_(0),
     render_sequence_(new RenderSequence(*this)),
-    routes_(new ScreenManager(*this)),
     debug_service_(new DebugService(this)) {
 
     ktiGenTimers(1, &fixed_timer_);

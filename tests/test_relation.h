@@ -50,18 +50,8 @@ public:
 
 }
 
-class RelationTest : public TestCase {
-public:
-    void set_up() {
-        if(!window) {
-            window = kglt::Window::create();
-            window->set_logging_level(kglt::LOG_LEVEL_NONE);
-        }
-
-        //window->reset();
-    }
-
-
+class RelationTest : public KGLTTestCase {
+public:    
     void test_relations_work() {
         using namespace relation_test;
 

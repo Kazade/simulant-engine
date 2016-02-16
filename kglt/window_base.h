@@ -32,6 +32,7 @@ namespace screens {
     class Loading;
 }
 
+class Application;
 class InputController;
 class Keyboard;
 class Mouse;
@@ -74,7 +75,6 @@ class WindowBase :
     public ResourceManagerImpl,
     public Loadable,
     public PipelineHelperAPIInterface,
-    public ScreenManagerInterface,
     public RenderTarget {
 
 public:    
@@ -82,8 +82,10 @@ public:
     static const int STEPS_PER_SECOND = 60;
 
     template<typename T>
-    static std::shared_ptr<WindowBase> create(int width=640, int height=480, int bpp=0, bool fullscreen=false) {
+    static std::shared_ptr<WindowBase> create(Application* app, int width=640, int height=480, int bpp=0, bool fullscreen=false) {
         std::shared_ptr<WindowBase> window(new T());
+        window->set_application(app);
+
         if(!window->_init(width, height, bpp, fullscreen)) {
             throw InstanceInitializationError();
         }
@@ -169,18 +171,6 @@ public:
     virtual bool has_pipeline(PipelineID pid) const;
     virtual bool is_pipeline_enabled(PipelineID pid) const;
 
-
-    /* ScreenManager interface */
-    virtual void register_screen(const unicode& route, ScreenFactory factory) { routes_->register_screen(route, factory); }
-    virtual bool has_screen(const unicode& route) const { return routes_->has_screen(route); }
-    virtual ScreenBasePtr resolve_screen(const unicode& route) { return routes_->resolve_screen(route); }
-    virtual void activate_screen(const unicode& route) { routes_->activate_screen(route); }
-    virtual void load_screen_in_background(const unicode& route, bool redirect_after=true) { routes_->load_screen_in_background(route, redirect_after); }
-    virtual void unload_screen(const unicode& route) { routes_->unload_screen(route); }
-    virtual bool is_screen_loaded(const unicode& route) const { return routes_->is_screen_loaded(route); }
-    virtual ScreenBasePtr active_screen() const { return routes_->active_screen(); }
-    /* End ScreenManager interface */
-
 protected:
     RenderSequencePtr render_sequence();
 
@@ -205,8 +195,10 @@ protected:
     bool has_context() const { return has_context_; }
     std::mutex& context_lock() { return context_lock_; }
 
-
+    void set_application(Application* app) { application_ = app; }
 private:    
+    Application* application_ = nullptr;
+
     void create_defaults();
 
     bool can_attach_sound_by_id() const { return false; }
@@ -262,7 +254,6 @@ private:
     generic::DataCarrier data_carrier_;
 
     std::shared_ptr<VirtualGamepad> virtual_gamepad_;
-    std::shared_ptr<ScreenManager> routes_;
     std::unique_ptr<DebugService> debug_service_;
 
     Stats stats_;
@@ -270,6 +261,7 @@ private:
 public:
 
     //Read only properties
+    Property<WindowBase, Application> application = { this, &WindowBase::application_ };
     Property<WindowBase, VirtualGamepad> virtual_joypad = { this, &WindowBase::virtual_gamepad_ };
     Property<WindowBase, MessageBar> message_bar = { this, &WindowBase::message_bar_ };
 

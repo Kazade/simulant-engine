@@ -15,7 +15,7 @@ public:
         logging::get_logger("/")->set_level(logging::LOG_LEVEL_NONE);
 
         if(!window) {
-            window = kglt::Window::create();
+            window = kglt::Window::create(nullptr);
             window->set_logging_level(kglt::LOG_LEVEL_NONE);
         } else {
             window->reset();

@@ -14,8 +14,8 @@ class Window :
     public WindowBase {
 
 public:
-    static WindowBase::ptr create(int width=640, int height=480, int bpp=0, bool fullscreen=false) {
-        return WindowBase::create<Window>(width, height, bpp, fullscreen);
+    static WindowBase::ptr create(Application* app, int width=640, int height=480, int bpp=0, bool fullscreen=false) {
+        return WindowBase::create<Window>(app, width, height, bpp, fullscreen);
     }
 
     Window();

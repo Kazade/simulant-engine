@@ -3,8 +3,9 @@
 
 namespace kglt {
 
-ScreenBase::ScreenBase(WindowBase &window):
-    window_(&window) {
+ScreenBase::ScreenBase(WindowBase &window, const unicode& name):
+    window_(&window),
+    name_(name) {
 
 }
 

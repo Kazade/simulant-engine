@@ -5,7 +5,7 @@ using namespace kglt;
 class GameScreen : public kglt::Screen<GameScreen> {
 public:
     GameScreen(WindowBase& window):
-        kglt::Screen<GameScreen>(window) {}
+        kglt::Screen<GameScreen>(window, "game_screen") {}
 
     void do_load() {
         camera_id_ = window->new_camera();

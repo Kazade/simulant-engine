@@ -26,16 +26,17 @@
 #include "../window_base.h"
 #include "../generic/managed.h"
 #include "../generic/property.h"
+#include "../interfaces.h"
 
 namespace kglt {
 
 class ScreenLoadException : public RuntimeError {};
 
-class ScreenBase {
+class ScreenBase : public Nameable {
 public:
     typedef std::shared_ptr<ScreenBase> ptr;
 
-    ScreenBase(WindowBase& window);
+    ScreenBase(WindowBase& window, const unicode& name);
     virtual ~ScreenBase();
 
     void load();
@@ -48,6 +49,9 @@ public:
 
     bool is_loaded() const { return is_loaded_; }
 
+    const unicode name() const { return name_; }
+    const bool has_name() const { return !name_.empty(); }
+    void set_name(const unicode &name) { name_ = name; }
 protected:
     Property<ScreenBase, WindowBase> window = { this, &ScreenBase::window_ };
 
@@ -63,6 +67,7 @@ protected:
     );
 
     WindowBase* window_;
+    unicode name_;
 private:
     bool is_loaded_ = false;
 };
@@ -70,8 +75,8 @@ private:
 template<typename T>
 class Screen : public ScreenBase, public Managed<T> {
 public:
-    Screen(WindowBase& window):
-        ScreenBase(window) {}
+    Screen(WindowBase& window, const unicode& name):
+        ScreenBase(window, name) {}
 
     void cleanup() override {
         do_unload();

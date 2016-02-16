@@ -14,8 +14,8 @@ class WindowBase;
  */
 class DebugService {
 public:
-    const static int PORT = 11235;
-    const static int MAX_CLIENTS = 1;
+    const static int PORT = 5555;
+    const static int MAX_CLIENTS = 2;
 
     DebugService(WindowBase* window):
         window_(window) {}

@@ -37,6 +37,7 @@ public:
     virtual void unload_screen(const unicode& route) = 0;
     virtual bool is_screen_loaded(const unicode& route) const = 0;
     virtual ScreenBasePtr active_screen() const = 0;
+    virtual const std::unordered_map<unicode, ScreenBasePtr> routes() const = 0;
 };
 
 
@@ -58,6 +59,9 @@ public:
     void reset();
     ScreenBasePtr active_screen() const;
 
+    const std::unordered_map<unicode, ScreenBasePtr> routes() const {
+        return routes_;
+    }
 private:
     WindowBase& window_;
     std::unordered_map<unicode, std::function<ScreenBasePtr ()>> screen_factories_;

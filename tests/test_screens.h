@@ -25,7 +25,7 @@ public:
 class TestScreen : public Screen<TestScreen> {
 public:
     TestScreen(WindowBase& window):
-        Screen<TestScreen>(window) {}
+        Screen<TestScreen>(window, "test_screen") {}
 
     void do_load() override { load_called = true; }
     void do_unload() override { unload_called = true; }

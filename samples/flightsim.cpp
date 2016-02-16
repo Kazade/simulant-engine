@@ -7,7 +7,7 @@ using namespace kglt;
 class GameScreen : public kglt::Screen<GameScreen> {
 public:
     GameScreen(WindowBase& window):
-        kglt::Screen<GameScreen>(window) {}
+        kglt::Screen<GameScreen>(window, "game_screen") {}
 
     void do_load() {
         unicode filename = ""; //FIXME: Figure out how to pass this down to the screen!
