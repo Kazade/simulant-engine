@@ -21,27 +21,31 @@ public:
             render_height, float(window->width()) / float(window->height())
         );
 
-        //Load a sprite grid, from the 'Layer 1' layer in a tmx file
-        kglt::MeshID mesh_id = window->stage(stage_id_)->new_mesh_from_tmx_file(
-            "sample_data/tiled/example.tmx", "Layer 1"
-        );
-        window->stage(stage_id_)->new_actor_with_mesh(mesh_id);
+        {
+            auto stage = window->stage(stage_id_);
 
-        auto bounds = window->stage(stage_id_)->mesh(mesh_id)->aabb();
+            //Load a sprite grid, from the 'Layer 1' layer in a tmx file
+            kglt::MeshID mesh_id = stage->new_mesh_from_tmx_file(
+                "sample_data/tiled/example.tmx", "Layer 1"
+            );
 
-        window->stage(stage_id_)->host_camera(camera_id_);
+            stage->new_actor_with_mesh(mesh_id);
 
-        //Constrain the camera to the area where the sprite grid is rendered
-        window->stage(stage_id_)->camera(camera_id_)->constrain_to(
-            kglt::Vec3(render_width / 2, render_height / 2, 0),
-            kglt::Vec3(
-                bounds.width() - render_width / 2,
-                bounds.height() - render_height / 2,
-                0
-            )
-        );
+            auto bounds = stage->mesh(mesh_id)->aabb();
 
+            stage->host_camera(camera_id_);
 
+            //Constrain the camera to the area where the sprite grid is rendered
+            stage->camera(camera_id_)->constrain_to(
+                kglt::Vec3(render_width / 2, render_height / 2, 0),
+                kglt::Vec3(
+                    bounds.width() - render_width / 2,
+                    bounds.height() - render_height / 2,
+                    0
+                )
+            );
+
+        }
     }
 
     void do_activate() {

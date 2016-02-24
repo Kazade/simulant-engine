@@ -38,7 +38,7 @@ const AABB Mesh::aabb() const {
     result.min = kglt::Vec3(max, max, max);
     result.max = kglt::Vec3(min, min, min);
 
-    apply_func_to_objects([&result](SubMesh* mesh) {
+    each([&result](SubMesh* mesh) {
         if(mesh->aabb().min.x < result.min.x) result.min.x = mesh->aabb().min.x;
         if(mesh->aabb().min.y < result.min.y) result.min.y = mesh->aabb().min.y;
         if(mesh->aabb().min.z < result.min.z) result.min.z = mesh->aabb().min.z;
@@ -64,7 +64,7 @@ void Mesh::enable_debug(bool value) {
         normal_debug_mesh_ = new_submesh_with_material(mid, MESH_ARRANGEMENT_LINES, VERTEX_SHARING_MODE_INDEPENDENT);
 
         //Go through the submeshes, and for each index draw a normal line
-        apply_func_to_objects([=](SubMesh* mesh) {
+        each([=](SubMesh* mesh) {
             for(uint16_t idx: mesh->index_data().all()) {
                 kmVec3 pos1 = mesh->vertex_data().position_at(idx);
                 kmVec3 n = mesh->vertex_data().normal_at(idx);
@@ -367,7 +367,7 @@ SubMesh* Mesh::only_submesh() const {
 }
 
 void Mesh::set_material_id(MaterialID material) {
-    apply_func_to_objects([=](SubMesh* mesh) {
+    each([=](SubMesh* mesh) {
         mesh->set_material_id(material);
     });
 }
@@ -392,7 +392,7 @@ void Mesh::transform_vertices(const kglt::Mat4& transform, bool include_submeshe
     shared_data().done();
 
     if(include_submeshes) {
-        apply_func_to_objects([transform](SubMesh* mesh) {
+        each([transform](SubMesh* mesh) {
             if(!mesh->uses_shared_vertices()) {
                 mesh->transform_vertices(transform);
             }
@@ -409,7 +409,7 @@ void Mesh::set_diffuse(const kglt::Colour& colour, bool include_submeshes) {
     shared_data().done();
 
     if(include_submeshes) {
-        apply_func_to_objects([=](SubMesh* mesh) {
+        each([=](SubMesh* mesh) {
             if(!mesh->uses_shared_vertices()) {
                 mesh->set_diffuse(colour);
             }
@@ -428,13 +428,13 @@ void Mesh::normalize() {
 }
 
 void Mesh::reverse_winding() {
-    apply_func_to_objects([=](SubMesh* mesh) {
+    each([=](SubMesh* mesh) {
         mesh->reverse_winding();
     });
 }
 
 void Mesh::set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass) {
-    apply_func_to_objects([=](SubMesh* mesh) {
+    each([=](SubMesh* mesh) {
         mesh->set_texture_on_material(unit, tex, pass);
     });
 }

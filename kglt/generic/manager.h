@@ -3,6 +3,7 @@
 
 #include "manager_base.h"
 
+#include <functional>
 #include <kazbase/list_utils.h>
 #include <kazbase/signals.h>
 
@@ -118,11 +119,11 @@ public:
     sig::signal<void (ObjectType&, ObjectIDType)>& signal_post_create() { return signal_post_create_; }
     sig::signal<void (ObjectType&, ObjectIDType)>& signal_pre_delete() { return signal_pre_delete_; }
 
-    template<typename Func>
-    void apply_func_to_objects(Func func) const {
+    void each(std::function<void (ObjectType*)> func) const {
         for(std::pair<ObjectIDType, typename ObjectType::ptr> p: objects_) {
             auto thing = manager_get(p.first); //Make sure we lock the object
-            std::bind(func, thing.lock().get())();
+            auto ptr = thing.lock(); // Keep the shared_ptr around while we use it
+            func(ptr.get());
         }
     }
 

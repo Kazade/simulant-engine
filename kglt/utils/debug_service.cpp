@@ -14,6 +14,7 @@
 #include "../screens/screen.h"
 #include "../stage.h"
 #include "../actor.h"
+#include "../light.h"
 
 namespace kglt {
 
@@ -258,10 +259,20 @@ std::string DebugService::command_stages() {
             actor_entry.insert_value("rotation").set(actor_rot);
         };
 
-        stage->ActorManager::apply_func_to_objects(actor_processor);
+        auto& lights = entry.insert_array("lights");
+        auto light_processor = [&](Light* light) {
+            auto& light_entry = lights.append_dict();
+            light_entry.insert_value("id").set((int32_t) light->id().value());
+            auto abs_pos = light->absolute_position();
+            auto light_pos = _u("({0}, {1}, {2})").format(abs_pos.x, abs_pos.y, abs_pos.z);
+            light_entry.insert_value("position").set(light_pos);
+        };
+
+        stage->ActorManager::each(actor_processor);
+        stage->LightManager::each(light_processor);
     };
 
-    window_->StageManager::apply_func_to_objects(stage_processor);
+    window_->StageManager::each(stage_processor);
     return json::dumps(result).encode();
 }
 

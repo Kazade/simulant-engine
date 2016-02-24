@@ -250,7 +250,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
          * of material properties (uniforms) will be created with the child nodes
          * being the meshes
          */
-        typedef std::unordered_map<int32_t, std::vector<RootGroup::ptr> > QueueGroups;
+        typedef std::map<int32_t, std::vector<RootGroup::ptr>> QueueGroups;
         static QueueGroups queues;
 
         //Empty the queues
@@ -266,7 +266,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
         //Go through the visible actors
         for(RenderablePtr ent: buffers) {
             //Get the priority queue for this actor (e.g. RENDER_PRIORITY_BACKGROUND)
-            QueueGroups::mapped_type& priority_queue = queues[(uint32_t)ent->render_priority()];
+            QueueGroups::mapped_type& priority_queue = queues[(int32_t)ent->render_priority()];
 
             auto mat = stage->material(ent->material_id());
 
@@ -302,9 +302,8 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
          * tree and calling bind()/unbind() at each level
          */
         renderer_->set_current_stage(stage_id);
-        for(RenderPriority priority: RENDER_PRIORITIES) {
-            QueueGroups::mapped_type& priority_queue = queues[priority];
-            for(RootGroup::ptr pass_group: priority_queue) {
+        for(auto& priority_queue: queues) {
+            for(RootGroup::ptr pass_group: priority_queue.second) {
                 std::function<void (Renderable&, MaterialPass&)> f = [=](Renderable& renderable, MaterialPass& pass) {
                     renderer_->render(
                         renderable,

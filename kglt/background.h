@@ -9,6 +9,8 @@
 
 namespace kglt {
 
+class BackgroundManager;
+
 enum BackgroundResizeStyle {
     BACKGROUND_RESIZE_ZOOM,
     BACKGROUND_RESIZE_SCALE
@@ -23,7 +25,7 @@ class Background:
     public Printable {
 
 public:
-    Background(WindowBase *window, BackgroundID background_id);
+    Background(BackgroundManager *manager, BackgroundID background_id);
 
     bool init() override;
     void cleanup() override;
@@ -45,9 +47,8 @@ public:
     void set_name(const unicode &name);
     const unicode name() const;
 
-    WindowBase& window() { return *window_; }
 private:
-    WindowBase* window_;
+    BackgroundManager* manager_;
     unicode name_;
 
     void update_camera(const Viewport& viewport);

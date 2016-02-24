@@ -11,7 +11,8 @@
         
         SET(FLAG DEPTH_WRITE OFF)
         SET(FLAG DEPTH_CHECK OFF)
-        
+        SET(FLAG BLEND ALPHA)
+
         BEGIN_DATA(VERTEX)
             #version 120
             attribute vec3 vertex_position;

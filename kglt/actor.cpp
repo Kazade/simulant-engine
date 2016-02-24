@@ -34,7 +34,7 @@ const VertexData& Actor::shared_data() const {
 void Actor::rebuild_subactors() {
     subactors_.clear();
 
-    mesh_->apply_func_to_objects([&](SubMesh* mesh) {
+    mesh_->each([&](SubMesh* mesh) {
         subactors_.push_back(
             SubActor::create(*this, mesh)
         );

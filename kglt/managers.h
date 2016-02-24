@@ -3,6 +3,7 @@
 
 #include "generic/generic_tree.h"
 #include "generic/manager.h"
+#include "generic/property.h"
 #include "types.h"
 #include "interfaces.h"
 
@@ -25,6 +26,7 @@ public:
 
     void update(double dt) override;
 
+    Property<BackgroundManager, WindowBase> window = { this, &BackgroundManager::window_ };
 private:
     WindowBase* window_;
 };

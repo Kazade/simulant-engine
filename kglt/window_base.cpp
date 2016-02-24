@@ -362,37 +362,37 @@ void WindowBase::handle_mouse_motion(int x, int y, bool pos_normalized) {
         y *= height();
     }
 
-    UIStageManager::apply_func_to_objects([=](UIStage* object) {
+    UIStageManager::each([=](UIStage* object) {
         object->__handle_mouse_move(x, y);
     });
 }
 
 void WindowBase::handle_mouse_button_down(int button) {
-    UIStageManager::apply_func_to_objects([=](UIStage* object) {
+    UIStageManager::each([=](UIStage* object) {
         object->__handle_mouse_down(button);
     });
 }
 
 void WindowBase::handle_mouse_button_up(int button) {
-    UIStageManager::apply_func_to_objects([=](UIStage* object) {
+    UIStageManager::each([=](UIStage* object) {
         object->__handle_mouse_up(button);
     });
 }
 
 void WindowBase::handle_touch_down(int finger_id, int x, int y) {
-    UIStageManager::apply_func_to_objects([=](UIStage* object) {
+    UIStageManager::each([=](UIStage* object) {
         object->__handle_touch_down(finger_id, x, y);
     });
 }
 
 void WindowBase::handle_touch_motion(int finger_id, int x, int y) {
-    UIStageManager::apply_func_to_objects([=](UIStage* object) {
+    UIStageManager::each([=](UIStage* object) {
         object->__handle_touch_motion(finger_id, x, y);
     });
 }
 
 void WindowBase::handle_touch_up(int finger_id, int x, int y) {
-    UIStageManager::apply_func_to_objects([=](UIStage* object) {
+    UIStageManager::each([=](UIStage* object) {
         object->__handle_touch_up(finger_id, x, y);
     });
 }

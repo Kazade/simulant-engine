@@ -7,9 +7,9 @@
 
 namespace kglt {
 
-Background::Background(WindowBase *window, BackgroundID background_id):
+Background::Background(BackgroundManager *manager, BackgroundID background_id):
     generic::Identifiable<BackgroundID>(background_id),
-    window_(window) {
+    manager_(manager) {
 
 }
 
@@ -31,7 +31,7 @@ void Background::update_camera(const Viewport &viewport) {
         height = 1.0;
     }
 
-    window().camera(camera_id_)->set_orthographic_projection(
+    manager_->window->camera(camera_id_)->set_orthographic_projection(
         0,
         width,
         0,
@@ -41,39 +41,43 @@ void Background::update_camera(const Viewport &viewport) {
 }
 
 bool Background::init() {
-    //Create a stage to add to the render pipeline
-    stage_id_ = window().new_stage(PARTITIONER_NULL);
-
     //We need to create an orthographic camera
-    camera_id_ = window().new_camera();
+    camera_id_ = manager_->window->new_camera();
     update_camera(Viewport()); //FIXME: Only fullscreen??
 
+    //Create a stage to add to the render pipeline
+    stage_id_ = manager_->window->new_stage(PARTITIONER_NULL);
+
+    {
+        auto stage = manager_->window->stage(stage_id_);
+
+        actor_id_ = stage->new_actor();
+        //Load the background material
+        material_id_ = stage->new_material_from_file("kglt/materials/background.kglm");
+
+        auto mesh = stage->new_mesh_as_rectangle(1, 1, Vec2(0.5, 0.5));
+        stage->actor(actor_id_)->set_mesh(mesh);
+        stage->mesh(mesh)->set_material_id(material_id_);
+    }
+
     //Add a pass for this background
-    pipeline_id_ = window().render(stage_id_, camera_id_).with_priority(kglt::RENDER_PRIORITY_BACKGROUND);
-    actor_id_ = window().stage(stage_id_)->new_actor();
-    //Load the background material
-    material_id_ = window().stage(stage_id_)->new_material_from_file("kglt/materials/background.kglm");
+    pipeline_id_ = manager_->window->render(stage_id_, camera_id_).with_priority(
+        kglt::RENDER_PRIORITY_BACKGROUND + manager_->background_count()
+    );
 
-    auto mesh = window().stage(stage_id_)->new_mesh_as_rectangle(1, 1, Vec2(0.5, 0.5));
-    window().stage(stage_id_)->actor(actor_id_)->set_mesh(mesh);
-    window().stage(stage_id_)->mesh(mesh)->set_material_id(material_id_);
-
-    window().stage(stage_id_)->material(material_id_)->pass(0).set_blending(BLEND_ALPHA);
-    window().stage(stage_id_)->material(material_id_)->pass(0).set_depth_test_enabled(false);
-    window().stage(stage_id_)->material(material_id_)->pass(0).set_depth_write_enabled(false);
     return true;
 }
 
 void Background::cleanup() {
     //Remove the pipeline and delete the camera, everything else is cleaned
     //up automatically when the node is detached from the scene tree
-    window().delete_pipeline(pipeline_id_);
-    window().delete_camera(camera_id_);
+    manager_->window->delete_pipeline(pipeline_id_);
+    manager_->window->delete_camera(camera_id_);
 }
 
 void Background::update(double dt) {
-    window().stage(stage_id_)->material(material_id_)->pass(0).texture_unit(0).scroll_x(x_rate_ * dt);
-    window().stage(stage_id_)->material(material_id_)->pass(0).texture_unit(0).scroll_y(y_rate_ * dt);
+    manager_->window->stage(stage_id_)->material(material_id_)->pass(0).texture_unit(0).scroll_x(x_rate_ * dt);
+    manager_->window->stage(stage_id_)->material(material_id_)->pass(0).texture_unit(0).scroll_y(y_rate_ * dt);
 }
 
 void Background::set_horizontal_scroll_rate(float x_rate) {
@@ -85,7 +89,7 @@ void Background::set_vertical_scroll_rate(float y_rate) {
 }
 
 void Background::set_texture(TextureID tex) {
-    window().stage(stage_id_)->material(material_id_)->pass(0).set_texture_unit(0, tex);
+    manager_->window->stage(stage_id_)->material(material_id_)->pass(0).set_texture_unit(0, tex);
 }
 
 void Background::set_resize_style(BackgroundResizeStyle style) {
@@ -93,7 +97,7 @@ void Background::set_resize_style(BackgroundResizeStyle style) {
 }
 
 void Background::ask_owner_for_destruction() {
-    window().delete_background(id());
+    manager_->window->delete_background(id());
 }
 
 unicode Background::__unicode__() const {

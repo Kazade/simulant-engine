@@ -44,3 +44,4 @@ submodules/luabind/luabind/detail
 kglt/procedural/mesh
 kglt/managers
 kglt/procedural
+kglt/materials
