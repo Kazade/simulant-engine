@@ -7,10 +7,13 @@
 #include <netdb.h>
 #include <unistd.h>
 
+#include "./debug_service.h"
+
 #include "../application.h"
 #include "../window_base.h"
 #include "../screens/screen.h"
-#include "./debug_service.h"
+#include "../stage.h"
+#include "../actor.h"
 
 namespace kglt {
 
@@ -203,7 +206,7 @@ void DebugService::respond(int client_socket) {
         if(path == "/screens/") {
             response = make_response(command_screens());
         } else if(path == "/stages/") {
-            response = make_response("{ \"stages\": [] }");
+            response = make_response(command_stages());
         } else if(path == "/pipelines/") {
             response = make_response("{ \"pipelines\": [] }");
         } else if(path == "/rendertree/") {
@@ -224,11 +227,41 @@ std::string DebugService::command_screens() {
 
     auto& screens = result.insert_array("screens");
     for(auto& p: window_->application->routes()) {
-        auto& result = screens.append_dict();
-        result.insert_value("route").set(p.first);
-        result.insert_value("name").set(p.second->name());
+        auto& screen = screens.append_dict();
+        screen.insert_value("route").set(p.first);
+        screen.insert_value("name").set(p.second->name());
     }
 
+    return json::dumps(result).encode();
+}
+
+std::string DebugService::command_stages() {
+    json::JSON result;
+
+    auto& stages = result.insert_array("stages");
+    auto stage_processor = [&](Stage* stage) {
+        auto& entry = stages.append_dict();
+        entry.insert_value("id").set((int32_t) stage->id().value());
+
+        auto& actors = entry.insert_array("actors");
+        auto actor_processor = [&](Actor* actor) {
+            auto& actor_entry = actors.append_dict();
+            actor_entry.insert_value("id").set((int32_t)actor->id().value());
+            actor_entry.insert_value("name").set(actor->name());
+
+            auto abs_pos = actor->absolute_position();
+            auto actor_pos = _u("({0}, {1}, {2})").format(abs_pos.x, abs_pos.y, abs_pos.z);
+            actor_entry.insert_value("position").set(actor_pos);
+
+            auto abs_rot = actor->absolute_rotation();
+            auto actor_rot = _u("({0}, {1}, {2}, {3})").format(abs_rot.x, abs_rot.y, abs_rot.z, abs_rot.w);
+            actor_entry.insert_value("rotation").set(actor_rot);
+        };
+
+        stage->ActorManager::apply_func_to_objects(actor_processor);
+    };
+
+    window_->StageManager::apply_func_to_objects(stage_processor);
     return json::dumps(result).encode();
 }
 
