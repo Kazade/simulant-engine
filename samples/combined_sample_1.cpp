@@ -13,7 +13,7 @@ public:
         //and the passed height. For example, passing a height of 2.0 would mean the view would extend
         //+1 and -1 in the vertical direction, -1.0 - +1.0 near/far, and width would be calculated from the aspect
         //window.scene().pass().viewport().configure(kglt::VIEWPORT_TYPE_BLACKBAR_16_BY_9);
-        window->camera(camera_id_)->set_orthographic_projection_from_height((float) 224 / (float) 40, 16.0 / 9.0);
+        window->camera(camera_id_)->set_orthographic_projection_from_height(224.0 / 40.0, 16.0 / 9.0);
 
         {
             auto stage = window->stage(stage_id_);

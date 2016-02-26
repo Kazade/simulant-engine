@@ -53,7 +53,7 @@ bool Background::init() {
 
         actor_id_ = stage->new_actor();
         //Load the background material
-        material_id_ = stage->new_material_from_file("kglt/materials/background.kglm");
+        material_id_ = stage->new_material_from_file("kglt/materials/simple_texture.kglm");
 
         auto mesh = stage->new_mesh_as_rectangle(1, 1, Vec2(0.5, 0.5));
         stage->actor(actor_id_)->set_mesh(mesh);

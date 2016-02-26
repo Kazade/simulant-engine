@@ -875,4 +875,4 @@ kglt/managers/window_holder.h
 kglt/procedural/constants.h
 kglt/utils/debug_service.h
 kglt/utils/debug_service.cpp
-kglt/materials/background.kglm
+kglt/materials/simple_texture.kglm

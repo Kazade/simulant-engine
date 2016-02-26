@@ -323,7 +323,7 @@ MaterialID ResourceManagerImpl::new_material_with_alias_from_file(const unicode&
 }
 
 MaterialID ResourceManagerImpl::new_material_from_texture(TextureID texture_id, bool garbage_collect) {
-    MaterialID m = new_material_from_file(default_material_filename(), garbage_collect);
+    MaterialID m = new_material_from_file("kglt/materials/simple_texture.kglm", garbage_collect);
     material(m)->set_texture_unit_on_all_passes(0, texture_id);
     mark_material_as_uncollected(m); //FIXME: Race-y
     return m;

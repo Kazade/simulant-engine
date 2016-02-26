@@ -239,7 +239,8 @@ void DepthGroup::unbind(GPUProgram *program) {
 void TextureGroup::bind(GPUProgram* program) {
     GLCheck(glActiveTexture, GL_TEXTURE0 + data_.unit);
     RootGroup& root = static_cast<RootGroup&>(get_root());
-    GLCheck(glBindTexture, GL_TEXTURE_2D, root.stage()->texture(data_.texture_id)->gl_tex());
+    GLuint tex_id = root.stage()->texture(data_.texture_id)->gl_tex();
+    GLCheck(glBindTexture, GL_TEXTURE_2D, tex_id);
 }
 
 void TextureGroup::unbind(GPUProgram *program) {
