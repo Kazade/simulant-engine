@@ -37,7 +37,7 @@ public:
     uint32_t clear_flags() const { return clear_mask_; }
 
     int32_t priority() const { return priority_; }
-    void set_priority(int32_t priority) { priority_ = priority; }
+    void set_priority(int32_t priority);
 
     void deactivate();
     void activate();
@@ -48,7 +48,9 @@ public:
     void set_viewport(const Viewport& v) { viewport_ = v; }
     void set_target(TextureID t) { target_ = t; }
     void set_ui_stage(UIStageID s) { ui_stage_ = s; }
-    void set_clear_flags(uint32_t viewport_clear_flags) { clear_mask_ = viewport_clear_flags; }
+    void set_clear_flags(uint32_t viewport_clear_flags) {
+        clear_mask_ = viewport_clear_flags;
+    }
 private:
     RenderSequence* sequence_;
     int32_t priority_;
@@ -116,6 +118,7 @@ public:
     RenderOptions render_options;
 
 private:    
+    void sort_pipelines();
     void run_pipeline(Pipeline::ptr stage, int& actors_rendered);
 
     WindowBase& window_;

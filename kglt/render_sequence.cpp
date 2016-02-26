@@ -28,6 +28,15 @@ Pipeline::Pipeline(
 
 }
 
+void Pipeline::set_priority(int32_t priority) {
+    if(priority_ != priority) {
+        priority_ = priority;
+
+        /* If the priority changed, we need to update the render sequence */
+        sequence_->sort_pipelines();
+    }
+}
+
 Pipeline::~Pipeline() {
     deactivate();
 }
@@ -126,6 +135,12 @@ void RenderSequence::delete_all_pipelines() {
     ordered_pipelines_.clear();
 }
 
+void RenderSequence::sort_pipelines() {
+    ordered_pipelines_.sort(
+        [](Pipeline::ptr lhs, Pipeline::ptr rhs) { return lhs->priority() < rhs->priority(); }
+    );
+}
+
 PipelineID RenderSequence::new_pipeline(StageID stage, CameraID camera, const Viewport& viewport, TextureID target, int32_t priority) {
     PipelineID new_p = PipelineManager::manager_new();
 
@@ -138,9 +153,7 @@ PipelineID RenderSequence::new_pipeline(StageID stage, CameraID camera, const Vi
     ordered_pipelines_.back()->set_priority(priority);
     ordered_pipelines_.back()->activate();
 
-    ordered_pipelines_.sort(
-        [](Pipeline::ptr lhs, Pipeline::ptr rhs) { return lhs->priority() < rhs->priority(); }
-    );
+    sort_pipelines();
 
     return new_p;
 }
@@ -157,9 +170,7 @@ PipelineID RenderSequence::new_pipeline(UIStageID stage, CameraID camera, const 
     ordered_pipelines_.back()->set_priority(priority);
     ordered_pipelines_.back()->activate();
 
-    ordered_pipelines_.sort(
-        [](Pipeline::ptr lhs, Pipeline::ptr rhs) { return lhs->priority() < rhs->priority(); }
-    );
+    sort_pipelines();
 
     return new_p;
 }
