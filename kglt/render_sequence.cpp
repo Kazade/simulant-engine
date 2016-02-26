@@ -193,7 +193,87 @@ void RenderSequence::update_camera_constraint(CameraID cid) {
     }
 }
 
+const uint32_t RENDER_PRIORITY_RANGE = RENDER_PRIORITY_MAX - RENDER_PRIORITY_ABSOLUTE_BACKGROUND;
+const uint32_t MAX_MATERIAL_PASSES = 25;
+
+struct RenderQueue {
+    RootGroup* passes_[MAX_MATERIAL_PASSES] = {nullptr};
+
+    RootGroup* get_or_create_pass(uint32_t pass, WindowBase* window, StageID stage_id, CameraID camera_id) {
+        assert(pass < MAX_MATERIAL_PASSES);
+        if(!passes_[pass]) {
+            passes_[pass] = new RootGroup(*window, stage_id, camera_id);
+        }
+        return passes_[pass];
+    }
+
+    ~RenderQueue() {
+        for(uint32_t i = 0; i < MAX_MATERIAL_PASSES; ++i) {
+            if(passes_[i]) {
+                delete passes_[i];
+                passes_[i] = nullptr;
+            }
+        }
+    }
+
+    void each(std::function<void(RootGroup*)> func) {
+        for(RootGroup* group: passes_) {
+            if(group) {
+                func(group);
+            }
+        }
+    }
+};
+
+struct QueuesByPriority {
+    /*
+     * This is a set of render queues indexed by their render priority
+     * Everything is raw pointers and static arrays for performance.
+     *
+     * It might be a wise idea to just allocate the entire range on construction
+     * but this is fast enough for now
+     */
+    RenderQueue* queues_[RENDER_PRIORITY_RANGE] = {nullptr};
+
+    RenderQueue* get_or_create_queue(RenderPriority priority) {
+        uint32_t idx = uint32_t(priority - RENDER_PRIORITY_ABSOLUTE_BACKGROUND);
+
+        assert(idx < RENDER_PRIORITY_RANGE);
+
+        if(!queues_[idx]) {
+            queues_[idx] = new RenderQueue();
+        }
+
+        return queues_[idx];
+    }
+
+    void clear() {
+        for(uint32_t i = 0; i < RENDER_PRIORITY_RANGE; ++i) {
+            if(queues_[i]) {
+                delete queues_[i];
+                queues_[i] = nullptr;
+            }
+        }
+    }
+
+    ~QueuesByPriority() {
+        clear();
+    }
+
+    void each(std::function<void(RenderQueue*)> func) {
+        for(RenderQueue* queue: queues_) {
+            if(queue) {
+                func(queue);
+            }
+        }
+    }
+};
+
 void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rendered) {
+    static QueuesByPriority queues;
+    //Empty the queues each call, but retain the same container (saves allocations)
+    queues.clear();
+
     if(!pipeline_stage->is_active()) {
         return;
     }
@@ -250,23 +330,13 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
          * of material properties (uniforms) will be created with the child nodes
          * being the meshes
          */
-        typedef std::map<int32_t, std::vector<RootGroup::ptr>> QueueGroups;
-        static QueueGroups queues;
-
-        //Empty the queues
-        for(auto& queue: queues) {
-            for(auto& group: queue.second) {
-                group->clear();
-            }
-            queue.second.clear();
-        }
-
         std::vector<LightID> lights_intersecting_actor;
 
         //Go through the visible actors
         for(RenderablePtr ent: buffers) {
             //Get the priority queue for this actor (e.g. RENDER_PRIORITY_BACKGROUND)
-            QueueGroups::mapped_type& priority_queue = queues[(int32_t)ent->render_priority()];
+            RenderQueue* priority_queue = queues.get_or_create_queue(ent->render_priority());
+            assert(priority_queue);
 
             auto mat = stage->material(ent->material_id());
 
@@ -278,16 +348,11 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
                 }
             }
 
-            //Go through the actors material passes
+            //Go through the actor's material passes
             for(uint8_t pass = 0; pass < mat->pass_count(); ++pass) {
-                //Create a new render group if necessary
-                RootGroup::ptr group;
-                if(priority_queue.size() <= pass) {
-                    group = RootGroup::ptr(new RootGroup(window_, stage_id, camera_id));
-                    priority_queue.push_back(group);
-                } else {
-                    group = priority_queue[pass];
-                }
+                // Get the group for this pass
+                RootGroup* group = priority_queue->get_or_create_pass(pass, &window_, stage_id, camera_id);
+                assert(group);
 
                 //Insert the actor into the RenderGroup tree
                 group->insert(*ent, pass, lights_intersecting_actor);
@@ -302,8 +367,13 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
          * tree and calling bind()/unbind() at each level
          */
         renderer_->set_current_stage(stage_id);
-        for(auto& priority_queue: queues) {
-            for(RootGroup::ptr pass_group: priority_queue.second) {
+
+        queues.each([=](RenderQueue* queue) {
+            assert(queue);
+
+            queue->each([=](RootGroup* pass_group) {
+                assert(pass_group);
+
                 std::function<void (Renderable&, MaterialPass&)> f = [=](Renderable& renderable, MaterialPass& pass) {
                     renderer_->render(
                         renderable,
@@ -312,8 +382,9 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
                     );
                 };
                 pass_group->traverse(f);
-            }
-        }
+            });
+        });
+
         renderer_->set_current_stage(StageID());
     }
 

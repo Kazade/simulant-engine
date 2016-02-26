@@ -177,6 +177,8 @@ public:
         stage_id_(stage),
         camera_id_(camera){}
 
+    virtual ~RootGroup() {}
+
     void bind(GPUProgram* program);
     void unbind(GPUProgram* program) {}
 

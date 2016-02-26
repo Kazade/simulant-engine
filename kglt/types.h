@@ -533,13 +533,13 @@ enum BufferClearFlag {
 };
 
 typedef int32_t RenderPriority;
-const RenderPriority RENDER_PRIORITY_ABSOLUTE_BACKGROUND = -1000;
+const RenderPriority RENDER_PRIORITY_ABSOLUTE_BACKGROUND = -250;
 const RenderPriority RENDER_PRIORITY_BACKGROUND = -100;
 const RenderPriority RENDER_PRIORITY_DISTANT = -50;
 const RenderPriority RENDER_PRIORITY_MAIN = 0;
 const RenderPriority RENDER_PRIORITY_NEAR = 50;
 const RenderPriority RENDER_PRIORITY_FOREGROUND = 100;
-const RenderPriority RENDER_PRIORITY_ABSOLUTE_FOREGROUND = 1000;
+const RenderPriority RENDER_PRIORITY_ABSOLUTE_FOREGROUND = 250;
 const RenderPriority RENDER_PRIORITY_MAX = RENDER_PRIORITY_ABSOLUTE_FOREGROUND + 1;
 
 const std::vector<RenderPriority> RENDER_PRIORITIES = {
