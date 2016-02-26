@@ -51,16 +51,9 @@ void ResourceManagerImpl::update() {
 
     if(datetime::timedelta_in_seconds(datetime::now() - last_collection) >= 5) {
         //Garbage collect all the things
-        L_DEBUG("Collecting meshes");
         MeshManager::garbage_collect();
-
-        L_DEBUG("Collecting materials");
         MaterialManager::garbage_collect();
-
-        L_DEBUG("Collecting textures");
         TextureManager::garbage_collect();
-
-        L_DEBUG("Collecting sounds");
         SoundManager::garbage_collect();
 
         last_collection = datetime::now();
