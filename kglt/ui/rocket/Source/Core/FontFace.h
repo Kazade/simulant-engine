@@ -29,8 +29,7 @@
 #define ROCKETCOREFONTFACE_H
 
 #include "../../Include/Rocket/Core/Font.h"
-#include <ft2build.h>
-#include FT_FREETYPE_H
+#include "../../Include/stb_truetype.h"
 
 namespace Rocket {
 namespace Core {
@@ -44,7 +43,7 @@ class FontFaceHandle;
 class FontFace
 {
 public:
-	FontFace(FT_Face face, Font::Style style, Font::Weight weight, bool release_stream);
+    FontFace(stbtt_fontinfo* face, Font::Style style, Font::Weight weight, bool release_stream);
 	~FontFace();
 
 	/// Returns the style of the font face.
@@ -65,7 +64,7 @@ public:
 	void ReleaseFace();
 
 private:
-	FT_Face face;
+    stbtt_fontinfo* face;
 	Font::Style style;
 	Font::Weight weight;
 

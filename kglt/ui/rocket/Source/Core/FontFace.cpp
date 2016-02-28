@@ -33,7 +33,7 @@
 namespace Rocket {
 namespace Core {
 
-FontFace::FontFace(FT_Face _face, Font::Style _style, Font::Weight _weight, bool _release_stream)
+FontFace::FontFace(stbtt_fontinfo* _face, Font::Style _style, Font::Weight _weight, bool _release_stream)
 {
 	face = _face;
 	style = _style;

@@ -29,8 +29,9 @@
 #include "../../Include/Rocket/Core/FontDatabase.h"
 #include "FontFamily.h"
 #include "../../Include/Rocket/Core.h"
-#include <ft2build.h>
-#include FT_FREETYPE_H
+
+#define STB_TRUETYPE_IMPLEMENTATION
+#include "../../Include/stb_truetype.h"
 
 namespace Rocket {
 namespace Core {
@@ -39,8 +40,6 @@ FontDatabase* FontDatabase::instance = NULL;
 
 typedef std::map< String, FontEffect* > FontEffectCache;
 FontEffectCache font_effect_cache;
-
-static FT_Library ft_library = NULL;
 
 FontDatabase::FontDatabase()
 {
@@ -59,14 +58,6 @@ bool FontDatabase::Initialise()
 	if (instance == NULL)
 	{
 		new FontDatabase();
-
-		FT_Error result = FT_Init_FreeType(&ft_library);
-		if (result != 0)
-		{
-			Log::Message(Log::LT_ERROR, "Failed to initialise FreeType, error %d.", result);
-			Shutdown();
-			return false;
-		}
 	}
 
 	return true;
@@ -79,37 +70,38 @@ void FontDatabase::Shutdown()
 		for (FontFamilyMap::iterator i = instance->font_families.begin(); i != instance->font_families.end(); ++i)
 			delete (*i).second;
 
-		if (ft_library != NULL)
-		{
-			FT_Done_FreeType(ft_library);
-			ft_library = NULL;
-		}
-
 		delete instance;
+        instance = NULL;
 	}
 }
 
 // Loads a new font face.
 bool FontDatabase::LoadFontFace(const String& file_name)
 {
-	FT_Face ft_face = (FT_Face) instance->LoadFace(file_name);
+    stbtt_fontinfo* ft_face = (stbtt_fontinfo*) instance->LoadFace(file_name);
 	if (ft_face == NULL)
 	{
 		Log::Message(Log::LT_ERROR, "Failed to load font face from %s.", file_name.CString());
 		return false;
 	}
 
-	Font::Style style = ft_face->style_flags & FT_STYLE_FLAG_ITALIC ? Font::STYLE_ITALIC : Font::STYLE_NORMAL;
-	Font::Weight weight = ft_face->style_flags & FT_STYLE_FLAG_BOLD ? Font::WEIGHT_BOLD : Font::WEIGHT_NORMAL;
+    int length;
+    const char* font_name = stbtt_GetFontNameString(ft_face, &length, STBTT_PLATFORM_ID_MAC, STBTT_MAC_EID_ROMAN, STBTT_MAC_LANG_ENGLISH, 1);
 
-	if (instance->AddFace(ft_face, ft_face->family_name, style, weight, true))
+    /* FIXME: Detect style and weight of font
+	Font::Style style = ft_face->style_flags & FT_STYLE_FLAG_ITALIC ? Font::STYLE_ITALIC : Font::STYLE_NORMAL;
+    Font::Weight weight = ft_face->style_flags & FT_STYLE_FLAG_BOLD ? Font::WEIGHT_BOLD : Font::WEIGHT_NORMAL; */
+    Font::Style style = Font::STYLE_NORMAL;
+    Font::Weight weight = Font::WEIGHT_NORMAL;
+
+    if (instance->AddFace(ft_face, font_name, style, weight, true))
 	{
-		Log::Message(Log::LT_INFO, "Loaded font face %s %s (from %s).", ft_face->family_name, ft_face->style_name, file_name.CString());
+        Log::Message(Log::LT_INFO, "Loaded font face from %s.", file_name.CString());
 		return true;
 	}
 	else
 	{
-		Log::Message(Log::LT_ERROR, "Failed to load font face %s %s (from %s).", ft_face->family_name, ft_face->style_name, file_name.CString());
+        Log::Message(Log::LT_ERROR, "Failed to load font face from %s.", file_name.CString());
 		return false;
 	}
 }
@@ -117,21 +109,24 @@ bool FontDatabase::LoadFontFace(const String& file_name)
 // Adds a new font face to the database, ignoring any family, style and weight information stored in the face itself.
 bool FontDatabase::LoadFontFace(const String& file_name, const String& family, Font::Style style, Font::Weight weight)
 {
-	FT_Face ft_face = (FT_Face) instance->LoadFace(file_name);
+    stbtt_fontinfo* ft_face = (stbtt_fontinfo*) instance->LoadFace(file_name);
 	if (ft_face == NULL)
 	{
 		Log::Message(Log::LT_ERROR, "Failed to load font face from %s.", file_name.CString());
 		return false;
 	}
 
+    int length;
+    const char* family_name = stbtt_GetFontNameString(ft_face, &length, STBTT_PLATFORM_ID_MAC, STBTT_MAC_EID_ROMAN, STBTT_MAC_LANG_ENGLISH, 1);
+
 	if (instance->AddFace(ft_face, family, style, weight, true))
 	{
-		Log::Message(Log::LT_INFO, "Loaded font face %s %s (from %s).", ft_face->family_name, ft_face->style_name, file_name.CString());
+        Log::Message(Log::LT_INFO, "Loaded font face %s (from %s).", family_name, file_name.CString());
 		return true;
 	}
 	else
 	{
-		Log::Message(Log::LT_ERROR, "Failed to load font face %s %s (from %s).", ft_face->family_name, ft_face->style_name, file_name.CString());
+        Log::Message(Log::LT_ERROR, "Failed to load font face %s (from %s).", family_name, file_name.CString());
 		return false;
 	}
 }
@@ -139,7 +134,7 @@ bool FontDatabase::LoadFontFace(const String& file_name, const String& family, F
 // Adds a new font face to the database, loading from memory.
 bool FontDatabase::LoadFontFace(const byte* data, int data_length)
 {
-	FT_Face ft_face = (FT_Face) instance->LoadFace(data, data_length, "memory", false);
+    stbtt_fontinfo* ft_face = (stbtt_fontinfo*) instance->LoadFace(data, data_length, "memory", false);
 	if (ft_face == NULL)
 	{
 		Log::Message(Log::LT_ERROR, "Failed to load font face from byte stream.");
@@ -164,7 +159,7 @@ bool FontDatabase::LoadFontFace(const byte* data, int data_length)
 // Adds a new font face to the database, loading from memory, ignoring any family, style and weight information stored in the face itself.
 bool FontDatabase::LoadFontFace(const byte* data, int data_length, const String& family, Font::Style style, Font::Weight weight)
 {
-	FT_Face ft_face = (FT_Face) instance->LoadFace(data, data_length, "memory", false);
+    stbtt_fontinfo* ft_face = (stbtt_fontinfo*) instance->LoadFace(data, data_length, "memory", false);
 	if (ft_face == NULL)
 	{
 		Log::Message(Log::LT_ERROR, "Failed to load font face from byte stream.");
@@ -268,7 +263,7 @@ bool FontDatabase::AddFace(void* face, const String& family, Font::Style style, 
 		instance->font_families[family] = font_family;
 	}
 
-	return font_family->AddFace((FT_Face) face, style, weight, release_stream);
+    return font_family->AddFace((stbtt_fontinfo*) face, style, weight, release_stream);
 }
 
 // Loads a FreeType face.
@@ -284,7 +279,7 @@ void* FontDatabase::LoadFace(const String& file_name)
 
 	size_t length = file_interface->Length(handle);
 
-	FT_Byte* buffer = new FT_Byte[length];
+    byte* buffer = new byte[length];
 	file_interface->Read(buffer, length, handle);
 	file_interface->Close(handle);
 
@@ -294,8 +289,9 @@ void* FontDatabase::LoadFace(const String& file_name)
 // Loads a FreeType face from memory.
 void* FontDatabase::LoadFace(const byte* data, int data_length, const String& source, bool local_data)
 {
-	FT_Face face = NULL;
-	int error = FT_New_Memory_Face(ft_library, (const FT_Byte*) data, data_length, 0, &face);
+    stbtt_fontinfo* face = new stbtt_fontinfo();
+
+    int error = stbtt_InitFont(face, data, stbtt_GetFontOffsetForIndex(data, 0));
 	if (error != 0)
 	{
 		Log::Message(Log::LT_ERROR, "FreeType error %d while loading face from %s.", error, source.CString());
@@ -303,21 +299,6 @@ void* FontDatabase::LoadFace(const byte* data, int data_length, const String& so
 			delete[] data;
 
 		return NULL;
-	}
-
-	// Initialise the character mapping on the face.
-	if (face->charmap == NULL)
-	{
-		FT_Select_Charmap(face, FT_ENCODING_APPLE_ROMAN);
-		if (face->charmap == NULL)
-		{
-			Log::Message(Log::LT_ERROR, "Font face (from %s) does not contain a Unicode or Apple Roman character map.", source.CString());
-			FT_Done_Face(face);
-			if (local_data)
-				delete[] data;
-
-			return NULL;
-		}
 	}
 
 	return face;

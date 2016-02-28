@@ -70,7 +70,7 @@ FontFaceHandle::~FontFaceHandle()
 }
 
 // Initialises the handle so it is able to render text.
-bool FontFaceHandle::Initialise(FT_Face ft_face, const String& _charset, int _size)
+bool FontFaceHandle::Initialise(stbtt_fontinfo* ft_face, const String& _charset, int _size)
 {
 	size = _size;
 
@@ -390,33 +390,20 @@ void FontFaceHandle::BuildGlyphMap(const UnicodeRange& unicode_range)
 {
 	for (word character_code = (word) (Math::Max< unsigned int >(unicode_range.min_codepoint, 32)); character_code <= unicode_range.max_codepoint; ++character_code)
 	{
-		int index = FT_Get_Char_Index(ft_face, character_code);
-		if (index != 0)
-		{
-			FT_Error error = FT_Load_Glyph(ft_face, index, 0);
-			if (error != 0)
-			{
-				Log::Message(Log::LT_WARNING, "Unable to load glyph for character '%u' on the font face '%s %s'; error code: %d.", character_code, ft_face->family_name, ft_face->style_name, error);
-				continue;
-			}
-
-			error = FT_Render_Glyph(ft_face->glyph, FT_RENDER_MODE_NORMAL);
-			if (error != 0)
-			{
-				Log::Message(Log::LT_WARNING, "Unable to render glyph for character '%u' on the font face '%s %s'; error code: %d.", character_code, ft_face->family_name, ft_face->style_name, error);
-				continue;
-			}
-
-			FontGlyph glyph;
-			glyph.character = character_code;
-			BuildGlyph(glyph, ft_face->glyph);
-			glyphs[character_code] = glyph;
-		}
+        FontGlyph glyph;
+        glyph.character = character_code;
+        BuildGlyph(glyph, ft_face);
+        glyphs[character_code] = glyph;
 	}
 }
 
-void FontFaceHandle::BuildGlyph(FontGlyph& glyph, FT_GlyphSlot ft_glyph)
+void FontFaceHandle::BuildGlyph(FontGlyph& glyph, stbtt_fontinfo* face)
 {
+    float scale_x, scale_y, ix0, iy0, ix1, iy1;
+    int glyph_index = stbtt_FindGlyphIndex(face, glyph->character);
+    //Continue, what should scale_x be?
+    stbtt_GetCodepointBitmapBox(face, glyph.character, scale_x, scale_y, ix0, iy0, ix1, iy1);
+
 	// Set the glyph's dimensions.
 	glyph.dimensions.x = ft_glyph->metrics.width >> 6;
 	glyph.dimensions.y = ft_glyph->metrics.height >> 6;

@@ -43,7 +43,7 @@ FontFamily::~FontFamily()
 }
 
 // Adds a new face to the family.
-bool FontFamily::AddFace(FT_Face ft_face, Font::Style style, Font::Weight weight, bool release_stream)
+bool FontFamily::AddFace(stbtt_fontinfo* ft_face, Font::Style style, Font::Weight weight, bool release_stream)
 {
 	FontFace* face = new FontFace(ft_face, style, weight, release_stream);
 	font_faces.push_back(face);

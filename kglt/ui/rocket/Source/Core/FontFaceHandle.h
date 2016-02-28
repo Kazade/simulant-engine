@@ -36,8 +36,7 @@
 #include "../../Include/Rocket/Core/Geometry.h"
 #include "../../Include/Rocket/Core/String.h"
 #include "../../Include/Rocket/Core/Texture.h"
-#include <ft2build.h>
-#include FT_FREETYPE_H
+#include "../../Include/stb_truetype.h"
 
 namespace Rocket {
 namespace Core {
@@ -59,7 +58,7 @@ public:
 	/// @param[in] charset The comma-separated list of unicode ranges this handle must support.
 	/// @param[in] size The size, in points, of the face this handle should render at.
 	/// @return True if the handle initialised successfully and is ready for rendering, false if an error occured.
-	bool Initialise(FT_Face ft_face, const String& charset, int size);
+    bool Initialise(stbtt_fontinfo* ft_face, const String& charset, int size);
 
 	/// Returns the average advance of all glyphs in this font face.
 	/// @return An approximate width of the characters in this font face.
@@ -130,7 +129,7 @@ private:
 	void GenerateMetrics(void);
 
 	void BuildGlyphMap(const UnicodeRange& unicode_range);
-	void BuildGlyph(FontGlyph& glyph, FT_GlyphSlot ft_glyph);
+    void BuildGlyph(FontGlyph& glyph, stbtt_fontinfo *face);
 
 	int GetKerning(word lhs, word rhs) const;
 
@@ -140,7 +139,7 @@ private:
 	typedef std::vector< int > GlyphKerningList;
 	typedef std::vector< GlyphKerningList > FontKerningList;
 
-	FT_Face ft_face;
+    stbtt_fontinfo* ft_face;
 
 	FontGlyphList glyphs;
 
