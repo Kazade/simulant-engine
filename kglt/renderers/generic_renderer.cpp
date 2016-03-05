@@ -5,6 +5,7 @@
 #include "../camera.h"
 #include "../light.h"
 #include "../partitioner.h"
+#include "../gpu_program.h"
 
 #include "kazmath/mat4.h"
 #include "../utils/glcompat.h"
@@ -15,7 +16,7 @@ namespace kglt {
 /*
  * FIXME: Stupid argument ordering
  */
-void GenericRenderer::set_auto_uniforms_on_shader(GPUProgram& program,
+void GenericRenderer::set_auto_uniforms_on_shader(GPUProgramInstance& program,
     CameraID camera,
     Renderable &subactor) {
 
@@ -30,81 +31,46 @@ void GenericRenderer::set_auto_uniforms_on_shader(GPUProgram& program,
     kmMat4Multiply(&modelview, &view, &model);
     kmMat4Multiply(&modelview_projection, &projection, &modelview);
 
-    if(program.uniforms().uses_auto(SP_AUTO_VIEW_MATRIX)) {
-        program.uniforms().set_mat4x4(
-            program.uniforms().auto_variable_name(SP_AUTO_VIEW_MATRIX),
+    if(program.uniforms->uses_auto(SP_AUTO_VIEW_MATRIX)) {
+        program.program->set_uniform_mat4x4(
+            program.uniforms->auto_variable_name(SP_AUTO_VIEW_MATRIX),
             view
         );
     }
 
-    if(program.uniforms().uses_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX)) {
-        program.uniforms().set_mat4x4(
-            program.uniforms().auto_variable_name(SP_AUTO_MODELVIEW_PROJECTION_MATRIX),
+    if(program.uniforms->uses_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX)) {
+        program.program->set_uniform_mat4x4(
+            program.uniforms->auto_variable_name(SP_AUTO_MODELVIEW_PROJECTION_MATRIX),
             modelview_projection
         );
     }
 
-    if(program.uniforms().uses_auto(SP_AUTO_MODELVIEW_MATRIX)) {
-        program.uniforms().set_mat4x4(
-            program.uniforms().auto_variable_name(SP_AUTO_MODELVIEW_MATRIX),
+    if(program.uniforms->uses_auto(SP_AUTO_MODELVIEW_MATRIX)) {
+        program.program->set_uniform_mat4x4(
+            program.uniforms->auto_variable_name(SP_AUTO_MODELVIEW_MATRIX),
             modelview
         );
     }
 
-    if(program.uniforms().uses_auto(SP_AUTO_PROJECTION_MATRIX)) {
-        program.uniforms().set_mat4x4(
-            program.uniforms().auto_variable_name(SP_AUTO_PROJECTION_MATRIX),
+    if(program.uniforms->uses_auto(SP_AUTO_PROJECTION_MATRIX)) {
+        program.program->set_uniform_mat4x4(
+            program.uniforms->auto_variable_name(SP_AUTO_PROJECTION_MATRIX),
             projection
         );
     }
 
-    if(program.uniforms().uses_auto(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX)) {
+    if(program.uniforms->uses_auto(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX)) {
         Mat3 inverse_transpose_modelview;
 
         kmMat4ExtractRotationMat3(&modelview, &inverse_transpose_modelview);
         kmMat3Inverse(&inverse_transpose_modelview, &inverse_transpose_modelview);
         kmMat3Transpose(&inverse_transpose_modelview, &inverse_transpose_modelview);
 
-        program.uniforms().set_mat3x3(
-            program.uniforms().auto_variable_name(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX),
+        program.program->set_uniform_mat3x3(
+            program.uniforms->auto_variable_name(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX),
             inverse_transpose_modelview
         );
     }
-/*
-    if(pass.uses_auto_uniform(SP_AUTO_MATERIAL_AMBIENT)) {
-        pass.program()->uniforms().set_colour(
-            pass.auto_uniform_variable_name(SP_AUTO_MATERIAL_AMBIENT),
-            pass.ambient()
-        );
-    }
-
-    if(pass.uses_auto_uniform(SP_AUTO_MATERIAL_DIFFUSE)) {
-        pass.program()->uniforms().set_colour(
-            pass.auto_uniform_variable_name(SP_AUTO_MATERIAL_DIFFUSE),
-            pass.diffuse()
-        );
-    }
-
-    if(pass.uses_auto_uniform(SP_AUTO_MATERIAL_SPECULAR)) {
-        pass.program()->uniforms().set_colour(
-            pass.auto_uniform_variable_name(SP_AUTO_MATERIAL_SPECULAR),
-            pass.specular()
-        );
-    }
-
-    if(pass.uses_auto_uniform(SP_AUTO_MATERIAL_SHININESS)) {
-        pass.program()->uniforms().set_float(
-            pass.auto_uniform_variable_name(SP_AUTO_MATERIAL_SHININESS),
-            pass.shininess()
-        );
-    }
-
-    if(pass.uses_auto_uniform(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS)) {
-        pass.program()->uniforms().set_int(
-            pass.auto_uniform_variable_name(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS),
-            pass.texture_unit_count()
-        );
-    }*/
 }
 
 template<typename EnabledMethod, typename OffsetMethod>
@@ -140,7 +106,7 @@ void GenericRenderer::set_auto_attributes_on_shader(Renderable &buffer) {
      *  function above that takes the VertexData member functions we need to provide the attribute
      *  and just makes the whole thing generic. Before this was 100s of lines of boilerplate. Thank god
      *  for templates!
-     */
+     */        
     send_attribute(SP_ATTR_VERTEX_POSITION, buffer.vertex_data(), &VertexData::has_positions, &VertexData::position_offset);
     send_attribute(SP_ATTR_VERTEX_TEXCOORD0, buffer.vertex_data(), &VertexData::has_texcoord0, &VertexData::texcoord0_offset);
     send_attribute(SP_ATTR_VERTEX_TEXCOORD1, buffer.vertex_data(), &VertexData::has_texcoord1, &VertexData::texcoord1_offset);
@@ -173,7 +139,7 @@ void GenericRenderer::set_blending_mode(BlendType type) {
     }
 }
 
-void GenericRenderer::render(Renderable& buffer, CameraID camera, GPUProgram* program) {
+void GenericRenderer::render(Renderable& buffer, CameraID camera, GPUProgramInstance *program) {
 
     if(!program) {
         L_ERROR("No shader is bound, so nothing will be rendered");
@@ -190,6 +156,18 @@ void GenericRenderer::render(Renderable& buffer, CameraID camera, GPUProgram* pr
 
     buffer._update_vertex_array_object();
     buffer._bind_vertex_array_object();
+
+    /*
+     * Set the attribute locations that are enabled for this pass - this is probably wasteful doing it here
+     * as it only needs to be done when the program instance changes...
+     */
+    for(auto attribute: SHADER_AVAILABLE_ATTRS) {
+        if(program->attributes->uses_auto(attribute)) {
+            auto varname = program->attributes->variable_name(attribute);
+            program->attributes->set_location(varname, (int32_t) attribute);
+        }
+    }
+
 
     //Attributes don't change per-iteration of a pass
     set_auto_attributes_on_shader(buffer);

@@ -43,6 +43,8 @@ public:
 private:
     bool do_init() {
         register_screen("/", screen_factory<GameScreen>());
+        load_screen_in_background("/", true);
+        activate_screen("/loading");
         return true;
     }
 };

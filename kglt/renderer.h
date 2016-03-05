@@ -26,7 +26,7 @@ public:
         current_stage_ = stage;
     }
 
-    virtual void render(Renderable& buffer, CameraID camera, GPUProgram* program) = 0;
+    virtual void render(Renderable& buffer, CameraID camera, GPUProgramInstance* program) = 0;
 
     WindowBase& window() { return window_; }
 protected:

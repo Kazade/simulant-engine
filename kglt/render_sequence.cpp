@@ -15,6 +15,7 @@
 #include "renderers/generic_renderer.h"
 #include "batcher.h"
 #include "loader.h"
+#include "gpu_program.h"
 
 namespace kglt {
 
@@ -33,7 +34,7 @@ void Pipeline::set_priority(int32_t priority) {
         priority_ = priority;
 
         /* If the priority changed, we need to update the render sequence */
-        sequence_->sort_pipelines();
+        sequence_->sort_pipelines(/*acquire_lock=*/true);
     }
 }
 
@@ -119,8 +120,8 @@ void RenderSequence::delete_pipeline(PipelineID pipeline_id) {
         pip->deactivate();
     }
 
-    PipelineManager::manager_delete(pipeline_id);
     ordered_pipelines_.remove_if([=](Pipeline::ptr pipeline) -> bool { return pipeline->id() == pipeline_id;});
+    PipelineManager::manager_delete(pipeline_id);    
 }
 
 void RenderSequence::delete_all_pipelines() {
@@ -135,24 +136,35 @@ void RenderSequence::delete_all_pipelines() {
     ordered_pipelines_.clear();
 }
 
-void RenderSequence::sort_pipelines() {
-    ordered_pipelines_.sort(
-        [](Pipeline::ptr lhs, Pipeline::ptr rhs) { return lhs->priority() < rhs->priority(); }
-    );
+void RenderSequence::sort_pipelines(bool acquire_lock) {
+    auto do_sort = [&]() {
+        ordered_pipelines_.sort(
+            [](Pipeline::ptr lhs, Pipeline::ptr rhs) { return lhs->priority() < rhs->priority(); }
+        );
+    };
+
+    if(acquire_lock) {
+        std::lock_guard<std::mutex> lock(pipeline_lock_);
+        do_sort();
+    } else {
+        do_sort();
+    }
 }
 
 PipelineID RenderSequence::new_pipeline(StageID stage, CameraID camera, const Viewport& viewport, TextureID target, int32_t priority) {
     PipelineID new_p = PipelineManager::manager_new();
 
-    ordered_pipelines_.push_back(PipelineManager::__objects()[new_p]);
+    auto pipeline = PipelineManager::manager_get(new_p).lock();
 
-    ordered_pipelines_.back()->set_stage(stage);
-    ordered_pipelines_.back()->set_camera(camera);
-    ordered_pipelines_.back()->set_viewport(viewport);
-    ordered_pipelines_.back()->set_target(target);
-    ordered_pipelines_.back()->set_priority(priority);
-    ordered_pipelines_.back()->activate();
+    pipeline->set_stage(stage);
+    pipeline->set_camera(camera);
+    pipeline->set_viewport(viewport);
+    pipeline->set_target(target);
+    pipeline->set_priority(priority);
+    pipeline->activate();
 
+    std::lock_guard<std::mutex> lock(pipeline_lock_);
+    ordered_pipelines_.push_back(pipeline);
     sort_pipelines();
 
     return new_p;
@@ -161,15 +173,19 @@ PipelineID RenderSequence::new_pipeline(StageID stage, CameraID camera, const Vi
 PipelineID RenderSequence::new_pipeline(UIStageID stage, CameraID camera, const Viewport& viewport, TextureID target, int32_t priority) {
     PipelineID new_p = PipelineManager::manager_new();
 
-    ordered_pipelines_.push_back(PipelineManager::__objects()[new_p]);
+    ordered_pipelines_.push_back(PipelineManager::manager_get(new_p).lock());
 
-    ordered_pipelines_.back()->set_ui_stage(stage);
-    ordered_pipelines_.back()->set_camera(camera);
-    ordered_pipelines_.back()->set_viewport(viewport);
-    ordered_pipelines_.back()->set_target(target);
-    ordered_pipelines_.back()->set_priority(priority);
-    ordered_pipelines_.back()->activate();
+    auto pipeline = PipelineManager::manager_get(new_p).lock();
 
+    pipeline->set_ui_stage(stage);
+    pipeline->set_camera(camera);
+    pipeline->set_viewport(viewport);
+    pipeline->set_target(target);
+    pipeline->set_priority(priority);
+    pipeline->activate();
+
+    std::lock_guard<std::mutex> lock(pipeline_lock_);
+    ordered_pipelines_.push_back(pipeline);
     sort_pipelines();
 
     return new_p;
@@ -359,15 +375,12 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
                 }
             }
 
-            //Go through the actor's material passes
-            for(uint8_t pass = 0; pass < mat->pass_count(); ++pass) {
-                // Get the group for this pass
-                RootGroup* group = priority_queue->get_or_create_pass(pass, &window_, stage_id, camera_id);
+            //Go through the actor's material passes building up the render tree
+            mat->each([&](uint32_t i, MaterialPass* pass) {
+                RootGroup* group = priority_queue->get_or_create_pass(i, &window_, stage_id, camera_id);
                 assert(group);
-
-                //Insert the actor into the RenderGroup tree
-                group->insert(*ent, pass, lights_intersecting_actor);
-            }
+                group->insert(ent.get(), pass, lights_intersecting_actor);
+            });
 
             actors_rendered++;
         }
@@ -386,10 +399,11 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
                 assert(pass_group);
 
                 std::function<void (Renderable&, MaterialPass&)> f = [=](Renderable& renderable, MaterialPass& pass) {
+                    pass.apply_staged_uniforms(pass.program->program.get());
                     renderer_->render(
                         renderable,
                         pipeline_stage->camera_id(),
-                        pass_group->get_root().current_program()
+                        pass.program.get()
                     );
                 };
                 pass_group->traverse(f);

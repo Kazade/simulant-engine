@@ -24,6 +24,7 @@
 #include "../camera.h"
 #include "../render_sequence.h"
 #include "../utils/gl_error.h"
+#include "../gpu_program.h"
 
 #include "interface.h"
 #include "ui_private.h"
@@ -118,11 +119,12 @@ public:
 
         L_INFO("UI shaders loaded, creating GPU program");
 
-        shader_ = GPUProgram::create();
-        shader_->set_shader_source(SHADER_TYPE_VERTEX, vert_shader);
-        shader_->set_shader_source(SHADER_TYPE_FRAGMENT, frag_shader);
+        auto program = GPUProgram::create();
+        program->set_shader_source(SHADER_TYPE_VERTEX, vert_shader);
+        program->set_shader_source(SHADER_TYPE_FRAGMENT, frag_shader);
 
-        window.idle->run_sync(std::bind(&GPUProgram::build, shader_.get()));
+        shader_ = GPUProgramInstance::create(program);
+        window.idle->run_sync(std::bind(&GPUProgram::build, program.get()));
     }
 
     ~RocketRenderInterface() {
@@ -219,9 +221,9 @@ public:
 
         prepare_shader(translation);
 
-        int pos_attrib = shader_->attributes().locate("position");
-        int colour_attrib = shader_->attributes().locate("colour");
-        int texcoord_attrib = shader_->attributes().locate("tex_coord");
+        int pos_attrib = shader_->attributes->locate("position");
+        int colour_attrib = shader_->attributes->locate("colour");
+        int texcoord_attrib = shader_->attributes->locate("tex_coord");
 
         GLCheck(glEnableVertexAttribArray, pos_attrib);
         GLCheck(glVertexAttribPointer,
@@ -262,11 +264,10 @@ public:
 
         assert(shader_);
 
-        shader_->build(); //Build if necessary
-
-        shader_->activate();
-        shader_->uniforms().set_mat4x4("modelview_projection", transform);
-        shader_->uniforms().set_int("texture_unit", 0);
+        shader_->program->build(); //Build if necessary
+        shader_->program->activate();
+        shader_->program->set_uniform_mat4x4("modelview_projection", transform);
+        shader_->program->set_uniform_int("texture_unit", 0);
     }
 
     void RenderCompiledGeometry(Rocket::Core::CompiledGeometryHandle geometry, const Rocket::Core::Vector2f& translation) {
@@ -289,9 +290,9 @@ public:
 
         geom->vao->bind();
 
-        int pos_attrib = shader_->attributes().locate("position");
-        int colour_attrib = shader_->attributes().locate("colour");
-        int texcoord_attrib = shader_->attributes().locate("tex_coord");
+        int pos_attrib = shader_->attributes->locate("position");
+        int colour_attrib = shader_->attributes->locate("colour");
+        int texcoord_attrib = shader_->attributes->locate("tex_coord");
 
         GLCheck(glEnableVertexAttribArray, pos_attrib);
         GLCheck(glVertexAttribPointer,
@@ -363,7 +364,7 @@ public:
 private:
     WindowBase& window_;
 
-    GPUProgram::ptr shader_;
+    std::shared_ptr<GPUProgramInstance> shader_;
 
     std::unordered_map<Rocket::Core::TextureHandle, TexturePtr> textures_;
 };

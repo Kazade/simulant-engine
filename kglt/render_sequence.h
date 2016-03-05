@@ -118,12 +118,13 @@ public:
     RenderOptions render_options;
 
 private:    
-    void sort_pipelines();
+    void sort_pipelines(bool acquire_lock=false);
     void run_pipeline(Pipeline::ptr stage, int& actors_rendered);
 
     WindowBase& window_;
     Renderer::ptr renderer_;
 
+    std::mutex pipeline_lock_;
     std::list<Pipeline::ptr> ordered_pipelines_;
 
     sig::signal<void (Pipeline&)> signal_pipeline_started_;
