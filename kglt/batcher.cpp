@@ -17,6 +17,8 @@
 
           ShaderNode <- GLSL shader is bound
               |
+          TextureNode <- Texture units
+              |
           DepthNode  <- Depth testing stuff
               |
           MaterialNode <- Uniform bindings
@@ -24,14 +26,8 @@
           BlendingNode <- Blending settings
               |
           RenderSettingsNode  <- Polygon mode
-              |         |
-            Meshes    TextureNode <- Texture units
-                        |
-                      Meshes
-
- FIXME: It's perhaps an error that texture unit grouping is so low in the tree, as texture switching
- is probably more expensive than everything else aside shader binding and moving it to below
- the shader node will likely result in improved performance.
+              |
+            Meshes
 */
 
 namespace kglt {
@@ -180,7 +176,19 @@ void RootGroup::generate_mesh_groups(RenderGroup* parent, Renderable* renderable
     }
 }
 
-void RootGroup::insert(Renderable *renderable, MaterialPass *pass, const std::vector<LightID>& lights) {
+void RootGroup::insert(Renderable *renderable, MaterialPass *pass, const std::vector<LightID>& lights) {    
+    auto texture_matrix_auto = [](uint8_t which) -> ShaderAvailableAuto {
+        switch(which) {
+        case 0: return SP_AUTO_MATERIAL_TEX_MATRIX0;
+        case 1: return SP_AUTO_MATERIAL_TEX_MATRIX1;
+        case 2: return SP_AUTO_MATERIAL_TEX_MATRIX2;
+        case 3: return SP_AUTO_MATERIAL_TEX_MATRIX3;
+        default:
+            throw ValueError("Invalid tex matrix index");
+        }
+    };
+
+
     if(!renderable->is_visible()) return;
 
     auto& program_instance = pass->program;
@@ -200,21 +208,21 @@ void RootGroup::insert(Renderable *renderable, MaterialPass *pass, const std::ve
 
     current = &current->get_or_create<TextureGroup>(TextureGroupData(units));
 
-    /*
-    RenderGroup* iteration_parent = &current->get_or_create<TextureGroup>(
-        TextureGroupData(tu, unit.texture_id())
-    );
+    std::vector<MatrixVariable> matrices(MAX_TEXTURE_MATRICES);
+    for(uint8_t i = 0; i < MAX_TEXTURE_MATRICES; ++i) {
+        if(i >= pass->texture_unit_count()) continue;
+        if(program_instance->uniforms->uses_auto(texture_matrix_auto(i))) {
+            auto name = program_instance->uniforms->auto_variable_name(
+                ShaderAvailableAuto(SP_AUTO_MATERIAL_TEX_MATRIX0 + i)
+            );
 
-    if(program_instance->uniforms->uses_auto(ShaderAvailableAuto(SP_AUTO_MATERIAL_TEX_MATRIX0 + tu))) {
-        auto name = program_instance->uniforms->auto_variable_name(
-            ShaderAvailableAuto(SP_AUTO_MATERIAL_TEX_MATRIX0 + tu)
-        );
-
-        iteration_parent = &iteration_parent->get_or_create<TextureMatrixGroup>(
-            TextureMatrixGroupData(tu, name, unit.matrix())
-        );
+            auto& unit = pass->texture_unit(i);
+            matrices[i].first.emplace(name);
+            matrices[i].second = unit.matrix();
+        }
     }
-    generate_mesh_groups(iteration_parent, renderable, pass, lights);*/
+
+    current = &current->get_or_create<TextureMatrixGroup>(TextureMatrixGroupData(matrices));
 
     //Add a node for depth settings
     current = &current->get_or_create<DepthGroup>(DepthGroupData(pass->depth_test_enabled(), pass->depth_write_enabled()));
@@ -335,7 +343,12 @@ void TextureGroup::unbind(GPUProgram *program) {
 }
 
 void TextureMatrixGroup::bind(GPUProgram *program) {
-    program->set_uniform_mat4x4(data_.matrix_variable, data_.matrix);
+    for(uint8_t i = 0; i < MAX_TEXTURE_MATRICES; ++i) {
+        auto& data = data_.texture_matrices_[i];
+        if(data.first) {
+            program->set_uniform_mat4x4(data.first.value(), data.second);
+        }
+    }
 }
 
 void TextureMatrixGroup::unbind(GPUProgram* program) {

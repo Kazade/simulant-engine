@@ -2,5 +2,6 @@
 #define MATERIAL_CONSTANTS_H
 
 static const uint32_t MAX_TEXTURE_UNITS = 8;
+static const uint32_t MAX_TEXTURE_MATRICES = 4;
 
 #endif // MATERIAL_CONSTANTS_H

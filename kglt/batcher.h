@@ -421,22 +421,38 @@ private:
     TextureGroupData data_;
 };
 
-struct TextureMatrixGroupData : public GroupData {
-    TextureMatrixGroupData(uint8_t texture_unit, std::string variable, Mat4 matrix):
-        unit(texture_unit),
-        matrix_variable(variable),
-        matrix(matrix) {}
+typedef std::pair<
+    std::experimental::optional<std::string>,
+    Mat4
+> MatrixVariable;
 
-    uint8_t unit;
-    std::string matrix_variable;
-    Mat4 matrix;
+struct TextureMatrixGroupData : public GroupData {
+    TextureMatrixGroupData(const std::vector<MatrixVariable>& texture_matrices) {
+        assert(texture_matrices.size() <= MAX_TEXTURE_MATRICES);
+
+        uint8_t i = 0;
+        for(auto& mat: texture_matrices) {
+            texture_matrices_[i] = mat;
+            ++i;
+        }
+    }
+
+    MatrixVariable texture_matrices_[MAX_TEXTURE_MATRICES];
 
     std::size_t do_hash() const {
         size_t seed = 0;
         hash_combine(seed, typeid(TextureMatrixGroupData).name());
-        hash_combine(seed, unit);
-        for(uint8_t i = 0; i < 16; ++i) {
-            hash_combine(seed, matrix.mat[i]);
+        for(uint8_t i = 0; i < MAX_TEXTURE_MATRICES; ++i) {
+            Mat4 matrix;
+            if(!texture_matrices_[i].first) {
+                kmMat4Identity(&matrix);
+            } else {
+                matrix = texture_matrices_[i].second;
+            }
+
+            for(uint8_t i = 0; i < 16; ++i) {
+                hash_combine(seed, matrix.mat[i]);
+            }
         }
         return seed;
     }
