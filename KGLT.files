@@ -197,7 +197,6 @@ kglt/input_controller.cpp
 kglt/testing/mock_window.h
 kglt/procedural/mesh/circle.h
 kglt/procedural/mesh/circle.cpp
-cmake_modules/FindAntTweakBar.cmake
 kglt/kazbase/testing.h
 tests/test_camera.h
 tests/main.cpp
@@ -226,7 +225,6 @@ kglt/ui/interface.h
 kglt/ui/interface.cpp
 kglt/ui/ui_private.h
 kglt/ui/element.cpp
-cmake_modules/FindLuabind.cmake
 kglt/ui/element.h
 kglt/kazbase/config/config_reader.h
 kglt/lua/interpreter.h
