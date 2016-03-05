@@ -173,7 +173,6 @@ void GenericRenderer::render(Renderable& buffer, CameraID camera, GPUProgramInst
     set_auto_attributes_on_shader(buffer);
     set_auto_uniforms_on_shader(*program, camera, buffer);
 
-    //Render the mesh, once for each iteration of the pass
     switch(buffer.arrangement()) {
         case MESH_ARRANGEMENT_POINTS:
             GLCheck(glDrawElements, GL_POINTS, index_count, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
