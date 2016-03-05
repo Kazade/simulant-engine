@@ -380,7 +380,7 @@ private:
 
 struct TextureGroupData : public GroupData {
     TextureGroupData(const std::vector<GLuint> texture_units){
-        assert(texture_units.size() < MAX_TEXTURE_UNITS);
+        assert(texture_units.size() <= MAX_TEXTURE_UNITS);
 
         std::fill(textures, textures + MAX_TEXTURE_UNITS, 0);
 

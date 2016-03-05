@@ -191,10 +191,33 @@ void RootGroup::insert(Renderable *renderable, MaterialPass *pass, const std::ve
     //Add a shader node
     current = &current->get_or_create<ShaderGroup>(ShaderGroupData(program_instance->program.get()));
 
-    //Add a node for depth settings
-    current = &current->get_or_create<DepthGroup>(
-        DepthGroupData(pass->depth_test_enabled(), pass->depth_write_enabled())
+    //Add the texture-related branches of the tree under the shader(
+    std::vector<GLuint> units(MAX_TEXTURE_UNITS, 0);
+    for(uint8_t tu = 0; tu < pass->texture_unit_count(); ++tu) {
+        auto& unit = pass->texture_unit(tu);
+        units[tu] = stage()->texture(unit.texture_id())->gl_tex();
+    }
+
+    current = &current->get_or_create<TextureGroup>(TextureGroupData(units));
+
+    /*
+    RenderGroup* iteration_parent = &current->get_or_create<TextureGroup>(
+        TextureGroupData(tu, unit.texture_id())
     );
+
+    if(program_instance->uniforms->uses_auto(ShaderAvailableAuto(SP_AUTO_MATERIAL_TEX_MATRIX0 + tu))) {
+        auto name = program_instance->uniforms->auto_variable_name(
+            ShaderAvailableAuto(SP_AUTO_MATERIAL_TEX_MATRIX0 + tu)
+        );
+
+        iteration_parent = &iteration_parent->get_or_create<TextureMatrixGroup>(
+            TextureMatrixGroupData(tu, name, unit.matrix())
+        );
+    }
+    generate_mesh_groups(iteration_parent, renderable, pass, lights);*/
+
+    //Add a node for depth settings
+    current = &current->get_or_create<DepthGroup>(DepthGroupData(pass->depth_test_enabled(), pass->depth_write_enabled()));
 
     //Add a node for the material properties
     current = &current->get_or_create<MaterialGroup>(generate_material_group_data(program_instance.get(), pass));
@@ -203,41 +226,11 @@ void RootGroup::insert(Renderable *renderable, MaterialPass *pass, const std::ve
     current = &current->get_or_create<BlendGroup>(BlendGroupData(pass->blending()));
 
     //Add a node for the render settings
-    current = &current->get_or_create<RenderSettingsGroup>(
-        RenderSettingsData(pass->point_size(), pass->polygon_mode())
-    );
+    current = &current->get_or_create<RenderSettingsGroup>(RenderSettingsData(pass->point_size(), pass->polygon_mode()));
 
-    if(!pass->texture_unit_count()) {
-        generate_mesh_groups(current, renderable, pass, lights);
-    } else {
-        //Add the texture-related branches of the tree under the shader(
-        std::vector<GLuint> units;
-        for(uint8_t tu = 0; tu < pass->texture_unit_count(); ++tu) {
-            auto& unit = pass->texture_unit(tu);
-
-            units.push_back(stage()->texture(unit.texture_id())->gl_tex());
-
-            /*
-            RenderGroup* iteration_parent = &current->get_or_create<TextureGroup>(
-                TextureGroupData(tu, unit.texture_id())
-            );
-
-            if(program_instance->uniforms->uses_auto(ShaderAvailableAuto(SP_AUTO_MATERIAL_TEX_MATRIX0 + tu))) {
-                auto name = program_instance->uniforms->auto_variable_name(
-                    ShaderAvailableAuto(SP_AUTO_MATERIAL_TEX_MATRIX0 + tu)
-                );
-
-                iteration_parent = &iteration_parent->get_or_create<TextureMatrixGroup>(
-                    TextureMatrixGroupData(tu, name, unit.matrix())
-                );
-            }
-            generate_mesh_groups(iteration_parent, renderable, pass, lights);*/
-        }
-
-        RenderGroup* iteration_parent = &current->get_or_create<TextureGroup>(TextureGroupData(units));
-        generate_mesh_groups(iteration_parent, renderable, pass, lights);
-    }
+    generate_mesh_groups(current, renderable, pass, lights);
 }
+
 
 void LightGroup::bind(GPUProgram* program) {
     if(!data_.light_id) {
