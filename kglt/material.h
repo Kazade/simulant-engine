@@ -19,6 +19,7 @@
 #include "generic/property.h"
 #include "types.h"
 #include "interfaces.h"
+#include "material_constants.h"
 
 namespace kglt {
 
@@ -90,7 +91,6 @@ enum IterationType {
     ITERATE_N,
     ITERATE_ONCE_PER_LIGHT
 };
-
 
 class MaterialPass:
     public Managed<MaterialPass>,

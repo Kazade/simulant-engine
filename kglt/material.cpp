@@ -29,8 +29,6 @@ static const unicode DEFAULT_FRAG_SHADER = R"(
     }
 )";
 
-static const uint32_t MAX_TEXTURE_UNITS = 8;
-
 TextureUnit::TextureUnit(MaterialPass &pass):
     pass_(&pass),
     time_elapsed_(0),
