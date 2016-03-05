@@ -19,13 +19,14 @@ public:
     }
 
     void test_group_creation() {
-        assert_false(root_group_->exists<TextureGroup>(TextureGroupData(0, TextureID())));
+        std::vector<GLuint> units;
+        units.push_back(1);
 
-        root_group_->get_or_create<TextureGroup>(TextureGroupData(0, TextureID())).get_or_create<TextureGroup>(TextureGroupData(1, TextureID(1)));
+        assert_false(root_group_->exists<TextureGroup>(TextureGroupData(units)));
 
-        assert_true(root_group_->exists<TextureGroup>(TextureGroupData(0, TextureID())));
-        assert_true(root_group_->get<TextureGroup>(TextureGroupData(0, TextureID())).exists<TextureGroup>(TextureGroupData(1, TextureID(1))));
-        assert_false(root_group_->get<TextureGroup>(TextureGroupData(0, TextureID())).exists<TextureGroup>(TextureGroupData(1, TextureID(2))));
+        root_group_->get_or_create<TextureGroup>(TextureGroupData(units));
+
+        assert_true(root_group_->exists<TextureGroup>(TextureGroupData(units)));
     }    
 
 private:

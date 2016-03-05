@@ -1,0 +1,6 @@
+#ifndef MATERIAL_CONSTANTS_H
+#define MATERIAL_CONSTANTS_H
+
+static const uint32_t MAX_TEXTURE_UNITS = 8;
+
+#endif // MATERIAL_CONSTANTS_H

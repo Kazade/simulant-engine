@@ -7,7 +7,7 @@
 #include <kazbase/exceptions.h>
 #include "kglt/types.h"
 #include "generic/auto_weakptr.h"
-
+#include "material_constants.h"
 //FIXME: Replace with std::optional when C++17 is done
 #include "std/optional.hpp"
 
@@ -379,18 +379,27 @@ private:
 };
 
 struct TextureGroupData : public GroupData {
-    TextureGroupData(uint8_t texture_unit, TextureID id):
-        unit(texture_unit),
-        texture_id(id) {}
+    TextureGroupData(const std::vector<GLuint> texture_units){
+        assert(texture_units.size() < MAX_TEXTURE_UNITS);
 
-    uint8_t unit;
-    TextureID texture_id;
+        std::fill(textures, textures + MAX_TEXTURE_UNITS, 0);
+
+        uint32_t i = 0;
+        for(auto& unit: texture_units) {
+            textures[i] = unit;
+            ++i;
+        }
+    }
+
+    GLuint textures[MAX_TEXTURE_UNITS] = {0};
 
     std::size_t do_hash() const {
         size_t seed = 0;
         hash_combine(seed, typeid(TextureGroupData).name());
-        hash_combine(seed, unit);
-        hash_combine(seed, texture_id.value());
+        for(uint8_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
+            hash_combine(seed, textures[i]);
+        }
+
         return seed;
     }
 };

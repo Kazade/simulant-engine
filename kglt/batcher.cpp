@@ -211,13 +211,17 @@ void RootGroup::insert(Renderable *renderable, MaterialPass *pass, const std::ve
         generate_mesh_groups(current, renderable, pass, lights);
     } else {
         //Add the texture-related branches of the tree under the shader(
+        std::vector<GLuint> units;
         for(uint8_t tu = 0; tu < pass->texture_unit_count(); ++tu) {
             auto& unit = pass->texture_unit(tu);
+
+            units.push_back(stage()->texture(unit.texture_id())->gl_tex());
+
+            /*
             RenderGroup* iteration_parent = &current->get_or_create<TextureGroup>(
                 TextureGroupData(tu, unit.texture_id())
             );
 
-            /* If this shader makes use of texture matrices, add a node for that */
             if(program_instance->uniforms->uses_auto(ShaderAvailableAuto(SP_AUTO_MATERIAL_TEX_MATRIX0 + tu))) {
                 auto name = program_instance->uniforms->auto_variable_name(
                     ShaderAvailableAuto(SP_AUTO_MATERIAL_TEX_MATRIX0 + tu)
@@ -227,8 +231,11 @@ void RootGroup::insert(Renderable *renderable, MaterialPass *pass, const std::ve
                     TextureMatrixGroupData(tu, name, unit.matrix())
                 );
             }
-            generate_mesh_groups(iteration_parent, renderable, pass, lights);
+            generate_mesh_groups(iteration_parent, renderable, pass, lights);*/
         }
+
+        RenderGroup* iteration_parent = &current->get_or_create<TextureGroup>(TextureGroupData(units));
+        generate_mesh_groups(iteration_parent, renderable, pass, lights);
     }
 }
 
@@ -320,15 +327,18 @@ void DepthGroup::unbind(GPUProgram *program) {
 }
 
 void TextureGroup::bind(GPUProgram* program) {
-    GLCheck(glActiveTexture, GL_TEXTURE0 + data_.unit);
-    RootGroup& root = static_cast<RootGroup&>(get_root());
-    GLuint tex_id = root.stage()->texture(data_.texture_id)->gl_tex();
-    GLCheck(glBindTexture, GL_TEXTURE_2D, tex_id);
+    for(uint8_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
+        GLuint unit = data_.textures[i];
+        GLCheck(glActiveTexture, GL_TEXTURE0 + i);
+        GLCheck(glBindTexture, GL_TEXTURE_2D, unit);
+    }
 }
 
 void TextureGroup::unbind(GPUProgram *program) {
-    GLCheck(glActiveTexture, GL_TEXTURE0 + data_.unit);
-    GLCheck(glBindTexture, GL_TEXTURE_2D, 0);
+    for(uint8_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
+        GLCheck(glActiveTexture, GL_TEXTURE0 + i);
+        GLCheck(glBindTexture, GL_TEXTURE_2D, 0);
+    }
 }
 
 void TextureMatrixGroup::bind(GPUProgram *program) {
