@@ -323,6 +323,19 @@ void ShaderGroup::unbind(GPUProgram *program) {
 }
 
 void AutoAttributeGroup::bind(GPUProgram *program) {
+    /*
+     *  This takes some explaining...
+     *
+     * So a GPUProgram can be shared across instances, however different instances of the same
+     * program could theoretically have different attributes enabled (unlikely) or use different
+     * variables. Also unfortunately changes don't take effect until you relink which is slow.
+     * Fortunately you can bind more than one variable name to an attribute index (aliasing)
+     * so what we do is we do is set the attribute locations for the material pass and then
+     * call relink() which only links if new attribute variables or locations were found.
+     * This means we may link a program a couple of times, but it'll settle down in the first
+     * frame or so.
+     */
+
     for(auto& p: data_.enabled_attributes) {
         program->set_attribute_location(p.first, (int32_t) p.second);
     }
