@@ -222,6 +222,12 @@ class GPUProgram:
 
 public:
     GPUProgram();
+    GPUProgram(const GPUProgram&) = delete;
+    GPUProgram& operator=(const GPUProgram&) = delete;
+
+    ~GPUProgram() {
+        L_DEBUG(_u("Destroying GPU program: {0}").format(program_object_));
+    }
 
     bool init() override;
     void cleanup() override;

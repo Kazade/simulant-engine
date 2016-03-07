@@ -318,7 +318,7 @@ void GPUProgram::build() {
     }
 
     if(!GLThreadCheck::is_current()) {
-        L_ERROR("Attempting to build a GPU program in the wrong thread");
+        throw LogicError("Attempting to build a GPU program in the wrong thread");
     }
 
     prepare_program();

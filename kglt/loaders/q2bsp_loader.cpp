@@ -47,11 +47,7 @@ enum LumpType {
     MAX_LUMPS
 };
 
-struct Point3f {
-    float x;
-    float y;
-    float z;
-};
+typedef kmVec3 Point3f;
 
 struct Point3s {
     int16_t x;
@@ -215,6 +211,17 @@ void add_lights_to_scene(Stage* stage, const std::vector<ActorProperties>& actor
     }
 }
 
+unicode locate_texture(const unicode& filename) {
+    std::vector<unicode> extensions = { ".tga", ".jpg", ".jpeg", ".png" };
+    for(auto& ext: extensions) {
+        if(os::path::exists(filename + ext)) {
+            return filename + ext;
+        }
+    }
+
+    return "";
+}
+
 void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     Loadable* res_ptr = &resource;
     Stage* stage = dynamic_cast<Stage*>(res_ptr);
@@ -277,18 +284,10 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     file.seekg(header.lumps[Q2::LumpType::FACE_EDGE_TABLE].offset);
     file.read((char*)&face_edges[0], sizeof(int32_t) * num_face_edges);
 
-    std::transform(vertices, vertices + num_vertices, [](Q2::Point3f& vert) {
+    std::for_each(vertices.begin(), vertices.end(), [&](Q2::Point3f& vert) {
         // Dirty casts, but it should work...
         kmVec3Transform((kmVec3*)&vert, (kmVec3*)&vert, &rotation);
     });
-
-
-    std::map<kglt::TextureID, uint32_t> mesh_for_texture;
-
-    uint16_t texinfo_idx = 0;
-    std::map<uint16_t, MaterialID> tex_info_to_material;
-    std::map<std::string, kglt::TextureID> tex_lookup;
-    std::map<std::string, std::pair<uint32_t, uint32_t> > texture_dimensions;
 
     /**
      *  Load the textures and generate materials
@@ -297,12 +296,14 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     MeshID mid = stage->new_mesh();
     auto mesh = stage->mesh(mid);
 
-    std::map<MaterialID, SubMeshID> material_to_submesh;
+    std::vector<MaterialID> materials;
+    std::vector<std::pair<uint32_t, uint32_t>> texture_dimensions;
+    std::unordered_map<MaterialID, SubMeshID> submeshes_by_material;
 
-    //We need to hold references here until the materials are attached to the mesh
-    std::vector<MaterialPtr> mat_ref_count_holder_;
-    std::vector<TexturePtr> tex_ref_count_holder_;
+    materials.resize(textures.size());
+    texture_dimensions.resize(textures.size());
 
+    uint32_t tex_idx = 0;
     for(Q2::TextureInfo& tex: textures) {
         kmVec3 u_axis, v_axis;
         kmVec3Fill(&u_axis, tex.u_axis.x, tex.u_axis.y, tex.u_axis.z);
@@ -317,40 +318,26 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         tex.v_axis.y = v_axis.y;
         tex.v_axis.z = v_axis.z;
 
-        ProtectedPtr<Texture> texture;
-        kglt::TextureID tid;
-        if(tex_lookup.find(tex.texture_name) != tex_lookup.end()) {
-            tid = tex_lookup[tex.texture_name];
+        auto texture_filename = locate_texture(tex.texture_name);
+        TextureID new_texture_id;
+        if(!texture_filename.empty()) {
+            new_texture_id = stage->new_texture_from_file(texture_filename);
         } else {
-            std::string texture_filename = "textures/" + std::string(tex.texture_name) + ".tga";
-
-            try {
-                texture = stage->texture(stage->new_texture_from_file(texture_filename));
-                tex_ref_count_holder_.push_back(texture.__object);
-            } catch(IOError& e) {
-                //Fallback texture
-                L_ERROR("Unable to find texture required by BSP file: " + texture_filename);
-                texture = stage->texture(checkerboard);
-            }
-
-            tid = texture->id();
-
-            //We need to store this to divide the texture coordinates later
-            texture_dimensions[tex.texture_name].first = texture->width();
-            texture_dimensions[tex.texture_name].second = texture->height();
-
-            tex_lookup[tex.texture_name] = tid;
+            new_texture_id = checkerboard;
         }
 
-        MaterialID mat_id = stage->new_material_from_texture(tid);
-        tex_info_to_material[texinfo_idx] = mat_id;
-        texinfo_idx++;
+        MaterialID new_material_id = stage->new_material_from_texture(new_texture_id);
 
-        L_DEBUG(_u("Associated material: {0}").format(mat_id.value()));
-        material_to_submesh[mat_id] = mesh->new_submesh_with_material(mat_id, MESH_ARRANGEMENT_TRIANGLES, VERTEX_SHARING_MODE_SHARED);
+        auto texture = stage->texture(new_texture_id);
+        texture_dimensions[tex_idx].first = texture->width();
+        texture_dimensions[tex_idx].second = texture->height();
+
+        materials[tex_idx] = new_material_id;
+        submeshes_by_material[new_material_id] = mesh->new_submesh_with_material(new_material_id);
+        tex_idx++;
     }
 
-    std::cout << "Num textures: " << tex_lookup.size() << std::endl;
+    std::cout << "Num textures: " << materials.size() << std::endl;
     std::cout << "Num submeshes: " << mesh->submesh_count() << std::endl;
 
     for(Q2::Face& f: faces) {
@@ -369,8 +356,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             }
         }
 
-        //Add a submesh for this face
-        SubMesh* sm = mesh->submesh(material_to_submesh[tex_info_to_material[f.texture_info]]);
+        auto material_id = materials[f.texture_info];
+        SubMesh* sm = mesh->submesh(submeshes_by_material[material_id]);
         Q2::TextureInfo& tex = textures[f.texture_info];
 
         kmVec3 normal;
@@ -400,9 +387,9 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             //Calculate the surface normal for this triangle
             kmVec3 normal;
             kmVec3 vec1, vec2;
-            kmVec3& v1 = positions[tri_idx[0]];
-            kmVec3& v2 = positions[tri_idx[1]];
-            kmVec3& v3 = positions[tri_idx[2]];
+            kmVec3& v1 = vertices[tri_idx[0]];
+            kmVec3& v2 = vertices[tri_idx[1]];
+            kmVec3& v3 = vertices[tri_idx[2]];
 
             kmVec3Subtract(&vec1, &v2, &v1);
             kmVec3Subtract(&vec2, &v3, &v1);
@@ -417,7 +404,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
                 }
 
 
-                kmVec3& pos = positions[tri_idx[j]];
+                kmVec3& pos = vertices[tri_idx[j]];
 
                 //We haven't done this before so calculate the vertex
                 float u = pos.x * tex.u_axis.x
@@ -428,8 +415,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
                         + pos.y * tex.v_axis.y
                         + pos.z * tex.v_axis.z + tex.v_offset;
 
-                float w = float(texture_dimensions[tex.texture_name].first);
-                float h = float(texture_dimensions[tex.texture_name].second);
+                float w = float(texture_dimensions[f.texture_info].first);
+                float h = float(texture_dimensions[f.texture_info].second);
 
                 mesh->shared_data().position(pos);
                 mesh->shared_data().normal(normal);
