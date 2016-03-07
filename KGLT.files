@@ -875,3 +875,5 @@ kglt/utils/debug_service.h
 kglt/utils/debug_service.cpp
 kglt/materials/simple_texture.kglm
 kglt/material_constants.h
+kglt/loaders/q2bsp_loader.h
+kglt/loaders/q2bsp_loader.cpp

@@ -159,24 +159,24 @@ void parse_actors(const std::string& actor_string, std::vector<ActorProperties>&
 
 }
 
-kmVec3 find_player_spawn_point(std::vector<ActorProperties>& actors) {
+Vec3 find_player_spawn_point(std::vector<ActorProperties>& actors) {
     for(ActorProperties p: actors) {
         std::cout << p["classname"] << std::endl;
         if(p["classname"] == "info_player_start") {
-            kmVec3 pos;
+            Vec3 pos;
             std::istringstream origin(p["origin"]);
             origin >> pos.x >> pos.y >> pos.z;
             std::cout << "Setting start position to: " << pos.x << ", " << pos.y << ", " << pos.z << std::endl;
             return pos;
         }
     }
-    kmVec3 none;
+    Vec3 none;
     kmVec3Fill(&none, 0, 0, 0);
 
     return none;
 }
 
-void add_lights_to_scene(WindowBase& window, const std::vector<ActorProperties>& actors) {
+void add_lights_to_scene(Stage* stage, const std::vector<ActorProperties>& actors) {
     //Needed because the Quake 2 coord system is weird
     kmMat4 rotation;
     kmMat4RotationX(&rotation, kmDegreesToRadians(-90.0f));
@@ -188,7 +188,7 @@ void add_lights_to_scene(WindowBase& window, const std::vector<ActorProperties>&
             origin >> pos.x >> pos.y >> pos.z;
 
             {
-                auto new_light = window.stage()->light(window.stage()->new_light());
+                auto new_light = stage->light(stage->new_light());
                 new_light->set_absolute_position(pos.x, pos.y, pos.z);
                 kmVec3Transform(&pos, &pos, &rotation);
 
@@ -218,7 +218,9 @@ void add_lights_to_scene(WindowBase& window, const std::vector<ActorProperties>&
 void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     Loadable* res_ptr = &resource;
     Stage* stage = dynamic_cast<Stage*>(res_ptr);
-    assert(window && "You passed a Resource that is not a window to the QBSP loader");
+    assert(stage && "You passed a Resource that is not a stage to the QBSP loader");
+
+    kglt::TextureID checkerboard = stage->new_texture_from_file("kglt/materials/checkerboard.png");
 
     std::ifstream file(filename_.encode().c_str(), std::ios::binary);
     if(!file.good()) {
@@ -244,11 +246,10 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     std::vector<ActorProperties> actors;
     parse_actors(actor_string, actors);
-    kmVec3 cam_pos = find_player_spawn_point(actors);
-    kmVec3Transform(&cam_pos, &cam_pos, &rotation);
-    window->stage()->camera()->set_absolute_position(cam_pos);
+    Vec3 cam_pos = find_player_spawn_point(actors);
+    stage->stash(cam_pos, "player_spawn");
 
-    add_lights_to_scene(*window, actors);
+    add_lights_to_scene(stage, actors);
 
     int32_t num_vertices = header.lumps[Q2::LumpType::VERTICES].length / sizeof(Q2::Point3f);
     std::vector<Q2::Point3f> vertices(num_vertices);
@@ -276,15 +277,11 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     file.seekg(header.lumps[Q2::LumpType::FACE_EDGE_TABLE].offset);
     file.read((char*)&face_edges[0], sizeof(int32_t) * num_face_edges);
 
-    std::vector<kmVec3> positions;
-    //Copy the vertices to the mesh
-    for(Q2::Point3f& p: vertices) {
-        kmVec3 point;
-        kmVec3Fill(&point, p.x, p.y, p.z);
-        kmVec3Transform(&point, &point, &rotation);
+    std::transform(vertices, vertices + num_vertices, [](Q2::Point3f& vert) {
+        // Dirty casts, but it should work...
+        kmVec3Transform((kmVec3*)&vert, (kmVec3*)&vert, &rotation);
+    });
 
-        positions.push_back(point);
-    }
 
     std::map<kglt::TextureID, uint32_t> mesh_for_texture;
 
@@ -297,20 +294,16 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
      *  Load the textures and generate materials
      */
 
-    MeshID mid = window->stage()->new_mesh();
-    auto mesh = window->stage()->mesh(mid);
+    MeshID mid = stage->new_mesh();
+    auto mesh = stage->mesh(mid);
 
-    std::map<MaterialID, SubMeshIndex> material_to_submesh;
+    std::map<MaterialID, SubMeshID> material_to_submesh;
 
     //We need to hold references here until the materials are attached to the mesh
     std::vector<MaterialPtr> mat_ref_count_holder_;
     std::vector<TexturePtr> tex_ref_count_holder_;
 
     for(Q2::TextureInfo& tex: textures) {
-        MaterialID mat_id = window->new_material_from_file(window->default_material_filename());
-        auto mat = window->material(mat_id);
-        mat_ref_count_holder_.push_back(mat.__object); //Prevent GC until we are done
-
         kmVec3 u_axis, v_axis;
         kmVec3Fill(&u_axis, tex.u_axis.x, tex.u_axis.y, tex.u_axis.z);
         kmVec3Fill(&v_axis, tex.v_axis.x, tex.v_axis.y, tex.v_axis.z);
@@ -332,21 +325,15 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             std::string texture_filename = "textures/" + std::string(tex.texture_name) + ".tga";
 
             try {
-                texture = window->stage()->texture(window->stage()->new_texture_from_file(texture_filename));
+                texture = stage->texture(stage->new_texture_from_file(texture_filename));
                 tex_ref_count_holder_.push_back(texture.__object);
             } catch(IOError& e) {
                 //Fallback texture
                 L_ERROR("Unable to find texture required by BSP file: " + texture_filename);
-                texture = window->stage()->texture(window->stage()->new_texture());
-                tex_ref_count_holder_.push_back(texture.__object);
-
-                //FIXME: Should be checkerboard, not starfield
-                kglt::procedural::texture::starfield(texture.__object, 64, 64);
+                texture = stage->texture(checkerboard);
             }
 
             tid = texture->id();
-
-            texture->upload(false, true, false, false);
 
             //We need to store this to divide the texture coordinates later
             texture_dimensions[tex.texture_name].first = texture->width();
@@ -355,19 +342,16 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             tex_lookup[tex.texture_name] = tid;
         }
 
-        //Set the texture for unit 0
-        mat->pass(0).set_texture_unit(0, tid);
-        mat->pass(0).set_blending(BLEND_NONE);
-
-        tex_info_to_material[texinfo_idx] = mat->id();
+        MaterialID mat_id = stage->new_material_from_texture(tid);
+        tex_info_to_material[texinfo_idx] = mat_id;
         texinfo_idx++;
 
-        L_DEBUG(_u("Associated material: {0}").format(mat->id().value()));
-        material_to_submesh[mat->id()] = mesh->new_submesh(mat->id(), MESH_ARRANGEMENT_TRIANGLES, true);
+        L_DEBUG(_u("Associated material: {0}").format(mat_id.value()));
+        material_to_submesh[mat_id] = mesh->new_submesh_with_material(mat_id, MESH_ARRANGEMENT_TRIANGLES, VERTEX_SHARING_MODE_SHARED);
     }
 
     std::cout << "Num textures: " << tex_lookup.size() << std::endl;
-    std::cout << "Num submeshes: " << mesh->submesh_ids().size() << std::endl;
+    std::cout << "Num submeshes: " << mesh->submesh_count() << std::endl;
 
     for(Q2::Face& f: faces) {
         std::vector<uint32_t> indexes;
@@ -386,7 +370,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         }
 
         //Add a submesh for this face
-        SubMesh& sm = mesh->submesh(material_to_submesh[tex_info_to_material[f.texture_info]]);
+        SubMesh* sm = mesh->submesh(material_to_submesh[tex_info_to_material[f.texture_info]]);
         Q2::TextureInfo& tex = textures[f.texture_info];
 
         kmVec3 normal;
@@ -428,7 +412,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             for(uint8_t j = 0; j < 3; ++j) {
                 if(container::contains(index_lookup, tri_idx[j])) {
                     //We've already processed this vertex
-                    sm.index_data().index(index_lookup[tri_idx[j]]);
+                    sm->index_data().index(index_lookup[tri_idx[j]]);
                     continue;
                 }
 
@@ -454,7 +438,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
                 mesh->shared_data().tex_coord1(u / w, v / h);
                 mesh->shared_data().move_next();
 
-                sm.index_data().index(mesh->shared_data().count() - 1);
+                sm->index_data().index(mesh->shared_data().count() - 1);
 
                 //Cache this new vertex in the lookup
                 index_lookup[tri_idx[j]] = mesh->shared_data().count() - 1;
@@ -463,18 +447,18 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     }
 
     mesh->shared_data().done();
-    for(SubMeshIndex i: mesh->submesh_ids()) {
+    mesh->each([&](SubMesh* submesh) {
         //Delete empty submeshes
-        if(!mesh->submesh(i).index_data().count()) {
-            mesh->delete_submesh(i);
-            continue;
-        }
-        mesh->submesh(i).index_data().done();
-    }
+        /*if(!submesh->index_data().count()) {
+            mesh->delete_submesh(submesh->id());
+            return;
+        }*/
+        submesh->index_data().done();
+    });
 
-    L_DEBUG(_u("Created an actor for mesh").format(mid));
+    L_DEBUG(_u("Created an actor for mesh: {0}").format(mid));
     //Finally, create an actor from the world mesh
-    window->stage()->new_actor(mid);
+    stage->new_actor(mid);
 }
 
 }
