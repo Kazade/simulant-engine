@@ -197,7 +197,7 @@ void RootGroup::insert(Renderable *renderable, MaterialPass *pass, const std::ve
     RenderGroup* current = this;
 
     //Add a shader node
-    current = &current->get_or_create<ShaderGroup>(ShaderGroupData(program_instance->program.get()));
+    current = &current->get_or_create<ShaderGroup>(ShaderGroupData(program_instance->_program_as_shared_ptr()));
 
     //Auto attributes
     std::map<std::string, ShaderAvailableAttributes> attributes;
@@ -249,6 +249,11 @@ void RootGroup::insert(Renderable *renderable, MaterialPass *pass, const std::ve
 
     //Add a node for the render settings
     current = &current->get_or_create<RenderSettingsGroup>(RenderSettingsData(pass->point_size(), pass->polygon_mode()));
+
+    //Add a node for any staged uniforms
+    current = &current->get_or_create<StagedUniformGroup>(
+        StagedUniformGroupData(pass->staged_float_uniforms(), pass->staged_int_uniforms())
+    );
 
     generate_mesh_groups(current, renderable, pass, lights);
 }
@@ -319,7 +324,8 @@ std::size_t ShaderGroupData::do_hash() const {
 }
 
 void ShaderGroup::unbind(GPUProgram *program) {
-
+    RootGroup& root = static_cast<RootGroup&>(get_root());
+    root.set_current_program(GPUProgram::ptr());
 }
 
 void AutoAttributeGroup::bind(GPUProgram *program) {
@@ -345,6 +351,23 @@ void AutoAttributeGroup::bind(GPUProgram *program) {
 }
 
 void AutoAttributeGroup::unbind(GPUProgram *program) {
+
+}
+
+void StagedUniformGroup::bind(GPUProgram *program) {
+    /* It's possible to set values for arbitrary uniforms, this
+     * node applies those */
+
+    for(auto& p: data_.float_uniforms) {
+        program->set_uniform_float(p.first, p.second);
+    }
+
+    for(auto& p: data_.int_uniforms) {
+        program->set_uniform_int(p.first, p.second);
+    }
+}
+
+void StagedUniformGroup::unbind(GPUProgram *program) {
 
 }
 

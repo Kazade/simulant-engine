@@ -156,16 +156,6 @@ void MaterialPass::set_albedo(float reflectiveness) {
     }
 }
 
-void MaterialPass::apply_staged_uniforms(GPUProgram* program) {
-    for(auto& p: int_uniforms_) {
-        program->set_uniform_int(p.first, p.second);
-    }
-
-    for(auto& p: float_uniforms_) {
-        program->set_uniform_float(p.first, p.second);
-    }
-}
-
 void Material::set_texture_unit_on_all_passes(uint32_t texture_unit_id, TextureID tex) {
     for(auto& p: passes_) {
         p->set_texture_unit(texture_unit_id, tex);

@@ -56,14 +56,16 @@ public:
     }
 
     ///Traverses the tree and calls the callback on each subactor we encounter
-    void traverse(std::function<void (Renderable&, MaterialPass&)> callback) {
-        bind(get_root().current_program());
+    void traverse(std::function<void (Renderable*, MaterialPass*)> callback) {
+        GPUProgram* program = get_root().current_program();
+
+        bind(program);
 
         for(auto& p: renderables_) {
             assert(p.first);
             assert(p.second);
 
-            callback(*p.first, *p.second);
+            callback(p.first, p.second);
         }
 
         for(std::pair<std::size_t, RenderGroups> groups: this->children_) {
@@ -72,7 +74,7 @@ public:
             }
         }
 
-        unbind(get_root().current_program());
+        unbind(program);
     }
 
     template<typename RenderGroupType>
@@ -155,8 +157,8 @@ public:
         children_.clear();
     }
 
-    void set_current_program(GPUProgram* program) { current_program_ = program; }
-    GPUProgram* current_program() const { return current_program_; }
+    void set_current_program(GPUProgram::ptr program) { current_program_ = program; }
+    GPUProgram* current_program() const { return current_program_.get(); }
 
 protected:
     RenderGroup* parent_;
@@ -169,7 +171,7 @@ private:
 
     std::list<std::pair<Renderable*, MaterialPass*> > renderables_;
 
-    GPUProgram* current_program_ = nullptr;
+    GPUProgram::ptr current_program_;
 };
 
 class RootGroup : public RenderGroup {
@@ -243,10 +245,10 @@ private:
 };
 
 struct ShaderGroupData : public GroupData {
-    ShaderGroupData(GPUProgram* program):
+    ShaderGroupData(GPUProgram::ptr program):
         shader_(program) {}
 
-    GPUProgram* shader_;
+    GPUProgram::ptr shader_;
 
     std::size_t do_hash() const;
 };
@@ -301,6 +303,51 @@ public:
 
 private:
     AutoAttributeGroupData data_;
+};
+
+typedef std::map<std::string, float> FloatUniforms;
+typedef std::map<std::string, int32_t> IntUniforms;
+
+struct StagedUniformGroupData : public GroupData {
+    FloatUniforms float_uniforms;
+    IntUniforms int_uniforms;
+
+    StagedUniformGroupData(FloatUniforms floats, IntUniforms ints):
+        float_uniforms(floats), int_uniforms(ints) {}
+
+    std::size_t do_hash() const {
+        size_t seed;
+
+        hash_combine(seed, typeid(StagedUniformGroupData).name());
+
+        // std::map is ordered so this will work
+        for(auto& p: float_uniforms) {
+            hash_combine(seed, p.first);
+            hash_combine(seed, p.second);
+        }
+
+        for(auto& p: int_uniforms) {
+            hash_combine(seed, p.first);
+            hash_combine(seed, p.second);
+        }
+
+        return seed;
+    }
+};
+
+class StagedUniformGroup : public RenderGroup {
+public:
+    typedef StagedUniformGroupData data_type;
+
+    StagedUniformGroup(RenderGroup* parent, StagedUniformGroupData data):
+        RenderGroup(parent),
+        data_(data) {}
+
+    void bind(GPUProgram *program);
+    void unbind(GPUProgram *program);
+
+private:
+    StagedUniformGroupData data_;
 };
 
 

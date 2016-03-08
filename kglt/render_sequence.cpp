@@ -398,15 +398,15 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
             queue->each([=](RootGroup* pass_group) {
                 assert(pass_group);
 
-                std::function<void (Renderable&, MaterialPass&)> f = [=](Renderable& renderable, MaterialPass& pass) {
-                    pass.apply_staged_uniforms(pass.program->program.get());
+                auto callback = [=](Renderable* renderable, MaterialPass* pass) {
                     renderer_->render(
-                        renderable,
+                        *renderable,
                         pipeline_stage->camera_id(),
-                        pass.program.get()
+                        pass->program.get()
                     );
                 };
-                pass_group->traverse(f);
+
+                pass_group->traverse(callback);
             });
         });
 

@@ -157,7 +157,9 @@ public:
         float_uniforms_[name] = value;
     }
 
-    void apply_staged_uniforms(GPUProgram* program);
+    std::map<std::string, float> staged_float_uniforms() const { return float_uniforms_; }
+    std::map<std::string, int> staged_int_uniforms() const { return int_uniforms_; }
+
     void set_prevent_textures(bool value) { allow_textures_ = !value; }
 
     Property<MaterialPass, Material> material = { this, &MaterialPass::material_ };
@@ -166,8 +168,8 @@ public:
 private:
     Material* material_;
 
-    std::unordered_map<std::string, float> float_uniforms_;
-    std::unordered_map<std::string, int> int_uniforms_;
+    std::map<std::string, float> float_uniforms_;
+    std::map<std::string, int> int_uniforms_;
 
     std::shared_ptr<GPUProgramInstance> program_;
 
