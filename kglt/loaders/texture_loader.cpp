@@ -19,13 +19,8 @@
 namespace kglt {
 namespace loaders {
 
-void TextureLoader::into(Loadable& resource, const LoaderOptions& options) {
-    Loadable* res_ptr = &resource;
-    Texture* tex = dynamic_cast<Texture*>(res_ptr);
-    assert(tex && "You passed a Resource that is not a texture to the texture loader");
-
-    auto str = this->data_->str();
-    std::vector<unsigned char> buffer(str.begin(), str.end());
+TextureLoadResult TextureLoader::do_load(const std::vector<uint8_t> &buffer) {
+    TextureLoadResult result;
 
     int width, height, channels;
     unsigned char* data = SOIL_load_image_from_memory(
@@ -37,18 +32,15 @@ void TextureLoader::into(Loadable& resource, const LoaderOptions& options) {
         SOIL_LOAD_AUTO
     );
 
-    if (!data) {
-        L_ERROR(_u("Unable to load texture with name: {0}").format(filename_));
-        throw IOError("Couldn't load the file: " + filename_.encode());
-    } else {
-        tex->set_bpp(channels * 8);
-        tex->resize(width, height);
-        tex->data().assign(data, data + (width * height * channels));
-
-        tex->flip_vertically();
-
+    if(data) {
+        result.width = (uint32_t) width;
+        result.height = (uint32_t) height;
+        result.channels = (uint32_t) channels;
+        result.data.assign(data, data + (width * height * channels));
         SOIL_free_image_data(data);
     }
+
+    return result;
 }
 
 }

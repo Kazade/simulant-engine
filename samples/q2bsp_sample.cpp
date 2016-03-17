@@ -14,6 +14,7 @@ public:
         prepare_basic_scene(stage_id_, camera_id_);
 
         auto stage = window->stage(stage_id_);
+        window->resource_locator->add_search_path("sample_data/q2");
         window->loader_for("sample_data/sample.bsp")->into(stage.get());
 
         stage->host_camera(camera_id_);

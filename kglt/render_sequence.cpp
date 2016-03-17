@@ -398,7 +398,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
             queue->each([=](RootGroup* pass_group) {
                 assert(pass_group);
 
-                auto callback = [=](Renderable* renderable, MaterialPass* pass) {
+                auto callback = [&](Renderable* renderable, MaterialPass* pass) {
                     renderer_->render(
                         *renderable,
                         pipeline_stage->camera_id(),
@@ -412,16 +412,6 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
 
         renderer_->set_current_stage(StageID());
     }
-
-/*
-    std::sort(buffers.begin(), buffers.end(), [](SubActor::ptr lhs, SubActor::ptr rhs) {
-        return lhs->_parent().render_priority() < rhs->_parent().render_priority();
-    });
-
-    //TODO: Batched rendering
-    renderer_->set_current_stage(stage.id());
-        renderer_->render(buffers, stage->camera_id());
-    renderer_->set_current_stage(StageID());*/
 
     signal_pipeline_finished_(*pipeline_stage);
 }

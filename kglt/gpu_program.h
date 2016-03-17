@@ -225,10 +225,6 @@ public:
     GPUProgram(const GPUProgram&) = delete;
     GPUProgram& operator=(const GPUProgram&) = delete;
 
-    ~GPUProgram() {
-        L_DEBUG(_u("Destroying GPU program: {0}").format(program_object_));
-    }
-
     bool init() override;
     void cleanup() override;
 
@@ -281,6 +277,7 @@ public:
         }
     }
 
+    GLuint program_object() const { return program_object_; }
 private:
     std::unordered_map<unicode, UniformInfo> uniform_info_;
     void prepare_program();

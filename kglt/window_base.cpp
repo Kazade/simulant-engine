@@ -16,6 +16,7 @@
 #include "loaders/particle_script.h"
 #include "loaders/heightmap_loader.h"
 #include "loaders/q2bsp_loader.h"
+#include "loaders/wal_loader.h"
 
 #include "sound.h"
 #include "camera.h"
@@ -79,21 +80,32 @@ RenderSequencePtr WindowBase::render_sequence() {
     return render_sequence_;
 }
 
-LoaderPtr WindowBase::loader_for(const unicode &filename) {
+LoaderPtr WindowBase::loader_for(const unicode &filename, LoaderHint hint) {
     unicode final_file = resource_locator->locate_file(filename);
 
-    std::vector<LoaderPtr> possible_loaders;
+    std::vector<std::pair<LoaderTypePtr, LoaderPtr>> possible_loaders;
 
     for(LoaderTypePtr loader_type: loaders_) {
         if(loader_type->supports(final_file)) {
-            possible_loaders.push_back(loader_type->loader_for(final_file, resource_locator->read_file(final_file)));
+            auto new_loader = loader_type->loader_for(final_file, resource_locator->read_file(final_file));
+            possible_loaders.push_back(
+                std::make_pair(loader_type, new_loader)
+            );
         }
     }
 
     if(possible_loaders.size() == 1) {
-        return possible_loaders.front();
+        return possible_loaders.front().second;
     } else if(possible_loaders.size() > 1) {
-        throw LogicError(_u("More than one possible loader was found for '{0}'. Please specify a loader name.").format(filename));
+        if(hint != LOADER_HINT_NONE) {
+            for(auto& p: possible_loaders) {
+                if(p.first->has_hint(hint)) {
+                    return p.second;
+                }
+            }
+        }
+
+        throw LogicError(_u("More than one possible loader was found for '{0}'. Please specify a hint.").format(filename));
     }
 
     throw DoesNotExist<Loader>((_u("Unable to find a loader for: ") + filename).encode());
@@ -159,6 +171,7 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
         register_loader(std::make_shared<kglt::loaders::TiledLoaderType>());
         register_loader(std::make_shared<kglt::loaders::HeightmapLoaderType>());
         register_loader(std::make_shared<kglt::loaders::Q2BSPLoaderType>());
+        register_loader(std::make_shared<kglt::loaders::WALLoaderType>());
 
         L_INFO("Initializing OpenAL");
         Sound::init_openal();

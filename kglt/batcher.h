@@ -68,10 +68,8 @@ public:
             callback(p.first, p.second);
         }
 
-        for(std::pair<std::size_t, RenderGroups> groups: this->children_) {
-            for(std::pair<std::size_t, std::shared_ptr<RenderGroup>> group: groups.second) {
-                group.second->traverse(callback);
-            }
+        for(std::pair<std::size_t, std::shared_ptr<RenderGroup>> group: this->children_) {
+            group.second->traverse(callback);
         }
 
         unbind(program);
@@ -81,12 +79,9 @@ public:
     RenderGroup& get_or_create(const GroupData& data) {
         static_assert(std::is_base_of<RenderGroup, RenderGroupType>::value, "RenderGroupType must derive RenderGroup");
 
-        size_t identifier = typeid(RenderGroupType).hash_code();
-
-        auto& container = children_[identifier];
-
         const typename RenderGroupType::data_type& cast_data = static_cast<const typename RenderGroupType::data_type&>(data);
 
+        auto& container = children_;
         RenderGroups::const_iterator it = container.find(data.hash());
 
         if(it != container.end()) {
@@ -101,35 +96,16 @@ public:
     template<typename RenderGroupType>
     bool exists(const GroupData& data) const {
         static_assert(std::is_base_of<RenderGroup, RenderGroupType>::value, "RenderGroupType must derive RenderGroup");
-
-        std::size_t hash = typeid(RenderGroupType).hash_code();
-
-        typename RenderGroupChildren::const_iterator it = children_.find(hash);
-        if(it == children_.end()) {
-            return false;
-        }
-
-        const RenderGroups& container = (*it).second;
-
-        return container.find(data.hash()) != container.end();
+        return children_.find(data.hash()) != children_.end();
     }
 
     template<typename RenderGroupType>
     RenderGroup& get(const GroupData& data) {
         static_assert(std::is_base_of<RenderGroup, RenderGroupType>::value, "RenderGroupType must derive RenderGroup");
 
-        std::size_t hash = typeid(RenderGroupType).hash_code();
+        RenderGroups::const_iterator it = children_.find(data.hash());
 
-        typename RenderGroupChildren::const_iterator child_it = children_.find(hash);
-        if(child_it == children_.end()) {
-            throw DoesNotExist<RenderGroupType>();
-        }
-
-        const RenderGroups& container = (*child_it).second;
-
-        RenderGroups::const_iterator it = container.find(data.hash());
-
-        if(it != container.end()) {
+        if(it != children_.end()) {
             return *(*it).second;
         } else {
             throw DoesNotExist<RenderGroupType>();
@@ -149,10 +125,8 @@ public:
 
     void clear() {
         renderables_.clear();
-        for(auto groups: children_) {
-            for(auto group: groups.second) {
-                group.second->clear();
-            }
+        for(auto group: children_) {
+            group.second->clear();
         }
         children_.clear();
     }
@@ -165,9 +139,8 @@ protected:
 
 private:
     typedef std::unordered_map<std::size_t, std::shared_ptr<RenderGroup> > RenderGroups;
-    typedef std::unordered_map<std::size_t, RenderGroups> RenderGroupChildren;
 
-    RenderGroupChildren children_;
+    RenderGroups children_;
 
     std::list<std::pair<Renderable*, MaterialPass*> > renderables_;
 

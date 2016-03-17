@@ -191,7 +191,7 @@ void RootGroup::insert(Renderable *renderable, MaterialPass *pass, const std::ve
 
     if(!renderable->is_visible()) return;
 
-    auto& program_instance = pass->program;
+    auto program_instance = pass->program.get();
 
     //First, let's build the texture units
     RenderGroup* current = this;
@@ -242,7 +242,7 @@ void RootGroup::insert(Renderable *renderable, MaterialPass *pass, const std::ve
     current = &current->get_or_create<DepthGroup>(DepthGroupData(pass->depth_test_enabled(), pass->depth_write_enabled()));
 
     //Add a node for the material properties
-    current = &current->get_or_create<MaterialGroup>(generate_material_group_data(program_instance.get(), pass));
+    current = &current->get_or_create<MaterialGroup>(generate_material_group_data(program_instance, pass));
 
     //Add a node for the blending type
     current = &current->get_or_create<BlendGroup>(BlendGroupData(pass->blending()));
@@ -318,8 +318,13 @@ void ShaderGroup::bind(GPUProgram* program) {
 
 std::size_t ShaderGroupData::do_hash() const {
     size_t seed = 0;
+
+    // IMPORTANT! If this hasn't been called at some point then the program object
+    // always returns zero which breaks everything
+    shader_->build();
+
     hash_combine(seed, typeid(ShaderGroupData).name());
-    hash_combine(seed, shader_->md5());
+    hash_combine(seed, shader_->program_object());
     return seed;
 }
 

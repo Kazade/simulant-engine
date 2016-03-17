@@ -49,7 +49,6 @@ unicode ResourceLocator::locate_file(const unicode &filename) const {
         }
     }
 #endif
-    L_ERROR("Unable to find the specified file: " + filename.encode());
     throw IOError(_u("Unable to find file: ") + filename);
 }
 

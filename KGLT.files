@@ -877,3 +877,5 @@ kglt/materials/simple_texture.kglm
 kglt/material_constants.h
 kglt/loaders/q2bsp_loader.h
 kglt/loaders/q2bsp_loader.cpp
+kglt/loaders/wal_loader.h
+kglt/loaders/wal_loader.cpp

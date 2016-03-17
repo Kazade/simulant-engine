@@ -30,7 +30,8 @@ public:
         */
 
         ///Shortcut function for loading images
-        kglt::TextureID tid = stage->new_texture_from_file("sample_data/sample.tga");
+        //kglt::TextureID tid = stage->new_texture_from_file("sample_data/sample.tga");
+        kglt::TextureID tid = stage->new_texture_from_file("sample_data/q2/e1u2/metal9_3.wal");
         kglt::MaterialID matid = stage->new_material_from_texture(tid);
 
         stage->set_ambient_light(kglt::Colour::WHITE);

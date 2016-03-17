@@ -211,11 +211,13 @@ void add_lights_to_scene(Stage* stage, const std::vector<ActorProperties>& actor
     }
 }
 
-unicode locate_texture(const unicode& filename) {
-    std::vector<unicode> extensions = { ".tga", ".jpg", ".jpeg", ".png" };
+unicode locate_texture(ResourceLocator& locator, const unicode& filename) {
+    std::vector<unicode> extensions = { ".wal", ".jpg", ".tga", ".jpeg", ".png" };
     for(auto& ext: extensions) {
-        if(os::path::exists(filename + ext)) {
-            return filename + ext;
+        try {
+            return locator.locate_file(filename + ext);
+        } catch(IOError&) {
+            continue;
         }
     }
 
@@ -318,11 +320,12 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         tex.v_axis.y = v_axis.y;
         tex.v_axis.z = v_axis.z;
 
-        auto texture_filename = locate_texture(tex.texture_name);
+        auto texture_filename = locate_texture(*stage->window->resource_locator.get(), tex.texture_name);
         TextureID new_texture_id;
         if(!texture_filename.empty()) {
             new_texture_id = stage->new_texture_from_file(texture_filename);
         } else {
+            L_DEBUG(_u("Texture {0} was missing").format(tex.texture_name));
             new_texture_id = checkerboard;
         }
 
