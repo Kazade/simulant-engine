@@ -72,10 +72,11 @@ TextureLoadResult WALLoader::do_load(const std::vector<uint8_t> &buffer) {
     result.height = header->height;
     result.channels = 4;
 
-    uint8_t* data = ((uint8_t*)&buffer[0]) + sizeof(Header);
+    uint8_t* data = (uint8_t*) &buffer[0];
+    data += header->offset[0];
 
     for(uint32_t i = 0; i < result.width * result.height; ++i) {
-        auto idx = data[i];
+        auto idx = data[i] * 3;
         result.data.push_back(PALETTE[idx]);
         result.data.push_back(PALETTE[idx+1]);
         result.data.push_back(PALETTE[idx+2]);
