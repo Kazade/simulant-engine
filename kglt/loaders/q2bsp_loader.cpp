@@ -305,6 +305,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     materials.resize(textures.size());
     texture_dimensions.resize(textures.size());
 
+    std::map<std::string, TextureID> texture_lookup;
+
     uint32_t tex_idx = 0;
     for(Q2::TextureInfo& tex: textures) {
         kmVec3 u_axis, v_axis;
@@ -320,13 +322,20 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         tex.v_axis.y = v_axis.y;
         tex.v_axis.z = v_axis.z;
 
-        auto texture_filename = locate_texture(*stage->window->resource_locator.get(), tex.texture_name);
         TextureID new_texture_id;
-        if(!texture_filename.empty()) {
-            new_texture_id = stage->new_texture_from_file(texture_filename);
+        std::string texture_name = tex.texture_name;
+
+        if(texture_lookup.count(texture_name)) {
+            new_texture_id = texture_lookup[texture_name];
         } else {
-            L_DEBUG(_u("Texture {0} was missing").format(tex.texture_name));
-            new_texture_id = checkerboard;
+            auto texture_filename = locate_texture(*stage->window->resource_locator.get(), texture_name);
+            if(!texture_filename.empty()) {
+                new_texture_id = stage->new_texture_from_file(texture_filename);
+            } else {
+                L_DEBUG(_u("Texture {0} was missing").format(tex.texture_name));
+                new_texture_id = checkerboard;
+            }
+            texture_lookup[texture_name] = new_texture_id;
         }
 
         MaterialID new_material_id = stage->new_material_from_texture(new_texture_id);
