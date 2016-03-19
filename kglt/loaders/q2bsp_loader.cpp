@@ -229,7 +229,25 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     Stage* stage = dynamic_cast<Stage*>(res_ptr);
     assert(stage && "You passed a Resource that is not a stage to the QBSP loader");
 
+    std::map<std::string, TextureID> texture_lookup;
     kglt::TextureID checkerboard = stage->new_texture_from_file("kglt/materials/checkerboard.png");
+
+    auto find_or_load_texture = [&](const std::string& texture_name) -> TextureID {
+        if(texture_lookup.count(texture_name)) {
+            return texture_lookup[texture_name];
+        } else {
+            TextureID new_texture_id;
+            auto texture_filename = locate_texture(*stage->window->resource_locator.get(), texture_name);
+            if(!texture_filename.empty()) {
+                new_texture_id = stage->new_texture_from_file(texture_filename);
+            } else {
+                L_DEBUG(_u("Texture {0} was missing").format(texture_name));
+                new_texture_id = checkerboard;
+            }
+            texture_lookup[texture_name] = new_texture_id;
+            return new_texture_id;
+        }
+    };
 
     std::ifstream file(filename_.encode().c_str(), std::ios::binary);
     if(!file.good()) {
@@ -305,8 +323,6 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     materials.resize(textures.size());
     texture_dimensions.resize(textures.size());
 
-    std::map<std::string, TextureID> texture_lookup;
-
     uint32_t tex_idx = 0;
     for(Q2::TextureInfo& tex: textures) {
         kmVec3 u_axis, v_axis;
@@ -322,22 +338,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         tex.v_axis.y = v_axis.y;
         tex.v_axis.z = v_axis.z;
 
-        TextureID new_texture_id;
-        std::string texture_name = tex.texture_name;
-
-        if(texture_lookup.count(texture_name)) {
-            new_texture_id = texture_lookup[texture_name];
-        } else {
-            auto texture_filename = locate_texture(*stage->window->resource_locator.get(), texture_name);
-            if(!texture_filename.empty()) {
-                new_texture_id = stage->new_texture_from_file(texture_filename);
-            } else {
-                L_DEBUG(_u("Texture {0} was missing").format(tex.texture_name));
-                new_texture_id = checkerboard;
-            }
-            texture_lookup[texture_name] = new_texture_id;
-        }
-
+        TextureID new_texture_id = find_or_load_texture(tex.texture_name);
         MaterialID new_material_id = stage->new_material_from_texture(new_texture_id);
 
         auto texture = stage->texture(new_texture_id);
