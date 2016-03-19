@@ -60,13 +60,25 @@ struct Edge {
     uint16_t b;
 };
 
+enum SurfaceFlag {
+    SURFACE_FLAG_NONE = 0x0,
+    SURFACE_FLAG_LIGHT = 0x1,
+    SURFACE_FLAG_SLICK = 0x2,
+    SURFACE_FLAG_SKY = 0x4,
+    SURFACE_FLAG_WARP = 0x8,
+    SURFACE_FLAG_TRANS_33 = 0x10,
+    SURFACE_FLAG_TRANS_66 = 0x20,
+    SURFACE_FLAG_FLOWING = 0x40,
+    SURFACE_FLAG_NO_DRAW = 0x80
+};
+
 struct TextureInfo {
     Point3f u_axis;
     float u_offset;
     Point3f v_axis;
     float v_offset;
 
-    uint32_t flags;
+    SurfaceFlag flags;
     uint32_t value;
 
     char texture_name[32];
@@ -224,6 +236,18 @@ unicode locate_texture(ResourceLocator& locator, const unicode& filename) {
     return "";
 }
 
+struct LightmapBuffer {
+    LightmapBuffer(uint32_t num_lightmaps) {
+        buffer.resize(16 * 16 * 3 * num_lightmaps, 0);
+    }
+
+    uint8_t* buffer_for_lightmap(uint32_t idx) {
+        return &buffer[16 * 16 * 3 * idx];
+    }
+
+    std::vector<uint8_t> buffer;
+};
+
 void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     Loadable* res_ptr = &resource;
     Stage* stage = dynamic_cast<Stage*>(res_ptr);
@@ -231,6 +255,20 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     std::map<std::string, TextureID> texture_lookup;
     kglt::TextureID checkerboard = stage->new_texture_from_file("kglt/materials/checkerboard.png");
+
+    auto texture_info_visible = [](Q2::TextureInfo& info) -> bool {
+        /* Don't draw invisible things */
+        if((info.flags & Q2::SURFACE_FLAG_NO_DRAW) == Q2::SURFACE_FLAG_NO_DRAW) {
+            return false;
+        }
+
+        /* Don't use sky faces (might change this... could create a skybox) */
+        if((info.flags & Q2::SURFACE_FLAG_SKY) == Q2::SURFACE_FLAG_SKY) {
+            return false;
+        }
+
+        return true;
+    };
 
     auto find_or_load_texture = [&](const std::string& texture_name) -> TextureID {
         if(texture_lookup.count(texture_name)) {
@@ -309,6 +347,27 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         kmVec3Transform((kmVec3*)&vert, (kmVec3*)&vert, &rotation);
     });
 
+    /* Lightmaps are a bunch of fun! There is one lightmap per-face, and that might be up to 16x16 - but
+     * can be smaller. Each face has the byte offset to the lightmap in the file, and the width and height of
+     * the lightmap is defined by some weird calculation. So you can't just read all the lightmaps without first
+     * reading the faces. So we read the lump into memory, then while we process the faces we pack the lightmap into
+     * a texture which is sqrt(num_faces) * 16 wide and tall and then manipulate the texture coords appropriately.
+     */
+
+    LightmapBuffer lightmap_buffer(num_faces);
+    auto process_lightmap = [&lightmap_buffer](uint32_t face_idx, Q2::Face& face, uint8_t* source_data) {
+        auto* data = lightmap_buffer.buffer_for_lightmap(face_idx);
+
+        /*auto width = ?;
+        auto height = ?;*/
+
+    };
+
+    int32_t lightmap_data_size = header.lumps[Q2::LumpType::LIGHTMAPS].length;
+    std::vector<uint8_t> lightmap_data(lightmap_data_size);
+    file.seekg(header.lumps[Q2::LumpType::LIGHTMAPS].offset);
+    file.read((char*)&lightmap_data[0], lightmap_data_size);
+
     /**
      *  Load the textures and generate materials
      */
@@ -325,6 +384,11 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     uint32_t tex_idx = 0;
     for(Q2::TextureInfo& tex: textures) {
+        if(!texture_info_visible(tex)) {
+            ++tex_idx;
+            continue;
+        }
+
         kmVec3 u_axis, v_axis;
         kmVec3Fill(&u_axis, tex.u_axis.x, tex.u_axis.y, tex.u_axis.z);
         kmVec3Fill(&v_axis, tex.v_axis.x, tex.v_axis.y, tex.v_axis.z);
@@ -350,10 +414,17 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         tex_idx++;
     }
 
-    std::cout << "Num textures: " << materials.size() << std::endl;
+    std::cout << "Num textures: " << texture_lookup.size() << std::endl;
     std::cout << "Num submeshes: " << mesh->submesh_count() << std::endl;
 
+    uint32_t face_index = 0;
     for(Q2::Face& f: faces) {
+        Q2::TextureInfo& tex = textures[f.texture_info];
+
+        if(!texture_info_visible(tex)) {
+            continue;
+        }
+
         std::vector<uint32_t> indexes;
         for(uint32_t i = f.first_edge; i < f.first_edge + f.num_edges; ++i) {
             int32_t edge_idx = face_edges[i];
@@ -371,10 +442,9 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
         auto material_id = materials[f.texture_info];
         SubMesh* sm = mesh->submesh(submeshes_by_material[material_id]);
-        Q2::TextureInfo& tex = textures[f.texture_info];
 
-        kmVec3 normal;
-        kmVec3Fill(&normal, 0, 1, 0);
+
+        process_lightmap(face_index, f, &lightmap_data[0] + f.lightmap_offset);
 
         /*
          *  A unique vertex is defined by a combination of the position ID and the
@@ -389,6 +459,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
          */
 
         std::map<uint32_t, uint32_t> index_lookup;
+        kmVec3 normal;
+        kmVec3Fill(&normal, 0, 1, 0);
 
         for(int16_t i = 1; i < (int16_t) indexes.size() - 1; ++i) {
             uint32_t tri_idx[] = {
@@ -444,6 +516,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
                 index_lookup[tri_idx[j]] = mesh->shared_data().count() - 1;
             }
         }
+
+        ++face_index;
     }
 
     mesh->shared_data().done();
