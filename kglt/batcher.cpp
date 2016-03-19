@@ -456,7 +456,6 @@ void MaterialGroup::unbind(GPUProgram *program) {
 
 void BlendGroup::bind(GPUProgram* program) {
     if(data_.type == BLEND_NONE) {
-        GLCheck(glDisable, GL_BLEND);
         return;
     }
 
@@ -478,7 +477,9 @@ void BlendGroup::bind(GPUProgram* program) {
 }
 
 void BlendGroup::unbind(GPUProgram *program) {
-    GLCheck(glDisable, GL_BLEND);
+    if(data_.type != BLEND_NONE) {
+        GLCheck(glDisable, GL_BLEND);
+    }
 }
 
 void RenderSettingsGroup::bind(GPUProgram* program) {

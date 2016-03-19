@@ -11,7 +11,8 @@ public:
         kglt::Screen<GameScreen>(window, "game_screen") {}
 
     void do_load() {
-        prepare_basic_scene(stage_id_, camera_id_);
+        pid_ = prepare_basic_scene(stage_id_, camera_id_);
+        window->disable_pipeline(pid_);
 
         auto stage = window->stage(stage_id_);
         window->resource_locator->add_search_path("sample_data/q2");
@@ -33,12 +34,13 @@ public:
     }
 
     void do_activate() {
-
+        window->enable_pipeline(pid_);
     }
 
 private:
     StageID stage_id_;
     CameraID camera_id_;
+    PipelineID pid_;
 };
 
 
