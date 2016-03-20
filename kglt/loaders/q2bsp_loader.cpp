@@ -237,14 +237,72 @@ unicode locate_texture(ResourceLocator& locator, const unicode& filename) {
 }
 
 struct LightmapBuffer {
+    const uint32_t LIGHTMAP_SIZE = 16;
+    const uint32_t LIGHTMAP_CHANNELS = 3;
+
     LightmapBuffer(uint32_t num_lightmaps) {
-        buffer.resize(16 * 16 * 3 * num_lightmaps, 0);
+        buffer.resize(LIGHTMAP_SIZE * LIGHTMAP_SIZE * LIGHTMAP_CHANNELS * num_lightmaps, 0);
+
+        horiz = uint32_t(sqrt(num_lightmaps));
+        vert = num_lightmaps / horiz;
     }
 
-    uint8_t* buffer_for_lightmap(uint32_t idx) {
-        return &buffer[16 * 16 * 3 * idx];
+    void write_lightmap(uint32_t index, uint8_t* data, uint32_t width, uint32_t height) {
+        uint32_t buffer_width = horiz * LIGHTMAP_SIZE * LIGHTMAP_CHANNELS;
+
+        uint32_t target_x = index % horiz;
+        uint32_t target_y = index / horiz;
+
+        uint32_t texel = ((target_y * buffer_width) + target_x) * LIGHTMAP_CHANNELS;
+
+        for(uint32_t y = 0; y < LIGHTMAP_SIZE; ++y) {
+            for(uint32_t x = 0; x < LIGHTMAP_SIZE; ++x) {
+                uint32_t source_idx = ((y * width) + x) * LIGHTMAP_CHANNELS;
+
+                // If we are within the bounds of the source lightmap, then
+                // copy the data for this texel to the right place
+                if(x < width && y < height) {
+                    buffer.at(texel) = data[source_idx];
+                    buffer.at(texel + 1) = data[source_idx + 1];
+                    buffer.at(texel + 2) = data[source_idx + 2];
+                }
+
+                // If we just did the last x-iteration, then rewind, then drop
+                // down to the next line
+                if(x == LIGHTMAP_SIZE - 1) {
+                    texel -= LIGHTMAP_SIZE * LIGHTMAP_CHANNELS;
+                    texel += buffer_width;
+                } else {
+                    // Otherwise, move to the next texel
+                    texel += LIGHTMAP_CHANNELS;
+                }
+            }
+        }
     }
 
+    std::pair<float, float> transform_uv(uint32_t index, float u, float v) const {
+        float ret_u = u / float(horiz);
+        float ret_v = v / float(vert);
+
+        uint32_t x = index % horiz;
+        uint32_t y = index / horiz;
+
+        ret_u += (1.0 / horiz) * x;
+        ret_v += (1.0 / vert) * y;
+
+        return std::make_pair(ret_u, ret_v);
+    }
+
+    const uint32_t width_in_texels() const {
+        return horiz * LIGHTMAP_SIZE;
+    }
+
+    const uint32_t height_in_texels() const {
+        return vert * LIGHTMAP_SIZE;
+    }
+
+    uint32_t horiz = 0;
+    uint32_t vert = 0;
     std::vector<uint8_t> buffer;
 };
 
@@ -254,7 +312,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     assert(stage && "You passed a Resource that is not a stage to the QBSP loader");
 
     std::map<std::string, TextureID> texture_lookup;
-    kglt::TextureID checkerboard = stage->new_texture_from_file("kglt/materials/checkerboard.png");
+    TextureID checkerboard = stage->new_texture_from_file("kglt/materials/checkerboard.png");
+    TextureID lightmap_texture = stage->new_texture(false);
 
     auto texture_info_visible = [](Q2::TextureInfo& info) -> bool {
         /* Don't draw invisible things */
@@ -355,12 +414,11 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
      */
 
     LightmapBuffer lightmap_buffer(num_faces);
-    auto process_lightmap = [&lightmap_buffer](uint32_t face_idx, Q2::Face& face, uint8_t* source_data) {
-        auto* data = lightmap_buffer.buffer_for_lightmap(face_idx);
+    auto process_lightmap = [&lightmap_buffer](uint32_t face_idx, uint8_t* source_data, float min_u, float max_u, float min_v, float max_v) {
+        auto lightmap_width  = ceil(max_u / 16) - floor(min_u / 16) + 1;
+        auto lightmap_height = ceil(max_v / 16) - floor(min_v / 16) + 1;
 
-        /*auto width = ?;
-        auto height = ?;*/
-
+        lightmap_buffer.write_lightmap(face_idx, source_data, lightmap_width, lightmap_height);
     };
 
     int32_t lightmap_data_size = header.lumps[Q2::LumpType::LIGHTMAPS].length;
@@ -403,7 +461,13 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         tex.v_axis.z = v_axis.z;
 
         TextureID new_texture_id = find_or_load_texture(tex.texture_name);
-        MaterialID new_material_id = stage->new_material_from_texture(new_texture_id);
+        MaterialID new_material_id = stage->new_material_from_file("kglt/materials/generic_multitexture.kglm");
+
+        {
+            auto mat = stage->material(new_material_id);
+            mat->pass(0).set_texture_unit(0, new_texture_id);
+            mat->pass(0).set_texture_unit(1, lightmap_texture);
+        }
 
         auto texture = stage->texture(new_texture_id);
         texture_dimensions[tex_idx].first = texture->width();
@@ -443,9 +507,6 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         auto material_id = materials[f.texture_info];
         SubMesh* sm = mesh->submesh(submeshes_by_material[material_id]);
 
-
-        process_lightmap(face_index, f, &lightmap_data[0] + f.lightmap_offset);
-
         /*
          *  A unique vertex is defined by a combination of the position ID and the
          *  texture_info index (because texture coordinates depend on both and some
@@ -461,6 +522,9 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         std::map<uint32_t, uint32_t> index_lookup;
         kmVec3 normal;
         kmVec3Fill(&normal, 0, 1, 0);
+
+        float min_u = 10000, max_u = -10000;
+        float min_v = 10000, max_v = -10000;
 
         for(int16_t i = 1; i < (int16_t) indexes.size() - 1; ++i) {
             uint32_t tri_idx[] = {
@@ -500,6 +564,11 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
                         + pos.y * tex.v_axis.y
                         + pos.z * tex.v_axis.z + tex.v_offset;
 
+                if(u < min_u) min_u = u;
+                if(u > max_u) max_u = u;
+                if(v < min_v) min_v = v;
+                if(v > max_v) max_v = v;
+
                 float w = float(texture_dimensions[f.texture_info].first);
                 float h = float(texture_dimensions[f.texture_info].second);
 
@@ -507,7 +576,9 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
                 mesh->shared_data().normal(normal);
                 mesh->shared_data().diffuse(kglt::Colour::WHITE);
                 mesh->shared_data().tex_coord0(u / w, v / h);
-                mesh->shared_data().tex_coord1(u / w, v / h);
+
+                auto lightmap_coords = lightmap_buffer.transform_uv(face_index, u / w, v / h);
+                mesh->shared_data().tex_coord1(lightmap_coords.first, lightmap_coords.second);
                 mesh->shared_data().move_next();
 
                 sm->index_data().index(mesh->shared_data().count() - 1);
@@ -517,7 +588,18 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             }
         }
 
+        process_lightmap(face_index, &lightmap_data[0] + f.lightmap_offset, min_u, max_u, min_v, max_v);
+
         ++face_index;
+    }
+
+    /* Now upload the lightmap texture */
+    {
+        auto lightmap = stage->texture(lightmap_texture);
+        lightmap->resize(lightmap_buffer.width_in_texels(), lightmap_buffer.height_in_texels());
+        lightmap->set_bpp(24); // RGB only, no alpha
+        lightmap->data().assign(lightmap_buffer.buffer.begin(), lightmap_buffer.buffer.end());
+        lightmap->upload(false, false, false, true);
     }
 
     mesh->shared_data().done();
