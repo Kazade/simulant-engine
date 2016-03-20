@@ -8,6 +8,9 @@
 #include "kglt/types.h"
 #include "generic/auto_weakptr.h"
 
+//FIXME: Replace with std::optional when C++17 is done
+#include "std/optional.hpp"
+
 namespace kglt {
 
 template <class T>
@@ -21,6 +24,7 @@ class Stage;
 class SubActor;
 class Camera;
 class MaterialPass;
+class GPUProgramInstance;
 
 struct GroupData {
     typedef std::shared_ptr<GroupData> ptr;
@@ -189,14 +193,19 @@ public:
     StagePtr stage();
     ProtectedPtr<CameraProxy> camera();
 
-    void insert(Renderable& ent, uint8_t pass_number, const std::vector<kglt::LightID> &lights);
+    void insert(Renderable* renderable, MaterialPass* pass, const std::vector<kglt::LightID> &lights);
 
 private:
     WindowBase& window_;
     StageID stage_id_;
     CameraID camera_id_;
 
-    void generate_mesh_groups(RenderGroup* parent, Renderable& ent, MaterialPass& pass, const std::vector<kglt::LightID> &lights);
+    void generate_mesh_groups(
+        RenderGroup* parent,
+        Renderable* renderable,
+        MaterialPass* pass,
+        const std::vector<kglt::LightID> &lights
+    );
 };
 
 
@@ -250,7 +259,7 @@ public:
 
     }
 
-    void bind(GPUProgram* program);
+    void bind(kglt::GPUProgram *program);
     void unbind(GPUProgram* program);
 
 private:
@@ -308,27 +317,22 @@ private:
 };
 
 struct MaterialGroupData : public GroupData {
-    MaterialGroupData(
-        const kglt::Colour& ambient,
-        const kglt::Colour& diffuse,
-        const kglt::Colour& specular,
-        float shininess,
-        int32_t active_texture_count,
-        float point_size):
-        ambient(ambient),
-        diffuse(diffuse),
-        specular(specular),
-        shininess(shininess),
-        active_texture_count(active_texture_count),
-        point_size(point_size) {
-
-    }
-
+    std::experimental::optional<std::string> ambient_variable;
     kglt::Colour ambient;
+
+    std::experimental::optional<std::string> diffuse_variable;
     kglt::Colour diffuse;
+
+    std::experimental::optional<std::string> specular_variable;
     kglt::Colour specular;
+
+    std::experimental::optional<std::string> shininess_variable;
     float shininess;
+
+    std::experimental::optional<std::string> active_texture_count_variable;
     int32_t active_texture_count;
+
+    std::experimental::optional<std::string> point_size_variable;
     float point_size;
 
     std::size_t do_hash() const {
@@ -409,11 +413,13 @@ private:
 };
 
 struct TextureMatrixGroupData : public GroupData {
-    TextureMatrixGroupData(uint8_t texture_unit, Mat4 matrix):
+    TextureMatrixGroupData(uint8_t texture_unit, std::string variable, Mat4 matrix):
         unit(texture_unit),
+        matrix_variable(variable),
         matrix(matrix) {}
 
     uint8_t unit;
+    std::string matrix_variable;
     Mat4 matrix;
 
     std::size_t do_hash() const {
@@ -445,10 +451,30 @@ private:
 };
 
 struct LightGroupData : public GroupData {
-    LightGroupData(LightID light_id):
-        light_id(light_id) {}
+    LightID light_id;    
 
-    LightID light_id;
+    std::experimental::optional<std::string> global_ambient_variable_;
+
+    std::experimental::optional<std::string> light_position_variable_;
+    kglt::Vec4 light_position_value_;
+
+    std::experimental::optional<std::string> light_ambient_variable_;
+    kglt::Colour light_ambient_value_;
+
+    std::experimental::optional<std::string> light_diffuse_variable_;
+    kglt::Colour light_diffuse_value_;
+
+    std::experimental::optional<std::string> light_specular_variable_;
+    kglt::Colour light_specular_value_;
+
+    std::experimental::optional<std::string> light_constant_attenuation_variable_;
+    float light_constant_attenuation_value_;
+
+    std::experimental::optional<std::string> light_linear_attenuation_variable_;
+    float light_linear_attenuation_value_;
+
+    std::experimental::optional<std::string> light_quadratic_attenuation_variable_;
+    float light_quadratic_attenuation_value_;
 
     std::size_t do_hash() const {
         size_t seed = 0;

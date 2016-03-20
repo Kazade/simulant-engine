@@ -39,7 +39,7 @@ TextureUnit::TextureUnit(MaterialPass &pass):
     kmMat4Identity(&texture_matrix_);
 
     //Initialize the texture unit to the default texture
-    ResourceManager& rm = pass.material().resource_manager();
+    ResourceManager& rm = pass.material->resource_manager();
     texture_unit_ = rm.texture(rm.default_texture_id()).__object;
 }
 
@@ -51,7 +51,7 @@ TextureUnit::TextureUnit(MaterialPass &pass, TextureID tex_id):
     kmMat4Identity(&texture_matrix_);
 
     //Initialize the texture unit
-    ResourceManager& rm = pass.material().resource_manager();
+    ResourceManager& rm = pass.material->resource_manager();
     texture_unit_ = rm.texture(tex_id).__object;
 }
 
@@ -64,7 +64,7 @@ TextureUnit::TextureUnit(MaterialPass &pass, std::vector<TextureID> textures, do
 
     kmMat4Identity(&texture_matrix_);
 
-    ResourceManager& rm = pass.material().resource_manager();
+    ResourceManager& rm = pass.material->resource_manager();
 
     for(TextureID tid: textures) {
         animated_texture_units_.push_back(rm.texture(tid).__object);
@@ -91,7 +91,7 @@ Material::~Material() {
 }
 
 uint32_t Material::new_pass() {
-    passes_.push_back(MaterialPass::ptr(new MaterialPass(*this)));
+    passes_.push_back(MaterialPass::ptr(new MaterialPass(this)));
     return passes_.size() - 1; //Return the index
 }
 
@@ -99,7 +99,7 @@ MaterialPass& Material::pass(uint32_t index) {
     return *passes_.at(index);
 }
 
-MaterialPass::MaterialPass(Material &material):
+MaterialPass::MaterialPass(Material *material):
     material_(material),
     iteration_(ITERATE_ONCE),    
     max_iterations_(1),
@@ -109,9 +109,12 @@ MaterialPass::MaterialPass(Material &material):
     point_size_(1) {
 
     //Create and build the default GPUProgram
-    program_ = GPUProgram::create();
-    program_->set_shader_source(SHADER_TYPE_VERTEX, DEFAULT_VERT_SHADER);
-    program_->set_shader_source(SHADER_TYPE_FRAGMENT, DEFAULT_FRAG_SHADER);
+    /* FIXME! Do this only once! */
+    auto gpu_program = GPUProgram::create();
+    gpu_program->set_shader_source(SHADER_TYPE_VERTEX, DEFAULT_VERT_SHADER);
+    gpu_program->set_shader_source(SHADER_TYPE_FRAGMENT, DEFAULT_FRAG_SHADER);
+
+    program_ = GPUProgramInstance::create(gpu_program);
 }
 
 void MaterialPass::set_texture_unit(uint32_t texture_unit_id, TextureID tex) {
@@ -149,9 +152,19 @@ void MaterialPass::set_iteration(IterationType iter_type, uint32_t max) {
 void MaterialPass::set_albedo(float reflectiveness) {
     albedo_ = reflectiveness;
     if(is_reflective()) {
-        material().reflective_passes_.insert(this);
+        material->reflective_passes_.insert(this);
     } else {
-        material().reflective_passes_.erase(this);
+        material->reflective_passes_.erase(this);
+    }
+}
+
+void MaterialPass::apply_staged_uniforms(GPUProgram* program) {
+    for(auto& p: int_uniforms_) {
+        program->set_uniform_int(p.first, p.second);
+    }
+
+    for(auto& p: float_uniforms_) {
+        program->set_uniform_float(p.first, p.second);
     }
 }
 
@@ -180,28 +193,25 @@ TextureUnit TextureUnit::new_clone(MaterialPass& owner) const {
     return ret;
 }
 
-MaterialPass::ptr MaterialPass::new_clone(Material& owner) const {
+MaterialPass::ptr MaterialPass::new_clone(Material* owner) const {
     MaterialPass::ptr ret = MaterialPass::create(owner);
 
     ret->float_uniforms_ = float_uniforms_;
     ret->int_uniforms_ = int_uniforms_;
 
-    auto clone_gpu_program = [](GPUProgram::ptr prog) -> GPUProgram::ptr {
-        GPUProgram::ptr ret = GPUProgram::create();
+    auto clone_gpu_program = [](GPUProgramInstance::ptr prog) -> GPUProgramInstance::ptr {
+        /* Create a new program instance using the same GPU program */
+        GPUProgramInstance::ptr ret = GPUProgramInstance::create(
+            prog->_program_as_shared_ptr()
+        );
 
-        for(auto& p: prog->shader_infos()) {
-            ret->set_shader_source(p.first, p.second.source);
+        for(auto& p: prog->uniforms->auto_uniforms()) {
+            ret->uniforms->register_auto(p.first, p.second);
         }
 
-        for(auto& p: prog->uniforms().auto_uniforms()) {
-            ret->uniforms().register_auto(p.first, p.second);
+        for(auto& p: prog->attributes->auto_attributes()) {
+            ret->attributes->register_auto(p.first, p.second);
         }
-
-        for(auto& p: prog->attributes().auto_attributes()) {
-            ret->attributes().register_auto(p.first, p.second);
-        }
-
-        ret->build();
         return ret;
     };
 
@@ -243,7 +253,7 @@ MaterialID Material::new_clone(bool garbage_collect) const {
     auto mat = tmp.material(ret);
 
     for(auto pass: passes_) {
-        mat->passes_.push_back(pass->new_clone(*mat.__object));
+        mat->passes_.push_back(pass->new_clone(mat.__object.get()));
     }
 
     return ret;

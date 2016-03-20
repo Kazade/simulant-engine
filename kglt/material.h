@@ -16,14 +16,15 @@
 #include "loadable.h"
 #include "generic/identifiable.h"
 #include "generic/cloneable.h"
+#include "generic/property.h"
 #include "types.h"
 #include "interfaces.h"
-#include "gpu_program.h"
 
 namespace kglt {
 
 class Material;
 class MaterialPass;
+class GPUProgramInstance;
 
 class TextureUnit:
     public Updateable {
@@ -95,7 +96,7 @@ class MaterialPass:
     public Managed<MaterialPass>,
     public Updateable {
 public:
-    MaterialPass(Material& material);
+    MaterialPass(Material* material);
 
     void set_shininess(float s) { shininess_ = s; }
     void set_ambient(const kglt::Colour& colour) { ambient_ = colour; }
@@ -148,29 +149,27 @@ public:
     void set_polygon_mode(PolygonMode mode) { polygon_mode_ = mode; }
     PolygonMode polygon_mode() const { return polygon_mode_; }
 
-    Material& material() { return material_;  }
-
-    GPUProgram::ptr program() { return program_; }
-
-
-
-    void stage_uniform(const unicode& name, const int& value) {
+    void stage_uniform(const std::string& name, const int& value) {
         int_uniforms_[name] = value;
     }
 
-    void stage_uniform(const unicode& name, const float& value) {
+    void stage_uniform(const std::string& name, const float& value) {
         float_uniforms_[name] = value;
     }
 
-    void apply_staged_uniforms();
+    void apply_staged_uniforms(GPUProgram* program);
     void set_prevent_textures(bool value) { allow_textures_ = !value; }
+
+    Property<MaterialPass, Material> material = { this, &MaterialPass::material_ };
+    Property<MaterialPass, GPUProgramInstance> program = { this, &MaterialPass::program_ };
+
 private:
-    Material& material_;
+    Material* material_;
 
-    std::unordered_map<unicode, float> float_uniforms_;
-    std::unordered_map<unicode, int> int_uniforms_;
+    std::unordered_map<std::string, float> float_uniforms_;
+    std::unordered_map<std::string, int> int_uniforms_;
 
-    GPUProgram::ptr program_;
+    std::shared_ptr<GPUProgramInstance> program_;
 
     Colour diffuse_ = Colour::WHITE;
     Colour ambient_ = Colour::WHITE;
@@ -198,7 +197,7 @@ private:
     std::map<kglt::ShaderType, unicode> shader_sources_;
 
     friend class Material;
-    MaterialPass::ptr new_clone(Material& owner) const;
+    MaterialPass::ptr new_clone(Material *owner) const;
 };
 
 class Material :
@@ -222,6 +221,13 @@ public:
     void set_texture_unit_on_all_passes(uint32_t texture_unit_id, TextureID tex);
 
     MaterialID new_clone(bool garbage_collect=true) const;
+
+    void each(std::function<void (uint32_t, MaterialPass*)> callback) {
+        for(uint32_t i = 0; i < passes_.size(); ++i) {
+            callback(i, passes_[i].get());
+        }
+    }
+
 private:
     std::vector<MaterialPass::ptr> passes_;
     std::set<MaterialPass*> reflective_passes_;

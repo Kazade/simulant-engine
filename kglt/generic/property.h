@@ -25,6 +25,7 @@ public:
         getter_([member](Container* self) -> T& {
             return *(self->*member);
         }) {
+
     }
 
     Property(Container* _this, std::function<T& (Container*)> getter):
@@ -48,9 +49,11 @@ public:
     inline operator T&() const { return getter_(this_); }
     inline T* operator->() const { return &getter_(this_); }
 
+    T* get() const { return &getter_(this_); }
 private:
     Container* this_ = nullptr;
     std::function<T& (Container*)> getter_;
+
 };
 
 

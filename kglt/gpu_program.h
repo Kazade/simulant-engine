@@ -7,6 +7,7 @@
 #include <kazbase/signals.h>
 
 #include "types.h"
+#include "generic/property.h"
 #include "generic/managed.h"
 #include "utils/gl_thread_check.h"
 
@@ -156,20 +157,15 @@ struct UniformInfo {
 
 class UniformManager {
 public:
-    void set_int(const unicode& uniform_name, const int32_t value);
-    void set_float(const unicode& uniform_name, const float value);
-    void set_mat4x4(const unicode& uniform_name, const Mat4& values);
-    void set_mat3x3(const unicode& uniform_name, const Mat3& values);
-    void set_vec3(const unicode& uniform_name, const Vec3& values);
-    void set_vec4(const unicode& uniform_name, const Vec4& values);
-    void set_colour(const unicode& uniform_name, const Colour& values);
-    void set_mat4x4_array(const unicode& uniform_name, const std::vector<Mat4>& matrices);
+    ~UniformManager() {
+
+    }
 
     bool uses_auto(ShaderAvailableAuto uniform) const {
         return auto_uniforms_.find(uniform) != auto_uniforms_.end();
     }
 
-    unicode auto_variable_name(ShaderAvailableAuto auto_name) const {
+    std::string auto_variable_name(ShaderAvailableAuto auto_name) const {
         auto it = auto_uniforms_.find(auto_name);
         if(it == auto_uniforms_.end()) {
             throw std::logic_error("Specified auto is not registered");
@@ -178,30 +174,17 @@ public:
         return (*it).second;
     }
 
-    void register_auto(ShaderAvailableAuto uniform, const unicode& var_name);
-    void clear_cache() {
-        uniform_cache_.clear();
-    }
-
-    UniformInfo info(const unicode& uniform_name);
-
-    const std::unordered_map<ShaderAvailableAuto, unicode>& auto_uniforms() const {
+    void register_auto(ShaderAvailableAuto uniform, const std::string& var_name);
+    const std::unordered_map<ShaderAvailableAuto, std::string>& auto_uniforms() const {
         return auto_uniforms_;
     }
 
 private:
-    friend class GPUProgram;
-    GPUProgram& program_;
+    friend class GPUProgramInstance;
+    GPUProgram* program_;
 
-    UniformManager(GPUProgram& program);
-    GLint locate(const unicode& uniform_name);
-
-    std::unordered_map<unicode, UniformInfo> uniform_info_;
-    std::unordered_map<unicode, GLint> uniform_cache_;
-
-    void clear_uniform_cache();
-
-    std::unordered_map<ShaderAvailableAuto, unicode> auto_uniforms_;
+    UniformManager(GPUProgram* program);
+    std::unordered_map<ShaderAvailableAuto, std::string> auto_uniforms_;
 };
 
 class AttributeManager {
@@ -233,11 +216,11 @@ public:
     }
 
 private:
-    friend class GPUProgram;
+    friend class GPUProgramInstance;
 
-    AttributeManager(GPUProgram& program);
+    AttributeManager(GPUProgram* program);
 
-    GPUProgram& program_;
+    GPUProgram* program_;
     std::unordered_map<std::string, int32_t> attribute_cache_;
     std::unordered_map<ShaderAvailableAttributes, std::string> auto_attributes_;
 };
@@ -251,9 +234,6 @@ public:
     bool init() override;
     void cleanup() override;
 
-    UniformManager& uniforms() { return uniforms_; }
-    AttributeManager& attributes() { return attributes_; }
-
     const bool is_current() const;
     void activate();
     void set_shader_source(ShaderType type, const unicode& source);
@@ -266,7 +246,7 @@ public:
     ProgramLinkedSignal& signal_linked() { return signal_linked_; }
     ShaderCompiledSignal& signal_shader_compiled() { return signal_shader_compiled_; }
 
-    unicode md5() { return md5_shader_hash_; }
+    std::string md5() { return md5_shader_hash_; }
 
     struct ShaderInfo {
         uint32_t object = 0;
@@ -275,12 +255,31 @@ public:
     };
 
     const std::unordered_map<ShaderType, ShaderInfo> shader_infos() const { return shaders_; }
+
+    GLint locate_uniform(const std::string& name);
+    GLint locate_attribute(const std::string& name);
+    void set_uniform_location(const std::string& name, GLint location);
+    void set_attribute_location(const std::string& name, GLint location);
+
+    UniformInfo uniform_info(const std::string& uniform_name);
+
+    void clear_cache() {
+        uniform_cache_.clear();
+    }
+
+    void set_uniform_int(const std::string& uniform_name, const int32_t value);
+    void set_uniform_float(const std::string& uniform_name, const float value);
+    void set_uniform_mat4x4(const std::string& uniform_name, const Mat4& values);
+    void set_uniform_mat3x3(const std::string& uniform_name, const Mat3& values);
+    void set_uniform_vec3(const std::string& uniform_name, const Vec3& values);
+    void set_uniform_vec4(const std::string& uniform_name, const Vec4& values);
+    void set_uniform_colour(const std::string& uniform_name, const Colour& values);
+    void set_uniform_mat4x4_array(const std::string& uniform_name, const std::vector<Mat4>& matrices);
+
 private:
-    friend class UniformManager;
-    friend class AttributeManager;
-
+    std::unordered_map<unicode, UniformInfo> uniform_info_;
     void prepare_program();
-
+    void rebuild_uniform_info();
 
     bool is_linked_ = false;
 
@@ -291,15 +290,40 @@ private:
     ProgramLinkedSignal signal_linked_;
     ShaderCompiledSignal signal_shader_compiled_;
 
-    UniformManager uniforms_;
-    AttributeManager attributes_;
-
     void link();
 
     //A hash of all the GLSL shaders so we can uniquely identify a program
     void rebuild_hash();
-    unicode md5_shader_hash_;
+    std::string md5_shader_hash_;
+
+    std::unordered_map<std::string, GLint> uniform_cache_;
 };
+
+class GPUProgramInstance : public Managed<GPUProgramInstance> {
+public:
+    GPUProgramInstance(GPUProgram::ptr program):
+        program_(program),
+        uniforms_(program.get()),
+        attributes_(program.get()){
+
+        assert(program);
+    }
+
+    Property<GPUProgramInstance, GPUProgram> program = { this, &GPUProgramInstance::program_ };
+    Property<GPUProgramInstance, UniformManager> uniforms = { this, &GPUProgramInstance::uniforms_ };
+    Property<GPUProgramInstance, AttributeManager> attributes = { this, &GPUProgramInstance::attributes_ };
+
+    // Internal, used for cloning program instances
+    GPUProgram::ptr _program_as_shared_ptr() { return program_; }
+private:
+    friend class UniformManager;
+    friend class AttributeManager;
+
+    GPUProgram::ptr program_;
+    UniformManager uniforms_;
+    AttributeManager attributes_;
+};
+
 
 }
 #endif // GPU_PROGRAM_H

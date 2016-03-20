@@ -76,8 +76,11 @@ void Background::cleanup() {
 }
 
 void Background::update(double dt) {
-    manager_->window->stage(stage_id_)->material(material_id_)->pass(0).texture_unit(0).scroll_x(x_rate_ * dt);
-    manager_->window->stage(stage_id_)->material(material_id_)->pass(0).texture_unit(0).scroll_y(y_rate_ * dt);
+    auto& pass = manager_->window->stage(stage_id_)->material(material_id_)->pass(0);
+    if(pass.texture_unit_count()) {
+        pass.texture_unit(0).scroll_x(x_rate_ * dt);
+        pass.texture_unit(0).scroll_y(y_rate_ * dt);
+    }
 }
 
 void Background::set_horizontal_scroll_rate(float x_rate) {

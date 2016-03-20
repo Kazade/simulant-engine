@@ -6,14 +6,12 @@
 
 namespace kglt {
 
-UniformManager::UniformManager(GPUProgram &program):
+UniformManager::UniformManager(GPUProgram *program):
     program_(program) {
 
-    //Always clear the uniform cache when the program is relinked
-    program.signal_linked().connect(std::bind(&UniformManager::clear_uniform_cache, this));
 }
 
-UniformInfo UniformManager::info(const unicode& uniform_name) {
+UniformInfo GPUProgram::uniform_info(const std::string& uniform_name) {
     /*
      *  Returns information about the named uniform
      */
@@ -26,13 +24,13 @@ UniformInfo UniformManager::info(const unicode& uniform_name) {
     return (*it).second;
 }
 
-GLint UniformManager::locate(const unicode& uniform_name) {
-    if(!program_.is_current()) {
+GLint GPUProgram::locate_uniform(const std::string& uniform_name) {
+    if(!is_current()) {
         L_ERROR("Attempted to modify a uniform without making the program active");
         throw LogicError("Attempted to modify GPU program object without making it active");
     }
 
-    if(!program_.is_complete()) {
+    if(!is_complete()) {
         L_ERROR("Attempted to modify a uniform without making the program complete");
         throw LogicError("Attempted to access uniform on a GPU program that is not complete");
     }
@@ -42,75 +40,98 @@ GLint UniformManager::locate(const unicode& uniform_name) {
         return (*it).second;
     }
 
-    std::string name = uniform_name.encode();
+    std::string name = uniform_name;
 
     //L_DEBUG(_u("Looking up uniform with name {0} in program {1}").format(name, program_.program_object_));
-    GLint location = _GLCheck<GLint>(__func__, glGetUniformLocation, program_.program_object_, name.c_str());
+    GLint location = _GLCheck<GLint>(__func__, glGetUniformLocation, program_object_, name.c_str());
 
     if(location < 0) {
-        throw LogicError(_u("Couldn't find uniform {0}. Has it been optimized into non-existence?").format(uniform_name).encode());
+        throw LogicError(_u("Couldn't find uniform {0}. Has it been optimized into non-existence?").format(name).encode());
     }
 
     uniform_cache_[uniform_name] = location;
     return location;
 }
 
-void UniformManager::set_int(const unicode& uniform_name, const int32_t value) {
-    GLint loc = locate(uniform_name);
+void GPUProgram::set_uniform_int(const std::string& uniform_name, const int32_t value) {
+    GLint loc = locate_uniform(uniform_name);
     GLCheck(glUniform1i, loc, value);
 }
 
-void UniformManager::set_float(const unicode& uniform_name, const float value) {
-    int32_t loc = locate(uniform_name);
+void GPUProgram::set_uniform_float(const std::string& uniform_name, const float value) {
+    int32_t loc = locate_uniform(uniform_name);
     GLCheck(glUniform1f, loc, value);
 }
 
-void UniformManager::set_mat4x4(const unicode& uniform_name, const Mat4& matrix) {
-    int32_t loc = locate(uniform_name);
+void GPUProgram::set_uniform_mat4x4(const std::string& uniform_name, const Mat4& matrix) {
+    int32_t loc = locate_uniform(uniform_name);
     GLCheck(glUniformMatrix4fv, loc, 1, false, (GLfloat*)matrix.mat);
 }
 
-void UniformManager::set_mat3x3(const unicode& uniform_name, const Mat3& matrix) {
-    int32_t loc = locate(uniform_name);
+void GPUProgram::set_uniform_mat3x3(const std::string& uniform_name, const Mat3& matrix) {
+    int32_t loc = locate_uniform(uniform_name);
     GLCheck(glUniformMatrix3fv, loc, 1, false, (GLfloat*)matrix.mat);
 }
 
-void UniformManager::set_vec3(const unicode& uniform_name, const Vec3& values) {
-    int32_t loc = locate(uniform_name);
+void GPUProgram::set_uniform_vec3(const std::string& uniform_name, const Vec3& values) {
+    int32_t loc = locate_uniform(uniform_name);
     GLCheck(glUniform3fv, loc, 1, (GLfloat*) &values);
 }
 
-void UniformManager::set_vec4(const unicode& uniform_name, const Vec4& values) {
-    int32_t loc = locate(uniform_name);
+void GPUProgram::set_uniform_vec4(const std::string& uniform_name, const Vec4& values) {
+    int32_t loc = locate_uniform(uniform_name);
     GLCheck(glUniform4fv, loc, 1, (GLfloat*) &values);
 }
 
-void UniformManager::set_colour(const unicode& uniform_name, const Colour& values) {
+void GPUProgram::set_uniform_colour(const std::string& uniform_name, const Colour& values) {
     Vec4 tmp;
     kmVec4Fill(&tmp, values.r, values.g, values.b, values.a);
-    set_vec4(uniform_name, tmp);
+    set_uniform_vec4(uniform_name, tmp);
 }
 
-void UniformManager::set_mat4x4_array(const unicode& uniform_name, const std::vector<Mat4>& matrices) {
-    int32_t loc = locate(uniform_name);
+void GPUProgram::set_uniform_mat4x4_array(const std::string& uniform_name, const std::vector<Mat4>& matrices) {
+    int32_t loc = locate_uniform(uniform_name);
     GLCheck(glUniformMatrix4fv, loc, matrices.size(), false, (GLfloat*) &matrices[0]);
 }
 
-void UniformManager::clear_uniform_cache() {
-    uniform_cache_.clear();
+void GPUProgram::rebuild_uniform_info() {
+    //FIXME: Make this only happen when debugging
+    //DEBUG info!
+    GLint count;
+    glGetProgramiv(program_object_, GL_ACTIVE_UNIFORMS, &count);
+
+    uniform_info_.clear();
+
+    char buf[256];
+    GLsizei buf_count;
+    GLint size;
+    GLenum type;
+
+    for(int i = 0; i < count; ++i) {
+        glGetActiveUniform(program_object_, (GLuint) i,  256,  &buf_count,  &size,  &type,  buf);
+
+        std::string name(buf, buf + buf_count);
+
+        UniformInfo info;
+        info.name = name;
+        info.size = size;
+        info.type = type;
+
+        uniform_info_[info.name] = info;
+    }
 }
 
-void UniformManager::register_auto(ShaderAvailableAuto uniform, const unicode &var_name) {
+void UniformManager::register_auto(ShaderAvailableAuto uniform, const std::string &var_name) {
     auto_uniforms_[uniform] = var_name;
 }
 
 //===================== END UNIFORMS =======================================
 
-AttributeManager::AttributeManager(GPUProgram &program):
+AttributeManager::AttributeManager(GPUProgram* program):
     program_(program) {}
 
 int32_t AttributeManager::locate(const std::string& attribute) {
-    if(!program_.is_complete()) {
+    if(!program_->is_complete()) {
         throw LogicError("Attempted to access attribute on a GPU program that is not complete");
     }
 
@@ -119,7 +140,7 @@ int32_t AttributeManager::locate(const std::string& attribute) {
         return (*it).second;
     }
 
-    GLint location = _GLCheck<GLint>(__func__, glGetAttribLocation, program_.program_object_, attribute.c_str());
+    GLint location = program_->locate_attribute(attribute);
     if(location < 0) {
         L_ERROR(_u("Unable to find attribute with name {0}").format(attribute));
         throw LogicError(_u("Couldn't find attribute {0}").format(attribute).encode());
@@ -132,8 +153,7 @@ int32_t AttributeManager::locate(const std::string& attribute) {
 
 void AttributeManager::set_location(const std::string &attribute, int32_t location) {
     //No completeness check, glBindAttribLocation can be called at any time
-
-    GLCheck(glBindAttribLocation, program_.program_object_, location, attribute.c_str());
+    program_->set_attribute_location(attribute, location);
 
     //Is this always true? Can we just assume that the location was given to that attribute?
     //The docs don't seem to suggest that it can fail...
@@ -148,9 +168,15 @@ void AttributeManager::register_auto(ShaderAvailableAttributes attr, const std::
 
 
 GPUProgram::GPUProgram():
-    program_object_(0),
-    uniforms_(*this),
-    attributes_(*this) {}
+    program_object_(0) {}
+
+GLint GPUProgram::locate_attribute(const std::__cxx11::string &name) {
+    return _GLCheck<GLint>(__func__, glGetAttribLocation, program_object_, name.c_str());
+}
+
+void GPUProgram::set_attribute_location(const std::string& name, GLint location) {
+    GLCheck(glBindAttribLocation, program_object_, location, name.c_str());
+}
 
 const bool GPUProgram::is_current() const {
     GLint current = 0;
@@ -302,12 +328,12 @@ void GPUProgram::build() {
     }
 
     // Set up the attribute locations once
-    for(auto attribute: SHADER_AVAILABLE_ATTRS) {
-        if(attributes().uses_auto(attribute)) {
-            auto varname = attributes().variable_name(attribute);
-            attributes().set_location(varname, (int32_t) attribute);
+/*    for(auto attribute: SHADER_AVAILABLE_ATTRS) {
+        if(attributes->uses_auto(attribute)) {
+            auto varname = attributes->variable_name(attribute);
+            attributes->set_location(varname, (int32_t) attribute);
         }
-    }
+    }*/
 
     link(); //Now link the program
 }
@@ -374,33 +400,12 @@ void GPUProgram::link() {
 
     L_DEBUG(_u("Linked program {0}").format(program_object_));
 
+    // Rebuild the uniform information for debugging
+    rebuild_uniform_info();
+    uniform_cache_.clear();
+
     is_linked_ = true;
     signal_linked_();
-
-    //DEBUG info!
-    GLint count;
-    glGetProgramiv(program_object_, GL_ACTIVE_UNIFORMS, &count);
-
-    uniforms().uniform_info_.clear();
-
-    char buf[256];
-    GLsizei buf_count;
-    GLint size;
-    GLenum type;
-    for(int i = 0; i < count; ++i) {
-        glGetActiveUniform(program_object_, (GLuint) i,  256,  &buf_count,  &size,  &type,  buf);
-
-        std::string name(buf, buf + buf_count);
-
-        UniformInfo info;
-        info.name = name;
-        info.size = size;
-        info.type = type;
-
-        uniforms().uniform_info_[info.name] = info;
-
-        //L_DEBUG(_u("UNIFORM {0} with size {1} and type {2}").format(std::string(buf, buf+buf_count), size, type));
-    }
 }
 
 }
