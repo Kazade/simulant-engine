@@ -8,6 +8,8 @@
 #include "kglt/types.h"
 #include "generic/auto_weakptr.h"
 #include "material_constants.h"
+#include "gpu_program.h"
+
 //FIXME: Replace with std::optional when C++17 is done
 #include "std/optional.hpp"
 
@@ -265,6 +267,42 @@ public:
 private:
     ShaderGroupData data_;
 };
+
+
+struct AutoAttributeGroupData : public GroupData {
+    AutoAttributeGroupData(const std::map<std::string, ShaderAvailableAttributes>& attributes):
+        enabled_attributes(attributes) {}
+
+    std::map<std::string, ShaderAvailableAttributes> enabled_attributes;
+
+    std::size_t do_hash() const {
+        size_t seed = 0;
+        hash_combine(seed, typeid(AutoAttributeGroupData).name());
+        for(auto& p: enabled_attributes) {
+            hash_combine(seed, p.first);
+            hash_combine(seed, (int32_t) p.second);
+        }
+        return seed;
+    }
+};
+
+class AutoAttributeGroup : public RenderGroup {
+public:
+    typedef AutoAttributeGroupData data_type;
+
+    AutoAttributeGroup(RenderGroup* parent, AutoAttributeGroupData data):
+        RenderGroup(parent),
+        data_(data) {
+
+    }
+
+    void bind(kglt::GPUProgram *program);
+    void unbind(GPUProgram* program);
+
+private:
+    AutoAttributeGroupData data_;
+};
+
 
 struct RenderableGroupData : public GroupData {
     std::size_t do_hash() const {

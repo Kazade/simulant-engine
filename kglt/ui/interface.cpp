@@ -221,9 +221,9 @@ public:
 
         prepare_shader(translation);
 
-        int pos_attrib = shader_->attributes->locate("position");
-        int colour_attrib = shader_->attributes->locate("colour");
-        int texcoord_attrib = shader_->attributes->locate("tex_coord");
+        int pos_attrib = shader_->program->locate_attribute("position");
+        int colour_attrib = shader_->program->locate_attribute("colour");
+        int texcoord_attrib = shader_->program->locate_attribute("tex_coord");
 
         GLCheck(glEnableVertexAttribArray, pos_attrib);
         GLCheck(glVertexAttribPointer,
@@ -290,9 +290,9 @@ public:
 
         geom->vao->bind();
 
-        int pos_attrib = shader_->attributes->locate("position");
-        int colour_attrib = shader_->attributes->locate("colour");
-        int texcoord_attrib = shader_->attributes->locate("tex_coord");
+        int pos_attrib = shader_->program->locate_attribute("position");
+        int colour_attrib = shader_->program->locate_attribute("colour");
+        int texcoord_attrib = shader_->program->locate_attribute("tex_coord");
 
         GLCheck(glEnableVertexAttribArray, pos_attrib);
         GLCheck(glVertexAttribPointer,

@@ -17,7 +17,7 @@
             #version 120
             attribute vec3 vertex_position;
             attribute vec2 texture_coord0;
-            
+
             uniform mat4 modelview_projection;
             uniform mat4 texture_matrix;
         

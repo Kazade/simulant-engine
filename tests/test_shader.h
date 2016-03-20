@@ -38,8 +38,8 @@ public:
         s->program->activate();
         s->program->set_uniform_vec3("c", kglt::Vec3());
 
-        s->attributes->set_location("tns", 1);
-        auto loc = s->attributes->locate("tns");
+        s->program->set_attribute_location("tns", 1);
+        auto loc = s->program->locate_attribute("tns");
 
         assert_equal(1, loc);
     }

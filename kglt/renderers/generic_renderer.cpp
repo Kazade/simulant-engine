@@ -84,7 +84,7 @@ void send_attribute(ShaderAvailableAttributes attr,
     auto get_has_attribute = std::bind(exists_on_data_predicate, std::reference_wrapper<const VertexData>(data));
 
     if(get_has_attribute()) {
-        auto get_offset = std::bind(offset_func, std::reference_wrapper<const VertexData>(data));
+        auto offset = std::bind(offset_func, std::reference_wrapper<const VertexData>(data))();
 
         GLCheck(glEnableVertexAttribArray, loc);
         GLCheck(glVertexAttribPointer,
@@ -93,7 +93,7 @@ void send_attribute(ShaderAvailableAttributes attr,
             GL_FLOAT,
             GL_FALSE,
             data.stride(),
-            BUFFER_OFFSET(get_offset())
+            BUFFER_OFFSET(offset)
         );
     } else {
         //L_WARN_ONCE(_u("Couldn't locate attribute on the mesh: {0}").format(attr));
@@ -108,11 +108,11 @@ void GenericRenderer::set_auto_attributes_on_shader(Renderable &buffer) {
      *  for templates!
      */        
     send_attribute(SP_ATTR_VERTEX_POSITION, buffer.vertex_data(), &VertexData::has_positions, &VertexData::position_offset);
+    send_attribute(SP_ATTR_VERTEX_DIFFUSE, buffer.vertex_data(), &VertexData::has_diffuse, &VertexData::diffuse_offset);
     send_attribute(SP_ATTR_VERTEX_TEXCOORD0, buffer.vertex_data(), &VertexData::has_texcoord0, &VertexData::texcoord0_offset);
     send_attribute(SP_ATTR_VERTEX_TEXCOORD1, buffer.vertex_data(), &VertexData::has_texcoord1, &VertexData::texcoord1_offset);
     send_attribute(SP_ATTR_VERTEX_TEXCOORD2, buffer.vertex_data(), &VertexData::has_texcoord2, &VertexData::texcoord2_offset);
     send_attribute(SP_ATTR_VERTEX_TEXCOORD3, buffer.vertex_data(), &VertexData::has_texcoord3, &VertexData::texcoord3_offset);
-    send_attribute(SP_ATTR_VERTEX_DIFFUSE, buffer.vertex_data(), &VertexData::has_diffuse, &VertexData::diffuse_offset);
     send_attribute(SP_ATTR_VERTEX_NORMAL, buffer.vertex_data(), &VertexData::has_normals, &VertexData::normal_offset);
 }
 
@@ -156,18 +156,6 @@ void GenericRenderer::render(Renderable& buffer, CameraID camera, GPUProgramInst
 
     buffer._update_vertex_array_object();
     buffer._bind_vertex_array_object();
-
-    /*
-     * Set the attribute locations that are enabled for this pass - this is probably wasteful doing it here
-     * as it only needs to be done when the program instance changes...
-     */
-    for(auto attribute: SHADER_AVAILABLE_ATTRS) {
-        if(program->attributes->uses_auto(attribute)) {
-            auto varname = program->attributes->variable_name(attribute);
-            program->attributes->set_location(varname, (int32_t) attribute);
-        }
-    }
-
 
     //Attributes don't change per-iteration of a pass
     set_auto_attributes_on_shader(buffer);

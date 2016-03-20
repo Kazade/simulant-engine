@@ -189,9 +189,6 @@ private:
 
 class AttributeManager {
 public:
-    int32_t locate(const std::string &attribute);
-    void set_location(const std::string& attribute, int32_t location);
-
     void register_auto(ShaderAvailableAttributes attr, const std::string &var_name);
 
     std::string variable_name(ShaderAvailableAttributes attr_name) const {
@@ -207,10 +204,6 @@ public:
         return auto_attributes_.find(attr) != auto_attributes_.end();
     }
 
-    void clear_cache() {
-        attribute_cache_.clear();
-    }
-
     const std::unordered_map<ShaderAvailableAttributes, std::string>& auto_attributes() const {
         return auto_attributes_;
     }
@@ -221,7 +214,6 @@ private:
     AttributeManager(GPUProgram* program);
 
     GPUProgram* program_;
-    std::unordered_map<std::string, int32_t> attribute_cache_;
     std::unordered_map<ShaderAvailableAttributes, std::string> auto_attributes_;
 };
 
@@ -276,12 +268,20 @@ public:
     void set_uniform_colour(const std::string& uniform_name, const Colour& values);
     void set_uniform_mat4x4_array(const std::string& uniform_name, const std::vector<Mat4>& matrices);
 
+    void relink() {
+        if(needs_relink_) {
+            link();
+            needs_relink_ = false;
+        }
+    }
+
 private:
     std::unordered_map<unicode, UniformInfo> uniform_info_;
     void prepare_program();
     void rebuild_uniform_info();
 
     bool is_linked_ = false;
+    bool needs_relink_ = false;
 
     uint32_t program_object_ = 0;
     std::unordered_map<ShaderType, ShaderInfo> shaders_;
@@ -290,13 +290,14 @@ private:
     ProgramLinkedSignal signal_linked_;
     ShaderCompiledSignal signal_shader_compiled_;
 
-    void link();
-
     //A hash of all the GLSL shaders so we can uniquely identify a program
     void rebuild_hash();
     std::string md5_shader_hash_;
 
     std::unordered_map<std::string, GLint> uniform_cache_;
+    std::unordered_map<std::string, int32_t> attribute_cache_;
+
+    void link();
 };
 
 class GPUProgramInstance : public Managed<GPUProgramInstance> {

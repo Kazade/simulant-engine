@@ -199,6 +199,20 @@ void RootGroup::insert(Renderable *renderable, MaterialPass *pass, const std::ve
     //Add a shader node
     current = &current->get_or_create<ShaderGroup>(ShaderGroupData(program_instance->program.get()));
 
+    //Auto attributes
+    std::map<std::string, ShaderAvailableAttributes> attributes;
+    /*
+     * Set the attribute locations that are enabled for this pass
+     */
+    for(auto attribute: SHADER_AVAILABLE_ATTRS) {
+        if(program_instance->attributes->uses_auto(attribute)) {
+            auto varname = program_instance->attributes->variable_name(attribute);
+            attributes[varname] = attribute;
+        }
+    }
+
+    current = &current->get_or_create<AutoAttributeGroup>(AutoAttributeGroupData(attributes));
+
     //Add the texture-related branches of the tree under the shader(
     std::vector<GLuint> units(MAX_TEXTURE_UNITS, 0);
     for(uint8_t tu = 0; tu < pass->texture_unit_count(); ++tu) {
@@ -292,6 +306,7 @@ void ShaderGroup::bind(GPUProgram* program) {
     RootGroup& root = static_cast<RootGroup&>(get_root());
 
     root.set_current_program(data_.shader_);
+
     data_.shader_->build();
     data_.shader_->activate();
 }
@@ -304,6 +319,19 @@ std::size_t ShaderGroupData::do_hash() const {
 }
 
 void ShaderGroup::unbind(GPUProgram *program) {
+
+}
+
+void AutoAttributeGroup::bind(GPUProgram *program) {
+    for(auto& p: data_.enabled_attributes) {
+        program->set_attribute_location(p.first, (int32_t) p.second);
+    }
+
+    RootGroup& root = static_cast<RootGroup&>(get_root());
+    root.current_program()->relink();
+}
+
+void AutoAttributeGroup::unbind(GPUProgram *program) {
 
 }
 

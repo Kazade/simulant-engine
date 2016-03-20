@@ -130,36 +130,6 @@ void UniformManager::register_auto(ShaderAvailableAuto uniform, const std::strin
 AttributeManager::AttributeManager(GPUProgram* program):
     program_(program) {}
 
-int32_t AttributeManager::locate(const std::string& attribute) {
-    if(!program_->is_complete()) {
-        throw LogicError("Attempted to access attribute on a GPU program that is not complete");
-    }
-
-    auto it = attribute_cache_.find(attribute);
-    if(it != attribute_cache_.end()) {
-        return (*it).second;
-    }
-
-    GLint location = program_->locate_attribute(attribute);
-    if(location < 0) {
-        L_ERROR(_u("Unable to find attribute with name {0}").format(attribute));
-        throw LogicError(_u("Couldn't find attribute {0}").format(attribute).encode());
-    }
-
-    attribute_cache_[attribute] = location;
-
-    return location;
-}
-
-void AttributeManager::set_location(const std::string &attribute, int32_t location) {
-    //No completeness check, glBindAttribLocation can be called at any time
-    program_->set_attribute_location(attribute, location);
-
-    //Is this always true? Can we just assume that the location was given to that attribute?
-    //The docs don't seem to suggest that it can fail...
-    attribute_cache_[attribute] = location;
-}
-
 void AttributeManager::register_auto(ShaderAvailableAttributes attr, const std::string &var_name) {
     auto_attributes_[attr] = var_name;
 }
@@ -170,12 +140,42 @@ void AttributeManager::register_auto(ShaderAvailableAttributes attr, const std::
 GPUProgram::GPUProgram():
     program_object_(0) {}
 
-GLint GPUProgram::locate_attribute(const std::__cxx11::string &name) {
-    return _GLCheck<GLint>(__func__, glGetAttribLocation, program_object_, name.c_str());
+GLint GPUProgram::locate_attribute(const std::string &attribute) {
+    if(!is_complete()) {
+        throw LogicError("Attempted to access attribute on a GPU program that is not complete");
+    }
+
+    auto it = attribute_cache_.find(attribute);
+    if(it != attribute_cache_.end()) {
+        return (*it).second;
+    }
+
+    GLint location = _GLCheck<GLint>(__func__, glGetAttribLocation, program_object_, attribute.c_str());
+    if(location < 0) {
+        L_ERROR(_u("Unable to find attribute with name {0}").format(attribute));
+        throw LogicError(_u("Couldn't find attribute {0}").format(attribute).encode());
+    }
+
+    attribute_cache_[attribute] = location;
+
+    return location;
 }
 
-void GPUProgram::set_attribute_location(const std::string& name, GLint location) {
-    GLCheck(glBindAttribLocation, program_object_, location, name.c_str());
+void GPUProgram::set_attribute_location(const std::string& attribute, GLint location) {
+    auto it = attribute_cache_.find(attribute);
+    if(it != attribute_cache_.end() && (*it).second == location) {
+        return;
+    }
+
+    //No completeness check, glBindAttribLocation can be called at any time
+    GLCheck(glBindAttribLocation, program_object_, location, attribute.c_str());
+
+    //Is this always true? Can we just assume that the location was given to that attribute?
+    //The docs don't seem to suggest that it can fail...
+    attribute_cache_[attribute] = location;
+
+    // Once we change the attributes they won't take effect until we relink
+    needs_relink_ = true;
 }
 
 const bool GPUProgram::is_current() const {
@@ -327,14 +327,6 @@ void GPUProgram::build() {
         compile(p.first); //Compile each shader if necessary
     }
 
-    // Set up the attribute locations once
-/*    for(auto attribute: SHADER_AVAILABLE_ATTRS) {
-        if(attributes->uses_auto(attribute)) {
-            auto varname = attributes->variable_name(attribute);
-            attributes->set_location(varname, (int32_t) attribute);
-        }
-    }*/
-
     link(); //Now link the program
 }
 
@@ -405,6 +397,7 @@ void GPUProgram::link() {
     uniform_cache_.clear();
 
     is_linked_ = true;
+    needs_relink_ = false;
     signal_linked_();
 }
 
