@@ -21,7 +21,7 @@ public:
         window->delete_stage(stage_id_);
     }
 
-    kglt::MeshID generate_test_mesh(StagePtr stage) {
+    kglt::MeshID generate_test_mesh(kglt::StagePtr stage) {
         kglt::MeshID mid = stage->new_mesh();
         auto mesh = stage->mesh(mid);
 
@@ -246,10 +246,10 @@ public:
     }
 
 private:
-    CameraID camera_id_;
-    StageID stage_id_;
+    kglt::CameraID camera_id_;
+    kglt::StageID stage_id_;
 
-    SubMeshID first_mesh_;
+    kglt::SubMeshID first_mesh_;
 };
 
 #endif // TEST_MESH_H

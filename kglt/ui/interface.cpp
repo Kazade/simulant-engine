@@ -172,7 +172,7 @@ public:
             Rocket::Core::TextureHandle texture) {
 
         auto new_group = std::make_shared<CompiledGroup>();
-        new_group->vao = std::make_unique<VertexArrayObject>();
+        new_group->vao = std::unique_ptr<VertexArrayObject>(new VertexArrayObject());
 
         new_group->texture = texture;
 
