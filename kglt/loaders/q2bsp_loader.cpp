@@ -465,8 +465,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
         {
             auto mat = stage->material(new_material_id);
-            mat->pass(0).set_texture_unit(0, new_texture_id);
-            mat->pass(0).set_texture_unit(1, lightmap_texture);
+            //mat->pass(0).set_texture_unit(0, new_texture_id);
+            mat->pass(0).set_texture_unit(0, lightmap_texture);
         }
 
         auto texture = stage->texture(new_texture_id);
@@ -526,6 +526,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         float min_u = 10000, max_u = -10000;
         float min_v = 10000, max_v = -10000;
 
+        std::map<int32_t, Vec2> lightmap_coords_to_process;
+
         for(int16_t i = 1; i < (int16_t) indexes.size() - 1; ++i) {
             uint32_t tri_idx[] = {
                 indexes[0],
@@ -577,8 +579,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
                 mesh->shared_data().diffuse(kglt::Colour::WHITE);
                 mesh->shared_data().tex_coord0(u / w, v / h);
 
-                auto lightmap_coords = lightmap_buffer.transform_uv(face_index, u / w, v / h);
-                mesh->shared_data().tex_coord1(lightmap_coords.first, lightmap_coords.second);
+                lightmap_coords_to_process[mesh->shared_data().cursor_position()] = Vec2(u, v);
                 mesh->shared_data().move_next();
 
                 sm->index_data().index(mesh->shared_data().count() - 1);
@@ -589,6 +590,16 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         }
 
         process_lightmap(face_index, &lightmap_data[0] + f.lightmap_offset, min_u, max_u, min_v, max_v);
+
+        for(auto& p: lightmap_coords_to_process) {
+            float u = p.second.x;
+            float v = p.second.y;
+
+            mesh->shared_data().move_to(p.first);
+
+            auto lightmap_coords = lightmap_buffer.transform_uv(face_index, u, v);
+            mesh->shared_data().tex_coord1(lightmap_coords.first, lightmap_coords.second);
+        }
 
         ++face_index;
     }
