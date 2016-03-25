@@ -325,13 +325,13 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
         targets_rendered_this_frame_.insert(&target);
     }
 
-    auto viewport = pipeline_stage->viewport();
+    auto& viewport = pipeline_stage->viewport;
 
     uint32_t clear = pipeline_stage->clear_flags();
     if(clear) {
-        viewport.clear(target, clear); //Implicitly calls apply
+        viewport->clear(target, clear); //Implicitly calls apply
     } else {
-        viewport.apply(target); //FIXME apply shouldn't exist, it ties Viewport to OpenGL...
+        viewport->apply(target); //FIXME apply shouldn't exist, it ties Viewport to OpenGL...
     }
 
     signal_pipeline_started_(*pipeline_stage);
@@ -342,7 +342,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
     if(pipeline_stage->ui_stage_id()) {        
         //This is a UI stage, so just render that
         auto ui_stage = window_.ui_stage(pipeline_stage->ui_stage_id());
-        ui_stage->__resize(viewport.width_in_pixels(target), viewport.height_in_pixels(target));
+        ui_stage->__resize(viewport->width_in_pixels(target), viewport->height_in_pixels(target));
         ui_stage->__render(camera_projection);
     } else {
         auto stage = window_.stage(stage_id);

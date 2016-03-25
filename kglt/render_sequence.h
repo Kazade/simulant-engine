@@ -7,6 +7,7 @@
 
 #include "generic/managed.h"
 #include "generic/manager.h"
+#include "generic/property.h"
 
 #include "types.h"
 #include "viewport.h"
@@ -29,7 +30,6 @@ public:
 
     ~Pipeline();
 
-    Viewport viewport() { return viewport_; }
     CameraID camera_id() { return camera_; }
     StageID stage_id() { return stage_; }
     UIStageID ui_stage_id() { return ui_stage_; }
@@ -51,6 +51,8 @@ public:
     void set_clear_flags(uint32_t viewport_clear_flags) {
         clear_mask_ = viewport_clear_flags;
     }
+
+    Property<Pipeline, Viewport> viewport = { this, &Pipeline::viewport_ };
 private:
     RenderSequence* sequence_;
     int32_t priority_;

@@ -253,11 +253,11 @@ struct LightmapBuffer {
         uint32_t target_x = index % horiz;
         uint32_t target_y = index / horiz;
 
-        uint32_t texel = ((target_y * buffer_width) + target_x) * LIGHTMAP_CHANNELS;
+        uint32_t texel = (target_y * buffer_width) + (target_x * LIGHTMAP_SIZE * LIGHTMAP_CHANNELS);
 
         for(uint32_t y = 0; y < LIGHTMAP_SIZE; ++y) {
             for(uint32_t x = 0; x < LIGHTMAP_SIZE; ++x) {
-                uint32_t source_idx = ((y * width) + x) * LIGHTMAP_CHANNELS;
+                uint32_t source_idx = ((y * width) + x) * 3;
 
                 // If we are within the bounds of the source lightmap, then
                 // copy the data for this texel to the right place
@@ -430,7 +430,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
      *  Load the textures and generate materials
      */
 
-    MeshID mid = stage->new_mesh();
+    MeshID mid = stage->new_mesh_with_alias("world_geometry");
     auto mesh = stage->mesh(mid);
 
     std::vector<MaterialID> materials;
@@ -465,8 +465,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
         {
             auto mat = stage->material(new_material_id);
-            //mat->pass(0).set_texture_unit(0, new_texture_id);
-            mat->pass(0).set_texture_unit(0, lightmap_texture);
+            mat->pass(0).set_texture_unit(0, new_texture_id);
+            mat->pass(0).set_texture_unit(1, lightmap_texture);
         }
 
         auto texture = stage->texture(new_texture_id);
@@ -578,6 +578,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
                 mesh->shared_data().normal(normal);
                 mesh->shared_data().diffuse(kglt::Colour::WHITE);
                 mesh->shared_data().tex_coord0(u / w, v / h);
+                mesh->shared_data().tex_coord1(0, 0);
 
                 lightmap_coords_to_process[mesh->shared_data().cursor_position()] = Vec2(u, v);
                 mesh->shared_data().move_next();
@@ -591,9 +592,20 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
         process_lightmap(face_index, &lightmap_data[0] + f.lightmap_offset, min_u, max_u, min_v, max_v);
 
+        auto lightmap_width  = ceil(max_u / 16) - floor(min_u / 16) + 1;
+        auto lightmap_height = ceil(max_v / 16) - floor(min_v / 16) + 1;
+
         for(auto& p: lightmap_coords_to_process) {
             float u = p.second.x;
             float v = p.second.y;
+
+            u -= floor(min_u / 16.0f) * 16.0f;
+            u += 8.0;
+            u /= lightmap_width * 16.0;
+
+            v -= floor(min_v / 16.0f) * 16.0f;
+            v += 8.0;
+            v /= lightmap_height * 16.0;
 
             mesh->shared_data().move_to(p.first);
 
@@ -608,11 +620,12 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     {
         auto lightmap = stage->texture(lightmap_texture);
         lightmap->resize(lightmap_buffer.width_in_texels(), lightmap_buffer.height_in_texels());
-        lightmap->set_bpp(24); // RGB only, no alpha
+        lightmap->set_bpp(24); // RGBA only, no alpha
         lightmap->data().assign(lightmap_buffer.buffer.begin(), lightmap_buffer.buffer.end());
         lightmap->upload(false, false, false, true);
     }
 
+    mesh->stash(lightmap_texture, "lightmap_texture_id");
     mesh->shared_data().done();
     mesh->each([&](SubMesh* submesh) {
         //Delete empty submeshes

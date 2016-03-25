@@ -45,6 +45,8 @@ public:
     uint32_t height_in_pixels(const RenderTarget& target) const;
 
     ViewportType type() const { return type_; }
+
+    void set_colour(const kglt::Colour& colour);
 private:
     Ratio x_;
     Ratio y_;
