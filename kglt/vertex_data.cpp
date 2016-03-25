@@ -8,11 +8,14 @@
 namespace kglt {
 
 void VertexData::check_or_add_attribute(AttributeBitMask attr) {
-    if(data_.size() > 1 && ((enabled_bitmask_ & attr) != attr)) {
+    bool enabled = ((enabled_bitmask_ & attr) == attr);
+    if(data_.size() > 1 && !enabled) {
         throw std::logic_error("Attempted to add an attribute that didn't exist on the first vertex");
     }
 
-    enabled_bitmask_ |= attr;
+    if(!enabled) {
+        enabled_bitmask_ |= attr;
+    }
 }
 
 VertexData::VertexData():
@@ -135,6 +138,7 @@ void VertexData::tex_coordX(uint8_t which, float u) {
 
     Vertex& vert = data_.at(cursor_position_);
     vert.tex_coords[which].x = u;
+    vert.tex_coords[which].y = vert.tex_coords[which].z = vert.tex_coords[which].w = 0;
 }
 
 void VertexData::tex_coordX(uint8_t which, float u, float v) {
@@ -146,6 +150,7 @@ void VertexData::tex_coordX(uint8_t which, float u, float v) {
     Vertex& vert = data_.at(cursor_position_);
     vert.tex_coords[which].x = u;
     vert.tex_coords[which].y = v;
+    vert.tex_coords[which].z = vert.tex_coords[which].w = 0;
 }
 
 void VertexData::tex_coordX(uint8_t which, float u, float v, float w) {
@@ -158,6 +163,7 @@ void VertexData::tex_coordX(uint8_t which, float u, float v, float w) {
     vert.tex_coords[which].x = u;
     vert.tex_coords[which].y = v;
     vert.tex_coords[which].z = w;
+    vert.tex_coords[which].w = 0;
 }
 
 void VertexData::tex_coordX(uint8_t which, float u, float v, float w, float x) {
@@ -259,12 +265,12 @@ void VertexData::move_to_end() {
     move_to(data_.size());
 }
 
-void VertexData::move_by(int16_t amount) {
+void VertexData::move_by(int32_t amount) {
     cursor_position_ += amount;
 }
 
-void VertexData::move_to(uint16_t index) {
-    if(index > data_.size()) {
+void VertexData::move_to(int32_t index) {
+    if(index > (int32_t) data_.size()) {
         throw std::out_of_range("Tried to move outside the range of the data");
     }
 

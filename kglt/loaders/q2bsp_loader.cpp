@@ -253,7 +253,8 @@ struct LightmapBuffer {
         uint32_t target_x = index % horiz;
         uint32_t target_y = index / horiz;
 
-        uint32_t texel = (target_y * buffer_width) + (target_x * LIGHTMAP_SIZE * LIGHTMAP_CHANNELS);
+        uint32_t texel_start = (target_y * buffer_width) + (target_x * LIGHTMAP_SIZE * LIGHTMAP_CHANNELS);
+        uint32_t texel = texel_start;
 
         for(uint32_t y = 0; y < LIGHTMAP_SIZE; ++y) {
             for(uint32_t x = 0; x < LIGHTMAP_SIZE; ++x) {
@@ -270,8 +271,7 @@ struct LightmapBuffer {
                 // If we just did the last x-iteration, then rewind, then drop
                 // down to the next line
                 if(x == LIGHTMAP_SIZE - 1) {
-                    texel -= LIGHTMAP_SIZE * LIGHTMAP_CHANNELS;
-                    texel += buffer_width;
+                    texel = texel_start + (buffer_width * y);
                 } else {
                     // Otherwise, move to the next texel
                     texel += LIGHTMAP_CHANNELS;
@@ -486,6 +486,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         Q2::TextureInfo& tex = textures[f.texture_info];
 
         if(!texture_info_visible(tex)) {
+            ++face_index;
             continue;
         }
 
@@ -595,6 +596,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         auto lightmap_width  = ceil(max_u / 16) - floor(min_u / 16) + 1;
         auto lightmap_height = ceil(max_v / 16) - floor(min_v / 16) + 1;
 
+        auto pos = mesh->shared_data().cursor_position();
         for(auto& p: lightmap_coords_to_process) {
             float u = p.second.x;
             float v = p.second.y;
@@ -612,7 +614,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             auto lightmap_coords = lightmap_buffer.transform_uv(face_index, u, v);
             mesh->shared_data().tex_coord1(lightmap_coords.first, lightmap_coords.second);
         }
-
+        mesh->shared_data().move_to(pos);
         ++face_index;
     }
 
