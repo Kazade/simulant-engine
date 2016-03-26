@@ -879,3 +879,10 @@ kglt/loaders/q2bsp_loader.h
 kglt/loaders/q2bsp_loader.cpp
 kglt/loaders/wal_loader.h
 kglt/loaders/wal_loader.cpp
+kglt/materials/opengl-2.x/texture_with_lightmap.kglm
+kglt/materials/opengl-2.x/texture_only.kglm
+kglt/materials/opengl-2.x/multitexture2_modulate_with_lighting.kglm
+kglt/materials/opengl-2.x/multitexture2_modulate.kglm
+kglt/materials/opengl-2.x/multitexture2_add.kglm
+kglt/materials/opengl-2.x/diffuse_with_lighting.kglm
+kglt/materials/opengl-2.x/diffuse_only.kglm

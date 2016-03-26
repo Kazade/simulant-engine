@@ -314,7 +314,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     assert(stage && "You passed a Resource that is not a stage to the QBSP loader");
 
     std::map<std::string, TextureID> texture_lookup;
-    TextureID checkerboard = stage->new_texture_from_file("kglt/materials/checkerboard.png");
+    TextureID checkerboard = stage->new_texture_from_file(Texture::BuiltIns::CHECKERBOARD);
     TextureID lightmap_texture = stage->new_texture(false);
 
     auto texture_info_visible = [](Q2::TextureInfo& info) -> bool {
@@ -463,7 +463,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         tex.v_axis.z = v_axis.z;
 
         TextureID new_texture_id = find_or_load_texture(tex.texture_name);
-        MaterialID new_material_id = stage->new_material_from_file("kglt/materials/generic_multitexture.kglm");
+        MaterialID new_material_id = stage->new_material_from_file(Material::BuiltIns::TEXTURE_WITH_LIGHTMAP);
 
         {
             auto mat = stage->material(new_material_id);

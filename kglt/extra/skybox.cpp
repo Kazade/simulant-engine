@@ -19,7 +19,7 @@ SkyBox::SkyBox(StagePtr stage, kglt::TextureID texture, CameraID cam, float size
 
     actor_ = stage->new_actor_with_mesh(stage->new_mesh_as_cube(size));
 
-    auto mat = stage->material(stage->new_material_from_file("kglt/materials/generic_multitexture.kglm"));
+    auto mat = stage->material(stage->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY));
 
     mat->pass(0).set_texture_unit(0, texture);
     mat->pass(0).set_depth_test_enabled(false);

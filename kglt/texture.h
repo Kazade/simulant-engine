@@ -21,6 +21,11 @@ class Texture :
     public RenderTarget {
 
 public:
+    struct BuiltIns {
+        static const std::string CHECKERBOARD;
+        static const std::string BUTTON;
+    };
+
     typedef std::shared_ptr<Texture> ptr;
     typedef std::vector<uint8_t> Data;
 

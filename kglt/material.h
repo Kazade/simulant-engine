@@ -210,6 +210,17 @@ class Material :
     public Updateable {
 
 public:
+    struct BuiltIns {
+        static const std::string TEXTURE_ONLY;
+        static const std::string DIFFUSE_ONLY;
+        static const std::string DIFFUSE_WITH_LIGHTING;
+        static const std::string MULTITEXTURE2_MODULATE;
+        static const std::string MULTITEXTURE2_ADD;
+        static const std::string TEXTURE_WITH_LIGHTMAP;
+        static const std::string TEXTURE_WITH_LIGHTMAP_AND_LIGHTING;
+        static const std::string MULTITEXTURE2_MODULATE_WITH_LIGHTING;
+    };
+
     Material(ResourceManager* resource_manager, MaterialID mat_id);
     ~Material();
 
