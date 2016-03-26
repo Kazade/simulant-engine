@@ -228,7 +228,7 @@ struct RenderQueue {
 
     RootGroup* get_or_create_pass(uint32_t pass, WindowBase* window, StageID stage_id, CameraID camera_id) {
         assert(pass < MAX_MATERIAL_PASSES);
-        if(!passes_[pass]) {
+        if(!passes_[pass]) {            
             passes_[pass] = new RootGroup(*window, stage_id, camera_id);
         }
         return passes_[pass];

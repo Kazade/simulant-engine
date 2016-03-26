@@ -51,10 +51,6 @@ LightGroupData generate_light_group_data(GPUProgramInstance* program_instance, P
 
     ret.light_id = light->id();
 
-    if(uniforms->uses_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT)) {
-        ret.global_ambient_variable_.emplace(program_instance->uniforms->auto_variable_name(SP_AUTO_LIGHT_GLOBAL_AMBIENT));
-    }
-
     if(uniforms->uses_auto(SP_AUTO_LIGHT_POSITION)) {
         ret.light_position_variable_.emplace(uniforms->auto_variable_name(SP_AUTO_LIGHT_POSITION));
         ret.light_position_value_ = Vec4(light->absolute_position(), (light->type() == LIGHT_TYPE_DIRECTIONAL) ? 0.0 : 1.0);
@@ -199,6 +195,14 @@ void RootGroup::insert(Renderable *renderable, MaterialPass *pass, const std::ve
     //Add a shader node
     current = &current->get_or_create<ShaderGroup>(ShaderGroupData(program_instance->_program_as_shared_ptr()));
 
+
+    //Global stuff
+    GlobalGroupData data;
+    if(program_instance->uniforms->uses_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT)) {
+        data.global_ambient_variable_.emplace(program_instance->uniforms->auto_variable_name(SP_AUTO_LIGHT_GLOBAL_AMBIENT));
+    }
+    current = &current->get_or_create<GlobalGroup>(data);
+
     //Auto attributes
     std::map<std::string, ShaderAvailableAttributes> attributes;
     /*
@@ -259,16 +263,17 @@ void RootGroup::insert(Renderable *renderable, MaterialPass *pass, const std::ve
 }
 
 
-void LightGroup::bind(GPUProgram* program) {
-    if(!data_.light_id) {
-        return;
-    }
-
+void GlobalGroup::bind(GPUProgram *program) {
     RootGroup& root = static_cast<RootGroup&>(get_root());
-    auto light = root.stage()->light(data_.light_id);
 
     if(data_.global_ambient_variable_) {
         program->set_uniform_colour(data_.global_ambient_variable_.value(), root.stage()->ambient_light());
+    }
+}
+
+void LightGroup::bind(GPUProgram* program) {
+    if(!data_.light_id) {
+        return;
     }
 
     if(data_.light_position_variable_) {

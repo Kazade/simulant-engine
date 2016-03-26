@@ -147,6 +147,7 @@ private:
     GPUProgram::ptr current_program_;
 };
 
+
 class RootGroup : public RenderGroup {
 public:
     typedef std::shared_ptr<RootGroup> ptr;
@@ -156,7 +157,7 @@ public:
         RenderGroup(nullptr),
         window_(window),
         stage_id_(stage),
-        camera_id_(camera){}
+        camera_id_(camera) {}
 
     virtual ~RootGroup() {}
 
@@ -183,6 +184,35 @@ private:
         MaterialPass* pass,
         const std::vector<kglt::LightID> &lights
     );
+};
+
+struct RenderableGroupData : public GroupData {
+    std::size_t do_hash() const {
+        return 1;
+    }
+};
+
+/* We subclass RenderableGroupData because this global stuff always shares the same
+ * node no matter what the material/mesh
+ */
+struct GlobalGroupData : public RenderableGroupData {
+    std::experimental::optional<std::string> global_ambient_variable_;
+};
+
+
+class GlobalGroup : public RenderGroup {
+public:
+    typedef GlobalGroupData data_type;
+
+    GlobalGroup(RenderGroup* parent, GlobalGroupData data):
+        RenderGroup(parent),
+        data_(data) {}
+
+    void bind(GPUProgram* program);
+    void unbind(GPUProgram* program) {}
+
+private:
+    GlobalGroupData data_;
 };
 
 
@@ -323,12 +353,6 @@ private:
     StagedUniformGroupData data_;
 };
 
-
-struct RenderableGroupData : public GroupData {
-    std::size_t do_hash() const {
-        return 1;
-    }
-};
 
 class RenderableGroup : public RenderGroup {
 public:
@@ -535,8 +559,6 @@ private:
 
 struct LightGroupData : public GroupData {
     LightID light_id;    
-
-    std::experimental::optional<std::string> global_ambient_variable_;
 
     std::experimental::optional<std::string> light_position_variable_;
     kglt::Vec4 light_position_value_;

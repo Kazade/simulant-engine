@@ -241,10 +241,10 @@ struct LightmapBuffer {
     const uint32_t LIGHTMAP_CHANNELS = 3;
 
     LightmapBuffer(uint32_t num_lightmaps) {
-        buffer.resize(LIGHTMAP_SIZE * LIGHTMAP_SIZE * LIGHTMAP_CHANNELS * num_lightmaps, 0);
+        horiz = ceil(sqrt(num_lightmaps));
+        vert = ceil(float(num_lightmaps) / float(horiz));
 
-        horiz = uint32_t(sqrt(num_lightmaps));
-        vert = num_lightmaps / horiz;
+        buffer.resize((LIGHTMAP_SIZE * LIGHTMAP_SIZE * LIGHTMAP_CHANNELS) * (horiz * vert), 0);
     }
 
     void write_lightmap(uint32_t index, uint8_t* data, uint32_t width, uint32_t height) {
@@ -252,6 +252,8 @@ struct LightmapBuffer {
 
         uint32_t target_x = index % horiz;
         uint32_t target_y = index / horiz;
+
+        std::cout << target_x << ", " << target_y << std::endl;
 
         uint32_t texel_start = (target_y * buffer_width) + (target_x * LIGHTMAP_SIZE * LIGHTMAP_CHANNELS);
         uint32_t texel = texel_start;
