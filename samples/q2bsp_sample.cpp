@@ -18,7 +18,7 @@ public:
 
         auto stage = window->stage(stage_id_);
         window->resource_locator->add_search_path("sample_data/q2");
-        window->loader_for("sample_data/CARBO2.bsp")->into(stage.get());
+        window->loader_for("sample_data/sample.bsp")->into(stage.get());
 
         stage->host_camera(camera_id_);
         stage->camera(camera_id_)->set_absolute_position(
@@ -35,25 +35,7 @@ public:
             10000.0
         );
 
-        stage->set_ambient_light(kglt::Colour(0.4, 0.4, 0.4, 1.0));
-
-        lightmap_preview_camera_ = window->new_camera();
-        window->camera(lightmap_preview_camera_)->set_orthographic_projection_from_height(1.0, window->aspect_ratio());
-
-        lightmap_preview_ = window->new_stage();
-/*
-        {
-            auto lm_stage = window->stage(lightmap_preview_);
-            auto world = stage->get_mesh_with_alias("world_geometry");
-            auto lightmap_texture = stage->mesh(world)->get<TextureID>("lightmap_texture_id");
-            auto rect_mat = lm_stage->new_material_from_texture(lightmap_texture);
-            auto rectangle = lm_stage->new_mesh_as_rectangle(0.25, 0.25, Vec2(), rect_mat);
-            auto rect_actor = lm_stage->new_actor_with_mesh(rectangle);
-            lm_stage->actor(rect_actor)->set_absolute_position(0.5, -0.25, 0);
-        }
-*/
-        lightmap_preview_pipeline_ = window->render(lightmap_preview_, lightmap_preview_camera_).with_priority(RENDER_PRIORITY_FOREGROUND);
-        window->enable_pipeline(lightmap_preview_pipeline_);
+        stage->set_ambient_light(kglt::Colour(0.75, 0.75, 0.75, 1.0));
     }
 
     void do_activate() {
@@ -64,10 +46,6 @@ private:
     StageID stage_id_;
     CameraID camera_id_;
     PipelineID pid_;
-
-    StageID lightmap_preview_;
-    CameraID lightmap_preview_camera_;
-    PipelineID lightmap_preview_pipeline_;
 };
 
 
