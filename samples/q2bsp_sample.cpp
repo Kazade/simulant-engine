@@ -41,7 +41,7 @@ public:
         window->camera(lightmap_preview_camera_)->set_orthographic_projection_from_height(1.0, window->aspect_ratio());
 
         lightmap_preview_ = window->new_stage();
-
+/*
         {
             auto lm_stage = window->stage(lightmap_preview_);
             auto world = stage->get_mesh_with_alias("world_geometry");
@@ -51,7 +51,7 @@ public:
             auto rect_actor = lm_stage->new_actor_with_mesh(rectangle);
             lm_stage->actor(rect_actor)->set_absolute_position(0.5, -0.25, 0);
         }
-
+*/
         lightmap_preview_pipeline_ = window->render(lightmap_preview_, lightmap_preview_camera_).with_priority(RENDER_PRIORITY_FOREGROUND);
         window->enable_pipeline(lightmap_preview_pipeline_);
     }
