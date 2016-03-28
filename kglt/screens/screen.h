@@ -61,7 +61,12 @@ protected:
     virtual void do_deactivate() {}
     virtual void do_step(double dt) {}
 
-    PipelineID prepare_basic_scene(StageID& new_stage, CameraID& new_camera);
+    PipelineID prepare_basic_scene(
+        StageID& new_stage,
+        CameraID& new_camera,
+        AvailablePartitioner partitioner=PARTITIONER_OCTREE
+    );
+
     std::pair<PipelineID, PipelineID> prepare_basic_scene_with_overlay(
         StageID& new_stage, CameraID& new_camera, UIStageID& new_ui, CameraID& new_ui_camera
     );
