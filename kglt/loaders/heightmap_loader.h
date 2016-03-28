@@ -18,7 +18,8 @@ public:
 class HeightmapLoaderType : public LoaderType {
 public:
     HeightmapLoaderType() {
-
+        // Add the mesh hint
+        add_hint(LOADER_HINT_MESH);
     }
 
     ~HeightmapLoaderType() {}

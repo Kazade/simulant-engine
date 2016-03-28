@@ -22,7 +22,7 @@ class InputController;
 class InputConnection;
 class WindowBase;
 
-class Device {
+class Device : public std::enable_shared_from_this<Device> {
 public:
     void disconnect(const InputConnection& connection) {
         _disconnect(connection);
@@ -41,11 +41,11 @@ class InputConnection :
     public generic::Identifiable<InputConnectionID> {
 
 public:
-    InputConnection(InputConnectionID id, Device& device);
+    InputConnection(InputConnectionID id, std::weak_ptr<Device> device);
     void disconnect();
 
 private:    
-    Device& device_;
+    std::weak_ptr<Device> device_;
 };
 
 typedef std::function<bool (SDL_Keysym)> GlobalKeyCallback;

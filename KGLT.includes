@@ -45,3 +45,5 @@ kglt/procedural/mesh
 kglt/managers
 kglt/procedural
 kglt/materials
+kglt/materials/opengl-2.x
+kglt/controllers

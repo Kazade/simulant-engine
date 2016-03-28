@@ -6,18 +6,20 @@
 namespace kglt {
 namespace loaders {
 
-class TextureLoader : public Loader {
+class TextureLoader : public BaseTextureLoader {
 public:
     TextureLoader(const unicode& filename, std::shared_ptr<std::stringstream> data):
-        Loader(filename, data) {}
+        BaseTextureLoader(filename, data) {}
 
-    void into(Loadable& resource, const LoaderOptions& options = LoaderOptions());
+private:
+    TextureLoadResult do_load(const std::vector<uint8_t> &buffer) override;
 };
 
 class TextureLoaderType : public LoaderType {
 public:
     TextureLoaderType() {
-
+        // Always add the texture hint
+        add_hint(LOADER_HINT_TEXTURE);
     }
 
     ~TextureLoaderType() {}

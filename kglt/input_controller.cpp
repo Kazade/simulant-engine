@@ -7,7 +7,7 @@
 
 namespace kglt {
 
-InputConnection::InputConnection(InputConnectionID id, Device &device):
+InputConnection::InputConnection(InputConnectionID id, std::weak_ptr<Device> device):
     generic::Identifiable<InputConnectionID>(id),
     device_(device) {
 
@@ -15,11 +15,14 @@ InputConnection::InputConnection(InputConnectionID id, Device &device):
 
 InputConnection Device::new_input_connection() {
     static uint32_t idx = 0;
-    return InputConnection(InputConnectionID(++idx), *this);
+    return InputConnection(InputConnectionID(++idx), shared_from_this());
 }
 
 void InputConnection::disconnect() {
-    device_.disconnect(*this);
+    auto device = device_.lock();
+    if(device) {
+        device->disconnect(*this);
+    }
 }
 
 InputConnection Keyboard::key_pressed_connect(GlobalKeyCallback callback) {

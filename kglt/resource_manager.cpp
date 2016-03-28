@@ -283,13 +283,27 @@ void ResourceManagerImpl::delete_material(MaterialID m) {
 }
 
 MaterialID ResourceManagerImpl::new_material_from_file(const unicode& path, bool garbage_collect) {
-    //Load the material
-    L_INFO(_u("Loading material {0}").format(path));
+    /*
+     * We keep a cache of the materials we've loaded from file, this massively improves performance
+     * and allows sharing of the GPU program during rendering
 
-    auto mat = material(new_material(garbage_collect));
-    window->loader_for(path.encode())->into(mat);
-    mark_material_as_uncollected(mat->id());
-    return mat->id();
+     */
+    static std::unordered_map<unicode, MaterialID> template_materials;
+
+    /* Not in the cache? Load it from file and store as a template */
+    if(!template_materials.count(path)) {
+        L_INFO(_u("Loading material {0}").format(path));
+        auto mat = material(new_material(false));
+        window->loader_for(path.encode())->into(mat);
+        template_materials[path] = mat->id();
+    }
+
+    /* Take the template, clone it, and set garbage_collection appropriately */
+    auto template_id = template_materials.at(path);
+    auto mat_id = material(template_id)->new_clone();
+    material(mat_id)->enable_gc(garbage_collect);
+    mark_material_as_uncollected(mat_id);
+    return mat_id;
 }
 
 MaterialID ResourceManagerImpl::new_material_with_alias(const unicode& alias, bool garbage_collect) {
@@ -316,7 +330,7 @@ MaterialID ResourceManagerImpl::new_material_with_alias_from_file(const unicode&
 }
 
 MaterialID ResourceManagerImpl::new_material_from_texture(TextureID texture_id, bool garbage_collect) {
-    MaterialID m = new_material_from_file("kglt/materials/simple_texture.kglm", garbage_collect);
+    MaterialID m = new_material_from_file(Material::BuiltIns::TEXTURE_ONLY, garbage_collect);
     material(m)->set_texture_unit_on_all_passes(0, texture_id);
     mark_material_as_uncollected(m); //FIXME: Race-y
     return m;
@@ -353,7 +367,7 @@ TextureID ResourceManagerImpl::new_texture(bool garbage_collect) {
 TextureID ResourceManagerImpl::new_texture_from_file(const unicode& path, TextureFlags flags, bool garbage_collect) {
     //Load the texture
     auto tex = texture(new_texture(garbage_collect));
-    window->loader_for("texture", path.encode())->into(tex);
+    window->loader_for(path, LOADER_HINT_TEXTURE)->into(tex);
 
     if((flags & TEXTURE_OPTION_FLIP_VERTICALLY) == TEXTURE_OPTION_FLIP_VERTICALLY) {
         tex->flip_vertically();
@@ -486,7 +500,7 @@ MaterialID ResourceManagerImpl::default_material_id() const {
 }
 
 unicode ResourceManagerImpl::default_material_filename() const {
-    return window->resource_locator->locate_file("kglt/materials/multitexture_and_lighting.kglm");
+    return window->resource_locator->locate_file(Material::BuiltIns::MULTITEXTURE2_MODULATE_WITH_LIGHTING);
 }
 
 

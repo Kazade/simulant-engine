@@ -21,6 +21,7 @@
 #include "managers.h"
 #include "pipeline_helper.h"
 #include "screens/screen_manager.h"
+#include "loader.h"
 
 namespace kglt {
 
@@ -94,7 +95,7 @@ public:
 
     virtual ~WindowBase();
     
-    LoaderPtr loader_for(const unicode& filename);
+    LoaderPtr loader_for(const unicode& filename, LoaderHint hint=LOADER_HINT_NONE);
     LoaderPtr loader_for(const unicode& loader_name, const unicode& filename);
     LoaderTypePtr loader_type(const unicode& loader_name) const;
     
@@ -266,11 +267,11 @@ public:
     Property<WindowBase, MessageBar> message_bar = { this, &WindowBase::message_bar_ };
 
     Property<WindowBase, Watcher> watcher = {
-        this, [](const WindowBase* self) -> Watcher& {
+        this, [](const WindowBase* self) -> Watcher* {
             if(!self->watcher_) {
                 throw LogicError("Watcher has not been initialized");
             } else {
-                return *self->watcher_.get();
+                return self->watcher_.get();
             }
         }
     };
@@ -280,8 +281,8 @@ public:
     Property<WindowBase, ResourceLocator> resource_locator = { this, &WindowBase::resource_locator_ };
 
     Property<WindowBase, Keyboard> keyboard = {
-        this, [](WindowBase* self) -> Keyboard& {
-            return self->input_controller_->keyboard();
+        this, [](WindowBase* self) -> Keyboard* {
+            return &self->input_controller_->keyboard();
         }
     };
 

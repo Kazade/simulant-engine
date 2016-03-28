@@ -37,6 +37,10 @@ Viewport::Viewport(Ratio x, Ratio y, Ratio width, Ratio height, const Colour &co
 
 }
 
+void Viewport::set_colour(const kglt::Colour& colour) {
+    colour_ = colour;
+}
+
 void Viewport::clear(const RenderTarget &target, uint32_t clear_flags) {
     apply(target);
 

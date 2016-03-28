@@ -13,6 +13,9 @@
 
 namespace kglt {
 
+const std::string Texture::BuiltIns::CHECKERBOARD = "kglt/materials/textures/checkerboard.png";
+const std::string Texture::BuiltIns::BUTTON = "kglt/materials/textures/button.png";
+
 Texture::~Texture() {
     if(gl_tex_) {
         GLCheck(glDeleteTextures, 1, &gl_tex_);

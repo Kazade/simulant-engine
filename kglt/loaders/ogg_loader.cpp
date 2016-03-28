@@ -27,7 +27,7 @@ int32_t queue_buffer(Sound* self, StreamWrapper::ptr stream, ALuint buffer) {
     int s = self->buffer_size();
     pcm.resize(s);
 
-    int size = 0;
+    size_t size = 0;
     int result = 0;
 
     while(size < self->buffer_size()) {

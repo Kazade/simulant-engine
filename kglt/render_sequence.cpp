@@ -228,7 +228,7 @@ struct RenderQueue {
 
     RootGroup* get_or_create_pass(uint32_t pass, WindowBase* window, StageID stage_id, CameraID camera_id) {
         assert(pass < MAX_MATERIAL_PASSES);
-        if(!passes_[pass]) {
+        if(!passes_[pass]) {            
             passes_[pass] = new RootGroup(*window, stage_id, camera_id);
         }
         return passes_[pass];
@@ -325,13 +325,13 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
         targets_rendered_this_frame_.insert(&target);
     }
 
-    auto viewport = pipeline_stage->viewport();
+    auto& viewport = pipeline_stage->viewport;
 
     uint32_t clear = pipeline_stage->clear_flags();
     if(clear) {
-        viewport.clear(target, clear); //Implicitly calls apply
+        viewport->clear(target, clear); //Implicitly calls apply
     } else {
-        viewport.apply(target); //FIXME apply shouldn't exist, it ties Viewport to OpenGL...
+        viewport->apply(target); //FIXME apply shouldn't exist, it ties Viewport to OpenGL...
     }
 
     signal_pipeline_started_(*pipeline_stage);
@@ -342,7 +342,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
     if(pipeline_stage->ui_stage_id()) {        
         //This is a UI stage, so just render that
         auto ui_stage = window_.ui_stage(pipeline_stage->ui_stage_id());
-        ui_stage->__resize(viewport.width_in_pixels(target), viewport.height_in_pixels(target));
+        ui_stage->__resize(viewport->width_in_pixels(target), viewport->height_in_pixels(target));
         ui_stage->__render(camera_projection);
     } else {
         auto stage = window_.stage(stage_id);
@@ -398,30 +398,20 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
             queue->each([=](RootGroup* pass_group) {
                 assert(pass_group);
 
-                std::function<void (Renderable&, MaterialPass&)> f = [=](Renderable& renderable, MaterialPass& pass) {
-                    pass.apply_staged_uniforms(pass.program->program.get());
+                auto callback = [&](Renderable* renderable, MaterialPass* pass) {
                     renderer_->render(
-                        renderable,
+                        *renderable,
                         pipeline_stage->camera_id(),
-                        pass.program.get()
+                        pass->program.get()
                     );
                 };
-                pass_group->traverse(f);
+
+                pass_group->traverse(callback);
             });
         });
 
         renderer_->set_current_stage(StageID());
     }
-
-/*
-    std::sort(buffers.begin(), buffers.end(), [](SubActor::ptr lhs, SubActor::ptr rhs) {
-        return lhs->_parent().render_priority() < rhs->_parent().render_priority();
-    });
-
-    //TODO: Batched rendering
-    renderer_->set_current_stage(stage.id());
-        renderer_->render(buffers, stage->camera_id());
-    renderer_->set_current_stage(StageID());*/
 
     signal_pipeline_finished_(*pipeline_stage);
 }

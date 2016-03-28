@@ -47,11 +47,7 @@ enum LumpType {
     MAX_LUMPS
 };
 
-struct Point3f {
-    float x;
-    float y;
-    float z;
-};
+typedef kmVec3 Point3f;
 
 struct Point3s {
     int16_t x;
@@ -64,13 +60,25 @@ struct Edge {
     uint16_t b;
 };
 
+enum SurfaceFlag {
+    SURFACE_FLAG_NONE = 0x0,
+    SURFACE_FLAG_LIGHT = 0x1,
+    SURFACE_FLAG_SLICK = 0x2,
+    SURFACE_FLAG_SKY = 0x4,
+    SURFACE_FLAG_WARP = 0x8,
+    SURFACE_FLAG_TRANS_33 = 0x10,
+    SURFACE_FLAG_TRANS_66 = 0x20,
+    SURFACE_FLAG_FLOWING = 0x40,
+    SURFACE_FLAG_NO_DRAW = 0x80
+};
+
 struct TextureInfo {
     Point3f u_axis;
     float u_offset;
     Point3f v_axis;
     float v_offset;
 
-    uint32_t flags;
+    SurfaceFlag flags;
     uint32_t value;
 
     char texture_name[32];
@@ -159,24 +167,24 @@ void parse_actors(const std::string& actor_string, std::vector<ActorProperties>&
 
 }
 
-kmVec3 find_player_spawn_point(std::vector<ActorProperties>& actors) {
+Vec3 find_player_spawn_point(std::vector<ActorProperties>& actors) {
     for(ActorProperties p: actors) {
         std::cout << p["classname"] << std::endl;
         if(p["classname"] == "info_player_start") {
-            kmVec3 pos;
+            Vec3 pos;
             std::istringstream origin(p["origin"]);
             origin >> pos.x >> pos.y >> pos.z;
             std::cout << "Setting start position to: " << pos.x << ", " << pos.y << ", " << pos.z << std::endl;
             return pos;
         }
     }
-    kmVec3 none;
+    Vec3 none;
     kmVec3Fill(&none, 0, 0, 0);
 
     return none;
 }
 
-void add_lights_to_scene(WindowBase& window, const std::vector<ActorProperties>& actors) {
+void add_lights_to_scene(Stage* stage, const std::vector<ActorProperties>& actors) {
     //Needed because the Quake 2 coord system is weird
     kmMat4 rotation;
     kmMat4RotationX(&rotation, kmDegreesToRadians(-90.0f));
@@ -188,7 +196,7 @@ void add_lights_to_scene(WindowBase& window, const std::vector<ActorProperties>&
             origin >> pos.x >> pos.y >> pos.z;
 
             {
-                auto new_light = window.stage()->light(window.stage()->new_light());
+                auto new_light = stage->light(stage->new_light());
                 new_light->set_absolute_position(pos.x, pos.y, pos.z);
                 kmVec3Transform(&pos, &pos, &rotation);
 
@@ -215,10 +223,130 @@ void add_lights_to_scene(WindowBase& window, const std::vector<ActorProperties>&
     }
 }
 
+unicode locate_texture(ResourceLocator& locator, const unicode& filename) {
+    std::vector<unicode> extensions = { ".wal", ".jpg", ".tga", ".jpeg", ".png" };
+    for(auto& ext: extensions) {
+        try {
+            return locator.locate_file(filename + ext);
+        } catch(IOError&) {
+            continue;
+        }
+    }
+
+    return "";
+}
+
+struct LightmapBuffer {
+    const uint32_t LIGHTMAP_SIZE = 16;
+    const uint32_t LIGHTMAP_CHANNELS = 3;
+
+    LightmapBuffer(uint32_t num_lightmaps) {
+        horiz = ceil(sqrt(num_lightmaps));
+        vert = ceil(float(num_lightmaps) / float(horiz));
+
+        buffer.resize((LIGHTMAP_SIZE * LIGHTMAP_SIZE * LIGHTMAP_CHANNELS) * (horiz * vert), 0);
+    }
+
+    void write_lightmap(uint32_t index, uint8_t* data, uint32_t width, uint32_t height) {
+        uint32_t buffer_width = horiz * LIGHTMAP_SIZE * LIGHTMAP_CHANNELS;
+
+        uint32_t target_x = index % horiz;
+        uint32_t target_y = index / horiz;
+
+        std::cout << target_x << ", " << target_y << std::endl;
+
+        uint32_t texel_start = (target_y * buffer_width) + (target_x * LIGHTMAP_SIZE * LIGHTMAP_CHANNELS);
+        uint32_t texel = texel_start;
+
+        for(uint32_t y = 0; y < LIGHTMAP_SIZE; ++y) {
+            for(uint32_t x = 0; x < LIGHTMAP_SIZE; ++x) {
+                uint32_t source_idx = ((y * width) + x) * 3;
+
+                // If we are within the bounds of the source lightmap, then
+                // copy the data for this texel to the right place
+                if(x < width && y < height) {
+                    buffer.at(texel) = data[source_idx];
+                    buffer.at(texel + 1) = data[source_idx + 1];
+                    buffer.at(texel + 2) = data[source_idx + 2];
+                }
+
+                // If we just did the last x-iteration, then rewind, then drop
+                // down to the next line
+                if(x == LIGHTMAP_SIZE - 1) {
+                    texel = texel_start + (buffer_width * y);
+                } else {
+                    // Otherwise, move to the next texel
+                    texel += LIGHTMAP_CHANNELS;
+                }
+            }
+        }
+    }
+
+    std::pair<float, float> transform_uv(uint32_t index, float u, float v) const {
+        float ret_u = u / float(horiz);
+        float ret_v = v / float(vert);
+
+        uint32_t x = index % horiz;
+        uint32_t y = index / horiz;
+
+        ret_u += (1.0 / horiz) * x;
+        ret_v += (1.0 / vert) * y;
+
+        return std::make_pair(ret_u, ret_v);
+    }
+
+    const uint32_t width_in_texels() const {
+        return horiz * LIGHTMAP_SIZE;
+    }
+
+    const uint32_t height_in_texels() const {
+        return vert * LIGHTMAP_SIZE;
+    }
+
+    uint32_t horiz = 0;
+    uint32_t vert = 0;
+    std::vector<uint8_t> buffer;
+};
+
 void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     Loadable* res_ptr = &resource;
     Stage* stage = dynamic_cast<Stage*>(res_ptr);
-    assert(window && "You passed a Resource that is not a window to the QBSP loader");
+    assert(stage && "You passed a Resource that is not a stage to the QBSP loader");
+
+    std::map<std::string, TextureID> texture_lookup;
+    TextureID checkerboard = stage->new_texture_from_file(Texture::BuiltIns::CHECKERBOARD);
+    TextureID lightmap_texture = stage->new_texture(false);
+
+    auto texture_info_visible = [](Q2::TextureInfo& info) -> bool {
+        /* Don't draw invisible things */
+        if((info.flags & Q2::SURFACE_FLAG_NO_DRAW) == Q2::SURFACE_FLAG_NO_DRAW) {
+            return false;
+        }
+
+        /* Don't use sky faces (might change this... could create a skybox) */
+        if((info.flags & Q2::SURFACE_FLAG_SKY) == Q2::SURFACE_FLAG_SKY) {
+            return false;
+        }
+
+        return true;
+    };
+
+    auto find_or_load_texture = [&](const std::string& texture_name) -> TextureID {
+        if(texture_lookup.count(texture_name)) {
+            return texture_lookup[texture_name];
+        } else {
+            TextureID new_texture_id;
+            auto texture_filename = locate_texture(*stage->window->resource_locator.get(), texture_name);
+            if(!texture_filename.empty()) {
+                new_texture_id = stage->new_texture_from_file(texture_filename);
+            } else {
+                L_DEBUG(_u("Texture {0} was missing").format(texture_name));
+                new_texture_id = checkerboard;
+            }
+            texture_lookup[texture_name] = new_texture_id;
+            return new_texture_id;
+        }
+    };
 
     std::ifstream file(filename_.encode().c_str(), std::ios::binary);
     if(!file.good()) {
@@ -244,11 +372,10 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     std::vector<ActorProperties> actors;
     parse_actors(actor_string, actors);
-    kmVec3 cam_pos = find_player_spawn_point(actors);
-    kmVec3Transform(&cam_pos, &cam_pos, &rotation);
-    window->stage()->camera()->set_absolute_position(cam_pos);
+    Vec3 cam_pos = find_player_spawn_point(actors);
+    stage->stash(cam_pos, "player_spawn");
 
-    add_lights_to_scene(*window, actors);
+    add_lights_to_scene(stage, actors);
 
     int32_t num_vertices = header.lumps[Q2::LumpType::VERTICES].length / sizeof(Q2::Point3f);
     std::vector<Q2::Point3f> vertices(num_vertices);
@@ -276,40 +403,51 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     file.seekg(header.lumps[Q2::LumpType::FACE_EDGE_TABLE].offset);
     file.read((char*)&face_edges[0], sizeof(int32_t) * num_face_edges);
 
-    std::vector<kmVec3> positions;
-    //Copy the vertices to the mesh
-    for(Q2::Point3f& p: vertices) {
-        kmVec3 point;
-        kmVec3Fill(&point, p.x, p.y, p.z);
-        kmVec3Transform(&point, &point, &rotation);
+    std::for_each(vertices.begin(), vertices.end(), [&](Q2::Point3f& vert) {
+        // Dirty casts, but it should work...
+        kmVec3Transform((kmVec3*)&vert, (kmVec3*)&vert, &rotation);
+    });
 
-        positions.push_back(point);
-    }
+    /* Lightmaps are a bunch of fun! There is one lightmap per-face, and that might be up to 16x16 - but
+     * can be smaller. Each face has the byte offset to the lightmap in the file, and the width and height of
+     * the lightmap is defined by some weird calculation. So you can't just read all the lightmaps without first
+     * reading the faces. So we read the lump into memory, then while we process the faces we pack the lightmap into
+     * a texture which is sqrt(num_faces) * 16 wide and tall and then manipulate the texture coords appropriately.
+     */
 
-    std::map<kglt::TextureID, uint32_t> mesh_for_texture;
+    LightmapBuffer lightmap_buffer(num_faces);
+    auto process_lightmap = [&lightmap_buffer](uint32_t face_idx, uint8_t* source_data, float min_u, float max_u, float min_v, float max_v) {
+        auto lightmap_width  = ceil(max_u / 16) - floor(min_u / 16) + 1;
+        auto lightmap_height = ceil(max_v / 16) - floor(min_v / 16) + 1;
 
-    uint16_t texinfo_idx = 0;
-    std::map<uint16_t, MaterialID> tex_info_to_material;
-    std::map<std::string, kglt::TextureID> tex_lookup;
-    std::map<std::string, std::pair<uint32_t, uint32_t> > texture_dimensions;
+        lightmap_buffer.write_lightmap(face_idx, source_data, lightmap_width, lightmap_height);
+    };
+
+    int32_t lightmap_data_size = header.lumps[Q2::LumpType::LIGHTMAPS].length;
+    std::vector<uint8_t> lightmap_data(lightmap_data_size);
+    file.seekg(header.lumps[Q2::LumpType::LIGHTMAPS].offset);
+    file.read((char*)&lightmap_data[0], lightmap_data_size);
 
     /**
      *  Load the textures and generate materials
      */
 
-    MeshID mid = window->stage()->new_mesh();
-    auto mesh = window->stage()->mesh(mid);
+    MeshID mid = stage->new_mesh_with_alias("world_geometry");
+    auto mesh = stage->mesh(mid);
 
-    std::map<MaterialID, SubMeshIndex> material_to_submesh;
+    std::vector<MaterialID> materials;
+    std::vector<std::pair<uint32_t, uint32_t>> texture_dimensions;
+    std::unordered_map<MaterialID, SubMeshID> submeshes_by_material;
 
-    //We need to hold references here until the materials are attached to the mesh
-    std::vector<MaterialPtr> mat_ref_count_holder_;
-    std::vector<TexturePtr> tex_ref_count_holder_;
+    materials.resize(textures.size());
+    texture_dimensions.resize(textures.size());
 
+    uint32_t tex_idx = 0;
     for(Q2::TextureInfo& tex: textures) {
-        MaterialID mat_id = window->new_material_from_file(window->default_material_filename());
-        auto mat = window->material(mat_id);
-        mat_ref_count_holder_.push_back(mat.__object); //Prevent GC until we are done
+        if(!texture_info_visible(tex)) {
+            ++tex_idx;
+            continue;
+        }
 
         kmVec3 u_axis, v_axis;
         kmVec3Fill(&u_axis, tex.u_axis.x, tex.u_axis.y, tex.u_axis.z);
@@ -324,52 +462,36 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         tex.v_axis.y = v_axis.y;
         tex.v_axis.z = v_axis.z;
 
-        ProtectedPtr<Texture> texture;
-        kglt::TextureID tid;
-        if(tex_lookup.find(tex.texture_name) != tex_lookup.end()) {
-            tid = tex_lookup[tex.texture_name];
-        } else {
-            std::string texture_filename = "textures/" + std::string(tex.texture_name) + ".tga";
+        TextureID new_texture_id = find_or_load_texture(tex.texture_name);
+        MaterialID new_material_id = stage->new_material_from_file(Material::BuiltIns::TEXTURE_WITH_LIGHTMAP);
 
-            try {
-                texture = window->stage()->texture(window->stage()->new_texture_from_file(texture_filename));
-                tex_ref_count_holder_.push_back(texture.__object);
-            } catch(IOError& e) {
-                //Fallback texture
-                L_ERROR("Unable to find texture required by BSP file: " + texture_filename);
-                texture = window->stage()->texture(window->stage()->new_texture());
-                tex_ref_count_holder_.push_back(texture.__object);
-
-                //FIXME: Should be checkerboard, not starfield
-                kglt::procedural::texture::starfield(texture.__object, 64, 64);
-            }
-
-            tid = texture->id();
-
-            texture->upload(false, true, false, false);
-
-            //We need to store this to divide the texture coordinates later
-            texture_dimensions[tex.texture_name].first = texture->width();
-            texture_dimensions[tex.texture_name].second = texture->height();
-
-            tex_lookup[tex.texture_name] = tid;
+        {
+            auto mat = stage->material(new_material_id);
+            mat->pass(0).set_texture_unit(0, new_texture_id);
+            mat->pass(0).set_texture_unit(1, lightmap_texture);
         }
 
-        //Set the texture for unit 0
-        mat->pass(0).set_texture_unit(0, tid);
-        mat->pass(0).set_blending(BLEND_NONE);
+        auto texture = stage->texture(new_texture_id);
+        texture_dimensions[tex_idx].first = texture->width();
+        texture_dimensions[tex_idx].second = texture->height();
 
-        tex_info_to_material[texinfo_idx] = mat->id();
-        texinfo_idx++;
-
-        L_DEBUG(_u("Associated material: {0}").format(mat->id().value()));
-        material_to_submesh[mat->id()] = mesh->new_submesh(mat->id(), MESH_ARRANGEMENT_TRIANGLES, true);
+        materials[tex_idx] = new_material_id;
+        submeshes_by_material[new_material_id] = mesh->new_submesh_with_material(new_material_id);
+        tex_idx++;
     }
 
-    std::cout << "Num textures: " << tex_lookup.size() << std::endl;
-    std::cout << "Num submeshes: " << mesh->submesh_ids().size() << std::endl;
+    std::cout << "Num textures: " << texture_lookup.size() << std::endl;
+    std::cout << "Num submeshes: " << mesh->submesh_count() << std::endl;
 
+    uint32_t face_index = 0;
     for(Q2::Face& f: faces) {
+        Q2::TextureInfo& tex = textures[f.texture_info];
+
+        if(!texture_info_visible(tex)) {
+            ++face_index;
+            continue;
+        }
+
         std::vector<uint32_t> indexes;
         for(uint32_t i = f.first_edge; i < f.first_edge + f.num_edges; ++i) {
             int32_t edge_idx = face_edges[i];
@@ -385,12 +507,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             }
         }
 
-        //Add a submesh for this face
-        SubMesh& sm = mesh->submesh(material_to_submesh[tex_info_to_material[f.texture_info]]);
-        Q2::TextureInfo& tex = textures[f.texture_info];
-
-        kmVec3 normal;
-        kmVec3Fill(&normal, 0, 1, 0);
+        auto material_id = materials[f.texture_info];
+        SubMesh* sm = mesh->submesh(submeshes_by_material[material_id]);
 
         /*
          *  A unique vertex is defined by a combination of the position ID and the
@@ -405,6 +523,13 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
          */
 
         std::map<uint32_t, uint32_t> index_lookup;
+        kmVec3 normal;
+        kmVec3Fill(&normal, 0, 1, 0);
+
+        float min_u = 10000, max_u = -10000;
+        float min_v = 10000, max_v = -10000;
+
+        std::map<int32_t, Vec2> lightmap_coords_to_process;
 
         for(int16_t i = 1; i < (int16_t) indexes.size() - 1; ++i) {
             uint32_t tri_idx[] = {
@@ -416,9 +541,9 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             //Calculate the surface normal for this triangle
             kmVec3 normal;
             kmVec3 vec1, vec2;
-            kmVec3& v1 = positions[tri_idx[0]];
-            kmVec3& v2 = positions[tri_idx[1]];
-            kmVec3& v3 = positions[tri_idx[2]];
+            kmVec3& v1 = vertices[tri_idx[0]];
+            kmVec3& v2 = vertices[tri_idx[1]];
+            kmVec3& v3 = vertices[tri_idx[2]];
 
             kmVec3Subtract(&vec1, &v2, &v1);
             kmVec3Subtract(&vec2, &v3, &v1);
@@ -428,12 +553,12 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             for(uint8_t j = 0; j < 3; ++j) {
                 if(container::contains(index_lookup, tri_idx[j])) {
                     //We've already processed this vertex
-                    sm.index_data().index(index_lookup[tri_idx[j]]);
+                    sm->index_data().index(index_lookup[tri_idx[j]]);
                     continue;
                 }
 
 
-                kmVec3& pos = positions[tri_idx[j]];
+                kmVec3& pos = vertices[tri_idx[j]];
 
                 //We haven't done this before so calculate the vertex
                 float u = pos.x * tex.u_axis.x
@@ -444,37 +569,77 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
                         + pos.y * tex.v_axis.y
                         + pos.z * tex.v_axis.z + tex.v_offset;
 
-                float w = float(texture_dimensions[tex.texture_name].first);
-                float h = float(texture_dimensions[tex.texture_name].second);
+                if(u < min_u) min_u = u;
+                if(u > max_u) max_u = u;
+                if(v < min_v) min_v = v;
+                if(v > max_v) max_v = v;
+
+                float w = float(texture_dimensions[f.texture_info].first);
+                float h = float(texture_dimensions[f.texture_info].second);
 
                 mesh->shared_data().position(pos);
                 mesh->shared_data().normal(normal);
                 mesh->shared_data().diffuse(kglt::Colour::WHITE);
                 mesh->shared_data().tex_coord0(u / w, v / h);
-                mesh->shared_data().tex_coord1(u / w, v / h);
+                mesh->shared_data().tex_coord1(0, 0);
+
+                lightmap_coords_to_process[mesh->shared_data().cursor_position()] = Vec2(u, v);
                 mesh->shared_data().move_next();
 
-                sm.index_data().index(mesh->shared_data().count() - 1);
+                sm->index_data().index(mesh->shared_data().count() - 1);
 
                 //Cache this new vertex in the lookup
                 index_lookup[tri_idx[j]] = mesh->shared_data().count() - 1;
             }
         }
-    }
 
-    mesh->shared_data().done();
-    for(SubMeshIndex i: mesh->submesh_ids()) {
-        //Delete empty submeshes
-        if(!mesh->submesh(i).index_data().count()) {
-            mesh->delete_submesh(i);
-            continue;
+        process_lightmap(face_index, &lightmap_data[0] + f.lightmap_offset, min_u, max_u, min_v, max_v);
+
+        auto pos = mesh->shared_data().cursor_position();
+        for(auto& p: lightmap_coords_to_process) {
+            float u = p.second.x;
+            float v = p.second.y;
+
+            u -= floor(min_u / 16.0f) * 16.0f;
+            u += 8.0;
+            u /= 128.0 * 16.0;
+
+            v -= floor(min_v / 16.0f) * 16.0f;
+            v += 8.0;
+            v /= 128.0 * 16.0;
+
+            mesh->shared_data().move_to(p.first);
+
+            auto lightmap_coords = lightmap_buffer.transform_uv(face_index, u, v);
+            mesh->shared_data().tex_coord1(lightmap_coords.first, lightmap_coords.second);
         }
-        mesh->submesh(i).index_data().done();
+        mesh->shared_data().move_to(pos);
+        ++face_index;
     }
 
-    L_DEBUG(_u("Created an actor for mesh").format(mid));
+    /* Now upload the lightmap texture */
+    {
+        auto lightmap = stage->texture(lightmap_texture);
+        lightmap->resize(lightmap_buffer.width_in_texels(), lightmap_buffer.height_in_texels());
+        lightmap->set_bpp(24); // RGBA only, no alpha
+        lightmap->data().assign(lightmap_buffer.buffer.begin(), lightmap_buffer.buffer.end());
+        lightmap->upload(false, false, false, true);
+    }
+
+    mesh->stash(lightmap_texture, "lightmap_texture_id");
+    mesh->shared_data().done();
+    mesh->each([&](SubMesh* submesh) {
+        //Delete empty submeshes
+        /*if(!submesh->index_data().count()) {
+            mesh->delete_submesh(submesh->id());
+            return;
+        }*/
+        submesh->index_data().done();
+    });
+
+    L_DEBUG(_u("Created an actor for mesh: {0}").format(mid));
     //Finally, create an actor from the world mesh
-    window->stage()->new_actor(mid);
+    stage->new_actor(mid);
 }
 
 }

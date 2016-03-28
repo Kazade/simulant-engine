@@ -58,7 +58,7 @@ void Mesh::enable_debug(bool value) {
 
         resource_manager().window->loader_for(
             "material_loader",
-            "kglt/materials/diffuse_render.kglm"
+            Material::BuiltIns::DIFFUSE_ONLY
         )->into(resource_manager().material(mid));
 
         normal_debug_mesh_ = new_submesh_with_material(mid, MESH_ARRANGEMENT_LINES, VERTEX_SHARING_MODE_INDEPENDENT);

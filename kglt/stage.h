@@ -6,6 +6,7 @@
 #include "generic/managed.h"
 #include "generic/manager.h"
 #include "generic/generic_tree.h"
+#include "generic/data_carrier.h"
 
 #include "managers/window_holder.h"
 #include "managers/skybox_manager.h"
@@ -42,6 +43,7 @@ class Stage:
     public SceneNode,
     public Protectable,
     public RenderableStage,
+    public generic::DataCarrier,
     public virtual WindowHolder {
 
 public:

@@ -191,8 +191,6 @@ public:
     MaterialID new_material_from_texture(TextureID texture, bool garbage_collect=true) override;
     MaterialID get_material_with_alias(const unicode& alias) override;    
 
-    MaterialID clone_material(MaterialID mat);
-
     ProtectedPtr<Material> material(MaterialID material);
     const ProtectedPtr<Material> material(MaterialID material) const;
     bool has_material(MaterialID m) const;

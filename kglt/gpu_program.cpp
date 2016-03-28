@@ -205,6 +205,8 @@ bool GPUProgram::init() {
 
 void GPUProgram::cleanup()  {
     if(GLThreadCheck::is_current() && program_object_) {        
+        L_DEBUG(_u("Destroying GPU program: {0}").format(program_object_));
+
         for(auto obj: this->shaders_) {
             if(obj.second.object) {
                 GLCheck(glDeleteShader, obj.second.object);
@@ -318,7 +320,7 @@ void GPUProgram::build() {
     }
 
     if(!GLThreadCheck::is_current()) {
-        L_ERROR("Attempting to build a GPU program in the wrong thread");
+        throw LogicError("Attempting to build a GPU program in the wrong thread");
     }
 
     prepare_program();

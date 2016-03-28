@@ -93,8 +93,8 @@ public:
     }
 
 private:
-    CameraID camera_id_;
-    StageID stage_id_;
+    kglt::CameraID camera_id_;
+    kglt::StageID stage_id_;
 };
 
 #endif // TEST_OBJECT_H

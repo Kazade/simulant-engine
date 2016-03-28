@@ -19,19 +19,30 @@
 
 #include "scene_node.h"
 #include "interfaces.h"
+#include "controllers/controller.h"
 
 namespace kglt {
 
 class Object :
     public generic::DataCarrier, //And they allow additional data to be attached
     public Transformable,
-    public SceneNode {
+    public SceneNode,
+    public Controllable {
 
 public:
     Object(Stage* parent_scene);
     virtual ~Object();
 
-	virtual void update(double dt) {
+    void pre_update(double step) override {
+        pre_update_controllers(step);
+    }
+
+    void post_update(double step) override {
+        post_update_controllers(step);
+    }
+
+    void update(double dt) override {
+        update_controllers(dt);
 		do_update(dt);
         _update_constraint();
 	}

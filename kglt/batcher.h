@@ -56,35 +56,32 @@ public:
     }
 
     ///Traverses the tree and calls the callback on each subactor we encounter
-    void traverse(std::function<void (Renderable&, MaterialPass&)> callback) {
-        bind(get_root().current_program());
+    void traverse(std::function<void (Renderable*, MaterialPass*)> callback) {
+        GPUProgram* program = get_root().current_program();
+
+        bind(program);
 
         for(auto& p: renderables_) {
             assert(p.first);
             assert(p.second);
 
-            callback(*p.first, *p.second);
+            callback(p.first, p.second);
         }
 
-        for(std::pair<std::size_t, RenderGroups> groups: this->children_) {
-            for(std::pair<std::size_t, std::shared_ptr<RenderGroup>> group: groups.second) {
-                group.second->traverse(callback);
-            }
+        for(std::pair<std::size_t, std::shared_ptr<RenderGroup>> group: this->children_) {
+            group.second->traverse(callback);
         }
 
-        unbind(get_root().current_program());
+        unbind(program);
     }
 
     template<typename RenderGroupType>
     RenderGroup& get_or_create(const GroupData& data) {
         static_assert(std::is_base_of<RenderGroup, RenderGroupType>::value, "RenderGroupType must derive RenderGroup");
 
-        size_t identifier = typeid(RenderGroupType).hash_code();
-
-        auto& container = children_[identifier];
-
         const typename RenderGroupType::data_type& cast_data = static_cast<const typename RenderGroupType::data_type&>(data);
 
+        auto& container = children_;
         RenderGroups::const_iterator it = container.find(data.hash());
 
         if(it != container.end()) {
@@ -99,35 +96,16 @@ public:
     template<typename RenderGroupType>
     bool exists(const GroupData& data) const {
         static_assert(std::is_base_of<RenderGroup, RenderGroupType>::value, "RenderGroupType must derive RenderGroup");
-
-        std::size_t hash = typeid(RenderGroupType).hash_code();
-
-        typename RenderGroupChildren::const_iterator it = children_.find(hash);
-        if(it == children_.end()) {
-            return false;
-        }
-
-        const RenderGroups& container = (*it).second;
-
-        return container.find(data.hash()) != container.end();
+        return children_.find(data.hash()) != children_.end();
     }
 
     template<typename RenderGroupType>
     RenderGroup& get(const GroupData& data) {
         static_assert(std::is_base_of<RenderGroup, RenderGroupType>::value, "RenderGroupType must derive RenderGroup");
 
-        std::size_t hash = typeid(RenderGroupType).hash_code();
+        RenderGroups::const_iterator it = children_.find(data.hash());
 
-        typename RenderGroupChildren::const_iterator child_it = children_.find(hash);
-        if(child_it == children_.end()) {
-            throw DoesNotExist<RenderGroupType>();
-        }
-
-        const RenderGroups& container = (*child_it).second;
-
-        RenderGroups::const_iterator it = container.find(data.hash());
-
-        if(it != container.end()) {
+        if(it != children_.end()) {
             return *(*it).second;
         } else {
             throw DoesNotExist<RenderGroupType>();
@@ -147,30 +125,28 @@ public:
 
     void clear() {
         renderables_.clear();
-        for(auto groups: children_) {
-            for(auto group: groups.second) {
-                group.second->clear();
-            }
+        for(auto group: children_) {
+            group.second->clear();
         }
         children_.clear();
     }
 
-    void set_current_program(GPUProgram* program) { current_program_ = program; }
-    GPUProgram* current_program() const { return current_program_; }
+    void set_current_program(GPUProgram::ptr program) { current_program_ = program; }
+    GPUProgram* current_program() const { return current_program_.get(); }
 
 protected:
     RenderGroup* parent_;
 
 private:
     typedef std::unordered_map<std::size_t, std::shared_ptr<RenderGroup> > RenderGroups;
-    typedef std::unordered_map<std::size_t, RenderGroups> RenderGroupChildren;
 
-    RenderGroupChildren children_;
+    RenderGroups children_;
 
     std::list<std::pair<Renderable*, MaterialPass*> > renderables_;
 
-    GPUProgram* current_program_ = nullptr;
+    GPUProgram::ptr current_program_;
 };
+
 
 class RootGroup : public RenderGroup {
 public:
@@ -181,7 +157,7 @@ public:
         RenderGroup(nullptr),
         window_(window),
         stage_id_(stage),
-        camera_id_(camera){}
+        camera_id_(camera) {}
 
     virtual ~RootGroup() {}
 
@@ -208,6 +184,35 @@ private:
         MaterialPass* pass,
         const std::vector<kglt::LightID> &lights
     );
+};
+
+struct RenderableGroupData : public GroupData {
+    std::size_t do_hash() const {
+        return 1;
+    }
+};
+
+/* We subclass RenderableGroupData because this global stuff always shares the same
+ * node no matter what the material/mesh
+ */
+struct GlobalGroupData : public RenderableGroupData {
+    std::experimental::optional<std::string> global_ambient_variable_;
+};
+
+
+class GlobalGroup : public RenderGroup {
+public:
+    typedef GlobalGroupData data_type;
+
+    GlobalGroup(RenderGroup* parent, GlobalGroupData data):
+        RenderGroup(parent),
+        data_(data) {}
+
+    void bind(GPUProgram* program);
+    void unbind(GPUProgram* program) {}
+
+private:
+    GlobalGroupData data_;
 };
 
 
@@ -243,10 +248,10 @@ private:
 };
 
 struct ShaderGroupData : public GroupData {
-    ShaderGroupData(GPUProgram* program):
+    ShaderGroupData(GPUProgram::ptr program):
         shader_(program) {}
 
-    GPUProgram* shader_;
+    GPUProgram::ptr shader_;
 
     std::size_t do_hash() const;
 };
@@ -303,12 +308,51 @@ private:
     AutoAttributeGroupData data_;
 };
 
+typedef std::map<std::string, float> FloatUniforms;
+typedef std::map<std::string, int32_t> IntUniforms;
 
-struct RenderableGroupData : public GroupData {
+struct StagedUniformGroupData : public GroupData {
+    FloatUniforms float_uniforms;
+    IntUniforms int_uniforms;
+
+    StagedUniformGroupData(FloatUniforms floats, IntUniforms ints):
+        float_uniforms(floats), int_uniforms(ints) {}
+
     std::size_t do_hash() const {
-        return 1;
+        size_t seed;
+
+        hash_combine(seed, typeid(StagedUniformGroupData).name());
+
+        // std::map is ordered so this will work
+        for(auto& p: float_uniforms) {
+            hash_combine(seed, p.first);
+            hash_combine(seed, p.second);
+        }
+
+        for(auto& p: int_uniforms) {
+            hash_combine(seed, p.first);
+            hash_combine(seed, p.second);
+        }
+
+        return seed;
     }
 };
+
+class StagedUniformGroup : public RenderGroup {
+public:
+    typedef StagedUniformGroupData data_type;
+
+    StagedUniformGroup(RenderGroup* parent, StagedUniformGroupData data):
+        RenderGroup(parent),
+        data_(data) {}
+
+    void bind(GPUProgram *program);
+    void unbind(GPUProgram *program);
+
+private:
+    StagedUniformGroupData data_;
+};
+
 
 class RenderableGroup : public RenderGroup {
 public:
@@ -515,8 +559,6 @@ private:
 
 struct LightGroupData : public GroupData {
     LightID light_id;    
-
-    std::experimental::optional<std::string> global_ambient_variable_;
 
     std::experimental::optional<std::string> light_position_variable_;
     kglt::Vec4 light_position_value_;

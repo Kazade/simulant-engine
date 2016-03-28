@@ -32,6 +32,11 @@ public:
     explicit operator bool() const {
         return manager_ && manager_->manager_contains(identifier_);
     }
+
+    std::shared_ptr<typename Manager::Type> get() {
+        return manager_->manager_get(identifier_).lock();
+    }
+
 private:
     Manager* manager_ = nullptr;
     ID identifier_;

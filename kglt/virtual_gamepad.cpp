@@ -53,7 +53,7 @@ unicode layout = R"(
             .dpad_left {
                 width: {0}px;
                 height: {0}px;
-                background-image: "kglt/materials/button.png";
+                background-image: "kglt/materials/textures/button.png";
                 background-decorator: image;
                 margin-left: {1}px;
                 margin-right: {1}px;
@@ -66,7 +66,7 @@ unicode layout = R"(
             .dpad_right {
                 width: {0}px;
                 height: {0}px;
-                background-image: "kglt/materials/button.png";
+                background-image: "kglt/materials/textures/button.png";
                 background-decorator: image;
                 margin-left: {1}px;
                 margin-right: {1}px;
@@ -83,7 +83,7 @@ unicode layout = R"(
                 line-height: {0}px;
                 vertical-align: middle;
                 background-decorator: image;
-                background-image: "kglt/materials/button.png";
+                background-image: "kglt/materials/textures/button.png";
                 margin-left: {1}px;
                 margin-right: {1}px;
                 font-size: 2em;

@@ -181,8 +181,17 @@ void StageManager::update(double dt) {
     //Update the stages
     for(auto stage_pair: StageManager::__objects()) {
         GenericTreeNode* root = stage_pair.second.get();
-        root->apply_recursively([=](GenericTreeNode* node) -> void {
+
+        root->apply_recursively([=](GenericTreeNode* node) {
+            node->as<SceneNode>()->pre_update(dt);
+        });
+
+        root->apply_recursively([=](GenericTreeNode* node) {
             node->as<SceneNode>()->update(dt);
+        });
+
+        root->apply_recursively([=](GenericTreeNode* node) {
+            node->as<SceneNode>()->post_update(dt);
         });
     }
 }

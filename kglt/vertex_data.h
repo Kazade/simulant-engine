@@ -73,8 +73,8 @@ public:
 
     void clear();
     void move_to_start();
-    void move_by(int16_t amount);
-    void move_to(uint16_t index);
+    void move_by(int32_t amount);
+    void move_to(int32_t index);
     void move_to_end();
     uint16_t move_next();
 
@@ -86,7 +86,7 @@ public:
     void position(const kmVec3& pos);
     void position(const kmVec2& pos);
 
-    kglt::Vec3 position_at(uint16_t idx) {
+    kglt::Vec3 position_at(int32_t idx) {
         return data_.at(idx).position;
     }
 
@@ -94,7 +94,7 @@ public:
     void normal(float x, float y, float z);
     void normal(const kmVec3& n);
 
-    kmVec3 normal_at(uint16_t idx) {
+    kmVec3 normal_at(int32_t idx) {
         return data_.at(idx).normal;
     }
 
@@ -104,7 +104,7 @@ public:
     void tex_coord0(float x, float y, float z, float w);
     void tex_coord0(const kmVec2& vec) { tex_coord0(vec.x, vec.y); }
 
-    kglt::Vec4 texcoord0_at(uint16_t idx) {
+    kglt::Vec4 texcoord0_at(int32_t idx) {
         return data_.at(idx).tex_coords[0];
     }
 
@@ -218,6 +218,7 @@ public:
 
     bool empty() const { return data_.empty(); }
 
+    const int32_t cursor_position() const { return cursor_position_; }
 private:
     int32_t enabled_bitmask_;
     uint8_t tex_coord_dimensions_[8];

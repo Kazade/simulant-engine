@@ -9,8 +9,8 @@
         
         SET(UNIFORM INT "texture" 0)
         
-        SET(FLAG DEPTH_WRITE OFF)
-        SET(FLAG DEPTH_CHECK OFF)
+        SET(FLAG DEPTH_WRITE ON)
+        SET(FLAG DEPTH_CHECK ON)
         SET(FLAG BLEND ALPHA)
 
         BEGIN_DATA(VERTEX)

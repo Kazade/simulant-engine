@@ -222,6 +222,8 @@ class GPUProgram:
 
 public:
     GPUProgram();
+    GPUProgram(const GPUProgram&) = delete;
+    GPUProgram& operator=(const GPUProgram&) = delete;
 
     bool init() override;
     void cleanup() override;
@@ -275,6 +277,7 @@ public:
         }
     }
 
+    GLuint program_object() const { return program_object_; }
 private:
     std::unordered_map<unicode, UniformInfo> uniform_info_;
     void prepare_program();

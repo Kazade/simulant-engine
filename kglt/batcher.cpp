@@ -51,10 +51,6 @@ LightGroupData generate_light_group_data(GPUProgramInstance* program_instance, P
 
     ret.light_id = light->id();
 
-    if(uniforms->uses_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT)) {
-        ret.global_ambient_variable_.emplace(program_instance->uniforms->auto_variable_name(SP_AUTO_LIGHT_GLOBAL_AMBIENT));
-    }
-
     if(uniforms->uses_auto(SP_AUTO_LIGHT_POSITION)) {
         ret.light_position_variable_.emplace(uniforms->auto_variable_name(SP_AUTO_LIGHT_POSITION));
         ret.light_position_value_ = Vec4(light->absolute_position(), (light->type() == LIGHT_TYPE_DIRECTIONAL) ? 0.0 : 1.0);
@@ -191,13 +187,21 @@ void RootGroup::insert(Renderable *renderable, MaterialPass *pass, const std::ve
 
     if(!renderable->is_visible()) return;
 
-    auto& program_instance = pass->program;
+    auto program_instance = pass->program.get();
 
     //First, let's build the texture units
     RenderGroup* current = this;
 
     //Add a shader node
-    current = &current->get_or_create<ShaderGroup>(ShaderGroupData(program_instance->program.get()));
+    current = &current->get_or_create<ShaderGroup>(ShaderGroupData(program_instance->_program_as_shared_ptr()));
+
+
+    //Global stuff
+    GlobalGroupData data;
+    if(program_instance->uniforms->uses_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT)) {
+        data.global_ambient_variable_.emplace(program_instance->uniforms->auto_variable_name(SP_AUTO_LIGHT_GLOBAL_AMBIENT));
+    }
+    current = &current->get_or_create<GlobalGroup>(data);
 
     //Auto attributes
     std::map<std::string, ShaderAvailableAttributes> attributes;
@@ -242,7 +246,7 @@ void RootGroup::insert(Renderable *renderable, MaterialPass *pass, const std::ve
     current = &current->get_or_create<DepthGroup>(DepthGroupData(pass->depth_test_enabled(), pass->depth_write_enabled()));
 
     //Add a node for the material properties
-    current = &current->get_or_create<MaterialGroup>(generate_material_group_data(program_instance.get(), pass));
+    current = &current->get_or_create<MaterialGroup>(generate_material_group_data(program_instance, pass));
 
     //Add a node for the blending type
     current = &current->get_or_create<BlendGroup>(BlendGroupData(pass->blending()));
@@ -250,20 +254,26 @@ void RootGroup::insert(Renderable *renderable, MaterialPass *pass, const std::ve
     //Add a node for the render settings
     current = &current->get_or_create<RenderSettingsGroup>(RenderSettingsData(pass->point_size(), pass->polygon_mode()));
 
+    //Add a node for any staged uniforms
+    current = &current->get_or_create<StagedUniformGroup>(
+        StagedUniformGroupData(pass->staged_float_uniforms(), pass->staged_int_uniforms())
+    );
+
     generate_mesh_groups(current, renderable, pass, lights);
 }
 
 
-void LightGroup::bind(GPUProgram* program) {
-    if(!data_.light_id) {
-        return;
-    }
-
+void GlobalGroup::bind(GPUProgram *program) {
     RootGroup& root = static_cast<RootGroup&>(get_root());
-    auto light = root.stage()->light(data_.light_id);
 
     if(data_.global_ambient_variable_) {
         program->set_uniform_colour(data_.global_ambient_variable_.value(), root.stage()->ambient_light());
+    }
+}
+
+void LightGroup::bind(GPUProgram* program) {
+    if(!data_.light_id) {
+        return;
     }
 
     if(data_.light_position_variable_) {
@@ -313,13 +323,19 @@ void ShaderGroup::bind(GPUProgram* program) {
 
 std::size_t ShaderGroupData::do_hash() const {
     size_t seed = 0;
+
+    // IMPORTANT! If this hasn't been called at some point then the program object
+    // always returns zero which breaks everything
+    shader_->build();
+
     hash_combine(seed, typeid(ShaderGroupData).name());
-    hash_combine(seed, shader_->md5());
+    hash_combine(seed, shader_->program_object());
     return seed;
 }
 
 void ShaderGroup::unbind(GPUProgram *program) {
-
+    RootGroup& root = static_cast<RootGroup&>(get_root());
+    root.set_current_program(GPUProgram::ptr());
 }
 
 void AutoAttributeGroup::bind(GPUProgram *program) {
@@ -345,6 +361,23 @@ void AutoAttributeGroup::bind(GPUProgram *program) {
 }
 
 void AutoAttributeGroup::unbind(GPUProgram *program) {
+
+}
+
+void StagedUniformGroup::bind(GPUProgram *program) {
+    /* It's possible to set values for arbitrary uniforms, this
+     * node applies those */
+
+    for(auto& p: data_.float_uniforms) {
+        program->set_uniform_float(p.first, p.second);
+    }
+
+    for(auto& p: data_.int_uniforms) {
+        program->set_uniform_int(p.first, p.second);
+    }
+}
+
+void StagedUniformGroup::unbind(GPUProgram *program) {
 
 }
 
@@ -428,7 +461,6 @@ void MaterialGroup::unbind(GPUProgram *program) {
 
 void BlendGroup::bind(GPUProgram* program) {
     if(data_.type == BLEND_NONE) {
-        GLCheck(glDisable, GL_BLEND);
         return;
     }
 
@@ -450,7 +482,9 @@ void BlendGroup::bind(GPUProgram* program) {
 }
 
 void BlendGroup::unbind(GPUProgram *program) {
-    GLCheck(glDisable, GL_BLEND);
+    if(data_.type != BLEND_NONE) {
+        GLCheck(glDisable, GL_BLEND);
+    }
 }
 
 void RenderSettingsGroup::bind(GPUProgram* program) {
