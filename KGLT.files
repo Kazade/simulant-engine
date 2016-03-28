@@ -886,3 +886,5 @@ kglt/materials/opengl-2.x/multitexture2_modulate.kglm
 kglt/materials/opengl-2.x/multitexture2_add.kglm
 kglt/materials/opengl-2.x/diffuse_with_lighting.kglm
 kglt/materials/opengl-2.x/diffuse_only.kglm
+kglt/controllers/controller.h
+kglt/controllers/fly.h

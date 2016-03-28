@@ -25,11 +25,14 @@ public:
             stage->get<kglt::Vec3>("player_spawn")
         );
 
+        // Add a fly controller to the camera for user input
+        stage->camera(camera_id_)->new_controller<controllers::Fly>(window);
+
         window->camera(camera_id_)->set_perspective_projection(
             45.0,
             float(window->width()) / float(window->height()),
-            0.1,
-            1000.0
+            1.0,
+            10000.0
         );
 
         stage->set_ambient_light(kglt::Colour(0.4, 0.4, 0.4, 1.0));

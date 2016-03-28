@@ -94,6 +94,8 @@ class Updateable {
 public:
     virtual ~Updateable() {}
     virtual void update(double step) = 0;
+    virtual void pre_update(double step) {}
+    virtual void post_update(double step) {}
 };
 
 class Printable {
