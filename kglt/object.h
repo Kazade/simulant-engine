@@ -27,7 +27,7 @@ class Object :
     public generic::DataCarrier, //And they allow additional data to be attached
     public Transformable,
     public SceneNode,
-    public ControllerContainer {
+    public Controllable {
 
 public:
     Object(Stage* parent_scene);

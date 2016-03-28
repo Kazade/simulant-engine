@@ -9,10 +9,10 @@ namespace controllers {
 
 class Fly : public Controller {
 public:
-    Fly(ControllerContainer* container, const Property<kglt::ScreenBase, kglt::WindowBase>& window):
+    Fly(Controllable* container, const Property<kglt::ScreenBase, kglt::WindowBase>& window):
         Fly(container, window.get()) {}
 
-    Fly(ControllerContainer* container, WindowBase* window):
+    Fly(Controllable* container, WindowBase* window):
         Controller("fly") {
 
         object_ = dynamic_cast<Object*>(container);

@@ -43,9 +43,9 @@ private:
     std::string name_;
 };
 
-class ControllerContainer {
+class Controllable {
 public:
-    virtual ~ControllerContainer() {}
+    virtual ~Controllable() {}
 
     void add_controller(ControllerPtr controller) {
         if(!controller) {
