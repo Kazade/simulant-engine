@@ -1,0 +1,44 @@
+released: 1/4/1999
+-------------------------------------------------------------------
+ Title                   : Fire and Ice
+ Filename                : cats05.bsp
+ Author                  : CatsInHeat [James Madden]
+ Email Address           : madhaven@home.com
+ 			 
+ Description             : Quake2 Deathmatch Map for up to 4-5 players		   			   			                             
+ 
+			   
+-----------------------------------------------------------------
+
+
+* Play Information *
+
+ Settings                : weapon stay for 5 and more might be a good idea.
+ Deathmatch 2-8          : 3-6 ffa recommended.
+ Deathmatch 9-100        : not likely
+
+
+* Construction *
+
+ Build Time      	 : 4 days
+ Editor(s) used  	 : BSP
+ Other Programs used	 : Wally 1.27b for textures, paint Pro Shop 5.0
+ Known Bugs      	 : none.
+
+
+* Other Info *
+ 
+ Install this with Winzip. Use folder names. This map and textures will intall in quake2\baseq2\map and quake2\baseq2\textures\halls. Then add champss to your map list.
+
+* Distribution * [legal stuff...hehe]
+
+ Authors MAY NOT use this level as a base to build 
+ additional levels.
+
+ This BSP may be distributed ONLY over the Internet 
+ and/or BBS systems. You are NOT authorized to put 
+ this BSP on any CD or distribute it in any way without 
+ my permission. 
+
+ this is to be freely distributed. This map may not be sold without my  written permission.
+
