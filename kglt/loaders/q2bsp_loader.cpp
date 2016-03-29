@@ -595,18 +595,23 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
         process_lightmap(face_index, &lightmap_data[0] + f.lightmap_offset, min_u, max_u, min_v, max_v);
 
+        auto lightmap_width  = ceil(max_u / 16) - floor(min_u / 16) + 1;
+        auto lightmap_height = ceil(max_v / 16) - floor(min_v / 16) + 1;
+
         auto pos = mesh->shared_data().cursor_position();
         for(auto& p: lightmap_coords_to_process) {
             float u = p.second.x;
             float v = p.second.y;
 
-            u -= floor(min_u / 16.0f) * 16.0f;
-            u += 8.0;
+            u -= min_u;
+            u += 8.0 + (lightmap_width * 16.0);
             u /= 128.0 * 16.0;
+            u *= (lightmap_width / 16.0);
 
-            v -= floor(min_v / 16.0f) * 16.0f;
-            v += 8.0;
+            v -= min_v;
+            v += 8.0 + (lightmap_height * 16.0);
             v /= 128.0 * 16.0;
+            v *= (lightmap_height / 16.0);
 
             mesh->shared_data().move_to(p.first);
 
