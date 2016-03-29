@@ -36,6 +36,7 @@ public:
         connections_.push_back(window->keyboard->key_while_pressed_connect(SDL_SCANCODE_RIGHT, [=](SDL_Keysym key, double dt) {
             rotating_right_ = true;
         }));
+
     }
 
     ~Fly() {

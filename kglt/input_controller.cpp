@@ -438,4 +438,16 @@ uint8_t InputController::joypad_count() const {
     return ret;
 }
 
+InputConnection InputController::axis_changed_connect(Axis axis, JoypadCallback callback) {
+    //FIXME: implement
+}
+
+InputConnection InputController::x_changed_connect(JoypadCallback callback) {
+    return axis_changed_connect(AXIS_X, callback);
+}
+
+InputConnection InputController::y_changed_connect(JoypadCallback callback) {
+    return axis_changed_connect(AXIS_Y, callback);
+}
+
 }

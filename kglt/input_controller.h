@@ -105,16 +105,29 @@ private:
     friend class InputController;
 };
 
+enum Axis {
+    AXIS_X,
+    AXIS_Y,
+    AXIS_Z
+};
+
+typedef float AxisRange;
+typedef uint8_t Button;
+typedef uint8_t Hat;
+
+typedef std::function<void (AxisRange, Axis)> MouseAxisCallback;
+
 class Mouse :
     public Device,
     public Managed<Mouse> {
 
+public:
+    InputConnection axis_changed_connect(Axis axis, MouseAxisCallback callback);
+    InputConnection x_changed_connect(MouseAxisCallback callback);
+    InputConnection y_changed_connect(MouseAxisCallback callback);
 };
 
-typedef uint8_t Axis;
-typedef uint8_t Button;
-typedef float AxisRange;
-typedef uint8_t Hat;
+
 // typedef uint8_t HatPosition;
 // Match SDL codes
 enum HatPosition {
