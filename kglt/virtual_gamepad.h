@@ -30,7 +30,7 @@ public:
     sig::signal<void (int)>& signal_button_up() { return signal_button_up_; }
 
     sig::signal<void (HatPosition)>& signal_hat_changed() { return signal_hat_changed_; }
-    sig::signal<void (Axis, int)>& signal_axis_changed() { return signal_axis_changed_; }
+    sig::signal<void (JoypadAxis, int)>& signal_axis_changed() { return signal_axis_changed_; }
 
     Dimensions button_dimensions(int button);
 
@@ -50,7 +50,7 @@ private:
     sig::signal<void (int)> signal_button_down_;
     sig::signal<void (int)> signal_button_up_;
     sig::signal<void (HatPosition)> signal_hat_changed_;
-    sig::signal<void (Axis, int)> signal_axis_changed_;    
+    sig::signal<void (JoypadAxis, int)> signal_axis_changed_;
 };
 
 }

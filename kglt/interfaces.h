@@ -54,6 +54,23 @@ public:
     virtual void rotate_y(const kglt::Degrees& angle) = 0;
     virtual void rotate_z(const kglt::Degrees& angle) = 0;
 
+    virtual void rotate_around(const kglt::Vec3& axis, const kglt::Degrees& degrees) = 0;
+
+    void rotate_global_x(const kglt::Degrees& degrees) {
+        const static Vec3 X(1, 0, 0);
+        rotate_around(X, degrees);
+    }
+
+    void rotate_global_y(const kglt::Degrees& degrees) {
+        const static Vec3 Y(0, 1, 0);
+        rotate_around(Y, degrees);
+    }
+
+    void rotate_global_z(const kglt::Degrees& degrees) {
+        const static Vec3 Z(0, 0, 1);
+        rotate_around(Z, degrees);
+    }
+
     virtual void look_at(const kglt::Vec3& target) = 0;
     virtual void look_at(float x, float y, float z) = 0;
 };
