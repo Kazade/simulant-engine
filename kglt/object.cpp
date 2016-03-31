@@ -197,62 +197,21 @@ void Object::move_forward(float amount) {
     );
 }
 
-void Object::rotate_absolute_x(float amount) {
+void Object::rotate_around(const kglt::Vec3& axis, const kglt::Degrees& degrees) {
     if(rotation_locked_) {
         return;
     }
 
+    float amount = degrees.value_;
     if(fabs(amount) < kmEpsilon) {
         return;
     }
 
     Quaternion rot;
-    kmVec3 axis;
-    kmVec3Fill(&axis, 1, 0, 0);
     kmQuaternionRotationAxisAngle(&rot, &axis, kmDegreesToRadians(amount));
 
-    set_absolute_rotation(absolute_rotation() * rot);
-
-    update_from_parent();
-}
-
-void Object::rotate_absolute_z(float amount) {
-    if(rotation_locked_) {
-        return;
-    }
-
-    if(fabs(amount) < kmEpsilon) {
-        return;
-    }
-
-    Quaternion rot;
-    kmVec3 axis;
-    kmVec3Fill(&axis, 0, 0, 1);
-    kmQuaternionRotationAxisAngle(&rot, &axis, kmDegreesToRadians(amount));
-
-    set_absolute_rotation(absolute_rotation() * rot);
+    set_absolute_rotation(rot * absolute_rotation());
     absolute_rotation_.normalize();
-
-    update_from_parent();
-}
-
-void Object::rotate_absolute_y(float amount) {
-    if(rotation_locked_) {
-        return;
-    }
-
-    if(fabs(amount) < kmEpsilon) {
-        return;
-    }
-
-    Quaternion rot;
-    kmVec3 axis;
-    kmVec3Fill(&axis, 0, 1, 0);
-    kmQuaternionRotationAxisAngle(&rot, &axis, kmDegreesToRadians(amount));
-
-    set_absolute_rotation(absolute_rotation() * rot);
-    absolute_rotation_.normalize();
-
     update_from_parent();
 }
 
@@ -263,7 +222,7 @@ void Object::look_at(const Vec3& position) {
 
     if(fabs(dot - (-1.0)) < kmEpsilon) {
         //Rotate 180 degrees around up
-        rotate_absolute_y(180.0);
+        rotate_global_y(Degrees(180.0));
         return;
     }
 

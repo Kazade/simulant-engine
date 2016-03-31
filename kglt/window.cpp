@@ -164,9 +164,9 @@ bool Window::create_window(int width, int height, int bpp, bool fullscreen) {
         flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
     }
 
-#ifdef __arch_dreamcast
+#ifdef KGLT_GL_VERSION_1X
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);

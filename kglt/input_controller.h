@@ -105,26 +105,52 @@ private:
     friend class InputController;
 };
 
-enum Axis {
-    AXIS_X,
-    AXIS_Y,
-    AXIS_Z
+enum JoypadAxis {
+    JOYPAD_AXIS_LEFT_X = 0,
+    JOYPAD_AXIS_LEFT_Y,
+    JOYPAD_AXIS_RIGHT_X,
+    JOYPAD_AXIS_RIGHT_Y,
+    JOYPAD_AXIS_TRIGGER_LEFT,
+    JOYPAD_AXIS_TRIGGER_RIGHT,
+    JOYPAD_AXIS_MAX,
+    JOYPAD_AXIS_X = JOYPAD_AXIS_LEFT_X,
+    JOYPAD_AXIS_Y = JOYPAD_AXIS_LEFT_Y
 };
 
 typedef float AxisRange;
 typedef uint8_t Button;
 typedef uint8_t Hat;
 
-typedef std::function<void (AxisRange, Axis)> MouseAxisCallback;
+typedef std::function<void (int32_t, int32_t, int32_t, int32_t)> MouseMotionCallback;
 
 class Mouse :
     public Device,
     public Managed<Mouse> {
 
 public:
-    InputConnection axis_changed_connect(Axis axis, MouseAxisCallback callback);
-    InputConnection x_changed_connect(MouseAxisCallback callback);
-    InputConnection y_changed_connect(MouseAxisCallback callback);
+    InputConnection motion_event_connect(MouseMotionCallback callback);
+
+private:
+    std::map<InputConnection, MouseMotionCallback> motion_event_signals_;
+
+    void _disconnect(const InputConnection &connection) override;
+    void _update(double dt);
+    void _handle_motion_event(int32_t x, int32_t y, int32_t relx, int32_t rely);
+
+    struct MotionEvent {
+        MotionEvent() = default;
+        MotionEvent(int32_t x, int32_t y, int32_t relx, int32_t rely):
+            x(x), y(y), relx(relx), rely(rely) {}
+
+        int32_t x = 0;
+        int32_t y = 0;
+        int32_t relx = 0;
+        int32_t rely = 0;
+    };
+
+    MotionEvent last_motion_event_;
+
+    friend class InputController;
 };
 
 
@@ -143,7 +169,7 @@ enum HatPosition {
 };
 
 
-typedef std::function<void (AxisRange, Axis)> JoypadCallback;
+typedef std::function<void (AxisRange, JoypadAxis)> JoypadCallback;
 typedef std::function<void (uint8_t)> JoypadButtonCallback;
 typedef std::function<void (uint8_t, double)> JoypadButtonDownCallback;
 typedef std::function<void (HatPosition, Hat)> JoypadHatCallback;
@@ -155,10 +181,10 @@ class Joypad :
 public:
     Joypad();
 
-    InputConnection axis_changed_connect(Axis axis, JoypadCallback callback);
-    InputConnection axis_while_nonzero_connect(Axis axis, JoypadCallback callback);
-    InputConnection axis_while_below_zero_connect(Axis axis, JoypadCallback callback);
-    InputConnection axis_while_above_zero_connect(Axis axis, JoypadCallback callback);
+    InputConnection axis_changed_connect(JoypadAxis axis, JoypadCallback callback);
+    InputConnection axis_while_nonzero_connect(JoypadAxis axis, JoypadCallback callback);
+    InputConnection axis_while_below_zero_connect(JoypadAxis axis, JoypadCallback callback);
+    InputConnection axis_while_above_zero_connect(JoypadAxis axis, JoypadCallback callback);
 
     InputConnection button_pressed_connect(Button button, JoypadButtonCallback callback);
     InputConnection button_released_connect(Button button, JoypadButtonCallback callback);
@@ -172,7 +198,7 @@ private:
     typedef std::pair<InputConnection, JoypadButtonCallback> ButtonSignalEntry;
     typedef std::pair<InputConnection, JoypadHatCallback> HatSignalEntry;
 
-    void _handle_axis_changed_event(Axis axis, int32_t value);
+    void _handle_axis_changed_event(JoypadAxis axis, int32_t value);
     void _handle_button_down_event(Button button);
     void _handle_button_up_event(Button button);
     void _handle_hat_changed_event(Hat hat, HatPosition value);
@@ -182,14 +208,14 @@ private:
 
     uint8_t jitter_value_;
 
-    std::map<Axis, int32_t> axis_state_;
+    std::map<JoypadAxis, int32_t> axis_state_;
     std::map<Button, bool> button_state_;
     std::map<Hat, HatPosition> hat_state_;
 
-    std::map<Axis, std::map<InputConnection, JoypadCallback> > axis_changed_signals_;
-    std::map<Axis, std::map<InputConnection, JoypadCallback> > axis_while_nonzero_signals_;
-    std::map<Axis, std::map<InputConnection, JoypadCallback> > axis_while_below_zero_signals_;
-    std::map<Axis, std::map<InputConnection, JoypadCallback> > axis_while_above_zero_signals_;
+    std::map<JoypadAxis, std::map<InputConnection, JoypadCallback> > axis_changed_signals_;
+    std::map<JoypadAxis, std::map<InputConnection, JoypadCallback> > axis_while_nonzero_signals_;
+    std::map<JoypadAxis, std::map<InputConnection, JoypadCallback> > axis_while_below_zero_signals_;
+    std::map<JoypadAxis, std::map<InputConnection, JoypadCallback> > axis_while_above_zero_signals_;
 
     std::map<Button, std::map<InputConnection, JoypadButtonCallback> > button_pressed_signals_;
     std::map<Button, std::map<InputConnection, JoypadButtonCallback> > button_released_signals_;
@@ -224,7 +250,7 @@ private:
 
     Joypad::ptr virtual_joypad_;
     std::vector<Joypad::ptr> joypads_;
-    std::vector<SDL_Joystick*> sdl_joysticks_;
+    std::vector<SDL_GameController*> sdl_joysticks_;
 
     void init_virtual_joypad();
     std::vector<sig::connection> virtual_joypad_connections_;

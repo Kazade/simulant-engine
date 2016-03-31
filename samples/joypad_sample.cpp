@@ -50,7 +50,7 @@ const float sensibility = 50.f;
 void joypad_button(kglt::Button button) {
 }
 
-void joypad_axis_left(kglt::AxisRange axis_range, kglt::Axis axis) {
+void joypad_axis_left(kglt::AxisRange axis_range, kglt::JoypadAxis axis) {
     if (axis % 2)
         pos.y += -axis_range / sensibility;
     else
@@ -59,7 +59,7 @@ void joypad_axis_left(kglt::AxisRange axis_range, kglt::Axis axis) {
     // g_actor->move_to(pos);
 }
 
-void joypad_axis_right(kglt::AxisRange axis_range, kglt::Axis axis) {
+void joypad_axis_right(kglt::AxisRange axis_range, kglt::JoypadAxis axis) {
     if (axis % 2)
         rot.y += -axis_range / sensibility;
     else
@@ -135,13 +135,13 @@ public:
             });
 
             // Left x-axis
-            joypad.axis_while_nonzero_connect(0, joypad_axis_left);
+            joypad.axis_while_nonzero_connect(JOYPAD_AXIS_LEFT_X, joypad_axis_left);
             // Left y-axis
-            joypad.axis_while_nonzero_connect(1, joypad_axis_left);
+            joypad.axis_while_nonzero_connect(JOYPAD_AXIS_LEFT_Y, joypad_axis_left);
             // Right x-axis
-            joypad.axis_while_nonzero_connect(2, joypad_axis_right);
+            joypad.axis_while_nonzero_connect(JOYPAD_AXIS_RIGHT_X, joypad_axis_right);
             // Right y-axis
-            joypad.axis_while_nonzero_connect(4, [=](kglt::AxisRange range, kglt::Axis) mutable {
+            joypad.axis_while_nonzero_connect(JOYPAD_AXIS_RIGHT_Y, [=](kglt::AxisRange range, kglt::JoypadAxis) mutable {
                     if (range > 0)
                         std::cout << (float) range << std::endl;
             });

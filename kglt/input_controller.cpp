@@ -183,25 +183,25 @@ Joypad::Joypad():
 
 }
 
-InputConnection Joypad::axis_changed_connect(Axis axis, JoypadCallback callback) {
+InputConnection Joypad::axis_changed_connect(JoypadAxis axis, JoypadCallback callback) {
     InputConnection c = new_input_connection();
     axis_changed_signals_[axis][c] = callback;
     return c;
 }
 
-InputConnection Joypad::axis_while_nonzero_connect(Axis axis, JoypadCallback callback) {
+InputConnection Joypad::axis_while_nonzero_connect(JoypadAxis axis, JoypadCallback callback) {
     InputConnection c = new_input_connection();
     axis_while_nonzero_signals_[axis][c] = callback;
     return c;
 }
 
-InputConnection Joypad::axis_while_below_zero_connect(Axis axis, JoypadCallback callback) {
+InputConnection Joypad::axis_while_below_zero_connect(JoypadAxis axis, JoypadCallback callback) {
     InputConnection c = new_input_connection();
     axis_while_below_zero_signals_[axis][c] = callback;
     return c;
 }
 
-InputConnection Joypad::axis_while_above_zero_connect(Axis axis, JoypadCallback callback) {
+InputConnection Joypad::axis_while_above_zero_connect(JoypadAxis axis, JoypadCallback callback) {
     InputConnection c = new_input_connection();
     axis_while_above_zero_signals_[axis][c] = callback;
     return c;
@@ -257,7 +257,7 @@ void Joypad::_handle_button_up_event(Button button) {
     button_state_[button] = false;
 }
 
-void Joypad::_handle_axis_changed_event(Axis axis, int32_t value) {
+void Joypad::_handle_axis_changed_event(JoypadAxis axis, int32_t value) {
     if(container::contains(axis_changed_signals_, axis)) {
         for(AxisSignalEntry entry: axis_changed_signals_[axis]) {
             entry.second(float(value) / float(32768), axis);
@@ -278,8 +278,8 @@ void Joypad::_handle_hat_changed_event(Hat hat, HatPosition position) {
 }
 
 void Joypad::_update(double dt) {
-    for(std::pair<Axis, int32_t> p: axis_state_) {
-        Axis axis = p.first;
+    for(std::pair<JoypadAxis, int32_t> p: axis_state_) {
+        JoypadAxis axis = p.first;
         int32_t axis_state = p.second;
 
         if(axis_state > jitter_value_ || axis_state < -jitter_value_) {
@@ -319,7 +319,7 @@ void Joypad::_update(double dt) {
 }
 
 void Joypad::_disconnect(const InputConnection &connection) {
-    for(std::pair<Axis, std::map<InputConnection, JoypadCallback> > p: axis_changed_signals_) {
+    for(std::pair<JoypadAxis, std::map<InputConnection, JoypadCallback> > p: axis_changed_signals_) {
         if(container::contains(p.second, connection)) {
             p.second.erase(connection);
         }
@@ -328,12 +328,16 @@ void Joypad::_disconnect(const InputConnection &connection) {
 
 InputController::InputController(WindowBase& window):
     window_(window),
-    keyboard_(new Keyboard()) {
+    keyboard_(new Keyboard()),
+    mouse_(new Mouse()) {
 
+    SDL_SetRelativeMouseMode(SDL_TRUE);
     SDL_JoystickEventState(SDL_ENABLE);
     for(uint8_t i = 0; i < SDL_NumJoysticks(); ++i) {
-        joypads_.push_back(Joypad::create());
-        sdl_joysticks_.push_back(SDL_JoystickOpen(i));
+        if(SDL_IsGameController(i)) {
+            joypads_.push_back(Joypad::create());
+            sdl_joysticks_.push_back(SDL_GameControllerOpen(i));
+        }
     }
 }
 
@@ -343,11 +347,22 @@ InputController::~InputController() {
 
     //Make sure we close the joysticks   
     if(SDL_WasInit(SDL_INIT_JOYSTICK)) {
-        for(SDL_Joystick* joy: sdl_joysticks_) {
+        for(auto joy: sdl_joysticks_) {
             if(joy) {
-                SDL_JoystickClose(joy);
+                SDL_GameControllerClose(joy);
             }
         }
+    }
+}
+
+auto SDL_axis_to_KGLT_axis(Uint8 axis) {
+    switch(axis) {
+    case SDL_CONTROLLER_AXIS_LEFTX: return JOYPAD_AXIS_LEFT_X;
+    case SDL_CONTROLLER_AXIS_LEFTY: return JOYPAD_AXIS_LEFT_Y;
+    case SDL_CONTROLLER_AXIS_RIGHTX: return JOYPAD_AXIS_RIGHT_X;
+    case SDL_CONTROLLER_AXIS_RIGHTY: return JOYPAD_AXIS_RIGHT_Y;
+    default:
+        throw NotImplementedError(__FILE__, __LINE__);
     }
 }
 
@@ -359,11 +374,16 @@ void InputController::handle_event(SDL_Event &event) {
         case SDL_KEYUP:
             keyboard()._handle_keyup_event(event.key.keysym);
         break;
+        case SDL_MOUSEMOTION:
+            mouse()._handle_motion_event(event.motion.x, event.motion.y, event.motion.xrel, event.motion.yrel);
+        break;
         case SDL_TEXTINPUT:
             keyboard()._handle_text_input_event(event.text);
         break;
         case SDL_JOYAXISMOTION:
-            joypad(event.jaxis.which)._handle_axis_changed_event(event.jaxis.axis, event.jaxis.value);
+            joypad(event.jaxis.which)._handle_axis_changed_event(
+                SDL_axis_to_KGLT_axis(event.jaxis.axis), event.jaxis.value
+            );
         break;
         case SDL_JOYBUTTONDOWN:
             joypad(event.jbutton.which)._handle_button_down_event(event.jbutton.button);
@@ -381,6 +401,8 @@ void InputController::handle_event(SDL_Event &event) {
 
 void InputController::update(double dt) {
     keyboard_->_update(dt);
+    mouse_->_update(dt);
+
     for(Joypad::ptr j: joypads_) {
         j->_update(dt);
     }
@@ -438,16 +460,32 @@ uint8_t InputController::joypad_count() const {
     return ret;
 }
 
-InputConnection InputController::axis_changed_connect(Axis axis, JoypadCallback callback) {
-    //FIXME: implement
+InputConnection Mouse::motion_event_connect(MouseMotionCallback callback) {
+    InputConnection c = new_input_connection();
+    motion_event_signals_[c] = callback;
+    return c;
 }
 
-InputConnection InputController::x_changed_connect(JoypadCallback callback) {
-    return axis_changed_connect(AXIS_X, callback);
+void Mouse::_handle_motion_event(int32_t x, int32_t y, int32_t relx, int32_t rely) {
+    last_motion_event_ = MotionEvent(x, y, relx, rely);
 }
 
-InputConnection InputController::y_changed_connect(JoypadCallback callback) {
-    return axis_changed_connect(AXIS_Y, callback);
+void Mouse::_disconnect(const InputConnection &connection) {
+    motion_event_signals_.erase(connection);
 }
+
+void Mouse::_update(double dt) {
+    for(auto& entry: this->motion_event_signals_) {
+        entry.second(
+            last_motion_event_.x,
+            last_motion_event_.y,
+            last_motion_event_.relx,
+            last_motion_event_.rely
+        );
+    }
+
+    last_motion_event_ = MotionEvent(); //Reset event
+}
+
 
 }

@@ -91,11 +91,24 @@ public:
 
     void rotate_to(const Degrees& angle, const kglt::Vec3& axis) override {
         rotate_to(angle, axis.x, axis.y, axis.z);
+    }    
+
+    void rotate_x(const Degrees& angle) override {
+        kglt::Vec3 x = right();
+        rotate_around(x, angle);
     }
 
-    void rotate_x(const Degrees& angle) override { rotate_absolute_x(angle.value_); }
-    void rotate_y(const Degrees& angle) override { rotate_absolute_y(angle.value_); }
-    void rotate_z(const Degrees& angle) override { rotate_absolute_z(angle.value_); }
+    void rotate_y(const Degrees& angle) override {
+        kglt::Vec3 y = up();
+        rotate_around(y, angle);
+    }
+
+    void rotate_z(const Degrees& angle) override {
+        kglt::Vec3 z = forward();
+        rotate_around(z, angle);
+    }
+
+    void rotate_around(const kglt::Vec3& axis, const kglt::Degrees& degrees) override;
 
     void look_at(const kglt::Vec3& position);
     void look_at(float x, float y, float z) {
@@ -207,11 +220,6 @@ private:
     virtual void transformation_changed() {}
 
     std::unique_ptr<std::pair<Vec3, Vec3>> constraint_;
-
-    virtual void rotate_absolute_x(float amount);
-    virtual void rotate_absolute_y(float amount);
-    virtual void rotate_absolute_z(float amount);
-
     unicode name_;
 };
 
