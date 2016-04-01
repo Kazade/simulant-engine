@@ -25,19 +25,19 @@ public:
             throw LogicError("Tried to attach FlyController to something which wasn't an object");
         }
 
-        connections_.push_back(window->keyboard->key_while_pressed_connect(SDL_SCANCODE_UP, [=](SDL_Keysym key, double dt) {
+        connections_.push_back(window->keyboard->key_while_pressed_connect(SDL_SCANCODE_W, [=](SDL_Keysym key, double dt) {
             moving_forward_ = true;
         }));
 
-        connections_.push_back(window->keyboard->key_while_pressed_connect(SDL_SCANCODE_DOWN, [=](SDL_Keysym key, double dt) {
+        connections_.push_back(window->keyboard->key_while_pressed_connect(SDL_SCANCODE_S, [=](SDL_Keysym key, double dt) {
             moving_backward_ = true;
         }));
 
-        connections_.push_back(window->keyboard->key_while_pressed_connect(SDL_SCANCODE_LEFT, [=](SDL_Keysym key, double dt) {
+        connections_.push_back(window->keyboard->key_while_pressed_connect(SDL_SCANCODE_A, [=](SDL_Keysym key, double dt) {
             rotating_left_ = true;
         }));
 
-        connections_.push_back(window->keyboard->key_while_pressed_connect(SDL_SCANCODE_RIGHT, [=](SDL_Keysym key, double dt) {
+        connections_.push_back(window->keyboard->key_while_pressed_connect(SDL_SCANCODE_D, [=](SDL_Keysym key, double dt) {
             rotating_right_ = true;
         }));
 
