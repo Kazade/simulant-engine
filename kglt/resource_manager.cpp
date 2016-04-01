@@ -46,7 +46,11 @@ bool ResourceManagerImpl::init() {
     return true;
 }
 
-void ResourceManagerImpl::update() {
+void ResourceManagerImpl::update(double dt) {
+    MaterialManager::each([dt](Material* mat) {
+        mat->update_controllers(dt);
+    });
+
     static datetime::DateTime last_collection = datetime::now();
 
     if(datetime::timedelta_in_seconds(datetime::now() - last_collection) >= 5) {

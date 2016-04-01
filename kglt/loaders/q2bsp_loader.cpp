@@ -15,6 +15,8 @@
 #include "../light.h"
 #include "../camera.h"
 #include "../procedural/texture.h"
+#include "../controllers/material/flowing.h"
+
 #include "q2bsp_loader.h"
 
 #include "kglt/shortcuts.h"
@@ -469,6 +471,10 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             auto mat = stage->material(new_material_id);
             mat->pass(0).set_texture_unit(0, new_texture_id);
             mat->pass(0).set_texture_unit(1, lightmap_texture);
+
+            if(tex.flags & Q2::SURFACE_FLAG_FLOWING) {
+                mat->new_controller<controllers::material::Flowing>();
+            }
         }
 
         auto texture = stage->texture(new_texture_id);

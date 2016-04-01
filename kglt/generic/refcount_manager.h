@@ -4,6 +4,7 @@
 #include "manager_base.h"
 #include <kazbase/list_utils.h>
 #include <kazbase/signals.h>
+#include "protected_ptr.h"
 
 namespace kglt {
 namespace generic {
@@ -20,6 +21,7 @@ protected:
 
 public:
     void mark_as_uncollected(ObjectIDType id) {
+        std::lock_guard<std::mutex> lock(manager_lock_);
         uncollected_.insert(id);
     }
 
@@ -91,6 +93,28 @@ public:
     //Internal!
     std::unordered_map<ObjectIDType, std::shared_ptr<ObjectType> > __objects() {
         return objects_;
+    }
+
+    void each(std::function<void (ObjectType*)> func) const {
+        std::set<ObjectIDType> object_ids;
+        {
+            // We copy the object IDs so we don't keep a handle to
+            // any shared_ptrs or anything
+            std::lock_guard<std::mutex> lock(manager_lock_);
+            for(auto& p: objects_) {
+                object_ids.insert(p.first);
+            }
+        }
+
+        for(auto& id: object_ids) {
+            try {
+                auto thing = ProtectedPtr<ObjectType>(manager_get(id)); //Make sure we lock the object
+                func(thing.get());
+            } catch(DoesNotExist<ObjectType>& e) {
+                // May have been deleted in another thread, just ignore this
+                continue;
+            }
+        }
     }
 
     void garbage_collect() {

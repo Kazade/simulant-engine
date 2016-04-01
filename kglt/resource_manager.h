@@ -212,7 +212,7 @@ public:
     bool has_sound(SoundID s) const;
     uint32_t sound_count() const;
 
-    void update();
+    void update(double dt);
 
     unicode default_material_filename() const;
 

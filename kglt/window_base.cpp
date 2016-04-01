@@ -256,6 +256,8 @@ bool WindowBase::run_frame() {
         update(fixed_step); //Update this
 
         signal_step_(fixed_step); //Trigger any steps
+
+        ResourceManagerImpl::update(fixed_step);
     }
 
     fixed_step_interp_ = ktiGetAccumulatorValue();
@@ -276,8 +278,6 @@ bool WindowBase::run_frame() {
             GLChecker::end_of_frame_check();
 
             //std::this_thread::sleep_for(std::chrono::milliseconds(10));
-
-            ResourceManagerImpl::update();
         }
     }
 

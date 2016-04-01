@@ -28,6 +28,7 @@ struct ProtectedPtr {
             std::shared_ptr<guard_type>()
         ) {
 
+        static_assert(std::is_base_of<Protectable, T>::value, "Type must subclass Protectable");
     }
 
     template<typename U>
@@ -43,6 +44,7 @@ struct ProtectedPtr {
 
     T* operator->() { return __object.get(); }
     const T* operator->() const { return __object.get(); }
+    T* get() const { return __object.get(); }
 
     explicit operator bool() const {
         return __object.get() != nullptr;

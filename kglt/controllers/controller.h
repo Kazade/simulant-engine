@@ -4,6 +4,8 @@
 #include <vector>
 #include <set>
 #include <memory>
+#include <thread>
+#include <mutex>
 #include <type_traits>
 #include <thread>
 #include <kazbase/exceptions.h>
@@ -11,6 +13,7 @@
 
 namespace kglt {
 
+class Material;
 class Controller;
 
 typedef std::shared_ptr<Controller> ControllerPtr;
@@ -41,6 +44,20 @@ private:
     virtual void do_post_update(double dt) {}
 
     std::string name_;
+};
+
+class MaterialController : public Controller {
+public:
+    MaterialController(const std::string& name, Material* material):
+        Controller(name),
+        material_(material) {
+    }
+
+protected:
+    Property<MaterialController, Material> material = { this, &MaterialController::material_ };
+
+private:
+    Material* material_;
 };
 
 class Controllable {
@@ -78,16 +95,15 @@ public:
         return ret;
     }
 
-protected:
-    void pre_update_controllers(double dt) {
-        for(auto& controller: controllers_) {
-            controller->pre_update(dt);
-        }
-    }
-
     void update_controllers(double dt) {
         for(auto& controller: controllers_) {
             controller->update(dt);
+        }
+    }
+
+    void pre_update_controllers(double dt) {
+        for(auto& controller: controllers_) {
+            controller->pre_update(dt);
         }
     }
 

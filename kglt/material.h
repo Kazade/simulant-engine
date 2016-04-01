@@ -17,6 +17,7 @@
 #include "generic/identifiable.h"
 #include "generic/cloneable.h"
 #include "generic/property.h"
+#include "controllers/controller.h"
 #include "types.h"
 #include "interfaces.h"
 #include "material_constants.h"
@@ -202,12 +203,13 @@ private:
     MaterialPass::ptr new_clone(Material *owner) const;
 };
 
-class Material :
+class Material:
     public Resource,
     public Loadable,
     public generic::Identifiable<MaterialID>,
     public Managed<Material>,
-    public Updateable {
+    public Updateable,
+    public Controllable {
 
 public:
     struct BuiltIns {

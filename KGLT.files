@@ -888,3 +888,5 @@ kglt/materials/opengl-2.x/diffuse_with_lighting.kglm
 kglt/materials/opengl-2.x/diffuse_only.kglm
 kglt/controllers/controller.h
 kglt/controllers/fly.h
+kglt/controllers/material/flowing.h
+kglt/controllers/material/flowing.cpp

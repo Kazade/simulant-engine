@@ -331,7 +331,7 @@ InputController::InputController(WindowBase& window):
     keyboard_(new Keyboard()),
     mouse_(new Mouse()) {
 
-    SDL_SetRelativeMouseMode(SDL_TRUE);
+    //SDL_SetRelativeMouseMode(SDL_TRUE);
     SDL_JoystickEventState(SDL_ENABLE);
     for(uint8_t i = 0; i < SDL_NumJoysticks(); ++i) {
         if(SDL_IsGameController(i)) {
