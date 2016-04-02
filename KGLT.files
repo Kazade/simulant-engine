@@ -890,3 +890,5 @@ kglt/controllers/controller.h
 kglt/controllers/fly.h
 kglt/controllers/material/flowing.h
 kglt/controllers/material/flowing.cpp
+kglt/controllers/material/warp.h
+kglt/controllers/material/warp.cpp

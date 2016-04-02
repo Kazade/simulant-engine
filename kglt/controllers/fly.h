@@ -72,7 +72,7 @@ private:
         }
 
         if(rotating_left_) {
-            object_->rotate_y(Degrees(50.0 * dt));
+            object_->rotate_global_y(Degrees(50.0 * dt));
         }
 
         if(rotating_right_) {

@@ -16,6 +16,7 @@
 #include "../camera.h"
 #include "../procedural/texture.h"
 #include "../controllers/material/flowing.h"
+#include "../controllers/material/warp.h"
 
 #include "q2bsp_loader.h"
 
@@ -465,15 +466,40 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         tex.v_axis.z = v_axis.z;
 
         TextureID new_texture_id = find_or_load_texture(tex.texture_name);
-        MaterialID new_material_id = stage->new_material_from_file(Material::BuiltIns::TEXTURE_WITH_LIGHTMAP);
+
+        MaterialID new_material_id;
+
+        bool uses_lightmap = !(tex.flags & (Q2::SURFACE_FLAG_SKY | Q2::SURFACE_FLAG_WARP));
+        if(uses_lightmap) {
+            new_material_id = stage->new_material_from_file(Material::BuiltIns::TEXTURE_WITH_LIGHTMAP);
+        } else {
+            new_material_id = stage->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
+        }
 
         {
             auto mat = stage->material(new_material_id);
             mat->pass(0).set_texture_unit(0, new_texture_id);
-            mat->pass(0).set_texture_unit(1, lightmap_texture);
+
+            if(uses_lightmap) {
+                mat->pass(0).set_texture_unit(1, lightmap_texture);
+            }
 
             if(tex.flags & Q2::SURFACE_FLAG_FLOWING) {
                 mat->new_controller<controllers::material::Flowing>();
+            }
+
+            if(tex.flags & Q2::SURFACE_FLAG_WARP) {
+                mat->new_controller<controllers::material::Warp>();
+            }
+
+            if(tex.flags & Q2::SURFACE_FLAG_TRANS_33) {
+                mat->pass(0).set_diffuse(kglt::Colour(1.0, 1.0, 1.0, 0.33));
+                mat->pass(0).set_blending(BLEND_ALPHA);
+            }
+
+            if(tex.flags & Q2::SURFACE_FLAG_TRANS_66) {
+                mat->pass(0).set_diffuse(kglt::Colour(1.0, 1.0, 1.0, 0.66));
+                mat->pass(0).set_blending(BLEND_ALPHA);
             }
         }
 
