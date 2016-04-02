@@ -12,7 +12,7 @@ void Flowing::do_update(double dt) {
     auto& tex_unit = pass.texture_unit(0);
 
     tex_unit.matrix().mat[12] = scroll;
-    tex_unit.matrix().mat[13] = sin(time_ * 5.0);
+    tex_unit.matrix().mat[13] = sin(time_ * 5.0) * 0.125;
 
     time_ += (dt * 0.125);
 }

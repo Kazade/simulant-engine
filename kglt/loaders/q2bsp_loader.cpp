@@ -486,9 +486,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
             if(tex.flags & Q2::SURFACE_FLAG_FLOWING) {
                 mat->new_controller<controllers::material::Flowing>();
-            }
-
-            if(tex.flags & Q2::SURFACE_FLAG_WARP) {
+            } else if(tex.flags & Q2::SURFACE_FLAG_WARP) {
                 mat->new_controller<controllers::material::Warp>();
             }
 
