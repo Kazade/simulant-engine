@@ -49,6 +49,7 @@ bool ResourceManagerImpl::init() {
 void ResourceManagerImpl::update(double dt) {
     MaterialManager::each([dt](Material* mat) {
         mat->update_controllers(dt);
+        mat->update(dt);
     });
 
     static datetime::DateTime last_collection = datetime::now();

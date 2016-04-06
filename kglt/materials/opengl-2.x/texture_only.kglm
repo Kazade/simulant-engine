@@ -12,7 +12,6 @@
         
         SET(FLAG DEPTH_WRITE ON)
         SET(FLAG DEPTH_CHECK ON)
-        SET(FLAG BLEND ALPHA)
 
         BEGIN_DATA(VERTEX)
             #version 120

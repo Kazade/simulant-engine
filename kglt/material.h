@@ -247,8 +247,6 @@ private:
     std::vector<MaterialPass::ptr> passes_;
     std::set<MaterialPass*> reflective_passes_;
 
-    sig::connection update_connection_;
-
     friend class MaterialPass;
 };
 

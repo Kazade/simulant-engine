@@ -74,6 +74,8 @@ void Texture::__do_upload(bool free_after, bool generate_mipmaps, bool repeat, b
     }
 
     GLCheck(glBindTexture, GL_TEXTURE_2D, gl_tex_);
+    GLCheck(glPixelStorei, GL_PACK_ALIGNMENT,1);
+    GLCheck(glPixelStorei, GL_UNPACK_ALIGNMENT,1);
     GLCheck(glTexImage2D,
         GL_TEXTURE_2D,
         0, (bpp_ == 32)? GL_RGBA: GL_RGB,
