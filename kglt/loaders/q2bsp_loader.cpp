@@ -244,10 +244,13 @@ struct LightmapBuffer {
     const uint32_t LIGHTMAP_CHANNELS = 3;
 
     LightmapBuffer(uint32_t num_lightmaps) {
-        horiz = ceil(sqrt(num_lightmaps));
-        vert = ceil(float(num_lightmaps) / float(horiz));
+        horiz = ceil(sqrt(num_lightmaps)) + 1;
+        vert = ceil(float(num_lightmaps) / float(horiz)) + 1;
 
-        buffer.resize((LIGHTMAP_SIZE * LIGHTMAP_SIZE * LIGHTMAP_CHANNELS) * (horiz * vert), 0);
+        uint32_t buffer_size = (horiz * LIGHTMAP_SIZE) * (vert * LIGHTMAP_SIZE);
+        buffer_size *= LIGHTMAP_CHANNELS;
+
+        buffer.resize(buffer_size, 255);
     }
 
     void write_lightmap(uint32_t index, uint8_t* data, uint32_t width, uint32_t height) {
@@ -257,7 +260,7 @@ struct LightmapBuffer {
         uint32_t target_x = index % horiz;
         uint32_t target_y = index / horiz;
 
-        uint32_t texel_start = (target_y * buffer_width) + (target_x * texture_width);
+        uint32_t texel_start = ((target_y * LIGHTMAP_SIZE) * buffer_width) + (target_x * texture_width);
         uint32_t texel = texel_start;
 
         for(uint32_t y = 0; y < height; ++y) {
@@ -270,7 +273,6 @@ struct LightmapBuffer {
                 buffer.at(texel) = data[source_idx];
                 buffer.at(texel + 1) = data[source_idx + 1];
                 buffer.at(texel + 2) = data[source_idx + 2];
-
                 // Move to the next texl
                 texel += LIGHTMAP_CHANNELS;
             }
@@ -283,8 +285,8 @@ struct LightmapBuffer {
         float ret_u = u / float(horiz);
         float ret_v = v / float(vert);
 
-        int32_t x = index % horiz;
-        int32_t y = index / horiz;
+        float x = float(index % horiz);
+        float y = float(index / horiz);
 
         ret_u += (x * (1.0 / float(horiz)));
         ret_v += (y * (1.0 / float(vert)));
@@ -523,13 +525,13 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     int32_t face_index = -1;
     for(Q2::Face& f: faces) {
-        ++face_index;
-
         Q2::TextureInfo& tex = textures[f.texture_info];
 
         if(!texture_info_visible(tex)) {
             continue;
         }
+
+        ++face_index;
 
         std::vector<uint32_t> indexes;
         for(uint32_t i = f.first_edge; i < f.first_edge + f.num_edges; ++i) {
@@ -670,13 +672,13 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         float u = staged_coord.u;
         float v = staged_coord.v;
 
-        u -= lightmap.min_u;
-        u += 8.0;
+        u = u - float(lightmap.min_u) + 8.0f;
         u /= (float(lightmap.width) * 16.0f);
+        u *= float(lightmap.width) / 16.0f;
 
-        v -= lightmap.min_v;
-        v += 8.0;
+        v = v - float(lightmap.min_v) + 8.0f;
         v /= (float(lightmap.height) * 16.0f);
+        v *= float(lightmap.height) / 16.0f;
 
         mesh->shared_data().move_to(staged_coord.cursor_position);
         auto lightmap_coords = lightmap_buffer.transform_uv(staged_coord.face_index, u, v);
