@@ -240,8 +240,8 @@ unicode locate_texture(ResourceLocator& locator, const unicode& filename) {
 }
 
 struct LightmapBuffer {
-    const uint32_t LIGHTMAP_SIZE = 16;
-    const uint32_t LIGHTMAP_CHANNELS = 3;
+    static const uint32_t LIGHTMAP_SIZE = 18; //16 + 1 px border each side
+    static const uint32_t LIGHTMAP_CHANNELS = 3;
 
     LightmapBuffer(uint32_t num_lightmaps) {
         horiz = ceil(sqrt(num_lightmaps)) + 1;
@@ -263,10 +263,13 @@ struct LightmapBuffer {
         uint32_t texel_start = ((target_y * LIGHTMAP_SIZE) * buffer_width) + (target_x * texture_width);
         uint32_t texel = texel_start;
 
-        for(uint32_t y = 0; y < height; ++y) {
+        for(int32_t y = -1; y < (int32_t) height + 1; ++y) {
             auto row_start = texel;
-            for(uint32_t x = 0; x < width; ++x) {
-                uint32_t source_idx = ((y * width) + x) * 3;
+            for(int32_t x = -1; x < (int32_t) width + 1; ++x) {
+                uint32_t src_x = (x < 0) ? 0 : (x >= (int32_t) width) ? width - 1 : x;
+                uint32_t src_y = (y < 0) ? 0 : (y >= (int32_t) height) ? height - 1 : y;
+
+                uint32_t source_idx = ((src_y * width) + src_x) * 3;
 
                 // If we are within the bounds of the source lightmap, then
                 // copy the data for this texel to the right place
@@ -642,6 +645,9 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         uint32_t lightmap_width  = ceil(max_u / 16) - floor(min_u / 16) + 1;
         uint32_t lightmap_height = ceil(max_v / 16) - floor(min_v / 16) + 1;
 
+        lightmap_width = std::min(lightmap_width, (uint32_t)16);
+        lightmap_height = std::min(lightmap_height, (uint32_t)16);
+
         if(!lightmaps.count(face_index)) {
             lightmaps[face_index].offset = f.lightmap_offset;
             lightmaps[face_index].width = lightmap_width;
@@ -674,11 +680,14 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
         u = u - float(lightmap.min_u) + 8.0f;
         u /= (float(lightmap.width) * 16.0f);
-        u *= float(lightmap.width) / 16.0f;
 
         v = v - float(lightmap.min_v) + 8.0f;
         v /= (float(lightmap.height) * 16.0f);
-        v *= float(lightmap.height) / 16.0f;
+
+        // These two lines are hacky, and in the wrong place. Basically we need to scale by width / LIGHTMAP_SIZE
+        // because our lightmap sections in the buffer have extra space (the max size for a lightmap)
+        u *= float(lightmap.width) / LightmapBuffer::LIGHTMAP_SIZE;
+        v *= float(lightmap.height) / LightmapBuffer::LIGHTMAP_SIZE;
 
         mesh->shared_data().move_to(staged_coord.cursor_position);
         auto lightmap_coords = lightmap_buffer.transform_uv(staged_coord.face_index, u, v);

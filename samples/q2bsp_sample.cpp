@@ -35,7 +35,7 @@ public:
             10000.0
         );
 
-                stage->set_ambient_light(kglt::Colour(0.4, 0.4, 0.4, 1.0));
+                stage->set_ambient_light(kglt::Colour(0.8, 0.8, 0.8, 1.0));
 
                 lightmap_preview_camera_ = window->new_camera();
                 window->camera(lightmap_preview_camera_)->set_orthographic_projection_from_height(1.0, window->aspect_ratio());

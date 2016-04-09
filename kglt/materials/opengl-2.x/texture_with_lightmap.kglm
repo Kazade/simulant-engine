@@ -62,7 +62,7 @@ BEGIN(PASS)
                 if(active_texture_count < 2) {
                     t2 = vec4(1.0, 1.0, 1.0, 0.0);
                 }
-                gl_FragColor = ((t1 * global_ambient) + t2) * frag_diffuse;
+                gl_FragColor = ((t1 * global_ambient) + (t2 * global_ambient)) * frag_diffuse;
             }
         }
     END_DATA(FRAGMENT)
