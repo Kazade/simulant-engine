@@ -26,7 +26,7 @@ class SkyboxManager;
 class Skybox :
     public Managed<Skybox>,
     public generic::Identifiable<SkyboxID>,
-    public ParentSetterMixin<Object>,
+    public ParentSetterMixin<MoveableObject>,
     public Protectable {
 
 public:

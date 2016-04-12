@@ -7,7 +7,7 @@
 namespace kglt {
 
 CameraProxy::CameraProxy(Stage *stage, CameraID camera_id):
-    ParentSetterMixin<Object>(stage),
+    ParentSetterMixin<MoveableObject>(stage),
     generic::Identifiable<CameraID>(camera_id) {
 
     assert(stage);

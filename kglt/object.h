@@ -23,24 +23,24 @@
 
 namespace kglt {
 
-class BaseObject:
+class Object:
     public generic::DataCarrier,
     public SceneNode {
 public:
-    BaseObject(Stage* stage):
+    Object(Stage* stage):
         stage_(stage),
         uuid_(++object_counter) {
 
     }
 
-    virtual ~BaseObject() {}
+    virtual ~Object() {}
 
     // Nameable interface
     void set_name(const unicode &name) { name_ = name; }
     const unicode name() const { return name_; }
     const bool has_name() const { return !name_.empty(); }
 
-    Property<BaseObject, Stage> stage = { this, &BaseObject::stage_ };
+    Property<Object, Stage> stage = { this, &Object::stage_ };
     uint64_t uuid() const { return uuid_; }
 
 private:
@@ -53,14 +53,14 @@ private:
 };
 
 
-class Object :
-    public BaseObject,
+class MoveableObject :
+    public Object,
     public Transformable,
     public Controllable {
 
 public:
-    Object(Stage* parent_scene);
-    virtual ~Object();
+    MoveableObject(Stage* parent_scene);
+    virtual ~MoveableObject();
 
     void pre_update(double step) override {
         pre_update_controllers(step);

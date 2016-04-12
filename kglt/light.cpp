@@ -4,7 +4,7 @@
 namespace kglt {
 
 Light::Light(Stage* stage, LightID lid):
-    ParentSetterMixin<Object>(stage),
+    ParentSetterMixin<MoveableObject>(stage),
     generic::Identifiable<LightID>(lid),
     type_(LIGHT_TYPE_POINT),
     range_(100.0) {

@@ -228,7 +228,7 @@ LightID Stage::new_light(LightType type) {
     return lid;
 }
 
-LightID Stage::new_light(Object &parent, LightType type) {
+LightID Stage::new_light(MoveableObject &parent, LightType type) {
     LightID lid = LightManager::manager_new();
 
     {

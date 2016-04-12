@@ -14,7 +14,7 @@
 namespace kglt {
 
 class Light :
-    public ParentSetterMixin<Object>,
+    public ParentSetterMixin<MoveableObject>,
     public generic::Identifiable<LightID>,
     public BoundableEntity,
     public Protectable,

@@ -24,7 +24,7 @@ class Actor :
     public virtual BoundableEntity,
     public Managed<Actor>,
     public generic::Identifiable<ActorID>,
-    public ParentSetterMixin<Object>,
+    public ParentSetterMixin<MoveableObject>,
     public Source,
     public Protectable {
 

@@ -9,10 +9,10 @@
 
 namespace kglt {
 
-uint64_t BaseObject::object_counter = 0;
+uint64_t Object::object_counter = 0;
 
-Object::Object(Stage *stage):
-    BaseObject(stage),
+MoveableObject::MoveableObject(Stage *stage):
+    Object(stage),
     is_visible_(true),
     rotation_locked_(false),
     position_locked_(false) {
@@ -25,14 +25,14 @@ Object::Object(Stage *stage):
     update_from_parent();
 
     //When the parent changes, update the position/orientation
-    parent_changed_connection_ = signal_parent_changed().connect(std::bind(&Object::parent_changed_callback, this, std::placeholders::_1, std::placeholders::_2));
+    parent_changed_connection_ = signal_parent_changed().connect(std::bind(&MoveableObject::parent_changed_callback, this, std::placeholders::_1, std::placeholders::_2));
 }
 
-Object::~Object() {
+MoveableObject::~MoveableObject() {
     parent_changed_connection_.disconnect();
 }
 
-void Object::_update_constraint() {
+void MoveableObject::_update_constraint() {
     if(!is_constrained()) {
         return;
     }
@@ -52,15 +52,15 @@ void Object::_update_constraint() {
     }
 }
 
-void Object::constrain_to(const Vec3 &min, const Vec3 &max) {
+void MoveableObject::constrain_to(const Vec3 &min, const Vec3 &max) {
     constraint_.reset(new std::pair<Vec3, Vec3>(min, max));
 }
 
-void Object::constrain_to(const AABB& box) {
+void MoveableObject::constrain_to(const AABB& box) {
     constrain_to(box.min, box.max);
 }
 
-std::pair<Vec3, Vec3> Object::constraint() const {
+std::pair<Vec3, Vec3> MoveableObject::constraint() const {
     if(!is_constrained()) {
         throw LogicError("Tried to get constraint on unconstrained camera");
     }
@@ -68,17 +68,17 @@ std::pair<Vec3, Vec3> Object::constraint() const {
     return *constraint_;
 }
 
-bool Object::is_constrained() const {
+bool MoveableObject::is_constrained() const {
     return bool(constraint_);
 }
 
-void Object::disable_constraint() {
+void MoveableObject::disable_constraint() {
     constraint_.reset();
 }
 
 
-void Object::parent_changed_callback(GenericTreeNode *old_parent, GenericTreeNode *new_parent) {
-    Object* new_p = dynamic_cast<Object*>(new_parent);
+void MoveableObject::parent_changed_callback(GenericTreeNode *old_parent, GenericTreeNode *new_parent) {
+    MoveableObject* new_p = dynamic_cast<MoveableObject*>(new_parent);
 
     if(!new_p) {
         return;
@@ -87,20 +87,20 @@ void Object::parent_changed_callback(GenericTreeNode *old_parent, GenericTreeNod
     update_from_parent();
 }
 
-void Object::lock_rotation() {
+void MoveableObject::lock_rotation() {
     rotation_locked_ = true;
 }
 
-void Object::unlock_rotation() {
+void MoveableObject::unlock_rotation() {
     rotation_locked_ = false;
     update_from_parent();
 }
 
-void Object::lock_position() {
+void MoveableObject::lock_position() {
     position_locked_ = true;
 }
 
-void Object::unlock_position() {
+void MoveableObject::unlock_position() {
     position_locked_ = false;
     update_from_parent();
 }
@@ -115,7 +115,7 @@ void Object::unlock_position() {
  * @param y
  * @param z
  */
-void Object::set_absolute_position(float x, float y, float z) {
+void MoveableObject::set_absolute_position(float x, float y, float z) {
     if(position_locked_) {
         return;
     }
@@ -128,31 +128,31 @@ void Object::set_absolute_position(float x, float y, float z) {
     set_relative_position(kglt::Vec3(x, y, z) - parent_pos);
 }
 
-void Object::set_relative_position(float x, float y, float z) {
+void MoveableObject::set_relative_position(float x, float y, float z) {
     //Always store the relative_position_ even for responsive bodies
     //as they only deal with absolute
     relative_position_ = Vec3(x, y, z);
     update_from_parent();
 }
 
-kglt::Vec3 Object::absolute_position() const {
+kglt::Vec3 MoveableObject::absolute_position() const {
     return absolute_position_;
 }
 
-kglt::Vec3 Object::relative_position() const {
+kglt::Vec3 MoveableObject::relative_position() const {
     return relative_position_;
 }
 
-kglt::Quaternion Object::absolute_rotation() const {
+kglt::Quaternion MoveableObject::absolute_rotation() const {
     return absolute_rotation_;
 }
 
-kglt::Quaternion Object::relative_rotation() const {
+kglt::Quaternion MoveableObject::relative_rotation() const {
     return relative_rotation_;
 }
 
 
-void Object::set_absolute_rotation(const Quaternion& quat) {
+void MoveableObject::set_absolute_rotation(const Quaternion& quat) {
     if(rotation_locked_) {
         return;
     }
@@ -169,7 +169,7 @@ void Object::set_absolute_rotation(const Quaternion& quat) {
     _update_constraint();
 }
 
-void Object::set_relative_rotation(const Quaternion &quaternion) {
+void MoveableObject::set_relative_rotation(const Quaternion &quaternion) {
     //Always store the relative rotation, even for responsive bodies
     //as they only deal with absolute
     relative_rotation_ = quaternion;
@@ -177,7 +177,7 @@ void Object::set_relative_rotation(const Quaternion &quaternion) {
     update_from_parent();
 }
 
-void Object::set_absolute_rotation(const Degrees &angle, float x, float y, float z) {
+void MoveableObject::set_absolute_rotation(const Degrees &angle, float x, float y, float z) {
     if(rotation_locked_) {
         return;
     }
@@ -190,13 +190,13 @@ void Object::set_absolute_rotation(const Degrees &angle, float x, float y, float
     set_absolute_rotation(rot);
 }
 
-void Object::move_forward(float amount) {
+void MoveableObject::move_forward(float amount) {
     set_absolute_position(
         absolute_position() + (forward() * amount)
     );
 }
 
-void Object::rotate_around(const kglt::Vec3& axis, const kglt::Degrees& degrees) {
+void MoveableObject::rotate_around(const kglt::Vec3& axis, const kglt::Degrees& degrees) {
     if(rotation_locked_) {
         return;
     }
@@ -214,7 +214,7 @@ void Object::rotate_around(const kglt::Vec3& axis, const kglt::Degrees& degrees)
     update_from_parent();
 }
 
-void Object::look_at(const Vec3& position) {
+void MoveableObject::look_at(const Vec3& position) {
     Vec3 forward = (position - absolute_position()).normalized();
 
     float dot = Vec3(0, 0, -1).dot(forward);
@@ -239,7 +239,7 @@ void Object::look_at(const Vec3& position) {
 }
 
 
-Mat4 Object::absolute_transformation() const {
+Mat4 MoveableObject::absolute_transformation() const {
     Mat4 rot_matrix, trans_matrix, final;
 
     Quaternion abs_rot = absolute_rotation();
@@ -251,7 +251,7 @@ Mat4 Object::absolute_transformation() const {
     return final;
 }
 
-void Object::update_from_parent() {
+void MoveableObject::update_from_parent() {
     Vec3 orig_pos = absolute_position();
     Quaternion orig_rot = absolute_rotation();
 
@@ -278,11 +278,11 @@ void Object::update_from_parent() {
     assert(!isnan(absolute_position_.z));
 
     apply_recursively([](GenericTreeNode* x) {
-        x->as<Object>()->update_from_parent();
+        x->as<MoveableObject>()->update_from_parent();
     }, false);
 }
 
-void Object::destroy_children() {
+void MoveableObject::destroy_children() {
     auto childs = children();
 
     detach_children();

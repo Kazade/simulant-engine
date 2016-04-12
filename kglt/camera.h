@@ -24,7 +24,7 @@ enum CameraFollowMode {
 
 
 class CameraProxy:
-    public ParentSetterMixin<Object>,
+    public ParentSetterMixin<MoveableObject>,
     public generic::Identifiable<CameraID>,
     public Managed<CameraProxy>,
     public Protectable {

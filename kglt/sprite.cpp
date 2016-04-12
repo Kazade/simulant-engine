@@ -8,7 +8,7 @@ using namespace kglt;
 
 Sprite::Sprite(Stage *stage, SpriteID id):
     generic::Identifiable<SpriteID>(id),
-    ParentSetterMixin<Object>(stage),
+    ParentSetterMixin<MoveableObject>(stage),
     Source(stage) {
 
     sprite_sheet_padding_ = std::make_pair(0, 0);

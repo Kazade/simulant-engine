@@ -15,7 +15,7 @@ namespace kglt {
 class Sprite :
     public Managed<Sprite>,
     public generic::Identifiable<SpriteID>,
-    public ParentSetterMixin<Object>,
+    public ParentSetterMixin<MoveableObject>,
     public KeyFrameAnimated,
     public Source,
     public Protectable {

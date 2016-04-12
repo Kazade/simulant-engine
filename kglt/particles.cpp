@@ -6,7 +6,7 @@ namespace kglt {
 
 ParticleSystem::ParticleSystem(Stage* stage, ParticleSystemID id):
     generic::Identifiable<ParticleSystemID>(id),
-    ParentSetterMixin<Object>(stage),
+    ParentSetterMixin<MoveableObject>(stage),
     Source(stage),
     vao_(MODIFY_REPEATEDLY_USED_FOR_RENDERING, MODIFY_REPEATEDLY_USED_FOR_RENDERING){
 
@@ -324,7 +324,7 @@ std::pair<float, float> ParticleEmitter::duration_range() const {
 }
 
 void ParticleSystem::set_particle_width(float width) {
-    Object::stage->material(material_id())->pass(0).set_point_size(width);
+    MoveableObject::stage->material(material_id())->pass(0).set_point_size(width);
     particle_width_ = width;
 }
 

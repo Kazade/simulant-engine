@@ -19,7 +19,7 @@ public:
     Fly(Controllable* container, WindowBase* window):
         Controller("fly") {
 
-        object_ = dynamic_cast<Object*>(container);
+        object_ = dynamic_cast<MoveableObject*>(container);
 
         if(!object_) {
             throw LogicError("Tried to attach FlyController to something which wasn't an object");
@@ -116,7 +116,7 @@ private:
 
     std::vector<InputConnection> connections_;
 
-    Object* object_ = nullptr;
+    MoveableObject* object_ = nullptr;
 };
 
 }

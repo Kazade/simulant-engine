@@ -11,7 +11,7 @@ namespace kglt {
 
 Skybox::Skybox(SkyboxManager* manager, SkyboxID id):
     generic::Identifiable<SkyboxID>(id),
-    ParentSetterMixin<Object>(&(Stage&)manager->stage) {
+    ParentSetterMixin<MoveableObject>(&(Stage&)manager->stage) {
 
 }
 
