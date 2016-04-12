@@ -50,7 +50,7 @@ void Actor::set_mesh(MeshID mesh) {
     }
 
     //Increment the ref-count on this mesh
-    mesh_ = stage()->mesh(mesh).__object;
+    mesh_ = stage->mesh(mesh).__object;
 
     //Rebuild the subactors to match the meshes submeshes
     rebuild_subactors();
@@ -79,7 +79,7 @@ const AABB Actor::transformed_aabb() const {
 }
 
 void Actor::ask_owner_for_destruction() {
-    stage()->delete_actor(id());
+    stage->delete_actor(id());
 }
 
 const MaterialID SubActor::material_id() const {
@@ -92,11 +92,11 @@ const MaterialID SubActor::material_id() const {
 
 void SubActor::override_material_id(MaterialID material) {
     //Store the pointer to maintain the ref-count
-    material_ = parent_.stage()->material(material).__object;
+    material_ = parent_.stage->material(material).__object;
 }
 
 ProtectedPtr<Mesh> Actor::mesh() const {
-    return stage()->mesh(mesh_id());
+    return stage->mesh(mesh_id());
 }
 
 const SubMeshID SubActor::submesh_id() const {

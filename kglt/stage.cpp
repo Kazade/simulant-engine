@@ -255,7 +255,7 @@ void Stage::delete_light(LightID light_id) {
 void Stage::host_camera(CameraID c) {
     if(window->camera(c)->has_proxy()) {
         //Destroy any existing proxy
-        window->camera(c)->proxy().stage()->evict_camera(c);
+        window->camera(c)->proxy().stage->evict_camera(c);
     }
 
     //Create a camera proxy for the camera ID

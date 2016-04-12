@@ -18,17 +18,17 @@ CameraProxy::CameraProxy(Stage *stage, CameraID camera_id):
 
 CameraProxy::~CameraProxy() {
     //Set the camera's proxy to null
-    if(!stage()->window->is_shutting_down() &&
-        stage()->window->has_camera(id())) {
+    if(!stage->window->is_shutting_down() &&
+        stage->window->has_camera(id())) {
 
-        if(&stage()->window->camera(id())->proxy() == this) {
-            stage()->window->camera(id())->set_proxy(nullptr);
+        if(&stage->window->camera(id())->proxy() == this) {
+            stage->window->camera(id())->set_proxy(nullptr);
         }
     }
 }
 
 void CameraProxy::ask_owner_for_destruction() {
-    stage()->evict_camera(id());
+    stage->evict_camera(id());
 }
 
 void CameraProxy::set_orthographic_projection(double left, double right, double bottom, double top, double near, double far) {
@@ -36,7 +36,7 @@ void CameraProxy::set_orthographic_projection(double left, double right, double 
 }
 
 CameraPtr CameraProxy::camera() {
-    return stage()->window->camera(id());
+    return stage->window->camera(id());
 }
 
 void CameraProxy::follow(ActorID actor, CameraFollowMode mode, const kglt::Vec3& offset, float lag_in_seconds) {
@@ -49,10 +49,10 @@ void CameraProxy::follow(ActorID actor, CameraFollowMode mode, const kglt::Vec3&
 }
 
 void CameraProxy::_update_following(double dt) {
-    if(following_actor_ && stage()->has_actor(following_actor_)) {
+    if(following_actor_ && stage->has_actor(following_actor_)) {
         float t = ((following_lag_ == 0) ? 1.0 : dt * (1.0 / following_lag_));
 
-        auto actor = stage()->actor(following_actor_);
+        auto actor = stage->actor(following_actor_);
 
         Vec3 avatar_position = actor->absolute_position();
         Quaternion avatar_rotation = actor->absolute_rotation();

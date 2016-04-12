@@ -596,13 +596,14 @@ typedef UniqueID<4> MaterialID;
 typedef UniqueID<5> LightID;
 typedef UniqueID<6> StageID;
 typedef UniqueID<8> ActorID;
-typedef UniqueID<9> SoundID;
-typedef UniqueID<10> PipelineID;
-typedef UniqueID<11> UIStageID;
-typedef UniqueID<12> SpriteID;
-typedef UniqueID<13> BackgroundID;
-typedef UniqueID<14> ParticleSystemID;
-typedef UniqueID<15> SkyboxID;
+typedef UniqueID<9> GeomID;
+typedef UniqueID<10> SoundID;
+typedef UniqueID<11> PipelineID;
+typedef UniqueID<12> UIStageID;
+typedef UniqueID<13> SpriteID;
+typedef UniqueID<14> BackgroundID;
+typedef UniqueID<15> ParticleSystemID;
+typedef UniqueID<16> SkyboxID;
 
 const StageID DefaultStageID = StageID();
 

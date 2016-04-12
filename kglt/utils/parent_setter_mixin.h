@@ -14,27 +14,27 @@ public:
         T(stage) {}
 
     void set_parent(ActorID actor) {
-        T::set_parent(T::stage()->actor(actor).__object.get());
+        T::set_parent(T::stage->actor(actor).__object.get());
     }
 
     void set_parent(LightID light) {
-        T::set_parent(T::stage()->light(light));
+        T::set_parent(T::stage->light(light));
     }
 
     void set_parent(CameraID camera) {
-        T::set_parent(T::stage()->camera(camera).__object.get());
+        T::set_parent(T::stage->camera(camera).__object.get());
     }
 
     void set_parent(SpriteID sprite) {
-        T::set_parent(T::stage()->sprite(sprite).__object.get());
+        T::set_parent(T::stage->sprite(sprite).__object.get());
     }
 
     void set_parent(BackgroundID background) {
-        T::set_parent(T::stage()->background(background).__object.get());
+        T::set_parent(T::stage->background(background).__object.get());
     }
 
     void set_parent(ParticleSystemID particles) {
-        T::set_parent(T::stage()->particle_system(particles).__object.get());
+        T::set_parent(T::stage->particle_system(particles).__object.get());
     }
 
 protected:

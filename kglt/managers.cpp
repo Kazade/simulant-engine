@@ -118,7 +118,7 @@ void CameraManager::delete_camera(CameraID cid) {
         //Remove any associated proxy
         auto cam = camera(cid);
         if(cam->has_proxy()) {
-            cam->proxy().stage()->evict_camera(cid);
+            cam->proxy().stage->evict_camera(cid);
         }
     } catch(DoesNotExist<Camera>&) {
         // If the camera has already been deleted, do nothing

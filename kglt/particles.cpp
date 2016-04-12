@@ -21,7 +21,7 @@ void ParticleSystem::set_material_id(MaterialID mat_id) {
     material_id_ = mat_id;
 
     //Hold a reference to the material so that it's destroyed when we are
-    material_ref_ = stage()->material(material_id_).__object;
+    material_ref_ = stage->material(material_id_).__object;
 }
 
 EmitterPtr ParticleSystem::push_emitter() {
@@ -126,7 +126,7 @@ bool ParticleSystem::has_active_emitters() const {
 }
 
 void ParticleSystem::ask_owner_for_destruction() {
-    stage()->delete_particle_system(id());
+    stage->delete_particle_system(id());
 }
 
 void ParticleEmitter::activate() {
@@ -146,7 +146,7 @@ void ParticleEmitter::update(double dt) {
 
         float repeat_delay = random_gen::random_float(repeat_delay_range_.first, repeat_delay_range_.second);
         if(repeat_delay > 0) {
-            system().stage()->window->idle->add_timeout(repeat_delay, std::bind(&ParticleEmitter::activate, this));
+            system().stage->window->idle->add_timeout(repeat_delay, std::bind(&ParticleEmitter::activate, this));
         }
     }
 }
@@ -324,7 +324,7 @@ std::pair<float, float> ParticleEmitter::duration_range() const {
 }
 
 void ParticleSystem::set_particle_width(float width) {
-    Object::stage()->material(material_id())->pass(0).set_point_size(width);
+    Object::stage->material(material_id())->pass(0).set_point_size(width);
     particle_width_ = width;
 }
 

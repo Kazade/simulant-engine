@@ -23,10 +23,39 @@
 
 namespace kglt {
 
+class BaseObject:
+    public generic::DataCarrier,
+    public SceneNode {
+public:
+    BaseObject(Stage* stage):
+        stage_(stage),
+        uuid_(++object_counter) {
+
+    }
+
+    virtual ~BaseObject() {}
+
+    // Nameable interface
+    void set_name(const unicode &name) { name_ = name; }
+    const unicode name() const { return name_; }
+    const bool has_name() const { return !name_.empty(); }
+
+    Property<BaseObject, Stage> stage = { this, &BaseObject::stage_ };
+    uint64_t uuid() const { return uuid_; }
+
+private:
+    Stage* stage_; //Each object is owned by a stage
+
+    static uint64_t object_counter;
+    uint64_t uuid_;
+
+    unicode name_;
+};
+
+
 class Object :
-    public generic::DataCarrier, //And they allow additional data to be attached
+    public BaseObject,
     public Transformable,
-    public SceneNode,
     public Controllable {
 
 public:
@@ -123,11 +152,6 @@ public:
     Quaternion rotation() const override { return absolute_rotation(); }
     // End Locateable Interface
 
-    // Nameable interface
-    void set_name(const unicode &name) { name_ = name; }
-    const unicode name() const { return name_; }
-    const bool has_name() const { return !name_.empty(); }
-
     virtual void set_relative_position(float x, float y, float z);
     virtual void set_relative_position(const kglt::Vec3& pos) { set_relative_position(pos.x, pos.y, pos.z); }
     virtual kglt::Vec3 relative_position() const;
@@ -172,20 +196,8 @@ public:
     void lock_position();
     void unlock_position();
 
-    uint64_t uuid() const { return uuid_; }
-
     virtual void _initialize() {}
     virtual void do_update(double dt) {}
-
-    Stage* stage() {
-        assert(stage_);
-        return stage_;
-    }
-
-    const Stage* stage() const {
-        assert(stage_);
-        return stage_;
-    }
 
     void destroy_children();
 
@@ -198,11 +210,6 @@ protected:
     void update_from_parent();
 
 private:
-    static uint64_t object_counter;
-    uint64_t uuid_;
-
-    Stage* stage_; //Each object is owned by a scene
-
     kglt::Vec3 relative_position_;
     kglt::Quaternion relative_rotation_;
 
@@ -220,7 +227,6 @@ private:
     virtual void transformation_changed() {}
 
     std::unique_ptr<std::pair<Vec3, Vec3>> constraint_;
-    unicode name_;
 };
 
 }

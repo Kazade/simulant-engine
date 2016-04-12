@@ -9,11 +9,10 @@
 
 namespace kglt {
 
-uint64_t Object::object_counter = 0;
+uint64_t BaseObject::object_counter = 0;
 
 Object::Object(Stage *stage):
-    uuid_(++object_counter),
-    stage_(stage),
+    BaseObject(stage),
     is_visible_(true),
     rotation_locked_(false),
     position_locked_(false) {
