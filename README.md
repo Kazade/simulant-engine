@@ -14,12 +14,10 @@ became a full blown game engine!
  * Easy to use API, and getting simpler all the time!
  * Flexible rendering pipeline
  * Complex material scripting format
- * Built-in Lua console (hit '~' , or '`' on a UK keyboard... top left!)
- * Manipulate the scene in realtime using Lua
  * Loading of .obj models and the X-Wing vs Tie Fighter .opt format
  * Loading of Q2 BSP files (needs work)
  * Octree partitioning/culling (WIP)
- * Loading of JPG, PNG, TGA images
+ * Loading of JPG, PNG, TGA, WAL images
  * Shortcut functions for loading 2D sprites, 2D backgrounds and 3D skyboxes
  * Simple scene graph functions
  * HTML/CSS based UI renderer based on libRocket
@@ -68,8 +66,8 @@ rectangle:
 class MyApp : public kglt::Application {
 public:
     bool do_init() {
-        MeshID mesh_id = window().stage()->new_mesh_as_rectangle(10.0, 5.0);
-        ActorID actor_id = window().stage().new_actor_with_mesh(mesh_id);
+        MeshID mesh_id = window->stage->new_mesh_as_rectangle(10.0, 5.0);
+        ActorID actor_id = window->stage->new_actor_with_mesh(mesh_id);
         return true;
     }
 
@@ -103,7 +101,7 @@ The _Window_ owns everything (pretty much). You can do the following with a Wind
 * Create and delete resources (e.g. Meshes, Textures, Shaders and Materials)
 * Manipulate the render sequence
 
-When you create a Window, a single Stage is created; this is the default Stage. Stages are where you create your world by spawning _Actors_, you can think of them as a chunk of the overall scene. Generally speaking most objects that you create should belong to the default stage. There's nothing particularly special about the default Stage aside from it being created automatically and it being automatically connected to a pipeline in the render sequence for you.
+Stages are where you create your world by spawning _Actors_, you can think of them as a chunk of the overall scene. 
 
 The RenderSequence is where you assemble your Stages for rendering. You add _Pipelines_ to the RenderSequence, and each Pipeline has the following:
 
@@ -114,9 +112,9 @@ The RenderSequence is where you assemble your Stages for rendering. You add _Pip
 
 For example, if you want to render a 2D overlay on your world you'll probably want to do that using a camera that has an orthographic projection. In that case, you'd do the following:
 
-* Create a new stage ( window->scene().new_stage() )
+* Create a new stage ( window->scene->new_stage() )
 * Build your 2D overlay in the subscene (e.g. using new_mesh(), new_material(), new_actor() etc.)
-* Manipulate the stage's camera (e.g. window.camera().set_orthographic_projection())
-* Finally add a stage to the pipeline (e.g. window().render_sequence().add_pipeline(stage.id(), camera().id(), ViewportID(), TextureID(), 100) );
+* Manipulate the stage's camera (e.g. window.camera(camera_id).set_orthographic_projection())
+* Finally add a stage to the pipeline (e.g. window->render_sequence->add_pipeline(stage.id(), camera().id(), ViewportID(), TextureID(), 100) );
 
 The 100 in the above example is the priority of this stage, the stage that renders the default subscene has a priority of 0, so giving your overlay subscene a priority of 100 would mean it would be renderered after the default.
