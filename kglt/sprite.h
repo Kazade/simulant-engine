@@ -28,7 +28,7 @@ public:
     void cleanup() override;
     void update(double dt);
 
-    Sprite(Stage* stage, SpriteID id);
+    Sprite(SpriteID id, Stage* stage);
 
     void set_render_dimensions(float width, float height);
     void set_render_dimensions_from_width(float width);

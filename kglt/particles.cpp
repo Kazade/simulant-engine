@@ -4,7 +4,7 @@
 
 namespace kglt {
 
-ParticleSystem::ParticleSystem(Stage* stage, ParticleSystemID id):
+ParticleSystem::ParticleSystem(ParticleSystemID id, Stage* stage):
     generic::Identifiable<ParticleSystemID>(id),
     ParentSetterMixin<MoveableObject>(stage),
     Source(stage),

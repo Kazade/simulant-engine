@@ -7,7 +7,7 @@
 
 namespace kglt {
 
-Background::Background(BackgroundManager *manager, BackgroundID background_id):
+Background::Background(BackgroundID background_id, BackgroundManager *manager):
     generic::Identifiable<BackgroundID>(background_id),
     manager_(manager) {
 

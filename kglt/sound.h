@@ -32,7 +32,7 @@ public:
     static void init_openal();
     static void shutdown_openal();
 
-    Sound(ResourceManager* resource_manager, SoundID id);
+    Sound(SoundID id, ResourceManager* resource_manager);
 
     uint32_t sample_rate() const { return sample_rate_; }
     void set_sample_rate(uint32_t rate) { sample_rate_ = rate; }

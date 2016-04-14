@@ -30,7 +30,7 @@ class Skybox :
     public Protectable {
 
 public:
-    Skybox(SkyboxManager* manager, SkyboxID id);
+    Skybox(SkyboxID id, SkyboxManager* manager);
 
     bool init() override;
     void cleanup() override;
@@ -80,7 +80,7 @@ public:
         IOError(what) {}
 };
 
-typedef generic::TemplatedManager<SkyboxManager, Skybox, SkyboxID> TemplatedSkyboxManager;
+typedef generic::TemplatedManager<Skybox, SkyboxID> TemplatedSkyboxManager;
 
 class SkyboxManager :
     public TemplatedSkyboxManager,

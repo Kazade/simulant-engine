@@ -7,6 +7,7 @@
 #include "debug.h"
 #include "sprite.h"
 #include "particles.h"
+#include "geom.h"
 
 #include "loader.h"
 #include "partitioners/null_partitioner.h"
@@ -15,12 +16,13 @@
 
 namespace kglt {
 
-Stage::Stage(WindowBase *parent, StageID id, AvailablePartitioner partitioner):
+Stage::Stage(StageID id, WindowBase *parent, AvailablePartitioner partitioner):
     WindowHolder(parent),
     generic::Identifiable<StageID>(id),
     ResourceManager(parent),
     SkyboxManager(parent, this),
-    ambient_light_(1.0, 1.0, 1.0, 1.0) {
+    ambient_light_(kglt::Colour::WHITE),
+    geom_manager_(new GeomManager()) {
 
     set_partitioner(partitioner);
 
@@ -46,7 +48,7 @@ void Stage::ask_owner_for_destruction() {
 }
 
 ActorID Stage::new_actor() {
-    ActorID result = ActorManager::manager_new();
+    ActorID result = ActorManager::manager_new(this);
     actor(result)->set_parent(this);
 
     //Tell everyone about the new actor
@@ -59,7 +61,7 @@ ActorID Stage::new_actor(MeshID mid) {
 }
 
 ActorID Stage::new_actor(MeshID mid, bool make_responsive, bool make_collidable) {
-    ActorID result = ActorManager::manager_new();
+    ActorID result = ActorManager::manager_new(this);
     actor(result)->set_parent(this);
 
     //If a mesh was specified, set it
@@ -117,10 +119,40 @@ void Stage::delete_actor(ActorID e) {
     ActorManager::manager_delete(e);
 }
 
+//=============== GEOMS =====================
+
+GeomID Stage::new_geom_with_mesh(MeshID mid) {
+    auto gid = geom_manager_->manager_new(this, mid);
+    geom(gid)->set_parent(this);
+    return gid;
+}
+
+GeomPtr Stage::geom(const GeomID gid) const {
+    return GeomPtr(geom_manager_->manager_get(gid));
+}
+
+GeomID Stage::new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, const Quaternion& rotation) {
+    auto gid = geom_manager_->manager_new(this, mid, position, rotation);
+    geom(gid)->set_parent(this);
+    return gid;
+}
+
+bool Stage::has_geom(GeomID geom_id) const {
+    return geom_manager_->manager_contains(geom_id);
+}
+
+void Stage::delete_geom(GeomID geom_id) {
+    geom_manager_->manager_delete(geom_id);
+}
+
+uint32_t Stage::geom_count() const {
+    return geom_manager_->manager_count();
+}
+
 //=============== PARTICLES =================
 
 ParticleSystemID Stage::new_particle_system() {
-    ParticleSystemID new_id = ParticleSystemManager::manager_new();
+    ParticleSystemID new_id = ParticleSystemManager::manager_new(this);
 
     signal_particle_system_created_(new_id);
     return new_id;
@@ -169,7 +201,7 @@ void Stage::delete_particle_system(ParticleSystemID pid) {
 //=============== SPRITES ===================
 
 SpriteID Stage::new_sprite() {
-    SpriteID s = SpriteManager::manager_new();
+    SpriteID s = SpriteManager::manager_new(this);
     sprite(s)->set_parent(this);
     signal_sprite_created_(s);
     return s;
@@ -213,7 +245,7 @@ uint32_t Stage::sprite_count() const {
 
 
 LightID Stage::new_light(LightType type) {
-    LightID lid = LightManager::manager_new();
+    LightID lid = LightManager::manager_new(this);
     light(lid)->set_type(type);
 
     // If this is a new directional light, make sure we set a decent
@@ -229,7 +261,7 @@ LightID Stage::new_light(LightType type) {
 }
 
 LightID Stage::new_light(MoveableObject &parent, LightType type) {
-    LightID lid = LightManager::manager_new();
+    LightID lid = LightManager::manager_new(this);
 
     {
         auto l = light(lid);
@@ -259,7 +291,7 @@ void Stage::host_camera(CameraID c) {
     }
 
     //Create a camera proxy for the camera ID
-    CameraProxyManager::manager_new(c);
+    CameraProxyManager::manager_new(c, this);
 
     camera(c)->set_parent(this);
 }

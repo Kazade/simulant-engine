@@ -57,8 +57,8 @@ class SubMesh :
 
 public:
     SubMesh(
-        Mesh* parent,
         SubMeshID id,
+        Mesh* parent,
         const std::string& name,
         MaterialID material,
         MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES,
@@ -114,7 +114,7 @@ private:
     sig::connection irecalc_;
 };
 
-typedef generic::TemplatedManager<Mesh, SubMesh, SubMeshID> TemplatedSubMeshManager;
+typedef generic::TemplatedManager<SubMesh, SubMeshID> TemplatedSubMeshManager;
 
 class Mesh :
     public MeshInterface,
@@ -125,7 +125,7 @@ class Mesh :
     public TemplatedSubMeshManager {
 
 public:
-    Mesh(ResourceManager* resource_manager, MeshID id);
+    Mesh(MeshID id, ResourceManager* resource_manager);
 
     VertexData& shared_data() {
         return shared_data_;

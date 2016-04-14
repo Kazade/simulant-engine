@@ -26,7 +26,7 @@ void BackgroundManager::update(double dt) {
 }
 
 BackgroundID BackgroundManager::new_background() {
-    BackgroundID bid = BackgroundManager::manager_new();
+    BackgroundID bid = BackgroundManager::manager_new(this);
     return bid;
 }
 
@@ -70,7 +70,7 @@ CameraManager::CameraManager(WindowBase *window):
 }
 
 CameraID CameraManager::new_camera() {
-    CameraID new_camera = CameraManager::manager_new();
+    CameraID new_camera = CameraManager::manager_new(this->window_);
 
     return new_camera;
 }
@@ -141,12 +141,13 @@ const bool CameraManager::has_camera(CameraID id) const {
 
 //=========== START STAGES ==================
 
-StageManager::StageManager() {
+StageManager::StageManager(WindowBase* window):
+    window_(window) {
 
 }
 
 StageID StageManager::new_stage(AvailablePartitioner partitioner) {
-    return StageManager::manager_new(StageID(), partitioner);
+    return StageManager::manager_new(this->window_, partitioner);
 }
 
 uint32_t StageManager::stage_count() const {
@@ -232,7 +233,7 @@ UIStageManager::UIStageManager(WindowBase *window):
 }
 
 UIStageID UIStageManager::new_ui_stage() {
-    return UIStageManager::manager_new();
+    return UIStageManager::manager_new(this->window_);
 }
 
 UIStageID UIStageManager::new_ui_stage_from_file(const unicode& rml_file) {

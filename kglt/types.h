@@ -627,6 +627,9 @@ typedef std::shared_ptr<Sound> SoundPtr;
 class Actor;
 typedef ProtectedPtr<Actor> ActorPtr;
 
+class Geom;
+typedef ProtectedPtr<Geom> GeomPtr;
+
 class ParticleSystem;
 typedef ProtectedPtr<ParticleSystem> ParticleSystemPtr;
 
@@ -651,7 +654,7 @@ typedef AutoWeakPtr<Background> BackgroundPtr;
 
 class Stage;
 class WindowBase;
-typedef generic::TemplatedManager<WindowBase, Stage, StageID> BaseStageManager;
+typedef generic::TemplatedManager<Stage, StageID> BaseStageManager;
 typedef ManagerLookupPtr<BaseStageManager, StageID> StagePtr;
 
 class ResourceManager;

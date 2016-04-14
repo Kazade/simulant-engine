@@ -23,7 +23,7 @@ class Light :
 public:
     typedef std::shared_ptr<Light> ptr;
 
-    Light(Stage* stage, LightID lid);
+    Light(LightID lid, Stage* stage);
     void set_type(LightType type) { type_ = type; }
 
     /*

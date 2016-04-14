@@ -426,7 +426,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
      *  Load the textures and generate materials
      */
 
-    MeshID mid = stage->new_mesh_with_alias("world_geometry");
+    MeshID mid = stage->new_mesh_with_alias("world_geometry", false);
     auto mesh = stage->mesh(mid);
 
     std::vector<MaterialID> materials;
@@ -715,9 +715,12 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         submesh->index_data().done();
     });
 
-    L_DEBUG(_u("Created an actor for mesh: {0}").format(mid));
     //Finally, create an actor from the world mesh
-    stage->new_actor(mid);
+    stage->new_geom_with_mesh(mid);
+
+    // Now the mesh has been attached, it can be collected
+    mesh->enable_gc();
+    L_DEBUG(_u("Created a geom for mesh: {0}").format(mid));
 }
 
 }

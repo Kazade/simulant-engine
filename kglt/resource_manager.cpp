@@ -74,7 +74,7 @@ const ProtectedPtr<Mesh> ResourceManagerImpl::mesh(MeshID m) const {
 }
 
 MeshID ResourceManagerImpl::new_mesh(bool garbage_collect) {
-    MeshID result = MeshManager::manager_new(garbage_collect);
+    MeshID result = MeshManager::manager_new(garbage_collect, this);
     return result;
 }
 
@@ -279,7 +279,7 @@ uint32_t ResourceManagerImpl::mesh_count() const {
 }
 
 MaterialID ResourceManagerImpl::new_material(bool garbage_collect) {
-    MaterialID result = MaterialManager::manager_new(garbage_collect);
+    MaterialID result = MaterialManager::manager_new(garbage_collect, this);
     return result;
 }
 
@@ -366,7 +366,7 @@ void ResourceManagerImpl::mark_material_as_uncollected(MaterialID t) {
 }
 
 TextureID ResourceManagerImpl::new_texture(bool garbage_collect) {
-    return TextureManager::manager_new(garbage_collect);
+    return TextureManager::manager_new(garbage_collect, this);
 }
 
 TextureID ResourceManagerImpl::new_texture_from_file(const unicode& path, TextureFlags flags, bool garbage_collect) {
@@ -440,7 +440,7 @@ void ResourceManagerImpl::mark_texture_as_uncollected(TextureID t) {
 }
 
 SoundID ResourceManagerImpl::new_sound(bool garbage_collect) {
-    return SoundManager::manager_new(garbage_collect);
+    return SoundManager::manager_new(garbage_collect, this);
 }
 
 SoundID ResourceManagerImpl::new_sound_from_file(const unicode& path, bool garbage_collect) {

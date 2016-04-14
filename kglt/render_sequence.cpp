@@ -19,9 +19,8 @@
 
 namespace kglt {
 
-Pipeline::Pipeline(
-        RenderSequence* render_sequence,
-        PipelineID id):
+Pipeline::Pipeline(PipelineID id,
+        RenderSequence* render_sequence):
     generic::Identifiable<PipelineID>(id),
     sequence_(render_sequence),
     priority_(0),
@@ -152,7 +151,7 @@ void RenderSequence::sort_pipelines(bool acquire_lock) {
 }
 
 PipelineID RenderSequence::new_pipeline(StageID stage, CameraID camera, const Viewport& viewport, TextureID target, int32_t priority) {
-    PipelineID new_p = PipelineManager::manager_new();
+    PipelineID new_p = PipelineManager::manager_new(this);
 
     auto pipeline = PipelineManager::manager_get(new_p).lock();
 
@@ -171,7 +170,7 @@ PipelineID RenderSequence::new_pipeline(StageID stage, CameraID camera, const Vi
 }
 
 PipelineID RenderSequence::new_pipeline(UIStageID stage, CameraID camera, const Viewport& viewport, TextureID target, int32_t priority) {
-    PipelineID new_p = PipelineManager::manager_new();
+    PipelineID new_p = PipelineManager::manager_new(this);
 
     ordered_pipelines_.push_back(PipelineManager::manager_get(new_p).lock());
 

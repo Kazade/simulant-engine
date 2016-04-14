@@ -223,7 +223,7 @@ public:
         static const std::string MULTITEXTURE2_MODULATE_WITH_LIGHTING;
     };
 
-    Material(ResourceManager* resource_manager, MaterialID mat_id);
+    Material(MaterialID mat_id, ResourceManager* resource_manager);
     ~Material();
 
     void update(double dt) override;

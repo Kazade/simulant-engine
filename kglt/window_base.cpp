@@ -39,7 +39,7 @@ WindowBase::WindowBase():
     ResourceManager(this),
     Source(this),
     BackgroundManager(this),
-    StageManager(),
+    StageManager(this),
     UIStageManager(this),    
     CameraManager(this),
     ResourceManagerImpl(this),

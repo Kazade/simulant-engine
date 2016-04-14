@@ -31,7 +31,7 @@ public:
 
     uint32_t gl_tex() const { return gl_tex_; }
 
-    Texture(ResourceManager* resource_manager, TextureID id):
+    Texture(TextureID id, ResourceManager* resource_manager):
         Resource(resource_manager),
         generic::Identifiable<TextureID>(id),
         width_(0),

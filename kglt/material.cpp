@@ -86,7 +86,7 @@ TextureID TextureUnit::texture_id() const {
     }
 }
 
-Material::Material(ResourceManager *resource_manager, MaterialID mat_id):
+Material::Material(MaterialID mat_id, ResourceManager *resource_manager):
     Resource(resource_manager),
     generic::Identifiable<MaterialID>(mat_id) {
 

@@ -24,8 +24,8 @@ class Pipeline:
 
 public:
     Pipeline(
-        RenderSequence* render_sequence,
-        PipelineID id
+        PipelineID id,
+        RenderSequence* render_sequence
     );
 
     ~Pipeline();
@@ -76,7 +76,7 @@ struct RenderOptions {
     uint8_t point_size;
 };
 
-typedef generic::TemplatedManager<RenderSequence, Pipeline, PipelineID> PipelineManager;
+typedef generic::TemplatedManager<Pipeline, PipelineID> PipelineManager;
 
 class RenderSequence:
     public Managed<RenderSequence>,

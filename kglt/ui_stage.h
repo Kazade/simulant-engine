@@ -27,7 +27,7 @@ public:
      *  and not 2D/3D scenes
      */
 
-    UIStage(WindowBase *parent, UIStageID id);
+    UIStage(UIStageID id, WindowBase *parent);
     ~UIStage();
 
     ui::ElementList append(const unicode& tag);

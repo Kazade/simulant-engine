@@ -23,11 +23,12 @@ class Partitioner;
 class Debug;
 class Sprite;
 
-typedef generic::TemplatedManager<Stage, Actor, ActorID> ActorManager;
-typedef generic::TemplatedManager<Stage, Light, LightID> LightManager;
-typedef generic::TemplatedManager<Stage, CameraProxy, CameraID> CameraProxyManager;
-typedef generic::TemplatedManager<Stage, Sprite, SpriteID> SpriteManager;
-typedef generic::TemplatedManager<Stage, ParticleSystem, ParticleSystemID> ParticleSystemManager;
+typedef generic::TemplatedManager<Actor, ActorID> ActorManager;
+typedef generic::TemplatedManager<Geom, GeomID> GeomManager;
+typedef generic::TemplatedManager<Light, LightID> LightManager;
+typedef generic::TemplatedManager<CameraProxy, CameraID> CameraProxyManager;
+typedef generic::TemplatedManager<Sprite, SpriteID> SpriteManager;
+typedef generic::TemplatedManager<ParticleSystem, ParticleSystemID> ParticleSystemManager;
 
 class Stage:
     public Managed<Stage>,
@@ -47,7 +48,7 @@ class Stage:
     public virtual WindowHolder {
 
 public:
-    Stage(WindowBase *parent, StageID id, AvailablePartitioner partitioner);
+    Stage(StageID id, WindowBase *parent, AvailablePartitioner partitioner);
 
     ActorID new_actor();
     ActorID new_actor(MeshID mid); //FIXME: Deprecate
@@ -59,6 +60,13 @@ public:
     ActorID new_actor_with_parent(ActorID parent, MeshID mid); //FIXME: deprecate
     ActorID new_actor_with_parent_and_mesh(ActorID parent, MeshID mid);
     ActorID new_actor_with_parent_and_mesh(SpriteID parent, MeshID mid);
+
+    GeomID new_geom_with_mesh(MeshID mid);
+    GeomID new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, const Quaternion& rotation=Quaternion());
+    GeomPtr geom(const GeomID gid) const;
+    bool has_geom(GeomID geom_id) const;
+    void delete_geom(GeomID geom_id);
+    uint32_t geom_count() const;
 
     ProtectedPtr<Actor> actor(ActorID e);
     const ProtectedPtr<Actor> actor(ActorID e) const;
@@ -371,6 +379,11 @@ private:
     void delete_camera_proxy(CameraID cam);
 
     unicode name_;
+
+    //FIXME: All managers should be composition rather than inheritence,
+    // like this one!
+
+    std::unique_ptr<GeomManager> geom_manager_;
 };
 
 

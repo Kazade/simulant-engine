@@ -6,7 +6,7 @@
 
 using namespace kglt;
 
-Sprite::Sprite(Stage *stage, SpriteID id):
+Sprite::Sprite(SpriteID id, Stage *stage):
     generic::Identifiable<SpriteID>(id),
     ParentSetterMixin<MoveableObject>(stage),
     Source(stage) {

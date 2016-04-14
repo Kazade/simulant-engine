@@ -30,7 +30,7 @@ class CameraProxy:
     public Protectable {
 
 public:
-    CameraProxy(Stage* stage, CameraID camera_id);
+    CameraProxy(CameraID camera_id, Stage* stage);
     ~CameraProxy();
 
     void follow(ActorID actor, CameraFollowMode mode, const kglt::Vec3& offset=kglt::Vec3(0, 0, -10), float lag_in_seconds=0.25);
@@ -68,7 +68,7 @@ class Camera:
     public Protectable {
 
 public:
-    Camera(WindowBase* window, CameraID id);
+    Camera(CameraID id, WindowBase* window);
 
     kmVec3 project_point(const RenderTarget& target, const Viewport& viewport, const kmVec3& point);
 

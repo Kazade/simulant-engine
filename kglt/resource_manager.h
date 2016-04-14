@@ -17,10 +17,10 @@ namespace kglt {
 
 class ResourceManagerImpl;
 
-typedef generic::RefCountedTemplatedManager<ResourceManagerImpl, Mesh, MeshID> MeshManager;
-typedef generic::RefCountedTemplatedManager<ResourceManagerImpl, Material, MaterialID> MaterialManager;
-typedef generic::RefCountedTemplatedManager<ResourceManagerImpl, Texture, TextureID> TextureManager;
-typedef generic::RefCountedTemplatedManager<ResourceManagerImpl, Sound, SoundID> SoundManager;
+typedef generic::RefCountedTemplatedManager<Mesh, MeshID> MeshManager;
+typedef generic::RefCountedTemplatedManager<Material, MaterialID> MaterialManager;
+typedef generic::RefCountedTemplatedManager<Texture, TextureID> TextureManager;
+typedef generic::RefCountedTemplatedManager<Sound, SoundID> SoundManager;
 
 class ResourceManager : public virtual WindowHolder {
 public:

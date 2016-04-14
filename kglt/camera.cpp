@@ -6,7 +6,7 @@
 
 namespace kglt {
 
-CameraProxy::CameraProxy(Stage *stage, CameraID camera_id):
+CameraProxy::CameraProxy(CameraID camera_id, Stage *stage):
     ParentSetterMixin<MoveableObject>(stage),
     generic::Identifiable<CameraID>(camera_id) {
 
@@ -101,7 +101,7 @@ kmVec3 CameraProxy::project_point(const RenderTarget& target, const Viewport &vi
     return camera()->project_point(target, viewport, point);
 }
 
-Camera::Camera(WindowBase *window, CameraID id):
+Camera::Camera(CameraID id, WindowBase *window):
     generic::Identifiable<CameraID>(id),
     window_(window),
     proxy_(nullptr) {

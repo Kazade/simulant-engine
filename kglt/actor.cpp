@@ -3,7 +3,7 @@
 
 namespace kglt {
 
-Actor::Actor(Stage* stage, ActorID id):
+Actor::Actor(ActorID id, Stage* stage):
     generic::Identifiable<ActorID>(id),
     ParentSetterMixin<MoveableObject>(stage),
     Source(stage),
@@ -11,7 +11,7 @@ Actor::Actor(Stage* stage, ActorID id):
 
 }
 
-Actor::Actor(Stage* stage, ActorID id, MeshID mesh):
+Actor::Actor(ActorID id, Stage* stage, MeshID mesh):
     generic::Identifiable<ActorID>(id),
     ParentSetterMixin<MoveableObject>(stage),
     Source(stage),

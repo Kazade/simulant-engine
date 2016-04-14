@@ -29,8 +29,8 @@ class Actor :
     public Protectable {
 
 public:
-    Actor(Stage* stage, ActorID id);
-    Actor(Stage* stage, ActorID id, MeshID mesh);
+    Actor(ActorID id, Stage* stage);
+    Actor(ActorID id, Stage* stage, MeshID mesh);
 
     MeshID mesh_id() const { return (mesh_) ? mesh_->id() : MeshID(0); }
 
@@ -70,6 +70,7 @@ public:
 
     const AABB aabb() const;
     const AABB transformed_aabb() const;
+
 private:
     std::shared_ptr<Mesh> mesh_;
     std::vector<std::shared_ptr<SubActor> > subactors_;

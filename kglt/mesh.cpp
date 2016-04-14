@@ -9,7 +9,7 @@
 
 namespace kglt {
 
-Mesh::Mesh(ResourceManager *resource_manager, MeshID id):
+Mesh::Mesh(MeshID id, ResourceManager *resource_manager):
     Resource(resource_manager),
     generic::Identifiable<MeshID>(id),
     normal_debug_mesh_(0) {
@@ -97,7 +97,7 @@ void Mesh::enable_debug(bool value) {
 
 SubMeshID Mesh::new_submesh_with_material(MaterialID material, MeshArrangement arrangement, VertexSharingMode vertex_sharing) {
 
-    SubMeshID id = TemplatedSubMeshManager::manager_new("", material, arrangement, vertex_sharing);
+    SubMeshID id = TemplatedSubMeshManager::manager_new(this, "", material, arrangement, vertex_sharing);
 
     signal_submeshes_changed_();
 
@@ -450,7 +450,7 @@ SubMesh* Mesh::submesh(SubMeshID index) {
     return TemplatedSubMeshManager::manager_get(index).lock().get();
 }
 
-SubMesh::SubMesh(Mesh* parent, SubMeshID id, const std::string& name,
+SubMesh::SubMesh(SubMeshID id, Mesh* parent, const std::string& name,
         MaterialID material, MeshArrangement arrangement, VertexSharingMode vertex_sharing):
     generic::Identifiable<SubMeshID>(id),
     parent_(parent),

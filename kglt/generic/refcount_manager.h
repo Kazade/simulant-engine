@@ -10,7 +10,6 @@ namespace kglt {
 namespace generic {
 
 template<
-    typename Derived,
     typename ObjectType,
     typename ObjectIDType,
     typename NewIDGenerator=IncrementalGetNextID<ObjectIDType>
@@ -30,13 +29,18 @@ public:
     }
 
     template<typename ...Args>
+    ObjectIDType manager_new(bool garbage_collect, Args&&... args) {
+        return manager_new(ObjectIDType(), garbage_collect, std::forward<Args>(args)...);
+    }
+
+    template<typename ...Args>
     ObjectIDType manager_new(ObjectIDType id, bool garbage_collect, Args&&... args) {
         std::lock_guard<std::mutex> lock(manager_lock_);
         if(!id) {
             id = NewIDGenerator()();
         }
 
-        auto obj = ObjectType::create((Derived*)this, id, std::forward<Args>(args)...);
+        auto obj = ObjectType::create(id, std::forward<Args>(args)...);
         obj->enable_gc(garbage_collect);
 
         objects_.insert(std::make_pair(id, obj));

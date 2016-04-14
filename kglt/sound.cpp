@@ -21,7 +21,7 @@ void Sound::shutdown_openal() {
     alcCloseDevice(dev);
 }
 
-Sound::Sound(ResourceManager *resource_manager, SoundID id):
+Sound::Sound(SoundID id, ResourceManager *resource_manager):
     generic::Identifiable<SoundID>(id),
     Resource(resource_manager) {
 

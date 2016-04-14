@@ -892,3 +892,5 @@ kglt/controllers/material/flowing.h
 kglt/controllers/material/flowing.cpp
 kglt/controllers/material/warp.h
 kglt/controllers/material/warp.cpp
+kglt/geom.h
+kglt/geom.cpp

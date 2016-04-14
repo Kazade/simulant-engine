@@ -141,7 +141,7 @@ class ParticleSystem :
     public Renderable {
 
 public:
-    ParticleSystem(Stage* stage, ParticleSystemID id);
+    ParticleSystem(ParticleSystemID id, Stage* stage);
 
     void set_name(const unicode& name) { name_ = name; }
     const bool has_name() const { return !name_.empty(); }

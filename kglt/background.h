@@ -25,7 +25,7 @@ class Background:
     public Printable {
 
 public:
-    Background(BackgroundManager *manager, BackgroundID background_id);
+    Background(BackgroundID background_id, BackgroundManager *manager);
 
     bool init() override;
     void cleanup() override;

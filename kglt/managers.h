@@ -11,7 +11,7 @@ namespace kglt {
 
 
 class BackgroundManager:
-    public generic::TemplatedManager<WindowBase, Background, BackgroundID>,
+    public generic::TemplatedManager<Background, BackgroundID>,
     public virtual Updateable {
 
 public:
@@ -32,7 +32,7 @@ private:
 };
 
 class CameraManager:
-    public generic::TemplatedManager<WindowBase, Camera, CameraID> {
+    public generic::TemplatedManager<Camera, CameraID> {
 
 public:
     CameraManager(WindowBase* window);
@@ -55,7 +55,7 @@ class StageManager:
     public virtual Updateable {
 
 public:
-    StageManager();
+    StageManager(WindowBase* window);
 
     StageID new_stage(AvailablePartitioner partitioner=PARTITIONER_OCTREE);
     StagePtr stage(StageID s);
@@ -67,11 +67,12 @@ public:
     void update(double dt) override;
 
 private:
+    WindowBase* window_ = nullptr;
     void print_tree(GenericTreeNode* node, uint32_t& level);
 };
 
 class UIStageManager:
-    public generic::TemplatedManager<WindowBase, UIStage, UIStageID> {
+    public generic::TemplatedManager<UIStage, UIStageID> {
 
 public:
     UIStageManager(WindowBase* window);

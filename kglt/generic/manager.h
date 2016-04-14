@@ -10,37 +10,37 @@
 namespace kglt {
 namespace generic {
 
-template<typename Derived, typename ObjectType, typename ObjectIDType, typename NewIDGenerator=IncrementalGetNextID<ObjectIDType> >
+template<typename ObjectType, typename ObjectIDType, typename NewIDGenerator=IncrementalGetNextID<ObjectIDType> >
 class TemplatedManager {
 protected:
     mutable std::recursive_mutex manager_lock_;
 
+private:
+
 public:
+    virtual ~TemplatedManager() {}
+
     typedef NewIDGenerator GeneratorType;
     typedef ObjectType Type;
 
-    ObjectIDType manager_new() {
-        return manager_new(ObjectIDType());
+    template<typename... Args>
+    ObjectIDType manager_new(Args&&... args) {
+        return manager_new(generator_(), std::forward<Args>(args)...);
     }
 
     template<typename... Args>
     ObjectIDType manager_new(ObjectIDType id, Args&&... args) {
         {
             std::lock_guard<std::recursive_mutex> lock(manager_lock_);
-            if(!id) {
-                id = generator_();
-            }
-            objects_.insert(std::make_pair(id, ObjectType::create((Derived*)this, id, std::forward<Args>(args)...)));
+
+            objects_.insert(std::make_pair(id,
+                ObjectType::create(id, std::forward<Args>(args)...)
+            ));
         }
 
         signal_post_create_(*objects_[id], id);
 
         return id;
-    }
-
-    template<typename... Args>
-    ObjectIDType manager_new(Args&&... args) {
-        return manager_new(ObjectIDType(), args...);
     }
 
     void manager_delete_all() {
@@ -151,8 +151,8 @@ protected:
     }
 };
 
-template <typename Derived, typename ObjectType, typename ObjectIDType, typename NewIDGenerator>
-NewIDGenerator TemplatedManager<Derived, ObjectType, ObjectIDType, NewIDGenerator>::generator_;
+template <typename ObjectType, typename ObjectIDType, typename NewIDGenerator>
+NewIDGenerator TemplatedManager<ObjectType, ObjectIDType, NewIDGenerator>::generator_;
 
 
 }
