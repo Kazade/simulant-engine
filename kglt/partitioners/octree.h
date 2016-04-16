@@ -8,6 +8,7 @@
 #include <memory>
 #include <kazmath/kazmath.h>
 
+#include "../generic/data_carrier.h"
 #include "../generic/managed.h"
 #include "../interfaces.h"
 #include "../types.h"
@@ -69,7 +70,8 @@ public:
 class Octree;
 
 class OctreeNode :
-    public Managed<OctreeNode> {
+    public Managed<OctreeNode>,
+    public generic::DataCarrier {
 
 public:
     OctreeNode(OctreeNode* parent, float strict_diameter, const kmVec3 &centre);
@@ -85,11 +87,11 @@ public:
     uint32_t object_count() const;
 
     OctreeNode& child(OctreePosition pos) {
-        return *container::const_get(children_, pos);
+        return *children_.at(pos);
     }
 
     bool has_child(OctreePosition pos) const {
-        return container::contains(children_, pos);
+        return children_.count(pos);
     }
     bool has_objects() const { return !objects_.empty(); }
 
@@ -172,8 +174,11 @@ public:
 
     bool has_root() const { return root_ != nullptr; }
 
-    void grow(const BoundableEntity* object);
-    void shrink(const BoundableEntity* object);
+    typedef std::function<bool (const BoundableEntity*, OctreeNode*)> GrowCallback;
+    typedef std::function<bool (const BoundableEntity*, OctreeNode*)> ShrinkCallback;
+
+    void grow(const BoundableEntity* object, GrowCallback callback=GrowCallback());
+    void shrink(const BoundableEntity* object, ShrinkCallback callback=ShrinkCallback());
     void relocate(const BoundableEntity* object);
 
     OctreeNode& find(const BoundableEntity *object);

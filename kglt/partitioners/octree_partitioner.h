@@ -1,10 +1,11 @@
 #ifndef OCTREE_PARTITIONER_H
 #define OCTREE_PARTITIONER_H
 
-#include "../partitioner.h"
-#include "octree.h"
-
 #include <kazbase/signals.h>
+
+#include "../partitioner.h"
+#include "../interfaces.h"
+#include "octree.h"
 
 namespace kglt {
 
@@ -12,15 +13,34 @@ class Renderable;
 
 typedef std::shared_ptr<Renderable> RenderablePtr;
 
+
+class Polygon:
+    public BoundableEntity {
+
+};
+
+class StaticChunk:
+    public Renderable {
+
+};
+
+struct StaticChunkHolder {
+    std::unordered_map<GeomID, StaticChunk> chunks;
+};
+
+
 class OctreePartitioner :
     public Partitioner {
 
 public:
-    OctreePartitioner(Stage& ss):
+    OctreePartitioner(Stage* ss):
         Partitioner(ss) {}
 
     void add_actor(ActorID obj);
     void remove_actor(ActorID obj);
+
+    void add_geom(GeomID geom_id);
+    void remove_geom(GeomID geom_id);
 
     void add_light(LightID obj);
     void remove_light(LightID obj);

@@ -124,6 +124,9 @@ void Stage::delete_actor(ActorID e) {
 GeomID Stage::new_geom_with_mesh(MeshID mid) {
     auto gid = geom_manager_->manager_new(this, mid);
     geom(gid)->set_parent(this);
+
+    signal_geom_created_(gid);
+
     return gid;
 }
 
@@ -134,6 +137,9 @@ GeomPtr Stage::geom(const GeomID gid) const {
 GeomID Stage::new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, const Quaternion& rotation) {
     auto gid = geom_manager_->manager_new(this, mid, position, rotation);
     geom(gid)->set_parent(this);
+
+    signal_geom_created_(gid);
+
     return gid;
 }
 
@@ -142,7 +148,9 @@ bool Stage::has_geom(GeomID geom_id) const {
 }
 
 void Stage::delete_geom(GeomID geom_id) {
-    geom_manager_->manager_delete(geom_id);
+    signal_geom_destroyed_(geom_id);
+
+    geom_manager_->manager_delete(geom_id);    
 }
 
 uint32_t Stage::geom_count() const {
@@ -306,12 +314,16 @@ ProtectedPtr<CameraProxy> Stage::camera(CameraID c) {
 }
 
 void Stage::set_partitioner(AvailablePartitioner partitioner) {
+    /*
+     * FIXME: Calling this twice will probably break because signals aren't disconnected!
+     */
+
     switch(partitioner) {
         case PARTITIONER_NULL:
-            partitioner_ = Partitioner::ptr(new NullPartitioner(*this));
+            partitioner_ = Partitioner::ptr(new NullPartitioner(this));
         break;
         case PARTITIONER_OCTREE:
-            partitioner_ = Partitioner::ptr(new OctreePartitioner(*this));
+            partitioner_ = Partitioner::ptr(new OctreePartitioner(this));
         break;
         default: {
             throw std::logic_error("Invalid partitioner type specified");
@@ -323,6 +335,9 @@ void Stage::set_partitioner(AvailablePartitioner partitioner) {
     //Keep the partitioner updated with new meshes and lights
     signal_actor_created().connect(std::bind(&Partitioner::add_actor, partitioner_.get(), std::placeholders::_1));
     signal_actor_destroyed().connect(std::bind(&Partitioner::remove_actor, partitioner_.get(), std::placeholders::_1));
+
+    signal_geom_created().connect(std::bind(&Partitioner::add_geom, partitioner_, std::placeholders::_1));
+    signal_geom_destroyed().connect(std::bind(&Partitioner::remove_geom, partitioner_, std::placeholders::_1));
 
     signal_light_created().connect(std::bind(&Partitioner::add_light, partitioner_.get(), std::placeholders::_1));
     signal_light_destroyed().connect(std::bind(&Partitioner::remove_light, partitioner_.get(), std::placeholders::_1));

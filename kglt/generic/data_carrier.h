@@ -4,7 +4,6 @@
 #include <unordered_map>
 #include <kazbase/any/any.h>
 #include <kazbase/exceptions.h>
-#include <kazbase/list_utils.h>
 
 namespace kglt {
 namespace generic {
@@ -19,7 +18,7 @@ public:
     }
 
     bool exists(const std::string& identifier) const {
-        return container::contains(things_, identifier);
+        return things_.count(identifier);
     }
 
     template<typename T>

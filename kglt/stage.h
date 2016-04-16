@@ -107,18 +107,6 @@ public:
     kglt::Colour ambient_light() const { return ambient_light_; }
     void set_ambient_light(const kglt::Colour& c) { ambient_light_ = c; }
 
-    sig::signal<void (ActorID)>& signal_actor_created() { return signal_actor_created_; }
-    sig::signal<void (ActorID)>& signal_actor_destroyed() { return signal_actor_destroyed_; }
-
-    sig::signal<void (ParticleSystemID)>& signal_particle_system_created() { return signal_particle_system_created_; }
-    sig::signal<void (ParticleSystemID)>& signal_particle_system_destroyed() { return signal_particle_system_destroyed_; }
-
-    sig::signal<void (LightID)>& signal_light_created() { return signal_light_created_; }
-    sig::signal<void (LightID)>& signal_light_destroyed() { return signal_light_destroyed_; }
-
-    sig::signal<void (SpriteID)>& signal_sprite_created() { return signal_sprite_created_; }
-    sig::signal<void (SpriteID)>& signal_sprite_destroyed() { return signal_sprite_destroyed_; }
-
     void move(float x, float y, float z) {
         throw std::logic_error("You cannot move the stage");
     }
@@ -352,11 +340,35 @@ public:
     // RenderableStage
     void on_render_started() {}
     void on_render_stopped() {}
+
+    typedef sig::signal<void (ActorID)> ActorCreatedSignal;
+    typedef sig::signal<void (ActorID)> ActorDestroyedSignal;
+    typedef sig::signal<void (GeomID)> GeomCreatedSignal;
+    typedef sig::signal<void (GeomID)> GeomDestroyedSignal;
+
+    ActorCreatedSignal& signal_actor_created() { return signal_actor_created_; }
+    ActorDestroyedSignal& signal_actor_destroyed() { return signal_actor_destroyed_; }
+
+    GeomCreatedSignal& signal_geom_created() { return signal_geom_created_; }
+    GeomDestroyedSignal& signal_geom_destroyed() { return signal_geom_destroyed_; }
+
+    sig::signal<void (ParticleSystemID)>& signal_particle_system_created() { return signal_particle_system_created_; }
+    sig::signal<void (ParticleSystemID)>& signal_particle_system_destroyed() { return signal_particle_system_destroyed_; }
+
+    sig::signal<void (LightID)>& signal_light_created() { return signal_light_created_; }
+    sig::signal<void (LightID)>& signal_light_destroyed() { return signal_light_destroyed_; }
+
+    sig::signal<void (SpriteID)>& signal_sprite_created() { return signal_sprite_created_; }
+    sig::signal<void (SpriteID)>& signal_sprite_destroyed() { return signal_sprite_destroyed_; }
+
 private:
     kglt::Colour ambient_light_;
 
-    sig::signal<void (ActorID)> signal_actor_created_;
-    sig::signal<void (ActorID)> signal_actor_destroyed_;
+    ActorCreatedSignal signal_actor_created_;
+    ActorDestroyedSignal signal_actor_destroyed_;
+
+    GeomCreatedSignal signal_geom_created_;
+    GeomDestroyedSignal signal_geom_destroyed_;
 
     sig::signal<void (LightID)> signal_light_created_;
     sig::signal<void (LightID)> signal_light_destroyed_;
@@ -372,8 +384,6 @@ private:
     void set_partitioner(AvailablePartitioner partitioner);
 
     std::shared_ptr<Debug> debug_;
-
-    friend 
 
     CameraID new_camera_proxy(CameraID cam);
     void delete_camera_proxy(CameraID cam);

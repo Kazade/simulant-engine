@@ -13,11 +13,11 @@ Octree::Octree() {
 }
 
 OctreeNode& Octree::find(const BoundableEntity* object) {
-    if(!container::contains(object_node_lookup_, object)) {
+    if(!object_node_lookup_.count(object)) {
         throw std::logic_error("Object does not exist in the tree");
     }
 
-    return *container::const_get(object_node_lookup_, object);
+    return *object_node_lookup_.at(object);
 }
 
 void visible_node_finder(OctreeNode* self, std::vector<OctreeNode*>& result, const Frustum& frustum) {
@@ -44,7 +44,7 @@ std::vector<OctreeNode*> Octree::nodes_visible_from(const Frustum& frustum) {
     return result;
 }
 
-void Octree::shrink(const BoundableEntity* object) {
+void Octree::shrink(const BoundableEntity* object, ShrinkCallback callback) {
     assert(object);
 
     if(!container::contains(this->object_node_lookup_, object)) {
@@ -61,7 +61,7 @@ void Octree::shrink(const BoundableEntity* object) {
     _unregister_object(object);
 }
 
-void Octree::grow(const BoundableEntity *object) {
+void Octree::grow(const BoundableEntity *object, GrowCallback callback) {
     assert(object);
 
     AABB obj_bounds = object->transformed_aabb();

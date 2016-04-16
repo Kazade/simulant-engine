@@ -22,22 +22,46 @@ void OctreePartitioner::event_actor_changed(ActorID ent) {
 }
 
 void OctreePartitioner::add_particle_system(ParticleSystemID ps) {
-    auto system = stage()->particle_system(ps); //Get a handle on the particle system
+    auto system = stage->particle_system(ps); //Get a handle on the particle system
 
     BoundableEntity* ent = system.__object.get(); //Get the raw pointer as a BoundableEntity (bad?)
     tree_.grow(ent);
 }
 
 void OctreePartitioner::remove_particle_system(ParticleSystemID ps) {
-    auto system = stage()->particle_system(ps);
+    auto system = stage->particle_system(ps);
     BoundableEntity* ent = system.__object.get(); //Get the raw pointer as a BoundableEntity (bad?)
     tree_.shrink(ent);
+}
+
+void OctreePartitioner::add_geom(GeomID geom_id) {
+    auto geom = stage->geom(geom_id);
+
+    /*
+     * 1. Iterate through the polygons in the geom, for each one generate a BoundableEntity
+     * 2. Insert into the tree, but set a callback for grow()
+     * 3. The callback must stash a new static chunk (if it doesn't exist on the node) otherwise
+     *    get a handle to the existing one.
+     * 4. Add the polygon to the static chunk, return false from the callback so that the octree
+     *    doesn't add the polygon to the object list on the node
+     */
+
+    tree_.grow(nullptr, [](const BoundableEntity* ent, OctreeNode* node) {
+        if(!node->exists("static_chunks")) {
+
+        }
+    });
+
+}
+
+void OctreePartitioner::remove_geom(GeomID geom_id) {
+
 }
 
 void OctreePartitioner::add_actor(ActorID obj) {
     L_DEBUG("Adding actor to the partitioner");
 
-    auto ent = stage()->actor(obj);
+    auto ent = stage->actor(obj);
     for(uint16_t i = 0; i < ent->subactor_count(); ++i) {
         //All subactors are boundable
         BoundableEntity* boundable = &ent->subactor(i);
@@ -70,7 +94,7 @@ void OctreePartitioner::remove_actor(ActorID obj) {
 
 void OctreePartitioner::add_light(LightID obj) {
     //FIXME: THis is nasty and dangerous
-    auto light = stage()->light(obj);
+    auto light = stage->light(obj);
     BoundableEntity* boundable = light.__object.get();
     assert(boundable);
     tree_.grow(boundable);
@@ -78,7 +102,7 @@ void OctreePartitioner::add_light(LightID obj) {
 }
 
 void OctreePartitioner::remove_light(LightID obj) {
-    auto light = stage()->light(obj);
+    auto light = stage->light(obj);
     BoundableEntity* boundable = light.__object.get();
     assert(boundable);
     tree_.shrink(boundable);
@@ -98,7 +122,7 @@ std::vector<RenderablePtr> OctreePartitioner::geometry_visible_from(CameraID cam
      */
 
     //Go through the visible nodes
-    for(OctreeNode* node: tree_.nodes_visible_from(stage()->window->camera(camera_id)->frustum())) {
+    for(OctreeNode* node: tree_.nodes_visible_from(stage->window->camera(camera_id)->frustum())) {
         //Go through the objects
         for(const BoundableEntity* obj: node->objects()) {
             if(container::contains(boundable_to_renderable_, obj)) {
