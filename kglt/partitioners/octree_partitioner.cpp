@@ -46,10 +46,24 @@ void OctreePartitioner::add_geom(GeomID geom_id) {
      *    doesn't add the polygon to the object list on the node
      */
 
-    tree_.grow(nullptr, [](const BoundableEntity* ent, OctreeNode* node) {
-        if(!node->exists("static_chunks")) {
+    tree_.grow(nullptr, [=](const BoundableEntity* ent, OctreeNode* node) -> bool {
+        StaticChunkHolder::ptr static_chunks;
 
+        if(!node->exists("static_chunks")) {
+            static_chunks.reset(new StaticChunkHolder());
+        } else {
+            static_chunks = node->get<StaticChunkHolder::ptr>("static_chunks");
         }
+
+        // If there isn't a chunk for this geom, create one
+        if(!static_chunks->chunks.count(geom_id)) {
+            static_chunks->chunks.insert(std::make_pair(geom_id, std::make_shared<StaticChunk>(stage.get())));
+        }
+
+        //TODO: Add the polygons to the chunk
+        auto& static_chunk = static_chunks->chunks.at(geom_id);
+
+        return false;
     });
 
 }

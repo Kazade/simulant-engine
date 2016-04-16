@@ -5,6 +5,7 @@
 
 #include "../partitioner.h"
 #include "../interfaces.h"
+#include "../mesh.h"
 #include "octree.h"
 
 namespace kglt {
@@ -21,11 +22,38 @@ class Polygon:
 
 class StaticChunk:
     public Renderable {
+public:
+    StaticChunk(Stage* stage):
+        mesh_(MeshID(), stage) {}
 
+    typedef std::shared_ptr<StaticChunk> ptr;
+
+    const AABB aabb() const { return mesh_.aabb(); }
+    const AABB transformed_aabb() const { return mesh_.aabb(); }
+    const VertexData& vertex_data() const;
+    const IndexData& index_data() const;
+    const MeshArrangement arrangement() const;
+
+    void _update_vertex_array_object();
+    void _bind_vertex_array_object();
+
+    //FIXME: Damn... we need to have static chunks organized by render priority
+    RenderPriority render_priority() const;
+
+    Mat4 final_transformation() const;
+    const MaterialID material_id() const;
+    const bool is_visible() const;
+    MeshID instanced_mesh_id() const;
+    SubMeshID instanced_submesh_id() const;
+
+private:
+    Mesh mesh_;
 };
 
 struct StaticChunkHolder {
-    std::unordered_map<GeomID, StaticChunk> chunks;
+    typedef std::shared_ptr<StaticChunkHolder> ptr;
+
+    std::unordered_map<GeomID, StaticChunk::ptr> chunks;
 };
 
 
