@@ -37,6 +37,7 @@ public:
 
     Geom(GeomID id, Stage* stage, MeshID mesh, const Vec3& position=Vec3(), const Quaternion rotation=Quaternion());
 
+    MeshID mesh_id() const { return mesh_->id(); }
     void set_mesh(MeshID mesh);
     MeshChangedSignal& signal_mesh_changed() { return signal_mesh_changed_; }
 
@@ -54,6 +55,7 @@ public:
     }
 
     const VertexData& shared_data() const;
+    RenderPriority render_priority() const { return render_priority_; }
 private:
     std::shared_ptr<Mesh> mesh_;
     RenderPriority render_priority_;

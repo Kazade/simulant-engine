@@ -5,6 +5,9 @@
 #include "../actor.h"
 #include "../camera.h"
 #include "../particles.h"
+#include "../geom.h"
+
+#include "./static_chunk.h"
 
 /*
  * TODO:
@@ -34,8 +37,20 @@ void OctreePartitioner::remove_particle_system(ParticleSystemID ps) {
     tree_.shrink(ent);
 }
 
+struct Polygon:
+    public BoundableEntity {
+
+    VertexData* source_data = nullptr;
+    std::vector<uint32_t> indices;
+    AABB bounding_box;
+
+    void recalc_bounds();
+
+    const AABB aabb() const { return bounding_box; }
+    const AABB transformed_aabb() const { return bounding_box; }
+};
+
 void OctreePartitioner::add_geom(GeomID geom_id) {
-    auto geom = stage->geom(geom_id);
 
     /*
      * 1. Iterate through the polygons in the geom, for each one generate a BoundableEntity
@@ -46,25 +61,76 @@ void OctreePartitioner::add_geom(GeomID geom_id) {
      *    doesn't add the polygon to the object list on the node
      */
 
-    tree_.grow(nullptr, [=](const BoundableEntity* ent, OctreeNode* node) -> bool {
-        StaticChunkHolder::ptr static_chunks;
+    GeomPtr geom = stage->geom(geom_id);
+    auto geom_mesh = stage->mesh(geom->mesh_id());
 
-        if(!node->exists("static_chunks")) {
-            static_chunks.reset(new StaticChunkHolder());
-        } else {
-            static_chunks = node->get<StaticChunkHolder::ptr>("static_chunks");
+    // Go through all the submeshes, separating into polygons and adding to the tree
+    geom_mesh->each([&](SubMesh* submesh) {
+        auto material_id = submesh->material_id();
+        auto render_priority = geom->render_priority();
+        auto mesh_arrangement = submesh->arrangement();
+
+        std::vector<Polygon> polygons;
+
+        switch(submesh->arrangement()) {
+            case kglt::MESH_ARRANGEMENT_TRIANGLES: {
+                assert(submesh->index_data().count() % 3 == 0);
+
+                uint32_t j = 0;
+                polygons.resize(submesh->index_data().count() / 3);
+                for(uint32_t i = 0; i < submesh->index_data().count(); i+=3) {
+                    Polygon& poly = polygons[j++];
+
+                    poly.source_data = &submesh->vertex_data();
+                    poly.indices.push_back(submesh->index_data().at(i));
+                    poly.indices.push_back(submesh->index_data().at(i+1));
+                    poly.indices.push_back(submesh->index_data().at(i+2));
+                }
+
+            } break;
+            default: {
+                // Just insert a bulk thing. Not efficient!
+                polygons.resize(1);
+                auto& poly = polygons.front();
+
+                poly.source_data = &submesh->vertex_data();
+                auto& data = submesh->index_data().all();
+                poly.indices.assign(data.begin(), data.end());
+            }
         }
 
-        // If there isn't a chunk for this geom, create one
-        if(!static_chunks->chunks.count(geom_id)) {
-            static_chunks->chunks.insert(std::make_pair(geom_id, std::make_shared<StaticChunk>(stage.get())));
+        for(auto& polygon: polygons) {
+            polygon.recalc_bounds();
+
+            tree_.grow(&polygon, [=](const BoundableEntity* ent, OctreeNode* node) -> bool {
+                StaticChunkHolder::ptr static_chunks;
+
+                if(!node->exists("static_chunks")) {
+                    static_chunks.reset(new StaticChunkHolder());
+                } else {
+                    static_chunks = node->get<StaticChunkHolder::ptr>("static_chunks");
+                }
+
+                // If there isn't a chunk for this geom, create one
+                if(!static_chunks->chunks.count(geom_id)) {
+                    static_chunks->chunks.insert(std::make_pair(geom_id, std::make_shared<StaticChunk>(stage.get())));
+                }
+
+                // Get the static chunk for this geom
+                auto& static_chunk = static_chunks->chunks.at(geom_id);
+
+                // Create a subchunk for this polygon if necessary
+                auto subchunk = static_chunk->get_or_create_subchunk(std::make_tuple(render_priority, material_id, mesh_arrangement));
+
+                // Add the polygon to the subchunk
+                subchunk->add_polygon(polygon);
+
+                return false; // Don't do the default tree insertion behaviour, we just overrode it
+            });
         }
-
-        //TODO: Add the polygons to the chunk
-        auto& static_chunk = static_chunks->chunks.at(geom_id);
-
-        return false;
     });
+
+
 
 }
 

@@ -2,6 +2,7 @@
 #define PROPERTY_H
 
 #include <functional>
+#include <memory>
 
 template<typename Container, typename T>
 class Property {

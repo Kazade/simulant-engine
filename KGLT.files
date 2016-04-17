@@ -894,3 +894,5 @@ kglt/controllers/material/warp.h
 kglt/controllers/material/warp.cpp
 kglt/geom.h
 kglt/geom.cpp
+kglt/partitioners/static_chunk.h
+kglt/partitioners/static_chunk.cpp
