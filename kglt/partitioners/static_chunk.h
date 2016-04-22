@@ -7,6 +7,20 @@ namespace kglt {
 
 class StaticChunk;
 
+
+struct Polygon:
+    public BoundableEntity {
+
+    VertexData* source_data = nullptr;
+    std::vector<uint32_t> indices;
+    AABB bounding_box;
+
+    void recalc_bounds();
+
+    const AABB aabb() const { return bounding_box; }
+    const AABB transformed_aabb() const { return bounding_box; }
+};
+
 class StaticSubchunk:
     public Renderable {
 
@@ -35,6 +49,7 @@ public:
     MeshID instanced_mesh_id() const { return mesh_->id(); }
     SubMeshID instanced_submesh_id() const { return submesh_->id(); }
 
+    void add_polygon(const Polygon&);
 private:
     StaticChunk* parent_;
     Mesh* mesh_;
@@ -53,6 +68,7 @@ public:
     StaticSubchunk* get_or_create_subchunk(KeyType key);
 
     Property<StaticChunk, Mesh> mesh = { this, &StaticChunk::mesh_ };
+
 private:
 
     typedef std::unordered_map<KeyType, StaticSubchunk::ptr> SubchunkLookup;

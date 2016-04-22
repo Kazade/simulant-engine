@@ -37,19 +37,6 @@ void OctreePartitioner::remove_particle_system(ParticleSystemID ps) {
     tree_.shrink(ent);
 }
 
-struct Polygon:
-    public BoundableEntity {
-
-    VertexData* source_data = nullptr;
-    std::vector<uint32_t> indices;
-    AABB bounding_box;
-
-    void recalc_bounds();
-
-    const AABB aabb() const { return bounding_box; }
-    const AABB transformed_aabb() const { return bounding_box; }
-};
-
 void OctreePartitioner::add_geom(GeomID geom_id) {
 
     /*
