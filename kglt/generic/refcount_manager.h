@@ -100,19 +100,17 @@ public:
     }
 
     void each(std::function<void (ObjectType*)> func) const {
-        std::set<ObjectIDType> object_ids;
+        std::unordered_map<ObjectIDType, std::shared_ptr<ObjectType> > objects;
         {
             // We copy the object IDs so we don't keep a handle to
             // any shared_ptrs or anything
             std::lock_guard<std::mutex> lock(manager_lock_);
-            for(auto& p: objects_) {
-                object_ids.insert(p.first);
-            }
+            objects = objects_;
         }
 
-        for(auto& id: object_ids) {
+        for(auto& p: objects) {
             try {
-                auto thing = ProtectedPtr<ObjectType>(manager_get(id)); //Make sure we lock the object
+                auto thing = ProtectedPtr<ObjectType>(manager_get(p.first)); //Make sure we lock the object
                 func(thing.get());
             } catch(DoesNotExist<ObjectType>& e) {
                 // May have been deleted in another thread, just ignore this

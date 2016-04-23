@@ -125,7 +125,7 @@ private:
 
     OctreeNode& create_child(OctreePosition pos);
 
-    OctreeNode& insert_into_subtree(const BoundableEntity *obj, GrowCallback callback);
+    OctreeNode& insert_into_subtree(const BoundableEntity *obj, GrowCallback callback, int32_t level = 0);
 
     void add_object(const BoundableEntity* obj) {
         objects_.insert(obj);

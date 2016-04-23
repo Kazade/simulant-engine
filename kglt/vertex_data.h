@@ -224,6 +224,12 @@ public:
     bool empty() const { return data_.empty(); }
 
     const int32_t cursor_position() const { return cursor_position_; }
+
+    int32_t enabled_bitmask() const { return enabled_bitmask_; }
+    void inherit_enabled_bitmask(const VertexData& other) {
+        enabled_bitmask_ = other.enabled_bitmask();
+    }
+
 private:
     int32_t enabled_bitmask_;
     uint8_t tex_coord_dimensions_[8];

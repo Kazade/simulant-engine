@@ -40,7 +40,7 @@ void OctreePartitioner::remove_particle_system(ParticleSystemID ps) {
 }
 
 void OctreePartitioner::add_geom(GeomID geom_id) {
-
+    uint32_t num_created = 0;
     /*
      * 1. Iterate through the polygons in the geom, for each one generate a BoundableEntity
      * 2. Insert into the tree, but set a callback for grow()
@@ -91,12 +91,13 @@ void OctreePartitioner::add_geom(GeomID geom_id) {
         for(auto& polygon: polygons) {
             polygon.recalc_bounds();
 
-            tree_.grow(&polygon, [=](const BoundableEntity* ent, OctreeNode* node) -> bool {
+            tree_.grow(&polygon, [=, &num_created](const BoundableEntity* ent, OctreeNode* node) -> bool {
                 StaticChunkHolder::ptr static_chunks;
 
                 if(!node->exists(STATIC_CHUNK_KEY)) {
                     static_chunks.reset(new StaticChunkHolder());
                     node->stash(static_chunks, STATIC_CHUNK_KEY);
+                    ++num_created;
                 } else {
                     static_chunks = node->get<StaticChunkHolder::ptr>(STATIC_CHUNK_KEY);
                 }
@@ -112,6 +113,9 @@ void OctreePartitioner::add_geom(GeomID geom_id) {
                 // Create a subchunk for this polygon if necessary
                 auto subchunk = static_chunk->get_or_create_subchunk(std::make_tuple(render_priority, material_id, mesh_arrangement));
 
+                // We need to make sure the same vertex attributes are enabled as they were on the source submesh
+                subchunk->vertex_data().inherit_enabled_bitmask(submesh->vertex_data());
+
                 // Add the polygon to the subchunk
                 subchunk->add_polygon(polygon);
 
@@ -120,8 +124,7 @@ void OctreePartitioner::add_geom(GeomID geom_id) {
         }
     });
 
-
-
+    std::cout << "Subchunk count: " << num_created << std::endl;
 }
 
 void OctreePartitioner::remove_geom(GeomID geom_id) {

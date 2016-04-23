@@ -67,6 +67,8 @@ public:
     const IndexData& index_data() const { return submesh_->index_data(); }
     const MeshArrangement arrangement() const { return submesh_->arrangement(); }
 
+    VertexData& vertex_data() { return submesh_->vertex_data(); }
+
     void _update_vertex_array_object() { submesh_->_update_vertex_array_object(); }
     void _bind_vertex_array_object() { submesh_->_bind_vertex_array_object(); }
 
@@ -75,8 +77,8 @@ public:
     Mat4 final_transformation() const { return Mat4(); }
     const MaterialID material_id() const { return submesh_->material_id(); }
     const bool is_visible() const { return true; }
-    MeshID instanced_mesh_id() const { return mesh_->id(); }
-    SubMeshID instanced_submesh_id() const { return submesh_->id(); }
+    MeshID instanced_mesh_id() const { return MeshID(); }
+    SubMeshID instanced_submesh_id() const { return SubMeshID(); }
 
     void add_polygon(const Polygon&);
 private:
@@ -92,6 +94,10 @@ public:
     typedef std::unordered_map<KeyType, StaticSubchunk::ptr> SubchunkLookup;
 
     StaticChunk(Stage* stage);
+    ~StaticChunk() {
+        // Clear these before the mesh is destroyed
+        subchunks_.clear();
+    }
 
     typedef std::shared_ptr<StaticChunk> ptr;
 

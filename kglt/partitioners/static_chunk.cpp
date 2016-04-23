@@ -8,9 +8,8 @@ StaticSubchunk::StaticSubchunk(StaticChunk* parent, RenderPriority priority, Mat
     mesh_(parent->mesh.get()),
     render_priority_(priority) {
 
-    auto smi = mesh_->new_submesh(arrangement, VERTEX_SHARING_MODE_INDEPENDENT);
+    auto smi = mesh_->new_submesh_with_material(material_id, arrangement, VERTEX_SHARING_MODE_INDEPENDENT);
     submesh_ = mesh_->submesh(smi);
-    submesh_->set_material_id(material_id);
 }
 
 
@@ -30,6 +29,9 @@ void StaticSubchunk::add_polygon(const Polygon& poly) {
         submesh_->vertex_data().push(vert);
         submesh_->index_data().push(submesh_->vertex_data().count() - 1);
     }
+
+    submesh_->vertex_data().done();
+    submesh_->index_data().done();
 }
 
 StaticSubchunk* StaticChunk::get_or_create_subchunk(KeyType key) {

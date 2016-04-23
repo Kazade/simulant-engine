@@ -13,7 +13,9 @@ public:
         id_(0) {}
 
     explicit UniqueID(uint32_t id):
-        id_(id) {}
+        id_(id) {
+
+    }
 
     bool operator==(const UniqueID<T>& other) const {
         return this->id_ == other.id_;

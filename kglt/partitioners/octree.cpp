@@ -316,11 +316,11 @@ kmAABB3 OctreeNode::calculate_child_strict_bounds(OctreePosition pos) {
  * node that can fit the object. If the object doesn't fit inside any
  * nodes then an ObjectDoesNotFitError() is thrown.
  */
-OctreeNode& OctreeNode::insert_into_subtree(const BoundableEntity* obj, GrowCallback callback) {
+OctreeNode& OctreeNode::insert_into_subtree(const BoundableEntity* obj, GrowCallback callback, int32_t level) {
     AABB obj_bounds = obj->transformed_aabb();
     float obj_diameter = obj->diameter();
 
-    if(obj_diameter < this->strict_diameter() / 2) {
+    if(obj_diameter < this->strict_diameter() / 2 && level < 3) {
         //Object will fit into child
         kmVec3 centre = obj->centre();
 
@@ -330,7 +330,7 @@ OctreeNode& OctreeNode::insert_into_subtree(const BoundableEntity* obj, GrowCall
 
             if(kmAABB3ContainsPoint(&bounds, &centre)) {
                 OctreeNode& child = create_child((OctreePosition) i);
-                return child.insert_into_subtree(obj, callback);
+                return child.insert_into_subtree(obj, callback, level + 1);
             }
         }
 
