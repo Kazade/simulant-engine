@@ -68,6 +68,10 @@ public:
 
 
 class Octree;
+class OctreeNode;
+
+typedef std::function<bool (const BoundableEntity*, OctreeNode*)> GrowCallback;
+typedef std::function<bool (const BoundableEntity*, OctreeNode*)> ShrinkCallback;
 
 class OctreeNode :
     public Managed<OctreeNode>,
@@ -121,7 +125,7 @@ private:
 
     OctreeNode& create_child(OctreePosition pos);
 
-    OctreeNode& insert_into_subtree(const BoundableEntity *obj);
+    OctreeNode& insert_into_subtree(const BoundableEntity *obj, GrowCallback callback);
 
     void add_object(const BoundableEntity* obj) {
         objects_.insert(obj);
@@ -173,9 +177,6 @@ public:
     uint32_t node_count() const;
 
     bool has_root() const { return root_ != nullptr; }
-
-    typedef std::function<bool (const BoundableEntity*, OctreeNode*)> GrowCallback;
-    typedef std::function<bool (const BoundableEntity*, OctreeNode*)> ShrinkCallback;
 
     void grow(const BoundableEntity* object, GrowCallback callback=GrowCallback());
     void shrink(const BoundableEntity* object, ShrinkCallback callback=ShrinkCallback());

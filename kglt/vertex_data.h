@@ -71,6 +71,11 @@ public:
     void reset();
     void set_texture_coordinate_dimensions(uint8_t coord_index, uint8_t count);
 
+    Vertex& at(int32_t idx) {
+        return data_.at(idx);
+    }
+
+    void push(const Vertex& vertex);
     void clear();
     void move_to_start();
     void move_by(int32_t amount);
@@ -237,6 +242,7 @@ private:
     sig::signal<void ()> signal_update_complete_;
 };
 
+typedef uint16_t Index;
 
 class IndexData {
 public:
@@ -244,14 +250,15 @@ public:
 
     void reset();
     void clear() { indices_.clear(); }
-    void reserve(uint16_t size) { indices_.reserve(size); }
-    void index(uint16_t idx) { indices_.push_back(idx); }
+    void reserve(uint32_t size) { indices_.reserve(size); }
+    void index(Index idx) { indices_.push_back(idx); }
+    void push(Index idx) { index(idx); }
     void done();
     uint16_t at(const uint16_t i) { return indices_.at(i); }
 
     uint16_t count() const { return indices_.size(); }
 
-    const std::vector<uint16_t>& all() const { return indices_; }
+    const std::vector<Index>& all() const { return indices_; }
 
     bool operator==(const IndexData& other) const {
         return this->indices_ == other.indices_;
@@ -265,7 +272,7 @@ public:
 
     uint16_t* _raw_data() { return &indices_[0]; }
 private:
-    std::vector<uint16_t> indices_;
+    std::vector<Index> indices_;
 
     sig::signal<void ()> signal_update_complete_;
 };

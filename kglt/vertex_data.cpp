@@ -46,6 +46,10 @@ void VertexData::clear() {
     enabled_bitmask_ = 0;
 }
 
+void VertexData::push(const Vertex& vertex) {
+    this->data_.push_back(vertex);
+}
+
 kglt::Vec3 VertexData::position() const {
     if(cursor_position_ > (int32_t) data_.size()) {
         throw std::out_of_range("Cursor moved out of range");

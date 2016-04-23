@@ -18,6 +18,8 @@
 
 namespace kglt {
 
+const std::string STATIC_CHUNK_KEY = "static_chunks";
+
 void OctreePartitioner::event_actor_changed(ActorID ent) {
     L_DEBUG("Actor changed, updating partitioner");
     remove_actor(ent);
@@ -92,10 +94,11 @@ void OctreePartitioner::add_geom(GeomID geom_id) {
             tree_.grow(&polygon, [=](const BoundableEntity* ent, OctreeNode* node) -> bool {
                 StaticChunkHolder::ptr static_chunks;
 
-                if(!node->exists("static_chunks")) {
+                if(!node->exists(STATIC_CHUNK_KEY)) {
                     static_chunks.reset(new StaticChunkHolder());
+                    node->stash(static_chunks, STATIC_CHUNK_KEY);
                 } else {
-                    static_chunks = node->get<StaticChunkHolder::ptr>("static_chunks");
+                    static_chunks = node->get<StaticChunkHolder::ptr>(STATIC_CHUNK_KEY);
                 }
 
                 // If there isn't a chunk for this geom, create one
@@ -195,6 +198,16 @@ std::vector<RenderablePtr> OctreePartitioner::geometry_visible_from(CameraID cam
             if(container::contains(boundable_to_renderable_, obj)) {
                 //Build a list of visible subactors
                 results.push_back(boundable_to_renderable_[obj]);
+            }
+        }
+
+        if(node->exists(STATIC_CHUNK_KEY)) {
+            auto static_chunks = node->get<StaticChunkHolder::ptr>(STATIC_CHUNK_KEY);
+            for(auto& chunk: static_chunks->chunks) {
+                auto& static_chunk = chunk.second;
+                for(auto& subchunk: *static_chunk->subchunks.get()) {
+                    results.push_back(subchunk.second);
+                }
             }
         }
     }

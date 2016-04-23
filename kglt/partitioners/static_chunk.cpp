@@ -19,6 +19,19 @@ StaticChunk::StaticChunk(Stage* stage):
 
 }
 
+void StaticSubchunk::add_polygon(const Polygon& poly) {
+    if(!poly.source_data) {
+        L_WARN("Tried to add a polygon without a source data pointer to a StaticSubchunk");
+        return;
+    }
+
+    for(auto& idx: poly.indices) {
+        auto& vert = (*poly.source_data).at(idx);
+        submesh_->vertex_data().push(vert);
+        submesh_->index_data().push(submesh_->vertex_data().count() - 1);
+    }
+}
+
 StaticSubchunk* StaticChunk::get_or_create_subchunk(KeyType key) {
     if(!subchunks_.count(key)) {
         subchunks_.insert(std::make_pair(key, std::make_shared<StaticSubchunk>(this, std::get<0>(key), std::get<1>(key), std::get<2>(key))));
