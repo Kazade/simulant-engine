@@ -21,9 +21,9 @@ SkyBox::SkyBox(StagePtr stage, kglt::TextureID texture, CameraID cam, float size
 
     auto mat = stage->material(stage->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY));
 
-    mat->pass(0).set_texture_unit(0, texture);
-    mat->pass(0).set_depth_test_enabled(false);
-    mat->pass(0).set_depth_write_enabled(false);
+    mat->pass(0)->set_texture_unit(0, texture);
+    mat->pass(0)->set_depth_test_enabled(false);
+    mat->pass(0)->set_depth_write_enabled(false);
 
     {
         auto actor = stage->actor(actor_);

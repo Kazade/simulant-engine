@@ -76,10 +76,10 @@ void Background::cleanup() {
 }
 
 void Background::update(double dt) {
-    auto& pass = manager_->window->stage(stage_id_)->material(material_id_)->pass(0);
-    if(pass.texture_unit_count()) {
-        pass.texture_unit(0).scroll_x(x_rate_ * dt);
-        pass.texture_unit(0).scroll_y(y_rate_ * dt);
+    auto pass = manager_->window->stage(stage_id_)->material(material_id_)->pass(0);
+    if(pass->texture_unit_count()) {
+        pass->texture_unit(0).scroll_x(x_rate_ * dt);
+        pass->texture_unit(0).scroll_y(y_rate_ * dt);
     }
 }
 
@@ -92,7 +92,7 @@ void Background::set_vertical_scroll_rate(float y_rate) {
 }
 
 void Background::set_texture(TextureID tex) {
-    manager_->window->stage(stage_id_)->material(material_id_)->pass(0).set_texture_unit(0, tex);
+    manager_->window->stage(stage_id_)->material(material_id_)->pass(0)->set_texture_unit(0, tex);
 }
 
 void Background::set_resize_style(BackgroundResizeStyle style) {

@@ -97,12 +97,17 @@ Material::~Material() {
 }
 
 uint32_t Material::new_pass() {
+    std::lock_guard<std::mutex> lock(pass_lock_);
+
     passes_.push_back(MaterialPass::ptr(new MaterialPass(this)));
+    pass_count_ = passes_.size();
+
     return passes_.size() - 1; //Return the index
 }
 
-MaterialPass& Material::pass(uint32_t index) {
-    return *passes_.at(index);
+MaterialPass::ptr Material::pass(uint32_t index) {
+    std::lock_guard<std::mutex> lock(pass_lock_);
+    return passes_.at(index);
 }
 
 MaterialPass::MaterialPass(Material *material):

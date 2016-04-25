@@ -469,10 +469,10 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
         {
             auto mat = stage->material(new_material_id);
-            mat->pass(0).set_texture_unit(0, new_texture_id);
+            mat->pass(0)->set_texture_unit(0, new_texture_id);
 
             if(uses_lightmap) {
-                mat->pass(0).set_texture_unit(1, lightmap_texture);
+                mat->pass(0)->set_texture_unit(1, lightmap_texture);
             }
 
             if(tex.flags & Q2::SURFACE_FLAG_FLOWING) {
@@ -482,13 +482,13 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             }
 
             if(tex.flags & Q2::SURFACE_FLAG_TRANS_33) {
-                mat->pass(0).set_diffuse(kglt::Colour(1.0, 1.0, 1.0, 0.33));
-                mat->pass(0).set_blending(BLEND_ALPHA);
+                mat->pass(0)->set_diffuse(kglt::Colour(1.0, 1.0, 1.0, 0.33));
+                mat->pass(0)->set_blending(BLEND_ALPHA);
             }
 
             if(tex.flags & Q2::SURFACE_FLAG_TRANS_66) {
-                mat->pass(0).set_diffuse(kglt::Colour(1.0, 1.0, 1.0, 0.66));
-                mat->pass(0).set_blending(BLEND_ALPHA);
+                mat->pass(0)->set_diffuse(kglt::Colour(1.0, 1.0, 1.0, 0.66));
+                mat->pass(0)->set_blending(BLEND_ALPHA);
             }
         }
 

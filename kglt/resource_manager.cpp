@@ -41,7 +41,7 @@ bool ResourceManagerImpl::init() {
     default_material_id_ = new_material_from_file(default_material_filename(), false);
 
     //Set the default material's first texture to the default (white) texture
-    material(default_material_id_)->pass(0).set_texture_unit(0, default_texture_id_);
+    material(default_material_id_)->pass(0)->set_texture_unit(0, default_texture_id_);
 
     return true;
 }

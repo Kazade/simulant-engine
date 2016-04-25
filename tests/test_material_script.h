@@ -34,7 +34,7 @@ public:
         script.generate(*mat.__object);
 
         this->assert_equal((uint32_t)1, mat->pass_count());
-        this->assert_equal((uint32_t)1, mat->pass(0).texture_unit_count());
+        this->assert_equal((uint32_t)1, mat->pass(0)->texture_unit_count());
 
         //TODO: Add tests to make sure that the shader has compiled correctly
     }

@@ -230,16 +230,23 @@ public:
     bool has_reflective_pass() const { return !reflective_passes_.empty(); }
 
     uint32_t new_pass();
-    MaterialPass& pass(uint32_t index);
-    uint32_t pass_count() const { return passes_.size(); }
+    MaterialPass::ptr pass(uint32_t index);
+    uint32_t pass_count() const { return pass_count_; }
 
     void set_texture_unit_on_all_passes(uint32_t texture_unit_id, TextureID tex);
 
     MaterialID new_clone(bool garbage_collect=true) const;
 
     void each(std::function<void (uint32_t, MaterialPass*)> callback) {
-        for(uint32_t i = 0; i < passes_.size(); ++i) {
-            callback(i, passes_[i].get());
+        // Wait until we can lock the atomic flag
+        std::vector<MaterialPass::ptr> passes;
+        {
+            std::lock_guard<std::mutex> lock(pass_lock_);
+            passes = passes_; // Copy, to prevent holding the lock for the entire loop
+        }
+
+        for(uint32_t i = 0; i < passes.size(); ++i) {
+            callback(i, passes[i].get());
         }
     }
 
@@ -255,7 +262,14 @@ private:
      */
     std::atomic_flag updating_disabled_;
 
+    /*
+     * Are we iterating passes? If so we should block on adding/removing them
+     */
+    std::mutex pass_lock_;
+
     std::vector<MaterialPass::ptr> passes_;
+    uint32_t pass_count_; // Used to prevent locking on passes_ when requesting the count
+
     std::set<MaterialPass*> reflective_passes_;
 
     friend class MaterialPass;

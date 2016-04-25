@@ -324,7 +324,7 @@ std::pair<float, float> ParticleEmitter::duration_range() const {
 }
 
 void ParticleSystem::set_particle_width(float width) {
-    MoveableObject::stage->material(material_id())->pass(0).set_point_size(width);
+    MoveableObject::stage->material(material_id())->pass(0)->set_point_size(width);
     particle_width_ = width;
 }
 

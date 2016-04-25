@@ -47,10 +47,10 @@ private:
             const std::vector<unicode> &lines,
             uint16_t& current_line,
             const unicode& parent_block_type,
-            MaterialPass* current_pass=nullptr);
+            MaterialPass::ptr current_pass=MaterialPass::ptr());
 
-    void handle_pass_set_command(Material& mat, const std::vector<unicode> &args, MaterialPass* pass);
-    void handle_data_block(Material& mat, const unicode &data_type, const std::vector<unicode>& lines, MaterialPass* pass);
+    void handle_pass_set_command(Material& mat, const std::vector<unicode> &args, MaterialPass::ptr pass);
+    void handle_data_block(Material& mat, const unicode &data_type, const std::vector<unicode>& lines, MaterialPass::ptr pass);
 };
 
 namespace loaders {
