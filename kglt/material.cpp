@@ -171,8 +171,15 @@ void Material::set_texture_unit_on_all_passes(uint32_t texture_unit_id, TextureI
 }
 
 void Material::update(double dt) {
-    for(auto& p: passes_) {
-        p->update(dt);
+    // The updating_disabled_ flag wasn't set so we
+    // can safely update
+    if(!updating_disabled_.test_and_set()) {
+        for(auto& p: passes_) {
+            p->update(dt);
+        }
+
+        // Clear when we are done
+        updating_disabled_.clear();
     }
 }
 

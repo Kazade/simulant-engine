@@ -48,3 +48,5 @@ kglt/materials
 kglt/materials/opengl-2.x
 kglt/controllers
 kglt/partitioners
+kglt/generic/lock_free
+kglt/generic/lock_free/memory

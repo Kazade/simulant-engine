@@ -244,6 +244,17 @@ public:
     }
 
 private:
+    /*
+     * Although individual resources are not thread-safe
+     * we do call update() automatically, which means that without
+     * some kind of locking manipulating materials would be impossible.
+     *
+     * This flag keeps track of whether we should be updating, and we
+     * set it and clear it whenever we manipulate the material. If the flag
+     * is set then updating won't happen until it's cleared
+     */
+    std::atomic_flag updating_disabled_;
+
     std::vector<MaterialPass::ptr> passes_;
     std::set<MaterialPass*> reflective_passes_;
 

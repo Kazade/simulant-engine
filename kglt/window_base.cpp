@@ -255,14 +255,13 @@ bool WindowBase::run_frame() {
 
         update(fixed_step); //Update this
 
-        signal_step_(fixed_step); //Trigger any steps
-
-        ResourceManagerImpl::update(fixed_step);
+        signal_step_(fixed_step); //Trigger any steps        
     }
 
     fixed_step_interp_ = ktiGetAccumulatorValue();
     signal_post_step_(fixed_step_interp_);
 
+    ResourceManagerImpl::update(delta_time_);
     idle_.execute(); //Execute idle tasks before render
 
     /* Don't run the render sequence if we don't have a context, and don't update the resource

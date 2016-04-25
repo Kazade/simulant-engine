@@ -110,7 +110,7 @@ public:
 
         for(auto& p: objects) {
             try {
-                auto thing = ProtectedPtr<ObjectType>(manager_get(p.first)); //Make sure we lock the object
+                auto thing = manager_get(p.first).lock();
                 func(thing.get());
             } catch(DoesNotExist<ObjectType>& e) {
                 // May have been deleted in another thread, just ignore this

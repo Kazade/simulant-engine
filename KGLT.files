@@ -897,3 +897,13 @@ kglt/geom.cpp
 kglt/partitioners/static_chunk.h
 kglt/partitioners/static_chunk.cpp
 tests/test_static_chunk.h
+kglt/generic/lock_free/FreeList.h
+kglt/generic/lock_free/UnorderedMap.h
+kglt/generic/lock_free/memory/Pool.cpp
+kglt/generic/lock_free/memory/Pool.h
+kglt/generic/lock_free/ConcurrentMap_Leapfrog.cpp
+kglt/generic/lock_free/ConcurrentMap_Leapfrog.h
+kglt/generic/lock_free/concurrent_pointer_recycler.hpp
+kglt/generic/lock_free/concurrent_queue.hpp
+kglt/generic/lock_free/concurrent_unordered_map.hpp
+kglt/generic/lock_free/shared_double_reference_guard.hpp
