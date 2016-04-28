@@ -10,7 +10,7 @@
 
 #include "object.h"
 #include "frustum.h"
-#include "renderer.h"
+#include "renderers/renderer.h"
 #include "sound.h"
 
 namespace kglt {

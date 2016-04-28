@@ -1,15 +1,15 @@
 #include "generic_renderer.h"
 
-#include "../actor.h"
-#include "../stage.h"
-#include "../camera.h"
-#include "../light.h"
-#include "../partitioner.h"
-#include "../gpu_program.h"
+#include "../../actor.h"
+#include "../../stage.h"
+#include "../../camera.h"
+#include "../../light.h"
+#include "../../partitioner.h"
+#include "../../gpu_program.h"
 
 #include "kazmath/mat4.h"
-#include "../utils/glcompat.h"
-#include "../utils/gl_error.h"
+#include "../../utils/glcompat.h"
+#include "../../utils/gl_error.h"
 
 namespace kglt {
 

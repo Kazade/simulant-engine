@@ -5,11 +5,11 @@
 #include <vector>
 #include <memory>
 
-#include "generic/protected_ptr.h"
-#include "types.h"
-#include "utils/geometry_buffer.h"
-#include "generic/auto_weakptr.h"
-#include "window_base.h"
+#include "../generic/protected_ptr.h"
+#include "../types.h"
+#include "../utils/geometry_buffer.h"
+#include "../generic/auto_weakptr.h"
+#include "../window_base.h"
 
 namespace kglt {
 
@@ -35,7 +35,6 @@ protected:
 private:    
     WindowBase& window_;
     StageID current_stage_;
-
 
 };
 

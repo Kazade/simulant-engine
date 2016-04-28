@@ -18,7 +18,6 @@
 #include "mesh.h"
 #include "procedural/mesh.h"
 #include "procedural/texture.h"
-#include "batcher.h"
 #include "loader.h"
 #include "ui/interface.h"
 #include "texture.h"
@@ -32,5 +31,7 @@
 #include "screens/screen_manager.h"
 #include "screens/screen.h"
 #include "controllers/fly.h"
+
+#include "renderers/renderer_config.h"
 
 #endif

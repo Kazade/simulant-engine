@@ -12,10 +12,10 @@
 #include "window_base.h"
 #include "partitioner.h"
 #include "partitioners/octree_partitioner.h"
-#include "renderers/generic_renderer.h"
-#include "batcher.h"
+#include "renderers/gl2x/generic_renderer.h"
 #include "loader.h"
 #include "gpu_program.h"
+#include "renderers/render_queue.h"
 
 namespace kglt {
 
@@ -218,82 +218,6 @@ void RenderSequence::update_camera_constraint(CameraID cid) {
         camera->set_transform(camera->proxy().absolute_transformation());
     }
 }
-
-const uint32_t RENDER_PRIORITY_RANGE = RENDER_PRIORITY_MAX - RENDER_PRIORITY_ABSOLUTE_BACKGROUND;
-const uint32_t MAX_MATERIAL_PASSES = 25;
-
-struct RenderQueue {
-    RootGroup* passes_[MAX_MATERIAL_PASSES] = {nullptr};
-
-    RootGroup* get_or_create_pass(uint32_t pass, WindowBase* window, StageID stage_id, CameraID camera_id) {
-        assert(pass < MAX_MATERIAL_PASSES);
-        if(!passes_[pass]) {            
-            passes_[pass] = new RootGroup(*window, stage_id, camera_id);
-        }
-        return passes_[pass];
-    }
-
-    ~RenderQueue() {
-        for(uint32_t i = 0; i < MAX_MATERIAL_PASSES; ++i) {
-            if(passes_[i]) {
-                delete passes_[i];
-                passes_[i] = nullptr;
-            }
-        }
-    }
-
-    void each(std::function<void(RootGroup*)> func) {
-        for(RootGroup* group: passes_) {
-            if(group) {
-                func(group);
-            }
-        }
-    }
-};
-
-struct QueuesByPriority {
-    /*
-     * This is a set of render queues indexed by their render priority
-     * Everything is raw pointers and static arrays for performance.
-     *
-     * It might be a wise idea to just allocate the entire range on construction
-     * but this is fast enough for now
-     */
-    RenderQueue* queues_[RENDER_PRIORITY_RANGE] = {nullptr};
-
-    RenderQueue* get_or_create_queue(RenderPriority priority) {
-        uint32_t idx = uint32_t(priority - RENDER_PRIORITY_ABSOLUTE_BACKGROUND);
-
-        assert(idx < RENDER_PRIORITY_RANGE);
-
-        if(!queues_[idx]) {
-            queues_[idx] = new RenderQueue();
-        }
-
-        return queues_[idx];
-    }
-
-    void clear() {
-        for(uint32_t i = 0; i < RENDER_PRIORITY_RANGE; ++i) {
-            if(queues_[i]) {
-                delete queues_[i];
-                queues_[i] = nullptr;
-            }
-        }
-    }
-
-    ~QueuesByPriority() {
-        clear();
-    }
-
-    void each(std::function<void(RenderQueue*)> func) {
-        for(RenderQueue* queue: queues_) {
-            if(queue) {
-                func(queue);
-            }
-        }
-    }
-};
 
 void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rendered) {
     static QueuesByPriority queues;

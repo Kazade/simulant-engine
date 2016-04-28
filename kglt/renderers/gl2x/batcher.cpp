@@ -1,16 +1,15 @@
-#include "utils/glcompat.h"
-
-#include "actor.h"
 #include "batcher.h"
 
-#include "light.h"
-#include "material.h"
-#include "stage.h"
-#include "gpu_program.h"
-#include "camera.h"
-#include "partitioner.h"
-#include "window_base.h"
-#include "utils/gl_error.h"
+#include "../../actor.h"
+#include "../../light.h"
+#include "../../material.h"
+#include "../../stage.h"
+#include "../../gpu_program.h"
+#include "../../camera.h"
+#include "../../partitioner.h"
+#include "../../window_base.h"
+#include "../../utils/gl_error.h"
+#include "../../utils/glcompat.h"
 
 /*
   This is the structure of the render tree:

@@ -9,10 +9,10 @@
 #include "generic/manager.h"
 #include "generic/property.h"
 
+#include "renderers/renderer.h"
 #include "types.h"
 #include "viewport.h"
 #include "partitioner.h"
-#include "renderer.h"
 
 namespace kglt {
 

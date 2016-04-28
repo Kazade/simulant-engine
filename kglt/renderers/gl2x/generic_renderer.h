@@ -3,9 +3,9 @@
 
 #include <vector>
 
-#include "../utils/geometry_buffer.h"
 #include "../renderer.h"
-#include "../material.h"
+#include "../../utils/geometry_buffer.h"
+#include "../../material.h"
 
 namespace kglt {
 

@@ -5,13 +5,14 @@
 #include <unordered_map>
 #include <memory>
 #include <kazbase/exceptions.h>
-#include "kglt/types.h"
-#include "generic/auto_weakptr.h"
-#include "material_constants.h"
-#include "gpu_program.h"
+#include "../../types.h"
+#include "../../generic/auto_weakptr.h"
+#include "../../material_constants.h"
+#include "../../gpu_program.h"
+#include "../../interfaces.h"
 
 //FIXME: Replace with std::optional when C++17 is done
-#include "std/optional.hpp"
+#include "../../std/optional.hpp"
 
 namespace kglt {
 

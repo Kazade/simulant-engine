@@ -907,3 +907,11 @@ kglt/generic/lock_free/concurrent_pointer_recycler.hpp
 kglt/generic/lock_free/concurrent_queue.hpp
 kglt/generic/lock_free/concurrent_unordered_map.hpp
 kglt/generic/lock_free/shared_double_reference_guard.hpp
+kglt/renderers/gl2x/batcher.cpp
+kglt/renderers/gl2x/batcher.h
+kglt/renderers/gl2x/generic_renderer.cpp
+kglt/renderers/gl2x/generic_renderer.h
+kglt/renderers/render_queue.h
+kglt/renderers/renderer.cpp
+kglt/renderers/renderer.h
+kglt/renderers/renderer_config.h
