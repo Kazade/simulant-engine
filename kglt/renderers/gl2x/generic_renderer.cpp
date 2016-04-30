@@ -25,8 +25,8 @@ void GenericRenderer::set_auto_uniforms_on_shader(GPUProgramInstance& program,
     Mat4 modelview;
 
     const Mat4 model = subactor.final_transformation();
-    const Mat4& view = window().camera(camera)->view_matrix();
-    const Mat4& projection = window().camera(camera)->projection_matrix();
+    const Mat4& view = window->camera(camera)->view_matrix();
+    const Mat4& projection = window->camera(camera)->projection_matrix();
 
     kmMat4Multiply(&modelview, &view, &model);
     kmMat4Multiply(&modelview_projection, &projection, &modelview);

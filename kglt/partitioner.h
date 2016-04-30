@@ -7,6 +7,7 @@
 
 #include "generic/property.h"
 #include "generic/managed.h"
+#include "renderers/renderer.h"
 #include "utils/geometry_buffer.h"
 #include "types.h"
 #include "interfaces.h"

@@ -47,9 +47,9 @@ void Pipeline::deactivate() {
     is_active_ = false;
 
     if(stage_) {
-        sequence_->window_.stage(stage_)->decrement_render_count();
+        sequence_->window->stage(stage_)->decrement_render_count();
     } else if(ui_stage_) {
-        sequence_->window_.ui_stage(ui_stage_)->decrement_render_count();
+        sequence_->window->ui_stage(ui_stage_)->decrement_render_count();
     }
 }
 
@@ -59,15 +59,15 @@ void Pipeline::activate() {
     is_active_ = true;
 
     if(stage_) {
-        sequence_->window_.stage(stage_)->increment_render_count();
+        sequence_->window->stage(stage_)->increment_render_count();
     } else if(ui_stage_) {
-        sequence_->window_.ui_stage(ui_stage_)->increment_render_count();
+        sequence_->window->ui_stage(ui_stage_)->increment_render_count();
     }
 }
 
-RenderSequence::RenderSequence(WindowBase &window):
+RenderSequence::RenderSequence(WindowBase *window):
     window_(window),
-    renderer_(new GenericRenderer(window)) {
+    renderer_(window->renderer.get()) {
 
     //Set up the default render options
     render_options.wireframe_enabled = false;
@@ -190,7 +190,7 @@ PipelineID RenderSequence::new_pipeline(UIStageID stage, CameraID camera, const 
     return new_p;
 }
 
-void RenderSequence::set_renderer(Renderer::ptr renderer) {
+void RenderSequence::set_renderer(Renderer* renderer) {
     renderer_ = renderer;
 }
 
@@ -202,11 +202,11 @@ void RenderSequence::run() {
         run_pipeline(pipeline, actors_rendered);
     }
 
-    window_.stats->set_subactors_rendered(actors_rendered);
+    window->stats->set_subactors_rendered(actors_rendered);
 }
 
 void RenderSequence::update_camera_constraint(CameraID cid) {
-    auto camera = window_.camera(cid);
+    auto camera = window->camera(cid);
 
     if(camera->has_proxy()) {
         //Update the associated camera
@@ -230,9 +230,9 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
 
     update_camera_constraint(pipeline_stage->camera_id());
 
-    Mat4 camera_projection = window_.camera(pipeline_stage->camera_id())->projection_matrix();
+    Mat4 camera_projection = window->camera(pipeline_stage->camera_id())->projection_matrix();
 
-    RenderTarget& target = window_; //FIXME: Should be window or texture
+    RenderTarget& target = *window_; //FIXME: Should be window or texture
 
     /*
      *  Render targets can specify whether their buffer should be cleared at the start of each frame. We do this the first
@@ -264,11 +264,11 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
 
     if(pipeline_stage->ui_stage_id()) {        
         //This is a UI stage, so just render that
-        auto ui_stage = window_.ui_stage(pipeline_stage->ui_stage_id());
+        auto ui_stage = window->ui_stage(pipeline_stage->ui_stage_id());
         ui_stage->__resize(viewport->width_in_pixels(target), viewport->height_in_pixels(target));
         ui_stage->__render(camera_projection);
     } else {
-        auto stage = window_.stage(stage_id);
+        auto stage = window->stage(stage_id);
 
         std::vector<RenderablePtr> buffers = stage->partitioner().geometry_visible_from(camera_id);
         std::vector<LightID> lights = stage->partitioner().lights_visible_from(camera_id);
@@ -300,7 +300,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
 
             //Go through the actor's material passes building up the render tree
             mat->each([&](uint32_t i, MaterialPass* pass) {
-                RootGroup* group = priority_queue->get_or_create_pass(i, &window_, stage_id, camera_id);
+                RootGroup* group = priority_queue->get_or_create_pass(i, window_, stage_id, camera_id);
                 assert(group);
                 group->insert(ent.get(), pass, lights_intersecting_actor);
             });

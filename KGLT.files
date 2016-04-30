@@ -915,3 +915,5 @@ kglt/renderers/render_queue.h
 kglt/renderers/renderer.cpp
 kglt/renderers/renderer.h
 kglt/renderers/renderer_config.h
+kglt/renderers/batching/render_queue.h
+kglt/renderers/batching/render_queue.cpp

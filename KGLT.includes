@@ -50,3 +50,4 @@ kglt/controllers
 kglt/partitioners
 kglt/generic/lock_free
 kglt/generic/lock_free/memory
+kglt/renderers/batching

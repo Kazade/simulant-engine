@@ -53,7 +53,6 @@ WindowBase::WindowBase():
     frame_counter_frames_(0),
     frame_time_in_milliseconds_(0),
     total_time_(0),
-    render_sequence_(new RenderSequence(*this)),
     debug_service_(new DebugService(this)) {
 
     ktiGenTimers(1, &fixed_timer_);
@@ -152,6 +151,9 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
     set_height(height);
 
     bool result = create_window(width, height, bpp, fullscreen);
+
+    // Initialize the render_sequence once we have a renderer
+    render_sequence_ = std::make_shared<RenderSequence>(this);
 
     if(result && !initialized_) {        
 

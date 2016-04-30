@@ -46,6 +46,7 @@ class SceneImpl;
 class Watcher;
 class VirtualGamepad;
 class DebugService;
+class Renderer;
 
 typedef std::function<void (double)> WindowUpdateCallback;
 typedef std::shared_ptr<Loader> LoaderPtr;
@@ -173,6 +174,8 @@ public:
     virtual bool is_pipeline_enabled(PipelineID pid) const;
 
 protected:
+    std::shared_ptr<Renderer> renderer_;
+
     RenderSequencePtr render_sequence();
 
     void set_width(uint32_t width) { 
@@ -265,6 +268,7 @@ public:
     Property<WindowBase, Application> application = { this, &WindowBase::application_ };
     Property<WindowBase, VirtualGamepad> virtual_joypad = { this, &WindowBase::virtual_gamepad_ };
     Property<WindowBase, MessageBar> message_bar = { this, &WindowBase::message_bar_ };
+    Property<WindowBase, Renderer> renderer = { this, &WindowBase::renderer_ };
 
     Property<WindowBase, Watcher> watcher = {
         this, [](const WindowBase* self) -> Watcher* {

@@ -9,7 +9,7 @@
 #include "../../generic/auto_weakptr.h"
 #include "../../material_constants.h"
 #include "../../gpu_program.h"
-#include "../../interfaces.h"
+#include "../../renderers/renderer.h"
 
 //FIXME: Replace with std::optional when C++17 is done
 #include "../../std/optional.hpp"
