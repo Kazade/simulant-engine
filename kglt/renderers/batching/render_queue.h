@@ -16,7 +16,7 @@ public:
         renderables_.push_back(renderable);
     }
 
-    void each(std::function<void (uint32_t, Renderable*)> func) {
+    void each(std::function<void (uint32_t, Renderable*)> func) const {
         uint32_t i = 0;
         for(auto& renderable: renderables_) {
             func(i++, renderable);
@@ -78,7 +78,7 @@ class RenderGroupFactory {
 public:
     virtual ~RenderGroupFactory() {}
 
-    virtual RenderGroup new_render_group(Renderable* renderable) = 0;
+    virtual RenderGroup new_render_group(MaterialPass* material_pass) = 0;
 };
 
 typedef uint32_t Pass;
@@ -86,7 +86,7 @@ typedef uint32_t Iteration;
 
 class RenderQueue {
 public:
-    typedef std::function<void (RenderGroup*, RenderGroup*, Renderable*, MaterialPass*, Iteration)> TraverseCallback;
+    typedef std::function<void (const RenderGroup*, const RenderGroup*, Renderable*, MaterialPass*, Iteration)> TraverseCallback;
 
     RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory);
 
