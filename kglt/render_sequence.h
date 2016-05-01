@@ -83,7 +83,7 @@ class RenderSequence:
     public PipelineManager {
 
 public:
-    RenderSequence(WindowBase& window);
+    RenderSequence(WindowBase* window);
 
     PipelineID new_pipeline(
         StageID stage,
@@ -110,7 +110,7 @@ public:
     void deactivate_all_pipelines();
 
     //void set_batcher(Batcher::ptr batcher);
-    void set_renderer(Renderer::ptr renderer);
+    void set_renderer(Renderer *renderer);
 
     void run();
 
@@ -119,12 +119,13 @@ public:
 
     RenderOptions render_options;
 
+    Property<RenderSequence, WindowBase> window = { this, &RenderSequence::window_ };
 private:    
     void sort_pipelines(bool acquire_lock=false);
     void run_pipeline(Pipeline::ptr stage, int& actors_rendered);
 
-    WindowBase& window_;
-    Renderer::ptr renderer_;
+    WindowBase* window_ = nullptr;
+    Renderer* renderer_ = nullptr;
 
     std::mutex pipeline_lock_;
     std::list<Pipeline::ptr> ordered_pipelines_;

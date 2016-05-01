@@ -14,6 +14,7 @@
 #include "sound.h"
 
 #include "utils/parent_setter_mixin.h"
+#include "renderers/batching/render_queue.h"
 
 namespace kglt {
 

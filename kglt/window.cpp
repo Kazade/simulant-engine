@@ -6,6 +6,12 @@
 #include "input_controller.h"
 #include "window.h"
 
+#ifdef KGLT_GL_VERSION_1X
+#include "renderers/gl1x/renderer.h"
+#else
+#include "renderers/gl2x/generic_renderer.h"
+#endif
+
 namespace kglt {
 
 Window::Window():
@@ -165,6 +171,8 @@ bool Window::create_window(int width, int height, int bpp, bool fullscreen) {
     }
 
 #ifdef KGLT_GL_VERSION_1X
+    renderer_ = std::make_shared<GL1XRenderer>(this);
+
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
@@ -176,8 +184,12 @@ bool Window::create_window(int width, int height, int bpp, bool fullscreen) {
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
 #elif __ANDROID__
+    renderer_ = std::make_shared<GenericRenderer>(this);
+
     SDL_GL_SetAttribute (SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 #else
+    renderer_ = std::make_shared<GenericRenderer>(this);
+
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 

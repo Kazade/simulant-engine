@@ -11,7 +11,7 @@ namespace kglt {
 
 class GenericRenderer : public Renderer {
 public:
-    GenericRenderer(WindowBase& window):
+    GenericRenderer(WindowBase* window):
         Renderer(window) {}
 
 private:

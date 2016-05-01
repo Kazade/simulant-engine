@@ -10,6 +10,7 @@
 #include "../utils/geometry_buffer.h"
 #include "../generic/auto_weakptr.h"
 #include "../window_base.h"
+#include "batching/renderable.h"
 
 namespace kglt {
 
@@ -19,7 +20,7 @@ class Renderer {
 public:
     typedef std::shared_ptr<Renderer> ptr;
 
-    Renderer(WindowBase& window):
+    Renderer(WindowBase* window):
         window_(window) {}
 
     void set_current_stage(StageID stage) {
@@ -28,12 +29,12 @@ public:
 
     virtual void render(Renderable& buffer, CameraID camera, GPUProgramInstance* program) = 0;
 
-    WindowBase& window() { return window_; }
+    Property<Renderer, WindowBase> window = { this, &Renderer::window_ };
 protected:
     StagePtr current_stage();
 
 private:    
-    WindowBase& window_;
+    WindowBase* window_ = nullptr;
     StageID current_stage_;
 
 };

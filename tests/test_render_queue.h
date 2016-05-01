@@ -1,0 +1,4 @@
+#ifndef TEST_RENDER_QUEUE_H
+#define TEST_RENDER_QUEUE_H
+
+#endif // TEST_RENDER_QUEUE_H

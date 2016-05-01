@@ -2,6 +2,7 @@
 
 #include <limits>
 #include "../generic/property.h"
+#include "../renderers/renderer.h"
 #include "../mesh.h"
 
 namespace kglt {
