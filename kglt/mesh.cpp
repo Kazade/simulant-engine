@@ -516,7 +516,7 @@ const MaterialID SubMesh::material_id() const {
 
 void SubMesh::set_material_id(MaterialID mat) {
     //Set the material, store the shared_ptr to increment the ref count
-    material_ = parent_->resource_manager().material(mat).__object;
+    material_ = parent_->resource_manager().material(mat);
 }
 
 void SubMesh::transform_vertices(const kglt::Mat4& transformation) {

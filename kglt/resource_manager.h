@@ -107,8 +107,8 @@ public:
     virtual MaterialID get_material_with_alias(const unicode& alias) = 0;
     virtual MaterialID new_material_from_texture(TextureID texture, bool garbage_collect=true) = 0;
 
-    virtual ProtectedPtr<Material> material(MaterialID t) = 0;
-    virtual const ProtectedPtr<Material> material(MaterialID t) const = 0;
+    virtual MaterialPtr material(MaterialID t) = 0;
+    virtual const MaterialPtr material(MaterialID t) const = 0;
 
     virtual bool has_material(MaterialID m) const = 0;
     virtual uint32_t material_count() const = 0;
@@ -191,8 +191,8 @@ public:
     MaterialID new_material_from_texture(TextureID texture, bool garbage_collect=true) override;
     MaterialID get_material_with_alias(const unicode& alias) override;    
 
-    ProtectedPtr<Material> material(MaterialID material);
-    const ProtectedPtr<Material> material(MaterialID material) const;
+    MaterialPtr material(MaterialID material);
+    const MaterialPtr material(MaterialID material) const;
     bool has_material(MaterialID m) const;
     uint32_t material_count() const;
     void mark_material_as_uncollected(MaterialID t) override;

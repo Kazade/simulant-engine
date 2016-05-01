@@ -31,7 +31,7 @@ public:
 
         auto mat = window->material(window->new_material());
         kglt::MaterialScript script((kglt::MaterialLanguageText(text))); //Most vexing parse \o/
-        script.generate(*mat.__object);
+        script.generate(*mat);
 
         this->assert_equal((uint32_t)1, mat->pass_count());
         this->assert_equal((uint32_t)1, mat->pass(0)->texture_unit_count());

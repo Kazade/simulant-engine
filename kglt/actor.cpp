@@ -92,7 +92,7 @@ const MaterialID SubActor::material_id() const {
 
 void SubActor::override_material_id(MaterialID material) {
     //Store the pointer to maintain the ref-count
-    material_ = parent_.stage->material(material).__object;
+    material_ = parent_.stage->material(material);
 }
 
 ProtectedPtr<Mesh> Actor::mesh() const {

@@ -294,8 +294,8 @@ public:
         return window->new_material_from_file(path, garbage_collect);
     }
 
-    virtual ProtectedPtr<Material> material(MaterialID m) { return window->material(m); }
-    virtual const ProtectedPtr<Material> material(MaterialID m) const { return window->material(m); }
+    virtual MaterialPtr material(MaterialID m) { return window->material(m); }
+    virtual const MaterialPtr material(MaterialID m) const { return window->material(m); }
 
     virtual bool has_material(MaterialID m) const { return window->has_material(m); }
     virtual uint32_t material_count() const { return window->material_count(); }

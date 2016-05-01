@@ -345,12 +345,12 @@ MaterialID ResourceManagerImpl::get_material_with_alias(const unicode& alias) {
     return MaterialManager::manager_get_by_alias(alias);
 }
 
-ProtectedPtr<Material> ResourceManagerImpl::material(MaterialID mid) {
-    return ProtectedPtr<Material>(MaterialManager::manager_get(mid));
+MaterialPtr ResourceManagerImpl::material(MaterialID mid) {
+    return MaterialManager::manager_get(mid).lock();
 }
 
-const ProtectedPtr<Material> ResourceManagerImpl::material(MaterialID mid) const {
-    return ProtectedPtr<Material>(MaterialManager::manager_get(mid));
+const MaterialPtr ResourceManagerImpl::material(MaterialID mid) const {
+    return MaterialManager::manager_get(mid).lock();
 }
 
 bool ResourceManagerImpl::has_material(MaterialID m) const {

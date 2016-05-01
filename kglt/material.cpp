@@ -261,7 +261,7 @@ MaterialID Material::new_clone(bool garbage_collect) const {
     auto mat = tmp.material(ret);
 
     for(auto pass: passes_) {
-        mat->passes_.push_back(pass->new_clone(mat.__object.get()));
+        mat->passes_.push_back(pass->new_clone(mat.get()));
     }
 
     return ret;

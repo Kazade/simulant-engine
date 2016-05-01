@@ -21,7 +21,7 @@ void ParticleSystem::set_material_id(MaterialID mat_id) {
     material_id_ = mat_id;
 
     //Hold a reference to the material so that it's destroyed when we are
-    material_ref_ = stage->material(material_id_).__object;
+    material_ref_ = stage->material(material_id_);
 }
 
 EmitterPtr ParticleSystem::push_emitter() {
