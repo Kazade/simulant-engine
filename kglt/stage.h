@@ -254,8 +254,8 @@ public:
         window->delete_texture(t);
     }
 
-    virtual ProtectedPtr<Texture> texture(TextureID t) { return window->texture(t); }
-    virtual const ProtectedPtr<Texture> texture(TextureID t) const { return window->texture(t); }
+    virtual TexturePtr texture(TextureID t) { return window->texture(t); }
+    virtual const TexturePtr texture(TextureID t) const { return window->texture(t); }
 
     virtual bool has_texture(TextureID t) const { return window->has_texture(t); }
     virtual uint32_t texture_count() const { return window->texture_count(); }

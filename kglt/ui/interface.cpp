@@ -140,7 +140,7 @@ public:
 
         texture_handle = tex->id().value();
 
-        textures_[texture_handle] = tex.__object; //Hold for ref-counting
+        textures_[texture_handle] = tex; //Hold for ref-counting
         return true;
     }
 
@@ -156,7 +156,7 @@ public:
 
         texture_handle = tex->id().value();
 
-        textures_[texture_handle] = tex.__object; //Hold for ref-counting
+        textures_[texture_handle] = tex; //Hold for ref-counting
         return true;
     }
 

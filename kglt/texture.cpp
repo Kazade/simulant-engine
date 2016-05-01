@@ -39,7 +39,7 @@ void Texture::sub_texture(TextureID src, uint16_t offset_x, uint16_t offset_y) {
     auto source_ptr = resource_manager().texture(src); //Lock
 
     //Bad things...
-    Texture& source = *source_ptr.__object;
+    Texture& source = *source_ptr;
 
     if(offset_x + source.width() > width() ||
         offset_y + source.height() > height()) {

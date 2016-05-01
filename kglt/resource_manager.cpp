@@ -419,12 +419,12 @@ TextureID ResourceManagerImpl::get_texture_with_alias(const unicode& alias) {
     return TextureManager::manager_get_by_alias(alias);
 }
 
-ProtectedPtr<Texture> ResourceManagerImpl::texture(TextureID t) {
-    return ProtectedPtr<Texture>(TextureManager::manager_get(t).lock());
+TexturePtr ResourceManagerImpl::texture(TextureID t) {
+    return TexturePtr(TextureManager::manager_get(t).lock());
 }
 
-const ProtectedPtr<Texture> ResourceManagerImpl::texture(TextureID t) const {
-    return ProtectedPtr<Texture>(TextureManager::manager_get(t).lock());
+const TexturePtr ResourceManagerImpl::texture(TextureID t) const {
+    return TexturePtr(TextureManager::manager_get(t).lock());
 }
 
 bool ResourceManagerImpl::has_texture(TextureID t) const {

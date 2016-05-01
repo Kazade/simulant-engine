@@ -75,8 +75,8 @@ public:
     virtual TextureID new_texture_with_alias_from_file(const unicode& alias, const unicode& path, TextureFlags flags=0, bool garbage_collect=true) = 0;
     virtual TextureID get_texture_with_alias(const unicode& alias) = 0;
 
-    virtual ProtectedPtr<Texture> texture(TextureID t) = 0;
-    virtual const ProtectedPtr<Texture> texture(TextureID t) const = 0;
+    virtual TexturePtr texture(TextureID t) = 0;
+    virtual const TexturePtr texture(TextureID t) const = 0;
 
     virtual bool has_texture(TextureID m) const = 0;
     virtual uint32_t texture_count() const = 0;
@@ -177,8 +177,8 @@ public:
     TextureID new_texture_with_alias_from_file(const unicode& alias, const unicode& path, TextureFlags flags=0, bool garbage_collect=true) override;
     TextureID get_texture_with_alias(const unicode& alias) override;
 
-    ProtectedPtr<Texture> texture(TextureID t);
-    const ProtectedPtr<Texture> texture(TextureID t) const;
+    TexturePtr texture(TextureID t);
+    const TexturePtr texture(TextureID t) const;
     bool has_texture(TextureID t) const;
     uint32_t texture_count() const;
     void mark_texture_as_uncollected(TextureID t) override;

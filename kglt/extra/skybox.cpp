@@ -43,7 +43,7 @@ StarField::StarField(StagePtr stage, CameraID cam) {
     //Generate a starfield texture
     texture_id_ = stage->new_texture();
     auto tex = stage->texture(texture_id_);
-    kglt::procedural::texture::starfield(tex.__object);
+    kglt::procedural::texture::starfield(tex);
     skybox_.reset(new SkyBox(stage, texture_id_, cam));
 }
 

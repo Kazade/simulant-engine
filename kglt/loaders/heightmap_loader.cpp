@@ -48,7 +48,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     // Load the texture using the texture loader
     TextureID tid = mesh->resource_manager().new_texture();
     TextureLoader loader(this->filename_, this->data_);
-    loader.into(*mesh->resource_manager().texture(tid).__object);
+    loader.into(*mesh->resource_manager().texture(tid));
 
     // Now generate the heightmap from it
     auto tex = mesh->resource_manager().texture(tid);
