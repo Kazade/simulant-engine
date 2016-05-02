@@ -13,6 +13,44 @@
 
 namespace kglt {
 
+class GL2RenderGroupImpl: public new_batcher::RenderGroupImpl {
+public:
+    GL2RenderGroupImpl(RenderPriority priority):
+        new_batcher::RenderGroupImpl(priority) {}
+
+    TextureID texture_id[MAX_TEXTURE_UNITS] = {TextureID(0)};
+    GLuint program_object;
+
+    bool lt(const RenderGroupImpl& other) const override {
+        const GL2RenderGroupImpl* rhs = dynamic_cast<const GL2RenderGroupImpl*>(&other);
+        if(!rhs) {
+            // Should never happen... throw an error maybe?
+            return false;
+        }
+
+        for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
+            if(rhs->texture_id[i].value() > texture_id[i].value()) {
+                return false;
+            }
+        }
+
+        if(rhs->program_object > program_object) {
+            return false;
+        }
+
+        return true;
+    }
+};
+
+new_batcher::RenderGroup GenericRenderer::new_render_group(Renderable* renderable, MaterialPass *material_pass) {
+    auto impl = std::make_shared<GL2RenderGroupImpl>(renderable->render_priority());
+    for(uint32_t i = 0; i < material_pass->texture_unit_count(); ++i) {
+        impl->texture_id[i] = material_pass->texture_unit(i).texture_id();
+    }
+    impl->program_object = material_pass->program->program->program_object();
+    return new_batcher::RenderGroup(impl);
+}
+
 /*
  * FIXME: Stupid argument ordering
  */

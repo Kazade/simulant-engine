@@ -11,12 +11,15 @@
 #include "../generic/auto_weakptr.h"
 #include "../window_base.h"
 #include "batching/renderable.h"
+#include "batching/render_queue.h"
 
 namespace kglt {
 
 class SubActor;
 
-class Renderer {
+class Renderer:
+    public new_batcher::RenderGroupFactory {
+
 public:
     typedef std::shared_ptr<Renderer> ptr;
 

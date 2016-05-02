@@ -13,6 +13,7 @@
 #include "partitioners/null_partitioner.h"
 #include "partitioners/octree_partitioner.h"
 #include "utils/ownable.h"
+#include "renderers/batching/render_queue.h"
 
 namespace kglt {
 
@@ -22,17 +23,17 @@ Stage::Stage(StageID id, WindowBase *parent, AvailablePartitioner partitioner):
     ResourceManager(parent),
     SkyboxManager(parent, this),
     ambient_light_(kglt::Colour::WHITE),
-    geom_manager_(new GeomManager()) {
+    geom_manager_(new GeomManager()),
+    render_queue_(new new_batcher::RenderQueue(this, parent->renderer.get())) {
 
     set_partitioner(partitioner);
 
     ActorManager::signal_post_create().connect(std::bind(&Stage::post_create_callback<Actor, ActorID>, this, std::placeholders::_1, std::placeholders::_2));
-    LightManager::signal_post_create().connect(std::bind(&Stage::post_create_callback<Light, LightID>, this, std::placeholders::_1, std::placeholders::_2));
+    LightManager::signal_post_create().connect(std::bind(&Stage::post_create_callback<Light, LightID>, this, std::placeholders::_1, std::placeholders::_2));    
 }
 
 bool Stage::init() {    
     debug_ = Debug::create(*this);
-
     return true;
 }
 

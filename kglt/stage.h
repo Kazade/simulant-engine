@@ -18,6 +18,10 @@
 
 namespace kglt {
 
+namespace new_batcher {
+class RenderQueue;
+}
+
 class Partitioner;
 
 class Debug;
@@ -394,6 +398,7 @@ private:
     // like this one!
 
     std::unique_ptr<GeomManager> geom_manager_;
+    std::unique_ptr<new_batcher::RenderQueue> render_queue_;
 };
 
 

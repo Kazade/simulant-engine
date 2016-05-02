@@ -72,6 +72,7 @@ public:
     const AABB aabb() const;
     const AABB transformed_aabb() const;
 
+    void each(std::function<void (uint32_t, SubActor*)> callback);
 private:
     std::shared_ptr<Mesh> mesh_;
     std::vector<std::shared_ptr<SubActor> > subactors_;

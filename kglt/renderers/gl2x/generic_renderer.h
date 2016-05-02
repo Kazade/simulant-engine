@@ -14,6 +14,7 @@ public:
     GenericRenderer(WindowBase* window):
         Renderer(window) {}
 
+    new_batcher::RenderGroup new_render_group(Renderable *renderable, MaterialPass *material_pass);
 private:
     void render(Renderable& mesh, CameraID camera, GPUProgramInstance *program);
 

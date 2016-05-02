@@ -19,7 +19,7 @@ void RenderQueue::insert_renderable(Renderable* renderable) {
     auto material_id = renderable->material_id();
     auto material = stage_->material(material_id);
     material->each([=](uint32_t i, MaterialPass* material_pass) {
-        RenderGroup group = render_group_factory_->new_render_group(material_pass);
+        RenderGroup group = render_group_factory_->new_render_group(renderable, material_pass);
         assert(i < MAX_MATERIAL_PASSES);
 
         if(batches_.size() < i) {
@@ -30,7 +30,7 @@ void RenderQueue::insert_renderable(Renderable* renderable) {
 }
 
 void RenderQueue::remove_renderable(Renderable* renderable) {
-
+    assert(0 && "Not Implemented");
 }
 
 void RenderQueue::traverse(TraverseCallback callback) const {

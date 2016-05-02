@@ -5,10 +5,11 @@ namespace kglt {
 
 Geom::Geom(GeomID id, Stage* stage, MeshID mesh, const Vec3 &position, const Quaternion rotation):
     generic::Identifiable<GeomID>(id),
-    ParentSetterMixin<Object>(stage, position, rotation),
+    Object(stage),
     Source(stage),
     render_priority_(RENDER_PRIORITY_MAIN) {
 
+    set_parent(stage);
     set_mesh(mesh);
 }
 

@@ -78,7 +78,7 @@ class RenderGroupFactory {
 public:
     virtual ~RenderGroupFactory() {}
 
-    virtual RenderGroup new_render_group(MaterialPass* material_pass) = 0;
+    virtual RenderGroup new_render_group(Renderable* renderable, MaterialPass* material_pass) = 0;
 };
 
 typedef uint32_t Pass;
@@ -106,6 +106,9 @@ private:
     Stage* stage_ = nullptr;
     RenderGroupFactory* render_group_factory_ = nullptr;
     BatchPasses batches_;
+
+    sig::connection actor_created_;
+    sig::connection actor_destroyed_;
 };
 
 }

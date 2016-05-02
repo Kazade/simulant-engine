@@ -9,6 +9,8 @@
 #include "render_sequence.h"
 #include "loader.h"
 
+#include "renderers/batching/render_queue.h"
+
 namespace kglt {
 
 //============== START BACKGROUNDS ==========

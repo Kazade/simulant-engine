@@ -28,7 +28,7 @@ class Geom :
     public virtual BoundableEntity,
     public Managed<Geom>,
     public generic::Identifiable<GeomID>,
-    public ParentSetterMixin<Object>,
+    public Object,
     public Source,
     public Protectable {
 
