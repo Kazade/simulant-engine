@@ -306,6 +306,7 @@ public:
     virtual void mark_material_as_uncollected(MaterialID t) { window->mark_material_as_uncollected(t); }
 
     Property<Stage, Debug> debug = { this, &Stage::debug_ };
+    Property<Stage, new_batcher::RenderQueue> render_queue = { this, &Stage::render_queue_ };
 
     bool init();
     void cleanup() override;
