@@ -126,7 +126,7 @@ const SubMesh& SubActor::submesh() const {
 void Actor::each(std::function<void (uint32_t, SubActor*)> callback) {
     uint32_t i = 0;
     for(auto subactor: subactors_) {
-        callback(i, subactor.get());
+        callback(i++, subactor.get());
     }
 }
 

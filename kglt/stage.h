@@ -400,6 +400,10 @@ private:
 
     std::unique_ptr<GeomManager> geom_manager_;
     std::unique_ptr<new_batcher::RenderQueue> render_queue_;
+
+private:
+    void on_actor_created(ActorID actor_id);
+    void on_actor_destroyed(ActorID actor_id);
 };
 
 

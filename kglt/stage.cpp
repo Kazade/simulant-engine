@@ -347,8 +347,19 @@ void Stage::set_partitioner(AvailablePartitioner partitioner) {
     signal_particle_system_destroyed().connect(std::bind(&Partitioner::remove_particle_system, partitioner_.get(), std::placeholders::_1));
 }
 
-
 void Stage::update(double dt) {
+
+}
+
+void Stage::on_actor_created(ActorID actor_id) {
+    auto act = actor(actor_id);
+
+    act->each([](uint32_t i, SubActor* actor) {
+
+    });
+}
+
+void Stage::on_actor_destroyed(ActorID actor_id) {
 
 }
 

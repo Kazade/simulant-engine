@@ -97,12 +97,13 @@ public:
 
     uint32_t pass_count() const { return batches_.size(); }
     uint32_t group_count(Pass pass_number) const {
-        if(pass_number > batches_.size()) {
+        if(pass_number >= batches_.size()) {
             throw LogicError("Tried to access a pass that doesn't exist");
         }
 
         return batches_[pass_number].size();
     }
+
 private:
     // std::map is ordered, so by using the RenderGroup as the key we
     // minimize GL state changes (e.g. if a RenderGroupImpl orders by TextureID, then ShaderID

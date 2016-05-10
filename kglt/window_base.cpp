@@ -71,6 +71,7 @@ WindowBase::~WindowBase() {
     loading_.reset();
     message_bar_.reset();
     watcher_.reset();
+    render_sequence_.reset();
 
     Sound::shutdown_openal();
 }

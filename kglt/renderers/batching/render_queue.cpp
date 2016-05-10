@@ -1,5 +1,7 @@
 #include "../../stage.h"
 #include "../../material.h"
+#include "../../actor.h"
+
 #include "render_queue.h"
 
 namespace kglt {
@@ -9,20 +11,28 @@ RenderQueue::RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory)
     stage_(stage),
     render_group_factory_(render_group_factory) {
 
+    stage->signal_actor_created().connect([=](ActorID actor_id) {
+        auto actor = stage->actor(actor_id);
+        actor->each([=](uint32_t i, SubActor* subactor) {
+            insert_renderable(subactor);
+        });
+    });
 }
 
 void RenderQueue::insert_renderable(Renderable* renderable) {
     /*
      * Adds a renderable to the correct render groups. This goes through the
      * material passes on the renderable, calculates the render group for each one
-     * and then adds the renderable to that pass's render queue */
+     * and then adds the renderable to that pass's render queue
+     */
+
     auto material_id = renderable->material_id();
     auto material = stage_->material(material_id);
     material->each([=](uint32_t i, MaterialPass* material_pass) {
         RenderGroup group = render_group_factory_->new_render_group(renderable, material_pass);
         assert(i < MAX_MATERIAL_PASSES);
 
-        if(batches_.size() < i) {
+        if(batches_.size() <= i) {
             batches_.push_back(BatchMap());
         }
         batches_[i][group].add_renderable(renderable);

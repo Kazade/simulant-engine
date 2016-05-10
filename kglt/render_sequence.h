@@ -84,6 +84,9 @@ class RenderSequence:
 
 public:
     RenderSequence(WindowBase* window);
+    ~RenderSequence() {
+        delete_all_pipelines();
+    }
 
     PipelineID new_pipeline(
         StageID stage,

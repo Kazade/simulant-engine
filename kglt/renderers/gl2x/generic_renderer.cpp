@@ -29,16 +29,16 @@ public:
         }
 
         for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
-            if(rhs->texture_id[i].value() > texture_id[i].value()) {
-                return false;
+            if(texture_id[i].value() < rhs->texture_id[i].value()) {
+                return true;
             }
         }
 
-        if(rhs->program_object > program_object) {
-            return false;
+        if(program_object < rhs->program_object) {
+            return true;
         }
 
-        return true;
+        return false;
     }
 };
 

@@ -47,20 +47,20 @@ public:
 
         stage_->new_actor_with_mesh(mesh_1);
 
+        // Still only 1 pass, with 1 render group (although that
+        // should have 2 renderables)
         assert_equal(1, render_queue->pass_count());
-        assert_equal(2, render_queue->group_count(0));
+        assert_equal(1, render_queue->group_count(0));
 
         stage_->new_actor_with_mesh(mesh_2);
 
-        assert_equal(2, render_queue->pass_count());
+        assert_equal(1, render_queue->pass_count());
         assert_equal(2, render_queue->group_count(0));
-        assert_equal(1, render_queue->group_count(1));
 
         stage_->new_actor_with_mesh(mesh_3);
 
-        assert_equal(2, render_queue->pass_count());
-        assert_equal(3, render_queue->group_count(0));
-        assert_equal(1, render_queue->group_count(1));
+        assert_equal(1, render_queue->pass_count());
+        assert_equal(2, render_queue->group_count(0));
     }
 
 #ifdef KGLT_GL_VERSION_2X
