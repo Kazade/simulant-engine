@@ -10,6 +10,7 @@
 #include "../utils/geometry_buffer.h"
 #include "../generic/auto_weakptr.h"
 #include "../window_base.h"
+
 #include "batching/renderable.h"
 #include "batching/render_queue.h"
 
@@ -30,7 +31,7 @@ public:
         current_stage_ = stage;
     }
 
-    virtual void render(Renderable& buffer, CameraID camera, GPUProgramInstance* program) = 0;
+    virtual void render(const new_batcher::RenderGroup*, const new_batcher::RenderGroup*, Renderable*, MaterialPass*, new_batcher::Iteration) = 0;
 
     Property<Renderer, WindowBase> window = { this, &Renderer::window_ };
 protected:

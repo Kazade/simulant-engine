@@ -28,6 +28,17 @@ public:
 
     virtual MeshID instanced_mesh_id() const = 0;
     virtual SubMeshID instanced_submesh_id() const = 0;
+
+    void update_last_visible_frame_id(uint64_t frame_id) {
+        last_visible_frame_id_ = frame_id;
+    }
+
+    bool is_visible_in_frame(uint64_t frame_id) {
+        return frame_id == last_visible_frame_id_;
+    }
+
+private:
+    uint64_t last_visible_frame_id_ = 0;
 };
 
 typedef std::shared_ptr<Renderable> RenderablePtr;

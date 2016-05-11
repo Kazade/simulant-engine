@@ -219,10 +219,13 @@ void RenderSequence::update_camera_constraint(CameraID cid) {
     }
 }
 
+uint64_t generate_frame_id() {
+    static uint64_t frame_id = 0;
+    return ++frame_id;
+}
+
 void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rendered) {
-    static QueuesByPriority queues;
-    //Empty the queues each call, but retain the same container (saves allocations)
-    queues.clear();
+    uint64_t frame_id = generate_frame_id();
 
     if(!pipeline_stage->is_active()) {
         return;
@@ -270,70 +273,16 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
     } else {
         auto stage = window->stage(stage_id);
 
-        std::vector<RenderablePtr> buffers = stage->partitioner().geometry_visible_from(camera_id);
-        std::vector<LightID> lights = stage->partitioner().lights_visible_from(camera_id);
-
-
-        /*
-         * Go through the visible objects, sort into queues and for
-         * each material pass add the subactor. The result is that a tree
-         * of material properties (uniforms) will be created with the child nodes
-         * being the meshes
-         */
-        std::vector<LightID> lights_intersecting_actor;
-
-        //Go through the visible actors
-        for(RenderablePtr ent: buffers) {
-            //Get the priority queue for this actor (e.g. RENDER_PRIORITY_BACKGROUND)
-            RenderQueue* priority_queue = queues.get_or_create_queue(ent->render_priority());
-            assert(priority_queue);
-
-            auto mat = stage->material(ent->material_id());
-
-            lights_intersecting_actor.clear();
-            for(auto lid: lights) {
-                auto light = stage->light(lid);
-                if(light->type() == LIGHT_TYPE_DIRECTIONAL || light->transformed_aabb().intersects(ent->transformed_aabb())) {
-                    lights_intersecting_actor.push_back(lid);
-                }
-            }
-
-            //Go through the actor's material passes building up the render tree
-            mat->each([&](uint32_t i, MaterialPass* pass) {
-                RootGroup* group = priority_queue->get_or_create_pass(i, window_, stage_id, camera_id);
-                assert(group);
-                group->insert(ent.get(), pass, lights_intersecting_actor);
-            });
-
-            actors_rendered++;
+        // Mark the visible objects as visible
+        for(auto& renderable: stage->partitioner().geometry_visible_from(camera_id)) {
+            renderable->update_last_visible_frame_id(frame_id);
         }
 
-        /*
-         * At this point, we will have a render group tree for each priority level
-         * when we render, we can apply the uniforms/textures/shaders etc. by traversing the
-         * tree and calling bind()/unbind() at each level
-         */
-        renderer_->set_current_stage(stage_id);
+        using namespace std::placeholders;
 
-        queues.each([=](RenderQueue* queue) {
-            assert(queue);
-
-            queue->each([=](RootGroup* pass_group) {
-                assert(pass_group);
-
-                auto callback = [&](Renderable* renderable, MaterialPass* pass) {
-                    renderer_->render(
-                        *renderable,
-                        pipeline_stage->camera_id(),
-                        pass->program.get()
-                    );
-                };
-
-                pass_group->traverse(callback);
-            });
-        });
-
-        renderer_->set_current_stage(StageID());
+        new_batcher::RenderQueue::TraverseCallback callback = std::bind(&Renderer::render, renderer_, _1, _2, _3, _4, _5);
+        // Render the visible objects
+        stage->render_queue->traverse(callback, frame_id);
     }
 
     signal_pipeline_finished_(*pipeline_stage);

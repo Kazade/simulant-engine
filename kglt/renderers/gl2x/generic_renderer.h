@@ -15,12 +15,20 @@ public:
         Renderer(window) {}
 
     new_batcher::RenderGroup new_render_group(Renderable *renderable, MaterialPass *material_pass);
-private:
-    void render(Renderable& mesh, CameraID camera, GPUProgramInstance *program);
 
+    void render(
+        const new_batcher::RenderGroup*,
+        const new_batcher::RenderGroup*,
+        Renderable*,
+        MaterialPass*,
+        new_batcher::Iteration
+    ) override;
+
+private:
     void set_auto_uniforms_on_shader(GPUProgramInstance &pass, CameraID camera, Renderable &subactor);
     void set_auto_attributes_on_shader(Renderable &buffer);
     void set_blending_mode(BlendType type);
+    void send_geometry(Renderable* renderable);
 };
 
 }

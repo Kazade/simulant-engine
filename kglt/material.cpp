@@ -264,6 +264,8 @@ MaterialID Material::new_clone(bool garbage_collect) const {
         mat->passes_.push_back(pass->new_clone(mat.get()));
     }
 
+    mat->pass_count_ = pass_count_;
+
     return ret;
 }
 

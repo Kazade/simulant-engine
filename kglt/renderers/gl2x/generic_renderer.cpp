@@ -18,7 +18,7 @@ public:
     GL2RenderGroupImpl(RenderPriority priority):
         new_batcher::RenderGroupImpl(priority) {}
 
-    TextureID texture_id[MAX_TEXTURE_UNITS] = {TextureID(0)};
+    GLuint texture_id[MAX_TEXTURE_UNITS] = {0};
     GLuint program_object;
 
     bool lt(const RenderGroupImpl& other) const override {
@@ -29,7 +29,7 @@ public:
         }
 
         for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
-            if(texture_id[i].value() < rhs->texture_id[i].value()) {
+            if(texture_id[i] < rhs->texture_id[i]) {
                 return true;
             }
         }
@@ -45,7 +45,9 @@ public:
 new_batcher::RenderGroup GenericRenderer::new_render_group(Renderable* renderable, MaterialPass *material_pass) {
     auto impl = std::make_shared<GL2RenderGroupImpl>(renderable->render_priority());
     for(uint32_t i = 0; i < material_pass->texture_unit_count(); ++i) {
-        impl->texture_id[i] = material_pass->texture_unit(i).texture_id();
+        auto tex_id = material_pass->texture_unit(i).texture_id();
+        auto gltex = material_pass->material->resource_manager().texture(tex_id)->gl_tex();
+        impl->texture_id[i] = gltex;
     }
     impl->program_object = material_pass->program->program->program_object();
     return new_batcher::RenderGroup(impl);
@@ -177,6 +179,70 @@ void GenericRenderer::set_blending_mode(BlendType type) {
     }
 }
 
+void GenericRenderer::render(const new_batcher::RenderGroup* current_group, const new_batcher::RenderGroup* last_group,
+    Renderable* renderable, MaterialPass* material_pass, new_batcher::Iteration iteration) {
+
+    static GPUProgramInstance* program_instance = nullptr;
+
+    // Casting blindly because I can't see how it's possible that it's anything else!
+    GL2RenderGroupImpl* last = (last_group) ? (GL2RenderGroupImpl*) last_group->impl() : nullptr;
+    GL2RenderGroupImpl* current = (GL2RenderGroupImpl*) current_group->impl();
+
+    for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
+        if(!last || last->texture_id[i] != current->texture_id[i]) {
+            GLCheck(glActiveTexture, GL_TEXTURE0 + i);
+            GLCheck(glBindTexture, GL_TEXTURE_2D, current->texture_id[i]);
+        }
+    }
+
+    // Active the shader if it changed since last time
+    if(!last || last->program_object != current->program_object) {
+        program_instance = material_pass->program.get();
+        program_instance->program->build();
+        program_instance->program->activate();
+        assert(program_instance);
+    }
+
+    assert(program_instance);
+
+    renderable->_update_vertex_array_object();
+    renderable->_bind_vertex_array_object();
+
+    set_blending_mode(material_pass->blending());
+    send_geometry(renderable);
+}
+
+void GenericRenderer::send_geometry(Renderable *renderable) {
+    std::size_t index_count = renderable->index_data().count();
+    if(!index_count) {
+        return;
+    }
+
+    switch(renderable->arrangement()) {
+        case MESH_ARRANGEMENT_POINTS:
+            GLCheck(glDrawElements, GL_POINTS, index_count, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+        break;
+        case MESH_ARRANGEMENT_LINES:
+            GLCheck(glDrawElements, GL_LINES, index_count, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+        break;
+        case MESH_ARRANGEMENT_LINE_STRIP:
+            GLCheck(glDrawElements, GL_LINE_STRIP, index_count, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+        break;
+        case MESH_ARRANGEMENT_TRIANGLES:
+            GLCheck(glDrawElements, GL_TRIANGLES, index_count, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+        break;
+        case MESH_ARRANGEMENT_TRIANGLE_STRIP:
+            GLCheck(glDrawElements, GL_TRIANGLE_STRIP, index_count, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+        break;
+        case MESH_ARRANGEMENT_TRIANGLE_FAN:
+            GLCheck(glDrawElements, GL_TRIANGLE_FAN, index_count, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+        break;
+        default:
+            throw NotImplementedError(__FILE__, __LINE__);
+    }
+}
+
+/*
 void GenericRenderer::render(Renderable& buffer, CameraID camera, GPUProgramInstance *program) {
 
     if(!program) {
@@ -199,29 +265,6 @@ void GenericRenderer::render(Renderable& buffer, CameraID camera, GPUProgramInst
     set_auto_attributes_on_shader(buffer);
     set_auto_uniforms_on_shader(*program, camera, buffer);
 
-    switch(buffer.arrangement()) {
-        case MESH_ARRANGEMENT_POINTS:
-            GLCheck(glDrawElements, GL_POINTS, index_count, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
-        break;
-        case MESH_ARRANGEMENT_LINES:
-            GLCheck(glDrawElements, GL_LINES, index_count, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
-        break;
-        case MESH_ARRANGEMENT_LINE_STRIP:
-            GLCheck(glDrawElements, GL_LINE_STRIP, index_count, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
-        break;
-        case MESH_ARRANGEMENT_TRIANGLES:
-            GLCheck(glDrawElements, GL_TRIANGLES, index_count, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
-        break;
-        case MESH_ARRANGEMENT_TRIANGLE_STRIP:
-            GLCheck(glDrawElements, GL_TRIANGLE_STRIP, index_count, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
-        break;
-        case MESH_ARRANGEMENT_TRIANGLE_FAN:
-            GLCheck(glDrawElements, GL_TRIANGLE_FAN, index_count, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
-        break;
-        default:
-            throw NotImplementedError(__FILE__, __LINE__);
-    }
-
-}
+}*/
 
 }

@@ -69,8 +69,12 @@ public:
         return impl_ && rhs.impl_ && *impl_ < *rhs.impl_;
     }
 
+    RenderGroupImpl* impl() const { return impl_.get(); }
+
 private:
     RenderGroupImpl::ptr impl_;
+
+    friend class Renderer;
 };
 
 
@@ -93,7 +97,7 @@ public:
     void insert_renderable(Renderable* renderable); // IMPORTANT, must updated RenderGroups if they exist already
     void remove_renderable(Renderable* renderable);
 
-    void traverse(TraverseCallback callback) const;
+    void traverse(TraverseCallback callback, uint64_t frame_id) const;
 
     uint32_t pass_count() const { return batches_.size(); }
     uint32_t group_count(Pass pass_number) const {

@@ -28,13 +28,19 @@ void RenderQueue::insert_renderable(Renderable* renderable) {
 
     auto material_id = renderable->material_id();
     auto material = stage_->material(material_id);
-    material->each([=](uint32_t i, MaterialPass* material_pass) {
-        RenderGroup group = render_group_factory_->new_render_group(renderable, material_pass);
+
+    material->each([&](uint32_t i, MaterialPass* material_pass) {
+        RenderGroup group = render_group_factory_->new_render_group(
+            renderable, material_pass
+        );
+
         assert(i < MAX_MATERIAL_PASSES);
+        assert(i < material->pass_count());
 
         if(batches_.size() <= i) {
             batches_.push_back(BatchMap());
         }
+
         batches_[i][group].add_renderable(renderable);
     });
 }
@@ -43,7 +49,7 @@ void RenderQueue::remove_renderable(Renderable* renderable) {
     assert(0 && "Not Implemented");
 }
 
-void RenderQueue::traverse(TraverseCallback callback) const {
+void RenderQueue::traverse(TraverseCallback callback, uint64_t frame_id) const {
     const RenderGroup* last_group = nullptr;
 
     Pass pass = 0;
@@ -56,9 +62,15 @@ void RenderQueue::traverse(TraverseCallback callback) const {
             const RenderGroup* current_group = &p.first;
 
             p.second.each([&](uint32_t i, Renderable* renderable) {
+                if(!renderable->is_visible_in_frame(frame_id)) {
+                    return;
+                }
+
                 // Only look up the material and pass if we have to (if it changed)
                 if(!material || material->id() != renderable->material_id()) {
                     material = stage_->material(renderable->material_id());
+                    assert(material);
+
                     material_pass = material->pass(pass);
                     pass_iteration_type = material_pass->iteration();
                 }
