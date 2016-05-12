@@ -1,20 +1,40 @@
 #pragma once
 
 #include <list>
-#include "./renderable.h"
+#include <set>
 
 namespace kglt {
 
 class MaterialPass;
 class Renderer;
+class Renderable;
 
 namespace new_batcher {
 
+class Batch;
+
+class BatchMember {
+public:
+    virtual ~BatchMember() {}
+
+    void join_batch(Batch* batch) {
+        batches_.insert(batch);
+    }
+
+    void leave_batch(Batch* batch) {
+        batches_.erase(batch);
+    }
+
+    std::set<Batch*> batches() const { return batches_; }
+
+private:
+    std::set<Batch*> batches_;
+};
+
 class Batch {
 public:
-    void add_renderable(Renderable* renderable) {
-        renderables_.push_back(renderable);
-    }
+    void add_renderable(Renderable* renderable);
+    void remove_renderable(Renderable* renderable);
 
     void each(std::function<void (uint32_t, Renderable*)> func) const {
         uint32_t i = 0;
@@ -22,6 +42,8 @@ public:
             func(i++, renderable);
         }
     }
+
+    uint32_t renderable_count() const { return renderables_.size(); }
 
 private:
     std::list<Renderable*> renderables_;
@@ -94,7 +116,7 @@ public:
 
     RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory);
 
-    void insert_renderable(Renderable* renderable); // IMPORTANT, must updated RenderGroups if they exist already
+    void insert_renderable(Renderable* renderable); // IMPORTANT, must update RenderGroups if they exist already
     void remove_renderable(Renderable* renderable);
 
     void traverse(TraverseCallback callback, uint64_t frame_id) const;
@@ -122,6 +144,8 @@ private:
 
     sig::connection actor_created_;
     sig::connection actor_destroyed_;
+
+    void clean_empty_batches();
 };
 
 }

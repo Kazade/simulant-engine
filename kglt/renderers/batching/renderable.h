@@ -3,13 +3,17 @@
 #include <memory>
 #include "../../types.h"
 #include "../../interfaces.h"
+#include "render_queue.h"
 
 namespace kglt {
 
 class VertexData;
 class IndexData;
 
-class Renderable : public virtual BoundableEntity {
+class Renderable:
+    public new_batcher::BatchMember,
+    public virtual BoundableEntity {
+
 public:
     virtual ~Renderable() {}
 

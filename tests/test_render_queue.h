@@ -19,6 +19,21 @@ public:
         window->delete_stage(stage_->id());
     }
 
+    void test_renderable_removal() {
+        auto& render_queue = stage_->render_queue;
+
+        auto mesh_1 = stage_->new_mesh_as_cube(1.0);
+        auto actor_id = stage_->new_actor_with_mesh(mesh_1);
+
+        assert_equal(2, render_queue->pass_count());
+        assert_equal(1, render_queue->group_count(0));
+        assert_equal(1, render_queue->group_count(1));
+
+        stage_->delete_actor(actor_id);
+
+        assert_equal(0, render_queue->pass_count());
+    }
+
     void test_texture_grouping() {
         auto texture_1 = stage_->new_texture();
         auto texture_2 = stage_->new_texture();

@@ -15,6 +15,7 @@
 
 #include "utils/parent_setter_mixin.h"
 #include "renderers/batching/render_queue.h"
+#include "renderers/batching/renderable.h"
 
 namespace kglt {
 
