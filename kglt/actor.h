@@ -55,8 +55,6 @@ public:
 
     const std::vector<std::shared_ptr<SubActor> >& _subactors() { return subactors_; }
 
-    sig::signal<void (ActorID)>& signal_mesh_changed() { return signal_mesh_changed_; }
-
     void ask_owner_for_destruction();
 
     RenderPriority render_priority() const { return render_priority_; }
@@ -74,18 +72,42 @@ public:
     const AABB transformed_aabb() const;
 
     void each(std::function<void (uint32_t, SubActor*)> callback);
+
+    typedef sig::signal<void (ActorID, SubActor*)> SubActorCreatedCallback;
+    typedef sig::signal<void (ActorID, SubActor*)> SubActorDestroyedCallback;
+    typedef sig::signal<void (ActorID, SubActor*, MaterialID, MaterialID)> SubActorMaterialChangedCallback;
+    typedef sig::signal<void (ActorID)> MeshChangedCallback;
+
+    SubActorCreatedCallback& signal_subactor_created() {
+        return signal_subactor_created_;
+    }
+
+    SubActorDestroyedCallback& signal_subactor_destroyed() {
+        return signal_subactor_destroyed_;
+    }
+
+    SubActorMaterialChangedCallback& signal_subactor_material_changed() {
+        return signal_subactor_material_changed_;
+    }
+
+    MeshChangedCallback& signal_mesh_changed() { return signal_mesh_changed_; }
+
 private:
     std::shared_ptr<Mesh> mesh_;
     std::vector<std::shared_ptr<SubActor> > subactors_;
 
     RenderPriority render_priority_;
 
-    sig::signal<void (ActorID)> signal_mesh_changed_;
+    SubActorCreatedCallback signal_subactor_created_;
+    SubActorDestroyedCallback signal_subactor_destroyed_;
+    SubActorMaterialChangedCallback signal_subactor_material_changed_;
+    MeshChangedCallback signal_mesh_changed_;
 
     void do_update(double dt) {
         update_source(dt);
     }
 
+    void clear_subactors();
     void rebuild_subactors();
     sig::connection submeshes_changed_connection_;
 

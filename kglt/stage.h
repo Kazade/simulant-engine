@@ -18,6 +18,21 @@
 
 namespace kglt {
 
+class SubActor;
+enum ActorChangeType {
+    ACTOR_CHANGE_TYPE_SUBACTOR_MATERIAL_CHANGED
+};
+
+struct SubActorMaterialChangeData {
+    MaterialID old_material_id;
+    MaterialID new_material_id;
+};
+
+struct ActorChangeEvent {
+    ActorChangeType type;
+    SubActorMaterialChangeData subactor_material_changed;
+};
+
 namespace new_batcher {
 class RenderQueue;
 }
@@ -348,11 +363,14 @@ public:
 
     typedef sig::signal<void (ActorID)> ActorCreatedSignal;
     typedef sig::signal<void (ActorID)> ActorDestroyedSignal;
+    typedef sig::signal<void (ActorID, ActorChangeEvent)> ActorChangedCallback;
+
     typedef sig::signal<void (GeomID)> GeomCreatedSignal;
     typedef sig::signal<void (GeomID)> GeomDestroyedSignal;
 
     ActorCreatedSignal& signal_actor_created() { return signal_actor_created_; }
     ActorDestroyedSignal& signal_actor_destroyed() { return signal_actor_destroyed_; }
+    ActorChangedCallback& signal_actor_changed() { return signal_actor_changed_; }
 
     GeomCreatedSignal& signal_geom_created() { return signal_geom_created_; }
     GeomDestroyedSignal& signal_geom_destroyed() { return signal_geom_destroyed_; }
@@ -371,6 +389,7 @@ private:
 
     ActorCreatedSignal signal_actor_created_;
     ActorDestroyedSignal signal_actor_destroyed_;
+    ActorChangedCallback signal_actor_changed_;
 
     GeomCreatedSignal signal_geom_created_;
     GeomDestroyedSignal signal_geom_destroyed_;
@@ -404,6 +423,7 @@ private:
 private:
     void on_actor_created(ActorID actor_id);
     void on_actor_destroyed(ActorID actor_id);
+    void on_subactor_material_changed(ActorID actor_id, SubActor* subactor, MaterialID old, MaterialID newM);
 };
 
 

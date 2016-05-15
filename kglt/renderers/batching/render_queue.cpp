@@ -24,6 +24,16 @@ RenderQueue::RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory)
             remove_renderable(subactor);
         });
     });
+
+    stage->signal_actor_changed().connect([=](ActorID actor_id, ActorChangeEvent event) {
+        auto actor = stage->actor(actor_id);
+        if(event.type == ACTOR_CHANGE_TYPE_SUBACTOR_MATERIAL_CHANGED) {
+            actor->each([=](uint32_t i, SubActor* subactor) {
+                remove_renderable(subactor);
+                insert_renderable(subactor);
+            });
+        }
+    });
 }
 
 void RenderQueue::insert_renderable(Renderable* renderable) {

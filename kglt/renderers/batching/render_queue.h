@@ -130,6 +130,13 @@ public:
         return batches_[pass_number].size();
     }
 
+    void each_group(Pass pass, std::function<void (uint32_t, const RenderGroup&, const Batch&)> cb) {
+        uint32_t i = 0;
+        for(auto& batch: batches_[pass]){
+            cb(i++, batch.first, batch.second);
+        }
+    }
+
 private:
     // std::map is ordered, so by using the RenderGroup as the key we
     // minimize GL state changes (e.g. if a RenderGroupImpl orders by TextureID, then ShaderID

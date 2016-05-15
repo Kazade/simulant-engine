@@ -48,9 +48,24 @@ void Stage::ask_owner_for_destruction() {
     window->delete_stage(id());
 }
 
+void Stage::on_subactor_material_changed(
+    ActorID actor_id, SubActor* subactor, MaterialID old, MaterialID newM
+) {
+    ActorChangeEvent evt;
+    evt.type = ACTOR_CHANGE_TYPE_SUBACTOR_MATERIAL_CHANGED;
+    evt.subactor_material_changed = { old, newM };
+
+    signal_actor_changed_(actor_id, evt);
+}
+
 ActorID Stage::new_actor() {
+    using namespace std::placeholders;
+
     ActorID result = ActorManager::manager_new(this);
     actor(result)->set_parent(this);
+    actor(result)->signal_subactor_material_changed().connect(
+        std::bind(&Stage::on_subactor_material_changed, this, _1, _2, _3, _4)
+    );
 
     //Tell everyone about the new actor
     signal_actor_created_(result);
@@ -62,8 +77,13 @@ ActorID Stage::new_actor(MeshID mid) {
 }
 
 ActorID Stage::new_actor(MeshID mid, bool make_responsive, bool make_collidable) {
+    using namespace std::placeholders;
+
     ActorID result = ActorManager::manager_new(this);
     actor(result)->set_parent(this);
+    actor(result)->signal_subactor_material_changed().connect(
+        std::bind(&Stage::on_subactor_material_changed, this, _1, _2, _3, _4)
+    );
 
     //If a mesh was specified, set it
     if(mid) {

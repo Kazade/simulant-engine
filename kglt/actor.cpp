@@ -30,21 +30,29 @@ const VertexData& Actor::shared_data() const {
     return mesh_->shared_data();
 }
 
+void Actor::clear_subactors() {
+    for(auto& subactor: subactors_) {
+        signal_subactor_destroyed_(id(), subactor.get());
+    }
+
+    subactors_.clear();
+}
 
 void Actor::rebuild_subactors() {
-    subactors_.clear();
+    clear_subactors();
 
     mesh_->each([&](SubMesh* mesh) {
         subactors_.push_back(
             SubActor::create(*this, mesh)
         );
+        signal_subactor_created_(id(), subactors_.back().get());
     });
 }
 
 void Actor::set_mesh(MeshID mesh) {
     if(!mesh) {
         submeshes_changed_connection_.disconnect();
-        subactors_.clear();
+        clear_subactors();
         mesh_.reset();
         return;
     }
@@ -91,8 +99,21 @@ const MaterialID SubActor::material_id() const {
 }
 
 void SubActor::override_material_id(MaterialID material) {
+    if(material == material_id()) {
+        return;
+    }
+    auto old_material = material_id();
+
     //Store the pointer to maintain the ref-count
     material_ = parent_.stage->material(material);
+
+    //Notify that the subactor material changed
+    parent_.signal_subactor_material_changed_(
+        parent_.id(),
+        this,
+        old_material,
+        material_->id()
+    );
 }
 
 ProtectedPtr<Mesh> Actor::mesh() const {
