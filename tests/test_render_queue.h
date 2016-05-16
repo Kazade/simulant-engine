@@ -55,7 +55,25 @@ public:
 
         assert_equal(1, render_queue->group_count(0));
 
-        //stage_->mesh(mesh_1)->set_material_id(mat_2);
+        render_queue->each_group(0, [&](uint32_t i, const RenderGroup& grp, const kglt::new_batcher::Batch&) {
+             assert_true(*group < grp);
+        });
+
+        stage_->actor(actor_id)->remove_material_id_override();
+        stage_->mesh(mesh_1)->set_material_id(mat_1);
+
+        assert_equal(1, render_queue->group_count(0));
+
+        // Everything should be back to the first material now
+        render_queue->each_group(0, [&](uint32_t i, const RenderGroup& grp, const kglt::new_batcher::Batch&) {
+             assert_true(!(*group < grp));
+        });
+
+        stage_->mesh(mesh_1)->set_material_id(mat_2);
+
+        assert_equal(1, render_queue->group_count(0));
+
+        // Back to the second material again!
         render_queue->each_group(0, [&](uint32_t i, const RenderGroup& grp, const kglt::new_batcher::Batch&) {
              assert_true(*group < grp);
         });

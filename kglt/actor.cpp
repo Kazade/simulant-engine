@@ -26,6 +26,12 @@ void Actor::override_material_id(MaterialID mat) {
     }
 }
 
+void Actor::remove_material_id_override() {
+    for(SubActor::ptr se: subactors_) {
+        se->remove_material_id_override();
+    }
+}
+
 const VertexData& Actor::shared_data() const {
     return mesh_->shared_data();
 }
@@ -104,16 +110,26 @@ void SubActor::override_material_id(MaterialID material) {
     }
     auto old_material = material_id();
 
-    //Store the pointer to maintain the ref-count
-    material_ = parent_.stage->material(material);
+    if(material) {
+        //Store the pointer to maintain the ref-count
+        material_ = parent_.stage->material(material);
+    } else {
+        // If we passed a zero material ID, then remove the
+        // material pointer
+        material_.reset();
+    }
 
     //Notify that the subactor material changed
     parent_.signal_subactor_material_changed_(
         parent_.id(),
         this,
         old_material,
-        material_->id()
+        material
     );
+}
+
+void SubActor::remove_material_id_override() {
+    override_material_id(MaterialID());
 }
 
 ProtectedPtr<Mesh> Actor::mesh() const {

@@ -48,6 +48,7 @@ public:
     }
 
     void override_material_id(MaterialID mat);
+    void remove_material_id_override();
 
     SubActor& subactor(uint16_t idx) {
         return *subactors_[idx];
@@ -126,6 +127,7 @@ public:
     const SubMeshID submesh_id() const;
 
     void override_material_id(MaterialID material);
+    void remove_material_id_override();
 
     const VertexData& vertex_data() const { return submesh().vertex_data(); }
     const IndexData& index_data() const { return submesh().index_data(); }
