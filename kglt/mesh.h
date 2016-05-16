@@ -165,11 +165,20 @@ public:
     void reverse_winding(); ///< Reverse the winding of all submeshes
     void set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass=0); ///< Replace the texture unit on all submesh materials
 
-    sig::signal<void ()>& signal_submeshes_changed() { return signal_submeshes_changed_; }
-
     const AABB aabb() const;
     void normalize(); //Scales the mesh so it has a radius of 1.0
     void transform_vertices(const kglt::Mat4& transform, bool include_submeshes=true);
+
+public:
+    // Signals
+
+    typedef sig::signal<void (MeshID, SubMesh*)> SubMeshCreatedCallback;
+    typedef sig::signal<void (MeshID, SubMesh*)> SubMeshDestroyedCallback;
+    typedef sig::signal<void (MeshID, SubMesh*, MaterialID, MaterialID)> SubMeshMaterialChangedCallback;
+
+    SubMeshCreatedCallback& signal_submesh_created() { return signal_submesh_created_; }
+    SubMeshDestroyedCallback& signal_submesh_destroyed() { return signal_submesh_destroyed_; }
+    SubMeshMaterialChangedCallback& signal_submesh_material_changed() { return signal_submesh_material_changed_; }
 
 private:
     friend class SubMesh;
@@ -181,7 +190,9 @@ private:
 
     SubMeshID normal_debug_mesh_;
 
-    sig::signal<void ()> signal_submeshes_changed_;
+    SubMeshCreatedCallback signal_submesh_created_;
+    SubMeshDestroyedCallback signal_submesh_destroyed_;
+    SubMeshMaterialChangedCallback signal_submesh_material_changed_;
 };
 
 }

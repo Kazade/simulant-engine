@@ -99,8 +99,7 @@ SubMeshID Mesh::new_submesh_with_material(MaterialID material, MeshArrangement a
 
     SubMeshID id = TemplatedSubMeshManager::manager_new(this, "", material, arrangement, vertex_sharing);
 
-    signal_submeshes_changed_();
-
+    signal_submesh_created_(this->id(), submesh(id));
     return id;
 }
 
@@ -354,8 +353,8 @@ SubMeshID Mesh::new_submesh_as_rectangle(MaterialID material, float width, float
 }
 
 void Mesh::delete_submesh(SubMeshID index) {
+    signal_submesh_destroyed_(this->id(), submesh(index));
     TemplatedSubMeshManager::manager_delete(index);
-    signal_submeshes_changed_();
 }
 
 SubMesh* Mesh::any_submesh() const {
@@ -515,8 +514,27 @@ const MaterialID SubMesh::material_id() const {
 }
 
 void SubMesh::set_material_id(MaterialID mat) {
-    //Set the material, store the shared_ptr to increment the ref count
-    material_ = parent_->resource_manager().material(mat);
+    auto old_material = (material_) ? material_->id() : MaterialID();
+
+    if(old_material == mat) {
+        // Don't do anything, don't fire the changed signal
+        return;
+    }
+
+    if(mat) {
+        // Set the material, store the shared_ptr to increment the ref count
+        material_ = parent_->resource_manager().material(mat);
+    } else {
+        // Reset the material
+        material_.reset();
+    }
+
+    parent_->signal_submesh_material_changed_(
+        parent_->id(),
+        this,
+        old_material,
+        mat
+    );
 }
 
 void SubMesh::transform_vertices(const kglt::Mat4& transformation) {

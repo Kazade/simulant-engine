@@ -110,7 +110,8 @@ private:
 
     void clear_subactors();
     void rebuild_subactors();
-    sig::connection submeshes_changed_connection_;
+    sig::connection submesh_created_connection_;
+    sig::connection submesh_destroyed_connection_;
 
     friend class SubActor;
 };
