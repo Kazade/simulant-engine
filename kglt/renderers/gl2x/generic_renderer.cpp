@@ -56,60 +56,65 @@ new_batcher::RenderGroup GenericRenderer::new_render_group(Renderable* renderabl
 /*
  * FIXME: Stupid argument ordering
  */
-void GenericRenderer::set_auto_uniforms_on_shader(GPUProgramInstance& program,
-    CameraID camera,
-    Renderable &subactor) {
+void GenericRenderer::set_auto_uniforms_on_shader(GPUProgramInstance* program,
+    CameraPtr camera,
+    Renderable* subactor, const kglt::Colour& global_ambient) {
 
     //Calculate the modelview-projection matrix
     Mat4 modelview_projection;
     Mat4 modelview;
 
-    const Mat4 model = subactor.final_transformation();
-    const Mat4& view = window->camera(camera)->view_matrix();
-    const Mat4& projection = window->camera(camera)->projection_matrix();
+    const Mat4 model = subactor->final_transformation();
+    const Mat4& view = camera->view_matrix();
+    const Mat4& projection = camera->projection_matrix();
 
     kmMat4Multiply(&modelview, &view, &model);
     kmMat4Multiply(&modelview_projection, &projection, &modelview);
 
-    if(program.uniforms->uses_auto(SP_AUTO_VIEW_MATRIX)) {
-        program.program->set_uniform_mat4x4(
-            program.uniforms->auto_variable_name(SP_AUTO_VIEW_MATRIX),
+    if(program->uniforms->uses_auto(SP_AUTO_VIEW_MATRIX)) {
+        program->program->set_uniform_mat4x4(
+            program->uniforms->auto_variable_name(SP_AUTO_VIEW_MATRIX),
             view
         );
     }
 
-    if(program.uniforms->uses_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX)) {
-        program.program->set_uniform_mat4x4(
-            program.uniforms->auto_variable_name(SP_AUTO_MODELVIEW_PROJECTION_MATRIX),
+    if(program->uniforms->uses_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX)) {
+        program->program->set_uniform_mat4x4(
+            program->uniforms->auto_variable_name(SP_AUTO_MODELVIEW_PROJECTION_MATRIX),
             modelview_projection
         );
     }
 
-    if(program.uniforms->uses_auto(SP_AUTO_MODELVIEW_MATRIX)) {
-        program.program->set_uniform_mat4x4(
-            program.uniforms->auto_variable_name(SP_AUTO_MODELVIEW_MATRIX),
+    if(program->uniforms->uses_auto(SP_AUTO_MODELVIEW_MATRIX)) {
+        program->program->set_uniform_mat4x4(
+            program->uniforms->auto_variable_name(SP_AUTO_MODELVIEW_MATRIX),
             modelview
         );
     }
 
-    if(program.uniforms->uses_auto(SP_AUTO_PROJECTION_MATRIX)) {
-        program.program->set_uniform_mat4x4(
-            program.uniforms->auto_variable_name(SP_AUTO_PROJECTION_MATRIX),
+    if(program->uniforms->uses_auto(SP_AUTO_PROJECTION_MATRIX)) {
+        program->program->set_uniform_mat4x4(
+            program->uniforms->auto_variable_name(SP_AUTO_PROJECTION_MATRIX),
             projection
         );
     }
 
-    if(program.uniforms->uses_auto(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX)) {
+    if(program->uniforms->uses_auto(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX)) {
         Mat3 inverse_transpose_modelview;
 
         kmMat4ExtractRotationMat3(&modelview, &inverse_transpose_modelview);
         kmMat3Inverse(&inverse_transpose_modelview, &inverse_transpose_modelview);
         kmMat3Transpose(&inverse_transpose_modelview, &inverse_transpose_modelview);
 
-        program.program->set_uniform_mat3x3(
-            program.uniforms->auto_variable_name(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX),
+        program->program->set_uniform_mat3x3(
+            program->uniforms->auto_variable_name(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX),
             inverse_transpose_modelview
         );
+    }
+
+    if(program->uniforms->uses_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT)) {
+        auto varname = program->uniforms->auto_variable_name(SP_AUTO_LIGHT_GLOBAL_AMBIENT);
+        program->program->set_uniform_colour(varname, global_ambient);
     }
 }
 
@@ -179,7 +184,7 @@ void GenericRenderer::set_blending_mode(BlendType type) {
     }
 }
 
-void GenericRenderer::render(const new_batcher::RenderGroup* current_group, const new_batcher::RenderGroup* last_group,
+void GenericRenderer::render(CameraPtr camera, StagePtr stage, const new_batcher::RenderGroup* current_group, const new_batcher::RenderGroup* last_group,
     Renderable* renderable, MaterialPass* material_pass, new_batcher::Iteration iteration) {
 
     static GPUProgramInstance* program_instance = nullptr;
@@ -204,6 +209,27 @@ void GenericRenderer::render(const new_batcher::RenderGroup* current_group, cons
     }
 
     assert(program_instance);
+
+    auto& program = program_instance->program;
+
+    set_auto_uniforms_on_shader(program_instance, camera, renderable, stage->ambient_light());
+
+    for(auto attribute: SHADER_AVAILABLE_ATTRS) {
+        if(program_instance->attributes->uses_auto(attribute)) {
+            auto varname = program_instance->attributes->variable_name(attribute);
+            program->set_attribute_location(varname, attribute);
+        }
+    }
+
+    for(auto& p: material_pass->staged_float_uniforms()) {
+        program->set_uniform_float(p.first, p.second);
+    }
+
+    for(auto& p: material_pass->staged_int_uniforms()) {
+        program->set_uniform_int(p.first, p.second);
+    }
+
+    program->relink();
 
     renderable->_update_vertex_array_object();
     renderable->_bind_vertex_array_object();

@@ -17,6 +17,8 @@ public:
     new_batcher::RenderGroup new_render_group(Renderable *renderable, MaterialPass *material_pass);
 
     void render(
+        CameraPtr camera,
+        StagePtr stage,
         const new_batcher::RenderGroup*,
         const new_batcher::RenderGroup*,
         Renderable*,
@@ -25,7 +27,7 @@ public:
     ) override;
 
 private:
-    void set_auto_uniforms_on_shader(GPUProgramInstance &pass, CameraID camera, Renderable &subactor);
+    void set_auto_uniforms_on_shader(GPUProgramInstance *pass, CameraPtr camera, Renderable* subactor, const Colour &global_ambient);
     void set_auto_attributes_on_shader(Renderable &buffer);
     void set_blending_mode(BlendType type);
     void send_geometry(Renderable* renderable);
