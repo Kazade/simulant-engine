@@ -161,12 +161,8 @@ public:
         return submesh().aabb();
     }
 
-    SubActor(Actor& parent, SubMesh* submesh):
-        parent_(parent),
-        submesh_(submesh),
-        material_(0) {
-    }
-
+    SubActor(Actor& parent, SubMesh* submesh);
+    ~SubActor();
 private:
     Actor& parent_;
     SubMesh* submesh_ = nullptr;
@@ -174,6 +170,8 @@ private:
 
     SubMesh& submesh();
     const SubMesh& submesh() const;
+
+    sig::connection submesh_material_changed_connection_;
 };
 
 }

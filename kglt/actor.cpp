@@ -80,6 +80,8 @@ void Actor::set_mesh(MeshID mesh) {
         }
     );
 
+
+
     //Rebuild the subactors to match the meshes submeshes
     rebuild_subactors();
 
@@ -105,6 +107,31 @@ const AABB Actor::transformed_aabb() const {
 
 void Actor::ask_owner_for_destruction() {
     stage->delete_actor(id());
+}
+
+SubActor::SubActor(Actor& parent, SubMesh* submesh):
+    parent_(parent),
+    submesh_(submesh),
+    material_(0) {
+
+    submesh_material_changed_connection_ = submesh->signal_material_changed().connect(
+        [=](SubMesh*, MaterialID old, MaterialID newM) {
+            if(!material_) {
+                // No material override, so fire that the subactor material
+                // changed.
+                parent_.signal_subactor_material_changed_(
+                    parent_.id(),
+                    this,
+                    old,
+                    newM
+                );
+            }
+        }
+    );
+}
+
+SubActor::~SubActor() {
+    submesh_material_changed_connection_.disconnect();
 }
 
 const MaterialID SubActor::material_id() const {

@@ -94,6 +94,14 @@ public:
     void _bind_vertex_array_object();
 
     void generate_texture_coordinates_cube(uint32_t texture=0);
+
+public:
+    typedef sig::signal<void (SubMesh*, MaterialID, MaterialID)> MaterialChangedCallback;
+
+    MaterialChangedCallback& signal_material_changed() {
+        return signal_material_changed_;
+    }
+
 private:
     Mesh* parent_;
 
@@ -112,6 +120,8 @@ private:
 
     sig::connection vrecalc_;
     sig::connection irecalc_;
+
+    MaterialChangedCallback signal_material_changed_;
 };
 
 typedef generic::TemplatedManager<SubMesh, SubMeshID> TemplatedSubMeshManager;

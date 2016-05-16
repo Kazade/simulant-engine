@@ -529,6 +529,7 @@ void SubMesh::set_material_id(MaterialID mat) {
         material_.reset();
     }
 
+    signal_material_changed_(this, old_material, mat);
     parent_->signal_submesh_material_changed_(
         parent_->id(),
         this,
