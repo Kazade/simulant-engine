@@ -68,6 +68,7 @@ WindowBase::WindowBase():
 
 WindowBase::~WindowBase() {
     //FIXME: Make WindowBase Managed<> and put this in cleanup()
+    virtual_gamepad_.reset();
     loading_.reset();
     message_bar_.reset();
     watcher_.reset();
