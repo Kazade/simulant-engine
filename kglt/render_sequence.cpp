@@ -275,7 +275,9 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
 
         // Mark the visible objects as visible
         for(auto& renderable: stage->partitioner().geometry_visible_from(camera_id)) {
-            renderable->update_last_visible_frame_id(frame_id);
+            if(renderable->is_visible()) {
+                renderable->update_last_visible_frame_id(frame_id);
+            }
         }
 
         using namespace std::placeholders;
