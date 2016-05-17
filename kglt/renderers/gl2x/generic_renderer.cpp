@@ -234,6 +234,40 @@ void GenericRenderer::render(CameraPtr camera, StagePtr stage, const new_batcher
     renderable->_update_vertex_array_object();
     renderable->_bind_vertex_array_object();
 
+    if(material_pass->depth_test_enabled()) {
+        GLCheck(glEnable, GL_DEPTH_TEST);
+    } else {
+        GLCheck(glDisable, GL_DEPTH_TEST);
+    }
+
+    if(material_pass->depth_write_enabled()) {
+        GLCheck(glDepthMask, GL_TRUE);
+    } else {
+        GLCheck(glDepthMask, GL_FALSE);
+    }
+
+    auto texture_matrix_auto = [](uint8_t which) -> ShaderAvailableAuto {
+        switch(which) {
+        case 0: return SP_AUTO_MATERIAL_TEX_MATRIX0;
+        case 1: return SP_AUTO_MATERIAL_TEX_MATRIX1;
+        case 2: return SP_AUTO_MATERIAL_TEX_MATRIX2;
+        case 3: return SP_AUTO_MATERIAL_TEX_MATRIX3;
+        default:
+            throw ValueError("Invalid tex matrix index");
+        }
+    };
+
+    for(uint8_t i = 0; i < material_pass->texture_unit_count(); ++i) {
+        if(program_instance->uniforms->uses_auto(texture_matrix_auto(i))) {
+            auto name = program_instance->uniforms->auto_variable_name(
+                ShaderAvailableAuto(SP_AUTO_MATERIAL_TEX_MATRIX0 + i)
+            );
+
+            auto& unit = material_pass->texture_unit(i);
+            program->set_uniform_mat4x4(name, unit.matrix());
+        }
+    }
+
     set_blending_mode(material_pass->blending());
     send_geometry(renderable);
 }
