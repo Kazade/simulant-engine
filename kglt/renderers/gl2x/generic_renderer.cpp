@@ -18,8 +18,8 @@ public:
     GL2RenderGroupImpl(RenderPriority priority):
         new_batcher::RenderGroupImpl(priority) {}
 
-    GLuint texture_id[MAX_TEXTURE_UNITS] = {0};
-    GLuint program_object;
+    TextureID texture_id[MAX_TEXTURE_UNITS] = {TextureID()};
+    ShaderID shader_id;
 
     bool lt(const RenderGroupImpl& other) const override {
         const GL2RenderGroupImpl* rhs = dynamic_cast<const GL2RenderGroupImpl*>(&other);
@@ -29,12 +29,12 @@ public:
         }
 
         for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
-            if(texture_id[i] < rhs->texture_id[i]) {
+            if(texture_id[i].value() < rhs->texture_id[i].value()) {
                 return true;
             }
         }
 
-        if(program_object < rhs->program_object) {
+        if(shader_id.value() < rhs->shader_id.value()) {
             return true;
         }
 
@@ -46,10 +46,9 @@ new_batcher::RenderGroup GenericRenderer::new_render_group(Renderable* renderabl
     auto impl = std::make_shared<GL2RenderGroupImpl>(renderable->render_priority());
     for(uint32_t i = 0; i < material_pass->texture_unit_count(); ++i) {
         auto tex_id = material_pass->texture_unit(i).texture_id();
-        auto gltex = material_pass->material->resource_manager().texture(tex_id)->gl_tex();
-        impl->texture_id[i] = gltex;
+        impl->texture_id[i] = tex_id;
     }
-    impl->program_object = material_pass->program->program->program_object();
+    impl->shader_id = material_pass->program->program->id();
     return new_batcher::RenderGroup(impl);
 }
 
@@ -196,12 +195,17 @@ void GenericRenderer::render(CameraPtr camera, StagePtr stage, const new_batcher
     for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
         if(!last || last->texture_id[i] != current->texture_id[i]) {
             GLCheck(glActiveTexture, GL_TEXTURE0 + i);
-            GLCheck(glBindTexture, GL_TEXTURE_2D, current->texture_id[i]);
+            if(current->texture_id[i]) {
+                auto texture = stage->texture(current->texture_id[i]);
+                GLCheck(glBindTexture, GL_TEXTURE_2D, texture->gl_tex());
+            } else {
+                GLCheck(glBindTexture, GL_TEXTURE_2D, 0);
+            }
         }
     }
 
     // Active the shader if it changed since last time
-    if(!last || last->program_object != current->program_object) {
+    if(!last || last->shader_id != current->shader_id) {
         program_instance = material_pass->program.get();
         program_instance->program->build();
         program_instance->program->activate();

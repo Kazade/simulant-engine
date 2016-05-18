@@ -10,6 +10,7 @@
 #include "generic/property.h"
 #include "generic/managed.h"
 #include "utils/gl_thread_check.h"
+#include "generic/identifiable.h"
 
 #define BUFFER_OFFSET(bytes) ((GLubyte*) NULL + (bytes))
 
@@ -218,7 +219,8 @@ private:
 };
 
 class GPUProgram:
-    public Managed<GPUProgram> {
+    public Managed<GPUProgram>,
+    public generic::Identifiable<ShaderID> {
 
 public:
     GPUProgram();
@@ -301,6 +303,8 @@ private:
     std::unordered_map<std::string, int32_t> attribute_cache_;
 
     void link();
+
+    static uint32_t shader_id_counter_;
 };
 
 class GPUProgramInstance : public Managed<GPUProgramInstance> {

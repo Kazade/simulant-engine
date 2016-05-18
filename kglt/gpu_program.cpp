@@ -6,6 +6,8 @@
 
 namespace kglt {
 
+uint32_t GPUProgram::shader_id_counter_ = 0;
+
 UniformManager::UniformManager(GPUProgram *program):
     program_(program) {
 
@@ -138,6 +140,7 @@ void AttributeManager::register_auto(ShaderAvailableAttributes attr, const std::
 
 
 GPUProgram::GPUProgram():
+    generic::Identifiable<ShaderID>(ShaderID(++shader_id_counter_)),
     program_object_(0) {}
 
 GLint GPUProgram::locate_attribute(const std::string &attribute) {

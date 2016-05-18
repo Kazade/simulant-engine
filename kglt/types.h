@@ -604,6 +604,7 @@ typedef UniqueID<13> SpriteID;
 typedef UniqueID<14> BackgroundID;
 typedef UniqueID<15> ParticleSystemID;
 typedef UniqueID<16> SkyboxID;
+typedef UniqueID<17> ShaderID;
 
 const StageID DefaultStageID = StageID();
 
