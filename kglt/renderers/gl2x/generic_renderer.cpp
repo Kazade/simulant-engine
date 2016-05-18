@@ -188,6 +188,9 @@ void GenericRenderer::render(CameraPtr camera, StagePtr stage, const new_batcher
 
     static GPUProgramInstance* program_instance = nullptr;
 
+    GLStateStash s2(GL_ELEMENT_ARRAY_BUFFER_BINDING);
+    GLStateStash s3(GL_ARRAY_BUFFER_BINDING);
+
     // Casting blindly because I can't see how it's possible that it's anything else!
     GL2RenderGroupImpl* last = (last_group) ? (GL2RenderGroupImpl*) last_group->impl() : nullptr;
     GL2RenderGroupImpl* current = (GL2RenderGroupImpl*) current_group->impl();
@@ -238,6 +241,8 @@ void GenericRenderer::render(CameraPtr camera, StagePtr stage, const new_batcher
     renderable->_update_vertex_array_object();
     renderable->_bind_vertex_array_object();
 
+    set_auto_attributes_on_shader(*renderable);
+
     if(material_pass->depth_test_enabled()) {
         GLCheck(glEnable, GL_DEPTH_TEST);
     } else {
@@ -260,6 +265,11 @@ void GenericRenderer::render(CameraPtr camera, StagePtr stage, const new_batcher
             throw ValueError("Invalid tex matrix index");
         }
     };
+
+    if(program_instance->uniforms->uses_auto(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS)) {
+        auto varname = program_instance->uniforms->auto_variable_name(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS);
+        program->set_uniform_int(varname, material_pass->texture_unit_count());
+    }
 
     for(uint8_t i = 0; i < material_pass->texture_unit_count(); ++i) {
         if(program_instance->uniforms->uses_auto(texture_matrix_auto(i))) {
