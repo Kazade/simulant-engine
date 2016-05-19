@@ -105,6 +105,7 @@ void OctreePartitioner::add_geom(GeomID geom_id) {
                 // If there isn't a chunk for this geom, create one
                 if(!static_chunks->chunks.count(geom_id)) {
                     static_chunks->chunks.insert(std::make_pair(geom_id, std::make_shared<StaticChunk>(stage.get())));
+                    signal_static_chunk_created_(static_chunks->chunks.at(geom_id).get());
                 }
 
                 // Get the static chunk for this geom

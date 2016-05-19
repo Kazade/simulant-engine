@@ -15,6 +15,7 @@
 namespace kglt {
 
 class SubActor;
+class StaticChunk;
 
 class Partitioner:
     public Managed<Partitioner> {
@@ -38,9 +39,17 @@ public:
     virtual std::vector<LightID> lights_visible_from(CameraID camera_id) = 0;
     virtual std::vector<std::shared_ptr<Renderable>> geometry_visible_from(CameraID camera_id) = 0;
 
+    typedef sig::signal<void (StaticChunk*)> StaticChunkCreated;
+    typedef sig::signal<void (StaticChunk*)> StaticChunkDestroyed;
+
+    StaticChunkCreated& signal_static_chunk_created() { return signal_static_chunk_created_; }
+    StaticChunkDestroyed& signal_static_chunk_destroyed() { return signal_static_chunk_destroyed_; }
+
 protected:
     Property<Partitioner, Stage> stage = { this, &Partitioner::stage_ };
 
+    StaticChunkCreated signal_static_chunk_created_;
+    StaticChunkDestroyed signal_static_chunk_destroyed_;
 private:
     Stage* stage_;
 };
