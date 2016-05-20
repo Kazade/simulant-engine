@@ -274,7 +274,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
         auto stage = window->stage(stage_id);
 
         // Mark the visible objects as visible
-        for(auto& renderable: stage->partitioner().geometry_visible_from(camera_id)) {
+        for(auto& renderable: stage->partitioner->geometry_visible_from(camera_id)) {
             if(renderable->is_visible()) {
                 renderable->update_last_visible_frame_id(frame_id);
             }

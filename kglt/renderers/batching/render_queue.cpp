@@ -4,6 +4,8 @@
 #include "../../actor.h"
 
 #include "render_queue.h"
+#include "../../partitioner.h"
+#include "../../partitioners/static_chunk.h"
 
 namespace kglt {
 namespace new_batcher {
@@ -33,6 +35,27 @@ RenderQueue::RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory)
                 remove_renderable(subactor);
                 insert_renderable(subactor);
             });
+        }
+    });
+
+    stage->partitioner->signal_static_chunk_created().connect([=](StaticChunk* chunk) {
+        chunk->each([=](uint32_t i, StaticSubchunk* subchunk) {
+            insert_renderable(subchunk);
+        });
+    });
+
+    stage->partitioner->signal_static_chunk_destroyed().connect([=](StaticChunk* chunk) {
+        chunk->each([=](uint32_t i, StaticSubchunk* subchunk) {
+            remove_renderable(subchunk);
+        });
+    });
+
+    stage->partitioner->signal_static_chunk_changed().connect([=](StaticChunk* chunk, StaticChunkChangeEvent event) {
+        if(event.type == STATIC_CHUNK_CHANGE_TYPE_SUBCHUNK_CREATED) {
+            insert_renderable(event.subchunk_created.subchunk);
+        } else {
+            assert(event.type == STATIC_CHUNK_CHANGE_TYPE_SUBCHUNK_DESTROYED);
+            remove_renderable(event.subchunk_destroyed.subchunk);
         }
     });
 }

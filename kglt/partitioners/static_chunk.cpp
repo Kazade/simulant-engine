@@ -34,12 +34,15 @@ void StaticSubchunk::add_polygon(const Polygon& poly) {
     submesh_->index_data().done();
 }
 
-StaticSubchunk* StaticChunk::get_or_create_subchunk(KeyType key) {
+std::pair<StaticSubchunk *, bool> StaticChunk::get_or_create_subchunk(KeyType key) {
+    bool created = false;
+
     if(!subchunks_.count(key)) {
         subchunks_.insert(std::make_pair(key, std::make_shared<StaticSubchunk>(this, std::get<0>(key), std::get<1>(key), std::get<2>(key))));
+        created = true;
     }
 
-    return subchunks_[key].get();
+    return std::make_pair(subchunks_[key].get(), created);
 }
 
 

@@ -112,10 +112,19 @@ void OctreePartitioner::add_geom(GeomID geom_id) {
                 auto& static_chunk = static_chunks->chunks.at(geom_id);
 
                 // Create a subchunk for this polygon if necessary
-                auto subchunk = static_chunk->get_or_create_subchunk(std::make_tuple(render_priority, material_id, mesh_arrangement));
+                auto subchunk_and_result = static_chunk->get_or_create_subchunk(std::make_tuple(render_priority, material_id, mesh_arrangement));
 
-                // We need to make sure the same vertex attributes are enabled as they were on the source submesh
-                subchunk->vertex_data().inherit_enabled_bitmask(submesh->vertex_data());
+                auto subchunk = subchunk_and_result.first;
+                auto created = subchunk_and_result.second;
+
+                if(created) {
+                    // We need to make sure the same vertex attributes are enabled as they were on the source submesh
+                    subchunk->vertex_data().inherit_enabled_bitmask(submesh->vertex_data());
+                    StaticChunkChangeEvent evt;
+                    evt.type = STATIC_CHUNK_CHANGE_TYPE_SUBCHUNK_CREATED;
+                    evt.subchunk_created.subchunk = subchunk;
+                    signal_static_chunk_changed_(static_chunk.get(), evt);
+                }
 
                 // Add the polygon to the subchunk
                 subchunk->add_polygon(polygon);
@@ -129,7 +138,8 @@ void OctreePartitioner::add_geom(GeomID geom_id) {
 }
 
 void OctreePartitioner::remove_geom(GeomID geom_id) {
-
+    /* FIXME: Need to be able to remove the geom, but also signal to the render queue to remove all subchunks */
+    assert(0 && "Not Implemented");
 }
 
 void OctreePartitioner::add_actor(ActorID obj) {

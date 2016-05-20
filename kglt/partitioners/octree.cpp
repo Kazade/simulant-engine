@@ -320,7 +320,7 @@ OctreeNode& OctreeNode::insert_into_subtree(const BoundableEntity* obj, GrowCall
     AABB obj_bounds = obj->transformed_aabb();
     float obj_diameter = obj->diameter();
 
-    if(obj_diameter < this->strict_diameter() / 2 && level < 3) {
+    if(obj_diameter < this->strict_diameter() / 2 && level < 5) {
         //Object will fit into child
         kmVec3 centre = obj->centre();
 

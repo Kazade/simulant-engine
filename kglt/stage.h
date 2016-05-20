@@ -136,8 +136,6 @@ public:
         obj._initialize();
     }
 
-    Partitioner& partitioner() { return *partitioner_; }
-
     void ask_owner_for_destruction();
 
     /*
@@ -322,6 +320,7 @@ public:
 
     Property<Stage, Debug> debug = { this, &Stage::debug_ };
     Property<Stage, new_batcher::RenderQueue> render_queue = { this, &Stage::render_queue_ };
+    Property<Stage, Partitioner> partitioner = { this, &Stage::partitioner_ };
 
     bool init();
     void cleanup() override;

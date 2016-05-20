@@ -102,10 +102,17 @@ public:
 
     typedef std::shared_ptr<StaticChunk> ptr;
 
-    StaticSubchunk* get_or_create_subchunk(KeyType key);
+    std::pair<StaticSubchunk*, bool> get_or_create_subchunk(KeyType key);
 
     Property<StaticChunk, Mesh> mesh = { this, &StaticChunk::mesh_ };
     Property<StaticChunk, SubchunkLookup> subchunks = { this, &StaticChunk::subchunks_ };
+
+    void each(std::function<void (uint32_t, StaticSubchunk*)> cb) {
+        uint32_t i = 0;
+        for(auto& p: subchunks_) {
+            cb(i++, p.second.get());
+        }
+    }
 
 private:
     SubchunkLookup subchunks_;

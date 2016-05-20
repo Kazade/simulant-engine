@@ -16,6 +16,27 @@ namespace kglt {
 
 class SubActor;
 class StaticChunk;
+class StaticSubchunk;
+
+enum StaticChunkChangeType {
+    STATIC_CHUNK_CHANGE_TYPE_SUBCHUNK_CREATED,
+    STATIC_CHUNK_CHANGE_TYPE_SUBCHUNK_DESTROYED
+};
+
+struct StaticSubchunkCreatedData {
+    StaticSubchunk* subchunk = nullptr;
+};
+
+struct StaticSubchunkDestroyedData {
+    StaticSubchunk* subchunk = nullptr;
+};
+
+struct StaticChunkChangeEvent {
+    StaticChunkChangeType type;
+    StaticSubchunkCreatedData subchunk_created;
+    StaticSubchunkDestroyedData subchunk_destroyed;
+};
+
 
 class Partitioner:
     public Managed<Partitioner> {
@@ -41,15 +62,18 @@ public:
 
     typedef sig::signal<void (StaticChunk*)> StaticChunkCreated;
     typedef sig::signal<void (StaticChunk*)> StaticChunkDestroyed;
+    typedef sig::signal<void (StaticChunk*, StaticChunkChangeEvent)> StaticChunkChanged;
 
     StaticChunkCreated& signal_static_chunk_created() { return signal_static_chunk_created_; }
     StaticChunkDestroyed& signal_static_chunk_destroyed() { return signal_static_chunk_destroyed_; }
+    StaticChunkChanged& signal_static_chunk_changed() { return signal_static_chunk_changed_; }
 
 protected:
     Property<Partitioner, Stage> stage = { this, &Partitioner::stage_ };
 
     StaticChunkCreated signal_static_chunk_created_;
     StaticChunkDestroyed signal_static_chunk_destroyed_;
+    StaticChunkChanged signal_static_chunk_changed_;
 private:
     Stage* stage_;
 };
