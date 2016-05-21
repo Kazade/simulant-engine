@@ -263,8 +263,9 @@ public:
             passes = passes_; // Copy, to prevent holding the lock for the entire loop
         }
 
-        for(uint32_t i = 0; i < passes.size(); ++i) {
-            callback(i, passes[i].get());
+        uint32_t i = 0;
+        for(auto pass: passes) {
+            callback(i++, pass.get());
         }
     }
 
