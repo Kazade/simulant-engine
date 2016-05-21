@@ -4,7 +4,7 @@
 #include <SDL.h>
 
 #include <memory>
-#include <kaztimer/kaztimer.h>
+#include "kaztimer/kaztimer.h"
 
 #include "generic/property.h"
 #include "generic/manager.h"
