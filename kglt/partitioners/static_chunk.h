@@ -37,8 +37,13 @@ struct Polygon:
             auto& data = (*source_data).at(idx);
             auto pos = data.position;
 
+            std::vector<float kmVec3::*> attrs;
+            attrs.push_back(&kmVec3::x);
+            attrs.push_back(&kmVec3::y);
+            attrs.push_back(&kmVec3::z);
+
             /* Iterate the X, Y and Z attributes and assign them if necessary */
-            auto attrs = { &Vec3::x, &Vec3::y, &Vec3::z };
+            //auto attrs = { &Vec3::x, &Vec3::y, &Vec3::z }; // Commented out due to a bug in GCC 6.1 :/
 
             for(auto& attr: attrs) {
                 if(pos.*attr < bounding_box.min.*attr) bounding_box.min.*attr = pos.*attr;
