@@ -102,6 +102,7 @@ uint32_t Material::new_pass() {
     passes_.push_back(MaterialPass::ptr(new MaterialPass(this)));
     pass_count_ = passes_.size();
 
+    signal_material_pass_created_(id(), passes_.back().get());
     return passes_.size() - 1; //Return the index
 }
 
@@ -138,10 +139,23 @@ void MaterialPass::set_texture_unit(uint32_t texture_unit_id, TextureID tex) {
         throw LogicError(_u("Texture unit ID is too high. {0} >= {1}").format(texture_unit_id, MAX_TEXTURE_UNITS).encode());
     }
 
+    TextureID previous_texture;
+
     if(texture_unit_id >= texture_units_.size()) {
         texture_units_.resize(texture_unit_id + 1, TextureUnit(*this));
+    } else {
+        previous_texture = texture_units_[texture_unit_id].texture_id();
     }
     texture_units_.at(texture_unit_id) = TextureUnit(*this, tex);
+
+    MaterialPassChangeEvent evt;
+    evt.type = MATERIAL_PASS_CHANGE_TYPE_TEXTURE_UNIT_CHANGED;
+    evt.texture_unit_changed.pass = this;
+    evt.texture_unit_changed.old_texture_id = previous_texture;
+    evt.texture_unit_changed.new_texture_id = tex;
+    evt.texture_unit_changed.texture_unit = texture_unit_id;
+
+    material->signal_material_pass_changed_(material->id(), evt);
 }
 
 void MaterialPass::set_animated_texture_unit(uint32_t texture_unit_id, const std::vector<TextureID> textures, double duration) {

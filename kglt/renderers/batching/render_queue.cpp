@@ -143,7 +143,7 @@ void RenderQueue::traverse(TraverseCallback callback, uint64_t frame_id) const {
                 }
 
                 // Only look up the material and pass if we have to (if it changed)
-                if(!material || material->id() != renderable->material_id()) {
+                if(!material || (material->id() != renderable->material_id())) {
                     material = stage_->material(renderable->material_id());
                     assert(material);
 

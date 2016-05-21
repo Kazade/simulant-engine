@@ -208,7 +208,7 @@ void GenericRenderer::render(CameraPtr camera, StagePtr stage, const new_batcher
     }
 
     // Active the shader if it changed since last time
-    if(!last || last->shader_id != current->shader_id) {
+    if(!last || program_instance->program->id() != current->shader_id) {
         program_instance = material_pass->program.get();
         program_instance->program->build();
         program_instance->program->activate();
@@ -216,7 +216,6 @@ void GenericRenderer::render(CameraPtr camera, StagePtr stage, const new_batcher
     }
 
     assert(program_instance);
-
     auto& program = program_instance->program;
 
     set_auto_uniforms_on_shader(program_instance, camera, renderable, stage->ambient_light());
