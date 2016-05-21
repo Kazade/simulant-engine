@@ -1,7 +1,7 @@
 #ifndef TEST_BATCHER_H
 #define TEST_BATCHER_H
 
-#include <kaztest/kaztest.h>
+#include "kaztest/kaztest.h"
 
 #include "kglt/kglt.h"
 #include "global.h"

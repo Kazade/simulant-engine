@@ -1,7 +1,7 @@
 #ifndef TEST_FRUSTUM_H
 #define TEST_FRUSTUM_H
 
-#include <kaztest/kaztest.h>
+#include "kaztest/kaztest.h"
 
 #include "kglt/kglt.h"
 #include "global.h"

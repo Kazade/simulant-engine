@@ -5,7 +5,7 @@
 
 extern kglt::Window::ptr window;
 
-#include <kaztest/kaztest.h>
+#include "kaztest/kaztest.h"
 #include <kazbase/logging.h>
 #include "kglt/window_base.h"
 

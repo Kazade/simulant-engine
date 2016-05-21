@@ -2,7 +2,7 @@
 #define TEST_MESH_H
 
 #include <kazbase/logging.h>
-#include <kaztest/kaztest.h>
+#include "kaztest/kaztest.h"
 
 #include "kglt/kglt.h"
 #include "global.h"

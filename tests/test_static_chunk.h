@@ -1,7 +1,7 @@
 #ifndef TEST_STATIC_CHUNK_H
 #define TEST_STATIC_CHUNK_H
 
-#include <kaztest/kaztest.h>
+#include "kaztest/kaztest.h"
 #include "kglt/partitioners/static_chunk.h"
 
 class PolygonTests:

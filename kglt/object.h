@@ -51,9 +51,9 @@ public:
     virtual ~Object() {}
 
     // Nameable interface
-    void set_name(const unicode &name) { name_ = name; }
-    const unicode name() const { return name_; }
-    const bool has_name() const { return !name_.empty(); }
+    void set_name(const unicode &name) override { name_ = name; }
+    const unicode name() const override { return name_; }
+    const bool has_name() const override { return !name_.empty(); }
 
     Property<Object, Stage> stage = { this, &Object::stage_ };
     uint64_t uuid() const { return uuid_; }
@@ -187,8 +187,8 @@ public:
 
     void rotate_around(const kglt::Vec3& axis, const kglt::Degrees& degrees) override;
 
-    void look_at(const kglt::Vec3& position);
-    void look_at(float x, float y, float z) {
+    void look_at(const kglt::Vec3& position) override;
+    void look_at(float x, float y, float z) override {
         return look_at(kglt::Vec3(x, y, z));
     }
 

@@ -47,7 +47,7 @@ public:
         const unicode& back
     );
 
-    unicode __unicode__() const {
+    unicode __unicode__() const override {
         return _u("Skybox {0}").format(this->id());
     }
 

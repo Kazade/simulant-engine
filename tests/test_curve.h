@@ -1,7 +1,7 @@
 #ifndef TEST_CURVE_H
 #define TEST_CURVE_H
 
-#include <kaztest/kaztest.h>
+#include "kaztest/kaztest.h"
 
 #include "kglt/extra/ai/curve.h"
 

@@ -1,7 +1,7 @@
 #ifndef TEST_OCTREE_H
 #define TEST_OCTREE_H
 
-#include <kaztest/kaztest.h>
+#include "kaztest/kaztest.h"
 
 #include "kglt/kglt.h"
 #include "global.h"

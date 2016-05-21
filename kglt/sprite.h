@@ -22,11 +22,11 @@ class Sprite :
 
 public:
     //Ownable interface (inherited through ParentSetterMixin)
-    void ask_owner_for_destruction();
+    void ask_owner_for_destruction() override;
 
     bool init() override;
     void cleanup() override;
-    void update(double dt);
+    void update(double dt) override;
 
     Sprite(SpriteID id, Stage* stage);
 
@@ -55,7 +55,7 @@ public:
     void override_playing_animation_duration(const float new_duration) override;
 
     //Printable interface
-    unicode __unicode__() const {
+    unicode __unicode__() const override {
         return _u("Sprite {0}").format(this->id());
     }
 

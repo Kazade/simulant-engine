@@ -118,8 +118,8 @@ public:
     double fixed_step_interp() const;
     bool is_paused() const { return is_paused_; }
 
-    uint32_t width() const { return width_; }
-    uint32_t height() const { return height_; }
+    uint32_t width() const override { return width_; }
+    uint32_t height() const override { return height_; }
     float aspect_ratio() const { return float(width_) / float(height_); }
     
     bool run_frame();
@@ -166,12 +166,12 @@ public:
         return new_pipeline_helper(render_sequence_, stage_id, camera_id);
     }
 
-    virtual PipelinePtr pipeline(PipelineID pid);
-    virtual bool enable_pipeline(PipelineID pid);
-    virtual bool disable_pipeline(PipelineID pid);
-    virtual void delete_pipeline(PipelineID pid);
-    virtual bool has_pipeline(PipelineID pid) const;
-    virtual bool is_pipeline_enabled(PipelineID pid) const;
+    virtual PipelinePtr pipeline(PipelineID pid) override;
+    virtual bool enable_pipeline(PipelineID pid) override;
+    virtual bool disable_pipeline(PipelineID pid) override;
+    virtual void delete_pipeline(PipelineID pid) override;
+    virtual bool has_pipeline(PipelineID pid) const override;
+    virtual bool is_pipeline_enabled(PipelineID pid) const override;
 
 protected:
     std::shared_ptr<Renderer> renderer_;

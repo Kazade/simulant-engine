@@ -1,7 +1,7 @@
 #ifndef TEST_GENERIC_TREE_H
 #define TEST_GENERIC_TREE_H
 
-#include <kaztest/kaztest.h>
+#include "kaztest/kaztest.h"
 
 #include "kglt/generic/generic_tree.h"
 

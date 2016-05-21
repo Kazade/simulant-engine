@@ -1,7 +1,7 @@
 #ifndef TEST_VIRTUAL_GAMEPAD_H
 #define TEST_VIRTUAL_GAMEPAD_H
 
-#include <kaztest/kaztest.h>
+#include "kaztest/kaztest.h"
 
 #include "kglt/kglt.h"
 #include "global.h"

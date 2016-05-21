@@ -1,7 +1,7 @@
 #ifndef TEST_RENDER_CHAIN_H
 #define TEST_RENDER_CHAIN_H
 
-#include <kaztest/kaztest.h>
+#include "kaztest/kaztest.h"
 
 #include "kglt/kglt.h"
 #include "global.h"
