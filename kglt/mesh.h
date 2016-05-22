@@ -103,6 +103,8 @@ public:
     }
 
 private:
+    sig::connection material_change_connection_;
+
     Mesh* parent_;
 
     MaterialPtr material_;

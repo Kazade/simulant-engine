@@ -16,11 +16,9 @@ public:
 
     new_batcher::RenderGroup new_render_group(Renderable *renderable, MaterialPass *material_pass);
 
-    void render(
-        CameraPtr camera,
-        StagePtr stage,
-        const new_batcher::RenderGroup*,
-        const new_batcher::RenderGroup*,
+    void render(CameraPtr camera,
+        StagePtr stage, bool render_group_changed,
+        const new_batcher::RenderGroup *,
         Renderable*,
         MaterialPass*,
         new_batcher::Iteration

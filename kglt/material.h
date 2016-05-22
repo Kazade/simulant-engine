@@ -185,6 +185,8 @@ public:
     Property<MaterialPass, GPUProgramInstance> program = { this, &MaterialPass::program_ };
 
 private:
+    static std::shared_ptr<GPUProgram> default_program;
+
     Material* material_ = nullptr;
 
     std::map<std::string, float> float_uniforms_;

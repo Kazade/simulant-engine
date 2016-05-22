@@ -130,31 +130,29 @@ void RenderQueue::traverse(TraverseCallback callback, uint64_t frame_id) const {
 
     Pass pass = 0;
     for(auto& batches: batches_) {
-        MaterialPtr material;
-        MaterialPass::ptr material_pass;
         IterationType pass_iteration_type;
 
         for(auto& p: batches) {
             const RenderGroup* current_group = &p.first;
+            MaterialPtr material;
+            MaterialPass::ptr material_pass;
 
+            bool render_group_changed = true;
             p.second.each([&](uint32_t i, Renderable* renderable) {
                 if(!renderable->is_visible_in_frame(frame_id)) {
                     return;
                 }
 
-                // Only look up the material and pass if we have to (if it changed)
-                if(!material || (material->id() != renderable->material_id())) {
-                    material = stage_->material(renderable->material_id());
-                    assert(material);
+                material = stage_->material(renderable->material_id());
+                assert(material);
 
-                    material_pass = material->pass(pass);
-                    pass_iteration_type = material_pass->iteration();
-                }
+                material_pass = material->pass(pass);
+                pass_iteration_type = material_pass->iteration();
 
                 switch(pass_iteration_type) {
                     case ITERATE_N: {
                         for(Iteration i = 0; i < material_pass->max_iterations(); ++i) {
-                            callback(current_group, last_group, renderable, material_pass.get(), i);
+                            callback(render_group_changed, current_group, renderable, material_pass.get(), i);
                         }
                     }
                     break;
@@ -162,8 +160,10 @@ void RenderQueue::traverse(TraverseCallback callback, uint64_t frame_id) const {
                         assert(0 && "Not Implemented");
                     break;
                     default:
-                        callback(current_group, last_group, renderable, material_pass.get(), 0);
+                        callback(render_group_changed, current_group, renderable, material_pass.get(), 0);
                 }
+
+                render_group_changed = false;
             });
 
             last_group = current_group;

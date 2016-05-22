@@ -112,7 +112,7 @@ typedef uint32_t Iteration;
 
 class RenderQueue {
 public:
-    typedef std::function<void (const RenderGroup*, const RenderGroup*, Renderable*, MaterialPass*, Iteration)> TraverseCallback;
+    typedef std::function<void (bool, const RenderGroup*, Renderable*, MaterialPass*, Iteration)> TraverseCallback;
 
     RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory);
 

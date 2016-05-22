@@ -111,6 +111,8 @@ MaterialPass::ptr Material::pass(uint32_t index) {
     return passes_.at(index);
 }
 
+GPUProgram::ptr MaterialPass::default_program;
+
 MaterialPass::MaterialPass(Material *material):
     material_(material),
     iteration_(ITERATE_ONCE),    
@@ -121,12 +123,13 @@ MaterialPass::MaterialPass(Material *material):
     point_size_(1) {
 
     //Create and build the default GPUProgram
-    /* FIXME! Do this only once! */
-    auto gpu_program = GPUProgram::create();
-    gpu_program->set_shader_source(SHADER_TYPE_VERTEX, DEFAULT_VERT_SHADER);
-    gpu_program->set_shader_source(SHADER_TYPE_FRAGMENT, DEFAULT_FRAG_SHADER);
+    if(!default_program) {
+        default_program = GPUProgram::create();
+        default_program->set_shader_source(SHADER_TYPE_VERTEX, DEFAULT_VERT_SHADER);
+        default_program->set_shader_source(SHADER_TYPE_FRAGMENT, DEFAULT_FRAG_SHADER);
+    }
 
-    program_ = GPUProgramInstance::create(gpu_program);
+    program_ = GPUProgramInstance::create(default_program);
 }
 
 void MaterialPass::set_texture_unit(uint32_t texture_unit_id, TextureID tex) {

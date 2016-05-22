@@ -28,14 +28,14 @@ public:
             return false;
         }
 
+        if(shader_id.value() < rhs->shader_id.value()) {
+            return true;
+        }
+
         for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
             if(texture_id[i].value() < rhs->texture_id[i].value()) {
                 return true;
             }
-        }
-
-        if(shader_id.value() < rhs->shader_id.value()) {
-            return true;
         }
 
         return false;
@@ -44,9 +44,13 @@ public:
 
 new_batcher::RenderGroup GenericRenderer::new_render_group(Renderable* renderable, MaterialPass *material_pass) {
     auto impl = std::make_shared<GL2RenderGroupImpl>(renderable->render_priority());
-    for(uint32_t i = 0; i < material_pass->texture_unit_count(); ++i) {
-        auto tex_id = material_pass->texture_unit(i).texture_id();
-        impl->texture_id[i] = tex_id;
+    for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
+        if(i < material_pass->texture_unit_count()) {
+            auto tex_id = material_pass->texture_unit(i).texture_id();
+            impl->texture_id[i] = tex_id;
+        } else {
+            impl->texture_id[i] = TextureID();
+        }
     }
     impl->shader_id = material_pass->program->program->id();
     return new_batcher::RenderGroup(impl);
@@ -183,42 +187,40 @@ void GenericRenderer::set_blending_mode(BlendType type) {
     }
 }
 
-void GenericRenderer::render(CameraPtr camera, StagePtr stage, const new_batcher::RenderGroup* current_group, const new_batcher::RenderGroup* last_group,
+void GenericRenderer::render(CameraPtr camera, StagePtr stage, bool render_group_changed, const new_batcher::RenderGroup* current_group,
     Renderable* renderable, MaterialPass* material_pass, new_batcher::Iteration iteration) {
-
-    static GPUProgramInstance* program_instance = nullptr;
 
     GLStateStash s2(GL_ELEMENT_ARRAY_BUFFER_BINDING);
     GLStateStash s3(GL_ARRAY_BUFFER_BINDING);
 
     // Casting blindly because I can't see how it's possible that it's anything else!
-    GL2RenderGroupImpl* last = (last_group) ? (GL2RenderGroupImpl*) last_group->impl() : nullptr;
     GL2RenderGroupImpl* current = (GL2RenderGroupImpl*) current_group->impl();
 
-    for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
-        if(!last || last->texture_id[i] != current->texture_id[i]) {
+    static ShaderID last_shader_id;
+
+    if(render_group_changed) {
+        for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
             GLCheck(glActiveTexture, GL_TEXTURE0 + i);
-            if(current->texture_id[i]) {
+            if(i < material_pass->texture_unit_count()) {
                 auto texture = stage->texture(current->texture_id[i]);
                 GLCheck(glBindTexture, GL_TEXTURE_2D, texture->gl_tex());
             } else {
                 GLCheck(glBindTexture, GL_TEXTURE_2D, 0);
             }
         }
+
+        if(material_pass->program->program->id() != last_shader_id) {
+            material_pass->program->program->build();
+            material_pass->program->program->activate();
+
+            last_shader_id = material_pass->program->program->id();
+        }
     }
 
-    // Active the shader if it changed since last time
-    if(!last || program_instance->program->id() != current->shader_id) {
-        program_instance = material_pass->program.get();
-        program_instance->program->build();
-        program_instance->program->activate();
-        assert(program_instance);
-    }
-
-    assert(program_instance);
+    auto& program_instance = material_pass->program;
     auto& program = program_instance->program;
 
-    set_auto_uniforms_on_shader(program_instance, camera, renderable, stage->ambient_light());
+    set_auto_uniforms_on_shader(program_instance.get(), camera, renderable, stage->ambient_light());
 
     for(auto attribute: SHADER_AVAILABLE_ATTRS) {
         if(program_instance->attributes->uses_auto(attribute)) {

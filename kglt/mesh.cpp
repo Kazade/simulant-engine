@@ -524,6 +524,16 @@ void SubMesh::set_material_id(MaterialID mat) {
     if(mat) {
         // Set the material, store the shared_ptr to increment the ref count
         material_ = parent_->resource_manager().material(mat);
+        material_change_connection_ = material_->signal_material_pass_changed().connect(
+            [=](MaterialID, MaterialPassChangeEvent evt) {
+                /* FIXME: This is a hack! We want material_changed event to take some kind of event
+                 * structure so we can signal different types of event changes. Here we are signaling that
+                 * the material passes changed so the material itself changed - not that it we changed from
+                 * one material to another. Still, we need to make sure that we trigger the signal so that the
+                 * render queue updates. */
+                signal_material_changed_(this, material_->id(), material_->id());
+            }
+        );
     } else {
         // Reset the material
         material_.reset();
