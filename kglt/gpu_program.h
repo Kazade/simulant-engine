@@ -98,6 +98,8 @@ namespace std {
     };
 }
 
+class ShaderTest;
+
 namespace kglt {
 
 const std::set<ShaderAvailableAuto> SHADER_AVAILABLE_AUTOS = {
@@ -223,7 +225,7 @@ class GPUProgram:
     public generic::Identifiable<ShaderID> {
 
 public:
-    GPUProgram();
+    GPUProgram(const std::string& vertex_source, const std::string& fragment_source);
     GPUProgram(const GPUProgram&) = delete;
     GPUProgram& operator=(const GPUProgram&) = delete;
 
@@ -232,7 +234,7 @@ public:
 
     const bool is_current() const;
     void activate();
-    void set_shader_source(ShaderType type, const unicode& source);
+
     const bool is_complete() const;
     const bool is_compiled(ShaderType type) const;
 
@@ -247,7 +249,7 @@ public:
     struct ShaderInfo {
         uint32_t object = 0;
         bool is_compiled = false;
-        unicode source;
+        std::string source;
     };
 
     const std::unordered_map<ShaderType, ShaderInfo> shader_infos() const { return shaders_; }
@@ -281,16 +283,19 @@ public:
 
     GLuint program_object() const { return program_object_; }
 private:
+    friend class ::ShaderTest;
+
     std::unordered_map<unicode, UniformInfo> uniform_info_;
     void prepare_program();
     void rebuild_uniform_info();
+    void set_shader_source(ShaderType type, const std::string &source);
 
     bool is_linked_ = false;
     bool needs_relink_ = false;
 
     uint32_t program_object_ = 0;
     std::unordered_map<ShaderType, ShaderInfo> shaders_;
-    std::unordered_map<ShaderType, unicode> shader_hashes_;
+    std::unordered_map<ShaderType, std::string> shader_hashes_;
 
     ProgramLinkedSignal signal_linked_;
     ShaderCompiledSignal signal_shader_compiled_;
@@ -323,6 +328,13 @@ public:
 
     // Internal, used for cloning program instances
     GPUProgram::ptr _program_as_shared_ptr() { return program_; }
+
+    void set_gpu_program(GPUProgram::ptr new_program) {
+        program_ = new_program;
+        uniforms_.program_ = program_.get();
+        attributes_.program_ = program_.get();
+    }
+
 private:
     friend class UniformManager;
     friend class AttributeManager;

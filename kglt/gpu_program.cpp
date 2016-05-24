@@ -139,9 +139,13 @@ void AttributeManager::register_auto(ShaderAvailableAttributes attr, const std::
 //===================== END ATTRIBS ========================================
 
 
-GPUProgram::GPUProgram():
+GPUProgram::GPUProgram(const std::string &vertex_source, const std::string &fragment_source):
     generic::Identifiable<ShaderID>(ShaderID(++shader_id_counter_)),
-    program_object_(0) {}
+    program_object_(0) {
+
+    set_shader_source(SHADER_TYPE_VERTEX, vertex_source);
+    set_shader_source(SHADER_TYPE_FRAGMENT, fragment_source);
+}
 
 GLint GPUProgram::locate_attribute(const std::string &attribute) {
     if(!is_complete()) {
@@ -237,7 +241,7 @@ GLenum shader_type_to_glenum(ShaderType type) {
     }
 }
 
-void GPUProgram::set_shader_source(ShaderType type, const unicode& source) {
+void GPUProgram::set_shader_source(ShaderType type, const std::string& source) {
     if(source.empty()) {
         throw ValueError("Tried to set shader source to an empty string");
     }
@@ -266,7 +270,7 @@ void GPUProgram::set_shader_source(ShaderType type, const unicode& source) {
 
     is_linked_ = false; //We're no longer linked
     shaders_[type] = new_shader;
-    shader_hashes_[type] = hashlib::MD5(source.encode()).hex_digest();
+    shader_hashes_[type] = hashlib::MD5(source).hex_digest();
     rebuild_hash();
 }
 
@@ -283,7 +287,7 @@ void GPUProgram::compile(ShaderType type) {
 
     assert(info.object); //Make sure we have a shader object
 
-    std::string encoded_string = info.source.encode();
+    std::string encoded_string = info.source;
     const char* c_str = encoded_string.c_str();
     GLCheck(glShaderSource, info.object, 1, &c_str, nullptr);
     GLCheck(glCompileShader, info.object);
@@ -360,7 +364,7 @@ void GPUProgram::rebuild_hash() {
     hashlib::MD5 combined_hash;
 
     for(auto p: shader_hashes_) {
-        combined_hash.update(p.second.encode());
+        combined_hash.update(p.second);
     }
 
     md5_shader_hash_ = combined_hash.hex_digest();

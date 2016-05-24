@@ -114,15 +114,12 @@ public:
         tmp_vao_(MODIFY_REPEATEDLY_USED_FOR_RENDERING, MODIFY_REPEATEDLY_USED_FOR_RENDERING),
         window_(window) {
 
-        unicode vert_shader = window_.resource_locator->read_file("kglt/materials/ui.vert")->str();
-        unicode frag_shader = window_.resource_locator->read_file("kglt/materials/ui.frag")->str();
+        std::string vert_shader = window_.resource_locator->read_file("kglt/materials/ui.vert")->str();
+        std::string frag_shader = window_.resource_locator->read_file("kglt/materials/ui.frag")->str();
 
         L_INFO("UI shaders loaded, creating GPU program");
 
-        auto program = GPUProgram::create();
-        program->set_shader_source(SHADER_TYPE_VERTEX, vert_shader);
-        program->set_shader_source(SHADER_TYPE_FRAGMENT, frag_shader);
-
+        auto program = GPUProgram::create(vert_shader, frag_shader);
         shader_ = GPUProgramInstance::create(program);
         window.idle->run_sync(std::bind(&GPUProgram::build, program.get()));
     }

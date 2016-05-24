@@ -51,6 +51,9 @@ private:
 
     void handle_pass_set_command(Material& mat, const std::vector<unicode> &args, MaterialPass::ptr pass);
     void handle_data_block(Material& mat, const unicode &data_type, const std::vector<unicode>& lines, MaterialPass::ptr pass);
+
+    std::string current_vert_shader_;
+    std::string current_frag_shader_;
 };
 
 namespace loaders {

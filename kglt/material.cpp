@@ -17,7 +17,7 @@ const std::string Material::BuiltIns::TEXTURE_WITH_LIGHTMAP = "kglt/materials/op
 const std::string Material::BuiltIns::TEXTURE_WITH_LIGHTMAP_AND_LIGHTING = "kglt/materials/opengl-2.x/texture_with_lightmap_and_lighting.kglm";
 const std::string Material::BuiltIns::MULTITEXTURE2_MODULATE_WITH_LIGHTING = "kglt/materials/opengl-2.x/multitexture2_modulate_with_lighting.kglm";
 
-static const unicode DEFAULT_VERT_SHADER = R"(
+static const std::string DEFAULT_VERT_SHADER = R"(
     attribute vec3 vertex_position;
     attribute vec4 vertex_diffuse;
 
@@ -31,7 +31,7 @@ static const unicode DEFAULT_VERT_SHADER = R"(
     }
 )";
 
-static const unicode DEFAULT_FRAG_SHADER = R"(
+static const std::string DEFAULT_FRAG_SHADER = R"(
     varying vec4 diffuse;
     void main() {
         gl_FragColor = diffuse;
@@ -124,9 +124,7 @@ MaterialPass::MaterialPass(Material *material):
 
     //Create and build the default GPUProgram
     if(!default_program) {
-        default_program = GPUProgram::create();
-        default_program->set_shader_source(SHADER_TYPE_VERTEX, DEFAULT_VERT_SHADER);
-        default_program->set_shader_source(SHADER_TYPE_FRAGMENT, DEFAULT_FRAG_SHADER);
+        default_program = GPUProgram::create(DEFAULT_VERT_SHADER, DEFAULT_FRAG_SHADER);
     }
 
     program_ = GPUProgramInstance::create(default_program);

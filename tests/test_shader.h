@@ -11,15 +11,12 @@
 class ShaderTest : public KGLTTestCase {
 public:
     void test_shader() {
-        kglt::GPUProgram::ptr prog = kglt::GPUProgram::create();
+        kglt::GPUProgram::ptr prog = kglt::GPUProgram::create(
+            "uniform vec3 c; attribute vec3 tns; void main(){ gl_Position = vec4(c, tns.x); }",
+            "void main(){ gl_FragColor = vec4(1.0); }"
+        );
         kglt::GPUProgramInstance::ptr s = kglt::GPUProgramInstance::create(prog);
-
         kglt::Mat4 ident;
-
-        assert_false(s->program->is_complete());
-
-        s->program->set_shader_source(kglt::SHADER_TYPE_VERTEX, "uniform vec3 c; attribute vec3 tns; void main(){ gl_Position = vec4(c, tns.x); }");
-        s->program->set_shader_source(kglt::SHADER_TYPE_FRAGMENT, "void main(){ gl_FragColor = vec4(1.0); }");
 
         assert_false(s->program->is_compiled(kglt::SHADER_TYPE_VERTEX));
         assert_false(s->program->is_compiled(kglt::SHADER_TYPE_FRAGMENT));
