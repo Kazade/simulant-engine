@@ -38,7 +38,6 @@ WindowBase::WindowBase():
     WindowHolder(this),
     ResourceManager(this),
     Source(this),
-    BackgroundManager(this),
     StageManager(this),
     UIStageManager(this),    
     CameraManager(this),
@@ -53,7 +52,8 @@ WindowBase::WindowBase():
     frame_counter_frames_(0),
     frame_time_in_milliseconds_(0),
     total_time_(0),
-    debug_service_(new DebugService(this)) {
+    debug_service_(new DebugService(this)),
+    background_manager_(new BackgroundManager(this)) {
 
     ktiGenTimers(1, &fixed_timer_);
     ktiBindTimer(fixed_timer_);
@@ -72,6 +72,7 @@ WindowBase::~WindowBase() {
     loading_.reset();
     message_bar_.reset();
     watcher_.reset();
+    background_manager_.reset();
     render_sequence_.reset();
 
     Sound::shutdown_openal();
@@ -219,7 +220,7 @@ void WindowBase::update(double dt) {
         //it's still accessible through get_deltatime if the user needs it
     }
 
-    BackgroundManager::update(dt);
+    background_manager_->update(dt);
     StageManager::update(dt);
 }
 
@@ -429,7 +430,7 @@ void WindowBase::reset() {
     CameraManager::manager_delete_all();
     UIStageManager::manager_delete_all();
     StageManager::manager_delete_all();
-    BackgroundManager::manager_delete_all();
+    background_manager_.reset(new BackgroundManager(this));
 
     create_defaults();
 }

@@ -16,6 +16,7 @@ class BackgroundManager:
 
 public:
     BackgroundManager(WindowBase* window);
+    ~BackgroundManager();
 
     BackgroundID new_background();
     BackgroundID new_background_from_file(const unicode& filename, float scroll_x=0.0, float scroll_y=0.0);

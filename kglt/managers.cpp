@@ -19,6 +19,13 @@ BackgroundManager::BackgroundManager(WindowBase* window):
 
 }
 
+BackgroundManager::~BackgroundManager() {
+    auto objects = BackgroundManager::__objects();
+    for(auto background_pair: objects) {
+        delete_background(background_pair.first);
+    }
+}
+
 void BackgroundManager::update(double dt) {
     //Update the backgrounds
     for(auto background_pair: BackgroundManager::__objects()) {
