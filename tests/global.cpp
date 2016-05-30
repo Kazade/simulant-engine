@@ -1,3 +1,3 @@
 #include "global.h"
 
-kglt::Window::ptr window;
+kglt::SDL2Window::ptr window;

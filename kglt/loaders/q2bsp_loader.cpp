@@ -8,7 +8,7 @@
 #include <kazbase/logging.h>
 #include <kazbase/unicode.h>
 
-#include "../window.h"
+#include "../sdl2_window.h"
 #include "../stage.h"
 #include "../mesh.h"
 #include "../types.h"

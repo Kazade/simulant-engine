@@ -87,8 +87,8 @@ kglt/texture.h
 kglt/types.h
 kglt/viewport.cpp
 kglt/viewport.h
-kglt/window.cpp
-kglt/window.h
+kglt/sdl2_window.cpp
+kglt/sdl2_window.h
 kglt/window_base.cpp
 kglt/window_base.h
 samples/2d_sample.cpp

@@ -4,7 +4,7 @@
 #include "utils/gl_error.h"
 #include "kazbase/unicode.h"
 #include "input_controller.h"
-#include "window.h"
+#include "sdl2_window.h"
 
 #ifdef KGLT_GL_VERSION_1X
 #include "renderers/gl1x/renderer.h"
@@ -14,27 +14,27 @@
 
 namespace kglt {
 
-Window::Window():
+SDL2Window::SDL2Window():
     WindowHolder(this),
     ResourceManager(this) {
 
 }
 
-Window::~Window() {
+SDL2Window::~SDL2Window() {
     SDL_GL_DeleteContext(context_);
 }
 
-void Window::set_title(const std::string& title) {
+void SDL2Window::set_title(const std::string& title) {
     if(screen_) {
         SDL_SetWindowTitle(screen_, title.c_str());
     }
 }
 
-void Window::show_cursor(bool value) {
+void SDL2Window::show_cursor(bool value) {
 	SDL_ShowCursor(value);
 }
 
-void Window::cursor_position(int32_t& mouse_x, int32_t& mouse_y) {
+void SDL2Window::cursor_position(int32_t& mouse_x, int32_t& mouse_y) {
 	SDL_GetMouseState(&mouse_x, &mouse_y);
 }
 
@@ -42,7 +42,7 @@ int event_filter(void* user_data, SDL_Event* event) {
     /*
      *  This event filter is for Android, e.g. when someone switches task
      */
-    Window* _this = (Window*) user_data;
+    SDL2Window* _this = (SDL2Window*) user_data;
 
     switch(event->type) {
         case SDL_APP_TERMINATING:
@@ -86,7 +86,7 @@ int event_filter(void* user_data, SDL_Event* event) {
     return 1;
 }
 
-void Window::check_events() {
+void SDL2Window::check_events() {
     SDL_Event event;
 
     while(SDL_PollEvent(&event)) {
@@ -149,7 +149,7 @@ void Window::check_events() {
     }
 }
 
-void Window::denormalize(float x, float y, int& xout, int& yout) {
+void SDL2Window::denormalize(float x, float y, int& xout, int& yout) {
     /**
         Given normalized screen coordinates, outputs the absolute position
     */
@@ -159,7 +159,7 @@ void Window::denormalize(float x, float y, int& xout, int& yout) {
     yout = (int) (y * float(height()));
 }
 
-bool Window::create_window(int width, int height, int bpp, bool fullscreen) {
+bool SDL2Window::create_window(int width, int height, int bpp, bool fullscreen) {
     if(SDL_Init(SDL_INIT_EVERYTHING) != 0) {
         L_ERROR(_u("Unable to initialize SDL {0}").format(SDL_GetError()));
         return false;
@@ -253,7 +253,7 @@ bool Window::create_window(int width, int height, int bpp, bool fullscreen) {
     return true;
 }
 
-void Window::swap_buffers() {
+void SDL2Window::swap_buffers() {
     SDL_GL_SwapWindow(screen_);
 }
 

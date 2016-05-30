@@ -10,16 +10,16 @@ namespace kglt {
 
 int event_filter(void* user_data, SDL_Event* event);
 
-class Window :
+class SDL2Window :
     public WindowBase {
 
 public:
     static WindowBase::ptr create(Application* app, int width=640, int height=480, int bpp=0, bool fullscreen=false) {
-        return WindowBase::create<Window>(app, width, height, bpp, fullscreen);
+        return WindowBase::create<SDL2Window>(app, width, height, bpp, fullscreen);
     }
 
-    Window();
-    virtual ~Window();
+    SDL2Window();
+    virtual ~SDL2Window();
 
     void set_title(const std::string& title);
     void show_cursor(bool value=true);

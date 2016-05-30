@@ -1,7 +1,7 @@
 #include <chrono>
 #include <future>
 
-#include "window.h"
+#include "sdl2_window.h"
 #include "application.h"
 #include "screens/loading.h"
 #include "input_controller.h"
@@ -9,7 +9,7 @@
 namespace kglt {
 
 Application::Application(const unicode &title, uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen){
-    window_ = Window::create(this, width, height, bpp, fullscreen);
+    window_ = SDL2Window::create(this, width, height, bpp, fullscreen);
     routes_.reset(new ScreenManager(*window_));
 
     window_->set_title(title.encode());

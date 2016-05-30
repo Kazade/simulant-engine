@@ -2,7 +2,7 @@
 #define KGLT_MAIN_H
 
 #include "types.h"
-#include "window.h"
+#include "sdl2_window.h"
 #include "input_controller.h"
 #include "stage.h"
 #include "ui_stage.h"

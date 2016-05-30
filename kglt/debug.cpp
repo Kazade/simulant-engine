@@ -1,7 +1,7 @@
 #include "stage.h"
 #include "debug.h"
 #include "actor.h"
-#include "window.h"
+#include "sdl2_window.h"
 
 namespace kglt {
 

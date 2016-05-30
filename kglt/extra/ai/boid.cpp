@@ -1,4 +1,4 @@
-#include "../../window.h"
+#include "../../sdl2_window.h"
 #include "../../actor.h"
 
 #include "boid.h"

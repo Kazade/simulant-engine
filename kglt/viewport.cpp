@@ -2,7 +2,7 @@
 
 #include "utils/glcompat.h"
 #include "viewport.h"
-#include "window.h"
+#include "sdl2_window.h"
 #include "utils/gl_error.h"
 
 namespace kglt {
