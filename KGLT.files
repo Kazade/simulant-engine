@@ -919,3 +919,4 @@ kglt/renderers/batching/render_queue.h
 kglt/renderers/batching/render_queue.cpp
 kglt/renderers/batching/renderable.h
 tests/test_render_queue.h
+kglt/generic/algorithm.h

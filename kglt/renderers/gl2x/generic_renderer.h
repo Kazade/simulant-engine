@@ -21,6 +21,7 @@ public:
         const new_batcher::RenderGroup *,
         Renderable*,
         MaterialPass*,
+        Light*,
         new_batcher::Iteration
     ) override;
 

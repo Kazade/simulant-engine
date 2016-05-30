@@ -43,7 +43,7 @@ StagePtr RootGroup::stage() {
     return window_.stage(stage_id_);
 }
 
-LightGroupData generate_light_group_data(GPUProgramInstance* program_instance, ProtectedPtr<Light> light) {
+LightGroupData generate_light_group_data(GPUProgramInstance* program_instance, LightPtr light) {
     LightGroupData ret;
 
     auto& uniforms = program_instance->uniforms;

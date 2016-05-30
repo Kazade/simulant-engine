@@ -252,8 +252,8 @@ SpriteID Stage::new_sprite_from_file(const unicode& filename, uint32_t frame_wid
     return s;
 }
 
-ProtectedPtr<Sprite> Stage::sprite(SpriteID s) {
-    return SpriteManager::manager_get(s);
+SpritePtr Stage::sprite(SpriteID s) {
+    return SpriteManager::manager_get(s).lock();
 }
 
 bool Stage::has_sprite(SpriteID s) const {
@@ -303,8 +303,8 @@ LightID Stage::new_light(MoveableObject &parent, LightType type) {
     return lid;
 }
 
-ProtectedPtr<Light> Stage::light(LightID light_id) {
-    return ProtectedPtr<Light>(LightManager::manager_get(light_id));
+LightPtr Stage::light(LightID light_id) {
+    return LightManager::manager_get(light_id).lock();
 }
 
 void Stage::delete_light(LightID light_id) {

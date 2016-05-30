@@ -32,7 +32,7 @@ public:
     }
 
     void set_parent(SpriteID sprite) {
-        T::set_parent(T::stage->sprite(sprite).__object.get());
+        T::set_parent(T::stage->sprite(sprite).get());
     }
 
     void set_parent(BackgroundID background) {

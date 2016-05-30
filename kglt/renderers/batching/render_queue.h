@@ -8,6 +8,7 @@ namespace kglt {
 class MaterialPass;
 class Renderer;
 class Renderable;
+class Light;
 
 namespace new_batcher {
 
@@ -112,7 +113,7 @@ typedef uint32_t Iteration;
 
 class RenderQueue {
 public:
-    typedef std::function<void (bool, const RenderGroup*, Renderable*, MaterialPass*, Iteration)> TraverseCallback;
+    typedef std::function<void (bool, const RenderGroup*, Renderable*, MaterialPass*, Light*, Iteration)> TraverseCallback;
 
     RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory);
 

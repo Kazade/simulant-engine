@@ -37,12 +37,21 @@ public:
         last_visible_frame_id_ = frame_id;
     }
 
-    bool is_visible_in_frame(uint64_t frame_id) {
+    bool is_visible_in_frame(uint64_t frame_id) const {
         return frame_id == last_visible_frame_id_;
+    }
+
+    void set_affected_by_lights(std::vector<LightPtr> lights) {
+        lights_affecting_this_frame_ = lights;
+    }
+
+    std::vector<LightPtr> lights_affecting_this_frame() const {
+        return lights_affecting_this_frame_;
     }
 
 private:
     uint64_t last_visible_frame_id_ = 0;
+    std::vector<LightPtr> lights_affecting_this_frame_;
 };
 
 typedef std::shared_ptr<Renderable> RenderablePtr;

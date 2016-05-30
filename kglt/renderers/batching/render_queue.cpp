@@ -126,8 +126,6 @@ void RenderQueue::remove_renderable(Renderable* renderable) {
 }
 
 void RenderQueue::traverse(TraverseCallback callback, uint64_t frame_id) const {
-    const RenderGroup* last_group = nullptr;
-
     Pass pass = 0;
     for(auto& batches: batches_) {
         IterationType pass_iteration_type;
@@ -149,24 +147,33 @@ void RenderQueue::traverse(TraverseCallback callback, uint64_t frame_id) const {
                 material_pass = material->pass(pass);
                 pass_iteration_type = material_pass->iteration();
 
-                switch(pass_iteration_type) {
-                    case ITERATE_N: {
-                        for(Iteration i = 0; i < material_pass->max_iterations(); ++i) {
-                            callback(render_group_changed, current_group, renderable, material_pass.get(), i);
-                        }
+                uint32_t iterations = 1;
+
+
+                std::vector<LightPtr> lights;
+
+                if(pass_iteration_type == ITERATE_N) {
+                    iterations = material_pass->max_iterations();
+                } else if(pass_iteration_type == ITERATE_ONCE_PER_LIGHT) {
+                    // Get any lights which are visible and affecting the renderable this frame
+                    lights = renderable->lights_affecting_this_frame();
+                    iterations = lights.size();
+                }
+
+                Light* light = nullptr;
+                for(Iteration i = 0; i < iterations; ++i) {
+                    // Pass down the light if necessary, otherwise just pass nullptr
+                    if(!lights.empty()) {
+                        light = lights[i].get();
+                    } else {
+                        light = nullptr;
                     }
-                    break;
-                    case ITERATE_ONCE_PER_LIGHT:
-                        assert(0 && "Not Implemented");
-                    break;
-                    default:
-                        callback(render_group_changed, current_group, renderable, material_pass.get(), 0);
+
+                    callback(render_group_changed, current_group, renderable, material_pass.get(), light, i);
                 }
 
                 render_group_changed = false;
             });
-
-            last_group = current_group;
         }
         ++pass;
     }

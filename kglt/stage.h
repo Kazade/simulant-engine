@@ -108,14 +108,14 @@ public:
         uint32_t margin=0, uint32_t spacing=0,
         std::pair<uint32_t, uint32_t> padding=std::make_pair(0, 0)
     );
-    ProtectedPtr<Sprite> sprite(SpriteID s);
+    SpritePtr sprite(SpriteID s);
     bool has_sprite(SpriteID s) const;
     void delete_sprite(SpriteID s);
     uint32_t sprite_count() const;
 
     LightID new_light(LightType type=LIGHT_TYPE_POINT);
     LightID new_light(MoveableObject& parent, LightType type=LIGHT_TYPE_POINT);
-    ProtectedPtr<Light> light(LightID light);
+    LightPtr light(LightID light);
     void delete_light(LightID light_id);
     uint32_t light_count() const { return LightManager::manager_count(); }
 

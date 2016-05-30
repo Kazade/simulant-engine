@@ -429,6 +429,10 @@ struct AABB : public kmAABB3 {
     bool intersects(const AABB& other) const {
         return kmAABB3IntersectsAABB(this, &other);
     }
+
+    Vec3 centre() const {
+        return Vec3(min) + ((Vec3(max) - Vec3(min)) * 0.5f);
+    }
 };
 
 std::ostream& operator<<(std::ostream& stream, const Vec2& vec);
@@ -635,7 +639,7 @@ class ParticleSystem;
 typedef ProtectedPtr<ParticleSystem> ParticleSystemPtr;
 
 class Sprite;
-typedef ProtectedPtr<Sprite> SpritePtr;
+typedef std::shared_ptr<Sprite> SpritePtr;
 
 class Light;
 typedef std::shared_ptr<Light> LightPtr;

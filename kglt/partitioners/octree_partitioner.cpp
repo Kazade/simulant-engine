@@ -181,7 +181,7 @@ void OctreePartitioner::remove_actor(ActorID obj) {
 void OctreePartitioner::add_light(LightID obj) {
     //FIXME: THis is nasty and dangerous
     auto light = stage->light(obj);
-    BoundableEntity* boundable = light.__object.get();
+    BoundableEntity* boundable = light.get();
     assert(boundable);
     tree_.grow(boundable);
     boundable_to_light_[boundable] = obj;
@@ -189,7 +189,7 @@ void OctreePartitioner::add_light(LightID obj) {
 
 void OctreePartitioner::remove_light(LightID obj) {
     auto light = stage->light(obj);
-    BoundableEntity* boundable = light.__object.get();
+    BoundableEntity* boundable = light.get();
     assert(boundable);
     tree_.shrink(boundable);
     boundable_to_light_.erase(boundable);

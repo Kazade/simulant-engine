@@ -188,7 +188,7 @@ void GenericRenderer::set_blending_mode(BlendType type) {
 }
 
 void GenericRenderer::render(CameraPtr camera, StagePtr stage, bool render_group_changed, const new_batcher::RenderGroup* current_group,
-    Renderable* renderable, MaterialPass* material_pass, new_batcher::Iteration iteration) {
+    Renderable* renderable, MaterialPass* material_pass, Light* light, new_batcher::Iteration iteration) {
 
     GLStateStash s2(GL_ELEMENT_ARRAY_BUFFER_BINDING);
     GLStateStash s3(GL_ARRAY_BUFFER_BINDING);
@@ -198,7 +198,7 @@ void GenericRenderer::render(CameraPtr camera, StagePtr stage, bool render_group
 
     static ShaderID last_shader_id;
 
-    if(render_group_changed) {
+    if(render_group_changed) {       
         for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
             GLCheck(glActiveTexture, GL_TEXTURE0 + i);
             if(i < material_pass->texture_unit_count()) {

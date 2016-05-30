@@ -1,6 +1,7 @@
 #include "utils/glcompat.h"
 #include <unordered_map>
 
+#include "generic/algorithm.h"
 #include "utils/gl_error.h"
 #include "render_sequence.h"
 #include "stage.h"
@@ -273,18 +274,48 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
     } else {
         auto stage = window->stage(stage_id);
 
+        auto light_ids = stage->partitioner->lights_visible_from(camera_id);
+        auto lights_visible = map<decltype(light_ids), std::vector<LightPtr>>(
+            light_ids, [&](const LightID& light_id) -> LightPtr { return stage->light(light_id); }
+        );
+
         // Mark the visible objects as visible
         for(auto& renderable: stage->partitioner->geometry_visible_from(camera_id)) {
-            if(renderable->is_visible()) {
-                renderable->update_last_visible_frame_id(frame_id);
+            if(!renderable->is_visible()) {
+                continue;
+
             }
+
+            renderable->update_last_visible_frame_id(frame_id);
+
+            auto renderable_lights = filter(lights_visible, [=](const LightPtr& light) -> bool {
+                // Filter by whether or not the renderable bounds intersects the light bounds
+                return renderable->aabb().intersects(light->aabb());
+            });
+
+            std::partial_sort(
+                renderable_lights.begin(),
+                renderable_lights.begin() + std::min(MAX_LIGHTS_PER_RENDERABLE, (uint32_t) renderable_lights.size()),
+                renderable_lights.end(),
+                [=](LightPtr lhs, LightPtr rhs) {
+                    /* FIXME: Sorting by the centre point is problematic. A renderable is made up
+                     * of many polygons, by choosing the light closest to the center you may find that
+                     * that polygons far away from the center aren't effected by lights when they should be.
+                     * This needs more thought, probably. */
+                    float lhs_dist = (renderable->centre() - lhs->position()).length_squared();
+                    float rhs_dist = (renderable->centre() - rhs->position()).length_squared();
+                    return lhs_dist < rhs_dist;
+                }
+            );
+
+            renderable->set_affected_by_lights(renderable_lights);
         }
 
         using namespace std::placeholders;
         auto camera = window->camera(camera_id);
 
         new_batcher::RenderQueue::TraverseCallback callback = std::bind(
-            &Renderer::render, renderer_, camera, stage, _1, _2, _3, _4, _5
+            &Renderer::render, renderer_, camera, stage, _1, _2, _3, _4, _5, _6
         );
 
         // Render the visible objects
