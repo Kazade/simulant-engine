@@ -18,8 +18,6 @@ ADD_EXECUTABLE(combined_sample_1 combined_sample_1.cpp)
 ADD_EXECUTABLE(light_sample light_sample.cpp)
 ADD_EXECUTABLE(flightsim flightsim.cpp)
 ADD_EXECUTABLE(joypad_sample joypad_sample.cpp)
-ADD_EXECUTABLE(path_following path_following.cpp)
-ADD_EXECUTABLE(seek_sample seek_sample.cpp)
 ADD_EXECUTABLE(rtt_sample rtt_sample.cpp)
 ADD_EXECUTABLE(q2bsp_sample q2bsp_sample.cpp)
 
