@@ -16,7 +16,7 @@
 #include "renderers/gl2x/generic_renderer.h"
 #include "loader.h"
 #include "gpu_program.h"
-#include "renderers/render_queue.h"
+
 
 namespace kglt {
 
