@@ -26,6 +26,7 @@ public:
     ) override;
 
 private:
+    void set_material_uniforms(GPUProgramInstance* program_instance, MaterialPass *pass);
     void set_auto_uniforms_on_shader(GPUProgramInstance *pass, CameraPtr camera, Renderable* subactor, const Colour &global_ambient);
     void set_auto_attributes_on_shader(Renderable &buffer);
     void set_blending_mode(BlendType type);

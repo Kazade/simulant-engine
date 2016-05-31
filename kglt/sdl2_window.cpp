@@ -183,6 +183,9 @@ bool SDL2Window::create_window(int width, int height, int bpp, bool fullscreen) 
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
+
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 #elif __ANDROID__
     renderer_ = std::make_shared<GenericRenderer>(this);
 
@@ -228,11 +231,13 @@ bool SDL2Window::create_window(int width, int height, int bpp, bool fullscreen) 
     set_has_context(true); //Mark that we have a valid GL context
 
 #ifndef __ANDROID__
+#ifdef KGLT_GL_VERSION_2X
     glewExperimental = true;
     GLenum err = glewInit();
     glGetError(); //Sigh, sets this regardless
     assert(err == GLEW_OK);
     assert(GLEW_VERSION_3_1);
+#endif
 #endif
     //Reset the width and height to whatever was actually created
     SDL_GetWindowSize(screen_, &width, &height);

@@ -56,6 +56,43 @@ new_batcher::RenderGroup GenericRenderer::new_render_group(Renderable* renderabl
     return new_batcher::RenderGroup(impl);
 }
 
+
+void GenericRenderer::set_material_uniforms(GPUProgramInstance* program_instance, MaterialPass* pass) {
+    auto& uniforms = program_instance->uniforms;
+    auto& program = program_instance->program;
+
+    if(uniforms->uses_auto(SP_AUTO_MATERIAL_AMBIENT)) {
+        auto varname = uniforms->auto_variable_name(SP_AUTO_MATERIAL_AMBIENT);
+        program->set_uniform_colour(varname, pass->ambient());
+    }
+
+    if(uniforms->uses_auto(SP_AUTO_MATERIAL_DIFFUSE)) {
+        auto varname = uniforms->auto_variable_name(SP_AUTO_MATERIAL_DIFFUSE);
+        program->set_uniform_colour(varname, pass->diffuse());
+    }
+
+    if(uniforms->uses_auto(SP_AUTO_MATERIAL_SPECULAR)) {
+        auto varname = uniforms->auto_variable_name(SP_AUTO_MATERIAL_SPECULAR);
+        program->set_uniform_colour(varname, pass->specular());
+    }
+
+    if(uniforms->uses_auto(SP_AUTO_MATERIAL_SHININESS)) {
+        auto varname = uniforms->auto_variable_name(SP_AUTO_MATERIAL_SHININESS);
+        program->set_uniform_float(varname, pass->shininess());
+    }
+
+    if(uniforms->uses_auto(SP_AUTO_MATERIAL_POINT_SIZE)) {
+        auto varname = uniforms->auto_variable_name(SP_AUTO_MATERIAL_POINT_SIZE);
+        program->set_uniform_float(varname, pass->point_size());
+    }
+
+    if(uniforms->uses_auto(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS)) {
+        auto varname = uniforms->auto_variable_name(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS);
+        program->set_uniform_int(varname, pass->texture_unit_count());
+    }
+
+}
+
 /*
  * FIXME: Stupid argument ordering
  */
@@ -199,21 +236,21 @@ void GenericRenderer::render(CameraPtr camera, StagePtr stage, bool render_group
     static ShaderID last_shader_id;
 
     if(render_group_changed) {       
-        for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
-            GLCheck(glActiveTexture, GL_TEXTURE0 + i);
-            if(i < material_pass->texture_unit_count()) {
-                auto texture = stage->texture(current->texture_id[i]);
-                GLCheck(glBindTexture, GL_TEXTURE_2D, texture->gl_tex());
-            } else {
-                GLCheck(glBindTexture, GL_TEXTURE_2D, 0);
-            }
-        }
-
         if(material_pass->program->program->id() != last_shader_id) {
             material_pass->program->program->build();
             material_pass->program->program->activate();
 
             last_shader_id = material_pass->program->program->id();
+        }
+
+        for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
+            GLCheck(glActiveTexture, GL_TEXTURE0 + i);
+            if(current->texture_id[i]) {
+                auto texture = stage->texture(current->texture_id[i]);
+                GLCheck(glBindTexture, GL_TEXTURE_2D, texture->gl_tex());
+            } else {
+                GLCheck(glBindTexture, GL_TEXTURE_2D, 0);
+            }
         }
     }
 
@@ -221,6 +258,7 @@ void GenericRenderer::render(CameraPtr camera, StagePtr stage, bool render_group
     auto& program = program_instance->program;
 
     set_auto_uniforms_on_shader(program_instance.get(), camera, renderable, stage->ambient_light());
+    set_material_uniforms(program_instance.get(), material_pass);
 
     for(auto attribute: SHADER_AVAILABLE_ATTRS) {
         if(program_instance->attributes->uses_auto(attribute)) {
@@ -266,11 +304,6 @@ void GenericRenderer::render(CameraPtr camera, StagePtr stage, bool render_group
             throw ValueError("Invalid tex matrix index");
         }
     };
-
-    if(program_instance->uniforms->uses_auto(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS)) {
-        auto varname = program_instance->uniforms->auto_variable_name(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS);
-        program->set_uniform_int(varname, material_pass->texture_unit_count());
-    }
 
     for(uint8_t i = 0; i < material_pass->texture_unit_count(); ++i) {
         if(program_instance->uniforms->uses_auto(texture_matrix_auto(i))) {

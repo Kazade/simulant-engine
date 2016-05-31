@@ -716,7 +716,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     });
 
     //Finally, create an actor from the world mesh
-    stage->new_geom_with_mesh(mid);
+    stage->new_actor_with_mesh(mid);
 
     // Now the mesh has been attached, it can be collected
     mesh->enable_gc();
