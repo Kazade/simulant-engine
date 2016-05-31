@@ -14,10 +14,10 @@ public:
     void render(CameraPtr camera,
         StagePtr stage, bool render_group_changed,
         const new_batcher::RenderGroup *,
-        Renderable*,
-        MaterialPass*,
-        Light*,
-        new_batcher::Iteration
+        Renderable* renderable,
+        MaterialPass* material_pass,
+        Light* light,
+        new_batcher::Iteration iteration
     ) override;
 };
 
