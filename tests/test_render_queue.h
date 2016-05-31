@@ -145,6 +145,8 @@ public:
     void test_shader_grouping() {
 
     }
+#else
+    void test_shader_grouping() {}
 #endif
 
 private:

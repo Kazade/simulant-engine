@@ -6,11 +6,7 @@
 #include "input_controller.h"
 #include "sdl2_window.h"
 
-#ifdef KGLT_GL_VERSION_1X
-#include "renderers/gl1x/renderer.h"
-#else
-#include "renderers/gl2x/generic_renderer.h"
-#endif
+#include "renderers/renderer_config.h"
 
 namespace kglt {
 
