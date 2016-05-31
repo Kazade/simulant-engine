@@ -1,6 +1,15 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 PROJECT(kglt)
 
+# Set a default build type if none was specified
+IF(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  MESSAGE(STATUS "Setting CMAKE_BUILD_TYPE to 'Debug' by default. Use -DCMAKE_BUILD_TYPE=Release for a release build.")
+  SET(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build." FORCE)
+  # Set the possible values of build type for cmake-gui
+  SET_PROPERTY(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+ENDIF()
+
+
 # Set module options
 OPTION(KGLT_BUILD_TESTS "Build KGLT tests" ON)
 OPTION(KGLT_BUILD_SAMPLES "Build KGLT samples" ON)
@@ -22,9 +31,8 @@ FIND_PACKAGE(KAZMATH REQUIRED)
 FIND_PACKAGE(OpenAL REQUIRED)
 FIND_PACKAGE(TinyXML REQUIRED)
 
-ADD_DEFINITIONS("-Wall -g")
+ADD_DEFINITIONS("-Wall")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y -pthread")
-#ADD_DEFINITIONS("-DBOOST_NO_RVALUE_REFERENCES") #https://svn.boost.org/trac/boost/ticket/4521
 
 PKG_CHECK_MODULES(SDL2 sdl2 REQUIRED)
 PKG_CHECK_MODULES(GL gl REQUIRED)
