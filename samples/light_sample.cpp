@@ -78,7 +78,7 @@ private:
 class LightingSample: public kglt::Application {
 public:
     LightingSample():
-        Application("KGLT Combined Sample") {
+        Application("KGLT Light Sample") {
     }
 
 private:

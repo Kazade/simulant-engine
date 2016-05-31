@@ -56,6 +56,48 @@ new_batcher::RenderGroup GenericRenderer::new_render_group(Renderable* renderabl
     return new_batcher::RenderGroup(impl);
 }
 
+void GenericRenderer::set_light_uniforms(GPUProgramInstance *program_instance, Light *light) {
+    auto& program = program_instance->program;
+    auto& uniforms = program_instance->uniforms;
+
+    if(uniforms->uses_auto(SP_AUTO_LIGHT_POSITION)) {
+        auto varname = uniforms->auto_variable_name(SP_AUTO_LIGHT_POSITION);
+        program->set_uniform_vec4(
+            varname,
+            Vec4(light->absolute_position(), (light->type() == LIGHT_TYPE_DIRECTIONAL) ? 0.0 : 1.0)
+        );
+    }
+
+    if(uniforms->uses_auto(SP_AUTO_LIGHT_AMBIENT)) {
+        auto varname = uniforms->auto_variable_name(SP_AUTO_LIGHT_AMBIENT);
+        program->set_uniform_colour(varname, light->ambient());
+    }
+
+    if(uniforms->uses_auto(SP_AUTO_LIGHT_DIFFUSE)) {
+        auto varname = uniforms->auto_variable_name(SP_AUTO_LIGHT_DIFFUSE);
+        program->set_uniform_colour(varname, light->diffuse());
+    }
+
+    if(uniforms->uses_auto(SP_AUTO_LIGHT_SPECULAR)) {
+        auto varname = uniforms->auto_variable_name(SP_AUTO_LIGHT_SPECULAR);
+        program->set_uniform_colour(varname, light->specular());
+    }
+
+    if(uniforms->uses_auto(SP_AUTO_LIGHT_CONSTANT_ATTENUATION)) {
+        auto varname = uniforms->auto_variable_name(SP_AUTO_LIGHT_CONSTANT_ATTENUATION);
+        program->set_uniform_float(varname, light->constant_attenuation());
+    }
+
+    if(uniforms->uses_auto(SP_AUTO_LIGHT_LINEAR_ATTENUATION)) {
+        auto varname = uniforms->auto_variable_name(SP_AUTO_LIGHT_LINEAR_ATTENUATION);
+        program->set_uniform_float(varname, light->linear_attenuation());
+    }
+
+    if(uniforms->uses_auto(SP_AUTO_LIGHT_QUADRATIC_ATTENUATION)) {
+        auto varname = uniforms->auto_variable_name(SP_AUTO_LIGHT_QUADRATIC_ATTENUATION);
+        program->set_uniform_float(varname, light->quadratic_attenuation());
+    }
+}
 
 void GenericRenderer::set_material_uniforms(GPUProgramInstance* program_instance, MaterialPass* pass) {
     auto& uniforms = program_instance->uniforms;
@@ -259,6 +301,10 @@ void GenericRenderer::render(CameraPtr camera, StagePtr stage, bool render_group
 
     set_auto_uniforms_on_shader(program_instance.get(), camera, renderable, stage->ambient_light());
     set_material_uniforms(program_instance.get(), material_pass);
+
+    if(light) {
+        set_light_uniforms(program_instance.get(), light);
+    }
 
     for(auto attribute: SHADER_AVAILABLE_ATTRS) {
         if(program_instance->attributes->uses_auto(attribute)) {
