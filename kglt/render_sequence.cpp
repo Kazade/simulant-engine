@@ -314,7 +314,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
         using namespace std::placeholders;
         auto camera = window->camera(camera_id);
 
-        new_batcher::RenderQueue::TraverseCallback callback = std::bind(
+        batcher::RenderQueue::TraverseCallback callback = std::bind(
             &Renderer::render, renderer_, camera, stage, _1, _2, _3, _4, _5, _6
         );
 

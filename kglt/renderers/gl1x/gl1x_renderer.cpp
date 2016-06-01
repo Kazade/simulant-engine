@@ -3,10 +3,10 @@
 
 namespace kglt {
 
-class GL1RenderGroupImpl: public new_batcher::RenderGroupImpl {
+class GL1RenderGroupImpl: public batcher::RenderGroupImpl {
 public:
     GL1RenderGroupImpl(RenderPriority priority):
-        new_batcher::RenderGroupImpl(priority) {}
+        batcher::RenderGroupImpl(priority) {}
 
     TextureID texture_id[MAX_TEXTURE_UNITS] = {TextureID()};
 
@@ -27,7 +27,7 @@ public:
     }
 };
 
-new_batcher::RenderGroup GL1XRenderer::new_render_group(Renderable *renderable, MaterialPass *material_pass) {
+batcher::RenderGroup GL1XRenderer::new_render_group(Renderable *renderable, MaterialPass *material_pass) {
     auto impl = std::make_shared<GL1RenderGroupImpl>(renderable->render_priority());
 
     for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
@@ -39,7 +39,7 @@ new_batcher::RenderGroup GL1XRenderer::new_render_group(Renderable *renderable, 
         }
     }
 
-    return new_batcher::RenderGroup(impl);
+    return batcher::RenderGroup(impl);
 }
 
 void set_transformation_matrices(CameraPtr camera, Renderable* renderable) {
@@ -50,7 +50,7 @@ void set_material_properties(MaterialPass* material_pass) {
 
 }
 
-void set_light_properties(Light* light, new_batcher::Iteration iteration) {
+void set_light_properties(Light* light, batcher::Iteration iteration) {
 
 }
 
@@ -59,7 +59,7 @@ void send_geometry(Renderable* renderable) {
 }
 
 void GL1XRenderer::render(CameraPtr camera, StagePtr stage, bool render_group_changed,
-    const new_batcher::RenderGroup*, Renderable* renderable, MaterialPass* material_pass, Light* light, new_batcher::Iteration iteration) {
+    const batcher::RenderGroup*, Renderable* renderable, MaterialPass* material_pass, Light* light, batcher::Iteration iteration) {
 
     set_transformation_matrices(camera, renderable);
     set_material_properties(material_pass);

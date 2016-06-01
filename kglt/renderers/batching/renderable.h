@@ -11,7 +11,7 @@ class VertexData;
 class IndexData;
 
 class Renderable:
-    public new_batcher::BatchMember,
+    public batcher::BatchMember,
     public virtual BoundableEntity {
 
 public:

@@ -19,7 +19,7 @@ namespace kglt {
 class SubActor;
 
 class Renderer:
-    public new_batcher::RenderGroupFactory {
+    public batcher::RenderGroupFactory {
 
 public:
     typedef std::shared_ptr<Renderer> ptr;
@@ -31,7 +31,7 @@ public:
         current_stage_ = stage;
     }
 
-    virtual void render(CameraPtr camera, StagePtr stage, bool, const new_batcher::RenderGroup*, Renderable*, MaterialPass*, Light*, new_batcher::Iteration) = 0;
+    virtual void render(CameraPtr camera, StagePtr stage, bool, const batcher::RenderGroup*, Renderable*, MaterialPass*, Light*, batcher::Iteration) = 0;
 
     Property<Renderer, WindowBase> window = { this, &Renderer::window_ };
 protected:

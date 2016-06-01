@@ -13,10 +13,10 @@
 
 namespace kglt {
 
-class GL2RenderGroupImpl: public new_batcher::RenderGroupImpl {
+class GL2RenderGroupImpl: public batcher::RenderGroupImpl {
 public:
     GL2RenderGroupImpl(RenderPriority priority):
-        new_batcher::RenderGroupImpl(priority) {}
+        batcher::RenderGroupImpl(priority) {}
 
     TextureID texture_id[MAX_TEXTURE_UNITS] = {TextureID()};
     ShaderID shader_id;
@@ -42,7 +42,7 @@ public:
     }
 };
 
-new_batcher::RenderGroup GenericRenderer::new_render_group(Renderable* renderable, MaterialPass *material_pass) {
+batcher::RenderGroup GenericRenderer::new_render_group(Renderable* renderable, MaterialPass *material_pass) {
     auto impl = std::make_shared<GL2RenderGroupImpl>(renderable->render_priority());
     for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
         if(i < material_pass->texture_unit_count()) {
@@ -53,7 +53,7 @@ new_batcher::RenderGroup GenericRenderer::new_render_group(Renderable* renderabl
         }
     }
     impl->shader_id = material_pass->program->program->id();
-    return new_batcher::RenderGroup(impl);
+    return batcher::RenderGroup(impl);
 }
 
 void GenericRenderer::set_light_uniforms(GPUProgramInstance *program_instance, Light *light) {
@@ -266,8 +266,8 @@ void GenericRenderer::set_blending_mode(BlendType type) {
     }
 }
 
-void GenericRenderer::render(CameraPtr camera, StagePtr stage, bool render_group_changed, const new_batcher::RenderGroup* current_group,
-    Renderable* renderable, MaterialPass* material_pass, Light* light, new_batcher::Iteration iteration) {
+void GenericRenderer::render(CameraPtr camera, StagePtr stage, bool render_group_changed, const batcher::RenderGroup* current_group,
+    Renderable* renderable, MaterialPass* material_pass, Light* light, batcher::Iteration iteration) {
 
     GLStateStash s2(GL_ELEMENT_ARRAY_BUFFER_BINDING);
     GLStateStash s3(GL_ARRAY_BUFFER_BINDING);

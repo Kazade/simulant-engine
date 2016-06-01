@@ -14,15 +14,15 @@ public:
     GenericRenderer(WindowBase* window):
         Renderer(window) {}
 
-    new_batcher::RenderGroup new_render_group(Renderable *renderable, MaterialPass *material_pass);
+    batcher::RenderGroup new_render_group(Renderable *renderable, MaterialPass *material_pass);
 
     void render(CameraPtr camera,
         StagePtr stage, bool render_group_changed,
-        const new_batcher::RenderGroup *,
+        const batcher::RenderGroup *,
         Renderable*,
         MaterialPass*,
         Light*,
-        new_batcher::Iteration
+        batcher::Iteration
     ) override;
 
 private:

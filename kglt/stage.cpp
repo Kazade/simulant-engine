@@ -26,7 +26,7 @@ Stage::Stage(StageID id, WindowBase *parent, AvailablePartitioner partitioner):
     geom_manager_(new GeomManager()){
 
     set_partitioner(partitioner);
-    render_queue_.reset(new new_batcher::RenderQueue(this, parent->renderer.get()));
+    render_queue_.reset(new batcher::RenderQueue(this, parent->renderer.get()));
 
     ActorManager::signal_post_create().connect(std::bind(&Stage::post_create_callback<Actor, ActorID>, this, std::placeholders::_1, std::placeholders::_2));
     LightManager::signal_post_create().connect(std::bind(&Stage::post_create_callback<Light, LightID>, this, std::placeholders::_1, std::placeholders::_2));    

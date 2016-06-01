@@ -10,7 +10,7 @@ class Renderer;
 class Renderable;
 class Light;
 
-namespace new_batcher {
+namespace batcher {
 
 class Batch;
 

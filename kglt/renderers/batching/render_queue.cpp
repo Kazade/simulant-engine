@@ -8,7 +8,7 @@
 #include "../../partitioners/static_chunk.h"
 
 namespace kglt {
-namespace new_batcher {
+namespace batcher {
 
 RenderQueue::RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory):
     stage_(stage),
