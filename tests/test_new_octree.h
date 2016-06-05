@@ -5,32 +5,17 @@
 #include "kglt/kglt.h"
 #include "kglt/partitioners/impl/octree.h"
 
-struct NodeData {
-    uint32_t poly_count = 0;
-
-    bool is_empty() const {
-        return poly_count == 0;
-    }
-};
-
-struct Object : public kglt::Boundable {
-    Object(const kglt::Vec3& centre, float width):
-        aabb(centre, width) {}
-
-    kglt::AABB aabb;
-};
 
 class NewOctreeTest : public KGLTTestCase {
 public:
     void set_up() {
         KGLTTestCase::set_up();
-        octree_.reset(new kglt::impl::Octree<NodeData>());
+        stage_id_ = window->new_stage();
+        octree_.reset(new kglt::impl::Octree(window->stage(stage_id_)));
     }
 
     void test_initial_insert() {
-        Object obj(kglt::Vec3(0, 0, 0), 10.0);
-
-        auto octree_node = octree_->insert(&obj);
+        auto octree_node = octree_->insert_actor(actor_id_);
 
         assert_false(octree_node->has_children());
         assert_true(octree_node->is_root());
@@ -40,24 +25,26 @@ public:
         assert_close(10.0f, octree_node->diameter(), 0.001);
         assert_true(octree_node->is_empty());
 
-        assert_equal(octree_node, octree_->locate(&obj));
+        assert_equal(octree_node, octree_->locate_actor(actor_id_));
 
-        octree_node->data->poly_count = 1;
-        octree_->prune_empty_nodes();
-        assert_equal(octree_node, octree_->locate(&obj));
+        octree_->remove_actor(actor_id_);
 
-        octree_node->data->poly_count = 0;
         octree_->prune_empty_nodes();
-        assert_is_null(octree_->locate(&obj));
+        assert_equal(octree_node, octree_->locate_actor(actor_id_));
+
+        octree_->prune_empty_nodes();
+        assert_is_null(octree_->locate_actor(actor_id_));
         assert_true(octree_->is_empty());
     }
 
     void tear_down() {
+        window->delete_stage(stage_id_);
         octree_.reset();
         KGLTTestCase::tear_down();
     }
 
 private:
-    std::unique_ptr<kglt::impl::Octree<NodeData>> octree_;
-
+    std::unique_ptr<kglt::impl::Octree> octree_;
+    kglt::StageID stage_id_;
+    kglt::ActorID actor_id_;
 };

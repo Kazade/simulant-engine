@@ -18,13 +18,6 @@
 #define assert_raises(exception, func) _assert_raises<exception>((func), __FILE__, __LINE__)
 #define not_implemented() _not_implemented(__FILE__, __LINE__)
 
-bool replace(std::string& str, const std::string& from, const std::string& to) {
-    size_t start_pos = str.find(from);
-    if(start_pos == std::string::npos)
-        return false;
-    str.replace(start_pos, from.length(), to);
-    return true;
-}
 
 class StringFormatter {
 public:
@@ -67,6 +60,15 @@ public:
     std::string _do_format(uint32_t counter, const std::string& value) {
         const std::string to_replace = "{" + std::to_string(counter) + "}";
         std::string output = templ_;
+
+        auto replace = [](std::string& str, const std::string& from, const std::string& to) -> bool {
+            size_t start_pos = str.find(from);
+            if(start_pos == std::string::npos)
+                return false;
+            str.replace(start_pos, from.length(), to);
+            return true;
+        };
+
         replace(output, to_replace, value);
         return output;
     }
@@ -119,7 +121,7 @@ public:
 
     template<typename T, typename U>
     void _assert_equal(T expected, U actual, std::string file, int line) {
-        if(expected != actual) {
+        if(expected != (T) actual) {
             auto file_and_line = std::make_pair(file, line);
             throw kaztest::AssertionError(file_and_line, _F("{0} does not match {1}").format(actual, expected));
         }
