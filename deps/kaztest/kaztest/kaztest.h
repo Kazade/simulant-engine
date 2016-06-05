@@ -77,6 +77,7 @@ private:
 
 #define _F StringFormatter
 
+namespace kaztest {
 
 class AssertionError : public std::logic_error {
 public:
@@ -107,6 +108,7 @@ public:
         std::logic_error(_F("Not implemented at {0}:{1}").format(file, line)) {}
 };
 
+}
 
 class TestCase {
 public:
@@ -119,7 +121,7 @@ public:
     void _assert_equal(T expected, U actual, std::string file, int line) {
         if(expected != actual) {
             auto file_and_line = std::make_pair(file, line);
-            throw AssertionError(file_and_line, _F("{0} does not match {1}").format(actual, expected));
+            throw kaztest::AssertionError(file_and_line, _F("{0} does not match {1}").format(actual, expected));
         }
     }
 
@@ -127,7 +129,7 @@ public:
     void _assert_true(T actual, std::string file, int line) {
         if(!bool(actual)) {
             auto file_and_line = std::make_pair(file, line);
-            throw AssertionError(file_and_line, _F("{0} is not true").format(bool(actual) ? "true" : "false"));
+            throw kaztest::AssertionError(file_and_line, _F("{0} is not true").format(bool(actual) ? "true" : "false"));
         }
     }
 
@@ -135,7 +137,7 @@ public:
     void _assert_false(T actual, std::string file, int line) {
         if(bool(actual)) {
             auto file_and_line = std::make_pair(file, line);
-            throw AssertionError(file_and_line, _F("{0} is not false").format(bool(actual) ? "true" : "false"));
+            throw kaztest::AssertionError(file_and_line, _F("{0} is not false").format(bool(actual) ? "true" : "false"));
         }
     }
 
@@ -144,7 +146,7 @@ public:
         if(actual < expected - difference ||
            actual > expected + difference) {
             auto file_and_line = std::make_pair(file, line);
-            throw AssertionError(file_and_line, _F("{0} is not close enough to {1}").format(actual, expected));
+            throw kaztest::AssertionError(file_and_line, _F("{0} is not close enough to {1}").format(actual, expected));
         }
     }
 
@@ -152,7 +154,7 @@ public:
     void _assert_is_null(T* thing, std::string file, int line) {
         if(thing != nullptr) {
             auto file_and_line = std::make_pair(file, line);
-            throw AssertionError(file_and_line, "Pointer was not NULL");
+            throw kaztest::AssertionError(file_and_line, "Pointer was not NULL");
         }
     }
 
@@ -160,7 +162,7 @@ public:
     void _assert_is_not_null(T* thing, std::string file, int line) {
         if(thing == nullptr) {
             auto file_and_line = std::make_pair(file, line);
-            throw AssertionError(file_and_line, "Pointer was unexpectedly NULL");
+            throw kaztest::AssertionError(file_and_line, "Pointer was unexpectedly NULL");
         }
     }
 
@@ -169,12 +171,12 @@ public:
         try {
             func();
             auto file_and_line = std::make_pair(file, line);
-            throw AssertionError(file_and_line, _F("Expected exception ({0}) was not thrown").format(typeid(T).name()));
+            throw kaztest::AssertionError(file_and_line, _F("Expected exception ({0}) was not thrown").format(typeid(T).name()));
         } catch(T& e) {}
     }
 
     void _not_implemented(std::string file, int line) {
-        throw NotImplementedError(file, line);
+        throw kaztest::NotImplementedError(file, line);
     }
 };
 
@@ -213,7 +215,7 @@ public:
             new_tests.clear();
             new_names.clear();
 
-            for(int i = 0; i < names_.size(); ++i) {
+            for(uint32_t i = 0; i < names_.size(); ++i) {
                 if(names_[i].find(test_case) == 0) {
                     new_tests.push_back(tests_[i]);
                     new_names.push_back(names_[i]);
@@ -223,8 +225,6 @@ public:
 
         std::cout << std::endl << "Running " << new_tests.size() << " tests" << std::endl << std::endl;
 
-
-        int32_t k = 0;
         for(std::function<void ()> test: new_tests) {
             try {
                 std::string output = "    " + new_names[ran];
@@ -236,10 +236,10 @@ public:
                 std::cout << output;
                 test();
                 std::cout << "\033[32m" << "   OK   " << "\033[0m" << std::endl;
-            } catch(NotImplementedError& e) {
+            } catch(kaztest::NotImplementedError& e) {
                 std::cout << "\033[34m" << " SKIPPED" << "\033[0m" << std::endl;
                 ++skipped;
-            } catch(AssertionError& e) {
+            } catch(kaztest::AssertionError& e) {
                 std::cout << "\033[33m" << " FAILED " << "\033[0m" << std::endl;
                 std::cout << "        " << e.what() << std::endl;
                 if(!e.file.empty()) {
