@@ -33,6 +33,21 @@ bool OctreeNode::has_children() const {
     return false;
 }
 
+OctreeNode::NodeList OctreeNode::children() const {
+    NodeList ret;
+    for(uint8_t i = 0; i < 8; ++i) {
+        if(children_[i]) {
+            ret.push_back(children_[i]);
+        }
+    }
+    return ret;
+}
+
+const float OctreeNode::diameter() const {
+    return octree_->node_diameter(this);
+}
+
+
 Octree::Octree(StagePtr stage):
     stage_(stage) {
 
@@ -63,17 +78,33 @@ OctreeNode* Octree::insert_actor(ActorID actor_id) {
     auto actor = stage_->actor(actor_id);
     OctreeNode* node = get_or_create_node(actor.get());
     node->data->actor_ids_.insert(actor_id);
+    actor_lookup_.insert(std::make_pair(actor_id, node));
     return node;
+}
+
+void Octree::remove_actor(ActorID actor_id) {
+    auto node = locate_actor(actor_id);
+
+    node->data->actor_ids_.erase(actor_id);
+    actor_lookup_.erase(actor_id);
 }
 
 OctreeNode* Octree::insert_light(LightID light_id) {
     auto light = stage_->light(light_id);
     OctreeNode* node = get_or_create_node(light.get());
     node->data->light_ids_.insert(light_id);
+    light_lookup_.insert(std::make_pair(light_id, node));
     return node;
 }
 
-NodeLevel Octree::calculate_level(float radius) {
+void Octree::remove_light(LightID light_id) {
+    auto node = locate_light(light_id);
+
+    node->data->light_ids_.erase(light_id);
+    light_lookup_.erase(light_id);
+}
+
+NodeLevel Octree::calculate_level(float diameter) {
     NodeLevel level = 0;
 
     // If there is no root, then we're outside the bounds
@@ -81,25 +112,29 @@ NodeLevel Octree::calculate_level(float radius) {
         throw OutsideBoundsError();
     }
 
-    float octree_radius = node_radius(get_root());
+    float octree_diameter = get_root()->diameter();
 
     // If we're outside the root octree radius, then we're outside the bounds
-    if(radius > octree_radius) {
+    if(diameter > octree_diameter) {
         throw OutsideBoundsError();
     }
 
     // Calculate the level by dividing the root radius until
     // we hit the point that the object is smaller
-    while(radius < octree_radius) {
-        octree_radius /= 2.0f;
+    while(diameter < octree_diameter) {
+        octree_diameter /= 2.0f;
         ++level;
     }
 
     return level;
 }
 
-float Octree::node_radius(NodeType* node) {
-    return (root_width_ / (node->level() + 1)) * 0.5f;
+float Octree::node_diameter(const NodeType *node) const {
+    return (root_width_ / (node->level() + 1));
+}
+
+void Octree::prune_empty_nodes() {
+    /* FIXME: Prune empty leaf nodes */
 }
 
 OctreeNode* Octree::get_or_create_node(Boundable* boundable) {

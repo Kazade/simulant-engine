@@ -57,11 +57,8 @@ public:
     bool has_children() const;
     const float diameter() const;
 
-    NodeList immediate_children() const;
     NodeList children() const;
-    NodeList siblings() const;
-
-    OctreeNode* parent() const;
+    OctreeNode* parent() const { return parent_; }
 
     Property<OctreeNode, NodeData> data = { this, &OctreeNode::data_ };
     Property<OctreeNode, Octree> octree = { this, &OctreeNode::octree_ };
@@ -90,8 +87,8 @@ public:
     NodeType* insert_actor(ActorID actor_id);
     NodeType* insert_light(LightID light_id);
 
-    NodeType* locate_actor(ActorID actor_id);
-    NodeType* locate_light(LightID light_id);
+    NodeType* locate_actor(ActorID actor_id) { return actor_lookup_.at(actor_id); }
+    NodeType* locate_light(LightID light_id) { return light_lookup_.at(light_id); }
 
     void remove_actor(ActorID actor_id);
     void remove_light(LightID light_id);
@@ -99,20 +96,18 @@ public:
     void prune_empty_nodes();
 
     const Vec3 centre() const;
-    const float diameter() const;
+    const float diameter() const { return root_width_; }
 
-    bool is_empty() const;
+    bool is_empty() const { return levels_.empty(); }
     NodeLevel node_level(NodeType* node) const;
     NodeList nodes_at_level(NodeLevel level) const;
 
     bool has_root() const { return !levels_.empty(); }
     NodeType* get_root() const { return levels_.front().begin()->second.get(); }
 
-    float root_width() const { return root_width_; }
-
 private:    
     typedef std::size_t VectorHash;
-    typedef std::map<VectorHash, std::shared_ptr<NodeType>> LevelNodes;
+    typedef std::unordered_map<VectorHash, std::shared_ptr<NodeType>> LevelNodes;
     typedef std::vector<LevelNodes> LevelArray;
     typedef typename LevelNodes::size_type NodeIndex;
 
@@ -122,13 +117,17 @@ private:
     StagePtr stage_;
     LevelArray levels_;
 
-    NodeLevel calculate_level(float radius);
+    NodeLevel calculate_level(float diameter);
     VectorHash calculate_node_hash(NodeLevel level, const Vec3& centre) { return generate_vector_hash(centre); }
-    float node_radius(NodeType* node);
+    float node_diameter(const NodeType* node) const;
 
     NodeType* get_or_create_node(Boundable* boundable);
 
     friend class NewOctreeTest;
+    friend class OctreeNode;
+
+    std::unordered_map<ActorID, NodeType*> actor_lookup_;
+    std::unordered_map<LightID, NodeType*> light_lookup_;
 };
 
 }

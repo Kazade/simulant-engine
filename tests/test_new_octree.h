@@ -19,8 +19,7 @@ public:
 
         assert_false(octree_node->has_children());
         assert_true(octree_node->is_root());
-        assert_equal(0, octree_node->siblings().size());
-        assert_equal(0, octree_node->immediate_children().size());
+        assert_equal(0, octree_node->children().size());
         assert_is_null(octree_node->parent());
         assert_close(10.0f, octree_node->diameter(), 0.001);
         assert_true(octree_node->is_empty());
