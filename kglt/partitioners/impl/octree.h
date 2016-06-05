@@ -21,14 +21,22 @@ namespace kglt {
 namespace impl {
 
 struct NodeData : public StaticChunkHolder {
-    std::list<ActorID> actor_ids_;
-    std::list<LightID> light_ids_;
-    std::list<ParticleSystemID> particle_system_ids_;
+    std::set<ActorID> actor_ids_;
+    std::set<LightID> light_ids_;
+    std::set<ParticleSystemID> particle_system_ids_;
 
     bool is_empty() const {
         return actor_ids_.empty() && light_ids_.empty() && particle_system_ids_.empty();
     }
 };
+
+class OutsideBoundsError : public std::logic_error {
+public:
+    OutsideBoundsError():
+        std::logic_error("Object was outside the bounds of the root node") {}
+};
+
+typedef uint32_t NodeLevel;
 
 class Octree;
 
@@ -36,7 +44,7 @@ class OctreeNode {
 public:
     typedef std::list<OctreeNode*> NodeList;
 
-    OctreeNode(Octree* octree);
+    OctreeNode(Octree* octree, NodeLevel level, const Vec3 &centre);
 
     bool is_empty() const {
         return data->is_empty() && !has_children();
@@ -58,8 +66,13 @@ public:
     Property<OctreeNode, NodeData> data = { this, &OctreeNode::data_ };
     Property<OctreeNode, Octree> octree = { this, &OctreeNode::octree_ };
 
+    NodeLevel level() const { return level_; }
+    Vec3 centre() const { return centre_; }
 private:
     Octree* octree_ = nullptr;
+    NodeLevel level_ = 0;
+    Vec3 centre_;
+
     std::shared_ptr<NodeData> data_;
 
     OctreeNode* parent_ = nullptr;
@@ -69,7 +82,6 @@ private:
 
 class Octree {
 public:
-    typedef uint32_t Level;
     typedef OctreeNode NodeType;
     typedef typename OctreeNode::NodeList NodeList;
 
@@ -82,7 +94,7 @@ public:
     NodeType* locate_light(LightID light_id);
 
     void remove_actor(ActorID actor_id);
-    void remove_light(ActorID actor_id);
+    void remove_light(LightID light_id);
 
     void prune_empty_nodes();
 
@@ -90,8 +102,13 @@ public:
     const float diameter() const;
 
     bool is_empty() const;
-    Level node_level(NodeType* node) const;
-    NodeList nodes_at_level(Level level) const;
+    NodeLevel node_level(NodeType* node) const;
+    NodeList nodes_at_level(NodeLevel level) const;
+
+    bool has_root() const { return !levels_.empty(); }
+    NodeType* get_root() const { return levels_.front().begin()->second.get(); }
+
+    float root_width() const { return root_width_; }
 
 private:    
     typedef std::size_t VectorHash;
@@ -99,14 +116,19 @@ private:
     typedef std::vector<LevelNodes> LevelArray;
     typedef typename LevelNodes::size_type NodeIndex;
 
+    float root_width_ = 0.0f;
+
     VectorHash generate_vector_hash(const Vec3& vec);
     StagePtr stage_;
     LevelArray levels_;
 
-    Level calculate_level(float radius);
-    VectorHash calculate_node_hash(Level level, const Vec3& centre);
+    NodeLevel calculate_level(float radius);
+    VectorHash calculate_node_hash(NodeLevel level, const Vec3& centre) { return generate_vector_hash(centre); }
+    float node_radius(NodeType* node);
 
     NodeType* get_or_create_node(Boundable* boundable);
+
+    friend class NewOctreeTest;
 };
 
 }

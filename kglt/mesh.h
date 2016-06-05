@@ -23,7 +23,7 @@ namespace kglt {
 class ResourceManager;
 
 class MeshInterface:
-    public Boundable {
+    public virtual Boundable {
 
 public:
     virtual ~MeshInterface() {}

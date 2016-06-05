@@ -52,3 +52,4 @@ kglt/generic/lock_free
 kglt/generic/lock_free/memory
 kglt/renderers/batching
 kglt/renderers/gl1x
+deps/kaztest/kaztest
