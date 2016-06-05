@@ -414,6 +414,14 @@ struct AABB : public kmAABB3 {
         kmVec3Zero(&this->max);
     }
 
+    AABB(const Vec3& centre, float width) {
+        kmAABB3Initialize(this, &centre, width, width, width);
+    }
+
+    AABB(const Vec3& centre, float xsize, float ysize, float zsize) {
+        kmAABB3Initialize(this, &centre, xsize, ysize, zsize);
+    }
+
     const float width() const {
         return fabs(max.x - min.x);
     }
@@ -424,6 +432,10 @@ struct AABB : public kmAABB3 {
 
     const float depth() const  {
         return fabs(max.z - min.z);
+    }
+
+    const float max_dimension() const {
+        return std::max(width(), std::max(height(), depth()));
     }
 
     bool intersects(const AABB& other) const {

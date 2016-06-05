@@ -128,6 +128,8 @@ struct StaticChunkHolder {
     typedef std::shared_ptr<StaticChunkHolder> ptr;
 
     std::unordered_map<GeomID, StaticChunk::ptr> chunks;
+
+    virtual ~StaticChunkHolder() {}
 };
 
 
