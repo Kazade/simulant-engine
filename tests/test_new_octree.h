@@ -36,6 +36,35 @@ public:
         assert_true(octree_->is_empty());
     }
 
+    void test_generate_vector_hash() {
+        kglt::Vec3 v1(1, 0, 0);
+        kglt::Vec3 v2(1.00001, 0, 0);
+
+        assert_equal(octree_->generate_vector_hash(v1), octree_->generate_vector_hash(v2));
+
+        kglt::Vec3 v3(1, 1, 0);
+
+        assert_not_equal(octree_->generate_vector_hash(v1), octree_->generate_vector_hash(v3));
+    }
+
+    void test_find_node_centre_for_point() {
+        kglt::Vec3 point;
+        kglt::impl::NodeLevel level = 0;
+        assert_raises(kglt::impl::OutsideBoundsError, std::bind(&kglt::impl::Octree::find_node_centre_for_point, octree_.get(), level, point));
+    }
+
+    void test_calculate_level() {
+
+    }
+
+    void test_find_best_existing_node() {
+
+    }
+
+    void test_node_diameter() {
+
+    }
+
     void tear_down() {
         window->delete_stage(stage_id_);
         octree_.reset();

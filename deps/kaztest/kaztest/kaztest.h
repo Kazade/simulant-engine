@@ -10,6 +10,7 @@
 #include <fstream>
 
 #define assert_equal(expected, actual) _assert_equal((expected), (actual), __FILE__, __LINE__)
+#define assert_not_equal(expected, actual) _assert_not_equal((expected), (actual), __FILE__, __LINE__)
 #define assert_false(actual) _assert_false((actual), __FILE__, __LINE__)
 #define assert_true(actual) _assert_true((actual), __FILE__, __LINE__)
 #define assert_close(expected, actual, difference) _assert_close((expected), (actual), (difference), __FILE__, __LINE__)
@@ -116,7 +117,7 @@ class TestCase {
 public:
     virtual ~TestCase() {}
 
-    virtual void set_Fp() {}
+    virtual void set_up() {}
     virtual void tear_down() {}
 
     template<typename T, typename U>
@@ -124,6 +125,14 @@ public:
         if(expected != (T) actual) {
             auto file_and_line = std::make_pair(file, line);
             throw kaztest::AssertionError(file_and_line, _F("{0} does not match {1}").format(actual, expected));
+        }
+    }
+
+    template<typename T, typename U>
+    void _assert_not_equal(T lhs, U rhs, std::string file, int line) {
+        if(lhs == (T) rhs) {
+            auto file_and_line = std::make_pair(file, line);
+            throw kaztest::AssertionError(file_and_line, _F("{0} should not match {1}").format(lhs, rhs));
         }
     }
 
@@ -197,7 +206,7 @@ public:
         for(U& method: methods) {
             std::function<void()> func = std::bind(method, dynamic_cast<T*>(instance.get()));
             tests_.push_back([=]() {
-                instance->set_Fp();
+                instance->set_up();
                 func();
                 instance->tear_down();
             });

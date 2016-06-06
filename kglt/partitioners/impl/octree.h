@@ -17,6 +17,8 @@
 #include "../../generic/property.h"
 #include "../static_chunk.h"
 
+class NewOctreeTest;
+
 namespace kglt {
 namespace impl {
 
@@ -105,7 +107,10 @@ public:
     bool has_root() const { return !levels_.empty(); }
     NodeType* get_root() const { return levels_.front().begin()->second.get(); }
 
-private:    
+private:
+    friend class ::NewOctreeTest;
+    friend class OctreeNode;
+
     typedef std::size_t VectorHash;
     typedef std::unordered_map<VectorHash, std::shared_ptr<NodeType>> LevelNodes;
     typedef std::vector<LevelNodes> LevelArray;
@@ -121,10 +126,10 @@ private:
     VectorHash calculate_node_hash(NodeLevel level, const Vec3& centre) { return generate_vector_hash(centre); }
     float node_diameter(const NodeType* node) const;
 
-    NodeType* get_or_create_node(Boundable* boundable);
+    std::pair<NodeLevel, VectorHash> find_best_existing_node(const AABB& aabb);
+    Vec3 find_node_centre_for_point(NodeLevel level, const Vec3& p);
 
-    friend class NewOctreeTest;
-    friend class OctreeNode;
+    NodeType* get_or_create_node(Boundable* boundable);
 
     std::unordered_map<ActorID, NodeType*> actor_lookup_;
     std::unordered_map<LightID, NodeType*> light_lookup_;
