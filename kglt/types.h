@@ -445,6 +445,17 @@ struct AABB : public kmAABB3 {
     Vec3 centre() const {
         return Vec3(min) + ((Vec3(max) - Vec3(min)) * 0.5f);
     }
+
+    const bool has_zero_area() const {
+        /*
+         * Returns True if the AABB has two or more zero dimensions
+         */
+        bool empty_x = kmAlmostEqual(0.0, width());
+        bool empty_y = kmAlmostEqual(0.0, height());
+        bool empty_z = kmAlmostEqual(0.0, depth());
+
+        return (empty_x && empty_y) || (empty_x && empty_z) || (empty_y && empty_z);
+    }
 };
 
 std::ostream& operator<<(std::ostream& stream, const Vec2& vec);

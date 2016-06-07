@@ -11,7 +11,10 @@ public:
     void set_up() {
         KGLTTestCase::set_up();
         stage_id_ = window->new_stage();
-        octree_.reset(new kglt::impl::Octree(window->stage(stage_id_)));
+        stage_ = window->stage(stage_id_);
+
+        actor_id_ = stage_->new_actor_with_mesh(stage_->new_mesh_as_cube(1.0));
+        octree_.reset(new kglt::impl::Octree(stage_));
     }
 
     void test_initial_insert() {
@@ -34,6 +37,11 @@ public:
         octree_->prune_empty_nodes();
         assert_is_null(octree_->locate_actor(actor_id_));
         assert_true(octree_->is_empty());
+    }
+
+    void test_insert_empty_aabb() {
+        auto blank_actor = stage_->new_actor();
+        assert_raises(kglt::impl::InvalidBoundableInsertion, std::bind(&kglt::impl::Octree::insert_actor, octree_.get(), blank_actor));
     }
 
     void test_generate_vector_hash() {
@@ -75,4 +83,5 @@ private:
     std::unique_ptr<kglt::impl::Octree> octree_;
     kglt::StageID stage_id_;
     kglt::ActorID actor_id_;
+    kglt::StagePtr stage_;
 };

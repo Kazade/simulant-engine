@@ -19,6 +19,7 @@ OctreeNode::OctreeNode(Octree* octree, NodeLevel level, const Vec3& centre):
     level_(level),
     centre_(centre) {
 
+    data_.reset(new NodeData());
 }
 
 bool OctreeNode::has_children() const {
@@ -78,36 +79,46 @@ OctreeNode* Octree::insert_actor(ActorID actor_id) {
     auto actor = stage_->actor(actor_id);
     OctreeNode* node = get_or_create_node(actor.get());
 
-    // Insert into both the node, and the lookup table
-    node->data->actor_ids_.insert(actor_id);
-    actor_lookup_.insert(std::make_pair(actor_id, node));
+    if(node) {
+        // Insert into both the node, and the lookup table
+        node->data->actor_ids_.insert(actor_id);
+        actor_lookup_.insert(std::make_pair(actor_id, node));
+    }
+
     return node;
 }
 
 void Octree::remove_actor(ActorID actor_id) {
     auto node = locate_actor(actor_id);
 
-    // Remove the actor from both the node, and the lookup table
-    node->data->actor_ids_.erase(actor_id);
-    actor_lookup_.erase(actor_id);
+    if(node) {
+        // Remove the actor from both the node, and the lookup table
+        node->data->actor_ids_.erase(actor_id);
+        actor_lookup_.erase(actor_id);
+    }
 }
 
 OctreeNode* Octree::insert_light(LightID light_id) {
     auto light = stage_->light(light_id);
     OctreeNode* node = get_or_create_node(light.get());
 
-    // Insert the light id into both the node and the lookup table
-    node->data->light_ids_.insert(light_id);
-    light_lookup_.insert(std::make_pair(light_id, node));
+    if(node) {
+        // Insert the light id into both the node and the lookup table
+        node->data->light_ids_.insert(light_id);
+        light_lookup_.insert(std::make_pair(light_id, node));
+    }
+
     return node;
 }
 
 void Octree::remove_light(LightID light_id) {
     auto node = locate_light(light_id);
 
-    // Remove the light from the node and lookup table
-    node->data->light_ids_.erase(light_id);
-    light_lookup_.erase(light_id);
+    if(node) {
+        // Remove the light from the node and lookup table
+        node->data->light_ids_.erase(light_id);
+        light_lookup_.erase(light_id);
+    }
 }
 
 std::pair<NodeLevel, Octree::VectorHash> Octree::find_best_existing_node(const AABB& aabb) {
@@ -205,6 +216,10 @@ OctreeNode* Octree::get_or_create_node(Boundable* boundable) {
      */
 
     auto& aabb = boundable->aabb();
+
+    if(aabb.has_zero_area()) {
+        throw InvalidBoundableInsertion("Object has no spacial area. Cannot insert into Octree.");
+    }
 
     if(levels_.empty()) {
         // No root at all, let's just create one

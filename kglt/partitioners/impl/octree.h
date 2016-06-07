@@ -38,6 +38,12 @@ public:
         std::logic_error("Object was outside the bounds of the root node") {}
 };
 
+class InvalidBoundableInsertion : public std::logic_error {
+public:
+    InvalidBoundableInsertion(const std::string& what):
+        std::logic_error(what) {}
+};
+
 typedef uint32_t NodeLevel;
 
 class Octree;
@@ -72,7 +78,7 @@ private:
     NodeLevel level_ = 0;
     Vec3 centre_;
 
-    std::shared_ptr<NodeData> data_;
+    std::unique_ptr<NodeData> data_;
 
     OctreeNode* parent_ = nullptr;
     OctreeNode* children_[8] = { nullptr };
