@@ -129,20 +129,29 @@ std::pair<NodeLevel, Octree::VectorHash> Octree::find_best_existing_node(const A
         throw OutsideBoundsError();
     }
 
+    Octree::VectorHash hash;
+
     // Go to the max level, and gradually step down until we find an existing node
     auto final_level = max_level;
     while(final_level >= 0) {
         if(levels_.size() > final_level) {
             // We got to an existing level, let's use that!
-            break;
+
+            // OK so we have a level, now, let's work out which node this aabb belongs in
+            auto node_centre = find_node_centre_for_point(final_level, aabb.centre());
+            hash = generate_vector_hash(node_centre);
+            // Does it exist already?
+            if(levels_[final_level].count(hash)) {
+                break;
+            } else {
+                // We continue on to the next highest level
+            }
         }
 
         final_level--;
     }
 
-    // OK so we have a level, now, let's work out which node this aabb belongs in
-    auto node_centre = find_node_centre_for_point(final_level, aabb.centre());
-    return std::make_pair(final_level, generate_vector_hash(node_centre));
+    return std::make_pair(final_level, hash);
 }
 
 Vec3 Octree::find_node_centre_for_point(NodeLevel level, const Vec3& p) {

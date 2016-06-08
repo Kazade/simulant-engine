@@ -13,7 +13,7 @@ public:
         stage_id_ = window->new_stage();
         stage_ = window->stage(stage_id_);
 
-        actor_id_ = stage_->new_actor_with_mesh(stage_->new_mesh_as_cube(1.0));
+        actor_id_ = stage_->new_actor_with_mesh(stage_->new_mesh_as_cube(10.0));
         octree_.reset(new kglt::impl::Octree(stage_));
     }
 
@@ -25,7 +25,7 @@ public:
         assert_equal(0, octree_node->children().size());
         assert_is_null(octree_node->parent());
         assert_close(10.0f, octree_node->diameter(), 0.001);
-        assert_true(octree_node->is_empty());
+        assert_false(octree_node->is_empty());
 
         assert_equal(octree_node, octree_->locate_actor(actor_id_));
 
@@ -59,6 +59,18 @@ public:
         kglt::Vec3 point;
         kglt::impl::NodeLevel level = 0;
         assert_raises(kglt::impl::OutsideBoundsError, std::bind(&kglt::impl::Octree::find_node_centre_for_point, octree_.get(), level, point));
+
+        octree_->insert_actor(actor_id_);
+
+        point = kglt::Vec3(2.0, 1, 1);
+        auto ret = octree_->find_node_centre_for_point(0, point);
+        assert_equal(kglt::Vec3(), ret); // Root level is centred around 0.0
+
+        auto half_root = octree_->diameter() / 2.0;
+
+        ret = octree_->find_node_centre_for_point(1, point);
+        kglt::Vec3 expected(half_root, half_root, half_root);
+        assert_equal(expected, ret);
     }
 
     void test_calculate_level() {
