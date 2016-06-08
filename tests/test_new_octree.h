@@ -82,7 +82,11 @@ public:
     }
 
     void test_node_diameter() {
-
+        octree_->insert_actor(actor_id_);
+        assert_equal(10.0f, octree_->node_diameter(0));
+        assert_equal(5.0f, octree_->node_diameter(1));
+        assert_equal(2.5f, octree_->node_diameter(2));
+        assert_equal(1.25f, octree_->node_diameter(3));
     }
 
     void tear_down() {

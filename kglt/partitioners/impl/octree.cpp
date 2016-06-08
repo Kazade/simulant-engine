@@ -45,7 +45,7 @@ OctreeNode::NodeList OctreeNode::children() const {
 }
 
 const float OctreeNode::diameter() const {
-    return octree_->node_diameter(this);
+    return octree_->node_diameter(this->level());
 }
 
 
@@ -198,8 +198,8 @@ NodeLevel Octree::calculate_level(float diameter) {
     return level;
 }
 
-float Octree::node_diameter(const NodeType *node) const {
-    return (root_width_ / (node->level() + 1));
+float Octree::node_diameter(NodeLevel level) const {
+    return (root_width_ / std::pow(2, level));
 }
 
 void Octree::prune_empty_nodes() {

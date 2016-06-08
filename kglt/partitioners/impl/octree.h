@@ -130,7 +130,7 @@ private:
 
     NodeLevel calculate_level(float diameter);
     VectorHash calculate_node_hash(NodeLevel level, const Vec3& centre) { return generate_vector_hash(centre); }
-    float node_diameter(const NodeType* node) const;
+    float node_diameter(NodeLevel level) const; // This is the "tight" diameter, not the loose bound
 
     std::pair<NodeLevel, VectorHash> find_best_existing_node(const AABB& aabb);
     Vec3 find_node_centre_for_point(NodeLevel level, const Vec3& p);
