@@ -166,11 +166,17 @@ Vec3 Octree::find_node_centre_for_point(NodeLevel level, const Vec3& p) {
         throw OutsideBoundsError();
     }
 
-    //float level_node_diameter = node_diameter_at_level(level);
+    float step = node_diameter(level);
 
+    auto snap = [step](const float& in) -> float {
+        return step * std::round(in / step);
+    };
 
-
-
+    return Vec3(
+        snap(p.x),
+        snap(p.y),
+        snap(p.z)
+    );
 }
 
 NodeLevel Octree::calculate_level(float diameter) {
