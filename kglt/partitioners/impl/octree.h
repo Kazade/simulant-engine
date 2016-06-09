@@ -73,6 +73,8 @@ public:
 
     NodeLevel level() const { return level_; }
     Vec3 centre() const { return centre_; }
+
+    const bool contains(const Vec3& p) const;
 private:
     Octree* octree_ = nullptr;
     NodeLevel level_ = 0;

@@ -17,6 +17,16 @@ public:
         octree_.reset(new kglt::impl::Octree(stage_));
     }
 
+    void test_octreenode_contains() {
+        octree_->insert_actor(actor_id_); // Dimension is now 10,10,10
+
+        assert_true(octree_->get_root()->contains(kglt::Vec3(0, 0, 0)));
+        assert_true(octree_->get_root()->contains(kglt::Vec3(5, 0, 0)));
+        assert_false(octree_->get_root()->contains(kglt::Vec3(6, 0, 0)));
+        assert_true(octree_->get_root()->contains(kglt::Vec3(5, 5, 0)));
+        assert_false(octree_->get_root()->contains(kglt::Vec3(5, 5.1, 0)));
+    }
+
     void test_initial_insert() {
         auto octree_node = octree_->insert_actor(actor_id_);
 

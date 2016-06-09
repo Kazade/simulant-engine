@@ -22,6 +22,26 @@ OctreeNode::OctreeNode(Octree* octree, NodeLevel level, const Vec3& centre):
     data_.reset(new NodeData());
 }
 
+const bool OctreeNode::contains(const Vec3& p) const {
+    float hw = this->diameter() / 2.0;
+    float minx = centre_.x - hw;
+    float maxx = centre_.x + hw;
+
+    if(p.x < minx || p.x > maxx) return false;
+
+    float miny = centre_.y - hw;
+    float maxy = centre_.y + hw;
+
+    if(p.y < miny || p.y > maxy) return false;
+
+    float minz = centre_.z - hw;
+    float maxz = centre_.z + hw;
+
+    if(p.z < minz || p.z > maxz) return false;
+
+    return true;
+}
+
 bool OctreeNode::has_children() const {
     /*
      * We keep pointers to the octree children for performance
@@ -163,6 +183,11 @@ Vec3 Octree::find_node_centre_for_point(NodeLevel level, const Vec3& p) {
     if(is_empty()) {
         // If we have no root node, we can't calculate this - we need the root
         // node centre position to work this out
+        throw OutsideBoundsError();
+    }
+
+    if(!get_root()->contains(p)) {
+        // If we're outside the root then we need to deal with that elsewhere
         throw OutsideBoundsError();
     }
 
