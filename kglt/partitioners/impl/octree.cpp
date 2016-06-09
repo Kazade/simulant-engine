@@ -193,8 +193,8 @@ Vec3 Octree::find_node_centre_for_point(NodeLevel level, const Vec3& p) {
 
     float step = node_diameter(level);
 
-    auto snap = [step](const float& in) -> float {
-        return step * std::round(in / step);
+    auto snap = [step, level](const float& in) -> float {
+        return step * std::round(in / step) + ((level) ? step / 2.0 : 0.0) * ((in >= 0) ? 1 : -1);
     };
 
     return Vec3(

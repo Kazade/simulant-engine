@@ -84,7 +84,17 @@ public:
 
         auto quarter_root = half_root / 2.0;
         ret = octree_->find_node_centre_for_point(2, point);
-        expected = kglt::Vec3(quarter_root / 2, quarter_root / 2, quarter_root / 2);
+        expected = kglt::Vec3(3.75, quarter_root / 2, quarter_root / 2);
+        assert_equal(expected, ret);
+
+        point = kglt::Vec3(-2.0, 1, 1);
+
+        ret = octree_->find_node_centre_for_point(1, point);
+        expected = kglt::Vec3(-half_root / 2, half_root / 2, half_root / 2);
+        assert_equal(expected, ret);
+
+        ret = octree_->find_node_centre_for_point(2, point);
+        expected = kglt::Vec3(-3.75, quarter_root / 2, quarter_root / 2);
         assert_equal(expected, ret);
     }
 
