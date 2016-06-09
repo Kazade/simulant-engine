@@ -93,7 +93,16 @@ public:
     }
 
     void test_find_best_existing_node() {
+        octree_->insert_actor(actor_id_);
 
+        kglt::AABB aabb;
+        aabb.min = kglt::Vec3(-1, -1, -1);
+        aabb.max = kglt::Vec3(1, 1, 1);
+
+        auto ret = octree_->find_best_existing_node(aabb);
+
+        assert_equal(0, ret.first);
+        assert_equal(octree_->levels_[0].begin()->first, ret.second);
     }
 
     void test_node_diameter() {
