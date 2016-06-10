@@ -238,23 +238,6 @@ void Octree::prune_empty_nodes() {
 }
 
 OctreeNode* Octree::get_or_create_node(Boundable* boundable) {
-    /*
-     * This is where the magic happens!
-     *
-     * First, we check if we have a root node, if we don't we create one the same size as the AABB.
-     *
-     * Otherwise, if we have a root, but the If the AABB doesn't fit inside, we grow the tree upwards until it does.
-     *
-     * Otherwise, we work out what the maximum level is depending on the size of the AABB
-     * this is the final level where the AABB will fit.
-     *
-     * Then we work backwards from that level to find a node that contains the centre point
-     * when we find one, we check if it requires splitting. If so we divide that into 8
-     * children.
-     *
-     *
-     */
-
     auto& aabb = boundable->aabb();
 
     if(aabb.has_zero_area()) {
@@ -275,10 +258,10 @@ OctreeNode* Octree::get_or_create_node(Boundable* boundable) {
         return new_node.get();
     }
 
-    NodeLevel level = calculate_level(aabb.max_dimension());
-    VectorHash hash = calculate_node_hash(level, aabb.centre());
+    // Find the best node to insert this boundable
+    auto level_and_hash = find_best_existing_node(aabb);
 
-    return nullptr;
+    return levels_[level_and_hash.first].at(level_and_hash.second).get();
 }
 
 }

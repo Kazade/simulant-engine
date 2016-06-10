@@ -42,9 +42,6 @@ public:
         octree_->remove_actor(actor_id_);
 
         octree_->prune_empty_nodes();
-        assert_equal(octree_node, octree_->locate_actor(actor_id_));
-
-        octree_->prune_empty_nodes();
         assert_is_null(octree_->locate_actor(actor_id_));
         assert_true(octree_->is_empty());
     }

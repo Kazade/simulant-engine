@@ -97,8 +97,16 @@ public:
     NodeType* insert_actor(ActorID actor_id);
     NodeType* insert_light(LightID light_id);
 
-    NodeType* locate_actor(ActorID actor_id) { return actor_lookup_.at(actor_id); }
-    NodeType* locate_light(LightID light_id) { return light_lookup_.at(light_id); }
+    NodeType* locate_actor(ActorID actor_id) {
+        if(!actor_lookup_.count(actor_id)) return nullptr;
+
+        return actor_lookup_.at(actor_id);
+    }
+
+    NodeType* locate_light(LightID light_id) {
+        if(!light_lookup_.count(light_id)) return nullptr;
+        return light_lookup_.at(light_id);
+    }
 
     void remove_actor(ActorID actor_id);
     void remove_light(LightID light_id);
