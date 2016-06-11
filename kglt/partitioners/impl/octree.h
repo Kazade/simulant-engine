@@ -76,6 +76,9 @@ public:
     Vec3 centre() const { return centre_; }
 
     const bool contains(const Vec3& p) const;    
+
+    std::vector<Vec3> child_centres() const;
+
 private:
     Octree* octree_ = nullptr;
     NodeLevel level_ = 0;

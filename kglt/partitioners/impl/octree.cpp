@@ -51,6 +51,22 @@ const bool OctreeNode::contains(const Vec3& p) const {
     return true;
 }
 
+std::vector<Vec3> OctreeNode::child_centres() const {
+    float qw = this->diameter() / 4.0;
+
+    std::vector<Vec3> centres;
+
+    for(auto x: {-1, 1}) {
+        for(auto y: {-1, 1}) {
+            for(auto z: {-1, 1}) {
+                centres.push_back(this->centre() + Vec3(x * qw, y * qw, z * qw));
+            }
+        }
+    }
+
+    return centres;
+}
+
 bool OctreeNode::has_children() const {
     /*
      * We keep pointers to the octree children for performance

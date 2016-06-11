@@ -17,6 +17,7 @@
 #define assert_is_null(actual) _assert_is_null((actual), __FILE__, __LINE__)
 #define assert_is_not_null(actual) _assert_is_not_null((actual), __FILE__, __LINE__)
 #define assert_raises(exception, func) _assert_raises<exception>((func), __FILE__, __LINE__)
+#define assert_items_equal(expected, actual) _assert_items_equal((actual), (expected), __FILE__, __LINE__)
 #define not_implemented() _not_implemented(__FILE__, __LINE__)
 
 
@@ -76,6 +77,39 @@ public:
 
 private:
     std::string templ_;
+};
+
+class StringSplitter {
+public:
+    StringSplitter(const std::string& str):
+        str_(str) {
+
+    }
+
+    std::vector<std::string> split() {
+        std::vector<std::string> result;
+        std::string buffer;
+
+        for(auto c: str_) {
+            if(c == '\r' || c == '\n') {
+                if(!buffer.empty()) {
+                    result.push_back(buffer);
+                    buffer.clear();
+                }
+            } else {
+                buffer.push_back(c);
+            }
+        }
+
+        if(!buffer.empty()) {
+            result.push_back(buffer);
+        }
+
+        return result;
+    }
+
+private:
+    std::string str_;
 };
 
 #define _F StringFormatter
@@ -186,6 +220,21 @@ public:
         } catch(T& e) {}
     }
 
+    template<typename T, typename U>
+    void _assert_items_equal(const T& lhs, const U& rhs, std::string file, int line) {
+        auto file_and_line = std::make_pair(file, line);
+
+        if(lhs.size() != rhs.size()) {
+            throw kaztest::AssertionError(file_and_line, "Containers are not the same length");
+        }
+
+        for(auto item: lhs) {
+            if(std::find(rhs.begin(), rhs.end(), item) == rhs.end()) {
+                throw kaztest::AssertionError(file_and_line, _F("Container does not contain {0}").format(item));
+            }
+        }
+    }
+
     void _not_implemented(std::string file, int line) {
         throw kaztest::NotImplementedError(file, line);
     }
@@ -258,7 +307,9 @@ public:
 
                     std::ifstream ifs(e.file);
                     if(ifs.good()) {
-                        std::string lines((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+                        std::string buffer((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+                        auto lines = StringSplitter(buffer).split();
+
                         int line_count = lines.size();
                         if(line_count && e.line <= line_count) {
                             std::cout << lines.at(e.line - 1) << std::endl << std::endl;

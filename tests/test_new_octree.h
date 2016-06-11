@@ -47,6 +47,24 @@ public:
         assert_equal(octree_->node_count(), 0);
     }
 
+    void test_child_centres() {
+        auto octree_node = octree_->insert_actor(actor_id_);
+
+        std::vector<kglt::Vec3> expected = {
+            kglt::Vec3(-2.5, -2.5, -2.5),
+            kglt::Vec3(-2.5,  2.5, -2.5),
+            kglt::Vec3( 2.5,  2.5, -2.5),
+            kglt::Vec3( 2.5, -2.5, -2.5),
+            kglt::Vec3(-2.5, -2.5,  2.5),
+            kglt::Vec3(-2.5,  2.5,  2.5),
+            kglt::Vec3( 2.5,  2.5,  2.5),
+            kglt::Vec3( 2.5, -2.5,  2.5),
+        };
+
+        assert_items_equal(expected, octree_node->child_centres());
+
+    }
+
     void test_insert_empty_aabb() {
         auto blank_actor = stage_->new_actor();
         assert_raises(kglt::impl::InvalidBoundableInsertion, std::bind(&kglt::impl::Octree::insert_actor, octree_.get(), blank_actor));
