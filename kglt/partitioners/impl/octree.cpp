@@ -3,6 +3,8 @@
 #include "../../stage.h"
 #include "../../actor.h"
 #include "../../light.h"
+#include "../../particles.h"
+
 
 namespace kglt {
 namespace impl {
@@ -181,6 +183,23 @@ void Octree::remove_light(LightID light_id) {
     merge_if_possible(node->siblings());
 }
 
+OctreeNode* Octree::insert_particle_system(ParticleSystemID particle_system_id) {
+    auto ps = stage_->particle_system(particle_system_id);
+    OctreeNode* node = get_or_create_node(ps.get());
+
+    if(node) {
+        // Insert the light id into both the node and the lookup table
+        node->data->particle_system_ids_.insert(std::make_pair(particle_system_id, ps->aabb()));
+        particle_system_lookup_.insert(std::make_pair(particle_system_id, node));
+    }
+
+    if(split_if_necessary(node)) {
+        return locate_particle_system(particle_system_id);
+    } else {
+        return node;
+    }
+}
+
 std::pair<NodeLevel, Octree::VectorHash> Octree::find_best_existing_node(const AABB& aabb) {
     float diameter = aabb.max_dimension();
     NodeLevel max_level = calculate_level(diameter);
@@ -274,7 +293,36 @@ float Octree::node_diameter(NodeLevel level) const {
 }
 
 void Octree::prune_empty_nodes() {
-    /* FIXME: Prune empty leaf nodes */
+    auto level = levels_.size();
+    while(level--) {
+        bool deleted = false;
+        for(auto it = levels_[level].begin(); it != levels_[level].end();) {
+            if(it->second->is_empty()) {
+                it = levels_[level].erase(it);
+                deleted = true;
+            } else {
+                ++it;
+            }
+        }
+        if(!deleted) {
+            // We got to a level where no nodes needed deleting
+            break;
+        }
+    }
+}
+
+void Octree::reinsert_data(std::shared_ptr<NodeData> data) {
+    for(auto& actor_pair: data->actor_ids_) {
+        insert_actor(actor_pair.first);
+    }
+
+    for(auto& light_pair: data->light_ids_) {
+        insert_light(light_pair.first);
+    }
+
+    for(auto& particle_pair: data->particle_system_ids_) {
+        insert_particle_system(particle_pair.first);
+    }
 }
 
 bool Octree::split_if_necessary(NodeType* node) {
@@ -282,7 +330,26 @@ bool Octree::split_if_necessary(NodeType* node) {
         return false;
     }
 
-    //FIXME: Split things
+    uint32_t created = 0;
+
+    // Create children
+    for(auto v: node->child_centres()) {
+        created += (int) get_or_create_node(node->level() + 1, v).second;
+    }
+
+    // If no children were created, then it's likely the stuff
+    // in this node is already as low down as it can be, the predicate
+    // might keep returning true but there's not much we can do about it
+    if(!created) {
+        return false;
+    }
+
+    // Now, relocate everything!
+    auto data = node->data_; // Stash original data
+    node->data_.reset(new NodeData()); // Wipe the data from the original node
+
+    // Reinsert the data into the tree, now that we have a lower level of nodes
+    reinsert_data(data);
 
     return true;
 }
@@ -295,6 +362,36 @@ bool Octree::merge_if_possible(const NodeList &nodes) {
     //FIXME: merge things
 
     return true;
+}
+
+std::pair<OctreeNode*, bool> Octree::get_or_create_node(NodeLevel level, const Vec3& centre) {
+    auto hash = generate_vector_hash(centre);
+
+    LevelNodes* nodes = nullptr;
+
+    // We can't skip levels
+    if(levels_.size() < level) {
+        throw MissingParentError();
+    } else if(levels_.size() == level) {
+        // Add the additional level we need
+        levels_.push_back(LevelNodes());
+        nodes = &levels_.back();
+    } else {
+        // The level already exists, just use it
+        nodes = &levels_[level];
+    }
+
+    auto it = nodes->find(hash);
+    if(it != nodes->end()) {
+        // Node already exists, just return that
+        return std::make_pair(it->second.get(), false);
+    } else {
+        // Create a new node for this centre point
+        auto new_node = std::make_shared<OctreeNode>(this, level, centre);
+        nodes->insert(std::make_pair(hash, new_node));
+        ++node_count_;
+        return std::make_pair(new_node.get(), true);
+    }
 }
 
 OctreeNode* Octree::get_or_create_node(Boundable* boundable) {

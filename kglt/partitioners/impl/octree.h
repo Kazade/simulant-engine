@@ -44,6 +44,12 @@ public:
         std::logic_error(what) {}
 };
 
+class MissingParentError : public std::logic_error {
+public:
+    MissingParentError():
+        std::logic_error("Tried to create node when there is a missing parent node") {}
+};
+
 typedef uint32_t NodeLevel;
 
 class Octree;
@@ -84,10 +90,12 @@ private:
     NodeLevel level_ = 0;
     Vec3 centre_;
 
-    std::unique_ptr<NodeData> data_;
+    std::shared_ptr<NodeData> data_;
 
     OctreeNode* parent_ = nullptr;
     OctreeNode* children_[8] = { nullptr };
+
+    friend class Octree;
 };
 
 
@@ -107,6 +115,7 @@ public:
 
     NodeType* insert_actor(ActorID actor_id);
     NodeType* insert_light(LightID light_id);
+    NodeType* insert_particle_system(ParticleSystemID particle_system_id);
 
     NodeType* locate_actor(ActorID actor_id) {
         if(!actor_lookup_.count(actor_id)) return nullptr;
@@ -119,8 +128,15 @@ public:
         return light_lookup_.at(light_id);
     }
 
+    NodeType* locate_particle_system(ParticleSystemID particle_system_id) {
+        if(!particle_system_lookup_.count(particle_system_id)) return nullptr;
+
+        return particle_system_lookup_.at(particle_system_id);
+    }
+
     void remove_actor(ActorID actor_id);
     void remove_light(LightID light_id);
+    void remove_particle_system(ParticleSystemID particle_system_id);
 
     void prune_empty_nodes();
 
@@ -158,15 +174,18 @@ private:
     Vec3 find_node_centre_for_point(NodeLevel level, const Vec3& p);
 
     NodeType* get_or_create_node(Boundable* boundable);
+    std::pair<NodeType*, bool> get_or_create_node(NodeLevel level, const Vec3& centre);
 
     std::unordered_map<ActorID, NodeType*> actor_lookup_;
     std::unordered_map<LightID, NodeType*> light_lookup_;
+    std::unordered_map<ParticleSystemID, NodeType*> particle_system_lookup_;
 
     std::function<bool (NodeType*)> should_split_predicate_;
     std::function<bool (const NodeList&)> should_merge_predicate_;
 
     bool split_if_necessary(NodeType* node);
     bool merge_if_possible(const NodeList& node);
+    void reinsert_data(std::shared_ptr<NodeData> data);
 
     uint32_t node_count_ = 0;
 };

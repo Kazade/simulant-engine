@@ -91,7 +91,7 @@ public:
         std::string buffer;
 
         for(auto c: str_) {
-            if(c == '\r' || c == '\n') {
+            if(c == '\n') {
                 if(!buffer.empty()) {
                     result.push_back(buffer);
                     buffer.clear();
