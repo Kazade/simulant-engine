@@ -23,9 +23,9 @@ namespace kglt {
 namespace impl {
 
 struct NodeData : public StaticChunkHolder {
-    std::set<ActorID> actor_ids_;
-    std::set<LightID> light_ids_;
-    std::set<ParticleSystemID> particle_system_ids_;
+    std::unordered_map<ActorID, AABB> actor_ids_;
+    std::unordered_map<LightID, AABB> light_ids_;
+    std::unordered_map<ParticleSystemID, AABB> particle_system_ids_;
 
     bool is_empty() const {
         return actor_ids_.empty() && light_ids_.empty() && particle_system_ids_.empty();
@@ -50,7 +50,7 @@ class Octree;
 
 class OctreeNode {
 public:
-    typedef std::list<OctreeNode*> NodeList;
+    typedef std::vector<OctreeNode*> NodeList;
 
     OctreeNode(Octree* octree, NodeLevel level, const Vec3 &centre);
 
@@ -67,6 +67,7 @@ public:
 
     NodeList children() const;
     OctreeNode* parent() const { return parent_; }
+    NodeList siblings() const { return parent()->children(); }
 
     Property<OctreeNode, NodeData> data = { this, &OctreeNode::data_ };
     Property<OctreeNode, Octree> octree = { this, &OctreeNode::octree_ };
@@ -74,7 +75,7 @@ public:
     NodeLevel level() const { return level_; }
     Vec3 centre() const { return centre_; }
 
-    const bool contains(const Vec3& p) const;
+    const bool contains(const Vec3& p) const;    
 private:
     Octree* octree_ = nullptr;
     NodeLevel level_ = 0;
@@ -87,12 +88,19 @@ private:
 };
 
 
+bool default_split_predicate(OctreeNode* node);
+bool default_merge_predicate(const std::vector<OctreeNode*>& nodes);
+
+
 class Octree {
 public:
     typedef OctreeNode NodeType;
     typedef typename OctreeNode::NodeList NodeList;
 
-    Octree(StagePtr stage);
+    Octree(StagePtr stage,
+        std::function<bool (NodeType*)> should_split_predicate = &default_split_predicate,
+        std::function<bool (const std::vector<NodeType*>&)> should_merge_predicate = &default_merge_predicate
+    );
 
     NodeType* insert_actor(ActorID actor_id);
     NodeType* insert_light(LightID light_id);
@@ -123,6 +131,7 @@ public:
     bool has_root() const { return !levels_.empty(); }
     NodeType* get_root() const { return levels_.front().begin()->second.get(); }
 
+    const uint32_t node_count() const { return node_count_; }
 private:
     friend class ::NewOctreeTest;
     friend class OctreeNode;
@@ -149,6 +158,14 @@ private:
 
     std::unordered_map<ActorID, NodeType*> actor_lookup_;
     std::unordered_map<LightID, NodeType*> light_lookup_;
+
+    std::function<bool (NodeType*)> should_split_predicate_;
+    std::function<bool (const NodeList&)> should_merge_predicate_;
+
+    bool split_if_necessary(NodeType* node);
+    bool merge_if_possible(const NodeList& node);
+
+    uint32_t node_count_ = 0;
 };
 
 }

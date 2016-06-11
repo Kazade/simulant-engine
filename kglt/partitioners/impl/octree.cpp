@@ -7,6 +7,15 @@
 namespace kglt {
 namespace impl {
 
+bool default_split_predicate(OctreeNode* node) {
+    return true;
+}
+
+bool default_merge_predicate(const std::vector<OctreeNode*>& nodes) {
+    return true;
+}
+
+
 template <class T>
 inline void hash_combine(std::size_t& seed, const T& v)
 {
@@ -69,8 +78,13 @@ const float OctreeNode::diameter() const {
 }
 
 
-Octree::Octree(StagePtr stage):
-    stage_(stage) {
+Octree::Octree(StagePtr stage,
+    std::function<bool (NodeType *)> should_split_predicate,
+    std::function<bool (const std::vector<NodeType*>&)> should_merge_predicate):
+
+    stage_(stage),
+    should_split_predicate_(should_split_predicate),
+    should_merge_predicate_(should_merge_predicate) {
 
 }
 
@@ -101,11 +115,15 @@ OctreeNode* Octree::insert_actor(ActorID actor_id) {
 
     if(node) {
         // Insert into both the node, and the lookup table
-        node->data->actor_ids_.insert(actor_id);
+        node->data->actor_ids_.insert(std::make_pair(actor_id, actor->aabb()));
         actor_lookup_.insert(std::make_pair(actor_id, node));
     }
 
-    return node;
+    if(split_if_necessary(node)) {
+        return locate_actor(actor_id);
+    } else {
+        return node;
+    }
 }
 
 void Octree::remove_actor(ActorID actor_id) {
@@ -124,11 +142,15 @@ OctreeNode* Octree::insert_light(LightID light_id) {
 
     if(node) {
         // Insert the light id into both the node and the lookup table
-        node->data->light_ids_.insert(light_id);
+        node->data->light_ids_.insert(std::make_pair(light_id, light->aabb()));
         light_lookup_.insert(std::make_pair(light_id, node));
     }
 
-    return node;
+    if(split_if_necessary(node)) {
+        return locate_light(light_id);
+    } else {
+        return node;
+    }
 }
 
 void Octree::remove_light(LightID light_id) {
@@ -139,6 +161,8 @@ void Octree::remove_light(LightID light_id) {
         node->data->light_ids_.erase(light_id);
         light_lookup_.erase(light_id);
     }
+
+    merge_if_possible(node->siblings());
 }
 
 std::pair<NodeLevel, Octree::VectorHash> Octree::find_best_existing_node(const AABB& aabb) {
@@ -237,6 +261,26 @@ void Octree::prune_empty_nodes() {
     /* FIXME: Prune empty leaf nodes */
 }
 
+bool Octree::split_if_necessary(NodeType* node) {
+    if(!should_split_predicate_(node)) {
+        return false;
+    }
+
+    //FIXME: Split things
+
+    return true;
+}
+
+bool Octree::merge_if_possible(const NodeList &nodes) {
+    if(!should_merge_predicate_(nodes)) {
+        return false;
+    }
+
+    //FIXME: merge things
+
+    return true;
+}
+
 OctreeNode* Octree::get_or_create_node(Boundable* boundable) {
     auto& aabb = boundable->aabb();
 
@@ -254,6 +298,7 @@ OctreeNode* Octree::get_or_create_node(Boundable* boundable) {
 
         levels_.push_back(nodes);
         root_width_ = aabb.max_dimension();
+        ++node_count_;
 
         return new_node.get();
     }
