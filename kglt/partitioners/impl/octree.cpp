@@ -13,7 +13,7 @@ bool default_split_predicate(OctreeNode* node) {
     return true;
 }
 
-bool default_merge_predicate(const std::vector<OctreeNode*>& nodes) {
+bool default_merge_predicate(const OctreeNode::NodeList &nodes) {
     return true;
 }
 
@@ -74,21 +74,11 @@ bool OctreeNode::has_children() const {
      * We keep pointers to the octree children for performance
      * if any of them are not null then this node has children
      */
-    for(auto child: children_) {
-        if(child) return true;
-    }
-
-    return false;
+    return !children_.empty();
 }
 
 OctreeNode::NodeList OctreeNode::children() const {
-    NodeList ret;
-    for(uint8_t i = 0; i < 8; ++i) {
-        if(children_[i]) {
-            ret.push_back(children_[i]);
-        }
-    }
-    return ret;
+    return children_;
 }
 
 const float OctreeNode::diameter() const {
@@ -98,7 +88,7 @@ const float OctreeNode::diameter() const {
 
 Octree::Octree(StagePtr stage,
     std::function<bool (NodeType *)> should_split_predicate,
-    std::function<bool (const std::vector<NodeType*>&)> should_merge_predicate):
+    std::function<bool (const NodeList&)> should_merge_predicate):
 
     stage_(stage),
     should_split_predicate_(should_split_predicate),
@@ -134,7 +124,7 @@ OctreeNode* Octree::insert_actor(ActorID actor_id) {
     if(node) {
         // Insert into both the node, and the lookup table
         node->data->actor_ids_.insert(std::make_pair(actor_id, actor->aabb()));
-        actor_lookup_.insert(std::make_pair(actor_id, node));
+        actor_lookup_[actor_id] = node;
     }
 
     if(split_if_necessary(node)) {
@@ -299,6 +289,7 @@ void Octree::prune_empty_nodes() {
         for(auto it = levels_[level].begin(); it != levels_[level].end();) {
             if(it->second->is_empty()) {
                 it = levels_[level].erase(it);
+                --node_count_;
                 deleted = true;
             } else {
                 ++it;
@@ -330,11 +321,18 @@ bool Octree::split_if_necessary(NodeType* node) {
         return false;
     }
 
-    uint32_t created = 0;
+    bool created = false;
 
     // Create children
+    std::vector<OctreeNode*> nodes_created;
     for(auto v: node->child_centres()) {
-        created += (int) get_or_create_node(node->level() + 1, v).second;
+        auto pair = get_or_create_node(node->level() + 1, v);
+
+        if(pair.second) {
+            created = true;
+            nodes_created.push_back(pair.first);
+            node->children_.insert(pair.first);
+        }
     }
 
     // If no children were created, then it's likely the stuff
@@ -350,6 +348,13 @@ bool Octree::split_if_necessary(NodeType* node) {
 
     // Reinsert the data into the tree, now that we have a lower level of nodes
     reinsert_data(data);
+
+    // Now, remove any nodes which are now unnecessary
+    for(auto node: nodes_created) {
+        if(node->is_empty()) {
+            remove_node(node);
+        }
+    }
 
     return true;
 }
@@ -387,10 +392,8 @@ std::pair<OctreeNode*, bool> Octree::get_or_create_node(NodeLevel level, const V
         return std::make_pair(it->second.get(), false);
     } else {
         // Create a new node for this centre point
-        auto new_node = std::make_shared<OctreeNode>(this, level, centre);
-        nodes->insert(std::make_pair(hash, new_node));
-        ++node_count_;
-        return std::make_pair(new_node.get(), true);
+        auto new_node = create_node(level, centre);
+        return std::make_pair(new_node, true);
     }
 }
 
@@ -403,23 +406,57 @@ OctreeNode* Octree::get_or_create_node(Boundable* boundable) {
 
     if(levels_.empty()) {
         // No root at all, let's just create one
-        VectorHash hash = generate_vector_hash(aabb.centre());
+        levels_.push_back(LevelNodes());
 
-        auto new_node = std::make_shared<NodeType>(this, 0, aabb.centre());
-        LevelNodes nodes;
-        nodes.insert(std::make_pair(hash, new_node));
-
-        levels_.push_back(nodes);
+        auto new_node = create_node(0, aabb.centre());
         root_width_ = aabb.max_dimension();
-        ++node_count_;
 
-        return new_node.get();
+        return new_node;
     }
 
     // Find the best node to insert this boundable
     auto level_and_hash = find_best_existing_node(aabb);
 
     return levels_[level_and_hash.first].at(level_and_hash.second).get();
+}
+
+OctreeNode* Octree::create_node(NodeLevel level, Vec3 centre) {
+    auto hash = generate_vector_hash(centre);
+
+    auto* nodes = &levels_.at(level);
+
+    auto new_node = std::make_shared<OctreeNode>(this, level, centre);
+    nodes->insert(std::make_pair(hash, new_node));
+    ++node_count_;
+
+    if(level > 0) {
+        auto hash = generate_vector_hash(find_node_centre_for_point(level - 1, centre));
+        new_node->parent_ = levels_[level - 1].at(hash).get();
+        new_node->parent_->children_.insert(new_node.get());
+    }
+
+    return new_node.get();
+}
+
+void Octree::remove_node(NodeType* node) {
+    levels_[node->level()].erase(generate_vector_hash(node->centre()));
+    if(node->parent_) {
+        node->parent_->children_.erase(node);
+    }
+
+    for(auto& actor_pair: node->data->actor_ids_) {
+        actor_lookup_.erase(actor_pair.first);
+    }
+
+    for(auto& light_pair: node->data->light_ids_) {
+        light_lookup_.erase(light_pair.first);
+    }
+
+    for(auto& particle_system_pair: node->data->particle_system_ids_) {
+        particle_system_lookup_.erase(particle_system_pair.first);
+    }
+
+    --node_count_;
 }
 
 }

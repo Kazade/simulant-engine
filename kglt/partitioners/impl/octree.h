@@ -56,7 +56,7 @@ class Octree;
 
 class OctreeNode {
 public:
-    typedef std::vector<OctreeNode*> NodeList;
+    typedef std::set<OctreeNode*> NodeList;
 
     OctreeNode(Octree* octree, NodeLevel level, const Vec3 &centre);
 
@@ -93,14 +93,14 @@ private:
     std::shared_ptr<NodeData> data_;
 
     OctreeNode* parent_ = nullptr;
-    OctreeNode* children_[8] = { nullptr };
+    std::set<OctreeNode*> children_;
 
     friend class Octree;
 };
 
 
 bool default_split_predicate(OctreeNode* node);
-bool default_merge_predicate(const std::vector<OctreeNode*>& nodes);
+bool default_merge_predicate(const OctreeNode::NodeList& nodes);
 
 
 class Octree {
@@ -110,7 +110,7 @@ public:
 
     Octree(StagePtr stage,
         std::function<bool (NodeType*)> should_split_predicate = &default_split_predicate,
-        std::function<bool (const std::vector<NodeType*>&)> should_merge_predicate = &default_merge_predicate
+        std::function<bool (const NodeList&)> should_merge_predicate = &default_merge_predicate
     );
 
     NodeType* insert_actor(ActorID actor_id);
@@ -188,6 +188,9 @@ private:
     void reinsert_data(std::shared_ptr<NodeData> data);
 
     uint32_t node_count_ = 0;
+
+    NodeType* create_node(NodeLevel level, Vec3 centre);
+    void remove_node(NodeType* node);
 };
 
 }
