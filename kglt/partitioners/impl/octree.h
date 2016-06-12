@@ -73,7 +73,15 @@ public:
 
     NodeList children() const;
     OctreeNode* parent() const { return parent_; }
-    NodeList siblings() const { return parent()->children(); }
+    NodeList siblings() const {
+        if(parent_) {
+            auto ret = parent()->children();
+            ret.erase((OctreeNode*)this);
+            return ret;
+        } else {
+            return NodeList();
+        }
+    }
 
     Property<OctreeNode, NodeData> data = { this, &OctreeNode::data_ };
     Property<OctreeNode, Octree> octree = { this, &OctreeNode::octree_ };

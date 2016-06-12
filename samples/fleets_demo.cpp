@@ -31,7 +31,7 @@ public:
         for(auto ship_id: ship_ids_) {
             auto pos = stage->actor(ship_id)->position();
             avg += pos;
-            stage->actor(ship_id)->set_absolute_position(pos + (speed * dt));
+            stage->actor(ship_id)->set_absolute_position(pos + (speed * dt * (0.01 * ship_id.value())));
         }
 
         avg /= ship_ids_.size();

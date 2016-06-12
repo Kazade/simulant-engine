@@ -141,6 +141,14 @@ void Octree::remove_actor(ActorID actor_id) {
         // Remove the actor from both the node, and the lookup table
         node->data->actor_ids_.erase(actor_id);
         actor_lookup_.erase(actor_id);
+
+        auto siblings = node->siblings();
+        siblings.insert(node);
+        merge_if_possible(siblings);
+
+        if(node->is_empty()) {
+            prune_empty_nodes();
+        }
     }
 }
 
@@ -168,9 +176,15 @@ void Octree::remove_light(LightID light_id) {
         // Remove the light from the node and lookup table
         node->data->light_ids_.erase(light_id);
         light_lookup_.erase(light_id);
-    }
 
-    merge_if_possible(node->siblings());
+        auto siblings = node->siblings();
+        siblings.insert(node);
+        merge_if_possible(siblings);
+
+        if(node->is_empty()) {
+            prune_empty_nodes();
+        }
+    }
 }
 
 OctreeNode* Octree::insert_particle_system(ParticleSystemID particle_system_id) {
@@ -286,13 +300,11 @@ void Octree::prune_empty_nodes() {
     auto level = levels_.size();
     while(level--) {
         bool deleted = false;
-        for(auto it = levels_[level].begin(); it != levels_[level].end();) {
-            if(it->second->is_empty()) {
-                it = levels_[level].erase(it);
-                --node_count_;
+        auto level_nodes = levels_[level]; // Copy! This is so we can use remove_node() in the loop
+        for(auto node_pair: level_nodes) {
+            if(node_pair.second->is_empty()) {
+                remove_node(node_pair.second.get());
                 deleted = true;
-            } else {
-                ++it;
             }
         }
         if(!deleted) {
@@ -439,7 +451,8 @@ OctreeNode* Octree::create_node(NodeLevel level, Vec3 centre) {
 }
 
 void Octree::remove_node(NodeType* node) {
-    levels_[node->level()].erase(generate_vector_hash(node->centre()));
+    auto level = node->level();
+    levels_[level].erase(generate_vector_hash(node->centre()));
     if(node->parent_) {
         node->parent_->children_.erase(node);
     }
@@ -454,6 +467,11 @@ void Octree::remove_node(NodeType* node) {
 
     for(auto& particle_system_pair: node->data->particle_system_ids_) {
         particle_system_lookup_.erase(particle_system_pair.first);
+    }
+
+    // Remove the level if it's empty and the last one
+    if(level == levels_.size() - 1 && levels_[level].empty()) {
+        levels_.pop_back();
     }
 
     --node_count_;
