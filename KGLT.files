@@ -922,3 +922,4 @@ kglt/partitioners/impl/octree.h
 kglt/partitioners/impl/octree.cpp
 tests/test_new_octree.h
 deps/kaztest/kaztest/kaztest.h
+samples/fleets_demo.cpp

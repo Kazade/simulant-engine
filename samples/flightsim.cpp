@@ -29,7 +29,7 @@ public:
         }
 
         //Load a particle system and attach it to the actor
-        auto ps_id = stage->new_particle_system_with_parent_from_file(actor_id, "kglt/particles/rocket_trail.kglp");
+        auto ps_id = stage->new_particle_system_with_parent_from_file(actor_id, "kglt/particles/pixel_trail.kglp");
         stage->particle_system(ps_id)->move_to(0, 0, -10);
 
         //Just stash the skybox with the window so we always have access to it
