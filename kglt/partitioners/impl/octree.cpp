@@ -278,13 +278,13 @@ NodeLevel Octree::calculate_level(float diameter) {
     float octree_diameter = get_root()->diameter();
 
     // If we're outside the root octree radius, then we're outside the bounds
-    if(diameter > octree_diameter) {
+    if(diameter > (octree_diameter * 2.0)) {
         throw OutsideBoundsError();
     }
 
     // Calculate the level by dividing the root radius until
     // we hit the point that the object is smaller
-    while(diameter < octree_diameter) {
+    while(diameter < (octree_diameter * 2.0)) {
         octree_diameter /= 2.0f;
         ++level;
     }
@@ -421,7 +421,10 @@ OctreeNode* Octree::get_or_create_node(Boundable* boundable) {
         levels_.push_back(LevelNodes());
 
         auto new_node = create_node(0, aabb.centre());
-        root_width_ = aabb.max_dimension();
+
+        // Loose octree, the node strict bounds need to only be half the size
+        // of the added object
+        root_width_ = aabb.max_dimension() / 2.0f;
 
         return new_node;
     }
