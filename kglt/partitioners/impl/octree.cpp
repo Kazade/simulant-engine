@@ -452,7 +452,7 @@ OctreeNode* Octree::create_node(NodeLevel level, Vec3 centre) {
 
 void Octree::remove_node(NodeType* node) {
     auto level = node->level();
-    levels_[level].erase(generate_vector_hash(node->centre()));
+
     if(node->parent_) {
         node->parent_->children_.erase(node);
     }
@@ -468,6 +468,8 @@ void Octree::remove_node(NodeType* node) {
     for(auto& particle_system_pair: node->data->particle_system_ids_) {
         particle_system_lookup_.erase(particle_system_pair.first);
     }
+
+    levels_[level].erase(generate_vector_hash(node->centre()));
 
     // Remove the level if it's empty and the last one
     if(level == levels_.size() - 1 && levels_[level].empty()) {
