@@ -17,18 +17,18 @@ public:
             by setting the cube size to 20, we should expect that a default node created for it
             will have a diameter of 10.0f;
         */
-        actor_id_ = stage_->new_actor_with_mesh(stage_->new_mesh_as_cube(20.0));
+        actor_id_ = stage_->new_actor_with_mesh(stage_->new_mesh_as_cube(32.0));
         octree_.reset(new kglt::impl::Octree(stage_.get().get()));
     }
 
     void test_octreenode_contains() {
-        octree_->insert_actor(actor_id_); // Dimension is now 10,10,10
+        octree_->insert_actor(actor_id_); // Dimension is now 16,16,16
 
         assert_true(octree_->get_root()->contains(kglt::Vec3(0, 0, 0)));
         assert_true(octree_->get_root()->contains(kglt::Vec3(5, 0, 0)));
-        assert_false(octree_->get_root()->contains(kglt::Vec3(6, 0, 0)));
-        assert_true(octree_->get_root()->contains(kglt::Vec3(5, 5, 0)));
-        assert_false(octree_->get_root()->contains(kglt::Vec3(5, 5.1, 0)));
+        assert_false(octree_->get_root()->contains(kglt::Vec3(9, 0, 0)));
+        assert_true(octree_->get_root()->contains(kglt::Vec3(8, 8, 0)));
+        assert_false(octree_->get_root()->contains(kglt::Vec3(8, 8.1, 0)));
     }
 
     void test_initial_insert() {
@@ -38,7 +38,7 @@ public:
         assert_true(octree_node->is_root());
         assert_equal(0, octree_node->children().size());
         assert_is_null(octree_node->parent());
-        assert_close(10.0f, octree_node->diameter(), 0.001);
+        assert_equal(16, octree_node->diameter());
         assert_false(octree_node->is_empty());
 
         assert_equal(octree_node, octree_->locate_actor(actor_id_));
@@ -53,42 +53,42 @@ public:
 
     void test_octree_growth() {
         auto octree_node = octree_->insert_actor(actor_id_);
-        assert_close(10.0f, octree_node->diameter(), 0.001);
+        assert_equal(16, octree_node->diameter());
 
         // Too big for this node, time to grow!
-        auto actor_2 = stage_->new_actor_with_mesh(stage_->new_mesh_as_cube(25.0f));
+        auto actor_2 = stage_->new_actor_with_mesh(stage_->new_mesh_as_cube(40.0f));
 
         auto new_root = octree_->insert_actor(actor_2);
 
         assert_equal(0, new_root->level());
         assert_equal(1, octree_node->level());
-        assert_close(20.0f, new_root->diameter(), 0.001);
+        assert_equal(32, new_root->diameter());
 
         // FIXME: If we redistribute the existing actors, this node should disappear
         // and all actors will be in the root.
-        assert_close(10.0f, octree_node->diameter(), 0.001);
+        assert_equal(16, octree_node->diameter());
     }
 
     void test_octree_shrinks() {
         auto octree_node = octree_->insert_actor(actor_id_);
-        assert_close(10.0f, octree_node->diameter(), 0.001);
+        assert_equal(16, octree_node->diameter());
 
         // Too big for this node, time to grow!
-        auto actor_2 = stage_->new_actor_with_mesh(stage_->new_mesh_as_cube(25.0f));
+        auto actor_2 = stage_->new_actor_with_mesh(stage_->new_mesh_as_cube(40.0f));
 
         auto new_root = octree_->insert_actor(actor_2);
 
         assert_equal(0, new_root->level());
         assert_equal(1, octree_node->level());
-        assert_close(20.0f, new_root->diameter(), 0.001);
+        assert_equal(32, new_root->diameter());
 
         // FIXME: If we redistribute the existing actors, this node should disappear
         // and all actors will be in the root.
-        assert_close(10.0f, octree_node->diameter(), 0.001);
+        assert_equal(16, octree_node->diameter());
 
         octree_->remove_actor(actor_2);
 
-        assert_close(10.0f, octree_->get_root()->diameter(), 0.001);
+        assert_equal(16, octree_->get_root()->diameter());
         assert_equal(1, octree_->node_count());
     }
 
@@ -112,7 +112,8 @@ public:
 
     void test_insert_empty_aabb() {
         auto blank_actor = stage_->new_actor();
-        assert_raises(kglt::impl::InvalidBoundableInsertion, std::bind(&kglt::impl::Octree::insert_actor, octree_.get(), blank_actor));
+        impl::OctreeNode* node = octree_->insert_actor(blank_actor);
+        assert_equal(1, node->diameter()); // 1 is the minimum node size
     }
 
     void test_splitting_nodes() {
@@ -165,7 +166,7 @@ public:
 
         auto quarter_root = half_root / 2.0;
         ret = octree_->find_node_centre_for_point(2, point);
-        expected = kglt::Vec3(3.75, quarter_root / 2, quarter_root / 2);
+        expected = kglt::Vec3(quarter_root / 2, quarter_root / 2, quarter_root / 2);
         assert_equal(expected, ret);
 
         point = kglt::Vec3(-2.0, 1, 1);
@@ -175,7 +176,7 @@ public:
         assert_equal(expected, ret);
 
         ret = octree_->find_node_centre_for_point(2, point);
-        expected = kglt::Vec3(-3.75, quarter_root / 2, quarter_root / 2);
+        expected = kglt::Vec3(-quarter_root / 2, quarter_root / 2, quarter_root / 2);
         assert_equal(expected, ret);
     }
 
@@ -198,10 +199,10 @@ public:
 
     void test_node_diameter() {
         octree_->insert_actor(actor_id_);
-        assert_equal(10.0f, octree_->node_diameter(0));
-        assert_equal(5.0f, octree_->node_diameter(1));
-        assert_equal(2.5f, octree_->node_diameter(2));
-        assert_equal(1.25f, octree_->node_diameter(3));
+        assert_equal(16, octree_->node_diameter(0));
+        assert_equal(8, octree_->node_diameter(1));
+        assert_equal(4, octree_->node_diameter(2));
+        assert_equal(2, octree_->node_diameter(3));
     }
 
     void tear_down() {

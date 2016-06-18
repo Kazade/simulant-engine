@@ -1,4 +1,5 @@
 #include "octree.h"
+#include "grid.h"
 #include "../../types.h"
 #include "../../stage.h"
 #include "../../actor.h"
@@ -43,7 +44,7 @@ OctreeNode::OctreeNode(Octree* octree, OctreeLevel *level, uint32_t diameter, co
 }
 
 const bool OctreeNode::contains(const Vec3& p) const {
-    uint32_t hw = this->diameter() / 2;
+    NodeDiameter hw = this->diameter() / 2;
     float minx = centre_.x - hw;
     float maxx = centre_.x + hw;
 
@@ -309,18 +310,10 @@ Vec3 Octree::find_node_centre_for_point(NodeLevel level, const Vec3& p) {
         return get_root()->centre();
     }
 
-    auto rc = get_root()->centre();
     float step = node_diameter(level);
 
-    auto snap = [step, level](const float& in) -> float {
-        return step * std::round(in / step) + ((level) ? step / 2.0 : 0.0) * ((in >= 0) ? 1 : -1);
-    };
-
-    auto ret = Vec3(
-        snap(p.x),
-        snap(p.y),
-        snap(p.z)
-    );
+    Grid grid(step, get_root()->diameter() / 2, step / 2.0, step / 2.0, step / 2.0);
+    auto ret = grid.snap(p);
 
     return ret;
 }
@@ -394,11 +387,8 @@ void Octree::reinsert_data(std::shared_ptr<NodeData> data) {
 bool Octree::split_if_necessary(NodeType* node) {
     bool should_split = should_split_predicate_(node);
     if(!should_split) {
-        L_DEBUG("Node doesn't require splitting\n");
         return false;
     }
-
-    L_DEBUG("Splitting node\n");
 
     bool created = false;
     NodeLevel node_level = node->level();
@@ -419,11 +409,8 @@ bool Octree::split_if_necessary(NodeType* node) {
     // in this node is already as low down as it can be, the predicate
     // might keep returning true but there's not much we can do about it
     if(!created) {
-        L_DEBUG("No new nodes were created\n");
         return false;
     }
-
-    L_DEBUG("New nodes created, reinserting data\n");
 
     // Now, relocate everything!
     auto data = node->data_; // Stash original data
@@ -435,10 +422,11 @@ bool Octree::split_if_necessary(NodeType* node) {
     // Now, remove any nodes which are now unnecessary
     for(auto node: nodes_created) {
         if(node->is_empty()) {
-            L_DEBUG("Removed empty node which was just added\n");
             remove_node(node);
         }
     }
+
+    L_DEBUG(_u("Node count {0}. Level count {1}").format(node_count_, levels_.size()));
 
     return true;
 }
@@ -523,6 +511,8 @@ void Octree::grow_to_contain(const AABB& aabb) {
         create_node(-1, rc + new_centre_offset, new_diameter);
 
         root = get_root();
+
+        L_DEBUG(_u("Octree diameter {0}").format(root->diameter()));
     }
 }
 
