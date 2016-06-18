@@ -18,7 +18,7 @@ public:
             will have a diameter of 10.0f;
         */
         actor_id_ = stage_->new_actor_with_mesh(stage_->new_mesh_as_cube(20.0));
-        octree_.reset(new kglt::impl::Octree(stage_));
+        octree_.reset(new kglt::impl::Octree(stage_.get().get()));
     }
 
     void test_octreenode_contains() {
@@ -120,7 +120,7 @@ public:
             return node->data->actor_ids_.size() > 2;
         };
 
-        auto octree = std::make_shared<kglt::impl::Octree>(stage_, split_predicate);
+        auto octree = std::make_shared<kglt::impl::Octree>(stage_.get().get(), split_predicate);
 
         octree->insert_actor(actor_id_);
         assert_equal(octree->node_count(), 1);

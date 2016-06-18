@@ -204,6 +204,24 @@ OctreeNode* Octree::insert_particle_system(ParticleSystemID particle_system_id) 
     }
 }
 
+void Octree::remove_particle_system(ParticleSystemID ps_id) {
+    auto node = locate_particle_system(ps_id);
+
+    if(node) {
+        // Remove the actor from both the node, and the lookup table
+        node->data->particle_system_ids_.erase(ps_id);
+        particle_system_lookup_.erase(ps_id);
+
+        auto siblings = node->siblings();
+        siblings.insert(node);
+        merge_if_possible(siblings);
+
+        if(node->is_empty()) {
+            prune_empty_nodes();
+        }
+    }
+}
+
 bool Octree::inside_octree(const AABB& aabb) const {
     if(is_empty()) {
         return false;
