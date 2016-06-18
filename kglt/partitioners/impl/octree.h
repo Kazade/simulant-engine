@@ -53,12 +53,13 @@ public:
 typedef uint32_t NodeLevel;
 
 class Octree;
+class OctreeLevel;
 
 class OctreeNode {
 public:
     typedef std::set<OctreeNode*> NodeList;
 
-    OctreeNode(Octree* octree, NodeLevel level, const Vec3 &centre);
+    OctreeNode(Octree* octree, OctreeLevel* level, float diameter, const Vec3 &centre);
 
     bool is_empty() const {
         return data->is_empty() && !has_children();
@@ -69,7 +70,7 @@ public:
     }
 
     bool has_children() const;
-    const float diameter() const;
+    const float diameter() const { return diameter_; }
 
     NodeList children() const;
     OctreeNode* parent() const { return parent_; }
@@ -86,7 +87,7 @@ public:
     Property<OctreeNode, NodeData> data = { this, &OctreeNode::data_ };
     Property<OctreeNode, Octree> octree = { this, &OctreeNode::octree_ };
 
-    NodeLevel level() const { return level_; }
+    NodeLevel level() const;
     Vec3 centre() const { return centre_; }
 
     const bool contains(const Vec3& p) const;    
@@ -95,7 +96,9 @@ public:
 
 private:
     Octree* octree_ = nullptr;
-    NodeLevel level_ = 0;
+    OctreeLevel* level_ = nullptr;
+
+    float diameter_;
     Vec3 centre_;
 
     std::shared_ptr<NodeData> data_;
@@ -109,6 +112,17 @@ private:
 
 bool default_split_predicate(OctreeNode* node);
 bool default_merge_predicate(const OctreeNode::NodeList& nodes);
+
+typedef std::size_t VectorHash;
+typedef std::unordered_map<VectorHash, std::shared_ptr<OctreeNode>> NodeMap;
+
+
+struct OctreeLevel {
+    OctreeLevel(uint32_t level=0): level_number(level) {}
+
+    uint32_t level_number = 0;
+    NodeMap nodes;
+};
 
 
 class Octree {
@@ -149,40 +163,41 @@ public:
     void prune_empty_nodes();
 
     const Vec3 centre() const;
-    const float diameter() const { return root_width_; }
+    const float diameter() const {
+        return (get_root()) ? get_root()->diameter() : 0.0f;
+    }
 
     bool is_empty() const { return levels_.empty(); }
     NodeLevel node_level(NodeType* node) const;
     NodeList nodes_at_level(NodeLevel level) const;
 
     bool has_root() const { return !levels_.empty(); }
-    NodeType* get_root() const { return levels_.front().begin()->second.get(); }
+
+    NodeType* get_root() const {
+        if(levels_.empty() || levels_.front()->nodes.empty()) return nullptr;
+        return levels_.front()->nodes.begin()->second.get();
+    }
 
     const uint32_t node_count() const { return node_count_; }
 private:
     friend class ::NewOctreeTest;
     friend class OctreeNode;
 
-    typedef std::size_t VectorHash;
-    typedef std::unordered_map<VectorHash, std::shared_ptr<NodeType>> LevelNodes;
-    typedef std::vector<LevelNodes> LevelArray;
-    typedef typename LevelNodes::size_type NodeIndex;
-
-    float root_width_ = 0.0f;
+    typedef std::deque<std::shared_ptr<OctreeLevel>> LevelArray;
 
     VectorHash generate_vector_hash(const Vec3& vec);
     StagePtr stage_;
     LevelArray levels_;
 
-    NodeLevel calculate_level(float diameter);
-    VectorHash calculate_node_hash(NodeLevel level, const Vec3& centre) { return generate_vector_hash(centre); }
-    float node_diameter(NodeLevel level) const; // This is the "tight" diameter, not the loose bound
+    uint32_t calculate_level(float diameter);
+    VectorHash calculate_node_hash(uint32_t level, const Vec3& centre) { return generate_vector_hash(centre); }
+    float node_diameter(uint32_t level) const; // This is the "tight" diameter, not the loose bound
 
-    std::pair<NodeLevel, VectorHash> find_best_existing_node(const AABB& aabb);
+    std::pair<uint32_t, VectorHash> find_best_existing_node(const AABB& aabb);
     Vec3 find_node_centre_for_point(NodeLevel level, const Vec3& p);
 
     NodeType* get_or_create_node(Boundable* boundable);
-    std::pair<NodeType*, bool> get_or_create_node(NodeLevel level, const Vec3& centre);
+    std::pair<NodeType*, bool> get_or_create_node(NodeLevel level, const Vec3& centre, float diameter);
 
     std::unordered_map<ActorID, NodeType*> actor_lookup_;
     std::unordered_map<LightID, NodeType*> light_lookup_;
@@ -194,12 +209,34 @@ private:
     bool split_if_necessary(NodeType* node);
     bool merge_if_possible(const NodeList& node);
     void reinsert_data(std::shared_ptr<NodeData> data);
+    void grow_to_contain(const AABB& aabb);
+
+    bool inside_octree(const AABB& aabb) const;
 
     uint32_t node_count_ = 0;
 
-    NodeType* create_node(NodeLevel level, Vec3 centre);
+    NodeType* create_node(int32_t level, Vec3 centre, float diameter);
     void remove_node(NodeType* node);
 };
+
+
+void traverse(OctreeNode* start, std::function<bool (OctreeNode*)> callback) {
+    /*
+     * Traverses the tree from the starting node in the traditional root-to-leaf way.
+     * The callback must return true if the traversal should continue to the nodes children
+     * returning false will terminate that particular branch's traversal.
+     */
+
+    std::function<void (OctreeNode*)> do_traversal = [&](OctreeNode* node) {
+        if(callback(node)) {
+            for(auto& child: node->children()) {
+                do_traversal(child);
+            }
+        }
+    };
+
+    do_traversal(start);
+}
 
 }
 }

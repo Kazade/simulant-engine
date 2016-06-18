@@ -69,6 +69,29 @@ public:
         assert_close(10.0f, octree_node->diameter(), 0.001);
     }
 
+    void test_octree_shrinks() {
+        auto octree_node = octree_->insert_actor(actor_id_);
+        assert_close(10.0f, octree_node->diameter(), 0.001);
+
+        // Too big for this node, time to grow!
+        auto actor_2 = stage_->new_actor_with_mesh(stage_->new_mesh_as_cube(25.0f));
+
+        auto new_root = octree_->insert_actor(actor_2);
+
+        assert_equal(0, new_root->level());
+        assert_equal(1, octree_node->level());
+        assert_close(20.0f, new_root->diameter(), 0.001);
+
+        // FIXME: If we redistribute the existing actors, this node should disappear
+        // and all actors will be in the root.
+        assert_close(10.0f, octree_node->diameter(), 0.001);
+
+        octree_->remove_actor(actor_id_);
+
+        assert_close(10.0f, octree_->get_root()->diameter(), 0.001);
+        assert_equal(1, octree_->node_count());
+    }
+
     void test_child_centres() {
         auto octree_node = octree_->insert_actor(actor_id_);
 
@@ -170,7 +193,7 @@ public:
         auto ret = octree_->find_best_existing_node(aabb);
 
         assert_equal(0, ret.first);
-        assert_equal(octree_->levels_[0].begin()->first, ret.second);
+        assert_equal(octree_->levels_.front()->nodes.begin()->first, ret.second);
     }
 
     void test_node_diameter() {

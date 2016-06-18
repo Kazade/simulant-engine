@@ -25,9 +25,10 @@ inline void hash_combine(std::size_t& seed, const T& v)
     seed ^= hasher(v) + 0x9e3779b9 + (seed<<6) + (seed>>2);
 }
 
-OctreeNode::OctreeNode(Octree* octree, NodeLevel level, const Vec3& centre):
+OctreeNode::OctreeNode(Octree* octree, OctreeLevel *level, float diameter, const Vec3& centre):
     octree_(octree),
     level_(level),
+    diameter_(diameter),
     centre_(centre) {
 
     data_.reset(new NodeData());
@@ -81,10 +82,9 @@ OctreeNode::NodeList OctreeNode::children() const {
     return children_;
 }
 
-const float OctreeNode::diameter() const {
-    return octree_->node_diameter(this->level());
+NodeLevel OctreeNode::level() const {
+    return level_->level_number;
 }
-
 
 Octree::Octree(StagePtr stage,
     std::function<bool (NodeType *)> should_split_predicate,
@@ -96,7 +96,7 @@ Octree::Octree(StagePtr stage,
 
 }
 
-Octree::VectorHash Octree::generate_vector_hash(const Vec3& vec) {
+VectorHash Octree::generate_vector_hash(const Vec3& vec) {
     auto round_float = [](float x) {
         // FIXME: There still might be edge cases here... we need floats which are
         // reasonably close together to have the same hash value.
@@ -114,7 +114,7 @@ Octree::VectorHash Octree::generate_vector_hash(const Vec3& vec) {
     std::hash_combine(seed, y);
     std::hash_combine(seed, z);
 
-    return Octree::VectorHash(seed);
+    return VectorHash(seed);
 }
 
 OctreeNode* Octree::insert_actor(ActorID actor_id) {
@@ -204,19 +204,33 @@ OctreeNode* Octree::insert_particle_system(ParticleSystemID particle_system_id) 
     }
 }
 
-std::pair<NodeLevel, Octree::VectorHash> Octree::find_best_existing_node(const AABB& aabb) {
+bool Octree::inside_octree(const AABB& aabb) const {
+    if(is_empty()) {
+        return false;
+    }
+
+    OctreeNode* root = get_root();
+    return root->contains(aabb.centre()) && (root->diameter() * 2.0f) >= aabb.max_dimension();
+}
+
+std::pair<NodeLevel, VectorHash> Octree::find_best_existing_node(const AABB& aabb) {
     float diameter = aabb.max_dimension();
     NodeLevel max_level = calculate_level(diameter);
 
-    if(is_empty()) {
+    if(!inside_octree(aabb)) {
         throw OutsideBoundsError();
     }
 
-    Octree::VectorHash hash;
+    VectorHash hash;
 
-    // Go to the max level, and gradually step down until we find an existing node
     auto final_level = max_level;
-    while(final_level >= 0) {
+    if(final_level == 0) {
+        return std::make_pair(0, generate_vector_hash(get_root()->centre()));
+    }
+
+    bool node_found = false;
+    // Go to the max level, and gradually step down until we find an existing node
+    while(final_level > 0) {
         if(levels_.size() > final_level) {
             // We got to an existing level, let's use that!
 
@@ -224,7 +238,8 @@ std::pair<NodeLevel, Octree::VectorHash> Octree::find_best_existing_node(const A
             auto node_centre = find_node_centre_for_point(final_level, aabb.centre());
             hash = generate_vector_hash(node_centre);
             // Does it exist already?
-            if(levels_[final_level].count(hash)) {
+            if(levels_[final_level]->nodes.count(hash)) {
+                node_found = true;
                 break;
             } else {
                 // We continue on to the next highest level
@@ -232,6 +247,12 @@ std::pair<NodeLevel, Octree::VectorHash> Octree::find_best_existing_node(const A
         }
 
         final_level--;
+    }
+
+    // If we went through the loop and no node was found, then we need to return
+    // the hash of the root node
+    if(!node_found) {
+        hash = generate_vector_hash(get_root()->centre());
     }
 
     return std::make_pair(final_level, hash);
@@ -252,6 +273,12 @@ Vec3 Octree::find_node_centre_for_point(NodeLevel level, const Vec3& p) {
     if(!get_root()->contains(p)) {
         // If we're outside the root then we need to deal with that elsewhere
         throw OutsideBoundsError();
+    }
+
+    /* If we're at the root, we just return the centre, everything is based on this
+     * so calculating anything else might be wrong */
+    if(level == 0) {
+        return get_root()->centre();
     }
 
     float step = node_diameter(level);
@@ -293,14 +320,19 @@ NodeLevel Octree::calculate_level(float diameter) {
 }
 
 float Octree::node_diameter(NodeLevel level) const {
-    return (root_width_ / std::pow(2, level));
+    float root_width = get_root()->diameter();
+    if(level == 0) {
+        return root_width;
+    }
+
+    return (root_width / std::pow(2, level));
 }
 
 void Octree::prune_empty_nodes() {
     auto level = levels_.size();
     while(level--) {
         bool deleted = false;
-        auto level_nodes = levels_[level]; // Copy! This is so we can use remove_node() in the loop
+        auto level_nodes = levels_[level]->nodes; // Copy! This is so we can use remove_node() in the loop
         for(auto node_pair: level_nodes) {
             if(node_pair.second->is_empty()) {
                 remove_node(node_pair.second.get());
@@ -329,16 +361,21 @@ void Octree::reinsert_data(std::shared_ptr<NodeData> data) {
 }
 
 bool Octree::split_if_necessary(NodeType* node) {
-    if(!should_split_predicate_(node)) {
+    bool should_split = should_split_predicate_(node);
+    if(!should_split) {
+        printf("Node doesn't require splitting\n");
         return false;
     }
 
+    printf("Splitting node\n");
+
     bool created = false;
+    NodeLevel node_level = node->level();
 
     // Create children
     std::vector<OctreeNode*> nodes_created;
     for(auto v: node->child_centres()) {
-        auto pair = get_or_create_node(node->level() + 1, v);
+        auto pair = get_or_create_node(node_level + 1, v, node->diameter() / 2.0f);
 
         if(pair.second) {
             created = true;
@@ -351,8 +388,11 @@ bool Octree::split_if_necessary(NodeType* node) {
     // in this node is already as low down as it can be, the predicate
     // might keep returning true but there's not much we can do about it
     if(!created) {
+        printf("No new nodes were created\n");
         return false;
     }
+
+    printf("New nodes created, reinserting data\n");
 
     // Now, relocate everything!
     auto data = node->data_; // Stash original data
@@ -364,6 +404,7 @@ bool Octree::split_if_necessary(NodeType* node) {
     // Now, remove any nodes which are now unnecessary
     for(auto node: nodes_created) {
         if(node->is_empty()) {
+            printf("Removed empty node which was just added\n");
             remove_node(node);
         }
     }
@@ -381,31 +422,44 @@ bool Octree::merge_if_possible(const NodeList &nodes) {
     return true;
 }
 
-std::pair<OctreeNode*, bool> Octree::get_or_create_node(NodeLevel level, const Vec3& centre) {
+std::pair<OctreeNode*, bool> Octree::get_or_create_node(NodeLevel level, const Vec3& centre, float diameter) {
     auto hash = generate_vector_hash(centre);
 
-    LevelNodes* nodes = nullptr;
+    assert(level >= 0);
 
-    // We can't skip levels
-    if(levels_.size() < level) {
-        throw MissingParentError();
-    } else if(levels_.size() == level) {
-        // Add the additional level we need
-        levels_.push_back(LevelNodes());
-        nodes = &levels_.back();
-    } else {
-        // The level already exists, just use it
-        nodes = &levels_[level];
+    if(level < levels_.size()) {
+        if(levels_[level]->nodes.count(hash)) {
+            return std::make_pair(levels_[level]->nodes[hash].get(), false);
+        }
     }
 
-    auto it = nodes->find(hash);
-    if(it != nodes->end()) {
-        // Node already exists, just return that
-        return std::make_pair(it->second.get(), false);
-    } else {
-        // Create a new node for this centre point
-        auto new_node = create_node(level, centre);
-        return std::make_pair(new_node, true);
+    return std::make_pair(create_node(level, centre, diameter), true);
+}
+
+void Octree::grow_to_contain(const AABB& aabb) {
+    OctreeNode* root = get_root();
+
+    while(!inside_octree(aabb)) {
+        auto c = aabb.centre();
+        auto rc = (root) ? root->centre() : Vec3();
+
+        float new_diameter = (root) ? root->diameter() * 2.0 : aabb.max_dimension() / 2.0f;
+        float qd = new_diameter / 4.0f;
+
+        Vec3 new_centre_offset(
+            (c.x < rc.x) ? -qd : qd,
+            (c.y < rc.y) ? -qd : qd,
+            (c.z < rc.z) ? -qd : qd
+        );
+
+        // If we're creating the first node, we don't want to offset
+        if(!root) {
+            new_centre_offset = Vec3();
+        }
+
+        create_node(-1, rc + new_centre_offset, new_diameter);
+
+        root = get_root();
     }
 }
 
@@ -416,38 +470,55 @@ OctreeNode* Octree::get_or_create_node(Boundable* boundable) {
         throw InvalidBoundableInsertion("Object has no spacial area. Cannot insert into Octree.");
     }
 
-    if(levels_.empty()) {
-        // No root at all, let's just create one
-        levels_.push_back(LevelNodes());
-
-        auto new_node = create_node(0, aabb.centre());
-
-        // Loose octree, the node strict bounds need to only be half the size
-        // of the added object
-        root_width_ = aabb.max_dimension() / 2.0f;
-
-        return new_node;
+    if(!get_root() || !get_root()->contains(aabb.centre()) || get_root()->diameter() * 2.0 < aabb.max_dimension()) {
+        // OK, so the boundable is outside the current octree, so we need to grow
+        grow_to_contain(aabb);
     }
 
     // Find the best node to insert this boundable
     auto level_and_hash = find_best_existing_node(aabb);
 
-    return levels_[level_and_hash.first].at(level_and_hash.second).get();
+    return levels_[level_and_hash.first]->nodes.at(level_and_hash.second).get();
 }
 
-OctreeNode* Octree::create_node(NodeLevel level, Vec3 centre) {
+OctreeNode* Octree::create_node(int32_t level_number, Vec3 centre, float diameter) {
     auto hash = generate_vector_hash(centre);
 
-    auto* nodes = &levels_.at(level);
+    OctreeLevel* level = nullptr;
+    if(level_number < 0) {
+        // Increment the level number on existing levels
+        for(auto& level: levels_) {
+            level->level_number++;
+        }
 
-    auto new_node = std::make_shared<OctreeNode>(this, level, centre);
+        // Insert out new level at the front (default number is zero so that's fine)
+        levels_.push_front(std::make_shared<OctreeLevel>());
+        level = levels_.front().get();
+    } else if(uint32_t(level_number) == levels_.size()) {
+        levels_.push_back(std::make_shared<OctreeLevel>(level_number));
+        level = levels_.back().get();
+    } else {
+        level = levels_.at(level_number).get();
+    }
+
+    auto* nodes = &level->nodes;
+
+    auto new_node = std::make_shared<OctreeNode>(this, level, diameter, centre);
+
     nodes->insert(std::make_pair(hash, new_node));
     ++node_count_;
 
-    if(level > 0) {
-        auto hash = generate_vector_hash(find_node_centre_for_point(level - 1, centre));
-        new_node->parent_ = levels_[level - 1].at(hash).get();
+    // Update the parent if this isn't a root node
+    if(level->level_number > 0) {
+        auto hash = generate_vector_hash(find_node_centre_for_point(level->level_number - 1, centre));
+        new_node->parent_ = levels_[level->level_number - 1]->nodes.at(hash).get();
         new_node->parent_->children_.insert(new_node.get());
+    } else if(levels_.size() > 1) {
+        // If we just added a new root node, then update the previous root
+        // to have a parent now
+        for(auto& node: levels_[1]->nodes) {
+            node.second->parent_ = levels_.front()->nodes.begin()->second.get();
+        }
     }
 
     return new_node.get();
@@ -472,10 +543,10 @@ void Octree::remove_node(NodeType* node) {
         particle_system_lookup_.erase(particle_system_pair.first);
     }
 
-    levels_[level].erase(generate_vector_hash(node->centre()));
+    levels_[level]->nodes.erase(generate_vector_hash(node->centre()));
 
     // Remove the level if it's empty and the last one
-    if(level == levels_.size() - 1 && levels_[level].empty()) {
+    if(level == levels_.size() - 1 && levels_[level]->nodes.empty()) {
         levels_.pop_back();
     }
 
