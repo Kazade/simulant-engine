@@ -59,7 +59,7 @@ class OctreeNode {
 public:
     typedef std::set<OctreeNode*> NodeList;
 
-    OctreeNode(Octree* octree, OctreeLevel* level, float diameter, const Vec3 &centre);
+    OctreeNode(Octree* octree, OctreeLevel* level, uint32_t diameter, const Vec3 &centre);
 
     bool is_empty() const {
         return data->is_empty() && !has_children();
@@ -70,7 +70,7 @@ public:
     }
 
     bool has_children() const;
-    const float diameter() const { return diameter_; }
+    const uint32_t diameter() const { return diameter_; }
 
     NodeList children() const;
     OctreeNode* parent() const { return parent_; }
@@ -118,7 +118,7 @@ bool default_merge_predicate(const OctreeNode::NodeList& nodes);
 
 typedef std::size_t VectorHash;
 typedef std::unordered_map<VectorHash, std::shared_ptr<OctreeNode>> NodeMap;
-
+typedef int32_t NodeDiameter;
 
 struct OctreeLevel {
     OctreeLevel(uint32_t level=0): level_number(level) {}
@@ -166,7 +166,7 @@ public:
     void prune_empty_nodes();
 
     const Vec3 centre() const;
-    const float diameter() const {
+    const NodeDiameter diameter() const {
         return (get_root()) ? get_root()->diameter() : 0.0f;
     }
 
@@ -194,13 +194,13 @@ private:
 
     uint32_t calculate_level(float diameter);
     VectorHash calculate_node_hash(uint32_t level, const Vec3& centre) { return generate_vector_hash(centre); }
-    float node_diameter(uint32_t level) const; // This is the "tight" diameter, not the loose bound
+    NodeDiameter node_diameter(uint32_t level) const; // This is the "tight" diameter, not the loose bound
 
     std::pair<uint32_t, VectorHash> find_best_existing_node(const AABB& aabb);
     Vec3 find_node_centre_for_point(NodeLevel level, const Vec3& p);
 
     NodeType* get_or_create_node(Boundable* boundable);
-    std::pair<NodeType*, bool> get_or_create_node(NodeLevel level, const Vec3& centre, float diameter);
+    std::pair<NodeType*, bool> get_or_create_node(NodeLevel level, const Vec3& centre, NodeDiameter diameter);
 
     std::unordered_map<ActorID, NodeType*> actor_lookup_;
     std::unordered_map<LightID, NodeType*> light_lookup_;
@@ -218,7 +218,7 @@ private:
 
     uint32_t node_count_ = 0;
 
-    NodeType* create_node(int32_t level, Vec3 centre, float diameter);
+    NodeType* create_node(int32_t level, Vec3 centre, NodeDiameter diameter);
     void remove_node(NodeType* node);
 };
 

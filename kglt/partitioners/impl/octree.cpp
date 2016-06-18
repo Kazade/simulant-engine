@@ -17,6 +17,14 @@ bool default_merge_predicate(const OctreeNode::NodeList &nodes) {
     return true;
 }
 
+float next_pow2(float value) {
+    int x = std::ceil(value);
+    if(x == 0) {
+        return 1;
+    }
+
+    return pow(2, ceil(log(x)/log(2)));
+}
 
 template <class T>
 inline void hash_combine(std::size_t& seed, const T& v)
@@ -25,7 +33,7 @@ inline void hash_combine(std::size_t& seed, const T& v)
     seed ^= hasher(v) + 0x9e3779b9 + (seed<<6) + (seed>>2);
 }
 
-OctreeNode::OctreeNode(Octree* octree, OctreeLevel *level, float diameter, const Vec3& centre):
+OctreeNode::OctreeNode(Octree* octree, OctreeLevel *level, uint32_t diameter, const Vec3& centre):
     octree_(octree),
     level_(level),
     diameter_(diameter),
@@ -35,7 +43,7 @@ OctreeNode::OctreeNode(Octree* octree, OctreeLevel *level, float diameter, const
 }
 
 const bool OctreeNode::contains(const Vec3& p) const {
-    float hw = this->diameter() / 2.0;
+    uint32_t hw = this->diameter() / 2;
     float minx = centre_.x - hw;
     float maxx = centre_.x + hw;
 
@@ -55,7 +63,7 @@ const bool OctreeNode::contains(const Vec3& p) const {
 }
 
 std::vector<Vec3> OctreeNode::child_centres() const {
-    float qw = this->diameter() / 4.0;
+    int32_t qw = (int32_t) this->diameter() / 4;
 
     std::vector<Vec3> centres;
 
@@ -228,7 +236,9 @@ bool Octree::inside_octree(const AABB& aabb) const {
     }
 
     OctreeNode* root = get_root();
-    return root->contains(aabb.centre()) && (root->diameter() * 2.0f) >= aabb.max_dimension();
+    auto rd = root->diameter();
+    auto maxd = aabb.max_dimension();
+    return root->contains(aabb.centre()) && (rd * 2) >= maxd;
 }
 
 std::pair<NodeLevel, VectorHash> Octree::find_best_existing_node(const AABB& aabb) {
@@ -306,11 +316,13 @@ Vec3 Octree::find_node_centre_for_point(NodeLevel level, const Vec3& p) {
         return step * std::round(in / step) + ((level) ? step / 2.0 : 0.0) * ((in >= 0) ? 1 : -1);
     };
 
-    return Vec3(
-        snap(p.x - rc.x) + rc.x,
-        snap(p.y - rc.y) + rc.y,
-        snap(p.z - rc.z) + rc.z
+    auto ret = Vec3(
+        snap(p.x),
+        snap(p.y),
+        snap(p.z)
     );
+
+    return ret;
 }
 
 NodeLevel Octree::calculate_level(float diameter) {
@@ -321,25 +333,25 @@ NodeLevel Octree::calculate_level(float diameter) {
         throw OutsideBoundsError();
     }
 
-    float octree_diameter = get_root()->diameter();
+    uint32_t octree_diameter = get_root()->diameter();
 
     // If we're outside the root octree radius, then we're outside the bounds
-    if(diameter > (octree_diameter * 2.0)) {
+    if(diameter > (octree_diameter * 2)) {
         throw OutsideBoundsError();
     }
 
     // Calculate the level by dividing the root radius until
     // we hit the point that the object is smaller
-    while(diameter < (octree_diameter * 2.0)) {
-        octree_diameter /= 2.0f;
+    while(diameter < (octree_diameter * 2)) {
+        octree_diameter /= 2;
         ++level;
     }
 
     return level;
 }
 
-float Octree::node_diameter(NodeLevel level) const {
-    float root_width = get_root()->diameter();
+NodeDiameter Octree::node_diameter(NodeLevel level) const {
+    NodeDiameter root_width = get_root()->diameter();
     if(level == 0) {
         return root_width;
     }
@@ -473,7 +485,7 @@ bool Octree::merge_if_possible(const NodeList &nodes) {
     return true;
 }
 
-std::pair<OctreeNode*, bool> Octree::get_or_create_node(NodeLevel level, const Vec3& centre, float diameter) {
+std::pair<OctreeNode*, bool> Octree::get_or_create_node(NodeLevel level, const Vec3& centre, NodeDiameter diameter) {
     auto hash = generate_vector_hash(centre);
 
     assert(level >= 0);
@@ -494,8 +506,8 @@ void Octree::grow_to_contain(const AABB& aabb) {
         auto c = aabb.centre();
         auto rc = (root) ? root->centre() : Vec3();
 
-        float new_diameter = (root) ? root->diameter() * 2.0 : aabb.max_dimension() / 2.0f;
-        float qd = new_diameter / 4.0f;
+        NodeDiameter new_diameter = (root) ? root->diameter() * 2 : next_pow2(aabb.max_dimension() / 2.0f);
+        NodeDiameter qd = new_diameter / 4;
 
         Vec3 new_centre_offset(
             (c.x < rc.x) ? -qd : qd,
@@ -517,11 +529,7 @@ void Octree::grow_to_contain(const AABB& aabb) {
 OctreeNode* Octree::get_or_create_node(Boundable* boundable) {
     auto& aabb = boundable->aabb();
 
-    if(aabb.has_zero_area()) {
-        throw InvalidBoundableInsertion("Object has no spacial area. Cannot insert into Octree.");
-    }
-
-    if(!get_root() || !get_root()->contains(aabb.centre()) || get_root()->diameter() * 2.0 < aabb.max_dimension()) {
+    if(!get_root() || !inside_octree(aabb)) {
         // OK, so the boundable is outside the current octree, so we need to grow
         grow_to_contain(aabb);
     }
@@ -532,7 +540,7 @@ OctreeNode* Octree::get_or_create_node(Boundable* boundable) {
     return levels_[level_and_hash.first]->nodes.at(level_and_hash.second).get();
 }
 
-OctreeNode* Octree::create_node(int32_t level_number, Vec3 centre, float diameter) {
+OctreeNode* Octree::create_node(int32_t level_number, Vec3 centre, NodeDiameter diameter) {
     auto hash = generate_vector_hash(centre);
 
     OctreeLevel* level = nullptr;

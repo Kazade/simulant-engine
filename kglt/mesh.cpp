@@ -32,6 +32,10 @@ const AABB Mesh::aabb() const {
     //FIXME: This should totally be cached for speed
     AABB result;
 
+    if(!this->submesh_count()) {
+        return result;
+    }
+
     float max = std::numeric_limits<float>::max();
     float min = std::numeric_limits<float>::min();
 

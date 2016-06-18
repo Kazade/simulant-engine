@@ -10,7 +10,7 @@ class NewOctreeTest : public KGLTTestCase {
 public:
     void set_up() {
         KGLTTestCase::set_up();
-        stage_id_ = window->new_stage();
+        stage_id_ = window->new_stage(kglt::PARTITIONER_NULL);
         stage_ = window->stage(stage_id_);
 
         /* We have a loose octree, so nodes can contain objects which are twice their size
