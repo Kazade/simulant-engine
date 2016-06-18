@@ -86,7 +86,7 @@ public:
         // and all actors will be in the root.
         assert_close(10.0f, octree_node->diameter(), 0.001);
 
-        octree_->remove_actor(actor_id_);
+        octree_->remove_actor(actor_2);
 
         assert_close(10.0f, octree_->get_root()->diameter(), 0.001);
         assert_equal(1, octree_->node_count());

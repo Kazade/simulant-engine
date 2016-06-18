@@ -281,6 +281,7 @@ Vec3 Octree::find_node_centre_for_point(NodeLevel level, const Vec3& p) {
         return get_root()->centre();
     }
 
+    auto rc = get_root()->centre();
     float step = node_diameter(level);
 
     auto snap = [step, level](const float& in) -> float {
@@ -288,9 +289,9 @@ Vec3 Octree::find_node_centre_for_point(NodeLevel level, const Vec3& p) {
     };
 
     return Vec3(
-        snap(p.x),
-        snap(p.y),
-        snap(p.z)
+        snap(p.x - rc.x) + rc.x,
+        snap(p.y - rc.y) + rc.y,
+        snap(p.z - rc.z) + rc.z
     );
 }
 
@@ -363,11 +364,11 @@ void Octree::reinsert_data(std::shared_ptr<NodeData> data) {
 bool Octree::split_if_necessary(NodeType* node) {
     bool should_split = should_split_predicate_(node);
     if(!should_split) {
-        printf("Node doesn't require splitting\n");
+        L_DEBUG("Node doesn't require splitting\n");
         return false;
     }
 
-    printf("Splitting node\n");
+    L_DEBUG("Splitting node\n");
 
     bool created = false;
     NodeLevel node_level = node->level();
@@ -388,11 +389,11 @@ bool Octree::split_if_necessary(NodeType* node) {
     // in this node is already as low down as it can be, the predicate
     // might keep returning true but there's not much we can do about it
     if(!created) {
-        printf("No new nodes were created\n");
+        L_DEBUG("No new nodes were created\n");
         return false;
     }
 
-    printf("New nodes created, reinserting data\n");
+    L_DEBUG("New nodes created, reinserting data\n");
 
     // Now, relocate everything!
     auto data = node->data_; // Stash original data
@@ -404,7 +405,7 @@ bool Octree::split_if_necessary(NodeType* node) {
     // Now, remove any nodes which are now unnecessary
     for(auto node: nodes_created) {
         if(node->is_empty()) {
-            printf("Removed empty node which was just added\n");
+            L_DEBUG("Removed empty node which was just added\n");
             remove_node(node);
         }
     }
@@ -413,11 +414,43 @@ bool Octree::split_if_necessary(NodeType* node) {
 }
 
 bool Octree::merge_if_possible(const NodeList &nodes) {
+    if(nodes.empty()) {
+        return false;
+    }
+
     if(!should_merge_predicate_(nodes)) {
         return false;
     }
 
-    //FIXME: merge things
+    auto first = (*nodes.begin());
+    auto parent = first->parent();
+    if(!parent) {
+        // Removing the root node, but only if it's empty
+        if(first->is_empty()) {
+            remove_node(first);
+        }
+        return true;
+    }
+
+    std::vector<std::shared_ptr<NodeData>> datas;
+
+    for(auto& node: nodes) {
+        if(!node->is_empty()) {
+            datas.push_back(node->data_);
+            node->data_.reset();
+        }
+
+        // If this is the case, then the node has children and we shouldn't even
+        // be trying to merge anything
+        assert(node->is_empty());
+        remove_node(node);
+    }
+
+    for(auto& data: datas) {
+        parent->data->actor_ids_.insert(data->actor_ids_.begin(), data->actor_ids_.end());
+        parent->data->light_ids_.insert(data->light_ids_.begin(), data->light_ids_.end());
+        parent->data->particle_system_ids_.insert(data->particle_system_ids_.begin(), data->particle_system_ids_.end());
+    }
 
     return true;
 }
@@ -529,6 +562,9 @@ void Octree::remove_node(NodeType* node) {
 
     if(node->parent_) {
         node->parent_->children_.erase(node);
+    } else {
+        // Removing the root node! assert that we're not doing anything bad
+        assert(levels_[0]->nodes.size() == 1);
     }
 
     for(auto& actor_pair: node->data->actor_ids_) {
@@ -548,6 +584,13 @@ void Octree::remove_node(NodeType* node) {
     // Remove the level if it's empty and the last one
     if(level == levels_.size() - 1 && levels_[level]->nodes.empty()) {
         levels_.pop_back();
+    } else if(level == 0) {
+        assert(levels_[0]->nodes.empty());
+        levels_.pop_front();
+        if(!levels_.empty()) {
+            // We should never have more than one root node
+            assert(levels_[0]->nodes.size() == 1);
+        }
     }
 
     --node_count_;
