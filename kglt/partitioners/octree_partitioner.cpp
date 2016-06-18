@@ -18,6 +18,22 @@
 
 namespace kglt {
 
+bool should_split_predicate(const impl::OctreeNode* node) {
+    return node->data->actor_ids_.size() + node->data->particle_system_ids_.size() > 30;
+}
+
+bool should_merge_predicate(const impl::Octree::NodeList& nodes) {
+    uint32_t total = 0;
+    for(auto& node: nodes) {
+        total += node->data->actor_ids_.size();
+        total += node->data->particle_system_ids_.size();
+    }
+
+    return total < 20;
+}
+
+
+
 const std::string STATIC_CHUNK_KEY = "static_chunks";
 
 void OctreePartitioner::event_actor_changed(ActorID ent) {
@@ -27,16 +43,11 @@ void OctreePartitioner::event_actor_changed(ActorID ent) {
 }
 
 void OctreePartitioner::add_particle_system(ParticleSystemID ps) {
-    auto system = stage->particle_system(ps); //Get a handle on the particle system
-
-    BoundableEntity* ent = system.__object.get(); //Get the raw pointer as a BoundableEntity (bad?)
-    tree_.grow(ent);
+    tree_.insert_particle_system(ps);
 }
 
 void OctreePartitioner::remove_particle_system(ParticleSystemID ps) {
-    auto system = stage->particle_system(ps);
-    BoundableEntity* ent = system.__object.get(); //Get the raw pointer as a BoundableEntity (bad?)
-    tree_.shrink(ent);
+    tree_.remove_particle_system(ps);
 }
 
 void OctreePartitioner::add_geom(GeomID geom_id) {
@@ -50,6 +61,7 @@ void OctreePartitioner::add_geom(GeomID geom_id) {
      *    doesn't add the polygon to the object list on the node
      */
 
+    /*
     GeomPtr geom = stage->geom(geom_id);
     auto geom_mesh = stage->mesh(geom->mesh_id());
 
@@ -134,7 +146,7 @@ void OctreePartitioner::add_geom(GeomID geom_id) {
         }
     });
 
-    std::cout << "Subchunk count: " << num_created << std::endl;
+    std::cout << "Subchunk count: " << num_created << std::endl; */
 }
 
 void OctreePartitioner::remove_geom(GeomID geom_id) {
@@ -145,54 +157,21 @@ void OctreePartitioner::remove_geom(GeomID geom_id) {
 void OctreePartitioner::add_actor(ActorID obj) {
     L_DEBUG("Adding actor to the partitioner");
 
-    auto ent = stage->actor(obj);
-    for(uint16_t i = 0; i < ent->subactor_count(); ++i) {
-        //All subactors are boundable
-        BoundableEntity* boundable = &ent->subactor(i);
-        tree_.grow(boundable);
-
-        actor_to_registered_subactors_[obj].push_back(boundable);
-        boundable_to_renderable_[boundable] = ent->_subactors().at(i);
-    }
-
-    //Connect the changed signal
-    actor_changed_connections_[obj] = ent->signal_mesh_changed().connect(
-        std::bind(&OctreePartitioner::event_actor_changed, this, std::placeholders::_1)
-    );
+    tree_.insert_actor(obj);
 }
 
 void OctreePartitioner::remove_actor(ActorID obj) {
     L_DEBUG("Removing actor from the partitioner");
 
-    //Remove all boundable subactors that were linked to the actor
-    for(BoundableEntity* boundable: actor_to_registered_subactors_[obj]) {
-        tree_.shrink(boundable);
-        boundable_to_renderable_.erase(boundable);
-    }
-
-    //Erase the list of subactors linked to this actor
-    actor_to_registered_subactors_.erase(obj);
-
-    //Disconnect the changed signal
-    actor_changed_connections_[obj].disconnect();
-    actor_changed_connections_.erase(obj);
+    tree_.remove_actor(obj);
 }
 
 void OctreePartitioner::add_light(LightID obj) {
-    //FIXME: THis is nasty and dangerous
-    auto light = stage->light(obj);
-    BoundableEntity* boundable = light.get();
-    assert(boundable);
-    tree_.grow(boundable);
-    boundable_to_light_[boundable] = obj;
+    tree_.insert_light(obj);
 }
 
 void OctreePartitioner::remove_light(LightID obj) {
-    auto light = stage->light(obj);
-    BoundableEntity* boundable = light.get();
-    assert(boundable);
-    tree_.shrink(boundable);
-    boundable_to_light_.erase(boundable);
+    tree_.remove_light(obj);
 }
 
 std::vector<RenderablePtr> OctreePartitioner::geometry_visible_from(CameraID camera_id) {
@@ -207,6 +186,32 @@ std::vector<RenderablePtr> OctreePartitioner::geometry_visible_from(CameraID cam
      *  FIXME: A tree_->objects_visible_from(cam.frustum()); would be faster
      */
 
+    auto camera = stage->window->camera(camera_id);
+    auto& frustum = camera->frustum();
+
+    impl::traverse(
+        tree_.get_root(),
+        [&](impl::OctreeNode* node) -> bool {
+            if(frustum.intersects_aabb(node->aabb())) {
+                for(auto& actor_id: node->data->actor_ids_) {
+                    auto actor = stage->actor(actor_id.first);
+                    for(auto subactor: actor->_subactors()) {
+                        results.push_back(subactor);
+                    };
+                }
+
+                for(auto& ps: node->data->particle_system_ids_) {
+                    auto system = stage->particle_system(ps.first);
+                    results.push_back(system.__object);
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+    );
+/*
     //Go through the visible nodes
     for(OctreeNode* node: tree_.nodes_visible_from(stage->window->camera(camera_id)->frustum())) {
         //Go through the objects
@@ -226,14 +231,37 @@ std::vector<RenderablePtr> OctreePartitioner::geometry_visible_from(CameraID cam
                 }
             }
         }
-    }
+    }*/
 
     return results;
 }
 
 std::vector<LightID> OctreePartitioner::lights_visible_from(CameraID camera_id) {
-    std::vector<LightID> lights;
-    return lights;
+    std::vector<LightID> results;
+
+    //If the tree has no root then we return nothing
+    if(!tree_.has_root()) {
+        return results;
+    }
+
+    auto camera = stage->window->camera(camera_id);
+    auto& frustum = camera->frustum();
+
+    impl::traverse(
+        tree_.get_root(),
+        [&](impl::OctreeNode* node) -> bool {
+            if(frustum.intersects_aabb(node->aabb())) {
+                for(auto light_id: node->data->light_ids_) {
+                    results.push_back(light_id.first);
+                }
+                return true;
+            }
+
+            return false;
+        }
+    );
+
+    return results;
 }
 
 }

@@ -94,6 +94,9 @@ public:
 
     std::vector<Vec3> child_centres() const;
 
+    const AABB aabb() const {
+        return AABB(centre_, diameter_);
+    }
 private:
     Octree* octree_ = nullptr;
     OctreeLevel* level_ = nullptr;
@@ -130,7 +133,7 @@ public:
     typedef OctreeNode NodeType;
     typedef typename OctreeNode::NodeList NodeList;
 
-    Octree(StagePtr stage,
+    Octree(Stage* stage,
         std::function<bool (NodeType*)> should_split_predicate = &default_split_predicate,
         std::function<bool (const NodeList&)> should_merge_predicate = &default_merge_predicate
     );
@@ -186,7 +189,7 @@ private:
     typedef std::deque<std::shared_ptr<OctreeLevel>> LevelArray;
 
     VectorHash generate_vector_hash(const Vec3& vec);
-    StagePtr stage_;
+    Stage* stage_;
     LevelArray levels_;
 
     uint32_t calculate_level(float diameter);
@@ -220,23 +223,7 @@ private:
 };
 
 
-void traverse(OctreeNode* start, std::function<bool (OctreeNode*)> callback) {
-    /*
-     * Traverses the tree from the starting node in the traditional root-to-leaf way.
-     * The callback must return true if the traversal should continue to the nodes children
-     * returning false will terminate that particular branch's traversal.
-     */
-
-    std::function<void (OctreeNode*)> do_traversal = [&](OctreeNode* node) {
-        if(callback(node)) {
-            for(auto& child: node->children()) {
-                do_traversal(child);
-            }
-        }
-    };
-
-    do_traversal(start);
-}
+void traverse(OctreeNode* start, std::function<bool (OctreeNode*)> callback);
 
 }
 }

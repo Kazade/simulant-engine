@@ -6,7 +6,7 @@
 #include "../partitioner.h"
 #include "../interfaces.h"
 #include "../mesh.h"
-#include "octree.h"
+#include "impl/octree.h"
 
 namespace kglt {
 
@@ -14,12 +14,17 @@ class Renderable;
 
 typedef std::shared_ptr<Renderable> RenderablePtr;
 
+bool should_split_predicate(const impl::OctreeNode *node);
+bool should_merge_predicate(const impl::Octree::NodeList& nodes);
+
+
 class OctreePartitioner :
     public Partitioner {
 
 public:
     OctreePartitioner(Stage* ss):
-        Partitioner(ss) {}
+        Partitioner(ss),
+        tree_(ss, &should_split_predicate, &should_merge_predicate) {}
 
     void add_actor(ActorID obj);
     void remove_actor(ActorID obj);
@@ -38,7 +43,7 @@ public:
 
     void event_actor_changed(ActorID ent);
 private:
-    Octree tree_;
+    impl::Octree tree_;
 
     std::map<ActorID, std::vector<BoundableEntity*> > actor_to_registered_subactors_;
 

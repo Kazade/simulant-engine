@@ -86,7 +86,7 @@ NodeLevel OctreeNode::level() const {
     return level_->level_number;
 }
 
-Octree::Octree(StagePtr stage,
+Octree::Octree(Stage *stage,
     std::function<bool (NodeType *)> should_split_predicate,
     std::function<bool (const NodeList&)> should_merge_predicate):
 
@@ -594,6 +594,24 @@ void Octree::remove_node(NodeType* node) {
     }
 
     --node_count_;
+}
+
+void traverse(OctreeNode* start, std::function<bool (OctreeNode*)> callback) {
+    /*
+     * Traverses the tree from the starting node in the traditional root-to-leaf way.
+     * The callback must return true if the traversal should continue to the nodes children
+     * returning false will terminate that particular branch's traversal.
+     */
+
+    std::function<void (OctreeNode*)> do_traversal = [&](OctreeNode* node) {
+        if(callback(node)) {
+            for(auto& child: node->children()) {
+                do_traversal(child);
+            }
+        }
+    };
+
+    do_traversal(start);
 }
 
 }
