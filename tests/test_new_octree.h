@@ -96,14 +96,14 @@ public:
         auto octree_node = octree_->insert_actor(actor_id_);
 
         std::vector<kglt::Vec3> expected = {
-            kglt::Vec3(-2.5, -2.5, -2.5),
-            kglt::Vec3(-2.5,  2.5, -2.5),
-            kglt::Vec3( 2.5,  2.5, -2.5),
-            kglt::Vec3( 2.5, -2.5, -2.5),
-            kglt::Vec3(-2.5, -2.5,  2.5),
-            kglt::Vec3(-2.5,  2.5,  2.5),
-            kglt::Vec3( 2.5,  2.5,  2.5),
-            kglt::Vec3( 2.5, -2.5,  2.5),
+            kglt::Vec3(-4.0, -4.0, -4.0),
+            kglt::Vec3(-4.0,  4.0, -4.0),
+            kglt::Vec3( 4.0,  4.0, -4.0),
+            kglt::Vec3( 4.0, -4.0, -4.0),
+            kglt::Vec3(-4.0, -4.0,  4.0),
+            kglt::Vec3(-4.0,  4.0,  4.0),
+            kglt::Vec3( 4.0,  4.0,  4.0),
+            kglt::Vec3( 4.0, -4.0,  4.0),
         };
 
         assert_items_equal(expected, octree_node->child_centres());
