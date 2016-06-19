@@ -921,3 +921,7 @@ tests/test_new_octree.h
 deps/kaztest/kaztest/kaztest.h
 samples/fleets_demo.cpp
 kglt/partitioners/impl/grid.h
+kglt/panels/panel.h
+kglt/panels/stats_panel.h
+kglt/panels/partitioner_panel.h
+kglt/panels/stats_panel.cpp

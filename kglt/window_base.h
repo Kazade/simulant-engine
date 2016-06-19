@@ -47,6 +47,7 @@ class Watcher;
 class VirtualGamepad;
 class DebugService;
 class Renderer;
+class Panel;
 
 typedef std::function<void (double)> WindowUpdateCallback;
 typedef std::shared_ptr<Loader> LoaderPtr;
@@ -220,6 +221,10 @@ public:
 
     uint32_t background_count() const { return background_manager_->background_count(); }
 
+    // Panels
+    void register_panel(uint8_t function_key, std::shared_ptr<Panel> panel);
+    void unregister_panel(uint8_t function_key);
+
 private:    
     Application* application_ = nullptr;
 
@@ -243,6 +248,14 @@ private:
     double fixed_step_interp_ = 0.0;
     bool is_paused_ = false;
     bool has_context_ = false;
+
+
+    struct PanelEntry {
+        std::shared_ptr<Panel> panel;
+        InputConnection keyboard_connection;
+    };
+
+    std::unordered_map<uint8_t, PanelEntry> panels_;
 
     /*
      *  Sometimes we need to destroy or recreate the GL context, if that happens while we are rendering in the

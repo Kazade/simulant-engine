@@ -31,6 +31,7 @@
 #include "utils/gl_error.h"
 #include "utils/debug_service.h"
 
+#include "panels/stats_panel.h"
 
 namespace kglt {
 
@@ -64,6 +65,7 @@ WindowBase::WindowBase():
     ktiStartGameTimer();
 
     logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));
+
 }
 
 WindowBase::~WindowBase() {
@@ -159,8 +161,6 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
     render_sequence_ = std::make_shared<RenderSequence>(this);
 
     if(result && !initialized_) {        
-
-
         //watcher_ = Watcher::create(*this);
 
         L_INFO("Registering loaders");
@@ -186,6 +186,8 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
 
         create_defaults();
 
+        register_panel(1, std::make_shared<StatsPanel>(this));
+
         GLCheck(glEnable, GL_DEPTH_TEST);
         GLCheck(glDepthFunc, GL_LEQUAL);
         GLCheck(glEnable, GL_CULL_FACE);
@@ -208,6 +210,25 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
     }
 
     return result;
+}
+
+void WindowBase::register_panel(uint8_t function_key, std::shared_ptr<Panel> panel) {
+    PanelEntry entry;
+    entry.panel = panel;
+    entry.keyboard_connection = input_controller_->keyboard().key_pressed_connect((SDL_Scancode) (int(SDL_SCANCODE_F1) + (function_key - 1)), [panel](SDL_Keysym sym) {
+        if(panel->is_active()) {
+            panel->deactivate();
+        } else {
+            panel->activate();
+        }
+    });
+
+    panels_[function_key] = entry;
+}
+
+void WindowBase::unregister_panel(uint8_t function_key) {
+    panels_[function_key].keyboard_connection.disconnect();
+    panels_.erase(function_key);
 }
 
 void WindowBase::set_logging_level(LoggingLevel level) {

@@ -42,6 +42,11 @@ class InputConnection :
 
 public:
     InputConnection(InputConnectionID id, std::weak_ptr<Device> device);
+    InputConnection():
+        generic::Identifiable<InputConnectionID>(InputConnectionID()) {}
+
+    InputConnection(const InputConnection& rhs) = default;
+
     void disconnect();
 
 private:    
