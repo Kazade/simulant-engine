@@ -390,6 +390,11 @@ bool Octree::split_if_necessary(NodeType* node) {
         return false;
     }
 
+    if(node->diameter() == 1) {
+        // We can't split any further than 1 - don't even try!
+        return false;
+    }
+
     bool created = false;
     NodeLevel node_level = node->level();
 
