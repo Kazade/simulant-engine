@@ -147,8 +147,6 @@ kglt/generic/safe_bool.h
 kglt/buffer_object.h
 kglt/buffer_object.cpp
 kglt/partitioners/octree_partitioner.h
-kglt/partitioners/octree.h
-kglt/partitioners/octree.cpp
 kglt/partitioners/octree_partitioner.cpp
 kglt/resource_locator.h
 kglt/resource_locator.cpp
@@ -206,7 +204,6 @@ tests/test_frustum.h
 tests/test_material.h
 tests/test_material_script.h
 tests/test_mesh.h
-tests/test_octree.h
 tests/test_shader.h
 tests/test_sound.h
 tests/test_vertex_data.h
