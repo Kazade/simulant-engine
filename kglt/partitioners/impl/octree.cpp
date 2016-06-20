@@ -154,10 +154,6 @@ void Octree::remove_actor(ActorID actor_id) {
         auto siblings = node->siblings();
         siblings.insert(node);
         merge_if_possible(siblings);
-
-        if(node->is_empty()) {
-            prune_empty_nodes();
-        }
     }
 }
 

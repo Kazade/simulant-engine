@@ -112,7 +112,7 @@ public:
 
     void test_insert_empty_aabb() {
         auto blank_actor = stage_->new_actor();
-        impl::OctreeNode* node = octree_->insert_actor(blank_actor);
+        kglt::impl::OctreeNode* node = octree_->insert_actor(blank_actor);
         assert_equal(1, node->diameter()); // 1 is the minimum node size
     }
 
