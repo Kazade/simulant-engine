@@ -22,6 +22,8 @@ private:
     UIStageID ui_stage_id_;
     CameraID ui_camera_;
     PipelineID pipeline_id_;
+
+    void update();
 };
 
 }

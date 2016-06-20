@@ -132,7 +132,7 @@ public:
         }
     }
 
-    void inner_rml(const unicode& rml) {
+    void html(const unicode& rml) {
         for(Element& e: elements_) {
             e.inner_rml(rml);
         }
