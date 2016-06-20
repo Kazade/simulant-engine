@@ -24,6 +24,8 @@ private:
     PipelineID pipeline_id_;
 
     void update();
+
+    int32_t get_memory_usage_in_megabytes();
 };
 
 }

@@ -68,6 +68,10 @@ private:
 
 
 class FleetsDemo: public kglt::Application {
+public:
+    FleetsDemo():
+        kglt::Application("Fleets Demo") {}
+
 private:
     bool do_init() {
         register_screen("/", kglt::screen_factory<GameScreen>());

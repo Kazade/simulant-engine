@@ -35,16 +35,57 @@ void StatsPanel::initialize() {
     fps.html("FPS: <span id='fps'></span>");
     overlay->find("#fps").text("0");
 
+    auto ram_usage = body.append("<div></div>");
+    ram_usage.css("top", "4.5em");
+    ram_usage.css("margin-left", "1em");
+    ram_usage.css("position", "absolute");
+    ram_usage.html("RAM: <span id='ram'></span>");
+    overlay->find("#ram").text("0");
+
     window_->signal_frame_started().connect(std::bind(&StatsPanel::update, this));
 
     initialized_ = true;
 }
 
+int32_t StatsPanel::get_memory_usage_in_megabytes() {
+#ifdef __linux__
+    std::ifstream file("/proc/self/status");
+    std::string line;
+    while(std::getline(file, line)) {
+
+        if(unicode(line).starts_with("VmRSS:")) {
+            auto parts = unicode(line).split(" ", -1, false);
+            if(parts.size() == 3) {
+                return float(parts[1].to_int()) / 1024.0f;
+            }
+        }
+    }
+    return -1;
+#else
+    return -1;
+#endif
+}
+
 void StatsPanel::update() {
-    auto overlay = window_->ui_stage(ui_stage_id_);
-    overlay->find("#fps").text(
-        _u("{0}").format(window_->stats->frames_per_second())
-    );
+    static float last_update = 0.0f;
+    static bool first_update = true;
+
+    last_update += window_->delta_time();
+
+    if(first_update || last_update >= 1.0) {
+        auto overlay = window_->ui_stage(ui_stage_id_);
+        overlay->find("#fps").text(
+            _u("{0}").format(window_->stats->frames_per_second())
+        );
+
+        auto mem_usage = get_memory_usage_in_megabytes();
+        overlay->find("#ram").text(
+            _u("{0} MB").format(mem_usage)
+        );
+
+        last_update = 0.0f;
+        first_update = false;
+    }
 }
 
 void StatsPanel::do_activate() {
