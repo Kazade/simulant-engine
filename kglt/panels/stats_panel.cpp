@@ -21,12 +21,12 @@ void StatsPanel::initialize() {
     auto body = overlay->append("<body/>");
     body.css("color", "#4BD3FFDD");
 
-    auto frame_time = body.append("<div></div>");
-    frame_time.css("top", "1.5em");
-    frame_time.css("position", "absolute");
-    frame_time.css("margin-left", "1em");
-    frame_time.html("Frame time: <span id='frame-time'></span>");
-    overlay->find("#frame-time").text("0");
+    auto title = body.append("<h1></h1>");
+    title.css("width", "640px");
+    title.css("position", "absolute");
+    title.css("top", "1.5em");
+    title.css("text-align", "center");
+    title.text("Performance");
 
     auto fps = body.append("<div></div>");
     fps.css("top", "3em");
