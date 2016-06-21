@@ -51,9 +51,15 @@ private:
     WindowBase* window_;
 };
 
+typedef sig::signal<void (StageID)> StageAddedSignal;
+typedef sig::signal<void (StageID)> StageRemovedSignal;
+
 class StageManager:
     public BaseStageManager,
     public virtual Updateable {
+
+    DEFINE_SIGNAL(StageAddedSignal, signal_stage_added);
+    DEFINE_SIGNAL(StageRemovedSignal, signal_stage_removed);
 
 public:
     StageManager(WindowBase* window);

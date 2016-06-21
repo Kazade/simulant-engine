@@ -156,7 +156,9 @@ StageManager::StageManager(WindowBase* window):
 }
 
 StageID StageManager::new_stage(AvailablePartitioner partitioner) {
-    return StageManager::manager_new(this->window_, partitioner);
+    auto ret = StageManager::manager_new(this->window_, partitioner);
+    signal_stage_added_(ret);
+    return ret;
 }
 
 uint32_t StageManager::stage_count() const {
@@ -179,7 +181,9 @@ StagePtr StageManager::stage(StageID s) {
 void StageManager::delete_stage(StageID s) {
     try {
         //Recurse through the tree, destroying all children
-        stage(s)->apply_recursively_leaf_first(&ownable_tree_node_destroy, false);
+        stage(s)->apply_recursively_leaf_first(&ownable_tree_node_destroy, false);       
+        signal_stage_removed_(s);
+
     } catch(DoesNotExist<Stage>&) {
         return;
     }

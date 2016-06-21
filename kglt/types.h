@@ -24,6 +24,13 @@
 #include "generic/manager_lookup_ptr.h"
 #include "kazbase/unicode.h"
 
+#define DEFINE_SIGNAL(prototype, name) \
+    public: \
+        prototype& name() { return name##_; } \
+    private: \
+        prototype name##_;
+
+
 namespace kglt {
 
 struct Vec3;

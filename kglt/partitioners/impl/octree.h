@@ -182,6 +182,8 @@ public:
     }
 
     const uint32_t node_count() const { return node_count_; }
+
+    kglt::MeshID debug_mesh_id() { return debug_mesh_; }
 private:
     friend class ::NewOctreeTest;
     friend class OctreeNode;
@@ -220,6 +222,8 @@ private:
 
     NodeType* create_node(int32_t level, Vec3 centre, NodeDiameter diameter);
     void remove_node(NodeType* node);
+
+    kglt::MeshID debug_mesh_;
 };
 
 

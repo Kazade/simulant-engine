@@ -42,6 +42,8 @@ public:
     std::vector<RenderablePtr> geometry_visible_from(CameraID camera_id);
 
     void event_actor_changed(ActorID ent);
+
+    MeshID debug_mesh_id() override { return tree_.debug_mesh_id(); }
 private:
     impl::Octree tree_;
 

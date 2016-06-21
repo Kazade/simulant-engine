@@ -32,6 +32,7 @@
 #include "utils/debug_service.h"
 
 #include "panels/stats_panel.h"
+#include "panels/partitioner_panel.h"
 
 namespace kglt {
 
@@ -187,6 +188,7 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
         create_defaults();
 
         register_panel(1, std::make_shared<StatsPanel>(this));
+        register_panel(2, std::make_shared<PartitionerPanel>(this));
 
         GLCheck(glEnable, GL_DEPTH_TEST);
         GLCheck(glDepthFunc, GL_LEQUAL);

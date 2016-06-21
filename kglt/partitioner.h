@@ -68,6 +68,7 @@ public:
     StaticChunkDestroyed& signal_static_chunk_destroyed() { return signal_static_chunk_destroyed_; }
     StaticChunkChanged& signal_static_chunk_changed() { return signal_static_chunk_changed_; }
 
+    virtual MeshID debug_mesh_id() { return MeshID(); }
 protected:
     Property<Partitioner, Stage> stage = { this, &Partitioner::stage_ };
 

@@ -532,6 +532,10 @@ OctreeNode* Octree::get_or_create_node(Boundable* boundable) {
 }
 
 OctreeNode* Octree::create_node(int32_t level_number, Vec3 centre, NodeDiameter diameter) {
+    if(!debug_mesh_) {
+        debug_mesh_ = stage_->new_mesh(false);
+    }
+
     auto hash = generate_vector_hash(centre);
 
     OctreeLevel* level = nullptr;
@@ -554,9 +558,13 @@ OctreeNode* Octree::create_node(int32_t level_number, Vec3 centre, NodeDiameter 
     auto* nodes = &level->nodes;
 
     auto new_node = std::make_shared<OctreeNode>(this, level, diameter, centre);
-
     nodes->insert(std::make_pair(hash, new_node));
     ++node_count_;
+
+    stage_->mesh(debug_mesh_)->new_submesh_as_box(
+        stage_->clone_default_material(),
+        diameter, diameter, diameter, centre
+    );
 
     // Update the parent if this isn't a root node
     if(level->level_number > 0) {

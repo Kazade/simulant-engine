@@ -23,6 +23,7 @@
 #include "screens/screen_manager.h"
 #include "loader.h"
 
+
 namespace kglt {
 
 namespace ui {
@@ -69,6 +70,15 @@ private:
     uint32_t frames_per_second_;
 };
 
+typedef sig::signal<void ()> FrameStartedSignal;
+typedef sig::signal<void ()> FrameFinishedSignal;
+typedef sig::signal<void ()> PreSwapSignal;
+typedef sig::signal<void (double)> StepSignal;
+typedef sig::signal<void (double)> PostStepSignal;
+typedef sig::signal<void ()> ShutdownSignal;
+typedef sig::signal<void (SDL_Scancode)> KeyUpSignal;
+typedef sig::signal<void (SDL_Scancode)> KeyDownSignal;
+
 class WindowBase :
     public Source,
     public StageManager,
@@ -78,6 +88,13 @@ class WindowBase :
     public Loadable,
     public PipelineHelperAPIInterface,
     public RenderTarget {
+
+    DEFINE_SIGNAL(FrameStartedSignal, signal_frame_started);
+    DEFINE_SIGNAL(FrameFinishedSignal, signal_frame_finished);
+    DEFINE_SIGNAL(PreSwapSignal, signal_pre_swap);
+    DEFINE_SIGNAL(StepSignal, signal_step);
+    DEFINE_SIGNAL(PostStepSignal, signal_post_step);
+    DEFINE_SIGNAL(ShutdownSignal, signal_shutdown);
 
 public:    
     typedef std::shared_ptr<WindowBase> ptr;
@@ -102,8 +119,8 @@ public:
     
     void register_loader(LoaderTypePtr loader_type);
 
-    virtual sig::signal<void (SDL_Scancode)>& signal_key_up() = 0;
-    virtual sig::signal<void (SDL_Scancode)>& signal_key_down() = 0;
+    virtual KeyUpSignal& signal_key_up() = 0;
+    virtual KeyDownSignal& signal_key_down() = 0;
     
     virtual void set_title(const std::string& title) = 0;
     virtual void cursor_position(int32_t& mouse_x, int32_t& mouse_y) = 0;
@@ -130,13 +147,6 @@ public:
     uint8_t joypad_count() const;
 
     void set_logging_level(LoggingLevel level);
-
-    sig::signal<void (void)>& signal_frame_started() { return signal_frame_started_; }
-    sig::signal<void (void)>& signal_frame_finished() { return signal_frame_finished_; }
-    sig::signal<void (void)>& signal_pre_swap() { return signal_pre_swap_; }
-    sig::signal<void (double)>& signal_step() { return signal_step_; }
-    sig::signal<void (double)>& signal_post_step() { return signal_post_step_; }
-    sig::signal<void (void)>& signal_shutdown() { return signal_shutdown_; }
 
     void stop_running() { is_running_ = false; }
     const bool is_shutting_down() const { return is_running_ == false; }
@@ -275,17 +285,8 @@ private:
 
     double total_time_ = 0.0;
 
-    sig::signal<void ()> signal_frame_started_;
-    sig::signal<void ()> signal_pre_swap_;
-    sig::signal<void ()> signal_frame_finished_;
-    sig::signal<void (double)> signal_step_;
-    sig::signal<void (double)> signal_post_step_;
-    sig::signal<void ()> signal_shutdown_;
-
     std::shared_ptr<Watcher> watcher_;
-
     std::shared_ptr<screens::Loading> loading_;
-
     std::shared_ptr<MessageBar> message_bar_;
     std::shared_ptr<kglt::RenderSequence> render_sequence_;
     generic::DataCarrier data_carrier_;
