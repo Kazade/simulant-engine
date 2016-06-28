@@ -163,8 +163,6 @@ public:
     void remove_light(LightID light_id);
     void remove_particle_system(ParticleSystemID particle_system_id);
 
-    void prune_empty_nodes();
-
     const Vec3 centre() const;
     const NodeDiameter diameter() const {
         return (get_root()) ? get_root()->diameter() : 0.0f;
@@ -201,7 +199,7 @@ private:
     std::pair<uint32_t, VectorHash> find_best_existing_node(const AABB& aabb);
     Vec3 find_node_centre_for_point(NodeLevel level, const Vec3& p);
 
-    NodeType* get_or_create_node(Boundable* boundable);
+    NodeType* get_or_create_node(BoundableEntity* boundable);
     std::pair<NodeType*, bool> get_or_create_node(NodeLevel level, const Vec3& centre, NodeDiameter diameter);
 
     std::unordered_map<ActorID, NodeType*> actor_lookup_;

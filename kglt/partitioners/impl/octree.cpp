@@ -185,10 +185,6 @@ void Octree::remove_light(LightID light_id) {
         auto siblings = node->siblings();
         siblings.insert(node);
         merge_if_possible(siblings);
-
-        if(node->is_empty()) {
-            prune_empty_nodes();
-        }
     }
 }
 
@@ -220,10 +216,6 @@ void Octree::remove_particle_system(ParticleSystemID ps_id) {
         auto siblings = node->siblings();
         siblings.insert(node);
         merge_if_possible(siblings);
-
-        if(node->is_empty()) {
-            prune_empty_nodes();
-        }
     }
 }
 
@@ -348,24 +340,6 @@ NodeDiameter Octree::node_diameter(NodeLevel level) const {
     return (root_width / std::pow(2, level));
 }
 
-void Octree::prune_empty_nodes() {
-    auto level = levels_.size();
-    while(level--) {
-        bool deleted = false;
-        auto level_nodes = levels_[level]->nodes; // Copy! This is so we can use remove_node() in the loop
-        for(auto node_pair: level_nodes) {
-            if(node_pair.second->is_empty()) {
-                remove_node(node_pair.second.get());
-                deleted = true;
-            }
-        }
-        if(!deleted) {
-            // We got to a level where no nodes needed deleting
-            break;
-        }
-    }
-}
-
 void Octree::reinsert_data(std::shared_ptr<NodeData> data) {
     for(auto& actor_pair: data->actor_ids_) {
         insert_actor(actor_pair.first);
@@ -448,6 +422,7 @@ bool Octree::merge_if_possible(const NodeList &nodes) {
         if(first->is_empty()) {
             remove_node(first);
         }
+        L_DEBUG(_u("Node count {0}. Level count {1}").format(node_count_, levels_.size()));
         return true;
     }
 
@@ -470,6 +445,8 @@ bool Octree::merge_if_possible(const NodeList &nodes) {
         parent->data->light_ids_.insert(data->light_ids_.begin(), data->light_ids_.end());
         parent->data->particle_system_ids_.insert(data->particle_system_ids_.begin(), data->particle_system_ids_.end());
     }
+
+    L_DEBUG(_u("Node count {0}. Level count {1}").format(node_count_, levels_.size()));
 
     return true;
 }
@@ -517,8 +494,8 @@ void Octree::grow_to_contain(const AABB& aabb) {
     }
 }
 
-OctreeNode* Octree::get_or_create_node(Boundable* boundable) {
-    auto& aabb = boundable->aabb();
+OctreeNode* Octree::get_or_create_node(BoundableEntity* boundable) {
+    auto& aabb = boundable->transformed_aabb();
 
     if(!get_root() || !inside_octree(aabb)) {
         // OK, so the boundable is outside the current octree, so we need to grow
