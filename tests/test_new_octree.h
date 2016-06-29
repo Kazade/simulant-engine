@@ -119,7 +119,7 @@ public:
 
     void test_splitting_nodes() {
         auto split_predicate = [](kglt::impl::OctreeNode* node) -> bool {
-            return node->data->actor_ids_.size() > 2;
+            return node->data->actor_count() > 2;
         };
 
         auto octree = std::make_shared<kglt::impl::Octree>(stage_.get().get(), split_predicate);

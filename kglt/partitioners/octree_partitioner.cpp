@@ -19,14 +19,14 @@
 namespace kglt {
 
 bool should_split_predicate(const impl::OctreeNode* node) {
-    return node->data->actor_ids_.size() + node->data->particle_system_ids_.size() > 30;
+    return node->data->actor_count() + node->data->particle_system_count() > 30;
 }
 
 bool should_merge_predicate(const impl::NodeList& nodes) {
     uint32_t total = 0;
     for(auto& node: nodes) {
-        total += node.lock()->data->actor_ids_.size();
-        total += node.lock()->data->particle_system_ids_.size();
+        total += node.lock()->data->actor_count();
+        total += node.lock()->data->particle_system_count();
     }
 
     return total < 20;
@@ -193,17 +193,17 @@ std::vector<RenderablePtr> OctreePartitioner::geometry_visible_from(CameraID cam
         tree_.get_root(),
         [&](impl::OctreeNode* node) -> bool {
             if(frustum.intersects_aabb(node->aabb())) {
-                for(auto& actor_id: node->data->actor_ids_) {
-                    auto actor = stage->actor(actor_id.first);
+                node->data->each_actor([&](ActorID actor_id, AABB aabb) {
+                    auto actor = stage->actor(actor_id);
                     for(auto subactor: actor->_subactors()) {
                         results.push_back(subactor);
                     };
-                }
+                });
 
-                for(auto& ps: node->data->particle_system_ids_) {
-                    auto system = stage->particle_system(ps.first);
+                node->data->each_particle_system([&](ParticleSystemID ps_id, AABB aabb) {
+                    auto system = stage->particle_system(ps_id);
                     results.push_back(system.__object);
-                }
+                });
 
                 return true;
             }
@@ -251,9 +251,9 @@ std::vector<LightID> OctreePartitioner::lights_visible_from(CameraID camera_id) 
         tree_.get_root(),
         [&](impl::OctreeNode* node) -> bool {
             if(frustum.intersects_aabb(node->aabb())) {
-                for(auto light_id: node->data->light_ids_) {
-                    results.push_back(light_id.first);
-                }
+                node->data->each_light([&](LightID light_id, AABB aabb) {
+                    results.push_back(light_id);
+                });
                 return true;
             }
 

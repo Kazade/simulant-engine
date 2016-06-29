@@ -926,3 +926,4 @@ kglt/panels/stats_panel.h
 kglt/panels/partitioner_panel.h
 kglt/panels/stats_panel.cpp
 kglt/panels/partitioner_panel.cpp
+kglt/generic/threading/shared_mutex.h

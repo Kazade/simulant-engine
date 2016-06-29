@@ -156,7 +156,7 @@ std::weak_ptr<OctreeNode> Octree::insert_actor(ActorID actor_id) {
 
     if(node) {
         // Insert into both the node, and the lookup table
-        node->data->actor_ids_.insert(std::make_pair(actor_id, actor->aabb()));
+        node->data->insert_or_update(actor_id, actor->transformed_aabb());
         actor_lookup_[actor_id] = node;
     }
 
@@ -173,7 +173,7 @@ void Octree::remove_actor(ActorID actor_id) {
     if(auto node = ref.lock()) {
         // Remove the actor from both the node, and the lookup table
         actor_lookup_.erase(actor_id);
-        node->data->actor_ids_.erase(actor_id);        
+        node->data->erase(actor_id);
         auto siblings = node->siblings();
         siblings.push_back(node);
         merge_if_possible(siblings);
@@ -186,7 +186,7 @@ std::weak_ptr<OctreeNode> Octree::insert_light(LightID light_id) {
 
     if(node) {
         // Insert the light id into both the node and the lookup table
-        node->data->light_ids_.insert(std::make_pair(light_id, light->aabb()));
+        node->data->insert_or_update(light_id, light->transformed_aabb());
         light_lookup_.insert(std::make_pair(light_id, node));
     }
 
@@ -202,7 +202,7 @@ void Octree::remove_light(LightID light_id) {
 
     if(auto node = ref.lock()) {
         // Remove the light from the node and lookup table
-        node->data->light_ids_.erase(light_id);
+        node->data->erase(light_id);
         light_lookup_.erase(light_id);
 
         auto siblings = node->siblings();
@@ -217,7 +217,7 @@ std::weak_ptr<OctreeNode> Octree::insert_particle_system(ParticleSystemID partic
 
     if(node) {
         // Insert the light id into both the node and the lookup table
-        node->data->particle_system_ids_.insert(std::make_pair(particle_system_id, ps->aabb()));
+        node->data->insert_or_update(particle_system_id, ps->transformed_aabb());
         particle_system_lookup_.insert(std::make_pair(particle_system_id, node));
     }
 
@@ -233,7 +233,7 @@ void Octree::remove_particle_system(ParticleSystemID ps_id) {
 
     if(auto node = ref.lock()) {
         // Remove the actor from both the node, and the lookup table
-        node->data->particle_system_ids_.erase(ps_id);
+        node->data->erase(ps_id);
         particle_system_lookup_.erase(ps_id);
 
         auto siblings = node->siblings();
@@ -364,17 +364,17 @@ NodeDiameter Octree::node_diameter(NodeLevel level) const {
 }
 
 void Octree::reinsert_data(std::shared_ptr<NodeData> data) {
-    for(auto& actor_pair: data->actor_ids_) {
-        insert_actor(actor_pair.first);
-    }
+    data->each_actor([this](ActorID actor_id, AABB aabb) {
+        insert_actor(actor_id);
+    });
 
-    for(auto& light_pair: data->light_ids_) {
-        insert_light(light_pair.first);
-    }
+    data->each_light([this](LightID light_id, AABB aabb) {
+        insert_light(light_id);
+    });
 
-    for(auto& particle_pair: data->particle_system_ids_) {
-        insert_particle_system(particle_pair.first);
-    }
+    data->each_particle_system([this](ParticleSystemID ps_id, AABB aabb) {
+        insert_particle_system(ps_id);
+    });
 }
 
 bool Octree::split_if_necessary(NodeType* node) {
@@ -470,9 +470,7 @@ bool Octree::merge_if_possible(const NodeList &nodes) {
     }
 
     for(auto& data: datas) {
-        parent->data->actor_ids_.insert(data->actor_ids_.begin(), data->actor_ids_.end());
-        parent->data->light_ids_.insert(data->light_ids_.begin(), data->light_ids_.end());
-        parent->data->particle_system_ids_.insert(data->particle_system_ids_.begin(), data->particle_system_ids_.end());
+        parent->data->merge(*data);
     }
 
     return true;
@@ -601,17 +599,17 @@ void Octree::remove_node(std::weak_ptr<OctreeNode> ref) {
         assert(levels_[0]->nodes.size() == 1);
     }
 
-    for(auto& actor_pair: node->data->actor_ids_) {
-        actor_lookup_.erase(actor_pair.first);
-    }
+    node->data->each_actor([&](ActorID actor_id, AABB aabb) {
+        actor_lookup_.erase(actor_id);
+    });
 
-    for(auto& light_pair: node->data->light_ids_) {
-        light_lookup_.erase(light_pair.first);
-    }
+    node->data->each_light([&](LightID light_id, AABB aabb) {
+        light_lookup_.erase(light_id);
+    });
 
-    for(auto& particle_system_pair: node->data->particle_system_ids_) {
-        particle_system_lookup_.erase(particle_system_pair.first);
-    }
+    node->data->each_particle_system([&](ParticleSystemID ps_id, AABB aabb) {
+        particle_system_lookup_.erase(ps_id);
+    });
 
     levels_[level]->nodes.erase(generate_vector_hash(node->centre()));
 
