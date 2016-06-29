@@ -32,8 +32,9 @@ public:
     }
 
     void test_initial_insert() {
-        auto octree_node = octree_->insert_actor(actor_id_);
+        auto octree_node = octree_->insert_actor(actor_id_).lock();
 
+        assert_true(octree_node);
         assert_false(octree_node->has_children());
         assert_true(octree_node->is_root());
         assert_equal(0, octree_node->children().size());
@@ -41,23 +42,24 @@ public:
         assert_equal(16, octree_node->diameter());
         assert_false(octree_node->is_empty());
 
-        assert_equal(octree_node, octree_->locate_actor(actor_id_));
+        assert_equal(octree_node, octree_->locate_actor(actor_id_).lock());
 
         octree_->remove_actor(actor_id_);
 
-        assert_is_null(octree_->locate_actor(actor_id_));
+        auto ret = octree_->locate_actor(actor_id_).lock();
+        assert_false(ret);
         assert_true(octree_->is_empty());
         assert_equal(octree_->node_count(), 0);
     }
 
     void test_octree_growth() {
-        auto octree_node = octree_->insert_actor(actor_id_);
+        auto octree_node = octree_->insert_actor(actor_id_).lock();
         assert_equal(16, octree_node->diameter());
 
         // Too big for this node, time to grow!
         auto actor_2 = stage_->new_actor_with_mesh(stage_->new_mesh_as_cube(40.0f));
 
-        auto new_root = octree_->insert_actor(actor_2);
+        auto new_root = octree_->insert_actor(actor_2).lock();
 
         assert_equal(0, new_root->level());
         assert_equal(1, octree_node->level());
@@ -69,13 +71,13 @@ public:
     }
 
     void test_octree_shrinks() {
-        auto octree_node = octree_->insert_actor(actor_id_);
+        auto octree_node = octree_->insert_actor(actor_id_).lock();
         assert_equal(16, octree_node->diameter());
 
         // Too big for this node, time to grow!
         auto actor_2 = stage_->new_actor_with_mesh(stage_->new_mesh_as_cube(40.0f));
 
-        auto new_root = octree_->insert_actor(actor_2);
+        auto new_root = octree_->insert_actor(actor_2).lock();
 
         assert_equal(0, new_root->level());
         assert_equal(1, octree_node->level());
@@ -92,7 +94,7 @@ public:
     }
 
     void test_child_centres() {
-        auto octree_node = octree_->insert_actor(actor_id_);
+        auto octree_node = octree_->insert_actor(actor_id_).lock();
 
         std::vector<kglt::Vec3> expected = {
             kglt::Vec3(-4.0, -4.0, -4.0),
@@ -111,7 +113,7 @@ public:
 
     void test_insert_empty_aabb() {
         auto blank_actor = stage_->new_actor();
-        kglt::impl::OctreeNode* node = octree_->insert_actor(blank_actor);
+        auto node = octree_->insert_actor(blank_actor).lock();
         assert_equal(1, node->diameter()); // 1 is the minimum node size
     }
 
@@ -130,9 +132,9 @@ public:
         assert_equal(octree->node_count(), 1);
 
         auto third = stage_->new_actor_with_mesh(stage_->new_mesh_as_cube(1.0));
-        auto new_node = octree->insert_actor(third);
+        auto new_node = octree->insert_actor(third).lock();
         assert_equal(octree->node_count(), 2);
-        assert_equal(new_node->parent(), octree->get_root());
+        assert_equal(new_node->parent(), octree->get_root().get());
     }
 
     void test_generate_vector_hash() {

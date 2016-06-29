@@ -10,11 +10,35 @@
 namespace kglt {
 namespace impl {
 
+void node_list_erase(NodeList& node_list, std::weak_ptr<OctreeNode> node) {
+    node_list.erase(node_list_find(node_list, node));
+}
+
+NodeList::iterator node_list_find(NodeList& node_list, OctreeNode* node) {
+    for(auto it = node_list.begin(); it != node_list.end(); ++it) {
+        if(it->lock().get() == node) {
+            return it;
+        }
+    }
+
+    return node_list.end();
+}
+
+NodeList::iterator node_list_find(NodeList &node_list, std::weak_ptr<OctreeNode> node) {
+    for(auto it = node_list.begin(); it != node_list.end(); ++it) {
+        if(it->lock().get() == node.lock().get()) {
+            return it;
+        }
+    }
+
+    return node_list.end();
+}
+
 bool default_split_predicate(OctreeNode* node) {
     return true;
 }
 
-bool default_merge_predicate(const OctreeNode::NodeList &nodes) {
+bool default_merge_predicate(const NodeList &nodes) {
     return true;
 }
 
@@ -87,7 +111,7 @@ bool OctreeNode::has_children() const {
     return !children_.empty();
 }
 
-OctreeNode::NodeList OctreeNode::children() const {
+NodeList OctreeNode::children() const {
     return children_;
 }
 
@@ -126,9 +150,9 @@ VectorHash Octree::generate_vector_hash(const Vec3& vec) {
     return VectorHash(seed);
 }
 
-OctreeNode* Octree::insert_actor(ActorID actor_id) {
+std::weak_ptr<OctreeNode> Octree::insert_actor(ActorID actor_id) {
     auto actor = stage_->actor(actor_id);
-    OctreeNode* node = get_or_create_node(actor.get());
+    auto node = get_or_create_node(actor.get());
 
     if(node) {
         // Insert into both the node, and the lookup table
@@ -136,7 +160,7 @@ OctreeNode* Octree::insert_actor(ActorID actor_id) {
         actor_lookup_[actor_id] = node;
     }
 
-    if(split_if_necessary(node)) {
+    if(split_if_necessary(node.get())) {
         return locate_actor(actor_id);
     } else {
         return node;
@@ -144,22 +168,21 @@ OctreeNode* Octree::insert_actor(ActorID actor_id) {
 }
 
 void Octree::remove_actor(ActorID actor_id) {
-    auto node = locate_actor(actor_id);
+    auto ref = locate_actor(actor_id);
 
-    if(node) {
+    if(auto node = ref.lock()) {
         // Remove the actor from both the node, and the lookup table
-        node->data->actor_ids_.erase(actor_id);
         actor_lookup_.erase(actor_id);
-
+        node->data->actor_ids_.erase(actor_id);        
         auto siblings = node->siblings();
-        siblings.insert(node);
+        siblings.push_back(node);
         merge_if_possible(siblings);
     }
 }
 
-OctreeNode* Octree::insert_light(LightID light_id) {
+std::weak_ptr<OctreeNode> Octree::insert_light(LightID light_id) {
     auto light = stage_->light(light_id);
-    OctreeNode* node = get_or_create_node(light.get());
+    auto node = get_or_create_node(light.get());
 
     if(node) {
         // Insert the light id into both the node and the lookup table
@@ -167,7 +190,7 @@ OctreeNode* Octree::insert_light(LightID light_id) {
         light_lookup_.insert(std::make_pair(light_id, node));
     }
 
-    if(split_if_necessary(node)) {
+    if(split_if_necessary(node.get())) {
         return locate_light(light_id);
     } else {
         return node;
@@ -175,22 +198,22 @@ OctreeNode* Octree::insert_light(LightID light_id) {
 }
 
 void Octree::remove_light(LightID light_id) {
-    auto node = locate_light(light_id);
+    auto ref = locate_light(light_id);
 
-    if(node) {
+    if(auto node = ref.lock()) {
         // Remove the light from the node and lookup table
         node->data->light_ids_.erase(light_id);
         light_lookup_.erase(light_id);
 
         auto siblings = node->siblings();
-        siblings.insert(node);
+        siblings.push_back(node);
         merge_if_possible(siblings);
     }
 }
 
-OctreeNode* Octree::insert_particle_system(ParticleSystemID particle_system_id) {
+std::weak_ptr<OctreeNode> Octree::insert_particle_system(ParticleSystemID particle_system_id) {
     auto ps = stage_->particle_system(particle_system_id);
-    OctreeNode* node = get_or_create_node(ps.get());
+    auto node = get_or_create_node(ps.get());
 
     if(node) {
         // Insert the light id into both the node and the lookup table
@@ -198,7 +221,7 @@ OctreeNode* Octree::insert_particle_system(ParticleSystemID particle_system_id) 
         particle_system_lookup_.insert(std::make_pair(particle_system_id, node));
     }
 
-    if(split_if_necessary(node)) {
+    if(split_if_necessary(node.get())) {
         return locate_particle_system(particle_system_id);
     } else {
         return node;
@@ -206,15 +229,15 @@ OctreeNode* Octree::insert_particle_system(ParticleSystemID particle_system_id) 
 }
 
 void Octree::remove_particle_system(ParticleSystemID ps_id) {
-    auto node = locate_particle_system(ps_id);
+    auto ref = locate_particle_system(ps_id);
 
-    if(node) {
+    if(auto node = ref.lock()) {
         // Remove the actor from both the node, and the lookup table
         node->data->particle_system_ids_.erase(ps_id);
         particle_system_lookup_.erase(ps_id);
 
         auto siblings = node->siblings();
-        siblings.insert(node);
+        siblings.push_back(node);
         merge_if_possible(siblings);
     }
 }
@@ -224,7 +247,7 @@ bool Octree::inside_octree(const AABB& aabb) const {
         return false;
     }
 
-    OctreeNode* root = get_root();
+    auto root = get_root();
     auto rd = root->diameter();
     auto maxd = aabb.max_dimension();
     return root->contains(aabb.centre()) && (rd * 2) >= maxd;
@@ -369,14 +392,14 @@ bool Octree::split_if_necessary(NodeType* node) {
     NodeLevel node_level = node->level();
 
     // Create children
-    std::vector<OctreeNode*> nodes_created;
+    std::vector<std::weak_ptr<OctreeNode>> nodes_created;
     for(auto v: node->child_centres()) {
         auto pair = get_or_create_node(node_level + 1, v, node->diameter() / 2.0f);
 
         if(pair.second) {
             created = true;
             nodes_created.push_back(pair.first);
-            node->children_.insert(pair.first);
+            assert(node->children_.size() <= 8);
         }
     }
 
@@ -395,13 +418,14 @@ bool Octree::split_if_necessary(NodeType* node) {
     reinsert_data(data);
 
     // Now, remove any nodes which are now unnecessary
-    for(auto node: nodes_created) {
+    for(auto ref: nodes_created) {
+        auto node = ref.lock();
+        if(!node) continue;
+
         if(node->is_empty()) {
             remove_node(node);
         }
     }
-
-    L_DEBUG(_u("Node count {0}. Level count {1}").format(node_count_, levels_.size()));
 
     return true;
 }
@@ -415,20 +439,25 @@ bool Octree::merge_if_possible(const NodeList &nodes) {
         return false;
     }
 
-    auto first = (*nodes.begin());
+    auto first = (*nodes.begin()).lock();
     auto parent = first->parent();
     if(!parent) {
         // Removing the root node, but only if it's empty
         if(first->is_empty()) {
             remove_node(first);
         }
-        L_DEBUG(_u("Node count {0}. Level count {1}").format(node_count_, levels_.size()));
+
         return true;
     }
 
     std::vector<std::shared_ptr<NodeData>> datas;
 
-    for(auto& node: nodes) {
+    for(auto& ref: nodes) {
+        auto node = ref.lock();
+        if(!node) {
+            continue;
+        }
+
         if(!node->is_empty()) {
             datas.push_back(node->data_);
             node->data_.reset();
@@ -446,19 +475,17 @@ bool Octree::merge_if_possible(const NodeList &nodes) {
         parent->data->particle_system_ids_.insert(data->particle_system_ids_.begin(), data->particle_system_ids_.end());
     }
 
-    L_DEBUG(_u("Node count {0}. Level count {1}").format(node_count_, levels_.size()));
-
     return true;
 }
 
-std::pair<OctreeNode*, bool> Octree::get_or_create_node(NodeLevel level, const Vec3& centre, NodeDiameter diameter) {
+std::pair<std::shared_ptr<OctreeNode>, bool> Octree::get_or_create_node(NodeLevel level, const Vec3& centre, NodeDiameter diameter) {
     auto hash = generate_vector_hash(centre);
 
     assert(level >= 0);
 
     if(level < levels_.size()) {
         if(levels_[level]->nodes.count(hash)) {
-            return std::make_pair(levels_[level]->nodes[hash].get(), false);
+            return std::make_pair(levels_[level]->nodes[hash], false);
         }
     }
 
@@ -466,7 +493,7 @@ std::pair<OctreeNode*, bool> Octree::get_or_create_node(NodeLevel level, const V
 }
 
 void Octree::grow_to_contain(const AABB& aabb) {
-    OctreeNode* root = get_root();
+    auto root = get_root();
 
     while(!inside_octree(aabb)) {
         auto c = aabb.centre();
@@ -494,7 +521,7 @@ void Octree::grow_to_contain(const AABB& aabb) {
     }
 }
 
-OctreeNode* Octree::get_or_create_node(BoundableEntity* boundable) {
+std::shared_ptr<OctreeNode> Octree::get_or_create_node(BoundableEntity* boundable) {
     auto& aabb = boundable->transformed_aabb();
 
     if(!get_root() || !inside_octree(aabb)) {
@@ -505,10 +532,10 @@ OctreeNode* Octree::get_or_create_node(BoundableEntity* boundable) {
     // Find the best node to insert this boundable
     auto level_and_hash = find_best_existing_node(aabb);
 
-    return levels_[level_and_hash.first]->nodes.at(level_and_hash.second).get();
+    return levels_[level_and_hash.first]->nodes.at(level_and_hash.second);
 }
 
-OctreeNode* Octree::create_node(int32_t level_number, Vec3 centre, NodeDiameter diameter) {
+std::shared_ptr<OctreeNode> Octree::create_node(int32_t level_number, Vec3 centre, NodeDiameter diameter) {
     if(!debug_mesh_) {
         debug_mesh_ = stage_->new_mesh(false);
     }
@@ -547,7 +574,8 @@ OctreeNode* Octree::create_node(int32_t level_number, Vec3 centre, NodeDiameter 
     if(level->level_number > 0) {
         auto hash = generate_vector_hash(find_node_centre_for_point(level->level_number - 1, centre));
         new_node->parent_ = levels_[level->level_number - 1]->nodes.at(hash).get();
-        new_node->parent_->children_.insert(new_node.get());
+        new_node->parent_->children_.push_back(new_node);
+        assert(new_node->parent_->children_.size() <= 8);
     } else if(levels_.size() > 1) {
         // If we just added a new root node, then update the previous root
         // to have a parent now
@@ -556,14 +584,18 @@ OctreeNode* Octree::create_node(int32_t level_number, Vec3 centre, NodeDiameter 
         }
     }
 
-    return new_node.get();
+    L_DEBUG(_u("Node count {0}. Level count {1}").format(node_count_, levels_.size()));
+
+    return new_node;
 }
 
-void Octree::remove_node(NodeType* node) {
+void Octree::remove_node(std::weak_ptr<OctreeNode> ref) {
+    auto node = ref.lock();
+
     auto level = node->level();
 
     if(node->parent_) {
-        node->parent_->children_.erase(node);
+        node_list_erase(node->parent_->children_, node);
     } else {
         // Removing the root node! assert that we're not doing anything bad
         assert(levels_[0]->nodes.size() == 1);
@@ -596,19 +628,25 @@ void Octree::remove_node(NodeType* node) {
     }
 
     --node_count_;
+
+    L_DEBUG(_u("Node count {0}. Level count {1}").format(node_count_, levels_.size()));
 }
 
-void traverse(OctreeNode* start, std::function<bool (OctreeNode*)> callback) {
+void traverse(std::weak_ptr<OctreeNode> start, std::function<bool (OctreeNode*)> callback) {
     /*
      * Traverses the tree from the starting node in the traditional root-to-leaf way.
      * The callback must return true if the traversal should continue to the nodes children
      * returning false will terminate that particular branch's traversal.
      */
 
-    std::function<void (OctreeNode*)> do_traversal = [&](OctreeNode* node) {
-        if(callback(node)) {
-            for(auto& child: node->children()) {
-                do_traversal(child);
+    std::function<void (std::weak_ptr<OctreeNode>)> do_traversal = [&](std::weak_ptr<OctreeNode> node_ref) {
+        if(auto node = node_ref.lock()) {
+            if(callback(node.get())) {
+                for(auto& ref: node->children()) {
+                    if(auto child = ref.lock()) {
+                        do_traversal(child);
+                    }
+                }
             }
         }
     };

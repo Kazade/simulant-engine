@@ -15,7 +15,7 @@ class Renderable;
 typedef std::shared_ptr<Renderable> RenderablePtr;
 
 bool should_split_predicate(const impl::OctreeNode *node);
-bool should_merge_predicate(const impl::Octree::NodeList& nodes);
+bool should_merge_predicate(const impl::NodeList& nodes);
 
 
 class OctreePartitioner :

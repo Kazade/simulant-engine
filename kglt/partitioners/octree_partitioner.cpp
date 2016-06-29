@@ -22,11 +22,11 @@ bool should_split_predicate(const impl::OctreeNode* node) {
     return node->data->actor_ids_.size() + node->data->particle_system_ids_.size() > 30;
 }
 
-bool should_merge_predicate(const impl::Octree::NodeList& nodes) {
+bool should_merge_predicate(const impl::NodeList& nodes) {
     uint32_t total = 0;
     for(auto& node: nodes) {
-        total += node->data->actor_ids_.size();
-        total += node->data->particle_system_ids_.size();
+        total += node.lock()->data->actor_ids_.size();
+        total += node.lock()->data->particle_system_ids_.size();
     }
 
     return total < 20;

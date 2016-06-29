@@ -8,11 +8,11 @@
  * - Fast. Inserting and locating happens in constant(ish) time
  * - Loose. Nodes are twice the size as a traditional octree
  * - Dynamic. The Octree grows and shrinks to contain the objects
- * - Generic. It's up to you to define the data on each node
- * - Cache-friendly. Nodes for a particular level are stored in consecutive memory
  */
 
 #include <list>
+#include <memory>
+
 #include "../../types.h"
 #include "../../generic/property.h"
 #include "../static_chunk.h"
@@ -54,11 +54,19 @@ typedef uint32_t NodeLevel;
 
 class Octree;
 class OctreeLevel;
+class OctreeNode;
 
-class OctreeNode {
+
+typedef std::list<
+    std::weak_ptr<OctreeNode>
+> NodeList;
+
+void node_list_erase(NodeList& node_list, std::weak_ptr<OctreeNode> node);
+NodeList::iterator node_list_find(NodeList& node_list, OctreeNode* node);
+NodeList::iterator node_list_find(NodeList &node_list, std::weak_ptr<OctreeNode> node);
+
+class OctreeNode : public std::enable_shared_from_this<OctreeNode> {
 public:
-    typedef std::set<OctreeNode*> NodeList;
-
     OctreeNode(Octree* octree, OctreeLevel* level, uint32_t diameter, const Vec3 &centre);
 
     bool is_empty() const {
@@ -76,8 +84,9 @@ public:
     OctreeNode* parent() const { return parent_; }
     NodeList siblings() const {
         if(parent_) {
-            auto ret = parent()->children();
-            ret.erase((OctreeNode*)this);
+            NodeList ret = parent_->children();
+            std::weak_ptr<OctreeNode> ref = std::const_pointer_cast<OctreeNode>(shared_from_this());
+            node_list_erase(ret, ref);
             return ret;
         } else {
             return NodeList();
@@ -107,14 +116,13 @@ private:
     std::shared_ptr<NodeData> data_;
 
     OctreeNode* parent_ = nullptr;
-    std::set<OctreeNode*> children_;
+    NodeList children_;
 
     friend class Octree;
 };
 
-
 bool default_split_predicate(OctreeNode* node);
-bool default_merge_predicate(const OctreeNode::NodeList& nodes);
+bool default_merge_predicate(const NodeList& nodes);
 
 typedef std::size_t VectorHash;
 typedef std::unordered_map<VectorHash, std::shared_ptr<OctreeNode>> NodeMap;
@@ -131,30 +139,29 @@ struct OctreeLevel {
 class Octree {
 public:
     typedef OctreeNode NodeType;
-    typedef typename OctreeNode::NodeList NodeList;
 
     Octree(Stage* stage,
         std::function<bool (NodeType*)> should_split_predicate = &default_split_predicate,
         std::function<bool (const NodeList&)> should_merge_predicate = &default_merge_predicate
     );
 
-    NodeType* insert_actor(ActorID actor_id);
-    NodeType* insert_light(LightID light_id);
-    NodeType* insert_particle_system(ParticleSystemID particle_system_id);
+    std::weak_ptr<OctreeNode> insert_actor(ActorID actor_id);
+    std::weak_ptr<OctreeNode> insert_light(LightID light_id);
+    std::weak_ptr<OctreeNode> insert_particle_system(ParticleSystemID particle_system_id);
 
-    NodeType* locate_actor(ActorID actor_id) {
-        if(!actor_lookup_.count(actor_id)) return nullptr;
+    std::weak_ptr<OctreeNode> locate_actor(ActorID actor_id) {
+        if(!actor_lookup_.count(actor_id)) return std::weak_ptr<OctreeNode>();
 
         return actor_lookup_.at(actor_id);
     }
 
-    NodeType* locate_light(LightID light_id) {
-        if(!light_lookup_.count(light_id)) return nullptr;
+    std::weak_ptr<OctreeNode> locate_light(LightID light_id) {
+        if(!light_lookup_.count(light_id)) return std::weak_ptr<OctreeNode>();
         return light_lookup_.at(light_id);
     }
 
-    NodeType* locate_particle_system(ParticleSystemID particle_system_id) {
-        if(!particle_system_lookup_.count(particle_system_id)) return nullptr;
+    std::weak_ptr<OctreeNode> locate_particle_system(ParticleSystemID particle_system_id) {
+        if(!particle_system_lookup_.count(particle_system_id)) return std::weak_ptr<OctreeNode>();
 
         return particle_system_lookup_.at(particle_system_id);
     }
@@ -174,9 +181,9 @@ public:
 
     bool has_root() const { return !levels_.empty(); }
 
-    NodeType* get_root() const {
-        if(levels_.empty() || levels_.front()->nodes.empty()) return nullptr;
-        return levels_.front()->nodes.begin()->second.get();
+    std::shared_ptr<OctreeNode> get_root() const {
+        if(levels_.empty() || levels_.front()->nodes.empty()) return std::shared_ptr<OctreeNode>();
+        return levels_.front()->nodes.begin()->second;
     }
 
     const uint32_t node_count() const { return node_count_; }
@@ -199,12 +206,12 @@ private:
     std::pair<uint32_t, VectorHash> find_best_existing_node(const AABB& aabb);
     Vec3 find_node_centre_for_point(NodeLevel level, const Vec3& p);
 
-    NodeType* get_or_create_node(BoundableEntity* boundable);
-    std::pair<NodeType*, bool> get_or_create_node(NodeLevel level, const Vec3& centre, NodeDiameter diameter);
+    std::shared_ptr<OctreeNode> get_or_create_node(BoundableEntity* boundable);
+    std::pair<std::shared_ptr<OctreeNode>, bool> get_or_create_node(NodeLevel level, const Vec3& centre, NodeDiameter diameter);
 
-    std::unordered_map<ActorID, NodeType*> actor_lookup_;
-    std::unordered_map<LightID, NodeType*> light_lookup_;
-    std::unordered_map<ParticleSystemID, NodeType*> particle_system_lookup_;
+    std::unordered_map<ActorID, std::weak_ptr<OctreeNode>> actor_lookup_;
+    std::unordered_map<LightID, std::weak_ptr<OctreeNode>> light_lookup_;
+    std::unordered_map<ParticleSystemID, std::weak_ptr<OctreeNode>> particle_system_lookup_;
 
     std::function<bool (NodeType*)> should_split_predicate_;
     std::function<bool (const NodeList&)> should_merge_predicate_;
@@ -218,14 +225,14 @@ private:
 
     uint32_t node_count_ = 0;
 
-    NodeType* create_node(int32_t level, Vec3 centre, NodeDiameter diameter);
-    void remove_node(NodeType* node);
+    std::shared_ptr<OctreeNode> create_node(int32_t level, Vec3 centre, NodeDiameter diameter);
+    void remove_node(std::weak_ptr<OctreeNode> node);
 
     kglt::MeshID debug_mesh_;
 };
 
 
-void traverse(OctreeNode* start, std::function<bool (OctreeNode*)> callback);
+void traverse(std::weak_ptr<OctreeNode> start, std::function<bool (OctreeNode *)> callback);
 
 }
 }
