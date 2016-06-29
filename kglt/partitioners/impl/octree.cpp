@@ -62,9 +62,9 @@ OctreeNode::OctreeNode(Octree* octree, OctreeLevel *level, uint32_t diameter, co
     octree_(octree),
     level_(level),
     diameter_(diameter),
-    centre_(centre) {
+    centre_(centre),
+    data_(new NodeData()) {
 
-    data_.reset(new NodeData());
 }
 
 const bool OctreeNode::contains(const Vec3& p) const {
@@ -640,7 +640,8 @@ void traverse(std::weak_ptr<OctreeNode> start, std::function<bool (OctreeNode*)>
     std::function<void (std::weak_ptr<OctreeNode>)> do_traversal = [&](std::weak_ptr<OctreeNode> node_ref) {
         if(auto node = node_ref.lock()) {
             if(callback(node.get())) {
-                for(auto& ref: node->children()) {
+                auto children = node->children(); // Copy
+                for(auto& ref: children) {
                     if(auto child = ref.lock()) {
                         do_traversal(child);
                     }
