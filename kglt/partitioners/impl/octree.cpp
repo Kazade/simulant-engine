@@ -5,6 +5,7 @@
 #include "../../actor.h"
 #include "../../light.h"
 #include "../../particles.h"
+#include "../../material.h"
 
 
 namespace kglt {
@@ -127,6 +128,11 @@ Octree::Octree(Stage *stage,
     should_split_predicate_(should_split_predicate),
     should_merge_predicate_(should_merge_predicate) {
 
+    debug_material_ = stage_->new_material_from_file(kglt::Material::BuiltIns::DIFFUSE_ONLY);
+    auto mat = stage_->material(debug_material_);
+    mat->first_pass()->set_diffuse(kglt::Colour(0.29, 0.82, 1.0, 0.4));
+    mat->first_pass()->set_blending(kglt::BLEND_ONE_ONE_MINUS_ALPHA);
+    mat->first_pass()->set_polygon_mode(kglt::POLYGON_MODE_LINE);
 }
 
 VectorHash Octree::generate_vector_hash(const Vec3& vec) {
@@ -564,7 +570,7 @@ std::shared_ptr<OctreeNode> Octree::create_node(int32_t level_number, Vec3 centr
     ++node_count_;
 
     stage_->mesh(debug_mesh_)->new_submesh_as_box(
-        stage_->clone_default_material(),
+        debug_material_,
         diameter, diameter, diameter, centre
     );
 

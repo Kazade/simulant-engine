@@ -312,6 +312,7 @@ private:
     void remove_node(std::weak_ptr<OctreeNode> node);
 
     kglt::MeshID debug_mesh_;
+    kglt::MaterialID debug_material_;
 };
 
 
