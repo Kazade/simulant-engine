@@ -24,6 +24,10 @@
 
 class shared_mutex {
 public:
+    shared_mutex() = default;
+    shared_mutex(const shared_mutex& rhs) = delete;
+    shared_mutex& operator=(const shared_mutex& rhs) = delete;
+
     void lock() {
         global_lock.lock(); // Writer lock
     }

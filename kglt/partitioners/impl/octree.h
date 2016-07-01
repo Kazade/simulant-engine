@@ -32,6 +32,15 @@ private:
     std::unordered_map<ParticleSystemID, AABB> particle_system_ids_;
 
 public:
+    NodeData() = default;
+    NodeData(const NodeData& rhs):
+        actor_ids_(rhs.actor_ids_),
+        light_ids_(rhs.light_ids_),
+        particle_system_ids_(rhs.particle_system_ids_) {
+
+        // Just to make sure we don't copy the mutex... not sure that they are copyable but whatever.
+    }
+
     bool is_empty() const {
         return actor_ids_.empty() && light_ids_.empty() && particle_system_ids_.empty();
     }
@@ -39,6 +48,13 @@ public:
     uint32_t actor_count() const { return actor_ids_.size(); }
     uint32_t light_count() const { return light_ids_.size(); }
     uint32_t particle_system_count() const { return particle_system_ids_.size(); }
+
+    void erase_all() {
+        write_lock<shared_mutex> lock(mutex);
+        actor_ids_.clear();
+        light_ids_.clear();
+        particle_system_ids_.clear();
+    }
 
     void insert_or_update(ActorID actor, AABB aabb) {
         write_lock<shared_mutex> lock(mutex);

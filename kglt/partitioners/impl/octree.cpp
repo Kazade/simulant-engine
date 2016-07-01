@@ -411,8 +411,8 @@ bool Octree::split_if_necessary(NodeType* node) {
     }
 
     // Now, relocate everything!
-    auto data = node->data_; // Stash original data
-    node->data_.reset(new NodeData()); // Wipe the data from the original node
+    auto data = std::shared_ptr<NodeData>(node->data_); // Stash original data
+    node->data->erase_all(); // Wipe the data from the original node
 
     // Reinsert the data into the tree, now that we have a lower level of nodes
     reinsert_data(data);
@@ -459,8 +459,8 @@ bool Octree::merge_if_possible(const NodeList &nodes) {
         }
 
         if(!node->is_empty()) {
-            datas.push_back(node->data_);
-            node->data_.reset();
+            datas.push_back(std::shared_ptr<NodeData>(node->data_));
+            node->data->erase_all();
         }
 
         // If this is the case, then the node has children and we shouldn't even
@@ -630,6 +630,19 @@ void Octree::remove_node(std::weak_ptr<OctreeNode> ref) {
     L_DEBUG(_u("Node count {0}. Level count {1}").format(node_count_, levels_.size()));
 }
 
+void do_traversal(std::weak_ptr<OctreeNode> node_ref, std::function<bool (OctreeNode*)> callback) {
+    if(auto node = node_ref.lock()) {
+        if(callback(node.get())) {
+            auto children = node->children(); // Copy
+            for(auto& ref: children) {
+                if(auto child = ref.lock()) {
+                    do_traversal(child, callback);
+                }
+            }
+        }
+    }
+}
+
 void traverse(std::weak_ptr<OctreeNode> start, std::function<bool (OctreeNode*)> callback) {
     /*
      * Traverses the tree from the starting node in the traditional root-to-leaf way.
@@ -637,20 +650,7 @@ void traverse(std::weak_ptr<OctreeNode> start, std::function<bool (OctreeNode*)>
      * returning false will terminate that particular branch's traversal.
      */
 
-    std::function<void (std::weak_ptr<OctreeNode>)> do_traversal = [&](std::weak_ptr<OctreeNode> node_ref) {
-        if(auto node = node_ref.lock()) {
-            if(callback(node.get())) {
-                auto children = node->children(); // Copy
-                for(auto& ref: children) {
-                    if(auto child = ref.lock()) {
-                        do_traversal(child);
-                    }
-                }
-            }
-        }
-    };
-
-    do_traversal(start);
+    do_traversal(start, callback);
 }
 
 }
