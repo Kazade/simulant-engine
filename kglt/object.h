@@ -111,10 +111,13 @@ private:
     virtual void do_update(double dt) {}
 };
 
+typedef sig::signal<void (const Vec3&, const Quaternion&)> TransformationChangedSignal;
 
 class MoveableObject :
     public Object,
     public Transformable {
+
+    DEFINE_SIGNAL(TransformationChangedSignal, signal_transformation_changed);
 
 public:
     MoveableObject(Stage* parent_scene);

@@ -178,6 +178,9 @@ public:
  * Any object that can be contained within a bounding box, but
  * can be positioned somewhere other than 0,0,0
  */
+
+
+
 class BoundableEntity:
     public virtual Boundable {
 

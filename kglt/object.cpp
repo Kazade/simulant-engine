@@ -249,6 +249,7 @@ void MoveableObject::update_from_parent() {
     //Only signal that the transformation changed if it did
     if(orig_pos != absolute_position() || orig_rot != absolute_rotation()) {
         transformation_changed();
+        signal_transformation_changed_(absolute_position(), absolute_rotation());
     }
 
     assert(!isnan(absolute_position_.x));
