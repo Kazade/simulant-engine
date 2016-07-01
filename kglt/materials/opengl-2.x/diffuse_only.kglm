@@ -5,18 +5,20 @@ BEGIN(PASS)
 
     SET(AUTO_UNIFORM MODELVIEW_PROJECTION_MATRIX "modelview_projection")
     SET(AUTO_UNIFORM POINT_SIZE "point_size")
+    SET(AUTO_UNIFORM MATERIAL_DIFFUSE "material_diffuse")
 
     BEGIN_DATA(VERTEX)
         attribute vec3 vertex_position;
         attribute vec4 vertex_diffuse;
 
+        uniform vec4 material_diffuse;
         uniform mat4 modelview_projection;
         uniform float point_size;
 
         varying vec4 diffuse;
 
         void main() {
-            diffuse = vertex_diffuse;
+            diffuse = vertex_diffuse * material_diffuse;
             gl_Position = (modelview_projection * vec4(vertex_position, 1.0));
             gl_PointSize = point_size;
         }
