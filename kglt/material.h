@@ -252,6 +252,12 @@ public:
     uint32_t new_pass();
     MaterialPass::ptr pass(uint32_t index);
     uint32_t pass_count() const { return pass_count_; }
+    MaterialPass::ptr first_pass() {
+        if(pass_count()) {
+            return pass(0);
+        }
+        return MaterialPass::ptr();
+    }
 
     void set_texture_unit_on_all_passes(uint32_t texture_unit_id, TextureID tex);
 
