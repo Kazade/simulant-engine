@@ -61,7 +61,7 @@ private:
             stage->actor(ship_ids_.back())->set_absolute_position(pos);
 
             auto ps_id = stage->new_particle_system_with_parent_from_file(ship_ids_.back(), "kglt/particles/pixel_trail.kglp");
-            stage->particle_system(ps_id)->move_to(0, 0, -10);
+            stage->particle_system(ps_id)->set_relative_position(0, 0, -10);
         }
     }
 };
