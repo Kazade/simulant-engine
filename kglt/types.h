@@ -600,6 +600,13 @@ enum PolygonMode {
     POLYGON_MODE_POINT
 };
 
+enum CullMode {
+    CULL_MODE_NONE,
+    CULL_MODE_BACK_FACE,
+    CULL_MODE_FRONT_FACE,
+    CULL_MODE_FRONT_AND_BACK_FACE
+};
+
 enum ShaderType {
     SHADER_TYPE_VERTEX,
     SHADER_TYPE_FRAGMENT,

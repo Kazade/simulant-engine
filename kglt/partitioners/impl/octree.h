@@ -93,7 +93,7 @@ public:
             actor_ids = actor_ids_;
         }
 
-        for(auto& pair: actor_ids_) {
+        for(auto& pair: actor_ids) {
             callback(pair.first, pair.second);
         }
     }

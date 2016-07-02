@@ -165,8 +165,12 @@ public:
     bool is_reflective() const { return albedo_ > 0.0; }
     void set_reflection_texture_unit(uint8_t i) { reflection_texture_unit_ = i; }
     uint8_t reflection_texture_unit() const { return reflection_texture_unit_; }
+
     void set_polygon_mode(PolygonMode mode) { polygon_mode_ = mode; }
     PolygonMode polygon_mode() const { return polygon_mode_; }
+
+    void set_cull_mode(CullMode mode) { cull_mode_ = mode; }
+    CullMode cull_mode() const { return cull_mode_; }
 
     void stage_uniform(const std::string& name, const int& value) {
         int_uniforms_[name] = value;
@@ -216,6 +220,7 @@ private:
     uint8_t reflection_texture_unit_ = 0;
 
     PolygonMode polygon_mode_ = POLYGON_MODE_FILL;
+    CullMode cull_mode_ = CULL_MODE_BACK_FACE;
 
     std::map<kglt::ShaderType, unicode> shader_sources_;
 

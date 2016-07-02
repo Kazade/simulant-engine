@@ -351,6 +351,25 @@ void GenericRenderer::render(CameraPtr camera, StagePtr stage, bool render_group
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
 
+    if(material_pass->cull_mode() != CULL_MODE_NONE) {
+        glEnable(GL_CULL_FACE);
+    }
+
+    switch(material_pass->cull_mode()) {
+        case CULL_MODE_NONE:
+            glDisable(GL_CULL_FACE);
+        break;
+        case CULL_MODE_FRONT_FACE:
+            glCullFace(GL_FRONT);
+        break;
+        case CULL_MODE_BACK_FACE:
+            glCullFace(GL_BACK);
+        break;
+        case CULL_MODE_FRONT_AND_BACK_FACE:
+            glCullFace(GL_FRONT_AND_BACK);
+        break;
+    }
+
     auto texture_matrix_auto = [](uint8_t which) -> ShaderAvailableAuto {
         switch(which) {
         case 0: return SP_AUTO_MATERIAL_TEX_MATRIX0;

@@ -12,7 +12,10 @@ namespace kglt {
 namespace impl {
 
 void node_list_erase(NodeList& node_list, std::weak_ptr<OctreeNode> node) {
-    node_list.erase(node_list_find(node_list, node));
+    auto it = node_list_find(node_list, node);
+    if(it != node_list.end()) {
+        node_list.erase(it);
+    }
 }
 
 NodeList::iterator node_list_find(NodeList& node_list, OctreeNode* node) {
@@ -133,6 +136,7 @@ Octree::Octree(Stage *stage,
     mat->first_pass()->set_diffuse(kglt::Colour(0.29, 0.82, 1.0, 0.4));
     mat->first_pass()->set_blending(kglt::BLEND_ONE_ONE_MINUS_ALPHA);
     mat->first_pass()->set_polygon_mode(kglt::POLYGON_MODE_LINE);
+    mat->first_pass()->set_cull_mode(kglt::CULL_MODE_NONE);
 }
 
 VectorHash Octree::generate_vector_hash(const Vec3& vec) {
