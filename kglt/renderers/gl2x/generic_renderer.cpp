@@ -340,6 +340,17 @@ void GenericRenderer::render(CameraPtr camera, StagePtr stage, bool render_group
         GLCheck(glDepthMask, GL_FALSE);
     }
 
+    switch(material_pass->polygon_mode()) {
+        case POLYGON_MODE_POINT:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+        break;
+        case POLYGON_MODE_LINE:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        break;
+        default:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+
     auto texture_matrix_auto = [](uint8_t which) -> ShaderAvailableAuto {
         switch(which) {
         case 0: return SP_AUTO_MATERIAL_TEX_MATRIX0;
