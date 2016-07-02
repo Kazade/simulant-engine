@@ -167,8 +167,13 @@ std::weak_ptr<OctreeNode> Octree::insert_actor(ActorID actor_id) {
 
         // When an actor moves, make sure we update the transformation
         actor_watchers_[actor_id] = actor->signal_transformation_changed().connect([this, actor_id](const Vec3& new_pos, const Quaternion& new_rot) {
-            remove_actor(actor_id);
-            insert_actor(actor_id);
+            if(auto node = locate_actor(actor_id).lock()) {
+                if(!node->contains(new_pos)) {
+                    // If the actor moved outside the bounds of the node it was in, then reinsert it
+                    remove_actor(actor_id);
+                    insert_actor(actor_id);
+                }
+            }
         });
     }
 
@@ -577,7 +582,7 @@ std::shared_ptr<OctreeNode> Octree::create_node(int32_t level_number, Vec3 centr
     nodes->insert(std::make_pair(hash, new_node));
     ++node_count_;
 
-    stage_->mesh(debug_mesh_)->new_submesh_as_box(
+    debug_submeshes_[new_node.get()] = stage_->mesh(debug_mesh_)->new_submesh_as_box(
         debug_material_,
         diameter, diameter, diameter, centre
     );
@@ -638,6 +643,8 @@ void Octree::remove_node(std::weak_ptr<OctreeNode> ref) {
             assert(levels_[0]->nodes.size() == 1);
         }
     }
+
+    stage_->mesh(debug_mesh_)->delete_submesh(debug_submeshes_[node.get()]);
 
     --node_count_;
 

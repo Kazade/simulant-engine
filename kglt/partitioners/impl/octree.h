@@ -87,22 +87,37 @@ public:
     }
 
     void each_actor(std::function<void (ActorID actor_id, AABB aabb)> callback) {
-        read_lock<shared_mutex> lock(mutex);
+        std::unordered_map<ActorID, AABB> actor_ids;
+        {
+            read_lock<shared_mutex> lock(mutex);
+            actor_ids = actor_ids_;
+        }
+
         for(auto& pair: actor_ids_) {
             callback(pair.first, pair.second);
         }
     }
 
     void each_light(std::function<void (LightID actor_id, AABB aabb)> callback) {
-        read_lock<shared_mutex> lock(mutex);
-        for(auto& pair: light_ids_) {
+        std::unordered_map<LightID, AABB> light_ids;
+        {
+            read_lock<shared_mutex> lock(mutex);
+            light_ids = light_ids_;
+        }
+
+        for(auto& pair: light_ids) {
             callback(pair.first, pair.second);
         }
     }
 
     void each_particle_system(std::function<void (ParticleSystemID actor_id, AABB aabb)> callback) {
-        read_lock<shared_mutex> lock(mutex);
-        for(auto& pair: particle_system_ids_) {
+        std::unordered_map<ParticleSystemID, AABB> particle_system_ids;
+        {
+            read_lock<shared_mutex> lock(mutex);
+            particle_system_ids = particle_system_ids_;
+        }
+
+        for(auto& pair: particle_system_ids) {
             callback(pair.first, pair.second);
         }
     }
@@ -314,6 +329,7 @@ private:
     kglt::MeshID debug_mesh_;
     kglt::MaterialID debug_material_;
 
+    std::unordered_map<OctreeNode*, kglt::SubMeshID> debug_submeshes_;
     std::unordered_map<ActorID, sig::connection> actor_watchers_;
 };
 
