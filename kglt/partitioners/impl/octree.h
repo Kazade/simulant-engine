@@ -313,6 +313,8 @@ private:
 
     kglt::MeshID debug_mesh_;
     kglt::MaterialID debug_material_;
+
+    std::unordered_map<ActorID, sig::connection> actor_watchers_;
 };
 
 

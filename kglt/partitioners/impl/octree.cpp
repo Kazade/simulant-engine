@@ -164,6 +164,12 @@ std::weak_ptr<OctreeNode> Octree::insert_actor(ActorID actor_id) {
         // Insert into both the node, and the lookup table
         node->data->insert_or_update(actor_id, actor->transformed_aabb());
         actor_lookup_[actor_id] = node;
+
+        // When an actor moves, make sure we update the transformation
+        actor_watchers_[actor_id] = actor->signal_transformation_changed().connect([this, actor_id](const Vec3& new_pos, const Quaternion& new_rot) {
+            remove_actor(actor_id);
+            insert_actor(actor_id);
+        });
     }
 
     if(split_if_necessary(node.get())) {
@@ -179,6 +185,8 @@ void Octree::remove_actor(ActorID actor_id) {
     if(auto node = ref.lock()) {
         // Remove the actor from both the node, and the lookup table
         actor_lookup_.erase(actor_id);
+        actor_watchers_.erase(actor_id);
+
         node->data->erase(actor_id);
         auto siblings = node->siblings();
         siblings.push_back(node);
