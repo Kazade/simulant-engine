@@ -174,8 +174,7 @@ std::weak_ptr<OctreeNode> Octree::insert_actor(ActorID actor_id) {
             if(auto node = locate_actor(actor_id).lock()) {
                 if(!node->contains(new_pos)) {
                     // If the actor moved outside the bounds of the node it was in, then reinsert it
-                    remove_actor(actor_id);
-                    insert_actor(actor_id);
+                    queue_actor_move(actor_id);
                 }
             }
         });
@@ -434,7 +433,9 @@ bool Octree::split_if_necessary(NodeType* node) {
     }
 
     // Now, relocate everything!
-    auto data = std::shared_ptr<NodeData>(node->data_); // Stash original data
+    auto data = std::make_shared<NodeData>(*node->data_); // Stash original data
+    assert(data->actor_count() == node->data->actor_count());
+
     node->data->erase_all(); // Wipe the data from the original node
 
     // Reinsert the data into the tree, now that we have a lower level of nodes
@@ -668,14 +669,66 @@ void do_traversal(std::weak_ptr<OctreeNode> node_ref, std::function<bool (Octree
     }
 }
 
-void traverse(std::weak_ptr<OctreeNode> start, std::function<bool (OctreeNode*)> callback) {
+void Octree::queue_actor_move(ActorID actor_id) {
+    QueuedUpdate update;
+    update.type_ = QUEUED_UPDATE_MOVE_ACTOR;
+    update.actor_id_ = actor_id;
+    queued_updates_.push_back(update);
+}
+
+void Octree::queue_light_move(LightID light_id) {
+    QueuedUpdate update;
+    update.type_ = QUEUED_UPDATE_MOVE_LIGHT;
+    update.light_id_ = light_id;
+    queued_updates_.push_back(update);
+}
+
+void Octree::queue_particle_system_move(ParticleSystemID particle_system_id) {
+    QueuedUpdate update;
+    update.type_ = QUEUED_UPDATE_MOVE_PARTICLE_SYSTEM;
+    update.particle_system_id_ = particle_system_id;
+    queued_updates_.push_back(update);
+}
+
+void Octree::apply_queued_updates() {
+    /*
+     * When objects move around they may change move from one node to another, the
+     * trouble is, if we are traversing the tree at that moment we might remove the actor
+     * from a node we have yet to traverse, and then add it to a node we already traversed
+     * (making the actor disappear for a traversal), alternatively we might end up traversing
+     * the same actor twice. What we instead is when an object moves we queue an update to the
+     * octree, and then we make sure those updates are applied before we perform the next
+     * traversal operation.
+     */
+    while(!queued_updates_.empty()) {
+        auto update = queued_updates_.front();
+        queued_updates_.pop_front();
+
+        switch(update.type_) {
+            case QUEUED_UPDATE_MOVE_ACTOR:
+                { remove_actor(update.actor_id_); insert_actor(update.actor_id_); }
+            break;
+            case QUEUED_UPDATE_MOVE_LIGHT:
+                { remove_light(update.light_id_); insert_light(update.light_id_); }
+            break;
+            case QUEUED_UPDATE_MOVE_PARTICLE_SYSTEM:
+                { remove_particle_system(update.particle_system_id_); insert_particle_system(update.particle_system_id_); }
+            break;
+            default:
+            break;
+        }
+    }
+}
+
+void traverse(Octree& tree, std::function<bool (OctreeNode*)> callback) {
     /*
      * Traverses the tree from the starting node in the traditional root-to-leaf way.
      * The callback must return true if the traversal should continue to the nodes children
      * returning false will terminate that particular branch's traversal.
      */
 
-    do_traversal(start, callback);
+    tree.apply_queued_updates();
+    do_traversal(tree.get_root(), callback);
 }
 
 }

@@ -190,7 +190,7 @@ std::vector<RenderablePtr> OctreePartitioner::geometry_visible_from(CameraID cam
     auto& frustum = camera->frustum();
 
     impl::traverse(
-        tree_.get_root(),
+        tree_,
         [&](impl::OctreeNode* node) -> bool {
             if(frustum.intersects_aabb(node->aabb())) {
                 node->data->each_actor([&](ActorID actor_id, AABB aabb) {
@@ -248,7 +248,7 @@ std::vector<LightID> OctreePartitioner::lights_visible_from(CameraID camera_id) 
     auto& frustum = camera->frustum();
 
     impl::traverse(
-        tree_.get_root(),
+        tree_,
         [&](impl::OctreeNode* node) -> bool {
             if(frustum.intersects_aabb(node->aabb())) {
                 node->data->each_light([&](LightID light_id, AABB aabb) {

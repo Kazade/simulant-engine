@@ -41,6 +41,18 @@ public:
         // Just to make sure we don't copy the mutex... not sure that they are copyable but whatever.
     }
 
+    NodeData& operator=(const NodeData& rhs) {
+        if(this == &rhs) {
+            return *this;
+        }
+
+        actor_ids_ = rhs.actor_ids_;
+        light_ids_ = rhs.light_ids_;
+        particle_system_ids_ = rhs.particle_system_ids_;
+
+        return *this;
+    }
+
     bool is_empty() const {
         return actor_ids_.empty() && light_ids_.empty() && particle_system_ids_.empty();
     }
@@ -234,6 +246,21 @@ struct OctreeLevel {
 };
 
 
+enum QueuedUpdateType {
+    QUEUED_UPDATE_MOVE_ACTOR,
+    QUEUED_UPDATE_MOVE_LIGHT,
+    QUEUED_UPDATE_MOVE_PARTICLE_SYSTEM
+};
+
+
+struct QueuedUpdate {
+    QueuedUpdateType type_;
+    ActorID actor_id_;
+    LightID light_id_;
+    ParticleSystemID particle_system_id_;
+};
+
+
 class Octree {
 public:
     typedef OctreeNode NodeType;
@@ -331,10 +358,19 @@ private:
 
     std::unordered_map<OctreeNode*, kglt::SubMeshID> debug_submeshes_;
     std::unordered_map<ActorID, sig::connection> actor_watchers_;
+
+    void queue_actor_move(ActorID actor_id);
+    void queue_light_move(LightID light_id);
+    void queue_particle_system_move(ParticleSystemID particle_system_id);
+    void apply_queued_updates();
+
+    std::list<QueuedUpdate> queued_updates_;
+
+    friend void traverse(Octree &tree, std::function<bool (OctreeNode *)> callback);
 };
 
 
-void traverse(std::weak_ptr<OctreeNode> start, std::function<bool (OctreeNode *)> callback);
+void traverse(Octree &tree, std::function<bool (OctreeNode *)> callback);
 
 }
 }
