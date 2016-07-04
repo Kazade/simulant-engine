@@ -115,6 +115,14 @@ bool OctreeNode::has_children() const {
     return !children_.empty();
 }
 
+void OctreeNode::add_child(std::weak_ptr<OctreeNode> child) {
+    children_.push_back(child);
+}
+
+void OctreeNode::remove_child(std::weak_ptr<OctreeNode> child) {
+    node_list_erase(children_, child);
+}
+
 NodeList OctreeNode::children() const {
     return children_;
 }
@@ -161,6 +169,8 @@ VectorHash Octree::generate_vector_hash(const Vec3& vec) {
 }
 
 std::weak_ptr<OctreeNode> Octree::insert_actor(ActorID actor_id) {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+
     auto actor = stage_->actor(actor_id);
     auto node = get_or_create_node(actor.get());
 
@@ -174,7 +184,8 @@ std::weak_ptr<OctreeNode> Octree::insert_actor(ActorID actor_id) {
             if(auto node = locate_actor(actor_id).lock()) {
                 if(!node->contains(new_pos)) {
                     // If the actor moved outside the bounds of the node it was in, then reinsert it
-                    queue_actor_move(actor_id);
+                    remove_actor(actor_id);
+                    insert_actor(actor_id);
                 }
             }
         });
@@ -188,6 +199,8 @@ std::weak_ptr<OctreeNode> Octree::insert_actor(ActorID actor_id) {
 }
 
 void Octree::remove_actor(ActorID actor_id) {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+
     auto ref = locate_actor(actor_id);
 
     if(auto node = ref.lock()) {
@@ -203,6 +216,8 @@ void Octree::remove_actor(ActorID actor_id) {
 }
 
 std::weak_ptr<OctreeNode> Octree::insert_light(LightID light_id) {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+
     auto light = stage_->light(light_id);
     auto node = get_or_create_node(light.get());
 
@@ -220,6 +235,8 @@ std::weak_ptr<OctreeNode> Octree::insert_light(LightID light_id) {
 }
 
 void Octree::remove_light(LightID light_id) {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+
     auto ref = locate_light(light_id);
 
     if(auto node = ref.lock()) {
@@ -234,6 +251,8 @@ void Octree::remove_light(LightID light_id) {
 }
 
 std::weak_ptr<OctreeNode> Octree::insert_particle_system(ParticleSystemID particle_system_id) {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+
     auto ps = stage_->particle_system(particle_system_id);
     auto node = get_or_create_node(ps.get());
 
@@ -251,6 +270,8 @@ std::weak_ptr<OctreeNode> Octree::insert_particle_system(ParticleSystemID partic
 }
 
 void Octree::remove_particle_system(ParticleSystemID ps_id) {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+
     auto ref = locate_particle_system(ps_id);
 
     if(auto node = ref.lock()) {
@@ -596,7 +617,7 @@ std::shared_ptr<OctreeNode> Octree::create_node(int32_t level_number, Vec3 centr
     if(level->level_number > 0) {
         auto hash = generate_vector_hash(find_node_centre_for_point(level->level_number - 1, centre));
         new_node->parent_ = levels_[level->level_number - 1]->nodes.at(hash).get();
-        new_node->parent_->children_.push_back(new_node);
+        new_node->parent_->add_child(new_node);
         assert(new_node->parent_->children_.size() <= 8);
     } else if(levels_.size() > 1) {
         // If we just added a new root node, then update the previous root
@@ -617,7 +638,7 @@ void Octree::remove_node(std::weak_ptr<OctreeNode> ref) {
     auto level = node->level();
 
     if(node->parent_) {
-        node_list_erase(node->parent_->children_, node);
+        node->parent_->remove_child(node);
     } else {
         // Removing the root node! assert that we're not doing anything bad
         assert(levels_[0]->nodes.size() == 1);
@@ -669,57 +690,6 @@ void do_traversal(std::weak_ptr<OctreeNode> node_ref, std::function<bool (Octree
     }
 }
 
-void Octree::queue_actor_move(ActorID actor_id) {
-    QueuedUpdate update;
-    update.type_ = QUEUED_UPDATE_MOVE_ACTOR;
-    update.actor_id_ = actor_id;
-    queued_updates_.push_back(update);
-}
-
-void Octree::queue_light_move(LightID light_id) {
-    QueuedUpdate update;
-    update.type_ = QUEUED_UPDATE_MOVE_LIGHT;
-    update.light_id_ = light_id;
-    queued_updates_.push_back(update);
-}
-
-void Octree::queue_particle_system_move(ParticleSystemID particle_system_id) {
-    QueuedUpdate update;
-    update.type_ = QUEUED_UPDATE_MOVE_PARTICLE_SYSTEM;
-    update.particle_system_id_ = particle_system_id;
-    queued_updates_.push_back(update);
-}
-
-void Octree::apply_queued_updates() {
-    /*
-     * When objects move around they may change move from one node to another, the
-     * trouble is, if we are traversing the tree at that moment we might remove the actor
-     * from a node we have yet to traverse, and then add it to a node we already traversed
-     * (making the actor disappear for a traversal), alternatively we might end up traversing
-     * the same actor twice. What we instead is when an object moves we queue an update to the
-     * octree, and then we make sure those updates are applied before we perform the next
-     * traversal operation.
-     */
-    while(!queued_updates_.empty()) {
-        auto update = queued_updates_.front();
-        queued_updates_.pop_front();
-
-        switch(update.type_) {
-            case QUEUED_UPDATE_MOVE_ACTOR:
-                { remove_actor(update.actor_id_); insert_actor(update.actor_id_); }
-            break;
-            case QUEUED_UPDATE_MOVE_LIGHT:
-                { remove_light(update.light_id_); insert_light(update.light_id_); }
-            break;
-            case QUEUED_UPDATE_MOVE_PARTICLE_SYSTEM:
-                { remove_particle_system(update.particle_system_id_); insert_particle_system(update.particle_system_id_); }
-            break;
-            default:
-            break;
-        }
-    }
-}
-
 void traverse(Octree& tree, std::function<bool (OctreeNode*)> callback) {
     /*
      * Traverses the tree from the starting node in the traditional root-to-leaf way.
@@ -727,7 +697,7 @@ void traverse(Octree& tree, std::function<bool (OctreeNode*)> callback) {
      * returning false will terminate that particular branch's traversal.
      */
 
-    tree.apply_queued_updates();
+    std::lock_guard<std::recursive_mutex> lock(tree.mutex_);
     do_traversal(tree.get_root(), callback);
 }
 

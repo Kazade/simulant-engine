@@ -12,11 +12,11 @@
 
 #include <list>
 #include <memory>
+#include <mutex>
 
 #include "../../types.h"
 #include "../../generic/property.h"
 #include "../static_chunk.h"
-#include "../../generic/threading/shared_mutex.h"
 
 class NewOctreeTest;
 
@@ -25,8 +25,6 @@ namespace impl {
 
 struct NodeData : public StaticChunkHolder {
 private:
-    shared_mutex mutex;
-
     std::unordered_map<ActorID, AABB> actor_ids_;
     std::unordered_map<LightID, AABB> light_ids_;
     std::unordered_map<ParticleSystemID, AABB> particle_system_ids_;
@@ -62,80 +60,54 @@ public:
     uint32_t particle_system_count() const { return particle_system_ids_.size(); }
 
     void erase_all() {
-        write_lock<shared_mutex> lock(mutex);
         actor_ids_.clear();
         light_ids_.clear();
         particle_system_ids_.clear();
     }
 
     void insert_or_update(ActorID actor, AABB aabb) {
-        write_lock<shared_mutex> lock(mutex);
         actor_ids_[actor] = aabb;
     }
 
     void erase(ActorID actor_id) {
-        write_lock<shared_mutex> lock(mutex);
         actor_ids_.erase(actor_id);
     }
 
     void insert_or_update(LightID light, AABB aabb) {
-        write_lock<shared_mutex> lock(mutex);
         light_ids_[light] = aabb;
     }
 
     void erase(LightID light_id) {
-        write_lock<shared_mutex> lock(mutex);
         light_ids_.erase(light_id);
     }
 
     void insert_or_update(ParticleSystemID psid, AABB aabb) {
-        write_lock<shared_mutex> lock(mutex);
         particle_system_ids_[psid] = aabb;
     }
 
     void erase(ParticleSystemID ps_id) {
-        write_lock<shared_mutex> lock(mutex);
         particle_system_ids_.erase(ps_id);
     }
 
     void each_actor(std::function<void (ActorID actor_id, AABB aabb)> callback) {
-        std::unordered_map<ActorID, AABB> actor_ids;
-        {
-            read_lock<shared_mutex> lock(mutex);
-            actor_ids = actor_ids_;
-        }
-
-        for(auto& pair: actor_ids) {
+        for(auto& pair: actor_ids_) {
             callback(pair.first, pair.second);
         }
     }
 
     void each_light(std::function<void (LightID actor_id, AABB aabb)> callback) {
-        std::unordered_map<LightID, AABB> light_ids;
-        {
-            read_lock<shared_mutex> lock(mutex);
-            light_ids = light_ids_;
-        }
-
-        for(auto& pair: light_ids) {
+        for(auto& pair: light_ids_) {
             callback(pair.first, pair.second);
         }
     }
 
     void each_particle_system(std::function<void (ParticleSystemID actor_id, AABB aabb)> callback) {
-        std::unordered_map<ParticleSystemID, AABB> particle_system_ids;
-        {
-            read_lock<shared_mutex> lock(mutex);
-            particle_system_ids = particle_system_ids_;
-        }
-
-        for(auto& pair: particle_system_ids) {
+        for(auto& pair: particle_system_ids_) {
             callback(pair.first, pair.second);
         }
     }
 
     void merge(NodeData& other) {
-        write_lock<shared_mutex> lock(mutex);
         actor_ids_.insert(other.actor_ids_.begin(), other.actor_ids_.end());
         light_ids_.insert(other.light_ids_.begin(), other.light_ids_.end());
         particle_system_ids_.insert(other.particle_system_ids_.begin(), other.particle_system_ids_.end());
@@ -217,6 +189,9 @@ public:
         return AABB(centre_, diameter_);
     }
 private:
+    void add_child(std::weak_ptr<OctreeNode> child);
+    void remove_child(std::weak_ptr<OctreeNode> child);
+
     Octree* octree_ = nullptr;
     OctreeLevel* level_ = nullptr;
 
@@ -314,11 +289,14 @@ public:
     const uint32_t node_count() const { return node_count_; }
 
     kglt::MeshID debug_mesh_id() { return debug_mesh_; }
+
 private:
     friend class ::NewOctreeTest;
     friend class OctreeNode;
 
     typedef std::deque<std::shared_ptr<OctreeLevel>> LevelArray;
+
+    std::recursive_mutex mutex_;
 
     VectorHash generate_vector_hash(const Vec3& vec);
     Stage* stage_;
@@ -358,13 +336,6 @@ private:
 
     std::unordered_map<OctreeNode*, kglt::SubMeshID> debug_submeshes_;
     std::unordered_map<ActorID, sig::connection> actor_watchers_;
-
-    void queue_actor_move(ActorID actor_id);
-    void queue_light_move(LightID light_id);
-    void queue_particle_system_move(ParticleSystemID particle_system_id);
-    void apply_queued_updates();
-
-    std::list<QueuedUpdate> queued_updates_;
 
     friend void traverse(Octree &tree, std::function<bool (OctreeNode *)> callback);
 };
