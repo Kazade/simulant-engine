@@ -161,11 +161,11 @@ public:
         return submesh().aabb();
     }
 
-    SubActor(Actor& parent, SubMesh* submesh);
+    SubActor(Actor& parent, std::shared_ptr<SubMesh> submesh);
     ~SubActor();
 private:
     Actor& parent_;
-    SubMesh* submesh_ = nullptr;
+    std::shared_ptr<SubMesh> submesh_;
     MaterialPtr material_;
 
     SubMesh& submesh();

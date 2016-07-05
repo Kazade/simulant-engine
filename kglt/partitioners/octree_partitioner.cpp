@@ -9,13 +9,6 @@
 
 #include "./static_chunk.h"
 
-/*
- * TODO:
- *
- * The tree stores a raw pointer to the boundable entity - surely this needs to be refcounted? What if the
- * entity is destroyed in another thread? There's so much to fix in this rendering system :/
- */
-
 namespace kglt {
 
 bool should_split_predicate(const impl::OctreeNode* node) {
@@ -182,10 +175,6 @@ std::vector<RenderablePtr> OctreePartitioner::geometry_visible_from(CameraID cam
         return results;
     }
 
-    /**
-     *  FIXME: A tree_->objects_visible_from(cam.frustum()); would be faster
-     */
-
     auto camera = stage->window->camera(camera_id);
     auto& frustum = camera->frustum();
 
@@ -211,27 +200,6 @@ std::vector<RenderablePtr> OctreePartitioner::geometry_visible_from(CameraID cam
             return false;
         }
     );
-/*
-    //Go through the visible nodes
-    for(OctreeNode* node: tree_.nodes_visible_from(stage->window->camera(camera_id)->frustum())) {
-        //Go through the objects
-        for(const BoundableEntity* obj: node->objects()) {
-            if(container::contains(boundable_to_renderable_, obj)) {
-                //Build a list of visible subactors
-                results.push_back(boundable_to_renderable_[obj]);
-            }
-        }
-
-        if(node->exists(STATIC_CHUNK_KEY)) {
-            auto static_chunks = node->get<StaticChunkHolder::ptr>(STATIC_CHUNK_KEY);
-            for(auto& chunk: static_chunks->chunks) {
-                auto& static_chunk = chunk.second;
-                for(auto& subchunk: *static_chunk->subchunks.get()) {
-                    results.push_back(subchunk.second);
-                }
-            }
-        }
-    }*/
 
     return results;
 }

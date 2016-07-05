@@ -5,6 +5,7 @@
 #include <vector>
 #include <unordered_map>
 #include <set>
+#include <memory>
 
 #include "generic/managed.h"
 #include "generic/identifiable.h"
@@ -181,6 +182,9 @@ public:
     void normalize(); //Scales the mesh so it has a radius of 1.0
     void transform_vertices(const kglt::Mat4& transform, bool include_submeshes=true);
 
+    void each(std::function<void (uint32_t, std::weak_ptr<SubMesh>)> func) const;
+
+    using TemplatedSubMeshManager::each;
 public:
     // Signals
 

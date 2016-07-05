@@ -131,6 +131,7 @@ public:
     std::unordered_map<ObjectIDType, std::shared_ptr<ObjectType> >& __objects() {
         return objects_;
     }
+
 private:
     sig::signal<void (ObjectType&, ObjectIDType)> signal_post_create_;
     sig::signal<void (ObjectType&, ObjectIDType)> signal_pre_delete_;

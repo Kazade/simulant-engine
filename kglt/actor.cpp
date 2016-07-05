@@ -47,9 +47,9 @@ void Actor::clear_subactors() {
 void Actor::rebuild_subactors() {
     clear_subactors();
 
-    mesh_->each([&](SubMesh* mesh) {
+    mesh_->each([&](uint32_t i, std::weak_ptr<SubMesh> mesh) {
         subactors_.push_back(
-            SubActor::create(*this, mesh)
+            SubActor::create(*this, mesh.lock())
         );
         signal_subactor_created_(id(), subactors_.back().get());
     });
@@ -109,7 +109,7 @@ void Actor::ask_owner_for_destruction() {
     stage->delete_actor(id());
 }
 
-SubActor::SubActor(Actor& parent, SubMesh* submesh):
+SubActor::SubActor(Actor& parent, std::shared_ptr<SubMesh> submesh):
     parent_(parent),
     submesh_(submesh),
     material_(0) {

@@ -22,6 +22,13 @@ Mesh::Mesh(MeshID id, ResourceManager *resource_manager):
     });
 }
 
+void Mesh::each(std::function<void (uint32_t, std::weak_ptr<SubMesh> submesh)> func) const {
+    int i = 0;
+    for(auto pair: this->objects_) {
+        func(i++, pair.second);
+    }
+}
+
 void Mesh::clear() {
     //Delete the submeshes and clear the shared data
     TemplatedSubMeshManager::manager_delete_all();
