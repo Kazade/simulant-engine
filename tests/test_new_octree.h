@@ -52,6 +52,27 @@ public:
         assert_equal(octree_->node_count(), 0);
     }
 
+    void test_add_remove() {
+        octree_->insert_actor(actor_id_);
+
+        auto actor = stage_->actor(actor_id_);
+
+        assert_equal(1, octree_->node_count());
+        assert_equal(actor->absolute_position(), octree_->get_root()->centre());
+
+        /* Moving the actor should cause a remove + insert. The remove should remove the
+         * root node and the insert should generate a new one in the new location */
+        actor->move_to(10, 10, 10);
+
+        assert_equal(1, octree_->node_count());
+        assert_equal(actor->absolute_position(), octree_->get_root()->centre());
+
+        /* No root node once all actors have bene removed */
+        octree_->remove_actor(actor_id_);
+        assert_equal(0, octree_->node_count());
+        assert_false(octree_->get_root());
+    }
+
     void test_octree_growth() {
         auto octree_node = octree_->insert_actor(actor_id_).lock();
         assert_equal(16, octree_node->diameter());

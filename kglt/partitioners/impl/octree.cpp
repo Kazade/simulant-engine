@@ -540,7 +540,7 @@ void Octree::grow_to_contain(const AABB& aabb) {
 
     while(!inside_octree(aabb)) {
         auto c = aabb.centre();
-        auto rc = (root) ? root->centre() : Vec3();
+        auto rc = (root) ? root->centre() : aabb.centre();
 
         NodeDiameter new_diameter = (root) ? root->diameter() * 2 : next_pow2(aabb.max_dimension() / 2.0f);
         NodeDiameter qd = new_diameter / 4;
