@@ -543,7 +543,7 @@ void Octree::grow_to_contain(const AABB& aabb) {
         auto rc = (root) ? root->centre() : aabb.centre();
 
         NodeDiameter new_diameter = (root) ? root->diameter() * 2 : next_pow2(aabb.max_dimension() / 2.0f);
-        NodeDiameter qd = new_diameter / 4;
+        float qd = float(new_diameter) / 4.0;
 
         Vec3 new_centre_offset(
             (c.x < rc.x) ? -qd : qd,
