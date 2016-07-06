@@ -24,7 +24,13 @@ public:
     typedef std::shared_ptr<Light> ptr;
 
     Light(LightID lid, Stage* stage);
-    void set_type(LightType type) { type_ = type; }
+    void set_type(LightType type) {
+        type_ = type;
+
+        // We should never cull directional lights
+        culling_mode_ = (type_ == LIGHT_TYPE_DIRECTIONAL) ?
+            RENDERABLE_CULLING_MODE_NEVER : RENDERABLE_CULLING_MODE_PARTITIONER;
+    }
 
     /*
      *  Direction (ab)uses the light's position.
@@ -93,6 +99,9 @@ public:
             return _u("Light {0}").format(this->id());
         }
     }
+
+    RenderableCullingMode renderable_culling_mode() const { return culling_mode_; }
+
 private:
     LightType type_;
 
@@ -105,6 +114,7 @@ private:
     float linear_attenuation_;
     float quadratic_attenuation_;
 
+    RenderableCullingMode culling_mode_ = RENDERABLE_CULLING_MODE_PARTITIONER;
 };
 
 }

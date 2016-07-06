@@ -52,6 +52,9 @@ private:
     std::map<ActorID, sig::connection> actor_changed_connections_;
     std::map<const BoundableEntity*, RenderablePtr> boundable_to_renderable_;
     std::map<const BoundableEntity*, LightID> boundable_to_light_;
+
+    std::set<ActorID> actors_always_visible_;
+    std::set<LightID> lights_always_visible_;
 };
 
 

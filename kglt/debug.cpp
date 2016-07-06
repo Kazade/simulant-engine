@@ -38,7 +38,10 @@ void Debug::update() {
 
 bool Debug::init() {
     mesh_ = stage_.new_mesh();
-    actor_ = stage_.new_actor_with_mesh(mesh_);
+    actor_ = stage_.new_actor_with_mesh(
+        mesh_,
+        RENDERABLE_CULLING_MODE_NEVER // Important!
+    );
 
     //Don't GC the material, if there are no debug lines then it won't be attached to the mesh
     material_ = stage_.new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY, /*garbage_collect=*/false);

@@ -150,27 +150,51 @@ void OctreePartitioner::remove_geom(GeomID geom_id) {
 void OctreePartitioner::add_actor(ActorID obj) {
     L_DEBUG("Adding actor to the partitioner");
 
-    tree_.insert_actor(obj);
+    if(stage->actor(obj)->renderable_culling_mode() == RENDERABLE_CULLING_MODE_NEVER) {
+        actors_always_visible_.insert(obj);
+    } else {
+        tree_.insert_actor(obj);
+    }
 }
 
 void OctreePartitioner::remove_actor(ActorID obj) {
     L_DEBUG("Removing actor from the partitioner");
 
-    tree_.remove_actor(obj);
+    if(actors_always_visible_.count(obj)) {
+        actors_always_visible_.erase(obj);
+    } else {
+        tree_.remove_actor(obj);
+    }
 }
 
 void OctreePartitioner::add_light(LightID obj) {
-    tree_.insert_light(obj);
+    if(stage->light(obj)->renderable_culling_mode() == RENDERABLE_CULLING_MODE_NEVER) {
+        lights_always_visible_.insert(obj);
+    } else {
+        tree_.insert_light(obj);
+    }
 }
 
 void OctreePartitioner::remove_light(LightID obj) {
-    tree_.remove_light(obj);
+    if(lights_always_visible_.count(obj)) {
+        lights_always_visible_.erase(obj);
+    } else {
+        tree_.remove_light(obj);
+    }
 }
 
 std::vector<RenderablePtr> OctreePartitioner::geometry_visible_from(CameraID camera_id) {
     std::vector<RenderablePtr> results;
 
-    //If the tree has no root then we return nothing
+    /* Make sure we return all actors which are always visible regardless of culling */
+    for(auto& aid: actors_always_visible_) {
+        auto actor = stage->actor(aid);
+        for(auto subactor: actor->_subactors()) {
+            results.push_back(subactor);
+        }
+    }
+
+    //If the tree has no root then there's nothing more to add
     if(!tree_.has_root()) {
         return results;
     }
@@ -205,7 +229,7 @@ std::vector<RenderablePtr> OctreePartitioner::geometry_visible_from(CameraID cam
 }
 
 std::vector<LightID> OctreePartitioner::lights_visible_from(CameraID camera_id) {
-    std::vector<LightID> results;
+    std::vector<LightID> results(lights_always_visible_.begin(), lights_always_visible_.end());
 
     //If the tree has no root then we return nothing
     if(!tree_.has_root()) {
