@@ -34,7 +34,7 @@ void PartitionerPanel::initialize() {
 
     /* for stage in stages: stage->new_actor(stage->partitioner->debug_mesh_id()) */
     window_->StageManager::each([=](Stage* stage) {
-        debug_actors_[stage->id()] = stage->new_actor(stage->partitioner->debug_mesh_id());
+        debug_actors_[stage->id()] = stage->new_actor_with_mesh(stage->partitioner->debug_mesh_id());
     });
 
     initialized_ = true;

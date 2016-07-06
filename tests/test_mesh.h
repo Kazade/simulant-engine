@@ -193,7 +193,7 @@ public:
         auto stage = window->stage(stage_id_);
 
         kglt::MeshID mesh_id = stage->new_mesh(); //Create a mesh
-        auto actor = stage->actor(stage->new_actor(mesh_id));
+        auto actor = stage->actor(stage->new_actor_with_mesh(mesh_id));
 
         assert_true(mesh_id == actor->mesh()->id());
     }

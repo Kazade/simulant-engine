@@ -58,10 +58,11 @@ void Stage::on_subactor_material_changed(
     signal_actor_changed_(actor_id, evt);
 }
 
-ActorID Stage::new_actor() {
+ActorID Stage::new_actor(RenderableCullingMode mode) {
     using namespace std::placeholders;
 
     ActorID result = ActorManager::manager_new(this);
+    actor(result)->set_renderable_culling_mode(mode);
     actor(result)->set_parent(this);
     actor(result)->signal_subactor_material_changed().connect(
         std::bind(&Stage::on_subactor_material_changed, this, _1, _2, _3, _4)
@@ -72,14 +73,11 @@ ActorID Stage::new_actor() {
     return result;
 }
 
-ActorID Stage::new_actor(MeshID mid) {
-    return new_actor(mid, false, false);
-}
-
-ActorID Stage::new_actor(MeshID mid, bool make_responsive, bool make_collidable) {
+ActorID Stage::new_actor_with_mesh(MeshID mid, RenderableCullingMode mode) {
     using namespace std::placeholders;
 
     ActorID result = ActorManager::manager_new(this);
+    actor(result)->set_renderable_culling_mode(mode);
     actor(result)->set_parent(this);
     actor(result)->signal_subactor_material_changed().connect(
         std::bind(&Stage::on_subactor_material_changed, this, _1, _2, _3, _4)
@@ -96,26 +94,20 @@ ActorID Stage::new_actor(MeshID mid, bool make_responsive, bool make_collidable)
     return result;
 }
 
-ActorID Stage::new_actor_with_parent(ActorID parent) {
-    ActorID new_id = new_actor();
+ActorID Stage::new_actor_with_parent(ActorID parent, RenderableCullingMode mode) {
+    ActorID new_id = new_actor(mode);
     actor(new_id)->set_parent(parent);
     return new_id;
 }
 
-ActorID Stage::new_actor_with_parent(ActorID parent, MeshID mid) {
-    ActorID new_id = new_actor(mid);
+ActorID Stage::new_actor_with_parent_and_mesh(SpriteID parent, MeshID mid, RenderableCullingMode mode) {
+    ActorID new_id = new_actor_with_mesh(mid, mode);
     actor(new_id)->set_parent(parent);
     return new_id;
 }
 
-ActorID Stage::new_actor_with_parent_and_mesh(SpriteID parent, MeshID mid) {
-    ActorID new_id = new_actor(mid);
-    actor(new_id)->set_parent(parent);
-    return new_id;
-}
-
-ActorID Stage::new_actor_with_parent_and_mesh(ActorID parent, MeshID mid) {
-    ActorID new_id = new_actor(mid);
+ActorID Stage::new_actor_with_parent_and_mesh(ActorID parent, MeshID mid, RenderableCullingMode mode) {
+    ActorID new_id = new_actor_with_mesh(mid, mode);
     actor(new_id)->set_parent(parent);
     return new_id;
 }

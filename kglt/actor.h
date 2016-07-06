@@ -93,11 +93,18 @@ public:
 
     MeshChangedCallback& signal_mesh_changed() { return signal_mesh_changed_; }
 
+    void set_renderable_culling_mode(RenderableCullingMode mode) {
+        culling_mode_ = mode;
+    }
+
+    RenderableCullingMode renderable_culling_mode() const { return culling_mode_; }
+
 private:
     std::shared_ptr<Mesh> mesh_;
     std::vector<std::shared_ptr<SubActor> > subactors_;
 
     RenderPriority render_priority_;
+    RenderableCullingMode culling_mode_ = RENDERABLE_CULLING_MODE_PARTITIONER;
 
     SubActorCreatedCallback signal_subactor_created_;
     SubActorDestroyedCallback signal_subactor_destroyed_;

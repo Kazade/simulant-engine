@@ -600,6 +600,11 @@ enum PolygonMode {
     POLYGON_MODE_POINT
 };
 
+enum RenderableCullingMode {
+    RENDERABLE_CULLING_MODE_NEVER,
+    RENDERABLE_CULLING_MODE_PARTITIONER
+};
+
 enum CullMode {
     CULL_MODE_NONE,
     CULL_MODE_BACK_FACE,

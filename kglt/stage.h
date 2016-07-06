@@ -69,16 +69,12 @@ class Stage:
 public:
     Stage(StageID id, WindowBase *parent, AvailablePartitioner partitioner);
 
-    ActorID new_actor();
-    ActorID new_actor(MeshID mid); //FIXME: Deprecate
-    ActorID new_actor(MeshID mid, bool make_responsive, bool make_collidable); //FIXME: deprecate
+    ActorID new_actor(RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
+    ActorID new_actor_with_mesh(MeshID mid, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
 
-    ActorID new_actor_with_mesh(MeshID mid) { return new_actor(mid); }
-
-    ActorID new_actor_with_parent(ActorID parent);
-    ActorID new_actor_with_parent(ActorID parent, MeshID mid); //FIXME: deprecate
-    ActorID new_actor_with_parent_and_mesh(ActorID parent, MeshID mid);
-    ActorID new_actor_with_parent_and_mesh(SpriteID parent, MeshID mid);
+    ActorID new_actor_with_parent(ActorID parent, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
+    ActorID new_actor_with_parent_and_mesh(ActorID parent, MeshID mid, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
+    ActorID new_actor_with_parent_and_mesh(SpriteID parent, MeshID mid, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
 
     GeomID new_geom_with_mesh(MeshID mid);
     GeomID new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, const Quaternion& rotation=Quaternion());

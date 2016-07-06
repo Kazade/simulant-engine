@@ -21,7 +21,7 @@ public:
         window->camera(camera_id_)->set_perspective_projection(45.0, float(window->width()) / float(window->height()));
 
         kglt::MeshID mid = stage->new_mesh_from_file(filename);
-        kglt::ActorID actor_id = stage->new_actor(mid);
+        kglt::ActorID actor_id = stage->new_actor_with_mesh(mid);
 
         {
             auto actor = stage->actor(actor_id);
