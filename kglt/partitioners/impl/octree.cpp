@@ -558,7 +558,14 @@ void Octree::grow_to_contain(const AABB& aabb) {
 
         create_node(-1, rc + new_centre_offset, new_diameter);
 
+        if(root) {
+            get_root()->add_child(root);
+        }
+
         root = get_root();
+
+        // See if we should merge the children of the new root
+        merge_if_possible(root->children());
 
         L_DEBUG(_u("Octree diameter {0}").format(root->diameter()));
     }
