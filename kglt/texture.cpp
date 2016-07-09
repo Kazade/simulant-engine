@@ -84,7 +84,13 @@ void Texture::__do_upload(bool free_after, bool generate_mipmaps, bool repeat, b
         GL_UNSIGNED_BYTE, &data_[0]
     );
     if(generate_mipmaps) {
+#ifdef KGLT_GL_VERSION_1X
+        if(generate_mipmaps) {
+            throw std::runtime_error("generate_mipmaps is not currently supported on the GL 1X renderer");
+        }
+#else
         GLCheck(glGenerateMipmap, GL_TEXTURE_2D);
+#endif
     }
     if(repeat) {
         GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
