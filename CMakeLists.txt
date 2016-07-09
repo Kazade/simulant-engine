@@ -53,6 +53,7 @@ SET(DEPS_SOURCES
 
 INCLUDE_DIRECTORIES(
     ${CMAKE_SOURCE_DIR}/deps
+    ${CMAKE_SOURCE_DIR}/deps/kazsignal
     ${CMAKE_SOURCE_DIR}/kglt/ui/rocket/Include #libRocket`
     ${CMAKE_SOURCE_DIR}
     ${KAZBASE_INCLUDE_DIRS}

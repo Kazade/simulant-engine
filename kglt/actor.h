@@ -6,7 +6,7 @@
 #include "generic/relation.h"
 #include "generic/protected_ptr.h"
 
-#include <kazbase/signals.h>
+#include <kazsignal/kazsignal.h>
 
 #include "interfaces.h"
 #include "object.h"

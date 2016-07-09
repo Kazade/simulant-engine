@@ -1,7 +1,7 @@
 #ifndef SCREEN_MANAGER_H
 #define SCREEN_MANAGER_H
 
-#include <kazbase/signals.h>
+#include <kazsignal/kazsignal.h>
 #include <kazbase/unicode.h>
 
 #include <unordered_map>

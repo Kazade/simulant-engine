@@ -8,7 +8,7 @@
 #include <SDL.h>
 #include <set>
 #include <cassert>
-#include <kazbase/signals.h>
+#include <kazsignal/kazsignal.h>
 
 #include "generic/managed.h"
 #include "generic/identifiable.h"

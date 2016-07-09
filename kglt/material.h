@@ -9,7 +9,7 @@
 #include <unordered_map>
 #include <set>
 
-#include <kazbase/signals.h>
+#include <kazsignal/kazsignal.h>
 #include "generic/managed.h"
 #include "kazmath/mat4.h"
 #include "resource.h"

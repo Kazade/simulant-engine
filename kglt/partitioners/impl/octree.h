@@ -335,7 +335,7 @@ private:
     kglt::MaterialID debug_material_;
 
     std::unordered_map<OctreeNode*, kglt::SubMeshID> debug_submeshes_;
-    std::unordered_map<ActorID, sig::connection> actor_watchers_;
+    std::unordered_map<ActorID, sig::scoped_connection> actor_watchers_;
 
     friend void traverse(Octree &tree, std::function<bool (OctreeNode *)> callback);
 };

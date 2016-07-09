@@ -5,7 +5,7 @@
 
 #include <functional>
 #include <kazbase/list_utils.h>
-#include <kazbase/signals.h>
+#include <kazsignal/kazsignal.h>
 
 namespace kglt {
 namespace generic {

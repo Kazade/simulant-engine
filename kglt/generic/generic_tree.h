@@ -2,7 +2,7 @@
 #define GENERIC_TREE_H
 
 #include <list>
-#include <kazbase/signals.h>
+#include <kazsignal/kazsignal.h>
 
 class GenericTreeNode;
 

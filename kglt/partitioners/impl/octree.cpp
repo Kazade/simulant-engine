@@ -180,7 +180,7 @@ std::weak_ptr<OctreeNode> Octree::insert_actor(ActorID actor_id) {
         actor_lookup_[actor_id] = node;
 
         // When an actor moves, make sure we update the transformation
-        actor_watchers_[actor_id] = actor->signal_transformation_changed().connect([this, actor_id](const Vec3& new_pos, const Quaternion& new_rot) {
+        sig::scoped_connection conn = actor->signal_transformation_changed().connect([this, actor_id](const Vec3& new_pos, const Quaternion& new_rot) {
             if(auto node = locate_actor(actor_id).lock()) {
                 if(!node->contains(new_pos)) {
                     // If the actor moved outside the bounds of the node it was in, then reinsert it
@@ -189,6 +189,8 @@ std::weak_ptr<OctreeNode> Octree::insert_actor(ActorID actor_id) {
                 }
             }
         });
+
+        actor_watchers_.insert(std::make_pair(actor_id, conn));
     }
 
     if(split_if_necessary(node.get())) {

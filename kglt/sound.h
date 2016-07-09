@@ -10,7 +10,7 @@
 #include "generic/managed.h"
 #include "generic/identifiable.h"
 
-#include <kazbase/signals.h>
+#include <kazsignal/kazsignal.h>
 
 #include "resource.h"
 #include "loadable.h"
