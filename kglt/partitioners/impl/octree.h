@@ -188,6 +188,11 @@ public:
     const AABB aabb() const {
         return AABB(centre_, diameter_);
     }
+
+    const AABB loose_aabb() const {
+        return AABB(centre_, diameter_ * 2);
+    }
+
 private:
     void add_child(std::weak_ptr<OctreeNode> child);
     void remove_child(std::weak_ptr<OctreeNode> child);

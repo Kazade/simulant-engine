@@ -205,7 +205,7 @@ std::vector<RenderablePtr> OctreePartitioner::geometry_visible_from(CameraID cam
     impl::traverse(
         tree_,
         [&](impl::OctreeNode* node) -> bool {
-            if(frustum.intersects_aabb(node->aabb())) {
+            if(frustum.intersects_aabb(node->loose_aabb())) {
                 node->data->each_actor([&](ActorID actor_id, AABB aabb) {
                     auto actor = stage->actor(actor_id);
                     for(auto subactor: actor->_subactors()) {
