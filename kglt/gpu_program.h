@@ -282,11 +282,13 @@ public:
     }
 
     GLuint program_object() const { return program_object_; }
+    void prepare_program();
+
 private:
     friend class ::ShaderTest;
 
     std::unordered_map<unicode, UniformInfo> uniform_info_;
-    void prepare_program();
+
     void rebuild_uniform_info();
     void set_shader_source(ShaderType type, const std::string &source);
 

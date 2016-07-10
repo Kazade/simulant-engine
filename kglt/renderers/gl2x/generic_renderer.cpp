@@ -303,13 +303,6 @@ void GenericRenderer::render(CameraPtr camera, StagePtr stage, bool render_group
         set_light_uniforms(program_instance.get(), light);
     }
 
-    for(auto attribute: SHADER_AVAILABLE_ATTRS) {
-        if(program_instance->attributes->uses_auto(attribute)) {
-            auto varname = program_instance->attributes->variable_name(attribute);
-            program->set_attribute_location(varname, attribute);
-        }
-    }
-
     for(auto& p: material_pass->staged_float_uniforms()) {
         program->set_uniform_float(p.first, p.second);
     }
@@ -317,8 +310,6 @@ void GenericRenderer::render(CameraPtr camera, StagePtr stage, bool render_group
     for(auto& p: material_pass->staged_int_uniforms()) {
         program->set_uniform_int(p.first, p.second);
     }
-
-    program->relink();
 
     renderable->_update_vertex_array_object();
     renderable->_bind_vertex_array_object();

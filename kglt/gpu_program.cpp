@@ -203,6 +203,7 @@ void GPUProgram::prepare_program() {
     }
 
     program_object_ = _GLCheck<GLuint>(__func__, glCreateProgram);
+
     L_DEBUG(_u("Created program {0}").format(program_object_));
 }
 

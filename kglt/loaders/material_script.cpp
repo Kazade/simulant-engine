@@ -278,6 +278,8 @@ void MaterialScript::handle_block(Material& mat,
                 current_pass->program->set_gpu_program(
                     GPUProgram::create(current_vert_shader_, current_frag_shader_)
                 );
+
+                current_pass->build_program_and_bind_attributes();
             }
             return; //Exit this function, we are done with this block
         } else if(line.starts_with("SET")) {

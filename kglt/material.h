@@ -188,6 +188,7 @@ public:
     Property<MaterialPass, Material> material = { this, &MaterialPass::material_ };
     Property<MaterialPass, GPUProgramInstance> program = { this, &MaterialPass::program_ };
 
+    void build_program_and_bind_attributes();
 private:
     static std::shared_ptr<GPUProgram> default_program;
 

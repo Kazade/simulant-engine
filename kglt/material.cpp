@@ -184,6 +184,29 @@ void MaterialPass::set_albedo(float reflectiveness) {
     }
 }
 
+void MaterialPass::build_program_and_bind_attributes() {
+    auto do_build_and_bind = [&]() {
+        program->program->prepare_program();
+
+        for(auto attribute: SHADER_AVAILABLE_ATTRS) {
+            if(program->attributes->uses_auto(attribute)) {
+                auto varname = program->attributes->variable_name(attribute);
+                program->program->set_attribute_location(varname, attribute);
+            }
+        }
+
+        program->program->build();
+    };
+
+    // If we're not in the GL thread, then make this run on the idle task and wait
+    if(!GLThreadCheck::is_current()) {
+        this->material->resource_manager().window->idle->run_sync(do_build_and_bind);
+    } else {
+        // Otherwise do this inline
+        do_build_and_bind();
+    }
+}
+
 void Material::set_texture_unit_on_all_passes(uint32_t texture_unit_id, TextureID tex) {
     for(auto& p: passes_) {
         p->set_texture_unit(texture_unit_id, tex);
