@@ -27,6 +27,11 @@ UniformInfo GPUProgram::uniform_info(const std::string& uniform_name) {
 }
 
 GLint GPUProgram::locate_uniform(const std::string& uniform_name) {
+    auto it = uniform_cache_.find(uniform_name);
+    if(it != uniform_cache_.end()) {
+        return (*it).second;
+    }
+
     if(!is_current()) {
         L_ERROR("Attempted to modify a uniform without making the program active");
         throw LogicError("Attempted to modify GPU program object without making it active");
@@ -35,11 +40,6 @@ GLint GPUProgram::locate_uniform(const std::string& uniform_name) {
     if(!is_complete()) {
         L_ERROR("Attempted to modify a uniform without making the program complete");
         throw LogicError("Attempted to access uniform on a GPU program that is not complete");
-    }
-
-    auto it = uniform_cache_.find(uniform_name);
-    if(it != uniform_cache_.end()) {
-        return (*it).second;
     }
 
     std::string name = uniform_name;
