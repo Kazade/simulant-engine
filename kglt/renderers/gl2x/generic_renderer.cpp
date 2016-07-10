@@ -269,9 +269,6 @@ void GenericRenderer::set_blending_mode(BlendType type) {
 void GenericRenderer::render(CameraPtr camera, StagePtr stage, bool render_group_changed, const batcher::RenderGroup* current_group,
     Renderable* renderable, MaterialPass* material_pass, Light* light, batcher::Iteration iteration) {
 
-    GLStateStash s2(GL_ELEMENT_ARRAY_BUFFER_BINDING);
-    GLStateStash s3(GL_ARRAY_BUFFER_BINDING);
-
     // Casting blindly because I can't see how it's possible that it's anything else!
     GL2RenderGroupImpl* current = (GL2RenderGroupImpl*) current_group->impl();
 
