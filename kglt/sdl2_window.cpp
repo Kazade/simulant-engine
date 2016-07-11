@@ -241,7 +241,14 @@ bool SDL2Window::create_window(int width, int height, int bpp, bool fullscreen) 
     set_width(width);
     set_height(height);
 
+#ifndef NDEBUG
+    //DEBUG mode
+    SDL_GL_SetSwapInterval(0);
+    SDL_ShowCursor(1);
+#else
     SDL_ShowCursor(0);
+#endif
+
 
     L_DEBUG(unicode("{0} joysicks found").format(SDL_NumJoysticks()).encode());
     for(uint16_t i = 0; i < SDL_NumJoysticks(); i++) {
