@@ -287,7 +287,7 @@ MaterialPass::ptr MaterialPass::new_clone(Material* owner) const {
     return ret;
 }
 
-MaterialID Material::new_clone(bool garbage_collect) const {
+MaterialID Material::new_clone(GarbageCollectMethod garbage_collect) const {
 
     // Probably the only legit use of const_cast I've ever done! The const-ness applies
     // to the source material, not the resource manager, and there's no other way to get

@@ -317,7 +317,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     std::map<std::string, TextureID> texture_lookup;
     TextureID checkerboard = stage->new_texture_from_file(Texture::BuiltIns::CHECKERBOARD);
-    TextureID lightmap_texture = stage->new_texture(false);
+    TextureID lightmap_texture = stage->new_texture(GARBAGE_COLLECT_NEVER);
 
     auto texture_info_visible = [](Q2::TextureInfo& info) -> bool {
         /* Don't draw invisible things */
@@ -429,7 +429,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     MeshID mid = stage->new_mesh_with_alias(
         "world_geometry",
         VERTEX_ATTRIBUTE_POSITION_3F | VERTEX_ATTRIBUTE_NORMAL_3F | VERTEX_ATTRIBUTE_DIFFUSE_4F | VERTEX_ATTRIBUTE_TEXCOORD0_2F | VERTEX_ATTRIBUTE_TEXCOORD1_2F,
-        false
+        GARBAGE_COLLECT_NEVER
     );
     auto mesh = stage->mesh(mid);
 

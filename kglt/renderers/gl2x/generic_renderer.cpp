@@ -214,12 +214,16 @@ void send_attribute(ShaderAvailableAttributes attr,
         auto offset = std::bind(offset_func, &data, false)();
 
         GLCheck(glEnableVertexAttribArray, loc);
+
+        auto attr_size = vertex_attribute_size(data.attribute_for_type(convert(attr)));
+        auto stride = data.stride();
+
         GLCheck(glVertexAttribPointer,
             loc,
-            vertex_attribute_size(data.attribute_for_type(convert(attr))),
+            attr_size / sizeof(float),
             GL_FLOAT,
             GL_FALSE,
-            data.stride(),
+            stride,
             BUFFER_OFFSET(offset)
         );
     } else {

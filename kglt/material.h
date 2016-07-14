@@ -17,6 +17,7 @@
 #include "generic/identifiable.h"
 #include "generic/cloneable.h"
 #include "generic/property.h"
+#include "generic/refcount_manager.h"
 #include "controllers/controller.h"
 #include "types.h"
 #include "interfaces.h"
@@ -267,7 +268,7 @@ public:
 
     void set_texture_unit_on_all_passes(uint32_t texture_unit_id, TextureID tex);
 
-    MaterialID new_clone(bool garbage_collect=true) const;
+    MaterialID new_clone(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) const;
 
     void each(std::function<void (uint32_t, MaterialPass*)> callback) {
         // Wait until we can lock the atomic flag

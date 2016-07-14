@@ -7,6 +7,12 @@
 #include "protected_ptr.h"
 
 namespace kglt {
+
+enum GarbageCollectMethod {
+    GARBAGE_COLLECT_NEVER,
+    GARBAGE_COLLECT_PERIODIC
+};
+
 namespace generic {
 
 template<
@@ -24,17 +30,17 @@ public:
         uncollected_.insert(id);
     }
 
-    ObjectIDType manager_new(bool garbage_collect) {
+    ObjectIDType manager_new(GarbageCollectMethod garbage_collect) {
         return manager_new(ObjectIDType(), garbage_collect);
     }
 
     template<typename ...Args>
-    ObjectIDType manager_new(bool garbage_collect, Args&&... args) {
+    ObjectIDType manager_new(GarbageCollectMethod garbage_collect, Args&&... args) {
         return manager_new(ObjectIDType(), garbage_collect, std::forward<Args>(args)...);
     }
 
     template<typename ...Args>
-    ObjectIDType manager_new(ObjectIDType id, bool garbage_collect, Args&&... args) {
+    ObjectIDType manager_new(ObjectIDType id, GarbageCollectMethod garbage_collect, Args&&... args) {
         std::lock_guard<std::mutex> lock(manager_lock_);
         if(!id) {
             id = NewIDGenerator()();

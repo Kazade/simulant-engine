@@ -44,7 +44,7 @@ bool Debug::init() {
     );
 
     //Don't GC the material, if there are no debug lines then it won't be attached to the mesh
-    material_ = stage_.new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY, /*garbage_collect=*/false);
+    material_ = stage_.new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY, GARBAGE_COLLECT_NEVER);
 
     //Connect regular updates so we can remove debug lines after their duration
     /*stage_.window().signal_frame_finished().connect(

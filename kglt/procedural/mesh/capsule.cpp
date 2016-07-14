@@ -12,7 +12,12 @@ SubMeshID capsule(ProtectedPtr<Mesh> mesh, float diameter, float height,
 
     SubMeshID smi = mesh->new_submesh(
         MESH_ARRANGEMENT_TRIANGLES,
-        VERTEX_SHARING_MODE_INDEPENDENT
+        VERTEX_SHARING_MODE_INDEPENDENT,
+        VERTEX_ATTRIBUTE_POSITION_3F |
+        VERTEX_ATTRIBUTE_NORMAL_3F |
+        VERTEX_ATTRIBUTE_TEXCOORD0_2F |
+        VERTEX_ATTRIBUTE_TEXCOORD1_2F |
+        VERTEX_ATTRIBUTE_DIFFUSE_4F
     );
     kglt::SubMesh& submesh = *mesh->submesh(smi);
 
@@ -53,8 +58,6 @@ SubMeshID capsule(ProtectedPtr<Mesh> mesh, float diameter, float height,
             vdata.position(new_point);
             vdata.tex_coord0(new_tex);
             vdata.tex_coord1(new_tex);
-            vdata.tex_coord2(new_tex);
-            vdata.tex_coord3(new_tex);
             vdata.normal(new_normal);
             vdata.diffuse(kglt::Colour::WHITE);
             vdata.move_next();
@@ -100,8 +103,6 @@ SubMeshID capsule(ProtectedPtr<Mesh> mesh, float diameter, float height,
             vdata.position(new_point);
             vdata.tex_coord0(new_tex);
             vdata.tex_coord1(new_tex);
-            vdata.tex_coord2(new_tex);
-            vdata.tex_coord3(new_tex);
             vdata.normal(new_normal);
             vdata.diffuse(kglt::Colour::WHITE);
             vdata.move_next();
@@ -147,8 +148,6 @@ SubMeshID capsule(ProtectedPtr<Mesh> mesh, float diameter, float height,
             vdata.position(new_point);
             vdata.tex_coord0(new_tex);
             vdata.tex_coord1(new_tex);
-            vdata.tex_coord2(new_tex);
-            vdata.tex_coord3(new_tex);
             vdata.normal(new_normal);
             vdata.diffuse(kglt::Colour::WHITE);
             vdata.move_next();

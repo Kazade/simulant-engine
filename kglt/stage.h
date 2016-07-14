@@ -140,77 +140,77 @@ public:
      */
 
     //Mesh functions
-    virtual MeshID new_mesh(uint64_t vertex_attribute_mask, bool garbage_collect=true) override {
+    virtual MeshID new_mesh(uint64_t vertex_attribute_mask, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh(vertex_attribute_mask, garbage_collect);
     }
 
-    virtual MeshID new_mesh_from_file(const unicode& path, bool garbage_collect=true) override {
+    virtual MeshID new_mesh_from_file(const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_from_file(path, garbage_collect);
     }
 
-    MeshID new_mesh_from_tmx_file(const unicode& tmx_file, const unicode& layer_name, float tile_render_size=1.0, bool garbage_collect=true) override {
+    MeshID new_mesh_from_tmx_file(const unicode& tmx_file, const unicode& layer_name, float tile_render_size=1.0, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_from_tmx_file(tmx_file, layer_name, tile_render_size, garbage_collect);
     }
 
     MeshID new_mesh_from_heightmap(
         const unicode& image_file, float spacing=1.0, float min_height=-64,
-        float max_height=64.0, const HeightmapDiffuseGenerator& generator=HeightmapDiffuseGenerator(), bool garbage_collect=true) override {
+        float max_height=64.0, const HeightmapDiffuseGenerator& generator=HeightmapDiffuseGenerator(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_from_heightmap(image_file, spacing, min_height, max_height, generator, garbage_collect);
     }
 
-    virtual MeshID new_mesh_as_cube(float width, bool garbage_collect=true) override {
+    virtual MeshID new_mesh_as_cube(float width, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_as_cube(width, garbage_collect);
     }
 
-    virtual MeshID new_mesh_as_cylinder(float diameter, float length, int segments=20, int stacks=20, bool garbage_collect=true) override {
+    virtual MeshID new_mesh_as_cylinder(float diameter, float length, int segments=20, int stacks=20, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_as_cylinder(diameter, length, segments, stacks, garbage_collect);
     }
 
-    virtual MeshID new_mesh_as_box(float width, float height, float depth, bool garbage_collect=true) override {
+    virtual MeshID new_mesh_as_box(float width, float height, float depth, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_as_box(width, height, depth, garbage_collect);
     }
 
-    virtual MeshID new_mesh_as_sphere(float diameter, bool garbage_collect=true) override {
+    virtual MeshID new_mesh_as_sphere(float diameter, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_as_sphere(diameter, garbage_collect);
     }
 
-    MeshID new_mesh_as_rectangle(float width, float height, const Vec2& offset=Vec2(), MaterialID material=MaterialID(), bool garbage_collect=true) override {
+    MeshID new_mesh_as_rectangle(float width, float height, const Vec2& offset=Vec2(), MaterialID material=MaterialID(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_as_rectangle(width, height, offset, material, garbage_collect);
     }
 
-    MeshID new_mesh_as_capsule(float diameter, float length, int segments=20, int stacks=20, bool garbage_collect=true) override {
+    MeshID new_mesh_as_capsule(float diameter, float length, int segments=20, int stacks=20, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_as_capsule(diameter, length, segments, stacks, garbage_collect);
     }
 
-    MeshID new_mesh_from_vertices(uint64_t vertex_attribute_mask, const std::vector<Vec2> &vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool garbage_collect=true) override {
+    MeshID new_mesh_from_vertices(uint64_t vertex_attribute_mask, const std::vector<Vec2> &vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_from_vertices(vertex_attribute_mask, vertices, arrangement, garbage_collect);
     }
 
-    MeshID new_mesh_from_vertices(uint64_t vertex_attribute_mask, const std::vector<Vec3> &vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool garbage_collect=true) override {
+    MeshID new_mesh_from_vertices(uint64_t vertex_attribute_mask, const std::vector<Vec3> &vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_from_vertices(vertex_attribute_mask, vertices, arrangement, garbage_collect);
     }
 
-    MeshID new_mesh_with_alias(const unicode& alias, uint64_t vertex_attribute_mask, bool garbage_collect=true) override {
+    MeshID new_mesh_with_alias(const unicode& alias, uint64_t vertex_attribute_mask, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_with_alias(alias, vertex_attribute_mask, garbage_collect);
     }
 
-    MeshID new_mesh_with_alias_from_file(const unicode& alias, const unicode &path, bool garbage_collect=true) override {
+    MeshID new_mesh_with_alias_from_file(const unicode& alias, const unicode &path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_with_alias_from_file(alias, path, garbage_collect);
     }
 
-    MeshID new_mesh_with_alias_as_cube(const unicode& alias, float width, bool garbage_collect=true) override {
+    MeshID new_mesh_with_alias_as_cube(const unicode& alias, float width, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_with_alias_as_cube(alias, width, garbage_collect);
     }
 
-    MeshID new_mesh_with_alias_as_sphere(const unicode& alias, float diameter, bool garbage_collect=true) override {
+    MeshID new_mesh_with_alias_as_sphere(const unicode& alias, float diameter, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_with_alias_as_sphere(alias, diameter, garbage_collect);
     }
 
-    MeshID new_mesh_with_alias_as_rectangle(const unicode &alias, float width, float height, const Vec2& offset=Vec2(), MaterialID material=MaterialID(), bool garbage_collect=true) override {
+    MeshID new_mesh_with_alias_as_rectangle(const unicode &alias, float width, float height, const Vec2& offset=Vec2(), MaterialID material=MaterialID(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_with_alias_as_rectangle(alias, width, height, offset, material, garbage_collect);
     }
 
-    virtual MeshID new_mesh_with_alias_as_cylinder(const unicode& alias, float diameter, float length, int segments=20, int stacks=20, bool garbage_collect=true) override {
+    virtual MeshID new_mesh_with_alias_as_cylinder(const unicode& alias, float diameter, float length, int segments=20, int stacks=20, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_with_alias_as_cylinder(alias, diameter, length, segments, stacks, garbage_collect);
     }
 
@@ -222,15 +222,15 @@ public:
         window->delete_mesh(m);
     }
 
-    MaterialID new_material_with_alias(const unicode& alias, bool garbage_collect=true) override {
+    MaterialID new_material_with_alias(const unicode& alias, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_material_with_alias(alias, garbage_collect);
     }
 
-    MaterialID new_material_with_alias_from_file(const unicode& alias, const unicode& path, bool garbage_collect=true) override {
+    MaterialID new_material_with_alias_from_file(const unicode& alias, const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_material_with_alias_from_file(alias, path, garbage_collect);
     }
 
-    MaterialID new_material_from_texture(TextureID texture, bool garbage_collect=true) override {
+    MaterialID new_material_from_texture(TextureID texture, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_material_from_texture(texture, garbage_collect);
     }
 
@@ -250,14 +250,14 @@ public:
 
 
     //Texture functions
-    virtual TextureID new_texture(bool garbage_collect=true) override { return window->new_texture(garbage_collect); }
-    virtual TextureID new_texture_from_file(const unicode& path, TextureFlags flags=0, bool garbage_collect=true) override {
+    virtual TextureID new_texture(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override { return window->new_texture(garbage_collect); }
+    virtual TextureID new_texture_from_file(const unicode& path, TextureFlags flags=0, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_texture_from_file(path, flags, garbage_collect);
     }
-    virtual TextureID new_texture_with_alias(const unicode& alias, bool garbage_collect=true) override {
+    virtual TextureID new_texture_with_alias(const unicode& alias, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_texture_with_alias(alias, garbage_collect);
     }
-    virtual TextureID new_texture_with_alias_from_file(const unicode& alias, const unicode& path, TextureFlags flags=0, bool garbage_collect=true) override {
+    virtual TextureID new_texture_with_alias_from_file(const unicode& alias, const unicode& path, TextureFlags flags=0, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_texture_with_alias_from_file(alias, path, flags, garbage_collect);
     }
     virtual TextureID get_texture_with_alias(const unicode& alias) override {
@@ -275,16 +275,16 @@ public:
     virtual void mark_texture_as_uncollected(TextureID t) override { window->mark_texture_as_uncollected(t); }
 
     //Sound functions
-    virtual SoundID new_sound(bool garbage_collect=true) override { return window->new_sound(garbage_collect); }
-    virtual SoundID new_sound_from_file(const unicode& path, bool garbage_collect=true) override {
+    virtual SoundID new_sound(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override { return window->new_sound(garbage_collect); }
+    virtual SoundID new_sound_from_file(const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_sound_from_file(path, garbage_collect);
     }
 
-    virtual SoundID new_sound_with_alias(const unicode& alias, bool garbage_collect=true) override {
+    virtual SoundID new_sound_with_alias(const unicode& alias, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_sound_with_alias(alias, garbage_collect);
     }
 
-    virtual SoundID new_sound_with_alias_from_file(const unicode& alias, const unicode& path, bool garbage_collect=true) override {
+    virtual SoundID new_sound_with_alias_from_file(const unicode& alias, const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_sound_with_alias_from_file(alias, path, garbage_collect);
     }
 
@@ -302,8 +302,8 @@ public:
 
 
     //Material functions
-    virtual MaterialID new_material(bool garbage_collect=true) override { return window->new_material(garbage_collect); }
-    virtual MaterialID new_material_from_file(const unicode& path, bool garbage_collect=true) override {
+    virtual MaterialID new_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override { return window->new_material(garbage_collect); }
+    virtual MaterialID new_material_from_file(const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_material_from_file(path, garbage_collect);
     }
 
@@ -349,7 +349,7 @@ public:
     // Default stuff
     MaterialID default_material_id() const override { return window->default_material_id(); }
     TextureID default_texture_id() const override { return window->default_texture_id(); }
-    MaterialID clone_default_material(bool garbage_collect=true) override { return window->clone_default_material(garbage_collect); }
+    MaterialID clone_default_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override { return window->clone_default_material(garbage_collect); }
     unicode default_material_filename() const override { return window->default_material_filename(); }
 
     // RenderableStage
