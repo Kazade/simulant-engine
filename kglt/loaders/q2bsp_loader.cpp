@@ -426,7 +426,11 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
      *  Load the textures and generate materials
      */
 
-    MeshID mid = stage->new_mesh_with_alias("world_geometry", false);
+    MeshID mid = stage->new_mesh_with_alias(
+        "world_geometry",
+        VERTEX_ATTRIBUTE_POSITION_3F | VERTEX_ATTRIBUTE_NORMAL_3F | VERTEX_ATTRIBUTE_DIFFUSE_4F | VERTEX_ATTRIBUTE_TEXCOORD0_2F | VERTEX_ATTRIBUTE_TEXCOORD1_2F,
+        false
+    );
     auto mesh = stage->mesh(mid);
 
     std::vector<MaterialID> materials;

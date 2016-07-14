@@ -527,13 +527,6 @@ enum MeshArrangement {
     MESH_ARRANGEMENT_LINE_STRIP
 };
 
-enum VertexAttribute {
-    VERTEX_ATTRIBUTE_POSITION = 1,
-    VERTEX_ATTRIBUTE_TEXCOORD_1 = 2,
-    VERTEX_ATTRIBUTE_DIFFUSE = 4,
-    VERTEX_ATTRIBUTE_NORMAL = 8
-};
-
 enum AvailablePartitioner {
     PARTITIONER_NULL,
     PARTITIONER_OCTREE

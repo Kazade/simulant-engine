@@ -30,7 +30,7 @@ public:
     virtual ~ResourceManager() {}
 
     //Mesh functions
-    virtual MeshID new_mesh(bool garbage_collect=true) = 0;
+    virtual MeshID new_mesh(uint64_t vertex_attribute_mask, bool garbage_collect=true) = 0;
     virtual MeshID new_mesh_from_file(const unicode& path, bool garbage_collect=true) = 0;
     virtual MeshID new_mesh_from_tmx_file(const unicode& tmx_file, const unicode& layer_name, float tile_render_size=1.0, bool garbage_collect=true) = 0;
 
@@ -46,10 +46,10 @@ public:
     virtual MeshID new_mesh_as_rectangle(float width, float height, const Vec2& offset=Vec2(), MaterialID material=MaterialID(), bool garbage_collect=true) = 0;
     virtual MeshID new_mesh_as_cylinder(float diameter, float length, int segments = 20, int stacks = 20, bool garbage_collect=true) = 0;
     virtual MeshID new_mesh_as_capsule(float diameter, float length, int segments=20, int stacks=20, bool garbage_collect=true) = 0;
-    virtual MeshID new_mesh_from_vertices(const std::vector<kglt::Vec2>& vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool garbage_collect=true) = 0;
-    virtual MeshID new_mesh_from_vertices(const std::vector<kglt::Vec3>& vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool garbage_collect=true) = 0;
+    virtual MeshID new_mesh_from_vertices(uint64_t vertex_attribute_mask, const std::vector<kglt::Vec2>& vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool garbage_collect=true) = 0;
+    virtual MeshID new_mesh_from_vertices(uint64_t vertex_attribute_mask, const std::vector<kglt::Vec3>& vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool garbage_collect=true) = 0;
 
-    virtual MeshID new_mesh_with_alias(const unicode& alias, bool garbage_collect=true) = 0;
+    virtual MeshID new_mesh_with_alias(const unicode& alias, uint64_t vertex_attribute_mask, bool garbage_collect=true) = 0;
     virtual MeshID new_mesh_with_alias_from_file(const unicode& alias, const unicode &path, bool garbage_collect=true) = 0;
     virtual MeshID new_mesh_with_alias_as_cube(const unicode& alias, float width, bool garbage_collect=true) = 0;
     virtual MeshID new_mesh_with_alias_as_sphere(const unicode& alias, float diameter, bool garbage_collect=true) = 0;
@@ -137,7 +137,7 @@ public:
 
     bool init() override;
 
-    MeshID new_mesh(bool garbage_collect=true) override;
+    MeshID new_mesh(uint64_t vertex_attribute_mask, bool garbage_collect=true) override;
     MeshID new_mesh_from_file(const unicode& path, bool garbage_collect=true) override;
     MeshID new_mesh_from_tmx_file(const unicode& tmx_file, const unicode& layer_name, float tile_render_size=1.0, bool garbage_collect=true) override;
     MeshID new_mesh_from_heightmap(
@@ -151,10 +151,10 @@ public:
     MeshID new_mesh_as_rectangle(float width, float height, const Vec2& offset=Vec2(), MaterialID material=MaterialID(), bool garbage_collect=true) override;
     MeshID new_mesh_as_cylinder(float diameter, float length, int segments = 20, int stacks = 20, bool garbage_collect=true) override;
     MeshID new_mesh_as_capsule(float diameter, float length, int segments=20, int stacks=20, bool garbage_collect=true) override;
-    MeshID new_mesh_from_vertices(const std::vector<kglt::Vec2>& vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool garbage_collect=true) override;
-    MeshID new_mesh_from_vertices(const std::vector<kglt::Vec3>& vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool garbage_collect=true) override;
+    MeshID new_mesh_from_vertices(uint64_t vertex_attribute_mask, const std::vector<kglt::Vec2>& vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool garbage_collect=true) override;
+    MeshID new_mesh_from_vertices(uint64_t vertex_attribute_mask, const std::vector<kglt::Vec3>& vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool garbage_collect=true) override;
 
-    MeshID new_mesh_with_alias(const unicode& alias, bool garbage_collect=true) override;
+    MeshID new_mesh_with_alias(const unicode& alias, uint64_t vertex_attribute_mask, bool garbage_collect=true) override;
     MeshID new_mesh_with_alias_from_file(const unicode& alias, const unicode &path, bool garbage_collect=true) override;
     MeshID new_mesh_with_alias_as_cube(const unicode& alias, float width, bool garbage_collect=true) override;
     MeshID new_mesh_with_alias_as_sphere(const unicode& alias, float diameter, bool garbage_collect=true) override;

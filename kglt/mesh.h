@@ -62,8 +62,9 @@ public:
         Mesh* parent,
         const std::string& name,
         MaterialID material,
-        MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES,
-        VertexSharingMode vertex_sharing=VERTEX_SHARING_MODE_SHARED
+        MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES,
+        VertexSharingMode vertex_sharing = VERTEX_SHARING_MODE_SHARED,
+        uint64_t vertex_attribute_mask = 0
     );
 
     virtual ~SubMesh();
@@ -138,7 +139,7 @@ class Mesh :
     public TemplatedSubMeshManager {
 
 public:
-    Mesh(MeshID id, ResourceManager* resource_manager);
+    Mesh(MeshID id, ResourceManager* resource_manager, uint64_t vertex_attribute_mask);
 
     VertexData& shared_data() {
         return shared_data_;
@@ -149,14 +150,16 @@ public:
     }
 
     SubMeshID new_submesh_with_material(
-        MaterialID material,
+        MaterialID material,        
         MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES,
-        VertexSharingMode vertex_sharing=VERTEX_SHARING_MODE_SHARED
+        VertexSharingMode vertex_sharing=VERTEX_SHARING_MODE_SHARED,
+        uint64_t vertex_attribute_mask=VERTEX_ATTRIBUTE_NONE
     );
 
-    SubMeshID new_submesh(
+    SubMeshID new_submesh(        
         MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES,
-        VertexSharingMode vertex_sharing=VERTEX_SHARING_MODE_SHARED
+        VertexSharingMode vertex_sharing=VERTEX_SHARING_MODE_SHARED,
+        uint64_t vertex_attribute_mask=VERTEX_ATTRIBUTE_NONE
     );
 
     SubMeshID new_submesh_as_rectangle(MaterialID material, float width, float height, const Vec3& offset=Vec3());

@@ -11,6 +11,7 @@
 #include "generic/managed.h"
 #include "utils/gl_thread_check.h"
 #include "generic/identifiable.h"
+#include "vertex_data.h"
 
 #define BUFFER_OFFSET(bytes) ((GLubyte*) NULL + (bytes))
 
@@ -50,19 +51,18 @@ enum ShaderAvailableAuto {
 
 
 enum ShaderAvailableAttributes {
-    SP_ATTR_VERTEX_POSITION,
-    SP_ATTR_VERTEX_DIFFUSE,
+    SP_ATTR_VERTEX_POSITION,    
     SP_ATTR_VERTEX_NORMAL,
     SP_ATTR_VERTEX_TEXCOORD0,
     SP_ATTR_VERTEX_TEXCOORD1,
     SP_ATTR_VERTEX_TEXCOORD2,
     SP_ATTR_VERTEX_TEXCOORD3,
-    SP_ATTR_VERTEX_TEXCOORD4,
-    SP_ATTR_VERTEX_TEXCOORD5,
-    SP_ATTR_VERTEX_TEXCOORD6,
-    SP_ATTR_VERTEX_TEXCOORD7,
-    SP_ATTR_VERTEX_COLOR = SP_ATTR_VERTEX_DIFFUSE
+    SP_ATTR_VERTEX_DIFFUSE,
+    SP_ATTR_VERTEX_SPECULAR
 };
+
+
+VertexAttributeType convert(ShaderAvailableAttributes attr);
 
 }
 
@@ -114,21 +114,6 @@ const std::set<ShaderAvailableAuto> SHADER_AVAILABLE_AUTOS = {
     SP_AUTO_MATERIAL_POINT_SIZE,
 };
 
-const std::unordered_map<ShaderAvailableAttributes, uint8_t> SHADER_ATTRIBUTE_SIZES = {
-    { SP_ATTR_VERTEX_POSITION, 3 },
-    { SP_ATTR_VERTEX_DIFFUSE, 4 },
-    { SP_ATTR_VERTEX_NORMAL, 3 },
-    { SP_ATTR_VERTEX_TEXCOORD0, 2},
-    { SP_ATTR_VERTEX_TEXCOORD1, 2},
-    { SP_ATTR_VERTEX_TEXCOORD2, 2},
-    { SP_ATTR_VERTEX_TEXCOORD3, 2},
-    { SP_ATTR_VERTEX_TEXCOORD4, 2},
-    { SP_ATTR_VERTEX_TEXCOORD5, 2},
-    { SP_ATTR_VERTEX_TEXCOORD6, 2},
-    { SP_ATTR_VERTEX_TEXCOORD7, 2}
-};
-
-
 const std::set<ShaderAvailableAttributes> SHADER_AVAILABLE_ATTRS = {
     SP_ATTR_VERTEX_POSITION,
     SP_ATTR_VERTEX_DIFFUSE,
@@ -137,10 +122,6 @@ const std::set<ShaderAvailableAttributes> SHADER_AVAILABLE_ATTRS = {
     SP_ATTR_VERTEX_TEXCOORD1,
     SP_ATTR_VERTEX_TEXCOORD2,
     SP_ATTR_VERTEX_TEXCOORD3,
-    SP_ATTR_VERTEX_TEXCOORD4,
-    SP_ATTR_VERTEX_TEXCOORD5,
-    SP_ATTR_VERTEX_TEXCOORD6,
-    SP_ATTR_VERTEX_TEXCOORD7
 };
 
 }

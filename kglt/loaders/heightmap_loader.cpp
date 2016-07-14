@@ -124,9 +124,9 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
             uint16_t idx3 = sm->index_data().at(i+2);
 
             kglt::Vec3 v1, v2, v3;
-            v1 = sm->vertex_data().position_at(idx1);
-            v2 = sm->vertex_data().position_at(idx2);
-            v3 = sm->vertex_data().position_at(idx3);
+            v1 = sm->vertex_data().position_at<Vec3>(idx1);
+            v2 = sm->vertex_data().position_at<Vec3>(idx2);
+            v3 = sm->vertex_data().position_at<Vec3>(idx3);
 
             kglt::Vec3 normal = (v2 - v1).normalized().cross((v3 - v1).normalized()).normalized();
 
@@ -139,8 +139,10 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     // Now set the normal on the vertex data
     for(auto p: index_to_normal) {
         mesh->shared_data().move_to(p.first);
-        mesh->shared_data().normal(p.second.normalized());
-        mesh->shared_data().diffuse(diffuse_func(mesh->shared_data().position(), mesh->shared_data().normal()));
+        auto n = p.second.normalized();
+        Vec3 pos = mesh->shared_data().position_at<Vec3>(p.first);
+        mesh->shared_data().normal(n);
+        mesh->shared_data().diffuse(diffuse_func(pos, n));
     }
 
     for(auto smi: submeshes) {

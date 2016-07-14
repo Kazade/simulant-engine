@@ -73,8 +73,8 @@ const ProtectedPtr<Mesh> ResourceManagerImpl::mesh(MeshID m) const {
     return MeshManager::manager_get(m);
 }
 
-MeshID ResourceManagerImpl::new_mesh(bool garbage_collect) {
-    MeshID result = MeshManager::manager_new(garbage_collect, this);
+MeshID ResourceManagerImpl::new_mesh(uint64_t vertex_attribute_mask, bool garbage_collect) {
+    MeshID result = MeshManager::manager_new(garbage_collect, this, vertex_attribute_mask);
     return result;
 }
 
@@ -150,17 +150,14 @@ MeshID ResourceManagerImpl::new_mesh_as_capsule(float diameter, float length, in
     return m;
 }
 
-MeshID ResourceManagerImpl::new_mesh_from_vertices(const std::vector<Vec2> &vertices, MeshArrangement arrangement, bool garbage_collect) {
-    MeshID m = new_mesh(garbage_collect);
+MeshID ResourceManagerImpl::new_mesh_from_vertices(uint64_t vertex_attribute_mask, const std::vector<Vec2> &vertices, MeshArrangement arrangement, bool garbage_collect) {
+    MeshID m = new_mesh(vertex_attribute_mask, garbage_collect);
 
     auto new_mesh = mesh(m);
     auto smi = new_mesh->new_submesh(arrangement);
     int i = 0;
     for(auto v: vertices) {
         new_mesh->shared_data().position(v);
-        new_mesh->shared_data().diffuse(kglt::Colour::WHITE);
-        new_mesh->shared_data().normal(kglt::Vec3());
-        new_mesh->shared_data().tex_coord0(kglt::Vec2());
         new_mesh->shared_data().move_next();
         new_mesh->submesh(smi)->index_data().index(i++);
     }
@@ -173,18 +170,15 @@ MeshID ResourceManagerImpl::new_mesh_from_vertices(const std::vector<Vec2> &vert
     return m;
 }
 
-MeshID ResourceManagerImpl::new_mesh_from_vertices(const std::vector<Vec3> &vertices, MeshArrangement arrangement, bool garbage_collect) {
+MeshID ResourceManagerImpl::new_mesh_from_vertices(uint64_t vertex_attribute_mask, const std::vector<Vec3> &vertices, MeshArrangement arrangement, bool garbage_collect) {
     //FIXME: THis is literally a copy/paste of the function above, we can templatize this
-    MeshID m = new_mesh(garbage_collect);
+    MeshID m = new_mesh(vertex_attribute_mask, garbage_collect);
 
     auto new_mesh = mesh(m);
     auto smi = new_mesh->new_submesh(arrangement);
     int i = 0;
     for(auto v: vertices) {
         new_mesh->shared_data().position(v);
-        new_mesh->shared_data().diffuse(kglt::Colour::WHITE);
-        new_mesh->shared_data().normal(kglt::Vec3());
-        new_mesh->shared_data().tex_coord0(kglt::Vec2());
         new_mesh->shared_data().move_next();
         new_mesh->submesh(smi)->index_data().index(i++);
     }
@@ -195,8 +189,8 @@ MeshID ResourceManagerImpl::new_mesh_from_vertices(const std::vector<Vec3> &vert
     return m;
 }
 
-MeshID ResourceManagerImpl::new_mesh_with_alias(const unicode& alias, bool garbage_collect) {
-    MeshID m = new_mesh(garbage_collect);
+MeshID ResourceManagerImpl::new_mesh_with_alias(const unicode& alias, uint64_t vertex_attribute_mask, bool garbage_collect) {
+    MeshID m = new_mesh(vertex_attribute_mask, garbage_collect);
     try {
         MeshManager::manager_store_alias(alias, m);
     } catch(...) {

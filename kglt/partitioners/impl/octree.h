@@ -16,14 +16,14 @@
 
 #include "../../types.h"
 #include "../../generic/property.h"
-#include "../static_chunk.h"
+#include "../../interfaces.h"
 
 class NewOctreeTest;
 
 namespace kglt {
 namespace impl {
 
-struct NodeData : public StaticChunkHolder {
+struct NodeData {
 private:
     std::unordered_map<ActorID, AABB> actor_ids_;
     std::unordered_map<LightID, AABB> light_ids_;

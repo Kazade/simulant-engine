@@ -7,8 +7,6 @@
 #include "../particles.h"
 #include "../geom.h"
 
-#include "./static_chunk.h"
-
 namespace kglt {
 
 bool should_split_predicate(const impl::OctreeNode* node) {

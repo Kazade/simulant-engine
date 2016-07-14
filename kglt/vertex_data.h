@@ -1,5 +1,4 @@
-#ifndef VERTEX_DATA_H
-#define VERTEX_DATA_H
+#pragma once
 
 #include <cstdint>
 #include <vector>
@@ -17,66 +16,108 @@ namespace kglt {
 
 class WindowBase;
 
-enum AttributeBitMask {
-    BM_POSITIONS = 1,
-    BM_NORMALS = 2,
-    BM_TEXCOORD_0 = 4,
-    BM_TEXCOORD_1 = 8,
-    BM_TEXCOORD_2 = 16,
-    BM_TEXCOORD_3 = 32,
-    BM_TEXCOORD_4 = 64,
-    BM_DIFFUSE = 128,
-    BM_SPECULAR = 256
+enum VertexAttribute {
+    VERTEX_ATTRIBUTE_NONE,
+    VERTEX_ATTRIBUTE_POSITION_2F = (1u << 1),
+    VERTEX_ATTRIBUTE_POSITION_3F = (1u << 2),
+    VERTEX_ATTRIBUTE_POSITION_4F = (1u << 3),
+
+    VERTEX_ATTRIBUTE_NORMAL_3F = (1u << 4),
+    VERTEX_ATTRIBUTE_NORMAL_4F = (1u << 5),
+
+    VERTEX_ATTRIBUTE_TEXCOORD0_2F = (1u << 6),
+    VERTEX_ATTRIBUTE_TEXCOORD0_3F = (1u << 7),
+    VERTEX_ATTRIBUTE_TEXCOORD0_4F = (1u << 8),
+
+    VERTEX_ATTRIBUTE_TEXCOORD1_2F = (1u << 9),
+    VERTEX_ATTRIBUTE_TEXCOORD1_3F = (1u << 10),
+    VERTEX_ATTRIBUTE_TEXCOORD1_4F = (1u << 11),
+
+    VERTEX_ATTRIBUTE_TEXCOORD2_2F = (1u << 12),
+    VERTEX_ATTRIBUTE_TEXCOORD2_3F = (1u << 13),
+    VERTEX_ATTRIBUTE_TEXCOORD2_4F = (1u << 14),
+
+    VERTEX_ATTRIBUTE_TEXCOORD3_2F = (1u << 15),
+    VERTEX_ATTRIBUTE_TEXCOORD3_3F = (1u << 16),
+    VERTEX_ATTRIBUTE_TEXCOORD3_4F = (1u << 17),
+
+    VERTEX_ATTRIBUTE_DIFFUSE_3F = (1u << 18),
+    VERTEX_ATTRIBUTE_DIFFUSE_4F = (1u << 19),
+
+    VERTEX_ATTRIBUTE_SPECULAR_3F = (1u << 20),
+    VERTEX_ATTRIBUTE_SPECULAR_4F = (1u << 21)
 };
 
-/*
- *  FIXME:
- *  The BufferObject maintained by VertexData includes all attributes, even if some of them
- *  haven't been used - this is ridiculously inefficient. Also the values returned from the *_offset
- *  methods are fixed and don't vary according to the attributes being used. What should happen
- *  is the buffer object should only include the attributes in use, and the offset methods should
- *  throw an exception if they are called on a VertexData instance that doesn't have the associated
- *  attribute in use. Similarly, texture coordinates should only take up the correct size in the
- *  buffer object and not always the full 4 floats.
- */
+uint32_t vertex_attribute_size(VertexAttribute attr);
 
-struct Vertex {
-    kglt::Vec3 position;
-    kglt::Vec3 normal;
-    kglt::Vec4 tex_coords[8];
-    Colour diffuse;
-    Colour specular;
-
-    bool operator==(const Vertex& other) const {
-        for(uint8_t i = 0; i < 8; ++i) {
-
-            if(!kmVec4AreEqual(&this->tex_coords[i], &other.tex_coords[i])) {
-                return false;
-            }
-        }
-
-        return kmVec3AreEqual(&this->position, &other.position) &&
-               kmVec3AreEqual(&this->normal, &other.normal) &&
-                this->diffuse == other.diffuse &&
-                this->specular == other.specular;
-    }
+const std::set<VertexAttribute> POSITION_ATTRIBUTES = {
+    VERTEX_ATTRIBUTE_POSITION_2F,
+    VERTEX_ATTRIBUTE_POSITION_3F,
+    VERTEX_ATTRIBUTE_POSITION_4F
 };
+
+const std::set<VertexAttribute> NORMAL_ATTRIBUTES = {
+    VERTEX_ATTRIBUTE_NORMAL_3F,
+    VERTEX_ATTRIBUTE_NORMAL_4F
+};
+
+const std::set<VertexAttribute> TEXCOORD0_ATTRIBUTES = {
+    VERTEX_ATTRIBUTE_TEXCOORD0_2F,
+    VERTEX_ATTRIBUTE_TEXCOORD0_3F,
+    VERTEX_ATTRIBUTE_TEXCOORD0_4F
+};
+
+const std::set<VertexAttribute> TEXCOORD1_ATTRIBUTES = {
+    VERTEX_ATTRIBUTE_TEXCOORD1_2F,
+    VERTEX_ATTRIBUTE_TEXCOORD1_3F,
+    VERTEX_ATTRIBUTE_TEXCOORD1_4F
+};
+
+const std::set<VertexAttribute> TEXCOORD2_ATTRIBUTES = {
+    VERTEX_ATTRIBUTE_TEXCOORD2_2F,
+    VERTEX_ATTRIBUTE_TEXCOORD2_3F,
+    VERTEX_ATTRIBUTE_TEXCOORD2_4F
+};
+
+const std::set<VertexAttribute> TEXCOORD3_ATTRIBUTES = {
+    VERTEX_ATTRIBUTE_TEXCOORD3_2F,
+    VERTEX_ATTRIBUTE_TEXCOORD3_3F,
+    VERTEX_ATTRIBUTE_TEXCOORD3_4F
+};
+
+const std::set<VertexAttribute> DIFFUSE_ATTRIBUTES = {
+    VERTEX_ATTRIBUTE_DIFFUSE_3F,
+    VERTEX_ATTRIBUTE_DIFFUSE_4F
+};
+
+const std::set<VertexAttribute> SPECULAR_ATTRIBUTES = {
+    VERTEX_ATTRIBUTE_SPECULAR_3F,
+    VERTEX_ATTRIBUTE_SPECULAR_4F
+};
+
+enum VertexAttributeType {
+    VERTEX_ATTRIBUTE_TYPE_EMPTY = 0,
+    VERTEX_ATTRIBUTE_TYPE_POSITION,
+    VERTEX_ATTRIBUTE_TYPE_NORMAL,
+    VERTEX_ATTRIBUTE_TYPE_TEXCOORD0,
+    VERTEX_ATTRIBUTE_TYPE_TEXCOORD1,
+    VERTEX_ATTRIBUTE_TYPE_TEXCOORD2,
+    VERTEX_ATTRIBUTE_TYPE_TEXCOORD3,
+    VERTEX_ATTRIBUTE_TYPE_DIFFUSE,
+    VERTEX_ATTRIBUTE_TYPE_SPECULAR
+};
+
 
 class VertexData :
     public Managed<VertexData> {
 
 public:
     VertexData();
+    VertexData(uint64_t attribute_mask);
 
-    void reset();
-    void set_texture_coordinate_dimensions(uint8_t coord_index, uint8_t count);
-
-    Vertex& at(int32_t idx) {
-        return data_.at(idx);
-    }
-
-    void push(const Vertex& vertex);
+    void reset(uint64_t attribute_mask);
     void clear();
+
     void move_to_start();
     void move_by(int32_t amount);
     void move_to(int32_t index);
@@ -85,57 +126,49 @@ public:
 
     void done();
 
-    kglt::Vec3 position() const;
     void position(float x, float y, float z);
     void position(float x, float y);
     void position(const kmVec3& pos);
     void position(const kmVec2& pos);
 
-    kglt::Vec3 position_at(int32_t idx) {
-        return data_.at(idx).position;
-    }
+    template<typename T>
+    T position_at(uint32_t idx);
 
-    kglt::Vec3 normal() const;
     void normal(float x, float y, float z);
     void normal(const kmVec3& n);
 
-    kmVec3 normal_at(int32_t idx) {
-        return data_.at(idx).normal;
+    void normal_at(int32_t idx, Vec3& out) {
+        assert(normal_attribute_ == VERTEX_ATTRIBUTE_NORMAL_3F);
+        out = *((Vec3*) &data_[(idx * stride()) + normal_offset()]);
     }
 
-    void tex_coord0(float u);
+    void normal_at(int32_t idx, Vec4& out) {
+        assert(normal_attribute_ == VERTEX_ATTRIBUTE_NORMAL_4F);
+        out = *((Vec4*) &data_[(idx * stride()) + normal_offset()]);
+    }
+
     void tex_coord0(float u, float v);
     void tex_coord0(float u, float v, float w);
     void tex_coord0(float x, float y, float z, float w);
     void tex_coord0(const kmVec2& vec) { tex_coord0(vec.x, vec.y); }
 
-    kglt::Vec4 texcoord0_at(int32_t idx) {
-        return data_.at(idx).tex_coords[0];
-    }
+    template<typename T>
+    T texcoord0_at(uint32_t idx);
 
-    void tex_coord1(float u);
     void tex_coord1(float u, float v);
     void tex_coord1(float u, float v, float w);
     void tex_coord1(float x, float y, float z, float w);
     void tex_coord1(const kmVec2& vec) { tex_coord1(vec.x, vec.y); }
 
-    void tex_coord2(float u);
     void tex_coord2(float u, float v);
     void tex_coord2(float u, float v, float w);
     void tex_coord2(float x, float y, float z, float w);
     void tex_coord2(const kmVec2& vec) { tex_coord2(vec.x, vec.y); }
 
-    void tex_coord3(float u);
     void tex_coord3(float u, float v);
     void tex_coord3(float u, float v, float w);
     void tex_coord3(float x, float y, float z, float w);
     void tex_coord3(const kmVec2& vec) { tex_coord3(vec.x, vec.y); }
-
-    void tex_coord4(float u);
-    void tex_coord4(float u, float v);
-    void tex_coord4(float u, float v, float w);
-    void tex_coord4(float x, float y, float z, float w);
-    void tex_coord4(const kmVec2& vec) { tex_coord4(vec.x, vec.y); }
 
     void diffuse(float r, float g, float b, float a);
     void diffuse(const Colour& colour);
@@ -143,101 +176,108 @@ public:
     void specular(float r, float g, float b, float a);
     void specular(const Colour& colour);
 
-    bool has_positions() const { return enabled_bitmask_ & BM_POSITIONS; }
-    bool has_normals() const { return enabled_bitmask_ & BM_NORMALS; }
-    bool has_texcoord0() const { return enabled_bitmask_ & BM_TEXCOORD_0; }
-    bool has_texcoord1() const { return enabled_bitmask_ & BM_TEXCOORD_1; }
-    bool has_texcoord2() const { return enabled_bitmask_ & BM_TEXCOORD_2; }
-    bool has_texcoord3() const { return enabled_bitmask_ & BM_TEXCOORD_3; }
-    bool has_texcoord4() const { return enabled_bitmask_ & BM_TEXCOORD_4; }
-    bool has_diffuse() const { return enabled_bitmask_ & BM_DIFFUSE; }
-    bool has_specular() const { return enabled_bitmask_ & BM_SPECULAR; }
+    bool has_positions() const { return bool(position_attribute_); }
+    bool has_normals() const { return bool(normal_attribute_); }
+    bool has_texcoord0() const { return bool(texcoord0_attribute_); }
+    bool has_texcoord1() const { return bool(texcoord1_attribute_); }
+    bool has_texcoord2() const { return bool(texcoord2_attribute_); }
+    bool has_texcoord3() const { return bool(texcoord3_attribute_); }
+    bool has_diffuse() const { return bool(diffuse_attribute_); }
+    bool has_specular() const { return bool(specular_attribute_); }
 
-    uint16_t count() const { return data_.size(); }
-
-    bool operator==(const VertexData& other) const {
-        return this->data_ == other.data_;
-    }
-
-    bool operator!=(const VertexData& other) const {
-        return !(*this == other);
-    }
-
-    uint32_t stride() const { return sizeof(Vertex); }
-
-    uint32_t position_offset() const {
-        Vertex vert;
-        return uint64_t(&vert.position) - uint64_t(&vert);
-    }
-
-    uint32_t normal_offset() const {
-        Vertex vert;
-        return uint64_t(&vert.normal) - uint64_t(&vert);
-    }
-
-    uint32_t texcoord0_offset() const {
-        Vertex vert;
-        return uint64_t(&vert.tex_coords[0]) - uint64_t(&vert);
-    }
-
-    uint32_t texcoord1_offset() const {
-        Vertex vert;
-        return uint64_t(&vert.tex_coords[1]) - uint64_t(&vert);
-    }
-
-    uint32_t texcoord2_offset() const {
-        Vertex vert;
-        return uint64_t(&vert.tex_coords[2]) - uint64_t(&vert);
-    }
-
-    uint32_t texcoord3_offset() const {
-        Vertex vert;
-        return uint64_t(&vert.tex_coords[3]) - uint64_t(&vert);
-    }
-
-    uint32_t texcoord4_offset() const {
-        Vertex vert;
-        return uint64_t(&vert.tex_coords[4]) - uint64_t(&vert);
-    }
-
-    uint32_t diffuse_offset() const {
-        Vertex vert;
-        return uint64_t(&vert.diffuse) - uint64_t(&vert);
-    }
-
-    uint32_t specular_offset() const {
-        Vertex vert;
-        return uint64_t(&vert.specular) - uint64_t(&vert);
-    }
-
-    uint8_t texcoord_size(uint8_t which) const {
-        if(which >= 8) {
-            throw std::out_of_range("Invalid tex coordinate index");
-        }
-        return tex_coord_dimensions_[which];
-    }
+    uint32_t count() const { return vertex_count_; }
 
     sig::signal<void ()>& signal_update_complete() { return signal_update_complete_; }
-
-    Vertex* _raw_data() { return &data_[0]; }
-
     bool empty() const { return data_.empty(); }
 
     const int32_t cursor_position() const { return cursor_position_; }
 
-    int32_t enabled_bitmask() const { return enabled_bitmask_; }
-    void inherit_enabled_bitmask(const VertexData& other) {
-        enabled_bitmask_ = other.enabled_bitmask();
+    uint32_t stride() const {
+        return (
+            vertex_attribute_size(position_attribute_) +
+            vertex_attribute_size(normal_attribute_) +
+            vertex_attribute_size(texcoord0_attribute_) +
+            vertex_attribute_size(texcoord1_attribute_) +
+            vertex_attribute_size(texcoord2_attribute_) +
+            vertex_attribute_size(texcoord3_attribute_) +
+            vertex_attribute_size(diffuse_attribute_) +
+            vertex_attribute_size(specular_attribute_)
+        );
     }
 
+    uint32_t position_offset(bool check=true) const {
+        if(check && !has_positions()) { throw std::logic_error("No such attribute"); }
+        return 0;
+    }
+
+    uint32_t normal_offset(bool check=true) const {
+        if(check && !has_normals()) { throw std::logic_error("No such attribute"); }
+        return vertex_attribute_size(position_attribute_);
+    }
+
+    uint32_t texcoord0_offset(bool check=true) const {
+        if(check && !has_texcoord0()) { throw std::logic_error("No such attribute"); }
+        return normal_offset(false) + vertex_attribute_size(normal_attribute_);
+    }
+
+    uint32_t texcoord1_offset(bool check=true) const {
+        if(check && !has_texcoord1()) { throw std::logic_error("No such attribute"); }
+        return texcoord0_offset(false) + vertex_attribute_size(texcoord0_attribute_);
+    }
+
+    uint32_t texcoord2_offset(bool check=true) const {
+        if(check && !has_texcoord2()) { throw std::logic_error("No such attribute"); }
+        return texcoord1_offset(false) + vertex_attribute_size(texcoord1_attribute_);
+    }
+
+    uint32_t texcoord3_offset(bool check=true) const {
+        if(check && !has_texcoord3()) { throw std::logic_error("No such attribute"); }
+        return texcoord2_offset(false) + vertex_attribute_size(texcoord2_attribute_);
+    }
+
+    uint32_t diffuse_offset(bool check=true) const {
+        if(check && !has_diffuse()) { throw std::logic_error("No such attribute"); }
+        return texcoord3_offset(false) + vertex_attribute_size(texcoord3_attribute_);
+    }
+
+    uint32_t specular_offset(bool check=true) const {
+        if(check && !has_specular()) { throw std::logic_error("No such attribute"); }
+        return diffuse_offset(false) + vertex_attribute_size(diffuse_attribute_);
+    }
+
+    void copy_vertex_to_another(VertexData& out, uint32_t idx) {
+        if(out.attribute_mask_ != this->attribute_mask_) {
+            throw std::runtime_error("Cannot copy vertex as formats differ");
+        }
+
+        uint32_t start = idx * stride();
+        uint32_t end = (idx + 1) * stride();
+
+        out.data_.insert(out.data_.end(), data_.begin() + start, data_.begin() + end);
+    }
+
+    uint64_t vertex_format() const { return attribute_mask_; }
+
+    uint8_t* data() { if(empty()) { return nullptr; } return &data_[0]; }
+    uint32_t data_size() const { return data_.size(); }
+
+    VertexAttribute attribute_for_type(VertexAttributeType type) const;
 private:
-    int32_t enabled_bitmask_;
-    uint8_t tex_coord_dimensions_[8];
+    uint64_t attribute_mask_ = 0;
 
-    std::vector<Vertex> data_;
-    int32_t cursor_position_;
+    VertexAttribute position_attribute_ = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute normal_attribute_ = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute texcoord0_attribute_ = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute texcoord1_attribute_ = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute texcoord2_attribute_ = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute texcoord3_attribute_ = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute diffuse_attribute_ = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute specular_attribute_ = VERTEX_ATTRIBUTE_NONE;
 
-    void check_or_add_attribute(AttributeBitMask attr);
+    std::vector<uint8_t> data_;
+    uint32_t vertex_count_ = 0;
+
+    int32_t cursor_position_ = 0;
 
     void tex_coordX(uint8_t which, float u);
     void tex_coordX(uint8_t which, float u, float v);
@@ -245,8 +285,36 @@ private:
     void tex_coordX(uint8_t which, float x, float y, float z, float w);
     void check_texcoord(uint8_t which);
 
+    VertexAttribute attribute_from_type(VertexAttributeType type);
+
     sig::signal<void ()> signal_update_complete_;
+
+    void push_back() {
+        for(uint32_t i = 0; i < stride(); ++i) { data_.push_back(0); }
+        vertex_count_++;
+    }
+
+    void position_checks();
+    void recalc_attributes();
 };
+
+template<>
+Vec2 VertexData::position_at<Vec2>(uint32_t idx);
+
+template<>
+Vec3 VertexData::position_at<Vec3>(uint32_t idx);
+
+template<>
+Vec4 VertexData::position_at<Vec4>(uint32_t idx);
+
+template<>
+Vec2 VertexData::texcoord0_at<Vec2>(uint32_t idx);
+
+template<>
+Vec3 VertexData::texcoord0_at<Vec3>(uint32_t idx);
+
+template<>
+Vec4 VertexData::texcoord0_at<Vec4>(uint32_t idx);
 
 typedef uint16_t Index;
 
@@ -285,5 +353,3 @@ private:
 
 
 }
-
-#endif // VERTEX_DATA_H

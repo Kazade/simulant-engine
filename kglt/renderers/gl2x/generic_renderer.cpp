@@ -208,21 +208,22 @@ void send_attribute(ShaderAvailableAttributes attr,
 
     int32_t loc = (int32_t) attr;
 
-    auto get_has_attribute = std::bind(exists_on_data_predicate, std::reference_wrapper<const VertexData>(data));
+    auto get_has_attribute = std::bind(exists_on_data_predicate, &data);
 
     if(get_has_attribute()) {
-        auto offset = std::bind(offset_func, std::reference_wrapper<const VertexData>(data))();
+        auto offset = std::bind(offset_func, &data, false)();
 
         GLCheck(glEnableVertexAttribArray, loc);
         GLCheck(glVertexAttribPointer,
             loc,
-            SHADER_ATTRIBUTE_SIZES.find(attr)->second,
+            vertex_attribute_size(data.attribute_for_type(convert(attr))),
             GL_FLOAT,
             GL_FALSE,
             data.stride(),
             BUFFER_OFFSET(offset)
         );
     } else {
+        GLCheck(glDisableVertexAttribArray, loc);
         //L_WARN_ONCE(_u("Couldn't locate attribute on the mesh: {0}").format(attr));
     }
 }
@@ -234,6 +235,7 @@ void GenericRenderer::set_auto_attributes_on_shader(Renderable &buffer) {
      *  and just makes the whole thing generic. Before this was 100s of lines of boilerplate. Thank god
      *  for templates!
      */        
+    auto& data = buffer.vertex_data();
     send_attribute(SP_ATTR_VERTEX_POSITION, buffer.vertex_data(), &VertexData::has_positions, &VertexData::position_offset);
     send_attribute(SP_ATTR_VERTEX_DIFFUSE, buffer.vertex_data(), &VertexData::has_diffuse, &VertexData::diffuse_offset);
     send_attribute(SP_ATTR_VERTEX_TEXCOORD0, buffer.vertex_data(), &VertexData::has_texcoord0, &VertexData::texcoord0_offset);

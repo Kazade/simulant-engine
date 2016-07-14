@@ -37,7 +37,7 @@ void Debug::update() {
 }
 
 bool Debug::init() {
-    mesh_ = stage_.new_mesh();
+    mesh_ = stage_.new_mesh(VERTEX_ATTRIBUTE_POSITION_3F | VERTEX_ATTRIBUTE_DIFFUSE_4F);
     actor_ = stage_.new_actor_with_mesh(
         mesh_,
         RENDERABLE_CULLING_MODE_NEVER // Important!

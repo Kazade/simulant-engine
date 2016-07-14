@@ -7,78 +7,82 @@
 
 namespace kglt {
 
-void VertexData::check_or_add_attribute(AttributeBitMask attr) {
-    bool enabled = ((enabled_bitmask_ & attr) == attr);
-    if(data_.size() > 1 && !enabled) {
-        throw std::logic_error("Attempted to add an attribute that didn't exist on the first vertex");
-    }
+uint32_t vertex_attribute_size(VertexAttribute attr) {
+    switch(attr) {
+        case VERTEX_ATTRIBUTE_NONE: return 0;
 
-    if(!enabled) {
-        enabled_bitmask_ |= attr;
+        case VERTEX_ATTRIBUTE_POSITION_2F:
+        case VERTEX_ATTRIBUTE_TEXCOORD0_2F:
+        case VERTEX_ATTRIBUTE_TEXCOORD1_2F:
+        case VERTEX_ATTRIBUTE_TEXCOORD2_2F:
+        case VERTEX_ATTRIBUTE_TEXCOORD3_2F:
+             return (sizeof(float) * 2);
+        case VERTEX_ATTRIBUTE_POSITION_3F:
+        case VERTEX_ATTRIBUTE_NORMAL_3F:
+        case VERTEX_ATTRIBUTE_TEXCOORD0_3F:
+        case VERTEX_ATTRIBUTE_TEXCOORD1_3F:
+        case VERTEX_ATTRIBUTE_TEXCOORD2_3F:
+        case VERTEX_ATTRIBUTE_TEXCOORD3_3F:
+        case VERTEX_ATTRIBUTE_DIFFUSE_3F:
+        case VERTEX_ATTRIBUTE_SPECULAR_3F:
+            return (sizeof(float) * 3);
+        case VERTEX_ATTRIBUTE_POSITION_4F:
+        case VERTEX_ATTRIBUTE_NORMAL_4F:
+        case VERTEX_ATTRIBUTE_TEXCOORD0_4F:
+        case VERTEX_ATTRIBUTE_TEXCOORD1_4F:
+        case VERTEX_ATTRIBUTE_TEXCOORD2_4F:
+        case VERTEX_ATTRIBUTE_TEXCOORD3_4F:
+        case VERTEX_ATTRIBUTE_DIFFUSE_4F:
+        case VERTEX_ATTRIBUTE_SPECULAR_4F:
+            return (sizeof(float) * 4);
+        default:
+            assert(0 && "Invalid attribute specified");
     }
 }
 
 VertexData::VertexData():
-    enabled_bitmask_(0),
     cursor_position_(0) {
-
-    //Default to u,v for all tex coords
-    for(uint8_t i = 0; i < 8; ++i) {
-        set_texture_coordinate_dimensions(i, 2);
-    }
 }
 
-void VertexData::set_texture_coordinate_dimensions(uint8_t coord_index, uint8_t count) {
-    if(coord_index >= 8) {
-        throw std::out_of_range("coord_index must be less than 8");
-    }
+VertexData::VertexData(uint64_t attribute_mask):
+    cursor_position_(0) {
 
-    if(count >= 4) {
-        throw std::out_of_range("Texture coordinates can only have up to 4 parts");
-    }
-
-    tex_coord_dimensions_[coord_index] = count;
+    reset(attribute_mask);
 }
 
 void VertexData::clear() {
     data_.clear();
     cursor_position_ = 0;    
-    enabled_bitmask_ = 0;
 }
 
-void VertexData::push(const Vertex& vertex) {
-    this->data_.push_back(vertex);
-}
+void VertexData::position_checks() {
+    if(!has_positions()) {
+        throw std::logic_error("Vertex data has no position attribute");
+    }
 
-kglt::Vec3 VertexData::position() const {
+    if(cursor_position_ == (int32_t) data_.size()) {
+        push_back();
+    }
+
     if(cursor_position_ > (int32_t) data_.size()) {
         throw std::out_of_range("Cursor moved out of range");
     }
-
-    const Vertex& vert = data_.at(cursor_position_);
-    return vert.position;
 }
 
 void VertexData::position(float x, float y, float z) {
-    check_or_add_attribute(BM_POSITIONS);
+    position_checks();
 
-    if(cursor_position_ == (int32_t) data_.size()) {
-        data_.push_back(Vertex());
-    }
-
-    if(cursor_position_ > (int32_t) data_.size()) {
-        throw std::out_of_range("Cursor moved out of range");
-    }
-
-    Vertex& vert = data_.at(cursor_position_);
-
-    vert.position.x = x;
-    vert.position.y = y;
-    vert.position.z = z;
+    assert(position_attribute_ == VERTEX_ATTRIBUTE_POSITION_3F);
+    Vec3* out = (Vec3*) &data_[cursor_position_];
+    *out = Vec3(x, y, z);
 }
 
 void VertexData::position(float x, float y) {
-    position(x, y, 0);
+    position_checks();
+
+    assert(position_attribute_ == VERTEX_ATTRIBUTE_POSITION_2F);
+    Vec2* out = (Vec2*) &data_[cursor_position_];
+    *out = Vec2(x, y);
 }
 
 void VertexData::position(const kmVec2 &pos) {
@@ -89,102 +93,80 @@ void VertexData::position(const kmVec3& pos) {
     position(pos.x, pos.y, pos.z);
 }
 
+template<>
+Vec2 VertexData::position_at<Vec2>(uint32_t idx) {
+    assert(position_attribute_ == VERTEX_ATTRIBUTE_POSITION_2F);
+    Vec2 out = *((Vec2*) &data_[idx * stride()]);
+    return out;
+}
 
-kglt::Vec3 VertexData::normal() const {
-    if(cursor_position_ > (int32_t) data_.size()) {
-        throw std::out_of_range("Cursor moved out of range");
-    }
+template<>
+Vec3 VertexData::position_at<Vec3>(uint32_t idx) {
+    assert(position_attribute_ == VERTEX_ATTRIBUTE_POSITION_3F);
+    Vec3 out = *((Vec3*) &data_[idx * stride()]);
+    return out;
+}
 
-    const Vertex& vert = data_.at(cursor_position_);
-    return vert.normal;
+template<>
+Vec4 VertexData::position_at<Vec4>(uint32_t idx) {
+    assert(position_attribute_ == VERTEX_ATTRIBUTE_POSITION_4F);
+    Vec4 out = *((Vec4*) &data_[idx * stride()]);
+    return out;
 }
 
 void VertexData::normal(float x, float y, float z) {
-    check_or_add_attribute(BM_NORMALS);
-
-    Vertex& vert = data_.at(cursor_position_);
-    vert.normal.x = x;
-    vert.normal.y = y;
-    vert.normal.z = z;
+    assert(normal_attribute_ == VERTEX_ATTRIBUTE_NORMAL_3F);
+    Vec3* out = (Vec3*) &data_[cursor_position_ + normal_offset()];
+    *out = Vec3(x, y, z);
 }
 
 void VertexData::normal(const kmVec3& n) {
     normal(n.x, n.y, n.z);
 }
 
-void VertexData::check_texcoord(uint8_t which) {
-    switch(which) {
-    case 0:
-        check_or_add_attribute(BM_TEXCOORD_0);
-    break;
-    case 1:
-        check_or_add_attribute(BM_TEXCOORD_1);
-    break;
-    case 2:
-        check_or_add_attribute(BM_TEXCOORD_2);
-    break;
-    case 3:
-        check_or_add_attribute(BM_TEXCOORD_3);
-    break;
-    case 4:
-        check_or_add_attribute(BM_TEXCOORD_4);
-    break;
-    default:
-        assert(0 && "Not implemented");
-    }
-}
-
-void VertexData::tex_coordX(uint8_t which, float u) {
-    check_texcoord(which);
-
-    //FIXME: throw an exception
-    assert(tex_coord_dimensions_[which] >= 1);
-
-    Vertex& vert = data_.at(cursor_position_);
-    vert.tex_coords[which].x = u;
-    vert.tex_coords[which].y = vert.tex_coords[which].z = vert.tex_coords[which].w = 0;
-}
-
 void VertexData::tex_coordX(uint8_t which, float u, float v) {
-    check_texcoord(which);
+    uint32_t offset = 0;
+    switch(which) {
+        case 0: offset = texcoord0_offset(); break;
+        case 1: offset = texcoord1_offset(); break;
+        case 2: offset = texcoord2_offset(); break;
+        case 3: offset = texcoord3_offset(); break;
+    default:
+        throw std::logic_error("Invalid texture coordinate specified");
+    }
 
-    //FIXME: throw an exception
-    assert(tex_coord_dimensions_[which] >= 2);
-
-    Vertex& vert = data_.at(cursor_position_);
-    vert.tex_coords[which].x = u;
-    vert.tex_coords[which].y = v;
-    vert.tex_coords[which].z = vert.tex_coords[which].w = 0;
+    Vec2* out = (Vec2*) &data_[cursor_position_ + offset];
+    *out = Vec2(u, v);
 }
 
 void VertexData::tex_coordX(uint8_t which, float u, float v, float w) {
-    check_texcoord(which);
+    uint32_t offset = 0;
+    switch(which) {
+        case 0: offset = texcoord0_offset(); break;
+        case 1: offset = texcoord1_offset(); break;
+        case 2: offset = texcoord2_offset(); break;
+        case 3: offset = texcoord3_offset(); break;
+    default:
+        throw std::logic_error("Invalid texture coordinate specified");
+    }
 
-    //FIXME: throw an exception
-    assert(tex_coord_dimensions_[which] >= 3);
-
-    Vertex& vert = data_.at(cursor_position_);
-    vert.tex_coords[which].x = u;
-    vert.tex_coords[which].y = v;
-    vert.tex_coords[which].z = w;
-    vert.tex_coords[which].w = 0;
+    Vec3* out = (Vec3*) &data_[cursor_position_ + offset];
+    *out = Vec3(u, v, w);
 }
 
 void VertexData::tex_coordX(uint8_t which, float u, float v, float w, float x) {
-    check_texcoord(which);
+    uint32_t offset = 0;
+    switch(which) {
+        case 0: offset = texcoord0_offset(); break;
+        case 1: offset = texcoord1_offset(); break;
+        case 2: offset = texcoord2_offset(); break;
+        case 3: offset = texcoord3_offset(); break;
+    default:
+        throw std::logic_error("Invalid texture coordinate specified");
+    }
 
-    //FIXME: throw an exception
-    assert(tex_coord_dimensions_[which] >= 4);
-
-    Vertex& vert = data_.at(cursor_position_);
-    vert.tex_coords[which].x = u;
-    vert.tex_coords[which].y = v;
-    vert.tex_coords[which].z = w;
-    vert.tex_coords[which].w = x;
-}
-
-void VertexData::tex_coord0(float u) {
-    tex_coordX(0, u);
+    Vec4* out = (Vec4*) &data_[cursor_position_ + offset];
+    *out = Vec4(u, v, w, x);
 }
 
 void VertexData::tex_coord0(float u, float v) {
@@ -199,8 +181,25 @@ void VertexData::tex_coord0(float u, float v, float w, float x) {
     tex_coordX(0, u, v, w, x);
 }
 
-void VertexData::tex_coord1(float u) {
-    tex_coordX(1, u);
+template<>
+Vec2 VertexData::texcoord0_at<Vec2>(uint32_t idx) {
+    assert(texcoord0_attribute_ == VERTEX_ATTRIBUTE_TEXCOORD0_2F);
+    Vec2 out = *((Vec2*) &data_[(idx * stride()) + texcoord0_offset()]);
+    return out;
+}
+
+template<>
+Vec3 VertexData::texcoord0_at<Vec3>(uint32_t idx) {
+    assert(texcoord0_attribute_ == VERTEX_ATTRIBUTE_TEXCOORD0_3F);
+    Vec3 out = *((Vec3*) &data_[(idx * stride()) + texcoord0_offset()]);
+    return out;
+}
+
+template<>
+Vec4 VertexData::texcoord0_at<Vec4>(uint32_t idx) {
+    assert(texcoord0_attribute_ == VERTEX_ATTRIBUTE_TEXCOORD0_4F);
+    Vec4 out = *((Vec4*) &data_[(idx * stride()) + texcoord0_offset()]);
+    return out;
 }
 
 void VertexData::tex_coord1(float u, float v) {
@@ -215,10 +214,6 @@ void VertexData::tex_coord1(float u, float v, float w, float x) {
     tex_coordX(1, u, v, w, x);
 }
 
-void VertexData::tex_coord2(float u) {
-    tex_coordX(2, u);
-}
-
 void VertexData::tex_coord2(float u, float v) {
     tex_coordX(2, u, v);
 }
@@ -229,10 +224,6 @@ void VertexData::tex_coord2(float u, float v, float w) {
 
 void VertexData::tex_coord2(float u, float v, float w, float x) {
     tex_coordX(2, u, v, w, x);
-}
-
-void VertexData::tex_coord3(float u) {
-    tex_coordX(3, u);
 }
 
 void VertexData::tex_coord3(float u, float v) {
@@ -248,13 +239,9 @@ void VertexData::tex_coord3(float u, float v, float w, float x) {
 }
 
 void VertexData::diffuse(float r, float g, float b, float a) {
-    check_or_add_attribute(BM_DIFFUSE);
-
-    Vertex& vert = data_.at(cursor_position_);
-    vert.diffuse.r = r;
-    vert.diffuse.g = g;
-    vert.diffuse.b = b;
-    vert.diffuse.a = a;
+    assert(diffuse_attribute_ == VERTEX_ATTRIBUTE_DIFFUSE_4F);
+    Vec4* out = (Vec4*) &data_[cursor_position_ + diffuse_offset()];
+    *out = Vec4(r, g, b, a);
 }
 
 void VertexData::diffuse(const Colour& colour) {
@@ -274,26 +261,74 @@ void VertexData::move_by(int32_t amount) {
 }
 
 void VertexData::move_to(int32_t index) {
-    if(index > (int32_t) data_.size()) {
+    int32_t offset = int32_t(stride()) * index;
+
+    if(offset > (int32_t) data_.size()) {
         throw std::out_of_range("Tried to move outside the range of the data");
     }
 
-    cursor_position_ = index;
+    cursor_position_ = (offset * stride());
 }
 
 uint16_t VertexData::move_next() {
-    cursor_position_++;
+    int32_t new_pos = cursor_position_ += stride();
 
     //cursor_position_ == data_.size() is allowed (see position())
-    if(cursor_position_ > (int32_t) data_.size()) {
+    if(new_pos > (int32_t) data_.size()) {
         throw std::out_of_range("Cursor moved out of range");
     }
 
+    cursor_position_ = new_pos;
     return cursor_position_;
 }
 
-void VertexData::reset() {
+void VertexData::reset(uint64_t attribute_mask) {
+    attribute_mask_ = attribute_mask;
     clear();
+    recalc_attributes();
+}
+
+void VertexData::recalc_attributes() {
+    position_attribute_ = VERTEX_ATTRIBUTE_NONE;
+    normal_attribute_ = VERTEX_ATTRIBUTE_NONE;
+    texcoord0_attribute_ = VERTEX_ATTRIBUTE_NONE;
+    texcoord1_attribute_ = VERTEX_ATTRIBUTE_NONE;
+    texcoord2_attribute_ = VERTEX_ATTRIBUTE_NONE;
+    texcoord3_attribute_ = VERTEX_ATTRIBUTE_NONE;
+    diffuse_attribute_ = VERTEX_ATTRIBUTE_NONE;
+    specular_attribute_ = VERTEX_ATTRIBUTE_NONE;
+
+    auto search_attribute = [this](std::set<VertexAttribute> attrs, VertexAttribute& target) {
+        for(auto& attr: attrs) {
+            if((attribute_mask_ & attr) == attr) {
+                target = attr;
+            }
+        }
+    };
+
+    search_attribute(POSITION_ATTRIBUTES, position_attribute_);
+    search_attribute(NORMAL_ATTRIBUTES, normal_attribute_);
+    search_attribute(TEXCOORD0_ATTRIBUTES, texcoord0_attribute_);
+    search_attribute(TEXCOORD1_ATTRIBUTES, texcoord1_attribute_);
+    search_attribute(TEXCOORD2_ATTRIBUTES, texcoord2_attribute_);
+    search_attribute(TEXCOORD3_ATTRIBUTES, texcoord3_attribute_);
+    search_attribute(DIFFUSE_ATTRIBUTES, diffuse_attribute_);
+    search_attribute(SPECULAR_ATTRIBUTES, specular_attribute_);
+}
+
+VertexAttribute VertexData::attribute_for_type(VertexAttributeType type) const {
+    switch(type) {
+        case VERTEX_ATTRIBUTE_TYPE_POSITION: return position_attribute_;
+        case VERTEX_ATTRIBUTE_TYPE_NORMAL: return normal_attribute_;
+        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD0: return texcoord0_attribute_;
+        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD1: return texcoord1_attribute_;
+        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD2: return texcoord2_attribute_;
+        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD3: return texcoord3_attribute_;
+        case VERTEX_ATTRIBUTE_TYPE_DIFFUSE: return diffuse_attribute_;
+        case VERTEX_ATTRIBUTE_TYPE_SPECULAR: return specular_attribute_;
+    default:
+        throw std::logic_error("Invalid vertex attribute type");
+    }
 }
 
 void VertexData::done() {

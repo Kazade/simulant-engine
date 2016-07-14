@@ -9,10 +9,12 @@
 
 namespace kglt {
 
-Mesh::Mesh(MeshID id, ResourceManager *resource_manager):
+Mesh::Mesh(MeshID id, ResourceManager *resource_manager, uint64_t vertex_attribute_mask):
     Resource(resource_manager),
     generic::Identifiable<MeshID>(id),
     normal_debug_mesh_(0) {
+
+    shared_data_.reset(vertex_attribute_mask);
 
     //FIXME: Somehow we need to specify if the shared data is modified repeatedly etc.
     shared_data_buffer_object_ = BufferObject::create(BUFFER_OBJECT_VERTEX_DATA, MODIFY_ONCE_USED_FOR_RENDERING);
@@ -77,8 +79,10 @@ void Mesh::enable_debug(bool value) {
         //Go through the submeshes, and for each index draw a normal line
         each([=](SubMesh* mesh) {
             for(uint16_t idx: mesh->index_data().all()) {
-                kmVec3 pos1 = mesh->vertex_data().position_at(idx);
-                kmVec3 n = mesh->vertex_data().normal_at(idx);
+                Vec3 pos1 = mesh->vertex_data().position_at<Vec3>(idx);
+
+                Vec3 n;
+                mesh->vertex_data().normal_at(idx, n);
                 kmVec3Scale(&n, &n, 10.0);
 
                 kmVec3 pos2;
@@ -106,23 +110,28 @@ void Mesh::enable_debug(bool value) {
     }
 }
 
-SubMeshID Mesh::new_submesh_with_material(MaterialID material, MeshArrangement arrangement, VertexSharingMode vertex_sharing) {
-
-    SubMeshID id = TemplatedSubMeshManager::manager_new(this, "", material, arrangement, vertex_sharing);
+SubMeshID Mesh::new_submesh_with_material(MaterialID material, MeshArrangement arrangement, VertexSharingMode vertex_sharing, uint64_t vertex_attribute_mask) {
+    SubMeshID id = TemplatedSubMeshManager::manager_new(this, "", material, arrangement, vertex_sharing, vertex_attribute_mask);
 
     signal_submesh_created_(this->id(), submesh(id));
     return id;
 }
 
-SubMeshID Mesh::new_submesh(MeshArrangement arrangement, VertexSharingMode vertex_sharing) {
+SubMeshID Mesh::new_submesh(MeshArrangement arrangement, VertexSharingMode vertex_sharing, uint64_t vertex_attribute_mask) {
     return new_submesh_with_material(
-        resource_manager().clone_default_material(),
-        arrangement, vertex_sharing
+        resource_manager().clone_default_material(),        
+        arrangement, vertex_sharing,
+        vertex_attribute_mask
     );
 }
 
 SubMeshID Mesh::new_submesh_as_box(MaterialID material, float width, float height, float depth, const Vec3& offset) {
-    SubMeshID ret = new_submesh_with_material(material, MESH_ARRANGEMENT_TRIANGLES, VERTEX_SHARING_MODE_INDEPENDENT);
+    SubMeshID ret = new_submesh_with_material(
+        material,
+        MESH_ARRANGEMENT_TRIANGLES,
+        VERTEX_SHARING_MODE_INDEPENDENT,
+        VERTEX_ATTRIBUTE_POSITION_3F | VERTEX_ATTRIBUTE_NORMAL_3F | VERTEX_ATTRIBUTE_TEXCOORD0_2F | VERTEX_ATTRIBUTE_TEXCOORD1_2F | VERTEX_ATTRIBUTE_DIFFUSE_4F
+    );
 
     auto& sm = *submesh(ret);
     auto& vd = sm.vertex_data();
@@ -294,7 +303,8 @@ SubMeshID Mesh::new_submesh_as_box(MaterialID material, float width, float heigh
     // Apply offset
     vd.move_to_start();
     for(uint16_t i = 0; i < vd.count(); ++i) {
-        vd.position(vd.position_at(i) + kglt::Vec3(x_offset, y_offset, z_offset));
+        Vec3 pos = vd.position_at<Vec3>(i);
+        vd.position(pos + kglt::Vec3(x_offset, y_offset, z_offset));
         vd.move_next();
     }
 
@@ -305,7 +315,11 @@ SubMeshID Mesh::new_submesh_as_box(MaterialID material, float width, float heigh
 }
 
 SubMeshID Mesh::new_submesh_as_rectangle(MaterialID material, float width, float height, const kglt::Vec3& offset) {
-    SubMeshID ret = new_submesh_with_material(material, MESH_ARRANGEMENT_TRIANGLES, VERTEX_SHARING_MODE_INDEPENDENT);
+    SubMeshID ret = new_submesh_with_material(
+        material,
+        MESH_ARRANGEMENT_TRIANGLES, VERTEX_SHARING_MODE_INDEPENDENT,
+        VERTEX_ATTRIBUTE_POSITION_3F | VERTEX_ATTRIBUTE_NORMAL_3F | VERTEX_ATTRIBUTE_TEXCOORD0_2F | VERTEX_ATTRIBUTE_TEXCOORD1_2F | VERTEX_ATTRIBUTE_DIFFUSE_4F
+    );
 
     auto& sm = *submesh(ret);
 
@@ -318,8 +332,6 @@ SubMeshID Mesh::new_submesh_as_rectangle(MaterialID material, float width, float
     sm.vertex_data().diffuse(kglt::Colour::WHITE);
     sm.vertex_data().tex_coord0(0.0, 0.0);
     sm.vertex_data().tex_coord1(0.0, 0.0);
-    sm.vertex_data().tex_coord2(0.0, 0.0);
-    sm.vertex_data().tex_coord3(0.0, 0.0);
     sm.vertex_data().normal(0, 0, 1);
     sm.vertex_data().move_next();
 
@@ -327,8 +339,6 @@ SubMeshID Mesh::new_submesh_as_rectangle(MaterialID material, float width, float
     sm.vertex_data().diffuse(kglt::Colour::WHITE);
     sm.vertex_data().tex_coord0(1.0, 0.0);
     sm.vertex_data().tex_coord1(1.0, 0.0);
-    sm.vertex_data().tex_coord2(1.0, 0.0);
-    sm.vertex_data().tex_coord3(1.0, 0.0);
     sm.vertex_data().normal(0, 0, 1);
     sm.vertex_data().move_next();
 
@@ -336,8 +346,6 @@ SubMeshID Mesh::new_submesh_as_rectangle(MaterialID material, float width, float
     sm.vertex_data().diffuse(kglt::Colour::WHITE);
     sm.vertex_data().tex_coord0(1.0, 1.0);
     sm.vertex_data().tex_coord1(1.0, 1.0);
-    sm.vertex_data().tex_coord2(1.0, 1.0);
-    sm.vertex_data().tex_coord3(1.0, 1.0);
     sm.vertex_data().normal(0, 0, 1);
     sm.vertex_data().move_next();
 
@@ -345,8 +353,6 @@ SubMeshID Mesh::new_submesh_as_rectangle(MaterialID material, float width, float
     sm.vertex_data().diffuse(kglt::Colour::WHITE);
     sm.vertex_data().tex_coord0(0.0, 1.0);
     sm.vertex_data().tex_coord1(0.0, 1.0);
-    sm.vertex_data().tex_coord2(0.0, 1.0);
-    sm.vertex_data().tex_coord3(0.0, 1.0);
     sm.vertex_data().normal(0, 0, 1);
     sm.vertex_data().move_next();
     sm.vertex_data().done();
@@ -385,15 +391,16 @@ void Mesh::set_material_id(MaterialID material) {
 void Mesh::transform_vertices(const kglt::Mat4& transform, bool include_submeshes) {
     shared_data().move_to_start();
 
-    for(int i = 0; i < shared_data().count(); ++i) {
+    for(uint32_t i = 0; i < shared_data().count(); ++i) {
         if(shared_data().has_positions()) {
-            kglt::Vec3 v = shared_data().position_at(i);
+            kglt::Vec3 v = shared_data().position_at<Vec3>(i);
             kmVec3MultiplyMat4(&v, &v, &transform);
             shared_data().position(v);
         }
 
         if(shared_data().has_normals()) {
-            kglt::Vec3 n = shared_data().normal_at(i);
+            kglt::Vec3 n;
+            shared_data().normal_at(i, n);
             kmVec3TransformNormal(&n, &n, &transform);
             shared_data().normal(n.normalized());
         }
@@ -451,7 +458,7 @@ void Mesh::set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass) {
 
 void Mesh::_update_buffer_object() {
     if(shared_data_dirty_) {
-        shared_data_buffer_object_->build(shared_data().count() * sizeof(Vertex), shared_data()._raw_data());
+        shared_data_buffer_object_->build(shared_data().data_size(), shared_data().data());
         shared_data_dirty_ = false;
     }
 }
@@ -461,11 +468,21 @@ SubMesh* Mesh::submesh(SubMeshID index) {
 }
 
 SubMesh::SubMesh(SubMeshID id, Mesh* parent, const std::string& name,
-        MaterialID material, MeshArrangement arrangement, VertexSharingMode vertex_sharing):
+        MaterialID material, MeshArrangement arrangement, VertexSharingMode vertex_sharing, uint64_t vertex_attribute_mask):
     generic::Identifiable<SubMeshID>(id),
     parent_(parent),
     arrangement_(arrangement),
     uses_shared_data_(vertex_sharing == VERTEX_SHARING_MODE_SHARED) {
+
+    if(!uses_shared_data_ && !vertex_attribute_mask) {
+        throw std::logic_error(
+            "You must specify a vertex_attribute_mask when creating a submesh with independent vertices"
+        );
+    }
+
+    if(!uses_shared_data_) {
+        vertex_data_.reset(vertex_attribute_mask);
+    }
 
     /*
      * If we use shared vertices then we must reuse the buffer object from the mesh,
@@ -506,7 +523,7 @@ void SubMesh::_update_vertex_array_object() {
     if(uses_shared_vertices()) {
         parent_->_update_buffer_object();
     } else if(vertex_data_dirty_) {
-        vertex_array_object_->vertex_buffer_update(vertex_data().count() * sizeof(Vertex), vertex_data()._raw_data());
+        vertex_array_object_->vertex_buffer_update(vertex_data().data_size(), vertex_data().data());
         vertex_data_dirty_ = false;
     }
 
@@ -566,14 +583,15 @@ void SubMesh::transform_vertices(const kglt::Mat4& transformation) {
 
     vertex_data().move_to_start();
     for(uint16_t i = 0; i < vertex_data().count(); ++i) {
-        kglt::Vec3 v = vertex_data().position_at(i);
+        kglt::Vec3 v = vertex_data().position_at<Vec3>(i);
 
         kmVec3MultiplyMat4(&v, &v, &transformation);
 
         vertex_data().position(v);
 
         if(vertex_data().has_normals()) {
-            kglt::Vec3 n = vertex_data().normal_at(i);
+            kglt::Vec3 n;
+            vertex_data().normal_at(i, n);
             kmVec3MultiplyMat4(&n, &n, &transformation);
             vertex_data().normal(n.normalized());
         }
@@ -631,7 +649,7 @@ void SubMesh::_recalc_bounds() {
     }
 
     for(uint16_t idx: index_data().all()) {
-        kmVec3 pos = vertex_data().position_at(idx);
+        Vec3 pos = vertex_data().position_at<Vec3>(idx);
         if(pos.x < bounds_.min.x) bounds_.min.x = pos.x;
         if(pos.y < bounds_.min.y) bounds_.min.y = pos.y;
         if(pos.z < bounds_.min.z) bounds_.min.z = pos.z;
@@ -679,7 +697,8 @@ void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
 
     vd.move_to_start();
     for(uint16_t i = 0; i < vd.count(); ++i) {
-        auto v = vd.normal_at(i); // Get the vertex normal
+        Vec3 v;
+        vd.normal_at(i, v); // Get the vertex normal
 
         // Work out the component with the largest value
         float absx = fabs(v.x);
@@ -705,7 +724,7 @@ void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
         kmPlane plane;
         kmPlaneFill(&plane, -dir.x, -dir.y, -dir.z, 0);
 
-        kglt::Vec3 v1 = vd.position_at(i) - bounds_.min;
+        kglt::Vec3 v1 = vd.position_at<Vec3>(i) - bounds_.min;
         kglt::Vec3 v2 = v1 + dir;
 
         // Project the vertex position onto the plane

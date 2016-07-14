@@ -127,8 +127,6 @@ kglt/renderer.h
 kglt/renderers/generic_renderer.h
 kglt/renderers/generic_renderer.cpp
 kglt/renderer.cpp
-kglt/utils/geometry_buffer.h
-kglt/utils/geometry_buffer.cpp
 kglt/extra/sprite_strip_loader.h
 kglt/extra/sprite.h
 kglt/extra/background.h
@@ -890,9 +888,6 @@ kglt/controllers/material/warp.h
 kglt/controllers/material/warp.cpp
 kglt/geom.h
 kglt/geom.cpp
-kglt/partitioners/static_chunk.h
-kglt/partitioners/static_chunk.cpp
-tests/test_static_chunk.h
 kglt/generic/lock_free/FreeList.h
 kglt/generic/lock_free/UnorderedMap.h
 kglt/generic/lock_free/memory/Pool.cpp

@@ -88,7 +88,7 @@ void ParticleSystem::_update_vertex_array_object() {
         return;
     }
 
-    vao_.vertex_buffer_update(vertex_data().count() * sizeof(Vertex), vertex_data_._raw_data());
+    vao_.vertex_buffer_update(vertex_data().data_size(), vertex_data_.data());
     vao_.index_buffer_update(index_data().count() * sizeof(uint16_t), index_data_._raw_data());
 }
 

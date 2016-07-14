@@ -280,9 +280,9 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             uint16_t idx3 = sm->index_data().at(i+2);
 
             kglt::Vec3 v1, v2, v3;
-            v1 = sm->vertex_data().position_at(idx1);
-            v2 = sm->vertex_data().position_at(idx2);
-            v3 = sm->vertex_data().position_at(idx3);
+            v1 = sm->vertex_data().position_at<Vec3>(idx1);
+            v2 = sm->vertex_data().position_at<Vec3>(idx2);
+            v3 = sm->vertex_data().position_at<Vec3>(idx3);
 
             kglt::Vec3 normal = (v2 - v1).normalized().cross((v3 - v1).normalized()).normalized();
 
