@@ -27,7 +27,9 @@ bool Sprite::init() {
 }
 
 void Sprite::cleanup() {
-    stage->delete_actor(actor_id_);
+    if(actor_id_) {
+        stage->delete_actor(actor_id_);
+    }
 }
 
 void Sprite::ask_owner_for_destruction() {

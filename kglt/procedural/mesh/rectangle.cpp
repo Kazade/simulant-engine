@@ -89,8 +89,6 @@ SubMeshID rectangle(
     mesh->shared_data->diffuse(kglt::Colour::WHITE);
     mesh->shared_data->tex_coord0(0.0, 0.0);
     mesh->shared_data->tex_coord1(0.0, 0.0);
-    mesh->shared_data->tex_coord2(0.0, 0.0);
-    mesh->shared_data->tex_coord3(0.0, 0.0);
     mesh->shared_data->normal(0, 0, 1);
     mesh->shared_data->move_next();
 
@@ -98,8 +96,6 @@ SubMeshID rectangle(
     mesh->shared_data->diffuse(kglt::Colour::WHITE);
     mesh->shared_data->tex_coord0(1.0, 0.0);
     mesh->shared_data->tex_coord1(1.0, 0.0);
-    mesh->shared_data->tex_coord2(1.0, 0.0);
-    mesh->shared_data->tex_coord3(1.0, 0.0);
     mesh->shared_data->normal(0, 0, 1);
     mesh->shared_data->move_next();
 
@@ -107,8 +103,6 @@ SubMeshID rectangle(
     mesh->shared_data->diffuse(kglt::Colour::WHITE);
     mesh->shared_data->tex_coord0(1.0, 1.0);
     mesh->shared_data->tex_coord1(1.0, 1.0);
-    mesh->shared_data->tex_coord2(1.0, 1.0);
-    mesh->shared_data->tex_coord3(1.0, 1.0);
     mesh->shared_data->normal(0, 0, 1);
     mesh->shared_data->move_next();
 
@@ -116,8 +110,6 @@ SubMeshID rectangle(
     mesh->shared_data->diffuse(kglt::Colour::WHITE);
     mesh->shared_data->tex_coord0(0.0, 1.0);
     mesh->shared_data->tex_coord1(0.0, 1.0);
-    mesh->shared_data->tex_coord2(0.0, 1.0);
-    mesh->shared_data->tex_coord3(0.0, 1.0);
     mesh->shared_data->normal(0, 0, 1);
     mesh->shared_data->move_next();
     mesh->shared_data->done();
