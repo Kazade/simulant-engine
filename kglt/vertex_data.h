@@ -18,82 +18,12 @@ class WindowBase;
 
 enum VertexAttribute {
     VERTEX_ATTRIBUTE_NONE,
-    VERTEX_ATTRIBUTE_POSITION_2F = (1u << 1),
-    VERTEX_ATTRIBUTE_POSITION_3F = (1u << 2),
-    VERTEX_ATTRIBUTE_POSITION_4F = (1u << 3),
-
-    VERTEX_ATTRIBUTE_NORMAL_3F = (1u << 4),
-    VERTEX_ATTRIBUTE_NORMAL_4F = (1u << 5),
-
-    VERTEX_ATTRIBUTE_TEXCOORD0_2F = (1u << 6),
-    VERTEX_ATTRIBUTE_TEXCOORD0_3F = (1u << 7),
-    VERTEX_ATTRIBUTE_TEXCOORD0_4F = (1u << 8),
-
-    VERTEX_ATTRIBUTE_TEXCOORD1_2F = (1u << 9),
-    VERTEX_ATTRIBUTE_TEXCOORD1_3F = (1u << 10),
-    VERTEX_ATTRIBUTE_TEXCOORD1_4F = (1u << 11),
-
-    VERTEX_ATTRIBUTE_TEXCOORD2_2F = (1u << 12),
-    VERTEX_ATTRIBUTE_TEXCOORD2_3F = (1u << 13),
-    VERTEX_ATTRIBUTE_TEXCOORD2_4F = (1u << 14),
-
-    VERTEX_ATTRIBUTE_TEXCOORD3_2F = (1u << 15),
-    VERTEX_ATTRIBUTE_TEXCOORD3_3F = (1u << 16),
-    VERTEX_ATTRIBUTE_TEXCOORD3_4F = (1u << 17),
-
-    VERTEX_ATTRIBUTE_DIFFUSE_3F = (1u << 18),
-    VERTEX_ATTRIBUTE_DIFFUSE_4F = (1u << 19),
-
-    VERTEX_ATTRIBUTE_SPECULAR_3F = (1u << 20),
-    VERTEX_ATTRIBUTE_SPECULAR_4F = (1u << 21)
+    VERTEX_ATTRIBUTE_2F,
+    VERTEX_ATTRIBUTE_3F,
+    VERTEX_ATTRIBUTE_4F
 };
 
 uint32_t vertex_attribute_size(VertexAttribute attr);
-
-const std::set<VertexAttribute> POSITION_ATTRIBUTES = {
-    VERTEX_ATTRIBUTE_POSITION_2F,
-    VERTEX_ATTRIBUTE_POSITION_3F,
-    VERTEX_ATTRIBUTE_POSITION_4F
-};
-
-const std::set<VertexAttribute> NORMAL_ATTRIBUTES = {
-    VERTEX_ATTRIBUTE_NORMAL_3F,
-    VERTEX_ATTRIBUTE_NORMAL_4F
-};
-
-const std::set<VertexAttribute> TEXCOORD0_ATTRIBUTES = {
-    VERTEX_ATTRIBUTE_TEXCOORD0_2F,
-    VERTEX_ATTRIBUTE_TEXCOORD0_3F,
-    VERTEX_ATTRIBUTE_TEXCOORD0_4F
-};
-
-const std::set<VertexAttribute> TEXCOORD1_ATTRIBUTES = {
-    VERTEX_ATTRIBUTE_TEXCOORD1_2F,
-    VERTEX_ATTRIBUTE_TEXCOORD1_3F,
-    VERTEX_ATTRIBUTE_TEXCOORD1_4F
-};
-
-const std::set<VertexAttribute> TEXCOORD2_ATTRIBUTES = {
-    VERTEX_ATTRIBUTE_TEXCOORD2_2F,
-    VERTEX_ATTRIBUTE_TEXCOORD2_3F,
-    VERTEX_ATTRIBUTE_TEXCOORD2_4F
-};
-
-const std::set<VertexAttribute> TEXCOORD3_ATTRIBUTES = {
-    VERTEX_ATTRIBUTE_TEXCOORD3_2F,
-    VERTEX_ATTRIBUTE_TEXCOORD3_3F,
-    VERTEX_ATTRIBUTE_TEXCOORD3_4F
-};
-
-const std::set<VertexAttribute> DIFFUSE_ATTRIBUTES = {
-    VERTEX_ATTRIBUTE_DIFFUSE_3F,
-    VERTEX_ATTRIBUTE_DIFFUSE_4F
-};
-
-const std::set<VertexAttribute> SPECULAR_ATTRIBUTES = {
-    VERTEX_ATTRIBUTE_SPECULAR_3F,
-    VERTEX_ATTRIBUTE_SPECULAR_4F
-};
 
 enum VertexAttributeType {
     VERTEX_ATTRIBUTE_TYPE_EMPTY = 0,
@@ -107,15 +37,65 @@ enum VertexAttributeType {
     VERTEX_ATTRIBUTE_TYPE_SPECULAR
 };
 
+struct VertexSpecification {
+    static const VertexSpecification DEFAULT;
+    static const VertexSpecification POSITION_ONLY;
+    static const VertexSpecification POSITION_AND_DIFFUSE;
+
+    VertexAttribute position_attribute = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute normal_attribute = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute texcoord0_attribute = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute texcoord1_attribute = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute texcoord2_attribute = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute texcoord3_attribute = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute diffuse_attribute = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute specular_attribute = VERTEX_ATTRIBUTE_NONE;
+
+    VertexSpecification() = default;
+    VertexSpecification(VertexAttribute position,
+                        VertexAttribute normal=VERTEX_ATTRIBUTE_NONE,
+                        VertexAttribute texcoord0=VERTEX_ATTRIBUTE_NONE,
+                        VertexAttribute texcoord1=VERTEX_ATTRIBUTE_NONE,
+                        VertexAttribute texcoord2=VERTEX_ATTRIBUTE_NONE,
+                        VertexAttribute texcoord3=VERTEX_ATTRIBUTE_NONE,
+                        VertexAttribute diffuse=VERTEX_ATTRIBUTE_NONE,
+                        VertexAttribute specular=VERTEX_ATTRIBUTE_NONE):
+        position_attribute(position),
+        normal_attribute(normal),
+        texcoord0_attribute(texcoord0),
+        texcoord1_attribute(texcoord1),
+        texcoord2_attribute(texcoord2),
+        texcoord3_attribute(texcoord3),
+        diffuse_attribute(diffuse),
+        specular_attribute(specular) {
+
+
+    }
+
+    bool operator==(const VertexSpecification& rhs) const {
+        return position_attribute == rhs.position_attribute &&
+               normal_attribute == rhs.normal_attribute  &&
+               texcoord0_attribute == rhs.texcoord0_attribute &&
+               texcoord1_attribute == rhs.texcoord1_attribute &&
+               texcoord2_attribute == rhs.texcoord2_attribute &&
+               texcoord3_attribute == rhs.texcoord3_attribute &&
+               diffuse_attribute == rhs.diffuse_attribute &&
+               specular_attribute == rhs.specular_attribute;
+    }
+
+    bool operator!=(const VertexSpecification& rhs) const {
+        return !(*this == rhs);
+    }
+};
+
 
 class VertexData :
     public Managed<VertexData> {
 
 public:
-    VertexData();
-    VertexData(uint64_t attribute_mask);
+    VertexData(VertexSpecification vertex_specification);
 
-    void reset(uint64_t attribute_mask);
+    void reset(VertexSpecification vertex_specification);
     void clear();
 
     void move_to_start();
@@ -138,12 +118,12 @@ public:
     void normal(const kmVec3& n);
 
     void normal_at(int32_t idx, Vec3& out) {
-        assert(normal_attribute_ == VERTEX_ATTRIBUTE_NORMAL_3F);
+        assert(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_3F);
         out = *((Vec3*) &data_[(idx * stride()) + normal_offset()]);
     }
 
     void normal_at(int32_t idx, Vec4& out) {
-        assert(normal_attribute_ == VERTEX_ATTRIBUTE_NORMAL_4F);
+        assert(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_4F);
         out = *((Vec4*) &data_[(idx * stride()) + normal_offset()]);
     }
 
@@ -176,14 +156,14 @@ public:
     void specular(float r, float g, float b, float a);
     void specular(const Colour& colour);
 
-    bool has_positions() const { return bool(position_attribute_); }
-    bool has_normals() const { return bool(normal_attribute_); }
-    bool has_texcoord0() const { return bool(texcoord0_attribute_); }
-    bool has_texcoord1() const { return bool(texcoord1_attribute_); }
-    bool has_texcoord2() const { return bool(texcoord2_attribute_); }
-    bool has_texcoord3() const { return bool(texcoord3_attribute_); }
-    bool has_diffuse() const { return bool(diffuse_attribute_); }
-    bool has_specular() const { return bool(specular_attribute_); }
+    bool has_positions() const { return bool(vertex_specification_.position_attribute); }
+    bool has_normals() const { return bool(vertex_specification_.normal_attribute); }
+    bool has_texcoord0() const { return bool(vertex_specification_.texcoord0_attribute); }
+    bool has_texcoord1() const { return bool(vertex_specification_.texcoord1_attribute); }
+    bool has_texcoord2() const { return bool(vertex_specification_.texcoord2_attribute); }
+    bool has_texcoord3() const { return bool(vertex_specification_.texcoord3_attribute); }
+    bool has_diffuse() const { return bool(vertex_specification_.diffuse_attribute); }
+    bool has_specular() const { return bool(vertex_specification_.specular_attribute); }
 
     uint32_t count() const { return vertex_count_; }
 
@@ -194,14 +174,14 @@ public:
 
     uint32_t stride() const {
         return (
-            vertex_attribute_size(position_attribute_) +
-            vertex_attribute_size(normal_attribute_) +
-            vertex_attribute_size(texcoord0_attribute_) +
-            vertex_attribute_size(texcoord1_attribute_) +
-            vertex_attribute_size(texcoord2_attribute_) +
-            vertex_attribute_size(texcoord3_attribute_) +
-            vertex_attribute_size(diffuse_attribute_) +
-            vertex_attribute_size(specular_attribute_)
+            vertex_attribute_size(vertex_specification_.position_attribute) +
+            vertex_attribute_size(vertex_specification_.normal_attribute) +
+            vertex_attribute_size(vertex_specification_.texcoord0_attribute) +
+            vertex_attribute_size(vertex_specification_.texcoord1_attribute) +
+            vertex_attribute_size(vertex_specification_.texcoord2_attribute) +
+            vertex_attribute_size(vertex_specification_.texcoord3_attribute) +
+            vertex_attribute_size(vertex_specification_.diffuse_attribute) +
+            vertex_attribute_size(vertex_specification_.specular_attribute)
         );
     }
 
@@ -212,41 +192,41 @@ public:
 
     uint32_t normal_offset(bool check=true) const {
         if(check && !has_normals()) { throw std::logic_error("No such attribute"); }
-        return vertex_attribute_size(position_attribute_);
+        return vertex_attribute_size(vertex_specification_.position_attribute);
     }
 
     uint32_t texcoord0_offset(bool check=true) const {
         if(check && !has_texcoord0()) { throw std::logic_error("No such attribute"); }
-        return normal_offset(false) + vertex_attribute_size(normal_attribute_);
+        return normal_offset(false) + vertex_attribute_size(vertex_specification_.normal_attribute);
     }
 
     uint32_t texcoord1_offset(bool check=true) const {
         if(check && !has_texcoord1()) { throw std::logic_error("No such attribute"); }
-        return texcoord0_offset(false) + vertex_attribute_size(texcoord0_attribute_);
+        return texcoord0_offset(false) + vertex_attribute_size(vertex_specification_.texcoord0_attribute);
     }
 
     uint32_t texcoord2_offset(bool check=true) const {
         if(check && !has_texcoord2()) { throw std::logic_error("No such attribute"); }
-        return texcoord1_offset(false) + vertex_attribute_size(texcoord1_attribute_);
+        return texcoord1_offset(false) + vertex_attribute_size(vertex_specification_.texcoord1_attribute);
     }
 
     uint32_t texcoord3_offset(bool check=true) const {
         if(check && !has_texcoord3()) { throw std::logic_error("No such attribute"); }
-        return texcoord2_offset(false) + vertex_attribute_size(texcoord2_attribute_);
+        return texcoord2_offset(false) + vertex_attribute_size(vertex_specification_.texcoord2_attribute);
     }
 
     uint32_t diffuse_offset(bool check=true) const {
         if(check && !has_diffuse()) { throw std::logic_error("No such attribute"); }
-        return texcoord3_offset(false) + vertex_attribute_size(texcoord3_attribute_);
+        return texcoord3_offset(false) + vertex_attribute_size(vertex_specification_.texcoord3_attribute);
     }
 
     uint32_t specular_offset(bool check=true) const {
         if(check && !has_specular()) { throw std::logic_error("No such attribute"); }
-        return diffuse_offset(false) + vertex_attribute_size(diffuse_attribute_);
+        return diffuse_offset(false) + vertex_attribute_size(vertex_specification_.diffuse_attribute);
     }
 
     void copy_vertex_to_another(VertexData& out, uint32_t idx) {
-        if(out.attribute_mask_ != this->attribute_mask_) {
+        if(out.vertex_specification_ != this->vertex_specification_) {
             throw std::runtime_error("Cannot copy vertex as formats differ");
         }
 
@@ -256,24 +236,13 @@ public:
         out.data_.insert(out.data_.end(), data_.begin() + start, data_.begin() + end);
     }
 
-    uint64_t vertex_format() const { return attribute_mask_; }
-
     uint8_t* data() { if(empty()) { return nullptr; } return &data_[0]; }
     uint32_t data_size() const { return data_.size(); }
 
     VertexAttribute attribute_for_type(VertexAttributeType type) const;
+
 private:
-    uint64_t attribute_mask_ = 0;
-
-    VertexAttribute position_attribute_ = VERTEX_ATTRIBUTE_NONE;
-    VertexAttribute normal_attribute_ = VERTEX_ATTRIBUTE_NONE;
-    VertexAttribute texcoord0_attribute_ = VERTEX_ATTRIBUTE_NONE;
-    VertexAttribute texcoord1_attribute_ = VERTEX_ATTRIBUTE_NONE;
-    VertexAttribute texcoord2_attribute_ = VERTEX_ATTRIBUTE_NONE;
-    VertexAttribute texcoord3_attribute_ = VERTEX_ATTRIBUTE_NONE;
-    VertexAttribute diffuse_attribute_ = VERTEX_ATTRIBUTE_NONE;
-    VertexAttribute specular_attribute_ = VERTEX_ATTRIBUTE_NONE;
-
+    VertexSpecification vertex_specification_;
     std::vector<uint8_t> data_;
     uint32_t vertex_count_ = 0;
 

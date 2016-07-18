@@ -7,11 +7,12 @@
 #include <set>
 #include <memory>
 
-#include "generic/managed.h"
-#include "generic/identifiable.h"
-
 #include <kazmath/kazmath.h>
 #include <kazbase/list_utils.h>
+
+#include "generic/managed.h"
+#include "generic/identifiable.h"
+#include "generic/property.h"
 
 #include "loadable.h"
 #include "resource.h"
@@ -28,7 +29,11 @@ class MeshInterface:
 
 public:
     virtual ~MeshInterface() {}
-    virtual const VertexData& shared_data() const = 0;
+
+    Property<MeshInterface, VertexData> shared_data = { this, &MeshInterface::get_shared_data };
+
+private:
+    virtual VertexData* get_shared_data() const = 0;
 };
 
 class SubMeshInterface:
@@ -37,13 +42,18 @@ class SubMeshInterface:
 public:
     virtual ~SubMeshInterface() {}
 
-    virtual const VertexData& vertex_data() const = 0;
-    virtual const IndexData& index_data() const = 0;
     virtual const MaterialID material_id() const = 0;
     virtual const MeshArrangement arrangement() const = 0;
 
     virtual void _update_vertex_array_object() = 0;
     virtual void _bind_vertex_array_object() = 0;
+
+    Property<SubMeshInterface, VertexData> vertex_data = { this, &SubMeshInterface::get_vertex_data };
+    Property<SubMeshInterface, IndexData> index_data = { this, &SubMeshInterface::get_index_data };
+
+private:
+    virtual VertexData* get_vertex_data() const = 0;
+    virtual IndexData* get_index_data() const = 0;
 };
 
 enum VertexSharingMode {
@@ -64,16 +74,10 @@ public:
         MaterialID material,
         MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES,
         VertexSharingMode vertex_sharing = VERTEX_SHARING_MODE_SHARED,
-        uint64_t vertex_attribute_mask = 0
+        VertexSpecification vertex_specification = VertexSpecification()
     );
 
     virtual ~SubMesh();
-
-    VertexData& vertex_data();
-    IndexData& index_data();
-
-    const VertexData& vertex_data() const;
-    const IndexData& index_data() const;
 
     const MaterialID material_id() const;
     void set_material_id(MaterialID mat);
@@ -97,6 +101,10 @@ public:
 
     void generate_texture_coordinates_cube(uint32_t texture=0);
 
+    VertexData* get_vertex_data() const;
+    IndexData* get_index_data() const;
+
+
 public:
     typedef sig::signal<void (SubMesh*, MaterialID, MaterialID)> MaterialChangedCallback;
 
@@ -113,8 +121,8 @@ private:
     MeshArrangement arrangement_;
     bool uses_shared_data_;
 
-    VertexData vertex_data_;
-    IndexData index_data_;
+    std::unique_ptr<VertexData> vertex_data_;
+    std::unique_ptr<IndexData> index_data_;
     VertexArrayObject::ptr vertex_array_object_;
 
     bool vertex_data_dirty_ = false;
@@ -139,27 +147,19 @@ class Mesh :
     public TemplatedSubMeshManager {
 
 public:
-    Mesh(MeshID id, ResourceManager* resource_manager, uint64_t vertex_attribute_mask);
-
-    VertexData& shared_data() {
-        return shared_data_;
-    }
-
-    const VertexData& shared_data() const {
-        return shared_data_;
-    }
+    Mesh(MeshID id, ResourceManager* resource_manager, VertexSpecification vertex_specification);
 
     SubMeshID new_submesh_with_material(
         MaterialID material,        
         MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES,
         VertexSharingMode vertex_sharing=VERTEX_SHARING_MODE_SHARED,
-        uint64_t vertex_attribute_mask=VERTEX_ATTRIBUTE_NONE
+        VertexSpecification vertex_specification=VertexSpecification()
     );
 
     SubMeshID new_submesh(        
         MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES,
         VertexSharingMode vertex_sharing=VERTEX_SHARING_MODE_SHARED,
-        uint64_t vertex_attribute_mask=VERTEX_ATTRIBUTE_NONE
+        VertexSpecification vertex_specification=VertexSpecification()
     );
 
     SubMeshID new_submesh_as_rectangle(MaterialID material, float width, float height, const Vec3& offset=Vec3());
@@ -201,10 +201,12 @@ public:
 
 private:
     friend class SubMesh;
+    VertexData* get_shared_data() const;
+
     void _update_buffer_object();
 
     bool shared_data_dirty_ = false;
-    VertexData shared_data_;
+    std::unique_ptr<VertexData> shared_data_;
     BufferObject::ptr shared_data_buffer_object_;
 
     SubMeshID normal_debug_mesh_;

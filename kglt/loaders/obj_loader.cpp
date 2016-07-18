@@ -133,25 +133,25 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             int32_t first_v, first_vt, first_vn;
             parse_face(parts[0], first_v, first_vt, first_vn);
 
-            int32_t first_index = sm->vertex_data().count(); //Store the index of this vertex
+            int32_t first_index = sm->vertex_data->count(); //Store the index of this vertex
 
-            sm->vertex_data().position(vertices[first_v]); //Read the position
+            sm->vertex_data->position(vertices[first_v]); //Read the position
             if(first_vt > -1) {
-                sm->vertex_data().tex_coord0(tex_coords[first_vt]);
-                sm->vertex_data().tex_coord1(tex_coords[first_vt]);
+                sm->vertex_data->tex_coord0(tex_coords[first_vt]);
+                sm->vertex_data->tex_coord1(tex_coords[first_vt]);
             } else {
-                sm->vertex_data().tex_coord0(kglt::Vec2());
-                sm->vertex_data().tex_coord1(kglt::Vec2());
+                sm->vertex_data->tex_coord0(kglt::Vec2());
+                sm->vertex_data->tex_coord1(kglt::Vec2());
             }
 
             if(first_vn > -1) {
-                sm->vertex_data().normal(normals[first_vn]);
+                sm->vertex_data->normal(normals[first_vn]);
             } else {
-                sm->vertex_data().normal(kglt::Vec3());
+                sm->vertex_data->normal(kglt::Vec3());
             }
 
-            sm->vertex_data().diffuse(kglt::Colour::WHITE);
-            sm->vertex_data().move_next();
+            sm->vertex_data->diffuse(kglt::Colour::WHITE);
+            sm->vertex_data->move_next();
 
             parts = std::vector<unicode>(parts.begin() + 1, parts.end()); //Strip off the first bit
 
@@ -167,24 +167,24 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                 parse_face(parts[i-1], v1, vt1, vn1);
                 parse_face(parts[i], v2, vt2, vn2);
 
-                sm->vertex_data().position(vertices[v1]); //Read the position
-                sm->vertex_data().tex_coord0((vt1 > -1) ? tex_coords[vt1] : kglt::Vec2());
-                sm->vertex_data().tex_coord1((vt1 > -1) ? tex_coords[vt1] : kglt::Vec2());
-                sm->vertex_data().normal((vn1 > -1) ? normals[vn1] : kglt::Vec3());
-                sm->vertex_data().diffuse(kglt::Colour::WHITE);
-                sm->vertex_data().move_next();
+                sm->vertex_data->position(vertices[v1]); //Read the position
+                sm->vertex_data->tex_coord0((vt1 > -1) ? tex_coords[vt1] : kglt::Vec2());
+                sm->vertex_data->tex_coord1((vt1 > -1) ? tex_coords[vt1] : kglt::Vec2());
+                sm->vertex_data->normal((vn1 > -1) ? normals[vn1] : kglt::Vec3());
+                sm->vertex_data->diffuse(kglt::Colour::WHITE);
+                sm->vertex_data->move_next();
 
-                sm->vertex_data().position(vertices[v2]); //Read the position
-                sm->vertex_data().tex_coord0((vt2 > -1) ? tex_coords[vt2] : kglt::Vec2());
-                sm->vertex_data().tex_coord1((vt2 > -1) ? tex_coords[vt2] : kglt::Vec2());
-                sm->vertex_data().normal((vn2 > -1) ? normals[vn2] : kglt::Vec3());
-                sm->vertex_data().diffuse(kglt::Colour::WHITE);
-                sm->vertex_data().move_next();
+                sm->vertex_data->position(vertices[v2]); //Read the position
+                sm->vertex_data->tex_coord0((vt2 > -1) ? tex_coords[vt2] : kglt::Vec2());
+                sm->vertex_data->tex_coord1((vt2 > -1) ? tex_coords[vt2] : kglt::Vec2());
+                sm->vertex_data->normal((vn2 > -1) ? normals[vn2] : kglt::Vec3());
+                sm->vertex_data->diffuse(kglt::Colour::WHITE);
+                sm->vertex_data->move_next();
 
                 //Add the triangle
-                sm->index_data().index(first_index);
-                sm->index_data().index(sm->vertex_data().count() - 2);
-                sm->index_data().index(sm->vertex_data().count() - 1);
+                sm->index_data->index(first_index);
+                sm->index_data->index(sm->vertex_data->count() - 2);
+                sm->index_data->index(sm->vertex_data->count() - 1);
             }
         } else if(parts[0] == "newmtl") {
             auto material_name = parts[1];
@@ -274,15 +274,15 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
         std::unordered_map<int, kglt::Vec3> index_to_normal;
 
         // Go through all the triangles, add the face normal to all the vertices
-        for(uint16_t i = 0; i < sm->index_data().count(); i+=3) {
-            uint16_t idx1 = sm->index_data().at(i);
-            uint16_t idx2 = sm->index_data().at(i+1);
-            uint16_t idx3 = sm->index_data().at(i+2);
+        for(uint16_t i = 0; i < sm->index_data->count(); i+=3) {
+            uint16_t idx1 = sm->index_data->at(i);
+            uint16_t idx2 = sm->index_data->at(i+1);
+            uint16_t idx3 = sm->index_data->at(i+2);
 
             kglt::Vec3 v1, v2, v3;
-            v1 = sm->vertex_data().position_at<Vec3>(idx1);
-            v2 = sm->vertex_data().position_at<Vec3>(idx2);
-            v3 = sm->vertex_data().position_at<Vec3>(idx3);
+            v1 = sm->vertex_data->position_at<Vec3>(idx1);
+            v2 = sm->vertex_data->position_at<Vec3>(idx2);
+            v3 = sm->vertex_data->position_at<Vec3>(idx3);
 
             kglt::Vec3 normal = (v2 - v1).normalized().cross((v3 - v1).normalized()).normalized();
 
@@ -293,8 +293,8 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
 
         // Now set the normal on the vertex data
         for(auto p: index_to_normal) {
-            sm->vertex_data().move_to(p.first);
-            sm->vertex_data().normal(p.second.normalized());
+            sm->vertex_data->move_to(p.first);
+            sm->vertex_data->normal(p.second.normalized());
         }
     }
 
@@ -328,12 +328,12 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
         }
     }
 
-    sm->vertex_data().done();
+    sm->vertex_data->done();
     if(material_submeshes.empty()) {
-        sm->index_data().done();
+        sm->index_data->done();
     } else {
         for(auto& p: material_submeshes) {
-            mesh->submesh(p.second)->index_data().done();
+            mesh->submesh(p.second)->index_data->done();
         }
     }
 }

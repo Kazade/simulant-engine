@@ -15,8 +15,8 @@ SubMeshID circle(kglt::Mesh& mesh, float diameter, int32_t point_count, float x_
 
     kglt::SubMesh& submesh = *mesh.submesh(smi);
 
-    kglt::VertexData& vdata = submesh.vertex_data();
-    kglt::IndexData& idata = submesh.index_data();
+    auto& vdata = submesh.vertex_data;
+    auto& idata = submesh.index_data;
 
     for(uint16_t i = 0; i < point_count; ++i) {
         //Build some shared vertex data
@@ -29,22 +29,22 @@ SubMeshID circle(kglt::Mesh& mesh, float diameter, int32_t point_count, float x_
         float u = cos(rads) * 0.5 + 0.5f;
         float v = sin(rads) * 0.5 + 0.5f;
 
-        vdata.position(x_offset + x, y_offset + y, z_offset);
-        vdata.diffuse(kglt::Colour::WHITE);
-        vdata.tex_coord0(u, v);
-        vdata.tex_coord1(u, v);
-        vdata.tex_coord2(u, v);
-        vdata.tex_coord3(u, v);
-        vdata.normal(0, 0, 1);
-        vdata.move_next();
+        vdata->position(x_offset + x, y_offset + y, z_offset);
+        vdata->diffuse(kglt::Colour::WHITE);
+        vdata->tex_coord0(u, v);
+        vdata->tex_coord1(u, v);
+        vdata->tex_coord2(u, v);
+        vdata->tex_coord3(u, v);
+        vdata->normal(0, 0, 1);
+        vdata->move_next();
     }
 
-    vdata.done();
+    vdata->done();
 
     for(uint16_t i = 0; i < point_count; ++i) {
-        idata.index(i);
+        idata->index(i);
     }
-    idata.done();
+    idata->done();
 
     return smi;
 }
@@ -55,8 +55,8 @@ SubMeshID circle_outline(kglt::Mesh& mesh, float diameter, int32_t point_count, 
     SubMeshID smi = mesh.new_submesh(MESH_ARRANGEMENT_LINE_STRIP, VERTEX_SHARING_MODE_INDEPENDENT);
     kglt::SubMesh& submesh = *mesh.submesh(smi);
 
-    kglt::VertexData& vdata = submesh.vertex_data();
-    kglt::IndexData& idata = submesh.index_data();
+    auto& vdata = submesh.vertex_data;
+    auto& idata = submesh.index_data;
 
     for(uint16_t i = 0; i < point_count; ++i) {
         //Build some shared vertex data
@@ -69,23 +69,23 @@ SubMeshID circle_outline(kglt::Mesh& mesh, float diameter, int32_t point_count, 
         float u = cos(rads) * 0.5 + 0.5f;
         float v = sin(rads) * 0.5 + 0.5f;
 
-        vdata.position(x_offset + x, y_offset + y, z_offset);
-        vdata.diffuse(kglt::Colour::WHITE);
-        vdata.tex_coord0(u, v);
-        vdata.tex_coord1(u, v);
-        vdata.tex_coord2(u, v);
-        vdata.tex_coord3(u, v);
-        vdata.normal(0, 0, 1);
-        vdata.move_next();
+        vdata->position(x_offset + x, y_offset + y, z_offset);
+        vdata->diffuse(kglt::Colour::WHITE);
+        vdata->tex_coord0(u, v);
+        vdata->tex_coord1(u, v);
+        vdata->tex_coord2(u, v);
+        vdata->tex_coord3(u, v);
+        vdata->normal(0, 0, 1);
+        vdata->move_next();
     }
 
-    vdata.done();
+    vdata->done();
 
     for(uint16_t i = 0; i < point_count; ++i) {
-        idata.index(i);
+        idata->index(i);
     }
-    idata.index(0);
-    idata.done();
+    idata->index(0);
+    idata->done();
 
     return smi;
 }

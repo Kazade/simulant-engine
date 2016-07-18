@@ -202,21 +202,21 @@ void GenericRenderer::set_auto_uniforms_on_shader(GPUProgramInstance* program,
 
 template<typename EnabledMethod, typename OffsetMethod>
 void send_attribute(ShaderAvailableAttributes attr,
-                    const VertexData& data,
+                    VertexData* data,
                     EnabledMethod exists_on_data_predicate,
                     OffsetMethod offset_func) {
 
     int32_t loc = (int32_t) attr;
 
-    auto get_has_attribute = std::bind(exists_on_data_predicate, &data);
+    auto get_has_attribute = std::bind(exists_on_data_predicate, data);
 
     if(get_has_attribute()) {
-        auto offset = std::bind(offset_func, &data, false)();
+        auto offset = std::bind(offset_func, data, false)();
 
         GLCheck(glEnableVertexAttribArray, loc);
 
-        auto attr_size = vertex_attribute_size(data.attribute_for_type(convert(attr)));
-        auto stride = data.stride();
+        auto attr_size = vertex_attribute_size(data->attribute_for_type(convert(attr)));
+        auto stride = data->stride();
 
         GLCheck(glVertexAttribPointer,
             loc,
@@ -239,14 +239,14 @@ void GenericRenderer::set_auto_attributes_on_shader(Renderable &buffer) {
      *  and just makes the whole thing generic. Before this was 100s of lines of boilerplate. Thank god
      *  for templates!
      */        
-    auto& data = buffer.vertex_data();
-    send_attribute(SP_ATTR_VERTEX_POSITION, buffer.vertex_data(), &VertexData::has_positions, &VertexData::position_offset);
-    send_attribute(SP_ATTR_VERTEX_DIFFUSE, buffer.vertex_data(), &VertexData::has_diffuse, &VertexData::diffuse_offset);
-    send_attribute(SP_ATTR_VERTEX_TEXCOORD0, buffer.vertex_data(), &VertexData::has_texcoord0, &VertexData::texcoord0_offset);
-    send_attribute(SP_ATTR_VERTEX_TEXCOORD1, buffer.vertex_data(), &VertexData::has_texcoord1, &VertexData::texcoord1_offset);
-    send_attribute(SP_ATTR_VERTEX_TEXCOORD2, buffer.vertex_data(), &VertexData::has_texcoord2, &VertexData::texcoord2_offset);
-    send_attribute(SP_ATTR_VERTEX_TEXCOORD3, buffer.vertex_data(), &VertexData::has_texcoord3, &VertexData::texcoord3_offset);
-    send_attribute(SP_ATTR_VERTEX_NORMAL, buffer.vertex_data(), &VertexData::has_normals, &VertexData::normal_offset);
+    VertexData* data = buffer.vertex_data.get();
+    send_attribute(SP_ATTR_VERTEX_POSITION, data, &VertexData::has_positions, &VertexData::position_offset);
+    send_attribute(SP_ATTR_VERTEX_DIFFUSE, data, &VertexData::has_diffuse, &VertexData::diffuse_offset);
+    send_attribute(SP_ATTR_VERTEX_TEXCOORD0, data, &VertexData::has_texcoord0, &VertexData::texcoord0_offset);
+    send_attribute(SP_ATTR_VERTEX_TEXCOORD1, data, &VertexData::has_texcoord1, &VertexData::texcoord1_offset);
+    send_attribute(SP_ATTR_VERTEX_TEXCOORD2, data, &VertexData::has_texcoord2, &VertexData::texcoord2_offset);
+    send_attribute(SP_ATTR_VERTEX_TEXCOORD3, data, &VertexData::has_texcoord3, &VertexData::texcoord3_offset);
+    send_attribute(SP_ATTR_VERTEX_NORMAL, data, &VertexData::has_normals, &VertexData::normal_offset);
 }
 
 void GenericRenderer::set_blending_mode(BlendType type) {
@@ -391,7 +391,7 @@ void GenericRenderer::render(CameraPtr camera, StagePtr stage, bool render_group
 }
 
 void GenericRenderer::send_geometry(Renderable *renderable) {
-    std::size_t index_count = renderable->index_data().count();
+    std::size_t index_count = renderable->index_data->count();
     if(!index_count) {
         return;
     }
@@ -428,7 +428,7 @@ void GenericRenderer::render(Renderable& buffer, CameraID camera, GPUProgramInst
         return;
     }
 
-    std::size_t index_count = buffer.index_data().count();
+    std::size_t index_count = buffer.index_data->count();
     if(!index_count) {
         return;
     }

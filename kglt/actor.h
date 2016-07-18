@@ -41,8 +41,6 @@ public:
     bool has_mesh() const { return bool(mesh_); }
     void set_mesh(MeshID mesh);
 
-    const VertexData& shared_data() const;
-
     const uint16_t subactor_count() const {
         return subactors_.size();
     }
@@ -100,6 +98,8 @@ public:
     RenderableCullingMode renderable_culling_mode() const { return culling_mode_; }
 
 private:
+    VertexData* get_shared_data() const;
+
     std::shared_ptr<Mesh> mesh_;
     std::vector<std::shared_ptr<SubActor> > subactors_;
 
@@ -137,8 +137,6 @@ public:
     void override_material_id(MaterialID material);
     void remove_material_id_override();
 
-    const VertexData& vertex_data() const { return submesh().vertex_data(); }
-    const IndexData& index_data() const { return submesh().index_data(); }
     const MeshArrangement arrangement() const { return submesh().arrangement(); }
 
     void _update_vertex_array_object() { submesh()._update_vertex_array_object(); }
@@ -170,7 +168,15 @@ public:
 
     SubActor(Actor& parent, std::shared_ptr<SubMesh> submesh);
     ~SubActor();
+
+    /* These properties are inherited by both the SubMeshInterface and RenderableInterface
+     * and both perform the same action, so we pull the SubMeshInterface ones into scope */
+    using SubMeshInterface::vertex_data;
+    using SubMeshInterface::index_data;
 private:
+    VertexData* get_vertex_data() const;
+    IndexData* get_index_data() const;
+
     Actor& parent_;
     std::shared_ptr<SubMesh> submesh_;
     MaterialPtr material_;
@@ -179,6 +185,7 @@ private:
     const SubMesh& submesh() const;
 
     sig::connection submesh_material_changed_connection_;
+
 };
 
 }

@@ -9,9 +9,13 @@
 class VertexDataTest : public KGLTTestCase {
 public:
     void test_offsets() {
-        kglt::VertexData::ptr data = kglt::VertexData::create(
-            kglt::VERTEX_ATTRIBUTE_POSITION_3F | kglt::VERTEX_ATTRIBUTE_NORMAL_3F | kglt::VERTEX_ATTRIBUTE_TEXCOORD0_2F
-        );
+        kglt::VertexSpecification spec = {
+            kglt::VERTEX_ATTRIBUTE_3F,
+            kglt::VERTEX_ATTRIBUTE_3F,
+            kglt::VERTEX_ATTRIBUTE_2F
+        };
+
+        kglt::VertexData::ptr data = kglt::VertexData::create(spec);
 
         assert_equal(0, (int32_t) data->position_offset());
         assert_equal(sizeof(float) * 3, data->normal_offset());
@@ -19,11 +23,10 @@ public:
     }
 
     void test_basic_usage() {
-        kglt::VertexData data(
-            kglt::VERTEX_ATTRIBUTE_POSITION_3F |
-            kglt::VERTEX_ATTRIBUTE_TEXCOORD0_2F |
-            kglt::VERTEX_ATTRIBUTE_DIFFUSE_4F
-        );
+        kglt::VertexSpecification spec = kglt::VertexSpecification::POSITION_AND_DIFFUSE;
+        spec.texcoord0_attribute = VERTEX_ATTRIBUTE_2F;
+
+        kglt::VertexData data(spec);
 
         assert_equal(0, data.data_size());
 

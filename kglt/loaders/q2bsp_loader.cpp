@@ -428,7 +428,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     MeshID mid = stage->new_mesh_with_alias(
         "world_geometry",
-        VERTEX_ATTRIBUTE_POSITION_3F | VERTEX_ATTRIBUTE_NORMAL_3F | VERTEX_ATTRIBUTE_DIFFUSE_4F | VERTEX_ATTRIBUTE_TEXCOORD0_2F | VERTEX_ATTRIBUTE_TEXCOORD1_2F,
+        VertexSpecification::DEFAULT,
         GARBAGE_COLLECT_NEVER
     );
     auto mesh = stage->mesh(mid);
@@ -599,7 +599,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             for(uint8_t j = 0; j < 3; ++j) {
                 if(container::contains(index_lookup, tri_idx[j])) {
                     //We've already processed this vertex
-                    sm->index_data().index(index_lookup[tri_idx[j]]);
+                    sm->index_data->index(index_lookup[tri_idx[j]]);
                     continue;
                 }
 
@@ -623,26 +623,26 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
                 float w = float(texture_dimensions[f.texture_info].first);
                 float h = float(texture_dimensions[f.texture_info].second);
 
-                mesh->shared_data().position(pos);
-                mesh->shared_data().normal(normal);
-                mesh->shared_data().diffuse(kglt::Colour::WHITE);
-                mesh->shared_data().tex_coord0(u / w, v / h);
-                mesh->shared_data().tex_coord1(u / w, v / h);
+                mesh->shared_data->position(pos);
+                mesh->shared_data->normal(normal);
+                mesh->shared_data->diffuse(kglt::Colour::WHITE);
+                mesh->shared_data->tex_coord0(u / w, v / h);
+                mesh->shared_data->tex_coord1(u / w, v / h);
 
                 StagedLightmapCoord coord;
-                coord.cursor_position = mesh->shared_data().cursor_position();
+                coord.cursor_position = mesh->shared_data->cursor_position();
                 coord.face_index = face_index;
                 coord.u = u;
                 coord.v = v;
 
                 lightmap_coords_to_process.push_back(coord);
 
-                mesh->shared_data().move_next();
+                mesh->shared_data->move_next();
 
-                sm->index_data().index(mesh->shared_data().count() - 1);
+                sm->index_data->index(mesh->shared_data->count() - 1);
 
                 //Cache this new vertex in the lookup
-                index_lookup[tri_idx[j]] = mesh->shared_data().count() - 1;
+                index_lookup[tri_idx[j]] = mesh->shared_data->count() - 1;
             }
         }
 
@@ -676,7 +676,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         );
     }
 
-    auto pos = mesh->shared_data().cursor_position();
+    auto pos = mesh->shared_data->cursor_position();
     for(StagedLightmapCoord& staged_coord: lightmap_coords_to_process) {
         auto& lightmap = lightmaps[staged_coord.face_index];
         float u = staged_coord.u;
@@ -693,11 +693,11 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         u *= float(lightmap.width) / LightmapBuffer::LIGHTMAP_SIZE;
         v *= float(lightmap.height) / LightmapBuffer::LIGHTMAP_SIZE;
 
-        mesh->shared_data().move_to(staged_coord.cursor_position);
+        mesh->shared_data->move_to(staged_coord.cursor_position);
         auto lightmap_coords = lightmap_buffer.transform_uv(staged_coord.face_index, u, v);
-        mesh->shared_data().tex_coord1(lightmap_coords.first, lightmap_coords.second);
+        mesh->shared_data->tex_coord1(lightmap_coords.first, lightmap_coords.second);
     }
-    mesh->shared_data().move_to(pos);
+    mesh->shared_data->move_to(pos);
 
     /* Now upload the lightmap texture */
     {
@@ -709,14 +709,14 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     }
 
     mesh->stash(lightmap_texture, "lightmap_texture_id");
-    mesh->shared_data().done();
+    mesh->shared_data->done();
     mesh->each([&](SubMesh* submesh) {
         //Delete empty submeshes
-        /*if(!submesh->index_data().count()) {
+        /*if(!submesh->index_data->count()) {
             mesh->delete_submesh(submesh->id());
             return;
         }*/
-        submesh->index_data().done();
+        submesh->index_data->done();
     });
 
     //Finally, create an actor from the world mesh

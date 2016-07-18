@@ -192,9 +192,6 @@ public:
     virtual MeshID instanced_mesh_id() const { return MeshID(); } //We don't support instancing
     virtual SubMeshID instanced_submesh_id() const { return SubMeshID(0); } //We don't support instancing
 
-    const VertexData& vertex_data() const { return vertex_data_; }
-    const IndexData& index_data() const { return index_data_; }
-
     void deactivate_emitters() { for(auto emitter: emitters_) { emitter->deactivate(); }; }
     void activate_emitters() { for(auto emitter: emitters_) { emitter->activate(); }; }
 
@@ -203,7 +200,16 @@ public:
 
     bool has_repeating_emitters() const;
     bool has_active_emitters() const;
+
 private:
+    VertexData* get_vertex_data() const {
+        return vertex_data_.get();
+    }
+
+    IndexData* get_index_data() const {
+        return index_data_.get();
+    }
+
     unicode name_;
     int quota_ = 10;
     float particle_width_ = 100.0;
@@ -218,8 +224,8 @@ private:
 
     void do_update(double dt);
 
-    VertexData vertex_data_;
-    IndexData index_data_;
+    std::unique_ptr<VertexData> vertex_data_;
+    std::unique_ptr<IndexData> index_data_;
 
     VertexArrayObject vao_;
 

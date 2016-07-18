@@ -73,21 +73,21 @@ const ProtectedPtr<Mesh> ResourceManagerImpl::mesh(MeshID m) const {
     return MeshManager::manager_get(m);
 }
 
-MeshID ResourceManagerImpl::new_mesh(uint64_t vertex_attribute_mask, GarbageCollectMethod garbage_collect) {
-    MeshID result = MeshManager::manager_new(garbage_collect, this, vertex_attribute_mask);
+MeshID ResourceManagerImpl::new_mesh(VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect) {
+    MeshID result = MeshManager::manager_new(garbage_collect, this, vertex_specification);
     return result;
 }
 
 MeshID ResourceManagerImpl::new_mesh_from_file(const unicode& path, GarbageCollectMethod garbage_collect) {
     //Load the material
-    kglt::MeshID mesh_id = new_mesh(garbage_collect);
+    kglt::MeshID mesh_id = new_mesh(VertexSpecification::POSITION_ONLY, garbage_collect);
     window->loader_for(path.encode())->into(mesh(mesh_id));
     MeshManager::mark_as_uncollected(mesh_id);
     return mesh_id;
 }
 
 MeshID ResourceManagerImpl::new_mesh_from_tmx_file(const unicode& tmx_file, const unicode& layer_name, float tile_render_size, GarbageCollectMethod garbage_collect) {
-    kglt::MeshID mesh_id = new_mesh(garbage_collect);
+    kglt::MeshID mesh_id = new_mesh(VertexSpecification::DEFAULT, garbage_collect);
     window->loader_for(tmx_file.encode())->into(mesh(mesh_id), {
         {"layer", layer_name},
         {"render_size", tile_render_size}
@@ -97,7 +97,7 @@ MeshID ResourceManagerImpl::new_mesh_from_tmx_file(const unicode& tmx_file, cons
 }
 
 MeshID ResourceManagerImpl::new_mesh_from_heightmap(const unicode& image_file, float spacing, float min_height, float max_height, const HeightmapDiffuseGenerator &generator, GarbageCollectMethod garbage_collect) {
-    kglt::MeshID mesh_id = new_mesh(garbage_collect);
+    kglt::MeshID mesh_id = new_mesh(VertexSpecification::DEFAULT, garbage_collect);
     window->loader_for("heightmap_loader", image_file)->into(mesh(mesh_id), {
         { "spacing", spacing},
         { "min_height", min_height},
@@ -110,11 +110,7 @@ MeshID ResourceManagerImpl::new_mesh_from_heightmap(const unicode& image_file, f
 
 MeshID ResourceManagerImpl::new_mesh_as_cube(float width, GarbageCollectMethod garbage_collect) {
     MeshID m = new_mesh(
-        VERTEX_ATTRIBUTE_POSITION_3F |
-        VERTEX_ATTRIBUTE_NORMAL_3F |
-        VERTEX_ATTRIBUTE_TEXCOORD0_2F |
-        VERTEX_ATTRIBUTE_TEXCOORD1_2F |
-        VERTEX_ATTRIBUTE_DIFFUSE_4F,
+        VertexSpecification::DEFAULT,
         garbage_collect
     );
     kglt::procedural::mesh::cube(mesh(m), width);
@@ -123,81 +119,81 @@ MeshID ResourceManagerImpl::new_mesh_as_cube(float width, GarbageCollectMethod g
 }
 
 MeshID ResourceManagerImpl::new_mesh_as_box(float width, float height, float depth, GarbageCollectMethod garbage_collect) {
-    MeshID m = new_mesh(garbage_collect);
+    MeshID m = new_mesh(VertexSpecification::DEFAULT, garbage_collect);
     kglt::procedural::mesh::box(mesh(m), width, height, depth);
     MeshManager::mark_as_uncollected(m);
     return m;
 }
 
 MeshID ResourceManagerImpl::new_mesh_as_sphere(float diameter, GarbageCollectMethod garbage_collect) {
-    MeshID m = new_mesh(garbage_collect);
+    MeshID m = new_mesh(VertexSpecification::DEFAULT, garbage_collect);
     kglt::procedural::mesh::sphere(mesh(m), diameter);
     MeshManager::mark_as_uncollected(m);
     return m;
 }
 
 MeshID ResourceManagerImpl::new_mesh_as_rectangle(float width, float height, const Vec2& offset, MaterialID material, GarbageCollectMethod garbage_collect) {
-    MeshID m = new_mesh(garbage_collect);
+    MeshID m = new_mesh(VertexSpecification::DEFAULT, garbage_collect);
     kglt::procedural::mesh::rectangle(mesh(m), width, height, offset.x, offset.y, 0, false, material);
     MeshManager::mark_as_uncollected(m);
     return m;
 }
 
 MeshID ResourceManagerImpl::new_mesh_as_cylinder(float diameter, float length, int segments, int stacks, GarbageCollectMethod garbage_collect) {
-    MeshID m = new_mesh(garbage_collect);
+    MeshID m = new_mesh(VertexSpecification::DEFAULT, garbage_collect);
     kglt::procedural::mesh::cylinder(mesh(m), diameter, length, segments, stacks);
     MeshManager::mark_as_uncollected(m);
     return m;
 }
 
 MeshID ResourceManagerImpl::new_mesh_as_capsule(float diameter, float length, int segments, int stacks, GarbageCollectMethod garbage_collect) {
-    MeshID m = new_mesh(garbage_collect);
+    MeshID m = new_mesh(VertexSpecification::DEFAULT, garbage_collect);
     kglt::procedural::mesh::capsule(mesh(m), diameter, length, segments, 1, stacks);
     MeshManager::mark_as_uncollected(m);
     return m;
 }
 
-MeshID ResourceManagerImpl::new_mesh_from_vertices(uint64_t vertex_attribute_mask, const std::vector<Vec2> &vertices, MeshArrangement arrangement, GarbageCollectMethod garbage_collect) {
-    MeshID m = new_mesh(vertex_attribute_mask, garbage_collect);
+MeshID ResourceManagerImpl::new_mesh_from_vertices(VertexSpecification vertex_specification, const std::vector<Vec2> &vertices, MeshArrangement arrangement, GarbageCollectMethod garbage_collect) {
+    MeshID m = new_mesh(vertex_specification, garbage_collect);
 
     auto new_mesh = mesh(m);
     auto smi = new_mesh->new_submesh(arrangement);
     int i = 0;
     for(auto v: vertices) {
-        new_mesh->shared_data().position(v);
-        new_mesh->shared_data().move_next();
-        new_mesh->submesh(smi)->index_data().index(i++);
+        new_mesh->shared_data->position(v);
+        new_mesh->shared_data->move_next();
+        new_mesh->submesh(smi)->index_data->index(i++);
     }
 
-    new_mesh->shared_data().done();
-    new_mesh->submesh(smi)->index_data().done();
+    new_mesh->shared_data->done();
+    new_mesh->submesh(smi)->index_data->done();
 
     MeshManager::mark_as_uncollected(m);
 
     return m;
 }
 
-MeshID ResourceManagerImpl::new_mesh_from_vertices(uint64_t vertex_attribute_mask, const std::vector<Vec3> &vertices, MeshArrangement arrangement, GarbageCollectMethod garbage_collect) {
+MeshID ResourceManagerImpl::new_mesh_from_vertices(VertexSpecification vertex_specification, const std::vector<Vec3> &vertices, MeshArrangement arrangement, GarbageCollectMethod garbage_collect) {
     //FIXME: THis is literally a copy/paste of the function above, we can templatize this
-    MeshID m = new_mesh(vertex_attribute_mask, garbage_collect);
+    MeshID m = new_mesh(vertex_specification, garbage_collect);
 
     auto new_mesh = mesh(m);
     auto smi = new_mesh->new_submesh(arrangement);
     int i = 0;
     for(auto v: vertices) {
-        new_mesh->shared_data().position(v);
-        new_mesh->shared_data().move_next();
-        new_mesh->submesh(smi)->index_data().index(i++);
+        new_mesh->shared_data->position(v);
+        new_mesh->shared_data->move_next();
+        new_mesh->submesh(smi)->index_data->index(i++);
     }
 
-    new_mesh->shared_data().done();
-    new_mesh->submesh(smi)->index_data().done();
+    new_mesh->shared_data->done();
+    new_mesh->submesh(smi)->index_data->done();
     MeshManager::mark_as_uncollected(m);
     return m;
 }
 
-MeshID ResourceManagerImpl::new_mesh_with_alias(const unicode& alias, uint64_t vertex_attribute_mask, GarbageCollectMethod garbage_collect) {
-    MeshID m = new_mesh(vertex_attribute_mask, garbage_collect);
+MeshID ResourceManagerImpl::new_mesh_with_alias(const unicode& alias, VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect) {
+    MeshID m = new_mesh(vertex_specification, garbage_collect);
     try {
         MeshManager::manager_store_alias(alias, m);
     } catch(...) {

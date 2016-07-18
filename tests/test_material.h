@@ -21,7 +21,7 @@ public:
 
     void test_material_applies_to_mesh() {
         kglt::MaterialID mid = window->new_material();
-        kglt::MeshID mesh_id = window->new_mesh(VERTEX_ATTRIBUTE_POSITION_3F);
+        kglt::MeshID mesh_id = window->new_mesh(kglt::VertexSpecification::POSITION_ONLY);
         auto mesh = window->mesh(mesh_id);
         kglt::SubMeshID idx = mesh->new_submesh_with_material(mid);
         this->assert_equal(mid, mesh->submesh(idx)->material_id());

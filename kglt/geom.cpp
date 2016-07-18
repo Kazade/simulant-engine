@@ -13,6 +13,10 @@ Geom::Geom(GeomID id, Stage* stage, MeshID mesh, const Vec3 &position, const Qua
     set_mesh(mesh);
 }
 
+VertexData* Geom::get_shared_data() const {
+    return mesh_->shared_data.get();
+}
+
 void Geom::set_mesh(MeshID mesh) {
     //Increment the ref-count on this mesh
     mesh_ = stage->mesh(mesh).__object;
@@ -38,8 +42,5 @@ void Geom::ask_owner_for_destruction() {
     stage->delete_geom(id());
 }
 
-const VertexData& Geom::shared_data() const {
-    return mesh_->shared_data();
-}
 
 }

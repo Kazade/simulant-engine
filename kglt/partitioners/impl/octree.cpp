@@ -589,7 +589,7 @@ std::shared_ptr<OctreeNode> Octree::get_or_create_node(BoundableEntity* boundabl
 
 std::shared_ptr<OctreeNode> Octree::create_node(int32_t level_number, Vec3 centre, NodeDiameter diameter) {
     if(!debug_mesh_) {
-        debug_mesh_ = stage_->new_mesh(false);
+        debug_mesh_ = stage_->new_mesh(VertexSpecification(), GARBAGE_COLLECT_NEVER);
     }
 
     auto hash = generate_vector_hash(centre);

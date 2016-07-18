@@ -32,8 +32,8 @@ void Actor::remove_material_id_override() {
     }
 }
 
-const VertexData& Actor::shared_data() const {
-    return mesh_->shared_data();
+VertexData* Actor::get_shared_data() const {
+    return mesh_->shared_data.get();
 }
 
 void Actor::clear_subactors() {
@@ -203,6 +203,15 @@ void Actor::each(std::function<void (uint32_t, SubActor*)> callback) {
     for(auto subactor: subactors_) {
         callback(i++, subactor.get());
     }
+}
+
+
+VertexData* SubActor::get_vertex_data() const {
+    return submesh().vertex_data.get();
+}
+
+IndexData* SubActor::get_index_data() const {
+    return submesh().index_data.get();
 }
 
 }

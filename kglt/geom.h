@@ -54,9 +54,10 @@ public:
         }
     }
 
-    const VertexData& shared_data() const;
     RenderPriority render_priority() const { return render_priority_; }
 private:
+    VertexData* get_shared_data() const;
+
     std::shared_ptr<Mesh> mesh_;
     RenderPriority render_priority_;
 

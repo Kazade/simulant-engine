@@ -7,47 +7,46 @@
 
 namespace kglt {
 
+const VertexSpecification VertexSpecification::DEFAULT = {
+    VERTEX_ATTRIBUTE_3F,
+    VERTEX_ATTRIBUTE_3F,
+    VERTEX_ATTRIBUTE_2F,
+    VERTEX_ATTRIBUTE_2F,
+    VERTEX_ATTRIBUTE_NONE,
+    VERTEX_ATTRIBUTE_NONE,
+    VERTEX_ATTRIBUTE_4F,
+    VERTEX_ATTRIBUTE_NONE
+};
+
+const VertexSpecification VertexSpecification::POSITION_ONLY = {
+    VERTEX_ATTRIBUTE_3F
+};
+
+const VertexSpecification VertexSpecification::POSITION_AND_DIFFUSE = {
+    VERTEX_ATTRIBUTE_3F,
+    VERTEX_ATTRIBUTE_NONE,
+    VERTEX_ATTRIBUTE_NONE,
+    VERTEX_ATTRIBUTE_NONE,
+    VERTEX_ATTRIBUTE_NONE,
+    VERTEX_ATTRIBUTE_NONE,
+    VERTEX_ATTRIBUTE_4F
+};
+
 uint32_t vertex_attribute_size(VertexAttribute attr) {
     switch(attr) {
         case VERTEX_ATTRIBUTE_NONE: return 0;
-
-        case VERTEX_ATTRIBUTE_POSITION_2F:
-        case VERTEX_ATTRIBUTE_TEXCOORD0_2F:
-        case VERTEX_ATTRIBUTE_TEXCOORD1_2F:
-        case VERTEX_ATTRIBUTE_TEXCOORD2_2F:
-        case VERTEX_ATTRIBUTE_TEXCOORD3_2F:
-             return (sizeof(float) * 2);
-        case VERTEX_ATTRIBUTE_POSITION_3F:
-        case VERTEX_ATTRIBUTE_NORMAL_3F:
-        case VERTEX_ATTRIBUTE_TEXCOORD0_3F:
-        case VERTEX_ATTRIBUTE_TEXCOORD1_3F:
-        case VERTEX_ATTRIBUTE_TEXCOORD2_3F:
-        case VERTEX_ATTRIBUTE_TEXCOORD3_3F:
-        case VERTEX_ATTRIBUTE_DIFFUSE_3F:
-        case VERTEX_ATTRIBUTE_SPECULAR_3F:
-            return (sizeof(float) * 3);
-        case VERTEX_ATTRIBUTE_POSITION_4F:
-        case VERTEX_ATTRIBUTE_NORMAL_4F:
-        case VERTEX_ATTRIBUTE_TEXCOORD0_4F:
-        case VERTEX_ATTRIBUTE_TEXCOORD1_4F:
-        case VERTEX_ATTRIBUTE_TEXCOORD2_4F:
-        case VERTEX_ATTRIBUTE_TEXCOORD3_4F:
-        case VERTEX_ATTRIBUTE_DIFFUSE_4F:
-        case VERTEX_ATTRIBUTE_SPECULAR_4F:
-            return (sizeof(float) * 4);
+        case VERTEX_ATTRIBUTE_2F: return sizeof(float) * 2;
+        case VERTEX_ATTRIBUTE_3F:  return sizeof(float) * 3;
+        case VERTEX_ATTRIBUTE_4F: return sizeof(float) * 4;
         default:
             assert(0 && "Invalid attribute specified");
     }
 }
 
-VertexData::VertexData():
-    cursor_position_(0) {
-}
-
-VertexData::VertexData(uint64_t attribute_mask):
+VertexData::VertexData(VertexSpecification vertex_specification):
     cursor_position_(0) {
 
-    reset(attribute_mask);
+    reset(vertex_specification);
 }
 
 void VertexData::clear() {
@@ -72,7 +71,7 @@ void VertexData::position_checks() {
 void VertexData::position(float x, float y, float z) {
     position_checks();
 
-    assert(position_attribute_ == VERTEX_ATTRIBUTE_POSITION_3F);
+    assert(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_3F);
     Vec3* out = (Vec3*) &data_[cursor_position_];
     *out = Vec3(x, y, z);
 }
@@ -80,7 +79,7 @@ void VertexData::position(float x, float y, float z) {
 void VertexData::position(float x, float y) {
     position_checks();
 
-    assert(position_attribute_ == VERTEX_ATTRIBUTE_POSITION_2F);
+    assert(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_2F);
     Vec2* out = (Vec2*) &data_[cursor_position_];
     *out = Vec2(x, y);
 }
@@ -95,27 +94,27 @@ void VertexData::position(const kmVec3& pos) {
 
 template<>
 Vec2 VertexData::position_at<Vec2>(uint32_t idx) {
-    assert(position_attribute_ == VERTEX_ATTRIBUTE_POSITION_2F);
+    assert(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_2F);
     Vec2 out = *((Vec2*) &data_[idx * stride()]);
     return out;
 }
 
 template<>
 Vec3 VertexData::position_at<Vec3>(uint32_t idx) {
-    assert(position_attribute_ == VERTEX_ATTRIBUTE_POSITION_3F);
+    assert(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_3F);
     Vec3 out = *((Vec3*) &data_[idx * stride()]);
     return out;
 }
 
 template<>
 Vec4 VertexData::position_at<Vec4>(uint32_t idx) {
-    assert(position_attribute_ == VERTEX_ATTRIBUTE_POSITION_4F);
+    assert(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_4F);
     Vec4 out = *((Vec4*) &data_[idx * stride()]);
     return out;
 }
 
 void VertexData::normal(float x, float y, float z) {
-    assert(normal_attribute_ == VERTEX_ATTRIBUTE_NORMAL_3F);
+    assert(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_3F);
     Vec3* out = (Vec3*) &data_[cursor_position_ + normal_offset()];
     *out = Vec3(x, y, z);
 }
@@ -183,21 +182,21 @@ void VertexData::tex_coord0(float u, float v, float w, float x) {
 
 template<>
 Vec2 VertexData::texcoord0_at<Vec2>(uint32_t idx) {
-    assert(texcoord0_attribute_ == VERTEX_ATTRIBUTE_TEXCOORD0_2F);
+    assert(vertex_specification_.texcoord0_attribute == VERTEX_ATTRIBUTE_2F);
     Vec2 out = *((Vec2*) &data_[(idx * stride()) + texcoord0_offset()]);
     return out;
 }
 
 template<>
 Vec3 VertexData::texcoord0_at<Vec3>(uint32_t idx) {
-    assert(texcoord0_attribute_ == VERTEX_ATTRIBUTE_TEXCOORD0_3F);
+    assert(vertex_specification_.texcoord0_attribute == VERTEX_ATTRIBUTE_3F);
     Vec3 out = *((Vec3*) &data_[(idx * stride()) + texcoord0_offset()]);
     return out;
 }
 
 template<>
 Vec4 VertexData::texcoord0_at<Vec4>(uint32_t idx) {
-    assert(texcoord0_attribute_ == VERTEX_ATTRIBUTE_TEXCOORD0_4F);
+    assert(vertex_specification_.texcoord0_attribute == VERTEX_ATTRIBUTE_4F);
     Vec4 out = *((Vec4*) &data_[(idx * stride()) + texcoord0_offset()]);
     return out;
 }
@@ -239,7 +238,7 @@ void VertexData::tex_coord3(float u, float v, float w, float x) {
 }
 
 void VertexData::diffuse(float r, float g, float b, float a) {
-    assert(diffuse_attribute_ == VERTEX_ATTRIBUTE_DIFFUSE_4F);
+    assert(vertex_specification_.diffuse_attribute == VERTEX_ATTRIBUTE_4F);
     Vec4* out = (Vec4*) &data_[cursor_position_ + diffuse_offset()];
     *out = Vec4(r, g, b, a);
 }
@@ -282,50 +281,27 @@ uint16_t VertexData::move_next() {
     return cursor_position_;
 }
 
-void VertexData::reset(uint64_t attribute_mask) {
-    attribute_mask_ = attribute_mask;
+void VertexData::reset(VertexSpecification vertex_specification) {
     clear();
+
+    vertex_specification_ = vertex_specification;
     recalc_attributes();
 }
 
 void VertexData::recalc_attributes() {
-    position_attribute_ = VERTEX_ATTRIBUTE_NONE;
-    normal_attribute_ = VERTEX_ATTRIBUTE_NONE;
-    texcoord0_attribute_ = VERTEX_ATTRIBUTE_NONE;
-    texcoord1_attribute_ = VERTEX_ATTRIBUTE_NONE;
-    texcoord2_attribute_ = VERTEX_ATTRIBUTE_NONE;
-    texcoord3_attribute_ = VERTEX_ATTRIBUTE_NONE;
-    diffuse_attribute_ = VERTEX_ATTRIBUTE_NONE;
-    specular_attribute_ = VERTEX_ATTRIBUTE_NONE;
 
-    auto search_attribute = [this](std::set<VertexAttribute> attrs, VertexAttribute& target) {
-        for(auto& attr: attrs) {
-            if((attribute_mask_ & attr) == attr) {
-                target = attr;
-            }
-        }
-    };
-
-    search_attribute(POSITION_ATTRIBUTES, position_attribute_);
-    search_attribute(NORMAL_ATTRIBUTES, normal_attribute_);
-    search_attribute(TEXCOORD0_ATTRIBUTES, texcoord0_attribute_);
-    search_attribute(TEXCOORD1_ATTRIBUTES, texcoord1_attribute_);
-    search_attribute(TEXCOORD2_ATTRIBUTES, texcoord2_attribute_);
-    search_attribute(TEXCOORD3_ATTRIBUTES, texcoord3_attribute_);
-    search_attribute(DIFFUSE_ATTRIBUTES, diffuse_attribute_);
-    search_attribute(SPECULAR_ATTRIBUTES, specular_attribute_);
 }
 
 VertexAttribute VertexData::attribute_for_type(VertexAttributeType type) const {
     switch(type) {
-        case VERTEX_ATTRIBUTE_TYPE_POSITION: return position_attribute_;
-        case VERTEX_ATTRIBUTE_TYPE_NORMAL: return normal_attribute_;
-        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD0: return texcoord0_attribute_;
-        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD1: return texcoord1_attribute_;
-        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD2: return texcoord2_attribute_;
-        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD3: return texcoord3_attribute_;
-        case VERTEX_ATTRIBUTE_TYPE_DIFFUSE: return diffuse_attribute_;
-        case VERTEX_ATTRIBUTE_TYPE_SPECULAR: return specular_attribute_;
+        case VERTEX_ATTRIBUTE_TYPE_POSITION: return vertex_specification_.position_attribute;
+        case VERTEX_ATTRIBUTE_TYPE_NORMAL: return vertex_specification_.normal_attribute;
+        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD0: return vertex_specification_.texcoord0_attribute;
+        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD1: return vertex_specification_.texcoord1_attribute;
+        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD2: return vertex_specification_.texcoord2_attribute;
+        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD3: return vertex_specification_.texcoord3_attribute;
+        case VERTEX_ATTRIBUTE_TYPE_DIFFUSE: return vertex_specification_.diffuse_attribute;
+        case VERTEX_ATTRIBUTE_TYPE_SPECULAR: return vertex_specification_.specular_attribute;
     default:
         throw std::logic_error("Invalid vertex attribute type");
     }

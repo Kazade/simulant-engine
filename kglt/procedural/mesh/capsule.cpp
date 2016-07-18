@@ -13,16 +13,13 @@ SubMeshID capsule(ProtectedPtr<Mesh> mesh, float diameter, float height,
     SubMeshID smi = mesh->new_submesh(
         MESH_ARRANGEMENT_TRIANGLES,
         VERTEX_SHARING_MODE_INDEPENDENT,
-        VERTEX_ATTRIBUTE_POSITION_3F |
-        VERTEX_ATTRIBUTE_NORMAL_3F |
-        VERTEX_ATTRIBUTE_TEXCOORD0_2F |
-        VERTEX_ATTRIBUTE_TEXCOORD1_2F |
-        VERTEX_ATTRIBUTE_DIFFUSE_4F
+        VertexSpecification::DEFAULT
     );
+
     kglt::SubMesh& submesh = *mesh->submesh(smi);
 
-    kglt::VertexData& vdata = submesh.vertex_data();
-    kglt::IndexData& idata = submesh.index_data();
+    auto& vdata = submesh.vertex_data;
+    auto& idata = submesh.index_data;
 
     float delta_ring_angle = ((kmPI / 2.0) / ring_count);
     float delta_seg_angle = ((kmPI * 2.0) / segment_count);
@@ -55,20 +52,20 @@ SubMeshID capsule(ProtectedPtr<Mesh> mesh, float diameter, float height,
             );
 
             // Add one vertex to the strip which makes up the sphere
-            vdata.position(new_point);
-            vdata.tex_coord0(new_tex);
-            vdata.tex_coord1(new_tex);
-            vdata.normal(new_normal);
-            vdata.diffuse(kglt::Colour::WHITE);
-            vdata.move_next();
+            vdata->position(new_point);
+            vdata->tex_coord0(new_tex);
+            vdata->tex_coord1(new_tex);
+            vdata->normal(new_normal);
+            vdata->diffuse(kglt::Colour::WHITE);
+            vdata->move_next();
 
             // each vertex (except the last) has six indices pointing to it
-            idata.index(offset + segment_count + 1);
-            idata.index(offset + segment_count);
-            idata.index(offset);
-            idata.index(offset + segment_count + 1);
-            idata.index(offset);
-            idata.index(offset + 1);
+            idata->index(offset + segment_count + 1);
+            idata->index(offset + segment_count);
+            idata->index(offset);
+            idata->index(offset + segment_count + 1);
+            idata->index(offset);
+            idata->index(offset + 1);
 
             offset ++;
         } // end for seg
@@ -100,19 +97,19 @@ SubMeshID capsule(ProtectedPtr<Mesh> mesh, float diameter, float height,
                 i / (float)vertical_segment_count * cylinder_ratio + sphere_ratio
             );
 
-            vdata.position(new_point);
-            vdata.tex_coord0(new_tex);
-            vdata.tex_coord1(new_tex);
-            vdata.normal(new_normal);
-            vdata.diffuse(kglt::Colour::WHITE);
-            vdata.move_next();
+            vdata->position(new_point);
+            vdata->tex_coord0(new_tex);
+            vdata->tex_coord1(new_tex);
+            vdata->normal(new_normal);
+            vdata->diffuse(kglt::Colour::WHITE);
+            vdata->move_next();
 
-            idata.index(offset + segment_count + 1);
-            idata.index(offset + segment_count);
-            idata.index(offset);
-            idata.index(offset + segment_count + 1);
-            idata.index(offset);
-            idata.index(offset + 1);
+            idata->index(offset + segment_count + 1);
+            idata->index(offset + segment_count);
+            idata->index(offset);
+            idata->index(offset + segment_count + 1);
+            idata->index(offset);
+            idata->index(offset + 1);
 
             offset ++;
         }
@@ -145,28 +142,28 @@ SubMeshID capsule(ProtectedPtr<Mesh> mesh, float diameter, float height,
                (float) ring / (float) ring_count * sphere_ratio + cylinder_ratio + sphere_ratio
             );
 
-            vdata.position(new_point);
-            vdata.tex_coord0(new_tex);
-            vdata.tex_coord1(new_tex);
-            vdata.normal(new_normal);
-            vdata.diffuse(kglt::Colour::WHITE);
-            vdata.move_next();
+            vdata->position(new_point);
+            vdata->tex_coord0(new_tex);
+            vdata->tex_coord1(new_tex);
+            vdata->normal(new_normal);
+            vdata->diffuse(kglt::Colour::WHITE);
+            vdata->move_next();
 
             if (ring != ring_count) {
                 // each vertex (except the last) has six indices pointing to it
-                idata.index(offset + segment_count + 1);
-                idata.index(offset + segment_count);
-                idata.index(offset);
-                idata.index(offset + segment_count + 1);
-                idata.index(offset);
-                idata.index(offset + 1);
+                idata->index(offset + segment_count + 1);
+                idata->index(offset + segment_count);
+                idata->index(offset);
+                idata->index(offset + segment_count + 1);
+                idata->index(offset);
+                idata->index(offset + 1);
             }
             offset++;
         } // end for seg
     } // end for ring
 
-    idata.done();
-    vdata.done();
+    idata->done();
+    vdata->done();
 
     return smi;
 }

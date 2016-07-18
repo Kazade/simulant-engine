@@ -8,7 +8,9 @@ ParticleSystem::ParticleSystem(ParticleSystemID id, Stage* stage):
     generic::Identifiable<ParticleSystemID>(id),
     ParentSetterMixin<MoveableObject>(stage),
     Source(stage),
-    vao_(MODIFY_REPEATEDLY_USED_FOR_RENDERING, MODIFY_REPEATEDLY_USED_FOR_RENDERING){
+    vertex_data_(new VertexData(VertexSpecification::POSITION_AND_DIFFUSE)),
+    index_data_(new IndexData()),
+    vao_(MODIFY_REPEATEDLY_USED_FOR_RENDERING, MODIFY_REPEATEDLY_USED_FOR_RENDERING) {
 
     set_material_id(stage->clone_default_material());       
 }
@@ -84,12 +86,12 @@ const AABB ParticleSystem::aabb() const {
 }
 
 void ParticleSystem::_update_vertex_array_object() {
-    if(!index_data_.count()) {
+    if(!index_data_->count()) {
         return;
     }
 
-    vao_.vertex_buffer_update(vertex_data().data_size(), vertex_data_.data());
-    vao_.index_buffer_update(index_data().count() * sizeof(uint16_t), index_data_._raw_data());
+    vao_.vertex_buffer_update(vertex_data->data_size(), vertex_data->data());
+    vao_.index_buffer_update(index_data->count() * sizeof(uint16_t), index_data->_raw_data());
 }
 
 void ParticleSystem::_bind_vertex_array_object() {
@@ -192,21 +194,21 @@ void ParticleSystem::do_update(double dt) {
         }
     }
 
-    vertex_data_.move_to_start();
-    vertex_data_.clear();
+    vertex_data_->move_to_start();
+    vertex_data_->clear();
     for(auto particle: particles_) {
-        vertex_data_.position(particle.position);
-        vertex_data_.diffuse(particle.colour);
-        vertex_data_.move_next();
+        vertex_data_->position(particle.position);
+        vertex_data_->diffuse(particle.colour);
+        vertex_data_->move_next();
     }
-    vertex_data_.done();
+    vertex_data_->done();
 
 
-    index_data_.clear();
-    for(uint16_t i = 0; i < vertex_data().count(); ++i) {
-        index_data_.index(i);
+    index_data_->clear();
+    for(uint16_t i = 0; i < vertex_data->count(); ++i) {
+        index_data_->index(i);
     }
-    index_data_.done();
+    index_data_->done();
 
 }
 

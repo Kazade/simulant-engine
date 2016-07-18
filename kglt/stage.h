@@ -140,8 +140,8 @@ public:
      */
 
     //Mesh functions
-    virtual MeshID new_mesh(uint64_t vertex_attribute_mask, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
-        return window->new_mesh(vertex_attribute_mask, garbage_collect);
+    virtual MeshID new_mesh(VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
+        return window->new_mesh(vertex_specification, garbage_collect);
     }
 
     virtual MeshID new_mesh_from_file(const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
@@ -182,16 +182,16 @@ public:
         return window->new_mesh_as_capsule(diameter, length, segments, stacks, garbage_collect);
     }
 
-    MeshID new_mesh_from_vertices(uint64_t vertex_attribute_mask, const std::vector<Vec2> &vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
-        return window->new_mesh_from_vertices(vertex_attribute_mask, vertices, arrangement, garbage_collect);
+    MeshID new_mesh_from_vertices(VertexSpecification vertex_specification, const std::vector<Vec2> &vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
+        return window->new_mesh_from_vertices(vertex_specification, vertices, arrangement, garbage_collect);
     }
 
-    MeshID new_mesh_from_vertices(uint64_t vertex_attribute_mask, const std::vector<Vec3> &vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
-        return window->new_mesh_from_vertices(vertex_attribute_mask, vertices, arrangement, garbage_collect);
+    MeshID new_mesh_from_vertices(VertexSpecification vertex_specification, const std::vector<Vec3> &vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
+        return window->new_mesh_from_vertices(vertex_specification, vertices, arrangement, garbage_collect);
     }
 
-    MeshID new_mesh_with_alias(const unicode& alias, uint64_t vertex_attribute_mask, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
-        return window->new_mesh_with_alias(alias, vertex_attribute_mask, garbage_collect);
+    MeshID new_mesh_with_alias(const unicode& alias, VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
+        return window->new_mesh_with_alias(alias, vertex_specification, garbage_collect);
     }
 
     MeshID new_mesh_with_alias_from_file(const unicode& alias, const unicode &path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {

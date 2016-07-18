@@ -66,17 +66,17 @@ void OctreePartitioner::add_geom(GeomID geom_id) {
 
         switch(submesh->arrangement()) {
             case kglt::MESH_ARRANGEMENT_TRIANGLES: {
-                assert(submesh->index_data().count() % 3 == 0);
+                assert(submesh->index_data->count() % 3 == 0);
 
                 uint32_t j = 0;
-                polygons.resize(submesh->index_data().count() / 3);
-                for(uint32_t i = 0; i < submesh->index_data().count(); i+=3) {
+                polygons.resize(submesh->index_data->count() / 3);
+                for(uint32_t i = 0; i < submesh->index_data->count(); i+=3) {
                     Polygon& poly = polygons[j++];
 
                     poly.source_data = &submesh->vertex_data();
-                    poly.indices.push_back(submesh->index_data().at(i));
-                    poly.indices.push_back(submesh->index_data().at(i+1));
-                    poly.indices.push_back(submesh->index_data().at(i+2));
+                    poly.indices.push_back(submesh->index_data->at(i));
+                    poly.indices.push_back(submesh->index_data->at(i+1));
+                    poly.indices.push_back(submesh->index_data->at(i+2));
                 }
 
             } break;
@@ -86,7 +86,7 @@ void OctreePartitioner::add_geom(GeomID geom_id) {
                 auto& poly = polygons.front();
 
                 poly.source_data = &submesh->vertex_data();
-                auto& data = submesh->index_data().all();
+                auto& data = submesh->index_data->all();
                 poly.indices.assign(data.begin(), data.end());
             }
         }
@@ -122,7 +122,7 @@ void OctreePartitioner::add_geom(GeomID geom_id) {
 
                 if(created) {
                     // We need to make sure the same vertex attributes are enabled as they were on the source submesh
-                    subchunk->vertex_data().inherit_enabled_bitmask(submesh->vertex_data());
+                    subchunk->vertex_data->inherit_enabled_bitmask(submesh->vertex_data());
                     StaticChunkChangeEvent evt;
                     evt.type = STATIC_CHUNK_CHANGE_TYPE_SUBCHUNK_CREATED;
                     evt.subchunk_created.subchunk = subchunk;

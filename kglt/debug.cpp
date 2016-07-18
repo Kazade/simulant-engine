@@ -37,7 +37,7 @@ void Debug::update() {
 }
 
 bool Debug::init() {
-    mesh_ = stage_.new_mesh(VERTEX_ATTRIBUTE_POSITION_3F | VERTEX_ATTRIBUTE_DIFFUSE_4F);
+    mesh_ = stage_.new_mesh(VertexSpecification::POSITION_AND_DIFFUSE);
     actor_ = stage_.new_actor_with_mesh(
         mesh_,
         RENDERABLE_CULLING_MODE_NEVER // Important!
@@ -67,18 +67,18 @@ void Debug::draw_line(const Vec3 &start, const Vec3 &end, const Colour &colour, 
 
     auto& submesh = *mesh->submesh(element.submesh);
 
-    submesh.vertex_data().move_to_start();
-    submesh.vertex_data().position(start);
-    submesh.vertex_data().diffuse(colour);
-    submesh.vertex_data().move_next();
+    submesh.vertex_data->move_to_start();
+    submesh.vertex_data->position(start);
+    submesh.vertex_data->diffuse(colour);
+    submesh.vertex_data->move_next();
 
-    submesh.vertex_data().position(end);
-    submesh.vertex_data().diffuse(colour);
-    submesh.vertex_data().done();
+    submesh.vertex_data->position(end);
+    submesh.vertex_data->diffuse(colour);
+    submesh.vertex_data->done();
 
-    submesh.index_data().index(0);
-    submesh.index_data().index(1);
-    submesh.index_data().done();
+    submesh.index_data->index(0);
+    submesh.index_data->index(1);
+    submesh.index_data->done();
 
     elements_.push_back(element);
 }
