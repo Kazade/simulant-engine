@@ -73,6 +73,9 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     unicode current_material;
 
+    VertexSpecification spec = { VERTEX_ATTRIBUTE_3F, VERTEX_ATTRIBUTE_3F };
+    bool vertex_specification_set = false;
+
     bool has_materials = false;
     for(uint32_t l = 0; l < lines.size(); ++l) {
         unicode line = lines[l];
@@ -107,6 +110,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
 
             tex_coords.push_back(Vec2(x, y));
 
+            spec.texcoord0_attribute = VERTEX_ATTRIBUTE_2F;
         } else if(parts[0] == "vn") {
             if(parts.size() != 4) {
                 throw IOError(_u("Found {0} components for vertex, expected 3").format(parts.size() - 1));
@@ -121,6 +125,11 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             normals.push_back(n);
         } else if(parts[0] == "f") {
             if(!sm) {
+                if(!vertex_specification_set) {
+                    mesh->shared_data->reset(spec);
+                    vertex_specification_set = true;
+                }
+
                 // We have an .obj file which has no materials or we hit faces before a
                 // usemtl statement. Let's just make a new default submesh
                 SubMeshID smi = mesh->new_submesh();
@@ -138,19 +147,12 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             sm->vertex_data->position(vertices[first_v]); //Read the position
             if(first_vt > -1) {
                 sm->vertex_data->tex_coord0(tex_coords[first_vt]);
-                sm->vertex_data->tex_coord1(tex_coords[first_vt]);
-            } else {
-                sm->vertex_data->tex_coord0(kglt::Vec2());
-                sm->vertex_data->tex_coord1(kglt::Vec2());
             }
 
             if(first_vn > -1) {
                 sm->vertex_data->normal(normals[first_vn]);
-            } else {
-                sm->vertex_data->normal(kglt::Vec3());
             }
 
-            sm->vertex_data->diffuse(kglt::Colour::WHITE);
             sm->vertex_data->move_next();
 
             parts = std::vector<unicode>(parts.begin() + 1, parts.end()); //Strip off the first bit
@@ -168,17 +170,23 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                 parse_face(parts[i], v2, vt2, vn2);
 
                 sm->vertex_data->position(vertices[v1]); //Read the position
-                sm->vertex_data->tex_coord0((vt1 > -1) ? tex_coords[vt1] : kglt::Vec2());
-                sm->vertex_data->tex_coord1((vt1 > -1) ? tex_coords[vt1] : kglt::Vec2());
-                sm->vertex_data->normal((vn1 > -1) ? normals[vn1] : kglt::Vec3());
-                sm->vertex_data->diffuse(kglt::Colour::WHITE);
+                if(vt1 > -1) {
+                    sm->vertex_data->tex_coord0(tex_coords[vt1]);
+                }
+
+                if(vn1 > -1) {
+                    sm->vertex_data->normal(normals[vn1]);
+                }
+
                 sm->vertex_data->move_next();
 
                 sm->vertex_data->position(vertices[v2]); //Read the position
-                sm->vertex_data->tex_coord0((vt2 > -1) ? tex_coords[vt2] : kglt::Vec2());
-                sm->vertex_data->tex_coord1((vt2 > -1) ? tex_coords[vt2] : kglt::Vec2());
-                sm->vertex_data->normal((vn2 > -1) ? normals[vn2] : kglt::Vec3());
-                sm->vertex_data->diffuse(kglt::Colour::WHITE);
+                if(vt2 > -1) {
+                    sm->vertex_data->tex_coord0(tex_coords[vt2]);
+                }
+                if(vn2 > -1) {
+                    sm->vertex_data->normal(normals[vn2]);
+                }
                 sm->vertex_data->move_next();
 
                 //Add the triangle
@@ -199,6 +207,11 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
 
             // If there is no submesh for this material yet, make it.
             if(!material_submeshes.count(current_material)) {
+                if(!vertex_specification_set) {
+                    mesh->shared_data->reset(spec);
+                    vertex_specification_set = true;
+                }
+
                 auto mat_id = materials.at(current_material);
                 material_submeshes.insert(
                     std::make_pair(current_material, mesh->new_submesh_with_material(mat_id))
