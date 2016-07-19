@@ -478,6 +478,7 @@ bool Octree::split_if_necessary(NodeType* node) {
 }
 
 bool Octree::merge_if_possible(const NodeList &nodes) {
+
     if(nodes.empty()) {
         return false;
     }
@@ -499,9 +500,22 @@ bool Octree::merge_if_possible(const NodeList &nodes) {
 
     std::vector<std::shared_ptr<NodeData>> datas;
 
+    bool mergeable = true;
+
     for(auto& ref: nodes) {
         auto node = ref.lock();
         if(!node) {
+            continue;
+        }
+
+        // If the node has children, see if they can be merged
+        if(node->has_children()) {
+            merge_if_possible(node->children());
+        }
+
+        // If the node still has children, then move to the next node (we can't merge this)
+        if(node->has_children() || !mergeable) {
+            mergeable = false;
             continue;
         }
 
@@ -514,6 +528,10 @@ bool Octree::merge_if_possible(const NodeList &nodes) {
         // be trying to merge anything
         assert(node->is_empty());
         remove_node(node);
+    }
+
+    if(!mergeable) {
+        return false;
     }
 
     for(auto& data: datas) {

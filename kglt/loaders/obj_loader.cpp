@@ -74,6 +74,8 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     unicode current_material;
 
     VertexSpecification spec = { VERTEX_ATTRIBUTE_3F, VERTEX_ATTRIBUTE_3F };
+    spec.diffuse_attribute = VERTEX_ATTRIBUTE_4F;
+
     bool vertex_specification_set = false;
 
     bool has_materials = false;
@@ -152,7 +154,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             if(first_vn > -1) {
                 sm->vertex_data->normal(normals[first_vn]);
             }
-
+            sm->vertex_data->diffuse(kglt::Colour::WHITE);
             sm->vertex_data->move_next();
 
             parts = std::vector<unicode>(parts.begin() + 1, parts.end()); //Strip off the first bit
@@ -187,6 +189,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                 if(vn2 > -1) {
                     sm->vertex_data->normal(normals[vn2]);
                 }
+                sm->vertex_data->diffuse(kglt::Colour::WHITE);
                 sm->vertex_data->move_next();
 
                 //Add the triangle

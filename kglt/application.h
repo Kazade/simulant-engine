@@ -12,6 +12,7 @@
 #include "kazbase/unicode.h"
 #include "screens/screen_manager.h"
 #include "generic/property.h"
+#include "generic/data_carrier.h"
 
 namespace kglt {
 
@@ -25,7 +26,8 @@ public:
         std::runtime_error("An error occurred while running a background task") {}
 };
 
-class Application : public ScreenManagerInterface {
+class Application :
+    public ScreenManagerInterface {
 public:
     Application(const unicode& title=_u("KGLT Application"),
         uint32_t width=1366,
@@ -38,6 +40,7 @@ public:
     int32_t run();
 
     Property<Application, WindowBase> window = {this, &Application::window_ };
+    Property<Application, generic::DataCarrier> data = { this, &Application::data_carrier_ };
 
     bool initialized() const { return initialized_; }
 
@@ -71,6 +74,8 @@ private:
     virtual bool while_key_pressed(SDL_Keysym key, double) { return false; }
     virtual bool on_key_press(SDL_Keysym key) { return false; }
     virtual bool on_key_release(SDL_Keysym key) { return false; }
+
+    generic::DataCarrier data_carrier_;
 };
 
 }

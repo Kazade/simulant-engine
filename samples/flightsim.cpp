@@ -10,7 +10,7 @@ public:
         kglt::Screen<GameScreen>(window, "game_screen") {}
 
     void do_load() {
-        unicode filename = ""; //FIXME: Figure out how to pass this down to the screen!
+        unicode filename = window->application->data->get<unicode>("filename");
 
         prepare_basic_scene(stage_id_, camera_id_);
 
@@ -75,7 +75,7 @@ private:
 
 class FlightSimSample: public kglt::Application {
 public:
-    FlightSimSample(const unicode& path):
+    FlightSimSample():
         Application("KGLT Combined Sample") {
     }
 
@@ -100,7 +100,9 @@ int main(int argc, char* argv[]) {
         return 2;
     }
 
-    FlightSimSample app(filename);
+    FlightSimSample app;
+    app.data->stash(filename, "filename");
+
     return app.run();
 }
 
