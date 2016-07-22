@@ -12,7 +12,15 @@ ParticleSystem::ParticleSystem(ParticleSystemID id, Stage* stage):
     index_data_(new IndexData()),
     vao_(MODIFY_REPEATEDLY_USED_FOR_RENDERING, MODIFY_REPEATEDLY_USED_FOR_RENDERING) {
 
-    set_material_id(stage->clone_default_material());       
+    set_material_id(stage->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY));
+}
+
+ParticleSystem::~ParticleSystem() {
+    delete vertex_data_;
+    vertex_data_ = nullptr;
+
+    delete index_data_;
+    index_data_ = nullptr;
 }
 
 void ParticleSystem::set_material_id(MaterialID mat_id) {
@@ -90,8 +98,8 @@ void ParticleSystem::_update_vertex_array_object() {
         return;
     }
 
-    vao_.vertex_buffer_update(vertex_data->data_size(), vertex_data->data());
-    vao_.index_buffer_update(index_data->count() * sizeof(uint16_t), index_data->_raw_data());
+    vao_.vertex_buffer_update(vertex_data_->data_size(), vertex_data_->data());
+    vao_.index_buffer_update(index_data_->count() * sizeof(uint16_t), index_data_->_raw_data());
 }
 
 void ParticleSystem::_bind_vertex_array_object() {
@@ -157,6 +165,7 @@ void ParticleSystem::do_update(double dt) {
     update_source(dt); //Update any sounds attached to this particle system
 
     auto current_particle_count = particles_.size();
+    auto original_particle_count = current_particle_count;
 
     for(auto emitter: emitters_) {
         emitter->update(dt);
@@ -195,21 +204,25 @@ void ParticleSystem::do_update(double dt) {
     }
 
     vertex_data_->move_to_start();
-    vertex_data_->clear();
+    vertex_data_->resize(particles_.size());
     for(auto particle: particles_) {
         vertex_data_->position(particle.position);
         vertex_data_->diffuse(particle.colour);
         vertex_data_->move_next();
+
     }
-    vertex_data_->done();
 
-
-    index_data_->clear();
-    for(uint16_t i = 0; i < vertex_data->count(); ++i) {
+    // Index any new particles
+    auto new_particle_count = particles_.size();
+    for(uint32_t i = original_particle_count; i < new_particle_count; ++i) {
         index_data_->index(i);
     }
-    index_data_->done();
 
+    // Truncate if necessary (in which case the above loop did nothing)
+    index_data_->resize(new_particle_count);
+
+    vertex_data_->done();
+    index_data_->done();
 }
 
 std::vector<Particle> ParticleEmitter::do_emit(double dt, uint32_t max) {

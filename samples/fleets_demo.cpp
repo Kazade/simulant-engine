@@ -47,7 +47,7 @@ private:
     std::vector<ActorID> ship_ids_;
 
     void generate_ships() {
-        Vec3 centre = Vec3(5000, 0, 0);
+        Vec3 centre = Vec3(2000, 0, 0);
 
         for(uint32_t i = 0; i < 100; ++i) {
             Vec3 pos = centre + (Vec3(
@@ -61,7 +61,7 @@ private:
             stage->actor(ship_ids_.back())->set_absolute_position(pos);
 
             auto ps_id = stage->new_particle_system_with_parent_from_file(ship_ids_.back(), "kglt/particles/pixel_trail.kglp");
-            stage->particle_system(ps_id)->set_relative_position(0, 0, -10);
+            stage->particle_system(ps_id)->set_relative_position(0, 0, 0);
         }
     }
 };

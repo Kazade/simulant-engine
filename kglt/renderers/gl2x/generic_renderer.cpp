@@ -334,6 +334,8 @@ void GenericRenderer::render(CameraPtr camera, StagePtr stage, bool render_group
         GLCheck(glDepthMask, GL_FALSE);
     }
 
+    glPointSize(material_pass->point_size());
+
     switch(material_pass->polygon_mode()) {
         case POLYGON_MODE_POINT:
             glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);

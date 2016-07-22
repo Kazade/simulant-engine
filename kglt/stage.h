@@ -49,6 +49,16 @@ typedef generic::TemplatedManager<CameraProxy, CameraID> CameraProxyManager;
 typedef generic::TemplatedManager<Sprite, SpriteID> SpriteManager;
 typedef generic::TemplatedManager<ParticleSystem, ParticleSystemID> ParticleSystemManager;
 
+typedef sig::signal<void (ActorID)> ActorCreatedSignal;
+typedef sig::signal<void (ActorID)> ActorDestroyedSignal;
+typedef sig::signal<void (ActorID, ActorChangeEvent)> ActorChangedCallback;
+
+typedef sig::signal<void (GeomID)> GeomCreatedSignal;
+typedef sig::signal<void (GeomID)> GeomDestroyedSignal;
+
+typedef sig::signal<void (ParticleSystemID)> ParticleSystemCreatedSignal;
+typedef sig::signal<void (ParticleSystemID)> ParticleSystemDestroyedSignal;
+
 class Stage:
     public Managed<Stage>,
     public generic::Identifiable<StageID>,
@@ -65,6 +75,9 @@ class Stage:
     public RenderableStage,
     public generic::DataCarrier,
     public virtual WindowHolder {
+
+    DEFINE_SIGNAL(ParticleSystemCreatedSignal, signal_particle_system_created);
+    DEFINE_SIGNAL(ParticleSystemDestroyedSignal, signal_particle_system_destroyed);
 
 public:
     Stage(StageID id, WindowBase *parent, AvailablePartitioner partitioner);
@@ -356,22 +369,12 @@ public:
     void on_render_started() override {}
     void on_render_stopped() override {}
 
-    typedef sig::signal<void (ActorID)> ActorCreatedSignal;
-    typedef sig::signal<void (ActorID)> ActorDestroyedSignal;
-    typedef sig::signal<void (ActorID, ActorChangeEvent)> ActorChangedCallback;
-
-    typedef sig::signal<void (GeomID)> GeomCreatedSignal;
-    typedef sig::signal<void (GeomID)> GeomDestroyedSignal;
-
     ActorCreatedSignal& signal_actor_created() { return signal_actor_created_; }
     ActorDestroyedSignal& signal_actor_destroyed() { return signal_actor_destroyed_; }
     ActorChangedCallback& signal_actor_changed() { return signal_actor_changed_; }
 
     GeomCreatedSignal& signal_geom_created() { return signal_geom_created_; }
     GeomDestroyedSignal& signal_geom_destroyed() { return signal_geom_destroyed_; }
-
-    sig::signal<void (ParticleSystemID)>& signal_particle_system_created() { return signal_particle_system_created_; }
-    sig::signal<void (ParticleSystemID)>& signal_particle_system_destroyed() { return signal_particle_system_destroyed_; }
 
     sig::signal<void (LightID)>& signal_light_created() { return signal_light_created_; }
     sig::signal<void (LightID)>& signal_light_destroyed() { return signal_light_destroyed_; }
@@ -391,9 +394,6 @@ private:
 
     sig::signal<void (LightID)> signal_light_created_;
     sig::signal<void (LightID)> signal_light_destroyed_;
-
-    sig::signal<void (ParticleSystemID)> signal_particle_system_created_;
-    sig::signal<void (ParticleSystemID)> signal_particle_system_destroyed_;
 
     sig::signal<void (SpriteID)> signal_sprite_created_;
     sig::signal<void (SpriteID)> signal_sprite_destroyed_;

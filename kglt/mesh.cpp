@@ -11,11 +11,11 @@ namespace kglt {
 
 VertexData *SubMesh::get_vertex_data() const {
     if(uses_shared_data_) { return parent_->shared_data.get(); }
-    return vertex_data_.get();
+    return vertex_data_;
 }
 
 IndexData* SubMesh::get_index_data() const {
-    return index_data_.get();
+    return index_data_;
 }
 
 Mesh::Mesh(MeshID id, ResourceManager *resource_manager, VertexSpecification vertex_specification):
@@ -23,7 +23,7 @@ Mesh::Mesh(MeshID id, ResourceManager *resource_manager, VertexSpecification ver
     generic::Identifiable<MeshID>(id),
     normal_debug_mesh_(0) {
 
-    shared_data_.reset(new VertexData(vertex_specification));
+    shared_data_ = new VertexData(vertex_specification);
 
     //FIXME: Somehow we need to specify if the shared data is modified repeatedly etc.
     shared_data_buffer_object_ = BufferObject::create(BUFFER_OBJECT_VERTEX_DATA, MODIFY_ONCE_USED_FOR_RENDERING);
@@ -31,6 +31,11 @@ Mesh::Mesh(MeshID id, ResourceManager *resource_manager, VertexSpecification ver
     shared_data->signal_update_complete().connect([&]{
         this->shared_data_dirty_ = true;
     });
+}
+
+Mesh::~Mesh() {
+    delete shared_data_;
+    shared_data_ = nullptr;
 }
 
 void Mesh::each(std::function<void (uint32_t, std::weak_ptr<SubMesh> submesh)> func) const {
@@ -47,7 +52,7 @@ void Mesh::clear() {
 }
 
 VertexData* Mesh::get_shared_data() const {
-    return shared_data_.get();
+    return shared_data_;
 }
 
 const AABB Mesh::aabb() const {
@@ -500,9 +505,9 @@ SubMesh::SubMesh(SubMeshID id, Mesh* parent, const std::string& name,
         );
     }
 
-    index_data_.reset(new IndexData());
+    index_data_ = new IndexData();
     if(!uses_shared_data_) {
-        vertex_data_.reset(new VertexData(vertex_specification));
+        vertex_data_ = new VertexData(vertex_specification);
     }
 
     /*
@@ -790,6 +795,12 @@ void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
 SubMesh::~SubMesh() {
     vrecalc_.disconnect();
     irecalc_.disconnect();
+
+    delete vertex_data_;
+    vertex_data_ = nullptr;
+
+    delete index_data_;
+    index_data_ = nullptr;
 }
 
 }

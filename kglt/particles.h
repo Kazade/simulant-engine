@@ -142,6 +142,7 @@ class ParticleSystem :
 
 public:
     ParticleSystem(ParticleSystemID id, Stage* stage);
+    ~ParticleSystem();
 
     void set_name(const unicode& name) { name_ = name; }
     const bool has_name() const { return !name_.empty(); }
@@ -202,12 +203,12 @@ public:
     bool has_active_emitters() const;
 
 private:
-    VertexData* get_vertex_data() const {
-        return vertex_data_.get();
+    inline VertexData* get_vertex_data() const {
+        return vertex_data_;
     }
 
-    IndexData* get_index_data() const {
-        return index_data_.get();
+    inline IndexData* get_index_data() const {
+        return index_data_;
     }
 
     unicode name_;
@@ -224,8 +225,8 @@ private:
 
     void do_update(double dt);
 
-    std::unique_ptr<VertexData> vertex_data_;
-    std::unique_ptr<IndexData> index_data_;
+    VertexData* vertex_data_ = nullptr;
+    IndexData* index_data_ = nullptr;
 
     VertexArrayObject vao_;
 

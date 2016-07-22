@@ -241,6 +241,10 @@ public:
 
     VertexAttribute attribute_for_type(VertexAttributeType type) const;
 
+    void resize(uint32_t size) {
+        data_.resize(size * stride(), 0);
+    }
+
 private:
     VertexSpecification vertex_specification_;
     std::vector<uint8_t> data_;
@@ -259,7 +263,7 @@ private:
     sig::signal<void ()> signal_update_complete_;
 
     void push_back() {
-        for(uint32_t i = 0; i < stride(); ++i) { data_.push_back(0); }
+        data_.resize((vertex_count_ + 1) * stride(), 0);
         vertex_count_++;
     }
 
@@ -293,6 +297,7 @@ public:
 
     void reset();
     void clear() { indices_.clear(); }
+    void resize(uint32_t size) { indices_.resize(size); }
     void reserve(uint32_t size) { indices_.reserve(size); }
     void index(Index idx) { indices_.push_back(idx); }
     void push(Index idx) { index(idx); }

@@ -2,6 +2,7 @@
 #include "../../stage.h"
 #include "../../material.h"
 #include "../../actor.h"
+#include "../../particles.h"
 
 #include "render_queue.h"
 #include "../../partitioner.h"
@@ -35,6 +36,16 @@ RenderQueue::RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory)
                 insert_renderable(subactor);
             });
         }
+    });
+
+    stage->signal_particle_system_created().connect([=](ParticleSystemID ps_id) {
+        auto ps = stage->particle_system(ps_id);
+        insert_renderable(ps.get());
+    });
+
+    stage->signal_particle_system_destroyed().connect([=](ParticleSystemID ps_id) {
+        auto ps = stage->particle_system(ps_id);
+        remove_renderable(ps.get());
     });
 }
 

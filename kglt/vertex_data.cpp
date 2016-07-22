@@ -61,9 +61,7 @@ void VertexData::position_checks() {
 
     if(cursor_position_ == (int32_t) data_.size()) {
         push_back();
-    }
-
-    if(cursor_position_ > (int32_t) data_.size()) {
+    } else if(cursor_position_ > (int32_t) data_.size()) {
         throw std::out_of_range("Cursor moved out of range");
     }
 }

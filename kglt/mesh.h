@@ -121,8 +121,8 @@ private:
     MeshArrangement arrangement_;
     bool uses_shared_data_;
 
-    std::unique_ptr<VertexData> vertex_data_;
-    std::unique_ptr<IndexData> index_data_;
+    VertexData* vertex_data_ = nullptr;
+    IndexData* index_data_ = nullptr;
     VertexArrayObject::ptr vertex_array_object_;
 
     bool vertex_data_dirty_ = false;
@@ -148,6 +148,7 @@ class Mesh :
 
 public:
     Mesh(MeshID id, ResourceManager* resource_manager, VertexSpecification vertex_specification);
+    ~Mesh();
 
     SubMeshID new_submesh_with_material(
         MaterialID material,        
@@ -206,7 +207,7 @@ private:
     void _update_buffer_object();
 
     bool shared_data_dirty_ = false;
-    std::unique_ptr<VertexData> shared_data_;
+    VertexData* shared_data_ = nullptr;
     BufferObject::ptr shared_data_buffer_object_;
 
     SubMeshID normal_debug_mesh_;
