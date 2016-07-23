@@ -1,0 +1,5 @@
+/home/kazade/Development/kglt/tools/dreamfire/dreamfire-admin/obj/x86/Debug/.NETFramework,Version=v4.5.AssemblyAttribute.cs
+/home/kazade/Development/kglt/tools/dreamfire/dreamfire-admin/bin/Debug/dreamfire-admin.exe.mdb
+/home/kazade/Development/kglt/tools/dreamfire/dreamfire-admin/bin/Debug/dreamfire-admin.exe
+/home/kazade/Development/kglt/tools/dreamfire/dreamfire-admin/obj/x86/Debug/dreamfire-admin.exe
+/home/kazade/Development/kglt/tools/dreamfire/dreamfire-admin/obj/x86/Debug/dreamfire-admin.exe.mdb
