@@ -2,7 +2,7 @@
 #define TEST_OBJECT_H
 
 #include "kglt/kglt.h"
-#include <kaztest/kaztest.h>
+#include "kaztest/kaztest.h"
 
 #include "global.h"
 

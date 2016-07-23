@@ -10,7 +10,7 @@
 
 namespace kglt {
 
-UIStage::UIStage(WindowBase *parent, UIStageID id):
+UIStage::UIStage(UIStageID id, WindowBase *parent):
     generic::Identifiable<UIStageID>(id),
     Resource(parent),
     window_(parent),
@@ -71,7 +71,7 @@ void UIStage::__update(double dt) {
 void UIStage::__handle_mouse_move(int x, int y) {
     if(!is_being_rendered()) return;
 
-    interface_->impl()->context_->ProcessMouseMove(x, y, 0); //FIXME pass down modifiers from the Window event
+    interface_->impl()->context_->ProcessMouseMove(x, y, 0); //FIXME pass down modifiers from the SDL2Window event
 }
 
 void UIStage::__handle_mouse_down(int button) {

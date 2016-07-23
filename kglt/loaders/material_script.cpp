@@ -21,7 +21,7 @@ MaterialScript::MaterialScript(const MaterialLanguageText& text):
 
 }
 
-void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<unicode>& args, MaterialPass* pass) {
+void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<unicode>& args, MaterialPass::ptr pass) {
     if(args.size() < 2) {
         throw SyntaxError("Wrong number of arguments for SET command");
     }
@@ -185,13 +185,11 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<un
     }
 }
 
-void MaterialScript::handle_data_block(Material& mat, const unicode& data_type, const std::vector<unicode> &lines, MaterialPass* pass) {
+void MaterialScript::handle_data_block(Material& mat, const unicode& data_type, const std::vector<unicode> &lines, MaterialPass::ptr pass) {
     if(data_type.upper() == "VERTEX") {
-        unicode source = _u("\n").join(lines);
-        pass->program->program->set_shader_source(SHADER_TYPE_VERTEX, source);
+        current_vert_shader_ = _u("\n").join(lines).encode();
     } else if(data_type.upper() == "FRAGMENT") {
-        unicode source = _u("\n").join(lines);
-        pass->program->program->set_shader_source(SHADER_TYPE_FRAGMENT, source);
+        current_frag_shader_ = _u("\n").join(lines).encode();
     } else {
         throw SyntaxError(_u("Invalid BEGIN_DATA block: ") + data_type);
     }
@@ -201,7 +199,7 @@ void MaterialScript::handle_block(Material& mat,
         const std::vector<unicode>& lines,
         uint16_t& current_line,
         const unicode &parent_block_type,
-        MaterialPass* current_pass) {
+        MaterialPass::ptr current_pass) {
 
     unicode line = unicode(lines[current_line]).strip();
     current_line++;
@@ -230,7 +228,7 @@ void MaterialScript::handle_block(Material& mat,
 
         //Create the pass with the default shader
         uint32_t pass_number = mat.new_pass();
-        current_pass = &mat.pass(pass_number);
+        current_pass = mat.pass(pass_number);
     }
 
     for(uint16_t i = current_line; current_line != lines.size(); ++i) {
@@ -275,6 +273,13 @@ void MaterialScript::handle_block(Material& mat,
 
             if(end_block_type == "PASS") {
                 //L_DEBUG(_u("Shader pass added {0}").format(mat.id()));
+
+                // Set the program
+                current_pass->program->set_gpu_program(
+                    GPUProgram::create(current_vert_shader_, current_frag_shader_)
+                );
+
+                current_pass->build_program_and_bind_attributes();
             }
             return; //Exit this function, we are done with this block
         } else if(line.starts_with("SET")) {

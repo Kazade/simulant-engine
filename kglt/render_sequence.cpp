@@ -1,6 +1,7 @@
 #include "utils/glcompat.h"
 #include <unordered_map>
 
+#include "generic/algorithm.h"
 #include "utils/gl_error.h"
 #include "render_sequence.h"
 #include "stage.h"
@@ -12,16 +13,15 @@
 #include "window_base.h"
 #include "partitioner.h"
 #include "partitioners/octree_partitioner.h"
-#include "renderers/generic_renderer.h"
-#include "batcher.h"
+#include "renderers/gl2x/generic_renderer.h"
 #include "loader.h"
 #include "gpu_program.h"
 
+
 namespace kglt {
 
-Pipeline::Pipeline(
-        RenderSequence* render_sequence,
-        PipelineID id):
+Pipeline::Pipeline(PipelineID id,
+        RenderSequence* render_sequence):
     generic::Identifiable<PipelineID>(id),
     sequence_(render_sequence),
     priority_(0),
@@ -48,9 +48,9 @@ void Pipeline::deactivate() {
     is_active_ = false;
 
     if(stage_) {
-        sequence_->window_.stage(stage_)->decrement_render_count();
+        sequence_->window->stage(stage_)->decrement_render_count();
     } else if(ui_stage_) {
-        sequence_->window_.ui_stage(ui_stage_)->decrement_render_count();
+        sequence_->window->ui_stage(ui_stage_)->decrement_render_count();
     }
 }
 
@@ -60,15 +60,15 @@ void Pipeline::activate() {
     is_active_ = true;
 
     if(stage_) {
-        sequence_->window_.stage(stage_)->increment_render_count();
+        sequence_->window->stage(stage_)->increment_render_count();
     } else if(ui_stage_) {
-        sequence_->window_.ui_stage(ui_stage_)->increment_render_count();
+        sequence_->window->ui_stage(ui_stage_)->increment_render_count();
     }
 }
 
-RenderSequence::RenderSequence(WindowBase &window):
+RenderSequence::RenderSequence(WindowBase *window):
     window_(window),
-    renderer_(new GenericRenderer(window)) {
+    renderer_(window->renderer.get()) {
 
     //Set up the default render options
     render_options.wireframe_enabled = false;
@@ -152,7 +152,7 @@ void RenderSequence::sort_pipelines(bool acquire_lock) {
 }
 
 PipelineID RenderSequence::new_pipeline(StageID stage, CameraID camera, const Viewport& viewport, TextureID target, int32_t priority) {
-    PipelineID new_p = PipelineManager::manager_new();
+    PipelineID new_p = PipelineManager::manager_new(this);
 
     auto pipeline = PipelineManager::manager_get(new_p).lock();
 
@@ -171,7 +171,7 @@ PipelineID RenderSequence::new_pipeline(StageID stage, CameraID camera, const Vi
 }
 
 PipelineID RenderSequence::new_pipeline(UIStageID stage, CameraID camera, const Viewport& viewport, TextureID target, int32_t priority) {
-    PipelineID new_p = PipelineManager::manager_new();
+    PipelineID new_p = PipelineManager::manager_new(this);
 
     ordered_pipelines_.push_back(PipelineManager::manager_get(new_p).lock());
 
@@ -191,7 +191,7 @@ PipelineID RenderSequence::new_pipeline(UIStageID stage, CameraID camera, const 
     return new_p;
 }
 
-void RenderSequence::set_renderer(Renderer::ptr renderer) {
+void RenderSequence::set_renderer(Renderer* renderer) {
     renderer_ = renderer;
 }
 
@@ -203,11 +203,11 @@ void RenderSequence::run() {
         run_pipeline(pipeline, actors_rendered);
     }
 
-    window_.stats->set_subactors_rendered(actors_rendered);
+    window->stats->set_subactors_rendered(actors_rendered);
 }
 
 void RenderSequence::update_camera_constraint(CameraID cid) {
-    auto camera = window_.camera(cid);
+    auto camera = window->camera(cid);
 
     if(camera->has_proxy()) {
         //Update the associated camera
@@ -220,86 +220,13 @@ void RenderSequence::update_camera_constraint(CameraID cid) {
     }
 }
 
-const uint32_t RENDER_PRIORITY_RANGE = RENDER_PRIORITY_MAX - RENDER_PRIORITY_ABSOLUTE_BACKGROUND;
-const uint32_t MAX_MATERIAL_PASSES = 25;
-
-struct RenderQueue {
-    RootGroup* passes_[MAX_MATERIAL_PASSES] = {nullptr};
-
-    RootGroup* get_or_create_pass(uint32_t pass, WindowBase* window, StageID stage_id, CameraID camera_id) {
-        assert(pass < MAX_MATERIAL_PASSES);
-        if(!passes_[pass]) {            
-            passes_[pass] = new RootGroup(*window, stage_id, camera_id);
-        }
-        return passes_[pass];
-    }
-
-    ~RenderQueue() {
-        for(uint32_t i = 0; i < MAX_MATERIAL_PASSES; ++i) {
-            if(passes_[i]) {
-                delete passes_[i];
-                passes_[i] = nullptr;
-            }
-        }
-    }
-
-    void each(std::function<void(RootGroup*)> func) {
-        for(RootGroup* group: passes_) {
-            if(group) {
-                func(group);
-            }
-        }
-    }
-};
-
-struct QueuesByPriority {
-    /*
-     * This is a set of render queues indexed by their render priority
-     * Everything is raw pointers and static arrays for performance.
-     *
-     * It might be a wise idea to just allocate the entire range on construction
-     * but this is fast enough for now
-     */
-    RenderQueue* queues_[RENDER_PRIORITY_RANGE] = {nullptr};
-
-    RenderQueue* get_or_create_queue(RenderPriority priority) {
-        uint32_t idx = uint32_t(priority - RENDER_PRIORITY_ABSOLUTE_BACKGROUND);
-
-        assert(idx < RENDER_PRIORITY_RANGE);
-
-        if(!queues_[idx]) {
-            queues_[idx] = new RenderQueue();
-        }
-
-        return queues_[idx];
-    }
-
-    void clear() {
-        for(uint32_t i = 0; i < RENDER_PRIORITY_RANGE; ++i) {
-            if(queues_[i]) {
-                delete queues_[i];
-                queues_[i] = nullptr;
-            }
-        }
-    }
-
-    ~QueuesByPriority() {
-        clear();
-    }
-
-    void each(std::function<void(RenderQueue*)> func) {
-        for(RenderQueue* queue: queues_) {
-            if(queue) {
-                func(queue);
-            }
-        }
-    }
-};
+uint64_t generate_frame_id() {
+    static uint64_t frame_id = 0;
+    return ++frame_id;
+}
 
 void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rendered) {
-    static QueuesByPriority queues;
-    //Empty the queues each call, but retain the same container (saves allocations)
-    queues.clear();
+    uint64_t frame_id = generate_frame_id();
 
     if(!pipeline_stage->is_active()) {
         return;
@@ -307,9 +234,9 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
 
     update_camera_constraint(pipeline_stage->camera_id());
 
-    Mat4 camera_projection = window_.camera(pipeline_stage->camera_id())->projection_matrix();
+    Mat4 camera_projection = window->camera(pipeline_stage->camera_id())->projection_matrix();
 
-    RenderTarget& target = window_; //FIXME: Should be window or texture
+    RenderTarget& target = *window_; //FIXME: Should be window or texture
 
     /*
      *  Render targets can specify whether their buffer should be cleared at the start of each frame. We do this the first
@@ -341,76 +268,58 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
 
     if(pipeline_stage->ui_stage_id()) {        
         //This is a UI stage, so just render that
-        auto ui_stage = window_.ui_stage(pipeline_stage->ui_stage_id());
+        auto ui_stage = window->ui_stage(pipeline_stage->ui_stage_id());
         ui_stage->__resize(viewport->width_in_pixels(target), viewport->height_in_pixels(target));
         ui_stage->__render(camera_projection);
     } else {
-        auto stage = window_.stage(stage_id);
+        auto stage = window->stage(stage_id);
 
-        std::vector<RenderablePtr> buffers = stage->partitioner().geometry_visible_from(camera_id);
-        std::vector<LightID> lights = stage->partitioner().lights_visible_from(camera_id);
+        auto light_ids = stage->partitioner->lights_visible_from(camera_id);
+        auto lights_visible = map<decltype(light_ids), std::vector<LightPtr>>(
+            light_ids, [&](const LightID& light_id) -> LightPtr { return stage->light(light_id); }
+        );
 
+        // Mark the visible objects as visible
+        for(auto& renderable: stage->partitioner->geometry_visible_from(camera_id)) {
+            if(!renderable->is_visible()) {
+                continue;
 
-        /*
-         * Go through the visible objects, sort into queues and for
-         * each material pass add the subactor. The result is that a tree
-         * of material properties (uniforms) will be created with the child nodes
-         * being the meshes
-         */
-        std::vector<LightID> lights_intersecting_actor;
-
-        //Go through the visible actors
-        for(RenderablePtr ent: buffers) {
-            //Get the priority queue for this actor (e.g. RENDER_PRIORITY_BACKGROUND)
-            RenderQueue* priority_queue = queues.get_or_create_queue(ent->render_priority());
-            assert(priority_queue);
-
-            auto mat = stage->material(ent->material_id());
-
-            lights_intersecting_actor.clear();
-            for(auto lid: lights) {
-                auto light = stage->light(lid);
-                if(light->type() == LIGHT_TYPE_DIRECTIONAL || light->transformed_aabb().intersects(ent->transformed_aabb())) {
-                    lights_intersecting_actor.push_back(lid);
-                }
             }
 
-            //Go through the actor's material passes building up the render tree
-            mat->each([&](uint32_t i, MaterialPass* pass) {
-                RootGroup* group = priority_queue->get_or_create_pass(i, &window_, stage_id, camera_id);
-                assert(group);
-                group->insert(ent.get(), pass, lights_intersecting_actor);
+            renderable->update_last_visible_frame_id(frame_id);
+
+            auto renderable_lights = filter(lights_visible, [=](const LightPtr& light) -> bool {
+                // Filter by whether or not the renderable bounds intersects the light bounds
+                return renderable->aabb().intersects(light->aabb());
             });
 
-            actors_rendered++;
+            std::partial_sort(
+                renderable_lights.begin(),
+                renderable_lights.begin() + std::min(MAX_LIGHTS_PER_RENDERABLE, (uint32_t) renderable_lights.size()),
+                renderable_lights.end(),
+                [=](LightPtr lhs, LightPtr rhs) {
+                    /* FIXME: Sorting by the centre point is problematic. A renderable is made up
+                     * of many polygons, by choosing the light closest to the center you may find that
+                     * that polygons far away from the center aren't effected by lights when they should be.
+                     * This needs more thought, probably. */
+                    float lhs_dist = (renderable->centre() - lhs->position()).length_squared();
+                    float rhs_dist = (renderable->centre() - rhs->position()).length_squared();
+                    return lhs_dist < rhs_dist;
+                }
+            );
+
+            renderable->set_affected_by_lights(renderable_lights);
         }
 
-        /*
-         * At this point, we will have a render group tree for each priority level
-         * when we render, we can apply the uniforms/textures/shaders etc. by traversing the
-         * tree and calling bind()/unbind() at each level
-         */
-        renderer_->set_current_stage(stage_id);
+        using namespace std::placeholders;
+        auto camera = window->camera(camera_id);
 
-        queues.each([=](RenderQueue* queue) {
-            assert(queue);
+        batcher::RenderQueue::TraverseCallback callback = std::bind(
+            &Renderer::render, renderer_, camera, stage, _1, _2, _3, _4, _5, _6
+        );
 
-            queue->each([=](RootGroup* pass_group) {
-                assert(pass_group);
-
-                auto callback = [&](Renderable* renderable, MaterialPass* pass) {
-                    renderer_->render(
-                        *renderable,
-                        pipeline_stage->camera_id(),
-                        pass->program.get()
-                    );
-                };
-
-                pass_group->traverse(callback);
-            });
-        });
-
-        renderer_->set_current_stage(StageID());
+        // Render the visible objects
+        stage->render_queue->traverse(callback, frame_id);
     }
 
     signal_pipeline_finished_(*pipeline_stage);

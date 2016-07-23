@@ -24,7 +24,7 @@ bool ResourceManagerImpl::init() {
     //FIXME: Should lock the default texture and material during construction!
 
     //Create the default blank texture
-    default_texture_id_ = new_texture(false);
+    default_texture_id_ = new_texture(GARBAGE_COLLECT_NEVER);
 
     auto tex = texture(default_texture_id_);
 
@@ -38,10 +38,10 @@ bool ResourceManagerImpl::init() {
     tex->upload();
 
     //Maintain ref-count
-    default_material_id_ = new_material_from_file(default_material_filename(), false);
+    default_material_id_ = new_material_from_file(default_material_filename(), GARBAGE_COLLECT_NEVER);
 
     //Set the default material's first texture to the default (white) texture
-    material(default_material_id_)->pass(0).set_texture_unit(0, default_texture_id_);
+    material(default_material_id_)->pass(0)->set_texture_unit(0, default_texture_id_);
 
     return true;
 }
@@ -73,21 +73,21 @@ const ProtectedPtr<Mesh> ResourceManagerImpl::mesh(MeshID m) const {
     return MeshManager::manager_get(m);
 }
 
-MeshID ResourceManagerImpl::new_mesh(bool garbage_collect) {
-    MeshID result = MeshManager::manager_new(garbage_collect);
+MeshID ResourceManagerImpl::new_mesh(VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect) {
+    MeshID result = MeshManager::manager_new(garbage_collect, this, vertex_specification);
     return result;
 }
 
-MeshID ResourceManagerImpl::new_mesh_from_file(const unicode& path, bool garbage_collect) {
+MeshID ResourceManagerImpl::new_mesh_from_file(const unicode& path, GarbageCollectMethod garbage_collect) {
     //Load the material
-    kglt::MeshID mesh_id = new_mesh(garbage_collect);
+    kglt::MeshID mesh_id = new_mesh(VertexSpecification::POSITION_ONLY, garbage_collect);
     window->loader_for(path.encode())->into(mesh(mesh_id));
     MeshManager::mark_as_uncollected(mesh_id);
     return mesh_id;
 }
 
-MeshID ResourceManagerImpl::new_mesh_from_tmx_file(const unicode& tmx_file, const unicode& layer_name, float tile_render_size, bool garbage_collect) {
-    kglt::MeshID mesh_id = new_mesh(garbage_collect);
+MeshID ResourceManagerImpl::new_mesh_from_tmx_file(const unicode& tmx_file, const unicode& layer_name, float tile_render_size, GarbageCollectMethod garbage_collect) {
+    kglt::MeshID mesh_id = new_mesh(VertexSpecification::DEFAULT, garbage_collect);
     window->loader_for(tmx_file.encode())->into(mesh(mesh_id), {
         {"layer", layer_name},
         {"render_size", tile_render_size}
@@ -96,8 +96,8 @@ MeshID ResourceManagerImpl::new_mesh_from_tmx_file(const unicode& tmx_file, cons
     return mesh_id;
 }
 
-MeshID ResourceManagerImpl::new_mesh_from_heightmap(const unicode& image_file, float spacing, float min_height, float max_height, const HeightmapDiffuseGenerator &generator, bool garbage_collect) {
-    kglt::MeshID mesh_id = new_mesh(garbage_collect);
+MeshID ResourceManagerImpl::new_mesh_from_heightmap(const unicode& image_file, float spacing, float min_height, float max_height, const HeightmapDiffuseGenerator &generator, GarbageCollectMethod garbage_collect) {
+    kglt::MeshID mesh_id = new_mesh(VertexSpecification::DEFAULT, garbage_collect);
     window->loader_for("heightmap_loader", image_file)->into(mesh(mesh_id), {
         { "spacing", spacing},
         { "min_height", min_height},
@@ -108,95 +108,92 @@ MeshID ResourceManagerImpl::new_mesh_from_heightmap(const unicode& image_file, f
     return mesh_id;
 }
 
-MeshID ResourceManagerImpl::new_mesh_as_cube(float width, bool garbage_collect) {
-    MeshID m = new_mesh(garbage_collect);
+MeshID ResourceManagerImpl::new_mesh_as_cube(float width, GarbageCollectMethod garbage_collect) {
+    MeshID m = new_mesh(
+        VertexSpecification::DEFAULT,
+        garbage_collect
+    );
     kglt::procedural::mesh::cube(mesh(m), width);
     MeshManager::mark_as_uncollected(m);
     return m;
 }
 
-MeshID ResourceManagerImpl::new_mesh_as_box(float width, float height, float depth, bool garbage_collect) {
-    MeshID m = new_mesh(garbage_collect);
+MeshID ResourceManagerImpl::new_mesh_as_box(float width, float height, float depth, GarbageCollectMethod garbage_collect) {
+    MeshID m = new_mesh(VertexSpecification::DEFAULT, garbage_collect);
     kglt::procedural::mesh::box(mesh(m), width, height, depth);
     MeshManager::mark_as_uncollected(m);
     return m;
 }
 
-MeshID ResourceManagerImpl::new_mesh_as_sphere(float diameter, bool garbage_collect) {
-    MeshID m = new_mesh(garbage_collect);
+MeshID ResourceManagerImpl::new_mesh_as_sphere(float diameter, GarbageCollectMethod garbage_collect) {
+    MeshID m = new_mesh(VertexSpecification::DEFAULT, garbage_collect);
     kglt::procedural::mesh::sphere(mesh(m), diameter);
     MeshManager::mark_as_uncollected(m);
     return m;
 }
 
-MeshID ResourceManagerImpl::new_mesh_as_rectangle(float width, float height, const Vec2& offset, MaterialID material, bool garbage_collect) {
-    MeshID m = new_mesh(garbage_collect);
+MeshID ResourceManagerImpl::new_mesh_as_rectangle(float width, float height, const Vec2& offset, MaterialID material, GarbageCollectMethod garbage_collect) {
+    MeshID m = new_mesh(VertexSpecification::DEFAULT, garbage_collect);
     kglt::procedural::mesh::rectangle(mesh(m), width, height, offset.x, offset.y, 0, false, material);
     MeshManager::mark_as_uncollected(m);
     return m;
 }
 
-MeshID ResourceManagerImpl::new_mesh_as_cylinder(float diameter, float length, int segments, int stacks, bool garbage_collect) {
-    MeshID m = new_mesh(garbage_collect);
+MeshID ResourceManagerImpl::new_mesh_as_cylinder(float diameter, float length, int segments, int stacks, GarbageCollectMethod garbage_collect) {
+    MeshID m = new_mesh(VertexSpecification::DEFAULT, garbage_collect);
     kglt::procedural::mesh::cylinder(mesh(m), diameter, length, segments, stacks);
     MeshManager::mark_as_uncollected(m);
     return m;
 }
 
-MeshID ResourceManagerImpl::new_mesh_as_capsule(float diameter, float length, int segments, int stacks, bool garbage_collect) {
-    MeshID m = new_mesh(garbage_collect);
+MeshID ResourceManagerImpl::new_mesh_as_capsule(float diameter, float length, int segments, int stacks, GarbageCollectMethod garbage_collect) {
+    MeshID m = new_mesh(VertexSpecification::DEFAULT, garbage_collect);
     kglt::procedural::mesh::capsule(mesh(m), diameter, length, segments, 1, stacks);
     MeshManager::mark_as_uncollected(m);
     return m;
 }
 
-MeshID ResourceManagerImpl::new_mesh_from_vertices(const std::vector<Vec2> &vertices, MeshArrangement arrangement, bool garbage_collect) {
-    MeshID m = new_mesh(garbage_collect);
+MeshID ResourceManagerImpl::new_mesh_from_vertices(VertexSpecification vertex_specification, const std::vector<Vec2> &vertices, MeshArrangement arrangement, GarbageCollectMethod garbage_collect) {
+    MeshID m = new_mesh(vertex_specification, garbage_collect);
 
     auto new_mesh = mesh(m);
     auto smi = new_mesh->new_submesh(arrangement);
     int i = 0;
     for(auto v: vertices) {
-        new_mesh->shared_data().position(v);
-        new_mesh->shared_data().diffuse(kglt::Colour::WHITE);
-        new_mesh->shared_data().normal(kglt::Vec3());
-        new_mesh->shared_data().tex_coord0(kglt::Vec2());
-        new_mesh->shared_data().move_next();
-        new_mesh->submesh(smi)->index_data().index(i++);
+        new_mesh->shared_data->position(v);
+        new_mesh->shared_data->move_next();
+        new_mesh->submesh(smi)->index_data->index(i++);
     }
 
-    new_mesh->shared_data().done();
-    new_mesh->submesh(smi)->index_data().done();
+    new_mesh->shared_data->done();
+    new_mesh->submesh(smi)->index_data->done();
 
     MeshManager::mark_as_uncollected(m);
 
     return m;
 }
 
-MeshID ResourceManagerImpl::new_mesh_from_vertices(const std::vector<Vec3> &vertices, MeshArrangement arrangement, bool garbage_collect) {
+MeshID ResourceManagerImpl::new_mesh_from_vertices(VertexSpecification vertex_specification, const std::vector<Vec3> &vertices, MeshArrangement arrangement, GarbageCollectMethod garbage_collect) {
     //FIXME: THis is literally a copy/paste of the function above, we can templatize this
-    MeshID m = new_mesh(garbage_collect);
+    MeshID m = new_mesh(vertex_specification, garbage_collect);
 
     auto new_mesh = mesh(m);
     auto smi = new_mesh->new_submesh(arrangement);
     int i = 0;
     for(auto v: vertices) {
-        new_mesh->shared_data().position(v);
-        new_mesh->shared_data().diffuse(kglt::Colour::WHITE);
-        new_mesh->shared_data().normal(kglt::Vec3());
-        new_mesh->shared_data().tex_coord0(kglt::Vec2());
-        new_mesh->shared_data().move_next();
-        new_mesh->submesh(smi)->index_data().index(i++);
+        new_mesh->shared_data->position(v);
+        new_mesh->shared_data->move_next();
+        new_mesh->submesh(smi)->index_data->index(i++);
     }
 
-    new_mesh->shared_data().done();
-    new_mesh->submesh(smi)->index_data().done();
+    new_mesh->shared_data->done();
+    new_mesh->submesh(smi)->index_data->done();
     MeshManager::mark_as_uncollected(m);
     return m;
 }
 
-MeshID ResourceManagerImpl::new_mesh_with_alias(const unicode& alias, bool garbage_collect) {
-    MeshID m = new_mesh(garbage_collect);
+MeshID ResourceManagerImpl::new_mesh_with_alias(const unicode& alias, VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect) {
+    MeshID m = new_mesh(vertex_specification, garbage_collect);
     try {
         MeshManager::manager_store_alias(alias, m);
     } catch(...) {
@@ -206,7 +203,7 @@ MeshID ResourceManagerImpl::new_mesh_with_alias(const unicode& alias, bool garba
     return m;
 }
 
-MeshID ResourceManagerImpl::new_mesh_with_alias_from_file(const unicode& alias, const unicode& path, bool garbage_collect) {
+MeshID ResourceManagerImpl::new_mesh_with_alias_from_file(const unicode& alias, const unicode& path, GarbageCollectMethod garbage_collect) {
     MeshID m = new_mesh_from_file(path, garbage_collect);
     try {
         MeshManager::manager_store_alias(alias, m);
@@ -217,7 +214,7 @@ MeshID ResourceManagerImpl::new_mesh_with_alias_from_file(const unicode& alias, 
     return m;
 }
 
-MeshID ResourceManagerImpl::new_mesh_with_alias_as_cube(const unicode& alias, float width, bool garbage_collect) {
+MeshID ResourceManagerImpl::new_mesh_with_alias_as_cube(const unicode& alias, float width, GarbageCollectMethod garbage_collect) {
     MeshID m = new_mesh_as_cube(width, garbage_collect);
     try {
         MeshManager::manager_store_alias(alias, m);
@@ -228,7 +225,7 @@ MeshID ResourceManagerImpl::new_mesh_with_alias_as_cube(const unicode& alias, fl
     return m;
 }
 
-MeshID ResourceManagerImpl::new_mesh_with_alias_as_sphere(const unicode& alias, float diameter, bool garbage_collect) {
+MeshID ResourceManagerImpl::new_mesh_with_alias_as_sphere(const unicode& alias, float diameter, GarbageCollectMethod garbage_collect) {
     MeshID m = new_mesh_as_sphere(diameter, garbage_collect);
     try {
         MeshManager::manager_store_alias(alias, m);
@@ -239,7 +236,7 @@ MeshID ResourceManagerImpl::new_mesh_with_alias_as_sphere(const unicode& alias, 
     return m;
 }
 
-MeshID ResourceManagerImpl::new_mesh_with_alias_as_rectangle(const unicode& alias, float width, float height, const Vec2& offset, kglt::MaterialID material, bool garbage_collect) {
+MeshID ResourceManagerImpl::new_mesh_with_alias_as_rectangle(const unicode& alias, float width, float height, const Vec2& offset, kglt::MaterialID material, GarbageCollectMethod garbage_collect) {
     MeshID m = new_mesh_as_rectangle(width, height, offset, material, garbage_collect);
     try {
         MeshManager::manager_store_alias(alias, m);
@@ -250,7 +247,7 @@ MeshID ResourceManagerImpl::new_mesh_with_alias_as_rectangle(const unicode& alia
     return m;
 }
 
-MeshID ResourceManagerImpl::new_mesh_with_alias_as_cylinder(const unicode &alias, float diameter, float length, int segments, int stacks, bool garbage_collect) {
+MeshID ResourceManagerImpl::new_mesh_with_alias_as_cylinder(const unicode &alias, float diameter, float length, int segments, int stacks, GarbageCollectMethod garbage_collect) {
     MeshID m = new_mesh_as_cylinder(diameter, length, segments, stacks, garbage_collect);
     try {
         MeshManager::manager_store_alias(alias, m);
@@ -278,8 +275,8 @@ uint32_t ResourceManagerImpl::mesh_count() const {
     return MeshManager::manager_count();
 }
 
-MaterialID ResourceManagerImpl::new_material(bool garbage_collect) {
-    MaterialID result = MaterialManager::manager_new(garbage_collect);
+MaterialID ResourceManagerImpl::new_material(GarbageCollectMethod garbage_collect) {
+    MaterialID result = MaterialManager::manager_new(garbage_collect, this);
     return result;
 }
 
@@ -287,7 +284,7 @@ void ResourceManagerImpl::delete_material(MaterialID m) {
     material(m)->enable_gc();
 }
 
-MaterialID ResourceManagerImpl::new_material_from_file(const unicode& path, bool garbage_collect) {
+MaterialID ResourceManagerImpl::new_material_from_file(const unicode& path, GarbageCollectMethod garbage_collect) {
     /*
      * We keep a cache of the materials we've loaded from file, this massively improves performance
      * and allows sharing of the GPU program during rendering
@@ -298,7 +295,7 @@ MaterialID ResourceManagerImpl::new_material_from_file(const unicode& path, bool
     /* Not in the cache? Load it from file and store as a template */
     if(!template_materials.count(path)) {
         L_INFO(_u("Loading material {0}").format(path));
-        auto mat = material(new_material(false));
+        auto mat = material(new_material(GARBAGE_COLLECT_NEVER));
         window->loader_for(path.encode())->into(mat);
         template_materials[path] = mat->id();
     }
@@ -311,7 +308,7 @@ MaterialID ResourceManagerImpl::new_material_from_file(const unicode& path, bool
     return mat_id;
 }
 
-MaterialID ResourceManagerImpl::new_material_with_alias(const unicode& alias, bool garbage_collect) {
+MaterialID ResourceManagerImpl::new_material_with_alias(const unicode& alias, GarbageCollectMethod garbage_collect) {
     MaterialID m = new_material(garbage_collect);
 
     try {
@@ -323,7 +320,7 @@ MaterialID ResourceManagerImpl::new_material_with_alias(const unicode& alias, bo
     return m;
 }
 
-MaterialID ResourceManagerImpl::new_material_with_alias_from_file(const unicode& alias, const unicode& path, bool garbage_collect) {
+MaterialID ResourceManagerImpl::new_material_with_alias_from_file(const unicode& alias, const unicode& path, GarbageCollectMethod garbage_collect) {
     MaterialID m = new_material_from_file(path, garbage_collect);
     try {
         MaterialManager::manager_store_alias(alias, m);
@@ -334,7 +331,7 @@ MaterialID ResourceManagerImpl::new_material_with_alias_from_file(const unicode&
     return m;
 }
 
-MaterialID ResourceManagerImpl::new_material_from_texture(TextureID texture_id, bool garbage_collect) {
+MaterialID ResourceManagerImpl::new_material_from_texture(TextureID texture_id, GarbageCollectMethod garbage_collect) {
     MaterialID m = new_material_from_file(Material::BuiltIns::TEXTURE_ONLY, garbage_collect);
     material(m)->set_texture_unit_on_all_passes(0, texture_id);
     mark_material_as_uncollected(m); //FIXME: Race-y
@@ -345,12 +342,12 @@ MaterialID ResourceManagerImpl::get_material_with_alias(const unicode& alias) {
     return MaterialManager::manager_get_by_alias(alias);
 }
 
-ProtectedPtr<Material> ResourceManagerImpl::material(MaterialID mid) {
-    return ProtectedPtr<Material>(MaterialManager::manager_get(mid));
+MaterialPtr ResourceManagerImpl::material(MaterialID mid) {
+    return MaterialManager::manager_get(mid).lock();
 }
 
-const ProtectedPtr<Material> ResourceManagerImpl::material(MaterialID mid) const {
-    return ProtectedPtr<Material>(MaterialManager::manager_get(mid));
+const MaterialPtr ResourceManagerImpl::material(MaterialID mid) const {
+    return MaterialManager::manager_get(mid).lock();
 }
 
 bool ResourceManagerImpl::has_material(MaterialID m) const {
@@ -365,11 +362,11 @@ void ResourceManagerImpl::mark_material_as_uncollected(MaterialID t) {
     MaterialManager::mark_as_uncollected(t);
 }
 
-TextureID ResourceManagerImpl::new_texture(bool garbage_collect) {
-    return TextureManager::manager_new(garbage_collect);
+TextureID ResourceManagerImpl::new_texture(GarbageCollectMethod garbage_collect) {
+    return TextureManager::manager_new(garbage_collect, this);
 }
 
-TextureID ResourceManagerImpl::new_texture_from_file(const unicode& path, TextureFlags flags, bool garbage_collect) {
+TextureID ResourceManagerImpl::new_texture_from_file(const unicode& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
     //Load the texture
     auto tex = texture(new_texture(garbage_collect));
     window->loader_for(path, LOADER_HINT_TEXTURE)->into(tex);
@@ -393,7 +390,7 @@ void ResourceManagerImpl::delete_texture(TextureID t) {
     texture(t)->enable_gc();
 }
 
-TextureID ResourceManagerImpl::new_texture_with_alias(const unicode& alias, bool garbage_collect) {
+TextureID ResourceManagerImpl::new_texture_with_alias(const unicode& alias, GarbageCollectMethod garbage_collect) {
     TextureID t = new_texture(garbage_collect);
     try {
         TextureManager::manager_store_alias(alias, t);
@@ -404,7 +401,7 @@ TextureID ResourceManagerImpl::new_texture_with_alias(const unicode& alias, bool
     return t;
 }
 
-TextureID ResourceManagerImpl::new_texture_with_alias_from_file(const unicode& alias, const unicode& path, TextureFlags flags, bool garbage_collect) {
+TextureID ResourceManagerImpl::new_texture_with_alias_from_file(const unicode& alias, const unicode& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
     TextureID t = new_texture_from_file(path, flags, garbage_collect);
     try {
         TextureManager::manager_store_alias(alias, t);
@@ -419,12 +416,12 @@ TextureID ResourceManagerImpl::get_texture_with_alias(const unicode& alias) {
     return TextureManager::manager_get_by_alias(alias);
 }
 
-ProtectedPtr<Texture> ResourceManagerImpl::texture(TextureID t) {
-    return ProtectedPtr<Texture>(TextureManager::manager_get(t).lock());
+TexturePtr ResourceManagerImpl::texture(TextureID t) {
+    return TexturePtr(TextureManager::manager_get(t).lock());
 }
 
-const ProtectedPtr<Texture> ResourceManagerImpl::texture(TextureID t) const {
-    return ProtectedPtr<Texture>(TextureManager::manager_get(t).lock());
+const TexturePtr ResourceManagerImpl::texture(TextureID t) const {
+    return TexturePtr(TextureManager::manager_get(t).lock());
 }
 
 bool ResourceManagerImpl::has_texture(TextureID t) const {
@@ -439,18 +436,18 @@ void ResourceManagerImpl::mark_texture_as_uncollected(TextureID t) {
     TextureManager::mark_as_uncollected(t);
 }
 
-SoundID ResourceManagerImpl::new_sound(bool garbage_collect) {
-    return SoundManager::manager_new(garbage_collect);
+SoundID ResourceManagerImpl::new_sound(GarbageCollectMethod garbage_collect) {
+    return SoundManager::manager_new(garbage_collect, this);
 }
 
-SoundID ResourceManagerImpl::new_sound_from_file(const unicode& path, bool garbage_collect) {
+SoundID ResourceManagerImpl::new_sound_from_file(const unicode& path, GarbageCollectMethod garbage_collect) {
     //Load the sound
     auto snd = sound(new_sound(garbage_collect));
     window->loader_for(path.encode())->into(snd);
     return snd->id();
 }
 
-SoundID ResourceManagerImpl::new_sound_with_alias(const unicode& alias, bool garbage_collect) {
+SoundID ResourceManagerImpl::new_sound_with_alias(const unicode& alias, GarbageCollectMethod garbage_collect) {
     SoundID s = new_sound(garbage_collect);
     try {
         SoundManager::manager_store_alias(alias, s);
@@ -461,7 +458,7 @@ SoundID ResourceManagerImpl::new_sound_with_alias(const unicode& alias, bool gar
     return s;
 }
 
-SoundID ResourceManagerImpl::new_sound_with_alias_from_file(const unicode& alias, const unicode& path, bool garbage_collect) {
+SoundID ResourceManagerImpl::new_sound_with_alias_from_file(const unicode& alias, const unicode& path, GarbageCollectMethod garbage_collect) {
     SoundID s = new_sound_from_file(path, garbage_collect);
     try {
         SoundManager::manager_store_alias(alias, s);

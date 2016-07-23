@@ -31,7 +31,7 @@ public:
 
     uint32_t gl_tex() const { return gl_tex_; }
 
-    Texture(ResourceManager* resource_manager, TextureID id):
+    Texture(TextureID id, ResourceManager* resource_manager):
         Resource(resource_manager),
         generic::Identifiable<TextureID>(id),
         width_(0),
@@ -43,7 +43,7 @@ public:
 
     void set_bpp(uint32_t bits=32);
     void resize(uint32_t width, uint32_t height);
-    void upload(bool free_after=false,
+    void upload(bool free_after=true,
                 bool generate_mipmaps=true,
                 bool repeat=true,
                 bool linear=false); //Upload to GL, initializes the tex ID

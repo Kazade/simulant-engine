@@ -1,3 +1,6 @@
 [submodule "kglt/kazbase"]
 	path = kglt/kazbase
 	url = https://github.com/Kazade/kazbase.git
+[submodule "deps/kazsignal"]
+	path = deps/kazsignal
+	url = git@github.com:Kazade/kazsignal.git

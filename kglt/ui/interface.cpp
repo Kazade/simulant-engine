@@ -114,15 +114,12 @@ public:
         tmp_vao_(MODIFY_REPEATEDLY_USED_FOR_RENDERING, MODIFY_REPEATEDLY_USED_FOR_RENDERING),
         window_(window) {
 
-        unicode vert_shader = window_.resource_locator->read_file("kglt/materials/ui.vert")->str();
-        unicode frag_shader = window_.resource_locator->read_file("kglt/materials/ui.frag")->str();
+        std::string vert_shader = window_.resource_locator->read_file("kglt/materials/ui.vert")->str();
+        std::string frag_shader = window_.resource_locator->read_file("kglt/materials/ui.frag")->str();
 
         L_INFO("UI shaders loaded, creating GPU program");
 
-        auto program = GPUProgram::create();
-        program->set_shader_source(SHADER_TYPE_VERTEX, vert_shader);
-        program->set_shader_source(SHADER_TYPE_FRAGMENT, frag_shader);
-
+        auto program = GPUProgram::create(vert_shader, frag_shader);
         shader_ = GPUProgramInstance::create(program);
         window.idle->run_sync(std::bind(&GPUProgram::build, program.get()));
     }
@@ -140,7 +137,7 @@ public:
 
         texture_handle = tex->id().value();
 
-        textures_[texture_handle] = tex.__object; //Hold for ref-counting
+        textures_[texture_handle] = tex; //Hold for ref-counting
         return true;
     }
 
@@ -156,7 +153,7 @@ public:
 
         texture_handle = tex->id().value();
 
-        textures_[texture_handle] = tex.__object; //Hold for ref-counting
+        textures_[texture_handle] = tex; //Hold for ref-counting
         return true;
     }
 
@@ -382,6 +379,87 @@ Interface::Interface(WindowBase &window):
 
 static int32_t interface_count = 0;
 
+const std::string DEFAULT_STYLES = R"(
+     body, div,
+     h1, h2, h3, h4,
+     h5, h6, p,
+     hr, pre, datagrid,
+     tabset tabs
+     {
+         display: block;
+         font-family: Ubuntu Mono;
+     }
+
+     div {
+        width: 100%;
+     }
+
+     body {
+         width: 100%;
+         height: 100%;
+         margin: 0px;
+         padding: 0px;
+         border: 0px;
+     }
+
+     h1
+     {
+         font-size: 2em;
+         margin: .67em 0;
+     }
+
+     h2
+     {
+         font-size: 1.5em;
+         margin: .83em 0;
+     }
+
+     h3
+     {
+         font-size: 1.17em;
+         margin: 1em 0;
+     }
+
+     h4, p
+     {
+         margin: 1.33em 0;
+     }
+
+     h5
+     {
+         font-size: .83em;
+         line-height: 1.17em;
+         margin: 1.67em 0;
+     }
+
+     h6
+     {
+         font-size: .67em;
+         margin: 2.33em 0;
+     }
+
+     h1, h2, h3, h4,
+     h5, h6, strong
+     {
+         font-weight: bold;
+     }
+
+     em
+     {
+         font-style: italic;
+     }
+
+     pre
+     {
+         white-space: pre;
+     }
+
+     hr
+     {
+         border-width: 1px;
+     }
+)";
+
 std::vector<unicode> Interface::find_fonts() {
     /*
      * Unfortunately, because Android doesn't easily let you list folders in a portable way
@@ -480,7 +558,7 @@ bool Interface::init() {
 
     assert(impl_->document_);
 
-    set_styles("body { font-family: \"Ubuntu\"; }");
+    set_styles(DEFAULT_STYLES);
 
     return true;
 }

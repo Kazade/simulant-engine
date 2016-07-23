@@ -5,12 +5,14 @@
 #include <vector>
 #include <unordered_map>
 #include <set>
-
-#include "generic/managed.h"
-#include "generic/identifiable.h"
+#include <memory>
 
 #include <kazmath/kazmath.h>
 #include <kazbase/list_utils.h>
+
+#include "generic/managed.h"
+#include "generic/identifiable.h"
+#include "generic/property.h"
 
 #include "loadable.h"
 #include "resource.h"
@@ -23,11 +25,15 @@ namespace kglt {
 class ResourceManager;
 
 class MeshInterface:
-    public Boundable {
+    public virtual Boundable {
 
 public:
     virtual ~MeshInterface() {}
-    virtual const VertexData& shared_data() const = 0;
+
+    Property<MeshInterface, VertexData> shared_data = { this, &MeshInterface::get_shared_data };
+
+private:
+    virtual VertexData* get_shared_data() const = 0;
 };
 
 class SubMeshInterface:
@@ -36,13 +42,18 @@ class SubMeshInterface:
 public:
     virtual ~SubMeshInterface() {}
 
-    virtual const VertexData& vertex_data() const = 0;
-    virtual const IndexData& index_data() const = 0;
     virtual const MaterialID material_id() const = 0;
     virtual const MeshArrangement arrangement() const = 0;
 
     virtual void _update_vertex_array_object() = 0;
     virtual void _bind_vertex_array_object() = 0;
+
+    Property<SubMeshInterface, VertexData> vertex_data = { this, &SubMeshInterface::get_vertex_data };
+    Property<SubMeshInterface, IndexData> index_data = { this, &SubMeshInterface::get_index_data };
+
+private:
+    virtual VertexData* get_vertex_data() const = 0;
+    virtual IndexData* get_index_data() const = 0;
 };
 
 enum VertexSharingMode {
@@ -57,21 +68,16 @@ class SubMesh :
 
 public:
     SubMesh(
-        Mesh* parent,
         SubMeshID id,
+        Mesh* parent,
         const std::string& name,
         MaterialID material,
-        MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES,
-        VertexSharingMode vertex_sharing=VERTEX_SHARING_MODE_SHARED
+        MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES,
+        VertexSharingMode vertex_sharing = VERTEX_SHARING_MODE_SHARED,
+        VertexSpecification vertex_specification = VertexSpecification()
     );
 
     virtual ~SubMesh();
-
-    VertexData& vertex_data();
-    IndexData& index_data();
-
-    const VertexData& vertex_data() const;
-    const IndexData& index_data() const;
 
     const MaterialID material_id() const;
     void set_material_id(MaterialID mat);
@@ -94,15 +100,29 @@ public:
     void _bind_vertex_array_object();
 
     void generate_texture_coordinates_cube(uint32_t texture=0);
+
+    VertexData* get_vertex_data() const;
+    IndexData* get_index_data() const;
+
+
+public:
+    typedef sig::signal<void (SubMesh*, MaterialID, MaterialID)> MaterialChangedCallback;
+
+    MaterialChangedCallback& signal_material_changed() {
+        return signal_material_changed_;
+    }
+
 private:
+    sig::connection material_change_connection_;
+
     Mesh* parent_;
 
     MaterialPtr material_;
     MeshArrangement arrangement_;
     bool uses_shared_data_;
 
-    VertexData vertex_data_;
-    IndexData index_data_;
+    VertexData* vertex_data_ = nullptr;
+    IndexData* index_data_ = nullptr;
     VertexArrayObject::ptr vertex_array_object_;
 
     bool vertex_data_dirty_ = false;
@@ -112,9 +132,11 @@ private:
 
     sig::connection vrecalc_;
     sig::connection irecalc_;
+
+    MaterialChangedCallback signal_material_changed_;
 };
 
-typedef generic::TemplatedManager<Mesh, SubMesh, SubMeshID> TemplatedSubMeshManager;
+typedef generic::TemplatedManager<SubMesh, SubMeshID> TemplatedSubMeshManager;
 
 class Mesh :
     public MeshInterface,
@@ -125,25 +147,20 @@ class Mesh :
     public TemplatedSubMeshManager {
 
 public:
-    Mesh(ResourceManager* resource_manager, MeshID id);
-
-    VertexData& shared_data() {
-        return shared_data_;
-    }
-
-    const VertexData& shared_data() const {
-        return shared_data_;
-    }
+    Mesh(MeshID id, ResourceManager* resource_manager, VertexSpecification vertex_specification);
+    ~Mesh();
 
     SubMeshID new_submesh_with_material(
-        MaterialID material,
+        MaterialID material,        
         MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES,
-        VertexSharingMode vertex_sharing=VERTEX_SHARING_MODE_SHARED
+        VertexSharingMode vertex_sharing=VERTEX_SHARING_MODE_SHARED,
+        VertexSpecification vertex_specification=VertexSpecification()
     );
 
-    SubMeshID new_submesh(
+    SubMeshID new_submesh(        
         MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES,
-        VertexSharingMode vertex_sharing=VERTEX_SHARING_MODE_SHARED
+        VertexSharingMode vertex_sharing=VERTEX_SHARING_MODE_SHARED,
+        VertexSpecification vertex_specification=VertexSpecification()
     );
 
     SubMeshID new_submesh_as_rectangle(MaterialID material, float width, float height, const Vec3& offset=Vec3());
@@ -165,23 +182,39 @@ public:
     void reverse_winding(); ///< Reverse the winding of all submeshes
     void set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass=0); ///< Replace the texture unit on all submesh materials
 
-    sig::signal<void ()>& signal_submeshes_changed() { return signal_submeshes_changed_; }
-
     const AABB aabb() const;
     void normalize(); //Scales the mesh so it has a radius of 1.0
     void transform_vertices(const kglt::Mat4& transform, bool include_submeshes=true);
 
+    void each(std::function<void (uint32_t, std::weak_ptr<SubMesh>)> func) const;
+
+    using TemplatedSubMeshManager::each;
+public:
+    // Signals
+
+    typedef sig::signal<void (MeshID, SubMesh*)> SubMeshCreatedCallback;
+    typedef sig::signal<void (MeshID, SubMesh*)> SubMeshDestroyedCallback;
+    typedef sig::signal<void (MeshID, SubMesh*, MaterialID, MaterialID)> SubMeshMaterialChangedCallback;
+
+    SubMeshCreatedCallback& signal_submesh_created() { return signal_submesh_created_; }
+    SubMeshDestroyedCallback& signal_submesh_destroyed() { return signal_submesh_destroyed_; }
+    SubMeshMaterialChangedCallback& signal_submesh_material_changed() { return signal_submesh_material_changed_; }
+
 private:
     friend class SubMesh;
+    VertexData* get_shared_data() const;
+
     void _update_buffer_object();
 
     bool shared_data_dirty_ = false;
-    VertexData shared_data_;
+    VertexData* shared_data_ = nullptr;
     BufferObject::ptr shared_data_buffer_object_;
 
     SubMeshID normal_debug_mesh_;
 
-    sig::signal<void ()> signal_submeshes_changed_;
+    SubMeshCreatedCallback signal_submesh_created_;
+    SubMeshDestroyedCallback signal_submesh_destroyed_;
+    SubMeshMaterialChangedCallback signal_submesh_material_changed_;
 };
 
 }

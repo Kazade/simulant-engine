@@ -7,7 +7,7 @@
 #include <memory>
 #include <stdexcept>
 
-#include <kazbase/signals.h>
+#include <kazsignal/kazsignal.h>
 
 #include "generic/data_carrier.h"
 #include "generic/visitor.h"
@@ -25,9 +25,24 @@ namespace kglt {
 
 class Object:
     public generic::DataCarrier,
-    public SceneNode {
+    public SceneNode,
+    public Controllable  {
 public:
     Object(Stage* stage):
+        stage_(stage),
+        uuid_(++object_counter) {
+
+        absolute_position_ = Vec3(0, 0, 0);
+        absolute_rotation_ = Quaternion(0, 0, 0, 1);
+        relative_position_ = Vec3(0, 0, 0);
+        relative_rotation_ = Quaternion(0, 0, 0, 1);
+    }
+
+    Object(Stage* stage, const Vec3& position, const Quaternion& rotation):
+        relative_position_(position),
+        relative_rotation_(rotation),
+        absolute_position_(position),
+        absolute_rotation_(rotation),
         stage_(stage),
         uuid_(++object_counter) {
 
@@ -36,31 +51,34 @@ public:
     virtual ~Object() {}
 
     // Nameable interface
-    void set_name(const unicode &name) { name_ = name; }
-    const unicode name() const { return name_; }
-    const bool has_name() const { return !name_.empty(); }
+    void set_name(const unicode &name) override { name_ = name; }
+    const unicode name() const override { return name_; }
+    const bool has_name() const override { return !name_.empty(); }
 
     Property<Object, Stage> stage = { this, &Object::stage_ };
     uint64_t uuid() const { return uuid_; }
 
-private:
-    Stage* stage_; //Each object is owned by a stage
+    // Locateable Interface
+    Vec3 position() const override { return absolute_position(); }
+    Vec2 position_2d() const override { return Vec2(position().x, position().y); }
+    Quaternion rotation() const override { return absolute_rotation(); }
+    // End Locateable Interface
 
-    static uint64_t object_counter;
-    uint64_t uuid_;
+    virtual kglt::Vec3 absolute_position() const {
+        return absolute_position_;
+    }
 
-    unicode name_;
-};
+    virtual kglt::Quaternion absolute_rotation() const {
+        return absolute_rotation_;
+    }
 
+    virtual kglt::Quaternion relative_rotation() const {
+        return relative_rotation_;
+    }
 
-class MoveableObject :
-    public Object,
-    public Transformable,
-    public Controllable {
-
-public:
-    MoveableObject(Stage* parent_scene);
-    virtual ~MoveableObject();
+    virtual kglt::Vec3 relative_position() const {
+        return relative_position_;
+    }
 
     void pre_update(double step) override {
         pre_update_controllers(step);
@@ -72,7 +90,41 @@ public:
 
     void update(double dt) override {
         update_controllers(dt);
-		do_update(dt);
+        do_update(dt);
+    }
+
+protected:
+    kglt::Vec3 relative_position_;
+    kglt::Quaternion relative_rotation_;
+
+    kglt::Vec3 absolute_position_;
+    kglt::Quaternion absolute_rotation_;
+
+private:
+    Stage* stage_ = nullptr; //Each object is owned by a stage
+
+    static uint64_t object_counter;
+    uint64_t uuid_;
+
+    unicode name_;
+
+    virtual void do_update(double dt) {}
+};
+
+typedef sig::signal<void (const Vec3&, const Quaternion&)> TransformationChangedSignal;
+
+class MoveableObject :
+    public Object,
+    public Transformable {
+
+    DEFINE_SIGNAL(TransformationChangedSignal, signal_transformation_changed);
+
+public:
+    MoveableObject(Stage* parent_scene);
+    virtual ~MoveableObject();
+
+    void update(double dt) override {
+        Object::update(dt);
         _update_constraint();
 	}
 
@@ -81,7 +133,6 @@ public:
 
     virtual void set_absolute_position(float x, float y, float z);
     virtual void set_absolute_position(const kglt::Vec3& pos) { set_absolute_position(pos.x, pos.y, pos.z); }
-    virtual kglt::Vec3 absolute_position() const;
 
     std::pair<Vec3, Vec3> constraint() const;
     bool is_constrained() const;
@@ -139,29 +190,21 @@ public:
 
     void rotate_around(const kglt::Vec3& axis, const kglt::Degrees& degrees) override;
 
-    void look_at(const kglt::Vec3& position);
-    void look_at(float x, float y, float z) {
+    void look_at(const kglt::Vec3& position) override;
+    void look_at(float x, float y, float z) override {
         return look_at(kglt::Vec3(x, y, z));
     }
 
     // End Transformable Interface
 
-    // Locateable Interface
-    Vec3 position() const override { return absolute_position(); }
-    Vec2 position_2d() const override { return Vec2(position().x, position().y); }
-    Quaternion rotation() const override { return absolute_rotation(); }
-    // End Locateable Interface
 
     virtual void set_relative_position(float x, float y, float z);
     virtual void set_relative_position(const kglt::Vec3& pos) { set_relative_position(pos.x, pos.y, pos.z); }
-    virtual kglt::Vec3 relative_position() const;
 
     virtual void set_absolute_rotation(const kglt::Quaternion& quaternion);
     virtual void set_absolute_rotation(const Degrees& angle, float x, float y, float z);
-    virtual kglt::Quaternion absolute_rotation() const;
 
     virtual void set_relative_rotation(const kglt::Quaternion& quaternion);
-    virtual kglt::Quaternion relative_rotation() const;
 
     Vec3 right() const {
         Vec3 result;
@@ -196,8 +239,7 @@ public:
     void lock_position();
     void unlock_position();
 
-    virtual void _initialize() {}
-    virtual void do_update(double dt) {}
+    virtual void _initialize() {}    
 
     void destroy_children();
 
@@ -210,12 +252,6 @@ protected:
     void update_from_parent();
 
 private:
-    kglt::Vec3 relative_position_;
-    kglt::Quaternion relative_rotation_;
-
-    kglt::Vec3 absolute_position_;
-    kglt::Quaternion absolute_rotation_;
-
     sig::connection parent_changed_connection_;
 
     void parent_changed_callback(GenericTreeNode* old_parent, GenericTreeNode* new_parent);

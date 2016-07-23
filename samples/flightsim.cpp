@@ -10,7 +10,7 @@ public:
         kglt::Screen<GameScreen>(window, "game_screen") {}
 
     void do_load() {
-        unicode filename = ""; //FIXME: Figure out how to pass this down to the screen!
+        unicode filename = window->application->data->get<unicode>("filename");
 
         prepare_basic_scene(stage_id_, camera_id_);
 
@@ -21,7 +21,7 @@ public:
         window->camera(camera_id_)->set_perspective_projection(45.0, float(window->width()) / float(window->height()));
 
         kglt::MeshID mid = stage->new_mesh_from_file(filename);
-        kglt::ActorID actor_id = stage->new_actor(mid);
+        kglt::ActorID actor_id = stage->new_actor_with_mesh(mid);
 
         {
             auto actor = stage->actor(actor_id);
@@ -29,7 +29,7 @@ public:
         }
 
         //Load a particle system and attach it to the actor
-        auto ps_id = stage->new_particle_system_with_parent_from_file(actor_id, "kglt/particles/rocket_trail.kglp");
+        auto ps_id = stage->new_particle_system_with_parent_from_file(actor_id, "kglt/particles/pixel_trail.kglp");
         stage->particle_system(ps_id)->move_to(0, 0, -10);
 
         //Just stash the skybox with the window so we always have access to it
@@ -75,7 +75,7 @@ private:
 
 class FlightSimSample: public kglt::Application {
 public:
-    FlightSimSample(const unicode& path):
+    FlightSimSample():
         Application("KGLT Combined Sample") {
     }
 
@@ -100,7 +100,9 @@ int main(int argc, char* argv[]) {
         return 2;
     }
 
-    FlightSimSample app(filename);
+    FlightSimSample app;
+    app.data->stash(filename, "filename");
+
     return app.run();
 }
 

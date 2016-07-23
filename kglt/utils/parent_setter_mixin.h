@@ -13,6 +13,12 @@ public:
     ParentSetterMixin(Stage* stage):
         T(stage) {}
 
+    template<typename ...Args>
+    ParentSetterMixin(Stage* stage, Args&& ...args):
+        T(stage, std::forward<Args>(args)...){
+
+    }
+
     void set_parent(ActorID actor) {
         T::set_parent(T::stage->actor(actor).__object.get());
     }
@@ -26,7 +32,7 @@ public:
     }
 
     void set_parent(SpriteID sprite) {
-        T::set_parent(T::stage->sprite(sprite).__object.get());
+        T::set_parent(T::stage->sprite(sprite).get());
     }
 
     void set_parent(BackgroundID background) {

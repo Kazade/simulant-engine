@@ -31,6 +31,8 @@
 #include "utils/gl_error.h"
 #include "utils/debug_service.h"
 
+#include "panels/stats_panel.h"
+#include "panels/partitioner_panel.h"
 
 namespace kglt {
 
@@ -38,8 +40,7 @@ WindowBase::WindowBase():
     WindowHolder(this),
     ResourceManager(this),
     Source(this),
-    BackgroundManager(this),
-    StageManager(),
+    StageManager(this),
     UIStageManager(this),    
     CameraManager(this),
     ResourceManagerImpl(this),
@@ -53,8 +54,8 @@ WindowBase::WindowBase():
     frame_counter_frames_(0),
     frame_time_in_milliseconds_(0),
     total_time_(0),
-    render_sequence_(new RenderSequence(*this)),
-    debug_service_(new DebugService(this)) {
+    debug_service_(new DebugService(this)),
+    background_manager_(new BackgroundManager(this)) {
 
     ktiGenTimers(1, &fixed_timer_);
     ktiBindTimer(fixed_timer_);
@@ -65,13 +66,17 @@ WindowBase::WindowBase():
     ktiStartGameTimer();
 
     logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));
+
 }
 
 WindowBase::~WindowBase() {
     //FIXME: Make WindowBase Managed<> and put this in cleanup()
+    virtual_gamepad_.reset();
     loading_.reset();
     message_bar_.reset();
     watcher_.reset();
+    background_manager_.reset();
+    render_sequence_.reset();
 
     Sound::shutdown_openal();
 }
@@ -153,9 +158,10 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
 
     bool result = create_window(width, height, bpp, fullscreen);
 
+    // Initialize the render_sequence once we have a renderer
+    render_sequence_ = std::make_shared<RenderSequence>(this);
+
     if(result && !initialized_) {        
-
-
         //watcher_ = Watcher::create(*this);
 
         L_INFO("Registering loaders");
@@ -181,6 +187,9 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
 
         create_defaults();
 
+        register_panel(1, std::make_shared<StatsPanel>(this));
+        register_panel(2, std::make_shared<PartitionerPanel>(this));
+
         GLCheck(glEnable, GL_DEPTH_TEST);
         GLCheck(glDepthFunc, GL_LEQUAL);
         GLCheck(glEnable, GL_CULL_FACE);
@@ -205,6 +214,25 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
     return result;
 }
 
+void WindowBase::register_panel(uint8_t function_key, std::shared_ptr<Panel> panel) {
+    PanelEntry entry;
+    entry.panel = panel;
+    entry.keyboard_connection = input_controller_->keyboard().key_pressed_connect((SDL_Scancode) (int(SDL_SCANCODE_F1) + (function_key - 1)), [panel](SDL_Keysym sym) {
+        if(panel->is_active()) {
+            panel->deactivate();
+        } else {
+            panel->activate();
+        }
+    });
+
+    panels_[function_key] = entry;
+}
+
+void WindowBase::unregister_panel(uint8_t function_key) {
+    panels_[function_key].keyboard_connection.disconnect();
+    panels_.erase(function_key);
+}
+
 void WindowBase::set_logging_level(LoggingLevel level) {
     logging::get_logger("/")->set_level((logging::LOG_LEVEL) level);
 }
@@ -215,7 +243,7 @@ void WindowBase::update(double dt) {
         //it's still accessible through get_deltatime if the user needs it
     }
 
-    BackgroundManager::update(dt);
+    background_manager_->update(dt);
     StageManager::update(dt);
 }
 
@@ -255,14 +283,13 @@ bool WindowBase::run_frame() {
 
         update(fixed_step); //Update this
 
-        signal_step_(fixed_step); //Trigger any steps
-
-        ResourceManagerImpl::update(fixed_step);
+        signal_step_(fixed_step); //Trigger any steps        
     }
 
     fixed_step_interp_ = ktiGetAccumulatorValue();
     signal_post_step_(fixed_step_interp_);
 
+    ResourceManagerImpl::update(delta_time_);
     idle_.execute(); //Execute idle tasks before render
 
     /* Don't run the render sequence if we don't have a context, and don't update the resource
@@ -426,7 +453,7 @@ void WindowBase::reset() {
     CameraManager::manager_delete_all();
     UIStageManager::manager_delete_all();
     StageManager::manager_delete_all();
-    BackgroundManager::manager_delete_all();
+    background_manager_.reset(new BackgroundManager(this));
 
     create_defaults();
 }

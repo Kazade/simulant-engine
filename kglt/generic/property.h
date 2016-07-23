@@ -2,6 +2,7 @@
 #define PROPERTY_H
 
 #include <functional>
+#include <memory>
 
 template<typename Container, typename T>
 class Property {
@@ -18,6 +19,14 @@ public:
         getter_([member](Container* self) -> T* {
             return (self->*member);
         }) {
+    }
+
+    Property(Container* _this, std::unique_ptr<T> Container::* member):
+        this_(_this),
+        getter_([member](Container* self) -> T* {
+            return (self->*member).get();
+    }) {
+
     }
 
     Property(Container* _this, std::shared_ptr<T> Container::* member):

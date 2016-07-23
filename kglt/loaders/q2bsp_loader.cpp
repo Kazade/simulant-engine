@@ -8,7 +8,7 @@
 #include <kazbase/logging.h>
 #include <kazbase/unicode.h>
 
-#include "../window.h"
+#include "../sdl2_window.h"
 #include "../stage.h"
 #include "../mesh.h"
 #include "../types.h"
@@ -317,7 +317,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     std::map<std::string, TextureID> texture_lookup;
     TextureID checkerboard = stage->new_texture_from_file(Texture::BuiltIns::CHECKERBOARD);
-    TextureID lightmap_texture = stage->new_texture(false);
+    TextureID lightmap_texture = stage->new_texture(GARBAGE_COLLECT_NEVER);
 
     auto texture_info_visible = [](Q2::TextureInfo& info) -> bool {
         /* Don't draw invisible things */
@@ -426,7 +426,11 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
      *  Load the textures and generate materials
      */
 
-    MeshID mid = stage->new_mesh_with_alias("world_geometry");
+    MeshID mid = stage->new_mesh_with_alias(
+        "world_geometry",
+        VertexSpecification::DEFAULT,
+        GARBAGE_COLLECT_NEVER
+    );
     auto mesh = stage->mesh(mid);
 
     std::vector<MaterialID> materials;
@@ -469,10 +473,10 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
         {
             auto mat = stage->material(new_material_id);
-            mat->pass(0).set_texture_unit(0, new_texture_id);
+            mat->pass(0)->set_texture_unit(0, new_texture_id);
 
             if(uses_lightmap) {
-                mat->pass(0).set_texture_unit(1, lightmap_texture);
+                mat->pass(0)->set_texture_unit(1, lightmap_texture);
             }
 
             if(tex.flags & Q2::SURFACE_FLAG_FLOWING) {
@@ -482,13 +486,13 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             }
 
             if(tex.flags & Q2::SURFACE_FLAG_TRANS_33) {
-                mat->pass(0).set_diffuse(kglt::Colour(1.0, 1.0, 1.0, 0.33));
-                mat->pass(0).set_blending(BLEND_ALPHA);
+                mat->pass(0)->set_diffuse(kglt::Colour(1.0, 1.0, 1.0, 0.33));
+                mat->pass(0)->set_blending(BLEND_ALPHA);
             }
 
             if(tex.flags & Q2::SURFACE_FLAG_TRANS_66) {
-                mat->pass(0).set_diffuse(kglt::Colour(1.0, 1.0, 1.0, 0.66));
-                mat->pass(0).set_blending(BLEND_ALPHA);
+                mat->pass(0)->set_diffuse(kglt::Colour(1.0, 1.0, 1.0, 0.66));
+                mat->pass(0)->set_blending(BLEND_ALPHA);
             }
         }
 
@@ -595,7 +599,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             for(uint8_t j = 0; j < 3; ++j) {
                 if(container::contains(index_lookup, tri_idx[j])) {
                     //We've already processed this vertex
-                    sm->index_data().index(index_lookup[tri_idx[j]]);
+                    sm->index_data->index(index_lookup[tri_idx[j]]);
                     continue;
                 }
 
@@ -619,26 +623,26 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
                 float w = float(texture_dimensions[f.texture_info].first);
                 float h = float(texture_dimensions[f.texture_info].second);
 
-                mesh->shared_data().position(pos);
-                mesh->shared_data().normal(normal);
-                mesh->shared_data().diffuse(kglt::Colour::WHITE);
-                mesh->shared_data().tex_coord0(u / w, v / h);
-                mesh->shared_data().tex_coord1(u / w, v / h);
+                mesh->shared_data->position(pos);
+                mesh->shared_data->normal(normal);
+                mesh->shared_data->diffuse(kglt::Colour::WHITE);
+                mesh->shared_data->tex_coord0(u / w, v / h);
+                mesh->shared_data->tex_coord1(u / w, v / h);
 
                 StagedLightmapCoord coord;
-                coord.cursor_position = mesh->shared_data().cursor_position();
+                coord.cursor_position = mesh->shared_data->cursor_position();
                 coord.face_index = face_index;
                 coord.u = u;
                 coord.v = v;
 
                 lightmap_coords_to_process.push_back(coord);
 
-                mesh->shared_data().move_next();
+                mesh->shared_data->move_next();
 
-                sm->index_data().index(mesh->shared_data().count() - 1);
+                sm->index_data->index(mesh->shared_data->count() - 1);
 
                 //Cache this new vertex in the lookup
-                index_lookup[tri_idx[j]] = mesh->shared_data().count() - 1;
+                index_lookup[tri_idx[j]] = mesh->shared_data->count() - 1;
             }
         }
 
@@ -672,7 +676,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         );
     }
 
-    auto pos = mesh->shared_data().cursor_position();
+    auto pos = mesh->shared_data->cursor_position();
     for(StagedLightmapCoord& staged_coord: lightmap_coords_to_process) {
         auto& lightmap = lightmaps[staged_coord.face_index];
         float u = staged_coord.u;
@@ -689,11 +693,11 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         u *= float(lightmap.width) / LightmapBuffer::LIGHTMAP_SIZE;
         v *= float(lightmap.height) / LightmapBuffer::LIGHTMAP_SIZE;
 
-        mesh->shared_data().move_to(staged_coord.cursor_position);
+        mesh->shared_data->move_to(staged_coord.cursor_position);
         auto lightmap_coords = lightmap_buffer.transform_uv(staged_coord.face_index, u, v);
-        mesh->shared_data().tex_coord1(lightmap_coords.first, lightmap_coords.second);
+        mesh->shared_data->tex_coord1(lightmap_coords.first, lightmap_coords.second);
     }
-    mesh->shared_data().move_to(pos);
+    mesh->shared_data->move_to(pos);
 
     /* Now upload the lightmap texture */
     {
@@ -705,19 +709,22 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     }
 
     mesh->stash(lightmap_texture, "lightmap_texture_id");
-    mesh->shared_data().done();
+    mesh->shared_data->done();
     mesh->each([&](SubMesh* submesh) {
         //Delete empty submeshes
-        /*if(!submesh->index_data().count()) {
+        /*if(!submesh->index_data->count()) {
             mesh->delete_submesh(submesh->id());
             return;
         }*/
-        submesh->index_data().done();
+        submesh->index_data->done();
     });
 
-    L_DEBUG(_u("Created an actor for mesh: {0}").format(mid));
     //Finally, create an actor from the world mesh
-    stage->new_actor(mid);
+    stage->new_actor_with_mesh(mid);
+
+    // Now the mesh has been attached, it can be collected
+    mesh->enable_gc();
+    L_DEBUG(_u("Created a geom for mesh: {0}").format(mid));
 }
 
 }

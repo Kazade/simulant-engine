@@ -48,7 +48,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     // Load the texture using the texture loader
     TextureID tid = mesh->resource_manager().new_texture();
     TextureLoader loader(this->filename_, this->data_);
-    loader.into(*mesh->resource_manager().texture(tid).__object);
+    loader.into(*mesh->resource_manager().texture(tid));
 
     // Now generate the heightmap from it
     auto tex = mesh->resource_manager().texture(tid);
@@ -84,15 +84,15 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
             float height = range * normalized_height;
             float final_pos = min_height + height;
 
-            mesh->shared_data().position(
+            mesh->shared_data->position(
                 (x * spacing) - x_offset,
                 final_pos,
                 (z * spacing) - z_offset
             );
-            mesh->shared_data().diffuse(kglt::Colour::WHITE);
-            mesh->shared_data().normal(kglt::Vec3(0, 1, 0));
+            mesh->shared_data->diffuse(kglt::Colour::WHITE);
+            mesh->shared_data->normal(kglt::Vec3(0, 1, 0));
 
-            mesh->shared_data().move_next();
+            mesh->shared_data->move_next();
 
             if(z < tex->height() - 1 && x < tex->width() - 1) {
                 int patch_x = (x / patch_size);
@@ -100,14 +100,14 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
                 int patch_idx = (patch_z * patches_across) + patch_x;
 
                 auto sm = mesh->submesh(submeshes.at(patch_idx));
-                sm->index_data().index(idx);
-                sm->index_data().index(idx + tex->width());
-                sm->index_data().index(idx + 1);
+                sm->index_data->index(idx);
+                sm->index_data->index(idx + tex->width());
+                sm->index_data->index(idx + 1);
 
 
-                sm->index_data().index(idx + 1);
-                sm->index_data().index(idx + tex->width());
-                sm->index_data().index(idx + tex->width() + 1);
+                sm->index_data->index(idx + 1);
+                sm->index_data->index(idx + tex->width());
+                sm->index_data->index(idx + tex->width() + 1);
             }
         }
     }
@@ -118,15 +118,15 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     for(auto smi: submeshes) {
         auto sm = mesh->submesh(smi);
         // Go through all the triangles, add the face normal to all the vertices
-        for(uint16_t i = 0; i < sm->index_data().count(); i+=3) {
-            uint16_t idx1 = sm->index_data().at(i);
-            uint16_t idx2 = sm->index_data().at(i+1);
-            uint16_t idx3 = sm->index_data().at(i+2);
+        for(uint16_t i = 0; i < sm->index_data->count(); i+=3) {
+            uint16_t idx1 = sm->index_data->at(i);
+            uint16_t idx2 = sm->index_data->at(i+1);
+            uint16_t idx3 = sm->index_data->at(i+2);
 
             kglt::Vec3 v1, v2, v3;
-            v1 = sm->vertex_data().position_at(idx1);
-            v2 = sm->vertex_data().position_at(idx2);
-            v3 = sm->vertex_data().position_at(idx3);
+            v1 = sm->vertex_data->position_at<Vec3>(idx1);
+            v2 = sm->vertex_data->position_at<Vec3>(idx2);
+            v3 = sm->vertex_data->position_at<Vec3>(idx3);
 
             kglt::Vec3 normal = (v2 - v1).normalized().cross((v3 - v1).normalized()).normalized();
 
@@ -138,15 +138,17 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     // Now set the normal on the vertex data
     for(auto p: index_to_normal) {
-        mesh->shared_data().move_to(p.first);
-        mesh->shared_data().normal(p.second.normalized());
-        mesh->shared_data().diffuse(diffuse_func(mesh->shared_data().position(), mesh->shared_data().normal()));
+        mesh->shared_data->move_to(p.first);
+        auto n = p.second.normalized();
+        Vec3 pos = mesh->shared_data->position_at<Vec3>(p.first);
+        mesh->shared_data->normal(n);
+        mesh->shared_data->diffuse(diffuse_func(pos, n));
     }
 
     for(auto smi: submeshes) {
-        mesh->submesh(smi)->index_data().done();
+        mesh->submesh(smi)->index_data->done();
     }
-    mesh->shared_data().done();
+    mesh->shared_data->done();
 
     mesh->resource_manager().delete_texture(tid); //Finally delete the texture
 }

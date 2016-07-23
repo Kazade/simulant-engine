@@ -505,7 +505,7 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
         }
         SubMesh& submesh = *mesh->submesh(texture_submesh[tri.texture_name]);
 
-        submesh.vertex_data().move_to_end();
+        submesh.vertex_data->move_to_end();
 
         kmQuaternion rotation;
         kmQuaternionRotationPitchYawRoll(&rotation, kmDegreesToRadians(-90), kmDegreesToRadians(180), 0);
@@ -522,19 +522,19 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
              * has a length of 416 units, so we divide that by 33.3 to get to roughly
              * the right size
              */
-            submesh.vertex_data().position(pos.x / 33.3, pos.y / 33.3, pos.z / 33.3);
-            submesh.vertex_data().tex_coord0(tex_coord);
-            submesh.vertex_data().tex_coord1(tex_coord.x, tex_coord.y);
-            submesh.vertex_data().diffuse(kglt::Colour::WHITE);
-            submesh.vertex_data().normal(normal.x, normal.y, normal.z);
-            submesh.vertex_data().move_next();
-            submesh.index_data().index(submesh.vertex_data().count()-1);
+            submesh.vertex_data->position(pos.x / 33.3, pos.y / 33.3, pos.z / 33.3);
+            submesh.vertex_data->tex_coord0(tex_coord);
+            submesh.vertex_data->tex_coord1(tex_coord.x, tex_coord.y);
+            submesh.vertex_data->diffuse(kglt::Colour::WHITE);
+            submesh.vertex_data->normal(normal.x, normal.y, normal.z);
+            submesh.vertex_data->move_next();
+            submesh.index_data->index(submesh.vertex_data->count()-1);
         }        
     }
 
     for(Texture tex: textures) {
-        mesh->submesh(texture_submesh[tex.name])->vertex_data().done();
-        mesh->submesh(texture_submesh[tex.name])->index_data().done();
+        mesh->submesh(texture_submesh[tex.name])->vertex_data->done();
+        mesh->submesh(texture_submesh[tex.name])->index_data->done();
         mesh->submesh(texture_submesh[tex.name])->reverse_winding();
     }
 }

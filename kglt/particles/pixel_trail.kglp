@@ -1,6 +1,6 @@
 {
     "name": "Pixel Trail",
-    "quota": 50,
+    "quota": 150,
     "particle_width": 1,
     "particle_height": 1,
     "cull_each": false,
@@ -8,13 +8,13 @@
     "emitters": [
         {
             "type": "point",
-            "direction": "0 1 0",
+            "direction": "0 0 1",
             "velocity": 5,
             "ttl_min": 0.1,
-            "ttl_max": 0.5,
-            "angle": 35,
+            "ttl_max": 0.3,
+            "angle": 90,
             "colour": "1 0 0 1",
-            "emission_rate": 20
+            "emission_rate": 30
         }
     ],
 

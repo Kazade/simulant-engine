@@ -1,7 +1,7 @@
 #ifndef UI_STAGE_H
 #define UI_STAGE_H
 
-#include <kazbase/signals.h>
+#include <kazsignal/kazsignal.h>
 #include "generic/managed.h"
 #include "generic/identifiable.h"
 #include "generic/property.h"
@@ -27,7 +27,7 @@ public:
      *  and not 2D/3D scenes
      */
 
-    UIStage(WindowBase *parent, UIStageID id);
+    UIStage(UIStageID id, WindowBase *parent);
     ~UIStage();
 
     ui::ElementList append(const unicode& tag);

@@ -1,11 +1,11 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
-#include "kglt/window.h"
+#include "kglt/sdl2_window.h"
 
-extern kglt::Window::ptr window;
+extern kglt::SDL2Window::ptr window;
 
-#include <kaztest/kaztest.h>
+#include "kaztest/kaztest.h"
 #include <kazbase/logging.h>
 #include "kglt/window_base.h"
 
@@ -15,7 +15,7 @@ public:
         logging::get_logger("/")->set_level(logging::LOG_LEVEL_NONE);
 
         if(!window) {
-            window = kglt::Window::create(nullptr);
+            window = kglt::SDL2Window::create(nullptr);
             window->set_logging_level(kglt::LOG_LEVEL_NONE);
         } else {
             window->reset();

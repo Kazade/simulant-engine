@@ -178,6 +178,9 @@ public:
  * Any object that can be contained within a bounding box, but
  * can be positioned somewhere other than 0,0,0
  */
+
+
+
 class BoundableEntity:
     public virtual Boundable {
 
@@ -192,32 +195,6 @@ public:
         );
     }
 };
-
-class VertexData;
-class IndexData;
-
-class Renderable : public virtual BoundableEntity {
-public:
-    virtual ~Renderable() {}
-
-    virtual const VertexData& vertex_data() const = 0;
-    virtual const IndexData& index_data() const = 0;
-    virtual const MeshArrangement arrangement() const = 0;
-
-    virtual void _update_vertex_array_object() = 0;
-    virtual void _bind_vertex_array_object() = 0;
-
-    virtual RenderPriority render_priority() const = 0;
-    virtual Mat4 final_transformation() const = 0;
-
-    virtual const MaterialID material_id() const = 0;
-    virtual const bool is_visible() const = 0;
-
-    virtual MeshID instanced_mesh_id() const = 0;
-    virtual SubMeshID instanced_submesh_id() const = 0;
-};
-
-typedef std::shared_ptr<Renderable> RenderablePtr;
 
 
 class RenderableStage {

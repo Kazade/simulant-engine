@@ -9,12 +9,21 @@
 #include "render_sequence.h"
 #include "loader.h"
 
+#include "renderers/batching/render_queue.h"
+
 namespace kglt {
 
 //============== START BACKGROUNDS ==========
 BackgroundManager::BackgroundManager(WindowBase* window):
     window_(window) {
 
+}
+
+BackgroundManager::~BackgroundManager() {
+    auto objects = BackgroundManager::__objects();
+    for(auto background_pair: objects) {
+        delete_background(background_pair.first);
+    }
 }
 
 void BackgroundManager::update(double dt) {
@@ -26,7 +35,7 @@ void BackgroundManager::update(double dt) {
 }
 
 BackgroundID BackgroundManager::new_background() {
-    BackgroundID bid = BackgroundManager::manager_new();
+    BackgroundID bid = BackgroundManager::manager_new(this);
     return bid;
 }
 
@@ -70,7 +79,7 @@ CameraManager::CameraManager(WindowBase *window):
 }
 
 CameraID CameraManager::new_camera() {
-    CameraID new_camera = CameraManager::manager_new();
+    CameraID new_camera = CameraManager::manager_new(this->window_);
 
     return new_camera;
 }
@@ -141,12 +150,15 @@ const bool CameraManager::has_camera(CameraID id) const {
 
 //=========== START STAGES ==================
 
-StageManager::StageManager() {
+StageManager::StageManager(WindowBase* window):
+    window_(window) {
 
 }
 
 StageID StageManager::new_stage(AvailablePartitioner partitioner) {
-    return StageManager::manager_new(StageID(), partitioner);
+    auto ret = StageManager::manager_new(this->window_, partitioner);
+    signal_stage_added_(ret);
+    return ret;
 }
 
 uint32_t StageManager::stage_count() const {
@@ -169,7 +181,9 @@ StagePtr StageManager::stage(StageID s) {
 void StageManager::delete_stage(StageID s) {
     try {
         //Recurse through the tree, destroying all children
-        stage(s)->apply_recursively_leaf_first(&ownable_tree_node_destroy, false);
+        stage(s)->apply_recursively_leaf_first(&ownable_tree_node_destroy, false);       
+        signal_stage_removed_(s);
+
     } catch(DoesNotExist<Stage>&) {
         return;
     }
@@ -232,7 +246,7 @@ UIStageManager::UIStageManager(WindowBase *window):
 }
 
 UIStageID UIStageManager::new_ui_stage() {
-    return UIStageManager::manager_new();
+    return UIStageManager::manager_new(this->window_);
 }
 
 UIStageID UIStageManager::new_ui_stage_from_file(const unicode& rml_file) {

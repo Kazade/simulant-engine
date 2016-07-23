@@ -17,7 +17,7 @@ const std::string Material::BuiltIns::TEXTURE_WITH_LIGHTMAP = "kglt/materials/op
 const std::string Material::BuiltIns::TEXTURE_WITH_LIGHTMAP_AND_LIGHTING = "kglt/materials/opengl-2.x/texture_with_lightmap_and_lighting.kglm";
 const std::string Material::BuiltIns::MULTITEXTURE2_MODULATE_WITH_LIGHTING = "kglt/materials/opengl-2.x/multitexture2_modulate_with_lighting.kglm";
 
-static const unicode DEFAULT_VERT_SHADER = R"(
+static const std::string DEFAULT_VERT_SHADER = R"(
     attribute vec3 vertex_position;
     attribute vec4 vertex_diffuse;
 
@@ -31,7 +31,7 @@ static const unicode DEFAULT_VERT_SHADER = R"(
     }
 )";
 
-static const unicode DEFAULT_FRAG_SHADER = R"(
+static const std::string DEFAULT_FRAG_SHADER = R"(
     varying vec4 diffuse;
     void main() {
         gl_FragColor = diffuse;
@@ -47,7 +47,7 @@ TextureUnit::TextureUnit(MaterialPass &pass):
 
     //Initialize the texture unit to the default texture
     ResourceManager& rm = pass.material->resource_manager();
-    texture_unit_ = rm.texture(rm.default_texture_id()).__object;
+    texture_unit_ = rm.texture(rm.default_texture_id());
 }
 
 TextureUnit::TextureUnit(MaterialPass &pass, TextureID tex_id):
@@ -59,7 +59,7 @@ TextureUnit::TextureUnit(MaterialPass &pass, TextureID tex_id):
 
     //Initialize the texture unit
     ResourceManager& rm = pass.material->resource_manager();
-    texture_unit_ = rm.texture(tex_id).__object;
+    texture_unit_ = rm.texture(tex_id);
 }
 
 TextureUnit::TextureUnit(MaterialPass &pass, std::vector<TextureID> textures, double duration):
@@ -74,7 +74,7 @@ TextureUnit::TextureUnit(MaterialPass &pass, std::vector<TextureID> textures, do
     ResourceManager& rm = pass.material->resource_manager();
 
     for(TextureID tid: textures) {
-        animated_texture_units_.push_back(rm.texture(tid).__object);
+        animated_texture_units_.push_back(rm.texture(tid));
     }
 }
 
@@ -86,7 +86,7 @@ TextureID TextureUnit::texture_id() const {
     }
 }
 
-Material::Material(ResourceManager *resource_manager, MaterialID mat_id):
+Material::Material(MaterialID mat_id, ResourceManager *resource_manager):
     Resource(resource_manager),
     generic::Identifiable<MaterialID>(mat_id) {
 
@@ -97,13 +97,21 @@ Material::~Material() {
 }
 
 uint32_t Material::new_pass() {
+    std::lock_guard<std::mutex> lock(pass_lock_);
+
     passes_.push_back(MaterialPass::ptr(new MaterialPass(this)));
+    pass_count_ = passes_.size();
+
+    signal_material_pass_created_(id(), passes_.back().get());
     return passes_.size() - 1; //Return the index
 }
 
-MaterialPass& Material::pass(uint32_t index) {
-    return *passes_.at(index);
+MaterialPass::ptr Material::pass(uint32_t index) {
+    std::lock_guard<std::mutex> lock(pass_lock_);
+    return passes_.at(index);
 }
+
+GPUProgram::ptr MaterialPass::default_program;
 
 MaterialPass::MaterialPass(Material *material):
     material_(material),
@@ -115,12 +123,11 @@ MaterialPass::MaterialPass(Material *material):
     point_size_(1) {
 
     //Create and build the default GPUProgram
-    /* FIXME! Do this only once! */
-    auto gpu_program = GPUProgram::create();
-    gpu_program->set_shader_source(SHADER_TYPE_VERTEX, DEFAULT_VERT_SHADER);
-    gpu_program->set_shader_source(SHADER_TYPE_FRAGMENT, DEFAULT_FRAG_SHADER);
+    if(!default_program) {
+        default_program = GPUProgram::create(DEFAULT_VERT_SHADER, DEFAULT_FRAG_SHADER);
+    }
 
-    program_ = GPUProgramInstance::create(gpu_program);
+    program_ = GPUProgramInstance::create(default_program);
 }
 
 void MaterialPass::set_texture_unit(uint32_t texture_unit_id, TextureID tex) {
@@ -133,10 +140,23 @@ void MaterialPass::set_texture_unit(uint32_t texture_unit_id, TextureID tex) {
         throw LogicError(_u("Texture unit ID is too high. {0} >= {1}").format(texture_unit_id, MAX_TEXTURE_UNITS).encode());
     }
 
+    TextureID previous_texture;
+
     if(texture_unit_id >= texture_units_.size()) {
         texture_units_.resize(texture_unit_id + 1, TextureUnit(*this));
+    } else {
+        previous_texture = texture_units_[texture_unit_id].texture_id();
     }
     texture_units_.at(texture_unit_id) = TextureUnit(*this, tex);
+
+    MaterialPassChangeEvent evt;
+    evt.type = MATERIAL_PASS_CHANGE_TYPE_TEXTURE_UNIT_CHANGED;
+    evt.texture_unit_changed.pass = this;
+    evt.texture_unit_changed.old_texture_id = previous_texture;
+    evt.texture_unit_changed.new_texture_id = tex;
+    evt.texture_unit_changed.texture_unit = texture_unit_id;
+
+    material->signal_material_pass_changed_(material->id(), evt);
 }
 
 void MaterialPass::set_animated_texture_unit(uint32_t texture_unit_id, const std::vector<TextureID> textures, double duration) {
@@ -164,6 +184,29 @@ void MaterialPass::set_albedo(float reflectiveness) {
     }
 }
 
+void MaterialPass::build_program_and_bind_attributes() {
+    auto do_build_and_bind = [&]() {
+        program->program->prepare_program();
+
+        for(auto attribute: SHADER_AVAILABLE_ATTRS) {
+            if(program->attributes->uses_auto(attribute)) {
+                auto varname = program->attributes->variable_name(attribute);
+                program->program->set_attribute_location(varname, attribute);
+            }
+        }
+
+        program->program->build();
+    };
+
+    // If we're not in the GL thread, then make this run on the idle task and wait
+    if(!GLThreadCheck::is_current()) {
+        this->material->resource_manager().window->idle->run_sync(do_build_and_bind);
+    } else {
+        // Otherwise do this inline
+        do_build_and_bind();
+    }
+}
+
 void Material::set_texture_unit_on_all_passes(uint32_t texture_unit_id, TextureID tex) {
     for(auto& p: passes_) {
         p->set_texture_unit(texture_unit_id, tex);
@@ -171,8 +214,15 @@ void Material::set_texture_unit_on_all_passes(uint32_t texture_unit_id, TextureI
 }
 
 void Material::update(double dt) {
-    for(auto& p: passes_) {
-        p->update(dt);
+    // The updating_disabled_ flag wasn't set so we
+    // can safely update
+    if(!updating_disabled_.test_and_set()) {
+        for(auto& p: passes_) {
+            p->update(dt);
+        }
+
+        // Clear when we are done
+        updating_disabled_.clear();
     }
 }
 
@@ -237,7 +287,7 @@ MaterialPass::ptr MaterialPass::new_clone(Material* owner) const {
     return ret;
 }
 
-MaterialID Material::new_clone(bool garbage_collect) const {
+MaterialID Material::new_clone(GarbageCollectMethod garbage_collect) const {
 
     // Probably the only legit use of const_cast I've ever done! The const-ness applies
     // to the source material, not the resource manager, and there's no other way to get
@@ -249,8 +299,10 @@ MaterialID Material::new_clone(bool garbage_collect) const {
     auto mat = tmp.material(ret);
 
     for(auto pass: passes_) {
-        mat->passes_.push_back(pass->new_clone(mat.__object.get()));
+        mat->passes_.push_back(pass->new_clone(mat.get()));
     }
+
+    mat->pass_count_ = pass_count_;
 
     return ret;
 }

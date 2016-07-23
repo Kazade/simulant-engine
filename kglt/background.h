@@ -25,7 +25,7 @@ class Background:
     public Printable {
 
 public:
-    Background(BackgroundManager *manager, BackgroundID background_id);
+    Background(BackgroundID background_id, BackgroundManager *manager);
 
     bool init() override;
     void cleanup() override;
@@ -40,12 +40,12 @@ public:
     void ask_owner_for_destruction();
 
     //Printable interface
-    unicode __unicode__() const;
+    unicode __unicode__() const override;
 
     //Nameable interface
-    const bool has_name() const;
-    void set_name(const unicode &name);
-    const unicode name() const;
+    const bool has_name() const override;
+    void set_name(const unicode &name) override;
+    const unicode name() const override;
 
 private:
     BackgroundManager* manager_;

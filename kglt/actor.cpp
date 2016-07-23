@@ -3,7 +3,7 @@
 
 namespace kglt {
 
-Actor::Actor(Stage* stage, ActorID id):
+Actor::Actor(ActorID id, Stage* stage):
     generic::Identifiable<ActorID>(id),
     ParentSetterMixin<MoveableObject>(stage),
     Source(stage),
@@ -11,7 +11,7 @@ Actor::Actor(Stage* stage, ActorID id):
 
 }
 
-Actor::Actor(Stage* stage, ActorID id, MeshID mesh):
+Actor::Actor(ActorID id, Stage* stage, MeshID mesh):
     generic::Identifiable<ActorID>(id),
     ParentSetterMixin<MoveableObject>(stage),
     Source(stage),
@@ -26,25 +26,40 @@ void Actor::override_material_id(MaterialID mat) {
     }
 }
 
-const VertexData& Actor::shared_data() const {
-    return mesh_->shared_data();
+void Actor::remove_material_id_override() {
+    for(SubActor::ptr se: subactors_) {
+        se->remove_material_id_override();
+    }
 }
 
+VertexData* Actor::get_shared_data() const {
+    return mesh_->shared_data.get();
+}
+
+void Actor::clear_subactors() {
+    for(auto& subactor: subactors_) {
+        signal_subactor_destroyed_(id(), subactor.get());
+    }
+
+    subactors_.clear();
+}
 
 void Actor::rebuild_subactors() {
-    subactors_.clear();
+    clear_subactors();
 
-    mesh_->each([&](SubMesh* mesh) {
+    mesh_->each([&](uint32_t i, std::weak_ptr<SubMesh> mesh) {
         subactors_.push_back(
-            SubActor::create(*this, mesh)
+            SubActor::create(*this, mesh.lock())
         );
+        signal_subactor_created_(id(), subactors_.back().get());
     });
 }
 
 void Actor::set_mesh(MeshID mesh) {
     if(!mesh) {
-        submeshes_changed_connection_.disconnect();
-        subactors_.clear();
+        submesh_created_connection_.disconnect();
+        submesh_destroyed_connection_.disconnect();
+        clear_subactors();
         mesh_.reset();
         return;
     }
@@ -52,11 +67,23 @@ void Actor::set_mesh(MeshID mesh) {
     //Increment the ref-count on this mesh
     mesh_ = stage->mesh(mesh).__object;
 
+    //Watch the mesh for changes to its submeshes so we can adapt to it
+    submesh_created_connection_ = mesh_->signal_submesh_created().connect(
+        [=](MeshID m, SubMesh* s) {
+            rebuild_subactors();
+        }
+    );
+
+    submesh_destroyed_connection_ = mesh_->signal_submesh_destroyed().connect(
+        [=](MeshID m, SubMesh* s) {
+            rebuild_subactors();
+        }
+    );
+
+
+
     //Rebuild the subactors to match the meshes submeshes
     rebuild_subactors();
-
-    //Watch the mesh for changes to its submeshes so we can adapt to it
-    submeshes_changed_connection_ = mesh_->signal_submeshes_changed().connect(std::bind(&Actor::rebuild_subactors, this));
 
     signal_mesh_changed_(id());
 }
@@ -82,6 +109,31 @@ void Actor::ask_owner_for_destruction() {
     stage->delete_actor(id());
 }
 
+SubActor::SubActor(Actor& parent, std::shared_ptr<SubMesh> submesh):
+    parent_(parent),
+    submesh_(submesh),
+    material_(0) {
+
+    submesh_material_changed_connection_ = submesh->signal_material_changed().connect(
+        [=](SubMesh*, MaterialID old, MaterialID newM) {
+            if(!material_) {
+                // No material override, so fire that the subactor material
+                // changed.
+                parent_.signal_subactor_material_changed_(
+                    parent_.id(),
+                    this,
+                    old,
+                    newM
+                );
+            }
+        }
+    );
+}
+
+SubActor::~SubActor() {
+    submesh_material_changed_connection_.disconnect();
+}
+
 const MaterialID SubActor::material_id() const {
     if(material_) {
         return material_->id();
@@ -91,8 +143,31 @@ const MaterialID SubActor::material_id() const {
 }
 
 void SubActor::override_material_id(MaterialID material) {
-    //Store the pointer to maintain the ref-count
-    material_ = parent_.stage->material(material).__object;
+    if(material == material_id()) {
+        return;
+    }
+    auto old_material = material_id();
+
+    if(material) {
+        //Store the pointer to maintain the ref-count
+        material_ = parent_.stage->material(material);
+    } else {
+        // If we passed a zero material ID, then remove the
+        // material pointer
+        material_.reset();
+    }
+
+    //Notify that the subactor material changed
+    parent_.signal_subactor_material_changed_(
+        parent_.id(),
+        this,
+        old_material,
+        material
+    );
+}
+
+void SubActor::remove_material_id_override() {
+    override_material_id(MaterialID());
 }
 
 ProtectedPtr<Mesh> Actor::mesh() const {
@@ -121,6 +196,22 @@ const SubMesh& SubActor::submesh() const {
     }
 
     return *submesh_;
+}
+
+void Actor::each(std::function<void (uint32_t, SubActor*)> callback) {
+    uint32_t i = 0;
+    for(auto subactor: subactors_) {
+        callback(i++, subactor.get());
+    }
+}
+
+
+VertexData* SubActor::get_vertex_data() const {
+    return submesh().vertex_data.get();
+}
+
+IndexData* SubActor::get_index_data() const {
+    return submesh().index_data.get();
 }
 
 }

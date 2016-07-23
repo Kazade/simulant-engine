@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include <memory>
-
+#include <tuple>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -23,6 +23,13 @@
 #include "generic/unique_id.h"
 #include "generic/manager_lookup_ptr.h"
 #include "kazbase/unicode.h"
+
+#define DEFINE_SIGNAL(prototype, name) \
+    public: \
+        prototype& name() { return name##_; } \
+    private: \
+        prototype name##_;
+
 
 namespace kglt {
 
@@ -414,6 +421,14 @@ struct AABB : public kmAABB3 {
         kmVec3Zero(&this->max);
     }
 
+    AABB(const Vec3& centre, float width) {
+        kmAABB3Initialize(this, &centre, width, width, width);
+    }
+
+    AABB(const Vec3& centre, float xsize, float ysize, float zsize) {
+        kmAABB3Initialize(this, &centre, xsize, ysize, zsize);
+    }
+
     const float width() const {
         return fabs(max.x - min.x);
     }
@@ -426,8 +441,27 @@ struct AABB : public kmAABB3 {
         return fabs(max.z - min.z);
     }
 
+    const float max_dimension() const {
+        return std::max(width(), std::max(height(), depth()));
+    }
+
     bool intersects(const AABB& other) const {
         return kmAABB3IntersectsAABB(this, &other);
+    }
+
+    Vec3 centre() const {
+        return Vec3(min) + ((Vec3(max) - Vec3(min)) * 0.5f);
+    }
+
+    const bool has_zero_area() const {
+        /*
+         * Returns True if the AABB has two or more zero dimensions
+         */
+        bool empty_x = kmAlmostEqual(0.0, width());
+        bool empty_y = kmAlmostEqual(0.0, height());
+        bool empty_z = kmAlmostEqual(0.0, depth());
+
+        return (empty_x && empty_y) || (empty_x && empty_z) || (empty_y && empty_z);
     }
 };
 
@@ -491,13 +525,6 @@ enum MeshArrangement {
     MESH_ARRANGEMENT_TRIANGLE_STRIP,
     MESH_ARRANGEMENT_LINES,
     MESH_ARRANGEMENT_LINE_STRIP
-};
-
-enum VertexAttribute {
-    VERTEX_ATTRIBUTE_POSITION = 1,
-    VERTEX_ATTRIBUTE_TEXCOORD_1 = 2,
-    VERTEX_ATTRIBUTE_DIFFUSE = 4,
-    VERTEX_ATTRIBUTE_NORMAL = 8
 };
 
 enum AvailablePartitioner {
@@ -566,6 +593,18 @@ enum PolygonMode {
     POLYGON_MODE_POINT
 };
 
+enum RenderableCullingMode {
+    RENDERABLE_CULLING_MODE_NEVER,
+    RENDERABLE_CULLING_MODE_PARTITIONER
+};
+
+enum CullMode {
+    CULL_MODE_NONE,
+    CULL_MODE_BACK_FACE,
+    CULL_MODE_FRONT_FACE,
+    CULL_MODE_FRONT_AND_BACK_FACE
+};
+
 enum ShaderType {
     SHADER_TYPE_VERTEX,
     SHADER_TYPE_FRAGMENT,
@@ -604,6 +643,7 @@ typedef UniqueID<13> SpriteID;
 typedef UniqueID<14> BackgroundID;
 typedef UniqueID<15> ParticleSystemID;
 typedef UniqueID<16> SkyboxID;
+typedef UniqueID<17> ShaderID;
 
 const StageID DefaultStageID = StageID();
 
@@ -627,11 +667,14 @@ typedef std::shared_ptr<Sound> SoundPtr;
 class Actor;
 typedef ProtectedPtr<Actor> ActorPtr;
 
+class Geom;
+typedef ProtectedPtr<Geom> GeomPtr;
+
 class ParticleSystem;
 typedef ProtectedPtr<ParticleSystem> ParticleSystemPtr;
 
 class Sprite;
-typedef ProtectedPtr<Sprite> SpritePtr;
+typedef std::shared_ptr<Sprite> SpritePtr;
 
 class Light;
 typedef std::shared_ptr<Light> LightPtr;
@@ -651,7 +694,7 @@ typedef AutoWeakPtr<Background> BackgroundPtr;
 
 class Stage;
 class WindowBase;
-typedef generic::TemplatedManager<WindowBase, Stage, StageID> BaseStageManager;
+typedef generic::TemplatedManager<Stage, StageID> BaseStageManager;
 typedef ManagerLookupPtr<BaseStageManager, StageID> StagePtr;
 
 class ResourceManager;
@@ -670,6 +713,68 @@ class Partitioner;
 class GPUProgram;
 typedef std::shared_ptr<GPUProgram> GPUProgramPtr;
 
+}
+
+/* Hash functions for kglt types */
+namespace std {
+    template <> struct hash<kglt::MeshArrangement> {
+        size_t operator() (kglt::MeshArrangement t) { return size_t(t); }
+    };
+}
+
+
+
+// Generic hash for tuples by Leo Goodstadt
+// http://stackoverflow.com/questions/7110301/generic-hash-for-tuples-in-unordered-map-unordered-set
+namespace std{
+    namespace
+    {
+
+        // Code from boost
+        // Reciprocal of the golden ratio helps spread entropy
+        //     and handles duplicates.
+        // See Mike Seymour in magic-numbers-in-boosthash-combine:
+        //     http://stackoverflow.com/questions/4948780
+
+        template <class T>
+        inline void hash_combine(std::size_t& seed, T const& v)
+        {
+            seed ^= std::hash<T>()(v) + 0x9e3779b9 + (seed<<6) + (seed>>2);
+        }
+
+        // Recursive template code derived from Matthieu M.
+        template <class Tuple, size_t Index = std::tuple_size<Tuple>::value - 1>
+        struct HashValueImpl
+        {
+          static void apply(size_t& seed, Tuple const& tuple)
+          {
+            HashValueImpl<Tuple, Index-1>::apply(seed, tuple);
+            hash_combine(seed, std::get<Index>(tuple));
+          }
+        };
+
+        template <class Tuple>
+        struct HashValueImpl<Tuple,0>
+        {
+          static void apply(size_t& seed, Tuple const& tuple)
+          {
+            hash_combine(seed, std::get<0>(tuple));
+          }
+        };
+    }
+
+    template <typename ... TT>
+    struct hash<std::tuple<TT...>>
+    {
+        size_t
+        operator()(std::tuple<TT...> const& tt) const
+        {
+            size_t seed = 0;
+            HashValueImpl<std::tuple<TT...> >::apply(seed, tt);
+            return seed;
+        }
+
+    };
 }
 
 

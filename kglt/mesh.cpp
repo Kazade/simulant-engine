@@ -9,28 +9,59 @@
 
 namespace kglt {
 
-Mesh::Mesh(ResourceManager *resource_manager, MeshID id):
+VertexData *SubMesh::get_vertex_data() const {
+    if(uses_shared_data_) { return parent_->shared_data.get(); }
+    return vertex_data_;
+}
+
+IndexData* SubMesh::get_index_data() const {
+    return index_data_;
+}
+
+Mesh::Mesh(MeshID id, ResourceManager *resource_manager, VertexSpecification vertex_specification):
     Resource(resource_manager),
     generic::Identifiable<MeshID>(id),
     normal_debug_mesh_(0) {
 
+    shared_data_ = new VertexData(vertex_specification);
+
     //FIXME: Somehow we need to specify if the shared data is modified repeatedly etc.
     shared_data_buffer_object_ = BufferObject::create(BUFFER_OBJECT_VERTEX_DATA, MODIFY_ONCE_USED_FOR_RENDERING);
 
-    shared_data().signal_update_complete().connect([&]{
+    shared_data->signal_update_complete().connect([&]{
         this->shared_data_dirty_ = true;
     });
+}
+
+Mesh::~Mesh() {
+    delete shared_data_;
+    shared_data_ = nullptr;
+}
+
+void Mesh::each(std::function<void (uint32_t, std::weak_ptr<SubMesh> submesh)> func) const {
+    int i = 0;
+    for(auto pair: this->objects_) {
+        func(i++, pair.second);
+    }
 }
 
 void Mesh::clear() {
     //Delete the submeshes and clear the shared data
     TemplatedSubMeshManager::manager_delete_all();
-    shared_data().clear();
+    shared_data->clear();
+}
+
+VertexData* Mesh::get_shared_data() const {
+    return shared_data_;
 }
 
 const AABB Mesh::aabb() const {
     //FIXME: This should totally be cached for speed
     AABB result;
+
+    if(!this->submesh_count()) {
+        return result;
+    }
 
     float max = std::numeric_limits<float>::max();
     float min = std::numeric_limits<float>::min();
@@ -65,28 +96,30 @@ void Mesh::enable_debug(bool value) {
 
         //Go through the submeshes, and for each index draw a normal line
         each([=](SubMesh* mesh) {
-            for(uint16_t idx: mesh->index_data().all()) {
-                kmVec3 pos1 = mesh->vertex_data().position_at(idx);
-                kmVec3 n = mesh->vertex_data().normal_at(idx);
+            for(uint16_t idx: mesh->index_data->all()) {
+                Vec3 pos1 = mesh->vertex_data->position_at<Vec3>(idx);
+
+                Vec3 n;
+                mesh->vertex_data->normal_at(idx, n);
                 kmVec3Scale(&n, &n, 10.0);
 
                 kmVec3 pos2;
                 kmVec3Add(&pos2, &pos1, &n);
 
-                submesh(normal_debug_mesh_)->vertex_data().position(pos1);
-                submesh(normal_debug_mesh_)->vertex_data().diffuse(kglt::Colour::RED);
-                int16_t next_index = submesh(normal_debug_mesh_)->vertex_data().move_next();
-                submesh(normal_debug_mesh_)->index_data().index(next_index - 1);
+                submesh(normal_debug_mesh_)->vertex_data->position(pos1);
+                submesh(normal_debug_mesh_)->vertex_data->diffuse(kglt::Colour::RED);
+                int16_t next_index = submesh(normal_debug_mesh_)->vertex_data->move_next();
+                submesh(normal_debug_mesh_)->index_data->index(next_index - 1);
 
-                submesh(normal_debug_mesh_)->vertex_data().position(pos2);
-                submesh(normal_debug_mesh_)->vertex_data().diffuse(kglt::Colour::RED);
-                next_index = submesh(normal_debug_mesh_)->vertex_data().move_next();
-                submesh(normal_debug_mesh_)->index_data().index(next_index - 1);
+                submesh(normal_debug_mesh_)->vertex_data->position(pos2);
+                submesh(normal_debug_mesh_)->vertex_data->diffuse(kglt::Colour::RED);
+                next_index = submesh(normal_debug_mesh_)->vertex_data->move_next();
+                submesh(normal_debug_mesh_)->index_data->index(next_index - 1);
             }
         });
 
-        submesh(normal_debug_mesh_)->vertex_data().done();
-        submesh(normal_debug_mesh_)->index_data().done();
+        submesh(normal_debug_mesh_)->vertex_data->done();
+        submesh(normal_debug_mesh_)->index_data->done();
     } else {
         if(normal_debug_mesh_) {
             delete_submesh(normal_debug_mesh_);
@@ -95,28 +128,39 @@ void Mesh::enable_debug(bool value) {
     }
 }
 
-SubMeshID Mesh::new_submesh_with_material(MaterialID material, MeshArrangement arrangement, VertexSharingMode vertex_sharing) {
+SubMeshID Mesh::new_submesh_with_material(MaterialID material, MeshArrangement arrangement, VertexSharingMode vertex_sharing, VertexSpecification vertex_specification) {
+    SubMeshID id = TemplatedSubMeshManager::manager_new(this, "", material, arrangement, vertex_sharing, vertex_specification);
 
-    SubMeshID id = TemplatedSubMeshManager::manager_new("", material, arrangement, vertex_sharing);
-
-    signal_submeshes_changed_();
-
+    signal_submesh_created_(this->id(), submesh(id));
     return id;
 }
 
-SubMeshID Mesh::new_submesh(MeshArrangement arrangement, VertexSharingMode vertex_sharing) {
+SubMeshID Mesh::new_submesh(MeshArrangement arrangement, VertexSharingMode vertex_sharing, VertexSpecification vertex_specification) {
     return new_submesh_with_material(
-        resource_manager().clone_default_material(),
-        arrangement, vertex_sharing
+        resource_manager().clone_default_material(),        
+        arrangement, vertex_sharing,
+        vertex_specification
     );
 }
 
 SubMeshID Mesh::new_submesh_as_box(MaterialID material, float width, float height, float depth, const Vec3& offset) {
-    SubMeshID ret = new_submesh_with_material(material, MESH_ARRANGEMENT_TRIANGLES, VERTEX_SHARING_MODE_INDEPENDENT);
+    VertexSpecification spec;
+    spec.position_attribute = VERTEX_ATTRIBUTE_3F;
+    spec.normal_attribute = VERTEX_ATTRIBUTE_3F;
+    spec.texcoord0_attribute = VERTEX_ATTRIBUTE_2F;
+    spec.texcoord1_attribute = VERTEX_ATTRIBUTE_2F;
+    spec.diffuse_attribute = VERTEX_ATTRIBUTE_4F;
+
+    SubMeshID ret = new_submesh_with_material(
+        material,
+        MESH_ARRANGEMENT_TRIANGLES,
+        VERTEX_SHARING_MODE_INDEPENDENT,
+        spec
+    );
 
     auto& sm = *submesh(ret);
-    auto& vd = sm.vertex_data();
-    auto& id = sm.index_data();
+    auto& vd = sm.vertex_data;
+    auto& id = sm.index_data;
 
     float x_offset = offset.x;
     float y_offset = offset.y;
@@ -128,174 +172,179 @@ SubMeshID Mesh::new_submesh_as_box(MaterialID material, float width, float heigh
 
     //front and back
     for(int32_t z: { -1, 1 }) {
-        uint32_t count = vd.count();
+        uint32_t count = vd->count();
 
-        vd.position(-1 * rx, -1 * ry, z * rz);
-        vd.tex_coord0(0, 0);
-        vd.tex_coord1(0, 0);
-        vd.diffuse(kglt::Colour::WHITE);
-        vd.normal(0, 0, z);
-        vd.move_next();
+        vd->position(-1 * rx, -1 * ry, z * rz);
+        vd->tex_coord0(0, 0);
+        vd->tex_coord1(0, 0);
+        vd->diffuse(kglt::Colour::WHITE);
+        vd->normal(0, 0, z);
+        vd->move_next();
 
-        vd.position( 1 * rx, -1 * ry, z * rz);
-        vd.tex_coord0(1, 0);
-        vd.tex_coord1(1, 0);
-        vd.diffuse(kglt::Colour::WHITE);
-        vd.normal(0, 0, z);
-        vd.move_next();
+        vd->position( 1 * rx, -1 * ry, z * rz);
+        vd->tex_coord0(1, 0);
+        vd->tex_coord1(1, 0);
+        vd->diffuse(kglt::Colour::WHITE);
+        vd->normal(0, 0, z);
+        vd->move_next();
 
-        vd.position( 1 * rx,  1 * ry, z * rz);
-        vd.tex_coord0(1, 1);
-        vd.tex_coord1(1, 1);
-        vd.diffuse(kglt::Colour::WHITE);
-        vd.normal(0, 0, z);
-        vd.move_next();
+        vd->position( 1 * rx,  1 * ry, z * rz);
+        vd->tex_coord0(1, 1);
+        vd->tex_coord1(1, 1);
+        vd->diffuse(kglt::Colour::WHITE);
+        vd->normal(0, 0, z);
+        vd->move_next();
 
-        vd.position(-1 * rx,  1 * ry, z * rz);
-        vd.tex_coord0(0, 1);
-        vd.tex_coord1(0, 1);
-        vd.diffuse(kglt::Colour::WHITE);
-        vd.normal(0, 0, z);
-        vd.move_next();
+        vd->position(-1 * rx,  1 * ry, z * rz);
+        vd->tex_coord0(0, 1);
+        vd->tex_coord1(0, 1);
+        vd->diffuse(kglt::Colour::WHITE);
+        vd->normal(0, 0, z);
+        vd->move_next();
 
         if(z > 0) {
-            id.index(count);
-            id.index(count + 1);
-            id.index(count + 2);
+            id->index(count);
+            id->index(count + 1);
+            id->index(count + 2);
 
-            id.index(count);
-            id.index(count + 2);
-            id.index(count + 3);
+            id->index(count);
+            id->index(count + 2);
+            id->index(count + 3);
         } else {
-            id.index(count);
-            id.index(count + 2);
-            id.index(count + 1);
+            id->index(count);
+            id->index(count + 2);
+            id->index(count + 1);
 
-            id.index(count);
-            id.index(count + 3);
-            id.index(count + 2);
+            id->index(count);
+            id->index(count + 3);
+            id->index(count + 2);
         }
     }
 
     //left and right
     for(int32_t x: { -1, 1 }) {
-        uint32_t count = vd.count();
+        uint32_t count = vd->count();
 
-        vd.position( x * rx, -1 * ry, -1 * rz);
-        vd.tex_coord0(0, 0);
-        vd.tex_coord1(0, 0);
-        vd.diffuse(kglt::Colour::WHITE);
-        vd.normal(x, 0, 0);
-        vd.move_next();
+        vd->position( x * rx, -1 * ry, -1 * rz);
+        vd->tex_coord0(0, 0);
+        vd->tex_coord1(0, 0);
+        vd->diffuse(kglt::Colour::WHITE);
+        vd->normal(x, 0, 0);
+        vd->move_next();
 
-        vd.position( x * rx,  1 * ry, -1 * rz);
-        vd.tex_coord0(1, 0);
-        vd.tex_coord1(1, 0);
-        vd.diffuse(kglt::Colour::WHITE);
-        vd.normal(x, 0, 0);
-        vd.move_next();
+        vd->position( x * rx,  1 * ry, -1 * rz);
+        vd->tex_coord0(1, 0);
+        vd->tex_coord1(1, 0);
+        vd->diffuse(kglt::Colour::WHITE);
+        vd->normal(x, 0, 0);
+        vd->move_next();
 
-        vd.position( x * rx,  1 * ry, 1 * rz);
-        vd.tex_coord0(1, 1);
-        vd.tex_coord1(1, 1);
-        vd.diffuse(kglt::Colour::WHITE);
-        vd.normal(x, 0, 0);
-        vd.move_next();
+        vd->position( x * rx,  1 * ry, 1 * rz);
+        vd->tex_coord0(1, 1);
+        vd->tex_coord1(1, 1);
+        vd->diffuse(kglt::Colour::WHITE);
+        vd->normal(x, 0, 0);
+        vd->move_next();
 
-        vd.position(x * rx, -1 * ry, 1 * rz);
-        vd.tex_coord0(0, 1);
-        vd.tex_coord1(0, 1);
-        vd.diffuse(kglt::Colour::WHITE);
-        vd.normal(x, 0, 0);
-        vd.move_next();
+        vd->position(x * rx, -1 * ry, 1 * rz);
+        vd->tex_coord0(0, 1);
+        vd->tex_coord1(0, 1);
+        vd->diffuse(kglt::Colour::WHITE);
+        vd->normal(x, 0, 0);
+        vd->move_next();
 
         if(x > 0) {
-            id.index(count);
-            id.index(count + 1);
-            id.index(count + 2);
+            id->index(count);
+            id->index(count + 1);
+            id->index(count + 2);
 
-            id.index(count);
-            id.index(count + 2);
-            id.index(count + 3);
+            id->index(count);
+            id->index(count + 2);
+            id->index(count + 3);
         } else {
-            id.index(count);
-            id.index(count + 2);
-            id.index(count + 1);
+            id->index(count);
+            id->index(count + 2);
+            id->index(count + 1);
 
-            id.index(count);
-            id.index(count + 3);
-            id.index(count + 2);
+            id->index(count);
+            id->index(count + 3);
+            id->index(count + 2);
         }
 
     }
 
     //top and bottom
     for(int32_t y: { -1, 1 }) {
-        uint32_t count = vd.count();
+        uint32_t count = vd->count();
 
-        vd.position( 1 * rx, y * ry, -1 * rz);
-        vd.tex_coord0(0, 0);
-        vd.tex_coord1(0, 0);
-        vd.diffuse(kglt::Colour::WHITE);
-        vd.normal(0, y, 0);
-        vd.move_next();
+        vd->position( 1 * rx, y * ry, -1 * rz);
+        vd->tex_coord0(0, 0);
+        vd->tex_coord1(0, 0);
+        vd->diffuse(kglt::Colour::WHITE);
+        vd->normal(0, y, 0);
+        vd->move_next();
 
-        vd.position( -1 * rx,  y * ry, -1 * rz);
-        vd.tex_coord0(1, 0);
-        vd.tex_coord1(1, 0);
-        vd.diffuse(kglt::Colour::WHITE);
-        vd.normal(0, y, 0);
-        vd.move_next();
+        vd->position( -1 * rx,  y * ry, -1 * rz);
+        vd->tex_coord0(1, 0);
+        vd->tex_coord1(1, 0);
+        vd->diffuse(kglt::Colour::WHITE);
+        vd->normal(0, y, 0);
+        vd->move_next();
 
-        vd.position( -1 * rx,  y * ry, 1 * rz);
-        vd.tex_coord0(1, 1);
-        vd.tex_coord1(1, 1);
-        vd.diffuse(kglt::Colour::WHITE);
-        vd.normal(0, y, 0);
-        vd.move_next();
+        vd->position( -1 * rx,  y * ry, 1 * rz);
+        vd->tex_coord0(1, 1);
+        vd->tex_coord1(1, 1);
+        vd->diffuse(kglt::Colour::WHITE);
+        vd->normal(0, y, 0);
+        vd->move_next();
 
-        vd.position( 1 * rx, y * ry, 1 * rz);
-        vd.tex_coord0(0, 1);
-        vd.tex_coord1(0, 1);
-        vd.diffuse(kglt::Colour::WHITE);
-        vd.normal(0, y, 0);
-        vd.move_next();
+        vd->position( 1 * rx, y * ry, 1 * rz);
+        vd->tex_coord0(0, 1);
+        vd->tex_coord1(0, 1);
+        vd->diffuse(kglt::Colour::WHITE);
+        vd->normal(0, y, 0);
+        vd->move_next();
 
         if(y > 0) {
-            id.index(count);
-            id.index(count + 1);
-            id.index(count + 2);
+            id->index(count);
+            id->index(count + 1);
+            id->index(count + 2);
 
-            id.index(count);
-            id.index(count + 2);
-            id.index(count + 3);
+            id->index(count);
+            id->index(count + 2);
+            id->index(count + 3);
         } else {
-            id.index(count);
-            id.index(count + 2);
-            id.index(count + 1);
+            id->index(count);
+            id->index(count + 2);
+            id->index(count + 1);
 
-            id.index(count);
-            id.index(count + 3);
-            id.index(count + 2);
+            id->index(count);
+            id->index(count + 3);
+            id->index(count + 2);
         }
 
     }
 
     // Apply offset
-    vd.move_to_start();
-    for(uint16_t i = 0; i < vd.count(); ++i) {
-        vd.position(vd.position_at(i) + kglt::Vec3(x_offset, y_offset, z_offset));
-        vd.move_next();
+    vd->move_to_start();
+    for(uint16_t i = 0; i < vd->count(); ++i) {
+        Vec3 pos = vd->position_at<Vec3>(i);
+        vd->position(pos + kglt::Vec3(x_offset, y_offset, z_offset));
+        vd->move_next();
     }
 
-    vd.done();
-    id.done();
+    vd->done();
+    id->done();
 
     return ret;
 }
 
 SubMeshID Mesh::new_submesh_as_rectangle(MaterialID material, float width, float height, const kglt::Vec3& offset) {
-    SubMeshID ret = new_submesh_with_material(material, MESH_ARRANGEMENT_TRIANGLES, VERTEX_SHARING_MODE_INDEPENDENT);
+    SubMeshID ret = new_submesh_with_material(
+        material,
+        MESH_ARRANGEMENT_TRIANGLES, VERTEX_SHARING_MODE_INDEPENDENT,
+        VertexSpecification::DEFAULT
+    );
 
     auto& sm = *submesh(ret);
 
@@ -304,58 +353,50 @@ SubMeshID Mesh::new_submesh_as_rectangle(MaterialID material, float width, float
     float z_offset = offset.z;
 
     //Build some shared vertex data
-    sm.vertex_data().position(x_offset + (-width / 2.0), y_offset + (-height / 2.0), z_offset);
-    sm.vertex_data().diffuse(kglt::Colour::WHITE);
-    sm.vertex_data().tex_coord0(0.0, 0.0);
-    sm.vertex_data().tex_coord1(0.0, 0.0);
-    sm.vertex_data().tex_coord2(0.0, 0.0);
-    sm.vertex_data().tex_coord3(0.0, 0.0);
-    sm.vertex_data().normal(0, 0, 1);
-    sm.vertex_data().move_next();
+    sm.vertex_data->position(x_offset + (-width / 2.0), y_offset + (-height / 2.0), z_offset);
+    sm.vertex_data->diffuse(kglt::Colour::WHITE);
+    sm.vertex_data->tex_coord0(0.0, 0.0);
+    sm.vertex_data->tex_coord1(0.0, 0.0);
+    sm.vertex_data->normal(0, 0, 1);
+    sm.vertex_data->move_next();
 
-    sm.vertex_data().position(x_offset + (width / 2.0), y_offset + (-height / 2.0), z_offset);
-    sm.vertex_data().diffuse(kglt::Colour::WHITE);
-    sm.vertex_data().tex_coord0(1.0, 0.0);
-    sm.vertex_data().tex_coord1(1.0, 0.0);
-    sm.vertex_data().tex_coord2(1.0, 0.0);
-    sm.vertex_data().tex_coord3(1.0, 0.0);
-    sm.vertex_data().normal(0, 0, 1);
-    sm.vertex_data().move_next();
+    sm.vertex_data->position(x_offset + (width / 2.0), y_offset + (-height / 2.0), z_offset);
+    sm.vertex_data->diffuse(kglt::Colour::WHITE);
+    sm.vertex_data->tex_coord0(1.0, 0.0);
+    sm.vertex_data->tex_coord1(1.0, 0.0);
+    sm.vertex_data->normal(0, 0, 1);
+    sm.vertex_data->move_next();
 
-    sm.vertex_data().position(x_offset + (width / 2.0),  y_offset + (height / 2.0), z_offset);
-    sm.vertex_data().diffuse(kglt::Colour::WHITE);
-    sm.vertex_data().tex_coord0(1.0, 1.0);
-    sm.vertex_data().tex_coord1(1.0, 1.0);
-    sm.vertex_data().tex_coord2(1.0, 1.0);
-    sm.vertex_data().tex_coord3(1.0, 1.0);
-    sm.vertex_data().normal(0, 0, 1);
-    sm.vertex_data().move_next();
+    sm.vertex_data->position(x_offset + (width / 2.0),  y_offset + (height / 2.0), z_offset);
+    sm.vertex_data->diffuse(kglt::Colour::WHITE);
+    sm.vertex_data->tex_coord0(1.0, 1.0);
+    sm.vertex_data->tex_coord1(1.0, 1.0);
+    sm.vertex_data->normal(0, 0, 1);
+    sm.vertex_data->move_next();
 
-    sm.vertex_data().position(x_offset + (-width / 2.0),  y_offset + (height / 2.0), z_offset);
-    sm.vertex_data().diffuse(kglt::Colour::WHITE);
-    sm.vertex_data().tex_coord0(0.0, 1.0);
-    sm.vertex_data().tex_coord1(0.0, 1.0);
-    sm.vertex_data().tex_coord2(0.0, 1.0);
-    sm.vertex_data().tex_coord3(0.0, 1.0);
-    sm.vertex_data().normal(0, 0, 1);
-    sm.vertex_data().move_next();
-    sm.vertex_data().done();
+    sm.vertex_data->position(x_offset + (-width / 2.0),  y_offset + (height / 2.0), z_offset);
+    sm.vertex_data->diffuse(kglt::Colour::WHITE);
+    sm.vertex_data->tex_coord0(0.0, 1.0);
+    sm.vertex_data->tex_coord1(0.0, 1.0);
+    sm.vertex_data->normal(0, 0, 1);
+    sm.vertex_data->move_next();
+    sm.vertex_data->done();
 
-    sm.index_data().index(0);
-    sm.index_data().index(1);
-    sm.index_data().index(2);
+    sm.index_data->index(0);
+    sm.index_data->index(1);
+    sm.index_data->index(2);
 
-    sm.index_data().index(0);
-    sm.index_data().index(2);
-    sm.index_data().index(3);
-    sm.index_data().done();
+    sm.index_data->index(0);
+    sm.index_data->index(2);
+    sm.index_data->index(3);
+    sm.index_data->done();
 
     return ret;
 }
 
 void Mesh::delete_submesh(SubMeshID index) {
+    signal_submesh_destroyed_(this->id(), submesh(index));
     TemplatedSubMeshManager::manager_delete(index);
-    signal_submeshes_changed_();
 }
 
 SubMesh* Mesh::any_submesh() const {
@@ -373,23 +414,24 @@ void Mesh::set_material_id(MaterialID material) {
 }
 
 void Mesh::transform_vertices(const kglt::Mat4& transform, bool include_submeshes) {
-    shared_data().move_to_start();
+    shared_data->move_to_start();
 
-    for(int i = 0; i < shared_data().count(); ++i) {
-        if(shared_data().has_positions()) {
-            kglt::Vec3 v = shared_data().position_at(i);
+    for(uint32_t i = 0; i < shared_data->count(); ++i) {
+        if(shared_data->has_positions()) {
+            kglt::Vec3 v = shared_data->position_at<Vec3>(i);
             kmVec3MultiplyMat4(&v, &v, &transform);
-            shared_data().position(v);
+            shared_data->position(v);
         }
 
-        if(shared_data().has_normals()) {
-            kglt::Vec3 n = shared_data().normal_at(i);
+        if(shared_data->has_normals()) {
+            kglt::Vec3 n;
+            shared_data->normal_at(i, n);
             kmVec3TransformNormal(&n, &n, &transform);
-            shared_data().normal(n.normalized());
+            shared_data->normal(n.normalized());
         }
-        shared_data().move_next();
+        shared_data->move_next();
     }
-    shared_data().done();
+    shared_data->done();
 
     if(include_submeshes) {
         each([transform](SubMesh* mesh) {
@@ -401,12 +443,12 @@ void Mesh::transform_vertices(const kglt::Mat4& transform, bool include_submeshe
 }
 
 void Mesh::set_diffuse(const kglt::Colour& colour, bool include_submeshes) {
-    shared_data().move_to_start();
-    for(int i = 0; i < shared_data().count(); ++i) {
-        shared_data().diffuse(colour);
-        shared_data().move_next();
+    shared_data->move_to_start();
+    for(int i = 0; i < shared_data->count(); ++i) {
+        shared_data->diffuse(colour);
+        shared_data->move_next();
     }
-    shared_data().done();
+    shared_data->done();
 
     if(include_submeshes) {
         each([=](SubMesh* mesh) {
@@ -441,7 +483,7 @@ void Mesh::set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass) {
 
 void Mesh::_update_buffer_object() {
     if(shared_data_dirty_) {
-        shared_data_buffer_object_->build(shared_data().count() * sizeof(Vertex), shared_data()._raw_data());
+        shared_data_buffer_object_->build(shared_data->data_size(), shared_data->data());
         shared_data_dirty_ = false;
     }
 }
@@ -450,12 +492,23 @@ SubMesh* Mesh::submesh(SubMeshID index) {
     return TemplatedSubMeshManager::manager_get(index).lock().get();
 }
 
-SubMesh::SubMesh(Mesh* parent, SubMeshID id, const std::string& name,
-        MaterialID material, MeshArrangement arrangement, VertexSharingMode vertex_sharing):
+SubMesh::SubMesh(SubMeshID id, Mesh* parent, const std::string& name,
+        MaterialID material, MeshArrangement arrangement, VertexSharingMode vertex_sharing, VertexSpecification vertex_specification):
     generic::Identifiable<SubMeshID>(id),
     parent_(parent),
     arrangement_(arrangement),
     uses_shared_data_(vertex_sharing == VERTEX_SHARING_MODE_SHARED) {
+
+    if(!uses_shared_data_ && vertex_specification == VertexSpecification()) {
+        throw std::logic_error(
+            "You must specify a vertex_attribute_mask when creating a submesh with independent vertices"
+        );
+    }
+
+    index_data_ = new IndexData();
+    if(!uses_shared_data_) {
+        vertex_data_ = new VertexData(vertex_specification);
+    }
 
     /*
      * If we use shared vertices then we must reuse the buffer object from the mesh,
@@ -474,16 +527,16 @@ SubMesh::SubMesh(Mesh* parent, SubMeshID id, const std::string& name,
 
     set_material_id(material);
 
-    vrecalc_ = vertex_data().signal_update_complete().connect(std::bind(&SubMesh::_recalc_bounds, this));
-    irecalc_ = index_data().signal_update_complete().connect(std::bind(&SubMesh::_recalc_bounds, this));
+    vrecalc_ = vertex_data->signal_update_complete().connect(std::bind(&SubMesh::_recalc_bounds, this));
+    irecalc_ = index_data->signal_update_complete().connect(std::bind(&SubMesh::_recalc_bounds, this));
 
     if(!uses_shared_data_) {
-        vertex_data().signal_update_complete().connect([&]{
+        vertex_data->signal_update_complete().connect([&]{
             this->vertex_data_dirty_ = true;
         });
     }
 
-    index_data().signal_update_complete().connect([&]{
+    index_data->signal_update_complete().connect([&]{
         this->index_data_dirty_ = true;
     });
 }
@@ -496,15 +549,15 @@ void SubMesh::_update_vertex_array_object() {
     if(uses_shared_vertices()) {
         parent_->_update_buffer_object();
     } else if(vertex_data_dirty_) {
-        vertex_array_object_->vertex_buffer_update(vertex_data().count() * sizeof(Vertex), vertex_data()._raw_data());
+        vertex_array_object_->vertex_buffer_update(vertex_data->data_size(), vertex_data->data());
         vertex_data_dirty_ = false;
     }
 
     if(index_data_dirty_) {
-        vertex_array_object_->index_buffer_update(index_data().count() * sizeof(uint16_t), index_data()._raw_data());
+        vertex_array_object_->index_buffer_update(index_data->count() * sizeof(uint16_t), index_data->_raw_data());
         index_data_dirty_ = false;
 
-        if(vertex_data().empty()) {
+        if(vertex_data->empty()) {
             L_WARN("Uploading index data to GL without any vertices");
         }
     }
@@ -515,8 +568,38 @@ const MaterialID SubMesh::material_id() const {
 }
 
 void SubMesh::set_material_id(MaterialID mat) {
-    //Set the material, store the shared_ptr to increment the ref count
-    material_ = parent_->resource_manager().material(mat).__object;
+    auto old_material = (material_) ? material_->id() : MaterialID();
+
+    if(old_material == mat) {
+        // Don't do anything, don't fire the changed signal
+        return;
+    }
+
+    if(mat) {
+        // Set the material, store the shared_ptr to increment the ref count
+        material_ = parent_->resource_manager().material(mat);
+        material_change_connection_ = material_->signal_material_pass_changed().connect(
+            [=](MaterialID, MaterialPassChangeEvent evt) {
+                /* FIXME: This is a hack! We want material_changed event to take some kind of event
+                 * structure so we can signal different types of event changes. Here we are signaling that
+                 * the material passes changed so the material itself changed - not that it we changed from
+                 * one material to another. Still, we need to make sure that we trigger the signal so that the
+                 * render queue updates. */
+                signal_material_changed_(this, material_->id(), material_->id());
+            }
+        );
+    } else {
+        // Reset the material
+        material_.reset();
+    }
+
+    signal_material_changed_(this, old_material, mat);
+    parent_->signal_submesh_material_changed_(
+        parent_->id(),
+        this,
+        old_material,
+        mat
+    );
 }
 
 void SubMesh::transform_vertices(const kglt::Mat4& transformation) {
@@ -524,23 +607,24 @@ void SubMesh::transform_vertices(const kglt::Mat4& transformation) {
         throw LogicError("Tried to transform shared_data, use Mesh::transform_vertices instead");
     }
 
-    vertex_data().move_to_start();
-    for(uint16_t i = 0; i < vertex_data().count(); ++i) {
-        kglt::Vec3 v = vertex_data().position_at(i);
+    vertex_data->move_to_start();
+    for(uint16_t i = 0; i < vertex_data->count(); ++i) {
+        kglt::Vec3 v = vertex_data->position_at<Vec3>(i);
 
         kmVec3MultiplyMat4(&v, &v, &transformation);
 
-        vertex_data().position(v);
+        vertex_data->position(v);
 
-        if(vertex_data().has_normals()) {
-            kglt::Vec3 n = vertex_data().normal_at(i);
+        if(vertex_data->has_normals()) {
+            kglt::Vec3 n;
+            vertex_data->normal_at(i, n);
             kmVec3MultiplyMat4(&n, &n, &transformation);
-            vertex_data().normal(n.normalized());
+            vertex_data->normal(n.normalized());
         }
 
-        vertex_data().move_next();
+        vertex_data->move_next();
     }
-    vertex_data().done();
+    vertex_data->done();
 }
 
 void SubMesh::set_diffuse(const kglt::Colour& colour) {
@@ -548,12 +632,12 @@ void SubMesh::set_diffuse(const kglt::Colour& colour) {
         throw LogicError("Tried to set the diffuse colour on shared_data, use Mesh::set_diffuse instead");
     }
 
-    vertex_data().move_to_start();
-    for(uint16_t i = 0; i < vertex_data().count(); ++i) {
-        vertex_data().diffuse(colour);
-        vertex_data().move_next();
+    vertex_data->move_to_start();
+    for(uint16_t i = 0; i < vertex_data->count(); ++i) {
+        vertex_data->diffuse(colour);
+        vertex_data->move_next();
     }
-    vertex_data().done();
+    vertex_data->done();
 }
 
 void SubMesh::reverse_winding() {
@@ -561,15 +645,15 @@ void SubMesh::reverse_winding() {
         throw NotImplementedError(__FILE__, __LINE__);
     }
 
-    std::vector<uint16_t> original = index_data().all();
+    std::vector<uint16_t> original = index_data->all();
 
-    index_data().clear();
+    index_data->clear();
     for(uint32_t i = 0; i < original.size() / 3; ++i) {
-        index_data().index(original[i * 3]);
-        index_data().index(original[(i * 3) + 2]);
-        index_data().index(original[(i * 3) + 1]);
+        index_data->index(original[i * 3]);
+        index_data->index(original[(i * 3) + 2]);
+        index_data->index(original[(i * 3) + 1]);
     }
-    index_data().done();
+    index_data->done();
 }
 
 /**
@@ -577,7 +661,7 @@ void SubMesh::reverse_winding() {
  *
  * Recalculate the bounds of the submesh. This involves interating over all of the
  * vertices that make up the submesh and so is potentially quite slow. This happens automatically
- * when vertex_data().done() or index_data().done() are called.
+ * when vertex_data->done() or index_data->done() are called.
  */
 void SubMesh::_recalc_bounds() {
     //Set the min bounds to the max
@@ -585,13 +669,13 @@ void SubMesh::_recalc_bounds() {
     //Set the max bounds to the min
     kmVec3Fill(&bounds_.max, -1000000, -1000000, -1000000);
 
-    if(!index_data().count()) {
+    if(!index_data->count()) {
         kmAABB3Initialize(&bounds_, nullptr, 0, 0, 0);
         return;
     }
 
-    for(uint16_t idx: index_data().all()) {
-        kmVec3 pos = vertex_data().position_at(idx);
+    for(uint16_t idx: index_data->all()) {
+        Vec3 pos = vertex_data->position_at<Vec3>(idx);
         if(pos.x < bounds_.min.x) bounds_.min.x = pos.x;
         if(pos.y < bounds_.min.y) bounds_.min.y = pos.y;
         if(pos.z < bounds_.min.z) bounds_.min.z = pos.z;
@@ -602,26 +686,8 @@ void SubMesh::_recalc_bounds() {
     }
 }
 
-VertexData& SubMesh::vertex_data() {
-    if(uses_shared_data_) { return parent_->shared_data(); }
-    return vertex_data_;
-}
-
-IndexData& SubMesh::index_data() {
-    return index_data_;
-}
-
-const VertexData& SubMesh::vertex_data() const {
-    if(uses_shared_data_) { return parent_->shared_data(); }
-    return vertex_data_;
-}
-
-const IndexData& SubMesh::index_data() const {
-    return index_data_;
-}
-
 void SubMesh::set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass) {
-    material_->pass(pass).set_texture_unit(unit, tex);
+    material_->pass(pass)->set_texture_unit(unit, tex);
 }
 
 /**
@@ -635,11 +701,12 @@ void SubMesh::set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass)
  * might be added.
  */
 void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
-    auto& vd = vertex_data();
+    auto& vd = vertex_data;
 
-    vd.move_to_start();
-    for(uint16_t i = 0; i < vd.count(); ++i) {
-        auto v = vd.normal_at(i); // Get the vertex normal
+    vd->move_to_start();
+    for(uint16_t i = 0; i < vd->count(); ++i) {
+        Vec3 v;
+        vd->normal_at(i, v); // Get the vertex normal
 
         // Work out the component with the largest value
         float absx = fabs(v.x);
@@ -665,7 +732,7 @@ void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
         kmPlane plane;
         kmPlaneFill(&plane, -dir.x, -dir.y, -dir.z, 0);
 
-        kglt::Vec3 v1 = vd.position_at(i) - bounds_.min;
+        kglt::Vec3 v1 = vd->position_at<Vec3>(i) - bounds_.min;
         kglt::Vec3 v2 = v1 + dir;
 
         // Project the vertex position onto the plane
@@ -707,27 +774,33 @@ void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
         }
 
         switch(texture) {
-            case 0: vd.tex_coord0(final.x, final.y);
+            case 0: vd->tex_coord0(final.x, final.y);
                 break;
-            case 1: vd.tex_coord1(final.x, final.y);
+            case 1: vd->tex_coord1(final.x, final.y);
                 break;
-            case 2: vd.tex_coord2(final.x, final.y);
+            case 2: vd->tex_coord2(final.x, final.y);
                 break;
-            case 3: vd.tex_coord3(final.x, final.y);
+            case 3: vd->tex_coord3(final.x, final.y);
                 break;
             default:
                 break;
         }
-        vd.move_next();
+        vd->move_next();
     }
 
-    vd.done();
+    vd->done();
 
 }
 
 SubMesh::~SubMesh() {
     vrecalc_.disconnect();
     irecalc_.disconnect();
+
+    delete vertex_data_;
+    vertex_data_ = nullptr;
+
+    delete index_data_;
+    index_data_ = nullptr;
 }
 
 }

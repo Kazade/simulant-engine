@@ -8,7 +8,7 @@
 #include <SDL.h>
 #include <set>
 #include <cassert>
-#include <kazbase/signals.h>
+#include <kazsignal/kazsignal.h>
 
 #include "generic/managed.h"
 #include "generic/identifiable.h"
@@ -42,6 +42,11 @@ class InputConnection :
 
 public:
     InputConnection(InputConnectionID id, std::weak_ptr<Device> device);
+    InputConnection():
+        generic::Identifiable<InputConnectionID>(InputConnectionID()) {}
+
+    InputConnection(const InputConnection& rhs) = default;
+
     void disconnect();
 
 private:    

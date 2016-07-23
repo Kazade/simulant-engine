@@ -9,7 +9,7 @@ class SubActor;
 
 class NullPartitioner : public Partitioner {
 public:
-    NullPartitioner(Stage& ss):
+    NullPartitioner(Stage* ss):
         Partitioner(ss) {}
 
     void add_actor(ActorID obj) {
@@ -18,6 +18,14 @@ public:
 
     void remove_actor(ActorID obj) {
         all_actors_.erase(obj);
+    }
+
+    void add_geom(GeomID geom_id) {
+        all_geoms_.insert(geom_id);
+    }
+
+    void remove_geom(GeomID geom_id) {
+        all_geoms_.erase(geom_id);
     }
 
     void add_light(LightID obj) {
@@ -42,6 +50,7 @@ public:
 private:
     std::set<ParticleSystemID> all_particle_systems_;
     std::set<ActorID> all_actors_;
+    std::set<GeomID> all_geoms_;
     std::set<LightID> all_lights_;
 };
 

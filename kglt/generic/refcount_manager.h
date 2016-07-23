@@ -3,14 +3,19 @@
 
 #include "manager_base.h"
 #include <kazbase/list_utils.h>
-#include <kazbase/signals.h>
+#include <kazsignal/kazsignal.h>
 #include "protected_ptr.h"
 
 namespace kglt {
+
+enum GarbageCollectMethod {
+    GARBAGE_COLLECT_NEVER,
+    GARBAGE_COLLECT_PERIODIC
+};
+
 namespace generic {
 
 template<
-    typename Derived,
     typename ObjectType,
     typename ObjectIDType,
     typename NewIDGenerator=IncrementalGetNextID<ObjectIDType>
@@ -25,18 +30,23 @@ public:
         uncollected_.insert(id);
     }
 
-    ObjectIDType manager_new(bool garbage_collect) {
+    ObjectIDType manager_new(GarbageCollectMethod garbage_collect) {
         return manager_new(ObjectIDType(), garbage_collect);
     }
 
     template<typename ...Args>
-    ObjectIDType manager_new(ObjectIDType id, bool garbage_collect, Args&&... args) {
+    ObjectIDType manager_new(GarbageCollectMethod garbage_collect, Args&&... args) {
+        return manager_new(ObjectIDType(), garbage_collect, std::forward<Args>(args)...);
+    }
+
+    template<typename ...Args>
+    ObjectIDType manager_new(ObjectIDType id, GarbageCollectMethod garbage_collect, Args&&... args) {
         std::lock_guard<std::mutex> lock(manager_lock_);
         if(!id) {
             id = NewIDGenerator()();
         }
 
-        auto obj = ObjectType::create((Derived*)this, id, std::forward<Args>(args)...);
+        auto obj = ObjectType::create(id, std::forward<Args>(args)...);
         obj->enable_gc(garbage_collect);
 
         objects_.insert(std::make_pair(id, obj));
@@ -96,19 +106,17 @@ public:
     }
 
     void each(std::function<void (ObjectType*)> func) const {
-        std::set<ObjectIDType> object_ids;
+        std::unordered_map<ObjectIDType, std::shared_ptr<ObjectType> > objects;
         {
             // We copy the object IDs so we don't keep a handle to
             // any shared_ptrs or anything
             std::lock_guard<std::mutex> lock(manager_lock_);
-            for(auto& p: objects_) {
-                object_ids.insert(p.first);
-            }
+            objects = objects_;
         }
 
-        for(auto& id: object_ids) {
+        for(auto& p: objects) {
             try {
-                auto thing = ProtectedPtr<ObjectType>(manager_get(id)); //Make sure we lock the object
+                auto thing = manager_get(p.first).lock();
                 func(thing.get());
             } catch(DoesNotExist<ObjectType>& e) {
                 // May have been deleted in another thread, just ignore this

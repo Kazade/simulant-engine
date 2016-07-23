@@ -4,12 +4,14 @@
 #include <set>
 #include <map>
 #include <unordered_map>
-#include <kazbase/signals.h>
+#include <kazsignal/kazsignal.h>
 
 #include "types.h"
 #include "generic/property.h"
 #include "generic/managed.h"
 #include "utils/gl_thread_check.h"
+#include "generic/identifiable.h"
+#include "vertex_data.h"
 
 #define BUFFER_OFFSET(bytes) ((GLubyte*) NULL + (bytes))
 
@@ -49,19 +51,18 @@ enum ShaderAvailableAuto {
 
 
 enum ShaderAvailableAttributes {
-    SP_ATTR_VERTEX_POSITION,
-    SP_ATTR_VERTEX_DIFFUSE,
+    SP_ATTR_VERTEX_POSITION,    
     SP_ATTR_VERTEX_NORMAL,
     SP_ATTR_VERTEX_TEXCOORD0,
     SP_ATTR_VERTEX_TEXCOORD1,
     SP_ATTR_VERTEX_TEXCOORD2,
     SP_ATTR_VERTEX_TEXCOORD3,
-    SP_ATTR_VERTEX_TEXCOORD4,
-    SP_ATTR_VERTEX_TEXCOORD5,
-    SP_ATTR_VERTEX_TEXCOORD6,
-    SP_ATTR_VERTEX_TEXCOORD7,
-    SP_ATTR_VERTEX_COLOR = SP_ATTR_VERTEX_DIFFUSE
+    SP_ATTR_VERTEX_DIFFUSE,
+    SP_ATTR_VERTEX_SPECULAR
 };
+
+
+VertexAttributeType convert(ShaderAvailableAttributes attr);
 
 }
 
@@ -97,6 +98,8 @@ namespace std {
     };
 }
 
+class ShaderTest;
+
 namespace kglt {
 
 const std::set<ShaderAvailableAuto> SHADER_AVAILABLE_AUTOS = {
@@ -111,21 +114,6 @@ const std::set<ShaderAvailableAuto> SHADER_AVAILABLE_AUTOS = {
     SP_AUTO_MATERIAL_POINT_SIZE,
 };
 
-const std::unordered_map<ShaderAvailableAttributes, uint8_t> SHADER_ATTRIBUTE_SIZES = {
-    { SP_ATTR_VERTEX_POSITION, 3 },
-    { SP_ATTR_VERTEX_DIFFUSE, 4 },
-    { SP_ATTR_VERTEX_NORMAL, 3 },
-    { SP_ATTR_VERTEX_TEXCOORD0, 2},
-    { SP_ATTR_VERTEX_TEXCOORD1, 2},
-    { SP_ATTR_VERTEX_TEXCOORD2, 2},
-    { SP_ATTR_VERTEX_TEXCOORD3, 2},
-    { SP_ATTR_VERTEX_TEXCOORD4, 2},
-    { SP_ATTR_VERTEX_TEXCOORD5, 2},
-    { SP_ATTR_VERTEX_TEXCOORD6, 2},
-    { SP_ATTR_VERTEX_TEXCOORD7, 2}
-};
-
-
 const std::set<ShaderAvailableAttributes> SHADER_AVAILABLE_ATTRS = {
     SP_ATTR_VERTEX_POSITION,
     SP_ATTR_VERTEX_DIFFUSE,
@@ -134,10 +122,6 @@ const std::set<ShaderAvailableAttributes> SHADER_AVAILABLE_ATTRS = {
     SP_ATTR_VERTEX_TEXCOORD1,
     SP_ATTR_VERTEX_TEXCOORD2,
     SP_ATTR_VERTEX_TEXCOORD3,
-    SP_ATTR_VERTEX_TEXCOORD4,
-    SP_ATTR_VERTEX_TEXCOORD5,
-    SP_ATTR_VERTEX_TEXCOORD6,
-    SP_ATTR_VERTEX_TEXCOORD7
 };
 
 }
@@ -218,10 +202,11 @@ private:
 };
 
 class GPUProgram:
-    public Managed<GPUProgram> {
+    public Managed<GPUProgram>,
+    public generic::Identifiable<ShaderID> {
 
 public:
-    GPUProgram();
+    GPUProgram(const std::string& vertex_source, const std::string& fragment_source);
     GPUProgram(const GPUProgram&) = delete;
     GPUProgram& operator=(const GPUProgram&) = delete;
 
@@ -230,7 +215,7 @@ public:
 
     const bool is_current() const;
     void activate();
-    void set_shader_source(ShaderType type, const unicode& source);
+
     const bool is_complete() const;
     const bool is_compiled(ShaderType type) const;
 
@@ -245,7 +230,7 @@ public:
     struct ShaderInfo {
         uint32_t object = 0;
         bool is_compiled = false;
-        unicode source;
+        std::string source;
     };
 
     const std::unordered_map<ShaderType, ShaderInfo> shader_infos() const { return shaders_; }
@@ -278,17 +263,22 @@ public:
     }
 
     GLuint program_object() const { return program_object_; }
-private:
-    std::unordered_map<unicode, UniformInfo> uniform_info_;
     void prepare_program();
+
+private:
+    friend class ::ShaderTest;
+
+    std::unordered_map<unicode, UniformInfo> uniform_info_;
+
     void rebuild_uniform_info();
+    void set_shader_source(ShaderType type, const std::string &source);
 
     bool is_linked_ = false;
     bool needs_relink_ = false;
 
     uint32_t program_object_ = 0;
     std::unordered_map<ShaderType, ShaderInfo> shaders_;
-    std::unordered_map<ShaderType, unicode> shader_hashes_;
+    std::unordered_map<ShaderType, std::string> shader_hashes_;
 
     ProgramLinkedSignal signal_linked_;
     ShaderCompiledSignal signal_shader_compiled_;
@@ -301,6 +291,8 @@ private:
     std::unordered_map<std::string, int32_t> attribute_cache_;
 
     void link();
+
+    static uint32_t shader_id_counter_;
 };
 
 class GPUProgramInstance : public Managed<GPUProgramInstance> {
@@ -319,6 +311,13 @@ public:
 
     // Internal, used for cloning program instances
     GPUProgram::ptr _program_as_shared_ptr() { return program_; }
+
+    void set_gpu_program(GPUProgram::ptr new_program) {
+        program_ = new_program;
+        uniforms_.program_ = program_.get();
+        attributes_.program_ = program_.get();
+    }
+
 private:
     friend class UniformManager;
     friend class AttributeManager;

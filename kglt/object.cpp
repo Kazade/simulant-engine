@@ -17,11 +17,6 @@ MoveableObject::MoveableObject(Stage *stage):
     rotation_locked_(false),
     position_locked_(false) {
 
-    absolute_position_ = Vec3(0, 0, 0);
-    absolute_rotation_ = Quaternion(0, 0, 0, 1);
-    relative_position_ = Vec3(0, 0, 0);
-    relative_rotation_ = Quaternion(0, 0, 0, 1);
-
     update_from_parent();
 
     //When the parent changes, update the position/orientation
@@ -134,23 +129,6 @@ void MoveableObject::set_relative_position(float x, float y, float z) {
     relative_position_ = Vec3(x, y, z);
     update_from_parent();
 }
-
-kglt::Vec3 MoveableObject::absolute_position() const {
-    return absolute_position_;
-}
-
-kglt::Vec3 MoveableObject::relative_position() const {
-    return relative_position_;
-}
-
-kglt::Quaternion MoveableObject::absolute_rotation() const {
-    return absolute_rotation_;
-}
-
-kglt::Quaternion MoveableObject::relative_rotation() const {
-    return relative_rotation_;
-}
-
 
 void MoveableObject::set_absolute_rotation(const Quaternion& quat) {
     if(rotation_locked_) {
@@ -271,6 +249,7 @@ void MoveableObject::update_from_parent() {
     //Only signal that the transformation changed if it did
     if(orig_pos != absolute_position() || orig_rot != absolute_rotation()) {
         transformation_changed();
+        signal_transformation_changed_(absolute_position(), absolute_rotation());
     }
 
     assert(!isnan(absolute_position_.x));

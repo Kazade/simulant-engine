@@ -18,16 +18,46 @@
 
 namespace kglt {
 
+class SubActor;
+enum ActorChangeType {
+    ACTOR_CHANGE_TYPE_SUBACTOR_MATERIAL_CHANGED
+};
+
+struct SubActorMaterialChangeData {
+    MaterialID old_material_id;
+    MaterialID new_material_id;
+};
+
+struct ActorChangeEvent {
+    ActorChangeType type;
+    SubActorMaterialChangeData subactor_material_changed;
+};
+
+namespace batcher {
+class RenderQueue;
+}
+
 class Partitioner;
 
 class Debug;
 class Sprite;
 
-typedef generic::TemplatedManager<Stage, Actor, ActorID> ActorManager;
-typedef generic::TemplatedManager<Stage, Light, LightID> LightManager;
-typedef generic::TemplatedManager<Stage, CameraProxy, CameraID> CameraProxyManager;
-typedef generic::TemplatedManager<Stage, Sprite, SpriteID> SpriteManager;
-typedef generic::TemplatedManager<Stage, ParticleSystem, ParticleSystemID> ParticleSystemManager;
+typedef generic::TemplatedManager<Actor, ActorID> ActorManager;
+typedef generic::TemplatedManager<Geom, GeomID> GeomManager;
+typedef generic::TemplatedManager<Light, LightID> LightManager;
+typedef generic::TemplatedManager<CameraProxy, CameraID> CameraProxyManager;
+typedef generic::TemplatedManager<Sprite, SpriteID> SpriteManager;
+typedef generic::TemplatedManager<ParticleSystem, ParticleSystemID> ParticleSystemManager;
+
+typedef sig::signal<void (ActorID)> ActorCreatedSignal;
+typedef sig::signal<void (ActorID)> ActorDestroyedSignal;
+typedef sig::signal<void (ActorID, ActorChangeEvent)> ActorChangedCallback;
+
+typedef sig::signal<void (GeomID)> GeomCreatedSignal;
+typedef sig::signal<void (GeomID)> GeomDestroyedSignal;
+
+typedef sig::signal<void (ParticleSystemID)> ParticleSystemCreatedSignal;
+typedef sig::signal<void (ParticleSystemID)> ParticleSystemDestroyedSignal;
 
 class Stage:
     public Managed<Stage>,
@@ -46,19 +76,25 @@ class Stage:
     public generic::DataCarrier,
     public virtual WindowHolder {
 
+    DEFINE_SIGNAL(ParticleSystemCreatedSignal, signal_particle_system_created);
+    DEFINE_SIGNAL(ParticleSystemDestroyedSignal, signal_particle_system_destroyed);
+
 public:
-    Stage(WindowBase *parent, StageID id, AvailablePartitioner partitioner);
+    Stage(StageID id, WindowBase *parent, AvailablePartitioner partitioner);
 
-    ActorID new_actor();
-    ActorID new_actor(MeshID mid); //FIXME: Deprecate
-    ActorID new_actor(MeshID mid, bool make_responsive, bool make_collidable); //FIXME: deprecate
+    ActorID new_actor(RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
+    ActorID new_actor_with_mesh(MeshID mid, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
 
-    ActorID new_actor_with_mesh(MeshID mid) { return new_actor(mid); }
+    ActorID new_actor_with_parent(ActorID parent, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
+    ActorID new_actor_with_parent_and_mesh(ActorID parent, MeshID mid, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
+    ActorID new_actor_with_parent_and_mesh(SpriteID parent, MeshID mid, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
 
-    ActorID new_actor_with_parent(ActorID parent);
-    ActorID new_actor_with_parent(ActorID parent, MeshID mid); //FIXME: deprecate
-    ActorID new_actor_with_parent_and_mesh(ActorID parent, MeshID mid);
-    ActorID new_actor_with_parent_and_mesh(SpriteID parent, MeshID mid);
+    GeomID new_geom_with_mesh(MeshID mid);
+    GeomID new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, const Quaternion& rotation=Quaternion());
+    GeomPtr geom(const GeomID gid) const;
+    bool has_geom(GeomID geom_id) const;
+    void delete_geom(GeomID geom_id);
+    uint32_t geom_count() const;
 
     ProtectedPtr<Actor> actor(ActorID e);
     const ProtectedPtr<Actor> actor(ActorID e) const;
@@ -81,14 +117,14 @@ public:
         uint32_t margin=0, uint32_t spacing=0,
         std::pair<uint32_t, uint32_t> padding=std::make_pair(0, 0)
     );
-    ProtectedPtr<Sprite> sprite(SpriteID s);
+    SpritePtr sprite(SpriteID s);
     bool has_sprite(SpriteID s) const;
     void delete_sprite(SpriteID s);
     uint32_t sprite_count() const;
 
     LightID new_light(LightType type=LIGHT_TYPE_POINT);
     LightID new_light(MoveableObject& parent, LightType type=LIGHT_TYPE_POINT);
-    ProtectedPtr<Light> light(LightID light);
+    LightPtr light(LightID light);
     void delete_light(LightID light_id);
     uint32_t light_count() const { return LightManager::manager_count(); }
 
@@ -98,18 +134,6 @@ public:
 
     kglt::Colour ambient_light() const { return ambient_light_; }
     void set_ambient_light(const kglt::Colour& c) { ambient_light_ = c; }
-
-    sig::signal<void (ActorID)>& signal_actor_created() { return signal_actor_created_; }
-    sig::signal<void (ActorID)>& signal_actor_destroyed() { return signal_actor_destroyed_; }
-
-    sig::signal<void (ParticleSystemID)>& signal_particle_system_created() { return signal_particle_system_created_; }
-    sig::signal<void (ParticleSystemID)>& signal_particle_system_destroyed() { return signal_particle_system_destroyed_; }
-
-    sig::signal<void (LightID)>& signal_light_created() { return signal_light_created_; }
-    sig::signal<void (LightID)>& signal_light_destroyed() { return signal_light_destroyed_; }
-
-    sig::signal<void (SpriteID)>& signal_sprite_created() { return signal_sprite_created_; }
-    sig::signal<void (SpriteID)>& signal_sprite_destroyed() { return signal_sprite_destroyed_; }
 
     void move(float x, float y, float z) {
         throw std::logic_error("You cannot move the stage");
@@ -121,9 +145,7 @@ public:
         obj._initialize();
     }
 
-    Partitioner& partitioner() { return *partitioner_; }
-
-    void ask_owner_for_destruction();
+    void ask_owner_for_destruction() override;
 
     /*
      *  ResourceManager interface follows
@@ -131,77 +153,77 @@ public:
      */
 
     //Mesh functions
-    virtual MeshID new_mesh(bool garbage_collect=true) override {
-        return window->new_mesh(garbage_collect);
+    virtual MeshID new_mesh(VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
+        return window->new_mesh(vertex_specification, garbage_collect);
     }
 
-    virtual MeshID new_mesh_from_file(const unicode& path, bool garbage_collect=true) override {
+    virtual MeshID new_mesh_from_file(const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_from_file(path, garbage_collect);
     }
 
-    MeshID new_mesh_from_tmx_file(const unicode& tmx_file, const unicode& layer_name, float tile_render_size=1.0, bool garbage_collect=true) override {
+    MeshID new_mesh_from_tmx_file(const unicode& tmx_file, const unicode& layer_name, float tile_render_size=1.0, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_from_tmx_file(tmx_file, layer_name, tile_render_size, garbage_collect);
     }
 
     MeshID new_mesh_from_heightmap(
         const unicode& image_file, float spacing=1.0, float min_height=-64,
-        float max_height=64.0, const HeightmapDiffuseGenerator& generator=HeightmapDiffuseGenerator(), bool garbage_collect=true) override {
+        float max_height=64.0, const HeightmapDiffuseGenerator& generator=HeightmapDiffuseGenerator(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_from_heightmap(image_file, spacing, min_height, max_height, generator, garbage_collect);
     }
 
-    virtual MeshID new_mesh_as_cube(float width, bool garbage_collect=true) {
+    virtual MeshID new_mesh_as_cube(float width, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_as_cube(width, garbage_collect);
     }
 
-    virtual MeshID new_mesh_as_cylinder(float diameter, float length, int segments=20, int stacks=20, bool garbage_collect=true) {
+    virtual MeshID new_mesh_as_cylinder(float diameter, float length, int segments=20, int stacks=20, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_as_cylinder(diameter, length, segments, stacks, garbage_collect);
     }
 
-    virtual MeshID new_mesh_as_box(float width, float height, float depth, bool garbage_collect=true) {
+    virtual MeshID new_mesh_as_box(float width, float height, float depth, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_as_box(width, height, depth, garbage_collect);
     }
 
-    virtual MeshID new_mesh_as_sphere(float diameter, bool garbage_collect=true) {
+    virtual MeshID new_mesh_as_sphere(float diameter, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_as_sphere(diameter, garbage_collect);
     }
 
-    MeshID new_mesh_as_rectangle(float width, float height, const Vec2& offset=Vec2(), MaterialID material=MaterialID(), bool garbage_collect=true) override {
+    MeshID new_mesh_as_rectangle(float width, float height, const Vec2& offset=Vec2(), MaterialID material=MaterialID(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_as_rectangle(width, height, offset, material, garbage_collect);
     }
 
-    MeshID new_mesh_as_capsule(float diameter, float length, int segments=20, int stacks=20, bool garbage_collect=true) {
+    MeshID new_mesh_as_capsule(float diameter, float length, int segments=20, int stacks=20, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_as_capsule(diameter, length, segments, stacks, garbage_collect);
     }
 
-    MeshID new_mesh_from_vertices(const std::vector<Vec2> &vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool garbage_collect=true) override {
-        return window->new_mesh_from_vertices(vertices, arrangement, garbage_collect);
+    MeshID new_mesh_from_vertices(VertexSpecification vertex_specification, const std::vector<Vec2> &vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
+        return window->new_mesh_from_vertices(vertex_specification, vertices, arrangement, garbage_collect);
     }
 
-    MeshID new_mesh_from_vertices(const std::vector<Vec3> &vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, bool garbage_collect=true) override {
-        return window->new_mesh_from_vertices(vertices, arrangement, garbage_collect);
+    MeshID new_mesh_from_vertices(VertexSpecification vertex_specification, const std::vector<Vec3> &vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
+        return window->new_mesh_from_vertices(vertex_specification, vertices, arrangement, garbage_collect);
     }
 
-    MeshID new_mesh_with_alias(const unicode& alias, bool garbage_collect=true) override {
-        return window->new_mesh_with_alias(alias, garbage_collect);
+    MeshID new_mesh_with_alias(const unicode& alias, VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
+        return window->new_mesh_with_alias(alias, vertex_specification, garbage_collect);
     }
 
-    MeshID new_mesh_with_alias_from_file(const unicode& alias, const unicode &path, bool garbage_collect=true) override {
+    MeshID new_mesh_with_alias_from_file(const unicode& alias, const unicode &path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_with_alias_from_file(alias, path, garbage_collect);
     }
 
-    MeshID new_mesh_with_alias_as_cube(const unicode& alias, float width, bool garbage_collect=true) override {
+    MeshID new_mesh_with_alias_as_cube(const unicode& alias, float width, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_with_alias_as_cube(alias, width, garbage_collect);
     }
 
-    MeshID new_mesh_with_alias_as_sphere(const unicode& alias, float diameter, bool garbage_collect=true) override {
+    MeshID new_mesh_with_alias_as_sphere(const unicode& alias, float diameter, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_with_alias_as_sphere(alias, diameter, garbage_collect);
     }
 
-    MeshID new_mesh_with_alias_as_rectangle(const unicode &alias, float width, float height, const Vec2& offset=Vec2(), MaterialID material=MaterialID(), bool garbage_collect=true) override {
+    MeshID new_mesh_with_alias_as_rectangle(const unicode &alias, float width, float height, const Vec2& offset=Vec2(), MaterialID material=MaterialID(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_with_alias_as_rectangle(alias, width, height, offset, material, garbage_collect);
     }
 
-    virtual MeshID new_mesh_with_alias_as_cylinder(const unicode& alias, float diameter, float length, int segments=20, int stacks=20, bool garbage_collect=true) {
+    virtual MeshID new_mesh_with_alias_as_cylinder(const unicode& alias, float diameter, float length, int segments=20, int stacks=20, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_mesh_with_alias_as_cylinder(alias, diameter, length, segments, stacks, garbage_collect);
     }
 
@@ -209,19 +231,19 @@ public:
         return window->get_mesh_with_alias(alias);
     }
 
-    void delete_mesh(MeshID m) {
+    void delete_mesh(MeshID m) override {
         window->delete_mesh(m);
     }
 
-    MaterialID new_material_with_alias(const unicode& alias, bool garbage_collect=true) override {
+    MaterialID new_material_with_alias(const unicode& alias, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_material_with_alias(alias, garbage_collect);
     }
 
-    MaterialID new_material_with_alias_from_file(const unicode& alias, const unicode& path, bool garbage_collect=true) override {
+    MaterialID new_material_with_alias_from_file(const unicode& alias, const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_material_with_alias_from_file(alias, path, garbage_collect);
     }
 
-    MaterialID new_material_from_texture(TextureID texture, bool garbage_collect=true) override {
+    MaterialID new_material_from_texture(TextureID texture, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_material_from_texture(texture, garbage_collect);
     }
 
@@ -229,26 +251,26 @@ public:
         return window->get_material_with_alias(alias);
     }
 
-    void delete_material(MaterialID m) {
+    void delete_material(MaterialID m) override {
         window->delete_material(m);
     }
 
-    virtual ProtectedPtr<Mesh> mesh(MeshID m) { return window->mesh(m); }
-    virtual const ProtectedPtr<Mesh> mesh(MeshID m) const { return window->mesh(m); }
+    virtual ProtectedPtr<Mesh> mesh(MeshID m) override { return window->mesh(m); }
+    virtual const ProtectedPtr<Mesh> mesh(MeshID m) const override { return window->mesh(m); }
 
-    virtual bool has_mesh(MeshID m) const { return window->has_mesh(m); }
-    virtual uint32_t mesh_count() const { return window->mesh_count(); }
+    virtual bool has_mesh(MeshID m) const override { return window->has_mesh(m); }
+    virtual uint32_t mesh_count() const override { return window->mesh_count(); }
 
 
     //Texture functions
-    virtual TextureID new_texture(bool garbage_collect=true) override { return window->new_texture(garbage_collect); }
-    virtual TextureID new_texture_from_file(const unicode& path, TextureFlags flags=0, bool garbage_collect=true) {
+    virtual TextureID new_texture(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override { return window->new_texture(garbage_collect); }
+    virtual TextureID new_texture_from_file(const unicode& path, TextureFlags flags=0, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_texture_from_file(path, flags, garbage_collect);
     }
-    virtual TextureID new_texture_with_alias(const unicode& alias, bool garbage_collect=true) override {
+    virtual TextureID new_texture_with_alias(const unicode& alias, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_texture_with_alias(alias, garbage_collect);
     }
-    virtual TextureID new_texture_with_alias_from_file(const unicode& alias, const unicode& path, TextureFlags flags=0, bool garbage_collect=true) override {
+    virtual TextureID new_texture_with_alias_from_file(const unicode& alias, const unicode& path, TextureFlags flags=0, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_texture_with_alias_from_file(alias, path, flags, garbage_collect);
     }
     virtual TextureID get_texture_with_alias(const unicode& alias) override {
@@ -258,61 +280,63 @@ public:
         window->delete_texture(t);
     }
 
-    virtual ProtectedPtr<Texture> texture(TextureID t) { return window->texture(t); }
-    virtual const ProtectedPtr<Texture> texture(TextureID t) const { return window->texture(t); }
+    virtual TexturePtr texture(TextureID t) override { return window->texture(t); }
+    virtual const TexturePtr texture(TextureID t) const override { return window->texture(t); }
 
-    virtual bool has_texture(TextureID t) const { return window->has_texture(t); }
-    virtual uint32_t texture_count() const { return window->texture_count(); }
-    virtual void mark_texture_as_uncollected(TextureID t) { window->mark_texture_as_uncollected(t); }
+    virtual bool has_texture(TextureID t) const override { return window->has_texture(t); }
+    virtual uint32_t texture_count() const override { return window->texture_count(); }
+    virtual void mark_texture_as_uncollected(TextureID t) override { window->mark_texture_as_uncollected(t); }
 
     //Sound functions
-    virtual SoundID new_sound(bool garbage_collect=true) override { return window->new_sound(garbage_collect); }
-    virtual SoundID new_sound_from_file(const unicode& path, bool garbage_collect=true) override {
+    virtual SoundID new_sound(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override { return window->new_sound(garbage_collect); }
+    virtual SoundID new_sound_from_file(const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_sound_from_file(path, garbage_collect);
     }
 
-    virtual SoundID new_sound_with_alias(const unicode& alias, bool garbage_collect=true) override {
+    virtual SoundID new_sound_with_alias(const unicode& alias, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_sound_with_alias(alias, garbage_collect);
     }
 
-    virtual SoundID new_sound_with_alias_from_file(const unicode& alias, const unicode& path, bool garbage_collect=true) override {
+    virtual SoundID new_sound_with_alias_from_file(const unicode& alias, const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_sound_with_alias_from_file(alias, path, garbage_collect);
     }
 
-    virtual SoundID get_sound_with_alias(const unicode& alias) {
+    virtual SoundID get_sound_with_alias(const unicode& alias) override {
         return window->get_sound_with_alias(alias);
     }
 
-    virtual void delete_sound(SoundID t) { window->delete_sound(t); }
+    virtual void delete_sound(SoundID t) override { window->delete_sound(t); }
 
-    virtual ProtectedPtr<Sound> sound(SoundID s) { return window->sound(s); }
-    virtual const ProtectedPtr<Sound> sound(SoundID s) const { return window->sound(s); }
+    virtual ProtectedPtr<Sound> sound(SoundID s) override { return window->sound(s); }
+    virtual const ProtectedPtr<Sound> sound(SoundID s) const override { return window->sound(s); }
 
-    virtual bool has_sound(SoundID s) const { return window->has_sound(s); }
-    virtual uint32_t sound_count() const { return window->sound_count(); }
+    virtual bool has_sound(SoundID s) const override { return window->has_sound(s); }
+    virtual uint32_t sound_count() const override { return window->sound_count(); }
 
 
     //Material functions
-    virtual MaterialID new_material(bool garbage_collect=true) { return window->new_material(garbage_collect); }
-    virtual MaterialID new_material_from_file(const unicode& path, bool garbage_collect=true) {
+    virtual MaterialID new_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override { return window->new_material(garbage_collect); }
+    virtual MaterialID new_material_from_file(const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_material_from_file(path, garbage_collect);
     }
 
-    virtual ProtectedPtr<Material> material(MaterialID m) { return window->material(m); }
-    virtual const ProtectedPtr<Material> material(MaterialID m) const { return window->material(m); }
+    virtual MaterialPtr material(MaterialID m) override { return window->material(m); }
+    virtual const MaterialPtr material(MaterialID m) const override { return window->material(m); }
 
-    virtual bool has_material(MaterialID m) const { return window->has_material(m); }
-    virtual uint32_t material_count() const { return window->material_count(); }
-    virtual void mark_material_as_uncollected(MaterialID t) { window->mark_material_as_uncollected(t); }
+    virtual bool has_material(MaterialID m) const override { return window->has_material(m); }
+    virtual uint32_t material_count() const override { return window->material_count(); }
+    virtual void mark_material_as_uncollected(MaterialID t) override { window->mark_material_as_uncollected(t); }
 
     Property<Stage, Debug> debug = { this, &Stage::debug_ };
+    Property<Stage, batcher::RenderQueue> render_queue = { this, &Stage::render_queue_ };
+    Property<Stage, Partitioner> partitioner = { this, &Stage::partitioner_ };
 
-    bool init();
+    bool init() override;
     void cleanup() override;
 
     // Updateable interface
 
-    void update(double dt);
+    void update(double dt) override;
 
     // Locateable interface
 
@@ -321,7 +345,7 @@ public:
     Quaternion rotation() const override { return Quaternion(); }
 
     // Printable interface
-    unicode __unicode__() const {
+    unicode __unicode__() const override {
         if(has_name()) {
             return name();
         } else {
@@ -330,31 +354,46 @@ public:
     }
 
     // Nameable interface
-    void set_name(const unicode& name) { name_ = name; }
-    const unicode name() const { return name_; }
-    const bool has_name() const { return !name_.empty(); }
+    void set_name(const unicode& name) override { name_ = name; }
+    const unicode name() const override { return name_; }
+    const bool has_name() const override { return !name_.empty(); }
 
 
     // Default stuff
-    MaterialID default_material_id() const { return window->default_material_id(); }
-    TextureID default_texture_id() const { return window->default_texture_id(); }
-    MaterialID clone_default_material(bool garbage_collect=true) { return window->clone_default_material(garbage_collect); }
-    unicode default_material_filename() const { return window->default_material_filename(); }
+    MaterialID default_material_id() const override { return window->default_material_id(); }
+    TextureID default_texture_id() const override { return window->default_texture_id(); }
+    MaterialID clone_default_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override { return window->clone_default_material(garbage_collect); }
+    unicode default_material_filename() const override { return window->default_material_filename(); }
 
     // RenderableStage
-    void on_render_started() {}
-    void on_render_stopped() {}
+    void on_render_started() override {}
+    void on_render_stopped() override {}
+
+    ActorCreatedSignal& signal_actor_created() { return signal_actor_created_; }
+    ActorDestroyedSignal& signal_actor_destroyed() { return signal_actor_destroyed_; }
+    ActorChangedCallback& signal_actor_changed() { return signal_actor_changed_; }
+
+    GeomCreatedSignal& signal_geom_created() { return signal_geom_created_; }
+    GeomDestroyedSignal& signal_geom_destroyed() { return signal_geom_destroyed_; }
+
+    sig::signal<void (LightID)>& signal_light_created() { return signal_light_created_; }
+    sig::signal<void (LightID)>& signal_light_destroyed() { return signal_light_destroyed_; }
+
+    sig::signal<void (SpriteID)>& signal_sprite_created() { return signal_sprite_created_; }
+    sig::signal<void (SpriteID)>& signal_sprite_destroyed() { return signal_sprite_destroyed_; }
+
 private:
     kglt::Colour ambient_light_;
 
-    sig::signal<void (ActorID)> signal_actor_created_;
-    sig::signal<void (ActorID)> signal_actor_destroyed_;
+    ActorCreatedSignal signal_actor_created_;
+    ActorDestroyedSignal signal_actor_destroyed_;
+    ActorChangedCallback signal_actor_changed_;
+
+    GeomCreatedSignal signal_geom_created_;
+    GeomDestroyedSignal signal_geom_destroyed_;
 
     sig::signal<void (LightID)> signal_light_created_;
     sig::signal<void (LightID)> signal_light_destroyed_;
-
-    sig::signal<void (ParticleSystemID)> signal_particle_system_created_;
-    sig::signal<void (ParticleSystemID)> signal_particle_system_destroyed_;
 
     sig::signal<void (SpriteID)> signal_sprite_created_;
     sig::signal<void (SpriteID)> signal_sprite_destroyed_;
@@ -365,12 +404,21 @@ private:
 
     std::shared_ptr<Debug> debug_;
 
-    friend 
-
     CameraID new_camera_proxy(CameraID cam);
     void delete_camera_proxy(CameraID cam);
 
     unicode name_;
+
+    //FIXME: All managers should be composition rather than inheritence,
+    // like this one!
+
+    std::unique_ptr<GeomManager> geom_manager_;
+    std::unique_ptr<batcher::RenderQueue> render_queue_;
+
+private:
+    void on_actor_created(ActorID actor_id);
+    void on_actor_destroyed(ActorID actor_id);
+    void on_subactor_material_changed(ActorID actor_id, SubActor* subactor, MaterialID old, MaterialID newM);
 };
 
 

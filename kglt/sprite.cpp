@@ -6,7 +6,7 @@
 
 using namespace kglt;
 
-Sprite::Sprite(Stage *stage, SpriteID id):
+Sprite::Sprite(SpriteID id, Stage *stage):
     generic::Identifiable<SpriteID>(id),
     ParentSetterMixin<MoveableObject>(stage),
     Source(stage) {
@@ -27,7 +27,9 @@ bool Sprite::init() {
 }
 
 void Sprite::cleanup() {
-    stage->delete_actor(actor_id_);
+    if(actor_id_) {
+        stage->delete_actor(actor_id_);
+    }
 }
 
 void Sprite::ask_owner_for_destruction() {
@@ -174,19 +176,19 @@ void Sprite::update_texture_coordinates() {
     {
         auto mesh = stage->mesh(mesh_id_);
 
-        mesh->shared_data().move_to_start();
-        mesh->shared_data().tex_coord0(x0, y0);
+        mesh->shared_data->move_to_start();
+        mesh->shared_data->tex_coord0(x0, y0);
 
-        mesh->shared_data().move_next();
-        mesh->shared_data().tex_coord0(x1, y0);
+        mesh->shared_data->move_next();
+        mesh->shared_data->tex_coord0(x1, y0);
 
-        mesh->shared_data().move_next();
-        mesh->shared_data().tex_coord0(x1, y1);
+        mesh->shared_data->move_next();
+        mesh->shared_data->tex_coord0(x1, y1);
 
-        mesh->shared_data().move_next();
-        mesh->shared_data().tex_coord0(x0, y1);
+        mesh->shared_data->move_next();
+        mesh->shared_data->tex_coord0(x0, y1);
 
-        mesh->shared_data().done();
+        mesh->shared_data->done();
     }
 }
 
@@ -240,17 +242,17 @@ void Sprite::set_render_dimensions(float width, float height) {
     //Rebuild the mesh
     auto mesh = stage->mesh(mesh_id_);
 
-    mesh->shared_data().move_to_start();
-    mesh->shared_data().position((-width / 2.0), (-height / 2.0), 0);
+    mesh->shared_data->move_to_start();
+    mesh->shared_data->position((-width / 2.0), (-height / 2.0), 0);
 
-    mesh->shared_data().move_next();
-    mesh->shared_data().position((width / 2.0), (-height / 2.0), 0);
+    mesh->shared_data->move_next();
+    mesh->shared_data->position((width / 2.0), (-height / 2.0), 0);
 
-    mesh->shared_data().move_next();
-    mesh->shared_data().position((width / 2.0),  (height / 2.0), 0);
+    mesh->shared_data->move_next();
+    mesh->shared_data->position((width / 2.0),  (height / 2.0), 0);
 
-    mesh->shared_data().move_next();
-    mesh->shared_data().position((-width / 2.0),  (height / 2.0), 0);
+    mesh->shared_data->move_next();
+    mesh->shared_data->position((-width / 2.0),  (height / 2.0), 0);
 
-    mesh->shared_data().done();
+    mesh->shared_data->done();
 }

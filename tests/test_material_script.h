@@ -1,7 +1,7 @@
 #ifndef TEST_MATERIAL_SCRIPT_H
 #define TEST_MATERIAL_SCRIPT_H
 
-#include <kaztest/kaztest.h>
+#include "kaztest/kaztest.h"
 
 #include "kglt/kglt.h"
 #include "global.h"
@@ -31,10 +31,10 @@ public:
 
         auto mat = window->material(window->new_material());
         kglt::MaterialScript script((kglt::MaterialLanguageText(text))); //Most vexing parse \o/
-        script.generate(*mat.__object);
+        script.generate(*mat);
 
         this->assert_equal((uint32_t)1, mat->pass_count());
-        this->assert_equal((uint32_t)1, mat->pass(0).texture_unit_count());
+        this->assert_equal((uint32_t)1, mat->pass(0)->texture_unit_count());
 
         //TODO: Add tests to make sure that the shader has compiled correctly
     }

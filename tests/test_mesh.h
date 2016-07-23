@@ -2,7 +2,7 @@
 #define TEST_MESH_H
 
 #include <kazbase/logging.h>
-#include <kaztest/kaztest.h>
+#include "kaztest/kaztest.h"
 
 #include "kglt/kglt.h"
 #include "global.h"
@@ -22,42 +22,42 @@ public:
     }
 
     kglt::MeshID generate_test_mesh(kglt::StagePtr stage) {
-        kglt::MeshID mid = stage->new_mesh();
+        kglt::MeshID mid = stage->new_mesh(kglt::VertexSpecification::POSITION_ONLY);
         auto mesh = stage->mesh(mid);
 
-        kglt::VertexData& data = mesh->shared_data();
+        auto& data = mesh->shared_data;
 
-        data.position(-1.0, -1.0, 0.0);
-        data.move_next();
+        data->position(-1.0, -1.0, 0.0);
+        data->move_next();
 
-        data.position( 1.0, -1.0, 0.0);
-        data.move_next();
+        data->position( 1.0, -1.0, 0.0);
+        data->move_next();
 
-        data.position( 1.0, 1.0, 0.0);
-        data.move_next();
+        data->position( 1.0, 1.0, 0.0);
+        data->move_next();
 
-        data.position(-1.0, 1.0, 0.0);
-        data.move_next();
+        data->position(-1.0, 1.0, 0.0);
+        data->move_next();
 
-        data.done();
+        data->done();
 
         first_mesh_ = mesh->new_submesh();
         kglt::SubMesh* submesh = mesh->submesh(first_mesh_);
 
-        submesh->index_data().index(0);
-        submesh->index_data().index(1);
-        submesh->index_data().index(2);
+        submesh->index_data->index(0);
+        submesh->index_data->index(1);
+        submesh->index_data->index(2);
 
-        submesh->index_data().index(0);
-        submesh->index_data().index(2);
-        submesh->index_data().index(3);
-        submesh->index_data().done();
+        submesh->index_data->index(0);
+        submesh->index_data->index(2);
+        submesh->index_data->index(3);
+        submesh->index_data->done();
 
         //Draw a line between the first two vertices
         kglt::SubMesh* sm = mesh->submesh(mesh->new_submesh(kglt::MESH_ARRANGEMENT_LINES));
-        sm->index_data().index(0);
-        sm->index_data().index(1);
-        sm->index_data().done();
+        sm->index_data->index(0);
+        sm->index_data->index(1);
+        sm->index_data->done();
 
         kmVec3 expected_min, expected_max;
         kmVec3Fill(&expected_min, -1.0, -1.0, 0.0);
@@ -120,36 +120,21 @@ public:
         this->assert_true(!stage->has_actor(cid2));
     }
 
-    void test_procedural_rectangle_outline() {
-        auto stage = window->stage(stage_id_);
-
-        kglt::MeshID mid = stage->new_mesh();
-        auto mesh = stage->mesh(mid);
-
-        this->assert_equal(0, mesh->shared_data().count());
-        kglt::SubMeshID idx = kglt::procedural::mesh::rectangle_outline(mesh, 1.0, 1.0);
-
-        this->assert_equal(kglt::MESH_ARRANGEMENT_LINE_STRIP, mesh->submesh(idx)->arrangement());
-        this->assert_equal(4, mesh->shared_data().count());
-        this->assert_equal(5, mesh->submesh(idx)->index_data().count());
-    }
-
     void test_basic_usage() {
         auto stage = window->stage(stage_id_);
         auto mesh = stage->mesh(generate_test_mesh(stage));
 
-        kglt::VertexData& data = mesh->shared_data();
+        auto& data = mesh->shared_data;
 
-        assert_true(data.has_positions());
-        assert_true(!data.has_normals());
-        assert_true(!data.has_texcoord0());
-        assert_true(!data.has_texcoord1());
-        assert_true(!data.has_texcoord2());
-        assert_true(!data.has_texcoord3());
-        assert_true(!data.has_texcoord4());
-        assert_true(!data.has_diffuse());
-        assert_true(!data.has_specular());
-        assert_equal(4, data.count());
+        assert_true(data->has_positions());
+        assert_true(!data->has_normals());
+        assert_true(!data->has_texcoord0());
+        assert_true(!data->has_texcoord1());
+        assert_true(!data->has_texcoord2());
+        assert_true(!data->has_texcoord3());
+        assert_true(!data->has_diffuse());
+        assert_true(!data->has_specular());
+        assert_equal(4, data->count());
 
         assert_equal((uint32_t)2, mesh->submesh_count());
     }
@@ -173,15 +158,15 @@ public:
         //The actor should report the same data as the mesh, the same subactor count
         //as well as the same shared vertex data
         assert_equal(mesh->submesh_count(), actor->subactor_count());
-        assert_true(mesh->shared_data().count() == actor->shared_data().count());
+        assert_true(mesh->shared_data->count() == actor->shared_data->count());
 
         kglt::SubMeshID smid = actor->subactor(0).submesh_id();
         kglt::SubMesh* sm = mesh->submesh(smid);
 
         //Likewise for subentities, they should just proxy to the submesh
         assert_equal(sm->material_id(), actor->subactor(0).material_id());
-        assert_true(sm->index_data() == actor->subactor(0).index_data());
-        assert_true(sm->vertex_data() == actor->subactor(0).vertex_data());
+        assert_equal(sm->index_data.get(), actor->subactor(0).index_data.get());
+        assert_equal(sm->vertex_data.get(), actor->subactor(0).vertex_data.get());
 
         //We should be able to override the material on a subactor though
         actor->subactor(0).override_material_id(kglt::MaterialID(1));
@@ -192,8 +177,8 @@ public:
     void test_scene_methods() {
         auto stage = window->stage(stage_id_);
 
-        kglt::MeshID mesh_id = stage->new_mesh(); //Create a mesh
-        auto actor = stage->actor(stage->new_actor(mesh_id));
+        kglt::MeshID mesh_id = stage->new_mesh(kglt::VertexSpecification::POSITION_ONLY); //Create a mesh
+        auto actor = stage->actor(stage->new_actor_with_mesh(mesh_id));
 
         assert_true(mesh_id == actor->mesh()->id());
     }
@@ -201,48 +186,46 @@ public:
     void test_cubic_texture_generation() {
         auto stage = window->stage(stage_id_);
 
-        auto mesh_id = stage->new_mesh();
-        auto smi = stage->mesh(mesh_id)->new_submesh_as_box(stage->clone_default_material(), 10.0, 10.0, 10.0);
-        auto sm = stage->mesh(mesh_id)->submesh(smi);
-        sm->generate_texture_coordinates_cube();
+        auto mesh_id = stage->new_mesh_as_box(10.0f, 10.0f, 10.0f);
+        stage->mesh(mesh_id)->only_submesh()->generate_texture_coordinates_cube();
 
-        auto& vd = sm->vertex_data();
+        auto& vd = *stage->mesh(mesh_id)->only_submesh()->vertex_data.get();
 
         // Neg Z
-        assert_equal(kglt::Vec4((1.0 / 3.0), 0, 0, 1), vd.texcoord0_at(0));
-        assert_equal(kglt::Vec4((2.0 / 3.0), 0, 0, 1), vd.texcoord0_at(1));
-        assert_equal(kglt::Vec4((2.0 / 3.0), (1.0 / 4.0), 0, 1), vd.texcoord0_at(2));
-        assert_equal(kglt::Vec4((1.0 / 3.0), (1.0 / 4.0), 0, 1), vd.texcoord0_at(3));
+        assert_equal(kglt::Vec2((1.0 / 3.0), 0), vd.texcoord0_at<kglt::Vec2>(0));
+        assert_equal(kglt::Vec2((2.0 / 3.0), 0), vd.texcoord0_at<kglt::Vec2>(1));
+        assert_equal(kglt::Vec2((2.0 / 3.0), (1.0 / 4.0)), vd.texcoord0_at<kglt::Vec2>(2));
+        assert_equal(kglt::Vec2((1.0 / 3.0), (1.0 / 4.0)), vd.texcoord0_at<kglt::Vec2>(3));
 
         // Pos Z
-        assert_equal(kglt::Vec4((1.0 / 3.0), (2.0 / 4.0), 0, 1), vd.texcoord0_at(4));
-        assert_equal(kglt::Vec4((2.0 / 3.0), (2.0 / 4.0), 0, 1), vd.texcoord0_at(5));
-        assert_equal(kglt::Vec4((2.0 / 3.0), (3.0 / 4.0), 0, 1), vd.texcoord0_at(6));
-        assert_equal(kglt::Vec4((1.0 / 3.0), (3.0 / 4.0), 0, 1), vd.texcoord0_at(7));
+        assert_equal(kglt::Vec2((1.0 / 3.0), (2.0 / 4.0)), vd.texcoord0_at<kglt::Vec2>(4));
+        assert_equal(kglt::Vec2((2.0 / 3.0), (2.0 / 4.0)), vd.texcoord0_at<kglt::Vec2>(5));
+        assert_equal(kglt::Vec2((2.0 / 3.0), (3.0 / 4.0)), vd.texcoord0_at<kglt::Vec2>(6));
+        assert_equal(kglt::Vec2((1.0 / 3.0), (3.0 / 4.0)), vd.texcoord0_at<kglt::Vec2>(7));
 
         // Neg X
-        assert_equal(kglt::Vec4(0, 2.0 / 4.0, 0, 1), vd.texcoord0_at(8));
-        assert_equal(kglt::Vec4(1.0 / 3.0, 2.0 / 4.0, 0, 1), vd.texcoord0_at(9));
-        assert_equal(kglt::Vec4(1.0 / 3.0, 3.0 / 4.0, 0, 1), vd.texcoord0_at(10));
-        assert_equal(kglt::Vec4(0, 3.0 / 4.0, 0, 1), vd.texcoord0_at(11));
+        assert_equal(kglt::Vec2(0, 2.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(8));
+        assert_equal(kglt::Vec2(1.0 / 3.0, 2.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(9));
+        assert_equal(kglt::Vec2(1.0 / 3.0, 3.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(10));
+        assert_equal(kglt::Vec2(0, 3.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(11));
 
         // Pos X
-        assert_equal(kglt::Vec4(2.0 / 3.0, 2.0 / 4.0, 0, 1), vd.texcoord0_at(12));
-        assert_equal(kglt::Vec4(3.0 / 3.0, 2.0 / 4.0, 0, 1), vd.texcoord0_at(13));
-        assert_equal(kglt::Vec4(3.0 / 3.0, 3.0 / 4.0, 0, 1), vd.texcoord0_at(14));
-        assert_equal(kglt::Vec4(2.0 / 3.0, 3.0 / 4.0, 0, 1), vd.texcoord0_at(15));
+        assert_equal(kglt::Vec2(2.0 / 3.0, 2.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(12));
+        assert_equal(kglt::Vec2(3.0 / 3.0, 2.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(13));
+        assert_equal(kglt::Vec2(3.0 / 3.0, 3.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(14));
+        assert_equal(kglt::Vec2(2.0 / 3.0, 3.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(15));
 
         // Neg Y
-        assert_equal(kglt::Vec4(1.0 / 3.0, 1.0 / 4.0, 0, 1), vd.texcoord0_at(16));
-        assert_equal(kglt::Vec4(2.0 / 3.0, 1.0 / 4.0, 0, 1), vd.texcoord0_at(17));
-        assert_equal(kglt::Vec4(2.0 / 3.0, 2.0 / 4.0, 0, 1), vd.texcoord0_at(18));
-        assert_equal(kglt::Vec4(1.0 / 3.0, 2.0 / 4.0, 0, 1), vd.texcoord0_at(19));
+        assert_equal(kglt::Vec2(1.0 / 3.0, 1.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(16));
+        assert_equal(kglt::Vec2(2.0 / 3.0, 1.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(17));
+        assert_equal(kglt::Vec2(2.0 / 3.0, 2.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(18));
+        assert_equal(kglt::Vec2(1.0 / 3.0, 2.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(19));
 
         // Pos Y
-        assert_equal(kglt::Vec4(1.0 / 3.0, 3.0 / 4.0, 0, 1), vd.texcoord0_at(20));
-        assert_equal(kglt::Vec4(2.0 / 3.0, 3.0 / 4.0, 0, 1), vd.texcoord0_at(21));
-        assert_equal(kglt::Vec4(2.0 / 3.0, 4.0 / 4.0, 0, 1), vd.texcoord0_at(22));
-        assert_equal(kglt::Vec4(1.0 / 3.0, 4.0 / 4.0, 0, 1), vd.texcoord0_at(23));
+        assert_equal(kglt::Vec2(1.0 / 3.0, 3.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(20));
+        assert_equal(kglt::Vec2(2.0 / 3.0, 3.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(21));
+        assert_equal(kglt::Vec2(2.0 / 3.0, 4.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(22));
+        assert_equal(kglt::Vec2(1.0 / 3.0, 4.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(23));
     }
 
 private:

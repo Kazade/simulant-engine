@@ -4,7 +4,7 @@
 #include <SDL.h>
 
 #include <memory>
-#include <kaztimer/kaztimer.h>
+#include "kaztimer/kaztimer.h"
 
 #include "generic/property.h"
 #include "generic/manager.h"
@@ -22,6 +22,7 @@
 #include "pipeline_helper.h"
 #include "screens/screen_manager.h"
 #include "loader.h"
+
 
 namespace kglt {
 
@@ -46,6 +47,8 @@ class SceneImpl;
 class Watcher;
 class VirtualGamepad;
 class DebugService;
+class Renderer;
+class Panel;
 
 typedef std::function<void (double)> WindowUpdateCallback;
 typedef std::shared_ptr<Loader> LoaderPtr;
@@ -67,9 +70,17 @@ private:
     uint32_t frames_per_second_;
 };
 
+typedef sig::signal<void ()> FrameStartedSignal;
+typedef sig::signal<void ()> FrameFinishedSignal;
+typedef sig::signal<void ()> PreSwapSignal;
+typedef sig::signal<void (double)> StepSignal;
+typedef sig::signal<void (double)> PostStepSignal;
+typedef sig::signal<void ()> ShutdownSignal;
+typedef sig::signal<void (SDL_Scancode)> KeyUpSignal;
+typedef sig::signal<void (SDL_Scancode)> KeyDownSignal;
+
 class WindowBase :
     public Source,
-    public BackgroundManager,
     public StageManager,
     public UIStageManager,
     public CameraManager,
@@ -77,6 +88,13 @@ class WindowBase :
     public Loadable,
     public PipelineHelperAPIInterface,
     public RenderTarget {
+
+    DEFINE_SIGNAL(FrameStartedSignal, signal_frame_started);
+    DEFINE_SIGNAL(FrameFinishedSignal, signal_frame_finished);
+    DEFINE_SIGNAL(PreSwapSignal, signal_pre_swap);
+    DEFINE_SIGNAL(StepSignal, signal_step);
+    DEFINE_SIGNAL(PostStepSignal, signal_post_step);
+    DEFINE_SIGNAL(ShutdownSignal, signal_shutdown);
 
 public:    
     typedef std::shared_ptr<WindowBase> ptr;
@@ -101,8 +119,8 @@ public:
     
     void register_loader(LoaderTypePtr loader_type);
 
-    virtual sig::signal<void (SDL_Scancode)>& signal_key_up() = 0;
-    virtual sig::signal<void (SDL_Scancode)>& signal_key_down() = 0;
+    virtual KeyUpSignal& signal_key_up() = 0;
+    virtual KeyDownSignal& signal_key_down() = 0;
     
     virtual void set_title(const std::string& title) = 0;
     virtual void cursor_position(int32_t& mouse_x, int32_t& mouse_y) = 0;
@@ -117,8 +135,8 @@ public:
     double fixed_step_interp() const;
     bool is_paused() const { return is_paused_; }
 
-    uint32_t width() const { return width_; }
-    uint32_t height() const { return height_; }
+    uint32_t width() const override { return width_; }
+    uint32_t height() const override { return height_; }
     float aspect_ratio() const { return float(width_) / float(height_); }
     
     bool run_frame();
@@ -129,13 +147,6 @@ public:
     uint8_t joypad_count() const;
 
     void set_logging_level(LoggingLevel level);
-
-    sig::signal<void (void)>& signal_frame_started() { return signal_frame_started_; }
-    sig::signal<void (void)>& signal_frame_finished() { return signal_frame_finished_; }
-    sig::signal<void (void)>& signal_pre_swap() { return signal_pre_swap_; }
-    sig::signal<void (double)>& signal_step() { return signal_step_; }
-    sig::signal<void (double)>& signal_post_step() { return signal_post_step_; }
-    sig::signal<void (void)>& signal_shutdown() { return signal_shutdown_; }
 
     void stop_running() { is_running_ = false; }
     const bool is_shutting_down() const { return is_running_ == false; }
@@ -165,14 +176,16 @@ public:
         return new_pipeline_helper(render_sequence_, stage_id, camera_id);
     }
 
-    virtual PipelinePtr pipeline(PipelineID pid);
-    virtual bool enable_pipeline(PipelineID pid);
-    virtual bool disable_pipeline(PipelineID pid);
-    virtual void delete_pipeline(PipelineID pid);
-    virtual bool has_pipeline(PipelineID pid) const;
-    virtual bool is_pipeline_enabled(PipelineID pid) const;
+    virtual PipelinePtr pipeline(PipelineID pid) override;
+    virtual bool enable_pipeline(PipelineID pid) override;
+    virtual bool disable_pipeline(PipelineID pid) override;
+    virtual void delete_pipeline(PipelineID pid) override;
+    virtual bool has_pipeline(PipelineID pid) const override;
+    virtual bool is_pipeline_enabled(PipelineID pid) const override;
 
-protected:
+protected:    
+    std::shared_ptr<Renderer> renderer_;
+
     RenderSequencePtr render_sequence();
 
     void set_width(uint32_t width) { 
@@ -197,6 +210,31 @@ protected:
     std::mutex& context_lock() { return context_lock_; }
 
     void set_application(Application* app) { application_ = app; }
+public:
+    // Background things
+    BackgroundID new_background() { return background_manager_->new_background(); }
+    BackgroundID new_background_from_file(const unicode& filename, float scroll_x=0.0, float scroll_y=0.0) {
+        return background_manager_->new_background_from_file(filename, scroll_x, scroll_y);
+    }
+
+    BackgroundPtr background(BackgroundID bid) {
+        return background_manager_->background(bid);
+    }
+
+    bool has_background(BackgroundID bid) const {
+        return background_manager_->has_background(bid);
+    }
+
+    void delete_background(BackgroundID bid) {
+        background_manager_->delete_background(bid);
+    }
+
+    uint32_t background_count() const { return background_manager_->background_count(); }
+
+    // Panels
+    void register_panel(uint8_t function_key, std::shared_ptr<Panel> panel);
+    void unregister_panel(uint8_t function_key);
+
 private:    
     Application* application_ = nullptr;
 
@@ -221,6 +259,14 @@ private:
     bool is_paused_ = false;
     bool has_context_ = false;
 
+
+    struct PanelEntry {
+        std::shared_ptr<Panel> panel;
+        InputConnection keyboard_connection;
+    };
+
+    std::unordered_map<uint8_t, PanelEntry> panels_;
+
     /*
      *  Sometimes we need to destroy or recreate the GL context, if that happens while we are rendering in the
      *  main thread, then bad things happen. This lock exists so that we don't destroy the context while we are rendering.
@@ -239,23 +285,16 @@ private:
 
     double total_time_ = 0.0;
 
-    sig::signal<void ()> signal_frame_started_;
-    sig::signal<void ()> signal_pre_swap_;
-    sig::signal<void ()> signal_frame_finished_;
-    sig::signal<void (double)> signal_step_;
-    sig::signal<void (double)> signal_post_step_;
-    sig::signal<void ()> signal_shutdown_;
-
     std::shared_ptr<Watcher> watcher_;
-
     std::shared_ptr<screens::Loading> loading_;
-
     std::shared_ptr<MessageBar> message_bar_;
     std::shared_ptr<kglt::RenderSequence> render_sequence_;
     generic::DataCarrier data_carrier_;
 
     std::shared_ptr<VirtualGamepad> virtual_gamepad_;
     std::unique_ptr<DebugService> debug_service_;
+
+    std::unique_ptr<BackgroundManager> background_manager_;
 
     Stats stats_;
 
@@ -265,6 +304,7 @@ public:
     Property<WindowBase, Application> application = { this, &WindowBase::application_ };
     Property<WindowBase, VirtualGamepad> virtual_joypad = { this, &WindowBase::virtual_gamepad_ };
     Property<WindowBase, MessageBar> message_bar = { this, &WindowBase::message_bar_ };
+    Property<WindowBase, Renderer> renderer = { this, &WindowBase::renderer_ };
 
     Property<WindowBase, Watcher> watcher = {
         this, [](const WindowBase* self) -> Watcher* {

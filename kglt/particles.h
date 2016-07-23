@@ -7,7 +7,7 @@
 #include "generic/identifiable.h"
 #include "generic/managed.h"
 #include "generic/protected_ptr.h"
-
+#include "renderers/renderer.h"
 #include "utils/parent_setter_mixin.h"
 
 #include "sound.h"
@@ -141,7 +141,8 @@ class ParticleSystem :
     public Renderable {
 
 public:
-    ParticleSystem(Stage* stage, ParticleSystemID id);
+    ParticleSystem(ParticleSystemID id, Stage* stage);
+    ~ParticleSystem();
 
     void set_name(const unicode& name) { name_ = name; }
     const bool has_name() const { return !name_.empty(); }
@@ -192,9 +193,6 @@ public:
     virtual MeshID instanced_mesh_id() const { return MeshID(); } //We don't support instancing
     virtual SubMeshID instanced_submesh_id() const { return SubMeshID(0); } //We don't support instancing
 
-    const VertexData& vertex_data() const { return vertex_data_; }
-    const IndexData& index_data() const { return index_data_; }
-
     void deactivate_emitters() { for(auto emitter: emitters_) { emitter->deactivate(); }; }
     void activate_emitters() { for(auto emitter: emitters_) { emitter->activate(); }; }
 
@@ -203,7 +201,16 @@ public:
 
     bool has_repeating_emitters() const;
     bool has_active_emitters() const;
+
 private:
+    inline VertexData* get_vertex_data() const {
+        return vertex_data_;
+    }
+
+    inline IndexData* get_index_data() const {
+        return index_data_;
+    }
+
     unicode name_;
     int quota_ = 10;
     float particle_width_ = 100.0;
@@ -218,8 +225,8 @@ private:
 
     void do_update(double dt);
 
-    VertexData vertex_data_;
-    IndexData index_data_;
+    VertexData* vertex_data_ = nullptr;
+    IndexData* index_data_ = nullptr;
 
     VertexArrayObject vao_;
 

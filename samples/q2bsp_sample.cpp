@@ -78,8 +78,8 @@ class Q2Sample: public kglt::Application {
 private:
     bool do_init() {
         register_screen("/", kglt::screen_factory<GameScreen>());
-        load_screen_in_background("/", true); //Do loading in a background thread, but show immediately when done
-        activate_screen("/loading"); // Show the loading screen in the meantime
+        //load_screen_in_background("/", true); //Do loading in a background thread, but show immediately when done
+        activate_screen("/"); // Show the loading screen in the meantime
         return true;
     }
 };

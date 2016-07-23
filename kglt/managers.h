@@ -11,11 +11,12 @@ namespace kglt {
 
 
 class BackgroundManager:
-    public generic::TemplatedManager<WindowBase, Background, BackgroundID>,
+    public generic::TemplatedManager<Background, BackgroundID>,
     public virtual Updateable {
 
 public:
     BackgroundManager(WindowBase* window);
+    ~BackgroundManager();
 
     BackgroundID new_background();
     BackgroundID new_background_from_file(const unicode& filename, float scroll_x=0.0, float scroll_y=0.0);
@@ -32,7 +33,7 @@ private:
 };
 
 class CameraManager:
-    public generic::TemplatedManager<WindowBase, Camera, CameraID> {
+    public generic::TemplatedManager<Camera, CameraID> {
 
 public:
     CameraManager(WindowBase* window);
@@ -50,12 +51,18 @@ private:
     WindowBase* window_;
 };
 
+typedef sig::signal<void (StageID)> StageAddedSignal;
+typedef sig::signal<void (StageID)> StageRemovedSignal;
+
 class StageManager:
     public BaseStageManager,
     public virtual Updateable {
 
+    DEFINE_SIGNAL(StageAddedSignal, signal_stage_added);
+    DEFINE_SIGNAL(StageRemovedSignal, signal_stage_removed);
+
 public:
-    StageManager();
+    StageManager(WindowBase* window);
 
     StageID new_stage(AvailablePartitioner partitioner=PARTITIONER_OCTREE);
     StagePtr stage(StageID s);
@@ -67,11 +74,12 @@ public:
     void update(double dt) override;
 
 private:
+    WindowBase* window_ = nullptr;
     void print_tree(GenericTreeNode* node, uint32_t& level);
 };
 
 class UIStageManager:
-    public generic::TemplatedManager<WindowBase, UIStage, UIStageID> {
+    public generic::TemplatedManager<UIStage, UIStageID> {
 
 public:
     UIStageManager(WindowBase* window);

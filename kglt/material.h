@@ -9,7 +9,7 @@
 #include <unordered_map>
 #include <set>
 
-#include <kazbase/signals.h>
+#include <kazsignal/kazsignal.h>
 #include "generic/managed.h"
 #include "kazmath/mat4.h"
 #include "resource.h"
@@ -17,6 +17,7 @@
 #include "generic/identifiable.h"
 #include "generic/cloneable.h"
 #include "generic/property.h"
+#include "generic/refcount_manager.h"
 #include "controllers/controller.h"
 #include "types.h"
 #include "interfaces.h"
@@ -24,8 +25,26 @@
 
 namespace kglt {
 
-class Material;
 class MaterialPass;
+
+enum MaterialPassChangeType {
+    MATERIAL_PASS_CHANGE_TYPE_TEXTURE_UNIT_CHANGED
+};
+
+struct TextureUnitChangedData {
+    MaterialPass* pass = nullptr;
+    uint8_t texture_unit = 0;
+    TextureID old_texture_id;
+    TextureID new_texture_id;
+};
+
+struct MaterialPassChangeEvent {
+    MaterialPassChangeType type;
+    TextureUnitChangedData texture_unit_changed;
+};
+
+
+class Material;
 class GPUProgramInstance;
 
 class TextureUnit:
@@ -112,7 +131,7 @@ public:
     Colour specular() const { return specular_; }
     float shininess() const { return shininess_; }
 
-    int32_t texture_unit_count() const { return (int) texture_units_.size(); }
+    uint32_t texture_unit_count() const { return texture_units_.size(); }
     TextureUnit& texture_unit(uint32_t index) { return texture_units_.at(index); }
 
     void update(double dt) {
@@ -147,8 +166,12 @@ public:
     bool is_reflective() const { return albedo_ > 0.0; }
     void set_reflection_texture_unit(uint8_t i) { reflection_texture_unit_ = i; }
     uint8_t reflection_texture_unit() const { return reflection_texture_unit_; }
+
     void set_polygon_mode(PolygonMode mode) { polygon_mode_ = mode; }
     PolygonMode polygon_mode() const { return polygon_mode_; }
+
+    void set_cull_mode(CullMode mode) { cull_mode_ = mode; }
+    CullMode cull_mode() const { return cull_mode_; }
 
     void stage_uniform(const std::string& name, const int& value) {
         int_uniforms_[name] = value;
@@ -166,8 +189,11 @@ public:
     Property<MaterialPass, Material> material = { this, &MaterialPass::material_ };
     Property<MaterialPass, GPUProgramInstance> program = { this, &MaterialPass::program_ };
 
+    void build_program_and_bind_attributes();
 private:
-    Material* material_;
+    static std::shared_ptr<GPUProgram> default_program;
+
+    Material* material_ = nullptr;
 
     std::map<std::string, float> float_uniforms_;
     std::map<std::string, int> int_uniforms_;
@@ -196,6 +222,7 @@ private:
     uint8_t reflection_texture_unit_ = 0;
 
     PolygonMode polygon_mode_ = POLYGON_MODE_FILL;
+    CullMode cull_mode_ = CULL_MODE_BACK_FACE;
 
     std::map<kglt::ShaderType, unicode> shader_sources_;
 
@@ -223,28 +250,74 @@ public:
         static const std::string MULTITEXTURE2_MODULATE_WITH_LIGHTING;
     };
 
-    Material(ResourceManager* resource_manager, MaterialID mat_id);
+    Material(MaterialID mat_id, ResourceManager* resource_manager);
     ~Material();
 
     void update(double dt) override;
     bool has_reflective_pass() const { return !reflective_passes_.empty(); }
 
     uint32_t new_pass();
-    MaterialPass& pass(uint32_t index);
-    uint32_t pass_count() const { return passes_.size(); }
+    MaterialPass::ptr pass(uint32_t index);
+    uint32_t pass_count() const { return pass_count_; }
+    MaterialPass::ptr first_pass() {
+        if(pass_count()) {
+            return pass(0);
+        }
+        return MaterialPass::ptr();
+    }
 
     void set_texture_unit_on_all_passes(uint32_t texture_unit_id, TextureID tex);
 
-    MaterialID new_clone(bool garbage_collect=true) const;
+    MaterialID new_clone(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) const;
 
     void each(std::function<void (uint32_t, MaterialPass*)> callback) {
-        for(uint32_t i = 0; i < passes_.size(); ++i) {
-            callback(i, passes_[i].get());
+        // Wait until we can lock the atomic flag
+        std::vector<MaterialPass::ptr> passes;
+        {
+            std::lock_guard<std::mutex> lock(pass_lock_);
+            passes = passes_; // Copy, to prevent holding the lock for the entire loop
+        }
+
+        uint32_t i = 0;
+        for(auto pass: passes) {
+            callback(i++, pass.get());
         }
     }
 
+public:
+    typedef sig::signal<void (MaterialID, MaterialPass*)> MaterialPassCreated;
+    typedef sig::signal<void (MaterialID, MaterialPass*)> MaterialPassDestroyed;
+    typedef sig::signal<void (MaterialID, MaterialPassChangeEvent)> MaterialPassChanged;
+
+    MaterialPassCreated& signal_material_pass_created() { return signal_material_pass_created_; }
+    MaterialPassDestroyed& signal_material_pass_destroyed() { return signal_material_pass_destroyed_; }
+    MaterialPassChanged& signal_material_pass_changed() { return signal_material_pass_changed_; }
+
 private:
+    MaterialPassCreated signal_material_pass_created_;
+    MaterialPassDestroyed signal_material_pass_destroyed_;
+    MaterialPassChanged signal_material_pass_changed_;
+
+private:
+    /*
+     * Although individual resources are not thread-safe
+     * we do call update() automatically, which means that without
+     * some kind of locking manipulating materials would be impossible.
+     *
+     * This flag keeps track of whether we should be updating, and we
+     * set it and clear it whenever we manipulate the material. If the flag
+     * is set then updating won't happen until it's cleared
+     */
+    std::atomic_flag updating_disabled_;
+
+    /*
+     * Are we iterating passes? If so we should block on adding/removing them
+     */
+    std::mutex pass_lock_;
+
     std::vector<MaterialPass::ptr> passes_;
+    uint32_t pass_count_; // Used to prevent locking on passes_ when requesting the count
+
     std::set<MaterialPass*> reflective_passes_;
 
     friend class MaterialPass;

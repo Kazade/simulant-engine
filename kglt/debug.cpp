@@ -1,7 +1,7 @@
 #include "stage.h"
 #include "debug.h"
 #include "actor.h"
-#include "window.h"
+#include "sdl2_window.h"
 
 namespace kglt {
 
@@ -37,11 +37,14 @@ void Debug::update() {
 }
 
 bool Debug::init() {
-    mesh_ = stage_.new_mesh();
-    actor_ = stage_.new_actor_with_mesh(mesh_);
+    mesh_ = stage_.new_mesh(VertexSpecification::POSITION_AND_DIFFUSE);
+    actor_ = stage_.new_actor_with_mesh(
+        mesh_,
+        RENDERABLE_CULLING_MODE_NEVER // Important!
+    );
 
     //Don't GC the material, if there are no debug lines then it won't be attached to the mesh
-    material_ = stage_.new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY, /*garbage_collect=*/false);
+    material_ = stage_.new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY, GARBAGE_COLLECT_NEVER);
 
     //Connect regular updates so we can remove debug lines after their duration
     /*stage_.window().signal_frame_finished().connect(
@@ -64,18 +67,18 @@ void Debug::draw_line(const Vec3 &start, const Vec3 &end, const Colour &colour, 
 
     auto& submesh = *mesh->submesh(element.submesh);
 
-    submesh.vertex_data().move_to_start();
-    submesh.vertex_data().position(start);
-    submesh.vertex_data().diffuse(colour);
-    submesh.vertex_data().move_next();
+    submesh.vertex_data->move_to_start();
+    submesh.vertex_data->position(start);
+    submesh.vertex_data->diffuse(colour);
+    submesh.vertex_data->move_next();
 
-    submesh.vertex_data().position(end);
-    submesh.vertex_data().diffuse(colour);
-    submesh.vertex_data().done();
+    submesh.vertex_data->position(end);
+    submesh.vertex_data->diffuse(colour);
+    submesh.vertex_data->done();
 
-    submesh.index_data().index(0);
-    submesh.index_data().index(1);
-    submesh.index_data().done();
+    submesh.index_data->index(0);
+    submesh.index_data->index(1);
+    submesh.index_data->done();
 
     elements_.push_back(element);
 }
