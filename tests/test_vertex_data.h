@@ -24,7 +24,7 @@ public:
 
     void test_basic_usage() {
         kglt::VertexSpecification spec = kglt::VertexSpecification::POSITION_AND_DIFFUSE;
-        spec.texcoord0_attribute = VERTEX_ATTRIBUTE_2F;
+        spec.texcoord0_attribute = kglt::VERTEX_ATTRIBUTE_2F;
 
         kglt::VertexData data(spec);
 
