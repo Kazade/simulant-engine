@@ -46,7 +46,6 @@ class RenderSequence;
 class SceneImpl;
 class Watcher;
 class VirtualGamepad;
-class DebugService;
 class Renderer;
 class Panel;
 
@@ -292,8 +291,6 @@ private:
     generic::DataCarrier data_carrier_;
 
     std::shared_ptr<VirtualGamepad> virtual_gamepad_;
-    std::unique_ptr<DebugService> debug_service_;
-
     std::unique_ptr<BackgroundManager> background_manager_;
 
     Stats stats_;

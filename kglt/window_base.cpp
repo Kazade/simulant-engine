@@ -29,7 +29,6 @@
 #include "screens/loading.h"
 #include "utils/gl_thread_check.h"
 #include "utils/gl_error.h"
-#include "utils/debug_service.h"
 
 #include "panels/stats_panel.h"
 #include "panels/partitioner_panel.h"
@@ -54,7 +53,6 @@ WindowBase::WindowBase():
     frame_counter_frames_(0),
     frame_time_in_milliseconds_(0),
     total_time_(0),
-    debug_service_(new DebugService(this)),
     background_manager_(new BackgroundManager(this)) {
 
     ktiGenTimers(1, &fixed_timer_);
@@ -205,9 +203,6 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
             );
         });
 
-        // Initialize the debug service
-        debug_service_->start();
-
         initialized_ = true;
     }
 
@@ -318,8 +313,6 @@ bool WindowBase::run_frame() {
 
         //Shutdown the input controller
         input_controller_.reset();
-
-        debug_service_->stop();
     }
 
     return is_running_;
