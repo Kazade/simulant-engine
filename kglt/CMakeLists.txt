@@ -36,16 +36,19 @@ INSTALL(DIRECTORY ../deps DESTINATION include/kglt FILES_MATCHING PATTERN *.h)
 
 INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/../cmake_modules/kglt-config.cmake DESTINATION ${CMAKE_INSTALL_PREFIX}/share/kglt)
 
-FILE(GLOB materials "${CMAKE_CURRENT_SOURCE_DIR}/materials/*.kglm")
-INSTALL(FILES ${materials} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/kglt/materials)
+FILE(GLOB_RECURSE materials "${CMAKE_CURRENT_SOURCE_DIR}/materials/opengl-2.x/*.kglm")
+INSTALL(FILES ${materials} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/kglt/materials/opengl-2.x)
+
+FILE(GLOB_RECURSE materials "${CMAKE_CURRENT_SOURCE_DIR}/materials/opengl-1.x/*.kglm")
+INSTALL(FILES ${materials} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/kglt/materials/opengl-1.x)
 
 FILE(GLOB textures "${CMAKE_CURRENT_SOURCE_DIR}/materials/*.png")
 INSTALL(FILES ${textures} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/kglt/materials)
 
-FILE(GLOB materials "${CMAKE_CURRENT_SOURCE_DIR}/materials/*.vert")
+FILE(GLOB_RECURSE materials "${CMAKE_CURRENT_SOURCE_DIR}/materials/*.vert")
 INSTALL(FILES ${materials} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/kglt/materials)
 
-FILE(GLOB materials "${CMAKE_CURRENT_SOURCE_DIR}/materials/*.frag")
+FILE(GLOB_RECURSE materials "${CMAKE_CURRENT_SOURCE_DIR}/materials/*.frag")
 INSTALL(FILES ${materials} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/kglt/materials)
 
 FILE(GLOB particles "${CMAKE_CURRENT_SOURCE_DIR}/particles/*.kglp")
