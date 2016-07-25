@@ -61,8 +61,8 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     const int patch_size = 100;
 
-    int patches_across = tex->width() / patch_size;
-    int patches_down = tex->height() / patch_size;
+    int patches_across = (tex->width() / patch_size) + 1;
+    int patches_down = (tex->height() / patch_size) + 1;
 
     int total_patches = patches_across * patches_down;
 
