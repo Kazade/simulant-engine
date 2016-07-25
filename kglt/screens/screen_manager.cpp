@@ -76,14 +76,9 @@ void ScreenManager::load_screen_in_background(const unicode& route, bool redirec
             return true; //Try again next frame
         }
 
-        try {
-            new_task->future.get();
-            if(redirect_after) {
-                activate_screen(route);
-            }
-        } catch(...) {
-            L_ERROR("There was an error while loading route: " + route);
-            throw;
+        new_task->future.get();
+        if(redirect_after) {
+            activate_screen(route);
         }
 
         return false;
