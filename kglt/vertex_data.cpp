@@ -264,7 +264,7 @@ void VertexData::move_to(int32_t index) {
         throw std::out_of_range("Tried to move outside the range of the data");
     }
 
-    cursor_position_ = (offset * stride());
+    cursor_position_ = offset;
 }
 
 uint16_t VertexData::move_next() {
