@@ -230,7 +230,10 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
              * lines into this position. This makes it so it's like the materials are embedded
              * in the current file which makes parsing the same as if they were!
              */
-             auto filename = parts[1];
+
+             // We need to re-get the filename because mtllib paths may have spaces and the existing 'parts'
+             // variable would have split it to pieces.
+             auto filename = line.split(" ", 1, false).back();
              filename = os::path::join(os::path::dir_name(filename_), filename);
              if(os::path::exists(filename)) {
                  std::vector<unicode> material_lines = file_utils::read_lines(filename);
