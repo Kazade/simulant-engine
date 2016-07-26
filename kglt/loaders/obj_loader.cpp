@@ -208,22 +208,29 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
         } else if(parts[0] == "usemtl") {
             current_material = parts[1];
 
-            // If there is no submesh for this material yet, make it.
-            if(!material_submeshes.count(current_material)) {
-                if(!vertex_specification_set) {
-                    mesh->shared_data->reset(spec);
-                    vertex_specification_set = true;
+            if(materials.count(current_material)) {
+                // If there is no submesh for this material yet, make it.
+                if(!material_submeshes.count(current_material)) {
+                    if(!vertex_specification_set) {
+                        mesh->shared_data->reset(spec);
+                        vertex_specification_set = true;
+                    }
+
+                    auto mat_id = materials.at(current_material);
+                    material_submeshes.insert(
+                        std::make_pair(current_material, mesh->new_submesh_with_material(mat_id))
+                    );
+                    mesh->submesh(material_submeshes[current_material])->set_material_id(mat_id);
                 }
 
-                auto mat_id = materials.at(current_material);
-                material_submeshes.insert(
-                    std::make_pair(current_material, mesh->new_submesh_with_material(mat_id))
-                );
-                mesh->submesh(material_submeshes[current_material])->set_material_id(mat_id);
+                // Make this submesh current
+                sm = mesh->submesh(material_submeshes.at(current_material));
+            } else {
+                L_WARN(_u("Ignoring non-existant material ({0}) while loading {1}").format(
+                    current_material,
+                    filename_
+                ));
             }
-
-            // Make this submesh current
-            sm = mesh->submesh(material_submeshes.at(current_material));
         } else if(parts[0] == "mtllib") {
             /*
              * If we find a mtllib command, we load the material file and insert its
