@@ -505,8 +505,6 @@ struct Radians {
 Radians to_radians(const Degrees& degrees);
 Degrees to_degrees(const Radians& radians);
 
-typedef std::function<kglt::Colour (const kglt::Vec3&, const kglt::Vec3&)> HeightmapDiffuseGenerator;
-
 const float PI = kmPI;
 
 enum BlendType {

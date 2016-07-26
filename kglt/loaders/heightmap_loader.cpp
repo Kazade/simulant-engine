@@ -6,10 +6,11 @@
 namespace kglt {
 namespace loaders {
 
-
-
-kglt::Colour colour_for_vertex(const kglt::Vec3& point, const kglt::Vec3& normal) {
-    return kglt::Colour::WHITE;
+kglt::Colour colour_for_vertex(const kglt::Vec3& point, const kglt::Vec3& normal, const float min, const float max) {
+    float height = fabs(min) + point.y;
+    float range = fabs(max - min);
+    float v = height / range;
+    return kglt::Colour(v, v, v, 1.0);
 }
 
 void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
@@ -142,7 +143,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
         auto n = p.second.normalized();
         Vec3 pos = mesh->shared_data->position_at<Vec3>(p.first);
         mesh->shared_data->normal(n);
-        mesh->shared_data->diffuse(diffuse_func(pos, n));
+        mesh->shared_data->diffuse(diffuse_func(pos, n, min_height, max_height));
     }
 
     for(auto smi: submeshes) {

@@ -201,8 +201,8 @@ private:
     std::shared_ptr<GPUProgramInstance> program_;
 
     Colour diffuse_ = Colour::WHITE;
-    Colour ambient_ = Colour::WHITE;
-    Colour specular_ = Colour::WHITE;
+    Colour ambient_ = Colour::BLACK;
+    Colour specular_ = Colour::BLACK;
     float shininess_ = 0.0;
     bool allow_textures_ = true;
 

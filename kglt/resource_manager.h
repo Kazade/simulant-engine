@@ -7,6 +7,7 @@
 #include "generic/refcount_manager.h"
 #include "generic/protected_ptr.h"
 #include "managers/window_holder.h"
+#include "loaders/heightmap_loader.h"
 
 #include "texture.h"
 #include "mesh.h"
