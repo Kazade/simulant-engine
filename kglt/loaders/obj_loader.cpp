@@ -77,6 +77,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     spec.diffuse_attribute = VERTEX_ATTRIBUTE_4F;
 
     bool vertex_specification_set = false;
+    SubMeshID default_submesh;
 
     bool has_materials = false;
     for(uint32_t l = 0; l < lines.size(); ++l) {
@@ -126,17 +127,38 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             kmVec3Normalize(&n, &n);
             normals.push_back(n);
         } else if(parts[0] == "f") {
-            if(!sm) {
-                if(!vertex_specification_set) {
-                    mesh->shared_data->reset(spec);
-                    vertex_specification_set = true;
-                }
-
-                // We have an .obj file which has no materials or we hit faces before a
-                // usemtl statement. Let's just make a new default submesh
-                SubMeshID smi = mesh->new_submesh();
-                sm = mesh->submesh(smi);
+            if(!vertex_specification_set) {
+                mesh->shared_data->reset(spec);
+                vertex_specification_set = true;
             }
+
+            SubMeshID smi;
+            if(current_material.empty()) {
+                if(!default_submesh) {
+                    default_submesh = mesh->new_submesh();
+                }
+                smi = default_submesh;
+            } else {
+                if(materials.count(current_material)) {
+                    auto mat_id = materials.at(current_material);
+                    if(material_submeshes.count(current_material)) {
+                        smi = material_submeshes.at(current_material);
+                    } else {
+                        smi = mesh->new_submesh_with_material(mat_id);
+                        material_submeshes.insert(
+                            std::make_pair(current_material, smi)
+                        );
+                    }
+                } else {
+                    L_WARN(_u("Ignoring non-existant material ({0}) while loading {1}").format(
+                        current_material,
+                        filename_
+                    ));
+                    smi = sm->id(); // Just stick with the current submesh, don't change it
+                }
+            }
+            sm = mesh->submesh(smi);
+
 
             //Faces are a pain in the arse to parse
             parts = std::vector<unicode>(parts.begin() + 1, parts.end()); //Strip off the first bit
@@ -156,8 +178,6 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             }
             sm->vertex_data->diffuse(kglt::Colour::WHITE);
             sm->vertex_data->move_next();
-
-            parts = std::vector<unicode>(parts.begin() + 1, parts.end()); //Strip off the first bit
 
             /*
              * This loop looks weird because it builds a triangle fan
@@ -207,30 +227,6 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             has_materials = true;
         } else if(parts[0] == "usemtl") {
             current_material = parts[1];
-
-            if(materials.count(current_material)) {
-                // If there is no submesh for this material yet, make it.
-                if(!material_submeshes.count(current_material)) {
-                    if(!vertex_specification_set) {
-                        mesh->shared_data->reset(spec);
-                        vertex_specification_set = true;
-                    }
-
-                    auto mat_id = materials.at(current_material);
-                    material_submeshes.insert(
-                        std::make_pair(current_material, mesh->new_submesh_with_material(mat_id))
-                    );
-                    mesh->submesh(material_submeshes[current_material])->set_material_id(mat_id);
-                }
-
-                // Make this submesh current
-                sm = mesh->submesh(material_submeshes.at(current_material));
-            } else {
-                L_WARN(_u("Ignoring non-existant material ({0}) while loading {1}").format(
-                    current_material,
-                    filename_
-                ));
-            }
         } else if(parts[0] == "mtllib") {
             /*
              * If we find a mtllib command, we load the material file and insert its
