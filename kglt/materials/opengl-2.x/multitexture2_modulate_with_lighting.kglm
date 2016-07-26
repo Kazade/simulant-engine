@@ -7,6 +7,7 @@ BEGIN(PASS)
     SET(AUTO_UNIFORM MODELVIEW_PROJECTION_MATRIX "modelview_projection")
     SET(AUTO_UNIFORM LIGHT_GLOBAL_AMBIENT "global_ambient")
     SET(AUTO_UNIFORM MATERIAL_AMBIENT "material_ambient")
+    SET(AUTO_UNIFORM MATERIAL_DIFFUSE "material_diffuse")
     SET(AUTO_UNIFORM POINT_SIZE "point_size")
     SET(AUTO_UNIFORM TEXTURE_MATRIX0 "texture_matrix[0]")
     SET(AUTO_UNIFORM TEXTURE_MATRIX1 "texture_matrix[1]")
@@ -40,6 +41,7 @@ BEGIN(PASS)
         #version 120
         uniform vec4 global_ambient;
         uniform vec4 material_ambient;
+        uniform vec4 material_diffuse;
         uniform sampler2D textures[2];
         uniform mat4 texture_matrix[2];
         uniform int active_texture_count;
@@ -48,7 +50,7 @@ BEGIN(PASS)
         varying vec2 frag_texcoord1;
 
         void main() {
-            vec4 color = global_ambient * material_ambient;
+            vec4 color = global_ambient * material_ambient * material_diffuse;
             if(active_texture_count == 0) {
                 gl_FragColor = color;
             } else {
