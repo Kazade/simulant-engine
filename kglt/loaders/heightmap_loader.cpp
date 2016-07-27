@@ -13,6 +13,60 @@ kglt::Colour colour_for_vertex(const kglt::Vec3& point, const kglt::Vec3& normal
     return kglt::Colour(v, v, v, 1.0);
 }
 
+void HeightmapLoader::smooth_terrain_iteration(Mesh* mesh, int width, int height) {
+    int32_t vertex_count = (width * height);
+
+    mesh->shared_data->move_to_start();
+    for(uint32_t i = 0; i < mesh->shared_data->count(); ++i) {
+        std::vector<uint32_t> surrounding_indexes;
+
+        bool can_left = i % (uint32_t)width > 1;
+        bool can_up = i > (uint32_t)width;
+        bool can_right = i % (uint32_t)width < ((uint32_t)width - 1);
+        bool can_down = i < vertex_count - (uint32_t)width;
+
+        if(can_up) {
+            surrounding_indexes.push_back(i - width);
+            if(can_left) {
+                surrounding_indexes.push_back(i - width - 1);
+            }
+            if(can_right) {
+                surrounding_indexes.push_back(i - width + 1);
+            }
+        }
+
+        if(can_left) {
+            surrounding_indexes.push_back(i - 1);
+        }
+
+        if(can_right) {
+            surrounding_indexes.push_back(i + 1);
+        }
+
+        if(can_down) {
+            surrounding_indexes.push_back(i + width);
+            if(can_left) {
+                surrounding_indexes.push_back(i + width - 1);
+            }
+            if(can_right) {
+                surrounding_indexes.push_back(i + width + 1);
+            }
+        }
+
+
+        float total_height = 0.0f;
+        for(auto& idx: surrounding_indexes) {
+            total_height += mesh->shared_data->position_at<Vec3>(idx).y;
+        }
+
+        // http://nic-gamedev.blogspot.co.uk/2013/02/simple-terrain-smoothing.html
+        auto this_pos = mesh->shared_data->position_at<Vec3>(i);
+        float new_height = ((total_height / float(surrounding_indexes.size())) + this_pos.y) / 2.0;
+        mesh->shared_data->position(this_pos.x, new_height, this_pos.z);
+        mesh->shared_data->move_next();
+    }
+}
+
 void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     Loadable* res_ptr = &resource;
     Mesh* mesh = dynamic_cast<Mesh*>(res_ptr);
@@ -24,6 +78,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     float spacing = 1.0;
     float min_height = -64.0;
     float max_height = 64.0;
+    int smooth_iterations = 10;
 
     if(options.count("spacing")) {
         spacing = kazbase::any_cast<float>(options.at("spacing"));
@@ -35,6 +90,10 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     if(options.count("max_height")) {
         max_height = kazbase::any_cast<float>(options.at("max_height"));
+    }
+
+    if(options.count("smooth_iterations")) {
+        smooth_iterations = kazbase::any_cast<int>(options.at("smooth_iterations"));
     }
 
     HeightmapDiffuseGenerator diffuse_func;
@@ -112,6 +171,10 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
                 sm->index_data->index(idx + width + 1);
             }
         }
+    }
+
+    for(auto i = 0; i < smooth_iterations; ++i) {
+        smooth_terrain_iteration(mesh, width, height);
     }
 
     // The mesh don't have any normals, let's generate some!

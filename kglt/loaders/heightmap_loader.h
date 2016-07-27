@@ -16,6 +16,9 @@ public:
         Loader(filename, data) {}
 
     void into(Loadable& resource, const LoaderOptions& options = LoaderOptions());
+
+private:
+    void smooth_terrain_iteration(Mesh *mesh, int width, int height);
 };
 
 class HeightmapLoaderType : public LoaderType {
