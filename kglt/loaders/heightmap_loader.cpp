@@ -62,53 +62,54 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     const int patch_size = 100;
 
-    int patches_across = (tex->width() / patch_size) + 1;
-    int patches_down = (tex->height() / patch_size) + 1;
+    int patches_across = std::ceil(float(tex->width()) / float(patch_size));
+    int patches_down = std::ceil(float(tex->height()) / float(patch_size));
 
     int total_patches = patches_across * patches_down;
 
     // We divide the heightmap into patches for more efficient rendering
-    kglt::MaterialID mat = mesh->resource_manager().clone_default_material();
+    kglt::MaterialID mat = mesh->resource_manager().new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY); //mesh->resource_manager().clone_default_material();
     std::vector<kglt::SubMeshID> submeshes;
     for(int i = 0; i < total_patches; ++i) {
         submeshes.push_back(mesh->new_submesh_with_material(mat));
     }
 
+    int32_t height = (int32_t) tex->height();
+    int32_t width = (int32_t) tex->width();
+
     // Generate the vertices from the heightmap
-    for(uint32_t z = 0; z < tex->height(); ++z) {
-        for(uint32_t x = 0; x < tex->width(); ++x) {
-            uint32_t idx = (z * tex->width()) + x;
+    for(int32_t z = 0; z < height; ++z) {
+        for(int32_t x = 0; x < width; ++x) {
+            int32_t idx = (z * width) + x;
 
             float height_val = tex->data()[idx * (tex->bpp() / 8)];
 
             float normalized_height = float(height_val) / float(256.0);
-            float height = range * normalized_height;
-            float final_pos = min_height + height;
+            float depth = range * normalized_height;
+            float final_pos = min_height + depth;
 
             mesh->shared_data->position(
-                (x * spacing) - x_offset,
+                (float(x) * spacing) - x_offset,
                 final_pos,
-                (z * spacing) - z_offset
+                (float(z) * spacing) - z_offset
             );
             mesh->shared_data->diffuse(kglt::Colour::WHITE);
             mesh->shared_data->normal(kglt::Vec3(0, 1, 0));
-
             mesh->shared_data->move_next();
 
-            if(z < tex->height() - 1 && x < tex->width() - 1) {
-                int patch_x = (x / patch_size);
-                int patch_z = (z / patch_size);
+            if(z < (height - 1) && x < (width - 1)) {
+                int patch_x = (x / float(patch_size));
+                int patch_z = (z / float(patch_size));
                 int patch_idx = (patch_z * patches_across) + patch_x;
 
                 auto sm = mesh->submesh(submeshes.at(patch_idx));
                 sm->index_data->index(idx);
-                sm->index_data->index(idx + tex->width());
+                sm->index_data->index(idx + width);
                 sm->index_data->index(idx + 1);
 
-
                 sm->index_data->index(idx + 1);
-                sm->index_data->index(idx + tex->width());
-                sm->index_data->index(idx + tex->width() + 1);
+                sm->index_data->index(idx + width);
+                sm->index_data->index(idx + width + 1);
             }
         }
     }
@@ -119,10 +120,10 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     for(auto smi: submeshes) {
         auto sm = mesh->submesh(smi);
         // Go through all the triangles, add the face normal to all the vertices
-        for(uint16_t i = 0; i < sm->index_data->count(); i+=3) {
-            uint16_t idx1 = sm->index_data->at(i);
-            uint16_t idx2 = sm->index_data->at(i+1);
-            uint16_t idx3 = sm->index_data->at(i+2);
+        for(uint32_t i = 0; i < sm->index_data->count(); i+=3) {
+            Index idx1 = sm->index_data->at(i);
+            Index idx2 = sm->index_data->at(i+1);
+            Index idx3 = sm->index_data->at(i+2);
 
             kglt::Vec3 v1, v2, v3;
             v1 = sm->vertex_data->position_at<Vec3>(idx1);

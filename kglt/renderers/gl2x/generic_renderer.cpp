@@ -400,22 +400,22 @@ void GenericRenderer::send_geometry(Renderable *renderable) {
 
     switch(renderable->arrangement()) {
         case MESH_ARRANGEMENT_POINTS:
-            GLCheck(glDrawElements, GL_POINTS, index_count, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+            GLCheck(glDrawElements, GL_POINTS, index_count, GL_UNSIGNED_INT, BUFFER_OFFSET(0));
         break;
         case MESH_ARRANGEMENT_LINES:
-            GLCheck(glDrawElements, GL_LINES, index_count, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+            GLCheck(glDrawElements, GL_LINES, index_count, GL_UNSIGNED_INT, BUFFER_OFFSET(0));
         break;
         case MESH_ARRANGEMENT_LINE_STRIP:
-            GLCheck(glDrawElements, GL_LINE_STRIP, index_count, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+            GLCheck(glDrawElements, GL_LINE_STRIP, index_count, GL_UNSIGNED_INT, BUFFER_OFFSET(0));
         break;
         case MESH_ARRANGEMENT_TRIANGLES:
-            GLCheck(glDrawElements, GL_TRIANGLES, index_count, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+            GLCheck(glDrawElements, GL_TRIANGLES, index_count, GL_UNSIGNED_INT, BUFFER_OFFSET(0));
         break;
         case MESH_ARRANGEMENT_TRIANGLE_STRIP:
-            GLCheck(glDrawElements, GL_TRIANGLE_STRIP, index_count, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+            GLCheck(glDrawElements, GL_TRIANGLE_STRIP, index_count, GL_UNSIGNED_INT, BUFFER_OFFSET(0));
         break;
         case MESH_ARRANGEMENT_TRIANGLE_FAN:
-            GLCheck(glDrawElements, GL_TRIANGLE_FAN, index_count, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
+            GLCheck(glDrawElements, GL_TRIANGLE_FAN, index_count, GL_UNSIGNED_INT, BUFFER_OFFSET(0));
         break;
         default:
             throw NotImplementedError(__FILE__, __LINE__);

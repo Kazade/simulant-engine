@@ -289,7 +289,7 @@ Vec3 VertexData::texcoord0_at<Vec3>(uint32_t idx);
 template<>
 Vec4 VertexData::texcoord0_at<Vec4>(uint32_t idx);
 
-typedef uint16_t Index;
+typedef uint32_t Index;
 
 class IndexData {
 public:
@@ -302,9 +302,9 @@ public:
     void index(Index idx) { indices_.push_back(idx); }
     void push(Index idx) { index(idx); }
     void done();
-    uint16_t at(const uint16_t i) { return indices_.at(i); }
+    Index at(const uint32_t i) { return indices_.at(i); }
 
-    uint16_t count() const { return indices_.size(); }
+    uint32_t count() const { return indices_.size(); }
 
     const std::vector<Index>& all() const { return indices_; }
 
@@ -318,7 +318,7 @@ public:
 
     sig::signal<void ()>& signal_update_complete() { return signal_update_complete_; }
 
-    uint16_t* _raw_data() { return &indices_[0]; }
+    Index* _raw_data() { return &indices_[0]; }
 private:
     std::vector<Index> indices_;
 

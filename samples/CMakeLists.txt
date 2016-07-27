@@ -23,4 +23,5 @@ ADD_EXECUTABLE(joypad_sample joypad_sample.cpp)
 ADD_EXECUTABLE(rtt_sample rtt_sample.cpp)
 ADD_EXECUTABLE(q2bsp_sample q2bsp_sample.cpp)
 ADD_EXECUTABLE(fleets_demo fleets_demo.cpp)
+ADD_EXECUTABLE(terrain_demo terrain_sample.cpp)
 

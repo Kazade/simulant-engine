@@ -268,7 +268,7 @@ void VertexData::move_to(int32_t index) {
 }
 
 uint16_t VertexData::move_next() {
-    int32_t new_pos = cursor_position_ += stride();
+    int32_t new_pos = cursor_position_ + stride();
 
     //cursor_position_ == data_.size() is allowed (see position())
     if(new_pos > (int32_t) data_.size()) {

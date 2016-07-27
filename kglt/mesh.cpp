@@ -554,7 +554,7 @@ void SubMesh::_update_vertex_array_object() {
     }
 
     if(index_data_dirty_) {
-        vertex_array_object_->index_buffer_update(index_data->count() * sizeof(uint16_t), index_data->_raw_data());
+        vertex_array_object_->index_buffer_update(index_data->count() * sizeof(Index), index_data->_raw_data());
         index_data_dirty_ = false;
 
         if(vertex_data->empty()) {
@@ -645,7 +645,7 @@ void SubMesh::reverse_winding() {
         throw NotImplementedError(__FILE__, __LINE__);
     }
 
-    std::vector<uint16_t> original = index_data->all();
+    auto original = index_data->all();
 
     index_data->clear();
     for(uint32_t i = 0; i < original.size() / 3; ++i) {
