@@ -6,7 +6,7 @@
 
 namespace kglt {
 
-typedef std::function<kglt::Colour (const kglt::Vec3&, const kglt::Vec3&, const float, const float)> HeightmapDiffuseGenerator;
+typedef std::function<kglt::Colour (const kglt::Vec3&, const kglt::Vec3&, const std::vector<Vec3>&)> HeightmapDiffuseGenerator;
 
 namespace loaders {
 

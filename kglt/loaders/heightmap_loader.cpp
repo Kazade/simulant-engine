@@ -6,62 +6,90 @@
 namespace kglt {
 namespace loaders {
 
-kglt::Colour colour_for_vertex(const kglt::Vec3& point, const kglt::Vec3& normal, const float min, const float max) {
-    float height = fabs(min) + point.y;
-    float range = fabs(max - min);
-    float v = height / range;
+inline float clamp(float x, float a, float b) {
+    return x < a ? a : (x > b ? b : x);
+}
+
+kglt::Colour colour_for_vertex(const kglt::Vec3& point, const kglt::Vec3& normal, const std::vector<Vec3>& surrounding_points) {
+    // FIXME: Replace with some kind of decent ambient occlusion
+    float sum = 0.0f;
+
+    for(auto& neighbour_pos: surrounding_points) {
+        auto neighbour_offset = (neighbour_pos - point).normalized();
+        sum += acos(normal.dot(neighbour_offset));
+    }
+
+    float v = sum / float(surrounding_points.size());
+
+    // If the average angle > 90 degrees, then we are white
+    if(v > 3.142f / 2.0) {
+        return kglt::Colour::WHITE;
+    } else {
+        v /= (3.142 / 2.0);
+    }
+
     return kglt::Colour(v, v, v, 1.0);
 }
 
-void HeightmapLoader::smooth_terrain_iteration(Mesh* mesh, int width, int height) {
+std::vector<Vec3> gather_surrounding_points(VertexData* data, int width, int height, uint32_t i) {
     int32_t vertex_count = (width * height);
 
+    std::vector<uint32_t> surrounding_indexes;
+
+    bool can_left = i % (uint32_t)width > 1;
+    bool can_up = i > (uint32_t)width;
+    bool can_right = i % (uint32_t)width < ((uint32_t)width - 1);
+    bool can_down = i < vertex_count - (uint32_t)width;
+
+    if(can_up) {
+        surrounding_indexes.push_back(i - width);
+        if(can_left) {
+            surrounding_indexes.push_back(i - width - 1);
+        }
+        if(can_right) {
+            surrounding_indexes.push_back(i - width + 1);
+        }
+    }
+
+    if(can_left) {
+        surrounding_indexes.push_back(i - 1);
+    }
+
+    if(can_right) {
+        surrounding_indexes.push_back(i + 1);
+    }
+
+    if(can_down) {
+        surrounding_indexes.push_back(i + width);
+        if(can_left) {
+            surrounding_indexes.push_back(i + width - 1);
+        }
+        if(can_right) {
+            surrounding_indexes.push_back(i + width + 1);
+        }
+    }
+
+    std::vector<Vec3> results;
+    for(auto& idx: surrounding_indexes) {
+        results.push_back(data->position_at<Vec3>(idx));
+    }
+
+    return results;
+}
+
+void HeightmapLoader::smooth_terrain_iteration(Mesh* mesh, int width, int height) {
     mesh->shared_data->move_to_start();
     for(uint32_t i = 0; i < mesh->shared_data->count(); ++i) {
-        std::vector<uint32_t> surrounding_indexes;
-
-        bool can_left = i % (uint32_t)width > 1;
-        bool can_up = i > (uint32_t)width;
-        bool can_right = i % (uint32_t)width < ((uint32_t)width - 1);
-        bool can_down = i < vertex_count - (uint32_t)width;
-
-        if(can_up) {
-            surrounding_indexes.push_back(i - width);
-            if(can_left) {
-                surrounding_indexes.push_back(i - width - 1);
-            }
-            if(can_right) {
-                surrounding_indexes.push_back(i - width + 1);
-            }
-        }
-
-        if(can_left) {
-            surrounding_indexes.push_back(i - 1);
-        }
-
-        if(can_right) {
-            surrounding_indexes.push_back(i + 1);
-        }
-
-        if(can_down) {
-            surrounding_indexes.push_back(i + width);
-            if(can_left) {
-                surrounding_indexes.push_back(i + width - 1);
-            }
-            if(can_right) {
-                surrounding_indexes.push_back(i + width + 1);
-            }
-        }
-
+        auto vertices = gather_surrounding_points(mesh->shared_data.get(), width, height, i);
 
         float total_height = 0.0f;
-        for(auto& idx: surrounding_indexes) {
-            total_height += mesh->shared_data->position_at<Vec3>(idx).y;
+        for(auto& vert: vertices) {
+            total_height += vert.y;
         }
 
         // http://nic-gamedev.blogspot.co.uk/2013/02/simple-terrain-smoothing.html
         auto this_pos = mesh->shared_data->position_at<Vec3>(i);
-        float new_height = ((total_height / float(surrounding_indexes.size())) + this_pos.y) / 2.0;
+        float new_height = ((total_height / float(vertices.size())) + this_pos.y) / 2.0;
         mesh->shared_data->position(this_pos.x, new_height, this_pos.z);
         mesh->shared_data->move_next();
     }
@@ -78,7 +106,8 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     float spacing = 1.0;
     float min_height = -64.0;
     float max_height = 64.0;
-    int smooth_iterations = 10;
+    int smooth_iterations = 20;
+    float texture_repeat = 4.0f;
 
     if(options.count("spacing")) {
         spacing = kazbase::any_cast<float>(options.at("spacing"));
@@ -94,6 +123,10 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     if(options.count("smooth_iterations")) {
         smooth_iterations = kazbase::any_cast<int>(options.at("smooth_iterations"));
+    }
+
+    if(options.count("texture_repeat")) {
+        texture_repeat = kazbase::any_cast<float>(options.at("texture_repeat"));
     }
 
     HeightmapDiffuseGenerator diffuse_func;
@@ -127,7 +160,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     int total_patches = patches_across * patches_down;
 
     // We divide the heightmap into patches for more efficient rendering
-    kglt::MaterialID mat = mesh->resource_manager().new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY); //mesh->resource_manager().clone_default_material();
+    kglt::MaterialID mat = mesh->resource_manager().clone_default_material();
     std::vector<kglt::SubMeshID> submeshes;
     for(int i = 0; i < total_patches; ++i) {
         submeshes.push_back(mesh->new_submesh_with_material(mat));
@@ -135,6 +168,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     int32_t height = (int32_t) tex->height();
     int32_t width = (int32_t) tex->width();
+    int32_t largest = std::max(width, height);
 
     // Generate the vertices from the heightmap
     for(int32_t z = 0; z < height; ++z) {
@@ -154,6 +188,19 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
             );
             mesh->shared_data->diffuse(kglt::Colour::WHITE);
             mesh->shared_data->normal(kglt::Vec3(0, 1, 0));
+
+            // First texture coordinate takes into account texture_repeat setting
+            mesh->shared_data->tex_coord0(
+                (texture_repeat / largest) * float(x),
+                (texture_repeat / largest) * float(z)
+            );
+
+            // Second texture coordinate makes the texture span the entire terrain
+            mesh->shared_data->tex_coord1(
+                (1.0 / width) * x,
+                (1.0 / height) * z
+            );
+
             mesh->shared_data->move_next();
 
             if(z < (height - 1) && x < (width - 1)) {
@@ -207,7 +254,11 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
         auto n = p.second.normalized();
         Vec3 pos = mesh->shared_data->position_at<Vec3>(p.first);
         mesh->shared_data->normal(n);
-        mesh->shared_data->diffuse(diffuse_func(pos, n, min_height, max_height));
+        mesh->shared_data->diffuse(
+            diffuse_func(pos, n,
+                gather_surrounding_points(mesh->shared_data.get(), width, height, p.first)
+            )
+        );
     }
 
     for(auto smi: submeshes) {
