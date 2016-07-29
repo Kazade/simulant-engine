@@ -106,7 +106,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     float spacing = 1.0;
     float min_height = -64.0;
     float max_height = 64.0;
-    int smooth_iterations = 20;
+    int smooth_iterations = 15;
     float texture_repeat = 4.0f;
 
     if(options.count("spacing")) {
@@ -191,14 +191,14 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
 
             // First texture coordinate takes into account texture_repeat setting
             mesh->shared_data->tex_coord0(
-                (texture_repeat / largest) * float(x),
-                (texture_repeat / largest) * float(z)
+                (texture_repeat / float(largest)) * float(x),
+                (texture_repeat / float(largest)) * float(z)
             );
 
             // Second texture coordinate makes the texture span the entire terrain
             mesh->shared_data->tex_coord1(
-                (1.0 / width) * x,
-                (1.0 / height) * z
+                (1.0 / float(width)) * float(x),
+                (1.0 / float(height)) * float(z)
             );
 
             mesh->shared_data->move_next();
@@ -267,6 +267,10 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     mesh->shared_data->done();
 
     mesh->resource_manager().delete_texture(tid); //Finally delete the texture
+
+    // Add some properties for the user to access if they need to
+    mesh->stash(uint32_t(width), "terrain_width");
+    mesh->stash(uint32_t(height), "terrain_length");
 }
 
 }

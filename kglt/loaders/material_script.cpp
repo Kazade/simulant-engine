@@ -30,8 +30,9 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<un
     unicode arg_1 = unicode(args[1]);
 
     if(type == "TEXTURE_UNIT") {
-        TextureID tex_id = mat.resource_manager().new_texture_from_file(arg_1.strip("\""));
-        pass->set_texture_unit(pass->texture_unit_count(), tex_id);
+        unicode arg_2 = unicode(args[2]);
+        TextureID tex_id = mat.resource_manager().new_texture_from_file(arg_2.strip("\""));
+        pass->set_texture_unit(arg_1.to_int(), tex_id);
     } else if(type == "ITERATION") {
         if(arg_1 == "ONCE") {
             pass->set_iteration(ITERATE_ONCE, pass->max_iterations());

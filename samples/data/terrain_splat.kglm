@@ -1,0 +1,204 @@
+
+BEGIN(PASS)
+    SET(ITERATION ONCE)
+
+    SET(ATTRIBUTE POSITION "vertex_position")
+    SET(ATTRIBUTE DIFFUSE "vertex_diffuse")
+    SET(ATTRIBUTE TEXCOORD0 "texture_coord0")
+    SET(ATTRIBUTE TEXCOORD1 "texture_coord1")
+
+    SET(AUTO_UNIFORM MODELVIEW_PROJECTION_MATRIX "modelview_projection")
+    SET(AUTO_UNIFORM LIGHT_GLOBAL_AMBIENT "global_ambient")
+    SET(AUTO_UNIFORM MATERIAL_AMBIENT "material_ambient")
+    SET(AUTO_UNIFORM MATERIAL_DIFFUSE "material_diffuse")
+    SET(AUTO_UNIFORM POINT_SIZE "point_size")
+
+    SET(TEXTURE_UNIT 0 "sample_data/beach_sand.png")
+    SET(TEXTURE_UNIT 1 "sample_data/grass3.png")
+    SET(TEXTURE_UNIT 2 "sample_data/rock.png")
+    SET(TEXTURE_UNIT 3 "sample_data/snow10_d.png")
+
+    SET(UNIFORM INT "textures[0]" 0)
+    SET(UNIFORM INT "textures[1]" 1)
+    SET(UNIFORM INT "textures[2]" 2)
+    SET(UNIFORM INT "textures[3]" 3)
+    SET(UNIFORM INT "textures[4]" 4)
+
+    BEGIN_DATA(VERTEX)
+        #version 120
+        attribute vec3 vertex_position;
+        attribute vec4 vertex_diffuse;
+        attribute vec2 texture_coord0;
+        attribute vec2 texture_coord1;
+
+        uniform mat4 modelview_projection;
+        uniform float point_size;
+
+        varying vec2 frag_texcoord0;
+        varying vec2 frag_texcoord1;
+        varying vec4 frag_diffuse;
+
+        void main() {
+            frag_texcoord0 = texture_coord0;
+            frag_texcoord1 = texture_coord1;
+            frag_diffuse = vertex_diffuse;
+            gl_Position = (modelview_projection * vec4(vertex_position, 1.0));
+            gl_PointSize = point_size;
+        }
+    END_DATA(VERTEX)
+
+    BEGIN_DATA(FRAGMENT)
+        #version 120
+        uniform vec4 global_ambient;
+        uniform vec4 material_ambient;
+        uniform vec4 material_diffuse;
+        uniform sampler2D textures[5];
+
+        varying vec2 frag_texcoord0;
+        varying vec2 frag_texcoord1;
+        varying vec4 frag_diffuse;
+
+        void main() {
+            vec4 blend = texture2D(textures[4], frag_texcoord1.st);
+            vec4 sand = texture2D(textures[0], frag_texcoord0.st) * vec4(blend.r);
+            vec4 grass = texture2D(textures[1], frag_texcoord0.st) * vec4(blend.g);
+            vec4 rock = texture2D(textures[2], frag_texcoord0.st) * vec4(blend.b);
+            vec4 snow = texture2D(textures[3], frag_texcoord0.st) * vec4(blend.a);
+            gl_FragColor = (global_ambient + material_ambient) * (sand + grass + rock + snow) * material_diffuse;
+        }
+    END_DATA(FRAGMENT)
+END(PASS)
+BEGIN(PASS)
+    SET(ITERATION ONCE_PER_LIGHT)
+    SET(MAX_ITERATIONS 8)
+
+    SET(ATTRIBUTE POSITION "vertex_position")
+    SET(ATTRIBUTE NORMAL "vertex_normal")
+    SET(ATTRIBUTE TEXCOORD0 "texture_coord0")
+    SET(ATTRIBUTE TEXCOORD1 "texture_coord1")
+    SET(ATTRIBUTE DIFFUSE "vertex_diffuse")
+
+    SET(AUTO_UNIFORM VIEW_MATRIX "view")
+    SET(AUTO_UNIFORM MODELVIEW_MATRIX "modelview")
+    SET(AUTO_UNIFORM MODELVIEW_PROJECTION_MATRIX "modelview_projection")
+    SET(AUTO_UNIFORM NORMAL_MATRIX "normal_matrix")
+    SET(AUTO_UNIFORM TEXTURE_MATRIX0 "texture_matrix[0]")
+    SET(AUTO_UNIFORM TEXTURE_MATRIX1 "texture_matrix[1]")
+    SET(AUTO_UNIFORM ACTIVE_TEXTURE_UNITS "active_texture_count")
+
+    SET(AUTO_UNIFORM LIGHT_POSITION "light_position")
+    SET(AUTO_UNIFORM LIGHT_DIFFUSE "light_diffuse")
+    SET(AUTO_UNIFORM LIGHT_SPECULAR "light_specular")
+
+    SET(AUTO_UNIFORM MATERIAL_SHININESS "material_shininess")
+    SET(AUTO_UNIFORM MATERIAL_DIFFUSE "material_diffuse")
+    SET(AUTO_UNIFORM MATERIAL_SPECULAR "material_specular")
+
+    SET(AUTO_UNIFORM LIGHT_CONSTANT_ATTENUATION "constant_attenuation")
+    SET(AUTO_UNIFORM LIGHT_LINEAR_ATTENUATION "linear_attenuation")
+    SET(AUTO_UNIFORM LIGHT_QUADRATIC_ATTENUATION "quadratic_attenuation")
+
+    SET(UNIFORM INT "textures[0]" 0)
+    SET(UNIFORM INT "textures[1]" 1)
+
+    SET(FLAG BLEND ADD)
+
+    BEGIN_DATA(VERTEX)
+        #version 120
+        attribute vec3 vertex_position;
+        attribute vec4 vertex_diffuse;
+        attribute vec3 vertex_normal;
+        attribute vec2 texture_coord0;
+        attribute vec2 texture_coord1;
+
+        uniform mat4 modelview;
+        uniform mat4 modelview_projection;
+        uniform mat4 view;
+        uniform mat3 normal_matrix;
+        uniform vec4 light_position;
+        uniform mat4 texture_matrix[2];
+
+        varying vec4 vertex_position_eye;
+        varying vec4 vertex_normal_eye;
+        varying vec4 light_position_eye;
+        varying vec2 frag_texcoord0;
+        varying vec2 frag_texcoord1;
+        varying vec4 frag_diffuse;
+
+        void main() {
+            vertex_normal_eye = vec4(normalize(normal_matrix * vertex_normal), 0); //Calculate the normal
+            vertex_position_eye = (modelview * vec4(vertex_position, 1.0));
+            light_position_eye = (view * light_position);
+
+            frag_texcoord0 = (texture_matrix[0] * vec4(texture_coord0, 0, 1)).st;
+            frag_texcoord1 = (texture_matrix[1] * vec4(texture_coord1, 0, 1)).st;
+            frag_diffuse = vertex_diffuse;
+
+            gl_Position = (modelview_projection * vec4(vertex_position, 1.0));
+        }
+    END_DATA(VERTEX)
+    BEGIN_DATA(FRAGMENT)
+        #version 120
+        uniform vec4 light_diffuse;
+        uniform vec4 light_specular;
+
+        uniform vec4 material_diffuse;
+        uniform vec4 material_specular;
+        uniform float material_shininess;
+
+        uniform float constant_attenuation;
+        uniform float linear_attenuation;
+        uniform float quadratic_attenuation;
+        uniform int active_texture_count;
+        uniform sampler2D textures[2];
+
+        varying vec4 vertex_position_eye;
+        varying vec4 vertex_normal_eye;
+        varying vec4 light_position_eye;
+        varying vec2 frag_texcoord0;
+        varying vec2 frag_texcoord1;
+        varying vec4 frag_diffuse;
+
+        void main() {
+            vec4 light_dir = light_position_eye - (vertex_position_eye * vec4(light_position_eye.w));
+            vec4 n_eye = normalize(vertex_normal_eye);
+            vec4 s_eye = normalize(light_dir);
+            vec4 v_eye = normalize(-vertex_position_eye);
+            vec4 h_eye = normalize(v_eye + s_eye);
+
+            vec4 color = vec4(0);
+
+            float intensity = max(dot(s_eye, n_eye), 0.0);
+
+            if(intensity > 0.0) {
+                float d = length(light_dir);
+                float attenuation = 1.0;
+
+                if(light_position_eye.w > 0.0) {
+                    attenuation = 1.0 / (
+                        constant_attenuation +
+                        linear_attenuation * d +
+                        quadratic_attenuation * d * d
+                    );
+                }
+
+                color += attenuation * (light_diffuse * material_diffuse * intensity);
+                float spec = max(dot(h_eye, n_eye), 0.0);
+                color += attenuation * (light_specular * material_specular) * pow(spec, material_shininess) * intensity;
+            }
+
+            if(active_texture_count == 0) {
+                gl_FragColor = color * frag_diffuse;
+            } else {
+                vec4 t1 = texture2D(textures[0], frag_texcoord0.st);
+                vec4 t2 = texture2D(textures[1], frag_texcoord1.st);
+                if(active_texture_count < 2) {
+                    t2 = vec4(1.0, 1.0, 1.0, 0.0);
+                }
+                gl_FragColor = (((1.0 - t2.a) * t1) + (t2.a * t2)) * frag_diffuse * color;
+            }
+        }
+
+    END_DATA(FRAGMENT)
+END(PASS)
+

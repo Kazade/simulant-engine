@@ -922,3 +922,4 @@ kglt/panels/partitioner_panel.cpp
 kglt/generic/threading/shared_mutex.h
 deps/kazsignal/kazsignal/kazsignal.h
 samples/terrain_sample.cpp
+samples/data/terrain_splat.kglm

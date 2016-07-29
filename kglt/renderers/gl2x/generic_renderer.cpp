@@ -372,6 +372,10 @@ void GenericRenderer::render(CameraPtr camera, StagePtr stage, bool render_group
         case 1: return SP_AUTO_MATERIAL_TEX_MATRIX1;
         case 2: return SP_AUTO_MATERIAL_TEX_MATRIX2;
         case 3: return SP_AUTO_MATERIAL_TEX_MATRIX3;
+        case 4: return SP_AUTO_MATERIAL_TEX_MATRIX4;
+        case 5: return SP_AUTO_MATERIAL_TEX_MATRIX5;
+        case 6: return SP_AUTO_MATERIAL_TEX_MATRIX6;
+        case 7: return SP_AUTO_MATERIAL_TEX_MATRIX7;
         default:
             throw ValueError("Invalid tex matrix index");
         }
