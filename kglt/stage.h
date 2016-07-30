@@ -166,9 +166,8 @@ public:
     }
 
     MeshID new_mesh_from_heightmap(
-        const unicode& image_file, float spacing=1.0, float min_height=-64,
-        float max_height=64.0, const HeightmapDiffuseGenerator& generator=HeightmapDiffuseGenerator(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
-        return window->new_mesh_from_heightmap(image_file, spacing, min_height, max_height, generator, garbage_collect);
+        const unicode& image_file, const HeightmapSpecification& specification=HeightmapSpecification(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
+        return window->new_mesh_from_heightmap(image_file, specification, garbage_collect);
     }
 
     virtual MeshID new_mesh_as_cube(float width, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {

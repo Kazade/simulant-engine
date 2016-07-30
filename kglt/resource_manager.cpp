@@ -96,13 +96,10 @@ MeshID ResourceManagerImpl::new_mesh_from_tmx_file(const unicode& tmx_file, cons
     return mesh_id;
 }
 
-MeshID ResourceManagerImpl::new_mesh_from_heightmap(const unicode& image_file, float spacing, float min_height, float max_height, const HeightmapDiffuseGenerator &generator, GarbageCollectMethod garbage_collect) {
+MeshID ResourceManagerImpl::new_mesh_from_heightmap(const unicode& image_file, const HeightmapSpecification& spec, GarbageCollectMethod garbage_collect) {
     kglt::MeshID mesh_id = new_mesh(VertexSpecification::DEFAULT, garbage_collect);
     window->loader_for("heightmap_loader", image_file)->into(mesh(mesh_id), {
-        { "spacing", spacing},
-        { "min_height", min_height},
-        { "max_height", max_height},
-        { "diffuse_func", generator}
+        { "spec", spec},
     });
     MeshManager::mark_as_uncollected(mesh_id);
     return mesh_id;

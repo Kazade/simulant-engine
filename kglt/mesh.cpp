@@ -444,7 +444,7 @@ void Mesh::transform_vertices(const kglt::Mat4& transform, bool include_submeshe
 
 void Mesh::set_diffuse(const kglt::Colour& colour, bool include_submeshes) {
     shared_data->move_to_start();
-    for(int i = 0; i < shared_data->count(); ++i) {
+    for(uint32_t i = 0; i < shared_data->count(); ++i) {
         shared_data->diffuse(colour);
         shared_data->move_next();
     }

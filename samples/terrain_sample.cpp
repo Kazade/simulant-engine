@@ -56,13 +56,14 @@ public:
         cam->look_at(0, 0, 0);
 
         terrain_material_id_ = stage->new_material_from_file("sample_data/terrain_splat.kglm", GARBAGE_COLLECT_NEVER);
-        terrain_mesh_id_ = stage->new_mesh_from_heightmap("sample_data/terrain.png", 2.5);
+        terrain_mesh_id_ = stage->new_mesh_from_heightmap("sample_data/terrain.png");
         auto terrain_mesh = stage->mesh(terrain_mesh_id_);
 
+        auto terrain_data = terrain_mesh->get<kglt::TerrainData>("terrain_data");
         kglt::TextureID terrain_splatmap = stage->new_texture();
         calculate_splat_map(
-            terrain_mesh->get<uint32_t>("terrain_width"),
-            terrain_mesh->get<uint32_t>("terrain_length"),
+            terrain_data.x_size,
+            terrain_data.z_size,
             stage->texture(terrain_splatmap),
             terrain_mesh->shared_data
         );
