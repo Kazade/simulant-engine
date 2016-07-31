@@ -287,7 +287,16 @@ void VertexData::reset(VertexSpecification vertex_specification) {
 }
 
 void VertexData::recalc_attributes() {
-
+    stride_ = (
+        vertex_attribute_size(vertex_specification_.position_attribute) +
+        vertex_attribute_size(vertex_specification_.normal_attribute) +
+        vertex_attribute_size(vertex_specification_.texcoord0_attribute) +
+        vertex_attribute_size(vertex_specification_.texcoord1_attribute) +
+        vertex_attribute_size(vertex_specification_.texcoord2_attribute) +
+        vertex_attribute_size(vertex_specification_.texcoord3_attribute) +
+        vertex_attribute_size(vertex_specification_.diffuse_attribute) +
+        vertex_attribute_size(vertex_specification_.specular_attribute)
+    );
 }
 
 VertexAttribute VertexData::attribute_for_type(VertexAttributeType type) const {

@@ -172,17 +172,8 @@ public:
 
     const int32_t cursor_position() const { return cursor_position_; }
 
-    uint32_t stride() const {
-        return (
-            vertex_attribute_size(vertex_specification_.position_attribute) +
-            vertex_attribute_size(vertex_specification_.normal_attribute) +
-            vertex_attribute_size(vertex_specification_.texcoord0_attribute) +
-            vertex_attribute_size(vertex_specification_.texcoord1_attribute) +
-            vertex_attribute_size(vertex_specification_.texcoord2_attribute) +
-            vertex_attribute_size(vertex_specification_.texcoord3_attribute) +
-            vertex_attribute_size(vertex_specification_.diffuse_attribute) +
-            vertex_attribute_size(vertex_specification_.specular_attribute)
-        );
+    inline uint32_t stride() const {
+        return stride_;
     }
 
     uint32_t position_offset(bool check=true) const {
@@ -247,6 +238,7 @@ public:
 
 private:
     VertexSpecification vertex_specification_;
+    uint32_t stride_ = 0;
     std::vector<uint8_t> data_;
     uint32_t vertex_count_ = 0;
 
