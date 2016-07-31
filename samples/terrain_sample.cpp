@@ -56,7 +56,10 @@ public:
         cam->look_at(0, 0, 0);
 
         terrain_material_id_ = stage->new_material_from_file("sample_data/terrain_splat.kglm", GARBAGE_COLLECT_NEVER);
-        terrain_mesh_id_ = stage->new_mesh_from_heightmap("sample_data/terrain.png");
+        kglt::HeightmapSpecification spec;
+        spec.smooth_iterations = 5;
+
+        terrain_mesh_id_ = stage->new_mesh_from_heightmap("sample_data/terrain.png", spec);
         auto terrain_mesh = stage->mesh(terrain_mesh_id_);
 
         auto terrain_data = terrain_mesh->get<kglt::TerrainData>("terrain_data");

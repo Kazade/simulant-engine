@@ -27,7 +27,11 @@ static std::vector<Vec3> _get_surrounding_vertices_from_index(Mesh* terrain, uin
     TerrainData data = terrain->get<TerrainData>("terrain_data");
     uint32_t vertex_count = (data.x_size * data.z_size);
 
-    std::vector<uint32_t> surrounding_indexes;
+    static std::array<int, 8> surrounding_indexes;
+    static std::vector<Vec3> surrounding_vertices;
+    surrounding_vertices.clear();
+    surrounding_vertices.reserve(8);
+    surrounding_indexes.fill(-1);
 
     bool can_left = i % data.x_size > 1;
     bool can_up = i > data.x_size;
@@ -35,39 +39,41 @@ static std::vector<Vec3> _get_surrounding_vertices_from_index(Mesh* terrain, uin
     bool can_down = i < vertex_count - data.x_size;
 
     if(can_up) {
-        surrounding_indexes.push_back(i - data.x_size);
+        surrounding_indexes[0] = (i - data.x_size);
         if(can_left) {
-            surrounding_indexes.push_back(i - data.x_size - 1);
+            surrounding_indexes[1] = (i - data.x_size - 1);
         }
         if(can_right) {
-            surrounding_indexes.push_back(i - data.x_size + 1);
+            surrounding_indexes[2] = (i - data.x_size + 1);
         }
     }
 
     if(can_left) {
-        surrounding_indexes.push_back(i - 1);
+        surrounding_indexes[3] = (i - 1);
     }
 
     if(can_right) {
-        surrounding_indexes.push_back(i + 1);
+        surrounding_indexes[4] = (i + 1);
     }
 
     if(can_down) {
-        surrounding_indexes.push_back(i + data.x_size);
+        surrounding_indexes[5] = (i + data.x_size);
         if(can_left) {
-            surrounding_indexes.push_back(i + data.x_size - 1);
+            surrounding_indexes[6] = (i + data.x_size - 1);
         }
         if(can_right) {
-            surrounding_indexes.push_back(i + data.x_size + 1);
+            surrounding_indexes[7] = (i + data.x_size + 1);
         }
     }
 
-    std::vector<Vec3> results;
+    VertexData& shared_data = terrain->shared_data;
+
     for(auto& idx: surrounding_indexes) {
-        results.push_back(terrain->shared_data->position_at<Vec3>(idx));
+        if(idx == -1) continue;
+        surrounding_vertices.push_back(shared_data.position_at<Vec3>(idx));
     }
 
-    return results;
+    return surrounding_vertices;
 }
 
 std::vector<Vec3> get_surrounding_vertices_from_index(MeshPtr terrain, uint32_t i) {
@@ -83,20 +89,24 @@ std::vector<Vec3> get_surrounding_vertices(MeshPtr terrain, int x, int z) {
 
 
 static void _smooth_terrain_iteration(Mesh* mesh, int width, int height) {
-    mesh->shared_data->move_to_start();
+    VertexData& shared_data = mesh->shared_data;
+
+    shared_data.move_to_start();
+
     for(uint32_t i = 0; i < mesh->shared_data->count(); ++i) {
+        auto this_pos = shared_data.position_at<Vec3>(i);
         auto vertices = _get_surrounding_vertices_from_index(mesh, i);
 
-        float total_height = 0.0f;
+        float total_height = this_pos.y;
         for(auto& vert: vertices) {
             total_height += vert.y;
         }
 
         // http://nic-gamedev.blogspot.co.uk/2013/02/simple-terrain-smoothing.html
-        auto this_pos = mesh->shared_data->position_at<Vec3>(i);
-        float new_height = ((total_height / float(vertices.size())) + this_pos.y) / 2.0;
-        mesh->shared_data->position(this_pos.x, new_height, this_pos.z);
-        mesh->shared_data->move_next();
+
+        float new_height = total_height / float(vertices.size() + 1);
+        shared_data.position(this_pos.x, new_height, this_pos.z);
+        shared_data.move_next();
     }
 }
 
@@ -235,6 +245,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     std::vector<kglt::SubMeshID> submeshes;
     for(int i = 0; i < total_patches; ++i) {
         submeshes.push_back(mesh->new_submesh_with_material(mat));
+        mesh->submesh(submeshes.back())->index_data->reserve(patch_size * patch_size);
     }
 
     int32_t height = (int32_t) tex->height();
@@ -312,35 +323,37 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
         terrain::_smooth_terrain(mesh, spec.smooth_iterations);
     }
 
-    // The mesh don't have any normals, let's generate some!
-    std::unordered_map<int, kglt::Vec3> index_to_normal;
+    if(spec.calculate_normals) {
+        // The mesh don't have any normals, let's generate some!
+        std::unordered_map<int, kglt::Vec3> index_to_normal;
 
-    for(auto smi: submeshes) {
-        auto sm = mesh->submesh(smi);
-        // Go through all the triangles, add the face normal to all the vertices
-        for(uint32_t i = 0; i < sm->index_data->count(); i+=3) {
-            Index idx1 = sm->index_data->at(i);
-            Index idx2 = sm->index_data->at(i+1);
-            Index idx3 = sm->index_data->at(i+2);
+        for(auto smi: submeshes) {
+            auto sm = mesh->submesh(smi);
+            // Go through all the triangles, add the face normal to all the vertices
+            for(uint32_t i = 0; i < sm->index_data->count(); i+=3) {
+                Index idx1 = sm->index_data->at(i);
+                Index idx2 = sm->index_data->at(i+1);
+                Index idx3 = sm->index_data->at(i+2);
 
-            kglt::Vec3 v1, v2, v3;
-            v1 = sm->vertex_data->position_at<Vec3>(idx1);
-            v2 = sm->vertex_data->position_at<Vec3>(idx2);
-            v3 = sm->vertex_data->position_at<Vec3>(idx3);
+                kglt::Vec3 v1, v2, v3;
+                v1 = sm->vertex_data->position_at<Vec3>(idx1);
+                v2 = sm->vertex_data->position_at<Vec3>(idx2);
+                v3 = sm->vertex_data->position_at<Vec3>(idx3);
 
-            kglt::Vec3 normal = (v2 - v1).normalized().cross((v3 - v1).normalized()).normalized();
+                kglt::Vec3 normal = (v2 - v1).normalized().cross((v3 - v1).normalized()).normalized();
 
-            index_to_normal[idx1] += normal;
-            index_to_normal[idx2] += normal;
-            index_to_normal[idx3] += normal;
+                index_to_normal[idx1] += normal;
+                index_to_normal[idx2] += normal;
+                index_to_normal[idx3] += normal;
+            }
         }
-    }
 
-    // Now set the normal on the vertex data
-    for(auto p: index_to_normal) {
-        mesh->shared_data->move_to(p.first);
-        auto n = p.second.normalized();
-        mesh->shared_data->normal(n);
+        // Now set the normal on the vertex data
+        for(auto p: index_to_normal) {
+            mesh->shared_data->move_to(p.first);
+            auto n = p.second.normalized();
+            mesh->shared_data->normal(n);
+        }
     }
 
     for(auto smi: submeshes) {
