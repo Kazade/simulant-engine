@@ -1,8 +1,6 @@
 #ifndef __ANDROID__
-	#include <GL/glew.h>
     #include <SDL2/SDL_rwops.h>
 #else
-    #include <GLES2/gl2.h>
     #include <SDL_rwops.h>
 #endif
 
@@ -29,10 +27,12 @@
 #include "interface.h"
 #include "ui_private.h"
 
+#ifdef KGLT_GL_VERSION_2X
+#include "../buffer_object.h"
+#endif
+
 namespace kglt {
 namespace ui {
-
-
 
 class RocketFileInterface : public Rocket::Core::FileInterface {
 public:
@@ -202,12 +202,6 @@ public:
             int num_indices, Rocket::Core::TextureHandle texture,
             const Rocket::Core::Vector2f& translation) {
 
-        GLStateStash s2(GL_DEPTH_TEST);
-        GLStateStash s3(GL_BLEND);
-        GLStateStash s4(GL_CURRENT_PROGRAM);
-        GLStateStash s5(GL_TEXTURE_BINDING_2D);
-        GLStateStash s6(GL_ARRAY_BUFFER_BINDING);
-
         // We have to convert to shorts for GLES compatibility
         std::vector<uint16_t> short_indices(num_indices);
         std::copy(indices, indices + num_indices, &short_indices[0]);
@@ -280,11 +274,6 @@ public:
         }
 
         auto geom = (*it).second;
-
-        GLStateStash s2(GL_DEPTH_TEST);
-        GLStateStash s3(GL_BLEND);
-        GLStateStash s4(GL_CURRENT_PROGRAM);
-        GLStateStash s5(GL_TEXTURE_BINDING_2D);
 
         GLCheck(glDisable, GL_DEPTH_TEST);
         GLCheck(glEnable, GL_BLEND);

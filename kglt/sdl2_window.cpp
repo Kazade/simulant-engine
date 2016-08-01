@@ -1,7 +1,5 @@
 #include <kazbase/exceptions.h>
 #include <kazbase/logging.h>
-#include "utils/glcompat.h"
-#include "utils/gl_error.h"
 #include "kazbase/unicode.h"
 #include "input_controller.h"
 #include "sdl2_window.h"
@@ -226,15 +224,8 @@ bool SDL2Window::create_window(int width, int height, int bpp, bool fullscreen) 
     SDL_SetEventFilter(event_filter, this);
     set_has_context(true); //Mark that we have a valid GL context
 
-#ifndef __ANDROID__
-#ifdef KGLT_GL_VERSION_2X
-    glewExperimental = true;
-    GLenum err = glewInit();
-    glGetError(); //Sigh, sets this regardless
-    assert(err == GLEW_OK);
-    assert(GLEW_VERSION_3_1);
-#endif
-#endif
+    renderer_->init_context();
+
     //Reset the width and height to whatever was actually created
     SDL_GetWindowSize(screen_, &width, &height);
 

@@ -2,6 +2,10 @@
 #include "stage.h"
 #include "particles.h"
 
+#ifdef KGLT_GL_VERSION_2X
+#include "buffer_object.h"
+#endif
+
 namespace kglt {
 
 ParticleSystem::ParticleSystem(ParticleSystemID id, Stage* stage):
@@ -10,7 +14,7 @@ ParticleSystem::ParticleSystem(ParticleSystemID id, Stage* stage):
     Source(stage),
     vertex_data_(new VertexData(VertexSpecification::POSITION_AND_DIFFUSE)),
     index_data_(new IndexData()),
-    vao_(MODIFY_REPEATEDLY_USED_FOR_RENDERING, MODIFY_REPEATEDLY_USED_FOR_RENDERING) {
+    vao_(new VertexArrayObject(MODIFY_REPEATEDLY_USED_FOR_RENDERING, MODIFY_REPEATEDLY_USED_FOR_RENDERING)) {
 
     set_material_id(stage->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY));
 }
@@ -98,12 +102,12 @@ void ParticleSystem::_update_vertex_array_object() {
         return;
     }
 
-    vao_.vertex_buffer_update(vertex_data_->data_size(), vertex_data_->data());
-    vao_.index_buffer_update(index_data_->count() * sizeof(uint16_t), index_data_->_raw_data());
+    vao_->vertex_buffer_update(vertex_data_->data_size(), vertex_data_->data());
+    vao_->index_buffer_update(index_data_->count() * sizeof(uint16_t), index_data_->_raw_data());
 }
 
 void ParticleSystem::_bind_vertex_array_object() {
-    vao_.bind();
+    vao_->bind();
 }
 
 const AABB ParticleSystem::transformed_aabb() const {

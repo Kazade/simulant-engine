@@ -19,6 +19,8 @@ public:
         Light* light,
         batcher::Iteration iteration
     ) override;
+
+    void init_context();
 };
 
 }

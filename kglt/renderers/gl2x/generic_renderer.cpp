@@ -8,7 +8,7 @@
 #include "../../gpu_program.h"
 
 #include "kazmath/mat4.h"
-#include "../../utils/glcompat.h"
+#include "./glad/glad/glad.h"
 #include "../../utils/gl_error.h"
 
 namespace kglt {
@@ -425,6 +425,17 @@ void GenericRenderer::send_geometry(Renderable *renderable) {
             throw NotImplementedError(__FILE__, __LINE__);
     }
 }
+
+void GenericRenderer::init_context() {
+    if(!gladLoadGL()) {
+        throw std::runtime_error("Unable to intialize OpenGL 2.1");
+    }
+
+    GLCheck(glEnable, GL_DEPTH_TEST);
+    GLCheck(glDepthFunc, GL_LEQUAL);
+    GLCheck(glEnable, GL_CULL_FACE);
+}
+
 
 /*
 void GenericRenderer::render(Renderable& buffer, CameraID camera, GPUProgramInstance *program) {

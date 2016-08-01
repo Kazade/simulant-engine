@@ -1,5 +1,3 @@
-#include "utils/glcompat.h"
-
 #include <cassert>
 #include <stdexcept>
 
@@ -10,6 +8,12 @@
 
 #include "window_base.h"
 #include "texture.h"
+
+#ifdef KGLT_GL_VERSION_2X
+#include "./renderers/gl2x/glad/glad/glad.h"
+#else
+#include "./renderers/gl1x/glad/glad/glad.h"
+#endif
 
 namespace kglt {
 

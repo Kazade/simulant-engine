@@ -1,5 +1,3 @@
-#include "utils/glcompat.h"
-
 #include <thread>
 
 #include "utils/gl_error.h"
@@ -187,10 +185,6 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
 
         register_panel(1, std::make_shared<StatsPanel>(this));
         register_panel(2, std::make_shared<PartitionerPanel>(this));
-
-        GLCheck(glEnable, GL_DEPTH_TEST);
-        GLCheck(glDepthFunc, GL_LEQUAL);
-        GLCheck(glEnable, GL_CULL_FACE);
 
         using std::bind;
 

@@ -34,6 +34,8 @@ public:
 
     Property<Renderer, WindowBase> window = { this, &Renderer::window_ };
 
+    virtual void init_context() = 0;
+
     // virtual void upload_texture(Texture* texture) = 0;
 protected:
     StagePtr current_stage();

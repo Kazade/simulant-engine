@@ -1,8 +1,6 @@
-#include "utils/glcompat.h"
 #include <unordered_map>
 
 #include "generic/algorithm.h"
-#include "utils/gl_error.h"
 #include "render_sequence.h"
 #include "stage.h"
 #include "ui_stage.h"

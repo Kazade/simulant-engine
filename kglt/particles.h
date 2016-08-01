@@ -228,7 +228,7 @@ private:
     VertexData* vertex_data_ = nullptr;
     IndexData* index_data_ = nullptr;
 
-    VertexArrayObject vao_;
+    std::shared_ptr<VertexArrayObject> vao_;
 
     bool destroy_on_completion_ = false;
 };

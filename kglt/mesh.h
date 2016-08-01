@@ -22,6 +22,12 @@
 
 namespace kglt {
 
+/* FIXME: REMOVE! */
+class VertexArrayObject;
+class BufferObject;
+typedef std::shared_ptr<VertexArrayObject> VertexArrayObjectPtr;
+typedef std::shared_ptr<BufferObject> BufferObjectPtr;
+
 class ResourceManager;
 
 class MeshInterface:
@@ -123,7 +129,7 @@ private:
 
     VertexData* vertex_data_ = nullptr;
     IndexData* index_data_ = nullptr;
-    VertexArrayObject::ptr vertex_array_object_;
+    VertexArrayObjectPtr vertex_array_object_;
 
     bool vertex_data_dirty_ = false;
     bool index_data_dirty_ = false;
@@ -208,7 +214,7 @@ private:
 
     bool shared_data_dirty_ = false;
     VertexData* shared_data_ = nullptr;
-    BufferObject::ptr shared_data_buffer_object_;
+    BufferObjectPtr shared_data_buffer_object_;
 
     SubMeshID normal_debug_mesh_;
 

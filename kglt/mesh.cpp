@@ -7,6 +7,10 @@
 #include "loader.h"
 #include "material.h"
 
+#ifdef KGLT_GL_VERSION_2X
+#include "buffer_object.h"
+#endif
+
 namespace kglt {
 
 VertexData *SubMesh::get_vertex_data() const {

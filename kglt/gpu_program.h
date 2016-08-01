@@ -12,6 +12,7 @@
 #include "utils/gl_thread_check.h"
 #include "generic/identifiable.h"
 #include "vertex_data.h"
+#include "renderers/gl2x/glad/glad/glad.h"
 
 #define BUFFER_OFFSET(bytes) ((GLubyte*) NULL + (bytes))
 
