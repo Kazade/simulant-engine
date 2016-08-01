@@ -74,7 +74,7 @@ void starfield(kglt::TexturePtr texture_ptr, uint32_t width, uint32_t height) {
         }
     }
 
-    texture.upload(false, true, false, false);
+    texture.upload(MIPMAP_GENERATE_COMPLETE, TEXTURE_WRAP_CLAMP_TO_EDGE, TEXTURE_FILTER_NEAREST, false);
 }
 
 }

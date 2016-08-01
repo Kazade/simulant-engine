@@ -486,7 +486,7 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
         new_tex->resize(tex.width, tex.height);
         new_tex->set_bpp(tex.bytes_per_pixel * 8);
         new_tex->data().assign(tex.data.begin(), tex.data.end());
-        new_tex->upload(true, true);
+        new_tex->upload(MIPMAP_GENERATE_COMPLETE);
 
         //Create a submesh for each texture. Don't share the vertex data between submeshes
         texture_submesh[tex.name] = mesh->new_submesh_with_material(

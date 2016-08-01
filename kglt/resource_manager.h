@@ -23,6 +23,23 @@ typedef generic::RefCountedTemplatedManager<Material, MaterialID> MaterialManage
 typedef generic::RefCountedTemplatedManager<Texture, TextureID> TextureManager;
 typedef generic::RefCountedTemplatedManager<Sound, SoundID> SoundManager;
 
+struct TextureFlags {
+    TextureFlags(
+        MipmapGenerate mipmap = MIPMAP_GENERATE_COMPLETE,
+        TextureWrap wrap = TEXTURE_WRAP_REPEAT,
+        TextureFilter filter = TEXTURE_FILTER_NEAREST):
+        mipmap(mipmap),
+        wrap(wrap),
+        filter(filter) {
+
+    }
+
+    MipmapGenerate mipmap = MIPMAP_GENERATE_COMPLETE;
+    TextureWrap wrap = TEXTURE_WRAP_REPEAT;
+    TextureFilter filter = TEXTURE_FILTER_NEAREST;
+    bool flip_vertically = false;
+};
+
 class ResourceManager : public virtual WindowHolder {
 public:
     ResourceManager(WindowBase* window):
@@ -70,9 +87,9 @@ public:
 
     //Texture functions
     virtual TextureID new_texture(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) = 0;
-    virtual TextureID new_texture_from_file(const unicode& path, TextureFlags flags=0, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) = 0;
+    virtual TextureID new_texture_from_file(const unicode& path, TextureFlags flags=TextureFlags(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) = 0;
     virtual TextureID new_texture_with_alias(const unicode& alias, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) = 0;
-    virtual TextureID new_texture_with_alias_from_file(const unicode& alias, const unicode& path, TextureFlags flags=0, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) = 0;
+    virtual TextureID new_texture_with_alias_from_file(const unicode& alias, const unicode& path, TextureFlags flags=TextureFlags(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) = 0;
     virtual TextureID get_texture_with_alias(const unicode& alias) = 0;
 
     virtual TexturePtr texture(TextureID t) = 0;
@@ -169,10 +186,10 @@ public:
 
 
     TextureID new_texture(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override;
-    TextureID new_texture_from_file(const unicode& path, TextureFlags flags=0, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override;
+    TextureID new_texture_from_file(const unicode& path, TextureFlags flags=TextureFlags(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override;
 
     TextureID new_texture_with_alias(const unicode& alias, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override;
-    TextureID new_texture_with_alias_from_file(const unicode& alias, const unicode& path, TextureFlags flags=0, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override;
+    TextureID new_texture_with_alias_from_file(const unicode& alias, const unicode& path, TextureFlags flags=TextureFlags(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override;
     TextureID get_texture_with_alias(const unicode& alias) override;
 
     TexturePtr texture(TextureID t) override;

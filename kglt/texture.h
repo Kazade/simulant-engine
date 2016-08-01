@@ -13,6 +13,23 @@
 
 namespace kglt {
 
+enum MipmapGenerate {
+    MIPMAP_GENERATE_NONE,
+    MIPMAP_GENERATE_COMPLETE
+};
+
+enum TextureWrap {
+    TEXTURE_WRAP_REPEAT,
+    TEXTURE_WRAP_CLAMP_TO_EDGE,
+    TEXTURE_WRAP_MIRRORED_REPEAT,
+    TEXTURE_WRAP_MIRRORED_CLAMP_TO_EDGE
+};
+
+enum TextureFilter {
+    TEXTURE_FILTER_LINEAR,
+    TEXTURE_FILTER_NEAREST
+};
+
 class Texture :
     public Resource,
     public Loadable,
@@ -43,12 +60,14 @@ public:
 
     void set_bpp(uint32_t bits=32);
     void resize(uint32_t width, uint32_t height);
-    void upload(bool free_after=true,
-                bool generate_mipmaps=true,
-                bool repeat=true,
-                bool linear=false); //Upload to GL, initializes the tex ID
+    void upload(
+        MipmapGenerate mipmap = MIPMAP_GENERATE_COMPLETE,
+        TextureWrap wrap = TEXTURE_WRAP_REPEAT,
+        TextureFilter filter = TEXTURE_FILTER_NEAREST,
+        bool free_after=true
+    ); //Upload to GL, initializes the tex ID
 
-    void __do_upload(bool free_after, bool generate_mipmaps, bool repeat, bool linear);
+    void __do_upload(MipmapGenerate mipmap, TextureWrap wrap, TextureFilter filter, bool free_after);
 
     void flip_vertically();
     void free(); //Frees the data used to construct the texture

@@ -31,7 +31,7 @@ struct HeightmapSpecification {
     float min_height = -64.0f;
     float max_height = 64.0f;
     float spacing = 2.5f;
-    uint32_t smooth_iterations = 15;
+    uint32_t smooth_iterations = 0;
     bool calculate_normals = true;
     float texcoord0_repeat = 4.0f;
 };

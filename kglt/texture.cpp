@@ -68,7 +68,7 @@ void Texture::sub_texture(TextureID src, uint16_t offset_x, uint16_t offset_y) {
     upload();
 }
 
-void Texture::__do_upload(bool free_after, bool generate_mipmaps, bool repeat, bool linear) {
+void Texture::__do_upload(MipmapGenerate mipmap, TextureWrap wrap, TextureFilter filter, bool free_after) {
     if(!gl_tex()) {
         GLCheck(glGenTextures, 1, &gl_tex_);
     }
@@ -83,28 +83,36 @@ void Texture::__do_upload(bool free_after, bool generate_mipmaps, bool repeat, b
         (bpp_ == 32) ? GL_RGBA : GL_RGB,
         GL_UNSIGNED_BYTE, &data_[0]
     );
-    if(generate_mipmaps) {
+    if(mipmap == MIPMAP_GENERATE_COMPLETE) {
 #ifdef KGLT_GL_VERSION_1X
-        if(generate_mipmaps) {
-            throw std::runtime_error("generate_mipmaps is not currently supported on the GL 1X renderer");
-        }
+        throw std::runtime_error("generate_mipmaps is not currently supported on the GL 1X renderer");
 #else
         GLCheck(glGenerateMipmap, GL_TEXTURE_2D);
 #endif
     }
-    if(repeat) {
-        GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    } else {
-        GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    switch(wrap) {
+        case TEXTURE_WRAP_REPEAT: {
+            GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        } break;
+        case TEXTURE_WRAP_CLAMP_TO_EDGE: {
+            GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        } break;
+    default:
+        assert(0 && "Not Implemented");
     }
 
-    if(!linear) {
-        GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    if(filter == TEXTURE_FILTER_NEAREST) {
+        if(mipmap == MIPMAP_GENERATE_COMPLETE) {
+            GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+        } else {
+            GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        }
         GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     } else {
-        if(generate_mipmaps) {
+        if(mipmap == MIPMAP_GENERATE_COMPLETE) {
             GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         } else {
             GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -117,16 +125,16 @@ void Texture::__do_upload(bool free_after, bool generate_mipmaps, bool repeat, b
     }
 }
 
-void Texture::upload(bool free_after, bool generate_mipmaps, bool repeat, bool linear) {
+void Texture::upload(MipmapGenerate mipmap, TextureWrap wrap, TextureFilter filter, bool free_after) {
     if(GLThreadCheck::is_current()) {
-        __do_upload(free_after, generate_mipmaps, repeat, linear);
+        __do_upload(mipmap, wrap, filter, free_after);
     } else {
 
         //FIXME: This might get hairy if more than one thread is messing with the texture
         //as we do an unlocked access here (which is fine when it's only this thread and the
         //main thread, but if there's another one then, that could be bad news)
         resource_manager().window->idle->add_once([=] {
-            this->__do_upload(free_after, generate_mipmaps, repeat, linear);
+            this->__do_upload(mipmap, wrap, filter, free_after);
         });
 
         //Wait for the main thread to process the upload

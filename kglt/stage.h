@@ -263,13 +263,13 @@ public:
 
     //Texture functions
     virtual TextureID new_texture(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override { return window->new_texture(garbage_collect); }
-    virtual TextureID new_texture_from_file(const unicode& path, TextureFlags flags=0, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
+    virtual TextureID new_texture_from_file(const unicode& path, TextureFlags flags=TextureFlags(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_texture_from_file(path, flags, garbage_collect);
     }
     virtual TextureID new_texture_with_alias(const unicode& alias, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_texture_with_alias(alias, garbage_collect);
     }
-    virtual TextureID new_texture_with_alias_from_file(const unicode& alias, const unicode& path, TextureFlags flags=0, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
+    virtual TextureID new_texture_with_alias_from_file(const unicode& alias, const unicode& path, TextureFlags flags=TextureFlags(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
         return window->new_texture_with_alias_from_file(alias, path, flags, garbage_collect);
     }
     virtual TextureID get_texture_with_alias(const unicode& alias) override {

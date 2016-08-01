@@ -623,8 +623,6 @@ enum VirtualDPadDirections {
     VIRTUAL_DPAD_DIRECTIONS_ANALOG
 };
 
-typedef uint32_t TextureFlags;
-
 typedef UniqueID<0> MeshID;
 typedef UniqueID<1> SubMeshID;
 typedef UniqueID<2> TextureID;

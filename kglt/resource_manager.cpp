@@ -368,15 +368,15 @@ TextureID ResourceManagerImpl::new_texture_from_file(const unicode& path, Textur
     auto tex = texture(new_texture(garbage_collect));
     window->loader_for(path, LOADER_HINT_TEXTURE)->into(tex);
 
-    if((flags & TEXTURE_OPTION_FLIP_VERTICALLY) == TEXTURE_OPTION_FLIP_VERTICALLY) {
+    if(flags.flip_vertically) {
         tex->flip_vertically();
     }
 
     tex->upload(
-        false,
-        (flags & TEXTURE_OPTION_DISABLE_MIPMAPS) != TEXTURE_OPTION_DISABLE_MIPMAPS,
-        (flags & TEXTURE_OPTION_CLAMP_TO_EDGE) != TEXTURE_OPTION_CLAMP_TO_EDGE,
-        (flags & TEXTURE_OPTION_NEAREST_FILTER) != TEXTURE_OPTION_NEAREST_FILTER
+        flags.mipmap,
+        flags.wrap,
+        flags.filter,
+        false
     );
 
     mark_texture_as_uncollected(tex->id());

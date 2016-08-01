@@ -21,7 +21,7 @@ void calculate_splat_map(int width, int length, TexturePtr texture, VertexData& 
 
         float rock = clamp(steepness.value_ / 45.0f);
         float sand = clamp(1.0 - (height * 4.0f));
-        float grass = 0.5f;
+        float grass = (sand > 0.5) ? 0.0 : 0.5f;
         float snow = height * clamp(n.z);
 
         float z = rock + sand + grass + snow;
@@ -31,7 +31,7 @@ void calculate_splat_map(int width, int length, TexturePtr texture, VertexData& 
         texture->data()[(i * 4) + 2] = 255.0f * (rock / z);
         texture->data()[(i * 4) + 3] = 255.0f * (snow / z);
     }
-    texture->upload(false, false, false, true);
+    texture->upload(kglt::MIPMAP_GENERATE_NONE, kglt::TEXTURE_WRAP_CLAMP_TO_EDGE, kglt::TEXTURE_FILTER_LINEAR, false);
 }
 
 class GameScreen : public kglt::Screen<GameScreen> {
@@ -57,7 +57,7 @@ public:
 
         terrain_material_id_ = stage->new_material_from_file("sample_data/terrain_splat.kglm", GARBAGE_COLLECT_NEVER);
         kglt::HeightmapSpecification spec;
-        spec.smooth_iterations = 5;
+        spec.smooth_iterations = 0;
 
         terrain_mesh_id_ = stage->new_mesh_from_heightmap("sample_data/terrain.png", spec);
         auto terrain_mesh = stage->mesh(terrain_mesh_id_);

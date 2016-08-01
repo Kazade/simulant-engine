@@ -705,7 +705,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         lightmap->resize(lightmap_buffer.width_in_texels(), lightmap_buffer.height_in_texels());
         lightmap->set_bpp(24); // RGB only, no alpha
         lightmap->data().assign(lightmap_buffer.buffer.begin(), lightmap_buffer.buffer.end());
-        lightmap->upload(false, false, false, true);
+        lightmap->upload(MIPMAP_GENERATE_NONE, TEXTURE_WRAP_CLAMP_TO_EDGE, TEXTURE_FILTER_LINEAR, false);
     }
 
     mesh->stash(lightmap_texture, "lightmap_texture_id");

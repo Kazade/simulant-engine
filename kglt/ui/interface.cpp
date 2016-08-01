@@ -133,7 +133,7 @@ public:
         auto tex = manager().texture(manager().new_texture_from_file(source.CString()));
 
         tex->flip_vertically();
-        tex->upload(true, false, false, true);
+        tex->upload(MIPMAP_GENERATE_NONE, TEXTURE_WRAP_CLAMP_TO_EDGE, TEXTURE_FILTER_LINEAR, true);
 
         texture_handle = tex->id().value();
 
@@ -149,7 +149,12 @@ public:
         tex->set_bpp(32);
 
         tex->data().assign(source, source + data_size);
-        tex->upload(true, false, false, true);
+        tex->upload(
+            MIPMAP_GENERATE_NONE,
+            TEXTURE_WRAP_CLAMP_TO_EDGE,
+            TEXTURE_FILTER_LINEAR,
+            true
+        );
 
         texture_handle = tex->id().value();
 

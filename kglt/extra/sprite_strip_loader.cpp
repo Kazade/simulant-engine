@@ -53,7 +53,7 @@ std::vector<TextureID> SpriteStripLoader::load_frames() {
         tex->set_bpp(tmp->bpp()); //Set the bpp
         tex->resize(frame_width_, tmp->height()); //Resize the texture
         tex->data().assign(data.begin(), data.end()); //Copy the frame data
-        tex->upload(true, true, false, false);
+        tex->upload(MIPMAP_GENERATE_COMPLETE, TEXTURE_WRAP_CLAMP_TO_EDGE, TEXTURE_FILTER_NEAREST, true);
 
         results.push_back(tex->id());
     }

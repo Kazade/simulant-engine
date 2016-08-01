@@ -33,6 +33,8 @@ public:
     virtual void render(CameraPtr camera, StagePtr stage, bool, const batcher::RenderGroup*, Renderable*, MaterialPass*, Light*, batcher::Iteration) = 0;
 
     Property<Renderer, WindowBase> window = { this, &Renderer::window_ };
+
+    // virtual void upload_texture(Texture* texture) = 0;
 protected:
     StagePtr current_stage();
 
