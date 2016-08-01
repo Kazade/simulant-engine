@@ -228,7 +228,9 @@ private:
     VertexData* vertex_data_ = nullptr;
     IndexData* index_data_ = nullptr;
 
+#ifdef KGLT_GL_VERSION_2X
     std::shared_ptr<VertexArrayObject> vao_;
+#endif
 
     bool destroy_on_completion_ = false;
 };

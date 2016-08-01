@@ -139,8 +139,10 @@ public:
 
     const MeshArrangement arrangement() const { return submesh().arrangement(); }
 
+#ifdef KGLT_GL_VERSION_2X
     void _update_vertex_array_object() { submesh()._update_vertex_array_object(); }
     void _bind_vertex_array_object() { submesh()._bind_vertex_array_object(); }
+#endif
 
     RenderPriority render_priority() const { return parent_.render_priority(); }
     Mat4 final_transformation() const { return parent_.absolute_transformation(); }
