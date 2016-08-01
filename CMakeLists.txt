@@ -48,6 +48,7 @@ SET(DEPS_SOURCES
     ${CMAKE_SOURCE_DIR}/deps/SOIL/image_DXT.c
     ${CMAKE_SOURCE_DIR}/deps/SOIL/image_helper.c
     ${CMAKE_SOURCE_DIR}/deps/SOIL/stb_image_aug.c
+    ${CMAKE_SOURCE_DIR}/deps/nuklear/nuklear.cpp
 )
 
 INCLUDE_DIRECTORIES(

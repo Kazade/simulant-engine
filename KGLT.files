@@ -925,3 +925,5 @@ samples/terrain_sample.cpp
 samples/data/terrain_splat.kglm
 kglt/renderers/gl2x/glad/glad.c
 kglt/renderers/gl2x/glad/glad/glad.h
+deps/nuklear/nuklear.cpp
+deps/nuklear/nuklear.h
