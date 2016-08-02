@@ -1,7 +1,7 @@
 #include <kazbase/exceptions.h>
 #include <kazbase/hash/md5.h>
 
-#include "utils/gl_error.h"
+#include "../utils/gl_error.h"
 #include "gpu_program.h"
 
 namespace kglt {

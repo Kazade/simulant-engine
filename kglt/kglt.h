@@ -9,7 +9,6 @@
 #include "viewport.h"
 #include "frustum.h"
 #include "material.h"
-#include "gpu_program.h"
 #include "camera.h"
 #include "actor.h"
 #include "sound.h"

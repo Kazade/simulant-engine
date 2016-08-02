@@ -13,7 +13,6 @@
 #include "../camera.h"
 #include "../render_sequence.h"
 #include "../utils/gl_error.h"
-#include "../gpu_program.h"
 
 #include "interface.h"
 #include "ui_private.h"

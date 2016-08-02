@@ -11,10 +11,7 @@
 #include "window_base.h"
 #include "partitioner.h"
 #include "partitioners/octree_partitioner.h"
-#include "renderers/gl2x/generic_renderer.h"
 #include "loader.h"
-#include "gpu_program.h"
-
 
 namespace kglt {
 

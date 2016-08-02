@@ -6,13 +6,14 @@
 #include <unordered_map>
 #include <kazsignal/kazsignal.h>
 
-#include "types.h"
-#include "generic/property.h"
-#include "generic/managed.h"
-#include "utils/gl_thread_check.h"
-#include "generic/identifiable.h"
-#include "vertex_data.h"
-#include "renderers/gl2x/glad/glad/glad.h"
+#include "../types.h"
+#include "../generic/property.h"
+#include "../generic/managed.h"
+#include "../utils/gl_thread_check.h"
+#include "../generic/identifiable.h"
+#include "../vertex_data.h"
+
+#include "gl2x/glad/glad/glad.h"
 
 #define BUFFER_OFFSET(bytes) ((GLubyte*) NULL + (bytes))
 

@@ -4,7 +4,10 @@
 #include "window_base.h"
 #include "material.h"
 #include "resource_manager.h"
-#include "gpu_program.h"
+
+#ifndef KGLT_GL_VERSION_1X
+#include "renderers/gpu_program.h"
+#endif
 
 namespace kglt {
 
@@ -111,7 +114,9 @@ MaterialPass::ptr Material::pass(uint32_t index) {
     return passes_.at(index);
 }
 
+#ifndef KGLT_GL_VERSION_1X
 GPUProgram::ptr MaterialPass::default_program;
+#endif
 
 MaterialPass::MaterialPass(Material *material):
     material_(material),
@@ -122,12 +127,14 @@ MaterialPass::MaterialPass(Material *material):
     depth_test_enabled_(true),
     point_size_(1) {
 
+#ifndef KGLT_GL_VERSION_1X
     //Create and build the default GPUProgram
     if(!default_program) {
         default_program = GPUProgram::create(DEFAULT_VERT_SHADER, DEFAULT_FRAG_SHADER);
     }
 
     program_ = GPUProgramInstance::create(default_program);
+#endif
 }
 
 void MaterialPass::set_texture_unit(uint32_t texture_unit_id, TextureID tex) {
@@ -184,6 +191,7 @@ void MaterialPass::set_albedo(float reflectiveness) {
     }
 }
 
+#ifndef KGLT_GL_VERSION_1X
 void MaterialPass::build_program_and_bind_attributes() {
     auto do_build_and_bind = [&]() {
         program->program->prepare_program();
@@ -206,6 +214,7 @@ void MaterialPass::build_program_and_bind_attributes() {
         do_build_and_bind();
     }
 }
+#endif
 
 void Material::set_texture_unit_on_all_passes(uint32_t texture_unit_id, TextureID tex) {
     for(auto& p: passes_) {
@@ -242,6 +251,7 @@ TextureUnit TextureUnit::new_clone(MaterialPass& owner) const {
 MaterialPass::ptr MaterialPass::new_clone(Material* owner) const {
     MaterialPass::ptr ret = MaterialPass::create(owner);
 
+#ifndef KGLT_GL_VERSION_1X
     ret->float_uniforms_ = float_uniforms_;
     ret->int_uniforms_ = int_uniforms_;
 
@@ -262,6 +272,8 @@ MaterialPass::ptr MaterialPass::new_clone(Material* owner) const {
     };
 
     ret->program_ = clone_gpu_program(program_);
+    ret->shader_sources_ = shader_sources_;
+#endif
 
     ret->diffuse_ = diffuse_;
     ret->ambient_ = ambient_;
@@ -283,7 +295,7 @@ MaterialPass::ptr MaterialPass::new_clone(Material* owner) const {
     ret->albedo_ = albedo_;
     ret->reflection_texture_unit_ = reflection_texture_unit_;
     ret->polygon_mode_ = polygon_mode_;
-    ret->shader_sources_ = shader_sources_;
+
     return ret;
 }
 

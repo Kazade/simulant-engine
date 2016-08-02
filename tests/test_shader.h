@@ -1,5 +1,4 @@
-#ifndef TEST_SHADER_H
-#define TEST_SHADER_H
+#pragma once
 
 #include "kglt/kglt.h"
 #include "kaztest/kaztest.h"
@@ -42,5 +41,3 @@ public:
     }
 
 };
-
-#endif // TEST_SHADER_H
