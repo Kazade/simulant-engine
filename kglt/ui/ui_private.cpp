@@ -10,8 +10,10 @@ namespace kglt {
 namespace ui {
 
 Element ElementImpl::append(const unicode& tag) {
-
-
+    TiXmlElement* element = new TiXmlElement(tag.lstrip("<").rstrip(">").encode());
+    element_->LinkEndChild(element);
+    interface_->element_impls_[element] = std::make_shared<ElementImpl>(interface_, element);
+    return Element(interface_->element_impls_[element]);
 }
 
 float ElementImpl::left() const {
@@ -35,9 +37,13 @@ void ElementImpl::set_event_callback(const unicode& event_type, std::function<bo
 }
 
 void ElementImpl::set_text(const unicode& text) {
-
+    TiXmlText* text_node = new TiXmlText(text.encode());
+    element_->LinkEndChild(text_node);
 }
 
+void ElementImpl::inner_rml(const unicode& rml) {
+
+}
 
 
 }

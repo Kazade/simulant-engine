@@ -89,7 +89,8 @@ void Texture::__do_upload(MipmapGenerate mipmap, TextureWrap wrap, TextureFilter
     );
     if(mipmap == MIPMAP_GENERATE_COMPLETE) {
 #ifdef KGLT_GL_VERSION_1X
-        throw std::runtime_error("generate_mipmaps is not currently supported on the GL 1X renderer");
+        // FIXME: OpenGL >= 1.4 - may need to look for GL_SGIS_generate_mipmap extension
+        //GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
 #else
         GLCheck(glGenerateMipmap, GL_TEXTURE_2D);
 #endif

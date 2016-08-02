@@ -125,10 +125,33 @@ uint16_t Interface::height() const {
 }
 
 ElementList Interface::append(const unicode &tag) {
+    TiXmlElement* element = new TiXmlElement(tag.lstrip("<").rstrip(">").encode());
+    document_.LinkEndChild(element);
+
+    element_impls_[element] = std::make_shared<ElementImpl>(this, element);
+
+    return ElementList({Element(element_impls_[element])});
 }
 
-ElementList Interface::_(const unicode &selector) {
+ElementList Interface::_(const unicode &selectors) {
+    std::vector<Element> elements;
 
+    for(auto selector: selectors.split(",")) {
+        selector = selector.strip();
+
+        for(auto& p: this->element_impls_) {
+            if(selector.starts_with("#")) {
+                if(p.second->id() == selector.lstrip("#").encode()) {
+                    elements.push_back(Element(p.second));
+                }
+            } else if(selector.starts_with(".")) {
+                if(p.second->attr("class").find(selector.lstrip(".").encode()) != std::string::npos) {
+                    elements.push_back(Element(p.second));
+                }
+            }
+        }
+    }
+    return ElementList(elements);
 }
 
 void Interface::set_styles(const std::string& stylesheet_content) {

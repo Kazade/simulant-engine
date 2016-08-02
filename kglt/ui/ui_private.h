@@ -4,6 +4,7 @@
 #include <mutex>
 #include <unordered_map>
 #include <kazbase/exceptions.h>
+#include <tinyxml.h>
 
 #include "element.h"
 
@@ -12,9 +13,13 @@ namespace kglt {
 
 namespace ui {
 
+class Interface;
+
 class ElementImpl {
 public:
-    ElementImpl(void* something) {
+    ElementImpl(Interface* interface, TiXmlElement* element):
+        interface_(interface),
+        element_(element) {
 
     }
 
@@ -24,24 +29,50 @@ public:
 
     void set_text(const unicode& text);
     const unicode text() const {
+        return element_->GetText();
     }
 
     void add_class(const std::string& cl) {
+        const std::string* ret = element_->Attribute(std::string("class"));
+        std::string current(*ret);
+        if(current.find(cl) == std::string::npos) {
+            current += " " + cl;
+            element_->SetAttribute("class", current);
+        }
     }
 
     void remove_class(const std::string& cl) {
+        assert(0 && "Not Implemented");
     }
 
     std::string css(const std::string& property) {
+        if(styles_.count(property)) {
+            return styles_[property];
+        } else {
+            // FIXME: Recurse up the dom
+        }
+
+        return "";
     }
 
     void css(const std::string& property, const std::string& value) {
+        styles_[property] = value;
     }
 
     void attr(const std::string& property, const std::string& value) {
+        element_->SetAttribute(property, value);
+    }
+
+    std::string attr(const std::string& property) const {
+        return *element_->Attribute(property);
     }
 
     void id(const std::string& id) {
+        element_->SetAttribute("id", id);
+    }
+
+    std::string id() const {
+        return *element_->Attribute(std::string("id"));
     }
 
     void scroll_to_bottom() {
@@ -62,8 +93,11 @@ public:
     float height() const;
 
 private:
-
     std::unordered_map<unicode, std::function<bool (Event)> > event_callbacks_;
+    Interface* interface_ = nullptr;
+    TiXmlElement* element_ = nullptr;
+
+    std::unordered_map<std::string, std::string> styles_;
 };
 
 

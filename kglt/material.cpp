@@ -11,6 +11,16 @@
 
 namespace kglt {
 
+#ifdef KGLT_GL_VERSION_1X
+const std::string Material::BuiltIns::TEXTURE_ONLY = "kglt/materials/opengl-1.x/texture_only.kglm";
+const std::string Material::BuiltIns::DIFFUSE_ONLY = "kglt/materials/opengl-1.x/diffuse_only.kglm";
+const std::string Material::BuiltIns::DIFFUSE_WITH_LIGHTING = "kglt/materials/opengl-1.x/diffuse_with_lighting.kglm";
+const std::string Material::BuiltIns::MULTITEXTURE2_MODULATE = "kglt/materials/opengl-1.x/multitexture2_modulate.kglm";
+const std::string Material::BuiltIns::MULTITEXTURE2_ADD = "kglt/materials/opengl-1.x/multitexture2_add.kglm";
+const std::string Material::BuiltIns::TEXTURE_WITH_LIGHTMAP = "kglt/materials/opengl-1.x/texture_with_lightmap.kglm";
+const std::string Material::BuiltIns::TEXTURE_WITH_LIGHTMAP_AND_LIGHTING = "kglt/materials/opengl-1.x/texture_with_lightmap_and_lighting.kglm";
+const std::string Material::BuiltIns::MULTITEXTURE2_MODULATE_WITH_LIGHTING = "kglt/materials/opengl-1.x/multitexture2_modulate_with_lighting.kglm";
+#else
 const std::string Material::BuiltIns::TEXTURE_ONLY = "kglt/materials/opengl-2.x/texture_only.kglm";
 const std::string Material::BuiltIns::DIFFUSE_ONLY = "kglt/materials/opengl-2.x/diffuse_only.kglm";
 const std::string Material::BuiltIns::DIFFUSE_WITH_LIGHTING = "kglt/materials/opengl-2.x/diffuse_with_lighting.kglm";
@@ -19,6 +29,8 @@ const std::string Material::BuiltIns::MULTITEXTURE2_ADD = "kglt/materials/opengl
 const std::string Material::BuiltIns::TEXTURE_WITH_LIGHTMAP = "kglt/materials/opengl-2.x/texture_with_lightmap.kglm";
 const std::string Material::BuiltIns::TEXTURE_WITH_LIGHTMAP_AND_LIGHTING = "kglt/materials/opengl-2.x/texture_with_lightmap_and_lighting.kglm";
 const std::string Material::BuiltIns::MULTITEXTURE2_MODULATE_WITH_LIGHTING = "kglt/materials/opengl-2.x/multitexture2_modulate_with_lighting.kglm";
+#endif
+
 
 static const std::string DEFAULT_VERT_SHADER = R"(
     attribute vec3 vertex_position;

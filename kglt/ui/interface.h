@@ -4,6 +4,8 @@
 #include <memory>
 #include <unordered_map>
 #include <kazbase/unicode.h>
+#include <tinyxml.h>
+
 #include "../generic/managed.h"
 #include"../types.h"
 #include "../loadable.h"
@@ -170,6 +172,8 @@ public:
     WindowBase* window() { return &window_; }
 
 private:    
+    friend class ElementImpl;
+
     void set_projection_matrix(const Mat4& mat) { projection_matrix_ = mat; }
     std::vector<unicode> find_fonts();
 
@@ -177,6 +181,9 @@ private:
 
     WindowBase& window_;
     Mat4 projection_matrix_;
+
+    TiXmlDocument document_;
+    std::unordered_map<TiXmlElement*, std::shared_ptr<ElementImpl>> element_impls_;
 };
 
 }

@@ -929,3 +929,10 @@ deps/nuklear/nuklear.cpp
 deps/nuklear/nuklear.h
 kglt/renderers/gl1x/glad/glad.c
 kglt/renderers/gl1x/glad/glad/glad.h
+kglt/materials/opengl-1.x/diffuse_only.kglm
+kglt/materials/opengl-1.x/diffuse_with_lighting.kglm
+kglt/materials/opengl-1.x/multitexture2_add.kglm
+kglt/materials/opengl-1.x/multitexture2_modulate.kglm
+kglt/materials/opengl-1.x/multitexture2_modulate_with_lighting.kglm
+kglt/materials/opengl-1.x/texture_only.kglm
+kglt/materials/opengl-1.x/texture_with_lightmap.kglm
