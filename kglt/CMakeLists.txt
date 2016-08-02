@@ -1,6 +1,27 @@
 FILE(GLOB_RECURSE KGLT_HEADERS *h)
 FILE(GLOB_RECURSE KGLT_FILES FOLLOW_SYMLINKS *.cpp *.c *.cc)
 
+# Remove all the renderer files so we can add them specifically
+FILE(GLOB_RECURSE TO_REMOVE "renderers/gl1x/*" "renderers/gl2x/*")
+LIST(REMOVE_ITEM KGLT_FILES ${TO_REMOVE})
+
+# Add GL1 files if we're targetting that
+IF(KGLT_GL_VERSION_1X)
+    MESSAGE("-- Using the OpenGL 1.1 renderer (Retro!)")
+
+    FILE(GLOB_RECURSE GL1_FILES renderers/gl1x/*.c*)
+    SET(KGLT_FILES ${KGLT_FILES} ${GL1_FILES})
+ENDIF()
+
+# Add GL2 files if we're using that instead
+IF(KGLT_GL_VERSION_2X)
+    MESSAGE("-- Using the OpenGL 2.1 renderer (Old Skool!)")
+
+    FILE(GLOB_RECURSE GL2_FILES renderers/gl2x/*.c*)
+    SET(KGLT_FILES ${KGLT_FILES} ${GL2_FILES})
+ENDIF()
+
+
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/..)
 
 ADD_LIBRARY(kglt SHARED ${KGLT_FILES} ${DEPS_SOURCES})

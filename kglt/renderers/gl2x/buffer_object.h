@@ -1,13 +1,11 @@
 #ifndef BUFFER_OBJECT_H
 #define BUFFER_OBJECT_H
 
-// FIXME: THIS SHOULD BE UNDER renderers/gl2x
-
 #include <cstdint>
 #include <vector>
 
-#include "generic/managed.h"
-#include "renderers/gl2x/glad/glad/glad.h"
+#include "../../generic/managed.h"
+#include "glad/glad/glad.h"
 
 namespace kglt {
 

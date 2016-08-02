@@ -1,9 +1,4 @@
 
-
-INCLUDE_DIRECTORIES(
-    ${CMAKE_CURRENT_SOURCE_DIR}/../dependencies
-)
-
 LINK_LIBRARIES(
     kglt
     ${KAZMATH_LIBRARIES}

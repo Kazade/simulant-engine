@@ -2,8 +2,8 @@
 
 #include "kazbase/logging.h"
 #include "buffer_object.h"
-#include "utils/gl_thread_check.h"
-#include "utils/gl_error.h"
+#include "../../utils/gl_thread_check.h"
+#include "../../utils/gl_error.h"
 
 namespace kglt {
 
