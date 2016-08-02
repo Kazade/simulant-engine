@@ -63,8 +63,6 @@ public:
     void inner_rml(const unicode& rml);
 private:
     std::shared_ptr<ElementImpl> impl_;
-
-    IdleTaskManager& idle();
 };
 
 }

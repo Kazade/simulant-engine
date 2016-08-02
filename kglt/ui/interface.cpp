@@ -4,15 +4,6 @@
     #include <SDL_rwops.h>
 #endif
 
-#include <Rocket/Core.h>
-#include <Rocket/Core/SystemInterface.h>
-#include <Rocket/Core/RenderInterface.h>
-#include <Rocket/Core/FontDatabase.h>
-#include <Rocket/Core/FileInterface.h>
-#include <Rocket/Core/Vertex.h>
-#include <Rocket/Core/Types.h>
-#include <Rocket/Core/String.h>
-
 #include <kazmath/mat4.h>
 #include <thread>
 
@@ -34,425 +25,10 @@
 namespace kglt {
 namespace ui {
 
-class RocketFileInterface : public Rocket::Core::FileInterface {
-public:
-    // Opens a file.
-    Rocket::Core::FileHandle Open(const Rocket::Core::String& path) {
-        SDL_RWops* ops = SDL_RWFromFile(path.CString(), "r");
-        return (Rocket::Core::FileHandle) ops; //Dirty cast
-    }
-
-    // Closes a previously opened file.
-    void Close(Rocket::Core::FileHandle file) {
-        SDL_RWops* ops = (SDL_RWops*) file; //Dirty cast
-        SDL_RWclose(ops);
-    }
-
-    // Reads data from a previously opened file.
-    size_t Read(void* buffer, size_t size, Rocket::Core::FileHandle file) {
-        SDL_RWops* ops = (SDL_RWops*) file; //Dirty cast
-        return SDL_RWread(ops, buffer, size, 1);
-    }
-
-    // Seeks to a point in a previously opened file.
-    bool Seek(Rocket::Core::FileHandle file, long offset, int origin) {
-        SDL_RWops* ops = (SDL_RWops*) file; //Dirty cast
-        SDL_RWseek(ops, offset, origin);
-        return true;
-    }
-
-    // Returns the current position of the file pointer.
-    size_t Tell(Rocket::Core::FileHandle file)  {
-        SDL_RWops* ops = (SDL_RWops*) file; //Dirty cast
-        return SDL_RWtell(ops);
-    }
-
-};
-
-class RocketSystemInterface : public Rocket::Core::SystemInterface {
-public:
-    RocketSystemInterface(WindowBase& window):
-        window_(window) {
-
-    }
-
-    virtual float GetElapsedTime() {
-        return window_.total_time();
-    }
-
-    //The default interface is weird and strips the leading slash from absolute paths
-    //this works around that. I have no idea why it was designed to do that.
-    virtual void JoinPath(Rocket::Core::String& translated_path, const Rocket::Core::String& document_path, const Rocket::Core::String& path) {
-        if (path.Substring(0, 1) == "/") {
-            translated_path = path;
-            return;
-        }
-
-        Rocket::Core::SystemInterface::JoinPath(translated_path, document_path, path);
-    }
-
-private:
-    WindowBase& window_;
-};
-
-struct CompiledGroup {
-    std::unique_ptr<VertexArrayObject> vao;
-    Rocket::Core::TextureHandle texture;
-
-    int num_indices;
-    int num_vertices;
-};
-
-class RocketRenderInterface : public Rocket::Core::RenderInterface {
-private:
-    std::unordered_map<Rocket::Core::CompiledGeometryHandle, std::shared_ptr<CompiledGroup>> compiled_geoms_;
-
-    VertexArrayObject tmp_vao_;
-
-public:
-    RocketRenderInterface(WindowBase& window):
-        tmp_vao_(MODIFY_REPEATEDLY_USED_FOR_RENDERING, MODIFY_REPEATEDLY_USED_FOR_RENDERING),
-        window_(window) {
-
-        std::string vert_shader = window_.resource_locator->read_file("kglt/materials/ui.vert")->str();
-        std::string frag_shader = window_.resource_locator->read_file("kglt/materials/ui.frag")->str();
-
-        L_INFO("UI shaders loaded, creating GPU program");
-
-        auto program = GPUProgram::create(vert_shader, frag_shader);
-        shader_ = GPUProgramInstance::create(program);
-        window.idle->run_sync(std::bind(&GPUProgram::build, program.get()));
-    }
-
-    ~RocketRenderInterface() {
-        shader_.reset();
-        textures_.clear();
-    }
-
-    bool LoadTexture(Rocket::Core::TextureHandle& texture_handle, Rocket::Core::Vector2i& texture_dimensions, const Rocket::Core::String& source) {
-        auto tex = manager().texture(manager().new_texture_from_file(source.CString()));
-
-        tex->flip_vertically();
-        tex->upload(MIPMAP_GENERATE_NONE, TEXTURE_WRAP_CLAMP_TO_EDGE, TEXTURE_FILTER_LINEAR, true);
-
-        texture_handle = tex->id().value();
-
-        textures_[texture_handle] = tex; //Hold for ref-counting
-        return true;
-    }
-
-    bool GenerateTexture(Rocket::Core::TextureHandle& texture_handle, const Rocket::Core::byte* source, const Rocket::Core::Vector2i& dimensions) {
-        auto tex = manager().texture(manager().new_texture());
-
-        uint32_t data_size = (dimensions.x * dimensions.y * 4);
-        tex->resize(dimensions.x, dimensions.y);
-        tex->set_bpp(32);
-
-        tex->data().assign(source, source + data_size);
-        tex->upload(
-            MIPMAP_GENERATE_NONE,
-            TEXTURE_WRAP_CLAMP_TO_EDGE,
-            TEXTURE_FILTER_LINEAR,
-            true
-        );
-
-        texture_handle = tex->id().value();
-
-        textures_[texture_handle] = tex; //Hold for ref-counting
-        return true;
-    }
-
-    void ReleaseTexture(Rocket::Core::TextureHandle texture) {
-        textures_.erase(texture); //Decrement the ref-count
-    }
-
-    Rocket::Core::CompiledGeometryHandle CompileGeometry(
-            Rocket::Core::Vertex* vertices,
-            int num_vertices,
-            int* indices,
-            int num_indices,
-            Rocket::Core::TextureHandle texture) {
-
-        auto new_group = std::make_shared<CompiledGroup>();
-        new_group->vao = std::unique_ptr<VertexArrayObject>(new VertexArrayObject());
-
-        new_group->texture = texture;
-
-        // We have to convert to shorts for GLES compatibility
-        std::vector<uint16_t> short_indices(num_indices);
-        std::copy(indices, indices + num_indices, &short_indices[0]);
-
-        new_group->vao->vertex_buffer_update(sizeof(Rocket::Core::Vertex) * num_vertices, vertices);
-        new_group->vao->index_buffer_update(sizeof(uint16_t) * num_indices, &short_indices[0]);
-
-        new_group->num_indices = num_indices;
-        new_group->num_vertices = num_vertices;
-
-        /*FIXME: WARNING: This is a cast from pointer to an unsigned long, might not be portable! */
-        Rocket::Core::CompiledGeometryHandle res = (unsigned long) new_group.get();
-
-        compiled_geoms_[res] = new_group;
-
-        return res;
-    }
-
-    void RenderGeometry(
-            Rocket::Core::Vertex* vertices,
-            int num_vertices, int* indices,
-            int num_indices, Rocket::Core::TextureHandle texture,
-            const Rocket::Core::Vector2f& translation) {
-
-        // We have to convert to shorts for GLES compatibility
-        std::vector<uint16_t> short_indices(num_indices);
-        std::copy(indices, indices + num_indices, &short_indices[0]);
-
-        //Update the buffers
-        tmp_vao_.vertex_buffer_update(num_vertices * sizeof(Rocket::Core::Vertex), vertices);
-        tmp_vao_.index_buffer_update(num_indices * sizeof(uint16_t), &short_indices[0]);
-        tmp_vao_.bind();
-
-        GLCheck(glDisable, GL_DEPTH_TEST);
-        GLCheck(glEnable, GL_BLEND);
-        GLCheck(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        prepare_shader(translation);
-
-        int pos_attrib = shader_->program->locate_attribute("position");
-        int colour_attrib = shader_->program->locate_attribute("colour");
-        int texcoord_attrib = shader_->program->locate_attribute("tex_coord");
-
-        GLCheck(glEnableVertexAttribArray, pos_attrib);
-        GLCheck(glVertexAttribPointer,
-            pos_attrib,
-            2, GL_FLOAT, GL_FALSE, sizeof(Rocket::Core::Vertex),
-            BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, position))
-        );
-
-        GLCheck(glEnableVertexAttribArray, colour_attrib);
-        GLCheck(glVertexAttribPointer,
-            colour_attrib,
-            4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Rocket::Core::Vertex),
-            BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, colour))
-        );
-
-        GLCheck(glEnableVertexAttribArray, texcoord_attrib);
-        GLCheck(glVertexAttribPointer,
-            texcoord_attrib,
-            2, GL_FLOAT, GL_FALSE, sizeof(Rocket::Core::Vertex),
-            BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, tex_coord))
-        );
-
-        GLCheck(glActiveTexture, GL_TEXTURE0);
-        if(texture) {
-            GLuint tex_id = textures_[texture]->gl_tex();
-            GLCheck(glBindTexture, GL_TEXTURE_2D, tex_id);
-        } else {
-            GLCheck(glBindTexture, GL_TEXTURE_2D, window_.texture(window_.default_texture_id())->gl_tex());
-        }
-
-        GLCheck(glDrawElements, GL_TRIANGLES, num_indices, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
-    }
-
-    void prepare_shader(const Rocket::Core::Vector2f& translation) {
-        Mat4 transform;
-        kmMat4Translation(&transform, translation.x, translation.y, 0);
-        transform = this->_projection_matrix * transform;
-
-        assert(shader_);
-
-        shader_->program->build(); //Build if necessary
-        shader_->program->activate();
-        shader_->program->set_uniform_mat4x4("modelview_projection", transform);
-        shader_->program->set_uniform_int("texture_unit", 0);
-    }
-
-    void RenderCompiledGeometry(Rocket::Core::CompiledGeometryHandle geometry, const Rocket::Core::Vector2f& translation) {
-        auto it = compiled_geoms_.find(geometry);
-
-        if(it == compiled_geoms_.end()) {
-            throw ValueError("Tried to render invalid UI geometry");
-        }
-
-        auto geom = (*it).second;
-
-        GLCheck(glDisable, GL_DEPTH_TEST);
-        GLCheck(glEnable, GL_BLEND);
-        GLCheck(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        geom->vao->bind();
-
-        int pos_attrib = shader_->program->locate_attribute("position");
-        int colour_attrib = shader_->program->locate_attribute("colour");
-        int texcoord_attrib = shader_->program->locate_attribute("tex_coord");
-
-        GLCheck(glEnableVertexAttribArray, pos_attrib);
-        GLCheck(glVertexAttribPointer,
-            pos_attrib,
-            2, GL_FLOAT, GL_FALSE, sizeof(Rocket::Core::Vertex),
-            BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, position))
-        );
-
-        GLCheck(glEnableVertexAttribArray, colour_attrib);
-        GLCheck(glVertexAttribPointer,
-            colour_attrib,
-            4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Rocket::Core::Vertex),
-            BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, colour))
-        );
-
-        GLCheck(glEnableVertexAttribArray, texcoord_attrib);
-        GLCheck(glVertexAttribPointer,
-            texcoord_attrib,
-            2, GL_FLOAT, GL_FALSE, sizeof(Rocket::Core::Vertex),
-            BUFFER_OFFSET((int)offsetof(Rocket::Core::Vertex, tex_coord))
-        );
-
-        GLCheck(glActiveTexture, GL_TEXTURE0);
-        if(geom->texture) {
-            auto tex = textures_.find(geom->texture);
-            if(tex == textures_.end()) {
-                throw ValueError("Tried to bind invalid UI texture");
-            }
-
-            GLuint tex_id = (*tex).second->gl_tex();
-            GLCheck(glBindTexture, GL_TEXTURE_2D, tex_id);
-        } else {
-            GLCheck(glBindTexture, GL_TEXTURE_2D, window_.texture(window_.default_texture_id())->gl_tex());
-        }
-
-        prepare_shader(translation);
-
-        GLCheck(glDrawElements, GL_TRIANGLES, geom->num_indices, GL_UNSIGNED_SHORT, BUFFER_OFFSET(0));
-    }
-
-    void ReleaseCompiledGeometry(Rocket::Core::CompiledGeometryHandle geometry) {
-        auto it = compiled_geoms_.find(geometry);
-        if(it == compiled_geoms_.end()) {
-            return;
-        }
-
-        compiled_geoms_.erase(it);
-    }
-
-    void EnableScissorRegion(bool enable) {
-        if(enable) {
-            GLCheck(glEnable, GL_SCISSOR_TEST);
-        } else {
-            GLCheck(glDisable, GL_SCISSOR_TEST);
-        }
-    }
-
-    void SetScissorRegion(int x, int y, int width, int height) {
-        GLCheck(glScissor, x, window_.height() - (y + height), width, height);
-    }
-
-
-    ResourceManager& manager() {
-        return window_;
-    }
-
-
-    Mat4 _projection_matrix;
-private:
-    WindowBase& window_;
-
-    std::shared_ptr<GPUProgramInstance> shader_;
-
-    std::unordered_map<Rocket::Core::TextureHandle, TexturePtr> textures_;
-};
-
-static RocketSystemInterface* rocket_system_interface_ = nullptr;
-static RocketRenderInterface* rocket_render_interface_ = nullptr;
-static RocketFileInterface* rocket_file_interface_ = nullptr;
-static RocketImpl* active_impl_ = nullptr;
-
 Interface::Interface(WindowBase &window):
-    window_(window),
-    impl_(new RocketImpl(this)) {
+    window_(window) {
 
 }
-
-static int32_t interface_count = 0;
-
-const std::string DEFAULT_STYLES = R"(
-     body, div,
-     h1, h2, h3, h4,
-     h5, h6, p,
-     hr, pre, datagrid,
-     tabset tabs
-     {
-         display: block;
-         font-family: Ubuntu Mono;
-     }
-
-     div {
-        width: 100%;
-     }
-
-     body {
-         width: 100%;
-         height: 100%;
-         margin: 0px;
-         padding: 0px;
-         border: 0px;
-     }
-
-     h1
-     {
-         font-size: 2em;
-         margin: .67em 0;
-     }
-
-     h2
-     {
-         font-size: 1.5em;
-         margin: .83em 0;
-     }
-
-     h3
-     {
-         font-size: 1.17em;
-         margin: 1em 0;
-     }
-
-     h4, p
-     {
-         margin: 1.33em 0;
-     }
-
-     h5
-     {
-         font-size: .83em;
-         line-height: 1.17em;
-         margin: 1.67em 0;
-     }
-
-     h6
-     {
-         font-size: .67em;
-         margin: 2.33em 0;
-     }
-
-     h1, h2, h3, h4,
-     h5, h6, strong
-     {
-         font-weight: bold;
-     }
-
-     em
-     {
-         font-style: italic;
-     }
-
-     pre
-     {
-         white-space: pre;
-     }
-
-     hr
-     {
-         border-width: 1px;
-     }
-)";
 
 std::vector<unicode> Interface::find_fonts() {
     /*
@@ -498,69 +74,13 @@ std::vector<unicode> Interface::find_fonts() {
     return results;
 }
 
-RocketImpl* get_active_impl() {
-    return active_impl_;
-}
-
-void set_active_impl(RocketImpl* impl) {
-    active_impl_ = impl;
-}
-
 bool Interface::init() {
-    interface_count++;
-
-    if(!rocket_system_interface_) {
-        rocket_system_interface_ = new RocketSystemInterface(window_);
-        Rocket::Core::SetSystemInterface(rocket_system_interface_);
-
-        rocket_render_interface_ = new RocketRenderInterface(window_);
-        Rocket::Core::SetRenderInterface(rocket_render_interface_);
-
-        rocket_file_interface_ = new RocketFileInterface();
-        Rocket::Core::SetFileInterface(rocket_file_interface_);
-
-        Rocket::Core::Initialise();
-
-        auto instancer = new Rocket::Core::ElementInstancerGeneric<CustomDocument>();
-        Rocket::Core::Factory::RegisterElementInstancer("body", instancer);
-
-        bool font_found = false;
-        for(unicode font: find_fonts()) {
-            try {
-                if(!Rocket::Core::FontDatabase::LoadFontFace(locate_font(font).encode().c_str())) {
-                    throw IOError("Couldn't load the font");
-                }
-                font_found = true;
-            } catch(IOError& e) {
-                continue;
-            }
-        }
-
-        if(!font_found) {
-            throw IOError("Unable to find a default font");
-        }
-    }
-
-    set_active_impl(impl_.get());
-    //Change name for each interface using this (dirty, but works)
-    impl_->context_ = Rocket::Core::CreateContext(
-        _u("context_{0}").format(int64_t(this)).encode().c_str(),
-        Rocket::Core::Vector2i(window_.width(), window_.height())
-    );
-    impl_->document_ = dynamic_cast<CustomDocument*>(impl_->context_->CreateDocument());
-    set_active_impl(nullptr);
-
-    assert(impl_->document_);
-
-    set_styles(DEFAULT_STYLES);
 
     return true;
 }
 
 void Interface::load_font(const unicode &ttf_file) {
-    if(!Rocket::Core::FontDatabase::LoadFontFace(locate_font(ttf_file).encode().c_str())) {
-        throw IOError("Couldn't load the font");
-    }
+
 }
 
 unicode Interface::locate_font(const unicode& filename) {
@@ -590,101 +110,32 @@ unicode Interface::locate_font(const unicode& filename) {
 }
 
 void Interface::update(float dt) {
-    if(!impl_) {
-        return;
-    }
 
-    std::lock_guard<std::recursive_mutex> lck(impl_->mutex_);
-    impl_->context_->Update();
 }
 
 void Interface::render(const Mat4 &projection_matrix) {
-    set_projection_matrix(projection_matrix); //Set the projection matrix
-    RocketRenderInterface* iface = dynamic_cast<RocketRenderInterface*>(impl_->context_->GetRenderInterface());
-
-    iface->_projection_matrix = projection_matrix;
-    {
-        std::lock_guard<std::recursive_mutex> lck(impl_->mutex_);
-        impl_->context_->Render();
-    }
-
-    set_projection_matrix(Mat4()); //Reset to identity
 }
 
 void Interface::set_dimensions(uint16_t width, uint16_t height) {
-    std::lock_guard<std::recursive_mutex> lck(impl_->mutex_);
-    impl_->context_->SetDimensions(Rocket::Core::Vector2i(width, height));
 }
 
 uint16_t Interface::width() const {
-    std::lock_guard<std::recursive_mutex> lck(impl_->mutex_);
-    return impl_->context_->GetDimensions().x;
 }
 
 uint16_t Interface::height() const {
-    std::lock_guard<std::recursive_mutex> lck(impl_->mutex_);
-    return impl_->context_->GetDimensions().x;
 }
 
 ElementList Interface::append(const unicode &tag) {
-    std::lock_guard<std::recursive_mutex> lck(impl_->mutex_);
-
-    unicode tag_name = tag.strip();
-
-    Rocket::Core::Element* elem = impl_->document_->CreateElement(tag_name.encode().c_str());
-    impl_->document_->AppendChild(elem);
-
-    Element result = Element(impl_->document_->get_impl_for_element(elem));
-
-    impl_->document_->Show();
-
-    return ElementList({result});
 }
 
 ElementList Interface::_(const unicode &selector) {
-    std::lock_guard<std::recursive_mutex> lck(impl_->mutex_);
 
-    std::vector<Element> result;
-    Rocket::Core::ElementList elements;
-    if(selector.starts_with(".")) {
-        impl_->document_->GetElementsByClassName(elements, selector.lstrip(".").encode().c_str());
-    } else if(selector.starts_with("#")) {
-        Rocket::Core::Element* elem = impl_->document_->GetElementById(selector.lstrip("#").encode().c_str());
-        if(elem) {
-            result.push_back(Element(impl_->document_->get_impl_for_element(elem)));
-        }
-    } else {
-        impl_->document_->GetElementsByTagName(elements, _u("<{0}>").format(selector).encode().c_str());
-    }
-
-    for(Rocket::Core::Element* elem: elements) {
-        result.push_back(Element(impl_->document_->get_impl_for_element(elem)));
-    }
-
-    return ElementList(result);
 }
 
 void Interface::set_styles(const std::string& stylesheet_content) {
-    std::lock_guard<std::recursive_mutex> lck(impl_->mutex_);
-    impl_->document_->SetStyleSheet(Rocket::Core::Factory::InstanceStyleSheetString(stylesheet_content.c_str()));
 }
 
 Interface::~Interface() {
-    try {
-        if(impl_ && impl_->context_) {
-            std::lock_guard<std::recursive_mutex> lck(impl_->mutex_);
-            impl_->context_->RemoveReference();
-        }
-    } catch(...) {
-        L_ERROR("Error removing reference to the context");
-    }
-
-    //Shutdown if this is the last interface
-    if(interface_count-- == 0) {
-        rocket_system_interface_->RemoveReference();
-        rocket_render_interface_->RemoveReference();
-        Rocket::Core::Shutdown();
-    }
 }
 
 }

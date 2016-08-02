@@ -1,7 +1,3 @@
-#include <Rocket/Core/Element.h>
-#include <Rocket/Core/ElementText.h>
-#include <Rocket/Core/ElementDocument.h>
-
 #include "interface.h"
 #include "ui_private.h"
 #include "../window_base.h"
@@ -70,7 +66,7 @@ void Element::scroll_to_bottom() {
 }
 
 void Element::show(const std::string& transition) {
-    if(transition == "fade") {
+    /*if(transition == "fade") {
         css("opacity", "0"); // Make transparent
 
         // Wrap a new refrence to the impl
@@ -90,13 +86,7 @@ void Element::show(const std::string& transition) {
         });
     }
     // Make visible
-    css("visibility", "visible");
-}
-
-IdleTaskManager& Element::idle() {
-    // Sigh...
-    auto* window = this->impl_->_rocket_impl()->interface()->window();
-    return window->idle;
+    css("visibility", "visible"); */
 }
 
 bool Element::is_visible() const {

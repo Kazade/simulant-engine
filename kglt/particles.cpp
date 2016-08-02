@@ -13,8 +13,11 @@ ParticleSystem::ParticleSystem(ParticleSystemID id, Stage* stage):
     ParentSetterMixin<MoveableObject>(stage),
     Source(stage),
     vertex_data_(new VertexData(VertexSpecification::POSITION_AND_DIFFUSE)),
-    index_data_(new IndexData()),
-    vao_(new VertexArrayObject(MODIFY_REPEATEDLY_USED_FOR_RENDERING, MODIFY_REPEATEDLY_USED_FOR_RENDERING)) {
+    index_data_(new IndexData()) {
+
+#ifdef KGLT_GL_VERSION_2X
+    vao_.reset(new VertexArrayObject(MODIFY_REPEATEDLY_USED_FOR_RENDERING, MODIFY_REPEATEDLY_USED_FOR_RENDERING));
+#endif
 
     set_material_id(stage->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY));
 }
@@ -97,6 +100,7 @@ const AABB ParticleSystem::aabb() const {
     return result;
 }
 
+#ifdef KGLT_GL_VERSION_2X
 void ParticleSystem::_update_vertex_array_object() {
     if(!index_data_->count()) {
         return;
@@ -109,6 +113,8 @@ void ParticleSystem::_update_vertex_array_object() {
 void ParticleSystem::_bind_vertex_array_object() {
     vao_->bind();
 }
+
+#endif
 
 const AABB ParticleSystem::transformed_aabb() const {
     AABB box = aabb(); //Get the untransformed one

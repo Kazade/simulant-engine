@@ -3,7 +3,7 @@
 
 #include "gl1x_renderer.h"
 #include "./glad/glad/glad.h"
-#include "../utils/gl_error.h"
+#include "../../utils/gl_error.h"
 
 namespace kglt {
 
@@ -64,6 +64,7 @@ void send_geometry(Renderable* renderable) {
         return;
     }
 
+    /*
     switch(renderable->arrangement()) {
         case MESH_ARRANGEMENT_POINTS:
             GLCheck(glDrawElements, GL_POINTS, index_count, GL_UNSIGNED_INT, BUFFER_OFFSET(0));
@@ -85,7 +86,7 @@ void send_geometry(Renderable* renderable) {
         break;
         default:
             throw NotImplementedError(__FILE__, __LINE__);
-    }
+    }*/
 }
 
 void GL1XRenderer::render(CameraPtr camera, StagePtr stage, bool render_group_changed,

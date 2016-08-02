@@ -11,7 +11,6 @@
 
 namespace kglt {
 
-struct RocketImpl;
 class WindowBase;
 
 namespace ui {
@@ -143,9 +142,6 @@ private:
 };
 
 
-void set_active_impl(RocketImpl* impl);
-RocketImpl* get_active_impl();
-
 class Interface :
     public Managed<Interface>,
     public Loadable {
@@ -158,8 +154,6 @@ public:
     uint16_t height() const;
 
     void set_dimensions(uint16_t width, uint16_t height);
-
-    RocketImpl* impl() { return impl_.get(); }
 
     bool init();
     void update(float dt);
@@ -174,6 +168,7 @@ public:
     void load_font(const unicode& ttf_file);
 
     WindowBase* window() { return &window_; }
+
 private:    
     void set_projection_matrix(const Mat4& mat) { projection_matrix_ = mat; }
     std::vector<unicode> find_fonts();
@@ -182,7 +177,6 @@ private:
 
     WindowBase& window_;
     Mat4 projection_matrix_;
-    std::unique_ptr<RocketImpl> impl_;   
 };
 
 }

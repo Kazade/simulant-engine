@@ -1,3 +1,5 @@
+#ifdef KGLT_GL_VERSION_2X
+
 #include "generic_renderer.h"
 
 #include "../../actor.h"
@@ -463,3 +465,5 @@ void GenericRenderer::render(Renderable& buffer, CameraID camera, GPUProgramInst
 }*/
 
 }
+
+#endif //KGLT_GL_VERSION_2X

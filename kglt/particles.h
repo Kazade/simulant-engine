@@ -177,8 +177,10 @@ public:
 
     const MeshArrangement arrangement() const { return MESH_ARRANGEMENT_POINTS; }
 
+#ifdef KGLT_GL_VERSION_2X
     virtual void _update_vertex_array_object();
     virtual void _bind_vertex_array_object();
+#endif
 
     void set_render_priority(RenderPriority priority) { render_priority_ = priority; }
     virtual RenderPriority render_priority() const { return render_priority_; }

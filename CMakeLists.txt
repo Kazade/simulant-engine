@@ -13,7 +13,6 @@ ENDIF()
 # Set module options
 OPTION(KGLT_BUILD_TESTS "Build KGLT tests" ON)
 OPTION(KGLT_BUILD_SAMPLES "Build KGLT samples" ON)
-
 OPTION(KGLT_GL_VERSION_1X "Enable GL 1.x support" OFF)
 
 IF(KGLT_GL_VERSION_1X)

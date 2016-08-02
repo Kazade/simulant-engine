@@ -101,8 +101,14 @@ void Texture::__do_upload(MipmapGenerate mipmap, TextureWrap wrap, TextureFilter
             GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         } break;
         case TEXTURE_WRAP_CLAMP_TO_EDGE: {
+#ifdef KGLT_GL_VERSION_2X
             GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+#else
+            //FIXME: check for extension and use GL_CLAMP_TO_EDGE
+            GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+            GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+#endif
         } break;
     default:
         assert(0 && "Not Implemented");
