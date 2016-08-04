@@ -27,6 +27,8 @@ public:
 
     }
 
+    std::string name() const;
+
     void set_text(const unicode& text);
     const unicode text() const {
         return element_->GetText();

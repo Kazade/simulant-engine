@@ -16,6 +16,10 @@ Element ElementImpl::append(const unicode& tag) {
     return Element(interface_->element_impls_[element]);
 }
 
+std::string ElementImpl::name() const {
+    return element_->ValueStr();
+}
+
 float ElementImpl::left() const {
 
 }

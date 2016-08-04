@@ -202,6 +202,20 @@ CHANGELOG:
 #ifndef NK_NUKLEAR_H_
 #define NK_NUKLEAR_H_
 
+#include <cstring> // For memset
+#include <cmath>
+
+#define NK_INCLUDE_FIXED_TYPES
+#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
+#define NK_INCLUDE_DEFAULT_ALLOCATOR
+#define NK_INCLUDE_STANDARD_IO
+#define NK_INCLUDE_FONT_BAKING
+#define NK_MEMSET memset
+#define NK_MEMCPY memcpy
+#define NK_SIN sinf
+#define NK_COS cosf
+#define NK_SQRT sqrtf
+
 #ifdef __cplusplus
 extern "C" {
 #endif

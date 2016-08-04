@@ -150,7 +150,7 @@ class ResourceManagerImpl:
     public Managed<ResourceManagerImpl> {
 
 public:
-    ResourceManagerImpl(WindowBase* window);
+    ResourceManagerImpl(WindowBase* window, ResourceManagerImpl* parent=nullptr);
 
     bool init() override;
 
@@ -239,6 +239,8 @@ public:
     TextureID default_texture_id() const override;
 
 private:
+    ResourceManagerImpl* parent_ = nullptr;
+
     MaterialID default_material_id_;
     TextureID default_texture_id_;
 };

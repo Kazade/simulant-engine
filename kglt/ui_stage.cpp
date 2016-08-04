@@ -9,10 +9,12 @@ UIStage::UIStage(UIStageID id, WindowBase *parent):
     generic::Identifiable<UIStageID>(id),
     Resource(parent),
     window_(parent),
-    interface_(ui::Interface::create(*parent)){
+    interface_(ui::Interface::create(*parent, this)){
+
+    resource_manager_ = std::make_shared<ResourceManagerImpl>(window_, window_);
 
     update_conn_ = window_->signal_step().connect(
-        std::bind(&UIStage::__update, this, std::placeholders::_1)
+        std::bind(&UIStage::update, this, std::placeholders::_1)
     );
 }
 
@@ -46,15 +48,11 @@ void UIStage::load_rml_from_string(const unicode& data) {
 
 }
 
-void UIStage::__resize(uint32_t width, uint32_t height) {
-    interface_->set_dimensions(width, height);
+void UIStage::render(CameraPtr camera, Viewport viewport) {
+    interface_->render(camera, viewport);
 }
 
-void UIStage::__render(const Mat4 &projection_matrix) {
-    interface_->render(projection_matrix);
-}
-
-void UIStage::__update(double dt) {
+void UIStage::update(double dt) {
     interface_->update(dt);
 }
 

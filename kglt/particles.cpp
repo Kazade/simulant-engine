@@ -3,7 +3,7 @@
 #include "particles.h"
 
 #ifdef KGLT_GL_VERSION_2X
-#include "buffer_object.h"
+#include "renderers/gl2x/buffer_object.h"
 #endif
 
 namespace kglt {

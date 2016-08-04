@@ -9,7 +9,7 @@
 #include "../utils/gl_thread_check.h"
 
 #ifndef KGLT_GL_VERSION_1X
-#include "../renderers/gpu_program.h"
+#include "../renderers/gl2x/gpu_program.h"
 #endif
 
 namespace kglt {

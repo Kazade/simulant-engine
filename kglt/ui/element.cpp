@@ -13,6 +13,10 @@ Element::Element(std::shared_ptr<ElementImpl> impl):
 
 }
 
+std::string Element::name() const {
+    return impl_->name();
+}
+
 Element Element::append(const unicode &tag) {
     return impl_->append(tag);
 }
@@ -51,6 +55,10 @@ std::string Element::css(const std::string& property) const {
 
 void Element::css(const std::string& property, const std::string& value) {
     impl_->css(property, value);
+}
+
+std::string Element::attr(const std::string& property) {
+    return impl_->attr(property);
 }
 
 void Element::attr(const std::string& property, const std::string& value) {

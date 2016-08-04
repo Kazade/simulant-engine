@@ -89,8 +89,12 @@ void send_geometry(Renderable* renderable) {
     }*/
 }
 
-void GL1XRenderer::render(CameraPtr camera, StagePtr stage, bool render_group_changed,
-    const batcher::RenderGroup*, Renderable* renderable, MaterialPass* material_pass, Light* light, batcher::Iteration iteration) {
+void GL1XRenderer::render(
+    CameraPtr camera, bool render_group_changed,
+    const batcher::RenderGroup*, Renderable* renderable,
+    MaterialPass* material_pass, Light* light, const Colour &global_ambient, batcher::Iteration iteration) {
+
+    ResourceManager& resource_manager = material_pass->material->resource_manager();
 
     set_transformation_matrices(camera, renderable);
     set_material_properties(material_pass);

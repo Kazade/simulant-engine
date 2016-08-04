@@ -14,9 +14,10 @@
 
 namespace kglt {
 
-ResourceManagerImpl::ResourceManagerImpl(WindowBase* window):
+ResourceManagerImpl::ResourceManagerImpl(WindowBase* window, ResourceManagerImpl *parent):
     WindowHolder(window),
-    ResourceManager(window) {
+    ResourceManager(window),
+    parent_(parent) {
 
 }
 
@@ -66,10 +67,18 @@ void ResourceManagerImpl::update(double dt) {
 }
 
 ProtectedPtr<Mesh> ResourceManagerImpl::mesh(MeshID m) {
+    if(parent_ && !has_mesh(m)) {
+        return parent_->mesh(m);
+    }
+
     return MeshManager::manager_get(m);
 }
 
 const ProtectedPtr<Mesh> ResourceManagerImpl::mesh(MeshID m) const {
+    if(parent_ && !has_mesh(m)) {
+        return parent_->mesh(m);
+    }
+
     return MeshManager::manager_get(m);
 }
 
@@ -340,10 +349,18 @@ MaterialID ResourceManagerImpl::get_material_with_alias(const unicode& alias) {
 }
 
 MaterialPtr ResourceManagerImpl::material(MaterialID mid) {
+    if(parent_ && !has_material(mid)) {
+        return parent_->material(mid);
+    }
+
     return MaterialManager::manager_get(mid).lock();
 }
 
 const MaterialPtr ResourceManagerImpl::material(MaterialID mid) const {
+    if(parent_ && !has_material(mid)) {
+        return parent_->material(mid);
+    }
+
     return MaterialManager::manager_get(mid).lock();
 }
 
@@ -414,10 +431,18 @@ TextureID ResourceManagerImpl::get_texture_with_alias(const unicode& alias) {
 }
 
 TexturePtr ResourceManagerImpl::texture(TextureID t) {
+    if(parent_ && !has_texture(t)) {
+        return parent_->texture(t);
+    }
+
     return TexturePtr(TextureManager::manager_get(t).lock());
 }
 
 const TexturePtr ResourceManagerImpl::texture(TextureID t) const {
+    if(parent_ && !has_texture(t)) {
+        return parent_->texture(t);
+    }
+
     return TexturePtr(TextureManager::manager_get(t).lock());
 }
 
@@ -471,10 +496,18 @@ SoundID ResourceManagerImpl::get_sound_with_alias(const unicode& alias) {
 }
 
 ProtectedPtr<Sound> ResourceManagerImpl::sound(SoundID s) {
+    if(parent_ && !has_sound(s)) {
+        return parent_->sound(s);
+    }
+
     return SoundManager::manager_get(s);
 }
 
 const ProtectedPtr<Sound> ResourceManagerImpl::sound(SoundID s) const {
+    if(parent_ && !has_sound(s)) {
+        return parent_->sound(s);
+    }
+
     return SoundManager::manager_get(s);
 }
 

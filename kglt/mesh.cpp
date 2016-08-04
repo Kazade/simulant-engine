@@ -8,7 +8,7 @@
 #include "material.h"
 
 #ifdef KGLT_GL_VERSION_2X
-#include "buffer_object.h"
+#include "renderers/gl2x/buffer_object.h"
 #endif
 
 namespace kglt {
@@ -518,7 +518,7 @@ SubMesh::SubMesh(SubMeshID id, Mesh* parent, const std::string& name,
         vertex_data_ = new VertexData(vertex_specification);
     }
 
-#ifdef KGL_GL_VERSION_2X
+#ifdef KGLT_GL_VERSION_2X
     /*
      * If we use shared vertices then we must reuse the buffer object from the mesh,
      * otherwise the VAO creates its own VBO

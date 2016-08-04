@@ -29,6 +29,8 @@ class Element {
 public:
     Element(std::shared_ptr<ElementImpl> impl);
 
+    std::string name() const;
+
     void text(const unicode& content);
     const unicode text() const;
 
@@ -38,6 +40,7 @@ public:
     std::string css(const std::string& property) const;
     void css(const std::string& property, const std::string& value);
     void attr(const std::string& property, const std::string& value);
+    std::string attr(const std::string& property);
 
     void show(const std::string& transition="");
     void hide() {

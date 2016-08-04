@@ -15,12 +15,12 @@ public:
 
     batcher::RenderGroup new_render_group(Renderable *renderable, MaterialPass *material_pass);
 
-    void render(CameraPtr camera,
-        StagePtr stage, bool render_group_changed,
+    void render(CameraPtr camera, bool render_group_changed,
         const batcher::RenderGroup *,
         Renderable*,
         MaterialPass*,
         Light*,
+        const kglt::Colour& global_ambient,
         batcher::Iteration
     ) override;
 

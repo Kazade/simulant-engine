@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include "../../generic/property.h"
 #include "../../types.h"
 #include "../../interfaces.h"
 #include "render_queue.h"

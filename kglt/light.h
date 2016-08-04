@@ -68,6 +68,9 @@ public:
     kglt::Colour diffuse() const { return diffuse_; }
     kglt::Colour specular() const { return specular_; }
 
+    /** Returns the owner stage's global ambient value. */
+    kglt::Colour global_ambient() const { return stage->ambient_light(); }
+
     void set_attenuation(float range, float constant, float linear, float quadratic);
     void set_attenuation_from_range(float range);
 
