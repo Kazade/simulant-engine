@@ -25,6 +25,8 @@ Interface::Interface(WindowBase &window, UIStage *owner):
     window_(window),
     stage_(owner) {
 
+    root_element_ = new TiXmlElement("interface");
+    document_.LinkEndChild(root_element_);
 }
 
 std::vector<unicode> Interface::find_fonts() {
@@ -72,7 +74,51 @@ std::vector<unicode> Interface::find_fonts() {
 }
 
 bool Interface::init() {
-    nk_init_default(&nk_ctx_, nullptr);
+    auto null_material_id = stage_->resources->new_material_from_texture(
+        stage_->resources->default_texture_id(),
+        GARBAGE_COLLECT_NEVER
+    );
+
+    auto null_material = stage_->resources->material(null_material_id);
+    null_material->first_pass()->set_cull_mode(CULL_MODE_NONE);
+    null_material->first_pass()->set_blending(BLEND_ALPHA);
+    null_material->first_pass()->set_depth_test_enabled(false);
+
+    // Load a material which renders a single white pixel texture
+    nk_device_.null_tex = null_material_id;
+
+    // Set the null texture to use this material
+    nk_device_.null.texture = nk_handle_id((int) nk_device_.null_tex.value());
+    nk_device_.null.uv.x = nk_device_.null.uv.y = 0;
+
+    nk_font_atlas_init_default(&nk_font_);
+    nk_font_atlas_begin(&nk_font_);
+    struct nk_font* font = nk_font_atlas_add_default(&nk_font_, 13, 0);
+
+    int w, h;
+    const nk_byte* image = (nk_byte*) nk_font_atlas_bake(&nk_font_, &w, &h, NK_FONT_ATLAS_RGBA32);
+
+    TextureID font_tex = stage_->resources->new_texture();
+    TexturePtr tex = stage_->resources->texture(font_tex);
+    tex->resize(w, h);
+    tex->data().assign(image, image + (w * h * 4));
+    tex->upload(
+        MIPMAP_GENERATE_NONE,
+        TEXTURE_WRAP_CLAMP_TO_EDGE,
+        TEXTURE_FILTER_LINEAR,
+        true
+    );
+
+    auto font_material_id = stage_->resources->new_material_from_texture(font_tex, GARBAGE_COLLECT_NEVER);
+    auto font_material = stage_->resources->material(font_material_id);
+    font_material->first_pass()->set_cull_mode(CULL_MODE_NONE);
+    font_material->first_pass()->set_blending(BLEND_ALPHA);
+    font_material->first_pass()->set_depth_test_enabled(false);
+
+    nk_device_.font_tex = font_material_id;
+    nk_font_atlas_end(&nk_font_, nk_handle_id((int)nk_device_.font_tex.value()), nullptr);
+    nk_init_default(&nk_ctx_, &font->handle);
+    nk_buffer_init_default(&nk_device_.cmds);
     return true;
 }
 
@@ -131,8 +177,8 @@ void Interface::render(CameraPtr camera, Viewport viewport) {
         }
 
         Element element(element_impls_.at((TiXmlElement*)element_node));
-
-        if(element.name() == "window") {
+        auto element_name = element.name();
+        if(element_name == "window") {
             if(before) {
                 std::string title = element.attr("title");
 
@@ -146,15 +192,29 @@ void Interface::render(CameraPtr camera, Viewport viewport) {
             } else {
                 nk_end(&nk_ctx_);
             }
-        } else if(element.name() == "row") {
+        } else if(element_name == "row") {
+            if(before) {
+                int child_count = 0;
+                for(auto child = element_node->FirstChild(); child; child = child->NextSibling()) {
+                    child_count++;
+                }
 
-        } else if(element.name() == "button") {
+                nk_layout_row_dynamic(&nk_ctx_, 20, child_count + 1);
+            } else {
+
+            }
+        } else if(element_name == "label") {
+            if(before) {
+                auto text = element.text().encode();
+                nk_label(&nk_ctx_, text.c_str(), NK_LEFT);
+            }
+        } else if(element_name == "button") {
 
         } else {
             L_WARN_ONCE(_u("Ignoring unknown element: {0}").format(element.name()));
         }
     };
-    xml_iterator(document_.FirstChild(), callback);
+    xml_iterator(document_.FirstChildElement(), callback);
 
     send_to_renderer(camera, viewport);
 
@@ -206,42 +266,55 @@ void Interface::send_to_renderer(CameraPtr camera, Viewport viewport) {
 
         vertex_data.position(x, y);
         vertex_data.tex_coord0(u, v);
-        vertex_data.diffuse(kglt::Colour::WHITE); //FIXME
+        vertex_data.diffuse(kglt::Colour(
+            float((colour & 0xFF000000) >> 6) / 256.0f,
+            float((colour & 0xFF0000) >> 4) / 256.0f,
+            float((colour & 0xFF00) >> 2) / 256.0f,
+            float((colour & 0xFF)) / 256.0f
+        ));
         vertex_data.move_next();
     }
     vertex_data.done();
 
-    std::vector<UIRenderable> renderables;
+    std::vector<std::shared_ptr<UIRenderable>> renderables;
 
     auto& renderer = this->window_.renderer;
 
     nk_draw_foreach(cmd, &nk_ctx_, &nk_device_.cmds) {
-        renderables.push_back(UIRenderable(vertex_data, MaterialID(cmd->texture.id)));
+        if(!cmd->elem_count) continue;
 
-        UIRenderable& renderable = renderables.back();
+        renderables.push_back(std::make_shared<UIRenderable>(vertex_data, MaterialID(cmd->texture.id)));
+
+        auto renderable = renderables.back();
 
         // FIXME: clipping?
         for(uint32_t i = 0; i < cmd->elem_count; ++i) {
-            renderable.index_data->index(offset[i]);
+            renderable->index_data->index(offset[i]);
         }
-        renderable.index_data->done();
+        renderable->index_data->done();
         offset += cmd->elem_count;
     }
 
+    nk_clear(&nk_ctx_);
+    nk_buffer_free(&vbuf);
+    nk_buffer_free(&ebuf);
+
     for(auto& renderable: renderables) {
-        MaterialPass* pass = stage_->resources->material(renderable.material_id())->first_pass().get();
-        auto render_group = renderer->new_render_group(&renderable, pass);
+        MaterialPass* pass = stage_->resources->material(renderable->material_id())->first_pass().get();
+        auto render_group = renderer->new_render_group(renderable.get(), pass);
         renderer->render(
             camera,
             true, // Render group changed
             &render_group,
-            &renderable,
+            renderable.get(),
             pass,
             nullptr,
             kglt::Colour::WHITE,
             kglt::batcher::Iteration(0)
         );
     }
+
+
 }
 
 void Interface::set_dimensions(uint16_t width, uint16_t height) {
@@ -255,7 +328,7 @@ uint16_t Interface::height() const {
 
 ElementList Interface::append(const unicode &tag) {
     TiXmlElement* element = new TiXmlElement(tag.lstrip("<").rstrip(">").encode());
-    document_.LinkEndChild(element);
+    root_element_->LinkEndChild(element);
 
     element_impls_[element] = std::make_shared<ElementImpl>(this, element);
 

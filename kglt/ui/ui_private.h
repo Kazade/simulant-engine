@@ -36,7 +36,12 @@ public:
 
     void add_class(const std::string& cl) {
         const std::string* ret = element_->Attribute(std::string("class"));
-        std::string current(*ret);
+        std::string current;
+
+        if(ret) {
+            current = *ret;
+        }
+
         if(current.find(cl) == std::string::npos) {
             current += " " + cl;
             element_->SetAttribute("class", current);
@@ -66,7 +71,12 @@ public:
     }
 
     std::string attr(const std::string& property) const {
-        return *element_->Attribute(property);
+        const std::string* value = element_->Attribute(property);
+        if(value) {
+            return *value;
+        }
+
+        return "";
     }
 
     void id(const std::string& id) {
@@ -74,7 +84,7 @@ public:
     }
 
     std::string id() const {
-        return *element_->Attribute(std::string("id"));
+        return this->attr("id");
     }
 
     void scroll_to_bottom() {

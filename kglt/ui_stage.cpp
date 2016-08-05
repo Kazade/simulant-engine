@@ -8,10 +8,10 @@ namespace kglt {
 UIStage::UIStage(UIStageID id, WindowBase *parent):
     generic::Identifiable<UIStageID>(id),
     Resource(parent),
-    window_(parent),
-    interface_(ui::Interface::create(*parent, this)){
+    window_(parent) {
 
-    resource_manager_ = std::make_shared<ResourceManagerImpl>(window_, window_);
+    resource_manager_ = ResourceManagerImpl::create(parent, parent);
+    interface_ = ui::Interface::create(*parent, this);
 
     update_conn_ = window_->signal_step().connect(
         std::bind(&UIStage::update, this, std::placeholders::_1)

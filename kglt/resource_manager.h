@@ -139,6 +139,7 @@ public:
 
     virtual unicode default_material_filename() const = 0;
 
+    virtual ResourceManager* base_manager() const = 0;
 };
 
 class ResourceManagerImpl:
@@ -232,11 +233,20 @@ public:
     unicode default_material_filename() const override;
 
     MaterialID clone_default_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) override {
-        return material(default_material_id_)->new_clone(garbage_collect);
+        return material(default_material_id_)->new_clone(this, garbage_collect);
     }
 
     MaterialID default_material_id() const override;
     TextureID default_texture_id() const override;
+
+    ResourceManager* base_manager() const {
+        // Constness applies to the resource manager itself, not the returned base manager
+        ResourceManagerImpl* ret = const_cast<ResourceManagerImpl*>(this);
+        while(ret->parent_) {
+            ret = ret->parent_;
+        }
+        return ret;
+    }
 
 private:
     ResourceManagerImpl* parent_ = nullptr;

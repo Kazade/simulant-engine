@@ -275,7 +275,7 @@ public:
 
     void set_texture_unit_on_all_passes(uint32_t texture_unit_id, TextureID tex);
 
-    MaterialID new_clone(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) const;
+    MaterialID new_clone(ResourceManager* target_resource_manager, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) const;
 
     void each(std::function<void (uint32_t, MaterialPass*)> callback) {
         // Wait until we can lock the atomic flag

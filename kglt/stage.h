@@ -82,6 +82,10 @@ class Stage:
 public:
     Stage(StageID id, WindowBase *parent, AvailablePartitioner partitioner);
 
+    ResourceManager* base_manager() const {
+        return window.get();
+    }
+
     ActorID new_actor(RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
     ActorID new_actor_with_mesh(MeshID mid, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
 

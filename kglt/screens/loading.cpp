@@ -44,14 +44,14 @@ void Loading::do_load() {
 
     )X");
 
-    stage->append("<window>").append("<label>").text("Loading");
+    stage->append("<window>").append("<row>").append("<label>").text("Loading");
     stage->$("label").add_class("thing");
 
     //Create an orthographic camera
     camera_ = window->new_camera();
 
     window->camera(camera_)->set_orthographic_projection(
-        0, window->width(), window->height(), 0
+        0, window->width(), window->height(), 0, -1.0, 1.0
     );
 
     //Create an inactive pipeline

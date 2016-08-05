@@ -311,16 +311,10 @@ MaterialPass::ptr MaterialPass::new_clone(Material* owner) const {
     return ret;
 }
 
-MaterialID Material::new_clone(GarbageCollectMethod garbage_collect) const {
+MaterialID Material::new_clone(ResourceManager* target_resource_manager, GarbageCollectMethod garbage_collect) const {
 
-    // Probably the only legit use of const_cast I've ever done! The const-ness applies
-    // to the source material, not the resource manager, and there's no other way to get
-    // a non-const resource manager reference unless we pass it in as an argument and that
-    // is nasty
-    ResourceManager& tmp = const_cast<ResourceManager&>(resource_manager());
-
-    MaterialID ret = tmp.new_material(garbage_collect);
-    auto mat = tmp.material(ret);
+    MaterialID ret = target_resource_manager->new_material(garbage_collect);
+    auto mat = target_resource_manager->material(ret);
 
     for(auto pass: passes_) {
         mat->passes_.push_back(pass->new_clone(mat.get()));

@@ -236,18 +236,20 @@ private:
     unicode locate_font(const unicode& filename);
 
     WindowBase& window_;
-    UIStage* stage_;
+    UIStage* stage_ = nullptr;
 
     TiXmlDocument document_;
+    TiXmlElement* root_element_ = nullptr;
     std::unordered_map<TiXmlElement*, std::shared_ptr<ElementImpl>> element_impls_;
 
     nk_context nk_ctx_;
     nk_panel nk_layout_;
-
+    nk_font_atlas nk_font_;
     struct nk_kglt_device {
         struct nk_buffer cmds;
         struct nk_draw_null_texture null;
         MaterialID font_tex;
+        MaterialID null_tex;
     } nk_device_;
 
     void send_to_renderer(CameraPtr camera, Viewport viewport);

@@ -22,6 +22,11 @@ ResourceManagerImpl::ResourceManagerImpl(WindowBase* window, ResourceManagerImpl
 }
 
 bool ResourceManagerImpl::init() {
+    if(base_manager() != this) {
+        // Only the base manager needs to load default materials and textures
+        return true;
+    }
+
     //FIXME: Should lock the default texture and material during construction!
 
     //Create the default blank texture
@@ -301,15 +306,16 @@ MaterialID ResourceManagerImpl::new_material_from_file(const unicode& path, Garb
     /* Not in the cache? Load it from file and store as a template */
     if(!template_materials.count(path)) {
         L_INFO(_u("Loading material {0}").format(path));
-        auto mat = material(new_material(GARBAGE_COLLECT_NEVER));
+
+        // Load template materials into the base manager so they are available to all
+        auto mat = base_manager()->material(base_manager()->new_material(GARBAGE_COLLECT_NEVER));
         window->loader_for(path.encode())->into(mat);
         template_materials[path] = mat->id();
     }
 
     /* Take the template, clone it, and set garbage_collection appropriately */
     auto template_id = template_materials.at(path);
-    auto mat_id = material(template_id)->new_clone();
-    material(mat_id)->enable_gc(garbage_collect);
+    auto mat_id = material(template_id)->new_clone(this, garbage_collect);
     mark_material_as_uncollected(mat_id);
     return mat_id;
 }
@@ -524,11 +530,19 @@ void ResourceManagerImpl::delete_sound(SoundID t) {
 }
 
 TextureID ResourceManagerImpl::default_texture_id() const {
-    return default_texture_id_;
+    if(base_manager() != this) {
+        return base_manager()->default_texture_id();
+    } else {
+        return default_texture_id_;
+    }
 }
 
 MaterialID ResourceManagerImpl::default_material_id() const {
-    return default_material_id_;
+    if(base_manager() != this) {
+        return base_manager()->default_material_id();
+    } else {
+        return default_material_id_;
+    }
 }
 
 unicode ResourceManagerImpl::default_material_filename() const {

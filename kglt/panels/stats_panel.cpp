@@ -18,28 +18,30 @@ void StatsPanel::initialize() {
 
     auto overlay = window_->ui_stage(ui_stage_id_);
 
-    auto body = overlay->append("<body/>");
+    auto body = overlay->append("<window>");
     body.css("color", "#4BD3FFDD");
 
-    auto title = body.append("<h1></h1>");
+    auto title = body.append("<row>").append("<label>");
     title.css("width", "640px");
     title.css("position", "absolute");
     title.css("top", "1.5em");
     title.css("text-align", "center");
     title.text("Performance");
 
-    auto fps = body.append("<div></div>");
+    auto fps = body.append("<row>");
     fps.css("top", "3em");
     fps.css("margin-left", "1em");
     fps.css("position", "absolute");
-    fps.html("FPS: <span id='fps'></span>");
+    fps.append("<label>").text("FPS: ");
+    fps.append("<label>").id("fps");
     overlay->find("#fps").text("0");
 
-    auto ram_usage = body.append("<div></div>");
+    auto ram_usage = body.append("<row>");
     ram_usage.css("top", "4.5em");
     ram_usage.css("margin-left", "1em");
     ram_usage.css("position", "absolute");
-    ram_usage.html("RAM: <span id='ram'></span>");
+    ram_usage.append("<label>").text("RAM: ");
+    ram_usage.append("<label>").id("ram");
     overlay->find("#ram").text("0");
 
     window_->signal_frame_started().connect(std::bind(&StatsPanel::update, this));

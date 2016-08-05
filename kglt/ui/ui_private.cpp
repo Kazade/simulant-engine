@@ -41,6 +41,8 @@ void ElementImpl::set_event_callback(const unicode& event_type, std::function<bo
 }
 
 void ElementImpl::set_text(const unicode& text) {
+    element_->RemoveChild(element_->FirstChild());
+
     TiXmlText* text_node = new TiXmlText(text.encode());
     element_->LinkEndChild(text_node);
 }
