@@ -93,8 +93,8 @@ public:
         ui->$("p").add_class("thing");
 
         ///Shortcut function for loading images
-        kglt::TextureID tid = window->stage(stage_id_)->resources->new_texture_from_file("sample_data/sample.tga");
-        kglt::MaterialID matid = window->stage(stage_id_)->resources->new_material_from_texture(tid);
+        kglt::TextureID tid = window->stage(stage_id_)->assets->new_texture_from_file("sample_data/sample.tga");
+        kglt::MaterialID matid = window->stage(stage_id_)->assets->new_material_from_texture(tid);
 
         window->stage(stage_id_)->set_ambient_light(kglt::Colour::WHITE);
         {
@@ -106,7 +106,7 @@ public:
 
         auto stage = window->stage(stage_id_);
 
-        actor_id = stage->new_actor_with_mesh(stage->resources->new_mesh_as_cube(2));
+        actor_id = stage->new_actor_with_mesh(stage->assets->new_mesh_as_cube(2));
 
         window->stage(stage_id_)->actor(actor_id)->mesh()->set_material_id(matid);
         window->stage(stage_id_)->actor(actor_id)->set_absolute_position(pos);

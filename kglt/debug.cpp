@@ -26,7 +26,7 @@ void Debug::update() {
     for(auto elem: elements_) {
         elem.time_since_created += dt;
         if(elem.time_since_created >= elem.duration) {
-            auto mesh = stage_.resources->mesh(mesh_);
+            auto mesh = stage_.assets->mesh(mesh_);
             mesh->delete_submesh(elem.submesh);
         } else {
             to_keep.push_back(elem);
@@ -37,14 +37,14 @@ void Debug::update() {
 }
 
 bool Debug::init() {
-    mesh_ = stage_.resources->new_mesh(VertexSpecification::POSITION_AND_DIFFUSE);
+    mesh_ = stage_.assets->new_mesh(VertexSpecification::POSITION_AND_DIFFUSE);
     actor_ = stage_.new_actor_with_mesh(
         mesh_,
         RENDERABLE_CULLING_MODE_NEVER // Important!
     );
 
     //Don't GC the material, if there are no debug lines then it won't be attached to the mesh
-    material_ = stage_.resources->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY, GARBAGE_COLLECT_NEVER);
+    material_ = stage_.assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY, GARBAGE_COLLECT_NEVER);
 
     //Connect regular updates so we can remove debug lines after their duration
     /*stage_.window().signal_frame_finished().connect(
@@ -56,7 +56,7 @@ bool Debug::init() {
 
 void Debug::draw_line(const Vec3 &start, const Vec3 &end, const Colour &colour, double duration, bool depth_test) {
 
-    auto mesh = stage_.resources->mesh(mesh_);
+    auto mesh = stage_.assets->mesh(mesh_);
 
     DebugElement element;
     element.submesh = mesh->new_submesh_with_material(material_, MESH_ARRANGEMENT_LINE_STRIP, VERTEX_SHARING_MODE_INDEPENDENT);

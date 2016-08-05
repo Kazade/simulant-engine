@@ -151,7 +151,7 @@ public:
     Property<Stage, Debug> debug = { this, &Stage::debug_ };
     Property<Stage, batcher::RenderQueue> render_queue = { this, &Stage::render_queue_ };
     Property<Stage, Partitioner> partitioner = { this, &Stage::partitioner_ };
-    Property<Stage, ResourceManager> resources = { this, &Stage::resource_manager_ };
+    Property<Stage, ResourceManager> assets = { this, &Stage::resource_manager_ };
 
     bool init() override;
     void cleanup() override;

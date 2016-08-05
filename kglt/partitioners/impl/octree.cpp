@@ -139,8 +139,8 @@ Octree::Octree(Stage *stage,
     should_split_predicate_(should_split_predicate),
     should_merge_predicate_(should_merge_predicate) {
 
-    debug_material_ = stage_->resources->new_material_from_file(kglt::Material::BuiltIns::DIFFUSE_ONLY);
-    auto mat = stage_->resources->material(debug_material_);
+    debug_material_ = stage_->assets->new_material_from_file(kglt::Material::BuiltIns::DIFFUSE_ONLY);
+    auto mat = stage_->assets->material(debug_material_);
     mat->first_pass()->set_diffuse(kglt::Colour(0.29, 0.82, 1.0, 0.4));
     mat->first_pass()->set_blending(kglt::BLEND_ONE_ONE_MINUS_ALPHA);
     mat->first_pass()->set_polygon_mode(kglt::POLYGON_MODE_LINE);
@@ -607,7 +607,7 @@ std::shared_ptr<OctreeNode> Octree::get_or_create_node(BoundableEntity* boundabl
 
 std::shared_ptr<OctreeNode> Octree::create_node(int32_t level_number, Vec3 centre, NodeDiameter diameter) {
     if(!debug_mesh_) {
-        debug_mesh_ = stage_->resources->new_mesh(VertexSpecification(), GARBAGE_COLLECT_NEVER);
+        debug_mesh_ = stage_->assets->new_mesh(VertexSpecification(), GARBAGE_COLLECT_NEVER);
     }
 
     auto hash = generate_vector_hash(centre);
@@ -635,7 +635,7 @@ std::shared_ptr<OctreeNode> Octree::create_node(int32_t level_number, Vec3 centr
     nodes->insert(std::make_pair(hash, new_node));
     ++node_count_;
 
-    debug_submeshes_[new_node.get()] = stage_->resources->mesh(debug_mesh_)->new_submesh_as_box(
+    debug_submeshes_[new_node.get()] = stage_->assets->mesh(debug_mesh_)->new_submesh_as_box(
         debug_material_,
         diameter, diameter, diameter, centre
     );
@@ -697,7 +697,7 @@ void Octree::remove_node(std::weak_ptr<OctreeNode> ref) {
         }
     }
 
-    stage_->resources->mesh(debug_mesh_)->delete_submesh(debug_submeshes_[node.get()]);
+    stage_->assets->mesh(debug_mesh_)->delete_submesh(debug_submeshes_[node.get()]);
 
     --node_count_;
 

@@ -59,7 +59,7 @@ public:
     void on_render_stopped();
 
     Property<UIStage, WindowBase> window = { this, &UIStage::window_ };
-    Property<UIStage, ResourceManager> resources = { this, &UIStage::resource_manager_ };
+    Property<UIStage, ResourceManager> assets = { this, &UIStage::resource_manager_ };
 
 private:
     WindowBase* window_ = nullptr;

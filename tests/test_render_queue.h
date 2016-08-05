@@ -22,17 +22,17 @@ public:
     void test_material_change_updates_queue() {
         auto& render_queue = stage_->render_queue;
 
-        auto texture_1 = stage_->resources->new_texture();
-        auto texture_2 = stage_->resources->new_texture();
+        auto texture_1 = stage_->assets->new_texture();
+        auto texture_2 = stage_->assets->new_texture();
 
-        stage_->resources->texture(texture_1)->upload();
-        stage_->resources->texture(texture_2)->upload();
+        stage_->assets->texture(texture_1)->upload();
+        stage_->assets->texture(texture_2)->upload();
 
-        auto mat_1 = stage_->resources->new_material_from_texture(texture_1);
-        auto mat_2 = stage_->resources->new_material_from_texture(texture_2);
+        auto mat_1 = stage_->assets->new_material_from_texture(texture_1);
+        auto mat_2 = stage_->assets->new_material_from_texture(texture_2);
 
-        auto mesh_1 = stage_->resources->new_mesh_as_cube(1.0);
-        stage_->resources->mesh(mesh_1)->set_material_id(mat_1);
+        auto mesh_1 = stage_->assets->new_mesh_as_cube(1.0);
+        stage_->assets->mesh(mesh_1)->set_material_id(mat_1);
 
         auto actor_id = stage_->new_actor_with_mesh(mesh_1);
 
@@ -60,7 +60,7 @@ public:
         });
 
         stage_->actor(actor_id)->remove_material_id_override();
-        stage_->resources->mesh(mesh_1)->set_material_id(mat_1);
+        stage_->assets->mesh(mesh_1)->set_material_id(mat_1);
 
         assert_equal(1, render_queue->group_count(0));
 
@@ -69,7 +69,7 @@ public:
              assert_true(!(*group < grp));
         });
 
-        stage_->resources->mesh(mesh_1)->set_material_id(mat_2);
+        stage_->assets->mesh(mesh_1)->set_material_id(mat_2);
 
         assert_equal(1, render_queue->group_count(0));
 
@@ -82,7 +82,7 @@ public:
     void test_renderable_removal() {
         auto& render_queue = stage_->render_queue;
 
-        auto mesh_1 = stage_->resources->new_mesh_as_cube(1.0);
+        auto mesh_1 = stage_->assets->new_mesh_as_cube(1.0);
         auto actor_id = stage_->new_actor_with_mesh(mesh_1);
 
         assert_equal(2, render_queue->pass_count());
@@ -95,28 +95,28 @@ public:
     }
 
     void test_texture_grouping() {
-        auto texture_1 = stage_->resources->new_texture();
-        auto texture_2 = stage_->resources->new_texture();
+        auto texture_1 = stage_->assets->new_texture();
+        auto texture_2 = stage_->assets->new_texture();
 
-        stage_->resources->texture(texture_1)->upload();
-        stage_->resources->texture(texture_2)->upload();
+        stage_->assets->texture(texture_1)->upload();
+        stage_->assets->texture(texture_2)->upload();
 
-        auto mat_1 = stage_->resources->new_material_from_texture(texture_1);
-        auto mat_2 = stage_->resources->new_material_from_texture(texture_2);
-        auto mat_3 = stage_->resources->new_material_from_texture(texture_1); // Texture 1 repeated
+        auto mat_1 = stage_->assets->new_material_from_texture(texture_1);
+        auto mat_2 = stage_->assets->new_material_from_texture(texture_2);
+        auto mat_3 = stage_->assets->new_material_from_texture(texture_1); // Texture 1 repeated
 
         auto& render_queue = stage_->render_queue;
 
         assert_equal(0, render_queue->pass_count());
 
-        auto mesh_1 = stage_->resources->new_mesh_as_cube(1.0);
-        stage_->resources->mesh(mesh_1)->set_material_id(mat_1);
+        auto mesh_1 = stage_->assets->new_mesh_as_cube(1.0);
+        stage_->assets->mesh(mesh_1)->set_material_id(mat_1);
 
-        auto mesh_2 = stage_->resources->new_mesh_as_cube(1.0);
-        stage_->resources->mesh(mesh_2)->set_material_id(mat_2);
+        auto mesh_2 = stage_->assets->new_mesh_as_cube(1.0);
+        stage_->assets->mesh(mesh_2)->set_material_id(mat_2);
 
-        auto mesh_3 = stage_->resources->new_mesh_as_cube(1.0);
-        stage_->resources->mesh(mesh_3)->set_material_id(mat_3);
+        auto mesh_3 = stage_->assets->new_mesh_as_cube(1.0);
+        stage_->assets->mesh(mesh_3)->set_material_id(mat_3);
 
         stage_->new_actor_with_mesh(mesh_1);
 

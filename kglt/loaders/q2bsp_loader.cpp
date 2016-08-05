@@ -316,8 +316,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     assert(stage && "You passed a Resource that is not a stage to the QBSP loader");
 
     std::map<std::string, TextureID> texture_lookup;
-    TextureID checkerboard = stage->resources->new_texture_from_file(Texture::BuiltIns::CHECKERBOARD);
-    TextureID lightmap_texture = stage->resources->new_texture(GARBAGE_COLLECT_NEVER);
+    TextureID checkerboard = stage->assets->new_texture_from_file(Texture::BuiltIns::CHECKERBOARD);
+    TextureID lightmap_texture = stage->assets->new_texture(GARBAGE_COLLECT_NEVER);
 
     auto texture_info_visible = [](Q2::TextureInfo& info) -> bool {
         /* Don't draw invisible things */
@@ -340,7 +340,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             TextureID new_texture_id;
             auto texture_filename = locate_texture(*stage->window->resource_locator.get(), texture_name);
             if(!texture_filename.empty()) {
-                new_texture_id = stage->resources->new_texture_from_file(texture_filename);
+                new_texture_id = stage->assets->new_texture_from_file(texture_filename);
             } else {
                 L_DEBUG(_u("Texture {0} was missing").format(texture_name));
                 new_texture_id = checkerboard;
@@ -426,12 +426,12 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
      *  Load the textures and generate materials
      */
 
-    MeshID mid = stage->resources->new_mesh_with_alias(
+    MeshID mid = stage->assets->new_mesh_with_alias(
         "world_geometry",
         VertexSpecification::DEFAULT,
         GARBAGE_COLLECT_NEVER
     );
-    auto mesh = stage->resources->mesh(mid);
+    auto mesh = stage->assets->mesh(mid);
 
     std::vector<MaterialID> materials;
     std::vector<std::pair<uint32_t, uint32_t>> texture_dimensions;
@@ -466,13 +466,13 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
         bool uses_lightmap = !(tex.flags & (Q2::SURFACE_FLAG_SKY | Q2::SURFACE_FLAG_WARP));
         if(uses_lightmap) {
-            new_material_id = stage->resources->new_material_from_file(Material::BuiltIns::TEXTURE_WITH_LIGHTMAP);
+            new_material_id = stage->assets->new_material_from_file(Material::BuiltIns::TEXTURE_WITH_LIGHTMAP);
         } else {
-            new_material_id = stage->resources->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
+            new_material_id = stage->assets->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
         }
 
         {
-            auto mat = stage->resources->material(new_material_id);
+            auto mat = stage->assets->material(new_material_id);
             mat->pass(0)->set_texture_unit(0, new_texture_id);
 
             if(uses_lightmap) {
@@ -496,7 +496,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             }
         }
 
-        auto texture = stage->resources->texture(new_texture_id);
+        auto texture = stage->assets->texture(new_texture_id);
         texture_dimensions[tex_idx].first = texture->width();
         texture_dimensions[tex_idx].second = texture->height();
 
@@ -701,7 +701,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     /* Now upload the lightmap texture */
     {
-        auto lightmap = stage->resources->texture(lightmap_texture);
+        auto lightmap = stage->assets->texture(lightmap_texture);
         lightmap->resize(lightmap_buffer.width_in_texels(), lightmap_buffer.height_in_texels());
         lightmap->set_bpp(24); // RGB only, no alpha
         lightmap->data().assign(lightmap_buffer.buffer.begin(), lightmap_buffer.buffer.end());

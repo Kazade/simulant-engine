@@ -74,12 +74,12 @@ std::vector<unicode> Interface::find_fonts() {
 }
 
 bool Interface::init() {
-    auto null_material_id = stage_->resources->new_material_from_texture(
-        stage_->resources->default_texture_id(),
+    auto null_material_id = stage_->assets->new_material_from_texture(
+        stage_->assets->default_texture_id(),
         GARBAGE_COLLECT_NEVER
     );
 
-    auto null_material = stage_->resources->material(null_material_id);
+    auto null_material = stage_->assets->material(null_material_id);
     null_material->first_pass()->set_cull_mode(CULL_MODE_NONE);
     null_material->first_pass()->set_blending(BLEND_ALPHA);
     null_material->first_pass()->set_depth_test_enabled(false);
@@ -98,8 +98,8 @@ bool Interface::init() {
     int w, h;
     const nk_byte* image = (nk_byte*) nk_font_atlas_bake(&nk_font_, &w, &h, NK_FONT_ATLAS_RGBA32);
 
-    TextureID font_tex = stage_->resources->new_texture();
-    TexturePtr tex = stage_->resources->texture(font_tex);
+    TextureID font_tex = stage_->assets->new_texture();
+    TexturePtr tex = stage_->assets->texture(font_tex);
     tex->resize(w, h);
     tex->data().assign(image, image + (w * h * 4));
     tex->upload(
@@ -109,8 +109,8 @@ bool Interface::init() {
         true
     );
 
-    auto font_material_id = stage_->resources->new_material_from_texture(font_tex, GARBAGE_COLLECT_NEVER);
-    auto font_material = stage_->resources->material(font_material_id);
+    auto font_material_id = stage_->assets->new_material_from_texture(font_tex, GARBAGE_COLLECT_NEVER);
+    auto font_material = stage_->assets->material(font_material_id);
     font_material->first_pass()->set_cull_mode(CULL_MODE_NONE);
     font_material->first_pass()->set_blending(BLEND_ALPHA);
     font_material->first_pass()->set_depth_test_enabled(false);
@@ -300,7 +300,7 @@ void Interface::send_to_renderer(CameraPtr camera, Viewport viewport) {
     nk_buffer_free(&ebuf);
 
     for(auto& renderable: renderables) {
-        MaterialPass* pass = stage_->resources->material(renderable->material_id())->first_pass().get();
+        MaterialPass* pass = stage_->assets->material(renderable->material_id())->first_pass().get();
         auto render_group = renderer->new_render_group(renderable.get(), pass);
         renderer->render(
             camera,

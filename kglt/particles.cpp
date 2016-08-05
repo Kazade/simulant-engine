@@ -19,7 +19,7 @@ ParticleSystem::ParticleSystem(ParticleSystemID id, Stage* stage):
     vao_.reset(new VertexArrayObject(MODIFY_REPEATEDLY_USED_FOR_RENDERING, MODIFY_REPEATEDLY_USED_FOR_RENDERING));
 #endif
 
-    set_material_id(stage->resources->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY));
+    set_material_id(stage->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY));
 }
 
 ParticleSystem::~ParticleSystem() {
@@ -38,7 +38,7 @@ void ParticleSystem::set_material_id(MaterialID mat_id) {
     material_id_ = mat_id;
 
     //Hold a reference to the material so that it's destroyed when we are
-    material_ref_ = stage->resources->material(material_id_);
+    material_ref_ = stage->assets->material(material_id_);
 }
 
 EmitterPtr ParticleSystem::push_emitter() {
@@ -349,7 +349,7 @@ std::pair<float, float> ParticleEmitter::duration_range() const {
 }
 
 void ParticleSystem::set_particle_width(float width) {
-    MoveableObject::stage->resources->material(material_id())->pass(0)->set_point_size(width);
+    MoveableObject::stage->assets->material(material_id())->pass(0)->set_point_size(width);
     particle_width_ = width;
 }
 

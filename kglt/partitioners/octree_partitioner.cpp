@@ -54,7 +54,7 @@ void OctreePartitioner::add_geom(GeomID geom_id) {
 
     /*
     GeomPtr geom = stage->geom(geom_id);
-    auto geom_mesh = stage->resources->mesh(geom->mesh_id());
+    auto geom_mesh = stage->assets->mesh(geom->mesh_id());
 
     // Go through all the submeshes, separating into polygons and adding to the tree
     geom_mesh->each([&](SubMesh* submesh) {
