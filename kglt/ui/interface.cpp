@@ -208,6 +208,11 @@ void Interface::render(CameraPtr camera, Viewport viewport) {
                 auto text = element.text().encode();
                 nk_label(&nk_ctx_, text.c_str(), NK_LEFT);
             }
+
+        } else if(element_name == "progress") {
+            if(before) {
+                nk_prog(&nk_ctx_, 50, 100, 1);
+            }
         } else if(element_name == "button") {
 
         } else {

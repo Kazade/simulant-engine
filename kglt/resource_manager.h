@@ -132,7 +132,7 @@ public:
     unicode default_material_filename() const;
 
     MaterialID clone_default_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) {
-        return material(default_material_id_)->new_clone(this, garbage_collect);
+        return base_manager()->material(base_manager()->default_material_id())->new_clone(this, garbage_collect);
     }
 
     MaterialID default_material_id() const;

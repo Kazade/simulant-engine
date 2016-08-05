@@ -44,7 +44,10 @@ void Loading::do_load() {
 
     )X");
 
-    stage->append("<window>").append("<row>").append("<label>").text("Loading");
+    auto $window = stage->append("<window>");
+    $window.append("<row>").append("<label>").text("Loading");
+    $window.append("<row>").append("<progress>");
+
     stage->$("label").add_class("thing");
 
     //Create an orthographic camera
