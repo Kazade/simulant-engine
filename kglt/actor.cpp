@@ -65,7 +65,7 @@ void Actor::set_mesh(MeshID mesh) {
     }
 
     //Increment the ref-count on this mesh
-    mesh_ = stage->mesh(mesh).__object;
+    mesh_ = stage->resources->mesh(mesh).__object;
 
     //Watch the mesh for changes to its submeshes so we can adapt to it
     submesh_created_connection_ = mesh_->signal_submesh_created().connect(
@@ -150,7 +150,7 @@ void SubActor::override_material_id(MaterialID material) {
 
     if(material) {
         //Store the pointer to maintain the ref-count
-        material_ = parent_.stage->material(material);
+        material_ = parent_.stage->resources->material(material);
     } else {
         // If we passed a zero material ID, then remove the
         // material pointer
@@ -171,7 +171,7 @@ void SubActor::remove_material_id_override() {
 }
 
 ProtectedPtr<Mesh> Actor::mesh() const {
-    return stage->mesh(mesh_id());
+    return stage->resources->mesh(mesh_id());
 }
 
 const SubMeshID SubActor::submesh_id() const {

@@ -20,7 +20,7 @@ namespace kglt {
 Stage::Stage(StageID id, WindowBase *parent, AvailablePartitioner partitioner):
     WindowHolder(parent),
     generic::Identifiable<StageID>(id),
-    ResourceManager(parent),
+    resource_manager_(new ResourceManagerImpl(parent, parent)),
     SkyboxManager(parent, this),
     ambient_light_(kglt::Colour::WHITE),
     geom_manager_(new GeomManager()){
@@ -30,6 +30,10 @@ Stage::Stage(StageID id, WindowBase *parent, AvailablePartitioner partitioner):
 
     ActorManager::signal_post_create().connect(std::bind(&Stage::post_create_callback<Actor, ActorID>, this, std::placeholders::_1, std::placeholders::_2));
     LightManager::signal_post_create().connect(std::bind(&Stage::post_create_callback<Light, LightID>, this, std::placeholders::_1, std::placeholders::_2));    
+}
+
+Stage::~Stage() {
+    delete resource_manager_;
 }
 
 bool Stage::init() {    
@@ -230,7 +234,7 @@ SpriteID Stage::new_sprite() {
 
 SpriteID Stage::new_sprite_from_file(const unicode& filename, uint32_t frame_width, uint32_t frame_height, uint32_t margin, uint32_t spacing, std::pair<uint32_t, uint32_t> padding) {
     SpriteID s = new_sprite();
-    TextureID t = new_texture_from_file(
+    TextureID t = resources->new_texture_from_file(
         filename,
         TextureFlags(MIPMAP_GENERATE_NONE, TEXTURE_WRAP_CLAMP_TO_EDGE, TEXTURE_FILTER_NEAREST)
     );

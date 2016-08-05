@@ -20,7 +20,7 @@ public:
         stage->set_ambient_light(kglt::Colour(1.0, 1.0, 1.0, 1.0));
         window->camera(camera_id_)->set_perspective_projection(45.0, float(window->width()) / float(window->height()));
 
-        kglt::MeshID mid = stage->new_mesh_from_file(filename);
+        kglt::MeshID mid = stage->resources->new_mesh_from_file(filename);
         kglt::ActorID actor_id = stage->new_actor_with_mesh(mid);
 
         {

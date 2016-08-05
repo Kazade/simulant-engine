@@ -53,11 +53,11 @@ bool Background::init() {
 
         actor_id_ = stage->new_actor();
         //Load the background material
-        material_id_ = stage->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
+        material_id_ = stage->resources->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
 
-        auto mesh = stage->new_mesh_as_rectangle(1, 1, Vec2(0.5, 0.5));
+        auto mesh = stage->resources->new_mesh_as_rectangle(1, 1, Vec2(0.5, 0.5));
         stage->actor(actor_id_)->set_mesh(mesh);
-        stage->mesh(mesh)->set_material_id(material_id_);
+        stage->resources->mesh(mesh)->set_material_id(material_id_);
     }
 
     //Add a pass for this background
@@ -76,7 +76,7 @@ void Background::cleanup() {
 }
 
 void Background::update(double dt) {
-    auto pass = manager_->window->stage(stage_id_)->material(material_id_)->pass(0);
+    auto pass = manager_->window->stage(stage_id_)->resources->material(material_id_)->first_pass();
     if(pass->texture_unit_count()) {
         pass->texture_unit(0).scroll_x(x_rate_ * dt);
         pass->texture_unit(0).scroll_y(y_rate_ * dt);
@@ -92,7 +92,7 @@ void Background::set_vertical_scroll_rate(float y_rate) {
 }
 
 void Background::set_texture(TextureID tex) {
-    manager_->window->stage(stage_id_)->material(material_id_)->pass(0)->set_texture_unit(0, tex);
+    manager_->window->stage(stage_id_)->resources->material(material_id_)->pass(0)->set_texture_unit(0, tex);
 }
 
 void Background::set_resize_style(BackgroundResizeStyle style) {

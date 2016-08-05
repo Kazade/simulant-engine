@@ -17,7 +17,7 @@ public:
             by setting the cube size to 20, we should expect that a default node created for it
             will have a diameter of 10.0f;
         */
-        actor_id_ = stage_->new_actor_with_mesh(stage_->new_mesh_as_cube(32.0));
+        actor_id_ = stage_->new_actor_with_mesh(stage_->resources->new_mesh_as_cube(32.0));
         octree_.reset(new kglt::impl::Octree(stage_.get().get()));
     }
 
@@ -78,7 +78,7 @@ public:
         assert_equal(16, octree_node->diameter());
 
         // Too big for this node, time to grow!
-        auto actor_2 = stage_->new_actor_with_mesh(stage_->new_mesh_as_cube(40.0f));
+        auto actor_2 = stage_->new_actor_with_mesh(stage_->resources->new_mesh_as_cube(40.0f));
 
         auto new_root = octree_->insert_actor(actor_2).lock();
 
@@ -96,7 +96,7 @@ public:
         assert_equal(16, octree_node->diameter());
 
         // Too big for this node, time to grow!
-        auto actor_2 = stage_->new_actor_with_mesh(stage_->new_mesh_as_cube(40.0f));
+        auto actor_2 = stage_->new_actor_with_mesh(stage_->resources->new_mesh_as_cube(40.0f));
 
         auto new_root = octree_->insert_actor(actor_2).lock();
 
@@ -148,11 +148,11 @@ public:
         octree->insert_actor(actor_id_);
         assert_equal(octree->node_count(), 1);
 
-        auto second = stage_->new_actor_with_mesh(stage_->new_mesh_as_cube(1.0));
+        auto second = stage_->new_actor_with_mesh(stage_->resources->new_mesh_as_cube(1.0));
         octree->insert_actor(second);
         assert_equal(octree->node_count(), 1);
 
-        auto third = stage_->new_actor_with_mesh(stage_->new_mesh_as_cube(1.0));
+        auto third = stage_->new_actor_with_mesh(stage_->resources->new_mesh_as_cube(1.0));
         auto new_node = octree->insert_actor(third).lock();
         assert_equal(octree->node_count(), 2);
         assert_equal(new_node->parent(), octree->get_root().get());

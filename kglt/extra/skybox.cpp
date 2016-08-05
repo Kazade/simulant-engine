@@ -17,9 +17,9 @@ SkyBox::SkyBox(StagePtr stage, kglt::TextureID texture, CameraID cam, float size
     stage_(stage),
     camera_id_(cam) {
 
-    actor_ = stage->new_actor_with_mesh(stage->new_mesh_as_cube(size));
+    actor_ = stage->new_actor_with_mesh(stage->resources->new_mesh_as_cube(size));
 
-    auto mat = stage->material(stage->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY));
+    auto mat = stage->resources->material(stage->resources->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY));
 
     mat->pass(0)->set_texture_unit(0, texture);
     mat->pass(0)->set_depth_test_enabled(false);
@@ -41,8 +41,8 @@ SkyBox::SkyBox(StagePtr stage, kglt::TextureID texture, CameraID cam, float size
 
 StarField::StarField(StagePtr stage, CameraID cam) {
     //Generate a starfield texture
-    texture_id_ = stage->new_texture();
-    auto tex = stage->texture(texture_id_);
+    texture_id_ = stage->resources->new_texture();
+    auto tex = stage->resources->texture(texture_id_);
     kglt::procedural::texture::starfield(tex);
     skybox_.reset(new SkyBox(stage, texture_id_, cam));
 }

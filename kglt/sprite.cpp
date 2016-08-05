@@ -16,7 +16,7 @@ Sprite::Sprite(SpriteID id, Stage *stage):
 }
 
 bool Sprite::init() {
-    mesh_id_ = stage->new_mesh_as_rectangle(1.0, 1.0);
+    mesh_id_ = stage->resources->new_mesh_as_rectangle(1.0, 1.0);
 
     //Annoyingly, we can't use new_actor_with_parent_and_mesh here, because that looks
     //up our ID in the stage, which doesn't exist until this function returns. So instead
@@ -174,7 +174,7 @@ void Sprite::update_texture_coordinates() {
     }
 
     {
-        auto mesh = stage->mesh(mesh_id_);
+        auto mesh = stage->resources->mesh(mesh_id_);
 
         mesh->shared_data->move_to_start();
         mesh->shared_data->tex_coord0(x0, y0);
@@ -203,12 +203,12 @@ void Sprite::set_spritesheet(TextureID texture_id, uint32_t frame_width,
     sprite_sheet_spacing_ = spacing;
     sprite_sheet_padding_ = padding;
 
-    image_width_ = stage->texture(texture_id)->width();
-    image_height_ = stage->texture(texture_id)->height();
+    image_width_ = stage->resources->texture(texture_id)->width();
+    image_height_ = stage->resources->texture(texture_id)->height();
 
     //Hold a reference to the new material
-    material_id_ = stage->new_material_from_texture(texture_id);
-    stage->mesh(mesh_id_)->set_material_id(material_id_);
+    material_id_ = stage->resources->new_material_from_texture(texture_id);
+    stage->resources->mesh(mesh_id_)->set_material_id(material_id_);
 
     update_texture_coordinates();
 }
@@ -240,7 +240,7 @@ void Sprite::set_render_dimensions(float width, float height) {
     render_height_ = height;
 
     //Rebuild the mesh
-    auto mesh = stage->mesh(mesh_id_);
+    auto mesh = stage->resources->mesh(mesh_id_);
 
     mesh->shared_data->move_to_start();
     mesh->shared_data->position((-width / 2.0), (-height / 2.0), 0);
