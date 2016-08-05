@@ -20,10 +20,10 @@ namespace kglt {
 Stage::Stage(StageID id, WindowBase *parent, AvailablePartitioner partitioner):
     WindowHolder(parent),
     generic::Identifiable<StageID>(id),
-    resource_manager_(new ResourceManagerImpl(parent, parent)),
     SkyboxManager(parent, this),
+    resource_manager_(ResourceManager::create(parent, parent->shared_assets.get())),
     ambient_light_(kglt::Colour::WHITE),
-    geom_manager_(new GeomManager()){
+    geom_manager_(new GeomManager()) {
 
     set_partitioner(partitioner);
     render_queue_.reset(new batcher::RenderQueue(this, parent->renderer.get()));
@@ -33,7 +33,7 @@ Stage::Stage(StageID id, WindowBase *parent, AvailablePartitioner partitioner):
 }
 
 Stage::~Stage() {
-    delete resource_manager_;
+
 }
 
 bool Stage::init() {    

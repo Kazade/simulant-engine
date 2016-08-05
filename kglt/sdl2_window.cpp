@@ -8,9 +8,7 @@
 
 namespace kglt {
 
-SDL2Window::SDL2Window():
-    WindowHolder(this),
-    ResourceManager(this) {
+SDL2Window::SDL2Window() {
 
 }
 
