@@ -15,6 +15,7 @@
 #include "../render_sequence.h"
 #include "../utils/gl_error.h"
 
+#include "../resource_manager.h"
 #include "interface.h"
 #include "ui_private.h"
 
@@ -305,7 +306,8 @@ void Interface::send_to_renderer(CameraPtr camera, Viewport viewport) {
     nk_buffer_free(&ebuf);
 
     for(auto& renderable: renderables) {
-        MaterialPass* pass = stage_->assets->material(renderable->material_id())->first_pass().get();
+        auto material = stage_->assets->material(renderable->material_id());
+        MaterialPass* pass = material->first_pass().get();
         auto render_group = renderer->new_render_group(renderable.get(), pass);
         renderer->render(
             camera,

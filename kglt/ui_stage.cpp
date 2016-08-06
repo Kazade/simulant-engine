@@ -2,6 +2,7 @@
 #include "window_base.h"
 #include "loader.h"
 #include "ui/ui_private.h"
+#include "resource_manager.h"
 
 namespace kglt {
 

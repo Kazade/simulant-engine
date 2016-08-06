@@ -152,6 +152,12 @@ private:
 
     MaterialID default_material_id_;
     TextureID default_texture_id_;
+
+    std::mutex template_material_lock_;
+    std::unordered_map<unicode, MaterialID> template_materials_;
+    std::set<MaterialID> materials_loading_;
+
+    MaterialID get_template_material(const unicode& path);
 };
 
 

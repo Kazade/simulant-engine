@@ -15,7 +15,6 @@
 #include "input_controller.h"
 #include "generic/auto_weakptr.h"
 #include "kazbase/logging.h"
-#include "resource_manager.h"
 #include "types.h"
 #include "sound.h"
 #include "managers.h"
@@ -25,6 +24,8 @@
 
 
 namespace kglt {
+
+class ResourceManager;
 
 namespace ui {
     class Interface;

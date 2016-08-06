@@ -8,6 +8,7 @@
 
 #include "window_base.h"
 #include "texture.h"
+#include "resource_manager.h"
 
 #ifdef KGLT_GL_VERSION_2X
 #include "./renderers/gl2x/glad/glad/glad.h"

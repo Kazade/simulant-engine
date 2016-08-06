@@ -16,6 +16,11 @@
 #include "types.h"
 #include "vertex_data.h"
 
+#ifndef KGLT_GL_VERSION_1X
+    #include "renderers/gl2x/buffer_object.h"
+#endif
+
+
 namespace kglt {
 
 enum ParticleEmitterType {

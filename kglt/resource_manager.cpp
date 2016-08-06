@@ -5,6 +5,7 @@
 
 #include "kazbase/datetime.h"
 
+#include "utils/gl_thread_check.h"
 
 /** FIXME
  *
@@ -294,28 +295,69 @@ void ResourceManager::delete_material(MaterialID m) {
     material(m)->enable_gc();
 }
 
-MaterialID ResourceManager::new_material_from_file(const unicode& path, GarbageCollectMethod garbage_collect) {
+MaterialID ResourceManager::get_template_material(const unicode& path) {
     /*
      * We keep a cache of the materials we've loaded from file, this massively improves performance
      * and allows sharing of the GPU program during rendering
-
+     * We have to lock access to the templates otherwise bad things happen in multithreaded land.
      */
-    static std::unordered_map<unicode, MaterialID> template_materials;
 
-    /* Not in the cache? Load it from file and store as a template */
-    if(!template_materials.count(path)) {
-        L_INFO(_u("Loading material {0}").format(path));
 
-        // Load template materials into the base manager so they are available to all
-        auto mat = base_manager()->material(base_manager()->new_material(GARBAGE_COLLECT_NEVER));
-        window->loader_for(path.encode())->into(mat);
-        template_materials[path] = mat->id();
+    // Only load template materials into the base resource manager, to avoid duplication
+    if(base_manager() != this) {
+        return base_manager()->get_template_material(path);
     }
 
+
+    MaterialID template_id;
+
+    /* We must load the material outside the lock, because loading the material
+     * in thread B might cause a IdleManager::run_sync which will block and deadlock
+     * as it will be holding the template_material_lock_ and the thread A
+     * will hanging waiting on it.
+     */
+
+    bool load_material = false;
+    {
+        std::lock_guard<std::mutex> lock(template_material_lock_);
+        if(!template_materials_.count(path)) {
+            template_materials_[path] = template_id = new_material(GARBAGE_COLLECT_NEVER);
+            materials_loading_.insert(template_id);
+            load_material = true; //We need to load the material from file
+        } else {
+            template_id = template_materials_[path];
+        }
+    }
+
+    // Blocking loop while we wait for either this thread or another thread to load the material
+    while(materials_loading_.count(template_id)) { // Not really threadsafe...
+        if(!load_material && GLThreadCheck::is_current()) {
+            /* If we aren't loading the material in this thread, but this is the main thread and the material is loading
+             * in another thread we *must* run the idle tasks while we wait for it to finish. Otherwise it will deadlock
+             * on a run_sync call */
+            window->idle->execute();
+        } else if(load_material) {
+            /* Otherwise, if we're loading the material, we load it, then remove it from the list */
+            L_INFO(_u("Loading material {0} into {1}").format(path, template_id));
+            auto mat = material(template_id);
+            window->loader_for(path.encode())->into(mat);
+            materials_loading_.erase(template_id);
+        }
+    }
+
+    return template_id;
+}
+
+MaterialID ResourceManager::new_material_from_file(const unicode& path, GarbageCollectMethod garbage_collect) {
+
+    MaterialID template_id = get_template_material(path);
+
     /* Take the template, clone it, and set garbage_collection appropriately */
-    auto template_id = template_materials.at(path);
     auto mat_id = material(template_id)->new_clone(this, garbage_collect);
     mark_material_as_uncollected(mat_id);
+
+    L_DEBUG(_u("Cloned material {0} into {1}").format(template_id, mat_id));
+
     return mat_id;
 }
 
