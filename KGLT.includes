@@ -55,3 +55,4 @@ kglt/renderers/gl1x
 deps/kaztest/kaztest
 kglt/partitioners/impl
 kglt/panels
+toolchains
