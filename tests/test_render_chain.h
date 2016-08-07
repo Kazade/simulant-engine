@@ -16,7 +16,7 @@ public:
         Viewport view;
         StageID stage = window->new_stage();
         CameraID cam = window->new_camera();
-        TextureID tex = window->new_texture();
+        TextureID tex = window->shared_assets->new_texture();
 
         PipelineID pid1 = window->render(stage, cam);
         PipelineID pid2 = window->render(stage, cam).to_texture(tex);

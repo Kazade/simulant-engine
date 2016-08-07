@@ -42,7 +42,7 @@ BackgroundID BackgroundManager::new_background() {
 BackgroundID BackgroundManager::new_background_from_file(const unicode& filename, float scroll_x, float scroll_y) {
     BackgroundID result = new_background();
     try {
-        background(result)->set_texture(window_->new_texture_from_file(filename));
+        background(result)->set_texture(window_->shared_assets->new_texture_from_file(filename));
         background(result)->set_horizontal_scroll_rate(scroll_x);
         background(result)->set_vertical_scroll_rate(scroll_y);
     } catch(...) {

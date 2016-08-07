@@ -4,14 +4,22 @@
 #include <memory>
 #include <unordered_map>
 #include <kazbase/unicode.h>
+#include <tinyxml.h>
+#include <nuklear/nuklear.h>
+
 #include "../generic/managed.h"
 #include"../types.h"
 #include "../loadable.h"
+#include "../renderers/batching/renderable.h"
+#include "../vertex_data.h"
 #include "element.h"
+
+#ifdef KGLT_GL_VERSION_2X
+#include "../renderers/gl2x/buffer_object.h"
+#endif
 
 namespace kglt {
 
-struct RocketImpl;
 class WindowBase;
 
 namespace ui {
@@ -142,16 +150,65 @@ private:
     std::vector<Element> elements_;
 };
 
+class UIRenderable:
+    public Renderable {
 
-void set_active_impl(RocketImpl* impl);
-RocketImpl* get_active_impl();
+public:
+    UIRenderable(VertexData& vertices, MaterialID material):
+        vertices_(vertices),
+        material_id_(material) {
+
+#ifdef KGLT_GL_VERSION_2X
+        vertex_array_object_ = VertexArrayObject::create();
+#endif
+    }
+
+    UIRenderable(const UIRenderable& rhs):
+        vertices_(rhs.vertices_),
+        material_id_(rhs.material_id_) {
+
+    }
+
+    const MeshArrangement arrangement() const override { return MESH_ARRANGEMENT_TRIANGLES; }
+    kglt::RenderPriority render_priority() const override { return RENDER_PRIORITY_MAIN; }
+    kglt::Mat4 final_transformation() const override { return Mat4(); }
+    const MaterialID material_id() const override { return material_id_; }
+    const bool is_visible() const override { return true; }
+    const AABB transformed_aabb() const { return AABB(); } // Not used
+    const AABB aabb() const { return AABB(); } // Not used
+
+    kglt::MeshID instanced_mesh_id() const { return kglt::MeshID(); } // Not used
+    kglt::SubMeshID instanced_submesh_id() const { return kglt::SubMeshID(); } // Not used
+
+#ifdef KGLT_GL_VERSION_2X
+    void _bind_vertex_array_object() {
+        vertex_array_object_->bind();
+    }
+
+    void _update_vertex_array_object() {
+        vertex_array_object_->vertex_buffer_update(vertex_data->data_size(), vertex_data->data());
+        vertex_array_object_->index_buffer_update(index_data->count() * sizeof(Index), index_data->_raw_data());
+    }
+private:
+    VertexArrayObject::ptr vertex_array_object_;
+#endif
+
+private:
+    VertexData* get_vertex_data() const { return &vertices_; }
+    IndexData* get_index_data() const { return const_cast<IndexData*>(&indices_); }
+
+    VertexData& vertices_;
+    IndexData indices_;
+    MaterialID material_id_;
+};
+
 
 class Interface :
     public Managed<Interface>,
     public Loadable {
 
 public:
-    Interface(WindowBase& window);
+    Interface(WindowBase& window, UIStage* owner);
     ~Interface();
 
     uint16_t width() const;
@@ -159,30 +216,43 @@ public:
 
     void set_dimensions(uint16_t width, uint16_t height);
 
-    RocketImpl* impl() { return impl_.get(); }
-
     bool init();
     void update(float dt);
-    void render(const Mat4& projection_matrix);
+    void render(CameraPtr camera, Viewport viewport);
 
     ElementList append(const unicode& tag);
     void set_styles(const std::string& stylesheet_content);
     ElementList _(const unicode& selector);
 
-    Mat4 projection_matrix() const { return projection_matrix_; }
-
     void load_font(const unicode& ttf_file);
 
     WindowBase* window() { return &window_; }
+
 private:    
-    void set_projection_matrix(const Mat4& mat) { projection_matrix_ = mat; }
+    friend class ElementImpl;
+
     std::vector<unicode> find_fonts();
 
     unicode locate_font(const unicode& filename);
 
     WindowBase& window_;
-    Mat4 projection_matrix_;
-    std::unique_ptr<RocketImpl> impl_;   
+    UIStage* stage_ = nullptr;
+
+    TiXmlDocument document_;
+    TiXmlElement* root_element_ = nullptr;
+    std::unordered_map<TiXmlElement*, std::shared_ptr<ElementImpl>> element_impls_;
+
+    nk_context nk_ctx_;
+    nk_panel nk_layout_;
+    nk_font_atlas nk_font_;
+    struct nk_kglt_device {
+        struct nk_buffer cmds;
+        struct nk_draw_null_texture null;
+        MaterialID font_tex;
+        MaterialID null_tex;
+    } nk_device_;
+
+    void send_to_renderer(CameraPtr camera, Viewport viewport);
 };
 
 }

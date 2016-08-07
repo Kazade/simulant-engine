@@ -44,10 +44,10 @@ public:
 
                 {
                     auto lm_stage = window->stage(lightmap_preview_);
-                    auto world = stage->get_mesh_with_alias("world_geometry");
-                    auto lightmap_texture = stage->mesh(world)->get<TextureID>("lightmap_texture_id");
-                    auto rect_mat = lm_stage->new_material_from_texture(lightmap_texture);
-                    auto rectangle = lm_stage->new_mesh_as_rectangle(0.25, 0.25, Vec2(), rect_mat);
+                    auto world = stage->assets->get_mesh_with_alias("world_geometry");
+                    auto lightmap_texture = stage->assets->mesh(world)->get<TextureID>("lightmap_texture_id");
+                    auto rect_mat = lm_stage->assets->new_material_from_texture(lightmap_texture);
+                    auto rectangle = lm_stage->assets->new_mesh_as_rectangle(0.25, 0.25, Vec2(), rect_mat);
                     auto rect_actor = lm_stage->new_actor_with_mesh(rectangle);
                     lm_stage->actor(rect_actor)->set_absolute_position(0.5, -0.25, 0);
                 }

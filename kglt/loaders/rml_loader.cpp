@@ -1,4 +1,3 @@
-#include <Rocket/Core.h>
 #include "rml_loader.h"
 
 #include "../ui_stage.h"
@@ -22,28 +21,6 @@ void RMLLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     assert(iface && "You passed a Resource that is not a Interface to the RML loader");
 
-    auto str = data_->str();
-    if(str.empty()) {
-        throw IOError("Couldn't load specified RML");
-    }
-
-
-
-    ui::set_active_impl(iface->impl());
-    auto doc = iface->impl()->context_->LoadDocumentFromMemory(str.c_str());
-    ui::set_active_impl(nullptr);
-
-    if(!doc) {
-        throw IOError("Unable to load specified document");
-    }
-
-    iface->impl()->document_ = dynamic_cast<kglt::ui::CustomDocument*>(doc);
-
-    if(!iface->impl()->document_) {
-        throw IOError("Unable to load the RML document");
-    } else {
-        iface->impl()->document_->Show();
-    }
 }
 
 }

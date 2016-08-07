@@ -7,6 +7,10 @@
 #include "loader.h"
 #include "material.h"
 
+#ifdef KGLT_GL_VERSION_2X
+#include "renderers/gl2x/buffer_object.h"
+#endif
+
 namespace kglt {
 
 VertexData *SubMesh::get_vertex_data() const {
@@ -25,8 +29,10 @@ Mesh::Mesh(MeshID id, ResourceManager *resource_manager, VertexSpecification ver
 
     shared_data_ = new VertexData(vertex_specification);
 
+#ifdef KGLT_GL_VERSION_2X
     //FIXME: Somehow we need to specify if the shared data is modified repeatedly etc.
     shared_data_buffer_object_ = BufferObject::create(BUFFER_OBJECT_VERTEX_DATA, MODIFY_ONCE_USED_FOR_RENDERING);
+#endif
 
     shared_data->signal_update_complete().connect([&]{
         this->shared_data_dirty_ = true;
@@ -481,12 +487,14 @@ void Mesh::set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass) {
     });
 }
 
+#ifdef KGLT_GL_VERSION_2X
 void Mesh::_update_buffer_object() {
     if(shared_data_dirty_) {
         shared_data_buffer_object_->build(shared_data->data_size(), shared_data->data());
         shared_data_dirty_ = false;
     }
 }
+#endif
 
 SubMesh* Mesh::submesh(SubMeshID index) {
     return TemplatedSubMeshManager::manager_get(index).lock().get();
@@ -510,6 +518,7 @@ SubMesh::SubMesh(SubMeshID id, Mesh* parent, const std::string& name,
         vertex_data_ = new VertexData(vertex_specification);
     }
 
+#ifdef KGLT_GL_VERSION_2X
     /*
      * If we use shared vertices then we must reuse the buffer object from the mesh,
      * otherwise the VAO creates its own VBO
@@ -519,6 +528,7 @@ SubMesh::SubMesh(SubMeshID id, Mesh* parent, const std::string& name,
     } else {
         vertex_array_object_ = VertexArrayObject::create();
     }
+#endif
 
     if(!material) {
         //Set the material to the default one (store the pointer to increment the ref-count)
@@ -541,6 +551,7 @@ SubMesh::SubMesh(SubMeshID id, Mesh* parent, const std::string& name,
     });
 }
 
+#ifdef KGLT_GL_VERSION_2X
 void SubMesh::_bind_vertex_array_object() {
     vertex_array_object_->bind();
 }
@@ -562,6 +573,7 @@ void SubMesh::_update_vertex_array_object() {
         }
     }
 }
+#endif
 
 const MaterialID SubMesh::material_id() const {
     return material_->id();

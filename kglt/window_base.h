@@ -15,7 +15,6 @@
 #include "input_controller.h"
 #include "generic/auto_weakptr.h"
 #include "kazbase/logging.h"
-#include "resource_manager.h"
 #include "types.h"
 #include "sound.h"
 #include "managers.h"
@@ -25,6 +24,8 @@
 
 
 namespace kglt {
+
+class ResourceManager;
 
 namespace ui {
     class Interface;
@@ -83,7 +84,6 @@ class WindowBase :
     public StageManager,
     public UIStageManager,
     public CameraManager,
-    public ResourceManagerImpl,
     public Loadable,
     public PipelineHelperAPIInterface,
     public RenderTarget {
@@ -292,12 +292,14 @@ private:
 
     std::shared_ptr<VirtualGamepad> virtual_gamepad_;
     std::unique_ptr<BackgroundManager> background_manager_;
+    ResourceManager* resource_manager_;
 
     Stats stats_;
 
 public:
 
     //Read only properties
+    Property<WindowBase, ResourceManager> shared_assets = { this, &WindowBase::resource_manager_ };
     Property<WindowBase, Application> application = { this, &WindowBase::application_ };
     Property<WindowBase, VirtualGamepad> virtual_joypad = { this, &WindowBase::virtual_gamepad_ };
     Property<WindowBase, MessageBar> message_bar = { this, &WindowBase::message_bar_ };

@@ -30,13 +30,13 @@ public:
         */
 
         ///Shortcut function for loading images
-        kglt::TextureID tid = stage->new_texture_from_file("sample_data/sample.tga");
-        kglt::MaterialID matid = stage->new_material_from_texture(tid);
+        kglt::TextureID tid = stage->assets->new_texture_from_file("sample_data/sample.tga");
+        kglt::MaterialID matid = stage->assets->new_material_from_texture(tid);
 
         stage->set_ambient_light(kglt::Colour::WHITE);
         stage->new_light(kglt::LIGHT_TYPE_DIRECTIONAL);
 
-        actor_id_ = stage->new_actor_with_mesh(stage->new_mesh_as_capsule(0.5, 1.0));
+        actor_id_ = stage->new_actor_with_mesh(stage->assets->new_mesh_as_capsule(0.5, 1.0));
         {
             auto actor = stage->actor(actor_id_);
             actor->mesh()->set_material_id(matid);

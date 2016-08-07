@@ -45,7 +45,10 @@ struct MaterialPassChangeEvent {
 
 
 class Material;
+
+#ifndef KGLT_GL_VERSION_1X
 class GPUProgramInstance;
+#endif
 
 class TextureUnit:
     public Updateable {
@@ -173,6 +176,16 @@ public:
     void set_cull_mode(CullMode mode) { cull_mode_ = mode; }
     CullMode cull_mode() const { return cull_mode_; }
 
+
+    void set_prevent_textures(bool value) { allow_textures_ = !value; }
+
+    Property<MaterialPass, Material> material = { this, &MaterialPass::material_ };
+
+#ifndef KGLT_GL_VERSION_1X
+    Property<MaterialPass, GPUProgramInstance> program = { this, &MaterialPass::program_ };
+    std::map<std::string, float> staged_float_uniforms() const { return float_uniforms_; }
+    std::map<std::string, int> staged_int_uniforms() const { return int_uniforms_; }
+
     void stage_uniform(const std::string& name, const int& value) {
         int_uniforms_[name] = value;
     }
@@ -181,24 +194,20 @@ public:
         float_uniforms_[name] = value;
     }
 
-    std::map<std::string, float> staged_float_uniforms() const { return float_uniforms_; }
-    std::map<std::string, int> staged_int_uniforms() const { return int_uniforms_; }
-
-    void set_prevent_textures(bool value) { allow_textures_ = !value; }
-
-    Property<MaterialPass, Material> material = { this, &MaterialPass::material_ };
-    Property<MaterialPass, GPUProgramInstance> program = { this, &MaterialPass::program_ };
-
     void build_program_and_bind_attributes();
+#endif
+
 private:
     static std::shared_ptr<GPUProgram> default_program;
 
     Material* material_ = nullptr;
 
+#ifndef KGLT_GL_VERSION_1X
     std::map<std::string, float> float_uniforms_;
     std::map<std::string, int> int_uniforms_;
-
     std::shared_ptr<GPUProgramInstance> program_;
+    std::map<kglt::ShaderType, unicode> shader_sources_;
+#endif
 
     Colour diffuse_ = Colour::WHITE;
     Colour ambient_ = Colour::BLACK;
@@ -223,8 +232,6 @@ private:
 
     PolygonMode polygon_mode_ = POLYGON_MODE_FILL;
     CullMode cull_mode_ = CULL_MODE_BACK_FACE;
-
-    std::map<kglt::ShaderType, unicode> shader_sources_;
 
     friend class Material;
     MaterialPass::ptr new_clone(Material *owner) const;
@@ -268,7 +275,7 @@ public:
 
     void set_texture_unit_on_all_passes(uint32_t texture_unit_id, TextureID tex);
 
-    MaterialID new_clone(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) const;
+    MaterialID new_clone(ResourceManager* target_resource_manager, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) const;
 
     void each(std::function<void (uint32_t, MaterialPass*)> callback) {
         // Wait until we can lock the atomic flag

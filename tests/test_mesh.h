@@ -22,8 +22,8 @@ public:
     }
 
     kglt::MeshID generate_test_mesh(kglt::StagePtr stage) {
-        kglt::MeshID mid = stage->new_mesh(kglt::VertexSpecification::POSITION_ONLY);
-        auto mesh = stage->mesh(mid);
+        kglt::MeshID mid = stage->assets->new_mesh(kglt::VertexSpecification::POSITION_ONLY);
+        auto mesh = stage->assets->mesh(mid);
 
         auto& data = mesh->shared_data;
 
@@ -78,7 +78,7 @@ public:
          */
 
         auto stage = window->stage(stage_id_);
-        auto mesh = stage->mesh(generate_test_mesh(stage));
+        auto mesh = stage->assets->mesh(generate_test_mesh(stage));
 
         assert_close(2.0, mesh->diameter(), 0.00001);
         mesh->normalize();
@@ -122,7 +122,7 @@ public:
 
     void test_basic_usage() {
         auto stage = window->stage(stage_id_);
-        auto mesh = stage->mesh(generate_test_mesh(stage));
+        auto mesh = stage->assets->mesh(generate_test_mesh(stage));
 
         auto& data = mesh->shared_data;
 
@@ -142,7 +142,7 @@ public:
     void test_actor_from_mesh() {
         auto stage = window->stage(stage_id_);
 
-        auto mesh = stage->mesh(generate_test_mesh(stage));
+        auto mesh = stage->assets->mesh(generate_test_mesh(stage));
 
         auto actor = stage->actor(stage->new_actor());
 
@@ -177,7 +177,7 @@ public:
     void test_scene_methods() {
         auto stage = window->stage(stage_id_);
 
-        kglt::MeshID mesh_id = stage->new_mesh(kglt::VertexSpecification::POSITION_ONLY); //Create a mesh
+        kglt::MeshID mesh_id = stage->assets->new_mesh(kglt::VertexSpecification::POSITION_ONLY); //Create a mesh
         auto actor = stage->actor(stage->new_actor_with_mesh(mesh_id));
 
         assert_true(mesh_id == actor->mesh()->id());
@@ -186,10 +186,10 @@ public:
     void test_cubic_texture_generation() {
         auto stage = window->stage(stage_id_);
 
-        auto mesh_id = stage->new_mesh_as_box(10.0f, 10.0f, 10.0f);
-        stage->mesh(mesh_id)->only_submesh()->generate_texture_coordinates_cube();
+        auto mesh_id = stage->assets->new_mesh_as_box(10.0f, 10.0f, 10.0f);
+        stage->assets->mesh(mesh_id)->only_submesh()->generate_texture_coordinates_cube();
 
-        auto& vd = *stage->mesh(mesh_id)->only_submesh()->vertex_data.get();
+        auto& vd = *stage->assets->mesh(mesh_id)->only_submesh()->vertex_data.get();
 
         // Neg Z
         assert_equal(kglt::Vec2((1.0 / 3.0), 0), vd.texcoord0_at<kglt::Vec2>(0));

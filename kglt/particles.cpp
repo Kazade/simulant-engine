@@ -2,6 +2,10 @@
 #include "stage.h"
 #include "particles.h"
 
+#ifdef KGLT_GL_VERSION_2X
+#include "renderers/gl2x/buffer_object.h"
+#endif
+
 namespace kglt {
 
 ParticleSystem::ParticleSystem(ParticleSystemID id, Stage* stage):
@@ -9,10 +13,13 @@ ParticleSystem::ParticleSystem(ParticleSystemID id, Stage* stage):
     ParentSetterMixin<MoveableObject>(stage),
     Source(stage),
     vertex_data_(new VertexData(VertexSpecification::POSITION_AND_DIFFUSE)),
-    index_data_(new IndexData()),
-    vao_(MODIFY_REPEATEDLY_USED_FOR_RENDERING, MODIFY_REPEATEDLY_USED_FOR_RENDERING) {
+    index_data_(new IndexData()) {
 
-    set_material_id(stage->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY));
+#ifdef KGLT_GL_VERSION_2X
+    vao_.reset(new VertexArrayObject(MODIFY_REPEATEDLY_USED_FOR_RENDERING, MODIFY_REPEATEDLY_USED_FOR_RENDERING));
+#endif
+
+    set_material_id(stage->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY));
 }
 
 ParticleSystem::~ParticleSystem() {
@@ -31,7 +38,7 @@ void ParticleSystem::set_material_id(MaterialID mat_id) {
     material_id_ = mat_id;
 
     //Hold a reference to the material so that it's destroyed when we are
-    material_ref_ = stage->material(material_id_);
+    material_ref_ = stage->assets->material(material_id_);
 }
 
 EmitterPtr ParticleSystem::push_emitter() {
@@ -93,18 +100,21 @@ const AABB ParticleSystem::aabb() const {
     return result;
 }
 
+#ifdef KGLT_GL_VERSION_2X
 void ParticleSystem::_update_vertex_array_object() {
     if(!index_data_->count()) {
         return;
     }
 
-    vao_.vertex_buffer_update(vertex_data_->data_size(), vertex_data_->data());
-    vao_.index_buffer_update(index_data_->count() * sizeof(uint16_t), index_data_->_raw_data());
+    vao_->vertex_buffer_update(vertex_data_->data_size(), vertex_data_->data());
+    vao_->index_buffer_update(index_data_->count() * sizeof(uint16_t), index_data_->_raw_data());
 }
 
 void ParticleSystem::_bind_vertex_array_object() {
-    vao_.bind();
+    vao_->bind();
 }
+
+#endif
 
 const AABB ParticleSystem::transformed_aabb() const {
     AABB box = aabb(); //Get the untransformed one
@@ -339,7 +349,7 @@ std::pair<float, float> ParticleEmitter::duration_range() const {
 }
 
 void ParticleSystem::set_particle_width(float width) {
-    MoveableObject::stage->material(material_id())->pass(0)->set_point_size(width);
+    MoveableObject::stage->assets->material(material_id())->pass(0)->set_point_size(width);
     particle_width_ = width;
 }
 

@@ -7,7 +7,10 @@
 #include "../shortcuts.h"
 #include "../resource_manager.h"
 #include "../utils/gl_thread_check.h"
-#include "../gpu_program.h"
+
+#ifndef KGLT_GL_VERSION_1X
+#include "../renderers/gl2x/gpu_program.h"
+#endif
 
 namespace kglt {
 
@@ -44,6 +47,8 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<un
     } else if (type == "MAX_ITERATIONS") {
         int count = unicode(arg_1).to_int();
         pass->set_iteration(pass->iteration(), count);
+
+#ifndef KGLT_GL_VERSION_1X
     } else if(type == "ATTRIBUTE") {
         if(args.size() < 3) {
             throw SyntaxError("Wrong number of arguments for SET(ATTRIBUTE) command");
@@ -140,6 +145,7 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<un
         } else {
             throw SyntaxError(_u("Unhandled auto-uniform: {0}").format(arg_1));
         }
+#endif
     } else if (type == "FLAG") {
         std::string arg_2 = unicode(args[2]).upper().encode();
 
@@ -273,6 +279,7 @@ void MaterialScript::handle_block(Material& mat,
             }
 
             if(end_block_type == "PASS") {
+#ifndef KGLT_GL_VERSION_1X
                 //L_DEBUG(_u("Shader pass added {0}").format(mat.id()));
 
                 // Set the program
@@ -281,6 +288,7 @@ void MaterialScript::handle_block(Material& mat,
                 );
 
                 current_pass->build_program_and_bind_attributes();
+#endif
             }
             return; //Exit this function, we are done with this block
         } else if(line.starts_with("SET")) {

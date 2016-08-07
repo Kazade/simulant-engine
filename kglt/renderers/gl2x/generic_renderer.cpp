@@ -1,3 +1,5 @@
+#ifdef KGLT_GL_VERSION_2X
+
 #include "generic_renderer.h"
 
 #include "../../actor.h"
@@ -5,10 +7,10 @@
 #include "../../camera.h"
 #include "../../light.h"
 #include "../../partitioner.h"
-#include "../../gpu_program.h"
+#include "gpu_program.h"
 
 #include "kazmath/mat4.h"
-#include "../../utils/glcompat.h"
+#include "./glad/glad/glad.h"
 #include "../../utils/gl_error.h"
 
 namespace kglt {
@@ -272,11 +274,12 @@ void GenericRenderer::set_blending_mode(BlendType type) {
     }
 }
 
-void GenericRenderer::render(CameraPtr camera, StagePtr stage, bool render_group_changed, const batcher::RenderGroup* current_group,
-    Renderable* renderable, MaterialPass* material_pass, Light* light, batcher::Iteration iteration) {
+void GenericRenderer::render(CameraPtr camera, bool render_group_changed, const batcher::RenderGroup* current_group,
+    Renderable* renderable, MaterialPass* material_pass, Light* light, const Colour &global_ambient, batcher::Iteration iteration) {
 
     // Casting blindly because I can't see how it's possible that it's anything else!
     GL2RenderGroupImpl* current = (GL2RenderGroupImpl*) current_group->impl();
+    ResourceManager& resource_manager = material_pass->material->resource_manager();
 
     static ShaderID last_shader_id;
 
@@ -291,7 +294,7 @@ void GenericRenderer::render(CameraPtr camera, StagePtr stage, bool render_group
         for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
             GLCheck(glActiveTexture, GL_TEXTURE0 + i);
             if(current->texture_id[i]) {
-                auto texture = stage->texture(current->texture_id[i]);
+                auto texture = resource_manager.texture(current->texture_id[i]);
                 GLCheck(glBindTexture, GL_TEXTURE_2D, texture->gl_tex());
             } else {
                 GLCheck(glBindTexture, GL_TEXTURE_2D, 0);
@@ -302,7 +305,7 @@ void GenericRenderer::render(CameraPtr camera, StagePtr stage, bool render_group
     auto& program_instance = material_pass->program;
     auto& program = program_instance->program;
 
-    set_auto_uniforms_on_shader(program_instance.get(), camera, renderable, stage->ambient_light());
+    set_auto_uniforms_on_shader(program_instance.get(), camera, renderable, global_ambient);
     set_material_uniforms(program_instance.get(), material_pass);
 
     if(light) {
@@ -426,6 +429,17 @@ void GenericRenderer::send_geometry(Renderable *renderable) {
     }
 }
 
+void GenericRenderer::init_context() {
+    if(!gladLoadGL()) {
+        throw std::runtime_error("Unable to intialize OpenGL 2.1");
+    }
+
+    GLCheck(glEnable, GL_DEPTH_TEST);
+    GLCheck(glDepthFunc, GL_LEQUAL);
+    GLCheck(glEnable, GL_CULL_FACE);
+}
+
+
 /*
 void GenericRenderer::render(Renderable& buffer, CameraID camera, GPUProgramInstance *program) {
 
@@ -452,3 +466,5 @@ void GenericRenderer::render(Renderable& buffer, CameraID camera, GPUProgramInst
 }*/
 
 }
+
+#endif //KGLT_GL_VERSION_2X

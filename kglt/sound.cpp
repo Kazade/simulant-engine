@@ -76,7 +76,7 @@ void SourceInstance::update(float dt) {
             parent_.signal_stream_finished_();
             if(loop_stream_) {
                 //Restart the sound
-                auto sound = parent_.stage_->sound(sound_);
+                auto sound = parent_.stage_->assets->sound(sound_);
                 sound->init_source_(*this);
                 start();
             } else {
@@ -113,11 +113,12 @@ void Source::play_sound(SoundID sound, bool loop) {
 
     SourceInstance::ptr new_source = SourceInstance::create(*this, sound, loop);
 
+    /* This is surely wrong... */
     if(stage_) {
-        auto s = stage_->sound(sound);
+        auto s = stage_->assets->sound(sound);
         s->init_source_(*new_source);
     } else {
-        auto s = window_->sound(sound);
+        auto s = window_->shared_assets->sound(sound);
         s->init_source_(*new_source);
     }
 

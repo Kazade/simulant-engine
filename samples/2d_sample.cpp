@@ -25,13 +25,13 @@ public:
             auto stage = window->stage(stage_id_);
 
             //Load a sprite grid, from the 'Layer 1' layer in a tmx file
-            kglt::MeshID mesh_id = stage->new_mesh_from_tmx_file(
+            kglt::MeshID mesh_id = stage->assets->new_mesh_from_tmx_file(
                 "sample_data/tiled/example.tmx", "Layer 1"
             );
 
             stage->new_actor_with_mesh(mesh_id);
 
-            auto bounds = stage->mesh(mesh_id)->aabb();
+            auto bounds = stage->assets->mesh(mesh_id)->aabb();
 
             stage->host_camera(camera_id_);
 

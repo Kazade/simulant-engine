@@ -4,10 +4,23 @@
 #include "window_base.h"
 #include "material.h"
 #include "resource_manager.h"
-#include "gpu_program.h"
+
+#ifndef KGLT_GL_VERSION_1X
+#include "renderers/gl2x/gpu_program.h"
+#endif
 
 namespace kglt {
 
+#ifdef KGLT_GL_VERSION_1X
+const std::string Material::BuiltIns::TEXTURE_ONLY = "kglt/materials/opengl-1.x/texture_only.kglm";
+const std::string Material::BuiltIns::DIFFUSE_ONLY = "kglt/materials/opengl-1.x/diffuse_only.kglm";
+const std::string Material::BuiltIns::DIFFUSE_WITH_LIGHTING = "kglt/materials/opengl-1.x/diffuse_with_lighting.kglm";
+const std::string Material::BuiltIns::MULTITEXTURE2_MODULATE = "kglt/materials/opengl-1.x/multitexture2_modulate.kglm";
+const std::string Material::BuiltIns::MULTITEXTURE2_ADD = "kglt/materials/opengl-1.x/multitexture2_add.kglm";
+const std::string Material::BuiltIns::TEXTURE_WITH_LIGHTMAP = "kglt/materials/opengl-1.x/texture_with_lightmap.kglm";
+const std::string Material::BuiltIns::TEXTURE_WITH_LIGHTMAP_AND_LIGHTING = "kglt/materials/opengl-1.x/texture_with_lightmap_and_lighting.kglm";
+const std::string Material::BuiltIns::MULTITEXTURE2_MODULATE_WITH_LIGHTING = "kglt/materials/opengl-1.x/multitexture2_modulate_with_lighting.kglm";
+#else
 const std::string Material::BuiltIns::TEXTURE_ONLY = "kglt/materials/opengl-2.x/texture_only.kglm";
 const std::string Material::BuiltIns::DIFFUSE_ONLY = "kglt/materials/opengl-2.x/diffuse_only.kglm";
 const std::string Material::BuiltIns::DIFFUSE_WITH_LIGHTING = "kglt/materials/opengl-2.x/diffuse_with_lighting.kglm";
@@ -16,6 +29,8 @@ const std::string Material::BuiltIns::MULTITEXTURE2_ADD = "kglt/materials/opengl
 const std::string Material::BuiltIns::TEXTURE_WITH_LIGHTMAP = "kglt/materials/opengl-2.x/texture_with_lightmap.kglm";
 const std::string Material::BuiltIns::TEXTURE_WITH_LIGHTMAP_AND_LIGHTING = "kglt/materials/opengl-2.x/texture_with_lightmap_and_lighting.kglm";
 const std::string Material::BuiltIns::MULTITEXTURE2_MODULATE_WITH_LIGHTING = "kglt/materials/opengl-2.x/multitexture2_modulate_with_lighting.kglm";
+#endif
+
 
 static const std::string DEFAULT_VERT_SHADER = R"(
     attribute vec3 vertex_position;
@@ -111,7 +126,9 @@ MaterialPass::ptr Material::pass(uint32_t index) {
     return passes_.at(index);
 }
 
+#ifndef KGLT_GL_VERSION_1X
 GPUProgram::ptr MaterialPass::default_program;
+#endif
 
 MaterialPass::MaterialPass(Material *material):
     material_(material),
@@ -122,12 +139,14 @@ MaterialPass::MaterialPass(Material *material):
     depth_test_enabled_(true),
     point_size_(1) {
 
+#ifndef KGLT_GL_VERSION_1X
     //Create and build the default GPUProgram
     if(!default_program) {
         default_program = GPUProgram::create(DEFAULT_VERT_SHADER, DEFAULT_FRAG_SHADER);
     }
 
     program_ = GPUProgramInstance::create(default_program);
+#endif
 }
 
 void MaterialPass::set_texture_unit(uint32_t texture_unit_id, TextureID tex) {
@@ -184,6 +203,7 @@ void MaterialPass::set_albedo(float reflectiveness) {
     }
 }
 
+#ifndef KGLT_GL_VERSION_1X
 void MaterialPass::build_program_and_bind_attributes() {
     auto do_build_and_bind = [&]() {
         program->program->prepare_program();
@@ -206,6 +226,7 @@ void MaterialPass::build_program_and_bind_attributes() {
         do_build_and_bind();
     }
 }
+#endif
 
 void Material::set_texture_unit_on_all_passes(uint32_t texture_unit_id, TextureID tex) {
     for(auto& p: passes_) {
@@ -242,6 +263,7 @@ TextureUnit TextureUnit::new_clone(MaterialPass& owner) const {
 MaterialPass::ptr MaterialPass::new_clone(Material* owner) const {
     MaterialPass::ptr ret = MaterialPass::create(owner);
 
+#ifndef KGLT_GL_VERSION_1X
     ret->float_uniforms_ = float_uniforms_;
     ret->int_uniforms_ = int_uniforms_;
 
@@ -262,6 +284,8 @@ MaterialPass::ptr MaterialPass::new_clone(Material* owner) const {
     };
 
     ret->program_ = clone_gpu_program(program_);
+    ret->shader_sources_ = shader_sources_;
+#endif
 
     ret->diffuse_ = diffuse_;
     ret->ambient_ = ambient_;
@@ -283,20 +307,14 @@ MaterialPass::ptr MaterialPass::new_clone(Material* owner) const {
     ret->albedo_ = albedo_;
     ret->reflection_texture_unit_ = reflection_texture_unit_;
     ret->polygon_mode_ = polygon_mode_;
-    ret->shader_sources_ = shader_sources_;
+
     return ret;
 }
 
-MaterialID Material::new_clone(GarbageCollectMethod garbage_collect) const {
+MaterialID Material::new_clone(ResourceManager* target_resource_manager, GarbageCollectMethod garbage_collect) const {
 
-    // Probably the only legit use of const_cast I've ever done! The const-ness applies
-    // to the source material, not the resource manager, and there's no other way to get
-    // a non-const resource manager reference unless we pass it in as an argument and that
-    // is nasty
-    ResourceManager& tmp = const_cast<ResourceManager&>(resource_manager());
-
-    MaterialID ret = tmp.new_material(garbage_collect);
-    auto mat = tmp.material(ret);
+    MaterialID ret = target_resource_manager->new_material(garbage_collect);
+    auto mat = target_resource_manager->material(ret);
 
     for(auto pass: passes_) {
         mat->passes_.push_back(pass->new_clone(mat.get()));

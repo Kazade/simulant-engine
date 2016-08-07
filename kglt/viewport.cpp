@@ -1,9 +1,15 @@
 #include <kazbase/exceptions.h>
 
-#include "utils/glcompat.h"
 #include "viewport.h"
 #include "sdl2_window.h"
+
 #include "utils/gl_error.h"
+
+#ifdef KGLT_GL_VERSION_2X
+    #include "renderers/gl2x/glad/glad/glad.h"
+#else
+    #include "renderers/gl1x/glad/glad/glad.h"
+#endif
 
 namespace kglt {
 

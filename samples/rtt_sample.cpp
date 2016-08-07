@@ -12,18 +12,18 @@ public:
         cube_stage_ = window->new_stage();
         rect_stage_ = window->new_stage();
 
-        kglt::TextureID tid = window->new_texture_from_file("sample_data/sample.tga");
-        MeshID cube_mesh = window->new_mesh_as_cube(1.0);
-        window->mesh(cube_mesh)->set_texture_on_material(0, tid);
+        kglt::TextureID tid = window->shared_assets->new_texture_from_file("sample_data/sample.tga");
+        MeshID cube_mesh = window->shared_assets->new_mesh_as_cube(1.0);
+        window->shared_assets->mesh(cube_mesh)->set_texture_on_material(0, tid);
         cube_ = window->stage(cube_stage_)->new_actor_with_mesh(cube_mesh);
         window->stage(cube_stage_)->actor(cube_)->set_absolute_position(0, 0, -4);
 
-        MeshID rect_mesh = window->new_mesh_as_rectangle(2.0, 2.0);
+        MeshID rect_mesh = window->shared_assets->new_mesh_as_rectangle(2.0, 2.0);
         rect_ = window->stage(rect_stage_)->new_actor_with_mesh(rect_mesh);
         window->stage(rect_stage_)->actor(rect_)->set_absolute_position(0, 0, -4);
 
-        TextureID rtt = window->new_texture(kglt::GARBAGE_COLLECT_NEVER);
-        window->mesh(rect_mesh)->set_texture_on_material(0, rtt);
+        TextureID rtt = window->shared_assets->new_texture(kglt::GARBAGE_COLLECT_NEVER);
+        window->shared_assets->mesh(rect_mesh)->set_texture_on_material(0, rtt);
 
         window->render(cube_stage_, camera_id_).to_texture(rtt);
         window->render(rect_stage_, camera_id_).to_framebuffer(

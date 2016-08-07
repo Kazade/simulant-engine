@@ -29,7 +29,7 @@ public:
                 END(pass)
         )";
 
-        auto mat = window->material(window->new_material());
+        auto mat = window->shared_assets->material(window->shared_assets->new_material());
         kglt::MaterialScript script((kglt::MaterialLanguageText(text))); //Most vexing parse \o/
         script.generate(*mat);
 

@@ -55,23 +55,23 @@ public:
         cam->move_to(0, 50, 700);
         cam->look_at(0, 0, 0);
 
-        terrain_material_id_ = stage->new_material_from_file("sample_data/terrain_splat.kglm", GARBAGE_COLLECT_NEVER);
+        terrain_material_id_ = stage->assets->new_material_from_file("sample_data/terrain_splat.kglm", GARBAGE_COLLECT_NEVER);
         kglt::HeightmapSpecification spec;
         spec.smooth_iterations = 0;
 
-        terrain_mesh_id_ = stage->new_mesh_from_heightmap("sample_data/terrain.png", spec);
-        auto terrain_mesh = stage->mesh(terrain_mesh_id_);
+        terrain_mesh_id_ = stage->assets->new_mesh_from_heightmap("sample_data/terrain.png", spec);
+        auto terrain_mesh = stage->assets->mesh(terrain_mesh_id_);
 
         auto terrain_data = terrain_mesh->get<kglt::TerrainData>("terrain_data");
-        kglt::TextureID terrain_splatmap = stage->new_texture();
+        kglt::TextureID terrain_splatmap = stage->assets->new_texture();
         calculate_splat_map(
             terrain_data.x_size,
             terrain_data.z_size,
-            stage->texture(terrain_splatmap),
+            stage->assets->texture(terrain_splatmap),
             terrain_mesh->shared_data
         );
 
-        stage->material(terrain_material_id_)->first_pass()->set_texture_unit(4, terrain_splatmap);
+        stage->assets->material(terrain_material_id_)->first_pass()->set_texture_unit(4, terrain_splatmap);
 
         terrain_mesh->set_material_id(terrain_material_id_);
 

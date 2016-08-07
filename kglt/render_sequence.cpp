@@ -1,8 +1,6 @@
-#include "utils/glcompat.h"
 #include <unordered_map>
 
 #include "generic/algorithm.h"
-#include "utils/gl_error.h"
 #include "render_sequence.h"
 #include "stage.h"
 #include "ui_stage.h"
@@ -13,10 +11,7 @@
 #include "window_base.h"
 #include "partitioner.h"
 #include "partitioners/octree_partitioner.h"
-#include "renderers/gl2x/generic_renderer.h"
 #include "loader.h"
-#include "gpu_program.h"
-
 
 namespace kglt {
 
@@ -234,8 +229,6 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
 
     update_camera_constraint(pipeline_stage->camera_id());
 
-    Mat4 camera_projection = window->camera(pipeline_stage->camera_id())->projection_matrix();
-
     RenderTarget& target = *window_; //FIXME: Should be window or texture
 
     /*
@@ -266,11 +259,12 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
     CameraID camera_id = pipeline_stage->camera_id();
     StageID stage_id = pipeline_stage->stage_id();
 
+    auto camera = window->camera(camera_id);
+
     if(pipeline_stage->ui_stage_id()) {        
         //This is a UI stage, so just render that
         auto ui_stage = window->ui_stage(pipeline_stage->ui_stage_id());
-        ui_stage->__resize(viewport->width_in_pixels(target), viewport->height_in_pixels(target));
-        ui_stage->__render(camera_projection);
+        ui_stage->render(camera, viewport);
     } else {
         auto stage = window->stage(stage_id);
 
@@ -312,10 +306,9 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
         }
 
         using namespace std::placeholders;
-        auto camera = window->camera(camera_id);
 
         batcher::RenderQueue::TraverseCallback callback = std::bind(
-            &Renderer::render, renderer_, camera, stage, _1, _2, _3, _4, _5, _6
+            &Renderer::render, renderer_, camera, _1, _2, _3, _4, _5, stage->ambient_light(), _6
         );
 
         // Render the visible objects

@@ -57,7 +57,7 @@ void RenderQueue::insert_renderable(Renderable* renderable) {
      */
 
     auto material_id = renderable->material_id();
-    auto material = stage_->material(material_id);
+    auto material = stage_->assets->material(material_id);
 
     material->each([&](uint32_t i, MaterialPass* material_pass) {
         RenderGroup group = render_group_factory_->new_render_group(
@@ -130,7 +130,7 @@ void RenderQueue::traverse(TraverseCallback callback, uint64_t frame_id) const {
                     return;
                 }
 
-                material = stage_->material(renderable->material_id());
+                material = stage_->assets->material(renderable->material_id());
                 assert(material);
 
                 material_pass = material->pass(pass);

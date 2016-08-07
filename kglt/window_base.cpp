@@ -1,5 +1,3 @@
-#include "utils/glcompat.h"
-
 #include <thread>
 
 #include "utils/gl_error.h"
@@ -36,13 +34,11 @@
 namespace kglt {
 
 WindowBase::WindowBase():
-    WindowHolder(this),
-    ResourceManager(this),
     Source(this),
     StageManager(this),
     UIStageManager(this),    
     CameraManager(this),
-    ResourceManagerImpl(this),
+    resource_manager_(new ResourceManager(this)),
     initialized_(false),
     width_(-1),
     height_(-1),
@@ -77,6 +73,8 @@ WindowBase::~WindowBase() {
     render_sequence_.reset();
 
     Sound::shutdown_openal();
+
+    delete resource_manager_;
 }
 
 RenderSequencePtr WindowBase::render_sequence() {
@@ -181,16 +179,12 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
         Sound::init_openal();
 
         L_INFO("Initializing the default resources");
-        ResourceManagerImpl::init();
+        shared_assets->init();
 
         create_defaults();
 
         register_panel(1, std::make_shared<StatsPanel>(this));
         register_panel(2, std::make_shared<PartitionerPanel>(this));
-
-        GLCheck(glEnable, GL_DEPTH_TEST);
-        GLCheck(glDepthFunc, GL_LEQUAL);
-        GLCheck(glEnable, GL_CULL_FACE);
 
         using std::bind;
 
@@ -284,7 +278,7 @@ bool WindowBase::run_frame() {
     fixed_step_interp_ = ktiGetAccumulatorValue();
     signal_post_step_(fixed_step_interp_);
 
-    ResourceManagerImpl::update(delta_time_);
+    shared_assets->update(delta_time_);
     idle_.execute(); //Execute idle tasks before render
 
     /* Don't run the render sequence if we don't have a context, and don't update the resource

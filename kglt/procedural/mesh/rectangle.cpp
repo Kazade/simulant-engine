@@ -115,7 +115,7 @@ SubMeshID rectangle(
     mesh->shared_data->done();
 
     if(!material) {
-        material = mesh->resource_manager().window->clone_default_material();
+        material = mesh->resource_manager().clone_default_material();
     }
 
     //Create a submesh that uses the shared data
@@ -172,7 +172,7 @@ SubMeshID rectangle_outline(
     mesh->shared_data->done();
     
     if(!material) {
-        material = mesh->resource_manager().window->clone_default_material();
+        material = mesh->resource_manager().clone_default_material();
     }
     SubMeshID sm = mesh->new_submesh_with_material(
         material,

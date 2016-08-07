@@ -19,7 +19,7 @@ VertexData* Geom::get_shared_data() const {
 
 void Geom::set_mesh(MeshID mesh) {
     //Increment the ref-count on this mesh
-    mesh_ = stage->mesh(mesh).__object;
+    mesh_ = stage->assets->mesh(mesh).__object;
 
     // Tell the partitioner that stuff changed
     signal_mesh_changed_(id());

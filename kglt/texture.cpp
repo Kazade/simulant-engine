@@ -1,5 +1,3 @@
-#include "utils/glcompat.h"
-
 #include <cassert>
 #include <stdexcept>
 
@@ -10,6 +8,13 @@
 
 #include "window_base.h"
 #include "texture.h"
+#include "resource_manager.h"
+
+#ifdef KGLT_GL_VERSION_2X
+#include "./renderers/gl2x/glad/glad/glad.h"
+#else
+#include "./renderers/gl1x/glad/glad/glad.h"
+#endif
 
 namespace kglt {
 
@@ -85,7 +90,8 @@ void Texture::__do_upload(MipmapGenerate mipmap, TextureWrap wrap, TextureFilter
     );
     if(mipmap == MIPMAP_GENERATE_COMPLETE) {
 #ifdef KGLT_GL_VERSION_1X
-        throw std::runtime_error("generate_mipmaps is not currently supported on the GL 1X renderer");
+        // FIXME: OpenGL >= 1.4 - may need to look for GL_SGIS_generate_mipmap extension
+        //GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
 #else
         GLCheck(glGenerateMipmap, GL_TEXTURE_2D);
 #endif
@@ -97,8 +103,14 @@ void Texture::__do_upload(MipmapGenerate mipmap, TextureWrap wrap, TextureFilter
             GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         } break;
         case TEXTURE_WRAP_CLAMP_TO_EDGE: {
+#ifdef KGLT_GL_VERSION_2X
             GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+#else
+            //FIXME: check for extension and use GL_CLAMP_TO_EDGE
+            GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+            GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+#endif
         } break;
     default:
         assert(0 && "Not Implemented");

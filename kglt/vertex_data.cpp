@@ -1,5 +1,3 @@
-#include "utils/glcompat.h"
-
 #include <stdexcept>
 #include "vertex_data.h"
 #include "window_base.h"

@@ -41,9 +41,8 @@ public:
 
     //Internal functions
     //Called when added to a pipeline, and also before rendering
-    void __resize(uint32_t width, uint32_t height);
-    void __render(const Mat4& projection_matrix);
-    void __update(double dt);
+    void render(CameraPtr camera, Viewport viewport);
+    void update(double dt);
 
     void __handle_mouse_move(int x, int y);
     void __handle_mouse_down(int button);
@@ -60,11 +59,14 @@ public:
     void on_render_stopped();
 
     Property<UIStage, WindowBase> window = { this, &UIStage::window_ };
+    Property<UIStage, ResourceManager> assets = { this, &UIStage::resource_manager_ };
 
 private:
     WindowBase* window_ = nullptr;
 
     std::shared_ptr<ui::Interface> interface_;
+    std::shared_ptr<ResourceManager> resource_manager_;
+
     sig::connection update_conn_;
 
     std::set<int> mouse_buttons_down_;

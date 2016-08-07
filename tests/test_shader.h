@@ -1,16 +1,18 @@
-#ifndef TEST_SHADER_H
-#define TEST_SHADER_H
+#pragma once
 
 #include "kglt/kglt.h"
 #include "kaztest/kaztest.h"
 
 #include "global.h"
 
-#include "kglt/gpu_program.h"
+#ifndef KGLT_GL_VERSION_1X
+#include "kglt/renderers/gl2x/gpu_program.h"
+#endif
 
 class ShaderTest : public KGLTTestCase {
 public:
     void test_shader() {
+#ifndef KGLT_GL_VERSION_1X
         kglt::GPUProgram::ptr prog = kglt::GPUProgram::create(
             "uniform vec3 c; attribute vec3 tns; void main(){ gl_Position = vec4(c, tns.x); }",
             "void main(){ gl_FragColor = vec4(1.0); }"
@@ -39,8 +41,7 @@ public:
         auto loc = s->program->locate_attribute("tns");
 
         assert_equal(1, loc);
+#endif
     }
 
 };
-
-#endif // TEST_SHADER_H

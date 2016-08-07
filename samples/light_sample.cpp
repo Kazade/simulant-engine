@@ -24,10 +24,10 @@ public:
 
         stage->set_ambient_light(kglt::Colour(0.2, 0.2, 0.2, 1.0));
 
-        actor_id_ = stage->new_actor_with_mesh(stage->new_mesh_as_cube(2.0));
+        actor_id_ = stage->new_actor_with_mesh(stage->assets->new_mesh_as_cube(2.0));
         stage->actor(actor_id_)->move_to(0.0, 0.0, -10.0);
 
-        kglt::TextureID texture = stage->new_texture_from_file("sample_data/crate.png");
+        kglt::TextureID texture = stage->assets->new_texture_from_file("sample_data/crate.png");
         stage->actor(actor_id_)->mesh()->set_texture_on_material(0, texture);
 
         // Test Camera::look_at function

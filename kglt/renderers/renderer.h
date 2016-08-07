@@ -17,6 +17,14 @@ namespace kglt {
 
 class SubActor;
 
+struct ElementRenderSpecification {
+    MaterialID material_id;
+    uint32_t count;
+    uint8_t* indices; // Must be an array of UNSIGNED_SHORT
+};
+
+typedef std::vector<ElementRenderSpecification> ElementRenderList;
+
 class Renderer:
     public batcher::RenderGroupFactory {
 
@@ -26,22 +34,24 @@ public:
     Renderer(WindowBase* window):
         window_(window) {}
 
-    void set_current_stage(StageID stage) {
-        current_stage_ = stage;
-    }
-
-    virtual void render(CameraPtr camera, StagePtr stage, bool, const batcher::RenderGroup*, Renderable*, MaterialPass*, Light*, batcher::Iteration) = 0;
+    virtual void render(
+        CameraPtr camera,
+        bool render_group_changed,
+        const batcher::RenderGroup* render_group,
+        Renderable* renderable,
+        MaterialPass* material_pass,
+        Light* light,
+        const kglt::Colour& global_ambient,
+        batcher::Iteration iteration
+    ) = 0;
 
     Property<Renderer, WindowBase> window = { this, &Renderer::window_ };
 
+    virtual void init_context() = 0;
     // virtual void upload_texture(Texture* texture) = 0;
-protected:
-    StagePtr current_stage();
 
 private:    
     WindowBase* window_ = nullptr;
-    StageID current_stage_;
-
 };
 
 }

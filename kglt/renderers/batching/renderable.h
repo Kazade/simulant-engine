@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include "../../generic/property.h"
 #include "../../types.h"
 #include "../../interfaces.h"
 #include "render_queue.h"
@@ -19,8 +20,10 @@ public:
 
     virtual const MeshArrangement arrangement() const = 0;
 
+#ifdef KGLT_GL_VERSION_2X
     virtual void _update_vertex_array_object() = 0;
     virtual void _bind_vertex_array_object() = 0;
+#endif
 
     virtual RenderPriority render_priority() const = 0;
     virtual Mat4 final_transformation() const = 0;

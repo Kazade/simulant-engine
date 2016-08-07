@@ -1,12 +1,12 @@
-#ifndef __ANDROID__
-	#include <GL/glew.h>
-#else
-    #include <GLES2/gl2.h>
-#endif
-
 #include <kazbase/logging.h>
 #include <kazbase/exceptions.h>
 #include <kazbase/unicode.h>
+
+#ifdef KGLT_GL_VERSION_2X
+    #include "../renderers/gl2x/glad/glad/glad.h"
+#else
+    #include "../renderers/gl1x/glad/glad/glad.h"
+#endif
 
 namespace GLChecker {
 

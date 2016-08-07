@@ -4,154 +4,116 @@
 #include <mutex>
 #include <unordered_map>
 #include <kazbase/exceptions.h>
+#include <tinyxml.h>
 
 #include "element.h"
 
-#include <Rocket/Core/EventListener.h>
-
-namespace Rocket {
-namespace Core {
-
-class Context;
-class ElementDocument;
-
-}
-}
 
 namespace kglt {
 
-class RocketImpl;
-
 namespace ui {
 
-const std::vector<unicode> STANDARD_EVENTS = {
-    "click", "mousedown", "mouseup", "mousemove", "mouseover", "mouseout",
-    "show", "hide", "resize", "scroll", "focus", "blur",
-    "touchdown", "touchup", "touchmove", "touchout", "touchover"
-};
+class Interface;
 
-class ElementImpl : public Rocket::Core::EventListener {
+class ElementImpl {
 public:
-    ElementImpl(RocketImpl* rocket_impl, Rocket::Core::Element* elem):
-        rocket_impl_(rocket_impl),
-        elem_(elem),
-        text_(nullptr) {
+    ElementImpl(Interface* interface, TiXmlElement* element):
+        interface_(interface),
+        element_(element) {
 
-        for(auto evt: STANDARD_EVENTS) {
-            elem_->AddEventListener(evt.encode().c_str(), this);
-        }
     }
 
     ~ElementImpl() {
-        for(auto evt: STANDARD_EVENTS) {
-            elem_->RemoveEventListener(evt.encode().c_str(), this);
-        }
+
     }
+
+    std::string name() const;
 
     void set_text(const unicode& text);
     const unicode text() const {
-        if(!text_) {
-            return unicode("");
-        }
-
-        Rocket::Core::String str;
-        return unicode(text_->GetText().ToUTF8(str).CString(), "utf8");
+        return element_->GetText();
     }
 
     void add_class(const std::string& cl) {
-        elem_->SetClass(cl.c_str(), true);
-    }
+        const std::string* ret = element_->Attribute(std::string("class"));
+        std::string current;
 
-    void remove_class(const std::string& cl) {
-        elem_->SetClass(cl.c_str(), false);
-    }
+        if(ret) {
+            current = *ret;
+        }
 
-    std::string css(const std::string& property) {
-        return elem_->GetProperty<Rocket::Core::String>(property.c_str()).CString();
-    }
-
-    void css(const std::string& property, const std::string& value) {
-        elem_->SetProperty(property.c_str(), value.c_str());
-    }
-
-    void attr(const std::string& property, const std::string& value) {
-        elem_->SetAttribute(property.c_str(), value.c_str());
-    }
-
-    void id(const std::string& id) {
-        elem_->SetId(id.c_str());
-    }
-
-    void scroll_to_bottom() {
-        elem_->SetScrollTop(elem_->GetScrollHeight());
-    }
-
-    void remove_children() {
-        while(elem_->HasChildNodes()) {
-            elem_->RemoveChild(elem_->GetLastChild());
+        if(current.find(cl) == std::string::npos) {
+            current += " " + cl;
+            element_->SetAttribute("class", current);
         }
     }
 
-    void inner_rml(const unicode& rml) {
-        elem_->SetInnerRML(rml.encode().c_str());
+    void remove_class(const std::string& cl) {
+        assert(0 && "Not Implemented");
     }
 
+    std::string css(const std::string& property) {
+        if(styles_.count(property)) {
+            return styles_[property];
+        } else {
+            // FIXME: Recurse up the dom
+        }
+
+        return "";
+    }
+
+    void css(const std::string& property, const std::string& value) {
+        styles_[property] = value;
+    }
+
+    void attr(const std::string& property, const std::string& value) {
+        element_->SetAttribute(property, value);
+    }
+
+    std::string attr(const std::string& property) const {
+        const std::string* value = element_->Attribute(property);
+        if(value) {
+            return *value;
+        }
+
+        return "";
+    }
+
+    void id(const std::string& id) {
+        element_->SetAttribute("id", id);
+    }
+
+    std::string id() const {
+        return this->attr("id");
+    }
+
+    void scroll_to_bottom() {
+
+    }
+
+    void remove_children() {
+    }
+
+    void inner_rml(const unicode& rml);
     kglt::ui::Element append(const unicode& tag);
 
     void set_event_callback(const unicode& event_type, std::function<bool (Event)> func);
-
-    void _set_rocket_impl(RocketImpl* impl) { rocket_impl_ = impl; }
 
     float left() const;
     float top() const;
     float width() const;
     float height() const;
 
-    RocketImpl* _rocket_impl() const { return rocket_impl_; }
 private:
-    RocketImpl* rocket_impl_ = nullptr;
-    Rocket::Core::Element* elem_ = nullptr;
-    Rocket::Core::ElementText* text_ = nullptr;
-
-    void ProcessEvent(Rocket::Core::Event& event);
-
     std::unordered_map<unicode, std::function<bool (Event)> > event_callbacks_;
+    Interface* interface_ = nullptr;
+    TiXmlElement* element_ = nullptr;
+
+    std::unordered_map<std::string, std::string> styles_;
 };
 
-class CustomDocument : public Rocket::Core::ElementDocument {
-public:
-    CustomDocument(const Rocket::Core::String& tag);
-    std::shared_ptr<ElementImpl> get_impl_for_element(Rocket::Core::Element* element);
-
-protected:
-    virtual void OnChildAdd(Rocket::Core::Element* element);
-
-    virtual void OnChildRemove(Rocket::Core::Element* element);
-private:
-    RocketImpl* impl_ = nullptr;
-    std::unordered_map<Rocket::Core::Element*, std::shared_ptr<ElementImpl>> element_impls_;
-};
-
-class Interface;
 
 }
-
-
-
-struct RocketImpl {
-    RocketImpl(ui::Interface* interface):
-        context_(nullptr),
-        document_(nullptr),
-        interface_(interface) {}
-
-    Rocket::Core::Context* context_;
-    kglt::ui::CustomDocument* document_;
-    std::recursive_mutex mutex_;
-
-    ui::Interface* interface() const { return interface_; }
-private:
-    ui::Interface* interface_ = nullptr;
-};
 }
 
 #endif // UI_PRIVATE_H

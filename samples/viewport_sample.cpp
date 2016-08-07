@@ -15,7 +15,7 @@ public:
         kglt::StageID sid = window->new_stage();
         auto stage = window->stage(sid);
 
-        kglt::MeshID cube = stage->new_mesh_as_cube(1.0);
+        kglt::MeshID cube = stage->assets->new_mesh_as_cube(1.0);
         kglt::ActorID aid = stage->new_actor_with_mesh(cube);
 
         stage->actor(aid)->move_to(0, 0, -5);

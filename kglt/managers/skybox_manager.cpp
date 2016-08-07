@@ -43,7 +43,7 @@ void Skybox::generate(
 
     if(!mesh_id_) {
         /*
-        mesh_id_ = stage->new_mesh_as_box(
+        mesh_id_ = stage->assets->new_mesh_as_box(
             1.0, 1.0, 1.0,
             kglt::GARBAGE_COLLECT_NEVER,
             procedural::MESH_STYLE_SUBMESH_PER_FACE
