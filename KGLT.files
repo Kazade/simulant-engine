@@ -936,3 +936,13 @@ kglt/materials/opengl-1.x/multitexture2_modulate.kglm
 kglt/materials/opengl-1.x/multitexture2_modulate_with_lighting.kglm
 kglt/materials/opengl-1.x/texture_only.kglm
 kglt/materials/opengl-1.x/texture_with_lightmap.kglm
+deps/yocto/yocto_trace.h
+deps/yocto/yocto_symrigid.h
+deps/yocto/yocto_shape.h
+deps/yocto/yocto_obj.h
+deps/yocto/yocto_math.h
+deps/yocto/yocto_glu.h
+deps/yocto/yocto_cmdline.h
+deps/yocto/yocto_bvh.h
+kglt/controllers/rigid_body.h
+kglt/controllers/rigid_body.cpp
