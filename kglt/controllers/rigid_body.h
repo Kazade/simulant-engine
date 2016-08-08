@@ -13,6 +13,7 @@
 namespace kglt {
 namespace controllers {
 
+class RigidBody;
 
 class RigidBodySimulation:
     public Managed<RigidBodySimulation> {
@@ -40,8 +41,10 @@ private:
 
     // Used by the RigidBodyController on creation/destruction to register a body
     // in the simulation
-    uint32_t acquire_body();
-    void release_body(uint32_t i);
+    uint32_t acquire_body(RigidBody* body);
+    void release_body(RigidBody* body);
+
+    std::unordered_map<RigidBody*, uint32_t> bodies_;
 };
 
 /*
@@ -66,8 +69,14 @@ public:
     void rotate_to(const Quaternion& rotation);
 
 private:
+    friend class RigidBodySimulation;
+
     uint32_t body_id_ = 0;
     RigidBodySimulation::ptr simulation_;
+
+    // Cleared each step
+    Vec3 force_;
+    Vec3 torque_;
 };
 
 }

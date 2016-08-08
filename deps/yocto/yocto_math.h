@@ -87,6 +87,13 @@
 #include <limits>
 #include <type_traits>
 
+// workaround missing "is_trivially_copyable" in g++ < 5.0
+#if __GNUG__ && __GNUC__ < 5
+#define IS_TRIVIALLY_COPYABLE(T) __has_trivial_copy(T)
+#else
+#define IS_TRIVIALLY_COPYABLE(T) std::is_trivially_copyable<T>::value
+#endif
+
 // -----------------------------------------------------------------------------
 // CONSTANTS
 // -----------------------------------------------------------------------------
@@ -1665,7 +1672,7 @@ struct ym_darray {
     }
 
     void _copy(size_t n, const T* dta) {
-        if (std::is_trivially_copyable<T>::value) {
+        if (IS_TRIVIALLY_COPYABLE(T)) {
             memcpy(d, dta, sizeof(T) * n);
         } else {
             for (size_t i = 0; i < n; i++) d[i] = dta[i];
@@ -1673,7 +1680,7 @@ struct ym_darray {
     }
 
     void _move(size_t n, T* dta) {
-        if (std::is_trivially_copyable<T>::value) {
+        if (IS_TRIVIALLY_COPYABLE(T)) {
             memcpy(d, dta, sizeof(T) * n);
         } else {
             for (size_t i = 0; i < n; i++) d[i] = std::move(dta[i]);
