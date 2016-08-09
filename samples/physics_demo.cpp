@@ -16,7 +16,7 @@ public:
         auto stage = window->stage(stage_id_);
         stage->host_camera(camera_id_);
         window->camera(camera_id_)->set_perspective_projection(
-            45.0, float(window->width()) / float(window->height()), 1.0, 100.0
+            45.0, float(window->width()) / float(window->height()), 1.0, 1000.0
         );
 
         window->pipeline(pipeline_id_)->viewport->set_colour(kglt::Colour::SKY_BLUE);
@@ -27,6 +27,14 @@ public:
         box_mesh_id_ = window->shared_assets->new_mesh_as_box(5, 5, 5);
         window->shared_assets->mesh(box_mesh_id_)->set_material_id(mat);
         object_id_ = stage->new_actor_with_mesh(box_mesh_id_);
+
+        kglt::TextureID grass = window->shared_assets->new_texture_from_file("sample_data/beach_sand.png");
+        ground_mesh_id_ = window->shared_assets->new_mesh_as_box(1000, 1, 1000);
+        window->shared_assets->mesh(ground_mesh_id_)->set_material_id(
+            window->shared_assets->new_material_from_texture(grass)
+        );
+        ground_id_ = stage->new_actor_with_mesh(ground_mesh_id_);
+        stage->actor(ground_id_)->move_to(0, -10, 0);
 
         auto object = stage->actor(object_id_);
 
@@ -86,6 +94,9 @@ private:
 
     MeshID box_mesh_id_;
     ActorID object_id_;
+
+    MeshID ground_mesh_id_;
+    ActorID ground_id_;
 
     controllers::RigidBodySimulation::ptr simulation_;
     controllers::RigidBody::ptr controller_;
