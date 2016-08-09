@@ -1,6 +1,7 @@
 #pragma once
 
 #include <queue>
+#include <kazmath/ray3.h>
 
 #include "controller.h"
 
@@ -19,6 +20,54 @@ namespace impl {
     class Body;
 }
 
+
+struct Triangle {
+    uint32_t index[3];
+    Vec3 normal;
+};
+
+
+struct RaycastCollider {
+    std::vector<Vec3> vertices;
+    std::vector<Triangle> triangles;
+    Vec3 normal;
+
+    std::pair<Vec3, bool> intersect_ray(const Vec3& start, const Vec3& direction, float* hit_distance=nullptr) {
+        kmRay3 ray;
+        kmVec3Assign(&ray.start, &start);
+        kmVec3Assign(&ray.dir, &direction);
+
+        float closest_hit = std::numeric_limits<float>::max();
+        Vec3 intersection, n;
+        bool intersects = false;
+
+        // FIXME: Bounds check to get a shortlist!
+        for(auto& tri: triangles) {
+            float dist = closest_hit;
+            Vec3 intersect;
+            bool hit = kmRay3IntersectTriangle(
+                &ray,
+                &vertices[tri.index[0]],
+                &vertices[tri.index[1]],
+                &vertices[tri.index[2]], &intersect, &n, &dist
+            );
+
+            if(hit && dist < closest_hit) {
+                closest_hit = dist;
+                intersection = intersect;
+                intersects = true;
+            }
+        }
+
+        if(hit_distance) {
+            *hit_distance = closest_hit;
+        }
+
+        return std::make_pair(intersection, intersects);
+    }
+};
+
+
 class RigidBody;
 
 class RigidBodySimulation:
@@ -31,7 +80,7 @@ public:
 
     void step(double dt);
 
-    Vec3 intersect_ray(const Vec3& start, const Vec3& direction);
+    std::pair<Vec3, bool> intersect_ray(const Vec3& start, const Vec3& direction, float* distance=nullptr);
 
 private:
     friend class impl::Body;
@@ -49,12 +98,17 @@ private:
 
     std::pair<Vec3, Quaternion> body_transform(impl::Body* body);
     void set_body_transform(impl::Body *body, const Vec3& position, const Quaternion& rotation);
+
+    std::unordered_map<impl::Body*, RaycastCollider> raycast_colliders_;
 };
 
 enum ColliderType {
-    COLLIDER_TYPE_NONE,
-    COLLIDER_TYPE_MESH,
-    COLLIDER_TYPE_BOX
+    /* OOB collisiion detection */
+    COLLIDER_TYPE_BOX,
+
+     /* Useful for terrain meshes. Doesn't move or interact with other colliders but
+     * allows for manual collider logic. */
+    COLLIDER_TYPE_RAYCAST_ONLY
 };
 
 namespace impl {

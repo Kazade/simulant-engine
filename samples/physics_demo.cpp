@@ -99,12 +99,14 @@ public:
         auto pos = stage->actor(object_id_)->absolute_position();
 
         float HEIGHT = 15.0;
-        Vec3 intersection = simulation_->intersect_ray(Vec3(pos.x, pos.y-2.6, pos.z), Vec3(0, -HEIGHT, 0));
+        auto intersection = simulation_->intersect_ray(Vec3(pos.x, pos.y-2.6, pos.z), Vec3(0, -HEIGHT, 0));
 
-        float dist = (pos - intersection).length();
-        if(dist < HEIGHT) {
-            float diff = HEIGHT - dist;
-            //controller_->add_force(Vec3(0, diff, 0));
+        if(intersection.second) {
+            float dist = (pos - intersection.first).length();
+            if(dist < HEIGHT) {
+                float diff = HEIGHT - dist;
+                //controller_->add_force(Vec3(0, diff, 0));
+            }
         }
 
         simulation_->step(dt);

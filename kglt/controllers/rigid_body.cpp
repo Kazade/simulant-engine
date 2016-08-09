@@ -89,15 +89,42 @@ public:
     }
 };
 
-Vec3 RigidBodySimulation::intersect_ray(const Vec3& start, const Vec3& direction) {
+std::pair<Vec3, bool> RigidBodySimulation::intersect_ray(const Vec3& start, const Vec3& direction, float* distance) {
+    bool hit = false;
+
     Raycast raycast;
     q3RaycastData data;
     data.start = to_q3vec3(start);
     data.dir = to_q3vec3(direction);
-
     scene_->RayCast(&raycast, data);
 
-    return to_vec3(data.GetImpactPoint());
+    float closest = std::numeric_limits<float>::max();
+    Vec3 impact_point;
+
+    if(raycast.impactBody) {
+        hit = true;
+        closest = data.toi;
+        impact_point = to_vec3(data.GetImpactPoint());
+    }
+
+    // Now, check all the raycast only colliders
+    for(auto& p: raycast_colliders_) {
+        float hit_distance;
+        auto ret = p.second.intersect_ray(start, direction, &hit_distance);
+        if(ret.second) {
+            // We hit something
+            if(hit_distance < closest) {
+                closest = hit_distance;
+                impact_point = ret.first;
+            }
+        }
+    }
+
+    if(distance) {
+        *distance = closest;
+    }
+
+    return std::make_pair(impact_point, hit);
 }
 
 q3Body* RigidBodySimulation::acquire_body(impl::Body *body) {
@@ -227,8 +254,6 @@ void Body::do_post_update(double dt) {
 }
 
 void Body::build_collider(ColliderType collider) {
-    if(collider == COLLIDER_TYPE_NONE) return;
-
     if(collider == COLLIDER_TYPE_BOX) {
         BoundableEntity* entity = dynamic_cast<BoundableEntity*>(object_);
         if(entity) {
@@ -243,6 +268,40 @@ void Body::build_collider(ColliderType collider) {
             def.Set(localSpace, q3Vec3(aabb.width(), aabb.height(), aabb.depth()));
             simulation_->bodies_.at(this)->AddBox(def);
         }
+    } else if(collider == COLLIDER_TYPE_RAYCAST_ONLY) {
+        assert(!is_dynamic()); // You can't have dynamic raycast colliders (yet)
+
+        Actor* actor = dynamic_cast<Actor*>(object_);
+        assert(actor && "Raycast colliders must be actors (or geoms, but that's not implemented");
+        assert(actor->mesh_id());
+
+        MeshPtr mesh = actor->stage->assets->mesh(actor->mesh_id());
+
+        RaycastCollider* collider = &simulation_->raycast_colliders_[this];
+        collider->triangles.clear();
+        collider->vertices.clear();
+
+        mesh->each([=](SubMesh* submesh) {
+            assert(submesh->arrangement() == MESH_ARRANGEMENT_TRIANGLES);
+
+            uint32_t offset = collider->vertices.size();
+
+            for(uint32_t i = 0; i < submesh->vertex_data->count(); ++i) {
+                collider->vertices.push_back(submesh->vertex_data->position_at<Vec3>(i));
+            }
+
+            for(uint32_t i = 0; i < submesh->index_data->count(); i +=3) {
+                Triangle tri;
+                for(uint32_t j = 0; j < 3; ++j) {
+                    tri.index[j] = offset + submesh->index_data->at(i + j);
+                }
+
+                auto v1 = collider->vertices[tri.index[1]] - collider->vertices[tri.index[0]];
+                auto v2 = collider->vertices[tri.index[2]] - collider->vertices[tri.index[0]];
+                tri.normal = v1.cross(v2).normalized();
+                collider->triangles.push_back(tri);
+            }
+        });
     }
 }
 
