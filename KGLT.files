@@ -946,3 +946,5 @@ deps/yocto/yocto_cmdline.h
 deps/yocto/yocto_bvh.h
 kglt/controllers/rigid_body.h
 kglt/controllers/rigid_body.cpp
+samples/physics_demo.cpp
+tests/test_quaternion.h

@@ -1,5 +1,5 @@
 #include "rigid_body.h"
-
+#include "../object.h"
 
 namespace kglt {
 namespace controllers {
@@ -45,6 +45,10 @@ void RigidBodySimulation::step(double dt) {
 }
 
 uint32_t RigidBodySimulation::acquire_body(RigidBody* body) {
+    if(free_bodies_.empty()) {
+        throw std::runtime_error("Hit the maximum number of bodies");
+    }
+
     uint32_t i = free_bodies_.front();
     free_bodies_.pop();
     bodies_[body] = i;
@@ -59,9 +63,23 @@ void RigidBodySimulation::release_body(RigidBody *body) {
     free_bodies_.push(i);
 }
 
+std::pair<Vec3, Quaternion> RigidBodySimulation::body_transform(RigidBody* body) {
+    ym_frame3f frame = ysr_get_transform(scene_, bodies_.at(body));
+
+    return std::make_pair(
+        Vec3(frame.t[0], frame.t[1], frame.t[2]),
+        Quaternion(Mat3(frame.m.data()))
+    );
+}
+
 RigidBody::RigidBody(Controllable* object, RigidBodySimulation::ptr simulation):
     Controller("rigid-body"),
     simulation_(simulation) {
+
+    object_ = dynamic_cast<MoveableObject*>(object);
+    if(!object_) {
+        throw std::runtime_error("Tried to attach a rigid body controller to something that isn't moveable");
+    }
 
     body_id_ = simulation->acquire_body(this);
 }
@@ -72,6 +90,12 @@ RigidBody::~RigidBody() {
 
 void RigidBody::add_force(const Vec3 &force) {
     force_ += force;
+}
+
+void RigidBody::do_post_update(double dt) {
+    auto xform = simulation_->body_transform(this);
+    object_->set_absolute_position(xform.first);
+    object_->set_absolute_rotation(xform.second);
 }
 
 }

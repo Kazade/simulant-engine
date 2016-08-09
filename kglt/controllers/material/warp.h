@@ -3,12 +3,16 @@
 
 #include "../../material.h"
 #include "../controller.h"
+#include "../../generic/managed.h"
 
 namespace kglt {
 namespace controllers {
 namespace material {
 
-class Warp : public MaterialController {
+class Warp:
+    public MaterialController,
+    public Managed<Warp> {
+
 public:
     Warp(Controllable* material):
         MaterialController("warp_material", dynamic_cast<Material*>(material)) {

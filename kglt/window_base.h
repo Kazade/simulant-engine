@@ -241,6 +241,7 @@ private:
 
     bool can_attach_sound_by_id() const { return false; }
 
+    ResourceManager* resource_manager_;
     bool initialized_;
 
     int32_t width_;
@@ -292,7 +293,6 @@ private:
 
     std::shared_ptr<VirtualGamepad> virtual_gamepad_;
     std::unique_ptr<BackgroundManager> background_manager_;
-    ResourceManager* resource_manager_;
 
     Stats stats_;
 

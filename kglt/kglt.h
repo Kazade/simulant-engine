@@ -30,6 +30,7 @@
 #include "screens/screen_manager.h"
 #include "screens/screen.h"
 #include "controllers/fly.h"
+#include "controllers/rigid_body.h"
 
 #include "renderers/renderer_config.h"
 

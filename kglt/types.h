@@ -34,6 +34,7 @@
 namespace kglt {
 
 struct Vec3;
+struct Mat3;
 
 struct Quaternion : public kmQuaternion {
     Quaternion(const kmQuaternion& other) {
@@ -43,6 +44,8 @@ struct Quaternion : public kmQuaternion {
     Quaternion() {
         kmQuaternionIdentity(this);
     }
+
+    Quaternion(const Mat3& rot_matrix);
 
     Quaternion(float x, float y, float z, float w) {
         kmQuaternionFill(this, x, y, z, w);
@@ -124,6 +127,16 @@ struct Mat3 : public kmMat3 {
     static Mat3 from_rotation_x(float pitch);
     static Mat3 from_rotation_y(float yaw);
     static Mat3 from_rotation_z(float roll);
+
+    Mat3() {
+        kmMat3Identity(this);
+    }
+
+    Mat3(const float* data) {
+        for(uint32_t i = 0; i < 9; ++i) {
+            this->mat[i] = data[i];
+        }
+    }
 };
 
 struct Vec4 : public kmVec4 {

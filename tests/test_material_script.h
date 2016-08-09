@@ -12,7 +12,7 @@ public:
     void test_basic_material_script_parsing() {
         const std::string text = R"(
                 BEGIN(pass)
-                    SET(TEXTURE_UNIT "../sample_data/sample.tga")
+                    SET(TEXTURE_UNIT 0 "../sample_data/sample.tga")
 
                     BEGIN_DATA(vertex)
                         #version 120

@@ -100,6 +100,52 @@ Quaternion Quaternion::look_rotation(const Vec3& direction, const Vec3& up=Vec3(
     return res;
 }
 
+Quaternion::Quaternion(const Mat3& rot_matrix) {
+    /* FIXME: This should be in kazmath */
+
+    float m12 = rot_matrix.mat[7];
+    float m21 = rot_matrix.mat[5];
+    float m02 = rot_matrix.mat[6];
+    float m20 = rot_matrix.mat[2];
+    float m10 = rot_matrix.mat[1];
+    float m01 = rot_matrix.mat[3];
+    float m00 = rot_matrix.mat[0];
+    float m11 = rot_matrix.mat[4];
+    float m22 = rot_matrix.mat[8];
+    float t = m00 + m11 + m22;
+    // we protect the division by s by ensuring that s>=1
+    if (t >= 0) { // by w
+        float s = sqrt(t + 1);
+        w = 0.5 * s;
+        s = 0.5 / s;
+        x = (m21 - m12) * s;
+        y = (m02 - m20) * s;
+        z = (m10 - m01) * s;
+    } else if ((m00 > m11) && (m00 > m22)) { // by x
+        float s = sqrt(1 + m00 - m11 - m22);
+        x = s * 0.5;
+        s = 0.5 / s;
+        y = (m10 + m01) * s;
+        z = (m02 + m20) * s;
+        w = (m21 - m12) * s;
+    } else if (m11 > m22) { // by y
+        float s = sqrt(1 + m11 - m00 - m22);
+        y = s * 0.5;
+        s = 0.5 / s;
+        x = (m10 + m01) * s;
+        z = (m21 + m12) * s;
+        w = (m02 - m20) * s;
+    } else { // by z
+        float s = sqrt(1 + m22 - m00 - m11);
+        z = s * 0.5;
+        s = 0.5 / s;
+        x = (m02 + m20) * s;
+        y = (m21 + m12) * s;
+        w = (m10 - m01) * s;
+    }
+}
+
+
 void Mat4::extract_rotation_and_translation(Quaternion& rotation, Vec3& translation) {
     Mat3 rot;
     kmMat4ExtractRotationMat3(this, &rot);

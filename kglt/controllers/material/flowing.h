@@ -3,12 +3,15 @@
 
 #include "../../material.h"
 #include "../controller.h"
+#include "../../generic/managed.h"
 
 namespace kglt {
 namespace controllers {
 namespace material {
 
-class Flowing : public MaterialController {
+class Flowing :
+    public MaterialController,
+    public Managed<Flowing> {
 public:
     Flowing(Controllable* material):
         MaterialController("flowing_material", dynamic_cast<Material*>(material)) {

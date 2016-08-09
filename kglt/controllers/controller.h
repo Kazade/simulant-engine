@@ -10,6 +10,7 @@
 #include <thread>
 #include <kazbase/exceptions.h>
 #include "../generic/property.h"
+#include "../generic/managed.h"
 
 namespace kglt {
 
@@ -80,17 +81,19 @@ public:
     }
 
     template<typename T>
-    ControllerPtr new_controller() {
+    std::shared_ptr<T> new_controller() {
         static_assert(std::is_base_of<Controller, T>::value, "Controllers must derive kglt::Controller");
-        ControllerPtr ret = std::make_shared<T>(this);
+        static_assert(std::is_base_of<Managed<T>, T>::value, "Controllers must derive Managed<T>");
+        std::shared_ptr<T> ret = T::create(this);
         add_controller(ret);
         return ret;
     }
 
     template<typename T, typename ...Params>
-    ControllerPtr new_controller(Params&&... params) {
+    std::shared_ptr<T> new_controller(Params&&... params) {
         static_assert(std::is_base_of<Controller, T>::value, "Controllers must derive kglt::Controller");
-        ControllerPtr ret = std::make_shared<T>(this, std::forward<Params>(params)...);
+        static_assert(std::is_base_of<Managed<T>, T>::value, "Controllers must derive Managed<T>");
+        std::shared_ptr<T> ret = T::create(this, std::forward<Params>(params)...);
         add_controller(ret);
         return ret;
     }

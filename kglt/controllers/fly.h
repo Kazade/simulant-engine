@@ -11,7 +11,10 @@ namespace controllers {
 const int MOUSE_FILTER_BUFFER_SIZE = 10;
 const float MOUSE_FILTER_MULTIPLIER = 0.5;
 
-class Fly : public Controller {
+class Fly:
+    public Controller,
+    public Managed<Fly> {
+
 public:
     Fly(Controllable* container, const Property<kglt::ScreenBase, kglt::WindowBase>& window):
         Fly(container, window.get()) {}

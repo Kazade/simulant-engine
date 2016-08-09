@@ -198,8 +198,6 @@ public:
     sig::signal<void (SpriteID)>& signal_sprite_destroyed() { return signal_sprite_destroyed_; }
 
 private:
-    kglt::Colour ambient_light_;
-
     ActorCreatedSignal signal_actor_created_;
     ActorDestroyedSignal signal_actor_destroyed_;
     ActorChangedCallback signal_actor_changed_;
@@ -225,11 +223,11 @@ private:
     unicode name_;
 
     //FIXME: All managers should be composition rather than inheritence,
-    // like this one!
-
-    std::unique_ptr<GeomManager> geom_manager_;
+    // like this one!   
     std::unique_ptr<batcher::RenderQueue> render_queue_;
     std::shared_ptr<ResourceManager> resource_manager_;
+    kglt::Colour ambient_light_;
+    std::unique_ptr<GeomManager> geom_manager_;
 
 private:
     void on_actor_created(ActorID actor_id);

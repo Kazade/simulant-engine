@@ -154,7 +154,14 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                         current_material,
                         filename_
                     ));
-                    smi = sm->id(); // Just stick with the current submesh, don't change it
+                    if(sm) {
+                        smi = sm->id(); // Just stick with the current submesh, don't change it
+                    } else {
+                        if(!default_submesh) {
+                            default_submesh = mesh->new_submesh();
+                        }
+                        smi = default_submesh;
+                    }
                 }
             }
             sm = mesh->submesh(smi);

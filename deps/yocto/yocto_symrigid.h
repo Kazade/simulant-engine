@@ -696,10 +696,17 @@ static inline void ysr__compute_collision(ysr_scene* scene, int bi, int bj) {
 // Compute collisions.
 //
 static inline void ysr__compute_collisions(ysr_scene* scene) {
-    // check which shapes might overlap
-    scene->overlap_shapes(scene->overlap_ctx, &scene->shapecollisions);
     // test all pair-wise objects
     scene->collisions.resize(0);
+
+    // If no collision callbacks have been set, do nothing
+    if(!scene->overlap_shapes) {
+        return;
+    }
+
+    // check which shapes might overlap
+    scene->overlap_shapes(scene->overlap_ctx, &scene->shapecollisions);
+
     for (int c = 0; c < (int) scene->shapecollisions.size(); c++) {
         int i = scene->shapecollisions[c].x, j = scene->shapecollisions[c].y;
         if (!scene->bodies[i].mass && !scene->bodies[j].mass) continue;
@@ -881,8 +888,10 @@ YGL_API void ysr_advance(ysr_scene* scene, float dt) {
         }
     }
 
-    // update acceleartion for collisions
-    scene->overlap_refit(scene->overlap_ctx, scene->frame.data());
+    if(scene->overlap_refit) {
+        // update acceleration for collisions
+        scene->overlap_refit(scene->overlap_ctx, scene->frame.data());
+    }
 }
 
 // -----------------------------------------------------------------------------

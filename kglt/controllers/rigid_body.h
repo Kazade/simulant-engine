@@ -11,6 +11,9 @@
 
 
 namespace kglt {
+
+class MoveableObject;
+
 namespace controllers {
 
 class RigidBody;
@@ -45,6 +48,8 @@ private:
     void release_body(RigidBody* body);
 
     std::unordered_map<RigidBody*, uint32_t> bodies_;
+
+    std::pair<Vec3, Quaternion> body_transform(RigidBody* body);
 };
 
 /*
@@ -52,7 +57,8 @@ private:
  * for rigid body simulation
  */
 class RigidBody:
-    public Controller {
+    public Controller,
+    public Managed<RigidBody> {
 
 public:
     RigidBody(Controllable* object, RigidBodySimulation::ptr simulation);
@@ -71,12 +77,15 @@ public:
 private:
     friend class RigidBodySimulation;
 
+    MoveableObject* object_;
     uint32_t body_id_ = 0;
     RigidBodySimulation::ptr simulation_;
 
     // Cleared each step
     Vec3 force_;
     Vec3 torque_;
+
+    void do_post_update(double dt) override;
 };
 
 }
