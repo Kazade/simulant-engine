@@ -43,7 +43,7 @@ public:
 
         window->keyboard->key_while_pressed_connect(SDL_SCANCODE_SPACE, [=](SDL_Keysym key, double dt) mutable {
             // While space is pressed, add an upward force
-            controller_->add_force(Vec3(0, 15, 0));
+            controller_->add_force(Vec3(0, 25, 0));
         });
 
         window->keyboard->key_while_pressed_connect(SDL_SCANCODE_A, [=](SDL_Keysym key, double dt) mutable {
@@ -52,6 +52,26 @@ public:
 
         window->keyboard->key_while_pressed_connect(SDL_SCANCODE_D, [=](SDL_Keysym key, double dt) mutable {
             controller_->add_torque(Vec3(0, 15, 0));
+        });
+
+        window->keyboard->key_while_pressed_connect(SDL_SCANCODE_E, [=](SDL_Keysym key, double dt) mutable {
+            auto stage = window->stage(stage_id_);
+            auto pos = stage->actor(object_id_)->absolute_position();
+
+            controller_->add_force_at_position(
+                Vec3(0, 15, 0),
+                Vec3(pos.x + 2.5, pos.y - 2.5, pos.z)
+            );
+        });
+
+        window->keyboard->key_while_pressed_connect(SDL_SCANCODE_Q, [=](SDL_Keysym key, double dt) mutable {
+            auto stage = window->stage(stage_id_);
+            auto pos = stage->actor(object_id_)->absolute_position();
+
+            controller_->add_force_at_position(
+                Vec3(0, 15, 0),
+                Vec3(pos.x - 2.5, pos.y - 2.5, pos.z)
+            );
         });
     }
 

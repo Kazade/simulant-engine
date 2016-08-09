@@ -51,6 +51,8 @@ private:
 
     std::pair<Vec3, Quaternion> body_transform(RigidBody* body);
     void set_body_transform(RigidBody *body, const Vec3& position, const Quaternion& rotation);
+
+    ysr__body* get_ysr_body(RigidBody* body);
 };
 
 /*

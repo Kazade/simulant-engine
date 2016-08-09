@@ -106,6 +106,10 @@ void RigidBodySimulation::set_body_transform(RigidBody* body, const Vec3& positi
     ysr_set_transform(scene_, bodies_.at(body), frame);
 }
 
+ysr__body* RigidBodySimulation::get_ysr_body(RigidBody* body) {
+    return &scene_->bodies[bodies_.at(body)];
+}
+
 RigidBody::RigidBody(Controllable* object, RigidBodySimulation::ptr simulation):
     Controller("rigid-body"),
     simulation_(simulation) {
@@ -124,6 +128,17 @@ RigidBody::~RigidBody() {
 
 void RigidBody::add_force(const Vec3 &force) {
     force_ += force;
+}
+
+void RigidBody::add_force_at_position(const Vec3& force, const Vec3& position) {
+    // FIXME: Should use shape position, probably...
+    Vec3 com = simulation_->body_transform(this).first;
+
+    Vec3 centre_dir = position - com;
+    Vec3 torque_force = centre_dir.cross(force);
+
+    add_force(force);
+    add_torque(torque_force);
 }
 
 void RigidBody::add_torque(const Vec3& torque) {
