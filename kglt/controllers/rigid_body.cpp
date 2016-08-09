@@ -93,18 +93,16 @@ std::pair<Vec3, bool> RigidBodySimulation::intersect_ray(const Vec3& start, cons
     bool hit = false;
 
     Raycast raycast;
-    q3RaycastData data;
-    data.start = to_q3vec3(start);
-    data.dir = to_q3vec3(direction);
-    scene_->RayCast(&raycast, data);
+    raycast.Init(to_q3vec3(start), to_q3vec3(direction));
+    scene_->RayCast(&raycast, raycast.data);
 
     float closest = std::numeric_limits<float>::max();
     Vec3 impact_point;
 
-    if(raycast.impactBody) {
+    if(raycast.impactBody && raycast.data.toi <= direction.length()) {
         hit = true;
-        closest = data.toi;
-        impact_point = to_vec3(data.GetImpactPoint());
+        closest = raycast.data.toi;
+        impact_point = to_vec3(raycast.data.GetImpactPoint());
     }
 
     // Now, check all the raycast only colliders

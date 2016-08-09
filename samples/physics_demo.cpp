@@ -21,11 +21,11 @@ public:
 
         window->pipeline(pipeline_id_)->viewport->set_colour(kglt::Colour::SKY_BLUE);
 
-//        kglt::TextureID crate = window->shared_assets->new_texture_from_file("sample_data/crate.png");
-//        kglt::MaterialID mat = window->shared_assets->new_material_from_texture(crate);
+        kglt::TextureID crate = window->shared_assets->new_texture_from_file("sample_data/crate.png");
+        kglt::MaterialID mat = window->shared_assets->new_material_from_texture(crate);
 
-        box_mesh_id_ = window->shared_assets->new_mesh_from_file("sample_data/tank/Tank.obj");
-        //window->shared_assets->mesh(box_mesh_id_)->set_material_id(mat);
+        box_mesh_id_ = window->shared_assets->new_mesh_as_box(5, 2.5, 7);
+        window->shared_assets->mesh(box_mesh_id_)->set_material_id(mat);
         object_id_ = stage->new_actor_with_mesh(box_mesh_id_);
 
         kglt::TextureID grass = window->shared_assets->new_texture_from_file("sample_data/beach_sand.png");
@@ -42,7 +42,7 @@ public:
 
         // Add a rigid body controller to the object and store it
         controller_ = object->new_controller<controllers::RigidBody>(simulation_);
-        controller_->move_to(Vec3(0, 0, -50));
+        controller_->move_to(Vec3(0, 20, -50));
 
         // Make the ground a staticbody
         auto ground_controller = stage->actor(ground_id_)->new_controller<controllers::StaticBody>(simulation_);
@@ -98,14 +98,18 @@ public:
         auto stage = window->stage(stage_id_);
         auto pos = stage->actor(object_id_)->absolute_position();
 
-        float HEIGHT = 15.0;
-        auto intersection = simulation_->intersect_ray(Vec3(pos.x, pos.y-2.6, pos.z), Vec3(0, -HEIGHT, 0));
+        float HEIGHT = 5.0;
+        float dist;
+        auto intersection = simulation_->intersect_ray(
+            Vec3(pos.x, pos.y - 5.0, pos.z),
+            Vec3(0, -HEIGHT, 0),
+            &dist
+        );
 
         if(intersection.second) {
-            float dist = (pos - intersection.first).length();
             if(dist < HEIGHT) {
                 float diff = HEIGHT - dist;
-                //controller_->add_force(Vec3(0, diff, 0));
+                controller_->add_force(Vec3(0, diff * 87.5, 0));
             }
         }
 
