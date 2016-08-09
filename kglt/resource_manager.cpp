@@ -354,6 +354,7 @@ MaterialID ResourceManager::new_material_from_file(const unicode& path, GarbageC
 
     /* Take the template, clone it, and set garbage_collection appropriately */
     auto mat_id = material(template_id)->new_clone(this, garbage_collect);
+    material(template_id)->enable_gc((garbage_collect == GARBAGE_COLLECT_NEVER) ? false: true);
     mark_material_as_uncollected(mat_id);
 
     L_DEBUG(_u("Cloned material {0} into {1}").format(template_id, mat_id));

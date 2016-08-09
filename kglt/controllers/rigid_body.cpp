@@ -14,6 +14,14 @@ q3Vec3 to_q3vec3(const Vec3& rhs) {
     return ret;
 }
 
+Vec3 to_vec3(const q3Vec3& rhs) {
+    Vec3 ret;
+    ret.x = rhs.x;
+    ret.y = rhs.y;
+    ret.z = rhs.z;
+    return ret;
+}
+
 Mat3 from_q3mat3(const q3Mat3& rhs) {
     Mat3 ret;
     ret.mat[0] = rhs.Column0().x;
@@ -52,8 +60,44 @@ void RigidBodySimulation::step(double dt) {
     scene_->Step();
 }
 
-Vec3 RigidBodySimulation::intersect_ray(const Vec3& start, const Vec3& direction) {
+class Raycast : public q3QueryCallback {
+public:
+    q3RaycastData data;
+    r32 tfinal;
+    q3Vec3 nfinal;
+    q3Body *impactBody;
 
+    bool ReportShape( q3Box *shape ) {
+        if ( data.toi < tfinal )
+        {
+            tfinal = data.toi;
+            nfinal = data.normal;
+            impactBody = shape->body;
+        }
+
+        data.toi = tfinal;
+        return true;
+    }
+
+    void Init( const q3Vec3& spot, const q3Vec3& dir ) {
+        data.start = spot;
+        data.dir = q3Normalize( dir );
+        data.t = r32( 10000.0 );
+        tfinal = FLT_MAX;
+        data.toi = data.t;
+        impactBody = NULL;
+    }
+};
+
+Vec3 RigidBodySimulation::intersect_ray(const Vec3& start, const Vec3& direction) {
+    Raycast raycast;
+    q3RaycastData data;
+    data.start = to_q3vec3(start);
+    data.dir = to_q3vec3(direction);
+
+    scene_->RayCast(&raycast, data);
+
+    return to_vec3(data.GetImpactPoint());
 }
 
 q3Body* RigidBodySimulation::acquire_body(impl::Body *body) {

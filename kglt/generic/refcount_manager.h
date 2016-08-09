@@ -47,7 +47,7 @@ public:
         }
 
         auto obj = ObjectType::create(id, std::forward<Args>(args)...);
-        obj->enable_gc(garbage_collect);
+        obj->enable_gc(garbage_collect == GARBAGE_COLLECT_PERIODIC);
 
         objects_.insert(std::make_pair(id, obj));
         creation_times_[id] = std::chrono::system_clock::now();
@@ -146,7 +146,7 @@ public:
                         now-creation_times_[key]
                     ).count();
 
-                    ok_to_delete = lifetime_in_seconds > 10;
+                    ok_to_delete = lifetime_in_seconds > 20;
 
                     if(ok_to_delete) {
                         L_WARN("Deleting unclaimed resource");
