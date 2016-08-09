@@ -8,6 +8,7 @@
 #include "../types.h"
 
 #include "yocto/yocto_symrigid.h"
+#include "yocto/yocto_bvh.h"
 
 
 namespace kglt {
@@ -32,12 +33,16 @@ public:
 
     void step(double dt);
 
+    Vec3 intersect_ray(const Vec3& start, const Vec3& direction);
+
 private:
     friend class impl::Body;
     friend class RigidBody;
     friend class StaticBody;
 
     ysr_scene* scene_ = nullptr;
+    yb_scene* bvh_scene_ = nullptr;
+
     uint32_t max_bodies_ = 0;
 
 
@@ -61,12 +66,17 @@ private:
     ysr__body* get_ysr_body(impl::Body* body);
 };
 
+enum ColliderType {
+    COLLIDER_TYPE_NONE,
+    COLLIDER_TYPE_MESH
+};
+
 namespace impl {
     class Body:
         public Controller {
 
     public:
-        Body(Controllable* object, RigidBodySimulation::ptr simulation);
+        Body(Controllable* object, RigidBodySimulation::ptr simulation, ColliderType collider=COLLIDER_TYPE_MESH);
         virtual ~Body();
 
         void move_to(const Vec3& position);
@@ -79,6 +89,15 @@ namespace impl {
         RigidBodySimulation::ptr simulation_;
 
         void do_post_update(double dt) override;
+
+        void build_collider(ColliderType collider);
+
+    private:
+        struct Shape {
+            std::vector<int> indexes;
+            std::vector<ym_vec3f> vertices;
+            int element_type = ysr_etype_triangle;
+        } shape;
     };
 } // End impl
 

@@ -42,7 +42,7 @@ public:
 
         // Add a rigid body controller to the object and store it
         controller_ = object->new_controller<controllers::RigidBody>(simulation_);
-        controller_->move_to(Vec3(0, 0, -50));
+        controller_->move_to(Vec3(0, 20, -50));
 
         // Make the ground a staticbody
         auto ground_controller = stage->actor(ground_id_)->new_controller<controllers::StaticBody>(simulation_);
@@ -54,15 +54,15 @@ public:
 
         window->keyboard->key_while_pressed_connect(SDL_SCANCODE_SPACE, [=](SDL_Keysym key, double dt) mutable {
             // While space is pressed, add an upward force
-            controller_->add_force(Vec3(0, 25, 0));
+            controller_->add_force(Vec3(0, 1000, 0));
         });
 
         window->keyboard->key_while_pressed_connect(SDL_SCANCODE_A, [=](SDL_Keysym key, double dt) mutable {
-            controller_->add_torque(Vec3(0, -15, 0));
+            controller_->add_torque(Vec3(0, -1000, 0));
         });
 
         window->keyboard->key_while_pressed_connect(SDL_SCANCODE_D, [=](SDL_Keysym key, double dt) mutable {
-            controller_->add_torque(Vec3(0, 15, 0));
+            controller_->add_torque(Vec3(0, 1000, 0));
         });
 
         window->keyboard->key_while_pressed_connect(SDL_SCANCODE_E, [=](SDL_Keysym key, double dt) mutable {
@@ -70,7 +70,7 @@ public:
             auto pos = stage->actor(object_id_)->absolute_position();
 
             controller_->add_force_at_position(
-                Vec3(0, 15, 0),
+                Vec3(0, 1000, 0),
                 Vec3(pos.x + 2.5, pos.y - 2.5, pos.z)
             );
         });
@@ -80,10 +80,13 @@ public:
             auto pos = stage->actor(object_id_)->absolute_position();
 
             controller_->add_force_at_position(
-                Vec3(0, 15, 0),
+                Vec3(0, 1000, 0),
                 Vec3(pos.x - 2.5, pos.y - 2.5, pos.z)
             );
         });
+
+        Vec3 intersection = simulation_->intersect_ray(Vec3(), Vec3(0, -100, 0));
+        std::cout << intersection.x << ", " << intersection.y << ", " << intersection.z << std::endl;
     }
 
     void do_step(double dt) override {

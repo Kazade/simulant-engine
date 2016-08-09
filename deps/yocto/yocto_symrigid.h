@@ -889,7 +889,7 @@ YGL_API void ysr_advance(ysr_scene* scene, float dt) {
     }
 
     if(scene->overlap_refit) {
-        // update acceleration for collisions
+        // update accelertion for collisions
         scene->overlap_refit(scene->overlap_ctx, scene->frame.data());
     }
 }

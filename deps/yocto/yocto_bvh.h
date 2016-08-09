@@ -1510,6 +1510,8 @@ YGL_API void yb_build_bvh(yb_scene* scene, int heuristic) {
     // recursively build shape bvhs
     ym_vector<ym_range3f> shape_bounds(scene->shapes.size());
     for (int sid = 0; sid < scene->shapes.size(); sid++) {
+        if(!scene->shapes[sid].elem) continue;
+
         yb__build_shape_bvh(&scene->shapes[sid], heuristic);
         shape_bounds[sid] = scene->shapes[sid].bvh->nodes[0].bbox;
     }
@@ -1523,11 +1525,20 @@ YGL_API void yb_build_bvh(yb_scene* scene, int heuristic) {
 //
 static inline void yb__recompute_scene_bounds(yb_scene* scene, int nodeid) {
     yb__bvh* bvh = scene->bvh;
+
+    if(!bvh) {
+        return;
+    }
+
     yb__bvhn* node = &bvh->nodes[nodeid];
     if (node->isleaf) {
         node->bbox = ym_invalid_range3f;
         for (int i = 0; i < node->count; i++) {
             int idx = bvh->sorted_prim[node->start + i];
+
+            // KGLT addition, ignore shapes without a bvh
+            if(!scene->shapes[idx].bvh) continue;
+
             ym_range3f bbox = scene->shapes[idx].bvh->nodes[0].bbox;
             ym_affine3f xform = scene->xforms[idx];
             ym_vec3f corners[8] = {
@@ -1632,6 +1643,10 @@ static inline bool yb__intersect_bvh(const yb_scene* scene, int shape_id,
     const yb_shape* shape =
         (shape_id >= 0) ? &scene->shapes[shape_id] : nullptr;
     const yb__bvh* bvh = (shape) ? shape->bvh : scene->bvh;
+
+    if(!bvh) {
+        return false;
+    }
 
     // init ray
     ym_ray3f ray = ray_;
@@ -1961,6 +1976,10 @@ YGL_API int yb_overlap_shape_bounds(const yb_scene* scene, bool exclude_self,
     // init shape and bvh
     const yb__bvh* bvh = scene->bvh;
 
+    if(!bvh) {
+        return hits;
+    }
+
     // walking stack
     while (node_cur) {
         // grab node
@@ -1982,6 +2001,10 @@ YGL_API int yb_overlap_shape_bounds(const yb_scene* scene, bool exclude_self,
                     int idx1 = bvh->sorted_prim[node1->start + i1];
                     int idx2 = bvh->sorted_prim[node2->start + i2];
                     if (exclude_self && idx1 == idx2) continue;
+
+                    // KGLT addition, ignore shapes without a bvh
+                    if (!scene->shapes[idx1].bvh || !scene->shapes[idx2].bvh) continue;
+
                     const ym_range3f bbox1 = yb__transform_bbox(
                         scene->xforms[idx1],
                         scene->shapes[idx1].bvh->nodes[0].bbox);
