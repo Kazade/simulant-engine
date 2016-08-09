@@ -65,6 +65,14 @@ public:
             controller_->add_torque(Vec3(0, 15, 0));
         });
 
+        window->keyboard->key_while_pressed_connect(SDL_SCANCODE_RIGHT, [=](SDL_Keysym key, double dt) mutable {
+            controller_->add_force(Vec3(15, 0, 0));
+        });
+
+        window->keyboard->key_while_pressed_connect(SDL_SCANCODE_LEFT, [=](SDL_Keysym key, double dt) mutable {
+            controller_->add_force(Vec3(-15, 0, 0));
+        });
+
         window->keyboard->key_while_pressed_connect(SDL_SCANCODE_E, [=](SDL_Keysym key, double dt) mutable {
             auto stage = window->stage(stage_id_);
             auto pos = stage->actor(object_id_)->absolute_position();

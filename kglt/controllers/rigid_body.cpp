@@ -17,22 +17,22 @@ q3Vec3 to_q3vec3(const Vec3& rhs) {
 Mat3 from_q3mat3(const q3Mat3& rhs) {
     Mat3 ret;
     ret.mat[0] = rhs.Column0().x;
-    ret.mat[1] = rhs.Column0().y;
-    ret.mat[2] = rhs.Column0().z;
+    ret.mat[3] = rhs.Column0().y;
+    ret.mat[6] = rhs.Column0().z;
 
-    ret.mat[3] = rhs.Column1().x;
+    ret.mat[1] = rhs.Column1().x;
     ret.mat[4] = rhs.Column1().y;
-    ret.mat[5] = rhs.Column1().z;
+    ret.mat[7] = rhs.Column1().z;
 
-    ret.mat[6] = rhs.Column2().x;
-    ret.mat[7] = rhs.Column2().y;
+    ret.mat[2] = rhs.Column2().x;
+    ret.mat[5] = rhs.Column2().y;
     ret.mat[8] = rhs.Column2().z;
 
     return ret;
 }
 
 RigidBodySimulation::RigidBodySimulation() {
-    scene_ = new q3Scene(1.0 / 30.0f);
+    scene_ = new q3Scene(1.0 / 60.0f);
     scene_->SetAllowSleep(true);
     scene_->SetGravity(q3Vec3(0, -9.81, 0));
 }
