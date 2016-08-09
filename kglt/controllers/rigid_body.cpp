@@ -38,7 +38,11 @@ void RigidBodySimulation::step(double dt) {
 
     // Apply force and torque:
     for(auto& p: bodies_) {
-        RigidBody* body = p.first;
+        RigidBody* body = dynamic_cast<RigidBody*>(p.first);
+        if(!body) {
+            continue;
+        }
+
         uint32_t i = p.second;
 
         float inv_mass = scene_->bodies[i].mass_inv;
@@ -65,7 +69,7 @@ void RigidBodySimulation::step(double dt) {
     ysr_advance(scene_, dt);
 }
 
-uint32_t RigidBodySimulation::acquire_body(RigidBody* body) {
+uint32_t RigidBodySimulation::acquire_body(impl::Body *body) {
     if(free_bodies_.empty()) {
         throw std::runtime_error("Hit the maximum number of bodies");
     }
@@ -77,14 +81,14 @@ uint32_t RigidBodySimulation::acquire_body(RigidBody* body) {
     return i;
 }
 
-void RigidBodySimulation::release_body(RigidBody *body) {
+void RigidBodySimulation::release_body(impl::Body *body) {
     auto i = bodies_.at(body);
     scene_->bodies[i].mass = 0;
     bodies_.erase(body);
     free_bodies_.push(i);
 }
 
-std::pair<Vec3, Quaternion> RigidBodySimulation::body_transform(RigidBody* body) {
+std::pair<Vec3, Quaternion> RigidBodySimulation::body_transform(impl::Body *body) {
     ym_frame3f frame = ysr_get_transform(scene_, bodies_.at(body));
 
     return std::make_pair(
@@ -93,7 +97,7 @@ std::pair<Vec3, Quaternion> RigidBodySimulation::body_transform(RigidBody* body)
     );
 }
 
-void RigidBodySimulation::set_body_transform(RigidBody* body, const Vec3& position, const Quaternion& rotation) {
+void RigidBodySimulation::set_body_transform(impl::Body* body, const Vec3& position, const Quaternion& rotation) {
     ym_frame3f frame;
     frame.t[0] = position.x;
     frame.t[1] = position.y;
@@ -106,24 +110,17 @@ void RigidBodySimulation::set_body_transform(RigidBody* body, const Vec3& positi
     ysr_set_transform(scene_, bodies_.at(body), frame);
 }
 
-ysr__body* RigidBodySimulation::get_ysr_body(RigidBody* body) {
+ysr__body* RigidBodySimulation::get_ysr_body(impl::Body* body) {
     return &scene_->bodies[bodies_.at(body)];
 }
 
 RigidBody::RigidBody(Controllable* object, RigidBodySimulation::ptr simulation):
-    Controller("rigid-body"),
-    simulation_(simulation) {
+    Body(object, simulation) {
 
-    object_ = dynamic_cast<MoveableObject*>(object);
-    if(!object_) {
-        throw std::runtime_error("Tried to attach a rigid body controller to something that isn't moveable");
-    }
-
-    body_id_ = simulation->acquire_body(this);
 }
 
 RigidBody::~RigidBody() {
-    simulation_->release_body(this);
+
 }
 
 void RigidBody::add_force(const Vec3 &force) {
@@ -145,7 +142,38 @@ void RigidBody::add_torque(const Vec3& torque) {
     torque_ += torque;
 }
 
-void RigidBody::move_to(const Vec3& position) {
+StaticBody::StaticBody(Controllable* object, RigidBodySimulation::ptr simulation):
+    Body(object, simulation) {
+
+    // Make sure we set the mass to zero so we don't simulate this body
+    auto body = simulation->get_ysr_body(this);
+    body->mass = 0;
+}
+
+StaticBody::~StaticBody() {
+
+}
+
+
+namespace impl {
+
+Body::Body(Controllable* object, RigidBodySimulation::ptr simulation):
+    Controller("rigid-body"),
+    simulation_(simulation) {
+
+    object_ = dynamic_cast<MoveableObject*>(object);
+    if(!object_) {
+        throw std::runtime_error("Tried to attach a rigid body controller to something that isn't moveable");
+    }
+
+    body_id_ = simulation->acquire_body(this);
+}
+
+Body::~Body() {
+    simulation_->release_body(this);
+}
+
+void Body::move_to(const Vec3& position) {
     auto xform = simulation_->body_transform(this);
     simulation_->set_body_transform(
         this,
@@ -154,11 +182,15 @@ void RigidBody::move_to(const Vec3& position) {
     );
 }
 
-void RigidBody::do_post_update(double dt) {
+void Body::do_post_update(double dt) {
     auto xform = simulation_->body_transform(this);
     object_->set_absolute_position(xform.first);
     object_->set_absolute_rotation(xform.second);
 }
+
+}
+
+
 
 }
 }

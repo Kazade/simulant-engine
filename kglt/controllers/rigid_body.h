@@ -16,6 +16,10 @@ class MoveableObject;
 
 namespace controllers {
 
+namespace impl {
+    class Body;
+}
+
 class RigidBody;
 
 class RigidBodySimulation:
@@ -29,7 +33,9 @@ public:
     void step(double dt);
 
 private:
+    friend class impl::Body;
     friend class RigidBody;
+    friend class StaticBody;
 
     ysr_scene* scene_ = nullptr;
     uint32_t max_bodies_ = 0;
@@ -44,15 +50,48 @@ private:
 
     // Used by the RigidBodyController on creation/destruction to register a body
     // in the simulation
-    uint32_t acquire_body(RigidBody* body);
-    void release_body(RigidBody* body);
+    uint32_t acquire_body(impl::Body* body);
+    void release_body(impl::Body *body);
 
-    std::unordered_map<RigidBody*, uint32_t> bodies_;
+    std::unordered_map<impl::Body*, uint32_t> bodies_;
 
-    std::pair<Vec3, Quaternion> body_transform(RigidBody* body);
-    void set_body_transform(RigidBody *body, const Vec3& position, const Quaternion& rotation);
+    std::pair<Vec3, Quaternion> body_transform(impl::Body* body);
+    void set_body_transform(impl::Body *body, const Vec3& position, const Quaternion& rotation);
 
-    ysr__body* get_ysr_body(RigidBody* body);
+    ysr__body* get_ysr_body(impl::Body* body);
+};
+
+namespace impl {
+    class Body:
+        public Controller {
+
+    public:
+        Body(Controllable* object, RigidBodySimulation::ptr simulation);
+        virtual ~Body();
+
+        void move_to(const Vec3& position);
+        void rotate_to(const Quaternion& rotation);
+
+    protected:
+        friend class RigidBodySimulation;
+        MoveableObject* object_;
+        uint32_t body_id_ = 0;
+        RigidBodySimulation::ptr simulation_;
+
+        void do_post_update(double dt) override;
+    };
+} // End impl
+
+/*
+ * Almost the same as a rigid body, but has no mass, and doesn't take part in the simulation
+ * aside from acting as a collider */
+class StaticBody:
+    public impl::Body,
+    public Managed<StaticBody> {
+
+public:
+    StaticBody(Controllable* object, RigidBodySimulation::ptr simulation);
+    ~StaticBody();
 };
 
 /*
@@ -60,7 +99,7 @@ private:
  * for rigid body simulation
  */
 class RigidBody:
-    public Controller,
+    public impl::Body,
     public Managed<RigidBody> {
 
 public:
@@ -74,21 +113,12 @@ public:
     void add_torque(const Vec3& torque);
     void add_relative_torque(const Vec3& torque);
 
-    void move_to(const Vec3& position);
-    void rotate_to(const Quaternion& rotation);
-
 private:
     friend class RigidBodySimulation;
-
-    MoveableObject* object_;
-    uint32_t body_id_ = 0;
-    RigidBodySimulation::ptr simulation_;
 
     // Cleared each step
     Vec3 force_;
     Vec3 torque_;
-
-    void do_post_update(double dt) override;
 };
 
 }

@@ -34,7 +34,6 @@ public:
             window->shared_assets->new_material_from_texture(grass)
         );
         ground_id_ = stage->new_actor_with_mesh(ground_mesh_id_);
-        stage->actor(ground_id_)->move_to(0, -10, 0);
 
         auto object = stage->actor(object_id_);
 
@@ -44,6 +43,10 @@ public:
         // Add a rigid body controller to the object and store it
         controller_ = object->new_controller<controllers::RigidBody>(simulation_);
         controller_->move_to(Vec3(0, 0, -50));
+
+        // Make the ground a staticbody
+        auto ground_controller = stage->actor(ground_id_)->new_controller<controllers::StaticBody>(simulation_);
+        ground_controller->move_to(Vec3(0, -10, 0));
     }
 
     void do_activate() {
