@@ -26,6 +26,14 @@ void RigidBodySimulation::cleanup() {
     ysr_free_scene(scene_);
 }
 
+Mat3 from_ym_mat3f(const ym_mat3f& rhs) {
+    Mat3 ret;
+    for(uint32_t i = 0; i < 9; ++i) {
+        ret.mat[i] = rhs.data()[i];
+    }
+    return ret;
+}
+
 void RigidBodySimulation::step(double dt) {
 
     // Apply force and torque:
@@ -39,6 +47,19 @@ void RigidBodySimulation::step(double dt) {
         scene_->lin_vel[i].v[0] += additional_linear.x;
         scene_->lin_vel[i].v[1] += additional_linear.y;
         scene_->lin_vel[i].v[2] += additional_linear.z;
+
+        Mat3 inv_inertia = from_ym_mat3f(scene_->bodies[i].inertia_inv);
+
+        Vec3 additional_angular;
+        kmVec3MultiplyMat3(&additional_angular, &body->torque_, &inv_inertia);
+        additional_angular *= dt;
+
+        scene_->ang_vel[i].v[0] += additional_angular.x;
+        scene_->ang_vel[i].v[1] += additional_angular.y;
+        scene_->ang_vel[i].v[2] += additional_angular.z;
+
+        body->force_ = Vec3();
+        body->torque_ = Vec3();
     }
 
     ysr_advance(scene_, dt);
@@ -72,6 +93,19 @@ std::pair<Vec3, Quaternion> RigidBodySimulation::body_transform(RigidBody* body)
     );
 }
 
+void RigidBodySimulation::set_body_transform(RigidBody* body, const Vec3& position, const Quaternion& rotation) {
+    ym_frame3f frame;
+    frame.t[0] = position.x;
+    frame.t[1] = position.y;
+    frame.t[2] = position.z;
+
+    Mat3 rot;
+    kmMat3FromRotationQuaternion(&rot, &rotation);
+    for(uint32_t i = 0; i < 9; ++i) { frame.m.data()[i] = rot.mat[i]; }
+
+    ysr_set_transform(scene_, bodies_.at(body), frame);
+}
+
 RigidBody::RigidBody(Controllable* object, RigidBodySimulation::ptr simulation):
     Controller("rigid-body"),
     simulation_(simulation) {
@@ -90,6 +124,19 @@ RigidBody::~RigidBody() {
 
 void RigidBody::add_force(const Vec3 &force) {
     force_ += force;
+}
+
+void RigidBody::add_torque(const Vec3& torque) {
+    torque_ += torque;
+}
+
+void RigidBody::move_to(const Vec3& position) {
+    auto xform = simulation_->body_transform(this);
+    simulation_->set_body_transform(
+        this,
+        position,
+        xform.second
+    );
 }
 
 void RigidBody::do_post_update(double dt) {

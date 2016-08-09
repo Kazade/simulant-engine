@@ -21,7 +21,11 @@ public:
 
         window->pipeline(pipeline_id_)->viewport->set_colour(kglt::Colour::SKY_BLUE);
 
-        box_mesh_id_ = window->shared_assets->new_mesh_as_box(5, 2.5, 5);
+        kglt::TextureID crate = window->shared_assets->new_texture_from_file("sample_data/crate.png");
+        kglt::MaterialID mat = window->shared_assets->new_material_from_texture(crate);
+
+        box_mesh_id_ = window->shared_assets->new_mesh_as_box(5, 5, 5);
+        window->shared_assets->mesh(box_mesh_id_)->set_material_id(mat);
         object_id_ = stage->new_actor_with_mesh(box_mesh_id_);
 
         auto object = stage->actor(object_id_);
@@ -31,6 +35,7 @@ public:
 
         // Add a rigid body controller to the object and store it
         controller_ = object->new_controller<controllers::RigidBody>(simulation_);
+        controller_->move_to(Vec3(0, 0, -50));
     }
 
     void do_activate() {
@@ -38,7 +43,15 @@ public:
 
         window->keyboard->key_while_pressed_connect(SDL_SCANCODE_SPACE, [=](SDL_Keysym key, double dt) mutable {
             // While space is pressed, add an upward force
-            controller_->add_force(Vec3(0, 1, 0));
+            controller_->add_force(Vec3(0, 15, 0));
+        });
+
+        window->keyboard->key_while_pressed_connect(SDL_SCANCODE_A, [=](SDL_Keysym key, double dt) mutable {
+            controller_->add_torque(Vec3(0, -15, 0));
+        });
+
+        window->keyboard->key_while_pressed_connect(SDL_SCANCODE_D, [=](SDL_Keysym key, double dt) mutable {
+            controller_->add_torque(Vec3(0, 15, 0));
         });
     }
 

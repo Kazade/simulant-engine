@@ -50,6 +50,7 @@ private:
     std::unordered_map<RigidBody*, uint32_t> bodies_;
 
     std::pair<Vec3, Quaternion> body_transform(RigidBody* body);
+    void set_body_transform(RigidBody *body, const Vec3& position, const Quaternion& rotation);
 };
 
 /*
