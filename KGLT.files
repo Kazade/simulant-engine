@@ -1028,3 +1028,4 @@ deps/SOIL/stb_image_aug.c
 deps/SOIL/stb_image_aug.h
 deps/SOIL/stbi_DDS_aug.h
 deps/SOIL/stbi_DDS_aug_c.h
+tests/test_rigid_body.h

@@ -149,7 +149,7 @@ class StaticBody:
     public Managed<StaticBody> {
 
 public:
-    StaticBody(Controllable* object, RigidBodySimulation::ptr simulation);
+    StaticBody(Controllable* object, RigidBodySimulation::ptr simulation, ColliderType collider=COLLIDER_TYPE_BOX);
     ~StaticBody();
 
     using impl::Body::init;
@@ -167,7 +167,7 @@ class RigidBody:
     public Managed<RigidBody> {
 
 public:
-    RigidBody(Controllable* object, RigidBodySimulation::ptr simulation);
+    RigidBody(Controllable* object, RigidBodySimulation::ptr simulation, ColliderType collider=COLLIDER_TYPE_BOX);
     ~RigidBody();
 
     void add_force(const Vec3& force);

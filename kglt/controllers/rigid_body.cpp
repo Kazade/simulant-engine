@@ -114,6 +114,7 @@ std::pair<Vec3, bool> RigidBodySimulation::intersect_ray(const Vec3& start, cons
             if(hit_distance < closest) {
                 closest = hit_distance;
                 impact_point = ret.first;
+                hit = true;
             }
         }
     }
@@ -161,8 +162,8 @@ void RigidBodySimulation::set_body_transform(impl::Body* body, const Vec3& posit
     b->SetTransform(to_q3vec3(position), to_q3vec3(axis), angle);
 }
 
-RigidBody::RigidBody(Controllable* object, RigidBodySimulation::ptr simulation):
-    Body(object, simulation) {
+RigidBody::RigidBody(Controllable* object, RigidBodySimulation::ptr simulation, ColliderType collider):
+    Body(object, simulation, collider) {
 
 }
 
@@ -196,8 +197,8 @@ void RigidBody::add_torque(const Vec3& torque) {
     b->ApplyTorque(to_q3vec3(torque));
 }
 
-StaticBody::StaticBody(Controllable* object, RigidBodySimulation::ptr simulation):
-    Body(object, simulation) {
+StaticBody::StaticBody(Controllable* object, RigidBodySimulation::ptr simulation, ColliderType collider):
+    Body(object, simulation, collider) {
 
 }
 
