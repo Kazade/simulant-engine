@@ -4,3 +4,6 @@
 [submodule "deps/kazsignal"]
 	path = deps/kazsignal
 	url = git@github.com:Kazade/kazsignal.git
+[submodule "deps/qu3e"]
+	path = deps/qu3e
+	url = git@github.com:Kazade/qu3e.git
