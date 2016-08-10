@@ -44,8 +44,8 @@ public:
         controller_ = object->new_controller<controllers::RigidBody>(simulation_);
         controller_->move_to(Vec3(0, 20, -50));
 
-        // Make the ground a staticbody
-        auto ground_controller = stage->actor(ground_id_)->new_controller<controllers::StaticBody>(simulation_);
+        // Make the ground a staticbody, and only deal with ray-cast hits
+        auto ground_controller = stage->actor(ground_id_)->new_controller<controllers::StaticBody>(simulation_, controllers::COLLIDER_TYPE_RAYCAST_ONLY);
         ground_controller->move_to(Vec3(0, -10, 0));
     }
 
@@ -109,7 +109,7 @@ public:
         if(intersection.second) {
             if(dist < HEIGHT) {
                 float diff = HEIGHT - dist;
-                controller_->add_force(Vec3(0, diff * 87.5, 0));
+                controller_->add_force(Vec3(0, diff * 11.39, 0));
             }
         }
 
