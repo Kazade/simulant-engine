@@ -92,10 +92,10 @@ class MyApp : public kglt::Application {
 public:
     bool do_init() {
         StageID stage_id;
-	CameraID camera_id;
-	prepare_basic_scene(stage_id, camera_id); // Set up a basic rendering pipeline
+        CameraID camera_id;
+        prepare_basic_scene(stage_id, camera_id); // Set up a basic rendering pipeline
 
-	auto stage = window->stage(stage_id); // Grab a handle to the stage
+        auto stage = window->stage(stage_id); // Grab a handle to the stage
         MeshID mesh_id = stage->assets->new_mesh_as_rectangle(10.0, 5.0); // Load a mesh into the stage's asset manager
         ActorID actor_id = stage->new_actor_with_mesh(mesh_id); // Create an actor with the loaded mesh
         return true;
@@ -116,10 +116,12 @@ int main(int argc, char* argv[]) {
     return app.run();
 }
 
+```
+
 You can build up sections of your scene by creating _Actors_ inside _Stages_, you can then combine your stages by building up a set of rendering
 pipelines. For example, you can render Stage 1, to Viewport 1, with Camera 1 and target Texture 1. By building up these pipelines dynamically you
 can build complex scenes.
-```
+
 
 # Documentation
 
