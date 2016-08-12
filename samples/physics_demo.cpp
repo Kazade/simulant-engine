@@ -54,7 +54,7 @@ public:
 
         window->keyboard->key_while_pressed_connect(SDL_SCANCODE_SPACE, [=](SDL_Keysym key, double dt) mutable {
             // While space is pressed, add an upward force
-            controller_->add_force(Vec3(0, 25, 0));
+            controller_->add_impulse_at_position(Vec3(0, 25, 0), Vec3(10, 10, -50));
         });
 
         window->keyboard->key_while_pressed_connect(SDL_SCANCODE_A, [=](SDL_Keysym key, double dt) mutable {
@@ -106,10 +106,12 @@ public:
             &dist
         );
 
+        const float HOVER_FORCE = 65.0f;
+
         if(intersection.second) {
             if(dist < HEIGHT) {
-                float diff = HEIGHT - dist;
-                controller_->add_force(Vec3(0, diff * 11.39, 0));
+                float proportional_height = (HEIGHT - dist) / HEIGHT;
+                controller_->add_force(Vec3(0, 1, 0) * proportional_height * HOVER_FORCE);
             }
         }
 

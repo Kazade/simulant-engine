@@ -36,7 +36,7 @@ deps/qu3e/dynamics
 deps/qu3e
 deps/SOIL/original
 deps/nuklear
-deps/qu3e/common
+deps/qu3e/src
 deps/SOIL
 deps/kazsignal/tests
 deps/qu3e/broadphase

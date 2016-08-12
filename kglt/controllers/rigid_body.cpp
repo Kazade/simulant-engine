@@ -176,6 +176,16 @@ void RigidBody::add_force(const Vec3 &force) {
     b->ApplyLinearForce(to_q3vec3(force));
 }
 
+void RigidBody::add_impulse(const Vec3& impulse) {
+    q3Body* b = simulation_->bodies_.at(this);
+    b->ApplyLinearImpulse(to_q3vec3(impulse));
+}
+
+void RigidBody::add_impulse_at_position(const Vec3& impulse, const Vec3& position) {
+    q3Body* b = simulation_->bodies_.at(this);
+    b->ApplyLinearImpulseAtWorldPoint(to_q3vec3(impulse), to_q3vec3(position));
+}
+
 void RigidBody::add_force_at_position(const Vec3& force, const Vec3& position) {
     q3Body* b = simulation_->bodies_.at(this);
 
@@ -301,6 +311,9 @@ void Body::build_collider(ColliderType collider) {
                 collider->triangles.push_back(tri);
             }
         });
+
+        // Build the octree for performance
+        collider->build_octree();
     }
 }
 

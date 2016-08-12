@@ -6,9 +6,10 @@
 #include "controller.h"
 
 #include "../generic/managed.h"
+#include "../generic/tri_octree.h"
 #include "../types.h"
 
-#include "qu3e/q3.h"
+#include "q3.h"
 
 namespace kglt {
 
@@ -24,15 +25,46 @@ namespace impl {
 struct Triangle {
     uint32_t index[3];
     Vec3 normal;
+
+    group_id get_group(void*) const { return 0; }
+    inline Vec3 get_vertex(uint32_t i, void* user_data) const {
+        return ((Vec3*)user_data)[index[i]];
+    }
 };
 
+typedef Octree<Triangle> RaycastOctree;
+
+std::pair<Vec3, Vec3> calculate_bounds(const std::vector<Vec3>& vertices) {
+    float min = std::numeric_limits<float>::max(), max = std::numeric_limits<float>::lowest();
+
+    for(auto& vertex: vertices) {
+        if(vertex.x < min) min = vertex.x;
+        if(vertex.y < min) min = vertex.y;
+        if(vertex.z < min) min = vertex.z;
+        if(vertex.x > max) max = vertex.x;
+        if(vertex.y > max) max = vertex.y;
+        if(vertex.z > max) max = vertex.z;
+    }
+
+    return std::make_pair(Vec3(min, min, min), Vec3(max, max, max));
+}
 
 struct RaycastCollider {
     std::vector<Vec3> vertices;
     std::vector<Triangle> triangles;
-    Vec3 normal;
+    std::unique_ptr<RaycastOctree> octree_;
+
+    void build_octree() {
+        std::pair<Vec3, Vec3> min_max = calculate_bounds(vertices);
+        octree_.reset(new RaycastOctree(min_max.first, min_max.second, 100, (void*)&vertices[0]));
+        for(auto& triangle: triangles) {
+            octree_->insert_triangle(triangle);
+        }
+    }
 
     std::pair<Vec3, bool> intersect_ray(const Vec3& start, const Vec3& direction, float* hit_distance=nullptr) {
+        auto triangles = flatten(octree_->gather_triangles(octree_->find_nodes_intersecting_ray(start, direction)));
+
         kmRay3 ray;
         kmVec3Assign(&ray.start, &start);
         kmVec3Assign(&ray.dir, &direction);
@@ -41,9 +73,9 @@ struct RaycastCollider {
         Vec3 intersection, n;
         bool intersects = false;
 
-        // FIXME: Bounds check to get a shortlist!
         for(auto& tri: triangles) {
             float dist = closest_hit;
+
             Vec3 intersect;
             bool hit = kmRay3IntersectTriangle(
                 &ray,
@@ -159,8 +191,7 @@ private:
 };
 
 /*
- * A rigid body controller that uses the rather excellent Yocto-gl library
- * for rigid body simulation
+ * A rigid body controller
  */
 class RigidBody:
     public impl::Body,
@@ -176,6 +207,9 @@ public:
 
     void add_torque(const Vec3& torque);
     void add_relative_torque(const Vec3& torque);
+
+    void add_impulse(const Vec3& impulse);
+    void add_impulse_at_position(const Vec3& impulse, const Vec3& position);
 
     using impl::Body::init;
     using impl::Body::cleanup;
