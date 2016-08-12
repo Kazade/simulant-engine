@@ -27,6 +27,30 @@ became a full blown game engine!
  * Procedural functions for generate a starfield texture (needs work)
  * Functions for creating lights, multiple viewports and cameras
 
+## Roadmap / TODO
+
+ * Fix up UI rendering after switch from libRocket -> Nuklear
+ * Rename UIStage -> Overlay
+ * Fix the onscreen joypad controller (broken with the switch to Nuklear)
+ * Make geoms work using the new Octree in generic/tri_octree.h
+ * Finish the GL 1.x renderer
+ * Switch the GL 2.x renderer with a GL 4.x one
+ * Implement render-to-texture
+ * Fix lightmaps in the Q2 bsp loader
+ * Implement animated meshes, starting with loading MD2
+ * Implement multiple LOD for meshes
+ * Introduce the concept of "bound" IDs, allowing `auto texture = texture_id.fetch();` to work if the ID was returned from new_X()
+ * Remove ProtectedPtr<T>
+ * Make non-reference counted objects return raw pointers with fetched
+ * Build in support for shadows
+ * Fix the lighting sample
+ * Finish skybox management
+ * Add SDL1 support (for Dreamcast)
+ * Add Dreamcast support (depends on GL 1.x)
+ * Restore Android support
+ * Port to OSX and Windows, then iOS
+ * Implement VBO management in the GL 2.x renderer for improved performance 
+
 ## Building
 
 Compiling the code requires CMake. Currently there are the following external dependencies:
