@@ -1,9 +1,9 @@
 #ifndef FRUSTUM_H
 #define FRUSTUM_H
 
-#include <kazmath/vec3.h>
-#include <kazmath/plane.h>
-#include <kazmath/aabb3.h>
+#include "kazmath/kazmath.h"
+#include "kazmath/kazmath.h"
+#include "kazmath/kazmath.h"
 
 #include <cstdint>
 #include <vector>

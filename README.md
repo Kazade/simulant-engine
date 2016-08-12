@@ -16,14 +16,37 @@ became a full blown game engine!
  * Complex material scripting format
  * Loading of .obj models and the X-Wing vs Tie Fighter .opt format
  * Loading of Q2 BSP files (needs work)
+ * Loading of heightmap terrains from image files
  * Octree partitioning/culling (WIP)
  * Loading of JPG, PNG, TGA, WAL images
  * Shortcut functions for loading 2D sprites, 2D backgrounds and 3D skyboxes
  * Simple scene graph functions
- * HTML/CSS based UI renderer based on libRocket
+ * UI layer based on the Nuklear library
+ * Basic rigid body physics using the Qu3e library
  * Procedural functions for generating spheres, cubes, capsules, circles and rectangles
  * Procedural functions for generate a starfield texture (needs work)
  * Functions for creating lights, multiple viewports and cameras
+
+## Building
+
+Compiling the code requires CMake. Currently there are the following external dependencies:
+
+ - ZLIB
+ - SDL2
+ - OpenGL
+ - TinyXML
+ - OpenAL
+ - Kazbase (found on my GitHub)
+
+To build:
+
+```
+    mkdir build && cd build
+    cmake ..
+    make
+```
+
+I'm working on bundling all dependencies except SDL2, OpenGL, OpenAL and ZLIB. 
 
 ## How do I use it?
 
@@ -66,8 +89,13 @@ rectangle:
 class MyApp : public kglt::Application {
 public:
     bool do_init() {
-        MeshID mesh_id = window->stage->assets->new_mesh_as_rectangle(10.0, 5.0);
-        ActorID actor_id = window->stage->new_actor_with_mesh(mesh_id);
+        StageID stage_id;
+	CameraID camera_id;
+	prepare_basic_scene(stage_id, camera_id); // Set up a basic rendering pipeline
+
+	auto stage = window->stage(stage_id); // Grab a handle to the stage
+        MeshID mesh_id = stage->assets->new_mesh_as_rectangle(10.0, 5.0); // Load a mesh into the stage's asset manager
+        ActorID actor_id = stage->new_actor_with_mesh(mesh_id); // Create an actor with the loaded mesh
         return true;
     }
 
@@ -98,7 +126,7 @@ can build complex scenes.
 The _Window_ owns everything (pretty much). You can do the following with a Window:
 
 * Create and delete Stages
-* Create and delete resources (e.g. Meshes, Textures, Shaders and Materials)
+* Create and delete resources (e.g. Meshes, Textures, Shaders and Materials) through the window->shared_assets property.
 * Manipulate the render sequence
 
 Stages are where you create your world by spawning _Actors_, you can think of them as a chunk of the overall scene. 
@@ -112,9 +140,10 @@ The RenderSequence is where you assemble your Stages for rendering. You add _Pip
 
 For example, if you want to render a 2D overlay on your world you'll probably want to do that using a camera that has an orthographic projection. In that case, you'd do the following:
 
-* Create a new stage ( window->scene->new_stage() )
-* Build your 2D overlay in the subscene (e.g. using new_mesh(), new_material(), new_actor() etc.)
-* Manipulate the stage's camera (e.g. window.camera(camera_id).set_orthographic_projection())
-* Finally add a stage to the pipeline (e.g. window->render_sequence->add_pipeline(stage.id(), camera().id(), ViewportID(), TextureID(), 100) );
+* Create a new stage ( window->new_stage() )
+* Create a camera (window->new_camera())
+* Build your 2D overlay in the stage (e.g. using new_mesh(), new_material(), new_actor() etc.)
+* Manipulate the camera (e.g. window.camera(camera_id)->set_orthographic_projection())
+* Finally add a stage to the pipeline (e.g. window->render(stage_id, camera_id()); )
 
-The 100 in the above example is the priority of this stage, the stage that renders the default subscene has a priority of 0, so giving your overlay subscene a priority of 100 would mean it would be renderered after the default.
+

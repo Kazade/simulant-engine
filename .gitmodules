@@ -7,3 +7,6 @@
 [submodule "deps/qu3e"]
 	path = deps/qu3e
 	url = git@github.com:Kazade/qu3e.git
+[submodule "deps/kazmath"]
+	path = deps/kazmath
+	url = git@github.com:Kazade/kazmath.git

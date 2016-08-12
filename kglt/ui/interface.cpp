@@ -5,7 +5,7 @@
 #endif
 
 #include <thread>
-#include <kazmath/mat4.h>
+#include "kazmath/kazmath.h"
 #include <kazbase/os/path.h>
 
 #include "../loader.h"

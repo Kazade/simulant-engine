@@ -1,7 +1,7 @@
 #pragma once
 
 #include <queue>
-#include <kazmath/ray3.h>
+#include "kazmath/kazmath.h"
 
 #include "controller.h"
 

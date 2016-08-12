@@ -1,4 +1,4 @@
-#include <kazmath/kazmath.h>
+#include "kazmath/kazmath.h"
 #include "sphere.h"
 #include "../../resource_manager.h"
 #include "../../mesh.h"

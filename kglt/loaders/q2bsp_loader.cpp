@@ -2,8 +2,8 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include <kazmath/vec3.h>
-#include <kazmath/mat4.h>
+#include "kazmath/kazmath.h"
+#include "kazmath/kazmath.h"
 
 #include <kazbase/logging.h>
 #include <kazbase/unicode.h>

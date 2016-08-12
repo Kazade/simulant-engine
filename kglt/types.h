@@ -9,14 +9,14 @@
 #include <vector>
 #include "colour.h"
 
-#include <kazmath/vec3.h>
-#include <kazmath/vec2.h>
-#include <kazmath/vec4.h>
-#include <kazmath/quaternion.h>
-#include <kazmath/mat4.h>
-#include <kazmath/mat3.h>
-#include <kazmath/utility.h>
-#include <kazmath/aabb3.h>
+#include "kazmath/vec2.h"
+#include "kazmath/vec3.h"
+#include "kazmath/vec4.h"
+#include "kazmath/ray3.h"
+#include "kazmath/mat4.h"
+#include "kazmath/mat3.h"
+#include "kazmath/aabb3.h"
+#include "kazmath/quaternion.h"
 
 #include "generic/protected_ptr.h"
 #include "generic/auto_weakptr.h"

@@ -1,7 +1,7 @@
 #include <queue>
 #include <deque>
 
-#include <kazmath/quaternion.h>
+#include "kazmath/kazmath.h"
 
 #include "../mesh.h"
 #include "../texture.h"
