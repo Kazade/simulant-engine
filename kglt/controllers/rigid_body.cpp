@@ -89,7 +89,7 @@ public:
     }
 };
 
-std::pair<Vec3, bool> RigidBodySimulation::intersect_ray(const Vec3& start, const Vec3& direction, float* distance) {
+std::pair<Vec3, bool> RigidBodySimulation::intersect_ray(const Vec3& start, const Vec3& direction, float* distance, Vec3* normal) {
     bool hit = false;
 
     Raycast raycast;
@@ -97,30 +97,37 @@ std::pair<Vec3, bool> RigidBodySimulation::intersect_ray(const Vec3& start, cons
     scene_->RayCast(&raycast, raycast.data);
 
     float closest = std::numeric_limits<float>::max();
-    Vec3 impact_point;
+    Vec3 impact_point, closest_normal;
 
     if(raycast.impactBody && raycast.data.toi <= direction.length()) {
         hit = true;
         closest = raycast.data.toi;
         impact_point = to_vec3(raycast.data.GetImpactPoint());
+        closest_normal = to_vec3(raycast.data.normal);
     }
 
     // Now, check all the raycast only colliders
     for(auto& p: raycast_colliders_) {
         float hit_distance;
-        auto ret = p.second.intersect_ray(start, direction, &hit_distance);
+        Vec3 n;
+        auto ret = p.second.intersect_ray(start, direction, &hit_distance, &n);
         if(ret.second) {
             // We hit something
             if(hit_distance < closest) {
                 closest = hit_distance;
                 impact_point = ret.first;
                 hit = true;
+                closest_normal = n;
             }
         }
     }
 
     if(distance) {
         *distance = closest;
+    }
+
+    if(normal) {
+        *normal = closest_normal;
     }
 
     return std::make_pair(impact_point, hit);
@@ -185,6 +192,22 @@ void RigidBody::add_impulse_at_position(const Vec3& impulse, const Vec3& positio
     q3Body* b = simulation_->bodies_.at(this);
     b->ApplyLinearImpulseAtWorldPoint(to_q3vec3(impulse), to_q3vec3(position));
 }
+
+float RigidBody::mass() const {
+    const q3Body* b = simulation_->bodies_.at(this);
+    return b->GetMass();
+}
+
+Vec3 RigidBody::linear_velocity() const {
+    const q3Body* b = simulation_->bodies_.at(this);
+    return to_vec3(b->GetLinearVelocity());
+}
+
+Vec3 RigidBody::linear_velocity_at(const Vec3& position) const {
+    const q3Body* b = simulation_->bodies_.at(this);
+    return to_vec3(b->GetLinearVelocityAtWorldPoint(to_q3vec3(position)));
+}
+
 
 void RigidBody::add_force_at_position(const Vec3& force, const Vec3& position) {
     q3Body* b = simulation_->bodies_.at(this);

@@ -62,7 +62,7 @@ struct RaycastCollider {
         }
     }
 
-    std::pair<Vec3, bool> intersect_ray(const Vec3& start, const Vec3& direction, float* hit_distance=nullptr) {
+    std::pair<Vec3, bool> intersect_ray(const Vec3& start, const Vec3& direction, float* hit_distance=nullptr, Vec3* hit_normal=nullptr) {
         auto triangles = flatten(octree_->gather_triangles(octree_->find_nodes_intersecting_ray(start, direction)));
 
         kmRay3 ray;
@@ -70,13 +70,13 @@ struct RaycastCollider {
         kmVec3Assign(&ray.dir, &direction);
 
         float closest_hit = std::numeric_limits<float>::max();
-        Vec3 intersection, n;
+        Vec3 intersection, normal;
         bool intersects = false;
 
         for(auto& tri: triangles) {
             float dist = closest_hit;
 
-            Vec3 intersect;
+            Vec3 intersect, n;
             bool hit = kmRay3IntersectTriangle(
                 &ray,
                 &vertices[tri.index[0]],
@@ -88,11 +88,16 @@ struct RaycastCollider {
                 closest_hit = dist;
                 intersection = intersect;
                 intersects = true;
+                normal = n;
             }
         }
 
         if(hit_distance) {
             *hit_distance = closest_hit;
+        }
+
+        if(hit_normal) {
+            *hit_normal = normal;
         }
 
         return std::make_pair(intersection, intersects);
@@ -112,7 +117,7 @@ public:
 
     void step(double dt);
 
-    std::pair<Vec3, bool> intersect_ray(const Vec3& start, const Vec3& direction, float* distance=nullptr);
+    std::pair<Vec3, bool> intersect_ray(const Vec3& start, const Vec3& direction, float* distance=nullptr, Vec3 *normal=nullptr);
 
 private:
     friend class impl::Body;
@@ -126,7 +131,7 @@ private:
     q3Body *acquire_body(impl::Body* body);
     void release_body(impl::Body *body);
 
-    std::unordered_map<impl::Body*, q3Body*> bodies_;
+    std::unordered_map<const impl::Body*, q3Body*> bodies_;
 
     std::pair<Vec3, Quaternion> body_transform(impl::Body* body);
     void set_body_transform(impl::Body *body, const Vec3& position, const Quaternion& rotation);
@@ -210,6 +215,10 @@ public:
 
     void add_impulse(const Vec3& impulse);
     void add_impulse_at_position(const Vec3& impulse, const Vec3& position);
+
+    float mass() const;
+    Vec3 linear_velocity() const;
+    Vec3 linear_velocity_at(const Vec3& position) const;
 
     using impl::Body::init;
     using impl::Body::cleanup;
