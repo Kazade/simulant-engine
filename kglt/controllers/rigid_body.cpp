@@ -39,6 +39,22 @@ Mat3 from_q3mat3(const q3Mat3& rhs) {
     return ret;
 }
 
+std::pair<Vec3, Vec3> calculate_bounds(const std::vector<Vec3>& vertices) {
+    float min = std::numeric_limits<float>::max(), max = std::numeric_limits<float>::lowest();
+
+    for(auto& vertex: vertices) {
+        if(vertex.x < min) min = vertex.x;
+        if(vertex.y < min) min = vertex.y;
+        if(vertex.z < min) min = vertex.z;
+        if(vertex.x > max) max = vertex.x;
+        if(vertex.y > max) max = vertex.y;
+        if(vertex.z > max) max = vertex.z;
+    }
+
+    return std::make_pair(Vec3(min, min, min), Vec3(max, max, max));
+}
+
+
 RigidBodySimulation::RigidBodySimulation() {
     scene_ = new q3Scene(1.0 / 60.0f);
     scene_->SetAllowSleep(true);
@@ -148,7 +164,7 @@ void RigidBodySimulation::release_body(impl::Body *body) {
     scene_->RemoveBody(bodies_.at(body));
 }
 
-std::pair<Vec3, Quaternion> RigidBodySimulation::body_transform(impl::Body *body) {
+std::pair<Vec3, Quaternion> RigidBodySimulation::body_transform(const impl::Body *body) {
     q3Body* b = bodies_.at(body);
     auto xform = b->GetTransform();
     Mat3 rot = from_q3mat3(xform.rotation);
@@ -208,6 +224,13 @@ Vec3 RigidBody::linear_velocity_at(const Vec3& position) const {
     return to_vec3(b->GetLinearVelocityAtWorldPoint(to_q3vec3(position)));
 }
 
+Vec3 RigidBody::position() const {
+    return simulation_->body_transform(this).first;
+}
+
+Quaternion RigidBody::rotation() const {
+    return simulation_->body_transform(this).second;
+}
 
 void RigidBody::add_force_at_position(const Vec3& force, const Vec3& position) {
     q3Body* b = simulation_->bodies_.at(this);

@@ -297,16 +297,16 @@ struct Vec3 : public kmVec3 {
         return kglt::Vec2(z, x);
     }
 
-    Vec3 operator+(const Vec3& rhs) const {
+    Vec3 operator+(const kmVec3& rhs) const {
         return Vec3(x + rhs.x, y + rhs.y, z + rhs.z);
     }
 
-    Vec3& operator+=(const Vec3& rhs) {
+    Vec3& operator+=(const kmVec3& rhs) {
         kmVec3Add(this, this, &rhs);
         return *this;
     }
 
-    Vec3 operator-(const Vec3& rhs) const {
+    Vec3 operator-(const kmVec3& rhs) const {
         return Vec3(x - rhs.x, y - rhs.y, z - rhs.z);
     }
 
@@ -314,6 +314,12 @@ struct Vec3 : public kmVec3 {
         Vec3 result;
         kmVec3Scale(&result, this, rhs);
         return result;
+    }
+
+    Vec3 operator*(const Quaternion& rhs) const {
+        Vec3 ret;
+        kmQuaternionMultiplyVec3(&ret, &rhs, this);
+        return ret;
     }
 
     Vec3& operator*=(float rhs) {
@@ -427,6 +433,9 @@ struct Vec3 : public kmVec3 {
     Vec3 random_deviant(const Degrees& angle, const Vec3 up=Vec3()) const;
 };
 
+struct Ray : public kmRay3 {
+
+};
 
 struct AABB : public kmAABB3 {
     AABB() {

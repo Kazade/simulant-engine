@@ -41,7 +41,7 @@ public:
         simulation_ = controllers::RigidBodySimulation::create();
 
         // Add a rigid body controller to the object and store it
-        controller_ = object->new_controller<controllers::RigidBody>(simulation_);
+        controller_ = object->new_controller<controllers::RaycastVehicle>(simulation_, 0.5);
         controller_->move_to(Vec3(0, 20, -50));
 
         // Make the ground a staticbody, and only deal with ray-cast hits
@@ -95,32 +95,6 @@ public:
     }
 
     void do_step(double dt) override {
-        auto stage = window->stage(stage_id_);
-        auto pos = stage->actor(object_id_)->absolute_position();
-
-        float HEIGHT = 1.0;
-        float dist;
-        Vec3 N;
-        auto intersection = simulation_->intersect_ray(
-            Vec3(pos.x, pos.y - 5.0, pos.z),
-            Vec3(0, -HEIGHT, 0),
-            &dist,
-            &N
-        );
-
-        if(intersection.second) {
-            if(dist < HEIGHT) {
-                Vec3 linear_vel_at = -controller_->linear_velocity_at(intersection.first);
-                Vec3 proj;
-                kmVec3ProjectOnToVec3(&linear_vel_at, &N, &proj);
-
-                float vel = proj.length();
-                float diff = HEIGHT - dist;
-                vel += 0.5 * diff;
-                controller_->add_impulse(Vec3(0, 1, 0) * vel * controller_->mass());
-            }
-        }
-
         simulation_->step(dt);
     }
 

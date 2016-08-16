@@ -1073,3 +1073,4 @@ deps/kazmath/kazmath/vec3.h
 deps/kazmath/kazmath/vec4.c
 deps/kazmath/kazmath/vec4.h
 kglt/controllers/raycast_vehicle.h
+kglt/controllers/raycast_vehicle.cpp

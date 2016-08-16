@@ -34,20 +34,7 @@ struct Triangle {
 
 typedef Octree<Triangle> RaycastOctree;
 
-std::pair<Vec3, Vec3> calculate_bounds(const std::vector<Vec3>& vertices) {
-    float min = std::numeric_limits<float>::max(), max = std::numeric_limits<float>::lowest();
-
-    for(auto& vertex: vertices) {
-        if(vertex.x < min) min = vertex.x;
-        if(vertex.y < min) min = vertex.y;
-        if(vertex.z < min) min = vertex.z;
-        if(vertex.x > max) max = vertex.x;
-        if(vertex.y > max) max = vertex.y;
-        if(vertex.z > max) max = vertex.z;
-    }
-
-    return std::make_pair(Vec3(min, min, min), Vec3(max, max, max));
-}
+std::pair<Vec3, Vec3> calculate_bounds(const std::vector<Vec3>& vertices);
 
 struct RaycastCollider {
     std::vector<Vec3> vertices;
@@ -133,7 +120,7 @@ private:
 
     std::unordered_map<const impl::Body*, q3Body*> bodies_;
 
-    std::pair<Vec3, Quaternion> body_transform(impl::Body* body);
+    std::pair<Vec3, Quaternion> body_transform(const impl::Body *body);
     void set_body_transform(impl::Body *body, const Vec3& position, const Quaternion& rotation);
 
     std::unordered_map<impl::Body*, RaycastCollider> raycast_colliders_;
@@ -162,6 +149,7 @@ namespace impl {
         bool init();
         void cleanup();
 
+        Property<Body, RigidBodySimulation> simulation = { this, &Body::simulation_ };
     protected:
         friend class kglt::controllers::RigidBodySimulation;
         MoveableObject* object_;
@@ -222,6 +210,9 @@ public:
 
     using impl::Body::init;
     using impl::Body::cleanup;
+
+    Vec3 position() const;
+    Quaternion rotation() const;
 private:
     friend class RigidBodySimulation;
 
