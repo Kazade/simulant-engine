@@ -44,7 +44,7 @@ public:
 
         // Add a rigid body controller to the object and store it
         controller_ = object->new_controller<controllers::RaycastVehicle>(simulation_, 1.0);
-        controller_->move_to(Vec3(0, 3, 0));
+        controller_->move_to(Vec3(0, 10, 0));
 
         // Make the ground a staticbody, and only deal with ray-cast hits
         auto ground_controller = stage->actor(ground_id_)->new_controller<controllers::StaticBody>(simulation_, controllers::COLLIDER_TYPE_RAYCAST_ONLY);

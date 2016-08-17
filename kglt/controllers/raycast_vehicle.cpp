@@ -64,7 +64,7 @@ void RaycastVehicle::do_fixed_update(double dt) {
         is_rolling_ = false;
     }
 
-    std::vector<Ray> rays = { wheels_[0], wheels_[1], wheels_[2], wheels_[3] };
+    std::vector<Ray> rays = { wheels_[0], wheels_[1], wheels_[2], wheels_[3], ground_detector_ };
 
     struct Intersection {
         float dist;
@@ -92,9 +92,7 @@ void RaycastVehicle::do_fixed_update(double dt) {
         }
     }
 
-    const float SUSPENSION_STIFFNESS = 1;
-
-    float m = mass();
+    const float SUSPENSION_STIFFNESS = 20;
 
     for(auto& intersection: intersections) {
         Vec3 up = -intersection.ray_dir.normalized(); //Vehicle up is always the reverse of the ray direction
@@ -103,12 +101,12 @@ void RaycastVehicle::do_fixed_update(double dt) {
         kmVec3ProjectOnToVec3(&Cv, &up, &Cf); // Project Cv onto Up
 
         // Calculate a value between 0.0 and 1.0 that shows how compressed the suspension is
-        float compression_ratio = intersection.dist / intersection.ray_dir.length();
+        float compression_ratio = 1.0 - (intersection.dist / intersection.ray_dir.length());
 
         auto Nf = up * compression_ratio * SUSPENSION_STIFFNESS;
         auto Df = Nf - Cf;
 
-        add_force_at_position(Df * m, intersection.ray_start);
+        add_force_at_position(Df, intersection.ray_start);
 
         std::cout << "Cr: " << compression_ratio << std::endl;
         std::cout << "Nf: " << Nf.x << ", " << Nf.y << ", " << Nf.z << std::endl;
