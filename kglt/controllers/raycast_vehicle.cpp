@@ -14,7 +14,7 @@ RaycastVehicle::RaycastVehicle(kglt::Controllable* object, RigidBodySimulation::
     BoundableEntity* entity = dynamic_cast<BoundableEntity*>(object_);
     AABB aabb = entity->aabb();
 
-    float offset = 0.1;
+    float offset = 0.001;
 
     wheel_position_local_[0] = Vec3(aabb.min.x, aabb.min.y - offset, aabb.min.z);
     wheel_position_local_[1] = Vec3(aabb.max.x, aabb.min.y - offset, aabb.min.z);
@@ -52,7 +52,7 @@ bool RaycastVehicle::init() {
     }
 }
 
-void RaycastVehicle::do_update(double dt) {
+void RaycastVehicle::do_fixed_update(double dt) {
     recalculate_rays();
 
     // If a roll has been detected, then fire a signal and do nothing else
@@ -64,49 +64,57 @@ void RaycastVehicle::do_update(double dt) {
         is_rolling_ = false;
     }
 
-    std::vector<Ray> rays = { wheels_[0], wheels_[1], wheels_[2], wheels_[3], ground_detector_ };
-
+    std::vector<Ray> rays = { wheels_[0], wheels_[1], wheels_[2], wheels_[3] };
 
     struct Intersection {
         float dist;
         Vec3 normal;
         Vec3 point;
         float penetration;
+        Vec3 ray_start;
+        Vec3 ray_dir;
     };
 
-    std::map<float, std::vector<Intersection>> intersections_by_distance;
+    std::vector<Intersection> intersections;
 
     for(auto& ray: rays) {
         Intersection intersection;
         auto ret = simulation_->intersect_ray(ray.start, ray.dir, &intersection.dist, &intersection.normal);
+
+        // If we intersected
         if(ret.second) {
+            // Store the intersection information
             intersection.point = ret.first;
             intersection.penetration = Vec3(ray.dir).length() - intersection.dist;
-            intersections_by_distance[intersection.dist].push_back(intersection);
+            intersection.ray_dir = Vec3(ray.dir);
+            intersection.ray_start = Vec3(ray.start);
+            intersections.push_back(intersection);
         }
     }
 
-    if(!intersections_by_distance.empty()) {
-        auto intersections_to_process = *(intersections_by_distance.rbegin()); // Get the max key (rbegin)
+    const float SUSPENSION_STIFFNESS = 1;
 
-        // First move the vehicle backwards along the velocity until we're no longer colliding
-        auto reverse_normalized_vel = -linear_velocity().normalized();
-        auto dist = intersections_to_process.second[0].penetration;
-        auto to_move = reverse_normalized_vel * dist;
+    float m = mass();
 
-        // Move out a bit
-        Vec3 pos = position();
-        this->move_to(pos + to_move);
+    for(auto& intersection: intersections) {
+        Vec3 up = -intersection.ray_dir.normalized(); //Vehicle up is always the reverse of the ray direction
+        Vec3 Cv = linear_velocity_at(intersection.ray_start); // Get the velocity at the point the ray starts
+        Vec3 Cf;
+        kmVec3ProjectOnToVec3(&Cv, &up, &Cf); // Project Cv onto Up
 
-        // Now apply impulses for all colliders at this (max) distance
-        for(auto& intersection: intersections_to_process.second) {
-            Vec3 linear_vel_at = -linear_velocity_at(intersection.point);
-            Vec3 proj;
-            kmVec3ProjectOnToVec3(&linear_vel_at, &intersection.normal, &proj);
+        // Calculate a value between 0.0 and 1.0 that shows how compressed the suspension is
+        float compression_ratio = intersection.dist / intersection.ray_dir.length();
 
-            float vel = proj.length();
-            add_impulse(intersection.normal * vel * mass());
-        }
+        auto Nf = up * compression_ratio * SUSPENSION_STIFFNESS;
+        auto Df = Nf - Cf;
+
+        add_force_at_position(Df * m, intersection.ray_start);
+
+        std::cout << "Cr: " << compression_ratio << std::endl;
+        std::cout << "Nf: " << Nf.x << ", " << Nf.y << ", " << Nf.z << std::endl;
+        std::cout << "Cf: " << Cf.x << ", " << Cf.y << ", " << Cf.z << std::endl;
+        std::cout << "Df: " << Df.x << ", " << Df.y << ", " << Df.z << std::endl;
+        std::cout << "===============================================" << std::endl;
     }
 }
 

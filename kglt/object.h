@@ -93,6 +93,18 @@ public:
         do_update(dt);
     }
 
+    void pre_fixed_update(double step) override {
+        pre_fixed_update_controllers(step);
+    }
+
+    void post_fixed_update(double step) override {
+        post_fixed_update_controllers(step);
+    }
+
+    void fixed_update(double dt) override {
+        fixed_update_controllers(dt);
+    }
+
 protected:
     kglt::Vec3 relative_position_;
     kglt::Quaternion relative_rotation_;

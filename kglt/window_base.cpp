@@ -236,6 +236,11 @@ void WindowBase::update(double dt) {
     StageManager::update(dt);
 }
 
+void WindowBase::fixed_update(double dt) {
+    if(is_paused()) return;
+    StageManager::fixed_update(dt);
+}
+
 bool WindowBase::run_frame() {
     signal_frame_started_();
 
@@ -258,6 +263,9 @@ bool WindowBase::run_frame() {
 
     //Update any playing sounds
     update_source(delta_time_);
+    input_controller().update(delta_time_);
+    update(delta_time_);
+
 
     ktiBindTimer(fixed_timer_);
     ktiUpdateFrameTime();
@@ -266,13 +274,8 @@ bool WindowBase::run_frame() {
     check_events();
 
     while(ktiTimerCanUpdate()) {
-        idle_.execute(); //Execute idle tasks before render
-
-        input_controller().update(fixed_step);
-
-        update(fixed_step); //Update this
-
-        signal_step_(fixed_step); //Trigger any steps        
+        signal_step_(fixed_step); //Trigger any steps
+        fixed_update(fixed_step); // Run the fixed updates on controllers
     }
 
     fixed_step_interp_ = ktiGetAccumulatorValue();

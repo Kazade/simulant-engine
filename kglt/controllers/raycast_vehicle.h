@@ -25,7 +25,7 @@ public:
         float wheel_height
     );
 
-    void do_update(double dt) override;
+    void do_fixed_update(double dt) override;
 
     bool init() override;
 

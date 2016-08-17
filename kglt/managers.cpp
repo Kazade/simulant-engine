@@ -191,6 +191,24 @@ void StageManager::delete_stage(StageID s) {
     StageManager::manager_delete(s);
 }
 
+void StageManager::fixed_update(double dt) {
+    for(auto stage_pair: StageManager::__objects()) {
+        GenericTreeNode* root = stage_pair.second.get();
+
+        root->apply_recursively([=](GenericTreeNode* node) {
+            node->as<SceneNode>()->pre_fixed_update(dt);
+        });
+
+        root->apply_recursively([=](GenericTreeNode* node) {
+            node->as<SceneNode>()->fixed_update(dt);
+        });
+
+        root->apply_recursively([=](GenericTreeNode* node) {
+            node->as<SceneNode>()->post_fixed_update(dt);
+        });
+    }
+}
+
 void StageManager::update(double dt) {
     //Update the stages
     for(auto stage_pair: StageManager::__objects()) {

@@ -71,6 +71,7 @@ public:
     bool has_stage(StageID stage_id) const;
 
     void print_tree();
+    void fixed_update(double dt);
     void update(double dt) override;
 
 private:

@@ -139,6 +139,7 @@ public:
     float aspect_ratio() const { return float(width_) / float(height_); }
     
     bool run_frame();
+    void fixed_update(double dt);
     void update(double dt) override;
 
     Mouse& mouse();

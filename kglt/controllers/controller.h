@@ -38,11 +38,27 @@ public:
         do_post_update(dt);
     }
 
+    void pre_fixed_update(double step) {
+        do_pre_fixed_update(step);
+    }
+
+    void fixed_update(double step) {
+        do_fixed_update(step);
+    }
+
+    void post_fixed_update(double step) {
+        do_post_fixed_update(step);
+    }
+
     Property<Controller, std::string> name = { this, &Controller::name_ };
 private:
     virtual void do_pre_update(double dt) {}
     virtual void do_update(double dt) {}
     virtual void do_post_update(double dt) {}
+
+    virtual void do_pre_fixed_update(double step) {}
+    virtual void do_fixed_update(double step) {}
+    virtual void do_post_fixed_update(double step) {}
 
     std::string name_;
 };
@@ -96,6 +112,24 @@ public:
         std::shared_ptr<T> ret = T::create(this, std::forward<Params>(params)...);
         add_controller(ret);
         return ret;
+    }
+
+    void pre_fixed_update_controllers(double step) {
+        for(auto& controller: controllers_) {
+            controller->pre_fixed_update(step);
+        }
+    }
+
+    void fixed_update_controllers(double step) {
+        for(auto& controller: controllers_) {
+            controller->fixed_update(step);
+        }
+    }
+
+    void post_fixed_update_controllers(double step) {
+        for(auto& controller: controllers_) {
+            controller->post_fixed_update(step);
+        }
     }
 
     void update_controllers(double dt) {

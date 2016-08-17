@@ -64,8 +64,8 @@ public:
         Node(Octree* octree, const vector_type& min, const vector_type& max):
             octree(octree), min(min), max(max) {
 
-            assert(min.x == min.y && min.y == min.z);
-            assert(max.x == max.y && max.y == max.z);
+            assert(max.x - min.x == max.y - min.y);
+            assert(max.x - min.x == max.z - min.z);
         }
 
         ~Node() {
@@ -141,7 +141,7 @@ public:
                 auto v = triangle.get_vertex(i, octree->user_data_);
 
                 if(!first) {
-                    auto this_v = find_child_containing_point(v);
+                    OctreeChild this_v = find_child_containing_point(v);
                     if(this_v != child) {
                         return nullptr;
                     }
@@ -179,6 +179,16 @@ public:
             for(uint8_t i = 0; i < 8; ++i) {
                 auto bounds = find_bounds_for_child((OctreeChild)i);
                 children[i] = new Node(this->octree, bounds.first, bounds.second);
+            }
+
+            auto groups = groups_;
+            groups_.clear();
+            count = 0;
+
+            for(auto& p: groups) {
+                for(auto& tri: *(p.second)) {
+                    octree->insert_triangle(tri);
+                }
             }
         }
 

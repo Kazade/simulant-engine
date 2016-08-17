@@ -19,6 +19,8 @@ public:
             45.0, float(window->width()) / float(window->height()), 1.0, 1000.0
         );
 
+        stage->camera(camera_id_)->move_to(0, 10, 50);
+
         window->pipeline(pipeline_id_)->viewport->set_colour(kglt::Colour::SKY_BLUE);
 
         kglt::TextureID crate = window->shared_assets->new_texture_from_file("sample_data/crate.png");
@@ -29,7 +31,7 @@ public:
         object_id_ = stage->new_actor_with_mesh(box_mesh_id_);
 
         kglt::TextureID grass = window->shared_assets->new_texture_from_file("sample_data/beach_sand.png");
-        ground_mesh_id_ = window->shared_assets->new_mesh_as_box(1000, 1, 1000);
+        ground_mesh_id_ = window->shared_assets->new_mesh_as_box(1000, 2.5, 1000); //window->shared_assets->new_mesh_from_file("sample_data/playground.obj");
         window->shared_assets->mesh(ground_mesh_id_)->set_material_id(
             window->shared_assets->new_material_from_texture(grass)
         );
@@ -41,12 +43,12 @@ public:
         simulation_ = controllers::RigidBodySimulation::create();
 
         // Add a rigid body controller to the object and store it
-        controller_ = object->new_controller<controllers::RaycastVehicle>(simulation_, 0.5);
-        controller_->move_to(Vec3(0, 20, -50));
+        controller_ = object->new_controller<controllers::RaycastVehicle>(simulation_, 1.0);
+        controller_->move_to(Vec3(0, 3, 0));
 
         // Make the ground a staticbody, and only deal with ray-cast hits
         auto ground_controller = stage->actor(ground_id_)->new_controller<controllers::StaticBody>(simulation_, controllers::COLLIDER_TYPE_RAYCAST_ONLY);
-        ground_controller->move_to(Vec3(0, -10, 0));
+        //ground_controller->move_to(Vec3(0, -10, 0));
     }
 
     void do_activate() {
