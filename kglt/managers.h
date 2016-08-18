@@ -74,6 +74,11 @@ public:
     void fixed_update(double dt);
     void update(double dt) override;
 
+    void pre_update(double dt);
+    void post_update(double dt);
+    void pre_fixed_update(double step);
+    void post_fixed_update(double step);
+
 private:
     WindowBase* window_ = nullptr;
     void print_tree(GenericTreeNode* node, uint32_t& level);

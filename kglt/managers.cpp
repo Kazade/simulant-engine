@@ -196,15 +196,47 @@ void StageManager::fixed_update(double dt) {
         GenericTreeNode* root = stage_pair.second.get();
 
         root->apply_recursively([=](GenericTreeNode* node) {
-            node->as<SceneNode>()->pre_fixed_update(dt);
-        });
-
-        root->apply_recursively([=](GenericTreeNode* node) {
             node->as<SceneNode>()->fixed_update(dt);
         });
+    }
+}
+
+void StageManager::pre_update(double dt) {
+    for(auto stage_pair: StageManager::__objects()) {
+        GenericTreeNode* root = stage_pair.second.get();
 
         root->apply_recursively([=](GenericTreeNode* node) {
-            node->as<SceneNode>()->post_fixed_update(dt);
+            node->as<SceneNode>()->pre_update(dt);
+        });
+    }
+}
+
+void StageManager::post_update(double dt) {
+    for(auto stage_pair: StageManager::__objects()) {
+        GenericTreeNode* root = stage_pair.second.get();
+
+        root->apply_recursively([=](GenericTreeNode* node) {
+            node->as<SceneNode>()->post_update(dt);
+        });
+    }
+}
+
+void StageManager::pre_fixed_update(double step) {
+    for(auto stage_pair: StageManager::__objects()) {
+        GenericTreeNode* root = stage_pair.second.get();
+
+        root->apply_recursively([=](GenericTreeNode* node) {
+            node->as<SceneNode>()->pre_fixed_update(step);
+        });
+    }
+}
+
+void StageManager::post_fixed_update(double step) {
+    for(auto stage_pair: StageManager::__objects()) {
+        GenericTreeNode* root = stage_pair.second.get();
+
+        root->apply_recursively([=](GenericTreeNode* node) {
+            node->as<SceneNode>()->post_fixed_update(step);
         });
     }
 }
@@ -215,15 +247,7 @@ void StageManager::update(double dt) {
         GenericTreeNode* root = stage_pair.second.get();
 
         root->apply_recursively([=](GenericTreeNode* node) {
-            node->as<SceneNode>()->pre_update(dt);
-        });
-
-        root->apply_recursively([=](GenericTreeNode* node) {
             node->as<SceneNode>()->update(dt);
-        });
-
-        root->apply_recursively([=](GenericTreeNode* node) {
-            node->as<SceneNode>()->post_update(dt);
         });
     }
 }

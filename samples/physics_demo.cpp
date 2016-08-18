@@ -54,45 +54,21 @@ public:
     void do_activate() {
         window->enable_pipeline(pipeline_id_);
 
-        window->keyboard->key_while_pressed_connect(SDL_SCANCODE_SPACE, [=](SDL_Keysym key, double dt) mutable {
-            // While space is pressed, add an upward force
-            controller_->add_impulse_at_position(Vec3(0, 25, 0), Vec3(10, 10, -50));
+
+        window->keyboard->key_while_pressed_connect(SDL_SCANCODE_UP, [=](SDL_Keysym key, double dt) mutable {
+            controller_->accelerate();
         });
 
-        window->keyboard->key_while_pressed_connect(SDL_SCANCODE_A, [=](SDL_Keysym key, double dt) mutable {
-            controller_->add_torque(Vec3(0, -15, 0));
-        });
-
-        window->keyboard->key_while_pressed_connect(SDL_SCANCODE_D, [=](SDL_Keysym key, double dt) mutable {
-            controller_->add_torque(Vec3(0, 15, 0));
+        window->keyboard->key_while_pressed_connect(SDL_SCANCODE_DOWN, [=](SDL_Keysym key, double dt) mutable {
+            controller_->decelerate();
         });
 
         window->keyboard->key_while_pressed_connect(SDL_SCANCODE_RIGHT, [=](SDL_Keysym key, double dt) mutable {
-            controller_->add_force(Vec3(15, 0, 0));
+            controller_->turn_left();
         });
 
         window->keyboard->key_while_pressed_connect(SDL_SCANCODE_LEFT, [=](SDL_Keysym key, double dt) mutable {
-            controller_->add_force(Vec3(-15, 0, 0));
-        });
-
-        window->keyboard->key_while_pressed_connect(SDL_SCANCODE_E, [=](SDL_Keysym key, double dt) mutable {
-            auto stage = window->stage(stage_id_);
-            auto pos = stage->actor(object_id_)->absolute_position();
-
-            controller_->add_force_at_position(
-                Vec3(0, 15, 0),
-                Vec3(pos.x + 2.5, pos.y - 2.5, pos.z)
-            );
-        });
-
-        window->keyboard->key_while_pressed_connect(SDL_SCANCODE_Q, [=](SDL_Keysym key, double dt) mutable {
-            auto stage = window->stage(stage_id_);
-            auto pos = stage->actor(object_id_)->absolute_position();
-
-            controller_->add_force_at_position(
-                Vec3(0, 15, 0),
-                Vec3(pos.x - 2.5, pos.y - 2.5, pos.z)
-            );
+            controller_->turn_right();
         });
     }
 
@@ -112,7 +88,7 @@ private:
     ActorID ground_id_;
 
     controllers::RigidBodySimulation::ptr simulation_;
-    controllers::RigidBody::ptr controller_;
+    controllers::RaycastVehicle::ptr controller_;
 };
 
 

@@ -213,6 +213,14 @@ public:
 
     Vec3 position() const;
     Quaternion rotation() const;
+
+    Vec3 forward() {
+        Vec3 ret;
+        Quaternion rot = rotation();
+        kmQuaternionMultiplyVec3(&ret, &rot, &KM_VEC3_NEG_Z);
+        return ret;
+    }
+
 private:
     friend class RigidBodySimulation;
 

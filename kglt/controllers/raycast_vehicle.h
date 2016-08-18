@@ -19,18 +19,38 @@ class RaycastVehicle:
     DEFINE_SIGNAL(VehicleGroundedSignal, signal_vehicle_grounded);
     DEFINE_SIGNAL(VehicleAirbourneSignal, signal_vehicle_airbourne);
 
-public:
+public:    
     RaycastVehicle(Controllable *object,
         RigidBodySimulation::ptr simulation,
         float wheel_height
     );
 
-    void do_fixed_update(double dt) override;
-
     bool init() override;
 
     using Managed<RaycastVehicle>::create;
+    using Managed<RaycastVehicle>::ptr;
+
+    void accelerate() {
+        drive_force_ += acceleration_;
+    }
+
+    void decelerate() {
+        drive_force_ += deceleration_;
+    }
+
+    void turn_left() {
+        turn_force_ -= turn_speed_;
+    }
+
+    void turn_right() {
+        turn_force_ += turn_speed_;
+    }
+
 private:
+    float acceleration_ = 100.0f;
+    float deceleration_ = -100.0f;
+    float turn_speed_ = 360.0f;
+
     float wheel_height_ = 2.0;
 
     Vec3 wheel_position_local_[4];
@@ -53,9 +73,21 @@ private:
     bool roll_detected() const { return false; }
     bool is_rolling_ = false;
 
+    bool is_grounded_ = false;
+
     /* Rays must be recalculated each frame as they need to be in world coordinates
      * and so transformed by the current body transformation */
     void recalculate_rays();
+
+    float turn_force_ = 0.0f;
+    float drive_force_ = 0.0f;
+
+    void do_fixed_update(double dt) override;
+    void do_pre_update(double dt) {
+        // Before we read any input or anything, clear the forces
+        drive_force_ = 0.0f;
+        turn_force_ = 0.0f;
+    }
 };
 
 

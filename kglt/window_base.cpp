@@ -261,10 +261,14 @@ bool WindowBase::run_frame() {
         frame_counter_time_ = 0.0;
     }
 
+    pre_update(delta_time_);
+
     //Update any playing sounds
     update_source(delta_time_);
     input_controller().update(delta_time_);
+
     update(delta_time_);
+    post_update(delta_time_);
 
 
     ktiBindTimer(fixed_timer_);
@@ -274,8 +278,10 @@ bool WindowBase::run_frame() {
     check_events();
 
     while(ktiTimerCanUpdate()) {
+        pre_fixed_update(fixed_step);
         signal_step_(fixed_step); //Trigger any steps
         fixed_update(fixed_step); // Run the fixed updates on controllers
+        post_fixed_update(fixed_step);
     }
 
     fixed_step_interp_ = ktiGetAccumulatorValue();

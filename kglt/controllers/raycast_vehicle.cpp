@@ -94,6 +94,9 @@ void RaycastVehicle::do_fixed_update(double dt) {
 
     const float SUSPENSION_STIFFNESS = 20;
 
+    Vec3 average_surface_normal_;
+    is_grounded_ = !intersections.empty();
+
     for(auto& intersection: intersections) {
         Vec3 up = -intersection.ray_dir.normalized(); //Vehicle up is always the reverse of the ray direction
         Vec3 Cv = linear_velocity_at(intersection.ray_start); // Get the velocity at the point the ray starts
@@ -108,11 +111,25 @@ void RaycastVehicle::do_fixed_update(double dt) {
 
         add_force_at_position(Df, intersection.ray_start);
 
+        average_surface_normal_ += intersection.normal;
+
         std::cout << "Cr: " << compression_ratio << std::endl;
         std::cout << "Nf: " << Nf.x << ", " << Nf.y << ", " << Nf.z << std::endl;
         std::cout << "Cf: " << Cf.x << ", " << Cf.y << ", " << Cf.z << std::endl;
         std::cout << "Df: " << Df.x << ", " << Df.y << ", " << Df.z << std::endl;
         std::cout << "===============================================" << std::endl;
+    }
+
+    if(is_grounded_) {
+        if(fabs(drive_force_) > kmEpsilon) {
+            average_surface_normal_.normalize();
+            Vec3 dir = forward();
+            add_force(dir * drive_force_);
+        }
+        if(fabs(turn_force_) > kmEpsilon) {
+            Vec3 torque = Vec3(0, 1, 0);
+            add_torque(torque * turn_force_);
+        }
     }
 }
 
