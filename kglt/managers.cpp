@@ -54,7 +54,7 @@ BackgroundID BackgroundManager::new_background_from_file(const unicode& filename
 }
 
 BackgroundPtr BackgroundManager::background(BackgroundID bid) {
-    return BackgroundManager::manager_get(bid);
+    return BackgroundManager::manager_get(bid).lock().get();
 }
 
 bool BackgroundManager::has_background(BackgroundID bid) const {
@@ -119,7 +119,7 @@ CameraID CameraManager::new_camera_for_ui() {
 }
 
 CameraPtr CameraManager::camera(CameraID c) {
-    return CameraManager::manager_get(c);
+    return CameraManager::manager_get(c).lock().get();
 }
 
 void CameraManager::delete_camera(CameraID cid) {
@@ -175,7 +175,7 @@ uint32_t StageManager::stage_count() const {
  */
 
 StagePtr StageManager::stage(StageID s) {
-    return StagePtr(*this, s);
+    return StageManager::manager_get(s).lock().get();
 }
 
 void StageManager::delete_stage(StageID s) {
@@ -305,7 +305,7 @@ OverlayID OverlayManager::new_overlay_from_file(const unicode& rml_file) {
 }
 
 OverlayPtr OverlayManager::overlay(OverlayID s) {
-    return OverlayManager::manager_get(s);
+    return OverlayManager::manager_get(s).lock().get();
 }
 
 void OverlayManager::delete_overlay(OverlayID s) {

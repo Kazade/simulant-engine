@@ -39,7 +39,6 @@ became a full blown game engine!
  * Implement animated meshes, starting with loading MD2
  * Implement multiple LOD for meshes
  * Introduce the concept of "bound" IDs, allowing `auto texture = texture_id.fetch();` to work if the ID was returned from new_X()
- * Remove ProtectedPtr<T>
  * Make non-reference counted objects return raw pointers with fetched
  * Build in support for shadows
  * Fix the lighting sample

@@ -18,7 +18,7 @@ public:
 
         auto stage = window->stage(stage_id_);
         window->resource_locator->add_search_path("sample_data/q2");
-        window->loader_for("sample_data/sample.bsp")->into(stage.get());
+        window->loader_for("sample_data/sample.bsp")->into(stage);
 
         stage->host_camera(camera_id_);
         stage->camera(camera_id_)->set_absolute_position(

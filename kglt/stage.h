@@ -70,7 +70,6 @@ class Stage:
     public SkyboxManager,
     public Loadable,
     public SceneNode,
-    public Protectable,
     public RenderableStage,
     public generic::DataCarrier,
     public virtual WindowHolder {
@@ -96,8 +95,8 @@ public:
     void delete_geom(GeomID geom_id);
     uint32_t geom_count() const;
 
-    ProtectedPtr<Actor> actor(ActorID e);
-    const ProtectedPtr<Actor> actor(ActorID e) const;
+    ActorPtr actor(ActorID e);
+    const ActorPtr actor(ActorID e) const;
 
     bool has_actor(ActorID e) const;
     void delete_actor(ActorID e);
@@ -130,7 +129,7 @@ public:
 
     void host_camera(CameraID c); ///< Create a representation (CameraProxy) of the designated camera
     void evict_camera(CameraID c); ///< Remove the representation of the camera
-    ProtectedPtr<CameraProxy> camera(CameraID c);
+    CameraProxyPtr camera(CameraID c);
 
     kglt::Colour ambient_light() const { return ambient_light_; }
     void set_ambient_light(const kglt::Colour& c) { ambient_light_ = c; }

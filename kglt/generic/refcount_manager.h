@@ -4,7 +4,6 @@
 #include "manager_base.h"
 #include <kazbase/list_utils.h>
 #include <kazsignal/kazsignal.h>
-#include "protected_ptr.h"
 
 namespace kglt {
 

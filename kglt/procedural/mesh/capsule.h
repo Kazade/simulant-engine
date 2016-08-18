@@ -8,7 +8,7 @@ namespace procedural {
 namespace mesh {
 
 SubMeshID capsule(
-    ProtectedPtr<Mesh> mesh,
+    MeshPtr mesh,
     float diameter=0.5,
     float height=1.0,
     uint32_t segment_count=10,

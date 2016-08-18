@@ -172,7 +172,7 @@ std::weak_ptr<OctreeNode> Octree::insert_actor(ActorID actor_id) {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
 
     auto actor = stage_->actor(actor_id);
-    auto node = get_or_create_node(actor.get());
+    auto node = get_or_create_node(actor);
 
     if(node) {
         // Insert into both the node, and the lookup table
@@ -221,7 +221,7 @@ std::weak_ptr<OctreeNode> Octree::insert_light(LightID light_id) {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
 
     auto light = stage_->light(light_id);
-    auto node = get_or_create_node(light.get());
+    auto node = get_or_create_node(light);
 
     if(node) {
         // Insert the light id into both the node and the lookup table
@@ -256,7 +256,7 @@ std::weak_ptr<OctreeNode> Octree::insert_particle_system(ParticleSystemID partic
     std::lock_guard<std::recursive_mutex> lock(mutex_);
 
     auto ps = stage_->particle_system(particle_system_id);
-    auto node = get_or_create_node(ps.get());
+    auto node = get_or_create_node(ps);
 
     if(node) {
         // Insert the light id into both the node and the lookup table

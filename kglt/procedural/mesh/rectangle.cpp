@@ -7,7 +7,7 @@ namespace procedural {
 namespace mesh {
 
 SubMeshID new_rectangle_submesh(
-    ProtectedPtr<Mesh>& mesh, float width, float height,
+    MeshPtr& mesh, float width, float height,
     float x_offset, float y_offset, float z_offset, MaterialID material_id) {
 
     //Create a submesh
@@ -71,7 +71,7 @@ SubMeshID new_rectangle_submesh(
 }
 
 SubMeshID rectangle(
-        ProtectedPtr<Mesh> mesh,
+        MeshPtr mesh,
         float width, float height,
         float x_offset, float y_offset, float z_offset,
         bool clear, kglt::MaterialID material) {
@@ -136,7 +136,7 @@ SubMeshID rectangle(
 }
 
 SubMeshID rectangle_outline(
-        ProtectedPtr<Mesh> mesh,
+        MeshPtr mesh,
         float width, float height,
         float x_offset, float y_offset, float z_offset,
         bool clear, kglt::MaterialID material) {

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "generic/managed.h"
-#include "generic/protected_ptr.h"
 #include "generic/tri_octree.h"
 #include "interfaces.h"
 #include "utils/parent_setter_mixin.h"
@@ -44,8 +43,7 @@ class Geom :
     public Managed<Geom>,
     public generic::Identifiable<GeomID>,
     public Object,
-    public Source,
-    public Protectable {
+    public Source {
 
 public:
     typedef sig::signal<void (GeomID)> MeshChangedSignal;

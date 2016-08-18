@@ -44,7 +44,7 @@ std::vector<RenderablePtr> NullPartitioner::geometry_visible_from(CameraID camer
         auto system = stage->particle_system(ps);
         AABB aabb = system->transformed_aabb();
         if(frustum.intersects_aabb(aabb)) {
-            result.push_back(system.__object);
+            result.push_back(system->shared_from_this());
         }
     }
 

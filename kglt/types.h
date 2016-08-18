@@ -18,10 +18,9 @@
 #include "kazmath/aabb3.h"
 #include "kazmath/quaternion.h"
 
-#include "generic/protected_ptr.h"
+#include "generic/manager.h"
 #include "generic/auto_weakptr.h"
 #include "generic/unique_id.h"
-#include "generic/manager_lookup_ptr.h"
 #include "kazbase/unicode.h"
 
 #define DEFINE_SIGNAL(prototype, name) \
@@ -668,7 +667,8 @@ const StageID DefaultStageID = StageID();
 const std::string DEFAULT_MATERIAL_SCHEME = "default";
 
 class Mesh;
-typedef ProtectedPtr<Mesh> MeshPtr;
+typedef std::weak_ptr<Mesh> MeshRef;
+typedef std::shared_ptr<Mesh> MeshPtr;
 
 class Material;
 typedef std::weak_ptr<Material> MaterialRef;
@@ -683,37 +683,38 @@ typedef std::weak_ptr<Sound> SoundRef;
 typedef std::shared_ptr<Sound> SoundPtr;
 
 class Actor;
-typedef ProtectedPtr<Actor> ActorPtr;
+typedef Actor* ActorPtr;
 
 class Geom;
-typedef ProtectedPtr<Geom> GeomPtr;
+typedef Geom* GeomPtr;
 
 class ParticleSystem;
-typedef ProtectedPtr<ParticleSystem> ParticleSystemPtr;
+typedef ParticleSystem* ParticleSystemPtr;
 
 class Sprite;
-typedef std::shared_ptr<Sprite> SpritePtr;
+typedef Sprite* SpritePtr;
 
 class Light;
-typedef std::shared_ptr<Light> LightPtr;
+typedef Light* LightPtr;
 
 class Camera;
 class CameraProxy;
 
-typedef AutoWeakPtr<Camera> CameraPtr;
+typedef Camera* CameraPtr;
+typedef CameraProxy* CameraProxyPtr;
 
 class Overlay;
-typedef AutoWeakPtr<Overlay> OverlayPtr;
+typedef Overlay* OverlayPtr;
 
 class Viewport;
 
 class Background;
-typedef AutoWeakPtr<Background> BackgroundPtr;
+typedef Background* BackgroundPtr;
 
 class Stage;
 class WindowBase;
 typedef generic::TemplatedManager<Stage, StageID> BaseStageManager;
-typedef ManagerLookupPtr<BaseStageManager, StageID> StagePtr;
+typedef Stage* StagePtr;
 
 class ResourceManager;
 typedef AutoWeakPtr<ResourceManager> ResourceManagerPtr;

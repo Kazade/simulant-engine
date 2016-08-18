@@ -71,20 +71,20 @@ void ResourceManager::update(double dt) {
     }
 }
 
-ProtectedPtr<Mesh> ResourceManager::mesh(MeshID m) {
+MeshPtr ResourceManager::mesh(MeshID m) {
     if(parent_ && !has_mesh(m)) {
         return parent_->mesh(m);
     }
 
-    return MeshManager::manager_get(m);
+    return MeshManager::manager_get(m).lock();
 }
 
-const ProtectedPtr<Mesh> ResourceManager::mesh(MeshID m) const {
+const MeshPtr ResourceManager::mesh(MeshID m) const {
     if(parent_ && !has_mesh(m)) {
         return parent_->mesh(m);
     }
 
-    return MeshManager::manager_get(m);
+    return MeshManager::manager_get(m).lock();
 }
 
 MeshID ResourceManager::new_mesh(VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect) {
@@ -543,20 +543,20 @@ SoundID ResourceManager::get_sound_with_alias(const unicode& alias) {
     return SoundManager::manager_get_by_alias(alias);
 }
 
-ProtectedPtr<Sound> ResourceManager::sound(SoundID s) {
+SoundPtr ResourceManager::sound(SoundID s) {
     if(parent_ && !has_sound(s)) {
         return parent_->sound(s);
     }
 
-    return SoundManager::manager_get(s);
+    return SoundManager::manager_get(s).lock();
 }
 
-const ProtectedPtr<Sound> ResourceManager::sound(SoundID s) const {
+const SoundPtr ResourceManager::sound(SoundID s) const {
     if(parent_ && !has_sound(s)) {
         return parent_->sound(s);
     }
 
-    return SoundManager::manager_get(s);
+    return SoundManager::manager_get(s).lock();
 }
 
 uint32_t ResourceManager::sound_count() const {

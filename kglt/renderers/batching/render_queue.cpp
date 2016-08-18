@@ -40,12 +40,12 @@ RenderQueue::RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory)
 
     stage->signal_particle_system_created().connect([=](ParticleSystemID ps_id) {
         auto ps = stage->particle_system(ps_id);
-        insert_renderable(ps.get());
+        insert_renderable(ps);
     });
 
     stage->signal_particle_system_destroyed().connect([=](ParticleSystemID ps_id) {
         auto ps = stage->particle_system(ps_id);
-        remove_renderable(ps.get());
+        remove_renderable(ps);
     });
 }
 
@@ -153,7 +153,7 @@ void RenderQueue::traverse(TraverseCallback callback, uint64_t frame_id) const {
                 for(Iteration i = 0; i < iterations; ++i) {
                     // Pass down the light if necessary, otherwise just pass nullptr
                     if(!lights.empty()) {
-                        light = lights[i].get();
+                        light = lights[i];
                     } else {
                         light = nullptr;
                     }

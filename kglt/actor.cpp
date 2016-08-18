@@ -65,7 +65,7 @@ void Actor::set_mesh(MeshID mesh) {
     }
 
     //Increment the ref-count on this mesh
-    mesh_ = stage->assets->mesh(mesh).__object;
+    mesh_ = stage->assets->mesh(mesh)->shared_from_this();
 
     //Watch the mesh for changes to its submeshes so we can adapt to it
     submesh_created_connection_ = mesh_->signal_submesh_created().connect(
@@ -170,7 +170,7 @@ void SubActor::remove_material_id_override() {
     override_material_id(MaterialID());
 }
 
-ProtectedPtr<Mesh> Actor::mesh() const {
+MeshPtr Actor::mesh() const {
     return stage->assets->mesh(mesh_id());
 }
 

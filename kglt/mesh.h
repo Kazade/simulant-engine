@@ -160,7 +160,8 @@ class Mesh :
     public Loadable,
     public Managed<Mesh>,
     public generic::Identifiable<MeshID>,
-    public TemplatedSubMeshManager {
+    public TemplatedSubMeshManager,
+    public std::enable_shared_from_this<Mesh> {
 
 public:
     Mesh(MeshID id, ResourceManager* resource_manager, VertexSpecification vertex_specification);

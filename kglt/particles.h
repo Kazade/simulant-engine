@@ -6,7 +6,6 @@
 
 #include "generic/identifiable.h"
 #include "generic/managed.h"
-#include "generic/protected_ptr.h"
 #include "renderers/renderer.h"
 #include "utils/parent_setter_mixin.h"
 
@@ -141,9 +140,9 @@ class ParticleSystem :
     public generic::Identifiable<ParticleSystemID>,
     public ParentSetterMixin<MoveableObject>,
     public Source,
-    public Protectable,
     public Loadable,
-    public Renderable {
+    public Renderable,
+    public std::enable_shared_from_this<ParticleSystem> {
 
 public:
     ParticleSystem(ParticleSystemID id, Stage* stage);

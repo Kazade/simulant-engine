@@ -285,7 +285,6 @@ kglt/physics/ode/ode_collidable.h
 kglt/physics/ode/ode_collidable.cpp
 kglt/physics/collidable.cpp
 kglt/physics/physics_engine.cpp
-kglt/generic/protected_ptr.h
 kglt/utils/parent_setter_mixin.h
 kglt/physics/responsive_body.cpp
 tests/test_vector.h
@@ -765,7 +764,6 @@ kglt/pipeline_helper.h
 kglt/pipeline_helper.cpp
 kglt/ui/rocket/Include/Rocket/Core/ElementInstancerGeneric.inl
 kglt/loaders/stb_vorbis.c
-kglt/generic/manager_lookup_ptr.h
 kglt/loaders/heightmap_loader.h
 kglt/loaders/heightmap_loader.cpp
 samples/rtt_sample.cpp

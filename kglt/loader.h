@@ -9,7 +9,6 @@
 
 #include "kazbase/any/any.h"
 #include "kazbase/exceptions.h"
-#include "generic/protected_ptr.h"
 #include "types.h"
 
 namespace kglt {
@@ -41,8 +40,8 @@ public:
         data_(data) {}
 
     virtual ~Loader();    
-    void into(const ProtectedPtr<Loadable>& resource, const LoaderOptions& options = LoaderOptions()) {
-        into(*resource.__object, options);
+    void into(Loadable* resource, const LoaderOptions& options = LoaderOptions()) {
+        into(*resource, options);
     }
 
     void into(std::shared_ptr<Loadable> resource, const LoaderOptions& options=LoaderOptions()) {

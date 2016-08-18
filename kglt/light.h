@@ -4,7 +4,6 @@
 #include "generic/managed.h"
 #include "object.h"
 #include "generic/identifiable.h"
-#include "generic/protected_ptr.h"
 #include "types.h"
 
 #include "utils/parent_setter_mixin.h"
@@ -17,7 +16,6 @@ class Light :
     public ParentSetterMixin<MoveableObject>,
     public generic::Identifiable<LightID>,
     public BoundableEntity,
-    public Protectable,
     public Managed<Light> {
 
 public:

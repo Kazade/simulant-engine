@@ -203,7 +203,7 @@ SkyboxID SkyboxManager::new_skybox_from_folder_and_relative_files(const unicode&
 }
 
 SkyboxPtr SkyboxManager::skybox(SkyboxID skybox_id) {
-    return TemplatedSkyboxManager::manager_get(skybox_id);
+    return TemplatedSkyboxManager::manager_get(skybox_id).lock().get();
 }
 
 void SkyboxManager::delete_skybox(SkyboxID skybox_id) {

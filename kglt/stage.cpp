@@ -120,12 +120,12 @@ bool Stage::has_actor(ActorID m) const {
     return ActorManager::manager_contains(m);
 }
 
-ProtectedPtr<Actor> Stage::actor(ActorID e) {
-    return ProtectedPtr<Actor>(ActorManager::manager_get(e));
+ActorPtr Stage::actor(ActorID e) {
+    return ActorManager::manager_get(e).lock().get();
 }
 
-const ProtectedPtr<Actor> Stage::actor(ActorID e) const {
-    return ProtectedPtr<Actor>(ActorManager::manager_get(e));
+const ActorPtr Stage::actor(ActorID e) const {
+    return ActorManager::manager_get(e).lock().get();
 }
 
 void Stage::delete_actor(ActorID e) {
@@ -148,7 +148,7 @@ GeomID Stage::new_geom_with_mesh(MeshID mid) {
 }
 
 GeomPtr Stage::geom(const GeomID gid) const {
-    return GeomPtr(geom_manager_->manager_get(gid));
+    return geom_manager_->manager_get(gid).lock().get();
 }
 
 GeomID Stage::new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, const Quaternion& rotation) {
@@ -186,7 +186,7 @@ ParticleSystemID Stage::new_particle_system() {
 ParticleSystemID Stage::new_particle_system_from_file(const unicode& filename, bool destroy_on_completion) {
     ParticleSystemID new_id = new_particle_system();
 
-    auto ps = particle_system(new_id);
+    auto ps = particle_system(new_id)->shared_from_this();
     ps->set_parent(this);
     ps->set_destroy_on_completion(destroy_on_completion);
 
@@ -198,7 +198,7 @@ ParticleSystemID Stage::new_particle_system_from_file(const unicode& filename, b
 ParticleSystemID Stage::new_particle_system_with_parent_from_file(ActorID parent, const unicode& filename, bool destroy_on_completion) {
     ParticleSystemID new_id = new_particle_system();
 
-    auto ps = particle_system(new_id);
+    auto ps = particle_system(new_id)->shared_from_this();
     ps->set_parent(parent);
     ps->set_destroy_on_completion(destroy_on_completion);
 
@@ -208,7 +208,7 @@ ParticleSystemID Stage::new_particle_system_with_parent_from_file(ActorID parent
 }
 
 ParticleSystemPtr Stage::particle_system(ParticleSystemID pid) {
-    return ParticleSystemManager::manager_get(pid);
+    return ParticleSystemManager::manager_get(pid).lock().get();
 }
 
 bool Stage::has_particle_system(ParticleSystemID pid) const {
@@ -249,7 +249,7 @@ SpriteID Stage::new_sprite_from_file(const unicode& filename, uint32_t frame_wid
 }
 
 SpritePtr Stage::sprite(SpriteID s) {
-    return SpriteManager::manager_get(s).lock();
+    return SpriteManager::manager_get(s).lock().get();
 }
 
 bool Stage::has_sprite(SpriteID s) const {
@@ -300,7 +300,7 @@ LightID Stage::new_light(MoveableObject &parent, LightType type) {
 }
 
 LightPtr Stage::light(LightID light_id) {
-    return LightManager::manager_get(light_id).lock();
+    return LightManager::manager_get(light_id).lock().get();
 }
 
 void Stage::delete_light(LightID light_id) {
@@ -326,8 +326,8 @@ void Stage::evict_camera(CameraID c) {
     CameraProxyManager::manager_delete(c);
 }
 
-ProtectedPtr<CameraProxy> Stage::camera(CameraID c) {
-    return ProtectedPtr<CameraProxy>(CameraProxyManager::manager_get(c));
+CameraProxyPtr Stage::camera(CameraID c) {
+    return CameraProxyManager::manager_get(c).lock().get();
 }
 
 void Stage::set_partitioner(AvailablePartitioner partitioner) {

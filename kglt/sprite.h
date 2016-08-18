@@ -5,7 +5,6 @@
 #include "interfaces.h"
 #include "generic/managed.h"
 #include "generic/identifiable.h"
-#include "generic/protected_ptr.h"
 #include "utils/parent_setter_mixin.h"
 #include "sound.h"
 #include "object.h"
@@ -17,8 +16,7 @@ class Sprite :
     public generic::Identifiable<SpriteID>,
     public ParentSetterMixin<MoveableObject>,
     public KeyFrameAnimated,
-    public Source,
-    public Protectable {
+    public Source {
 
 public:
     //Ownable interface (inherited through ParentSetterMixin)

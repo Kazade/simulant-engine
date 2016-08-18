@@ -4,7 +4,6 @@
 #include <cassert>
 #include <mutex>
 
-#include "generic/protected_ptr.h"
 #include "generic/data_carrier.h"
 
 namespace kglt {
@@ -12,7 +11,6 @@ namespace kglt {
 class ResourceManager;
 
 class Resource :
-    public virtual Protectable,
     public virtual generic::DataCarrier {
 
 public:

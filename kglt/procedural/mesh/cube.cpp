@@ -5,7 +5,7 @@ namespace kglt {
 namespace procedural {
 namespace mesh {
 
-void box(ProtectedPtr<Mesh> mesh, float width, float height, float depth, MeshStyle style) {
+void box(MeshPtr mesh, float width, float height, float depth, MeshStyle style) {
     mesh->clear();
 
     float rx = width * 0.5f;
@@ -196,7 +196,7 @@ void box(ProtectedPtr<Mesh> mesh, float width, float height, float depth, MeshSt
     }
 }
 
-void cube(ProtectedPtr<Mesh> mesh, float width, procedural::MeshStyle style) {
+void cube(MeshPtr mesh, float width, procedural::MeshStyle style) {
     box(mesh, width, width, width, style);
 }
 

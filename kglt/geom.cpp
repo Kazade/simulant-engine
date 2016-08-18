@@ -11,7 +11,7 @@ Geom::Geom(GeomID id, Stage* stage, MeshID mesh, const Vec3 &position, const Qua
 
     set_parent(stage);
 
-    mesh_ = stage->assets->mesh(mesh).__object;
+    mesh_ = stage->assets->mesh(mesh)->shared_from_this();
 
     compile();
 }

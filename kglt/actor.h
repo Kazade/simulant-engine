@@ -4,7 +4,6 @@
 #include "generic/identifiable.h"
 #include "generic/managed.h"
 #include "generic/relation.h"
-#include "generic/protected_ptr.h"
 
 #include <kazsignal/kazsignal.h>
 
@@ -27,8 +26,7 @@ class Actor :
     public Managed<Actor>,
     public generic::Identifiable<ActorID>,
     public ParentSetterMixin<MoveableObject>,
-    public Source,
-    public Protectable {
+    public Source {
 
 public:
     Actor(ActorID id, Stage* stage);
@@ -36,7 +34,7 @@ public:
 
     MeshID mesh_id() const { return (mesh_) ? mesh_->id() : MeshID(0); }
 
-    ProtectedPtr<Mesh> mesh() const;
+    MeshPtr mesh() const;
 
     bool has_mesh() const { return bool(mesh_); }
     void set_mesh(MeshID mesh);

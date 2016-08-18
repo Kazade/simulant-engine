@@ -213,7 +213,7 @@ std::vector<RenderablePtr> OctreePartitioner::geometry_visible_from(CameraID cam
 
                 node->data->each_particle_system([&](ParticleSystemID ps_id, AABB aabb) {
                     auto system = stage->particle_system(ps_id);
-                    results.push_back(system.__object);
+                    results.push_back(system->shared_from_this());
                 });
 
                 return true;

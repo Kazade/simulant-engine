@@ -16,10 +16,10 @@ public:
     virtual ActorID actor_id() const = 0;
 
     StagePtr stage() { return window_.stage(stage_id()); }
-    ProtectedPtr<Actor> actor() { return stage()->actor(actor_id()); }
+    ActorPtr actor() { return stage()->actor(actor_id()); }
 
     const StagePtr stage() const { return window_.stage(stage_id()); }
-    const ProtectedPtr<Actor> actor() const { return stage()->actor(actor_id()); }
+    const ActorPtr actor() const { return stage()->actor(actor_id()); }
 
 private:
     WindowBase& window_;

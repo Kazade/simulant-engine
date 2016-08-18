@@ -5,7 +5,6 @@
 #include <vector>
 #include <memory>
 
-#include "../generic/protected_ptr.h"
 #include "../types.h"
 #include "../generic/auto_weakptr.h"
 #include "../window_base.h"

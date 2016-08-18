@@ -4,7 +4,6 @@
 #include "generic/managed.h"
 #include "generic/identifiable.h"
 #include "utils/parent_setter_mixin.h"
-#include "generic/protected_ptr.h"
 #include "object.h"
 
 namespace kglt {
@@ -19,7 +18,6 @@ enum BackgroundResizeStyle {
 class Background:
     public Managed<Background>,
     public generic::Identifiable<BackgroundID>,
-    public Protectable,
     public Updateable,
     public Nameable,
     public Printable {

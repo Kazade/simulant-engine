@@ -2,7 +2,7 @@
 #define SPHERE_H
 
 #include <cstdint>
-#include "../../generic/protected_ptr.h"
+#include "../../types.h"
 
 namespace kglt {
 
@@ -11,8 +11,8 @@ class Mesh;
 namespace procedural {
 namespace mesh {
 
-void sphere(ProtectedPtr<Mesh> mesh, float diameter, int32_t slices=20, int32_t stacks=20);
-void icosphere(ProtectedPtr<Mesh> mesh, float diameter);
+void sphere(MeshPtr mesh, float diameter, int32_t slices=20, int32_t stacks=20);
+void icosphere(MeshPtr mesh, float diameter);
 
 }
 }

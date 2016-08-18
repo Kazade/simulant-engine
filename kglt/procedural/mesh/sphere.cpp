@@ -32,7 +32,7 @@ void generate_uv(const kmVec3& pos, float& u, float& v) {
     }
 }
 
-void sphere(ProtectedPtr<Mesh> mesh, float diameter, int32_t slices, int32_t stacks) {
+void sphere(MeshPtr mesh, float diameter, int32_t slices, int32_t stacks) {
     float theta, phi;
     float u, v;
     kmVec3 pos, n;

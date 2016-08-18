@@ -5,7 +5,6 @@
 #include <map>
 
 #include "generic/refcount_manager.h"
-#include "generic/protected_ptr.h"
 #include "managers/window_holder.h"
 #include "loaders/heightmap_loader.h"
 
@@ -77,8 +76,8 @@ public:
     MeshID new_mesh_with_alias_as_cylinder(const unicode& name, float diameter, float length, int segments = 20, int stacks = 20, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     MeshID get_mesh_with_alias(const unicode& alias);
 
-    ProtectedPtr<Mesh> mesh(MeshID m);
-    const ProtectedPtr<Mesh> mesh(MeshID m) const;
+    MeshPtr mesh(MeshID m);
+    const MeshPtr mesh(MeshID m) const;
 
     bool has_mesh(MeshID m) const;
     uint32_t mesh_count() const;
@@ -122,8 +121,8 @@ public:
 
     void delete_sound(SoundID t);
 
-    ProtectedPtr<Sound> sound(SoundID sound);
-    const ProtectedPtr<Sound> sound(SoundID sound) const;
+    SoundPtr sound(SoundID sound);
+    const SoundPtr sound(SoundID sound) const;
     bool has_sound(SoundID s) const;
     uint32_t sound_count() const;
 

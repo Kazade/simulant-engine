@@ -4,7 +4,6 @@
 #include "kazmath/mat4.h"
 #include "generic/identifiable.h"
 #include "generic/managed.h"
-#include "generic/protected_ptr.h"
 
 #include "utils/parent_setter_mixin.h"
 
@@ -26,8 +25,7 @@ enum CameraFollowMode {
 class CameraProxy:
     public ParentSetterMixin<MoveableObject>,
     public generic::Identifiable<CameraID>,
-    public Managed<CameraProxy>,
-    public Protectable {
+    public Managed<CameraProxy> {
 
 public:
     CameraProxy(CameraID camera_id, Stage* stage);
@@ -64,8 +62,7 @@ private:
 
 class Camera:
     public generic::Identifiable<CameraID>,
-    public Managed<Camera>,
-    public Protectable {
+    public Managed<Camera> {
 
 public:
     Camera(CameraID id, WindowBase* window);

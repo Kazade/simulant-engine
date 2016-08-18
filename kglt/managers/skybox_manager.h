@@ -26,8 +26,7 @@ class SkyboxManager;
 class Skybox :
     public Managed<Skybox>,
     public generic::Identifiable<SkyboxID>,
-    public ParentSetterMixin<MoveableObject>,
-    public Protectable {
+    public ParentSetterMixin<MoveableObject> {
 
 public:
     Skybox(SkyboxID id, SkyboxManager* manager);
@@ -66,7 +65,7 @@ private:
     MaterialID materials_[SKYBOX_FACE_MAX];
 };
 
-typedef ProtectedPtr<Skybox> SkyboxPtr;
+typedef Skybox* SkyboxPtr;
 
 class SkyboxImageNotFoundError : public IOError {
 public:
