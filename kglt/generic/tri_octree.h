@@ -9,8 +9,10 @@
  * A static octree for handling only triangles. This is a template so that
  * you can pass your own Triangle class, it just must have the following:
  *
- * Vec3* vertices; // A pointer to a vertex array (Vec3 must have .x, .y and .z attributes)
- * uint16_t index[3]; // An array of 3 indexes into the vertices array
+* Triangle must provide the following interface:
+ *
+ * Vec3 get_vertex(i, user_data);
+ * group_id get_group() const; // Should return 0 if not grouping
  */
 
 typedef int32_t group_id;
@@ -43,11 +45,6 @@ const std::set<OctreeChild> ALL_CHILDREN = {
     OCTREE_CHILD_LOWER_BACK_RIGHT
 };
 
-/* Triangle must provide the following interface:
- *
- * Vec3 get_vertex(i, user_data);
- * group_id get_group() const; // Should return 0 if not grouping
- */
 
 template<typename Triangle>
 class Octree {

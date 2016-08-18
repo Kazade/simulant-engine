@@ -2,6 +2,7 @@
 
 #include "generic/managed.h"
 #include "generic/protected_ptr.h"
+#include "generic/tri_octree.h"
 #include "interfaces.h"
 #include "utils/parent_setter_mixin.h"
 
@@ -10,6 +11,21 @@
 #include "object.h"
 
 namespace kglt {
+
+namespace impl {
+
+    struct Triangle {
+        Vec3 get_vertex(uint32_t i, void* user_data) {
+            return Vec3();
+        }
+
+        group_id get_group(void* user_data) {
+            return 0;
+        }
+    };
+
+}
+
 
 /**
  * @brief The Geom class
@@ -20,8 +36,7 @@ namespace kglt {
  * the freedom to split the geometry as necessary for improved performance
  * or even store entirely cached versions of the geometry.
  *
- * Also unlike an actor, a mesh is a requirement. You can switch the mesh though which
- * will signal to the partitioner that the fixed geometry needs rebuilding/caching etc.
+ * Also unlike an actor, a mesh is a requirement.
  */
 class Geom :
     public MeshInterface,
@@ -38,8 +53,6 @@ public:
     Geom(GeomID id, Stage* stage, MeshID mesh, const Vec3& position=Vec3(), const Quaternion rotation=Quaternion());
 
     MeshID mesh_id() const { return mesh_->id(); }
-    void set_mesh(MeshID mesh);
-    MeshChangedSignal& signal_mesh_changed() { return signal_mesh_changed_; }
 
     const AABB aabb() const;
     const AABB transformed_aabb() const;
@@ -55,17 +68,18 @@ public:
     }
 
     RenderPriority render_priority() const { return render_priority_; }
+
 private:
     VertexData* get_shared_data() const;
 
     std::shared_ptr<Mesh> mesh_;
     RenderPriority render_priority_;
 
-    MeshChangedSignal signal_mesh_changed_;
-
     void do_update(double dt) {
         update_source(dt);
     }
+
+    void compile();
 };
 
 }
