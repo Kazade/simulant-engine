@@ -9,7 +9,7 @@
 #include <kazbase/os/path.h>
 
 #include "../loader.h"
-#include "../ui_stage.h"
+#include "../overlay.h"
 #include "../window_base.h"
 #include "../camera.h"
 #include "../render_sequence.h"
@@ -22,7 +22,7 @@
 namespace kglt {
 namespace ui {
 
-Interface::Interface(WindowBase &window, UIStage *owner):
+Interface::Interface(WindowBase &window, Overlay *owner):
     window_(window),
     stage_(owner) {
 

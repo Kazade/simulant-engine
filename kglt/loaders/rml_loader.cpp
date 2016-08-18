@@ -1,6 +1,6 @@
 #include "rml_loader.h"
 
-#include "../ui_stage.h"
+#include "../overlay.h"
 #include "../ui/ui_private.h"
 #include "../ui/interface.h"
 
@@ -10,7 +10,7 @@ namespace loaders {
 void RMLLoader::into(Loadable& resource, const LoaderOptions &options) {
     Loadable* res_ptr = &resource;
 
-    UIStage* stage = dynamic_cast<UIStage*>(res_ptr);
+    Overlay* stage = dynamic_cast<Overlay*>(res_ptr);
     ui::Interface* iface = dynamic_cast<ui::Interface*>(res_ptr);
 
     //First, check to see if this is a UI stage

@@ -208,7 +208,7 @@ class Interface :
     public Loadable {
 
 public:
-    Interface(WindowBase& window, UIStage* owner);
+    Interface(WindowBase& window, Overlay* owner);
     ~Interface();
 
     uint16_t width() const;
@@ -236,7 +236,7 @@ private:
     unicode locate_font(const unicode& filename);
 
     WindowBase& window_;
-    UIStage* stage_ = nullptr;
+    Overlay* stage_ = nullptr;
 
     TiXmlDocument document_;
     TiXmlElement* root_element_ = nullptr;

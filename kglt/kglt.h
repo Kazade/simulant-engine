@@ -5,7 +5,7 @@
 #include "sdl2_window.h"
 #include "input_controller.h"
 #include "stage.h"
-#include "ui_stage.h"
+#include "overlay.h"
 #include "viewport.h"
 #include "frustum.h"
 #include "material.h"

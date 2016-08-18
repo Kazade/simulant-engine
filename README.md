@@ -30,7 +30,6 @@ became a full blown game engine!
 ## Roadmap / TODO
 
  * Fix up UI rendering after switch from libRocket -> Nuklear
- * Rename UIStage -> Overlay
  * Fix the onscreen joypad controller (broken with the switch to Nuklear)
  * Make geoms work using the new Octree in generic/tri_octree.h
  * Finish the GL 1.x renderer

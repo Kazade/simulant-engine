@@ -1,7 +1,7 @@
 #include "window_base.h"
 #include "message_bar.h"
 #include "render_sequence.h"
-#include "ui_stage.h"
+#include "overlay.h"
 #include "camera.h"
 
 namespace kglt {
@@ -24,7 +24,7 @@ bool MessageBar::init() {
 }
 
 void MessageBar::display_message(Message next_message) {
-    auto ui = window_.ui_stage(stage_);
+    auto ui = window_.overlay(stage_);
 
     ui->$("#message-bar").text(next_message.text);
     switch(next_message.type) {
@@ -43,7 +43,7 @@ void MessageBar::display_message(Message next_message) {
 }
 
 void MessageBar::update(float dt) {
-    auto ui = window_.ui_stage(stage_);
+    auto ui = window_.overlay(stage_);
 
     if(ui->$("#message-bar").empty()) {
         return;
@@ -81,13 +81,13 @@ void MessageBar::create_stage_and_element() {
         return;
     }
 
-    stage_ = window_.new_ui_stage();
+    stage_ = window_.new_overlay();
     camera_ = window_.new_camera();
 
     window_.camera(camera_)->set_orthographic_projection(0, window_.width(), window_.height(), 0, -1, 1);
 
     {
-        auto ui = window_.ui_stage(stage_);
+        auto ui = window_.overlay(stage_);
         ui->append("<div>").id("message-bar");
         auto $element = ui->$("#message-bar");
         $element.css("position", "absolute");

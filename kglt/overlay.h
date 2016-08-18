@@ -13,9 +13,9 @@
 
 namespace kglt {
 
-class UIStage:
-    public Managed<UIStage>,
-    public generic::Identifiable<UIStageID>,
+class Overlay:
+    public Managed<Overlay>,
+    public generic::Identifiable<OverlayID>,
     public Resource,
     public RenderableStage,
     public Loadable {
@@ -27,8 +27,8 @@ public:
      *  and not 2D/3D scenes
      */
 
-    UIStage(UIStageID id, WindowBase *parent);
-    ~UIStage();
+    Overlay(OverlayID id, WindowBase *parent);
+    ~Overlay();
 
     ui::ElementList append(const unicode& tag);
     ui::ElementList $(const unicode& selector);
@@ -58,8 +58,8 @@ public:
     void on_render_started() {}
     void on_render_stopped();
 
-    Property<UIStage, WindowBase> window = { this, &UIStage::window_ };
-    Property<UIStage, ResourceManager> assets = { this, &UIStage::resource_manager_ };
+    Property<Overlay, WindowBase> window = { this, &Overlay::window_ };
+    Property<Overlay, ResourceManager> assets = { this, &Overlay::resource_manager_ };
 
 private:
     WindowBase* window_ = nullptr;

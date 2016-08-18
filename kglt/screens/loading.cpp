@@ -1,7 +1,7 @@
 #include "../stage.h"
 #include "../render_sequence.h"
 #include "../actor.h"
-#include "../ui_stage.h"
+#include "../overlay.h"
 #include "../camera.h"
 #include "../window_base.h"
 
@@ -13,9 +13,9 @@ namespace screens {
 
 void Loading::do_load() {
     //Create a stage
-    stage_ = window->new_ui_stage();
+    stage_ = window->new_overlay();
 
-    auto stage = window->ui_stage(stage_);
+    auto stage = window->overlay(stage_);
 
     stage->set_styles(R"X(
         body {
@@ -65,7 +65,7 @@ void Loading::do_load() {
 void Loading::do_unload() {
     //Clean up
     window->delete_pipeline(pipeline_);
-    window->delete_ui_stage(stage_);
+    window->delete_overlay(stage_);
     window->delete_camera(camera_);
 }
 

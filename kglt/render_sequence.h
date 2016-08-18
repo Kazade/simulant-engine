@@ -32,7 +32,7 @@ public:
 
     CameraID camera_id() { return camera_; }
     StageID stage_id() { return stage_; }
-    UIStageID ui_stage_id() { return ui_stage_; }
+    OverlayID overlay_id() { return overlay_; }
     TextureID target_id() { return target_; }
     uint32_t clear_flags() const { return clear_mask_; }
 
@@ -47,7 +47,7 @@ public:
     void set_camera(CameraID c) { camera_ = c; }
     void set_viewport(const Viewport& v) { viewport_ = v; }
     void set_target(TextureID t) { target_ = t; }
-    void set_ui_stage(UIStageID s) { ui_stage_ = s; }
+    void set_overlay(OverlayID s) { overlay_ = s; }
     void set_clear_flags(uint32_t viewport_clear_flags) {
         clear_mask_ = viewport_clear_flags;
     }
@@ -60,7 +60,7 @@ private:
     TextureID target_;
     CameraID camera_;
     Viewport viewport_;
-    UIStageID ui_stage_;
+    OverlayID overlay_;
 
     uint32_t clear_mask_ = 0;
 
@@ -97,7 +97,7 @@ public:
     );
 
     PipelineID new_pipeline(
-        UIStageID stage,
+        OverlayID stage,
         CameraID camera,
         const Viewport& viewport=Viewport(),
         TextureID target=TextureID(),

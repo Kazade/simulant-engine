@@ -26,7 +26,7 @@ private:
     void do_load() override;
     void do_unload() override;
 
-    UIStageID stage_;
+    OverlayID stage_;
     CameraID camera_;
     PipelineID pipeline_;
 };

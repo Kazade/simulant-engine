@@ -3,7 +3,7 @@
 #include "generic/algorithm.h"
 #include "render_sequence.h"
 #include "stage.h"
-#include "ui_stage.h"
+#include "overlay.h"
 #include "actor.h"
 #include "mesh.h"
 #include "light.h"
@@ -44,8 +44,8 @@ void Pipeline::deactivate() {
 
     if(stage_) {
         sequence_->window->stage(stage_)->decrement_render_count();
-    } else if(ui_stage_) {
-        sequence_->window->ui_stage(ui_stage_)->decrement_render_count();
+    } else if(overlay_) {
+        sequence_->window->overlay(overlay_)->decrement_render_count();
     }
 }
 
@@ -56,8 +56,8 @@ void Pipeline::activate() {
 
     if(stage_) {
         sequence_->window->stage(stage_)->increment_render_count();
-    } else if(ui_stage_) {
-        sequence_->window->ui_stage(ui_stage_)->increment_render_count();
+    } else if(overlay_) {
+        sequence_->window->overlay(overlay_)->increment_render_count();
     }
 }
 
@@ -165,14 +165,14 @@ PipelineID RenderSequence::new_pipeline(StageID stage, CameraID camera, const Vi
     return new_p;
 }
 
-PipelineID RenderSequence::new_pipeline(UIStageID stage, CameraID camera, const Viewport& viewport, TextureID target, int32_t priority) {
+PipelineID RenderSequence::new_pipeline(OverlayID stage, CameraID camera, const Viewport& viewport, TextureID target, int32_t priority) {
     PipelineID new_p = PipelineManager::manager_new(this);
 
     ordered_pipelines_.push_back(PipelineManager::manager_get(new_p).lock());
 
     auto pipeline = PipelineManager::manager_get(new_p).lock();
 
-    pipeline->set_ui_stage(stage);
+    pipeline->set_overlay(stage);
     pipeline->set_camera(camera);
     pipeline->set_viewport(viewport);
     pipeline->set_target(target);
@@ -261,10 +261,10 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
 
     auto camera = window->camera(camera_id);
 
-    if(pipeline_stage->ui_stage_id()) {        
+    if(pipeline_stage->overlay_id()) {        
         //This is a UI stage, so just render that
-        auto ui_stage = window->ui_stage(pipeline_stage->ui_stage_id());
-        ui_stage->render(camera, viewport);
+        auto overlay = window->overlay(pipeline_stage->overlay_id());
+        overlay->render(camera, viewport);
     } else {
         auto stage = window->stage(stage_id);
 

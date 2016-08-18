@@ -31,7 +31,7 @@ PipelineHelper PipelineHelperAPIInterface::new_pipeline_helper(RenderSequence::p
     return PipelineHelper(sequence, pid);
 }
 
-PipelineHelper PipelineHelperAPIInterface::new_pipeline_helper(RenderSequence::ptr sequence, UIStageID stage, CameraID cam) {
+PipelineHelper PipelineHelperAPIInterface::new_pipeline_helper(RenderSequence::ptr sequence, OverlayID stage, CameraID cam) {
     PipelineID pid = sequence->new_pipeline(stage, cam);
     return PipelineHelper(sequence, pid);
 }

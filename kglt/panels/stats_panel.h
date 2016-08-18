@@ -19,7 +19,7 @@ private:
     void initialize();
     bool initialized_ = false;
 
-    UIStageID ui_stage_id_;
+    OverlayID overlay_id_;
     CameraID ui_camera_;
     PipelineID pipeline_id_;
 

@@ -85,7 +85,7 @@ public:
         );
 
         // Thanks to other samples
-        auto ui = window->ui_stage(overlay_id_);
+        auto ui = window->overlay(overlay_id_);
         ui->set_styles("body { font-family: \"Ubuntu\"; } .thing { font-size: 14; padding-left: 10;};");
         ui->append("<p>").text("Left x-y axis move the cube.");
         ui->append("<p>").text("Right x-y axis rotate the cube.");
@@ -169,7 +169,7 @@ public:
 private:
     CameraID camera_id_, overlay_camera_id_;
     StageID stage_id_;
-    UIStageID overlay_id_;
+    OverlayID overlay_id_;
 };
 
 class JoypadSample: public kglt::Application {

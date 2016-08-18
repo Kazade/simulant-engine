@@ -22,7 +22,7 @@
 #include "message_bar.h"
 #include "render_sequence.h"
 #include "stage.h"
-#include "ui_stage.h"
+#include "overlay.h"
 #include "virtual_gamepad.h"
 #include "screens/loading.h"
 #include "utils/gl_thread_check.h"
@@ -36,7 +36,7 @@ namespace kglt {
 WindowBase::WindowBase():
     Source(this),
     StageManager(this),
-    UIStageManager(this),    
+    OverlayManager(this),    
     CameraManager(this),
     resource_manager_(new ResourceManager(this)),
     initialized_(false),
@@ -400,37 +400,37 @@ void WindowBase::handle_mouse_motion(int x, int y, bool pos_normalized) {
         y *= height();
     }
 
-    UIStageManager::each([=](UIStage* object) {
+    OverlayManager::each([=](Overlay* object) {
         object->__handle_mouse_move(x, y);
     });
 }
 
 void WindowBase::handle_mouse_button_down(int button) {
-    UIStageManager::each([=](UIStage* object) {
+    OverlayManager::each([=](Overlay* object) {
         object->__handle_mouse_down(button);
     });
 }
 
 void WindowBase::handle_mouse_button_up(int button) {
-    UIStageManager::each([=](UIStage* object) {
+    OverlayManager::each([=](Overlay* object) {
         object->__handle_mouse_up(button);
     });
 }
 
 void WindowBase::handle_touch_down(int finger_id, int x, int y) {
-    UIStageManager::each([=](UIStage* object) {
+    OverlayManager::each([=](Overlay* object) {
         object->__handle_touch_down(finger_id, x, y);
     });
 }
 
 void WindowBase::handle_touch_motion(int finger_id, int x, int y) {
-    UIStageManager::each([=](UIStage* object) {
+    OverlayManager::each([=](Overlay* object) {
         object->__handle_touch_motion(finger_id, x, y);
     });
 }
 
 void WindowBase::handle_touch_up(int finger_id, int x, int y) {
-    UIStageManager::each([=](UIStage* object) {
+    OverlayManager::each([=](Overlay* object) {
         object->__handle_touch_up(finger_id, x, y);
     });
 }
@@ -447,7 +447,7 @@ void WindowBase::reset() {
     render_sequence()->delete_all_pipelines();
 
     CameraManager::manager_delete_all();
-    UIStageManager::manager_delete_all();
+    OverlayManager::manager_delete_all();
     StageManager::manager_delete_all();
     background_manager_.reset(new BackgroundManager(this));
 

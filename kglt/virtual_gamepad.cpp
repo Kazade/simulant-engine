@@ -3,7 +3,7 @@
 
 #include "virtual_gamepad.h"
 #include "window_base.h"
-#include "ui_stage.h"
+#include "overlay.h"
 #include "ui/interface.h"
 #include "render_sequence.h"
 
@@ -131,7 +131,7 @@ Dimensions VirtualGamepad::button_dimensions(int button) {
 
     button++; //Buttons are 1-indexed in the UI element classes
 
-    auto document = window_.ui_stage(ui_stage_);
+    auto document = window_.overlay(overlay_);
 
     unicode klass = _u(".button_{0}").format(humanize(button));
 
@@ -155,14 +155,14 @@ Dimensions VirtualGamepad::button_dimensions(int button) {
 bool VirtualGamepad::init() {
     L_DEBUG(_u("Initializing virtual gamepad with {0} buttons").format(button_count_));
 
-    ui_stage_ = window_.new_ui_stage(); //Create a UI stage to hold the controller buttons
+    overlay_ = window_.new_overlay(); //Create a UI stage to hold the controller buttons
 
     uint32_t button_size = int(float(window_.width() / 10.0));
     uint32_t dpad_margin = int(float(window_.width() * (5.0 / 640.0)));
     uint32_t area_width = int(float(window_.width() * (200.0 / 640.0)));
     uint32_t outside_padding = int(float(window_.width() * (10.0 / 640.0)));
     uint32_t font_size = window_.height() / 50;
-    auto stage = window_.ui_stage(ui_stage_);
+    auto stage = window_.overlay(overlay_);
     stage->load_rml_from_string(layout.format(button_size, dpad_margin, area_width, outside_padding, font_size));
 
     if(this->directions_ == VIRTUAL_DPAD_DIRECTIONS_TWO) {
@@ -238,7 +238,7 @@ bool VirtualGamepad::init() {
     camera_id_ = window_.new_camera_with_orthographic_projection();
 
     //Finally add to the render sequence, give a ridiculously high priority
-    pipeline_id_ = window_.render(ui_stage_, camera_id_).with_priority(kglt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
+    pipeline_id_ = window_.render(overlay_, camera_id_).with_priority(kglt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
 
     return true;
 }
@@ -252,7 +252,7 @@ void VirtualGamepad::cleanup() {
 
     window_.delete_pipeline(pipeline_id_);
     window_.delete_camera(camera_id_);
-    window_.delete_ui_stage(ui_stage_);
+    window_.delete_overlay(overlay_);
 }
 
 void VirtualGamepad::flip() {

@@ -44,7 +44,7 @@ private:
     WindowBase& window_;
     std::queue<Message> message_queue_;
 
-    UIStageID stage_;
+    OverlayID stage_;
     CameraID camera_;
 
     float time_message_visible_ = 0.0;

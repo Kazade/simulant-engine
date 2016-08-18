@@ -1,6 +1,6 @@
 #include "stats_panel.h"
 #include "../window_base.h"
-#include "../ui_stage.h"
+#include "../overlay.h"
 
 namespace kglt {
 
@@ -12,11 +12,11 @@ StatsPanel::StatsPanel(WindowBase *window):
 void StatsPanel::initialize() {
     if(initialized_) return;
 
-    ui_stage_id_ = window_->new_ui_stage();
+    overlay_id_ = window_->new_overlay();
     ui_camera_ = window_->new_camera_with_orthographic_projection(0, 640, 480, 0);
-    pipeline_id_ = window_->render(ui_stage_id_, ui_camera_).with_priority(kglt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
+    pipeline_id_ = window_->render(overlay_id_, ui_camera_).with_priority(kglt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
 
-    auto overlay = window_->ui_stage(ui_stage_id_);
+    auto overlay = window_->overlay(overlay_id_);
 
     auto body = overlay->append("<window>");
     body.css("color", "#4BD3FFDD");
@@ -75,7 +75,7 @@ void StatsPanel::update() {
     last_update += window_->delta_time();
 
     if(first_update || last_update >= 1.0) {
-        auto overlay = window_->ui_stage(ui_stage_id_);
+        auto overlay = window_->overlay(overlay_id_);
         overlay->find("#fps").text(
             _u("{0}").format(window_->stats->frames_per_second())
         );

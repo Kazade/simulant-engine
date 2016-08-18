@@ -251,8 +251,8 @@ kglt/application.cpp
 kglt/screens/loading.cpp
 kglt/render_sequence.h
 kglt/render_sequence.cpp
-kglt/ui_stage.h
-kglt/ui_stage.cpp
+kglt/overlay.h
+kglt/overlay.cpp
 kglt/kazbase/os/stat.h
 kglt/kazbase/os/stat.cpp
 samples/joypad_sample.cpp
@@ -1074,3 +1074,4 @@ deps/kazmath/kazmath/vec4.c
 deps/kazmath/kazmath/vec4.h
 kglt/controllers/raycast_vehicle.h
 kglt/controllers/raycast_vehicle.cpp
+README.md

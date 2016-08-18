@@ -656,7 +656,7 @@ typedef UniqueID<8> ActorID;
 typedef UniqueID<9> GeomID;
 typedef UniqueID<10> SoundID;
 typedef UniqueID<11> PipelineID;
-typedef UniqueID<12> UIStageID;
+typedef UniqueID<12> OverlayID;
 typedef UniqueID<13> SpriteID;
 typedef UniqueID<14> BackgroundID;
 typedef UniqueID<15> ParticleSystemID;
@@ -702,8 +702,8 @@ class CameraProxy;
 
 typedef AutoWeakPtr<Camera> CameraPtr;
 
-class UIStage;
-typedef AutoWeakPtr<UIStage> UIStagePtr;
+class Overlay;
+typedef AutoWeakPtr<Overlay> OverlayPtr;
 
 class Viewport;
 

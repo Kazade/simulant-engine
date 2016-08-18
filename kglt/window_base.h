@@ -82,7 +82,7 @@ typedef sig::signal<void (SDL_Scancode)> KeyDownSignal;
 class WindowBase :
     public Source,
     public StageManager,
-    public UIStageManager,
+    public OverlayManager,
     public CameraManager,
     public Loadable,
     public PipelineHelperAPIInterface,
@@ -172,7 +172,7 @@ public:
         return new_pipeline_helper(render_sequence_, stage_id, camera_id);
     }
 
-    virtual PipelineHelper render(UIStageID stage_id, CameraID camera_id) override {
+    virtual PipelineHelper render(OverlayID stage_id, CameraID camera_id) override {
         return new_pipeline_helper(render_sequence_, stage_id, camera_id);
     }
 

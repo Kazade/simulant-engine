@@ -3,7 +3,7 @@
 #include "background.h"
 #include "window_base.h"
 #include "stage.h"
-#include "ui_stage.h"
+#include "overlay.h"
 #include "camera.h"
 #include "utils/ownable.h"
 #include "render_sequence.h"
@@ -282,42 +282,42 @@ bool StageManager::has_stage(StageID stage_id) const {
 
 // ============= UI STAGES ============
 
-UIStageManager::UIStageManager(WindowBase *window):
+OverlayManager::OverlayManager(WindowBase *window):
     window_(window) {
 
 }
 
-UIStageID UIStageManager::new_ui_stage() {
-    return UIStageManager::manager_new(this->window_);
+OverlayID OverlayManager::new_overlay() {
+    return OverlayManager::manager_new(this->window_);
 }
 
-UIStageID UIStageManager::new_ui_stage_from_file(const unicode& rml_file) {
-    auto new_ui = new_ui_stage();
-    window_->loader_for(rml_file.encode())->into(std::shared_ptr<UIStage>(ui_stage(new_ui)));
+OverlayID OverlayManager::new_overlay_from_file(const unicode& rml_file) {
+    auto new_ui = new_overlay();
+    window_->loader_for(rml_file.encode())->into(std::shared_ptr<Overlay>(overlay(new_ui)));
     try {
 
     } catch(...) {
-        delete_ui_stage(new_ui);
+        delete_overlay(new_ui);
         throw;
     }
 
     return new_ui;
 }
 
-UIStagePtr UIStageManager::ui_stage(UIStageID s) {
-    return UIStageManager::manager_get(s);
+OverlayPtr OverlayManager::overlay(OverlayID s) {
+    return OverlayManager::manager_get(s);
 }
 
-void UIStageManager::delete_ui_stage(UIStageID s) {
-    UIStageManager::manager_delete(s);
+void OverlayManager::delete_overlay(OverlayID s) {
+    OverlayManager::manager_delete(s);
 }
 
-uint32_t UIStageManager::ui_stage_count() const {
-    return UIStageManager::manager_count();
+uint32_t OverlayManager::overlay_count() const {
+    return OverlayManager::manager_count();
 }
 
-bool UIStageManager::has_ui_stage(UIStageID ui_stage) const {
-    return UIStageManager::manager_contains(ui_stage);
+bool OverlayManager::has_overlay(OverlayID overlay) const {
+    return OverlayManager::manager_contains(overlay);
 }
 
 // =========== END UI STAGES ==========
