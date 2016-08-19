@@ -31,7 +31,7 @@ public:
     CameraProxy(CameraID camera_id, Stage* stage);
     ~CameraProxy();
 
-    void follow(ActorID actor, CameraFollowMode mode, const kglt::Vec3& offset=kglt::Vec3(0, 0, -10), float lag_in_seconds=0.25);
+    void follow(ActorID actor, CameraFollowMode mode, const kglt::Vec3& offset=kglt::Vec3(0, 5, 20), float lag_in_seconds=0);
     void ask_owner_for_destruction();
 
     void _update_following(double dt);
@@ -54,7 +54,7 @@ private:
     CameraFollowMode following_mode_;
     float following_lag_ = 0.0;
 
-    void do_update(double dt);
+    void post_fixed_update(double dt);
 
 
     CameraPtr camera();

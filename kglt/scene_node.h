@@ -16,9 +16,6 @@ class SceneNode:
     public Nameable {
 
 public:
-    virtual void pre_fixed_update(double dt) {}
-    virtual void fixed_update(double dt) {}
-    virtual void post_fixed_update(double dt) {}
 };
 
 }

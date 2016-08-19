@@ -39,6 +39,8 @@ public:
 
         auto object = stage->actor(object_id_);
 
+        stage->camera(camera_id_)->follow(object_id_, CAMERA_FOLLOW_MODE_DIRECT);
+
         // Create a rigid body simulation
         simulation_ = controllers::RigidBodySimulation::create();
 

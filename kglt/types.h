@@ -72,9 +72,14 @@ struct Quaternion : public kmQuaternion {
         return result;
     }
 
-    const Quaternion& inverse() {
+    void inverse() {
         kmQuaternionInverse(this, this);
-        return *this;
+    }
+
+    const Quaternion inversed() const {
+        Quaternion result(*this);
+        result.inverse();
+        return result;
     }
 
     bool operator==(const Quaternion& rhs) const {

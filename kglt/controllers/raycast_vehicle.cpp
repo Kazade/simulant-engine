@@ -130,6 +130,15 @@ void RaycastVehicle::do_fixed_update(double dt) {
             Vec3 torque = Vec3(0, 1, 0);
             add_torque(torque * turn_force_);
         }
+
+        // Apply side force
+        Vec3 linear_vel = linear_velocity();
+        Vec3 dir = forward();
+        Vec3 proj;
+        kmVec3ProjectOnToVec3(&linear_vel, &dir, &proj);
+
+        Vec3 side_force = proj - linear_vel;
+        add_force(side_force);
     }
 }
 

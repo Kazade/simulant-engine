@@ -192,30 +192,20 @@ void MoveableObject::rotate_around(const kglt::Vec3& axis, const kglt::Degrees& 
     update_from_parent();
 }
 
-void MoveableObject::look_at(const Vec3& position) {
-    Vec3 forward = (position - absolute_position()).normalized();
+Quaternion MoveableObject::calc_look_at_rotation(const Vec3& target) {
+    Vec3 up(0, 1, 0);
 
-    float dot = Vec3(0, 0, -1).dot(forward);
-
-    if(fabs(dot - (-1.0)) < kmEpsilon) {
-        //Rotate 180 degrees around up
-        rotate_global_y(Degrees(180.0));
-        return;
-    }
-
-    if(fabs(dot - 1.0) < kmEpsilon) {
-        return;
-    }
-
-    float rot_angle = acosf(dot);
-    Vec3 rot_axis = Vec3(0, 0, -1).cross(forward).normalized();
-
-    Quaternion q;
-    kmQuaternionRotationAxisAngle(&q, &rot_axis, rot_angle);
-
-    set_absolute_rotation(q);
+    Quaternion final;
+    Vec3 dir = (target - absolute_position()).normalized();
+    kmQuaternionLookRotation(&final, &dir, &up);
+    final.normalize();
+    kmQuaternionInverse(&final, &final);
+    return final;
 }
 
+void MoveableObject::look_at(const Vec3& position) {
+    set_absolute_rotation(calc_look_at_rotation(position));
+}
 
 Mat4 MoveableObject::absolute_transformation() const {
     Mat4 rot_matrix, trans_matrix, final;

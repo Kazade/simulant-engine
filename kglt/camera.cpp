@@ -50,7 +50,7 @@ void CameraProxy::follow(ActorID actor, CameraFollowMode mode, const kglt::Vec3&
 
 void CameraProxy::_update_following(double dt) {
     if(following_actor_ && stage->has_actor(following_actor_)) {
-        float t = ((following_lag_ == 0) ? 1.0 : dt * (1.0 / following_lag_));
+        float t = (fabs(following_lag_) < kmEpsilon) ? 1.0 : dt * (1.0 / following_lag_);
 
         auto actor = stage->actor(following_actor_);
 
@@ -63,8 +63,8 @@ void CameraProxy::_update_following(double dt) {
         Quaternion destination_rotation;
 
         if(following_mode_ == CAMERA_FOLLOW_MODE_DIRECT) {
-            destination_position = following_offset_.rotated_by(avatar_rotation) + avatar_position;
-            destination_rotation = avatar_rotation;
+            destination_position = avatar_position + following_offset_.rotated_by(avatar_rotation);
+            destination_rotation = calc_look_at_rotation(avatar_position);
         } else if(following_mode_ == CAMERA_FOLLOW_MODE_THIRD_PERSON) {
             float yaw = kmQuaternionGetYaw(&avatar_rotation);
             kmQuaternionRotationPitchYawRoll(&destination_rotation, 0, yaw, 0);
@@ -73,23 +73,15 @@ void CameraProxy::_update_following(double dt) {
             throw ValueError("Unknown camera follow mode");
         }
 
-        // If we're close, just position directly
-        if((destination_position - initial_position).length_squared() < 0.1f) {
-            set_absolute_position(destination_position);
-        } else {
-            set_absolute_position(initial_position.lerp(destination_position, t));
-        }
-
+        set_absolute_position(initial_position.lerp(destination_position, t));
         set_absolute_rotation(initial_rotation.slerp(destination_rotation, t));
-
-        update_from_parent();
     } else {
         //The actor was destroyed, so reset
         following_actor_ = ActorID();
     }
 }
 
-void CameraProxy::do_update(double dt) {
+void CameraProxy::post_fixed_update(double dt) {
     _update_following(dt);
 }
 

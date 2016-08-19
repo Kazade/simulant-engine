@@ -210,6 +210,8 @@ public:
         return look_at(kglt::Vec3(x, y, z));
     }
 
+    Quaternion calc_look_at_rotation(const Vec3& target);
+
     // End Transformable Interface
 
 

@@ -302,7 +302,7 @@ void Body::move_to(const Vec3& position) {
     );
 }
 
-void Body::do_post_update(double dt) {
+void Body::do_post_fixed_update(double dt) {
     auto xform = simulation_->body_transform(this);
     object_->set_absolute_position(xform.first);
     object_->set_absolute_rotation(xform.second);
