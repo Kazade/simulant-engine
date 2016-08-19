@@ -93,10 +93,10 @@ public:
 
         this->assert_true(actor->id() != 0); //Make sure we set an id for the mesh
         this->assert_true(actor->uuid() != 0); //Make sure we set a unique ID for the object
-        this->assert_true(!actor->exists("data"));
-        actor->stash((int)0xDEADBEEF, "data");
-        this->assert_true(actor->exists("data"));
-        this->assert_equal((int)0xDEADBEEF, actor->get<int>("data"));
+        this->assert_true(!actor->data->exists("data"));
+        actor->data->stash((int)0xDEADBEEF, "data");
+        this->assert_true(actor->data->exists("data"));
+        this->assert_equal((int)0xDEADBEEF, actor->data->get<int>("data"));
 
         stage->delete_actor(mid);
 

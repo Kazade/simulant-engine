@@ -4,15 +4,14 @@
 #include <cassert>
 #include <mutex>
 
+#include "generic/property.h"
 #include "generic/data_carrier.h"
 
 namespace kglt {
 
 class ResourceManager;
 
-class Resource :
-    public virtual generic::DataCarrier {
-
+class Resource {
 public:
     Resource(ResourceManager* manager):
         manager_(manager) {
@@ -30,10 +29,13 @@ public:
                ).count();
     }
 
+    Property<Resource, generic::DataCarrier> data = { this, &Resource::data_ };
 private:
     ResourceManager* manager_;
 
     std::chrono::time_point<std::chrono::system_clock> created_;
+
+    generic::DataCarrier data_;
 };
 
 }

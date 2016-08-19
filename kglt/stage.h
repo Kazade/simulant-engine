@@ -71,7 +71,6 @@ class Stage:
     public Loadable,
     public SceneNode,
     public RenderableStage,
-    public generic::DataCarrier,
     public virtual WindowHolder {
 
     DEFINE_SIGNAL(ParticleSystemCreatedSignal, signal_particle_system_created);
@@ -100,7 +99,7 @@ public:
 
     bool has_actor(ActorID e) const;
     void delete_actor(ActorID e);
-    uint32_t actor_count() const { return ActorManager::manager_count(); }
+    uint32_t actor_count() const { return ActorManager::count(); }
 
     ParticleSystemID new_particle_system();
     ParticleSystemID new_particle_system_from_file(const unicode& filename, bool destroy_on_completion=false);
@@ -125,7 +124,7 @@ public:
     LightID new_light(MoveableObject& parent, LightType type=LIGHT_TYPE_POINT);
     LightPtr light(LightID light);
     void delete_light(LightID light_id);
-    uint32_t light_count() const { return LightManager::manager_count(); }
+    uint32_t light_count() const { return LightManager::count(); }
 
     void host_camera(CameraID c); ///< Create a representation (CameraProxy) of the designated camera
     void evict_camera(CameraID c); ///< Remove the representation of the camera
@@ -151,6 +150,7 @@ public:
     Property<Stage, batcher::RenderQueue> render_queue = { this, &Stage::render_queue_ };
     Property<Stage, Partitioner> partitioner = { this, &Stage::partitioner_ };
     Property<Stage, ResourceManager> assets = { this, &Stage::resource_manager_ };
+    Property<Stage, generic::DataCarrier> data = { this, &Stage::data_ };
 
     bool init() override;
     void cleanup() override;
@@ -227,6 +227,8 @@ private:
     std::shared_ptr<ResourceManager> resource_manager_;
     kglt::Colour ambient_light_;
     std::unique_ptr<GeomManager> geom_manager_;
+
+    generic::DataCarrier data_;
 
 private:
     void on_actor_created(ActorID actor_id);

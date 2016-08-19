@@ -65,7 +65,7 @@ void Stage::on_subactor_material_changed(
 ActorID Stage::new_actor(RenderableCullingMode mode) {
     using namespace std::placeholders;
 
-    ActorID result = ActorManager::manager_new(this);
+    ActorID result = ActorManager::make(this);
     actor(result)->set_renderable_culling_mode(mode);
     actor(result)->set_parent(this);
     actor(result)->signal_subactor_material_changed().connect(
@@ -80,7 +80,7 @@ ActorID Stage::new_actor(RenderableCullingMode mode) {
 ActorID Stage::new_actor_with_mesh(MeshID mid, RenderableCullingMode mode) {
     using namespace std::placeholders;
 
-    ActorID result = ActorManager::manager_new(this);
+    ActorID result = ActorManager::make(this);
     actor(result)->set_renderable_culling_mode(mode);
     actor(result)->set_parent(this);
     actor(result)->signal_subactor_material_changed().connect(
@@ -117,15 +117,15 @@ ActorID Stage::new_actor_with_parent_and_mesh(ActorID parent, MeshID mid, Render
 }
 
 bool Stage::has_actor(ActorID m) const {
-    return ActorManager::manager_contains(m);
+    return ActorManager::contains(m);
 }
 
 ActorPtr Stage::actor(ActorID e) {
-    return ActorManager::manager_get(e).lock().get();
+    return ActorManager::get(e).lock().get();
 }
 
 const ActorPtr Stage::actor(ActorID e) const {
-    return ActorManager::manager_get(e).lock().get();
+    return ActorManager::get(e).lock().get();
 }
 
 void Stage::delete_actor(ActorID e) {
@@ -133,13 +133,13 @@ void Stage::delete_actor(ActorID e) {
 
     actor(e)->destroy_children();
 
-    ActorManager::manager_delete(e);
+    ActorManager::destroy(e);
 }
 
 //=============== GEOMS =====================
 
 GeomID Stage::new_geom_with_mesh(MeshID mid) {
-    auto gid = geom_manager_->manager_new(this, mid);
+    auto gid = geom_manager_->make(this, mid);
     geom(gid)->set_parent(this);
 
     signal_geom_created_(gid);
@@ -148,11 +148,11 @@ GeomID Stage::new_geom_with_mesh(MeshID mid) {
 }
 
 GeomPtr Stage::geom(const GeomID gid) const {
-    return geom_manager_->manager_get(gid).lock().get();
+    return geom_manager_->get(gid).lock().get();
 }
 
 GeomID Stage::new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, const Quaternion& rotation) {
-    auto gid = geom_manager_->manager_new(this, mid, position, rotation);
+    auto gid = geom_manager_->make(this, mid, position, rotation);
     geom(gid)->set_parent(this);
 
     signal_geom_created_(gid);
@@ -161,23 +161,23 @@ GeomID Stage::new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, c
 }
 
 bool Stage::has_geom(GeomID geom_id) const {
-    return geom_manager_->manager_contains(geom_id);
+    return geom_manager_->contains(geom_id);
 }
 
 void Stage::delete_geom(GeomID geom_id) {
     signal_geom_destroyed_(geom_id);
 
-    geom_manager_->manager_delete(geom_id);    
+    geom_manager_->destroy(geom_id);
 }
 
 uint32_t Stage::geom_count() const {
-    return geom_manager_->manager_count();
+    return geom_manager_->count();
 }
 
 //=============== PARTICLES =================
 
 ParticleSystemID Stage::new_particle_system() {
-    ParticleSystemID new_id = ParticleSystemManager::manager_new(this);
+    ParticleSystemID new_id = ParticleSystemManager::make(this);
 
     signal_particle_system_created_(new_id);
     return new_id;
@@ -208,11 +208,11 @@ ParticleSystemID Stage::new_particle_system_with_parent_from_file(ActorID parent
 }
 
 ParticleSystemPtr Stage::particle_system(ParticleSystemID pid) {
-    return ParticleSystemManager::manager_get(pid).lock().get();
+    return ParticleSystemManager::get(pid).lock().get();
 }
 
 bool Stage::has_particle_system(ParticleSystemID pid) const {
-    return ParticleSystemManager::manager_contains(pid);
+    return ParticleSystemManager::contains(pid);
 }
 
 void Stage::delete_particle_system(ParticleSystemID pid) {
@@ -220,13 +220,13 @@ void Stage::delete_particle_system(ParticleSystemID pid) {
 
     particle_system(pid)->destroy_children();
 
-    ParticleSystemManager::manager_delete(pid);
+    ParticleSystemManager::destroy(pid);
 }
 
 //=============== SPRITES ===================
 
 SpriteID Stage::new_sprite() {
-    SpriteID s = SpriteManager::manager_new(this);
+    SpriteID s = SpriteManager::make(this);
     sprite(s)->set_parent(this);
     signal_sprite_created_(s);
     return s;
@@ -249,28 +249,28 @@ SpriteID Stage::new_sprite_from_file(const unicode& filename, uint32_t frame_wid
 }
 
 SpritePtr Stage::sprite(SpriteID s) {
-    return SpriteManager::manager_get(s).lock().get();
+    return SpriteManager::get(s).lock().get();
 }
 
 bool Stage::has_sprite(SpriteID s) const {
-    return SpriteManager::manager_contains(s);
+    return SpriteManager::contains(s);
 }
 
 void Stage::delete_sprite(SpriteID s) {   
     sprite(s)->apply_recursively_leaf_first(&ownable_tree_node_destroy, false);
     sprite(s)->detach();
-    SpriteManager::manager_delete(s);
+    SpriteManager::destroy(s);
 }
 
 uint32_t Stage::sprite_count() const {
-    return SpriteManager::manager_count();
+    return SpriteManager::count();
 }
 
 //============== END SPRITES ================
 
 
 LightID Stage::new_light(LightType type) {
-    LightID lid = LightManager::manager_new(this);
+    LightID lid = LightManager::make(this);
     light(lid)->set_type(type);
 
     // If this is a new directional light, make sure we set a decent
@@ -286,7 +286,7 @@ LightID Stage::new_light(LightType type) {
 }
 
 LightID Stage::new_light(MoveableObject &parent, LightType type) {
-    LightID lid = LightManager::manager_new(this);
+    LightID lid = LightManager::make(this);
 
     {
         auto l = light(lid);
@@ -300,13 +300,13 @@ LightID Stage::new_light(MoveableObject &parent, LightType type) {
 }
 
 LightPtr Stage::light(LightID light_id) {
-    return LightManager::manager_get(light_id).lock().get();
+    return LightManager::get(light_id).lock().get();
 }
 
 void Stage::delete_light(LightID light_id) {
     signal_light_destroyed_(light_id);
     light(light_id)->destroy_children();
-    LightManager::manager_delete(light_id);
+    LightManager::destroy(light_id);
 }
 
 void Stage::host_camera(CameraID c) {
@@ -316,18 +316,18 @@ void Stage::host_camera(CameraID c) {
     }
 
     //Create a camera proxy for the camera ID
-    CameraProxyManager::manager_new(c, this);
+    CameraProxyManager::make(c, this);
 
     camera(c)->set_parent(this);
 }
 
 void Stage::evict_camera(CameraID c) {
     //Delete the camera proxy
-    CameraProxyManager::manager_delete(c);
+    CameraProxyManager::destroy(c);
 }
 
 CameraProxyPtr Stage::camera(CameraID c) {
-    return CameraProxyManager::manager_get(c).lock().get();
+    return CameraProxyManager::get(c).lock().get();
 }
 
 void Stage::set_partitioner(AvailablePartitioner partitioner) {

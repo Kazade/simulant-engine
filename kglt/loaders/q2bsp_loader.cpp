@@ -375,7 +375,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     std::vector<ActorProperties> actors;
     parse_actors(actor_string, actors);
     Vec3 cam_pos = find_player_spawn_point(actors);
-    stage->stash(cam_pos, "player_spawn");
+    stage->data->stash(cam_pos, "player_spawn");
 
     add_lights_to_scene(stage, actors);
 
@@ -708,7 +708,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         lightmap->upload(MIPMAP_GENERATE_NONE, TEXTURE_WRAP_CLAMP_TO_EDGE, TEXTURE_FILTER_LINEAR, false);
     }
 
-    mesh->stash(lightmap_texture, "lightmap_texture_id");
+    mesh->data->stash(lightmap_texture, "lightmap_texture_id");
     mesh->shared_data->done();
     mesh->each([&](SubMesh* submesh) {
         //Delete empty submeshes

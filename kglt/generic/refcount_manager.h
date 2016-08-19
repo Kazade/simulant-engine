@@ -29,17 +29,17 @@ public:
         uncollected_.insert(id);
     }
 
-    ObjectIDType manager_new(GarbageCollectMethod garbage_collect) {
-        return manager_new(ObjectIDType(), garbage_collect);
+    ObjectIDType make(GarbageCollectMethod garbage_collect) {
+        return make(ObjectIDType(), garbage_collect);
     }
 
     template<typename ...Args>
-    ObjectIDType manager_new(GarbageCollectMethod garbage_collect, Args&&... args) {
-        return manager_new(ObjectIDType(), garbage_collect, std::forward<Args>(args)...);
+    ObjectIDType make(GarbageCollectMethod garbage_collect, Args&&... args) {
+        return make(ObjectIDType(), garbage_collect, std::forward<Args>(args)...);
     }
 
     template<typename ...Args>
-    ObjectIDType manager_new(ObjectIDType id, GarbageCollectMethod garbage_collect, Args&&... args) {
+    ObjectIDType make(ObjectIDType id, GarbageCollectMethod garbage_collect, Args&&... args) {
         std::lock_guard<std::mutex> lock(manager_lock_);
         if(!id) {
             id = NewIDGenerator()();
@@ -57,7 +57,7 @@ public:
         return id;
     }
 
-    uint32_t manager_count() const {
+    uint32_t count() const {
         return objects_.size();
     }
 
@@ -76,23 +76,23 @@ public:
         return std::weak_ptr<ObjectType>(it->second);
     }
 
-    std::weak_ptr<ObjectType> manager_get(ObjectIDType id) {
+    std::weak_ptr<ObjectType> get(ObjectIDType id) {
         std::lock_guard<std::mutex> lock(manager_lock_);
         return manager_unlocked_get(id);
     }
 
-    ObjectType* manager_get_unsafe(ObjectIDType id) {
+    ObjectType* get_unsafe(ObjectIDType id) {
         std::lock_guard<std::mutex> lock(manager_lock_);
 
         return manager_unlocked_get(id).lock().get();
     }
 
-    const std::weak_ptr<ObjectType> manager_get(ObjectIDType id) const {
+    const std::weak_ptr<ObjectType> get(ObjectIDType id) const {
         std::lock_guard<std::mutex> lock(manager_lock_);
         return manager_unlocked_get(id);
     }
 
-    bool manager_contains(ObjectIDType id) const {
+    bool contains(ObjectIDType id) const {
         return objects_.find(id) != objects_.end();
     }
 
@@ -115,7 +115,7 @@ public:
 
         for(auto& p: objects) {
             try {
-                auto thing = manager_get(p.first).lock();
+                auto thing = get(p.first).lock();
                 func(thing.get());
             } catch(DoesNotExist<ObjectType>& e) {
                 // May have been deleted in another thread, just ignore this
@@ -178,7 +178,7 @@ protected:
         object_names_[alias] = id;
     }
 
-    ObjectIDType manager_get_by_alias(const unicode& alias) {
+    ObjectIDType get_by_alias(const unicode& alias) {
         auto it = object_names_.find(alias);
         if(it == object_names_.end()) {
             throw DoesNotExist<ObjectIDType>(_u("Object with alias {0} does not exist").format(alias));

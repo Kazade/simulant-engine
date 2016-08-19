@@ -62,7 +62,7 @@ public:
         terrain_mesh_id_ = stage->assets->new_mesh_from_heightmap("sample_data/terrain.png", spec);
         auto terrain_mesh = stage->assets->mesh(terrain_mesh_id_);
 
-        auto terrain_data = terrain_mesh->get<kglt::TerrainData>("terrain_data");
+        auto terrain_data = terrain_mesh->data->get<kglt::TerrainData>("terrain_data");
         kglt::TextureID terrain_splatmap = stage->assets->new_texture();
         calculate_splat_map(
             terrain_data.x_size,

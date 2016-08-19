@@ -83,11 +83,11 @@ void TiledLoader::into(Loadable &resource, const LoaderOptions &options) {
     }
 
     //Store useful information on the mesh
-    mesh->stash(layer->GetHeight(), "TILED_LAYER_HEIGHT");
-    mesh->stash(layer->GetWidth(), "TILED_LAYER_WIDTH");
-    mesh->stash(map.GetTileWidth(), "TILED_MAP_TILE_WIDTH");
-    mesh->stash(map.GetTileHeight(), "TILED_MAP_TILE_HEIGHT");
-    mesh->stash(tile_render_size, "TILED_TILE_RENDER_SIZE");
+    mesh->data->stash(layer->GetHeight(), "TILED_LAYER_HEIGHT");
+    mesh->data->stash(layer->GetWidth(), "TILED_LAYER_WIDTH");
+    mesh->data->stash(map.GetTileWidth(), "TILED_MAP_TILE_WIDTH");
+    mesh->data->stash(map.GetTileHeight(), "TILED_MAP_TILE_HEIGHT");
+    mesh->data->stash(tile_render_size, "TILED_TILE_RENDER_SIZE");
 
     /*
       Now go through the layer and build up a tile submesh for each grid square. Originally I chunked these

@@ -102,11 +102,11 @@ void RenderSequence::deactivate_all_pipelines() {
 }
 
 PipelinePtr RenderSequence::pipeline(PipelineID pipeline) {
-    return PipelineManager::manager_get(pipeline);
+    return PipelineManager::get(pipeline);
 }
 
 void RenderSequence::delete_pipeline(PipelineID pipeline_id) {
-    if(!PipelineManager::manager_contains(pipeline_id)) {
+    if(!PipelineManager::contains(pipeline_id)) {
         return;
     }
 
@@ -116,11 +116,11 @@ void RenderSequence::delete_pipeline(PipelineID pipeline_id) {
     }
 
     ordered_pipelines_.remove_if([=](Pipeline::ptr pipeline) -> bool { return pipeline->id() == pipeline_id;});
-    PipelineManager::manager_delete(pipeline_id);    
+    PipelineManager::destroy(pipeline_id);
 }
 
 void RenderSequence::delete_all_pipelines() {
-    PipelineManager::manager_delete_all();
+    PipelineManager::destroy_all();
 
     for(auto pip: ordered_pipelines_) {
         if(pip->is_active()) {
@@ -147,9 +147,9 @@ void RenderSequence::sort_pipelines(bool acquire_lock) {
 }
 
 PipelineID RenderSequence::new_pipeline(StageID stage, CameraID camera, const Viewport& viewport, TextureID target, int32_t priority) {
-    PipelineID new_p = PipelineManager::manager_new(this);
+    PipelineID new_p = PipelineManager::make(this);
 
-    auto pipeline = PipelineManager::manager_get(new_p).lock();
+    auto pipeline = PipelineManager::get(new_p).lock();
 
     pipeline->set_stage(stage);
     pipeline->set_camera(camera);
@@ -166,11 +166,11 @@ PipelineID RenderSequence::new_pipeline(StageID stage, CameraID camera, const Vi
 }
 
 PipelineID RenderSequence::new_pipeline(OverlayID stage, CameraID camera, const Viewport& viewport, TextureID target, int32_t priority) {
-    PipelineID new_p = PipelineManager::manager_new(this);
+    PipelineID new_p = PipelineManager::make(this);
 
-    ordered_pipelines_.push_back(PipelineManager::manager_get(new_p).lock());
+    ordered_pipelines_.push_back(PipelineManager::get(new_p).lock());
 
-    auto pipeline = PipelineManager::manager_get(new_p).lock();
+    auto pipeline = PipelineManager::get(new_p).lock();
 
     pipeline->set_overlay(stage);
     pipeline->set_camera(camera);

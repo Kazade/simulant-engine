@@ -146,7 +146,7 @@ SkyboxID SkyboxManager::new_skybox_from_absolute_files(
 
     assert(stage_);
 
-    SkyboxID sid = TemplatedSkyboxManager::manager_new(this);
+    SkyboxID sid = TemplatedSkyboxManager::make(this);
 
     auto sb = skybox(sid);
     sb->generate(
@@ -203,11 +203,11 @@ SkyboxID SkyboxManager::new_skybox_from_folder_and_relative_files(const unicode&
 }
 
 SkyboxPtr SkyboxManager::skybox(SkyboxID skybox_id) {
-    return TemplatedSkyboxManager::manager_get(skybox_id).lock().get();
+    return TemplatedSkyboxManager::get(skybox_id).lock().get();
 }
 
 void SkyboxManager::delete_skybox(SkyboxID skybox_id) {
-    TemplatedSkyboxManager::manager_delete(skybox_id);
+    TemplatedSkyboxManager::destroy(skybox_id);
 }
 
 }

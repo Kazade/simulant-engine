@@ -438,7 +438,7 @@ void WindowBase::handle_touch_up(int finger_id, int x, int y) {
 /**
  * @brief WindowBase::reset
  *
- * Destroys all stages, and UI stages, and releases all loadables. Then resets the
+ * Destroys all stages, and overlays, and releases all loadables. Then resets the
  * window to its original state.
  */
 void WindowBase::reset() {
@@ -446,9 +446,9 @@ void WindowBase::reset() {
 
     render_sequence()->delete_all_pipelines();
 
-    CameraManager::manager_delete_all();
-    OverlayManager::manager_delete_all();
-    StageManager::manager_delete_all();
+    CameraManager::destroy_all();
+    OverlayManager::destroy_all();
+    StageManager::destroy_all();
     background_manager_.reset(new BackgroundManager(this));
 
     create_defaults();
@@ -486,7 +486,7 @@ void WindowBase::delete_pipeline(PipelineID pid) {
 }
 
 bool WindowBase::has_pipeline(PipelineID pid) const {
-    return render_sequence_->manager_contains(pid);
+    return render_sequence_->contains(pid);
 }
 
 bool WindowBase::is_pipeline_enabled(PipelineID pid) const {

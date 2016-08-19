@@ -24,7 +24,6 @@
 namespace kglt {
 
 class Object:
-    public generic::DataCarrier,
     public SceneNode,
     public Controllable  {
 public:
@@ -105,6 +104,8 @@ public:
         fixed_update_controllers(dt);
     }
 
+    Property<Object, generic::DataCarrier> data = { this, &Object::data_ };
+
 protected:
     kglt::Vec3 relative_position_;
     kglt::Quaternion relative_rotation_;
@@ -121,6 +122,8 @@ private:
     unicode name_;
 
     virtual void do_update(double dt) {}
+
+    generic::DataCarrier data_;
 };
 
 typedef sig::signal<void (const Vec3&, const Quaternion&)> TransformationChangedSignal;

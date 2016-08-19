@@ -24,12 +24,12 @@ public:
     typedef ObjectType Type;
 
     template<typename... Args>
-    ObjectIDType manager_new(Args&&... args) {
-        return manager_new(generator_(), std::forward<Args>(args)...);
+    ObjectIDType make(Args&&... args) {
+        return make(generator_(), std::forward<Args>(args)...);
     }
 
     template<typename... Args>
-    ObjectIDType manager_new(ObjectIDType id, Args&&... args) {
+    ObjectIDType make(ObjectIDType id, Args&&... args) {
         {
             std::lock_guard<std::recursive_mutex> lock(manager_lock_);
 
@@ -43,7 +43,7 @@ public:
         return id;
     }
 
-    void manager_delete_all() {
+    void destroy_all() {
         for(auto p: objects_) {
             signal_pre_delete_(*p.second, p.first);
         }
@@ -51,24 +51,24 @@ public:
         objects_.clear();
     }
 
-    void manager_delete(ObjectIDType id) {
-        if(manager_contains(id)) {
+    void destroy(ObjectIDType id) {
+        if(contains(id)) {
             std::lock_guard<std::recursive_mutex> lock(manager_lock_);
 
             ObjectType& obj = *objects_[id];
             signal_pre_delete_(obj, id);
 
-            if(manager_contains(id)) {
+            if(contains(id)) {
                 objects_.erase(id);
             }
         }
     }
 
-    uint32_t manager_count() const {
+    uint32_t count() const {
         return objects_.size();
     }
 
-    std::weak_ptr<ObjectType> manager_get(ObjectIDType id) {
+    std::weak_ptr<ObjectType> get(ObjectIDType id) {
         std::lock_guard<std::recursive_mutex> lock(manager_lock_);
 
         auto it = objects_.find(id);
@@ -79,30 +79,30 @@ public:
     }
 
     /**
-     * @brief manager_any
+     * @brief first
      * @return Returns an unspecified item from the manager. This is useful in tests.
      * It's not neccessarily random but effectively it is as far as you care.
      */
-    std::weak_ptr<ObjectType> manager_any() const {
+    std::weak_ptr<ObjectType> first() const {
         return objects_.begin()->second;
     }
 
     /**
-     * @brief manager_only
+     * @brief only
      * @return Returns the only item in the container, or throws a LogicError
      * if there is more than one item or DoesNotExist<ObjectType> if the manager is empty
      */
-    std::weak_ptr<ObjectType> manager_only() const {
-        if(manager_count() != 1) {
-            if(manager_count() == 0) {
+    std::weak_ptr<ObjectType> only() const {
+        if(count() != 1) {
+            if(count() == 0) {
                 throw DoesNotExist<ObjectType>("Container does not contain any objects");
             }
             throw LogicError("Used only() on manager with more than one item");
         }
-        return manager_any();
+        return first();
     }
 
-    std::weak_ptr<ObjectType> manager_get(ObjectIDType id) const {
+    std::weak_ptr<ObjectType> get(ObjectIDType id) const {
         std::lock_guard<std::recursive_mutex> lock(manager_lock_);
 
         auto it = objects_.find(id);
@@ -112,7 +112,7 @@ public:
         return it->second;
     }
 
-    bool manager_contains(ObjectIDType id) const {
+    bool contains(ObjectIDType id) const {
         return objects_.find(id) != objects_.end();
     }
 
@@ -121,7 +121,7 @@ public:
 
     void each(std::function<void (ObjectType*)> func) const {
         for(std::pair<ObjectIDType, typename ObjectType::ptr> p: objects_) {
-            auto thing = manager_get(p.first); //Make sure we lock the object
+            auto thing = get(p.first); //Make sure we lock the object
             auto ptr = thing.lock(); // Keep the shared_ptr around while we use it
             func(ptr.get());
         }

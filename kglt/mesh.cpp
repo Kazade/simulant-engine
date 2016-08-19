@@ -53,7 +53,7 @@ void Mesh::each(std::function<void (uint32_t, std::weak_ptr<SubMesh> submesh)> f
 
 void Mesh::clear() {
     //Delete the submeshes and clear the shared data
-    TemplatedSubMeshManager::manager_delete_all();
+    TemplatedSubMeshManager::destroy_all();
     shared_data->clear();
 }
 
@@ -135,7 +135,7 @@ void Mesh::enable_debug(bool value) {
 }
 
 SubMeshID Mesh::new_submesh_with_material(MaterialID material, MeshArrangement arrangement, VertexSharingMode vertex_sharing, VertexSpecification vertex_specification) {
-    SubMeshID id = TemplatedSubMeshManager::manager_new(this, "", material, arrangement, vertex_sharing, vertex_specification);
+    SubMeshID id = TemplatedSubMeshManager::make(this, "", material, arrangement, vertex_sharing, vertex_specification);
 
     signal_submesh_created_(this->id(), submesh(id));
     return id;
@@ -402,15 +402,15 @@ SubMeshID Mesh::new_submesh_as_rectangle(MaterialID material, float width, float
 
 void Mesh::delete_submesh(SubMeshID index) {
     signal_submesh_destroyed_(this->id(), submesh(index));
-    TemplatedSubMeshManager::manager_delete(index);
+    TemplatedSubMeshManager::destroy(index);
 }
 
 SubMesh* Mesh::any_submesh() const {
-    return TemplatedSubMeshManager::manager_any().lock().get();
+    return TemplatedSubMeshManager::first().lock().get();
 }
 
 SubMesh* Mesh::only_submesh() const {
-    return TemplatedSubMeshManager::manager_only().lock().get();
+    return TemplatedSubMeshManager::only().lock().get();
 }
 
 void Mesh::set_material_id(MaterialID material) {
@@ -497,7 +497,7 @@ void Mesh::_update_buffer_object() {
 #endif
 
 SubMesh* Mesh::submesh(SubMeshID index) {
-    return TemplatedSubMeshManager::manager_get(index).lock().get();
+    return TemplatedSubMeshManager::get(index).lock().get();
 }
 
 SubMesh::SubMesh(SubMeshID id, Mesh* parent, const std::string& name,

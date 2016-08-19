@@ -18,13 +18,13 @@ float get_height_at(MeshPtr terrain, float x_point, float z_point) {
 
 Vec3 get_vertex_at(MeshPtr terrain, int x, int z) {
     /* Returns the vertex at the specified point */
-    TerrainData data = terrain->get<TerrainData>("terrain_data");
+    TerrainData data = terrain->data->get<TerrainData>("terrain_data");
     int idx = (z * data.x_size) + x;
     return terrain->shared_data->position_at<Vec3>(idx);
 }
 
 static std::vector<Vec3> _get_surrounding_vertices_from_index(Mesh* terrain, uint32_t i) {
-    TerrainData data = terrain->get<TerrainData>("terrain_data");
+    TerrainData data = terrain->data->get<TerrainData>("terrain_data");
     uint32_t vertex_count = (data.x_size * data.z_size);
 
     static std::array<int, 8> surrounding_indexes;
@@ -81,7 +81,7 @@ std::vector<Vec3> get_surrounding_vertices_from_index(MeshPtr terrain, uint32_t 
 }
 
 std::vector<Vec3> get_surrounding_vertices(MeshPtr terrain, int x, int z) {
-    TerrainData data = terrain->get<TerrainData>("terrain_data");
+    TerrainData data = terrain->data->get<TerrainData>("terrain_data");
     int32_t i = (z * data.x_size) + x;
 
     return get_surrounding_vertices_from_index(terrain, i);
@@ -115,7 +115,7 @@ void smooth_terrain_iteration(MeshPtr mesh, int width, int height) {
 }
 
 static void _smooth_terrain(Mesh* terrain, uint32_t iterations) {
-    TerrainData data = terrain->get<TerrainData>("terrain_data");
+    TerrainData data = terrain->data->get<TerrainData>("terrain_data");
 
     for(uint32_t i = 0; i < iterations; ++i) {
         _smooth_terrain_iteration(terrain, data.x_size, data.z_size);
@@ -267,7 +267,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     data.min_height = spec.min_height;
     data.max_height = spec.max_height;
     data.grid_spacing = spec.spacing;
-    mesh->stash(data, "terrain_data");
+    mesh->data->stash(data, "terrain_data");
 
     // Generate the vertices from the heightmap
     for(int32_t z = 0; z < height; ++z) {

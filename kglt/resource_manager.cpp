@@ -76,7 +76,7 @@ MeshPtr ResourceManager::mesh(MeshID m) {
         return parent_->mesh(m);
     }
 
-    return MeshManager::manager_get(m).lock();
+    return MeshManager::get(m).lock();
 }
 
 const MeshPtr ResourceManager::mesh(MeshID m) const {
@@ -84,11 +84,11 @@ const MeshPtr ResourceManager::mesh(MeshID m) const {
         return parent_->mesh(m);
     }
 
-    return MeshManager::manager_get(m).lock();
+    return MeshManager::get(m).lock();
 }
 
 MeshID ResourceManager::new_mesh(VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect) {
-    MeshID result = MeshManager::manager_new(garbage_collect, this, vertex_specification);
+    MeshID result = MeshManager::make(garbage_collect, this, vertex_specification);
     return result;
 }
 
@@ -271,7 +271,7 @@ MeshID ResourceManager::new_mesh_with_alias_as_cylinder(const unicode &alias, fl
 }
 
 MeshID ResourceManager::get_mesh_with_alias(const unicode& alias) {
-    return MeshManager::manager_get_by_alias(alias);
+    return MeshManager::get_by_alias(alias);
 }
 
 void ResourceManager::delete_mesh(MeshID m) {
@@ -279,15 +279,15 @@ void ResourceManager::delete_mesh(MeshID m) {
 }
 
 bool ResourceManager::has_mesh(MeshID m) const {
-    return MeshManager::manager_contains(m);
+    return MeshManager::contains(m);
 }
 
 uint32_t ResourceManager::mesh_count() const {
-    return MeshManager::manager_count();
+    return MeshManager::count();
 }
 
 MaterialID ResourceManager::new_material(GarbageCollectMethod garbage_collect) {
-    MaterialID result = MaterialManager::manager_new(garbage_collect, this);
+    MaterialID result = MaterialManager::make(garbage_collect, this);
     return result;
 }
 
@@ -393,7 +393,7 @@ MaterialID ResourceManager::new_material_from_texture(TextureID texture_id, Garb
 }
 
 MaterialID ResourceManager::get_material_with_alias(const unicode& alias) {
-    return MaterialManager::manager_get_by_alias(alias);
+    return MaterialManager::get_by_alias(alias);
 }
 
 MaterialPtr ResourceManager::material(MaterialID mid) {
@@ -401,7 +401,7 @@ MaterialPtr ResourceManager::material(MaterialID mid) {
         return parent_->material(mid);
     }
 
-    return MaterialManager::manager_get(mid).lock();
+    return MaterialManager::get(mid).lock();
 }
 
 const MaterialPtr ResourceManager::material(MaterialID mid) const {
@@ -409,15 +409,15 @@ const MaterialPtr ResourceManager::material(MaterialID mid) const {
         return parent_->material(mid);
     }
 
-    return MaterialManager::manager_get(mid).lock();
+    return MaterialManager::get(mid).lock();
 }
 
 bool ResourceManager::has_material(MaterialID m) const {
-    return MaterialManager::manager_contains(m);
+    return MaterialManager::contains(m);
 }
 
 uint32_t ResourceManager::material_count() const {
-    return MaterialManager::manager_count();
+    return MaterialManager::count();
 }
 
 void ResourceManager::mark_material_as_uncollected(MaterialID t) {
@@ -425,7 +425,7 @@ void ResourceManager::mark_material_as_uncollected(MaterialID t) {
 }
 
 TextureID ResourceManager::new_texture(GarbageCollectMethod garbage_collect) {
-    return TextureManager::manager_new(garbage_collect, this);
+    return TextureManager::make(garbage_collect, this);
 }
 
 TextureID ResourceManager::new_texture_from_file(const unicode& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
@@ -475,7 +475,7 @@ TextureID ResourceManager::new_texture_with_alias_from_file(const unicode& alias
 }
 
 TextureID ResourceManager::get_texture_with_alias(const unicode& alias) {
-    return TextureManager::manager_get_by_alias(alias);
+    return TextureManager::get_by_alias(alias);
 }
 
 TexturePtr ResourceManager::texture(TextureID t) {
@@ -483,7 +483,7 @@ TexturePtr ResourceManager::texture(TextureID t) {
         return parent_->texture(t);
     }
 
-    return TexturePtr(TextureManager::manager_get(t).lock());
+    return TexturePtr(TextureManager::get(t).lock());
 }
 
 const TexturePtr ResourceManager::texture(TextureID t) const {
@@ -491,15 +491,15 @@ const TexturePtr ResourceManager::texture(TextureID t) const {
         return parent_->texture(t);
     }
 
-    return TexturePtr(TextureManager::manager_get(t).lock());
+    return TexturePtr(TextureManager::get(t).lock());
 }
 
 bool ResourceManager::has_texture(TextureID t) const {
-    return TextureManager::manager_contains(t);
+    return TextureManager::contains(t);
 }
 
 uint32_t ResourceManager::texture_count() const {
-    return TextureManager::manager_count();
+    return TextureManager::count();
 }
 
 void ResourceManager::mark_texture_as_uncollected(TextureID t) {
@@ -507,7 +507,7 @@ void ResourceManager::mark_texture_as_uncollected(TextureID t) {
 }
 
 SoundID ResourceManager::new_sound(GarbageCollectMethod garbage_collect) {
-    return SoundManager::manager_new(garbage_collect, this);
+    return SoundManager::make(garbage_collect, this);
 }
 
 SoundID ResourceManager::new_sound_from_file(const unicode& path, GarbageCollectMethod garbage_collect) {
@@ -540,7 +540,7 @@ SoundID ResourceManager::new_sound_with_alias_from_file(const unicode& alias, co
 }
 
 SoundID ResourceManager::get_sound_with_alias(const unicode& alias) {
-    return SoundManager::manager_get_by_alias(alias);
+    return SoundManager::get_by_alias(alias);
 }
 
 SoundPtr ResourceManager::sound(SoundID s) {
@@ -548,7 +548,7 @@ SoundPtr ResourceManager::sound(SoundID s) {
         return parent_->sound(s);
     }
 
-    return SoundManager::manager_get(s).lock();
+    return SoundManager::get(s).lock();
 }
 
 const SoundPtr ResourceManager::sound(SoundID s) const {
@@ -556,15 +556,15 @@ const SoundPtr ResourceManager::sound(SoundID s) const {
         return parent_->sound(s);
     }
 
-    return SoundManager::manager_get(s).lock();
+    return SoundManager::get(s).lock();
 }
 
 uint32_t ResourceManager::sound_count() const {
-    return SoundManager::manager_count();
+    return SoundManager::count();
 }
 
 bool ResourceManager::has_sound(SoundID s) const {
-    return SoundManager::manager_contains(s);
+    return SoundManager::contains(s);
 }
 
 void ResourceManager::delete_sound(SoundID t) {

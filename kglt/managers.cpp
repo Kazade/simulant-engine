@@ -35,7 +35,7 @@ void BackgroundManager::update(double dt) {
 }
 
 BackgroundID BackgroundManager::new_background() {
-    BackgroundID bid = BackgroundManager::manager_new(this);
+    BackgroundID bid = BackgroundManager::make(this);
     return bid;
 }
 
@@ -54,19 +54,19 @@ BackgroundID BackgroundManager::new_background_from_file(const unicode& filename
 }
 
 BackgroundPtr BackgroundManager::background(BackgroundID bid) {
-    return BackgroundManager::manager_get(bid).lock().get();
+    return BackgroundManager::get(bid).lock().get();
 }
 
 bool BackgroundManager::has_background(BackgroundID bid) const {
-    return BackgroundManager::manager_contains(bid);
+    return BackgroundManager::contains(bid);
 }
 
 void BackgroundManager::delete_background(BackgroundID bid) {
-    BackgroundManager::manager_delete(bid);
+    BackgroundManager::destroy(bid);
 }
 
 uint32_t BackgroundManager::background_count() const {
-    return BackgroundManager::manager_count();
+    return BackgroundManager::count();
 }
 
 //============== END BACKGROUNDS ============
@@ -79,7 +79,7 @@ CameraManager::CameraManager(WindowBase *window):
 }
 
 CameraID CameraManager::new_camera() {
-    CameraID new_camera = CameraManager::manager_new(this->window_);
+    CameraID new_camera = CameraManager::make(this->window_);
 
     return new_camera;
 }
@@ -119,7 +119,7 @@ CameraID CameraManager::new_camera_for_ui() {
 }
 
 CameraPtr CameraManager::camera(CameraID c) {
-    return CameraManager::manager_get(c).lock().get();
+    return CameraManager::get(c).lock().get();
 }
 
 void CameraManager::delete_camera(CameraID cid) {
@@ -134,15 +134,15 @@ void CameraManager::delete_camera(CameraID cid) {
         return;
     }
 
-    CameraManager::manager_delete(cid);
+    CameraManager::destroy(cid);
 }
 
 uint32_t CameraManager::camera_count() const {
-    return CameraManager::manager_count();
+    return CameraManager::count();
 }
 
 const bool CameraManager::has_camera(CameraID id) const {
-    return CameraManager::manager_contains(id);
+    return CameraManager::contains(id);
 }
 
 //============== END CAMERAS ================
@@ -156,13 +156,13 @@ StageManager::StageManager(WindowBase* window):
 }
 
 StageID StageManager::new_stage(AvailablePartitioner partitioner) {
-    auto ret = StageManager::manager_new(this->window_, partitioner);
+    auto ret = StageManager::make(this->window_, partitioner);
     signal_stage_added_(ret);
     return ret;
 }
 
 uint32_t StageManager::stage_count() const {
-    return StageManager::manager_count();
+    return StageManager::count();
 }
 
 /**
@@ -175,7 +175,7 @@ uint32_t StageManager::stage_count() const {
  */
 
 StagePtr StageManager::stage(StageID s) {
-    return StageManager::manager_get(s).lock().get();
+    return StageManager::get(s).lock().get();
 }
 
 void StageManager::delete_stage(StageID s) {
@@ -188,7 +188,7 @@ void StageManager::delete_stage(StageID s) {
         return;
     }
 
-    StageManager::manager_delete(s);
+    StageManager::destroy(s);
 }
 
 void StageManager::fixed_update(double dt) {
@@ -275,7 +275,7 @@ void StageManager::print_tree(GenericTreeNode* node, uint32_t& level) {
 }
 
 bool StageManager::has_stage(StageID stage_id) const {
-    return manager_contains(stage_id);
+    return contains(stage_id);
 }
 
 // ============= END STAGES ===========
@@ -288,7 +288,7 @@ OverlayManager::OverlayManager(WindowBase *window):
 }
 
 OverlayID OverlayManager::new_overlay() {
-    return OverlayManager::manager_new(this->window_);
+    return OverlayManager::make(this->window_);
 }
 
 OverlayID OverlayManager::new_overlay_from_file(const unicode& rml_file) {
@@ -305,19 +305,19 @@ OverlayID OverlayManager::new_overlay_from_file(const unicode& rml_file) {
 }
 
 OverlayPtr OverlayManager::overlay(OverlayID s) {
-    return OverlayManager::manager_get(s).lock().get();
+    return OverlayManager::get(s).lock().get();
 }
 
 void OverlayManager::delete_overlay(OverlayID s) {
-    OverlayManager::manager_delete(s);
+    OverlayManager::destroy(s);
 }
 
 uint32_t OverlayManager::overlay_count() const {
-    return OverlayManager::manager_count();
+    return OverlayManager::count();
 }
 
 bool OverlayManager::has_overlay(OverlayID overlay) const {
-    return OverlayManager::manager_contains(overlay);
+    return OverlayManager::contains(overlay);
 }
 
 // =========== END UI STAGES ==========
