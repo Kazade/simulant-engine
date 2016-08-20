@@ -155,6 +155,7 @@ q3Body* RigidBodySimulation::acquire_body(impl::Body *body) {
     bool is_dynamic = body->is_dynamic();
     def.bodyType = (is_dynamic) ? eDynamicBody : eStaticBody;
     def.gravityScale = (is_dynamic) ? 1.0 : 0.0;
+    def.angularDamping = 0.75;
 
     bodies_[body] = scene_->CreateBody(def);
     return bodies_[body];

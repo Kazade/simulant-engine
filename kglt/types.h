@@ -17,6 +17,7 @@
 #include "kazmath/mat3.h"
 #include "kazmath/aabb3.h"
 #include "kazmath/quaternion.h"
+#include "kazmath/plane.h"
 
 #include "generic/manager.h"
 #include "generic/auto_weakptr.h"
@@ -435,6 +436,18 @@ struct Vec3 : public kmVec3 {
 
     Vec3 perpendicular() const;
     Vec3 random_deviant(const Degrees& angle, const Vec3 up=Vec3()) const;
+};
+
+struct Plane : public kmPlane {
+    Plane(const Vec3& N, float D) {
+        kmPlaneFromNormalAndDistance(this, &N, D);
+    }
+
+    Vec3 project(const Vec3& v) {
+        Vec3 ret;
+        kmVec3ProjectOnToPlane(&ret, &v, this);
+        return ret;
+    }
 };
 
 struct Ray : public kmRay3 {

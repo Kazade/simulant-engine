@@ -49,7 +49,7 @@ public:
 private:
     float acceleration_ = 100.0f;
     float deceleration_ = -100.0f;
-    float turn_speed_ = 360.0f;
+    float turn_speed_ = 720.0f;
 
     float wheel_height_ = 2.0;
 

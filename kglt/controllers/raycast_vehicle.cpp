@@ -121,10 +121,17 @@ void RaycastVehicle::do_fixed_update(double dt) {
     }
 
     if(is_grounded_) {
+        average_surface_normal_.normalize();
+        Plane ground_plane(average_surface_normal_, 0);
+        Vec3 proj_forward = ground_plane.project(forward());
+
+        std::cout << "Sn: " << average_surface_normal_.x << ", " << average_surface_normal_.y << ", " << average_surface_normal_.z << std::endl;
+        std::cout << "Fo: " << forward().x << ", " << forward().y << ", " << forward().z << std::endl;
+        std::cout << "Pf: " << proj_forward.x << ", " << proj_forward.y << ", " << proj_forward.z << std::endl;
+
         if(fabs(drive_force_) > kmEpsilon) {
             average_surface_normal_.normalize();
-            Vec3 dir = forward();
-            add_force(dir * drive_force_);
+            add_force(proj_forward * drive_force_);
         }
         if(fabs(turn_force_) > kmEpsilon) {
             Vec3 torque = Vec3(0, 1, 0);
@@ -133,12 +140,19 @@ void RaycastVehicle::do_fixed_update(double dt) {
 
         // Apply side force
         Vec3 linear_vel = linear_velocity();
-        Vec3 dir = forward();
         Vec3 proj;
-        kmVec3ProjectOnToVec3(&linear_vel, &dir, &proj);
+        kmVec3ProjectOnToVec3(&linear_vel, &proj_forward, &proj);
 
-        Vec3 side_force = proj - linear_vel;
-        add_force(side_force);
+        Vec3 floor_vel = ground_plane.project(linear_vel);
+        Vec3 Sf = proj - floor_vel;
+        std::cout << "Sf: " << Sf.x << ", " << Sf.y << ", " << Sf.z << std::endl;
+        add_force(Sf * 10.0f);
+
+        // Apply some friction
+        Vec3 friction_force = -proj * mass() * 0.01;
+        add_force(friction_force);
+
+
     }
 }
 
