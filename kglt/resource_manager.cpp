@@ -164,41 +164,41 @@ MeshID ResourceManager::new_mesh_as_capsule(float diameter, float length, int se
     return m;
 }
 
-MeshID ResourceManager::new_mesh_from_vertices(VertexSpecification vertex_specification, const std::vector<Vec2> &vertices, MeshArrangement arrangement, GarbageCollectMethod garbage_collect) {
+MeshID ResourceManager::new_mesh_from_vertices(VertexSpecification vertex_specification, const std::string& submesh_name, const std::vector<Vec2> &vertices, MeshArrangement arrangement, GarbageCollectMethod garbage_collect) {
     MeshID m = new_mesh(vertex_specification, garbage_collect);
 
     auto new_mesh = mesh(m);
-    auto smi = new_mesh->new_submesh(arrangement);
+    auto submesh = new_mesh->new_submesh(submesh_name, arrangement);
     int i = 0;
     for(auto v: vertices) {
         new_mesh->shared_data->position(v);
         new_mesh->shared_data->move_next();
-        new_mesh->submesh(smi)->index_data->index(i++);
+        submesh->index_data->index(i++);
     }
 
     new_mesh->shared_data->done();
-    new_mesh->submesh(smi)->index_data->done();
+    submesh->index_data->done();
 
     MeshManager::mark_as_uncollected(m);
 
     return m;
 }
 
-MeshID ResourceManager::new_mesh_from_vertices(VertexSpecification vertex_specification, const std::vector<Vec3> &vertices, MeshArrangement arrangement, GarbageCollectMethod garbage_collect) {
+MeshID ResourceManager::new_mesh_from_vertices(VertexSpecification vertex_specification, const std::string& submesh_name, const std::vector<Vec3> &vertices, MeshArrangement arrangement, GarbageCollectMethod garbage_collect) {
     //FIXME: THis is literally a copy/paste of the function above, we can templatize this
     MeshID m = new_mesh(vertex_specification, garbage_collect);
 
     auto new_mesh = mesh(m);
-    auto smi = new_mesh->new_submesh(arrangement);
+    auto submesh = new_mesh->new_submesh(submesh_name, arrangement);
     int i = 0;
     for(auto v: vertices) {
         new_mesh->shared_data->position(v);
         new_mesh->shared_data->move_next();
-        new_mesh->submesh(smi)->index_data->index(i++);
+        submesh->index_data->index(i++);
     }
 
     new_mesh->shared_data->done();
-    new_mesh->submesh(smi)->index_data->done();
+    submesh->index_data->done();
     MeshManager::mark_as_uncollected(m);
     return m;
 }

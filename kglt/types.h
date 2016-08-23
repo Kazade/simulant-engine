@@ -663,22 +663,21 @@ enum VirtualDPadDirections {
 };
 
 typedef UniqueID<0> MeshID;
-typedef UniqueID<1> SubMeshID;
-typedef UniqueID<2> TextureID;
-typedef UniqueID<3> CameraID;
-typedef UniqueID<4> MaterialID;
-typedef UniqueID<5> LightID;
-typedef UniqueID<6> StageID;
-typedef UniqueID<8> ActorID;
-typedef UniqueID<9> GeomID;
-typedef UniqueID<10> SoundID;
-typedef UniqueID<11> PipelineID;
-typedef UniqueID<12> OverlayID;
-typedef UniqueID<13> SpriteID;
-typedef UniqueID<14> BackgroundID;
-typedef UniqueID<15> ParticleSystemID;
-typedef UniqueID<16> SkyboxID;
-typedef UniqueID<17> ShaderID;
+typedef UniqueID<1> TextureID;
+typedef UniqueID<2> CameraID;
+typedef UniqueID<3> MaterialID;
+typedef UniqueID<4> LightID;
+typedef UniqueID<5> StageID;
+typedef UniqueID<6> ActorID;
+typedef UniqueID<7> GeomID;
+typedef UniqueID<8> SoundID;
+typedef UniqueID<9> PipelineID;
+typedef UniqueID<10> OverlayID;
+typedef UniqueID<11> SpriteID;
+typedef UniqueID<12> BackgroundID;
+typedef UniqueID<13> ParticleSystemID;
+typedef UniqueID<14> SkyboxID;
+typedef UniqueID<15> ShaderID;
 
 const StageID DefaultStageID = StageID();
 

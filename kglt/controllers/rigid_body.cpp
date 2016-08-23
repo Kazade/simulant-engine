@@ -337,7 +337,7 @@ void Body::build_collider(ColliderType collider) {
         collider->triangles.clear();
         collider->vertices.clear();
 
-        mesh->each([=](SubMesh* submesh) {
+        mesh->each([=](const std::string& name, SubMesh* submesh) {
             assert(submesh->arrangement() == MESH_ARRANGEMENT_TRIANGLES);
 
             uint32_t offset = collider->vertices.size();

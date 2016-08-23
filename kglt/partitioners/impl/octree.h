@@ -17,6 +17,7 @@
 #include "../../types.h"
 #include "../../generic/property.h"
 #include "../../interfaces.h"
+#include "../../mesh.h"
 
 class NewOctreeTest;
 
@@ -339,7 +340,7 @@ private:
     kglt::MeshID debug_mesh_;
     kglt::MaterialID debug_material_;
 
-    std::unordered_map<OctreeNode*, kglt::SubMeshID> debug_submeshes_;
+    std::unordered_map<OctreeNode*, kglt::SubMesh*> debug_submeshes_;
     std::unordered_map<ActorID, sig::scoped_connection> actor_watchers_;
 
     friend void traverse(Octree &tree, std::function<bool (OctreeNode *)> callback);

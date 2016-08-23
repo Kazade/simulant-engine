@@ -17,14 +17,13 @@ void box(MeshPtr mesh, float width, float height, float depth, MeshStyle style) 
 
     if(style == MESH_STYLE_SUBMESH_PER_FACE) {
         for(uint8_t i = 0; i < 6; ++i) {
-            SubMeshID sm = mesh->new_submesh(MESH_ARRANGEMENT_TRIANGLES);
-            submeshes[i] = mesh->submesh(sm);
+            submeshes[i] = mesh->new_submesh(std::to_string(i), MESH_ARRANGEMENT_TRIANGLES);
         }
     } else {
-        SubMeshID sm = mesh->new_submesh(MESH_ARRANGEMENT_TRIANGLES);
+        SubMesh* sm = mesh->new_submesh("box", MESH_ARRANGEMENT_TRIANGLES);
 
         for(uint8_t i = 0; i < 6; ++i) {
-            submeshes[i] = mesh->submesh(sm);
+            submeshes[i] = sm;
         }
     }
 

@@ -177,9 +177,6 @@ public:
     const AABB transformed_aabb() const { return AABB(); } // Not used
     const AABB aabb() const { return AABB(); } // Not used
 
-    kglt::MeshID instanced_mesh_id() const { return kglt::MeshID(); } // Not used
-    kglt::SubMeshID instanced_submesh_id() const { return kglt::SubMeshID(); } // Not used
-
 #ifdef KGLT_GL_VERSION_2X
     void _bind_vertex_array_object() {
         vertex_array_object_->bind();

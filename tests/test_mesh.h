@@ -41,8 +41,8 @@ public:
 
         data->done();
 
-        first_mesh_ = mesh->new_submesh();
-        kglt::SubMesh* submesh = mesh->submesh(first_mesh_);
+        first_mesh_ = mesh->new_submesh("test");
+        kglt::SubMesh* submesh = first_mesh_;
 
         submesh->index_data->index(0);
         submesh->index_data->index(1);
@@ -54,7 +54,7 @@ public:
         submesh->index_data->done();
 
         //Draw a line between the first two vertices
-        kglt::SubMesh* sm = mesh->submesh(mesh->new_submesh(kglt::MESH_ARRANGEMENT_LINES));
+        kglt::SubMesh* sm = mesh->new_submesh("test2", kglt::MESH_ARRANGEMENT_LINES);
         sm->index_data->index(0);
         sm->index_data->index(1);
         sm->index_data->done();
@@ -160,8 +160,7 @@ public:
         assert_equal(mesh->submesh_count(), actor->subactor_count());
         assert_true(mesh->shared_data->count() == actor->shared_data->count());
 
-        kglt::SubMeshID smid = actor->subactor(0).submesh_id();
-        kglt::SubMesh* sm = mesh->submesh(smid);
+        kglt::SubMesh* sm = actor->subactor(0).submesh();
 
         //Likewise for subentities, they should just proxy to the submesh
         assert_equal(sm->material_id(), actor->subactor(0).material_id());
@@ -187,9 +186,9 @@ public:
         auto stage = window->stage(stage_id_);
 
         auto mesh_id = stage->assets->new_mesh_as_box(10.0f, 10.0f, 10.0f);
-        stage->assets->mesh(mesh_id)->only_submesh()->generate_texture_coordinates_cube();
+        stage->assets->mesh(mesh_id)->first_submesh()->generate_texture_coordinates_cube();
 
-        auto& vd = *stage->assets->mesh(mesh_id)->only_submesh()->vertex_data.get();
+        auto& vd = *stage->assets->mesh(mesh_id)->first_submesh()->vertex_data.get();
 
         // Neg Z
         assert_equal(kglt::Vec2((1.0 / 3.0), 0), vd.texcoord0_at<kglt::Vec2>(0));
@@ -232,7 +231,7 @@ private:
     kglt::CameraID camera_id_;
     kglt::StageID stage_id_;
 
-    kglt::SubMeshID first_mesh_;
+    kglt::SubMesh* first_mesh_;
 };
 
 #endif // TEST_MESH_H

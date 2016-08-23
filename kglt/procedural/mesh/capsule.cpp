@@ -5,21 +5,20 @@ namespace kglt {
 namespace procedural {
 namespace mesh {
 
-SubMeshID capsule(MeshPtr mesh, float diameter, float height,
+SubMesh* capsule(MeshPtr mesh, float diameter, float height,
     uint32_t segment_count, uint32_t vertical_segment_count, uint32_t ring_count, const kglt::Vec3& pos_offset) {
 
     float radius = diameter * 0.5f;
 
-    SubMeshID smi = mesh->new_submesh(
+    SubMesh* submesh = mesh->new_submesh(
+        "capsule",
         MESH_ARRANGEMENT_TRIANGLES,
         VERTEX_SHARING_MODE_INDEPENDENT,
         VertexSpecification::DEFAULT
     );
 
-    kglt::SubMesh& submesh = *mesh->submesh(smi);
-
-    auto& vdata = submesh.vertex_data;
-    auto& idata = submesh.index_data;
+    auto& vdata = submesh->vertex_data;
+    auto& idata = submesh->index_data;
 
     float delta_ring_angle = ((kmPI / 2.0) / ring_count);
     float delta_seg_angle = ((kmPI * 2.0) / segment_count);
@@ -165,7 +164,7 @@ SubMeshID capsule(MeshPtr mesh, float diameter, float height,
     idata->done();
     vdata->done();
 
-    return smi;
+    return submesh;
 }
 
 

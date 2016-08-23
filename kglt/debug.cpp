@@ -2,6 +2,7 @@
 #include "debug.h"
 #include "actor.h"
 #include "sdl2_window.h"
+#include <kazbase/random.h>
 
 namespace kglt {
 
@@ -27,7 +28,7 @@ void Debug::update() {
         elem.time_since_created += dt;
         if(elem.time_since_created >= elem.duration) {
             auto mesh = stage_.assets->mesh(mesh_);
-            mesh->delete_submesh(elem.submesh);
+            mesh->delete_submesh(elem.submesh->name());
         } else {
             to_keep.push_back(elem);
         }
@@ -59,13 +60,13 @@ void Debug::draw_line(const Vec3 &start, const Vec3 &end, const Colour &colour, 
     auto mesh = stage_.assets->mesh(mesh_);
 
     DebugElement element;
-    element.submesh = mesh->new_submesh_with_material(material_, MESH_ARRANGEMENT_LINE_STRIP, VERTEX_SHARING_MODE_INDEPENDENT);
+    element.submesh = mesh->new_submesh_with_material(std::to_string(random()), material_, MESH_ARRANGEMENT_LINE_STRIP, VERTEX_SHARING_MODE_INDEPENDENT);
     element.colour = colour;
     element.duration = duration;
     element.depth_test = depth_test;
     element.type = DebugElementType::DET_LINE;
 
-    auto& submesh = *mesh->submesh(element.submesh);
+    auto& submesh = *element.submesh;
 
     submesh.vertex_data->move_to_start();
     submesh.vertex_data->position(start);

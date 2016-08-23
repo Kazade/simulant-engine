@@ -10,7 +10,7 @@ class Mesh;
 namespace procedural {
 namespace mesh {
 
-SubMeshID new_rectangle_submesh(
+SubMesh* new_rectangle_submesh(
     MeshPtr& mesh,
     float width,
     float height,
@@ -18,12 +18,12 @@ SubMeshID new_rectangle_submesh(
     MaterialID material_id=MaterialID()
 );
 
-SubMeshID rectangle(MeshPtr mesh,
+SubMesh* rectangle(MeshPtr mesh,
     float width, float height,
     float x_offset=0.0, float y_offset=0.0, float z_offset=0.0,
     bool clear=true, kglt::MaterialID material=kglt::MaterialID());
 
-SubMeshID rectangle_outline(
+kglt::SubMesh *rectangle_outline(
     MeshPtr mesh,
     float width, float height,
     float x_offset=0.0, float y_offset=0.0, float z_offset=0.0,

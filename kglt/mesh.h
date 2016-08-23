@@ -74,11 +74,10 @@ enum VertexSharingMode {
 class SubMesh :
     public SubMeshInterface,
     public Managed<SubMesh>,
-    public generic::Identifiable<SubMeshID> {
+    public std::enable_shared_from_this<SubMesh> {
 
 public:
     SubMesh(
-        SubMeshID id,
         Mesh* parent,
         const std::string& name,
         MaterialID material,
@@ -117,6 +116,7 @@ public:
     VertexData* get_vertex_data() const;
     IndexData* get_index_data() const;
 
+    const std::string& name() const { return name_; }
 
 public:
     typedef sig::signal<void (SubMesh*, MaterialID, MaterialID)> MaterialChangedCallback;
@@ -129,6 +129,7 @@ private:
     sig::connection material_change_connection_;
 
     Mesh* parent_;
+    std::string name_;
 
     MaterialPtr material_;
     MeshArrangement arrangement_;
@@ -152,7 +153,6 @@ private:
     MaterialChangedCallback signal_material_changed_;
 };
 
-typedef generic::TemplatedManager<SubMesh, SubMeshID> TemplatedSubMeshManager;
 
 class Mesh :
     public MeshInterface,
@@ -160,35 +160,50 @@ class Mesh :
     public Loadable,
     public Managed<Mesh>,
     public generic::Identifiable<MeshID>,
-    public TemplatedSubMeshManager,
     public std::enable_shared_from_this<Mesh> {
 
 public:
     Mesh(MeshID id, ResourceManager* resource_manager, VertexSpecification vertex_specification);
     ~Mesh();
 
-    SubMeshID new_submesh_with_material(
+    SubMesh* new_submesh_with_material(
+        const std::string& name,
         MaterialID material,        
         MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES,
         VertexSharingMode vertex_sharing=VERTEX_SHARING_MODE_SHARED,
         VertexSpecification vertex_specification=VertexSpecification()
     );
 
-    SubMeshID new_submesh(        
+    SubMesh* new_submesh(
+        const std::string& name,
         MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES,
         VertexSharingMode vertex_sharing=VERTEX_SHARING_MODE_SHARED,
         VertexSpecification vertex_specification=VertexSpecification()
     );
 
-    SubMeshID new_submesh_as_rectangle(MaterialID material, float width, float height, const Vec3& offset=Vec3());
-    SubMeshID new_submesh_as_box(MaterialID material, float width, float height, float depth, const Vec3& offset=Vec3());
-    uint32_t submesh_count() const { return TemplatedSubMeshManager::count(); }
+    SubMesh* new_submesh_as_rectangle(
+        const std::string& name,
+        MaterialID material,
+        float width,
+        float height,
+        const Vec3& offset=Vec3()
+    );
 
-    SubMesh* submesh(SubMeshID index);
-    SubMesh* any_submesh() const;
-    SubMesh* only_submesh() const;
+    SubMesh* new_submesh_as_box(
+        const std::string& name,
+        MaterialID material,
+        float width,
+        float height,
+        float depth,
+        const Vec3& offset=Vec3()
+    );
 
-    void delete_submesh(SubMeshID index);
+    uint32_t submesh_count() const { return submeshes_.size(); }
+    bool has_submesh(const std::string& name) const { return submeshes_.count(name); }
+    SubMesh* submesh(const std::string& name);
+    SubMesh* first_submesh() const;
+
+    void delete_submesh(const std::string& name);
     void clear();
 
     void enable_debug(bool value);
@@ -203,9 +218,7 @@ public:
     void normalize(); //Scales the mesh so it has a radius of 1.0
     void transform_vertices(const kglt::Mat4& transform, bool include_submeshes=true);
 
-    void each(std::function<void (uint32_t, std::weak_ptr<SubMesh>)> func) const;
-
-    using TemplatedSubMeshManager::each;
+    void each(std::function<void (const std::string&, SubMesh*)> func) const;
 public:
     // Signals
 
@@ -229,7 +242,9 @@ private:
     BufferObjectPtr shared_data_buffer_object_;
 #endif
 
-    SubMeshID normal_debug_mesh_;
+    std::unordered_map<std::string, std::shared_ptr<SubMesh>> submeshes_;
+
+    SubMesh* normal_debug_mesh_ = nullptr;
 
     SubMeshCreatedCallback signal_submesh_created_;
     SubMeshDestroyedCallback signal_submesh_destroyed_;

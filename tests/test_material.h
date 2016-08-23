@@ -23,8 +23,8 @@ public:
         kglt::MaterialID mid = window->shared_assets->new_material();
         kglt::MeshID mesh_id = window->shared_assets->new_mesh(kglt::VertexSpecification::POSITION_ONLY);
         auto mesh = window->shared_assets->mesh(mesh_id);
-        kglt::SubMeshID idx = mesh->new_submesh_with_material(mid);
-        this->assert_equal(mid, mesh->submesh(idx)->material_id());
+        kglt::SubMesh* sm = mesh->new_submesh_with_material("test", mid);
+        this->assert_equal(mid, sm->material_id());
     }
 
     void test_reflectiveness() {

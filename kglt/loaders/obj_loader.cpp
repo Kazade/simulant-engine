@@ -67,8 +67,6 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     std::vector<Vec3> normals;
 
     std::unordered_map<unicode, kglt::MaterialPtr> materials;
-    std::unordered_map<unicode, SubMeshID> material_submeshes;
-
     SubMesh* sm = nullptr;
 
     unicode current_material;
@@ -77,7 +75,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     spec.diffuse_attribute = VERTEX_ATTRIBUTE_4F;
 
     bool vertex_specification_set = false;
-    SubMeshID default_submesh;
+    SubMesh* default_submesh = nullptr;
 
     bool has_materials = false;
     for(uint32_t l = 0; l < lines.size(); ++l) {
@@ -132,22 +130,20 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                 vertex_specification_set = true;
             }
 
-            SubMeshID smi;
+            std::string smi;
             if(current_material.empty()) {
                 if(!default_submesh) {
-                    default_submesh = mesh->new_submesh();
+                    default_submesh = mesh->new_submesh("default");
                 }
-                smi = default_submesh;
+                smi = "default";
             } else {
                 if(materials.count(current_material)) {
                     auto mat_id = materials.at(current_material)->id();
-                    if(material_submeshes.count(current_material)) {
-                        smi = material_submeshes.at(current_material);
+                    if(mesh->has_submesh(current_material.encode())) {
+                        smi = current_material.encode();
                     } else {
-                        smi = mesh->new_submesh_with_material(mat_id);
-                        material_submeshes.insert(
-                            std::make_pair(current_material, smi)
-                        );
+                        mesh->new_submesh_with_material(current_material.encode(), mat_id);
+                        smi = current_material.encode();
                     }
                 } else {
                     L_WARN(_u("Ignoring non-existant material ({0}) while loading {1}").format(
@@ -155,12 +151,12 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                         filename_
                     ));
                     if(sm) {
-                        smi = sm->id(); // Just stick with the current submesh, don't change it
+                        smi = sm->name(); // Just stick with the current submesh, don't change it
                     } else {
                         if(!default_submesh) {
-                            default_submesh = mesh->new_submesh();
+                            default_submesh = mesh->new_submesh("default");
                         }
-                        smi = default_submesh;
+                        smi = "default";
                     }
                 }
             }
@@ -302,7 +298,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
 
 
     if(normals.empty()) {
-        mesh->each([&](SubMesh* submesh) {
+        mesh->each([&](const std::string& name, SubMesh* submesh) {
             VertexData* vertex_data = submesh->vertex_data.get();
             IndexData* index_data = submesh->index_data.get();
 
@@ -366,13 +362,9 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     }
 
     mesh->shared_data->done();
-    if(material_submeshes.empty()) {
-        mesh->submesh(default_submesh)->index_data->done();
-    } else {
-        for(auto& p: material_submeshes) {
-            mesh->submesh(p.second)->index_data->done();
-        }
-    }
+    mesh->each([](const std::string&, SubMesh* submesh) {
+        submesh->index_data->done();
+    });
 }
 
 }

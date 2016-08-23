@@ -196,9 +196,6 @@ public:
     virtual const MaterialID material_id() const { return material_id_; }
     virtual const bool is_visible() const { return MoveableObject::is_visible(); }
 
-    virtual MeshID instanced_mesh_id() const { return MeshID(); } //We don't support instancing
-    virtual SubMeshID instanced_submesh_id() const { return SubMeshID(0); } //We don't support instancing
-
     void deactivate_emitters() { for(auto emitter: emitters_) { emitter->deactivate(); }; }
     void activate_emitters() { for(auto emitter: emitters_) { emitter->activate(); }; }
 

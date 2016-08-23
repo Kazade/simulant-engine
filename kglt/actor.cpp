@@ -47,9 +47,14 @@ void Actor::clear_subactors() {
 void Actor::rebuild_subactors() {
     clear_subactors();
 
-    mesh_->each([&](uint32_t i, std::weak_ptr<SubMesh> mesh) {
+    mesh_->each([&](const std::string& name, SubMesh* submesh) {
+        /*
+         * It's important that subactors hold a reference to their counterpart
+         * submesh. Otherwise if a thread destroys a submesh while rendering is happening
+         * we get random crashes. We called shared_from_this to keep the submesh around
+         */
         subactors_.push_back(
-            SubActor::create(*this, mesh.lock())
+            SubActor::create(*this, submesh->shared_from_this())
         );
         signal_subactor_created_(id(), subactors_.back().get());
     });
@@ -139,7 +144,7 @@ const MaterialID SubActor::material_id() const {
         return material_->id();
     }
 
-    return submesh().material_id();
+    return submesh()->material_id();
 }
 
 void SubActor::override_material_id(MaterialID material) {
@@ -174,28 +179,20 @@ MeshPtr Actor::mesh() const {
     return stage->assets->mesh(mesh_id());
 }
 
-const SubMeshID SubActor::submesh_id() const {
+SubMesh* SubActor::submesh() {
     if(!submesh_) {
         throw ValueError("Submesh was not initialized");
     }
 
-    return submesh_->id();
+    return submesh_.get();
 }
 
-SubMesh& SubActor::submesh() {
+const SubMesh *SubActor::submesh() const {
     if(!submesh_) {
         throw ValueError("Submesh was not initialized");
     }
 
-    return *submesh_;
-}
-
-const SubMesh& SubActor::submesh() const {
-    if(!submesh_) {
-        throw ValueError("Submesh was not initialized");
-    }
-
-    return *submesh_;
+    return submesh_.get();
 }
 
 void Actor::each(std::function<void (uint32_t, SubActor*)> callback) {
@@ -207,11 +204,11 @@ void Actor::each(std::function<void (uint32_t, SubActor*)> callback) {
 
 
 VertexData* SubActor::get_vertex_data() const {
-    return submesh().vertex_data.get();
+    return submesh()->vertex_data.get();
 }
 
 IndexData* SubActor::get_index_data() const {
-    return submesh().index_data.get();
+    return submesh()->index_data.get();
 }
 
 }

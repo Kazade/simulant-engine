@@ -130,24 +130,19 @@ class SubActor :
 public:
     const MaterialID material_id() const;
 
-    const SubMeshID submesh_id() const;
-
     void override_material_id(MaterialID material);
     void remove_material_id_override();
 
-    const MeshArrangement arrangement() const { return submesh().arrangement(); }
+    const MeshArrangement arrangement() const { return submesh()->arrangement(); }
 
 #ifdef KGLT_GL_VERSION_2X
-    void _update_vertex_array_object() { submesh()._update_vertex_array_object(); }
-    void _bind_vertex_array_object() { submesh()._bind_vertex_array_object(); }
+    void _update_vertex_array_object() { submesh()->_update_vertex_array_object(); }
+    void _bind_vertex_array_object() { submesh()->_bind_vertex_array_object(); }
 #endif
 
     RenderPriority render_priority() const { return parent_.render_priority(); }
     Mat4 final_transformation() const { return parent_.absolute_transformation(); }
     const bool is_visible() const { return parent_.is_visible(); }
-
-    MeshID instanced_mesh_id() const { return parent_.mesh_id(); }
-    SubMeshID instanced_submesh_id() const { return submesh_id(); }
 
     /* BoundableAndTransformable interface implementation */
 
@@ -163,11 +158,15 @@ public:
     }
 
     const AABB aabb() const {
-        return submesh().aabb();
+        return submesh()->aabb();
     }
 
     SubActor(Actor& parent, std::shared_ptr<SubMesh> submesh);
     ~SubActor();
+
+    SubMesh* submesh();
+    const SubMesh* submesh() const;
+
 
     /* These properties are inherited by both the SubMeshInterface and RenderableInterface
      * and both perform the same action, so we pull the SubMeshInterface ones into scope */
@@ -180,9 +179,6 @@ private:
     Actor& parent_;
     std::shared_ptr<SubMesh> submesh_;
     MaterialPtr material_;
-
-    SubMesh& submesh();
-    const SubMesh& submesh() const;
 
     sig::connection submesh_material_changed_connection_;
 

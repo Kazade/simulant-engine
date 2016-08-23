@@ -83,33 +83,34 @@ void sphere(MeshPtr mesh, float diameter, int32_t slices, int32_t stacks) {
 
     mesh->shared_data->done();
 
-    SubMeshID sm = mesh->new_submesh(
+    SubMesh* sm = mesh->new_submesh(
+        "sphere",
         MESH_ARRANGEMENT_TRIANGLES
     );
 
     for(int32_t current_stack = 0; current_stack < stacks - 3; current_stack++) {
         for(int32_t current_slice = 0; current_slice < slices - 1; current_slice++) {
-            mesh->submesh(sm)->index_data->index(current_stack * slices + current_slice);
-            mesh->submesh(sm)->index_data->index((current_stack + 1) * slices + current_slice + 1);
-            mesh->submesh(sm)->index_data->index(current_stack * slices + current_slice + 1);
+            sm->index_data->index(current_stack * slices + current_slice);
+            sm->index_data->index((current_stack + 1) * slices + current_slice + 1);
+            sm->index_data->index(current_stack * slices + current_slice + 1);
 
-            mesh->submesh(sm)->index_data->index(current_stack * slices + current_slice);
-            mesh->submesh(sm)->index_data->index((current_stack + 1) * slices + current_slice);
-            mesh->submesh(sm)->index_data->index((current_stack + 1) * slices + current_slice + 1);
+            sm->index_data->index(current_stack * slices + current_slice);
+            sm->index_data->index((current_stack + 1) * slices + current_slice);
+            sm->index_data->index((current_stack + 1) * slices + current_slice + 1);
         }
     }
 
     for(int32_t i = 0; i < slices - 1; ++i) {
-        mesh->submesh(sm)->index_data->index((stacks - 2) * slices);
-        mesh->submesh(sm)->index_data->index(i);
-        mesh->submesh(sm)->index_data->index(i + 1);
+        sm->index_data->index((stacks - 2) * slices);
+        sm->index_data->index(i);
+        sm->index_data->index(i + 1);
 
-        mesh->submesh(sm)->index_data->index((stacks - 2) * slices + 1);
-        mesh->submesh(sm)->index_data->index((stacks - 3) * slices + i + 1);
-        mesh->submesh(sm)->index_data->index((stacks - 3) * slices + i);
+        sm->index_data->index((stacks - 2) * slices + 1);
+        sm->index_data->index((stacks - 3) * slices + i + 1);
+        sm->index_data->index((stacks - 3) * slices + i);
     }
 
-    mesh->submesh(sm)->index_data->done();
+    sm->index_data->done();
 }
 
 }

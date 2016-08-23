@@ -242,10 +242,10 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     // We divide the heightmap into patches for more efficient rendering
     kglt::MaterialID mat = mesh->resource_manager().clone_default_material();
-    std::vector<kglt::SubMeshID> submeshes;
+    std::vector<kglt::SubMesh*> submeshes;
     for(int i = 0; i < total_patches; ++i) {
-        submeshes.push_back(mesh->new_submesh_with_material(mat));
-        mesh->submesh(submeshes.back())->index_data->reserve(patch_size * patch_size);
+        submeshes.push_back(mesh->new_submesh_with_material(std::to_string(i), mat));
+        submeshes.back()->index_data->reserve(patch_size * patch_size);
     }
 
     int32_t height = (int32_t) tex->height();
@@ -307,7 +307,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
                 int patch_z = (z / float(patch_size));
                 int patch_idx = (patch_z * patches_across) + patch_x;
 
-                auto sm = mesh->submesh(submeshes.at(patch_idx));
+                auto sm = submeshes.at(patch_idx);
                 sm->index_data->index(idx);
                 sm->index_data->index(idx + width);
                 sm->index_data->index(idx + 1);
@@ -327,8 +327,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
         // The mesh don't have any normals, let's generate some!
         std::unordered_map<int, kglt::Vec3> index_to_normal;
 
-        for(auto smi: submeshes) {
-            auto sm = mesh->submesh(smi);
+        for(auto sm: submeshes) {
             // Go through all the triangles, add the face normal to all the vertices
             for(uint32_t i = 0; i < sm->index_data->count(); i+=3) {
                 Index idx1 = sm->index_data->at(i);
@@ -356,8 +355,8 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
         }
     }
 
-    for(auto smi: submeshes) {
-        mesh->submesh(smi)->index_data->done();
+    for(auto sm: submeshes) {
+        sm->index_data->done();
     }
     mesh->shared_data->done();
 

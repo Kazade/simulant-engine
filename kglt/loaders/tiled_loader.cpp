@@ -121,8 +121,10 @@ void TiledLoader::into(Loadable &resource, const LoaderOptions &options) {
             offset.x = (float(x) * tile_render_size) + (0.5 * tile_render_size);
             offset.y = (float(layer->GetHeight() - y) * tile_render_size) - (0.5 * tile_render_size);
 
+            std::string name = layer->GetName() + " (" + std::to_string(tileset_index) + ")";
+
             //Create the submesh as a rectangle, the offset determines the location on the map
-            auto sidx = mesh->new_submesh_as_rectangle(tileset_materials.at(tileset_index), tile_render_size, tile_render_size, Vec3(offset.x, offset.y, 0));
+            auto submesh = mesh->new_submesh_as_rectangle(name, tileset_materials.at(tileset_index), tile_render_size, tile_render_size, Vec3(offset.x, offset.y, 0));
 
             //Set texture coordinates appropriately for the tileset
             float tx0 = x0 / tileset.total_width + (0.5 / tileset.total_width);
@@ -130,19 +132,19 @@ void TiledLoader::into(Loadable &resource, const LoaderOptions &options) {
             float tx1 = x1 / tileset.total_width - (0.5 / tileset.total_width);
             float ty1 = y1 / tileset.total_height + (0.5 / tileset.total_height);
 
-            mesh->submesh(sidx)->vertex_data->move_to(0);
-            mesh->submesh(sidx)->vertex_data->tex_coord0(kglt::Vec2(tx0, ty1));
+            submesh->vertex_data->move_to(0);
+            submesh->vertex_data->tex_coord0(kglt::Vec2(tx0, ty1));
 
-            mesh->submesh(sidx)->vertex_data->move_next();
-            mesh->submesh(sidx)->vertex_data->tex_coord0(kglt::Vec2(tx1, ty1));
+            submesh->vertex_data->move_next();
+            submesh->vertex_data->tex_coord0(kglt::Vec2(tx1, ty1));
 
-            mesh->submesh(sidx)->vertex_data->move_next();
-            mesh->submesh(sidx)->vertex_data->tex_coord0(kglt::Vec2(tx1, ty0));
+            submesh->vertex_data->move_next();
+            submesh->vertex_data->tex_coord0(kglt::Vec2(tx1, ty0));
 
-            mesh->submesh(sidx)->vertex_data->move_next();
-            mesh->submesh(sidx)->vertex_data->tex_coord0(kglt::Vec2(tx0, ty0));
+            submesh->vertex_data->move_next();
+            submesh->vertex_data->tex_coord0(kglt::Vec2(tx0, ty0));
 
-            mesh->submesh(sidx)->vertex_data->done();
+            submesh->vertex_data->done();
         }
     }
 }

@@ -5,18 +5,17 @@ namespace kglt {
 namespace procedural {
 namespace mesh {
 
-SubMeshID circle(kglt::Mesh& mesh, float diameter, int32_t point_count, float x_offset, float y_offset, float z_offset) {
+SubMesh* circle(kglt::Mesh& mesh, float diameter, int32_t point_count, float x_offset, float y_offset, float z_offset) {
     float radius = diameter * 0.5f;
 
-    SubMeshID smi = mesh.new_submesh(
+    SubMesh* submesh = mesh.new_submesh(
+        "circle",
         MESH_ARRANGEMENT_TRIANGLE_FAN,
         VERTEX_SHARING_MODE_INDEPENDENT
     );
 
-    kglt::SubMesh& submesh = *mesh.submesh(smi);
-
-    auto& vdata = submesh.vertex_data;
-    auto& idata = submesh.index_data;
+    auto& vdata = submesh->vertex_data;
+    auto& idata = submesh->index_data;
 
     for(uint16_t i = 0; i < point_count; ++i) {
         //Build some shared vertex data
@@ -46,17 +45,16 @@ SubMeshID circle(kglt::Mesh& mesh, float diameter, int32_t point_count, float x_
     }
     idata->done();
 
-    return smi;
+    return submesh;
 }
 
-SubMeshID circle_outline(kglt::Mesh& mesh, float diameter, int32_t point_count, float x_offset, float y_offset, float z_offset) {
+SubMesh* circle_outline(kglt::Mesh& mesh, float diameter, int32_t point_count, float x_offset, float y_offset, float z_offset) {
     float radius = diameter * 0.5f;
 
-    SubMeshID smi = mesh.new_submesh(MESH_ARRANGEMENT_LINE_STRIP, VERTEX_SHARING_MODE_INDEPENDENT);
-    kglt::SubMesh& submesh = *mesh.submesh(smi);
+    SubMesh* submesh = mesh.new_submesh("circle_outline", MESH_ARRANGEMENT_LINE_STRIP, VERTEX_SHARING_MODE_INDEPENDENT);
 
-    auto& vdata = submesh.vertex_data;
-    auto& idata = submesh.index_data;
+    auto& vdata = submesh->vertex_data;
+    auto& idata = submesh->index_data;
 
     for(uint16_t i = 0; i < point_count; ++i) {
         //Build some shared vertex data
@@ -87,7 +85,7 @@ SubMeshID circle_outline(kglt::Mesh& mesh, float diameter, int32_t point_count, 
     idata->index(0);
     idata->done();
 
-    return smi;
+    return submesh;
 }
 
 }

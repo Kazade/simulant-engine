@@ -53,7 +53,7 @@ private:
         Colour colour = Colour::WHITE;
         bool depth_test = true;
         double duration = 0.0;
-        SubMeshID submesh;
+        SubMesh* submesh = nullptr;
     };
 
     std::vector<DebugElement> elements_;

@@ -636,6 +636,7 @@ std::shared_ptr<OctreeNode> Octree::create_node(int32_t level_number, Vec3 centr
     ++node_count_;
 
     debug_submeshes_[new_node.get()] = stage_->assets->mesh(debug_mesh_)->new_submesh_as_box(
+        "__debug__",
         debug_material_,
         diameter, diameter, diameter, centre
     );
@@ -697,7 +698,9 @@ void Octree::remove_node(std::weak_ptr<OctreeNode> ref) {
         }
     }
 
-    stage_->assets->mesh(debug_mesh_)->delete_submesh(debug_submeshes_[node.get()]);
+    auto it = debug_submeshes_.find(node.get());
+    stage_->assets->mesh(debug_mesh_)->delete_submesh(it->second->name());
+    debug_submeshes_.erase(it);
 
     --node_count_;
 

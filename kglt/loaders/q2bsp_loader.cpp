@@ -435,7 +435,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     std::vector<MaterialID> materials;
     std::vector<std::pair<uint32_t, uint32_t>> texture_dimensions;
-    std::unordered_map<MaterialID, SubMeshID> submeshes_by_material;
+    std::unordered_map<MaterialID, SubMesh*> submeshes_by_material;
 
     materials.resize(textures.size());
     texture_dimensions.resize(textures.size());
@@ -501,7 +501,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         texture_dimensions[tex_idx].second = texture->height();
 
         materials[tex_idx] = new_material_id;
-        submeshes_by_material[new_material_id] = mesh->new_submesh_with_material(new_material_id);
+        submeshes_by_material[new_material_id] = mesh->new_submesh_with_material(std::to_string(tex_idx), new_material_id);
         tex_idx++;
     }
 
@@ -556,7 +556,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         }
 
         auto material_id = materials[f.texture_info];
-        SubMesh* sm = mesh->submesh(submeshes_by_material[material_id]);
+        SubMesh* sm = submeshes_by_material[material_id];
 
         /*
          *  A unique vertex is defined by a combination of the position ID and the
@@ -710,7 +710,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     mesh->data->stash(lightmap_texture, "lightmap_texture_id");
     mesh->shared_data->done();
-    mesh->each([&](SubMesh* submesh) {
+    mesh->each([&](const std::string& name, SubMesh* submesh) {
         //Delete empty submeshes
         /*if(!submesh->index_data->count()) {
             mesh->delete_submesh(submesh->id());

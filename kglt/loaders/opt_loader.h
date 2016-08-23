@@ -7,6 +7,9 @@
 #include "../loader.h"
 
 namespace kglt {
+
+class SubMesh;
+
 namespace loaders {
 
 typedef int32_t Offset;
@@ -45,7 +48,7 @@ private:
     std::vector<Texture> textures;
     std::string current_texture;
 
-    std::map<std::string, SubMeshID> texture_submesh;
+    std::map<std::string, SubMesh*> texture_submesh;
     std::map<std::string, TextureID> texture_name_to_id;
 
     struct Triangle {

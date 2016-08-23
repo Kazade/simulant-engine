@@ -14,9 +14,7 @@ void cylinder(MeshPtr mesh, float diameter, float length, int32_t segments, int3
     float delta_height = length / (float) stacks;
     int offset = 0;
 
-    auto smi = mesh->new_submesh();
-    auto* buffer = mesh->submesh(smi);
-
+    auto buffer = mesh->new_submesh("cylinder");
     for(auto i = 0; i <= stacks; ++i) {
         for(auto j = 0; j <= segments; ++j) {
             float x0 = radius * cosf(delta_angle * j);
