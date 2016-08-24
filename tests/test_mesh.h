@@ -70,6 +70,18 @@ public:
         return mid;
     }
 
+    void test_create_mesh_from_submesh() {
+        auto stage = window->stage(stage_id_);
+        auto mesh = stage->assets->mesh(generate_test_mesh(stage));
+        auto submesh = mesh->first_submesh();
+
+        auto second_mesh_id = stage->assets->new_mesh_from_submesh(submesh);
+        auto second_mesh = stage->assets->mesh(second_mesh_id);
+
+        assert_equal(second_mesh->first_submesh()->index_data->count(), submesh->index_data->count());
+        assert_equal(second_mesh->first_submesh()->arrangement(), submesh->arrangement());
+    }
+
     void test_mesh_normalization() {
         /*
          *  The normalize function scales the mesh so that it has a diameter of 1

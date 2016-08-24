@@ -636,7 +636,7 @@ std::shared_ptr<OctreeNode> Octree::create_node(int32_t level_number, Vec3 centr
     ++node_count_;
 
     debug_submeshes_[new_node.get()] = stage_->assets->mesh(debug_mesh_)->new_submesh_as_box(
-        "__debug__",
+        std::to_string(hash),
         debug_material_,
         diameter, diameter, diameter, centre
     );

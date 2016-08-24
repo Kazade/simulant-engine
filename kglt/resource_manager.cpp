@@ -92,6 +92,38 @@ MeshID ResourceManager::new_mesh(VertexSpecification vertex_specification, Garba
     return result;
 }
 
+MeshID ResourceManager::new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMethod garbage_collect) {
+    VertexSpecification spec = submesh->vertex_data->specification();
+    MeshID result = new_mesh(spec, garbage_collect);
+
+    SubMesh* target = mesh(result)->new_submesh_with_material(
+        submesh->name(),
+        submesh->material_id(),
+        submesh->arrangement(),
+        VERTEX_SHARING_MODE_SHARED
+    );
+
+    std::unordered_map<Index, Index> old_to_new;
+
+    for(uint32_t i = 0; i < submesh->index_data->count(); ++i) {
+        auto old_index = submesh->index_data->at(i);
+
+        if(old_to_new.count(old_index)) {
+            target->index_data->index(old_to_new[old_index]);
+        } else {
+            old_to_new[old_index] = submesh->vertex_data->copy_vertex_to_another(
+                *target->vertex_data.get(), submesh->index_data->at(i)
+            );
+            target->index_data->index(i);
+        }
+    }
+
+    target->vertex_data->done();
+    target->index_data->done();
+
+    return result;
+}
+
 MeshID ResourceManager::new_mesh_from_file(const unicode& path, GarbageCollectMethod garbage_collect) {
     //Load the material
     kglt::MeshID mesh_id = new_mesh(VertexSpecification::POSITION_ONLY, garbage_collect);

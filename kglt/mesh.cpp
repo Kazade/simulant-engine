@@ -136,7 +136,11 @@ void Mesh::enable_debug(bool value) {
 }
 
 SubMesh* Mesh::new_submesh_with_material(const std::string& name, MaterialID material, MeshArrangement arrangement, VertexSharingMode vertex_sharing, VertexSpecification vertex_specification) {
-    auto new_submesh = std::make_shared<SubMesh>(this, name, material, arrangement, vertex_sharing, vertex_specification);
+    if(submeshes_.count(name)) {
+        throw LogicError("Attempted to create a duplicate submesh with name: " + name);
+    }
+
+    auto new_submesh = SubMesh::create(this, name, material, arrangement, vertex_sharing, vertex_specification);
     submeshes_.insert(std::make_pair(name, new_submesh));
     signal_submesh_created_(id(), new_submesh.get());
     return new_submesh.get();
@@ -167,8 +171,8 @@ SubMesh* Mesh::new_submesh_as_box(const std::string& name, MaterialID material, 
         spec
     );
 
-    auto& vd = sm->vertex_data;
-    auto& id = sm->index_data;
+    auto vd = sm->vertex_data.get();
+    auto id = sm->index_data.get();
 
     float x_offset = offset.x;
     float y_offset = offset.y;

@@ -14,8 +14,8 @@ public:
         mat->new_pass(); //Create a pass
         this->assert_equal((uint32_t)1, mat->pass_count()); //Should return the default pass
         this->assert_true(kglt::Colour::WHITE == mat->pass(0)->diffuse()); //this->assert_true the default pass sets white as the default
-        this->assert_true(kglt::Colour::WHITE == mat->pass(0)->ambient()); //this->assert_true the default pass sets white as the default
-        this->assert_true(kglt::Colour::WHITE == mat->pass(0)->specular()); //this->assert_true the default pass sets white as the default
+        this->assert_true(kglt::Colour::BLACK == mat->pass(0)->ambient()); //this->assert_true the default pass sets white as the default
+        this->assert_true(kglt::Colour::BLACK == mat->pass(0)->specular()); //this->assert_true the default pass sets white as the default
         this->assert_equal(0.0, mat->pass(0)->shininess());
     }
 

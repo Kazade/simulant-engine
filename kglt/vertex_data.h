@@ -215,7 +215,7 @@ public:
         return diffuse_offset(false) + vertex_attribute_size(vertex_specification_.diffuse_attribute);
     }
 
-    void copy_vertex_to_another(VertexData& out, uint32_t idx) {
+    uint32_t copy_vertex_to_another(VertexData& out, uint32_t idx) {
         if(out.vertex_specification_ != this->vertex_specification_) {
             throw std::runtime_error("Cannot copy vertex as formats differ");
         }
@@ -224,6 +224,10 @@ public:
         uint32_t end = (idx + 1) * stride();
 
         out.data_.insert(out.data_.end(), data_.begin() + start, data_.begin() + end);
+        out.vertex_count_++; //Increment the vertex count on the output
+
+        // Return the index to the new vertex
+        return out.count() - 1;
     }
 
     uint8_t* data() { if(empty()) { return nullptr; } return &data_[0]; }
@@ -234,6 +238,8 @@ public:
     void resize(uint32_t size) {
         data_.resize(size * stride(), 0);
     }
+
+    VertexSpecification specification() const { return vertex_specification_; }
 
 private:
     VertexSpecification vertex_specification_;

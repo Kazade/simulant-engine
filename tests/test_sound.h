@@ -21,9 +21,7 @@ public:
     }
 
     void test_2d_sound_output() {
-        auto stage = window->stage(stage_id_);
-
-        kglt::SoundID sound = stage->assets->new_sound_from_file("sample_data/test_sound.ogg");
+        kglt::SoundID sound = window->shared_assets->new_sound_from_file("sample_data/test_sound.ogg");
 
         assert_false(window->playing_sound_count());
 
