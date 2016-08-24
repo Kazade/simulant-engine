@@ -4,10 +4,13 @@
 
 ## What is it?
 
-While working on reverse engineering some obscure 3D model format, I needed a
-quick way to test file parsing, and procedually generating and rendering a mesh
-from the model file. This library was spawned from that, and before long it
-became a full blown game engine!
+KGLT is my accidental hobby engine. It started while I was reverse-engineering a model format and wanted to quickly and easily manipulated meshes. Over the next couple of years I chipped away at it here and there, using it for various little toy projects, but it grew out of control without any focus. Over time it became a dumping ground for useful graphics-related code, and depended on more and more third party libraries. 
+
+In 2014, I decided that it there was a lot of nice things in KGLT, but it was a mess, and so I developed my first game "Rocks & Spaceworms" (https://play.google.com/store/apps/details?id=uk.co.kazade.rocks) with it and ported the code to Android. This allowed me to start focusing on removing dependencies and structuring the codebase like a real game engine. 
+
+Since then the focus has been to remove dependencies, build an easy-to-use API, and performance. The engine now is already very different to the one that powered Rocks & Spaceworms. My future plan is to port the engine to "retro" consoles like the Dreamcast, and also Windows, OSX, iOS, and perhaps even PSP or NDS. Although you could use this engine for modern graphics (the material system is very powerful), it's generally aimed at providing mid-2000s style game graphics. 
+
+There are some glaring holes in functionality (animated meshes, LOD, billboards, shadows, projected textures) but you can already build some impressive things, and those features will arrive eventually, hopefully sooner rather than later!
 
 ## Features
 
@@ -143,33 +146,5 @@ int main(int argc, char* argv[]) {
 You can build up sections of your scene by creating _Actors_ inside _Stages_, you can then combine your stages by building up a set of rendering
 pipelines. For example, you can render Stage 1, to Viewport 1, with Camera 1 and target Texture 1. By building up these pipelines dynamically you
 can build complex scenes.
-
-
-# Documentation
-
-## The Window, Stages and the RenderSequence
-
-The _Window_ owns everything (pretty much). You can do the following with a Window:
-
-* Create and delete Stages
-* Create and delete resources (e.g. Meshes, Textures, Shaders and Materials) through the window->shared_assets property.
-* Manipulate the render sequence
-
-Stages are where you create your world by spawning _Actors_, you can think of them as a chunk of the overall scene. 
-
-The RenderSequence is where you assemble your Stages for rendering. You add _Pipelines_ to the RenderSequence, and each Pipeline has the following:
-
-* The Stage that this pipeline renders
-* The CameraID of the camera to use
-* The ViewportID of the viewport to render to
-* An optional TextureID if you want to render to a texture rather than the framebuffer (not yet implemented)
-
-For example, if you want to render a 2D overlay on your world you'll probably want to do that using a camera that has an orthographic projection. In that case, you'd do the following:
-
-* Create a new stage ( window->new_stage() )
-* Create a camera (window->new_camera())
-* Build your 2D overlay in the stage (e.g. using new_mesh(), new_material(), new_actor() etc.)
-* Manipulate the camera (e.g. window.camera(camera_id)->set_orthographic_projection())
-* Finally add a stage to the pipeline (e.g. window->render(stage_id, camera_id()); )
 
 
