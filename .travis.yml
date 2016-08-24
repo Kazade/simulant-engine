@@ -1,5 +1,10 @@
 language: cpp
+git:
+   submodules: false
+
 before_install:
+ - sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
+ - git submodule update --init --recursive
  - sudo apt-get -qq update
  - sudo apt-get install -y libsdl2-dev libopenal-dev libtinyxml-dev
 
