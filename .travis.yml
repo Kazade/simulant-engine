@@ -1,0 +1,13 @@
+language: cpp
+before_install:
+ - sudo apt-get -qq update
+ - sudo apt-get install -y libsdl2-dev libopenal-dev libtinyxml-dev
+
+install:
+ - mkdir build && cd build
+ - cmake ..
+ - make
+
+script:
+ - ./tests/kglt_tests
+ 
