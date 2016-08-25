@@ -146,7 +146,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                         smi = current_material.encode();
                     }
                 } else {
-                    L_WARN(_u("Ignoring non-existant material ({0}) while loading {1}").format(
+                    L_WARN(_F("Ignoring non-existant material ({0}) while loading {1}").format(
                         current_material,
                         filename_
                     ));
@@ -248,7 +248,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                  std::vector<unicode> material_lines = file_utils::read_lines(filename);
                  lines.insert(lines.begin() + l + 1, material_lines.begin(), material_lines.end());
              } else {
-                 L_DEBUG(_u("mtllib {0} not found. Skipping.").format(filename));
+                 L_DEBUG(_F("mtllib {0} not found. Skipping.").format(filename));
              }
         } else if(parts[0] == "Ns") {
             auto mat = materials.at(current_material);
@@ -291,7 +291,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                 auto tex_id = mesh->resource_manager().new_texture_from_file(texture_file);
                 mat->set_texture_unit_on_all_passes(0, tex_id);
             } else {
-                L_WARN(_u("Unable to locate texture {0}").format(texture_file));
+                L_WARN(_F("Unable to locate texture {0}").format(texture_file));
             }
         }
     }

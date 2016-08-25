@@ -1,3 +1,4 @@
+#include <kazlog/kazlog.h>
 #include "loader.h"
 #include "texture.h"
 
@@ -20,7 +21,7 @@ void BaseTextureLoader::into(Loadable& resource, const LoaderOptions& options) {
     auto result = do_load(buffer);
 
     if (result.data.empty()) {
-        L_ERROR(_u("Unable to load texture with name: {0}").format(filename_));
+        L_ERROR(_F("Unable to load texture with name: {0}").format(filename_));
         throw IOError("Couldn't load the file: " + filename_.encode());
     } else {
         tex->set_bpp(result.channels * 8);

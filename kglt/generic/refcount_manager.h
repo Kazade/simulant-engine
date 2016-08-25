@@ -5,6 +5,8 @@
 #include <kazbase/list_utils.h>
 #include <kazsignal/kazsignal.h>
 
+#include <kazlog/kazlog.h>
+
 namespace kglt {
 
 enum GarbageCollectMethod {
@@ -156,7 +158,7 @@ public:
                     objects_.erase(key);
                     creation_times_.erase(key);
 
-                    L_DEBUG(_u("Garbage collected: {0}").format(key.value()));
+                    L_DEBUG(_F("Garbage collected: {0}").format(key.value()));
                 }
             }
         }

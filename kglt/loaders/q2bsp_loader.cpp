@@ -5,7 +5,7 @@
 #include "kazmath/kazmath.h"
 #include "kazmath/kazmath.h"
 
-#include <kazbase/logging.h>
+#include "kazlog/kazlog.h"
 #include <kazbase/unicode.h>
 
 #include "../sdl2_window.h"
@@ -342,7 +342,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             if(!texture_filename.empty()) {
                 new_texture_id = stage->assets->new_texture_from_file(texture_filename);
             } else {
-                L_DEBUG(_u("Texture {0} was missing").format(texture_name));
+                L_DEBUG(_F("Texture {0} was missing").format(texture_name));
                 new_texture_id = checkerboard;
             }
             texture_lookup[texture_name] = new_texture_id;
@@ -724,7 +724,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     // Now the mesh has been attached, it can be collected
     mesh->enable_gc();
-    L_DEBUG(_u("Created a geom for mesh: {0}").format(mid));
+    L_DEBUG(_F("Created a geom for mesh: {0}").format(mid));
 }
 
 }

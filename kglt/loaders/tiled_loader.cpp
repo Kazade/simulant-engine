@@ -1,3 +1,4 @@
+#include <kazbase/os.h>
 #include "tiled_loader.h"
 #include "../mesh.h"
 #include "../types.h"
@@ -64,7 +65,7 @@ void TiledLoader::into(Loadable &resource, const LoaderOptions &options) {
         unicode rel_path = image->GetSource();
 
         unicode final_path = os::path::join(parent_dir, rel_path);
-        L_DEBUG(_u("Loading tileset from: {0}").format(final_path));
+        L_DEBUG(_F("Loading tileset from: {0}").format(final_path));
 
         TextureID tid = mesh->resource_manager().new_texture_from_file(
             final_path,

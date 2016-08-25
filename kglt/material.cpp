@@ -155,8 +155,8 @@ void MaterialPass::set_texture_unit(uint32_t texture_unit_id, TextureID tex) {
     }
 
     if(texture_unit_id >= MAX_TEXTURE_UNITS) {
-        L_ERROR(_u("Texture unit ID is too high. {0} >= {1}").format(texture_unit_id, MAX_TEXTURE_UNITS));
-        throw LogicError(_u("Texture unit ID is too high. {0} >= {1}").format(texture_unit_id, MAX_TEXTURE_UNITS).encode());
+        L_ERROR(_F("Texture unit ID is too high. {0} >= {1}").format(texture_unit_id, MAX_TEXTURE_UNITS));
+        throw LogicError(_F("Texture unit ID is too high. {0} >= {1}").format(texture_unit_id, MAX_TEXTURE_UNITS));
     }
 
     TextureID previous_texture;

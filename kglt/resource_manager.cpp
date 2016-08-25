@@ -370,7 +370,7 @@ MaterialID ResourceManager::get_template_material(const unicode& path) {
             window->idle->execute();
         } else if(load_material) {
             /* Otherwise, if we're loading the material, we load it, then remove it from the list */
-            L_INFO(_u("Loading material {0} into {1}").format(path, template_id));
+            L_INFO(_F("Loading material {0} into {1}").format(path, template_id));
             auto mat = material(template_id);
             window->loader_for(path.encode())->into(mat);
             materials_loading_.erase(template_id);
@@ -389,7 +389,7 @@ MaterialID ResourceManager::new_material_from_file(const unicode& path, GarbageC
     material(template_id)->enable_gc((garbage_collect == GARBAGE_COLLECT_NEVER) ? false: true);
     mark_material_as_uncollected(mat_id);
 
-    L_DEBUG(_u("Cloned material {0} into {1}").format(template_id, mat_id));
+    L_DEBUG(_F("Cloned material {0} into {1}").format(template_id, mat_id));
 
     return mat_id;
 }

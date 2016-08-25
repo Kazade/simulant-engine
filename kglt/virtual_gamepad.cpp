@@ -1,4 +1,4 @@
-#include <kazbase/logging.h>
+#include "kazlog/kazlog.h"
 #include <kazbase/unicode.h>
 
 #include "virtual_gamepad.h"
@@ -153,7 +153,7 @@ Dimensions VirtualGamepad::button_dimensions(int button) {
 }
 
 bool VirtualGamepad::init() {
-    L_DEBUG(_u("Initializing virtual gamepad with {0} buttons").format(button_count_));
+    L_DEBUG(_F("Initializing virtual gamepad with {0} buttons").format(button_count_));
 
     overlay_ = window_.new_overlay(); //Create a UI stage to hold the controller buttons
 

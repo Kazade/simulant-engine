@@ -1,3 +1,4 @@
+#include <kazbase/os.h>
 #include "../window_base.h"
 #include "../loader.h"
 #include "../stage.h"

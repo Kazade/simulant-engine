@@ -1,9 +1,8 @@
 #include <AL/al.h>
 #include <AL/alc.h>
 
-#include <kazbase/logging.h>
+#include <kazlog/kazlog.h>
 #include <kazbase/exceptions.h>
-#include <kazbase/unicode.h>
 
 namespace ALChecker {
 void al_check_and_log_error() {
@@ -28,8 +27,8 @@ void al_check_and_log_error() {
             break;
         }
 
-        L_ERROR(_u("An OpenAL error occurred: {0}").format(error));
-        throw RuntimeError(_u("AL ERROR: {0}").format(error_string).encode());
+        L_ERROR(_F("An OpenAL error occurred: {0}").format(error));
+        throw RuntimeError(_F("AL ERROR: {0}").format(error_string));
     }
 }
 }

@@ -59,7 +59,7 @@ WindowBase::WindowBase():
     ktiBindTimer(variable_timer_);
     ktiStartGameTimer();
 
-    logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));
+    kazlog::get_logger("/")->add_handler(kazlog::Handler::ptr(new kazlog::StdIOHandler));
 
 }
 
@@ -223,7 +223,7 @@ void WindowBase::unregister_panel(uint8_t function_key) {
 }
 
 void WindowBase::set_logging_level(LoggingLevel level) {
-    logging::get_logger("/")->set_level((logging::LOG_LEVEL) level);
+    kazlog::get_logger("/")->set_level((kazlog::LOG_LEVEL) level);
 }
 
 void WindowBase::update(double dt) {

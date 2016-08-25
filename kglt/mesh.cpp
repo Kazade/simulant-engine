@@ -413,7 +413,7 @@ void Mesh::delete_submesh(const std::string& name) {
         signal_submesh_destroyed_(id(), submesh.get());
     } else {
 #ifndef NDEBUG
-    L_WARN(_u("Tried to delete non-existent mesh with name: {0}").format(name));
+    L_WARN(_F("Tried to delete non-existent mesh with name: {0}").format(name));
 #endif
     }
 }

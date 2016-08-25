@@ -112,7 +112,7 @@ private:
     std::string str_;
 };
 
-#define _F StringFormatter
+typedef StringFormatter _Format;
 
 namespace kaztest {
 
@@ -142,7 +142,7 @@ public:
 class NotImplementedError: public std::logic_error {
 public:
     NotImplementedError(const std::string& file, int line):
-        std::logic_error(_F("Not implemented at {0}:{1}").format(file, line)) {}
+        std::logic_error(_Format("Not implemented at {0}:{1}").format(file, line)) {}
 };
 
 }
@@ -158,7 +158,7 @@ public:
     void _assert_equal(T expected, U actual, std::string file, int line) {
         if(expected != (T) actual) {
             auto file_and_line = std::make_pair(file, line);
-            throw kaztest::AssertionError(file_and_line, _F("{0} does not match {1}").format(actual, expected));
+            throw kaztest::AssertionError(file_and_line, _Format("{0} does not match {1}").format(actual, expected));
         }
     }
 
@@ -166,7 +166,7 @@ public:
     void _assert_not_equal(T lhs, U rhs, std::string file, int line) {
         if(lhs == (T) rhs) {
             auto file_and_line = std::make_pair(file, line);
-            throw kaztest::AssertionError(file_and_line, _F("{0} should not match {1}").format(lhs, rhs));
+            throw kaztest::AssertionError(file_and_line, _Format("{0} should not match {1}").format(lhs, rhs));
         }
     }
 
@@ -174,7 +174,7 @@ public:
     void _assert_true(T actual, std::string file, int line) {
         if(!bool(actual)) {
             auto file_and_line = std::make_pair(file, line);
-            throw kaztest::AssertionError(file_and_line, _F("{0} is not true").format(bool(actual) ? "true" : "false"));
+            throw kaztest::AssertionError(file_and_line, _Format("{0} is not true").format(bool(actual) ? "true" : "false"));
         }
     }
 
@@ -182,7 +182,7 @@ public:
     void _assert_false(T actual, std::string file, int line) {
         if(bool(actual)) {
             auto file_and_line = std::make_pair(file, line);
-            throw kaztest::AssertionError(file_and_line, _F("{0} is not false").format(bool(actual) ? "true" : "false"));
+            throw kaztest::AssertionError(file_and_line, _Format("{0} is not false").format(bool(actual) ? "true" : "false"));
         }
     }
 
@@ -191,7 +191,7 @@ public:
         if(actual < expected - difference ||
            actual > expected + difference) {
             auto file_and_line = std::make_pair(file, line);
-            throw kaztest::AssertionError(file_and_line, _F("{0} is not close enough to {1}").format(actual, expected));
+            throw kaztest::AssertionError(file_and_line, _Format("{0} is not close enough to {1}").format(actual, expected));
         }
     }
 
@@ -216,7 +216,7 @@ public:
         try {
             func();
             auto file_and_line = std::make_pair(file, line);
-            throw kaztest::AssertionError(file_and_line, _F("Expected exception ({0}) was not thrown").format(typeid(T).name()));
+            throw kaztest::AssertionError(file_and_line, _Format("Expected exception ({0}) was not thrown").format(typeid(T).name()));
         } catch(T& e) {}
     }
 
@@ -230,7 +230,7 @@ public:
 
         for(auto item: lhs) {
             if(std::find(rhs.begin(), rhs.end(), item) == rhs.end()) {
-                throw kaztest::AssertionError(file_and_line, _F("Container does not contain {0}").format(item));
+                throw kaztest::AssertionError(file_and_line, _Format("Container does not contain {0}").format(item));
             }
         }
     }

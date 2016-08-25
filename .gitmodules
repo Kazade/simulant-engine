@@ -10,3 +10,9 @@
 [submodule "deps/kazmath"]
 	path = deps/kazmath
 	url = git@github.com:Kazade/kazmath.git
+[submodule "deps/kazlog"]
+	path = deps/kazlog
+	url = git@github.com:Kazade/kazlog.git
+[submodule "deps/jsonic"]
+	path = deps/jsonic
+	url = https://gitlab.com/Kazade/jsonic.git

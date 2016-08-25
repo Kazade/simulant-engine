@@ -587,7 +587,7 @@ void Octree::grow_to_contain(const AABB& aabb) {
         // See if we should merge the children of the new root
         merge_if_possible(root->children());
 
-        L_DEBUG(_u("Octree diameter {0}").format(root->diameter()));
+        L_DEBUG(_F("Octree diameter {0}").format(root->diameter()));
     }
 }
 
@@ -655,7 +655,7 @@ std::shared_ptr<OctreeNode> Octree::create_node(int32_t level_number, Vec3 centr
         }
     }
 
-    L_DEBUG(_u("Node count {0}. Level count {1}").format(node_count_, levels_.size()));
+    L_DEBUG(_F("Node count {0}. Level count {1}").format(node_count_, levels_.size()));
 
     return new_node;
 }
@@ -704,7 +704,7 @@ void Octree::remove_node(std::weak_ptr<OctreeNode> ref) {
 
     --node_count_;
 
-    L_DEBUG(_u("Node count {0}. Level count {1}").format(node_count_, levels_.size()));
+    L_DEBUG(_F("Node count {0}. Level count {1}").format(node_count_, levels_.size()));
 }
 
 void do_traversal(std::weak_ptr<OctreeNode> node_ref, std::function<bool (OctreeNode*)> callback) {

@@ -1,5 +1,5 @@
 #include <kazbase/exceptions.h>
-#include <kazbase/logging.h>
+#include "kazlog/kazlog.h"
 #include "kazbase/unicode.h"
 #include "input_controller.h"
 #include "sdl2_window.h"
@@ -41,9 +41,9 @@ int event_filter(void* user_data, SDL_Event* event) {
             _this->stop_running();
         break;
         case SDL_APP_WILLENTERBACKGROUND: {
-            unicode sdl_err = SDL_GetError();
+            std::string sdl_err = SDL_GetError();
             if(!sdl_err.empty()) {
-                L_ERROR(_u("Something went wrong with SDL: ") + sdl_err);
+                L_ERROR(_F("Something went wrong with SDL: {0}").format(sdl_err));
             }
 
             L_INFO("Application is entering the background, disabling rendering");
@@ -57,9 +57,9 @@ int event_filter(void* user_data, SDL_Event* event) {
             }
         } break;
         case SDL_APP_DIDENTERFOREGROUND: {
-            unicode sdl_err = SDL_GetError();
+            std::string sdl_err = SDL_GetError();
             if(!sdl_err.empty()) {
-                L_ERROR(_u("Something went wrong with SDL: ") + sdl_err);
+                L_ERROR("Something went wrong with SDL: " + sdl_err);
             }
 
             L_INFO("Application is entering the foreground, enabling rendering");
@@ -108,34 +108,34 @@ void SDL2Window::check_events() {
                 handle_mouse_motion(event.motion.x, event.motion.y);
             } break;
             case SDL_MOUSEBUTTONDOWN: {
-                L_DEBUG(_u("MOUSEDOWN received: {0}").format(event.button.button));
+                L_DEBUG(_F("MOUSEDOWN received: {0}").format(event.button.button));
                 handle_mouse_button_down(event.button.button);
             } break;
             case SDL_MOUSEBUTTONUP: {
-                L_DEBUG(_u("MOUSEUP received: {0}").format(event.button.button));
+                L_DEBUG(_F("MOUSEUP received: {0}").format(event.button.button));
                 handle_mouse_button_up(event.button.button);
             } break;
             case SDL_FINGERDOWN: {
-                L_DEBUG(_u("FINGERDOWN received: {0} - {1}, {2}").format(event.tfinger.fingerId, event.tfinger.x, event.tfinger.y));
+                L_DEBUG(_F("FINGERDOWN received: {0} - {1}, {2}").format(event.tfinger.fingerId, event.tfinger.x, event.tfinger.y));
                 int x, y;
                 denormalize(event.tfinger.x, event.tfinger.y, x, y);
                 handle_touch_down(event.tfinger.fingerId, x, y);
             } break;
             case SDL_FINGERMOTION: {
-                L_DEBUG(_u("FINGERMOTION received: {0}, {1}").format(event.tfinger.x, event.tfinger.y));
+                L_DEBUG(_F("FINGERMOTION received: {0}, {1}").format(event.tfinger.x, event.tfinger.y));
                 int x, y;
                 denormalize(event.tfinger.x, event.tfinger.y, x, y);
                 handle_touch_motion(event.tfinger.fingerId, x, y);
             } break;
             case SDL_FINGERUP: {
-                L_DEBUG(_u("FINGERUP received: {0} - {1}, {2}").format(event.tfinger.fingerId, event.tfinger.x, event.tfinger.y));
+                L_DEBUG(_F("FINGERUP received: {0} - {1}, {2}").format(event.tfinger.fingerId, event.tfinger.x, event.tfinger.y));
                 int x, y;
                 denormalize(event.tfinger.x, event.tfinger.y, x, y);
                 handle_touch_up(event.tfinger.fingerId, x, y);
             } break;
 
             default:
-                L_WARN_ONCE(_u("Unhandled event {0}").format(event.type));
+                L_WARN_ONCE(_F("Unhandled event {0}").format(event.type));
                 break;
         }
     }
@@ -153,7 +153,7 @@ void SDL2Window::denormalize(float x, float y, int& xout, int& yout) {
 
 bool SDL2Window::create_window(int width, int height, int bpp, bool fullscreen) {
     if(SDL_Init(SDL_INIT_EVERYTHING) != 0) {
-        L_ERROR(_u("Unable to initialize SDL {0}").format(SDL_GetError()));
+        L_ERROR(_F("Unable to initialize SDL {0}").format(SDL_GetError()));
         return false;
     }
 

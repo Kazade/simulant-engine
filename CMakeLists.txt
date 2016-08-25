@@ -45,6 +45,8 @@ FILE(GLOB_RECURSE KAZMATH ${CMAKE_SOURCE_DIR}/deps/kazmath/kazmath/*c)
 
 SET(DEPS_SOURCES
     ${CMAKE_SOURCE_DIR}/deps/kaztimer/kaztimer.cpp
+    ${CMAKE_SOURCE_DIR}/deps/kazlog/kazlog/kazlog.cpp
+    ${CMAKE_SOURCE_DIR}/deps/jsonic/jsonic/jsonic.cpp
     ${CMAKE_SOURCE_DIR}/deps/SOIL/SOIL.c
     ${CMAKE_SOURCE_DIR}/deps/SOIL/image_DXT.c
     ${CMAKE_SOURCE_DIR}/deps/SOIL/image_helper.c
@@ -58,6 +60,8 @@ INCLUDE_DIRECTORIES(
     ${CMAKE_SOURCE_DIR}/deps
     ${CMAKE_SOURCE_DIR}/deps/kazsignal
     ${CMAKE_SOURCE_DIR}/deps/kazmath
+    ${CMAKE_SOURCE_DIR}/deps/kazlog
+    ${CMAKE_SOURCE_DIR}/deps/jsonic
     ${CMAKE_SOURCE_DIR}/deps/qu3e/src
     ${CMAKE_SOURCE_DIR}
     ${KAZBASE_INCLUDE_DIRS}

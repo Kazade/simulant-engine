@@ -1073,3 +1073,8 @@ deps/kazmath/kazmath/vec4.h
 kglt/controllers/raycast_vehicle.h
 kglt/controllers/raycast_vehicle.cpp
 README.md
+deps/kazlog/kazlog/kazlog.h
+deps/kazlog/kazlog/kazlog.cpp
+deps/jsonic/jsonic/jsonic.h
+deps/jsonic/jsonic/jsonic.cpp
+deps/jsonic/jsonic/containers.h

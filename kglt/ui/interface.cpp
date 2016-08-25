@@ -217,7 +217,7 @@ void Interface::render(CameraPtr camera, Viewport viewport) {
         } else if(element_name == "button") {
 
         } else {
-            L_WARN_ONCE(_u("Ignoring unknown element: {0}").format(element.name()));
+            L_WARN_ONCE(_F("Ignoring unknown element: {0}").format(element.name()));
         }
     };
     xml_iterator(document_.FirstChildElement(), callback);

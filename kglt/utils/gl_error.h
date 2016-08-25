@@ -5,7 +5,7 @@
 
 #include <kazbase/exceptions.h>
 #include <kazbase/unicode.h>
-#include <kazbase/logging.h>
+#include "kazlog/kazlog.h"
 #include "gl_thread_check.h"
 
 void check_and_log_error(const std::string& function_name);

@@ -32,6 +32,8 @@ deps/kazsignal
 deps/kaztest/bin
 deps/qu3e/collision
 deps/kaztimer
+deps/kazlog
+deps/jsonic
 deps/qu3e/dynamics
 deps/qu3e
 deps/SOIL/original

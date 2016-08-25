@@ -182,8 +182,8 @@ GLint GPUProgram::locate_attribute(const std::string &attribute) {
 
     GLint location = _GLCheck<GLint>(__func__, glGetAttribLocation, program_object_, attribute.c_str());
     if(location < 0) {
-        L_ERROR(_u("Unable to find attribute with name {0}").format(attribute));
-        throw LogicError(_u("Couldn't find attribute {0}").format(attribute).encode());
+        L_ERROR(_F("Unable to find attribute with name {0}").format(attribute));
+        throw LogicError(_F("Couldn't find attribute {0}").format(attribute));
     }
 
     attribute_cache_[attribute] = location;
@@ -227,7 +227,7 @@ void GPUProgram::prepare_program() {
 
     program_object_ = _GLCheck<GLuint>(__func__, glCreateProgram);
 
-    L_DEBUG(_u("Created program {0}").format(program_object_));
+    L_DEBUG(_F("Created program {0}").format(program_object_));
 }
 
 bool GPUProgram::init() {
@@ -236,7 +236,7 @@ bool GPUProgram::init() {
 
 void GPUProgram::cleanup()  {
     if(GLThreadCheck::is_current() && program_object_) {        
-        L_DEBUG(_u("Destroying GPU program: {0}").format(program_object_));
+        L_DEBUG(_F("Destroying GPU program: {0}").format(program_object_));
 
         for(auto obj: this->shaders_) {
             if(obj.second.object) {
@@ -423,7 +423,7 @@ void GPUProgram::link() {
         throw RuntimeError("Couldn't link the GPU program. See error log for details.");
     }
 
-    L_DEBUG(_u("Linked program {0}").format(program_object_));
+    L_DEBUG(_F("Linked program {0}").format(program_object_));
 
     // Rebuild the uniform information for debugging
     rebuild_uniform_info();

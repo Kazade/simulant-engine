@@ -1,6 +1,6 @@
 #include <cassert>
 
-#include "kazbase/logging.h"
+#include "kazlog/kazlog.h"
 #include "buffer_object.h"
 #include "../../utils/gl_thread_check.h"
 #include "../../utils/gl_error.h"

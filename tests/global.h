@@ -6,14 +6,11 @@
 extern kglt::SDL2Window::ptr window;
 
 #include "kaztest/kaztest.h"
-#include <kazbase/logging.h>
 #include "kglt/window_base.h"
 
 class KGLTTestCase : public TestCase {
 public:
     void set_up() {
-        logging::get_logger("/")->set_level(logging::LOG_LEVEL_NONE);
-
         if(!window) {
             window = kglt::SDL2Window::create(nullptr);
             window->set_logging_level(kglt::LOG_LEVEL_NONE);

@@ -2,7 +2,7 @@
 #include <thread>
 #include <iostream>
 #include <kazbase/unicode.h>
-#include <kazbase/logging.h>
+#include "kazlog/kazlog.h"
 #include "ui_private.h"
 #include "interface.h"
 

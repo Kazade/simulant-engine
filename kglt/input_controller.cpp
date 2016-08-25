@@ -1,6 +1,6 @@
 #include "kazbase/list_utils.h"
 #include "kazbase/unicode.h"
-#include "kazbase/logging.h"
+#include "kazlog/kazlog.h"
 #include "input_controller.h"
 #include "window_base.h"
 #include "virtual_gamepad.h"

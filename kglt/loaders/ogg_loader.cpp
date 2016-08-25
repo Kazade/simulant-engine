@@ -1,6 +1,7 @@
 #include "ogg_loader.h"
 #include "stb_vorbis.h"
 
+#include <kazlog/kazlog.h>
 #include "../utils/al_error.h"
 #include "../sound.h"
 
@@ -71,7 +72,7 @@ void OGGLoader::into(Loadable& resource, const LoaderOptions& options) {
 
     assert(!str.empty());
 
-    L_DEBUG(_u("Stream size: {0}").format(str.length()));
+    L_DEBUG(_F("Stream size: {0}").format(str.length()));
     std::vector<unsigned char> data(str.begin(), str.end());
 
     StreamWrapper stream(stb_vorbis_open_memory(&data[0], data.size(),nullptr, nullptr));

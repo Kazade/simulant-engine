@@ -1,5 +1,6 @@
-#include <kazbase/json/json.h>
 #include <kazbase/file_utils.h>
+#include <jsonic/jsonic.h>
+
 #include "particle_script.h"
 #include "../particles.h"
 
@@ -8,27 +9,28 @@ namespace loaders {
 
 void KGLPLoader::into(Loadable &resource, const LoaderOptions &options) {
     ParticleSystem* ps = loadable_to<ParticleSystem>(resource);
-    json::JSON js = json::loads(data_->str());
+    jsonic::Node js;
+    jsonic::loads(data_->str(), js);
 
-    ps->set_name((js.has_key("name")) ? _u(js.dict_value("name")): "");
+    ps->set_name((js.has_key("name")) ? _u(js["name"]): "");
 
-    if(js.has_key("quota")) ps->set_quota(js.dict_value("quota").get_number());
-    if(js.has_key("particle_width")) ps->set_particle_width(js.dict_value("particle_width").get_number());    
-    if(js.has_key("cull_each")) ps->set_cull_each(js.dict_value("cull_each").get_bool());
+    if(js.has_key("quota")) ps->set_quota(js["quota"]);
+    if(js.has_key("particle_width")) ps->set_particle_width(js["particle_width"]);
+    if(js.has_key("cull_each")) ps->set_cull_each(js["cull_each"]);
 
     if(js.has_key("emitters")) {
-        json::Node& emitters = js.dict_value("emitters");
+        jsonic::Node& emitters = js["emitters"];
         for(uint32_t i = 0; i < emitters.length(); ++i) {
-            json::Node& emitter = emitters.array_value(i);
+            jsonic::Node& emitter = emitters[i];
 
             auto new_emitter = ps->push_emitter();
 
             if(emitter.has_key("type")) {
-                new_emitter->set_type((emitter["type"].get() == _u("point")) ? PARTICLE_EMITTER_POINT : PARTICLE_EMITTER_BOX);
+                new_emitter->set_type((std::string(emitter["type"]) == "point") ? PARTICLE_EMITTER_POINT : PARTICLE_EMITTER_BOX);
             }
 
             if(emitter.has_key("direction")) {
-                auto parts = emitter["direction"].get().split(" ");
+                auto parts = unicode(emitter["direction"]).split(" ");
                 //FIXME: check length
                 new_emitter->set_direction(kglt::Vec3(
                     parts.at(0).to_float(),

@@ -1,4 +1,4 @@
-#include <kazbase/logging.h>
+#include "kazlog/kazlog.h"
 #include <kazbase/exceptions.h>
 #include <kazbase/unicode.h>
 
@@ -23,7 +23,7 @@ void end_of_frame_check() {
 void check_and_log_error(const std::string &function_name) {
     GLuint error = glGetError();
     if(error != GL_NO_ERROR) {
-        unicode error_string;
+        std::string error_string;
         switch(error) {
         case GL_INVALID_ENUM:
             error_string = "GL_INVALID_ENUM";
@@ -50,8 +50,8 @@ void check_and_log_error(const std::string &function_name) {
 #endif
         }
 
-        L_ERROR(_u("An OpenGL error occurred: {0} - {1}").format(function_name, error_string));
+        L_ERROR(_F("An OpenGL error occurred: {0} - {1}").format(function_name, error_string));
 
-        throw RuntimeError(_u("GL ERROR: {0}").format(error_string).encode());
+        throw RuntimeError(_F("GL ERROR: {0}").format(error_string));
     }
 }

@@ -1,5 +1,6 @@
 #include <kazbase/os/path.h>
 #include <kazbase/exceptions.h>
+#include <fstream>
 #include "resource_locator.h"
 
 #ifdef __ANDROID__
