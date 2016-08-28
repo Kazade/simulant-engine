@@ -112,15 +112,15 @@ bool Watcher::update() {
 }
 
 void Watcher::watch(const unicode &path, WatchCallback cb) {
-    unicode p = os::path::abs_path(path);
+    auto p = kfs::path::abs_path(path.encode());
 
-    if(!os::path::exists(p)) {
+    if(!kfs::path::exists(p)) {
         return;
     }
 
     int mask = IN_MODIFY | IN_ATTRIB | IN_MOVE_SELF | IN_DELETE_SELF;
 
-    int wd = inotify_add_watch(inotify_fd_, p.encode().c_str(), mask);
+    int wd = inotify_add_watch(inotify_fd_, p.c_str(), mask);
 
     watch_callbacks_[wd] = cb;
     watch_descriptors_[path] = wd;
@@ -128,7 +128,7 @@ void Watcher::watch(const unicode &path, WatchCallback cb) {
 }
 
 void Watcher::unwatch(const unicode &path) {
-    unicode p = os::path::abs_path(path);
+    auto p = kfs::path::abs_path(path.encode());
 
     if(watch_descriptors_.find(p) != watch_descriptors_.end()) {
         int wd = watch_descriptors_.at(p);

@@ -51,7 +51,7 @@ void TiledLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     Tmx::Layer* layer = (*it);
 
-    unicode parent_dir = os::path::abs_path(os::path::dir_name(filename_));
+    auto parent_dir = kfs::path::abs_path(kfs::path::dir_name(filename_.encode()));
 
     std::map<int32_t, TilesetInfo> tileset_info;
 
@@ -62,9 +62,9 @@ void TiledLoader::into(Loadable &resource, const LoaderOptions &options) {
     for(int32_t i = 0; i < map.GetNumTilesets(); ++i) {
         const Tmx::Tileset* tileset = map.GetTileset(i);
         const Tmx::Image* image = tileset->GetImage();
-        unicode rel_path = image->GetSource();
+        std::string rel_path = image->GetSource();
 
-        unicode final_path = os::path::join(parent_dir, rel_path);
+        auto final_path = kfs::path::join(parent_dir, rel_path);
         L_DEBUG(_F("Loading tileset from: {0}").format(final_path));
 
         TextureID tid = mesh->resource_manager().new_texture_from_file(

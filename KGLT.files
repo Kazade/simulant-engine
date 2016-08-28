@@ -1078,3 +1078,5 @@ deps/kazlog/kazlog/kazlog.cpp
 deps/jsonic/jsonic/jsonic.h
 deps/jsonic/jsonic/jsonic.cpp
 deps/jsonic/jsonic/containers.h
+deps/kfs/kfs/kfs.h
+deps/kfs/kfs/kfs.cpp

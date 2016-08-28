@@ -145,8 +145,8 @@ unicode Interface::locate_font(const unicode& filename) {
     for(std::string font_dir: paths) {
 
 
-        if(os::path::exists(os::path::join(font_dir, filename))) {
-            return os::path::join(font_dir, filename);
+        if(kfs::path::exists(kfs::path::join(font_dir, filename))) {
+            return kfs::path::join(font_dir, filename);
         }
     }
 

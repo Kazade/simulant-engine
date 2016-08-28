@@ -77,11 +77,11 @@ SkyboxManager::SkyboxManager(WindowBase* window, Stage* stage):
 SkyboxID SkyboxManager::new_skybox_from_folder(const unicode& folder) {
     std::map<SkyboxFace, unicode> files;
 
-    for(unicode file: os::path::list_dir(folder)) {
+    for(auto& file: kfs::path::list_dir(folder.encode())) {
         SkyboxFace face;
 
         // Case-insensitive detection
-        unicode file_lower = file.lower();
+        unicode file_lower = unicode(file).lower();
 
         if(file_lower.contains("top")) {
             face = SKYBOX_FACE_TOP;
@@ -100,7 +100,7 @@ SkyboxID SkyboxManager::new_skybox_from_folder(const unicode& folder) {
             continue;
         }
 
-        unicode full_path = os::path::join(folder, file);
+        auto full_path = kfs::path::join(folder.encode(), file);
 
         // Make sure this is a supported texture file
         if(!window->loader_type("texture")->supports(full_path)) {
@@ -182,12 +182,12 @@ SkyboxID SkyboxManager::new_skybox_from_folder_and_relative_files(
     const unicode& back) {
 
     return new_skybox_from_absolute_files(
-        os::path::join(folder, up),
-        os::path::join(folder, down),
-        os::path::join(folder, left),
-        os::path::join(folder, right),
-        os::path::join(folder, front),
-        os::path::join(folder, back)
+        kfs::path::join(folder.encode(), up.encode()),
+        kfs::path::join(folder.encode(), down.encode()),
+        kfs::path::join(folder.encode(), left.encode()),
+        kfs::path::join(folder.encode(), right.encode()),
+        kfs::path::join(folder.encode(), front.encode()),
+        kfs::path::join(folder.encode(), back.encode())
     );
 }
 

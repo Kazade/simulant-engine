@@ -5,6 +5,9 @@
 #include <stdexcept>
 #include <string>
 #include <memory>
+
+#include <kfs/kfs.h>
+
 #include "loadable.h"
 
 #include "kazbase/any/any.h"

@@ -1,6 +1,8 @@
 #include <kazbase/os/path.h>
 #include <kazbase/exceptions.h>
 #include <fstream>
+#include <kfs/kfs.h>
+
 #include "resource_locator.h"
 
 #ifdef __ANDROID__
@@ -39,14 +41,14 @@ unicode ResourceLocator::locate_file(const unicode &filename) const {
 
 #else
 
-    if(os::path::exists(filename)) { //Absolute path
-        return os::path::abs_path(filename);
+    if(kfs::path::exists(filename.encode())) { //Absolute path
+        return kfs::path::abs_path(filename.encode());
     }
 
     for(unicode path: resource_path_) {
-        unicode full_path = os::path::join(path, filename);
-        if(os::path::exists(full_path)) {
-            return os::path::abs_path(full_path);
+        auto full_path = kfs::path::join(path.encode(), filename.encode());
+        if(kfs::path::exists(full_path)) {
+            return kfs::path::abs_path(full_path);
         }
     }
 #endif
@@ -108,11 +110,11 @@ std::vector<std::string> ResourceLocator::read_file_lines(const unicode &filenam
 }
 
 unicode ResourceLocator::find_executable_directory() {
-    return os::path::exe_dirname();
+    return kfs::exe_dirname();
 }
 
 unicode ResourceLocator::find_working_directory() {
-    return os::path::get_cwd();
+    return kfs::get_cwd();
 }
 
 }

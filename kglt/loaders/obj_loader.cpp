@@ -243,8 +243,8 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
              // We need to re-get the filename because mtllib paths may have spaces and the existing 'parts'
              // variable would have split it to pieces.
              auto filename = line.split(" ", 1, false).back();
-             filename = os::path::join(os::path::dir_name(filename_), filename);
-             if(os::path::exists(filename)) {
+             filename = kfs::path::join(kfs::path::dir_name(filename_.encode()), filename.encode());
+             if(kfs::path::exists(filename.encode())) {
                  std::vector<unicode> material_lines = file_utils::read_lines(filename);
                  lines.insert(lines.begin() + l + 1, material_lines.begin(), material_lines.end());
              } else {
@@ -286,8 +286,8 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
         } else if(parts[0] == "map_Kd") {
             auto texture_name = parts[1];
             auto mat = materials.at(current_material);
-            auto texture_file = os::path::join(os::path::dir_name(filename_), texture_name);
-            if(os::path::exists(texture_file)) {
+            auto texture_file = kfs::path::join(kfs::path::dir_name(filename_.encode()), texture_name.encode());
+            if(kfs::path::exists(texture_file)) {
                 auto tex_id = mesh->resource_manager().new_texture_from_file(texture_file);
                 mat->set_texture_unit_on_all_passes(0, tex_id);
             } else {
@@ -334,7 +334,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     if(!has_materials) {
         //If the OBJ file has no materials, have a look around for textures in the same directory
 
-        std::pair<unicode, unicode> parts = os::path::split_ext(filename_);
+        auto parts = kfs::path::split_ext(filename_.encode());
 
         std::vector<unicode> possible_diffuse_maps = {
             parts.first + ".jpg",
@@ -349,7 +349,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
         };
 
         for(const unicode& p: possible_diffuse_maps) {
-            if(os::path::exists(p.encode())) {
+            if(kfs::path::exists(p.encode())) {
                 //Create a material from it and apply it to the submesh
                 MaterialID mat = mesh->resource_manager().new_material_from_texture(
                     mesh->resource_manager().new_texture_from_file(p.encode())

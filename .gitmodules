@@ -16,3 +16,6 @@
 [submodule "deps/jsonic"]
 	path = deps/jsonic
 	url = https://gitlab.com/Kazade/jsonic.git
+[submodule "deps/kfs"]
+	path = deps/kfs
+	url = git@github.com:Kazade/kfs.git
