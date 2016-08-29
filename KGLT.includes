@@ -43,3 +43,5 @@ deps/SOIL
 deps/kazsignal/tests
 deps/qu3e/broadphase
 deps/qu3e/debug
+deps/kfs/tests
+deps/kfs

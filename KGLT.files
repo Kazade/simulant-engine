@@ -1080,3 +1080,5 @@ deps/jsonic/jsonic/jsonic.cpp
 deps/jsonic/jsonic/containers.h
 deps/kfs/kfs/kfs.h
 deps/kfs/kfs/kfs.cpp
+deps/kfs/tests/test_kfs.h
+deps/kfs/CMakeLists.txt
