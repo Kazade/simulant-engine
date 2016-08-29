@@ -1,7 +1,6 @@
 #ifndef TEST_MESH_H
 #define TEST_MESH_H
 
-#include <kazbase/logging.h>
 #include "kaztest/kaztest.h"
 
 #include "kglt/kglt.h"
