@@ -2,7 +2,6 @@
 #include "camera.h"
 #include "stage.h"
 #include "window_base.h"
-#include "kazbase/unicode.h"
 
 namespace kglt {
 
