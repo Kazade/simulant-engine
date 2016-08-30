@@ -7,7 +7,7 @@ the engine are flakey, untested, or just downright badly thought out!
 My aim is that, if I keep hacking as and when I can, eventually it will be a useful,
 easy to use game engine. Until then, here are some of the things that need doing:
 
-  - Speed up the rendering pipeline stuff, try to make it more understandable and the API nicer (e.g. rename/replace add_pipeline)
+ - Speed up the rendering pipeline stuff, try to make it more understandable and the API nicer (e.g. rename/replace add_pipeline)
  - Animated meshes (keyframe and skeletal), probably means big changes to the Mesh structure
  - Shadows
  - Lighting (half-complete)
