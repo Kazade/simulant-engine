@@ -1,6 +1,7 @@
 #ifndef TEST_OBJ_LOADER_H
 #define TEST_OBJ_LOADER_H
 
+#include <kfs/kfs.h>
 #include "kglt/loaders/obj_loader.h"
 
 class OBJLoaderTest : public KGLTTestCase {
@@ -50,7 +51,7 @@ public:
     }
 
     void test_loading_without_texture_coords() {
-        unicode path = os::path::join(os::path::dir_name(__FILE__), "test-data");
+        kfs::Path path = kfs::path::join(kfs::path::dir_name(__FILE__), "test-data");
         window->resource_locator->add_search_path(path);
 
         //Shouldn't throw

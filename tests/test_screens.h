@@ -59,7 +59,7 @@ public:
     }
 
     void test_activate_screen() {
-        assert_raises(ValueError, std::bind(&ScreenManager::activate_screen, manager_, "/"));
+        assert_raises(std::logic_error, std::bind(&ScreenManager::activate_screen, manager_, "/"));
 
         manager_->register_screen("/", screen_factory<TestScreen>());
 

@@ -1,4 +1,4 @@
-#include <kazbase/random.h>
+#include "kglt/utils/random.h"
 
 #include "kglt/kglt.h"
 

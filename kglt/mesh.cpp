@@ -1,6 +1,5 @@
 #include <limits>
 
-#include "kazbase/unicode.h"
 #include "window_base.h"
 #include "resource_manager.h"
 #include "mesh.h"
@@ -137,7 +136,7 @@ void Mesh::enable_debug(bool value) {
 
 SubMesh* Mesh::new_submesh_with_material(const std::string& name, MaterialID material, MeshArrangement arrangement, VertexSharingMode vertex_sharing, VertexSpecification vertex_specification) {
     if(submeshes_.count(name)) {
-        throw LogicError("Attempted to create a duplicate submesh with name: " + name);
+        throw std::runtime_error("Attempted to create a duplicate submesh with name: " + name);
     }
 
     auto new_submesh = SubMesh::create(this, name, material, arrangement, vertex_sharing, vertex_specification);
@@ -525,10 +524,6 @@ SubMesh::SubMesh(Mesh* parent, const std::string& name,
     arrangement_(arrangement),
     uses_shared_data_(vertex_sharing == VERTEX_SHARING_MODE_SHARED) {
 
-    if(name.empty()) {
-        throw LogicError("You must specify a name for the submesh");
-    }
-
     if(!uses_shared_data_ && vertex_specification == VertexSpecification()) {
         throw std::logic_error(
             "You must specify a vertex_attribute_mask when creating a submesh with independent vertices"
@@ -638,7 +633,7 @@ void SubMesh::set_material_id(MaterialID mat) {
 
 void SubMesh::transform_vertices(const kglt::Mat4& transformation) {
     if(uses_shared_data_) {
-        throw LogicError("Tried to transform shared_data, use Mesh::transform_vertices instead");
+        throw std::logic_error("Tried to transform shared_data, use Mesh::transform_vertices instead");
     }
 
     vertex_data->move_to_start();
@@ -663,7 +658,8 @@ void SubMesh::transform_vertices(const kglt::Mat4& transformation) {
 
 void SubMesh::set_diffuse(const kglt::Colour& colour) {
     if(uses_shared_data_) {
-        throw LogicError("Tried to set the diffuse colour on shared_data, use Mesh::set_diffuse instead");
+        L_WARN("Tried to set the diffuse colour on shared_data, use Mesh::set_diffuse instead");
+        return;
     }
 
     vertex_data->move_to_start();
@@ -676,7 +672,7 @@ void SubMesh::set_diffuse(const kglt::Colour& colour) {
 
 void SubMesh::reverse_winding() {
     if(arrangement_ != MESH_ARRANGEMENT_TRIANGLES) {
-        throw NotImplementedError(__FILE__, __LINE__);
+        assert(0 && "Not implemented");
     }
 
     auto original = index_data->all();

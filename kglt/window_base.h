@@ -309,7 +309,8 @@ public:
     Property<WindowBase, Watcher> watcher = {
         this, [](const WindowBase* self) -> Watcher* {
             if(!self->watcher_) {
-                throw LogicError("Watcher has not been initialized");
+                L_WARN("Watcher has not been initialized");
+                return nullptr;
             } else {
                 return self->watcher_.get();
             }

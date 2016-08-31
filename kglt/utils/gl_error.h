@@ -2,9 +2,6 @@
 #define KGLT_GL_ERROR_H
 
 #include <string>
-
-#include <kazbase/exceptions.h>
-#include <kazbase/unicode.h>
 #include "kazlog/kazlog.h"
 #include "gl_thread_check.h"
 

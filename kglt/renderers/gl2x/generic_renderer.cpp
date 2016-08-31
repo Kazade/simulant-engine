@@ -270,7 +270,7 @@ void GenericRenderer::set_blending_mode(BlendType type) {
         case BLEND_ONE_ONE_MINUS_ALPHA: GLCheck(glBlendFunc, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         break;
     default:
-        throw ValueError("Invalid blend type specified");
+        throw std::logic_error("Invalid blend type specified");
     }
 }
 
@@ -380,7 +380,7 @@ void GenericRenderer::render(CameraPtr camera, bool render_group_changed, const 
         case 6: return SP_AUTO_MATERIAL_TEX_MATRIX6;
         case 7: return SP_AUTO_MATERIAL_TEX_MATRIX7;
         default:
-            throw ValueError("Invalid tex matrix index");
+            throw std::logic_error("Invalid tex matrix index");
         }
     };
 
@@ -425,7 +425,7 @@ void GenericRenderer::send_geometry(Renderable *renderable) {
             GLCheck(glDrawElements, GL_TRIANGLE_FAN, index_count, GL_UNSIGNED_INT, BUFFER_OFFSET(0));
         break;
         default:
-            throw NotImplementedError(__FILE__, __LINE__);
+            L_DEBUG("Tried to render a mesh with an invalid arrangement");
     }
 }
 

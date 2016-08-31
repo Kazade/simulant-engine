@@ -151,12 +151,12 @@ MaterialPass::MaterialPass(Material *material):
 
 void MaterialPass::set_texture_unit(uint32_t texture_unit_id, TextureID tex) {
     if(!allow_textures_) {
-        throw LogicError("Attempted to set a texture on a pass which prevents them");
+        throw std::logic_error("Attempted to set a texture on a pass which prevents them");
     }
 
     if(texture_unit_id >= MAX_TEXTURE_UNITS) {
         L_ERROR(_F("Texture unit ID is too high. {0} >= {1}").format(texture_unit_id, MAX_TEXTURE_UNITS));
-        throw LogicError(_F("Texture unit ID is too high. {0} >= {1}").format(texture_unit_id, MAX_TEXTURE_UNITS));
+        throw std::logic_error(_F("Texture unit ID is too high. {0} >= {1}").format(texture_unit_id, MAX_TEXTURE_UNITS));
     }
 
     TextureID previous_texture;
@@ -314,6 +314,8 @@ MaterialPass::ptr MaterialPass::new_clone(Material* owner) const {
 MaterialID Material::new_clone(ResourceManager* target_resource_manager, GarbageCollectMethod garbage_collect) const {
 
     MaterialID ret = target_resource_manager->new_material(garbage_collect);
+    assert(ret);
+
     auto mat = target_resource_manager->material(ret);
 
     for(auto pass: passes_) {

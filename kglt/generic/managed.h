@@ -3,7 +3,7 @@
 
 #include <stdexcept>
 #include <memory>
-#include <kazbase/unicode.h>
+
 
 class InstanceInitializationError :
     public std::runtime_error {
@@ -12,8 +12,8 @@ public:
     InstanceInitializationError():
         std::runtime_error("Couldn't initialize the instance") {}
 
-    InstanceInitializationError(const unicode& type):
-        std::runtime_error((type + " could not be initialized").encode()) {
+    InstanceInitializationError(const std::string& type):
+        std::runtime_error(type + " could not be initialized") {
 
     }
 };

@@ -9,7 +9,7 @@
 #include <SDL.h>
 
 #include "types.h"
-#include "kazbase/unicode.h"
+#include "utils/unicode.h"
 #include "screens/screen_manager.h"
 #include "generic/property.h"
 #include "generic/data_carrier.h"
@@ -45,15 +45,15 @@ public:
     bool initialized() const { return initialized_; }
 
     /* ScreenManager interface */
-    virtual void register_screen(const unicode& route, ScreenFactory factory) { routes_->register_screen(route, factory); }
-    virtual bool has_screen(const unicode& route) const { return routes_->has_screen(route); }
-    virtual ScreenBasePtr resolve_screen(const unicode& route) { return routes_->resolve_screen(route); }
-    virtual void activate_screen(const unicode& route) { routes_->activate_screen(route); }
-    virtual void load_screen_in_background(const unicode& route, bool redirect_after=true) { routes_->load_screen_in_background(route, redirect_after); }
-    virtual void unload_screen(const unicode& route) { routes_->unload_screen(route); }
-    virtual bool is_screen_loaded(const unicode& route) const { return routes_->is_screen_loaded(route); }
+    virtual void register_screen(const std::string& route, ScreenFactory factory) { routes_->register_screen(route, factory); }
+    virtual bool has_screen(const std::string& route) const { return routes_->has_screen(route); }
+    virtual ScreenBasePtr resolve_screen(const std::string& route) { return routes_->resolve_screen(route); }
+    virtual void activate_screen(const std::string& route) { routes_->activate_screen(route); }
+    virtual void load_screen_in_background(const std::string& route, bool redirect_after=true) { routes_->load_screen_in_background(route, redirect_after); }
+    virtual void unload_screen(const std::string& route) { routes_->unload_screen(route); }
+    virtual bool is_screen_loaded(const std::string& route) const { return routes_->is_screen_loaded(route); }
     virtual ScreenBasePtr active_screen() const { return routes_->active_screen(); }
-    const std::unordered_map<unicode, ScreenBasePtr> routes() const override { return routes_->routes(); }
+    const std::unordered_map<std::string, ScreenBasePtr> routes() const override { return routes_->routes(); }
     /* End ScreenManager interface */
 protected:
     StagePtr stage(StageID stage=StageID());

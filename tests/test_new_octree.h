@@ -18,7 +18,7 @@ public:
             will have a diameter of 10.0f;
         */
         actor_id_ = stage_->new_actor_with_mesh(stage_->assets->new_mesh_as_cube(32.0));
-        octree_.reset(new kglt::impl::Octree(stage_));
+        octree_.reset(new kglt::octree_impl::Octree(stage_));
     }
 
     void test_octreenode_contains() {
@@ -139,11 +139,11 @@ public:
     }
 
     void test_splitting_nodes() {
-        auto split_predicate = [](kglt::impl::OctreeNode* node) -> bool {
+        auto split_predicate = [](kglt::octree_impl::OctreeNode* node) -> bool {
             return node->data->actor_count() > 2;
         };
 
-        auto octree = std::make_shared<kglt::impl::Octree>(stage_, split_predicate);
+        auto octree = std::make_shared<kglt::octree_impl::Octree>(stage_, split_predicate);
 
         octree->insert_actor(actor_id_);
         assert_equal(octree->node_count(), 1);
@@ -171,8 +171,8 @@ public:
 
     void test_find_node_centre_for_point() {
         kglt::Vec3 point;
-        kglt::impl::NodeLevel level = 0;
-        assert_raises(kglt::impl::OutsideBoundsError, std::bind(&kglt::impl::Octree::find_node_centre_for_point, octree_.get(), level, point));
+        kglt::octree_impl::NodeLevel level = 0;
+        assert_raises(kglt::octree_impl::OutsideBoundsError, std::bind(&kglt::octree_impl::Octree::find_node_centre_for_point, octree_.get(), level, point));
 
         octree_->insert_actor(actor_id_);
 
@@ -234,7 +234,7 @@ public:
     }
 
 private:
-    std::unique_ptr<kglt::impl::Octree> octree_;
+    std::unique_ptr<kglt::octree_impl::Octree> octree_;
     kglt::StageID stage_id_;
     kglt::ActorID actor_id_;
     kglt::StagePtr stage_;

@@ -69,7 +69,7 @@ void CameraProxy::_update_following(double dt) {
             kmQuaternionRotationPitchYawRoll(&destination_rotation, 0, yaw, 0);
             destination_position = following_offset_.rotated_by(destination_rotation) + avatar_position;
         } else {
-            throw ValueError("Unknown camera follow mode");
+            throw std::logic_error("Unknown camera follow mode");
         }
 
         set_absolute_position(initial_position.lerp(destination_position, t));
@@ -137,7 +137,7 @@ double Camera::set_orthographic_projection_from_height(double desired_height_in_
 
 kmVec3 Camera::project_point(const RenderTarget &target, const Viewport &viewport, const kmVec3& point) {
     if(!window_) {
-        throw LogicError("Passed a nullptr as a camera's window");
+        throw std::logic_error("Passed a nullptr as a camera's window");
     }
 
     kmVec3 tmp;

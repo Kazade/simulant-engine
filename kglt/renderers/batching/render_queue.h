@@ -2,6 +2,7 @@
 
 #include <list>
 #include <set>
+#include <map>
 
 namespace kglt {
 
@@ -125,7 +126,7 @@ public:
     uint32_t pass_count() const { return batches_.size(); }
     uint32_t group_count(Pass pass_number) const {
         if(pass_number >= batches_.size()) {
-            throw LogicError("Tried to access a pass that doesn't exist");
+            throw std::out_of_range("Tried to access a pass that doesn't exist");
         }
 
         return batches_[pass_number].size();

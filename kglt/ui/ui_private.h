@@ -3,7 +3,6 @@
 
 #include <mutex>
 #include <unordered_map>
-#include <kazbase/exceptions.h>
 #include <tinyxml.h>
 
 #include "element.h"

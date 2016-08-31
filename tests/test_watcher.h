@@ -1,8 +1,8 @@
 #ifndef TEST_WATCHER_H
 #define TEST_WATCHER_H
 
+#include <kfs/kfs.h>
 #include "kaztest/kaztest.h"
-#include <kazbase/os.h>
 #include "kglt/watcher.h"
 
 namespace {
@@ -30,26 +30,26 @@ public:
     }
 
     void test_watching() {
-        unicode test_file = os::path::join(os::temp_dir(), "watcher.test");
-        os::touch(test_file);
+        kfs::Path test_file = kfs::path::join(kfs::temp_dir(), "watcher.test");
+        kfs::touch(test_file);
 
         watcher->watch(test_file, std::bind(&WatcherTest::callback, this, std::placeholders::_1, std::placeholders::_2));
 
         assert_equal(0, modify_counter);
 
-        os::touch(test_file);
+        kfs::touch(test_file);
         watcher->update();
 
         assert_equal(1, modify_counter);
 
-        os::touch(test_file);
+        kfs::touch(test_file);
         watcher->update();
 
         assert_equal(2, modify_counter);
 
         assert_equal(0, delete_counter);
 
-        os::remove(test_file);
+        kfs::remove(test_file);
         watcher->update();
 
         assert_equal(1, delete_counter);

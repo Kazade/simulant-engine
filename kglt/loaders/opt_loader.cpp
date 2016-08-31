@@ -7,8 +7,6 @@
 #include "../texture.h"
 #include "../resource_manager.h"
 #include "../shortcuts.h"
-
-#include <kazbase/unicode.h>
 #include "opt_loader.h"
 
 namespace kglt {
@@ -436,7 +434,7 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     std::ifstream file(filename_.encode().c_str(), std::ios::binary);
     if(!file.good()) {
-        throw IOError("Couldn't load the OPT file: " + filename_.encode());
+        throw std::runtime_error("Couldn't load the OPT file: " + filename_.encode());
     }
 
     MainHeader main_header;
@@ -477,8 +475,8 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
         read_block(file, off);
     }
 
-    for(Texture tex: textures) {
-        if(container::contains(texture_name_to_id, tex.name)) continue;
+    for(Texture tex: textures) {        
+        if(texture_name_to_id.count(tex.name)) continue;
 
         texture_name_to_id[tex.name] = mesh->resource_manager().new_texture();
 
@@ -499,7 +497,7 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     //Now let's build everything!
     for(Triangle tri: triangles[0]) {
-        if(!container::contains(texture_submesh, tri.texture_name)) {
+        if(!texture_submesh.count(tri.texture_name)) {
             L_ERROR(unicode("Some part of this file wasn't loaded, as we have found a reused texture {0} without loading the actual texture. Some of the model will be missing").
                     format(tri.texture_name).encode());
             continue;

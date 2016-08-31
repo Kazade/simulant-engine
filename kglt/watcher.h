@@ -3,7 +3,8 @@
 
 #include <unordered_map>
 #include "generic/managed.h"
-#include "kazbase/unicode.h"
+
+#include "utils/unicode.h"
 
 namespace kglt {
 

@@ -57,7 +57,7 @@ void MoveableObject::constrain_to(const AABB& box) {
 
 std::pair<Vec3, Vec3> MoveableObject::constraint() const {
     if(!is_constrained()) {
-        throw LogicError("Tried to get constraint on unconstrained camera");
+        throw std::logic_error("Tried to get constraint on unconstrained camera");
     }
 
     return *constraint_;

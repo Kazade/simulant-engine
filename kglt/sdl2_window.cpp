@@ -1,6 +1,5 @@
-#include <kazbase/exceptions.h>
 #include "kazlog/kazlog.h"
-#include "kazbase/unicode.h"
+#include "utils/unicode.h"
 #include "input_controller.h"
 #include "sdl2_window.h"
 
@@ -210,13 +209,13 @@ bool SDL2Window::create_window(int width, int height, int bpp, bool fullscreen) 
     );
 
     if(!screen_) {
-        throw RuntimeError("FATAL: Unable to create SDL window");
+        throw std::runtime_error("FATAL: Unable to create SDL window");
     }
 
     context_ = SDL_GL_CreateContext(screen_);
 
     if(!context_) {
-        throw RuntimeError("FATAL: Unable to create a GL context");
+        throw std::runtime_error("FATAL: Unable to create a GL context");
     }
 
     SDL_SetEventFilter(event_filter, this);

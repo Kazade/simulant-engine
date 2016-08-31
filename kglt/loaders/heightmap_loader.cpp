@@ -210,12 +210,12 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     Mesh* mesh = dynamic_cast<Mesh*>(res_ptr);
 
     if(!mesh) {
-        throw LogicError("Tried to load a heightmap file into something that wasn't a mesh");
+        throw std::logic_error("Tried to load a heightmap file into something that wasn't a mesh");
     }
 
     HeightmapSpecification spec = (
         options.count("spec") ?
-        kazbase::any_cast<HeightmapSpecification>(options.at("spec")) :
+        kglt::any_cast<HeightmapSpecification>(options.at("spec")) :
         HeightmapSpecification()
     );
 

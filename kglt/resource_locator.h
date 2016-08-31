@@ -6,9 +6,17 @@
 #include <string>
 
 #include "generic/managed.h"
-#include <kazbase/unicode.h>
+#include "utils/unicode.h"
 
 namespace kglt {
+
+
+class ResourceMissingError : public std::runtime_error {
+public:
+    ResourceMissingError(const std::string& what):
+        std::runtime_error(what) {}
+};
+
 
 class ResourceLocator :
     public Managed<ResourceLocator> {

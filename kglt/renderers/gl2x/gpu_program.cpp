@@ -1,7 +1,6 @@
-#include <kazbase/exceptions.h>
-#include <kazbase/hash/md5.h>
 
 #include "../../utils/gl_error.h"
+#include "../../utils/hash/md5.h"
 #include "gpu_program.h"
 
 namespace kglt {
@@ -43,7 +42,7 @@ UniformInfo GPUProgram::uniform_info(const std::string& uniform_name) {
     auto it = uniform_info_.find(uniform_name);
 
     if(it == uniform_info_.end()) {
-        throw DoesNotExist<UniformInfo>(_u("Couldn't find info for {0}").format(uniform_name));
+        throw std::logic_error("Couldn't find info for: " + uniform_name);
     }
 
     return (*it).second;
@@ -57,12 +56,12 @@ GLint GPUProgram::locate_uniform(const std::string& uniform_name) {
 
     if(!is_current()) {
         L_ERROR("Attempted to modify a uniform without making the program active");
-        throw LogicError("Attempted to modify GPU program object without making it active");
+        throw std::logic_error("Attempted to modify GPU program object without making it active");
     }
 
     if(!is_complete()) {
         L_ERROR("Attempted to modify a uniform without making the program complete");
-        throw LogicError("Attempted to access uniform on a GPU program that is not complete");
+        throw std::logic_error("Attempted to access uniform on a GPU program that is not complete");
     }
 
     std::string name = uniform_name;
@@ -71,7 +70,7 @@ GLint GPUProgram::locate_uniform(const std::string& uniform_name) {
     GLint location = _GLCheck<GLint>(__func__, glGetUniformLocation, program_object_, name.c_str());
 
     if(location < 0) {
-        throw LogicError(_u("Couldn't find uniform {0}. Has it been optimized into non-existence?").format(name).encode());
+        throw std::logic_error(_u("Couldn't find uniform {0}. Has it been optimized into non-existence?").format(name).encode());
     }
 
     uniform_cache_[uniform_name] = location;
@@ -172,7 +171,7 @@ GPUProgram::GPUProgram(const std::string &vertex_source, const std::string &frag
 
 GLint GPUProgram::locate_attribute(const std::string &attribute) {
     if(!is_complete()) {
-        throw LogicError("Attempted to access attribute on a GPU program that is not complete");
+        throw std::logic_error("Attempted to access attribute on a GPU program that is not complete");
     }
 
     auto it = attribute_cache_.find(attribute);
@@ -183,7 +182,7 @@ GLint GPUProgram::locate_attribute(const std::string &attribute) {
     GLint location = _GLCheck<GLint>(__func__, glGetAttribLocation, program_object_, attribute.c_str());
     if(location < 0) {
         L_ERROR(_F("Unable to find attribute with name {0}").format(attribute));
-        throw LogicError(_F("Couldn't find attribute {0}").format(attribute));
+        throw std::logic_error(_F("Couldn't find attribute {0}").format(attribute));
     }
 
     attribute_cache_[attribute] = location;
@@ -261,13 +260,13 @@ GLenum shader_type_to_glenum(ShaderType type) {
         case SHADER_TYPE_VERTEX: return GL_VERTEX_SHADER;
         case SHADER_TYPE_FRAGMENT: return GL_FRAGMENT_SHADER;
     default:
-        throw LogicError("Unsupported shader type");
+        throw std::logic_error("Unsupported shader type");
     }
 }
 
 void GPUProgram::set_shader_source(ShaderType type, const std::string& source) {
     if(source.empty()) {
-        throw ValueError("Tried to set shader source to an empty string");
+        throw std::logic_error("Tried to set shader source to an empty string");
     }
 
     ShaderInfo new_shader;
@@ -325,7 +324,7 @@ void GPUProgram::compile(ShaderType type) {
 
         if(length < 0) {
             L_ERROR("Unable to get the info log for the errornous shader, are you calling from the right thread?");
-            throw RuntimeError("CRITICAL: Unable to get GLSL log");
+            throw std::runtime_error("CRITICAL: Unable to get GLSL log");
         }
 
         std::vector<char> log;
@@ -335,7 +334,7 @@ void GPUProgram::compile(ShaderType type) {
         std::string error_log(log.begin(), log.end());
 
         L_ERROR(error_log);
-        throw RuntimeError("Unable to compile shader, check the error log for details");
+        throw std::runtime_error("Unable to compile shader, check the error log for details");
     }
 
     prepare_program(); //Make sure we have a program object before attaching the shader
@@ -351,7 +350,7 @@ void GPUProgram::build() {
     }
 
     if(!GLThreadCheck::is_current()) {
-        throw LogicError("Attempting to build a GPU program in the wrong thread");
+        throw std::logic_error("Attempting to build a GPU program in the wrong thread");
     }
 
     prepare_program();
@@ -420,7 +419,7 @@ void GPUProgram::link() {
         std::string error_log(log.begin(), log.end());
         L_ERROR(error_log);
 
-        throw RuntimeError("Couldn't link the GPU program. See error log for details.");
+        throw std::runtime_error("Couldn't link the GPU program. See error log for details.");
     }
 
     L_DEBUG(_F("Linked program {0}").format(program_object_));

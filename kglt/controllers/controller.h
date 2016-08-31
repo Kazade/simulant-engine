@@ -8,7 +8,9 @@
 #include <mutex>
 #include <type_traits>
 #include <thread>
-#include <kazbase/exceptions.h>
+
+#include <kazlog/kazlog.h>
+
 #include "../generic/property.h"
 #include "../generic/managed.h"
 
@@ -83,13 +85,15 @@ public:
 
     void add_controller(ControllerPtr controller) {
         if(!controller) {
-            throw LogicError("Tried to add null controller");
+            L_WARN("Tried to add a null controller to the controllable");
+            return;
         }
 
         std::lock_guard<std::mutex> lock(container_lock_);
 
         if(controller_names_.count(controller->name)) {
-            throw LogicError(_u("Tried to add a duplicate controller: {0}").format((std::string)controller->name));
+            L_WARN(_F("Tried to add a duplicate controller: {0}").format((std::string)controller->name));
+            return;
         }
 
         controller_names_.insert(controller->name);

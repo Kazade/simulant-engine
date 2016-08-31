@@ -3,8 +3,9 @@
 
 #include <string>
 #include <memory>
-#include <kazbase/unicode.h>
+
 #include "../idle_task_manager.h"
+#include "../utils/unicode.h"
 
 namespace kglt {
 namespace ui {

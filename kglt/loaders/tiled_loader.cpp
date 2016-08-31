@@ -1,4 +1,3 @@
-#include <kazbase/os.h>
 #include "tiled_loader.h"
 #include "../mesh.h"
 #include "../types.h"
@@ -32,21 +31,21 @@ void TiledLoader::into(Loadable &resource, const LoaderOptions &options) {
     Mesh* mesh = dynamic_cast<Mesh*>(res_ptr);
 
     if(!mesh) {
-        throw LogicError("Tried to load a TMX file into something that wasn't a mesh");
+        throw std::runtime_error("Tried to load a TMX file into something that wasn't a mesh");
     }
 
     Tmx::Map map;
 
     map.ParseFile(this->filename_.encode());
 
-    unicode layer_name = kazbase::any_cast<unicode>(options.at("layer"));
-    float tile_render_size = kazbase::any_cast<float>(options.at("render_size"));
+    unicode layer_name = kglt::any_cast<unicode>(options.at("layer"));
+    float tile_render_size = kglt::any_cast<float>(options.at("render_size"));
 
     auto layers = map.GetLayers();
     auto it = std::find_if(layers.begin(), layers.end(), [=](Tmx::Layer* layer) { return layer->GetName() == layer_name.encode(); });
 
     if(it == layers.end()) {
-        throw RuntimeError(_u("Unable to find the layer with name: {0}").format(layer_name).encode());
+        throw std::runtime_error(_u("Unable to find the layer with name: {0}").format(layer_name).encode());
     }
 
     Tmx::Layer* layer = (*it);

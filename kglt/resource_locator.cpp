@@ -1,6 +1,5 @@
-#include <kazbase/os/path.h>
-#include <kazbase/exceptions.h>
 #include <fstream>
+
 #include <kfs/kfs.h>
 
 #include "resource_locator.h"
@@ -40,7 +39,6 @@ unicode ResourceLocator::locate_file(const unicode &filename) const {
     }
 
 #else
-
     if(kfs::path::exists(filename.encode())) { //Absolute path
         return kfs::path::abs_path(filename.encode());
     }
@@ -52,7 +50,7 @@ unicode ResourceLocator::locate_file(const unicode &filename) const {
         }
     }
 #endif
-    throw IOError(_u("Unable to find file: ") + filename);
+    throw ResourceMissingError("Unable to find file: " + filename.encode());
 }
 
 std::shared_ptr<std::stringstream> ResourceLocator::read_file(const unicode& filename) {
@@ -84,7 +82,7 @@ std::shared_ptr<std::stringstream> ResourceLocator::read_file(const unicode& fil
 
     std::ifstream file_in(path.encode());
     if(!file_in) {
-        throw IOError(_u("Unable to load file: ") + filename);
+        throw ResourceMissingError("Unable to load file: " + filename.encode());
     }
 
     std::shared_ptr<std::stringstream> result(new std::stringstream);
@@ -98,7 +96,7 @@ std::vector<std::string> ResourceLocator::read_file_lines(const unicode &filenam
 
     std::ifstream file_in(path.encode().c_str());
     if(!file_in) {
-        throw IOError(_u("Unable to load file: ") + filename);
+        throw ResourceMissingError("Unable to load file: " + filename.encode());
     }
 
     std::vector<std::string> results;

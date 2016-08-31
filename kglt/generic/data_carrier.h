@@ -2,11 +2,16 @@
 #define USER_DATA_CARRIER_H
 
 #include <unordered_map>
-#include <kazbase/any/any.h>
-#include <kazbase/exceptions.h>
+#include "any/any.h"
 
 namespace kglt {
 namespace generic {
+
+class NoSuchData : public std::runtime_error {
+public:
+    NoSuchData(const std::string& what):
+        std::runtime_error(what) {}
+};
 
 class DataCarrier {
 public:
@@ -14,7 +19,7 @@ public:
 
     template<typename T>
     void stash(T thing, const std::string& identifier) {
-        things_[identifier] = kazbase::any(thing);
+        things_[identifier] = kglt::any(thing);
     }
 
     bool exists(const std::string& identifier) const {
@@ -24,9 +29,9 @@ public:
     template<typename T>
     T get(const std::string& identifier) const {
         if(!exists(identifier)) {
-            throw DoesNotExist<T>();
+            throw NoSuchData(identifier);
         }
-        return kazbase::any_cast<T>(things_.at(identifier));
+        return kglt::any_cast<T>(things_.at(identifier));
     }
 
     void unstash(const std::string& identifier) {
@@ -36,7 +41,7 @@ public:
     }
 
 private:
-    std::unordered_map<std::string, kazbase::any> things_;
+    std::unordered_map<std::string, kglt::any> things_;
 };
 
 }

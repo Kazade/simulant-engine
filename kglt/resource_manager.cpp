@@ -2,9 +2,6 @@
 #include "resource_manager.h"
 #include "loader.h"
 #include "procedural/mesh.h"
-
-#include "kazbase/datetime.h"
-
 #include "utils/gl_thread_check.h"
 
 /** FIXME
@@ -58,16 +55,19 @@ void ResourceManager::update(double dt) {
         mat->update(dt);
     });
 
-    static datetime::DateTime last_collection = datetime::now();
+    static auto last_collection = std::chrono::system_clock::now();
 
-    if(datetime::timedelta_in_seconds(datetime::now() - last_collection) >= 5) {
+    auto now = std::chrono::system_clock::now();
+    auto diff = now - last_collection;
+
+    if(std::chrono::duration_cast<std::chrono::seconds>(diff).count() >= 5) {
         //Garbage collect all the things
         MeshManager::garbage_collect();
         MaterialManager::garbage_collect();
         TextureManager::garbage_collect();
         SoundManager::garbage_collect();
 
-        last_collection = datetime::now();
+        last_collection = std::chrono::system_clock::now();
     }
 }
 
@@ -235,7 +235,7 @@ MeshID ResourceManager::new_mesh_from_vertices(VertexSpecification vertex_specif
     return m;
 }
 
-MeshID ResourceManager::new_mesh_with_alias(const unicode& alias, VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect) {
+MeshID ResourceManager::new_mesh_with_alias(const std::string& alias, VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect) {
     MeshID m = new_mesh(vertex_specification, garbage_collect);
     try {
         MeshManager::manager_store_alias(alias, m);
@@ -246,7 +246,7 @@ MeshID ResourceManager::new_mesh_with_alias(const unicode& alias, VertexSpecific
     return m;
 }
 
-MeshID ResourceManager::new_mesh_with_alias_from_file(const unicode& alias, const unicode& path, GarbageCollectMethod garbage_collect) {
+MeshID ResourceManager::new_mesh_with_alias_from_file(const std::string &alias, const unicode& path, GarbageCollectMethod garbage_collect) {
     MeshID m = new_mesh_from_file(path, garbage_collect);
     try {
         MeshManager::manager_store_alias(alias, m);
@@ -257,7 +257,7 @@ MeshID ResourceManager::new_mesh_with_alias_from_file(const unicode& alias, cons
     return m;
 }
 
-MeshID ResourceManager::new_mesh_with_alias_as_cube(const unicode& alias, float width, GarbageCollectMethod garbage_collect) {
+MeshID ResourceManager::new_mesh_with_alias_as_cube(const std::string& alias, float width, GarbageCollectMethod garbage_collect) {
     MeshID m = new_mesh_as_cube(width, garbage_collect);
     try {
         MeshManager::manager_store_alias(alias, m);
@@ -268,7 +268,7 @@ MeshID ResourceManager::new_mesh_with_alias_as_cube(const unicode& alias, float 
     return m;
 }
 
-MeshID ResourceManager::new_mesh_with_alias_as_sphere(const unicode& alias, float diameter, GarbageCollectMethod garbage_collect) {
+MeshID ResourceManager::new_mesh_with_alias_as_sphere(const std::string &alias, float diameter, GarbageCollectMethod garbage_collect) {
     MeshID m = new_mesh_as_sphere(diameter, garbage_collect);
     try {
         MeshManager::manager_store_alias(alias, m);
@@ -279,7 +279,7 @@ MeshID ResourceManager::new_mesh_with_alias_as_sphere(const unicode& alias, floa
     return m;
 }
 
-MeshID ResourceManager::new_mesh_with_alias_as_rectangle(const unicode& alias, float width, float height, const Vec2& offset, kglt::MaterialID material, GarbageCollectMethod garbage_collect) {
+MeshID ResourceManager::new_mesh_with_alias_as_rectangle(const std::string& alias, float width, float height, const Vec2& offset, kglt::MaterialID material, GarbageCollectMethod garbage_collect) {
     MeshID m = new_mesh_as_rectangle(width, height, offset, material, garbage_collect);
     try {
         MeshManager::manager_store_alias(alias, m);
@@ -290,7 +290,7 @@ MeshID ResourceManager::new_mesh_with_alias_as_rectangle(const unicode& alias, f
     return m;
 }
 
-MeshID ResourceManager::new_mesh_with_alias_as_cylinder(const unicode &alias, float diameter, float length, int segments, int stacks, GarbageCollectMethod garbage_collect) {
+MeshID ResourceManager::new_mesh_with_alias_as_cylinder(const std::string &alias, float diameter, float length, int segments, int stacks, GarbageCollectMethod garbage_collect) {
     MeshID m = new_mesh_as_cylinder(diameter, length, segments, stacks, garbage_collect);
     try {
         MeshManager::manager_store_alias(alias, m);
@@ -302,7 +302,7 @@ MeshID ResourceManager::new_mesh_with_alias_as_cylinder(const unicode &alias, fl
     return m;
 }
 
-MeshID ResourceManager::get_mesh_with_alias(const unicode& alias) {
+MeshID ResourceManager::get_mesh_with_alias(const std::string& alias) {
     return MeshManager::get_by_alias(alias);
 }
 
@@ -384,6 +384,8 @@ MaterialID ResourceManager::new_material_from_file(const unicode& path, GarbageC
 
     MaterialID template_id = get_template_material(path);
 
+    assert(template_id);
+
     /* Take the template, clone it, and set garbage_collection appropriately */
     auto mat_id = material(template_id)->new_clone(this, garbage_collect);
     material(template_id)->enable_gc((garbage_collect == GARBAGE_COLLECT_NEVER) ? false: true);
@@ -394,8 +396,9 @@ MaterialID ResourceManager::new_material_from_file(const unicode& path, GarbageC
     return mat_id;
 }
 
-MaterialID ResourceManager::new_material_with_alias(const unicode& alias, GarbageCollectMethod garbage_collect) {
+MaterialID ResourceManager::new_material_with_alias(const std::string& alias, GarbageCollectMethod garbage_collect) {
     MaterialID m = new_material(garbage_collect);
+    assert(m);
 
     try {
         MaterialManager::manager_store_alias(alias, m);
@@ -406,8 +409,10 @@ MaterialID ResourceManager::new_material_with_alias(const unicode& alias, Garbag
     return m;
 }
 
-MaterialID ResourceManager::new_material_with_alias_from_file(const unicode& alias, const unicode& path, GarbageCollectMethod garbage_collect) {
+MaterialID ResourceManager::new_material_with_alias_from_file(const std::string &alias, const unicode& path, GarbageCollectMethod garbage_collect) {
     MaterialID m = new_material_from_file(path, garbage_collect);
+    assert(m);
+
     try {
         MaterialManager::manager_store_alias(alias, m);
     } catch(...) {
@@ -419,12 +424,14 @@ MaterialID ResourceManager::new_material_with_alias_from_file(const unicode& ali
 
 MaterialID ResourceManager::new_material_from_texture(TextureID texture_id, GarbageCollectMethod garbage_collect) {
     MaterialID m = new_material_from_file(Material::BuiltIns::TEXTURE_ONLY, garbage_collect);
+    assert(m);
+
     material(m)->set_texture_unit_on_all_passes(0, texture_id);
     mark_material_as_uncollected(m); //FIXME: Race-y
     return m;
 }
 
-MaterialID ResourceManager::get_material_with_alias(const unicode& alias) {
+MaterialID ResourceManager::get_material_with_alias(const std::string& alias) {
     return MaterialManager::get_by_alias(alias);
 }
 
@@ -484,7 +491,7 @@ void ResourceManager::delete_texture(TextureID t) {
     texture(t)->enable_gc();
 }
 
-TextureID ResourceManager::new_texture_with_alias(const unicode& alias, GarbageCollectMethod garbage_collect) {
+TextureID ResourceManager::new_texture_with_alias(const std::string& alias, GarbageCollectMethod garbage_collect) {
     TextureID t = new_texture(garbage_collect);
     try {
         TextureManager::manager_store_alias(alias, t);
@@ -495,7 +502,7 @@ TextureID ResourceManager::new_texture_with_alias(const unicode& alias, GarbageC
     return t;
 }
 
-TextureID ResourceManager::new_texture_with_alias_from_file(const unicode& alias, const unicode& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
+TextureID ResourceManager::new_texture_with_alias_from_file(const std::string &alias, const unicode& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
     TextureID t = new_texture_from_file(path, flags, garbage_collect);
     try {
         TextureManager::manager_store_alias(alias, t);
@@ -506,7 +513,7 @@ TextureID ResourceManager::new_texture_with_alias_from_file(const unicode& alias
     return t;
 }
 
-TextureID ResourceManager::get_texture_with_alias(const unicode& alias) {
+TextureID ResourceManager::get_texture_with_alias(const std::string& alias) {
     return TextureManager::get_by_alias(alias);
 }
 
@@ -549,7 +556,7 @@ SoundID ResourceManager::new_sound_from_file(const unicode& path, GarbageCollect
     return snd->id();
 }
 
-SoundID ResourceManager::new_sound_with_alias(const unicode& alias, GarbageCollectMethod garbage_collect) {
+SoundID ResourceManager::new_sound_with_alias(const std::string &alias, GarbageCollectMethod garbage_collect) {
     SoundID s = new_sound(garbage_collect);
     try {
         SoundManager::manager_store_alias(alias, s);
@@ -560,7 +567,7 @@ SoundID ResourceManager::new_sound_with_alias(const unicode& alias, GarbageColle
     return s;
 }
 
-SoundID ResourceManager::new_sound_with_alias_from_file(const unicode& alias, const unicode& path, GarbageCollectMethod garbage_collect) {
+SoundID ResourceManager::new_sound_with_alias_from_file(const std::string& alias, const unicode& path, GarbageCollectMethod garbage_collect) {
     SoundID s = new_sound_from_file(path, garbage_collect);
     try {
         SoundManager::manager_store_alias(alias, s);
@@ -571,7 +578,7 @@ SoundID ResourceManager::new_sound_with_alias_from_file(const unicode& alias, co
     return s;
 }
 
-SoundID ResourceManager::get_sound_with_alias(const unicode& alias) {
+SoundID ResourceManager::get_sound_with_alias(const std::string &alias) {
     return SoundManager::get_by_alias(alias);
 }
 

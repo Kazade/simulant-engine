@@ -20,12 +20,12 @@ void ScreenManager::step(double dt) {
     }
 }
 
-ScreenBase::ptr ScreenManager::get_or_create_route(const unicode& route) {
+ScreenBase::ptr ScreenManager::get_or_create_route(const std::string& route) {
     auto it = routes_.find(route);
     if(it == routes_.end()) {
         auto factory = screen_factories_.find(route);
         if(factory == screen_factories_.end()) {
-            throw ValueError("No such route available: " + route);
+            throw std::logic_error("No such route available: " + route);
         }
 
         routes_[route] = (*factory).second();
@@ -34,7 +34,7 @@ ScreenBase::ptr ScreenManager::get_or_create_route(const unicode& route) {
     return it->second;
 }
 
-void ScreenManager::register_screen(const unicode& route, ScreenFactory factory) {
+void ScreenManager::register_screen(const std::string& route, ScreenFactory factory) {
     screen_factories_[route] = std::bind(factory, std::reference_wrapper<WindowBase>(window_));
 }
 
@@ -42,7 +42,7 @@ ScreenBase::ptr ScreenManager::active_screen() const {
     return current_screen_;
 }
 
-void ScreenManager::activate_screen(const unicode& route) {
+void ScreenManager::activate_screen(const std::string& route) {
     auto new_screen = get_or_create_route(route);
 
     if(new_screen == current_screen_) {
@@ -59,7 +59,7 @@ void ScreenManager::activate_screen(const unicode& route) {
     current_screen_->activate();
 }
 
-void ScreenManager::load_screen_in_background(const unicode& route, bool redirect_after) {
+void ScreenManager::load_screen_in_background(const std::string& route, bool redirect_after) {
     auto screen = get_or_create_route(route);
 
     //Create a background task for loading the screen
@@ -85,14 +85,14 @@ void ScreenManager::load_screen_in_background(const unicode& route, bool redirec
     });
 }
 
-void ScreenManager::unload_screen(const unicode& route) {
+void ScreenManager::unload_screen(const std::string& route) {
     auto it = routes_.find(route);
     if(it != routes_.end()) {
         it->second->unload();
     }
 }
 
-bool ScreenManager::is_screen_loaded(const unicode& route) const {
+bool ScreenManager::is_screen_loaded(const std::string& route) const {
     auto it = routes_.find(route);
     if(it == routes_.end()) {
         return false;
@@ -101,11 +101,11 @@ bool ScreenManager::is_screen_loaded(const unicode& route) const {
     }
 }
 
-bool ScreenManager::has_screen(const unicode& route) const {
+bool ScreenManager::has_screen(const std::string& route) const {
     return screen_factories_.find(route) != screen_factories_.end();
 }
 
-ScreenBase::ptr ScreenManager::resolve_screen(const unicode& route) {
+ScreenBase::ptr ScreenManager::resolve_screen(const std::string& route) {
     return get_or_create_route(route);
 }
 

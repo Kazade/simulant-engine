@@ -25,7 +25,7 @@ public:
         object_ = dynamic_cast<MoveableObject*>(container);
 
         if(!object_) {
-            throw LogicError("Tried to attach FlyController to something which wasn't an object");
+            throw std::logic_error("Tried to attach FlyController to something which wasn't an object");
         }
 
         connections_.push_back(window->keyboard->key_while_pressed_connect(SDL_SCANCODE_W, [=](SDL_Keysym key, double dt) {

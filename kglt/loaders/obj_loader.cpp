@@ -2,9 +2,6 @@
 
 #include "../mesh.h"
 #include "../resource_manager.h"
-#include <kazbase/unicode.h>
-#include <kazbase/file_utils.h>
-#include <kazbase/os.h>
 #include "../shortcuts.h"
 
 namespace kglt {
@@ -60,7 +57,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     Mesh* mesh = loadable_to<Mesh>(resource);
 
     //Split on newlines
-    std::vector<unicode> lines = file_utils::read_lines(filename_);
+    std::vector<unicode> lines = unicode(this->data_->str()).split("\n");
 
     std::vector<Vec3> vertices;
     std::vector<Vec2> tex_coords;
@@ -93,7 +90,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
         std::vector<unicode> parts = line.split("", -1, false); //Split on whitespace
         if(parts[0] == "v") {
             if(parts.size() != 4) {
-                throw IOError(_u("Found {0} components for vertex, expected 3").format(parts.size()));
+                throw std::runtime_error(_F("Found {0} components for vertex, expected 3").format(parts.size()));
             }
 
             float x = parts[1].to_float();
@@ -103,7 +100,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             vertices.push_back(Vec3(x, y, z));
         } else if(parts[0] == "vt") {
             if(parts.size() < 3) {
-                throw IOError(_u("Found {0} components for texture coordinate, expected 2").format(parts.size() - 1));
+                throw std::runtime_error(_F("Found {0} components for texture coordinate, expected 2").format(parts.size() - 1));
             }
 
             float x = parts[1].to_float();
@@ -114,7 +111,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             spec.texcoord0_attribute = VERTEX_ATTRIBUTE_2F;
         } else if(parts[0] == "vn") {
             if(parts.size() != 4) {
-                throw IOError(_u("Found {0} components for vertex, expected 3").format(parts.size() - 1));
+                throw std::runtime_error(_F("Found {0} components for vertex, expected 3").format(parts.size() - 1));
             }
 
             float x = parts[1].to_float();
@@ -244,10 +241,12 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
              // variable would have split it to pieces.
              auto filename = line.split(" ", 1, false).back();
              filename = kfs::path::join(kfs::path::dir_name(filename_.encode()), filename.encode());
-             if(kfs::path::exists(filename.encode())) {
-                 std::vector<unicode> material_lines = file_utils::read_lines(filename);
-                 lines.insert(lines.begin() + l + 1, material_lines.begin(), material_lines.end());
-             } else {
+
+             try {
+                filename = this->locator->locate_file(filename);
+                auto material_lines = this->locator->read_file_lines(filename);
+                lines.insert(lines.begin() + l + 1, material_lines.begin(), material_lines.end());
+             } catch(ResourceMissingError& e) {
                  L_DEBUG(_F("mtllib {0} not found. Skipping.").format(filename));
              }
         } else if(parts[0] == "Ns") {

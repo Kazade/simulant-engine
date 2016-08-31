@@ -6,8 +6,6 @@
 
 #include <thread>
 #include "kazmath/kazmath.h"
-#include <kazbase/os/path.h>
-
 #include "../loader.h"
 #include "../overlay.h"
 #include "../window_base.h"

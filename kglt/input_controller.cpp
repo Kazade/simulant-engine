@@ -1,6 +1,6 @@
-#include "kazbase/list_utils.h"
-#include "kazbase/unicode.h"
-#include "kazlog/kazlog.h"
+#include <kazlog/kazlog.h>
+
+#include "utils/unicode.h"
 #include "input_controller.h"
 #include "window_base.h"
 #include "virtual_gamepad.h"
@@ -29,7 +29,7 @@ InputConnection Keyboard::key_pressed_connect(GlobalKeyCallback callback) {
     InputConnection c = new_input_connection();
 
     if(global_key_press_signals_.find(c) != global_key_press_signals_.end()) {
-        throw ValueError("Something went wrong when generating the connection ID");
+        throw std::logic_error("Something went wrong when generating the connection ID");
     }
 
     global_key_press_signals_[c] = callback;
@@ -46,7 +46,7 @@ InputConnection Keyboard::key_while_pressed_connect(GlobalKeyDownCallback callba
     InputConnection c = new_input_connection();
 
     if(global_while_key_pressed_signals_.find(c) != global_while_key_pressed_signals_.end()) {
-        throw ValueError("Something went wrong when generating the connection ID");
+        throw std::logic_error("Something went wrong when generating the connection ID");
     }
 
     global_while_key_pressed_signals_[c] = callback;
@@ -94,7 +94,7 @@ void Keyboard::_handle_keydown_event(SDL_Keysym key) {
     //If a global handler returned true, we don't trigger any more
     //signals
     if(!propagation_stopped) {
-        if(container::contains(key_press_signals_, key.scancode)) {
+        if(key_press_signals_.count(key.scancode)) {
             for(KeySignalEntry entry: key_press_signals_[key.scancode]) {
                 entry.second(key);
             }
@@ -128,7 +128,7 @@ void Keyboard::_handle_keyup_event(SDL_Keysym key) {
     }
 
     if(!propagation_stopped) {
-        if(container::contains(key_release_signals_, key.scancode)) {
+        if(key_release_signals_.count(key.scancode)) {
             for(KeySignalEntry entry: key_release_signals_[key.scancode]) {
                 entry.second(key);
             }
@@ -157,19 +157,19 @@ void Keyboard::_update(double dt) {
 
 void Keyboard::_disconnect(const InputConnection &connection) {
     for(auto p: key_press_signals_) {
-        if(container::contains(p.second, connection)) {
+        if(p.second.count(connection)) {
             p.second.erase(connection);
         }
     }
 
     for(auto p: key_while_down_signals_) {
-        if(container::contains(p.second, connection)) {
+        if(p.second.count(connection)) {
             p.second.erase(connection);
         }
     }
 
     for(auto p: key_release_signals_) {
-        if(container::contains(p.second, connection)) {
+        if(p.second.count(connection)) {
             p.second.erase(connection);
         }
     }
@@ -238,7 +238,7 @@ InputConnection Joypad::hat_while_not_centered_connect(Hat hat, JoypadHatDownCal
 }
 
 void Joypad::_handle_button_down_event(Button button) {
-    if(container::contains(button_pressed_signals_, button)) {
+    if(button_pressed_signals_.count(button)) {
         for(ButtonSignalEntry entry: button_pressed_signals_[button]) {
             entry.second(button);
         }
@@ -248,7 +248,7 @@ void Joypad::_handle_button_down_event(Button button) {
 }
 
 void Joypad::_handle_button_up_event(Button button) {
-    if(container::contains(button_released_signals_, button)) {
+    if(button_released_signals_.count(button)) {
         for(ButtonSignalEntry entry: button_released_signals_[button]) {
             entry.second(button);
         }
@@ -258,7 +258,7 @@ void Joypad::_handle_button_up_event(Button button) {
 }
 
 void Joypad::_handle_axis_changed_event(JoypadAxis axis, int32_t value) {
-    if(container::contains(axis_changed_signals_, axis)) {
+    if(axis_changed_signals_.count(axis)) {
         for(AxisSignalEntry entry: axis_changed_signals_[axis]) {
             entry.second(float(value) / float(32768), axis);
         }
@@ -268,7 +268,7 @@ void Joypad::_handle_axis_changed_event(JoypadAxis axis, int32_t value) {
 }
 
 void Joypad::_handle_hat_changed_event(Hat hat, HatPosition position) {
-    if(container::contains(hat_changed_signals_, hat)) {
+    if(hat_changed_signals_.count(hat)) {
         for(HatSignalEntry entry: hat_changed_signals_[hat]) {
             entry.second(position, hat);
         }
@@ -320,7 +320,7 @@ void Joypad::_update(double dt) {
 
 void Joypad::_disconnect(const InputConnection &connection) {
     for(std::pair<JoypadAxis, std::map<InputConnection, JoypadCallback> > p: axis_changed_signals_) {
-        if(container::contains(p.second, connection)) {
+        if(p.second.count(connection)) {
             p.second.erase(connection);
         }
     }
@@ -362,7 +362,7 @@ auto SDL_axis_to_KGLT_axis(Uint8 axis) {
     case SDL_CONTROLLER_AXIS_RIGHTX: return JOYPAD_AXIS_RIGHT_X;
     case SDL_CONTROLLER_AXIS_RIGHTY: return JOYPAD_AXIS_RIGHT_Y;
     default:
-        throw NotImplementedError(__FILE__, __LINE__);
+        throw std::out_of_range("Invalid axis");
     }
 }
 

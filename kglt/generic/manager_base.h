@@ -19,6 +19,13 @@ public:
     }
 };
 
+class ObjectLookupError : public std::runtime_error {
+public:
+    ObjectLookupError(const std::string& what):
+        std::runtime_error(what) {
+    }
+};
+
 }
 }
 

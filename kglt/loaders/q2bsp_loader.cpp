@@ -3,10 +3,8 @@
 #include <iostream>
 #include <sstream>
 #include "kazmath/kazmath.h"
-#include "kazmath/kazmath.h"
 
 #include "kazlog/kazlog.h"
-#include <kazbase/unicode.h>
 
 #include "../sdl2_window.h"
 #include "../stage.h"
@@ -204,13 +202,13 @@ void add_lights_to_scene(Stage* stage, const std::vector<ActorProperties>& actor
                 kmVec3Transform(&pos, &pos, &rotation);
 
                 float range = 300; //Default in Q2
-                if(container::contains(props, std::string("light"))) {
+                if(props.count(std::string("light"))) {
                     std::string tmp = props["light"];
                     std::istringstream value(tmp);
                     value >> range;
                 }
 
-                if(container::contains(props, std::string("_color"))) {
+                if(props.count(std::string("_color"))) {
                     kglt::Colour diffuse;
                     std::istringstream value(props["_color"]);
                     value >> diffuse.r >> diffuse.g >> diffuse.b;
@@ -231,7 +229,7 @@ unicode locate_texture(ResourceLocator& locator, const unicode& filename) {
     for(auto& ext: extensions) {
         try {
             return locator.locate_file(filename + ext);
-        } catch(IOError&) {
+        } catch(std::runtime_error&) {
             continue;
         }
     }
@@ -597,7 +595,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             kmVec3Normalize(&normal, &normal);
 
             for(uint8_t j = 0; j < 3; ++j) {
-                if(container::contains(index_lookup, tri_idx[j])) {
+                if(index_lookup.count(tri_idx[j])) {
                     //We've already processed this vertex
                     sm->index_data->index(index_lookup[tri_idx[j]]);
                     continue;

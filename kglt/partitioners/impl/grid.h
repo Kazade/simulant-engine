@@ -3,7 +3,7 @@
 #include "../../types.h"
 
 namespace kglt {
-namespace impl {
+namespace octree_impl {
 
 
 class Grid {

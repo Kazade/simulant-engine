@@ -1,5 +1,7 @@
-#include <kazbase/random.h>
 #include "types.h"
+
+#include "utils/random.h"
+
 
 namespace kglt {
 

@@ -181,7 +181,7 @@ MeshPtr Actor::mesh() const {
 
 SubMesh* SubActor::submesh() {
     if(!submesh_) {
-        throw ValueError("Submesh was not initialized");
+        throw std::logic_error("Submesh was not initialized");
     }
 
     return submesh_.get();
@@ -189,7 +189,7 @@ SubMesh* SubActor::submesh() {
 
 const SubMesh *SubActor::submesh() const {
     if(!submesh_) {
-        throw ValueError("Submesh was not initialized");
+        throw std::logic_error("Submesh was not initialized");
     }
 
     return submesh_.get();

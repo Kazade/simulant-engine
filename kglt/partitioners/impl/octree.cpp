@@ -9,7 +9,7 @@
 
 
 namespace kglt {
-namespace impl {
+namespace octree_impl {
 
 void node_list_erase(NodeList& node_list, std::weak_ptr<OctreeNode> node) {
     auto it = node_list_find(node_list, node);

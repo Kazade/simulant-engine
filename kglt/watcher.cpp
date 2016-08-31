@@ -4,7 +4,7 @@
 #include <sys/inotify.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "kazbase/os.h"
+
 
 namespace kglt {
 
@@ -97,7 +97,7 @@ bool Watcher::update() {
         } else if(ev->mask == IN_IGNORED) {
             continue;
         } else {
-            throw LogicError("Received invalid mask from inotify");
+            throw std::runtime_error("Received invalid mask from inotify");
         }
 
         watch_callbacks_.at(wd)(

@@ -9,11 +9,11 @@
 
 namespace kglt {
 
-bool should_split_predicate(const impl::OctreeNode* node) {
+bool should_split_predicate(const octree_impl::OctreeNode* node) {
     return node->data->actor_count() + node->data->particle_system_count() > 30;
 }
 
-bool should_merge_predicate(const impl::NodeList& nodes) {
+bool should_merge_predicate(const octree_impl::NodeList& nodes) {
     uint32_t total = 0;
     for(auto& node: nodes) {
         total += node.lock()->data->actor_count();
@@ -200,9 +200,9 @@ std::vector<RenderablePtr> OctreePartitioner::geometry_visible_from(CameraID cam
     auto camera = stage->window->camera(camera_id);
     auto& frustum = camera->frustum();
 
-    impl::traverse(
+    octree_impl::traverse(
         tree_,
-        [&](impl::OctreeNode* node) -> bool {
+        [&](octree_impl::OctreeNode* node) -> bool {
             if(frustum.intersects_aabb(node->loose_aabb())) {
                 node->data->each_actor([&](ActorID actor_id, AABB aabb) {
                     auto actor = stage->actor(actor_id);
@@ -237,9 +237,9 @@ std::vector<LightID> OctreePartitioner::lights_visible_from(CameraID camera_id) 
     auto camera = stage->window->camera(camera_id);
     auto& frustum = camera->frustum();
 
-    impl::traverse(
+    octree_impl::traverse(
         tree_,
-        [&](impl::OctreeNode* node) -> bool {
+        [&](octree_impl::OctreeNode* node) -> bool {
             if(frustum.intersects_aabb(node->aabb())) {
                 node->data->each_light([&](LightID light_id, AABB aabb) {
                     results.push_back(light_id);

@@ -2,13 +2,12 @@
 #include <AL/alc.h>
 
 #include <kazlog/kazlog.h>
-#include <kazbase/exceptions.h>
 
 namespace ALChecker {
 void al_check_and_log_error() {
     ALuint error = alGetError();
     if(error != AL_NO_ERROR) {
-        unicode error_string;
+        std::string error_string;
         switch(error) {
         case AL_INVALID_NAME:
             error_string = "AL_INVALID_NAME";
@@ -28,7 +27,7 @@ void al_check_and_log_error() {
         }
 
         L_ERROR(_F("An OpenAL error occurred: {0}").format(error));
-        throw RuntimeError(_F("AL ERROR: {0}").format(error_string));
+        throw std::runtime_error(_F("AL ERROR: {0}").format(error_string));
     }
 }
 }

@@ -1,6 +1,3 @@
-#include <kazbase/exceptions.h>
-#include <kazbase/os/path.h>
-#include <kazbase/unicode.h>
 #include "sprite_strip_loader.h"
 
 #include "../shortcuts.h"
@@ -19,7 +16,7 @@ std::vector<TextureID> SpriteStripLoader::load_frames() {
     auto tmp = rm_.texture(rm_.new_texture_from_file(filename_));
 
     if(tmp->width() % frame_width_ != 0) {
-        throw IOError(_u("Invalid texture width. Should be a multiple of: {0}").format(frame_width_));
+        throw std::logic_error("Invalid texture width. Should be a multiple of: " + std::to_string(frame_width_));
     }
 
     std::vector< Texture::Data > frame_data;

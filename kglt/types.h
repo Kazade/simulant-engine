@@ -22,7 +22,7 @@
 #include "generic/manager.h"
 #include "generic/auto_weakptr.h"
 #include "generic/unique_id.h"
-#include "kazbase/unicode.h"
+#include "utils/unicode.h"
 
 #define DEFINE_SIGNAL(prototype, name) \
     public: \

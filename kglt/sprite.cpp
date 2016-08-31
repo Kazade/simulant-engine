@@ -86,7 +86,8 @@ void Sprite::add_animation(const unicode &name, uint32_t start_frame, uint32_t e
 void Sprite::queue_next_animation(const unicode &name) {
     auto it = animations_.find(name);
     if(it == animations_.end()) {
-        throw DoesNotExist<Animation>();
+        L_WARN("No such animation: " + name.encode());
+        return;
     }
 
     next_animation_ = &(*it).second;
@@ -99,7 +100,8 @@ void Sprite::override_playing_animation_duration(const float new_duration) {
 void Sprite::play_animation(const unicode &name) {
     auto it = animations_.find(name);
     if(it == animations_.end()) {
-        throw DoesNotExist<Animation>();
+        L_WARN("No such animation: " + name.encode());
+        return;
     }
 
     if(current_animation_ == &(*it).second) {
@@ -122,11 +124,11 @@ void Sprite::play_animation(const unicode &name) {
 }
 
 void Sprite::add_sequence(const unicode &name, const std::vector<AnimationSequenceStage> &stages) {
-    throw NotImplementedError(__FILE__, __LINE__);
+    assert(0 && "Not implemented");
 }
 
 void Sprite::play_sequence(const unicode &name) {
-    throw NotImplementedError(__FILE__, __LINE__);
+    assert(0 && "Not implemented");
 }
 
 void Sprite::flip_horizontally(bool value) {
@@ -223,7 +225,7 @@ void Sprite::set_render_dimensions_from_width(float width) {
 
 void Sprite::set_render_dimensions(float width, float height) {
     if(!frame_width_ || !frame_height_) {
-        throw LogicError("You can't call set_render_dimensions without first specifying a spritesheet");
+        throw std::runtime_error("You can't call set_render_dimensions without first specifying a spritesheet");
     }
 
     if(width < 0 && height > 0) {
@@ -233,7 +235,9 @@ void Sprite::set_render_dimensions(float width, float height) {
         //Determine aspect ratio to calculate height
         height = width / (float(frame_width_) / float(frame_height_));
     } else if(width < 0 && height < 0) {
-        throw ValueError("You must specify a positive value for width or height, or both");
+        L_ERROR("You must specify a positive value for width or height, or both");
+        width = std::max(width, 0.0f);
+        height = std::max(height, 0.0f);
     }
 
     render_width_ = width;

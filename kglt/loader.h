@@ -1,6 +1,7 @@
 #ifndef KGLT_LOADER_H
 #define KGLT_LOADER_H
 
+#include <set>
 #include <unordered_map>
 #include <stdexcept>
 #include <string>
@@ -10,11 +11,13 @@
 
 #include "loadable.h"
 
-#include "kazbase/any/any.h"
-#include "kazbase/exceptions.h"
+#include "generic/property.h"
+#include "generic/any/any.h"
 #include "types.h"
 
 namespace kglt {
+
+class ResourceLocator;
 
 /*
  * You may have a situation where a single filetype can be used for different purposes.
@@ -32,7 +35,7 @@ enum LoaderHint {
     LOADER_HINT_MESH
 };
 
-typedef std::unordered_map<unicode, kazbase::any> LoaderOptions;
+typedef std::unordered_map<unicode, kglt::any> LoaderOptions;
 
 class Loader {
 public:
@@ -55,6 +58,9 @@ public:
         into((Loadable&) window, options);
     }
 
+    void set_resource_locator(ResourceLocator* locator) { locator_ = locator; }
+
+    Property<Loader, ResourceLocator> locator = { this, &Loader::locator_ };
 protected:
     unicode filename_;
     std::shared_ptr<std::stringstream> data_;
@@ -63,13 +69,15 @@ protected:
     T* loadable_to(Loadable& loadable) {
         T* thing = dynamic_cast<T*>(&loadable);
         if(!thing) {
-            throw LogicError("Attempted to cast resource to invalid type");
+            L_WARN("Attempted to cast resource to invalid type");
+            return nullptr;
         }
 
         return thing;
     }
 
 private:
+    ResourceLocator* locator_ = nullptr;
     virtual void into(Loadable& resource, const LoaderOptions& options = LoaderOptions()) = 0;
 };
 
@@ -92,7 +100,7 @@ protected:
         hints_.insert(hint);
     }
 
-    std::set<LoaderHint> hints_;
+    std::set<LoaderHint> hints_;    
 };
 
 struct TextureLoadResult {

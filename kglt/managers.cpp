@@ -123,16 +123,12 @@ CameraPtr CameraManager::camera(CameraID c) {
 }
 
 void CameraManager::delete_camera(CameraID cid) {
-    try {
-        //Remove any associated proxy
-        auto cam = camera(cid);
-        if(cam->has_proxy()) {
-            cam->proxy().stage->evict_camera(cid);
-        }
-    } catch(DoesNotExist<Camera>&) {
-        // If the camera has already been deleted, do nothing
-        return;
+    //Remove any associated proxy
+    auto cam = camera(cid);
+    if(cam && cam->has_proxy()) {
+        cam->proxy().stage->evict_camera(cid);
     }
+
 
     CameraManager::destroy(cid);
 }
@@ -179,13 +175,11 @@ StagePtr StageManager::stage(StageID s) {
 }
 
 void StageManager::delete_stage(StageID s) {
-    try {
-        //Recurse through the tree, destroying all children
-        stage(s)->apply_recursively_leaf_first(&ownable_tree_node_destroy, false);       
+    //Recurse through the tree, destroying all children
+    auto st = stage(s);
+    if(st) {
+        stage(s)->apply_recursively_leaf_first(&ownable_tree_node_destroy, false);
         signal_stage_removed_(s);
-
-    } catch(DoesNotExist<Stage>&) {
-        return;
     }
 
     StageManager::destroy(s);

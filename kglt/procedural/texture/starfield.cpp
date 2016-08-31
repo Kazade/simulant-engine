@@ -1,7 +1,8 @@
 #include "../../texture.h"
 #include "../../utils/simplex.h"
+#include "../../utils/random.h"
+
 #include "starfield.h"
-#include <kazbase/random.h>
 
 namespace kglt {
 namespace procedural {

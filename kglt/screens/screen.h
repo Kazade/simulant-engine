@@ -19,9 +19,7 @@
  *
  */
 
-#include <kazbase/unicode.h>
-#include <kazbase/exceptions.h>
-
+#include "../utils/unicode.h"
 #include "../types.h"
 #include "../window_base.h"
 #include "../generic/managed.h"
@@ -30,7 +28,7 @@
 
 namespace kglt {
 
-class ScreenLoadException : public RuntimeError {};
+class ScreenLoadException : public std::runtime_error {};
 
 class ScreenBase : public Nameable {
 public:

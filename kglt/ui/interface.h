@@ -3,7 +3,6 @@
 
 #include <memory>
 #include <unordered_map>
-#include <kazbase/unicode.h>
 #include <tinyxml.h>
 #include <nuklear/nuklear.h>
 
@@ -12,6 +11,8 @@
 #include "../loadable.h"
 #include "../renderers/batching/renderable.h"
 #include "../vertex_data.h"
+#include "../utils/unicode.h"
+
 #include "element.h"
 
 #ifdef KGLT_GL_VERSION_2X
@@ -49,7 +50,8 @@ public:
 
     bool is(const std::string& selector) {
         if(selector != ":visible") {
-            throw ValueError("Unsupported selector: " + selector);
+            L_WARN("Unsupported selector: " + selector);
+            return false;
         }
 
         for(Element& e: elements_) {

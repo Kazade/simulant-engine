@@ -14,8 +14,8 @@ class Renderable;
 
 typedef std::shared_ptr<Renderable> RenderablePtr;
 
-bool should_split_predicate(const impl::OctreeNode *node);
-bool should_merge_predicate(const impl::NodeList& nodes);
+bool should_split_predicate(const octree_impl::OctreeNode *node);
+bool should_merge_predicate(const octree_impl::NodeList& nodes);
 
 
 class OctreePartitioner :
@@ -45,7 +45,7 @@ public:
 
     MeshID debug_mesh_id() override { return tree_.debug_mesh_id(); }
 private:
-    impl::Octree tree_;
+    octree_impl::Octree tree_;
 
     std::map<ActorID, std::vector<BoundableEntity*> > actor_to_registered_subactors_;
 

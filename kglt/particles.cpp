@@ -1,4 +1,4 @@
-#include <kazbase/random.h>
+#include "utils/random.h"
 #include "stage.h"
 #include "particles.h"
 
@@ -32,7 +32,7 @@ ParticleSystem::~ParticleSystem() {
 
 void ParticleSystem::set_material_id(MaterialID mat_id) {
     if(!mat_id) {
-        throw ValueError("A particle system must always have a valid material");
+        throw std::logic_error("A particle system must always have a valid material");
     }
 
     material_id_ = mat_id;
@@ -301,7 +301,7 @@ void ParticleEmitter::set_ttl(float seconds) {
 
 void ParticleEmitter::set_ttl_range(float min_seconds, float max_seconds) {
     if(min_seconds > max_seconds) {
-        throw ValueError("min_seconds can't be greater than max_seconds");
+        throw std::logic_error("min_seconds can't be greater than max_seconds");
     }
 
     ttl_range_ = std::make_pair(min_seconds, max_seconds);

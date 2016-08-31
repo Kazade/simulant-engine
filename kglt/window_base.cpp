@@ -89,6 +89,8 @@ LoaderPtr WindowBase::loader_for(const unicode &filename, LoaderHint hint) {
     for(LoaderTypePtr loader_type: loaders_) {
         if(loader_type->supports(final_file)) {
             auto new_loader = loader_type->loader_for(final_file, resource_locator->read_file(final_file));
+            new_loader->set_resource_locator(this->resource_locator_.get());
+
             possible_loaders.push_back(
                 std::make_pair(loader_type, new_loader)
             );
@@ -106,10 +108,10 @@ LoaderPtr WindowBase::loader_for(const unicode &filename, LoaderHint hint) {
             }
         }
 
-        throw LogicError(_u("More than one possible loader was found for '{0}'. Please specify a hint.").format(filename));
+        throw std::logic_error(_u("More than one possible loader was found for '{0}'. Please specify a hint.").format(filename).encode());
     }
 
-    throw DoesNotExist<Loader>((_u("Unable to find a loader for: ") + filename).encode());
+    return LoaderPtr();
 }
 
 
@@ -121,12 +123,12 @@ LoaderPtr WindowBase::loader_for(const unicode& loader_name, const unicode &file
             if(loader_type->supports(final_file)) {
                 return loader_type->loader_for(final_file, resource_locator->read_file(final_file));
             } else {
-                throw IOError(_u("Loader '{0}' does not support file '{1}'").format(loader_name, filename));
+                throw std::logic_error(_u("Loader '{0}' does not support file '{1}'").format(loader_name, filename).encode());
             }
         }
     }
 
-    throw DoesNotExist<Loader>((_u("Unable to find a loader for: ") + filename).encode());
+    return LoaderPtr();
 }
 
 LoaderTypePtr WindowBase::loader_type(const unicode& loader_name) const {
@@ -135,7 +137,7 @@ LoaderTypePtr WindowBase::loader_type(const unicode& loader_name) const {
             return loader_type;
         }
     }
-    throw DoesNotExist<LoaderType>((_u("Unable to find a loader type with name: ") + loader_name).encode());
+    return LoaderTypePtr();
 }
 
 void WindowBase::create_defaults() {
@@ -323,8 +325,8 @@ bool WindowBase::run_frame() {
 }
 
 void WindowBase::register_loader(LoaderTypePtr loader) {
-    if(container::contains(loaders_, loader)) {
-        throw LogicError("Tried to add the same loader twice");
+    if(std::find(loaders_.begin(), loaders_.end(), loader) != loaders_.end()) {
+        throw std::logic_error("Tried to add the same loader twice");
     }
 
     loaders_.push_back(loader);

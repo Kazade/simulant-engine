@@ -1,6 +1,5 @@
 #include "kazlog/kazlog.h"
-#include <kazbase/exceptions.h>
-#include <kazbase/unicode.h>
+
 
 #ifdef KGLT_GL_VERSION_2X
     #include "../renderers/gl2x/glad/glad/glad.h"
@@ -52,6 +51,6 @@ void check_and_log_error(const std::string &function_name) {
 
         L_ERROR(_F("An OpenGL error occurred: {0} - {1}").format(function_name, error_string));
 
-        throw RuntimeError(_F("GL ERROR: {0}").format(error_string));
+        throw std::runtime_error(_F("GL ERROR: {0}").format(error_string));
     }
 }

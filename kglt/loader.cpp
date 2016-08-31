@@ -22,7 +22,7 @@ void BaseTextureLoader::into(Loadable& resource, const LoaderOptions& options) {
 
     if (result.data.empty()) {
         L_ERROR(_F("Unable to load texture with name: {0}").format(filename_));
-        throw IOError("Couldn't load the file: " + filename_.encode());
+        throw std::runtime_error("Couldn't load the file: " + filename_.encode());
     } else {
         tex->set_bpp(result.channels * 8);
         tex->resize(result.width, result.height);

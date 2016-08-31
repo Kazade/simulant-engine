@@ -78,7 +78,7 @@ void OGGLoader::into(Loadable& resource, const LoaderOptions& options) {
     StreamWrapper stream(stb_vorbis_open_memory(&data[0], data.size(),nullptr, nullptr));
 
     if(!stream.get()) {
-        throw IOError("Unable to load the OGG file");
+        throw std::runtime_error("Unable to load the OGG file");
     }
 
     stb_vorbis_info info = stb_vorbis_get_info(stream.get());

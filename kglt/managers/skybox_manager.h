@@ -1,5 +1,7 @@
 #pragma once
 
+#include <map>
+
 #include "../generic/managed.h"
 #include "../generic/identifiable.h"
 #include "../utils/parent_setter_mixin.h"
@@ -67,16 +69,16 @@ private:
 
 typedef Skybox* SkyboxPtr;
 
-class SkyboxImageNotFoundError : public IOError {
+class SkyboxImageNotFoundError : public std::runtime_error {
 public:
     SkyboxImageNotFoundError(const std::string& what):
-        IOError(what) {}
+        std::runtime_error(what) {}
 };
 
-class SkyboxImageDuplicateError : public IOError {
+class SkyboxImageDuplicateError : public std::runtime_error {
 public:
     SkyboxImageDuplicateError(const std::string& what):
-        IOError(what) {}
+        std::runtime_error(what) {}
 };
 
 typedef generic::TemplatedManager<Skybox, SkyboxID> TemplatedSkyboxManager;

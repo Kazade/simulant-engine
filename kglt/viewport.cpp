@@ -1,5 +1,3 @@
-#include <kazbase/exceptions.h>
-
 #include "viewport.h"
 #include "sdl2_window.h"
 
@@ -119,7 +117,7 @@ void calculate_ratios_from_viewport(ViewportType type, float& x, float& y, float
             y = (1.0 - height) / 2.0;
         break;
         default:
-            throw NotImplementedError(__FILE__, __LINE__);
+            throw std::logic_error("Unknown viewport mode");
     }
 }
 

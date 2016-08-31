@@ -1,10 +1,10 @@
 #include <mutex>
 #include <thread>
 #include <iostream>
-#include <kazbase/unicode.h>
 #include "kazlog/kazlog.h"
 #include "ui_private.h"
 #include "interface.h"
+#include "../utils/unicode.h"
 
 namespace kglt {
 namespace ui {

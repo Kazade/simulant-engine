@@ -4,8 +4,8 @@
 #include "manager_base.h"
 
 #include <functional>
-#include <kazbase/list_utils.h>
 #include "kazsignal/kazsignal.h"
+#include "kazlog/kazlog.h"
 
 namespace kglt {
 namespace generic {
@@ -14,8 +14,6 @@ template<typename ObjectType, typename ObjectIDType, typename NewIDGenerator=Inc
 class TemplatedManager {
 protected:
     mutable std::recursive_mutex manager_lock_;
-
-private:
 
 public:
     virtual ~TemplatedManager() {}
@@ -73,7 +71,13 @@ public:
 
         auto it = objects_.find(id);
         if(it == objects_.end()) {
-            throw DoesNotExist<ObjectType>(typeid(ObjectType).name() + _u(" with ID: {0}").format(id));
+            L_WARN(_F(
+                "Unable to find object of type: {0} with ID {1}").format(
+                    typeid(ObjectType).name(),
+                    id
+                )
+            );
+            return std::weak_ptr<ObjectType>();
         }
         return it->second;
     }
@@ -95,9 +99,9 @@ public:
     std::weak_ptr<ObjectType> only() const {
         if(count() != 1) {
             if(count() == 0) {
-                throw DoesNotExist<ObjectType>("Container does not contain any objects");
+                throw ObjectLookupError("Container does not contain any objects");
             }
-            throw LogicError("Used only() on manager with more than one item");
+            throw ObjectLookupError("Used only() on manager with more than one item");
         }
         return first();
     }
@@ -107,7 +111,13 @@ public:
 
         auto it = objects_.find(id);
         if(it == objects_.end()) {
-            throw DoesNotExist<ObjectType>(typeid(ObjectType).name() + _u(" with ID: {0}").format(id));
+            L_WARN(_F(
+                "Unable to find object of type: {0} with ID {1}").format(
+                    typeid(ObjectType).name(),
+                    id
+                )
+            );
+            return std::weak_ptr<ObjectType>();
         }
         return it->second;
     }

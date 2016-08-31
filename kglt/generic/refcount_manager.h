@@ -1,11 +1,12 @@
 #ifndef REFCOUNT_MANAGER_H
 #define REFCOUNT_MANAGER_H
 
-#include "manager_base.h"
-#include <kazbase/list_utils.h>
+#include <set>
 #include <kazsignal/kazsignal.h>
-
 #include <kazlog/kazlog.h>
+
+#include "manager_base.h"
+
 
 namespace kglt {
 
@@ -48,13 +49,17 @@ public:
         }
 
         auto obj = ObjectType::create(id, std::forward<Args>(args)...);
+        assert(obj);
+
         obj->enable_gc(garbage_collect == GARBAGE_COLLECT_PERIODIC);
+
+        assert(id);
 
         objects_.insert(std::make_pair(id, obj));
         creation_times_[id] = std::chrono::system_clock::now();
         uncollected_.insert(id);
 
-        signal_post_create_(*objects_[id], id);
+        signal_post_create_(*obj, id);
 
         return id;
     }
@@ -66,11 +71,8 @@ public:
     std::weak_ptr<ObjectType> manager_unlocked_get(ObjectIDType id) const {
         auto it = objects_.find(id);
         if(it == objects_.end()) {
-            throw DoesNotExist<ObjectType>(
-                typeid(ObjectType).name() + _u("ID: {0}").format(
-                    id.value()
-                ).encode()
-            );
+            L_WARN(_F("Unable to locate object of type {0} with ID {1}").format(typeid(ObjectType).name(), id));
+            return std::weak_ptr<ObjectType>();
         }
 
         uncollected_.erase(id);
@@ -107,21 +109,22 @@ public:
     }
 
     void each(std::function<void (ObjectType*)> func) const {
-        std::unordered_map<ObjectIDType, std::shared_ptr<ObjectType> > objects;
+        std::set<ObjectIDType> object_ids;
         {
             // We copy the object IDs so we don't keep a handle to
             // any shared_ptrs or anything
             std::lock_guard<std::mutex> lock(manager_lock_);
-            objects = objects_;
+            for(auto& p: objects_) {
+                object_ids.insert(p.first);
+            }
         }
 
-        for(auto& p: objects) {
-            try {
-                auto thing = get(p.first).lock();
+        for(auto& obj_id: object_ids) {
+            auto thing = get(obj_id).lock();
+
+            // If thing is false-y it may have been deleted in another thread
+            if(thing) {
                 func(thing.get());
-            } catch(DoesNotExist<ObjectType>& e) {
-                // May have been deleted in another thread, just ignore this
-                continue;
             }
         }
     }
@@ -129,8 +132,14 @@ public:
     void garbage_collect() {
         std::lock_guard<std::mutex> lock(manager_lock_);
 
-        for(ObjectIDType key: container::keys(objects_)) {
-            if(objects_[key].unique() && objects_[key]->uses_gc()) {
+        for(auto obj_it = objects_.begin(); obj_it != objects_.end(); ) {
+            auto& key = obj_it->first;
+            assert(key);
+
+            auto& pointer = obj_it->second;
+            assert(pointer);
+
+            if(pointer.unique() && pointer->uses_gc()) {
                 auto it = uncollected_.find(key);
                 bool ok_to_delete = false;
 
@@ -155,41 +164,45 @@ public:
                 }
 
                 if(ok_to_delete) {
-                    objects_.erase(key);
+                    obj_it = objects_.erase(obj_it);
                     creation_times_.erase(key);
-
                     L_DEBUG(_F("Garbage collected: {0}").format(key.value()));
+                    continue; // Don't increment the iterator
                 }
             }
+
+            ++obj_it;
         }
     }
 
     typedef std::unordered_map<ObjectIDType, std::shared_ptr<ObjectType>> ObjectMap;
 
 protected:
-    void manager_store_alias(const unicode& alias, ObjectIDType id) {
+    void manager_store_alias(const std::string& alias, ObjectIDType id) {
         auto it = object_names_.find(alias);
         if(it != object_names_.end()) {
             if((*it).second == id) {
                 //Don't throw if it's the same thing
                 return;
+            } else {
+                L_DEBUG(_F("Overwriting object with alias: {0}").format(alias));
             }
-            throw LogicError(_u("Attempted to add a duplicate resource with the alias: {0}").format(alias).encode());
         }
 
         object_names_[alias] = id;
     }
 
-    ObjectIDType get_by_alias(const unicode& alias) {
+    ObjectIDType get_by_alias(const std::string& alias) {
         auto it = object_names_.find(alias);
         if(it == object_names_.end()) {
-            throw DoesNotExist<ObjectIDType>(_u("Object with alias {0} does not exist").format(alias));
+            L_WARN(_F("Unable to find ID for alias: {0}").format(alias));
+            return ObjectIDType();
         }
 
         return (*it).second;
     }
 
-    void manage_remove_alias(const unicode& alias) {
+    void manage_remove_alias(const std::string& alias) {
         object_names_.erase(alias);
     }
 
@@ -203,7 +216,7 @@ private:
     sig::signal<void (ObjectType&, ObjectIDType)> signal_post_create_;
     sig::signal<void (ObjectType&, ObjectIDType)> signal_pre_delete_;
 
-    std::unordered_map<unicode, ObjectIDType> object_names_;
+    std::unordered_map<std::string, ObjectIDType> object_names_;
 
 };
 

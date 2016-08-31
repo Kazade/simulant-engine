@@ -22,7 +22,7 @@
 class NewOctreeTest;
 
 namespace kglt {
-namespace impl {
+namespace octree_impl {
 
 struct NodeData {
 private:

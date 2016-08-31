@@ -1,6 +1,5 @@
 #include "kazlog/kazlog.h"
-#include <kazbase/unicode.h>
-
+#include "utils/unicode.h"
 #include "virtual_gamepad.h"
 #include "window_base.h"
 #include "overlay.h"
@@ -126,7 +125,7 @@ VirtualGamepad::VirtualGamepad(WindowBase &window, VirtualDPadDirections directi
 
 Dimensions VirtualGamepad::button_dimensions(int button) {
     if(button >= button_count_) {
-        throw ValueError(_u("Invalid button: {0}").format(button));
+        throw std::out_of_range(_u("Invalid button: {0}").format(button).encode());
     }
 
     button++; //Buttons are 1-indexed in the UI element classes
@@ -137,7 +136,7 @@ Dimensions VirtualGamepad::button_dimensions(int button) {
 
     ui::ElementList list = document->$(klass);
     if(list.empty()) {
-        throw ValueError(_u("Unable to find button: {0}").format(button));
+        throw std::logic_error(_u("Unable to find button: {0}").format(button).encode());
     }
 
     ui::Element element = list[0];

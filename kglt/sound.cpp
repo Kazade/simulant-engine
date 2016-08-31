@@ -108,7 +108,8 @@ Source::~Source() {
 
 void Source::play_sound(SoundID sound, bool loop) {
     if(!sound) {
-        throw LogicError("Not a valid SoundID");
+        L_WARN("Tried to play an invalid sound");
+        return;
     }
 
     SourceInstance::ptr new_source = SourceInstance::create(*this, sound, loop);

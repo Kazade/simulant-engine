@@ -2,7 +2,7 @@
 #include "debug.h"
 #include "actor.h"
 #include "sdl2_window.h"
-#include <kazbase/random.h>
+#include "utils/random.h"
 
 namespace kglt {
 

@@ -1,6 +1,4 @@
 #include "material_script.h"
-#include <kazbase/exceptions.h>
-#include <kazbase/unicode.h>
 #include "kazlog/kazlog.h"
 #include "../types.h"
 #include "../material.h"
@@ -220,7 +218,7 @@ void MaterialScript::handle_block(Material& mat,
         "PASS"
     };
 
-    if(!container::contains(VALID_BLOCKS, block_type)) {
+    if(std::find(VALID_BLOCKS.begin(), VALID_BLOCKS.end(), block_type) == VALID_BLOCKS.end()) {
         throw SyntaxError(_u("Line: {0}. Invalid block type: {1}").format(current_line, block_type));
     }
 
@@ -362,7 +360,7 @@ void MaterialReloader::reload(const unicode& path, WatchEvent evt) {
         rm_.window->loader_for(path.encode())->into(rm_.material(material_));
     } catch(SyntaxError& e) {
         L_WARN("Unable to reload material as the syntax is incorrect");
-    } catch(RuntimeError& e) {
+    } catch(std::runtime_error& e) {
         L_WARN("Unable to reload material as there was an error");
     }
 }
