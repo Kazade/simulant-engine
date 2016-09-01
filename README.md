@@ -34,6 +34,7 @@ There are some glaring holes in functionality (animated meshes, LOD, billboards,
 
 ![screenshot 1](/screenshots/screenshot1.png?raw=true)
 ![screenshot 2](/screenshots/screenshot2.png?raw=true)
+![screenshot 2](/screenshots/screenshot3.png?raw=true)
 
 ## Roadmap / TODO
 
