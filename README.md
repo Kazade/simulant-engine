@@ -65,7 +65,6 @@ Compiling the code requires CMake. Currently there are the following external de
  - OpenGL
  - TinyXML
  - OpenAL
- - Kazbase (found on my GitHub)
 
 To build:
 
@@ -75,9 +74,6 @@ To build:
     cmake ..
     make
 ```
-
-I'm working on bundling all dependencies except SDL2, OpenGL, OpenAL and ZLIB. kazbase is a bit of a dumping ground for useful code which I'm splitting
-into separate libraries. Currently kglt depends on logging and unicode handling from there mainly.
 
 ## How do I use it?
 
