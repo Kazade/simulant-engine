@@ -2,12 +2,9 @@
 
 #include <cstdint>
 #include <vector>
-#include <kazsignal/kazsignal.h>
+#include "deps/kazsignal/kazsignal.h"
 
 #include "generic/managed.h"
-#include "kazmath/vec2.h"
-#include "kazmath/vec3.h"
-#include "kazmath/vec4.h"
 #include "colour.h"
 #include "types.h"
 

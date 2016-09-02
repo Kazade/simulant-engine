@@ -4,8 +4,8 @@
 #include <memory>
 #include <unordered_map>
 #include <tinyxml.h>
-#include <nuklear/nuklear.h>
 
+#include "../deps/nuklear/nuklear.h"
 #include "../generic/managed.h"
 #include"../types.h"
 #include "../loadable.h"

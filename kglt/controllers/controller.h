@@ -9,7 +9,7 @@
 #include <type_traits>
 #include <thread>
 
-#include <kazlog/kazlog.h>
+#include "../deps/kazlog/kazlog.h"
 
 #include "../generic/property.h"
 #include "../generic/managed.h"

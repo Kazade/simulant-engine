@@ -1,4 +1,5 @@
-#include <kazmath/ray3.h>
+
+#include "../types.h"
 
 template<typename Triangle>
 Octree<Triangle>::Octree(vector_type aabb_min, vector_type aabb_max, uint8_t max_triangles_per_node, void* user_data):

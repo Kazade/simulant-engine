@@ -1,7 +1,7 @@
 #ifndef TEST_OBJ_LOADER_H
 #define TEST_OBJ_LOADER_H
 
-#include <kfs/kfs.h>
+#include "kglt/deps/kfs/kfs.h"
 #include "kglt/loaders/obj_loader.h"
 
 class OBJLoaderTest : public KGLTTestCase {

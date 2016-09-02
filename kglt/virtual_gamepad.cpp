@@ -1,4 +1,4 @@
-#include "kazlog/kazlog.h"
+#include "deps/kazlog/kazlog.h"
 #include "utils/unicode.h"
 #include "virtual_gamepad.h"
 #include "window_base.h"

@@ -1,4 +1,4 @@
-#include <kazlog/kazlog.h>
+#include "deps/kazlog/kazlog.h"
 #include "loader.h"
 #include "texture.h"
 

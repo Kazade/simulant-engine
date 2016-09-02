@@ -8,8 +8,8 @@
 #include <SDL.h>
 #include <set>
 #include <cassert>
-#include <kazsignal/kazsignal.h>
 
+#include "deps/kazsignal/kazsignal.h"
 #include "generic/managed.h"
 #include "generic/identifiable.h"
 #include "generic/unique_id.h"

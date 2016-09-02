@@ -1,8 +1,8 @@
 #include <cmath>
 #include <cstdlib>
-#include "kazmath/kazmath.h"
-
 #include "simplex.h"
+
+static const float PI = 3.14159f;
 
 int fastfloor(double x) {
     return x > 0 ? (int)x : (int)x-1;
@@ -44,10 +44,10 @@ bool Simplex::init() {
             float dx = range_x1 - range_x0;
             float dy = range_y1 - range_y0;
 
-            float nx = range_x1 + cos(s * 2 * kmPI) * dx / (2 * kmPI);
-            float ny = range_y1 + cos(t * 2 * kmPI) * dy / (2 * kmPI);
-            float nz = range_x1 + sin(s * 2 * kmPI) * dx / (2 * kmPI);
-            float nw = range_y1 + sin(t * 2 * kmPI) * dy / (2 * kmPI);
+            float nx = range_x1 + cos(s * 2 * PI) * dx / (2 * PI);
+            float ny = range_y1 + cos(t * 2 * PI) * dy / (2 * PI);
+            float nz = range_x1 + sin(s * 2 * PI) * dx / (2 * PI);
+            float nw = range_y1 + sin(t * 2 * PI) * dy / (2 * PI);
 
             buffer[(y * buffer_width_) + x] = noise(nx, ny, nz, nw);
         }

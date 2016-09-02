@@ -4,8 +4,8 @@
 #include "manager_base.h"
 
 #include <functional>
-#include "kazsignal/kazsignal.h"
-#include "kazlog/kazlog.h"
+#include "../deps/kazsignal/kazsignal.h"
+#include "../deps/kazlog/kazlog.h"
 
 namespace kglt {
 namespace generic {

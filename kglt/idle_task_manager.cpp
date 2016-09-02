@@ -1,6 +1,6 @@
 #include <utility>
 #include <functional>
-#include "kazlog/kazlog.h"
+#include "deps/kazlog/kazlog.h"
 #include "idle_task_manager.h"
 #include "window_base.h"
 #include "utils/gl_thread_check.h"

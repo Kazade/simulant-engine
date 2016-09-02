@@ -1,13 +1,12 @@
 #ifndef SCREEN_MANAGER_H
 #define SCREEN_MANAGER_H
 
-#include <kazsignal/kazsignal.h>
-
 #include <unordered_map>
 #include <functional>
 #include <future>
 
 #include "../generic/managed.h"
+#include "../deps/kazsignal/kazsignal.h"
 
 namespace kglt {
 

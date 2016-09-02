@@ -4,7 +4,7 @@
 #include "utils/gl_thread_check.h"
 #include "utils/gl_error.h"
 
-#include "kazlog/kazlog.h"
+#include "deps/kazlog/kazlog.h"
 
 #include "window_base.h"
 #include "texture.h"

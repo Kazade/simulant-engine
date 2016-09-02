@@ -1,4 +1,4 @@
-#include "kazlog/kazlog.h"
+#include "../deps/kazlog/kazlog.h"
 
 
 #ifdef KGLT_GL_VERSION_2X

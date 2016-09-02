@@ -7,9 +7,9 @@
 #include "../../camera.h"
 #include "../../light.h"
 #include "../../partitioner.h"
+#include "../../types.h"
 #include "gpu_program.h"
 
-#include "kazmath/mat4.h"
 #include "./glad/glad/glad.h"
 #include "../../utils/gl_error.h"
 

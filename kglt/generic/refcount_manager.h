@@ -2,8 +2,8 @@
 #define REFCOUNT_MANAGER_H
 
 #include <set>
-#include <kazsignal/kazsignal.h>
-#include <kazlog/kazlog.h>
+#include "../deps/kazsignal/kazsignal.h"
+#include "../deps/kazlog/kazlog.h"
 
 #include "manager_base.h"
 

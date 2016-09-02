@@ -5,7 +5,7 @@
 #endif
 
 #include <thread>
-#include "kazmath/kazmath.h"
+
 #include "../loader.h"
 #include "../overlay.h"
 #include "../window_base.h"

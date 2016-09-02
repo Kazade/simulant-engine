@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <functional>
 
-#include "kazmath/mat3.h"
+#include "types.h"
 #include "stage.h"
 #include "object.h"
 #include "camera.h"

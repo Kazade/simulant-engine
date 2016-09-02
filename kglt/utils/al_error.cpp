@@ -1,7 +1,7 @@
 #include <AL/al.h>
 #include <AL/alc.h>
 
-#include <kazlog/kazlog.h>
+#include "../deps/kazlog/kazlog.h"
 
 namespace ALChecker {
 void al_check_and_log_error() {

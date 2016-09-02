@@ -1,12 +1,10 @@
 #ifndef FRUSTUM_H
 #define FRUSTUM_H
 
-#include "kazmath/kazmath.h"
-#include "kazmath/kazmath.h"
-#include "kazmath/kazmath.h"
-
 #include <cstdint>
 #include <vector>
+
+#include "types.h"
 
 namespace kglt {
 

@@ -1,7 +1,7 @@
 #ifndef UI_STAGE_H
 #define UI_STAGE_H
 
-#include <kazsignal/kazsignal.h>
+#include "deps/kazsignal/kazsignal.h"
 #include "generic/managed.h"
 #include "generic/identifiable.h"
 #include "generic/property.h"

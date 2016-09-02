@@ -1,7 +1,7 @@
 #ifndef OCTREE_PARTITIONER_H
 #define OCTREE_PARTITIONER_H
 
-#include <kazsignal/kazsignal.h>
+#include "../deps/kazsignal/kazsignal.h"
 
 #include "../partitioner.h"
 #include "../interfaces.h"

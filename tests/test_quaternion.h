@@ -1,6 +1,5 @@
 #pragma once
 
-#include <kazmath/kazmath.h>
 #include "kaztest/kaztest.h"
 
 #include "kglt/kglt.h"

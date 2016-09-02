@@ -2,9 +2,8 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include "kazmath/kazmath.h"
 
-#include "kazlog/kazlog.h"
+#include "../deps/kazlog/kazlog.h"
 
 #include "../sdl2_window.h"
 #include "../stage.h"

@@ -1,4 +1,4 @@
-#include <jsonic/jsonic.h>
+#include "../deps/jsonic/jsonic.h"
 
 #include "particle_script.h"
 #include "../particles.h"

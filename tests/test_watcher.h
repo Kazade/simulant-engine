@@ -1,7 +1,7 @@
 #ifndef TEST_WATCHER_H
 #define TEST_WATCHER_H
 
-#include <kfs/kfs.h>
+#include "kglt/deps/kfs/kfs.h"
 #include "kaztest/kaztest.h"
 #include "kglt/watcher.h"
 

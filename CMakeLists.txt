@@ -38,32 +38,24 @@ PKG_CHECK_MODULES(GL gl REQUIRED)
 FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/kglt/materials DESTINATION ${CMAKE_BINARY_DIR}/kglt)
 FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/kglt/fonts DESTINATION ${CMAKE_BINARY_DIR}/kglt)
 
-FILE(GLOB_RECURSE QU3E ${CMAKE_SOURCE_DIR}/deps/qu3e/src/*.cpp)
-FILE(GLOB_RECURSE KAZMATH ${CMAKE_SOURCE_DIR}/deps/kazmath/kazmath/*c)
+#FILE(GLOB_RECURSE QU3E ${CMAKE_SOURCE_DIR}/deps/qu3e/src/*.cpp)
+#FILE(GLOB_RECURSE KAZMATH ${CMAKE_SOURCE_DIR}/deps/kazmath/kazmath/*c)
 
 SET(DEPS_SOURCES
-    ${CMAKE_SOURCE_DIR}/deps/kaztimer/kaztimer.cpp
-    ${CMAKE_SOURCE_DIR}/deps/kazlog/kazlog/kazlog.cpp
-    ${CMAKE_SOURCE_DIR}/deps/jsonic/jsonic/jsonic.cpp
-    ${CMAKE_SOURCE_DIR}/deps/kfs/kfs/kfs.cpp
+#    ${CMAKE_SOURCE_DIR}/deps/kaztimer/kaztimer.cpp
+#    ${CMAKE_SOURCE_DIR}/deps/kazlog/kazlog/kazlog.cpp
+#    ${CMAKE_SOURCE_DIR}/deps/jsonic/jsonic/jsonic.cpp
+#    ${CMAKE_SOURCE_DIR}/deps/kfs/kfs/kfs.cpp
     ${CMAKE_SOURCE_DIR}/deps/SOIL/SOIL.c
     ${CMAKE_SOURCE_DIR}/deps/SOIL/image_DXT.c
     ${CMAKE_SOURCE_DIR}/deps/SOIL/image_helper.c
     ${CMAKE_SOURCE_DIR}/deps/SOIL/stb_image_aug.c
-    ${CMAKE_SOURCE_DIR}/deps/nuklear/nuklear.cpp
-    ${QU3E}
-    ${KAZMATH}
+#    ${CMAKE_SOURCE_DIR}/deps/nuklear/nuklear.cpp
+#    ${QU3E}
+#    ${KAZMATH}
 )
 
 INCLUDE_DIRECTORIES(
-    ${CMAKE_SOURCE_DIR}/deps
-    ${CMAKE_SOURCE_DIR}/deps/kazsignal
-    ${CMAKE_SOURCE_DIR}/deps/kazmath
-    ${CMAKE_SOURCE_DIR}/deps/kazlog
-    ${CMAKE_SOURCE_DIR}/deps/jsonic
-    ${CMAKE_SOURCE_DIR}/deps/kfs
-    ${CMAKE_SOURCE_DIR}/deps/qu3e/src
-    ${CMAKE_SOURCE_DIR}
     ${SDL2_INCLUDE_DIRS}
     ${GL_INCLUDE_DIRS}
     ${OPENAL_INCLUDE_DIRS}

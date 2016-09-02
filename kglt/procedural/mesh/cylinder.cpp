@@ -1,5 +1,6 @@
-#include "kazmath/kazmath.h"
+
 #include "cylinder.h"
+#include "../../types.h"
 #include "../../mesh.h"
 #include "../../resource_manager.h"
 

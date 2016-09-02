@@ -1,15 +1,13 @@
 #pragma once
 
 #include <queue>
-#include "kazmath/kazmath.h"
-
 #include "controller.h"
 
 #include "../generic/managed.h"
 #include "../generic/tri_octree.h"
 #include "../types.h"
 
-#include "q3.h"
+#include "../deps/qu3e/q3.h"
 
 namespace kglt {
 

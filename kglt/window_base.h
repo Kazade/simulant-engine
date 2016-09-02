@@ -4,7 +4,9 @@
 #include <SDL.h>
 
 #include <memory>
-#include "kaztimer/kaztimer.h"
+
+#include "deps/kazlog/kazlog.h"
+#include "deps/kaztimer/kaztimer.h"
 
 #include "generic/property.h"
 #include "generic/manager.h"
@@ -14,7 +16,6 @@
 #include "idle_task_manager.h"
 #include "input_controller.h"
 #include "generic/auto_weakptr.h"
-#include "kazlog/kazlog.h"
 #include "types.h"
 #include "sound.h"
 #include "managers.h"

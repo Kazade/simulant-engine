@@ -1,5 +1,6 @@
-#include "kazmath/kazmath.h"
+
 #include "sphere.h"
+#include "../../types.h"
 #include "../../resource_manager.h"
 #include "../../mesh.h"
 

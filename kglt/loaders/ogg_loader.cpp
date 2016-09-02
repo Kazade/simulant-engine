@@ -1,7 +1,7 @@
 #include "ogg_loader.h"
 #include "stb_vorbis.h"
 
-#include <kazlog/kazlog.h>
+#include "../deps/kazlog/kazlog.h"
 #include "../utils/al_error.h"
 #include "../sound.h"
 

@@ -2,7 +2,7 @@
 #define KGLT_GL_ERROR_H
 
 #include <string>
-#include "kazlog/kazlog.h"
+#include "../deps/kazlog/kazlog.h"
 #include "gl_thread_check.h"
 
 void check_and_log_error(const std::string& function_name);

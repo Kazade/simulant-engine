@@ -7,7 +7,7 @@
 #include <set>
 #include <memory>
 
-#include "kazmath/kazmath.h"
+#include "deps/kazmath/kazmath.h"
 
 #include "generic/managed.h"
 #include "generic/identifiable.h"

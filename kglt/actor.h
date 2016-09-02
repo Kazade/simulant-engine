@@ -5,7 +5,7 @@
 #include "generic/managed.h"
 #include "generic/relation.h"
 
-#include <kazsignal/kazsignal.h>
+#include "deps/kazsignal/kazsignal.h"
 
 #include "interfaces.h"
 #include "object.h"

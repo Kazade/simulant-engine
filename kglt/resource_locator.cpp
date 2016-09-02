@@ -1,6 +1,6 @@
 #include <fstream>
 
-#include <kfs/kfs.h>
+#include "deps/kfs/kfs.h"
 
 #include "resource_locator.h"
 

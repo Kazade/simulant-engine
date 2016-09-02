@@ -4,8 +4,8 @@
 #include <set>
 #include <map>
 #include <unordered_map>
-#include <kazsignal/kazsignal.h>
 
+#include "../../deps/kazsignal/kazsignal.h"
 #include "../../types.h"
 #include "../../generic/property.h"
 #include "../../generic/managed.h"

@@ -1,5 +1,5 @@
 #include "material_script.h"
-#include "kazlog/kazlog.h"
+#include "../deps/kazlog/kazlog.h"
 #include "../types.h"
 #include "../material.h"
 #include "../shortcuts.h"

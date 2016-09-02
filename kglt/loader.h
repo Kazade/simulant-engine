@@ -7,7 +7,7 @@
 #include <string>
 #include <memory>
 
-#include <kfs/kfs.h>
+#include "deps/kfs/kfs.h"
 
 #include "loadable.h"
 

@@ -4,7 +4,6 @@
 #include <memory>
 #include <cstdint>
 #include "generic/managed.h"
-#include "kazmath/mat4.h"
 #include "interfaces.h"
 #include "types.h"
 

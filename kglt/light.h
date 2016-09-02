@@ -8,7 +8,6 @@
 
 #include "utils/parent_setter_mixin.h"
 
-#include "kazmath/vec4.h"
 
 namespace kglt {
 

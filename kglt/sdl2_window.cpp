@@ -1,4 +1,4 @@
-#include "kazlog/kazlog.h"
+#include "deps/kazlog/kazlog.h"
 #include "utils/unicode.h"
 #include "input_controller.h"
 #include "sdl2_window.h"

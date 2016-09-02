@@ -5,7 +5,7 @@
 #include <thread>
 #include <memory>
 
-#include "kazlog/kazlog.h"
+#include "../deps/kazlog/kazlog.h"
 
 class WrongThreadError:
     public std::runtime_error {

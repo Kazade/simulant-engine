@@ -7,14 +7,10 @@
 #include <memory>
 #include <stdexcept>
 
-#include <kazsignal/kazsignal.h>
+#include "deps/kazsignal/kazsignal.h"
 
 #include "generic/data_carrier.h"
 #include "generic/visitor.h"
-
-#include "kazmath/mat4.h"
-#include "kazmath/vec3.h"
-#include "kazmath/quaternion.h"
 #include "types.h"
 
 #include "scene_node.h"
