@@ -3,12 +3,7 @@
 #include <stdexcept>
 #include <string>
 
-//This is a hack, it should really be fixed in the build system :(
-#ifndef __ANDROID__
-#include <SOIL/SOIL.h>
-#else
-#include <SOIL.h>
-#endif
+#include "../deps/SOIL/SOIL.h"
 
 #include "texture_loader.h"
 #include "../texture.h"

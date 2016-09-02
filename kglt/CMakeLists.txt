@@ -2,7 +2,7 @@ FILE(GLOB_RECURSE KGLT_HEADERS *h)
 FILE(GLOB_RECURSE KGLT_FILES FOLLOW_SYMLINKS *.cpp *.c *.cc)
 
 # Remove all the renderer files so we can add them specifically
-FILE(GLOB_RECURSE TO_REMOVE "renderers/gl1x/*" "renderers/gl2x/*")
+FILE(GLOB_RECURSE TO_REMOVE "renderers/gl1x/*" "renderers/gl2x/*" "deps/SOIL/original/*")
 LIST(REMOVE_ITEM KGLT_FILES ${TO_REMOVE})
 
 # Add GL1 files if we're targetting that
@@ -24,14 +24,13 @@ ENDIF()
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/..)
 
-ADD_LIBRARY(kglt SHARED ${KGLT_FILES} ${DEPS_SOURCES})
+ADD_LIBRARY(kglt SHARED ${KGLT_FILES})
 SET_TARGET_PROPERTIES(kglt
                       PROPERTIES
                       VERSION 0.0.1
                       SOVERSION 1)
 
 INSTALL(TARGETS kglt DESTINATION lib)
-INSTALL(DIRECTORY ../deps DESTINATION include/kglt FILES_MATCHING PATTERN *.h)
 
 INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/../cmake_modules/kglt-config.cmake DESTINATION ${CMAKE_INSTALL_PREFIX}/share/kglt)
 
