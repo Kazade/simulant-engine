@@ -1,4 +1,4 @@
-FILE(GLOB_RECURSE KGLT_HEADERS *h)
+FILE(GLOB_RECURSE KGLT_HEADERS *.h)
 FILE(GLOB_RECURSE KGLT_FILES FOLLOW_SYMLINKS *.cpp *.c *.cc)
 
 # Remove all the renderer files so we can add them specifically
@@ -31,6 +31,34 @@ SET_TARGET_PROPERTIES(kglt
                       SOVERSION 1)
 
 INSTALL(TARGETS kglt DESTINATION lib)
+INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} DESTINATION include FILES_MATCHING PATTERN "*.h" PATTERN "deps*" EXCLUDE)
+
+SET(DEPS
+    "jsonic"
+    "kazlog"
+    "kazmath"
+    "kazsignal"
+    "kaztimer"
+    "kfs"
+    "nuklear"
+    "qu3e"
+    "qu3e/common"
+    "qu3e/broadphase"
+    "qu3e/debug"
+    "qu3e/collision"
+    "qu3e/dynamics"
+    "qu3e/math"
+    "qu3e/scene"
+    "SOIL"
+)
+
+FOREACH(DEP ${DEPS})
+    SET(DEP_PATH "${CMAKE_CURRENT_SOURCE_DIR}/deps/${DEP}")
+    SET(DEP_INSTALL_PATH include/kglt/deps/${DEP})
+    FILE(GLOB DEP_INCLUDES FOLLOW_SYMLINKS ${DEP_PATH}/*.h)
+    INSTALL(DIRECTORY DESTINATION ${DEP_INSTALL_PATH})
+    INSTALL(FILES ${DEP_INCLUDES} DESTINATION ${DEP_INSTALL_PATH})
+ENDFOREACH()
 
 INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/../cmake_modules/kglt-config.cmake DESTINATION ${CMAKE_INSTALL_PREFIX}/share/kglt)
 
