@@ -15,19 +15,44 @@ class KeyFrameAnimated {
 public:
     virtual ~KeyFrameAnimated() {}
 
-    virtual void add_sequence(const unicode& name, const std::vector<AnimationSequenceStage>& stages) = 0;
-    virtual void play_sequence(const unicode& name) = 0;
+    void add_sequence(const unicode& name, const std::vector<AnimationSequenceStage>& stages);
+    void play_sequence(const unicode& name);
 
-    virtual void add_animation(const unicode& name,
+    void add_animation(const unicode& name,
         uint32_t start_frame, uint32_t end_frame, float duration
-    ) = 0;
+    );
 
-    virtual void play_animation(const unicode& name) = 0;
-    virtual void queue_next_animation(const unicode& name) = 0;
-    virtual void override_playing_animation_duration(const float new_duration) = 0;
+    void play_animation(const unicode& name);
+    void queue_next_animation(const unicode& name);
+    void override_playing_animation_duration(const float new_duration);
+    void update(double dt);
 
+protected:
+    //Animation stuff
 
-    virtual void update(double dt) = 0;
+    struct Animation {
+        Animation():
+            duration(0) {}
+
+        Animation(double duration, uint32_t start, uint32_t end):
+            duration(duration),
+            frames(std::make_pair(start, end)) {}
+
+        double duration;
+        std::pair<uint32_t, uint32_t> frames;
+    };
+
+    std::unordered_map<unicode, Animation> animations_;
+    Animation* current_animation_ = nullptr;
+    Animation* next_animation_ = nullptr;
+    float current_animation_duration_ = 0.0;
+
+    uint32_t current_frame_ = 0;
+    uint32_t next_frame_ = 0;
+    double interp_ = 0.0;
+
+    virtual void refresh_animation_state() = 0;
+
 };
 
 

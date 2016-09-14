@@ -102,13 +102,15 @@ public:
 
     void done();
 
+    void position(float x, float y, float z, float w);
     void position(float x, float y, float z);
     void position(float x, float y);
     void position(const kmVec3& pos);
     void position(const kmVec2& pos);
+    void position(const kmVec4& pos);
 
     template<typename T>
-    T position_at(uint32_t idx);
+    T position_at(uint32_t idx) const;
 
     void normal(float x, float y, float z);
     void normal(const kmVec3& n);
@@ -227,6 +229,7 @@ public:
         return out.count() - 1;
     }
 
+    void interp_vertex(uint32_t source_idx, const VertexData& dest_state, uint32_t dest_idx, VertexData& out, uint32_t out_idx, float interp);
     uint8_t* data() { if(empty()) { return nullptr; } return &data_[0]; }
     uint32_t data_size() const { return data_.size(); }
 
@@ -266,13 +269,13 @@ private:
 };
 
 template<>
-Vec2 VertexData::position_at<Vec2>(uint32_t idx);
+Vec2 VertexData::position_at<Vec2>(uint32_t idx) const;
 
 template<>
-Vec3 VertexData::position_at<Vec3>(uint32_t idx);
+Vec3 VertexData::position_at<Vec3>(uint32_t idx) const;
 
 template<>
-Vec4 VertexData::position_at<Vec4>(uint32_t idx);
+Vec4 VertexData::position_at<Vec4>(uint32_t idx) const;
 
 template<>
 Vec2 VertexData::texcoord0_at<Vec2>(uint32_t idx);

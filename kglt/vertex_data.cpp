@@ -64,6 +64,14 @@ void VertexData::position_checks() {
     }
 }
 
+void VertexData::position(float x, float y, float z, float w) {
+    position_checks();
+
+    assert(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_4F);
+    Vec4* out = (Vec4*) &data_[cursor_position_];
+    *out = Vec4(x, y, z, w);
+}
+
 void VertexData::position(float x, float y, float z) {
     position_checks();
 
@@ -88,22 +96,26 @@ void VertexData::position(const kmVec3& pos) {
     position(pos.x, pos.y, pos.z);
 }
 
+void VertexData::position(const kmVec4 &pos) {
+    position(pos.x, pos.y, pos.z, pos.w);
+}
+
 template<>
-Vec2 VertexData::position_at<Vec2>(uint32_t idx) {
+Vec2 VertexData::position_at<Vec2>(uint32_t idx) const {
     assert(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_2F);
     Vec2 out = *((Vec2*) &data_[idx * stride()]);
     return out;
 }
 
 template<>
-Vec3 VertexData::position_at<Vec3>(uint32_t idx) {
+Vec3 VertexData::position_at<Vec3>(uint32_t idx) const {
     assert(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_3F);
     Vec3 out = *((Vec3*) &data_[idx * stride()]);
     return out;
 }
 
 template<>
-Vec4 VertexData::position_at<Vec4>(uint32_t idx) {
+Vec4 VertexData::position_at<Vec4>(uint32_t idx) const {
     assert(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_4F);
     Vec4 out = *((Vec4*) &data_[idx * stride()]);
     return out;
@@ -310,6 +322,47 @@ VertexAttribute VertexData::attribute_for_type(VertexAttributeType type) const {
     default:
         throw std::logic_error("Invalid vertex attribute type");
     }
+}
+
+void VertexData::interp_vertex(uint32_t source_idx, const VertexData &dest_state, uint32_t dest_idx, VertexData &out, uint32_t out_idx, float interp) {
+    /*
+     * Given a VertexData representing the destination state, this will interpolate
+     * the vertex position and normal into the out data of the specified index
+     */
+
+    if(out.vertex_specification_ != this->vertex_specification_ || dest_state.vertex_specification_ != this->vertex_specification_) {
+        throw std::logic_error("You cannot interpolate vertices between data with different specifications");
+    }
+
+    out.move_to(out_idx);
+
+    switch(vertex_specification_.position_attribute) {
+        case VERTEX_ATTRIBUTE_2F: {
+            Vec2 source = this->position_at<Vec2>(source_idx);
+            Vec2 dest = dest_state.position_at<Vec2>(dest_idx);
+            Vec2 final = source + ((dest - source).normalized() * interp);
+            out.position(final);
+        }
+        break;
+        case VERTEX_ATTRIBUTE_3F: {
+            Vec3 source = this->position_at<Vec3>(source_idx);
+            Vec3 dest = dest_state.position_at<Vec3>(dest_idx);
+            Vec3 final = source + ((dest - source).normalized() * interp);
+            out.position(final);
+        }
+        break;
+        case VERTEX_ATTRIBUTE_4F: {
+            Vec4 source = this->position_at<Vec4>(source_idx);
+            Vec4 dest = dest_state.position_at<Vec4>(dest_idx);
+            Vec4 final = source + ((dest - source).normalized() * interp);
+            out.position(final);
+        }
+        break;
+        default:
+            L_WARN("Ignoring unsupported vertex position type");
+    }
+
+    //FIXME: Interpolate normals here
 }
 
 void VertexData::done() {

@@ -43,15 +43,6 @@ public:
     void flip_vertically(bool value=true);
     void flip_horizontally(bool value=true);
 
-    //KeyFrameAnimated overrides
-    void add_animation(const unicode &name, uint32_t start_frame, uint32_t end_frame, float duration) override;
-    void play_animation(const unicode &name) override;
-    void queue_next_animation(const unicode &name) override;
-
-    void add_sequence(const unicode& name, const std::vector<AnimationSequenceStage>& stages) override;
-    void play_sequence(const unicode& name) override;
-    void override_playing_animation_duration(const float new_duration) override;
-
     //Printable interface
     unicode __unicode__() const override {
         return _u("Sprite {0}").format(this->id());
@@ -75,32 +66,12 @@ private:
 
     void update_texture_coordinates();
 
-    //Animation stuff
-
-    struct Animation {
-        Animation():
-            duration(0) {}
-
-        Animation(double duration, uint32_t start, uint32_t end):
-            duration(duration),
-            frames(std::make_pair(start, end)) {}
-
-        double duration;
-        std::pair<uint32_t, uint32_t> frames;
-    };
-
-    std::unordered_map<unicode, Animation> animations_;
-    Animation* current_animation_ = nullptr;
-    Animation* next_animation_ = nullptr;
-    float current_animation_duration_ = 0.0;
-
-
-    uint32_t current_frame_ = 0;
-    uint32_t next_frame_ = 0;
-    double interp_ = 0.0;
-
     bool flipped_vertically_ = false;
     bool flipped_horizontally_ = false;
+
+    void refresh_animation_state() {
+        update_texture_coordinates();
+    }
 };
 
 }

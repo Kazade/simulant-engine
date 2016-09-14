@@ -193,6 +193,24 @@ public:
         assert_true(mesh_id == actor->mesh()->id());
     }
 
+    void test_animated_mesh_initialization() {
+        auto stage = window->stage(stage_id_);
+
+        const int num_frames = 3;
+
+        auto mesh_id = stage->assets->new_animated_mesh(
+            kglt::VertexSpecification::POSITION_ONLY,
+            kglt::MESH_ANIMATION_TYPE_VERTEX_MORPH,
+            num_frames
+        );
+
+        auto mesh = stage->assets->mesh(mesh_id);
+
+        assert_equal(mesh->animation_frames(), 3);
+        assert_equal(mesh->animation_type(), kglt::MESH_ANIMATION_TYPE_VERTEX_MORPH);
+        assert_true(mesh->is_animated());
+    }
+
     void test_cubic_texture_generation() {
         auto stage = window->stage(stage_id_);
 

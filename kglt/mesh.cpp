@@ -21,10 +21,13 @@ IndexData* SubMesh::get_index_data() const {
     return index_data_;
 }
 
-Mesh::Mesh(MeshID id, ResourceManager *resource_manager, VertexSpecification vertex_specification):
-    Resource(resource_manager),
-    generic::Identifiable<MeshID>(id),
-    normal_debug_mesh_(0) {
+Mesh::Mesh(
+    MeshID id,
+    ResourceManager *resource_manager,
+    VertexSpecification vertex_specification):
+        Resource(resource_manager),
+        generic::Identifiable<MeshID>(id),
+        normal_debug_mesh_(0) {
 
     shared_data_ = new VertexData(vertex_specification);
 
@@ -41,6 +44,10 @@ Mesh::Mesh(MeshID id, ResourceManager *resource_manager, VertexSpecification ver
 Mesh::~Mesh() {
     delete shared_data_;
     shared_data_ = nullptr;
+
+    // Make sure we delete the shared vertex animation buffer if necessary
+    delete shared_vertex_animation_buffer_;
+    shared_vertex_animation_buffer_ = nullptr;
 }
 
 void Mesh::each(std::function<void (const std::string&, SubMesh*)> func) const {
@@ -53,6 +60,23 @@ void Mesh::clear() {
     //Delete the submeshes and clear the shared data
     submeshes_.clear();
     shared_data->clear();
+}
+
+void Mesh::enable_animation(MeshAnimationType animation_type, uint32_t animation_frames) {
+    if(animation_type_ != MESH_ANIMATION_TYPE_NONE) {
+        throw std::logic_error("Tried to re-enable animations on an animated mesh");
+
+        if(!abs(animation_frames)) {
+            throw std::logic_error("You must specify the number of frames when enabling mesh animations");
+        }
+    }
+
+    animation_type_ = animation_type;
+    animation_frames_ = animation_frames;
+
+    if(!shared_vertex_animation_buffer_) {
+        shared_vertex_animation_buffer_ = new VertexData(shared_data->specification());
+    }
 }
 
 VertexData* Mesh::get_shared_data() const {
@@ -134,7 +158,13 @@ void Mesh::enable_debug(bool value) {
     }
 }
 
-SubMesh* Mesh::new_submesh_with_material(const std::string& name, MaterialID material, MeshArrangement arrangement, VertexSharingMode vertex_sharing, VertexSpecification vertex_specification) {
+SubMesh* Mesh::new_submesh_with_material(
+    const std::string& name,
+    MaterialID material,
+    MeshArrangement arrangement,
+    VertexSharingMode vertex_sharing,
+    VertexSpecification vertex_specification) {
+
     if(submeshes_.count(name)) {
         throw std::runtime_error("Attempted to create a duplicate submesh with name: " + name);
     }
@@ -145,7 +175,12 @@ SubMesh* Mesh::new_submesh_with_material(const std::string& name, MaterialID mat
     return new_submesh.get();
 }
 
-SubMesh* Mesh::new_submesh(const std::string& name, MeshArrangement arrangement, VertexSharingMode vertex_sharing, VertexSpecification vertex_specification) {
+SubMesh* Mesh::new_submesh(
+    const std::string& name,
+    MeshArrangement arrangement,
+    VertexSharingMode vertex_sharing,
+    VertexSpecification vertex_specification) {
+
     return new_submesh_with_material(
         name,
         resource_manager().clone_default_material(),        
@@ -515,6 +550,56 @@ SubMesh* Mesh::submesh(const std::string& name) {
     }
 
     return nullptr;
+}
+
+void Mesh::refresh_animation_state() {
+    auto shared_data_size = shared_data->count();
+    if(shared_data_size) {
+        assert(shared_data_size % animation_frames_ == 0);
+        auto shared_vertices_per_frame = shared_data_size / animation_frames_;
+
+        // Should hopefully be a no-op if nothing changed!
+        shared_vertex_animation_buffer_->resize(shared_vertices_per_frame);
+
+        auto source_offset = shared_vertices_per_frame * current_frame_;
+        auto target_offset = shared_vertices_per_frame * next_frame_;
+
+        for(uint32_t i = 0; i < shared_vertices_per_frame; ++i) {
+            shared_data_->interp_vertex(
+                source_offset + i,
+                *shared_data_,
+                target_offset + i,
+                *shared_vertex_animation_buffer_,
+                i,
+                this->interp_
+            );
+        }
+    }
+
+    /* Update the interpolated data on submeshes */
+    this->each([this](const std::string& name, SubMesh* submesh) {
+        if(!submesh->uses_shared_vertices()) {
+            assert(submesh->vertex_data->count() % animation_frames_ == 0);
+            auto vertices_per_frame = submesh->vertex_data->count() / animation_frames_;
+
+            // Should hopefully be a no-op if nothing changed!
+            submesh->vertex_animation_buffer_->resize(vertices_per_frame);
+
+            auto source_offset = vertices_per_frame * current_frame_;
+            auto target_offset = vertices_per_frame * next_frame_;
+
+            for(uint32_t i = 0; i < vertices_per_frame; ++i) {
+                submesh->vertex_data_->interp_vertex(
+                    source_offset + i,
+                    *submesh->vertex_data_,
+                    target_offset + i,
+                    *submesh->vertex_animation_buffer_,
+                    i,
+                    interp_
+                );
+            }
+        }
+    });
 }
 
 SubMesh::SubMesh(Mesh* parent, const std::string& name,

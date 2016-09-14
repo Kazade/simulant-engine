@@ -164,6 +164,26 @@ struct Vec4 : public kmVec4 {
     bool operator!=(const Vec4& rhs) const {
         return !(*this == rhs);
     }
+
+    Vec4 operator-(const Vec4& rhs) const {
+        return Vec4(x - rhs.x, y - rhs.y, z - rhs.z, w - rhs.w);
+    }
+
+    const kglt::Vec4 normalized() {
+        kglt::Vec4 result;
+        kmVec4Normalize(&result, this);
+        return result;
+    }
+
+    Vec4 operator*(float rhs) const {
+        Vec4 result;
+        kmVec4Scale(&result, this, rhs);
+        return result;
+    }
+
+    Vec4 operator+(const kmVec4& rhs) const {
+        return Vec4(x + rhs.x, y + rhs.y, z + rhs.z, w + rhs.w);
+    }
 };
 
 struct Vec2 : public kmVec2 {
