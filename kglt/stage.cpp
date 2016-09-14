@@ -364,7 +364,7 @@ void Stage::set_partitioner(AvailablePartitioner partitioner) {
 }
 
 void Stage::update(double dt) {
-
+    resource_manager_->update(dt);
 }
 
 void Stage::on_actor_created(ActorID actor_id) {

@@ -29,16 +29,29 @@ Mesh::Mesh(
         generic::Identifiable<MeshID>(id),
         normal_debug_mesh_(0) {
 
+    reset(vertex_specification);
+
+    shared_data->signal_update_complete().connect([&]{
+        this->shared_data_dirty_ = true;
+    });
+}
+
+void Mesh::reset(VertexSpecification vertex_specification) {
+    submeshes_.clear();
+    animation_type_ = MESH_ANIMATION_TYPE_NONE;
+    animation_frames_ = 0;
+
+    delete shared_data_;
     shared_data_ = new VertexData(vertex_specification);
+
+    delete shared_vertex_animation_buffer_;
+    shared_vertex_animation_buffer_ = nullptr;
 
 #ifdef KGLT_GL_VERSION_2X
     //FIXME: Somehow we need to specify if the shared data is modified repeatedly etc.
     shared_data_buffer_object_ = BufferObject::create(BUFFER_OBJECT_VERTEX_DATA, MODIFY_ONCE_USED_FOR_RENDERING);
 #endif
 
-    shared_data->signal_update_complete().connect([&]{
-        this->shared_data_dirty_ = true;
-    });
 }
 
 Mesh::~Mesh() {
@@ -536,8 +549,12 @@ void Mesh::set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass) {
 
 #ifdef KGLT_GL_VERSION_2X
 void Mesh::_update_buffer_object() {
-    if(shared_data_dirty_) {
-        shared_data_buffer_object_->build(shared_data->data_size(), shared_data->data());
+    if(shared_data_dirty_ || is_animated()) {
+        if(is_animated()) {
+            shared_data_buffer_object_->build(shared_vertex_animation_buffer_->data_size(), shared_vertex_animation_buffer_->data());
+        } else {
+            shared_data_buffer_object_->build(shared_data->data_size(), shared_data->data());
+        }
         shared_data_dirty_ = false;
     }
 }
@@ -574,6 +591,8 @@ void Mesh::refresh_animation_state() {
                 this->interp_
             );
         }
+
+        shared_vertex_animation_buffer_->done();
     }
 
     /* Update the interpolated data on submeshes */
@@ -598,8 +617,12 @@ void Mesh::refresh_animation_state() {
                     interp_
                 );
             }
+
+            submesh->vertex_animation_buffer_->done();
         }
     });
+
+
 }
 
 SubMesh::SubMesh(Mesh* parent, const std::string& name,
@@ -661,8 +684,15 @@ void SubMesh::_bind_vertex_array_object() {
 void SubMesh::_update_vertex_array_object() {
     if(uses_shared_vertices()) {
         parent_->_update_buffer_object();
-    } else if(vertex_data_dirty_) {
-        vertex_array_object_->vertex_buffer_update(vertex_data->data_size(), vertex_data->data());
+    } else if(vertex_data_dirty_ || parent_->is_animated()) {
+        if(parent_->is_animated()) {
+            vertex_array_object_->vertex_buffer_update(
+                vertex_animation_buffer_->data_size(),
+                vertex_animation_buffer_->data()
+            );
+        } else {
+            vertex_array_object_->vertex_buffer_update(vertex_data->data_size(), vertex_data->data());
+        }
         vertex_data_dirty_ = false;
     }
 

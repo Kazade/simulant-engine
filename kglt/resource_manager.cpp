@@ -55,6 +55,10 @@ void ResourceManager::update(double dt) {
         mat->update(dt);
     });
 
+    MeshManager::each([dt](Mesh* mesh) {
+        mesh->update(dt);
+    });
+
     static auto last_collection = std::chrono::system_clock::now();
 
     auto now = std::chrono::system_clock::now();
@@ -147,7 +151,11 @@ MeshID ResourceManager::new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMe
 MeshID ResourceManager::new_mesh_from_file(const unicode& path, GarbageCollectMethod garbage_collect) {
     //Load the material
     kglt::MeshID mesh_id = new_mesh(VertexSpecification::POSITION_ONLY, garbage_collect);
-    window->loader_for(path.encode())->into(mesh(mesh_id));
+    auto loader = window->loader_for(path.encode());
+    assert(loader && "Unable to locate a loader for the specified mesh file");
+
+    loader->into(mesh(mesh_id));
+
     MeshManager::mark_as_uncollected(mesh_id);
     return mesh_id;
 }

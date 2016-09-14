@@ -179,6 +179,8 @@ public:
 
     ~Mesh();
 
+    void reset(VertexSpecification vertex_specification);
+
     SubMesh* new_submesh_with_material(
         const std::string& name,
         MaterialID material,        

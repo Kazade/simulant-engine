@@ -237,6 +237,7 @@ public:
 
     void resize(uint32_t size) {
         data_.resize(size * stride(), 0);
+        vertex_count_ = size;
     }
 
     VertexSpecification specification() const { return vertex_specification_; }

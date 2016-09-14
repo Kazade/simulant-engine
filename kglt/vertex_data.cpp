@@ -334,6 +334,11 @@ void VertexData::interp_vertex(uint32_t source_idx, const VertexData &dest_state
         throw std::logic_error("You cannot interpolate vertices between data with different specifications");
     }
 
+    // First, copy all the data from the source to the current out vertex
+    for(uint32_t i = 0; i < stride(); ++i) {
+        out.data_[(out_idx * stride()) + i] = data_[(source_idx * stride()) + i];
+    }
+
     out.move_to(out_idx);
 
     switch(vertex_specification_.position_attribute) {

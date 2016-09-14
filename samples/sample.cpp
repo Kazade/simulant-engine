@@ -8,9 +8,12 @@ public:
         kglt::Screen<GameScreen>(window, "game_screen") {}
 
     void do_load() {
-        prepare_basic_scene(stage_id_, camera_id_);
+        auto pipeline_id = prepare_basic_scene(stage_id_, camera_id_);
+
+        window->pipeline(pipeline_id)->viewport->set_colour(kglt::Colour::SKY_BLUE);
 
         auto stage = window->stage(stage_id_);
+
         window->camera(camera_id_)->set_perspective_projection(
             45.0,
             float(window->width()) / float(window->height()),
@@ -29,18 +32,20 @@ public:
             for a reference to an object.
         */
 
-        ///Shortcut function for loading images
-        kglt::TextureID tid = stage->assets->new_texture_from_file("sample_data/sample.tga");
-        kglt::MaterialID matid = stage->assets->new_material_from_texture(tid);
-
         stage->set_ambient_light(kglt::Colour::WHITE);
-        stage->new_light(kglt::LIGHT_TYPE_DIRECTIONAL);
+//        stage->new_light(kglt::LIGHT_TYPE_DIRECTIONAL);
 
-        actor_id_ = stage->new_actor_with_mesh(stage->assets->new_mesh_as_capsule(0.5, 1.0));
+        // Load an animated MD2 mesh
+        kglt::MeshID mesh_id = stage->assets->new_mesh_from_file(
+            "sample_data/ogro.md2"
+        );
+
+        // Create an instance of it
+        actor_id_ = stage->new_actor_with_mesh(mesh_id);
+
         {
             auto actor = stage->actor(actor_id_);
-            actor->mesh()->set_material_id(matid);
-            actor->move_to(0.0f, 0.0f, -5.0f);
+            actor->move_to(0.0f, 0.0f, -80.0f);
         }
     }
 
