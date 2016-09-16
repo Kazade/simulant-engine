@@ -202,7 +202,7 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
     // with the combined position + texcoord data
     for(int32_t frame_id = 0; frame_id < header->num_frames; ++frame_id) {
         for(int32_t i = 0; i < header->num_tris; ++i) {
-            MD2Triangle* tri = (MD2Triangle*) triangle_cursor;
+            MD2Triangle* tri = ((MD2Triangle*) triangle_cursor) + i;
 
             for(int32_t j = 0; j < 3; ++j) {
                 VertexKey key = std::make_pair(tri->index[j], tri->st[j]);
@@ -220,7 +220,7 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
     submesh->index_data->done();
     submesh->vertex_data->done();
 
-    mesh->add_animation("test", 0, 0, 3.0);
+    mesh->add_animation("test", 0, 8, 10.0);
 }
 
 

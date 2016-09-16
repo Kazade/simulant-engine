@@ -584,10 +584,8 @@ void Mesh::refresh_animation_state() {
         for(uint32_t i = 0; i < shared_vertices_per_frame; ++i) {
             shared_data_->interp_vertex(
                 source_offset + i,
-                *shared_data_,
-                target_offset + i,
-                *shared_vertex_animation_buffer_,
-                i,
+                *shared_data_, target_offset + i,
+                *shared_vertex_animation_buffer_, i,
                 this->interp_
             );
         }

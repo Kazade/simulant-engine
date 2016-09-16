@@ -50,8 +50,8 @@ public:
     }
 
     void do_step(double dt) {
-        auto stage = window->stage(stage_id_);
-        stage->actor(actor_id_)->rotate_y(kglt::Degrees(20.0 * dt));
+        //auto stage = window->stage(stage_id_);
+        //stage->actor(actor_id_)->rotate_y(kglt::Degrees(20.0 * dt));
     }
 
 private:

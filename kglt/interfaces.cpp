@@ -81,25 +81,31 @@ void KeyFrameAnimated::update(double dt) {
         return;
     }
 
-    interp_ += dt;
-
     int diff = current_animation_->frames.second - current_animation_->frames.first;
-    if((diff && interp_ >= (current_animation_duration_ / double(diff))) || diff == 0) {
-        interp_ = 0.0;
-        current_frame_ = next_frame_;
-        next_frame_++;
+    if(!diff) {
+        interp_ = 0.0f;
+    } else {
+        float divider = current_animation_duration_ / double(diff);
+        interp_ += dt / divider;
 
-        //FIXME: Add and handle loop=false
-        if(next_frame_ > current_animation_->frames.second) {
-            if(next_animation_) {
-                current_animation_ = next_animation_;
-                current_animation_duration_ = current_animation_->duration;
-                next_animation_ = nullptr;
+        if(interp_ >= 1.0) {
+            interp_ = 0.0;
+            current_frame_ = next_frame_;
+            next_frame_++;
+
+            //FIXME: Add and handle loop=false
+            if(next_frame_ > current_animation_->frames.second) {
+                if(next_animation_) {
+                    current_animation_ = next_animation_;
+                    current_animation_duration_ = current_animation_->duration;
+                    next_animation_ = nullptr;
+                }
+                next_frame_ = current_animation_->frames.first;
             }
-            next_frame_ = current_animation_->frames.first;
         }
-        refresh_animation_state();
     }
+
+    refresh_animation_state();
 }
 
 }

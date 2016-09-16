@@ -345,21 +345,21 @@ void VertexData::interp_vertex(uint32_t source_idx, const VertexData &dest_state
         case VERTEX_ATTRIBUTE_2F: {
             Vec2 source = this->position_at<Vec2>(source_idx);
             Vec2 dest = dest_state.position_at<Vec2>(dest_idx);
-            Vec2 final = source + ((dest - source).normalized() * interp);
+            Vec2 final = source + ((dest - source) * interp);
             out.position(final);
         }
         break;
         case VERTEX_ATTRIBUTE_3F: {
             Vec3 source = this->position_at<Vec3>(source_idx);
             Vec3 dest = dest_state.position_at<Vec3>(dest_idx);
-            Vec3 final = source + ((dest - source).normalized() * interp);
+            Vec3 final = source + ((dest - source) * interp);
             out.position(final);
         }
         break;
         case VERTEX_ATTRIBUTE_4F: {
             Vec4 source = this->position_at<Vec4>(source_idx);
             Vec4 dest = dest_state.position_at<Vec4>(dest_idx);
-            Vec4 final = source + ((dest - source).normalized() * interp);
+            Vec4 final = source + ((dest - source) * interp);
             out.position(final);
         }
         break;
