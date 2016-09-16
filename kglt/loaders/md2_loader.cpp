@@ -220,7 +220,22 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
     submesh->index_data->done();
     submesh->vertex_data->done();
 
-    mesh->add_animation("test", 0, 8, 10.0);
+    mesh->add_animation("idle_1", 0, 39, 10.0);
+    mesh->add_animation("running", 40, 46, 10.0);
+    mesh->add_animation("shot_1", 47, 60, 10.0);
+    mesh->add_animation("shot_2", 61, 66, 10.0);
+    mesh->add_animation("jumping", 67, 73, 10.0);
+    mesh->add_animation("idle_2", 74, 95, 10.0);
+    mesh->add_animation("shot_3", 96, 112, 10.0);
+    mesh->add_animation("idle_3", 113, 122, 10.0);
+    mesh->add_animation("idle_4", 123, 135, 10.0);
+    mesh->add_animation("crouching_1", 136, 154, 10.0);
+    mesh->add_animation("crawling", 155, 161, 10.0);
+    mesh->add_animation("crouching_2", 162, 169, 10.0);
+    mesh->add_animation("death_1", 170, 177, 10.0);
+    mesh->add_animation("death_2", 178, 185, 10.0);
+    mesh->add_animation("death_3", 186, 190, 10.0);
+    mesh->add_animation("death_4", 191, 198, 10.0);
 }
 
 
