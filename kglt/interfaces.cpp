@@ -15,12 +15,12 @@ void KeyFrameAnimated::play_sequence(const unicode& name) {
 }
 
 void KeyFrameAnimated::add_animation(const unicode& name,
-    uint32_t start_frame, uint32_t end_frame, float duration
+    uint32_t start_frame, uint32_t end_frame, float fps
 ) {
     auto& anim = animations_[name];
     anim.frames.first = start_frame;
     anim.frames.second = end_frame;
-    anim.duration = duration;
+    anim.duration = (end_frame - start_frame) / fps;
 
     if(animations_.size() == 1) {
         current_animation_ = &anim;

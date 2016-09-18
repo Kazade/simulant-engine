@@ -71,8 +71,12 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
 
     auto get_frame_vertex_position = [header, &data](int32_t frame_index, int16_t vertex_index) -> Vec3 {
         //Needed because the Quake 2 coord system is weird
+        kmMat4 rotation_x, rotation_y;
+        kmMat4RotationX(&rotation_x, kmDegreesToRadians(-90.0f));
+        kmMat4RotationY(&rotation_y, kmDegreesToRadians(90.0f));
+
         kmMat4 rotation;
-        kmMat4RotationX(&rotation, kmDegreesToRadians(-90.0f));
+        kmMat4Multiply(&rotation, &rotation_y, &rotation_x);
 
         const char* cursor = &data[0];
         cursor += header->offset_frames;
@@ -220,22 +224,50 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
     submesh->index_data->done();
     submesh->vertex_data->done();
 
-    mesh->add_animation("idle_1", 0, 39, 10.0);
-    mesh->add_animation("running", 40, 46, 10.0);
-    mesh->add_animation("shot_1", 47, 60, 10.0);
-    mesh->add_animation("shot_2", 61, 66, 10.0);
-    mesh->add_animation("jumping", 67, 73, 10.0);
-    mesh->add_animation("idle_2", 74, 95, 10.0);
-    mesh->add_animation("shot_3", 96, 112, 10.0);
-    mesh->add_animation("idle_3", 113, 122, 10.0);
-    mesh->add_animation("idle_4", 123, 135, 10.0);
-    mesh->add_animation("crouching_1", 136, 154, 10.0);
-    mesh->add_animation("crawling", 155, 161, 10.0);
-    mesh->add_animation("crouching_2", 162, 169, 10.0);
-    mesh->add_animation("death_1", 170, 177, 10.0);
-    mesh->add_animation("death_2", 178, 185, 10.0);
-    mesh->add_animation("death_3", 186, 190, 10.0);
-    mesh->add_animation("death_4", 191, 198, 10.0);
+    /*
+     *     {   0,  39,  9 },   // STAND
+    {  40,  45, 10 },   // RUN
+    {  46,  53, 10 },   // ATTACK
+    {  54,  57,  7 },   // PAIN_A
+    {  58,  61,  7 },   // PAIN_B
+    {  62,  65,  7 },   // PAIN_C
+    {  66,  71,  7 },   // JUMP
+    {  72,  83,  7 },   // FLIP
+    {  84,  94,  7 },   // SALUTE
+    {  95, 111, 10 },   // FALLBACK
+    { 112, 122,  7 },   // WAVE
+    { 123, 134,  6 },   // POINT
+    { 135, 153, 10 },   // CROUCH_STAND
+    { 154, 159,  7 },   // CROUCH_WALK
+    { 160, 168, 10 },   // CROUCH_ATTACK
+    { 196, 172,  7 },   // CROUCH_PAIN
+    { 173, 177,  5 },   // CROUCH_DEATH
+    { 178, 183,  7 },   // DEATH_FALLBACK
+    { 184, 189,  7 },   // DEATH_FALLFORWARD
+    { 190, 197,  7 },   // DEATH_FALLBACKSLOW
+    { 198, 198,  5 },   // BOOM
+    */
+    mesh->add_animation("idle_1", 0, 39, 9.0);
+    mesh->add_animation("running", 40, 45, 10.0);
+    mesh->add_animation("attack", 46, 53, 10.0);
+    mesh->add_animation("pain_1", 54, 57, 7.0);
+    mesh->add_animation("pain_2", 58, 61, 7.0);
+    mesh->add_animation("pain_3", 62, 65, 7.0);
+    mesh->add_animation("jumping", 66, 71, 7.0);
+    mesh->add_animation("taunt_1", 72, 83, 7.0);
+    mesh->add_animation("taunt_2", 84, 94, 7.0);
+    mesh->add_animation("fall_back", 95, 111, 10.0);
+    mesh->add_animation("idle_2", 112, 122, 7.0);
+    mesh->add_animation("idle_3", 123, 134, 6.0);
+    mesh->add_animation("crouch_idle", 135, 153, 10.0);
+    mesh->add_animation("crouch_walk", 154, 159, 7.0);
+    mesh->add_animation("crouch_attack", 160, 168, 10.0);
+    mesh->add_animation("crouch_pain", 169, 172, 7.0);
+    mesh->add_animation("crouch_death", 173, 177, 5.0);
+    mesh->add_animation("death_1", 178, 183, 7.0);
+    mesh->add_animation("death_2", 184, 189, 7.0);
+    mesh->add_animation("death_3", 190, 197, 7.0);
+    mesh->add_animation("death_4", 198, 198, 5.0);
 }
 
 

@@ -19,7 +19,7 @@ public:
     void play_sequence(const unicode& name);
 
     void add_animation(const unicode& name,
-        uint32_t start_frame, uint32_t end_frame, float duration
+        uint32_t start_frame, uint32_t end_frame, float fps
     );
 
     void play_animation(const unicode& name);
