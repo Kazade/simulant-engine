@@ -99,6 +99,11 @@ void Actor::set_mesh(MeshID mesh) {
         delete shared_vertex_animation_buffer_;
 
         shared_vertex_animation_buffer_ = new VertexData(mesh_->shared_data->specification());
+
+#ifdef KGLT_GL_VERSION_2X
+        animated_vertex_buffer_object_ = BufferObject::create(BUFFER_OBJECT_VERTEX_DATA, MODIFY_REPEATEDLY_USED_FOR_RENDERING);
+#endif
+
         animation_state_ = std::make_shared<KeyFrameAnimationState>(
             mesh_,
             std::bind(&Actor::refresh_animation_state, this, _1, _2, _3)
@@ -164,6 +169,7 @@ void Actor::refresh_animation_state(uint32_t current_frame, uint32_t next_frame,
         }
 
         shared_vertex_animation_buffer_->done();
+        animated_vertex_buffer_object_dirty_ = true;
     }
 }
 
@@ -210,8 +216,8 @@ SubActor::SubActor(Actor& parent, std::shared_ptr<SubMesh> submesh):
     );
 
 #ifdef KGLT_GL_VERSION_2X
-    if(parent.has_animated_mesh()) {
-        animated_vertex_array_object_ = VertexArrayObject::create();
+    if(parent_.has_animated_mesh()) {
+        vertex_array_object_ = VertexArrayObject::create(parent_.animated_vertex_buffer_object_);
     }
 #endif
 }
@@ -231,15 +237,37 @@ const MaterialID SubActor::material_id() const {
 #ifdef KGLT_GL_VERSION_2X
 void SubActor::_update_vertex_array_object() {
     if(parent_.has_animated_mesh()) {
+        // If the parent is animated, update the parent buffer if necessary
+        // as the VAO shares this buffer, we don't need to do anything special there
+        if(parent_.animated_vertex_buffer_object_dirty_) {
+            parent_.animated_vertex_buffer_object_->build(
+                parent_.shared_vertex_animation_buffer_->data_size(),
+                parent_.shared_vertex_animation_buffer_->data());
+            parent_.animated_vertex_buffer_object_dirty_ = false;
+        }
+
+        // This only triggers on the first update as indexes on animated meshes don't change
+        if(index_data_dirty_) {
+            //FIXME: This is crazy wasteful as we're uploading indexes twice (once per submesh, and once per subactor) but to fix it
+            // I need to refactor the way hardware buffers are bound.
+            vertex_array_object_->index_buffer_update(
+                submesh()->index_data->count() * sizeof(Index),
+                submesh()->index_data->_raw_data()
+            );
+
+            index_data_dirty_ = false;
+        }
 
     } else {
+        // If there is no animated mesh, then just do the normal thing and
+        // update the submesh buffer if necessary
         submesh()->_update_vertex_array_object();
     }
 }
 
 void SubActor::_bind_vertex_array_object() {
     if(parent_.has_animated_mesh()) {
-        animated_vertex_array_object_->bind();
+        vertex_array_object_->bind();
     } else {
         submesh()->_bind_vertex_array_object();
     }

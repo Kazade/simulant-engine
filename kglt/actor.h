@@ -110,6 +110,14 @@ private:
      * is stored */
     VertexData* shared_vertex_animation_buffer_ = nullptr;
 
+    /*
+     * If the actor has an animated mesh, then we need to store interpolated vertex
+     * attributes in the Actor::shared_vertex_animation_buffer_.*/
+#ifdef KGLT_GL_VERSION_2X
+    BufferObjectPtr animated_vertex_buffer_object_;
+    bool animated_vertex_buffer_object_dirty_ = true;
+#endif
+
     std::shared_ptr<Mesh> mesh_;
     std::vector<std::shared_ptr<SubActor> > subactors_;
     std::shared_ptr<KeyFrameAnimationState> animation_state_;
@@ -194,16 +202,9 @@ private:
 
     sig::connection submesh_material_changed_connection_;
 
-
-    /*
-     * If the actor has an animated mesh, then we need to store interpolated vertex
-     * attributes in the Actor::shared_vertex_animation_buffer_. Because of that we need
-     * to maintain a VertexArrayObject per subactor instead of per submesh. However, like
-     * with SubMesh this is currently very wasteful as we upload the vertex data multiple times (
-     * once for each submesh). This needs to be fixed by adding hardware buffer management to the renderer
-     * and using separate Vertex/Index data handles */
 #ifdef KGLT_GL_VERSION_2X
-    VertexArrayObjectPtr animated_vertex_array_object_;
+    VertexArrayObjectPtr vertex_array_object_;
+    bool index_data_dirty_ = true;
 #endif
 
 };
