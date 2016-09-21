@@ -3,6 +3,7 @@
 #include "stage.h"
 #include "actor.h"
 #include "window_base.h"
+#include "animation.h"
 
 using namespace kglt;
 
@@ -13,6 +14,12 @@ Sprite::Sprite(SpriteID id, Stage *stage):
 
     sprite_sheet_padding_ = std::make_pair(0, 0);
 
+    using namespace std::placeholders;
+
+    animation_state_ = std::make_shared<KeyFrameAnimationState>(
+        shared_from_this(),
+        std::bind(&Sprite::refresh_animation_state, this, _1, _2, _3)
+    );
 }
 
 bool Sprite::init() {
@@ -40,7 +47,7 @@ void Sprite::update(double dt) {
     stage->actor(actor_id_)->set_parent(id()); //Make sure every frame that our actor stays attached to us!
 
     // Update any keyframe animations
-    KeyFrameAnimated::update(dt);
+    animation_state_->update(dt);
 }
 
 
@@ -61,8 +68,9 @@ void Sprite::flip_vertically(bool value) {
 void Sprite::update_texture_coordinates() {
     uint8_t across = image_width_ / frame_width_;
 
-    int x = current_frame_ % across;
-    int y = current_frame_ / across;
+    auto current_frame = animation_state_->current_frame();
+    int x = current_frame % across;
+    int y = current_frame / across;
 
     float x0 = sprite_sheet_margin_ + (x * (sprite_sheet_spacing_ + frame_width_)) + sprite_sheet_padding_.first;
     float x1 = x0 + (frame_width_ - sprite_sheet_padding_.first);

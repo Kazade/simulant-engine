@@ -55,10 +55,6 @@ void ResourceManager::update(double dt) {
         mat->update(dt);
     });
 
-    MeshManager::each([dt](Mesh* mesh) {
-        mesh->update(dt);
-    });
-
     static auto last_collection = std::chrono::system_clock::now();
 
     auto now = std::chrono::system_clock::now();

@@ -44,9 +44,6 @@ void Mesh::reset(VertexSpecification vertex_specification) {
     delete shared_data_;
     shared_data_ = new VertexData(vertex_specification);
 
-    delete shared_vertex_animation_buffer_;
-    shared_vertex_animation_buffer_ = nullptr;
-
 #ifdef KGLT_GL_VERSION_2X
     //FIXME: Somehow we need to specify if the shared data is modified repeatedly etc.
     shared_data_buffer_object_ = BufferObject::create(BUFFER_OBJECT_VERTEX_DATA, MODIFY_ONCE_USED_FOR_RENDERING);
@@ -57,10 +54,6 @@ void Mesh::reset(VertexSpecification vertex_specification) {
 Mesh::~Mesh() {
     delete shared_data_;
     shared_data_ = nullptr;
-
-    // Make sure we delete the shared vertex animation buffer if necessary
-    delete shared_vertex_animation_buffer_;
-    shared_vertex_animation_buffer_ = nullptr;
 }
 
 void Mesh::each(std::function<void (const std::string&, SubMesh*)> func) const {
@@ -87,9 +80,7 @@ void Mesh::enable_animation(MeshAnimationType animation_type, uint32_t animation
     animation_type_ = animation_type;
     animation_frames_ = animation_frames;
 
-    if(!shared_vertex_animation_buffer_) {
-        shared_vertex_animation_buffer_ = new VertexData(shared_data->specification());
-    }
+    signal_animation_enabled_(this, animation_type_, animation_frames_);
 }
 
 VertexData* Mesh::get_shared_data() const {
@@ -549,10 +540,10 @@ void Mesh::set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass) {
 
 #ifdef KGLT_GL_VERSION_2X
 void Mesh::_update_buffer_object() {
-    if(shared_data_dirty_ || is_animated()) {
-        if(is_animated()) {
-            shared_data_buffer_object_->build(shared_vertex_animation_buffer_->data_size(), shared_vertex_animation_buffer_->data());
-        } else {
+    if(shared_data_dirty_) {
+        // Only update the buffer if we're not animating, if we are then we don't upload
+        // vertex data to GL, as we use the interpolated buffer on the Actor
+        if(!is_animated()) {
             shared_data_buffer_object_->build(shared_data->data_size(), shared_data->data());
         }
         shared_data_dirty_ = false;
@@ -569,60 +560,6 @@ SubMesh* Mesh::submesh(const std::string& name) {
     return nullptr;
 }
 
-void Mesh::refresh_animation_state() {
-    auto shared_data_size = shared_data->count();
-    if(shared_data_size) {
-        assert(shared_data_size % animation_frames_ == 0);
-        auto shared_vertices_per_frame = shared_data_size / animation_frames_;
-
-        // Should hopefully be a no-op if nothing changed!
-        shared_vertex_animation_buffer_->resize(shared_vertices_per_frame);
-
-        auto source_offset = shared_vertices_per_frame * current_frame_;
-        auto target_offset = shared_vertices_per_frame * next_frame_;
-
-        for(uint32_t i = 0; i < shared_vertices_per_frame; ++i) {
-            shared_data_->interp_vertex(
-                source_offset + i,
-                *shared_data_, target_offset + i,
-                *shared_vertex_animation_buffer_, i,
-                this->interp_
-            );
-        }
-
-        shared_vertex_animation_buffer_->done();
-    }
-
-    /* Update the interpolated data on submeshes */
-    this->each([this](const std::string& name, SubMesh* submesh) {
-        if(!submesh->uses_shared_vertices()) {
-            assert(submesh->vertex_data->count() % animation_frames_ == 0);
-            auto vertices_per_frame = submesh->vertex_data->count() / animation_frames_;
-
-            // Should hopefully be a no-op if nothing changed!
-            submesh->vertex_animation_buffer_->resize(vertices_per_frame);
-
-            auto source_offset = vertices_per_frame * current_frame_;
-            auto target_offset = vertices_per_frame * next_frame_;
-
-            for(uint32_t i = 0; i < vertices_per_frame; ++i) {
-                submesh->vertex_data_->interp_vertex(
-                    source_offset + i,
-                    *submesh->vertex_data_,
-                    target_offset + i,
-                    *submesh->vertex_animation_buffer_,
-                    i,
-                    interp_
-                );
-            }
-
-            submesh->vertex_animation_buffer_->done();
-        }
-    });
-
-
-}
-
 SubMesh::SubMesh(Mesh* parent, const std::string& name,
         MaterialID material, MeshArrangement arrangement, VertexSharingMode vertex_sharing, VertexSpecification vertex_specification):
     parent_(parent),
@@ -634,6 +571,10 @@ SubMesh::SubMesh(Mesh* parent, const std::string& name,
         throw std::logic_error(
             "You must specify a vertex_attribute_mask when creating a submesh with independent vertices"
         );
+    }
+
+    if(!uses_shared_data_ && parent_->is_animated()) {
+        throw std::logic_error("You can't have submesh-independent vertices on an animated mesh (yet!)");
     }
 
     index_data_ = new IndexData();
@@ -682,15 +623,8 @@ void SubMesh::_bind_vertex_array_object() {
 void SubMesh::_update_vertex_array_object() {
     if(uses_shared_vertices()) {
         parent_->_update_buffer_object();
-    } else if(vertex_data_dirty_ || parent_->is_animated()) {
-        if(parent_->is_animated()) {
-            vertex_array_object_->vertex_buffer_update(
-                vertex_animation_buffer_->data_size(),
-                vertex_animation_buffer_->data()
-            );
-        } else {
-            vertex_array_object_->vertex_buffer_update(vertex_data->data_size(), vertex_data->data());
-        }
+    } else if(vertex_data_dirty_) {
+        vertex_array_object_->vertex_buffer_update(vertex_data->data_size(), vertex_data->data());
         vertex_data_dirty_ = false;
     }
 

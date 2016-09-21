@@ -18,6 +18,7 @@
 
 namespace kglt {
 
+class KeyFrameAnimationState;
 class SubActor;
 
 class Actor :
@@ -31,6 +32,7 @@ class Actor :
 public:
     Actor(ActorID id, Stage* stage);
     Actor(ActorID id, Stage* stage, MeshID mesh);
+    virtual ~Actor();
 
     MeshID mesh_id() const { return (mesh_) ? mesh_->id() : MeshID(0); }
 
@@ -95,11 +97,22 @@ public:
 
     RenderableCullingMode renderable_culling_mode() const { return culling_mode_; }
 
+    Property<Actor, KeyFrameAnimationState> animation_state = { this, &Actor::animation_state_ };
+
+    bool has_animated_mesh() const {
+        return mesh_ && mesh_->is_animated();
+    }
+
 private:
     VertexData* get_shared_data() const;
 
+    /* If this actor has an animated mesh then this is where interpolated key frame data
+     * is stored */
+    VertexData* shared_vertex_animation_buffer_ = nullptr;
+
     std::shared_ptr<Mesh> mesh_;
     std::vector<std::shared_ptr<SubActor> > subactors_;
+    std::shared_ptr<KeyFrameAnimationState> animation_state_;
 
     RenderPriority render_priority_;
     RenderableCullingMode culling_mode_ = RENDERABLE_CULLING_MODE_PARTITIONER;
@@ -109,16 +122,15 @@ private:
     SubActorMaterialChangedCallback signal_subactor_material_changed_;
     MeshChangedCallback signal_mesh_changed_;
 
-    void do_update(double dt) {
-        update_source(dt);
-    }
-
+    void do_update(double dt);
     void clear_subactors();
     void rebuild_subactors();
     sig::connection submesh_created_connection_;
     sig::connection submesh_destroyed_connection_;
 
     friend class SubActor;
+
+    void refresh_animation_state(uint32_t current_frame, uint32_t next_frame, float interp);
 };
 
 class SubActor :
@@ -136,8 +148,8 @@ public:
     const MeshArrangement arrangement() const { return submesh()->arrangement(); }
 
 #ifdef KGLT_GL_VERSION_2X
-    void _update_vertex_array_object() { submesh()->_update_vertex_array_object(); }
-    void _bind_vertex_array_object() { submesh()->_bind_vertex_array_object(); }
+    void _update_vertex_array_object();
+    void _bind_vertex_array_object();
 #endif
 
     RenderPriority render_priority() const { return parent_.render_priority(); }
@@ -181,6 +193,18 @@ private:
     MaterialPtr material_;
 
     sig::connection submesh_material_changed_connection_;
+
+
+    /*
+     * If the actor has an animated mesh, then we need to store interpolated vertex
+     * attributes in the Actor::shared_vertex_animation_buffer_. Because of that we need
+     * to maintain a VertexArrayObject per subactor instead of per submesh. However, like
+     * with SubMesh this is currently very wasteful as we upload the vertex data multiple times (
+     * once for each submesh). This needs to be fixed by adding hardware buffer management to the renderer
+     * and using separate Vertex/Index data handles */
+#ifdef KGLT_GL_VERSION_2X
+    VertexArrayObjectPtr animated_vertex_array_object_;
+#endif
 
 };
 

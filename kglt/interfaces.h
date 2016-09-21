@@ -6,55 +6,6 @@
 
 namespace kglt {
 
-struct AnimationSequenceStage {
-    unicode animation_name;
-    float duration;
-};
-
-class KeyFrameAnimated {
-public:
-    virtual ~KeyFrameAnimated() {}
-
-    void add_sequence(const unicode& name, const std::vector<AnimationSequenceStage>& stages);
-    void play_sequence(const unicode& name);
-
-    void add_animation(const unicode& name,
-        uint32_t start_frame, uint32_t end_frame, float fps
-    );
-
-    void play_animation(const unicode& name);
-    void queue_next_animation(const unicode& name);
-    void override_playing_animation_duration(const float new_duration);
-    void update(double dt);
-
-protected:
-    //Animation stuff
-
-    struct Animation {
-        Animation():
-            duration(0) {}
-
-        Animation(double duration, uint32_t start, uint32_t end):
-            duration(duration),
-            frames(std::make_pair(start, end)) {}
-
-        double duration;
-        std::pair<uint32_t, uint32_t> frames;
-    };
-
-    std::unordered_map<unicode, Animation> animations_;
-    Animation* current_animation_ = nullptr;
-    Animation* next_animation_ = nullptr;
-    float current_animation_duration_ = 0.0;
-
-    uint32_t current_frame_ = 0;
-    uint32_t next_frame_ = 0;
-    double interp_ = 0.0;
-
-    virtual void refresh_animation_state() = 0;
-
-};
-
 
 /**
  * @brief The Transformable class

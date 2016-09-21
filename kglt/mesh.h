@@ -18,6 +18,7 @@
 #include "vertex_data.h"
 #include "types.h"
 #include "interfaces.h"
+#include "animation.h"
 
 namespace kglt {
 
@@ -139,8 +140,6 @@ private:
     VertexData* vertex_data_ = nullptr;
     IndexData* index_data_ = nullptr;
 
-    VertexData* vertex_animation_buffer_ = nullptr;
-
 #ifdef KGLT_GL_VERSION_2X
     VertexArrayObjectPtr vertex_array_object_;
 #endif
@@ -163,6 +162,8 @@ enum MeshAnimationType {
 };
 
 
+typedef sig::signal<void (Mesh*, MeshAnimationType, uint32_t)> SignalAnimationEnabled;
+
 class Mesh :
     public MeshInterface,
     public Resource,
@@ -171,6 +172,8 @@ class Mesh :
     public generic::Identifiable<MeshID>,
     public KeyFrameAnimated,
     public std::enable_shared_from_this<Mesh> {
+
+    DEFINE_SIGNAL(SignalAnimationEnabled, signal_animation_enabled);
 
 public:
     Mesh(MeshID id,
@@ -255,10 +258,6 @@ private:
     friend class SubMesh;
     VertexData* get_shared_data() const;
 
-    // If vertex animation is enabled, this buffer becomes the location where interpolated
-    // vertex data goes. In that case this is the buffer uploaded to the hardware buffers
-    VertexData* shared_vertex_animation_buffer_ = nullptr;
-
     bool shared_data_dirty_ = false;
     VertexData* shared_data_ = nullptr;
     MeshAnimationType animation_type_ = MESH_ANIMATION_TYPE_NONE;
@@ -276,8 +275,6 @@ private:
     SubMeshCreatedCallback signal_submesh_created_;
     SubMeshDestroyedCallback signal_submesh_destroyed_;
     SubMeshMaterialChangedCallback signal_submesh_material_changed_;
-
-    void refresh_animation_state();
 };
 
 }

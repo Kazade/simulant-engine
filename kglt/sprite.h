@@ -8,15 +8,19 @@
 #include "utils/parent_setter_mixin.h"
 #include "sound.h"
 #include "object.h"
+#include "animation.h"
 
 namespace kglt {
+
+class KeyFrameAnimationState;
 
 class Sprite :
     public Managed<Sprite>,
     public generic::Identifiable<SpriteID>,
     public ParentSetterMixin<MoveableObject>,
     public KeyFrameAnimated,
-    public Source {
+    public Source,
+    public std::enable_shared_from_this<Sprite> {
 
 public:
     //Ownable interface (inherited through ParentSetterMixin)
@@ -49,6 +53,7 @@ public:
     }
 
     kglt::ActorID actor_id() const { return actor_id_; }
+
 private:
     float frame_width_ = 0;
     float frame_height_ = 0;
@@ -69,9 +74,11 @@ private:
     bool flipped_vertically_ = false;
     bool flipped_horizontally_ = false;
 
-    void refresh_animation_state() {
+    void refresh_animation_state(uint32_t current_frame, uint32_t next_frame, float interp) {
         update_texture_coordinates();
     }
+
+    std::shared_ptr<KeyFrameAnimationState> animation_state_;
 };
 
 }
