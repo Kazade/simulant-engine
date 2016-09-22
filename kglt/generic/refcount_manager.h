@@ -45,7 +45,12 @@ public:
     ObjectIDType make(ObjectIDType id, GarbageCollectMethod garbage_collect, Args&&... args) {
         std::lock_guard<std::mutex> lock(manager_lock_);
         if(!id) {
-            id = NewIDGenerator()();
+            id = ObjectIDType(
+                NewIDGenerator()(),
+                [this](const ObjectIDType* id) -> typename ObjectIDType::resource_pointer_type {
+                    return this->get(*id).lock();
+                }
+            );
         }
 
         auto obj = ObjectType::create(id, std::forward<Args>(args)...);

@@ -16,11 +16,11 @@
 
 namespace kglt {
 
-typedef UniqueID<300> InputConnectionID;
-
 class InputController;
 class InputConnection;
 class WindowBase;
+
+typedef UniqueID<InputConnection> InputConnectionID;
 
 class Device : public std::enable_shared_from_this<Device> {
 public:

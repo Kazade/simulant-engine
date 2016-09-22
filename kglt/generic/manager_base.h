@@ -13,9 +13,9 @@ namespace generic  {
 template<typename T>
 class IncrementalGetNextID {
 public:
-    T operator()() {
+    uint32_t operator()() {
         static uint32_t counter = 0;
-        return T(++counter);
+        return ++counter;
     }
 };
 

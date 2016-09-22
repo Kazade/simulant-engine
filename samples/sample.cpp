@@ -22,29 +22,14 @@ public:
         );
 
         stage->set_ambient_light(kglt::Colour::WHITE);
-//        stage->new_light(kglt::LIGHT_TYPE_DIRECTIONAL);
 
         // Load an animated MD2 mesh
-        kglt::MeshID mesh_id = stage->assets->new_mesh_from_file(
-            "sample_data/ogro.md2"
-        );
+        kglt::MeshID mesh_id = stage->assets->new_mesh_from_file("sample_data/ogro.md2");
 
         // Create an instance of it
-        auto a1 = stage->new_actor_with_mesh(mesh_id);
-        auto a2 = stage->new_actor_with_mesh(mesh_id);
-
-        {
-            auto actor = stage->actor(a1);
-            actor->move_to(0.0f, 0.0f, -80.0f);
-            actor->rotate_global_y(kglt::Degrees(180));
-        }
-
-        {
-            auto actor2 = stage->actor(a2);
-            actor2->move_to(0.0f, 0.0f, -120.0f);
-            actor2->animation_state->play_animation("idle_2");
-
-        }
+        auto actor = stage->new_actor_with_mesh(mesh_id).fetch();
+        actor->move_to(0.0f, 0.0f, -80.0f);
+        actor->rotate_global_y(kglt::Degrees(180));
     }
 
     void do_step(double dt) {

@@ -1,6 +1,7 @@
 #ifndef MANAGER_H
 #define MANAGER_H
 
+#include <type_traits>
 #include "manager_base.h"
 
 #include <functional>
@@ -10,10 +11,29 @@
 namespace kglt {
 namespace generic {
 
+
 template<typename ObjectType, typename ObjectIDType, typename NewIDGenerator=IncrementalGetNextID<ObjectIDType> >
 class TemplatedManager {
 protected:
     mutable std::recursive_mutex manager_lock_;
+
+
+private:
+    // This covers the case where the resource_pointer_type is a raw pointer
+    template<typename Q=ObjectIDType>
+    typename ObjectIDType::resource_pointer_type getter(
+            const ObjectIDType* id,
+            typename std::enable_if<std::is_pointer<typename Q::resource_pointer_type>::value>::type* = 0) {
+        return get(*id).lock().get();
+    }
+
+    // This covers the case where the resource_pointer_type is a smart pointer
+    template<typename Q=ObjectIDType>
+    typename ObjectIDType::resource_pointer_type getter(
+            const ObjectIDType* id,
+            typename std::enable_if<!std::is_pointer<typename Q::resource_pointer_type>::value>::type* = 0) {
+        return get(*id).lock();
+    }
 
 public:
     virtual ~TemplatedManager() {}
@@ -23,7 +43,15 @@ public:
 
     template<typename... Args>
     ObjectIDType make(Args&&... args) {
-        return make(generator_(), std::forward<Args>(args)...);
+        return make(
+            ObjectIDType(
+                generator_(),
+                [this](const ObjectIDType* id) -> typename ObjectIDType::resource_pointer_type {
+                    return this->getter(id);
+                }
+            ),
+            std::forward<Args>(args)...
+        );
     }
 
     template<typename... Args>

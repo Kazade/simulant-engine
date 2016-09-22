@@ -6,52 +6,69 @@
 
 #include "safe_bool.h"
 
-template<uint32_t T>
-class UniqueID : public safe_bool<UniqueID<T> >{
-public:
-    UniqueID():
-        id_(0) {}
 
-    explicit UniqueID(uint32_t id):
-        id_(id) {
+template<typename ResourceTypePtr>
+class UniqueID : public safe_bool<UniqueID<ResourceTypePtr> >{
+public:
+    typedef ResourceTypePtr resource_pointer_type;
+
+    typedef std::function<ResourceTypePtr (const UniqueID<ResourceTypePtr>*)> ResourceGetter;
+
+    UniqueID(ResourceGetter getter=ResourceGetter()):
+        id_(0),
+        getter_(getter) {}
+
+    ResourceTypePtr fetch() const {
+        assert(is_bound() && "This ID is not bound to a resource manager");
+        return getter_(this);
+    }
+
+    bool is_bound() const {
+        return bool(getter_);
+    }
+
+    explicit UniqueID(uint32_t id, ResourceGetter getter=ResourceGetter()):
+        id_(id),
+        getter_(getter) {
 
     }
 
-    bool operator==(const UniqueID<T>& other) const {
+    bool operator==(const UniqueID<ResourceTypePtr>& other) const {
         return this->id_ == other.id_;
     }
 
-    UniqueID& operator=(const UniqueID<T>& other) {
+    UniqueID& operator=(const UniqueID<ResourceTypePtr>& other) {
         this->id_ = other.id_;
         return *this;
     }
 
-    bool operator<(const UniqueID<T>& other) const {
+    bool operator<(const UniqueID<ResourceTypePtr>& other) const {
         return this->id_ < other.id_;
     }
 
-    bool operator!=(const UniqueID<T>& other) const {
+    bool operator!=(const UniqueID<ResourceTypePtr>& other) const {
         return !(*this == other);
     }
 
-    friend std::ostream& operator<< (std::ostream& o, UniqueID<T> const& instance) {
+    friend std::ostream& operator<< (std::ostream& o, UniqueID<ResourceTypePtr> const& instance) {
         return o << instance.value();
     }
 
-public:
     bool boolean_test() const {
         return id_ != 0;
     }
 
     uint32_t value() const { return id_; }
+
 private:
     uint32_t id_;
+    ResourceGetter getter_;
 };
 
 namespace std {
-    template<uint32_t T>
-    struct hash< UniqueID<T> > {
-        size_t operator()(const UniqueID<T>& id) const {
+    template<typename ResourcePtrType>
+    struct hash< UniqueID<ResourcePtrType> > {
+        size_t operator()(const UniqueID<ResourcePtrType>& id) const {
             hash<uint32_t> make_hash;
             return make_hash(id.value());
         }

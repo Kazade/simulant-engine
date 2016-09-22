@@ -682,25 +682,6 @@ enum VirtualDPadDirections {
     VIRTUAL_DPAD_DIRECTIONS_ANALOG
 };
 
-typedef UniqueID<0> MeshID;
-typedef UniqueID<1> TextureID;
-typedef UniqueID<2> CameraID;
-typedef UniqueID<3> MaterialID;
-typedef UniqueID<4> LightID;
-typedef UniqueID<5> StageID;
-typedef UniqueID<6> ActorID;
-typedef UniqueID<7> GeomID;
-typedef UniqueID<8> SoundID;
-typedef UniqueID<9> PipelineID;
-typedef UniqueID<10> OverlayID;
-typedef UniqueID<11> SpriteID;
-typedef UniqueID<12> BackgroundID;
-typedef UniqueID<13> ParticleSystemID;
-typedef UniqueID<14> SkyboxID;
-typedef UniqueID<15> ShaderID;
-
-const StageID DefaultStageID = StageID();
-
 const std::string DEFAULT_MATERIAL_SCHEME = "default";
 
 class Mesh;
@@ -750,7 +731,6 @@ typedef Background* BackgroundPtr;
 
 class Stage;
 class WindowBase;
-typedef generic::TemplatedManager<Stage, StageID> BaseStageManager;
 typedef Stage* StagePtr;
 
 class ResourceManager;
@@ -768,6 +748,28 @@ class Partitioner;
 
 class GPUProgram;
 typedef std::shared_ptr<GPUProgram> GPUProgramPtr;
+
+class Skybox;
+typedef Skybox* SkyboxPtr;
+
+typedef UniqueID<MeshPtr> MeshID;
+typedef UniqueID<TexturePtr> TextureID;
+typedef UniqueID<CameraPtr> CameraID;
+typedef UniqueID<MaterialPtr> MaterialID;
+typedef UniqueID<LightPtr> LightID;
+typedef UniqueID<StagePtr> StageID;
+typedef UniqueID<ActorPtr> ActorID;
+typedef UniqueID<GeomPtr> GeomID;
+typedef UniqueID<SoundPtr> SoundID;
+typedef UniqueID<PipelinePtr> PipelineID;
+typedef UniqueID<OverlayPtr> OverlayID;
+typedef UniqueID<SpritePtr> SpriteID;
+typedef UniqueID<BackgroundPtr> BackgroundID;
+typedef UniqueID<ParticleSystemPtr> ParticleSystemID;
+typedef UniqueID<SkyboxPtr> SkyboxID;
+typedef UniqueID<GPUProgramPtr> ShaderID;
+
+typedef generic::TemplatedManager<Stage, StageID> BaseStageManager;
 
 }
 
