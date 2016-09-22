@@ -111,13 +111,26 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
 
         if(i == 0) {
             // Only load the first skin
+            std::string skin_name(skin->name);
+            std::vector<std::string> possible_paths = {
+                kfs::path::join(kfs::path::dir_name(filename_.encode()), kfs::path::split(skin_name).second),
+                skin_name
+            };
 
             kglt::TextureID tex_id;
-            try {
-                std::string texture_path = "sample_data/ogro.png";
-                tex_id = resource_manager->new_texture_from_file(locator->locate_file(texture_path));
-            } catch(ResourceMissingError&) {
-                L_WARN("Unable to locate MD2 skin: " + std::string((char*) skin->name));
+            bool found = false;
+            for(auto& texture_path: possible_paths) {
+                try {
+                    tex_id = resource_manager->new_texture_from_file(locator->locate_file(texture_path));
+                    found = true;
+                } catch(ResourceMissingError&) {
+                    L_DEBUG("MD2 skin not found at: " + texture_path);
+                    continue;
+                }
+            }
+
+            if(!found) {
+                L_WARN("Unable to locate MD2 skin: " + skin_name);
                 tex_id = resource_manager->default_texture_id();
             }
 
