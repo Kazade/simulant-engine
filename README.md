@@ -45,7 +45,6 @@ There are some glaring holes in functionality (animated meshes, LOD, billboards,
  * Switch the GL 2.x renderer with a GL 4.x one
  * Implement render-to-texture
  * Fix lightmaps in the Q2 bsp loader
- * Implement animated meshes, starting with loading MD2
  * Implement multiple LOD for meshes
  * Build in support for shadows
  * Fix the lighting sample
