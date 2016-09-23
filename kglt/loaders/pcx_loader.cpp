@@ -45,24 +45,27 @@ TextureLoadResult PCXLoader::do_load(const std::vector<uint8_t> &buffer) {
     result.data.resize(result.width * result.height * result.channels);
 
     auto bitcount = header->bits_per_pixel * header->num_color_planes;
+    if(bitcount != 8) {
+        throw std::runtime_error("Unsupported PCX bitcount");
+    }
 
     uint8_t palette_marker = buffer[buffer.size() - 769];
 
-    const uint8_t* palette = (palette_marker == 0x0c) ? &buffer[buffer.size() - 768] : header->palette;
+    const uint8_t* palette = (palette_marker == 12) ? &buffer[buffer.size() - 768] : header->palette;
 
     int32_t rle_count = 0;
     int32_t rle_value = 0;
 
-    uint8_t cursor = 128;
-    uint8_t* texel = &result.data[0];
+    const uint8_t* image_data = &buffer[128];
 
-    for(uint32_t idx = 0; idx < (result.width * result.height); ++idx) {
+    for(uint32_t idx = 0; idx < (result.width * result.height * result.channels); idx += result.channels) {
         if(rle_count == 0) {
-            rle_value = buffer[cursor];
-            if(rle_value > 0xbf) {
-                rle_count = 0x3f & rle_value;
-                ++cursor;
-                rle_value = buffer[cursor];
+            rle_value = *image_data;
+            ++image_data;
+            if((rle_value & 0xc0) == 0xc0) {
+                rle_count = rle_value & 0x3f;
+                rle_value = *image_data;
+                ++image_data;
             } else {
                 rle_count = 1;
             }
@@ -70,12 +73,12 @@ TextureLoadResult PCXLoader::do_load(const std::vector<uint8_t> &buffer) {
 
         rle_count--;
 
-        texel[(idx * result.channels) + 0] = palette[(rle_value * 3) + 0];
-        texel[(idx * result.channels) + 1] = palette[(rle_value * 3) + 1];
-        texel[(idx * result.channels) + 2] = palette[(rle_value * 3) + 2];
-        texel[(idx * result.channels) + 3] = 255;
+        assert(rle_value * 3 < 768);
 
-        cursor++;
+        result.data[idx + 0] = palette[(rle_value * 3) + 0];
+        result.data[idx + 1] = palette[(rle_value * 3) + 1];
+        result.data[idx + 2] = palette[(rle_value * 3) + 2];
+        result.data[idx + 3] = 255;
     }
 
     return result;
