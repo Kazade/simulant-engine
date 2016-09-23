@@ -1098,3 +1098,5 @@ kglt/loaders/md2_loader.h
 kglt/loaders/md2_loader.cpp
 kglt/animation.h
 kglt/animation.cpp
+kglt/loaders/pcx_loader.h
+kglt/loaders/pcx_loader.cpp
