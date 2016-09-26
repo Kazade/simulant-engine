@@ -147,10 +147,13 @@ public:
             auto& key = obj_it->first;
             assert(key);
 
-            auto& pointer = obj_it->second;
-            assert(pointer);
 
-            if(pointer.unique() && pointer->uses_gc()) {
+            bool pointer_is_unique = obj_it->second.unique();
+            ObjectType* obj = obj_it->second.get();
+
+            assert(obj);
+
+            if(pointer_is_unique && obj->uses_gc()) {
                 auto it = uncollected_.find(key);
                 bool ok_to_delete = false;
 
@@ -167,7 +170,7 @@ public:
                         now-creation_times_[key]
                     ).count();
 
-                    ok_to_delete = lifetime_in_seconds > 20;
+                    ok_to_delete = lifetime_in_seconds > 5;
 
                     if(ok_to_delete) {
                         L_WARN("Deleting unclaimed resource");

@@ -414,13 +414,13 @@ MaterialID ResourceManager::new_material_from_file(const unicode& path, GarbageC
     assert(template_id);
 
     /* Take the template, clone it, and set garbage_collection appropriately */
-    auto mat_id = material(template_id)->new_clone(this, garbage_collect);
-    material(template_id)->enable_gc((garbage_collect == GARBAGE_COLLECT_NEVER) ? false: true);
-    mark_material_as_uncollected(mat_id);
+    auto new_mat = material(template_id)->new_clone(this, garbage_collect).fetch();
+    new_mat->enable_gc((garbage_collect == GARBAGE_COLLECT_NEVER) ? false: true);
+    mark_material_as_uncollected(new_mat->id());
 
-    L_DEBUG(_F("Cloned material {0} into {1}").format(template_id, mat_id));
+    L_DEBUG(_F("Cloned material {0} into {1}").format(template_id, new_mat->id()));
 
-    return mat_id;
+    return new_mat->id();
 }
 
 MaterialID ResourceManager::new_material_with_alias(const std::string& alias, GarbageCollectMethod garbage_collect) {
