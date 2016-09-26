@@ -26,6 +26,17 @@ class RefCountedTemplatedManager {
 protected:
     mutable std::mutex manager_lock_;
 
+
+private:
+    ObjectIDType generate_new_id() {
+        return ObjectIDType(
+            NewIDGenerator()(),
+            [this](const ObjectIDType* id) -> typename ObjectIDType::resource_pointer_type {
+                return this->get(*id).lock();
+            }
+        );
+    }
+
 public:
     void mark_as_uncollected(ObjectIDType id) {
         std::lock_guard<std::mutex> lock(manager_lock_);
@@ -33,24 +44,19 @@ public:
     }
 
     ObjectIDType make(GarbageCollectMethod garbage_collect) {
-        return make(ObjectIDType(), garbage_collect);
+        return make(generate_new_id(), garbage_collect);
     }
 
     template<typename ...Args>
     ObjectIDType make(GarbageCollectMethod garbage_collect, Args&&... args) {
-        return make(ObjectIDType(), garbage_collect, std::forward<Args>(args)...);
+        return make(generate_new_id(), garbage_collect, std::forward<Args>(args)...);
     }
 
     template<typename ...Args>
     ObjectIDType make(ObjectIDType id, GarbageCollectMethod garbage_collect, Args&&... args) {
         std::lock_guard<std::mutex> lock(manager_lock_);
         if(!id) {
-            id = ObjectIDType(
-                NewIDGenerator()(),
-                [this](const ObjectIDType* id) -> typename ObjectIDType::resource_pointer_type {
-                    return this->get(*id).lock();
-                }
-            );
+            id = generate_new_id();
         }
 
         auto obj = ObjectType::create(id, std::forward<Args>(args)...);

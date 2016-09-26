@@ -39,6 +39,7 @@ public:
 
     UniqueID& operator=(const UniqueID<ResourceTypePtr>& other) {
         this->id_ = other.id_;
+        this->getter_ = other.getter_;
         return *this;
     }
 

@@ -381,7 +381,7 @@ MaterialID ResourceManager::get_template_material(const unicode& path) {
             materials_loading_.insert(template_id);
             load_material = true; //We need to load the material from file
         } else {
-            template_id = template_materials_[path];
+            template_id = template_materials_.at(path);
         }
     }
 
@@ -400,6 +400,9 @@ MaterialID ResourceManager::get_template_material(const unicode& path) {
             materials_loading_.erase(template_id);
         }
     }
+
+    // Templates should never have garbage collection enabled
+    assert(!template_id.fetch()->uses_gc());
 
     return template_id;
 }
