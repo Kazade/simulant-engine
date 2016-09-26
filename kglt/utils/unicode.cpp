@@ -404,8 +404,7 @@ unicode unicode::_do_format(uint32_t counter, const std::string& value) {
             break;
         }
 
-        auto to_replace = result.string_.substr(pos, end - pos);
-        result.string_.replace(pos, end - pos, replacement);
+        result.string_.replace(pos, (end - pos) + 1, replacement);
     }
     return result;
 
