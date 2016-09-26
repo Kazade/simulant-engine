@@ -407,55 +407,6 @@ unicode unicode::_do_format(uint32_t counter, const std::string& value) {
         result.string_.replace(pos, (end - pos) + 1, replacement);
     }
     return result;
-
-    /*
-    regex::Regex re("\\{(\\d+)(:\\.(\\d+)f)?(:[xod])?\\}");
-    auto matches = re.search(*this);
-    for(auto match: matches) {
-        unicode placeholder = match.group(0);
-        uint32_t found_counter = match.group(1).to_int();
-        unicode found_decimal, found_format;
-
-        if(match.groups().size() > 2) {
-            if (match.group(2).ends_with("f")) {
-                found_decimal = match.group(3);
-            } else {
-                found_format = match.group(2);
-            }
-        }
-
-        if(found_counter == counter) {
-            std::string replacement;
-
-            if(found_decimal.length()) {
-                int decimal = found_decimal.to_int();
-                std::stringstream stream;
-                stream << std::fixed << std::setprecision(decimal) << unicode(value).to_float();
-                replacement = stream.str();
-            } else if(found_format.length()) {
-                unicode format = found_format;
-                if(format == ":x") {
-                    std::stringstream stream;
-                    stream << "0x" << std::hex << unicode(value).to_int();
-                    replacement = stream.str();
-                } else if(format == ":o") {
-                    std::stringstream stream;
-                    stream << std::oct << unicode(value).to_int();
-                    replacement = stream.str();
-                } else if(format == ":d") {
-                    std::stringstream stream;
-                    stream << std::dec << unicode(value).to_int();
-                    replacement = stream.str();
-                }
-            } else {
-                replacement = value;
-            }
-
-            return replace(placeholder, replacement);
-        }
-    }
-
-    throw std::runtime_error("format placeholder not found"); */
 }
 
 
