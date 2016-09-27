@@ -68,10 +68,13 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     unicode current_material;
 
-    VertexSpecification spec = { VERTEX_ATTRIBUTE_3F, VERTEX_ATTRIBUTE_3F };
+    VertexSpecification spec;
+    spec.position_attribute = VERTEX_ATTRIBUTE_3F;
+    spec.texcoord0_attribute = VERTEX_ATTRIBUTE_2F;
+    spec.normal_attribute = VERTEX_ATTRIBUTE_3F;
     spec.diffuse_attribute = VERTEX_ATTRIBUTE_4F;
+    mesh->reset(spec);
 
-    bool vertex_specification_set = false;
     SubMesh* default_submesh = nullptr;
 
     bool has_materials = false;
@@ -107,8 +110,6 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             float y = parts[2].to_float();
 
             tex_coords.push_back(Vec2(x, y));
-
-            spec.texcoord0_attribute = VERTEX_ATTRIBUTE_2F;
         } else if(parts[0] == "vn") {
             if(parts.size() != 4) {
                 throw std::runtime_error(_F("Found {0} components for vertex, expected 3").format(parts.size() - 1));
@@ -122,11 +123,6 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             kmVec3Normalize(&n, &n);
             normals.push_back(n);
         } else if(parts[0] == "f") {
-            if(!vertex_specification_set) {
-                mesh->shared_data->reset(spec);
-                vertex_specification_set = true;
-            }
-
             std::string smi;
             if(current_material.empty()) {
                 if(!default_submesh) {
