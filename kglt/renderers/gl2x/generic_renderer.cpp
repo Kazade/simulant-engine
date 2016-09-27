@@ -25,18 +25,31 @@ public:
 
     bool lt(const RenderGroupImpl& other) const override {
         const GL2RenderGroupImpl* rhs = dynamic_cast<const GL2RenderGroupImpl*>(&other);
+
+        assert(rhs);
+
         if(!rhs) {
             // Should never happen... throw an error maybe?
             return false;
         }
 
-        if(shader_id.value() < rhs->shader_id.value()) {
-            return true;
-        }
+        // Build a list of shader + texture ids, and return true if the
+        // first non-equal id is less than the rhs equivalent
 
-        for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
-            if(texture_id[i].value() < rhs->texture_id[i].value()) {
-                return true;
+        for(uint32_t i = 0; i < MAX_TEXTURE_UNITS + 1; ++i) {
+            if(i == 0) {
+                if(shader_id.value() == rhs->shader_id.value()) {
+                    continue;
+                } else {
+                    return shader_id.value() < rhs->shader_id.value();
+                }
+            } else {
+                auto j = i - 1; // i is 1-based because of the shader check
+                if(texture_id[j].value() == rhs->texture_id[j].value()) {
+                    continue;
+                }
+
+                return texture_id[j].value() < rhs->texture_id[j].value();
             }
         }
 

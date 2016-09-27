@@ -66,9 +66,12 @@ public:
 
     }
 
+    RenderGroupImpl(const RenderGroupImpl&) = delete;
+    RenderGroupImpl& operator=(const RenderGroupImpl&) = delete;
+
     virtual ~RenderGroupImpl() {}
 
-    bool operator<(const RenderGroupImpl& rhs) {
+    bool operator<(const RenderGroupImpl& rhs) const {
         // Always sort on priority first
 
         if(this->priority_ < rhs.priority_) {
@@ -86,11 +89,20 @@ private:
 
 class RenderGroup {
 public:
+    RenderGroup() = delete;
+
     RenderGroup(RenderGroupImpl::ptr impl):
-        impl_(impl) {}
+        impl_(impl) {
+
+        assert(impl_);
+    }
 
     bool operator<(const RenderGroup& rhs) const {
-        return impl_ && rhs.impl_ && *impl_ < *rhs.impl_;
+        // These things should never happen, but they do...
+        assert(impl_);
+        assert(rhs.impl_);
+
+        return *impl_ < *rhs.impl_;
     }
 
     RenderGroupImpl* impl() const { return impl_.get(); }
