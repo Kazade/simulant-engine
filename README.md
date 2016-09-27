@@ -10,7 +10,7 @@ In 2014, I decided that it there were a lot of nice things in KGLT, but it was a
 
 Since then the focus has been to remove dependencies, build an easy-to-use API, and performance. The engine now is already very different to the one that powered Rocks & Spaceworms. My future plan is to port the engine to "retro" consoles like the Dreamcast, and also Windows, OSX, iOS, and perhaps even PSP or NDS. Although you could use this engine for modern graphics (the material system is very powerful), it's generally aimed at providing mid-2000s style game graphics. 
 
-There are some glaring holes in functionality (animated meshes, LOD, billboards, shadows, projected textures) but you can already build some impressive things, and those features will arrive eventually, hopefully sooner rather than later!
+There are some glaring holes in functionality (LOD, billboards, shadows, projected textures) but you can already build some impressive things, and those features will arrive eventually, hopefully sooner rather than later!
 
 ## Features
 
@@ -18,10 +18,11 @@ There are some glaring holes in functionality (animated meshes, LOD, billboards,
  * Flexible rendering pipeline
  * Complex material scripting format
  * Loading of .obj models and the X-Wing vs Tie Fighter .opt format
+ * Loading of MD2 animated models
  * Loading of Q2 BSP files (needs work)
  * Loading of heightmap terrains from image files
  * Octree partitioning/culling (WIP)
- * Loading of JPG, PNG, TGA, WAL images
+ * Loading of JPG, PNG, TGA, WAL, PCX images and more!
  * Shortcut functions for loading 2D sprites, 2D backgrounds and 3D skyboxes
  * Simple scene graph functions
  * UI layer based on the Nuklear library
