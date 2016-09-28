@@ -161,65 +161,46 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             //Faces are a pain in the arse to parse
             parts = std::vector<unicode>(parts.begin() + 1, parts.end()); //Strip off the first bit
 
-            int32_t first_v, first_vt, first_vn;
-            parse_face(parts[0], first_v, first_vt, first_vn);
-
-            int32_t first_index = vertex_data->count(); //Store the index of this vertex
-
-            vertex_data->position(vertices[first_v]); //Read the position
-            if(first_vt > -1) {
-                vertex_data->tex_coord0(tex_coords[first_vt]);
-            }
-
-            if(first_vn > -1) {
-                vertex_data->normal(normals[first_vn]);
-            }
-            vertex_data->diffuse(kglt::Colour::WHITE);
-            vertex_data->move_next();
-
             /*
              * This loop looks weird because it builds a triangle fan
              * from the face indexes, as there could be more than 3. It goes
              * (0, 2, 1), (0, 3, 2) etc.
              */
-            for(uint32_t i = 1; i < parts.size(); i++) {
-                int32_t v1, vt1, vn1;
-                int32_t v2, vt2, vn2;
+            uint32_t first_index = 0;
+            uint32_t i = 0;
+            for(auto& part: parts) {
+                int32_t v, tc, n;
+                parse_face(part, v, tc, n);
 
-                parse_face(parts[i-1], v1, vt1, vn1);
-                parse_face(parts[i], v2, vt2, vn2);
+                vertex_data->position(vertices[v]);
 
-                vertex_data->position(vertices[v1]); //Read the position
-                if(vt1 > -1) {
-                    vertex_data->tex_coord0(tex_coords[vt1]);
+                if(tc != -1) {
+                    vertex_data->tex_coord0(tex_coords[tc]);
                 }
 
-                if(vn1 > -1) {
-                    vertex_data->normal(normals[vn1]);
-                }
-
-                vertex_data->move_next();
-
-                vertex_data->position(vertices[v2]); //Read the position
-                if(vt2 > -1) {
-                    vertex_data->tex_coord0(tex_coords[vt2]);
-                }
-                if(vn2 > -1) {
-                    vertex_data->normal(normals[vn2]);
+                if(n != -1) {
+                    vertex_data->normal(normals[n]);
                 }
                 vertex_data->diffuse(kglt::Colour::WHITE);
                 vertex_data->move_next();
 
-                //Add the triangle
-                index_data->index(first_index);
-                index_data->index(vertex_data->count() - 2);
-                index_data->index(vertex_data->count() - 1);
+                if(i == 2) {
+                    first_index = vertex_data->count() - 3;
+                }
+
+                if(i >= 2) {
+                    index_data->index(first_index);
+                    index_data->index(vertex_data->count() - 1);
+                    index_data->index(vertex_data->count() - 2);
+                }
+
+                ++i;
             }
         } else if(parts[0] == "newmtl") {
             auto material_name = parts[1];
 
             // Clone the default material
-            materials[material_name] = mesh->resource_manager().material(mesh->resource_manager().clone_default_material());
+            materials[material_name] = mesh->resource_manager().clone_default_material().fetch();
             materials[material_name]->first_pass()->set_cull_mode(CULL_MODE_NONE);
             current_material = material_name;
 
@@ -281,12 +262,32 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
         } else if(parts[0] == "map_Kd") {
             auto texture_name = parts[1];
             auto mat = materials.at(current_material);
-            auto texture_file = kfs::path::join(kfs::path::dir_name(filename_.encode()), texture_name.encode());
-            if(kfs::path::exists(texture_file)) {
-                auto tex_id = mesh->resource_manager().new_texture_from_file(texture_file);
-                mat->set_texture_unit_on_all_passes(0, tex_id);
-            } else {
-                L_WARN(_F("Unable to locate texture {0}").format(texture_file));
+
+            std::vector<std::string> possible_locations;
+
+            // Check relative texture file first
+            possible_locations.push_back(
+                kfs::path::join(
+                    kfs::path::dir_name(filename_.encode()),
+                    kfs::path::split(texture_name.encode()).second
+                )
+            );
+
+            // Check potentially absolute file path
+            possible_locations.push_back(texture_name.encode());
+
+            bool found = false;
+            for(auto& texture_file: possible_locations) {
+                if(kfs::path::exists(texture_file)) {
+                    auto tex_id = mesh->resource_manager().new_texture_from_file(texture_file);
+                    mat->set_texture_unit_on_all_passes(0, tex_id);
+                    found = true;
+                    break;
+                }
+            }
+
+            if(!found) {
+                L_WARN(_F("Unable to locate texture {0}").format(texture_name.encode()));
             }
         }
     }

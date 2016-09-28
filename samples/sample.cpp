@@ -25,19 +25,23 @@ public:
 
         // Load an animated MD2 mesh
         kglt::MeshID mesh_id = stage->assets->new_mesh_from_file("sample_data/ogro.md2");
+
         auto actor = stage->new_actor_with_mesh(mesh_id).fetch(); // Create an instance of it
         actor->move_to(0.0f, 0.0f, -80.0f);
         actor->rotate_global_y(kglt::Degrees(180));
-
-        auto actor2 = stage->new_actor_with_mesh(mesh_id).fetch();
-        actor2->move_to(40.0f, 0.0f, -95.0f);
-        actor2->rotate_global_y(kglt::Degrees(180));
-        actor2->animation_state->play_animation("idle_3");
 
         auto actor3 = stage->new_actor_with_mesh(mesh_id).fetch();
         actor3->move_to(-40.0f, 0.0f, -95.0f);
         actor3->rotate_global_y(kglt::Degrees(180));
         actor3->animation_state->play_animation("idle_2");
+
+        auto scaling_matrix = kglt::Mat4::as_scaling(10.0);
+
+        auto tank = stage->assets->new_mesh_from_file("sample_data/tank.obj").fetch();
+        tank->transform_vertices(scaling_matrix);
+
+        auto tank_actor = stage->new_actor_with_mesh(tank->id()).fetch();
+        tank_actor->move_to(40, 0, -110);
     }
 
     void do_step(double dt) {
