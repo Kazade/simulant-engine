@@ -173,6 +173,12 @@ Mat3 Mat3::from_rotation_z(float roll) {
     return ret;
 }
 
+Mat4 Mat4::as_scaling(float s) {
+    Mat4 ret;
+    kmMat4Scaling(&ret, s, s, s);
+    return ret;
+}
+
 Mat4 Mat4::from_lookat(const Vec3& eye, const Vec3& target, const Vec3& up) {
     Mat4 ret;
     kmMat4LookAt(&ret, &eye, &target, &up);

@@ -126,6 +126,8 @@ struct Mat4 : public kmMat4 {
     void extract_rotation_and_translation(Quaternion& rotation, Vec3& translation);
     static Mat4 from_lookat(const Vec3& eye, const Vec3& target, const Vec3& up);
 
+    static Mat4 as_scaling(float s);
+
 };
 
 struct Mat3 : public kmMat3 {
