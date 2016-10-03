@@ -31,9 +31,6 @@ Mesh::Mesh(
 
     reset(vertex_specification);
 
-    shared_data->signal_update_complete().connect([&]{
-        this->shared_data_dirty_ = true;
-    });
 }
 
 void Mesh::reset(VertexSpecification vertex_specification) {
@@ -43,6 +40,10 @@ void Mesh::reset(VertexSpecification vertex_specification) {
 
     delete shared_data_;
     shared_data_ = new VertexData(vertex_specification);
+
+    shared_data->signal_update_complete().connect([&]{
+        this->shared_data_dirty_ = true;
+    });
 
 #ifdef KGLT_GL_VERSION_2X
     //FIXME: Somehow we need to specify if the shared data is modified repeatedly etc.
