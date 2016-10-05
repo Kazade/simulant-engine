@@ -45,3 +45,4 @@ deps/qu3e/broadphase
 deps/qu3e/debug
 deps/kfs/tests
 deps/kfs
+kglt/renderers/gl2x

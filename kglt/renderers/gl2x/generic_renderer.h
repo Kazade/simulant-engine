@@ -5,13 +5,17 @@
 
 #include "../renderer.h"
 #include "../../material.h"
+#include "./buffer_manager.h"
 
 namespace kglt {
 
 class GenericRenderer : public Renderer {
 public:
     GenericRenderer(WindowBase* window):
-        Renderer(window) {}
+        Renderer(window),
+        buffer_manager_(new GL2BufferManager()) {
+
+    }
 
     batcher::RenderGroup new_render_group(Renderable *renderable, MaterialPass *material_pass);
 
@@ -25,7 +29,14 @@ public:
     ) override;
 
     void init_context();
+
 private:
+    std::unique_ptr<HardwareBufferManager> buffer_manager_;
+
+    HardwareBufferManager* _get_buffer_manager() const {
+        return buffer_manager_.get();
+    }
+
     void set_light_uniforms(GPUProgramInstance* program_instance, Light* light);
     void set_material_uniforms(GPUProgramInstance* program_instance, MaterialPass *pass);
     void set_auto_uniforms_on_shader(GPUProgramInstance *pass, CameraPtr camera, Renderable* subactor, const Colour &global_ambient);

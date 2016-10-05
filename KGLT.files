@@ -1100,3 +1100,8 @@ kglt/animation.h
 kglt/animation.cpp
 kglt/loaders/pcx_loader.h
 kglt/loaders/pcx_loader.cpp
+kglt/hardware_buffer.h
+kglt/renderers/gl2x/buffer_manager.h
+tests/test_gl2.h
+kglt/renderers/gl2x/buffer_manager.cpp
+kglt/hardware_buffer.cpp

@@ -26,6 +26,7 @@
 #include "base.h"
 #include "sprite.h"
 #include "particles.h"
+#include "hardware_buffer.h"
 #include "virtual_gamepad.h"
 #include "screens/screen_manager.h"
 #include "screens/screen.h"
