@@ -187,4 +187,80 @@ Radians::Radians(const Degrees &rhs) {
     value_ = kmDegreesToRadians(rhs.value_);
 }
 
+uint32_t vertex_attribute_size(VertexAttribute attr) {
+    switch(attr) {
+        case VERTEX_ATTRIBUTE_NONE: return 0;
+        case VERTEX_ATTRIBUTE_2F: return sizeof(float) * 2;
+        case VERTEX_ATTRIBUTE_3F:  return sizeof(float) * 3;
+        case VERTEX_ATTRIBUTE_4F: return sizeof(float) * 4;
+        default:
+            assert(0 && "Invalid attribute specified");
+    }
+}
+
+VertexSpecification::VertexSpecification(
+    VertexAttribute position, VertexAttribute normal, VertexAttribute texcoord0,
+    VertexAttribute texcoord1, VertexAttribute texcoord2, VertexAttribute texcoord3,
+    VertexAttribute diffuse, VertexAttribute specular):
+        position_attribute(position),
+        normal_attribute(normal),
+        texcoord0_attribute(texcoord0),
+        texcoord1_attribute(texcoord1),
+        texcoord2_attribute(texcoord2),
+        texcoord3_attribute(texcoord3),
+        diffuse_attribute(diffuse),
+        specular_attribute(specular) {
+
+    stride_ = (
+        vertex_attribute_size(position_attribute) +
+        vertex_attribute_size(normal_attribute) +
+        vertex_attribute_size(texcoord0_attribute) +
+        vertex_attribute_size(texcoord1_attribute) +
+        vertex_attribute_size(texcoord2_attribute) +
+        vertex_attribute_size(texcoord3_attribute) +
+        vertex_attribute_size(diffuse_attribute) +
+        vertex_attribute_size(specular_attribute)
+    );
+}
+
+uint32_t VertexSpecification::position_offset(bool check) const {
+    if(check && !has_positions()) { throw std::logic_error("No such attribute"); }
+    return 0;
+}
+
+uint32_t VertexSpecification::normal_offset(bool check) const {
+    if(check && !has_normals()) { throw std::logic_error("No such attribute"); }
+    return vertex_attribute_size(position_attribute);
+}
+
+uint32_t VertexSpecification::texcoord0_offset(bool check) const {
+    if(check && !has_texcoord0()) { throw std::logic_error("No such attribute"); }
+    return normal_offset(false) + vertex_attribute_size(normal_attribute);
+}
+
+uint32_t VertexSpecification::texcoord1_offset(bool check) const {
+    if(check && !has_texcoord1()) { throw std::logic_error("No such attribute"); }
+    return texcoord0_offset(false) + vertex_attribute_size(texcoord0_attribute);
+}
+
+uint32_t VertexSpecification::texcoord2_offset(bool check) const {
+    if(check && !has_texcoord2()) { throw std::logic_error("No such attribute"); }
+    return texcoord1_offset(false) + vertex_attribute_size(texcoord1_attribute);
+}
+
+uint32_t VertexSpecification::texcoord3_offset(bool check) const {
+    if(check && !has_texcoord3()) { throw std::logic_error("No such attribute"); }
+    return texcoord2_offset(false) + vertex_attribute_size(texcoord2_attribute);
+}
+
+uint32_t VertexSpecification::diffuse_offset(bool check) const {
+    if(check && !has_diffuse()) { throw std::logic_error("No such attribute"); }
+    return texcoord3_offset(false) + vertex_attribute_size(texcoord3_attribute);
+}
+
+uint32_t VertexSpecification::specular_offset(bool check) const {
+    if(check && !has_specular()) { throw std::logic_error("No such attribute"); }
+    return diffuse_offset(false) + vertex_attribute_size(diffuse_attribute);
+}
+
 }

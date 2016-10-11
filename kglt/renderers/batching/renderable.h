@@ -10,6 +10,7 @@ namespace kglt {
 
 class VertexData;
 class IndexData;
+class HardwareBuffer;
 
 class Renderable:
     public batcher::BatchMember,
@@ -20,10 +21,12 @@ public:
 
     virtual const MeshArrangement arrangement() const = 0;
 
-#ifdef KGLT_GL_VERSION_2X
-    virtual void _update_vertex_array_object() = 0;
-    virtual void _bind_vertex_array_object() = 0;
-#endif
+    virtual void prepare_buffers() = 0;
+
+    virtual VertexSpecification vertex_attribute_specification() const = 0;
+    virtual HardwareBuffer* vertex_attribute_buffer() const = 0;
+    virtual HardwareBuffer* index_buffer() const = 0;
+    virtual std::size_t index_element_count() const = 0; ///< The number of indexes that should be rendered
 
     virtual RenderPriority render_priority() const = 0;
     virtual Mat4 final_transformation() const = 0;
@@ -47,13 +50,7 @@ public:
         return lights_affecting_this_frame_;
     }
 
-    Property<Renderable, VertexData> vertex_data = { this, &Renderable::get_vertex_data };
-    Property<Renderable, IndexData> index_data = { this, &Renderable::get_index_data };
-
 private:
-    virtual VertexData* get_vertex_data() const = 0;
-    virtual IndexData* get_index_data() const = 0;
-
     uint64_t last_visible_frame_id_ = 0;
     std::vector<LightPtr> lights_affecting_this_frame_;
 };

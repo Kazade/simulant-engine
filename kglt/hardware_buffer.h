@@ -31,13 +31,17 @@ class HardwareBufferManager;
  */
 struct HardwareBufferImpl {
     HardwareBufferManager* manager = nullptr;
-    std::size_t size = 0; ///< The size of the buffer, this is for bounds checking and so is the only required field
+    std::size_t capacity = 0; ///< This is the actual amount of allocated memory
+    std::size_t size = 0; ///< The size of the buffer, this is for bounds checking and...
+    // ... used when rendering
 
     HardwareBufferImpl(HardwareBufferManager* manager):
         manager(manager) {
     }
     virtual ~HardwareBufferImpl() {}
 
+    void bind(HardwareBufferPurpose purpose);
+    void resize(std::size_t new_size);
     void release();
 
     virtual void upload(const uint8_t* data, const std::size_t size) = 0;
@@ -45,16 +49,23 @@ struct HardwareBufferImpl {
 
 
 /* Public-facing API to hardware buffers */
-class HardwareBuffer:
-    public Managed<HardwareBuffer> {
-
+class HardwareBuffer {
 public:
+    typedef std::unique_ptr<HardwareBuffer> ptr;
+
     HardwareBuffer(std::unique_ptr<HardwareBufferImpl> impl);
     ~HardwareBuffer() { release(); }
 
     void upload(VertexData& vertex_data);
     void upload(IndexData& index_data);
     void upload(const uint8_t* data, const std::size_t size);
+
+    void bind(HardwareBufferPurpose purpose);
+
+    void resize(std::size_t new_size) {
+        impl_->resize(new_size);
+    }
+
     void release() {
         if(impl_) {
             impl_->release();
@@ -84,7 +95,10 @@ public:
 
 private:
     virtual std::unique_ptr<HardwareBufferImpl> do_allocation(std::size_t size, HardwareBufferPurpose purpose, HardwareBufferUsage usage) = 0;
+
+    virtual void do_resize(HardwareBufferImpl* buffer, std::size_t new_size) = 0;
     virtual void do_release(const HardwareBufferImpl* buffer) = 0;
+    virtual void do_bind(const HardwareBufferImpl* buffer, HardwareBufferPurpose purpose) = 0;
 
     friend class HardwareBufferImpl;
 };

@@ -137,14 +137,14 @@ public:
 
         auto& data = mesh->shared_data;
 
-        assert_true(data->has_positions());
-        assert_true(!data->has_normals());
-        assert_true(!data->has_texcoord0());
-        assert_true(!data->has_texcoord1());
-        assert_true(!data->has_texcoord2());
-        assert_true(!data->has_texcoord3());
-        assert_true(!data->has_diffuse());
-        assert_true(!data->has_specular());
+        assert_true(data->specification().has_positions());
+        assert_true(!data->specification().has_normals());
+        assert_true(!data->specification().has_texcoord0());
+        assert_true(!data->specification().has_texcoord1());
+        assert_true(!data->specification().has_texcoord2());
+        assert_true(!data->specification().has_texcoord3());
+        assert_true(!data->specification().has_diffuse());
+        assert_true(!data->specification().has_specular());
         assert_equal(4, data->count());
 
         assert_equal((uint32_t)2, mesh->submesh_count());

@@ -30,14 +30,18 @@ const VertexSpecification VertexSpecification::POSITION_AND_DIFFUSE = {
     VERTEX_ATTRIBUTE_4F
 };
 
-uint32_t vertex_attribute_size(VertexAttribute attr) {
-    switch(attr) {
-        case VERTEX_ATTRIBUTE_NONE: return 0;
-        case VERTEX_ATTRIBUTE_2F: return sizeof(float) * 2;
-        case VERTEX_ATTRIBUTE_3F:  return sizeof(float) * 3;
-        case VERTEX_ATTRIBUTE_4F: return sizeof(float) * 4;
-        default:
-            assert(0 && "Invalid attribute specified");
+VertexAttribute attribute_for_type(VertexAttributeType type, const VertexSpecification& spec) {
+    switch(type) {
+        case VERTEX_ATTRIBUTE_TYPE_POSITION: return spec.position_attribute;
+        case VERTEX_ATTRIBUTE_TYPE_NORMAL: return spec.normal_attribute;
+        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD0: return spec.texcoord0_attribute;
+        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD1: return spec.texcoord1_attribute;
+        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD2: return spec.texcoord2_attribute;
+        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD3: return spec.texcoord3_attribute;
+        case VERTEX_ATTRIBUTE_TYPE_DIFFUSE: return spec.diffuse_attribute;
+        case VERTEX_ATTRIBUTE_TYPE_SPECULAR: return spec.specular_attribute;
+    default:
+        throw std::logic_error("Invalid vertex attribute type");
     }
 }
 
@@ -53,7 +57,7 @@ void VertexData::clear() {
 }
 
 void VertexData::position_checks() {
-    if(!has_positions()) {
+    if(!specification().has_positions()) {
         throw std::logic_error("Vertex data has no position attribute");
     }
 
@@ -123,7 +127,7 @@ Vec4 VertexData::position_at<Vec4>(uint32_t idx) const {
 
 void VertexData::normal(float x, float y, float z) {
     assert(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_3F);
-    Vec3* out = (Vec3*) &data_[cursor_position_ + normal_offset()];
+    Vec3* out = (Vec3*) &data_[cursor_position_ + specification().normal_offset()];
     *out = Vec3(x, y, z);
 }
 
@@ -134,10 +138,10 @@ void VertexData::normal(const kmVec3& n) {
 void VertexData::tex_coordX(uint8_t which, float u, float v) {
     uint32_t offset = 0;
     switch(which) {
-        case 0: offset = texcoord0_offset(); break;
-        case 1: offset = texcoord1_offset(); break;
-        case 2: offset = texcoord2_offset(); break;
-        case 3: offset = texcoord3_offset(); break;
+        case 0: offset = specification().texcoord0_offset(); break;
+        case 1: offset = specification().texcoord1_offset(); break;
+        case 2: offset = specification().texcoord2_offset(); break;
+        case 3: offset = specification().texcoord3_offset(); break;
     default:
         throw std::logic_error("Invalid texture coordinate specified");
     }
@@ -149,10 +153,10 @@ void VertexData::tex_coordX(uint8_t which, float u, float v) {
 void VertexData::tex_coordX(uint8_t which, float u, float v, float w) {
     uint32_t offset = 0;
     switch(which) {
-        case 0: offset = texcoord0_offset(); break;
-        case 1: offset = texcoord1_offset(); break;
-        case 2: offset = texcoord2_offset(); break;
-        case 3: offset = texcoord3_offset(); break;
+        case 0: offset = specification().texcoord0_offset(); break;
+        case 1: offset = specification().texcoord1_offset(); break;
+        case 2: offset = specification().texcoord2_offset(); break;
+        case 3: offset = specification().texcoord3_offset(); break;
     default:
         throw std::logic_error("Invalid texture coordinate specified");
     }
@@ -164,10 +168,10 @@ void VertexData::tex_coordX(uint8_t which, float u, float v, float w) {
 void VertexData::tex_coordX(uint8_t which, float u, float v, float w, float x) {
     uint32_t offset = 0;
     switch(which) {
-        case 0: offset = texcoord0_offset(); break;
-        case 1: offset = texcoord1_offset(); break;
-        case 2: offset = texcoord2_offset(); break;
-        case 3: offset = texcoord3_offset(); break;
+        case 0: offset = specification().texcoord0_offset(); break;
+        case 1: offset = specification().texcoord1_offset(); break;
+        case 2: offset = specification().texcoord2_offset(); break;
+        case 3: offset = specification().texcoord3_offset(); break;
     default:
         throw std::logic_error("Invalid texture coordinate specified");
     }
@@ -191,21 +195,21 @@ void VertexData::tex_coord0(float u, float v, float w, float x) {
 template<>
 Vec2 VertexData::texcoord0_at<Vec2>(uint32_t idx) {
     assert(vertex_specification_.texcoord0_attribute == VERTEX_ATTRIBUTE_2F);
-    Vec2 out = *((Vec2*) &data_[(idx * stride()) + texcoord0_offset()]);
+    Vec2 out = *((Vec2*) &data_[(idx * stride()) + specification().texcoord0_offset()]);
     return out;
 }
 
 template<>
 Vec3 VertexData::texcoord0_at<Vec3>(uint32_t idx) {
     assert(vertex_specification_.texcoord0_attribute == VERTEX_ATTRIBUTE_3F);
-    Vec3 out = *((Vec3*) &data_[(idx * stride()) + texcoord0_offset()]);
+    Vec3 out = *((Vec3*) &data_[(idx * stride()) + specification().texcoord0_offset()]);
     return out;
 }
 
 template<>
 Vec4 VertexData::texcoord0_at<Vec4>(uint32_t idx) {
     assert(vertex_specification_.texcoord0_attribute == VERTEX_ATTRIBUTE_4F);
-    Vec4 out = *((Vec4*) &data_[(idx * stride()) + texcoord0_offset()]);
+    Vec4 out = *((Vec4*) &data_[(idx * stride()) + specification().texcoord0_offset()]);
     return out;
 }
 
@@ -247,7 +251,7 @@ void VertexData::tex_coord3(float u, float v, float w, float x) {
 
 void VertexData::diffuse(float r, float g, float b, float a) {
     assert(vertex_specification_.diffuse_attribute == VERTEX_ATTRIBUTE_4F);
-    Vec4* out = (Vec4*) &data_[cursor_position_ + diffuse_offset()];
+    Vec4* out = (Vec4*) &data_[cursor_position_ + specification().diffuse_offset()];
     *out = Vec4(r, g, b, a);
 }
 
@@ -297,31 +301,7 @@ void VertexData::reset(VertexSpecification vertex_specification) {
 }
 
 void VertexData::recalc_attributes() {
-    stride_ = (
-        vertex_attribute_size(vertex_specification_.position_attribute) +
-        vertex_attribute_size(vertex_specification_.normal_attribute) +
-        vertex_attribute_size(vertex_specification_.texcoord0_attribute) +
-        vertex_attribute_size(vertex_specification_.texcoord1_attribute) +
-        vertex_attribute_size(vertex_specification_.texcoord2_attribute) +
-        vertex_attribute_size(vertex_specification_.texcoord3_attribute) +
-        vertex_attribute_size(vertex_specification_.diffuse_attribute) +
-        vertex_attribute_size(vertex_specification_.specular_attribute)
-    );
-}
 
-VertexAttribute VertexData::attribute_for_type(VertexAttributeType type) const {
-    switch(type) {
-        case VERTEX_ATTRIBUTE_TYPE_POSITION: return vertex_specification_.position_attribute;
-        case VERTEX_ATTRIBUTE_TYPE_NORMAL: return vertex_specification_.normal_attribute;
-        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD0: return vertex_specification_.texcoord0_attribute;
-        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD1: return vertex_specification_.texcoord1_attribute;
-        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD2: return vertex_specification_.texcoord2_attribute;
-        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD3: return vertex_specification_.texcoord3_attribute;
-        case VERTEX_ATTRIBUTE_TYPE_DIFFUSE: return vertex_specification_.diffuse_attribute;
-        case VERTEX_ATTRIBUTE_TYPE_SPECULAR: return vertex_specification_.specular_attribute;
-    default:
-        throw std::logic_error("Invalid vertex attribute type");
-    }
 }
 
 void VertexData::interp_vertex(uint32_t source_idx, const VertexData &dest_state, uint32_t dest_idx, VertexData &out, uint32_t out_idx, float interp) {

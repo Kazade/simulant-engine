@@ -1,10 +1,8 @@
 #include "utils/random.h"
 #include "stage.h"
 #include "particles.h"
+#include "hardware_buffer.h"
 
-#ifdef KGLT_GL_VERSION_2X
-#include "renderers/gl2x/buffer_object.h"
-#endif
 
 namespace kglt {
 
@@ -15,11 +13,8 @@ ParticleSystem::ParticleSystem(ParticleSystemID id, Stage* stage):
     vertex_data_(new VertexData(VertexSpecification::POSITION_AND_DIFFUSE)),
     index_data_(new IndexData()) {
 
-#ifdef KGLT_GL_VERSION_2X
-    vao_.reset(new VertexArrayObject(MODIFY_REPEATEDLY_USED_FOR_RENDERING, MODIFY_REPEATEDLY_USED_FOR_RENDERING));
-#endif
-
-    set_material_id(stage->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY));
+    set_quota(quota_); // Force hardware buffer initialization
+    set_material_id(stage->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY));    
 }
 
 ParticleSystem::~ParticleSystem() {
@@ -100,21 +95,15 @@ const AABB ParticleSystem::aabb() const {
     return result;
 }
 
-#ifdef KGLT_GL_VERSION_2X
-void ParticleSystem::_update_vertex_array_object() {
-    if(!index_data_->count()) {
-        return;
+void ParticleSystem::prepare_buffers() {
+    if(vertex_buffer_dirty_) {
+        vertex_buffer_->upload(*vertex_data_);
     }
 
-    vao_->vertex_buffer_update(vertex_data_->data_size(), vertex_data_->data());
-    vao_->index_buffer_update(index_data_->count() * sizeof(uint16_t), index_data_->_raw_data());
+    if(index_buffer_dirty_) {
+        index_buffer_->upload(*index_data_);
+    }
 }
-
-void ParticleSystem::_bind_vertex_array_object() {
-    vao_->bind();
-}
-
-#endif
 
 const AABB ParticleSystem::transformed_aabb() const {
     AABB box = aabb(); //Get the untransformed one
@@ -169,6 +158,32 @@ void ParticleEmitter::update(double dt) {
             system().stage->window->idle->add_timeout(repeat_delay, std::bind(&ParticleEmitter::activate, this));
         }
     }
+}
+
+void ParticleSystem::set_quota(int quota) {
+    auto* renderer = stage->window->renderer.get();
+
+    quota_ = quota;
+    particles_.resize(quota);
+    if(!vertex_buffer_) {
+        vertex_buffer_ = renderer->hardware_buffers->allocate(
+            vertex_data_->stride() * quota,
+            HARDWARE_BUFFER_VERTEX_ATTRIBUTES
+        );
+    } else {
+        vertex_buffer_->resize(vertex_data_->stride() * quota);
+    }
+
+    if(!index_buffer_) {
+        index_buffer_ = renderer->hardware_buffers->allocate(
+            sizeof(Index) * quota,
+            HARDWARE_BUFFER_VERTEX_ARRAY_INDICES
+        );
+    } else {
+        index_buffer_->resize(sizeof(Index) * quota);
+    }
+
+    vertex_buffer_dirty_ = index_buffer_dirty_ = true;
 }
 
 void ParticleSystem::do_update(double dt) {
@@ -231,7 +246,10 @@ void ParticleSystem::do_update(double dt) {
     // Truncate if necessary (in which case the above loop did nothing)
     index_data_->resize(new_particle_count);
 
+    vertex_buffer_dirty_ = true;
     vertex_data_->done();
+
+    index_buffer_dirty_ = true;
     index_data_->done();
 }
 

@@ -1,10 +1,9 @@
 #include "stage.h"
 #include "actor.h"
 #include "animation.h"
+#include "renderers/renderer.h"
+#include "hardware_buffer.h"
 
-#ifdef KGLT_GL_VERSION_2X
-#include "renderers/gl2x/buffer_object.h"
-#endif
 
 namespace kglt {
 
@@ -26,8 +25,7 @@ Actor::Actor(ActorID id, Stage* stage, MeshID mesh):
 }
 
 Actor::~Actor() {
-    delete shared_vertex_animation_buffer_;
-    shared_vertex_animation_buffer_ = nullptr;
+
 }
 
 void Actor::override_material_id(MaterialID mat) {
@@ -43,10 +41,6 @@ void Actor::remove_material_id_override() {
 }
 
 VertexData* Actor::get_shared_data() const {
-    if(has_animated_mesh()) {
-        return shared_vertex_animation_buffer_;
-    }
-
     return mesh_->shared_data.get();
 }
 
@@ -57,6 +51,27 @@ void Actor::clear_subactors() {
 
     subactors_.clear();
 }
+
+VertexSpecification SubActor::vertex_attribute_specification() const {
+    return get_vertex_data()->specification();
+}
+
+HardwareBuffer* SubActor::vertex_attribute_buffer() const {
+    if(parent_.has_animated_mesh()) {
+        return parent_.interpolated_vertex_buffer_.get();
+    }
+
+    return submesh_->vertex_buffer();
+}
+
+HardwareBuffer* SubActor::index_buffer() const {
+    return submesh_->index_buffer();
+}
+
+std::size_t SubActor::index_element_count() const {
+    return submesh_->index_data->count();
+}
+
 
 void Actor::rebuild_subactors() {
     clear_subactors();
@@ -95,14 +110,14 @@ void Actor::set_mesh(MeshID mesh) {
     if(mesh_ && mesh_->is_animated()) {
         using namespace std::placeholders;
 
-        // Deleting a nullptr does nothing
-        delete shared_vertex_animation_buffer_;
+        auto shared_data_size = mesh_->shared_data->count();
+        auto shared_vertices_per_frame = shared_data_size / mesh_->animation_frames();
 
-        shared_vertex_animation_buffer_ = new VertexData(mesh_->shared_data->specification());
-
-#ifdef KGLT_GL_VERSION_2X
-        animated_vertex_buffer_object_ = BufferObject::create(BUFFER_OBJECT_VERTEX_DATA, MODIFY_REPEATEDLY_USED_FOR_RENDERING);
-#endif
+        // Create an interpolated vertex hardware buffer if this is an animated mesh
+        interpolated_vertex_buffer_ = stage->window->renderer->hardware_buffers->allocate(
+            mesh_->shared_data->specification().stride() * shared_vertices_per_frame,
+            HARDWARE_BUFFER_VERTEX_ATTRIBUTES
+        );
 
         animation_state_ = std::make_shared<KeyFrameAnimationState>(
             mesh_,
@@ -139,7 +154,7 @@ void Actor::do_update(double dt) {
 }
 
 void Actor::refresh_animation_state(uint32_t current_frame, uint32_t next_frame, float interp) {
-    if(!shared_vertex_animation_buffer_) {
+    if(!interpolated_vertex_buffer_) {
         // The animation buffer hasn't been configured yet
         return;
     }
@@ -151,25 +166,25 @@ void Actor::refresh_animation_state(uint32_t current_frame, uint32_t next_frame,
         assert(shared_data_size % mesh_->animation_frames() == 0);
         auto shared_vertices_per_frame = shared_data_size / mesh_->animation_frames();
 
-        // Should hopefully be a no-op if nothing changed!
-        shared_vertex_animation_buffer_->resize(shared_vertices_per_frame);
-
         auto source_offset = shared_vertices_per_frame * animation_state_->current_frame();
         auto target_offset = shared_vertices_per_frame * animation_state_->next_frame();
 
         VertexData* source_data = mesh_->shared_data.get();
 
+        VertexData target(source_data->specification());
+        target.resize(shared_vertices_per_frame);
+
         for(uint32_t i = 0; i < shared_vertices_per_frame; ++i) {
             source_data->interp_vertex(
                 source_offset + i,
                 *source_data, target_offset + i,
-                *shared_vertex_animation_buffer_, i,
+                target, i,
                 animation_state_->interp()
             );
         }
+        target.done();
 
-        shared_vertex_animation_buffer_->done();
-        animated_vertex_buffer_object_dirty_ = true;
+        interpolated_vertex_buffer_->upload(target);
     }
 }
 
@@ -214,12 +229,6 @@ SubActor::SubActor(Actor& parent, std::shared_ptr<SubMesh> submesh):
             }
         }
     );
-
-#ifdef KGLT_GL_VERSION_2X
-    if(parent_.has_animated_mesh()) {
-        vertex_array_object_ = VertexArrayObject::create(parent_.animated_vertex_buffer_object_);
-    }
-#endif
 }
 
 SubActor::~SubActor() {
@@ -233,46 +242,6 @@ const MaterialID SubActor::material_id() const {
 
     return submesh()->material_id();
 }
-
-#ifdef KGLT_GL_VERSION_2X
-void SubActor::_update_vertex_array_object() {
-    if(parent_.has_animated_mesh()) {
-        // If the parent is animated, update the parent buffer if necessary
-        // as the VAO shares this buffer, we don't need to do anything special there
-        if(parent_.animated_vertex_buffer_object_dirty_) {
-            parent_.animated_vertex_buffer_object_->build(
-                parent_.shared_vertex_animation_buffer_->data_size(),
-                parent_.shared_vertex_animation_buffer_->data());
-            parent_.animated_vertex_buffer_object_dirty_ = false;
-        }
-
-        // This only triggers on the first update as indexes on animated meshes don't change
-        if(index_data_dirty_) {
-            //FIXME: This is crazy wasteful as we're uploading indexes twice (once per submesh, and once per subactor) but to fix it
-            // I need to refactor the way hardware buffers are bound.
-            vertex_array_object_->index_buffer_update(
-                submesh()->index_data->count() * sizeof(Index),
-                submesh()->index_data->_raw_data()
-            );
-
-            index_data_dirty_ = false;
-        }
-
-    } else {
-        // If there is no animated mesh, then just do the normal thing and
-        // update the submesh buffer if necessary
-        submesh()->_update_vertex_array_object();
-    }
-}
-
-void SubActor::_bind_vertex_array_object() {
-    if(parent_.has_animated_mesh()) {
-        vertex_array_object_->bind();
-    } else {
-        submesh()->_bind_vertex_array_object();
-    }
-}
-#endif
 
 void SubActor::override_material_id(MaterialID material) {
     if(material == material_id()) {

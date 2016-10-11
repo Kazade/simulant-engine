@@ -104,19 +104,15 @@ public:
     }
 
 private:
+    // Used for animated meshes
+    std::unique_ptr<HardwareBuffer> interpolated_vertex_buffer_;
+
     VertexData* get_shared_data() const;
 
     /* If this actor has an animated mesh then this is where interpolated key frame data
      * is stored */
     VertexData* shared_vertex_animation_buffer_ = nullptr;
 
-    /*
-     * If the actor has an animated mesh, then we need to store interpolated vertex
-     * attributes in the Actor::shared_vertex_animation_buffer_.*/
-#ifdef KGLT_GL_VERSION_2X
-    BufferObjectPtr animated_vertex_buffer_object_;
-    bool animated_vertex_buffer_object_dirty_ = true;
-#endif
 
     std::shared_ptr<Mesh> mesh_;
     std::vector<std::shared_ptr<SubActor> > subactors_;
@@ -155,11 +151,6 @@ public:
 
     const MeshArrangement arrangement() const { return submesh()->arrangement(); }
 
-#ifdef KGLT_GL_VERSION_2X
-    void _update_vertex_array_object();
-    void _bind_vertex_array_object();
-#endif
-
     RenderPriority render_priority() const { return parent_.render_priority(); }
     Mat4 final_transformation() const { return parent_.absolute_transformation(); }
     const bool is_visible() const { return parent_.is_visible(); }
@@ -187,11 +178,13 @@ public:
     SubMesh* submesh();
     const SubMesh* submesh() const;
 
+    void prepare_buffers();
 
-    /* These properties are inherited by both the SubMeshInterface and RenderableInterface
-     * and both perform the same action, so we pull the SubMeshInterface ones into scope */
-    using SubMeshInterface::vertex_data;
-    using SubMeshInterface::index_data;
+    VertexSpecification vertex_attribute_specification() const;
+    HardwareBuffer* vertex_attribute_buffer() const;
+    HardwareBuffer* index_buffer() const;
+    std::size_t index_element_count() const;
+
 private:
     VertexData* get_vertex_data() const;
     IndexData* get_index_data() const;
@@ -202,11 +195,7 @@ private:
 
     sig::connection submesh_material_changed_connection_;
 
-#ifdef KGLT_GL_VERSION_2X
-    VertexArrayObjectPtr vertex_array_object_;
-    bool index_data_dirty_ = true;
-#endif
-
+    std::unique_ptr<HardwareBuffer> interpolated_vertex_buffer_;
 };
 
 }

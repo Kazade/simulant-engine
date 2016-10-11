@@ -75,13 +75,14 @@ std::unique_ptr<HardwareBufferImpl> GL2BufferManager::do_allocation(std::size_t 
     std::unique_ptr<GL2HardwareBufferImpl> buffer_impl(new GL2HardwareBufferImpl(this));
 
     buffer_impl->size = size;
+    buffer_impl->capacity = size; // FIXME: Should probably round to some boundary
     buffer_impl->offset = 0;
     buffer_impl->usage = convert_usage(usage);
     buffer_impl->purpose = convert_purpose(purpose);
 
     GLCheck(glGenBuffers, 1, &buffer_impl->buffer_id);
     GLCheck(glBindBuffer, buffer_impl->purpose, buffer_impl->buffer_id);
-    GLCheck(glBufferData, buffer_impl->purpose, size, nullptr, buffer_impl->usage);
+    GLCheck(glBufferData, buffer_impl->purpose, buffer_impl->capacity, nullptr, buffer_impl->usage);
 
     return std::move(buffer_impl);
 }
@@ -91,7 +92,35 @@ void GL2BufferManager::do_release(const HardwareBufferImpl *buffer) {
     GLCheck(glDeleteBuffers, 1, &gl2_buffer->buffer_id);
 }
 
+void GL2BufferManager::do_resize(HardwareBufferImpl* buffer, std::size_t new_size) {
+    auto gl2_buffer = static_cast<GL2HardwareBufferImpl*>(buffer);
+
+    //FIXME: If supported this should use glCopyBufferSubData for performance
+    GLCheck(glBindBuffer, gl2_buffer->purpose, gl2_buffer->buffer_id);
+
+    // Read the data from the existing buffer so we can retain it
+    std::vector<uint8_t> existing(gl2_buffer->size);
+    GLCheck(glGetBufferSubData, gl2_buffer->purpose, gl2_buffer->offset, gl2_buffer->size, &existing[0]);
+
+    // Resize to the new size, either truncating the data, or extending it with zeroes
+    existing.resize(new_size, 0);
+
+    // Update the size of the allocated buffer
+    gl2_buffer->size = new_size;
+    gl2_buffer->capacity = new_size; //FIXME: Should probably round up (like do_allocate)
+
+    // Upload the new data to the existing buffer
+    GLCheck(glBufferData, gl2_buffer->purpose, gl2_buffer->capacity, &existing[0], gl2_buffer->usage);
+}
+
+void GL2BufferManager::do_bind(const HardwareBufferImpl *buffer, HardwareBufferPurpose purpose) {
+    auto gl2_buffer = static_cast<const GL2HardwareBufferImpl*>(buffer);
+    GLCheck(glBindBuffer, purpose, gl2_buffer->buffer_id);
+}
+
 void GL2HardwareBufferImpl::upload(const uint8_t *data, const std::size_t size) {
+    assert(size <= capacity);
+
     GLCheck(glBindBuffer, purpose, buffer_id);
     GLCheck(glBufferSubData, purpose, offset, size, data);
 }

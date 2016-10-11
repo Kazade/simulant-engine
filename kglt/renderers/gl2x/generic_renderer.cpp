@@ -217,21 +217,21 @@ void GenericRenderer::set_auto_uniforms_on_shader(GPUProgramInstance* program,
 
 template<typename EnabledMethod, typename OffsetMethod>
 void send_attribute(ShaderAvailableAttributes attr,
-                    VertexData* data,
+                    const VertexSpecification& vertex_spec,
                     EnabledMethod exists_on_data_predicate,
                     OffsetMethod offset_func) {
 
     int32_t loc = (int32_t) attr;
 
-    auto get_has_attribute = std::bind(exists_on_data_predicate, data);
+    auto get_has_attribute = std::bind(exists_on_data_predicate, vertex_spec);
 
     if(get_has_attribute()) {
-        auto offset = std::bind(offset_func, data, false)();
+        auto offset = std::bind(offset_func, vertex_spec, false)();
 
         GLCheck(glEnableVertexAttribArray, loc);
 
-        auto attr_size = vertex_attribute_size(data->attribute_for_type(convert(attr)));
-        auto stride = data->stride();
+        auto attr_size = vertex_attribute_size(attribute_for_type(convert(attr), vertex_spec));
+        auto stride = vertex_spec.stride();
 
         GLCheck(glVertexAttribPointer,
             loc,
@@ -254,14 +254,15 @@ void GenericRenderer::set_auto_attributes_on_shader(Renderable &buffer) {
      *  and just makes the whole thing generic. Before this was 100s of lines of boilerplate. Thank god
      *  for templates!
      */        
-    VertexData* data = buffer.vertex_data.get();
-    send_attribute(SP_ATTR_VERTEX_POSITION, data, &VertexData::has_positions, &VertexData::position_offset);
-    send_attribute(SP_ATTR_VERTEX_DIFFUSE, data, &VertexData::has_diffuse, &VertexData::diffuse_offset);
-    send_attribute(SP_ATTR_VERTEX_TEXCOORD0, data, &VertexData::has_texcoord0, &VertexData::texcoord0_offset);
-    send_attribute(SP_ATTR_VERTEX_TEXCOORD1, data, &VertexData::has_texcoord1, &VertexData::texcoord1_offset);
-    send_attribute(SP_ATTR_VERTEX_TEXCOORD2, data, &VertexData::has_texcoord2, &VertexData::texcoord2_offset);
-    send_attribute(SP_ATTR_VERTEX_TEXCOORD3, data, &VertexData::has_texcoord3, &VertexData::texcoord3_offset);
-    send_attribute(SP_ATTR_VERTEX_NORMAL, data, &VertexData::has_normals, &VertexData::normal_offset);
+    const VertexSpecification& vertex_spec = buffer.vertex_attribute_specification();
+
+    send_attribute(SP_ATTR_VERTEX_POSITION, vertex_spec, &VertexSpecification::has_positions, &VertexSpecification::position_offset);
+    send_attribute(SP_ATTR_VERTEX_DIFFUSE, vertex_spec, &VertexSpecification::has_diffuse, &VertexSpecification::diffuse_offset);
+    send_attribute(SP_ATTR_VERTEX_TEXCOORD0, vertex_spec, &VertexSpecification::has_texcoord0, &VertexSpecification::texcoord0_offset);
+    send_attribute(SP_ATTR_VERTEX_TEXCOORD1, vertex_spec, &VertexSpecification::has_texcoord1, &VertexSpecification::texcoord1_offset);
+    send_attribute(SP_ATTR_VERTEX_TEXCOORD2, vertex_spec, &VertexSpecification::has_texcoord2, &VertexSpecification::texcoord2_offset);
+    send_attribute(SP_ATTR_VERTEX_TEXCOORD3, vertex_spec, &VertexSpecification::has_texcoord3, &VertexSpecification::texcoord3_offset);
+    send_attribute(SP_ATTR_VERTEX_NORMAL, vertex_spec, &VertexSpecification::has_normals, &VertexSpecification::normal_offset);
 }
 
 void GenericRenderer::set_blending_mode(BlendType type) {
@@ -333,8 +334,14 @@ void GenericRenderer::render(CameraPtr camera, bool render_group_changed, const 
         program->set_uniform_int(p.first, p.second);
     }
 
-    renderable->_update_vertex_array_object();
-    renderable->_bind_vertex_array_object();
+    renderable->prepare_buffers();
+
+    auto* vertex_buffer = renderable->vertex_attribute_buffer();
+    auto* index_buffer = renderable->index_buffer();
+
+    // Bind the buffers to the correct targets (purpose)
+    vertex_buffer->bind(HARDWARE_BUFFER_VERTEX_ATTRIBUTES);
+    index_buffer->bind(HARDWARE_BUFFER_VERTEX_ARRAY_INDICES);
 
     set_auto_attributes_on_shader(*renderable);
 
@@ -413,7 +420,7 @@ void GenericRenderer::render(CameraPtr camera, bool render_group_changed, const 
 }
 
 void GenericRenderer::send_geometry(Renderable *renderable) {
-    std::size_t index_count = renderable->index_data->count();
+    std::size_t index_count = renderable->index_element_count();
     if(!index_count) {
         return;
     }

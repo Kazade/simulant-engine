@@ -20,6 +20,16 @@
 namespace kglt {
 namespace ui {
 
+const VertexSpecification UIRenderable::VERTEX_SPECIFICATION = {
+    VERTEX_ATTRIBUTE_2F, //Position
+    VERTEX_ATTRIBUTE_NONE,
+    VERTEX_ATTRIBUTE_2F, //Texcoord0
+    VERTEX_ATTRIBUTE_NONE,
+    VERTEX_ATTRIBUTE_NONE,
+    VERTEX_ATTRIBUTE_NONE,
+    VERTEX_ATTRIBUTE_4F //Diffuse
+};
+
 Interface::Interface(WindowBase &window, Overlay *owner):
     window_(window),
     stage_(owner) {
@@ -245,15 +255,10 @@ void Interface::send_to_renderer(CameraPtr camera, Viewport viewport) {
     nk_buffer_init_default(&ebuf);
     nk_convert(&nk_ctx_, &nk_device_.cmds, &vbuf, &ebuf, &config);
 
-    VertexSpecification spec;
-    spec.position_attribute = VERTEX_ATTRIBUTE_2F;
-    spec.texcoord0_attribute = VERTEX_ATTRIBUTE_2F;
-    spec.diffuse_attribute = VERTEX_ATTRIBUTE_4F;
-
     const nk_byte* vertices = (const nk_byte*) nk_buffer_memory_const(&vbuf);
     const nk_draw_index *offset = (const nk_draw_index*) nk_buffer_memory_const(&ebuf);
 
-    VertexData vertex_data(spec);
+    VertexData vertex_data(UIRenderable::VERTEX_SPECIFICATION);
 
     auto vertex_size = (sizeof(float) * 4 + sizeof(uint32_t));
 
@@ -280,6 +285,16 @@ void Interface::send_to_renderer(CameraPtr camera, Viewport viewport) {
     }
     vertex_data.done();
 
+    if(!shared_vertex_buffer_) {
+        shared_vertex_buffer_ = window_.renderer->hardware_buffers->allocate(
+            vertex_data.data_size(),
+            HARDWARE_BUFFER_VERTEX_ATTRIBUTES
+        );
+    } else {
+        shared_vertex_buffer_->resize(vertex_data.data_size());
+    }
+    shared_vertex_buffer_->upload(vertex_data);
+
     std::vector<std::shared_ptr<UIRenderable>> renderables;
 
     auto& renderer = this->window_.renderer;
@@ -287,15 +302,20 @@ void Interface::send_to_renderer(CameraPtr camera, Viewport viewport) {
     nk_draw_foreach(cmd, &nk_ctx_, &nk_device_.cmds) {
         if(!cmd->elem_count) continue;
 
-        renderables.push_back(std::make_shared<UIRenderable>(vertex_data, MaterialID(cmd->texture.id)));
+        renderables.push_back(std::make_shared<UIRenderable>(
+            shared_vertex_buffer_.get(), MaterialID(cmd->texture.id))
+        );
 
         auto renderable = renderables.back();
+        IndexData index_data;
 
         // FIXME: clipping?
         for(uint32_t i = 0; i < cmd->elem_count; ++i) {
-            renderable->index_data->index(offset[i]);
+            index_data.index(offset[i]);
         }
-        renderable->index_data->done();
+        index_data.done();
+        renderable->index_buffer()->upload(index_data);
+
         offset += cmd->elem_count;
     }
 

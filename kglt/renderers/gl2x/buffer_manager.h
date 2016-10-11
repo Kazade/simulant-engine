@@ -23,6 +23,8 @@ class GL2BufferManager:
 private:
     std::unique_ptr<HardwareBufferImpl> do_allocation(std::size_t size, HardwareBufferPurpose purpose, HardwareBufferUsage usage);
     void do_release(const HardwareBufferImpl *buffer);
+    void do_resize(HardwareBufferImpl* buffer, std::size_t new_size);
+    void do_bind(const HardwareBufferImpl *buffer, HardwareBufferPurpose purpose);
 };
 
 }
