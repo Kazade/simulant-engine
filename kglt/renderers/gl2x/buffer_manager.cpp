@@ -1,5 +1,6 @@
 #include <cassert>
 #include "buffer_manager.h"
+#include "../renderer.h"
 #include "../../utils/gl_error.h"
 
 namespace kglt {
@@ -71,6 +72,11 @@ static GLenum convert_usage(HardwareBufferUsage usage) {
     }
 }
 
+GL2BufferManager::GL2BufferManager(const Renderer* renderer):
+    HardwareBufferManager(renderer) {
+
+}
+
 std::unique_ptr<HardwareBufferImpl> GL2BufferManager::do_allocation(std::size_t size, HardwareBufferPurpose purpose, HardwareBufferUsage usage) {
     std::unique_ptr<GL2HardwareBufferImpl> buffer_impl(new GL2HardwareBufferImpl(this));
 
@@ -80,49 +86,98 @@ std::unique_ptr<HardwareBufferImpl> GL2BufferManager::do_allocation(std::size_t 
     buffer_impl->usage = convert_usage(usage);
     buffer_impl->purpose = convert_purpose(purpose);
 
-    GLCheck(glGenBuffers, 1, &buffer_impl->buffer_id);
-    GLCheck(glBindBuffer, buffer_impl->purpose, buffer_impl->buffer_id);
-    GLCheck(glBufferData, buffer_impl->purpose, buffer_impl->capacity, nullptr, buffer_impl->usage);
+    auto allocate_buffers = [&buffer_impl]() {
+        GLCheck(glGenBuffers, 1, &buffer_impl->buffer_id);
+        GLCheck(glBindBuffer, buffer_impl->purpose, buffer_impl->buffer_id);
+        GLCheck(glBufferData, buffer_impl->purpose, buffer_impl->capacity, nullptr, buffer_impl->usage);
+    };
+
+    if(GLThreadCheck::is_current()) {
+        allocate_buffers();
+    } else {
+        auto& idle_manager = renderer->window->idle;
+        idle_manager->add_once(allocate_buffers);
+        idle_manager->wait();
+    }
 
     return std::move(buffer_impl);
 }
 
 void GL2BufferManager::do_release(const HardwareBufferImpl *buffer) {
     auto gl2_buffer = static_cast<const GL2HardwareBufferImpl*>(buffer);
-    GLCheck(glDeleteBuffers, 1, &gl2_buffer->buffer_id);
+    if(GLThreadCheck::is_current()) {
+        GLCheck(glDeleteBuffers, 1, &gl2_buffer->buffer_id);
+    } else {
+        auto& idle_manager = renderer->window->idle;
+        // Make sure we run the GL stuff on the main thread
+        idle_manager->add_once([&]() {
+            GLCheck(glDeleteBuffers, 1, &gl2_buffer->buffer_id);
+        });
+
+        idle_manager->wait();
+    }
 }
 
 void GL2BufferManager::do_resize(HardwareBufferImpl* buffer, std::size_t new_size) {
     auto gl2_buffer = static_cast<GL2HardwareBufferImpl*>(buffer);
 
-    //FIXME: If supported this should use glCopyBufferSubData for performance
-    GLCheck(glBindBuffer, gl2_buffer->purpose, gl2_buffer->buffer_id);
+    auto resize_buffer = [gl2_buffer, new_size]() {
+        //FIXME: If supported this should use glCopyBufferSubData for performance
+        GLCheck(glBindBuffer, gl2_buffer->purpose, gl2_buffer->buffer_id);
 
-    // Read the data from the existing buffer so we can retain it
-    std::vector<uint8_t> existing(gl2_buffer->size);
-    GLCheck(glGetBufferSubData, gl2_buffer->purpose, gl2_buffer->offset, gl2_buffer->size, &existing[0]);
+        // Read the data from the existing buffer so we can retain it
+        std::vector<uint8_t> existing(gl2_buffer->size);
+        GLCheck(glGetBufferSubData, gl2_buffer->purpose, gl2_buffer->offset, gl2_buffer->size, &existing[0]);
 
-    // Resize to the new size, either truncating the data, or extending it with zeroes
-    existing.resize(new_size, 0);
+        // Resize to the new size, either truncating the data, or extending it with zeroes
+        existing.resize(new_size, 0);
 
-    // Update the size of the allocated buffer
-    gl2_buffer->size = new_size;
-    gl2_buffer->capacity = new_size; //FIXME: Should probably round up (like do_allocate)
+        // Update the size of the allocated buffer
+        gl2_buffer->size = new_size;
+        gl2_buffer->capacity = new_size; //FIXME: Should probably round up (like do_allocate)
 
-    // Upload the new data to the existing buffer
-    GLCheck(glBufferData, gl2_buffer->purpose, gl2_buffer->capacity, &existing[0], gl2_buffer->usage);
+        // Upload the new data to the existing buffer
+        GLCheck(glBufferData, gl2_buffer->purpose, gl2_buffer->capacity, &existing[0], gl2_buffer->usage);
+    };
+
+    if(GLThreadCheck::is_current()) {
+        resize_buffer();
+    } else {
+        auto& idle_manager = renderer->window->idle;
+        idle_manager->add_once(resize_buffer);
+        idle_manager->wait();
+    }
 }
 
 void GL2BufferManager::do_bind(const HardwareBufferImpl *buffer, HardwareBufferPurpose purpose) {
     auto gl2_buffer = static_cast<const GL2HardwareBufferImpl*>(buffer);
-    GLCheck(glBindBuffer, convert_purpose(purpose), gl2_buffer->buffer_id);
+    if(GLThreadCheck::is_current()) {
+        GLCheck(glBindBuffer, convert_purpose(purpose), gl2_buffer->buffer_id);
+    } else {
+        auto& idle_manager = renderer->window->idle;
+        // If we're uploading in a background thread, make sure we run the GL stuff on the main thread
+        idle_manager->add_once([&]() {
+            GLCheck(glBindBuffer, convert_purpose(purpose), gl2_buffer->buffer_id);
+        });
+        idle_manager->wait();
+    }
 }
 
 void GL2HardwareBufferImpl::upload(const uint8_t *data, const std::size_t size) {
     assert(size <= capacity);
 
-    GLCheck(glBindBuffer, purpose, buffer_id);
-    GLCheck(glBufferSubData, purpose, offset, size, data);
+    if(GLThreadCheck::is_current()) {
+        GLCheck(glBindBuffer, purpose, buffer_id);
+        GLCheck(glBufferSubData, purpose, offset, size, data);
+    } else {
+        auto& idle_manager = manager->renderer->window->idle;
+        // If we're uploading in a background thread, make sure we run the GL stuff on the main thread
+        idle_manager->add_once([&]() {
+            GLCheck(glBindBuffer, purpose, buffer_id);
+            GLCheck(glBufferSubData, purpose, offset, size, data);
+        });
+        idle_manager->wait();
+    }
 }
 
 }

@@ -1,11 +1,13 @@
 #pragma once
 
 #include "generic/managed.h"
+#include "generic/property.h"
 
 namespace kglt {
 
 class VertexData;
 class IndexData;
+class Renderer;
 
 enum HardwareBufferPurpose {
     HARDWARE_BUFFER_VERTEX_ATTRIBUTES,
@@ -91,9 +93,13 @@ private:
  * that returns a HardwareBufferManager subclass */
 class HardwareBufferManager {
 public:
+    HardwareBufferManager(const Renderer* renderer);
     HardwareBuffer::ptr allocate(std::size_t size, HardwareBufferPurpose purpose, HardwareBufferUsage usage=HARDWARE_BUFFER_MODIFY_ONCE_USED_FOR_RENDERING);
 
+    Property<HardwareBufferManager, const Renderer> renderer = { this, &HardwareBufferManager::renderer_ };
 private:
+    const Renderer* renderer_;
+
     virtual std::unique_ptr<HardwareBufferImpl> do_allocation(std::size_t size, HardwareBufferPurpose purpose, HardwareBufferUsage usage) = 0;
 
     virtual void do_resize(HardwareBufferImpl* buffer, std::size_t new_size) = 0;

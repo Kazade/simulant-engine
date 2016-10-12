@@ -20,6 +20,9 @@ struct GL2HardwareBufferImpl : public HardwareBufferImpl {
 class GL2BufferManager:
     public kglt::HardwareBufferManager {
 
+public:
+    GL2BufferManager(const Renderer* renderer);
+
 private:
     std::unique_ptr<HardwareBufferImpl> do_allocation(std::size_t size, HardwareBufferPurpose purpose, HardwareBufferUsage usage);
     void do_release(const HardwareBufferImpl *buffer);

@@ -11,6 +11,11 @@ private:
     GL2BufferManager buffer_manager_;
 
 public:
+    GL2Tests():
+        buffer_manager_(nullptr) {
+
+    }
+
     void test_that_buffers_can_be_allocated() {
         auto buffer = buffer_manager_.allocate(10, kglt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES);
         assert_equal(10, buffer->size());

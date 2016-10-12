@@ -4,6 +4,11 @@
 
 namespace kglt {
 
+HardwareBufferManager::HardwareBufferManager(const Renderer* renderer):
+    renderer_(renderer) {
+
+}
+
 HardwareBuffer::ptr HardwareBufferManager::allocate(std::size_t size, HardwareBufferPurpose purpose, HardwareBufferUsage usage) {
     return HardwareBuffer::ptr(new HardwareBuffer(do_allocation(size, purpose, usage)));
 }

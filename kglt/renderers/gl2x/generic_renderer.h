@@ -13,7 +13,7 @@ class GenericRenderer : public Renderer {
 public:
     GenericRenderer(WindowBase* window):
         Renderer(window),
-        buffer_manager_(new GL2BufferManager()) {
+        buffer_manager_(new GL2BufferManager(this)) {
 
     }
 
