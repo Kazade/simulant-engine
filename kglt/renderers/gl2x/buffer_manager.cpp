@@ -115,7 +115,7 @@ void GL2BufferManager::do_resize(HardwareBufferImpl* buffer, std::size_t new_siz
 
 void GL2BufferManager::do_bind(const HardwareBufferImpl *buffer, HardwareBufferPurpose purpose) {
     auto gl2_buffer = static_cast<const GL2HardwareBufferImpl*>(buffer);
-    GLCheck(glBindBuffer, purpose, gl2_buffer->buffer_id);
+    GLCheck(glBindBuffer, convert_purpose(purpose), gl2_buffer->buffer_id);
 }
 
 void GL2HardwareBufferImpl::upload(const uint8_t *data, const std::size_t size) {

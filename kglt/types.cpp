@@ -211,6 +211,10 @@ VertexSpecification::VertexSpecification(
         diffuse_attribute(diffuse),
         specular_attribute(specular) {
 
+    recalc_stride();
+}
+
+void VertexSpecification::recalc_stride() {
     stride_ = (
         vertex_attribute_size(position_attribute) +
         vertex_attribute_size(normal_attribute) +

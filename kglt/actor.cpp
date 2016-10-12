@@ -57,7 +57,12 @@ void SubActor::prepare_buffers() {
 }
 
 VertexSpecification SubActor::vertex_attribute_specification() const {
-    return get_vertex_data()->specification();
+    auto* vertex_data = get_vertex_data();
+    if(vertex_data) {
+        return vertex_data->specification();
+    }
+
+    return VertexSpecification();
 }
 
 HardwareBuffer* SubActor::vertex_attribute_buffer() const {

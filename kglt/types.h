@@ -635,6 +635,8 @@ struct VertexSpecification {
     uint32_t diffuse_offset(bool check=true) const;
     uint32_t specular_offset(bool check=true) const;
 
+    void recalc_stride();
+
 private:
     uint32_t stride_;
 };
