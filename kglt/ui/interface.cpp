@@ -30,6 +30,14 @@ const VertexSpecification UIRenderable::VERTEX_SPECIFICATION = {
     VERTEX_ATTRIBUTE_4F //Diffuse
 };
 
+UIRenderable::UIRenderable(HardwareBuffer::ptr& index_buffer, HardwareBuffer* vertex_buffer, MaterialID material):
+    vertex_buffer_(vertex_buffer),
+    index_buffer_(std::move(index_buffer)),
+    material_id_(material) {
+
+
+}
+
 Interface::Interface(WindowBase &window, Overlay *owner):
     window_(window),
     stage_(owner) {
@@ -302,8 +310,13 @@ void Interface::send_to_renderer(CameraPtr camera, Viewport viewport) {
     nk_draw_foreach(cmd, &nk_ctx_, &nk_device_.cmds) {
         if(!cmd->elem_count) continue;
 
+        HardwareBuffer::ptr index_buffer = renderer->hardware_buffers->allocate(
+            cmd->elem_count * sizeof(Index),
+            HARDWARE_BUFFER_VERTEX_ARRAY_INDICES
+        );
+
         renderables.push_back(std::make_shared<UIRenderable>(
-            shared_vertex_buffer_.get(), MaterialID(cmd->texture.id))
+            index_buffer, shared_vertex_buffer_.get(), MaterialID(cmd->texture.id))
         );
 
         auto renderable = renderables.back();

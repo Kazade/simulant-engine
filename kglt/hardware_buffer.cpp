@@ -26,7 +26,7 @@ HardwareBuffer::HardwareBuffer(std::unique_ptr<HardwareBufferImpl> impl):
 }
 
 void HardwareBuffer::upload(IndexData &index_data) {
-    assert(0 && "Not Implemented");
+    upload(index_data.data(), index_data.data_size());
 }
 
 void HardwareBuffer::upload(VertexData &vertex_data) {

@@ -155,10 +155,7 @@ public:
     static const VertexSpecification VERTEX_SPECIFICATION;
 
 public:
-    UIRenderable(HardwareBuffer* vertex_buffer, MaterialID material):
-        vertex_buffer_(vertex_buffer),
-        material_id_(material) {
-    }
+    UIRenderable(HardwareBuffer::ptr& index_buffer, HardwareBuffer* vertex_buffer, MaterialID material);
 
     const MeshArrangement arrangement() const override { return MESH_ARRANGEMENT_TRIANGLES; }
     kglt::RenderPriority render_priority() const override { return RENDER_PRIORITY_MAIN; }
