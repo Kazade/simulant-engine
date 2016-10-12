@@ -52,6 +52,10 @@ void Actor::clear_subactors() {
     subactors_.clear();
 }
 
+void SubActor::prepare_buffers() {
+
+}
+
 VertexSpecification SubActor::vertex_attribute_specification() const {
     return get_vertex_data()->specification();
 }
