@@ -573,8 +573,11 @@ SubMesh::SubMesh(Mesh* parent, const std::string& name,
     }
 
     index_data_ = new IndexData();
+    index_data_->signal_update_complete().connect([this]() { this->index_buffer_dirty_ = true; });
+
     if(!uses_shared_data_) {
         vertex_data_ = new VertexData(vertex_specification);
+        vertex_data->signal_update_complete().connect([this]() { this->vertex_buffer_dirty_ = true; });
     }
 
     if(!material) {
@@ -586,12 +589,6 @@ SubMesh::SubMesh(Mesh* parent, const std::string& name,
 
     vrecalc_ = vertex_data->signal_update_complete().connect(std::bind(&SubMesh::_recalc_bounds, this));
     irecalc_ = index_data->signal_update_complete().connect(std::bind(&SubMesh::_recalc_bounds, this));
-
-    if(!uses_shared_data_) {
-        vertex_data->signal_update_complete().connect([this]() { this->vertex_buffer_dirty_ = true; });
-    }
-
-    index_data->signal_update_complete().connect([this]() { this->index_buffer_dirty_ = true; });
 }
 
 const MaterialID SubMesh::material_id() const {
@@ -605,6 +602,7 @@ void Mesh::prepare_buffers() {
             resource_manager().window->renderer.get(),
             HARDWARE_BUFFER_VERTEX_ATTRIBUTES
         );
+        shared_vertex_buffer_dirty_ = false;
     }
 }
 
@@ -619,6 +617,7 @@ void SubMesh::prepare_buffers() {
             renderer,
             HARDWARE_BUFFER_VERTEX_ATTRIBUTES
         );
+        vertex_buffer_dirty_ = false;
     }
 
     if(index_buffer_dirty_) {
@@ -627,6 +626,7 @@ void SubMesh::prepare_buffers() {
             renderer,
             HARDWARE_BUFFER_VERTEX_ARRAY_INDICES
         );
+        index_buffer_dirty_ = false;
     }
 }
 
