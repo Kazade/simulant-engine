@@ -53,7 +53,9 @@ void Actor::clear_subactors() {
 }
 
 void SubActor::prepare_buffers() {
-
+    if(submesh_) {
+        submesh_->prepare_buffers();
+    }
 }
 
 VertexSpecification SubActor::vertex_attribute_specification() const {

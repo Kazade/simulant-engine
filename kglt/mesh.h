@@ -104,6 +104,7 @@ public:
     HardwareBuffer* vertex_buffer() const { return vertex_buffer_.get(); }
     HardwareBuffer* index_buffer() const { return index_buffer_.get(); }
 
+    void prepare_buffers(); // Called by actors to make sure things are up-to-date before rendering
 public:
     typedef sig::signal<void (SubMesh*, MaterialID, MaterialID)> MaterialChangedCallback;
 
@@ -128,6 +129,9 @@ private:
 
     std::unique_ptr<HardwareBuffer> vertex_buffer_;
     std::unique_ptr<HardwareBuffer> index_buffer_;
+
+    bool vertex_buffer_dirty_ = false;
+    bool index_buffer_dirty_ = false;
 
     AABB bounds_;
 
@@ -225,6 +229,7 @@ public:
     uint32_t animation_frames() const { return animation_frames_; }
     MeshAnimationType animation_type() const { return animation_type_; }
 
+    void prepare_buffers();
 public:
     // Signals
 
@@ -245,6 +250,7 @@ private:
     uint32_t animation_frames_ = 0;
 
     std::unique_ptr<HardwareBuffer> shared_vertex_buffer_;
+    bool shared_vertex_buffer_dirty_ = false;
 
     std::unordered_map<std::string, std::shared_ptr<SubMesh>> submeshes_;
 

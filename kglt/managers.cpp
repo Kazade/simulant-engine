@@ -141,6 +141,10 @@ const bool CameraManager::has_camera(CameraID id) const {
     return CameraManager::contains(id);
 }
 
+void CameraManager::delete_all_cameras() {
+    destroy_all();
+}
+
 //============== END CAMERAS ================
 
 
@@ -272,6 +276,10 @@ bool StageManager::has_stage(StageID stage_id) const {
     return contains(stage_id);
 }
 
+void StageManager::delete_all_stages() {
+    destroy_all();
+}
+
 // ============= END STAGES ===========
 
 // ============= UI STAGES ============
@@ -312,6 +320,10 @@ uint32_t OverlayManager::overlay_count() const {
 
 bool OverlayManager::has_overlay(OverlayID overlay) const {
     return OverlayManager::contains(overlay);
+}
+
+void OverlayManager::delete_all_overlays() {
+    destroy_all();
 }
 
 // =========== END UI STAGES ==========

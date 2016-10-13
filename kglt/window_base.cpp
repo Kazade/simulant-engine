@@ -74,6 +74,10 @@ WindowBase::~WindowBase() {
     background_manager_.reset();
     render_sequence_.reset();
 
+    delete_all_cameras();
+    delete_all_overlays();
+    delete_all_stages();
+
     Sound::shutdown_openal();
 
     delete resource_manager_;

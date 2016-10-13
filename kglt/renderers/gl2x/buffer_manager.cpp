@@ -96,8 +96,7 @@ std::unique_ptr<HardwareBufferImpl> GL2BufferManager::do_allocation(std::size_t 
         allocate_buffers();
     } else {
         auto& idle_manager = renderer->window->idle;
-        idle_manager->add_once(allocate_buffers);
-        idle_manager->wait();
+        idle_manager->run_sync(allocate_buffers);
     }
 
     return std::move(buffer_impl);
@@ -110,11 +109,9 @@ void GL2BufferManager::do_release(const HardwareBufferImpl *buffer) {
     } else {
         auto& idle_manager = renderer->window->idle;
         // Make sure we run the GL stuff on the main thread
-        idle_manager->add_once([&]() {
+        idle_manager->run_sync([&]() {
             GLCheck(glDeleteBuffers, 1, &gl2_buffer->buffer_id);
         });
-
-        idle_manager->wait();
     }
 }
 
@@ -144,8 +141,7 @@ void GL2BufferManager::do_resize(HardwareBufferImpl* buffer, std::size_t new_siz
         resize_buffer();
     } else {
         auto& idle_manager = renderer->window->idle;
-        idle_manager->add_once(resize_buffer);
-        idle_manager->wait();
+        idle_manager->run_sync(resize_buffer);
     }
 }
 
@@ -156,10 +152,9 @@ void GL2BufferManager::do_bind(const HardwareBufferImpl *buffer, HardwareBufferP
     } else {
         auto& idle_manager = renderer->window->idle;
         // If we're uploading in a background thread, make sure we run the GL stuff on the main thread
-        idle_manager->add_once([&]() {
+        idle_manager->run_sync([&]() {
             GLCheck(glBindBuffer, convert_purpose(purpose), gl2_buffer->buffer_id);
         });
-        idle_manager->wait();
     }
 }
 
@@ -172,11 +167,10 @@ void GL2HardwareBufferImpl::upload(const uint8_t *data, const std::size_t size) 
     } else {
         auto& idle_manager = manager->renderer->window->idle;
         // If we're uploading in a background thread, make sure we run the GL stuff on the main thread
-        idle_manager->add_once([&]() {
+        idle_manager->run_sync([&]() {
             GLCheck(glBindBuffer, purpose, buffer_id);
             GLCheck(glBufferSubData, purpose, offset, size, data);
         });
-        idle_manager->wait();
     }
 }
 

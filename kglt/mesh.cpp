@@ -56,14 +56,7 @@ void Mesh::reset(VertexSpecification vertex_specification) {
     shared_data_ = new VertexData(vertex_specification);
 
     // When the vertex data updates, update the hardware buffer
-    shared_data->signal_update_complete().connect(
-        std::bind(
-            &sync_buffer<VertexData, Renderer>,
-            &shared_vertex_buffer_, shared_data_,
-            resource_manager().window->renderer.get(),
-            HARDWARE_BUFFER_VERTEX_ATTRIBUTES
-        )
-    );
+    shared_data->signal_update_complete().connect([this]() { shared_vertex_buffer_dirty_ = true; });
 }
 
 Mesh::~Mesh() {
@@ -594,31 +587,47 @@ SubMesh::SubMesh(Mesh* parent, const std::string& name,
     vrecalc_ = vertex_data->signal_update_complete().connect(std::bind(&SubMesh::_recalc_bounds, this));
     irecalc_ = index_data->signal_update_complete().connect(std::bind(&SubMesh::_recalc_bounds, this));
 
-    auto* renderer = parent_->resource_manager().window->renderer.get();
-
     if(!uses_shared_data_) {
-        vertex_data->signal_update_complete().connect(
-            std::bind(
-                &sync_buffer<VertexData, Renderer>,
-                &vertex_buffer_, vertex_data_,
-                renderer,
-                HARDWARE_BUFFER_VERTEX_ATTRIBUTES
-            )
-        );
+        vertex_data->signal_update_complete().connect([this]() { this->vertex_buffer_dirty_ = true; });
     }
 
-    index_data->signal_update_complete().connect(
-        std::bind(
-            &sync_buffer<IndexData, Renderer>,
-            &index_buffer_, index_data_,
-            renderer,
-            HARDWARE_BUFFER_VERTEX_ARRAY_INDICES
-        )
-    );
+    index_data->signal_update_complete().connect([this]() { this->index_buffer_dirty_ = true; });
 }
 
 const MaterialID SubMesh::material_id() const {
     return material_->id();
+}
+
+void Mesh::prepare_buffers() {
+    if(shared_vertex_buffer_dirty_) {
+        sync_buffer<VertexData, Renderer>(
+            &shared_vertex_buffer_, shared_data_,
+            resource_manager().window->renderer.get(),
+            HARDWARE_BUFFER_VERTEX_ATTRIBUTES
+        );
+    }
+}
+
+void SubMesh::prepare_buffers() {
+    auto* renderer = parent_->resource_manager().window->renderer.get();
+
+    if(uses_shared_data_) {
+        parent_->prepare_buffers();
+    } else if(vertex_buffer_dirty_) {
+        sync_buffer<VertexData, Renderer>(
+            &vertex_buffer_, vertex_data_,
+            renderer,
+            HARDWARE_BUFFER_VERTEX_ATTRIBUTES
+        );
+    }
+
+    if(index_buffer_dirty_) {
+        sync_buffer<IndexData, Renderer>(
+            &index_buffer_, index_data_,
+            renderer,
+            HARDWARE_BUFFER_VERTEX_ARRAY_INDICES
+        );
+    }
 }
 
 void SubMesh::set_material_id(MaterialID mat) {
@@ -632,6 +641,10 @@ void SubMesh::set_material_id(MaterialID mat) {
     if(mat) {
         // Set the material, store the shared_ptr to increment the ref count
         material_ = parent_->resource_manager().material(mat);
+        if(!material_) {
+            throw std::runtime_error("Tried to set invalid material on submesh");
+        }
+
         material_change_connection_ = material_->signal_material_pass_changed().connect(
             [=](MaterialID, MaterialPassChangeEvent evt) {
                 /* FIXME: This is a hack! We want material_changed event to take some kind of event
