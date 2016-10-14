@@ -316,6 +316,11 @@ void GenericRenderer::render(CameraPtr camera, bool render_group_changed, const 
         }
     }
 
+    // Don't bother doing *anything* if there is nothing to render
+    if(!renderable->index_element_count()) {
+        return;
+    }
+
     auto& program_instance = material_pass->program;
     auto& program = program_instance->program;
 

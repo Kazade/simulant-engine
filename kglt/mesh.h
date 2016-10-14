@@ -101,7 +101,7 @@ public:
 
     const std::string& name() const { return name_; }
 
-    HardwareBuffer* vertex_buffer() const { return vertex_buffer_.get(); }
+    HardwareBuffer* vertex_buffer() const;
     HardwareBuffer* index_buffer() const { return index_buffer_.get(); }
 
     void prepare_buffers(); // Called by actors to make sure things are up-to-date before rendering

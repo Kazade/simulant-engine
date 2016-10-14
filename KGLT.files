@@ -1105,3 +1105,4 @@ kglt/renderers/gl2x/buffer_manager.h
 tests/test_gl2.h
 kglt/renderers/gl2x/buffer_manager.cpp
 kglt/hardware_buffer.cpp
+samples/nehe01.cpp

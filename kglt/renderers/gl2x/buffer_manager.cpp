@@ -119,6 +119,10 @@ void GL2BufferManager::do_resize(HardwareBufferImpl* buffer, std::size_t new_siz
     auto gl2_buffer = static_cast<GL2HardwareBufferImpl*>(buffer);
 
     auto resize_buffer = [gl2_buffer, new_size]() {
+        if(new_size == gl2_buffer->capacity) {
+            return;
+        }
+
         //FIXME: If supported this should use glCopyBufferSubData for performance
         GLCheck(glBindBuffer, gl2_buffer->purpose, gl2_buffer->buffer_id);
 

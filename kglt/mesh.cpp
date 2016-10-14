@@ -20,6 +20,11 @@ IndexData* SubMesh::get_index_data() const {
     return index_data_;
 }
 
+HardwareBuffer* SubMesh::vertex_buffer() const {
+    if(uses_shared_data_) { return parent_->shared_vertex_buffer_.get(); }
+    return vertex_buffer_.get();
+}
+
 Mesh::Mesh(
     MeshID id,
     ResourceManager *resource_manager,
@@ -45,6 +50,8 @@ void sync_buffer(HardwareBuffer::ptr* buffer, Data* data, Allocator* allocator, 
         assert(data->count());
         (*buffer)->resize(data->data_size());
     }
+
+    (*buffer)->upload(*data);
 }
 
 void Mesh::reset(VertexSpecification vertex_specification) {
