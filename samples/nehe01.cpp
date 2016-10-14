@@ -11,8 +11,6 @@ public:
 
         kglt::StagePtr stage = stage_.fetch();
         kglt::MeshPtr square = stage->assets->new_mesh_as_rectangle(1.0, 1.0).fetch();
-        kglt::MaterialPtr mat = square->first_submesh()->material_id().fetch();
-        mat->first_pass()->set_cull_mode(kglt::CULL_MODE_NONE);
 
         stage->new_actor_with_mesh(square->id()).fetch()->move_to(0, 0, -5);
     }
