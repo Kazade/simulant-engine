@@ -109,11 +109,6 @@ private:
 
     VertexData* get_shared_data() const;
 
-    /* If this actor has an animated mesh then this is where interpolated key frame data
-     * is stored */
-    VertexData* shared_vertex_animation_buffer_ = nullptr;
-
-
     std::shared_ptr<Mesh> mesh_;
     std::vector<std::shared_ptr<SubActor> > subactors_;
     std::shared_ptr<KeyFrameAnimationState> animation_state_;

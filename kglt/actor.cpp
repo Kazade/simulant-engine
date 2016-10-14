@@ -311,10 +311,6 @@ void Actor::each(std::function<void (uint32_t, SubActor*)> callback) {
 
 
 VertexData* SubActor::get_vertex_data() const {
-    if(parent_.has_animated_mesh()) {
-        return parent_.shared_vertex_animation_buffer_;
-    }
-
     return submesh()->vertex_data.get();
 }
 
