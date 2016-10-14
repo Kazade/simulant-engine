@@ -96,12 +96,40 @@ const AABB ParticleSystem::aabb() const {
 }
 
 void ParticleSystem::prepare_buffers() {
+
+    // Only resize the hardware buffers if someone called set_quota()
+    if(resize_buffers_) {
+        auto* renderer = stage->window->renderer.get();
+
+        if(!vertex_buffer_) {
+            vertex_buffer_ = renderer->hardware_buffers->allocate(
+                vertex_data_->stride() * quota_,
+                HARDWARE_BUFFER_VERTEX_ATTRIBUTES
+            );
+        } else {
+            vertex_buffer_->resize(vertex_data_->stride() * quota_);
+        }
+
+        if(!index_buffer_) {
+            index_buffer_ = renderer->hardware_buffers->allocate(
+                sizeof(Index) * quota_,
+                HARDWARE_BUFFER_VERTEX_ARRAY_INDICES
+            );
+        } else {
+            index_buffer_->resize(sizeof(Index) * quota_);
+        }
+
+        resize_buffers_ = false;
+    }
+
     if(vertex_buffer_dirty_) {
         vertex_buffer_->upload(*vertex_data_);
+        vertex_buffer_dirty_ = false;
     }
 
     if(index_buffer_dirty_) {
         index_buffer_->upload(*index_data_);
+        index_buffer_dirty_ = false;
     }
 }
 
@@ -160,29 +188,16 @@ void ParticleEmitter::update(double dt) {
     }
 }
 
-void ParticleSystem::set_quota(int quota) {
-    auto* renderer = stage->window->renderer.get();
+void ParticleSystem::set_quota(int quota) {    
+    if(quota == particles_.size()) {
+        return;
+    }
+
+    // if the quota changed, then the hardware buffers will need resizing
+    resize_buffers_ = true;
 
     quota_ = quota;
     particles_.resize(quota);
-    if(!vertex_buffer_) {
-        vertex_buffer_ = renderer->hardware_buffers->allocate(
-            vertex_data_->stride() * quota,
-            HARDWARE_BUFFER_VERTEX_ATTRIBUTES
-        );
-    } else {
-        vertex_buffer_->resize(vertex_data_->stride() * quota);
-    }
-
-    if(!index_buffer_) {
-        index_buffer_ = renderer->hardware_buffers->allocate(
-            sizeof(Index) * quota,
-            HARDWARE_BUFFER_VERTEX_ARRAY_INDICES
-        );
-    } else {
-        index_buffer_->resize(sizeof(Index) * quota);
-    }
-
     vertex_buffer_dirty_ = index_buffer_dirty_ = true;
 }
 

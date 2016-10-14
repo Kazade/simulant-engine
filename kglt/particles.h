@@ -212,6 +212,7 @@ public:
 private:
     std::unique_ptr<HardwareBuffer> vertex_buffer_;
     std::unique_ptr<HardwareBuffer> index_buffer_;
+    bool resize_buffers_ = false;
 
     bool vertex_buffer_dirty_ = false;
     bool index_buffer_dirty_ = false;
