@@ -22,14 +22,7 @@
 
 namespace kglt {
 
-#ifdef KGLT_GL_VERSION_2X
-/* FIXME: REMOVE! */
-class VertexArrayObject;
-class BufferObject;
-typedef std::shared_ptr<VertexArrayObject> VertexArrayObjectPtr;
-typedef std::shared_ptr<BufferObject> BufferObjectPtr;
-#endif
-
+class HardwareBuffer;
 class ResourceManager;
 
 class MeshInterface:
@@ -52,11 +45,6 @@ public:
 
     virtual const MaterialID material_id() const = 0;
     virtual const MeshArrangement arrangement() const = 0;
-
-#ifdef KGLT_GL_VERSION_2X
-    virtual void _update_vertex_array_object() = 0;
-    virtual void _bind_vertex_array_object() = 0;
-#endif
 
     Property<SubMeshInterface, VertexData> vertex_data = { this, &SubMeshInterface::get_vertex_data };
     Property<SubMeshInterface, IndexData> index_data = { this, &SubMeshInterface::get_index_data };
@@ -106,11 +94,6 @@ public:
 
     void _recalc_bounds();
 
-#ifdef KGLT_GL_VERSION_2X
-    void _update_vertex_array_object();
-    void _bind_vertex_array_object();
-#endif
-
     void generate_texture_coordinates_cube(uint32_t texture=0);
 
     VertexData* get_vertex_data() const;
@@ -118,6 +101,10 @@ public:
 
     const std::string& name() const { return name_; }
 
+    HardwareBuffer* vertex_buffer() const;
+    HardwareBuffer* index_buffer() const { return index_buffer_.get(); }
+
+    void prepare_buffers(); // Called by actors to make sure things are up-to-date before rendering
 public:
     typedef sig::signal<void (SubMesh*, MaterialID, MaterialID)> MaterialChangedCallback;
 
@@ -140,12 +127,11 @@ private:
     VertexData* vertex_data_ = nullptr;
     IndexData* index_data_ = nullptr;
 
-#ifdef KGLT_GL_VERSION_2X
-    VertexArrayObjectPtr vertex_array_object_;
-#endif
+    std::unique_ptr<HardwareBuffer> vertex_buffer_;
+    std::unique_ptr<HardwareBuffer> index_buffer_;
 
-    bool vertex_data_dirty_ = false;
-    bool index_data_dirty_ = false;
+    bool vertex_buffer_dirty_ = false;
+    bool index_buffer_dirty_ = false;
 
     AABB bounds_;
 
@@ -243,6 +229,7 @@ public:
     uint32_t animation_frames() const { return animation_frames_; }
     MeshAnimationType animation_type() const { return animation_type_; }
 
+    void prepare_buffers();
 public:
     // Signals
 
@@ -258,15 +245,12 @@ private:
     friend class SubMesh;
     VertexData* get_shared_data() const;
 
-    bool shared_data_dirty_ = false;
     VertexData* shared_data_ = nullptr;
     MeshAnimationType animation_type_ = MESH_ANIMATION_TYPE_NONE;
     uint32_t animation_frames_ = 0;
 
-#ifdef KGLT_GL_VERSION_2X
-    void _update_buffer_object();
-    BufferObjectPtr shared_data_buffer_object_;
-#endif
+    std::unique_ptr<HardwareBuffer> shared_vertex_buffer_;
+    bool shared_vertex_buffer_dirty_ = false;
 
     std::unordered_map<std::string, std::shared_ptr<SubMesh>> submeshes_;
 

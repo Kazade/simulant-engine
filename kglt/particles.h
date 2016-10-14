@@ -15,10 +15,6 @@
 #include "types.h"
 #include "vertex_data.h"
 
-#ifndef KGLT_GL_VERSION_1X
-    #include "renderers/gl2x/buffer_object.h"
-#endif
-
 
 namespace kglt {
 
@@ -152,10 +148,7 @@ public:
     const bool has_name() const { return !name_.empty(); }
     const unicode name() const { return name_; }
 
-    void set_quota(int quota) {
-        quota_ = quota;
-    }
-
+    void set_quota(int quota);
     int32_t quota() const { return quota_; }
 
     void set_particle_width(float width);
@@ -180,12 +173,6 @@ public:
     //Renderable stuff
 
     const MeshArrangement arrangement() const { return MESH_ARRANGEMENT_POINTS; }
-
-#ifdef KGLT_GL_VERSION_2X
-    virtual void _update_vertex_array_object();
-    virtual void _bind_vertex_array_object();
-#endif
-
     void set_render_priority(RenderPriority priority) { render_priority_ = priority; }
     virtual RenderPriority render_priority() const { return render_priority_; }
     virtual Mat4 final_transformation() const {
@@ -205,7 +192,31 @@ public:
     bool has_repeating_emitters() const;
     bool has_active_emitters() const;
 
+    void prepare_buffers() override;
+    HardwareBuffer* vertex_attribute_buffer() const override {
+        return vertex_buffer_.get();
+    }
+
+    HardwareBuffer* index_buffer() const override {
+        return index_buffer_.get();
+    }
+
+    VertexSpecification vertex_attribute_specification() const {
+        return vertex_data_->specification();
+    }
+
+    std::size_t index_element_count() const override {
+        return index_data_->count();
+    }
+
 private:
+    std::unique_ptr<HardwareBuffer> vertex_buffer_;
+    std::unique_ptr<HardwareBuffer> index_buffer_;
+    bool resize_buffers_ = false;
+
+    bool vertex_buffer_dirty_ = false;
+    bool index_buffer_dirty_ = false;
+
     inline VertexData* get_vertex_data() const {
         return vertex_data_;
     }
@@ -230,10 +241,6 @@ private:
 
     VertexData* vertex_data_ = nullptr;
     IndexData* index_data_ = nullptr;
-
-#ifdef KGLT_GL_VERSION_2X
-    std::shared_ptr<VertexArrayObject> vao_;
-#endif
 
     bool destroy_on_completion_ = false;
 };

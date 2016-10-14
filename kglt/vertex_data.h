@@ -12,12 +12,6 @@ namespace kglt {
 
 class WindowBase;
 
-enum VertexAttribute {
-    VERTEX_ATTRIBUTE_NONE,
-    VERTEX_ATTRIBUTE_2F,
-    VERTEX_ATTRIBUTE_3F,
-    VERTEX_ATTRIBUTE_4F
-};
 
 uint32_t vertex_attribute_size(VertexAttribute attr);
 
@@ -33,57 +27,7 @@ enum VertexAttributeType {
     VERTEX_ATTRIBUTE_TYPE_SPECULAR
 };
 
-struct VertexSpecification {
-    static const VertexSpecification DEFAULT;
-    static const VertexSpecification POSITION_ONLY;
-    static const VertexSpecification POSITION_AND_DIFFUSE;
-
-    VertexAttribute position_attribute = VERTEX_ATTRIBUTE_NONE;
-    VertexAttribute normal_attribute = VERTEX_ATTRIBUTE_NONE;
-    VertexAttribute texcoord0_attribute = VERTEX_ATTRIBUTE_NONE;
-    VertexAttribute texcoord1_attribute = VERTEX_ATTRIBUTE_NONE;
-    VertexAttribute texcoord2_attribute = VERTEX_ATTRIBUTE_NONE;
-    VertexAttribute texcoord3_attribute = VERTEX_ATTRIBUTE_NONE;
-    VertexAttribute diffuse_attribute = VERTEX_ATTRIBUTE_NONE;
-    VertexAttribute specular_attribute = VERTEX_ATTRIBUTE_NONE;
-
-    VertexSpecification() = default;
-    VertexSpecification(VertexAttribute position,
-                        VertexAttribute normal=VERTEX_ATTRIBUTE_NONE,
-                        VertexAttribute texcoord0=VERTEX_ATTRIBUTE_NONE,
-                        VertexAttribute texcoord1=VERTEX_ATTRIBUTE_NONE,
-                        VertexAttribute texcoord2=VERTEX_ATTRIBUTE_NONE,
-                        VertexAttribute texcoord3=VERTEX_ATTRIBUTE_NONE,
-                        VertexAttribute diffuse=VERTEX_ATTRIBUTE_NONE,
-                        VertexAttribute specular=VERTEX_ATTRIBUTE_NONE):
-        position_attribute(position),
-        normal_attribute(normal),
-        texcoord0_attribute(texcoord0),
-        texcoord1_attribute(texcoord1),
-        texcoord2_attribute(texcoord2),
-        texcoord3_attribute(texcoord3),
-        diffuse_attribute(diffuse),
-        specular_attribute(specular) {
-
-
-    }
-
-    bool operator==(const VertexSpecification& rhs) const {
-        return position_attribute == rhs.position_attribute &&
-               normal_attribute == rhs.normal_attribute  &&
-               texcoord0_attribute == rhs.texcoord0_attribute &&
-               texcoord1_attribute == rhs.texcoord1_attribute &&
-               texcoord2_attribute == rhs.texcoord2_attribute &&
-               texcoord3_attribute == rhs.texcoord3_attribute &&
-               diffuse_attribute == rhs.diffuse_attribute &&
-               specular_attribute == rhs.specular_attribute;
-    }
-
-    bool operator!=(const VertexSpecification& rhs) const {
-        return !(*this == rhs);
-    }
-};
-
+VertexAttribute attribute_for_type(VertexAttributeType type, const VertexSpecification& spec);
 
 class VertexData :
     public Managed<VertexData> {
@@ -117,12 +61,12 @@ public:
 
     void normal_at(int32_t idx, Vec3& out) {
         assert(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_3F);
-        out = *((Vec3*) &data_[(idx * stride()) + normal_offset()]);
+        out = *((Vec3*) &data_[(idx * stride()) + vertex_specification_.normal_offset()]);
     }
 
     void normal_at(int32_t idx, Vec4& out) {
         assert(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_4F);
-        out = *((Vec4*) &data_[(idx * stride()) + normal_offset()]);
+        out = *((Vec4*) &data_[(idx * stride()) + vertex_specification_.normal_offset()]);
     }
 
     void tex_coord0(float u, float v);
@@ -154,15 +98,6 @@ public:
     void specular(float r, float g, float b, float a);
     void specular(const Colour& colour);
 
-    bool has_positions() const { return bool(vertex_specification_.position_attribute); }
-    bool has_normals() const { return bool(vertex_specification_.normal_attribute); }
-    bool has_texcoord0() const { return bool(vertex_specification_.texcoord0_attribute); }
-    bool has_texcoord1() const { return bool(vertex_specification_.texcoord1_attribute); }
-    bool has_texcoord2() const { return bool(vertex_specification_.texcoord2_attribute); }
-    bool has_texcoord3() const { return bool(vertex_specification_.texcoord3_attribute); }
-    bool has_diffuse() const { return bool(vertex_specification_.diffuse_attribute); }
-    bool has_specular() const { return bool(vertex_specification_.specular_attribute); }
-
     uint32_t count() const { return vertex_count_; }
 
     sig::signal<void ()>& signal_update_complete() { return signal_update_complete_; }
@@ -171,48 +106,9 @@ public:
     const int32_t cursor_position() const { return cursor_position_; }
 
     inline uint32_t stride() const {
-        return stride_;
+        return specification().stride();
     }
 
-    uint32_t position_offset(bool check=true) const {
-        if(check && !has_positions()) { throw std::logic_error("No such attribute"); }
-        return 0;
-    }
-
-    uint32_t normal_offset(bool check=true) const {
-        if(check && !has_normals()) { throw std::logic_error("No such attribute"); }
-        return vertex_attribute_size(vertex_specification_.position_attribute);
-    }
-
-    uint32_t texcoord0_offset(bool check=true) const {
-        if(check && !has_texcoord0()) { throw std::logic_error("No such attribute"); }
-        return normal_offset(false) + vertex_attribute_size(vertex_specification_.normal_attribute);
-    }
-
-    uint32_t texcoord1_offset(bool check=true) const {
-        if(check && !has_texcoord1()) { throw std::logic_error("No such attribute"); }
-        return texcoord0_offset(false) + vertex_attribute_size(vertex_specification_.texcoord0_attribute);
-    }
-
-    uint32_t texcoord2_offset(bool check=true) const {
-        if(check && !has_texcoord2()) { throw std::logic_error("No such attribute"); }
-        return texcoord1_offset(false) + vertex_attribute_size(vertex_specification_.texcoord1_attribute);
-    }
-
-    uint32_t texcoord3_offset(bool check=true) const {
-        if(check && !has_texcoord3()) { throw std::logic_error("No such attribute"); }
-        return texcoord2_offset(false) + vertex_attribute_size(vertex_specification_.texcoord2_attribute);
-    }
-
-    uint32_t diffuse_offset(bool check=true) const {
-        if(check && !has_diffuse()) { throw std::logic_error("No such attribute"); }
-        return texcoord3_offset(false) + vertex_attribute_size(vertex_specification_.texcoord3_attribute);
-    }
-
-    uint32_t specular_offset(bool check=true) const {
-        if(check && !has_specular()) { throw std::logic_error("No such attribute"); }
-        return diffuse_offset(false) + vertex_attribute_size(vertex_specification_.diffuse_attribute);
-    }
 
     uint32_t copy_vertex_to_another(VertexData& out, uint32_t idx) {
         if(out.vertex_specification_ != this->vertex_specification_) {
@@ -244,7 +140,6 @@ public:
 
 private:
     VertexSpecification vertex_specification_;
-    uint32_t stride_ = 0;
     std::vector<uint8_t> data_;
     uint32_t vertex_count_ = 0;
 
@@ -317,6 +212,9 @@ public:
     sig::signal<void ()>& signal_update_complete() { return signal_update_complete_; }
 
     Index* _raw_data() { return &indices_[0]; }
+
+    const uint8_t* data() const { return (uint8_t*) &indices_[0]; }
+    std::size_t data_size() const { return indices_.size() * sizeof(Index); }
 private:
     std::vector<Index> indices_;
 

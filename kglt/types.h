@@ -568,6 +568,81 @@ Degrees to_degrees(const Radians& radians);
 
 const float PI = kmPI;
 
+enum VertexAttribute {
+    VERTEX_ATTRIBUTE_NONE,
+    VERTEX_ATTRIBUTE_2F,
+    VERTEX_ATTRIBUTE_3F,
+    VERTEX_ATTRIBUTE_4F
+};
+
+
+struct VertexSpecification {
+    static const VertexSpecification DEFAULT;
+    static const VertexSpecification POSITION_ONLY;
+    static const VertexSpecification POSITION_AND_DIFFUSE;
+
+    VertexAttribute position_attribute = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute normal_attribute = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute texcoord0_attribute = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute texcoord1_attribute = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute texcoord2_attribute = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute texcoord3_attribute = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute diffuse_attribute = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute specular_attribute = VERTEX_ATTRIBUTE_NONE;
+
+    VertexSpecification() = default;
+    VertexSpecification(
+        VertexAttribute position,
+        VertexAttribute normal=VERTEX_ATTRIBUTE_NONE,
+        VertexAttribute texcoord0=VERTEX_ATTRIBUTE_NONE,
+        VertexAttribute texcoord1=VERTEX_ATTRIBUTE_NONE,
+        VertexAttribute texcoord2=VERTEX_ATTRIBUTE_NONE,
+        VertexAttribute texcoord3=VERTEX_ATTRIBUTE_NONE,
+        VertexAttribute diffuse=VERTEX_ATTRIBUTE_NONE,
+        VertexAttribute specular=VERTEX_ATTRIBUTE_NONE
+    );
+
+    bool operator==(const VertexSpecification& rhs) const {
+        return position_attribute == rhs.position_attribute &&
+               normal_attribute == rhs.normal_attribute  &&
+               texcoord0_attribute == rhs.texcoord0_attribute &&
+               texcoord1_attribute == rhs.texcoord1_attribute &&
+               texcoord2_attribute == rhs.texcoord2_attribute &&
+               texcoord3_attribute == rhs.texcoord3_attribute &&
+               diffuse_attribute == rhs.diffuse_attribute &&
+               specular_attribute == rhs.specular_attribute;
+    }
+
+    bool operator!=(const VertexSpecification& rhs) const {
+        return !(*this == rhs);
+    }
+
+    inline uint32_t stride() const { return stride_; }
+
+    bool has_positions() const { return bool(position_attribute); }
+    bool has_normals() const { return bool(normal_attribute); }
+    bool has_texcoord0() const { return bool(texcoord0_attribute); }
+    bool has_texcoord1() const { return bool(texcoord1_attribute); }
+    bool has_texcoord2() const { return bool(texcoord2_attribute); }
+    bool has_texcoord3() const { return bool(texcoord3_attribute); }
+    bool has_diffuse() const { return bool(diffuse_attribute); }
+    bool has_specular() const { return bool(specular_attribute); }
+
+    uint32_t position_offset(bool check=true) const;
+    uint32_t normal_offset(bool check=true) const;
+    uint32_t texcoord0_offset(bool check=true) const;
+    uint32_t texcoord1_offset(bool check=true) const;
+    uint32_t texcoord2_offset(bool check=true) const;
+    uint32_t texcoord3_offset(bool check=true) const;
+    uint32_t diffuse_offset(bool check=true) const;
+    uint32_t specular_offset(bool check=true) const;
+
+    void recalc_stride();
+
+private:
+    uint32_t stride_;
+};
+
 enum BlendType {
     BLEND_NONE,
     BLEND_ADD,

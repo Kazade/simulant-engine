@@ -15,6 +15,7 @@
 namespace kglt {
 
 class SubActor;
+class HardwareBufferManager;
 
 struct ElementRenderSpecification {
     MaterialID material_id;
@@ -49,8 +50,14 @@ public:
     virtual void init_context() = 0;
     // virtual void upload_texture(Texture* texture) = 0;
 
+    Property<Renderer, HardwareBufferManager> hardware_buffers = { this, [](Renderer* self) {
+        return self->_get_buffer_manager();
+    }};
+
 private:    
     WindowBase* window_ = nullptr;
+
+    virtual HardwareBufferManager* _get_buffer_manager() const = 0;
 };
 
 }

@@ -12,12 +12,8 @@
 #include "../renderers/batching/renderable.h"
 #include "../vertex_data.h"
 #include "../utils/unicode.h"
-
+#include "../hardware_buffer.h"
 #include "element.h"
-
-#ifdef KGLT_GL_VERSION_2X
-#include "../renderers/gl2x/buffer_object.h"
-#endif
 
 namespace kglt {
 
@@ -156,20 +152,10 @@ class UIRenderable:
     public Renderable {
 
 public:
-    UIRenderable(VertexData& vertices, MaterialID material):
-        vertices_(vertices),
-        material_id_(material) {
+    static const VertexSpecification VERTEX_SPECIFICATION;
 
-#ifdef KGLT_GL_VERSION_2X
-        vertex_array_object_ = VertexArrayObject::create();
-#endif
-    }
-
-    UIRenderable(const UIRenderable& rhs):
-        vertices_(rhs.vertices_),
-        material_id_(rhs.material_id_) {
-
-    }
+public:
+    UIRenderable(HardwareBuffer::ptr& index_buffer, HardwareBuffer* vertex_buffer, MaterialID material);
 
     const MeshArrangement arrangement() const override { return MESH_ARRANGEMENT_TRIANGLES; }
     kglt::RenderPriority render_priority() const override { return RENDER_PRIORITY_MAIN; }
@@ -179,25 +165,32 @@ public:
     const AABB transformed_aabb() const { return AABB(); } // Not used
     const AABB aabb() const { return AABB(); } // Not used
 
-#ifdef KGLT_GL_VERSION_2X
-    void _bind_vertex_array_object() {
-        vertex_array_object_->bind();
+    void prepare_buffers() {
+        // This is a no-op as we manually change the buffers every frame manually
     }
 
-    void _update_vertex_array_object() {
-        vertex_array_object_->vertex_buffer_update(vertex_data->data_size(), vertex_data->data());
-        vertex_array_object_->index_buffer_update(index_data->count() * sizeof(Index), index_data->_raw_data());
+    HardwareBuffer* vertex_attribute_buffer() const {
+        return vertex_buffer_;
     }
-private:
-    VertexArrayObject::ptr vertex_array_object_;
-#endif
+
+    HardwareBuffer* index_buffer() const {
+        return index_buffer_.get();
+    }
+
+    VertexSpecification vertex_attribute_specification() const {
+        return VERTEX_SPECIFICATION;
+    }
+
+    std::size_t index_element_count() const {
+        return index_buffer()->size() / sizeof(Index);
+    }
 
 private:
-    VertexData* get_vertex_data() const { return &vertices_; }
-    IndexData* get_index_data() const { return const_cast<IndexData*>(&indices_); }
+    friend class Interface;
 
-    VertexData& vertices_;
-    IndexData indices_;
+    HardwareBuffer* vertex_buffer_ = nullptr;
+    std::unique_ptr<HardwareBuffer> index_buffer_;
+
     MaterialID material_id_;
 };
 
@@ -252,6 +245,8 @@ private:
     } nk_device_;
 
     void send_to_renderer(CameraPtr camera, Viewport viewport);
+
+    std::unique_ptr<HardwareBuffer> shared_vertex_buffer_;
 };
 
 }

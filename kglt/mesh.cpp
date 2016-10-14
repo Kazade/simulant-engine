@@ -5,10 +5,9 @@
 #include "mesh.h"
 #include "loader.h"
 #include "material.h"
+#include "hardware_buffer.h"
+#include "renderers/renderer.h"
 
-#ifdef KGLT_GL_VERSION_2X
-#include "renderers/gl2x/buffer_object.h"
-#endif
 
 namespace kglt {
 
@@ -21,6 +20,11 @@ IndexData* SubMesh::get_index_data() const {
     return index_data_;
 }
 
+HardwareBuffer* SubMesh::vertex_buffer() const {
+    if(uses_shared_data_) { return parent_->shared_vertex_buffer_.get(); }
+    return vertex_buffer_.get();
+}
+
 Mesh::Mesh(
     MeshID id,
     ResourceManager *resource_manager,
@@ -30,6 +34,24 @@ Mesh::Mesh(
         normal_debug_mesh_(0) {
 
     reset(vertex_specification);
+
+}
+
+template<typename Data, typename Allocator>
+void sync_buffer(HardwareBuffer::ptr* buffer, Data* data, Allocator* allocator, HardwareBufferPurpose purpose) {
+    if(!(*buffer) && data->count()) {
+        (*buffer) = allocator->hardware_buffers->allocate(
+            data->data_size(),
+            purpose
+        );
+    } else {
+
+        // See FIXME above
+        assert(data->count());
+        (*buffer)->resize(data->data_size());
+    }
+
+    (*buffer)->upload(*data);
 }
 
 void Mesh::reset(VertexSpecification vertex_specification) {
@@ -39,15 +61,9 @@ void Mesh::reset(VertexSpecification vertex_specification) {
 
     delete shared_data_;
     shared_data_ = new VertexData(vertex_specification);
-    shared_data->signal_update_complete().connect([&]{
-        this->shared_data_dirty_ = true;
-    });
 
-#ifdef KGLT_GL_VERSION_2X
-    //FIXME: Somehow we need to specify if the shared data is modified repeatedly etc.
-    shared_data_buffer_object_ = BufferObject::create(BUFFER_OBJECT_VERTEX_DATA, MODIFY_ONCE_USED_FOR_RENDERING);
-#endif
-
+    // When the vertex data updates, update the hardware buffer
+    shared_data->signal_update_complete().connect([this]() { shared_vertex_buffer_dirty_ = true; });
 }
 
 Mesh::~Mesh() {
@@ -473,13 +489,13 @@ void Mesh::transform_vertices(const kglt::Mat4& transform, bool include_submeshe
     shared_data->move_to_start();
 
     for(uint32_t i = 0; i < shared_data->count(); ++i) {
-        if(shared_data->has_positions()) {
+        if(shared_data->specification().has_positions()) {
             kglt::Vec3 v = shared_data->position_at<Vec3>(i);
             kmVec3MultiplyMat4(&v, &v, &transform);
             shared_data->position(v);
         }
 
-        if(shared_data->has_normals()) {
+        if(shared_data->specification().has_normals()) {
             kglt::Vec3 n;
             shared_data->normal_at(i, n);
             kmVec3TransformNormal(&n, &n, &transform);
@@ -537,19 +553,6 @@ void Mesh::set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass) {
     });
 }
 
-#ifdef KGLT_GL_VERSION_2X
-void Mesh::_update_buffer_object() {
-    if(shared_data_dirty_) {
-        // Only update the buffer if we're not animating, if we are then we don't upload
-        // vertex data to GL, as we use the interpolated buffer on the Actor
-        if(!is_animated()) {
-            shared_data_buffer_object_->build(shared_data->data_size(), shared_data->data());
-        }
-        shared_data_dirty_ = false;
-    }
-}
-#endif
-
 SubMesh* Mesh::submesh(const std::string& name) {
     auto it = submeshes_.find(name);
     if(it != submeshes_.end()) {
@@ -577,21 +580,12 @@ SubMesh::SubMesh(Mesh* parent, const std::string& name,
     }
 
     index_data_ = new IndexData();
+    index_data_->signal_update_complete().connect([this]() { this->index_buffer_dirty_ = true; });
+
     if(!uses_shared_data_) {
         vertex_data_ = new VertexData(vertex_specification);
+        vertex_data->signal_update_complete().connect([this]() { this->vertex_buffer_dirty_ = true; });
     }
-
-#ifdef KGLT_GL_VERSION_2X
-    /*
-     * If we use shared vertices then we must reuse the buffer object from the mesh,
-     * otherwise the VAO creates its own VBO
-     */
-    if(uses_shared_data_) {
-        vertex_array_object_ = VertexArrayObject::create(parent_->shared_data_buffer_object_);
-    } else {
-        vertex_array_object_ = VertexArrayObject::create();
-    }
-#endif
 
     if(!material) {
         //Set the material to the default one (store the pointer to increment the ref-count)
@@ -602,44 +596,45 @@ SubMesh::SubMesh(Mesh* parent, const std::string& name,
 
     vrecalc_ = vertex_data->signal_update_complete().connect(std::bind(&SubMesh::_recalc_bounds, this));
     irecalc_ = index_data->signal_update_complete().connect(std::bind(&SubMesh::_recalc_bounds, this));
-
-    if(!uses_shared_data_) {
-        vertex_data->signal_update_complete().connect([&]{
-            this->vertex_data_dirty_ = true;
-        });
-    }
-
-    index_data->signal_update_complete().connect([&]{
-        this->index_data_dirty_ = true;
-    });
 }
-
-#ifdef KGLT_GL_VERSION_2X
-void SubMesh::_bind_vertex_array_object() {
-    vertex_array_object_->bind();
-}
-
-void SubMesh::_update_vertex_array_object() {
-    if(uses_shared_vertices()) {
-        parent_->_update_buffer_object();
-    } else if(vertex_data_dirty_) {
-        vertex_array_object_->vertex_buffer_update(vertex_data->data_size(), vertex_data->data());
-        vertex_data_dirty_ = false;
-    }
-
-    if(index_data_dirty_) {
-        vertex_array_object_->index_buffer_update(index_data->count() * sizeof(Index), index_data->_raw_data());
-        index_data_dirty_ = false;
-
-        if(vertex_data->empty()) {
-            L_WARN("Uploading index data to GL without any vertices");
-        }
-    }
-}
-#endif
 
 const MaterialID SubMesh::material_id() const {
     return material_->id();
+}
+
+void Mesh::prepare_buffers() {
+    if(shared_vertex_buffer_dirty_) {
+        sync_buffer<VertexData, Renderer>(
+            &shared_vertex_buffer_, shared_data_,
+            resource_manager().window->renderer.get(),
+            HARDWARE_BUFFER_VERTEX_ATTRIBUTES
+        );
+        shared_vertex_buffer_dirty_ = false;
+    }
+}
+
+void SubMesh::prepare_buffers() {
+    auto* renderer = parent_->resource_manager().window->renderer.get();
+
+    if(uses_shared_data_) {
+        parent_->prepare_buffers();
+    } else if(vertex_buffer_dirty_) {
+        sync_buffer<VertexData, Renderer>(
+            &vertex_buffer_, vertex_data_,
+            renderer,
+            HARDWARE_BUFFER_VERTEX_ATTRIBUTES
+        );
+        vertex_buffer_dirty_ = false;
+    }
+
+    if(index_buffer_dirty_) {
+        sync_buffer<IndexData, Renderer>(
+            &index_buffer_, index_data_,
+            renderer,
+            HARDWARE_BUFFER_VERTEX_ARRAY_INDICES
+        );
+        index_buffer_dirty_ = false;
+    }
 }
 
 void SubMesh::set_material_id(MaterialID mat) {
@@ -653,6 +648,10 @@ void SubMesh::set_material_id(MaterialID mat) {
     if(mat) {
         // Set the material, store the shared_ptr to increment the ref count
         material_ = parent_->resource_manager().material(mat);
+        if(!material_) {
+            throw std::runtime_error("Tried to set invalid material on submesh");
+        }
+
         material_change_connection_ = material_->signal_material_pass_changed().connect(
             [=](MaterialID, MaterialPassChangeEvent evt) {
                 /* FIXME: This is a hack! We want material_changed event to take some kind of event
@@ -690,7 +689,7 @@ void SubMesh::transform_vertices(const kglt::Mat4& transformation) {
 
         vertex_data->position(v);
 
-        if(vertex_data->has_normals()) {
+        if(vertex_data->specification().has_normals()) {
             kglt::Vec3 n;
             vertex_data->normal_at(i, n);
             kmVec3MultiplyMat4(&n, &n, &transformation);

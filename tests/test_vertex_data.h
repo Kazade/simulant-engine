@@ -17,9 +17,9 @@ public:
 
         kglt::VertexData::ptr data = kglt::VertexData::create(spec);
 
-        assert_equal(0, (int32_t) data->position_offset());
-        assert_equal(sizeof(float) * 3, data->normal_offset());
-        assert_equal(sizeof(float) * 6, data->texcoord0_offset());
+        assert_equal(0, (int32_t) data->specification().position_offset());
+        assert_equal(sizeof(float) * 3, data->specification().normal_offset());
+        assert_equal(sizeof(float) * 6, data->specification().texcoord0_offset());
     }
 
     void test_basic_usage() {

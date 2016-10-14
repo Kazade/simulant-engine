@@ -46,6 +46,7 @@ public:
     void delete_camera(CameraID cid);
     uint32_t camera_count() const;
     const bool has_camera(CameraID id) const;
+    void delete_all_cameras();
 
 private:
     WindowBase* window_;
@@ -79,6 +80,7 @@ public:
     void pre_fixed_update(double step);
     void post_fixed_update(double step);
 
+    void delete_all_stages();
 private:
     WindowBase* window_ = nullptr;
     void print_tree(GenericTreeNode* node, uint32_t& level);
@@ -98,6 +100,8 @@ public:
     uint32_t overlay_count() const;
 
     bool has_overlay(OverlayID overlay) const;
+
+    void delete_all_overlays();
 private:
     WindowBase* window_;
 
