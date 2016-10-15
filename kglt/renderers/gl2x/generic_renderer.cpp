@@ -215,6 +215,33 @@ void GenericRenderer::set_auto_uniforms_on_shader(GPUProgramInstance* program,
     }
 }
 
+
+/* Shadows GL state to avoid unnecessary GL calls */
+static uint8_t enabled_vertex_attributes_ = 0;
+
+void enable_vertex_attribute(uint8_t i) {
+    uint8_t v = 1 << i;
+    if((enabled_vertex_attributes_ & v) == v) {
+        return;
+    }
+
+    GLCheck(glEnableVertexAttribArray, i);
+
+    enabled_vertex_attributes_ ^= v;
+}
+
+void disable_vertex_attribute(uint8_t i) {
+    uint8_t v = 1 << i;
+
+    if((enabled_vertex_attributes_ & v) != v) {
+        return;
+    }
+
+    GLCheck(glDisableVertexAttribArray, i);
+
+    enabled_vertex_attributes_ ^= v;
+}
+
 template<typename EnabledMethod, typename OffsetMethod>
 void send_attribute(ShaderAvailableAttributes attr,
                     const VertexSpecification& vertex_spec,
@@ -228,7 +255,7 @@ void send_attribute(ShaderAvailableAttributes attr,
     if(get_has_attribute()) {
         auto offset = std::bind(offset_func, vertex_spec, false)();
 
-        GLCheck(glEnableVertexAttribArray, loc);
+        enable_vertex_attribute(loc);
 
         auto attr_size = vertex_attribute_size(attribute_for_type(convert(attr), vertex_spec));
         auto stride = vertex_spec.stride();
@@ -242,7 +269,7 @@ void send_attribute(ShaderAvailableAttributes attr,
             BUFFER_OFFSET(offset)
         );
     } else {
-        GLCheck(glDisableVertexAttribArray, loc);
+        disable_vertex_attribute(loc);
         //L_WARN_ONCE(_u("Couldn't locate attribute on the mesh: {0}").format(attr));
     }
 }
