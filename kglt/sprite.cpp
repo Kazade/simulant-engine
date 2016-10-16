@@ -14,12 +14,8 @@ Sprite::Sprite(SpriteID id, Stage *stage):
 
     sprite_sheet_padding_ = std::make_pair(0, 0);
 
-    using namespace std::placeholders;
 
-    animation_state_ = std::make_shared<KeyFrameAnimationState>(
-        shared_from_this(),
-        std::bind(&Sprite::refresh_animation_state, this, _1, _2, _3)
-    );
+
 }
 
 bool Sprite::init() {
@@ -29,6 +25,12 @@ bool Sprite::init() {
     //up our ID in the stage, which doesn't exist until this function returns. So instead
     //we make sure we are set as the parent on each update. Not ideal, but still.
     actor_id_ = stage->new_actor_with_mesh(mesh_id_);
+
+    using namespace std::placeholders;
+    animation_state_ = std::make_shared<KeyFrameAnimationState>(
+        shared_from_this(),
+        std::bind(&Sprite::refresh_animation_state, this, _1, _2, _3)
+    );
 
     return true;
 }
