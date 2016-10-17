@@ -56,6 +56,8 @@ void sync_buffer(HardwareBuffer::ptr* buffer, Data* data, Allocator* allocator, 
 
 void Mesh::reset(VertexSpecification vertex_specification) {
     submeshes_.clear();
+    ordered_submeshes_.clear();
+
     animation_type_ = MESH_ANIMATION_TYPE_NONE;
     animation_frames_ = 0;
 
@@ -67,13 +69,18 @@ void Mesh::reset(VertexSpecification vertex_specification) {
 }
 
 Mesh::~Mesh() {
+    assert(ordered_submeshes_.size() == submeshes_.size());
+
     delete shared_data_;
     shared_data_ = nullptr;
 }
 
 void Mesh::each(std::function<void (const std::string&, SubMesh*)> func) const {
-    for(auto pair: this->submeshes_) {
-        func(pair.first, pair.second.get());
+    assert(ordered_submeshes_.size() == submeshes_.size());
+
+    // Respect insertion order while iterating
+    for(SubMesh* submesh: this->ordered_submeshes_) {
+        func(submesh->name(), submesh);
     }
 }
 
@@ -190,6 +197,7 @@ SubMesh* Mesh::new_submesh_with_material(
 
     auto new_submesh = SubMesh::create(this, name, material, arrangement, vertex_sharing, vertex_specification);
     submeshes_.insert(std::make_pair(name, new_submesh));
+    ordered_submeshes_.push_back(new_submesh.get());
     signal_submesh_created_(id(), new_submesh.get());
     return new_submesh.get();
 }
@@ -463,6 +471,7 @@ void Mesh::delete_submesh(const std::string& name) {
     if(it != submeshes_.end()) {
         auto submesh = (*it).second;
         submeshes_.erase(it);
+        ordered_submeshes_.remove(submesh.get());
         signal_submesh_destroyed_(id(), submesh.get());
     } else {
 #ifndef NDEBUG
@@ -476,7 +485,7 @@ SubMesh* Mesh::first_submesh() const {
         return nullptr;
     }
 
-    return submeshes_.begin()->second.get();
+    return ordered_submeshes_.front();
 }
 
 void Mesh::set_material_id(MaterialID material) {

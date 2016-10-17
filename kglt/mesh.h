@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <set>
 #include <memory>
+#include <list>
 
 #include "deps/kazmath/kazmath.h"
 
@@ -253,6 +254,7 @@ private:
     bool shared_vertex_buffer_dirty_ = false;
 
     std::unordered_map<std::string, std::shared_ptr<SubMesh>> submeshes_;
+    std::list<SubMesh*> ordered_submeshes_; // Ordered by insertion order
 
     SubMesh* normal_debug_mesh_ = nullptr;
 
