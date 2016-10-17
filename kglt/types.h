@@ -817,7 +817,7 @@ class RenderSequence;
 typedef AutoWeakPtr<RenderSequence> RenderSequencePtr;
 
 class Pipeline;
-typedef AutoWeakPtr<Pipeline> PipelinePtr;
+typedef Pipeline* PipelinePtr;
 
 class Frustum;
 class WindowBase;

@@ -102,7 +102,7 @@ void RenderSequence::deactivate_all_pipelines() {
 }
 
 PipelinePtr RenderSequence::pipeline(PipelineID pipeline) {
-    return PipelineManager::get(pipeline);
+    return PipelineManager::get(pipeline).lock().get();
 }
 
 void RenderSequence::delete_pipeline(PipelineID pipeline_id) {
