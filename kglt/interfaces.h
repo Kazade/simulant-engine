@@ -21,6 +21,11 @@ public:
     virtual void move_to(float x, float y, float z) = 0;
     virtual void move_to(float x, float y) = 0;
 
+    virtual void move_by(const kglt::Vec3& pos) = 0;
+    virtual void move_by(const kglt::Vec2& pos) = 0;
+    virtual void move_by(float x, float y, float z) = 0;
+    virtual void move_by(float x, float y) = 0;
+
     virtual void rotate_to(const kglt::Degrees& angle) = 0;
     virtual void rotate_to(const kglt::Degrees& angle, float axis_x, float axis_y, float axis_z) = 0;
     virtual void rotate_to(const kglt::Degrees& angle, const kglt::Vec3& axis) = 0;

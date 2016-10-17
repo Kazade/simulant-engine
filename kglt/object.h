@@ -168,6 +168,26 @@ public:
         move_to(pos.x, pos.y);
     }
 
+    void move_by(const Vec3 &pos) override {
+        move_by(pos.x, pos.y, pos.z);
+    }
+
+    void move_by(const Vec2 &pos) override {
+        move_by(pos.x, pos.y);
+    }
+
+    void move_by(float x, float y) override {
+        move_by(x, y, 0);
+    }
+
+    void move_by(float x, float y, float z) override {
+        auto pos = absolute_position();
+        pos.x += x;
+        pos.y += y;
+        pos.z += z;
+        set_absolute_position(pos);
+    }
+
     void rotate_to(const Degrees& degrees) override {
         set_absolute_rotation(degrees, 0, 0, 1);
     }
