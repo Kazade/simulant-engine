@@ -19,6 +19,15 @@ RenderQueue::RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory)
         actor->each([=](uint32_t i, SubActor* subactor) {
             insert_renderable(subactor);
         });
+
+        // If the actor's render priority changes, we need to remove the renderables and re-add them
+        actor->signal_render_priority_changed().connect([this, actor_id](RenderPriority old, RenderPriority newp) {
+            auto actor = actor_id.fetch();
+            actor->each([this](uint32_t i, SubActor* subactor) {
+                remove_renderable(subactor);
+                insert_renderable(subactor);
+            });
+        });
     });
 
     stage->signal_actor_destroyed().connect([=](ActorID actor_id) {
@@ -41,6 +50,11 @@ RenderQueue::RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory)
     stage->signal_particle_system_created().connect([=](ParticleSystemID ps_id) {
         auto ps = stage->particle_system(ps_id);
         insert_renderable(ps);
+        ps->signal_render_priority_changed().connect([this, ps_id](RenderPriority old, RenderPriority newp) {
+            auto ps = ps_id.fetch();
+            remove_renderable(ps);
+            insert_renderable(ps);
+        });
     });
 
     stage->signal_particle_system_destroyed().connect([=](ParticleSystemID ps_id) {
@@ -76,26 +90,27 @@ void RenderQueue::insert_renderable(Renderable* renderable) {
 }
 
 void RenderQueue::clean_empty_batches() {
-    for(auto pass = batches_.begin(); pass != batches_.end();) {
-        for(auto group = pass->begin(); group != pass->end();) {
-            if(!group->second.renderable_count()) {
-                pass->erase(group++);
+    for(auto& pass: batches_) {
+        auto group = pass.begin();
+        while(group != pass.end()) {
+            auto& batch = group->second;
+            if(!batch.renderable_count()) {
+                group = pass.erase(group);
             } else {
                 ++group;
             }
         }
-
-        if(pass->empty()) {
-            pass = batches_.erase(pass);
-        } else {
-            ++pass;
-        }
     }
+
+    batches_.erase(
+        std::remove_if(batches_.begin(), batches_.end(), [](const BatchMap& pass) -> bool { return pass.empty(); }),
+        batches_.end()
+    );
 }
 
 void RenderQueue::remove_renderable(Renderable* renderable) {
     /*
-     * The Renderable is a BatchMember had maintains a list of
+     * The Renderable is a BatchMember that maintains a list of
      * batches that it is a member of. This way removing the renderable
      * is just a case of iterating its batches and removing it. If the
      * renderable was the last in the batch we need to remove the batch.

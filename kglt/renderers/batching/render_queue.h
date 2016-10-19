@@ -76,6 +76,8 @@ public:
 
         if(this->priority_ < rhs.priority_) {
             return true;
+        } else if(this->priority_ > rhs.priority_) {
+            return false;
         }
 
         return lt(rhs);

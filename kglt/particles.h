@@ -137,7 +137,8 @@ class ParticleSystem :
     public ParentSetterMixin<MoveableObject>,
     public Source,
     public Loadable,
-    public Renderable,
+    public HasMutableRenderPriority,
+    public Renderable,    
     public std::enable_shared_from_this<ParticleSystem> {
 
 public:
@@ -173,8 +174,6 @@ public:
     //Renderable stuff
 
     const MeshArrangement arrangement() const { return MESH_ARRANGEMENT_POINTS; }
-    void set_render_priority(RenderPriority priority) { render_priority_ = priority; }
-    virtual RenderPriority render_priority() const { return render_priority_; }
     virtual Mat4 final_transformation() const {
         return Mat4(); //Particles are absolutely positioned in the world
     }
@@ -209,6 +208,9 @@ public:
         return index_data_->count();
     }
 
+    RenderPriority render_priority() const override {
+        return HasMutableRenderPriority::render_priority();
+    }
 private:
     std::unique_ptr<HardwareBuffer> vertex_buffer_;
     std::unique_ptr<HardwareBuffer> index_buffer_;
@@ -229,7 +231,6 @@ private:
     int quota_ = 10;
     float particle_width_ = 100.0;
     bool cull_each_ = false;
-    RenderPriority render_priority_ = RENDER_PRIORITY_MAIN;
 
     MaterialID material_id_;
     MaterialPtr material_ref_;

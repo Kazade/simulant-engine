@@ -12,6 +12,31 @@ class VertexData;
 class IndexData;
 class HardwareBuffer;
 
+typedef sig::signal<void (RenderPriority, RenderPriority)> RenderPriorityChangedSignal;
+
+
+class HasMutableRenderPriority {
+    DEFINE_SIGNAL(RenderPriorityChangedSignal, signal_render_priority_changed);
+
+public:
+    virtual ~HasMutableRenderPriority() {}
+
+    void set_render_priority(RenderPriority priority) {
+        if(priority != render_priority_) {
+            auto old = render_priority_;
+            render_priority_ = priority;
+
+            signal_render_priority_changed_(old, render_priority_);
+        }
+    }
+
+    virtual RenderPriority render_priority() const { return render_priority_; }
+
+private:
+    RenderPriority render_priority_ = RENDER_PRIORITY_MAIN;
+};
+
+
 class Renderable:
     public batcher::BatchMember,
     public virtual BoundableEntity {

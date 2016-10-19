@@ -27,7 +27,8 @@ class Actor :
     public Managed<Actor>,
     public generic::Identifiable<ActorID>,
     public ParentSetterMixin<MoveableObject>,
-    public Source {
+    public Source,
+    public HasMutableRenderPriority {
 
 public:
     Actor(ActorID id, Stage* stage);
@@ -56,8 +57,6 @@ public:
 
     void ask_owner_for_destruction();
 
-    RenderPriority render_priority() const { return render_priority_; }
-    void set_render_priority(RenderPriority value) { render_priority_ = value;}
 
     unicode __unicode__() const {
         if(has_name()) {
@@ -113,7 +112,6 @@ private:
     std::vector<std::shared_ptr<SubActor> > subactors_;
     std::shared_ptr<KeyFrameAnimationState> animation_state_;
 
-    RenderPriority render_priority_;
     RenderableCullingMode culling_mode_ = RENDERABLE_CULLING_MODE_PARTITIONER;
 
     SubActorCreatedCallback signal_subactor_created_;
@@ -191,6 +189,7 @@ private:
     sig::connection submesh_material_changed_connection_;
 
     std::unique_ptr<HardwareBuffer> interpolated_vertex_buffer_;
+
 };
 
 }

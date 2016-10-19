@@ -10,16 +10,14 @@ namespace kglt {
 Actor::Actor(ActorID id, Stage* stage):
     generic::Identifiable<ActorID>(id),
     ParentSetterMixin<MoveableObject>(stage),
-    Source(stage),
-    render_priority_(RENDER_PRIORITY_MAIN) {
+    Source(stage) {
 
 }
 
 Actor::Actor(ActorID id, Stage* stage, MeshID mesh):
     generic::Identifiable<ActorID>(id),
     ParentSetterMixin<MoveableObject>(stage),
-    Source(stage),
-    render_priority_(RENDER_PRIORITY_MAIN) {
+    Source(stage) {
 
     set_mesh(mesh);
 }
