@@ -13,7 +13,7 @@ This section covers the base subsystems and usages of KGLT.
  - Overview: [Engine Structure](engine_structure.md) | [Resource Management](resource_management.md)
  - Managing objects: [Manual managers](manual_managers.md) | [Refcounted managers](refcount_managers.md) | [ProtectedPtr<T>](protected_ptr.md)
  - Core systems: [The Window](window.md) | [Idle Manager](idle.md) | [Viewports](viewport.md) | [Threading](threading.md)
- - Scripting: [The Lua Console](lua.md)
+ - Scripting: [Particle System File Format](particle_system_format.md)
 
 ## The Rendering System
  
