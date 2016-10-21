@@ -237,6 +237,11 @@ public:
         return look_at(kglt::Vec3(x, y, z));
     }
 
+    virtual void set_relative_scale(const Vec3& scale) {
+        relative_scale_ = scale;
+        update_from_parent();
+    }
+
     virtual void scale_x_by(const float scale) {
         relative_scale_.x *= scale;
         update_from_parent();
