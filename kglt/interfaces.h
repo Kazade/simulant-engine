@@ -35,6 +35,11 @@ public:
     virtual void rotate_y(const kglt::Degrees& angle) = 0;
     virtual void rotate_z(const kglt::Degrees& angle) = 0;
 
+    virtual void scale_x_by(const float scale) = 0;
+    virtual void scale_y_by(const float scale) = 0;
+    virtual void scale_z_by(const float scale) = 0;
+    virtual void scale_by(float x) = 0;
+
     virtual void rotate_around(const kglt::Vec3& axis, const kglt::Degrees& degrees) = 0;
 
     void rotate_global_x(const kglt::Degrees& degrees) {
@@ -68,6 +73,7 @@ public:
     virtual kglt::Vec3 position() const = 0;
     virtual kglt::Vec2 position_2d() const = 0;
     virtual kglt::Quaternion rotation() const = 0;
+    virtual kglt::Vec3 scale() const = 0;
 };
 
 /**

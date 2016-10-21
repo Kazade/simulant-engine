@@ -337,6 +337,10 @@ struct Vec3 : public kmVec3 {
         return Vec3(x - rhs.x, y - rhs.y, z - rhs.z);
     }
 
+    Vec3 operator*(const kmVec3& rhs) const {
+        return Vec3(x * rhs.x, y * rhs.y, z * rhs.z);
+    }
+
     Vec3 operator*(float rhs) const {
         Vec3 result;
         kmVec3Scale(&result, this, rhs);

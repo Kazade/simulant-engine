@@ -57,6 +57,7 @@ public:
     Vec3 position() const override { return absolute_position(); }
     Vec2 position_2d() const override { return Vec2(position().x, position().y); }
     Quaternion rotation() const override { return absolute_rotation(); }
+    Vec3 scale() const override { return absolute_scale(); }
     // End Locateable Interface
 
     virtual kglt::Vec3 absolute_position() const {
@@ -67,12 +68,20 @@ public:
         return absolute_rotation_;
     }
 
+    virtual kglt::Vec3 absolute_scale() const {
+        return absolute_scale_;
+    }
+
     virtual kglt::Quaternion relative_rotation() const {
         return relative_rotation_;
     }
 
     virtual kglt::Vec3 relative_position() const {
         return relative_position_;
+    }
+
+    virtual kglt::Vec3 relative_scale() const {
+        return relative_scale_;
     }
 
     void pre_update(double step) override {
@@ -105,9 +114,11 @@ public:
 protected:
     kglt::Vec3 relative_position_;
     kglt::Quaternion relative_rotation_;
+    kglt::Vec3 relative_scale_ = kglt::Vec3(1, 1, 1);
 
     kglt::Vec3 absolute_position_;
-    kglt::Quaternion absolute_rotation_;
+    kglt::Quaternion absolute_rotation_;   
+    kglt::Vec3 absolute_scale_ = kglt::Vec3(1, 1, 1);
 
 private:
     Stage* stage_ = nullptr; //Each object is owned by a stage
@@ -224,6 +235,29 @@ public:
     void look_at(const kglt::Vec3& position) override;
     void look_at(float x, float y, float z) override {
         return look_at(kglt::Vec3(x, y, z));
+    }
+
+    virtual void scale_x_by(const float scale) {
+        relative_scale_.x *= scale;
+        update_from_parent();
+    }
+
+    virtual void scale_y_by(const float scale) {
+        relative_scale_.y *= scale;
+        update_from_parent();
+    }
+
+    virtual void scale_z_by(const float scale) {
+        relative_scale_.z *= scale;
+        update_from_parent();
+    }
+
+    virtual void scale_by(float scale) {
+        relative_scale_.x *= scale;
+        relative_scale_.y *= scale;
+        relative_scale_.z *= scale;
+
+        update_from_parent();
     }
 
     Quaternion calc_look_at_rotation(const Vec3& target);

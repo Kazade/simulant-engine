@@ -216,6 +216,11 @@ Mat4 MoveableObject::absolute_transformation() const {
     kmMat4Translation(&trans_matrix, absolute_position().x, absolute_position().y, absolute_position().z);
 
     kmMat4Multiply(&final, &trans_matrix, &rot_matrix);
+
+    final.mat[0] = absolute_scale().x;
+    final.mat[5] = absolute_scale().y;
+    final.mat[10] = absolute_scale().z;
+
     return final;
 }
 
@@ -226,6 +231,7 @@ void MoveableObject::update_from_parent() {
     if(!has_parent()) {
         absolute_position_ = relative_position();
         absolute_rotation_ = relative_rotation();
+        absolute_scale_ = relative_scale();
     } else {
         if(!position_locked_) {
             absolute_position_ = parent()->as<SceneNode>()->position() + relative_position();
@@ -234,6 +240,8 @@ void MoveableObject::update_from_parent() {
             absolute_rotation_ = relative_rotation() * parent()->as<SceneNode>()->rotation();
             absolute_rotation_.normalize();
         }
+
+        absolute_scale_ = relative_scale() * parent()->as<SceneNode>()->scale();
     }
 
     //Only signal that the transformation changed if it did

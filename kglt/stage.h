@@ -164,6 +164,7 @@ public:
     Vec3 position() const override { return Vec3(); }
     Vec2 position_2d() const override { return Vec2(); }
     Quaternion rotation() const override { return Quaternion(); }
+    Vec3 scale() const override { return Vec3(1, 1, 1); }
 
     // Printable interface
     unicode __unicode__() const override {

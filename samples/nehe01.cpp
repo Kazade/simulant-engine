@@ -12,7 +12,9 @@ public:
         kglt::StagePtr stage = stage_.fetch();
         kglt::MeshPtr square = stage->assets->new_mesh_as_rectangle(1.0, 1.0).fetch();
 
-        stage->new_actor_with_mesh(square->id()).fetch()->move_to(0, 0, -5);
+        auto actor = stage->new_actor_with_mesh(square->id()).fetch();
+        actor->move_to(0, 0, -5);
+        actor->scale_by(2.0);
     }
 
 private:
