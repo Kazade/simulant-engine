@@ -314,7 +314,7 @@ private:
      * set it and clear it whenever we manipulate the material. If the flag
      * is set then updating won't happen until it's cleared
      */
-    std::atomic_flag updating_disabled_;
+    std::atomic_flag updating_disabled_ = ATOMIC_FLAG_INIT;
 
     /*
      * Are we iterating passes? If so we should block on adding/removing them

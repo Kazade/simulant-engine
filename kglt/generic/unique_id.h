@@ -14,6 +14,12 @@ public:
 
     typedef std::function<ResourceTypePtr (const UniqueID<ResourceTypePtr>*)> ResourceGetter;
 
+    UniqueID(const UniqueID<ResourceTypePtr>& other):
+        id_(other.id_),
+        getter_(other.getter_) {
+
+    }
+
     UniqueID(ResourceGetter getter=ResourceGetter()):
         id_(0),
         getter_(getter) {}
@@ -38,6 +44,10 @@ public:
     }
 
     UniqueID& operator=(const UniqueID<ResourceTypePtr>& other) {
+        if(&other == this) {
+            return *this;
+        }
+
         this->id_ = other.id_;
         this->getter_ = other.getter_;
         return *this;
@@ -62,7 +72,7 @@ public:
     uint32_t value() const { return id_; }
 
 private:
-    uint32_t id_;
+    uint32_t id_ = 0;
     ResourceGetter getter_;
 };
 

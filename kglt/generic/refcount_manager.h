@@ -67,7 +67,7 @@ public:
         assert(id);
 
         objects_.insert(std::make_pair(id, obj));
-        creation_times_[id] = std::chrono::system_clock::now();
+        creation_times_.insert(std::make_pair(id, std::chrono::system_clock::now()));
         uncollected_.insert(id);
 
         signal_post_create_(*obj, id);
@@ -144,7 +144,7 @@ public:
         std::lock_guard<std::mutex> lock(manager_lock_);
 
         for(auto obj_it = objects_.begin(); obj_it != objects_.end(); ) {
-            auto& key = obj_it->first;
+            auto key = obj_it->first;
             assert(key);
 
 
@@ -167,7 +167,7 @@ public:
                     date_time now = std::chrono::system_clock::now();
 
                     int lifetime_in_seconds = std::chrono::duration_cast<std::chrono::seconds>(
-                        now-creation_times_[key]
+                        now - creation_times_.at(key)
                     ).count();
 
                     ok_to_delete = lifetime_in_seconds > 5;

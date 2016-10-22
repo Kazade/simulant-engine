@@ -42,11 +42,11 @@ public:
     void apply_recursively(std::function<void (GenericTreeNode*)> func, bool include_this=true);
     void apply_recursively_leaf_first(std::function<void (GenericTreeNode*)> func, bool include_this=true);
 private:
-    GenericTreeNode* parent_;
+    GenericTreeNode* parent_ = nullptr;
     std::list<GenericTreeNode*> children_;
 
-    GenericTreeNode* left_;
-    GenericTreeNode* right_;
+    GenericTreeNode* left_ = nullptr;
+    GenericTreeNode* right_ = nullptr;
 
     ParentChangedSignal signal_parent_changed_;
 };

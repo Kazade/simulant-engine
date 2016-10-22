@@ -71,7 +71,10 @@ void RenderQueue::insert_renderable(Renderable* renderable) {
      */
 
     auto material_id = renderable->material_id();
+    assert(material_id);
+
     auto material = stage_->assets->material(material_id);
+    assert(material);
 
     material->each([&](uint32_t i, MaterialPass* material_pass) {
         RenderGroup group = render_group_factory_->new_render_group(
