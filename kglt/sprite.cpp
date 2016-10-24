@@ -38,6 +38,7 @@ bool Sprite::init() {
 void Sprite::cleanup() {
     if(actor_id_) {
         stage->delete_actor(actor_id_);
+        actor_id_ = kglt::ActorID(0);
     }
 }
 
@@ -46,7 +47,9 @@ void Sprite::ask_owner_for_destruction() {
 }
 
 void Sprite::update(double dt) {
-    stage->actor(actor_id_)->set_parent(id()); //Make sure every frame that our actor stays attached to us!
+    if(actor_id_) {
+        stage->actor(actor_id_)->set_parent(id()); //Make sure every frame that our actor stays attached to us!
+    }
 
     // Update any keyframe animations
     animation_state_->update(dt);
