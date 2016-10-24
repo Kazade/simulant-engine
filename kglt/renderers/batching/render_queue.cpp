@@ -148,7 +148,10 @@ void RenderQueue::traverse(TraverseCallback callback, uint64_t frame_id) const {
                     return;
                 }
 
-                material = stage_->assets->material(renderable->material_id());
+                auto& material_id = renderable->material_id();
+                assert(material_id);
+
+                material = stage_->assets->material(material_id);
                 assert(material);
 
                 material_pass = material->pass(pass);
