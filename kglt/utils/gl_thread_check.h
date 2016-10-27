@@ -28,23 +28,28 @@ public:
     static void check();
 
     static bool is_current() {
-        try {
-            GL_thread->do_check();
-            return true;
-        } catch(WrongThreadError& e) {
+        if(!GL_thread) {
             return false;
         }
+
+        return GL_thread->do_check(false);
     }
 
 private:
     GLThreadCheck(std::thread::id render_thread):
         render_thread_id_(render_thread) {}
 
-    void do_check() {
+    bool do_check(bool raise=true) {
 
         if(std::this_thread::get_id() != render_thread_id_) {
-            throw WrongThreadError();
+            if(raise) {
+                throw WrongThreadError();
+            } else {
+                return false;
+            }
         }
+
+        return true;
     }
 
 
