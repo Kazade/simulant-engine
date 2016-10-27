@@ -97,6 +97,8 @@ void GenericTreeNode::detach() {
         right_->left_ = left_;
     }
 
+    left_ = right_ = nullptr;
+
     if(has_parent()) {
         parent_->children_.remove(this);
         parent_ = nullptr;
