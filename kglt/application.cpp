@@ -52,6 +52,9 @@ int32_t Application::run() {
 
     while(window_->run_frame()) {}
 
+    window_->_cleanup();
+    window_.reset();
+
     return 0;
 }
 

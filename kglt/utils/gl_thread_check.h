@@ -25,6 +25,10 @@ public:
         GL_thread.reset(new GLThreadCheck(std::this_thread::get_id()));
     }
 
+    static void cleanup() {
+        GL_thread.reset();
+    }
+
     static void check();
 
     static bool is_current() {

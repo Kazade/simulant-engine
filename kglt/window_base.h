@@ -184,6 +184,8 @@ public:
     virtual bool has_pipeline(PipelineID pid) const override;
     virtual bool is_pipeline_enabled(PipelineID pid) const override;
 
+    void _cleanup();
+
 protected:    
     std::shared_ptr<Renderer> renderer_;
 
@@ -198,7 +200,10 @@ protected:
     }
 
     bool _init(int width, int height, int bpp, bool fullscreen);
+
+
     virtual bool create_window(int width, int height, int bpp, bool fullscreen) = 0;
+    virtual void destroy_window() = 0;
 
     InputController& input_controller() { assert(input_controller_); return *input_controller_; }
 

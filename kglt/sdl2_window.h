@@ -33,6 +33,8 @@ private:
     SDL_GLContext context_;
 
     bool create_window(int width, int height, int bpp, bool fullscreen);
+    void destroy_window();
+
     void check_events();
     void swap_buffers();
 

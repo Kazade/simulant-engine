@@ -66,21 +66,7 @@ WindowBase::WindowBase():
 }
 
 WindowBase::~WindowBase() {
-    //FIXME: Make WindowBase Managed<> and put this in cleanup()
-    virtual_gamepad_.reset();
-    loading_.reset();
-    message_bar_.reset();
-    watcher_.reset();
-    background_manager_.reset();
-    render_sequence_.reset();
 
-    delete_all_cameras();
-    delete_all_overlays();
-    delete_all_stages();
-
-    Sound::shutdown_openal();
-
-    delete resource_manager_;
 }
 
 RenderSequencePtr WindowBase::render_sequence() {
@@ -152,6 +138,26 @@ void WindowBase::create_defaults() {
 
     //This needs to happen after SDL or whatever is initialized
     input_controller_ = InputController::create(*this);
+}
+
+void WindowBase::_cleanup() {
+    virtual_gamepad_.reset();
+    loading_.reset();
+    message_bar_.reset();
+    watcher_.reset();
+    background_manager_.reset();
+    render_sequence_.reset();
+
+    delete_all_cameras();
+    delete_all_overlays();
+    delete_all_stages();
+
+    Sound::shutdown_openal();
+
+    delete resource_manager_;
+
+    destroy_window();
+    GLThreadCheck::cleanup();
 }
 
 bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {

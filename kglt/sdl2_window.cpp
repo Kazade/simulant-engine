@@ -12,7 +12,7 @@ SDL2Window::SDL2Window() {
 }
 
 SDL2Window::~SDL2Window() {
-    SDL_GL_DeleteContext(context_);
+
 }
 
 void SDL2Window::set_title(const std::string& title) {
@@ -247,6 +247,11 @@ bool SDL2Window::create_window(int width, int height, int bpp, bool fullscreen) 
     }
 
     return true;
+}
+
+void SDL2Window::destroy_window() {
+    SDL_GL_DeleteContext(context_);
+    SDL_Quit();
 }
 
 void SDL2Window::swap_buffers() {
