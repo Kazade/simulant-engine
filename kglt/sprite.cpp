@@ -146,6 +146,10 @@ void Sprite::set_render_dimensions_from_height(float height) {
     set_render_dimensions(-1, height);
 }
 
+void Sprite::set_render_priority(RenderPriority priority) {
+    actor_id_.fetch()->set_render_priority(priority);
+}
+
 void Sprite::set_render_dimensions_from_width(float width) {
     set_render_dimensions(width, -1);
 }

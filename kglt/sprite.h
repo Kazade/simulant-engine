@@ -36,6 +36,8 @@ public:
     void set_render_dimensions_from_width(float width);
     void set_render_dimensions_from_height(float height);
 
+    void set_render_priority(kglt::RenderPriority priority);
+
     void set_spritesheet(
         TextureID texture_id,
         uint32_t frame_width,
