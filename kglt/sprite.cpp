@@ -36,7 +36,7 @@ bool Sprite::init() {
 }
 
 void Sprite::cleanup() {
-    if(actor_id_) {
+    if(actor_id_ && stage->actor(actor_id_)) {
         stage->delete_actor(actor_id_);
         actor_id_ = kglt::ActorID(0);
     }

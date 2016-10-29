@@ -258,7 +258,7 @@ bool Stage::has_sprite(SpriteID s) const {
 
 void Stage::delete_sprite(SpriteID s) {   
     sprite(s)->apply_recursively_leaf_first(&ownable_tree_node_destroy, false);
-    sprite(s)->detach();
+    sprite(s)->detach();    
     SpriteManager::destroy(s);
 }
 
