@@ -22,9 +22,9 @@ bool Sprite::init() {
     mesh_id_ = stage->assets->new_mesh_as_rectangle(1.0, 1.0);
 
     //Annoyingly, we can't use new_actor_with_parent_and_mesh here, because that looks
-    //up our ID in the stage, which doesn't exist until this function returns. So instead
-    //we make sure we are set as the parent on each update. Not ideal, but still.
+    //up our ID in the stage, which doesn't exist until this function returns
     actor_id_ = stage->new_actor_with_mesh(mesh_id_);
+    actor_id_.fetch()->set_parent(this);
 
     using namespace std::placeholders;
     animation_state_ = std::make_shared<KeyFrameAnimationState>(
@@ -48,7 +48,7 @@ void Sprite::ask_owner_for_destruction() {
 
 void Sprite::update(double dt) {
     if(actor_id_) {
-        stage->actor(actor_id_)->set_parent(id()); //Make sure every frame that our actor stays attached to us!
+        stage->actor(actor_id_)->set_parent(this); //Make sure every frame that our actor stays attached to us!
     }
 
     // Update any keyframe animations
