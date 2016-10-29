@@ -160,6 +160,10 @@ void WindowBase::_cleanup() {
     GLThreadCheck::cleanup();
 }
 
+void WindowBase::each_stage(std::function<void (uint32_t, Stage*)> func) {
+    StageManager::each(func);
+}
+
 bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
     GLThreadCheck::init();
 
@@ -416,37 +420,37 @@ void WindowBase::handle_mouse_motion(int x, int y, bool pos_normalized) {
         y *= height();
     }
 
-    OverlayManager::each([=](Overlay* object) {
+    OverlayManager::each([=](uint32_t i, Overlay* object) {
         object->__handle_mouse_move(x, y);
     });
 }
 
 void WindowBase::handle_mouse_button_down(int button) {
-    OverlayManager::each([=](Overlay* object) {
+    OverlayManager::each([=](uint32_t i, Overlay* object) {
         object->__handle_mouse_down(button);
     });
 }
 
 void WindowBase::handle_mouse_button_up(int button) {
-    OverlayManager::each([=](Overlay* object) {
+    OverlayManager::each([=](uint32_t i, Overlay* object) {
         object->__handle_mouse_up(button);
     });
 }
 
 void WindowBase::handle_touch_down(int finger_id, int x, int y) {
-    OverlayManager::each([=](Overlay* object) {
+    OverlayManager::each([=](uint32_t i, Overlay* object) {
         object->__handle_touch_down(finger_id, x, y);
     });
 }
 
 void WindowBase::handle_touch_motion(int finger_id, int x, int y) {
-    OverlayManager::each([=](Overlay* object) {
+    OverlayManager::each([=](uint32_t i, Overlay* object) {
         object->__handle_touch_motion(finger_id, x, y);
     });
 }
 
 void WindowBase::handle_touch_up(int finger_id, int x, int y) {
-    OverlayManager::each([=](Overlay* object) {
+    OverlayManager::each([=](uint32_t i, Overlay* object) {
         object->__handle_touch_up(finger_id, x, y);
     });
 }

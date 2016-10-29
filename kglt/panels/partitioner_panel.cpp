@@ -33,7 +33,7 @@ void PartitionerPanel::initialize() {
     if(initialized_) return;
 
     /* for stage in stages: stage->new_actor(stage->partitioner->debug_mesh_id()) */
-    window_->StageManager::each([=](Stage* stage) {
+    window_->each_stage([=](uint32_t i, Stage* stage) {
         debug_actors_[stage->id()] = stage->new_actor_with_mesh(
             stage->partitioner->debug_mesh_id(),
             RENDERABLE_CULLING_MODE_NEVER //Important, we never want this to use the partitioner itself

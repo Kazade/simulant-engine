@@ -49,6 +49,8 @@ void Element::inner_rml(const unicode& rml) {
     impl_->inner_rml(rml);
 }
 
+bool Element::is_dead() const { return impl_->is_dead(); }
+
 std::string Element::css(const std::string& property) const {
     return impl_->css(property);
 }

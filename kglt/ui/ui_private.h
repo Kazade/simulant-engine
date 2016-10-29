@@ -90,8 +90,7 @@ public:
 
     }
 
-    void remove_children() {
-    }
+    void remove_children();
 
     void inner_rml(const unicode& rml);
     kglt::ui::Element append(const unicode& tag);
@@ -102,6 +101,8 @@ public:
     float top() const;
     float width() const;
     float height() const;
+
+    bool is_dead() const { return !interface_; }
 
 private:
     std::unordered_map<unicode, std::function<bool (Event)> > event_callbacks_;

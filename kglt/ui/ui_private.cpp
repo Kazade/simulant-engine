@@ -47,6 +47,36 @@ void ElementImpl::set_text(const unicode& text) {
     element_->LinkEndChild(text_node);
 }
 
+void ElementImpl::remove_children() {
+
+    std::function<void (TiXmlNode*)> walk = [&](TiXmlNode* node) {
+        for(auto child = node->FirstChild(); child; child = child->NextSibling()) {
+            /* This takes some explaining...
+             *
+             * Element objects hold a shared_ptr to an ElementImpl which in turn wraps a TiXmlElement.
+             *
+             * What we do is update the ElementImpl and set its TiXmlElement to null. Then we ignore
+             * ElementImpl with a null TiXMLElement for all things
+             */
+
+            if(child->FirstChild()) {
+                walk(child);
+            }
+
+            auto it = interface_->element_impls_.find((TiXmlElement*) child);
+            if(it != interface_->element_impls_.end()) {
+                it->second->element_ = nullptr;
+                interface_->element_impls_.erase(it);
+            }
+
+
+            node->RemoveChild(child);
+        }
+    };
+
+    walk(element_);
+}
+
 void ElementImpl::inner_rml(const unicode& rml) {
 
 }

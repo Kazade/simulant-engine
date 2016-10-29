@@ -52,6 +52,10 @@ int32_t Application::run() {
 
     while(window_->run_frame()) {}
 
+    // Shutdown any screens
+    routes_.reset();
+
+    // Shutdown and clean up the window
     window_->_cleanup();
     window_.reset();
 

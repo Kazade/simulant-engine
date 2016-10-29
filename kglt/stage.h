@@ -107,6 +107,7 @@ public:
     ParticleSystemPtr particle_system(ParticleSystemID pid);
     bool has_particle_system(ParticleSystemID pid) const;
     void delete_particle_system(ParticleSystemID pid);
+    uint32_t particle_system_count() const { return ParticleSystemManager::count(); }
 
     SpriteID new_sprite();
     SpriteID new_sprite_from_file(

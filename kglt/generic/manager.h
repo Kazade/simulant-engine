@@ -157,11 +157,13 @@ public:
     sig::signal<void (ObjectType&, ObjectIDType)>& signal_post_create() { return signal_post_create_; }
     sig::signal<void (ObjectType&, ObjectIDType)>& signal_pre_delete() { return signal_pre_delete_; }
 
-    void each(std::function<void (ObjectType*)> func) const {
+    void each(std::function<void (uint32_t, ObjectType*)> func) const {
+        uint32_t i = 0;
+
         for(std::pair<ObjectIDType, typename ObjectType::ptr> p: objects_) {
             auto thing = get(p.first); //Make sure we lock the object
             auto ptr = thing.lock(); // Keep the shared_ptr around while we use it
-            func(ptr.get());
+            func(i++, ptr.get());
         }
     }
 

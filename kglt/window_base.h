@@ -186,6 +186,8 @@ public:
 
     void _cleanup();
 
+    void each_stage(std::function<void (uint32_t, Stage*)> func);
+
 protected:    
     std::shared_ptr<Renderer> renderer_;
 

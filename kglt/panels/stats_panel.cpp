@@ -1,6 +1,7 @@
 #include "stats_panel.h"
 #include "../window_base.h"
 #include "../overlay.h"
+#include "../stage.h"
 
 namespace kglt {
 
@@ -43,6 +44,8 @@ void StatsPanel::initialize() {
     ram_usage.append("<label>").text("RAM: ");
     ram_usage.append("<label>").id("ram");
     overlay->find("#ram").text("0");
+
+    body.append("<row>").id("stages");
 
     window_->signal_frame_started().connect(std::bind(&StatsPanel::update, this));
 
@@ -87,6 +90,23 @@ void StatsPanel::update() {
 
         last_update = 0.0f;
         first_update = false;
+
+        auto stages = overlay->find("#stages");
+        stages.remove_children();
+
+        this->window_->each_stage([&](uint32_t i, Stage* stage) {
+            auto stage_row = stages.append("<row>");
+            stage_row.append("<row>").append("<label>").text(
+                (stage->name().empty()) ? "Stage " + std::to_string(i) : stage->name().encode()
+            );
+            stage_row.append("<row>").append("<label>").text(
+                "   Actors: " + std::to_string(stage->actor_count())
+            );
+
+            stage_row.append("<row>").append("<label>").text(
+                "   Particle Systems: " + std::to_string(stage->particle_system_count())
+            );
+        });
     }
 }
 

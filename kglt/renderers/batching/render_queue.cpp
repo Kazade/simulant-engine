@@ -190,6 +190,8 @@ void RenderQueue::traverse(TraverseCallback callback, uint64_t frame_id) const {
 }
 
 void Batch::add_renderable(Renderable* renderable) {
+    assert(renderable);
+
     renderable->join_batch(this);
     renderables_.push_back(renderable);
 }

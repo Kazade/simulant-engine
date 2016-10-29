@@ -65,6 +65,8 @@ public:
 
     void remove_children();
     void inner_rml(const unicode& rml);
+
+    bool is_dead() const;
 private:
     std::shared_ptr<ElementImpl> impl_;
 };
