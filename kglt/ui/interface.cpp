@@ -42,8 +42,11 @@ Interface::Interface(WindowBase &window, Overlay *owner):
     window_(window),
     stage_(owner) {
 
-    root_element_ = new TiXmlElement("interface");
-    document_.LinkEndChild(root_element_);
+    TiXmlElement* root_element = new TiXmlElement("window");
+    document_.LinkEndChild(root_element);
+
+    interface_->element_impls_[root_element] = std::make_shared<ElementImpl>(this, root_element);
+    root_element_ = Element(interface_->element_impls_[root_element]);
 }
 
 std::vector<unicode> Interface::find_fonts() {
@@ -364,6 +367,10 @@ uint16_t Interface::width() const {
 uint16_t Interface::height() const {
 }
 
+ElementList Interface::append_row() {
+    return append("<row>");
+}
+
 ElementList Interface::append(const unicode &tag) {
     TiXmlElement* element = new TiXmlElement(tag.lstrip("<").rstrip(">").encode());
     root_element_->LinkEndChild(element);
@@ -392,6 +399,10 @@ ElementList Interface::_(const unicode &selectors) {
         }
     }
     return ElementList(elements);
+}
+
+void Interface::add_css(const std::string& property, const std::string& value) {
+    root_element_.add_css(property, value);
 }
 
 void Interface::set_styles(const std::string& stylesheet_content) {

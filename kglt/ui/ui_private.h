@@ -61,11 +61,11 @@ public:
         return "";
     }
 
-    void css(const std::string& property, const std::string& value) {
+    void add_css(const std::string& property, const std::string& value) {
         styles_[property] = value;
     }
 
-    void attr(const std::string& property, const std::string& value) {
+    void set_attr(const std::string& property, const std::string& value) {
         element_->SetAttribute(property, value);
     }
 
@@ -78,7 +78,7 @@ public:
         return "";
     }
 
-    void id(const std::string& id) {
+    void set_id(const std::string& id) {
         element_->SetAttribute("id", id);
     }
 
@@ -93,9 +93,9 @@ public:
     void remove_children();
 
     void inner_rml(const unicode& rml);
-    kglt::ui::Element append(const unicode& tag);
 
-    void set_event_callback(const unicode& event_type, std::function<bool (Event)> func);
+
+    void set_event_callback(EventType event_type, EventCallback func);
 
     float left() const;
     float top() const;
@@ -104,12 +104,16 @@ public:
 
     bool is_dead() const { return !interface_; }
 
+    Element append_row();
+    Element append_label(const std::string& text);
 private:
-    std::unordered_map<unicode, std::function<bool (Event)> > event_callbacks_;
+    std::map<EventType, EventCallback> event_callbacks_;
     Interface* interface_ = nullptr;
     TiXmlElement* element_ = nullptr;
 
     std::unordered_map<std::string, std::string> styles_;
+
+    kglt::ui::Element append(const std::string& tag);
 };
 
 

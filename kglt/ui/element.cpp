@@ -17,11 +17,15 @@ std::string Element::name() const {
     return impl_->name();
 }
 
-Element Element::append(const unicode &tag) {
-    return impl_->append(tag);
+Element Element::append_row() {
+    return impl_->append_row();
 }
 
-void Element::text(const unicode& text) {
+Element Element::append_label(const unicode &label) {
+    return impl_->append_label(label);
+}
+
+void Element::set_text(const unicode& text) {
     impl_->set_text(text);
 }
 
@@ -55,20 +59,24 @@ std::string Element::css(const std::string& property) const {
     return impl_->css(property);
 }
 
-void Element::css(const std::string& property, const std::string& value) {
-    impl_->css(property, value);
+void Element::add_css(const std::string& property, const std::string& value) {
+    impl_->add_css(property, value);
 }
 
-std::string Element::attr(const std::string& property) {
-    return impl_->attr(property);
+std::string Element::set_attr(const std::string& property) {
+    return impl_->set_attr(property);
 }
 
 void Element::attr(const std::string& property, const std::string& value) {
     impl_->attr(property, value);
 }
 
-void Element::id(const std::string& id) {
-    impl_->id(id);
+void Element::id() const {
+    return impl_->id();
+}
+
+void Element::set_id(const std::string& id) {
+    impl_->set_id(id);
 }
 
 void Element::scroll_to_bottom() {
@@ -104,7 +112,7 @@ bool Element::is_visible() const {
     return visibility != HIDDEN;
 }
 
-void Element::set_event_callback(const unicode& event_type, std::function<bool (Event)> func) {
+void Element::set_event_callback(EventType event_type, EventCallback func) {
     impl_->set_event_callback(event_type, func);
 }
 

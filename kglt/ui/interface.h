@@ -29,16 +29,34 @@ public:
     ElementList(const std::vector<Element>& elements):
         elements_(elements) {}
 
-    void text(const unicode& text) {
+    void set_text(const unicode& text) {
         for(Element& e: elements_) {
-            e.text(text);
+            e.set_text(text);
         }
     }
 
-    ElementList append(const unicode& tag) {
+    ElementList append_row() {
         std::vector<Element> new_elements;
         for(Element& e: elements_) {
-            new_elements.push_back(e.append(tag));
+            new_elements.push_back(e.append_row());
+        }
+
+        return ElementList(new_elements);
+    }
+
+    ElementList append_label(const unicode& text) {
+        std::vector<Element> new_elements;
+        for(Element& e: elements_) {
+            new_elements.push_back(e.append_label(text));
+        }
+
+        return ElementList(new_elements);
+    }
+
+    ElementList append_progress_bar() {
+        std::vector<Element> new_elements;
+        for(Element& e: elements_) {
+            new_elements.push_back(e.append_progress_bar());
         }
 
         return ElementList(new_elements);
@@ -67,7 +85,7 @@ public:
         return *this;
     }
 
-    ElementList set_event_callback(const unicode& event_type, std::function<bool (Event)> func) {
+    ElementList set_event_callback(EventType event_type, EventCallback func) {
         for(Element& e: elements_) {
             e.set_event_callback(event_type, func);
         }
@@ -83,15 +101,15 @@ public:
         return *this;
     }
 
-    void css(const std::string& property, const std::string& value) {
+    void add_css(const std::string& property, const std::string& value) {
         for(Element& e: elements_) {
-            e.css(property, value);
+            e.add_css(property, value);
         }
     }
 
-    void attr(const std::string& property, const std::string& value) {
+    void set_attr(const std::string& property, const std::string& value) {
         for(Element& e: elements_) {
-            e.attr(property, value);
+            e.set_attr(property, value);
         }
     }
 
@@ -120,9 +138,9 @@ public:
         }
     }
 
-    void id(const std::string& id) {
+    void set_id(const std::string& id) {
         for(Element& e: elements_) {
-            e.id(id);
+            e.set_id(id);
         }
     }
 
@@ -212,10 +230,11 @@ public:
     void update(float dt);
     void render(CameraPtr camera, Viewport viewport);
 
-    ElementList append(const unicode& tag);
-    void set_styles(const std::string& stylesheet_content);
-    ElementList _(const unicode& selector);
+    void add_css(const std::string& property, const std::string& value);
 
+    ElementList append_row();
+
+    void set_styles(const std::string& stylesheet_content);
     void load_font(const unicode& ttf_file);
 
     WindowBase* window() { return &window_; }
@@ -231,7 +250,7 @@ private:
     Overlay* stage_ = nullptr;
 
     TiXmlDocument document_;
-    TiXmlElement* root_element_ = nullptr;
+    Element root_element_;
     std::unordered_map<TiXmlElement*, std::shared_ptr<ElementImpl>> element_impls_;
 
     nk_context nk_ctx_;
@@ -247,6 +266,8 @@ private:
     void send_to_renderer(CameraPtr camera, Viewport viewport);
 
     std::unique_ptr<HardwareBuffer> shared_vertex_buffer_;
+
+    ElementList append(const std::string& tag);
 };
 
 }

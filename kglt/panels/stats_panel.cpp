@@ -19,33 +19,19 @@ void StatsPanel::initialize() {
 
     auto overlay = window_->overlay(overlay_id_);
 
-    auto body = overlay->append("<window>");
-    body.css("color", "#4BD3FFDD");
+    overlay->add_css("color", "#4BD3FFDD");
 
-    auto title = body.append("<row>").append("<label>");
-    title.css("width", "640px");
-    title.css("position", "absolute");
-    title.css("top", "1.5em");
-    title.css("text-align", "center");
-    title.text("Performance");
+    overlay->append_row().append_label("Performance");
 
-    auto fps = body.append("<row>");
-    fps.css("top", "3em");
-    fps.css("margin-left", "1em");
-    fps.css("position", "absolute");
-    fps.append("<label>").text("FPS: ");
-    fps.append("<label>").id("fps");
-    overlay->find("#fps").text("0");
+    auto fps = overlay->append_row();
+    fps.append_label("FPS: ");
+    fps.append_label("0").set_id("fps");
 
-    auto ram_usage = body.append("<row>");
-    ram_usage.css("top", "4.5em");
-    ram_usage.css("margin-left", "1em");
-    ram_usage.css("position", "absolute");
-    ram_usage.append("<label>").text("RAM: ");
-    ram_usage.append("<label>").id("ram");
-    overlay->find("#ram").text("0");
+    auto ram_usage = overlay->append_row();
+    ram_usage.append_label("RAM: ");
+    ram_usage.append_label("0").set_id("ram");
 
-    body.append("<row>").id("stages");
+    overlay->append_row().set_id("stages");
 
     window_->signal_frame_started().connect(std::bind(&StatsPanel::update, this));
 
@@ -79,12 +65,12 @@ void StatsPanel::update() {
 
     if(first_update || last_update >= 1.0) {
         auto overlay = window_->overlay(overlay_id_);
-        overlay->find("#fps").text(
+        overlay->find("#fps").set_text(
             _u("{0}").format(window_->stats->frames_per_second())
         );
 
         auto mem_usage = get_memory_usage_in_megabytes();
-        overlay->find("#ram").text(
+        overlay->find("#ram").set_text(
             _u("{0} MB").format(mem_usage)
         );
 
@@ -95,15 +81,15 @@ void StatsPanel::update() {
         stages.remove_children();
 
         this->window_->each_stage([&](uint32_t i, Stage* stage) {
-            auto stage_row = stages.append("<row>");
-            stage_row.append("<row>").append("<label>").text(
+            auto stage_row = stages.append_row();
+            stage_row.append_row().append_label(
                 (stage->name().empty()) ? "Stage " + std::to_string(i) : stage->name().encode()
             );
-            stage_row.append("<row>").append("<label>").text(
+            stage_row.append_row().append_label(
                 "   Actors: " + std::to_string(stage->actor_count())
             );
 
-            stage_row.append("<row>").append("<label>").text(
+            stage_row.append_row().append_label(
                 "   Particle Systems: " + std::to_string(stage->particle_system_count())
             );
         });

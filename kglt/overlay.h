@@ -30,9 +30,10 @@ public:
     Overlay(OverlayID id, WindowBase *parent);
     ~Overlay();
 
-    ui::ElementList append(const unicode& tag);
-    ui::ElementList $(const unicode& selector);
-    ui::ElementList find(const unicode& selector) { return this->$(selector); }
+    ui::ElementList append_row();
+    ui::ElementList find(const std::string& selector);
+
+    void add_css(const std::string& property, const std::string& value);
 
     void set_styles(const std::string& styles);
     void load_rml(const unicode& path);

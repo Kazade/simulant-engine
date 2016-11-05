@@ -9,7 +9,18 @@
 namespace kglt {
 namespace ui {
 
-Element ElementImpl::append(const unicode& tag) {
+
+Element ElementImpl::append_row() {
+    return append("<row>");
+}
+
+Element ElementImpl::append_label(const std::string& text) {
+    auto e = append("<label>");
+    e.set_text(text);
+    return e;
+}
+
+Element ElementImpl::append(const std::string &tag) {
     TiXmlElement* element = new TiXmlElement(tag.lstrip("<").rstrip(">").encode());
     element_->LinkEndChild(element);
     interface_->element_impls_[element] = std::make_shared<ElementImpl>(interface_, element);
@@ -36,7 +47,7 @@ float ElementImpl::height() const {
 
 }
 
-void ElementImpl::set_event_callback(const unicode& event_type, std::function<bool (Event)> func) {
+void ElementImpl::set_event_callback(EventType event_type, EventCallback func) {
     event_callbacks_[event_type] = func;
 }
 
