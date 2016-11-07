@@ -2,16 +2,16 @@
 
 #include "kaztest/kaztest.h"
 
-#include "kglt/kglt.h"
+#include "simulant/simulant.h"
 
 namespace {
 
-using namespace kglt;
+using namespace smlt;
 
-class RenderQueueTests : public KGLTTestCase {
+class RenderQueueTests : public SimulantTestCase {
 public:
     void set_up() {
-        KGLTTestCase::set_up();
+        SimulantTestCase::set_up();
         stage_ = window->stage(window->new_stage());
     }
 
@@ -41,9 +41,9 @@ public:
         // Store the current group. We don't give direct access to batches and groups aside
         // from iteration so that's why the code is a bit funky. Also, RenderGroup doesn't have a
         // default constructor - hence the shared_ptr and copy construction.
-        typedef kglt::batcher::RenderGroup RenderGroup;
+        typedef smlt::batcher::RenderGroup RenderGroup;
         std::shared_ptr<RenderGroup> group;
-        render_queue->each_group(0, [&](uint32_t i, const RenderGroup& grp, const kglt::batcher::Batch&) {
+        render_queue->each_group(0, [&](uint32_t i, const RenderGroup& grp, const smlt::batcher::Batch&) {
              group.reset(new RenderGroup(grp));
         });
 
@@ -55,7 +55,7 @@ public:
 
         assert_equal(1, render_queue->group_count(0));
 
-        render_queue->each_group(0, [&](uint32_t i, const RenderGroup& grp, const kglt::batcher::Batch&) {
+        render_queue->each_group(0, [&](uint32_t i, const RenderGroup& grp, const smlt::batcher::Batch&) {
              assert_true(*group < grp);
         });
 
@@ -65,7 +65,7 @@ public:
         assert_equal(1, render_queue->group_count(0));
 
         // Everything should be back to the first material now
-        render_queue->each_group(0, [&](uint32_t i, const RenderGroup& grp, const kglt::batcher::Batch&) {
+        render_queue->each_group(0, [&](uint32_t i, const RenderGroup& grp, const smlt::batcher::Batch&) {
              assert_true(!(*group < grp));
         });
 
@@ -74,7 +74,7 @@ public:
         assert_equal(1, render_queue->group_count(0));
 
         // Back to the second material again!
-        render_queue->each_group(0, [&](uint32_t i, const RenderGroup& grp, const kglt::batcher::Batch&) {
+        render_queue->each_group(0, [&](uint32_t i, const RenderGroup& grp, const smlt::batcher::Batch&) {
              assert_true(*group < grp);
         });
     }
@@ -141,7 +141,7 @@ public:
         assert_equal(2, render_queue->group_count(0));
     }
 
-#ifdef KGLT_GL_VERSION_2X
+#ifdef SIMULANT_GL_VERSION_2X
     void test_shader_grouping() {
 
     }

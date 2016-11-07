@@ -1,7 +1,7 @@
-#include <kglt/kglt.h>
+#include <simulant/simulant.h>
 #include <iostream>
 
-using namespace kglt;
+using namespace smlt;
 
 
 enum XBoxAxis { 
@@ -42,15 +42,15 @@ enum XBoxButtons {
 //     LeftDown = Left + Down
 // };
 
-kglt::ActorID actor_id;
+smlt::ActorID actor_id;
 kmVec3 pos = { 0.f, 0.f, -5.f };
 kmVec2 rot = { 1.f, 0.5f };
 const float sensibility = 50.f;
 
-void joypad_button(kglt::Button button) {
+void joypad_button(smlt::Button button) {
 }
 
-void joypad_axis_left(kglt::AxisRange axis_range, kglt::JoypadAxis axis) {
+void joypad_axis_left(smlt::AxisRange axis_range, smlt::JoypadAxis axis) {
     if (axis % 2)
         pos.y += -axis_range / sensibility;
     else
@@ -59,7 +59,7 @@ void joypad_axis_left(kglt::AxisRange axis_range, kglt::JoypadAxis axis) {
     // g_actor->move_to(pos);
 }
 
-void joypad_axis_right(kglt::AxisRange axis_range, kglt::JoypadAxis axis) {
+void joypad_axis_right(smlt::AxisRange axis_range, smlt::JoypadAxis axis) {
     if (axis % 2)
         rot.y += -axis_range / sensibility;
     else
@@ -69,10 +69,10 @@ void joypad_axis_right(kglt::AxisRange axis_range, kglt::JoypadAxis axis) {
     // g_actor->rotate_y(rot.x);
 }
 
-class GameScreen : public kglt::Screen<GameScreen> {
+class GameScreen : public smlt::Screen<GameScreen> {
 public:
     GameScreen(WindowBase& window):
-        kglt::Screen<GameScreen>(window, "game_screen") {}
+        smlt::Screen<GameScreen>(window, "game_screen") {}
 
     void do_load() {
         prepare_basic_scene_with_overlay(stage_id_, camera_id_, overlay_id_, overlay_camera_id_);
@@ -93,14 +93,14 @@ public:
         ui->$("p").add_class("thing");
 
         ///Shortcut function for loading images
-        kglt::TextureID tid = window->stage(stage_id_)->assets->new_texture_from_file("sample_data/sample.tga");
-        kglt::MaterialID matid = window->stage(stage_id_)->assets->new_material_from_texture(tid);
+        smlt::TextureID tid = window->stage(stage_id_)->assets->new_texture_from_file("sample_data/sample.tga");
+        smlt::MaterialID matid = window->stage(stage_id_)->assets->new_material_from_texture(tid);
 
-        window->stage(stage_id_)->set_ambient_light(kglt::Colour::WHITE);
+        window->stage(stage_id_)->set_ambient_light(smlt::Colour::WHITE);
         {
             auto light = window->stage(stage_id_)->light(window->stage(stage_id_)->new_light());
             light->set_absolute_position(5.0, 0.0, -5.0);
-            light->set_diffuse(kglt::Colour::GREEN);
+            light->set_diffuse(smlt::Colour::GREEN);
             light->set_attenuation_from_range(10.0);
         }
 
@@ -115,22 +115,22 @@ public:
         // and the create the reference..
         //
 
-        window->enable_virtual_joypad(kglt::VIRTUAL_DPAD_DIRECTIONS_TWO, 2);
+        window->enable_virtual_joypad(smlt::VIRTUAL_DPAD_DIRECTIONS_TWO, 2);
 
         for(int i = 0; i < window->joypad_count(); ++i) {
-            kglt::Joypad& joypad = window->joypad(i);
+            smlt::Joypad& joypad = window->joypad(i);
 
             // Currently A button on XBOX Controller
-            joypad.button_pressed_connect(XBoxButtons::RightStick, [=](kglt::Button button) mutable {
+            joypad.button_pressed_connect(XBoxButtons::RightStick, [=](smlt::Button button) mutable {
                     rot.x = -rot.x;
                     rot.y = -rot.y;
             });
-            joypad.button_pressed_connect(1, [&](kglt::Button button) mutable {
+            joypad.button_pressed_connect(1, [&](smlt::Button button) mutable {
                     /* Reset positions and rotations */
                     pos = { 0, 0, -5.f };
                     // rot = { 0, 0 };
 
-                    window->stage(stage_id_)->actor(actor_id)->set_absolute_rotation(kglt::Degrees(0), 0, 0, pos.z);
+                    window->stage(stage_id_)->actor(actor_id)->set_absolute_rotation(smlt::Degrees(0), 0, 0, pos.z);
                     window->stage(stage_id_)->actor(actor_id)->set_absolute_position(pos);
             });
 
@@ -141,13 +141,13 @@ public:
             // Right x-axis
             joypad.axis_while_nonzero_connect(JOYPAD_AXIS_RIGHT_X, joypad_axis_right);
             // Right y-axis
-            joypad.axis_while_nonzero_connect(JOYPAD_AXIS_RIGHT_Y, [=](kglt::AxisRange range, kglt::JoypadAxis) mutable {
+            joypad.axis_while_nonzero_connect(JOYPAD_AXIS_RIGHT_Y, [=](smlt::AxisRange range, smlt::JoypadAxis) mutable {
                     if (range > 0)
                         std::cout << (float) range << std::endl;
             });
 
 
-            auto hat_cb = [=](kglt::HatPosition position, kglt::Hat hat, double dt) mutable {
+            auto hat_cb = [=](smlt::HatPosition position, smlt::Hat hat, double dt) mutable {
                 std::cout << "Hat: " << (int) hat << std::endl;
                 std::cout << "Position " << (int) position << std::endl;
             };
@@ -162,8 +162,8 @@ public:
 
     void do_step(double dt) {
         auto actor = window->stage(stage_id_)->actor(actor_id);
-        actor->rotate_x(kglt::Degrees(rot.y * dt * 10));
-        actor->rotate_y(kglt::Degrees(rot.x * dt * 10));
+        actor->rotate_x(smlt::Degrees(rot.y * dt * 10));
+        actor->rotate_y(smlt::Degrees(rot.x * dt * 10));
     }
 
 private:
@@ -172,10 +172,10 @@ private:
     OverlayID overlay_id_;
 };
 
-class JoypadSample: public kglt::Application {
+class JoypadSample: public smlt::Application {
 public:
     JoypadSample():
-        Application("KGLT Combined Sample") {
+        Application("Simulant Combined Sample") {
     }
 
 private:

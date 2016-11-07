@@ -1,19 +1,19 @@
-#include "kglt/kglt.h"
-#include "kglt/shortcuts.h"
-#include "kglt/extra.h"
+#include "simulant/simulant.h"
+#include "simulant/shortcuts.h"
+#include "simulant/extra.h"
 
-using namespace kglt;
-using namespace kglt::extra;
+using namespace smlt;
+using namespace smlt::extra;
 
-class GameScreen : public kglt::Screen<GameScreen> {
+class GameScreen : public smlt::Screen<GameScreen> {
 public:
-    GameScreen(kglt::WindowBase& window):
-        kglt::Screen<GameScreen>(window, "game_screen") {}
+    GameScreen(smlt::WindowBase& window):
+        smlt::Screen<GameScreen>(window, "game_screen") {}
 
     void do_load() {
         pid_ = prepare_basic_scene(stage_id_, camera_id_);
         window->pipeline(pid_)->set_clear_flags(BUFFER_CLEAR_ALL);
-        window->pipeline(pid_)->viewport->set_colour(kglt::Colour::GREY);
+        window->pipeline(pid_)->viewport->set_colour(smlt::Colour::GREY);
         window->disable_pipeline(pid_);
 
         auto stage = window->stage(stage_id_);
@@ -22,7 +22,7 @@ public:
 
         stage->host_camera(camera_id_);
         stage->camera(camera_id_)->set_absolute_position(
-            stage->data->get<kglt::Vec3>("player_spawn")
+            stage->data->get<smlt::Vec3>("player_spawn")
         );
 
         // Add a fly controller to the camera for user input
@@ -35,7 +35,7 @@ public:
             10000.0
         );
 
-                stage->set_ambient_light(kglt::Colour(0.8, 0.8, 0.8, 1.0));
+                stage->set_ambient_light(smlt::Colour(0.8, 0.8, 0.8, 1.0));
 
                 lightmap_preview_camera_ = window->new_camera();
                 window->camera(lightmap_preview_camera_)->set_orthographic_projection_from_height(1.0, window->aspect_ratio());
@@ -55,7 +55,7 @@ public:
                 lightmap_preview_pipeline_ = window->render(lightmap_preview_, lightmap_preview_camera_).with_priority(RENDER_PRIORITY_FOREGROUND);
                 window->enable_pipeline(lightmap_preview_pipeline_);
 
-        stage->set_ambient_light(kglt::Colour(0.75, 0.75, 0.75, 1.0));
+        stage->set_ambient_light(smlt::Colour(0.75, 0.75, 0.75, 1.0));
     }
 
     void do_activate() {
@@ -74,10 +74,10 @@ private:
 };
 
 
-class Q2Sample: public kglt::Application {
+class Q2Sample: public smlt::Application {
 private:
     bool do_init() {
-        register_screen("/", kglt::screen_factory<GameScreen>());
+        register_screen("/", smlt::screen_factory<GameScreen>());
         //load_screen_in_background("/", true); //Do loading in a background thread, but show immediately when done
         activate_screen("/"); // Show the loading screen in the meantime
         return true;

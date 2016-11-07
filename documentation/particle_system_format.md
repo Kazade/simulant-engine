@@ -1,6 +1,6 @@
 # Particle System File Format (.kglp)
 
-KGLT uses a custom file format to define particle system properties. These files are JSON files with a particular set of keys and values.
+Simulant uses a custom file format to define particle system properties. These files are JSON files with a particular set of keys and values.
 
 ## System properties
 

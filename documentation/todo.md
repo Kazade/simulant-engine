@@ -1,7 +1,7 @@
 
 # TODO
 
-KGLT is a one-man project, and it is already way too large for that! Lots of areas of 
+Simulant is a one-man project, and it is already way too large for that! Lots of areas of 
 the engine are flakey, untested, or just downright badly thought out!
 
 My aim is that, if I keep hacking as and when I can, eventually it will be a useful,

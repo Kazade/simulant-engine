@@ -1,11 +1,11 @@
 #pragma once
 
-#include "kglt/kglt.h"
+#include "simulant/simulant.h"
 #include "global.h"
-#include "../kglt/hardware_buffer.h"
+#include "../simulant/hardware_buffer.h"
 
 class GL2Tests:
-    public KGLTTestCase {
+    public SimulantTestCase {
 
 private:
     GL2BufferManager buffer_manager_;
@@ -17,12 +17,12 @@ public:
     }
 
     void test_that_buffers_can_be_allocated() {
-        auto buffer = buffer_manager_.allocate(10, kglt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES);
+        auto buffer = buffer_manager_.allocate(10, smlt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES);
         assert_equal(10, buffer->size());
     }
 
     void test_that_buffers_can_be_released() {
-        auto buffer = buffer_manager_.allocate(10, kglt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES);
+        auto buffer = buffer_manager_.allocate(10, smlt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES);
         assert_equal(10, buffer->size());
         buffer->release();
         assert_true(buffer->is_dead());
@@ -40,23 +40,23 @@ public:
     }
 
     void test_that_vertex_data_is_uploaded() {
-        kglt::VertexSpecification spec(kglt::VERTEX_ATTRIBUTE_3F);
-        kglt::VertexData data(spec);
+        smlt::VertexSpecification spec(smlt::VERTEX_ATTRIBUTE_3F);
+        smlt::VertexData data(spec);
 
-        data.position(kglt::Vec3());
+        data.position(smlt::Vec3());
         data.move_next();
 
-        data.position(kglt::Vec3());
+        data.position(smlt::Vec3());
         data.done();
 
-        auto small_buffer = buffer_manager_.allocate(3 * sizeof(float), kglt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES);
+        auto small_buffer = buffer_manager_.allocate(3 * sizeof(float), smlt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES);
 
         // Buffer is too small for the specified data, should raise an error
         assert_raises(std::out_of_range, [&]() {
             small_buffer->upload(data);
         });
 
-        auto buffer = buffer_manager_.allocate(sizeof(float) * 6, kglt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES);
+        auto buffer = buffer_manager_.allocate(sizeof(float) * 6, smlt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES);
         buffer->upload(data); //Should succeed
     }
 };

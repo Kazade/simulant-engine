@@ -3,32 +3,32 @@
 
 #include "kaztest/kaztest.h"
 
-#include "kglt/kglt.h"
+#include "simulant/simulant.h"
 #include "global.h"
 
-class MaterialTest : public KGLTTestCase {
+class MaterialTest : public SimulantTestCase {
 public:
     void test_material_initialization() {
         auto mat = window->shared_assets->material(window->shared_assets->new_material());
 
         mat->new_pass(); //Create a pass
         this->assert_equal((uint32_t)1, mat->pass_count()); //Should return the default pass
-        this->assert_true(kglt::Colour::WHITE == mat->pass(0)->diffuse()); //this->assert_true the default pass sets white as the default
-        this->assert_true(kglt::Colour::BLACK == mat->pass(0)->ambient()); //this->assert_true the default pass sets white as the default
-        this->assert_true(kglt::Colour::BLACK == mat->pass(0)->specular()); //this->assert_true the default pass sets white as the default
+        this->assert_true(smlt::Colour::WHITE == mat->pass(0)->diffuse()); //this->assert_true the default pass sets white as the default
+        this->assert_true(smlt::Colour::BLACK == mat->pass(0)->ambient()); //this->assert_true the default pass sets white as the default
+        this->assert_true(smlt::Colour::BLACK == mat->pass(0)->specular()); //this->assert_true the default pass sets white as the default
         this->assert_equal(0.0, mat->pass(0)->shininess());
     }
 
     void test_material_applies_to_mesh() {
-        kglt::MaterialID mid = window->shared_assets->new_material();
-        kglt::MeshID mesh_id = window->shared_assets->new_mesh(kglt::VertexSpecification::POSITION_ONLY);
+        smlt::MaterialID mid = window->shared_assets->new_material();
+        smlt::MeshID mesh_id = window->shared_assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY);
         auto mesh = window->shared_assets->mesh(mesh_id);
-        kglt::SubMesh* sm = mesh->new_submesh_with_material("test", mid);
+        smlt::SubMesh* sm = mesh->new_submesh_with_material("test", mid);
         this->assert_equal(mid, sm->material_id());
     }
 
     void test_reflectiveness() {
-        kglt::MaterialID mid = window->shared_assets->new_material();
+        smlt::MaterialID mid = window->shared_assets->new_material();
         auto mat = window->shared_assets->material(mid);
         uint32_t pass_id = mat->new_pass();
         auto pass = mat->pass(pass_id);

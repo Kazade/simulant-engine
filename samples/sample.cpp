@@ -1,16 +1,16 @@
-#include "kglt/kglt.h"
+#include "simulant/simulant.h"
 
-using namespace kglt;
+using namespace smlt;
 
-class GameScreen : public kglt::Screen<GameScreen> {
+class GameScreen : public smlt::Screen<GameScreen> {
 public:
     GameScreen(WindowBase& window):
-        kglt::Screen<GameScreen>(window, "game_screen") {}
+        smlt::Screen<GameScreen>(window, "game_screen") {}
 
     void do_load() {
-        auto pipeline_id = prepare_basic_scene(stage_id_, camera_id_, kglt::PARTITIONER_NULL);
+        auto pipeline_id = prepare_basic_scene(stage_id_, camera_id_, smlt::PARTITIONER_NULL);
 
-        window->pipeline(pipeline_id)->viewport->set_colour(kglt::Colour::SKY_BLUE);
+        window->pipeline(pipeline_id)->viewport->set_colour(smlt::Colour::SKY_BLUE);
 
         auto stage = window->stage(stage_id_);
 
@@ -21,21 +21,21 @@ public:
             1000.0
         );
 
-        stage->set_ambient_light(kglt::Colour::WHITE);
+        stage->set_ambient_light(smlt::Colour::WHITE);
 
         // Load an animated MD2 mesh
-        kglt::MeshID mesh_id = stage->assets->new_mesh_from_file("sample_data/ogro.md2");
+        smlt::MeshID mesh_id = stage->assets->new_mesh_from_file("sample_data/ogro.md2");
 
         auto actor = stage->new_actor_with_mesh(mesh_id).fetch(); // Create an instance of it
         actor->move_to(0.0f, 0.0f, -80.0f);
-        actor->rotate_global_y(kglt::Degrees(180));
+        actor->rotate_global_y(smlt::Degrees(180));
 
         auto actor3 = stage->new_actor_with_mesh(mesh_id).fetch();
         actor3->move_to(-40.0f, 0.0f, -95.0f);
-        actor3->rotate_global_y(kglt::Degrees(180));
+        actor3->rotate_global_y(smlt::Degrees(180));
         actor3->animation_state->play_animation("idle_2");
 
-        auto scaling_matrix = kglt::Mat4::as_scaling(10.0);
+        auto scaling_matrix = smlt::Mat4::as_scaling(10.0);
 
         auto tank = stage->assets->new_mesh_from_file("sample_data/tank.obj").fetch();
         tank->transform_vertices(scaling_matrix);
@@ -53,10 +53,10 @@ private:
     StageID stage_id_;
 };
 
-class Sample: public kglt::Application {
+class Sample: public smlt::Application {
 public:
     Sample():
-        Application("KGLT Sample") {
+        Application("Simulant Sample") {
     }
 
 private:

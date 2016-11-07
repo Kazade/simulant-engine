@@ -3,12 +3,12 @@
 
 #include "kaztest/kaztest.h"
 
-#include "kglt/kglt.h"
+#include "simulant/simulant.h"
 #include "global.h"
 
-using namespace kglt;
+using namespace smlt;
 
-class FrustumTest : public KGLTTestCase {
+class FrustumTest : public SimulantTestCase {
 public:
     void test_frustum_generation() {
         Frustum frustum;

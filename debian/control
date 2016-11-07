@@ -10,5 +10,5 @@ Architecture: any
 Section: libdevel
 Description: An OpenGL powered graphics toolkit
  An OpenGL powered graphics toolkit that makes it easy to create
- 2D and 3D scenes in C++. KGLT is backed by OpenGL and SDL to remain
+ 2D and 3D scenes in C++. Simulant is backed by OpenGL and SDL to remain
  portable.

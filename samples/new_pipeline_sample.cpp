@@ -1,6 +1,6 @@
-#include "kglt/kglt.h"
+#include "simulant/simulant.h"
 
-using namespace kglt;
+using namespace smlt;
 
 int main(int argc, char* argv[]) {
     Window::ptr window = Window::create();

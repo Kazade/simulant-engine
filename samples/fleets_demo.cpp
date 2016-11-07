@@ -1,12 +1,12 @@
-#include "kglt/kglt.h"
-#include "kglt/utils/random.h"
+#include "simulant/simulant.h"
+#include "simulant/utils/random.h"
 
-using namespace kglt;
+using namespace smlt;
 
-class GameScreen : public kglt::Screen<GameScreen> {
+class GameScreen : public smlt::Screen<GameScreen> {
 public:
-    GameScreen(kglt::WindowBase& window):
-        kglt::Screen<GameScreen>(window, "game_screen") {}
+    GameScreen(smlt::WindowBase& window):
+        smlt::Screen<GameScreen>(window, "game_screen") {}
 
     void do_load() {
         prepare_basic_scene(stage_id_, camera_id_);
@@ -59,21 +59,21 @@ private:
             ship_ids_.push_back(stage->new_actor_with_mesh(ship_mesh_id_));
             stage->actor(ship_ids_.back())->set_absolute_position(pos);
 
-            auto ps_id = stage->new_particle_system_with_parent_from_file(ship_ids_.back(), "kglt/particles/pixel_trail.kglp");
+            auto ps_id = stage->new_particle_system_with_parent_from_file(ship_ids_.back(), "simulant/particles/pixel_trail.kglp");
             stage->particle_system(ps_id)->set_relative_position(0, 0, 0);
         }
     }
 };
 
 
-class FleetsDemo: public kglt::Application {
+class FleetsDemo: public smlt::Application {
 public:
     FleetsDemo():
-        kglt::Application("Fleets Demo") {}
+        smlt::Application("Fleets Demo") {}
 
 private:
     bool do_init() {
-        register_screen("/", kglt::screen_factory<GameScreen>());
+        register_screen("/", smlt::screen_factory<GameScreen>());
         load_screen_in_background("/", true); //Do loading in a background thread, but show immediately when done
         activate_screen("/loading"); // Show the loading screen in the meantime
         return true;

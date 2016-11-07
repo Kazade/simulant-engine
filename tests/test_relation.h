@@ -3,12 +3,12 @@
 
 #include "kaztest/kaztest.h"
 
-#include "kglt/kglt.h"
+#include "simulant/simulant.h"
 #include "global.h"
 
 namespace relation_test {
 
-using namespace kglt;
+using namespace smlt;
 
 class B;
 class C;
@@ -50,7 +50,7 @@ public:
 
 }
 
-class RelationTest : public KGLTTestCase {
+class RelationTest : public SimulantTestCase {
 public:    
     void test_relations_work() {
         using namespace relation_test;

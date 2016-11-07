@@ -1,14 +1,14 @@
-#include "kglt/kglt.h"
-#include "kglt/shortcuts.h"
-#include "kglt/extra.h"
+#include "simulant/simulant.h"
+#include "simulant/shortcuts.h"
+#include "simulant/extra.h"
 
-using namespace kglt;
-using namespace kglt::extra;
+using namespace smlt;
+using namespace smlt::extra;
 
-class GameScreen : public kglt::Screen<GameScreen> {
+class GameScreen : public smlt::Screen<GameScreen> {
 public:
     GameScreen(WindowBase& window):
-        kglt::Screen<GameScreen>(window, "game_screen") {}
+        smlt::Screen<GameScreen>(window, "game_screen") {}
 
     void do_load() {
         prepare_basic_scene(stage_id_, camera_id_);
@@ -22,12 +22,12 @@ public:
             1000.0
         );
 
-        stage->set_ambient_light(kglt::Colour(0.2, 0.2, 0.2, 1.0));
+        stage->set_ambient_light(smlt::Colour(0.2, 0.2, 0.2, 1.0));
 
         actor_id_ = stage->new_actor_with_mesh(stage->assets->new_mesh_as_cube(2.0));
         stage->actor(actor_id_)->move_to(0.0, 0.0, -10.0);
 
-        kglt::TextureID texture = stage->assets->new_texture_from_file("sample_data/crate.png");
+        smlt::TextureID texture = stage->assets->new_texture_from_file("sample_data/crate.png");
         stage->actor(actor_id_)->mesh()->set_texture_on_material(0, texture);
 
         // Test Camera::look_at function
@@ -36,17 +36,17 @@ public:
         {
             auto light = stage->light(stage->new_light());
             light->move_to(5.0, 0.0, -5.0);
-            light->set_diffuse(kglt::Colour::GREEN);
+            light->set_diffuse(smlt::Colour::GREEN);
             light->set_attenuation_from_range(20.0);
 
             auto light2 = stage->light(stage->new_light());
             light2->move_to(-5.0, 0.0, -5.0);
-            light2->set_diffuse(kglt::Colour::BLUE);
+            light2->set_diffuse(smlt::Colour::BLUE);
             light2->set_attenuation_from_range(30.0);
 
             auto light3 = stage->light(stage->new_light());
             light3->move_to(0.0, 15.0, -5.0);
-            light3->set_diffuse(kglt::Colour::RED);
+            light3->set_diffuse(smlt::Colour::RED);
             light3->set_attenuation_from_range(50.0);
         }
 
@@ -64,9 +64,9 @@ public:
     }
 
     void do_step(double dt) {
-        window->stage(stage_id_)->actor(actor_id_)->rotate_x(kglt::Degrees(dt * 20.0));
-        window->stage(stage_id_)->actor(actor_id_)->rotate_y(kglt::Degrees(dt * 15.0));
-        window->stage(stage_id_)->actor(actor_id_)->rotate_z(kglt::Degrees(dt * 25.0));
+        window->stage(stage_id_)->actor(actor_id_)->rotate_x(smlt::Degrees(dt * 20.0));
+        window->stage(stage_id_)->actor(actor_id_)->rotate_y(smlt::Degrees(dt * 15.0));
+        window->stage(stage_id_)->actor(actor_id_)->rotate_z(smlt::Degrees(dt * 25.0));
     }
 
 private:
@@ -75,10 +75,10 @@ private:
     ActorID actor_id_;
 };
 
-class LightingSample: public kglt::Application {
+class LightingSample: public smlt::Application {
 public:
     LightingSample():
-        Application("KGLT Light Sample") {
+        Application("Simulant Light Sample") {
     }
 
 private:

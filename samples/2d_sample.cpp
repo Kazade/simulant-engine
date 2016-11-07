@@ -1,14 +1,14 @@
-#include "kglt/kglt.h"
-#include "kglt/shortcuts.h"
-#include "kglt/extra.h"
+#include "simulant/simulant.h"
+#include "simulant/shortcuts.h"
+#include "simulant/extra.h"
 
-using namespace kglt;
-using namespace kglt::extra;
+using namespace smlt;
+using namespace smlt::extra;
 
-class GameScreen : public kglt::Screen<GameScreen> {
+class GameScreen : public smlt::Screen<GameScreen> {
 public:
-    GameScreen(kglt::WindowBase& window):
-        kglt::Screen<GameScreen>(window, "game_screen") {}
+    GameScreen(smlt::WindowBase& window):
+        smlt::Screen<GameScreen>(window, "game_screen") {}
 
     void do_load() {
         prepare_basic_scene(stage_id_, camera_id_);
@@ -25,7 +25,7 @@ public:
             auto stage = window->stage(stage_id_);
 
             //Load a sprite grid, from the 'Layer 1' layer in a tmx file
-            kglt::MeshID mesh_id = stage->assets->new_mesh_from_tmx_file(
+            smlt::MeshID mesh_id = stage->assets->new_mesh_from_tmx_file(
                 "sample_data/tiled/example.tmx", "Layer 1"
             );
 
@@ -37,8 +37,8 @@ public:
 
             //Constrain the camera to the area where the sprite grid is rendered
             stage->camera(camera_id_)->constrain_to(
-                kglt::Vec3(render_width / 2, render_height / 2, 0),
-                kglt::Vec3(
+                smlt::Vec3(render_width / 2, render_height / 2, 0),
+                smlt::Vec3(
                     bounds.width() - render_width / 2,
                     bounds.height() - render_height / 2,
                     0
@@ -49,7 +49,7 @@ public:
     }
 
     void do_activate() {
-        window->enable_virtual_joypad(kglt::VIRTUAL_DPAD_DIRECTIONS_TWO, 2);
+        window->enable_virtual_joypad(smlt::VIRTUAL_DPAD_DIRECTIONS_TWO, 2);
         window->message_bar->inform("Sample demonstrating 2D sprites");
     }
 
@@ -59,10 +59,10 @@ private:
 };
 
 
-class Sample2D: public kglt::Application {
+class Sample2D: public smlt::Application {
 private:
     bool do_init() {
-        register_screen("/", kglt::screen_factory<GameScreen>());
+        register_screen("/", smlt::screen_factory<GameScreen>());
         load_screen_in_background("/", true); //Do loading in a background thread, but show immediately when done
         activate_screen("/loading"); // Show the loading screen in the meantime
         return true;
