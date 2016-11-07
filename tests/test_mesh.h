@@ -3,25 +3,25 @@
 
 #include "kaztest/kaztest.h"
 
-#include "kglt/kglt.h"
+#include "simulant/simulant.h"
 #include "global.h"
 
-class MeshTest : public KGLTTestCase {
+class MeshTest : public SimulantTestCase {
 public:
     void set_up() {
-        KGLTTestCase::set_up();
+        SimulantTestCase::set_up();
         camera_id_ = window->new_camera();
         stage_id_ = window->new_stage();
     }
 
     void tear_down() {
-        KGLTTestCase::tear_down();
+        SimulantTestCase::tear_down();
         window->delete_camera(camera_id_);
         window->delete_stage(stage_id_);
     }
 
-    kglt::MeshID generate_test_mesh(kglt::StagePtr stage) {
-        kglt::MeshID mid = stage->assets->new_mesh(kglt::VertexSpecification::POSITION_ONLY);
+    smlt::MeshID generate_test_mesh(smlt::StagePtr stage) {
+        smlt::MeshID mid = stage->assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY);
         auto mesh = stage->assets->mesh(mid);
 
         auto& data = mesh->shared_data;
@@ -41,7 +41,7 @@ public:
         data->done();
 
         first_mesh_ = mesh->new_submesh("test");
-        kglt::SubMesh* submesh = first_mesh_;
+        smlt::SubMesh* submesh = first_mesh_;
 
         submesh->index_data->index(0);
         submesh->index_data->index(1);
@@ -53,7 +53,7 @@ public:
         submesh->index_data->done();
 
         //Draw a line between the first two vertices
-        kglt::SubMesh* sm = mesh->new_submesh("test2", kglt::MESH_ARRANGEMENT_LINES);
+        smlt::SubMesh* sm = mesh->new_submesh("test2", smlt::MESH_ARRANGEMENT_LINES);
         sm->index_data->index(0);
         sm->index_data->index(1);
         sm->index_data->done();
@@ -99,7 +99,7 @@ public:
     void test_user_data_works() {
         auto stage = window->stage(stage_id_);
 
-        kglt::ActorID mid = stage->new_actor();
+        smlt::ActorID mid = stage->new_actor();
         auto actor = stage->actor(mid);
 
         this->assert_true(actor->id() != 0); //Make sure we set an id for the mesh
@@ -117,9 +117,9 @@ public:
     void test_deleting_entities_deletes_children() {
         auto stage = window->stage(stage_id_);
 
-        kglt::ActorID mid = stage->new_actor(); //Create the root mesh
-        kglt::ActorID cid1 = stage->new_actor_with_parent(mid); //Create a child
-        kglt::ActorID cid2 = stage->new_actor_with_parent(cid1); //Create a child of the child
+        smlt::ActorID mid = stage->new_actor(); //Create the root mesh
+        smlt::ActorID cid1 = stage->new_actor_with_parent(mid); //Create a child
+        smlt::ActorID cid2 = stage->new_actor_with_parent(cid1); //Create a child of the child
 
         this->assert_equal((uint32_t)1, stage->actor(mid)->children().size());
         this->assert_equal((uint32_t)1, stage->actor(cid1)->children().size());
@@ -171,7 +171,7 @@ public:
         assert_equal(mesh->submesh_count(), actor->subactor_count());
         assert_true(mesh->shared_data->count() == actor->shared_data->count());
 
-        kglt::SubMesh* sm = actor->subactor(0).submesh();
+        smlt::SubMesh* sm = actor->subactor(0).submesh();
 
         //Likewise for subentities, they should just proxy to the submesh
         assert_equal(sm->material_id(), actor->subactor(0).material_id());
@@ -179,15 +179,15 @@ public:
         assert_equal(sm->vertex_data.get(), actor->subactor(0).vertex_data.get());
 
         //We should be able to override the material on a subactor though
-        actor->subactor(0).override_material_id(kglt::MaterialID(1));
+        actor->subactor(0).override_material_id(smlt::MaterialID(1));
 
-        assert_equal(kglt::MaterialID(1), actor->subactor(0).material_id());
+        assert_equal(smlt::MaterialID(1), actor->subactor(0).material_id());
     }
 
     void test_scene_methods() {
         auto stage = window->stage(stage_id_);
 
-        kglt::MeshID mesh_id = stage->assets->new_mesh(kglt::VertexSpecification::POSITION_ONLY); //Create a mesh
+        smlt::MeshID mesh_id = stage->assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY); //Create a mesh
         auto actor = stage->actor(stage->new_actor_with_mesh(mesh_id));
 
         assert_true(mesh_id == actor->mesh()->id());
@@ -199,15 +199,15 @@ public:
         const int num_frames = 3;
 
         auto mesh_id = stage->assets->new_animated_mesh(
-            kglt::VertexSpecification::POSITION_ONLY,
-            kglt::MESH_ANIMATION_TYPE_VERTEX_MORPH,
+            smlt::VertexSpecification::POSITION_ONLY,
+            smlt::MESH_ANIMATION_TYPE_VERTEX_MORPH,
             num_frames
         );
 
         auto mesh = stage->assets->mesh(mesh_id);
 
         assert_equal(mesh->animation_frames(), 3);
-        assert_equal(mesh->animation_type(), kglt::MESH_ANIMATION_TYPE_VERTEX_MORPH);
+        assert_equal(mesh->animation_type(), smlt::MESH_ANIMATION_TYPE_VERTEX_MORPH);
         assert_true(mesh->is_animated());
     }
 
@@ -220,47 +220,47 @@ public:
         auto& vd = *stage->assets->mesh(mesh_id)->first_submesh()->vertex_data.get();
 
         // Neg Z
-        assert_equal(kglt::Vec2((1.0 / 3.0), 0), vd.texcoord0_at<kglt::Vec2>(0));
-        assert_equal(kglt::Vec2((2.0 / 3.0), 0), vd.texcoord0_at<kglt::Vec2>(1));
-        assert_equal(kglt::Vec2((2.0 / 3.0), (1.0 / 4.0)), vd.texcoord0_at<kglt::Vec2>(2));
-        assert_equal(kglt::Vec2((1.0 / 3.0), (1.0 / 4.0)), vd.texcoord0_at<kglt::Vec2>(3));
+        assert_equal(smlt::Vec2((1.0 / 3.0), 0), vd.texcoord0_at<smlt::Vec2>(0));
+        assert_equal(smlt::Vec2((2.0 / 3.0), 0), vd.texcoord0_at<smlt::Vec2>(1));
+        assert_equal(smlt::Vec2((2.0 / 3.0), (1.0 / 4.0)), vd.texcoord0_at<smlt::Vec2>(2));
+        assert_equal(smlt::Vec2((1.0 / 3.0), (1.0 / 4.0)), vd.texcoord0_at<smlt::Vec2>(3));
 
         // Pos Z
-        assert_equal(kglt::Vec2((1.0 / 3.0), (2.0 / 4.0)), vd.texcoord0_at<kglt::Vec2>(4));
-        assert_equal(kglt::Vec2((2.0 / 3.0), (2.0 / 4.0)), vd.texcoord0_at<kglt::Vec2>(5));
-        assert_equal(kglt::Vec2((2.0 / 3.0), (3.0 / 4.0)), vd.texcoord0_at<kglt::Vec2>(6));
-        assert_equal(kglt::Vec2((1.0 / 3.0), (3.0 / 4.0)), vd.texcoord0_at<kglt::Vec2>(7));
+        assert_equal(smlt::Vec2((1.0 / 3.0), (2.0 / 4.0)), vd.texcoord0_at<smlt::Vec2>(4));
+        assert_equal(smlt::Vec2((2.0 / 3.0), (2.0 / 4.0)), vd.texcoord0_at<smlt::Vec2>(5));
+        assert_equal(smlt::Vec2((2.0 / 3.0), (3.0 / 4.0)), vd.texcoord0_at<smlt::Vec2>(6));
+        assert_equal(smlt::Vec2((1.0 / 3.0), (3.0 / 4.0)), vd.texcoord0_at<smlt::Vec2>(7));
 
         // Neg X
-        assert_equal(kglt::Vec2(0, 2.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(8));
-        assert_equal(kglt::Vec2(1.0 / 3.0, 2.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(9));
-        assert_equal(kglt::Vec2(1.0 / 3.0, 3.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(10));
-        assert_equal(kglt::Vec2(0, 3.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(11));
+        assert_equal(smlt::Vec2(0, 2.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(8));
+        assert_equal(smlt::Vec2(1.0 / 3.0, 2.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(9));
+        assert_equal(smlt::Vec2(1.0 / 3.0, 3.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(10));
+        assert_equal(smlt::Vec2(0, 3.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(11));
 
         // Pos X
-        assert_equal(kglt::Vec2(2.0 / 3.0, 2.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(12));
-        assert_equal(kglt::Vec2(3.0 / 3.0, 2.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(13));
-        assert_equal(kglt::Vec2(3.0 / 3.0, 3.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(14));
-        assert_equal(kglt::Vec2(2.0 / 3.0, 3.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(15));
+        assert_equal(smlt::Vec2(2.0 / 3.0, 2.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(12));
+        assert_equal(smlt::Vec2(3.0 / 3.0, 2.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(13));
+        assert_equal(smlt::Vec2(3.0 / 3.0, 3.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(14));
+        assert_equal(smlt::Vec2(2.0 / 3.0, 3.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(15));
 
         // Neg Y
-        assert_equal(kglt::Vec2(1.0 / 3.0, 1.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(16));
-        assert_equal(kglt::Vec2(2.0 / 3.0, 1.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(17));
-        assert_equal(kglt::Vec2(2.0 / 3.0, 2.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(18));
-        assert_equal(kglt::Vec2(1.0 / 3.0, 2.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(19));
+        assert_equal(smlt::Vec2(1.0 / 3.0, 1.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(16));
+        assert_equal(smlt::Vec2(2.0 / 3.0, 1.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(17));
+        assert_equal(smlt::Vec2(2.0 / 3.0, 2.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(18));
+        assert_equal(smlt::Vec2(1.0 / 3.0, 2.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(19));
 
         // Pos Y
-        assert_equal(kglt::Vec2(1.0 / 3.0, 3.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(20));
-        assert_equal(kglt::Vec2(2.0 / 3.0, 3.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(21));
-        assert_equal(kglt::Vec2(2.0 / 3.0, 4.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(22));
-        assert_equal(kglt::Vec2(1.0 / 3.0, 4.0 / 4.0), vd.texcoord0_at<kglt::Vec2>(23));
+        assert_equal(smlt::Vec2(1.0 / 3.0, 3.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(20));
+        assert_equal(smlt::Vec2(2.0 / 3.0, 3.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(21));
+        assert_equal(smlt::Vec2(2.0 / 3.0, 4.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(22));
+        assert_equal(smlt::Vec2(1.0 / 3.0, 4.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(23));
     }
 
 private:
-    kglt::CameraID camera_id_;
-    kglt::StageID stage_id_;
+    smlt::CameraID camera_id_;
+    smlt::StageID stage_id_;
 
-    kglt::SubMesh* first_mesh_;
+    smlt::SubMesh* first_mesh_;
 };
 
 #endif // TEST_MESH_H

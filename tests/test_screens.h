@@ -3,15 +3,15 @@
 
 #include "kaztest/kaztest.h"
 
-#include "kglt/kglt.h"
+#include "simulant/simulant.h"
 #include "global.h"
 
 namespace {
 
-using namespace kglt;
+using namespace smlt;
 
 
-class ScreenTests : public KGLTTestCase {
+class ScreenTests : public SimulantTestCase {
 public:
     void test_load() {
 
@@ -38,13 +38,13 @@ public:
     volatile bool deactivate_called = false;
 };
 
-class ScreenManagerTests : public KGLTTestCase {
+class ScreenManagerTests : public SimulantTestCase {
 private:
     ScreenManager::ptr manager_;
 
 public:
     void set_up() {
-        KGLTTestCase::set_up();
+        SimulantTestCase::set_up();
         manager_ = std::make_shared<ScreenManager>(*window);
     }
 

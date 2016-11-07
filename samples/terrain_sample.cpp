@@ -1,8 +1,8 @@
-#include "kglt/utils/random.h"
+#include "simulant/utils/random.h"
 
-#include "kglt/kglt.h"
+#include "simulant/simulant.h"
 
-using namespace kglt;
+using namespace smlt;
 
 template<typename T>
 inline T clamp(T x, T a = 0, T b = 1) {
@@ -31,16 +31,16 @@ void calculate_splat_map(int width, int length, TexturePtr texture, VertexData& 
         texture->data()[(i * 4) + 2] = 255.0f * (rock / z);
         texture->data()[(i * 4) + 3] = 255.0f * (snow / z);
     }
-    texture->upload(kglt::MIPMAP_GENERATE_NONE, kglt::TEXTURE_WRAP_CLAMP_TO_EDGE, kglt::TEXTURE_FILTER_LINEAR, false);
+    texture->upload(smlt::MIPMAP_GENERATE_NONE, smlt::TEXTURE_WRAP_CLAMP_TO_EDGE, smlt::TEXTURE_FILTER_LINEAR, false);
 }
 
-class GameScreen : public kglt::Screen<GameScreen> {
+class GameScreen : public smlt::Screen<GameScreen> {
 public:
-    GameScreen(kglt::WindowBase& window):
-        kglt::Screen<GameScreen>(window, "game_screen") {}
+    GameScreen(smlt::WindowBase& window):
+        smlt::Screen<GameScreen>(window, "game_screen") {}
 
     void do_load() {
-        pipeline_id_ = prepare_basic_scene(stage_id_, camera_id_, kglt::PARTITIONER_NULL);
+        pipeline_id_ = prepare_basic_scene(stage_id_, camera_id_, smlt::PARTITIONER_NULL);
         window->disable_pipeline(pipeline_id_);
 
         auto stage = window->stage(stage_id_);
@@ -49,21 +49,21 @@ public:
             45.0, float(window->width()) / float(window->height()), 10.0, 10000.0
         );
 
-        window->pipeline(pipeline_id_)->viewport->set_colour(kglt::Colour::SKY_BLUE);
+        window->pipeline(pipeline_id_)->viewport->set_colour(smlt::Colour::SKY_BLUE);
 
         auto cam = stage->camera(camera_id_);
         cam->move_to(0, 50, 700);
         cam->look_at(0, 0, 0);
 
         terrain_material_id_ = stage->assets->new_material_from_file("sample_data/terrain_splat.kglm", GARBAGE_COLLECT_NEVER);
-        kglt::HeightmapSpecification spec;
+        smlt::HeightmapSpecification spec;
         spec.smooth_iterations = 0;
 
         terrain_mesh_id_ = stage->assets->new_mesh_from_heightmap("sample_data/terrain.png", spec);
         auto terrain_mesh = stage->assets->mesh(terrain_mesh_id_);
 
-        auto terrain_data = terrain_mesh->data->get<kglt::TerrainData>("terrain_data");
-        kglt::TextureID terrain_splatmap = stage->assets->new_texture();
+        auto terrain_data = terrain_mesh->data->get<smlt::TerrainData>("terrain_data");
+        smlt::TextureID terrain_splatmap = stage->assets->new_texture();
         calculate_splat_map(
             terrain_data.x_size,
             terrain_data.z_size,
@@ -84,7 +84,7 @@ public:
 
     void do_step(double dt) override {
         auto stage = window->stage(stage_id_);
-        stage->actor(terrain_actor_id_)->rotate_global_y(kglt::Degrees(dt * 5.0));
+        stage->actor(terrain_actor_id_)->rotate_global_y(smlt::Degrees(dt * 5.0));
     }
 
 private:
@@ -100,14 +100,14 @@ private:
 };
 
 
-class TerrainDemo: public kglt::Application {
+class TerrainDemo: public smlt::Application {
 public:
     TerrainDemo():
-        kglt::Application("Terrain Demo") {}
+        smlt::Application("Terrain Demo") {}
 
 private:
     bool do_init() {
-        register_screen("/", kglt::screen_factory<GameScreen>());
+        register_screen("/", smlt::screen_factory<GameScreen>());
         load_screen_in_background("/", true); //Do loading in a background thread, but show immediately when done
         activate_screen("/loading"); // Show the loading screen in the meantime
         return true;

@@ -1,4 +1,4 @@
-# KGLT Documentation
+# Simulant Documentation
 
 [Massive Amounts of TODO](todo.md)
 
@@ -8,7 +8,7 @@
 
 ## The Core
 
-This section covers the base subsystems and usages of KGLT. 
+This section covers the base subsystems and usages of Simulant. 
 
  - Overview: [Engine Structure](engine_structure.md) | [Resource Management](resource_management.md)
  - Managing objects: [Manual managers](manual_managers.md) | [Refcounted managers](refcount_managers.md) | [ProtectedPtr<T>](protected_ptr.md)

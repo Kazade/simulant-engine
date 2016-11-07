@@ -2,15 +2,15 @@
 
 #include <memory>
 #include "global.h"
-#include "kglt/kglt.h"
-#include "kglt/partitioners/impl/octree.h"
+#include "simulant/simulant.h"
+#include "simulant/partitioners/impl/octree.h"
 
 
-class NewOctreeTest : public KGLTTestCase {
+class NewOctreeTest : public SimulantTestCase {
 public:
     void set_up() {
-        KGLTTestCase::set_up();
-        stage_id_ = window->new_stage(kglt::PARTITIONER_NULL);
+        SimulantTestCase::set_up();
+        stage_id_ = window->new_stage(smlt::PARTITIONER_NULL);
         stage_ = window->stage(stage_id_);
 
         /* We have a loose octree, so nodes can contain objects which are twice their size
@@ -18,17 +18,17 @@ public:
             will have a diameter of 10.0f;
         */
         actor_id_ = stage_->new_actor_with_mesh(stage_->assets->new_mesh_as_cube(32.0));
-        octree_.reset(new kglt::octree_impl::Octree(stage_));
+        octree_.reset(new smlt::octree_impl::Octree(stage_));
     }
 
     void test_octreenode_contains() {
         octree_->insert_actor(actor_id_); // Dimension is now 16,16,16
 
-        assert_true(octree_->get_root()->contains(kglt::Vec3(0, 0, 0)));
-        assert_true(octree_->get_root()->contains(kglt::Vec3(5, 0, 0)));
-        assert_false(octree_->get_root()->contains(kglt::Vec3(9, 0, 0)));
-        assert_true(octree_->get_root()->contains(kglt::Vec3(8, 8, 0)));
-        assert_false(octree_->get_root()->contains(kglt::Vec3(8, 8.1, 0)));
+        assert_true(octree_->get_root()->contains(smlt::Vec3(0, 0, 0)));
+        assert_true(octree_->get_root()->contains(smlt::Vec3(5, 0, 0)));
+        assert_false(octree_->get_root()->contains(smlt::Vec3(9, 0, 0)));
+        assert_true(octree_->get_root()->contains(smlt::Vec3(8, 8, 0)));
+        assert_false(octree_->get_root()->contains(smlt::Vec3(8, 8.1, 0)));
     }
 
     void test_initial_insert() {
@@ -117,15 +117,15 @@ public:
     void test_child_centres() {
         auto octree_node = octree_->insert_actor(actor_id_).lock();
 
-        std::vector<kglt::Vec3> expected = {
-            kglt::Vec3(-4.0, -4.0, -4.0),
-            kglt::Vec3(-4.0,  4.0, -4.0),
-            kglt::Vec3( 4.0,  4.0, -4.0),
-            kglt::Vec3( 4.0, -4.0, -4.0),
-            kglt::Vec3(-4.0, -4.0,  4.0),
-            kglt::Vec3(-4.0,  4.0,  4.0),
-            kglt::Vec3( 4.0,  4.0,  4.0),
-            kglt::Vec3( 4.0, -4.0,  4.0),
+        std::vector<smlt::Vec3> expected = {
+            smlt::Vec3(-4.0, -4.0, -4.0),
+            smlt::Vec3(-4.0,  4.0, -4.0),
+            smlt::Vec3( 4.0,  4.0, -4.0),
+            smlt::Vec3( 4.0, -4.0, -4.0),
+            smlt::Vec3(-4.0, -4.0,  4.0),
+            smlt::Vec3(-4.0,  4.0,  4.0),
+            smlt::Vec3( 4.0,  4.0,  4.0),
+            smlt::Vec3( 4.0, -4.0,  4.0),
         };
 
         assert_items_equal(expected, octree_node->child_centres());
@@ -139,11 +139,11 @@ public:
     }
 
     void test_splitting_nodes() {
-        auto split_predicate = [](kglt::octree_impl::OctreeNode* node) -> bool {
+        auto split_predicate = [](smlt::octree_impl::OctreeNode* node) -> bool {
             return node->data->actor_count() > 2;
         };
 
-        auto octree = std::make_shared<kglt::octree_impl::Octree>(stage_, split_predicate);
+        auto octree = std::make_shared<smlt::octree_impl::Octree>(stage_, split_predicate);
 
         octree->insert_actor(actor_id_);
         assert_equal(octree->node_count(), 1);
@@ -159,46 +159,46 @@ public:
     }
 
     void test_generate_vector_hash() {
-        kglt::Vec3 v1(1, 0, 0);
-        kglt::Vec3 v2(1.00001, 0, 0);
+        smlt::Vec3 v1(1, 0, 0);
+        smlt::Vec3 v2(1.00001, 0, 0);
 
         assert_equal(octree_->generate_vector_hash(v1), octree_->generate_vector_hash(v2));
 
-        kglt::Vec3 v3(1, 1, 0);
+        smlt::Vec3 v3(1, 1, 0);
 
         assert_not_equal(octree_->generate_vector_hash(v1), octree_->generate_vector_hash(v3));
     }
 
     void test_find_node_centre_for_point() {
-        kglt::Vec3 point;
-        kglt::octree_impl::NodeLevel level = 0;
-        assert_raises(kglt::octree_impl::OutsideBoundsError, std::bind(&kglt::octree_impl::Octree::find_node_centre_for_point, octree_.get(), level, point));
+        smlt::Vec3 point;
+        smlt::octree_impl::NodeLevel level = 0;
+        assert_raises(smlt::octree_impl::OutsideBoundsError, std::bind(&smlt::octree_impl::Octree::find_node_centre_for_point, octree_.get(), level, point));
 
         octree_->insert_actor(actor_id_);
 
-        point = kglt::Vec3(2.0, 1, 1);
+        point = smlt::Vec3(2.0, 1, 1);
         auto ret = octree_->find_node_centre_for_point(0, point);
-        assert_equal(kglt::Vec3(), ret); // Root level is centred around 0.0
+        assert_equal(smlt::Vec3(), ret); // Root level is centred around 0.0
 
         auto half_root = octree_->diameter() / 2.0;
 
         ret = octree_->find_node_centre_for_point(1, point);
-        kglt::Vec3 expected(half_root / 2, half_root / 2, half_root / 2);
+        smlt::Vec3 expected(half_root / 2, half_root / 2, half_root / 2);
         assert_equal(expected, ret);
 
         auto quarter_root = half_root / 2.0;
         ret = octree_->find_node_centre_for_point(2, point);
-        expected = kglt::Vec3(quarter_root / 2, quarter_root / 2, quarter_root / 2);
+        expected = smlt::Vec3(quarter_root / 2, quarter_root / 2, quarter_root / 2);
         assert_equal(expected, ret);
 
-        point = kglt::Vec3(-2.0, 1, 1);
+        point = smlt::Vec3(-2.0, 1, 1);
 
         ret = octree_->find_node_centre_for_point(1, point);
-        expected = kglt::Vec3(-half_root / 2, half_root / 2, half_root / 2);
+        expected = smlt::Vec3(-half_root / 2, half_root / 2, half_root / 2);
         assert_equal(expected, ret);
 
         ret = octree_->find_node_centre_for_point(2, point);
-        expected = kglt::Vec3(-quarter_root / 2, quarter_root / 2, quarter_root / 2);
+        expected = smlt::Vec3(-quarter_root / 2, quarter_root / 2, quarter_root / 2);
         assert_equal(expected, ret);
     }
 
@@ -209,9 +209,9 @@ public:
     void test_find_best_existing_node() {
         octree_->insert_actor(actor_id_);
 
-        kglt::AABB aabb;
-        aabb.min = kglt::Vec3(-1, -1, -1);
-        aabb.max = kglt::Vec3(1, 1, 1);
+        smlt::AABB aabb;
+        aabb.min = smlt::Vec3(-1, -1, -1);
+        aabb.max = smlt::Vec3(1, 1, 1);
 
         auto ret = octree_->find_best_existing_node(aabb);
 
@@ -230,12 +230,12 @@ public:
     void tear_down() {
         window->delete_stage(stage_id_);
         octree_.reset();
-        KGLTTestCase::tear_down();
+        SimulantTestCase::tear_down();
     }
 
 private:
-    std::unique_ptr<kglt::octree_impl::Octree> octree_;
-    kglt::StageID stage_id_;
-    kglt::ActorID actor_id_;
-    kglt::StagePtr stage_;
+    std::unique_ptr<smlt::octree_impl::Octree> octree_;
+    smlt::StageID stage_id_;
+    smlt::ActorID actor_id_;
+    smlt::StagePtr stage_;
 };

@@ -1,16 +1,16 @@
 
-#include <kglt/kglt.h>
+#include <simulant/simulant.h>
 
-class MainScreen : public kglt::Screen<MainScreen> {
+class MainScreen : public smlt::Screen<MainScreen> {
 public:
-    MainScreen(kglt::WindowBase& window):
-        kglt::Screen<MainScreen>(window, "NeHe 01") {}
+    MainScreen(smlt::WindowBase& window):
+        smlt::Screen<MainScreen>(window, "NeHe 01") {}
 
     void do_load() {
         prepare_basic_scene(stage_, camera_);
 
-        kglt::StagePtr stage = stage_.fetch();
-        kglt::MeshPtr square = stage->assets->new_mesh_as_rectangle(1.0, 1.0).fetch();
+        smlt::StagePtr stage = stage_.fetch();
+        smlt::MeshPtr square = stage->assets->new_mesh_as_rectangle(1.0, 1.0).fetch();
 
         auto actor = stage->new_actor_with_mesh(square->id()).fetch();
         actor->move_to(0, 0, -5);
@@ -18,14 +18,14 @@ public:
     }
 
 private:
-    kglt::StageID stage_;
-    kglt::CameraID camera_;
+    smlt::StageID stage_;
+    smlt::CameraID camera_;
 };
 
-class App : public kglt::Application {
+class App : public smlt::Application {
 public:
     bool do_init() {
-        register_screen("/", kglt::screen_factory<MainScreen>());
+        register_screen("/", smlt::screen_factory<MainScreen>());
         return true;
     }
 };

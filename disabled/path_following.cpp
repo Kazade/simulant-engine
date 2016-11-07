@@ -67,7 +67,7 @@ private:
 class PathFollowing: public kglt::Application {
 public:
     PathFollowing():
-        Application("KGLT Sprite Sample") {
+        Application("Simulant Sprite Sample") {
 
         window->set_logging_level(kglt::LOG_LEVEL_DEBUG);
     }

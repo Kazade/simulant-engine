@@ -3,7 +3,7 @@
 
 #include "kaztest/kaztest.h"
 
-#include "kglt/generic/generic_tree.h"
+#include "simulant/generic/generic_tree.h"
 
 class GenericTreeTest : public TestCase {
 public:

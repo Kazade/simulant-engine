@@ -1,19 +1,19 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
-#include "kglt/sdl2_window.h"
+#include "simulant/sdl2_window.h"
 
-extern kglt::SDL2Window::ptr window;
+extern smlt::SDL2Window::ptr window;
 
 #include "kaztest/kaztest.h"
-#include "kglt/window_base.h"
+#include "simulant/window_base.h"
 
-class KGLTTestCase : public TestCase {
+class SimulantTestCase : public TestCase {
 public:
     void set_up() {
         if(!window) {
-            window = kglt::SDL2Window::create(nullptr);
-            window->set_logging_level(kglt::LOG_LEVEL_NONE);
+            window = smlt::SDL2Window::create(nullptr);
+            window->set_logging_level(smlt::LOG_LEVEL_NONE);
         } else {
             window->reset();
         }

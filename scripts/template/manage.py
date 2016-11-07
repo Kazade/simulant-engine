@@ -12,7 +12,7 @@ from zipfile import ZipFile
 from urllib import urlopen
 from functools import partial
 
-parser = argparse.ArgumentParser(description='Manage your KGLT-based project')
+parser = argparse.ArgumentParser(description='Manage your Simulant-based project')
 parser.add_argument('command', type=unicode, nargs=1, help='The command to run')
 parser.add_argument('args', type=unicode, nargs="*")
 
@@ -28,7 +28,7 @@ ASSETS_DIR = os.path.join(ANDROID_DIR, "assets")
 
 ANDROID_JNI_DIR = os.path.join(ANDROID_DIR, "jni")
 ANDROID_LIBS_DOWNLOAD_URL = "https://github.com/Kazade/kglt-android-libs/archive/master.zip"
-ANDROID_KGLT_OUTPUT_DIR = os.path.join(ANDROID_JNI_DIR, "kglt")
+ANDROID_SIMULANT_OUTPUT_DIR = os.path.join(ANDROID_JNI_DIR, "kglt")
 
 PROJECT_NAME = "{PROJECT_NAME}"
 
@@ -75,23 +75,23 @@ def update(args):
     target = args[0]
 
     if target == "android":
-        if os.path.exists(ANDROID_KGLT_OUTPUT_DIR):
-            shutil.rmtree(ANDROID_KGLT_OUTPUT_DIR)
+        if os.path.exists(ANDROID_SIMULANT_OUTPUT_DIR):
+            shutil.rmtree(ANDROID_SIMULANT_OUTPUT_DIR)
 
         print("Please wait, downloading libraries...")
         url = urlopen(ANDROID_LIBS_DOWNLOAD_URL)
         zipfile = ZipFile(StringIO(url.read()))
         print("Extracting...")
         zipfile.extractall(path=ANDROID_JNI_DIR)
-        shutil.move(os.path.join(ANDROID_JNI_DIR, 'kglt-android-libs-master'), ANDROID_KGLT_OUTPUT_DIR)
+        shutil.move(os.path.join(ANDROID_JNI_DIR, 'kglt-android-libs-master'), ANDROID_SIMULANT_OUTPUT_DIR)
 
-        KGLT_ASSETS = os.path.join(ASSETS_DIR, "kglt")
+        SIMULANT_ASSETS = os.path.join(ASSETS_DIR, "kglt")
 
-        if os.path.exists(KGLT_ASSETS):
-            os.unlink(KGLT_ASSETS)
+        if os.path.exists(SIMULANT_ASSETS):
+            os.unlink(SIMULANT_ASSETS)
 
-        os.symlink(os.path.join(ANDROID_KGLT_OUTPUT_DIR, "assets"), KGLT_ASSETS)
-        print("KGLT update complete")
+        os.symlink(os.path.join(ANDROID_SIMULANT_OUTPUT_DIR, "assets"), SIMULANT_ASSETS)
+        print("SIMULANT update complete")
         return 0
     else:
         print("No update command is available/needed for the %s target" % target)
@@ -138,8 +138,8 @@ def build(args, is_release=False):
     elif target == "android":
         update_version("ANDROID_BUILD")
 
-        # Make sure KGLT is available
-        if not os.path.exists(ANDROID_KGLT_OUTPUT_DIR):
+        # Make sure SIMULANT is available
+        if not os.path.exists(ANDROID_SIMULANT_OUTPUT_DIR):
             class Args:
                 args.args = ["android"]
             update(Args())
@@ -158,8 +158,8 @@ def build(args, is_release=False):
         if os.path.exists(ASSET_DIR):
             os.unlink(ASSET_DIR)
 
-        os.symlink(os.path.join(ANDROID_KGLT_OUTPUT_DIR, "include"), header_symlink)
-        os.symlink(os.path.join(ANDROID_KGLT_OUTPUT_DIR, "libs", "release" if is_release else "debug"), libs_symlink)
+        os.symlink(os.path.join(ANDROID_SIMULANT_OUTPUT_DIR, "include"), header_symlink)
+        os.symlink(os.path.join(ANDROID_SIMULANT_OUTPUT_DIR, "libs", "release" if is_release else "debug"), libs_symlink)
         os.symlink(os.path.join(THIS_DIR, PROJECT_NAME, "assets", PROJECT_NAME), ASSET_DIR)
 
         os.chdir(ANDROID_DIR)

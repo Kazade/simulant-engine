@@ -1,18 +1,18 @@
-#include "kglt/kglt.h"
+#include "simulant/simulant.h"
 
-using namespace kglt;
+using namespace smlt;
 
-class GameScreen : public kglt::Screen<GameScreen> {
+class GameScreen : public smlt::Screen<GameScreen> {
 public:
     GameScreen(WindowBase& window):
-        kglt::Screen<GameScreen>(window, "game_screen") {}
+        smlt::Screen<GameScreen>(window, "game_screen") {}
 
     void do_load() {
         camera_id_ = window->new_camera();
         cube_stage_ = window->new_stage();
         rect_stage_ = window->new_stage();
 
-        kglt::TextureID tid = window->shared_assets->new_texture_from_file("sample_data/sample.tga");
+        smlt::TextureID tid = window->shared_assets->new_texture_from_file("sample_data/sample.tga");
         MeshID cube_mesh = window->shared_assets->new_mesh_as_cube(1.0);
         window->shared_assets->mesh(cube_mesh)->set_texture_on_material(0, tid);
         cube_ = window->stage(cube_stage_)->new_actor_with_mesh(cube_mesh);
@@ -22,12 +22,12 @@ public:
         rect_ = window->stage(rect_stage_)->new_actor_with_mesh(rect_mesh);
         window->stage(rect_stage_)->actor(rect_)->set_absolute_position(0, 0, -4);
 
-        TextureID rtt = window->shared_assets->new_texture(kglt::GARBAGE_COLLECT_NEVER);
+        TextureID rtt = window->shared_assets->new_texture(smlt::GARBAGE_COLLECT_NEVER);
         window->shared_assets->mesh(rect_mesh)->set_texture_on_material(0, rtt);
 
         window->render(cube_stage_, camera_id_).to_texture(rtt);
         window->render(rect_stage_, camera_id_).to_framebuffer(
-            Viewport(VIEWPORT_TYPE_FULL, kglt::Colour::GREY)
+            Viewport(VIEWPORT_TYPE_FULL, smlt::Colour::GREY)
         ).with_clear();
     }
 
@@ -42,10 +42,10 @@ private:
     ActorID cube_, rect_;
 };
 
-class Sample: public kglt::Application {
+class Sample: public smlt::Application {
 public:
     Sample():
-        Application("KGLT RTT Sample") {
+        Application("Simulant RTT Sample") {
     }
 
 private:

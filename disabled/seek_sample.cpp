@@ -85,7 +85,7 @@ private:
 class SeekSample: public kglt::Application {
 public:
     SeekSample():
-        Application("KGLT Seek Behaviour") {
+        Application("Simulant Seek Behaviour") {
 
         window->set_logging_level(kglt::LOG_LEVEL_DEBUG);
     }

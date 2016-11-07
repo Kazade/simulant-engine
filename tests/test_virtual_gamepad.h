@@ -3,14 +3,14 @@
 
 #include "kaztest/kaztest.h"
 
-#include "kglt/kglt.h"
+#include "simulant/simulant.h"
 #include "global.h"
 
 namespace {
 
-using namespace kglt;
+using namespace smlt;
 
-class VirtualGamepadTest : public KGLTTestCase {
+class VirtualGamepadTest : public SimulantTestCase {
 private:
     bool b1_pressed = false;
     bool b2_pressed = false;
@@ -20,7 +20,7 @@ private:
 
 public:
     void set_up() {
-        KGLTTestCase::set_up();
+        SimulantTestCase::set_up();
 
         b1_pressed = false;
         b2_pressed = false;
@@ -51,7 +51,7 @@ public:
         conn1.disconnect();
         conn2.disconnect();
 
-        KGLTTestCase::tear_down();
+        SimulantTestCase::tear_down();
     }
 
     void test_touchdown_event_triggers_signal() {
@@ -183,15 +183,15 @@ public:
     }
 };
 
-class VirtualGamepadInputTests : public KGLTTestCase {
+class VirtualGamepadInputTests : public SimulantTestCase {
 public:
     void set_up() {
-        KGLTTestCase::set_up();
+        SimulantTestCase::set_up();
         window->enable_virtual_joypad(VIRTUAL_DPAD_DIRECTIONS_TWO, 2);
     }
 
     void tear_down() {
-        KGLTTestCase::tear_down();
+        SimulantTestCase::tear_down();
     }
 
     void test_input_controller_signals_fire() {

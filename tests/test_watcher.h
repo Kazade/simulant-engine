@@ -1,13 +1,13 @@
 #ifndef TEST_WATCHER_H
 #define TEST_WATCHER_H
 
-#include "kglt/deps/kfs/kfs.h"
+#include "simulant/deps/kfs/kfs.h"
 #include "kaztest/kaztest.h"
-#include "kglt/watcher.h"
+#include "simulant/watcher.h"
 
 namespace {
 
-using namespace kglt;
+using namespace smlt;
 
 class WatcherTest : public TestCase {
 public:

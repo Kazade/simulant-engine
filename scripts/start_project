@@ -9,7 +9,7 @@ from os.path import dirname, abspath, join, exists
 import argparse
 import re
 
-parser = argparse.ArgumentParser(description='Generate a KGLT Game Project')
+parser = argparse.ArgumentParser(description='Generate a Simulant Game Project')
 parser.add_argument("output_directory", type=unicode, nargs=1)
 
 PROJECT_NAME_REGEX = "[a-zA-Z0-9_]+"
@@ -68,7 +68,7 @@ def automagicify(project_name, project_package, project_title, output_directory)
     for src, dst in to_rename:
         shutil.move(src, dst)
 
-    print("Downloading and updating KGLT for Android")
+    print("Downloading and updating Simulant for Android")
     subprocess.check_call(["python", "manage.py", "update", "android"], cwd=output_dest)
 
 def main():

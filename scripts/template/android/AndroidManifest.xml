@@ -14,7 +14,7 @@
         android:hardwareAccelerated="true"
         android:icon="@drawable/icon">
         <activity
-            android:name="KGLTActivity"
+            android:name="SimulantActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:screenOrientation="landscape"
             android:label="{PROJECT_TITLE}" >

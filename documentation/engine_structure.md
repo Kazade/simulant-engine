@@ -1,6 +1,6 @@
 # Engine Structure
 
-The KGLT architecture can be divided into three parts:
+The Simulant architecture can be divided into three parts:
 
  - Render system
  - Scene management
@@ -8,7 +8,7 @@ The KGLT architecture can be divided into three parts:
  
 ## Render System
 
-The render system in KGLT is in constant flux at the moment, but the general
+The render system in Simulant is in constant flux at the moment, but the general
 architecture has been established. The rendering process is based around a series
 of pipelines. Each pipeline take a StageID (or OverlayID), CameraID and ViewportID 
 as inputs, and an optional target TextureID as an output. If the TextureID is omitted, 
