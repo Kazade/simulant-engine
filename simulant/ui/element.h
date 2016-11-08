@@ -19,7 +19,10 @@ struct TouchEvent {
 
 enum EventType {
     EVENT_TYPE_NONE,
-    EVENT_TYPE_TOUCH,
+    EVENT_TYPE_TOUCH_DOWN,
+    EVENT_TYPE_TOUCH_UP,
+    EVENT_TYPE_TOUCH_OVER,
+    EVENT_TYPE_TOUCH_OUT
 };
 
 union Event {
@@ -65,6 +68,7 @@ public:
     Element append_row();
     Element append_label(const unicode& text);
     Element append_button(const unicode& text, EventCallback on_click=EventCallback());
+    Element append_progress_bar();
 
     void set_event_callback(EventType event_type, EventCallback func);
 
@@ -78,6 +82,8 @@ public:
 
     bool is_dead() const;
 private:
+    friend class Interface;
+
     std::shared_ptr<ElementImpl> impl_;
 };
 

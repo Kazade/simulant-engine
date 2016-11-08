@@ -14,14 +14,19 @@ Element ElementImpl::append_row() {
     return append("<row>");
 }
 
-Element ElementImpl::append_label(const std::string& text) {
+Element ElementImpl::append_label(const unicode &text) {
     auto e = append("<label>");
     e.set_text(text);
     return e;
 }
 
+Element ElementImpl::append_progress_bar() {
+    auto e = append("<progress_bar>");
+    return e;
+}
+
 Element ElementImpl::append(const std::string &tag) {
-    TiXmlElement* element = new TiXmlElement(tag.lstrip("<").rstrip(">").encode());
+    TiXmlElement* element = new TiXmlElement(_u(tag).lstrip("<").rstrip(">").encode());
     element_->LinkEndChild(element);
     interface_->element_impls_[element] = std::make_shared<ElementImpl>(interface_, element);
     return Element(interface_->element_impls_[element]);

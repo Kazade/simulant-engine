@@ -93,8 +93,6 @@ public:
     void remove_children();
 
     void inner_rml(const unicode& rml);
-    smlt::ui::Element append(const unicode& tag);
-
 
     void set_event_callback(EventType event_type, EventCallback func);
 
@@ -106,15 +104,19 @@ public:
     bool is_dead() const { return !interface_; }
 
     Element append_row();
-    Element append_label(const std::string& text);
-private:
+    Element append_label(const unicode& text);
+    Element append_progress_bar();
+
+private:    
+    friend class Interface;
+
     std::map<EventType, EventCallback> event_callbacks_;
     Interface* interface_ = nullptr;
     TiXmlElement* element_ = nullptr;
 
     std::unordered_map<std::string, std::string> styles_;
 
-    kglt::ui::Element append(const std::string& tag);
+    ui::Element append(const std::string& tag);
 };
 
 

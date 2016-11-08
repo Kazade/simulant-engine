@@ -87,10 +87,11 @@ public:
         // Thanks to other samples
         auto ui = window->overlay(overlay_id_);
         ui->set_styles("body { font-family: \"Ubuntu\"; } .thing { font-size: 14; padding-left: 10;};");
-        ui->append("<p>").text("Left x-y axis move the cube.");
-        ui->append("<p>").text("Right x-y axis rotate the cube.");
-        ui->append("<p>").text("Button 0 (A) reset the cube.");
-        ui->$("p").add_class("thing");
+        auto row = ui->append_row();
+        row.append_label("Left x-y axis move the cube.");
+        row.append_label("Right x-y axis rotate the cube.");
+        row.append_label("Button 0 (A) reset the cube.");
+        ui->find("label").add_class("thing");
 
         ///Shortcut function for loading images
         smlt::TextureID tid = window->stage(stage_id_)->assets->new_texture_from_file("sample_data/sample.tga");

@@ -25,6 +25,10 @@ Element Element::append_label(const unicode &label) {
     return impl_->append_label(label);
 }
 
+Element Element::append_progress_bar() {
+    return impl_->append_progress_bar();
+}
+
 void Element::set_text(const unicode& text) {
     impl_->set_text(text);
 }
@@ -63,15 +67,15 @@ void Element::add_css(const std::string& property, const std::string& value) {
     impl_->add_css(property, value);
 }
 
-std::string Element::set_attr(const std::string& property) {
-    return impl_->set_attr(property);
+void Element::set_attr(const std::string& property, const std::string& value) {
+    impl_->set_attr(property, value);
 }
 
-void Element::attr(const std::string& property, const std::string& value) {
-    impl_->attr(property, value);
+std::string Element::attr(const std::string& property) {
+    return impl_->attr(property);
 }
 
-void Element::id() const {
+std::string Element::id() const {
     return impl_->id();
 }
 

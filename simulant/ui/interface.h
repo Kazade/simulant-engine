@@ -234,6 +234,7 @@ public:
 
     ElementList append_row();
 
+    ElementList find(const unicode& selectors);
     void set_styles(const std::string& stylesheet_content);
     void load_font(const unicode& ttf_file);
 
@@ -250,7 +251,7 @@ private:
     Overlay* stage_ = nullptr;
 
     TiXmlDocument document_;
-    Element root_element_;
+    std::shared_ptr<Element> root_element_;
     std::unordered_map<TiXmlElement*, std::shared_ptr<ElementImpl>> element_impls_;
 
     nk_context nk_ctx_;
@@ -267,7 +268,6 @@ private:
 
     std::unique_ptr<HardwareBuffer> shared_vertex_buffer_;
 
-    ElementList append(const std::string& tag);
 };
 
 }
