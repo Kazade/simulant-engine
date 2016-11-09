@@ -5,6 +5,7 @@
 #endif
 
 #include <thread>
+#include <iostream>
 
 #include "../loader.h"
 #include "../overlay.h"
@@ -180,11 +181,11 @@ void xml_iterator(
         const TiXmlNode* el,
         std::function<void (const TiXmlNode*, bool)> callback) {
 
-    for(const TiXmlNode* node = el->FirstChild(); node; node = node->NextSibling()) {
-        callback(node, false);
+    callback(el, false);
+    for(const TiXmlNode* node = el->FirstChild(); node; node = node->NextSibling()) {        
         xml_iterator(node, callback);
-        callback(node, true);
     }
+    callback(el, true);
 }
 
 void Interface::render(CameraPtr camera, Viewport viewport) {
@@ -192,6 +193,7 @@ void Interface::render(CameraPtr camera, Viewport viewport) {
         bool before = !after;
 
         const TiXmlElement* element_node = node->ToElement();
+
         if(!element_node) {
             return; //Not an element
         }
@@ -239,7 +241,8 @@ void Interface::render(CameraPtr camera, Viewport viewport) {
             L_WARN_ONCE(_F("Ignoring unknown element: {0}").format(element.name()));
         }
     };
-    xml_iterator(document_.FirstChildElement(), callback);
+
+    xml_iterator(document_.RootElement(), callback);
 
     send_to_renderer(camera, viewport);
 
