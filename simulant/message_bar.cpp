@@ -59,6 +59,7 @@ void MessageBar::update(float dt) {
             } else {
                 //No more messages, let's hide the bar
                 ui->find("#message-bar").hide();
+                window_.disable_pipeline(pipeline_id_);
             }
             time_message_visible_ = 0.0f;
         }
@@ -70,7 +71,9 @@ void MessageBar::update(float dt) {
             display_message(next_message);
             message_queue_.pop();
 
+            window_.enable_pipeline(pipeline_id_);
             ui->find("#message-bar").show();
+
             time_message_visible_ = 0.0f;
         }
     }
@@ -93,7 +96,8 @@ void MessageBar::create_stage_and_element() {
         $element.hide();
     }
 
-    window_.render(stage_, camera_).with_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
+    pipeline_id_ = window_.render(stage_, camera_).with_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
+    window_.disable_pipeline(pipeline_id_);
 }
 
 void MessageBar::notify_left(const unicode& message) {

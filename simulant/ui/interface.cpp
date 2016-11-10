@@ -231,7 +231,7 @@ void Interface::render(CameraPtr camera, Viewport viewport) {
                 nk_label(&nk_ctx_, text.c_str(), NK_LEFT);
             }
 
-        } else if(element_name == "progress") {
+        } else if(element_name == "progress_bar") {
             if(before) {
                 nk_prog(&nk_ctx_, 50, 100, 1);
             }
@@ -243,7 +243,6 @@ void Interface::render(CameraPtr camera, Viewport viewport) {
     };
 
     xml_iterator(document_.RootElement(), callback);
-
     send_to_renderer(camera, viewport);
 
 }

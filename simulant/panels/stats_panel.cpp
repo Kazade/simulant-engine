@@ -16,11 +16,10 @@ void StatsPanel::initialize() {
     overlay_id_ = window_->new_overlay();
     ui_camera_ = window_->new_camera_with_orthographic_projection(0, 640, 480, 0);
     pipeline_id_ = window_->render(overlay_id_, ui_camera_).with_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
+    window_->disable_pipeline(pipeline_id_);
 
     auto overlay = window_->overlay(overlay_id_);
-
     overlay->add_css("color", "#4BD3FFDD");
-
     overlay->append_row().append_label("Performance");
 
     auto fps = overlay->append_row();
