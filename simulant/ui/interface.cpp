@@ -283,17 +283,19 @@ void Interface::send_to_renderer(CameraPtr camera, Viewport viewport) {
         float v = ((float*)current)[3];
 
         current += sizeof(float) * 4;
-        uint32_t colour = ((uint32_t*)current)[0];
+        uint32_t colour = *((uint32_t*)current);
         current += sizeof(uint32_t);
+
+        smlt::Colour rgba(
+            float((colour >> 16) & 0xFF) / 255.0f,
+            float((colour >> 8) & 0xFF) / 255.0f,
+            float((colour & 0xFF)) / 255.0f,
+            float((colour >> 24) & 0xFF) / 255.0f
+        );
 
         vertex_data.position(x, y);
         vertex_data.tex_coord0(u, v);
-        vertex_data.diffuse(smlt::Colour(
-            float((colour & 0xFF000000) >> 6) / 256.0f,
-            float((colour & 0xFF0000) >> 4) / 256.0f,
-            float((colour & 0xFF00) >> 2) / 256.0f,
-            float((colour & 0xFF)) / 256.0f
-        ));
+        vertex_data.diffuse(rgba);
         vertex_data.move_next();
     }
     vertex_data.done();
