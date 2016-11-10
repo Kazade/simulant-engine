@@ -4,6 +4,8 @@
 #include <set>
 #include <map>
 
+#include "../../generic/threading/shared_mutex.h"
+
 namespace smlt {
 
 class MaterialPass;
@@ -38,17 +40,13 @@ public:
     void add_renderable(Renderable* renderable);
     void remove_renderable(Renderable* renderable);
 
-    void each(std::function<void (uint32_t, Renderable*)> func) const {
-        uint32_t i = 0;
-        for(auto& renderable: renderables_) {
-            func(i++, renderable);
-        }
-    }
+    void each(std::function<void (uint32_t, Renderable*)> func) const;
 
     uint32_t renderable_count() const { return renderables_.size(); }
 
 private:
     std::list<Renderable*> renderables_;
+    mutable shared_mutex batch_lock_;
 };
 
 /**
