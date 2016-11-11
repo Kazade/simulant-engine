@@ -114,7 +114,14 @@ bool Interface::init() {
 
     nk_font_atlas_init_default(&nk_font_);
     nk_font_atlas_begin(&nk_font_);
-    struct nk_font* font = nk_font_atlas_add_default(&nk_font_, 13, 0);
+
+    auto font_path = locate_font("simulant/fonts/opensans/OpenSans-Regular.ttf");
+    auto data = window()->resource_locator->read_file(font_path)->str();
+    struct nk_font* font = nk_font_atlas_add_from_memory(
+        &nk_font_,
+        (void*) data.c_str(), data.size(),
+        13, 0
+    );
 
     int w, h;
     const nk_byte* image = (nk_byte*) nk_font_atlas_bake(&nk_font_, &w, &h, NK_FONT_ATLAS_RGBA32);
@@ -210,7 +217,7 @@ void Interface::render(CameraPtr camera, Viewport viewport) {
                 bounds.w = element.css("width").empty() ? window_.width() : std::stoi(element.css("width"));
                 bounds.h = element.css("height").empty() ? window_.height() : std::stoi(element.css("height"));
 
-                nk_begin(&nk_ctx_, &nk_layout_, title.c_str(), bounds, 0);
+                nk_begin(&nk_ctx_, title.c_str(), bounds, 0);
             } else {
                 nk_end(&nk_ctx_);
             }
@@ -247,6 +254,13 @@ void Interface::render(CameraPtr camera, Viewport viewport) {
 
 }
 
+struct nk_smlt_vertex {
+    float position[2];
+    float uv[2];
+    nk_byte col[4];
+};
+
+
 void Interface::send_to_renderer(CameraPtr camera, Viewport viewport) {
     // Now to actually render everything
     const struct nk_draw_command *cmd;
@@ -255,6 +269,18 @@ void Interface::send_to_renderer(CameraPtr camera, Viewport viewport) {
     /* fill converting configuration */
     struct nk_convert_config config;
     memset(&config, 0, sizeof(config));
+
+    static const struct nk_draw_vertex_layout_element vertex_layout[] = {
+        {NK_VERTEX_POSITION, NK_FORMAT_FLOAT, NK_OFFSETOF(struct nk_smlt_vertex, position)},
+        {NK_VERTEX_TEXCOORD, NK_FORMAT_FLOAT, NK_OFFSETOF(struct nk_smlt_vertex, uv)},
+        {NK_VERTEX_COLOR, NK_FORMAT_R8G8B8A8, NK_OFFSETOF(struct nk_smlt_vertex, col)},
+        {NK_VERTEX_LAYOUT_END}
+    };
+
+    config.vertex_layout = vertex_layout;
+    config.vertex_size = sizeof(struct nk_smlt_vertex);
+    config.vertex_alignment = NK_ALIGNOF(struct nk_smlt_vertex);
+
     config.global_alpha = 1.0f;
     config.shape_AA = NK_ANTI_ALIASING_ON;
     config.line_AA = NK_ANTI_ALIASING_ON;
