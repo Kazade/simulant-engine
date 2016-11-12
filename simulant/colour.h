@@ -42,6 +42,9 @@ struct Colour {
         return false;
     }
 
+    std::string to_hex_string() const;
+    static Colour from_hex_string(const std::string& hex_string);
+
     static const Colour ALICE_BLUE;
     static const Colour ANTIQUE_WHITE;
     static const Colour AQUA;

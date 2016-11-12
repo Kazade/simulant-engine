@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 
+#include "../colour.h"
 #include "../idle_task_manager.h"
 #include "../utils/unicode.h"
 #include "../generic/data_carrier.h"
@@ -23,6 +24,12 @@ enum EventType {
     EVENT_TYPE_TOUCH_UP,
     EVENT_TYPE_TOUCH_OVER,
     EVENT_TYPE_TOUCH_OUT
+};
+
+enum TextAlignment {
+    TEXT_ALIGNMENT_LEFT,
+    TEXT_ALIGNMENT_CENTRE,
+    TEXT_ALIGNMENT_RIGHT
 };
 
 union Event {
@@ -72,15 +79,19 @@ public:
 
     void set_event_callback(EventType event_type, EventCallback func);
 
-    float left() const;
-    float top() const;
-    float width() const;
-    float height() const;
-
     void remove_children();
     void inner_rml(const unicode& rml);
 
     bool is_dead() const;
+
+    void set_background_colour(const smlt::Colour& colour);
+    void set_border_colour(const smlt::Colour& colour);
+    void set_text_colour(const smlt::Colour& colour);
+    void set_border_width(const float width);
+    void set_border_radius(const float radius);
+    void set_text_alignment(TextAlignment alignment);
+    void set_padding(float padding);
+
 private:
     friend class Interface;
 

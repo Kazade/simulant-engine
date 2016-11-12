@@ -147,6 +147,7 @@ bool Interface::init() {
     nk_font_atlas_end(&nk_font_, nk_handle_id((int)nk_device_.font_tex.value()), nullptr);
     nk_init_default(&nk_ctx_, &font->handle);
     nk_buffer_init_default(&nk_device_.cmds);
+
     return true;
 }
 
@@ -194,6 +195,7 @@ void xml_iterator(
     }
     callback(el, true);
 }
+
 
 void Interface::render(CameraPtr camera, Viewport viewport) {
     auto callback = [this](const TiXmlNode* node, bool after) {
@@ -294,35 +296,34 @@ void Interface::send_to_renderer(CameraPtr camera, Viewport viewport) {
     nk_buffer_init_default(&ebuf);
     nk_convert(&nk_ctx_, &nk_device_.cmds, &vbuf, &ebuf, &config);
 
-    const nk_byte* vertices = (const nk_byte*) nk_buffer_memory_const(&vbuf);
+    const nk_smlt_vertex* vertices = (const nk_smlt_vertex*) ((const nk_byte*) nk_buffer_memory_const(&vbuf));
     const nk_draw_index *offset = (const nk_draw_index*) nk_buffer_memory_const(&ebuf);
 
     VertexData vertex_data(UIRenderable::VERTEX_SPECIFICATION);
 
     auto vertex_size = (sizeof(float) * 4 + sizeof(uint32_t));
 
-    const nk_byte* current = vertices;
+    const nk_smlt_vertex* current = vertices;
     for(uint32_t i = 0; i < vbuf.size / vertex_size; ++i) {
-        float x = ((float*)current)[0];
-        float y = ((float*)current)[1];
-        float u = ((float*)current)[2];
-        float v = ((float*)current)[3];
+        float x = current->position[0];
+        float y = current->position[1];
+        float u = current->uv[0];
+        float v = current->uv[1];
 
-        current += sizeof(float) * 4;
-        uint32_t colour = *((uint32_t*)current);
-        current += sizeof(uint32_t);
 
         smlt::Colour rgba(
-            float((colour >> 16) & 0xFF) / 255.0f,
-            float((colour >> 8) & 0xFF) / 255.0f,
-            float((colour & 0xFF)) / 255.0f,
-            float((colour >> 24) & 0xFF) / 255.0f
+            float(current->col[0]) / 255.0f,
+            float(current->col[1]) / 255.0f,
+            float(current->col[2]) / 255.0f,
+            float(current->col[3]) / 255.0f
         );
 
         vertex_data.position(x, y);
         vertex_data.tex_coord0(u, v);
         vertex_data.diffuse(rgba);
         vertex_data.move_next();
+
+        current++;
     }
     vertex_data.done();
 

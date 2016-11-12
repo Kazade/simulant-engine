@@ -120,20 +120,32 @@ void Element::set_event_callback(EventType event_type, EventCallback func) {
     impl_->set_event_callback(event_type, func);
 }
 
-float Element::left() const {
-    return impl_->left();
+void Element::set_background_colour(const smlt::Colour& colour) {
+    impl_->set_background_colour(colour);
 }
 
-float Element::top() const {
-    return impl_->top();
+void Element::set_border_colour(const smlt::Colour& colour) {
+    impl_->set_border_colour(colour);
 }
 
-float Element::width() const {
-    return impl_->width();
+void Element::set_text_colour(const smlt::Colour& colour) {
+    impl_->set_text_colour(colour);
 }
 
-float Element::height() const {
-    return impl_->height();
+void Element::set_border_width(const float width) {
+    impl_->set_border_width(width);
+}
+
+void Element::set_border_radius(const float radius) {
+    impl_->set_border_radius(radius);
+}
+
+void Element::set_text_alignment(TextAlignment alignment) {
+    impl_->set_text_alignment(alignment);
+}
+
+void Element::set_padding(float padding) {
+    impl_->set_padding(padding);
 }
 
 }

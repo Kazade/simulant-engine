@@ -1,3 +1,5 @@
+#include <string>
+#include <sstream>
 
 #include "colour.h"
 
@@ -141,5 +143,33 @@ const Colour Colour::WHITE_SMOKE = Colour(0.95703125, 0.95703125, 0.95703125, 1.
 const Colour Colour::YELLOW = Colour(0.99609375, 0.99609375, 0.0, 1.0);
 const Colour Colour::YELLOW_GREEN = Colour(0.6015625, 0.80078125, 0.1953125, 1.0);
 
+std::string Colour::to_hex_string() const {
+    auto rval = uint8_t(255.0 * r);
+    auto gval = uint8_t(255.0 * g);
+    auto bval = uint8_t(255.0 * b);
+    auto aval = uint8_t(255.0 * a);
+
+    std::stringstream sstream;
+    sstream << std::hex << rval;
+    sstream << std::hex << gval;
+    sstream << std::hex << bval;
+    sstream << std::hex << aval;
+
+    return sstream.str();
+}
+
+Colour Colour::from_hex_string(const std::string& hex_string) {
+    std::string rpart(hex_string.begin(), hex_string.begin() + 2);
+    std::string gpart(hex_string.begin() + 2, hex_string.begin() + 4);
+    std::string bpart(hex_string.begin() + 4, hex_string.begin() + 6);
+    std::string apart(hex_string.begin() + 6, hex_string.end());
+
+    return Colour(
+        float(strtoul(rpart.c_str(), nullptr, 16)) / 255.0,
+        float(strtoul(gpart.c_str(), nullptr, 16)) / 255.0,
+        float(strtoul(bpart.c_str(), nullptr, 16)) / 255.0,
+        float(strtoul(apart.c_str(), nullptr, 16)) / 255.0
+    );
+}
 
 }

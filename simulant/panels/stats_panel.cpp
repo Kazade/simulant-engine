@@ -19,7 +19,7 @@ void StatsPanel::initialize() {
     window_->disable_pipeline(pipeline_id_);
 
     auto overlay = window_->overlay(overlay_id_);
-    overlay->add_css("color", "#4BD3FFDD");
+    //overlay->add_css("color", "#4BD3FFDD");
     overlay->append_row().append_label("Performance");
 
     auto fps = overlay->append_row();

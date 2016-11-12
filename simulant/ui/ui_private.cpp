@@ -36,22 +36,6 @@ std::string ElementImpl::name() const {
     return element_->ValueStr();
 }
 
-float ElementImpl::left() const {
-
-}
-
-float ElementImpl::top() const {
-
-}
-
-float ElementImpl::width() const {
-
-}
-
-float ElementImpl::height() const {
-
-}
-
 void ElementImpl::set_event_callback(EventType event_type, EventCallback func) {
     event_callbacks_[event_type] = func;
 }
@@ -97,6 +81,33 @@ void ElementImpl::inner_rml(const unicode& rml) {
 
 }
 
+void ElementImpl::set_background_colour(const smlt::Colour& colour) {
+    styles_["background-color"] = colour.to_hex_string();
+}
+
+void ElementImpl::set_border_colour(const smlt::Colour& colour) {
+    styles_["border-color"] = colour.to_hex_string();
+}
+
+void ElementImpl::set_text_colour(const smlt::Colour& colour) {
+    styles_["color"] = colour.to_hex_string();
+}
+
+void ElementImpl::set_border_width(const float width) {
+    styles_["border-width"] = std::to_string(width) + "px";
+}
+
+void ElementImpl::set_border_radius(const float radius) {
+    styles_["border-radius"] = std::to_string(radius) + "px";
+}
+
+void ElementImpl::set_text_alignment(TextAlignment alignment) {
+    styles_["text-align"] = (alignment == TEXT_ALIGNMENT_CENTRE) ? "center" : (alignment == TEXT_ALIGNMENT_LEFT) ? "left" : "right";
+}
+
+void ElementImpl::set_padding(float padding) {
+    styles_["padding"] = std::to_string(padding) + "px";
+}
 
 }
 }

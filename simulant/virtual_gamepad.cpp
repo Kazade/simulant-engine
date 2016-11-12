@@ -143,10 +143,12 @@ Dimensions VirtualGamepad::button_dimensions(int button) {
 
     Dimensions dim;
 
-    dim.left = element.left();
+    //FIXME: !!!!!!!!!!!
+
+    /*dim.left = element.left();
     dim.top = element.top();
     dim.width = element.width();
-    dim.height = element.height();
+    dim.height = element.height();*/
 
     return dim;
 }

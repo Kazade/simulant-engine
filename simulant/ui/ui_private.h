@@ -96,16 +96,19 @@ public:
 
     void set_event_callback(EventType event_type, EventCallback func);
 
-    float left() const;
-    float top() const;
-    float width() const;
-    float height() const;
-
     bool is_dead() const { return !interface_; }
 
     Element append_row();
     Element append_label(const unicode& text);
     Element append_progress_bar();
+
+    void set_background_colour(const smlt::Colour& colour);
+    void set_border_colour(const smlt::Colour& colour);
+    void set_text_colour(const smlt::Colour& colour);
+    void set_border_width(const float width);
+    void set_border_radius(const float radius);
+    void set_text_alignment(TextAlignment alignment);
+    void set_padding(float padding);
 
 private:    
     friend class Interface;
