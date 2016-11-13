@@ -16,11 +16,7 @@ class Interface;
 
 class ElementImpl {
 public:
-    ElementImpl(Interface* interface, TiXmlElement* element):
-        interface_(interface),
-        element_(element) {
-
-    }
+    ElementImpl(Interface* interface, TiXmlElement* element);
 
     ~ElementImpl() {
 
@@ -109,6 +105,14 @@ public:
     void set_border_radius(const float radius);
     void set_text_alignment(TextAlignment alignment);
     void set_padding(float padding);
+
+    Colour background_colour() const {
+        return Colour::from_hex_string(styles_.at("background-color"));
+    }
+
+    Colour text_colour() const {
+        return Colour::from_hex_string(styles_.at("color"));
+    }
 
 private:    
     friend class Interface;

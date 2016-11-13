@@ -32,6 +32,19 @@ Element ElementImpl::append(const std::string &tag) {
     return Element(interface_->element_impls_[element]);
 }
 
+ElementImpl::ElementImpl(Interface *interface, TiXmlElement *element):
+    interface_(interface),
+    element_(element) {
+
+    if(element->ValueStr() == "window") {
+        set_background_colour(Colour(0, 0, 0, 0.5));
+        set_text_colour(Colour::SLATE_GREY);
+    } else {
+        set_background_colour(Colour::SLATE_GREY);
+        set_text_colour(Colour::WHITE);
+    }
+}
+
 std::string ElementImpl::name() const {
     return element_->ValueStr();
 }

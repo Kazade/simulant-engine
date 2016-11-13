@@ -197,6 +197,10 @@ void xml_iterator(
 }
 
 
+nk_color nk_color_from(const Colour& colour) {
+    return nk_rgba_f(colour.r, colour.g, colour.b, colour.a);
+}
+
 void Interface::render(CameraPtr camera, Viewport viewport) {
     auto callback = [this](const TiXmlNode* node, bool after) {
         bool before = !after;
@@ -218,6 +222,12 @@ void Interface::render(CameraPtr camera, Viewport viewport) {
                 bounds.y = element.css("top").empty() ? 0 : std::stoi(element.css("top"));
                 bounds.w = element.css("width").empty() ? window_.width() : std::stoi(element.css("width"));
                 bounds.h = element.css("height").empty() ? window_.height() : std::stoi(element.css("height"));
+
+                auto background_colour = nk_color_from(element.background_colour());
+                auto text_colour = nk_color_from(element.text_colour());
+
+                nk_ctx_.style.window.background = background_colour;
+                nk_ctx_.style.window.fixed_background = nk_style_item_color(background_colour);
 
                 nk_begin(&nk_ctx_, title.c_str(), bounds, 0);
             } else {

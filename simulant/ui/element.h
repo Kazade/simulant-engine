@@ -92,6 +92,8 @@ public:
     void set_text_alignment(TextAlignment alignment);
     void set_padding(float padding);
 
+    Colour background_colour() const;
+    Colour text_colour() const;
 private:
     friend class Interface;
 

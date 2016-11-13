@@ -1,5 +1,6 @@
 #include <string>
 #include <sstream>
+#include <iomanip>
 
 #include "colour.h"
 
@@ -144,18 +145,20 @@ const Colour Colour::YELLOW = Colour(0.99609375, 0.99609375, 0.0, 1.0);
 const Colour Colour::YELLOW_GREEN = Colour(0.6015625, 0.80078125, 0.1953125, 1.0);
 
 std::string Colour::to_hex_string() const {
-    auto rval = uint8_t(255.0 * r);
-    auto gval = uint8_t(255.0 * g);
-    auto bval = uint8_t(255.0 * b);
-    auto aval = uint8_t(255.0 * a);
+    auto rval = int(255.0 * r);
+    auto gval = int(255.0 * g);
+    auto bval = int(255.0 * b);
+    auto aval = int(255.0 * a);
 
-    std::stringstream sstream;
-    sstream << std::hex << rval;
-    sstream << std::hex << gval;
-    sstream << std::hex << bval;
-    sstream << std::hex << aval;
+    std::string final;
 
-    return sstream.str();
+    for(auto& val: {rval, gval, bval, aval}) {
+        std::stringstream sstream;
+        sstream << std::hex << std::setw(2) << std::setfill('0') << val;
+        final += sstream.str();
+    }
+
+    return final;
 }
 
 Colour Colour::from_hex_string(const std::string& hex_string) {

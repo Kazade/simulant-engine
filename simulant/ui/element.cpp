@@ -148,6 +148,14 @@ void Element::set_padding(float padding) {
     impl_->set_padding(padding);
 }
 
+Colour Element::background_colour() const {
+    return impl_->background_colour();
+}
+
+Colour Element::text_colour() const {
+    return impl_->text_colour();
+}
+
 }
 
 }
