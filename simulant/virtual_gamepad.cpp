@@ -132,9 +132,9 @@ Dimensions VirtualGamepad::button_dimensions(int button) {
 
     auto document = window_.overlay(overlay_);
 
-    unicode klass = _u(".button_{0}").format(humanize(button));
+    auto klass = _u(".button_{0}").format(humanize(button)).encode();
 
-    ui::ElementList list = document->$(klass);
+    ui::ElementList list = document->find(klass);
     if(list.empty()) {
         throw std::logic_error(_u("Unable to find button: {0}").format(button).encode());
     }
@@ -143,10 +143,12 @@ Dimensions VirtualGamepad::button_dimensions(int button) {
 
     Dimensions dim;
 
-    dim.left = element.left();
+    //FIXME: !!!!!!!!!!!
+
+    /*dim.left = element.left();
     dim.top = element.top();
     dim.width = element.width();
-    dim.height = element.height();
+    dim.height = element.height();*/
 
     return dim;
 }
@@ -165,11 +167,11 @@ bool VirtualGamepad::init() {
     stage->load_rml_from_string(layout.format(button_size, dpad_margin, area_width, outside_padding, font_size));
 
     if(this->directions_ == VIRTUAL_DPAD_DIRECTIONS_TWO) {
-        stage->$(".dpad_two").css("display", "inline-block");
+        stage->find(".dpad_two").add_css("display", "inline-block");
 
 
-        for(auto evt: { "touchdown", "touchover"}) {
-            stage->$(".dpad_left").set_event_callback(evt, [=](ui::Event evt) -> bool {
+        for(auto evt: { ui::EVENT_TYPE_TOUCH_DOWN, ui::EVENT_TYPE_TOUCH_OVER}) {
+            stage->find(".dpad_left").set_event_callback(evt, [=](ui::Event evt) -> bool {
                 dpad_button_touches_["left"].insert(evt.touch.finger_id);
                 if(dpad_button_touches_["left"].size() == 1) {
                     signal_hat_changed_(HAT_POSITION_LEFT);
@@ -177,7 +179,7 @@ bool VirtualGamepad::init() {
                 return true;
             });
 
-            stage->$(".dpad_right").set_event_callback(evt, [=](ui::Event evt) -> bool {
+            stage->find(".dpad_right").set_event_callback(evt, [=](ui::Event evt) -> bool {
                 dpad_button_touches_["right"].insert(evt.touch.finger_id);
                 if(dpad_button_touches_["right"].size() == 1) {
                     signal_hat_changed_(HAT_POSITION_RIGHT);
@@ -186,8 +188,8 @@ bool VirtualGamepad::init() {
             });
         }
 
-        for(auto evt: { "touchup", "touchout"}) {
-            stage->$(".dpad_left").set_event_callback(evt, [=](ui::Event evt) -> bool {
+        for(auto evt: { ui::EVENT_TYPE_TOUCH_UP, ui::EVENT_TYPE_TOUCH_OUT}) {
+            stage->find(".dpad_left").set_event_callback(evt, [=](ui::Event evt) -> bool {
                 dpad_button_touches_["left"].erase(evt.touch.finger_id);
                 if(dpad_button_touches_["left"].size() == 0) {
                     signal_hat_changed_(HAT_POSITION_CENTERED);
@@ -195,7 +197,7 @@ bool VirtualGamepad::init() {
                 return true;
             });
 
-            stage->$(".dpad_right").set_event_callback(evt, [=](ui::Event evt) -> bool {
+            stage->find(".dpad_right").set_event_callback(evt, [=](ui::Event evt) -> bool {
                 dpad_button_touches_["right"].erase(evt.touch.finger_id);
                 if(dpad_button_touches_["right"].size() == 0) {
                     signal_hat_changed_(HAT_POSITION_CENTERED);
@@ -209,12 +211,12 @@ bool VirtualGamepad::init() {
     for(int i = 1; i < button_count_ + 1; ++i) {
         int idx = i - 1;
 
-        unicode klass = _u(".button_{0}").format(humanize(i));
-        stage->$(klass).css("display", "inline-block");
+        auto klass = _u(".button_{0}").format(humanize(i)).encode();
+        stage->find(klass).add_css("display", "inline-block");
 
-        for(auto evt: { "touchdown", "touchover"}) {
+        for(auto evt: { ui::EVENT_TYPE_TOUCH_DOWN, ui::EVENT_TYPE_TOUCH_OVER}) {
             //Forward the events from the UI on to the signals
-            stage->$(klass).set_event_callback(evt, [=](ui::Event evt) -> bool {
+            stage->find(klass).set_event_callback(evt, [=](ui::Event evt) -> bool {
                 this->button_touches_[idx].insert(evt.touch.finger_id);
                 if(this->button_touches_[idx].size() == 1) {
                     signal_button_down_(idx);
@@ -223,8 +225,8 @@ bool VirtualGamepad::init() {
             });
         }
 
-        for(auto evt: { "touchup", "touchout"}) {
-            stage->$(klass).set_event_callback(evt, [=](ui::Event evt) -> bool {
+        for(auto evt: { ui::EVENT_TYPE_TOUCH_UP, ui::EVENT_TYPE_TOUCH_OUT}) {
+            stage->find(klass).set_event_callback(evt, [=](ui::Event evt) -> bool {
                 this->button_touches_[idx].erase(evt.touch.finger_id);
                 if(this->button_touches_[idx].size() == 0) {
                     signal_button_up_(i - 1);

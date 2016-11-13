@@ -26,30 +26,30 @@ bool MessageBar::init() {
 void MessageBar::display_message(Message next_message) {
     auto ui = window_.overlay(stage_);
 
-    ui->$("#message-bar").text(next_message.text);
+    ui->find("#message-bar").set_text(next_message.text);
     switch(next_message.type) {
         case MessageType::ALERT:
-            ui->$("#message-bar").attr("background-color", "#ff000088");
+            ui->find("#message-bar").set_attr("background-color", "#ff000088");
         break;
         case MessageType::WARN:
-            ui->$("#message-bar").attr("background-color", "#ffff0088");
+            ui->find("#message-bar").set_attr("background-color", "#ffff0088");
         break;
         case MessageType::INFORM:
-            ui->$("#message-bar").attr("background-color", "#0000ff88");
+            ui->find("#message-bar").set_attr("background-color", "#0000ff88");
         break;
         default:
-            ui->$("#message-bar").attr("background-color", "#ffffff88");
+            ui->find("#message-bar").set_attr("background-color", "#ffffff88");
     }
 }
 
 void MessageBar::update(float dt) {
     auto ui = window_.overlay(stage_);
 
-    if(ui->$("#message-bar").empty()) {
+    if(ui->find("#message-bar").empty()) {
         return;
     }
 
-    if(ui->$("#message-bar")[0].is_visible()) {
+    if(ui->find("#message-bar")[0].is_visible()) {
         time_message_visible_ += dt;
         if(time_message_visible_ > 3.0) {
             if(!message_queue_.empty()) {
@@ -58,7 +58,8 @@ void MessageBar::update(float dt) {
                 message_queue_.pop();
             } else {
                 //No more messages, let's hide the bar
-                ui->$("#message-bar").hide();
+                ui->find("#message-bar").hide();
+                window_.disable_pipeline(pipeline_id_);
             }
             time_message_visible_ = 0.0f;
         }
@@ -70,7 +71,9 @@ void MessageBar::update(float dt) {
             display_message(next_message);
             message_queue_.pop();
 
-            ui->$("#message-bar").show();
+            window_.enable_pipeline(pipeline_id_);
+            ui->find("#message-bar").show();
+
             time_message_visible_ = 0.0f;
         }
     }
@@ -88,14 +91,13 @@ void MessageBar::create_stage_and_element() {
 
     {
         auto ui = window_.overlay(stage_);
-        ui->append("<div>").id("message-bar");
-        auto $element = ui->$("#message-bar");
-        $element.css("position", "absolute");
-        $element.css("display", "block");
+        ui->append_row().append_label("").set_id("message-bar");
+        auto $element = ui->find("#message-bar");
         $element.hide();
     }
 
-    window_.render(stage_, camera_).with_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
+    pipeline_id_ = window_.render(stage_, camera_).with_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
+    window_.disable_pipeline(pipeline_id_);
 }
 
 void MessageBar::notify_left(const unicode& message) {

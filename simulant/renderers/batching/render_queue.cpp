@@ -192,16 +192,29 @@ void RenderQueue::traverse(TraverseCallback callback, uint64_t frame_id) const {
 void Batch::add_renderable(Renderable* renderable) {
     assert(renderable);
 
+    write_lock<shared_mutex> lock(batch_lock_);
+
     renderable->join_batch(this);
     renderables_.push_back(renderable);
 }
 
 void Batch::remove_renderable(Renderable *renderable) {
+    write_lock<shared_mutex> lock(batch_lock_);
+
     auto it = std::find(renderables_.begin(), renderables_.end(), renderable);
     if(it != renderables_.end()) {
         renderables_.erase(it);
     }
     renderable->leave_batch(this);
+}
+
+void Batch::each(std::function<void (uint32_t, Renderable *)> func) const {
+    read_lock<shared_mutex> lock(batch_lock_);
+
+    uint32_t i = 0;
+    for(auto& renderable: renderables_) {
+        func(i++, renderable);
+    }
 }
 
 }

@@ -17,11 +17,19 @@ std::string Element::name() const {
     return impl_->name();
 }
 
-Element Element::append(const unicode &tag) {
-    return impl_->append(tag);
+Element Element::append_row() {
+    return impl_->append_row();
 }
 
-void Element::text(const unicode& text) {
+Element Element::append_label(const unicode &label) {
+    return impl_->append_label(label);
+}
+
+Element Element::append_progress_bar() {
+    return impl_->append_progress_bar();
+}
+
+void Element::set_text(const unicode& text) {
     impl_->set_text(text);
 }
 
@@ -55,20 +63,24 @@ std::string Element::css(const std::string& property) const {
     return impl_->css(property);
 }
 
-void Element::css(const std::string& property, const std::string& value) {
-    impl_->css(property, value);
+void Element::add_css(const std::string& property, const std::string& value) {
+    impl_->add_css(property, value);
+}
+
+void Element::set_attr(const std::string& property, const std::string& value) {
+    impl_->set_attr(property, value);
 }
 
 std::string Element::attr(const std::string& property) {
     return impl_->attr(property);
 }
 
-void Element::attr(const std::string& property, const std::string& value) {
-    impl_->attr(property, value);
+std::string Element::id() const {
+    return impl_->id();
 }
 
-void Element::id(const std::string& id) {
-    impl_->id(id);
+void Element::set_id(const std::string& id) {
+    impl_->set_id(id);
 }
 
 void Element::scroll_to_bottom() {
@@ -104,24 +116,44 @@ bool Element::is_visible() const {
     return visibility != HIDDEN;
 }
 
-void Element::set_event_callback(const unicode& event_type, std::function<bool (Event)> func) {
+void Element::set_event_callback(EventType event_type, EventCallback func) {
     impl_->set_event_callback(event_type, func);
 }
 
-float Element::left() const {
-    return impl_->left();
+void Element::set_background_colour(const smlt::Colour& colour) {
+    impl_->set_background_colour(colour);
 }
 
-float Element::top() const {
-    return impl_->top();
+void Element::set_border_colour(const smlt::Colour& colour) {
+    impl_->set_border_colour(colour);
 }
 
-float Element::width() const {
-    return impl_->width();
+void Element::set_text_colour(const smlt::Colour& colour) {
+    impl_->set_text_colour(colour);
 }
 
-float Element::height() const {
-    return impl_->height();
+void Element::set_border_width(const float width) {
+    impl_->set_border_width(width);
+}
+
+void Element::set_border_radius(const float radius) {
+    impl_->set_border_radius(radius);
+}
+
+void Element::set_text_alignment(TextAlignment alignment) {
+    impl_->set_text_alignment(alignment);
+}
+
+void Element::set_padding(float padding) {
+    impl_->set_padding(padding);
+}
+
+Colour Element::background_colour() const {
+    return impl_->background_colour();
+}
+
+Colour Element::text_colour() const {
+    return impl_->text_colour();
 }
 
 }

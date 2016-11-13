@@ -16,11 +16,7 @@ class Interface;
 
 class ElementImpl {
 public:
-    ElementImpl(Interface* interface, TiXmlElement* element):
-        interface_(interface),
-        element_(element) {
-
-    }
+    ElementImpl(Interface* interface, TiXmlElement* element);
 
     ~ElementImpl() {
 
@@ -61,11 +57,11 @@ public:
         return "";
     }
 
-    void css(const std::string& property, const std::string& value) {
+    void add_css(const std::string& property, const std::string& value) {
         styles_[property] = value;
     }
 
-    void attr(const std::string& property, const std::string& value) {
+    void set_attr(const std::string& property, const std::string& value) {
         element_->SetAttribute(property, value);
     }
 
@@ -78,7 +74,7 @@ public:
         return "";
     }
 
-    void id(const std::string& id) {
+    void set_id(const std::string& id) {
         element_->SetAttribute("id", id);
     }
 
@@ -93,23 +89,41 @@ public:
     void remove_children();
 
     void inner_rml(const unicode& rml);
-    smlt::ui::Element append(const unicode& tag);
 
-    void set_event_callback(const unicode& event_type, std::function<bool (Event)> func);
-
-    float left() const;
-    float top() const;
-    float width() const;
-    float height() const;
+    void set_event_callback(EventType event_type, EventCallback func);
 
     bool is_dead() const { return !interface_; }
 
-private:
-    std::unordered_map<unicode, std::function<bool (Event)> > event_callbacks_;
+    Element append_row();
+    Element append_label(const unicode& text);
+    Element append_progress_bar();
+
+    void set_background_colour(const smlt::Colour& colour);
+    void set_border_colour(const smlt::Colour& colour);
+    void set_text_colour(const smlt::Colour& colour);
+    void set_border_width(const float width);
+    void set_border_radius(const float radius);
+    void set_text_alignment(TextAlignment alignment);
+    void set_padding(float padding);
+
+    Colour background_colour() const {
+        return Colour::from_hex_string(styles_.at("background-color"));
+    }
+
+    Colour text_colour() const {
+        return Colour::from_hex_string(styles_.at("color"));
+    }
+
+private:    
+    friend class Interface;
+
+    std::map<EventType, EventCallback> event_callbacks_;
     Interface* interface_ = nullptr;
     TiXmlElement* element_ = nullptr;
 
     std::unordered_map<std::string, std::string> styles_;
+
+    ui::Element append(const std::string& tag);
 };
 
 

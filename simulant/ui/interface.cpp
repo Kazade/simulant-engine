@@ -5,6 +5,7 @@
 #endif
 
 #include <thread>
+#include <iostream>
 
 #include "../loader.h"
 #include "../overlay.h"
@@ -42,8 +43,11 @@ Interface::Interface(WindowBase &window, Overlay *owner):
     window_(window),
     stage_(owner) {
 
-    root_element_ = new TiXmlElement("interface");
-    document_.LinkEndChild(root_element_);
+    TiXmlElement* root_element = new TiXmlElement("window");
+    document_.LinkEndChild(root_element);
+
+    element_impls_[root_element] = std::make_shared<ElementImpl>(this, root_element);
+    root_element_ = std::make_shared<Element>(element_impls_[root_element]);
 }
 
 std::vector<unicode> Interface::find_fonts() {
@@ -110,7 +114,14 @@ bool Interface::init() {
 
     nk_font_atlas_init_default(&nk_font_);
     nk_font_atlas_begin(&nk_font_);
-    struct nk_font* font = nk_font_atlas_add_default(&nk_font_, 13, 0);
+
+    auto font_path = locate_font("simulant/fonts/opensans/OpenSans-Regular.ttf");
+    auto data = window()->resource_locator->read_file(font_path)->str();
+    struct nk_font* font = nk_font_atlas_add_from_memory(
+        &nk_font_,
+        (void*) data.c_str(), data.size(),
+        13, 0
+    );
 
     int w, h;
     const nk_byte* image = (nk_byte*) nk_font_atlas_bake(&nk_font_, &w, &h, NK_FONT_ATLAS_RGBA32);
@@ -136,6 +147,7 @@ bool Interface::init() {
     nk_font_atlas_end(&nk_font_, nk_handle_id((int)nk_device_.font_tex.value()), nullptr);
     nk_init_default(&nk_ctx_, &font->handle);
     nk_buffer_init_default(&nk_device_.cmds);
+
     return true;
 }
 
@@ -177,11 +189,16 @@ void xml_iterator(
         const TiXmlNode* el,
         std::function<void (const TiXmlNode*, bool)> callback) {
 
-    for(const TiXmlNode* node = el->FirstChild(); node; node = node->NextSibling()) {
-        callback(node, false);
+    callback(el, false);
+    for(const TiXmlNode* node = el->FirstChild(); node; node = node->NextSibling()) {        
         xml_iterator(node, callback);
-        callback(node, true);
     }
+    callback(el, true);
+}
+
+
+nk_color nk_color_from(const Colour& colour) {
+    return nk_rgba_f(colour.r, colour.g, colour.b, colour.a);
 }
 
 void Interface::render(CameraPtr camera, Viewport viewport) {
@@ -189,6 +206,7 @@ void Interface::render(CameraPtr camera, Viewport viewport) {
         bool before = !after;
 
         const TiXmlElement* element_node = node->ToElement();
+
         if(!element_node) {
             return; //Not an element
         }
@@ -205,7 +223,13 @@ void Interface::render(CameraPtr camera, Viewport viewport) {
                 bounds.w = element.css("width").empty() ? window_.width() : std::stoi(element.css("width"));
                 bounds.h = element.css("height").empty() ? window_.height() : std::stoi(element.css("height"));
 
-                nk_begin(&nk_ctx_, &nk_layout_, title.c_str(), bounds, 0);
+                auto background_colour = nk_color_from(element.background_colour());
+                auto text_colour = nk_color_from(element.text_colour());
+
+                nk_ctx_.style.window.background = background_colour;
+                nk_ctx_.style.window.fixed_background = nk_style_item_color(background_colour);
+
+                nk_begin(&nk_ctx_, title.c_str(), bounds, 0);
             } else {
                 nk_end(&nk_ctx_);
             }
@@ -226,7 +250,7 @@ void Interface::render(CameraPtr camera, Viewport viewport) {
                 nk_label(&nk_ctx_, text.c_str(), NK_LEFT);
             }
 
-        } else if(element_name == "progress") {
+        } else if(element_name == "progress_bar") {
             if(before) {
                 nk_prog(&nk_ctx_, 50, 100, 1);
             }
@@ -236,11 +260,18 @@ void Interface::render(CameraPtr camera, Viewport viewport) {
             L_WARN_ONCE(_F("Ignoring unknown element: {0}").format(element.name()));
         }
     };
-    xml_iterator(document_.FirstChildElement(), callback);
 
+    xml_iterator(document_.RootElement(), callback);
     send_to_renderer(camera, viewport);
 
 }
+
+struct nk_smlt_vertex {
+    float position[2];
+    float uv[2];
+    nk_byte col[4];
+};
+
 
 void Interface::send_to_renderer(CameraPtr camera, Viewport viewport) {
     // Now to actually render everything
@@ -250,6 +281,18 @@ void Interface::send_to_renderer(CameraPtr camera, Viewport viewport) {
     /* fill converting configuration */
     struct nk_convert_config config;
     memset(&config, 0, sizeof(config));
+
+    static const struct nk_draw_vertex_layout_element vertex_layout[] = {
+        {NK_VERTEX_POSITION, NK_FORMAT_FLOAT, NK_OFFSETOF(struct nk_smlt_vertex, position)},
+        {NK_VERTEX_TEXCOORD, NK_FORMAT_FLOAT, NK_OFFSETOF(struct nk_smlt_vertex, uv)},
+        {NK_VERTEX_COLOR, NK_FORMAT_R8G8B8A8, NK_OFFSETOF(struct nk_smlt_vertex, col)},
+        {NK_VERTEX_LAYOUT_END}
+    };
+
+    config.vertex_layout = vertex_layout;
+    config.vertex_size = sizeof(struct nk_smlt_vertex);
+    config.vertex_alignment = NK_ALIGNOF(struct nk_smlt_vertex);
+
     config.global_alpha = 1.0f;
     config.shape_AA = NK_ANTI_ALIASING_ON;
     config.line_AA = NK_ANTI_ALIASING_ON;
@@ -263,33 +306,34 @@ void Interface::send_to_renderer(CameraPtr camera, Viewport viewport) {
     nk_buffer_init_default(&ebuf);
     nk_convert(&nk_ctx_, &nk_device_.cmds, &vbuf, &ebuf, &config);
 
-    const nk_byte* vertices = (const nk_byte*) nk_buffer_memory_const(&vbuf);
+    const nk_smlt_vertex* vertices = (const nk_smlt_vertex*) ((const nk_byte*) nk_buffer_memory_const(&vbuf));
     const nk_draw_index *offset = (const nk_draw_index*) nk_buffer_memory_const(&ebuf);
 
     VertexData vertex_data(UIRenderable::VERTEX_SPECIFICATION);
 
     auto vertex_size = (sizeof(float) * 4 + sizeof(uint32_t));
 
-    const nk_byte* current = vertices;
+    const nk_smlt_vertex* current = vertices;
     for(uint32_t i = 0; i < vbuf.size / vertex_size; ++i) {
-        float x = ((float*)current)[0];
-        float y = ((float*)current)[1];
-        float u = ((float*)current)[2];
-        float v = ((float*)current)[3];
+        float x = current->position[0];
+        float y = current->position[1];
+        float u = current->uv[0];
+        float v = current->uv[1];
 
-        current += sizeof(float) * 4;
-        uint32_t colour = ((uint32_t*)current)[0];
-        current += sizeof(uint32_t);
+
+        smlt::Colour rgba(
+            float(current->col[0]) / 255.0f,
+            float(current->col[1]) / 255.0f,
+            float(current->col[2]) / 255.0f,
+            float(current->col[3]) / 255.0f
+        );
 
         vertex_data.position(x, y);
         vertex_data.tex_coord0(u, v);
-        vertex_data.diffuse(smlt::Colour(
-            float((colour & 0xFF000000) >> 6) / 256.0f,
-            float((colour & 0xFF0000) >> 4) / 256.0f,
-            float((colour & 0xFF00) >> 2) / 256.0f,
-            float((colour & 0xFF)) / 256.0f
-        ));
+        vertex_data.diffuse(rgba);
         vertex_data.move_next();
+
+        current++;
     }
     vertex_data.done();
 
@@ -364,16 +408,11 @@ uint16_t Interface::width() const {
 uint16_t Interface::height() const {
 }
 
-ElementList Interface::append(const unicode &tag) {
-    TiXmlElement* element = new TiXmlElement(tag.lstrip("<").rstrip(">").encode());
-    root_element_->LinkEndChild(element);
-
-    element_impls_[element] = std::make_shared<ElementImpl>(this, element);
-
-    return ElementList({Element(element_impls_[element])});
+ElementList Interface::append_row() {
+    return ElementList(std::vector<Element>{root_element_->append_row()});
 }
 
-ElementList Interface::_(const unicode &selectors) {
+ElementList Interface::find(const unicode &selectors) {
     std::vector<Element> elements;
 
     for(auto selector: selectors.split(",")) {
@@ -392,6 +431,10 @@ ElementList Interface::_(const unicode &selectors) {
         }
     }
     return ElementList(elements);
+}
+
+void Interface::add_css(const std::string& property, const std::string& value) {
+    root_element_->add_css(property, value);
 }
 
 void Interface::set_styles(const std::string& stylesheet_content) {

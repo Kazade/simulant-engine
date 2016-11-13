@@ -25,12 +25,17 @@ Overlay::~Overlay() {
     } catch(...) {}
 }
 
-ui::ElementList Overlay::append(const unicode &tag) {
-    return interface_->append(tag);
+
+void Overlay::add_css(const std::string& property, const std::string& value) {
+    interface_->add_css(property, value);
 }
 
-ui::ElementList Overlay::$(const unicode &selector) {
-    return interface_->_(selector);
+ui::ElementList Overlay::append_row() {
+    return interface_->append_row();
+}
+
+ui::ElementList Overlay::find(const std::string &selector) {
+    return interface_->find(selector);
 }
 
 void Overlay::set_styles(const std::string& styles) {

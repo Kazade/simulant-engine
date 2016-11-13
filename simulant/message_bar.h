@@ -46,6 +46,7 @@ private:
 
     OverlayID stage_;
     CameraID camera_;
+    PipelineID pipeline_id_;
 
     float time_message_visible_ = 0.0;
 
