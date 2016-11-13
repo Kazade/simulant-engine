@@ -80,9 +80,9 @@ To build:
 Well, it's pretty simple really...
 
 ```
-#include <kglt/kglt.h>
+#include <simulant/simulant.h>
 
-class MyApp : public kglt::Application {
+class MyApp : public smlt::Application {
 public:
     bool do_init() {
         return true;
@@ -111,9 +111,9 @@ But you wanted something more interesting than that right? OK, let's draw a
 rectangle:
 
 ```
-#include <kglt/kglt.h>
+#include <simulant/simulant.h>
 
-class MyApp : public kglt::Application {
+class MyApp : public smlt::Application {
 public:
     bool do_init() {
         StageID stage_id;
