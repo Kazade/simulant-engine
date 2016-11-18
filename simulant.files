@@ -1487,3 +1487,8 @@ simulant/watcher.h
 simulant/window_base.cpp
 simulant/window_base.h
 simulant/CMakeLists.txt
+simulant/partitioners/spatial_hash.h
+simulant/partitioners/impl/hgsh.h
+simulant/partitioners/impl/hgsh.cpp
+tests/test_spatial_hash.h
+simulant/partitioners/spatial_hash.cpp
