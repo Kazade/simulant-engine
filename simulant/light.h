@@ -15,7 +15,8 @@ class Light :
     public ParentSetterMixin<MoveableObject>,
     public generic::Identifiable<LightID>,
     public BoundableEntity,
-    public Managed<Light> {
+    public Managed<Light>,
+    public std::enable_shared_from_this<Light> {
 
 public:
     typedef std::shared_ptr<Light> ptr;

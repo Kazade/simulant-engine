@@ -7,9 +7,25 @@
 
 namespace smlt {
 
+struct PartitionerEntry : public HGSHEntry {
+    PartitionerEntry(RenderablePtr renderable):
+        renderable(renderable) {}
+
+    PartitionerEntry(LightID light_id):
+        light_id(light_id) {}
+
+    ~PartitionerEntry() {}
+
+    union {
+        RenderablePtr renderable;
+        LightID light_id;
+    };
+};
+
 class SpatialHashPartitioner : public Partitioner {
 public:
     SpatialHashPartitioner(Stage* ss);
+    ~SpatialHashPartitioner();
 
     void add_actor(ActorID obj);
     void remove_actor(ActorID obj);
@@ -27,6 +43,15 @@ public:
     std::vector<RenderablePtr> geometry_visible_from(CameraID camera_id);
 
     void event_actor_changed(ActorID ent);
+
+private:
+    HGSH* hash_ = nullptr;
+
+    typedef std::shared_ptr<PartitionerEntry> PartitionerEntryPtr;
+
+    std::unordered_map<ActorID, std::vector<PartitionerEntryPtr>> actor_entries_;
+    std::unordered_map<LightID, PartitionerEntryPtr> light_entries_;
+    std::unordered_map<ParticleSystemID, PartitionerEntryPtr> particle_system_entries_;
 };
 
 }

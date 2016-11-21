@@ -134,7 +134,8 @@ class SubActor :
     public SubMeshInterface,
     public virtual BoundableEntity,
     public Managed<SubActor>,
-    public Renderable {
+    public Renderable,
+    public std::enable_shared_from_this<SubActor> {
 
 public:
     const MaterialID material_id() const;
