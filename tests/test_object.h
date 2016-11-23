@@ -20,6 +20,31 @@ public:
         window->delete_stage(stage_id_);
     }
 
+    void test_scaling_applies() {
+        auto actor = window->stage(stage_id_)->new_actor().fetch();
+        actor->set_relative_scale(smlt::Vec3(2.0, 1.0, 0.5));
+
+        auto transform = actor->absolute_transformation();
+
+        assert_equal(transform[0], 2.0);
+        assert_equal(transform[5], 1.0);
+        assert_equal(transform[10], 0.5);
+
+        auto actor2 = window->stage(stage_id_)->new_actor().fetch();
+
+        actor2->rotate_y(smlt::Degrees(1.0));
+
+        auto first = actor2->absolute_transformation();
+
+        actor2->set_relative_scale(smlt::Vec3(2.0, 2.0, 2.0));
+
+        auto second = actor2->absolute_transformation();
+
+        assert_equal(first[0] * 2, second[0]);
+        assert_equal(first[5] * 2, second[5]);
+        assert_equal(first[10] * 2, second[10]);
+    }
+
     void test_set_absolute_rotation() {
         smlt::ActorID act = window->stage(stage_id_)->new_actor();
         auto actor = window->stage(stage_id_)->actor(act);
