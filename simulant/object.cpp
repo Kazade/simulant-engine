@@ -208,18 +208,18 @@ void MoveableObject::look_at(const Vec3& position) {
 }
 
 Mat4 MoveableObject::absolute_transformation() const {
-    Mat4 rot_matrix, trans_matrix, final;
+    Mat4 final;
 
-    Quaternion abs_rot = absolute_rotation();
+    kmMat4RotationQuaternion(&final, &absolute_rotation_);
 
-    kmMat4RotationQuaternion(&rot_matrix, &abs_rot);
-    kmMat4Translation(&trans_matrix, absolute_position().x, absolute_position().y, absolute_position().z);
+    final.mat[0] *= absolute_scale_.x;
+    final.mat[5] *= absolute_scale_.y;
+    final.mat[10] *= absolute_scale_.z;
+    final.mat[15] = 1.0;
 
-    kmMat4Multiply(&final, &trans_matrix, &rot_matrix);
-
-    final.mat[0] = absolute_scale().x;
-    final.mat[5] = absolute_scale().y;
-    final.mat[10] = absolute_scale().z;
+    final.mat[12] = absolute_position_.x;
+    final.mat[13] = absolute_position_.y;
+    final.mat[14] = absolute_position_.z;
 
     return final;
 }

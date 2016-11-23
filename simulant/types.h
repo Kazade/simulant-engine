@@ -128,6 +128,9 @@ struct Mat4 : public kmMat4 {
 
     static Mat4 as_scaling(float s);
 
+    float operator[](const uint32_t index) const {
+        return this->mat[index];
+    }
 };
 
 struct Mat3 : public kmMat3 {
@@ -143,6 +146,10 @@ struct Mat3 : public kmMat3 {
         for(uint32_t i = 0; i < 9; ++i) {
             this->mat[i] = data[i];
         }
+    }
+
+    float operator[](const uint32_t index) const {
+        return this->mat[index];
     }
 };
 
