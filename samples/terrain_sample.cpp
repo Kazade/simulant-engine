@@ -40,7 +40,7 @@ public:
         smlt::Screen<GameScreen>(window, "game_screen") {}
 
     void do_load() {
-        pipeline_id_ = prepare_basic_scene(stage_id_, camera_id_, smlt::PARTITIONER_NULL);
+        pipeline_id_ = prepare_basic_scene(stage_id_, camera_id_);
         window->disable_pipeline(pipeline_id_);
 
         auto stage = window->stage(stage_id_);

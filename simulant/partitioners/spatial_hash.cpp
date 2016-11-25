@@ -82,7 +82,10 @@ std::vector<LightID> SpatialHashPartitioner::lights_visible_from(CameraID camera
     );
 
     for(auto& entry: entries) {
-        lights.push_back(dynamic_cast<PartitionerEntry*>(entry)->light_id);
+        auto pentry = static_cast<PartitionerEntry*>(entry);
+        if(pentry->type == PARTITIONER_ENTRY_TYPE_LIGHT) {
+            lights.push_back(pentry->light_id);
+        }
     }
 
     return lights;
@@ -91,8 +94,12 @@ std::vector<LightID> SpatialHashPartitioner::lights_visible_from(CameraID camera
 std::vector<RenderablePtr> SpatialHashPartitioner::geometry_visible_from(CameraID camera_id) {
     std::vector<RenderablePtr> geometry;
     auto camera = stage->window->camera(camera_id);
-    for(auto& entry: hash_->find_objects_within_frustum(camera->frustum())) {
-        geometry.push_back(dynamic_cast<PartitionerEntry*>(entry)->renderable);
+    auto entries = hash_->find_objects_within_frustum(camera->frustum());
+    for(auto& entry: entries) {
+        auto pentry = static_cast<PartitionerEntry*>(entry);
+        if(pentry->type == PARTITIONER_ENTRY_TYPE_RENDERABLE) {
+            geometry.push_back(pentry->renderable);
+        }
     }
 
     return geometry;

@@ -65,7 +65,7 @@ class StageManager:
 public:
     StageManager(WindowBase* window);
 
-    StageID new_stage(AvailablePartitioner partitioner=PARTITIONER_OCTREE);
+    StageID new_stage(AvailablePartitioner partitioner=PARTITIONER_HASH);
     StagePtr stage(StageID s);
     void delete_stage(StageID s);
     uint32_t stage_count() const;

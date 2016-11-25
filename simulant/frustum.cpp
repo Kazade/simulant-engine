@@ -38,6 +38,7 @@ bool Frustum::intersects_aabb(const kmAABB3 &aabb) const {
     return true;
 }
 
+
 void Frustum::build(const kmMat4* modelview_projection) {
     planes_.resize(FRUSTUM_PLANE_MAX);
 

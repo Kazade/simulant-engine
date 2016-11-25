@@ -40,8 +40,8 @@ public:
 
     std::vector<kmVec3> near_corners() const; ///< Returns the near 4 corners of the frustum
     std::vector<kmVec3> far_corners() const; ///< Returns the far 4 corners of the frustum
-    bool contains_point(const kmVec3& point) const; ///< Returns true if the frustum contains point
 
+    bool contains_point(const kmVec3& point) const; ///< Returns true if the frustum contains point
     bool intersects_aabb(const kmAABB3& box) const;
 
     bool initialized() const { return initialized_; }

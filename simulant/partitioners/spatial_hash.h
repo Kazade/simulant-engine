@@ -7,15 +7,23 @@
 
 namespace smlt {
 
+enum PartitionerEntryType {
+    PARTITIONER_ENTRY_TYPE_LIGHT,
+    PARTITIONER_ENTRY_TYPE_RENDERABLE
+};
+
 struct PartitionerEntry : public HGSHEntry {
     PartitionerEntry(RenderablePtr renderable):
+        type(PARTITIONER_ENTRY_TYPE_RENDERABLE),
         renderable(renderable) {}
 
     PartitionerEntry(LightID light_id):
+        type(PARTITIONER_ENTRY_TYPE_LIGHT),
         light_id(light_id) {}
 
     ~PartitionerEntry() {}
 
+    PartitionerEntryType type;
     union {
         RenderablePtr renderable;
         LightID light_id;

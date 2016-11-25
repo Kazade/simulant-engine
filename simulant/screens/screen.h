@@ -62,7 +62,7 @@ protected:
     PipelineID prepare_basic_scene(
         StageID& new_stage,
         CameraID& new_camera,
-        AvailablePartitioner partitioner=PARTITIONER_OCTREE
+        AvailablePartitioner partitioner=PARTITIONER_HASH
     );
 
     std::pair<PipelineID, PipelineID> prepare_basic_scene_with_overlay(
