@@ -54,10 +54,7 @@ public:
     void remove_object(HGSHEntry* object);
 
     HGSHEntryList find_objects_within_box(const AABB& box);
-
-    HGSHEntryList find_objects_within_frustum(const Frustum& frustum) {
-
-    }
+    HGSHEntryList find_objects_within_frustum(const Frustum& frustum);
 
     uint32_t grid_count() const { return buckets_.size(); }
 
@@ -74,7 +71,9 @@ private:
         HGSHEntryList objects;
     };
 
-    std::unordered_map<float, std::unordered_map<Hash, Bucket>> buckets_;
+
+    typedef std::unordered_map<Hash, std::shared_ptr<Bucket>> HashBucket;
+    std::unordered_map<float, HashBucket> buckets_;
 
     float min_size_ = 1.0f;
     float max_size_ = 1024.0f;
