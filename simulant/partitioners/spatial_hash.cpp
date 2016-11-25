@@ -18,6 +18,8 @@ SpatialHashPartitioner::~SpatialHashPartitioner() {
 }
 
 void SpatialHashPartitioner::add_actor(ActorID obj) {
+    write_lock<shared_mutex> lock(lock_);
+
     auto actor = stage->actor(obj);
     actor->each([this, &obj](uint32_t i, SubActor* subactor) {
         auto partitioner_entry = std::make_shared<PartitionerEntry>(subactor->shared_from_this());
@@ -27,6 +29,8 @@ void SpatialHashPartitioner::add_actor(ActorID obj) {
 }
 
 void SpatialHashPartitioner::remove_actor(ActorID obj) {
+    write_lock<shared_mutex> lock(lock_);
+
     auto it = actor_entries_.find(obj);
     if(it != actor_entries_.end()) {
         for(auto& entry: it->second) {
@@ -44,6 +48,8 @@ void SpatialHashPartitioner::remove_geom(GeomID geom_id) {
 }
 
 void SpatialHashPartitioner::add_light(LightID obj) {
+    write_lock<shared_mutex> lock(lock_);
+
     auto light = stage->light(obj);
 
     auto partitioner_entry = std::make_shared<PartitionerEntry>(obj);
@@ -52,6 +58,8 @@ void SpatialHashPartitioner::add_light(LightID obj) {
 }
 
 void SpatialHashPartitioner::remove_light(LightID obj) {
+    write_lock<shared_mutex> lock(lock_);
+
     auto it = light_entries_.find(obj);
     if(it != light_entries_.end()) {
         hash_->remove_object(it->second.get());
@@ -60,6 +68,8 @@ void SpatialHashPartitioner::remove_light(LightID obj) {
 }
 
 void SpatialHashPartitioner::add_particle_system(ParticleSystemID ps) {
+    write_lock<shared_mutex> lock(lock_);
+
     auto particle_system = stage->particle_system(ps);
     auto partitioner_entry = std::make_shared<PartitionerEntry>(particle_system->shared_from_this());
     hash_->insert_object_for_box(particle_system->aabb(), partitioner_entry.get());
@@ -67,6 +77,8 @@ void SpatialHashPartitioner::add_particle_system(ParticleSystemID ps) {
 }
 
 void SpatialHashPartitioner::remove_particle_system(ParticleSystemID ps) {
+    write_lock<shared_mutex> lock(lock_);
+
     auto it = particle_system_entries_.find(ps);
     if(it != particle_system_entries_.end()) {
         hash_->remove_object(it->second.get());
@@ -75,6 +87,8 @@ void SpatialHashPartitioner::remove_particle_system(ParticleSystemID ps) {
 }
 
 std::vector<LightID> SpatialHashPartitioner::lights_visible_from(CameraID camera_id) {
+    read_lock<shared_mutex> lock(lock_);
+
     std::vector<LightID> lights;
 
     auto entries = hash_->find_objects_within_frustum(
@@ -92,6 +106,8 @@ std::vector<LightID> SpatialHashPartitioner::lights_visible_from(CameraID camera
 }
 
 std::vector<RenderablePtr> SpatialHashPartitioner::geometry_visible_from(CameraID camera_id) {
+    read_lock<shared_mutex> lock(lock_);
+
     std::vector<RenderablePtr> geometry;
     auto camera = stage->window->camera(camera_id);
     auto entries = hash_->find_objects_within_frustum(camera->frustum());

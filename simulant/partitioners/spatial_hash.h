@@ -4,6 +4,7 @@
 #include "../partitioner.h"
 #include "./impl/hgsh.h"
 #include "../stage.h"
+#include "../generic/threading/shared_mutex.h"
 
 namespace smlt {
 
@@ -60,6 +61,8 @@ private:
     std::unordered_map<ActorID, std::vector<PartitionerEntryPtr>> actor_entries_;
     std::unordered_map<LightID, PartitionerEntryPtr> light_entries_;
     std::unordered_map<ParticleSystemID, PartitionerEntryPtr> particle_system_entries_;
+
+    shared_mutex lock_;
 };
 
 }

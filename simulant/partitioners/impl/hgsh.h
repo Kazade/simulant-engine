@@ -48,7 +48,7 @@ typedef std::unordered_set<HGSHEntry*> HGSHEntryList;
 
 class HGSH {
 public:
-    HGSH(float min_cell_size = 1.0, float max_cell_size = 1024.0);
+    HGSH(float min_cell_size = 256.0, float max_cell_size = 32768.0);
 
     void insert_object_for_box(const AABB& box, HGSHEntry* object);
     void remove_object(HGSHEntry* object);
@@ -75,7 +75,7 @@ private:
     typedef std::unordered_map<Hash, std::shared_ptr<Bucket>> HashBucket;
     std::unordered_map<float, HashBucket> buckets_;
 
-    float min_size_ = 1.0f;
+    float min_size_ = 256.0f;
     float max_size_ = 1024.0f;
 };
 
