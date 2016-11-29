@@ -20,6 +20,22 @@ public:
         delete new_entry_;
     }
 
+    void test_key_construction() {
+        Key test1 = make_key(1, 0, 0, 0);
+        Key test2 = make_key(2, 0.5, 0, 0);
+
+        assert_equal(15, test1.ancestors);
+        assert_true(test1.hash_path[15]);
+
+        assert_equal(14, test2.ancestors);
+        assert_true(test2.hash_path[14]);
+        assert_equal(0, test2.hash_path[15]);
+
+        assert_true(test2.is_ancestor_of(test1));
+        assert_false(test1.is_ancestor_of(test2));
+        assert_false(test1.is_ancestor_of(test1)); // Keys are not ancestors of themselves
+    }
+
     void test_adding_objects_to_the_hash() {
         AABB box1(Vec3(0.5, 0.5, 0.5), 0.5);
         AABB box2(Vec3(0, 0, 0), 5.0);

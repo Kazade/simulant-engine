@@ -157,7 +157,7 @@ void HGSH::insert_object_for_key(Key key, HGSHEntry *entry) {
 }
 
 Key make_key(int32_t cell_size, float x, float y, float z) {
-    int32_t path_size = pow(1, MAX_GRID_LEVELS);
+    int32_t path_size = pow(2, MAX_GRID_LEVELS - 1); // Minus 1, because cell_size 1 is not a power of 2
     Key key;
 
     uint32_t ancestor_count = 0;
@@ -167,7 +167,9 @@ Key make_key(int32_t cell_size, float x, float y, float z) {
         path_size /= 2;
     }
 
-    key.hash_path[ancestor_count++] = make_hash(cell_size, x, y, z);
+    assert(ancestor_count < MAX_GRID_LEVELS);
+
+    key.hash_path[ancestor_count] = make_hash(cell_size, x, y, z);
     key.ancestors = ancestor_count;
 
     return key;
@@ -195,7 +197,7 @@ Key Key::parent_key() const {
 bool Key::is_ancestor_of(const Key &other) const {
     if(ancestors >= other.ancestors) return false;
 
-    return memcmp(hash_path, other.hash_path, sizeof(std::size_t) * ancestors) == 0;
+    return memcmp(hash_path, other.hash_path, sizeof(std::size_t) * (ancestors + 1)) == 0;
 }
 
 
