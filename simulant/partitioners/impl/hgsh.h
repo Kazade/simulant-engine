@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstring>
+#include <map>
 #include <unordered_set>
 #include "../../interfaces.h"
 
@@ -12,35 +14,62 @@
 namespace smlt {
 
 
-typedef int32_t Hash;
+const uint32_t MAX_GRID_LEVELS = 16;
 
-struct BucketHash {
-    float cell_size;
-    Hash hash;
+
+/*
+ * Heirarchical hash key. Each level in the key is a hash of cell_size, x, y, z
+ * if a child key is visible then all parent and child keys are visible. Using a multimap
+ * we can rapidly gather child key objects (by iterating until the key no longer starts with this one)
+ * and we can gather parent ones by checking all levels of the hash_path
+ */
+struct Key {
+    std::size_t hash_path[MAX_GRID_LEVELS] = {0};
+    std::size_t ancestors = 0;
+
+    bool operator<(const Key& other) const {
+        std::size_t i = 0;
+        auto max = std::min(ancestors, other.ancestors);
+
+        for(; i < max; ++i) {
+            if(hash_path[i] >= other.hash_path[i]) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    bool is_root() const { return ancestors == 0; }
+    Key parent_key() const;
+
+    bool is_ancestor_of(const Key& other) const;
 };
 
-typedef std::vector<BucketHash> BucketHashList;
+Key make_key(int32_t cell_size, float x, float y, float z);
+std::size_t make_hash(int32_t cell_size, float x, float y, float z);
 
+typedef std::vector<Key> KeyList;
 
 class HGSHEntry {
 public:
     virtual ~HGSHEntry() {}
 
 
-    void push_bucket(const BucketHash& hash) {
-        buckets_.push_back(hash);
+    void push_key(const Key& key) {
+        keys_.push_back(key);
     }
 
-    void set_buckets(const BucketHashList buckets) {
-        buckets_ = buckets;
+    void set_keys(const KeyList& keys) {
+        keys_ = keys;
     }
 
-    BucketHashList buckets() const {
-        return buckets_;
+    KeyList keys() const {
+        return keys_;
     }
 
 private:
-    BucketHashList buckets_;
+    KeyList keys_;
 
 };
 
@@ -48,7 +77,7 @@ typedef std::unordered_set<HGSHEntry*> HGSHEntryList;
 
 class HGSH {
 public:
-    HGSH(float min_cell_size = 256.0, float max_cell_size = 32768.0);
+    HGSH();
 
     void insert_object_for_box(const AABB& box, HGSHEntry* object);
     void remove_object(HGSHEntry* object);
@@ -56,27 +85,11 @@ public:
     HGSHEntryList find_objects_within_box(const AABB& box);
     HGSHEntryList find_objects_within_frustum(const Frustum& frustum);
 
-    uint32_t grid_count() const { return buckets_.size(); }
-
 private:
-    Hash make_key(int32_t x, int32_t y, int32_t z) {
-        return (x * 73856093) ^ (y * 19349663) ^ (z * 83492791);
-    }
+    int32_t find_cell_size_for_box(const AABB& box) const;
+    void insert_object_for_key(Key key, HGSHEntry* entry);
 
-    float find_cell_size_for_box(AABB box) const;
-
-    void insert_object_for_hash(float cell_size, Hash hash, HGSHEntry* entry);
-
-    struct Bucket {
-        HGSHEntryList objects;
-    };
-
-
-    typedef std::unordered_map<Hash, std::shared_ptr<Bucket>> HashBucket;
-    std::unordered_map<float, HashBucket> buckets_;
-
-    float min_size_ = 256.0f;
-    float max_size_ = 1024.0f;
+    std::map<Key, std::unordered_set<HGSHEntry*>> index_;
 };
 
 }

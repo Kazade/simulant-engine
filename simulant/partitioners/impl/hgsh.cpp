@@ -1,11 +1,10 @@
+#include <cmath>
 #include "../../frustum.h"
 #include "hgsh.h"
 
 namespace smlt {
 
-HGSH::HGSH(float min_cell_size, float max_cell_size):
-    min_size_(min_cell_size),
-    max_size_(max_cell_size) {
+HGSH::HGSH() {
 
 }
 
@@ -23,23 +22,25 @@ void HGSH::insert_object_for_box(const AABB &box, HGSHEntry *object) {
     for(int32_t x = xmin; x <= xmax; ++x) {
         for(int32_t y = ymin; y <= ymax; ++y) {
             for(int32_t z = zmin; z <= zmax; ++z) {
-                auto hash = make_key(x, y, z);
-                insert_object_for_hash(cell_size, hash, object);
+                auto key = make_key(std::floor(cell_size), x, y, z);
+                insert_object_for_key(key, object);
             }
         }
     }
 }
 
 void HGSH::remove_object(HGSHEntry *object) {
-    for(auto& buckethash: object->buckets()) {
-        auto& hashspace = buckets_[buckethash.cell_size];
-        auto hash_bucket = hashspace.find(buckethash.hash);
-        if(hash_bucket != hashspace.end()) {
-            auto bucket = (*hash_bucket).second;
-            bucket->objects.erase(object);
+    for(auto key: object->keys()) {
+        auto it = index_.find(key);
+        if(it != index_.end()) {
+            it->second.erase(object);
+        }
+
+        if(it->second.empty()) {
+            index_.erase(it);
         }
     }
-    object->set_buckets(BucketHashList());
+    object->set_keys(KeyList());
 }
 
 HGSHEntryList HGSH::find_objects_within_frustum(const Frustum &frustum) {
@@ -78,68 +79,124 @@ HGSHEntryList HGSH::find_objects_within_frustum(const Frustum &frustum) {
 HGSHEntryList HGSH::find_objects_within_box(const AABB &box) {
     HGSHEntryList objects;
 
-    for(auto& p: buckets_) {
-        auto cell_size = p.first;
+    auto cell_size = find_cell_size_for_box(box);
 
-        auto xmin = int32_t(floor(box.min.x / cell_size));
-        auto xmax = int32_t(floor(box.max.x / cell_size));
-        auto ymin = int32_t(floor(box.min.y / cell_size));
-        auto ymax = int32_t(floor(box.max.y / cell_size));
-        auto zmin = int32_t(floor(box.min.z / cell_size));
-        auto zmax = int32_t(floor(box.max.z / cell_size));
+    auto xmin = int32_t(floor(box.min.x / cell_size));
+    auto xmax = int32_t(floor(box.max.x / cell_size));
+    auto ymin = int32_t(floor(box.min.y / cell_size));
+    auto ymax = int32_t(floor(box.max.y / cell_size));
+    auto zmin = int32_t(floor(box.min.z / cell_size));
+    auto zmax = int32_t(floor(box.max.z / cell_size));
 
-        auto& hashspace = buckets_[cell_size];
+    auto gather_objects = [this, &objects](const Key& key) {
+        auto it = index_.find(key);
+        if(it == index_.end()) {
+            return;
+        }
 
-        for(int32_t x = xmin; x <= xmax; ++x) {
-            for(int32_t y = ymin; y <= ymax; ++y) {
-                for(int32_t z = zmin; z <= zmax; ++z) {
-                    auto hash = make_key(x, y, z);
+        // First, iterate the index to find a key which isn't a descendent of this one
+        // then break
+        while(it != index_.end() && key.is_ancestor_of(it->first)) {
+            objects.insert(it->second.begin(), it->second.end());
+            ++it;
+        }
 
-                    auto hash_bucket = hashspace.find(hash);
-                    if(hash_bucket != hashspace.end()) {
-                        auto bucket = hash_bucket->second;
-                        for(auto& new_obj: bucket->objects) {
-                            objects.insert(new_obj);
-                        }
-                    }
-                }
+        // Now, go up the tree looking for objects which are ancestors of this key
+        auto path = key;
+        while(true) {
+            path = path.parent_key();
+            it = index_.find(path);
+            if(it != index_.end()) {
+                objects.insert(it->second.begin(), it->second.end());
+            }
+
+            if(path.is_root()) {
+                break;
+            }
+        }
+    };
+
+
+    for(int32_t x = xmin; x <= xmax; ++x) {
+        for(int32_t y = ymin; y <= ymax; ++y) {
+            for(int32_t z = zmin; z <= zmax; ++z) {
+                auto key = make_key(std::floor(cell_size), x, y, z);
+                gather_objects(key);
             }
         }
     }
 
+
     return objects;
 }
 
-float HGSH::find_cell_size_for_box(AABB box) const {
+int32_t HGSH::find_cell_size_for_box(const AABB &box) const {
     /*
      * We find the nearest hash size which is greater than double the max dimension of the
      * box. This increases the likelyhood that the object will not wastefully span cells
      */
-    float i = min_size_;
+    const int32_t MAX_SIZE = pow(1, MAX_GRID_LEVELS);
+    int32_t i = 1;
 
-    while(i < std::min(box.max_dimension() * 2.0f, max_size_)) {
-        i *= 2.0;
+    while(i < std::min(box.max_dimension(), (float) MAX_SIZE)) {
+        i *= 2;
     }
 
     return i;
 }
 
-void HGSH::insert_object_for_hash(float cell_size, Hash hash, HGSHEntry *entry) {    
-    auto& hashspace = buckets_[cell_size];
-    auto hash_bucket = hashspace.find(hash);
-
-    std::shared_ptr<Bucket> bucket;
-    if(hash_bucket == hashspace.end()) {
-        bucket = std::make_shared<Bucket>();
-        hashspace.insert(std::make_pair(hash, bucket));
+void HGSH::insert_object_for_key(Key key, HGSHEntry *entry) {
+    auto it = index_.find(key);
+    if(it != index_.end()) {
+        it->second.insert(entry);
     } else {
-        bucket = hash_bucket->second;
+        HGSHEntryList list;
+        list.insert(entry);
+        index_.insert(std::make_pair(key, list));
     }
-
-    bucket->objects.insert(entry);
-    entry->push_bucket(BucketHash{cell_size, hash});
 }
 
+Key make_key(int32_t cell_size, float x, float y, float z) {
+    int32_t path_size = pow(1, MAX_GRID_LEVELS);
+    Key key;
+
+    uint32_t ancestor_count = 0;
+
+    while(path_size > cell_size) {
+        key.hash_path[ancestor_count++] = make_hash(path_size, x, y, z);
+        path_size /= 2;
+    }
+
+    key.hash_path[ancestor_count++] = make_hash(cell_size, x, y, z);
+    key.ancestors = ancestor_count;
+
+    return key;
+}
+
+std::size_t make_hash(int32_t cell_size, float x, float y, float z) {
+    std::size_t seed = 0;
+    std::hash_combine(seed, cell_size);
+    std::hash_combine(seed, int32_t(x));
+    std::hash_combine(seed, int32_t(y));
+    std::hash_combine(seed, int32_t(z));
+
+    return seed;
+}
+
+Key Key::parent_key() const {
+    assert(!is_root());
+
+    Key ret;
+    memcpy(ret.hash_path, hash_path, sizeof(std::size_t) * ancestors);
+    ret.ancestors = ancestors - 1;
+    return ret;
+}
+
+bool Key::is_ancestor_of(const Key &other) const {
+    if(ancestors >= other.ancestors) return false;
+
+    return memcmp(hash_path, other.hash_path, sizeof(std::size_t) * ancestors) == 0;
+}
 
 
 }

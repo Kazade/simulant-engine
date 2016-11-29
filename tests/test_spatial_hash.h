@@ -26,13 +26,11 @@ public:
 
         hash_->insert_object_for_box(box1, new_entry_);
 
-        assert_equal(new_entry_->buckets().size(), 1);
-        assert_equal(hash_->grid_count(), 1);
+        assert_equal(new_entry_->keys().size(), 1);
 
         hash_->insert_object_for_box(box2, new_entry_);
 
-        assert_equal(new_entry_->buckets().size(), 9);
-        assert_equal(hash_->grid_count(), 2);
+        assert_equal(new_entry_->keys().size(), 9);
     }
 
     void test_retrieving_objects_within_a_box() {

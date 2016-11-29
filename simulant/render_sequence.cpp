@@ -273,6 +273,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
             light_ids, [&](const LightID& light_id) -> LightPtr { return stage->light(light_id); }
         );
 
+        uint32_t renderables_rendered = 0;
         // Mark the visible objects as visible
         for(auto& renderable: stage->partitioner->geometry_visible_from(camera_id)) {
             if(!renderable->is_visible()) {
@@ -303,6 +304,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
             );
 
             renderable->set_affected_by_lights(renderable_lights);
+            ++renderables_rendered;
         }
 
         using namespace std::placeholders;
