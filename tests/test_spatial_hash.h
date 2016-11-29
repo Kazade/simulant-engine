@@ -46,7 +46,7 @@ public:
 
         hash_->insert_object_for_box(box2, new_entry_);
 
-        assert_equal(new_entry_->keys().size(), 9);
+        assert_equal(new_entry_->keys().size(), 2);
     }
 
     void test_retrieving_objects_within_a_box() {

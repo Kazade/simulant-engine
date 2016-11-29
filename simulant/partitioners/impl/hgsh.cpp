@@ -12,21 +12,8 @@ HGSH::HGSH() {
 void HGSH::insert_object_for_box(const AABB &box, HGSHEntry *object) {
     auto cell_size = find_cell_size_for_box(box);
 
-    auto xmin = int32_t(floor(box.min.x / cell_size));
-    auto xmax = int32_t(floor(box.max.x / cell_size));
-    auto ymin = int32_t(floor(box.min.y / cell_size));
-    auto ymax = int32_t(floor(box.max.y / cell_size));
-    auto zmin = int32_t(floor(box.min.z / cell_size));
-    auto zmax = int32_t(floor(box.max.z / cell_size));
-
-    for(int32_t x = xmin; x <= xmax; ++x) {
-        for(int32_t y = ymin; y <= ymax; ++y) {
-            for(int32_t z = zmin; z <= zmax; ++z) {
-                auto key = make_key(std::floor(cell_size), x, y, z);
-                insert_object_for_key(key, object);
-            }
-        }
-    }
+    auto key = make_key(std::floor(cell_size), box.centre().x, box.centre().y, box.centre().z);
+    insert_object_for_key(key, object);
 }
 
 void HGSH::remove_object(HGSHEntry *object) {
@@ -34,10 +21,10 @@ void HGSH::remove_object(HGSHEntry *object) {
         auto it = index_.find(key);
         if(it != index_.end()) {
             it->second.erase(object);
-        }
 
-        if(it->second.empty()) {
-            index_.erase(it);
+            if(it->second.empty()) {
+                index_.erase(it);
+            }
         }
     }
     object->set_keys(KeyList());
@@ -135,14 +122,14 @@ int32_t HGSH::find_cell_size_for_box(const AABB &box) const {
      * We find the nearest hash size which is greater than double the max dimension of the
      * box. This increases the likelyhood that the object will not wastefully span cells
      */
-    const int32_t MAX_SIZE = pow(1, MAX_GRID_LEVELS);
-    int32_t i = 1;
 
-    while(i < std::min(box.max_dimension(), (float) MAX_SIZE)) {
-        i *= 2;
+    int32_t k = 1;
+
+    while(k < box.max_dimension()) {
+        k *= 2;
     }
 
-    return i;
+    return k;
 }
 
 void HGSH::insert_object_for_key(Key key, HGSHEntry *entry) {
@@ -154,6 +141,7 @@ void HGSH::insert_object_for_key(Key key, HGSHEntry *entry) {
         list.insert(entry);
         index_.insert(std::make_pair(key, list));
     }
+    entry->push_key(key);
 }
 
 Key make_key(int32_t cell_size, float x, float y, float z) {
