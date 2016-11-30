@@ -36,6 +36,23 @@ public:
         assert_false(test1.is_ancestor_of(test1)); // Keys are not ancestors of themselves
     }
 
+    void test_key_comparison() {
+        Key key1, key2, key3;
+
+        key1.hash_path[0] = 1; key1.hash_path[1] = 2;
+        key2.hash_path[0] = 1; key2.hash_path[1] = 3;
+        key3.hash_path[0] = 1; key3.hash_path[1] = 1; key3.hash_path[2] = 2;
+
+        assert_true(key3 < key1);
+        assert_false(key1 < key3);
+
+        assert_true(key3 < key2);
+        assert_false(key2 < key3);
+
+        assert_true(key1 < key2);
+        assert_false(key2 < key1);
+    }
+
     void test_adding_objects_to_the_hash() {
         AABB box1(Vec3(0.5, 0.5, 0.5), 0.5);
         AABB box2(Vec3(0, 0, 0), 5.0);

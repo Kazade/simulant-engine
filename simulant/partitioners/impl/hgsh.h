@@ -28,16 +28,22 @@ struct Key {
     std::size_t ancestors = 0;
 
     bool operator<(const Key& other) const {
-        std::size_t i = 0;
-        auto max = std::min(ancestors, other.ancestors);
-
-        for(; i < max; ++i) {
-            if(hash_path[i] >= other.hash_path[i]) {
+        for(std::size_t i = 0; i < MAX_GRID_LEVELS; ++i) {
+            if(hash_path[i] > other.hash_path[i]) {
                 return false;
+            } else if(hash_path[i] < other.hash_path[i]) {
+                return true;
             }
         }
 
-        return true;
+        return false; // All equal
+    }
+
+    bool operator==(const Key& other) const {
+        return (
+            ancestors == other.ancestors &&
+            memcmp(hash_path, other.hash_path, sizeof(std::size_t) * MAX_GRID_LEVELS) == 0
+        );
     }
 
     bool is_root() const { return ancestors == 0; }
@@ -89,7 +95,8 @@ private:
     int32_t find_cell_size_for_box(const AABB& box) const;
     void insert_object_for_key(Key key, HGSHEntry* entry);
 
-    std::map<Key, std::unordered_set<HGSHEntry*>> index_;
+    typedef std::map<Key, std::unordered_set<HGSHEntry*>> Index;
+    Index index_;
 };
 
 }

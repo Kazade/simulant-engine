@@ -75,8 +75,9 @@ HGSHEntryList HGSH::find_objects_within_box(const AABB &box) {
     auto zmin = int32_t(floor(box.min.z / cell_size));
     auto zmax = int32_t(floor(box.max.z / cell_size));
 
+
     auto gather_objects = [this, &objects](const Key& key) {
-        auto it = index_.find(key);
+        auto it = index_.lower_bound(key);
         if(it == index_.end()) {
             return;
         }
