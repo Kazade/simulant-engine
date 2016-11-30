@@ -2,6 +2,7 @@
 
 #include <cstring>
 #include <map>
+#include <set>
 #include <unordered_set>
 #include "../../interfaces.h"
 
@@ -55,7 +56,7 @@ struct Key {
 Key make_key(int32_t cell_size, float x, float y, float z);
 std::size_t make_hash(int32_t cell_size, float x, float y, float z);
 
-typedef std::vector<Key> KeyList;
+typedef std::set<Key> KeyList;
 
 class HGSHEntry {
 public:
@@ -63,7 +64,7 @@ public:
 
 
     void push_key(const Key& key) {
-        keys_.push_back(key);
+        keys_.insert(key);
     }
 
     void set_keys(const KeyList& keys) {

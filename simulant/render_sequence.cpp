@@ -307,6 +307,8 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
             ++renderables_rendered;
         }
 
+        window->stats->set_geometry_visible(renderables_rendered);
+
         using namespace std::placeholders;
 
         batcher::RenderQueue::TraverseCallback callback = std::bind(

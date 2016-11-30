@@ -12,8 +12,14 @@ HGSH::HGSH() {
 void HGSH::insert_object_for_box(const AABB &box, HGSHEntry *object) {
     auto cell_size = find_cell_size_for_box(box);
 
-    auto key = make_key(std::floor(cell_size), box.centre().x, box.centre().y, box.centre().z);
-    insert_object_for_key(key, object);
+    for(auto& x: {box.min.x, box.max.x}) {
+        for(auto& y: {box.min.y, box.max.y}) {
+            for(auto& z: {box.min.z, box.max.z}) {
+                auto key = make_key(cell_size, x, y, z);
+                insert_object_for_key(key, object);
+            }
+        }
+    }
 }
 
 void HGSH::remove_object(HGSHEntry *object) {
@@ -108,7 +114,7 @@ HGSHEntryList HGSH::find_objects_within_box(const AABB &box) {
     for(int32_t x = xmin; x <= xmax; ++x) {
         for(int32_t y = ymin; y <= ymax; ++y) {
             for(int32_t z = zmin; z <= zmax; ++z) {
-                auto key = make_key(std::floor(cell_size), x, y, z);
+                auto key = make_key(std::floor(cell_size), x * cell_size, y * cell_size, z * cell_size);
                 gather_objects(key);
             }
         }
@@ -166,10 +172,9 @@ Key make_key(int32_t cell_size, float x, float y, float z) {
 
 std::size_t make_hash(int32_t cell_size, float x, float y, float z) {
     std::size_t seed = 0;
-    std::hash_combine(seed, cell_size);
-    std::hash_combine(seed, int32_t(x));
-    std::hash_combine(seed, int32_t(y));
-    std::hash_combine(seed, int32_t(z));
+    std::hash_combine(seed, int32_t(std::floor(x / cell_size)));
+    std::hash_combine(seed, int32_t(std::floor(y / cell_size)));
+    std::hash_combine(seed, int32_t(std::floor(z / cell_size)));
 
     return seed;
 }

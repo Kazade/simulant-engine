@@ -63,20 +63,31 @@ public:
 
         hash_->insert_object_for_box(box2, new_entry_);
 
-        assert_equal(new_entry_->keys().size(), 2);
+        assert_equal(new_entry_->keys().size(), 9);
     }
 
     void test_retrieving_objects_within_a_box() {
-        test_adding_objects_to_the_hash(); // Populate two grids with the object
+        HGSHEntry entry1, entry2, entry3;
 
+        AABB box1(Vec3(0.5, 0.5, 0.5), 0.5);
+        AABB box2(Vec3(0, 0, 0), 5.0);
+        AABB box3(Vec3(10, 10, 10), 1.0);
+
+        hash_->insert_object_for_box(box1, &entry1);
+        hash_->insert_object_for_box(box2, &entry2);
+        hash_->insert_object_for_box(box3, &entry3);
 
         auto results = hash_->find_objects_within_box(AABB(Vec3(), 10));
 
-        assert_equal(results.size(), 1);
+        assert_equal(results.size(), 2);
 
         results = hash_->find_objects_within_box(AABB(Vec3(150.0, 150.0, 150.0), 1.0));
 
         assert_equal(results.size(), 0);
+
+        results = hash_->find_objects_within_box(AABB(Vec3(), 400));
+
+        assert_equal(results.size(), 3);
     }
 
     void test_removing_objects_from_the_hash() {

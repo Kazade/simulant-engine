@@ -57,6 +57,14 @@ typedef std::shared_ptr<LoaderType> LoaderTypePtr;
 
 class Stats {
 public:
+    uint32_t geometry_visible() const {
+        return geometry_visible_;
+    }
+
+    void set_geometry_visible(uint32_t value) {
+        geometry_visible_ = value;
+    }
+
     uint32_t subactors_rendered() const { return subactors_renderered_; }
     void set_subactors_rendered(uint32_t value) {
         subactors_renderered_ = value;
@@ -67,8 +75,9 @@ public:
         frames_per_second_ = value;
     }
 private:
-    uint32_t subactors_renderered_;
-    uint32_t frames_per_second_;
+    uint32_t subactors_renderered_ = 0;
+    uint32_t frames_per_second_ = 0;
+    uint32_t geometry_visible_ = 0;
 };
 
 typedef sig::signal<void ()> FrameStartedSignal;
