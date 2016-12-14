@@ -33,15 +33,26 @@ public:
 
         assert_true(test2.is_ancestor_of(test1));
         assert_false(test1.is_ancestor_of(test2));
-        assert_false(test1.is_ancestor_of(test1)); // Keys are not ancestors of themselves
+        assert_true(test1.is_ancestor_of(test1)); // Keys are ancestors of themselves
     }
 
     void test_key_comparison() {
-        Key key1, key2, key3;
+        Key key1, key2, key3, key4, key5;
 
         key1.hash_path[0] = 1; key1.hash_path[1] = 2;
+        key1.ancestors = 1;
+
         key2.hash_path[0] = 1; key2.hash_path[1] = 3;
+        key2.ancestors = 1;
+
         key3.hash_path[0] = 1; key3.hash_path[1] = 1; key3.hash_path[2] = 2;
+        key3.ancestors = 2;
+
+        key4.hash_path[0] = 3;
+        key4.ancestors = 0;
+
+        key5.hash_path[0] = 1;
+        key5.ancestors = 0;
 
         assert_true(key3 < key1);
         assert_false(key1 < key3);
@@ -51,6 +62,22 @@ public:
 
         assert_true(key1 < key2);
         assert_false(key2 < key1);
+
+        assert_true(key3 < key4);
+        assert_true(key2 < key4);
+        assert_true(key1 < key4);
+
+        assert_false(key4 < key3);
+        assert_false(key4 < key2);
+        assert_false(key4 < key1);
+
+        assert_true(key5 < key3);
+        assert_true(key5 < key2);
+        assert_true(key5 < key1);
+
+        assert_false(key3 < key5);
+        assert_false(key2 < key5);
+        assert_false(key1 < key5);
     }
 
     void test_adding_objects_to_the_hash() {
@@ -77,7 +104,7 @@ public:
         hash_->insert_object_for_box(box2, &entry2);
         hash_->insert_object_for_box(box3, &entry3);
 
-        auto results = hash_->find_objects_within_box(AABB(Vec3(), 10));
+        auto results = hash_->find_objects_within_box(AABB(Vec3(), 5.0));
 
         assert_equal(results.size(), 2);
 

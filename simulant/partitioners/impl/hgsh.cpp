@@ -12,13 +12,9 @@ HGSH::HGSH() {
 void HGSH::insert_object_for_box(const AABB &box, HGSHEntry *object) {
     auto cell_size = find_cell_size_for_box(box);
 
-    for(auto& x: {box.min.x, box.max.x}) {
-        for(auto& y: {box.min.y, box.max.y}) {
-            for(auto& z: {box.min.z, box.max.z}) {
-                auto key = make_key(cell_size, x, y, z);
-                insert_object_for_key(key, object);
-            }
-        }
+    for(auto& corner: box.corners()) {
+        auto key = make_key(cell_size, corner.x, corner.y, corner.z);
+        insert_object_for_key(key, object);
     }
 }
 
@@ -74,23 +70,15 @@ HGSHEntryList HGSH::find_objects_within_box(const AABB &box) {
 
     auto cell_size = find_cell_size_for_box(box);
 
-    auto xmin = int32_t(floor(box.min.x / cell_size));
-    auto xmax = int32_t(floor(box.max.x / cell_size));
-    auto ymin = int32_t(floor(box.min.y / cell_size));
-    auto ymax = int32_t(floor(box.max.y / cell_size));
-    auto zmin = int32_t(floor(box.min.z / cell_size));
-    auto zmax = int32_t(floor(box.max.z / cell_size));
-
-
-    auto gather_objects = [this, &objects](const Key& key) {
-        auto it = index_.lower_bound(key);
-        if(it == index_.end()) {
+    auto gather_objects = [](Index& index, const Key& key, HGSHEntryList& objects) {
+        auto it = index.lower_bound(key);
+        if(it == index.end()) {
             return;
         }
 
         // First, iterate the index to find a key which isn't a descendent of this one
         // then break
-        while(it != index_.end() && key.is_ancestor_of(it->first)) {
+        while(it != index.end() && key.is_ancestor_of(it->first)) {
             objects.insert(it->second.begin(), it->second.end());
             ++it;
         }
@@ -99,8 +87,8 @@ HGSHEntryList HGSH::find_objects_within_box(const AABB &box) {
         auto path = key;
         while(true) {
             path = path.parent_key();
-            it = index_.find(path);
-            if(it != index_.end()) {
+            it = index.find(path);
+            if(it != index.end() && path.is_ancestor_of(it->first)) {
                 objects.insert(it->second.begin(), it->second.end());
             }
 
@@ -110,14 +98,16 @@ HGSHEntryList HGSH::find_objects_within_box(const AABB &box) {
         }
     };
 
+    auto corners = box.corners();
 
-    for(int32_t x = xmin; x <= xmax; ++x) {
-        for(int32_t y = ymin; y <= ymax; ++y) {
-            for(int32_t z = zmin; z <= zmax; ++z) {
-                auto key = make_key(std::floor(cell_size), x * cell_size, y * cell_size, z * cell_size);
-                gather_objects(key);
-            }
-        }
+    for(auto& corner: corners) {
+        auto key = make_key(
+            cell_size,
+            corner.x,
+            corner.y,
+            corner.z
+        );
+        gather_objects(index_, key, objects);
     }
 
 
@@ -158,8 +148,9 @@ Key make_key(int32_t cell_size, float x, float y, float z) {
     uint32_t ancestor_count = 0;
 
     while(path_size > cell_size) {
-        key.hash_path[ancestor_count++] = make_hash(path_size, x, y, z);
+        key.hash_path[ancestor_count] = make_hash(path_size, x, y, z);
         path_size /= 2;
+        ancestor_count++;
     }
 
     assert(ancestor_count < MAX_GRID_LEVELS);
@@ -170,11 +161,16 @@ Key make_key(int32_t cell_size, float x, float y, float z) {
     return key;
 }
 
-std::size_t make_hash(int32_t cell_size, float x, float y, float z) {
+Hash make_hash(int32_t cell_size, float x, float y, float z) {
     std::size_t seed = 0;
-    std::hash_combine(seed, int32_t(std::floor(x / cell_size)));
-    std::hash_combine(seed, int32_t(std::floor(y / cell_size)));
-    std::hash_combine(seed, int32_t(std::floor(z / cell_size)));
+
+    auto xp = int32_t(std::floor(x / cell_size));
+    auto yp = int32_t(std::floor(y / cell_size));
+    auto zp = int32_t(std::floor(z / cell_size));
+
+    std::hash_combine(seed, xp);
+    std::hash_combine(seed, yp);
+    std::hash_combine(seed, zp);
 
     return seed;
 }
@@ -189,9 +185,20 @@ Key Key::parent_key() const {
 }
 
 bool Key::is_ancestor_of(const Key &other) const {
-    if(ancestors >= other.ancestors) return false;
+    if(ancestors > other.ancestors) return false;
 
     return memcmp(hash_path, other.hash_path, sizeof(std::size_t) * (ancestors + 1)) == 0;
+}
+
+std::ostream &operator<<(std::ostream &os, const Key &key) {
+    for(std::size_t i = 0; i < key.ancestors + 1; ++i) {
+        os << key.hash_path[i];
+        if(i != key.ancestors) {
+            os << " / ";
+        }
+    }
+
+    return os;
 }
 
 

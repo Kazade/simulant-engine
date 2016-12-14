@@ -3,6 +3,7 @@
 #include <cstring>
 #include <map>
 #include <set>
+#include <ostream>
 #include <unordered_set>
 #include "../../interfaces.h"
 
@@ -16,7 +17,7 @@ namespace smlt {
 
 
 const uint32_t MAX_GRID_LEVELS = 16;
-
+typedef std::size_t Hash;
 
 /*
  * Heirarchical hash key. Each level in the key is a hash of cell_size, x, y, z
@@ -25,19 +26,21 @@ const uint32_t MAX_GRID_LEVELS = 16;
  * and we can gather parent ones by checking all levels of the hash_path
  */
 struct Key {
-    std::size_t hash_path[MAX_GRID_LEVELS] = {0};
+    Hash hash_path[MAX_GRID_LEVELS] = {0};
     std::size_t ancestors = 0;
 
     bool operator<(const Key& other) const {
-        for(std::size_t i = 0; i < MAX_GRID_LEVELS; ++i) {
-            if(hash_path[i] > other.hash_path[i]) {
+        for(std::size_t i = 0; i <= ancestors; ++i) {
+            if(other.hash_path[i] == 0) {
                 return false;
             } else if(hash_path[i] < other.hash_path[i]) {
                 return true;
+            } else if(hash_path[i] > other.hash_path[i]) {
+                return false;
             }
         }
 
-        return false; // All equal
+        return (ancestors < other.ancestors); // All equal
     }
 
     bool operator==(const Key& other) const {
@@ -51,7 +54,11 @@ struct Key {
     Key parent_key() const;
 
     bool is_ancestor_of(const Key& other) const;
+
+    friend std::ostream& operator<<(std::ostream& os, const Key& key);
 };
+
+std::ostream& operator<<(std::ostream& os, const Key& key);
 
 Key make_key(int32_t cell_size, float x, float y, float z);
 std::size_t make_hash(int32_t cell_size, float x, float y, float z);

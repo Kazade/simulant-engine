@@ -535,6 +535,22 @@ struct AABB : public kmAABB3 {
 
         return (empty_x && empty_y) || (empty_x && empty_z) || (empty_y && empty_z);
     }
+
+    std::array<Vec3, 8> corners() const {
+        std::array<Vec3, 8> ret;
+
+        ret[0] = Vec3(min.x, min.y, min.z);
+        ret[1] = Vec3(max.x, min.y, min.z);
+        ret[2] = Vec3(max.x, min.y, max.z);
+        ret[3] = Vec3(min.x, min.y, max.z);
+
+        ret[4] = Vec3(min.x, max.y, min.z);
+        ret[5] = Vec3(max.x, max.y, min.z);
+        ret[6] = Vec3(max.x, max.y, max.z);
+        ret[7] = Vec3(min.x, max.y, max.z);
+
+        return ret;
+    }
 };
 
 std::ostream& operator<<(std::ostream& stream, const Vec2& vec);
