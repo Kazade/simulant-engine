@@ -2,7 +2,7 @@
 
 #include <kaztest/kaztest.h>
 
-#include "../simulant/partitioners/impl/hgsh.h"
+#include "../simulant/partitioners/impl/spatial_hash.h"
 
 namespace {
 

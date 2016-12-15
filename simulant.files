@@ -1492,3 +1492,5 @@ simulant/partitioners/impl/hgsh.h
 simulant/partitioners/impl/hgsh.cpp
 tests/test_spatial_hash.h
 simulant/partitioners/spatial_hash.cpp
+simulant/partitioners/impl/spatial_hash.h
+simulant/partitioners/impl/spatial_hash.cpp

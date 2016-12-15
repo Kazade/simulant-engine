@@ -1,6 +1,6 @@
 #include <cmath>
 #include "../../frustum.h"
-#include "hgsh.h"
+#include "spatial_hash.h"
 
 namespace smlt {
 
