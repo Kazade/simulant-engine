@@ -11,7 +11,6 @@
 
 #include "loader.h"
 #include "partitioners/null_partitioner.h"
-#include "partitioners/octree_partitioner.h"
 #include "partitioners/spatial_hash.h"
 #include "utils/ownable.h"
 #include "renderers/batching/render_queue.h"
@@ -339,9 +338,6 @@ void Stage::set_partitioner(AvailablePartitioner partitioner) {
     switch(partitioner) {
         case PARTITIONER_NULL:
             partitioner_ = Partitioner::ptr(new NullPartitioner(this));
-        break;
-        case PARTITIONER_OCTREE:
-            partitioner_ = Partitioner::ptr(new OctreePartitioner(this));
         break;
         case PARTITIONER_HASH:
             partitioner_ = std::make_shared<SpatialHashPartitioner>(this);

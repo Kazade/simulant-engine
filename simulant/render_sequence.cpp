@@ -10,7 +10,6 @@
 #include "camera.h"
 #include "window_base.h"
 #include "partitioner.h"
-#include "partitioners/octree_partitioner.h"
 #include "loader.h"
 
 namespace smlt {
