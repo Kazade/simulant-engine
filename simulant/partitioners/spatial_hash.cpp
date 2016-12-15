@@ -9,7 +9,7 @@ namespace smlt {
 SpatialHashPartitioner::SpatialHashPartitioner(smlt::Stage *ss):
     Partitioner(ss) {
 
-    hash_ = new HGSH();
+    hash_ = new SpatialHash();
 }
 
 SpatialHashPartitioner::~SpatialHashPartitioner() {

@@ -11,8 +11,8 @@ using namespace smlt;
 class SpatialHashTests : public TestCase {
 public:
     void set_up() {
-        hash_ = new smlt::HGSH();
-        new_entry_ = new HGSHEntry();
+        hash_ = new smlt::SpatialHash();
+        new_entry_ = new SpatialHashEntry();
     }
 
     void tear_down() {
@@ -94,7 +94,7 @@ public:
     }
 
     void test_retrieving_objects_within_a_box() {
-        HGSHEntry entry1, entry2, entry3;
+        SpatialHashEntry entry1, entry2, entry3;
 
         AABB box1(Vec3(0.5, 0.5, 0.5), 0.5);
         AABB box2(Vec3(0, 0, 0), 5.0);
@@ -115,6 +115,10 @@ public:
         results = hash_->find_objects_within_box(AABB(Vec3(), 400));
 
         assert_equal(results.size(), 3);
+
+        results = hash_->find_objects_within_box(AABB(Vec3(1000, 1000, 1000), 400));
+
+        assert_equal(results.size(), 0);
     }
 
     void test_removing_objects_from_the_hash() {
@@ -132,8 +136,8 @@ public:
     }
 
 private:
-    smlt::HGSH* hash_ = nullptr;
-    HGSHEntry* new_entry_ = nullptr;
+    smlt::SpatialHash* hash_ = nullptr;
+    SpatialHashEntry* new_entry_ = nullptr;
 
 };
 

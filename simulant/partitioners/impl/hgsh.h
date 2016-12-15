@@ -65,9 +65,9 @@ std::size_t make_hash(int32_t cell_size, float x, float y, float z);
 
 typedef std::set<Key> KeyList;
 
-class HGSHEntry {
+class SpatialHashEntry {
 public:
-    virtual ~HGSHEntry() {}
+    virtual ~SpatialHashEntry() {}
 
 
     void push_key(const Key& key) {
@@ -87,23 +87,23 @@ private:
 
 };
 
-typedef std::unordered_set<HGSHEntry*> HGSHEntryList;
+typedef std::unordered_set<SpatialHashEntry*> HGSHEntryList;
 
-class HGSH {
+class SpatialHash {
 public:
-    HGSH();
+    SpatialHash();
 
-    void insert_object_for_box(const AABB& box, HGSHEntry* object);
-    void remove_object(HGSHEntry* object);
+    void insert_object_for_box(const AABB& box, SpatialHashEntry* object);
+    void remove_object(SpatialHashEntry* object);
 
     HGSHEntryList find_objects_within_box(const AABB& box);
     HGSHEntryList find_objects_within_frustum(const Frustum& frustum);
 
 private:
     int32_t find_cell_size_for_box(const AABB& box) const;
-    void insert_object_for_key(Key key, HGSHEntry* entry);
+    void insert_object_for_key(Key key, SpatialHashEntry* entry);
 
-    typedef std::map<Key, std::unordered_set<HGSHEntry*>> Index;
+    typedef std::map<Key, std::unordered_set<SpatialHashEntry*>> Index;
     Index index_;
 };
 

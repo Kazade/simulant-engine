@@ -13,7 +13,7 @@ enum PartitionerEntryType {
     PARTITIONER_ENTRY_TYPE_RENDERABLE
 };
 
-struct PartitionerEntry : public HGSHEntry {
+struct PartitionerEntry : public SpatialHashEntry {
     PartitionerEntry(RenderablePtr renderable):
         type(PARTITIONER_ENTRY_TYPE_RENDERABLE),
         renderable(renderable) {}
@@ -54,7 +54,7 @@ public:
     void event_actor_changed(ActorID ent);
 
 private:
-    HGSH* hash_ = nullptr;
+    SpatialHash* hash_ = nullptr;
 
     typedef std::shared_ptr<PartitionerEntry> PartitionerEntryPtr;
 

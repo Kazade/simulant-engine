@@ -4,12 +4,12 @@
 
 namespace smlt {
 
-HGSH::HGSH() {
+SpatialHash::SpatialHash() {
 
 }
 
 
-void HGSH::insert_object_for_box(const AABB &box, HGSHEntry *object) {
+void SpatialHash::insert_object_for_box(const AABB &box, SpatialHashEntry *object) {
     auto cell_size = find_cell_size_for_box(box);
 
     for(auto& corner: box.corners()) {
@@ -18,7 +18,7 @@ void HGSH::insert_object_for_box(const AABB &box, HGSHEntry *object) {
     }
 }
 
-void HGSH::remove_object(HGSHEntry *object) {
+void SpatialHash::remove_object(SpatialHashEntry *object) {
     for(auto key: object->keys()) {
         auto it = index_.find(key);
         if(it != index_.end()) {
@@ -32,7 +32,7 @@ void HGSH::remove_object(HGSHEntry *object) {
     object->set_keys(KeyList());
 }
 
-HGSHEntryList HGSH::find_objects_within_frustum(const Frustum &frustum) {
+HGSHEntryList SpatialHash::find_objects_within_frustum(const Frustum &frustum) {
     // FIXME: This just builds an AABB around the frustum, for perspective
     // projections this likely isn't efficient (fine for ortho)
 
@@ -65,7 +65,7 @@ HGSHEntryList HGSH::find_objects_within_frustum(const Frustum &frustum) {
     return find_objects_within_box(box);
 }
 
-HGSHEntryList HGSH::find_objects_within_box(const AABB &box) {
+HGSHEntryList SpatialHash::find_objects_within_box(const AABB &box) {
     HGSHEntryList objects;
 
     auto cell_size = find_cell_size_for_box(box);
@@ -114,7 +114,7 @@ HGSHEntryList HGSH::find_objects_within_box(const AABB &box) {
     return objects;
 }
 
-int32_t HGSH::find_cell_size_for_box(const AABB &box) const {
+int32_t SpatialHash::find_cell_size_for_box(const AABB &box) const {
     /*
      * We find the nearest hash size which is greater than double the max dimension of the
      * box. This increases the likelyhood that the object will not wastefully span cells
@@ -129,7 +129,7 @@ int32_t HGSH::find_cell_size_for_box(const AABB &box) const {
     return k;
 }
 
-void HGSH::insert_object_for_key(Key key, HGSHEntry *entry) {
+void SpatialHash::insert_object_for_key(Key key, SpatialHashEntry *entry) {
     auto it = index_.find(key);
     if(it != index_.end()) {
         it->second.insert(entry);
