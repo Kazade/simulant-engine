@@ -32,37 +32,66 @@ void SpatialHash::remove_object(SpatialHashEntry *object) {
     object->set_keys(KeyList());
 }
 
+void generate_boxes_for_frustum(const Frustum& frustum, int32_t slices, std::vector<AABB>& results) {
+    results.clear(); // Required
+
+    // start at the center of the near plane
+    Vec3 start_point = Vec3::find_average(frustum.near_corners());
+
+    // We want to head in the direction of the frustum
+    Vec3 direction = frustum.direction().normalized();
+
+    // Get the normals of the up and right planes so we can generated boxes
+    Vec3 up = frustum.plane(FRUSTUM_PLANE_TOP).normal();           
+    Vec3 right = frustum.plane(FRUSTUM_PLANE_RIGHT).normal();
+
+    // Project the up and right normals onto the near plane (otherwise they might be skewed)
+    up = frustum.plane(FRUSTUM_PLANE_NEAR).project(up).normalized();
+    right = frustum.plane(FRUSTUM_PLANE_NEAR).project(right).normalized();
+
+    float box_size = frustum.depth() / slices;
+
+    for(auto i = 0; i < slices; ++i) {
+        // Get the width and the height of the frustum at the far edge of this box slice
+        float width = frustum.width_at_distance((i + 1) * box_size);
+        float height = frustum.height_at_distance((i + 1) * box_size);
+
+        float halfWidth = width * 0.5;
+        float halfHeight = height * 0.5;
+
+        // Generate the boxes for this slice
+        for(float x = -halfWidth; x < halfWidth; x += box_size) {
+            for(float y = -halfHeight; y < halfHeight; y += box_size) {
+
+                Vec3 min = start_point + (right * x) + (up * y);
+                Vec3 max = start_point + (right * (x + box_size)) + (up * (y + box_size)) + (direction * box_size);
+
+                AABB box(min, max);
+
+                results.push_back(box);
+            }
+        }
+
+        start_point += direction * box_size;
+    }
+}
+
 HGSHEntryList SpatialHash::find_objects_within_frustum(const Frustum &frustum) {
-    // FIXME: This just builds an AABB around the frustum, for perspective
-    // projections this likely isn't efficient (fine for ortho)
+    const int32_t SLICES = 10;
+    static std::vector<AABB> boxes; // Static to avoid repeated allocations
 
-    const float min = std::numeric_limits<float>::lowest();
-    const float max = std::numeric_limits<float>::max();
+    generate_boxes_for_frustum(frustum, SLICES, boxes);
 
-    AABB box;
-    box.min.x = box.min.y = box.min.z = max;
-    box.max.x = box.max.y = box.max.z = min;
+    HGSHEntryList results;
 
-    auto update_box = [&box](const Vec3& corner) {
-        if(corner.x < box.min.x) box.min.x = corner.x;
-        if(corner.y < box.min.y) box.min.y = corner.y;
-        if(corner.z < box.min.z) box.min.z = corner.z;
-
-        if(corner.x > box.max.x) box.max.x = corner.x;
-        if(corner.y > box.max.y) box.max.y = corner.y;
-        if(corner.z > box.max.z) box.max.z = corner.z;
-    };
-
-    for(auto& corner: frustum.near_corners()) {
-        update_box(corner);
+    for(auto& box: boxes) {
+        auto ret = find_objects_within_box(box);
+        if(!ret.empty()) {
+            results.insert(ret.begin(), ret.end());
+        }
     }
 
-
-    for(auto& corner: frustum.far_corners()) {
-        update_box(corner);
-    }
-
-    return find_objects_within_box(box);
+    return results;
 }
 
 HGSHEntryList SpatialHash::find_objects_within_box(const AABB &box) {
