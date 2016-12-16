@@ -28,7 +28,7 @@ public:
         frustum.build(&modelview_projection);
         assert_true(frustum.initialized());
 
-        std::vector<kmVec3> near_corners = frustum.near_corners();
+        std::vector<Vec3> near_corners = frustum.near_corners();
 
         //Bottom left near corner
         assert_close(-1.0, near_corners[FRUSTUM_CORNER_BOTTOM_LEFT].x, 0.00001);
@@ -50,7 +50,7 @@ public:
         assert_close(1.0, near_corners[FRUSTUM_CORNER_TOP_LEFT].y, 0.00001);
         assert_close(-1.0, near_corners[FRUSTUM_CORNER_TOP_LEFT].z, 0.00001); //Near distance
 
-        std::vector<kmVec3> far_corners = frustum.far_corners();
+        std::vector<Vec3> far_corners = frustum.far_corners();
 
         //Bottom left near corner
         assert_close(-1.0, far_corners[FRUSTUM_CORNER_BOTTOM_LEFT].x, 0.00001);

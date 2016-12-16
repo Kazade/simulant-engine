@@ -443,6 +443,17 @@ struct Vec3 : public kmVec3 {
         return *this;
     }
 
+    template<typename Container>
+    static Vec3 find_average(const Container& vectors) {
+        Vec3 ret;
+        for(auto& v: vectors) {
+            ret += v;
+        }
+
+        ret /= float(vectors.size());
+        return ret;
+    }
+
     static float distance(const smlt::Vec3& lhs, const smlt::Vec3& rhs) {
         return (rhs - lhs).length();
     }
@@ -472,6 +483,10 @@ struct Vec3 : public kmVec3 {
 };
 
 struct Plane : public kmPlane {
+    Plane() {
+        kmPlaneFill(this, 0, 0, 0, 0);
+    }
+
     Plane(const Vec3& N, float D) {
         kmPlaneFromNormalAndDistance(this, &N, D);
     }
@@ -480,6 +495,10 @@ struct Plane : public kmPlane {
         Vec3 ret;
         kmVec3ProjectOnToPlane(&ret, &v, this);
         return ret;
+    }
+
+    Vec3 normal() const {
+        return Vec3(a, b, c);
     }
 };
 
@@ -491,6 +510,11 @@ struct AABB : public kmAABB3 {
     AABB() {
         kmVec3Zero(&this->min);
         kmVec3Zero(&this->max);
+    }
+
+    AABB(const Vec3& min, const Vec3& max) {
+        this->min = min;
+        this->max = max;
     }
 
     AABB(const Vec3& centre, float width) {
