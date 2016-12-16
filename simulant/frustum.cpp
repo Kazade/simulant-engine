@@ -54,12 +54,12 @@ float Frustum::width_at_distance(float distance) const {
 
 float Frustum::height_at_distance(float distance) const {
     const float Deg2Rad = (kmPI * 2) / 360;
-    return 2.0f * distance * tanf(field_of_view() * 0.5f * Deg2Rad);
+    return 2.0f * distance * tanf(field_of_view().value_ * 0.5f * Deg2Rad);
 }
 
-float Frustum::field_of_view() const {
+Degrees Frustum::field_of_view() const {
     float cosb = planes_[FRUSTUM_PLANE_TOP].normal().dot(planes_[FRUSTUM_PLANE_NEAR].normal());
-    return 2.0f * atanf(cosb * (1.0 / sqrtf(1.0f - cosb * cosb)));
+    return Degrees(Radians(2.0f * atanf(cosb * (1.0 / sqrtf(1.0f - cosb * cosb)))));
 }
 
 void Frustum::build(const kmMat4* modelview_projection) {

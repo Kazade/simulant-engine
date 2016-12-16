@@ -76,6 +76,48 @@ public:
         assert_close(2.0, frustum.far_height(), 0.0001);
         assert_close(9.0, frustum.depth(), 0.0001);
     }
+
+    void test_aspect_ratio() {
+        Frustum frustum;
+
+        assert_true(!frustum.initialized());
+
+        //Create an orthographic projection, and a modelview idactor matrix
+        kmMat4 projection, modelview;
+        kmMat4OrthographicProjection(&projection, -1.0, 1.0, -1.0, 1.0, 1.0, 10.0);
+        kmMat4Identity(&modelview);
+
+        //Create the modelview projection matrix
+        kmMat4 modelview_projection;
+        kmMat4Multiply(&modelview_projection, &projection, &modelview);
+
+        //Build the frustum from the modelview projection matrix
+        frustum.build(&modelview_projection);
+        assert_true(frustum.initialized());
+
+        assert_close(frustum.aspect_ratio(), 1.0, 0.0001);
+    }
+
+    void test_field_of_view() {
+        Frustum frustum;
+
+        assert_true(!frustum.initialized());
+
+        //Create an orthographic projection, and a modelview idactor matrix
+        kmMat4 projection, modelview;
+        kmMat4PerspectiveProjection(&projection, 45.0, 16.0 / 9.0, 1.0, 100.0);
+        kmMat4Identity(&modelview);
+
+        //Create the modelview projection matrix
+        kmMat4 modelview_projection;
+        kmMat4Multiply(&modelview_projection, &projection, &modelview);
+
+        //Build the frustum from the modelview projection matrix
+        frustum.build(&modelview_projection);
+        assert_true(frustum.initialized());
+
+        assert_close(frustum.field_of_view().value_, 45.0, 0.0001);
+    }
 };
 
 #endif // TEST_FRUSTUM_H
