@@ -38,6 +38,29 @@ bool Frustum::intersects_aabb(const kmAABB3 &aabb) const {
     return true;
 }
 
+Vec3 Frustum::direction() const {
+    Vec3 far = Vec3::find_average(far_corners());
+    Vec3 near = Vec3::find_average(near_corners());
+    return (far - near).normalized();
+}
+
+float Frustum::aspect_ratio() const {
+    return far_width() / far_height();
+}
+
+float Frustum::width_at_distance(float distance) const {
+    return height_at_distance(distance) * aspect_ratio();
+}
+
+float Frustum::height_at_distance(float distance) const {
+    const float Deg2Rad = (kmPI * 2) / 360;
+    return 2.0f * distance * tanf(field_of_view() * 0.5f * Deg2Rad);
+}
+
+float Frustum::field_of_view() const {
+    float cosb = planes_[FRUSTUM_PLANE_TOP].normal().dot(planes_[FRUSTUM_PLANE_NEAR].normal());
+    return 2.0f * atanf(cosb * (1.0 / sqrtf(1.0f - cosb * cosb)));
+}
 
 void Frustum::build(const kmMat4* modelview_projection) {
     planes_.resize(FRUSTUM_PLANE_MAX);
@@ -111,11 +134,11 @@ void Frustum::build(const kmMat4* modelview_projection) {
     initialized_ = true;
 }
 
-std::vector<kmVec3> Frustum::near_corners() const {
+std::vector<Vec3> Frustum::near_corners() const {
     return near_corners_;
 }
 
-std::vector<kmVec3> Frustum::far_corners() const {
+std::vector<Vec3> Frustum::far_corners() const {
     return far_corners_;
 }
 
