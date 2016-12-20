@@ -32,7 +32,7 @@ void SpatialHash::remove_object(SpatialHashEntry *object) {
     object->set_keys(KeyList());
 }
 
-void generate_boxes_for_frustum(const Frustum& frustum, int32_t slices, std::vector<AABB>& results) {
+void generate_boxes_for_frustum(const Frustum& frustum, float box_size, std::vector<AABB>& results) {
     results.clear(); // Required
 
     // start at the center of the near plane
@@ -42,14 +42,14 @@ void generate_boxes_for_frustum(const Frustum& frustum, int32_t slices, std::vec
     Vec3 direction = frustum.direction().normalized();
 
     // Get the normals of the up and right planes so we can generated boxes
-    Vec3 up = frustum.plane(FRUSTUM_PLANE_TOP).normal();           
-    Vec3 right = frustum.plane(FRUSTUM_PLANE_RIGHT).normal();
+    Vec3 up = frustum.plane(FRUSTUM_PLANE_BOTTOM).normal();
+    Vec3 right = frustum.plane(FRUSTUM_PLANE_LEFT).normal();
 
     // Project the up and right normals onto the near plane (otherwise they might be skewed)
     up = frustum.plane(FRUSTUM_PLANE_NEAR).project(up).normalized();
     right = frustum.plane(FRUSTUM_PLANE_NEAR).project(right).normalized();
 
-    float box_size = frustum.depth() / slices;
+    auto slices = std::ceil(frustum.depth() / box_size);
 
     for(auto i = 0; i < slices; ++i) {
         // Get the width and the height of the frustum at the far edge of this box slice
@@ -60,15 +60,28 @@ void generate_boxes_for_frustum(const Frustum& frustum, int32_t slices, std::vec
         float halfHeight = height * 0.5;
 
         // Generate the boxes for this slice
-        for(float x = -halfWidth; x < halfWidth; x += box_size) {
-            for(float y = -halfHeight; y < halfHeight; y += box_size) {
+        for(float x = 0; x < halfWidth; x += box_size) {
+            for(float y = 0; y < halfHeight; y += box_size) {
 
                 Vec3 min = start_point + (right * x) + (up * y);
                 Vec3 max = start_point + (right * (x + box_size)) + (up * (y + box_size)) + (direction * box_size);
 
-                AABB box(min, max);
+                results.push_back(AABB(min, max));
 
-                results.push_back(box);
+                min = start_point + (right * x) + (-up * y);
+                max = start_point + (right * (x + box_size)) + (-up * (y + box_size)) + (direction * box_size);
+
+                results.push_back(AABB(min, max));
+
+                min = start_point + (-right * x) + (-up * y);
+                max = start_point + (-right * (x + box_size)) + (-up * (y + box_size)) + (direction * box_size);
+
+                results.push_back(AABB(min, max));
+
+                min = start_point + (-right * x) + (up * y);
+                max = start_point + (-right * (x + box_size)) + (up * (y + box_size)) + (direction * box_size);
+
+                results.push_back(AABB(min, max));
             }
         }
 
@@ -77,10 +90,11 @@ void generate_boxes_for_frustum(const Frustum& frustum, int32_t slices, std::vec
 }
 
 HGSHEntryList SpatialHash::find_objects_within_frustum(const Frustum &frustum) {
-    const int32_t SLICES = 10;
+    const static float BOX_SIZE = 1024.0;
+
     static std::vector<AABB> boxes; // Static to avoid repeated allocations
 
-    generate_boxes_for_frustum(frustum, SLICES, boxes);
+    generate_boxes_for_frustum(frustum, BOX_SIZE, boxes);
 
     HGSHEntryList results;
 

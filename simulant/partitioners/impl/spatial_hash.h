@@ -107,5 +107,7 @@ private:
     Index index_;
 };
 
+void generate_boxes_for_frustum(const Frustum& frustum, float box_size, std::vector<AABB>& results);
+
 }
 

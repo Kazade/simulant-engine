@@ -118,6 +118,27 @@ public:
 
         assert_close(frustum.field_of_view().value_, 45.0, 0.0001);
     }
+
+    void test_depth() {
+        Frustum frustum;
+
+        assert_true(!frustum.initialized());
+
+        //Create an orthographic projection, and a modelview idactor matrix
+        kmMat4 projection, modelview;
+        kmMat4PerspectiveProjection(&projection, 45.0, 16.0 / 9.0, 1.0, 100.0);
+        kmMat4Identity(&modelview);
+
+        //Create the modelview projection matrix
+        kmMat4 modelview_projection;
+        kmMat4Multiply(&modelview_projection, &projection, &modelview);
+
+        //Build the frustum from the modelview projection matrix
+        frustum.build(&modelview_projection);
+        assert_true(frustum.initialized());
+
+        assert_close(frustum.depth(), 99.0, 0.001);
+    }
 };
 
 #endif // TEST_FRUSTUM_H
