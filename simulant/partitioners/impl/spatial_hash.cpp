@@ -143,6 +143,8 @@ HGSHEntryList SpatialHash::find_objects_within_box(const AABB &box) {
 
     auto corners = box.corners();
 
+    std::set<Key> seen;
+
     for(auto& corner: corners) {
         auto key = make_key(
             cell_size,
@@ -150,7 +152,13 @@ HGSHEntryList SpatialHash::find_objects_within_box(const AABB &box) {
             corner.y,
             corner.z
         );
-        gather_objects(index_, key, objects);
+
+        // Don't look at the same key more than once
+        // FIXME: implement a hashing function and use unordered_set
+        if(seen.find(key) == seen.end()) {
+            gather_objects(index_, key, objects);
+            seen.insert(key);
+        }
     }
 
 
