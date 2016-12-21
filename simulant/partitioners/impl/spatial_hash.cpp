@@ -90,11 +90,11 @@ void generate_boxes_for_frustum(const Frustum& frustum, float box_size, std::vec
 }
 
 HGSHEntryList SpatialHash::find_objects_within_frustum(const Frustum &frustum) {
-    const static float BOX_SIZE = 1024.0;
+    auto box_size = frustum.depth() / 5.0;
 
     static std::vector<AABB> boxes; // Static to avoid repeated allocations
 
-    generate_boxes_for_frustum(frustum, BOX_SIZE, boxes);
+    generate_boxes_for_frustum(frustum, box_size, boxes);
 
     HGSHEntryList results;
 
