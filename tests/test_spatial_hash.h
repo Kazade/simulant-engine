@@ -121,6 +121,22 @@ public:
         assert_equal(results.size(), 0);
     }
 
+    void test_inserting_and_getting_flat_objects() {
+        SpatialHashEntry entry1, entry2, entry3;
+
+        AABB box1(Vec3(0, 0, 0), Vec3(1, 1, 0));
+        AABB box2(Vec3(0, 0, 0), Vec3(1, 0, 1));
+        AABB box3(Vec3(0, 0, 0), Vec3(0, 1, 1));
+
+        hash_->insert_object_for_box(box1, &entry1);
+        hash_->insert_object_for_box(box2, &entry2);
+        hash_->insert_object_for_box(box3, &entry3);
+
+        auto results = hash_->find_objects_within_box(AABB(Vec3(), 5.0));
+
+        assert_equal(results.size(), 3);
+    }
+
     void test_retrieving_objects_within_frustum() {
         SpatialHashEntry entry1, entry2, entry3, entry4;
 
