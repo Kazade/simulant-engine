@@ -121,6 +121,41 @@ public:
         assert_equal(results.size(), 0);
     }
 
+    void test_retrieving_objects_within_frustum() {
+        SpatialHashEntry entry1, entry2, entry3, entry4;
+
+        AABB box1(Vec3(0.5, 0.5, -0.5), 0.5);
+        AABB box2(Vec3(0, 0, -1), 5.0);
+        AABB box3(Vec3(10, 10, -200), 1.0);
+        AABB box4(Vec3(0, 0, 1), 1.0);
+
+        hash_->insert_object_for_box(box1, &entry1);
+        hash_->insert_object_for_box(box2, &entry2);
+        hash_->insert_object_for_box(box3, &entry3);
+        hash_->insert_object_for_box(box4, &entry4);
+
+        Frustum frustum;
+
+        assert_true(!frustum.initialized());
+
+        //Create an orthographic projection, and a modelview idactor matrix
+        kmMat4 projection, modelview;
+        kmMat4PerspectiveProjection(&projection, 45.0, 16.0 / 9.0, 0.1, 100.0);
+        kmMat4Identity(&modelview);
+
+        //Create the modelview projection matrix
+        kmMat4 modelview_projection;
+        kmMat4Multiply(&modelview_projection, &projection, &modelview);
+
+        //Build the frustum from the modelview projection matrix
+        frustum.build(&modelview_projection);
+        assert_true(frustum.initialized());
+
+        auto results = hash_->find_objects_within_frustum(frustum);
+
+        assert_equal(results.size(), 2);
+    }
+
     void test_removing_objects_from_the_hash() {
         test_adding_objects_to_the_hash();
 
