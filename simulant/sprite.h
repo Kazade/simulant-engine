@@ -50,7 +50,7 @@ public:
     void flip_horizontally(bool value=true);
 
     //Printable interface
-    unicode __unicode__() const override {
+    unicode to_unicode() const override {
         return _u("Sprite {0}").format(this->id());
     }
 

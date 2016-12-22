@@ -108,7 +108,7 @@ public:
 
 class Printable {
 public:
-    virtual unicode __unicode__() const = 0;
+    virtual unicode to_unicode() const = 0;
 
     friend std::ostream& operator<< (std::ostream& o, Printable const& instance);
 };

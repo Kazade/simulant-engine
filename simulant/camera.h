@@ -41,7 +41,7 @@ public:
 
     void set_orthographic_projection(double left, double right, double bottom, double top, double near=-1.0, double far=1.0);
 
-    unicode __unicode__() const {
+    unicode to_unicode() const {
         if(has_name()) {
             return name();
         } else {

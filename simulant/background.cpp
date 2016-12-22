@@ -103,7 +103,7 @@ void Background::ask_owner_for_destruction() {
     manager_->window->delete_background(id());
 }
 
-unicode Background::__unicode__() const {
+unicode Background::to_unicode() const {
     if(has_name()) {
         return name();
     } else {

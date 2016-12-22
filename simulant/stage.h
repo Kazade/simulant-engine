@@ -168,7 +168,7 @@ public:
     Vec3 scale() const override { return Vec3(1, 1, 1); }
 
     // Printable interface
-    unicode __unicode__() const override {
+    unicode to_unicode() const override {
         if(has_name()) {
             return name();
         } else {

@@ -58,7 +58,7 @@ public:
     void ask_owner_for_destruction();
 
 
-    unicode __unicode__() const {
+    unicode to_unicode() const {
         if(has_name()) {
             return name();
         } else {

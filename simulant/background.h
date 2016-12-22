@@ -38,7 +38,7 @@ public:
     void ask_owner_for_destruction();
 
     //Printable interface
-    unicode __unicode__() const override;
+    unicode to_unicode() const override;
 
     //Nameable interface
     const bool has_name() const override;

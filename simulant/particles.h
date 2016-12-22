@@ -167,7 +167,7 @@ public:
     const AABB aabb() const;
     const AABB transformed_aabb() const;
 
-    unicode __unicode__() const { return name_; }
+    unicode to_unicode() const { return name_; }
 
     void ask_owner_for_destruction();
 
