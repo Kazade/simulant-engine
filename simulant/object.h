@@ -10,7 +10,6 @@
 #include "deps/kazsignal/kazsignal.h"
 
 #include "generic/data_carrier.h"
-#include "generic/visitor.h"
 #include "types.h"
 
 #include "scene_node.h"
