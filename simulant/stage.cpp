@@ -1,23 +1,24 @@
 #include "stage.h"
 #include "window_base.h"
 #include "partitioner.h"
-#include "actor.h"
-#include "light.h"
+#include "nodes/actor.h"
+#include "nodes/light.h"
 #include "camera.h"
 #include "debug.h"
-#include "sprite.h"
-#include "particles.h"
-#include "geom.h"
+#include "nodes/sprite.h"
+#include "nodes/particles.h"
+#include "nodes/geom.h"
+#include "nodes/camera_proxy.h"
 
 #include "loader.h"
 #include "partitioners/null_partitioner.h"
 #include "partitioners/spatial_hash.h"
-#include "utils/ownable.h"
 #include "renderers/batching/render_queue.h"
 
 namespace smlt {
 
 Stage::Stage(StageID id, WindowBase *parent, AvailablePartitioner partitioner):
+    StageNode(this),
     WindowHolder(parent),
     generic::Identifiable<StageID>(id),
     SkyboxManager(parent, this),
@@ -27,9 +28,6 @@ Stage::Stage(StageID id, WindowBase *parent, AvailablePartitioner partitioner):
 
     set_partitioner(partitioner);
     render_queue_.reset(new batcher::RenderQueue(this, parent->renderer.get()));
-
-    ActorManager::signal_post_create().connect(std::bind(&Stage::post_create_callback<Actor, ActorID>, this, std::placeholders::_1, std::placeholders::_2));
-    LightManager::signal_post_create().connect(std::bind(&Stage::post_create_callback<Light, LightID>, this, std::placeholders::_1, std::placeholders::_2));    
 }
 
 Stage::~Stage() {
@@ -130,9 +128,6 @@ const ActorPtr Stage::actor(ActorID e) const {
 
 void Stage::delete_actor(ActorID e) {
     signal_actor_destroyed_(e);
-
-    actor(e)->destroy_children();
-
     ActorManager::destroy(e);
 }
 
@@ -217,9 +212,6 @@ bool Stage::has_particle_system(ParticleSystemID pid) const {
 
 void Stage::delete_particle_system(ParticleSystemID pid) {
     signal_particle_system_destroyed_(pid);
-
-    particle_system(pid)->destroy_children();
-
     ParticleSystemManager::destroy(pid);
 }
 
@@ -256,9 +248,7 @@ bool Stage::has_sprite(SpriteID s) const {
     return SpriteManager::contains(s);
 }
 
-void Stage::delete_sprite(SpriteID s) {   
-    sprite(s)->apply_recursively_leaf_first(&ownable_tree_node_destroy, false);
-    sprite(s)->detach();    
+void Stage::delete_sprite(SpriteID s) {     
     SpriteManager::destroy(s);
 }
 
@@ -285,27 +275,12 @@ LightID Stage::new_light(LightType type) {
     return lid;
 }
 
-LightID Stage::new_light(MoveableObject &parent, LightType type) {
-    LightID lid = LightManager::make(this);
-
-    {
-        auto l = light(lid);
-        l->set_type(type);
-        l->set_parent(&parent);
-    }
-
-    signal_light_created_(lid);
-
-    return lid;
-}
-
 LightPtr Stage::light(LightID light_id) {
     return LightManager::get(light_id).lock().get();
 }
 
 void Stage::delete_light(LightID light_id) {
     signal_light_destroyed_(light_id);
-    light(light_id)->destroy_children();
     LightManager::destroy(light_id);
 }
 

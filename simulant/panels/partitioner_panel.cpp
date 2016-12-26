@@ -2,7 +2,7 @@
 #include "partitioner_panel.h"
 #include "../window_base.h"
 #include "../stage.h"
-#include "../actor.h"
+#include "../nodes/actor.h"
 #include "../partitioner.h"
 
 namespace smlt {

@@ -4,9 +4,10 @@
 #include "render_sequence.h"
 #include "stage.h"
 #include "overlay.h"
-#include "actor.h"
+#include "nodes/actor.h"
+#include "nodes/camera_proxy.h"
 #include "mesh.h"
-#include "light.h"
+#include "nodes/light.h"
 #include "camera.h"
 #include "window_base.h"
 #include "partitioner.h"
@@ -200,19 +201,6 @@ void RenderSequence::run() {
     window->stats->set_subactors_rendered(actors_rendered);
 }
 
-void RenderSequence::update_camera_constraint(CameraID cid) {
-    auto camera = window->camera(cid);
-
-    if(camera->has_proxy()) {
-        //Update the associated camera
-        if(camera->proxy().is_constrained()) {
-            //FIXME: THis might work for cameras but we need a more generic place
-            //to do this for all objects before render
-            camera->proxy()._update_constraint();
-        }
-        camera->set_transform(camera->proxy().absolute_transformation());
-    }
-}
 
 uint64_t generate_frame_id() {
     static uint64_t frame_id = 0;
@@ -225,8 +213,6 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
     if(!pipeline_stage->is_active()) {
         return;
     }
-
-    update_camera_constraint(pipeline_stage->camera_id());
 
     RenderTarget& target = *window_; //FIXME: Should be window or texture
 

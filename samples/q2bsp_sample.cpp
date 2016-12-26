@@ -21,7 +21,7 @@ public:
         window->loader_for("sample_data/sample.bsp")->into(stage);
 
         stage->host_camera(camera_id_);
-        stage->camera(camera_id_)->set_absolute_position(
+        stage->camera(camera_id_)->move_to_absolute(
             stage->data->get<smlt::Vec3>("player_spawn")
         );
 
@@ -49,7 +49,7 @@ public:
                     auto rect_mat = lm_stage->assets->new_material_from_texture(lightmap_texture);
                     auto rectangle = lm_stage->assets->new_mesh_as_rectangle(0.25, 0.25, Vec2(), rect_mat);
                     auto rect_actor = lm_stage->new_actor_with_mesh(rectangle);
-                    lm_stage->actor(rect_actor)->set_absolute_position(0.5, -0.25, 0);
+                    lm_stage->actor(rect_actor)->move_to_absolute(0.5, -0.25, 0);
                 }
 
                 lightmap_preview_pipeline_ = window->render(lightmap_preview_, lightmap_preview_camera_).with_priority(RENDER_PRIORITY_FOREGROUND);

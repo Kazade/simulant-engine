@@ -1,20 +1,16 @@
 #ifndef LIGHT_H_INCLUDED
 #define LIGHT_H_INCLUDED
 
-#include "generic/managed.h"
-#include "object.h"
-#include "generic/identifiable.h"
-#include "types.h"
-
-#include "utils/parent_setter_mixin.h"
-
+#include "../generic/managed.h"
+#include "../generic/identifiable.h"
+#include "../types.h"
+#include "stage_node.h"
 
 namespace smlt {
 
 class Light :
-    public ParentSetterMixin<MoveableObject>,
+    public StageNode,
     public generic::Identifiable<LightID>,
-    public BoundableEntity,
     public Managed<Light>,
     public std::enable_shared_from_this<Light> {
 
@@ -46,7 +42,7 @@ public:
 
     void set_direction(const kmVec3& dir) {
         set_type(LIGHT_TYPE_DIRECTIONAL);
-        set_absolute_position(-dir.x, -dir.y, -dir.z);
+        move_to(-dir.x, -dir.y, -dir.z);
     }
 
     void set_diffuse(const smlt::Colour& colour) {
@@ -92,17 +88,13 @@ public:
     }
 
     void ask_owner_for_destruction();
-
-    unicode to_unicode() const {
-        if(has_name()) {
-            return name();
-        } else {
-            return _u("Light {0}").format(this->id());
-        }
-    }
-
     RenderableCullingMode renderable_culling_mode() const { return culling_mode_; }
 
+    void update(double step) override {}
+
+    void cleanup() override {
+        StageNode::cleanup();
+    }
 private:
     LightType type_;
 

@@ -1,14 +1,14 @@
-#include "utils/random.h"
-#include "stage.h"
 #include "particles.h"
-#include "hardware_buffer.h"
 
+#include "../utils/random.h"
+#include "../stage.h"
+#include "../hardware_buffer.h"
 
 namespace smlt {
 
 ParticleSystem::ParticleSystem(ParticleSystemID id, Stage* stage):
+    StageNode(stage),
     generic::Identifiable<ParticleSystemID>(id),
-    ParentSetterMixin<MoveableObject>(stage),
     Source(stage),
     vertex_data_(new VertexData(VertexSpecification::POSITION_AND_DIFFUSE)),
     index_data_(new IndexData()) {
@@ -201,7 +201,7 @@ void ParticleSystem::set_quota(int quota) {
     vertex_buffer_dirty_ = index_buffer_dirty_ = true;
 }
 
-void ParticleSystem::do_update(double dt) {
+void ParticleSystem::update(double dt) {
     update_source(dt); //Update any sounds attached to this particle system
 
     auto current_particle_count = particles_.size();
@@ -382,7 +382,7 @@ std::pair<float, float> ParticleEmitter::duration_range() const {
 }
 
 void ParticleSystem::set_particle_width(float width) {
-    MoveableObject::stage->assets->material(material_id())->pass(0)->set_point_size(width);
+    stage->assets->material(material_id())->pass(0)->set_point_size(width);
     particle_width_ = width;
 }
 

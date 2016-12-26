@@ -101,3 +101,5 @@ simulant/managers
 simulant/deps/SOIL
 simulant/deps/nuklear
 simulant/shaders
+simulant/nodes
+simulant/interfaces

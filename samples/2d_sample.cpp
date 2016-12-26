@@ -36,12 +36,14 @@ public:
             stage->host_camera(camera_id_);
 
             //Constrain the camera to the area where the sprite grid is rendered
-            stage->camera(camera_id_)->constrain_to(
-                smlt::Vec3(render_width / 2, render_height / 2, 0),
-                smlt::Vec3(
-                    bounds.width() - render_width / 2,
-                    bounds.height() - render_height / 2,
-                    0
+            stage->camera(camera_id_)->constrain_to_aabb(
+                AABB(
+                    smlt::Vec3(render_width / 2, render_height / 2, 0),
+                    smlt::Vec3(
+                        bounds.width() - render_width / 2,
+                        bounds.height() - render_height / 2,
+                        0
+                    )
                 )
             );
 

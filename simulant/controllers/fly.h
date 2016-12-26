@@ -3,7 +3,8 @@
 #include <deque>
 #include "./controller.h"
 #include "../window_base.h"
-#include "../object.h"
+
+#include "../interfaces/transformable.h"
 
 namespace smlt {
 namespace controllers {
@@ -22,7 +23,7 @@ public:
     Fly(Controllable* container, WindowBase* window):
         Controller("fly") {
 
-        object_ = dynamic_cast<MoveableObject*>(container);
+        object_ = dynamic_cast<Transformable*>(container);
 
         if(!object_) {
             throw std::logic_error("Tried to attach FlyController to something which wasn't an object");
@@ -67,19 +68,19 @@ public:
 private:
     void do_post_update(double dt) override {
         if(moving_forward_) {
-            object_->move_forward(600.0 * dt);
+            object_->move_forward_by(600.0 * dt);
         }
 
         if(moving_backward_) {
-            object_->move_forward(-600.0 * dt);
+            object_->move_forward_by(-600.0 * dt);
         }
 
         if(rotating_left_) {
-            object_->rotate_global_y(Degrees(50.0 * dt));
+            object_->rotate_global_y_by(Degrees(50.0 * dt));
         }
 
         if(rotating_right_) {
-            object_->rotate_global_y(Degrees(-50.0 * dt));
+            object_->rotate_global_y_by(Degrees(-50.0 * dt));
         }
 
         // http://www.flipcode.com/archives/Smooth_Mouse_Filtering.shtml
@@ -102,8 +103,8 @@ private:
         filtered_x /= MOUSE_FILTER_BUFFER_SIZE;
         filtered_y /= MOUSE_FILTER_BUFFER_SIZE;
 
-        object_->rotate_x(Degrees(filtered_y * -150.0f * dt));
-        object_->rotate_global_y(Degrees(filtered_x * -150.0f * dt));
+        object_->rotate_x_by(Degrees(filtered_y * -150.0f * dt));
+        object_->rotate_global_y_by(Degrees(filtered_x * -150.0f * dt));
 
         moving_forward_ = moving_backward_ = false;
         rotating_left_ = rotating_right_ = false;
@@ -119,7 +120,7 @@ private:
 
     std::vector<InputConnection> connections_;
 
-    MoveableObject* object_ = nullptr;
+    Transformable* object_ = nullptr;
 };
 
 }

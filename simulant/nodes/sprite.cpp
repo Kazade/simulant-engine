@@ -1,21 +1,19 @@
 #include <functional>
 #include "sprite.h"
-#include "stage.h"
 #include "actor.h"
-#include "window_base.h"
-#include "animation.h"
+
+#include "../stage.h"
+#include "../window_base.h"
+#include "../animation.h"
 
 using namespace smlt;
 
 Sprite::Sprite(SpriteID id, Stage *stage):
+    StageNode(stage),
     generic::Identifiable<SpriteID>(id),
-    ParentSetterMixin<MoveableObject>(stage),
     Source(stage) {
 
     sprite_sheet_padding_ = std::make_pair(0, 0);
-
-
-
 }
 
 bool Sprite::init() {
@@ -62,6 +60,10 @@ void Sprite::flip_horizontally(bool value) {
     flipped_horizontally_ = value;
     update_texture_coordinates();
 }
+
+const AABB Sprite::aabb() const { return actor_id_.fetch()->aabb(); }
+
+const AABB Sprite::transformed_aabb() const { return actor_id_.fetch()->transformed_aabb(); }
 
 void Sprite::flip_vertically(bool value) {
     if(value == flipped_vertically_) return;

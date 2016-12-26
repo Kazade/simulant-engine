@@ -1,8 +1,8 @@
 #include "spatial_hash.h"
-#include "../actor.h"
-#include "../light.h"
+#include "../nodes/actor.h"
+#include "../nodes/light.h"
 #include "../camera.h"
-#include "../particles.h"
+#include "../nodes/particles.h"
 
 namespace smlt {
 
@@ -23,7 +23,7 @@ void SpatialHashPartitioner::add_actor(ActorID obj) {
     auto actor = stage->actor(obj);
     actor->each([this, &obj](uint32_t i, SubActor* subactor) {
         auto partitioner_entry = std::make_shared<PartitionerEntry>(subactor->shared_from_this());
-        hash_->insert_object_for_box(subactor->aabb(), partitioner_entry.get());
+        hash_->insert_object_for_box(subactor->transformed_aabb(), partitioner_entry.get());
         actor_entries_[obj].push_back(partitioner_entry);
     });
 }

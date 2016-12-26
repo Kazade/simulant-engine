@@ -1,6 +1,5 @@
 #include "simulant/simulant.h"
 #include "simulant/shortcuts.h"
-#include "simulant/extra/skybox.h"
 
 using namespace smlt;
 
@@ -25,7 +24,7 @@ public:
 
         {
             auto actor = stage->actor(actor_id);
-            actor->set_absolute_position(0, 0, -30);
+            actor->move_to_absolute(0, 0, -30);
         }
 
         //Load a particle system and attach it to the actor
@@ -33,7 +32,7 @@ public:
         stage->particle_system(ps_id)->move_to(0, 0, -10);
 
         //Just stash the skybox with the window so we always have access to it
-        window->data->stash(smlt::extra::StarField::create(stage, camera_id_), "skybox");
+//        window->data->stash(smlt::extra::StarField::create(stage, camera_id_), "skybox");
 
         //Set the camera to follow the model
         stage->camera(camera_id_)->follow(actor_id, smlt::CAMERA_FOLLOW_MODE_DIRECT, smlt::Vec3(0, 5, 50));
@@ -41,31 +40,31 @@ public:
 
         //Connect keyboard signals
         window->keyboard->key_while_pressed_connect(SDL_SCANCODE_LEFT, [=](SDL_Keysym key, double dt) mutable {
-            window->stage(stage_id_)->actor(actor_id)->rotate_y(smlt::Degrees(-20.0 * dt));
+            window->stage(stage_id_)->actor(actor_id)->rotate_y_by(smlt::Degrees(-20.0 * dt));
         });
 
         window->keyboard->key_while_pressed_connect(SDL_SCANCODE_RIGHT, [=](SDL_Keysym key, double dt) mutable {
-            window->stage(stage_id_)->actor(actor_id)->rotate_y(smlt::Degrees(20.0 * dt));
+            window->stage(stage_id_)->actor(actor_id)->rotate_y_by(smlt::Degrees(20.0 * dt));
         });
 
         window->keyboard->key_while_pressed_connect(SDL_SCANCODE_UP, [=](SDL_Keysym key, double dt) mutable {
-            window->stage(stage_id_)->actor(actor_id)->rotate_x(smlt::Degrees(20.0 * dt));
+            window->stage(stage_id_)->actor(actor_id)->rotate_x_by(smlt::Degrees(20.0 * dt));
         });
 
         window->keyboard->key_while_pressed_connect(SDL_SCANCODE_DOWN, [=](SDL_Keysym key, double dt) mutable {
-            window->stage(stage_id_)->actor(actor_id)->rotate_x(smlt::Degrees(-20.0 * dt));
+            window->stage(stage_id_)->actor(actor_id)->rotate_x_by(smlt::Degrees(-20.0 * dt));
         });
 
         window->keyboard->key_while_pressed_connect(SDL_SCANCODE_A, [=](SDL_Keysym key, double dt) mutable {
-            window->stage(stage_id_)->actor(actor_id)->rotate_z(smlt::Degrees(-60.0 * dt));
+            window->stage(stage_id_)->actor(actor_id)->rotate_z_by(smlt::Degrees(-60.0 * dt));
         });
 
         window->keyboard->key_while_pressed_connect(SDL_SCANCODE_D, [=](SDL_Keysym key, double dt) mutable {
-            window->stage(stage_id_)->actor(actor_id)->rotate_z(smlt::Degrees(60.0 * dt));
+            window->stage(stage_id_)->actor(actor_id)->rotate_z_by(smlt::Degrees(60.0 * dt));
         });
 
         window->keyboard->key_while_pressed_connect(SDL_SCANCODE_S, [=](SDL_Keysym key, double dt) mutable {
-            window->stage(stage_id_)->actor(actor_id)->move_forward(60 * dt);
+            window->stage(stage_id_)->actor(actor_id)->move_forward_by(60 * dt);
         });
     }
 private:

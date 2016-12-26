@@ -1,20 +1,18 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 
-#include "generic/identifiable.h"
-#include "generic/managed.h"
-#include "generic/relation.h"
+#include "../generic/identifiable.h"
+#include "../generic/managed.h"
 
-#include "deps/kazsignal/kazsignal.h"
+#include "../deps/kazsignal/kazsignal.h"
 
-#include "interfaces.h"
-#include "object.h"
-#include "mesh.h"
-#include "sound.h"
+#include "stage_node.h"
+#include "../interfaces.h"
+#include "../mesh.h"
+#include "../sound.h"
 
-#include "utils/parent_setter_mixin.h"
-#include "renderers/batching/render_queue.h"
-#include "renderers/batching/renderable.h"
+#include "../renderers/batching/render_queue.h"
+#include "../renderers/batching/renderable.h"
 
 namespace smlt {
 
@@ -22,11 +20,10 @@ class KeyFrameAnimationState;
 class SubActor;
 
 class Actor :
+    public StageNode,
     public MeshInterface,
-    public virtual BoundableEntity,
     public Managed<Actor>,
     public generic::Identifiable<ActorID>,
-    public ParentSetterMixin<MoveableObject>,
     public Source,
     public HasMutableRenderPriority {
 
@@ -34,6 +31,9 @@ public:
     Actor(ActorID id, Stage* stage);
     Actor(ActorID id, Stage* stage, MeshID mesh);
     virtual ~Actor();
+
+    const AABB aabb() const;
+    const AABB transformed_aabb() const;
 
     MeshID mesh_id() const { return (mesh_) ? mesh_->id() : MeshID(0); }
 
@@ -56,18 +56,6 @@ public:
     const std::vector<std::shared_ptr<SubActor> >& _subactors() { return subactors_; }
 
     void ask_owner_for_destruction();
-
-
-    unicode to_unicode() const {
-        if(has_name()) {
-            return name();
-        } else {
-            return _u("Actor {0}").format(this->id());
-        }
-    }
-
-    const AABB aabb() const;
-    const AABB transformed_aabb() const;
 
     void each(std::function<void (uint32_t, SubActor*)> callback);
 
@@ -102,6 +90,10 @@ public:
         return mesh_ && mesh_->is_animated();
     }
 
+    void cleanup() override {
+        StageNode::cleanup();
+    }
+
 private:
     // Used for animated meshes
     std::unique_ptr<HardwareBuffer> interpolated_vertex_buffer_;
@@ -119,7 +111,7 @@ private:
     SubActorMaterialChangedCallback signal_subactor_material_changed_;
     MeshChangedCallback signal_mesh_changed_;
 
-    void do_update(double dt);
+    void update(double dt) override;
     void clear_subactors();
     void rebuild_subactors();
     sig::connection submesh_created_connection_;

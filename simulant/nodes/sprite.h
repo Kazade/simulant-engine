@@ -1,23 +1,23 @@
 #ifndef SPRITE_H
 #define SPRITE_H
 
-#include "types.h"
-#include "interfaces.h"
-#include "generic/managed.h"
-#include "generic/identifiable.h"
-#include "utils/parent_setter_mixin.h"
-#include "sound.h"
-#include "object.h"
-#include "animation.h"
+#include "stage_node.h"
+
+#include "../types.h"
+#include "../interfaces.h"
+#include "../generic/managed.h"
+#include "../generic/identifiable.h"
+#include "../sound.h"
+#include "../animation.h"
 
 namespace smlt {
 
 class KeyFrameAnimationState;
 
 class Sprite :
+    public StageNode,
     public Managed<Sprite>,
     public generic::Identifiable<SpriteID>,
-    public ParentSetterMixin<MoveableObject>,
     public KeyFrameAnimated,
     public Source,
     public std::enable_shared_from_this<Sprite> {
@@ -49,12 +49,10 @@ public:
     void flip_vertically(bool value=true);
     void flip_horizontally(bool value=true);
 
-    //Printable interface
-    unicode to_unicode() const override {
-        return _u("Sprite {0}").format(this->id());
-    }
-
     smlt::ActorID actor_id() const { return actor_id_; }
+
+    const AABB aabb() const;
+    const AABB transformed_aabb() const;
 
 private:
     float frame_width_ = 0;

@@ -11,7 +11,7 @@
 #include "managers/window_holder.h"
 #include "managers/skybox_manager.h"
 
-#include "object.h"
+#include "nodes/stage_node.h"
 #include "types.h"
 #include "resource_manager.h"
 #include "window_base.h"
@@ -60,6 +60,7 @@ typedef sig::signal<void (ParticleSystemID)> ParticleSystemCreatedSignal;
 typedef sig::signal<void (ParticleSystemID)> ParticleSystemDestroyedSignal;
 
 class Stage:
+    public StageNode,
     public Managed<Stage>,
     public generic::Identifiable<StageID>,
     public ActorManager,
@@ -68,8 +69,7 @@ class Stage:
     public SpriteManager,
     public CameraProxyManager,
     public SkyboxManager,
-    public Loadable,
-    public SceneNode,
+    public Loadable,    
     public RenderableStage,
     public virtual WindowHolder {
 
@@ -122,7 +122,6 @@ public:
     uint32_t sprite_count() const;
 
     LightID new_light(LightType type=LIGHT_TYPE_POINT);
-    LightID new_light(MoveableObject& parent, LightType type=LIGHT_TYPE_POINT);
     LightPtr light(LightID light);
     void delete_light(LightID light_id);
     uint32_t light_count() const { return LightManager::count(); }
@@ -138,14 +137,7 @@ public:
         throw std::logic_error("You cannot move the stage");
     }
 
-    template<typename T, typename ID>
-    void post_create_callback(T& obj, ID id) {
-        obj.set_parent(this);
-        obj._initialize();
-    }
-
     void ask_owner_for_destruction() override;
-
 
     Property<Stage, Debug> debug = { this, &Stage::debug_ };
     Property<Stage, batcher::RenderQueue> render_queue = { this, &Stage::render_queue_ };
@@ -159,27 +151,6 @@ public:
     // Updateable interface
 
     void update(double dt) override;
-
-    // Locateable interface
-
-    Vec3 position() const override { return Vec3(); }
-    Vec2 position_2d() const override { return Vec2(); }
-    Quaternion rotation() const override { return Quaternion(); }
-    Vec3 scale() const override { return Vec3(1, 1, 1); }
-
-    // Printable interface
-    unicode to_unicode() const override {
-        if(has_name()) {
-            return name();
-        } else {
-            return _u("Stage {0}").format(this->id());
-        }
-    }
-
-    // Nameable interface
-    void set_name(const unicode& name) override { name_ = name; }
-    const unicode name() const override { return name_; }
-    const bool has_name() const override { return !name_.empty(); }
 
     // RenderableStage
     void on_render_started() override {}
@@ -197,6 +168,9 @@ public:
 
     sig::signal<void (SpriteID)>& signal_sprite_created() { return signal_sprite_created_; }
     sig::signal<void (SpriteID)>& signal_sprite_destroyed() { return signal_sprite_destroyed_; }
+
+    const AABB aabb() const { return AABB(); }
+    const AABB transformed_aabb() const { return AABB(); }
 
 private:
     ActorCreatedSignal signal_actor_created_;

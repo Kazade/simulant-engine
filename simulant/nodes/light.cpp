@@ -1,10 +1,10 @@
-#include "stage.h"
+#include "../stage.h"
 #include "light.h"
 
 namespace smlt {
 
 Light::Light(LightID lid, Stage* stage):
-    ParentSetterMixin<MoveableObject>(stage),
+    StageNode(stage),
     generic::Identifiable<LightID>(lid),
     type_(LIGHT_TYPE_POINT),
     range_(100.0) {
