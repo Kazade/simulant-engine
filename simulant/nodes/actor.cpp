@@ -207,15 +207,6 @@ const AABB Actor::aabb() const {
     return AABB();
 }
 
-const AABB Actor::transformed_aabb() const {
-    AABB box = aabb(); //Get the untransformed one
-
-    auto pos = absolute_position();
-    kmVec3Add(&box.min, &box.min, &pos);
-    kmVec3Add(&box.max, &box.max, &pos);
-    return box;
-}
-
 void Actor::ask_owner_for_destruction() {
     stage->delete_actor(id());
 }

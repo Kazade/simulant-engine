@@ -106,6 +106,8 @@ void StageNode::update_rotation_from_parent() {
     absolute_rotation_ = rotation() * prot;
     absolute_rotation_.normalize();
 
+    recalc_bounds();
+
     each_child([](uint32_t, TreeNode* child) {
         StageNode* node = static_cast<StageNode*>(child);
         node->update_rotation_from_parent();
@@ -121,6 +123,8 @@ void StageNode::update_position_from_parent() {
     }
 
     absolute_position_ = ppos + position();
+
+    recalc_bounds();
 
     each_child([](uint32_t, TreeNode* child) {
         StageNode* node = static_cast<StageNode*>(child);
@@ -138,6 +142,8 @@ void StageNode::update_scaling_from_parent() {
 
     absolute_scale_ = pscale * scale();
 
+    recalc_bounds();
+
     each_child([](uint32_t, TreeNode* child) {
         StageNode* node = static_cast<StageNode*>(child);
         node->update_scaling_from_parent();
@@ -148,6 +154,25 @@ void StageNode::on_parent_set(TreeNode* oldp, TreeNode* newp) {
     update_position_from_parent();
     update_rotation_from_parent();
     update_scaling_from_parent();
+}
+
+const AABB StageNode::transformed_aabb() const {
+    auto corners = aabb().corners();
+    auto transform = absolute_transformation();
+
+    for(auto& corner: corners) {
+        kmVec3Transform(&corner, &corner, &transform);
+    }
+
+    return AABB(corners.data(), corners.size());
+}
+
+void StageNode::recalc_bounds() {
+    auto newb = transformed_aabb();
+    if(Vec3(newb.min) != Vec3(bounds_.min) || Vec3(newb.max) != Vec3(bounds_.max)) {
+        bounds_ = newb;
+        signal_bounds_updated_(bounds_);
+    }
 }
 
 }

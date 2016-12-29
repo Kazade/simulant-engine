@@ -133,13 +133,6 @@ void ParticleSystem::prepare_buffers() {
     }
 }
 
-const AABB ParticleSystem::transformed_aabb() const {
-    AABB box = aabb(); //Get the untransformed one
-    auto pos = absolute_position();
-    kmVec3Add(&box.min, &box.min, &pos);
-    kmVec3Add(&box.max, &box.max, &pos);
-    return box;
-}
 
 bool ParticleSystem::has_repeating_emitters() const {
     for(auto e: emitters_) {

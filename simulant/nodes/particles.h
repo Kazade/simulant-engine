@@ -143,7 +143,9 @@ public:
     ~ParticleSystem();
 
     const AABB aabb() const;
-    const AABB transformed_aabb() const;
+    const AABB transformed_aabb() const override {
+        return StageNode::transformed_aabb();
+    }
 
     void set_quota(int quota);
     int32_t quota() const { return quota_; }

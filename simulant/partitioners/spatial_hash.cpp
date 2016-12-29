@@ -21,11 +21,16 @@ void SpatialHashPartitioner::add_actor(ActorID obj) {
     write_lock<shared_mutex> lock(lock_);
 
     auto actor = stage->actor(obj);
+
     actor->each([this, &obj](uint32_t i, SubActor* subactor) {
         auto partitioner_entry = std::make_shared<PartitionerEntry>(subactor->shared_from_this());
         hash_->insert_object_for_box(subactor->transformed_aabb(), partitioner_entry.get());
         actor_entries_[obj].push_back(partitioner_entry);
     });
+
+    actor_updates_[obj] = actor->signal_bounds_updated().connect(
+        std::bind(&SpatialHashPartitioner::_update_actor, this, std::placeholders::_1, obj)
+    );
 }
 
 void SpatialHashPartitioner::remove_actor(ActorID obj) {
@@ -37,6 +42,14 @@ void SpatialHashPartitioner::remove_actor(ActorID obj) {
             hash_->remove_object(entry.get());
         }
     }
+
+    actor_updates_[obj].disconnect();
+    actor_updates_.erase(obj);
+}
+
+void SpatialHashPartitioner::_update_actor(AABB bounds, ActorID actor) {
+    remove_actor(actor);
+    add_actor(actor);
 }
 
 void SpatialHashPartitioner::add_geom(GeomID geom_id) {

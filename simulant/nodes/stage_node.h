@@ -13,6 +13,8 @@
 
 namespace smlt {
 
+typedef sig::signal<void (AABB)> BoundsUpdatedSignal;
+
 class StageNode:
     public TreeNode,
     public Nameable,
@@ -23,6 +25,9 @@ class StageNode:
     public BoundableEntity,
     public Controllable,
     public HasAutoID<StageNode> {
+
+
+    DEFINE_SIGNAL(BoundsUpdatedSignal, signal_bounds_updated);
 
 public:
     unicode to_unicode() const {
@@ -45,6 +50,7 @@ public:
     Quaternion absolute_rotation() const;
     Vec3 absolute_scaling() const;
     Mat4 absolute_transformation() const;
+    const AABB& bounds() const { return bounds_; }
 
     bool is_visible() const { return is_visible_; }
     void set_visible(bool visible) { is_visible_ = visible; }
@@ -68,6 +74,8 @@ public:
     bool parent_is_stage() const { return parent() == (TreeNode*) stage_; }
 
     void cleanup();
+
+    const AABB transformed_aabb() const override;
 protected:
     // Faster than properties, useful for subclasses where a clean API isn't as important
     Stage* get_stage() const { return stage_; }
@@ -81,6 +89,7 @@ private:
     void update_rotation_from_parent();
     void update_position_from_parent();
     void update_scaling_from_parent();
+    void recalc_bounds();
 
     Stage* stage_ = nullptr;
 
@@ -91,6 +100,8 @@ private:
     Vec3 absolute_position_;
     Quaternion absolute_rotation_;
     Vec3 absolute_scale_ = Vec3(1, 1, 1);
+
+    AABB bounds_;
 };
 
 }

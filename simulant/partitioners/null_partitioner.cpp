@@ -14,7 +14,7 @@ std::vector<LightID> NullPartitioner::lights_visible_from(CameraID camera_id) {
     std::vector<LightID> result;
     for(LightID lid: all_lights_) {
         auto light = stage->light(lid);
-        AABB aabb = light->transformed_aabb();
+        auto aabb = light->bounds();
         if(light->type() == LIGHT_TYPE_DIRECTIONAL || frustum.intersects_aabb(aabb)) {
             result.push_back(lid);
         }
@@ -42,7 +42,7 @@ std::vector<RenderablePtr> NullPartitioner::geometry_visible_from(CameraID camer
 
     for(ParticleSystemID ps: all_particle_systems_) {
         auto system = stage->particle_system(ps);
-        AABB aabb = system->transformed_aabb();
+        auto aabb = system->bounds();
         if(frustum.intersects_aabb(aabb)) {
             result.push_back(system->shared_from_this());
         }

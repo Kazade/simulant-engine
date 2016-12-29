@@ -33,7 +33,6 @@ public:
     virtual ~Actor();
 
     const AABB aabb() const;
-    const AABB transformed_aabb() const;
 
     MeshID mesh_id() const { return (mesh_) ? mesh_->id() : MeshID(0); }
 

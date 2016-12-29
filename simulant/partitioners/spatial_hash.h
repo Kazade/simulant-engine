@@ -53,6 +53,7 @@ public:
 
     void event_actor_changed(ActorID ent);
 
+    void _update_actor(AABB bounds, ActorID actor);
 private:
     SpatialHash* hash_ = nullptr;
 
@@ -63,6 +64,8 @@ private:
     std::unordered_map<ParticleSystemID, PartitionerEntryPtr> particle_system_entries_;
 
     shared_mutex lock_;
+
+    std::unordered_map<ActorID, sig::connection> actor_updates_;
 };
 
 }

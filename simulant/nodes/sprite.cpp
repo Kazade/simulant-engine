@@ -63,8 +63,6 @@ void Sprite::flip_horizontally(bool value) {
 
 const AABB Sprite::aabb() const { return actor_id_.fetch()->aabb(); }
 
-const AABB Sprite::transformed_aabb() const { return actor_id_.fetch()->transformed_aabb(); }
-
 void Sprite::flip_vertically(bool value) {
     if(value == flipped_vertically_) return;
 

@@ -528,6 +528,29 @@ struct AABB : public kmAABB3 {
         kmAABB3Initialize(this, &centre, xsize, ysize, zsize);
     }
 
+    AABB(const Vec3* vertices, const std::size_t count) {
+        float minx = std::numeric_limits<float>::max();
+        float miny = std::numeric_limits<float>::max();
+        float minz = std::numeric_limits<float>::max();
+
+        float maxx = std::numeric_limits<float>::lowest();
+        float maxy = std::numeric_limits<float>::lowest();
+        float maxz = std::numeric_limits<float>::lowest();
+
+        for(uint32_t i = 0; i < count; ++i) {
+            if(vertices[i].x < minx) minx = vertices[i].x;
+            if(vertices[i].y < minx) miny = vertices[i].y;
+            if(vertices[i].z < minx) minz = vertices[i].z;
+
+            if(vertices[i].x > maxx) maxx = vertices[i].x;
+            if(vertices[i].y > maxx) maxy = vertices[i].y;
+            if(vertices[i].z > maxx) maxz = vertices[i].z;
+        }
+
+        kmVec3Fill(&min, minx, miny, minz);
+        kmVec3Fill(&max, maxx, maxy, maxz);
+    }
+
     const float width() const {
         return fabs(max.x - min.x);
     }

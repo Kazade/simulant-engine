@@ -49,7 +49,6 @@ public:
     void ask_owner_for_destruction() override;
 
     const AABB aabb() const;
-    const AABB transformed_aabb() const;
 
     void update(double step) {}
 private:

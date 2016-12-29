@@ -73,14 +73,6 @@ public:
     float linear_attenuation() const { return linear_attenuation_; }
     float quadratic_attenuation() const { return quadratic_attenuation_; }
 
-    /** Boundable interface **/
-    const AABB transformed_aabb() const {
-        AABB result;
-        Vec3 abs_pos = absolute_position();
-        kmAABB3Initialize(&result, &abs_pos, range(), range(), range());
-        return result;
-    }
-
     const AABB aabb() const {
         AABB result;
         kmAABB3Initialize(&result, nullptr, range(), range(), range());

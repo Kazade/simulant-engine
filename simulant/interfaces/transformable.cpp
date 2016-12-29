@@ -198,6 +198,7 @@ void Transformable::set_position(const Vec3 &p) {
         auto tmp = position_;
         position_ = p;
         on_position_set(tmp, position_);
+        signal_transformation_changed_();
     }
 }
 
@@ -206,6 +207,7 @@ void Transformable::set_rotation(const Quaternion& q) {
         auto tmp = rotation_;
         rotation_ = q;
         on_rotation_set(tmp, rotation_);
+        signal_transformation_changed_();
     }
 }
 
@@ -214,6 +216,7 @@ void Transformable::set_scaling(const Vec3 &s) {
         auto tmp = scaling_;
         scaling_ = s;
         on_scaling_set(tmp, scaling_);
+        signal_transformation_changed_();
     }
 }
 

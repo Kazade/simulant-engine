@@ -5,6 +5,8 @@
 
 namespace smlt {
 
+typedef sig::signal<void ()> TransformationChangedSignal;
+
 /**
  * @brief The Transformable class
  *
@@ -12,6 +14,8 @@ namespace smlt {
  */
 class Transformable:
     public Locateable {
+
+    DEFINE_SIGNAL(TransformationChangedSignal, signal_transformation_changed);
 
 public:
     virtual ~Transformable() {}

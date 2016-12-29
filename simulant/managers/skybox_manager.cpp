@@ -29,8 +29,6 @@ void Skybox::ask_owner_for_destruction() {
 
 const AABB Skybox::aabb() const { return actor_id_.fetch()->aabb(); }
 
-const AABB Skybox::transformed_aabb() const { return actor_id_.fetch()->transformed_aabb(); }
-
 void Skybox::generate(
         const unicode& up,
         const unicode& down,

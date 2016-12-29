@@ -52,7 +52,6 @@ public:
     smlt::ActorID actor_id() const { return actor_id_; }
 
     const AABB aabb() const;
-    const AABB transformed_aabb() const;
 
 private:
     float frame_width_ = 0;

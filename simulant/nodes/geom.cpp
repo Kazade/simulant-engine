@@ -24,15 +24,6 @@ const AABB Geom::aabb() const {
     return mesh_->aabb();
 }
 
-const AABB Geom::transformed_aabb() const {
-    AABB box = aabb(); //Get the untransformed one
-
-    auto pos = absolute_position();
-    kmVec3Add(&box.min, &box.min, &pos);
-    kmVec3Add(&box.max, &box.max, &pos);
-    return box;
-}
-
 void Geom::ask_owner_for_destruction() {
     stage->delete_geom(id());
 }
