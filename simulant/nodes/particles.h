@@ -4,16 +4,14 @@
 #include <memory>
 #include <unordered_map>
 
-#include "generic/identifiable.h"
-#include "generic/managed.h"
-#include "renderers/renderer.h"
-#include "utils/parent_setter_mixin.h"
-
-#include "sound.h"
-#include "object.h"
-#include "interfaces.h"
-#include "types.h"
-#include "vertex_data.h"
+#include "../generic/identifiable.h"
+#include "../generic/managed.h"
+#include "../renderers/renderer.h"
+#include "stage_node.h"
+#include "../sound.h"
+#include "../interfaces.h"
+#include "../types.h"
+#include "../vertex_data.h"
 
 
 namespace smlt {
@@ -131,10 +129,9 @@ private:
 typedef std::shared_ptr<ParticleEmitter> EmitterPtr;
 
 class ParticleSystem :
-    public virtual BoundableEntity,
+    public StageNode,
     public Managed<ParticleSystem>,
     public generic::Identifiable<ParticleSystemID>,
-    public ParentSetterMixin<MoveableObject>,
     public Source,
     public Loadable,
     public HasMutableRenderPriority,
@@ -145,9 +142,8 @@ public:
     ParticleSystem(ParticleSystemID id, Stage* stage);
     ~ParticleSystem();
 
-    void set_name(const unicode& name) { name_ = name; }
-    const bool has_name() const { return !name_.empty(); }
-    const unicode name() const { return name_; }
+    const AABB aabb() const;
+    const AABB transformed_aabb() const;
 
     void set_quota(int quota);
     int32_t quota() const { return quota_; }
@@ -163,12 +159,6 @@ public:
     EmitterPtr push_emitter();
     void pop_emitter();
 
-    //Boundable entity things
-    const AABB aabb() const;
-    const AABB transformed_aabb() const;
-
-    unicode to_unicode() const { return name_; }
-
     void ask_owner_for_destruction();
 
     //Renderable stuff
@@ -180,7 +170,6 @@ public:
 
     void set_material_id(MaterialID mat_id);
     virtual const MaterialID material_id() const { return material_id_; }
-    virtual const bool is_visible() const { return MoveableObject::is_visible(); }
 
     void deactivate_emitters() { for(auto emitter: emitters_) { emitter->deactivate(); }; }
     void activate_emitters() { for(auto emitter: emitters_) { emitter->activate(); }; }
@@ -211,6 +200,15 @@ public:
     RenderPriority render_priority() const override {
         return HasMutableRenderPriority::render_priority();
     }
+
+    const bool is_visible() const {
+        return StageNode::is_visible();
+    }
+
+    void cleanup() override {
+        StageNode::cleanup();
+    }
+
 private:
     std::unique_ptr<HardwareBuffer> vertex_buffer_;
     std::unique_ptr<HardwareBuffer> index_buffer_;
@@ -238,7 +236,7 @@ private:
     std::vector<EmitterPtr> emitters_;
     std::list<Particle> particles_;
 
-    void do_update(double dt);
+    void update(double dt) override;
 
     VertexData* vertex_data_ = nullptr;
     IndexData* index_data_ = nullptr;

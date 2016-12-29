@@ -102,6 +102,14 @@ Quaternion Quaternion::look_rotation(const Vec3& direction, const Vec3& up=Vec3(
     return res;
 }
 
+Quaternion::Quaternion(const Degrees &degrees, const Vec3 &axis) {
+    kmQuaternionRotationAxisAngle(
+        this,
+        &axis,
+        kmDegreesToRadians(degrees.value_)
+    );
+}
+
 Quaternion::Quaternion(const Mat3& rot_matrix) {
     /* FIXME: This should be in kazmath */
 

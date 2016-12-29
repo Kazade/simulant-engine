@@ -1,7 +1,5 @@
-
+#include "../interfaces/boundable.h"
 #include "raycast_vehicle.h"
-
-#include "../object.h"
 
 namespace smlt {
 namespace controllers {

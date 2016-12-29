@@ -1,8 +1,8 @@
 #include "../stage.h"
 #include "../camera.h"
-#include "../actor.h"
-#include "../light.h"
-#include "../particles.h"
+#include "../nodes/actor.h"
+#include "../nodes/light.h"
+#include "../nodes/particles.h"
 
 #include "null_partitioner.h"
 

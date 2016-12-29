@@ -1,22 +1,23 @@
-#include "stage.h"
 #include "actor.h"
-#include "animation.h"
-#include "renderers/renderer.h"
-#include "hardware_buffer.h"
+
+#include "../stage.h"
+#include "../animation.h"
+#include "../renderers/renderer.h"
+#include "../hardware_buffer.h"
 
 
 namespace smlt {
 
 Actor::Actor(ActorID id, Stage* stage):
+    StageNode(stage),
     generic::Identifiable<ActorID>(id),
-    ParentSetterMixin<MoveableObject>(stage),
     Source(stage) {
 
 }
 
 Actor::Actor(ActorID id, Stage* stage, MeshID mesh):
+    StageNode(stage),
     generic::Identifiable<ActorID>(id),
-    ParentSetterMixin<MoveableObject>(stage),
     Source(stage) {
 
     set_mesh(mesh);
@@ -155,7 +156,7 @@ void Actor::set_mesh(MeshID mesh) {
     signal_mesh_changed_(id());
 }
 
-void Actor::do_update(double dt) {
+void Actor::update(double dt) {
     update_source(dt);
     if(animation_state_) {
         animation_state_->update(dt);

@@ -1,7 +1,7 @@
 #include "../deps/jsonic/jsonic.h"
 
 #include "particle_script.h"
-#include "../particles.h"
+#include "../nodes/particles.h"
 
 namespace smlt {
 namespace loaders {

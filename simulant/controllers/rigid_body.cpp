@@ -1,6 +1,5 @@
 #include "rigid_body.h"
-#include "../object.h"
-#include "../actor.h"
+#include "../nodes/actor.h"
 #include "../stage.h"
 
 namespace smlt {
@@ -271,12 +270,10 @@ Body::Body(Controllable* object, RigidBodySimulation::ptr simulation, ColliderTy
     simulation_(simulation),
     collider_type_(collider_type) {
 
-    object_ = dynamic_cast<MoveableObject*>(object);
+    object_ = dynamic_cast<Transformable*>(object);
     if(!object_) {
         throw std::runtime_error("Tried to attach a rigid body controller to something that isn't moveable");
     }
-
-
 }
 
 Body::~Body() {
@@ -305,8 +302,8 @@ void Body::move_to(const Vec3& position) {
 
 void Body::do_post_fixed_update(double dt) {
     auto xform = simulation_->body_transform(this);
-    object_->set_absolute_position(xform.first);
-    object_->set_absolute_rotation(xform.second);
+    object_->move_to(xform.first);
+    object_->rotate_to(xform.second);
 }
 
 void Body::build_collider(ColliderType collider) {

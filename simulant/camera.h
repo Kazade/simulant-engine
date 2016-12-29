@@ -5,60 +5,12 @@
 #include "generic/identifiable.h"
 #include "generic/managed.h"
 
-#include "utils/parent_setter_mixin.h"
-
-#include "object.h"
+#include "nodes/stage_node.h"
 #include "frustum.h"
 #include "renderers/renderer.h"
 #include "sound.h"
 
 namespace smlt {
-
-class Camera;
-
-enum CameraFollowMode {
-    CAMERA_FOLLOW_MODE_THIRD_PERSON,
-    CAMERA_FOLLOW_MODE_DIRECT
-};
-
-
-class CameraProxy:
-    public ParentSetterMixin<MoveableObject>,
-    public generic::Identifiable<CameraID>,
-    public Managed<CameraProxy> {
-
-public:
-    CameraProxy(CameraID camera_id, Stage* stage);
-    ~CameraProxy();
-
-    void follow(ActorID actor, CameraFollowMode mode, const smlt::Vec3& offset=smlt::Vec3(0, 5, 20), float lag_in_seconds=0);
-    void ask_owner_for_destruction();
-
-    void _update_following(double dt);
-
-    Frustum& frustum();
-    kmVec3 project_point(const RenderTarget &target, const Viewport& viewport, const kmVec3& point);
-
-    void set_orthographic_projection(double left, double right, double bottom, double top, double near=-1.0, double far=1.0);
-
-    unicode to_unicode() const {
-        if(has_name()) {
-            return name();
-        } else {
-            return _u("Camera {0}").format(this->id());
-        }
-    }
-private:
-    ActorID following_actor_;
-    Vec3 following_offset_;
-    CameraFollowMode following_mode_;
-    float following_lag_ = 0.0;
-
-    void post_fixed_update(double dt);
-
-
-    CameraPtr camera();
-};
 
 class Camera:
     public generic::Identifiable<CameraID>,

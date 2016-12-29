@@ -100,7 +100,7 @@ public:
         window->stage(stage_id_)->set_ambient_light(smlt::Colour::WHITE);
         {
             auto light = window->stage(stage_id_)->light(window->stage(stage_id_)->new_light());
-            light->set_absolute_position(5.0, 0.0, -5.0);
+            light->move_to_absolute(5.0, 0.0, -5.0);
             light->set_diffuse(smlt::Colour::GREEN);
             light->set_attenuation_from_range(10.0);
         }
@@ -110,7 +110,7 @@ public:
         actor_id = stage->new_actor_with_mesh(stage->assets->new_mesh_as_cube(2));
 
         window->stage(stage_id_)->actor(actor_id)->mesh()->set_material_id(matid);
-        window->stage(stage_id_)->actor(actor_id)->set_absolute_position(pos);
+        window->stage(stage_id_)->actor(actor_id)->move_to_absolute(pos);
 
         // It would be nice to check if a joypad is connected
         // and the create the reference..
@@ -131,8 +131,8 @@ public:
                     pos = { 0, 0, -5.f };
                     // rot = { 0, 0 };
 
-                    window->stage(stage_id_)->actor(actor_id)->set_absolute_rotation(smlt::Degrees(0), 0, 0, pos.z);
-                    window->stage(stage_id_)->actor(actor_id)->set_absolute_position(pos);
+                    window->stage(stage_id_)->actor(actor_id)->rotate_to_absolute(smlt::Degrees(0), 0, 0, pos.z);
+                    window->stage(stage_id_)->actor(actor_id)->move_to_absolute(pos);
             });
 
             // Left x-axis
@@ -163,8 +163,8 @@ public:
 
     void do_step(double dt) {
         auto actor = window->stage(stage_id_)->actor(actor_id);
-        actor->rotate_x(smlt::Degrees(rot.y * dt * 10));
-        actor->rotate_y(smlt::Degrees(rot.x * dt * 10));
+        actor->rotate_x_by(smlt::Degrees(rot.y * dt * 10));
+        actor->rotate_y_by(smlt::Degrees(rot.x * dt * 10));
     }
 
 private:

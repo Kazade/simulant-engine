@@ -35,11 +35,14 @@ namespace smlt {
 
 struct Vec3;
 struct Mat3;
+struct Degrees;
 
 struct Quaternion : public kmQuaternion {
     Quaternion(const kmQuaternion& other) {
         kmQuaternionAssign(this, &other);
     }
+
+    Quaternion(const Degrees& degrees, const Vec3& axis);
 
     Quaternion() {
         kmQuaternionIdentity(this);

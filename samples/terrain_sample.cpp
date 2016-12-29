@@ -84,7 +84,7 @@ public:
 
     void do_step(double dt) override {
         auto stage = window->stage(stage_id_);
-        stage->actor(terrain_actor_id_)->rotate_global_y(smlt::Degrees(dt * 5.0));
+        stage->actor(terrain_actor_id_)->rotate_global_y_by(smlt::Degrees(dt * 5.0));
     }
 
 private:

@@ -103,7 +103,7 @@ public:
         auto actor = stage->actor(mid);
 
         this->assert_true(actor->id() != 0); //Make sure we set an id for the mesh
-        this->assert_true(actor->uuid() != 0); //Make sure we set a unique ID for the object
+        this->assert_true(actor->auto_id() != 0); //Make sure we set a unique ID for the object
         this->assert_true(!actor->data->exists("data"));
         actor->data->stash((int)0xDEADBEEF, "data");
         this->assert_true(actor->data->exists("data"));
@@ -121,9 +121,9 @@ public:
         smlt::ActorID cid1 = stage->new_actor_with_parent(mid); //Create a child
         smlt::ActorID cid2 = stage->new_actor_with_parent(cid1); //Create a child of the child
 
-        this->assert_equal((uint32_t)1, stage->actor(mid)->children().size());
-        this->assert_equal((uint32_t)1, stage->actor(cid1)->children().size());
-        this->assert_equal((uint32_t)0, stage->actor(cid2)->children().size());
+        this->assert_equal((uint32_t)1, stage->actor(mid)->count_children());
+        this->assert_equal((uint32_t)1, stage->actor(cid1)->count_children());
+        this->assert_equal((uint32_t)0, stage->actor(cid2)->count_children());
 
         stage->delete_actor(mid);
         this->assert_true(!stage->has_actor(mid));
