@@ -49,6 +49,11 @@ void SpatialHashPartitioner::_update_actor(AABB bounds, ActorID actor) {
     hash_->update_object_for_box(bounds, actor_entries_.at(actor).get());
 }
 
+void SpatialHashPartitioner::_update_particle_system(const AABB& bounds, ParticleSystemID ps) {
+    write_lock<shared_mutex> lock(lock_);
+    hash_->update_object_for_box(bounds, particle_system_entries_.at(ps).get());
+}
+
 void SpatialHashPartitioner::add_geom(GeomID geom_id) {
 
 }
@@ -84,6 +89,10 @@ void SpatialHashPartitioner::add_particle_system(ParticleSystemID ps) {
     auto partitioner_entry = std::make_shared<PartitionerEntry>(ps);
     hash_->insert_object_for_box(particle_system->bounds(), partitioner_entry.get());
     particle_system_entries_[ps] = partitioner_entry;
+
+    particle_system_updates_[ps] = particle_system->signal_bounds_updated().connect(
+        std::bind(&SpatialHashPartitioner::_update_particle_system, this, std::placeholders::_1, ps)
+    );
 }
 
 void SpatialHashPartitioner::remove_particle_system(ParticleSystemID ps) {
@@ -94,6 +103,9 @@ void SpatialHashPartitioner::remove_particle_system(ParticleSystemID ps) {
         hash_->remove_object(it->second.get());
         particle_system_entries_.erase(it);
     }
+
+    particle_system_updates_[ps].disconnect();
+    particle_system_updates_.erase(ps);
 }
 
 std::vector<LightID> SpatialHashPartitioner::lights_visible_from(CameraID camera_id) {

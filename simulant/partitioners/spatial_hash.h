@@ -64,6 +64,7 @@ public:
     std::vector<RenderablePtr> geometry_visible_from(CameraID camera_id);
 
     void _update_actor(AABB bounds, ActorID actor);
+    void _update_particle_system(const AABB& bounds, ParticleSystemID ps);
 private:
     SpatialHash* hash_ = nullptr;
 
@@ -76,6 +77,7 @@ private:
     shared_mutex lock_;
 
     std::unordered_map<ActorID, sig::connection> actor_updates_;
+    std::unordered_map<ParticleSystemID, sig::connection> particle_system_updates_;
 };
 
 }
