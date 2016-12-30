@@ -20,16 +20,59 @@ void SpatialHash::insert_object_for_box(const AABB &box, SpatialHashEntry *objec
 
 void SpatialHash::remove_object(SpatialHashEntry *object) {
     for(auto key: object->keys()) {
-        auto it = index_.find(key);
-        if(it != index_.end()) {
-            it->second.erase(object);
-
-            if(it->second.empty()) {
-                index_.erase(it);
-            }
-        }
+        erase_object_from_key(key, object);
     }
     object->set_keys(KeyList());
+}
+
+void SpatialHash::erase_object_from_key(Key key, SpatialHashEntry* object) {
+    auto it = index_.find(key);
+    if(it != index_.end()) {
+        it->second.erase(object);
+
+        if(it->second.empty()) {
+            index_.erase(it);
+        }
+    }
+}
+
+void SpatialHash::update_object_for_box(const AABB& new_box, SpatialHashEntry* object) {
+    auto cell_size = find_cell_size_for_box(new_box);
+
+    KeyList new_keys;
+    KeyList old_keys = object->keys();
+
+    for(auto& corner: new_box.corners()) {
+        auto key = make_key(cell_size, corner.x, corner.y, corner.z);
+        new_keys.insert(key);
+    }
+
+
+    KeyList keys_to_add, keys_to_remove;
+
+    std::set_difference(
+        new_keys.begin(), new_keys.end(), old_keys.begin(), old_keys.end(),
+        std::inserter(keys_to_add, keys_to_add.end())
+    );
+
+    std::set_difference(
+        old_keys.begin(), old_keys.end(), new_keys.begin(), new_keys.end(),
+        std::inserter(keys_to_remove, keys_to_remove.end())
+    );
+
+    if(new_keys.empty() && old_keys.empty()) {
+        return;
+    }
+
+    for(auto& key: keys_to_remove) {
+        erase_object_from_key(key, object);
+    }
+
+    for(auto& key: keys_to_add) {
+        insert_object_for_key(key, object);
+    }
+
+    object->set_keys(new_keys);
 }
 
 void generate_boxes_for_frustum(const Frustum& frustum, float box_size, std::vector<AABB>& results) {
@@ -172,8 +215,9 @@ int32_t SpatialHash::find_cell_size_for_box(const AABB &box) const {
      */
 
     int32_t k = 1;
+    auto maxd = box.max_dimension();
 
-    while(k < box.max_dimension()) {
+    while(k < maxd) {
         k *= 2;
     }
 

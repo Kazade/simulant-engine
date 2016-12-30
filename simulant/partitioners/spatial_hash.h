@@ -10,24 +10,36 @@ namespace smlt {
 
 enum PartitionerEntryType {
     PARTITIONER_ENTRY_TYPE_LIGHT,
-    PARTITIONER_ENTRY_TYPE_RENDERABLE
+    PARTITIONER_ENTRY_TYPE_ACTOR,
+    PARTITIONER_ENTRY_TYPE_GEOM,
+    PARTITIONER_ENTRY_TYPE_PARTICLE_SYSTEM
 };
 
 struct PartitionerEntry : public SpatialHashEntry {
-    PartitionerEntry(RenderablePtr renderable):
-        type(PARTITIONER_ENTRY_TYPE_RENDERABLE),
-        renderable(renderable) {}
+    PartitionerEntry(ActorID actor_id):
+        type(PARTITIONER_ENTRY_TYPE_ACTOR),
+        actor_id(actor_id) {}
 
     PartitionerEntry(LightID light_id):
         type(PARTITIONER_ENTRY_TYPE_LIGHT),
         light_id(light_id) {}
 
+    PartitionerEntry(GeomID geom_id):
+        type(PARTITIONER_ENTRY_TYPE_GEOM),
+        geom_id(geom_id) {}
+
+    PartitionerEntry(ParticleSystemID ps_id):
+        type(PARTITIONER_ENTRY_TYPE_PARTICLE_SYSTEM),
+        particle_system_id(ps_id) {}
+
     ~PartitionerEntry() {}
 
     PartitionerEntryType type;
     union {
-        RenderablePtr renderable;
+        ActorID actor_id;
         LightID light_id;
+        GeomID geom_id;
+        ParticleSystemID particle_system_id;
     };
 };
 
@@ -51,15 +63,13 @@ public:
     std::vector<LightID> lights_visible_from(CameraID camera_id);
     std::vector<RenderablePtr> geometry_visible_from(CameraID camera_id);
 
-    void event_actor_changed(ActorID ent);
-
     void _update_actor(AABB bounds, ActorID actor);
 private:
     SpatialHash* hash_ = nullptr;
 
     typedef std::shared_ptr<PartitionerEntry> PartitionerEntryPtr;
 
-    std::unordered_map<ActorID, std::vector<PartitionerEntryPtr>> actor_entries_;
+    std::unordered_map<ActorID, PartitionerEntryPtr> actor_entries_;
     std::unordered_map<LightID, PartitionerEntryPtr> light_entries_;
     std::unordered_map<ParticleSystemID, PartitionerEntryPtr> particle_system_entries_;
 

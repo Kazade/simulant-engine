@@ -96,10 +96,14 @@ public:
     void insert_object_for_box(const AABB& box, SpatialHashEntry* object);
     void remove_object(SpatialHashEntry* object);
 
+    void update_object_for_box(const AABB& new_box, SpatialHashEntry* object);
+
     HGSHEntryList find_objects_within_box(const AABB& box);
     HGSHEntryList find_objects_within_frustum(const Frustum& frustum);
 
 private:
+    void erase_object_from_key(Key key, SpatialHashEntry* object);
+
     int32_t find_cell_size_for_box(const AABB& box) const;
     void insert_object_for_key(Key key, SpatialHashEntry* entry);
 
