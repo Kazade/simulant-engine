@@ -44,7 +44,7 @@ void SpatialHashPartitioner::remove_actor(ActorID obj) {
     actor_updates_.erase(obj);
 }
 
-void SpatialHashPartitioner::_update_actor(AABB bounds, ActorID actor) {
+void SpatialHashPartitioner::_update_actor(const AABB &bounds, ActorID actor) {
     write_lock<shared_mutex> lock(lock_);
     hash_->update_object_for_box(bounds, actor_entries_.at(actor).get());
 }
@@ -52,6 +52,11 @@ void SpatialHashPartitioner::_update_actor(AABB bounds, ActorID actor) {
 void SpatialHashPartitioner::_update_particle_system(const AABB& bounds, ParticleSystemID ps) {
     write_lock<shared_mutex> lock(lock_);
     hash_->update_object_for_box(bounds, particle_system_entries_.at(ps).get());
+}
+
+void SpatialHashPartitioner::_update_light(const AABB& bounds, LightID light) {
+    write_lock<shared_mutex> lock(lock_);
+    hash_->update_object_for_box(bounds, light_entries_.at(light).get());
 }
 
 void SpatialHashPartitioner::add_geom(GeomID geom_id) {
@@ -67,18 +72,34 @@ void SpatialHashPartitioner::add_light(LightID obj) {
 
     auto light = stage->light(obj);
 
-    auto partitioner_entry = std::make_shared<PartitionerEntry>(obj);
-    hash_->insert_object_for_box(light->aabb(), partitioner_entry.get());
-    light_entries_[obj] = partitioner_entry;
+    if(light->type() == LIGHT_TYPE_DIRECTIONAL) {
+        // Directional lights are always visible, no need to add them to the hash
+        directional_lights_.insert(obj);
+    } else {
+        auto partitioner_entry = std::make_shared<PartitionerEntry>(obj);
+        hash_->insert_object_for_box(light->bounds(), partitioner_entry.get());
+        light_entries_[obj] = partitioner_entry;
+
+        light_updates_[obj] = light->signal_bounds_updated().connect(
+            std::bind(&SpatialHashPartitioner::_update_light, this, std::placeholders::_1, obj)
+        );
+    }
 }
 
 void SpatialHashPartitioner::remove_light(LightID obj) {
     write_lock<shared_mutex> lock(lock_);
 
-    auto it = light_entries_.find(obj);
-    if(it != light_entries_.end()) {
-        hash_->remove_object(it->second.get());
-        light_entries_.erase(it);
+    if(directional_lights_.find(obj) != directional_lights_.end()) {
+        directional_lights_.erase(obj);
+    } else {
+        auto it = light_entries_.find(obj);
+        if(it != light_entries_.end()) {
+            hash_->remove_object(it->second.get());
+            light_entries_.erase(it);
+
+            light_updates_[obj].disconnect();
+            light_updates_.erase(obj);
+        }
     }
 }
 
@@ -123,6 +144,9 @@ std::vector<LightID> SpatialHashPartitioner::lights_visible_from(CameraID camera
             lights.push_back(pentry->light_id);
         }
     }
+
+    // Add directional lights to the end
+    lights.insert(lights.end(), directional_lights_.begin(), directional_lights_.end());
 
     return lights;
 }

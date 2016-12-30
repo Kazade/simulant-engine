@@ -14,6 +14,7 @@ public:
         stage->host_camera(camera_id_);
         window->camera(camera_id_)->set_perspective_projection(45.0, float(window->width()) / float(window->height()), 10.0, 10000.0);
         ship_mesh_id_ = window->shared_assets->new_mesh_from_file("sample_data/fighter_good/space_frigate_6.obj");
+        ship_mesh_id_.fetch()->reverse_winding();
         generate_ships();
     }
 
