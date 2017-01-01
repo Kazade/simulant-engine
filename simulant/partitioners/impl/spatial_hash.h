@@ -17,7 +17,11 @@ namespace smlt {
 
 
 const uint32_t MAX_GRID_LEVELS = 16;
-typedef std::size_t Hash;
+struct Hash {
+    int16_t x;
+    int16_t y;
+    int16_t z;
+};
 
 /*
  * Heirarchical hash key. Each level in the key is a hash of cell_size, x, y, z
@@ -30,13 +34,15 @@ struct Key {
     std::size_t ancestors = 0;
 
     bool operator<(const Key& other) const {
-        return memcmp(hash_path, other.hash_path, sizeof(Hash) * MAX_GRID_LEVELS) < 0;
+        auto len = std::min(other.ancestors, ancestors) + 1;
+        auto ret = memcmp(hash_path, other.hash_path, sizeof(Hash) * len);
+        return ret < 0 || (ret == 0 && ancestors < other.ancestors);
     }
 
     bool operator==(const Key& other) const {
         return (
             ancestors == other.ancestors &&
-            memcmp(hash_path, other.hash_path, sizeof(Hash) * MAX_GRID_LEVELS) == 0
+            memcmp(hash_path, other.hash_path, sizeof(Hash) * (ancestors + 1)) == 0
         );
     }
 
@@ -51,7 +57,7 @@ struct Key {
 std::ostream& operator<<(std::ostream& os, const Key& key);
 
 Key make_key(int32_t cell_size, float x, float y, float z);
-std::size_t make_hash(int32_t cell_size, float x, float y, float z);
+Hash make_hash(int32_t cell_size, float x, float y, float z);
 
 typedef std::set<Key> KeyList;
 

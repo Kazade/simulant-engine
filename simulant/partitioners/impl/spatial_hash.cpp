@@ -241,24 +241,20 @@ Key make_key(int32_t cell_size, float x, float y, float z) {
 }
 
 Hash make_hash(int32_t cell_size, float x, float y, float z) {
-    std::size_t seed = 0;
+    Hash hash;
 
-    auto xp = int32_t(std::floor(x / cell_size));
-    auto yp = int32_t(std::floor(y / cell_size));
-    auto zp = int32_t(std::floor(z / cell_size));
+    hash.x = ensure_big_endian(int16_t(std::floor(x / cell_size)));
+    hash.y = ensure_big_endian(int16_t(std::floor(y / cell_size)));
+    hash.z = ensure_big_endian(int16_t(std::floor(z / cell_size)));
 
-    std::hash_combine(seed, xp);
-    std::hash_combine(seed, yp);
-    std::hash_combine(seed, zp);
-
-    return ensure_big_endian(seed);
+    return hash;
 }
 
 Key Key::parent_key() const {
     assert(!is_root());
 
     Key ret;
-    memcpy(ret.hash_path, hash_path, sizeof(std::size_t) * ancestors);
+    memcpy(ret.hash_path, hash_path, sizeof(Hash) * ancestors);
     ret.ancestors = ancestors - 1;
     return ret;
 }
@@ -270,8 +266,8 @@ bool Key::is_ancestor_of(const Key &other) const {
 }
 
 std::ostream &operator<<(std::ostream &os, const Key &key) {
-    for(std::size_t i = 0; i < key.ancestors + 1; ++i) {
-        os << key.hash_path[i];
+    for(uint32_t i = 0; i < key.ancestors + 1; ++i) {
+        os << key.hash_path[i].x << key.hash_path[i].y << key.hash_path[i].z;
         if(i != key.ancestors) {
             os << " / ";
         }

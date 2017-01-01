@@ -25,11 +25,7 @@ public:
         Key test2 = make_key(2, 0.5, 0, 0);
 
         assert_equal(15, test1.ancestors);
-        assert_true(test1.hash_path[15]);
-
         assert_equal(14, test2.ancestors);
-        assert_true(test2.hash_path[14]);
-        assert_equal(0, test2.hash_path[15]);
 
         assert_true(test2.is_ancestor_of(test1));
         assert_false(test1.is_ancestor_of(test2));
@@ -39,19 +35,19 @@ public:
     void test_key_comparison() {
         Key key1, key2, key3, key4, key5;
 
-        key1.hash_path[0] = 1; key1.hash_path[1] = 2;
+        key1.hash_path[0] = {1}; key1.hash_path[1] = {2};
         key1.ancestors = 1;
 
-        key2.hash_path[0] = 1; key2.hash_path[1] = 3;
+        key2.hash_path[0] = {1}; key2.hash_path[1] = {3};
         key2.ancestors = 1;
 
-        key3.hash_path[0] = 1; key3.hash_path[1] = 1; key3.hash_path[2] = 2;
+        key3.hash_path[0] = {1}; key3.hash_path[1] = {1}; key3.hash_path[2] = {2};
         key3.ancestors = 2;
 
-        key4.hash_path[0] = 3;
+        key4.hash_path[0] = {3};
         key4.ancestors = 0;
 
-        key5.hash_path[0] = 1;
+        key5.hash_path[0] = {1};
         key5.ancestors = 0;
 
         assert_true(key3 < key1);
