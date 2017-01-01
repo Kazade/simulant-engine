@@ -1,6 +1,7 @@
 #include <cmath>
 #include "../../frustum.h"
 #include "spatial_hash.h"
+#include "../../utils/endian.h"
 
 namespace smlt {
 
@@ -75,69 +76,56 @@ void SpatialHash::update_object_for_box(const AABB& new_box, SpatialHashEntry* o
     object->set_keys(new_keys);
 }
 
-void generate_boxes_for_frustum(const Frustum& frustum, float box_size, std::vector<AABB>& results) {
+void generate_boxes_for_frustum(const Frustum& frustum, std::vector<AABB>& results) {
     results.clear(); // Required
 
     // start at the center of the near plane
-    Vec3 start_point = Vec3::find_average(frustum.near_corners());
+    Vec3 start_point = Vec3::find_average(frustum.far_corners());
 
-    // We want to head in the direction of the frustum
-    Vec3 direction = frustum.direction().normalized();
+    // We want to head in the reverse direction of the frustum
+    Vec3 direction = -frustum.direction().normalized();
 
     // Get the normals of the up and right planes so we can generated boxes
     Vec3 up = frustum.plane(FRUSTUM_PLANE_BOTTOM).normal();
     Vec3 right = frustum.plane(FRUSTUM_PLANE_LEFT).normal();
 
+    auto near_plane = frustum.plane(FRUSTUM_PLANE_NEAR);
+
     // Project the up and right normals onto the near plane (otherwise they might be skewed)
-    up = frustum.plane(FRUSTUM_PLANE_NEAR).project(up).normalized();
-    right = frustum.plane(FRUSTUM_PLANE_NEAR).project(right).normalized();
+    up = near_plane.project(up).normalized();
+    right = near_plane.project(right).normalized();
 
-    auto slices = std::ceil(frustum.depth() / box_size);
+    float distance_left = frustum.depth();
+    auto p = start_point;
+    while(distance_left > 0) {
+        float box_size = std::max(frustum.width_at_distance(distance_left), frustum.height_at_distance(distance_left));
+        float hw = box_size / 2.0;
 
-    for(auto i = 0; i < slices; ++i) {
-        // Get the width and the height of the frustum at the far edge of this box slice
-        float width = frustum.width_at_distance((i + 1) * box_size);
-        float height = frustum.height_at_distance((i + 1) * box_size);
+        std::array<Vec3, 8> corners;
 
-        float halfWidth = width * 0.5;
-        float halfHeight = height * 0.5;
+        corners[0] = p - (direction * box_size) - (right * hw) - (up * hw);
+        corners[1] = p - (direction * box_size) + (right * hw) - (up * hw);
+        corners[2] = p - (direction * box_size) + (right * hw) + (up * hw);
+        corners[3] = p - (direction * box_size) - (right * hw) + (up * hw);
 
-        // Generate the boxes for this slice
-        for(float x = 0; x < halfWidth; x += box_size) {
-            for(float y = 0; y < halfHeight; y += box_size) {
+        corners[4] = p - (right * hw) - (up * hw);
+        corners[5] = p + (right * hw) - (up * hw);
+        corners[6] = p + (right * hw) + (up * hw);
+        corners[7] = p - (right * hw) + (up * hw);
 
-                Vec3 min = start_point + (right * x) + (up * y);
-                Vec3 max = start_point + (right * (x + box_size)) + (up * (y + box_size)) + (direction * box_size);
 
-                results.push_back(AABB(min, max));
+        AABB new_box(corners.data(), corners.size());
+        results.push_back(new_box);
 
-                min = start_point + (right * x) + (-up * y);
-                max = start_point + (right * (x + box_size)) + (-up * (y + box_size)) + (direction * box_size);
-
-                results.push_back(AABB(min, max));
-
-                min = start_point + (-right * x) + (-up * y);
-                max = start_point + (-right * (x + box_size)) + (-up * (y + box_size)) + (direction * box_size);
-
-                results.push_back(AABB(min, max));
-
-                min = start_point + (-right * x) + (up * y);
-                max = start_point + (-right * (x + box_size)) + (up * (y + box_size)) + (direction * box_size);
-
-                results.push_back(AABB(min, max));
-            }
-        }
-
-        start_point += direction * box_size;
+        distance_left -= box_size;
+        p += direction * box_size;
     }
 }
 
 HGSHEntryList SpatialHash::find_objects_within_frustum(const Frustum &frustum) {
-    auto box_size = frustum.depth() / 5.0;
-
     static std::vector<AABB> boxes; // Static to avoid repeated allocations
 
-    generate_boxes_for_frustum(frustum, box_size, boxes);
+    generate_boxes_for_frustum(frustum, boxes);
 
     HGSHEntryList results;
 
@@ -171,15 +159,11 @@ HGSHEntryList SpatialHash::find_objects_within_box(const AABB &box) {
 
         // Now, go up the tree looking for objects which are ancestors of this key
         auto path = key;
-        while(true) {
+        while(!path.is_root()) {
             path = path.parent_key();
             it = index.find(path);
             if(it != index.end() && path.is_ancestor_of(it->first)) {
                 objects.insert(it->second.begin(), it->second.end());
-            }
-
-            if(path.is_root()) {
-                break;
             }
         }
     };
@@ -214,14 +198,15 @@ int32_t SpatialHash::find_cell_size_for_box(const AABB &box) const {
      * box. This increases the likelyhood that the object will not wastefully span cells
      */
 
-    int32_t k = 1;
-    auto maxd = box.max_dimension();
+        int32_t k = 1;
+         auto maxd = box.max_dimension();
 
-    while(k < maxd) {
-        k *= 2;
-    }
+        while(k < maxd) {
+            k *= 2;
+        }
 
-    return k;
+        return k;
+
 }
 
 void SpatialHash::insert_object_for_key(Key key, SpatialHashEntry *entry) {
@@ -243,6 +228,8 @@ Key make_key(int32_t cell_size, float x, float y, float z) {
     uint32_t ancestor_count = 0;
 
     while(path_size > cell_size) {
+        assert(ancestor_count < MAX_GRID_LEVELS);
+
         key.hash_path[ancestor_count] = make_hash(path_size, x, y, z);
         path_size /= 2;
         ancestor_count++;
@@ -267,7 +254,7 @@ Hash make_hash(int32_t cell_size, float x, float y, float z) {
     std::hash_combine(seed, yp);
     std::hash_combine(seed, zp);
 
-    return seed;
+    return ensure_big_endian(seed);
 }
 
 Key Key::parent_key() const {
@@ -282,7 +269,7 @@ Key Key::parent_key() const {
 bool Key::is_ancestor_of(const Key &other) const {
     if(ancestors > other.ancestors) return false;
 
-    return memcmp(hash_path, other.hash_path, sizeof(std::size_t) * (ancestors + 1)) == 0;
+    return memcmp(hash_path, other.hash_path, sizeof(Hash) * (ancestors + 1)) == 0;
 }
 
 std::ostream &operator<<(std::ostream &os, const Key &key) {

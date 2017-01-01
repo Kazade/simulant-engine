@@ -1517,3 +1517,5 @@ simulant/interfaces/has_auto_id.cpp
 simulant/nodes/stage_node.cpp
 simulant/nodes/camera_proxy.h
 simulant/nodes/camera_proxy.cpp
+simulant/utils/endian.h
+simulant/utils/endian.cpp

@@ -205,12 +205,11 @@ public:
         assert_true(frustum.initialized());
 
         std::vector<AABB> result;
-        generate_boxes_for_frustum(frustum, 20.0, result);
+        generate_boxes_for_frustum(frustum, result);
 
         assert_close(result[0].min.z, -1.0, 0.0001);
         assert_close(result.back().max.z, -101.0, 0.0001);
     }
-
 
 private:
     smlt::SpatialHash* hash_ = nullptr;

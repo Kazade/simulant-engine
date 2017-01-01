@@ -30,23 +30,13 @@ struct Key {
     std::size_t ancestors = 0;
 
     bool operator<(const Key& other) const {
-        for(std::size_t i = 0; i <= ancestors; ++i) {
-            if(other.hash_path[i] == 0) {
-                return false;
-            } else if(hash_path[i] < other.hash_path[i]) {
-                return true;
-            } else if(hash_path[i] > other.hash_path[i]) {
-                return false;
-            }
-        }
-
-        return (ancestors < other.ancestors); // All equal
+        return memcmp(hash_path, other.hash_path, sizeof(Hash) * MAX_GRID_LEVELS) < 0;
     }
 
     bool operator==(const Key& other) const {
         return (
             ancestors == other.ancestors &&
-            memcmp(hash_path, other.hash_path, sizeof(std::size_t) * MAX_GRID_LEVELS) == 0
+            memcmp(hash_path, other.hash_path, sizeof(Hash) * MAX_GRID_LEVELS) == 0
         );
     }
 
@@ -111,7 +101,7 @@ private:
     Index index_;
 };
 
-void generate_boxes_for_frustum(const Frustum& frustum, float box_size, std::vector<AABB>& results);
+void generate_boxes_for_frustum(const Frustum& frustum, std::vector<AABB>& results);
 
 }
 
