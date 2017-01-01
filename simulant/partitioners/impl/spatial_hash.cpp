@@ -243,9 +243,9 @@ Key make_key(int32_t cell_size, float x, float y, float z) {
 Hash make_hash(int32_t cell_size, float x, float y, float z) {
     Hash hash;
 
-    hash.x = ensure_big_endian(int16_t(std::floor(x / cell_size)));
-    hash.y = ensure_big_endian(int16_t(std::floor(y / cell_size)));
-    hash.z = ensure_big_endian(int16_t(std::floor(z / cell_size)));
+    hash.x = int16_t(std::floor(x / cell_size));
+    hash.y = int16_t(std::floor(y / cell_size));
+    hash.z = int16_t(std::floor(z / cell_size));
 
     return hash;
 }
