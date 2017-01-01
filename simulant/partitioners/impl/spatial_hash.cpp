@@ -198,15 +198,12 @@ int32_t SpatialHash::find_cell_size_for_box(const AABB &box) const {
      * box. This increases the likelyhood that the object will not wastefully span cells
      */
 
-        int32_t k = 1;
-         auto maxd = box.max_dimension();
-
-        while(k < maxd) {
-            k *= 2;
-        }
-
-        return k;
-
+    auto maxd = box.max_dimension();
+    if(maxd < 1.0f) {
+        return 1;
+    } else {
+        return 1 << uint32_t(std::ceil(std::log2(maxd)));
+    }
 }
 
 void SpatialHash::insert_object_for_key(Key key, SpatialHashEntry *entry) {
