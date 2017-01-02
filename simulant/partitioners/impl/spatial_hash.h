@@ -15,8 +15,8 @@
 
 namespace smlt {
 
-
-const uint32_t MAX_GRID_LEVELS = 16;
+const uint32_t MINIMAL_GRID_LEVELS = 4;
+const uint32_t MAX_GRID_LEVELS = 8;
 struct Hash {
     int16_t x;
     int16_t y;

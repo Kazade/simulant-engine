@@ -21,11 +21,11 @@ public:
     }
 
     void test_key_construction() {
-        Key test1 = make_key(1, 0, 0, 0);
-        Key test2 = make_key(2, 0.5, 0, 0);
+        Key test1 = make_key(16, 0, 0, 0);
+        Key test2 = make_key(32, 0.5, 0, 0);
 
-        assert_equal(15, test1.ancestors);
-        assert_equal(14, test2.ancestors);
+        assert_equal(7, test1.ancestors);
+        assert_equal(6, test2.ancestors);
 
         assert_true(test2.is_ancestor_of(test1));
         assert_false(test1.is_ancestor_of(test2));
@@ -78,7 +78,7 @@ public:
 
     void test_adding_objects_to_the_hash() {
         AABB box1(Vec3(0.5, 0.5, 0.5), 0.5);
-        AABB box2(Vec3(0, 0, 0), 5.0);
+        AABB box2(Vec3(0, 0, 0), 18.0);
 
         hash_->insert_object_for_box(box1, new_entry_);
 
@@ -94,7 +94,7 @@ public:
 
         AABB box1(Vec3(0.5, 0.5, 0.5), 0.5);
         AABB box2(Vec3(0, 0, 0), 5.0);
-        AABB box3(Vec3(10, 10, 10), 1.0);
+        AABB box3(Vec3(18, 18, 18), 1.0);
 
         hash_->insert_object_for_box(box1, &entry1);
         hash_->insert_object_for_box(box2, &entry2);

@@ -199,10 +199,12 @@ int32_t SpatialHash::find_cell_size_for_box(const AABB &box) const {
      */
 
     auto maxd = box.max_dimension();
-    if(maxd < 1.0f) {
-        return 1;
+    auto min = pow(2, MINIMAL_GRID_LEVELS);
+    if(maxd < min) {
+        return min;
     } else {
-        return 1 << uint32_t(std::ceil(std::log2(maxd)));
+        auto shift = uint32_t(std::ceil(std::log2(maxd)));
+        return 1 << shift;
     }
 }
 
@@ -219,23 +221,23 @@ void SpatialHash::insert_object_for_key(Key key, SpatialHashEntry *entry) {
 }
 
 Key make_key(int32_t cell_size, float x, float y, float z) {
-    int32_t path_size = pow(2, MAX_GRID_LEVELS - 1); // Minus 1, because cell_size 1 is not a power of 2
+    static const int32_t MIN_CELL_SIZE = pow(2, MINIMAL_GRID_LEVELS);
+    static const int32_t MAX_PATH_SIZE = pow(2, MINIMAL_GRID_LEVELS + MAX_GRID_LEVELS);
+
+    cell_size = std::max(MIN_CELL_SIZE, cell_size);
+
     Key key;
 
-    uint32_t ancestor_count = 0;
+    key.ancestors = 7 - (int(std::log2(cell_size)) - MINIMAL_GRID_LEVELS);
 
-    while(path_size > cell_size) {
-        assert(ancestor_count < MAX_GRID_LEVELS);
-
-        key.hash_path[ancestor_count] = make_hash(path_size, x, y, z);
-        path_size /= 2;
-        ancestor_count++;
-    }
-
-    assert(ancestor_count < MAX_GRID_LEVELS);
-
-    key.hash_path[ancestor_count] = make_hash(cell_size, x, y, z);
-    key.ancestors = ancestor_count;
+    key.hash_path[0] = make_hash(MAX_PATH_SIZE, x, y, z);
+    key.hash_path[1] = (key.ancestors > 0) ? make_hash(MAX_PATH_SIZE / 2, x, y, z) : Hash();
+    key.hash_path[2] = (key.ancestors > 1) ? make_hash(MAX_PATH_SIZE / 4, x, y, z) : Hash();
+    key.hash_path[3] = (key.ancestors > 2) ? make_hash(MAX_PATH_SIZE / 8, x, y, z) : Hash();
+    key.hash_path[4] = (key.ancestors > 3) ? make_hash(MAX_PATH_SIZE / 16, x, y, z) : Hash();
+    key.hash_path[5] = (key.ancestors > 4) ? make_hash(MAX_PATH_SIZE / 32, x, y, z) : Hash();
+    key.hash_path[6] = (key.ancestors > 5) ? make_hash(MAX_PATH_SIZE / 64, x, y, z) : Hash();
+    key.hash_path[7] = (key.ancestors > 6) ? make_hash(MAX_PATH_SIZE / 128, x, y, z) : Hash();
 
     return key;
 }
