@@ -169,7 +169,7 @@ const AABB StageNode::transformed_aabb() const {
 
 void StageNode::recalc_bounds() {
     auto newb = transformed_aabb();
-    if(Vec3(newb.min) != Vec3(bounds_.min) || Vec3(newb.max) != Vec3(bounds_.max)) {
+    if(!kmVec3AreEqual(&newb.min, &bounds_.min) || !kmVec3AreEqual(&newb.max, &bounds_.max)) {
         bounds_ = newb;
         signal_bounds_updated_(bounds_);
     }
