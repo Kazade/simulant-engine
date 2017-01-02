@@ -219,23 +219,19 @@ void SpatialHash::insert_object_for_key(Key key, SpatialHashEntry *entry) {
 }
 
 Key make_key(int32_t cell_size, float x, float y, float z) {
-    int32_t path_size = pow(2, MAX_GRID_LEVELS - 1); // Minus 1, because cell_size 1 is not a power of 2
+    static const int32_t MAX_PATH_SIZE = pow(2, MAX_GRID_LEVELS);
+
     Key key;
+    key.ancestors = 15 - (int(std::log2(cell_size)));
 
-    uint32_t ancestor_count = 0;
-
-    while(path_size > cell_size) {
-        assert(ancestor_count < MAX_GRID_LEVELS);
-
-        key.hash_path[ancestor_count] = make_hash(path_size, x, y, z);
-        path_size /= 2;
-        ancestor_count++;
-    }
-
-    assert(ancestor_count < MAX_GRID_LEVELS);
-
-    key.hash_path[ancestor_count] = make_hash(cell_size, x, y, z);
-    key.ancestors = ancestor_count;
+    key.hash_path[0] = make_hash(MAX_PATH_SIZE, x, y, z);
+    key.hash_path[1] = (key.ancestors > 0) ? make_hash(MAX_PATH_SIZE / 2, x, y, z) : Hash();
+    key.hash_path[2] = (key.ancestors > 1) ? make_hash(MAX_PATH_SIZE / 4, x, y, z) : Hash();
+    key.hash_path[3] = (key.ancestors > 2) ? make_hash(MAX_PATH_SIZE / 8, x, y, z) : Hash();
+    key.hash_path[4] = (key.ancestors > 3) ? make_hash(MAX_PATH_SIZE / 16, x, y, z) : Hash();
+    key.hash_path[5] = (key.ancestors > 4) ? make_hash(MAX_PATH_SIZE / 32, x, y, z) : Hash();
+    key.hash_path[6] = (key.ancestors > 5) ? make_hash(MAX_PATH_SIZE / 64, x, y, z) : Hash();
+    key.hash_path[7] = (key.ancestors > 6) ? make_hash(MAX_PATH_SIZE / 128, x, y, z) : Hash();
 
     return key;
 }
