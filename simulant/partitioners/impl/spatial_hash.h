@@ -97,6 +97,8 @@ public:
     HGSHEntryList find_objects_within_box(const AABB& box);
     HGSHEntryList find_objects_within_frustum(const Frustum& frustum);
 
+    friend std::ostream &operator<<(std::ostream &os, const SpatialHash &hash);
+
 private:
     void erase_object_from_key(Key key, SpatialHashEntry* object);
 
@@ -106,6 +108,8 @@ private:
     typedef std::map<Key, std::unordered_set<SpatialHashEntry*>> Index;
     Index index_;
 };
+
+std::ostream &operator<<(std::ostream &os, const SpatialHash &hash);
 
 void generate_boxes_for_frustum(const Frustum& frustum, std::vector<AABB>& results);
 

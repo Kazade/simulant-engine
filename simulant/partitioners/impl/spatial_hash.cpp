@@ -179,15 +179,12 @@ HGSHEntryList SpatialHash::find_objects_within_box(const AABB &box) {
             corner.y,
             corner.z
         );
-
-        // Don't look at the same key more than once
-        // FIXME: implement a hashing function and use unordered_set
-        if(seen.find(key) == seen.end()) {
-            gather_objects(index_, key, objects);
-            seen.insert(key);
-        }
+        seen.insert(key);
     }
 
+    for(auto& key: seen) {
+        gather_objects(index_, key, objects);
+    }
 
     return objects;
 }
@@ -219,7 +216,7 @@ void SpatialHash::insert_object_for_key(Key key, SpatialHashEntry *entry) {
 }
 
 Key make_key(int32_t cell_size, float x, float y, float z) {
-    static const int32_t MAX_PATH_SIZE = pow(2, MAX_GRID_LEVELS);
+    static const int32_t MAX_PATH_SIZE = pow(2, MAX_GRID_LEVELS - 1);
 
     Key key;
     key.ancestors = 15 - (int(std::log2(cell_size)));
@@ -232,6 +229,14 @@ Key make_key(int32_t cell_size, float x, float y, float z) {
     key.hash_path[5] = (key.ancestors > 4) ? make_hash(MAX_PATH_SIZE / 32, x, y, z) : Hash();
     key.hash_path[6] = (key.ancestors > 5) ? make_hash(MAX_PATH_SIZE / 64, x, y, z) : Hash();
     key.hash_path[7] = (key.ancestors > 6) ? make_hash(MAX_PATH_SIZE / 128, x, y, z) : Hash();
+    key.hash_path[8] = (key.ancestors > 7) ? make_hash(MAX_PATH_SIZE / 256, x, y, z) : Hash();
+    key.hash_path[9] = (key.ancestors > 8) ? make_hash(MAX_PATH_SIZE / 512, x, y, z) : Hash();
+    key.hash_path[10] = (key.ancestors > 9) ? make_hash(MAX_PATH_SIZE / 1024, x, y, z) : Hash();
+    key.hash_path[11] = (key.ancestors > 10) ? make_hash(MAX_PATH_SIZE / 2048, x, y, z) : Hash();
+    key.hash_path[12] = (key.ancestors > 11) ? make_hash(MAX_PATH_SIZE / 4096, x, y, z) : Hash();
+    key.hash_path[13] = (key.ancestors > 12) ? make_hash(MAX_PATH_SIZE / 8192, x, y, z) : Hash();
+    key.hash_path[14] = (key.ancestors > 13) ? make_hash(MAX_PATH_SIZE / 16384, x, y, z) : Hash();
+    key.hash_path[15] = (key.ancestors > 14) ? make_hash(1, x, y, z) : Hash();
 
     return key;
 }
@@ -267,6 +272,14 @@ std::ostream &operator<<(std::ostream &os, const Key &key) {
         if(i != key.ancestors) {
             os << " / ";
         }
+    }
+
+    return os;
+}
+
+std::ostream &operator<<(std::ostream &os, const SpatialHash &hash) {
+    for(auto& pair: hash.index_) {
+        os << pair.first << " : " << pair.second.size() << " items";
     }
 
     return os;
