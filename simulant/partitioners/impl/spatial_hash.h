@@ -65,6 +65,9 @@ class SpatialHashEntry {
 public:
     virtual ~SpatialHashEntry() {}
 
+    void set_hash_aabb(const AABB& aabb) {
+        hash_aabb_ = aabb;
+    }
 
     void push_key(const Key& key) {
         keys_.insert(key);
@@ -78,9 +81,10 @@ public:
         return keys_;
     }
 
+    const AABB& hash_aabb() const { return hash_aabb_; }
 private:
     KeyList keys_;
-
+    AABB hash_aabb_;
 };
 
 typedef std::unordered_set<SpatialHashEntry*> HGSHEntryList;

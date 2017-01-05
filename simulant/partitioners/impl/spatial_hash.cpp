@@ -13,6 +13,7 @@ SpatialHash::SpatialHash() {
 void SpatialHash::insert_object_for_box(const AABB &box, SpatialHashEntry *object) {
     auto cell_size = find_cell_size_for_box(box);
 
+    object->set_hash_aabb(box);
     for(auto& corner: box.corners()) {
         auto key = make_key(cell_size, corner.x, corner.y, corner.z);
         insert_object_for_key(key, object);
@@ -73,11 +74,20 @@ void SpatialHash::update_object_for_box(const AABB& new_box, SpatialHashEntry* o
         insert_object_for_key(key, object);
     }
 
+    object->set_hash_aabb(new_box);
     object->set_keys(new_keys);
 }
 
 void generate_boxes_for_frustum(const Frustum& frustum, std::vector<AABB>& results) {
     results.clear(); // Required
+
+    auto corners = frustum.near_corners();
+    auto far_corners = frustum.far_corners();
+    for(auto& corner: far_corners) {
+        corners.push_back(corner);
+    }
+    results.push_back(AABB(corners.data(), corners.size()));
+    return;
 
     // start at the center of the near plane
     Vec3 start_point = Vec3::find_average(frustum.far_corners());
@@ -130,9 +140,10 @@ HGSHEntryList SpatialHash::find_objects_within_frustum(const Frustum &frustum) {
     HGSHEntryList results;
 
     for(auto& box: boxes) {
-        auto ret = find_objects_within_box(box);
-        if(!ret.empty()) {
-            results.insert(ret.begin(), ret.end());
+        for(auto& result: find_objects_within_box(box)) {
+            if(frustum.intersects_aabb(result->hash_aabb())) {
+                results.insert(result);
+            }
         }
     }
 

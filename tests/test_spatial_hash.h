@@ -182,31 +182,6 @@ public:
         assert_equal(results.size(), 0);
     }
 
-    void test_frustum_box_generation() {
-        Frustum frustum;
-
-        assert_true(!frustum.initialized());
-
-        //Create an orthographic projection, and a modelview idactor matrix
-        kmMat4 projection, modelview;
-        kmMat4PerspectiveProjection(&projection, 45.0, 16.0 / 9.0, 1.0, 100.0);
-        kmMat4Identity(&modelview);
-
-        //Create the modelview projection matrix
-        kmMat4 modelview_projection;
-        kmMat4Multiply(&modelview_projection, &projection, &modelview);
-
-        //Build the frustum from the modelview projection matrix
-        frustum.build(&modelview_projection);
-        assert_true(frustum.initialized());
-
-        std::vector<AABB> result;
-        generate_boxes_for_frustum(frustum, result);
-
-        assert_close(result[0].min.z, -1.0, 0.0001);
-        assert_close(result.back().max.z, -101.0, 0.0001);
-    }
-
 private:
     smlt::SpatialHash* hash_ = nullptr;
     SpatialHashEntry* new_entry_ = nullptr;
