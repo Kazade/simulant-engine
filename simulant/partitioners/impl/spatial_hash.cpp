@@ -279,7 +279,7 @@ std::ostream &operator<<(std::ostream &os, const Key &key) {
 
 std::ostream &operator<<(std::ostream &os, const SpatialHash &hash) {
     for(auto& pair: hash.index_) {
-        os << pair.first << " : " << pair.second.size() << " items";
+        os << pair.first << " : " << pair.second.size() << " items" << std::endl;
     }
 
     return os;
