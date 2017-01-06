@@ -18,9 +18,13 @@ This section covers the base subsystems and usages of Simulant.
 ### The Rendering System
 
  - The rendering process: [The Render Sequence](render_sequence.md) | [Pipelines](pipeline.md)
+ - Partitioning: [Overview](partitioners.md) | [Spatial Hash Partitioner](spatial_hash.md) | [The Null Partitioner](null_partitioner.md)
  - User interfaces: [Overlays](overlay.md)
- - Cameras: [Cameras and Camera Proxies](cameras.md)
+ - Cameras(1)[1]: [Cameras and Camera Proxies](cameras.md)
 
 ### Scene Building
 
  - Scripting: [Particle System File Format](particle_system_format.md)
+ - Scene Tree: [Stage Nodes](stage_nodes.md) 
+
+[1]: The Camera Proxy system will potentially change at some point to make Cameras normal StageNodes
