@@ -19,7 +19,7 @@ The clever part is, the implementation doesn't have multiple hashes - it has a s
 
 ## Keys, Ancestors and Descendents
 
-When an object is inserted, a multi-level Key is generated. Each Key is made up of up to 16, 3-dimensional hash keys. These are the hash keys that the inserted object would exist in at each cell-size that it would fit into starting at the largest (32768).
+When an object is inserted, a multi-level Key is generated. Each Key is made up of up to 16, 3-dimensional hash keys to form a path in a tree of spatial hashes, starting from the largest cell-size to the smallest in which the object can fit.
 
 Theoretically, these keys form heirarchies. If Key A has 16 elements in its path, and Key B has 15 elements and those 15 are the same as the first 15 of Key A, then Key B is an ancestor of Key A, and Key A is a descendent of Key B. This gives us a powerful lookup system as we know that if objects with Key B are visible, then objects of Key A are also visible. If this is difficult to visualise, consider that these multiple spatial hashes are essentially overlapping grids. If you know a grid cell is visible, you know that smaller grid cells within it are also visible.
 
