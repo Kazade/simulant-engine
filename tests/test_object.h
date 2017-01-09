@@ -20,6 +20,23 @@ public:
         window->delete_stage(stage_id_);
     }
 
+    void test_positional_constraints() {
+        smlt::AABB aabb(Vec3(), 2.0);
+
+        auto actor = stage_id_.fetch()->new_actor().fetch();
+        actor->move_to(Vec3(2, 0.5, 0.5));
+
+        assert_equal(2, actor->position().x);
+
+        // Applying the constraint should be enough to change the position
+        actor->constrain_to_aabb(aabb);
+        assert_equal(1, actor->position().x);
+
+        // Subsequent moves should be constrained
+        actor->move_to(Vec3(2, 0.5, 0.5));
+        assert_equal(1, actor->position().x);
+    }
+
     void test_scaling_applies() {
         auto actor = window->stage(stage_id_)->new_actor().fetch();
         actor->scale_by(smlt::Vec3(2.0, 1.0, 0.5));

@@ -170,6 +170,9 @@ Vec3 Transformable::forward() const {
 
 void Transformable::constrain_to_aabb(const AABB& region) {
     constraint_.reset(new AABB(region));
+
+    // Reset the current position to apply the constraint if necessary
+    set_position(position());
 }
 
 bool Transformable::is_constrained() const {
@@ -194,9 +197,21 @@ void Transformable::move_up_by(float amount) {
 
 
 void Transformable::set_position(const Vec3 &p) {
-    if(p.x != position_.x || p.y != position_.y || p.z != position_.z) {
+    auto to_set = p;
+
+    if(constraint_ && !constraint_->contains_point(to_set)) {
+        if(to_set.x < constraint_->min.x) to_set.x = constraint_->min.x;
+        if(to_set.y < constraint_->min.y) to_set.y = constraint_->min.y;
+        if(to_set.z < constraint_->min.z) to_set.z = constraint_->min.z;
+
+        if(to_set.x > constraint_->max.x) to_set.x = constraint_->max.x;
+        if(to_set.y > constraint_->max.y) to_set.y = constraint_->max.y;
+        if(to_set.z > constraint_->max.z) to_set.z = constraint_->max.z;
+    };
+
+    if(to_set.x != position_.x || to_set.y != position_.y || to_set.z != position_.z) {
         auto tmp = position_;
-        position_ = p;
+        position_ = to_set;
         on_position_set(tmp, position_);
         signal_transformation_changed_();
     }

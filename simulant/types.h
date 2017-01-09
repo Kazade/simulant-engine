@@ -610,6 +610,11 @@ struct AABB : public kmAABB3 {
         return (empty_x && empty_y) || (empty_x && empty_z) || (empty_y && empty_z);
     }
 
+
+    bool contains_point(const Vec3& p) const {
+        return kmAABB3ContainsPoint(this, &p);
+    }
+
     std::array<Vec3, 8> corners() const {
         std::array<Vec3, 8> ret;
 
