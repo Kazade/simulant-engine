@@ -22,9 +22,7 @@
 
 #include "../generic/managed.h"
 #include "../generic/identifiable.h"
-#include "../utils/parent_setter_mixin.h"
-
-#include "../object.h"
+#include "../nodes/stage_node.h"
 #include "../types.h"
 
 #include "./window_holder.h"
@@ -46,7 +44,7 @@ class SkyboxManager;
 class Skybox :
     public Managed<Skybox>,
     public generic::Identifiable<SkyboxID>,
-    public ParentSetterMixin<MoveableObject> {
+    public StageNode {
 
 public:
     Skybox(SkyboxID id, SkyboxManager* manager);
@@ -54,8 +52,8 @@ public:
     bool init() override;
     void cleanup() override;
 
-    void set_width(float width);
-    const float width() const;
+    void set_width(float width) { width_ = width; }
+    const float width() const { return width_; }
 
     void generate(
         const unicode& up,
@@ -66,12 +64,11 @@ public:
         const unicode& back
     );
 
-    unicode __unicode__() const override {
-        return _u("Skybox {0}").format(this->id());
-    }
-
     void ask_owner_for_destruction() override;
 
+    const AABB aabb() const;
+
+    void update(double step) {}
 private:
     friend class SkyboxManager;
 
@@ -83,6 +80,8 @@ private:
     MeshID mesh_id_;
 
     MaterialID materials_[SKYBOX_FACE_MAX];
+
+    float width_;
 };
 
 typedef Skybox* SkyboxPtr;

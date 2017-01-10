@@ -22,6 +22,7 @@
 #include "../../generic/property.h"
 #include "../../types.h"
 #include "../../interfaces.h"
+#include "../../interfaces/boundable.h"
 #include "render_queue.h"
 
 namespace smlt {

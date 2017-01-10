@@ -53,20 +53,20 @@ public:
         float xpos = 0;
         window->keyboard->key_while_pressed_connect(SDL_SCANCODE_A, [&](SDL_Keysym key, double dt) mutable {
                 xpos -= 20.0 * dt;
-                window->stage(stage_id_)->camera(camera_id_)->set_absolute_position(xpos, 2, 0);
+                window->stage(stage_id_)->camera(camera_id_)->move_to_absolute(xpos, 2, 0);
                 window->stage(stage_id_)->camera(camera_id_)->look_at(window->stage(stage_id_)->actor(actor_id_)->absolute_position());
         });
         window->keyboard->key_while_pressed_connect(SDL_SCANCODE_D, [&](SDL_Keysym key, double dt) mutable {
                 xpos += 20.0 * dt;
-                window->stage(stage_id_)->camera(camera_id_)->set_absolute_position(xpos, 2, 0);
+                window->stage(stage_id_)->camera(camera_id_)->move_to_absolute(xpos, 2, 0);
                 window->stage(stage_id_)->camera(camera_id_)->look_at(window->stage(stage_id_)->actor(actor_id_)->absolute_position());
         });
     }
 
     void do_step(double dt) {
-        window->stage(stage_id_)->actor(actor_id_)->rotate_x(smlt::Degrees(dt * 20.0));
-        window->stage(stage_id_)->actor(actor_id_)->rotate_y(smlt::Degrees(dt * 15.0));
-        window->stage(stage_id_)->actor(actor_id_)->rotate_z(smlt::Degrees(dt * 25.0));
+        window->stage(stage_id_)->actor(actor_id_)->rotate_x_by(smlt::Degrees(dt * 20.0));
+        window->stage(stage_id_)->actor(actor_id_)->rotate_y_by(smlt::Degrees(dt * 15.0));
+        window->stage(stage_id_)->actor(actor_id_)->rotate_z_by(smlt::Degrees(dt * 25.0));
     }
 
 private:

@@ -49,6 +49,10 @@ void StatsPanel::initialize() {
     ram_usage.append_label("RAM: ");
     ram_usage.append_label("0").set_id("ram");
 
+    auto actors_rendered = overlay->append_row();
+    actors_rendered.append_label("Renderables visible: ");
+    actors_rendered.append_label("0").set_id("renderables-visible");
+
     overlay->append_row().set_id("stages");
 
     window_->signal_frame_started().connect(std::bind(&StatsPanel::update, this));
@@ -90,6 +94,11 @@ void StatsPanel::update() {
         auto mem_usage = get_memory_usage_in_megabytes();
         overlay->find("#ram").set_text(
             _u("{0} MB").format(mem_usage)
+        );
+
+        auto actors_rendered = window_->stats->geometry_visible();
+        overlay->find("#renderables-visible").set_text(
+            _u("{0}").format(actors_rendered)
         );
 
         last_update = 0.0f;

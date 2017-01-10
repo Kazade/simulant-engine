@@ -19,7 +19,7 @@
 
 #include "../stage.h"
 #include "../render_sequence.h"
-#include "../actor.h"
+#include "../nodes/actor.h"
 #include "../overlay.h"
 #include "../camera.h"
 #include "../window_base.h"

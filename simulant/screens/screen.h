@@ -42,6 +42,7 @@
 #include "../window_base.h"
 #include "../generic/managed.h"
 #include "../generic/property.h"
+#include "../interfaces/nameable.h"
 #include "../interfaces.h"
 
 namespace smlt {
@@ -65,9 +66,6 @@ public:
 
     bool is_loaded() const { return is_loaded_; }
 
-    const unicode name() const { return name_; }
-    const bool has_name() const { return !name_.empty(); }
-    void set_name(const unicode &name) { name_ = name; }
 protected:
     Property<ScreenBase, WindowBase> window = { this, &ScreenBase::window_ };
 
@@ -80,7 +78,7 @@ protected:
     PipelineID prepare_basic_scene(
         StageID& new_stage,
         CameraID& new_camera,
-        AvailablePartitioner partitioner=PARTITIONER_OCTREE
+        AvailablePartitioner partitioner=PARTITIONER_HASH
     );
 
     std::pair<PipelineID, PipelineID> prepare_basic_scene_with_overlay(
@@ -88,7 +86,7 @@ protected:
     );
 
     WindowBase* window_;
-    unicode name_;
+
 private:
     bool is_loaded_ = false;
 };

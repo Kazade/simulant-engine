@@ -14,6 +14,7 @@ public:
         stage->host_camera(camera_id_);
         window->camera(camera_id_)->set_perspective_projection(45.0, float(window->width()) / float(window->height()), 10.0, 10000.0);
         ship_mesh_id_ = window->shared_assets->new_mesh_from_file("sample_data/fighter_good/space_frigate_6.obj");
+        ship_mesh_id_.fetch()->reverse_winding();
         generate_ships();
     }
 
@@ -30,7 +31,7 @@ public:
         for(auto ship_id: ship_ids_) {
             auto pos = stage->actor(ship_id)->position();
             avg += pos;
-            stage->actor(ship_id)->set_absolute_position(pos + (speed * dt * (0.01 * ship_id.value())));
+            stage->actor(ship_id)->move_to_absolute(pos + (speed * dt * (0.01 * ship_id.value())));
         }
 
         avg /= ship_ids_.size();
@@ -57,10 +58,10 @@ private:
 
             auto stage = window->stage(stage_id_);
             ship_ids_.push_back(stage->new_actor_with_mesh(ship_mesh_id_));
-            stage->actor(ship_ids_.back())->set_absolute_position(pos);
+            stage->actor(ship_ids_.back())->move_to_absolute(pos);
 
             auto ps_id = stage->new_particle_system_with_parent_from_file(ship_ids_.back(), "simulant/particles/pixel_trail.kglp");
-            stage->particle_system(ps_id)->set_relative_position(0, 0, 0);
+            stage->particle_system(ps_id)->move_to(0, 0, 0);
         }
     }
 };

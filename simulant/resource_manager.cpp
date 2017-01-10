@@ -437,7 +437,7 @@ MaterialID ResourceManager::new_material_from_file(const unicode& path, GarbageC
     new_mat->enable_gc((garbage_collect == GARBAGE_COLLECT_NEVER) ? false: true);
     mark_material_as_uncollected(new_mat->id());
 
-    L_DEBUG(_F("Cloned material {0} into {1}").format(template_id, new_mat->id()));
+    //L_DEBUG(_F("Cloned material {0} into {1}").format(template_id, new_mat->id()));
 
     return new_mat->id();
 }

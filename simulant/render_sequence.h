@@ -154,8 +154,6 @@ private:
     sig::signal<void (Pipeline&)> signal_pipeline_started_;
     sig::signal<void (Pipeline&)> signal_pipeline_finished_;
 
-    void update_camera_constraint(CameraID cid);
-
     friend class Pipeline;
 
     std::set<RenderTarget*> targets_rendered_this_frame_;

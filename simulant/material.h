@@ -39,6 +39,7 @@
 #include "types.h"
 #include "interfaces.h"
 #include "material_constants.h"
+#include "interfaces/updateable.h"
 
 namespace smlt {
 

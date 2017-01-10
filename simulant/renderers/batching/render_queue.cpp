@@ -20,8 +20,8 @@
 
 #include "../../stage.h"
 #include "../../material.h"
-#include "../../actor.h"
-#include "../../particles.h"
+#include "../../nodes/actor.h"
+#include "../../nodes/particles.h"
 
 #include "render_queue.h"
 #include "../../partitioner.h"

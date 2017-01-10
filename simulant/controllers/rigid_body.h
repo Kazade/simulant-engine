@@ -24,12 +24,10 @@
 #include "../generic/managed.h"
 #include "../generic/tri_octree.h"
 #include "../types.h"
-
+#include "../interfaces/transformable.h"
 #include "../deps/qu3e/q3.h"
 
 namespace smlt {
-
-class MoveableObject;
 
 namespace controllers {
 
@@ -168,7 +166,7 @@ namespace impl {
         Property<Body, RigidBodySimulation> simulation = { this, &Body::simulation_ };
     protected:
         friend class smlt::controllers::RigidBodySimulation;
-        MoveableObject* object_;
+        Transformable* object_;
         q3Body* body_ = nullptr;
         RigidBodySimulation::ptr simulation_;
         ColliderType collider_type_;

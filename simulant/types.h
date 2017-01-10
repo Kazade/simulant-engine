@@ -53,11 +53,14 @@ namespace smlt {
 
 struct Vec3;
 struct Mat3;
+struct Degrees;
 
 struct Quaternion : public kmQuaternion {
     Quaternion(const kmQuaternion& other) {
         kmQuaternionAssign(this, &other);
     }
+
+    Quaternion(const Degrees& degrees, const Vec3& axis);
 
     Quaternion() {
         kmQuaternionIdentity(this);
@@ -461,6 +464,17 @@ struct Vec3 : public kmVec3 {
         return *this;
     }
 
+    template<typename Container>
+    static Vec3 find_average(const Container& vectors) {
+        Vec3 ret;
+        for(auto& v: vectors) {
+            ret += v;
+        }
+
+        ret /= float(vectors.size());
+        return ret;
+    }
+
     static float distance(const smlt::Vec3& lhs, const smlt::Vec3& rhs) {
         return (rhs - lhs).length();
     }
@@ -490,6 +504,10 @@ struct Vec3 : public kmVec3 {
 };
 
 struct Plane : public kmPlane {
+    Plane() {
+        kmPlaneFill(this, 0, 0, 0, 0);
+    }
+
     Plane(const Vec3& N, float D) {
         kmPlaneFromNormalAndDistance(this, &N, D);
     }
@@ -498,6 +516,10 @@ struct Plane : public kmPlane {
         Vec3 ret;
         kmVec3ProjectOnToPlane(&ret, &v, this);
         return ret;
+    }
+
+    Vec3 normal() const {
+        return Vec3(a, b, c);
     }
 };
 
@@ -511,12 +533,46 @@ struct AABB : public kmAABB3 {
         kmVec3Zero(&this->max);
     }
 
+    AABB(const Vec3& min, const Vec3& max) {
+        this->min = min;
+        this->max = max;
+    }
+
     AABB(const Vec3& centre, float width) {
         kmAABB3Initialize(this, &centre, width, width, width);
     }
 
     AABB(const Vec3& centre, float xsize, float ysize, float zsize) {
         kmAABB3Initialize(this, &centre, xsize, ysize, zsize);
+    }
+
+    AABB(const Vec3* vertices, const std::size_t count) {
+        if(count == 0) {
+            this->min = Vec3();
+            this->max = Vec3();
+            return;
+        }
+
+        float minx = std::numeric_limits<float>::max();
+        float miny = std::numeric_limits<float>::max();
+        float minz = std::numeric_limits<float>::max();
+
+        float maxx = std::numeric_limits<float>::lowest();
+        float maxy = std::numeric_limits<float>::lowest();
+        float maxz = std::numeric_limits<float>::lowest();
+
+        for(uint32_t i = 0; i < count; ++i) {
+            if(vertices[i].x < minx) minx = vertices[i].x;
+            if(vertices[i].y < miny) miny = vertices[i].y;
+            if(vertices[i].z < minz) minz = vertices[i].z;
+
+            if(vertices[i].x > maxx) maxx = vertices[i].x;
+            if(vertices[i].y > maxy) maxy = vertices[i].y;
+            if(vertices[i].z > maxz) maxz = vertices[i].z;
+        }
+
+        kmVec3Fill(&min, minx, miny, minz);
+        kmVec3Fill(&max, maxx, maxy, maxz);
     }
 
     const float width() const {
@@ -552,6 +608,27 @@ struct AABB : public kmAABB3 {
         bool empty_z = kmAlmostEqual(0.0, depth());
 
         return (empty_x && empty_y) || (empty_x && empty_z) || (empty_y && empty_z);
+    }
+
+
+    bool contains_point(const Vec3& p) const {
+        return kmAABB3ContainsPoint(this, &p);
+    }
+
+    std::array<Vec3, 8> corners() const {
+        std::array<Vec3, 8> ret;
+
+        ret[0] = Vec3(min.x, min.y, min.z);
+        ret[1] = Vec3(max.x, min.y, min.z);
+        ret[2] = Vec3(max.x, min.y, max.z);
+        ret[3] = Vec3(min.x, min.y, max.z);
+
+        ret[4] = Vec3(min.x, max.y, min.z);
+        ret[5] = Vec3(max.x, max.y, min.z);
+        ret[6] = Vec3(max.x, max.y, max.z);
+        ret[7] = Vec3(min.x, max.y, max.z);
+
+        return ret;
     }
 };
 
@@ -692,7 +769,7 @@ enum MeshArrangement {
 
 enum AvailablePartitioner {
     PARTITIONER_NULL,
-    PARTITIONER_OCTREE
+    PARTITIONER_HASH
 };
 
 enum LightType {

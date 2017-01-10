@@ -24,9 +24,11 @@
 #include "generic/property.h"
 #include "types.h"
 #include "interfaces.h"
+#include "interfaces/updateable.h"
 
 namespace smlt {
 
+class StageNode;
 
 class BackgroundManager:
     public generic::TemplatedManager<Background, BackgroundID>,
@@ -83,7 +85,7 @@ class StageManager:
 public:
     StageManager(WindowBase* window);
 
-    StageID new_stage(AvailablePartitioner partitioner=PARTITIONER_OCTREE);
+    StageID new_stage(AvailablePartitioner partitioner=PARTITIONER_HASH);
     StagePtr stage(StageID s);
     void delete_stage(StageID s);
     uint32_t stage_count() const;
@@ -101,7 +103,7 @@ public:
     void delete_all_stages();
 private:
     WindowBase* window_ = nullptr;
-    void print_tree(GenericTreeNode* node, uint32_t& level);
+    void print_tree(StageNode* node, uint32_t& level);
 };
 
 class OverlayManager:

@@ -21,10 +21,10 @@
 
 #include "generic_renderer.h"
 
-#include "../../actor.h"
+#include "../../nodes/actor.h"
 #include "../../stage.h"
 #include "../../camera.h"
-#include "../../light.h"
+#include "../../nodes/light.h"
 #include "../../partitioner.h"
 #include "../../types.h"
 #include "gpu_program.h"

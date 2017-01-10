@@ -19,10 +19,14 @@
 #ifndef BACKGROUND_H
 #define BACKGROUND_H
 
+#include "types.h"
+
 #include "generic/managed.h"
 #include "generic/identifiable.h"
-#include "utils/parent_setter_mixin.h"
-#include "object.h"
+
+#include "interfaces/printable.h"
+#include "interfaces/nameable.h"
+#include "interfaces/updateable.h"
 
 namespace smlt {
 
@@ -55,17 +59,12 @@ public:
     //Ownable interface
     void ask_owner_for_destruction();
 
-    //Printable interface
-    unicode __unicode__() const override;
-
-    //Nameable interface
-    const bool has_name() const override;
-    void set_name(const unicode &name) override;
-    const unicode name() const override;
+    unicode to_unicode() const {
+        return Nameable::to_unicode();
+    }
 
 private:
     BackgroundManager* manager_;
-    unicode name_;
 
     void update_camera(const Viewport& viewport);
 

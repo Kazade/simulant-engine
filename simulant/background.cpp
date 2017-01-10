@@ -22,7 +22,7 @@
 #include "window_base.h"
 #include "camera.h"
 #include "render_sequence.h"
-#include "actor.h"
+#include "nodes/actor.h"
 
 namespace smlt {
 
@@ -122,24 +122,5 @@ void Background::ask_owner_for_destruction() {
     manager_->window->delete_background(id());
 }
 
-unicode Background::__unicode__() const {
-    if(has_name()) {
-        return name();
-    } else {
-        return _u("Background {0}").format(this->id());
-    }
-}
-
-const bool Background::has_name() const {
-    return !name_.empty();
-}
-
-void Background::set_name(const unicode &name) {
-    name_ = name;
-}
-
-const unicode Background::name() const {
-    return name_;
-}
 
 }

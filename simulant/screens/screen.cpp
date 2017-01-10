@@ -23,9 +23,9 @@
 namespace smlt {
 
 ScreenBase::ScreenBase(WindowBase &window, const unicode& name):
-    window_(&window),
-    name_(name) {
+    window_(&window) {
 
+    set_name(name);
 }
 
 ScreenBase::~ScreenBase() {

@@ -20,7 +20,7 @@
 #include "../window_base.h"
 #include "../loader.h"
 #include "../stage.h"
-#include "../actor.h"
+#include "../nodes/actor.h"
 #include "../mesh.h"
 #include "../procedural/constants.h"
 
@@ -30,7 +30,7 @@ namespace smlt {
 
 Skybox::Skybox(SkyboxID id, SkyboxManager* manager):
     generic::Identifiable<SkyboxID>(id),
-    ParentSetterMixin<MoveableObject>(&(Stage&)manager->stage) {
+    StageNode(&(Stage&)manager->stage) {
 
 }
 
@@ -46,10 +46,12 @@ void Skybox::ask_owner_for_destruction() {
     manager_->delete_skybox(id());
 }
 
+const AABB Skybox::aabb() const { return actor_id_.fetch()->aabb(); }
+
 void Skybox::generate(
-    const unicode& up,
-    const unicode& down,
-    const unicode& left,
+        const unicode& up,
+        const unicode& down,
+        const unicode& left,
     const unicode& right,
     const unicode& front,
     const unicode& back

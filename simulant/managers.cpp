@@ -24,7 +24,7 @@
 #include "stage.h"
 #include "overlay.h"
 #include "camera.h"
-#include "utils/ownable.h"
+#include "nodes/camera_proxy.h"
 #include "render_sequence.h"
 #include "loader.h"
 
@@ -148,7 +148,6 @@ void CameraManager::delete_camera(CameraID cid) {
         cam->proxy().stage->evict_camera(cid);
     }
 
-
     CameraManager::destroy(cid);
 }
 
@@ -201,7 +200,11 @@ void StageManager::delete_stage(StageID s) {
     //Recurse through the tree, destroying all children
     auto st = stage(s);
     if(st) {
-        stage(s)->apply_recursively_leaf_first(&ownable_tree_node_destroy, false);
+        stage(s)->each_descendent_lf([](uint32_t, TreeNode* node) {
+            StageNode* stage_node = static_cast<StageNode*>(node);
+            stage_node->ask_owner_for_destruction();
+        });
+
         signal_stage_removed_(s);
     }
 
@@ -210,50 +213,55 @@ void StageManager::delete_stage(StageID s) {
 
 void StageManager::fixed_update(double dt) {
     for(auto stage_pair: StageManager::__objects()) {
-        GenericTreeNode* root = stage_pair.second.get();
+        TreeNode* root = stage_pair.second.get();
 
-        root->apply_recursively([=](GenericTreeNode* node) {
-            node->as<SceneNode>()->fixed_update(dt);
+        root->each_descendent_and_self([=](uint32_t, TreeNode* node) {
+            StageNode* stage_node = static_cast<StageNode*>(node);
+            stage_node->fixed_update(dt);
         });
     }
 }
 
 void StageManager::pre_update(double dt) {
     for(auto stage_pair: StageManager::__objects()) {
-        GenericTreeNode* root = stage_pair.second.get();
+        TreeNode* root = stage_pair.second.get();
 
-        root->apply_recursively([=](GenericTreeNode* node) {
-            node->as<SceneNode>()->pre_update(dt);
+        root->each_descendent_and_self([=](uint32_t, TreeNode* node) {
+            StageNode* stage_node = static_cast<StageNode*>(node);
+            stage_node->pre_update(dt);
         });
     }
 }
 
 void StageManager::post_update(double dt) {
     for(auto stage_pair: StageManager::__objects()) {
-        GenericTreeNode* root = stage_pair.second.get();
+        TreeNode* root = stage_pair.second.get();
 
-        root->apply_recursively([=](GenericTreeNode* node) {
-            node->as<SceneNode>()->post_update(dt);
+        root->each_descendent_and_self([=](uint32_t, TreeNode* node) {
+            StageNode* stage_node = static_cast<StageNode*>(node);
+            stage_node->post_update(dt);
         });
     }
 }
 
-void StageManager::pre_fixed_update(double step) {
+void StageManager::pre_fixed_update(double dt) {
     for(auto stage_pair: StageManager::__objects()) {
-        GenericTreeNode* root = stage_pair.second.get();
+        TreeNode* root = stage_pair.second.get();
 
-        root->apply_recursively([=](GenericTreeNode* node) {
-            node->as<SceneNode>()->pre_fixed_update(step);
+        root->each_descendent_and_self([=](uint32_t, TreeNode* node) {
+            StageNode* stage_node = static_cast<StageNode*>(node);
+            stage_node->pre_fixed_update(dt);
         });
     }
 }
 
-void StageManager::post_fixed_update(double step) {
+void StageManager::post_fixed_update(double dt) {
     for(auto stage_pair: StageManager::__objects()) {
-        GenericTreeNode* root = stage_pair.second.get();
+        TreeNode* root = stage_pair.second.get();
 
-        root->apply_recursively([=](GenericTreeNode* node) {
-            node->as<SceneNode>()->post_fixed_update(step);
+        root->each_descendent_and_self([=](uint32_t, TreeNode* node) {
+            StageNode* stage_node = static_cast<StageNode*>(node);
+            stage_node->post_fixed_update(dt);
         });
     }
 }
@@ -261,10 +269,11 @@ void StageManager::post_fixed_update(double step) {
 void StageManager::update(double dt) {
     //Update the stages
     for(auto stage_pair: StageManager::__objects()) {
-        GenericTreeNode* root = stage_pair.second.get();
+        TreeNode* root = stage_pair.second.get();
 
-        root->apply_recursively([=](GenericTreeNode* node) {
-            node->as<SceneNode>()->update(dt);
+        root->each_descendent_and_self([=](uint32_t, TreeNode* node) {
+            StageNode* stage_node = static_cast<StageNode*>(node);
+            stage_node->update(dt);
         });
     }
 }
@@ -277,7 +286,7 @@ void StageManager::print_tree() {
     }
 }
 
-void StageManager::print_tree(GenericTreeNode* node, uint32_t& level) {
+void StageManager::print_tree(StageNode *node, uint32_t& level) {
     for(uint32_t i = 0; i < level; ++i) {
         std::cout << "    ";
     }
@@ -285,9 +294,9 @@ void StageManager::print_tree(GenericTreeNode* node, uint32_t& level) {
     std::cout << *dynamic_cast<Printable*>(node) << std::endl;
 
     level += 1;
-    for(auto child: node->children()) {
-        print_tree(child, level);
-    }
+    node->each_child([&](uint32_t, TreeNode* child) {
+        print_tree(static_cast<StageNode*>(child), level);
+    });
     level -= 1;
 }
 

@@ -32,6 +32,7 @@
 #include "generic/identifiable.h"
 #include "generic/property.h"
 
+#include "interfaces/boundable.h"
 #include "loadable.h"
 #include "resource.h"
 #include "vertex_data.h"

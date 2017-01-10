@@ -40,7 +40,7 @@ public:
         smlt::Screen<GameScreen>(window, "game_screen") {}
 
     void do_load() {
-        pipeline_id_ = prepare_basic_scene(stage_id_, camera_id_, smlt::PARTITIONER_NULL);
+        pipeline_id_ = prepare_basic_scene(stage_id_, camera_id_);
         window->disable_pipeline(pipeline_id_);
 
         auto stage = window->stage(stage_id_);
@@ -84,7 +84,7 @@ public:
 
     void do_step(double dt) override {
         auto stage = window->stage(stage_id_);
-        stage->actor(terrain_actor_id_)->rotate_global_y(smlt::Degrees(dt * 5.0));
+        stage->actor(terrain_actor_id_)->rotate_global_y_by(smlt::Degrees(dt * 5.0));
     }
 
 private:

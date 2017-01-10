@@ -16,11 +16,11 @@ public:
         MeshID cube_mesh = window->shared_assets->new_mesh_as_cube(1.0);
         window->shared_assets->mesh(cube_mesh)->set_texture_on_material(0, tid);
         cube_ = window->stage(cube_stage_)->new_actor_with_mesh(cube_mesh);
-        window->stage(cube_stage_)->actor(cube_)->set_absolute_position(0, 0, -4);
+        window->stage(cube_stage_)->actor(cube_)->move_to_absolute(0, 0, -4);
 
         MeshID rect_mesh = window->shared_assets->new_mesh_as_rectangle(2.0, 2.0);
         rect_ = window->stage(rect_stage_)->new_actor_with_mesh(rect_mesh);
-        window->stage(rect_stage_)->actor(rect_)->set_absolute_position(0, 0, -4);
+        window->stage(rect_stage_)->actor(rect_)->move_to_absolute(0, 0, -4);
 
         TextureID rtt = window->shared_assets->new_texture(smlt::GARBAGE_COLLECT_NEVER);
         window->shared_assets->mesh(rect_mesh)->set_texture_on_material(0, rtt);
@@ -32,8 +32,8 @@ public:
     }
 
     void do_step(double dt) {
-        window->stage(cube_stage_)->actor(cube_)->rotate_y(Degrees(dt * 360));
-        window->stage(rect_stage_)->actor(rect_)->rotate_y(Degrees(dt * 180));
+        window->stage(cube_stage_)->actor(cube_)->rotate_y_by(Degrees(dt * 360));
+        window->stage(rect_stage_)->actor(rect_)->rotate_y_by(Degrees(dt * 180));
     }
 
 private:

@@ -28,7 +28,7 @@
 #include "../stage.h"
 #include "../mesh.h"
 #include "../types.h"
-#include "../light.h"
+#include "../nodes/light.h"
 #include "../camera.h"
 #include "../procedural/texture.h"
 #include "../controllers/material/flowing.h"
@@ -216,7 +216,7 @@ void add_lights_to_scene(Stage* stage, const std::vector<ActorProperties>& actor
 
             {
                 auto new_light = stage->light(stage->new_light());
-                new_light->set_absolute_position(pos.x, pos.y, pos.z);
+                new_light->move_to(pos.x, pos.y, pos.z);
                 kmVec3Transform(&pos, &pos, &rotation);
 
                 float range = 300; //Default in Q2

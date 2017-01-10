@@ -20,9 +20,26 @@ public:
         window->delete_stage(stage_id_);
     }
 
+    void test_positional_constraints() {
+        smlt::AABB aabb(Vec3(), 2.0);
+
+        auto actor = stage_id_.fetch()->new_actor().fetch();
+        actor->move_to(Vec3(2, 0.5, 0.5));
+
+        assert_equal(2, actor->position().x);
+
+        // Applying the constraint should be enough to change the position
+        actor->constrain_to_aabb(aabb);
+        assert_equal(1, actor->position().x);
+
+        // Subsequent moves should be constrained
+        actor->move_to(Vec3(2, 0.5, 0.5));
+        assert_equal(1, actor->position().x);
+    }
+
     void test_scaling_applies() {
         auto actor = window->stage(stage_id_)->new_actor().fetch();
-        actor->set_relative_scale(smlt::Vec3(2.0, 1.0, 0.5));
+        actor->scale_by(smlt::Vec3(2.0, 1.0, 0.5));
 
         auto transform = actor->absolute_transformation();
 
@@ -32,11 +49,11 @@ public:
 
         auto actor2 = window->stage(stage_id_)->new_actor().fetch();
 
-        actor2->rotate_y(smlt::Degrees(1.0));
+        actor2->rotate_y_by(smlt::Degrees(1.0));
 
         auto first = actor2->absolute_transformation();
 
-        actor2->set_relative_scale(smlt::Vec3(2.0, 2.0, 2.0));
+        actor2->scale_by(smlt::Vec3(2.0, 2.0, 2.0));
 
         auto second = actor2->absolute_transformation();
 
@@ -49,9 +66,9 @@ public:
         smlt::ActorID act = window->stage(stage_id_)->new_actor();
         auto actor = window->stage(stage_id_)->actor(act);
 
-        actor->set_absolute_rotation(smlt::Degrees(10), 0, 0, 1);
+        actor->rotate_to_absolute(smlt::Degrees(10), 0, 0, 1);
 
-        assert_equal(actor->relative_rotation(), actor->absolute_rotation());
+        assert_equal(actor->rotation(), actor->absolute_rotation());
 
         smlt::ActorID act2 = window->stage(stage_id_)->new_actor();
         auto actor2 = window->stage(stage_id_)->actor(act2);
@@ -60,21 +77,21 @@ public:
 
         assert_equal(actor2->absolute_rotation(), actor->absolute_rotation());
 
-        actor2->set_absolute_rotation(smlt::Degrees(20), 0, 0, 1);
+        actor2->rotate_to_absolute(smlt::Degrees(20), 0, 0, 1);
 
         smlt::Quaternion expected_rel, expected_abs;
         kmQuaternionRotationAxisAngle(&expected_abs, &KM_VEC3_POS_Z, kmDegreesToRadians(20));
         kmQuaternionRotationAxisAngle(&expected_rel, &KM_VEC3_POS_Z, kmDegreesToRadians(10));
 
         assert_equal(expected_abs, actor2->absolute_rotation());
-        assert_equal(expected_rel, actor2->relative_rotation());
+        assert_equal(expected_rel, actor2->rotation());
     }
 
     void test_set_absolute_position() {
         smlt::ActorID act = window->stage(stage_id_)->new_actor();
         auto actor = window->stage(stage_id_)->actor(act);
 
-        actor->set_absolute_position(10, 10, 10);
+        actor->move_to_absolute(10, 10, 10);
 
         assert_equal(smlt::Vec3(10, 10, 10), actor->absolute_position());
 
@@ -87,12 +104,12 @@ public:
         assert_equal(actor2->absolute_position(), actor->absolute_position());
 
         //Make sure relative position is correctly calculated
-        actor2->set_absolute_position(20, 10, 10);
-        assert_equal(smlt::Vec3(10, 0, 0), actor2->relative_position());
+        actor2->move_to_absolute(20, 10, 10);
+        assert_equal(smlt::Vec3(10, 0, 0), actor2->position());
         assert_equal(smlt::Vec3(20, 10, 10), actor2->absolute_position());
 
         //Make sure setting by vec3 works
-        actor2->set_absolute_position(smlt::Vec3(0, 0, 0));
+        actor2->move_to_absolute(smlt::Vec3(0, 0, 0));
         assert_equal(smlt::Vec3(), actor2->absolute_position());
     }
 
@@ -100,10 +117,10 @@ public:
         smlt::ActorID act = window->stage(stage_id_)->new_actor();
         auto actor = window->stage(stage_id_)->actor(act);
 
-        actor->set_relative_position(10, 10, 10);
+        actor->move_to(10, 10, 10);
 
         //No parent, both should be the same
-        assert_equal(smlt::Vec3(10, 10, 10), actor->relative_position());
+        assert_equal(smlt::Vec3(10, 10, 10), actor->position());
         assert_equal(smlt::Vec3(10, 10, 10), actor->absolute_position());
 
         smlt::ActorID act2 = window->stage(stage_id_)->new_actor();
@@ -111,10 +128,10 @@ public:
 
         actor2->set_parent(act);
 
-        actor2->set_relative_position(smlt::Vec3(10, 0, 0));
+        actor2->move_to(smlt::Vec3(10, 0, 0));
 
         assert_equal(smlt::Vec3(20, 10, 10), actor2->absolute_position());
-        assert_equal(smlt::Vec3(10, 0, 0), actor2->relative_position());
+        assert_equal(smlt::Vec3(10, 0, 0), actor2->position());
     }
 
 private:

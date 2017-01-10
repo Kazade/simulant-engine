@@ -17,10 +17,8 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-
+#include "../interfaces/boundable.h"
 #include "raycast_vehicle.h"
-
-#include "../object.h"
 
 namespace smlt {
 namespace controllers {

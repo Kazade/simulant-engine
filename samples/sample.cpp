@@ -28,11 +28,11 @@ public:
 
         auto actor = stage->new_actor_with_mesh(mesh_id).fetch(); // Create an instance of it
         actor->move_to(0.0f, 0.0f, -80.0f);
-        actor->rotate_global_y(smlt::Degrees(180));
+        actor->rotate_global_y_by(smlt::Degrees(180));
 
         auto actor3 = stage->new_actor_with_mesh(mesh_id).fetch();
         actor3->move_to(-40.0f, 0.0f, -95.0f);
-        actor3->rotate_global_y(smlt::Degrees(180));
+        actor3->rotate_global_y_by(smlt::Degrees(180));
         actor3->animation_state->play_animation("idle_2");
 
         auto scaling_matrix = smlt::Mat4::as_scaling(10.0);

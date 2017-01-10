@@ -56,10 +56,10 @@ public:
 
     void build(const kmMat4* modelview_projection);
 
-    std::vector<kmVec3> near_corners() const; ///< Returns the near 4 corners of the frustum
-    std::vector<kmVec3> far_corners() const; ///< Returns the far 4 corners of the frustum
-    bool contains_point(const kmVec3& point) const; ///< Returns true if the frustum contains point
+    std::vector<Vec3> near_corners() const; ///< Returns the near 4 corners of the frustum
+    std::vector<Vec3> far_corners() const; ///< Returns the far 4 corners of the frustum
 
+    bool contains_point(const kmVec3& point) const; ///< Returns true if the frustum contains point
     bool intersects_aabb(const kmAABB3& box) const;
 
     bool initialized() const { return initialized_; }
@@ -117,12 +117,22 @@ public:
 
     }    
 
+    Plane plane(FrustumPlane p) const {
+        return planes_[p];
+    }
+
+    Vec3 direction() const;
+
+    float width_at_distance(float distance) const;
+    float height_at_distance(float distance) const;
+    Degrees field_of_view() const;
+    float aspect_ratio() const;
 private:
     bool initialized_;
 
-    std::vector<kmVec3> near_corners_;
-    std::vector<kmVec3> far_corners_;
-    std::vector<kmPlane> planes_;
+    std::vector<Vec3> near_corners_;
+    std::vector<Vec3> far_corners_;
+    std::vector<Plane> planes_;
 };
 
 }

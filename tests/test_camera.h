@@ -71,13 +71,13 @@ public:
         stage->host_camera(camera_id_);
 
         ActorID a = stage->new_actor();
-        stage->actor(a)->set_absolute_position(Vec3());
+        stage->actor(a)->move_to(Vec3());
 
         stage->camera(camera_id_)->follow(a, CAMERA_FOLLOW_MODE_DIRECT, Vec3(0, 0, 10));
 
         assert_equal(Vec3(0, 0, 10), stage->camera(camera_id_)->absolute_position());
 
-        stage->actor(a)->set_absolute_rotation(Degrees(90), 0, -1, 0);
+        stage->actor(a)->rotate_to(Degrees(90), 0, -1, 0);
         stage->camera(camera_id_)->_update_following(1.0);
 
         auto cam_pos = stage->camera(camera_id_)->absolute_position();
