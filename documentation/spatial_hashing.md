@@ -25,7 +25,15 @@ Theoretically, these keys form heirarchies. If Key A has 16 elements in its path
 
 ## Gathering Objects
 
+All object gathering (at the moment) happens with axis-aligned cubes. The process is as follows:
 
+1. When passed an AABB, the max_dimension is used to build a cube around its central point. Keys are generated for the 8 corners of the cube at the cell-size which would fit the max_dimension.
+2. The keys are deduplicated and then each key is looked up in the spatial hash index. The index is iterated in order until a key is found which is not a descendent of the passed in key
+3. When objects for all iterated keys are added, the search looks up the tree by popping the last element of the path of the key, and then looking for exact matches. This is an anccestor search. If any are found then objects at this key are added to the set. These objects are larger than the box max_dimension but overlap the same space and should be returned also.
+
+# Improvements
+
+ - Frustum culling is currently performed by a single box around the frustum, this returns many objects outside the frustum when using a perspective projection, and particularly with a large far-distance. It would make more sense to find the hash keys which are within the frustum at a particular cell-size (possible determined by the size of the frustum) by performing a kind of 3D scanline rendering (iterating the bounds of the frustum AABB). Then the lookup could be performed for each of those keys. 
 
 
 
