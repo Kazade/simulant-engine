@@ -175,4 +175,28 @@ void StageNode::recalc_bounds() {
     }
 }
 
+void StageNode::pre_update(double dt) {
+    pre_update_controllers(dt);
+}
+
+void StageNode::update(double dt) {
+    update_controllers(dt);
+}
+
+void StageNode::post_update(double dt) {
+    post_update_controllers(dt);
+}
+
+void StageNode::pre_fixed_update(double step) {
+    pre_fixed_update_controllers(step);
+}
+
+void StageNode::fixed_update(double step) {
+    fixed_update_controllers(step);
+}
+
+void StageNode::post_fixed_update(double step) {
+    post_fixed_update_controllers(step);
+}
+
 }
