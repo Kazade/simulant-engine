@@ -1519,3 +1519,12 @@ simulant/nodes/camera_proxy.h
 simulant/nodes/camera_proxy.cpp
 simulant/utils/endian.h
 simulant/utils/endian.cpp
+simulant/nodes/ui/widget.h
+simulant/nodes/ui/button.h
+simulant/nodes/ui/ui_manager.h
+tests/test_widgets.h
+simulant/nodes/ui/ui_manager.cpp
+simulant/generic/optional.h
+simulant/nodes/ui/label.h
+simulant/nodes/ui/progress_bar.h
+simulant/nodes/ui/widget.cpp

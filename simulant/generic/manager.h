@@ -61,7 +61,32 @@ public:
 
     template<typename... Args>
     ObjectIDType make(Args&&... args) {
-        return make(
+        return make_as<ObjectType>(std::forward<Args>(args)...);
+    }
+
+    template<typename... Args>
+    ObjectIDType make(ObjectIDType id, Args&&... args) {
+        return make_as<ObjectType>(id, std::forward<Args>(args)...);
+    }
+
+    template<typename T, typename... Args>
+    ObjectIDType make_as(ObjectIDType id, Args&&... args) {
+        {
+            std::lock_guard<std::recursive_mutex> lock(manager_lock_);
+
+            objects_.insert(std::make_pair(id,
+                T::create(id, std::forward<Args>(args)...)
+            ));
+        }
+
+        signal_post_create_(*objects_[id], id);
+
+        return id;
+    }
+
+    template<typename T, typename... Args>
+    ObjectIDType make_as(Args&&... args) {
+        return make_as<T>(
             ObjectIDType(
                 generator_(),
                 [this](const ObjectIDType* id) -> typename ObjectIDType::resource_pointer_type {
@@ -70,21 +95,6 @@ public:
             ),
             std::forward<Args>(args)...
         );
-    }
-
-    template<typename... Args>
-    ObjectIDType make(ObjectIDType id, Args&&... args) {
-        {
-            std::lock_guard<std::recursive_mutex> lock(manager_lock_);
-
-            objects_.insert(std::make_pair(id,
-                ObjectType::create(id, std::forward<Args>(args)...)
-            ));
-        }
-
-        signal_post_create_(*objects_[id], id);
-
-        return id;
     }
 
     void destroy_all() {

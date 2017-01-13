@@ -916,6 +916,13 @@ class Stage;
 class WindowBase;
 typedef Stage* StagePtr;
 
+namespace ui {
+
+class Widget;
+typedef Widget* WidgetPtr;
+
+}
+
 class ResourceManager;
 typedef AutoWeakPtr<ResourceManager> ResourceManagerPtr;
 
@@ -951,6 +958,7 @@ typedef UniqueID<BackgroundPtr> BackgroundID;
 typedef UniqueID<ParticleSystemPtr> ParticleSystemID;
 typedef UniqueID<SkyboxPtr> SkyboxID;
 typedef UniqueID<GPUProgramPtr> ShaderID;
+typedef UniqueID<ui::WidgetPtr> WidgetID;
 
 typedef generic::TemplatedManager<Stage, StageID> BaseStageManager;
 
