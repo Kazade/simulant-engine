@@ -29,6 +29,14 @@
 namespace smlt {
 namespace batcher {
 
+void reinsert(ActorID actor_id, RenderQueue* queue) {
+    auto actor = actor_id.fetch();
+    actor->each([queue](uint32_t i, SubActor* subactor) {
+        queue->remove_renderable(subactor);
+        queue->insert_renderable(subactor);
+    });
+}
+
 RenderQueue::RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory):
     stage_(stage),
     render_group_factory_(render_group_factory) {
@@ -41,12 +49,10 @@ RenderQueue::RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory)
 
         // If the actor's render priority changes, we need to remove the renderables and re-add them
         actor->signal_render_priority_changed().connect([this, actor_id](RenderPriority old, RenderPriority newp) {
-            auto actor = actor_id.fetch();
-            actor->each([this](uint32_t i, SubActor* subactor) {
-                remove_renderable(subactor);
-                insert_renderable(subactor);
-            });
+            reinsert(actor_id, this);
         });
+
+        actor->signal_mesh_changed().connect([this, actor_id](ActorID) { reinsert(actor_id, this); });
     });
 
     stage->signal_actor_destroyed().connect([=](ActorID actor_id) {
