@@ -17,11 +17,11 @@ public:
 
         //stage->ui->transform_input_with_camera(camera_);
 
-        auto title = stage->ui->new_widget_as_label("UI Sample demonstrating widgets");
-        title.fetch()->move_to(window->coordinate_from_normalized(0.5, 0.9));
+        auto title = stage->ui->new_widget_as_label("UI Sample demonstrating widgets").fetch();
+        title->move_to(window->coordinate_from_normalized(0.5, 0.9));
 
-        auto button = stage->ui->new_widget_as_button("Button 1");
-        button.fetch()->move_to(window->coordinate_from_normalized(0.1, 0.25));
+        auto button = stage->ui->new_widget_as_button("Button 1").fetch();
+        button->move_to(window->coordinate_from_normalized(0.1, 0.25));
     }
 
 private:

@@ -18,6 +18,8 @@ bool Widget::init() {
     actor_ = stage->new_actor();
     actor_.fetch()->set_parent(this);
 
+    material_ = stage->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
+
     on_size_changed(); // Build the mesh and attach to the actor
 
     return true;
@@ -72,8 +74,6 @@ MeshID Widget::construct_widget(float requested_width, float requested_height) {
     spec.texcoord0_attribute = VERTEX_ATTRIBUTE_2F;
     spec.diffuse_attribute = VERTEX_ATTRIBUTE_4F;
 
-    MaterialID material = stage->assets->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
-
     auto content_dim = calc_content_dimensions();
 
     float width = requested_width;
@@ -93,10 +93,10 @@ MeshID Widget::construct_widget(float requested_width, float requested_height) {
     }
 
     auto mesh = stage->assets->new_mesh(spec).fetch();
-    mesh->new_submesh_as_rectangle("border", material, width + (border_width_ * 2), height + (border_width_ * 2));
+    mesh->new_submesh_as_rectangle("border", material_, width + (border_width_ * 2), height + (border_width_ * 2));
     mesh->submesh("border")->set_diffuse(border_colour_);
 
-    mesh->new_submesh_as_rectangle("content", material, width, height);
+    mesh->new_submesh_as_rectangle("content", material_, width, height);
     mesh->submesh("content")->set_diffuse(background_colour_);
 
     // Make sure the mesh doesn't get cleaned up until next access

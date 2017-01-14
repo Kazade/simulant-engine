@@ -129,6 +129,7 @@ private:
     UIManager* owner_;
     ActorID actor_;
     MeshPtr mesh_;
+    MaterialID material_;
 
     virtual MeshID construct_widget(float requested_width, float requested_height);
     virtual UIDim calc_content_dimensions();
