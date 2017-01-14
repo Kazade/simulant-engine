@@ -22,4 +22,5 @@ ADD_EXECUTABLE(fleets_demo fleets_demo.cpp)
 ADD_EXECUTABLE(terrain_demo terrain_sample.cpp)
 ADD_EXECUTABLE(physics_demo physics_demo.cpp)
 ADD_EXECUTABLE(nehe01 nehe01.cpp)
+ADD_EXECUTABLE(ui_demo ui_demo.cpp)
 

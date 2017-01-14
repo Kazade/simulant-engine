@@ -1528,3 +1528,4 @@ simulant/generic/optional.h
 simulant/nodes/ui/label.h
 simulant/nodes/ui/progress_bar.h
 simulant/nodes/ui/widget.cpp
+samples/ui_demo.cpp
