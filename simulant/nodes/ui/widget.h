@@ -8,10 +8,10 @@ namespace smlt {
 namespace ui {
 
 struct Float4 {
-    float top;
     float left;
-    float bottom;
     float right;
+    float bottom;
+    float top;
 };
 
 enum OverflowType {
@@ -29,7 +29,8 @@ enum TextAlignment {
 
 enum ResizeMode {
     RESIZE_MODE_FIXED,
-    RESIZE_MODE_FIT_CONTENT
+    RESIZE_MODE_FIT_CONTENT,
+    RESIZE_MODE_AT_LEAST_CONTENT
 };
 
 struct UIDim {
@@ -37,20 +38,25 @@ struct UIDim {
     float height = 0.0;
 };
 
-struct UIConfig {
-    float default_width_ = 80;
-    float default_height_ = 16;
-
+struct UIConfig {    
     float font_size_ = 16;
     float line_height_ = 18;
 
     Colour foreground_colour_ = Colour::BLACK;
     Colour background_colour_ = Colour::WHITE;
 
+    ResizeMode label_resize_mode_ = RESIZE_MODE_AT_LEAST_CONTENT;
+    ResizeMode button_resize_mode_ = RESIZE_MODE_AT_LEAST_CONTENT;
+
     float scrollbar_width_ = 16;
     Colour scrollbar_background_colour_ = Colour::LIGHT_GREY;
     Colour scrollbar_foreground_colour_ = Colour::ALICE_BLUE;
 
+
+    float button_height_ = 36;
+    float button_width_ = 0; // Fit content
+
+    Float4 button_padding_ = { 30, 30, 0, 0 };
     Colour button_background_color_ = Colour::ALICE_BLUE;
     Colour button_foreground_color_ = Colour::WHITE;
     Colour button_border_colour_ = Colour::WHITE;
@@ -87,6 +93,8 @@ public:
     void set_resize_mode(ResizeMode resize_mode);
 
     void set_background_image(TextureID texture); // FIXME: Switch to TextureFrame when that's a thing
+    void set_background_colour(const Colour& colour);
+    void set_foreground_colour(const Colour& colour);
 
     float requested_width() const { return width_; }
     float requested_height() const { return height_; }
@@ -116,25 +124,29 @@ public:
     void ask_owner_for_destruction();
     const AABB aabb() const;
 
+    const unicode& text() const { return text_; }
 private:
     UIManager* owner_;
     ActorID actor_;
     MeshPtr mesh_;
 
-    virtual MeshID construct_widget(float width, float height);
+    virtual MeshID construct_widget(float requested_width, float requested_height);
     virtual UIDim calc_content_dimensions();
 
-    float width_;
-    float height_;
+    float width_ = .0f;
+    float height_ = .0f;
 
-    Float4 padding_;
+    Float4 padding_ = {0, 0, 0, 0};
 
-    Float4 border_width_;
-    Colour border_colour_;
+    float border_width_ = 1.0f;
+    Colour border_colour_ = Colour::BLACK;
 
     unicode text_;
     OverflowType overflow_;
-    ResizeMode resize_mode_;
+    ResizeMode resize_mode_ = RESIZE_MODE_AT_LEAST_CONTENT;
+
+    Colour background_colour_ = Colour::WHITE;
+    Colour foreground_colour_ = Colour::BLACK;
 
     std::unordered_map<std::string, smlt::any> properties_;
 

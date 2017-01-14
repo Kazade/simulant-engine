@@ -14,10 +14,10 @@ class UIManager {
 public:
     UIManager(Stage* stage);
 
-    WidgetID new_widget_as_button(const unicode& text, float width, float height);
+    WidgetID new_widget_as_button(const unicode& text, float width=.0f, float height=.0f);
 
-    WidgetID new_widget_as_label(const unicode& text, float width, float height);
-    WidgetID new_widget_as_progress_bar(float min, float max, float value);
+    WidgetID new_widget_as_label(const unicode& text, float width=.0f, float height=.0f);
+    WidgetID new_widget_as_progress_bar(float min=.0f, float max=100.0f, float value=.0f);
 
     void delete_widget(WidgetID widget);
 
