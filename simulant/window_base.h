@@ -215,6 +215,13 @@ public:
 
     void each_stage(std::function<void (uint32_t, Stage*)> func);
 
+    Vec2 coordinate_from_normalized(Ratio rx, Ratio ry) {
+        return Vec2(
+            uint32_t(float(width()) * rx),
+            uint32_t(float(height()) * ry)
+        );
+    }
+
 protected:    
     std::shared_ptr<Renderer> renderer_;
 
