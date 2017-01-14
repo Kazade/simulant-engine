@@ -51,6 +51,10 @@ struct ActorChangeEvent {
     SubActorMaterialChangeData subactor_material_changed;
 };
 
+namespace ui {
+    class UIManager;
+}
+
 namespace batcher {
 class RenderQueue;
 }
@@ -162,6 +166,7 @@ public:
     Property<Stage, Partitioner> partitioner = { this, &Stage::partitioner_ };
     Property<Stage, ResourceManager> assets = { this, &Stage::resource_manager_ };
     Property<Stage, generic::DataCarrier> data = { this, &Stage::data_ };
+    Property<Stage, ui::UIManager> ui = { this, &Stage::ui_ };
 
     bool init() override;
     void cleanup() override;
@@ -209,6 +214,7 @@ private:
     void set_partitioner(AvailablePartitioner partitioner);
 
     std::shared_ptr<Debug> debug_;
+    std::unique_ptr<ui::UIManager> ui_;
 
     CameraID new_camera_proxy(CameraID cam);
     void delete_camera_proxy(CameraID cam);

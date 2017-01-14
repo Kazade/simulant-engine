@@ -10,6 +10,7 @@ namespace ui {
 UIManager::UIManager(Stage *stage):
     stage_(stage) {
 
+    manager_.reset(new WidgetManager());
 }
 
 WidgetID UIManager::new_widget_as_button(const unicode &text, float width, float height) {

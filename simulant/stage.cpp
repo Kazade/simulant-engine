@@ -24,10 +24,13 @@
 #include "nodes/light.h"
 #include "camera.h"
 #include "debug.h"
+
 #include "nodes/sprite.h"
 #include "nodes/particles.h"
 #include "nodes/geom.h"
 #include "nodes/camera_proxy.h"
+
+#include "nodes/ui/ui_manager.h"
 
 #include "loader.h"
 #include "partitioners/null_partitioner.h"
@@ -41,6 +44,7 @@ Stage::Stage(StageID id, WindowBase *parent, AvailablePartitioner partitioner):
     WindowHolder(parent),
     generic::Identifiable<StageID>(id),
     SkyboxManager(parent, this),
+    ui_(new ui::UIManager(this)),
     resource_manager_(ResourceManager::create(parent, parent->shared_assets.get())),
     ambient_light_(smlt::Colour::WHITE),
     geom_manager_(new GeomManager()) {

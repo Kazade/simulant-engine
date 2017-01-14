@@ -20,11 +20,12 @@ enum OverflowType {
     OVERFLOW_TYPE_AUTO
 };
 
+/*
 enum TextAlignment {
     TEXT_ALIGNMENT_LEFT,
     TEXT_ALIGNMENT_CENTER,
     TEXT_ALIGNMENT_RIGHT
-};
+};*/
 
 enum ResizeMode {
     RESIZE_MODE_FIXED,
@@ -76,7 +77,7 @@ public:
     void set_width(float width);
     void set_height(float height);
 
-    void set_text(const unicode& text) { set_text(text); }
+    void set_text(const unicode& text) { text_ = text; on_size_changed(); }
     void set_border_width(float x);
     void set_border_width(float left, float right, float bottom, float top);
     void set_border_colour(const Colour& colour);
@@ -86,6 +87,9 @@ public:
     void set_resize_mode(ResizeMode resize_mode);
 
     void set_background_image(TextureID texture); // FIXME: Switch to TextureFrame when that's a thing
+
+    float requested_width() const { return width_; }
+    float requested_height() const { return height_; }
 
     float content_width() const; // Content area
     float content_height() const;
@@ -115,8 +119,9 @@ public:
 private:
     UIManager* owner_;
     ActorID actor_;
+    MeshPtr mesh_;
 
-    virtual ActorID construct_widget();
+    virtual MeshID construct_widget(float width, float height);
     virtual UIDim calc_content_dimensions();
 
     float width_;
@@ -133,7 +138,7 @@ private:
 
     std::unordered_map<std::string, smlt::any> properties_;
 
-    virtual void on_size_changed() {}
+    virtual void on_size_changed();
 };
 
 }

@@ -23,7 +23,9 @@ public:
     void test_button_creation() {
         auto button = stage_->ui->new_widget_as_button("Test", 100, 20);
 
-
+        assert_equal("Test", button->text());
+        assert_equal(100, button->requested_width());
+        assert_equal(20, button->requested_height());
     }
 
 private:

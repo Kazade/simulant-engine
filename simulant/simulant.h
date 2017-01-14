@@ -29,6 +29,12 @@
 #include "material.h"
 #include "camera.h"
 #include "nodes/actor.h"
+
+#include "nodes/ui/ui_manager.h"
+#include "nodes/ui/button.h"
+#include "nodes/ui/label.h"
+#include "nodes/ui/progress_bar.h"
+
 #include "sound.h"
 #include "render_sequence.h"
 #include "nodes/light.h"
