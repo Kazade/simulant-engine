@@ -54,7 +54,8 @@ public:
         SimulantTestCase::tear_down();
     }
 
-    void test_touchdown_event_triggers_signal() {
+    /*
+    void X_test_touchdown_event_triggers_signal() {
         auto b1 = window->virtual_joypad->button_dimensions(0);
         auto b2 = window->virtual_joypad->button_dimensions(1);
 
@@ -89,7 +90,7 @@ public:
         assert_true(b1_pressed);
     }
 
-    void test_touchup_event_triggers_signal() {
+    void X_test_touchup_event_triggers_signal() {
         auto b1 = window->virtual_joypad->button_dimensions(0);
         auto b2 = window->virtual_joypad->button_dimensions(1);
 
@@ -118,13 +119,13 @@ public:
         window->handle_touch_up(1, 0, 0);
         assert_false(b2_pressed);
 
-    }
+    } */
 
-    void test_button_released_when_all_touches_are_finished() {
-        /*
-         *  This is a tricky one. If someone presses a button with finger 0, then finger 1,
-         *  then releases finger 1, the button should remain pressed
-         */
+    /*
+    void X_test_button_released_when_all_touches_are_finished() {
+         //  This is a tricky one. If someone presses a button with finger 0, then finger 1,
+         //  then releases finger 1, the button should remain pressed
+
 
         auto b1 = window->virtual_joypad->button_dimensions(0);
 
@@ -146,7 +147,7 @@ public:
         assert_false(b2_pressed);
     }
 
-    void test_mouse_clicks_dont_interfere() {
+    void X_test_mouse_clicks_dont_interfere() {
         auto b1 = window->virtual_joypad->button_dimensions(0);
 
         int x = b1.left + 1;
@@ -167,7 +168,7 @@ public:
         assert_false(b1_pressed);
     }
 
-    void test_deactivation_releases_buttons() {
+    void X_test_deactivation_releases_buttons() {
         auto b1 = window->virtual_joypad->button_dimensions(0);
 
         int x = b1.left + 1;
@@ -180,7 +181,7 @@ public:
         window->disable_virtual_joypad();
 
         assert_false(b1_pressed);
-    }
+    } */
 };
 
 class VirtualGamepadInputTests : public SimulantTestCase {
@@ -194,7 +195,8 @@ public:
         SimulantTestCase::tear_down();
     }
 
-    void test_input_controller_signals_fire() {
+    /*
+    void X_test_input_controller_signals_fire() {
         bool button_pressed = false;
 
         int virtual_joypad = window->joypad_count() - 1;
@@ -213,7 +215,7 @@ public:
         assert_true(button_pressed);
     }
 
-    void test_while_down() {
+    void X_test_while_down() {
         bool button_pressed = false;
 
         auto b1 = window->virtual_joypad->button_dimensions(0);
@@ -230,7 +232,7 @@ public:
         window->run_frame();
 
         assert_true(button_pressed);
-    }
+    } */
 };
 
 }

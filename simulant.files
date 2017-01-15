@@ -1282,8 +1282,6 @@ simulant/loaders/pcx_loader.cpp
 simulant/loaders/pcx_loader.h
 simulant/loaders/q2bsp_loader.cpp
 simulant/loaders/q2bsp_loader.h
-simulant/loaders/rml_loader.cpp
-simulant/loaders/rml_loader.h
 simulant/loaders/stb_vorbis.c
 simulant/loaders/stb_vorbis.h
 simulant/loaders/texture_loader.cpp
@@ -1435,10 +1433,6 @@ simulant/material.h
 simulant/material_constants.h
 simulant/mesh.cpp
 simulant/mesh.h
-simulant/message_bar.cpp
-simulant/message_bar.h
-simulant/overlay.cpp
-simulant/overlay.h
 simulant/particles.cpp
 simulant/particles.h
 simulant/partitioner.h

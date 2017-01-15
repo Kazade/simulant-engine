@@ -59,7 +59,6 @@ class InputController;
 class Keyboard;
 class Mouse;
 class Joypad;
-class MessageBar;
 class Loader;
 class LoaderType;
 class RenderSequence;
@@ -110,7 +109,6 @@ typedef sig::signal<void (SDL_Scancode)> KeyDownSignal;
 class WindowBase :
     public Source,
     public StageManager,
-    public OverlayManager,
     public CameraManager,
     public Loadable,
     public PipelineHelperAPIInterface,
@@ -185,22 +183,9 @@ public:
 
     void reset();
 
-    // Only public for testing purposes. DO NOT USE!
-    void handle_mouse_motion(int x, int y, bool pos_normalized=false);
-    void handle_mouse_button_down(int button);
-    void handle_mouse_button_up(int button);
-
-    void handle_touch_down(int finger_id, int x, int y);
-    void handle_touch_motion(int finger_id, int x, int y);
-    void handle_touch_up(int finger_id, int x, int y);
-
     /* PipelineHelperAPIInterface */
 
     virtual PipelineHelper render(StageID stage_id, CameraID camera_id) override {
-        return new_pipeline_helper(render_sequence_, stage_id, camera_id);
-    }
-
-    virtual PipelineHelper render(OverlayID stage_id, CameraID camera_id) override {
         return new_pipeline_helper(render_sequence_, stage_id, camera_id);
     }
 
@@ -330,7 +315,6 @@ private:
 
     std::shared_ptr<Watcher> watcher_;
     std::shared_ptr<screens::Loading> loading_;
-    std::shared_ptr<MessageBar> message_bar_;
     std::shared_ptr<smlt::RenderSequence> render_sequence_;
     generic::DataCarrier data_carrier_;
 
@@ -345,7 +329,6 @@ public:
     Property<WindowBase, ResourceManager> shared_assets = { this, &WindowBase::resource_manager_ };
     Property<WindowBase, Application> application = { this, &WindowBase::application_ };
     Property<WindowBase, VirtualGamepad> virtual_joypad = { this, &WindowBase::virtual_gamepad_ };
-    Property<WindowBase, MessageBar> message_bar = { this, &WindowBase::message_bar_ };
     Property<WindowBase, Renderer> renderer = { this, &WindowBase::renderer_ };
 
     Property<WindowBase, Watcher> watcher = {

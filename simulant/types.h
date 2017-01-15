@@ -904,9 +904,6 @@ class CameraProxy;
 typedef Camera* CameraPtr;
 typedef CameraProxy* CameraProxyPtr;
 
-class Overlay;
-typedef Overlay* OverlayPtr;
-
 class Viewport;
 
 class Background;
@@ -952,7 +949,6 @@ typedef UniqueID<ActorPtr> ActorID;
 typedef UniqueID<GeomPtr> GeomID;
 typedef UniqueID<SoundPtr> SoundID;
 typedef UniqueID<PipelinePtr> PipelineID;
-typedef UniqueID<OverlayPtr> OverlayID;
 typedef UniqueID<SpritePtr> SpriteID;
 typedef UniqueID<BackgroundPtr> BackgroundID;
 typedef UniqueID<ParticleSystemPtr> ParticleSystemID;

@@ -61,7 +61,7 @@ private:
     std::unordered_map<int, std::set<int>> button_touches_;
     std::unordered_map<std::string, std::set<int>> dpad_button_touches_;
 
-    OverlayID overlay_;
+    StageID stage_;
     CameraID camera_id_;
     PipelineID pipeline_id_;
 

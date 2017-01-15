@@ -21,119 +21,10 @@
 #include "utils/unicode.h"
 #include "virtual_gamepad.h"
 #include "window_base.h"
-#include "overlay.h"
-#include "ui/interface.h"
+#include "stage.h"
 #include "render_sequence.h"
 
 namespace smlt {
-
-unicode layout = R"(
-<rml>
-    <head>
-        <style>
-            body {
-                height: 100%;
-                font-family: Ubuntu;
-                font-weight: bold;
-                font-size: {4}px;
-                color: #ffffff88;
-            }
-            div {
-                display: block;
-            }
-
-            .controls {
-                position: absolute;
-                bottom: 12%;
-                padding-left: 2%;
-                padding-right: 2%;
-            }
-
-            .buttons {
-                width: {2}px;
-                float: right;
-                margin-right: {3}px;
-                text-align: right;
-                margin-bottom: {3}px;
-            }
-
-            .dpad {
-                width: {2}px;
-                float: left;
-                margin-left: {3}px;
-                margin-bottom: {3}px;
-            }
-
-            .dpad, .button {
-                display: none;
-            }
-
-            .dpad_left {
-                width: {0}px;
-                height: {0}px;
-                background-image: "smlt/materials/textures/button.png";
-                background-decorator: image;
-                margin-left: {1}px;
-                margin-right: {1}px;
-                text-align: center;
-                line-height: {0}px;
-                font-size: 2em;
-                float: left;
-            }
-
-            .dpad_right {
-                width: {0}px;
-                height: {0}px;
-                background-image: "smlt/materials/textures/button.png";
-                background-decorator: image;
-                margin-left: {1}px;
-                margin-right: {1}px;
-                text-align: center;
-                line-height: {0}px;
-                font-size: 2em;
-                float: left;
-            }
-
-            .button {
-                width: {0}px;
-                height: {0}px;
-                text-align: center;
-                line-height: {0}px;
-                vertical-align: middle;
-                background-decorator: image;
-                background-image: "smlt/materials/textures/button.png";
-                margin-left: {1}px;
-                margin-right: {1}px;
-                font-size: 2em;
-            }
-
-            .button_text { display: none; }
-
-        </style>
-    </head>
-    <body>
-        <div class="controls">
-            <div class="dpad dpad_two">
-                <div class="dpad_left">L</div>
-                <div class="dpad_right">R</div>
-            </div>
-            <div class="dpad dpad_four">
-
-            </div>
-            <div class="dpad dpad_eight">
-
-            </div>
-
-            <div class="buttons">
-                <div class="button button_one">1</div>
-                <div class="button button_two">2</div>
-                <div class="button button_three">3</div>
-            </div>
-        </div>
-    </body>
-</rml>
-)";
-
 
 VirtualGamepad::VirtualGamepad(WindowBase &window, VirtualDPadDirections directions, int button_count):
     window_(window),
@@ -148,7 +39,7 @@ Dimensions VirtualGamepad::button_dimensions(int button) {
     }
 
     button++; //Buttons are 1-indexed in the UI element classes
-
+/*
     auto document = window_.overlay(overlay_);
 
     auto klass = _u(".button_{0}").format(humanize(button)).encode();
@@ -159,7 +50,7 @@ Dimensions VirtualGamepad::button_dimensions(int button) {
     }
 
     ui::Element element = list[0];
-
+*/
     Dimensions dim;
 
     //FIXME: !!!!!!!!!!!
@@ -175,14 +66,17 @@ Dimensions VirtualGamepad::button_dimensions(int button) {
 bool VirtualGamepad::init() {
     L_DEBUG(_F("Initializing virtual gamepad with {0} buttons").format(button_count_));
 
-    overlay_ = window_.new_overlay(); //Create a UI stage to hold the controller buttons
+    stage_ = window_.new_stage(); //Create a Stage to hold the controller buttons
 
     uint32_t button_size = int(float(window_.width() / 10.0));
     uint32_t dpad_margin = int(float(window_.width() * (5.0 / 640.0)));
     uint32_t area_width = int(float(window_.width() * (200.0 / 640.0)));
     uint32_t outside_padding = int(float(window_.width() * (10.0 / 640.0)));
     uint32_t font_size = window_.height() / 50;
-    auto stage = window_.overlay(overlay_);
+
+    auto stage = stage_.fetch();
+
+/*
     stage->load_rml_from_string(layout.format(button_size, dpad_margin, area_width, outside_padding, font_size));
 
     if(this->directions_ == VIRTUAL_DPAD_DIRECTIONS_TWO) {
@@ -259,7 +153,7 @@ bool VirtualGamepad::init() {
 
     //Finally add to the render sequence, give a ridiculously high priority
     pipeline_id_ = window_.render(overlay_, camera_id_).with_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
-
+*/
     return true;
 }
 
@@ -272,7 +166,7 @@ void VirtualGamepad::cleanup() {
 
     window_.delete_pipeline(pipeline_id_);
     window_.delete_camera(camera_id_);
-    window_.delete_overlay(overlay_);
+    window_.delete_stage(stage_);
 }
 
 void VirtualGamepad::flip() {

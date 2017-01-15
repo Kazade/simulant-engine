@@ -81,10 +81,6 @@ protected:
         AvailablePartitioner partitioner=PARTITIONER_HASH
     );
 
-    std::pair<PipelineID, PipelineID> prepare_basic_scene_with_overlay(
-        StageID& new_stage, CameraID& new_camera, OverlayID& new_ui, CameraID& new_ui_camera
-    );
-
     WindowBase* window_;
 
 private:

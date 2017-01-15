@@ -52,7 +52,6 @@ public:
 
     void do_activate() {
         window->enable_virtual_joypad(smlt::VIRTUAL_DPAD_DIRECTIONS_TWO, 2);
-        window->message_bar->inform("Sample demonstrating 2D sprites");
     }
 
 private:

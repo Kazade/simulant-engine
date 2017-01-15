@@ -21,13 +21,11 @@
 
 #include "utils/gl_error.h"
 #include "window_base.h"
-#include "ui/interface.h"
 #include "input_controller.h"
 #include "loaders/texture_loader.h"
 #include "loaders/material_script.h"
 #include "loaders/opt_loader.h"
 #include "loaders/ogg_loader.h"
-#include "loaders/rml_loader.h"
 #include "loaders/obj_loader.h"
 #include "loaders/tiled_loader.h"
 #include "loaders/particle_script.h"
@@ -40,10 +38,8 @@
 #include "sound.h"
 #include "camera.h"
 #include "watcher.h"
-#include "message_bar.h"
 #include "render_sequence.h"
 #include "stage.h"
-#include "overlay.h"
 #include "virtual_gamepad.h"
 #include "screens/loading.h"
 #include "utils/gl_thread_check.h"
@@ -56,8 +52,7 @@ namespace smlt {
 
 WindowBase::WindowBase():
     Source(this),
-    StageManager(this),
-    OverlayManager(this),    
+    StageManager(this),    
     CameraManager(this),
     resource_manager_(new ResourceManager(this)),
     initialized_(false),
@@ -152,7 +147,6 @@ LoaderTypePtr WindowBase::loader_type(const unicode& loader_name) const {
 }
 
 void WindowBase::create_defaults() {
-    message_bar_ = MessageBar::create(*this);
     loading_ = screens::Loading::create(*this);
 
     //This needs to happen after SDL or whatever is initialized
@@ -162,13 +156,11 @@ void WindowBase::create_defaults() {
 void WindowBase::_cleanup() {
     virtual_gamepad_.reset();
     loading_.reset();
-    message_bar_.reset();
     watcher_.reset();
     background_manager_.reset();
     render_sequence_.reset();
 
     delete_all_cameras();
-    delete_all_overlays();
     delete_all_stages();
 
     Sound::shutdown_openal();
@@ -205,7 +197,6 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
         register_loader(std::make_shared<smlt::loaders::KGLPLoaderType>());
         register_loader(std::make_shared<smlt::loaders::OPTLoaderType>());
         register_loader(std::make_shared<smlt::loaders::OGGLoaderType>());
-        register_loader(std::make_shared<smlt::loaders::RMLLoaderType>());
         register_loader(std::make_shared<smlt::loaders::OBJLoaderType>());
         register_loader(std::make_shared<smlt::loaders::TiledLoaderType>());
         register_loader(std::make_shared<smlt::loaders::HeightmapLoaderType>());
@@ -433,51 +424,11 @@ void WindowBase::disable_virtual_joypad() {
     }
 }
 
-void WindowBase::handle_mouse_motion(int x, int y, bool pos_normalized) {
-    if(pos_normalized) {
-        x *= width();
-        y *= height();
-    }
-
-    OverlayManager::each([=](uint32_t i, Overlay* object) {
-        object->__handle_mouse_move(x, y);
-    });
-}
-
-void WindowBase::handle_mouse_button_down(int button) {
-    OverlayManager::each([=](uint32_t i, Overlay* object) {
-        object->__handle_mouse_down(button);
-    });
-}
-
-void WindowBase::handle_mouse_button_up(int button) {
-    OverlayManager::each([=](uint32_t i, Overlay* object) {
-        object->__handle_mouse_up(button);
-    });
-}
-
-void WindowBase::handle_touch_down(int finger_id, int x, int y) {
-    OverlayManager::each([=](uint32_t i, Overlay* object) {
-        object->__handle_touch_down(finger_id, x, y);
-    });
-}
-
-void WindowBase::handle_touch_motion(int finger_id, int x, int y) {
-    OverlayManager::each([=](uint32_t i, Overlay* object) {
-        object->__handle_touch_motion(finger_id, x, y);
-    });
-}
-
-void WindowBase::handle_touch_up(int finger_id, int x, int y) {
-    OverlayManager::each([=](uint32_t i, Overlay* object) {
-        object->__handle_touch_up(finger_id, x, y);
-    });
-}
 
 /**
  * @brief WindowBase::reset
  *
- * Destroys all stages, and overlays, and releases all loadables. Then resets the
+ * Destroys all stages and releases all loadables. Then resets the
  * window to its original state.
  */
 void WindowBase::reset() {
@@ -486,7 +437,6 @@ void WindowBase::reset() {
     render_sequence()->delete_all_pipelines();
 
     CameraManager::destroy_all();
-    OverlayManager::destroy_all();
     StageManager::destroy_all();
     background_manager_.reset(new BackgroundManager(this));
 

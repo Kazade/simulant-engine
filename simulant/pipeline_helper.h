@@ -58,7 +58,6 @@ public:
     virtual ~PipelineHelperAPIInterface() {}
 
     virtual PipelineHelper render(StageID, CameraID) = 0;
-    virtual PipelineHelper render(OverlayID, CameraID) = 0;
 
     virtual PipelinePtr pipeline(PipelineID pid) = 0;
     virtual bool enable_pipeline(PipelineID pid) = 0;
@@ -69,7 +68,6 @@ public:
 
 protected:
     PipelineHelper new_pipeline_helper(std::shared_ptr<RenderSequence> sequence, StageID stage, CameraID cam);
-    PipelineHelper new_pipeline_helper(std::shared_ptr<RenderSequence> sequence, OverlayID stage, CameraID cam);
 };
 
 }

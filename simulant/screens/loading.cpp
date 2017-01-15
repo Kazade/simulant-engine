@@ -20,9 +20,9 @@
 #include "../stage.h"
 #include "../render_sequence.h"
 #include "../nodes/actor.h"
-#include "../overlay.h"
 #include "../camera.h"
 #include "../window_base.h"
+#include "../nodes/ui/ui_manager.h"
 
 #include "loading.h"
 
@@ -32,48 +32,17 @@ namespace screens {
 
 void Loading::do_load() {
     //Create a stage
-    stage_ = window->new_overlay();
+    stage_ = window->new_stage();
 
-    auto stage = window->overlay(stage_);
-
-    stage->set_styles(R"X(
-        body {
-            font-family: "Ubuntu";
-            display: block;
-            height: 100%;
-            width: 100%;
-            background-color: #000000FF;
-            vertical-align: middle;
-        }
-        p, div {
-            display: block;
-        }
-
-        .thing {
-            position: absolute;
-
-            color: white;
-            font-size: 16px;
-            width: 100%;
-            height: 100%;
-
-            top: 48%;
-            text-align: center;
-        }
-
-    )X");
-
-
-    stage->append_row().append_label("Loading");
-    stage->append_row().append_progress_bar();
-
-    stage->find("label").add_class("thing");
+    auto stage = stage_.fetch();
+    auto progress_bar = stage->ui->new_widget_as_progress_bar().fetch();
+    progress_bar->move_to(window->coordinate_from_normalized(0.5, 0.5));
 
     //Create an orthographic camera
     camera_ = window->new_camera();
 
     window->camera(camera_)->set_orthographic_projection(
-        0, window->width(), window->height(), 0, -1.0, 1.0
+        0, window->width(), 0, window->height()
     );
 
     //Create an inactive pipeline
@@ -84,7 +53,7 @@ void Loading::do_load() {
 void Loading::do_unload() {
     //Clean up
     window->delete_pipeline(pipeline_);
-    window->delete_overlay(stage_);
+    window->delete_stage(stage_);
     window->delete_camera(camera_);
 }
 

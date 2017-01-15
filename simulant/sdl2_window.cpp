@@ -122,36 +122,6 @@ void SDL2Window::check_events() {
                         break;
                 }
             } break;
-            case SDL_MOUSEMOTION: {
-                handle_mouse_motion(event.motion.x, event.motion.y);
-            } break;
-            case SDL_MOUSEBUTTONDOWN: {
-                L_DEBUG(_F("MOUSEDOWN received: {0}").format(event.button.button));
-                handle_mouse_button_down(event.button.button);
-            } break;
-            case SDL_MOUSEBUTTONUP: {
-                L_DEBUG(_F("MOUSEUP received: {0}").format(event.button.button));
-                handle_mouse_button_up(event.button.button);
-            } break;
-            case SDL_FINGERDOWN: {
-                L_DEBUG(_F("FINGERDOWN received: {0} - {1}, {2}").format(event.tfinger.fingerId, event.tfinger.x, event.tfinger.y));
-                int x, y;
-                denormalize(event.tfinger.x, event.tfinger.y, x, y);
-                handle_touch_down(event.tfinger.fingerId, x, y);
-            } break;
-            case SDL_FINGERMOTION: {
-                L_DEBUG(_F("FINGERMOTION received: {0}, {1}").format(event.tfinger.x, event.tfinger.y));
-                int x, y;
-                denormalize(event.tfinger.x, event.tfinger.y, x, y);
-                handle_touch_motion(event.tfinger.fingerId, x, y);
-            } break;
-            case SDL_FINGERUP: {
-                L_DEBUG(_F("FINGERUP received: {0} - {1}, {2}").format(event.tfinger.fingerId, event.tfinger.x, event.tfinger.y));
-                int x, y;
-                denormalize(event.tfinger.x, event.tfinger.y, x, y);
-                handle_touch_up(event.tfinger.fingerId, x, y);
-            } break;
-
             default:
                 L_WARN_ONCE(_F("Unhandled event {0}").format(event.type));
                 break;
