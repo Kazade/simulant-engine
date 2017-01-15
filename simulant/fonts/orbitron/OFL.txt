@@ -1,6 +1,5 @@
-Copyright (c) 2014, Andrew Sigurow (sigurow@gmail.com),
-with Reserved Font Name PROBE_10PX.
-
+Copyright (c) 2009, Matt McInerney (matt@pixelspread.com),
+with Reserved Font Name Orbitron.
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
 This license is copied below, and is also available with a FAQ at:
 http://scripts.sil.org/OFL

@@ -35,6 +35,7 @@ ResourceManager::ResourceManager(WindowBase* window, ResourceManager *parent):
     WindowHolder(window),
     parent_(parent) {
 
+    font_manager_.reset(new FontManager());
 }
 
 bool ResourceManager::init() {
@@ -43,8 +44,9 @@ bool ResourceManager::init() {
         return true;
     }
 
-    //FIXME: Should lock the default texture and material during construction!
+    default_font_ = new_font_from_ttf("smlt/fonts/orbitron/Orbitron-Regular.ttf", 16).fetch();
 
+    //FIXME: Should lock the default texture and material during construction!
     //Create the default blank texture
     default_texture_id_ = new_texture(GARBAGE_COLLECT_NEVER);
 
@@ -85,6 +87,8 @@ void ResourceManager::update(double dt) {
         MaterialManager::garbage_collect();
         TextureManager::garbage_collect();
         SoundManager::garbage_collect();
+
+        font_manager_->garbage_collect();
 
         last_collection = std::chrono::system_clock::now();
     }

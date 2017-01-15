@@ -883,6 +883,10 @@ class Sound;
 typedef std::weak_ptr<Sound> SoundRef;
 typedef std::shared_ptr<Sound> SoundPtr;
 
+class Font;
+typedef std::weak_ptr<Font> FontRef;
+typedef std::shared_ptr<Font> FontPtr;
+
 class Actor;
 typedef Actor* ActorPtr;
 
@@ -941,6 +945,7 @@ typedef Skybox* SkyboxPtr;
 
 typedef UniqueID<MeshPtr> MeshID;
 typedef UniqueID<TexturePtr> TextureID;
+typedef UniqueID<FontPtr> FontID;
 typedef UniqueID<CameraPtr> CameraID;
 typedef UniqueID<MaterialPtr> MaterialID;
 typedef UniqueID<LightPtr> LightID;
