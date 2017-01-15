@@ -39,7 +39,6 @@ SET(DEPS
     "kazsignal"
     "kaztimer"
     "kfs"
-    "nuklear"
     "qu3e"
     "qu3e/common"
     "qu3e/broadphase"
