@@ -44,7 +44,7 @@ bool ResourceManager::init() {
         return true;
     }
 
-    default_font_ = new_font_from_ttf("smlt/fonts/orbitron/Orbitron-Regular.ttf", 16).fetch();
+    default_font_ = new_font_from_ttf(default_font_filename(), 16).fetch();
 
     //FIXME: Should lock the default texture and material during construction!
     //Create the default blank texture
@@ -668,6 +668,10 @@ TextureID ResourceManager::default_texture_id() const {
     }
 }
 
+FontID ResourceManager::default_font_id() const {
+    return default_font_->id();
+}
+
 MaterialID ResourceManager::default_material_id() const {
     if(base_manager() != this) {
         return base_manager()->default_material_id();
@@ -676,9 +680,73 @@ MaterialID ResourceManager::default_material_id() const {
     }
 }
 
+unicode ResourceManager::default_font_filename() const {
+    return window->resource_locator->locate_file("simulant/fonts/orbitron/Orbitron-Regular.ttf");
+}
+
 unicode ResourceManager::default_material_filename() const {
     return window->resource_locator->locate_file(Material::BuiltIns::MULTITEXTURE2_MODULATE_WITH_LIGHTING);
 }
 
+// ========== FONTS ======================
+
+FontID ResourceManager::new_font_from_ttf(const unicode& filename, uint32_t font_size, CharacterSet charset, GarbageCollectMethod garbage_collect) {
+    auto font_id = font_manager_->make(garbage_collect, this);
+    auto font = font_id.fetch();
+
+    try {
+        LoaderOptions options;
+        options["size"] = font_size;
+        options["charset"] = charset;
+        window->loader_for(filename)->into(font.get(), options);
+
+        mark_font_as_uncollected(font_id);
+    } catch (...) {
+        // Make sure we don't leave the font hanging around
+        delete_font(font_id);
+        throw;
+    }
+
+    return font_id;
+}
+
+FontID ResourceManager::new_font_with_alias_from_ttf(const std::string& alias, const unicode& filename, uint32_t font_size, CharacterSet charset, GarbageCollectMethod garbage_collect) {
+    auto fid = new_font_from_ttf(filename, font_size, charset, garbage_collect);
+    try {
+        font_manager_->manager_store_alias(alias, fid);
+    } catch(...) {
+        delete_font(fid);
+        throw;
+    }
+    return fid;
+}
+
+FontID ResourceManager::get_font_with_alias(const std::string& alias) {
+    return font_manager_->get_by_alias(alias);
+}
+
+void ResourceManager::delete_font(FontID f) {
+    f.fetch()->enable_gc();
+}
+
+FontPtr ResourceManager::font(FontID f) {
+    return font_manager_->get(f).lock();
+}
+
+const FontPtr ResourceManager::font(FontID f) const {
+    return font_manager_->get(f).lock();
+}
+
+uint32_t ResourceManager::font_count() const {
+    return font_manager_->count();
+}
+
+bool ResourceManager::has_font(FontID f) const {
+    return font_manager_->contains(f);
+}
+
+void ResourceManager::mark_font_as_uncollected(FontID f) {
+    font_manager_->mark_as_uncollected(f);
+}
 
 }

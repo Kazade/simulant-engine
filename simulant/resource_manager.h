@@ -173,6 +173,7 @@ public:
     void update(double dt);
 
     unicode default_material_filename() const;
+    unicode default_font_filename() const;
 
     MaterialID clone_default_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) {
         return base_manager()->material(base_manager()->default_material_id())->new_clone(this, garbage_collect);
@@ -180,6 +181,7 @@ public:
 
     MaterialID default_material_id() const;
     TextureID default_texture_id() const;
+    FontID default_font_id() const;
 
     ResourceManager* base_manager() const {
         // Constness applies to the resource manager itself, not the returned base manager

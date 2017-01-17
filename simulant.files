@@ -1524,3 +1524,6 @@ simulant/nodes/ui/progress_bar.h
 simulant/nodes/ui/widget.cpp
 samples/ui_demo.cpp
 simulant/font.h
+simulant/font.cpp
+simulant/loaders/ttf_loader.h
+simulant/loaders/ttf_loader.cpp

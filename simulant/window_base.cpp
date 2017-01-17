@@ -34,6 +34,7 @@
 #include "loaders/wal_loader.h"
 #include "loaders/md2_loader.h"
 #include "loaders/pcx_loader.h"
+#include "loaders/ttf_loader.h"
 
 #include "sound.h"
 #include "camera.h"
@@ -204,6 +205,7 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
         register_loader(std::make_shared<smlt::loaders::WALLoaderType>());
         register_loader(std::make_shared<smlt::loaders::MD2LoaderType>());
         register_loader(std::make_shared<smlt::loaders::PCXLoaderType>());
+        register_loader(std::make_shared<smlt::loaders::TTFLoaderType>());
 
         L_INFO("Initializing OpenAL");
         Sound::init_openal();
