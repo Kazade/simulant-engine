@@ -52,7 +52,22 @@ RenderQueue::RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory)
             reinsert(actor_id, this);
         });
 
-        actor->signal_mesh_changed().connect([this, actor_id](ActorID) { reinsert(actor_id, this); });
+
+        // If a material changes on an actor's subactor, reinsert
+        actor->signal_subactor_material_changed().connect([this](ActorID, SubActor* subactor, MaterialID, MaterialID) {
+            remove_renderable(subactor);
+            insert_renderable(subactor);
+        });
+
+        // If a new subactor is added to the actor, add it to the render queue
+        actor->signal_subactor_created().connect([this](ActorID actor_id, SubActor* subactor) {
+            insert_renderable(subactor);
+        });
+
+        // If a subactor is destroyed, remove it from the render queue
+        actor->signal_subactor_destroyed().connect([this](ActorID actor_id, SubActor* subactor) {
+            remove_renderable(subactor);
+        });
     });
 
     stage->signal_actor_destroyed().connect([=](ActorID actor_id) {
@@ -60,16 +75,6 @@ RenderQueue::RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory)
         actor->each([=](uint32_t i, SubActor* subactor) {
             remove_renderable(subactor);
         });
-    });
-
-    stage->signal_actor_changed().connect([=](ActorID actor_id, ActorChangeEvent event) {
-        auto actor = stage->actor(actor_id);
-        if(event.type == ACTOR_CHANGE_TYPE_SUBACTOR_MATERIAL_CHANGED) {
-            actor->each([=](uint32_t i, SubActor* subactor) {
-                remove_renderable(subactor);
-                insert_renderable(subactor);
-            });
-        }
     });
 
     stage->signal_particle_system_created().connect([=](ParticleSystemID ps_id) {
