@@ -72,11 +72,16 @@ public:
     template<typename T, typename... Args>
     ObjectIDType make_as(ObjectIDType id, Args&&... args) {
         {
-            std::lock_guard<std::recursive_mutex> lock(manager_lock_);
 
-            objects_.insert(std::make_pair(id,
+            // Make the new object, but dont lock until we insert
+            // this prevents deadlocks being caused if a stage is created in another
+            // thread and needs the idle task handler to run
+            auto to_insert = std::make_pair(id,
                 T::create(id, std::forward<Args>(args)...)
-            ));
+            );
+
+            std::lock_guard<std::recursive_mutex> lock(manager_lock_);
+            objects_.insert(to_insert);
         }
 
         signal_post_create_(*objects_[id], id);
