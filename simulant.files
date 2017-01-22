@@ -1528,3 +1528,4 @@ simulant/font.cpp
 simulant/loaders/ttf_loader.h
 simulant/loaders/ttf_loader.cpp
 simulant/nodes/ui/progress_bar.cpp
+simulant/nodes/ui/label.cpp

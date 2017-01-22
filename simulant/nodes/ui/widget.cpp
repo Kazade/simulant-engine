@@ -229,6 +229,10 @@ MeshID Widget::construct_widget(float requested_width, float requested_height) {
             mesh->submesh("text")->aabb().height() + padding_.top + padding_.bottom,
             height
         );
+    } else if(resize_mode_ == RESIZE_MODE_FIT_CONTENT) {
+        auto aabb = mesh->submesh("text")->aabb();
+        width = aabb.width() + padding_.left + padding_.right;
+        height = aabb.height() + padding_.top + padding_.bottom;
     } else {
         // Clip the content?
     }
@@ -252,6 +256,7 @@ MeshID Widget::construct_widget(float requested_width, float requested_height) {
 
 void Widget::set_resize_mode(ResizeMode resize_mode) {
     resize_mode_ = resize_mode;
+    on_size_changed();
 }
 
 void Widget::set_padding(float left, float right, float bottom, float top) {

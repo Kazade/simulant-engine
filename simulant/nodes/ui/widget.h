@@ -28,8 +28,10 @@ enum TextAlignment {
 };*/
 
 enum ResizeMode {
-    RESIZE_MODE_FIXED,
-    RESIZE_MODE_FIXED_WIDTH
+    RESIZE_MODE_FIXED, // Clips / scrolls text
+    RESIZE_MODE_FIXED_WIDTH, // Will expand vertically with text, text is word-wrapped
+    RESIZE_MODE_FIXED_HEIGHT, // Will expand horizontally with text, text is not wrapped
+    RESIZE_MODE_FIT_CONTENT // Will fit the text, newlines affect the height
 };
 
 struct UIDim {
@@ -44,13 +46,13 @@ struct UIConfig {
     Colour foreground_colour_ = Colour::BLACK;
     Colour background_colour_ = Colour::WHITE;
 
-    ResizeMode label_resize_mode_ = RESIZE_MODE_FIXED_WIDTH;
-    ResizeMode button_resize_mode_ = RESIZE_MODE_FIXED_WIDTH;
+    ResizeMode label_resize_mode_ = RESIZE_MODE_FIT_CONTENT;
+    ResizeMode button_resize_mode_ = RESIZE_MODE_FIT_CONTENT;
+    ResizeMode progress_bar_resize_mode_ = RESIZE_MODE_FIXED;
 
     float scrollbar_width_ = 16;
     Colour scrollbar_background_colour_ = Colour::LIGHT_GREY;
     Colour scrollbar_foreground_colour_ = Colour::ALICE_BLUE;
-
 
     float button_height_ = 36;
     float button_width_ = 0; // Fit content
