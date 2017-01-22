@@ -669,7 +669,11 @@ TextureID ResourceManager::default_texture_id() const {
 }
 
 FontID ResourceManager::default_font_id() const {
-    return default_font_->id();
+    if(base_manager() != this) {
+        return base_manager()->default_font_id();
+    } else {
+        return default_font_->id();
+    }
 }
 
 MaterialID ResourceManager::default_material_id() const {

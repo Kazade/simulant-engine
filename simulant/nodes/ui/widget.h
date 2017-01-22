@@ -29,8 +29,7 @@ enum TextAlignment {
 
 enum ResizeMode {
     RESIZE_MODE_FIXED,
-    RESIZE_MODE_FIT_CONTENT,
-    RESIZE_MODE_AT_LEAST_CONTENT
+    RESIZE_MODE_FIXED_WIDTH
 };
 
 struct UIDim {
@@ -45,8 +44,8 @@ struct UIConfig {
     Colour foreground_colour_ = Colour::BLACK;
     Colour background_colour_ = Colour::WHITE;
 
-    ResizeMode label_resize_mode_ = RESIZE_MODE_AT_LEAST_CONTENT;
-    ResizeMode button_resize_mode_ = RESIZE_MODE_AT_LEAST_CONTENT;
+    ResizeMode label_resize_mode_ = RESIZE_MODE_FIXED_WIDTH;
+    ResizeMode button_resize_mode_ = RESIZE_MODE_FIXED_WIDTH;
 
     float scrollbar_width_ = 16;
     Colour scrollbar_background_colour_ = Colour::LIGHT_GREY;
@@ -63,6 +62,11 @@ struct UIConfig {
 
     float button_border_width_ = 1;
     float button_border_radius_ = 3;
+
+    Colour progress_bar_foreground_colour_ = Colour::DODGER_BLUE;
+    Colour progress_bar_background_colour_ = Colour::WHITE;
+    Colour progress_bar_border_colour_ = Colour::DODGER_BLUE;
+    float progress_bar_border_width_ = 1;
 
     OverflowType default_overflow_ = OVERFLOW_TYPE_HIDDEN;
     ResizeMode default_resize_mode_ = RESIZE_MODE_FIXED;
@@ -82,10 +86,10 @@ public:
     void resize(float width, float height);
     void set_width(float width);
     void set_height(float height);
+    void set_font(FontID font);
 
     void set_text(const unicode& text) { text_ = text; on_size_changed(); }
-    void set_border_width(float x);
-    void set_border_width(float left, float right, float bottom, float top);
+    void set_border_width(float x);    
     void set_border_colour(const Colour& colour);
     void set_overflow(OverflowType type);
     void set_padding(float x);
@@ -94,16 +98,20 @@ public:
 
     void set_background_image(TextureID texture); // FIXME: Switch to TextureFrame when that's a thing
     void set_background_colour(const Colour& colour);
+
     void set_foreground_colour(const Colour& colour);
+    void set_foreground_image(TextureID texture);
+
+    void set_text_colour(const Colour& colour);
 
     float requested_width() const { return width_; }
     float requested_height() const { return height_; }
 
-    float content_width() const; // Content area
-    float content_height() const;
+    float content_width() const { return content_width_; } // Content area
+    float content_height() const { return content_height_; }
 
-    float outer_width() const; // With border
-    float outer_height() const;
+    float outer_width() const { return content_width() + (border_width_ * 2); }
+    float outer_height() const { return content_height() + (border_width_ * 2); }
 
     bool is_checked() const; // Widget dependent, returns false if widget has no concept of 'active'
     bool is_enabled() const; // Widget dependent, returns true if widget has no concept of 'disabled'
@@ -126,16 +134,21 @@ public:
 
     const unicode& text() const { return text_; }
 private:
+    bool initialized_ = false;
     UIManager* owner_;
     ActorID actor_;
     MeshPtr mesh_;
-    MaterialID material_;
+    FontPtr font_;
+    MaterialPtr material_;
 
     virtual MeshID construct_widget(float requested_width, float requested_height);
     virtual UIDim calc_content_dimensions();
 
     float width_ = .0f;
     float height_ = .0f;
+
+    float content_width_ = .0f;
+    float content_height_ = .0f;
 
     Float4 padding_ = {0, 0, 0, 0};
 
@@ -144,14 +157,27 @@ private:
 
     unicode text_;
     OverflowType overflow_;
-    ResizeMode resize_mode_ = RESIZE_MODE_AT_LEAST_CONTENT;
+    ResizeMode resize_mode_ = RESIZE_MODE_FIXED_WIDTH;
 
     Colour background_colour_ = Colour::WHITE;
-    Colour foreground_colour_ = Colour::BLACK;
+    Colour foreground_colour_ = Colour::NONE; //Transparent
+    Colour text_colour_ = Colour::BLACK;
+    float line_height_ = 16;
 
     std::unordered_map<std::string, smlt::any> properties_;
 
     virtual void on_size_changed();
+    void rebuild();
+protected:
+    bool is_initialized() const { return initialized_; }
+
+    MeshPtr mesh() { return mesh_; }
+
+    float background_depth_bias_ = 0.00001f;
+    float foreground_depth_bias_ = 0.00002f;
+
+    void resize_foreground(MeshPtr mesh, float width, float height, float xoffset, float yoffset);
+    void render_text(MeshPtr mesh, const std::string& submesh_name, const unicode& text, float width);
 };
 
 }

@@ -28,10 +28,15 @@ class Font:
 public:
     Font(FontID id, ResourceManager* resource_manager);
 
+    bool init() override;
+
     bool is_valid() const { return bool(info_) && texture_; }
     TextureID texture_id() const;
 
     std::pair<Vec2, Vec2> texture_coordinates_for_character(char32_t c);
+    float character_width(char32_t ch);
+    float character_height(char32_t ch);
+    float character_advance(char32_t ch, char32_t next);
 
 private:
     std::unique_ptr<stbtt_fontinfo> info_;

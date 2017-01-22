@@ -920,6 +920,10 @@ typedef Stage* StagePtr;
 namespace ui {
 
 class Widget;
+class ProgressBar;
+class Button;
+class Label;
+
 typedef Widget* WidgetPtr;
 
 }
@@ -942,6 +946,8 @@ typedef std::shared_ptr<GPUProgram> GPUProgramPtr;
 
 class Skybox;
 typedef Skybox* SkyboxPtr;
+
+typedef uint32_t IdleConnectionID;
 
 typedef UniqueID<MeshPtr> MeshID;
 typedef UniqueID<TexturePtr> TextureID;

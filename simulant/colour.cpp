@@ -162,6 +162,7 @@ const Colour Colour::WHITE = Colour(0.99609375, 0.99609375, 0.99609375, 1.0);
 const Colour Colour::WHITE_SMOKE = Colour(0.95703125, 0.95703125, 0.95703125, 1.0);
 const Colour Colour::YELLOW = Colour(0.99609375, 0.99609375, 0.0, 1.0);
 const Colour Colour::YELLOW_GREEN = Colour(0.6015625, 0.80078125, 0.1953125, 1.0);
+const Colour Colour::NONE = Colour(0, 0, 0, 0); // Transparent
 
 std::string Colour::to_hex_string() const {
     auto rval = int(255.0 * r);

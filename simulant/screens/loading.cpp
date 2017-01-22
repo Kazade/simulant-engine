@@ -35,8 +35,9 @@ void Loading::do_load() {
     stage_ = window->new_stage();
 
     auto stage = stage_.fetch();
-    auto progress_bar = stage->ui->new_widget_as_progress_bar().fetch();
-    progress_bar->move_to(window->coordinate_from_normalized(0.5, 0.5));
+    progress_bar_ = dynamic_cast<ui::ProgressBar*>(stage->ui->new_widget_as_progress_bar().fetch());
+    progress_bar_->resize(300, 16);
+    progress_bar_->move_to(window->coordinate_from_normalized(0.5, 0.5));
 
     //Create an orthographic camera
     camera_ = window->new_camera();

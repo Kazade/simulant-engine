@@ -78,6 +78,11 @@ void ScreenManager::activate_screen(const std::string& route) {
     current_screen_->activate();
 }
 
+void ScreenManager::load_screen(const std::string& route) {
+    auto screen = get_or_create_route(route);
+    screen->load();
+}
+
 void ScreenManager::load_screen_in_background(const std::string& route, bool redirect_after) {
     auto screen = get_or_create_route(route);
 
@@ -124,8 +129,13 @@ bool ScreenManager::has_screen(const std::string& route) const {
     return screen_factories_.find(route) != screen_factories_.end();
 }
 
-ScreenBase::ptr ScreenManager::resolve_screen(const std::string& route) {
-    return get_or_create_route(route);
+ScreenBase::ptr ScreenManager::resolve_screen(const std::string& route) const {
+    auto it = routes_.find(route);
+    if(it != routes_.end()) {
+        return it->second;
+    } else {
+        return ScreenBase::ptr();
+    }
 }
 
 void ScreenManager::reset() {

@@ -50,6 +50,7 @@ bool Application::init() {
     // Add some useful screens by default, these can be overridden in do_init if the
     // user so wishes
     register_screen("/loading", screen_factory<screens::Loading>());
+    load_screen("/loading");
 
     initialized_ = do_init();
 

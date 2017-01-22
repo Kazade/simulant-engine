@@ -25,30 +25,31 @@
 #include <mutex>
 #include <condition_variable>
 
+#include "types.h"
+
 namespace smlt {
 
-typedef uint32_t ConnectionID;
 class WindowBase;
 
 class IdleTaskManager {
 public:
     IdleTaskManager(WindowBase& window);
 
-    ConnectionID add(std::function<bool ()> callback);
-    ConnectionID add_once(std::function<void ()> callback);
-    ConnectionID add_timeout(float seconds, std::function<void()> callback);
+    IdleConnectionID add(std::function<bool ()> callback);
+    IdleConnectionID add_once(std::function<void ()> callback);
+    IdleConnectionID add_timeout(float seconds, std::function<void()> callback);
     
     void run_sync(std::function<void()> callback);
 
-    void remove(ConnectionID connection);
+    void remove(IdleConnectionID connection);
 
     void execute();
 
     void wait();
 
 private:
-    typedef std::map<ConnectionID, std::function<bool ()> > SignalMap;
-    typedef std::map<ConnectionID, std::function<void ()> > SignalOnceMap;
+    typedef std::map<IdleConnectionID, std::function<bool ()> > SignalMap;
+    typedef std::map<IdleConnectionID, std::function<void ()> > SignalOnceMap;
 
     WindowBase& window_;
 
