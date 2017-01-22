@@ -64,6 +64,11 @@ void Widget::set_height(float height) {
     on_size_changed();
 }
 
+void Widget::set_text(const unicode &text) {
+    text_ = text;
+    on_size_changed();
+}
+
 void Widget::on_size_changed() {
     rebuild();
 }
@@ -100,6 +105,7 @@ void Widget::render_text(MeshPtr mesh, const std::string& submesh_name, const un
 
     // Create a new submesh for the text
     auto submesh = mesh->new_submesh(submesh_name, MESH_ARRANGEMENT_TRIANGLES, VERTEX_SHARING_MODE_INDEPENDENT, spec);
+    submesh->set_material_id(font_->material_id());
 
     float xoffset = 0;
     float yoffset = 0;
@@ -111,11 +117,9 @@ void Widget::render_text(MeshPtr mesh, const std::string& submesh_name, const un
 
     std::vector<WordVertex> word_vertices;
     bool word_wrap = false;
+    float word_length = .0f;
 
     for(std::size_t i = 0; i < text.length(); ++i) {
-        float word_length = .0f;
-        word_vertices.clear();
-
         if(text[i] == ' ' || i == text.length() - 1) {
             float xshift = 0;
             float yshift = 0;
@@ -131,14 +135,28 @@ void Widget::render_text(MeshPtr mesh, const std::string& submesh_name, const un
                 yoffset -= line_height_;
             }
 
+            auto offset = submesh->vertex_data->count();
+
             // We're at the end of the word, time to commit to the mesh
             for(auto& v: word_vertices) {
-                submesh->vertex_data->position(v.position + Vec3(xshift, yshift, 0));
+                submesh->vertex_data->position(v.position + Vec3(xshift, yshift, text_depth_bias_));
                 submesh->vertex_data->tex_coord0(v.texcoord);
+                submesh->vertex_data->diffuse(text_colour_);
                 submesh->vertex_data->move_next();
             }
 
+            for(auto k = 0; k < word_vertices.size(); k += 4) {
+                submesh->index_data->index(offset + k);
+                submesh->index_data->index(offset + k + 1);
+                submesh->index_data->index(offset + k + 2);
+
+                submesh->index_data->index(offset + k);
+                submesh->index_data->index(offset + k + 2);
+                submesh->index_data->index(offset + k + 3);
+            }
+
             word_vertices.clear();
+            word_length = .0f;
             word_wrap = false;
         } else if(text[i] == '\n') {
             xoffset = 0;
@@ -187,6 +205,9 @@ void Widget::render_text(MeshPtr mesh, const std::string& submesh_name, const un
             }
         }
     }
+
+    submesh->vertex_data->done();
+    submesh->index_data->done();
 }
 
 MeshID Widget::construct_widget(float requested_width, float requested_height) {

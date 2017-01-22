@@ -32,6 +32,7 @@ public:
 
     bool is_valid() const { return bool(info_) && texture_; }
     TextureID texture_id() const;
+    MaterialID material_id() const;
 
     std::pair<Vec2, Vec2> texture_coordinates_for_character(char32_t c);
     float character_width(char32_t ch);
@@ -43,6 +44,7 @@ private:
     std::vector<stbtt_bakedchar> char_data_;
 
     TexturePtr texture_;
+    MaterialPtr material_;
 
     friend class ui::Widget;
     friend class loaders::TTFLoader;

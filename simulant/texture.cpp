@@ -100,11 +100,32 @@ void Texture::__do_upload(MipmapGenerate mipmap, TextureWrap wrap, TextureFilter
     GLCheck(glBindTexture, GL_TEXTURE_2D, gl_tex_);
     GLCheck(glPixelStorei, GL_PACK_ALIGNMENT,1);
     GLCheck(glPixelStorei, GL_UNPACK_ALIGNMENT,1);
+
+    // FIXME: This is awful, we should expose this via an API
+    GLenum internalFormat, format;
+    switch(bpp_) {
+        case 32: {
+            internalFormat = GL_RGBA;
+            format = GL_RGBA;
+        } break;
+        case 24: {
+            internalFormat = GL_RGB;
+            format = GL_RGB;
+        } break;
+        case 8: {
+            // FIXME: deprecated in GL 4.0
+            internalFormat = GL_ALPHA;
+            format = GL_ALPHA;
+        } break;
+    default:
+        assert(0 && "Not implemented");
+    }
+
     GLCheck(glTexImage2D,
         GL_TEXTURE_2D,
-        0, (bpp_ == 32)? GL_RGBA: GL_RGB,
+        0, internalFormat,
         width_, height_, 0,
-        (bpp_ == 32) ? GL_RGBA : GL_RGB,
+        format,
         GL_UNSIGNED_BYTE, &data_[0]
     );
     if(mipmap == MIPMAP_GENERATE_COMPLETE) {

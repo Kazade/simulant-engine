@@ -38,6 +38,9 @@ namespace loaders {
             first_char, char_count,
             &font->char_data_[0]
         );
+
+        font->texture_->upload(MIPMAP_GENERATE_COMPLETE, TEXTURE_WRAP_CLAMP_TO_EDGE);
+        font->material_ = font->resource_manager().new_material_from_texture(font->texture_->id()).fetch();
     }
 }
 }

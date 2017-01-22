@@ -39,6 +39,9 @@ void Loading::do_load() {
     progress_bar_->resize(300, 16);
     progress_bar_->move_to(window->coordinate_from_normalized(0.5, 0.5));
 
+    auto label = stage->ui->new_widget_as_label("LOADING").fetch();
+    label->move_to(window->coordinate_from_normalized(0.5, 0.6));
+
     //Create an orthographic camera
     camera_ = window->new_camera();
 

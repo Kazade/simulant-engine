@@ -88,7 +88,7 @@ public:
     void set_height(float height);
     void set_font(FontID font);
 
-    void set_text(const unicode& text) { text_ = text; on_size_changed(); }
+    void set_text(const unicode& text);
     void set_border_width(float x);    
     void set_border_colour(const Colour& colour);
     void set_overflow(OverflowType type);
@@ -175,6 +175,7 @@ protected:
 
     float background_depth_bias_ = 0.00001f;
     float foreground_depth_bias_ = 0.00002f;
+    float text_depth_bias_ = 0.00003f;
 
     void resize_foreground(MeshPtr mesh, float width, float height, float xoffset, float yoffset);
     void render_text(MeshPtr mesh, const std::string& submesh_name, const unicode& text, float width);

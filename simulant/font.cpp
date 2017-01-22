@@ -1,5 +1,6 @@
 #include "font.h"
 #include "texture.h"
+#include "material.h"
 
 #define STB_TRUETYPE_IMPLEMENTATION  // force following include to generate implementation
 #define STBTT_STATIC
@@ -15,6 +16,8 @@ Font::Font(FontID id, ResourceManager *resource_manager):
 }
 
 TextureID Font::texture_id() const { return texture_->id(); }
+
+MaterialID Font::material_id() const { return material_->id(); }
 
 bool Font::init() {
 
