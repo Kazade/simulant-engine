@@ -33,6 +33,7 @@ namespace smlt {
 #ifdef SIMULANT_GL_VERSION_1X
 const std::string Material::BuiltIns::TEXTURE_ONLY = "simulant/materials/opengl-1.x/texture_only.kglm";
 const std::string Material::BuiltIns::DIFFUSE_ONLY = "simulant/materials/opengl-1.x/diffuse_only.kglm";
+const std::string Material::BuiltIns::ALPHA_TEXTURE = "simulant/materials/opengl-1.x/alpha_texture.kglm";
 const std::string Material::BuiltIns::DIFFUSE_WITH_LIGHTING = "simulant/materials/opengl-1.x/diffuse_with_lighting.kglm";
 const std::string Material::BuiltIns::MULTITEXTURE2_MODULATE = "simulant/materials/opengl-1.x/multitexture2_modulate.kglm";
 const std::string Material::BuiltIns::MULTITEXTURE2_ADD = "simulant/materials/opengl-1.x/multitexture2_add.kglm";
@@ -42,6 +43,7 @@ const std::string Material::BuiltIns::MULTITEXTURE2_MODULATE_WITH_LIGHTING = "si
 #else
 const std::string Material::BuiltIns::TEXTURE_ONLY = "simulant/materials/opengl-2.x/texture_only.kglm";
 const std::string Material::BuiltIns::DIFFUSE_ONLY = "simulant/materials/opengl-2.x/diffuse_only.kglm";
+const std::string Material::BuiltIns::ALPHA_TEXTURE = "simulant/materials/opengl-2.x/alpha_texture.kglm";
 const std::string Material::BuiltIns::DIFFUSE_WITH_LIGHTING = "simulant/materials/opengl-2.x/diffuse_with_lighting.kglm";
 const std::string Material::BuiltIns::MULTITEXTURE2_MODULATE = "simulant/materials/opengl-2.x/multitexture2_modulate.kglm";
 const std::string Material::BuiltIns::MULTITEXTURE2_ADD = "simulant/materials/opengl-2.x/multitexture2_add.kglm";

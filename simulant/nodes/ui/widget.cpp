@@ -106,6 +106,7 @@ void Widget::render_text(MeshPtr mesh, const std::string& submesh_name, const un
     // Create a new submesh for the text
     auto submesh = mesh->new_submesh(submesh_name, MESH_ARRANGEMENT_TRIANGLES, VERTEX_SHARING_MODE_INDEPENDENT, spec);
     submesh->set_material_id(font_->material_id());
+    submesh->set_diffuse(text_colour_);
 
     float xoffset = 0;
     float yoffset = 0;
@@ -145,7 +146,7 @@ void Widget::render_text(MeshPtr mesh, const std::string& submesh_name, const un
                 submesh->vertex_data->move_next();
             }
 
-            for(auto k = 0; k < word_vertices.size(); k += 4) {
+            for(std::size_t k = 0; k < word_vertices.size(); k += 4) {
                 submesh->index_data->index(offset + k);
                 submesh->index_data->index(offset + k + 1);
                 submesh->index_data->index(offset + k + 2);

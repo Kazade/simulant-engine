@@ -40,7 +40,8 @@ namespace loaders {
         );
 
         font->texture_->upload(MIPMAP_GENERATE_COMPLETE, TEXTURE_WRAP_CLAMP_TO_EDGE);
-        font->material_ = font->resource_manager().new_material_from_texture(font->texture_->id()).fetch();
+        font->material_ = font->resource_manager().new_material_from_file(Material::BuiltIns::ALPHA_TEXTURE).fetch();
+        font->material_->set_texture_unit_on_all_passes(0, font->texture_id());
     }
 }
 }

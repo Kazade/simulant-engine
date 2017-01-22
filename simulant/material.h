@@ -267,6 +267,7 @@ public:
     struct BuiltIns {
         static const std::string TEXTURE_ONLY;
         static const std::string DIFFUSE_ONLY;
+        static const std::string ALPHA_TEXTURE;
         static const std::string DIFFUSE_WITH_LIGHTING;
         static const std::string MULTITEXTURE2_MODULATE;
         static const std::string MULTITEXTURE2_ADD;
