@@ -113,9 +113,8 @@ void Texture::__do_upload(MipmapGenerate mipmap, TextureWrap wrap, TextureFilter
             format = GL_RGB;
         } break;
         case 8: {
-            // FIXME: deprecated in GL 4.0
-            internalFormat = GL_ALPHA;
-            format = GL_ALPHA;
+            internalFormat = GL_RED;
+            format = GL_RED;
         } break;
     default:
         assert(0 && "Not implemented");

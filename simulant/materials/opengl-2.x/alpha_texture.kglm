@@ -41,7 +41,7 @@
             varying vec4 frag_diffuse;
                         
             void main() {
-                gl_FragColor = vec4(frag_diffuse.rgb, frag_diffuse.a * texture2D(texture, frag_texcoord0.st));
+                gl_FragColor = vec4(frag_diffuse.rgb, frag_diffuse.a * texture2D(texture, frag_texcoord0.st).r);
             }                
         END_DATA(FRAGMENT)        
     END(PASS)

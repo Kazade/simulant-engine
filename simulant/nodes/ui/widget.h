@@ -58,7 +58,7 @@ struct UIConfig {
     float button_width_ = 0; // Fit content
 
     Float4 label_padding_ = { 5, 5, 5, 5 };
-    Colour label_background_colour_ = Colour::NONE;
+    Colour label_background_colour_ = Colour::WHITE;
     Colour label_foreground_colour_ = Colour::NONE;
     Colour label_text_colour_ = Colour::DODGER_BLUE;
 

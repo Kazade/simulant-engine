@@ -21,7 +21,7 @@ namespace loaders {
 
         // Generate a new texture for rendering the font to
         font->texture_ = font->resource_manager().new_texture().fetch();
-        font->texture_->set_bpp(32);
+        font->texture_->set_bpp(8); // 8 BPP == GL_RED
         font->texture_->resize(512, 512);
 
         if(charset != CHARACTER_SET_LATIN) {
@@ -33,25 +33,15 @@ namespace loaders {
 
         font->char_data_.resize(char_count);
 
-        std::vector<unsigned char> data(font->texture_->width() * font->texture_->height());
-
         stbtt_BakeFontBitmap(
-            &buffer[0], 0, font_size, &data[0],
+            &buffer[0], 0, font_size, &font->texture_->data()[0],
             font->texture_->width(), font->texture_->height(),
             first_char, char_count,
             &font->char_data_[0]
         );
 
-        uint32_t j = 0;
-        for(uint32_t i = 0; i < data.size(); ++i) {
-            for(uint32_t k = 0; k < 4; ++k) {
-                font->texture_->data()[j + k] = data[i];
-            }
-            j += 4;
-        }
-
         font->texture_->upload(MIPMAP_GENERATE_COMPLETE, TEXTURE_WRAP_CLAMP_TO_EDGE);
-        font->material_ = font->resource_manager().new_material_from_file(Material::BuiltIns::TEXTURE_ONLY).fetch();
+        font->material_ = font->resource_manager().new_material_from_file(Material::BuiltIns::ALPHA_TEXTURE).fetch();
         font->material_->set_texture_unit_on_all_passes(0, font->texture_id());
     }
 }
