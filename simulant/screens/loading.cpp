@@ -50,7 +50,7 @@ void Loading::do_load() {
     );
 
     //Create an inactive pipeline
-    pipeline_ = window->render(stage_, camera_);
+    pipeline_ = window->render(stage_, camera_).with_clear();
     window->disable_pipeline(pipeline_);
 }
 

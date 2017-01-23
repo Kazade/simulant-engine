@@ -22,12 +22,17 @@ bool Widget::init() {
     material_->first_pass()->set_blending(BLEND_ALPHA);
 
     // Assign the default font as default
-    font_ = stage->assets->default_font_id().fetch();
+    set_font(stage->assets->default_font_id());
 
     mesh_ = construct_widget(0, 0).fetch();
 
     initialized_ = true;
     return true;
+}
+
+void Widget::set_font(FontID font_id) {
+    font_ = stage->assets->font(font_id);
+    line_height_ = float(font_->size()) * 1.1;
 }
 
 void Widget::resize(float width, float height) {
@@ -95,6 +100,11 @@ void Widget::set_foreground_colour(const Colour& colour) {
     rebuild();
 }
 
+void Widget::set_text_colour(const Colour &colour) {
+    text_colour_ = colour;
+    rebuild();
+}
+
 void Widget::render_text(MeshPtr mesh, const std::string& submesh_name, const unicode& text, float width) {
     mesh->delete_submesh(submesh_name); // Delete the text submesh if it exists
 
@@ -106,7 +116,12 @@ void Widget::render_text(MeshPtr mesh, const std::string& submesh_name, const un
     // Create a new submesh for the text
     auto submesh = mesh->new_submesh(submesh_name, MESH_ARRANGEMENT_TRIANGLES, VERTEX_SHARING_MODE_INDEPENDENT, spec);
     submesh->set_material_id(font_->material_id());
-    submesh->set_diffuse(text_colour_);
+
+    // We return here so there's always a text mesh even if it's got nothing in it
+    // FIXME: although totally not thread or exception safe :/
+    if(text.empty()) {
+        return;
+    }
 
     float xoffset = 0;
     float yoffset = 0;
@@ -119,9 +134,17 @@ void Widget::render_text(MeshPtr mesh, const std::string& submesh_name, const un
     std::vector<WordVertex> word_vertices;
     bool word_wrap = false;
     float word_length = .0f;
+    float longest_line = .0f;
+    float line_length = .0f;
 
-    for(std::size_t i = 0; i < text.length(); ++i) {
-        if(text[i] == ' ' || i == text.length() - 1) {
+    // We use the font-size as the default height, but then add line-height for each subsequent
+    // line. That's because the line height might be less than the font size (causing overlapping)
+    // but we want the total visible height... I think this makes sense!
+    float min_height = std::numeric_limits<float>::max();
+    float max_height = std::numeric_limits<float>::lowest();
+
+    for(std::size_t i = 0; i <= text.length(); ++i) {
+        if(i == text.length() || text[i] == ' ') {
             float xshift = 0;
             float yshift = 0;
 
@@ -140,7 +163,11 @@ void Widget::render_text(MeshPtr mesh, const std::string& submesh_name, const un
 
             // We're at the end of the word, time to commit to the mesh
             for(auto& v: word_vertices) {
-                submesh->vertex_data->position(v.position + Vec3(xshift, yshift, text_depth_bias_));
+                auto pos = v.position + Vec3(xshift, yshift, text_depth_bias_);
+                if(pos.y < min_height) min_height = pos.y;
+                if(pos.y > max_height) max_height = pos.y;
+
+                submesh->vertex_data->position(pos);
                 submesh->vertex_data->tex_coord0(v.texcoord);
                 submesh->vertex_data->diffuse(text_colour_);
                 submesh->vertex_data->move_next();
@@ -159,9 +186,19 @@ void Widget::render_text(MeshPtr mesh, const std::string& submesh_name, const un
             word_vertices.clear();
             word_length = .0f;
             word_wrap = false;
+            if(line_length > longest_line) {
+                longest_line = line_length;
+            }
+            line_length = .0f;
+
         } else if(text[i] == '\n') {
             xoffset = 0;
             yoffset -= line_height_;
+
+            if(line_length > longest_line) {
+                longest_line = line_length;
+            }
+            line_length = .0f;
         } else {
             auto ch = text[i];
             auto ch_width = font_->character_width(ch);
@@ -175,29 +212,33 @@ void Widget::render_text(MeshPtr mesh, const std::string& submesh_name, const un
             v1.position.x = xoffset;
             v1.position.y = yoffset;
             v1.texcoord.x = min.x;
-            v1.texcoord.y = max.y;
+            v1.texcoord.y = min.y;
             word_vertices.push_back(v1);
 
             v2.position.x = xoffset;
             v2.position.y = yoffset - ch_height;
             v2.texcoord.x = min.x;
-            v2.texcoord.y = min.y;
+            v2.texcoord.y = max.y;
             word_vertices.push_back(v2);
 
             v3.position.x = xoffset + ch_width;
             v3.position.y = yoffset - ch_height;
             v3.texcoord.x = max.x;
-            v3.texcoord.y = min.y;
+            v3.texcoord.y = max.y;
             word_vertices.push_back(v3);
 
             v4.position.x = xoffset + ch_width;
             v4.position.y = yoffset;
             v4.texcoord.x = max.x;
-            v4.texcoord.y = max.y;
+            v4.texcoord.y = min.y;
             word_vertices.push_back(v4);
 
             if(i != text.length() - 1) {
-                xoffset += ch_width + font_->character_advance(ch, text[i + 1]);
+                float advance = ch_width + font_->character_advance(ch, text[i + 1]);
+                xoffset += advance;
+                line_length += advance;
+            } else {
+                line_length += ch_width;
             }
 
             // If the xoffset is greater than the width then we should word wrap
@@ -205,6 +246,14 @@ void Widget::render_text(MeshPtr mesh, const std::string& submesh_name, const un
                 word_wrap = true;
             }
         }
+    }
+
+    for(uint32_t i = 0; i < submesh->vertex_data->count(); ++i) {
+        submesh->vertex_data->move_to(i);
+        auto pos = submesh->vertex_data->position_at<Vec3>(i);
+        submesh->vertex_data->position(
+            pos + Vec3(-longest_line / 2, (max_height - min_height) / 2.0f, 0)
+        );
     }
 
     submesh->vertex_data->done();

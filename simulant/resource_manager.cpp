@@ -734,10 +734,17 @@ void ResourceManager::delete_font(FontID f) {
 }
 
 FontPtr ResourceManager::font(FontID f) {
+    if(parent_ && !font_manager_->contains(f)) {
+        return parent_->font_manager_->get(f).lock();
+    }
+
     return font_manager_->get(f).lock();
 }
 
 const FontPtr ResourceManager::font(FontID f) const {
+    if(parent_ && !font_manager_->contains(f)) {
+        return parent_->font_manager_->get(f).lock();
+    }
     return font_manager_->get(f).lock();
 }
 

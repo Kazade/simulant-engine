@@ -38,8 +38,10 @@ public:
     float character_width(char32_t ch);
     float character_height(char32_t ch);
     float character_advance(char32_t ch, char32_t next);
+    uint32_t size() const { return font_size_; }
 
 private:
+    uint32_t font_size_ = 0;
     std::unique_ptr<stbtt_fontinfo> info_;
     std::vector<stbtt_bakedchar> char_data_;
 

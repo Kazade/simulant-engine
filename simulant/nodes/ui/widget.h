@@ -57,6 +57,11 @@ struct UIConfig {
     float button_height_ = 36;
     float button_width_ = 0; // Fit content
 
+    Float4 label_padding_ = { 5, 5, 5, 5 };
+    Colour label_background_colour_ = Colour::NONE;
+    Colour label_foreground_colour_ = Colour::NONE;
+    Colour label_text_colour_ = Colour::DODGER_BLUE;
+
     Float4 button_padding_ = { 30, 30, 0, 0 };
     Colour button_background_color_ = Colour::ALICE_BLUE;
     Colour button_foreground_color_ = Colour::WHITE;
@@ -88,7 +93,7 @@ public:
     void resize(float width, float height);
     void set_width(float width);
     void set_height(float height);
-    void set_font(FontID font);
+    void set_font(FontID font_id);
 
     void set_text(const unicode& text);
     void set_border_width(float x);    
