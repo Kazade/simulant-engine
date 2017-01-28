@@ -106,6 +106,36 @@ void SDL2Window::check_events() {
             case SDL_QUIT:
                 stop_running();
                 break;
+            case SDL_FINGERDOWN: {
+                each_event_listener([this, &event](EventListener* listener) {
+                    float x = event.tfinger.x;
+                    float y = event.tfinger.y;
+#ifdef __linux__
+                    // On Linux, touch coords are window coords not normalized
+                    // https://bugzilla.libsdl.org/show_bug.cgi?id=2307
+
+                    x /= float(this->width());
+                    y /= float(this->height());
+#endif
+                    listener->handle_touch_begin(
+                        this,
+                        event.tfinger.fingerId,
+                        x,
+                        y,
+                        event.tfinger.pressure
+                    );
+                });
+            } break;
+            case SDL_FINGERUP: {
+                each_event_listener([this, &event](EventListener* listener) {
+                    listener->handle_touch_end(
+                        this,
+                        event.tfinger.fingerId,
+                        event.tfinger.x,
+                        event.tfinger.y
+                    );
+                });
+            } break;
             case SDL_WINDOWEVENT: {
                 /* Make sure we pause/unpause when the window is minimized and restored.
                  * We also unpause on maximize just in case (although I imagine that we shouldn't

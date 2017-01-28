@@ -240,6 +240,9 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
     auto camera = window->camera(camera_id);
     auto stage = window->stage(stage_id);
 
+    // Trigger a signal to indicate the stage is about to be rendered
+    stage->signal_stage_pre_render()(camera_id, viewport);
+
     auto light_ids = stage->partitioner->lights_visible_from(camera_id);
     auto lights_visible = map<decltype(light_ids), std::vector<LightPtr>>(
         light_ids, [&](const LightID& light_id) -> LightPtr { return stage->light(light_id); }
@@ -290,6 +293,8 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
     // Render the visible objects
     stage->render_queue->traverse(callback, frame_id);
 
+    // Trigger a signal to indicate the stage has been rendered
+    stage->signal_stage_post_render()(camera_id, viewport);
 
     signal_pipeline_finished_(*pipeline_stage);
 }

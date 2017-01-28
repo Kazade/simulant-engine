@@ -1,8 +1,9 @@
+#pragma once
+
 #include "../stage_node.h"
 #include "../../generic/optional.h"
 #include "../../generic/identifiable.h"
-
-#pragma once
+#include "../../generic/managed.h"
 
 namespace smlt {
 namespace ui {
@@ -81,11 +82,19 @@ struct UIConfig {
 
 class UIManager;
 
+typedef sig::signal<void ()> WidgetPressedSignal;
+typedef sig::signal<void ()> WidgetReleasedSignal;
+
 class Widget:
     public StageNode,
     public generic::Identifiable<WidgetID> {
 
+    DEFINE_SIGNAL(WidgetPressedSignal, signal_widget_pressed);
+    DEFINE_SIGNAL(WidgetReleasedSignal, signal_widget_released);
+
 public:
+    typedef std::shared_ptr<Widget> ptr;
+
     Widget(WidgetID id, UIManager* owner, UIConfig* defaults);
 
     virtual bool init();
@@ -140,6 +149,11 @@ public:
     const AABB aabb() const;
 
     const unicode& text() const { return text_; }
+
+    // Probably shouldn't use these directly (designed for UIManager)
+    void fingerdown(uint32_t finger_id);
+    void fingerup(uint32_t finger_id);
+
 private:
     bool initialized_ = false;
     UIManager* owner_;
@@ -186,6 +200,8 @@ protected:
 
     void resize_foreground(MeshPtr mesh, float width, float height, float xoffset, float yoffset);
     void render_text(MeshPtr mesh, const std::string& submesh_name, const unicode& text, float width);
+
+    std::set<uint32_t> fingers_down_;
 };
 
 }

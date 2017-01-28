@@ -91,7 +91,7 @@ Frustum& CameraProxy::frustum() {
     return camera()->frustum();
 }
 
-kmVec3 CameraProxy::project_point(const RenderTarget& target, const Viewport &viewport, const kmVec3& point) {
+smlt::optional<Vec3> CameraProxy::project_point(const RenderTarget& target, const Viewport &viewport, const kmVec3& point) {
     return camera()->project_point(target, viewport, point);
 }
 

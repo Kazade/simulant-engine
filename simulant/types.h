@@ -523,8 +523,25 @@ struct Plane : public kmPlane {
     }
 };
 
-struct Ray : public kmRay3 {
+struct AABB;
 
+struct Ray : public kmRay3 {
+    Vec3 dir_inv;
+
+    Ray() {
+        kmRay3Fill(this, 0, 0, 0, 0, 0, 0);
+    }
+
+    Ray(const Vec3& start, const Vec3& dir) {
+        kmRay3Fill(this, start.x, start.y, start.z, dir.x, dir.y, dir.z);
+        dir_inv = Vec3(1.0 / dir.x, 1.0f / dir.y, 1.0 / dir.z);
+    }
+
+    bool intersects(const AABB& b) const {
+        return kmRay3IntersectAABB3(
+            this, (const kmAABB3*) &b, nullptr, nullptr
+        );
+    }
 };
 
 struct AABB : public kmAABB3 {

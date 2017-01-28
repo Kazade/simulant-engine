@@ -330,5 +330,20 @@ void Widget::resize_foreground(MeshPtr mesh, float width, float height, float xo
     mesh->submesh("foreground")->set_diffuse(foreground_colour_);
 }
 
+void Widget::fingerdown(uint32_t finger_id) {
+    // If we added, and it was the first finger down
+    if(fingers_down_.insert(finger_id).second && fingers_down_.size() == 1) {
+        // Emit the widget pressed signal
+        signal_widget_pressed_();
+    }
+}
+
+void Widget::fingerup(uint32_t finger_id) {
+    // If we just released the last finger, emit a widget released signal
+    if(fingers_down_.erase(finger_id) && fingers_down_.empty()) {
+        signal_widget_released_();
+    }
+}
+
 }
 }

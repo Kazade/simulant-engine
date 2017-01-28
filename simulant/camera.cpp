@@ -21,6 +21,7 @@
 #include "camera.h"
 #include "stage.h"
 #include "window_base.h"
+#include "./generic/optional.h"
 
 namespace smlt {
 
@@ -67,29 +68,81 @@ double Camera::set_orthographic_projection_from_height(double desired_height_in_
     return width;
 }
 
-kmVec3 Camera::project_point(const RenderTarget &target, const Viewport &viewport, const kmVec3& point) {
+smlt::optional<Vec3> Camera::project_point(const RenderTarget &target, const Viewport &viewport, const Vec3& point) const {
     if(!window_) {
         throw std::logic_error("Passed a nullptr as a camera's window");
     }
 
-    kmVec3 tmp;
-    kmVec3Fill(&tmp, point.x, point.y, point.z);
+    Vec4 in, out;
+    kmVec4Fill(&in, point.x, point.y, point.z, 1.0);
 
-    kmVec3 result;
+    kmVec4MultiplyMat4(&out, &in, &view_matrix());
+    kmVec4MultiplyMat4(&in, &out, &projection_matrix());
 
-    kmVec3MultiplyMat4(&tmp, &tmp, &view_matrix());
-    kmVec3MultiplyMat4(&tmp, &tmp, &projection_matrix());
+    if(in.w == 0.0) {
+        return smlt::optional<Vec3>();
+    }
 
-    tmp.x /= tmp.z;
-    tmp.y /= tmp.z;
+    in.x /= in.w;
+    in.y /= in.w;
+    in.z /= in.w;
+
+    in.x = in.x * 0.5 + 0.5;
+    in.y = in.y * 0.5 + 0.5;
+    in.z = in.z * 0.5 + 0.5;
 
     float vp_width = viewport.width_in_pixels(target);
     float vp_height = viewport.height_in_pixels(target);
+    float vp_xoffset = target.width() * viewport.x();
+    float vp_yoffset = target.height() * viewport.y();
 
-    result.x = (tmp.x + 1) * vp_width / 2.0;
-    result.y = (tmp.y + 1) * vp_height / 2.0;
+    return Vec3(
+        in.x * vp_width + vp_xoffset,
+        in.y * vp_height + vp_yoffset,
+        in.z
+    );
+}
 
-    return result;
+smlt::optional<Vec3> Camera::unproject_point(const RenderTarget& target, const Viewport& viewport, const Vec3& win) {
+    /*
+     * WARNING: This function is untested (FIXME) !!!
+     */
+
+    Mat4 A, m;
+    Vec4 in;
+
+    kmMat4Multiply(&A, &projection_matrix(), &view_matrix());
+
+    if(!kmMat4Inverse(&A, &m)) {
+        return smlt::optional<Vec3>();
+    }
+
+    float vx = float(target.width()) * viewport.x();
+    float vy = float(target.height()) * viewport.y();
+    float vw = (float) viewport.width_in_pixels(target);
+    float vh = (float) viewport.height_in_pixels(target);
+
+    in.x = (win.x - vx) / vw * 2.0 - 1.0;
+    in.y = (win.y - vy) / vh * 2.0 - 1.0;
+    in.z = 2.0 * win.z - 1.0;
+    in.w = 1.0;
+
+    Vec4 out;
+    kmVec4MultiplyMat4(&out, &in, &m);
+
+    if(out.w == 0.0f) {
+        return smlt::optional<Vec3>();
+    }
+
+    out.w = 1.0 / out.w;
+
+    Vec3 ret;
+
+    ret.x = out.x * out.w;
+    ret.y = out.y * out.y;
+    ret.z = out.z * out.z;
+
+    return ret;
 }
 
 }

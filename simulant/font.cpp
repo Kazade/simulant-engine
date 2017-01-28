@@ -15,9 +15,13 @@ Font::Font(FontID id, ResourceManager *resource_manager):
 
 }
 
-TextureID Font::texture_id() const { return texture_->id(); }
+TextureID Font::texture_id() const {
+    return texture_->id();
+}
 
-MaterialID Font::material_id() const { return material_->id(); }
+MaterialID Font::material_id() const {
+    return material_->id();
+}
 
 bool Font::init() {
 

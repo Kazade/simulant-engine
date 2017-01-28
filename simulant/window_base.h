@@ -40,6 +40,7 @@
 #include "pipeline_helper.h"
 #include "screens/screen_manager.h"
 #include "loader.h"
+#include "event_listener.h"
 
 
 namespace smlt {
@@ -112,7 +113,8 @@ class WindowBase :
     public CameraManager,
     public Loadable,
     public PipelineHelperAPIInterface,
-    public RenderTarget {
+    public RenderTarget,
+    public EventListenerManager {
 
     DEFINE_SIGNAL(FrameStartedSignal, signal_frame_started);
     DEFINE_SIGNAL(FrameFinishedSignal, signal_frame_finished);

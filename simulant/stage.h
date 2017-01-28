@@ -81,6 +81,9 @@ typedef sig::signal<void (GeomID)> GeomDestroyedSignal;
 typedef sig::signal<void (ParticleSystemID)> ParticleSystemCreatedSignal;
 typedef sig::signal<void (ParticleSystemID)> ParticleSystemDestroyedSignal;
 
+typedef sig::signal<void (CameraID, Viewport)> StagePreRenderSignal;
+typedef sig::signal<void (CameraID, Viewport)> StagePostRenderSignal;
+
 class Stage:
     public StageNode,
     public Managed<Stage>,
@@ -97,6 +100,9 @@ class Stage:
 
     DEFINE_SIGNAL(ParticleSystemCreatedSignal, signal_particle_system_created);
     DEFINE_SIGNAL(ParticleSystemDestroyedSignal, signal_particle_system_destroyed);
+
+    DEFINE_SIGNAL(StagePreRenderSignal, signal_stage_pre_render);
+    DEFINE_SIGNAL(StagePostRenderSignal, signal_stage_post_render);
 
 public:
     Stage(StageID id, WindowBase *parent, AvailablePartitioner partitioner);
