@@ -20,8 +20,12 @@ public:
         auto title = stage->ui->new_widget_as_label("UI Sample demonstrating widgets").fetch();
         title->move_to(window->coordinate_from_normalized(0.5, 0.9));
 
-        auto button = stage->ui->new_widget_as_button("Button 1").fetch();
+        auto button = stage->ui->new_widget_as_button("BUTTON 1").fetch();
         button->move_to(window->coordinate_from_normalized(0.1, 0.25));
+
+        auto pg = stage->ui->new_widget_as_progress_bar().fetch_as<smlt::ui::ProgressBar>();
+        pg->move_to(window->coordinate_from_normalized(0.5, 0.5));
+        pg->pulse();
     }
 
 private:

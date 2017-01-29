@@ -48,7 +48,7 @@ struct UIConfig {
     Colour background_colour_ = Colour::WHITE;
 
     ResizeMode label_resize_mode_ = RESIZE_MODE_FIT_CONTENT;
-    ResizeMode button_resize_mode_ = RESIZE_MODE_FIT_CONTENT;
+    ResizeMode button_resize_mode_ = RESIZE_MODE_FIXED_HEIGHT;
     ResizeMode progress_bar_resize_mode_ = RESIZE_MODE_FIXED;
 
     float scrollbar_width_ = 16;
@@ -64,7 +64,7 @@ struct UIConfig {
     Colour label_text_colour_ = Colour::DODGER_BLUE;
 
     Float4 button_padding_ = { 30, 30, 0, 0 };
-    Colour button_background_color_ = Colour::ALICE_BLUE;
+    Colour button_background_color_ = Colour::DODGER_BLUE;
     Colour button_foreground_color_ = Colour::WHITE;
     Colour button_border_colour_ = Colour::WHITE;
 

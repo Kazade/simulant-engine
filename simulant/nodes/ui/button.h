@@ -14,8 +14,7 @@ public:
     using Widget::init; // Pull in init to satisfy Managed<Button>
     using StageNode::cleanup;
 
-    Button(WidgetID id, UIManager* owner, UIConfig* config):
-        Widget(id, owner, config) {}
+    Button(WidgetID id, UIManager* owner, UIConfig* config);
 };
 
 }
