@@ -286,12 +286,10 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
 
     using namespace std::placeholders;
 
-    batcher::RenderQueue::TraverseCallback callback = std::bind(
-        &Renderer::render, renderer_, camera, _1, _2, _3, _4, _5, stage->ambient_light(), _6
-    );
+    auto visitor = renderer_->get_render_queue_visitor(camera, stage->ambient_light());
 
     // Render the visible objects
-    stage->render_queue->traverse(callback, frame_id);
+    stage->render_queue->traverse(visitor.get(), frame_id);
 
     // Trigger a signal to indicate the stage has been rendered
     stage->signal_stage_post_render()(camera_id, viewport);

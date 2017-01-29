@@ -162,17 +162,23 @@ void RenderQueue::remove_renderable(Renderable* renderable) {
     }
 }
 
-void RenderQueue::traverse(TraverseCallback callback, uint64_t frame_id) const {
+void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const {
     Pass pass = 0;
+
+    visitor->start_traversal(*this, frame_id);
+
     for(auto& batches: batches_) {
         IterationType pass_iteration_type;
+
+        const RenderGroup* last_group = nullptr;
 
         for(auto& p: batches) {
             const RenderGroup* current_group = &p.first;
             MaterialPtr material;
             MaterialPass::ptr material_pass;
 
-            bool render_group_changed = true;
+            visitor->change_render_group(last_group, current_group);
+
             p.second.each([&](uint32_t i, Renderable* renderable) {
                 if(!renderable->is_visible_in_frame(frame_id)) {
                     return;
@@ -209,14 +215,16 @@ void RenderQueue::traverse(TraverseCallback callback, uint64_t frame_id) const {
                         light = nullptr;
                     }
 
-                    callback(render_group_changed, current_group, renderable, material_pass.get(), light, i);
+                    visitor->visit(renderable, material_pass.get(), light, i);
                 }
 
-                render_group_changed = false;
+                last_group = current_group;
             });
         }
         ++pass;
     }
+
+    visitor->end_traversal(*this);
 }
 
 void Batch::add_renderable(Renderable* renderable) {

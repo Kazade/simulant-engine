@@ -334,27 +334,48 @@ void GenericRenderer::set_blending_mode(BlendType type) {
     }
 }
 
-void GenericRenderer::render(CameraPtr camera, bool render_group_changed, const batcher::RenderGroup* current_group,
-    Renderable* renderable, MaterialPass* material_pass, Light* light, const Colour &global_ambient, batcher::Iteration iteration) {
+
+std::shared_ptr<batcher::RenderQueueVisitor> GenericRenderer::get_render_queue_visitor(CameraPtr camera, const Colour &global_ambient) {
+    return std::make_shared<GL2RenderQueueVisitor>(this, camera, global_ambient);
+}
+
+GL2RenderQueueVisitor::GL2RenderQueueVisitor(GenericRenderer* renderer, CameraPtr camera, const Colour& colour):
+    renderer_(renderer),
+    camera_(camera),
+    global_ambient_(colour) {
+
+}
+
+void GL2RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id) {
+
+}
+
+void GL2RenderQueueVisitor::end_traversal(const batcher::RenderQueue &queue) {
+
+}
+
+void GL2RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev, const batcher::RenderGroup *next) {
+    render_group_changed_ = true;
 
     // Casting blindly because I can't see how it's possible that it's anything else!
-    GL2RenderGroupImpl* current = (GL2RenderGroupImpl*) current_group->impl();
+    current_group_ = (GL2RenderGroupImpl*) next->impl();
+}
+
+void GL2RenderQueueVisitor::visit(Renderable* renderable, MaterialPass* material_pass, Light* light, batcher::Iteration) {
     ResourceManager& resource_manager = material_pass->material->resource_manager();
 
-    static ShaderID last_shader_id;
-
-    if(render_group_changed) {       
-        if(material_pass->program->program->id() != last_shader_id) {
+    if(render_group_changed_) {
+        if(material_pass->program->program->id() != last_shader_id_) {
             material_pass->program->program->build();
             material_pass->program->program->activate();
 
-            last_shader_id = material_pass->program->program->id();
+            last_shader_id_ = material_pass->program->program->id();
         }
 
         for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
             GLCheck(glActiveTexture, GL_TEXTURE0 + i);
-            if(current->texture_id[i]) {
-                auto texture = resource_manager.texture(current->texture_id[i]);
+            if(current_group_->texture_id[i]) {
+                auto texture = resource_manager.texture(current_group_->texture_id[i]);
                 GLCheck(glBindTexture, GL_TEXTURE_2D, texture->gl_tex());
             } else {
                 GLCheck(glBindTexture, GL_TEXTURE_2D, 0);
@@ -370,11 +391,11 @@ void GenericRenderer::render(CameraPtr camera, bool render_group_changed, const 
     auto& program_instance = material_pass->program;
     auto& program = program_instance->program;
 
-    set_auto_uniforms_on_shader(program_instance.get(), camera, renderable, global_ambient);
-    set_material_uniforms(program_instance.get(), material_pass);
+    renderer_->set_auto_uniforms_on_shader(program_instance.get(), camera_, renderable, global_ambient_);
+    renderer_->set_material_uniforms(program_instance.get(), material_pass);
 
     if(light) {
-        set_light_uniforms(program_instance.get(), light);
+        renderer_->set_light_uniforms(program_instance.get(), light);
     }
 
     for(auto& p: material_pass->staged_float_uniforms()) {
@@ -394,7 +415,7 @@ void GenericRenderer::render(CameraPtr camera, bool render_group_changed, const 
     vertex_buffer->bind(HARDWARE_BUFFER_VERTEX_ATTRIBUTES);
     index_buffer->bind(HARDWARE_BUFFER_VERTEX_ARRAY_INDICES);
 
-    set_auto_attributes_on_shader(*renderable);
+    renderer_->set_auto_attributes_on_shader(*renderable);
 
     if(material_pass->depth_test_enabled()) {
         GLCheck(glEnable, GL_DEPTH_TEST);
@@ -466,8 +487,8 @@ void GenericRenderer::render(CameraPtr camera, bool render_group_changed, const 
         }
     }
 
-    set_blending_mode(material_pass->blending());
-    send_geometry(renderable);
+    renderer_->set_blending_mode(material_pass->blending());
+    renderer_->send_geometry(renderable);
 }
 
 void GenericRenderer::send_geometry(Renderable *renderable) {

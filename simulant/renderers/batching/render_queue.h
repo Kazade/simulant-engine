@@ -142,6 +142,18 @@ public:
 typedef uint32_t Pass;
 typedef uint32_t Iteration;
 
+class RenderQueue;
+
+class RenderQueueVisitor {
+public:
+    virtual ~RenderQueueVisitor() {}
+
+    virtual void start_traversal(const RenderQueue& queue, uint64_t frame_id) = 0;
+    virtual void change_render_group(const RenderGroup* prev, const RenderGroup* next) = 0;
+    virtual void visit(Renderable*, MaterialPass*, Light*, Iteration) = 0;
+    virtual void end_traversal(const RenderQueue& queue) = 0;
+};
+
 class RenderQueue {
 public:
     typedef std::function<void (bool, const RenderGroup*, Renderable*, MaterialPass*, Light*, Iteration)> TraverseCallback;
@@ -151,7 +163,7 @@ public:
     void insert_renderable(Renderable* renderable); // IMPORTANT, must update RenderGroups if they exist already
     void remove_renderable(Renderable* renderable);
 
-    void traverse(TraverseCallback callback, uint64_t frame_id) const;
+    void traverse(RenderQueueVisitor* callback, uint64_t frame_id) const;
 
     uint32_t pass_count() const { return batches_.size(); }
     uint32_t group_count(Pass pass_number) const {

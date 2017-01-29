@@ -52,16 +52,7 @@ public:
     Renderer(WindowBase* window):
         window_(window) {}
 
-    virtual void render(
-        CameraPtr camera,
-        bool render_group_changed,
-        const batcher::RenderGroup* render_group,
-        Renderable* renderable,
-        MaterialPass* material_pass,
-        Light* light,
-        const smlt::Colour& global_ambient,
-        batcher::Iteration iteration
-    ) = 0;
+    virtual std::shared_ptr<batcher::RenderQueueVisitor> get_render_queue_visitor(CameraPtr camera, const smlt::Colour& global_ambient) = 0;
 
     Property<Renderer, WindowBase> window = { this, &Renderer::window_ };
 
