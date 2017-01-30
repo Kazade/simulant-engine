@@ -42,6 +42,7 @@ void Loading::do_load() {
 
     auto label = stage->ui->new_widget_as_label("LOADING").fetch();
     label->move_to(window->coordinate_from_normalized(0.5, 0.55));
+    label->set_background_colour(smlt::Colour::NONE);
 
     //Create an orthographic camera
     camera_ = window->new_camera();
