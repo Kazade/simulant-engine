@@ -1532,3 +1532,4 @@ simulant/nodes/ui/label.cpp
 simulant/event_listener.h
 simulant/event_listener.cpp
 simulant/nodes/ui/button.cpp
+tests/test_plane.h

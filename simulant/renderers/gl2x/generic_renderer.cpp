@@ -346,12 +346,37 @@ GL2RenderQueueVisitor::GL2RenderQueueVisitor(GenericRenderer* renderer, CameraPt
 
 }
 
+void GL2RenderQueueVisitor::visit(Renderable* renderable, MaterialPass* material_pass, Light* light, batcher::Iteration iteration) {
+    queue_blended_objects_ = true;
+    do_visit(renderable, material_pass, light, iteration);
+}
+
 void GL2RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id) {
 
 }
 
 void GL2RenderQueueVisitor::end_traversal(const batcher::RenderQueue &queue) {
+    // When running do_visit, don't queue blended objects just render them
+    queue_blended_objects_ = false;
 
+    // Should be ordered by distance to camera
+    for(auto p: blended_object_queue_) {
+        RenderState& state = p.second;
+        if(state.render_group_impl != current_group_) {
+            current_group_ = state.render_group_impl;
+            render_group_changed_ = true;
+        }
+
+        // Render the transparent / blended objects
+        do_visit(
+            state.renderable,
+            state.pass,
+            state.light,
+            state.iteration
+        );
+    }
+
+    blended_object_queue_.clear();
 }
 
 void GL2RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev, const batcher::RenderGroup *next) {
@@ -361,8 +386,30 @@ void GL2RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev
     current_group_ = (GL2RenderGroupImpl*) next->impl();
 }
 
-void GL2RenderQueueVisitor::visit(Renderable* renderable, MaterialPass* material_pass, Light* light, batcher::Iteration) {
+void GL2RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* material_pass, Light* light, batcher::Iteration iteration) {
     ResourceManager& resource_manager = material_pass->material->resource_manager();
+
+    // Queue transparent objects for render later
+    if(material_pass->is_blended() && queue_blended_objects_) {
+        auto pos = renderable->transformed_aabb().centre();
+        auto plane = camera_->frustum().plane(FRUSTUM_PLANE_NEAR);
+
+        float key = plane.distance_to(pos);
+
+        RenderState state;
+        state.renderable = renderable;
+        state.pass = material_pass;
+        state.light = light;
+        state.iteration = iteration;
+        state.render_group_impl = current_group_;
+
+        blended_object_queue_.insert(
+            std::make_pair(key, state)
+        );
+
+        // We are done for now, we'll render this in back-to-front order later
+        return;
+    }
 
     if(render_group_changed_) {
         if(material_pass->program->program->id() != last_shader_id_) {
@@ -381,6 +428,8 @@ void GL2RenderQueueVisitor::visit(Renderable* renderable, MaterialPass* material
                 GLCheck(glBindTexture, GL_TEXTURE_2D, 0);
             }
         }
+
+        render_group_changed_ = false;
     }
 
     // Don't bother doing *anything* if there is nothing to render

@@ -31,6 +31,14 @@ namespace smlt {
 class GL2RenderGroupImpl;
 class GenericRenderer;
 
+struct RenderState {
+    Renderable* renderable;
+    MaterialPass* pass;
+    Light* light;
+    batcher::Iteration iteration;
+    GL2RenderGroupImpl* render_group_impl;
+};
+
 class GL2RenderQueueVisitor : public batcher::RenderQueueVisitor {
 public:
     GL2RenderQueueVisitor(GenericRenderer* renderer, CameraPtr camera, const Colour& colour);
@@ -48,6 +56,15 @@ private:
     ShaderID last_shader_id_;
     GL2RenderGroupImpl* current_group_ = nullptr;
     bool render_group_changed_ = true;
+
+    bool queue_blended_objects_ = true;
+
+    /*
+     * All entries are ordered by distance from the near frustum descending (back-to-front)
+     */
+    std::multimap<float, RenderState, std::greater<float> > blended_object_queue_;
+
+    void do_visit(Renderable* renderable, MaterialPass* material_pass, Light* light, batcher::Iteration iteration);
 };
 
 class GenericRenderer : public Renderer {

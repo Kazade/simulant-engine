@@ -167,6 +167,8 @@ public:
     void set_blending(BlendType blend) { blend_ = blend; }
     BlendType blending() { return blend_; }
 
+    bool is_blended() const { return blend_ != BLEND_NONE; }
+
     void set_depth_write_enabled(bool value=true) {
         depth_writes_enabled_ = value;
     }

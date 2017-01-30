@@ -521,6 +521,12 @@ struct Plane : public kmPlane {
     Vec3 normal() const {
         return Vec3(a, b, c);
     }
+
+    float distance_to(const Vec3& p) {
+        float k1 = d;
+        float k2 = (a * p.x) + (b * p.y) + (c * p.z);
+        return k2 - k1;
+    }
 };
 
 struct AABB;

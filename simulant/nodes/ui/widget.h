@@ -194,9 +194,9 @@ protected:
 
     MeshPtr mesh() { return mesh_; }
 
-    float background_depth_bias_ = 0.00001f;
-    float foreground_depth_bias_ = 0.00002f;
-    float text_depth_bias_ = 0.00003f;
+    float background_depth_bias_ = 0.0001f;
+    float foreground_depth_bias_ = 0.0002f;
+    float text_depth_bias_ = 0.0004f;
 
     void resize_foreground(MeshPtr mesh, float width, float height, float xoffset, float yoffset);
     void render_text(MeshPtr mesh, const std::string& submesh_name, const unicode& text, float width);
