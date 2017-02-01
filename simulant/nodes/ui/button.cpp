@@ -15,8 +15,9 @@ Button::Button(WidgetID id, UIManager *owner, UIConfig *config):
         config->button_padding_.top
     );
 
-    set_background_colour(config->button_background_color_);
-    set_foreground_colour(config->button_foreground_color_);
+    set_text_colour(config->button_text_colour_);
+    set_background_colour(config->button_background_colour_);
+    set_foreground_colour(config->button_foreground_colour_);
     set_border_colour(config->button_border_colour_);
     set_border_width(config->button_border_width_);
 }

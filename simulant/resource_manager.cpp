@@ -44,7 +44,7 @@ bool ResourceManager::init() {
         return true;
     }
 
-    default_font_ = new_font_from_ttf(default_font_filename(), 32).fetch();
+    default_font_ = new_font_from_ttf(default_font_filename(), 18).fetch();
 
     //FIXME: Should lock the default texture and material during construction!
     //Create the default blank texture

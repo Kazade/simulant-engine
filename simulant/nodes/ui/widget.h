@@ -59,16 +59,17 @@ struct UIConfig {
     float button_width_ = 0; // Fit content
 
     Float4 label_padding_ = { 5, 5, 5, 5 };
-    Colour label_background_colour_ = Colour::WHITE;
+    Colour label_background_colour_ = Colour::NONE;
     Colour label_foreground_colour_ = Colour::NONE;
     Colour label_text_colour_ = Colour::DODGER_BLUE;
 
-    Float4 button_padding_ = { 30, 30, 0, 0 };
-    Colour button_background_color_ = Colour::DODGER_BLUE;
-    Colour button_foreground_color_ = Colour::WHITE;
-    Colour button_border_colour_ = Colour::WHITE;
+    Float4 button_padding_ = { 30, 30, 20, 20 };
+    Colour button_background_colour_ = Colour::DODGER_BLUE;
+    Colour button_foreground_colour_ = Colour::NONE;
+    Colour button_text_colour_ = Colour::WHITE;
+    Colour button_border_colour_ = Colour::NONE;
 
-    float button_border_width_ = 1;
+    float button_border_width_ = 0;
     float button_border_radius_ = 3;
 
     Colour progress_bar_foreground_colour_ = Colour::DODGER_BLUE;
@@ -83,14 +84,16 @@ struct UIConfig {
 class UIManager;
 
 typedef sig::signal<void ()> WidgetPressedSignal;
-typedef sig::signal<void ()> WidgetReleasedSignal;
+typedef sig::signal<void ()> WidgetReleasedSignal; // Triggered on fingerup, but also on leave
+typedef sig::signal<void ()> WidgetClickedSignal; // Triggered on fingerup only
 
 class Widget:
     public StageNode,
     public generic::Identifiable<WidgetID> {
 
-    DEFINE_SIGNAL(WidgetPressedSignal, signal_widget_pressed);
-    DEFINE_SIGNAL(WidgetReleasedSignal, signal_widget_released);
+    DEFINE_SIGNAL(WidgetPressedSignal, signal_pressed);
+    DEFINE_SIGNAL(WidgetReleasedSignal, signal_released);
+    DEFINE_SIGNAL(WidgetClickedSignal, signal_clicked);
 
 public:
     typedef std::shared_ptr<Widget> ptr;
@@ -163,7 +166,6 @@ private:
     MaterialPtr material_;
 
     virtual MeshID construct_widget(float requested_width, float requested_height);
-    virtual UIDim calc_content_dimensions();
 
     float width_ = .0f;
     float height_ = .0f;
@@ -199,7 +201,7 @@ protected:
     float text_depth_bias_ = 0.0004f;
 
     void resize_foreground(MeshPtr mesh, float width, float height, float xoffset, float yoffset);
-    void render_text(MeshPtr mesh, const std::string& submesh_name, const unicode& text, float width);
+    void render_text(MeshPtr mesh, const std::string& submesh_name, const unicode& text, float width, float xoffset=0, float yoffset=0);
 
     std::set<uint32_t> fingers_down_;
 };

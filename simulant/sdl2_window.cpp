@@ -106,6 +106,13 @@ void SDL2Window::check_events() {
             case SDL_QUIT:
                 stop_running();
                 break;
+            case SDL_MOUSEBUTTONDOWN: {
+
+            } break;
+            case SDL_MOUSEBUTTONUP: {
+
+            } break;
+
             case SDL_FINGERDOWN: {
                 each_event_listener([this, &event](EventListener* listener) {
                     float x = event.tfinger.x;

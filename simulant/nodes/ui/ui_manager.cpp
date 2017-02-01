@@ -50,21 +50,8 @@ UIManager::~UIManager() {
 
 WidgetID UIManager::new_widget_as_button(const unicode &text, float width, float height) {
     auto button = manager_->make_as<Button>(this, &config_).fetch();
-    button->set_resize_mode(config_.button_resize_mode_);
-    button->set_padding(
-        config_.button_padding_.left,
-        config_.button_padding_.right,
-        config_.button_padding_.bottom,
-        config_.button_padding_.top
-    );
     button->set_text(text);
-    button->set_background_colour(config_.button_background_color_);
-    button->set_foreground_colour(config_.button_foreground_color_);
-    button->resize(
-        (width == .0f) ? config_.button_width_ : width,
-        (height == .0f) ? config_.button_height_ : height
-    );
-
+    button->resize(width, height);
     stage_->add_child(button);
 
     return button->id();
@@ -141,13 +128,15 @@ void UIManager::clear_event_queue() {
 }
 
 WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, const Viewport &viewport, const Vec2 &window_coord) const {
-    WidgetPtr result;
+    WidgetPtr result = nullptr;
 
     manager_->each([&](uint32_t, WidgetPtr widget) {
         auto aabb = widget->transformed_aabb();
         std::vector<Vec3> ss_points;
-        ss_points.push_back(camera->project_point(*window_, viewport, aabb.min).value());
-        ss_points.push_back(camera->project_point(*window_, viewport, aabb.max).value());
+
+        for(auto& corner: aabb.corners()) {
+            ss_points.push_back(camera->project_point(*window_, viewport, corner).value());
+        }
 
         AABB ss_aabb(&ss_points[0], ss_points.size());
 

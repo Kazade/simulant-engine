@@ -14,10 +14,21 @@ namespace loaders {
         font->info_.reset(new stbtt_fontinfo());
         font->font_size_ = font_size;
 
+        stbtt_fontinfo* info = font->info_.get();
+
         const std::string buffer_string = this->data_->str();
         const unsigned char* buffer = (const unsigned char*) buffer_string.c_str();
         // Initialize the font data
-        stbtt_InitFont(font->info_.get(), buffer, stbtt_GetFontOffsetForIndex(buffer, 0));
+        stbtt_InitFont(info, buffer, stbtt_GetFontOffsetForIndex(buffer, 0));
+
+        font->scale_ = stbtt_ScaleForPixelHeight(info, (int) font_size);
+
+        int ascent, descent, line_gap;
+        stbtt_GetFontVMetrics(info, &ascent, &descent, &line_gap);
+
+        font->ascent_ = float(ascent) * font->scale_;
+        font->descent_ = float(descent) * font->scale_;
+        font->line_gap_ = float(line_gap) * font->scale_;
 
         // Generate a new texture for rendering the font to
         font->texture_ = font->resource_manager().new_texture().fetch();

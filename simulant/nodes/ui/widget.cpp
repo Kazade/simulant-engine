@@ -32,7 +32,7 @@ bool Widget::init() {
 
 void Widget::set_font(FontID font_id) {
     font_ = stage->assets->font(font_id);
-    line_height_ = float(font_->size()) * 1.1;
+    line_height_ = std::round(float(font_->size()) * 1.1);
 }
 
 void Widget::resize(float width, float height) {
@@ -105,7 +105,7 @@ void Widget::set_text_colour(const Colour &colour) {
     rebuild();
 }
 
-void Widget::render_text(MeshPtr mesh, const std::string& submesh_name, const unicode& text, float width) {
+void Widget::render_text(MeshPtr mesh, const std::string& submesh_name, const unicode& text, float width, float left_margin, float top_margin) {
     mesh->delete_submesh(submesh_name); // Delete the text submesh if it exists
 
     VertexSpecification spec;
@@ -123,16 +123,12 @@ void Widget::render_text(MeshPtr mesh, const std::string& submesh_name, const un
         return;
     }
 
-    float xoffset = 0;
-    float yoffset = 0;
-
     struct WordVertex {
         Vec3 position;
         Vec2 texcoord;
     };
 
     std::vector<WordVertex> word_vertices;
-    bool word_wrap = false;
     float word_length = .0f;
     float longest_line = .0f;
     float line_length = .0f;
@@ -143,8 +139,73 @@ void Widget::render_text(MeshPtr mesh, const std::string& submesh_name, const un
     float min_height = std::numeric_limits<float>::max();
     float max_height = std::numeric_limits<float>::lowest();
 
-    for(std::size_t i = 0; i <= text.length(); ++i) {
-        if(i == text.length() || text[i] == ' ') {
+    float xoffset = 0;
+    float yoffset = 0;
+
+
+    for(std::size_t i = 0; i < text.length(); ++i) {
+        bool word_ended = text[i] == U' ' || i == text.length() - 1;
+        bool word_wrap = false;
+
+        if(text[i] == '\n') {
+            xoffset = 0;
+            yoffset -= line_height_;
+
+            if(line_length > longest_line) {
+                longest_line = line_length;
+            }
+            line_length = .0f;
+        } else {
+            auto ch = text[i];
+            auto ch_width = font_->character_width(ch);
+            auto ch_height = font_->character_height(ch);
+            auto coords = font_->texture_coordinates_for_character(ch);
+            auto min = coords.first;
+            auto max = coords.second;
+
+            auto off = font_->character_offset(ch);
+
+            WordVertex v1, v2, v3, v4;
+
+            v1.position.x = off.first + xoffset;
+            v1.position.y = off.second + yoffset;
+            v1.texcoord.x = min.x;
+            v1.texcoord.y = min.y;
+            word_vertices.push_back(v1);
+
+            v2.position.x = off.first + xoffset;
+            v2.position.y = off.second + yoffset - ch_height;
+            v2.texcoord.x = min.x;
+            v2.texcoord.y = max.y;
+            word_vertices.push_back(v2);
+
+            v3.position.x = off.first + xoffset + ch_width;
+            v3.position.y = off.second + yoffset - ch_height;
+            v3.texcoord.x = max.x;
+            v3.texcoord.y = max.y;
+            word_vertices.push_back(v3);
+
+            v4.position.x = off.first + xoffset + ch_width;
+            v4.position.y = off.second + yoffset;
+            v4.texcoord.x = max.x;
+            v4.texcoord.y = min.y;
+            word_vertices.push_back(v4);
+
+            if(i != text.length() - 1) {
+                float advance = font_->character_advance(ch, text[i + 1]);
+                xoffset += advance;
+                line_length += advance + ch_width;
+            } else {
+                line_length += ch_width;
+            }
+
+            // If the xoffset is greater than the width then we should word wrap
+            if(xoffset > width) {
+                word_wrap = true;
+            }
+        }
+
+        if(word_ended) {
             float xshift = 0;
             float yshift = 0;
 
@@ -191,68 +252,26 @@ void Widget::render_text(MeshPtr mesh, const std::string& submesh_name, const un
             }
             line_length = .0f;
 
-        } else if(text[i] == '\n') {
-            xoffset = 0;
-            yoffset -= line_height_;
-
-            if(line_length > longest_line) {
-                longest_line = line_length;
-            }
-            line_length = .0f;
-        } else {
-            auto ch = text[i];
-            auto ch_width = font_->character_width(ch);
-            auto ch_height = font_->character_height(ch);
-            auto coords = font_->texture_coordinates_for_character(ch);
-            auto min = coords.first;
-            auto max = coords.second;
-
-            WordVertex v1, v2, v3, v4;
-
-            v1.position.x = xoffset;
-            v1.position.y = yoffset;
-            v1.texcoord.x = min.x;
-            v1.texcoord.y = min.y;
-            word_vertices.push_back(v1);
-
-            v2.position.x = xoffset;
-            v2.position.y = yoffset - ch_height;
-            v2.texcoord.x = min.x;
-            v2.texcoord.y = max.y;
-            word_vertices.push_back(v2);
-
-            v3.position.x = xoffset + ch_width;
-            v3.position.y = yoffset - ch_height;
-            v3.texcoord.x = max.x;
-            v3.texcoord.y = max.y;
-            word_vertices.push_back(v3);
-
-            v4.position.x = xoffset + ch_width;
-            v4.position.y = yoffset;
-            v4.texcoord.x = max.x;
-            v4.texcoord.y = min.y;
-            word_vertices.push_back(v4);
-
-            if(i != text.length() - 1) {
-                float advance = ch_width + font_->character_advance(ch, text[i + 1]);
-                xoffset += advance;
-                line_length += advance;
-            } else {
-                line_length += ch_width;
-            }
-
-            // If the xoffset is greater than the width then we should word wrap
-            if(xoffset > width) {
-                word_wrap = true;
-            }
         }
     }
+
+    submesh->vertex_data->done();
+
+    // Everything was positioned with the starting X being at the
+    // the center of the widget, so now we move the text to the left by whatever its width was
+    // or half of "width" if that was specified
+    float shiftX = std::round(std::max(submesh->aabb().width(), width) / 2.0);
+    float ascent = font_->ascent();
+    float descent = font_->descent();
+
+    // FIXME: I can't for the life of me figure out why this works - it's almost definitely wrong
+    float shiftY = std::round(-descent);
 
     for(uint32_t i = 0; i < submesh->vertex_data->count(); ++i) {
         submesh->vertex_data->move_to(i);
         auto pos = submesh->vertex_data->position_at<Vec3>(i);
         submesh->vertex_data->position(
-            pos + Vec3(-longest_line / 2, (max_height - min_height) / 2.0f, 0)
+            pos + Vec3(-shiftX, -shiftY, 0)
         );
     }
 
@@ -272,7 +291,7 @@ MeshID Widget::construct_widget(float requested_width, float requested_height) {
     auto mesh = stage->assets->new_mesh(spec).fetch();
 
     // Render the text to the specified width
-    render_text(mesh, "text", text_, width - padding_.left - padding_.right);
+    render_text(mesh, "text", text_, width - padding_.left - padding_.right, padding_.left, padding_.top);
 
     if(resize_mode_ == RESIZE_MODE_FIXED_WIDTH) {
         height = std::max(
@@ -281,9 +300,13 @@ MeshID Widget::construct_widget(float requested_width, float requested_height) {
         );
     } else if(resize_mode_ == RESIZE_MODE_FIXED_HEIGHT) {
         width = std::max(
-            mesh->submesh("text")->aabb().width() + padding_.left + padding_.bottom,
+            mesh->submesh("text")->aabb().width() + padding_.left + padding_.right,
             width
         );
+
+        // Default to the font size + padding if there is no requested height
+        height = (height == 0.0f) ? font_->size() + padding_.top + padding_.bottom : height;
+
     } else if(resize_mode_ == RESIZE_MODE_FIT_CONTENT) {
         auto aabb = mesh->submesh("text")->aabb();
         width = aabb.width() + padding_.left + padding_.right;
@@ -321,13 +344,6 @@ void Widget::set_padding(float left, float right, float bottom, float top) {
     padding_.top = top;
 }
 
-UIDim Widget::calc_content_dimensions() {
-    UIDim ret;
-    ret.width = 80; //TEMPORARY UNTIL FONT RENDERING
-    ret.height = 16;
-    return ret;
-}
-
 void Widget::resize_foreground(MeshPtr mesh, float width, float height, float xoffset, float yoffset) {
     mesh->delete_submesh("foreground");
 
@@ -339,14 +355,15 @@ void Widget::fingerdown(uint32_t finger_id) {
     // If we added, and it was the first finger down
     if(fingers_down_.insert(finger_id).second && fingers_down_.size() == 1) {
         // Emit the widget pressed signal
-        signal_widget_pressed_();
+        signal_pressed_();
     }
 }
 
 void Widget::fingerup(uint32_t finger_id) {
     // If we just released the last finger, emit a widget released signal
     if(fingers_down_.erase(finger_id) && fingers_down_.empty()) {
-        signal_widget_released_();
+        signal_released_();
+        signal_clicked_();
     }
 }
 
