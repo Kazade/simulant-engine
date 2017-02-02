@@ -14,6 +14,16 @@ Widget::Widget(WidgetID id, UIManager *owner, UIConfig *defaults):
 
 }
 
+Widget::~Widget() {
+    if(focus_next_ && focus_next_->focus_previous_ == this) {
+        focus_next_->focus_previous_ = nullptr;
+    }
+
+    if(focus_previous_ && focus_previous_->focus_next_ == this) {
+        focus_previous_->focus_next_ = nullptr;
+    }
+}
+
 bool Widget::init() {
     actor_ = stage->new_actor();
     actor_.fetch()->set_parent(this);
@@ -260,8 +270,7 @@ void Widget::render_text(MeshPtr mesh, const std::string& submesh_name, const un
     // Everything was positioned with the starting X being at the
     // the center of the widget, so now we move the text to the left by whatever its width was
     // or half of "width" if that was specified
-    float shiftX = std::round(std::max(submesh->aabb().width(), width) / 2.0);
-    float ascent = font_->ascent();
+    float shiftX = std::round(std::max(submesh->aabb().width(), width) / 2.0);    
     float descent = font_->descent();
 
     // FIXME: I can't for the life of me figure out why this works - it's almost definitely wrong
@@ -366,6 +375,165 @@ void Widget::fingerup(uint32_t finger_id) {
         signal_clicked_();
     }
 }
+
+bool Widget::is_focused() const {
+    return is_focused_;
+}
+
+void Widget::set_focus_previous(WidgetPtr previous_widget) {
+    focus_previous_ = previous_widget;
+    if(focus_previous_) {
+        focus_previous_->focus_next_ = this;
+    }
+}
+
+void Widget::set_focus_next(WidgetPtr next_widget) {
+    focus_next_ = next_widget;
+    if(focus_next_) {
+        focus_next_->focus_previous_ = this;
+    }
+}
+
+void Widget::focus() {
+    auto focused = focused_in_chain_or_this();
+    if(focused == this) {
+        return;
+    } else {
+        focused->blur();
+        is_focused_ = true;
+        signal_focused_();
+    }
+}
+
+WidgetPtr Widget::focused_in_chain_or_this() {
+    auto next = focus_next_;
+    while(next && next != this) {
+        if(next->is_focused()) {
+            return next;
+        }
+        next = next->focus_next_;
+    }
+
+    auto previous = focus_previous_;
+    while(previous && previous != this) {
+        if(previous->is_focused()) {
+            return previous;
+        }
+        previous = previous->focus_previous_;
+    }
+
+    return this;
+}
+
+void Widget::focus_next_in_chain(ChangeFocusBehaviour behaviour) {
+    bool focus_none_if_none = (behaviour & FOCUS_NONE_IF_NONE_FOCUSED) == FOCUS_NONE_IF_NONE_FOCUSED;
+    bool focus_this_if_none = (behaviour & FOCUS_THIS_IF_NONE_FOCUSED) == FOCUS_THIS_IF_NONE_FOCUSED;
+
+    if(focus_none_if_none && focus_this_if_none) {
+        throw std::logic_error(
+            "You can only specify one 'none focused' behaviour"
+        );
+    }
+
+    auto focused = focused_in_chain_or_this();
+    auto to_focus = this;
+
+    // If something is focused
+    if(focused) {
+        // Focus the next in the chain, otherwise focus the first in the chain
+        if(focused->focus_next_) {
+            to_focus = focus_next_;
+        } else {
+            to_focus = first_in_focus_chain();
+        }
+    } else {
+        // If nothing is focused, focus this if that's the desired behaviour
+        // otherwise we don't focus anything
+        if(focus_this_if_none) {
+            to_focus = this;
+        }
+    }
+
+    // Bail if we're already focusing the right thing
+    if(focused && focused == to_focus) {
+        return;
+    }
+
+    focused->blur();
+    if(to_focus) {
+        to_focus->is_focused_ = true;
+        to_focus->signal_focused_();
+    }
+}
+
+void Widget::focus_previous_in_chain(ChangeFocusBehaviour behaviour) {
+    bool focus_none_if_none = (behaviour & FOCUS_NONE_IF_NONE_FOCUSED) == FOCUS_NONE_IF_NONE_FOCUSED;
+    bool focus_this_if_none = (behaviour & FOCUS_THIS_IF_NONE_FOCUSED) == FOCUS_THIS_IF_NONE_FOCUSED;
+
+    if(focus_none_if_none && focus_this_if_none) {
+        throw std::logic_error(
+            "You can only specify one 'none focused' behaviour"
+        );
+    }
+
+    auto focused = focused_in_chain_or_this();
+    auto to_focus = this;
+
+    // If something is focused
+    if(focused) {
+        // Focus the previous in the chain, otherwise focus the last in the chain
+        if(focused->focus_previous_) {
+            to_focus = focus_previous_;
+        } else {
+            to_focus = last_in_focus_chain();
+        }
+    } else {
+        // If nothing is focused, focus this if that's the desired behaviour
+        // otherwise we don't focus anything
+        if(focus_this_if_none) {
+            to_focus = this;
+        }
+    }
+
+    // Bail if we're already focusing the right thing
+    if(focused && focused == to_focus) {
+        return;
+    }
+
+    focused->blur();
+    if(to_focus) {
+        to_focus->is_focused_ = true;
+        to_focus->signal_focused_();
+    }
+}
+
+WidgetPtr Widget::first_in_focus_chain() {
+    auto search = this;
+    while(search->focus_previous_) {
+        search = search->focus_previous_;
+    }
+
+    return search;
+}
+
+WidgetPtr Widget::last_in_focus_chain() {
+    auto search = this;
+    while(search->focus_next_) {
+        search = search->focus_next_;
+    }
+
+    return search;
+}
+
+void Widget::blur() {
+    is_focused_ = false;
+    signal_blurred_();
+}
+
+void Widget::click() {
+    signal_clicked_();
+}
+
 
 }
 }

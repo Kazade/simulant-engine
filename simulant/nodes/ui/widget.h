@@ -35,6 +35,11 @@ enum ResizeMode {
     RESIZE_MODE_FIT_CONTENT // Will fit the text, newlines affect the height
 };
 
+enum ChangeFocusBehaviour {
+    FOCUS_THIS_IF_NONE_FOCUSED = 0x1,
+    FOCUS_NONE_IF_NONE_FOCUSED = 0x2
+};
+
 struct UIDim {
     float width = 0.0;
     float height = 0.0;
@@ -87,6 +92,8 @@ class UIManager;
 typedef sig::signal<void ()> WidgetPressedSignal;
 typedef sig::signal<void ()> WidgetReleasedSignal; // Triggered on fingerup, but also on leave
 typedef sig::signal<void ()> WidgetClickedSignal; // Triggered on fingerup only
+typedef sig::signal<void ()> WidgetFocusedSignal;
+typedef sig::signal<void ()> WidgetBlurredSignal;
 
 class Widget:
     public StageNode,
@@ -95,11 +102,13 @@ class Widget:
     DEFINE_SIGNAL(WidgetPressedSignal, signal_pressed);
     DEFINE_SIGNAL(WidgetReleasedSignal, signal_released);
     DEFINE_SIGNAL(WidgetClickedSignal, signal_clicked);
-
+    DEFINE_SIGNAL(WidgetFocusedSignal, signal_focused);
+    DEFINE_SIGNAL(WidgetBlurredSignal, signal_blurred);
 public:
     typedef std::shared_ptr<Widget> ptr;
 
     Widget(WidgetID id, UIManager* owner, UIConfig* defaults);
+    virtual ~Widget();
 
     virtual bool init();
 
@@ -107,6 +116,22 @@ public:
     void set_width(float width);
     void set_height(float height);
     void set_font(FontID font_id);
+
+    /* Allow creating a double-linked list of widgets for focusing. There is no
+     * global focused widget but there is only one focused widget in a chain
+     */
+    bool is_focused() const;
+    void set_focus_previous(WidgetPtr previous_widget);
+    void set_focus_next(WidgetPtr next_widget);
+    void focus();
+    void blur();
+    void focus_next_in_chain(ChangeFocusBehaviour behaviour = FOCUS_THIS_IF_NONE_FOCUSED);
+    void focus_previous_in_chain(ChangeFocusBehaviour behaviour = FOCUS_THIS_IF_NONE_FOCUSED);
+    WidgetPtr first_in_focus_chain();
+    WidgetPtr last_in_focus_chain();
+
+    // Manually trigger events
+    void click();
 
     void set_text(const unicode& text);
     void set_border_width(float x);    
@@ -133,9 +158,11 @@ public:
     float outer_width() const { return content_width() + (border_width_ * 2); }
     float outer_height() const { return content_height() + (border_width_ * 2); }
 
-    bool is_checked() const; // Widget dependent, returns false if widget has no concept of 'active'
+    /*
+    bool is_checked() const; // Widget dependent, returns false if widget has no concept of 'active'    
     bool is_enabled() const; // Widget dependent, returns true if widget has no concept of 'disabled'
     bool is_hovered() const; // Widget dependent, returns false if widget has no concept of 'hovered'
+    */
 
     void set_property(const std::string& name, float value);
     bool has_property(const std::string& name) const { return bool(properties_.count(name)); }
@@ -192,6 +219,11 @@ private:
 
     virtual void on_size_changed();
     void rebuild();
+
+    bool is_focused_ = false;
+    WidgetPtr focus_next_ = nullptr;
+    WidgetPtr focus_previous_ = nullptr;
+
 protected:
     bool is_initialized() const { return initialized_; }
 
@@ -205,6 +237,8 @@ protected:
     void render_text(MeshPtr mesh, const std::string& submesh_name, const unicode& text, float width, float xoffset=0, float yoffset=0);
 
     std::set<uint32_t> fingers_down_;
+
+    WidgetPtr focused_in_chain_or_this();
 };
 
 }
