@@ -34,17 +34,19 @@ UIManager::UIManager(Stage *stage):
 
     /* Each time the stage is rendered with a camera and viewport, we need to process any queued events
      * so that (for example) we can interact with the same widget rendered to different viewports */
-    stage_->signal_stage_pre_render().connect([this](CameraID cam_id, Viewport viewport) {
+    pre_render_connection_ = stage_->signal_stage_pre_render().connect([this](CameraID cam_id, Viewport viewport) {
         this->process_event_queue(cam_id.fetch(), viewport);
     });
 
     /* We clear queued events at the end of each frame */
-    window_->signal_frame_finished().connect([this]() {
+    frame_finished_connection_ = window_->signal_frame_finished().connect([this]() {
         this->clear_event_queue();
     });
 }
 
 UIManager::~UIManager() {
+    pre_render_connection_.disconnect();
+    frame_finished_connection_.disconnect();
     window_->unregister_event_listener(this);
 }
 

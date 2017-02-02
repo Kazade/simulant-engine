@@ -62,6 +62,9 @@ private:
     std::queue<UIEvent> queued_events_;
 
     WidgetPtr find_widget_at_window_coordinate(const Camera *camera, const Viewport& viewport, const Vec2& window_coord) const;
+
+    sig::connection frame_finished_connection_;
+    sig::connection pre_render_connection_;
 };
 
 }

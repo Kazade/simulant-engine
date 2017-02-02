@@ -40,8 +40,8 @@
 namespace smlt {
 
 Stage::Stage(StageID id, WindowBase *parent, AvailablePartitioner partitioner):
-    StageNode(this),
     WindowHolder(parent),
+    StageNode(this),
     generic::Identifiable<StageID>(id),
     SkyboxManager(parent, this),
     ui_(new ui::UIManager(this)),

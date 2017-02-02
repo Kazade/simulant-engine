@@ -47,7 +47,7 @@ public:
 
     virtual void register_screen(const std::string& route, ScreenFactory factory) = 0;
     virtual bool has_screen(const std::string& route) const = 0;
-    virtual ScreenBasePtr resolve_screen(const std::string& route) const = 0;
+    virtual ScreenBasePtr resolve_screen(const std::string& route) = 0;
     virtual void activate_screen(const std::string& route) = 0;
     virtual void load_screen(const std::string& route) = 0;
     virtual void load_screen_in_background(const std::string& route, bool redirect_after=true) = 0;
@@ -57,7 +57,7 @@ public:
     virtual const std::unordered_map<std::string, ScreenBasePtr> routes() const = 0;
 
     template<typename T>
-    std::shared_ptr<T> resolve_screen_as(const std::string& route) const {
+    std::shared_ptr<T> resolve_screen_as(const std::string& route) {
         return std::dynamic_pointer_cast<T>(resolve_screen(route));
     }
 
@@ -78,7 +78,7 @@ public:
 
     void register_screen(const std::string& route, ScreenFactory factory);
     bool has_screen(const std::string& route) const;
-    ScreenBasePtr resolve_screen(const std::string& route) const;
+    ScreenBasePtr resolve_screen(const std::string& route);
     void activate_screen(const std::string& route);
 
     void load_screen(const std::string& route);
