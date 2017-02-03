@@ -39,17 +39,24 @@ void StatsPanel::initialize() {
 
     auto overlay = stage_id_.fetch();
 
+    float vheight = 460;
+    const float diff = 32;
+
     auto heading1 = overlay->ui->new_widget_as_label("Performance").fetch();
-    heading1->move_to(window_->coordinate_from_normalized(0.2, 0.9));
+    heading1->move_to(320, vheight);
+    vheight -= diff;
 
     fps_ = overlay->ui->new_widget_as_label("FPS: 0").fetch();
-    fps_->move_to(window_->coordinate_from_normalized(0.2, 0.8));
+    fps_->move_to(320, vheight);
+    vheight -= diff;
 
     ram_usage_ = overlay->ui->new_widget_as_label("RAM: 0").fetch();
-    ram_usage_->move_to(window_->coordinate_from_normalized(0.2, 0.7));
+    ram_usage_->move_to(320, vheight);
+    vheight -= diff;
 
     actors_rendered_ = overlay->ui->new_widget_as_label("Renderables visible: 0").fetch();
-    actors_rendered_->move_to(window_->coordinate_from_normalized(0.2, 0.6));
+    actors_rendered_->move_to(320, vheight);
+    vheight -= diff;
 
     window_->signal_frame_started().connect(std::bind(&StatsPanel::update, this));
 
