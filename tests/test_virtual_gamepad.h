@@ -54,15 +54,14 @@ public:
         SimulantTestCase::tear_down();
     }
 
-    /*
-    void X_test_touchdown_event_triggers_signal() {
+    void test_touchdown_event_triggers_signal() {
         auto b1 = window->virtual_joypad->button_dimensions(0);
         auto b2 = window->virtual_joypad->button_dimensions(1);
 
         int x = b1.left + 1;
         int y = b1.top + 1;
 
-        window->handle_touch_down(0, x, y);
+        window->on_finger_down(0, x, y, 1.0);
 
         assert_true(b1_pressed);
         assert_false(b2_pressed);
@@ -70,27 +69,27 @@ public:
         x = b2.left + 1;
         y = b2.top - 1; //Outside the button
 
-        window->handle_touch_down(1, x, y);
+        window->on_finger_down(1, x, y, 1.0);
         assert_false(b2_pressed);
         assert_true(b1_pressed);
 
         x = b2.left + 1;
         y = b2.top + 1;
 
-        window->handle_touch_down(1, x, y);
+        window->on_finger_down(1, x, y, 1.0);
         assert_true(b2_pressed);
         assert_true(b1_pressed);
 
-        window->handle_touch_motion(1, x, y);
+        window->on_finger_motion(1, x, y, 0.1, 0.1);
         assert_true(b2_pressed);
         assert_true(b1_pressed);
 
-        window->handle_touch_motion(1, 0, 0);
+        window->on_finger_motion(1, 0, 0, 0.1, 0.1);
         assert_false(b2_pressed);
         assert_true(b1_pressed);
     }
 
-    void X_test_touchup_event_triggers_signal() {
+    void test_touchup_event_triggers_signal() {
         auto b1 = window->virtual_joypad->button_dimensions(0);
         auto b2 = window->virtual_joypad->button_dimensions(1);
 
@@ -98,12 +97,12 @@ public:
         int x = b1.left + 1;
         int y = b1.top + 1;
 
-        window->handle_touch_down(0, x, y);
+        window->on_finger_down(0, x, y, 1.0);
 
         x = b2.left + 1;
         y = b2.top + 1;
 
-        window->handle_touch_down(1, x, y);
+        window->on_finger_down(1, x, y, 1.0);
 
         // We should have pressed both buttons, one with each finger
         assert_true(b1_pressed);
@@ -111,18 +110,17 @@ public:
 
         // The location of the touch up event doesn't matter,
         // if the finger is released, the button should be released
-        window->handle_touch_up(0, 0, 0);
+        window->on_finger_down(0, 0, 0, 1);
 
         assert_false(b1_pressed);
         assert_true(b2_pressed);
 
-        window->handle_touch_up(1, 0, 0);
+        window->on_finger_up(1, 0, 0);
         assert_false(b2_pressed);
 
-    } */
+    }
 
-    /*
-    void X_test_button_released_when_all_touches_are_finished() {
+    void test_button_released_when_all_touches_are_finished() {
          //  This is a tricky one. If someone presses a button with finger 0, then finger 1,
          //  then releases finger 1, the button should remain pressed
 
@@ -133,20 +131,21 @@ public:
         int x = b1.left + 1;
         int y = b1.top + 1;
 
-        window->handle_touch_down(0, x, y);
-        window->handle_touch_down(1, x, y);
+        window->on_finger_down(0, x, y);
+        window->on_finger_down(1, x, y);
 
         assert_true(b1_pressed);
 
-        window->handle_touch_up(1, 0, 0);
+        window->on_finger_up(1, 0, 0);
 
         assert_true(b1_pressed);
 
-        window->handle_touch_up(0, 0, 0);
+        window->on_finger_up(0, 0, 0);
 
         assert_false(b2_pressed);
     }
 
+    /*
     void X_test_mouse_clicks_dont_interfere() {
         auto b1 = window->virtual_joypad->button_dimensions(0);
 
@@ -155,7 +154,7 @@ public:
 
         window->handle_mouse_motion(x, y);
         window->handle_mouse_button_down(0);
-        window->handle_touch_down(0, x, y);
+        window->on_finger_down(0, x, y);
 
         assert_true(b1_pressed);
 
@@ -163,25 +162,25 @@ public:
 
         assert_true(b1_pressed);
 
-        window->handle_touch_up(0, x, y);
+        window->on_finger_up(0, x, y);
 
         assert_false(b1_pressed);
-    }
+    } */
 
-    void X_test_deactivation_releases_buttons() {
+    void test_deactivation_releases_buttons() {
         auto b1 = window->virtual_joypad->button_dimensions(0);
 
         int x = b1.left + 1;
         int y = b1.top + 1;
 
-        window->handle_touch_down(0, x, y);
+        window->on_finger_down(0, x, y);
 
         assert_true(b1_pressed);
 
         window->disable_virtual_joypad();
 
         assert_false(b1_pressed);
-    } */
+    }
 };
 
 class VirtualGamepadInputTests : public SimulantTestCase {
@@ -195,8 +194,7 @@ public:
         SimulantTestCase::tear_down();
     }
 
-    /*
-    void X_test_input_controller_signals_fire() {
+    void test_input_controller_signals_fire() {
         bool button_pressed = false;
 
         int virtual_joypad = window->joypad_count() - 1;
@@ -210,12 +208,12 @@ public:
         int x = b1.left + 1;
         int y = b1.top + 1;
 
-        window->handle_touch_down(0, x, y);
+        window->on_finger_down(0, x, y);
 
         assert_true(button_pressed);
     }
 
-    void X_test_while_down() {
+    void test_while_down() {
         bool button_pressed = false;
 
         auto b1 = window->virtual_joypad->button_dimensions(0);
@@ -225,14 +223,14 @@ public:
 
         window->joypad(window->joypad_count() - 1).button_while_down_connect(0, [&](int btn, double dt) {
             button_pressed = true;
-            window->handle_touch_up(0, x, y);
+            window->on_finger_up(0, x, y);
         });
 
-        window->handle_touch_down(0, x, y);
+        window->on_finger_down(0, x, y);
         window->run_frame();
 
         assert_true(button_pressed);
-    } */
+    }
 };
 
 }

@@ -486,4 +486,44 @@ bool WindowBase::is_pipeline_enabled(PipelineID pid) const {
 /* End PipelineHelperAPIInterface */
 
 
+void WindowBase::on_finger_down(TouchPointID touch_id, float normalized_x, float normalized_y, float pressure) {
+    each_event_listener([&](EventListener* listener) {
+        listener->handle_touch_begin(
+            this,
+            touch_id,
+            normalized_x,
+            normalized_y,
+            pressure
+        );
+    });
+}
+
+void WindowBase::on_finger_up(TouchPointID touch_id, float normalized_x, float normalized_y) {
+    each_event_listener([&](EventListener* listener) {
+        listener->handle_touch_end(
+            this,
+            touch_id,
+            normalized_x,
+            normalized_y
+        );
+    });
+}
+
+void WindowBase::on_finger_motion(
+    TouchPointID touch_id,
+    float normalized_x, float normalized_y,
+    float dx, float dy // Between -1.0 and +1.0
+) {
+    each_event_listener([&](EventListener* listener) {
+        listener->handle_touch_move(
+            this,
+            touch_id,
+            normalized_x,
+            normalized_y,
+            dx,
+            dy
+        );
+    });
+}
+
 }

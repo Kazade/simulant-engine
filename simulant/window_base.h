@@ -209,6 +209,22 @@ public:
         );
     }
 
+    void on_finger_down(
+        TouchPointID touch_id,
+        float normalized_x, float normalized_y, float pressure=1.0
+    );
+
+    void on_finger_up(
+        TouchPointID touch_id,
+        float normalized_x, float normalized_y
+    );
+
+    void on_finger_motion(
+        TouchPointID touch_id,
+        float normalized_x, float normalized_y,
+        float dx, float dy // Between -1.0 and +1.0
+    );
+
 protected:    
     std::shared_ptr<Renderer> renderer_;
 

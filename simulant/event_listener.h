@@ -25,6 +25,7 @@ struct TouchEvent {
     TouchPointID touch_id;
     Vec2 coord;
     Vec2 normalized_coord;
+    Vec2 movement;
     float pressure;
 };
 
@@ -35,10 +36,12 @@ public:
 
     void handle_touch_begin(WindowBase* window, TouchPointID touch_id, float normalized_x, float normalized_y, float pressure);
     void handle_touch_end(WindowBase* window, TouchPointID touch_id, float normalized_x, float normalized_y);
+    void handle_touch_move(WindowBase* window, TouchPointID touch_id, float normalized_x, float normalized_y, float dx, float dy);
 
 private:
     virtual void on_touch_begin(const TouchEvent& evt) {}
     virtual void on_touch_end(const TouchEvent& evt) {}
+    virtual void on_touch_move(const TouchEvent& evt) {}
 
     virtual void on_window_focus() {}
     virtual void on_window_blur() {}
