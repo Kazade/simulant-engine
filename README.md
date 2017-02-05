@@ -21,14 +21,13 @@ There are some glaring holes in functionality (LOD, billboards, shadows, project
  * Loading of MD2 animated models
  * Loading of Q2 BSP files (needs work)
  * Loading of heightmap terrains from image files
- * Octree partitioning/culling (WIP)
+ * Advanced spatial hash partitioning and culling
  * Loading of JPG, PNG, TGA, WAL, PCX images and more!
  * Shortcut functions for loading 2D sprites, 2D backgrounds and 3D skyboxes
  * Simple scene graph functions
- * UI layer based on the Nuklear library
+ * UI widgets (Button, Label, Progress Bar)
  * Basic rigid body physics using the Qu3e library
  * Procedural functions for generating spheres, cubes, capsules, circles and rectangles
- * Procedural functions for generate a starfield texture (needs work)
  * Functions for creating lights, multiple viewports and cameras
 
 ## Screenshots
@@ -39,8 +38,6 @@ There are some glaring holes in functionality (LOD, billboards, shadows, project
 
 ## Roadmap / TODO
 
- * Fix up UI rendering after switch from libRocket -> Nuklear
- * Fix the onscreen joypad controller (broken with the switch to Nuklear)
  * Make geoms work using the new Octree in generic/tri_octree.h
  * Finish the GL 1.x renderer
  * Switch the GL 2.x renderer with a GL 4.x one
@@ -50,7 +47,6 @@ There are some glaring holes in functionality (LOD, billboards, shadows, project
  * Build in support for shadows
  * Fix the lighting sample
  * Finish skybox management
- * Add SDL1 support (for Dreamcast)
  * Add Dreamcast support (depends on GL 1.x)
  * Restore Android support
  * Port to OSX and Windows, then iOS
