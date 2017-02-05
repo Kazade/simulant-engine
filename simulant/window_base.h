@@ -179,7 +179,7 @@ public:
     void stop_running() { is_running_ = false; }
     const bool is_shutting_down() const { return is_running_ == false; }
 
-    void enable_virtual_joypad(VirtualDPadDirections directions, int button_count, bool flipped=false);
+    void enable_virtual_joypad(VirtualGamepadConfig config, bool flipped=false);
     void disable_virtual_joypad();
     bool has_virtual_joypad() const { return bool(virtual_gamepad_); }
 

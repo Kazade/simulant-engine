@@ -12,7 +12,7 @@ class Button:
 
 public:
     using Widget::init; // Pull in init to satisfy Managed<Button>
-    using StageNode::cleanup;
+    using Widget::cleanup;
 
     Button(WidgetID id, UIManager* owner, UIConfig* config);
 };

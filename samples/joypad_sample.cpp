@@ -117,7 +117,7 @@ public:
         // and the create the reference..
         //
 
-        window->enable_virtual_joypad(smlt::VIRTUAL_DPAD_DIRECTIONS_TWO, 2);
+        window->enable_virtual_joypad(smlt::VIRTUAL_GAMEPAD_CONFIG_TWO_BUTTONS);
 
         for(int i = 0; i < window->joypad_count(); ++i) {
             smlt::Joypad& joypad = window->joypad(i);

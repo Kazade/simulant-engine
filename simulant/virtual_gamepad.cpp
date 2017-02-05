@@ -23,142 +23,81 @@
 #include "window_base.h"
 #include "stage.h"
 #include "render_sequence.h"
+#include "nodes/ui/ui_manager.h"
+#include "nodes/ui/button.h"
+
 
 namespace smlt {
 
-VirtualGamepad::VirtualGamepad(WindowBase &window, VirtualDPadDirections directions, int button_count):
+VirtualGamepad::VirtualGamepad(WindowBase &window, VirtualGamepadConfig config):
     window_(window),
-    directions_(directions),
-    button_count_(button_count) {
+    config_(config) {
 
 }
 
-Dimensions VirtualGamepad::button_dimensions(int button) {
-    if(button >= button_count_) {
-        throw std::out_of_range(_u("Invalid button: {0}").format(button).encode());
-    }
-
-    button++; //Buttons are 1-indexed in the UI element classes
-/*
-    auto document = window_.overlay(overlay_);
-
-    auto klass = _u(".button_{0}").format(humanize(button)).encode();
-
-    ui::ElementList list = document->find(klass);
-    if(list.empty()) {
-        throw std::logic_error(_u("Unable to find button: {0}").format(button).encode());
-    }
-
-    ui::Element element = list[0];
-*/
-    Dimensions dim;
-
-    //FIXME: !!!!!!!!!!!
-
-    /*dim.left = element.left();
-    dim.top = element.top();
-    dim.width = element.width();
-    dim.height = element.height();*/
-
-    return dim;
+AABB VirtualGamepad::button_bounds(int button) {
+    return buttons_[button]->transformed_aabb();
 }
 
 bool VirtualGamepad::init() {
-    L_DEBUG(_F("Initializing virtual gamepad with {0} buttons").format(button_count_));
-
     stage_ = window_.new_stage(); //Create a Stage to hold the controller buttons
 
     uint32_t button_size = int(float(window_.width() / 10.0));
-    uint32_t dpad_margin = int(float(window_.width() * (5.0 / 640.0)));
-    uint32_t area_width = int(float(window_.width() * (200.0 / 640.0)));
-    uint32_t outside_padding = int(float(window_.width() * (10.0 / 640.0)));
-    uint32_t font_size = window_.height() / 50;
-
     auto stage = stage_.fetch();
 
-/*
-    stage->load_rml_from_string(layout.format(button_size, dpad_margin, area_width, outside_padding, font_size));
+    if(this->config_ == VIRTUAL_GAMEPAD_CONFIG_TWO_BUTTONS) {
+        auto button1 = stage->ui->new_widget_as_button("L").fetch_as<ui::Button>();
+        auto button2 = stage->ui->new_widget_as_button("R").fetch_as<ui::Button>();
 
-    if(this->directions_ == VIRTUAL_DPAD_DIRECTIONS_TWO) {
-        stage->find(".dpad_two").add_css("display", "inline-block");
+        button1->set_background_colour(smlt::Colour(0, 0, 0, 0.2));
+        button2->set_background_colour(smlt::Colour(0, 0, 0, 0.2));
 
+        button1->set_font(stage->assets->default_font_id(DEFAULT_FONT_STYLE_HEADING));
+        button2->set_font(stage->assets->default_font_id(DEFAULT_FONT_STYLE_HEADING));
 
-        for(auto evt: { ui::EVENT_TYPE_TOUCH_DOWN, ui::EVENT_TYPE_TOUCH_OVER}) {
-            stage->find(".dpad_left").set_event_callback(evt, [=](ui::Event evt) -> bool {
-                dpad_button_touches_["left"].insert(evt.touch.finger_id);
-                if(dpad_button_touches_["left"].size() == 1) {
-                    signal_hat_changed_(HAT_POSITION_LEFT);
-                }
-                return true;
-            });
+        button1->move_to(window_.coordinate_from_normalized(0.10, 0.10 * window_.aspect_ratio()));
+        button2->move_to(window_.coordinate_from_normalized(0.90, 0.10 * window_.aspect_ratio()));
 
-            stage->find(".dpad_right").set_event_callback(evt, [=](ui::Event evt) -> bool {
-                dpad_button_touches_["right"].insert(evt.touch.finger_id);
-                if(dpad_button_touches_["right"].size() == 1) {
-                    signal_hat_changed_(HAT_POSITION_RIGHT);
-                }
-                return true;
-            });
-        }
+        button1->resize(button_size, button_size);
+        button2->resize(button_size, button_size);
 
-        for(auto evt: { ui::EVENT_TYPE_TOUCH_UP, ui::EVENT_TYPE_TOUCH_OUT}) {
-            stage->find(".dpad_left").set_event_callback(evt, [=](ui::Event evt) -> bool {
-                dpad_button_touches_["left"].erase(evt.touch.finger_id);
-                if(dpad_button_touches_["left"].size() == 0) {
-                    signal_hat_changed_(HAT_POSITION_CENTERED);
-                }
-                return true;
-            });
+        connections_.push_back(button1->signal_pressed().connect([this]() {
+            signal_button_down_(0);
+        }));
 
-            stage->find(".dpad_right").set_event_callback(evt, [=](ui::Event evt) -> bool {
-                dpad_button_touches_["right"].erase(evt.touch.finger_id);
-                if(dpad_button_touches_["right"].size() == 0) {
-                    signal_hat_changed_(HAT_POSITION_CENTERED);
-                }
-                return true;
-            });
-        }
-    }
+        connections_.push_back(button2->signal_pressed().connect([this]() {
+            signal_button_down_(1);
+        }));
 
-    //Make the buttons visible that need to be
-    for(int i = 1; i < button_count_ + 1; ++i) {
-        int idx = i - 1;
+        connections_.push_back(button1->signal_released().connect([this]() {
+            signal_button_up_(0);
+        }));
 
-        auto klass = _u(".button_{0}").format(humanize(i)).encode();
-        stage->find(klass).add_css("display", "inline-block");
+        connections_.push_back(button2->signal_released().connect([this]() {
+            signal_button_up_(1);
+        }));
 
-        for(auto evt: { ui::EVENT_TYPE_TOUCH_DOWN, ui::EVENT_TYPE_TOUCH_OVER}) {
-            //Forward the events from the UI on to the signals
-            stage->find(klass).set_event_callback(evt, [=](ui::Event evt) -> bool {
-                this->button_touches_[idx].insert(evt.touch.finger_id);
-                if(this->button_touches_[idx].size() == 1) {
-                    signal_button_down_(idx);
-                }
-                return true;
-            });
-        }
-
-        for(auto evt: { ui::EVENT_TYPE_TOUCH_UP, ui::EVENT_TYPE_TOUCH_OUT}) {
-            stage->find(klass).set_event_callback(evt, [=](ui::Event evt) -> bool {
-                this->button_touches_[idx].erase(evt.touch.finger_id);
-                if(this->button_touches_[idx].size() == 0) {
-                    signal_button_up_(i - 1);
-                }
-                return true;
-            });
-        }
+        buttons_.push_back(button1);
+        buttons_.push_back(button2);
+    } else {
+        assert(0 && "Not Implemented");
     }
 
     camera_id_ = window_.new_camera_with_orthographic_projection();
 
     //Finally add to the render sequence, give a ridiculously high priority
-    pipeline_id_ = window_.render(overlay_, camera_id_).with_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
-*/
+    pipeline_id_ = window_.render(stage_, camera_id_).with_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
+
     return true;
 }
 
-void VirtualGamepad::_disable_rendering() {
+void VirtualGamepad::_prepare_deletion() {
     window_.disable_pipeline(pipeline_id_);
+
+    // make sure we delete the buttons before we delete the gamepad
+    for(auto& button: buttons_) {
+        stage_.fetch()->ui->delete_widget(button->id());
+    }
 }
 
 void VirtualGamepad::cleanup() {

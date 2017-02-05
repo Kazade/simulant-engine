@@ -16,7 +16,7 @@ class ProgressBar:
 
 public:
     using Widget::init; // Pull in init to satisfy Managed<Button>
-    using StageNode::cleanup;
+    using Widget::cleanup;
 
     ProgressBar(WidgetID id, UIManager* owner, UIConfig* config);
     ~ProgressBar();

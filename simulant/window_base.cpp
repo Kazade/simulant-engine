@@ -396,12 +396,12 @@ void WindowBase::set_has_context(bool value) {
     has_context_ = value;
 }
 
-void WindowBase::enable_virtual_joypad(VirtualDPadDirections directions, int button_count, bool flipped) {
+void WindowBase::enable_virtual_joypad(VirtualGamepadConfig config, bool flipped) {
     if(virtual_gamepad_) {
         virtual_gamepad_.reset();
     }
 
-    virtual_gamepad_ = VirtualGamepad::create(*this, directions, button_count);
+    virtual_gamepad_ = VirtualGamepad::create(*this, config);
     input_controller().init_virtual_joypad();
 
     if(flipped) {
@@ -421,7 +421,7 @@ void WindowBase::disable_virtual_joypad() {
      */
 
     if(virtual_gamepad_) {
-        virtual_gamepad_->_disable_rendering();
+        virtual_gamepad_->_prepare_deletion();
         virtual_gamepad_.reset();
     }
 }

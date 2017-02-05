@@ -105,7 +105,7 @@ CameraID CameraManager::new_camera() {
 CameraID CameraManager::new_camera_with_orthographic_projection(double left, double right, double bottom, double top, double near, double far) {
     /*
      *  Instantiates a camera with an orthographic projection. If both left and right are zero then they default to 0 and window.width()
-     *  respectively. If bottom and top are zero, then they default to window.height() and 0 respectively. So top left is 0,0
+     *  respectively. If top and bottom are zero, then they default to window.height() and 0 respectively. So top left is 0,0
      */
     CameraID new_camera_id = new_camera();
 
@@ -114,7 +114,7 @@ CameraID CameraManager::new_camera_with_orthographic_projection(double left, dou
     }
 
     if(!bottom && !top) {
-        bottom = window_->height();
+        top = window_->height();
     }
 
     camera(new_camera_id)->set_orthographic_projection(left, right, bottom, top, near, far);
@@ -196,18 +196,8 @@ StagePtr StageManager::stage(StageID s) {
 }
 
 void StageManager::delete_stage(StageID s) {
-    //Recurse through the tree, destroying all children
-    auto st = stage(s);
-    if(st) {
-        stage(s)->each_descendent_lf([](uint32_t, TreeNode* node) {
-            StageNode* stage_node = static_cast<StageNode*>(node);
-            stage_node->ask_owner_for_destruction();
-        });
-
-        signal_stage_removed_(s);
-    }
-
     StageManager::destroy(s);
+    signal_stage_removed_(s);
 }
 
 void StageManager::fixed_update(double dt) {

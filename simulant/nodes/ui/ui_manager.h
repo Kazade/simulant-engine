@@ -54,6 +54,7 @@ private:
 
     void on_touch_begin(const TouchEvent &evt) override;
     void on_touch_end(const TouchEvent &evt) override;
+    void on_touch_move(const TouchEvent &evt) override;
 
     void queue_event(const TouchEvent& evt);
     void process_event_queue(const Camera *camera, const Viewport& viewport) const;

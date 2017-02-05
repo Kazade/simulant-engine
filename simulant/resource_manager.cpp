@@ -44,7 +44,9 @@ bool ResourceManager::init() {
         return true;
     }
 
-    default_font_ = new_font_from_ttf(default_font_filename(), 18).fetch();
+    default_heading_font_ = new_font_from_ttf(default_font_filename(), 42).fetch();
+    default_subheading_font_ = new_font_from_ttf(default_font_filename(), 24).fetch();
+    default_body_font_ = new_font_from_ttf(default_font_filename(), 18).fetch();
 
     //FIXME: Should lock the default texture and material during construction!
     //Create the default blank texture
@@ -668,11 +670,18 @@ TextureID ResourceManager::default_texture_id() const {
     }
 }
 
-FontID ResourceManager::default_font_id() const {
+FontID ResourceManager::default_font_id(DefaultFontStyle style) const {
     if(base_manager() != this) {
-        return base_manager()->default_font_id();
+        return base_manager()->default_font_id(style);
     } else {
-        return default_font_->id();
+        switch(style) {
+        case DEFAULT_FONT_STYLE_HEADING:
+            return default_heading_font_->id();
+        case DEFAULT_FONT_STYLE_SUBHEADING:
+            return default_subheading_font_->id();
+        default:
+            return default_body_font_->id();
+        }
     }
 }
 

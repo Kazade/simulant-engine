@@ -14,7 +14,8 @@ void StageNode::cleanup() {
     // Go through the subnodes and ask each for destruction in-turn
     each_descendent_lf([](uint32_t, TreeNode* node) {
         StageNode* stage_node = static_cast<StageNode*>(node);
-        stage_node->ask_owner_for_destruction();
+        stage_node->detach();
+        stage_node->ask_owner_for_destruction();        
     });
 
     detach(); // Make sure we're not connected to anything

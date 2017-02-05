@@ -40,6 +40,19 @@ bool Widget::init() {
     return true;
 }
 
+void Widget::cleanup() {
+    // Make sure we fire any outstanding events when the widget
+    // is destroyed. If any buttons are held, then they should fire
+    // released signals.
+
+    auto fingers_down = fingers_down_; // Copy, fingerup will delete from fingers_down_
+    for(auto& finger_id: fingers_down) {
+        fingerup(finger_id);
+    }
+
+    StageNode::cleanup();
+}
+
 void Widget::set_font(FontID font_id) {
     font_ = stage->assets->font(font_id);
     line_height_ = std::round(float(font_->size()) * 1.1);
@@ -360,6 +373,10 @@ void Widget::resize_foreground(MeshPtr mesh, float width, float height, float xo
     mesh->submesh("foreground")->set_diffuse(foreground_colour_);
 }
 
+bool Widget::is_pressed_by_finger(uint32_t finger_id) {
+    return fingers_down_.find(finger_id) != fingers_down_.end();
+}
+
 void Widget::fingerdown(uint32_t finger_id) {
     // If we added, and it was the first finger down
     if(fingers_down_.insert(finger_id).second && fingers_down_.size() == 1) {
@@ -373,6 +390,21 @@ void Widget::fingerup(uint32_t finger_id) {
     if(fingers_down_.erase(finger_id) && fingers_down_.empty()) {
         signal_released_();
         signal_clicked_();
+    }
+}
+
+void Widget::fingerenter(uint32_t finger_id) {
+    fingerdown(finger_id); // Same behaviour
+}
+
+void Widget::fingermove(uint32_t finger_id) {
+    //FIXME: fire signal
+}
+
+void Widget::fingerleave(uint32_t finger_id) {
+    // Same as fingerup, but we don't fire the click signal
+    if(fingers_down_.erase(finger_id) && fingers_down_.empty()) {
+        signal_released_();
     }
 }
 

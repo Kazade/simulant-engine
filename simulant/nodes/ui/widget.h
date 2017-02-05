@@ -111,6 +111,7 @@ public:
     virtual ~Widget();
 
     virtual bool init();
+    virtual void cleanup();
 
     void resize(float width, float height);
     void set_width(float width);
@@ -184,6 +185,10 @@ public:
     // Probably shouldn't use these directly (designed for UIManager)
     void fingerdown(uint32_t finger_id);
     void fingerup(uint32_t finger_id);
+    void fingerenter(uint32_t finger_id);
+    void fingermove(uint32_t finger_id);
+    void fingerleave(uint32_t finger_id);
+    bool is_pressed_by_finger(uint32_t finger_id);
 
 private:
     bool initialized_ = false;

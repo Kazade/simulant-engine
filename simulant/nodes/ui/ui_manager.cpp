@@ -45,6 +45,8 @@ UIManager::UIManager(Stage *stage):
 }
 
 UIManager::~UIManager() {
+    manager_.reset();
+
     pre_render_connection_.disconnect();
     frame_finished_connection_.disconnect();
     window_->unregister_event_listener(this);
@@ -96,6 +98,10 @@ void UIManager::on_touch_end(const TouchEvent &evt) {
     queue_event(evt);
 }
 
+void UIManager::on_touch_move(const TouchEvent &evt) {
+    queue_event(evt);
+}
+
 void UIManager::queue_event(const TouchEvent& e) {
     UIEvent evt(e);
     queued_events_.push(evt);
@@ -114,10 +120,30 @@ void UIManager::process_event_queue(const Camera* camera, const Viewport &viewpo
                 if(widget) {
                     if(evt.touch.type == TOUCH_EVENT_TYPE_FINGER_DOWN) {
                         widget->fingerdown(evt.touch.touch_id);
-                    } else if(evt.touch.type == TOUCH_EVENT_TYPE_FINGER_UP){
+                    } else if(evt.touch.type == TOUCH_EVENT_TYPE_FINGER_UP) {
                         widget->fingerup(evt.touch.touch_id);
+                    } else if(evt.touch.type == TOUCH_EVENT_TYPE_FINGER_MOVE) {
+                        // If we just moved over the widget, and we weren't already on it
+                        // then trigger a fingerenter
+                        if(!widget->is_pressed_by_finger(evt.touch.touch_id)) {
+                            widget->fingerenter(evt.touch.touch_id);
+                        }
+
+                        // notify that there was a movement on the widget
+                        widget->fingermove(evt.touch.touch_id);
                     }
                 }
+
+                if(evt.touch.type == TOUCH_EVENT_TYPE_FINGER_MOVE || evt.touch.type == TOUCH_EVENT_TYPE_FINGER_UP) {
+                    // Go through all the widgets, if one is being pressed and it's different
+                    // than the one above, then trigger a fingerleave event
+                    manager_->each([&](uint32_t, WidgetPtr iter) {
+                        if(iter->is_pressed_by_finger(evt.touch.touch_id) && iter != widget) {
+                            iter->fingerleave(evt.touch.touch_id);
+                        }
+                    });
+                }
+
             } break;
         default:
             break;

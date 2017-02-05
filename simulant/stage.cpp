@@ -62,7 +62,15 @@ bool Stage::init() {
     return true;
 }
 
-void Stage::cleanup() {
+void Stage::cleanup() {    
+    ui_.reset();
+
+    //Recurse through the tree, destroying all children
+    this->each_descendent_lf([](uint32_t, TreeNode* node) {
+        StageNode* stage_node = static_cast<StageNode*>(node);
+        stage_node->ask_owner_for_destruction();
+    });
+
     SpriteManager::objects_.clear();
     LightManager::objects_.clear();
     ActorManager::objects_.clear();

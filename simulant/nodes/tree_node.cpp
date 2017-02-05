@@ -60,15 +60,18 @@ void TreeNode::remove_from_parent() {
         return;
     }
 
+    auto left = left_;
+    auto right = right_;
+
     if(left_) {
-        left_->right_ = right_;
+        left_->right_ = right;
         left_ = nullptr;
     } else {
-        parent_->first_child_ = right_;
+        parent_->first_child_ = right;
     }
 
     if(right_) {
-        right_->left_ = left_;
+        right_->left_ = left;
         right_ = nullptr;
     }
 
@@ -148,8 +151,9 @@ void TreeNode::each_descendent_lf(TreeNodeTraversalCallback cb) {
     TreeNode* descendent = first_child_;
     while(descendent) {
         descendent->each_descendent_lf(cb);
+        auto next = descendent->right_;
         cb(0, descendent); //FIXME: Increment first argument for each descendent
-        descendent = descendent->right_;
+        descendent = next;
     }
 }
 
