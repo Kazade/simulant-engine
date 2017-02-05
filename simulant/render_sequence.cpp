@@ -22,7 +22,6 @@
 #include "generic/algorithm.h"
 #include "render_sequence.h"
 #include "stage.h"
-#include "overlay.h"
 #include "nodes/actor.h"
 #include "nodes/camera_proxy.h"
 #include "mesh.h"
@@ -63,8 +62,6 @@ void Pipeline::deactivate() {
 
     if(stage_) {
         sequence_->window->stage(stage_)->decrement_render_count();
-    } else if(overlay_) {
-        sequence_->window->overlay(overlay_)->decrement_render_count();
     }
 }
 
@@ -75,8 +72,6 @@ void Pipeline::activate() {
 
     if(stage_) {
         sequence_->window->stage(stage_)->increment_render_count();
-    } else if(overlay_) {
-        sequence_->window->overlay(overlay_)->increment_render_count();
     }
 }
 
@@ -184,27 +179,6 @@ PipelineID RenderSequence::new_pipeline(StageID stage, CameraID camera, const Vi
     return new_p;
 }
 
-PipelineID RenderSequence::new_pipeline(OverlayID stage, CameraID camera, const Viewport& viewport, TextureID target, int32_t priority) {
-    PipelineID new_p = PipelineManager::make(this);
-
-    ordered_pipelines_.push_back(PipelineManager::get(new_p).lock());
-
-    auto pipeline = PipelineManager::get(new_p).lock();
-
-    pipeline->set_overlay(stage);
-    pipeline->set_camera(camera);
-    pipeline->set_viewport(viewport);
-    pipeline->set_target(target);
-    pipeline->set_priority(priority);
-    pipeline->activate();
-
-    std::lock_guard<std::mutex> lock(pipeline_lock_);
-    ordered_pipelines_.push_back(pipeline);
-    sort_pipelines();
-
-    return new_p;
-}
-
 void RenderSequence::set_renderer(Renderer* renderer) {
     renderer_ = renderer;
 }
@@ -264,64 +238,61 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
     StageID stage_id = pipeline_stage->stage_id();
 
     auto camera = window->camera(camera_id);
+    auto stage = window->stage(stage_id);
 
-    if(pipeline_stage->overlay_id()) {        
-        //This is a UI stage, so just render that
-        auto overlay = window->overlay(pipeline_stage->overlay_id());
-        overlay->render(camera, viewport);
-    } else {
-        auto stage = window->stage(stage_id);
+    // Trigger a signal to indicate the stage is about to be rendered
+    stage->signal_stage_pre_render()(camera_id, viewport);
 
-        auto light_ids = stage->partitioner->lights_visible_from(camera_id);
-        auto lights_visible = map<decltype(light_ids), std::vector<LightPtr>>(
-            light_ids, [&](const LightID& light_id) -> LightPtr { return stage->light(light_id); }
-        );
+    auto light_ids = stage->partitioner->lights_visible_from(camera_id);
+    auto lights_visible = map<decltype(light_ids), std::vector<LightPtr>>(
+        light_ids, [&](const LightID& light_id) -> LightPtr { return stage->light(light_id); }
+    );
 
-        uint32_t renderables_rendered = 0;
-        // Mark the visible objects as visible
-        for(auto& renderable: stage->partitioner->geometry_visible_from(camera_id)) {
-            if(!renderable->is_visible()) {
-                continue;
+    uint32_t renderables_rendered = 0;
+    // Mark the visible objects as visible
+    for(auto& renderable: stage->partitioner->geometry_visible_from(camera_id)) {
+        if(!renderable->is_visible()) {
+            continue;
 
-            }
-
-            renderable->update_last_visible_frame_id(frame_id);
-
-            auto renderable_lights = filter(lights_visible, [=](const LightPtr& light) -> bool {
-                // Filter by whether or not the renderable bounds intersects the light bounds
-                return renderable->aabb().intersects(light->aabb());
-            });
-
-            std::partial_sort(
-                renderable_lights.begin(),
-                renderable_lights.begin() + std::min(MAX_LIGHTS_PER_RENDERABLE, (uint32_t) renderable_lights.size()),
-                renderable_lights.end(),
-                [=](LightPtr lhs, LightPtr rhs) {
-                    /* FIXME: Sorting by the centre point is problematic. A renderable is made up
-                     * of many polygons, by choosing the light closest to the center you may find that
-                     * that polygons far away from the center aren't effected by lights when they should be.
-                     * This needs more thought, probably. */
-                    float lhs_dist = (renderable->centre() - lhs->position()).length_squared();
-                    float rhs_dist = (renderable->centre() - rhs->position()).length_squared();
-                    return lhs_dist < rhs_dist;
-                }
-            );
-
-            renderable->set_affected_by_lights(renderable_lights);
-            ++renderables_rendered;
         }
 
-        window->stats->set_geometry_visible(renderables_rendered);
+        renderable->update_last_visible_frame_id(frame_id);
 
-        using namespace std::placeholders;
+        auto renderable_lights = filter(lights_visible, [=](const LightPtr& light) -> bool {
+            // Filter by whether or not the renderable bounds intersects the light bounds
+            return renderable->aabb().intersects(light->aabb());
+        });
 
-        batcher::RenderQueue::TraverseCallback callback = std::bind(
-            &Renderer::render, renderer_, camera, _1, _2, _3, _4, _5, stage->ambient_light(), _6
+        std::partial_sort(
+            renderable_lights.begin(),
+            renderable_lights.begin() + std::min(MAX_LIGHTS_PER_RENDERABLE, (uint32_t) renderable_lights.size()),
+            renderable_lights.end(),
+            [=](LightPtr lhs, LightPtr rhs) {
+                /* FIXME: Sorting by the centre point is problematic. A renderable is made up
+                 * of many polygons, by choosing the light closest to the center you may find that
+                 * that polygons far away from the center aren't effected by lights when they should be.
+                 * This needs more thought, probably. */
+                float lhs_dist = (renderable->centre() - lhs->position()).length_squared();
+                float rhs_dist = (renderable->centre() - rhs->position()).length_squared();
+                return lhs_dist < rhs_dist;
+            }
         );
 
-        // Render the visible objects
-        stage->render_queue->traverse(callback, frame_id);
+        renderable->set_affected_by_lights(renderable_lights);
+        ++renderables_rendered;
     }
+
+    window->stats->set_geometry_visible(renderables_rendered);
+
+    using namespace std::placeholders;
+
+    auto visitor = renderer_->get_render_queue_visitor(camera, stage->ambient_light());
+
+    // Render the visible objects
+    stage->render_queue->traverse(visitor.get(), frame_id);
+
+    // Trigger a signal to indicate the stage has been rendered
+    stage->signal_stage_post_render()(camera_id, viewport);
 
     signal_pipeline_finished_(*pipeline_stage);
 }

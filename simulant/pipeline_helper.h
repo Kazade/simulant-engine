@@ -29,7 +29,10 @@ public:
     PipelineHelper to_framebuffer(const Viewport& view=Viewport());
     PipelineHelper to_texture(TextureID tex, const Viewport& view=Viewport());
     PipelineHelper with_priority(smlt::RenderPriority priority);
-    PipelineHelper with_clear(uint32_t viewport_clear_flags=BUFFER_CLEAR_ALL);
+    PipelineHelper with_clear(
+        uint32_t viewport_clear_flags=BUFFER_CLEAR_ALL,
+        const smlt::Colour& clear_colour=Colour::GREY
+    );
 
     PipelineHelper(const PipelineHelper&) = default;
     PipelineHelper& operator=(PipelineHelper& rhs) = default;
@@ -55,7 +58,6 @@ public:
     virtual ~PipelineHelperAPIInterface() {}
 
     virtual PipelineHelper render(StageID, CameraID) = 0;
-    virtual PipelineHelper render(OverlayID, CameraID) = 0;
 
     virtual PipelinePtr pipeline(PipelineID pid) = 0;
     virtual bool enable_pipeline(PipelineID pid) = 0;
@@ -66,7 +68,6 @@ public:
 
 protected:
     PipelineHelper new_pipeline_helper(std::shared_ptr<RenderSequence> sequence, StageID stage, CameraID cam);
-    PipelineHelper new_pipeline_helper(std::shared_ptr<RenderSequence> sequence, OverlayID stage, CameraID cam);
 };
 
 }

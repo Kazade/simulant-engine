@@ -21,13 +21,11 @@
 
 #include "utils/gl_error.h"
 #include "window_base.h"
-#include "ui/interface.h"
 #include "input_controller.h"
 #include "loaders/texture_loader.h"
 #include "loaders/material_script.h"
 #include "loaders/opt_loader.h"
 #include "loaders/ogg_loader.h"
-#include "loaders/rml_loader.h"
 #include "loaders/obj_loader.h"
 #include "loaders/tiled_loader.h"
 #include "loaders/particle_script.h"
@@ -36,14 +34,13 @@
 #include "loaders/wal_loader.h"
 #include "loaders/md2_loader.h"
 #include "loaders/pcx_loader.h"
+#include "loaders/ttf_loader.h"
 
 #include "sound.h"
 #include "camera.h"
 #include "watcher.h"
-#include "message_bar.h"
 #include "render_sequence.h"
 #include "stage.h"
-#include "overlay.h"
 #include "virtual_gamepad.h"
 #include "screens/loading.h"
 #include "utils/gl_thread_check.h"
@@ -56,8 +53,7 @@ namespace smlt {
 
 WindowBase::WindowBase():
     Source(this),
-    StageManager(this),
-    OverlayManager(this),    
+    StageManager(this),    
     CameraManager(this),
     resource_manager_(new ResourceManager(this)),
     initialized_(false),
@@ -152,7 +148,6 @@ LoaderTypePtr WindowBase::loader_type(const unicode& loader_name) const {
 }
 
 void WindowBase::create_defaults() {
-    message_bar_ = MessageBar::create(*this);
     loading_ = screens::Loading::create(*this);
 
     //This needs to happen after SDL or whatever is initialized
@@ -162,13 +157,11 @@ void WindowBase::create_defaults() {
 void WindowBase::_cleanup() {
     virtual_gamepad_.reset();
     loading_.reset();
-    message_bar_.reset();
     watcher_.reset();
     background_manager_.reset();
     render_sequence_.reset();
 
     delete_all_cameras();
-    delete_all_overlays();
     delete_all_stages();
 
     Sound::shutdown_openal();
@@ -205,7 +198,6 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
         register_loader(std::make_shared<smlt::loaders::KGLPLoaderType>());
         register_loader(std::make_shared<smlt::loaders::OPTLoaderType>());
         register_loader(std::make_shared<smlt::loaders::OGGLoaderType>());
-        register_loader(std::make_shared<smlt::loaders::RMLLoaderType>());
         register_loader(std::make_shared<smlt::loaders::OBJLoaderType>());
         register_loader(std::make_shared<smlt::loaders::TiledLoaderType>());
         register_loader(std::make_shared<smlt::loaders::HeightmapLoaderType>());
@@ -213,6 +205,7 @@ bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
         register_loader(std::make_shared<smlt::loaders::WALLoaderType>());
         register_loader(std::make_shared<smlt::loaders::MD2LoaderType>());
         register_loader(std::make_shared<smlt::loaders::PCXLoaderType>());
+        register_loader(std::make_shared<smlt::loaders::TTFLoaderType>());
 
         L_INFO("Initializing OpenAL");
         Sound::init_openal();
@@ -403,12 +396,12 @@ void WindowBase::set_has_context(bool value) {
     has_context_ = value;
 }
 
-void WindowBase::enable_virtual_joypad(VirtualDPadDirections directions, int button_count, bool flipped) {
+void WindowBase::enable_virtual_joypad(VirtualGamepadConfig config, bool flipped) {
     if(virtual_gamepad_) {
         virtual_gamepad_.reset();
     }
 
-    virtual_gamepad_ = VirtualGamepad::create(*this, directions, button_count);
+    virtual_gamepad_ = VirtualGamepad::create(*this, config);
     input_controller().init_virtual_joypad();
 
     if(flipped) {
@@ -428,56 +421,16 @@ void WindowBase::disable_virtual_joypad() {
      */
 
     if(virtual_gamepad_) {
-        virtual_gamepad_->_disable_rendering();
+        virtual_gamepad_->_prepare_deletion();
         virtual_gamepad_.reset();
     }
 }
 
-void WindowBase::handle_mouse_motion(int x, int y, bool pos_normalized) {
-    if(pos_normalized) {
-        x *= width();
-        y *= height();
-    }
-
-    OverlayManager::each([=](uint32_t i, Overlay* object) {
-        object->__handle_mouse_move(x, y);
-    });
-}
-
-void WindowBase::handle_mouse_button_down(int button) {
-    OverlayManager::each([=](uint32_t i, Overlay* object) {
-        object->__handle_mouse_down(button);
-    });
-}
-
-void WindowBase::handle_mouse_button_up(int button) {
-    OverlayManager::each([=](uint32_t i, Overlay* object) {
-        object->__handle_mouse_up(button);
-    });
-}
-
-void WindowBase::handle_touch_down(int finger_id, int x, int y) {
-    OverlayManager::each([=](uint32_t i, Overlay* object) {
-        object->__handle_touch_down(finger_id, x, y);
-    });
-}
-
-void WindowBase::handle_touch_motion(int finger_id, int x, int y) {
-    OverlayManager::each([=](uint32_t i, Overlay* object) {
-        object->__handle_touch_motion(finger_id, x, y);
-    });
-}
-
-void WindowBase::handle_touch_up(int finger_id, int x, int y) {
-    OverlayManager::each([=](uint32_t i, Overlay* object) {
-        object->__handle_touch_up(finger_id, x, y);
-    });
-}
 
 /**
  * @brief WindowBase::reset
  *
- * Destroys all stages, and overlays, and releases all loadables. Then resets the
+ * Destroys all stages and releases all loadables. Then resets the
  * window to its original state.
  */
 void WindowBase::reset() {
@@ -486,7 +439,6 @@ void WindowBase::reset() {
     render_sequence()->delete_all_pipelines();
 
     CameraManager::destroy_all();
-    OverlayManager::destroy_all();
     StageManager::destroy_all();
     background_manager_.reset(new BackgroundManager(this));
 
@@ -533,5 +485,45 @@ bool WindowBase::is_pipeline_enabled(PipelineID pid) const {
 }
 /* End PipelineHelperAPIInterface */
 
+
+void WindowBase::on_finger_down(TouchPointID touch_id, float normalized_x, float normalized_y, float pressure) {
+    each_event_listener([&](EventListener* listener) {
+        listener->handle_touch_begin(
+            this,
+            touch_id,
+            normalized_x,
+            normalized_y,
+            pressure
+        );
+    });
+}
+
+void WindowBase::on_finger_up(TouchPointID touch_id, float normalized_x, float normalized_y) {
+    each_event_listener([&](EventListener* listener) {
+        listener->handle_touch_end(
+            this,
+            touch_id,
+            normalized_x,
+            normalized_y
+        );
+    });
+}
+
+void WindowBase::on_finger_motion(
+    TouchPointID touch_id,
+    float normalized_x, float normalized_y,
+    float dx, float dy // Between -1.0 and +1.0
+) {
+    each_event_listener([&](EventListener* listener) {
+        listener->handle_touch_move(
+            this,
+            touch_id,
+            normalized_x,
+            normalized_y,
+            dx,
+            dy
+        );
+    });
+}
 
 }

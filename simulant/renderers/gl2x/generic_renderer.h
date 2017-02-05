@@ -24,8 +24,48 @@
 #include "../renderer.h"
 #include "../../material.h"
 #include "./buffer_manager.h"
+#include "../batching/render_queue.h"
 
 namespace smlt {
+
+class GL2RenderGroupImpl;
+class GenericRenderer;
+
+struct RenderState {
+    Renderable* renderable;
+    MaterialPass* pass;
+    Light* light;
+    batcher::Iteration iteration;
+    GL2RenderGroupImpl* render_group_impl;
+};
+
+class GL2RenderQueueVisitor : public batcher::RenderQueueVisitor {
+public:
+    GL2RenderQueueVisitor(GenericRenderer* renderer, CameraPtr camera, const Colour& colour);
+
+    void start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id);
+    void visit(Renderable* renderable, MaterialPass* pass, Light* light, batcher::Iteration);
+    void end_traversal(const batcher::RenderQueue &queue);
+    void change_render_group(const batcher::RenderGroup *prev, const batcher::RenderGroup *next);
+
+private:
+    GenericRenderer* renderer_;
+    CameraPtr camera_;
+    Colour global_ambient_;
+
+    ShaderID last_shader_id_;
+    GL2RenderGroupImpl* current_group_ = nullptr;
+    bool render_group_changed_ = true;
+
+    bool queue_blended_objects_ = true;
+
+    /*
+     * All entries are ordered by distance from the near frustum descending (back-to-front)
+     */
+    std::multimap<float, RenderState, std::greater<float> > blended_object_queue_;
+
+    void do_visit(Renderable* renderable, MaterialPass* material_pass, Light* light, batcher::Iteration iteration);
+};
 
 class GenericRenderer : public Renderer {
 public:
@@ -36,18 +76,9 @@ public:
     }
 
     batcher::RenderGroup new_render_group(Renderable *renderable, MaterialPass *material_pass);
-
-    void render(CameraPtr camera, bool render_group_changed,
-        const batcher::RenderGroup *,
-        Renderable*,
-        MaterialPass*,
-        Light*,
-        const smlt::Colour& global_ambient,
-        batcher::Iteration
-    ) override;
-
     void init_context();
 
+    std::shared_ptr<batcher::RenderQueueVisitor> get_render_queue_visitor(CameraPtr camera, const Colour &global_ambient);
 private:
     std::unique_ptr<HardwareBufferManager> buffer_manager_;
 
@@ -61,6 +92,8 @@ private:
     void set_auto_attributes_on_shader(Renderable &buffer);
     void set_blending_mode(BlendType type);
     void send_geometry(Renderable* renderable);
+
+    friend class GL2RenderQueueVisitor;
 };
 
 }

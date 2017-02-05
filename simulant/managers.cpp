@@ -22,7 +22,6 @@
 #include "background.h"
 #include "window_base.h"
 #include "stage.h"
-#include "overlay.h"
 #include "camera.h"
 #include "nodes/camera_proxy.h"
 #include "render_sequence.h"
@@ -106,7 +105,7 @@ CameraID CameraManager::new_camera() {
 CameraID CameraManager::new_camera_with_orthographic_projection(double left, double right, double bottom, double top, double near, double far) {
     /*
      *  Instantiates a camera with an orthographic projection. If both left and right are zero then they default to 0 and window.width()
-     *  respectively. If bottom and top are zero, then they default to window.height() and 0 respectively. So top left is 0,0
+     *  respectively. If top and bottom are zero, then they default to window.height() and 0 respectively. So top left is 0,0
      */
     CameraID new_camera_id = new_camera();
 
@@ -115,7 +114,7 @@ CameraID CameraManager::new_camera_with_orthographic_projection(double left, dou
     }
 
     if(!bottom && !top) {
-        bottom = window_->height();
+        top = window_->height();
     }
 
     camera(new_camera_id)->set_orthographic_projection(left, right, bottom, top, near, far);
@@ -197,18 +196,8 @@ StagePtr StageManager::stage(StageID s) {
 }
 
 void StageManager::delete_stage(StageID s) {
-    //Recurse through the tree, destroying all children
-    auto st = stage(s);
-    if(st) {
-        stage(s)->each_descendent_lf([](uint32_t, TreeNode* node) {
-            StageNode* stage_node = static_cast<StageNode*>(node);
-            stage_node->ask_owner_for_destruction();
-        });
-
-        signal_stage_removed_(s);
-    }
-
     StageManager::destroy(s);
+    signal_stage_removed_(s);
 }
 
 void StageManager::fixed_update(double dt) {
@@ -310,49 +299,4 @@ void StageManager::delete_all_stages() {
 
 // ============= END STAGES ===========
 
-// ============= UI STAGES ============
-
-OverlayManager::OverlayManager(WindowBase *window):
-    window_(window) {
-
-}
-
-OverlayID OverlayManager::new_overlay() {
-    return OverlayManager::make(this->window_);
-}
-
-OverlayID OverlayManager::new_overlay_from_file(const unicode& rml_file) {
-    auto new_ui = new_overlay();
-    window_->loader_for(rml_file.encode())->into(std::shared_ptr<Overlay>(overlay(new_ui)));
-    try {
-
-    } catch(...) {
-        delete_overlay(new_ui);
-        throw;
-    }
-
-    return new_ui;
-}
-
-OverlayPtr OverlayManager::overlay(OverlayID s) {
-    return OverlayManager::get(s).lock().get();
-}
-
-void OverlayManager::delete_overlay(OverlayID s) {
-    OverlayManager::destroy(s);
-}
-
-uint32_t OverlayManager::overlay_count() const {
-    return OverlayManager::count();
-}
-
-bool OverlayManager::has_overlay(OverlayID overlay) const {
-    return OverlayManager::contains(overlay);
-}
-
-void OverlayManager::delete_all_overlays() {
-    destroy_all();
-}
-
-// =========== END UI STAGES ==========
 }

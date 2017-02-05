@@ -29,6 +29,14 @@
 namespace smlt {
 namespace batcher {
 
+void reinsert(ActorID actor_id, RenderQueue* queue) {
+    auto actor = actor_id.fetch();
+    actor->each([queue](uint32_t i, SubActor* subactor) {
+        queue->remove_renderable(subactor);
+        queue->insert_renderable(subactor);
+    });
+}
+
 RenderQueue::RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory):
     stage_(stage),
     render_group_factory_(render_group_factory) {
@@ -41,11 +49,24 @@ RenderQueue::RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory)
 
         // If the actor's render priority changes, we need to remove the renderables and re-add them
         actor->signal_render_priority_changed().connect([this, actor_id](RenderPriority old, RenderPriority newp) {
-            auto actor = actor_id.fetch();
-            actor->each([this](uint32_t i, SubActor* subactor) {
-                remove_renderable(subactor);
-                insert_renderable(subactor);
-            });
+            reinsert(actor_id, this);
+        });
+
+
+        // If a material changes on an actor's subactor, reinsert
+        actor->signal_subactor_material_changed().connect([this](ActorID, SubActor* subactor, MaterialID, MaterialID) {
+            remove_renderable(subactor);
+            insert_renderable(subactor);
+        });
+
+        // If a new subactor is added to the actor, add it to the render queue
+        actor->signal_subactor_created().connect([this](ActorID actor_id, SubActor* subactor) {
+            insert_renderable(subactor);
+        });
+
+        // If a subactor is destroyed, remove it from the render queue
+        actor->signal_subactor_destroyed().connect([this](ActorID actor_id, SubActor* subactor) {
+            remove_renderable(subactor);
         });
     });
 
@@ -54,16 +75,6 @@ RenderQueue::RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory)
         actor->each([=](uint32_t i, SubActor* subactor) {
             remove_renderable(subactor);
         });
-    });
-
-    stage->signal_actor_changed().connect([=](ActorID actor_id, ActorChangeEvent event) {
-        auto actor = stage->actor(actor_id);
-        if(event.type == ACTOR_CHANGE_TYPE_SUBACTOR_MATERIAL_CHANGED) {
-            actor->each([=](uint32_t i, SubActor* subactor) {
-                remove_renderable(subactor);
-                insert_renderable(subactor);
-            });
-        }
     });
 
     stage->signal_particle_system_created().connect([=](ParticleSystemID ps_id) {
@@ -151,17 +162,23 @@ void RenderQueue::remove_renderable(Renderable* renderable) {
     }
 }
 
-void RenderQueue::traverse(TraverseCallback callback, uint64_t frame_id) const {
+void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const {
     Pass pass = 0;
+
+    visitor->start_traversal(*this, frame_id);
+
     for(auto& batches: batches_) {
         IterationType pass_iteration_type;
+
+        const RenderGroup* last_group = nullptr;
 
         for(auto& p: batches) {
             const RenderGroup* current_group = &p.first;
             MaterialPtr material;
             MaterialPass::ptr material_pass;
 
-            bool render_group_changed = true;
+            visitor->change_render_group(last_group, current_group);
+
             p.second.each([&](uint32_t i, Renderable* renderable) {
                 if(!renderable->is_visible_in_frame(frame_id)) {
                     return;
@@ -198,14 +215,16 @@ void RenderQueue::traverse(TraverseCallback callback, uint64_t frame_id) const {
                         light = nullptr;
                     }
 
-                    callback(render_group_changed, current_group, renderable, material_pass.get(), light, i);
+                    visitor->visit(renderable, material_pass.get(), light, i);
                 }
 
-                render_group_changed = false;
+                last_group = current_group;
             });
         }
         ++pass;
     }
+
+    visitor->end_traversal(*this);
 }
 
 void Batch::add_renderable(Renderable* renderable) {

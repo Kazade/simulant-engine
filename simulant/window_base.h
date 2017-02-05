@@ -40,6 +40,7 @@
 #include "pipeline_helper.h"
 #include "screens/screen_manager.h"
 #include "loader.h"
+#include "event_listener.h"
 
 
 namespace smlt {
@@ -59,7 +60,6 @@ class InputController;
 class Keyboard;
 class Mouse;
 class Joypad;
-class MessageBar;
 class Loader;
 class LoaderType;
 class RenderSequence;
@@ -110,11 +110,11 @@ typedef sig::signal<void (SDL_Scancode)> KeyDownSignal;
 class WindowBase :
     public Source,
     public StageManager,
-    public OverlayManager,
     public CameraManager,
     public Loadable,
     public PipelineHelperAPIInterface,
-    public RenderTarget {
+    public RenderTarget,
+    public EventListenerManager {
 
     DEFINE_SIGNAL(FrameStartedSignal, signal_frame_started);
     DEFINE_SIGNAL(FrameFinishedSignal, signal_frame_finished);
@@ -179,28 +179,15 @@ public:
     void stop_running() { is_running_ = false; }
     const bool is_shutting_down() const { return is_running_ == false; }
 
-    void enable_virtual_joypad(VirtualDPadDirections directions, int button_count, bool flipped=false);
+    void enable_virtual_joypad(VirtualGamepadConfig config, bool flipped=false);
     void disable_virtual_joypad();
     bool has_virtual_joypad() const { return bool(virtual_gamepad_); }
 
     void reset();
 
-    // Only public for testing purposes. DO NOT USE!
-    void handle_mouse_motion(int x, int y, bool pos_normalized=false);
-    void handle_mouse_button_down(int button);
-    void handle_mouse_button_up(int button);
-
-    void handle_touch_down(int finger_id, int x, int y);
-    void handle_touch_motion(int finger_id, int x, int y);
-    void handle_touch_up(int finger_id, int x, int y);
-
     /* PipelineHelperAPIInterface */
 
     virtual PipelineHelper render(StageID stage_id, CameraID camera_id) override {
-        return new_pipeline_helper(render_sequence_, stage_id, camera_id);
-    }
-
-    virtual PipelineHelper render(OverlayID stage_id, CameraID camera_id) override {
         return new_pipeline_helper(render_sequence_, stage_id, camera_id);
     }
 
@@ -214,6 +201,29 @@ public:
     void _cleanup();
 
     void each_stage(std::function<void (uint32_t, Stage*)> func);
+
+    Vec2 coordinate_from_normalized(Ratio rx, Ratio ry) {
+        return Vec2(
+            uint32_t(float(width()) * rx),
+            uint32_t(float(height()) * ry)
+        );
+    }
+
+    void on_finger_down(
+        TouchPointID touch_id,
+        float normalized_x, float normalized_y, float pressure=1.0
+    );
+
+    void on_finger_up(
+        TouchPointID touch_id,
+        float normalized_x, float normalized_y
+    );
+
+    void on_finger_motion(
+        TouchPointID touch_id,
+        float normalized_x, float normalized_y,
+        float dx, float dy // Between -1.0 and +1.0
+    );
 
 protected:    
     std::shared_ptr<Renderer> renderer_;
@@ -323,7 +333,6 @@ private:
 
     std::shared_ptr<Watcher> watcher_;
     std::shared_ptr<screens::Loading> loading_;
-    std::shared_ptr<MessageBar> message_bar_;
     std::shared_ptr<smlt::RenderSequence> render_sequence_;
     generic::DataCarrier data_carrier_;
 
@@ -338,7 +347,6 @@ public:
     Property<WindowBase, ResourceManager> shared_assets = { this, &WindowBase::resource_manager_ };
     Property<WindowBase, Application> application = { this, &WindowBase::application_ };
     Property<WindowBase, VirtualGamepad> virtual_joypad = { this, &WindowBase::virtual_gamepad_ };
-    Property<WindowBase, MessageBar> message_bar = { this, &WindowBase::message_bar_ };
     Property<WindowBase, Renderer> renderer = { this, &WindowBase::renderer_ };
 
     Property<WindowBase, Watcher> watcher = {

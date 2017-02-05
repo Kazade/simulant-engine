@@ -47,6 +47,11 @@ public:
         return getter_(this);
     }
 
+    template<typename T>
+    T* fetch_as() const {
+        return dynamic_cast<T*>(fetch());
+    }
+
     bool is_bound() const {
         return bool(getter_);
     }

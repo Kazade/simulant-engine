@@ -1,6 +1,6 @@
 #include "simulant/utils/random.h"
-
 #include "simulant/simulant.h"
+#include "simulant/screens/loading.h"
 
 using namespace smlt;
 
@@ -40,6 +40,17 @@ public:
         smlt::Screen<GameScreen>(window, "game_screen") {}
 
     void do_load() {
+        auto loading = window->application->resolve_screen_as<screens::Loading>("/loading");
+        assert(loading);
+
+        bool done = false;
+
+        // While we're loading, continually pulse the progress bar to show that stuff is happening
+        window->idle->add([&loading, &done]() {
+            loading->progress_bar->pulse();
+            return !done;
+        });
+
         pipeline_id_ = prepare_basic_scene(stage_id_, camera_id_);
         window->disable_pipeline(pipeline_id_);
 
@@ -76,6 +87,8 @@ public:
         terrain_mesh->set_material_id(terrain_material_id_);
 
         terrain_actor_id_ = stage->new_actor_with_mesh(terrain_mesh_id_);
+
+        done = true;
     }
 
     void do_activate() {

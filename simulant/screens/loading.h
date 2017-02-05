@@ -21,9 +21,11 @@
 
 #include <vector>
 
+#include "../generic/property.h"
 #include "../generic/managed.h"
 #include "../types.h"
 #include "screen.h"
+#include "../nodes/ui/progress_bar.h"
 
 namespace smlt {
 
@@ -37,6 +39,8 @@ public:
     Loading(WindowBase& window):
         Screen<Loading>(window, "loading") {}
 
+    Property<Loading, ui::ProgressBar> progress_bar = {this, &Loading::progress_bar_};
+
 private:
     void do_activate() override;
     void do_deactivate() override;
@@ -44,9 +48,11 @@ private:
     void do_load() override;
     void do_unload() override;
 
-    OverlayID stage_;
+    StageID stage_;
     CameraID camera_;
     PipelineID pipeline_;
+
+    ui::ProgressBar* progress_bar_ = nullptr;
 };
 
 }

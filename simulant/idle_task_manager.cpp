@@ -26,25 +26,25 @@
 
 namespace smlt {
 
-static ConnectionID connection_counter = 0;
+static IdleConnectionID connection_counter = 0;
 
 IdleTaskManager::IdleTaskManager(WindowBase &window):
     window_(window) {
 
 }
 
-ConnectionID IdleTaskManager::add(std::function<bool ()> callback) {
+IdleConnectionID IdleTaskManager::add(std::function<bool ()> callback) {
     std::lock_guard<std::mutex> lock(signals_mutex_);
 
-    ConnectionID new_id = ++connection_counter;
+    IdleConnectionID new_id = ++connection_counter;
     signals_.insert(std::make_pair(new_id, callback));
     return new_id;
 }
 
-ConnectionID IdleTaskManager::add_once(std::function<void ()> callback) {
+IdleConnectionID IdleTaskManager::add_once(std::function<void ()> callback) {
     std::lock_guard<std::mutex> lock(signals_once_mutex_);
 
-    ConnectionID new_id = ++connection_counter;
+    IdleConnectionID new_id = ++connection_counter;
     signals_once_.insert(std::make_pair(new_id, callback));
     return new_id;
 }
@@ -87,7 +87,7 @@ struct TimedTrigger {
     std::function<void ()> callback_;
 };
 
-ConnectionID IdleTaskManager::add_timeout(float seconds, std::function<void()> callback) {
+IdleConnectionID IdleTaskManager::add_timeout(float seconds, std::function<void()> callback) {
     std::shared_ptr<TimedTrigger> trigger(new TimedTrigger(seconds, callback));
     return add(std::bind(&TimedTrigger::update, trigger, &this->window_));
 }
@@ -105,7 +105,7 @@ void IdleTaskManager::execute() {
             signals_copy = signals_;
         }
 
-        std::vector<ConnectionID> to_erase;
+        std::vector<IdleConnectionID> to_erase;
 
         for(auto pair: signals_copy) {
             bool result = pair.second();
@@ -138,7 +138,7 @@ void IdleTaskManager::execute() {
     cv_.notify_all(); //Unblock any threads waiting
 }
 
-void IdleTaskManager::remove(ConnectionID connection) {
+void IdleTaskManager::remove(IdleConnectionID connection) {
     std::lock_guard<std::mutex> lock1(signals_mutex_);
     std::lock_guard<std::mutex> lock2(signals_once_mutex_);
 

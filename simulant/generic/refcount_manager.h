@@ -209,7 +209,7 @@ public:
 
     typedef std::unordered_map<ObjectIDType, std::shared_ptr<ObjectType>> ObjectMap;
 
-protected:
+
     void manager_store_alias(const std::string& alias, ObjectIDType id) {
         auto it = object_names_.find(alias);
         if(it != object_names_.end()) {

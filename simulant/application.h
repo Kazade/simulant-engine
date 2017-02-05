@@ -67,6 +67,7 @@ public:
     virtual bool has_screen(const std::string& route) const { return routes_->has_screen(route); }
     virtual ScreenBasePtr resolve_screen(const std::string& route) { return routes_->resolve_screen(route); }
     virtual void activate_screen(const std::string& route) { routes_->activate_screen(route); }
+    virtual void load_screen(const std::string& route) { routes_->load_screen(route); }
     virtual void load_screen_in_background(const std::string& route, bool redirect_after=true) { routes_->load_screen_in_background(route, redirect_after); }
     virtual void unload_screen(const std::string& route) { routes_->unload_screen(route); }
     virtual bool is_screen_loaded(const std::string& route) const { return routes_->is_screen_loaded(route); }

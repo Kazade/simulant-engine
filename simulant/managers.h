@@ -106,27 +106,6 @@ private:
     void print_tree(StageNode* node, uint32_t& level);
 };
 
-class OverlayManager:
-    public generic::TemplatedManager<Overlay, OverlayID> {
-
-public:
-    OverlayManager(WindowBase* window);
-
-    OverlayID new_overlay();
-    OverlayID new_overlay_from_file(const unicode& rml_file);
-
-    OverlayPtr overlay(OverlayID s);
-    void delete_overlay(OverlayID s);
-    uint32_t overlay_count() const;
-
-    bool has_overlay(OverlayID overlay) const;
-
-    void delete_all_overlays();
-private:
-    WindowBase* window_;
-
-};
-
 }
 
 #endif // MANAGERS_H

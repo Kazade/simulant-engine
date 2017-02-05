@@ -167,6 +167,8 @@ public:
     void set_blending(BlendType blend) { blend_ = blend; }
     BlendType blending() { return blend_; }
 
+    bool is_blended() const { return blend_ != BLEND_NONE; }
+
     void set_depth_write_enabled(bool value=true) {
         depth_writes_enabled_ = value;
     }
@@ -267,6 +269,7 @@ public:
     struct BuiltIns {
         static const std::string TEXTURE_ONLY;
         static const std::string DIFFUSE_ONLY;
+        static const std::string ALPHA_TEXTURE;
         static const std::string DIFFUSE_WITH_LIGHTING;
         static const std::string MULTITEXTURE2_MODULATE;
         static const std::string MULTITEXTURE2_ADD;

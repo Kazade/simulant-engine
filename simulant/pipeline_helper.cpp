@@ -34,8 +34,9 @@ PipelineHelper PipelineHelper::to_texture(TextureID tex, const Viewport& view) {
     return *this;
 }
 
-PipelineHelper PipelineHelper::with_clear(uint32_t viewport_clear_flags) {
+PipelineHelper PipelineHelper::with_clear(uint32_t viewport_clear_flags, const smlt::Colour& clear_colour) {
     sequence_->pipeline(pipeline_id_)->set_clear_flags(viewport_clear_flags);
+    sequence_->pipeline(pipeline_id_)->viewport->set_colour(clear_colour);
     return *this;
 }
 
@@ -46,11 +47,6 @@ PipelineHelper PipelineHelper::with_priority(smlt::RenderPriority priority) {
 
 
 PipelineHelper PipelineHelperAPIInterface::new_pipeline_helper(RenderSequence::ptr sequence, StageID stage, CameraID cam) {
-    PipelineID pid = sequence->new_pipeline(stage, cam);
-    return PipelineHelper(sequence, pid);
-}
-
-PipelineHelper PipelineHelperAPIInterface::new_pipeline_helper(RenderSequence::ptr sequence, OverlayID stage, CameraID cam) {
     PipelineID pid = sequence->new_pipeline(stage, cam);
     return PipelineHelper(sequence, pid);
 }

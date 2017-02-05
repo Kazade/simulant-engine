@@ -78,6 +78,11 @@ void ScreenManager::activate_screen(const std::string& route) {
     current_screen_->activate();
 }
 
+void ScreenManager::load_screen(const std::string& route) {
+    auto screen = get_or_create_route(route);
+    screen->load();
+}
+
 void ScreenManager::load_screen_in_background(const std::string& route, bool redirect_after) {
     auto screen = get_or_create_route(route);
 

@@ -19,8 +19,8 @@
 
 #include "stats_panel.h"
 #include "../window_base.h"
-#include "../overlay.h"
 #include "../stage.h"
+#include "../nodes/ui/ui_manager.h"
 
 namespace smlt {
 
@@ -32,28 +32,31 @@ StatsPanel::StatsPanel(WindowBase *window):
 void StatsPanel::initialize() {
     if(initialized_) return;
 
-    overlay_id_ = window_->new_overlay();
-    ui_camera_ = window_->new_camera_with_orthographic_projection(0, 640, 480, 0);
-    pipeline_id_ = window_->render(overlay_id_, ui_camera_).with_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
+    stage_id_ = window_->new_stage();
+    ui_camera_ = window_->new_camera_with_orthographic_projection(0, 640, 0, 480);
+    pipeline_id_ = window_->render(stage_id_, ui_camera_).with_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
     window_->disable_pipeline(pipeline_id_);
 
-    auto overlay = window_->overlay(overlay_id_);
-    //overlay->add_css("color", "#4BD3FFDD");
-    overlay->append_row().append_label("Performance");
+    auto overlay = stage_id_.fetch();
 
-    auto fps = overlay->append_row();
-    fps.append_label("FPS: ");
-    fps.append_label("0").set_id("fps");
+    float vheight = 460;
+    const float diff = 32;
 
-    auto ram_usage = overlay->append_row();
-    ram_usage.append_label("RAM: ");
-    ram_usage.append_label("0").set_id("ram");
+    auto heading1 = overlay->ui->new_widget_as_label("Performance").fetch();
+    heading1->move_to(320, vheight);
+    vheight -= diff;
 
-    auto actors_rendered = overlay->append_row();
-    actors_rendered.append_label("Renderables visible: ");
-    actors_rendered.append_label("0").set_id("renderables-visible");
+    fps_ = overlay->ui->new_widget_as_label("FPS: 0").fetch();
+    fps_->move_to(320, vheight);
+    vheight -= diff;
 
-    overlay->append_row().set_id("stages");
+    ram_usage_ = overlay->ui->new_widget_as_label("RAM: 0").fetch();
+    ram_usage_->move_to(320, vheight);
+    vheight -= diff;
+
+    actors_rendered_ = overlay->ui->new_widget_as_label("Renderables visible: 0").fetch();
+    actors_rendered_->move_to(320, vheight);
+    vheight -= diff;
 
     window_->signal_frame_started().connect(std::bind(&StatsPanel::update, this));
 
@@ -86,24 +89,18 @@ void StatsPanel::update() {
     last_update += window_->delta_time();
 
     if(first_update || last_update >= 1.0) {
-        auto overlay = window_->overlay(overlay_id_);
-        overlay->find("#fps").set_text(
-            _u("{0}").format(window_->stats->frames_per_second())
-        );
-
         auto mem_usage = get_memory_usage_in_megabytes();
-        overlay->find("#ram").set_text(
-            _u("{0} MB").format(mem_usage)
-        );
-
         auto actors_rendered = window_->stats->geometry_visible();
-        overlay->find("#renderables-visible").set_text(
-            _u("{0}").format(actors_rendered)
-        );
+
+        fps_->set_text(_u("FPS: {0}").format(window_->stats->frames_per_second()));
+        ram_usage_->set_text(_u("RAM: {0} MB").format(mem_usage));
+        actors_rendered_->set_text(_u("Renderables Visible: {0}").format(actors_rendered));
 
         last_update = 0.0f;
         first_update = false;
 
+        /* FIXME: Restore this...
+         *
         auto stages = overlay->find("#stages");
         stages.remove_children();
 
@@ -119,7 +116,7 @@ void StatsPanel::update() {
             stage_row.append_row().append_label(
                 "   Particle Systems: " + std::to_string(stage->particle_system_count())
             );
-        });
+        }); */
     }
 }
 

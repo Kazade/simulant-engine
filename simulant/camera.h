@@ -27,6 +27,7 @@
 #include "frustum.h"
 #include "renderers/renderer.h"
 #include "sound.h"
+#include "./generic/optional.h"
 
 namespace smlt {
 
@@ -37,9 +38,13 @@ class Camera:
 public:
     Camera(CameraID id, WindowBase* window);
 
-    kmVec3 project_point(const RenderTarget& target, const Viewport& viewport, const kmVec3& point);
+    // Converts an OpenGL unit to window space
+    smlt::optional<Vec3> project_point(const RenderTarget& target, const Viewport& viewport, const Vec3& point) const;
 
-    const Mat4& view_matrix() { return view_matrix_; }
+    // Converts a pixel to OpenGL units (z-input should be read from the depth buffer)
+    smlt::optional<Vec3> unproject_point(const RenderTarget& target, const Viewport& viewport, const Vec3& win_point);
+
+    const Mat4& view_matrix() const { return view_matrix_; }
     const Mat4& projection_matrix() const { return projection_matrix_; }
 
     Frustum& frustum() { return frustum_; }

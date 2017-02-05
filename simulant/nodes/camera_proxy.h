@@ -2,6 +2,7 @@
 
 #include "stage_node.h"
 #include "../generic/identifiable.h"
+#include "../generic/optional.h"
 
 namespace smlt {
 
@@ -27,7 +28,7 @@ public:
     void _update_following(double dt);
 
     Frustum& frustum();
-    kmVec3 project_point(const RenderTarget &target, const Viewport& viewport, const kmVec3& point);
+    smlt::optional<Vec3> project_point(const RenderTarget &target, const Viewport& viewport, const kmVec3& point);
 
     void set_orthographic_projection(double left, double right, double bottom, double top, double near=-1.0, double far=1.0);
 

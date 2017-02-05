@@ -30,6 +30,7 @@
 #include "mesh.h"
 #include "material.h"
 #include "sound.h"
+#include "font.h"
 
 namespace smlt {
 
@@ -39,6 +40,7 @@ typedef generic::RefCountedTemplatedManager<Mesh, MeshID> MeshManager;
 typedef generic::RefCountedTemplatedManager<Material, MaterialID> MaterialManager;
 typedef generic::RefCountedTemplatedManager<Texture, TextureID> TextureManager;
 typedef generic::RefCountedTemplatedManager<Sound, SoundID> SoundManager;
+typedef generic::RefCountedTemplatedManager<Font, FontID> FontManager;
 
 struct TextureFlags {
     TextureFlags(
@@ -55,6 +57,12 @@ struct TextureFlags {
     TextureWrap wrap = TEXTURE_WRAP_REPEAT;
     TextureFilter filter = TEXTURE_FILTER_NEAREST;
     bool flip_vertically = false;
+};
+
+enum DefaultFontStyle {
+    DEFAULT_FONT_STYLE_HEADING,
+    DEFAULT_FONT_STYLE_SUBHEADING,
+    DEFAULT_FONT_STYLE_BODY
 };
 
 
@@ -157,9 +165,21 @@ public:
     bool has_sound(SoundID s) const;
     uint32_t sound_count() const;
 
+    FontID new_font_from_ttf(const unicode& filename, uint32_t font_size, CharacterSet charset=CHARACTER_SET_LATIN, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    FontID new_font_with_alias_from_ttf(const std::string& alias, const unicode& filename, uint32_t font_size, CharacterSet charset=CHARACTER_SET_LATIN, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    FontID get_font_with_alias(const std::string& alias);
+    void delete_font(FontID f);
+
+    FontPtr font(FontID f);
+    const FontPtr font(FontID f) const;
+    uint32_t font_count() const;
+    bool has_font(FontID f) const;
+    void mark_font_as_uncollected(FontID f);
+
     void update(double dt);
 
     unicode default_material_filename() const;
+    unicode default_font_filename() const;
 
     MaterialID clone_default_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) {
         return base_manager()->material(base_manager()->default_material_id())->new_clone(this, garbage_collect);
@@ -167,6 +187,7 @@ public:
 
     MaterialID default_material_id() const;
     TextureID default_texture_id() const;
+    FontID default_font_id(DefaultFontStyle style=DEFAULT_FONT_STYLE_BODY) const;
 
     ResourceManager* base_manager() const {
         // Constness applies to the resource manager itself, not the returned base manager
@@ -182,6 +203,11 @@ private:
 
     MaterialID default_material_id_;
     TextureID default_texture_id_;
+    FontPtr default_body_font_;
+    FontPtr default_subheading_font_;
+    FontPtr default_heading_font_;
+
+    std::unique_ptr<FontManager> font_manager_;
 
     std::mutex template_material_lock_;
     std::unordered_map<unicode, MaterialID> template_materials_;

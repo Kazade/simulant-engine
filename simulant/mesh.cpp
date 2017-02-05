@@ -492,10 +492,6 @@ void Mesh::delete_submesh(const std::string& name) {
         submeshes_.erase(it);
         ordered_submeshes_.remove(submesh.get());
         signal_submesh_destroyed_(id(), submesh.get());
-    } else {
-#ifndef NDEBUG
-    L_WARN(_F("Tried to delete non-existent mesh with name: {0}").format(name));
-#endif
     }
 }
 

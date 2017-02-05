@@ -200,6 +200,7 @@ struct Colour {
     static const Colour WHITE_SMOKE;
     static const Colour YELLOW;
     static const Colour YELLOW_GREEN;
+    static const Colour NONE;
 
 };
 

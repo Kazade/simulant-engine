@@ -106,6 +106,55 @@ void SDL2Window::check_events() {
             case SDL_QUIT:
                 stop_running();
                 break;
+            case SDL_MOUSEBUTTONDOWN: {
+
+            } break;
+            case SDL_MOUSEBUTTONUP: {
+
+            } break;
+
+            case SDL_FINGERMOTION: {
+                float x = event.tfinger.x;
+                float y = event.tfinger.y;
+#ifdef __linux__
+                // On Linux, touch coords are window coords not normalized
+                // https://bugzilla.libsdl.org/show_bug.cgi?id=2307
+
+                x /= float(this->width());
+                y /= float(this->height());
+#endif
+                on_finger_motion(
+                    event.tfinger.fingerId, x, y, event.tfinger.dx, event.tfinger.dy
+                );
+            } break;
+            case SDL_FINGERDOWN: {
+                float x = event.tfinger.x;
+                float y = event.tfinger.y;
+#ifdef __linux__
+                // On Linux, touch coords are window coords not normalized
+                // https://bugzilla.libsdl.org/show_bug.cgi?id=2307
+
+                x /= float(this->width());
+                y /= float(this->height());
+#endif
+                on_finger_down(
+                    event.tfinger.fingerId, x, y, event.tfinger.pressure
+                );
+            } break;
+            case SDL_FINGERUP: {
+                float x = event.tfinger.x;
+                float y = event.tfinger.y;
+#ifdef __linux__
+                // On Linux, touch coords are window coords not normalized
+                // https://bugzilla.libsdl.org/show_bug.cgi?id=2307
+
+                x /= float(this->width());
+                y /= float(this->height());
+#endif
+                on_finger_up(
+                    event.tfinger.fingerId, x, y
+                );
+            } break;
             case SDL_WINDOWEVENT: {
                 /* Make sure we pause/unpause when the window is minimized and restored.
                  * We also unpause on maximize just in case (although I imagine that we shouldn't
@@ -122,36 +171,6 @@ void SDL2Window::check_events() {
                         break;
                 }
             } break;
-            case SDL_MOUSEMOTION: {
-                handle_mouse_motion(event.motion.x, event.motion.y);
-            } break;
-            case SDL_MOUSEBUTTONDOWN: {
-                L_DEBUG(_F("MOUSEDOWN received: {0}").format(event.button.button));
-                handle_mouse_button_down(event.button.button);
-            } break;
-            case SDL_MOUSEBUTTONUP: {
-                L_DEBUG(_F("MOUSEUP received: {0}").format(event.button.button));
-                handle_mouse_button_up(event.button.button);
-            } break;
-            case SDL_FINGERDOWN: {
-                L_DEBUG(_F("FINGERDOWN received: {0} - {1}, {2}").format(event.tfinger.fingerId, event.tfinger.x, event.tfinger.y));
-                int x, y;
-                denormalize(event.tfinger.x, event.tfinger.y, x, y);
-                handle_touch_down(event.tfinger.fingerId, x, y);
-            } break;
-            case SDL_FINGERMOTION: {
-                L_DEBUG(_F("FINGERMOTION received: {0}, {1}").format(event.tfinger.x, event.tfinger.y));
-                int x, y;
-                denormalize(event.tfinger.x, event.tfinger.y, x, y);
-                handle_touch_motion(event.tfinger.fingerId, x, y);
-            } break;
-            case SDL_FINGERUP: {
-                L_DEBUG(_F("FINGERUP received: {0} - {1}, {2}").format(event.tfinger.fingerId, event.tfinger.x, event.tfinger.y));
-                int x, y;
-                denormalize(event.tfinger.x, event.tfinger.y, x, y);
-                handle_touch_up(event.tfinger.fingerId, x, y);
-            } break;
-
             default:
                 L_WARN_ONCE(_F("Unhandled event {0}").format(event.type));
                 break;

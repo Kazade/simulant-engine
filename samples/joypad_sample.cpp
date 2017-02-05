@@ -75,7 +75,7 @@ public:
         smlt::Screen<GameScreen>(window, "game_screen") {}
 
     void do_load() {
-        prepare_basic_scene_with_overlay(stage_id_, camera_id_, overlay_id_, overlay_camera_id_);
+        prepare_basic_scene(stage_id_, camera_id_);
 
         window->camera(camera_id_)->set_perspective_projection(
             45.0,
@@ -85,13 +85,14 @@ public:
         );
 
         // Thanks to other samples
+        /*
         auto ui = window->overlay(overlay_id_);
         ui->set_styles("body { font-family: \"Ubuntu\"; } .thing { font-size: 14; padding-left: 10;};");
         auto row = ui->append_row();
         row.append_label("Left x-y axis move the cube.");
         row.append_label("Right x-y axis rotate the cube.");
         row.append_label("Button 0 (A) reset the cube.");
-        ui->find("label").add_class("thing");
+        ui->find("label").add_class("thing"); */
 
         ///Shortcut function for loading images
         smlt::TextureID tid = window->stage(stage_id_)->assets->new_texture_from_file("sample_data/sample.tga");
@@ -116,7 +117,7 @@ public:
         // and the create the reference..
         //
 
-        window->enable_virtual_joypad(smlt::VIRTUAL_DPAD_DIRECTIONS_TWO, 2);
+        window->enable_virtual_joypad(smlt::VIRTUAL_GAMEPAD_CONFIG_TWO_BUTTONS);
 
         for(int i = 0; i < window->joypad_count(); ++i) {
             smlt::Joypad& joypad = window->joypad(i);
@@ -168,9 +169,8 @@ public:
     }
 
 private:
-    CameraID camera_id_, overlay_camera_id_;
+    CameraID camera_id_;
     StageID stage_id_;
-    OverlayID overlay_id_;
 };
 
 class JoypadSample: public smlt::Application {

@@ -119,9 +119,15 @@ void Actor::rebuild_subactors() {
 }
 
 void Actor::set_mesh(MeshID mesh) {
-    if(!mesh) {
+    if(submesh_created_connection_) {
         submesh_created_connection_.disconnect();
+    }
+
+    if(submesh_destroyed_connection_) {
         submesh_destroyed_connection_.disconnect();
+    }
+
+    if(!mesh) {
         clear_subactors();
         mesh_.reset();
         return;

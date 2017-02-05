@@ -521,10 +521,33 @@ struct Plane : public kmPlane {
     Vec3 normal() const {
         return Vec3(a, b, c);
     }
+
+    float distance_to(const Vec3& p) {
+        float k1 = d;
+        float k2 = (a * p.x) + (b * p.y) + (c * p.z);
+        return k2 - k1;
+    }
 };
 
-struct Ray : public kmRay3 {
+struct AABB;
 
+struct Ray : public kmRay3 {
+    Vec3 dir_inv;
+
+    Ray() {
+        kmRay3Fill(this, 0, 0, 0, 0, 0, 0);
+    }
+
+    Ray(const Vec3& start, const Vec3& dir) {
+        kmRay3Fill(this, start.x, start.y, start.z, dir.x, dir.y, dir.z);
+        dir_inv = Vec3(1.0 / dir.x, 1.0f / dir.y, 1.0 / dir.z);
+    }
+
+    bool intersects(const AABB& b) const {
+        return kmRay3IntersectAABB3(
+            this, (const kmAABB3*) &b, nullptr, nullptr
+        );
+    }
 };
 
 struct AABB : public kmAABB3 {
@@ -858,11 +881,9 @@ enum TextureFlag {
     TEXTURE_OPTION_NEAREST_FILTER = 8
 };
 
-enum VirtualDPadDirections {
-    VIRTUAL_DPAD_DIRECTIONS_TWO,
-    VIRTUAL_DPAD_DIRECTIONS_FOUR,
-    VIRTUAL_DPAD_DIRECTIONS_EIGHT,
-    VIRTUAL_DPAD_DIRECTIONS_ANALOG
+enum VirtualGamepadConfig {
+    VIRTUAL_GAMEPAD_CONFIG_TWO_BUTTONS,
+    VIRTUAL_GAMEPAD_CONFIG_HAT_AND_BUTTON
 };
 
 const std::string DEFAULT_MATERIAL_SCHEME = "default";
@@ -882,6 +903,10 @@ typedef std::shared_ptr<Texture> TexturePtr;
 class Sound;
 typedef std::weak_ptr<Sound> SoundRef;
 typedef std::shared_ptr<Sound> SoundPtr;
+
+class Font;
+typedef std::weak_ptr<Font> FontRef;
+typedef std::shared_ptr<Font> FontPtr;
 
 class Actor;
 typedef Actor* ActorPtr;
@@ -904,9 +929,6 @@ class CameraProxy;
 typedef Camera* CameraPtr;
 typedef CameraProxy* CameraProxyPtr;
 
-class Overlay;
-typedef Overlay* OverlayPtr;
-
 class Viewport;
 
 class Background;
@@ -915,6 +937,17 @@ typedef Background* BackgroundPtr;
 class Stage;
 class WindowBase;
 typedef Stage* StagePtr;
+
+namespace ui {
+
+class Widget;
+class ProgressBar;
+class Button;
+class Label;
+
+typedef Widget* WidgetPtr;
+
+}
 
 class ResourceManager;
 typedef AutoWeakPtr<ResourceManager> ResourceManagerPtr;
@@ -935,8 +968,11 @@ typedef std::shared_ptr<GPUProgram> GPUProgramPtr;
 class Skybox;
 typedef Skybox* SkyboxPtr;
 
+typedef uint32_t IdleConnectionID;
+
 typedef UniqueID<MeshPtr> MeshID;
 typedef UniqueID<TexturePtr> TextureID;
+typedef UniqueID<FontPtr> FontID;
 typedef UniqueID<CameraPtr> CameraID;
 typedef UniqueID<MaterialPtr> MaterialID;
 typedef UniqueID<LightPtr> LightID;
@@ -945,12 +981,12 @@ typedef UniqueID<ActorPtr> ActorID;
 typedef UniqueID<GeomPtr> GeomID;
 typedef UniqueID<SoundPtr> SoundID;
 typedef UniqueID<PipelinePtr> PipelineID;
-typedef UniqueID<OverlayPtr> OverlayID;
 typedef UniqueID<SpritePtr> SpriteID;
 typedef UniqueID<BackgroundPtr> BackgroundID;
 typedef UniqueID<ParticleSystemPtr> ParticleSystemID;
 typedef UniqueID<SkyboxPtr> SkyboxID;
 typedef UniqueID<GPUProgramPtr> ShaderID;
+typedef UniqueID<ui::WidgetPtr> WidgetID;
 
 typedef generic::TemplatedManager<Stage, StageID> BaseStageManager;
 

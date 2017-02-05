@@ -37,13 +37,17 @@ private:
     void initialize();
     bool initialized_ = false;
 
-    OverlayID overlay_id_;
+    StageID stage_id_;
     CameraID ui_camera_;
     PipelineID pipeline_id_;
 
     void update();
 
     int32_t get_memory_usage_in_megabytes();
+
+    ui::WidgetPtr fps_;
+    ui::WidgetPtr ram_usage_;
+    ui::WidgetPtr actors_rendered_;
 };
 
 }
