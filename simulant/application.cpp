@@ -44,6 +44,15 @@ Application::Application(const unicode &title, uint32_t width, uint32_t height, 
 
 void Application::construct_window(const AppConfig& config) {
     window_ = SDL2Window::create(this, config.width, config.height, config.bpp, config.fullscreen);
+
+    for(auto& search_path: config.search_paths) {
+        window_->resource_locator->add_search_path(search_path);
+    }
+
+    if(!window_->_init()) {
+        throw InstanceInitializationError("Unabel to create window");
+    }
+
     routes_.reset(new ScreenManager(*window_));
 
     window_->set_title(config.title.encode());

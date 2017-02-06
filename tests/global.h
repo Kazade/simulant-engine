@@ -13,6 +13,7 @@ public:
     void set_up() {
         if(!window) {
             window = smlt::SDL2Window::create(nullptr);
+            window->_init();
             window->set_logging_level(smlt::LOG_LEVEL_NONE);
         } else {
             window->reset();

@@ -129,12 +129,8 @@ public:
 
     template<typename T>
     static std::shared_ptr<WindowBase> create(Application* app, int width=640, int height=480, int bpp=0, bool fullscreen=false) {
-        std::shared_ptr<WindowBase> window(new T());
+        std::shared_ptr<WindowBase> window(new T(width, height, bpp, fullscreen));
         window->set_application(app);
-
-        if(!window->_init(width, height, bpp, fullscreen)) {
-            throw InstanceInitializationError();
-        }
         return window;
     }
 
@@ -225,6 +221,15 @@ public:
         float dx, float dy // Between -1.0 and +1.0
     );
 
+
+    /* Must be called directly after Window construction, it creates the window itself. The reason this
+     * isn't done in create() or the constructor is that _init also sets up the default resources etc. and doesn't
+     * allow a window of opportunity to manipulate the WindowBase instance before creating the window.
+     *
+     * FIXME: This is dirty and hacky and should be fixed.
+     */
+    bool _init();
+
 protected:    
     std::shared_ptr<Renderer> renderer_;
 
@@ -238,8 +243,13 @@ protected:
         height_ = height; 
     }
 
-    bool _init(int width, int height, int bpp, bool fullscreen);
+    void set_bpp(uint32_t bpp) {
+        bpp_ = bpp;
+    }
 
+    void set_fullscreen(bool val) {
+        fullscreen_ = val;
+    }
 
     virtual bool create_window(int width, int height, int bpp, bool fullscreen) = 0;
     virtual void destroy_window() = 0;
@@ -290,8 +300,10 @@ private:
     ResourceManager* resource_manager_;
     bool initialized_;
 
-    int32_t width_;
-    int32_t height_;
+    uint32_t width_ = 0;
+    uint32_t height_ = 0;
+    uint32_t bpp_ = 0;
+    bool fullscreen_ = false;
 
     std::vector<LoaderTypePtr> loaders_;
     bool is_running_;

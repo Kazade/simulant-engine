@@ -51,6 +51,9 @@ struct AppConfig {
     uint32_t height = 0;
     uint32_t bpp = 0;
     bool fullscreen = true;
+
+    // Additional paths for asset loading
+    std::vector<unicode> search_paths;
 };
 
 class Application :

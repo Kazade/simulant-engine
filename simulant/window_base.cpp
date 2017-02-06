@@ -176,13 +176,10 @@ void WindowBase::each_stage(std::function<void (uint32_t, Stage*)> func) {
     StageManager::each(func);
 }
 
-bool WindowBase::_init(int width, int height, int bpp, bool fullscreen) {
+bool WindowBase::_init() {
     GLThreadCheck::init();
 
-    set_width(width);
-    set_height(height);
-
-    bool result = create_window(width, height, bpp, fullscreen);
+    bool result = create_window(width_, height_, bpp_, fullscreen_);
 
     // Initialize the render_sequence once we have a renderer
     render_sequence_ = std::make_shared<RenderSequence>(this);

@@ -36,7 +36,7 @@ public:
         return WindowBase::create<SDL2Window>(app, width, height, bpp, fullscreen);
     }
 
-    SDL2Window();
+    SDL2Window(uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen);
     virtual ~SDL2Window();
 
     void set_title(const std::string& title);
