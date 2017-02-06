@@ -96,8 +96,8 @@ private:
 
 class PhysicsDemo: public smlt::Application {
 public:
-    PhysicsDemo():
-        smlt::Application("Physics Demo") {}
+    PhysicsDemo(const smlt::AppConfig& config):
+        smlt::Application(config) {}
 
 private:
     bool do_init() {
@@ -110,6 +110,9 @@ private:
 
 
 int main(int argc, char* argv[]) {
-    PhysicsDemo app;
+    smlt::AppConfig config;
+    config.title = "Physics Sample";
+
+    PhysicsDemo app(config);
     return app.run();
 }

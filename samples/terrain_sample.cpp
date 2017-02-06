@@ -115,8 +115,8 @@ private:
 
 class TerrainDemo: public smlt::Application {
 public:
-    TerrainDemo():
-        smlt::Application("Terrain Demo") {}
+    TerrainDemo(const smlt::AppConfig& config):
+        smlt::Application(config) {}
 
 private:
     bool do_init() {
@@ -129,6 +129,9 @@ private:
 
 
 int main(int argc, char* argv[]) {
-    TerrainDemo app;
+    smlt::AppConfig config;
+    config.title = "Terrain Demo";
+
+    TerrainDemo app(config);
     return app.run();
 }

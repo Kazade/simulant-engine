@@ -36,8 +36,8 @@ private:
 
 class CombinedSample: public smlt::Application {
 public:
-    CombinedSample():
-        Application("Simulant Combined Sample") {
+    CombinedSample(const AppConfig& config):
+        Application(config) {
     }
 
 private:
@@ -50,7 +50,10 @@ private:
 };
 
 int main(int argc, char* argv[]) {
-    CombinedSample app;
+    smlt::AppConfig config;
+    config.title = "Simulant Combined Sample";
+
+    CombinedSample app(config);
     return app.run();
 }
 

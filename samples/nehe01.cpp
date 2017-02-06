@@ -24,6 +24,9 @@ private:
 
 class App : public smlt::Application {
 public:
+    App(const smlt::AppConfig& config):
+        smlt::Application(config) {}
+
     bool do_init() {
         register_screen("/", smlt::screen_factory<MainScreen>());
         return true;
@@ -31,6 +34,8 @@ public:
 };
 
 int main(int argc, char* argv[]) {
-    App app;
+    smlt::AppConfig config;
+    config.title = "NeHe 01";
+    App app(config);
     return app.run();
 }

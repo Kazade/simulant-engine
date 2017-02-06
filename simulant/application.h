@@ -26,6 +26,7 @@
 #include <future>
 #include <SDL.h>
 
+#include "utils/deprecated.h"
 #include "types.h"
 #include "utils/unicode.h"
 #include "screens/screen_manager.h"
@@ -44,9 +45,20 @@ public:
         std::runtime_error("An error occurred while running a background task") {}
 };
 
+struct AppConfig {
+    unicode title = _u("Simulant Application");
+    uint32_t width = 0;
+    uint32_t height = 0;
+    uint32_t bpp = 0;
+    bool fullscreen = true;
+};
+
 class Application :
     public ScreenManagerInterface {
 public:
+    Application(const AppConfig& config);
+
+    DEPRECATED
     Application(const unicode& title=_u("Simulant Application"),
         uint32_t width=1366,
         uint32_t height=768,
@@ -95,6 +107,8 @@ private:
     virtual bool on_key_release(SDL_Keysym key) { return false; }
 
     generic::DataCarrier data_carrier_;
+
+    void construct_window(const AppConfig& config);
 };
 
 }

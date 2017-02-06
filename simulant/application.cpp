@@ -27,11 +27,26 @@
 
 namespace smlt {
 
+Application::Application(const AppConfig &config) {
+    construct_window(config);
+}
+
 Application::Application(const unicode &title, uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen){
-    window_ = SDL2Window::create(this, width, height, bpp, fullscreen);
+    AppConfig config;
+    config.title = title;;
+    config.width = width;
+    config.height = height;
+    config.bpp = bpp;
+    config.fullscreen = fullscreen;
+
+    construct_window(config);
+}
+
+void Application::construct_window(const AppConfig& config) {
+    window_ = SDL2Window::create(this, config.width, config.height, config.bpp, config.fullscreen);
     routes_.reset(new ScreenManager(*window_));
 
-    window_->set_title(title.encode());
+    window_->set_title(config.title.encode());
 
     window_->signal_step().connect(std::bind(&Application::do_step, this, std::placeholders::_1));
     window_->signal_post_step().connect(std::bind(&Application::do_post_step, this, std::placeholders::_1));
