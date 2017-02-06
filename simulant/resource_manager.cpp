@@ -44,7 +44,7 @@ bool ResourceManager::init() {
         return true;
     }
 
-    default_heading_font_ = new_font_from_ttf(default_font_filename(), 42).fetch();
+    default_heading_font_ = new_font_from_ttf(default_font_filename(), 64).fetch();
     default_subheading_font_ = new_font_from_ttf(default_font_filename(), 24).fetch();
     default_body_font_ = new_font_from_ttf(default_font_filename(), 18).fetch();
 
