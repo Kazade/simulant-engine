@@ -56,6 +56,7 @@ void Widget::cleanup() {
 void Widget::set_font(FontID font_id) {
     font_ = stage->assets->font(font_id);
     line_height_ = std::round(float(font_->size()) * 1.1);
+    rebuild();
 }
 
 void Widget::resize(float width, float height) {
