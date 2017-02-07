@@ -430,6 +430,10 @@ void Widget::set_focus_next(WidgetPtr next_widget) {
 void Widget::focus() {
     auto focused = focused_in_chain_or_this();
     if(focused == this) {
+        if(!is_focused_) {
+            is_focused_ = true;
+            signal_focused_();
+        }
         return;
     } else {
         focused->blur();
