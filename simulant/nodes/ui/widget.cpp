@@ -479,7 +479,7 @@ void Widget::focus_next_in_chain(ChangeFocusBehaviour behaviour) {
     if(focused) {
         // Focus the next in the chain, otherwise focus the first in the chain
         if(focused->focus_next_) {
-            to_focus = focus_next_;
+            to_focus = focused->focus_next_;
         } else {
             to_focus = first_in_focus_chain();
         }
@@ -496,7 +496,10 @@ void Widget::focus_next_in_chain(ChangeFocusBehaviour behaviour) {
         return;
     }
 
-    focused->blur();
+    if(focused) {
+        focused->blur();
+    }
+
     if(to_focus) {
         to_focus->is_focused_ = true;
         to_focus->signal_focused_();
