@@ -1534,3 +1534,5 @@ simulant/event_listener.cpp
 simulant/nodes/ui/button.cpp
 tests/test_plane.h
 simulant/utils/deprecated.h
+simulant/sdl2_keycodes.h
+simulant/keycodes.h

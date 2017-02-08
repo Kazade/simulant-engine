@@ -21,6 +21,8 @@
 
 #include <SDL.h>
 
+#include "sdl2_keycodes.h"
+
 #include "generic/managed.h"
 #include "window_base.h"
 

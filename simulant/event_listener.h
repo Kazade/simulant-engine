@@ -2,6 +2,7 @@
 
 #include <list>
 #include "types.h"
+#include "keycodes.h"
 
 namespace smlt {
 
@@ -29,6 +30,16 @@ struct TouchEvent {
     float pressure;
 };
 
+enum KeyEventType {
+    KEY_EVENT_TYPE_KEY_DOWN,
+    KEY_EVENT_TYPE_KEY_UP
+};
+
+struct KeyEvent {
+    KeyEventType type;
+    KeyboardCode keyboard_code;
+};
+
 class EventListener {
 public:
     EventListener() {}
@@ -38,7 +49,13 @@ public:
     void handle_touch_end(WindowBase* window, TouchPointID touch_id, float normalized_x, float normalized_y);
     void handle_touch_move(WindowBase* window, TouchPointID touch_id, float normalized_x, float normalized_y, float dx, float dy);
 
+    void handle_key_down(WindowBase* window, KeyboardCode code);
+    void handle_key_up(WindowBase* window, KeyboardCode code);
+
 private:
+    virtual void on_key_down(const KeyEvent& evt) {}
+    virtual void on_key_up(const KeyEvent& evt) {}
+
     virtual void on_touch_begin(const TouchEvent& evt) {}
     virtual void on_touch_end(const TouchEvent& evt) {}
     virtual void on_touch_move(const TouchEvent& evt) {}

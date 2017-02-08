@@ -221,6 +221,9 @@ public:
         float dx, float dy // Between -1.0 and +1.0
     );
 
+    void on_key_down(KeyboardCode code);
+    void on_key_up(KeyboardCode code);
+
 
     /* Must be called directly after Window construction, it creates the window itself. The reason this
      * isn't done in create() or the constructor is that _init also sets up the default resources etc. and doesn't

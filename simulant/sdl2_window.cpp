@@ -109,6 +109,12 @@ void SDL2Window::check_events() {
             case SDL_QUIT:
                 stop_running();
                 break;
+            case SDL_KEYDOWN: {
+                on_key_down((KeyboardCode) event.key.keysym.scancode);
+            } break;
+            case SDL_KEYUP: {
+                on_key_up((KeyboardCode) event.key.keysym.scancode);
+            } break;
             case SDL_MOUSEBUTTONDOWN: {
 
             } break;

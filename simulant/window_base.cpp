@@ -482,6 +482,17 @@ bool WindowBase::is_pipeline_enabled(PipelineID pid) const {
 }
 /* End PipelineHelperAPIInterface */
 
+void WindowBase::on_key_down(KeyboardCode code) {
+    each_event_listener([=](EventListener* listener) {
+        listener->handle_key_down(this, code);
+    });
+}
+
+void WindowBase::on_key_up(KeyboardCode code) {
+    each_event_listener([=](EventListener* listener) {
+        listener->handle_key_up(this, code);
+    });
+}
 
 void WindowBase::on_finger_down(TouchPointID touch_id, float normalized_x, float normalized_y, float pressure) {
     each_event_listener([&](EventListener* listener) {

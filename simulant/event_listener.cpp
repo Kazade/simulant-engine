@@ -35,6 +35,22 @@ void EventListener::handle_touch_move(WindowBase* window, TouchPointID touch_id,
     on_touch_move(evt);
 }
 
+void EventListener::handle_key_down(WindowBase* window, KeyboardCode code) {
+    KeyEvent evt;
+    evt.type = KEY_EVENT_TYPE_KEY_DOWN;
+    evt.keyboard_code = code;
+
+    on_key_down(evt);
+}
+
+void EventListener::handle_key_up(WindowBase* window, KeyboardCode code) {
+    KeyEvent evt;
+    evt.type = KEY_EVENT_TYPE_KEY_UP;
+    evt.keyboard_code = code;
+
+    on_key_up(evt);
+}
+
 void EventListenerManager::register_event_listener(EventListener* listener) {
     listeners_.push_back(listener);
 }
