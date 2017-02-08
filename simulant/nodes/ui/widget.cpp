@@ -523,7 +523,7 @@ void Widget::focus_previous_in_chain(ChangeFocusBehaviour behaviour) {
     if(focused) {
         // Focus the previous in the chain, otherwise focus the last in the chain
         if(focused->focus_previous_) {
-            to_focus = focus_previous_;
+            to_focus = focused->focus_previous_;
         } else {
             to_focus = last_in_focus_chain();
         }
@@ -540,7 +540,10 @@ void Widget::focus_previous_in_chain(ChangeFocusBehaviour behaviour) {
         return;
     }
 
-    focused->blur();
+    if(focused) {
+        focused->blur();
+    }
+
     if(to_focus) {
         to_focus->is_focused_ = true;
         to_focus->signal_focused_();
