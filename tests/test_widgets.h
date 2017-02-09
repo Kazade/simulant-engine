@@ -28,6 +28,25 @@ public:
         assert_equal(20, button->requested_height());
     }
 
+    void test_focus_chain() {
+        auto widget1 = stage_->ui->new_widget_as_label("label1").fetch();
+        auto widget2 = stage_->ui->new_widget_as_label("label2").fetch();
+
+        assert_is_null(widget1->focused_in_chain());
+
+        widget1->set_focus_next(widget2);
+        widget1->focus();
+
+        assert_equal(widget1, widget1->focused_in_chain());
+        widget1->focus_next_in_chain();
+
+        assert_equal(widget2, widget2->focused_in_chain());
+
+        widget2->blur();
+
+        assert_is_null(widget1->focused_in_chain());
+    }
+
 private:
     StagePtr stage_;
 };

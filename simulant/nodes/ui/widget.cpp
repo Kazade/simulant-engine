@@ -442,6 +442,18 @@ void Widget::focus() {
     }
 }
 
+WidgetPtr Widget::focused_in_chain() {
+    auto ret = focused_in_chain_or_this();
+
+    // If we got back this element, but this element isn't focused
+    // then return null
+    if(ret == this && !is_focused_) {
+        return nullptr;
+    }
+
+    return ret;
+}
+
 WidgetPtr Widget::focused_in_chain_or_this() {
     auto next = focus_next_;
     while(next && next != this) {

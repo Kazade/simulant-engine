@@ -130,6 +130,7 @@ public:
     void focus_previous_in_chain(ChangeFocusBehaviour behaviour = FOCUS_THIS_IF_NONE_FOCUSED);
     WidgetPtr first_in_focus_chain();
     WidgetPtr last_in_focus_chain();
+    WidgetPtr focused_in_chain();
 
     // Manually trigger events
     void click();
