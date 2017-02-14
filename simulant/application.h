@@ -54,6 +54,9 @@ struct AppConfig {
 
     // Additional paths for asset loading
     std::vector<unicode> search_paths;
+
+    // Program arguments
+    std::vector<unicode> arguments;
 };
 
 class Application :

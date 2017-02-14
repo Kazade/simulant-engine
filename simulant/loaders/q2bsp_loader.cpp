@@ -203,45 +203,6 @@ Vec3 find_player_spawn_point(std::vector<ActorProperties>& actors) {
     return none;
 }
 
-void add_lights_to_scene(Stage* stage, const std::vector<ActorProperties>& actors) {
-    //Needed because the Quake 2 coord system is weird
-    kmMat4 rotation;
-    kmMat4RotationX(&rotation, kmDegreesToRadians(-90.0f));
-
-    for(ActorProperties props: actors) {
-        if(props["classname"] == "light") {
-            kmVec3 pos;
-            std::istringstream origin(props["origin"]);
-            origin >> pos.x >> pos.y >> pos.z;
-
-            {
-                auto new_light = stage->light(stage->new_light());
-                new_light->move_to(pos.x, pos.y, pos.z);
-                kmVec3Transform(&pos, &pos, &rotation);
-
-                float range = 300; //Default in Q2
-                if(props.count(std::string("light"))) {
-                    std::string tmp = props["light"];
-                    std::istringstream value(tmp);
-                    value >> range;
-                }
-
-                if(props.count(std::string("_color"))) {
-                    smlt::Colour diffuse;
-                    std::istringstream value(props["_color"]);
-                    value >> diffuse.r >> diffuse.g >> diffuse.b;
-                    diffuse.a = 1.0;
-                    new_light->set_diffuse(diffuse);
-                }
-
-
-                std::cout << "Creating light at: " << pos.x << ", " << pos.y << ", " << pos.z << std::endl;
-                new_light->set_attenuation_from_range(range);
-            }
-        }
-    }
-}
-
 unicode locate_texture(ResourceLocator& locator, const unicode& filename) {
     std::vector<unicode> extensions = { ".wal", ".jpg", ".tga", ".jpeg", ".png" };
     for(auto& ext: extensions) {
@@ -328,12 +289,19 @@ struct LightmapBuffer {
 
 void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     Loadable* res_ptr = &resource;
-    Stage* stage = dynamic_cast<Stage*>(res_ptr);
-    assert(stage && "You passed a Resource that is not a stage to the QBSP loader");
+    Mesh* mesh = dynamic_cast<Mesh*>(res_ptr);
+
+    // Make sure the passed mesh is empty and using the default vertex spec
+    mesh->reset(smlt::VertexSpecification::DEFAULT);
+
+    auto assets = &mesh->resource_manager();
+    auto& locator = assets->window->resource_locator;
+
+    assert(mesh && "You passed a Resource that is not a mesh to the QBSP loader");
 
     std::map<std::string, TextureID> texture_lookup;
-    TextureID checkerboard = stage->assets->new_texture_from_file(Texture::BuiltIns::CHECKERBOARD);
-    TextureID lightmap_texture = stage->assets->new_texture(GARBAGE_COLLECT_NEVER);
+    TextureID checkerboard = assets->new_texture_from_file(Texture::BuiltIns::CHECKERBOARD);
+    TextureID lightmap_texture = assets->new_texture(GARBAGE_COLLECT_NEVER);
 
     auto texture_info_visible = [](Q2::TextureInfo& info) -> bool {
         /* Don't draw invisible things */
@@ -354,9 +322,9 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             return texture_lookup[texture_name];
         } else {
             TextureID new_texture_id;
-            auto texture_filename = locate_texture(*stage->window->resource_locator.get(), texture_name);
+            auto texture_filename = locate_texture(*locator.get(), texture_name);
             if(!texture_filename.empty()) {
-                new_texture_id = stage->assets->new_texture_from_file(texture_filename);
+                new_texture_id = assets->new_texture_from_file(texture_filename);
             } else {
                 L_DEBUG(_F("Texture {0} was missing").format(texture_name));
                 new_texture_id = checkerboard;
@@ -391,9 +359,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     std::vector<ActorProperties> actors;
     parse_actors(actor_string, actors);
     Vec3 cam_pos = find_player_spawn_point(actors);
-    stage->data->stash(cam_pos, "player_spawn");
-
-    add_lights_to_scene(stage, actors);
+    mesh->data->stash(cam_pos, "player_spawn");
 
     int32_t num_vertices = header.lumps[Q2::LumpType::VERTICES].length / sizeof(Q2::Point3f);
     std::vector<Q2::Point3f> vertices(num_vertices);
@@ -442,13 +408,6 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
      *  Load the textures and generate materials
      */
 
-    MeshID mid = stage->assets->new_mesh_with_alias(
-        "world_geometry",
-        VertexSpecification::DEFAULT,
-        GARBAGE_COLLECT_NEVER
-    );
-    auto mesh = stage->assets->mesh(mid);
-
     std::vector<MaterialID> materials;
     std::vector<std::pair<uint32_t, uint32_t>> texture_dimensions;
     std::unordered_map<MaterialID, SubMesh*> submeshes_by_material;
@@ -482,13 +441,13 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
         bool uses_lightmap = !(tex.flags & (Q2::SURFACE_FLAG_SKY | Q2::SURFACE_FLAG_WARP));
         if(uses_lightmap) {
-            new_material_id = stage->assets->new_material_from_file(Material::BuiltIns::TEXTURE_WITH_LIGHTMAP);
+            new_material_id = assets->new_material_from_file(Material::BuiltIns::TEXTURE_WITH_LIGHTMAP);
         } else {
-            new_material_id = stage->assets->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
+            new_material_id = assets->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
         }
 
         {
-            auto mat = stage->assets->material(new_material_id);
+            auto mat = assets->material(new_material_id);
             mat->pass(0)->set_texture_unit(0, new_texture_id);
 
             if(uses_lightmap) {
@@ -512,7 +471,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             }
         }
 
-        auto texture = stage->assets->texture(new_texture_id);
+        auto texture = assets->texture(new_texture_id);
         texture_dimensions[tex_idx].first = texture->width();
         texture_dimensions[tex_idx].second = texture->height();
 
@@ -717,7 +676,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     /* Now upload the lightmap texture */
     {
-        auto lightmap = stage->assets->texture(lightmap_texture);
+        auto lightmap = assets->texture(lightmap_texture);
         lightmap->resize(lightmap_buffer.width_in_texels(), lightmap_buffer.height_in_texels());
         lightmap->set_bpp(24); // RGB only, no alpha
         lightmap->data().assign(lightmap_buffer.buffer.begin(), lightmap_buffer.buffer.end());
@@ -735,12 +694,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         submesh->index_data->done();
     });
 
-    //Finally, create an actor from the world mesh
-    stage->new_actor_with_mesh(mid);
 
-    // Now the mesh has been attached, it can be collected
-    mesh->enable_gc();
-    L_DEBUG(_F("Created a geom for mesh: {0}").format(mid));
+    //FIXME: mark mesh as uncollected
 }
 
 }
