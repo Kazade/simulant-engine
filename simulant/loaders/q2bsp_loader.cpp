@@ -129,11 +129,9 @@ struct Header {
 
 }
 
-typedef std::map<std::string, std::string> ActorProperties;
-
-void parse_actors(const std::string& actor_string, std::vector<ActorProperties>& actors) {
+void parse_actors(const std::string& actor_string, Q2EntityList& actors) {
     bool inside_actor = false;
-    ActorProperties current;
+    Q2Entity current;
     unicode key, value;
     bool inside_key = false, inside_value = false, key_done_for_this_line = false;
     for(char c: actor_string) {
@@ -184,23 +182,6 @@ void parse_actors(const std::string& actor_string, std::vector<ActorProperties>&
         }
     }
 
-}
-
-Vec3 find_player_spawn_point(std::vector<ActorProperties>& actors) {
-    for(ActorProperties p: actors) {
-        std::cout << p["classname"] << std::endl;
-        if(p["classname"] == "info_player_start") {
-            Vec3 pos;
-            std::istringstream origin(p["origin"]);
-            origin >> pos.x >> pos.y >> pos.z;
-            std::cout << "Setting start position to: " << pos.x << ", " << pos.y << ", " << pos.z << std::endl;
-            return pos;
-        }
-    }
-    Vec3 none;
-    kmVec3Fill(&none, 0, 0, 0);
-
-    return none;
 }
 
 unicode locate_texture(ResourceLocator& locator, const unicode& filename) {
@@ -287,6 +268,15 @@ struct LightmapBuffer {
     std::vector<uint8_t> buffer;
 };
 
+template<typename T>
+uint32_t read_lump(std::istream& file, const Q2::Header& header, Q2::LumpType type, std::vector<T>& lumpout) {
+    uint32_t count = header.lumps[type].length / sizeof(T);
+    lumpout.resize(count);
+    file.seekg((std::istream::pos_type) header.lumps[type].offset);
+    file.read((char*)&lumpout[0], (int) sizeof(T) * count);
+    return count;
+}
+
 void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     Loadable* res_ptr = &resource;
     Mesh* mesh = dynamic_cast<Mesh*>(res_ptr);
@@ -334,10 +324,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         }
     };
 
-    std::ifstream file(filename_.encode().c_str(), std::ios::binary);
-    if(!file.good()) {
-        throw std::runtime_error("Couldn't load the BSP file: " + filename_.encode());
-    }
+    auto& file = *this->data_;
 
     //Needed because the Quake 2 coord system is weird
     kmMat4 rotation;
@@ -350,42 +337,28 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         throw std::runtime_error("Not a valid Q2 map");
     }
 
-    std::vector<char> actor_buffer(header.lumps[Q2::LumpType::ENTITIES].length);
-    file.seekg(header.lumps[Q2::LumpType::ENTITIES].offset);
-    file.read(&actor_buffer[0], sizeof(char) * header.lumps[Q2::LumpType::ENTITIES].length);
+    std::vector<char> actor_buffer;
+    read_lump(file, header, Q2::LumpType::ENTITIES, actor_buffer);
     std::string actor_string(actor_buffer.begin(), actor_buffer.end());
 
+    Q2EntityList entities;
+    parse_actors(actor_string, entities);
+    mesh->data->stash(entities, "entities");
 
-    std::vector<ActorProperties> actors;
-    parse_actors(actor_string, actors);
-    Vec3 cam_pos = find_player_spawn_point(actors);
-    mesh->data->stash(cam_pos, "player_spawn");
+    std::vector<Q2::Point3f> vertices;
+    std::vector<Q2::Edge> edges;
+    std::vector<Q2::TextureInfo> textures;
+    std::vector<Q2::Face> faces;
+    std::vector<uint32_t> face_edges;
+    std::vector<uint8_t> lightmap_data;
 
-    int32_t num_vertices = header.lumps[Q2::LumpType::VERTICES].length / sizeof(Q2::Point3f);
-    std::vector<Q2::Point3f> vertices(num_vertices);
-    file.seekg(header.lumps[Q2::LumpType::VERTICES].offset);
-    file.read((char*)&vertices[0], sizeof(Q2::Point3f) * num_vertices);
+    auto num_vertices = read_lump(file, header, Q2::LumpType::VERTICES, vertices);
+    auto num_edges = read_lump(file, header, Q2::LumpType::EDGES, edges);
+    auto num_textures = read_lump(file, header, Q2::LumpType::TEXTURE_INFO, textures);
+    auto num_faces = read_lump(file, header, Q2::LumpType::FACES, faces);
+    auto num_face_edges = read_lump(file, header, Q2::LumpType::FACE_EDGE_TABLE, face_edges);
+    auto lightmap_length = read_lump(file, header, Q2::LumpType::LIGHTMAPS, lightmap_data);
 
-    int32_t num_edges = header.lumps[Q2::LumpType::EDGES].length / sizeof(Q2::Edge);
-    std::vector<Q2::Edge> edges(num_edges);
-    file.seekg(header.lumps[Q2::LumpType::EDGES].offset);
-    file.read((char*)&edges[0], sizeof(Q2::Edge) * num_edges);
-
-    int32_t num_textures = header.lumps[Q2::LumpType::TEXTURE_INFO].length / sizeof(Q2::TextureInfo);
-    std::vector<Q2::TextureInfo> textures(num_textures);
-    file.seekg(header.lumps[Q2::LumpType::TEXTURE_INFO].offset);
-    file.read((char*)&textures[0], sizeof(Q2::TextureInfo) * num_textures);
-
-    //Read in the faces
-    int32_t num_faces = header.lumps[Q2::LumpType::FACES].length / sizeof(Q2::Face);
-    std::vector<Q2::Face> faces(num_faces);
-    file.seekg(header.lumps[Q2::LumpType::FACES].offset);
-    file.read((char*)&faces[0], sizeof(Q2::Face) * num_faces);
-
-    int32_t num_face_edges = header.lumps[Q2::LumpType::FACE_EDGE_TABLE].length / sizeof(int32_t);
-    std::vector<int32_t> face_edges(num_face_edges);
-    file.seekg(header.lumps[Q2::LumpType::FACE_EDGE_TABLE].offset);
-    file.read((char*)&face_edges[0], sizeof(int32_t) * num_face_edges);
 
     std::for_each(vertices.begin(), vertices.end(), [&](Q2::Point3f& vert) {
         // Dirty casts, but it should work...
@@ -399,10 +372,6 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
      * a texture which is sqrt(num_faces) * 16 wide and tall and then manipulate the texture coords appropriately.
      */
 
-    int32_t lightmap_data_size = header.lumps[Q2::LumpType::LIGHTMAPS].length;
-    std::vector<uint8_t> lightmap_data(lightmap_data_size);
-    file.seekg(header.lumps[Q2::LumpType::LIGHTMAPS].offset);
-    file.read((char*)&lightmap_data[0], lightmap_data_size);
 
     /**
      *  Load the textures and generate materials

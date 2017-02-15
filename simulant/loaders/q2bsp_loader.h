@@ -19,9 +19,15 @@
 #ifndef Q2BSP_LOADER_H_INCLUDED
 #define Q2BSP_LOADER_H_INCLUDED
 
+#include <map>
+
 #include "../loader.h"
 
 namespace smlt {
+
+typedef std::map<std::string, std::string> Q2Entity;
+typedef std::vector<Q2Entity> Q2EntityList;
+
 namespace loaders {
 
 class Q2BSPLoader : public Loader {
