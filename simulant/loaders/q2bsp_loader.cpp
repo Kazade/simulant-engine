@@ -197,77 +197,6 @@ unicode locate_texture(ResourceLocator& locator, const unicode& filename) {
     return "";
 }
 
-struct LightmapBuffer {
-    static const uint32_t LIGHTMAP_SIZE = 18; //16 + 1 px border each side
-    static const uint32_t LIGHTMAP_CHANNELS = 3;
-
-    LightmapBuffer(uint32_t num_lightmaps) {
-        horiz = ceil(sqrt(num_lightmaps)) + 1;
-        vert = ceil(float(num_lightmaps) / float(horiz)) + 1;
-
-        uint32_t buffer_size = (horiz * LIGHTMAP_SIZE) * (vert * LIGHTMAP_SIZE);
-        buffer_size *= LIGHTMAP_CHANNELS;
-
-        buffer.resize(buffer_size, 255);
-    }
-
-    void write_lightmap(uint32_t index, uint8_t* data, uint32_t width, uint32_t height) {
-        uint32_t texture_width = LIGHTMAP_SIZE * LIGHTMAP_CHANNELS;
-        uint32_t buffer_width = horiz * LIGHTMAP_SIZE * LIGHTMAP_CHANNELS;
-
-        uint32_t target_x = index % horiz;
-        uint32_t target_y = index / horiz;
-
-        uint32_t texel_start = ((target_y * LIGHTMAP_SIZE) * buffer_width) + (target_x * texture_width);
-        uint32_t texel = texel_start;
-
-        for(int32_t y = -1; y < (int32_t) height + 1; ++y) {
-            auto row_start = texel;
-            for(int32_t x = -1; x < (int32_t) width + 1; ++x) {
-                uint32_t src_x = (x < 0) ? 0 : (x >= (int32_t) width) ? width - 1 : x;
-                uint32_t src_y = (y < 0) ? 0 : (y >= (int32_t) height) ? height - 1 : y;
-
-                uint32_t source_idx = ((src_y * width) + src_x) * 3;
-
-                // If we are within the bounds of the source lightmap, then
-                // copy the data for this texel to the right place
-                buffer.at(texel) = data[source_idx];
-                buffer.at(texel + 1) = data[source_idx + 1];
-                buffer.at(texel + 2) = data[source_idx + 2];
-                // Move to the next texl
-                texel += LIGHTMAP_CHANNELS;
-            }
-
-            texel = row_start + buffer_width;
-        }
-    }
-
-    std::pair<float, float> transform_uv(int32_t index, float u, float v) const {
-        float ret_u = u / float(horiz);
-        float ret_v = v / float(vert);
-
-        float x = float(index % horiz);
-        float y = float(index / horiz);
-
-        ret_u += (x * (1.0 / float(horiz)));
-        ret_v += (y * (1.0 / float(vert)));
-
-        return std::make_pair(ret_u, ret_v);
-    }
-
-    const uint32_t width_in_texels() const {
-        return horiz * LIGHTMAP_SIZE;
-    }
-
-    const uint32_t height_in_texels() const {
-        return vert * LIGHTMAP_SIZE;
-    }
-
-    uint32_t horiz = 0;
-    uint32_t vert = 0;
-    std::vector<uint8_t> buffer;
-};
-
 template<typename T>
 uint32_t read_lump(std::istream& file, const Q2::Header& header, Q2::LumpType type, std::vector<T>& lumpout) {
     uint32_t count = header.lumps[type].length / sizeof(T);
@@ -291,7 +220,6 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     std::map<std::string, TextureID> texture_lookup;
     TextureID checkerboard = assets->new_texture_from_file(Texture::BuiltIns::CHECKERBOARD);
-    TextureID lightmap_texture = assets->new_texture(GARBAGE_COLLECT_NEVER);
 
     auto texture_info_visible = [](Q2::TextureInfo& info) -> bool {
         /* Don't draw invisible things */
@@ -418,10 +346,10 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         {
             auto mat = assets->material(new_material_id);
             mat->pass(0)->set_texture_unit(0, new_texture_id);
-
+/*
             if(uses_lightmap) {
                 mat->pass(0)->set_texture_unit(1, lightmap_texture);
-            }
+            }*/
 
             if(tex.flags & Q2::SURFACE_FLAG_FLOWING) {
                 mat->new_controller<controllers::material::Flowing>();
@@ -456,23 +384,6 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     typedef uint32_t Offset;
     typedef uint32_t FaceIndex;
 
-    struct LightmapInfo {
-        Offset offset;
-        uint32_t width;
-        uint32_t height;
-        short min_u;
-        short min_v;
-    };
-
-    struct StagedLightmapCoord {
-        FaceIndex face_index;
-        int32_t cursor_position;
-        float u;
-        float v;
-    };
-
-    std::vector<StagedLightmapCoord> lightmap_coords_to_process;
-    std::map<FaceIndex, LightmapInfo> lightmaps;
 
     int32_t face_index = -1;
     for(Q2::Face& f: faces) {
@@ -572,15 +483,6 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
                 mesh->shared_data->diffuse(smlt::Colour::WHITE);
                 mesh->shared_data->tex_coord0(u / w, v / h);
                 mesh->shared_data->tex_coord1(u / w, v / h);
-
-                StagedLightmapCoord coord;
-                coord.cursor_position = mesh->shared_data->cursor_position();
-                coord.face_index = face_index;
-                coord.u = u;
-                coord.v = v;
-
-                lightmap_coords_to_process.push_back(coord);
-
                 mesh->shared_data->move_next();
 
                 sm->index_data->index(mesh->shared_data->count() - 1);
@@ -590,69 +492,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             }
         }
 
-        uint32_t lightmap_width  = ceil(max_u / 16) - floor(min_u / 16) + 1;
-        uint32_t lightmap_height = ceil(max_v / 16) - floor(min_v / 16) + 1;
-
-        lightmap_width = std::min(lightmap_width, (uint32_t)16);
-        lightmap_height = std::min(lightmap_height, (uint32_t)16);
-
-        if(!lightmaps.count(face_index)) {
-            lightmaps[face_index].offset = f.lightmap_offset;
-            lightmaps[face_index].width = lightmap_width;
-            lightmaps[face_index].height = lightmap_height;
-            lightmaps[face_index].min_u = min_u;
-            lightmaps[face_index].min_v = min_v;
-        }
     }
 
-    std::cout << "Num lightmaps: " << lightmaps.size() << std::endl;
-    LightmapBuffer lightmap_buffer(lightmaps.size());
-
-    for(auto& p: lightmaps) {
-        auto face_index = p.first;
-        auto& lightmap = p.second;
-
-        lightmap_buffer.write_lightmap(
-            face_index,
-            &lightmap_data[0] + lightmap.offset,
-            lightmap.width,
-            lightmap.height
-        );
-    }
-
-    auto pos = mesh->shared_data->cursor_position();
-    for(StagedLightmapCoord& staged_coord: lightmap_coords_to_process) {
-        auto& lightmap = lightmaps[staged_coord.face_index];
-        float u = staged_coord.u;
-        float v = staged_coord.v;
-
-        u = u - float(lightmap.min_u) + 8.0f;
-        u /= (float(lightmap.width) * 16.0f);
-
-        v = v - float(lightmap.min_v) + 8.0f;
-        v /= (float(lightmap.height) * 16.0f);
-
-        // These two lines are hacky, and in the wrong place. Basically we need to scale by width / LIGHTMAP_SIZE
-        // because our lightmap sections in the buffer have extra space (the max size for a lightmap)
-        u *= float(lightmap.width) / LightmapBuffer::LIGHTMAP_SIZE;
-        v *= float(lightmap.height) / LightmapBuffer::LIGHTMAP_SIZE;
-
-        mesh->shared_data->move_to(staged_coord.cursor_position);
-        auto lightmap_coords = lightmap_buffer.transform_uv(staged_coord.face_index, u, v);
-        mesh->shared_data->tex_coord1(lightmap_coords.first, lightmap_coords.second);
-    }
-    mesh->shared_data->move_to(pos);
-
-    /* Now upload the lightmap texture */
-    {
-        auto lightmap = assets->texture(lightmap_texture);
-        lightmap->resize(lightmap_buffer.width_in_texels(), lightmap_buffer.height_in_texels());
-        lightmap->set_bpp(24); // RGB only, no alpha
-        lightmap->data().assign(lightmap_buffer.buffer.begin(), lightmap_buffer.buffer.end());
-        lightmap->upload(MIPMAP_GENERATE_NONE, TEXTURE_WRAP_CLAMP_TO_EDGE, TEXTURE_FILTER_LINEAR, false);
-    }
-
-    mesh->data->stash(lightmap_texture, "lightmap_texture_id");
     mesh->shared_data->done();
     mesh->each([&](const std::string& name, SubMesh* submesh) {
         //Delete empty submeshes

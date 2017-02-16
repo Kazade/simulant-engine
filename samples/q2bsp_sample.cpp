@@ -23,9 +23,10 @@ public:
         auto actor_id = stage->new_actor_with_mesh(mesh->id());
 
         stage->host_camera(camera_id_);
+        /*
         stage->camera(camera_id_)->move_to_absolute(
             mesh->data->get<smlt::Vec3>("player_spawn")
-        );
+        );*/
 
         // Add a fly controller to the camera for user input
         stage->camera(camera_id_)->new_controller<controllers::Fly>(window);
