@@ -137,7 +137,7 @@ void Q2BSPLoader::generate_materials(
     materials.clear();
     for(auto& info: texture_infos) {
         bool is_invisible = has_bitflag(info.flags, Q2::SURFACE_FLAG_NO_DRAW);
-        bool uses_lightmap = has_bitflag(info.flags, Q2::SURFACE_FLAG_SKY) || has_bitflag(info.flags, Q2::SURFACE_FLAG_WARP);
+        bool uses_lightmap = !(has_bitflag(info.flags, Q2::SURFACE_FLAG_SKY) || has_bitflag(info.flags, Q2::SURFACE_FLAG_WARP));
 
         if(is_invisible) {
             materials.push_back(MaterialID()); // Just push a null material for invisible surfaces
