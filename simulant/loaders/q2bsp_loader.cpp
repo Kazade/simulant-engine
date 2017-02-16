@@ -41,93 +41,7 @@
 namespace smlt  {
 namespace loaders {
 
-namespace Q2 {
 
-enum LumpType {
-    ENTITIES = 0,
-    PLANES,
-    VERTICES,
-    VISIBILITY,
-    NODES,
-    TEXTURE_INFO,
-    FACES,
-    LIGHTMAPS,
-    LEAVES,
-    LEAF_FACE_TABLE,
-    LEAF_BRUSH_TABLE,
-    EDGES,
-    FACE_EDGE_TABLE,
-    MODELS,
-    BRUSHES,
-    BRUSH_SIDES,
-    POP,
-    AREAS,
-    AREA_PORTALS,
-    MAX_LUMPS
-};
-
-typedef kmVec3 Point3f;
-
-struct Point3s {
-    int16_t x;
-    int16_t y;
-    int16_t z;
-};
-
-struct Edge {
-    uint16_t a;
-    uint16_t b;
-};
-
-enum SurfaceFlag {
-    SURFACE_FLAG_NONE = 0x0,
-    SURFACE_FLAG_LIGHT = 0x1,
-    SURFACE_FLAG_SLICK = 0x2,
-    SURFACE_FLAG_SKY = 0x4,
-    SURFACE_FLAG_WARP = 0x8,
-    SURFACE_FLAG_TRANS_33 = 0x10,
-    SURFACE_FLAG_TRANS_66 = 0x20,
-    SURFACE_FLAG_FLOWING = 0x40,
-    SURFACE_FLAG_NO_DRAW = 0x80
-};
-
-struct TextureInfo {
-    Point3f u_axis;
-    float u_offset;
-    Point3f v_axis;
-    float v_offset;
-
-    SurfaceFlag flags;
-    uint32_t value;
-
-    char texture_name[32];
-
-    uint32_t next_tex_info;
-};
-
-struct Face {
-    uint16_t plane;             // index of the plane the face is parallel to
-    uint16_t plane_side;        // set if the normal is parallel to the plane normal
-    uint32_t first_edge;        // index of the first edge (in the face edge array)
-    uint16_t num_edges;         // number of consecutive edges (in the face edge array)
-    uint16_t texture_info;      // index of the texture info structure
-    uint8_t lightmap_syles[4]; // styles (bit flags) for the lightmaps
-    uint32_t lightmap_offset;   // offset of the lightmap (in bytes) in the lightmap lump
-};
-
-struct Lump {
-    uint32_t offset;
-    uint32_t length;
-};
-
-struct Header {
-    uint8_t magic[4];
-    uint32_t version;
-
-    Lump lumps[MAX_LUMPS];
-};
-
-}
 
 void parse_actors(const std::string& actor_string, Q2EntityList& actors) {
     bool inside_actor = false;
@@ -194,7 +108,7 @@ unicode locate_texture(ResourceLocator& locator, const unicode& filename) {
         }
     }
 
-    return "";
+    return Texture::BuiltIns::CHECKERBOARD;
 }
 
 template<typename T>
@@ -204,6 +118,56 @@ uint32_t read_lump(std::istream& file, const Q2::Header& header, Q2::LumpType ty
     file.seekg((std::istream::pos_type) header.lumps[type].offset);
     file.read((char*)&lumpout[0], (int) sizeof(T) * count);
     return count;
+}
+
+bool has_bitflag(uint32_t val, uint32_t flag) {
+    return (val & flag) == flag;
+}
+
+void Q2BSPLoader::generate_materials(
+    ResourceManager* assets,
+    const std::vector<Q2::TextureInfo>& texture_infos,
+    std::vector<MaterialID>& materials,
+    std::vector<Q2::TexDimension>& dimensions) {
+
+    /* Given a list of texture infos, this generates counterpart materials */
+
+    std::map<unicode, TextureID> textures;
+
+    materials.clear();
+    for(auto& info: texture_infos) {
+        bool is_invisible = has_bitflag(info.flags, Q2::SURFACE_FLAG_NO_DRAW);
+        bool uses_lightmap = has_bitflag(info.flags, Q2::SURFACE_FLAG_SKY) || has_bitflag(info.flags, Q2::SURFACE_FLAG_WARP);
+
+        if(is_invisible) {
+            materials.push_back(MaterialID()); // Just push a null material for invisible surfaces
+            dimensions.push_back(Q2::TexDimension(0, 0));
+            continue;
+        }
+
+        unicode texture_name = info.texture_name;
+
+        TextureID tex_id;
+        if(!textures.count(texture_name)) {
+            unicode full_path = locate_texture(locator, texture_name);
+            tex_id = assets->new_texture_from_file(full_path);
+            textures[texture_name] = tex_id;
+        } else {
+            tex_id = textures.at(texture_name);
+        }
+
+        auto material_id = assets->new_material_from_file(
+            (uses_lightmap) ? Material::BuiltIns::TEXTURE_WITH_LIGHTMAP : Material::BuiltIns::TEXTURE_ONLY
+        );
+
+        auto mat = material_id.fetch();
+        mat->first_pass()->set_texture_unit(0, tex_id);
+        assets->mark_material_as_uncollected(material_id);
+
+        auto tex = tex_id.fetch();
+        materials.push_back(material_id);
+        dimensions.push_back(Q2::TexDimension(tex->width(), tex->height()));
+    }
 }
 
 void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
@@ -217,40 +181,6 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     auto& locator = assets->window->resource_locator;
 
     assert(mesh && "You passed a Resource that is not a mesh to the QBSP loader");
-
-    std::map<std::string, TextureID> texture_lookup;
-    TextureID checkerboard = assets->new_texture_from_file(Texture::BuiltIns::CHECKERBOARD);
-
-    auto texture_info_visible = [](Q2::TextureInfo& info) -> bool {
-        /* Don't draw invisible things */
-        if((info.flags & Q2::SURFACE_FLAG_NO_DRAW) == Q2::SURFACE_FLAG_NO_DRAW) {
-            return false;
-        }
-
-        /* Don't use sky faces (might change this... could create a skybox) */
-        if((info.flags & Q2::SURFACE_FLAG_SKY) == Q2::SURFACE_FLAG_SKY) {
-            return false;
-        }
-
-        return true;
-    };
-
-    auto find_or_load_texture = [&](const std::string& texture_name) -> TextureID {
-        if(texture_lookup.count(texture_name)) {
-            return texture_lookup[texture_name];
-        } else {
-            TextureID new_texture_id;
-            auto texture_filename = locate_texture(*locator.get(), texture_name);
-            if(!texture_filename.empty()) {
-                new_texture_id = assets->new_texture_from_file(texture_filename);
-            } else {
-                L_DEBUG(_F("Texture {0} was missing").format(texture_name));
-                new_texture_id = checkerboard;
-            }
-            texture_lookup[texture_name] = new_texture_id;
-            return new_texture_id;
-        }
-    };
 
     auto& file = *this->data_;
 
@@ -305,20 +235,12 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
      *  Load the textures and generate materials
      */
 
-    std::vector<MaterialID> materials;
-    std::vector<std::pair<uint32_t, uint32_t>> texture_dimensions;
-    std::unordered_map<MaterialID, SubMesh*> submeshes_by_material;
+    std::vector<MaterialID> materials;    
+    std::vector<Q2::TexDimension> dimensions;
+    generate_materials(assets, textures, materials, dimensions);
 
-    materials.resize(textures.size());
-    texture_dimensions.resize(textures.size());
-
-    uint32_t tex_idx = 0;
+    /* Transform U/V coordinates appropriately */
     for(Q2::TextureInfo& tex: textures) {
-        if(!texture_info_visible(tex)) {
-            ++tex_idx;
-            continue;
-        }
-
         kmVec3 u_axis, v_axis;
         kmVec3Fill(&u_axis, tex.u_axis.x, tex.u_axis.y, tex.u_axis.z);
         kmVec3Fill(&v_axis, tex.v_axis.x, tex.v_axis.y, tex.v_axis.z);
@@ -331,65 +253,23 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         tex.v_axis.x = v_axis.x;
         tex.v_axis.y = v_axis.y;
         tex.v_axis.z = v_axis.z;
-
-        TextureID new_texture_id = find_or_load_texture(tex.texture_name);
-
-        MaterialID new_material_id;
-
-        bool uses_lightmap = !(tex.flags & (Q2::SURFACE_FLAG_SKY | Q2::SURFACE_FLAG_WARP));
-        if(uses_lightmap) {
-            new_material_id = assets->new_material_from_file(Material::BuiltIns::TEXTURE_WITH_LIGHTMAP);
-        } else {
-            new_material_id = assets->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
-        }
-
-        {
-            auto mat = assets->material(new_material_id);
-            mat->pass(0)->set_texture_unit(0, new_texture_id);
-/*
-            if(uses_lightmap) {
-                mat->pass(0)->set_texture_unit(1, lightmap_texture);
-            }*/
-
-            if(tex.flags & Q2::SURFACE_FLAG_FLOWING) {
-                mat->new_controller<controllers::material::Flowing>();
-            } else if(tex.flags & Q2::SURFACE_FLAG_WARP) {
-                mat->new_controller<controllers::material::Warp>();
-            }
-
-            if(tex.flags & Q2::SURFACE_FLAG_TRANS_33) {
-                mat->pass(0)->set_diffuse(smlt::Colour(1.0, 1.0, 1.0, 0.33));
-                mat->pass(0)->set_blending(BLEND_ALPHA);
-            }
-
-            if(tex.flags & Q2::SURFACE_FLAG_TRANS_66) {
-                mat->pass(0)->set_diffuse(smlt::Colour(1.0, 1.0, 1.0, 0.66));
-                mat->pass(0)->set_blending(BLEND_ALPHA);
-            }
-        }
-
-        auto texture = assets->texture(new_texture_id);
-        texture_dimensions[tex_idx].first = texture->width();
-        texture_dimensions[tex_idx].second = texture->height();
-
-        materials[tex_idx] = new_material_id;
-        submeshes_by_material[new_material_id] = mesh->new_submesh_with_material(std::to_string(tex_idx), new_material_id);
-        tex_idx++;
     }
 
-    std::cout << "Num textures: " << texture_lookup.size() << std::endl;
+    std::unordered_map<MaterialID, SubMesh*> submeshes_by_material;
+    uint32_t i;
+    for(auto& material: materials) {
+        submeshes_by_material[material] = mesh->new_submesh_with_material(_F("{0}").format(i++), material);
+    }
+
+    std::cout << "Num materials: " << materials.size() << std::endl;
     std::cout << "Num submeshes: " << mesh->submesh_count() << std::endl;
-
-
-    typedef uint32_t Offset;
-    typedef uint32_t FaceIndex;
-
 
     int32_t face_index = -1;
     for(Q2::Face& f: faces) {
-        Q2::TextureInfo& tex = textures[f.texture_info];
-
-        if(!texture_info_visible(tex)) {
+        auto& tex = textures[f.texture_info];
+        auto material_id = materials.at(f.texture_info);
+        if(!material_id) {
+            // Must be an invisible surface
             continue;
         }
 
@@ -410,8 +290,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             }
         }
 
-        auto material_id = materials[f.texture_info];
-        SubMesh* sm = submeshes_by_material[material_id];
+        SubMesh* sm = submeshes_by_material.at(material_id);
 
         /*
          *  A unique vertex is defined by a combination of the position ID and the
@@ -475,8 +354,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
                 if(v < min_v) min_v = v;
                 if(v > max_v) max_v = v;
 
-                float w = float(texture_dimensions[f.texture_info].first);
-                float h = float(texture_dimensions[f.texture_info].second);
+                float w = float(dimensions[f.texture_info].width);
+                float h = float(dimensions[f.texture_info].height);
 
                 mesh->shared_data->position(pos);
                 mesh->shared_data->normal(normal);
@@ -498,7 +377,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     mesh->each([&](const std::string& name, SubMesh* submesh) {
         //Delete empty submeshes
         /*if(!submesh->index_data->count()) {
-            mesh->delete_submesh(submesh->id());
+            mesh->delete_submesh(name);
             return;
         }*/
         submesh->index_data->done();
