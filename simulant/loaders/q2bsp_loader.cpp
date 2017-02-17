@@ -33,6 +33,7 @@
 #include "../procedural/texture.h"
 #include "../controllers/material/flowing.h"
 #include "../controllers/material/warp.h"
+#include "../utils/rect_pack.h"
 
 #include "q2bsp_loader.h"
 
@@ -128,7 +129,8 @@ void Q2BSPLoader::generate_materials(
     ResourceManager* assets,
     const std::vector<Q2::TextureInfo>& texture_infos,
     std::vector<MaterialID>& materials,
-    std::vector<Q2::TexDimension>& dimensions) {
+    std::vector<Q2::TexDimension>& dimensions,
+    TextureID lightmap_texture) {
 
     /* Given a list of texture infos, this generates counterpart materials */
 
@@ -161,7 +163,13 @@ void Q2BSPLoader::generate_materials(
         );
 
         auto mat = material_id.fetch();
+
         mat->first_pass()->set_texture_unit(0, tex_id);
+        if(uses_lightmap) {
+            // Set the second texture unit to the lightmap texture if necessary
+            mat->first_pass()->set_texture_unit(1, lightmap_texture);
+        }
+
         assets->mark_material_as_uncollected(material_id);
 
         auto tex = tex_id.fetch();
@@ -200,6 +208,15 @@ std::vector<Lightmap> extract_lightmaps(const std::vector<uint8_t> lightmap_data
     }
 
     return result;
+}
+
+struct LightmapLocation {
+    uint16_t x;
+    uint16_t y;
+};
+
+std::vector<LightmapLocation> pack_lightmaps(const std::vector<Lightmap>& lightmaps, smlt::TexturePtr output_texture) {
+
 }
 
 void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
@@ -269,7 +286,10 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     std::vector<MaterialID> materials;    
     std::vector<Q2::TexDimension> dimensions;
-    generate_materials(assets, textures, materials, dimensions);
+
+    TextureID lightmap_texture = assets->new_texture();
+
+    generate_materials(assets, textures, materials, dimensions, lightmap_texture);
 
     /* Transform U/V coordinates appropriately */
     for(Q2::TextureInfo& tex: textures) {
@@ -416,6 +436,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     }
 
     auto lightmaps = extract_lightmaps(lightmap_data, faces, uv_limits);
+    auto locations = pack_lightmaps(lightmaps, lightmap_texture.fetch());
 
     mesh->shared_data->done();
     mesh->each([&](const std::string& name, SubMesh* submesh) {
