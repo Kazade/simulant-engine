@@ -170,6 +170,38 @@ void Q2BSPLoader::generate_materials(
     }
 }
 
+struct Lightmap {
+    std::vector<uint8_t> data;
+    uint32_t width;
+    uint32_t height;
+};
+
+struct FaceUVLimits {
+    Vec2 min;
+    Vec2 max;
+};
+
+std::vector<Lightmap> extract_lightmaps(const std::vector<uint8_t> lightmap_data, const std::vector<Q2::Face>& faces, const std::vector<FaceUVLimits>& uv_limits) {
+    std::vector<Lightmap> result;
+
+    assert(faces.size() == uv_limits.size());
+
+    for(uint32_t i = 0; i < faces.size(); ++i) {
+        auto& face = faces[i];
+        auto& uv_limit = uv_limits[i];
+
+        Lightmap lmap;
+        lmap.width = std::ceil(uv_limit.max.x / 16) - floor(uv_limit.min.x / 16) + 1;
+        lmap.height = std::ceil(uv_limit.max.y / 16) - floor(uv_limit.min.y / 16) + 1;
+
+        auto data_size = lmap.width * lmap.height * 3;
+        lmap.data.assign(&lightmap_data[face.lightmap_offset], &lightmap_data[face.lightmap_offset + data_size]);
+        result.push_back(lmap);
+    }
+
+    return result;
+}
+
 void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     Loadable* res_ptr = &resource;
     Mesh* mesh = dynamic_cast<Mesh*>(res_ptr);
@@ -264,12 +296,17 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     std::cout << "Num materials: " << materials.size() << std::endl;
     std::cout << "Num submeshes: " << mesh->submesh_count() << std::endl;
 
+    std::vector<FaceUVLimits> uv_limits;
+
     int32_t face_index = -1;
     for(Q2::Face& f: faces) {
+        FaceUVLimits uv_limit;
+
         auto& tex = textures[f.texture_info];
         auto material_id = materials.at(f.texture_info);
         if(!material_id) {
             // Must be an invisible surface
+            uv_limits.push_back(uv_limit);
             continue;
         }
 
@@ -308,8 +345,10 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         kmVec3 normal;
         kmVec3Fill(&normal, 0, 1, 0);
 
-        short min_u = 10000, max_u = -10000;
-        short min_v = 10000, max_v = -10000;
+        float min_u = std::numeric_limits<float>::max();
+        float max_u = std::numeric_limits<float>::lowest();
+        float min_v = std::numeric_limits<float>::max();
+        float max_v = std::numeric_limits<float>::lowest();
 
         for(int16_t i = 1; i < (int16_t) indexes.size() - 1; ++i) {
             uint32_t tri_idx[] = {
@@ -371,7 +410,12 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             }
         }
 
+        uv_limit.min = Vec2(min_u, min_v);
+        uv_limit.max = Vec2(max_u, max_v);
+        uv_limits.push_back(uv_limit);
     }
+
+    auto lightmaps = extract_lightmaps(lightmap_data, faces, uv_limits);
 
     mesh->shared_data->done();
     mesh->each([&](const std::string& name, SubMesh* submesh) {
