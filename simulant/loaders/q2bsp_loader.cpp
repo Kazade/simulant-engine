@@ -42,7 +42,7 @@
 namespace smlt  {
 namespace loaders {
 
-
+const int LIGHTMAP_DIMENSION = 1024; // Should be enough for anybody...
 
 void parse_actors(const std::string& actor_string, Q2EntityList& actors) {
     bool inside_actor = false;
@@ -149,6 +149,7 @@ void Q2BSPLoader::generate_materials(
 
         unicode texture_name = info.texture_name;
 
+        // Only load each texture once
         TextureID tex_id;
         if(!textures.count(texture_name)) {
             unicode full_path = locate_texture(locator, texture_name);
@@ -158,6 +159,7 @@ void Q2BSPLoader::generate_materials(
             tex_id = textures.at(texture_name);
         }
 
+        // Load the correct material depending on surface flags
         auto material_id = assets->new_material_from_file(
             (uses_lightmap) ? Material::BuiltIns::TEXTURE_WITH_LIGHTMAP : Material::BuiltIns::TEXTURE_ONLY
         );
@@ -170,6 +172,7 @@ void Q2BSPLoader::generate_materials(
             mat->first_pass()->set_texture_unit(1, lightmap_texture);
         }
 
+        // Important, we fetched but we don't want it collected yet
         assets->mark_material_as_uncollected(material_id);
 
         auto tex = tex_id.fetch();
@@ -213,10 +216,64 @@ std::vector<Lightmap> extract_lightmaps(const std::vector<uint8_t> lightmap_data
 struct LightmapLocation {
     uint16_t x;
     uint16_t y;
+
+    LightmapLocation() = default;
+    LightmapLocation(uint16_t x, uint16_t y):
+        x(x), y(y) {}
 };
 
 std::vector<LightmapLocation> pack_lightmaps(const std::vector<Lightmap>& lightmaps, smlt::TexturePtr output_texture) {
+    stbrp_context context;
+    std::vector<stbrp_node> temp_storage(LIGHTMAP_DIMENSION * 1.5);
+    stbrp_init_target(&context, LIGHTMAP_DIMENSION, LIGHTMAP_DIMENSION, &temp_storage[0], temp_storage.size());
 
+    std::vector<stbrp_rect> rects(lightmaps.size());
+    for(uint32_t i = 0; i < lightmaps.size(); ++i) {
+        rects[i].id = i;
+        rects[i].w = lightmaps[i].width;
+        rects[i].h = lightmaps[i].height;
+    }
+
+    // Pack the rectangles
+    stbrp_pack_rects(&context, &rects[0], rects.size());
+
+    // Finally generate the texture!
+    output_texture->resize(LIGHTMAP_DIMENSION, LIGHTMAP_DIMENSION);
+    output_texture->set_bpp(24);
+
+    std::vector<LightmapLocation> locations(lightmaps.size());
+
+    bool logged = false;
+    for(uint32_t i = 0; i < lightmaps.size(); ++i) {
+        auto& rect = rects[i];
+
+        if(!rect.was_packed && !logged) {
+            L_DEBUG("Ran out of space packing lightmaps!");
+            logged = true;
+        }
+
+        uint32_t src_x = 0, src_y = 0;
+        for(uint32_t y = rect.y; y < rect.y + rect.h; ++y) {
+            for(uint32_t x = rect.x; x < rect.x + rect.w; ++x) {
+                uint32_t idx = (y * LIGHTMAP_DIMENSION * 3) + (x * 3);
+                uint32_t src_idx = (src_y * rect.w * 3) + (src_x * 3);
+
+                output_texture->data()[idx] = lightmaps[i].data[src_idx];
+                output_texture->data()[idx + 1] = lightmaps[i].data[src_idx + 1];
+                output_texture->data()[idx + 2] = lightmaps[i].data[src_idx + 2];
+
+                src_x++;
+            }
+            src_y++;
+            src_x = 0;
+        }
+
+        locations[i] = LightmapLocation(rect.x, rect.y);
+    }
+
+    output_texture->save_to_file("/tmp/lightmap.tga");
+    output_texture->upload(MIPMAP_GENERATE_NONE, TEXTURE_WRAP_CLAMP_TO_EDGE, TEXTURE_FILTER_LINEAR);
+    return locations;
 }
 
 void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
@@ -318,7 +375,9 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     std::vector<FaceUVLimits> uv_limits;
 
-    int32_t face_index = -1;
+    std::vector<std::set<uint32_t>> face_indexes(faces.size());
+
+    int32_t face_id = -1;
     for(Q2::Face& f: faces) {
         FaceUVLimits uv_limit;
 
@@ -330,7 +389,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             continue;
         }
 
-        ++face_index;
+        ++face_id;
 
         std::vector<uint32_t> indexes;
         for(uint32_t i = f.first_edge; i < f.first_edge + f.num_edges; ++i) {
@@ -427,6 +486,10 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
                 //Cache this new vertex in the lookup
                 index_lookup[tri_idx[j]] = mesh->shared_data->count() - 1;
+
+                // Record this vertex against this face so we can manipulate the lightmap coordinates
+                // after packing
+                face_indexes[face_id].insert(mesh->shared_data->count() - 1);
             }
         }
 
@@ -437,6 +500,22 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     auto lightmaps = extract_lightmaps(lightmap_data, faces, uv_limits);
     auto locations = pack_lightmaps(lightmaps, lightmap_texture.fetch());
+
+    for(uint32_t i = 0; i < locations.size(); ++i) {
+        for(auto idx: face_indexes[i]) {
+
+            float x_offset = float(locations[i].x) / float(LIGHTMAP_DIMENSION);
+            float y_offset = float(locations[i].y) / float(LIGHTMAP_DIMENSION);
+
+            mesh->shared_data->move_to(idx);
+            auto t = mesh->shared_data->texcoord1_at<Vec2>(idx);
+
+            t.x *= float(lightmaps[i].width) / float(LIGHTMAP_DIMENSION);
+            t.y *= float(lightmaps[i].height) / float(LIGHTMAP_DIMENSION);
+
+            mesh->shared_data->tex_coord1(t + Vec2(x_offset, y_offset));
+        }
+    }
 
     mesh->shared_data->done();
     mesh->each([&](const std::string& name, SubMesh* submesh) {
