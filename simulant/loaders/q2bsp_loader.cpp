@@ -42,7 +42,8 @@
 namespace smlt  {
 namespace loaders {
 
-const int LIGHTMAP_DIMENSION = 1024; // Should be enough for anybody...
+const int LIGHTMAP_DIMENSION = 512; // Should be enough for anybody...
+const bool LIGHTMAPS_ENABLED = false;
 
 void parse_actors(const std::string& actor_string, Q2EntityList& actors) {
     bool inside_actor = false;
@@ -136,10 +137,20 @@ void Q2BSPLoader::generate_materials(
 
     std::map<unicode, TextureID> textures;
 
+    // TESTING: BLACK TEXTURE
+    auto black = assets->new_texture().fetch();
+    black->resize(1, 1);
+    black->set_bpp(32);
+    black->data()[0] = black->data()[1] = black->data()[2] = 0;
+    black->data()[3] = 255;
+    black->upload();
+
     materials.clear();
     for(auto& info: texture_infos) {
         bool is_invisible = has_bitflag(info.flags, Q2::SURFACE_FLAG_NO_DRAW);
         bool uses_lightmap = !(has_bitflag(info.flags, Q2::SURFACE_FLAG_SKY) || has_bitflag(info.flags, Q2::SURFACE_FLAG_WARP));
+
+        uses_lightmap = uses_lightmap && LIGHTMAPS_ENABLED;
 
         if(is_invisible) {
             materials.push_back(MaterialID()); // Just push a null material for invisible surfaces
@@ -158,6 +169,9 @@ void Q2BSPLoader::generate_materials(
         } else {
             tex_id = textures.at(texture_name);
         }
+
+        // TESTING: USE BLACK TEXTURE
+       // tex_id = black->id();
 
         // Load the correct material depending on surface flags
         auto material_id = assets->new_material_from_file(
@@ -202,8 +216,8 @@ std::vector<Lightmap> extract_lightmaps(const std::vector<uint8_t> lightmap_data
         auto& uv_limit = uv_limits[i];
 
         Lightmap lmap;
-        lmap.width = std::ceil(uv_limit.max.x / 16) - floor(uv_limit.min.x / 16) + 1;
-        lmap.height = std::ceil(uv_limit.max.y / 16) - floor(uv_limit.min.y / 16) + 1;
+        lmap.width = std::ceil(uv_limit.max.x / 16.0) - std::floor(uv_limit.min.x / 16.0) + 1;
+        lmap.height = std::ceil(uv_limit.max.y / 16.0) - std::floor(uv_limit.min.y / 16.0) + 1;
 
         auto data_size = lmap.width * lmap.height * 3;
         lmap.data.assign(&lightmap_data[face.lightmap_offset], &lightmap_data[face.lightmap_offset + data_size]);
@@ -214,11 +228,11 @@ std::vector<Lightmap> extract_lightmaps(const std::vector<uint8_t> lightmap_data
 }
 
 struct LightmapLocation {
-    uint16_t x;
-    uint16_t y;
+    int16_t x;
+    int16_t y;
 
     LightmapLocation() = default;
-    LightmapLocation(uint16_t x, uint16_t y):
+    LightmapLocation(int16_t x, int16_t y):
         x(x), y(y) {}
 };
 
@@ -239,7 +253,7 @@ std::vector<LightmapLocation> pack_lightmaps(const std::vector<Lightmap>& lightm
 
     // Finally generate the texture!
     output_texture->resize(LIGHTMAP_DIMENSION, LIGHTMAP_DIMENSION);
-    output_texture->set_bpp(24);
+    output_texture->set_bpp(32);
 
     std::vector<LightmapLocation> locations(lightmaps.size());
 
@@ -252,20 +266,18 @@ std::vector<LightmapLocation> pack_lightmaps(const std::vector<Lightmap>& lightm
             logged = true;
         }
 
-        uint32_t src_x = 0, src_y = 0;
+        uint32_t src_idx = 0;
         for(uint32_t y = rect.y; y < rect.y + rect.h; ++y) {
             for(uint32_t x = rect.x; x < rect.x + rect.w; ++x) {
-                uint32_t idx = (y * LIGHTMAP_DIMENSION * 3) + (x * 3);
-                uint32_t src_idx = (src_y * rect.w * 3) + (src_x * 3);
+                uint32_t idx = (y * LIGHTMAP_DIMENSION * 4) + (x * 4);
 
                 output_texture->data()[idx] = lightmaps[i].data[src_idx];
                 output_texture->data()[idx + 1] = lightmaps[i].data[src_idx + 1];
                 output_texture->data()[idx + 2] = lightmaps[i].data[src_idx + 2];
+                output_texture->data()[idx + 3] = 255;
 
-                src_x++;
+                src_idx += 3;
             }
-            src_y++;
-            src_x = 0;
         }
 
         locations[i] = LightmapLocation(rect.x, rect.y);
@@ -424,10 +436,10 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         kmVec3 normal;
         kmVec3Fill(&normal, 0, 1, 0);
 
-        float min_u = std::numeric_limits<float>::max();
-        float max_u = std::numeric_limits<float>::lowest();
-        float min_v = std::numeric_limits<float>::max();
-        float max_v = std::numeric_limits<float>::lowest();
+        int32_t min_u = std::numeric_limits<int32_t>::max();
+        int32_t max_u = std::numeric_limits<int32_t>::lowest();
+        int32_t min_v = std::numeric_limits<int32_t>::max();
+        int32_t max_v = std::numeric_limits<int32_t>::lowest();
 
         for(int16_t i = 1; i < (int16_t) indexes.size() - 1; ++i) {
             uint32_t tri_idx[] = {
@@ -467,10 +479,13 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
                         + pos.y * tex.v_axis.y
                         + pos.z * tex.v_axis.z + tex.v_offset;
 
-                if(u < min_u) min_u = u;
-                if(u > max_u) max_u = u;
-                if(v < min_v) min_v = v;
-                if(v > max_v) max_v = v;
+                int32_t floor_u = std::floor(u);
+                int32_t floor_v = std::floor(v);
+
+                if(floor_u < min_u) min_u = floor_u;
+                if(floor_u > max_u) max_u = floor_u;
+                if(floor_v < min_v) min_v = floor_v;
+                if(floor_v > max_v) max_v = floor_v;
 
                 float w = float(dimensions[f.texture_info].width);
                 float h = float(dimensions[f.texture_info].height);
@@ -503,17 +518,22 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     for(uint32_t i = 0; i < locations.size(); ++i) {
         for(auto idx: face_indexes[i]) {
-
-            float x_offset = float(locations[i].x) / float(LIGHTMAP_DIMENSION);
-            float y_offset = float(locations[i].y) / float(LIGHTMAP_DIMENSION);
-
             mesh->shared_data->move_to(idx);
             auto t = mesh->shared_data->texcoord1_at<Vec2>(idx);
+
+            t.x -= uv_limits[i].min.x;
+            t.y -= uv_limits[i].min.y;
+
+            t.x /= (uv_limits[i].max.x - uv_limits[i].min.x);
+            t.y /= (uv_limits[i].max.y - uv_limits[i].min.y);
 
             t.x *= float(lightmaps[i].width) / float(LIGHTMAP_DIMENSION);
             t.y *= float(lightmaps[i].height) / float(LIGHTMAP_DIMENSION);
 
-            mesh->shared_data->tex_coord1(t + Vec2(x_offset, y_offset));
+            t.x += float(locations[i].x) / float(LIGHTMAP_DIMENSION);
+            t.y += float(locations[i].y) / float(LIGHTMAP_DIMENSION);
+
+            mesh->shared_data->tex_coord1(t);
         }
     }
 
