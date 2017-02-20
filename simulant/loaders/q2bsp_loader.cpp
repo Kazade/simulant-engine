@@ -303,8 +303,12 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     auto& file = *this->data_;
 
     //Needed because the Quake 2 coord system is weird
+    kmMat4 rotation_x, rotation_y;
+    kmMat4RotationX(&rotation_x, kmDegreesToRadians(-90.0f));
+    kmMat4RotationY(&rotation_y, kmDegreesToRadians(90.0f));
+
     kmMat4 rotation;
-    kmMat4RotationX(&rotation, kmDegreesToRadians(-90.0f));
+    kmMat4Multiply(&rotation, &rotation_y, &rotation_x);
 
     Q2::Header header;
     file.read((char*)&header, sizeof(Q2::Header));
