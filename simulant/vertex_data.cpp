@@ -232,6 +232,27 @@ Vec4 VertexData::texcoord0_at<Vec4>(uint32_t idx) {
     return out;
 }
 
+template<>
+Vec2 VertexData::texcoord1_at<Vec2>(uint32_t idx) const {
+    assert(vertex_specification_.texcoord1_attribute == VERTEX_ATTRIBUTE_2F);
+    Vec2 out = *((Vec2*) &data_[(idx * stride()) + specification().texcoord1_offset()]);
+    return out;
+}
+
+template<>
+Vec3 VertexData::texcoord1_at<Vec3>(uint32_t idx) const {
+    assert(vertex_specification_.texcoord1_attribute == VERTEX_ATTRIBUTE_3F);
+    Vec3 out = *((Vec3*) &data_[(idx * stride()) + specification().texcoord1_offset()]);
+    return out;
+}
+
+template<>
+Vec4 VertexData::texcoord1_at<Vec4>(uint32_t idx) const {
+    assert(vertex_specification_.texcoord1_attribute == VERTEX_ATTRIBUTE_4F);
+    Vec4 out = *((Vec4*) &data_[(idx * stride()) + specification().texcoord1_offset()]);
+    return out;
+}
+
 void VertexData::tex_coord1(float u, float v) {
     tex_coordX(1, u, v);
 }

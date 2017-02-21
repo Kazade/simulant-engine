@@ -24,6 +24,7 @@
 #include "utils/gl_error.h"
 
 #include "deps/kazlog/kazlog.h"
+#include "deps/SOIL/SOIL.h"
 
 #include "window_base.h"
 #include "texture.h"
@@ -215,6 +216,10 @@ void Texture::flip_vertically() {
 
 void Texture::free() {
     data_.clear();
+}
+
+void Texture::save_to_file(const unicode& filename) {
+    SOIL_save_image(filename.encode().c_str(), SOIL_SAVE_TYPE_TGA, width(), height(), bpp() / 8, &data_[0]);
 }
 
 }

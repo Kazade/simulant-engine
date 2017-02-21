@@ -99,6 +99,7 @@ public:
 
     void sub_texture(TextureID src, uint16_t offset_x, uint16_t offset_y);
 
+    void save_to_file(const unicode& filename);
 private:
     uint32_t width_;
     uint32_t height_;

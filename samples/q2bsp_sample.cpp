@@ -18,12 +18,15 @@ public:
 
         auto stage = window->stage(stage_id_);
         window->resource_locator->add_search_path("sample_data/q2");
-        window->loader_for("sample_data/sample.bsp")->into(stage);
+
+        auto mesh = stage->assets->new_mesh_from_file("sample_data/sample.bsp").fetch();
+        auto actor_id = stage->new_actor_with_mesh(mesh->id());
 
         stage->host_camera(camera_id_);
+        /*
         stage->camera(camera_id_)->move_to_absolute(
-            stage->data->get<smlt::Vec3>("player_spawn")
-        );
+            mesh->data->get<smlt::Vec3>("player_spawn")
+        );*/
 
         // Add a fly controller to the camera for user input
         stage->camera(camera_id_)->new_controller<controllers::Fly>(window);
@@ -32,30 +35,10 @@ public:
             45.0,
             float(window->width()) / float(window->height()),
             1.0,
-            10000.0
+            1000.0
         );
 
-                stage->set_ambient_light(smlt::Colour(0.8, 0.8, 0.8, 1.0));
-
-                lightmap_preview_camera_ = window->new_camera();
-                window->camera(lightmap_preview_camera_)->set_orthographic_projection_from_height(1.0, window->aspect_ratio());
-
-                lightmap_preview_ = window->new_stage();
-
-                {
-                    auto lm_stage = window->stage(lightmap_preview_);
-                    auto world = stage->assets->get_mesh_with_alias("world_geometry");
-                    auto lightmap_texture = stage->assets->mesh(world)->data->get<TextureID>("lightmap_texture_id");
-                    auto rect_mat = lm_stage->assets->new_material_from_texture(lightmap_texture);
-                    auto rectangle = lm_stage->assets->new_mesh_as_rectangle(0.25, 0.25, Vec2(), rect_mat);
-                    auto rect_actor = lm_stage->new_actor_with_mesh(rectangle);
-                    lm_stage->actor(rect_actor)->move_to_absolute(0.5, -0.25, 0);
-                }
-
-                lightmap_preview_pipeline_ = window->render(lightmap_preview_, lightmap_preview_camera_).with_priority(RENDER_PRIORITY_FOREGROUND);
-                window->enable_pipeline(lightmap_preview_pipeline_);
-
-        stage->set_ambient_light(smlt::Colour(0.75, 0.75, 0.75, 1.0));
+        stage->set_ambient_light(smlt::Colour(0.8, 0.8, 0.8, 1.0));
     }
 
     void do_activate() {
@@ -66,26 +49,31 @@ private:
     StageID stage_id_;
     CameraID camera_id_;
     PipelineID pid_;
-
-        StageID lightmap_preview_;
-        CameraID lightmap_preview_camera_;
-        PipelineID lightmap_preview_pipeline_;
-
 };
 
 
 class Q2Sample: public smlt::Application {
+public:
+    Q2Sample(const smlt::AppConfig& config):
+        smlt::Application(config) {}
+
 private:
     bool do_init() {
         register_screen("/", smlt::screen_factory<GameScreen>());
-        //load_screen_in_background("/", true); //Do loading in a background thread, but show immediately when done
-        activate_screen("/"); // Show the loading screen in the meantime
+        load_screen_in_background("/", true); //Do loading in a background thread, but show immediately when done
+        activate_screen("/loading"); // Show the loading screen in the meantime
         return true;
     }
 };
 
 
 int main(int argc, char* argv[]) {
-    Q2Sample app;
+    smlt::AppConfig config;
+    config.title = "Quake 2 Mesh Loader";
+    config.fullscreen = false;
+    config.width = 1280;
+    config.height = 960;
+
+    Q2Sample app(config);
     return app.run();
 }

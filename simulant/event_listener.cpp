@@ -60,7 +60,14 @@ void EventListenerManager::unregister_event_listener(EventListener* listener) {
 }
 
 void EventListenerManager::each_event_listener(std::function<void (EventListener*)> callback) {
-    for(auto lst: listeners_) {
+    auto listeners = listeners_; // Copy, in case listeners_ is altered in a callback
+
+    for(auto lst: listeners) {
+        // If a listener was removed don't try to call a callback on it
+        if(std::find(listeners_.begin(), listeners_.end(), lst) == listeners_.end()) {
+            continue;
+        }
+
         callback(lst);
     }
 }

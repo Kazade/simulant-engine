@@ -1536,3 +1536,5 @@ tests/test_plane.h
 simulant/utils/deprecated.h
 simulant/sdl2_keycodes.h
 simulant/keycodes.h
+simulant/utils/rect_pack.h
+simulant/utils/rect_pack.cpp

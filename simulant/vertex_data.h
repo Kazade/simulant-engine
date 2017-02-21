@@ -95,6 +95,9 @@ public:
     template<typename T>
     T texcoord0_at(uint32_t idx);
 
+    template<typename T>
+    T texcoord1_at(uint32_t idx) const;
+
     void tex_coord1(float u, float v);
     void tex_coord1(float u, float v, float w);
     void tex_coord1(float x, float y, float z, float w);
@@ -199,6 +202,16 @@ Vec3 VertexData::texcoord0_at<Vec3>(uint32_t idx);
 
 template<>
 Vec4 VertexData::texcoord0_at<Vec4>(uint32_t idx);
+
+template<>
+Vec2 VertexData::texcoord1_at<Vec2>(uint32_t idx) const;
+
+template<>
+Vec3 VertexData::texcoord1_at<Vec3>(uint32_t idx) const;
+
+template<>
+Vec4 VertexData::texcoord1_at<Vec4>(uint32_t idx) const;
+
 
 typedef uint32_t Index;
 

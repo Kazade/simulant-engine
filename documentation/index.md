@@ -26,5 +26,6 @@ This section covers the base subsystems and usages of Simulant.
 
  - Scripting: [Particle System File Format](particle_system_format.md)
  - Scene Tree: [Stage Nodes](stage_nodes.md) 
+ - Supported File Formats: [Mesh Formats](mesh_formats.md) | [Image Formats](image_formats.md)
 
-[1]: The Camera Proxy system will potentially change at some point to make Cameras normal StageNodes
+[1]: The Camera Proxy system will change at some point to make Cameras normal StageNodes

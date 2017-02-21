@@ -33,6 +33,7 @@
 #include "../procedural/texture.h"
 #include "../controllers/material/flowing.h"
 #include "../controllers/material/warp.h"
+#include "../utils/rect_pack.h"
 
 #include "q2bsp_loader.h"
 
@@ -41,99 +42,12 @@
 namespace smlt  {
 namespace loaders {
 
-namespace Q2 {
+const int LIGHTMAP_DIMENSION = 512; // Should be enough for anybody...
+const bool LIGHTMAPS_ENABLED = false;
 
-enum LumpType {
-    ENTITIES = 0,
-    PLANES,
-    VERTICES,
-    VISIBILITY,
-    NODES,
-    TEXTURE_INFO,
-    FACES,
-    LIGHTMAPS,
-    LEAVES,
-    LEAF_FACE_TABLE,
-    LEAF_BRUSH_TABLE,
-    EDGES,
-    FACE_EDGE_TABLE,
-    MODELS,
-    BRUSHES,
-    BRUSH_SIDES,
-    POP,
-    AREAS,
-    AREA_PORTALS,
-    MAX_LUMPS
-};
-
-typedef kmVec3 Point3f;
-
-struct Point3s {
-    int16_t x;
-    int16_t y;
-    int16_t z;
-};
-
-struct Edge {
-    uint16_t a;
-    uint16_t b;
-};
-
-enum SurfaceFlag {
-    SURFACE_FLAG_NONE = 0x0,
-    SURFACE_FLAG_LIGHT = 0x1,
-    SURFACE_FLAG_SLICK = 0x2,
-    SURFACE_FLAG_SKY = 0x4,
-    SURFACE_FLAG_WARP = 0x8,
-    SURFACE_FLAG_TRANS_33 = 0x10,
-    SURFACE_FLAG_TRANS_66 = 0x20,
-    SURFACE_FLAG_FLOWING = 0x40,
-    SURFACE_FLAG_NO_DRAW = 0x80
-};
-
-struct TextureInfo {
-    Point3f u_axis;
-    float u_offset;
-    Point3f v_axis;
-    float v_offset;
-
-    SurfaceFlag flags;
-    uint32_t value;
-
-    char texture_name[32];
-
-    uint32_t next_tex_info;
-};
-
-struct Face {
-    uint16_t plane;             // index of the plane the face is parallel to
-    uint16_t plane_side;        // set if the normal is parallel to the plane normal
-    uint32_t first_edge;        // index of the first edge (in the face edge array)
-    uint16_t num_edges;         // number of consecutive edges (in the face edge array)
-    uint16_t texture_info;      // index of the texture info structure
-    uint8_t lightmap_syles[4]; // styles (bit flags) for the lightmaps
-    uint32_t lightmap_offset;   // offset of the lightmap (in bytes) in the lightmap lump
-};
-
-struct Lump {
-    uint32_t offset;
-    uint32_t length;
-};
-
-struct Header {
-    uint8_t magic[4];
-    uint32_t version;
-
-    Lump lumps[MAX_LUMPS];
-};
-
-}
-
-typedef std::map<std::string, std::string> ActorProperties;
-
-void parse_actors(const std::string& actor_string, std::vector<ActorProperties>& actors) {
+void parse_actors(const std::string& actor_string, Q2EntityList& actors) {
     bool inside_actor = false;
-    ActorProperties current;
+    Q2Entity current;
     unicode key, value;
     bool inside_key = false, inside_value = false, key_done_for_this_line = false;
     for(char c: actor_string) {
@@ -186,62 +100,6 @@ void parse_actors(const std::string& actor_string, std::vector<ActorProperties>&
 
 }
 
-Vec3 find_player_spawn_point(std::vector<ActorProperties>& actors) {
-    for(ActorProperties p: actors) {
-        std::cout << p["classname"] << std::endl;
-        if(p["classname"] == "info_player_start") {
-            Vec3 pos;
-            std::istringstream origin(p["origin"]);
-            origin >> pos.x >> pos.y >> pos.z;
-            std::cout << "Setting start position to: " << pos.x << ", " << pos.y << ", " << pos.z << std::endl;
-            return pos;
-        }
-    }
-    Vec3 none;
-    kmVec3Fill(&none, 0, 0, 0);
-
-    return none;
-}
-
-void add_lights_to_scene(Stage* stage, const std::vector<ActorProperties>& actors) {
-    //Needed because the Quake 2 coord system is weird
-    kmMat4 rotation;
-    kmMat4RotationX(&rotation, kmDegreesToRadians(-90.0f));
-
-    for(ActorProperties props: actors) {
-        if(props["classname"] == "light") {
-            kmVec3 pos;
-            std::istringstream origin(props["origin"]);
-            origin >> pos.x >> pos.y >> pos.z;
-
-            {
-                auto new_light = stage->light(stage->new_light());
-                new_light->move_to(pos.x, pos.y, pos.z);
-                kmVec3Transform(&pos, &pos, &rotation);
-
-                float range = 300; //Default in Q2
-                if(props.count(std::string("light"))) {
-                    std::string tmp = props["light"];
-                    std::istringstream value(tmp);
-                    value >> range;
-                }
-
-                if(props.count(std::string("_color"))) {
-                    smlt::Colour diffuse;
-                    std::istringstream value(props["_color"]);
-                    value >> diffuse.r >> diffuse.g >> diffuse.b;
-                    diffuse.a = 1.0;
-                    new_light->set_diffuse(diffuse);
-                }
-
-
-                std::cout << "Creating light at: " << pos.x << ", " << pos.y << ", " << pos.z << std::endl;
-                new_light->set_attenuation_from_range(range);
-            }
-        }
-    }
-}
-
 unicode locate_texture(ResourceLocator& locator, const unicode& filename) {
     std::vector<unicode> extensions = { ".wal", ".jpg", ".tga", ".jpeg", ".png" };
     for(auto& ext: extensions) {
@@ -252,128 +110,205 @@ unicode locate_texture(ResourceLocator& locator, const unicode& filename) {
         }
     }
 
-    return "";
+    return Texture::BuiltIns::CHECKERBOARD;
 }
 
-struct LightmapBuffer {
-    static const uint32_t LIGHTMAP_SIZE = 18; //16 + 1 px border each side
-    static const uint32_t LIGHTMAP_CHANNELS = 3;
+template<typename T>
+uint32_t read_lump(std::istream& file, const Q2::Header& header, Q2::LumpType type, std::vector<T>& lumpout) {
+    uint32_t count = header.lumps[type].length / sizeof(T);
+    lumpout.resize(count);
+    file.seekg((std::istream::pos_type) header.lumps[type].offset);
+    file.read((char*)&lumpout[0], (int) sizeof(T) * count);
+    return count;
+}
 
-    LightmapBuffer(uint32_t num_lightmaps) {
-        horiz = ceil(sqrt(num_lightmaps)) + 1;
-        vert = ceil(float(num_lightmaps) / float(horiz)) + 1;
+bool has_bitflag(uint32_t val, uint32_t flag) {
+    return (val & flag) == flag;
+}
 
-        uint32_t buffer_size = (horiz * LIGHTMAP_SIZE) * (vert * LIGHTMAP_SIZE);
-        buffer_size *= LIGHTMAP_CHANNELS;
+void Q2BSPLoader::generate_materials(
+    ResourceManager* assets,
+    const std::vector<Q2::TextureInfo>& texture_infos,
+    std::vector<MaterialID>& materials,
+    std::vector<Q2::TexDimension>& dimensions,
+    TextureID lightmap_texture) {
 
-        buffer.resize(buffer_size, 255);
-    }
+    /* Given a list of texture infos, this generates counterpart materials */
 
-    void write_lightmap(uint32_t index, uint8_t* data, uint32_t width, uint32_t height) {
-        uint32_t texture_width = LIGHTMAP_SIZE * LIGHTMAP_CHANNELS;
-        uint32_t buffer_width = horiz * LIGHTMAP_SIZE * LIGHTMAP_CHANNELS;
+    std::map<unicode, TextureID> textures;
 
-        uint32_t target_x = index % horiz;
-        uint32_t target_y = index / horiz;
+    // TESTING: BLACK TEXTURE
+    auto black = assets->new_texture().fetch();
+    black->resize(1, 1);
+    black->set_bpp(32);
+    black->data()[0] = black->data()[1] = black->data()[2] = 0;
+    black->data()[3] = 255;
+    black->upload();
 
-        uint32_t texel_start = ((target_y * LIGHTMAP_SIZE) * buffer_width) + (target_x * texture_width);
-        uint32_t texel = texel_start;
+    materials.clear();
+    for(auto& info: texture_infos) {
+        bool is_invisible = has_bitflag(info.flags, Q2::SURFACE_FLAG_NO_DRAW);
+        bool uses_lightmap = !(has_bitflag(info.flags, Q2::SURFACE_FLAG_SKY) || has_bitflag(info.flags, Q2::SURFACE_FLAG_WARP));
 
-        for(int32_t y = -1; y < (int32_t) height + 1; ++y) {
-            auto row_start = texel;
-            for(int32_t x = -1; x < (int32_t) width + 1; ++x) {
-                uint32_t src_x = (x < 0) ? 0 : (x >= (int32_t) width) ? width - 1 : x;
-                uint32_t src_y = (y < 0) ? 0 : (y >= (int32_t) height) ? height - 1 : y;
+        uses_lightmap = uses_lightmap && LIGHTMAPS_ENABLED;
 
-                uint32_t source_idx = ((src_y * width) + src_x) * 3;
-
-                // If we are within the bounds of the source lightmap, then
-                // copy the data for this texel to the right place
-                buffer.at(texel) = data[source_idx];
-                buffer.at(texel + 1) = data[source_idx + 1];
-                buffer.at(texel + 2) = data[source_idx + 2];
-                // Move to the next texl
-                texel += LIGHTMAP_CHANNELS;
-            }
-
-            texel = row_start + buffer_width;
+        if(is_invisible) {
+            materials.push_back(MaterialID()); // Just push a null material for invisible surfaces
+            dimensions.push_back(Q2::TexDimension(0, 0));
+            continue;
         }
+
+        unicode texture_name = info.texture_name;
+
+        // Only load each texture once
+        TextureID tex_id;
+        if(!textures.count(texture_name)) {
+            unicode full_path = locate_texture(locator, texture_name);
+            tex_id = assets->new_texture_from_file(full_path);
+            textures[texture_name] = tex_id;
+        } else {
+            tex_id = textures.at(texture_name);
+        }
+
+        // TESTING: USE BLACK TEXTURE
+       // tex_id = black->id();
+
+        // Load the correct material depending on surface flags
+        auto material_id = assets->new_material_from_file(
+            (uses_lightmap) ? Material::BuiltIns::TEXTURE_WITH_LIGHTMAP : Material::BuiltIns::TEXTURE_ONLY
+        );
+
+        auto mat = material_id.fetch();
+
+        mat->first_pass()->set_texture_unit(0, tex_id);
+        if(uses_lightmap) {
+            // Set the second texture unit to the lightmap texture if necessary
+            mat->first_pass()->set_texture_unit(1, lightmap_texture);
+        }
+
+        // Important, we fetched but we don't want it collected yet
+        assets->mark_material_as_uncollected(material_id);
+
+        auto tex = tex_id.fetch();
+        materials.push_back(material_id);
+        dimensions.push_back(Q2::TexDimension(tex->width(), tex->height()));
     }
+}
 
-    std::pair<float, float> transform_uv(int32_t index, float u, float v) const {
-        float ret_u = u / float(horiz);
-        float ret_v = v / float(vert);
-
-        float x = float(index % horiz);
-        float y = float(index / horiz);
-
-        ret_u += (x * (1.0 / float(horiz)));
-        ret_v += (y * (1.0 / float(vert)));
-
-        return std::make_pair(ret_u, ret_v);
-    }
-
-    const uint32_t width_in_texels() const {
-        return horiz * LIGHTMAP_SIZE;
-    }
-
-    const uint32_t height_in_texels() const {
-        return vert * LIGHTMAP_SIZE;
-    }
-
-    uint32_t horiz = 0;
-    uint32_t vert = 0;
-    std::vector<uint8_t> buffer;
+struct Lightmap {
+    std::vector<uint8_t> data;
+    uint32_t width;
+    uint32_t height;
 };
+
+struct FaceUVLimits {
+    Vec2 min;
+    Vec2 max;
+};
+
+std::vector<Lightmap> extract_lightmaps(const std::vector<uint8_t> lightmap_data, const std::vector<Q2::Face>& faces, const std::vector<FaceUVLimits>& uv_limits) {
+    std::vector<Lightmap> result;
+
+    assert(faces.size() == uv_limits.size());
+
+    for(uint32_t i = 0; i < faces.size(); ++i) {
+        auto& face = faces[i];
+        auto& uv_limit = uv_limits[i];
+
+        Lightmap lmap;
+        lmap.width = std::ceil(uv_limit.max.x / 16.0) - std::floor(uv_limit.min.x / 16.0) + 1;
+        lmap.height = std::ceil(uv_limit.max.y / 16.0) - std::floor(uv_limit.min.y / 16.0) + 1;
+
+        auto data_size = lmap.width * lmap.height * 3;
+        lmap.data.assign(&lightmap_data[face.lightmap_offset], &lightmap_data[face.lightmap_offset + data_size]);
+        result.push_back(lmap);
+    }
+
+    return result;
+}
+
+struct LightmapLocation {
+    int16_t x;
+    int16_t y;
+
+    LightmapLocation() = default;
+    LightmapLocation(int16_t x, int16_t y):
+        x(x), y(y) {}
+};
+
+std::vector<LightmapLocation> pack_lightmaps(const std::vector<Lightmap>& lightmaps, smlt::TexturePtr output_texture) {
+    stbrp_context context;
+    std::vector<stbrp_node> temp_storage(LIGHTMAP_DIMENSION * 1.5);
+    stbrp_init_target(&context, LIGHTMAP_DIMENSION, LIGHTMAP_DIMENSION, &temp_storage[0], temp_storage.size());
+
+    std::vector<stbrp_rect> rects(lightmaps.size());
+    for(uint32_t i = 0; i < lightmaps.size(); ++i) {
+        rects[i].id = i;
+        rects[i].w = lightmaps[i].width;
+        rects[i].h = lightmaps[i].height;
+    }
+
+    // Pack the rectangles
+    stbrp_pack_rects(&context, &rects[0], rects.size());
+
+    // Finally generate the texture!
+    output_texture->resize(LIGHTMAP_DIMENSION, LIGHTMAP_DIMENSION);
+    output_texture->set_bpp(32);
+
+    std::vector<LightmapLocation> locations(lightmaps.size());
+
+    bool logged = false;
+    for(uint32_t i = 0; i < lightmaps.size(); ++i) {
+        auto& rect = rects[i];
+
+        if(!rect.was_packed && !logged) {
+            L_DEBUG("Ran out of space packing lightmaps!");
+            logged = true;
+        }
+
+        uint32_t src_idx = 0;
+        for(uint32_t y = rect.y; y < rect.y + rect.h; ++y) {
+            for(uint32_t x = rect.x; x < rect.x + rect.w; ++x) {
+                uint32_t idx = (y * LIGHTMAP_DIMENSION * 4) + (x * 4);
+
+                output_texture->data()[idx] = lightmaps[i].data[src_idx];
+                output_texture->data()[idx + 1] = lightmaps[i].data[src_idx + 1];
+                output_texture->data()[idx + 2] = lightmaps[i].data[src_idx + 2];
+                output_texture->data()[idx + 3] = 255;
+
+                src_idx += 3;
+            }
+        }
+
+        locations[i] = LightmapLocation(rect.x, rect.y);
+    }
+
+    output_texture->save_to_file("/tmp/lightmap.tga");
+    output_texture->upload(MIPMAP_GENERATE_NONE, TEXTURE_WRAP_CLAMP_TO_EDGE, TEXTURE_FILTER_LINEAR);
+    return locations;
+}
 
 void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     Loadable* res_ptr = &resource;
-    Stage* stage = dynamic_cast<Stage*>(res_ptr);
-    assert(stage && "You passed a Resource that is not a stage to the QBSP loader");
+    Mesh* mesh = dynamic_cast<Mesh*>(res_ptr);
 
-    std::map<std::string, TextureID> texture_lookup;
-    TextureID checkerboard = stage->assets->new_texture_from_file(Texture::BuiltIns::CHECKERBOARD);
-    TextureID lightmap_texture = stage->assets->new_texture(GARBAGE_COLLECT_NEVER);
+    // Make sure the passed mesh is empty and using the default vertex spec
+    mesh->reset(smlt::VertexSpecification::DEFAULT);
 
-    auto texture_info_visible = [](Q2::TextureInfo& info) -> bool {
-        /* Don't draw invisible things */
-        if((info.flags & Q2::SURFACE_FLAG_NO_DRAW) == Q2::SURFACE_FLAG_NO_DRAW) {
-            return false;
-        }
+    auto assets = &mesh->resource_manager();
+    auto& locator = assets->window->resource_locator;
 
-        /* Don't use sky faces (might change this... could create a skybox) */
-        if((info.flags & Q2::SURFACE_FLAG_SKY) == Q2::SURFACE_FLAG_SKY) {
-            return false;
-        }
+    assert(mesh && "You passed a Resource that is not a mesh to the QBSP loader");
 
-        return true;
-    };
-
-    auto find_or_load_texture = [&](const std::string& texture_name) -> TextureID {
-        if(texture_lookup.count(texture_name)) {
-            return texture_lookup[texture_name];
-        } else {
-            TextureID new_texture_id;
-            auto texture_filename = locate_texture(*stage->window->resource_locator.get(), texture_name);
-            if(!texture_filename.empty()) {
-                new_texture_id = stage->assets->new_texture_from_file(texture_filename);
-            } else {
-                L_DEBUG(_F("Texture {0} was missing").format(texture_name));
-                new_texture_id = checkerboard;
-            }
-            texture_lookup[texture_name] = new_texture_id;
-            return new_texture_id;
-        }
-    };
-
-    std::ifstream file(filename_.encode().c_str(), std::ios::binary);
-    if(!file.good()) {
-        throw std::runtime_error("Couldn't load the BSP file: " + filename_.encode());
-    }
+    auto& file = *this->data_;
 
     //Needed because the Quake 2 coord system is weird
+    kmMat4 rotation_x, rotation_y;
+    kmMat4RotationX(&rotation_x, kmDegreesToRadians(-90.0f));
+    kmMat4RotationY(&rotation_y, kmDegreesToRadians(90.0f));
+
     kmMat4 rotation;
-    kmMat4RotationX(&rotation, kmDegreesToRadians(-90.0f));
+    kmMat4Multiply(&rotation, &rotation_y, &rotation_x);
 
     Q2::Header header;
     file.read((char*)&header, sizeof(Q2::Header));
@@ -382,44 +317,28 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         throw std::runtime_error("Not a valid Q2 map");
     }
 
-    std::vector<char> actor_buffer(header.lumps[Q2::LumpType::ENTITIES].length);
-    file.seekg(header.lumps[Q2::LumpType::ENTITIES].offset);
-    file.read(&actor_buffer[0], sizeof(char) * header.lumps[Q2::LumpType::ENTITIES].length);
+    std::vector<char> actor_buffer;
+    read_lump(file, header, Q2::LumpType::ENTITIES, actor_buffer);
     std::string actor_string(actor_buffer.begin(), actor_buffer.end());
 
+    Q2EntityList entities;
+    parse_actors(actor_string, entities);
+    mesh->data->stash(entities, "entities");
 
-    std::vector<ActorProperties> actors;
-    parse_actors(actor_string, actors);
-    Vec3 cam_pos = find_player_spawn_point(actors);
-    stage->data->stash(cam_pos, "player_spawn");
+    std::vector<Q2::Point3f> vertices;
+    std::vector<Q2::Edge> edges;
+    std::vector<Q2::TextureInfo> textures;
+    std::vector<Q2::Face> faces;
+    std::vector<uint32_t> face_edges;
+    std::vector<uint8_t> lightmap_data;
 
-    add_lights_to_scene(stage, actors);
+    auto num_vertices = read_lump(file, header, Q2::LumpType::VERTICES, vertices);
+    auto num_edges = read_lump(file, header, Q2::LumpType::EDGES, edges);
+    auto num_textures = read_lump(file, header, Q2::LumpType::TEXTURE_INFO, textures);
+    auto num_faces = read_lump(file, header, Q2::LumpType::FACES, faces);
+    auto num_face_edges = read_lump(file, header, Q2::LumpType::FACE_EDGE_TABLE, face_edges);
+    auto lightmap_length = read_lump(file, header, Q2::LumpType::LIGHTMAPS, lightmap_data);
 
-    int32_t num_vertices = header.lumps[Q2::LumpType::VERTICES].length / sizeof(Q2::Point3f);
-    std::vector<Q2::Point3f> vertices(num_vertices);
-    file.seekg(header.lumps[Q2::LumpType::VERTICES].offset);
-    file.read((char*)&vertices[0], sizeof(Q2::Point3f) * num_vertices);
-
-    int32_t num_edges = header.lumps[Q2::LumpType::EDGES].length / sizeof(Q2::Edge);
-    std::vector<Q2::Edge> edges(num_edges);
-    file.seekg(header.lumps[Q2::LumpType::EDGES].offset);
-    file.read((char*)&edges[0], sizeof(Q2::Edge) * num_edges);
-
-    int32_t num_textures = header.lumps[Q2::LumpType::TEXTURE_INFO].length / sizeof(Q2::TextureInfo);
-    std::vector<Q2::TextureInfo> textures(num_textures);
-    file.seekg(header.lumps[Q2::LumpType::TEXTURE_INFO].offset);
-    file.read((char*)&textures[0], sizeof(Q2::TextureInfo) * num_textures);
-
-    //Read in the faces
-    int32_t num_faces = header.lumps[Q2::LumpType::FACES].length / sizeof(Q2::Face);
-    std::vector<Q2::Face> faces(num_faces);
-    file.seekg(header.lumps[Q2::LumpType::FACES].offset);
-    file.read((char*)&faces[0], sizeof(Q2::Face) * num_faces);
-
-    int32_t num_face_edges = header.lumps[Q2::LumpType::FACE_EDGE_TABLE].length / sizeof(int32_t);
-    std::vector<int32_t> face_edges(num_face_edges);
-    file.seekg(header.lumps[Q2::LumpType::FACE_EDGE_TABLE].offset);
-    file.read((char*)&face_edges[0], sizeof(int32_t) * num_face_edges);
 
     std::for_each(vertices.begin(), vertices.end(), [&](Q2::Point3f& vert) {
         // Dirty casts, but it should work...
@@ -433,36 +352,20 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
      * a texture which is sqrt(num_faces) * 16 wide and tall and then manipulate the texture coords appropriately.
      */
 
-    int32_t lightmap_data_size = header.lumps[Q2::LumpType::LIGHTMAPS].length;
-    std::vector<uint8_t> lightmap_data(lightmap_data_size);
-    file.seekg(header.lumps[Q2::LumpType::LIGHTMAPS].offset);
-    file.read((char*)&lightmap_data[0], lightmap_data_size);
 
     /**
      *  Load the textures and generate materials
      */
 
-    MeshID mid = stage->assets->new_mesh_with_alias(
-        "world_geometry",
-        VertexSpecification::DEFAULT,
-        GARBAGE_COLLECT_NEVER
-    );
-    auto mesh = stage->assets->mesh(mid);
+    std::vector<MaterialID> materials;    
+    std::vector<Q2::TexDimension> dimensions;
 
-    std::vector<MaterialID> materials;
-    std::vector<std::pair<uint32_t, uint32_t>> texture_dimensions;
-    std::unordered_map<MaterialID, SubMesh*> submeshes_by_material;
+    TextureID lightmap_texture = assets->new_texture();
 
-    materials.resize(textures.size());
-    texture_dimensions.resize(textures.size());
+    generate_materials(assets, textures, materials, dimensions, lightmap_texture);
 
-    uint32_t tex_idx = 0;
+    /* Transform U/V coordinates appropriately */
     for(Q2::TextureInfo& tex: textures) {
-        if(!texture_info_visible(tex)) {
-            ++tex_idx;
-            continue;
-        }
-
         kmVec3 u_axis, v_axis;
         kmVec3Fill(&u_axis, tex.u_axis.x, tex.u_axis.y, tex.u_axis.z);
         kmVec3Fill(&v_axis, tex.v_axis.x, tex.v_axis.y, tex.v_axis.z);
@@ -475,86 +378,34 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         tex.v_axis.x = v_axis.x;
         tex.v_axis.y = v_axis.y;
         tex.v_axis.z = v_axis.z;
-
-        TextureID new_texture_id = find_or_load_texture(tex.texture_name);
-
-        MaterialID new_material_id;
-
-        bool uses_lightmap = !(tex.flags & (Q2::SURFACE_FLAG_SKY | Q2::SURFACE_FLAG_WARP));
-        if(uses_lightmap) {
-            new_material_id = stage->assets->new_material_from_file(Material::BuiltIns::TEXTURE_WITH_LIGHTMAP);
-        } else {
-            new_material_id = stage->assets->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
-        }
-
-        {
-            auto mat = stage->assets->material(new_material_id);
-            mat->pass(0)->set_texture_unit(0, new_texture_id);
-
-            if(uses_lightmap) {
-                mat->pass(0)->set_texture_unit(1, lightmap_texture);
-            }
-
-            if(tex.flags & Q2::SURFACE_FLAG_FLOWING) {
-                mat->new_controller<controllers::material::Flowing>();
-            } else if(tex.flags & Q2::SURFACE_FLAG_WARP) {
-                mat->new_controller<controllers::material::Warp>();
-            }
-
-            if(tex.flags & Q2::SURFACE_FLAG_TRANS_33) {
-                mat->pass(0)->set_diffuse(smlt::Colour(1.0, 1.0, 1.0, 0.33));
-                mat->pass(0)->set_blending(BLEND_ALPHA);
-            }
-
-            if(tex.flags & Q2::SURFACE_FLAG_TRANS_66) {
-                mat->pass(0)->set_diffuse(smlt::Colour(1.0, 1.0, 1.0, 0.66));
-                mat->pass(0)->set_blending(BLEND_ALPHA);
-            }
-        }
-
-        auto texture = stage->assets->texture(new_texture_id);
-        texture_dimensions[tex_idx].first = texture->width();
-        texture_dimensions[tex_idx].second = texture->height();
-
-        materials[tex_idx] = new_material_id;
-        submeshes_by_material[new_material_id] = mesh->new_submesh_with_material(std::to_string(tex_idx), new_material_id);
-        tex_idx++;
     }
 
-    std::cout << "Num textures: " << texture_lookup.size() << std::endl;
+    std::unordered_map<MaterialID, SubMesh*> submeshes_by_material;
+    uint32_t i;
+    for(auto& material: materials) {
+        submeshes_by_material[material] = mesh->new_submesh_with_material(_F("{0}").format(i++), material);
+    }
+
+    std::cout << "Num materials: " << materials.size() << std::endl;
     std::cout << "Num submeshes: " << mesh->submesh_count() << std::endl;
 
+    std::vector<FaceUVLimits> uv_limits;
 
-    typedef uint32_t Offset;
-    typedef uint32_t FaceIndex;
+    std::vector<std::set<uint32_t>> face_indexes(faces.size());
 
-    struct LightmapInfo {
-        Offset offset;
-        uint32_t width;
-        uint32_t height;
-        short min_u;
-        short min_v;
-    };
-
-    struct StagedLightmapCoord {
-        FaceIndex face_index;
-        int32_t cursor_position;
-        float u;
-        float v;
-    };
-
-    std::vector<StagedLightmapCoord> lightmap_coords_to_process;
-    std::map<FaceIndex, LightmapInfo> lightmaps;
-
-    int32_t face_index = -1;
+    int32_t face_id = -1;
     for(Q2::Face& f: faces) {
-        Q2::TextureInfo& tex = textures[f.texture_info];
+        FaceUVLimits uv_limit;
 
-        if(!texture_info_visible(tex)) {
+        auto& tex = textures[f.texture_info];
+        auto material_id = materials.at(f.texture_info);
+        if(!material_id) {
+            // Must be an invisible surface
+            uv_limits.push_back(uv_limit);
             continue;
         }
 
-        ++face_index;
+        ++face_id;
 
         std::vector<uint32_t> indexes;
         for(uint32_t i = f.first_edge; i < f.first_edge + f.num_edges; ++i) {
@@ -571,8 +422,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             }
         }
 
-        auto material_id = materials[f.texture_info];
-        SubMesh* sm = submeshes_by_material[material_id];
+        SubMesh* sm = submeshes_by_material.at(material_id);
 
         /*
          *  A unique vertex is defined by a combination of the position ID and the
@@ -590,8 +440,10 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         kmVec3 normal;
         kmVec3Fill(&normal, 0, 1, 0);
 
-        short min_u = 10000, max_u = -10000;
-        short min_v = 10000, max_v = -10000;
+        int32_t min_u = std::numeric_limits<int32_t>::max();
+        int32_t max_u = std::numeric_limits<int32_t>::lowest();
+        int32_t min_v = std::numeric_limits<int32_t>::max();
+        int32_t max_v = std::numeric_limits<int32_t>::lowest();
 
         for(int16_t i = 1; i < (int16_t) indexes.size() - 1; ++i) {
             uint32_t tri_idx[] = {
@@ -631,116 +483,76 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
                         + pos.y * tex.v_axis.y
                         + pos.z * tex.v_axis.z + tex.v_offset;
 
-                if(u < min_u) min_u = u;
-                if(u > max_u) max_u = u;
-                if(v < min_v) min_v = v;
-                if(v > max_v) max_v = v;
+                int32_t floor_u = std::floor(u);
+                int32_t floor_v = std::floor(v);
 
-                float w = float(texture_dimensions[f.texture_info].first);
-                float h = float(texture_dimensions[f.texture_info].second);
+                if(floor_u < min_u) min_u = floor_u;
+                if(floor_u > max_u) max_u = floor_u;
+                if(floor_v < min_v) min_v = floor_v;
+                if(floor_v > max_v) max_v = floor_v;
+
+                float w = float(dimensions[f.texture_info].width);
+                float h = float(dimensions[f.texture_info].height);
 
                 mesh->shared_data->position(pos);
                 mesh->shared_data->normal(normal);
                 mesh->shared_data->diffuse(smlt::Colour::WHITE);
                 mesh->shared_data->tex_coord0(u / w, v / h);
                 mesh->shared_data->tex_coord1(u / w, v / h);
-
-                StagedLightmapCoord coord;
-                coord.cursor_position = mesh->shared_data->cursor_position();
-                coord.face_index = face_index;
-                coord.u = u;
-                coord.v = v;
-
-                lightmap_coords_to_process.push_back(coord);
-
                 mesh->shared_data->move_next();
 
                 sm->index_data->index(mesh->shared_data->count() - 1);
 
                 //Cache this new vertex in the lookup
                 index_lookup[tri_idx[j]] = mesh->shared_data->count() - 1;
+
+                // Record this vertex against this face so we can manipulate the lightmap coordinates
+                // after packing
+                face_indexes[face_id].insert(mesh->shared_data->count() - 1);
             }
         }
 
-        uint32_t lightmap_width  = ceil(max_u / 16) - floor(min_u / 16) + 1;
-        uint32_t lightmap_height = ceil(max_v / 16) - floor(min_v / 16) + 1;
+        uv_limit.min = Vec2(min_u, min_v);
+        uv_limit.max = Vec2(max_u, max_v);
+        uv_limits.push_back(uv_limit);
+    }
 
-        lightmap_width = std::min(lightmap_width, (uint32_t)16);
-        lightmap_height = std::min(lightmap_height, (uint32_t)16);
+    auto lightmaps = extract_lightmaps(lightmap_data, faces, uv_limits);
+    auto locations = pack_lightmaps(lightmaps, lightmap_texture.fetch());
 
-        if(!lightmaps.count(face_index)) {
-            lightmaps[face_index].offset = f.lightmap_offset;
-            lightmaps[face_index].width = lightmap_width;
-            lightmaps[face_index].height = lightmap_height;
-            lightmaps[face_index].min_u = min_u;
-            lightmaps[face_index].min_v = min_v;
+    for(uint32_t i = 0; i < locations.size(); ++i) {
+        for(auto idx: face_indexes[i]) {
+            mesh->shared_data->move_to(idx);
+            auto t = mesh->shared_data->texcoord1_at<Vec2>(idx);
+
+            t.x -= uv_limits[i].min.x;
+            t.y -= uv_limits[i].min.y;
+
+            t.x /= (uv_limits[i].max.x - uv_limits[i].min.x);
+            t.y /= (uv_limits[i].max.y - uv_limits[i].min.y);
+
+            t.x *= float(lightmaps[i].width) / float(LIGHTMAP_DIMENSION);
+            t.y *= float(lightmaps[i].height) / float(LIGHTMAP_DIMENSION);
+
+            t.x += float(locations[i].x) / float(LIGHTMAP_DIMENSION);
+            t.y += float(locations[i].y) / float(LIGHTMAP_DIMENSION);
+
+            mesh->shared_data->tex_coord1(t);
         }
     }
 
-    std::cout << "Num lightmaps: " << lightmaps.size() << std::endl;
-    LightmapBuffer lightmap_buffer(lightmaps.size());
-
-    for(auto& p: lightmaps) {
-        auto face_index = p.first;
-        auto& lightmap = p.second;
-
-        lightmap_buffer.write_lightmap(
-            face_index,
-            &lightmap_data[0] + lightmap.offset,
-            lightmap.width,
-            lightmap.height
-        );
-    }
-
-    auto pos = mesh->shared_data->cursor_position();
-    for(StagedLightmapCoord& staged_coord: lightmap_coords_to_process) {
-        auto& lightmap = lightmaps[staged_coord.face_index];
-        float u = staged_coord.u;
-        float v = staged_coord.v;
-
-        u = u - float(lightmap.min_u) + 8.0f;
-        u /= (float(lightmap.width) * 16.0f);
-
-        v = v - float(lightmap.min_v) + 8.0f;
-        v /= (float(lightmap.height) * 16.0f);
-
-        // These two lines are hacky, and in the wrong place. Basically we need to scale by width / LIGHTMAP_SIZE
-        // because our lightmap sections in the buffer have extra space (the max size for a lightmap)
-        u *= float(lightmap.width) / LightmapBuffer::LIGHTMAP_SIZE;
-        v *= float(lightmap.height) / LightmapBuffer::LIGHTMAP_SIZE;
-
-        mesh->shared_data->move_to(staged_coord.cursor_position);
-        auto lightmap_coords = lightmap_buffer.transform_uv(staged_coord.face_index, u, v);
-        mesh->shared_data->tex_coord1(lightmap_coords.first, lightmap_coords.second);
-    }
-    mesh->shared_data->move_to(pos);
-
-    /* Now upload the lightmap texture */
-    {
-        auto lightmap = stage->assets->texture(lightmap_texture);
-        lightmap->resize(lightmap_buffer.width_in_texels(), lightmap_buffer.height_in_texels());
-        lightmap->set_bpp(24); // RGB only, no alpha
-        lightmap->data().assign(lightmap_buffer.buffer.begin(), lightmap_buffer.buffer.end());
-        lightmap->upload(MIPMAP_GENERATE_NONE, TEXTURE_WRAP_CLAMP_TO_EDGE, TEXTURE_FILTER_LINEAR, false);
-    }
-
-    mesh->data->stash(lightmap_texture, "lightmap_texture_id");
     mesh->shared_data->done();
     mesh->each([&](const std::string& name, SubMesh* submesh) {
         //Delete empty submeshes
         /*if(!submesh->index_data->count()) {
-            mesh->delete_submesh(submesh->id());
+            mesh->delete_submesh(name);
             return;
         }*/
         submesh->index_data->done();
     });
 
-    //Finally, create an actor from the world mesh
-    stage->new_actor_with_mesh(mid);
 
-    // Now the mesh has been attached, it can be collected
-    mesh->enable_gc();
-    L_DEBUG(_F("Created a geom for mesh: {0}").format(mid));
+    //FIXME: mark mesh as uncollected
 }
 
 }
