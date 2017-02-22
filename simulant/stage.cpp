@@ -290,20 +290,29 @@ uint32_t Stage::sprite_count() const {
 //============== END SPRITES ================
 
 
-LightID Stage::new_light(LightType type) {
-    LightID lid = LightManager::make(this);
-    light(lid)->set_type(type);
+LightID Stage::new_light_as_directional(const Vec3& direction, const smlt::Colour& colour) {
+    auto light = LightManager::make(this).fetch();
 
-    // If this is a new directional light, make sure we set a decent
-    // direction to start with so that users can get a decent
-    // effect without doing anything
-    if(type == LIGHT_TYPE_DIRECTIONAL) {
-        light(lid)->set_direction(smlt::Vec3(-1, -0.5, 0).normalized());
-    }
+    light->set_type(smlt::LIGHT_TYPE_DIRECTIONAL);
+    light->set_direction(direction.normalized());
+    light->set_diffuse(colour);
+    light->set_parent(this);
 
-    light(lid)->set_parent(this);
-    signal_light_created_(lid);
-    return lid;
+    signal_light_created_(light->id());
+    return light->id();
+}
+
+LightID Stage::new_light_as_point(const Vec3& position, const smlt::Colour& colour) {
+    auto light = LightManager::make(this).fetch();
+
+    light->set_type(smlt::LIGHT_TYPE_POINT);
+    light->move_to(position);
+
+    light->set_diffuse(colour);
+    light->set_parent(this);
+
+    signal_light_created_(light->id());
+    return light->id();
 }
 
 LightPtr Stage::light(LightID light_id) {

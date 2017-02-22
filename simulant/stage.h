@@ -149,7 +149,9 @@ public:
     void delete_sprite(SpriteID s);
     uint32_t sprite_count() const;
 
-    LightID new_light(LightType type=LIGHT_TYPE_POINT);
+    LightID new_light_as_directional(const Vec3& direction=Vec3(1, -1, 0), const smlt::Colour& colour=smlt::Colour::WHITE);
+    LightID new_light_as_point(const Vec3& position=Vec3(), const smlt::Colour& colour=smlt::Colour::WHITE);
+
     LightPtr light(LightID light);
     void delete_light(LightID light_id);
     uint32_t light_count() const { return LightManager::count(); }

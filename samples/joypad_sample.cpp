@@ -100,9 +100,11 @@ public:
 
         window->stage(stage_id_)->set_ambient_light(smlt::Colour::WHITE);
         {
-            auto light = window->stage(stage_id_)->light(window->stage(stage_id_)->new_light());
-            light->move_to_absolute(5.0, 0.0, -5.0);
-            light->set_diffuse(smlt::Colour::GREEN);
+            auto light = window->stage(stage_id_)->new_light_as_point(
+                Vec3(5.0, 0, -5.0),
+                smlt::Colour::GREEN
+            ).fetch();
+
             light->set_attenuation_from_range(10.0);
         }
 
