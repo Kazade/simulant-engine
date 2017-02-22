@@ -417,7 +417,7 @@ struct Vec3 : public kmVec3 {
         return kmVec3LengthSq(this);
     }
 
-    const smlt::Vec3 normalized() {
+    const smlt::Vec3 normalized() const {
         smlt::Vec3 result;
         kmVec3Normalize(&result, this);
         return result;
