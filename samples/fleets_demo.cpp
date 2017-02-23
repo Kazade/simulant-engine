@@ -18,6 +18,9 @@ public:
         ship_mesh_id_ = window->shared_assets->new_mesh_from_file("sample_data/fighter_good/space_frigate_6.obj");
         ship_mesh_id_.fetch()->reverse_winding();
         generate_ships();
+
+        stage->set_ambient_light(smlt::Colour(0.2, 0.2, 0.2, 1.0));
+        stage->new_light_as_directional();
     }
 
     void do_activate() {

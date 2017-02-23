@@ -220,7 +220,6 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
 
             // Clone the default material
             materials[material_name] = mesh->resource_manager().clone_default_material().fetch();
-            materials[material_name]->first_pass()->set_cull_mode(CULL_MODE_NONE);
             current_material = material_name;
 
             has_materials = true;
