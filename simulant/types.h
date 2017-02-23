@@ -480,7 +480,6 @@ struct Vec3 : public kmVec3 {
     }
 
 
-    //Neccesary for OpenSteer
     inline Vec3 parallel_component(const Vec3& unit_basis) const {
         const float projection = this->dot(unit_basis);
         return unit_basis * projection;
@@ -615,7 +614,8 @@ struct AABB : public kmAABB3 {
     }
 
     bool intersects(const AABB& other) const {
-        return kmAABB3IntersectsAABB(this, &other);
+        bool ret = kmAABB3IntersectsAABB(this, &other);
+        return ret;
     }
 
     Vec3 centre() const {

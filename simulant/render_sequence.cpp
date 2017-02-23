@@ -260,7 +260,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
 
         auto renderable_lights = filter(lights_visible, [=](const LightPtr& light) -> bool {
             // Filter by whether or not the renderable bounds intersects the light bounds
-            return renderable->aabb().intersects(light->aabb());
+            return renderable->transformed_aabb().intersects(light->transformed_aabb());
         });
 
         std::partial_sort(

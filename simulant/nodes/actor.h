@@ -161,14 +161,14 @@ public:
     /* BoundableAndTransformable interface implementation */
 
     const AABB transformed_aabb() const {
-        AABB local = aabb();
-        Mat4 transform = parent_.absolute_transformation();
+        auto corners = aabb().corners();
+        auto transform = parent_.absolute_transformation();
 
-        //Transform local by the transformation matrix of the parent
-        kmVec3Transform(&local.min, &local.min, &transform);
-        kmVec3Transform(&local.max, &local.max, &transform);
+        for(auto& corner: corners) {
+            kmVec3Transform(&corner, &corner, &transform);
+        }
 
-        return local;
+        return AABB(corners.data(), corners.size());
     }
 
     const AABB aabb() const {
