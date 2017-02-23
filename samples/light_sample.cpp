@@ -42,6 +42,8 @@ public:
 
             auto light3 = stage->new_light_as_point(Vec3(0, -15, -5), smlt::Colour::RED).fetch();
             light3->set_attenuation_from_range(50.0);
+
+            stage->new_light_as_directional(Vec3(1, 0, 0), smlt::Colour::YELLOW);
         }
 
         float xpos = 0;
