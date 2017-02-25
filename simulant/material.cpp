@@ -189,14 +189,7 @@ void MaterialPass::set_texture_unit(uint32_t texture_unit_id, TextureID tex) {
     }
     texture_units_.at(texture_unit_id) = TextureUnit(*this, tex);
 
-    MaterialPassChangeEvent evt;
-    evt.type = MATERIAL_PASS_CHANGE_TYPE_TEXTURE_UNIT_CHANGED;
-    evt.texture_unit_changed.pass = this;
-    evt.texture_unit_changed.old_texture_id = previous_texture;
-    evt.texture_unit_changed.new_texture_id = tex;
-    evt.texture_unit_changed.texture_unit = texture_unit_id;
-
-    material->signal_material_pass_changed_(material->id(), evt);
+    material->on_pass_changed(this);
 }
 
 void MaterialPass::set_animated_texture_unit(uint32_t texture_unit_id, const std::vector<TextureID> textures, double duration) {
@@ -208,11 +201,15 @@ void MaterialPass::set_animated_texture_unit(uint32_t texture_unit_id, const std
         texture_units_.resize(texture_unit_id + 1, TextureUnit(*this));
     }
     texture_units_[texture_unit_id] = TextureUnit(*this, textures, duration);
+
+    material->on_pass_changed(this);
 }
 
 void MaterialPass::set_iteration(IterationType iter_type, uint32_t max) {
     iteration_ = iter_type;
     max_iterations_ = max;
+
+    material->on_pass_changed(this);
 }
 
 void MaterialPass::set_albedo(float reflectiveness) {
@@ -222,6 +219,8 @@ void MaterialPass::set_albedo(float reflectiveness) {
     } else {
         material->reflective_passes_.erase(this);
     }
+
+    material->on_pass_changed(this);
 }
 
 #ifndef SIMULANT_GL_VERSION_1X
@@ -346,6 +345,18 @@ MaterialID Material::new_clone(ResourceManager* target_resource_manager, Garbage
     mat->pass_count_ = pass_count_;
 
     return ret;
+}
+
+void Material::on_pass_created(MaterialPass *pass) {
+    signal_material_pass_created_(id(), pass);
+}
+
+void Material::on_pass_changed(MaterialPass *pass) {
+    signal_material_changed_(id());
+}
+
+void Material::on_pass_destroyed(MaterialPass* pass) {
+    signal_material_pass_destroyed_(id(), pass);
 }
 
 }

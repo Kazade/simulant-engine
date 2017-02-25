@@ -22,6 +22,7 @@
 #include <set>
 #include <map>
 
+#include "../../types.h"
 #include "../../generic/threading/shared_mutex.h"
 
 namespace smlt {
@@ -154,6 +155,33 @@ public:
     virtual void end_traversal(const RenderQueue& queue) = 0;
 };
 
+
+class MaterialChangeWatcher {
+public:
+    MaterialChangeWatcher(RenderQueue* queue):
+        queue_(queue) {}
+
+    void watch(MaterialID material_id, Renderable* renderable);
+    void unwatch(Renderable* renderable);
+
+private:
+    RenderQueue* queue_;
+
+    /*
+     * We store a list of all the renderables that need to be reinserted if a material changes
+     */
+    std::unordered_map<MaterialID, std::set<Renderable*>> renderables_by_material_;
+
+    /*
+     * We store connections to material update signals, when all renderables are removed
+     * for a particular material, we disconnect the signal
+     */
+    std::unordered_map<MaterialID, sig::connection> material_update_conections_;
+
+    void on_material_changed(MaterialID material);
+};
+
+
 class RenderQueue {
 public:
     typedef std::function<void (bool, const RenderGroup*, Renderable*, MaterialPass*, Light*, Iteration)> TraverseCallback;
@@ -197,6 +225,8 @@ private:
     sig::connection actor_destroyed_;
 
     void clean_empty_batches();
+
+    MaterialChangeWatcher material_watcher_;
 };
 
 }

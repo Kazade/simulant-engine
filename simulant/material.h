@@ -44,24 +44,6 @@
 namespace smlt {
 
 class MaterialPass;
-
-enum MaterialPassChangeType {
-    MATERIAL_PASS_CHANGE_TYPE_TEXTURE_UNIT_CHANGED
-};
-
-struct TextureUnitChangedData {
-    MaterialPass* pass = nullptr;
-    uint8_t texture_unit = 0;
-    TextureID old_texture_id;
-    TextureID new_texture_id;
-};
-
-struct MaterialPassChangeEvent {
-    MaterialPassChangeType type;
-    TextureUnitChangedData texture_unit_changed;
-};
-
-
 class Material;
 
 #ifndef SIMULANT_GL_VERSION_1X
@@ -257,6 +239,8 @@ private:
     MaterialPass::ptr new_clone(Material *owner) const;
 };
 
+typedef sig::signal<void (MaterialID)> MaterialChangedSignal;
+
 class Material:
     public Resource,
     public Loadable,
@@ -264,6 +248,8 @@ class Material:
     public Managed<Material>,
     public Updateable,
     public Controllable {
+
+    DEFINE_SIGNAL(MaterialChangedSignal, signal_material_changed);
 
 public:
     struct BuiltIns {
@@ -315,16 +301,17 @@ public:
 public:
     typedef sig::signal<void (MaterialID, MaterialPass*)> MaterialPassCreated;
     typedef sig::signal<void (MaterialID, MaterialPass*)> MaterialPassDestroyed;
-    typedef sig::signal<void (MaterialID, MaterialPassChangeEvent)> MaterialPassChanged;
 
     MaterialPassCreated& signal_material_pass_created() { return signal_material_pass_created_; }
     MaterialPassDestroyed& signal_material_pass_destroyed() { return signal_material_pass_destroyed_; }
-    MaterialPassChanged& signal_material_pass_changed() { return signal_material_pass_changed_; }
 
 private:
     MaterialPassCreated signal_material_pass_created_;
     MaterialPassDestroyed signal_material_pass_destroyed_;
-    MaterialPassChanged signal_material_pass_changed_;
+
+    void on_pass_created(MaterialPass *pass);
+    void on_pass_changed(MaterialPass *pass);
+    void on_pass_destroyed(MaterialPass *pass);
 
 private:
     /*

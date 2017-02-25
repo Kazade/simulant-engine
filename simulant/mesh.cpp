@@ -676,8 +676,8 @@ void SubMesh::set_material_id(MaterialID mat) {
             throw std::runtime_error("Tried to set invalid material on submesh");
         }
 
-        material_change_connection_ = material_->signal_material_pass_changed().connect(
-            [=](MaterialID, MaterialPassChangeEvent evt) {
+        material_change_connection_ = material_->signal_material_changed().connect(
+            [=](MaterialID) {
                 /* FIXME: This is a hack! We want material_changed event to take some kind of event
                  * structure so we can signal different types of event changes. Here we are signaling that
                  * the material passes changed so the material itself changed - not that it we changed from

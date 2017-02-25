@@ -37,9 +37,59 @@ void reinsert(ActorID actor_id, RenderQueue* queue) {
     });
 }
 
+void MaterialChangeWatcher::watch(MaterialID material_id, Renderable *renderable) {
+    auto ret = renderables_by_material_.emplace(material_id, std::set<Renderable*>());
+    auto material = material_id.fetch(); //FIXME: fetch is bad here, prevents a user constructing manually
+
+    if(ret.second) {
+        // First renderable with this material, set up a connection
+        material_update_conections_.emplace(material_id, material->signal_material_changed().connect(
+           std::bind(&MaterialChangeWatcher::on_material_changed, this, std::placeholders::_1)
+        ));
+    }
+
+    // Add the renderable to the list of renderables that use this material
+    auto& renderable_list = (*ret.first).second;
+    renderable_list.insert(renderable);
+}
+
+void MaterialChangeWatcher::on_material_changed(MaterialID material) {
+    // Intentionally copy, the act of removing and inserting will alter this map
+    auto renderables = renderables_by_material_.at(material);
+
+    for(auto& renderable: renderables) {
+        queue_->remove_renderable(renderable);
+        queue_->insert_renderable(renderable);
+    }
+}
+
+void MaterialChangeWatcher::unwatch(Renderable *renderable) {
+    MaterialID to_erase;
+    for(auto& pair: renderables_by_material_) {
+        if(pair.second.find(renderable) != pair.second.end()) {
+            pair.second.erase(renderable);
+            if(pair.second.empty()) {
+                // Was last renderable with this material, so erase the material
+                to_erase = pair.first;
+            }
+            break;
+        }
+    }
+
+    if(to_erase) {
+        // Disconnect signal
+        material_update_conections_.at(to_erase).disconnect();
+        material_update_conections_.erase(to_erase);
+
+        // Erase material entry
+        renderables_by_material_.erase(to_erase);
+    }
+}
+
 RenderQueue::RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory):
     stage_(stage),
-    render_group_factory_(render_group_factory) {
+    render_group_factory_(render_group_factory),
+    material_watcher_(this) {
 
     stage->signal_actor_created().connect([=](ActorID actor_id) {
         auto actor = stage->actor(actor_id);
@@ -120,6 +170,8 @@ void RenderQueue::insert_renderable(Renderable* renderable) {
 
         batches_[i][group].add_renderable(renderable);
     });
+
+    material_watcher_.watch(material_id, renderable);
 }
 
 void RenderQueue::clean_empty_batches() {
@@ -148,6 +200,8 @@ void RenderQueue::remove_renderable(Renderable* renderable) {
      * is just a case of iterating its batches and removing it. If the
      * renderable was the last in the batch we need to remove the batch.
      */
+
+    material_watcher_.unwatch(renderable);
 
     bool empty_batches_created = false;
     for(auto batch: renderable->batches()) {
