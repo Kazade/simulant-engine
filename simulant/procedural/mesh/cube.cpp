@@ -25,7 +25,7 @@ namespace procedural {
 namespace mesh {
 
 void box(MeshPtr mesh, float width, float height, float depth, MeshStyle style) {
-    mesh->clear();
+    mesh->reset(VertexSpecification::DEFAULT);
 
     float rx = width * 0.5f;
     float ry = height * 0.5f;

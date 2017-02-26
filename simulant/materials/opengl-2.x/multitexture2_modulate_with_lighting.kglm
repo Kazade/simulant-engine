@@ -4,6 +4,8 @@ BEGIN(PASS)
 
     SET(ATTRIBUTE POSITION "vertex_position")
     SET(ATTRIBUTE DIFFUSE "vertex_diffuse")
+    SET(ATTRIBUTE TEXCOORD0 "texture_coord0")
+    SET(ATTRIBUTE TEXCOORD1 "texture_coord1")
 
     SET(AUTO_UNIFORM MODELVIEW_PROJECTION_MATRIX "modelview_projection")
     SET(AUTO_UNIFORM LIGHT_GLOBAL_AMBIENT "global_ambient")
@@ -60,11 +62,12 @@ BEGIN(PASS)
                 gl_FragColor = color;
             } else {
                 vec4 t1 = texture2D(textures[0], frag_texcoord0.st) * material_diffuse;
-                vec4 t2 = texture2D(textures[1], frag_texcoord1.st) * material_diffuse;
-                if(active_texture_count < 2) {
-                    t2 = vec4(1.0, 1.0, 1.0, 0.0) * material_diffuse;
+                if(active_texture_count == 1) {
+                    gl_FragColor = t1 * color;
+                } else {
+                    vec4 t2 = texture2D(textures[1], frag_texcoord1.st) * material_diffuse;
+                    gl_FragColor = (t1 + vec4(t2.rgb, 1.0 - t1.a) * color);
                 }
-                gl_FragColor = (((1.0 - t2.a) * vec4(t1.rgb, 1.0)) + (t2.a * vec4(t2.rgb, 1.0))) * color;
             }
         }
     END_DATA(FRAGMENT)
@@ -174,4 +177,5 @@ BEGIN(PASS)
 
     END_DATA(FRAGMENT)
 END(PASS)
+
 
