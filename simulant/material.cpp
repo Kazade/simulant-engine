@@ -138,7 +138,7 @@ uint32_t Material::new_pass() {
     passes_.push_back(MaterialPass::ptr(new MaterialPass(this)));
     pass_count_ = passes_.size();
 
-    signal_material_pass_created_(id(), passes_.back().get());
+    on_pass_created(passes_.back().get());
     return passes_.size() - 1; //Return the index
 }
 
@@ -349,6 +349,7 @@ MaterialID Material::new_clone(ResourceManager* target_resource_manager, Garbage
 
 void Material::on_pass_created(MaterialPass *pass) {
     signal_material_pass_created_(id(), pass);
+    signal_material_changed_(id());
 }
 
 void Material::on_pass_changed(MaterialPass *pass) {
@@ -357,6 +358,7 @@ void Material::on_pass_changed(MaterialPass *pass) {
 
 void Material::on_pass_destroyed(MaterialPass* pass) {
     signal_material_pass_destroyed_(id(), pass);
+    signal_material_changed_(id());
 }
 
 }
