@@ -175,7 +175,7 @@ void Q2BSPLoader::generate_materials(
 
         // Load the correct material depending on surface flags
         auto material_id = assets->new_material_from_file(
-            (uses_lightmap) ? Material::BuiltIns::TEXTURE_WITH_LIGHTMAP : Material::BuiltIns::TEXTURE_ONLY
+            (uses_lightmap) ? Material::BuiltIns::TEXTURE_WITH_LIGHTMAP : Material::BuiltIns::MULTITEXTURE2_MODULATE_WITH_LIGHTING
         );
 
         auto mat = material_id.fetch();
