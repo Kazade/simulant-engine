@@ -95,8 +95,10 @@ public:
 protected:
     StagePtr stage(StageID stage=StageID());
 
-
     bool init();
+
+    Property<Application, AppConfig> config = { this, &Application::config_ };
+
 private:
     std::shared_ptr<WindowBase> window_;
     std::shared_ptr<ScreenManager> routes_;
@@ -114,6 +116,7 @@ private:
 
     generic::DataCarrier data_carrier_;
 
+    AppConfig config_;
     void construct_window(const AppConfig& config);
 };
 

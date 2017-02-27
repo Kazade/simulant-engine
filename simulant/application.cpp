@@ -27,7 +27,8 @@
 
 namespace smlt {
 
-Application::Application(const AppConfig &config) {
+Application::Application(const AppConfig &config):
+    config_(config) {
     construct_window(config);
 }
 
@@ -39,6 +40,7 @@ Application::Application(const unicode &title, uint32_t width, uint32_t height, 
     config.bpp = bpp;
     config.fullscreen = fullscreen;
 
+    config_ = config;
     construct_window(config);
 }
 
