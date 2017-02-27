@@ -290,21 +290,22 @@ bool WindowBase::run_frame() {
         frame_counter_time_ = 0.0;
     }
 
+    check_events();
+
     pre_update(delta_time_);
 
     //Update any playing sounds
     update_source(delta_time_);
     input_controller().update(delta_time_);
 
-    update(delta_time_);
-    post_update(delta_time_);
+    update(delta_time_);    
+    signal_update_(delta_time_);
 
+    post_update(delta_time_);
 
     ktiBindTimer(fixed_timer_);
     ktiUpdateFrameTime();
     double fixed_step = ktiGetDeltaTime();
-
-    check_events();
 
     while(ktiTimerCanUpdate()) {
         pre_fixed_update(fixed_step);

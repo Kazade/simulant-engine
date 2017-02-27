@@ -103,6 +103,9 @@ typedef sig::signal<void ()> FrameFinishedSignal;
 typedef sig::signal<void ()> PreSwapSignal;
 typedef sig::signal<void (double)> StepSignal;
 typedef sig::signal<void (double)> PostStepSignal;
+
+typedef sig::signal<void (double)> UpdateSignal;
+
 typedef sig::signal<void ()> ShutdownSignal;
 typedef sig::signal<void (SDL_Scancode)> KeyUpSignal;
 typedef sig::signal<void (SDL_Scancode)> KeyDownSignal;
@@ -121,6 +124,8 @@ class WindowBase :
     DEFINE_SIGNAL(PreSwapSignal, signal_pre_swap);
     DEFINE_SIGNAL(StepSignal, signal_step);
     DEFINE_SIGNAL(PostStepSignal, signal_post_step);
+
+    DEFINE_SIGNAL(UpdateSignal, signal_update);
     DEFINE_SIGNAL(ShutdownSignal, signal_shutdown);
 
 public:    
