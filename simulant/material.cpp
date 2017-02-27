@@ -142,6 +142,16 @@ uint32_t Material::new_pass() {
     return passes_.size() - 1; //Return the index
 }
 
+void Material::delete_pass(uint32_t index) {
+    std::lock_guard<std::mutex> lock(pass_lock_);
+
+    auto pass = passes_.at(index);
+    passes_.erase(passes_.begin() + index);
+    pass_count_ = passes_.size();
+
+    on_pass_destroyed(pass.get());
+}
+
 MaterialPass::ptr Material::pass(uint32_t index) {
     std::lock_guard<std::mutex> lock(pass_lock_);
     return passes_.at(index);

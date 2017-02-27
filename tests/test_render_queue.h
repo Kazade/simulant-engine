@@ -29,7 +29,10 @@ public:
         stage_->assets->texture(texture_2)->upload();
 
         auto mat_1 = stage_->assets->new_material_from_texture(texture_1);
+        mat_1.fetch()->delete_pass(1); // Delete the lighting pass from the material
+
         auto mat_2 = stage_->assets->new_material_from_texture(texture_2);
+        mat_2.fetch()->delete_pass(1);
 
         auto mesh_1 = stage_->assets->new_mesh_as_cube(1.0);
         stage_->assets->mesh(mesh_1)->set_material_id(mat_1);
@@ -102,8 +105,13 @@ public:
         stage_->assets->texture(texture_2)->upload();
 
         auto mat_1 = stage_->assets->new_material_from_texture(texture_1);
+        mat_1.fetch()->delete_pass(1);
+
         auto mat_2 = stage_->assets->new_material_from_texture(texture_2);
+        mat_2.fetch()->delete_pass(1);
+
         auto mat_3 = stage_->assets->new_material_from_texture(texture_1); // Texture 1 repeated
+        mat_3.fetch()->delete_pass(1);
 
         auto& render_queue = stage_->render_queue;
 

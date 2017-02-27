@@ -279,6 +279,7 @@ public:
         }
         return MaterialPass::ptr();
     }
+    void delete_pass(uint32_t index);
 
     void set_texture_unit_on_all_passes(uint32_t texture_unit_id, TextureID tex);
 
