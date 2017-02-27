@@ -84,6 +84,9 @@ typedef sig::signal<void (ParticleSystemID)> ParticleSystemDestroyedSignal;
 typedef sig::signal<void (CameraID, Viewport)> StagePreRenderSignal;
 typedef sig::signal<void (CameraID, Viewport)> StagePostRenderSignal;
 
+
+extern const Colour DEFAULT_LIGHT_COLOUR;
+
 class Stage:
     public StageNode,
     public Managed<Stage>,
@@ -149,8 +152,8 @@ public:
     void delete_sprite(SpriteID s);
     uint32_t sprite_count() const;
 
-    LightID new_light_as_directional(const Vec3& direction=Vec3(1, -1, 0), const smlt::Colour& colour=smlt::Colour::WHITE);
-    LightID new_light_as_point(const Vec3& position=Vec3(), const smlt::Colour& colour=smlt::Colour::WHITE);
+    LightID new_light_as_directional(const Vec3& direction=Vec3(1, -0.5, 0), const smlt::Colour& colour=DEFAULT_LIGHT_COLOUR);
+    LightID new_light_as_point(const Vec3& position=Vec3(), const smlt::Colour& colour=DEFAULT_LIGHT_COLOUR);
 
     LightPtr light(LightID light);
     void delete_light(LightID light_id);

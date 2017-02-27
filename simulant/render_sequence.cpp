@@ -260,6 +260,10 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
 
         auto renderable_lights = filter(lights_visible, [=](const LightPtr& light) -> bool {
             // Filter by whether or not the renderable bounds intersects the light bounds
+            if(light->type() == LIGHT_TYPE_DIRECTIONAL) {
+                return true;
+            }
+
             return renderable->transformed_aabb().intersects(light->transformed_aabb());
         });
 
@@ -272,6 +276,12 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
                  * of many polygons, by choosing the light closest to the center you may find that
                  * that polygons far away from the center aren't effected by lights when they should be.
                  * This needs more thought, probably. */
+                if(lhs->type() == LIGHT_TYPE_DIRECTIONAL && rhs->type() != LIGHT_TYPE_DIRECTIONAL) {
+                    return true;
+                } else if(rhs->type() == LIGHT_TYPE_DIRECTIONAL && lhs->type() != LIGHT_TYPE_DIRECTIONAL) {
+                    return false;
+                }
+
                 float lhs_dist = (renderable->centre() - lhs->position()).length_squared();
                 float rhs_dist = (renderable->centre() - rhs->position()).length_squared();
                 return lhs_dist < rhs_dist;
