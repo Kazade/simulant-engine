@@ -187,10 +187,13 @@ void RenderQueue::clean_empty_batches() {
         }
     }
 
-    batches_.erase(
-        std::remove_if(batches_.begin(), batches_.end(), [](const BatchMap& pass) -> bool { return pass.empty(); }),
-        batches_.end()
-    );
+    for(auto it = batches_.begin(); it != batches_.end();) {
+        if(it->empty()) {
+            it = batches_.erase(it);
+        } else {
+            ++it;
+        }
+    }
 }
 
 void RenderQueue::remove_renderable(Renderable* renderable) {
