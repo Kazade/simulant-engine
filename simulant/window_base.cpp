@@ -272,12 +272,6 @@ void WindowBase::fixed_update(double dt) {
 
 
 void WindowBase::run_update() {
-    ktiBindTimer(variable_timer_);
-    ktiUpdateFrameTime();
-
-    delta_time_ = ktiGetDeltaTime();
-    total_time_ += delta_time_;
-
     frame_counter_time_ += delta_time_;
     frame_counter_frames_++;
 
@@ -288,11 +282,6 @@ void WindowBase::run_update() {
         frame_counter_frames_ = 0;
         frame_counter_time_ = 0.0;
     }
-
-    check_events();
-    //Update any playing sounds
-    update_source(delta_time_);
-    input_controller().update(delta_time_);
 
     update(delta_time_);
     signal_update_(delta_time_);
@@ -315,10 +304,21 @@ void WindowBase::run_fixed_updates() {
 bool WindowBase::run_frame() {
     signal_frame_started_();
 
+    ktiBindTimer(variable_timer_);
+    ktiUpdateFrameTime();
+
+    // Store the frame time, and the total elapsed time
+    delta_time_ = ktiGetDeltaTime();
+    total_time_ += delta_time_;
+
+    check_events(); // Check for any window events
+    Source::update_source(delta_time_); //Update any playing sounds
+    input_controller().update(delta_time_); // Update input devices
+    shared_assets->update(delta_time_); // Update animated assets
+
     run_fixed_updates();
     run_update();
 
-    shared_assets->update(delta_time_);
     idle_.execute(); //Execute idle tasks before render
 
     /* Don't run the render sequence if we don't have a context, and don't update the resource
