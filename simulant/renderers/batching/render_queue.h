@@ -205,7 +205,7 @@ public:
     void each_group(Pass pass, std::function<void (uint32_t, const RenderGroup&, const Batch&)> cb) {
         uint32_t i = 0;
         for(auto& batch: batches_[pass]){
-            cb(i++, batch.first, batch.second);
+            cb(i++, batch.first, *batch.second);
         }
     }
 
@@ -214,7 +214,7 @@ private:
     // minimize GL state changes (e.g. if a RenderGroupImpl orders by TextureID, then ShaderID
     // then we'll see  (TexID(1), ShaderID(1)), (TexID(1), ShaderID(2)) for example meaning the
     // texture doesn't change even if the shader does
-    typedef std::map<RenderGroup, Batch> BatchMap;
+    typedef std::map<RenderGroup, std::shared_ptr<Batch> > BatchMap;
     typedef std::vector<BatchMap> BatchPasses;
 
     Stage* stage_ = nullptr;

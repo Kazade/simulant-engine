@@ -168,7 +168,11 @@ void RenderQueue::insert_renderable(Renderable* renderable) {
             batches_.push_back(BatchMap());
         }
 
-        batches_[i][group].add_renderable(renderable);
+        if(!batches_[i].count(group)) {
+            batches_[i].insert(std::make_pair(group, std::make_shared<Batch>()));
+        }
+
+        batches_[i][group]->add_renderable(renderable);
     });
 
     material_watcher_.watch(material_id, renderable);
@@ -179,7 +183,7 @@ void RenderQueue::clean_empty_batches() {
         auto group = pass.begin();
         while(group != pass.end()) {
             auto& batch = group->second;
-            if(!batch.renderable_count()) {
+            if(!batch->renderable_count()) {
                 group = pass.erase(group);
             } else {
                 ++group;
@@ -236,7 +240,7 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
 
             visitor->change_render_group(last_group, current_group);
 
-            p.second.each([&](uint32_t i, Renderable* renderable) {
+            p.second->each([&](uint32_t i, Renderable* renderable) {
                 if(!renderable->is_visible_in_frame(frame_id)) {
                     return;
                 }
