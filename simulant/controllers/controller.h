@@ -46,39 +46,24 @@ public:
 
     virtual ~Controller() {}
 
-    void pre_update(double dt) {
-        do_pre_update(dt);
-    }
 
     void update(double dt) {
         do_update(dt);
     }
 
-    void post_update(double dt) {
-        do_post_update(dt);
-    }
-
-    void pre_fixed_update(double step) {
-        do_pre_fixed_update(step);
+    void late_update(double dt) {
+        do_late_update(dt);
     }
 
     void fixed_update(double step) {
         do_fixed_update(step);
     }
 
-    void post_fixed_update(double step) {
-        do_post_fixed_update(step);
-    }
-
     Property<Controller, std::string> name = { this, &Controller::name_ };
 private:
-    virtual void do_pre_update(double dt) {}
     virtual void do_update(double dt) {}
-    virtual void do_post_update(double dt) {}
-
-    virtual void do_pre_fixed_update(double step) {}
+    virtual void do_late_update(double dt) {}
     virtual void do_fixed_update(double step) {}
-    virtual void do_post_fixed_update(double step) {}
 
     std::string name_;
 };
@@ -136,21 +121,9 @@ public:
         return ret;
     }
 
-    void pre_fixed_update_controllers(double step) {
-        for(auto& controller: controllers_) {
-            controller->pre_fixed_update(step);
-        }
-    }
-
     void fixed_update_controllers(double step) {
         for(auto& controller: controllers_) {
             controller->fixed_update(step);
-        }
-    }
-
-    void post_fixed_update_controllers(double step) {
-        for(auto& controller: controllers_) {
-            controller->post_fixed_update(step);
         }
     }
 
@@ -160,15 +133,9 @@ public:
         }
     }
 
-    void pre_update_controllers(double dt) {
+    void late_update_controllers(double dt) {
         for(auto& controller: controllers_) {
-            controller->pre_update(dt);
-        }
-    }
-
-    void post_update_controllers(double dt) {
-        for(auto& controller: controllers_) {
-            controller->post_update(dt);
+            controller->late_update(dt);
         }
     }
 

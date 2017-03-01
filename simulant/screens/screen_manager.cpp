@@ -26,16 +26,16 @@ namespace smlt {
 ScreenManager::ScreenManager(WindowBase &window):
     window_(window) {
 
-    step_conn_ = window.signal_step().connect(std::bind(&ScreenManager::step, this, std::placeholders::_1));
+    step_conn_ = window.signal_fixed_update().connect(std::bind(&ScreenManager::fixed_update, this, std::placeholders::_1));
 }
 
 ScreenManager::~ScreenManager() {
     step_conn_.disconnect();
 }
 
-void ScreenManager::step(double dt) {
+void ScreenManager::fixed_update(double dt) {
     if(active_screen()) {
-        active_screen()->step(dt);
+        active_screen()->fixed_update(dt);
     }
 }
 

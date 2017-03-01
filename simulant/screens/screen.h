@@ -62,7 +62,9 @@ public:
     void activate();
     void deactivate();
 
-    void step(double dt);
+    void update(double dt);
+    void late_update(double dt);
+    void fixed_update(double step);
 
     bool is_loaded() const { return is_loaded_; }
 
@@ -73,7 +75,10 @@ protected:
     virtual void do_unload() {}
     virtual void do_activate() {}
     virtual void do_deactivate() {}
-    virtual void do_step(double dt) {}
+
+    virtual void do_fixed_update(double step) {}
+    virtual void do_update(double dt) {}
+    virtual void do_late_update(double dt) {}
 
     PipelineID prepare_basic_scene(
         StageID& new_stage,

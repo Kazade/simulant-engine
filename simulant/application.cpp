@@ -52,15 +52,14 @@ void Application::construct_window(const AppConfig& config) {
     }
 
     if(!window_->_init()) {
-        throw InstanceInitializationError("Unabel to create window");
+        throw InstanceInitializationError("Unable to create window");
     }
 
     routes_.reset(new ScreenManager(*window_));
 
     window_->set_title(config.title.encode());
 
-    window_->signal_step().connect(std::bind(&Application::do_step, this, std::placeholders::_1));
-    window_->signal_post_step().connect(std::bind(&Application::do_post_step, this, std::placeholders::_1));
+    window_->signal_fixed_update().connect(std::bind(&Application::do_fixed_update, this, std::placeholders::_1));
     window_->signal_shutdown().connect(std::bind(&Application::do_cleanup, this));
 
     window_->keyboard->key_pressed_connect(std::bind(&Application::on_key_press, this, std::placeholders::_1));

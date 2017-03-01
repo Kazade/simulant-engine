@@ -44,7 +44,7 @@ public:
         tank_actor->move_to(40, 0, -110);
     }
 
-    void do_step(double dt) {
+    void do_fixed_update(double dt) {
 
     }
 

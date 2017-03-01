@@ -52,7 +52,7 @@ private:
     CameraFollowMode following_mode_;
     float following_lag_ = 0.0;
 
-    void post_fixed_update(double dt);
+    void late_update(double dt);
 
     CameraPtr camera();
 };

@@ -90,7 +90,7 @@ void RigidBodySimulation::cleanup() {
 
 
 
-void RigidBodySimulation::step(double dt) {
+void RigidBodySimulation::fixed_update(double dt) {
     scene_->Step();
 }
 
@@ -319,7 +319,7 @@ void Body::move_to(const Vec3& position) {
     );
 }
 
-void Body::do_post_fixed_update(double dt) {
+void Body::do_update(double dt) {
     auto xform = simulation_->body_transform(this);
     object_->move_to(xform.first);
     object_->rotate_to(xform.second);

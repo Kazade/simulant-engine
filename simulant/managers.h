@@ -92,13 +92,9 @@ public:
     bool has_stage(StageID stage_id) const;
 
     void print_tree();
-    void fixed_update(double dt);
+    void fixed_update(double dt) override;
     void update(double dt) override;
-
-    void pre_update(double dt);
-    void post_update(double dt);
-    void pre_fixed_update(double step);
-    void post_fixed_update(double step);
+    void late_update(double dt) override;
 
     void delete_all_stages();
 private:

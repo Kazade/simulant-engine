@@ -84,7 +84,7 @@ public:
     }
 
 private:
-    void do_post_update(double dt) override {
+    void do_late_update(double dt) override {
         if(moving_forward_) {
             object_->move_forward_by(600.0 * dt);
         }

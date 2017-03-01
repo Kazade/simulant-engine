@@ -101,10 +101,10 @@ private:
 typedef sig::signal<void ()> FrameStartedSignal;
 typedef sig::signal<void ()> FrameFinishedSignal;
 typedef sig::signal<void ()> PreSwapSignal;
-typedef sig::signal<void (double)> StepSignal;
-typedef sig::signal<void (double)> PostStepSignal;
 
+typedef sig::signal<void (double)> FixedUpdateSignal;
 typedef sig::signal<void (double)> UpdateSignal;
+typedef sig::signal<void (double)> LateUpdateSignal;
 
 typedef sig::signal<void ()> ShutdownSignal;
 typedef sig::signal<void (SDL_Scancode)> KeyUpSignal;
@@ -122,10 +122,9 @@ class WindowBase :
     DEFINE_SIGNAL(FrameStartedSignal, signal_frame_started);
     DEFINE_SIGNAL(FrameFinishedSignal, signal_frame_finished);
     DEFINE_SIGNAL(PreSwapSignal, signal_pre_swap);
-    DEFINE_SIGNAL(StepSignal, signal_step);
-    DEFINE_SIGNAL(PostStepSignal, signal_post_step);
-
+    DEFINE_SIGNAL(FixedUpdateSignal, signal_fixed_update);
     DEFINE_SIGNAL(UpdateSignal, signal_update);
+    DEFINE_SIGNAL(LateUpdateSignal, signal_late_update);
     DEFINE_SIGNAL(ShutdownSignal, signal_shutdown);
 
 public:    
@@ -168,6 +167,7 @@ public:
     float aspect_ratio() const { return float(width_) / float(height_); }
     
     bool run_frame();
+
     void fixed_update(double dt);
     void update(double dt) override;
 
@@ -391,6 +391,9 @@ public:
     };
 
     Property<WindowBase, Stats> stats = { this, &WindowBase::stats_ };
+
+    void run_update();
+    void run_fixed_updates();
 };
 
 }

@@ -74,8 +74,8 @@ public:
         });
     }
 
-    void do_step(double dt) override {
-        simulation_->step(dt);
+    void do_fixed_update(double step) override {
+        simulation_->fixed_update(step);
     }
 
 private:

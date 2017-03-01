@@ -83,7 +83,9 @@ void CameraProxy::_update_following(double dt) {
     }
 }
 
-void CameraProxy::post_fixed_update(double dt) {
+void CameraProxy::late_update(double dt) {
+    StageNode::late_update(dt);
+
     _update_following(dt);
 }
 

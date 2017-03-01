@@ -27,7 +27,7 @@ public:
 
     }
 
-    void do_step(double dt) override {
+    void do_fixed_update(double dt) override {
         Vec3 speed(-250, 0, 0.0);
 
         Vec3 avg;

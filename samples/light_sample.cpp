@@ -59,7 +59,7 @@ public:
         });
     }
 
-    void do_step(double dt) {
+    void do_fixed_update(double dt) {
         window->stage(stage_id_)->actor(actor_id_)->rotate_x_by(smlt::Degrees(dt * 20.0));
         window->stage(stage_id_)->actor(actor_id_)->rotate_y_by(smlt::Degrees(dt * 15.0));
         window->stage(stage_id_)->actor(actor_id_)->rotate_z_by(smlt::Degrees(dt * 25.0));
