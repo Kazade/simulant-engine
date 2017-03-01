@@ -69,7 +69,7 @@ bool RaycastVehicle::init() {
     }
 }
 
-void RaycastVehicle::do_fixed_update(double dt) {
+void RaycastVehicle::fixed_update(double dt) {
     recalculate_rays();
 
     // If a roll has been detected, then fire a signal and do nothing else

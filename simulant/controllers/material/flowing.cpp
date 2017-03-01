@@ -24,7 +24,7 @@ namespace smlt {
 namespace controllers {
 namespace material {
 
-void Flowing::do_update(double dt) {
+void Flowing::update(double dt) {
     float scroll = -(time_ - int(time_));
 
     auto pass = material->pass(0);

@@ -44,10 +44,6 @@ public:
         tank_actor->move_to(40, 0, -110);
     }
 
-    void do_fixed_update(double dt) {
-
-    }
-
 private:
     CameraID camera_id_;
     StageID stage_id_;

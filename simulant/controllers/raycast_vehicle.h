@@ -100,8 +100,8 @@ private:
     float turn_force_ = 0.0f;
     float drive_force_ = 0.0f;
 
-    void do_fixed_update(double dt) override;
-    void do_pre_update(double dt) {
+    void fixed_update(double dt) override;
+    void pre_update(double dt) {
         // Before we read any input or anything, clear the forces
         drive_force_ = 0.0f;
         turn_force_ = 0.0f;

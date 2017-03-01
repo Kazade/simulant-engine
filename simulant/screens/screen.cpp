@@ -58,18 +58,6 @@ void ScreenBase::deactivate() {
     do_deactivate();
 }
 
-void ScreenBase::late_update(double dt) {
-    do_late_update(dt);
-}
-
-void ScreenBase::update(double dt) {
-    do_update(dt);
-}
-
-void ScreenBase::fixed_update(double step) {
-    do_fixed_update(step);
-}
-
 PipelineID ScreenBase::prepare_basic_scene(StageID& new_stage, CameraID& new_camera, AvailablePartitioner partitioner) {
     new_stage = window->new_stage(partitioner);
     new_camera = window->new_camera();

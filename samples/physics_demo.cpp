@@ -74,7 +74,7 @@ public:
         });
     }
 
-    void do_fixed_update(double step) override {
+    void fixed_update(double step) override {
         simulation_->fixed_update(step);
     }
 

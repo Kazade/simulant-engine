@@ -31,6 +31,7 @@
 
 #include "../generic/property.h"
 #include "../generic/managed.h"
+#include "../interfaces/updateable.h"
 
 namespace smlt {
 
@@ -39,7 +40,8 @@ class Controller;
 
 typedef std::shared_ptr<Controller> ControllerPtr;
 
-class Controller {
+class Controller:
+    public Updateable {
 public:
     Controller(const std::string& name):
         name_(name) {}
@@ -49,17 +51,13 @@ public:
     void enable();
     void disable();
 
-    void update(double dt);
-    void late_update(double dt);
-    void fixed_update(double step);
-
     Property<Controller, std::string> name = { this, &Controller::name_ };
 
-private:
-    virtual void do_update(double dt) {}
-    virtual void do_late_update(double dt) {}
-    virtual void do_fixed_update(double step) {}
+    void _update_thunk(double dt) override;
+    void _late_update_thunk(double dt) override;
+    void _fixed_update_thunk(double step) override;
 
+private:
     std::string name_;
     bool is_enabled_ = true;
 };
@@ -119,19 +117,19 @@ public:
 
     void fixed_update_controllers(double step) {
         for(auto& controller: controllers_) {
-            controller->fixed_update(step);
+            controller->_fixed_update_thunk(step);
         }
     }
 
     void update_controllers(double dt) {
         for(auto& controller: controllers_) {
-            controller->update(dt);
+            controller->_update_thunk(dt);
         }
     }
 
     void late_update_controllers(double dt) {
         for(auto& controller: controllers_) {
-            controller->late_update(dt);
+            controller->_late_update_thunk(dt);
         }
     }
 

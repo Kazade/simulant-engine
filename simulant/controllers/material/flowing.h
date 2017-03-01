@@ -37,7 +37,7 @@ public:
     }
 
 private:
-    void do_update(double dt) override;
+    void update(double dt) override;
     double time_ = 0.0f;
 };
 

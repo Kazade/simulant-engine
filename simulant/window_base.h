@@ -168,8 +168,8 @@ public:
     
     bool run_frame();
 
-    void fixed_update(double dt);
-    void update(double dt) override;
+    void _fixed_update_thunk(double dt);
+    void _update_thunk(double dt) override;
 
     Mouse& mouse();
     Joypad& joypad(uint8_t idx);

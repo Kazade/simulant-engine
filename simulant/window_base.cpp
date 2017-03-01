@@ -255,19 +255,19 @@ void WindowBase::set_logging_level(LoggingLevel level) {
     kazlog::get_logger("/")->set_level((kazlog::LOG_LEVEL) level);
 }
 
-void WindowBase::update(double dt) {
+void WindowBase::_update_thunk(double dt) {
     if(is_paused()) {
         dt = 0.0; //If the application window is not displayed, don't send a deltatime down
         //it's still accessible through get_deltatime if the user needs it
     }
 
     background_manager_->update(dt);
-    StageManager::update(dt);
+    StageManager::_update_thunk(dt);
 }
 
-void WindowBase::fixed_update(double dt) {
+void WindowBase::_fixed_update_thunk(double dt) {
     if(is_paused()) return;
-    StageManager::fixed_update(dt);
+    StageManager::_fixed_update_thunk(dt);
 }
 
 
@@ -283,10 +283,10 @@ void WindowBase::run_update() {
         frame_counter_time_ = 0.0;
     }
 
-    update(delta_time_);
+    _update_thunk(delta_time_);
     signal_update_(delta_time_);
 
-    late_update(delta_time_);
+    _late_update_thunk(delta_time_);
     signal_late_update_(delta_time_);
 }
 
@@ -296,7 +296,7 @@ void WindowBase::run_fixed_updates() {
     double fixed_step = ktiGetDeltaTime();
 
     while(ktiTimerCanUpdate()) {
-        fixed_update(fixed_step); // Run the fixed updates on controllers
+        _fixed_update_thunk(fixed_step); // Run the fixed updates on controllers
         signal_fixed_update_(fixed_step); //Trigger any steps
     }
 }

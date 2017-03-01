@@ -10,28 +10,28 @@ void Controller::disable() {
     is_enabled_ = false;
 }
 
-void Controller::update(double dt) {
+void Controller::_update_thunk(double dt) {
     if(!is_enabled_) {
         return;
     }
 
-    do_update(dt);
+    Updateable::_update_thunk(dt);
 }
 
-void Controller::late_update(double dt) {
+void Controller::_late_update_thunk(double dt) {
     if(!is_enabled_) {
         return;
     }
 
-    do_late_update(dt);
+    Updateable::_late_update_thunk(dt);
 }
 
-void Controller::fixed_update(double step) {
+void Controller::_fixed_update_thunk(double step) {
     if(!is_enabled_) {
         return;
     }
 
-    do_fixed_update(step);
+    Updateable::_fixed_update_thunk(step);
 }
 
 }

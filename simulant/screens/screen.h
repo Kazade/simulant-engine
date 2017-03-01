@@ -49,7 +49,9 @@ namespace smlt {
 
 class ScreenLoadException : public std::runtime_error {};
 
-class ScreenBase : public Nameable {
+class ScreenBase:
+    public Nameable,
+    public Updateable {
 public:
     typedef std::shared_ptr<ScreenBase> ptr;
 
@@ -62,10 +64,6 @@ public:
     void activate();
     void deactivate();
 
-    void update(double dt);
-    void late_update(double dt);
-    void fixed_update(double step);
-
     bool is_loaded() const { return is_loaded_; }
 
 protected:
@@ -75,10 +73,6 @@ protected:
     virtual void do_unload() {}
     virtual void do_activate() {}
     virtual void do_deactivate() {}
-
-    virtual void do_fixed_update(double step) {}
-    virtual void do_update(double dt) {}
-    virtual void do_late_update(double dt) {}
 
     PipelineID prepare_basic_scene(
         StageID& new_stage,

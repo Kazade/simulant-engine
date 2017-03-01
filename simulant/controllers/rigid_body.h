@@ -172,7 +172,7 @@ namespace impl {
         RigidBodySimulation::ptr simulation_;
         ColliderType collider_type_;
 
-        void do_update(double dt) override;
+        void update(double dt) override;
 
         void build_collider(ColliderType collider);
 

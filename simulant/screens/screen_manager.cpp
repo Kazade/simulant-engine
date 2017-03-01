@@ -35,7 +35,7 @@ ScreenManager::~ScreenManager() {
 
 void ScreenManager::fixed_update(double dt) {
     if(active_screen()) {
-        active_screen()->fixed_update(dt);
+        active_screen()->_fixed_update_thunk(dt);
     }
 }
 
