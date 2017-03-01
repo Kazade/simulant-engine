@@ -17,33 +17,33 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "screen_manager.h"
-#include "screen.h"
+#include "scene_manager.h"
+#include "scene.h"
 #include "../window_base.h"
 
 namespace smlt {
 
-ScreenManager::ScreenManager(WindowBase &window):
+SceneManager::SceneManager(WindowBase &window):
     window_(window) {
 
-    step_conn_ = window.signal_fixed_update().connect(std::bind(&ScreenManager::fixed_update, this, std::placeholders::_1));
+    step_conn_ = window.signal_fixed_update().connect(std::bind(&SceneManager::fixed_update, this, std::placeholders::_1));
 }
 
-ScreenManager::~ScreenManager() {
+SceneManager::~SceneManager() {
     step_conn_.disconnect();
 }
 
-void ScreenManager::fixed_update(double dt) {
-    if(active_screen()) {
-        active_screen()->_fixed_update_thunk(dt);
+void SceneManager::fixed_update(double dt) {
+    if(active_scene()) {
+        active_scene()->_fixed_update_thunk(dt);
     }
 }
 
-ScreenBase::ptr ScreenManager::get_or_create_route(const std::string& route) {
+SceneBase::ptr SceneManager::get_or_create_route(const std::string& route) {
     auto it = routes_.find(route);
     if(it == routes_.end()) {
-        auto factory = screen_factories_.find(route);
-        if(factory == screen_factories_.end()) {
+        auto factory = scene_factories_.find(route);
+        if(factory == scene_factories_.end()) {
             throw std::logic_error("No such route available: " + route);
         }
 
@@ -53,43 +53,43 @@ ScreenBase::ptr ScreenManager::get_or_create_route(const std::string& route) {
     return it->second;
 }
 
-void ScreenManager::register_screen(const std::string& route, ScreenFactory factory) {
-    screen_factories_[route] = std::bind(factory, std::reference_wrapper<WindowBase>(window_));
+void SceneManager::register_scene(const std::string& route, SceneFactory factory) {
+    scene_factories_[route] = std::bind(factory, std::reference_wrapper<WindowBase>(window_));
 }
 
-ScreenBase::ptr ScreenManager::active_screen() const {
-    return current_screen_;
+SceneBase::ptr SceneManager::active_scene() const {
+    return current_scene_;
 }
 
-void ScreenManager::activate_screen(const std::string& route) {
-    auto new_screen = get_or_create_route(route);
+void SceneManager::activate_scene(const std::string& route) {
+    auto new_scene = get_or_create_route(route);
 
-    if(new_screen == current_screen_) {
+    if(new_scene == current_scene_) {
         return;
     }
 
-    new_screen->load();
+    new_scene->load();
 
-    if(current_screen_) {
-        current_screen_->deactivate();
+    if(current_scene_) {
+        current_scene_->deactivate();
     }
 
-    std::swap(current_screen_, new_screen);
-    current_screen_->activate();
+    std::swap(current_scene_, new_scene);
+    current_scene_->activate();
 }
 
-void ScreenManager::load_screen(const std::string& route) {
-    auto screen = get_or_create_route(route);
-    screen->load();
+void SceneManager::load_scene(const std::string& route) {
+    auto scene = get_or_create_route(route);
+    scene->load();
 }
 
-void ScreenManager::load_screen_in_background(const std::string& route, bool redirect_after) {
-    auto screen = get_or_create_route(route);
+void SceneManager::load_scene_in_background(const std::string& route, bool redirect_after) {
+    auto scene = get_or_create_route(route);
 
-    //Create a background task for loading the screen
+    //Create a background task for loading the scene
     auto new_task = std::shared_ptr<BackgroundTask>(new BackgroundTask{
         route,
-        std::async(std::launch::async, std::bind(&ScreenBase::load, screen))
+        std::async(std::launch::async, std::bind(&SceneBase::load, scene))
     });
 
     // Add an idle task to check for when the background task completes
@@ -102,21 +102,21 @@ void ScreenManager::load_screen_in_background(const std::string& route, bool red
 
         new_task->future.get();
         if(redirect_after) {
-            activate_screen(route);
+            activate_scene(route);
         }
 
         return false;
     });
 }
 
-void ScreenManager::unload_screen(const std::string& route) {
+void SceneManager::unload_scene(const std::string& route) {
     auto it = routes_.find(route);
     if(it != routes_.end()) {
         it->second->unload();
     }
 }
 
-bool ScreenManager::is_screen_loaded(const std::string& route) const {
+bool SceneManager::is_scene_loaded(const std::string& route) const {
     auto it = routes_.find(route);
     if(it == routes_.end()) {
         return false;
@@ -125,20 +125,20 @@ bool ScreenManager::is_screen_loaded(const std::string& route) const {
     }
 }
 
-bool ScreenManager::has_screen(const std::string& route) const {
-    return screen_factories_.find(route) != screen_factories_.end();
+bool SceneManager::has_scene(const std::string& route) const {
+    return scene_factories_.find(route) != scene_factories_.end();
 }
 
-ScreenBase::ptr ScreenManager::resolve_screen(const std::string& route) {
+SceneBase::ptr SceneManager::resolve_scene(const std::string& route) {
     return get_or_create_route(route);
 }
 
-void ScreenManager::reset() {
+void SceneManager::reset() {
     for(auto p: routes_) {
         p.second->unload();
     }
     routes_.clear();
-    screen_factories_.clear();
+    scene_factories_.clear();
 }
 
 }

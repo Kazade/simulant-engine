@@ -1,12 +1,12 @@
 
 #include <simulant/simulant.h>
 
-class MainScreen:
-    public smlt::Screen<MainScreen> {
+class MainScene:
+    public smlt::Scene<MainScene> {
 
 public:
-    MainScreen(smlt::WindowBase& window):
-        smlt::Screen<MainScreen>(window, "UI Demo") {}
+    MainScene(smlt::WindowBase& window):
+        smlt::Scene<MainScene>(window, "UI Demo") {}
 
     void do_load() {
         camera_ = window->new_camera_with_orthographic_projection(0, window->width(), 0, window->height());
@@ -41,7 +41,7 @@ private:
 class App : public smlt::Application {
 public:
     bool do_init() {
-        register_screen("/", smlt::screen_factory<MainScreen>());
+        register_scene("/", smlt::scene_factory<MainScene>());
         return true;
     }
 };

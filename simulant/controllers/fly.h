@@ -35,7 +35,7 @@ class Fly:
     public Managed<Fly> {
 
 public:
-    Fly(Controllable* container, const Property<smlt::ScreenBase, smlt::WindowBase>& window):
+    Fly(Controllable* container, const Property<smlt::SceneBase, smlt::WindowBase>& window):
         Fly(container, window.get()) {}
 
     Fly(Controllable* container, WindowBase* window):

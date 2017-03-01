@@ -42,7 +42,7 @@
 #include "render_sequence.h"
 #include "stage.h"
 #include "virtual_gamepad.h"
-#include "screens/loading.h"
+#include "scenes/loading.h"
 #include "utils/gl_thread_check.h"
 #include "utils/gl_error.h"
 
@@ -148,7 +148,7 @@ LoaderTypePtr WindowBase::loader_type(const unicode& loader_name) const {
 }
 
 void WindowBase::create_defaults() {
-    loading_ = screens::Loading::create(*this);
+    loading_ = scenes::Loading::create(*this);
 
     //This needs to happen after SDL or whatever is initialized
     input_controller_ = InputController::create(*this);

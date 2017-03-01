@@ -1,10 +1,10 @@
 
 #include <simulant/simulant.h>
 
-class MainScreen : public smlt::Screen<MainScreen> {
+class MainScene : public smlt::Scene<MainScene> {
 public:
-    MainScreen(smlt::WindowBase& window):
-        smlt::Screen<MainScreen>(window, "NeHe 01") {}
+    MainScene(smlt::WindowBase& window):
+        smlt::Scene<MainScene>(window, "NeHe 01") {}
 
     void do_load() {
         prepare_basic_scene(stage_, camera_);
@@ -28,7 +28,7 @@ public:
         smlt::Application(config) {}
 
     bool do_init() {
-        register_screen("/", smlt::screen_factory<MainScreen>());
+        register_scene("/", smlt::scene_factory<MainScene>());
         return true;
     }
 };

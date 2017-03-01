@@ -38,7 +38,7 @@
 #include "sound.h"
 #include "managers.h"
 #include "pipeline_helper.h"
-#include "screens/screen_manager.h"
+#include "scenes/scene_manager.h"
 #include "loader.h"
 #include "event_listener.h"
 
@@ -51,7 +51,7 @@ namespace ui {
     class Interface;
 }
 
-namespace screens {
+namespace scenes {
     class Loading;
 }
 
@@ -352,7 +352,7 @@ private:
     double total_time_ = 0.0;
 
     std::shared_ptr<Watcher> watcher_;
-    std::shared_ptr<screens::Loading> loading_;
+    std::shared_ptr<scenes::Loading> loading_;
     std::shared_ptr<smlt::RenderSequence> render_sequence_;
     generic::DataCarrier data_carrier_;
 

@@ -5,10 +5,10 @@
 using namespace smlt;
 using namespace smlt::extra;
 
-class GameScreen : public smlt::Screen<GameScreen> {
+class GameScene : public smlt::Scene<GameScene> {
 public:
-    GameScreen(WindowBase& window):
-        smlt::Screen<GameScreen>(window, "game_screen") {}
+    GameScene(WindowBase& window):
+        smlt::Scene<GameScene>(window, "game_screen") {}
 
     void do_load() {
         prepare_basic_scene(stage_id_, camera_id_);
@@ -79,7 +79,7 @@ public:
 
 private:
     bool do_init() {
-        register_screen("/", screen_factory<GameScreen>());
+        register_scene("/", scene_factory<GameScene>());
         return true;
     }
 };

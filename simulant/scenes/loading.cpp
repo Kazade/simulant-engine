@@ -27,7 +27,7 @@
 #include "loading.h"
 
 namespace smlt {
-namespace screens {
+namespace scenes {
 
 
 void Loading::do_load() {

@@ -4,10 +4,10 @@
 
 using namespace smlt;
 
-class GameScreen : public smlt::Screen<GameScreen> {
+class GameScene : public smlt::Scene<GameScene> {
 public:
-    GameScreen(smlt::WindowBase& window):
-        smlt::Screen<GameScreen>(window, "game_screen") {}
+    GameScene(smlt::WindowBase& window):
+        smlt::Scene<GameScene>(window, "game_screen") {}
 
     void do_load() {
         pipeline_id_ = prepare_basic_scene(stage_id_, camera_id_, smlt::PARTITIONER_NULL);
@@ -101,9 +101,9 @@ public:
 
 private:
     bool do_init() {
-        register_screen("/", smlt::screen_factory<GameScreen>());
-        load_screen_in_background("/", true); //Do loading in a background thread, but show immediately when done
-        activate_screen("/loading"); // Show the loading screen in the meantime
+        register_scene("/", smlt::scene_factory<GameScene>());
+        load_scene_in_background("/", true); //Do loading in a background thread, but show immediately when done
+        activate_scene("/loading"); // Show the loading screen in the meantime
         return true;
     }
 };

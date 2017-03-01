@@ -22,7 +22,7 @@
 
 #include "sdl2_window.h"
 #include "application.h"
-#include "screens/loading.h"
+#include "scenes/loading.h"
 #include "input_controller.h"
 
 namespace smlt {
@@ -55,7 +55,7 @@ void Application::construct_window(const AppConfig& config) {
         throw InstanceInitializationError("Unable to create window");
     }
 
-    routes_.reset(new ScreenManager(*window_));
+    routes_.reset(new SceneManager(*window_));
 
     window_->set_title(config.title.encode());
 
@@ -72,17 +72,17 @@ StagePtr Application::stage(StageID stage) {
 }
 
 bool Application::init() {
-    // Add some useful screens by default, these can be overridden in do_init if the
+    // Add some useful scenes by default, these can be overridden in do_init if the
     // user so wishes
-    register_screen("/loading", screen_factory<screens::Loading>());
-    load_screen("/loading");
+    register_scene("/loading", scene_factory<scenes::Loading>());
+    load_scene("/loading");
 
     initialized_ = do_init();
 
     // If we successfully initialized, but the user didn't specify
-    // a particular screen, we just hit the root route
-    if(initialized_ && !active_screen()) {
-        activate_screen("/");
+    // a particular scene, we just hit the root route
+    if(initialized_ && !active_scene()) {
+        activate_scene("/");
     }
 
     return initialized_;
@@ -97,7 +97,7 @@ int32_t Application::run() {
 
     while(window_->run_frame()) {}
 
-    // Shutdown any screens
+    // Shutdown any scenes
     routes_.reset();
 
     // Shutdown and clean up the window
