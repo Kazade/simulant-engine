@@ -69,13 +69,9 @@ public:
 
     void set_parent(CameraID id);
 
-    void pre_update(double dt) override;
     void update(double dt) override;
-    void post_update(double dt) override;
-
-    void pre_fixed_update(double step) override;
+    void late_update(double dt) override;
     void fixed_update(double step) override;
-    void post_fixed_update(double step) override;
 
     bool parent_is_stage() const { return parent() == (TreeNode*) stage_; }
 

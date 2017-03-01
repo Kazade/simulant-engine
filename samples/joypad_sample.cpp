@@ -164,7 +164,7 @@ public:
         }
     }
 
-    void do_step(double dt) {
+    void fixed_update(double dt) {
         auto actor = window->stage(stage_id_)->actor(actor_id);
         actor->rotate_x_by(smlt::Degrees(rot.y * dt * 10));
         actor->rotate_y_by(smlt::Degrees(rot.x * dt * 10));

@@ -12,13 +12,27 @@ namespace smlt {
 class Updateable {
 public:
     virtual ~Updateable() {}
-    virtual void update(double step) = 0;
-    virtual void pre_update(double dt) {}
-    virtual void post_update(double dt) {}
 
-    virtual void pre_fixed_update(double step) {}
+    /*
+     * Non-Virtual Interface. Simulant calls these underscore prefixed
+     * functions, and subclasses implement the more nicely named ones
+     */
+    virtual void _update_thunk(double dt) {
+        update(dt);
+    }
+
+    virtual void _late_update_thunk(double dt) {
+        late_update(dt);
+    }
+
+    virtual void _fixed_update_thunk(double step) {
+        fixed_update(step);
+    }
+
+private:
+    virtual void update(double dt) {}
+    virtual void late_update(double dt) {}
     virtual void fixed_update(double step) {}
-    virtual void post_fixed_update(double step) {}
 };
 
 }

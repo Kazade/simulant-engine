@@ -211,49 +211,17 @@ void StageManager::fixed_update(double dt) {
     }
 }
 
-void StageManager::pre_update(double dt) {
+void StageManager::late_update(double dt) {
     for(auto stage_pair: StageManager::__objects()) {
         TreeNode* root = stage_pair.second.get();
 
         root->each_descendent_and_self([=](uint32_t, TreeNode* node) {
             StageNode* stage_node = static_cast<StageNode*>(node);
-            stage_node->pre_update(dt);
+            stage_node->late_update(dt);
         });
     }
 }
 
-void StageManager::post_update(double dt) {
-    for(auto stage_pair: StageManager::__objects()) {
-        TreeNode* root = stage_pair.second.get();
-
-        root->each_descendent_and_self([=](uint32_t, TreeNode* node) {
-            StageNode* stage_node = static_cast<StageNode*>(node);
-            stage_node->post_update(dt);
-        });
-    }
-}
-
-void StageManager::pre_fixed_update(double dt) {
-    for(auto stage_pair: StageManager::__objects()) {
-        TreeNode* root = stage_pair.second.get();
-
-        root->each_descendent_and_self([=](uint32_t, TreeNode* node) {
-            StageNode* stage_node = static_cast<StageNode*>(node);
-            stage_node->pre_fixed_update(dt);
-        });
-    }
-}
-
-void StageManager::post_fixed_update(double dt) {
-    for(auto stage_pair: StageManager::__objects()) {
-        TreeNode* root = stage_pair.second.get();
-
-        root->each_descendent_and_self([=](uint32_t, TreeNode* node) {
-            StageNode* stage_node = static_cast<StageNode*>(node);
-            stage_node->post_fixed_update(dt);
-        });
-    }
-}
 
 void StageManager::update(double dt) {
     //Update the stages

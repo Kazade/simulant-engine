@@ -108,7 +108,7 @@ private:
 
     sig::connection step_conn_;
 
-    void step(double dt);
+    void fixed_update(double step);
 };
 
 }

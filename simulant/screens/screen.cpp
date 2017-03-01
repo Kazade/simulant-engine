@@ -58,10 +58,6 @@ void ScreenBase::deactivate() {
     do_deactivate();
 }
 
-void ScreenBase::step(double dt) {
-    do_step(dt);
-}
-
 PipelineID ScreenBase::prepare_basic_scene(StageID& new_stage, CameraID& new_camera, AvailablePartitioner partitioner) {
     new_stage = window->new_stage(partitioner);
     new_camera = window->new_camera();

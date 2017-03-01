@@ -109,14 +109,15 @@ struct RaycastCollider {
 class RigidBody;
 
 class RigidBodySimulation:
-    public Managed<RigidBodySimulation> {
+    public Managed<RigidBodySimulation>,
+    public std::enable_shared_from_this<RigidBodySimulation> {
 
 public:
     RigidBodySimulation();
     bool init() override;
     void cleanup() override;
 
-    void step(double dt);
+    void fixed_update(double dt);
 
     std::pair<Vec3, bool> intersect_ray(const Vec3& start, const Vec3& direction, float* distance=nullptr, Vec3 *normal=nullptr);
 
@@ -171,7 +172,7 @@ namespace impl {
         RigidBodySimulation::ptr simulation_;
         ColliderType collider_type_;
 
-        void do_post_fixed_update(double dt) override;
+        void update(double dt) override;
 
         void build_collider(ColliderType collider);
 

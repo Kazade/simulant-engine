@@ -255,30 +255,23 @@ void WindowBase::set_logging_level(LoggingLevel level) {
     kazlog::get_logger("/")->set_level((kazlog::LOG_LEVEL) level);
 }
 
-void WindowBase::update(double dt) {
+void WindowBase::_update_thunk(double dt) {
     if(is_paused()) {
         dt = 0.0; //If the application window is not displayed, don't send a deltatime down
         //it's still accessible through get_deltatime if the user needs it
     }
 
     background_manager_->update(dt);
-    StageManager::update(dt);
+    StageManager::_update_thunk(dt);
 }
 
-void WindowBase::fixed_update(double dt) {
+void WindowBase::_fixed_update_thunk(double dt) {
     if(is_paused()) return;
-    StageManager::fixed_update(dt);
+    StageManager::_fixed_update_thunk(dt);
 }
 
-bool WindowBase::run_frame() {
-    signal_frame_started_();
 
-    ktiBindTimer(variable_timer_);
-    ktiUpdateFrameTime();
-
-    delta_time_ = ktiGetDeltaTime();
-    total_time_ += delta_time_;
-
+void WindowBase::run_update() {
     frame_counter_time_ += delta_time_;
     frame_counter_frames_++;
 
@@ -290,34 +283,42 @@ bool WindowBase::run_frame() {
         frame_counter_time_ = 0.0;
     }
 
-    check_events();
-
-    pre_update(delta_time_);
-
-    //Update any playing sounds
-    update_source(delta_time_);
-    input_controller().update(delta_time_);
-
-    update(delta_time_);    
+    _update_thunk(delta_time_);
     signal_update_(delta_time_);
 
-    post_update(delta_time_);
+    _late_update_thunk(delta_time_);
+    signal_late_update_(delta_time_);
+}
 
+void WindowBase::run_fixed_updates() {
     ktiBindTimer(fixed_timer_);
     ktiUpdateFrameTime();
     double fixed_step = ktiGetDeltaTime();
 
     while(ktiTimerCanUpdate()) {
-        pre_fixed_update(fixed_step);
-        signal_step_(fixed_step); //Trigger any steps
-        fixed_update(fixed_step); // Run the fixed updates on controllers
-        post_fixed_update(fixed_step);
+        _fixed_update_thunk(fixed_step); // Run the fixed updates on controllers
+        signal_fixed_update_(fixed_step); //Trigger any steps
     }
+}
 
-    fixed_step_interp_ = ktiGetAccumulatorValue();
-    signal_post_step_(fixed_step_interp_);
+bool WindowBase::run_frame() {
+    signal_frame_started_();
 
-    shared_assets->update(delta_time_);
+    ktiBindTimer(variable_timer_);
+    ktiUpdateFrameTime();
+
+    // Store the frame time, and the total elapsed time
+    delta_time_ = ktiGetDeltaTime();
+    total_time_ += delta_time_;
+
+    check_events(); // Check for any window events
+    Source::update_source(delta_time_); //Update any playing sounds
+    input_controller().update(delta_time_); // Update input devices
+    shared_assets->update(delta_time_); // Update animated assets
+
+    run_fixed_updates();
+    run_update();
+
     idle_.execute(); //Execute idle tasks before render
 
     /* Don't run the render sequence if we don't have a context, and don't update the resource

@@ -24,7 +24,7 @@ namespace smlt {
 namespace controllers {
 namespace material {
 
-void Warp::do_update(double dt) {
+void Warp::update(double dt) {
     auto pass = material->pass(0);
     auto& tex_unit = pass->texture_unit(0);
 

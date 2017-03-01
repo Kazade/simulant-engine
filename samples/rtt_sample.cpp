@@ -31,7 +31,7 @@ public:
         ).with_clear();
     }
 
-    void do_step(double dt) {
+    void fixed_update(double dt) {
         window->stage(cube_stage_)->actor(cube_)->rotate_y_by(Degrees(dt * 360));
         window->stage(rect_stage_)->actor(rect_)->rotate_y_by(Degrees(dt * 180));
     }
