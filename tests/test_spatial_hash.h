@@ -35,19 +35,19 @@ public:
     void test_key_comparison() {
         Key key1, key2, key3, key4, key5;
 
-        key1.hash_path[0] = {1}; key1.hash_path[1] = {2};
+        key1.hash_path[0] = Hash(1, 1, 1); key1.hash_path[1] = Hash(2, 2, 2);
         key1.ancestors = 1;
 
-        key2.hash_path[0] = {1}; key2.hash_path[1] = {3};
+        key2.hash_path[0] = Hash(1, 1, 1); key2.hash_path[1] = Hash(3, 3, 3);
         key2.ancestors = 1;
 
-        key3.hash_path[0] = {1}; key3.hash_path[1] = {1}; key3.hash_path[2] = {2};
+        key3.hash_path[0] = Hash(1, 1, 1); key3.hash_path[1] = Hash(1, 1, 1); key3.hash_path[2] = Hash(2, 2, 2);
         key3.ancestors = 2;
 
-        key4.hash_path[0] = {3};
+        key4.hash_path[0] = Hash(3, 3, 3);
         key4.ancestors = 0;
 
-        key5.hash_path[0] = {1};
+        key5.hash_path[0] = Hash(1, 1, 1);
         key5.ancestors = 0;
 
         assert_true(key3 < key1);

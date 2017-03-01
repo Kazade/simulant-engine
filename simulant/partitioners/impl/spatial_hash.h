@@ -18,9 +18,13 @@ namespace smlt {
 
 const uint32_t MAX_GRID_LEVELS = 16;
 struct Hash {
-    int16_t x;
-    int16_t y;
-    int16_t z;
+    Hash() = default;
+    Hash(int16_t x, int16_t y, int16_t z):
+        x(x), y(y), z(z) {}
+
+    int16_t x = 0;
+    int16_t y = 0;
+    int16_t z = 0;
 };
 
 /*
@@ -30,7 +34,7 @@ struct Hash {
  * and we can gather parent ones by checking all levels of the hash_path
  */
 struct Key {
-    Hash hash_path[MAX_GRID_LEVELS] = {0};
+    Hash hash_path[MAX_GRID_LEVELS];
     std::size_t ancestors = 0;
 
     bool operator<(const Key& other) const {
