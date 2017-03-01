@@ -1539,3 +1539,4 @@ simulant/keycodes.h
 simulant/utils/rect_pack.h
 simulant/utils/rect_pack.cpp
 tests/test_aabb.h
+simulant/controllers/controller.cpp

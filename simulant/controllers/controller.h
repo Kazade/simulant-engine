@@ -46,26 +46,22 @@ public:
 
     virtual ~Controller() {}
 
+    void enable();
+    void disable();
 
-    void update(double dt) {
-        do_update(dt);
-    }
-
-    void late_update(double dt) {
-        do_late_update(dt);
-    }
-
-    void fixed_update(double step) {
-        do_fixed_update(step);
-    }
+    void update(double dt);
+    void late_update(double dt);
+    void fixed_update(double step);
 
     Property<Controller, std::string> name = { this, &Controller::name_ };
+
 private:
     virtual void do_update(double dt) {}
     virtual void do_late_update(double dt) {}
     virtual void do_fixed_update(double step) {}
 
     std::string name_;
+    bool is_enabled_ = true;
 };
 
 class MaterialController : public Controller {
