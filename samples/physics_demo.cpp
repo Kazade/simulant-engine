@@ -7,7 +7,7 @@ using namespace smlt;
 class GameScene : public smlt::Scene<GameScene> {
 public:
     GameScene(smlt::WindowBase& window):
-        smlt::Scene<GameScene>(window, "game_screen") {}
+        smlt::Scene<GameScene>(window) {}
 
     void do_load() {
         pipeline_id_ = prepare_basic_scene(stage_id_, camera_id_, smlt::PARTITIONER_NULL);

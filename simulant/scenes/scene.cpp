@@ -22,10 +22,9 @@
 
 namespace smlt {
 
-SceneBase::SceneBase(WindowBase &window, const unicode& name):
+SceneBase::SceneBase(WindowBase &window):
     window_(&window) {
 
-    set_name(name);
 }
 
 SceneBase::~SceneBase() {

@@ -37,7 +37,7 @@ void calculate_splat_map(int width, int length, TexturePtr texture, VertexData& 
 class Gamescene : public smlt::Scene<Gamescene> {
 public:
     Gamescene(smlt::WindowBase& window):
-        smlt::Scene<Gamescene>(window, "game_scene") {}
+        smlt::Scene<Gamescene>(window) {}
 
     void do_load() {
         auto loading = window->application->resolve_scene_as<scenes::Loading>("/loading");

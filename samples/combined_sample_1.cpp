@@ -5,7 +5,7 @@ using namespace smlt;
 class GameScene : public smlt::Scene<GameScene> {
 public:
     GameScene(WindowBase& window):
-        smlt::Scene<GameScene>(window, "game_screen") {}
+        smlt::Scene<GameScene>(window) {}
 
     void do_load() {
         prepare_basic_scene(stage_id_, camera_id_);

@@ -5,7 +5,7 @@
 class MainScene : public smlt::Scene<MainScene> {
 public:
     MainScene(smlt::WindowBase& window):
-        smlt::Scene<MainScene>(window, "main_screen") {}
+        smlt::Scene<MainScene>(window) {}
 
     void do_load() {
         // Create two viewports for the left and right hand side of the screen, set different clear colours

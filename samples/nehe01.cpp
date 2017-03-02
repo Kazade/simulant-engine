@@ -4,7 +4,7 @@
 class MainScene : public smlt::Scene<MainScene> {
 public:
     MainScene(smlt::WindowBase& window):
-        smlt::Scene<MainScene>(window, "NeHe 01") {}
+        smlt::Scene<MainScene>(window) {}
 
     void do_load() {
         prepare_basic_scene(stage_, camera_);

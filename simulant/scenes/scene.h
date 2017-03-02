@@ -23,17 +23,17 @@
  *  Allows you to register different scenes of gameplay, and
  *  easily switch between them.
  *
- *  manager->register_scene("/", scene_factory<LoadingScene());
- *  manager->register_scene("/menu", scene_factory<MenuScene());
- *  manager->register_scene("/ingame", scene_factory<GameScene());
+ *  manager->register_scene<LoadingScene>("loading");
+ *  manager->register_scene<MenuScene>("menu");
+ *  manager->register_scene<GameScene>("ingame");
  *
- *  manager->activate_scene("/");
- *  manager->load_scene_in_background("/menu");
- *  if(manager->is_loaded("/menu")) {
- *      manager->activate_scene("/menu");
+ *  manager->activate_scene("loading");
+ *  manager->load_scene_in_background("menu");
+ *  if(manager->is_loaded("menu")) {
+ *      manager->activate_scene("menu");
  *  }
- *  manager->unload("/");
- *  manager->activate_scene("/"); // Will cause loading to happen again
+ *  manager->unload("loading");
+ *  manager->activate_scene("loading"); // Will cause loading to happen again
  *
  */
 
@@ -55,7 +55,7 @@ class SceneBase:
 public:
     typedef std::shared_ptr<SceneBase> ptr;
 
-    SceneBase(WindowBase& window, const unicode& name);
+    SceneBase(WindowBase& window);
     virtual ~SceneBase();
 
     void load();
@@ -89,8 +89,8 @@ private:
 template<typename T>
 class Scene : public SceneBase, public Managed<T> {
 public:
-    Scene(WindowBase& window, const unicode& name):
-        SceneBase(window, name) {}
+    Scene(WindowBase& window):
+        SceneBase(window) {}
 
     void cleanup() override {
         do_unload();

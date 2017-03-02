@@ -6,7 +6,7 @@ class MainScene:
 
 public:
     MainScene(smlt::WindowBase& window):
-        smlt::Scene<MainScene>(window, "UI Demo") {}
+        smlt::Scene<MainScene>(window) {}
 
     void do_load() {
         camera_ = window->new_camera_with_orthographic_projection(0, window->width(), 0, window->height());

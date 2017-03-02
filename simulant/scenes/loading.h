@@ -37,7 +37,7 @@ class Loading:
 
 public:
     Loading(WindowBase& window):
-        Scene<Loading>(window, "loading") {}
+        Scene<Loading>(window) {}
 
     Property<Loading, ui::ProgressBar> progress_bar = {this, &Loading::progress_bar_};
 
