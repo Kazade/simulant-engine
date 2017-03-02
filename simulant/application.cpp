@@ -76,8 +76,8 @@ bool Application::init() {
 
     // Add some useful scenes by default, these can be overridden in do_init if the
     // user so wishes
-    register_scene<scenes::Loading>("/loading");
-    load_scene("/loading");
+    register_scene<scenes::Loading>("_loading");
+    load_scene("_loading");
 
     initialized_ = do_init();
 
