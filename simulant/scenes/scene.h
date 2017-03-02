@@ -16,24 +16,24 @@
  *     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SCREEN_H
-#define SCREEN_H
+#ifndef SCENE_H
+#define SCENE_H
 
 /**
- *  Allows you to register different screens of gameplay, and
+ *  Allows you to register different scenes of gameplay, and
  *  easily switch between them.
  *
- *  manager->register_screen("/", screen_factory<LoadingScreen());
- *  manager->register_screen("/menu", screen_factory<MenuScreen());
- *  manager->register_screen("/ingame", screen_factory<GameScreen());
+ *  manager->register_scene<LoadingScene>("loading");
+ *  manager->register_scene<MenuScene>("menu");
+ *  manager->register_scene<GameScene>("ingame");
  *
- *  manager->activate_screen("/");
- *  manager->load_screen_in_background("/menu");
- *  if(manager->is_loaded("/menu")) {
- *      manager->activate_screen("/menu");
+ *  manager->activate_scene("loading");
+ *  manager->load_scene_in_background("menu");
+ *  if(manager->is_loaded("menu")) {
+ *      manager->activate_scene("menu");
  *  }
- *  manager->unload("/");
- *  manager->activate_screen("/"); // Will cause loading to happen again
+ *  manager->unload("loading");
+ *  manager->activate_scene("loading"); // Will cause loading to happen again
  *
  */
 
@@ -47,16 +47,16 @@
 
 namespace smlt {
 
-class ScreenLoadException : public std::runtime_error {};
+class SceneLoadException : public std::runtime_error {};
 
-class ScreenBase:
+class SceneBase:
     public Nameable,
     public Updateable {
 public:
-    typedef std::shared_ptr<ScreenBase> ptr;
+    typedef std::shared_ptr<SceneBase> ptr;
 
-    ScreenBase(WindowBase& window, const unicode& name);
-    virtual ~ScreenBase();
+    SceneBase(WindowBase& window);
+    virtual ~SceneBase();
 
     void load();
     void unload();
@@ -67,7 +67,7 @@ public:
     bool is_loaded() const { return is_loaded_; }
 
 protected:
-    Property<ScreenBase, WindowBase> window = { this, &ScreenBase::window_ };
+    Property<SceneBase, WindowBase> window = { this, &SceneBase::window_ };
 
     virtual void do_load() = 0;
     virtual void do_unload() {}
@@ -87,10 +87,10 @@ private:
 };
 
 template<typename T>
-class Screen : public ScreenBase, public Managed<T> {
+class Scene : public SceneBase, public Managed<T> {
 public:
-    Screen(WindowBase& window, const unicode& name):
-        ScreenBase(window, name) {}
+    Scene(WindowBase& window):
+        SceneBase(window) {}
 
     void cleanup() override {
         do_unload();
@@ -100,4 +100,4 @@ public:
 }
 
 
-#endif // SCREEN_H
+#endif // SCENE_H

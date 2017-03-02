@@ -24,20 +24,20 @@
 #include "../generic/property.h"
 #include "../generic/managed.h"
 #include "../types.h"
-#include "screen.h"
+#include "scene.h"
 #include "../nodes/ui/progress_bar.h"
 
 namespace smlt {
 
 
-namespace screens {
+namespace scenes {
 
 class Loading:
-    public Screen<Loading> {
+    public Scene<Loading> {
 
 public:
     Loading(WindowBase& window):
-        Screen<Loading>(window, "loading") {}
+        Scene<Loading>(window) {}
 
     Property<Loading, ui::ProgressBar> progress_bar = {this, &Loading::progress_bar_};
 

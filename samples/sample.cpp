@@ -2,10 +2,10 @@
 
 using namespace smlt;
 
-class GameScreen : public smlt::Screen<GameScreen> {
+class GameScene : public smlt::Scene<GameScene> {
 public:
-    GameScreen(WindowBase& window):
-        smlt::Screen<GameScreen>(window, "game_screen") {}
+    GameScene(WindowBase& window):
+        smlt::Scene<GameScene>(window) {}
 
     void do_load() {
         auto pipeline_id = prepare_basic_scene(stage_id_, camera_id_, smlt::PARTITIONER_NULL);
@@ -57,7 +57,7 @@ public:
 
 private:
     bool do_init() {
-        register_screen("/", screen_factory<GameScreen>());
+        register_scene<GameScene>("main");
         return true;
     }
 };

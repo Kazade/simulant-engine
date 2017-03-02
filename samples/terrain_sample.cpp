@@ -1,6 +1,6 @@
 #include "simulant/utils/random.h"
 #include "simulant/simulant.h"
-#include "simulant/screens/loading.h"
+#include "simulant/scenes/loading.h"
 
 using namespace smlt;
 
@@ -34,13 +34,13 @@ void calculate_splat_map(int width, int length, TexturePtr texture, VertexData& 
     texture->upload(smlt::MIPMAP_GENERATE_NONE, smlt::TEXTURE_WRAP_CLAMP_TO_EDGE, smlt::TEXTURE_FILTER_LINEAR, false);
 }
 
-class GameScreen : public smlt::Screen<GameScreen> {
+class Gamescene : public smlt::Scene<Gamescene> {
 public:
-    GameScreen(smlt::WindowBase& window):
-        smlt::Screen<GameScreen>(window, "game_screen") {}
+    Gamescene(smlt::WindowBase& window):
+        smlt::Scene<Gamescene>(window) {}
 
     void do_load() {
-        auto loading = window->application->resolve_screen_as<screens::Loading>("/loading");
+        auto loading = window->application->resolve_scene_as<scenes::Loading>("_loading");
         assert(loading);
 
         bool done = false;
@@ -120,9 +120,9 @@ public:
 
 private:
     bool do_init() {
-        register_screen("/", smlt::screen_factory<GameScreen>());
-        load_screen_in_background("/", true); //Do loading in a background thread, but show immediately when done
-        activate_screen("/loading"); // Show the loading screen in the meantime
+        register_scene<Gamescene>("main");
+        load_scene_in_background("main", true); //Do loading in a background thread, but show immediately when done
+        activate_scene("_loading"); // Show the loading scene in the meantime
         return true;
     }
 };

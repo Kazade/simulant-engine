@@ -17,22 +17,21 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "screen.h"
+#include "scene.h"
 #include "../window_base.h"
 
 namespace smlt {
 
-ScreenBase::ScreenBase(WindowBase &window, const unicode& name):
+SceneBase::SceneBase(WindowBase &window):
     window_(&window) {
 
-    set_name(name);
 }
 
-ScreenBase::~ScreenBase() {
+SceneBase::~SceneBase() {
 
 }
 
-void ScreenBase::load() {
+void SceneBase::load() {
     if(is_loaded_) {
         return;
     }
@@ -41,7 +40,7 @@ void ScreenBase::load() {
     is_loaded_ = true;
 }
 
-void ScreenBase::unload() {
+void SceneBase::unload() {
     if(!is_loaded_) {
         return;
     }
@@ -50,15 +49,15 @@ void ScreenBase::unload() {
     is_loaded_ = false;
 }
 
-void ScreenBase::activate() {
+void SceneBase::activate() {
     do_activate();
 }
 
-void ScreenBase::deactivate() {
+void SceneBase::deactivate() {
     do_deactivate();
 }
 
-PipelineID ScreenBase::prepare_basic_scene(StageID& new_stage, CameraID& new_camera, AvailablePartitioner partitioner) {
+PipelineID SceneBase::prepare_basic_scene(StageID& new_stage, CameraID& new_camera, AvailablePartitioner partitioner) {
     new_stage = window->new_stage(partitioner);
     new_camera = window->new_camera();
     return window->render(new_stage, new_camera).with_clear();

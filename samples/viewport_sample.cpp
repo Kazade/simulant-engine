@@ -2,10 +2,10 @@
 #include "simulant/shortcuts.h"
 
 
-class MainScreen : public smlt::Screen<MainScreen> {
+class MainScene : public smlt::Scene<MainScene> {
 public:
-    MainScreen(smlt::WindowBase& window):
-        smlt::Screen<MainScreen>(window, "main_screen") {}
+    MainScene(smlt::WindowBase& window):
+        smlt::Scene<MainScene>(window) {}
 
     void do_load() {
         // Create two viewports for the left and right hand side of the screen, set different clear colours
@@ -29,7 +29,7 @@ public:
 class ViewportSample : public smlt::Application {
 public:
     bool do_init() {
-        register_screen("/", smlt::screen_factory<MainScreen>());
+        register_scene<MainScene>("main");
         return true;
     }
 };

@@ -22,17 +22,19 @@
 
 #include "sdl2_window.h"
 #include "application.h"
-#include "screens/loading.h"
+#include "scenes/loading.h"
 #include "input_controller.h"
 
 namespace smlt {
 
 Application::Application(const AppConfig &config):
     config_(config) {
+
     construct_window(config);
 }
 
-Application::Application(const unicode &title, uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen){
+Application::Application(const unicode &title, uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen) {
+
     AppConfig config;
     config.title = title;;
     config.width = width;
@@ -55,8 +57,6 @@ void Application::construct_window(const AppConfig& config) {
         throw InstanceInitializationError("Unable to create window");
     }
 
-    routes_.reset(new ScreenManager(*window_));
-
     window_->set_title(config.title.encode());
 
     window_->signal_fixed_update().connect(std::bind(&Application::do_fixed_update, this, std::placeholders::_1));
@@ -72,17 +72,19 @@ StagePtr Application::stage(StageID stage) {
 }
 
 bool Application::init() {
-    // Add some useful screens by default, these can be overridden in do_init if the
+    scene_manager_.reset(new SceneManager(window_.get()));
+
+    // Add some useful scenes by default, these can be overridden in do_init if the
     // user so wishes
-    register_screen("/loading", screen_factory<screens::Loading>());
-    load_screen("/loading");
+    register_scene<scenes::Loading>("_loading");
+    load_scene("_loading");
 
     initialized_ = do_init();
 
     // If we successfully initialized, but the user didn't specify
-    // a particular screen, we just hit the root route
-    if(initialized_ && !active_screen()) {
-        activate_screen("/");
+    // a particular scene, we just hit the root route
+    if(initialized_ && !active_scene()) {
+        activate_scene("/");
     }
 
     return initialized_;
@@ -96,9 +98,6 @@ int32_t Application::run() {
     }
 
     while(window_->run_frame()) {}
-
-    // Shutdown any screens
-    routes_.reset();
 
     // Shutdown and clean up the window
     window_->_cleanup();

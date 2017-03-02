@@ -76,6 +76,9 @@ public:
     inline operator T&() const { return *getter_(this_); }
     inline T* operator->() const { return getter_(this_); }
 
+    // Implicit conversion to a T*
+    inline operator T*() { return getter_(this_); }
+
     T* get() const { return getter_(this_); }
 private:
     Container* this_ = nullptr;

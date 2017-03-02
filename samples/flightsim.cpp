@@ -3,10 +3,10 @@
 
 using namespace smlt;
 
-class GameScreen : public smlt::Screen<GameScreen> {
+class GameScene : public smlt::Scene<GameScene> {
 public:
-    GameScreen(WindowBase& window):
-        smlt::Screen<GameScreen>(window, "game_screen") {}
+    GameScene(WindowBase& window):
+        smlt::Scene<GameScene>(window) {}
 
     void do_load() {
         unicode filename = window->application->data->get<unicode>("filename");
@@ -80,7 +80,7 @@ public:
 
 private:
     bool do_init() {
-        register_screen("/", screen_factory<GameScreen>());
+        register_scene<GameScene>("main");
         return true;
     }
 };

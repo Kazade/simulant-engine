@@ -29,15 +29,15 @@
 #include "utils/deprecated.h"
 #include "types.h"
 #include "utils/unicode.h"
-#include "screens/screen_manager.h"
+#include "scenes/scene_manager.h"
 #include "generic/property.h"
 #include "generic/data_carrier.h"
+#include "scenes/scene_manager.h"
 
 namespace smlt {
 
 class WindowBase;
 class Stage;
-class ScreenManager;
 
 class BackgroundLoadException : public std::runtime_error {
 public:
@@ -60,7 +60,8 @@ struct AppConfig {
 };
 
 class Application :
-    public ScreenManagerInterface {
+    public SceneManagerInterface {
+
 public:
     Application(const AppConfig& config);
 
@@ -71,8 +72,8 @@ public:
         uint32_t bpp=0,
         bool fullscreen=false);
 
-    //Create the window, start do_initialization in a thread, show the loading screen
-    //when thread completes, hide the loading screen and run the main loop
+    //Create the window, start do_initialization in a thread, show the loading scene
+    //when thread completes, hide the loading scene and run the main loop
     int32_t run();
 
     Property<Application, WindowBase> window = {this, &Application::window_ };
@@ -80,18 +81,46 @@ public:
 
     bool initialized() const { return initialized_; }
 
-    /* ScreenManager interface */
-    virtual void register_screen(const std::string& route, ScreenFactory factory) { routes_->register_screen(route, factory); }
-    virtual bool has_screen(const std::string& route) const { return routes_->has_screen(route); }
-    virtual ScreenBasePtr resolve_screen(const std::string& route) { return routes_->resolve_screen(route); }
-    virtual void activate_screen(const std::string& route) { routes_->activate_screen(route); }
-    virtual void load_screen(const std::string& route) { routes_->load_screen(route); }
-    virtual void load_screen_in_background(const std::string& route, bool redirect_after=true) { routes_->load_screen_in_background(route, redirect_after); }
-    virtual void unload_screen(const std::string& route) { routes_->unload_screen(route); }
-    virtual bool is_screen_loaded(const std::string& route) const { return routes_->is_screen_loaded(route); }
-    virtual ScreenBasePtr active_screen() const { return routes_->active_screen(); }
-    const std::unordered_map<std::string, ScreenBasePtr> routes() const override { return routes_->routes(); }
-    /* End ScreenManager interface */
+    bool has_scene(const std::string& route) const override {
+        return scene_manager_->has_scene(route);
+    }
+
+    SceneBasePtr resolve_scene(const std::string& route) override {
+        return scene_manager_->resolve_scene(route);
+    }
+
+    void activate_scene(const std::string& route) override {
+        scene_manager_->activate_scene(route);
+    }
+
+    void load_scene(const std::string& route) override {
+        scene_manager_->load_scene(route);
+    }
+
+    void load_scene_in_background(const std::string& route, bool redirect_after=true) override {
+        scene_manager_->load_scene_in_background(route);
+    }
+
+    void unload_scene(const std::string& route) override {
+        scene_manager_->unload_scene(route);
+    }
+
+    bool is_scene_loaded(const std::string& route) const override {
+        return scene_manager_->is_scene_loaded(route);
+    }
+
+    void reset() override {
+        scene_manager_->reset();
+    }
+
+    SceneBasePtr active_scene() const override {
+        return scene_manager_->active_scene();
+    }
+
+    void _store_scene_factory(const std::string& name, std::function<SceneBasePtr (WindowBase*)> func) {
+        scene_manager_->_store_scene_factory(name, func);
+    }
+
 protected:
     StagePtr stage(StageID stage=StageID());
 
@@ -101,7 +130,7 @@ protected:
 
 private:
     std::shared_ptr<WindowBase> window_;
-    std::shared_ptr<ScreenManager> routes_;
+    std::unique_ptr<SceneManager> scene_manager_;
 
     bool initialized_ = false;
 
