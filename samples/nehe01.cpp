@@ -28,7 +28,7 @@ public:
         smlt::Application(config) {}
 
     bool do_init() {
-        register_scene<MainScene>("/");
+        register_scene<MainScene>("main");
         return true;
     }
 };

@@ -49,30 +49,30 @@ public:
     }
 
     void test_route() {
-        assert_false(manager_->has_scene("/"));
+        assert_false(manager_->has_scene("main"));
         assert_false(manager_->has_scene("/test"));
 
         manager_->register_scene<TestScene>("/test");
 
         assert_true(manager_->has_scene("/test"));
-        assert_false(manager_->has_scene("/"));
+        assert_false(manager_->has_scene("main"));
     }
 
     void test_activate_scene() {
-        assert_raises(std::logic_error, std::bind(&SceneManager::activate_scene, manager_, "/"));
+        assert_raises(std::logic_error, std::bind(&SceneManager::activate_scene, manager_, "main"));
 
-        manager_->register_scene<TestScene>("/");
+        manager_->register_scene<TestScene>("main");
 
-        manager_->activate_scene("/");
+        manager_->activate_scene("main");
 
-        TestScene* scr = dynamic_cast<TestScene*>(manager_->resolve_scene("/").get());
+        TestScene* scr = dynamic_cast<TestScene*>(manager_->resolve_scene("main").get());
 
         assert_true(scr->load_called);
         assert_true(scr->activate_called);
         assert_false(scr->deactivate_called);
         assert_false(scr->unload_called);
 
-        manager_->activate_scene("/"); //activate_sceneing to the same place should do nothing
+        manager_->activate_scene("main"); //activate_sceneing to the same place should do nothing
 
         assert_true(scr->load_called);
         assert_true(scr->activate_called);
@@ -96,11 +96,11 @@ public:
     }
 
     void test_background_load() {
-        manager_->register_scene<TestScene>("/");
+        manager_->register_scene<TestScene>("main");
 
-        TestScene* scr = dynamic_cast<TestScene*>(manager_->resolve_scene("/").get());
+        TestScene* scr = dynamic_cast<TestScene*>(manager_->resolve_scene("main").get());
         assert_false(scr->load_called);
-        manager_->load_scene_in_background("/");
+        manager_->load_scene_in_background("main");
         std::this_thread::sleep_for(std::chrono::milliseconds(100));        
         assert_true(scr->load_called);
     }

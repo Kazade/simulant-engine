@@ -42,8 +42,8 @@ public:
 
 private:
     bool do_init() {
-        register_scene<GameScene>("/");
-        load_scene_in_background("/", true);
+        register_scene<GameScene>("main");
+        load_scene_in_background("main", true);
         activate_scene("/loading");
         return true;
     }

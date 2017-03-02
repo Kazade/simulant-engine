@@ -41,7 +41,7 @@ private:
 class App : public smlt::Application {
 public:
     bool do_init() {
-        register_scene<MainScene>("/");
+        register_scene<MainScene>("main");
         return true;
     }
 };

@@ -8,7 +8,7 @@ int main(int argc, char* argv[]) {
  *  THIS SAMPLE IS TOTALLY BROKEN AS IT SHOULD BE IMPLEMENTED
  *  IN TERMS OF PASSES RATHER THAN A SEPARATE RENDERER
  *
-	logging::get_logger("/")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));
+	logging::get_logger("main")->add_handler(logging::Handler::ptr(new logging::StdIOHandler));
 		
 	smlt::Window window;	
 	smlt::Scene& scene = window.scene();

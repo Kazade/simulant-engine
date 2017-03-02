@@ -120,8 +120,8 @@ public:
 
 private:
     bool do_init() {
-        register_scene<Gamescene>("/");
-        load_scene_in_background("/", true); //Do loading in a background thread, but show immediately when done
+        register_scene<Gamescene>("main");
+        load_scene_in_background("main", true); //Do loading in a background thread, but show immediately when done
         activate_scene("/loading"); // Show the loading scene in the meantime
         return true;
     }
