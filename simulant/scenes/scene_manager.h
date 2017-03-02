@@ -118,7 +118,11 @@ private:
     };
 
     sig::connection step_conn_;
+    sig::connection update_conn_;
+    sig::connection late_update_conn_;
 
+    void update(double dt);
+    void late_update(double dt);
     void fixed_update(double step);
 };
 

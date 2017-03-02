@@ -81,45 +81,16 @@ public:
 
     bool initialized() const { return initialized_; }
 
-    bool has_scene(const std::string& route) const override {
-        return scene_manager_->has_scene(route);
-    }
-
-    SceneBasePtr resolve_scene(const std::string& route) override {
-        return scene_manager_->resolve_scene(route);
-    }
-
-    void activate_scene(const std::string& route) override {
-        scene_manager_->activate_scene(route);
-    }
-
-    void load_scene(const std::string& route) override {
-        scene_manager_->load_scene(route);
-    }
-
-    void load_scene_in_background(const std::string& route, bool redirect_after=true) override {
-        scene_manager_->load_scene_in_background(route);
-    }
-
-    void unload_scene(const std::string& route) override {
-        scene_manager_->unload_scene(route);
-    }
-
-    bool is_scene_loaded(const std::string& route) const override {
-        return scene_manager_->is_scene_loaded(route);
-    }
-
-    void reset() override {
-        scene_manager_->reset();
-    }
-
-    SceneBasePtr active_scene() const override {
-        return scene_manager_->active_scene();
-    }
-
-    void _store_scene_factory(const std::string& name, std::function<SceneBasePtr (WindowBase*)> func) {
-        scene_manager_->_store_scene_factory(name, func);
-    }
+    bool has_scene(const std::string& route) const override;
+    SceneBasePtr resolve_scene(const std::string& route) override;
+    void activate_scene(const std::string& route) override;
+    void load_scene(const std::string& route) override;
+    void load_scene_in_background(const std::string& route, bool redirect_after=true) override;
+    void unload_scene(const std::string& route) override;
+    bool is_scene_loaded(const std::string& route) const override;
+    void reset() override;
+    SceneBasePtr active_scene() const override;
+    void _store_scene_factory(const std::string& name, std::function<SceneBasePtr (WindowBase*)> func);
 
 protected:
     StagePtr stage(StageID stage=StageID());

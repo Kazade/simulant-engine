@@ -110,4 +110,44 @@ int32_t Application::run() {
     return 0;
 }
 
+bool Application::has_scene(const std::string &route) const {
+    return scene_manager_->has_scene(route);
+}
+
+SceneBasePtr Application::resolve_scene(const std::string &route) {
+    return scene_manager_->resolve_scene(route);
+}
+
+void Application::activate_scene(const std::string &route) {
+    scene_manager_->activate_scene(route);
+}
+
+void Application::load_scene(const std::string &route) {
+    scene_manager_->load_scene(route);
+}
+
+void Application::load_scene_in_background(const std::string &route, bool redirect_after) {
+    scene_manager_->load_scene_in_background(route);
+}
+
+void Application::unload_scene(const std::string &route) {
+    scene_manager_->unload_scene(route);
+}
+
+bool Application::is_scene_loaded(const std::string &route) const {
+    return scene_manager_->is_scene_loaded(route);
+}
+
+void Application::reset() {
+    scene_manager_->reset();
+}
+
+SceneBasePtr Application::active_scene() const {
+    return scene_manager_->active_scene();
+}
+
+void Application::_store_scene_factory(const std::string &name, std::function<SceneBasePtr (WindowBase *)> func) {
+    scene_manager_->_store_scene_factory(name, func);
+}
+
 }

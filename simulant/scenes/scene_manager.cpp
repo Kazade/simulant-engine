@@ -27,10 +27,26 @@ SceneManager::SceneManager(WindowBase *window):
     window_(window) {
 
     step_conn_ = window_->signal_fixed_update().connect(std::bind(&SceneManager::fixed_update, this, std::placeholders::_1));
+    update_conn_ = window->signal_update().connect(std::bind(&SceneManager::update, this, std::placeholders::_1));
+    late_update_conn_ = window->signal_late_update().connect(std::bind(&SceneManager::late_update, this, std::placeholders::_1));
 }
 
 SceneManager::~SceneManager() {
     step_conn_.disconnect();
+    update_conn_.disconnect();
+    late_update_conn_.disconnect();
+}
+
+void SceneManager::late_update(double dt) {
+    if(active_scene()) {
+        active_scene()->_late_update_thunk(dt);
+    }
+}
+
+void SceneManager::update(double dt) {
+    if(active_scene()) {
+        active_scene()->_update_thunk(dt);
+    }
 }
 
 void SceneManager::fixed_update(double dt) {
