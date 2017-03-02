@@ -99,6 +99,10 @@ int32_t Application::run() {
 
     while(window_->run_frame()) {}
 
+    // Reset the scene manager (destroying scenes) before the window
+    // disappears
+    scene_manager_.reset();
+
     // Shutdown and clean up the window
     window_->_cleanup();
     window_.reset();
