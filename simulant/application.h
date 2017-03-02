@@ -32,12 +32,12 @@
 #include "scenes/scene_manager.h"
 #include "generic/property.h"
 #include "generic/data_carrier.h"
+#include "scenes/scene_manager.h"
 
 namespace smlt {
 
 class WindowBase;
 class Stage;
-class SceneManager;
 
 class BackgroundLoadException : public std::runtime_error {
 public:
@@ -61,6 +61,7 @@ struct AppConfig {
 
 class Application :
     public SceneManagerInterface {
+
 public:
     Application(const AppConfig& config);
 
@@ -80,18 +81,46 @@ public:
 
     bool initialized() const { return initialized_; }
 
-    /* SceneManager interface */
-    virtual void register_scene(const std::string& route, SceneFactory factory) { routes_->register_scene(route, factory); }
-    virtual bool has_scene(const std::string& route) const { return routes_->has_scene(route); }
-    virtual SceneBasePtr resolve_scene(const std::string& route) { return routes_->resolve_scene(route); }
-    virtual void activate_scene(const std::string& route) { routes_->activate_scene(route); }
-    virtual void load_scene(const std::string& route) { routes_->load_scene(route); }
-    virtual void load_scene_in_background(const std::string& route, bool redirect_after=true) { routes_->load_scene_in_background(route, redirect_after); }
-    virtual void unload_scene(const std::string& route) { routes_->unload_scene(route); }
-    virtual bool is_scene_loaded(const std::string& route) const { return routes_->is_scene_loaded(route); }
-    virtual SceneBasePtr active_scene() const { return routes_->active_scene(); }
-    const std::unordered_map<std::string, SceneBasePtr> routes() const override { return routes_->routes(); }
-    /* End SceneManager interface */
+    bool has_scene(const std::string& route) const override {
+        return scene_manager_->has_scene(route);
+    }
+
+    SceneBasePtr resolve_scene(const std::string& route) override {
+        return scene_manager_->resolve_scene(route);
+    }
+
+    void activate_scene(const std::string& route) override {
+        scene_manager_->activate_scene(route);
+    }
+
+    void load_scene(const std::string& route) override {
+        scene_manager_->load_scene(route);
+    }
+
+    void load_scene_in_background(const std::string& route, bool redirect_after=true) override {
+        scene_manager_->load_scene_in_background(route);
+    }
+
+    void unload_scene(const std::string& route) override {
+        scene_manager_->unload_scene(route);
+    }
+
+    bool is_scene_loaded(const std::string& route) const override {
+        return scene_manager_->is_scene_loaded(route);
+    }
+
+    void reset() override {
+        scene_manager_->reset();
+    }
+
+    SceneBasePtr active_scene() const override {
+        return scene_manager_->active_scene();
+    }
+
+    void _store_scene_factory(const std::string& name, std::function<SceneBasePtr (WindowBase*)> func) {
+        scene_manager_->_store_scene_factory(name, func);
+    }
+
 protected:
     StagePtr stage(StageID stage=StageID());
 
@@ -101,7 +130,7 @@ protected:
 
 private:
     std::shared_ptr<WindowBase> window_;
-    std::shared_ptr<SceneManager> routes_;
+    std::unique_ptr<SceneManager> scene_manager_;
 
     bool initialized_ = false;
 

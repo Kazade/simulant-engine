@@ -63,7 +63,7 @@ private:
 class Sample2D: public smlt::Application {
 private:
     bool do_init() {
-        register_scene("/", smlt::scene_factory<GameScene>());
+        register_scene<GameScene>("/");
         load_scene_in_background("/", true); //Do loading in a background thread, but show immediately when done
         activate_scene("/loading"); // Show the loading screen in the meantime
         return true;

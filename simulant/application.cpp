@@ -29,10 +29,12 @@ namespace smlt {
 
 Application::Application(const AppConfig &config):
     config_(config) {
+
     construct_window(config);
 }
 
-Application::Application(const unicode &title, uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen){
+Application::Application(const unicode &title, uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen) {
+
     AppConfig config;
     config.title = title;;
     config.width = width;
@@ -55,8 +57,6 @@ void Application::construct_window(const AppConfig& config) {
         throw InstanceInitializationError("Unable to create window");
     }
 
-    routes_.reset(new SceneManager(*window_));
-
     window_->set_title(config.title.encode());
 
     window_->signal_fixed_update().connect(std::bind(&Application::do_fixed_update, this, std::placeholders::_1));
@@ -72,9 +72,11 @@ StagePtr Application::stage(StageID stage) {
 }
 
 bool Application::init() {
+    scene_manager_.reset(new SceneManager(window_.get()));
+
     // Add some useful scenes by default, these can be overridden in do_init if the
     // user so wishes
-    register_scene("/loading", scene_factory<scenes::Loading>());
+    register_scene<scenes::Loading>("/loading");
     load_scene("/loading");
 
     initialized_ = do_init();
@@ -96,9 +98,6 @@ int32_t Application::run() {
     }
 
     while(window_->run_frame()) {}
-
-    // Shutdown any scenes
-    routes_.reset();
 
     // Shutdown and clean up the window
     window_->_cleanup();

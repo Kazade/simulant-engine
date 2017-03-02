@@ -29,7 +29,7 @@ public:
 class ViewportSample : public smlt::Application {
 public:
     bool do_init() {
-        register_scene("/", smlt::scene_factory<MainScene>());
+        register_scene<MainScene>("/");
         return true;
     }
 };

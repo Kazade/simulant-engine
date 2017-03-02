@@ -23,10 +23,10 @@
 
 namespace smlt {
 
-SceneManager::SceneManager(WindowBase &window):
+SceneManager::SceneManager(WindowBase *window):
     window_(window) {
 
-    step_conn_ = window.signal_fixed_update().connect(std::bind(&SceneManager::fixed_update, this, std::placeholders::_1));
+    step_conn_ = window_->signal_fixed_update().connect(std::bind(&SceneManager::fixed_update, this, std::placeholders::_1));
 }
 
 SceneManager::~SceneManager() {
@@ -47,14 +47,10 @@ SceneBase::ptr SceneManager::get_or_create_route(const std::string& route) {
             throw std::logic_error("No such route available: " + route);
         }
 
-        routes_[route] = (*factory).second();
+        routes_[route] = (*factory).second(window_);
         it = routes_.find(route);
     }
     return it->second;
-}
-
-void SceneManager::register_scene(const std::string& route, SceneFactory factory) {
-    scene_factories_[route] = std::bind(factory, std::reference_wrapper<WindowBase>(window_));
 }
 
 SceneBase::ptr SceneManager::active_scene() const {
@@ -93,7 +89,7 @@ void SceneManager::load_scene_in_background(const std::string& route, bool redir
     });
 
     // Add an idle task to check for when the background task completes
-    window_.idle->add([=]() -> bool {
+    window_->idle->add([=]() -> bool {
         // Checks for complete or failed tasks
         auto status = new_task->future.wait_for(std::chrono::microseconds(0));
         if(status != std::future_status::ready) {

@@ -42,7 +42,7 @@ public:
 
 private:
     bool do_init() {
-        register_scene("/", scene_factory<GameScene>());
+        register_scene<GameScene>("/");
         load_scene_in_background("/", true);
         activate_scene("/loading");
         return true;

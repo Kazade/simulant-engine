@@ -79,7 +79,7 @@ public:
 
 private:
     bool do_init() {
-        register_scene("/", scene_factory<GameScene>());
+        register_scene<GameScene>("/");
         return true;
     }
 };

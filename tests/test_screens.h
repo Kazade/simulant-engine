@@ -45,14 +45,14 @@ private:
 public:
     void set_up() {
         SimulantTestCase::set_up();
-        manager_ = std::make_shared<SceneManager>(*window);
+        manager_ = std::make_shared<SceneManager>(window.get());
     }
 
     void test_route() {
         assert_false(manager_->has_scene("/"));
         assert_false(manager_->has_scene("/test"));
 
-        manager_->register_scene("/test", scene_factory<TestScene>());
+        manager_->register_scene<TestScene>("/test");
 
         assert_true(manager_->has_scene("/test"));
         assert_false(manager_->has_scene("/"));
@@ -61,7 +61,7 @@ public:
     void test_activate_scene() {
         assert_raises(std::logic_error, std::bind(&SceneManager::activate_scene, manager_, "/"));
 
-        manager_->register_scene("/", scene_factory<TestScene>());
+        manager_->register_scene<TestScene>("/");
 
         manager_->activate_scene("/");
 
@@ -79,7 +79,7 @@ public:
         assert_false(scr->deactivate_called);
         assert_false(scr->unload_called);
 
-        manager_->register_scene("/test", scene_factory<TestScene>());
+        manager_->register_scene<TestScene>("/test");
         manager_->activate_scene("/test");
 
         assert_true(scr->load_called);
@@ -96,7 +96,7 @@ public:
     }
 
     void test_background_load() {
-        manager_->register_scene("/", scene_factory<TestScene>());
+        manager_->register_scene<TestScene>("/");
 
         TestScene* scr = dynamic_cast<TestScene*>(manager_->resolve_scene("/").get());
         assert_false(scr->load_called);
