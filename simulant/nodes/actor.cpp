@@ -182,6 +182,8 @@ void Actor::set_mesh(MeshID mesh) {
 }
 
 void Actor::update(double dt) {
+    StageNode::update(dt);
+
     update_source(dt);
     if(animation_state_) {
         animation_state_->update(dt);
