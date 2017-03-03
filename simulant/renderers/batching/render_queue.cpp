@@ -230,14 +230,13 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
 
     for(auto& batches: batches_) {
         IterationType pass_iteration_type;
+        MaterialID material_id;
+        MaterialPass::ptr material_pass;
 
         const RenderGroup* last_group = nullptr;
 
         for(auto& p: batches) {
             const RenderGroup* current_group = &p.first;
-
-            MaterialID material_id;
-            MaterialPass::ptr material_pass;
 
             visitor->change_render_group(last_group, current_group);
 
@@ -261,7 +260,6 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
                 }
 
                 uint32_t iterations = 1;
-
 
                 std::vector<LightPtr> lights;
 
