@@ -79,6 +79,10 @@ RigidBodySimulation::RigidBodySimulation() {
     scene_->SetGravity(q3Vec3(0, -9.81, 0));
 }
 
+void RigidBodySimulation::set_gravity(const Vec3& gravity) {
+    scene_->SetGravity(to_q3vec3(gravity));
+}
+
 bool RigidBodySimulation::init() {
 
     return true;

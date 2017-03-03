@@ -121,6 +121,7 @@ public:
 
     std::pair<Vec3, bool> intersect_ray(const Vec3& start, const Vec3& direction, float* distance=nullptr, Vec3 *normal=nullptr);
 
+    void set_gravity(const Vec3& gravity);
 private:
     friend class impl::Body;
     friend class RigidBody;
