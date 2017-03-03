@@ -47,6 +47,7 @@ public:
     void visit(Renderable* renderable, MaterialPass* pass, Light* light, batcher::Iteration);
     void end_traversal(const batcher::RenderQueue &queue);
     void change_render_group(const batcher::RenderGroup *prev, const batcher::RenderGroup *next);
+    void change_material_pass(const MaterialPass* prev, const MaterialPass* next);
 
 private:
     GenericRenderer* renderer_;

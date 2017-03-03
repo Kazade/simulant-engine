@@ -235,7 +235,8 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
 
         for(auto& p: batches) {
             const RenderGroup* current_group = &p.first;
-            MaterialPtr material;
+
+            MaterialID material_id;
             MaterialPass::ptr material_pass;
 
             visitor->change_render_group(last_group, current_group);
@@ -245,14 +246,19 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
                     return;
                 }
 
-                auto& material_id = renderable->material_id();
-                assert(material_id);
+                /* As the pass number is constant for the entire batch, a material_pass
+                 * will only change if and when a material changes
+                 */
+                auto& this_mat_id = renderable->material_id();
+                if(this_mat_id != material_id) {
+                    auto last_pass = material_pass;
 
-                material = stage_->assets->material(material_id);
-                assert(material);
+                    material_id = this_mat_id;
+                    material_pass = stage_->assets->material(material_id)->pass(pass);
+                    pass_iteration_type = material_pass->iteration();
 
-                material_pass = material->pass(pass);
-                pass_iteration_type = material_pass->iteration();
+                    visitor->change_material_pass(last_pass.get(), material_pass.get());
+                }
 
                 uint32_t iterations = 1;
 

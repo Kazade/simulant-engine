@@ -379,11 +379,69 @@ void GL2RenderQueueVisitor::end_traversal(const batcher::RenderQueue &queue) {
     blended_object_queue_.clear();
 }
 
+void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const MaterialPass* next) {
+
+    if(!prev || prev->depth_test_enabled() != next->depth_test_enabled()) {
+        if(next->depth_test_enabled()) {
+            GLCheck(glEnable, GL_DEPTH_TEST);
+        } else {
+            GLCheck(glDisable, GL_DEPTH_TEST);
+        }
+    }
+
+    if(!prev || prev->depth_write_enabled() != next->depth_write_enabled()) {
+        if(next->depth_write_enabled()) {
+            GLCheck(glDepthMask, GL_TRUE);
+        } else {
+            GLCheck(glDepthMask, GL_FALSE);
+        }
+    }
+
+    if(!prev || prev->point_size() != next->point_size()) {
+        glPointSize(next->point_size());
+    }
+
+    if(!prev || prev->polygon_mode() != next->polygon_mode()) {
+        switch(next->polygon_mode()) {
+            case POLYGON_MODE_POINT:
+                glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+            break;
+            case POLYGON_MODE_LINE:
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            break;
+            default:
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
+    }
+
+    if(!prev || prev->cull_mode() != next->cull_mode()) {
+        if(next->cull_mode() != CULL_MODE_NONE) {
+            glEnable(GL_CULL_FACE);
+        }
+
+        switch(next->cull_mode()) {
+            case CULL_MODE_NONE:
+                glDisable(GL_CULL_FACE);
+            break;
+            case CULL_MODE_FRONT_FACE:
+                glCullFace(GL_FRONT);
+            break;
+            case CULL_MODE_BACK_FACE:
+                glCullFace(GL_BACK);
+            break;
+            case CULL_MODE_FRONT_AND_BACK_FACE:
+                glCullFace(GL_FRONT_AND_BACK);
+            break;
+        }
+    }
+}
+
 void GL2RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev, const batcher::RenderGroup *next) {
     render_group_changed_ = true;
 
     // Casting blindly because I can't see how it's possible that it's anything else!
     current_group_ = (GL2RenderGroupImpl*) next->impl();
+
 }
 
 void GL2RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* material_pass, Light* light, batcher::Iteration iteration) {
@@ -465,50 +523,6 @@ void GL2RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
     index_buffer->bind(HARDWARE_BUFFER_VERTEX_ARRAY_INDICES);
 
     renderer_->set_auto_attributes_on_shader(*renderable);
-
-    if(material_pass->depth_test_enabled()) {
-        GLCheck(glEnable, GL_DEPTH_TEST);
-    } else {
-        GLCheck(glDisable, GL_DEPTH_TEST);
-    }
-
-    if(material_pass->depth_write_enabled()) {
-        GLCheck(glDepthMask, GL_TRUE);
-    } else {
-        GLCheck(glDepthMask, GL_FALSE);
-    }
-
-    glPointSize(material_pass->point_size());
-
-    switch(material_pass->polygon_mode()) {
-        case POLYGON_MODE_POINT:
-            glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-        break;
-        case POLYGON_MODE_LINE:
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        break;
-        default:
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    }
-
-    if(material_pass->cull_mode() != CULL_MODE_NONE) {
-        glEnable(GL_CULL_FACE);
-    }
-
-    switch(material_pass->cull_mode()) {
-        case CULL_MODE_NONE:
-            glDisable(GL_CULL_FACE);
-        break;
-        case CULL_MODE_FRONT_FACE:
-            glCullFace(GL_FRONT);
-        break;
-        case CULL_MODE_BACK_FACE:
-            glCullFace(GL_BACK);
-        break;
-        case CULL_MODE_FRONT_AND_BACK_FACE:
-            glCullFace(GL_FRONT_AND_BACK);
-        break;
-    }
 
     auto texture_matrix_auto = [](uint8_t which) -> ShaderAvailableAuto {
         switch(which) {
