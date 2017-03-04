@@ -54,7 +54,7 @@ private:
     CameraPtr camera_;
     Colour global_ambient_;
 
-    ShaderID last_shader_id_;
+    GPUProgramID last_shader_id_;
     GL2RenderGroupImpl* current_group_ = nullptr;
     bool render_group_changed_ = true;
 

@@ -227,7 +227,7 @@ private:
 
 class GPUProgram:
     public Managed<GPUProgram>,
-    public generic::Identifiable<ShaderID> {
+    public generic::Identifiable<GPUProgramID> {
 
 public:
     GPUProgram(const std::string& vertex_source, const std::string& fragment_source);

@@ -40,7 +40,7 @@ public:
         batcher::RenderGroupImpl(priority) {}
 
     TextureID texture_id[MAX_TEXTURE_UNITS] = {TextureID()};
-    ShaderID shader_id;
+    GPUProgramID shader_id;
 
     bool lt(const RenderGroupImpl& other) const override {
         const GL2RenderGroupImpl* rhs = dynamic_cast<const GL2RenderGroupImpl*>(&other);

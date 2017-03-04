@@ -181,7 +181,7 @@ void AttributeManager::register_auto(ShaderAvailableAttributes attr, const std::
 
 
 GPUProgram::GPUProgram(const std::string &vertex_source, const std::string &fragment_source):
-    generic::Identifiable<ShaderID>(ShaderID(++shader_id_counter_)),
+    generic::Identifiable<GPUProgramID>(GPUProgramID(++shader_id_counter_)),
     program_object_(0) {
 
     set_shader_source(SHADER_TYPE_VERTEX, vertex_source);
