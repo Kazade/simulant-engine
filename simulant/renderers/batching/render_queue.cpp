@@ -226,7 +226,7 @@ void RenderQueue::remove_renderable(Renderable* renderable) {
 void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const {
     Pass pass = 0;
 
-    visitor->start_traversal(*this, frame_id);
+    visitor->start_traversal(*this, frame_id, stage_);
 
     for(auto& batches: batches_) {
         IterationType pass_iteration_type;
@@ -273,14 +273,21 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
 
                 Light* light = nullptr;
                 for(Iteration i = 0; i < iterations; ++i) {
+                    Light* next = nullptr;
+
                     // Pass down the light if necessary, otherwise just pass nullptr
                     if(!lights.empty()) {
-                        light = lights[i];
+                        next = lights[i];
                     } else {
-                        light = nullptr;
+                        next = nullptr;
                     }
 
-                    visitor->visit(renderable, material_pass.get(), light, i);
+                    if(i == 0 || light != next) {
+                        visitor->change_light(light, next);
+                    }
+
+                    light = next;
+                    visitor->visit(renderable, material_pass.get(), i);
                 }
 
                 last_group = current_group;
@@ -289,7 +296,7 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
         ++pass;
     }
 
-    visitor->end_traversal(*this);
+    visitor->end_traversal(*this, stage_);
 }
 
 void Batch::add_renderable(Renderable* renderable) {

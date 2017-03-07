@@ -34,26 +34,32 @@ class GenericRenderer;
 struct RenderState {
     Renderable* renderable;
     MaterialPass* pass;
-    Light* light;
+    const Light* light;
     batcher::Iteration iteration;
     GL2RenderGroupImpl* render_group_impl;
 };
 
 class GL2RenderQueueVisitor : public batcher::RenderQueueVisitor {
 public:
-    GL2RenderQueueVisitor(GenericRenderer* renderer, CameraPtr camera, const Colour& colour);
+    GL2RenderQueueVisitor(GenericRenderer* renderer, CameraPtr camera);
 
-    void start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id);
-    void visit(Renderable* renderable, MaterialPass* pass, Light* light, batcher::Iteration);
-    void end_traversal(const batcher::RenderQueue &queue);
+    void start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, Stage* stage);
+    void visit(Renderable* renderable, MaterialPass* pass, batcher::Iteration);
+    void end_traversal(const batcher::RenderQueue &queue, Stage* stage);
+
     void change_render_group(const batcher::RenderGroup *prev, const batcher::RenderGroup *next);
     void change_material_pass(const MaterialPass* prev, const MaterialPass* next);
+    void change_light(const Light* prev, const Light* next);
 
 private:
     GenericRenderer* renderer_;
     CameraPtr camera_;
     Colour global_ambient_;
+
     GPUProgram* program_ = nullptr;
+    const MaterialPass* pass_ = nullptr;
+    const Light* light_ = nullptr;
+
     GL2RenderGroupImpl* current_group_ = nullptr;
 
     bool queue_blended_objects_ = true;
@@ -63,7 +69,7 @@ private:
      */
     std::multimap<float, RenderState, std::greater<float> > blended_object_queue_;
 
-    void do_visit(Renderable* renderable, MaterialPass* material_pass, Light* light, batcher::Iteration iteration);
+    void do_visit(Renderable* renderable, MaterialPass* material_pass, batcher::Iteration iteration);
 
     void rebind_attribute_locations_if_necessary(const MaterialPass* pass, GPUProgram* program);
 };
@@ -81,7 +87,7 @@ public:
     batcher::RenderGroup new_render_group(Renderable *renderable, MaterialPass *material_pass);
     void init_context();
 
-    std::shared_ptr<batcher::RenderQueueVisitor> get_render_queue_visitor(CameraPtr camera, const Colour &global_ambient);
+    std::shared_ptr<batcher::RenderQueueVisitor> get_render_queue_visitor(CameraPtr camera);
 
     GPUProgramID new_or_existing_gpu_program(const std::string& vertex_shader_source, const std::string& fragment_shader_source);
 
@@ -97,7 +103,7 @@ private:
         return buffer_manager_.get();
     }
 
-    void set_light_uniforms(MaterialPass* pass, GPUProgram* program, Light *light);
+    void set_light_uniforms(const MaterialPass* pass, GPUProgram* program, const Light *light);
     void set_material_uniforms(const MaterialPass *pass, GPUProgram* program);
     void set_renderable_uniforms(const MaterialPass* pass, GPUProgram* program, Renderable* renderable, Camera* camera);
     void set_stage_uniforms(const MaterialPass* pass, GPUProgram* program, const Colour& global_ambient);

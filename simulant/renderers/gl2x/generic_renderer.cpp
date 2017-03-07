@@ -93,14 +93,16 @@ batcher::RenderGroup GenericRenderer::new_render_group(Renderable* renderable, M
     return batcher::RenderGroup(impl);
 }
 
-void GenericRenderer::set_light_uniforms(MaterialPass* pass, GPUProgram* program, Light *light) {
+void GenericRenderer::set_light_uniforms(const MaterialPass* pass, GPUProgram* program, const Light *light) {
     auto& uniforms = pass->uniforms;
 
     if(uniforms->uses_auto(SP_AUTO_LIGHT_POSITION)) {
         auto varname = uniforms->auto_variable_name(SP_AUTO_LIGHT_POSITION);
+        auto pos = (light) ? light->absolute_position() : Vec3();
+
         program->set_uniform_vec4(
             varname,
-            Vec4(light->absolute_position(), (light->type() == LIGHT_TYPE_DIRECTIONAL) ? 0.0 : 1.0)
+            Vec4(pos, (light->type() == LIGHT_TYPE_DIRECTIONAL) ? 0.0 : 1.0)
         );
     }
 
@@ -110,28 +112,33 @@ void GenericRenderer::set_light_uniforms(MaterialPass* pass, GPUProgram* program
     }
 
     if(uniforms->uses_auto(SP_AUTO_LIGHT_DIFFUSE)) {
+        auto diffuse = (light) ? light->diffuse() : smlt::Colour::NONE;
         auto varname = uniforms->auto_variable_name(SP_AUTO_LIGHT_DIFFUSE);
-        program->set_uniform_colour(varname, light->diffuse());
+        program->set_uniform_colour(varname, diffuse);
     }
 
     if(uniforms->uses_auto(SP_AUTO_LIGHT_SPECULAR)) {
+        auto specular = (light) ? light->specular() : smlt::Colour::NONE;
         auto varname = uniforms->auto_variable_name(SP_AUTO_LIGHT_SPECULAR);
-        program->set_uniform_colour(varname, light->specular());
+        program->set_uniform_colour(varname, specular);
     }
 
     if(uniforms->uses_auto(SP_AUTO_LIGHT_CONSTANT_ATTENUATION)) {
+        auto att = (light) ? light->constant_attenuation() : 0;
         auto varname = uniforms->auto_variable_name(SP_AUTO_LIGHT_CONSTANT_ATTENUATION);
-        program->set_uniform_float(varname, light->constant_attenuation());
+        program->set_uniform_float(varname, att);
     }
 
     if(uniforms->uses_auto(SP_AUTO_LIGHT_LINEAR_ATTENUATION)) {
+        auto att = (light) ? light->linear_attenuation() : 0;
         auto varname = uniforms->auto_variable_name(SP_AUTO_LIGHT_LINEAR_ATTENUATION);
-        program->set_uniform_float(varname, light->linear_attenuation());
+        program->set_uniform_float(varname, att);
     }
 
     if(uniforms->uses_auto(SP_AUTO_LIGHT_QUADRATIC_ATTENUATION)) {
+        auto att = (light) ? light->quadratic_attenuation() : 0;
         auto varname = uniforms->auto_variable_name(SP_AUTO_LIGHT_QUADRATIC_ATTENUATION);
-        program->set_uniform_float(varname, light->quadratic_attenuation());
+        program->set_uniform_float(varname, att);
     }
 }
 
@@ -303,8 +310,8 @@ void GenericRenderer::set_blending_mode(BlendType type) {
 }
 
 
-std::shared_ptr<batcher::RenderQueueVisitor> GenericRenderer::get_render_queue_visitor(CameraPtr camera, const Colour &global_ambient) {
-    return std::make_shared<GL2RenderQueueVisitor>(this, camera, global_ambient);
+std::shared_ptr<batcher::RenderQueueVisitor> GenericRenderer::get_render_queue_visitor(CameraPtr camera) {
+    return std::make_shared<GL2RenderQueueVisitor>(this, camera);
 }
 
 smlt::GPUProgramID smlt::GenericRenderer::new_or_existing_gpu_program(const std::string &vertex_shader_source, const std::string &fragment_shader_source) {
@@ -315,23 +322,22 @@ smlt::GPUProgramPtr smlt::GenericRenderer::gpu_program(const smlt::GPUProgramID 
     return program_manager_.get(program_id).lock();
 }
 
-GL2RenderQueueVisitor::GL2RenderQueueVisitor(GenericRenderer* renderer, CameraPtr camera, const Colour& colour):
+GL2RenderQueueVisitor::GL2RenderQueueVisitor(GenericRenderer* renderer, CameraPtr camera):
     renderer_(renderer),
-    camera_(camera),
-    global_ambient_(colour) {
+    camera_(camera) {
 
 }
 
-void GL2RenderQueueVisitor::visit(Renderable* renderable, MaterialPass* material_pass, Light* light, batcher::Iteration iteration) {
+void GL2RenderQueueVisitor::visit(Renderable* renderable, MaterialPass* material_pass, batcher::Iteration iteration) {
     queue_blended_objects_ = true;
-    do_visit(renderable, material_pass, light, iteration);
+    do_visit(renderable, material_pass, iteration);
 }
 
-void GL2RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id) {
-
+void GL2RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, Stage* stage) {
+    global_ambient_ = stage->ambient_light();
 }
 
-void GL2RenderQueueVisitor::end_traversal(const batcher::RenderQueue &queue) {
+void GL2RenderQueueVisitor::end_traversal(const batcher::RenderQueue &queue, Stage* stage) {
     // When running do_visit, don't queue blended objects just render them
     queue_blended_objects_ = false;
 
@@ -347,11 +353,13 @@ void GL2RenderQueueVisitor::end_traversal(const batcher::RenderQueue &queue) {
             current_group_ = state.render_group_impl;
         }
 
+        // FIXME: Pass the previous light from the last iteration, not nullptr
+        change_light(nullptr, state.light);
+
         // Render the transparent / blended objects
         do_visit(
             state.renderable,
             state.pass,
-            state.light,
             state.iteration
         );
     }
@@ -359,7 +367,14 @@ void GL2RenderQueueVisitor::end_traversal(const batcher::RenderQueue &queue) {
     blended_object_queue_.clear();
 }
 
+void GL2RenderQueueVisitor::change_light(const Light *prev, const Light *next) {
+    light_ = next;
+
+    renderer_->set_light_uniforms(pass_, program_, next);
+}
+
 void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const MaterialPass* next) {
+    pass_ = next;
 
     if(!prev || prev->depth_test_enabled() != next->depth_test_enabled()) {
         if(next->depth_test_enabled()) {
@@ -543,7 +558,7 @@ void GL2RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev
     }
 }
 
-void GL2RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* material_pass, Light* light, batcher::Iteration iteration) {
+void GL2RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* material_pass, batcher::Iteration iteration) {
     // Queue transparent objects for render later
     if(material_pass->is_blended() && queue_blended_objects_) {
         auto pos = renderable->transformed_aabb().centre();
@@ -554,7 +569,7 @@ void GL2RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
         RenderState state;
         state.renderable = renderable;
         state.pass = material_pass;
-        state.light = light;
+        state.light = light_;
         state.iteration = iteration;
         state.render_group_impl = current_group_;
 
@@ -569,10 +584,6 @@ void GL2RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
     // Don't bother doing *anything* if there is nothing to render
     if(!renderable->index_element_count()) {
         return;
-    }
-
-    if(light) {
-        renderer_->set_light_uniforms(material_pass, program_, light);
     }
 
     renderer_->set_renderable_uniforms(material_pass, program_, renderable, camera_);
