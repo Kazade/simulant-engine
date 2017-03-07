@@ -274,7 +274,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
             [=](LightPtr lhs, LightPtr rhs) {
                 /* FIXME: Sorting by the centre point is problematic. A renderable is made up
                  * of many polygons, by choosing the light closest to the center you may find that
-                 * that polygons far away from the center aren't effected by lights when they should be.
+                 * that polygons far away from the center aren't affected by lights when they should be.
                  * This needs more thought, probably. */
                 if(lhs->type() == LIGHT_TYPE_DIRECTIONAL && rhs->type() != LIGHT_TYPE_DIRECTIONAL) {
                     return true;
@@ -296,7 +296,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
 
     using namespace std::placeholders;
 
-    auto visitor = renderer_->get_render_queue_visitor(camera, stage->ambient_light());
+    auto visitor = renderer_->get_render_queue_visitor(camera);
 
     // Render the visible objects
     stage->render_queue->traverse(visitor.get(), frame_id);

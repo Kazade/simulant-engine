@@ -1,3 +1,8 @@
+BEGIN(HEADER)
+    PROPERTY(INT "texture" 0)
+END(HEADER)
+
+
     BEGIN(PASS)
         SET(ITERATION ONCE)
     
@@ -5,10 +10,8 @@
         SET(ATTRIBUTE TEXCOORD0 "texture_coord0")
         SET(ATTRIBUTE DIFFUSE "vertex_diffuse")
         
-        SET(AUTO_UNIFORM MODELVIEW_PROJECTION_MATRIX "modelview_projection")
-        SET(AUTO_UNIFORM TEXTURE_MATRIX0 "texture_matrix")
-        
-        SET(UNIFORM INT "texture" 0)
+        SET(UNIFORM MODELVIEW_PROJECTION_MATRIX "modelview_projection")
+        SET(UNIFORM TEXTURE_MATRIX0 "texture_matrix")
         
         SET(FLAG DEPTH_WRITE ON)
         SET(FLAG DEPTH_CHECK ON)

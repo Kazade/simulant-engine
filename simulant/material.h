@@ -41,14 +41,14 @@
 #include "material_constants.h"
 #include "interfaces/updateable.h"
 
+#include "materials/attribute_manager.h"
+#include "materials/uniform_manager.h"
+
 namespace smlt {
 
 class MaterialPass;
 class Material;
 
-#ifndef SIMULANT_GL_VERSION_1X
-class GPUProgramInstance;
-#endif
 
 class TextureUnit:
     public Updateable {
@@ -90,7 +90,7 @@ public:
         kmMat4Multiply(&texture_matrix_, &texture_matrix_, &diff);
     }
 
-    Mat4& matrix() {
+    const Mat4& matrix() const {
         return texture_matrix_;
     }
 
@@ -115,6 +115,33 @@ enum IterationType {
     ITERATE_ONCE_PER_LIGHT
 };
 
+
+enum MaterialPropertyType {
+    MATERIAL_PROPERTY_TYPE_INT,
+    MATERIAL_PROPERTY_TYPE_FLOAT,
+    MATERIAL_PROPERTY_TYPE_VEC2,
+    MATERIAL_PROPERTY_TYPE_VEC3,
+    MATERIAL_PROPERTY_TYPE_VEC4
+};
+
+struct MaterialProperty {
+    MaterialProperty():
+        int_value(0) {}
+
+    MaterialPropertyType type;
+    bool is_set = false; // Has this property been set (either by shader or the user)
+
+    union {
+        int int_value;
+        float float_value;
+        Vec2 vec2_value;
+        Vec3 vec3_value;
+        Vec4 vec4_value;
+    };
+};
+
+typedef std::unordered_map<std::string, MaterialProperty> MaterialProperties;
+
 class MaterialPass:
     public Managed<MaterialPass>,
     public Updateable {
@@ -136,6 +163,7 @@ public:
 
     uint32_t texture_unit_count() const { return texture_units_.size(); }
     TextureUnit& texture_unit(uint32_t index) { return texture_units_.at(index); }
+    const TextureUnit& texture_unit(uint32_t index) const { return texture_units_.at(index); }
 
     void update(double dt) {
         for(TextureUnit& t: texture_units_) {
@@ -147,7 +175,7 @@ public:
     uint32_t max_iterations() const { return max_iterations_; }
     void set_iteration(IterationType iter_type, uint32_t max=8);
     void set_blending(BlendType blend) { blend_ = blend; }
-    BlendType blending() { return blend_; }
+    BlendType blending() const { return blend_; }
 
     bool is_blended() const { return blend_ != BLEND_NONE; }
 
@@ -178,38 +206,29 @@ public:
     void set_cull_mode(CullMode mode) { cull_mode_ = mode; }
     CullMode cull_mode() const { return cull_mode_; }
 
-
     void set_prevent_textures(bool value) { allow_textures_ = !value; }
 
-    Property<MaterialPass, Material> material = { this, &MaterialPass::material_ };
+    Property<MaterialPass, Material> material = { this, &MaterialPass::material_ };    
+    Property<MaterialPass, UniformManager> uniforms = { this, &MaterialPass::uniforms_ };
+    Property<MaterialPass, AttributeManager> attributes = { this, &MaterialPass::attributes_ };
 
-#ifndef SIMULANT_GL_VERSION_1X
-    Property<MaterialPass, GPUProgramInstance> program = { this, &MaterialPass::program_ };
-    std::map<std::string, float> staged_float_uniforms() const { return float_uniforms_; }
-    std::map<std::string, int> staged_int_uniforms() const { return int_uniforms_; }
-
-    void stage_uniform(const std::string& name, const int& value) {
-        int_uniforms_[name] = value;
-    }
-
-    void stage_uniform(const std::string& name, const float& value) {
-        float_uniforms_[name] = value;
-    }
-
-    void build_program_and_bind_attributes();
-#endif
+    const GPUProgramID& gpu_program_id() const { return gpu_program_; }
+    void set_gpu_program_id(GPUProgramID program_id);
 
 private:
+    UniformManager uniforms_;
+    AttributeManager attributes_;
+
     static std::shared_ptr<GPUProgram> default_program;
 
     Material* material_ = nullptr;
 
-#ifndef SIMULANT_GL_VERSION_1X
+    GPUProgramID gpu_program_;
+    GPUProgramPtr gpu_program_ref_;
+
     std::map<std::string, float> float_uniforms_;
     std::map<std::string, int> int_uniforms_;
-    std::shared_ptr<GPUProgramInstance> program_;
-    std::map<smlt::ShaderType, unicode> shader_sources_;
-#endif
+
 
     Colour diffuse_ = Colour::WHITE;
     Colour ambient_ = Colour::BLACK;
@@ -306,6 +325,14 @@ public:
     MaterialPassCreated& signal_material_pass_created() { return signal_material_pass_created_; }
     MaterialPassDestroyed& signal_material_pass_destroyed() { return signal_material_pass_destroyed_; }
 
+    void set_int_property(const std::string& name, int value);
+    void set_float_property(const std::string& name, float value);
+
+    void create_int_property(const std::string& name);
+    void create_float_property(const std::string& name);
+
+    const MaterialProperties& properties() const { return properties_; }
+
 private:
     MaterialPassCreated signal_material_pass_created_;
     MaterialPassDestroyed signal_material_pass_destroyed_;
@@ -335,6 +362,8 @@ private:
     uint32_t pass_count_; // Used to prevent locking on passes_ when requesting the count
 
     std::set<MaterialPass*> reflective_passes_;
+
+    MaterialProperties properties_;
 
     friend class MaterialPass;
 };

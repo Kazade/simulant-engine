@@ -24,6 +24,7 @@
 #include "../shortcuts.h"
 #include "../resource_manager.h"
 #include "../utils/gl_thread_check.h"
+#include "../renderers/renderer.h"
 
 #ifndef SIMULANT_GL_VERSION_1X
 #include "../renderers/gl2x/gpu_program.h"
@@ -41,10 +42,49 @@ MaterialScript::MaterialScript(const MaterialLanguageText& text):
 
 }
 
+void MaterialScript::handle_header_property_command(Material& mat, const std::vector<unicode> &args) {
+    if(args.size() < 2) {
+        throw SyntaxError("Wrong number of arguments for PROPERTY command");
+    }
+
+    unicode type = unicode(args[0]).upper();
+    bool has_value = args.size() == 3;
+
+    // PROPERTY(INT varname [value])
+    // PROPERTY(FLOAT varname [value])
+
+    if(args.size() < 3) {
+        throw SyntaxError("Wrong number of arguments to PROPERTY()");
+    }
+
+    std::string variable_name = unicode(args[1]).strip("\"").encode();
+
+    if(type == "INT") {
+
+        // Create an integer property on the material
+        mat.create_int_property(variable_name);
+
+        if(has_value) {
+            /* If we have a value, then set it - otherwise just create an uninitialized property with this name */
+            int32_t value = 0;
+            try {
+                value = unicode(args[2]).to_int();
+                mat.set_int_property(variable_name, value);
+            } catch(std::exception& e) { //FIXME: Should be a specific exception
+                throw SyntaxError("Invalid INT value passed to PROPERTY");
+            }
+        }
+    } else {
+        throw SyntaxError("Unhandled type passed to PROPERTY");
+    }
+}
+
 void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<unicode>& args, MaterialPass::ptr pass) {
     if(args.size() < 2) {
         throw SyntaxError("Wrong number of arguments for SET command");
     }
+
+    Renderer* renderer = mat.resource_manager().window->renderer;
 
     unicode type = unicode(args[0]).upper();
     unicode arg_1 = unicode(args[1]);
@@ -65,104 +105,88 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<un
         int count = unicode(arg_1).to_int();
         pass->set_iteration(pass->iteration(), count);
 
-#ifndef SIMULANT_GL_VERSION_1X
     } else if(type == "ATTRIBUTE") {
         if(args.size() < 3) {
             throw SyntaxError("Wrong number of arguments for SET(ATTRIBUTE) command");
         }
 
-        {
-            auto& shader = pass->program;
-            std::string variable_name = unicode(args[2]).strip("\"").encode();
-            if(arg_1 == "POSITION") {
-                shader->attributes->register_auto(SP_ATTR_VERTEX_POSITION, variable_name);
-            } else if(arg_1 == "TEXCOORD0") {
-                shader->attributes->register_auto(SP_ATTR_VERTEX_TEXCOORD0, variable_name);
-            } else if(arg_1 == "TEXCOORD1") {
-                shader->attributes->register_auto(SP_ATTR_VERTEX_TEXCOORD1, variable_name);
-            } else if(arg_1 == "TEXCOORD2") {
-                shader->attributes->register_auto(SP_ATTR_VERTEX_TEXCOORD2, variable_name);
-            } else if(arg_1 == "TEXCOORD3") {
-                shader->attributes->register_auto(SP_ATTR_VERTEX_TEXCOORD3, variable_name);
-            } else if(arg_1 == "NORMAL") {
-                shader->attributes->register_auto(SP_ATTR_VERTEX_NORMAL, variable_name);
-            } else if(arg_1 == "DIFFUSE") {
-                shader->attributes->register_auto(SP_ATTR_VERTEX_DIFFUSE, variable_name);
-            } else {
-                throw SyntaxError(_u("Unhandled attribute: {0}").format(arg_1));
-            }
-        }
-    } else if(type == "UNIFORM") {
-        if(args.size() < 4) {
-            throw SyntaxError("Wrong number of arguments to SET(UNIFORM)");
+        if(!renderer->supports_gpu_programs()) {
+            throw SyntaxError("ATTRIBUTE commands are not supported on this renderer");
         }
 
         std::string variable_name = unicode(args[2]).strip("\"").encode();
-
-        if(arg_1 == "INT") {
-            int32_t value = 0;
-            try {
-                value = unicode(args[3]).to_int();
-            } catch(std::exception& e) { //FIXME: Should be a specific exception
-                throw SyntaxError("Invalid INT value passed to SET(UNIFORM)");
-            }
-
-            pass->stage_uniform(variable_name, value);
+        if(arg_1 == "POSITION") {
+            pass->attributes->register_auto(SP_ATTR_VERTEX_POSITION, variable_name);
+        } else if(arg_1 == "TEXCOORD0") {
+            pass->attributes->register_auto(SP_ATTR_VERTEX_TEXCOORD0, variable_name);
+        } else if(arg_1 == "TEXCOORD1") {
+            pass->attributes->register_auto(SP_ATTR_VERTEX_TEXCOORD1, variable_name);
+        } else if(arg_1 == "TEXCOORD2") {
+            pass->attributes->register_auto(SP_ATTR_VERTEX_TEXCOORD2, variable_name);
+        } else if(arg_1 == "TEXCOORD3") {
+            pass->attributes->register_auto(SP_ATTR_VERTEX_TEXCOORD3, variable_name);
+        } else if(arg_1 == "NORMAL") {
+            pass->attributes->register_auto(SP_ATTR_VERTEX_NORMAL, variable_name);
+        } else if(arg_1 == "DIFFUSE") {
+            pass->attributes->register_auto(SP_ATTR_VERTEX_DIFFUSE, variable_name);
         } else {
-            throw SyntaxError("Unhandled type passed to SET(UNIFORM)");
+            throw SyntaxError(_u("Unhandled attribute: {0}").format(arg_1));
         }
 
-    } else if(type == "AUTO_UNIFORM") {
+    }  else if(type == "UNIFORM") {
         std::string variable_name = unicode(args[2]).strip("\"").encode();
+
+        if(!renderer->supports_gpu_programs()) {
+            throw SyntaxError("UNIFORM commands are not supported on this renderer");
+        }
 
         if(arg_1 == "VIEW_MATRIX") {
-            pass->program->uniforms->register_auto(SP_AUTO_VIEW_MATRIX, variable_name);
+            pass->uniforms->register_auto(SP_AUTO_VIEW_MATRIX, variable_name);
         } else if(arg_1 == "MODELVIEW_MATRIX") {
-            pass->program->uniforms->register_auto(SP_AUTO_MODELVIEW_MATRIX, variable_name);
+            pass->uniforms->register_auto(SP_AUTO_MODELVIEW_MATRIX, variable_name);
         } else if(arg_1 == "MODELVIEW_PROJECTION_MATRIX") {
-            pass->program->uniforms->register_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX, variable_name);
+            pass->uniforms->register_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX, variable_name);
         } else if(arg_1 == "INVERSE_TRANSPOSE_MODELVIEW_PROJECTION_MATRIX" || arg_1 == "NORMAL_MATRIX") {
-            pass->program->uniforms->register_auto(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX, variable_name);
+            pass->uniforms->register_auto(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX, variable_name);
         } else if(arg_1 == "TEXTURE_MATRIX0") {
-            pass->program->uniforms->register_auto(SP_AUTO_MATERIAL_TEX_MATRIX0, variable_name);
+            pass->uniforms->register_auto(SP_AUTO_MATERIAL_TEX_MATRIX0, variable_name);
         } else if(arg_1 == "TEXTURE_MATRIX1") {
-            pass->program->uniforms->register_auto(SP_AUTO_MATERIAL_TEX_MATRIX1, variable_name);
+            pass->uniforms->register_auto(SP_AUTO_MATERIAL_TEX_MATRIX1, variable_name);
         } else if(arg_1 == "TEXTURE_MATRIX2") {
-            pass->program->uniforms->register_auto(SP_AUTO_MATERIAL_TEX_MATRIX2, variable_name);
+            pass->uniforms->register_auto(SP_AUTO_MATERIAL_TEX_MATRIX2, variable_name);
         } else if(arg_1 == "TEXTURE_MATRIX3") {
-            pass->program->uniforms->register_auto(SP_AUTO_MATERIAL_TEX_MATRIX3, variable_name);
+            pass->uniforms->register_auto(SP_AUTO_MATERIAL_TEX_MATRIX3, variable_name);
         } else if(arg_1 == "POINT_SIZE") {
-            pass->program->uniforms->register_auto(SP_AUTO_MATERIAL_POINT_SIZE, variable_name);
+            pass->uniforms->register_auto(SP_AUTO_MATERIAL_POINT_SIZE, variable_name);
         } else if(arg_1 == "LIGHT_GLOBAL_AMBIENT") {            
-            pass->program->uniforms->register_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT, variable_name);
+            pass->uniforms->register_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT, variable_name);
         } else if(arg_1 == "LIGHT_POSITION") {
-            pass->program->uniforms->register_auto(SP_AUTO_LIGHT_POSITION, variable_name);
+            pass->uniforms->register_auto(SP_AUTO_LIGHT_POSITION, variable_name);
         } else if(arg_1 == "LIGHT_AMBIENT") {
-            pass->program->uniforms->register_auto(SP_AUTO_LIGHT_AMBIENT, variable_name);
+            pass->uniforms->register_auto(SP_AUTO_LIGHT_AMBIENT, variable_name);
         } else if(arg_1 == "LIGHT_DIFFUSE") {
-            pass->program->uniforms->register_auto(SP_AUTO_LIGHT_DIFFUSE, variable_name);
+            pass->uniforms->register_auto(SP_AUTO_LIGHT_DIFFUSE, variable_name);
         } else if(arg_1 == "LIGHT_SPECULAR") {
-            pass->program->uniforms->register_auto(SP_AUTO_LIGHT_SPECULAR, variable_name);
+            pass->uniforms->register_auto(SP_AUTO_LIGHT_SPECULAR, variable_name);
         } else if(arg_1 == "LIGHT_CONSTANT_ATTENUATION") {
-            pass->program->uniforms->register_auto(SP_AUTO_LIGHT_CONSTANT_ATTENUATION, variable_name);
+            pass->uniforms->register_auto(SP_AUTO_LIGHT_CONSTANT_ATTENUATION, variable_name);
         } else if(arg_1 == "LIGHT_LINEAR_ATTENUATION") {
-            pass->program->uniforms->register_auto(SP_AUTO_LIGHT_LINEAR_ATTENUATION, variable_name);
+            pass->uniforms->register_auto(SP_AUTO_LIGHT_LINEAR_ATTENUATION, variable_name);
         } else if(arg_1 == "LIGHT_QUADRATIC_ATTENUATION") {
-            pass->program->uniforms->register_auto(SP_AUTO_LIGHT_QUADRATIC_ATTENUATION, variable_name);
+            pass->uniforms->register_auto(SP_AUTO_LIGHT_QUADRATIC_ATTENUATION, variable_name);
         } else if(arg_1 == "MATERIAL_SHININESS") {
-            pass->program->uniforms->register_auto(SP_AUTO_MATERIAL_SHININESS, variable_name);
+            pass->uniforms->register_auto(SP_AUTO_MATERIAL_SHININESS, variable_name);
         } else if(arg_1 == "MATERIAL_AMBIENT") {
-            pass->program->uniforms->register_auto(SP_AUTO_MATERIAL_AMBIENT, variable_name);
+            pass->uniforms->register_auto(SP_AUTO_MATERIAL_AMBIENT, variable_name);
         } else if(arg_1 == "MATERIAL_DIFFUSE") {
-            pass->program->uniforms->register_auto(SP_AUTO_MATERIAL_DIFFUSE, variable_name);
+            pass->uniforms->register_auto(SP_AUTO_MATERIAL_DIFFUSE, variable_name);
         } else if(arg_1 == "MATERIAL_SPECULAR") {
-            pass->program->uniforms->register_auto(SP_AUTO_MATERIAL_SPECULAR, variable_name);
+            pass->uniforms->register_auto(SP_AUTO_MATERIAL_SPECULAR, variable_name);
         } else if(arg_1 == "ACTIVE_TEXTURE_UNITS") {
-            pass->program->uniforms->register_auto(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS, variable_name);
+            pass->uniforms->register_auto(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS, variable_name);
         } else {
             throw SyntaxError(_u("Unhandled auto-uniform: {0}").format(arg_1));
         }
-#endif
     } else if (type == "FLAG") {
         std::string arg_2 = unicode(args[2]).upper().encode();
 
@@ -225,6 +249,8 @@ void MaterialScript::handle_block(Material& mat,
         const unicode &parent_block_type,
         MaterialPass::ptr current_pass) {
 
+    Renderer* renderer = mat.resource_manager().window->renderer;
+
     unicode line = unicode(lines[current_line]).strip();
     current_line++;
 
@@ -234,6 +260,7 @@ void MaterialScript::handle_block(Material& mat,
     unicode block_type = block_args[0].upper();
 
     const std::vector<unicode> VALID_BLOCKS = {
+        "HEADER",
         "PASS"
     };
 
@@ -241,18 +268,20 @@ void MaterialScript::handle_block(Material& mat,
         throw SyntaxError(_u("Line: {0}. Invalid block type: {1}").format(current_line, block_type));
     }
 
-    if (block_type == "PASS") {
+    if(block_type == "PASS" || block_type == "HEADER") {
         if(!parent_block_type.empty()) {
-            throw SyntaxError(_u("Line: {0}. Unexpected PASS block").format(current_line));
+            throw SyntaxError(_u("Line: {0}. Unexpected {1} block").format(current_line, block_type));
         }
 
         if(block_args.size() > 1) {
             throw SyntaxError(_u("Line: {0}. Wrong number of arguments.").format(current_line));
         }
 
-        //Create the pass with the default shader
-        uint32_t pass_number = mat.new_pass();
-        current_pass = mat.pass(pass_number);
+        if(block_type == "PASS") {
+            //Create the pass with the default shader
+            uint32_t pass_number = mat.new_pass();
+            current_pass = mat.pass(pass_number);
+        }
     }
 
     for(uint16_t i = current_line; current_line != lines.size(); ++i) {
@@ -295,17 +324,10 @@ void MaterialScript::handle_block(Material& mat,
                     _u("Line: {0}. Expected END({1}) but found END({2})").format(current_line, block_type, end_block_type));
             }
 
-            if(end_block_type == "PASS") {
-#ifndef SIMULANT_GL_VERSION_1X
-                //L_DEBUG(_u("Shader pass added {0}").format(mat.id()));
-
-                // Set the program
-                current_pass->program->set_gpu_program(
-                    GPUProgram::create(current_vert_shader_, current_frag_shader_)
+            if(end_block_type == "PASS" && renderer->supports_gpu_programs()) {
+                current_pass->set_gpu_program_id(
+                    renderer->new_or_existing_gpu_program(current_vert_shader_, current_frag_shader_)
                 );
-
-                current_pass->build_program_and_bind_attributes();
-#endif
             }
             return; //Exit this function, we are done with this block
         } else if(line.starts_with("SET")) {
@@ -319,6 +341,13 @@ void MaterialScript::handle_block(Material& mat,
                 throw SyntaxError(unicode("Line: {0}. Block does not accept SET commands").format(current_line).encode());
             }
 
+        } else if(line.starts_with("PROPERTY")) {
+            unicode args_part = line.split("(")[1].strip(")");
+            std::vector<unicode> args = args_part.split(" ");
+
+            if(block_type == "HEADER") {
+                handle_header_property_command(mat, args);
+            }
         }
         current_line++;
     }

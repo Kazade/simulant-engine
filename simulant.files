@@ -1540,3 +1540,7 @@ simulant/utils/rect_pack.h
 simulant/utils/rect_pack.cpp
 tests/test_aabb.h
 simulant/controllers/controller.cpp
+simulant/materials/uniform_manager.h
+simulant/materials/attribute_manager.h
+simulant/materials/uniform_manager.cpp
+simulant/materials/attribute_manager.cpp

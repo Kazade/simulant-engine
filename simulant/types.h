@@ -985,7 +985,7 @@ typedef UniqueID<SpritePtr> SpriteID;
 typedef UniqueID<BackgroundPtr> BackgroundID;
 typedef UniqueID<ParticleSystemPtr> ParticleSystemID;
 typedef UniqueID<SkyboxPtr> SkyboxID;
-typedef UniqueID<GPUProgramPtr> ShaderID;
+typedef UniqueID<GPUProgramPtr> GPUProgramID;
 typedef UniqueID<ui::WidgetPtr> WidgetID;
 
 typedef generic::TemplatedManager<Stage, StageID> BaseStageManager;

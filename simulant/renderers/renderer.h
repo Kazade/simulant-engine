@@ -52,7 +52,7 @@ public:
     Renderer(WindowBase* window):
         window_(window) {}
 
-    virtual std::shared_ptr<batcher::RenderQueueVisitor> get_render_queue_visitor(CameraPtr camera, const smlt::Colour& global_ambient) = 0;
+    virtual std::shared_ptr<batcher::RenderQueueVisitor> get_render_queue_visitor(CameraPtr camera) = 0;
 
     Property<Renderer, WindowBase> window = { this, &Renderer::window_ };
 
@@ -62,6 +62,16 @@ public:
     Property<Renderer, HardwareBufferManager> hardware_buffers = { this, [](Renderer* self) {
         return self->_get_buffer_manager();
     }};
+
+    virtual GPUProgramID new_or_existing_gpu_program(const std::string& vertex_shader, const std::string& fragment_shader) {
+        return GPUProgramID();
+    }
+
+    virtual GPUProgramPtr gpu_program(GPUProgramID) const { return GPUProgramPtr(); }
+
+public:
+    // Render support flags
+    virtual bool supports_gpu_programs() const { return false; }
 
 private:    
     WindowBase* window_ = nullptr;
