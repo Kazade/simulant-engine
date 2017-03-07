@@ -1,3 +1,7 @@
+BEGIN(HEADER)
+    PROPERTY(INT "textures[0]" 0)
+    PROPERTY(INT "textures[1]" 1)
+END(HEADER)
 
 BEGIN(PASS)
     SET(ITERATION ONCE)
@@ -7,15 +11,12 @@ BEGIN(PASS)
     SET(ATTRIBUTE TEXCOORD1 "texture_coord1")
     SET(ATTRIBUTE DIFFUSE "vertex_diffuse")
 
-    SET(AUTO_UNIFORM MODELVIEW_PROJECTION_MATRIX "modelview_projection")
-    SET(AUTO_UNIFORM TEXTURE_MATRIX0 "texture_matrix[0]")
-    SET(AUTO_UNIFORM TEXTURE_MATRIX1 "texture_matrix[1]")
-    SET(AUTO_UNIFORM ACTIVE_TEXTURE_UNITS "active_texture_count")
-    SET(AUTO_UNIFORM POINT_SIZE "point_size")
-    SET(AUTO_UNIFORM LIGHT_GLOBAL_AMBIENT "global_ambient")
-
-    SET(UNIFORM INT "textures[0]" 0)
-    SET(UNIFORM INT "textures[1]" 1)
+    SET(UNIFORM MODELVIEW_PROJECTION_MATRIX "modelview_projection")
+    SET(UNIFORM TEXTURE_MATRIX0 "texture_matrix[0]")
+    SET(UNIFORM TEXTURE_MATRIX1 "texture_matrix[1]")
+    SET(UNIFORM ACTIVE_TEXTURE_UNITS "active_texture_count")
+    SET(UNIFORM POINT_SIZE "point_size")
+    SET(UNIFORM LIGHT_GLOBAL_AMBIENT "global_ambient")
 
     BEGIN_DATA(VERTEX)
         #version 120

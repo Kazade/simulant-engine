@@ -67,6 +67,7 @@ private:
             const unicode& parent_block_type,
             MaterialPass::ptr current_pass=MaterialPass::ptr());
 
+    void handle_header_property_command(Material& mat, const std::vector<unicode> &args);
     void handle_pass_set_command(Material& mat, const std::vector<unicode> &args, MaterialPass::ptr pass);
     void handle_data_block(Material& mat, const unicode &data_type, const std::vector<unicode>& lines, MaterialPass::ptr pass);
 

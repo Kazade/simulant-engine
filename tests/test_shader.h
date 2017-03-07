@@ -13,32 +13,32 @@ class ShaderTest : public SimulantTestCase {
 public:
     void test_shader() {
 #ifndef SIMULANT_GL_VERSION_1X
-        smlt::GPUProgram::ptr prog = smlt::GPUProgram::create(
+        smlt::GPUProgram::ptr program = smlt::GPUProgram::create(
+            smlt::GPUProgramID(1),
             "uniform vec3 c; attribute vec3 tns; void main(){ gl_Position = vec4(c, tns.x); }",
             "void main(){ gl_FragColor = vec4(1.0); }"
         );
-        smlt::GPUProgramInstance::ptr s = smlt::GPUProgramInstance::create(prog);
         smlt::Mat4 ident;
 
-        assert_false(s->program->is_compiled(smlt::SHADER_TYPE_VERTEX));
-        assert_false(s->program->is_compiled(smlt::SHADER_TYPE_FRAGMENT));
+        assert_false(program->is_compiled(smlt::SHADER_TYPE_VERTEX));
+        assert_false(program->is_compiled(smlt::SHADER_TYPE_FRAGMENT));
 
-        s->program->compile(smlt::SHADER_TYPE_VERTEX);
+        program->compile(smlt::SHADER_TYPE_VERTEX);
 
-        assert_true(s->program->is_compiled(smlt::SHADER_TYPE_VERTEX));
-        assert_false(s->program->is_compiled(smlt::SHADER_TYPE_FRAGMENT));
+        assert_true(program->is_compiled(smlt::SHADER_TYPE_VERTEX));
+        assert_false(program->is_compiled(smlt::SHADER_TYPE_FRAGMENT));
 
-        s->program->build();
+        program->build();
 
-        assert_true(s->program->is_compiled(smlt::SHADER_TYPE_VERTEX));
-        assert_true(s->program->is_compiled(smlt::SHADER_TYPE_FRAGMENT));
-        assert_true(s->program->is_complete());
+        assert_true(program->is_compiled(smlt::SHADER_TYPE_VERTEX));
+        assert_true(program->is_compiled(smlt::SHADER_TYPE_FRAGMENT));
+        assert_true(program->is_complete());
 
-        s->program->activate();
-        s->program->set_uniform_vec3("c", smlt::Vec3());
+        program->activate();
+        program->set_uniform_vec3("c", smlt::Vec3());
 
-        s->program->set_attribute_location("tns", 1);
-        auto loc = s->program->locate_attribute("tns");
+        program->set_attribute_location("tns", 1);
+        auto loc = program->locate_attribute("tns");
 
         assert_equal(1, loc);
 #endif

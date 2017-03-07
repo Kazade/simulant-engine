@@ -23,10 +23,8 @@
 #include "window_base.h"
 #include "material.h"
 #include "resource_manager.h"
+#include "renderers/renderer.h"
 
-#ifndef SIMULANT_GL_VERSION_1X
-#include "renderers/gl2x/gpu_program.h"
-#endif
 
 namespace smlt {
 
@@ -157,10 +155,6 @@ MaterialPass::ptr Material::pass(uint32_t index) {
     return passes_.at(index);
 }
 
-#ifndef SIMULANT_GL_VERSION_1X
-GPUProgram::ptr MaterialPass::default_program;
-#endif
-
 MaterialPass::MaterialPass(Material *material):
     material_(material),
     iteration_(ITERATE_ONCE),    
@@ -170,14 +164,6 @@ MaterialPass::MaterialPass(Material *material):
     depth_test_enabled_(true),
     point_size_(1) {
 
-#ifndef SIMULANT_GL_VERSION_1X
-    //Create and build the default GPUProgram
-    if(!default_program) {
-        default_program = GPUProgram::create(DEFAULT_VERT_SHADER, DEFAULT_FRAG_SHADER);
-    }
-
-    program_ = GPUProgramInstance::create(default_program);
-#endif
 }
 
 void MaterialPass::set_texture_unit(uint32_t texture_unit_id, TextureID tex) {
@@ -233,30 +219,17 @@ void MaterialPass::set_albedo(float reflectiveness) {
     material->on_pass_changed(this);
 }
 
-#ifndef SIMULANT_GL_VERSION_1X
-void MaterialPass::build_program_and_bind_attributes() {
-    auto do_build_and_bind = [&]() {
-        program->program->prepare_program();
+void MaterialPass::set_gpu_program_id(GPUProgramID program_id) {
+    gpu_program_ = program_id;
 
-        for(auto attribute: SHADER_AVAILABLE_ATTRS) {
-            if(program->attributes->uses_auto(attribute)) {
-                auto varname = program->attributes->variable_name(attribute);
-                program->program->set_attribute_location(varname, attribute);
-            }
-        }
-
-        program->program->build();
-    };
-
-    // If we're not in the GL thread, then make this run on the idle task and wait
-    if(!GLThreadCheck::is_current()) {
-        this->material->resource_manager().window->idle->run_sync(do_build_and_bind);
+    if(program_id) {
+        // We hold a shared_ptr to the program so it doesn't get destroyed while we're using it
+        gpu_program_ref_ = material->resource_manager().window->renderer->gpu_program(program_id);
     } else {
-        // Otherwise do this inline
-        do_build_and_bind();
+        gpu_program_ref_.reset();
     }
 }
-#endif
+
 
 void Material::set_texture_unit_on_all_passes(uint32_t texture_unit_id, TextureID tex) {
     for(auto& p: passes_) {
@@ -293,29 +266,16 @@ TextureUnit TextureUnit::new_clone(MaterialPass& owner) const {
 MaterialPass::ptr MaterialPass::new_clone(Material* owner) const {
     MaterialPass::ptr ret = MaterialPass::create(owner);
 
-#ifndef SIMULANT_GL_VERSION_1X
-    ret->float_uniforms_ = float_uniforms_;
-    ret->int_uniforms_ = int_uniforms_;
+    for(auto& p: uniforms_.auto_uniforms()) {
+        ret->uniforms_.register_auto(p.first, p.second);
+    }
 
-    auto clone_gpu_program = [](GPUProgramInstance::ptr prog) -> GPUProgramInstance::ptr {
-        /* Create a new program instance using the same GPU program */
-        GPUProgramInstance::ptr ret = GPUProgramInstance::create(
-            prog->_program_as_shared_ptr()
-        );
+    for(auto& p: attributes_.auto_attributes()) {
+        ret->attributes_.register_auto(p.first, p.second);
+    }
 
-        for(auto& p: prog->uniforms->auto_uniforms()) {
-            ret->uniforms->register_auto(p.first, p.second);
-        }
-
-        for(auto& p: prog->attributes->auto_attributes()) {
-            ret->attributes->register_auto(p.first, p.second);
-        }
-        return ret;
-    };
-
-    ret->program_ = clone_gpu_program(program_);
-    ret->shader_sources_ = shader_sources_;
-#endif
+    ret->gpu_program_ = gpu_program_;
+    ret->gpu_program_ref_ = gpu_program_ref_;
 
     ret->diffuse_ = diffuse_;
     ret->ambient_ = ambient_;
@@ -355,6 +315,36 @@ MaterialID Material::new_clone(ResourceManager* target_resource_manager, Garbage
     mat->pass_count_ = pass_count_;
 
     return ret;
+}
+
+void Material::set_int_property(const std::__cxx11::string &name, int value) {
+    auto& property = properties_.at(name);
+    property.type = MATERIAL_PROPERTY_TYPE_INT;
+    property.int_value = value;
+    property.is_set = true;
+}
+
+void Material::set_float_property(const std::__cxx11::string &name, float value) {
+    auto& property = properties_.at(name);
+    property.type = MATERIAL_PROPERTY_TYPE_FLOAT;
+    property.float_value = value;
+    property.is_set = true;
+}
+
+void Material::create_int_property(const std::string &name) {
+    if(!properties_.count(name)) {
+        MaterialProperty new_prop;
+        new_prop.type = MATERIAL_PROPERTY_TYPE_INT;
+        properties_[name] = new_prop;
+    }
+}
+
+void Material::create_float_property(const std::string &name) {
+    if(!properties_.count(name)) {
+        MaterialProperty new_prop;
+        new_prop.type = MATERIAL_PROPERTY_TYPE_FLOAT;
+        properties_[name] = new_prop;
+    }
 }
 
 void Material::on_pass_created(MaterialPass *pass) {

@@ -53,10 +53,8 @@ private:
     GenericRenderer* renderer_;
     CameraPtr camera_;
     Colour global_ambient_;
-
-    GPUProgramID last_shader_id_;
+    GPUProgram* program_ = nullptr;
     GL2RenderGroupImpl* current_group_ = nullptr;
-    bool render_group_changed_ = true;
 
     bool queue_blended_objects_ = true;
 
@@ -66,7 +64,11 @@ private:
     std::multimap<float, RenderState, std::greater<float> > blended_object_queue_;
 
     void do_visit(Renderable* renderable, MaterialPass* material_pass, Light* light, batcher::Iteration iteration);
+
+    void rebind_attribute_locations_if_necessary(const MaterialPass* pass, GPUProgram* program);
 };
+
+typedef generic::RefCountedTemplatedManager<GPUProgram, GPUProgramID> GPUProgramManager;
 
 class GenericRenderer : public Renderer {
 public:
@@ -80,16 +82,26 @@ public:
     void init_context();
 
     std::shared_ptr<batcher::RenderQueueVisitor> get_render_queue_visitor(CameraPtr camera, const Colour &global_ambient);
+
+    GPUProgramID new_or_existing_gpu_program(const std::string& vertex_shader_source, const std::string& fragment_shader_source);
+
+    GPUProgramPtr gpu_program(const GPUProgramID& program_id);
+
+    bool supports_gpu_programs() const override { return true; }
 private:
+    GPUProgramManager program_manager_;
+
     std::unique_ptr<HardwareBufferManager> buffer_manager_;
 
     HardwareBufferManager* _get_buffer_manager() const {
         return buffer_manager_.get();
     }
 
-    void set_light_uniforms(GPUProgramInstance* program_instance, Light* light);
-    void set_material_uniforms(GPUProgramInstance* program_instance, MaterialPass *pass);
-    void set_auto_uniforms_on_shader(GPUProgramInstance *pass, CameraPtr camera, Renderable* subactor, const Colour &global_ambient);
+    void set_light_uniforms(MaterialPass* pass, GPUProgram* program, Light *light);
+    void set_material_uniforms(const MaterialPass *pass, GPUProgram* program);
+    void set_renderable_uniforms(const MaterialPass* pass, GPUProgram* program, Renderable* renderable, Camera* camera);
+    void set_stage_uniforms(const MaterialPass* pass, GPUProgram* program, const Colour& global_ambient);
+
     void set_auto_attributes_on_shader(Renderable &buffer);
     void set_blending_mode(BlendType type);
     void send_geometry(Renderable* renderable);
