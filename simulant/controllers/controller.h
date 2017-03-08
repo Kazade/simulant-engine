@@ -43,29 +43,25 @@ typedef std::shared_ptr<Controller> ControllerPtr;
 class Controller:
     public Updateable {
 public:
-    Controller(const std::string& name):
-        name_(name) {}
-
     virtual ~Controller() {}
+
+    virtual const std::string name() const = 0;
 
     void enable();
     void disable();
-
-    Property<Controller, std::string> name = { this, &Controller::name_ };
 
     void _update_thunk(double dt) override;
     void _late_update_thunk(double dt) override;
     void _fixed_update_thunk(double step) override;
 
 private:
-    std::string name_;
     bool is_enabled_ = true;
 };
 
 class MaterialController : public Controller {
 public:
-    MaterialController(const std::string& name, Material* material):
-        Controller(name),
+    MaterialController(Material* material):
+        Controller(),
         material_(material) {
     }
 
@@ -88,12 +84,12 @@ public:
 
         std::lock_guard<std::mutex> lock(container_lock_);
 
-        if(controller_names_.count(controller->name)) {
-            L_WARN(_F("Tried to add a duplicate controller: {0}").format((std::string)controller->name));
+        if(controller_names_.count(controller->name())) {
+            L_WARN(_F("Tried to add a duplicate controller: {0}").format((std::string)controller->name()));
             return;
         }
 
-        controller_names_.insert(controller->name);
+        controller_names_.insert(controller->name());
         controllers_.push_back(controller);
     }
 

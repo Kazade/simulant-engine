@@ -39,7 +39,7 @@ public:
         Fly(container, window.get()) {}
 
     Fly(Controllable* container, WindowBase* window):
-        Controller("fly") {
+        Controller() {
 
         object_ = dynamic_cast<Transformable*>(container);
 
@@ -82,6 +82,8 @@ public:
             conn.disconnect();
         }
     }
+
+    const std::string name() const override { return "Fly by Keyboard"; }
 
 private:
     void late_update(double dt) override {

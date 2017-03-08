@@ -33,9 +33,11 @@ class Warp:
 
 public:
     Warp(Controllable* material):
-        MaterialController("warp_material", dynamic_cast<Material*>(material)) {
+        MaterialController(dynamic_cast<Material*>(material)) {
 
     }
+
+    const std::string name() const { return "Warped Material"; }
 
 private:
     void update(double dt) override;

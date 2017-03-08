@@ -32,10 +32,11 @@ class Flowing :
     public Managed<Flowing> {
 public:
     Flowing(Controllable* material):
-        MaterialController("flowing_material", dynamic_cast<Material*>(material)) {
+        MaterialController(dynamic_cast<Material*>(material)) {
 
     }
 
+    const std::string name() const override { return "Flowing Material"; }
 private:
     void update(double dt) override;
     double time_ = 0.0f;

@@ -289,7 +289,7 @@ StaticBody::~StaticBody() {
 namespace impl {
 
 Body::Body(Controllable* object, RigidBodySimulation::ptr simulation, ColliderType collider_type):
-    Controller("rigid-body"),
+    Controller(),
     simulation_(simulation),
     collider_type_(collider_type) {
 

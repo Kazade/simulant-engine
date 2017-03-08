@@ -166,6 +166,7 @@ namespace impl {
         void cleanup();
 
         Property<Body, RigidBodySimulation> simulation = { this, &Body::simulation_ };
+
     protected:
         friend class smlt::controllers::RigidBodySimulation;
         Transformable* object_;
@@ -195,6 +196,8 @@ public:
 
     using impl::Body::init;
     using impl::Body::cleanup;
+
+    const std::string name() const { return "Static Body"; }
 private:
     bool is_dynamic() const override { return false; }
 };
@@ -236,6 +239,8 @@ public:
         kmQuaternionMultiplyVec3(&ret, &rot, &KM_VEC3_NEG_Z);
         return ret;
     }
+
+    const std::string name() const { return "Rigid Body"; }
 
 private:
     friend class RigidBodySimulation;
