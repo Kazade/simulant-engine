@@ -116,7 +116,7 @@ public:
         frustum.build(&modelview_projection);
         assert_true(frustum.initialized());
 
-        assert_close(frustum.field_of_view().value_, 45.0, 0.0001);
+        assert_close(frustum.field_of_view().value, 45.0, 0.0001);
     }
 
     void test_depth() {

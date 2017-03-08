@@ -53,7 +53,34 @@ namespace smlt {
 
 struct Vec3;
 struct Mat3;
-struct Degrees;
+
+struct Radians;
+struct Degrees {
+    explicit Degrees(float value):
+        value(value) {}
+
+    Degrees(const Radians& rhs);
+
+    float value;
+
+    Degrees operator-() const {
+        Degrees ret = *this;
+        ret.value = -ret.value;
+        return ret;
+    }
+};
+
+struct Radians {
+    explicit Radians(float value):
+        value(value) {}
+
+    Radians(const Degrees& rhs);
+
+    float value;
+};
+
+Radians to_radians(const Degrees& degrees);
+Degrees to_degrees(const Radians& radians);
 
 struct Quaternion : public kmQuaternion {
     Quaternion(const kmQuaternion& other) {
@@ -667,33 +694,11 @@ smlt::Vec3 operator/(float lhs, const smlt::Vec3& rhs);
 smlt::Vec3 operator-(const smlt::Vec3& vec);
 smlt::Quaternion operator-(const smlt::Quaternion& q);
 
-struct Radians;
-struct Degrees {
-    explicit Degrees(float value):
-        value_(value) {}
 
-    Degrees(const Radians& rhs);
 
-    float value_;
 
-    Degrees operator-() const {
-        Degrees ret = *this;
-        ret.value_ = -ret.value_;
-        return ret;
-    }
-};
 
-struct Radians {
-    explicit Radians(float value):
-        value_(value) {}
 
-    Radians(const Degrees& rhs);
-
-    float value_;
-};
-
-Radians to_radians(const Degrees& degrees);
-Degrees to_degrees(const Radians& radians);
 
 const float PI = kmPI;
 

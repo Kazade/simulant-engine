@@ -25,11 +25,11 @@
 namespace smlt {
 
 Radians to_radians(const Degrees& degrees) {
-    return Radians(kmDegreesToRadians(degrees.value_));
+    return Radians(kmDegreesToRadians(degrees.value));
 }
 
 Degrees to_degrees(const Radians& radians) {
-    return Degrees(kmRadiansToDegrees(radians.value_));
+    return Degrees(kmRadiansToDegrees(radians.value));
 }
 
 bool operator==(const Vec2& lhs, const Vec2& rhs) {
@@ -66,7 +66,7 @@ Vec3 Vec3::random_deviant(const Degrees& angle, const Vec3 up) const {
     Quaternion q;
     kmQuaternionRotationAxisAngle(&q, this, random_gen::random_float(0, 1) * (PI * 2.0));
     kmQuaternionMultiplyVec3(&new_up, &q, &new_up);
-    kmQuaternionRotationAxisAngle(&q, &new_up, Radians(angle).value_);
+    kmQuaternionRotationAxisAngle(&q, &new_up, Radians(angle).value);
 
     Vec3 ret;
     kmQuaternionMultiplyVec3(&ret, &q, this);
@@ -125,7 +125,7 @@ Quaternion::Quaternion(const Degrees &degrees, const Vec3 &axis) {
     kmQuaternionRotationAxisAngle(
         this,
         &axis,
-        kmDegreesToRadians(degrees.value_)
+        kmDegreesToRadians(degrees.value)
     );
 }
 
@@ -213,11 +213,11 @@ Mat4 Mat4::from_lookat(const Vec3& eye, const Vec3& target, const Vec3& up) {
 }
 
 Degrees::Degrees(const Radians &rhs) {
-    value_ = kmRadiansToDegrees(rhs.value_);
+    value = kmRadiansToDegrees(rhs.value);
 }
 
 Radians::Radians(const Degrees &rhs) {
-    value_ = kmDegreesToRadians(rhs.value_);
+    value = kmDegreesToRadians(rhs.value);
 }
 
 uint32_t vertex_attribute_size(VertexAttribute attr) {

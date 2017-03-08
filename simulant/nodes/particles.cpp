@@ -310,9 +310,9 @@ std::vector<Particle> ParticleEmitter::do_emit(double dt, uint32_t max) {
         }
 
         Vec3 dir = direction();
-        if(angle().value_ != 0) {
+        if(angle().value != 0) {
             Radians ang(angle()); //Convert from degress to radians
-            ang.value_ *= random_gen::random_float(0, 1); //Multiply by a random unit float
+            ang.value *= random_gen::random_float(0, 1); //Multiply by a random unit float
             dir = dir.random_deviant(ang);
         }
 

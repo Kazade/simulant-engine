@@ -58,7 +58,7 @@ void Transformable::rotate_to(const smlt::Degrees& angle, float axis_x, float ax
 
 void Transformable::rotate_to(const smlt::Degrees& angle, const smlt::Vec3& axis) {
     Quaternion new_rot;
-    kmQuaternionRotationAxisAngle(&new_rot, &axis, angle.value_);
+    kmQuaternionRotationAxisAngle(&new_rot, &axis, angle.value);
     set_rotation(new_rot);
 }
 
@@ -106,7 +106,7 @@ void Transformable::rotate_around(const smlt::Vec3& axis, const smlt::Degrees& d
     if(rotation_locked_) return;
 
     Quaternion rot;
-    kmQuaternionRotationAxisAngle(&rot, &axis, kmDegreesToRadians(degrees.value_));
+    kmQuaternionRotationAxisAngle(&rot, &axis, kmDegreesToRadians(degrees.value));
 
     Quaternion tmp = rotation_;
 

@@ -1,0 +1,4 @@
+#ifndef SMOOTH_FOLLOW_H
+#define SMOOTH_FOLLOW_H
+
+#endif // SMOOTH_FOLLOW_H
