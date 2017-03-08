@@ -94,6 +94,10 @@ public:
         return texture_matrix_;
     }
 
+    Mat4& matrix() {
+        return texture_matrix_;
+    }
+
 private:
     MaterialPass* pass_;
 

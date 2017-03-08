@@ -300,4 +300,22 @@ uint32_t VertexSpecification::specular_offset(bool check) const {
     return diffuse_offset(false) + vertex_attribute_size(diffuse_attribute);
 }
 
+float smlt::math::lerp(float a, float b, float t) {
+    t = (t > 1.0) ? 1.0 : t;
+    t = (t < 0.0) ? 0.0 : t;
+    return a + ((b - a) * t);
+}
+
+Degrees math::lerp_angle(Degrees a, Degrees b, float t) {
+    while(a.value > b.value + 180.0) {
+        b.value += 360.0;
+    }
+
+    while(b.value > a.value + 180.0) {
+        b.value -= 360.0;
+    }
+
+    return Degrees(lerp(a.value, b.value, t));
+}
+
 }

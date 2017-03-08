@@ -105,3 +105,4 @@ simulant/shaders
 simulant/nodes
 simulant/interfaces
 simulant/nodes/ui
+simulant/controllers/movement

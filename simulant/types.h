@@ -81,8 +81,20 @@ struct Radians {
 
 Radians to_radians(const Degrees& degrees);
 Degrees to_degrees(const Radians& radians);
+struct Euler {
+    Euler(float x, float y, float z):
+        x(x), y(y), z(z) {}
+
+    Degrees x;
+    Degrees y;
+    Degrees z;
+};
 
 struct Quaternion : public kmQuaternion {
+    Quaternion(Degrees pitch, Degrees yaw, Degrees roll) {
+        kmQuaternionRotationPitchYawRoll(this, pitch.value, yaw.value, roll.value);
+    }
+
     Quaternion(const kmQuaternion& other) {
         kmQuaternionAssign(this, &other);
     }
@@ -109,6 +121,13 @@ struct Quaternion : public kmQuaternion {
         Quaternion result;
         kmQuaternionMultiply(&result, this, &quat);
         return result;
+    }
+
+    Euler to_euler() const {
+        float pitch = kmQuaternionGetPitch(this);
+        float yaw = kmQuaternionGetYaw(this);
+        float roll = kmQuaternionGetRoll(this);
+        return Euler(pitch, yaw, roll);
     }
 
     void normalize() {
@@ -696,8 +715,12 @@ smlt::Quaternion operator-(const smlt::Quaternion& q);
 
 
 
+namespace math {
 
+float lerp(float a, float b, float t);
+Degrees lerp_angle(Degrees a, Degrees b, float t);
 
+}
 
 
 const float PI = kmPI;
