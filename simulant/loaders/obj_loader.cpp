@@ -209,8 +209,8 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
 
                 if(i >= 2) {
                     index_data->index(first_index);
-                    index_data->index(vertex_data->count() - 1);
                     index_data->index(vertex_data->count() - 2);
+                    index_data->index(vertex_data->count() - 1);
                 }
 
                 ++i;
