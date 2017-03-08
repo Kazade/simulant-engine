@@ -54,6 +54,7 @@
 #include "controllers/fly.h"
 #include "controllers/rigid_body.h"
 #include "controllers/raycast_vehicle.h"
+#include "controllers/movement/smooth_follow.h"
 
 #include "renderers/renderer_config.h"
 

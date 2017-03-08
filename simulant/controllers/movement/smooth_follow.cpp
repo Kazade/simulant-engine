@@ -6,6 +6,11 @@
 namespace smlt {
 namespace controllers {
 
+SmoothFollow::SmoothFollow(Controllable* controllable):
+    StageNodeController(controllable) {
+
+}
+
 void SmoothFollow::late_update(double dt) {
     auto target = target_.lock();
 
