@@ -27,6 +27,8 @@ public:
 
     void set_follow_distance(float dist) { distance_ = dist; }
     void set_follow_height(float height) { height_ = height; }
+    void set_height_damping(float damping) { height_damping_ = damping; }
+    void set_rotation_damping(float damping) { rotation_damping_ = damping; }
 
 private:
     std::weak_ptr<StageNode> target_;
