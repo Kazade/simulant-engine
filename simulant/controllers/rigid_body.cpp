@@ -218,45 +218,90 @@ RigidBody::~RigidBody() {
 }
 
 void RigidBody::add_force(const Vec3 &force) {
-    q3Body* b = simulation_->bodies_.at(this);
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return;
+    }
+
+    q3Body* b = sim->bodies_.at(this);
     b->ApplyLinearForce(to_q3vec3(force));
 }
 
 void RigidBody::add_impulse(const Vec3& impulse) {
-    q3Body* b = simulation_->bodies_.at(this);
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return;
+    }
+
+    q3Body* b = sim->bodies_.at(this);
     b->ApplyLinearImpulse(to_q3vec3(impulse));
 }
 
 void RigidBody::add_impulse_at_position(const Vec3& impulse, const Vec3& position) {
-    q3Body* b = simulation_->bodies_.at(this);
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return;
+    }
+
+    q3Body* b = sim->bodies_.at(this);
     b->ApplyLinearImpulseAtWorldPoint(to_q3vec3(impulse), to_q3vec3(position));
 }
 
 float RigidBody::mass() const {
-    const q3Body* b = simulation_->bodies_.at(this);
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return 0;
+    }
+
+    const q3Body* b = sim->bodies_.at(this);
     return b->GetMass();
 }
 
 Vec3 RigidBody::linear_velocity() const {
-    const q3Body* b = simulation_->bodies_.at(this);
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return Vec3();
+    }
+
+    const q3Body* b = sim->bodies_.at(this);
     return to_vec3(b->GetLinearVelocity());
 }
 
 Vec3 RigidBody::linear_velocity_at(const Vec3& position) const {
-    const q3Body* b = simulation_->bodies_.at(this);
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return Vec3();
+    }
+
+    const q3Body* b = sim->bodies_.at(this);
     return to_vec3(b->GetLinearVelocityAtWorldPoint(to_q3vec3(position)));
 }
 
 Vec3 RigidBody::position() const {
-    return simulation_->body_transform(this).first;
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return Vec3();
+    }
+
+    return sim->body_transform(this).first;
 }
 
 Quaternion RigidBody::rotation() const {
-    return simulation_->body_transform(this).second;
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return Quaternion();
+    }
+
+    return sim->body_transform(this).second;
 }
 
 void RigidBody::add_force_at_position(const Vec3& force, const Vec3& position) {
-    q3Body* b = simulation_->bodies_.at(this);
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return;
+    }
+
+    q3Body* b = sim->bodies_.at(this);
 
     q3Vec3 f, p;
 
@@ -272,7 +317,12 @@ void RigidBody::add_force_at_position(const Vec3& force, const Vec3& position) {
 }
 
 void RigidBody::add_torque(const Vec3& torque) {
-    q3Body* b = simulation_->bodies_.at(this);
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return;
+    }
+
+    q3Body* b = sim->bodies_.at(this);
     b->ApplyTorque(to_q3vec3(torque));
 }
 
@@ -290,7 +340,7 @@ namespace impl {
 
 Body::Body(Controllable* object, RigidBodySimulation* simulation, ColliderType collider_type):
     Controller(),
-    simulation_(simulation),
+    simulation_(simulation->shared_from_this()),
     collider_type_(collider_type) {
 
     object_ = dynamic_cast<Transformable*>(object);
@@ -304,19 +354,32 @@ Body::~Body() {
 }
 
 bool Body::init() {
-    body_ = simulation_->acquire_body(this);
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return false;
+    }
+
+    body_ = sim->acquire_body(this);
     build_collider(collider_type_);
 
     return true;
 }
 
 void Body::cleanup() {
-    simulation_->release_body(this);
+    auto sim = simulation_.lock();
+    if(sim) {
+        sim->release_body(this);
+    }
 }
 
 void Body::move_to(const Vec3& position) {
-    auto xform = simulation_->body_transform(this);
-    simulation_->set_body_transform(
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return;
+    }
+
+    auto xform = sim->body_transform(this);
+    sim->set_body_transform(
         this,
         position,
         xform.second
@@ -324,12 +387,22 @@ void Body::move_to(const Vec3& position) {
 }
 
 void Body::update(double dt) {
-    auto xform = simulation_->body_transform(this);
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return;
+    }
+
+    auto xform = sim->body_transform(this);
     object_->move_to(xform.first);
     object_->rotate_to(xform.second);
 }
 
 void Body::build_collider(ColliderType collider) {
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return;
+    }
+
     if(collider == COLLIDER_TYPE_BOX) {
         BoundableEntity* entity = dynamic_cast<BoundableEntity*>(object_);
         if(entity) {
@@ -342,7 +415,7 @@ void Body::build_collider(ColliderType collider) {
             q3Identity( localSpace );
 
             def.Set(localSpace, q3Vec3(aabb.width(), aabb.height(), aabb.depth()));
-            simulation_->bodies_.at(this)->AddBox(def);
+            sim->bodies_.at(this)->AddBox(def);
         }
     } else if(collider == COLLIDER_TYPE_RAYCAST_ONLY) {
         assert(!is_dynamic()); // You can't have dynamic raycast colliders (yet)
@@ -353,7 +426,7 @@ void Body::build_collider(ColliderType collider) {
 
         MeshPtr mesh = actor->stage->assets->mesh(actor->mesh_id());
 
-        RaycastCollider* collider = &simulation_->raycast_colliders_[this];
+        RaycastCollider* collider = &sim->raycast_colliders_[this];
         collider->triangles.clear();
         collider->vertices.clear();
 

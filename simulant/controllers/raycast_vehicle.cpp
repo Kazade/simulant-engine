@@ -70,6 +70,11 @@ bool RaycastVehicle::init() {
 }
 
 void RaycastVehicle::fixed_update(double dt) {
+    RigidBodySimulation* sim = simulation;
+    if(!sim) {
+        return;
+    }
+
     recalculate_rays();
 
     // If a roll has been detected, then fire a signal and do nothing else
@@ -96,7 +101,7 @@ void RaycastVehicle::fixed_update(double dt) {
 
     for(auto& ray: rays) {
         Intersection intersection;
-        auto ret = simulation_->intersect_ray(ray.start, ray.dir, &intersection.dist, &intersection.normal);
+        auto ret = sim->intersect_ray(ray.start, ray.dir, &intersection.dist, &intersection.normal);
 
         // If we intersected
         if(ret.second) {

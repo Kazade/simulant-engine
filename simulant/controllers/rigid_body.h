@@ -165,13 +165,21 @@ namespace impl {
         bool init();
         void cleanup();
 
-        Property<Body, RigidBodySimulation> simulation = { this, &Body::simulation_ };
+        Property<Body, RigidBodySimulation> simulation = {
+            this, [](Body* _this) -> RigidBodySimulation* {
+                if(auto ret = _this->simulation_.lock()) {
+                    return ret.get();
+                } else {
+                    return nullptr;
+                }
+            }
+        };
 
     protected:
         friend class smlt::controllers::RigidBodySimulation;
         Transformable* object_;
         q3Body* body_ = nullptr;
-        RigidBodySimulation* simulation_;
+        std::weak_ptr<RigidBodySimulation> simulation_;
         ColliderType collider_type_;
 
         void update(double dt) override;
