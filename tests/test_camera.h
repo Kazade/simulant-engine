@@ -66,28 +66,6 @@ public:
 
     }
 
-    void test_following() {
-        auto stage = window->stage(stage_id_);
-        stage->host_camera(camera_id_);
-
-        ActorID a = stage->new_actor();
-        stage->actor(a)->move_to(Vec3());
-
-        stage->camera(camera_id_)->follow(a, CAMERA_FOLLOW_MODE_DIRECT, Vec3(0, 0, 10));
-
-        assert_equal(Vec3(0, 0, 10), stage->camera(camera_id_)->absolute_position());
-
-        stage->actor(a)->rotate_to(Degrees(90), 0, -1, 0);
-        stage->camera(camera_id_)->_update_following(1.0);
-
-        auto cam_pos = stage->camera(camera_id_)->absolute_position();
-        assert_close(-10, cam_pos.x, 0.0001);
-        assert_close(0, cam_pos.y, 0.0001);
-        assert_close(0, cam_pos.z, 0.0001);
-
-        assert_equal(stage->actor(a)->absolute_rotation(), stage->camera(camera_id_)->absolute_rotation());
-    }
-
 private:
     CameraID camera_id_;
     StageID stage_id_;

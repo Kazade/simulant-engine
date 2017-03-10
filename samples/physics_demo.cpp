@@ -39,7 +39,10 @@ public:
 
         auto object = stage->actor(object_id_);
 
-        stage->camera(camera_id_)->follow(object_id_, CAMERA_FOLLOW_MODE_DIRECT);
+        auto cam = stage->camera(camera_id_);
+        auto follower = cam->new_controller<smlt::controllers::SmoothFollow>();
+        follower->set_target(object);
+        follower->set_follow_distance(30.0);
 
         // Create a rigid body simulation
         simulation_ = controllers::RigidBodySimulation::create();
