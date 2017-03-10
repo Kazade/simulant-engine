@@ -76,6 +76,7 @@ class ResourceManager:
 
 public:
     ResourceManager(WindowBase* window, ResourceManager* parent=nullptr);
+    ~ResourceManager();
 
     bool init();
 
@@ -198,6 +199,8 @@ public:
         return ret;
     }
 
+    void run_garbage_collection();
+
 private:
     ResourceManager* parent_ = nullptr;
 
@@ -214,6 +217,16 @@ private:
     std::set<MaterialID> materials_loading_;
 
     MaterialID get_template_material(const unicode& path);
+
+    std::chrono::time_point<std::chrono::system_clock> last_collection_;
+    std::set<ResourceManager*> children_;
+    void register_child(ResourceManager* child) {
+        children_.insert(child);
+    }
+
+    void unregister_child(ResourceManager* child) {
+        children_.erase(child);
+    }
 };
 
 

@@ -36,6 +36,16 @@ ResourceManager::ResourceManager(WindowBase* window, ResourceManager *parent):
     parent_(parent) {
 
     font_manager_.reset(new FontManager());
+
+    if(parent_) {
+        base_manager()->register_child(this);
+    }
+}
+
+ResourceManager::~ResourceManager() {
+    if(parent_) {
+        base_manager()->unregister_child(this);
+    }
 }
 
 bool ResourceManager::init() {
@@ -77,11 +87,15 @@ void ResourceManager::update(double dt) {
         mat->update_controllers(dt);
         mat->update(dt);
     });
+}
 
-    static auto last_collection = std::chrono::system_clock::now();
+void ResourceManager::run_garbage_collection() {
+    for(auto child: children_) {
+        child->run_garbage_collection();
+    }
 
     auto now = std::chrono::system_clock::now();
-    auto diff = now - last_collection;
+    auto diff = now - last_collection_;
 
     if(std::chrono::duration_cast<std::chrono::seconds>(diff).count() >= 5) {
         //Garbage collect all the things
@@ -92,7 +106,7 @@ void ResourceManager::update(double dt) {
 
         font_manager_->garbage_collect();
 
-        last_collection = std::chrono::system_clock::now();
+        last_collection_ = std::chrono::system_clock::now();
     }
 }
 

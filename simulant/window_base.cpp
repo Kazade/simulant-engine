@@ -321,6 +321,9 @@ bool WindowBase::run_frame() {
 
     idle_.execute(); //Execute idle tasks before render
 
+    // Garbage collect resources after idle, but before rendering
+    resource_manager_->run_garbage_collection();
+
     /* Don't run the render sequence if we don't have a context, and don't update the resource
      * manager either because that probably needs a context too! */
     {
