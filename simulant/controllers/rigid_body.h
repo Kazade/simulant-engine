@@ -156,7 +156,7 @@ namespace impl {
         public Controller {
 
     public:
-        Body(Controllable* object, RigidBodySimulation::ptr simulation, ColliderType collider=COLLIDER_TYPE_BOX);
+        Body(Controllable* object, RigidBodySimulation* simulation, ColliderType collider=COLLIDER_TYPE_BOX);
         virtual ~Body();
 
         void move_to(const Vec3& position);
@@ -171,7 +171,7 @@ namespace impl {
         friend class smlt::controllers::RigidBodySimulation;
         Transformable* object_;
         q3Body* body_ = nullptr;
-        RigidBodySimulation::ptr simulation_;
+        RigidBodySimulation* simulation_;
         ColliderType collider_type_;
 
         void update(double dt) override;
@@ -191,7 +191,7 @@ class StaticBody:
     public Managed<StaticBody> {
 
 public:
-    StaticBody(Controllable* object, RigidBodySimulation::ptr simulation, ColliderType collider=COLLIDER_TYPE_BOX);
+    StaticBody(Controllable* object, RigidBodySimulation *simulation, ColliderType collider=COLLIDER_TYPE_BOX);
     ~StaticBody();
 
     using impl::Body::init;
@@ -210,7 +210,7 @@ class RigidBody:
     public Managed<RigidBody> {
 
 public:
-    RigidBody(Controllable* object, RigidBodySimulation::ptr simulation, ColliderType collider=COLLIDER_TYPE_BOX);
+    RigidBody(Controllable* object, RigidBodySimulation *simulation, ColliderType collider=COLLIDER_TYPE_BOX);
     ~RigidBody();
 
     void add_force(const Vec3& force);

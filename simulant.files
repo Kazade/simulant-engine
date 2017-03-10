@@ -1547,3 +1547,4 @@ simulant/materials/attribute_manager.cpp
 simulant/controllers/movement/smooth_follow.h
 simulant/controllers/stage_node_controller.h
 simulant/controllers/movement/smooth_follow.cpp
+simulant/scenes/physics_scene.h

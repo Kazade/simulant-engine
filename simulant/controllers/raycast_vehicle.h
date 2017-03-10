@@ -39,7 +39,7 @@ class RaycastVehicle:
 
 public:    
     RaycastVehicle(Controllable *object,
-        RigidBodySimulation::ptr simulation,
+        RigidBodySimulation *simulation,
         float wheel_height
     );
 

@@ -4,10 +4,10 @@
 
 using namespace smlt;
 
-class GameScene : public smlt::Scene<GameScene> {
+class GameScene : public smlt::PhysicsScene<GameScene> {
 public:
     GameScene(smlt::WindowBase& window):
-        smlt::Scene<GameScene>(window) {}
+        smlt::PhysicsScene<GameScene>(window) {}
 
     void do_load() {
         pipeline_id_ = prepare_basic_scene(stage_id_, camera_id_, smlt::PARTITIONER_NULL);
@@ -44,16 +44,12 @@ public:
         follower->set_target(object);
         follower->set_follow_distance(30.0);
 
-        // Create a rigid body simulation
-        simulation_ = controllers::RigidBodySimulation::create();
-
         // Add a rigid body controller to the object and store it
-        controller_ = object->new_controller<controllers::RaycastVehicle>(simulation_, 1.0);
+        controller_ = object->new_controller<controllers::RaycastVehicle>(physics, 1.0);
         controller_->move_to(Vec3(0, 10, 0));
 
         // Make the ground a staticbody, and only deal with ray-cast hits
-        auto ground_controller = stage->actor(ground_id_)->new_controller<controllers::StaticBody>(simulation_, controllers::COLLIDER_TYPE_RAYCAST_ONLY);
-        //ground_controller->move_to(Vec3(0, -10, 0));
+        stage->actor(ground_id_)->new_controller<controllers::StaticBody>(physics, controllers::COLLIDER_TYPE_RAYCAST_ONLY);
     }
 
     void do_activate() {
@@ -77,10 +73,6 @@ public:
         });
     }
 
-    void fixed_update(double step) override {
-        simulation_->fixed_update(step);
-    }
-
 private:
     PipelineID pipeline_id_;
     StageID stage_id_;
@@ -92,7 +84,6 @@ private:
     MeshID ground_mesh_id_;
     ActorID ground_id_;
 
-    controllers::RigidBodySimulation::ptr simulation_;
     controllers::RaycastVehicle::ptr controller_;
 };
 

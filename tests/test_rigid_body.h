@@ -18,7 +18,7 @@ public:
 
         auto actor_id = stage->new_actor_with_mesh(mesh_id);
         auto actor = stage->actor(actor_id);
-        actor->new_controller<smlt::controllers::StaticBody>(simulation, smlt::controllers::COLLIDER_TYPE_RAYCAST_ONLY);
+        actor->new_controller<smlt::controllers::StaticBody>(simulation.get(), smlt::controllers::COLLIDER_TYPE_RAYCAST_ONLY);
 
         auto ret = simulation->intersect_ray(Vec3(0, 5, 0), Vec3(0, -5, 0));
         assert_true(ret.second);

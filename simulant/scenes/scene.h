@@ -83,6 +83,9 @@ protected:
     WindowBase* window_;
 
 private:
+    virtual void pre_load() {}
+    virtual void post_unload() {}
+
     bool is_loaded_ = false;
 };
 

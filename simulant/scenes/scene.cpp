@@ -36,7 +36,9 @@ void SceneBase::load() {
         return;
     }
 
+    pre_load();
     do_load();
+
     is_loaded_ = true;
 }
 
@@ -46,6 +48,8 @@ void SceneBase::unload() {
     }
 
     do_unload();
+    post_unload();
+
     is_loaded_ = false;
 }
 

@@ -23,7 +23,7 @@
 namespace smlt {
 namespace controllers {
 
-RaycastVehicle::RaycastVehicle(smlt::Controllable* object, RigidBodySimulation::ptr simulation, float wheel_height):
+RaycastVehicle::RaycastVehicle(smlt::Controllable* object, RigidBodySimulation* simulation, float wheel_height):
     RigidBody(object, simulation, COLLIDER_TYPE_BOX),
     wheel_height_(wheel_height) {
 

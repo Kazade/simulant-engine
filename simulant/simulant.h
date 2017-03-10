@@ -51,6 +51,7 @@
 #include "virtual_gamepad.h"
 #include "scenes/scene_manager.h"
 #include "scenes/scene.h"
+#include "scenes/physics_scene.h"
 #include "controllers/fly.h"
 #include "controllers/rigid_body.h"
 #include "controllers/raycast_vehicle.h"
