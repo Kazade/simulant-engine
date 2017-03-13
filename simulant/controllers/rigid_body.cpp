@@ -20,19 +20,20 @@
 #include "rigid_body.h"
 #include "../nodes/actor.h"
 #include "../stage.h"
+#include "../deps/bounce/bounce.h"
 
 namespace smlt {
 namespace controllers {
 
-q3Vec3 to_q3vec3(const Vec3& rhs) {
-    q3Vec3 ret;
+b3Vec3 to_b3vec3(const Vec3& rhs) {
+    b3Vec3 ret;
     ret.x = rhs.x;
     ret.y = rhs.y;
     ret.z = rhs.z;
     return ret;
 }
 
-Vec3 to_vec3(const q3Vec3& rhs) {
+Vec3 to_vec3(const b3Vec3& rhs) {
     Vec3 ret;
     ret.x = rhs.x;
     ret.y = rhs.y;
@@ -40,21 +41,13 @@ Vec3 to_vec3(const q3Vec3& rhs) {
     return ret;
 }
 
-Mat3 from_q3mat3(const q3Mat3& rhs) {
-    Mat3 ret;
-    ret.mat[0] = rhs.Column0().x;
-    ret.mat[3] = rhs.Column0().y;
-    ret.mat[6] = rhs.Column0().z;
-
-    ret.mat[1] = rhs.Column1().x;
-    ret.mat[4] = rhs.Column1().y;
-    ret.mat[7] = rhs.Column1().z;
-
-    ret.mat[2] = rhs.Column2().x;
-    ret.mat[5] = rhs.Column2().y;
-    ret.mat[8] = rhs.Column2().z;
-
-    return ret;
+Quaternion to_quat(const b3Quat& rhs) {
+    return Quaternion(
+        rhs.x,
+        rhs.y,
+        rhs.z,
+        rhs.w
+    );
 }
 
 std::pair<Vec3, Vec3> calculate_bounds(const std::vector<Vec3>& vertices) {
@@ -76,13 +69,12 @@ std::pair<Vec3, Vec3> calculate_bounds(const std::vector<Vec3>& vertices) {
 RigidBodySimulation::RigidBodySimulation(TimeKeeper *time_keeper):
     time_keeper_(time_keeper) {
 
-    scene_ = new q3Scene(1.0 / 60.0f);
-    scene_->SetAllowSleep(true);
-    scene_->SetGravity(q3Vec3(0, -9.81, 0));
+    scene_ = new b3World();
+    scene_->SetGravity(b3Vec3(0, -9.81, 0));
 }
 
 void RigidBodySimulation::set_gravity(const Vec3& gravity) {
-    scene_->SetGravity(to_q3vec3(gravity));
+    scene_->SetGravity(to_b3vec3(gravity));
 }
 
 bool RigidBodySimulation::init() {
@@ -97,53 +89,23 @@ void RigidBodySimulation::cleanup() {
 
 
 void RigidBodySimulation::fixed_update(float dt) {
-    scene_->Step();
+    uint32_t velocity_iterations = 8;
+    uint32_t position_iterations = 2;
+
+    scene_->Step(time_keeper_->fixed_step(), velocity_iterations, position_iterations);
 }
 
-class Raycast : public q3QueryCallback {
-public:
-    q3RaycastData data;
-    r32 tfinal;
-    q3Vec3 nfinal;
-    q3Body *impactBody;
-
-    bool ReportShape( q3Box *shape ) {
-        if ( data.toi < tfinal )
-        {
-            tfinal = data.toi;
-            nfinal = data.normal;
-            impactBody = shape->body;
-        }
-
-        data.toi = tfinal;
-        return true;
-    }
-
-    void Init( const q3Vec3& spot, const q3Vec3& dir ) {
-        data.start = spot;
-        data.dir = q3Normalize( dir );
-        data.t = r32( 10000.0 );
-        tfinal = FLT_MAX;
-        data.toi = data.t;
-        impactBody = NULL;
-    }
-};
-
 std::pair<Vec3, bool> RigidBodySimulation::intersect_ray(const Vec3& start, const Vec3& direction, float* distance, Vec3* normal) {
-    bool hit = false;
-
-    Raycast raycast;
-    raycast.Init(to_q3vec3(start), to_q3vec3(direction));
-    scene_->RayCast(&raycast, raycast.data);
+    b3RayCastSingleOutput result;
+    bool hit = scene_->RayCastSingle(&result, to_b3vec3(start), to_b3vec3(start + direction));
 
     float closest = std::numeric_limits<float>::max();
     Vec3 impact_point, closest_normal;
 
-    if(raycast.impactBody && raycast.data.toi <= direction.length()) {
-        hit = true;
-        closest = raycast.data.toi;
-        impact_point = to_vec3(raycast.data.GetImpactPoint());
-        closest_normal = to_vec3(raycast.data.normal);
+    if(hit) {
+        impact_point = to_vec3(result.point);
+        closest = (impact_point - start).length();
+        closest_normal = to_vec3(result.normal);
     }
 
     // Now, check all the raycast only colliders
@@ -173,41 +135,38 @@ std::pair<Vec3, bool> RigidBodySimulation::intersect_ray(const Vec3& start, cons
     return std::make_pair(impact_point, hit);
 }
 
-q3Body* RigidBodySimulation::acquire_body(impl::Body *body) {
-    q3BodyDef def;
+b3Body *RigidBodySimulation::acquire_body(impl::Body *body) {
+    b3BodyDef def;
 
     bool is_dynamic = body->is_dynamic();
-    def.bodyType = (is_dynamic) ? eDynamicBody : eStaticBody;
+    def.type = (is_dynamic) ? e_dynamicBody : e_staticBody;
     def.gravityScale = (is_dynamic) ? 1.0 : 0.0;
-    def.angularDamping = 0.75;
 
     bodies_[body] = scene_->CreateBody(def);
     return bodies_[body];
 }
 
 void RigidBodySimulation::release_body(impl::Body *body) {
-    scene_->RemoveBody(bodies_.at(body));
+    scene_->DestroyBody(bodies_.at(body));
 }
 
 std::pair<Vec3, Quaternion> RigidBodySimulation::body_transform(const impl::Body *body) {
-    q3Body* b = bodies_.at(body);
-    auto xform = b->GetTransform();
-    Mat3 rot = from_q3mat3(xform.rotation);
+    b3Body* b = bodies_.at(body);
 
     return std::make_pair(
-        Vec3(xform.position.x, xform.position.y, xform.position.z),
-        Quaternion(rot)
+        to_vec3(b->GetPosition()),
+        to_quat(b->GetOrientation())
     );
 }
 
 void RigidBodySimulation::set_body_transform(impl::Body* body, const Vec3& position, const Quaternion& rotation) {
-    q3Body* b = bodies_.at(body);
+    b3Body* b = bodies_.at(body);
 
     Vec3 axis;
     float angle;
     kmQuaternionToAxisAngle(&rotation, &axis, &angle);
 
-    b->SetTransform(to_q3vec3(position), to_q3vec3(axis), angle);
+    b->SetTransform(to_b3vec3(position), to_b3vec3(axis), angle);
 }
 
 RigidBody::RigidBody(Controllable* object, RigidBodySimulation* simulation, ColliderType collider):
@@ -225,8 +184,8 @@ void RigidBody::add_force(const Vec3 &force) {
         return;
     }
 
-    q3Body* b = sim->bodies_.at(this);
-    b->ApplyLinearForce(to_q3vec3(force));
+    b3Body* b = sim->bodies_.at(this);
+    b->ApplyForceToCenter(to_b3vec3(force), true);
 }
 
 void RigidBody::add_impulse(const Vec3& impulse) {
@@ -235,8 +194,8 @@ void RigidBody::add_impulse(const Vec3& impulse) {
         return;
     }
 
-    q3Body* b = sim->bodies_.at(this);
-    b->ApplyLinearImpulse(to_q3vec3(impulse));
+    b3Body* b = sim->bodies_.at(this);
+    b->ApplyLinearImpulse(to_b3vec3(impulse), b->GetPosition(), true);
 }
 
 void RigidBody::add_impulse_at_position(const Vec3& impulse, const Vec3& position) {
@@ -245,8 +204,8 @@ void RigidBody::add_impulse_at_position(const Vec3& impulse, const Vec3& positio
         return;
     }
 
-    q3Body* b = sim->bodies_.at(this);
-    b->ApplyLinearImpulseAtWorldPoint(to_q3vec3(impulse), to_q3vec3(position));
+    b3Body* b = sim->bodies_.at(this);
+    b->ApplyLinearImpulse(to_b3vec3(impulse), to_b3vec3(position), true);
 }
 
 float RigidBody::mass() const {
@@ -255,7 +214,7 @@ float RigidBody::mass() const {
         return 0;
     }
 
-    const q3Body* b = sim->bodies_.at(this);
+    const b3Body* b = sim->bodies_.at(this);
     return b->GetMass();
 }
 
@@ -265,7 +224,7 @@ Vec3 RigidBody::linear_velocity() const {
         return Vec3();
     }
 
-    const q3Body* b = sim->bodies_.at(this);
+    const b3Body* b = sim->bodies_.at(this);
     return to_vec3(b->GetLinearVelocity());
 }
 
@@ -275,8 +234,12 @@ Vec3 RigidBody::linear_velocity_at(const Vec3& position) const {
         return Vec3();
     }
 
-    const q3Body* b = sim->bodies_.at(this);
-    return to_vec3(b->GetLinearVelocityAtWorldPoint(to_q3vec3(position)));
+    const b3Body* b = sim->bodies_.at(this);
+
+    auto direction_to_point = to_b3vec3(position) - b->GetPosition();
+    auto relative_torque = b3Cross(b->GetAngularVelocity(), direction_to_point);
+
+    return to_vec3(b->GetLinearVelocity() + relative_torque);
 }
 
 Vec3 RigidBody::position() const {
@@ -303,9 +266,9 @@ void RigidBody::add_force_at_position(const Vec3& force, const Vec3& position) {
         return;
     }
 
-    q3Body* b = sim->bodies_.at(this);
+    b3Body* b = sim->bodies_.at(this);
 
-    q3Vec3 f, p;
+    b3Vec3 f, p;
 
     f.x = force.x;
     f.y = force.y;
@@ -315,7 +278,7 @@ void RigidBody::add_force_at_position(const Vec3& force, const Vec3& position) {
     p.y = position.y;
     p.z = position.z;
 
-    b->ApplyForceAtWorldPoint(to_q3vec3(force), to_q3vec3(position));
+    b->ApplyForce(to_b3vec3(force), to_b3vec3(position), true);
 }
 
 void RigidBody::add_torque(const Vec3& torque) {
@@ -324,8 +287,8 @@ void RigidBody::add_torque(const Vec3& torque) {
         return;
     }
 
-    q3Body* b = sim->bodies_.at(this);
-    b->ApplyTorque(to_q3vec3(torque));
+    b3Body* b = sim->bodies_.at(this);
+    b->ApplyTorque(to_b3vec3(torque), true);
 }
 
 StaticBody::StaticBody(Controllable* object, RigidBodySimulation* simulation, ColliderType collider):
@@ -419,14 +382,18 @@ void Body::build_collider(ColliderType collider) {
         if(entity) {
             AABB aabb = entity->aabb();
 
-            q3BoxDef def;
-            def.SetRestitution(0);
+            b3BoxHull def;
+            def.Set(aabb.width(), aabb.height(), aabb.depth());
 
-            q3Transform localSpace;
-            q3Identity( localSpace );
+            b3HullShape hsdef;
+            hsdef.m_hull = &def;
 
-            def.Set(localSpace, q3Vec3(aabb.width(), aabb.height(), aabb.depth()));
-            sim->bodies_.at(this)->AddBox(def);
+            b3ShapeDef sdef;
+            sdef.density = 1.0;
+            sdef.shape = &hsdef;
+            sdef.userData = this;
+
+            sim->bodies_.at(this)->CreateShape(sdef);
         }
     } else if(collider == COLLIDER_TYPE_RAYCAST_ONLY) {
         assert(!is_dynamic()); // You can't have dynamic raycast colliders (yet)

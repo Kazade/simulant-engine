@@ -25,7 +25,7 @@
 #include "../generic/tri_octree.h"
 #include "../types.h"
 #include "../interfaces/transformable.h"
-#include "../deps/qu3e/q3.h"
+#include "../deps/bounce/bounce.h"
 #include "../time_keeper.h"
 
 namespace smlt {
@@ -131,14 +131,14 @@ private:
 
     TimeKeeper* time_keeper_ = nullptr;
 
-    q3Scene* scene_ = nullptr;
+    b3World* scene_ = nullptr;
 
     // Used by the RigidBodyController on creation/destruction to register a body
     // in the simulation
-    q3Body *acquire_body(impl::Body* body);
+    b3Body *acquire_body(impl::Body* body);
     void release_body(impl::Body *body);
 
-    std::unordered_map<const impl::Body*, q3Body*> bodies_;
+    std::unordered_map<const impl::Body*, b3Body*> bodies_;
 
     std::pair<Vec3, Quaternion> body_transform(const impl::Body *body);
     void set_body_transform(impl::Body *body, const Vec3& position, const Quaternion& rotation);
@@ -182,7 +182,7 @@ namespace impl {
     protected:
         friend class smlt::controllers::RigidBodySimulation;
         Transformable* object_;
-        q3Body* body_ = nullptr;
+        b3Body* body_ = nullptr;
         std::weak_ptr<RigidBodySimulation> simulation_;
         ColliderType collider_type_;
 
