@@ -397,7 +397,7 @@ void Body::update(float dt) {
     auto prev_state = last_state_;
     auto next_state = sim->body_transform(this);
 
-    float t = sim->time_keeper_->fixed_step_remainder();
+    float t = sim->time_keeper_->fixed_step_remainder() / sim->time_keeper_->delta_time();
 
     auto new_pos = prev_state.first + ((next_state.first - prev_state.first) * t);
     auto new_rot = prev_state.second.slerp(next_state.second, t);
