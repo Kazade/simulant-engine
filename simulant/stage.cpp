@@ -381,7 +381,7 @@ void Stage::set_partitioner(AvailablePartitioner partitioner) {
     signal_particle_system_destroyed().connect(std::bind(&Partitioner::remove_particle_system, partitioner_.get(), std::placeholders::_1));
 }
 
-void Stage::update(double dt) {
+void Stage::update(float dt) {
     resource_manager_->update(dt);
 }
 

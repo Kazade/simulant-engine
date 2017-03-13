@@ -50,9 +50,9 @@ public:
     void enable();
     void disable();
 
-    void _update_thunk(double dt) override;
-    void _late_update_thunk(double dt) override;
-    void _fixed_update_thunk(double step) override;
+    void _update_thunk(float dt) override;
+    void _late_update_thunk(float dt) override;
+    void _fixed_update_thunk(float step) override;
 
 private:
     bool is_enabled_ = true;
@@ -111,19 +111,19 @@ public:
         return ret;
     }
 
-    void fixed_update_controllers(double step) {
+    void fixed_update_controllers(float step) {
         for(auto& controller: controllers_) {
             controller->_fixed_update_thunk(step);
         }
     }
 
-    void update_controllers(double dt) {
+    void update_controllers(float dt) {
         for(auto& controller: controllers_) {
             controller->_update_thunk(dt);
         }
     }
 
-    void late_update_controllers(double dt) {
+    void late_update_controllers(float dt) {
         for(auto& controller: controllers_) {
             controller->_late_update_thunk(dt);
         }

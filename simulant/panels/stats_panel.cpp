@@ -86,7 +86,7 @@ void StatsPanel::update() {
     static float last_update = 0.0f;
     static bool first_update = true;
 
-    last_update += window_->delta_time();
+    last_update += window_->time_keeper->delta_time();
 
     if(first_update || last_update >= 1.0) {
         auto mem_usage = get_memory_usage_in_megabytes();

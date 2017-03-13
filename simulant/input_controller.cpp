@@ -158,7 +158,7 @@ void Keyboard::_handle_keyup_event(SDL_Keysym key) {
 
 }
 
-void Keyboard::_update(double dt) {
+void Keyboard::_update(float dt) {
     for(auto keysym: keys_down_) {
         for(auto conn: global_while_key_pressed_signals_) {
             conn.second(keysym.second, dt);
@@ -296,7 +296,7 @@ void Joypad::_handle_hat_changed_event(Hat hat, HatPosition position) {
     hat_state_[hat] = position;
 }
 
-void Joypad::_update(double dt) {
+void Joypad::_update(float dt) {
     for(std::pair<JoypadAxis, int32_t> p: axis_state_) {
         JoypadAxis axis = p.first;
         int32_t axis_state = p.second;
@@ -418,7 +418,7 @@ void InputController::handle_event(SDL_Event &event) {
     }
 }
 
-void InputController::update(double dt) {
+void InputController::update(float dt) {
     keyboard_->_update(dt);
     mouse_->_update(dt);
 
@@ -493,7 +493,7 @@ void Mouse::_disconnect(const InputConnection &connection) {
     motion_event_signals_.erase(connection);
 }
 
-void Mouse::_update(double dt) {
+void Mouse::_update(float dt) {
     for(auto& entry: this->motion_event_signals_) {
         entry.second(
             last_motion_event_.x,

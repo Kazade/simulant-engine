@@ -39,7 +39,7 @@ Debug::~Debug() {
 }
 
 void Debug::update() {
-    double dt = stage_.window->delta_time();
+    float dt = stage_.window->time_keeper->delta_time();
 
     std::vector<DebugElement> to_keep;
 

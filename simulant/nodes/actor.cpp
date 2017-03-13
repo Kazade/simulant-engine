@@ -181,7 +181,7 @@ void Actor::set_mesh(MeshID mesh) {
     signal_mesh_changed_(id());
 }
 
-void Actor::update(double dt) {
+void Actor::update(float dt) {
     StageNode::update(dt);
 
     update_source(dt);

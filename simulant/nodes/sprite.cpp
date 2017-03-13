@@ -63,7 +63,7 @@ void Sprite::ask_owner_for_destruction() {
     stage->delete_sprite(id());
 }
 
-void Sprite::update(double dt) {
+void Sprite::update(float dt) {
     if(actor_id_) {
         stage->actor(actor_id_)->set_parent(this); //Make sure every frame that our actor stays attached to us!
     }

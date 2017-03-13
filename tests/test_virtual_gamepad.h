@@ -248,7 +248,7 @@ public:
         float x = b1.min.x + 1;
         float y = b1.min.y + 1;
 
-        window->joypad(window->joypad_count() - 1).button_while_down_connect(0, [&](int btn, double dt) {
+        window->joypad(window->joypad_count() - 1).button_while_down_connect(0, [&](int btn, float dt) {
             button_pressed = true;
         });
 

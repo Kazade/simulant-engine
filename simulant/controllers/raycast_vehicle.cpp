@@ -69,7 +69,7 @@ bool RaycastVehicle::init() {
     }
 }
 
-void RaycastVehicle::fixed_update(double dt) {
+void RaycastVehicle::fixed_update(float dt) {
     RigidBodySimulation* sim = simulation;
     if(!sim) {
         return;

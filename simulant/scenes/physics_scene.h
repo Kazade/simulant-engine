@@ -15,7 +15,7 @@ protected:
 
     Property<PhysicsScene, smlt::controllers::RigidBodySimulation> physics = { this, &PhysicsScene::physics_ };
 
-    virtual void _fixed_update_thunk(double step) {
+    virtual void _fixed_update_thunk(float step) {
         Scene<T>::_fixed_update_thunk(step);
         if(physics_) {
             physics_->fixed_update(step);
@@ -24,7 +24,7 @@ protected:
 
 private:
     void pre_load() override {
-        physics_.reset(new smlt::controllers::RigidBodySimulation());
+        physics_.reset(new smlt::controllers::RigidBodySimulation(this->window_->time_keeper));
     }
 
     void post_unload() override {

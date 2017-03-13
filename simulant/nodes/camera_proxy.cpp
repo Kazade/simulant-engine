@@ -49,7 +49,7 @@ smlt::optional<Vec3> CameraProxy::project_point(const RenderTarget& target, cons
     return camera()->project_point(target, viewport, point);
 }
 
-void CameraProxy::update(double step) {
+void CameraProxy::update(float step) {
     StageNode::update(step);
 
     // Update the associated camera with this transformation

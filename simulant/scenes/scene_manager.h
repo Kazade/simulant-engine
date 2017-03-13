@@ -121,9 +121,9 @@ private:
     sig::connection update_conn_;
     sig::connection late_update_conn_;
 
-    void update(double dt);
-    void late_update(double dt);
-    void fixed_update(double step);
+    void update(float dt);
+    void late_update(float dt);
+    void fixed_update(float step);
 };
 
 }

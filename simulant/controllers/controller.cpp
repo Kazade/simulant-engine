@@ -10,7 +10,7 @@ void Controller::disable() {
     is_enabled_ = false;
 }
 
-void Controller::_update_thunk(double dt) {
+void Controller::_update_thunk(float dt) {
     if(!is_enabled_) {
         return;
     }
@@ -18,7 +18,7 @@ void Controller::_update_thunk(double dt) {
     Updateable::_update_thunk(dt);
 }
 
-void Controller::_late_update_thunk(double dt) {
+void Controller::_late_update_thunk(float dt) {
     if(!is_enabled_) {
         return;
     }
@@ -26,7 +26,7 @@ void Controller::_late_update_thunk(double dt) {
     Updateable::_late_update_thunk(dt);
 }
 
-void Controller::_fixed_update_thunk(double step) {
+void Controller::_fixed_update_thunk(float step) {
     if(!is_enabled_) {
         return;
     }

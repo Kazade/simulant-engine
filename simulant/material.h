@@ -64,7 +64,7 @@ public:
 
     TextureID texture_id() const;
 
-    void update(double dt) {
+    void update(float dt) {
         if(!is_animated()) return;
 
         time_elapsed_ += dt;
@@ -169,7 +169,7 @@ public:
     TextureUnit& texture_unit(uint32_t index) { return texture_units_.at(index); }
     const TextureUnit& texture_unit(uint32_t index) const { return texture_units_.at(index); }
 
-    void update(double dt) {
+    void update(float dt) {
         for(TextureUnit& t: texture_units_) {
             t.update(dt);
         }
@@ -290,7 +290,7 @@ public:
     Material(MaterialID mat_id, ResourceManager* resource_manager);
     ~Material();
 
-    void update(double dt) override;
+    void update(float dt) override;
     bool has_reflective_pass() const { return !reflective_passes_.empty(); }
 
     uint32_t new_pass();

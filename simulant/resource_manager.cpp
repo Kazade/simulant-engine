@@ -82,7 +82,7 @@ bool ResourceManager::init() {
     return true;
 }
 
-void ResourceManager::update(double dt) {
+void ResourceManager::update(float dt) {
     MaterialManager::each([dt](Material* mat) {
         mat->update_controllers(dt);
         mat->update(dt);

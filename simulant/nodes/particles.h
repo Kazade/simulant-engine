@@ -110,11 +110,11 @@ public:
     void set_duration_range(float min_seconds, float max_seconds);
     std::pair<float, float> duration_range() const;
 
-    std::vector<Particle> do_emit(double dt, uint32_t max_to_emit);
+    std::vector<Particle> do_emit(float dt, uint32_t max_to_emit);
 
     ParticleSystem& system() { return system_; }
 
-    void update(double dt);
+    void update(float dt);
 
     void activate();
     void deactivate();
@@ -256,7 +256,7 @@ private:
     std::vector<EmitterPtr> emitters_;
     std::list<Particle> particles_;
 
-    void update(double dt) override;
+    void update(float dt) override;
 
     VertexData* vertex_data_ = nullptr;
     IndexData* index_data_ = nullptr;

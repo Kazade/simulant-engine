@@ -1548,3 +1548,5 @@ simulant/controllers/movement/smooth_follow.h
 simulant/controllers/stage_node_controller.h
 simulant/controllers/movement/smooth_follow.cpp
 simulant/scenes/physics_scene.h
+simulant/time_keeper.h
+simulant/time_keeper.cpp

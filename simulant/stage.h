@@ -184,7 +184,7 @@ public:
 
     // Updateable interface
 
-    void update(double dt) override;
+    void update(float dt) override;
 
     // RenderableStage
     void on_render_started() override {}

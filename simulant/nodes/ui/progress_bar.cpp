@@ -34,7 +34,7 @@ void ProgressBar::refresh_pulse() {
     float pulse_max = pulse_range / 2.0f;
     float pulse_min = -pulse_range / 2.0f;
 
-    float dt = stage->window->delta_time();
+    float dt = stage->window->time_keeper->delta_time();
 
     if(pulse_right_) {
         pulse_position_ += pulse_step_ * dt;

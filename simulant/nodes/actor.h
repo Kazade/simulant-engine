@@ -129,7 +129,7 @@ private:
     SubActorMaterialChangedCallback signal_subactor_material_changed_;
     MeshChangedCallback signal_mesh_changed_;
 
-    void update(double dt) override;
+    void update(float dt) override;
     void clear_subactors();
     void rebuild_subactors();
     sig::connection submesh_created_connection_;

@@ -177,7 +177,7 @@ public:
     bool has_font(FontID f) const;
     void mark_font_as_uncollected(FontID f);
 
-    void update(double dt);
+    void update(float dt);
 
     unicode default_material_filename() const;
     unicode default_font_filename() const;

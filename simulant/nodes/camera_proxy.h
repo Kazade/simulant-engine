@@ -24,7 +24,7 @@ public:
 
     void set_orthographic_projection(double left, double right, double bottom, double top, double near=-1.0, double far=1.0);
 
-    void update(double step) override;
+    void update(float step) override;
 
     /* Camera Proxies have no mass/body so their AABB is just 0,0,0, or their position */
     const AABB aabb() const {

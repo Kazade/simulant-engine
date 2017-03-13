@@ -14,7 +14,7 @@ public:
 
         auto mesh_id = window->shared_assets->new_mesh_as_box(50, 1, 50);
 
-        auto simulation = smlt::controllers::RigidBodySimulation::create();
+        auto simulation = smlt::controllers::RigidBodySimulation::create(window->time_keeper);
 
         auto actor_id = stage->new_actor_with_mesh(mesh_id);
         auto actor = stage->actor(actor_id);

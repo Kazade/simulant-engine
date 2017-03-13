@@ -46,7 +46,7 @@ public:
 
     bool init() override;
     void cleanup() override;
-    void update(double dt) override;
+    void update(float dt) override;
 
     Sprite(SpriteID id, Stage* stage);
 

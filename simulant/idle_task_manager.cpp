@@ -70,7 +70,7 @@ struct TimedTrigger {
     }
 
     bool update(smlt::WindowBase* window) {
-        auto now = window->total_time();
+        auto now = window->time_keeper->total_elapsed_seconds();
         if(!start_time_) {
             start_time_ = now;
         }

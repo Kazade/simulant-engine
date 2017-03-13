@@ -73,7 +73,9 @@ std::pair<Vec3, Vec3> calculate_bounds(const std::vector<Vec3>& vertices) {
 }
 
 
-RigidBodySimulation::RigidBodySimulation() {
+RigidBodySimulation::RigidBodySimulation(TimeKeeper *time_keeper):
+    time_keeper_(time_keeper) {
+
     scene_ = new q3Scene(1.0 / 60.0f);
     scene_->SetAllowSleep(true);
     scene_->SetGravity(q3Vec3(0, -9.81, 0));
@@ -94,7 +96,7 @@ void RigidBodySimulation::cleanup() {
 
 
 
-void RigidBodySimulation::fixed_update(double dt) {
+void RigidBodySimulation::fixed_update(float dt) {
     scene_->Step();
 }
 
@@ -386,15 +388,24 @@ void Body::move_to(const Vec3& position) {
     );
 }
 
-void Body::update(double dt) {
+void Body::update(float dt) {
     auto sim = simulation_.lock();
     if(!sim) {
         return;
     }
 
-    auto xform = sim->body_transform(this);
-    object_->move_to(xform.first);
-    object_->rotate_to(xform.second);
+    auto prev_state = last_state_;
+    auto next_state = sim->body_transform(this);
+
+    float t = sim->time_keeper_->fixed_step_remainder();
+
+    auto new_pos = prev_state.first + ((next_state.first - prev_state.first) * t);
+    auto new_rot = prev_state.second.slerp(next_state.second, t);
+
+    object_->move_to(new_pos);
+    object_->rotate_to(new_rot);
+
+    last_state_ = next_state;
 }
 
 void Body::build_collider(ColliderType collider) {

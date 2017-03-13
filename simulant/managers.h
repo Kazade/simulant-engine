@@ -45,7 +45,7 @@ public:
     void delete_background(BackgroundID bid);
     uint32_t background_count() const;
 
-    void update(double dt) override;
+    void update(float dt) override;
 
     Property<BackgroundManager, WindowBase> window = { this, &BackgroundManager::window_ };
 private:
@@ -92,9 +92,9 @@ public:
     bool has_stage(StageID stage_id) const;
 
     void print_tree();
-    void fixed_update(double dt) override;
-    void update(double dt) override;
-    void late_update(double dt) override;
+    void fixed_update(float dt) override;
+    void update(float dt) override;
+    void late_update(float dt) override;
 
     void delete_all_stages();
 private:
