@@ -26,7 +26,7 @@ public:
 
     }
 
-    void fixed_update(double dt) override {
+    void fixed_update(float dt) override {
         Vec3 speed(-250, 0, 0.0);
 
         Vec3 avg;

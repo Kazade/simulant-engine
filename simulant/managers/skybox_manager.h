@@ -68,7 +68,7 @@ public:
 
     const AABB aabb() const;
 
-    void update(double step) {}
+    void update(float step) {}
 private:
     friend class SkyboxManager;
 

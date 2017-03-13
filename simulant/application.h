@@ -106,7 +106,7 @@ private:
     bool initialized_ = false;
 
     virtual bool do_init() = 0;
-    virtual void do_fixed_update(double dt) {}
+    virtual void do_fixed_update(float dt) {}
     virtual void do_cleanup() {}
 
     virtual bool while_key_pressed(SDL_Keysym key, double) { return false; }

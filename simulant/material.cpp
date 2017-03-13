@@ -237,7 +237,7 @@ void Material::set_texture_unit_on_all_passes(uint32_t texture_unit_id, TextureI
     }
 }
 
-void Material::update(double dt) {
+void Material::update(float dt) {
     // The updating_disabled_ flag wasn't set so we
     // can safely update
     if(!updating_disabled_.test_and_set()) {

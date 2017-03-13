@@ -177,15 +177,15 @@ void StageNode::recalc_bounds() {
 }
 
 
-void StageNode::update(double dt) {
+void StageNode::update(float dt) {
     update_controllers(dt);
 }
 
-void StageNode::late_update(double dt) {
+void StageNode::late_update(float dt) {
     late_update_controllers(dt);
 }
 
-void StageNode::fixed_update(double step) {
+void StageNode::fixed_update(float step) {
     fixed_update_controllers(step);
 }
 

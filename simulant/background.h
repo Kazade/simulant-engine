@@ -49,7 +49,7 @@ public:
 
     bool init() override;
     void cleanup() override;
-    void update(double dt) override;
+    void update(float dt) override;
 
     void set_horizontal_scroll_rate(float x_rate);
     void set_vertical_scroll_rate(float y_rate);

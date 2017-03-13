@@ -47,19 +47,19 @@ public:
             throw std::logic_error("Tried to attach FlyController to something which wasn't an object");
         }
 
-        connections_.push_back(window->keyboard->key_while_pressed_connect(SDL_SCANCODE_W, [=](SDL_Keysym key, double dt) {
+        connections_.push_back(window->keyboard->key_while_pressed_connect(SDL_SCANCODE_W, [=](SDL_Keysym key, float dt) {
             moving_forward_ = true;
         }));
 
-        connections_.push_back(window->keyboard->key_while_pressed_connect(SDL_SCANCODE_S, [=](SDL_Keysym key, double dt) {
+        connections_.push_back(window->keyboard->key_while_pressed_connect(SDL_SCANCODE_S, [=](SDL_Keysym key, float dt) {
             moving_backward_ = true;
         }));
 
-        connections_.push_back(window->keyboard->key_while_pressed_connect(SDL_SCANCODE_A, [=](SDL_Keysym key, double dt) {
+        connections_.push_back(window->keyboard->key_while_pressed_connect(SDL_SCANCODE_A, [=](SDL_Keysym key, float dt) {
             rotating_left_ = true;
         }));
 
-        connections_.push_back(window->keyboard->key_while_pressed_connect(SDL_SCANCODE_D, [=](SDL_Keysym key, double dt) {
+        connections_.push_back(window->keyboard->key_while_pressed_connect(SDL_SCANCODE_D, [=](SDL_Keysym key, float dt) {
             rotating_right_ = true;
         }));
 
@@ -86,7 +86,7 @@ public:
     const std::string name() const override { return "Fly by Keyboard"; }
 
 private:
-    void late_update(double dt) override {
+    void late_update(float dt) override {
         if(moving_forward_) {
             object_->move_forward_by(600.0 * dt);
         }

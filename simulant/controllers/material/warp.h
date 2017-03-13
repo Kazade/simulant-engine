@@ -40,7 +40,7 @@ public:
     const std::string name() const { return "Warped Material"; }
 
 private:
-    void update(double dt) override;
+    void update(float dt) override;
     double time_ = 0.0f;
 };
 

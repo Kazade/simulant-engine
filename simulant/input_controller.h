@@ -109,7 +109,7 @@ private:
     void _handle_keyup_event(SDL_Keysym key);
     void _handle_text_input_event(SDL_TextInputEvent key);
 
-    void _update(double dt);
+    void _update(float dt);
     void _disconnect(const InputConnection &connection);
 
     std::map<SDL_Scancode, bool> state_;
@@ -157,7 +157,7 @@ private:
     std::map<InputConnection, MouseMotionCallback> motion_event_signals_;
 
     void _disconnect(const InputConnection &connection) override;
-    void _update(double dt);
+    void _update(float dt);
     void _handle_motion_event(int32_t x, int32_t y, int32_t relx, int32_t rely);
 
     struct MotionEvent {
@@ -226,7 +226,7 @@ private:
     void _handle_button_up_event(Button button);
     void _handle_hat_changed_event(Hat hat, HatPosition value);
 
-    void _update(double dt);
+    void _update(float dt);
     void _disconnect(const InputConnection &connection);
 
     uint8_t jitter_value_;
@@ -262,7 +262,7 @@ public:
     Joypad& joypad(uint8_t idx=0);
     uint8_t joypad_count() const;
 
-    void update(double dt);
+    void update(float dt);
     void handle_event(SDL_Event& event);
 
 private:

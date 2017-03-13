@@ -100,7 +100,7 @@ public:
     void ask_owner_for_destruction();
     RenderableCullingMode renderable_culling_mode() const { return culling_mode_; }
 
-    void update(double step) override {}
+    void update(float step) override {}
 
     void cleanup() override {
         StageNode::cleanup();

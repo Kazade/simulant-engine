@@ -65,16 +65,9 @@ WindowBase::WindowBase():
     frame_counter_time_(0),
     frame_counter_frames_(0),
     frame_time_in_milliseconds_(0),
-    total_time_(0),
-    background_manager_(new BackgroundManager(this)) {
+    background_manager_(new BackgroundManager(this)),
+    time_keeper_(TimeKeeper::create(1.0 / WindowBase::STEPS_PER_SECOND)) {
 
-    ktiGenTimers(1, &fixed_timer_);
-    ktiBindTimer(fixed_timer_);
-    ktiStartFixedStepTimer(WindowBase::STEPS_PER_SECOND);
-
-    ktiGenTimers(1, &variable_timer_);
-    ktiBindTimer(variable_timer_);
-    ktiStartGameTimer();
 
     kazlog::get_logger("/")->add_handler(kazlog::Handler::ptr(new kazlog::StdIOHandler));
 
@@ -255,7 +248,7 @@ void WindowBase::set_logging_level(LoggingLevel level) {
     kazlog::get_logger("/")->set_level((kazlog::LOG_LEVEL) level);
 }
 
-void WindowBase::_update_thunk(double dt) {
+void WindowBase::_update_thunk(float dt) {
     if(is_paused()) {
         dt = 0.0; //If the application window is not displayed, don't send a deltatime down
         //it's still accessible through get_deltatime if the user needs it
@@ -265,14 +258,16 @@ void WindowBase::_update_thunk(double dt) {
     StageManager::_update_thunk(dt);
 }
 
-void WindowBase::_fixed_update_thunk(double dt) {
+void WindowBase::_fixed_update_thunk(float dt) {
     if(is_paused()) return;
     StageManager::_fixed_update_thunk(dt);
 }
 
 
 void WindowBase::run_update() {
-    frame_counter_time_ += delta_time_;
+    float dt = time_keeper_->delta_time();
+
+    frame_counter_time_ += dt;
     frame_counter_frames_++;
 
     if(frame_counter_time_ >= 1.0) {
@@ -283,38 +278,32 @@ void WindowBase::run_update() {
         frame_counter_time_ = 0.0;
     }
 
-    _update_thunk(delta_time_);
-    signal_update_(delta_time_);
+    _update_thunk(dt);
+    signal_update_(dt);
 
-    _late_update_thunk(delta_time_);
-    signal_late_update_(delta_time_);
+    _late_update_thunk(dt);
+    signal_late_update_(dt);
 }
 
 void WindowBase::run_fixed_updates() {
-    ktiBindTimer(fixed_timer_);
-    ktiUpdateFrameTime();
-    double fixed_step = ktiGetDeltaTime();
-
-    while(ktiTimerCanUpdate()) {
-        _fixed_update_thunk(fixed_step); // Run the fixed updates on controllers
-        signal_fixed_update_(fixed_step); //Trigger any steps
+    while(time_keeper_->use_fixed_step()) {
+        _fixed_update_thunk(time_keeper_->fixed_step()); // Run the fixed updates on controllers
+        signal_fixed_update_(time_keeper_->fixed_step()); //Trigger any steps
     }
 }
 
 bool WindowBase::run_frame() {
     signal_frame_started_();
 
-    ktiBindTimer(variable_timer_);
-    ktiUpdateFrameTime();
+    // Update timers
+    time_keeper_->update();
 
-    // Store the frame time, and the total elapsed time
-    delta_time_ = ktiGetDeltaTime();
-    total_time_ += delta_time_;
+    float dt = time_keeper_->delta_time();
 
     check_events(); // Check for any window events
-    Source::update_source(delta_time_); //Update any playing sounds
-    input_controller().update(delta_time_); // Update input devices
-    shared_assets->update(delta_time_); // Update animated assets
+    Source::update_source(dt); //Update any playing sounds
+    input_controller().update(dt); // Update input devices
+    shared_assets->update(dt); // Update animated assets
 
     run_fixed_updates();
     run_update();
@@ -374,10 +363,6 @@ Joypad& WindowBase::joypad(uint8_t idx) {
 
 uint8_t WindowBase::joypad_count() const {
     return input_controller_->joypad_count();
-}
-
-double WindowBase::fixed_step_interp() const {
-    return fixed_step_interp_;
 }
 
 void WindowBase::set_paused(bool value) {

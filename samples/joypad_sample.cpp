@@ -151,7 +151,7 @@ public:
             });
 
 
-            auto hat_cb = [=](smlt::HatPosition position, smlt::Hat hat, double dt) mutable {
+            auto hat_cb = [=](smlt::HatPosition position, smlt::Hat hat, float dt) mutable {
                 std::cout << "Hat: " << (int) hat << std::endl;
                 std::cout << "Position " << (int) position << std::endl;
             };
@@ -164,7 +164,7 @@ public:
         }
     }
 
-    void fixed_update(double dt) {
+    void fixed_update(float dt) {
         auto actor = window->stage(stage_id_)->actor(actor_id);
         actor->rotate_x_by(smlt::Degrees(rot.y * dt * 10));
         actor->rotate_y_by(smlt::Degrees(rot.x * dt * 10));

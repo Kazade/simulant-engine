@@ -83,7 +83,7 @@ private:
     std::shared_ptr<Mesh> mesh_;
     RenderPriority render_priority_;
 
-    void update(double dt) {
+    void update(float dt) {
         update_source(dt);
     }
 

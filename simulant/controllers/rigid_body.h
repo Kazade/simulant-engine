@@ -26,6 +26,7 @@
 #include "../types.h"
 #include "../interfaces/transformable.h"
 #include "../deps/qu3e/q3.h"
+#include "../time_keeper.h"
 
 namespace smlt {
 
@@ -113,19 +114,22 @@ class RigidBodySimulation:
     public std::enable_shared_from_this<RigidBodySimulation> {
 
 public:
-    RigidBodySimulation();
+    RigidBodySimulation(TimeKeeper* time_keeper);
     bool init() override;
     void cleanup() override;
 
-    void fixed_update(double dt);
+    void fixed_update(float dt);
 
     std::pair<Vec3, bool> intersect_ray(const Vec3& start, const Vec3& direction, float* distance=nullptr, Vec3 *normal=nullptr);
 
     void set_gravity(const Vec3& gravity);
+
 private:
     friend class impl::Body;
     friend class RigidBody;
     friend class StaticBody;
+
+    TimeKeeper* time_keeper_ = nullptr;
 
     q3Scene* scene_ = nullptr;
 
@@ -182,7 +186,9 @@ namespace impl {
         std::weak_ptr<RigidBodySimulation> simulation_;
         ColliderType collider_type_;
 
-        void update(double dt) override;
+        std::pair<Vec3, Quaternion> last_state_;
+
+        void update(float dt) override;
 
         void build_collider(ColliderType collider);
 

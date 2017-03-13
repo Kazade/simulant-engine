@@ -21,7 +21,7 @@ public:
         return "Smooth Follow";
     }
 
-    void late_update(double dt) override;
+    void late_update(float dt) override;
     void set_target(ActorPtr actor);
     void set_target(ParticleSystemPtr ps);
 

@@ -118,7 +118,7 @@ void KeyFrameAnimationState::override_playing_animation_duration(const float new
     current_animation_duration_ = new_duration;
 }
 
-void KeyFrameAnimationState::update(double dt) {
+void KeyFrameAnimationState::update(float dt) {
     if(!current_animation_){
         return;
     }

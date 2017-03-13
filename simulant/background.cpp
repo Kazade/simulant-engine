@@ -94,7 +94,7 @@ void Background::cleanup() {
     manager_->window->delete_camera(camera_id_);
 }
 
-void Background::update(double dt) {
+void Background::update(float dt) {
     auto pass = manager_->window->stage(stage_id_)->assets->material(material_id_)->first_pass();
     if(pass->texture_unit_count()) {
         pass->texture_unit(0).scroll_x(x_rate_ * dt);

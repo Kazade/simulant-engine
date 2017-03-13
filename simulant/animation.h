@@ -92,7 +92,7 @@ public:
     void play_sequence(const std::string& name);
 
     void override_playing_animation_duration(const float new_duration);
-    void update(double dt);
+    void update(float dt);
 
     uint32_t current_frame() const { return current_frame_; }
     uint32_t next_frame() const { return next_frame_; }

@@ -44,7 +44,7 @@ BackgroundManager::~BackgroundManager() {
     }
 }
 
-void BackgroundManager::update(double dt) {
+void BackgroundManager::update(float dt) {
     //Update the backgrounds
     for(auto background_pair: BackgroundManager::__objects()) {
         auto* bg = background_pair.second.get();
@@ -200,7 +200,7 @@ void StageManager::delete_stage(StageID s) {
     signal_stage_removed_(s);
 }
 
-void StageManager::fixed_update(double dt) {
+void StageManager::fixed_update(float dt) {
     for(auto stage_pair: StageManager::__objects()) {
         TreeNode* root = stage_pair.second.get();
 
@@ -211,7 +211,7 @@ void StageManager::fixed_update(double dt) {
     }
 }
 
-void StageManager::late_update(double dt) {
+void StageManager::late_update(float dt) {
     for(auto stage_pair: StageManager::__objects()) {
         TreeNode* root = stage_pair.second.get();
 
@@ -223,7 +223,7 @@ void StageManager::late_update(double dt) {
 }
 
 
-void StageManager::update(double dt) {
+void StageManager::update(float dt) {
     //Update the stages
     for(auto stage_pair: StageManager::__objects()) {
         TreeNode* root = stage_pair.second.get();

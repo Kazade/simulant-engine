@@ -187,7 +187,7 @@ void ParticleEmitter::deactivate() {
     is_active_ = false;
 }
 
-void ParticleEmitter::update(double dt) {
+void ParticleEmitter::update(float dt) {
     time_active_ += dt;
 
     if(current_duration_ && time_active_ >= current_duration_) {
@@ -213,7 +213,7 @@ void ParticleSystem::set_quota(int quota) {
     vertex_buffer_dirty_ = index_buffer_dirty_ = true;
 }
 
-void ParticleSystem::update(double dt) {
+void ParticleSystem::update(float dt) {
     update_source(dt); //Update any sounds attached to this particle system
 
     auto current_particle_count = particles_.size();
@@ -280,7 +280,7 @@ void ParticleSystem::update(double dt) {
     index_data_->done();
 }
 
-std::vector<Particle> ParticleEmitter::do_emit(double dt, uint32_t max) {
+std::vector<Particle> ParticleEmitter::do_emit(float dt, uint32_t max) {
     std::vector<Particle> new_particles;
 
     if(!max) {

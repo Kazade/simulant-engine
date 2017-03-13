@@ -41,6 +41,7 @@
 #include "scenes/scene_manager.h"
 #include "loader.h"
 #include "event_listener.h"
+#include "time_keeper.h"
 
 
 namespace smlt {
@@ -156,10 +157,6 @@ public:
     virtual void check_events() = 0;
     virtual void swap_buffers() = 0;
 
-    double delta_time() const { return delta_time_; }
-    double total_time() const { return total_time_; }
-    double fixed_step() const { return 1.0 / double(WindowBase::STEPS_PER_SECOND); }
-    double fixed_step_interp() const;
     bool is_paused() const { return is_paused_; }
 
     uint32_t width() const override { return width_; }
@@ -168,8 +165,8 @@ public:
     
     bool run_frame();
 
-    void _fixed_update_thunk(double dt);
-    void _update_thunk(double dt) override;
+    void _fixed_update_thunk(float dt);
+    void _update_thunk(float dt) override;
 
     Mouse& mouse();
     Joypad& joypad(uint8_t idx);
@@ -318,10 +315,6 @@ private:
         
     IdleTaskManager idle_;
 
-    KTIuint fixed_timer_;
-    KTIuint variable_timer_;
-    double delta_time_;
-    double fixed_step_interp_ = 0.0;
     bool is_paused_ = false;
     bool has_context_ = false;
 
@@ -349,8 +342,6 @@ private:
     int32_t frame_counter_frames_;
     double frame_time_in_milliseconds_;
 
-    double total_time_ = 0.0;
-
     std::shared_ptr<Watcher> watcher_;
     std::shared_ptr<scenes::Loading> loading_;
     std::shared_ptr<smlt::RenderSequence> render_sequence_;
@@ -358,6 +349,7 @@ private:
 
     std::shared_ptr<VirtualGamepad> virtual_gamepad_;
     std::unique_ptr<BackgroundManager> background_manager_;
+    std::shared_ptr<TimeKeeper> time_keeper_;
 
     Stats stats_;
 
@@ -368,6 +360,7 @@ public:
     Property<WindowBase, Application> application = { this, &WindowBase::application_ };
     Property<WindowBase, VirtualGamepad> virtual_joypad = { this, &WindowBase::virtual_gamepad_ };
     Property<WindowBase, Renderer> renderer = { this, &WindowBase::renderer_ };
+    Property<WindowBase, TimeKeeper> time_keeper = { this, &WindowBase::time_keeper_ };
 
     Property<WindowBase, Watcher> watcher = {
         this, [](const WindowBase* self) -> Watcher* {

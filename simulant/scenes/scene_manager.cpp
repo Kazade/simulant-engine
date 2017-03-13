@@ -37,19 +37,19 @@ SceneManager::~SceneManager() {
     late_update_conn_.disconnect();
 }
 
-void SceneManager::late_update(double dt) {
+void SceneManager::late_update(float dt) {
     if(active_scene()) {
         active_scene()->_late_update_thunk(dt);
     }
 }
 
-void SceneManager::update(double dt) {
+void SceneManager::update(float dt) {
     if(active_scene()) {
         active_scene()->_update_thunk(dt);
     }
 }
 
-void SceneManager::fixed_update(double dt) {
+void SceneManager::fixed_update(float dt) {
     if(active_scene()) {
         active_scene()->_fixed_update_thunk(dt);
     }

@@ -11,7 +11,7 @@ SmoothFollow::SmoothFollow(Controllable* controllable):
 
 }
 
-void SmoothFollow::late_update(double dt) {
+void SmoothFollow::late_update(float dt) {
     auto target = target_.lock();
 
     if(!target) {
