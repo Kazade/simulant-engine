@@ -25,8 +25,11 @@
 #include "../generic/tri_octree.h"
 #include "../types.h"
 #include "../interfaces/transformable.h"
-#include "../deps/bounce/bounce.h"
 #include "../time_keeper.h"
+
+
+struct b3World;
+struct b3Body;
 
 namespace smlt {
 

@@ -107,3 +107,4 @@ simulant/interfaces
 simulant/nodes/ui
 simulant/controllers/movement
 simulant/scenes
+simulant/deps/bounce

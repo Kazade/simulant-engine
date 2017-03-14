@@ -22,6 +22,12 @@
 #include "../stage.h"
 #include "../deps/bounce/bounce.h"
 
+
+// These are just to keep Bounce happy
+bool b3PushProfileScope(char const*) { return false; }
+void b3PopProfileScope() {}
+
+
 namespace smlt {
 namespace controllers {
 
