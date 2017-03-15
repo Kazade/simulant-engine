@@ -30,6 +30,7 @@
 
 struct b3World;
 struct b3Body;
+struct b3Hull;
 
 namespace smlt {
 
@@ -134,7 +135,7 @@ private:
 
     TimeKeeper* time_keeper_ = nullptr;
 
-    b3World* scene_ = nullptr;
+    std::shared_ptr<b3World> scene_;
 
     // Used by the RigidBodyController on creation/destruction to register a body
     // in the simulation
@@ -197,6 +198,8 @@ namespace impl {
 
     private:
         virtual bool is_dynamic() const { return true; }
+
+        std::vector<std::shared_ptr<b3Hull>> hulls_;
     };
 } // End impl
 

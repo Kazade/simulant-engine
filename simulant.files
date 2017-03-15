@@ -1551,3 +1551,4 @@ simulant/scenes/physics_scene.h
 simulant/time_keeper.h
 simulant/time_keeper.cpp
 simulant/deps/bounce/bounce.h
+deps/bounce/include/bounce/bounce.h

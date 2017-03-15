@@ -75,7 +75,7 @@ std::pair<Vec3, Vec3> calculate_bounds(const std::vector<Vec3>& vertices) {
 RigidBodySimulation::RigidBodySimulation(TimeKeeper *time_keeper):
     time_keeper_(time_keeper) {
 
-    scene_ = new b3World();
+    scene_.reset(new b3World());
     scene_->SetGravity(b3Vec3(0, -9.81, 0));
 }
 
@@ -147,6 +147,7 @@ b3Body *RigidBodySimulation::acquire_body(impl::Body *body) {
     bool is_dynamic = body->is_dynamic();
     def.type = (is_dynamic) ? e_dynamicBody : e_staticBody;
     def.gravityScale = (is_dynamic) ? 1.0 : 0.0;
+    def.userData = this;
 
     bodies_[body] = scene_->CreateBody(def);
     return bodies_[body];
@@ -388,14 +389,15 @@ void Body::build_collider(ColliderType collider) {
         if(entity) {
             AABB aabb = entity->aabb();
 
-            b3BoxHull def;
-            def.Set(aabb.width(), aabb.height(), aabb.depth());
+            auto def = std::make_shared<b3BoxHull>();
+            def->Set(aabb.width(), aabb.height(), aabb.depth());
+            hulls_.push_back(def);
 
             b3HullShape hsdef;
-            hsdef.m_hull = &def;
+            hsdef.m_hull = def.get();
 
             b3ShapeDef sdef;
-            sdef.density = 1.0;
+            sdef.density = 0.5;
             sdef.shape = &hsdef;
             sdef.userData = this;
 

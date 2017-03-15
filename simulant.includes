@@ -108,3 +108,4 @@ simulant/nodes/ui
 simulant/controllers/movement
 simulant/scenes
 simulant/deps/bounce
+deps/bounce/include/bounce
