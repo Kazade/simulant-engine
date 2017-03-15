@@ -25,8 +25,12 @@
 #include "../generic/tri_octree.h"
 #include "../types.h"
 #include "../interfaces/transformable.h"
-#include "../deps/qu3e/q3.h"
 #include "../time_keeper.h"
+
+
+struct b3World;
+struct b3Body;
+struct b3Hull;
 
 namespace smlt {
 
@@ -131,14 +135,14 @@ private:
 
     TimeKeeper* time_keeper_ = nullptr;
 
-    q3Scene* scene_ = nullptr;
+    std::shared_ptr<b3World> scene_;
 
     // Used by the RigidBodyController on creation/destruction to register a body
     // in the simulation
-    q3Body *acquire_body(impl::Body* body);
+    b3Body *acquire_body(impl::Body* body);
     void release_body(impl::Body *body);
 
-    std::unordered_map<const impl::Body*, q3Body*> bodies_;
+    std::unordered_map<const impl::Body*, b3Body*> bodies_;
 
     std::pair<Vec3, Quaternion> body_transform(const impl::Body *body);
     void set_body_transform(impl::Body *body, const Vec3& position, const Quaternion& rotation);
@@ -182,7 +186,7 @@ namespace impl {
     protected:
         friend class smlt::controllers::RigidBodySimulation;
         Transformable* object_;
-        q3Body* body_ = nullptr;
+        b3Body* body_ = nullptr;
         std::weak_ptr<RigidBodySimulation> simulation_;
         ColliderType collider_type_;
 
@@ -194,6 +198,8 @@ namespace impl {
 
     private:
         virtual bool is_dynamic() const { return true; }
+
+        std::vector<std::shared_ptr<b3Hull>> hulls_;
     };
 } // End impl
 

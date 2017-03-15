@@ -4,9 +4,6 @@
 [submodule "deps/kazsignal"]
 	path = deps/kazsignal
 	url = git@github.com:Kazade/kazsignal.git
-[submodule "deps/qu3e"]
-	path = deps/qu3e
-	url = git@github.com:Kazade/qu3e.git
 [submodule "deps/kazmath"]
 	path = deps/kazmath
 	url = git@github.com:Kazade/kazmath.git
@@ -19,3 +16,6 @@
 [submodule "deps/kfs"]
 	path = deps/kfs
 	url = git@github.com:Kazade/kfs.git
+[submodule "deps/bounce"]
+	path = deps/bounce
+	url = https://github.com/irlanrobson/bounce.git
