@@ -407,6 +407,7 @@ void Body::build_collider(ColliderType collider) {
             b3ShapeDef sdef;
             sdef.shape = &hsdef;
             sdef.userData = this;
+            sdef.density = 0.5;
 
             sim->bodies_.at(this)->CreateShape(sdef);
         }
