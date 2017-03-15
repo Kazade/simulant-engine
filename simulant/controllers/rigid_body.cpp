@@ -359,23 +359,31 @@ void Body::move_to(const Vec3& position) {
 }
 
 void Body::update(float dt) {
+    const bool INTERPOLATION_ENABLED = true;
+
     auto sim = simulation_.lock();
     if(!sim) {
         return;
     }
 
-    auto prev_state = last_state_;
-    auto next_state = sim->body_transform(this);
+    if(INTERPOLATION_ENABLED) {
+        auto prev_state = last_state_;
+        auto next_state = sim->body_transform(this);
 
-    float t = sim->time_keeper_->fixed_step_remainder() / sim->time_keeper_->delta_time();
+        float t = sim->time_keeper_->fixed_step_remainder() / sim->time_keeper_->delta_time();
 
-    auto new_pos = prev_state.first + ((next_state.first - prev_state.first) * t);
-    auto new_rot = prev_state.second.slerp(next_state.second, t);
+        auto new_pos = prev_state.first + ((next_state.first - prev_state.first) * t);
+        auto new_rot = prev_state.second.slerp(next_state.second, t);
 
-    object_->move_to(new_pos);
-    object_->rotate_to(new_rot);
+        object_->move_to(new_pos);
+        object_->rotate_to(new_rot);
 
-    last_state_ = next_state;
+        last_state_ = next_state;
+    } else {
+        auto state = sim->body_transform(this);
+        object_->move_to(state.first);
+        object_->rotate_to(state.second);
+    }
 }
 
 void Body::build_collider(ColliderType collider) {
@@ -397,7 +405,6 @@ void Body::build_collider(ColliderType collider) {
             hsdef.m_hull = def.get();
 
             b3ShapeDef sdef;
-            sdef.density = 0.5;
             sdef.shape = &hsdef;
             sdef.userData = this;
 
