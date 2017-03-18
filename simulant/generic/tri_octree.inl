@@ -85,14 +85,11 @@ typename Octree<Triangle>::node* Octree<Triangle>::node_containing_point(const O
 
 template<typename Triangle>
 typename Octree<Triangle>::node_list Octree<Triangle>::find_nodes_intersecting_ray(const Octree<Triangle>::vector_type& start, const Octree<Triangle>::vector_type& dir) {
-    kmRay3 ray;
-    kmRay3Fill(&ray, start.x, start.y, start.z, dir.x, dir.y, dir.z);
+    smlt::Ray ray(start, dir);
 
     node_list nodes = root_->find_nodes_that_satisfy_predicate([ray](node* this_node) -> bool {
-        smlt::AABB aabb;
-        kmVec3Assign(&aabb.min, &this_node->min);
-        kmVec3Assign(&aabb.max, &this_node->max);
-        return kmRay3IntersectAABB3(&ray, &aabb, nullptr, nullptr);
+        smlt::AABB aabb(this_node->min, this_node->max);
+        return ray.intersects_aabb(aabb);
     });
 
     return nodes;

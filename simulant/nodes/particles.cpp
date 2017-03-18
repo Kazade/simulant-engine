@@ -321,7 +321,9 @@ std::vector<Particle> ParticleEmitter::do_emit(float dt, uint32_t max) {
         //We have to rotate the velocity by the system, because if the particle system is attached to something (e.g. the back of a spaceship)
         //when that entity rotates we want the velocity to stay pointing relative to the entity
         auto rot = system().absolute_rotation();
-        kmQuaternionMultiplyVec3(&p.velocity, &rot, &p.velocity);
+
+        p.velocity *= rot;
+
 
         p.ttl = random_gen::random_float(ttl_range().first, ttl_range().second);
         p.colour = colour();

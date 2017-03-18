@@ -27,15 +27,17 @@
 #include <vector>
 #include "colour.h"
 
-#include "deps/kazmath/vec2.h"
-#include "deps/kazmath/vec3.h"
-#include "deps/kazmath/vec4.h"
-#include "deps/kazmath/ray3.h"
-#include "deps/kazmath/mat4.h"
-#include "deps/kazmath/mat3.h"
-#include "deps/kazmath/aabb3.h"
-#include "deps/kazmath/quaternion.h"
-#include "deps/kazmath/plane.h"
+#include "deps/glm/vec2.hpp"
+#include "deps/glm/vec3.hpp"
+#include "deps/glm/vec4.hpp"
+#include "deps/glm/mat4x4.hpp"
+#include "deps/glm/mat3x3.hpp"
+#include "deps/glm/gtc/quaternion.hpp"
+#include "deps/glm/gtx/norm.hpp"
+#include "deps/glm/gtx/compatibility.hpp"
+#include "deps/glm/gtx/intersect.hpp"
+#include "deps/glm/gtc/epsilon.hpp"
+#include "deps/glm/gtc/matrix_transform.hpp"
 
 #include "generic/manager.h"
 #include "generic/auto_weakptr.h"
@@ -53,6 +55,7 @@ namespace smlt {
 
 struct Vec3;
 struct Mat3;
+struct Quaternion;
 
 struct Radians;
 struct Degrees {
@@ -81,6 +84,7 @@ struct Radians {
 
 Radians to_radians(const Degrees& degrees);
 Degrees to_degrees(const Radians& radians);
+
 struct Euler {
     Euler(float x, float y, float z):
         x(x), y(y), z(z) {}
@@ -90,235 +94,171 @@ struct Euler {
     Degrees z;
 };
 
-struct Quaternion : public kmQuaternion {
-    Quaternion(Degrees pitch, Degrees yaw, Degrees roll) {
-        kmQuaternionRotationPitchYawRoll(this, pitch.value, yaw.value, roll.value);
+
+struct Plane;
+
+struct Mat4 : private glm::mat4x4 {
+private:
+    Mat4& operator=(const glm::mat4& rhs) {
+        glm::mat4::operator =(rhs);
+        return *this;
     }
 
-    Quaternion(const kmQuaternion& other) {
-        kmQuaternionAssign(this, &other);
-    }
-
-    Quaternion(const Degrees& degrees, const Vec3& axis);
-
-    Quaternion() {
-        kmQuaternionIdentity(this);
-    }
-
-    Quaternion(const Mat3& rot_matrix);
-
-    Quaternion(float x, float y, float z, float w) {
-        kmQuaternionFill(this, x, y, z, w);
-    }
-
-    Quaternion operator-(const Quaternion& quat) const {
-        Quaternion result;
-        kmQuaternionSubtract(&result, this, &quat);
-        return result;
-    }
-
-    Quaternion operator*(const Quaternion& quat) const {
-        Quaternion result;
-        kmQuaternionMultiply(&result, this, &quat);
-        return result;
-    }
-
-    Euler to_euler() const {
-        float pitch = kmQuaternionGetPitch(this);
-        float yaw = kmQuaternionGetYaw(this);
-        float roll = kmQuaternionGetRoll(this);
-        return Euler(pitch, yaw, roll);
-    }
-
-    void normalize() {
-        kmQuaternionNormalize(this, this);
-    }
-
-    const Quaternion normalized() {
-        Quaternion result;
-        kmQuaternionNormalize(&result, this);
-        return result;
-    }
-
-    void inverse() {
-        kmQuaternionInverse(this, this);
-    }
-
-    const Quaternion inversed() const {
-        Quaternion result(*this);
-        result.inverse();
-        return result;
-    }
-
-    bool operator==(const Quaternion& rhs) const {
-        return kmQuaternionAreEqual(this, &rhs);
-    }
-
-    bool operator!=(const Quaternion& rhs) const {
-        return !(*this == rhs);
-    }
-
-    Quaternion slerp(const Quaternion& rhs, float t) {
-        Quaternion result;
-        kmQuaternionSlerp(&result, this, &rhs, t);
-        return result;
-    }
-
-    const float pitch() const {
-        return kmQuaternionGetPitch(this);
-    }
-
-    const float yaw() const {
-        return kmQuaternionGetYaw(this);
-    }
-
-    const float roll() const {
-        return kmQuaternionGetRoll(this);
-    }
-
-    static Quaternion look_rotation(const Vec3& direction, const Vec3& up);
-};
-
-struct Mat4 : public kmMat4 {
+    friend class Vec4;
+public:
     Mat4() {
-        kmMat4Identity(this);
+        glm::mat4x4();
+    }
+
+    Mat4(const Quaternion& rhs) {
+        *this = glm::mat4_cast((const glm::quat&) rhs);
     }
 
     Mat4 operator*(const Mat4& rhs) const {
-        Mat4 result;
-        kmMat4Multiply(&result, this, &rhs);
+        Mat4 result = *this * rhs;
         return result;
     }
 
     void extract_rotation_and_translation(Quaternion& rotation, Vec3& translation);
-    static Mat4 from_lookat(const Vec3& eye, const Vec3& target, const Vec3& up);
 
+    static Mat4 as_rotation_x(const Degrees& angle);
+    static Mat4 as_rotation_y(const Degrees& angle);
+    static Mat4 as_rotation_z(const Degrees& angle);
+
+    static Mat4 as_look_at(const Vec3& eye, const Vec3& target, const Vec3& up);
     static Mat4 as_scaling(float s);
 
     float operator[](const uint32_t index) const {
-        return this->mat[index];
+        uint32_t col = index / 4;
+
+        auto column = glm::mat4x4::operator [](col);
+        return column[index - (4 * col)];
     }
+
+    float& operator[](const uint32_t index){
+        uint32_t col = index / 4;
+
+        auto column = glm::mat4x4::operator [](col);
+        return column[index - (4 * col)];
+    }
+
+    static Mat4 as_translation(const Vec3& v);
+
+    static Mat4 as_projection(float fov, float aspect, float near, float far) {
+        Mat4 ret;
+        ret = glm::perspective(fov, aspect, near, far);
+        return ret;
+    }
+
+    static Mat4 as_orthographic(float left, float right, float bottom, float top, float near, float far) {
+        Mat4 ret;
+        ret = glm::ortho(left, right, bottom, top, near, far);
+        return ret;
+    }
+
+    void inverse() {
+        *this = glm::inverse((glm::mat4x4) *this);
+    }
+
+    Mat4 inversed() const {
+        Mat4 ret = *this;
+        ret.inverse();
+        return ret;
+    }
+
+    Plane extract_plane(int32_t id) const;
 };
 
-struct Mat3 : public kmMat3 {
+struct Mat3 : private glm::mat3x3 {
     static Mat3 from_rotation_x(float pitch);
     static Mat3 from_rotation_y(float yaw);
     static Mat3 from_rotation_z(float roll);
 
     Mat3() {
-        kmMat3Identity(this);
+        glm::mat3x3();
     }
 
     Mat3(const float* data) {
         for(uint32_t i = 0; i < 9; ++i) {
-            this->mat[i] = data[i];
+            (*this)[i] = data[i];
         }
     }
 
-    float operator[](const uint32_t index) const {
-        return this->mat[index];
+    float& operator[](const uint32_t index) const {
+        uint32_t col = index / 3;
+        auto column = glm::mat3x3::operator [](col);
+        return column[index - (3 * col)];
     }
+
+    Vec3 transform_vector(const Vec3& v) const;
 };
 
-struct Vec4 : public kmVec4 {
-    Vec4() {
-        kmVec4Fill(this, 0, 0, 0, 1);
+
+struct Vec2 : private glm::vec2 {
+private:
+    Vec2(glm::vec2& rhs) {
+        x = rhs.x;
+        y = rhs.y;
     }
 
-    Vec4(float x, float y, float z, float w) {
-        kmVec4Fill(this, x, y, z, w);
+    Vec2& operator=(const glm::vec2& rhs) {
+        glm::vec2::operator =(rhs);
+        return *this;
     }
 
-    Vec4(const kmVec3& v, float w) {
-        kmVec4Fill(this, v.x, v.y, v.z, w);
-    }
+public:
+    using glm::vec2::x;
+    using glm::vec2::y;
 
-    bool operator==(const Vec4& rhs) const {
-        return kmVec4AreEqual(this, &rhs);
-    }
-
-    bool operator!=(const Vec4& rhs) const {
-        return !(*this == rhs);
-    }
-
-    Vec4 operator-(const Vec4& rhs) const {
-        return Vec4(x - rhs.x, y - rhs.y, z - rhs.z, w - rhs.w);
-    }
-
-    const smlt::Vec4 normalized() {
-        smlt::Vec4 result;
-        kmVec4Normalize(&result, this);
-        return result;
-    }
-
-    Vec4 operator*(float rhs) const {
-        Vec4 result;
-        kmVec4Scale(&result, this, rhs);
-        return result;
-    }
-
-    Vec4 operator+(const kmVec4& rhs) const {
-        return Vec4(x + rhs.x, y + rhs.y, z + rhs.z, w + rhs.w);
-    }
-};
-
-struct Vec2 : public kmVec2 {
     Vec2() {
         x = 0.0;
         y = 0.0;
     }
 
     Vec2(float x, float y) {
-        kmVec2Fill(this, x, y);
+        glm::vec2(x, y);
     }
 
-    Vec2 rotated_by(float degrees) const {
-        Vec2 result, zero;
-        kmVec2RotateBy(&result, this, degrees, &zero);
-        return result;
-    }
+    Vec2 rotated_by(Degrees degrees) const;
 
     float length() const {
-        return kmVec2Length(this);
+        return glm::vec2::length();
     }
 
     void normalize() {
-        kmVec2Normalize(this, this);
+        *this = glm::normalize((glm::vec2) *this);
     }
 
     Vec2 normalized() const {
-        Vec2 ret;
-        kmVec2Normalize(&ret, this);
+        Vec2 ret = *this;
+        ret.normalize();
         return ret;
     }
 
-    Vec2 limit(float l) {
+    void limit(float l) {
         if(length() > l) {
-            normalize();
-            kmVec2Scale(this, this, l);
+            normalize();            
+            *this *= l;
         }
-
-        return *this;
     }
 
     Vec2 operator*(float rhs) const {
-        Vec2 result;
-        kmVec2Scale(&result, this, rhs);
+        Vec2 result(x * rhs, y * rhs);
         return result;
     }
 
     Vec2& operator*=(float rhs) {
-        kmVec2Scale(this, this, rhs);
+        *this = *this * rhs;
         return *this;
     }
 
     Vec2& operator+=(const Vec2& rhs) {
-        kmVec2Add(this, this, &rhs);
+        *this = *this + rhs;
         return *this;
     }
 
     Vec2& operator-=(const Vec2& rhs) {
-        kmVec2Subtract(this, this, &rhs);
+        *this = *this - rhs;
         return *this;
     }
 
@@ -327,13 +267,12 @@ struct Vec2 : public kmVec2 {
     }
 
     Vec2& operator/=(float rhs) {
-        kmVec2Scale(this, this, 1.0 / rhs);
+        *this = *this / rhs;
         return *this;
     }
 
     Vec2 operator/(float rhs) const {
-        Vec2 result;
-        kmVec2Scale(&result, this, 1.0 / rhs);
+        Vec2 result(x / rhs, y / rhs);
         return result;
     }
 
@@ -346,7 +285,7 @@ struct Vec2 : public kmVec2 {
     }
 
     float dot(const Vec2& rhs) const {
-        return kmVec2Dot(this, &rhs);
+        return glm::dot(glm::vec2(*this), (glm::vec2)rhs);
     }
 
     unicode to_string() const {
@@ -361,90 +300,92 @@ bool operator!=(const Vec2& lhs, const Vec2& rhs);
 
 struct Degrees;
 
-struct Vec3 : public kmVec3 {        
-    Vec3() {
-        kmVec3Zero(this);
+struct Vec3 : private glm::vec3 {
+private:
+    Vec3(const glm::vec3& rhs) {
+        x = rhs.x;
+        y = rhs.y;
+        z = rhs.z;
     }
 
-    Vec3(float x, float y, float z) {
-        kmVec3Fill(this, x, y, z);
-    }
-
-    Vec3(const kmVec2& v2, float z) {
-        kmVec3Fill(this, v2.x, v2.y, z);
-    }
-
-    Vec3(const kmVec3& v) {
-        kmVec3Fill(this, v.x, v.y, v.z);
-    }
-
-    Vec2 xy() const {
-        return smlt::Vec2(x, y);
-    }
-
-    Vec2 yx() const {
-        return smlt::Vec2(y, x);
-    }
-
-    Vec3 zyx() const {
-        return smlt::Vec3(z, y, x);
-    }
-
-    Vec2 xz() const {
-        return smlt::Vec2(x, z);
-    }
-
-    Vec2 zx() const {
-        return smlt::Vec2(z, x);
-    }
-
-    Vec3 operator+(const kmVec3& rhs) const {
-        return Vec3(x + rhs.x, y + rhs.y, z + rhs.z);
-    }
-
-    Vec3& operator+=(const kmVec3& rhs) {
-        kmVec3Add(this, this, &rhs);
+    Vec3& operator=(const glm::vec3& rhs) {
+        glm::vec3::operator =(rhs);
         return *this;
     }
 
-    Vec3 operator-(const kmVec3& rhs) const {
+public:
+    static const Vec3 NEGATIVE_X;
+    static const Vec3 POSITIVE_X;
+    static const Vec3 NEGATIVE_Y;
+    static const Vec3 POSITIVE_Y;
+    static const Vec3 POSITIVE_Z;
+    static const Vec3 NEGATIVE_Z;
+
+    using glm::vec3::x;
+    using glm::vec3::y;
+    using glm::vec3::z;
+
+    Vec3() {
+        glm::vec3();
+    }
+
+    Vec3(float x, float y, float z) {
+        glm::vec3(x, y, z);
+    }
+
+    Vec3(const Vec2& v2, float z) {
+        glm::vec3(v2.x, v2.y, z);
+    }
+
+    Vec3(const Vec3& v) {
+        glm::vec3(v.x, v.y, v.z);
+    }
+
+    Vec3 operator+(const Vec3& rhs) const {
+        return Vec3(x + rhs.x, y + rhs.y, z + rhs.z);
+    }
+
+    Vec3& operator+=(const Vec3& rhs) {
+        *this = *this + rhs;
+        return *this;
+    }
+
+    Vec3 operator-(const Vec3& rhs) const {
         return Vec3(x - rhs.x, y - rhs.y, z - rhs.z);
     }
 
-    Vec3 operator*(const kmVec3& rhs) const {
+    Vec3 operator*(const Vec3& rhs) const {
         return Vec3(x * rhs.x, y * rhs.y, z * rhs.z);
     }
 
     Vec3 operator*(float rhs) const {
-        Vec3 result;
-        kmVec3Scale(&result, this, rhs);
+        Vec3 result(x * rhs, y * rhs, z * rhs);
         return result;
     }
 
-    Vec3 operator*(const Quaternion& rhs) const {
-        Vec3 ret;
-        kmQuaternionMultiplyVec3(&ret, &rhs, this);
-        return ret;
+    Vec3 operator*(const Quaternion& rhs) const;
+    Vec3& operator*=(const Quaternion& rhs) {
+        *this = *this * rhs;
+        return *this;
     }
 
     Vec3& operator*=(float rhs) {
-        kmVec3Scale(this, this, rhs);
+        *this = *this * rhs;
         return *this;
     }
 
     Vec3& operator/=(float rhs) {
-        kmVec3Scale(this, this, 1.0 / rhs);
+        *this = *this / rhs;
         return *this;
     }
 
     Vec3 operator/(float rhs) const {
-        Vec3 result;
-        kmVec3Scale(&result, this, 1.0 / rhs);
+        Vec3 result(x / rhs, y / rhs, z / rhs);
         return result;
     }
 
     bool operator==(const Vec3& rhs) const {
-        return kmVec3AreEqual(this, &rhs);
+        return glm::operator==(*this, rhs);
     }
 
     bool operator!=(const Vec3& rhs) const {
@@ -452,59 +393,72 @@ struct Vec3 : public kmVec3 {
     }
 
     void set(float x, float y, float z) {
-        kmVec3Fill(this, x, y, z);
+        this->x = x;
+        this->y = y;
+        this->z = z;
     }
 
     float length() const {        
-        return kmVec3Length(this);
+        return glm::length((glm::vec3) *this);
     }
 
     float length_squared() const {
-        return kmVec3LengthSq(this);
+        return glm::length2((glm::vec3) *this);
     }
 
     const smlt::Vec3 normalized() const {
-        smlt::Vec3 result;
-        kmVec3Normalize(&result, this);
+        smlt::Vec3 result = glm::normalize((glm::vec3) *this);
         return result;
     }
 
     void normalize() {
-        kmVec3Normalize(this, this);
+        *this = glm::normalize((glm::vec3) *this);
     }
 
     Vec3 lerp(const Vec3& end, const float t) {
         Vec3 ret;
-        kmVec3Lerp(&ret, this, &end, t);
+        ret = glm::lerp((glm::vec3) *this, end, t);
         return ret;
     }
 
-    Vec3 rotated_by(const Quaternion& q) const {
-        Vec3 result;
-        kmQuaternionMultiplyVec3(&result, &q, this);
-        return result;
+    Vec3 rotated_by(const Quaternion& q) const;
+    Vec3 rotated_by(const Mat3& rot) const {
+        return rot.transform_vector(*this);
     }
 
-    Vec3 rotated_by(const Mat3& rot) const {
-        Vec3 result;
-        kmVec3MultiplyMat3(&result, this, &rot);
-        return result;
+    /* Note: We do *not* supply multiply operators with Mat4 because
+     * the behaviour you want depends on whether want translation or not
+     * (e.g. is this a point in space or a vector). Instead we provide
+     * rotated_by() and transformed_by() the former assumes a W component of
+     * 0 whereas the latter assumes a W component of 1.0
+     */
+
+    Vec3 rotated_by(const Mat4& rot) const;
+    Vec3 transformed_by(const Mat4& trans) const;
+
+    Vec3 project_onto_vec3(const Vec3& projection_target) const {
+        Vec3 unitW = this->normalized();
+        Vec3 unitV = projection_target.normalized();
+
+        float cos0 = unitW.dot(unitV);
+
+        unitV *= (this->length() * cos0);
+
+        return unitV;
     }
 
     float dot(const smlt::Vec3& rhs) const {
-        return kmVec3Dot(this, &rhs);
+        return glm::dot((glm::vec3) *this, (glm::vec3) rhs);
     }
 
     smlt::Vec3 cross(const smlt::Vec3& rhs) const {
-        smlt::Vec3 result;
-        kmVec3Cross(&result, this, &rhs);
-        return result;
+        return Vec3(glm::cross((glm::vec3) *this, (glm::vec3) rhs));
     }
 
     smlt::Vec3 limit(float l) {
         if(length() > l) {
             normalize();
-            kmVec3Scale(this, this, l);
+            *this *= l;
         }
 
         return *this;
@@ -548,70 +502,278 @@ struct Vec3 : public kmVec3 {
     Vec3 random_deviant(const Degrees& angle, const Vec3 up=Vec3()) const;
 };
 
-struct Plane : public kmPlane {
-    Plane() {
-        kmPlaneFill(this, 0, 0, 0, 0);
+struct AxisAngle {
+    Vec3 axis;
+    Degrees angle;
+};
+
+struct Quaternion : private glm::quat {
+private:
+    Quaternion(const glm::quat& rhs) {
+        *this = rhs;
     }
 
-    Plane(const Vec3& N, float D) {
-        kmPlaneFromNormalAndDistance(this, &N, D);
+    Quaternion& operator=(const glm::quat& rhs) {
+        glm::quat::operator =(rhs);
+        return *this;
     }
 
-    Vec3 project(const Vec3& v) {
-        Vec3 ret;
-        kmVec3ProjectOnToPlane(&ret, &v, this);
-        return ret;
+    friend class Vec3;
+    friend class Mat4;
+public:
+    using glm::quat::x;
+    using glm::quat::y;
+    using glm::quat::z;
+    using glm::quat::w;
+
+    Quaternion() {
+        x = y = z = 0;
+        w = 1;
     }
+
+    Quaternion(Degrees pitch, Degrees yaw, Degrees roll) {
+        glm::quat::operator =(glm::quat(glm::vec3(pitch.value, yaw.value, roll.value)));
+    }
+
+    Quaternion(const Vec3& axis, const Degrees& degrees);
+    Quaternion(const Mat3& rot_matrix);
+
+    Quaternion(float x, float y, float z, float w) {
+        x = x;
+        y = y;
+        z = z;
+        w = w;
+    }
+
+    Vec3 rotate_vector(const Vec3& v) const;
+
+    Euler to_euler() const {
+        auto ret = glm::eulerAngles(*this);
+        return Euler(ret.x, ret.y, ret.z);
+    }
+
+    AxisAngle to_axis_angle() const;
+
+    void normalize() {
+        *this = glm::normalize((glm::quat) *this);
+    }
+
+    const Quaternion normalized() {
+        Quaternion result = *this;
+        result.normalize();
+        return result;
+    }
+
+    void inverse() {
+        glm::quat::operator =(glm::inverse(*this));
+    }
+
+    const Quaternion inversed() const {
+        Quaternion result(*this);
+        result.inverse();
+        return result;
+    }
+
+    bool operator==(const Quaternion& rhs) const {
+        return glm::operator ==(*this, rhs);
+    }
+
+    bool operator!=(const Quaternion& rhs) const {
+        return !(*this == rhs);
+    }
+
+    Quaternion operator*(const Quaternion& rhs) const {
+        return Quaternion(glm::operator*((const glm::quat&) *this, (const glm::quat&) rhs));
+    }
+
+    Quaternion slerp(const Quaternion& rhs, float t) {
+        Quaternion result;
+        result = glm::slerp(*this, rhs, t);
+        return result;
+    }
+
+    const float pitch() const {
+        return glm::eulerAngles(*this).x;
+    }
+
+    const float yaw() const {
+        return glm::eulerAngles(*this).y;
+    }
+
+    const float roll() const {
+        return glm::eulerAngles(*this).z;
+    }
+
+    Vec3 forward() const;
+    Vec3 up() const;
+    Vec3 right() const;
+
+    static Quaternion as_look_at(const Vec3& direction, const Vec3& up);
+};
+
+class PlaneClassification {
+private:
+    friend struct Plane;
+    PlaneClassification(int8_t v):
+        value_(v) {}
+
+    int8_t value_;
+public:
+    bool is_behind_plane() const { return value_ == -1; }
+    bool is_on_plane() const { return value_ == 0; }
+    bool is_in_front_of_plane() const { return value_ == 1; }
+};
+
+struct Plane {
+    Vec3 n;
+    float d;
+
+    Plane():
+        n(Vec3()),
+        d(0) {
+    }
+
+    Plane(const Vec3& N, float D):
+        n(N),
+        d(D) {
+
+    }
+
+    Plane(float A, float B, float C, float D):
+        n(A, B, C),
+        d(D) {
+
+    }
+
+    Vec3 project(const Vec3& p);
 
     Vec3 normal() const {
-        return Vec3(a, b, c);
+        return n;
     }
 
-    float distance_to(const Vec3& p) {
-        float k1 = d;
-        float k2 = (a * p.x) + (b * p.y) + (c * p.z);
-        return k2 - k1;
+    float distance_to(const Vec3& p);
+
+    PlaneClassification classify_point(const Vec3& p) const;
+
+    static Vec3 intersect_planes(
+        const Plane& p1,
+        const Plane& p2,
+        const Plane& p3
+    );
+};
+
+
+struct Vec4 : private glm::vec4 {
+private:
+    Vec4(const glm::vec4& rhs) {
+        x = rhs.x;
+        y = rhs.y;
+        z = rhs.z;
+        w = rhs.w;
+    }
+
+    Vec4& operator=(const glm::vec4& rhs) {
+        glm::vec4::operator =(rhs);
+        return *this;
+    }
+
+public:
+    using glm::vec4::x;
+    using glm::vec4::y;
+    using glm::vec4::z;
+    using glm::vec4::w;
+
+    Vec4() {
+        glm::vec4();
+    }
+
+    Vec4(float x, float y, float z, float w) {
+        glm::vec4(x, y, z, w);
+    }
+
+    Vec4(const Vec3& v, float w):
+        glm::vec4(v.x, v.y, v.z, w) {
+
+    }
+
+    bool operator==(const Vec4& rhs) const {
+        return glm::operator==(*this, rhs);
+    }
+
+    bool operator!=(const Vec4& rhs) const {
+        return !(*this == rhs);
+    }
+
+    Vec4 operator-(const Vec4& rhs) const {
+        return Vec4(x - rhs.x, y - rhs.y, z - rhs.z, w - rhs.w);
+    }
+
+    Vec4 operator*(const Mat4& rhs) const {
+        glm::vec4 p = *this;
+        glm::mat4x4 m = rhs;
+        return Vec4(p * m);
+    }
+
+    void normalize() {
+        *this = glm::normalize((glm::vec4) *this);
+    }
+
+    const smlt::Vec4 normalized() const {
+        smlt::Vec4 result = *this;
+        result.normalize();
+        return result;
+    }
+
+    Vec4 operator+(const Vec4& rhs) const {
+        return Vec4(x + rhs.x, y + rhs.y, z + rhs.z, w + rhs.w);
     }
 };
 
 struct AABB;
 
-struct Ray : public kmRay3 {
+struct Ray {
+    Vec3 start;
+    Vec3 dir;
     Vec3 dir_inv;
 
-    Ray() {
-        kmRay3Fill(this, 0, 0, 0, 0, 0, 0);
-    }
+    Ray() = default;
 
-    Ray(const Vec3& start, const Vec3& dir) {
-        kmRay3Fill(this, start.x, start.y, start.z, dir.x, dir.y, dir.z);
+    Ray(const Vec3& start, const Vec3& dir):
+        start(start),
+        dir(dir) {
+
         dir_inv = Vec3(1.0 / dir.x, 1.0f / dir.y, 1.0 / dir.z);
     }
 
-    bool intersects(const AABB& b) const {
-        return kmRay3IntersectAABB3(
-            this, (const kmAABB3*) &b, nullptr, nullptr
-        );
-    }
+    bool intersects_aabb(const AABB& aabb) const;
+
+    bool intersects_triangle(
+        const Vec3& v1, const Vec3& v2, const Vec3& v3,
+        Vec3* intersection=nullptr, Vec3* normal=nullptr, float* distance=nullptr
+    ) const;
 };
 
-struct AABB : public kmAABB3 {
-    AABB() {
-        kmVec3Zero(&this->min);
-        kmVec3Zero(&this->max);
-    }
+struct AABB {
+    Vec3 min;
+    Vec3 max;
+
+    AABB() = default;
 
     AABB(const Vec3& min, const Vec3& max) {
         this->min = min;
         this->max = max;
     }
 
-    AABB(const Vec3& centre, float width) {
-        kmAABB3Initialize(this, &centre, width, width, width);
+    AABB(const Vec3& centre, float width):
+        min(centre - Vec3(width * 0.5, width * 0.5, width * 0.5)),
+        max(centre + Vec3(width * 0.5, width * 0.5, width * 0.5)){
+
     }
 
-    AABB(const Vec3& centre, float xsize, float ysize, float zsize) {
-        kmAABB3Initialize(this, &centre, xsize, ysize, zsize);
+    AABB(const Vec3& centre, float xsize, float ysize, float zsize):
+        min(centre - Vec3(xsize * 0.5, ysize * 0.5, zsize * 0.5)),
+        max(centre + Vec3(xsize * 0.5, ysize * 0.5, zsize * 0.5)) {
+
     }
 
     AABB(const Vec3* vertices, const std::size_t count) {
@@ -639,8 +801,8 @@ struct AABB : public kmAABB3 {
             if(vertices[i].z > maxz) maxz = vertices[i].z;
         }
 
-        kmVec3Fill(&min, minx, miny, minz);
-        kmVec3Fill(&max, maxx, maxy, maxz);
+        min = Vec3(minx, miny, minz);
+        max = Vec3(maxx, maxy, maxz);
     }
 
     const float width() const {
@@ -660,8 +822,27 @@ struct AABB : public kmAABB3 {
     }
 
     bool intersects(const AABB& other) const {
-        bool ret = kmAABB3IntersectsAABB(this, &other);
-        return ret;
+        auto acx = (min.x + max.x) * 0.5;
+        auto acy = (min.y + max.y) * 0.5;
+        auto acz = (min.z + max.z) * 0.5;
+
+        auto bcx = (other.min.x + other.max.x) * 0.5;
+        auto bcy = (other.min.y + other.max.y) * 0.5;
+        auto bcz = (other.min.z + other.max.z) * 0.5;
+
+        auto arx = (max.x - min.x) * 0.5;
+        auto ary = (max.y - min.y) * 0.5;
+        auto arz = (max.z - min.z) * 0.5;
+
+        auto brx = (other.max.x - other.min.x) * 0.5;
+        auto bry = (other.max.y - other.min.y) * 0.5;
+        auto brz = (other.max.z - other.min.z) * 0.5;
+
+        bool x = fabs(acx - bcx) <= (arx + brx);
+        bool y = fabs(acy - bcy) <= (ary + bry);
+        bool z = fabs(acz - bcz) <= (arz + brz);
+
+        return x && y && z;
     }
 
     Vec3 centre() const {
@@ -672,16 +853,21 @@ struct AABB : public kmAABB3 {
         /*
          * Returns True if the AABB has two or more zero dimensions
          */
-        bool empty_x = kmAlmostEqual(0.0, width());
-        bool empty_y = kmAlmostEqual(0.0, height());
-        bool empty_z = kmAlmostEqual(0.0, depth());
+        bool empty_x = width() == 0.0f;
+        bool empty_y = height() == 0.0f;
+        bool empty_z = depth() == 0.0f;
 
         return (empty_x && empty_y) || (empty_x && empty_z) || (empty_y && empty_z);
     }
 
-
     bool contains_point(const Vec3& p) const {
-        return kmAABB3ContainsPoint(this, &p);
+        if(p.x >= min.x && p.x <= max.x &&
+           p.y >= min.y && p.y <= max.y &&
+           p.z >= min.z && p.z <= max.z) {
+            return true;
+        }
+
+        return false;
     }
 
     std::array<Vec3, 8> corners() const {
@@ -723,7 +909,9 @@ Degrees lerp_angle(Degrees a, Degrees b, float t);
 }
 
 
-const float PI = kmPI;
+const float PI = glm::pi<float>();
+const float PI_OVER_180 = PI / 180.0f;
+const float PI_UNDER_180 = 180.0f / PI;
 
 enum VertexAttribute {
     VERTEX_ATTRIBUTE_NONE,

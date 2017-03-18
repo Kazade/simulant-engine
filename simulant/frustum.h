@@ -54,42 +54,34 @@ class Frustum {
 public:
     Frustum();
 
-    void build(const kmMat4* modelview_projection);
+    void build(const Mat4* modelview_projection);
 
     std::vector<Vec3> near_corners() const; ///< Returns the near 4 corners of the frustum
     std::vector<Vec3> far_corners() const; ///< Returns the far 4 corners of the frustum
 
-    bool contains_point(const kmVec3& point) const; ///< Returns true if the frustum contains point
-    bool intersects_aabb(const kmAABB3& box) const;
+    bool contains_point(const Vec3& point) const; ///< Returns true if the frustum contains point
+    bool intersects_aabb(const AABB &box) const;
 
     bool initialized() const { return initialized_; }
 
     double near_height() const {
         assert(initialized_);
-        kmVec3 diff;
-        kmVec3Subtract(&diff, &near_corners_[FRUSTUM_CORNER_BOTTOM_LEFT], &near_corners_[FRUSTUM_CORNER_TOP_LEFT]);
-        return kmVec3Length(&diff);
+        return (near_corners_[FRUSTUM_CORNER_BOTTOM_LEFT] - near_corners_[FRUSTUM_CORNER_TOP_LEFT]).length();
     }
 
     double far_height() const {
         assert(initialized_);
-        kmVec3 diff;
-        kmVec3Subtract(&diff, &far_corners_[FRUSTUM_CORNER_BOTTOM_LEFT], &far_corners_[FRUSTUM_CORNER_TOP_LEFT]);
-        return kmVec3Length(&diff);
+        return (far_corners_[FRUSTUM_CORNER_BOTTOM_LEFT] - far_corners_[FRUSTUM_CORNER_TOP_LEFT]).length();
     }
 
     double near_width() const {
         assert(initialized_);
-        kmVec3 diff;
-        kmVec3Subtract(&diff, &near_corners_[FRUSTUM_CORNER_BOTTOM_LEFT], &near_corners_[FRUSTUM_CORNER_BOTTOM_RIGHT]);
-        return kmVec3Length(&diff);
+        return (near_corners_[FRUSTUM_CORNER_BOTTOM_LEFT] - near_corners_[FRUSTUM_CORNER_BOTTOM_RIGHT]).length();
     }
 
     double far_width() const {
         assert(initialized_);
-        kmVec3 diff;
-        kmVec3Subtract(&diff, &far_corners_[FRUSTUM_CORNER_BOTTOM_LEFT], &far_corners_[FRUSTUM_CORNER_BOTTOM_RIGHT]);
-        return kmVec3Length(&diff);
+        return (far_corners_[FRUSTUM_CORNER_BOTTOM_LEFT] - far_corners_[FRUSTUM_CORNER_BOTTOM_RIGHT]).length();
     }
 
 
@@ -100,21 +92,17 @@ public:
          * We need to find the central points of both the near and far corners
          * and return the length between them
          */
-        kmVec3 near_avg, far_avg;
-        kmVec3Zero(&near_avg);
-        kmVec3Zero(&far_avg);
+        Vec3 near_avg, far_avg;
+
         for(uint32_t i = 0; i < FRUSTUM_CORNER_MAX; ++i) {
-            kmVec3Add(&near_avg, &near_avg, &near_corners_[i]);
-            kmVec3Add(&far_avg, &far_avg, &far_corners_[i]);
+            near_avg += near_corners_[i];
+            far_avg += far_corners_[i];
         }
 
-        kmVec3Scale(&near_avg, &near_avg, 1.0 / FRUSTUM_CORNER_MAX);
-        kmVec3Scale(&far_avg, &far_avg, 1.0 / FRUSTUM_CORNER_MAX);
+        near_avg /= FRUSTUM_CORNER_MAX;
+        far_avg /= FRUSTUM_CORNER_MAX;
 
-        kmVec3 diff;
-        kmVec3Subtract(&diff, &far_avg, &near_avg);
-        return kmVec3Length(&diff);
-
+        return (far_avg - near_avg).length();
     }    
 
     Plane plane(FrustumPlane p) const {

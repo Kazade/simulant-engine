@@ -90,12 +90,10 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
 
     auto get_frame_vertex_position = [header, &data](int32_t frame_index, int16_t vertex_index) -> Vec3 {
         //Needed because the Quake 2 coord system is weird
-        kmMat4 rotation_x, rotation_y;
-        kmMat4RotationX(&rotation_x, kmDegreesToRadians(-90.0f));
-        kmMat4RotationY(&rotation_y, kmDegreesToRadians(90.0f));
+        Mat4 rotation_x = Mat4::as_rotation_x(Degrees(-90.0f));
+        Mat4 rotation_y = Mat4::as_rotation_y(Degrees(90.0f));
 
-        kmMat4 rotation;
-        kmMat4Multiply(&rotation, &rotation_y, &rotation_x);
+        Mat4 rotation = rotation_y * rotation_x;
 
         const char* cursor = &data[0];
         cursor += header->offset_frames;
@@ -116,7 +114,9 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
         float y = float(vert->v[1]) * scale->y + translate->y;
         float z = float(vert->v[2]) * scale->z + translate->z;
         auto ret = Vec3(x, y, z);
-        kmVec3Transform(&ret, &ret, &rotation);
+
+        ret = ret.rotated_by(rotation);
+
         return ret;
     };
 

@@ -79,15 +79,13 @@ public:
     }
 
     void scroll_x(float amount) {
-        Mat4 diff;
-        kmMat4Translation(&diff, amount, 0, 0);
-        kmMat4Multiply(&texture_matrix_, &texture_matrix_, &diff);
+        Mat4 diff = Mat4::as_translation(Vec3(amount, 0, 0));
+        texture_matrix_ = texture_matrix_ * diff;
     }
 
     void scroll_y(float amount) {
-        Mat4 diff;
-        kmMat4Translation(&diff, 0, amount, 0);
-        kmMat4Multiply(&texture_matrix_, &texture_matrix_, &diff);
+        Mat4 diff = Mat4::as_translation(Vec3(0, amount, 0));
+        texture_matrix_ = texture_matrix_ * diff;
     }
 
     const Mat4& matrix() const {

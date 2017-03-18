@@ -19,7 +19,6 @@
 #ifndef CAMERA_H_INCLUDED
 #define CAMERA_H_INCLUDED
 
-#include "deps/kazmath/mat4.h"
 #include "generic/identifiable.h"
 #include "generic/managed.h"
 

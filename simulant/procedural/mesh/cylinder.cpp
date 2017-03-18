@@ -30,7 +30,7 @@ namespace mesh {
 void cylinder(MeshPtr mesh, float diameter, float length, int32_t segments, int32_t stacks) {
     float radius = diameter * 0.5;
 
-    float delta_angle = (kmPI * 2.0) / (float) segments;
+    float delta_angle = (PI * 2.0) / (float) segments;
     float delta_height = length / (float) stacks;
     int offset = 0;
 

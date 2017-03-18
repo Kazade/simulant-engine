@@ -303,12 +303,9 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     auto& file = *this->data_;
 
     //Needed because the Quake 2 coord system is weird
-    kmMat4 rotation_x, rotation_y;
-    kmMat4RotationX(&rotation_x, kmDegreesToRadians(-90.0f));
-    kmMat4RotationY(&rotation_y, kmDegreesToRadians(90.0f));
-
-    kmMat4 rotation;
-    kmMat4Multiply(&rotation, &rotation_y, &rotation_x);
+    Mat4 rotation_x = Mat4::as_rotation_x(Degrees(-90));
+    Mat4 rotation_y = Mat4::as_rotation_y(Degrees(90.0f));
+    Mat4 rotation = rotation_y * rotation_x;
 
     Q2::Header header;
     file.read((char*)&header, sizeof(Q2::Header));
@@ -341,8 +338,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
 
     std::for_each(vertices.begin(), vertices.end(), [&](Q2::Point3f& vert) {
-        // Dirty casts, but it should work...
-        kmVec3Transform((kmVec3*)&vert, (kmVec3*)&vert, &rotation);
+        vert = vert.transformed_by(rotation);
     });
 
     /* Lightmaps are a bunch of fun! There is one lightmap per-face, and that might be up to 16x16 - but
@@ -366,11 +362,12 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     /* Transform U/V coordinates appropriately */
     for(Q2::TextureInfo& tex: textures) {
-        kmVec3 u_axis, v_axis;
-        kmVec3Fill(&u_axis, tex.u_axis.x, tex.u_axis.y, tex.u_axis.z);
-        kmVec3Fill(&v_axis, tex.v_axis.x, tex.v_axis.y, tex.v_axis.z);
-        kmVec3Transform(&u_axis, &u_axis, &rotation);
-        kmVec3Transform(&v_axis, &v_axis, &rotation);
+        Vec3 u_axis(tex.u_axis.x, tex.u_axis.y, tex.u_axis.z);
+        Vec3 v_axis(tex.v_axis.x, tex.v_axis.y, tex.v_axis.z);
+
+        u_axis = u_axis.rotated_by(rotation);
+        v_axis = v_axis.rotated_by(rotation);
+
         tex.u_axis.x = u_axis.x;
         tex.u_axis.y = u_axis.y;
         tex.u_axis.z = u_axis.z;
@@ -437,8 +434,6 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
          */
 
         std::map<uint32_t, uint32_t> index_lookup;
-        kmVec3 normal;
-        kmVec3Fill(&normal, 0, 1, 0);
 
         int32_t min_u = std::numeric_limits<int32_t>::max();
         int32_t max_u = std::numeric_limits<int32_t>::lowest();
@@ -453,16 +448,13 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             };
 
             //Calculate the surface normal for this triangle
-            kmVec3 normal;
-            kmVec3 vec1, vec2;
-            kmVec3& v1 = vertices[tri_idx[0]];
-            kmVec3& v2 = vertices[tri_idx[1]];
-            kmVec3& v3 = vertices[tri_idx[2]];
+            Vec3& v1 = vertices[tri_idx[0]];
+            Vec3& v2 = vertices[tri_idx[1]];
+            Vec3& v3 = vertices[tri_idx[2]];
 
-            kmVec3Subtract(&vec1, &v2, &v1);
-            kmVec3Subtract(&vec2, &v3, &v1);
-            kmVec3Cross(&normal, &vec1, &vec2);
-            kmVec3Normalize(&normal, &normal);
+            Vec3 vec1 = v2 - v1;
+            Vec3 vec2 = v3 - v1;
+            Vec3 normal = vec1.cross(vec2).normalized();
 
             for(uint8_t j = 0; j < 3; ++j) {
                 if(index_lookup.count(tri_idx[j])) {
@@ -471,8 +463,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
                     continue;
                 }
 
-
-                kmVec3& pos = vertices[tri_idx[j]];
+                Vec3& pos = vertices[tri_idx[j]];
 
                 //We haven't done this before so calculate the vertex
                 float u = pos.x * tex.u_axis.x

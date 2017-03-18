@@ -77,8 +77,6 @@ TextureUnit::TextureUnit(MaterialPass &pass):
     time_elapsed_(0),
     current_texture_(0) {
 
-    kmMat4Identity(&texture_matrix_);
-
     //Initialize the texture unit to the default texture
     ResourceManager& rm = pass.material->resource_manager();
     texture_unit_ = rm.texture(rm.default_texture_id());
@@ -88,8 +86,6 @@ TextureUnit::TextureUnit(MaterialPass &pass, TextureID tex_id):
     pass_(&pass),
     time_elapsed_(0),
     current_texture_(0) {
-
-    kmMat4Identity(&texture_matrix_);
 
     //Initialize the texture unit
     ResourceManager& rm = pass.material->resource_manager();
@@ -102,8 +98,6 @@ TextureUnit::TextureUnit(MaterialPass &pass, std::vector<TextureID> textures, do
     time_elapsed_(0),
     current_texture_(0),
     texture_unit_(0) {
-
-    kmMat4Identity(&texture_matrix_);
 
     ResourceManager& rm = pass.material->resource_manager();
 

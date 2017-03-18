@@ -25,11 +25,11 @@
 namespace smlt {
 
 Radians to_radians(const Degrees& degrees) {
-    return Radians(kmDegreesToRadians(degrees.value));
+    return Radians(degrees.value * PI_OVER_180);
 }
 
 Degrees to_degrees(const Radians& radians) {
-    return Degrees(kmRadiansToDegrees(radians.value));
+    return Degrees(radians.value * PI_UNDER_180);
 }
 
 bool operator==(const Vec2& lhs, const Vec2& rhs) {
@@ -74,6 +74,18 @@ Vec3 Vec3::random_deviant(const Degrees& angle, const Vec3 up) const {
     return ret;
 }
 
+Vec3 Vec3::operator*(const Quaternion &rhs) const {
+    return rhs.rotate_vector(*this);
+}
+
+Vec3 Vec3::operator*(const Mat4 &rhs) const {
+    return (Vec4(*this, 1.0) * rhs).xyz();
+}
+
+Vec3 Vec3::rotated_by(const Quaternion &q) const {
+    return q.rotate_vector(*this);
+}
+
 Vec3 Vec3::perpendicular() const {
     //Lovingly adapted from Ogre
     static const float square_zero = (float)(1e-06 * 1e-06);
@@ -114,14 +126,14 @@ std::ostream& operator<<(std::ostream& stream, const Quaternion& quat) {
     return stream;
 }
 
-Quaternion Quaternion::look_rotation(const Vec3& direction, const Vec3& up=Vec3(0, 1, 0)) {
+Quaternion Quaternion::as_look_at(const Vec3& direction, const Vec3& up=Vec3(0, 1, 0)) {
     Quaternion res;
     kmQuaternionLookRotation(&res, &direction, &up);
     kmQuaternionNormalize(&res, &res);
     return res;
 }
 
-Quaternion::Quaternion(const Degrees &degrees, const Vec3 &axis) {
+Quaternion::Quaternion(const Vec3 &axis, const Degrees &degrees) {
     kmQuaternionRotationAxisAngle(
         this,
         &axis,
@@ -174,6 +186,18 @@ Quaternion::Quaternion(const Mat3& rot_matrix) {
     }
 }
 
+Vec3 Quaternion::rotate_vector(const Vec3 &v) const {
+    Vec3 ret;
+    ret = glm::rotate(*this, v);
+    return ret;
+}
+
+AxisAngle Quaternion::to_axis_angle() const {
+    AxisAngle ret;
+    ret.axis = glm::axis(*this);
+    ret.angle = glm::angle(*this);
+    return ret;
+}
 
 void Mat4::extract_rotation_and_translation(Quaternion& rotation, Vec3& translation) {
     Mat3 rot;
@@ -200,13 +224,23 @@ Mat3 Mat3::from_rotation_z(float roll) {
     return ret;
 }
 
+Vec3 Mat3::transform_vector(const Vec3 &v) const {
+    return Vec3(glm::vec3(v.x, v.y, v.z) * (glm::mat3x3&) *this);
+}
+
 Mat4 Mat4::as_scaling(float s) {
     Mat4 ret;
     kmMat4Scaling(&ret, s, s, s);
     return ret;
 }
 
-Mat4 Mat4::from_lookat(const Vec3& eye, const Vec3& target, const Vec3& up) {
+Mat4 Mat4::as_translation(const Vec3 &v) {
+    Mat4 ret;
+    ret = glm::translate((glm::mat4x4) ret, (glm::vec3) v);
+    return ret;
+}
+
+Mat4 Mat4::as_look_at(const Vec3& eye, const Vec3& target, const Vec3& up) {
     Mat4 ret;
     kmMat4LookAt(&ret, &eye, &target, &up);
     return ret;
@@ -316,6 +350,51 @@ Degrees math::lerp_angle(Degrees a, Degrees b, float t) {
     }
 
     return Degrees(lerp(a.value, b.value, t));
+}
+
+Vec2 Vec2::rotated_by(Degrees degrees) const {
+    Vec3 result = glm::rotate(*this, degrees.value, glm::vec3(0, 0, 1));
+    return result;
+}
+
+Vec3 Plane::project(const Vec3 &p) {
+    /* Not sure if there is a more direct way to do this in GLM.. */
+
+    return p - (n.dot(p) + d) * n;
+}
+
+float Plane::distance_to(const Vec3 &p) {
+    float k1 = d;
+    float k2 = (n.x * p.x) + (n.y * p.y) + (n.z * p.z);
+    return k2 - k1;
+}
+
+bool Ray::intersects_aabb(const AABB &aabb) const {
+    //http://gamedev.stackexchange.com/a/18459/15125
+    Vec3 rdir = this->dir.normalized();
+    Vec3 dirfrac(1.0 / rdir.x, 1.0 / rdir.y, 1.0 / rdir.z);
+
+    float t1 = (aabb.min.x - start.x) * dirfrac.x;
+    float t2 = (aabb.max.x - start.x) * dirfrac.x;
+    float t3 = (aabb.min.y - start.y) * dirfrac.y;
+    float t4 = (aabb.max.y - start.y) * dirfrac.y;
+    float t5 = (aabb.min.z - start.z) * dirfrac.z;
+    float t6 = (aabb.max.z - start.z) * dirfrac.z;
+
+    float tmin = std::max(std::max(std::min(t1, t2), std::min(t3, t4)), std::min(t5, t6));
+    float tmax = std::min(std::min(std::max(t1, t2), std::max(t3, t4)), std::max(t5, t6));
+
+    // if tmax < 0, ray (line) is intersecting AABB, but whole AABB is behind us
+    if(tmax < 0) {
+        return false;
+    }
+
+    // if tmin > tmax, ray doesn't intersect AABB
+    if (tmin > tmax) {
+        return false;
+    }
+
+    return false;
 }
 
 }

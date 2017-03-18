@@ -20,7 +20,7 @@ public:
     void ask_owner_for_destruction();
 
     Frustum& frustum();
-    smlt::optional<Vec3> project_point(const RenderTarget &target, const Viewport& viewport, const kmVec3& point);
+    smlt::optional<Vec3> project_point(const RenderTarget &target, const Viewport& viewport, const Vec3& point);
 
     void set_orthographic_projection(double left, double right, double bottom, double top, double near=-1.0, double far=1.0);
 

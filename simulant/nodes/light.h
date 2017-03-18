@@ -58,7 +58,7 @@ public:
         set_direction(Vec3(x, y, z));
     }
 
-    void set_direction(const kmVec3& dir) {
+    void set_direction(const Vec3& dir) {
         set_type(LIGHT_TYPE_DIRECTIONAL);
         move_to(-dir.x, -dir.y, -dir.z);
     }
@@ -92,8 +92,7 @@ public:
     float quadratic_attenuation() const { return quadratic_attenuation_; }
 
     const AABB aabb() const {
-        AABB result;
-        kmAABB3Initialize(&result, nullptr, range(), range(), range());
+        AABB result(Vec3(), range());
         return result;
     }
 

@@ -30,10 +30,6 @@ Camera::Camera(CameraID id, WindowBase *window):
     window_(window),
     proxy_(nullptr) {
 
-    kmMat4Identity(&transform_);
-    kmMat4Identity(&projection_matrix_); //Initialize the projection matrix
-    kmMat4Identity(&view_matrix_);
-
     set_perspective_projection(45.0, float(window->width()) / float(window->height()));
 }
 
@@ -44,21 +40,20 @@ void Camera::set_transform(const smlt::Mat4& transform) {
 
 void Camera::update_frustum() {
     //Recalculate the view matrix
-    kmMat4Inverse(&view_matrix_, &transform_);
+    view_matrix_ = transform_.inversed();
 
-    kmMat4 mvp;
-    kmMat4Multiply(&mvp, &projection_matrix(), &view_matrix());
+    Mat4 mvp = projection_matrix() * view_matrix();
 
     frustum_.build(&mvp); //Update the frustum for this camera
 }
 
 void Camera::set_perspective_projection(double fov, double aspect, double near, double far) {
-    kmMat4PerspectiveProjection(&projection_matrix_, fov, aspect, near, far);
+    projection_matrix_ = Mat4::as_projection(fov, aspect, near, far);
     update_frustum();
 }
 
 void Camera::set_orthographic_projection(double left, double right, double bottom, double top, double near, double far) {
-    kmMat4OrthographicProjection(&projection_matrix_, left, right, bottom, top, near, far);
+    projection_matrix_ = Mat4::as_orthographic(left, right, bottom, top, near, far);
     update_frustum();
 }
 
@@ -73,11 +68,9 @@ smlt::optional<Vec3> Camera::project_point(const RenderTarget &target, const Vie
         throw std::logic_error("Passed a nullptr as a camera's window");
     }
 
-    Vec4 in, out;
-    kmVec4Fill(&in, point.x, point.y, point.z, 1.0);
-
-    kmVec4MultiplyMat4(&out, &in, &view_matrix());
-    kmVec4MultiplyMat4(&in, &out, &projection_matrix());
+    Vec4 in(point, 1.0);
+    Vec4 out = in * view_matrix();
+    in = out * projection_matrix();
 
     if(in.w == 0.0) {
         return smlt::optional<Vec3>();
@@ -111,11 +104,8 @@ smlt::optional<Vec3> Camera::unproject_point(const RenderTarget& target, const V
     Mat4 A, m;
     Vec4 in;
 
-    kmMat4Multiply(&A, &projection_matrix(), &view_matrix());
-
-    if(!kmMat4Inverse(&A, &m)) {
-        return smlt::optional<Vec3>();
-    }
+    A = projection_matrix() * view_matrix();
+    m = A.inversed();
 
     float vx = float(target.width()) * viewport.x();
     float vy = float(target.height()) * viewport.y();
@@ -127,8 +117,7 @@ smlt::optional<Vec3> Camera::unproject_point(const RenderTarget& target, const V
     in.z = 2.0 * win.z - 1.0;
     in.w = 1.0;
 
-    Vec4 out;
-    kmVec4MultiplyMat4(&out, &in, &m);
+    Vec4 out = in * m;
 
     if(out.w == 0.0f) {
         return smlt::optional<Vec3>();
