@@ -37,7 +37,11 @@
 #include "deps/glm/gtx/compatibility.hpp"
 #include "deps/glm/gtx/intersect.hpp"
 #include "deps/glm/gtc/epsilon.hpp"
+#include "deps/glm/gtx/transform.hpp"
 #include "deps/glm/gtc/matrix_transform.hpp"
+#include "deps/glm/gtx/matrix_decompose.hpp"
+#include "deps/glm/gtc/type_ptr.hpp"
+#include "deps/glm/gtx/rotate_vector.hpp"
 
 #include "generic/manager.h"
 #include "generic/auto_weakptr.h"
@@ -59,6 +63,9 @@ struct Quaternion;
 
 struct Radians;
 struct Degrees {
+    Degrees():
+        value(0) {}
+
     explicit Degrees(float value):
         value(value) {}
 
@@ -74,6 +81,9 @@ struct Degrees {
 };
 
 struct Radians {
+    Radians():
+        value(0) {}
+
     explicit Radians(float value):
         value(value) {}
 
@@ -99,12 +109,18 @@ struct Plane;
 
 struct Mat4 : private glm::mat4x4 {
 private:
-    Mat4& operator=(const glm::mat4& rhs) {
+    Mat4(const glm::mat4x4& rhs) {
+        *this = rhs;
+    }
+
+    Mat4& operator=(const glm::mat4x4& rhs) {
         glm::mat4::operator =(rhs);
         return *this;
     }
 
     friend class Vec4;
+    friend class Quaternion;
+    friend class Mat3;
 public:
     Mat4() {
         glm::mat4x4();
@@ -119,7 +135,7 @@ public:
         return result;
     }
 
-    void extract_rotation_and_translation(Quaternion& rotation, Vec3& translation);
+    void extract_rotation_and_translation(Quaternion& rotation, Vec3& translation) const;
 
     static Mat4 as_rotation_x(const Degrees& angle);
     static Mat4 as_rotation_y(const Degrees& angle);
@@ -167,9 +183,25 @@ public:
     }
 
     Plane extract_plane(int32_t id) const;
+
+    const float* data() const {
+        return glm::value_ptr(*this);
+    }
+
 };
 
 struct Mat3 : private glm::mat3x3 {
+private:
+    Mat3(const glm::mat3x3& rhs) {
+        *this = rhs;
+    }
+
+    Mat3& operator=(const glm::mat3x3& rhs) {
+        glm::mat3x3::operator =(rhs);
+        return *this;
+    }
+
+public:
     static Mat3 from_rotation_x(float pitch);
     static Mat3 from_rotation_y(float yaw);
     static Mat3 from_rotation_z(float roll);
@@ -184,6 +216,8 @@ struct Mat3 : private glm::mat3x3 {
         }
     }
 
+    Mat3(const Mat4& rhs);
+
     float& operator[](const uint32_t index) const {
         uint32_t col = index / 3;
         auto column = glm::mat3x3::operator [](col);
@@ -191,6 +225,30 @@ struct Mat3 : private glm::mat3x3 {
     }
 
     Vec3 transform_vector(const Vec3& v) const;
+
+    const float* data() const {
+        return glm::value_ptr(*this);
+    }
+
+    void inverse() {
+        *this = glm::inverse((const glm::mat3x3&) *this);
+    }
+
+    Mat3 inversed() const {
+        Mat3 ret = *this;
+        ret.inverse();
+        return ret;
+    }
+
+    void transpose() {
+        *this = glm::transpose((const glm::mat3x3&) *this);
+    }
+
+    Mat3 transposed() const {
+        Mat3 ret = *this;
+        ret.transpose();
+        return ret;
+    }
 };
 
 
@@ -293,6 +351,7 @@ public:
     }
 
     friend std::ostream& operator<<(std::ostream& stream, const Vec2& vec);
+    friend bool operator==(const Vec2& lhs, const Vec2& rhs);
 };
 
 bool operator==(const Vec2& lhs, const Vec2& rhs);
@@ -312,6 +371,11 @@ private:
         glm::vec3::operator =(rhs);
         return *this;
     }
+
+    friend class Quaternion;
+    friend class Mat4;
+    friend class Mat3;
+    friend class Vec2;
 
 public:
     static const Vec3 NEGATIVE_X;
@@ -421,7 +485,10 @@ public:
         return ret;
     }
 
-    Vec3 rotated_by(const Quaternion& q) const;
+    Vec3 rotated_by(const Quaternion& q) const {
+        return glm::rotate((const glm::quat&) q, (const glm::vec3&) *this);
+    }
+
     Vec3 rotated_by(const Mat3& rot) const {
         return rot.transform_vector(*this);
     }
@@ -434,6 +501,7 @@ public:
      */
 
     Vec3 rotated_by(const Mat4& rot) const;
+
     Vec3 transformed_by(const Mat4& trans) const;
 
     Vec3 project_onto_vec3(const Vec3& projection_target) const {
@@ -520,6 +588,7 @@ private:
 
     friend class Vec3;
     friend class Mat4;
+    friend class Mat3;
 public:
     using glm::quat::x;
     using glm::quat::y;
@@ -712,6 +781,15 @@ public:
         glm::vec4 p = *this;
         glm::mat4x4 m = rhs;
         return Vec4(p * m);
+    }
+
+    Vec4 operator*(const float& rhs) const {
+        return Vec4(
+            x * rhs,
+            y * rhs,
+            z * rhs,
+            w * rhs
+        );
     }
 
     void normalize() {

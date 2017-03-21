@@ -329,13 +329,12 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     std::vector<uint32_t> face_edges;
     std::vector<uint8_t> lightmap_data;
 
-    auto num_vertices = read_lump(file, header, Q2::LumpType::VERTICES, vertices);
-    auto num_edges = read_lump(file, header, Q2::LumpType::EDGES, edges);
-    auto num_textures = read_lump(file, header, Q2::LumpType::TEXTURE_INFO, textures);
-    auto num_faces = read_lump(file, header, Q2::LumpType::FACES, faces);
-    auto num_face_edges = read_lump(file, header, Q2::LumpType::FACE_EDGE_TABLE, face_edges);
-    auto lightmap_length = read_lump(file, header, Q2::LumpType::LIGHTMAPS, lightmap_data);
-
+    read_lump(file, header, Q2::LumpType::VERTICES, vertices);
+    read_lump(file, header, Q2::LumpType::EDGES, edges);
+    read_lump(file, header, Q2::LumpType::TEXTURE_INFO, textures);
+    read_lump(file, header, Q2::LumpType::FACES, faces);
+    read_lump(file, header, Q2::LumpType::FACE_EDGE_TABLE, face_edges);
+    read_lump(file, header, Q2::LumpType::LIGHTMAPS, lightmap_data);
 
     std::for_each(vertices.begin(), vertices.end(), [&](Q2::Point3f& vert) {
         vert = vert.transformed_by(rotation);

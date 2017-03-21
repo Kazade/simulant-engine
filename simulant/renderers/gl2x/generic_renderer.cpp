@@ -462,16 +462,13 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
 }
 
 void GenericRenderer::set_renderable_uniforms(const MaterialPass* pass, GPUProgram* program, Renderable* renderable, Camera* camera) {
-    //Calculate the modelview-projection matrix
-    Mat4 modelview_projection;
-    Mat4 modelview;
-
+    //Calculate the modelview-projection matrix    
     const Mat4 model = renderable->final_transformation();
     const Mat4& view = camera->view_matrix();
     const Mat4& projection = camera->projection_matrix();
 
-    kmMat4Multiply(&modelview, &view, &model);
-    kmMat4Multiply(&modelview_projection, &projection, &modelview);
+    Mat4 modelview = view * model;
+    Mat4 modelview_projection = projection * modelview;
 
     if(pass->uniforms->uses_auto(SP_AUTO_VIEW_MATRIX)) {
         program->set_uniform_mat4x4(
@@ -502,11 +499,9 @@ void GenericRenderer::set_renderable_uniforms(const MaterialPass* pass, GPUProgr
     }
 
     if(pass->uniforms->uses_auto(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX)) {
-        Mat3 inverse_transpose_modelview;
-
-        kmMat4ExtractRotationMat3(&modelview, &inverse_transpose_modelview);
-        kmMat3Inverse(&inverse_transpose_modelview, &inverse_transpose_modelview);
-        kmMat3Transpose(&inverse_transpose_modelview, &inverse_transpose_modelview);
+        Mat3 inverse_transpose_modelview(modelview);
+        inverse_transpose_modelview.inverse();
+        inverse_transpose_modelview.transpose();
 
         program->set_uniform_mat3x3(
             pass->uniforms->auto_variable_name(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX),

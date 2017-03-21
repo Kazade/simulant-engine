@@ -24,6 +24,13 @@
 
 namespace smlt {
 
+const Vec3 Vec3::NEGATIVE_X = Vec3(-1, 0, 0);
+const Vec3 Vec3::POSITIVE_X = Vec3(1, 0, 0);
+const Vec3 Vec3::NEGATIVE_Y = Vec3(0, -1, 0);
+const Vec3 Vec3::POSITIVE_Y = Vec3(0, 1, 0);
+const Vec3 Vec3::POSITIVE_Z = Vec3(0, 0, 1);
+const Vec3 Vec3::NEGATIVE_Z = Vec3(0, 0, -1);
+
 Radians to_radians(const Degrees& degrees) {
     return Radians(degrees.value * PI_OVER_180);
 }
@@ -33,8 +40,7 @@ Degrees to_degrees(const Radians& radians) {
 }
 
 bool operator==(const Vec2& lhs, const Vec2& rhs) {
-    auto ret = kmVec2AreEqual(&lhs, &rhs);
-    return ret;
+    return glm::operator==(lhs, rhs);
 }
 
 bool operator!=(const Vec2& lhs, const Vec2& rhs) {
@@ -42,20 +48,20 @@ bool operator!=(const Vec2& lhs, const Vec2& rhs) {
 }
 
 smlt::Vec2 operator*(float lhs, const smlt::Vec2& rhs) {
-    smlt::Vec2 result;
-    kmVec2Scale(&result, &rhs, lhs);
+    smlt::Vec2 result = rhs;
+    result *= lhs;
     return result;
 }
 
 smlt::Vec3 operator*(float lhs, const smlt::Vec3& rhs) {
-    smlt::Vec3 result;
-    kmVec3Scale(&result, &rhs, lhs);
+    smlt::Vec3 result = rhs;
+    result *= lhs;
     return result;
 }
 
 smlt::Vec3 operator/(float lhs, const smlt::Vec3& rhs) {
-    smlt::Vec3 result;
-    kmVec3Scale(&result, &rhs, 1.0 / lhs);
+    smlt::Vec3 result = rhs;
+    result /= lhs;
     return result;
 }
 
@@ -63,27 +69,29 @@ Vec3 Vec3::random_deviant(const Degrees& angle, const Vec3 up) const {
     //Lovingly adapted from ogre
     Vec3 new_up = (up == Vec3()) ? perpendicular() : up;
 
-    Quaternion q;
-    kmQuaternionRotationAxisAngle(&q, this, random_gen::random_float(0, 1) * (PI * 2.0));
-    kmQuaternionMultiplyVec3(&new_up, &q, &new_up);
-    kmQuaternionRotationAxisAngle(&q, &new_up, Radians(angle).value);
+    Quaternion q(*this, Radians(random_gen::random_float(0, 1) * (PI * 2.0)));
 
-    Vec3 ret;
-    kmQuaternionMultiplyVec3(&ret, &q, this);
+    new_up = new_up * q;
 
-    return ret;
+    q = Quaternion(new_up, angle);
+
+    return *this * q;
+
 }
 
 Vec3 Vec3::operator*(const Quaternion &rhs) const {
     return rhs.rotate_vector(*this);
 }
 
-Vec3 Vec3::operator*(const Mat4 &rhs) const {
-    return (Vec4(*this, 1.0) * rhs).xyz();
+
+Vec3 Vec3::rotated_by(const Mat4 &rot) const {
+    auto tmp = Vec4(*this, 0) * rot;
+    return Vec3(tmp.x, tmp.y, tmp.z);
 }
 
-Vec3 Vec3::rotated_by(const Quaternion &q) const {
-    return q.rotate_vector(*this);
+Vec3 Vec3::transformed_by(const Mat4 &trans) const {
+    auto tmp = Vec4(*this, 1) * trans;
+    return Vec3(tmp.x, tmp.y, tmp.z);
 }
 
 Vec3 Vec3::perpendicular() const {
@@ -127,32 +135,27 @@ std::ostream& operator<<(std::ostream& stream, const Quaternion& quat) {
 }
 
 Quaternion Quaternion::as_look_at(const Vec3& direction, const Vec3& up=Vec3(0, 1, 0)) {
-    Quaternion res;
-    kmQuaternionLookRotation(&res, &direction, &up);
-    kmQuaternionNormalize(&res, &res);
-    return res;
+    Mat4 lookat = Mat4::as_look_at(Vec3(), direction, up);
+    Quaternion ret = glm::quat_cast(lookat);
+    return ret;
 }
 
 Quaternion::Quaternion(const Vec3 &axis, const Degrees &degrees) {
-    kmQuaternionRotationAxisAngle(
-        this,
-        &axis,
-        kmDegreesToRadians(degrees.value)
-    );
+    *this = glm::angleAxis(degrees.value, axis);
 }
 
 Quaternion::Quaternion(const Mat3& rot_matrix) {
     /* FIXME: This should be in kazmath */
 
-    float m12 = rot_matrix.mat[7];
-    float m21 = rot_matrix.mat[5];
-    float m02 = rot_matrix.mat[6];
-    float m20 = rot_matrix.mat[2];
-    float m10 = rot_matrix.mat[1];
-    float m01 = rot_matrix.mat[3];
-    float m00 = rot_matrix.mat[0];
-    float m11 = rot_matrix.mat[4];
-    float m22 = rot_matrix.mat[8];
+    float m12 = rot_matrix[7];
+    float m21 = rot_matrix[5];
+    float m02 = rot_matrix[6];
+    float m20 = rot_matrix[2];
+    float m10 = rot_matrix[1];
+    float m01 = rot_matrix[3];
+    float m00 = rot_matrix[0];
+    float m11 = rot_matrix[4];
+    float m22 = rot_matrix[8];
     float t = m00 + m11 + m22;
     // we protect the division by s by ensuring that s>=1
     if (t >= 0) { // by w
@@ -195,33 +198,40 @@ Vec3 Quaternion::rotate_vector(const Vec3 &v) const {
 AxisAngle Quaternion::to_axis_angle() const {
     AxisAngle ret;
     ret.axis = glm::axis(*this);
-    ret.angle = glm::angle(*this);
+    ret.angle = Degrees(glm::angle(*this));
     return ret;
 }
 
-void Mat4::extract_rotation_and_translation(Quaternion& rotation, Vec3& translation) {
-    Mat3 rot;
-    kmMat4ExtractRotationMat3(this, &rot);
-    kmQuaternionRotationMatrix(&rotation, &rot);
-    kmMat4ExtractTranslationVec3(this, &translation);
+void Mat4::extract_rotation_and_translation(Quaternion& rotation, Vec3& translation) const {
+
+    glm::vec3 scale;
+    glm::vec3 skew;
+    glm::vec4 perspective;
+
+    glm::decompose(*this, scale, rotation, translation, skew, perspective);
+    rotation = glm::conjugate(rotation);
 }
 
 Mat3 Mat3::from_rotation_x(float pitch) {
-    Mat3 ret;
-    kmMat3FromRotationX(&ret, pitch);
+    Mat3 ret = glm::mat3x3(glm::rotate(pitch, glm::vec3(1, 0, 0)));
     return ret;
 }
 
 Mat3 Mat3::from_rotation_y(float yaw) {
-    Mat3 ret;
-    kmMat3FromRotationY(&ret, yaw);
+    Mat3 ret = glm::mat3x3(glm::rotate(yaw, glm::vec3(0, 1, 0)));
     return ret;
 }
 
 Mat3 Mat3::from_rotation_z(float roll) {
-    Mat3 ret;
-    kmMat3FromRotationZ(&ret, roll);
+    Mat3 ret = glm::mat3x3(glm::rotate(roll, glm::vec3(0, 0, 1)));
     return ret;
+}
+
+Mat3::Mat3(const Mat4 &rhs) {
+    Quaternion q;
+    Vec3 v;
+    rhs.extract_rotation_and_translation(q, v);
+    *this = glm::mat3_cast(q);
 }
 
 Vec3 Mat3::transform_vector(const Vec3 &v) const {
@@ -229,8 +239,7 @@ Vec3 Mat3::transform_vector(const Vec3 &v) const {
 }
 
 Mat4 Mat4::as_scaling(float s) {
-    Mat4 ret;
-    kmMat4Scaling(&ret, s, s, s);
+    Mat4 ret = glm::scale(glm::mat4x4(), glm::vec3(s, s, s));
     return ret;
 }
 
@@ -241,17 +250,17 @@ Mat4 Mat4::as_translation(const Vec3 &v) {
 }
 
 Mat4 Mat4::as_look_at(const Vec3& eye, const Vec3& target, const Vec3& up) {
-    Mat4 ret;
-    kmMat4LookAt(&ret, &eye, &target, &up);
+    Mat4 ret = glm::lookAt(eye, target, up);
     return ret;
 }
 
-Degrees::Degrees(const Radians &rhs) {
-    value = kmRadiansToDegrees(rhs.value);
+Degrees::Degrees(const Radians &rhs):
+    value(rhs.value * PI_UNDER_180) {
+
 }
 
-Radians::Radians(const Degrees &rhs) {
-    value = kmDegreesToRadians(rhs.value);
+Radians::Radians(const Degrees &rhs):
+    value(rhs.value * PI_OVER_180) {
 }
 
 uint32_t vertex_attribute_size(VertexAttribute attr) {
@@ -353,8 +362,10 @@ Degrees math::lerp_angle(Degrees a, Degrees b, float t) {
 }
 
 Vec2 Vec2::rotated_by(Degrees degrees) const {
-    Vec3 result = glm::rotate(*this, degrees.value, glm::vec3(0, 0, 1));
-    return result;
+    // FIXME: Lazy costly indirect way, should just do it manually
+    Mat4 rotation_z = Mat4::as_rotation_z(degrees);
+    auto result = Vec3(x, y, 0).rotated_by(rotation_z);
+    return Vec2(result.x, result.y);
 }
 
 Vec3 Plane::project(const Vec3 &p) {

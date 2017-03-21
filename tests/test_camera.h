@@ -48,16 +48,7 @@ public:
         stage->camera(camera_id_)->look_at(pos);
 
         Quaternion q = stage->camera(camera_id_)->absolute_rotation();
-        assert_true(kmQuaternionIsIdentity(&q));
-
-        //Just double check that kazmath actually works
-        Mat3 rot;
-        kmMat3FromRotationQuaternion(&rot, &q);
-
-        Quaternion other;
-        kmQuaternionRotationMatrix(&other, &rot);
-
-        assert_true(kmQuaternionAreEqual(&q, &other));
+        assert_true(q == Quaternion());
 
         pos = Vec3(0, -1, 0);
         stage->camera(camera_id_)->look_at(pos);

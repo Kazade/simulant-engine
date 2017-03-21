@@ -79,9 +79,8 @@ public:
 
         actor2->rotate_to_absolute(smlt::Degrees(20), 0, 0, 1);
 
-        smlt::Quaternion expected_rel, expected_abs;
-        kmQuaternionRotationAxisAngle(&expected_abs, &KM_VEC3_POS_Z, kmDegreesToRadians(20));
-        kmQuaternionRotationAxisAngle(&expected_rel, &KM_VEC3_POS_Z, kmDegreesToRadians(10));
+        smlt::Quaternion expected_rel(smlt::Vec3::POSITIVE_Z, smlt::Degrees(20));
+        smlt::Quaternion expected_abs(smlt::Vec3::POSITIVE_Z, smlt::Degrees(10));
 
         assert_equal(expected_abs, actor2->absolute_rotation());
         assert_equal(expected_rel, actor2->rotation());

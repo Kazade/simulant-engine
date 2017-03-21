@@ -150,14 +150,12 @@ public:
 
         assert_true(!frustum.initialized());
 
-        //Create an orthographic projection, and a modelview idactor matrix
-        kmMat4 projection, modelview;
-        kmMat4PerspectiveProjection(&projection, 45.0, 16.0 / 9.0, 0.1, 100.0);
-        kmMat4Identity(&modelview);
+        //Create a pespective projection, and a modelview idactor matrix
+        Mat4 projection = Mat4::as_projection(45.0, 16.0 / 9.0, 0.1, 100.0);
+        Mat4 modelview;
 
         //Create the modelview projection matrix
-        kmMat4 modelview_projection;
-        kmMat4Multiply(&modelview_projection, &projection, &modelview);
+        Mat4 modelview_projection = projection * modelview;
 
         //Build the frustum from the modelview projection matrix
         frustum.build(&modelview_projection);

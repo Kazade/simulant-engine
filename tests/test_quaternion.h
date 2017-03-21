@@ -9,12 +9,12 @@ public:
 
     void test_mat3_to_quaternion() {
         smlt::Mat3 mat;
-        for(uint32_t i = 0; i < 9; ++i) mat.mat[i] = 0;
+        for(uint32_t i = 0; i < 9; ++i) mat[i] = 0;
 
         // 90 degree rotation around z
-        mat.mat[1] = 1;
-        mat.mat[3] = -1;
-        mat.mat[8] = 1;
+        mat[1] = 1;
+        mat[3] = -1;
+        mat[8] = 1;
 
         smlt::Quaternion quat(mat);
 

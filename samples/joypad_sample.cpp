@@ -43,8 +43,8 @@ enum XBoxButtons {
 // };
 
 smlt::ActorID actor_id;
-kmVec3 pos = { 0.f, 0.f, -5.f };
-kmVec2 rot = { 1.f, 0.5f };
+smlt::Vec3 pos = { 0.f, 0.f, -5.f };
+smlt::Vec2 rot = { 1.f, 0.5f };
 const float sensibility = 50.f;
 
 void joypad_button(smlt::Button button) {
