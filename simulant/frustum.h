@@ -34,16 +34,6 @@ enum FrustumCorner {
     FRUSTUM_CORNER_MAX
 };
 
-enum FrustumPlane {
-    FRUSTUM_PLANE_LEFT = 0,
-    FRUSTUM_PLANE_RIGHT,
-    FRUSTUM_PLANE_BOTTOM,
-    FRUSTUM_PLANE_TOP,
-    FRUSTUM_PLANE_NEAR,
-    FRUSTUM_PLANE_FAR,
-    FRUSTUM_PLANE_MAX
-};
-
 enum FrustumClassification {
     FRUSTUM_CONTAINS_NONE = 0,
     FRUSTUM_CONTAINS_PARTIAL,

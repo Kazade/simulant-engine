@@ -131,7 +131,7 @@ public:
             });
             joypad.button_pressed_connect(1, [&](smlt::Button button) mutable {
                     /* Reset positions and rotations */
-                    pos = { 0, 0, -5.f };
+                    pos = Vec3(0, 0, -5.f);
                     // rot = { 0, 0 };
 
                     window->stage(stage_id_)->actor(actor_id)->rotate_to_absolute(smlt::Degrees(0), 0, 0, pos.z);

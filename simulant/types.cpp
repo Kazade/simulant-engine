@@ -18,7 +18,6 @@
 //
 
 #include "types.h"
-
 #include "utils/random.h"
 
 
@@ -212,6 +211,21 @@ void Mat4::extract_rotation_and_translation(Quaternion& rotation, Vec3& translat
     rotation = glm::conjugate(rotation);
 }
 
+Mat4 Mat4::as_rotation_x(const Degrees &angle) {
+    Quaternion q = Quaternion(Degrees(angle), Degrees(), Degrees());
+    return Mat4(glm::mat4_cast(q));
+}
+
+Mat4 Mat4::as_rotation_y(const Degrees &angle) {
+    Quaternion q = Quaternion(Degrees(), Degrees(angle), Degrees());
+    return Mat4(glm::mat4_cast(q));
+}
+
+Mat4 Mat4::as_rotation_z(const Degrees &angle) {
+    Quaternion q = Quaternion(Degrees(), Degrees(), Degrees(angle));
+    return Mat4(glm::mat4_cast(q));
+}
+
 Mat3 Mat3::from_rotation_x(float pitch) {
     Mat3 ret = glm::mat3x3(glm::rotate(pitch, glm::vec3(1, 0, 0)));
     return ret;
@@ -249,6 +263,62 @@ Mat4 Mat4::as_translation(const Vec3 &v) {
     return ret;
 }
 
+Plane Mat4::extract_plane(FrustumPlane plane) const {
+    float t = 1.0f;
+    Plane out;
+
+    switch(plane) {
+    case FRUSTUM_PLANE_RIGHT:
+        out.n.x = (*this)[3] - (*this)[0];
+        out.n.y = (*this)[7] - (*this)[4];
+        out.n.z = (*this)[11] - (*this)[8];
+        out.d = (*this)[15] - (*this)[12];
+        break;
+    case FRUSTUM_PLANE_LEFT:
+        out.n.x = (*this)[3] + (*this)[0];
+        out.n.y = (*this)[7] + (*this)[4];
+        out.n.z = (*this)[11] + (*this)[8];
+        out.d = (*this)[15] + (*this)[12];
+        break;
+    case FRUSTUM_PLANE_BOTTOM:
+        out.n.x = (*this)[3] + (*this)[1];
+        out.n.y = (*this)[7] + (*this)[5];
+        out.n.z = (*this)[11] + (*this)[9];
+        out.d = (*this)[15] + (*this)[13];
+        break;
+    case FRUSTUM_PLANE_TOP:
+        out.n.x = (*this)[3] - (*this)[1];
+        out.n.y = (*this)[7] - (*this)[5];
+        out.n.z = (*this)[11] - (*this)[9];
+        out.d = (*this)[15] - (*this)[13];
+        break;
+    case FRUSTUM_PLANE_FAR:
+        out.n.x = (*this)[3] - (*this)[2];
+        out.n.y = (*this)[7] - (*this)[6];
+        out.n.z = (*this)[11] - (*this)[10];
+        out.d = (*this)[15] - (*this)[14];
+        break;
+    case FRUSTUM_PLANE_NEAR:
+        out.n.x = (*this)[3] + (*this)[2];
+        out.n.y = (*this)[7] + (*this)[6];
+        out.n.z = (*this)[11] + (*this)[10];
+        out.d = (*this)[15] + (*this)[14];
+        break;
+    default:
+        assert(0 && "Invalid plane index");
+    }
+
+    t = sqrtf(out.n.x * out.n.x +
+              out.n.y * out.n.y +
+              out.n.z * out.n.z);
+    out.n.x /= t;
+    out.n.y /= t;
+    out.n.z /= t;
+    out.d /= t;
+
+    return out;
+}
+
 Mat4 Mat4::as_look_at(const Vec3& eye, const Vec3& target, const Vec3& up) {
     Mat4 ret = glm::lookAt(eye, target, up);
     return ret;
@@ -265,42 +335,42 @@ Radians::Radians(const Degrees &rhs):
 
 uint32_t vertex_attribute_size(VertexAttribute attr) {
     switch(attr) {
-        case VERTEX_ATTRIBUTE_NONE: return 0;
-        case VERTEX_ATTRIBUTE_2F: return sizeof(float) * 2;
-        case VERTEX_ATTRIBUTE_3F:  return sizeof(float) * 3;
-        case VERTEX_ATTRIBUTE_4F: return sizeof(float) * 4;
-        default:
-            assert(0 && "Invalid attribute specified");
+    case VERTEX_ATTRIBUTE_NONE: return 0;
+    case VERTEX_ATTRIBUTE_2F: return sizeof(float) * 2;
+    case VERTEX_ATTRIBUTE_3F:  return sizeof(float) * 3;
+    case VERTEX_ATTRIBUTE_4F: return sizeof(float) * 4;
+    default:
+        assert(0 && "Invalid attribute specified");
     }
 }
 
 VertexSpecification::VertexSpecification(
-    VertexAttribute position, VertexAttribute normal, VertexAttribute texcoord0,
-    VertexAttribute texcoord1, VertexAttribute texcoord2, VertexAttribute texcoord3,
-    VertexAttribute diffuse, VertexAttribute specular):
-        position_attribute(position),
-        normal_attribute(normal),
-        texcoord0_attribute(texcoord0),
-        texcoord1_attribute(texcoord1),
-        texcoord2_attribute(texcoord2),
-        texcoord3_attribute(texcoord3),
-        diffuse_attribute(diffuse),
-        specular_attribute(specular) {
+        VertexAttribute position, VertexAttribute normal, VertexAttribute texcoord0,
+        VertexAttribute texcoord1, VertexAttribute texcoord2, VertexAttribute texcoord3,
+        VertexAttribute diffuse, VertexAttribute specular):
+    position_attribute(position),
+    normal_attribute(normal),
+    texcoord0_attribute(texcoord0),
+    texcoord1_attribute(texcoord1),
+    texcoord2_attribute(texcoord2),
+    texcoord3_attribute(texcoord3),
+    diffuse_attribute(diffuse),
+    specular_attribute(specular) {
 
     recalc_stride();
 }
 
 void VertexSpecification::recalc_stride() {
     stride_ = (
-        vertex_attribute_size(position_attribute) +
-        vertex_attribute_size(normal_attribute) +
-        vertex_attribute_size(texcoord0_attribute) +
-        vertex_attribute_size(texcoord1_attribute) +
-        vertex_attribute_size(texcoord2_attribute) +
-        vertex_attribute_size(texcoord3_attribute) +
-        vertex_attribute_size(diffuse_attribute) +
-        vertex_attribute_size(specular_attribute)
-    );
+                vertex_attribute_size(position_attribute) +
+                vertex_attribute_size(normal_attribute) +
+                vertex_attribute_size(texcoord0_attribute) +
+                vertex_attribute_size(texcoord1_attribute) +
+                vertex_attribute_size(texcoord2_attribute) +
+                vertex_attribute_size(texcoord3_attribute) +
+                vertex_attribute_size(diffuse_attribute) +
+                vertex_attribute_size(specular_attribute)
+                );
 }
 
 uint32_t VertexSpecification::position_offset(bool check) const {
@@ -380,6 +450,46 @@ float Plane::distance_to(const Vec3 &p) {
     return k2 - k1;
 }
 
+PlaneClassification Plane::classify_point(const Vec3 &p) const {
+    /* This function will determine if a point is on, in front of, or behind*/
+    /* the plane.  First we store the dot product of the plane and the point.*/
+    auto distance = n.x * p.x + n.y * p.y + n.z * p.z + d;
+
+    /* Simply put if the dot product is greater than 0 then it is infront of it.*/
+    /* If it is less than 0 then it is behind it.  And if it is 0 then it is on it.*/
+    if(distance > std::numeric_limits<float>::epsilon()) return PlaneClassification(-1);
+    if(distance < -std::numeric_limits<float>::epsilon()) return PlaneClassification(1);
+
+    return PlaneClassification(0);
+}
+
+smlt::optional<Vec3> Plane::intersect_planes(const Plane &p1, const Plane &p2, const Plane &p3) {
+    const Vec3& n1 = p1.n;
+    const Vec3& n2 = p2.n;
+    const Vec3& n3 = p3.n;
+
+    auto cross = n2.cross(n3);
+    auto denom = n1.dot(cross);
+
+    if(almost_equal(denom, 0.0f)) {
+        return smlt::optional<Vec3>();
+    }
+
+    auto r1 = n2.cross(n3);
+    auto r2 = n3.cross(n1);
+    auto r3 = n1.cross(n2);
+
+    r1 *= -p1.d;
+    r2 *= p2.d;
+    r3 *= p3.d;
+
+    auto ret = r1 - r2 - r3;
+
+    ret *= 1.0 / denom;
+
+    return ret;
+}
+
 bool Ray::intersects_aabb(const AABB &aabb) const {
     //http://gamedev.stackexchange.com/a/18459/15125
     Vec3 rdir = this->dir.normalized();
@@ -406,6 +516,31 @@ bool Ray::intersects_aabb(const AABB &aabb) const {
     }
 
     return false;
+}
+
+bool Ray::intersects_triangle(const Vec3 &v1, const Vec3 &v2, const Vec3 &v3, Vec3 *intersection, Vec3 *normal, float *distance) const {
+    Vec3 hit;
+    bool ret = glm::intersectLineTriangle(
+                (const glm::vec3&) start,
+                (const glm::vec3&) dir,
+                (const glm::vec3&) v1,
+                (const glm::vec3&) v2,
+                (const glm::vec3&) v3,
+                (glm::vec3&) hit
+                );
+
+    if(ret) {
+        if(intersection) *intersection = hit;
+        if(normal) {
+            *normal = (v2 - v1).cross(v3 - v1).normalized();
+        }
+
+        if(distance) {
+            *distance = (hit - start).length();
+        }
+    }
+
+    return ret;
 }
 
 }

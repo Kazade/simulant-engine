@@ -85,12 +85,12 @@ Degrees Frustum::field_of_view() const {
 void Frustum::build(const Mat4* modelview_projection) {
     planes_.resize(FRUSTUM_PLANE_MAX);
 
-    planes_[FRUSTUM_PLANE_LEFT] = modelview_projection->extract_plane(1);
-    planes_[FRUSTUM_PLANE_RIGHT] = modelview_projection->extract_plane(-1);
-    planes_[FRUSTUM_PLANE_BOTTOM] = modelview_projection->extract_plane(2);
-    planes_[FRUSTUM_PLANE_TOP] = modelview_projection->extract_plane(-2);
-    planes_[FRUSTUM_PLANE_NEAR] = modelview_projection->extract_plane(3);
-    planes_[FRUSTUM_PLANE_FAR] = modelview_projection->extract_plane(-3);
+    planes_[FRUSTUM_PLANE_LEFT] = modelview_projection->extract_plane(FRUSTUM_PLANE_LEFT);
+    planes_[FRUSTUM_PLANE_RIGHT] = modelview_projection->extract_plane(FRUSTUM_PLANE_RIGHT);
+    planes_[FRUSTUM_PLANE_BOTTOM] = modelview_projection->extract_plane(FRUSTUM_PLANE_BOTTOM);
+    planes_[FRUSTUM_PLANE_TOP] = modelview_projection->extract_plane(FRUSTUM_PLANE_TOP);
+    planes_[FRUSTUM_PLANE_NEAR] = modelview_projection->extract_plane(FRUSTUM_PLANE_NEAR);
+    planes_[FRUSTUM_PLANE_FAR] = modelview_projection->extract_plane(FRUSTUM_PLANE_FAR);
 
     near_corners_.resize(FRUSTUM_CORNER_MAX);
 
@@ -98,50 +98,50 @@ void Frustum::build(const Mat4* modelview_projection) {
         planes_[FRUSTUM_PLANE_LEFT],
         planes_[FRUSTUM_PLANE_BOTTOM],
         planes_[FRUSTUM_PLANE_NEAR]
-    );
+    ).value();
 
     near_corners_[FRUSTUM_CORNER_BOTTOM_RIGHT] = Plane::intersect_planes(
         planes_[FRUSTUM_PLANE_RIGHT],
         planes_[FRUSTUM_PLANE_BOTTOM],
         planes_[FRUSTUM_PLANE_NEAR]
-    );
+    ).value();
 
     near_corners_[FRUSTUM_CORNER_TOP_RIGHT] = Plane::intersect_planes(
         planes_[FRUSTUM_PLANE_RIGHT],
         planes_[FRUSTUM_PLANE_TOP],
         planes_[FRUSTUM_PLANE_NEAR]
-    );
+    ).value();
 
     near_corners_[FRUSTUM_CORNER_TOP_LEFT] = Plane::intersect_planes(
         planes_[FRUSTUM_PLANE_LEFT],
         planes_[FRUSTUM_PLANE_TOP],
         planes_[FRUSTUM_PLANE_NEAR]
-    );
+    ).value();
 
     far_corners_.resize(FRUSTUM_CORNER_MAX);
     far_corners_[FRUSTUM_CORNER_BOTTOM_LEFT] = Plane::intersect_planes(
         planes_[FRUSTUM_PLANE_LEFT],
         planes_[FRUSTUM_PLANE_BOTTOM],
         planes_[FRUSTUM_PLANE_FAR]
-    );
+    ).value();
 
     far_corners_[FRUSTUM_CORNER_BOTTOM_RIGHT] = Plane::intersect_planes(
         planes_[FRUSTUM_PLANE_RIGHT],
         planes_[FRUSTUM_PLANE_BOTTOM],
         planes_[FRUSTUM_PLANE_FAR]
-    );
+    ).value();
 
     far_corners_[FRUSTUM_CORNER_TOP_RIGHT] = Plane::intersect_planes(
         planes_[FRUSTUM_PLANE_RIGHT],
         planes_[FRUSTUM_PLANE_TOP],
         planes_[FRUSTUM_PLANE_FAR]
-    );
+    ).value();
 
     far_corners_[FRUSTUM_CORNER_TOP_LEFT] = Plane::intersect_planes(
         planes_[FRUSTUM_PLANE_LEFT],
         planes_[FRUSTUM_PLANE_TOP],
         planes_[FRUSTUM_PLANE_FAR]
-    );
+    ).value();
 
     initialized_ = true;
 }

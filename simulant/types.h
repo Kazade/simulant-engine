@@ -26,6 +26,7 @@
 #include <string>
 #include <vector>
 #include "colour.h"
+#include "generic/optional.h"
 
 #include "deps/glm/vec2.hpp"
 #include "deps/glm/vec3.hpp"
@@ -104,8 +105,23 @@ struct Euler {
     Degrees z;
 };
 
-
 struct Plane;
+
+enum FrustumPlane {
+    FRUSTUM_PLANE_LEFT = 0,
+    FRUSTUM_PLANE_RIGHT,
+    FRUSTUM_PLANE_BOTTOM,
+    FRUSTUM_PLANE_TOP,
+    FRUSTUM_PLANE_NEAR,
+    FRUSTUM_PLANE_FAR,
+    FRUSTUM_PLANE_MAX
+};
+
+template<typename T>
+bool almost_equal(const T& lhs, const T& rhs) {
+    return lhs + std::numeric_limits<T>::epsilon() > rhs &&
+           lhs - std::numeric_limits<T>::epsilon() < rhs;
+}
 
 struct Mat4 : private glm::mat4x4 {
 private:
@@ -131,7 +147,7 @@ public:
     }
 
     Mat4 operator*(const Mat4& rhs) const {
-        Mat4 result = *this * rhs;
+        Mat4 result = glm::operator *(*this, rhs);
         return result;
     }
 
@@ -140,21 +156,20 @@ public:
     static Mat4 as_rotation_x(const Degrees& angle);
     static Mat4 as_rotation_y(const Degrees& angle);
     static Mat4 as_rotation_z(const Degrees& angle);
-
     static Mat4 as_look_at(const Vec3& eye, const Vec3& target, const Vec3& up);
     static Mat4 as_scaling(float s);
 
-    float operator[](const uint32_t index) const {
+    const float operator[](const uint32_t index) const {
         uint32_t col = index / 4;
 
-        auto column = glm::mat4x4::operator [](col);
+        auto& column = glm::mat4x4::operator [](col);
         return column[index - (4 * col)];
     }
 
     float& operator[](const uint32_t index){
         uint32_t col = index / 4;
 
-        auto column = glm::mat4x4::operator [](col);
+        auto& column = glm::mat4x4::operator [](col);
         return column[index - (4 * col)];
     }
 
@@ -182,7 +197,7 @@ public:
         return ret;
     }
 
-    Plane extract_plane(int32_t id) const;
+    Plane extract_plane(FrustumPlane plane) const;
 
     const float* data() const {
         return glm::value_ptr(*this);
@@ -218,9 +233,15 @@ public:
 
     Mat3(const Mat4& rhs);
 
-    float& operator[](const uint32_t index) const {
+    const float operator[](const uint32_t index) const {
         uint32_t col = index / 3;
-        auto column = glm::mat3x3::operator [](col);
+        auto& column = glm::mat3x3::operator [](col);
+        return column[index - (3 * col)];
+    }
+
+    float& operator[](const uint32_t index) {
+        uint32_t col = index / 3;
+        auto& column = glm::mat3x3::operator [](col);
         return column[index - (3 * col)];
     }
 
@@ -274,7 +295,8 @@ public:
     }
 
     Vec2(float x, float y) {
-        glm::vec2(x, y);
+        this->x = x;
+        this->y = y;
     }
 
     Vec2 rotated_by(Degrees degrees) const;
@@ -368,7 +390,10 @@ private:
     }
 
     Vec3& operator=(const glm::vec3& rhs) {
-        glm::vec3::operator =(rhs);
+        x = rhs.x;
+        y = rhs.y;
+        z = rhs.z;
+
         return *this;
     }
 
@@ -376,8 +401,11 @@ private:
     friend class Mat4;
     friend class Mat3;
     friend class Vec2;
+    friend class Ray;
 
 public:
+    using glm::vec3::value_type;
+
     static const Vec3 NEGATIVE_X;
     static const Vec3 POSITIVE_X;
     static const Vec3 NEGATIVE_Y;
@@ -390,19 +418,25 @@ public:
     using glm::vec3::z;
 
     Vec3() {
-        glm::vec3();
+        x = y = z = 0;
     }
 
     Vec3(float x, float y, float z) {
-        glm::vec3(x, y, z);
+        this->x = x;
+        this->y = y;
+        this->z = z;
     }
 
     Vec3(const Vec2& v2, float z) {
-        glm::vec3(v2.x, v2.y, z);
+        this->x = v2.x;
+        this->y = v2.y;
+        this->z = z;
     }
 
     Vec3(const Vec3& v) {
-        glm::vec3(v.x, v.y, v.z);
+        this->x = v.x;
+        this->y = v.y;
+        this->z = v.z;
     }
 
     Vec3 operator+(const Vec3& rhs) const {
@@ -608,10 +642,10 @@ public:
     Quaternion(const Mat3& rot_matrix);
 
     Quaternion(float x, float y, float z, float w) {
-        x = x;
-        y = y;
-        z = z;
-        w = w;
+        this->x = x;
+        this->y = y;
+        this->z = z;
+        this->w = w;
     }
 
     Vec3 rotate_vector(const Vec3& v) const;
@@ -673,9 +707,23 @@ public:
         return glm::eulerAngles(*this).z;
     }
 
-    Vec3 forward() const;
-    Vec3 up() const;
-    Vec3 right() const;
+    Vec3 forward() const {
+        auto view = Mat4(glm::mat4_cast(*this));
+        auto zaxis = Vec3(view[2], view[6], view[10]);
+        return -zaxis;
+    }
+
+    Vec3 up() const {
+        auto view = Mat4(glm::mat4_cast(*this));
+        auto yaxis = Vec3(view[1], view[5], view[9]);
+        return yaxis;
+    }
+
+    Vec3 right() const {
+        auto view = Mat4(glm::mat4_cast(*this));
+        auto xaxis = Vec3(view[0], view[4], view[8]);
+        return xaxis;
+    }
 
     static Quaternion as_look_at(const Vec3& direction, const Vec3& up);
 };
@@ -724,7 +772,7 @@ struct Plane {
 
     PlaneClassification classify_point(const Vec3& p) const;
 
-    static Vec3 intersect_planes(
+    static smlt::optional<Vec3> intersect_planes(
         const Plane& p1,
         const Plane& p2,
         const Plane& p3
@@ -753,16 +801,21 @@ public:
     using glm::vec4::w;
 
     Vec4() {
-        glm::vec4();
+        x = y = z = 0;
     }
 
     Vec4(float x, float y, float z, float w) {
-        glm::vec4(x, y, z, w);
+        this->x = x;
+        this->y = y;
+        this->z = z;
+        this->w = w;
     }
 
-    Vec4(const Vec3& v, float w):
-        glm::vec4(v.x, v.y, v.z, w) {
-
+    Vec4(const Vec3& v, float w) {
+        this->x = v.x;
+        this->y = v.y;
+        this->z = v.z;
+        this->w = w;
     }
 
     bool operator==(const Vec4& rhs) const {
