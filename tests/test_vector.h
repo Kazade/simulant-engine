@@ -109,10 +109,10 @@ public:
     void test_vec2_rotated_by() {
         smlt::Vec2 up(0, 1);
 
-        assert_close(-1, up.rotated_by(smlt::Degrees(-90)).x, 0.0000001);
+        assert_close(1, up.rotated_by(smlt::Degrees(-90)).x, 0.0000001);
         assert_close(0, up.rotated_by(smlt::Degrees(-90)).y, 0.0000001);
 
-        assert_close(1, up.rotated_by(smlt::Degrees(90)).x, 0.0000001);
+        assert_close(-1, up.rotated_by(smlt::Degrees(90)).x, 0.0000001);
         assert_close(0, up.rotated_by(smlt::Degrees(90)).y, 0.0000001);
     }
 

@@ -223,9 +223,9 @@ private:
     }
 
 public:
-    static Mat3 from_rotation_x(float pitch);
-    static Mat3 from_rotation_y(float yaw);
-    static Mat3 from_rotation_z(float roll);
+    static Mat3 from_rotation_x(const Degrees& angle);
+    static Mat3 from_rotation_y(const Degrees& angle);
+    static Mat3 from_rotation_z(const Degrees& angle);
 
     Mat3() {
         glm::mat3x3();

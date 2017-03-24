@@ -88,7 +88,7 @@ Vec3 Vec3::rotated_by(const Mat4 &rot) const {
 }
 
 Vec3 Vec3::transformed_by(const Mat4 &trans) const {
-    auto tmp = Vec4(*this, 1) * trans;
+    auto tmp = trans * Vec4(*this, 1);
     return Vec3(tmp.x, tmp.y, tmp.z);
 }
 
@@ -216,32 +216,27 @@ void Mat4::extract_rotation_and_translation(Quaternion& rotation, Vec3& translat
 }
 
 Mat4 Mat4::as_rotation_x(const Degrees &angle) {
-    Quaternion q = Quaternion(Degrees(angle), Degrees(), Degrees());
-    return Mat4(glm::mat4_cast(q));
+    return glm::rotate(Mat4(), Radians(angle).value, glm::vec3(1, 0, 0));
 }
 
 Mat4 Mat4::as_rotation_y(const Degrees &angle) {
-    Quaternion q = Quaternion(Degrees(), Degrees(angle), Degrees());
-    return Mat4(glm::mat4_cast(q));
+    return glm::rotate(Mat4(), Radians(angle).value, glm::vec3(0, 1, 0));
 }
 
 Mat4 Mat4::as_rotation_z(const Degrees &angle) {
-    return glm::rotate(Mat4(), angle.value, glm::vec3(0, 0, 1));
+    return glm::rotate(Mat4(), Radians(angle).value, glm::vec3(0, 0, 1));
 }
 
-Mat3 Mat3::from_rotation_x(float pitch) {
-    Mat3 ret = glm::mat3x3(glm::rotate(pitch, glm::vec3(1, 0, 0)));
-    return ret;
+Mat3 Mat3::from_rotation_x(const Degrees& angle) {
+    return glm::mat3_cast(Quaternion(angle, Degrees(), Degrees()));
 }
 
-Mat3 Mat3::from_rotation_y(float yaw) {
-    Mat3 ret = glm::mat3x3(glm::rotate(yaw, glm::vec3(0, 1, 0)));
-    return ret;
+Mat3 Mat3::from_rotation_y(const Degrees &angle) {
+    return glm::mat3_cast(Quaternion(Degrees(), angle, Degrees()));
 }
 
-Mat3 Mat3::from_rotation_z(float roll) {
-    Mat3 ret = glm::mat3x3(glm::rotate(roll, glm::vec3(0, 0, 1)));
-    return ret;
+Mat3 Mat3::from_rotation_z(const Degrees& angle) {
+    return glm::mat3_cast(Quaternion(Degrees(), Degrees(), angle));
 }
 
 Mat3::Mat3(const Mat4 &rhs) {
