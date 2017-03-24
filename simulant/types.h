@@ -106,6 +106,7 @@ struct Euler {
 };
 
 struct Plane;
+struct Vec4;
 
 enum FrustumPlane {
     FRUSTUM_PLANE_LEFT = 0,
@@ -137,6 +138,7 @@ private:
     friend class Vec4;
     friend class Quaternion;
     friend class Mat3;
+    friend class Vec3;
 public:
     Mat4() {
         glm::mat4x4();
@@ -151,6 +153,8 @@ public:
         return result;
     }
 
+    Vec4 operator*(const Vec4& rhs) const;
+
     void extract_rotation_and_translation(Quaternion& rotation, Vec3& translation) const;
 
     static Mat4 as_rotation_x(const Degrees& angle);
@@ -159,18 +163,20 @@ public:
     static Mat4 as_look_at(const Vec3& eye, const Vec3& target, const Vec3& up);
     static Mat4 as_scaling(float s);
 
-    const float operator[](const uint32_t index) const {
+    const float& operator[](const uint32_t index) const {
         uint32_t col = index / 4;
+        uint32_t row = index % 4;
 
-        auto& column = glm::mat4x4::operator [](col);
-        return column[index - (4 * col)];
+        const glm::mat4x4& self = *this;
+        return self[col][row];
     }
 
     float& operator[](const uint32_t index){
         uint32_t col = index / 4;
+        uint32_t row = index % 4;
 
-        auto& column = glm::mat4x4::operator [](col);
-        return column[index - (4 * col)];
+        glm::mat4x4& self = *this;
+        return self[col][row];
     }
 
     static Mat4 as_translation(const Vec3& v);
@@ -611,8 +617,9 @@ struct AxisAngle {
 
 struct Quaternion : private glm::quat {
 private:
-    Quaternion(const glm::quat& rhs) {
-        *this = rhs;
+    Quaternion(const glm::quat& rhs):
+        glm::quat(rhs) {
+
     }
 
     Quaternion& operator=(const glm::quat& rhs) {
@@ -635,7 +642,11 @@ public:
     }
 
     Quaternion(Degrees pitch, Degrees yaw, Degrees roll) {
-        glm::quat::operator =(glm::quat(glm::vec3(pitch.value, yaw.value, roll.value)));
+        glm::quat::operator =(glm::quat(glm::vec3(
+            Radians(pitch).value,
+            Radians(yaw).value,
+            Radians(roll).value
+        )));
     }
 
     Quaternion(const Vec3& axis, const Degrees& degrees);
@@ -686,7 +697,10 @@ public:
     }
 
     Quaternion operator*(const Quaternion& rhs) const {
-        return Quaternion(glm::operator*((const glm::quat&) *this, (const glm::quat&) rhs));
+        glm::quat l = *this;
+        glm::quat r = rhs;
+
+        return Quaternion(l * r);
     }
 
     Quaternion slerp(const Quaternion& rhs, float t) {
@@ -794,6 +808,8 @@ private:
         return *this;
     }
 
+    friend class Vec3;
+    friend class Mat4;
 public:
     using glm::vec4::x;
     using glm::vec4::y;
@@ -828,12 +844,6 @@ public:
 
     Vec4 operator-(const Vec4& rhs) const {
         return Vec4(x - rhs.x, y - rhs.y, z - rhs.z, w - rhs.w);
-    }
-
-    Vec4 operator*(const Mat4& rhs) const {
-        glm::vec4 p = *this;
-        glm::mat4x4 m = rhs;
-        return Vec4(p * m);
     }
 
     Vec4 operator*(const float& rhs) const {

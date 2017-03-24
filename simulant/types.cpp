@@ -82,9 +82,8 @@ Vec3 Vec3::operator*(const Quaternion &rhs) const {
     return rhs.rotate_vector(*this);
 }
 
-
 Vec3 Vec3::rotated_by(const Mat4 &rot) const {
-    auto tmp = Vec4(*this, 0) * rot;
+    auto tmp = rot * Vec4(*this, 0);
     return Vec3(tmp.x, tmp.y, tmp.z);
 }
 
@@ -141,6 +140,7 @@ Quaternion Quaternion::as_look_at(const Vec3& direction, const Vec3& up=Vec3(0, 
 
 Quaternion::Quaternion(const Vec3 &axis, const Degrees &degrees) {
     *this = glm::angleAxis(degrees.value, axis);
+    normalize();
 }
 
 Quaternion::Quaternion(const Mat3& rot_matrix) {
@@ -201,6 +201,10 @@ AxisAngle Quaternion::to_axis_angle() const {
     return ret;
 }
 
+Vec4 Mat4::operator*(const Vec4 &rhs) const {
+    return glm::operator*(*this, rhs);
+}
+
 void Mat4::extract_rotation_and_translation(Quaternion& rotation, Vec3& translation) const {
 
     glm::vec3 scale;
@@ -222,8 +226,7 @@ Mat4 Mat4::as_rotation_y(const Degrees &angle) {
 }
 
 Mat4 Mat4::as_rotation_z(const Degrees &angle) {
-    Quaternion q = Quaternion(Degrees(), Degrees(), Degrees(angle));
-    return Mat4(glm::mat4_cast(q));
+    return glm::rotate(Mat4(), angle.value, glm::vec3(0, 0, 1));
 }
 
 Mat3 Mat3::from_rotation_x(float pitch) {

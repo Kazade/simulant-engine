@@ -19,6 +19,30 @@ public:
         }
     }
 
+    void test_from_rotation_z() {
+        smlt::Mat4 m = smlt::Mat4::as_rotation_z(smlt::Degrees(90));
+
+        assert_close(m[0], acosf(smlt::Radians(smlt::Degrees(90)).value), 0.0000001);
+        assert_close(m[1], asinf(smlt::Radians(smlt::Degrees(90)).value), 0.0000001);
+        assert_close(m[2], 0, 0.0000001);
+        assert_close(m[3], 0, 0.0000001);
+
+        assert_close(m[4], -asinf(smlt::Radians(smlt::Degrees(90)).value), 0.0000001);
+        assert_close(m[5], acosf(smlt::Radians(smlt::Degrees(90)).value), 0.0000001);
+        assert_close(m[6], 0, 0.0000001);
+        assert_close(m[7], 0, 0.0000001);
+
+        assert_close(m[8], 0, 0.0000001);
+        assert_close(m[9], 0, 0.0000001);
+        assert_close(m[10], 1, 0.0000001);
+        assert_close(m[11], 0, 0.0000001);
+
+        assert_close(m[12], 0, 0.0000001);
+        assert_close(m[13], 0, 0.0000001);
+        assert_close(m[14], 0, 0.0000001);
+        assert_close(m[15], 1, 0.0000001);
+    }
+
     void test_assignment() {
         smlt::Mat4 b;
 
