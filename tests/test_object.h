@@ -79,11 +79,18 @@ public:
 
         actor2->rotate_to_absolute(smlt::Degrees(20), 0, 0, 1);
 
-        smlt::Quaternion expected_rel(smlt::Vec3::POSITIVE_Z, smlt::Degrees(20));
-        smlt::Quaternion expected_abs(smlt::Vec3::POSITIVE_Z, smlt::Degrees(10));
+        smlt::Quaternion expected_rel(smlt::Vec3::POSITIVE_Z, smlt::Degrees(10));
+        smlt::Quaternion expected_abs(smlt::Vec3::POSITIVE_Z, smlt::Degrees(20));
 
-        assert_equal(expected_abs, actor2->absolute_rotation());
-        assert_equal(expected_rel, actor2->rotation());
+        assert_close(expected_abs.x, actor2->absolute_rotation().x, 0.000001);
+        assert_close(expected_abs.y, actor2->absolute_rotation().y, 0.000001);
+        assert_close(expected_abs.z, actor2->absolute_rotation().z, 0.000001);
+        assert_close(expected_abs.w, actor2->absolute_rotation().w, 0.000001);
+
+        assert_close(expected_rel.x, actor2->rotation().x, 0.000001);
+        assert_close(expected_rel.y, actor2->rotation().y, 0.000001);
+        assert_close(expected_rel.z, actor2->rotation().z, 0.000001);
+        assert_close(expected_rel.w, actor2->rotation().w, 0.000001);
     }
 
     void test_set_absolute_position() {

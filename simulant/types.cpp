@@ -139,8 +139,7 @@ Quaternion Quaternion::as_look_at(const Vec3& direction, const Vec3& up=Vec3(0, 
 }
 
 Quaternion::Quaternion(const Vec3 &axis, const Degrees &degrees) {
-    *this = glm::angleAxis(degrees.value, axis);
-    normalize();
+    *this = glm::angleAxis(Radians(degrees).value, axis);
 }
 
 Quaternion::Quaternion(const Mat3& rot_matrix) {

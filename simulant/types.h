@@ -617,9 +617,11 @@ struct AxisAngle {
 
 struct Quaternion : private glm::quat {
 private:
-    Quaternion(const glm::quat& rhs):
-        glm::quat(rhs) {
-
+    Quaternion(const glm::quat& rhs) {
+        this->x = rhs.x;
+        this->y = rhs.y;
+        this->z = rhs.z;
+        this->w = rhs.w;
     }
 
     Quaternion& operator=(const glm::quat& rhs) {
@@ -689,7 +691,7 @@ public:
     }
 
     bool operator==(const Quaternion& rhs) const {
-        return glm::operator ==(*this, rhs);
+        return x == rhs.x && y == rhs.y && z == rhs.z && w == rhs.w;
     }
 
     bool operator!=(const Quaternion& rhs) const {
