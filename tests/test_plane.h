@@ -14,6 +14,25 @@ public:
 
         assert_equal(1.0, p.distance_to(point));
     }
+
+    void test_point_classification() {
+
+        smlt::Plane p(0, 1, 0, 0);
+
+        smlt::Vec3 in_front(0, 1, 0);
+        smlt::Vec3 behind(0, -1, 0);
+        smlt::Vec3 on_plane(0, 0, 0);
+
+        assert_true(p.classify_point(in_front).is_in_front_of_plane());
+        assert_false(p.classify_point(in_front).is_behind_plane());
+
+        assert_true(p.classify_point(behind).is_behind_plane());
+        assert_false(p.classify_point(behind).is_in_front_of_plane());
+
+        assert_true(p.classify_point(on_plane).is_on_plane());
+        assert_false(p.classify_point(on_plane).is_behind_plane());
+        assert_false(p.classify_point(on_plane).is_in_front_of_plane());
+    }
 };
 
 }
