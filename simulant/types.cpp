@@ -317,7 +317,15 @@ Plane Mat4::extract_plane(FrustumPlane plane) const {
 }
 
 Mat4 Mat4::as_look_at(const Vec3& eye, const Vec3& target, const Vec3& up) {
-    Mat4 ret = glm::lookAt(eye, target, up);
+    /* If the up vector is parellel to the view vector then we swap the up Y/Z axis */
+
+    float d = up.dot((target - eye));
+
+    Mat4 ret = glm::lookAt(
+        eye,
+        target,
+        (almost_equal(d*d, 1.0f)) ? Vec3(up.x, up.z, up.y) : up
+    );
     return ret;
 }
 

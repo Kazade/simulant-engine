@@ -53,8 +53,15 @@ public:
         pos = Vec3(0, -1, 0);
         stage->camera(camera_id_)->look_at(pos);
 
-        assert_equal(Vec3(0, 0, -1), stage->camera(camera_id_)->up());
+        auto f = stage->camera(camera_id_)->forward();
+        assert_close(0.0f, f.x, 0.000001);
+        assert_close(-1.0f, f.y, 0.000001);
+        assert_close(0.0f, f.z, 0.000001);
 
+        auto res = stage->camera(camera_id_)->up();
+        assert_close(res.x, 0, 0.000001);
+        assert_close(res.y, 0, 0.000001);
+        assert_close(res.z, 1, 0.000001);
     }
 
 private:
