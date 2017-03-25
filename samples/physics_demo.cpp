@@ -16,7 +16,7 @@ public:
         auto stage = window->stage(stage_id_);
         stage->host_camera(camera_id_);
         window->camera(camera_id_)->set_perspective_projection(
-            45.0, float(window->width()) / float(window->height()), 1.0, 1000.0
+            Degrees(45.0), float(window->width()) / float(window->height()), 1.0, 1000.0
         );
 
         stage->camera(camera_id_)->move_to(0, 10, 50);

@@ -151,7 +151,7 @@ public:
         assert_true(!frustum.initialized());
 
         //Create a pespective projection, and a modelview idactor matrix
-        Mat4 projection = Mat4::as_projection(45.0, 16.0 / 9.0, 0.1, 100.0);
+        Mat4 projection = Mat4::as_projection(Degrees(45.0), 16.0 / 9.0, 0.1, 100.0);
         Mat4 modelview;
 
         //Create the modelview projection matrix

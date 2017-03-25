@@ -25,7 +25,7 @@ public:
     }
 
     void test_project_point() {
-        window->camera(camera_id_)->set_perspective_projection(45.0, float(window->width()) / float(window->height()));
+        window->camera(camera_id_)->set_perspective_projection(Degrees(45.0), float(window->width()) / float(window->height()));
 
         Vec3 p1 = window->camera(camera_id_)->project_point(*window, Viewport(), Vec3(0, 0, -10)).value();
 

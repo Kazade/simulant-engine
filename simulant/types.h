@@ -181,9 +181,9 @@ public:
 
     static Mat4 as_translation(const Vec3& v);
 
-    static Mat4 as_projection(float fov, float aspect, float near, float far) {
+    static Mat4 as_projection(const Degrees& fov, float aspect, float near, float far) {
         Mat4 ret;
-        ret = glm::perspective(fov, aspect, near, far);
+        ret = glm::perspective(Radians(fov).value, aspect, near, far);
         return ret;
     }
 

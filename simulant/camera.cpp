@@ -30,7 +30,7 @@ Camera::Camera(CameraID id, WindowBase *window):
     window_(window),
     proxy_(nullptr) {
 
-    set_perspective_projection(45.0, float(window->width()) / float(window->height()));
+    set_perspective_projection(Degrees(45.0), float(window->width()) / float(window->height()));
 }
 
 void Camera::set_transform(const smlt::Mat4& transform) {
@@ -47,7 +47,7 @@ void Camera::update_frustum() {
     frustum_.build(&mvp); //Update the frustum for this camera
 }
 
-void Camera::set_perspective_projection(double fov, double aspect, double near, double far) {
+void Camera::set_perspective_projection(const Degrees& fov, double aspect, double near, double far) {
     projection_matrix_ = Mat4::as_projection(fov, aspect, near, far);
     update_frustum();
 }
