@@ -79,6 +79,14 @@ struct Degrees {
         ret.value = -ret.value;
         return ret;
     }
+
+    bool operator==(const Degrees& rhs) const {
+        return value == rhs.value;
+    }
+
+    bool operator!=(const Degrees& rhs) const {
+        return !(*this == rhs);
+    }
 };
 
 struct Radians {
@@ -665,7 +673,11 @@ public:
 
     Euler to_euler() const {
         auto ret = glm::eulerAngles(*this);
-        return Euler(ret.x, ret.y, ret.z);
+        return Euler(
+            Degrees(Radians(ret.x)).value,
+            Degrees(Radians(ret.y)).value,
+            Degrees(Radians(ret.z)).value
+        );
     }
 
     AxisAngle to_axis_angle() const;
