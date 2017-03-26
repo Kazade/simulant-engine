@@ -99,16 +99,17 @@ void GenericRenderer::set_light_uniforms(const MaterialPass* pass, GPUProgram* p
     if(uniforms->uses_auto(SP_AUTO_LIGHT_POSITION)) {
         auto varname = uniforms->auto_variable_name(SP_AUTO_LIGHT_POSITION);
         auto pos = (light) ? light->absolute_position() : Vec3();
+        auto vec = (light) ? Vec4(pos, (light->type() == LIGHT_TYPE_DIRECTIONAL) ? 0.0 : 1.0) : Vec4();
 
-        program->set_uniform_vec4(
-            varname,
-            Vec4(pos, (light->type() == LIGHT_TYPE_DIRECTIONAL) ? 0.0 : 1.0)
-        );
+        program->set_uniform_vec4(varname, vec);
     }
 
     if(uniforms->uses_auto(SP_AUTO_LIGHT_AMBIENT)) {
         auto varname = uniforms->auto_variable_name(SP_AUTO_LIGHT_AMBIENT);
-        program->set_uniform_colour(varname, light->ambient());
+        program->set_uniform_colour(
+            varname,
+            (light) ? light->ambient() : Colour::NONE
+        );
     }
 
     if(uniforms->uses_auto(SP_AUTO_LIGHT_DIFFUSE)) {
