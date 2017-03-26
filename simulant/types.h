@@ -736,21 +736,16 @@ public:
     }
 
     Vec3 forward() const {
-        auto view = Mat4(glm::mat4_cast(*this));
-        auto zaxis = Vec3(view[2], view[6], view[10]);
-        return -zaxis;
+        // OpenGL coordinate system has Neg-z as "forward"
+        return Vec3::NEGATIVE_Z.rotated_by(*this);
     }
 
     Vec3 up() const {
-        auto view = Mat4(glm::mat4_cast(*this));
-        auto yaxis = Vec3(view[1], view[5], view[9]);
-        return yaxis;
+        return Vec3::POSITIVE_Y.rotated_by(*this);
     }
 
     Vec3 right() const {
-        auto view = Mat4(glm::mat4_cast(*this));
-        auto xaxis = Vec3(view[0], view[4], view[8]);
-        return xaxis;
+        return Vec3::POSITIVE_X.rotated_by(*this);
     }
 
     static Quaternion as_look_at(const Vec3& direction, const Vec3& up);

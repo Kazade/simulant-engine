@@ -20,6 +20,17 @@ public:
         window->delete_stage(stage_id_);
     }
 
+    void test_move_forward_by() {
+        auto actor = stage_id_.fetch()->new_actor().fetch();
+
+        actor->rotate_to(smlt::Quaternion(smlt::Degrees(0), smlt::Degrees(90), smlt::Degrees(0)));
+        actor->move_forward_by(200);
+
+        assert_close(actor->absolute_position().x, -200.0, 0.00001);
+        assert_close(actor->absolute_position().y, 0.0, 0.00001);
+        assert_close(actor->absolute_position().z, 0.0, 0.00001);
+    }
+
     void test_positional_constraints() {
         smlt::AABB aabb(Vec3(), 2.0);
 
