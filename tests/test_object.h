@@ -26,9 +26,9 @@ public:
         actor->rotate_to(smlt::Quaternion(smlt::Degrees(0), smlt::Degrees(90), smlt::Degrees(0)));
         actor->move_forward_by(200);
 
-        assert_close(actor->absolute_position().x, -200.0, 0.00001);
-        assert_close(actor->absolute_position().y, 0.0, 0.00001);
-        assert_close(actor->absolute_position().z, 0.0, 0.00001);
+        assert_close(actor->absolute_position().x, -200.0, 0.0001);
+        assert_close(actor->absolute_position().y, 0.0, 0.0001);
+        assert_close(actor->absolute_position().z, 0.0, 0.0001);
     }
 
     void test_positional_constraints() {
