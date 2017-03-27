@@ -311,14 +311,14 @@ MaterialID Material::new_clone(ResourceManager* target_resource_manager, Garbage
     return ret;
 }
 
-void Material::set_int_property(const std::__cxx11::string &name, int value) {
+void Material::set_int_property(const std::string &name, int value) {
     auto& property = properties_.at(name);
     property.type = MATERIAL_PROPERTY_TYPE_INT;
     property.int_value = value;
     property.is_set = true;
 }
 
-void Material::set_float_property(const std::__cxx11::string &name, float value) {
+void Material::set_float_property(const std::string &name, float value) {
     auto& property = properties_.at(name);
     property.type = MATERIAL_PROPERTY_TYPE_FLOAT;
     property.float_value = value;
