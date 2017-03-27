@@ -131,7 +131,7 @@ smlt::optional<Vec3> Camera::unproject_point(const RenderTarget& target, const V
     ret.y = out.y * out.y;
     ret.z = out.z * out.z;
 
-    return ret;
+    return smlt::optional<Vec3>(std::move(ret));
 }
 
 }
