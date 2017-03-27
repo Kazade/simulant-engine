@@ -492,7 +492,7 @@ smlt::optional<Vec3> Plane::intersect_planes(const Plane &p1, const Plane &p2, c
 
     ret *= 1.0 / denom;
 
-    return ret;
+    return smlt::optional<Vec3>(std::move(ret));
 }
 
 bool Ray::intersects_aabb(const AABB &aabb) const {
