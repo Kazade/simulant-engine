@@ -43,8 +43,8 @@ enum XBoxButtons {
 // };
 
 smlt::ActorID actor_id;
-kmVec3 pos = { 0.f, 0.f, -5.f };
-kmVec2 rot = { 1.f, 0.5f };
+smlt::Vec3 pos = { 0.f, 0.f, -5.f };
+smlt::Vec2 rot = { 1.f, 0.5f };
 const float sensibility = 50.f;
 
 void joypad_button(smlt::Button button) {
@@ -78,7 +78,7 @@ public:
         prepare_basic_scene(stage_id_, camera_id_);
 
         window->camera(camera_id_)->set_perspective_projection(
-            45.0,
+            Degrees(45.0),
             float(window->width()) / float(window->height()),
             1.0,
             1000.0
@@ -131,7 +131,7 @@ public:
             });
             joypad.button_pressed_connect(1, [&](smlt::Button button) mutable {
                     /* Reset positions and rotations */
-                    pos = { 0, 0, -5.f };
+                    pos = Vec3(0, 0, -5.f);
                     // rot = { 0, 0 };
 
                     window->stage(stage_id_)->actor(actor_id)->rotate_to_absolute(smlt::Degrees(0), 0, 0, pos.z);

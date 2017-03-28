@@ -176,10 +176,10 @@ void Mesh::enable_debug(bool value) {
 
                 Vec3 n;
                 mesh->vertex_data->normal_at(idx, n);
-                kmVec3Scale(&n, &n, 10.0);
 
-                kmVec3 pos2;
-                kmVec3Add(&pos2, &pos1, &n);
+                n *= 10.0f;
+
+                Vec3 pos2 = pos1 + n;
 
                 normal_debug_mesh_->vertex_data->position(pos1);
                 normal_debug_mesh_->vertex_data->diffuse(smlt::Colour::RED);
@@ -515,14 +515,14 @@ void Mesh::transform_vertices(const smlt::Mat4& transform, bool include_submeshe
     for(uint32_t i = 0; i < shared_data->count(); ++i) {
         if(shared_data->specification().has_positions()) {
             smlt::Vec3 v = shared_data->position_at<Vec3>(i);
-            kmVec3MultiplyMat4(&v, &v, &transform);
+            v = v.transformed_by(transform);
             shared_data->position(v);
         }
 
         if(shared_data->specification().has_normals()) {
             smlt::Vec3 n;
             shared_data->normal_at(i, n);
-            kmVec3TransformNormal(&n, &n, &transform);
+            n = n.rotated_by(transform);
             shared_data->normal(n.normalized());
         }
         shared_data->move_next();
@@ -559,8 +559,7 @@ void Mesh::normalize() {
     float dia = this->diameter();
     float scaling = 1.0 / dia;
 
-    smlt::Mat4 scale_matrix;
-    kmMat4Scaling(&scale_matrix, scaling, scaling, scaling);
+    smlt::Mat4 scale_matrix = Mat4::as_scaling(scaling);
 
     transform_vertices(scale_matrix);
 }
@@ -709,14 +708,14 @@ void SubMesh::transform_vertices(const smlt::Mat4& transformation) {
     for(uint16_t i = 0; i < vertex_data->count(); ++i) {
         smlt::Vec3 v = vertex_data->position_at<Vec3>(i);
 
-        kmVec3MultiplyMat4(&v, &v, &transformation);
+        v = v.transformed_by(transformation);
 
         vertex_data->position(v);
 
         if(vertex_data->specification().has_normals()) {
             smlt::Vec3 n;
             vertex_data->normal_at(i, n);
-            kmVec3MultiplyMat4(&n, &n, &transformation);
+            n = n.rotated_by(transformation);
             vertex_data->normal(n.normalized());
         }
 
@@ -764,12 +763,12 @@ void SubMesh::reverse_winding() {
  */
 void SubMesh::_recalc_bounds() {
     //Set the min bounds to the max
-    kmVec3Fill(&bounds_.min, std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+    bounds_.min = Vec3(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
     //Set the max bounds to the min
-    kmVec3Fill(&bounds_.max, -1000000, -1000000, -1000000);
+    bounds_.max = Vec3(std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest());
 
     if(!index_data->count()) {
-        kmAABB3Initialize(&bounds_, nullptr, 0, 0, 0);
+        bounds_ = AABB();
         return;
     }
 
@@ -828,15 +827,12 @@ void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
         }
 
         // Create a plane at the origin with the opposite direction
-        kmPlane plane;
-        kmPlaneFill(&plane, -dir.x, -dir.y, -dir.z, 0);
+        Plane plane(-dir.x, -dir.y, -dir.z, 0.0f);
 
         smlt::Vec3 v1 = vd->position_at<Vec3>(i) - bounds_.min;
-        smlt::Vec3 v2 = v1 + dir;
 
         // Project the vertex position onto the plane
-        smlt::Vec3 final;
-        kmPlaneIntersectLine(&final, &plane, &v1, &v2);
+        smlt::Vec3 final = plane.project(v1);
 
         //Scale the final position on the plane by the size of the box
         // and subtract the lower corner so that everything is relative to 0,0,0

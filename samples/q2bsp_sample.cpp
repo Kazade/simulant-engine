@@ -32,7 +32,7 @@ public:
         stage->camera(camera_id_)->new_controller<controllers::Fly>(window);
 
         window->camera(camera_id_)->set_perspective_projection(
-            45.0,
+            Degrees(45.0),
             float(window->width()) / float(window->height()),
             1.0,
             1000.0

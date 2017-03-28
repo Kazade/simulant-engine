@@ -79,12 +79,12 @@ void GPUProgram::set_uniform_float(const std::string& uniform_name, const float 
 
 void GPUProgram::set_uniform_mat4x4(const std::string& uniform_name, const Mat4& matrix) {
     int32_t loc = locate_uniform(uniform_name);
-    GLCheck(glUniformMatrix4fv, loc, 1, false, (GLfloat*)matrix.mat);
+    GLCheck(glUniformMatrix4fv, loc, 1, false, (GLfloat*)matrix.data());
 }
 
 void GPUProgram::set_uniform_mat3x3(const std::string& uniform_name, const Mat3& matrix) {
     int32_t loc = locate_uniform(uniform_name);
-    GLCheck(glUniformMatrix3fv, loc, 1, false, (GLfloat*)matrix.mat);
+    GLCheck(glUniformMatrix3fv, loc, 1, false, (GLfloat*)matrix.data());
 }
 
 void GPUProgram::set_uniform_vec3(const std::string& uniform_name, const Vec3& values) {
@@ -98,8 +98,7 @@ void GPUProgram::set_uniform_vec4(const std::string& uniform_name, const Vec4& v
 }
 
 void GPUProgram::set_uniform_colour(const std::string& uniform_name, const Colour& values) {
-    Vec4 tmp;
-    kmVec4Fill(&tmp, values.r, values.g, values.b, values.a);
+    Vec4 tmp(values.r, values.g, values.b, values.a);
     set_uniform_vec4(uniform_name, tmp);
 }
 

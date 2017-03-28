@@ -18,7 +18,6 @@ void SmoothFollow::late_update(float dt) {
         return;
     }
 
-
     Degrees target_rotation_angle = target->absolute_rotation().to_euler().y;
     float target_height = target->absolute_position().y + height_;
 

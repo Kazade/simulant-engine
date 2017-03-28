@@ -39,7 +39,7 @@ SubMesh* circle(smlt::Mesh& mesh, float diameter, int32_t point_count, float x_o
     for(uint16_t i = 0; i < point_count; ++i) {
         //Build some shared vertex data
 
-        float rads = 2 * kmPI * i / point_count;
+        float rads = 2 * PI * i / point_count;
 
         float x = radius * cos(rads);
         float y = radius * sin(rads);
@@ -78,7 +78,7 @@ SubMesh* circle_outline(smlt::Mesh& mesh, float diameter, int32_t point_count, f
     for(uint16_t i = 0; i < point_count; ++i) {
         //Build some shared vertex data
 
-        float rads = 2 * kmPI * i / point_count;
+        float rads = 2 * PI * i / point_count;
 
         float x = radius * cos(rads);
         float y = radius * sin(rads);

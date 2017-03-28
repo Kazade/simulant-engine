@@ -99,16 +99,17 @@ void GenericRenderer::set_light_uniforms(const MaterialPass* pass, GPUProgram* p
     if(uniforms->uses_auto(SP_AUTO_LIGHT_POSITION)) {
         auto varname = uniforms->auto_variable_name(SP_AUTO_LIGHT_POSITION);
         auto pos = (light) ? light->absolute_position() : Vec3();
+        auto vec = (light) ? Vec4(pos, (light->type() == LIGHT_TYPE_DIRECTIONAL) ? 0.0 : 1.0) : Vec4();
 
-        program->set_uniform_vec4(
-            varname,
-            Vec4(pos, (light->type() == LIGHT_TYPE_DIRECTIONAL) ? 0.0 : 1.0)
-        );
+        program->set_uniform_vec4(varname, vec);
     }
 
     if(uniforms->uses_auto(SP_AUTO_LIGHT_AMBIENT)) {
         auto varname = uniforms->auto_variable_name(SP_AUTO_LIGHT_AMBIENT);
-        program->set_uniform_colour(varname, light->ambient());
+        program->set_uniform_colour(
+            varname,
+            (light) ? light->ambient() : Colour::NONE
+        );
     }
 
     if(uniforms->uses_auto(SP_AUTO_LIGHT_DIFFUSE)) {
@@ -462,16 +463,13 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
 }
 
 void GenericRenderer::set_renderable_uniforms(const MaterialPass* pass, GPUProgram* program, Renderable* renderable, Camera* camera) {
-    //Calculate the modelview-projection matrix
-    Mat4 modelview_projection;
-    Mat4 modelview;
-
+    //Calculate the modelview-projection matrix    
     const Mat4 model = renderable->final_transformation();
     const Mat4& view = camera->view_matrix();
     const Mat4& projection = camera->projection_matrix();
 
-    kmMat4Multiply(&modelview, &view, &model);
-    kmMat4Multiply(&modelview_projection, &projection, &modelview);
+    Mat4 modelview = view * model;
+    Mat4 modelview_projection = projection * modelview;
 
     if(pass->uniforms->uses_auto(SP_AUTO_VIEW_MATRIX)) {
         program->set_uniform_mat4x4(
@@ -502,11 +500,9 @@ void GenericRenderer::set_renderable_uniforms(const MaterialPass* pass, GPUProgr
     }
 
     if(pass->uniforms->uses_auto(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX)) {
-        Mat3 inverse_transpose_modelview;
-
-        kmMat4ExtractRotationMat3(&modelview, &inverse_transpose_modelview);
-        kmMat3Inverse(&inverse_transpose_modelview, &inverse_transpose_modelview);
-        kmMat3Transpose(&inverse_transpose_modelview, &inverse_transpose_modelview);
+        Mat3 inverse_transpose_modelview(modelview);
+        inverse_transpose_modelview.inverse();
+        inverse_transpose_modelview.transpose();
 
         program->set_uniform_mat3x3(
             pass->uniforms->auto_variable_name(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX),

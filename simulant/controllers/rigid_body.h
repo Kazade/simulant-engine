@@ -71,9 +71,7 @@ struct RaycastCollider {
     std::pair<Vec3, bool> intersect_ray(const Vec3& start, const Vec3& direction, float* hit_distance=nullptr, Vec3* hit_normal=nullptr) {
         auto triangles = flatten(octree_->gather_triangles(octree_->find_nodes_intersecting_ray(start, direction)));
 
-        kmRay3 ray;
-        kmVec3Assign(&ray.start, &start);
-        kmVec3Assign(&ray.dir, &direction);
+        Ray ray(start, direction);
 
         float closest_hit = std::numeric_limits<float>::max();
         Vec3 intersection, normal;
@@ -83,11 +81,10 @@ struct RaycastCollider {
             float dist = closest_hit;
 
             Vec3 intersect, n;
-            bool hit = kmRay3IntersectTriangle(
-                &ray,
-                &vertices[tri.index[0]],
-                &vertices[tri.index[1]],
-                &vertices[tri.index[2]], &intersect, &n, &dist
+            bool hit = ray.intersects_triangle(
+                vertices[tri.index[0]],
+                vertices[tri.index[1]],
+                vertices[tri.index[2]], &intersect, &n, &dist
             );
 
             if(hit && dist < closest_hit) {
@@ -254,10 +251,8 @@ public:
     Quaternion rotation() const;
 
     Vec3 forward() {
-        Vec3 ret;
         Quaternion rot = rotation();
-        kmQuaternionMultiplyVec3(&ret, &rot, &KM_VEC3_NEG_Z);
-        return ret;
+        return Vec3::NEGATIVE_Z * rot;
     }
 
     const std::string name() const { return "Rigid Body"; }

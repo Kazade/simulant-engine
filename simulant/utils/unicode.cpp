@@ -23,6 +23,7 @@
 #include <iomanip>
 #include <cassert>
 #include <climits>
+#include <codecvt>
 
 #include "utf8.h"
 #include "unicode.h"
@@ -406,6 +407,8 @@ unicode unicode::strip() const {
 }
 
 unicode unicode::_do_format(uint32_t counter, const std::string& value) {
+    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> convert;
+
     unicode search = "{" + std::to_string(counter);
 
     ustring replacement(value.begin(), value.end());
@@ -423,7 +426,35 @@ unicode unicode::_do_format(uint32_t counter, const std::string& value) {
             break;
         }
 
-        result.string_.replace(pos, (end - pos) + 1, replacement);
+        ustring contents = ustring(
+            result.string_.begin() + pos + search.length(),
+            result.string_.begin() + end
+        );
+
+        auto colon_idx = contents.find(':');
+        if(colon_idx != ustring::npos) {
+            // OK, so we have some kind of formatting parameter here... let's deal with floats only
+            auto formatter = ustring(contents.begin() + colon_idx + 1, contents.end());
+            if(formatter[formatter.size() - 1] == 'f') {
+                if(formatter[0] == '.') {
+                    auto precision_string = ustring(formatter.begin() + 1, formatter.end() - 1);
+                    auto precision = std::stoi(convert.to_bytes(precision_string));
+                    auto float_val = std::stof(value);
+
+                    std::stringstream ss;
+                    ss << std::fixed << std::setprecision(precision) << float_val;
+                    replacement = unicode(ss.str()).string_;
+                }
+            }
+        }
+
+        result.string_.replace(
+            result.string_.begin() + pos,
+            result.string_.begin() + end + 1,
+            replacement
+        );
+
+        start_pos = pos + replacement.length();
     }
     return result;
 }

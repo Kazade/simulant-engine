@@ -26,8 +26,6 @@
 #include <memory>
 #include <list>
 
-#include "deps/kazmath/kazmath.h"
-
 #include "generic/managed.h"
 #include "generic/identifiable.h"
 #include "generic/property.h"

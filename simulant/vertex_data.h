@@ -67,15 +67,15 @@ public:
     void position(float x, float y, float z, float w);
     void position(float x, float y, float z);
     void position(float x, float y);
-    void position(const kmVec3& pos);
-    void position(const kmVec2& pos);
-    void position(const kmVec4& pos);
+    void position(const Vec3& pos);
+    void position(const Vec2& pos);
+    void position(const Vec4& pos);
 
     template<typename T>
     T position_at(uint32_t idx) const;
 
     void normal(float x, float y, float z);
-    void normal(const kmVec3& n);
+    void normal(const Vec3& n);
 
     void normal_at(int32_t idx, Vec3& out) {
         assert(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_3F);
@@ -90,7 +90,7 @@ public:
     void tex_coord0(float u, float v);
     void tex_coord0(float u, float v, float w);
     void tex_coord0(float x, float y, float z, float w);
-    void tex_coord0(const kmVec2& vec) { tex_coord0(vec.x, vec.y); }
+    void tex_coord0(const Vec2& vec) { tex_coord0(vec.x, vec.y); }
 
     template<typename T>
     T texcoord0_at(uint32_t idx);
@@ -101,17 +101,17 @@ public:
     void tex_coord1(float u, float v);
     void tex_coord1(float u, float v, float w);
     void tex_coord1(float x, float y, float z, float w);
-    void tex_coord1(const kmVec2& vec) { tex_coord1(vec.x, vec.y); }
+    void tex_coord1(const Vec2& vec) { tex_coord1(vec.x, vec.y); }
 
     void tex_coord2(float u, float v);
     void tex_coord2(float u, float v, float w);
     void tex_coord2(float x, float y, float z, float w);
-    void tex_coord2(const kmVec2& vec) { tex_coord2(vec.x, vec.y); }
+    void tex_coord2(const Vec2& vec) { tex_coord2(vec.x, vec.y); }
 
     void tex_coord3(float u, float v);
     void tex_coord3(float u, float v, float w);
     void tex_coord3(float x, float y, float z, float w);
-    void tex_coord3(const kmVec2& vec) { tex_coord3(vec.x, vec.y); }
+    void tex_coord3(const Vec2& vec) { tex_coord3(vec.x, vec.y); }
 
     void diffuse(float r, float g, float b, float a);
     void diffuse(const Colour& colour);

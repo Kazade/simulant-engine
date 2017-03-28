@@ -139,8 +139,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             float z = parts[3].to_float();
 
             Vec3 n(x, y, z);
-            kmVec3Normalize(&n, &n);
-            normals.push_back(n);
+            normals.push_back(n.normalized());
         } else if(parts[0] == "f") {
             std::string smi;
             if(current_material.empty()) {

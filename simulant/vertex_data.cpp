@@ -111,15 +111,15 @@ void VertexData::position(float x, float y) {
     *out = Vec2(x, y);
 }
 
-void VertexData::position(const kmVec2 &pos) {
+void VertexData::position(const Vec2 &pos) {
     position(pos.x, pos.y);
 }
 
-void VertexData::position(const kmVec3& pos) {
+void VertexData::position(const Vec3& pos) {
     position(pos.x, pos.y, pos.z);
 }
 
-void VertexData::position(const kmVec4 &pos) {
+void VertexData::position(const Vec4 &pos) {
     position(pos.x, pos.y, pos.z, pos.w);
 }
 
@@ -150,7 +150,7 @@ void VertexData::normal(float x, float y, float z) {
     *out = Vec3(x, y, z);
 }
 
-void VertexData::normal(const kmVec3& n) {
+void VertexData::normal(const Vec3 &n) {
     normal(n.x, n.y, n.z);
 }
 

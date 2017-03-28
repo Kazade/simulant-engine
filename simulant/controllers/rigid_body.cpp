@@ -169,11 +169,9 @@ std::pair<Vec3, Quaternion> RigidBodySimulation::body_transform(const impl::Body
 void RigidBodySimulation::set_body_transform(impl::Body* body, const Vec3& position, const Quaternion& rotation) {
     b3Body* b = bodies_.at(body);
 
-    Vec3 axis;
-    float angle;
-    kmQuaternionToAxisAngle(&rotation, &axis, &angle);
+    auto axis_angle = rotation.to_axis_angle();
 
-    b->SetTransform(to_b3vec3(position), to_b3vec3(axis), angle);
+    b->SetTransform(to_b3vec3(position), to_b3vec3(axis_angle.axis), axis_angle.angle.value);
 }
 
 RigidBody::RigidBody(Controllable* object, RigidBodySimulation* simulation, ColliderType collider):

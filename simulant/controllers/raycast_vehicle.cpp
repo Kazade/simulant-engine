@@ -122,8 +122,7 @@ void RaycastVehicle::fixed_update(float dt) {
     for(auto& intersection: intersections) {
         Vec3 up = -intersection.ray_dir.normalized(); //Vehicle up is always the reverse of the ray direction
         Vec3 Cv = linear_velocity_at(intersection.ray_start); // Get the velocity at the point the ray starts
-        Vec3 Cf;
-        kmVec3ProjectOnToVec3(&Cv, &up, &Cf); // Project Cv onto Up
+        Vec3 Cf = up.project_onto_vec3(Cv);
 
         // Calculate a value between 0.0 and 1.0 that shows how compressed the suspension is
         float compression_ratio = 1.0 - (intersection.dist / intersection.ray_dir.length());
@@ -151,19 +150,18 @@ void RaycastVehicle::fixed_update(float dt) {
         std::cout << "Fo: " << forward().x << ", " << forward().y << ", " << forward().z << std::endl;
         std::cout << "Pf: " << proj_forward.x << ", " << proj_forward.y << ", " << proj_forward.z << std::endl;
 
-        if(fabs(drive_force_) > kmEpsilon) {
+        if(fabs(drive_force_) > FLT_EPSILON) {
             average_surface_normal_.normalize();
             add_force(proj_forward * drive_force_);
         }
-        if(fabs(turn_force_) > kmEpsilon) {
+        if(fabs(turn_force_) > FLT_EPSILON) {
             Vec3 torque = Vec3(0, 1, 0);
             add_torque(torque * turn_force_);
         }
 
         // Apply side force
         Vec3 linear_vel = linear_velocity();
-        Vec3 proj;
-        kmVec3ProjectOnToVec3(&linear_vel, &proj_forward, &proj);
+        Vec3 proj = linear_vel.project_onto_vec3(proj_forward);
 
         Vec3 floor_vel = ground_plane.project(linear_vel);
         Vec3 Sf = proj - floor_vel;

@@ -38,18 +38,16 @@ Vec3 StageNode::absolute_scaling() const {
 }
 
 Mat4 StageNode::absolute_transformation() const {
-    Mat4 final;
+    Mat4 final(absolute_rotation_);
 
-    kmMat4RotationQuaternion(&final, &absolute_rotation_);
+    final[0] *= absolute_scale_.x;
+    final[5] *= absolute_scale_.y;
+    final[10] *= absolute_scale_.z;
+    final[15] = 1.0;
 
-    final.mat[0] *= absolute_scale_.x;
-    final.mat[5] *= absolute_scale_.y;
-    final.mat[10] *= absolute_scale_.z;
-    final.mat[15] = 1.0;
-
-    final.mat[12] = absolute_position_.x;
-    final.mat[13] = absolute_position_.y;
-    final.mat[14] = absolute_position_.z;
+    final[12] = absolute_position_.x;
+    final[13] = absolute_position_.y;
+    final[14] = absolute_position_.z;
 
     return final;
 }
@@ -81,7 +79,7 @@ void StageNode::rotate_to_absolute(const Quaternion& rotation) {
 }
 
 void StageNode::rotate_to_absolute(const Degrees& degrees, float x, float y, float z) {
-    rotate_to_absolute(Quaternion(degrees, Vec3(x, y, z)));
+    rotate_to_absolute(Quaternion(Vec3(x, y, z), degrees));
 }
 
 void StageNode::on_position_set(const Vec3& oldp, const Vec3& newp) {
@@ -162,7 +160,7 @@ const AABB StageNode::transformed_aabb() const {
     auto transform = absolute_transformation();
 
     for(auto& corner: corners) {
-        kmVec3Transform(&corner, &corner, &transform);
+        corner = corner.transformed_by(transform);
     }
 
     return AABB(corners.data(), corners.size());
@@ -170,7 +168,7 @@ const AABB StageNode::transformed_aabb() const {
 
 void StageNode::recalc_bounds() {
     auto newb = transformed_aabb();
-    if(!kmVec3AreEqual(&newb.min, &bounds_.min) || !kmVec3AreEqual(&newb.max, &bounds_.max)) {
+    if(newb.min != bounds_.min || newb.max != bounds_.max) {
         bounds_ = newb;
         signal_bounds_updated_(bounds_);
     }

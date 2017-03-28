@@ -16,7 +16,7 @@ public:
         stage->host_camera(camera_id_);
 
         window->camera(camera_id_)->set_perspective_projection(
-            45.0,
+            Degrees(45.0),
             float(window->width()) / float(window->height()),
             0.1,
             1000.0
