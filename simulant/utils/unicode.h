@@ -24,7 +24,7 @@
 #include <sstream>
 #include <stdexcept>
 
-typedef std::basic_string<char32_t> ustring;
+typedef std::u16string ustring;
 
 class InvalidEncodingError : public std::runtime_error {
 public:
@@ -45,11 +45,11 @@ public:
     unicode& operator=(const unicode& rhs);
     unicode(const char* encoded_string, const std::string& encoding="ascii");
 
-    unicode(int32_t n, char32_t c);
+    unicode(int32_t n, char16_t c);
     unicode(int32_t n, char c);
 
     unicode(const std::string& utf8_string, const std::string &encoding="ascii");
-    unicode(char32_t* unicode_string);
+    unicode(const char16_t *utf16_string);
 
     template<class InputIterator>
     unicode(InputIterator begin, InputIterator end):
@@ -164,11 +164,11 @@ public:
         return string_.rfind(what.string_);
     }
 
-    char32_t& operator[](ustring::size_type pos) {
+    char16_t& operator[](ustring::size_type pos) {
         return string_[pos];
     }
 
-    const char32_t& operator[](ustring::size_type pos) const {
+    const char16_t& operator[](ustring::size_type pos) const {
         return string_[pos];
     }
 
