@@ -23,7 +23,6 @@
 #include <iomanip>
 #include <cassert>
 #include <climits>
-#include <codecvt>
 
 #include "utf8.h"
 #include "unicode.h"
@@ -53,8 +52,8 @@ unicode& unicode::operator=(const unicode& rhs) {
     return *this;
 }
 
-unicode::unicode(int32_t n, char32_t c) {
-    string_ = std::basic_string<char32_t>(n, c);
+unicode::unicode(int32_t n, char16_t c) {
+    string_ = std::basic_string<char16_t>(n, c);
 }
 
 unicode::unicode(int32_t n, char c) {
@@ -68,11 +67,11 @@ unicode::unicode(const char* encoded_string, const std::string &encoding) {
         size_t len = strlen(encoded_string);
         string_.resize(len);
         for(size_t i = 0; i < len; ++i) {
-            string_[i] = char32_t(encoded_string[i]);
+            string_[i] = char16_t(encoded_string[i]);
         }
     } else if(encoding == "utf8" || encoding == "utf-8") {
         std::string tmp(encoded_string);
-        utf8::utf8to32(tmp.begin(), tmp.end(), std::back_inserter(string_));
+        utf8::utf8to16(tmp.begin(), tmp.end(), std::back_inserter(string_));
     } else if(encoding == "iso-8859-1" || encoding == "latin1" || encoding == "latin-1") {
         std::string tmp(encoded_string);
         std::string final;
@@ -86,7 +85,7 @@ unicode::unicode(const char* encoded_string, const std::string &encoding) {
             }
         }
 
-        utf8::utf8to32(final.begin(), final.end(), std::back_inserter(string_));
+        utf8::utf8to16(final.begin(), final.end(), std::back_inserter(string_));
 
     } else {
         throw InvalidEncodingError("Unsupported encoding: " + encoding);
@@ -97,8 +96,8 @@ unicode::unicode(const std::string& encoded_string, const std::string& encoding)
     unicode(encoded_string.c_str(), encoding) {
 }
 
-unicode::unicode(char32_t* utf32_string) {
-    string_ = ustring(utf32_string);
+unicode::unicode(const char16_t *utf16_string) {
+    string_ = ustring(utf16_string);
 }
 
 bool unicode::contains(const unicode& thing) const {
@@ -123,7 +122,7 @@ std::string unicode::encode() const {
     if(string_.empty()) {
         return result;
     }
-    utf8::utf32to8(string_.begin(), string_.end(), std::back_inserter(result));
+    utf8::utf16to8(string_.begin(), string_.end(), std::back_inserter(result));
     return result;
 }
 
@@ -146,9 +145,9 @@ unicode unicode::replace(const unicode& to_find, const unicode& to_replace) cons
 }
 
 unicode unicode::upper() const {
-    std::vector<char32_t> result;
+    std::vector<char16_t> result;
 
-    for(char32_t c: *this) {
+    for(char16_t c: *this) {
         result.push_back(std::towupper(c));
     }
 
@@ -156,9 +155,9 @@ unicode unicode::upper() const {
 }
 
 unicode unicode::lower() const {
-    std::vector<char32_t> result;
+    std::vector<char16_t> result;
 
-    for(char32_t c: *this) {
+    for(char16_t c: *this) {
         result.push_back(std::towlower(c));
     }
 
@@ -370,7 +369,7 @@ unicode unicode::rstrip() const {
     unicode result = *this;
 
     auto& s = result.string_;
-    auto it = std::find_if(s.rbegin(), s.rend(), [](const char32_t& c) -> bool { return !(iswspace(c) || iswcntrl(c)); }).base();
+    auto it = std::find_if(s.rbegin(), s.rend(), [](const char16_t& c) -> bool { return !(iswspace(c) || iswcntrl(c)); }).base();
     s.erase(it, s.end());
 
     return result;
@@ -388,7 +387,7 @@ unicode unicode::lstrip() const {
     unicode result = *this;
 
     auto& s = result.string_;
-    auto it = std::find_if(s.begin(), s.end(), [](const char32_t& c) -> bool { return !(iswspace(c) || iswcntrl(c)); });
+    auto it = std::find_if(s.begin(), s.end(), [](const char16_t& c) -> bool { return !(iswspace(c) || iswcntrl(c)); });
     s.erase(s.begin(), it);
 
     return result;
@@ -407,8 +406,6 @@ unicode unicode::strip() const {
 }
 
 unicode unicode::_do_format(uint32_t counter, const std::string& value) {
-    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> convert;
-
     unicode search = "{" + std::to_string(counter);
 
     ustring replacement(value.begin(), value.end());
@@ -421,7 +418,7 @@ unicode unicode::_do_format(uint32_t counter, const std::string& value) {
             break;
         }
 
-        auto end = result.string_.find(U"}", pos);
+        auto end = result.string_.find(u"}", pos);
         if(end == ustring::npos) {
             break;
         }
@@ -438,7 +435,7 @@ unicode unicode::_do_format(uint32_t counter, const std::string& value) {
             if(formatter[formatter.size() - 1] == 'f') {
                 if(formatter[0] == '.') {
                     auto precision_string = ustring(formatter.begin() + 1, formatter.end() - 1);
-                    auto precision = std::stoi(convert.to_bytes(precision_string));
+                    auto precision = std::stoi(unicode(precision_string.c_str()).encode());
                     auto float_val = std::stof(value);
 
                     std::stringstream ss;
