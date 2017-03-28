@@ -57,8 +57,7 @@ void Transformable::rotate_to(const smlt::Degrees& angle, float axis_x, float ax
 }
 
 void Transformable::rotate_to(const smlt::Degrees& angle, const smlt::Vec3& axis) {
-    Quaternion new_rot;
-    kmQuaternionRotationAxisAngle(&new_rot, &axis, angle.value);
+    Quaternion new_rot(axis, angle);
     set_rotation(new_rot);
 }
 
@@ -105,9 +104,7 @@ void Transformable::scale_by(const Vec3& x) {
 void Transformable::rotate_around(const smlt::Vec3& axis, const smlt::Degrees& degrees) {
     if(rotation_locked_) return;
 
-    Quaternion rot;
-    kmQuaternionRotationAxisAngle(&rot, &axis, kmDegreesToRadians(degrees.value));
-
+    Quaternion rot(axis, degrees);
     Quaternion tmp = rotation_;
 
     tmp = rot * tmp;
@@ -134,11 +131,9 @@ void Transformable::rotate_global_z_by(const Degrees &degrees) {
 Quaternion Transformable::calc_look_at_rotation(const smlt::Vec3& target) {
     Vec3 up(0, 1, 0);
 
-    Quaternion final;
     Vec3 dir = (target - position_).normalized();
-    kmQuaternionLookRotation(&final, &dir, &up);
-    final.normalize();
-    kmQuaternionInverse(&final, &final);
+    Quaternion final = Quaternion::as_look_at(dir, up);
+    final.inverse();
     return final;
 }
 
@@ -151,21 +146,15 @@ void Transformable::look_at(float x, float y, float z) {
 }
 
 Vec3 Transformable::right() const {
-    Vec3 result;
-    kmQuaternionGetRightVec3(&result, &rotation_);
-    return result;
+    return rotation_.right();
 }
 
 Vec3 Transformable::up() const {
-    Vec3 result;
-    kmQuaternionGetUpVec3(&result, &rotation_);
-    return result;
+    return rotation_.up();
 }
 
 Vec3 Transformable::forward() const {
-    Vec3 result;
-    kmQuaternionGetForwardVec3RH(&result, &rotation_);
-    return result;
+    return rotation_.forward();
 }
 
 void Transformable::constrain_to_aabb(const AABB& region) {

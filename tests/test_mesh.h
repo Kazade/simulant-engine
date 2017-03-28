@@ -58,13 +58,12 @@ public:
         sm->index_data->index(1);
         sm->index_data->done();
 
-        kmVec3 expected_min, expected_max;
-        kmVec3Fill(&expected_min, -1.0, -1.0, 0.0);
-        kmVec3Fill(&expected_max, 1.0, -1.0, 0.0);
+        Vec3 expected_min(-1.0, -1.0, 0.0);
+        Vec3 expected_max( 1.0, -1.0, 0.0);
 
         auto box = sm->aabb();
-        assert_true(kmVec3AreEqual(&box.min, &expected_min));
-        assert_true(kmVec3AreEqual(&box.max, &expected_max));
+        assert_true(box.min == expected_min);
+        assert_true(box.max == expected_max);
 
         return mid;
     }

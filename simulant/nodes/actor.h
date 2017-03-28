@@ -166,7 +166,7 @@ public:
         auto transform = parent_.absolute_transformation();
 
         for(auto& corner: corners) {
-            kmVec3Transform(&corner, &corner, &transform);
+            corner = corner.transformed_by(transform);
         }
 
         return AABB(corners.data(), corners.size());

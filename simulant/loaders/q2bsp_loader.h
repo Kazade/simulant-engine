@@ -55,7 +55,7 @@ enum LumpType {
     MAX_LUMPS
 };
 
-typedef kmVec3 Point3f;
+typedef Vec3 Point3f;
 
 struct Point3s {
     int16_t x;

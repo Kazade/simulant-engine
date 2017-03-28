@@ -28,8 +28,8 @@ Frustum::Frustum():
 
 }
 
-bool Frustum::intersects_aabb(const kmAABB3 &aabb) const {
-    for(const kmPlane& plane: planes_) {
+bool Frustum::intersects_aabb(const AABB& aabb) const {
+    for(const Plane& plane: planes_) {
         smlt::Vec3 points[] = {
             Vec3(aabb.min.x, aabb.min.y, aabb.min.z),
             Vec3(aabb.max.x, aabb.min.y, aabb.min.z),
@@ -43,8 +43,9 @@ bool Frustum::intersects_aabb(const kmAABB3 &aabb) const {
 
         int32_t points_behind = 0;
         for(Vec3& p: points) {
-            KM_POINT_CLASSIFICATION classify = kmPlaneClassifyPoint(&plane, &p);
-            if(classify == POINT_BEHIND_PLANE) {
+            auto classification = plane.classify_point(p);
+
+            if(classification.is_behind_plane()) {
                 points_behind++;
             }
         }
@@ -72,7 +73,7 @@ float Frustum::width_at_distance(float distance) const {
 }
 
 float Frustum::height_at_distance(float distance) const {
-    const float Deg2Rad = (kmPI * 2) / 360;
+    const float Deg2Rad = (PI * 2) / 360;
     return 2.0f * distance * tanf(field_of_view().value * 0.5f * Deg2Rad);
 }
 
@@ -81,74 +82,66 @@ Degrees Frustum::field_of_view() const {
     return Degrees(Radians(2.0f * atanf(cosb * (1.0 / sqrtf(1.0f - cosb * cosb)))));
 }
 
-void Frustum::build(const kmMat4* modelview_projection) {
+void Frustum::build(const Mat4* modelview_projection) {
     planes_.resize(FRUSTUM_PLANE_MAX);
 
-    kmPlaneExtractFromMat4(&planes_[FRUSTUM_PLANE_LEFT], modelview_projection, 1);
-    kmPlaneExtractFromMat4(&planes_[FRUSTUM_PLANE_RIGHT], modelview_projection, -1);
-    kmPlaneExtractFromMat4(&planes_[FRUSTUM_PLANE_BOTTOM], modelview_projection, 2);
-    kmPlaneExtractFromMat4(&planes_[FRUSTUM_PLANE_TOP], modelview_projection, -2);
-    kmPlaneExtractFromMat4(&planes_[FRUSTUM_PLANE_NEAR], modelview_projection, 3);
-    kmPlaneExtractFromMat4(&planes_[FRUSTUM_PLANE_FAR], modelview_projection, -3);
+    planes_[FRUSTUM_PLANE_LEFT] = modelview_projection->extract_plane(FRUSTUM_PLANE_LEFT);
+    planes_[FRUSTUM_PLANE_RIGHT] = modelview_projection->extract_plane(FRUSTUM_PLANE_RIGHT);
+    planes_[FRUSTUM_PLANE_BOTTOM] = modelview_projection->extract_plane(FRUSTUM_PLANE_BOTTOM);
+    planes_[FRUSTUM_PLANE_TOP] = modelview_projection->extract_plane(FRUSTUM_PLANE_TOP);
+    planes_[FRUSTUM_PLANE_NEAR] = modelview_projection->extract_plane(FRUSTUM_PLANE_NEAR);
+    planes_[FRUSTUM_PLANE_FAR] = modelview_projection->extract_plane(FRUSTUM_PLANE_FAR);
 
     near_corners_.resize(FRUSTUM_CORNER_MAX);
-    kmPlaneGetIntersection(
-        &near_corners_[FRUSTUM_CORNER_BOTTOM_LEFT],
-        &planes_[FRUSTUM_PLANE_LEFT],
-        &planes_[FRUSTUM_PLANE_BOTTOM],
-        &planes_[FRUSTUM_PLANE_NEAR]
-    );
 
-    kmPlaneGetIntersection(
-        &near_corners_[FRUSTUM_CORNER_BOTTOM_RIGHT],
-        &planes_[FRUSTUM_PLANE_RIGHT],
-        &planes_[FRUSTUM_PLANE_BOTTOM],
-        &planes_[FRUSTUM_PLANE_NEAR]
-    );
+    near_corners_[FRUSTUM_CORNER_BOTTOM_LEFT] = Plane::intersect_planes(
+        planes_[FRUSTUM_PLANE_LEFT],
+        planes_[FRUSTUM_PLANE_BOTTOM],
+        planes_[FRUSTUM_PLANE_NEAR]
+    ).value();
 
-    kmPlaneGetIntersection(
-        &near_corners_[FRUSTUM_CORNER_TOP_RIGHT],
-        &planes_[FRUSTUM_PLANE_RIGHT],
-        &planes_[FRUSTUM_PLANE_TOP],
-        &planes_[FRUSTUM_PLANE_NEAR]
-    );
+    near_corners_[FRUSTUM_CORNER_BOTTOM_RIGHT] = Plane::intersect_planes(
+        planes_[FRUSTUM_PLANE_RIGHT],
+        planes_[FRUSTUM_PLANE_BOTTOM],
+        planes_[FRUSTUM_PLANE_NEAR]
+    ).value();
 
-    kmPlaneGetIntersection(
-        &near_corners_[FRUSTUM_CORNER_TOP_LEFT],
-        &planes_[FRUSTUM_PLANE_LEFT],
-        &planes_[FRUSTUM_PLANE_TOP],
-        &planes_[FRUSTUM_PLANE_NEAR]
-    );
+    near_corners_[FRUSTUM_CORNER_TOP_RIGHT] = Plane::intersect_planes(
+        planes_[FRUSTUM_PLANE_RIGHT],
+        planes_[FRUSTUM_PLANE_TOP],
+        planes_[FRUSTUM_PLANE_NEAR]
+    ).value();
+
+    near_corners_[FRUSTUM_CORNER_TOP_LEFT] = Plane::intersect_planes(
+        planes_[FRUSTUM_PLANE_LEFT],
+        planes_[FRUSTUM_PLANE_TOP],
+        planes_[FRUSTUM_PLANE_NEAR]
+    ).value();
 
     far_corners_.resize(FRUSTUM_CORNER_MAX);
-    kmPlaneGetIntersection(
-        &far_corners_[FRUSTUM_CORNER_BOTTOM_LEFT],
-        &planes_[FRUSTUM_PLANE_LEFT],
-        &planes_[FRUSTUM_PLANE_BOTTOM],
-        &planes_[FRUSTUM_PLANE_FAR]
-    );
+    far_corners_[FRUSTUM_CORNER_BOTTOM_LEFT] = Plane::intersect_planes(
+        planes_[FRUSTUM_PLANE_LEFT],
+        planes_[FRUSTUM_PLANE_BOTTOM],
+        planes_[FRUSTUM_PLANE_FAR]
+    ).value();
 
-    kmPlaneGetIntersection(
-        &far_corners_[FRUSTUM_CORNER_BOTTOM_RIGHT],
-        &planes_[FRUSTUM_PLANE_RIGHT],
-        &planes_[FRUSTUM_PLANE_BOTTOM],
-        &planes_[FRUSTUM_PLANE_FAR]
-    );
+    far_corners_[FRUSTUM_CORNER_BOTTOM_RIGHT] = Plane::intersect_planes(
+        planes_[FRUSTUM_PLANE_RIGHT],
+        planes_[FRUSTUM_PLANE_BOTTOM],
+        planes_[FRUSTUM_PLANE_FAR]
+    ).value();
 
-    kmPlaneGetIntersection(
-        &far_corners_[FRUSTUM_CORNER_TOP_RIGHT],
-        &planes_[FRUSTUM_PLANE_RIGHT],
-        &planes_[FRUSTUM_PLANE_TOP],
-        &planes_[FRUSTUM_PLANE_FAR]
-    );
+    far_corners_[FRUSTUM_CORNER_TOP_RIGHT] = Plane::intersect_planes(
+        planes_[FRUSTUM_PLANE_RIGHT],
+        planes_[FRUSTUM_PLANE_TOP],
+        planes_[FRUSTUM_PLANE_FAR]
+    ).value();
 
-    kmPlaneGetIntersection(
-        &far_corners_[FRUSTUM_CORNER_TOP_LEFT],
-        &planes_[FRUSTUM_PLANE_LEFT],
-        &planes_[FRUSTUM_PLANE_TOP],
-        &planes_[FRUSTUM_PLANE_FAR]
-    );
-
+    far_corners_[FRUSTUM_CORNER_TOP_LEFT] = Plane::intersect_planes(
+        planes_[FRUSTUM_PLANE_LEFT],
+        planes_[FRUSTUM_PLANE_TOP],
+        planes_[FRUSTUM_PLANE_FAR]
+    ).value();
 
     initialized_ = true;
 }
@@ -161,10 +154,10 @@ std::vector<Vec3> Frustum::far_corners() const {
     return far_corners_;
 }
 
-bool Frustum::contains_point(const kmVec3& point) const {    
-    for(const kmPlane& plane: planes_) {
-        KM_POINT_CLASSIFICATION classify = kmPlaneClassifyPoint(&plane, &point);
-        if(classify == POINT_BEHIND_PLANE) {
+bool Frustum::contains_point(const Vec3 &point) const {
+    for(const Plane& plane: planes_) {
+        auto classify = plane.classify_point(point);
+        if(classify.is_behind_plane()) {
             return false;
         }
     }

@@ -127,7 +127,7 @@ CameraID CameraManager::new_camera_for_viewport(const Viewport& vp) {
     calculate_ratios_from_viewport(vp.type(), x, y, width, height);
 
     CameraID cid = new_camera();
-    camera(cid)->set_perspective_projection(45.0, width / height);
+    camera(cid)->set_perspective_projection(Degrees(45.0), width / height);
 
     return cid;
 }

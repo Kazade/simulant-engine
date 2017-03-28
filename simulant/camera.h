@@ -19,7 +19,6 @@
 #ifndef CAMERA_H_INCLUDED
 #define CAMERA_H_INCLUDED
 
-#include "deps/kazmath/mat4.h"
 #include "generic/identifiable.h"
 #include "generic/managed.h"
 
@@ -49,7 +48,7 @@ public:
 
     Frustum& frustum() { return frustum_; }
 
-    void set_perspective_projection(double fov, double aspect, double near=1.0, double far=1000.0f);
+    void set_perspective_projection(const Degrees &fov, double aspect, double near=1.0, double far=1000.0f);
     void set_orthographic_projection(double left, double right, double bottom, double top, double near=-1.0, double far=1.0);
     double set_orthographic_projection_from_height(double desired_height_in_units, double ratio);
 

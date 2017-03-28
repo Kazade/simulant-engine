@@ -20,8 +20,6 @@
 #include <queue>
 #include <deque>
 
-#include "../deps/kazmath/kazmath.h"
-
 #include "../mesh.h"
 #include "../texture.h"
 #include "../resource_manager.h"
@@ -525,16 +523,15 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
 
         submesh.vertex_data->move_to_end();
 
-        kmQuaternion rotation;
-        kmQuaternionRotationPitchYawRoll(&rotation, kmDegreesToRadians(-90), kmDegreesToRadians(180), 0);
+        Quaternion rotation(Degrees(-90), Degrees(180), Degrees(0));
 
         for(int8_t i = 0; i < 3; ++i) {
             Vec3 pos = tri.positions[i];
             Vec2 tex_coord = tri.tex_coords[i];
             Vec3 normal = tri.normals[i];
 
-            kmQuaternionMultiplyVec3(&pos, &rotation, &pos);
-            kmQuaternionMultiplyVec3(&normal, &rotation, &normal);
+            pos *= rotation;
+            normal *= rotation;
 
             /* X-Wings are apparently 12.5 meters long. The XWING.OPT model from XWA
              * has a length of 416 units, so we divide that by 33.3 to get to roughly
