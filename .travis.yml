@@ -16,5 +16,5 @@ install:
  - make
 
 script:
- - ./tests/kglt_tests
+ - ./tests/simulant_tests
  
