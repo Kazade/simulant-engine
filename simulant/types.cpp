@@ -424,16 +424,27 @@ float smlt::math::lerp(float a, float b, float t) {
     return a + ((b - a) * t);
 }
 
+Radians math::lerp_angle(Radians a, Radians b, float t) {
+    float from_angle = std::fmod(a.value + TWO_PI, TWO_PI);
+    float to_angle = std::fmod(b.value + TWO_PI, TWO_PI);
+
+    auto diff = std::fabs(from_angle - to_angle);
+
+    if(diff < PI) {
+        return Radians(lerp(from_angle, to_angle, t));
+    } else {
+        if(from_angle > to_angle) {
+            from_angle = from_angle - TWO_PI;
+            return Radians(lerp(from_angle, to_angle, t));
+        } else {
+            to_angle = to_angle - TWO_PI;
+            return Radians(lerp(from_angle, to_angle, t));
+        }
+    }
+}
+
 Degrees math::lerp_angle(Degrees a, Degrees b, float t) {
-    while(a.value > b.value + 180.0) {
-        b.value += 360.0;
-    }
-
-    while(b.value > a.value + 180.0) {
-        b.value -= 360.0;
-    }
-
-    return Degrees(lerp(a.value, b.value, t));
+    return Degrees(lerp_angle(Radians(a), Radians(b), t));
 }
 
 Vec2 Vec2::rotated_by(Degrees degrees) const {

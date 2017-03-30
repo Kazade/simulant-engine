@@ -1619,3 +1619,4 @@ deps/bounce/include/bounce/dynamics/world_listeners.h
 deps/bounce/include/bounce/quickhull/qh_hull.h
 deps/bounce/include/bounce/bounce.h
 tests/test_matrix.h
+tests/test_math.h
