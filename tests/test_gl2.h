@@ -4,6 +4,10 @@
 #include "global.h"
 #include "../simulant/hardware_buffer.h"
 
+namespace {
+
+using namespace smlt;
+
 class GL2Tests:
     public SimulantTestCase {
 
@@ -60,3 +64,5 @@ public:
         buffer->upload(data); //Should succeed
     }
 };
+
+}
