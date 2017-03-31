@@ -39,7 +39,7 @@ public:
         actor->rotate_to_absolute(Quaternion(Vec3(0, 1, 0), Degrees(90)));
 
         // Run 3 seconds of updates at 1/60
-        for(uint32_t i = 0; i < seconds * 60; ++i) {
+        for(int32_t i = 0; i < seconds * 60; ++i) {
             controller->_late_update_thunk(step);
         }
 
@@ -53,7 +53,7 @@ public:
         actor->rotate_to_absolute(Quaternion(Vec3(0, 1, 0), Degrees(180)));
 
         // Run 3 seconds of updates at 1/60
-        for(uint32_t i = 0; i < seconds * 60; ++i) {
+        for(int32_t i = 0; i < seconds * 60; ++i) {
             controller->_late_update_thunk(step);
         }
 
