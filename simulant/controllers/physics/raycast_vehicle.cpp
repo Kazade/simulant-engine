@@ -17,7 +17,7 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "../interfaces/boundable.h"
+#include "../../interfaces/boundable.h"
 #include "raycast_vehicle.h"
 
 namespace smlt {

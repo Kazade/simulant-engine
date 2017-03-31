@@ -53,9 +53,7 @@
 #include "scenes/scene.h"
 #include "scenes/physics_scene.h"
 #include "controllers/fly.h"
-#include "controllers/rigid_body.h"
-#include "controllers/raycast_vehicle.h"
-#include "controllers/movement/smooth_follow.h"
+#include "controllers/builtin.h"
 
 #include "renderers/renderer_config.h"
 

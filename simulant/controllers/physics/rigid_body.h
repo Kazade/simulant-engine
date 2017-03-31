@@ -19,13 +19,13 @@
 #pragma once
 
 #include <queue>
-#include "controller.h"
+#include "../controller.h"
 
-#include "../generic/managed.h"
-#include "../generic/tri_octree.h"
-#include "../types.h"
-#include "../interfaces/transformable.h"
-#include "../time_keeper.h"
+#include "../../generic/managed.h"
+#include "../../generic/tri_octree.h"
+#include "../../types.h"
+#include "../../interfaces/transformable.h"
+#include "../../time_keeper.h"
 
 
 struct b3World;

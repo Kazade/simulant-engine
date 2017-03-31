@@ -1621,3 +1621,8 @@ deps/bounce/include/bounce/bounce.h
 tests/test_matrix.h
 tests/test_math.h
 tests/test_smooth_follow.h
+simulant/controllers/physics/raycast_vehicle.cpp
+simulant/controllers/physics/raycast_vehicle.h
+simulant/controllers/physics/rigid_body.cpp
+simulant/controllers/physics/rigid_body.h
+simulant/controllers/builtin.h

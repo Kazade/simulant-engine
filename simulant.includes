@@ -125,3 +125,4 @@ deps/bounce/include/bounce/collision/trees
 deps/bounce/include/bounce/common/math
 deps/bounce/include/bounce/common
 deps/bounce/include/bounce/dynamics/contacts
+simulant/controllers/physics

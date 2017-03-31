@@ -18,9 +18,9 @@
 //
 
 #include "rigid_body.h"
-#include "../nodes/actor.h"
-#include "../stage.h"
-#include "../deps/bounce/bounce.h"
+#include "../../nodes/actor.h"
+#include "../../stage.h"
+#include "../../deps/bounce/bounce.h"
 
 
 // These are just to keep Bounce happy

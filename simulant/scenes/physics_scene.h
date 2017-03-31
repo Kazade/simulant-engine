@@ -1,7 +1,7 @@
 #pragma once
 
 #include "scene.h"
-#include "../controllers/rigid_body.h"
+#include "../controllers/builtin.h"
 
 namespace smlt {
 
