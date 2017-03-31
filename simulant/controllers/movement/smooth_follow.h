@@ -27,7 +27,7 @@ public:
 
     void set_follow_distance(float dist) { distance_ = dist; }
     void set_follow_height(float height) { height_ = height; }
-    void set_height_damping(float damping) { height_damping_ = damping; }
+    void set_damping(float damping) { damping_ = damping; }
     void set_rotation_damping(float damping) { rotation_damping_ = damping; }
 
 private:
@@ -36,8 +36,8 @@ private:
     float distance_ = 10.0;
     float height_ = 10.0;
 
-    float height_damping_ = 2.0;
-    float rotation_damping_ = 0.6;
+    float damping_ = 5.0;
+    float rotation_damping_ = 10.0;
 
 };
 

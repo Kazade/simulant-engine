@@ -662,13 +662,7 @@ public:
         w = 1;
     }
 
-    Quaternion(Degrees pitch, Degrees yaw, Degrees roll) {
-        glm::quat::operator =(glm::quat(glm::vec3(
-            Radians(pitch).value,
-            Radians(yaw).value,
-            Radians(roll).value
-        )));
-    }
+    Quaternion(Degrees pitch, Degrees yaw, Degrees roll);
 
     Quaternion(const Vec3& axis, const Degrees& degrees);
     Quaternion(const Mat3& rot_matrix);
@@ -682,14 +676,7 @@ public:
 
     Vec3 rotate_vector(const Vec3& v) const;
 
-    Euler to_euler() const {
-        auto ret = glm::eulerAngles(*this);
-        return Euler(
-            Degrees(Radians(ret.x)).value,
-            Degrees(Radians(ret.y)).value,
-            Degrees(Radians(ret.z)).value
-        );
-    }
+    Euler to_euler() const;
 
     AxisAngle to_axis_angle() const;
 
@@ -734,16 +721,16 @@ public:
         return result;
     }
 
-    const float pitch() const {
-        return glm::eulerAngles(*this).x;
+    const Degrees pitch() const {
+        return Radians(glm::pitch(*this));
     }
 
-    const float yaw() const {
-        return glm::eulerAngles(*this).y;
+    const Degrees yaw() const {
+        return Radians(glm::yaw(*this));
     }
 
-    const float roll() const {
-        return glm::eulerAngles(*this).z;
+    const Degrees roll() const {
+        return Radians(glm::roll(*this));
     }
 
     Vec3 forward() const {

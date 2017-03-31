@@ -138,6 +138,14 @@ Quaternion Quaternion::as_look_at(const Vec3& direction, const Vec3& up=Vec3(0, 
     return ret;
 }
 
+Quaternion::Quaternion(Degrees pitch, Degrees yaw, Degrees roll) {
+    Quaternion x = Quaternion(Vec3::POSITIVE_X, pitch);
+    Quaternion y = Quaternion(Vec3::POSITIVE_Y, yaw);
+    Quaternion z = Quaternion(Vec3::POSITIVE_Z, roll);
+
+    *this = z * x * y;
+}
+
 Quaternion::Quaternion(const Vec3 &axis, const Degrees &degrees) {
     *this = glm::angleAxis(Radians(degrees).value, axis);
 }
@@ -191,6 +199,15 @@ Vec3 Quaternion::rotate_vector(const Vec3 &v) const {
     Vec3 ret;
     ret = glm::rotate(*this, v);
     return ret;
+}
+
+Euler Quaternion::to_euler() const {
+    auto ret = glm::eulerAngles(*this);
+    return Euler(
+                Degrees(Radians(ret.x)).value,
+                Degrees(Radians(ret.y)).value,
+                Degrees(Radians(ret.z)).value
+                );
 }
 
 AxisAngle Quaternion::to_axis_angle() const {

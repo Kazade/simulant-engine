@@ -4,6 +4,10 @@
 
 #include "simulant/simulant.h"
 
+namespace {
+
+using namespace smlt;
+
 class QuaternionTest : public TestCase {
 public:
 
@@ -43,4 +47,18 @@ public:
         assert_close(quat.w, 0.707, 0.001);
     }
 
+    void test_forward_right_up() {
+        Quaternion q;
+
+        assert_equal(Vec3(0, 0, -1), q.forward());
+        assert_equal(Vec3(1, 0, 0), q.right());
+        assert_equal(Vec3(0, 1, 0), q.up());
+
+        q = Quaternion(Vec3(0, 1, 0), Degrees(90));
+
+        assert_close(-1, q.forward().x, 0.0001);
+    }
+
 };
+
+}

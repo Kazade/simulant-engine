@@ -18,24 +18,18 @@ void SmoothFollow::late_update(float dt) {
         return;
     }
 
-    Degrees target_rotation_angle = target->absolute_rotation().to_euler().y;
-    float target_height = target->absolute_position().y + height_;
+    auto wanted_position = target->absolute_position() + Vec3(0, height_, distance_).rotated_by(target->absolute_rotation());
 
-    Degrees current_rotation_angle = owner->absolute_rotation().to_euler().y;
-    float current_height = owner->absolute_position().y;
+    owner->move_to_absolute(
+        owner->absolute_position().lerp(wanted_position, damping_ * dt)
+    );
 
-    current_rotation_angle = math::lerp_angle(current_rotation_angle, target_rotation_angle, rotation_damping_ * dt);
-    current_height = math::lerp(current_height, target_height, height_damping_ * dt);
+    auto wanted_rotation = Quaternion::as_look_at((target->absolute_position() - owner->absolute_position()).normalized(), target->absolute_rotation().up());
+    wanted_rotation.inverse(); // << FIXME: This seems like a bug in as_look_at...
 
-    auto new_rotation = Quaternion(Degrees(0), current_rotation_angle, Degrees(0));
-    owner->rotate_to_absolute(new_rotation);
-
-    auto new_position = target->absolute_position();
-    new_position = new_position - (Vec3(0, 0, -1) * distance_).rotated_by(new_rotation);
-    new_position.y = current_height;
-
-    owner->move_to_absolute(new_position);
-    owner->look_at(target->absolute_position());
+    owner->rotate_to_absolute(
+        owner->absolute_rotation().slerp(wanted_rotation, rotation_damping_ * dt)
+    );
 }
 
 void SmoothFollow::set_target(ActorPtr actor) {
