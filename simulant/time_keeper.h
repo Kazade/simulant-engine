@@ -1,6 +1,7 @@
 #pragma once
 
-#include "deps/kaztimer/kaztimer.h"
+#include <chrono>
+
 #include "generic/managed.h"
 
 namespace smlt {
@@ -9,7 +10,7 @@ class TimeKeeper:
     public Managed<TimeKeeper> {
 
 public:
-    TimeKeeper(const float fixed_step = 1.0 / 6.0f);
+    TimeKeeper(const float fixed_step);
 
     bool init() override;
     void cleanup() override;
@@ -24,12 +25,12 @@ public:
     bool use_fixed_step();
 
 private:
+    std::chrono::high_resolution_clock::time_point last_update_;
+
+    float accumulator_ = 0.0f;
     float total_time_ = 0.0f;
     float delta_time_ = 0.0f;
     float fixed_step_ = 0.0f;
-
-    KTIuint fixed_timer_ = 0;
-    KTIuint variable_timer_ = 0;
 };
 
 }

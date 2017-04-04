@@ -289,6 +289,8 @@ void WindowBase::run_fixed_updates() {
     while(time_keeper_->use_fixed_step()) {
         _fixed_update_thunk(time_keeper_->fixed_step()); // Run the fixed updates on controllers
         signal_fixed_update_(time_keeper_->fixed_step()); //Trigger any steps
+
+        stats_.increment_fixed_steps();
     }
 }
 
@@ -331,6 +333,8 @@ bool WindowBase::run_frame() {
 
     signal_frame_finished_();
 
+    stats_.increment_frames();
+
     if(!is_running_) {
         signal_shutdown_();
 
@@ -339,6 +343,11 @@ bool WindowBase::run_frame() {
 
         //Shutdown the input controller
         input_controller_.reset();
+
+        std::cout << "Frames rendered: " << stats_.frames_run() << std::endl;
+        std::cout << "Fixed updates run: " << stats_.fixed_steps_run() << std::endl;
+        std::cout << "Total time: " << time_keeper->total_elapsed_seconds() << std::endl;
+        std::cout << "Average FPS: " << float(stats_.frames_run()) / time_keeper->total_elapsed_seconds() << std::endl;
     }
 
     return is_running_;

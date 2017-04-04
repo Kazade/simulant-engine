@@ -24,7 +24,6 @@
 #include <memory>
 
 #include "deps/kazlog/kazlog.h"
-#include "deps/kaztimer/kaztimer.h"
 
 #include "generic/property.h"
 #include "generic/manager.h"
@@ -93,10 +92,19 @@ public:
     void set_frames_per_second(uint32_t value) {
         frames_per_second_ = value;
     }
+
+    uint64_t fixed_steps_run() const { return fixed_steps_run_; }
+    uint64_t frames_run() const { return frames_run_; }
+
+    void increment_fixed_steps() { fixed_steps_run_++; }
+    void increment_frames() { frames_run_++; }
 private:
     uint32_t subactors_renderered_ = 0;
     uint32_t frames_per_second_ = 0;
     uint32_t geometry_visible_ = 0;
+
+    uint64_t fixed_steps_run_ = 0;
+    uint64_t frames_run_ = 0;
 };
 
 typedef sig::signal<void ()> FrameStartedSignal;

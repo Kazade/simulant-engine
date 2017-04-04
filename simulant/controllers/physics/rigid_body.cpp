@@ -47,6 +47,11 @@ Vec3 to_vec3(const b3Vec3& rhs) {
     return ret;
 }
 
+Mat3 to_mat3(const b3Mat33& rhs) {
+    Mat3 ret((float*)&rhs[0]);
+    return ret;
+}
+
 Quaternion to_quat(const b3Quat& rhs) {
     return Quaternion(
         rhs.x,
@@ -94,11 +99,11 @@ void RigidBodySimulation::cleanup() {
 
 
 
-void RigidBodySimulation::fixed_update(float dt) {
+void RigidBodySimulation::fixed_update(float step) {
     uint32_t velocity_iterations = 8;
     uint32_t position_iterations = 2;
 
-    scene_->Step(time_keeper_->fixed_step(), velocity_iterations, position_iterations);
+    scene_->Step(step, velocity_iterations, position_iterations);
 }
 
 std::pair<Vec3, bool> RigidBodySimulation::intersect_ray(const Vec3& start, const Vec3& direction, float* distance, Vec3* normal) {
@@ -160,9 +165,11 @@ void RigidBodySimulation::release_body(impl::Body *body) {
 std::pair<Vec3, Quaternion> RigidBodySimulation::body_transform(const impl::Body *body) {
     b3Body* b = bodies_.at(body);
 
+    auto tx = b->GetTransform();
+
     return std::make_pair(
-        to_vec3(b->GetPosition()),
-        to_quat(b->GetOrientation())
+        to_vec3(tx.position),
+        Quaternion(to_mat3(tx.rotation))
     );
 }
 
@@ -377,6 +384,8 @@ void Body::update(float dt) {
         object_->rotate_to(new_rot);
 
         last_state_ = next_state;
+
+        std::cout << new_pos.z << std::endl;
     } else {
         auto state = sim->body_transform(this);
         object_->move_to(state.first);

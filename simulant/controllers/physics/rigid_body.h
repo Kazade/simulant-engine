@@ -119,7 +119,7 @@ public:
     bool init() override;
     void cleanup() override;
 
-    void fixed_update(float dt);
+    void fixed_update(float step);
 
     std::pair<Vec3, bool> intersect_ray(const Vec3& start, const Vec3& direction, float* distance=nullptr, Vec3 *normal=nullptr);
 

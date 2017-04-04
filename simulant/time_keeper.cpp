@@ -9,42 +9,40 @@ TimeKeeper::TimeKeeper(const float fixed_step):
 }
 
 bool TimeKeeper::init() {
-    ktiGenTimers(1, &fixed_timer_);
-    ktiBindTimer(fixed_timer_);
-    ktiStartFixedStepTimer(1.0f / fixed_step_);
-
-    ktiGenTimers(1, &variable_timer_);
-    ktiBindTimer(variable_timer_);
-    ktiStartGameTimer();
+    last_update_ = std::chrono::high_resolution_clock::now();
 
     return true;
 }
 
 void TimeKeeper::cleanup() {
-    ktiDeleteTimers(1, &fixed_timer_);
-    ktiDeleteTimers(1, &variable_timer_);
+
 }
 
 void TimeKeeper::update() {
-    ktiBindTimer(fixed_timer_);
-    ktiUpdateFrameTime();
+    auto now = std::chrono::high_resolution_clock::now();
+    auto diff = now - last_update_;
+    last_update_ = now;
 
-    ktiBindTimer(variable_timer_);
-    ktiUpdateFrameTime();
+    typedef std::chrono::duration<float> float_seconds;
 
     // Store the frame time, and the total elapsed time
-    delta_time_ = ktiGetDeltaTime();
+    delta_time_ = std::chrono::duration_cast<float_seconds>(diff).count();
+    accumulator_ += delta_time_;
     total_time_ += delta_time_;
 }
 
 float TimeKeeper::fixed_step_remainder() const {
-    ktiBindTimer(fixed_timer_);
-    return ktiGetAccumulatorValue();
+    return accumulator_;
 }
 
 bool TimeKeeper::use_fixed_step() {
-    ktiBindTimer(fixed_timer_);
-    return ktiTimerCanUpdate();
+    bool can_update = accumulator_ > fixed_step_;
+
+    if(can_update) {
+        accumulator_ -= fixed_step_;
+    }
+
+    return can_update;
 }
 
 }
