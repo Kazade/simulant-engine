@@ -47,7 +47,10 @@ public:
 
         auto box = boxes_.back().fetch();
         auto controller = box->new_controller<smlt::controllers::RigidBody>(physics);
-        controller->move_to(Vec3((float(rand()) / RAND_MAX) * 10.0f, 10, 0));
+        controller->move_to(Vec3(
+            ((float(rand()) / RAND_MAX) * 20.0f) - 10.0f,
+            20, 0)
+        );
     }
 
     void do_activate() {

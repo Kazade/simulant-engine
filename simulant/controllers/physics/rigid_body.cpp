@@ -369,6 +369,8 @@ void Body::move_to(const Vec3& position) {
         position,
         xform.second
     );
+
+    object_->move_to_absolute(position);
 }
 
 void Body::update(float dt) {
