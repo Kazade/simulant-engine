@@ -154,10 +154,10 @@ private:
         return *this;
     }
 
-    friend class Vec4;
-    friend class Quaternion;
-    friend class Mat3;
-    friend class Vec3;
+    friend struct Vec4;
+    friend struct Quaternion;
+    friend struct Mat3;
+    friend struct Vec3;
 public:
     Mat4() {
         glm::mat4x4();
@@ -422,11 +422,11 @@ private:
         return *this;
     }
 
-    friend class Quaternion;
-    friend class Mat4;
-    friend class Mat3;
-    friend class Vec2;
-    friend class Ray;
+    friend struct Quaternion;
+    friend struct Mat4;
+    friend struct Mat3;
+    friend struct Vec2;
+    friend struct Ray;
 
 public:
     using glm::vec3::value_type;
@@ -651,9 +651,9 @@ private:
         return *this;
     }
 
-    friend class Vec3;
-    friend class Mat4;
-    friend class Mat3;
+    friend struct Vec3;
+    friend struct Mat4;
+    friend struct Mat3;
 public:
     using glm::quat::x;
     using glm::quat::y;
@@ -821,8 +821,8 @@ private:
         return *this;
     }
 
-    friend class Vec3;
-    friend class Mat4;
+    friend struct Vec3;
+    friend struct Mat4;
 public:
     using glm::vec4::x;
     using glm::vec4::y;
