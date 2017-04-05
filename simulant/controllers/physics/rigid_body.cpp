@@ -364,7 +364,7 @@ void Body::move_to(const Vec3& position) {
 }
 
 void Body::update(float dt) {
-    const bool INTERPOLATION_ENABLED = true;
+    const bool INTERPOLATION_ENABLED = false;
 
     auto sim = simulation_.lock();
     if(!sim) {
@@ -377,10 +377,7 @@ void Body::update(float dt) {
 
         float t = sim->time_keeper_->fixed_step_remainder() / dt;
 
-        if(t < 0.0f) t = 0.0f;
-        if(t > 1.0f) t = 1.0f;
-
-        auto new_pos = prev_state.first + ((next_state.first - prev_state.first) * t);
+        auto new_pos = prev_state.first.lerp(next_state.first, t);
         auto new_rot = prev_state.second.slerp(next_state.second, t);
 
         object_->move_to_absolute(new_pos);
