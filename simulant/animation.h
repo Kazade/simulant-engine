@@ -21,6 +21,7 @@
 #include <unordered_map>
 #include <memory>
 #include <vector>
+#include <string>
 #include "deps/kazsignal/kazsignal.h"
 
 namespace smlt {
