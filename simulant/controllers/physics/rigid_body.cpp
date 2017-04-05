@@ -103,6 +103,7 @@ void RigidBodySimulation::fixed_update(float step) {
     uint32_t velocity_iterations = 8;
     uint32_t position_iterations = 2;
 
+    signal_simulation_pre_step_();
     scene_->Step(step, velocity_iterations, position_iterations);
 }
 
@@ -324,10 +325,17 @@ Body::Body(Controllable* object, RigidBodySimulation* simulation, ColliderType c
     if(!object_) {
         throw std::runtime_error("Tried to attach a rigid body controller to something that isn't moveable");
     }
+
+    // Keep each body's last_state in sync when the simulation is stepped
+    simulation_stepped_connection_ = simulation->signal_simulation_pre_step().connect([this]() {
+        if(auto sim = simulation_.lock()) {
+            last_state_ = sim->body_transform(this);
+        }
+    });
 }
 
 Body::~Body() {
-
+    simulation_stepped_connection_.disconnect();
 }
 
 bool Body::init() {
@@ -364,7 +372,7 @@ void Body::move_to(const Vec3& position) {
 }
 
 void Body::update(float dt) {
-    const bool INTERPOLATION_ENABLED = false;
+    const bool INTERPOLATION_ENABLED = true;
 
     auto sim = simulation_.lock();
     if(!sim) {
@@ -372,7 +380,7 @@ void Body::update(float dt) {
     }
 
     if(INTERPOLATION_ENABLED) {
-        auto prev_state = last_state_;
+        auto prev_state = last_state_; // This is set by the signal connected in Body::Body()
         auto next_state = sim->body_transform(this);
 
         float t = sim->time_keeper_->fixed_step_remainder() / dt;
@@ -382,8 +390,6 @@ void Body::update(float dt) {
 
         object_->move_to_absolute(new_pos);
         object_->rotate_to_absolute(new_rot);
-
-        last_state_ = next_state;
     } else {
         auto state = sim->body_transform(this);
         object_->move_to_absolute(state.first);

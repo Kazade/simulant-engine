@@ -110,9 +110,13 @@ struct RaycastCollider {
 
 class RigidBody;
 
+typedef sig::signal<void ()> SimulationPreStepSignal;
+
 class RigidBodySimulation:
     public Managed<RigidBodySimulation>,
     public std::enable_shared_from_this<RigidBodySimulation> {
+
+    DEFINE_SIGNAL(SimulationPreStepSignal, signal_simulation_pre_step);
 
 public:
     RigidBodySimulation(TimeKeeper* time_keeper);
@@ -196,6 +200,7 @@ namespace impl {
     private:
         virtual bool is_dynamic() const { return true; }
 
+        sig::connection simulation_stepped_connection_;
         std::vector<std::shared_ptr<b3Hull>> hulls_;
     };
 } // End impl
