@@ -18,8 +18,6 @@ addons:
    - libopenal-dev 
    - libtinyxml-dev
    - mesa-utils 
-   - libgl1-mesa-swx11 
-   - libgl1-mesa-swx11-dev 
    - xvfb  
 
 before_install:
