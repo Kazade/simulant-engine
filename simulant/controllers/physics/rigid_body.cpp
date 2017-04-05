@@ -375,7 +375,7 @@ void Body::update(float dt) {
         auto prev_state = last_state_;
         auto next_state = sim->body_transform(this);
 
-        float t = sim->time_keeper_->fixed_step_remainder() / sim->time_keeper_->delta_time();
+        float t = sim->time_keeper_->fixed_step_remainder() / dt;
 
         if(t < 0.0f) t = 0.0f;
         if(t > 1.0f) t = 1.0f;
@@ -406,7 +406,7 @@ void Body::build_collider(ColliderType collider) {
             AABB aabb = entity->aabb();
 
             auto def = std::make_shared<b3BoxHull>();
-            def->Set(aabb.width(), aabb.height(), aabb.depth());
+            def->Set(aabb.width() * 0.5, aabb.height() * 0.5, aabb.depth() * 0.5);
             hulls_.push_back(def);
 
             b3HullShape hsdef;
@@ -415,8 +415,8 @@ void Body::build_collider(ColliderType collider) {
             b3ShapeDef sdef;
             sdef.shape = &hsdef;
             sdef.userData = this;
-            sdef.density = 0.5;
-            sdef.friction = 1.0;
+            sdef.density = 0.005;
+            sdef.friction = 0.3;
 
             sim->bodies_.at(this)->CreateShape(sdef);
         }

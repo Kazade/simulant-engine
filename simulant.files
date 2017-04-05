@@ -1626,3 +1626,4 @@ simulant/controllers/physics/raycast_vehicle.h
 simulant/controllers/physics/rigid_body.cpp
 simulant/controllers/physics/rigid_body.h
 simulant/controllers/builtin.h
+deps/bounce/src/bounce/dynamics/island.cpp
