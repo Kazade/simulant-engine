@@ -19,10 +19,11 @@
 #ifndef SIMULANT_WINDOW_H_INCLUDED
 #define SIMULANT_WINDOW_H_INCLUDED
 
+#include <string>
+
 #include <SDL.h>
 
 #include "sdl2_keycodes.h"
-
 #include "generic/managed.h"
 #include "window_base.h"
 
