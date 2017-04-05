@@ -374,7 +374,7 @@ InputController::~InputController() {
     }
 }
 
-auto SDL_axis_to_simulant_axis(Uint8 axis) {
+JoypadAxis SDL_axis_to_simulant_axis(Uint8 axis) {
     switch(axis) {
     case SDL_CONTROLLER_AXIS_LEFTX: return JOYPAD_AXIS_LEFT_X;
     case SDL_CONTROLLER_AXIS_LEFTY: return JOYPAD_AXIS_LEFT_Y;
