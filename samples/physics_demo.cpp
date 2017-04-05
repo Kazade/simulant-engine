@@ -26,9 +26,8 @@ public:
         smlt::TextureID crate = window->shared_assets->new_texture_from_file("sample_data/crate.png");
         smlt::MaterialID mat = window->shared_assets->new_material_from_texture(crate);
 
-        box_mesh_id_ = window->shared_assets->new_mesh_as_box(5, 2.5, 7);
+        box_mesh_id_ = window->shared_assets->new_mesh_as_box(5, 5, 5);
         window->shared_assets->mesh(box_mesh_id_)->set_material_id(mat);
-        object_id_ = stage->new_actor_with_mesh(box_mesh_id_);
 
         smlt::TextureID grass = window->shared_assets->new_texture_from_file("sample_data/beach_sand.png");
         ground_mesh_id_ = window->shared_assets->new_mesh_as_box(1000, 2.5, 1000); //window->shared_assets->new_mesh_from_file("sample_data/playground.obj");
@@ -37,54 +36,45 @@ public:
         );
         ground_id_ = stage->new_actor_with_mesh(ground_mesh_id_);
 
-        auto object = stage->actor(object_id_);
-
-        auto cam = stage->camera(camera_id_);
-        auto follower = cam->new_controller<smlt::controllers::SmoothFollow>();
-        follower->set_target(object);
-        follower->set_follow_distance(30.0);
-
-        // Add a rigid body controller to the object and store it
-        controller_ = object->new_controller<controllers::RaycastVehicle>(physics, 1.0);
-        controller_->move_to(Vec3(0, 10, 0));
-
         // Make the ground a staticbody, and only deal with ray-cast hits
-        stage->actor(ground_id_)->new_controller<controllers::StaticBody>(physics, controllers::COLLIDER_TYPE_RAYCAST_ONLY);
+        ground_id_.fetch()->new_controller<controllers::StaticBody>(physics);
+    }
+
+    void spawn_box() {
+        boxes_.push_back(
+            stage_id_.fetch()->new_actor_with_mesh(box_mesh_id_)
+        );
+
+        auto box = boxes_.back().fetch();
+        auto controller = box->new_controller<smlt::controllers::RigidBody>(physics);
+        controller->move_to(Vec3(0, 10, 0));
     }
 
     void do_activate() {
         window->enable_pipeline(pipeline_id_);
+    }
 
-
-        window->keyboard->key_while_pressed_connect(SDL_SCANCODE_UP, [=](SDL_Keysym key, float dt) mutable {
-            controller_->accelerate();
-        });
-
-        window->keyboard->key_while_pressed_connect(SDL_SCANCODE_DOWN, [=](SDL_Keysym key, float dt) mutable {
-            controller_->decelerate();
-        });
-
-        window->keyboard->key_while_pressed_connect(SDL_SCANCODE_RIGHT, [=](SDL_Keysym key, float dt) mutable {
-            controller_->turn_left();
-        });
-
-        window->keyboard->key_while_pressed_connect(SDL_SCANCODE_LEFT, [=](SDL_Keysym key, float dt) mutable {
-            controller_->turn_right();
-        });
+    void update(float dt) {
+        counter += dt;
+        if(counter > 1.0f) {
+            counter = 0;
+            spawn_box();
+        }
     }
 
 private:
+    std::vector<ActorID> boxes_;
+
     PipelineID pipeline_id_;
     StageID stage_id_;
     CameraID camera_id_;
 
     MeshID box_mesh_id_;
-    ActorID object_id_;
 
     MeshID ground_mesh_id_;
     ActorID ground_id_;
 
-    controllers::RaycastVehicle::ptr controller_;
+    float counter = 0.0f;
 };
 
 
