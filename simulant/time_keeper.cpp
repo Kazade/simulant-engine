@@ -32,6 +32,12 @@ void TimeKeeper::update() {
 }
 
 float TimeKeeper::fixed_step_remainder() const {
+
+    // Don't return anything if we have fixed steps remaining
+    if(accumulator_ > fixed_step_) {
+        return 0.0f;
+    }
+
     return accumulator_;
 }
 

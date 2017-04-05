@@ -150,7 +150,7 @@ b3Body *RigidBodySimulation::acquire_body(impl::Body *body) {
     b3BodyDef def;
 
     bool is_dynamic = body->is_dynamic();
-    def.type = (is_dynamic) ? e_dynamicBody : e_staticBody;
+    def.type = (is_dynamic) ? b3BodyType::e_dynamicBody : b3BodyType::e_staticBody;
     def.gravityScale = (is_dynamic) ? 1.0 : 0.0;
     def.userData = this;
 
@@ -320,7 +320,7 @@ Body::Body(Controllable* object, RigidBodySimulation* simulation, ColliderType c
     simulation_(simulation->shared_from_this()),
     collider_type_(collider_type) {
 
-    object_ = dynamic_cast<Transformable*>(object);
+    object_ = dynamic_cast<StageNode*>(object);
     if(!object_) {
         throw std::runtime_error("Tried to attach a rigid body controller to something that isn't moveable");
     }
@@ -377,19 +377,20 @@ void Body::update(float dt) {
 
         float t = sim->time_keeper_->fixed_step_remainder() / sim->time_keeper_->delta_time();
 
+        if(t < 0.0f) t = 0.0f;
+        if(t > 1.0f) t = 1.0f;
+
         auto new_pos = prev_state.first + ((next_state.first - prev_state.first) * t);
         auto new_rot = prev_state.second.slerp(next_state.second, t);
 
-        object_->move_to(new_pos);
-        object_->rotate_to(new_rot);
+        object_->move_to_absolute(new_pos);
+        object_->rotate_to_absolute(new_rot);
 
         last_state_ = next_state;
-
-        std::cout << new_pos.z << std::endl;
     } else {
         auto state = sim->body_transform(this);
-        object_->move_to(state.first);
-        object_->rotate_to(state.second);
+        object_->move_to_absolute(state.first);
+        object_->rotate_to_absolute(state.second);
     }
 }
 
@@ -415,6 +416,7 @@ void Body::build_collider(ColliderType collider) {
             sdef.shape = &hsdef;
             sdef.userData = this;
             sdef.density = 0.5;
+            sdef.friction = 1.0;
 
             sim->bodies_.at(this)->CreateShape(sdef);
         }

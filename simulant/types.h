@@ -538,7 +538,10 @@ public:
         *this = glm::normalize((glm::vec3) *this);
     }
 
-    Vec3 lerp(const Vec3& end, const float t) {
+    Vec3 lerp(const Vec3& end, float t) {
+        if(t > 1.0f) t = 1.0f;
+        if(t < 0.0f) t = 0.0f;
+
         Vec3 ret;
         ret = glm::lerp((glm::vec3) *this, end, t);
         return ret;
@@ -716,6 +719,9 @@ public:
     }
 
     Quaternion slerp(const Quaternion& rhs, float t) {
+        if(t > 1.0f) t = 1.0f;
+        if(t < 0.0f) t = 0.0f;
+
         Quaternion result;
         result = glm::slerp(*this, rhs, t);
         return result;

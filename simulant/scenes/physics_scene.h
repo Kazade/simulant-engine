@@ -16,10 +16,11 @@ protected:
     Property<PhysicsScene, smlt::controllers::RigidBodySimulation> physics = { this, &PhysicsScene::physics_ };
 
     virtual void _fixed_update_thunk(float step) {
-        Scene<T>::_fixed_update_thunk(step);
         if(physics_) {
             physics_->fixed_update(step);
         }
+
+        Scene<T>::_fixed_update_thunk(step);
     }
 
 private:

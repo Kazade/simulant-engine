@@ -24,7 +24,7 @@
 #include "../../generic/managed.h"
 #include "../../generic/tri_octree.h"
 #include "../../types.h"
-#include "../../interfaces/transformable.h"
+#include "../../nodes/stage_node.h"
 #include "../../time_keeper.h"
 
 
@@ -182,7 +182,7 @@ namespace impl {
 
     protected:
         friend class smlt::controllers::RigidBodySimulation;
-        Transformable* object_;
+        StageNode* object_;
         b3Body* body_ = nullptr;
         std::weak_ptr<RigidBodySimulation> simulation_;
         ColliderType collider_type_;
