@@ -26,7 +26,7 @@ There are some glaring holes in functionality (LOD, billboards, shadows, project
  * Shortcut functions for loading 2D sprites, 2D backgrounds and 3D skyboxes
  * Simple scene graph functions
  * UI widgets (Button, Label, Progress Bar)
- * Basic rigid body physics using the Qu3e library
+ * Basic rigid body physics using the Bounce library
  * Procedural functions for generating spheres, cubes, capsules, circles and rectangles
  * Functions for creating lights, multiple viewports and cameras
 
@@ -34,7 +34,8 @@ There are some glaring holes in functionality (LOD, billboards, shadows, project
 
 ![screenshot 1](/screenshots/screenshot1.png?raw=true)
 ![screenshot 2](/screenshots/screenshot2.png?raw=true)
-![screenshot 2](/screenshots/screenshot3.png?raw=true)
+![screenshot 3](/screenshots/screenshot3.png?raw=true)
+![screenshot 4](/screenshots/screenshot4.png?raw=true)
 
 ## Roadmap / TODO
 
@@ -45,7 +46,6 @@ There are some glaring holes in functionality (LOD, billboards, shadows, project
  * Fix lightmaps in the Q2 bsp loader
  * Implement multiple LOD for meshes
  * Build in support for shadows
- * Fix the lighting sample
  * Finish skybox management
  * Add Dreamcast support (depends on GL 1.x)
  * Restore Android support
