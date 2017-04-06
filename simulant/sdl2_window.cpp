@@ -34,7 +34,7 @@ SDL2Window::SDL2Window(uint32_t width, uint32_t height, uint32_t bpp, bool fulls
 }
 
 SDL2Window::~SDL2Window() {
-
+    _cleanup();
 }
 
 void SDL2Window::set_title(const std::string& title) {
