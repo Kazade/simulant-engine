@@ -8,7 +8,7 @@ git:
    submodules: false
 
 env:
-  # avoid ALSA errors
+ global:
   - AUDIODEV=null
 
 compiler:
