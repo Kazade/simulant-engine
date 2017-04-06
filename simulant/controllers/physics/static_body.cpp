@@ -3,7 +3,7 @@
 namespace smlt {
 namespace controllers {
 
-StaticBody::StaticBody(Controllable* object, RigidBodySimulation* simulation, ColliderType collider):
+StaticBody::StaticBody(Controllable* object, RigidBodySimulation* simulation, GeneratedColliderType collider):
     Body(object, simulation, collider) {
 
 }

@@ -60,8 +60,6 @@ private:
 
     std::pair<Vec3, Quaternion> body_transform(const impl::Body *body);
     void set_body_transform(impl::Body *body, const Vec3& position, const Quaternion& rotation);
-
-    std::unordered_map<impl::Body*, RaycastCollider> raycast_colliders_;
 };
 
 void to_b3vec3(const Vec3& rhs, b3Vec3& ret);
