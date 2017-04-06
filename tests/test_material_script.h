@@ -10,12 +10,6 @@
 class MaterialScriptTest : public SimulantTestCase {
 public:
     void test_basic_material_script_parsing() {
-        auto root = kfs::path::dir_name(kfs::path::dir_name(__FILE__));
-
-        window->resource_locator->add_search_path(
-            kfs::path::join(root, "samples/data")
-        );
-
         const std::string text = R"(
                 BEGIN(pass)
                     SET(TEXTURE_UNIT 0 "sample.tga")

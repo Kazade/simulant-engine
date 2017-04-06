@@ -15,6 +15,12 @@ public:
             window = smlt::SDL2Window::create(nullptr);
             window->_init();
             window->set_logging_level(smlt::LOG_LEVEL_NONE);
+
+            auto root = kfs::path::dir_name(kfs::path::dir_name(__FILE__));
+            window->resource_locator->add_search_path(
+                kfs::path::join(root, "samples/data")
+            );
+
         } else {
             window->reset();
         }
