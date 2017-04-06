@@ -19,10 +19,10 @@
 #pragma once
 
 #include <queue>
-#include "../controller.h"
+
+#include "./body.h"
 
 #include "../../generic/managed.h"
-#include "../../generic/tri_octree.h"
 #include "../../types.h"
 #include "../../nodes/stage_node.h"
 #include "../../time_keeper.h"
@@ -40,170 +40,8 @@ namespace impl {
     class Body;
 }
 
-
-struct Triangle {
-    uint32_t index[3];
-    Vec3 normal;
-
-    group_id get_group(void*) const { return 0; }
-    inline Vec3 get_vertex(uint32_t i, void* user_data) const {
-        return ((Vec3*)user_data)[index[i]];
-    }
-};
-
-typedef Octree<Triangle> RaycastOctree;
-
-std::pair<Vec3, Vec3> calculate_bounds(const std::vector<Vec3>& vertices);
-
-struct RaycastCollider {
-    std::vector<Vec3> vertices;
-    std::vector<Triangle> triangles;
-    std::unique_ptr<RaycastOctree> octree_;
-
-    void build_octree() {
-        std::pair<Vec3, Vec3> min_max = calculate_bounds(vertices);
-        octree_.reset(new RaycastOctree(min_max.first, min_max.second, 100, (void*)&vertices[0]));
-        for(auto& triangle: triangles) {
-            octree_->insert_triangle(triangle);
-        }
-    }
-
-    std::pair<Vec3, bool> intersect_ray(const Vec3& start, const Vec3& direction, float* hit_distance=nullptr, Vec3* hit_normal=nullptr) {
-        auto triangles = flatten(octree_->gather_triangles(octree_->find_nodes_intersecting_ray(start, direction)));
-
-        Ray ray(start, direction);
-
-        float closest_hit = std::numeric_limits<float>::max();
-        Vec3 intersection, normal;
-        bool intersects = false;
-
-        for(auto& tri: triangles) {
-            float dist = closest_hit;
-
-            Vec3 intersect, n;
-            bool hit = ray.intersects_triangle(
-                vertices[tri.index[0]],
-                vertices[tri.index[1]],
-                vertices[tri.index[2]], &intersect, &n, &dist
-            );
-
-            if(hit && dist < closest_hit) {
-                closest_hit = dist;
-                intersection = intersect;
-                intersects = true;
-                normal = n;
-            }
-        }
-
-        if(hit_distance) {
-            *hit_distance = closest_hit;
-        }
-
-        if(hit_normal) {
-            *hit_normal = normal;
-        }
-
-        return std::make_pair(intersection, intersects);
-    }
-};
-
-
 class RigidBody;
 
-typedef sig::signal<void ()> SimulationPreStepSignal;
-
-class RigidBodySimulation:
-    public Managed<RigidBodySimulation>,
-    public std::enable_shared_from_this<RigidBodySimulation> {
-
-    DEFINE_SIGNAL(SimulationPreStepSignal, signal_simulation_pre_step);
-
-public:
-    RigidBodySimulation(TimeKeeper* time_keeper);
-    bool init() override;
-    void cleanup() override;
-
-    void fixed_update(float step);
-
-    std::pair<Vec3, bool> intersect_ray(const Vec3& start, const Vec3& direction, float* distance=nullptr, Vec3 *normal=nullptr);
-
-    void set_gravity(const Vec3& gravity);
-
-private:
-    friend class impl::Body;
-    friend class RigidBody;
-    friend class StaticBody;
-
-    TimeKeeper* time_keeper_ = nullptr;
-
-    std::shared_ptr<b3World> scene_;
-
-    // Used by the RigidBodyController on creation/destruction to register a body
-    // in the simulation
-    b3Body *acquire_body(impl::Body* body);
-    void release_body(impl::Body *body);
-
-    std::unordered_map<const impl::Body*, b3Body*> bodies_;
-
-    std::pair<Vec3, Quaternion> body_transform(const impl::Body *body);
-    void set_body_transform(impl::Body *body, const Vec3& position, const Quaternion& rotation);
-
-    std::unordered_map<impl::Body*, RaycastCollider> raycast_colliders_;
-};
-
-enum ColliderType {
-    /* OOB collisiion detection */
-    COLLIDER_TYPE_BOX,
-
-     /* Useful for terrain meshes. Doesn't move or interact with other colliders but
-     * allows for manual collider logic. */
-    COLLIDER_TYPE_RAYCAST_ONLY
-};
-
-namespace impl {
-    class Body:
-        public Controller {
-
-    public:
-        Body(Controllable* object, RigidBodySimulation* simulation, ColliderType collider=COLLIDER_TYPE_BOX);
-        virtual ~Body();
-
-        void move_to(const Vec3& position);
-        void rotate_to(const Quaternion& rotation);
-
-        bool init();
-        void cleanup();
-
-        Property<Body, RigidBodySimulation> simulation = {
-            this, [](Body* _this) -> RigidBodySimulation* {
-                if(auto ret = _this->simulation_.lock()) {
-                    return ret.get();
-                } else {
-                    return nullptr;
-                }
-            }
-        };
-
-    protected:
-        friend class smlt::controllers::RigidBodySimulation;
-        StageNode* object_;
-        b3Body* body_ = nullptr;
-        std::weak_ptr<RigidBodySimulation> simulation_;
-        ColliderType collider_type_;
-
-        std::pair<Vec3, Quaternion> last_state_;
-
-        void update(float dt) override;
-
-        void build_collider(ColliderType collider);
-
-    private:
-        virtual bool is_dynamic() const { return true; }
-
-        sig::connection simulation_stepped_connection_;
-        std::vector<std::shared_ptr<b3Hull>> hulls_;
-    };
-} // End impl
 
 /*
  * Almost the same as a rigid body, but has no mass, and doesn't take part in the simulation

@@ -19,6 +19,7 @@
 
 #include "../../interfaces/boundable.h"
 #include "raycast_vehicle.h"
+#include "simulation.h"
 
 namespace smlt {
 namespace controllers {

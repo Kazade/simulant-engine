@@ -17,13 +17,10 @@
 
 namespace smlt {
 
-union {
-    uint16_t s;
-    unsigned char c[2];
-} constexpr static  d {1};
+static const int16_t num = 1;
 
 constexpr bool is_little_endian() {
-    return d.c[0] == 1;
+    return *(char *)&num == 1;
 }
 
 uint16_t swap_endian(uint16_t v) {
