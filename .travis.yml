@@ -46,7 +46,7 @@ before_install:
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then sed -i '' 's/git@github.com:/https:\/\/github.com\//' .gitmodules; fi
  - git submodule update --init --recursive
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
- - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install tinyxml; fi
+ - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install tinyxml sdl2; fi
 
 install:
  - mkdir build && cd build
