@@ -167,18 +167,5 @@ void RigidBody::add_torque(const Vec3& torque) {
     b->ApplyTorque(t, true);
 }
 
-StaticBody::StaticBody(Controllable* object, RigidBodySimulation* simulation, ColliderType collider):
-    Body(object, simulation, collider) {
-
-}
-
-StaticBody::~StaticBody() {
-
-}
-
-
-
-
-
 }
 }
