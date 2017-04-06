@@ -19,7 +19,7 @@ namespace smlt {
 
 static const int16_t num = 1;
 
-constexpr bool is_little_endian() {
+const bool is_little_endian() {
     return *(char *)&num == 1;
 }
 
