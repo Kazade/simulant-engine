@@ -17,9 +17,23 @@ addons:
    - libsdl2-dev 
    - libopenal-dev 
    - libtinyxml-dev
-   - mesa-utils 
-   - xvfb  
-
+   - libxi-dev
+   - libxmu-dev
+   - xserver-xorg-video-dummy
+   - xpra
+   - xorg-dev
+   - opencl-headers
+   - libgl1-mesa-dev
+   - libxcursor-dev
+   - libpulse-dev
+   - libxinerama-dev
+   - libxrandr-dev
+   - libxv-dev
+   - libasound2-dev
+   - libudev-dev
+   - mesa-utils
+   - libgl1-mesa-glx
+   
 before_install:
  - sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
  - git submodule update --init --recursive
@@ -31,7 +45,9 @@ install:
 
 before_script:
   - export DISPLAY=:99.0
-  - sh -e /etc/init.d/xvfb start
+  - export LIBGL_ALWAYS_SOFTWARE=1
+  - xpra --xvfb="Xorg +extension GLX +extension RANDR +extension RENDER -config `pwd`/test/dummy.xorg.conf -logfile ${HOME}/.xpra/xorg.log"  start :99
+  - glxinfo
 
 script:
  - SDL_VIDEODRIVER=x11 ./tests/simulant_tests
