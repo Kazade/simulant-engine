@@ -33,6 +33,13 @@ addons:
    - libudev-dev
    - mesa-utils
    - libgl1-mesa-glx
+   - xvfb
+   - mesa-common-dev 
+   - libglapi-mesa 
+   - libgbm1 
+   - libgl1-mesa-dri 
+   - libxatracker-dev 
+   - xvfb
    
 before_install:
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules; fi
