@@ -34,6 +34,24 @@ public:
     bool init();
     void cleanup();
 
+    void add_box_collider(
+        const Vec3& size,
+        const ColliderMaterial& properties,
+        const Vec3& offset, const Quaternion& rotation
+    );
+
+    void add_sphere_collider(
+        const float radius,
+        const ColliderMaterial& properties,
+        const Vec3& offset, const Quaternion& rotation
+    );
+
+    void add_mesh_collider(
+        const MeshID& mesh,
+        const ColliderMaterial& properties,
+        const Vec3& offset, const Quaternion& rotation
+    );
+
     Property<Body, RigidBodySimulation> simulation = {
         this, [](Body* _this) -> RigidBodySimulation* {
             if(auto ret = _this->simulation_.lock()) {

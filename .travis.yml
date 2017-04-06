@@ -44,9 +44,7 @@ addons:
    - libgl1-mesa-dri 
    - libxatracker-dev 
    - xvfb
-   - jackd
-   - libjack-dev
-   - libjack0
+   - pulseaudio
    
 before_install:
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules; fi
@@ -56,6 +54,7 @@ before_install:
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install tinyxml sdl2; fi
  - sudo usermod -a -G audio travis
  - sudo bash ./.prep-dummy-soundcard.sh
+ - dbus-launch pulseaudio --start
 
 install:
  - mkdir build && cd build
@@ -65,11 +64,10 @@ install:
 before_script:
   - export DISPLAY=:99
   - export LIBGL_ALWAYS_SOFTWARE=1
+  - export ALSOFT_DRIVERS=pulse
   - /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1400x900x24 -ac +extension GLX +render
   - sleep 3
   - glxinfo
-  - sudo jackd -r -ddummy -r44100 -p1024 &
-  - sleep 3
 
 script:
  - SDL_VIDEODRIVER=x11 ./tests/simulant_tests

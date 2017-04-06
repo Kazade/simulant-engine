@@ -36,7 +36,7 @@ public:
         );
         ground_id_ = stage->new_actor_with_mesh(ground_mesh_id_);
 
-        // Make the ground a staticbody, and only deal with ray-cast hits
+        // Make the ground a staticbody
         ground_id_.fetch()->new_controller<controllers::StaticBody>(physics, smlt::controllers::GENERATED_COLLIDER_TYPE_BOX);
     }
 
