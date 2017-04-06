@@ -51,6 +51,8 @@ before_install:
  - git submodule update --init --recursive
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install tinyxml sdl2; fi
+ - sudo usermod -a -G audio travis
+ - sudo bash ./.prep-dummy-soundcard.sh
 
 install:
  - mkdir build && cd build
@@ -63,7 +65,6 @@ before_script:
   - /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1400x900x24 -ac +extension GLX +render
   - sleep 3
   - glxinfo
-  - sudo sh .prep-dummy-soundcard.sh
 
 script:
  - SDL_VIDEODRIVER=x11 ./tests/simulant_tests
