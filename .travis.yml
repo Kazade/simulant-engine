@@ -35,7 +35,8 @@ addons:
    - libgl1-mesa-glx
    
 before_install:
- - sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
+ - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules; fi
+ - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then sed -i '' 's/git@github.com:/https:\/\/github.com\//' .gitmodules; fi
  - git submodule update --init --recursive
 
 install:
