@@ -25,6 +25,8 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <array>
+
 #include "colour.h"
 #include "generic/optional.h"
 
