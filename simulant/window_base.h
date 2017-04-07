@@ -173,7 +173,7 @@ public:
     
     bool run_frame();
 
-    void _fixed_update_thunk(float dt);
+    void _fixed_update_thunk(float dt) override;
     void _update_thunk(float dt) override;
 
     Mouse& mouse();

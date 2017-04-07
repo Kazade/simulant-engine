@@ -90,7 +90,7 @@ public:
     bool is_scene_loaded(const std::string& route) const override;
     void reset() override;
     SceneBasePtr active_scene() const override;
-    void _store_scene_factory(const std::string& name, std::function<SceneBasePtr (WindowBase*)> func);
+    void _store_scene_factory(const std::string& name, std::function<SceneBasePtr (WindowBase*)> func) override;
 
 protected:
     StagePtr stage(StageID stage=StageID());

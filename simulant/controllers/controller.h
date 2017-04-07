@@ -67,6 +67,7 @@ public:
 
 protected:
     Property<MaterialController, Material> material = { this, &MaterialController::material_ };
+    Material* get_material() const { return material_; }
 
 private:
     Material* material_;
