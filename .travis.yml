@@ -54,7 +54,7 @@ before_install:
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then sed -i '' 's/git@github.com:/https:\/\/github.com\//' .gitmodules; fi
  - git submodule update --init --recursive
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
- - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install tinyxml sdl2; fi
+ - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install tinyxml sdl2 openal-soft; fi
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo usermod -a -G audio travis; fi
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo bash ./.prep-dummy-soundcard.sh; fi
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then dbus-launch pulseaudio --start; fi
