@@ -34,7 +34,11 @@ SDL2Window::SDL2Window(uint32_t width, uint32_t height, uint32_t bpp, bool fulls
 }
 
 SDL2Window::~SDL2Window() {
-    _cleanup();
+    try {
+        _cleanup();
+    } catch(...) {
+        L_ERROR("There was a problem shutting down the Window. Ignoring.");
+    }
 }
 
 void SDL2Window::set_title(const std::string& title) {
@@ -296,7 +300,16 @@ bool SDL2Window::create_window(int width, int height, int bpp, bool fullscreen) 
 }
 
 void SDL2Window::destroy_window() {
+    if(!screen_ && !context_) {
+        return;
+    }
+
     SDL_GL_DeleteContext(context_);
+    context_ = nullptr;
+
+    SDL_DestroyWindow(screen_);
+    screen_ = nullptr;
+
     SDL_Quit();
 }
 

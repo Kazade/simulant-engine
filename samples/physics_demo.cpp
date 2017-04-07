@@ -36,8 +36,8 @@ public:
         );
         ground_id_ = stage->new_actor_with_mesh(ground_mesh_id_);
 
-        // Make the ground a staticbody, and only deal with ray-cast hits
-        ground_id_.fetch()->new_controller<controllers::StaticBody>(physics);
+        // Make the ground a staticbody
+        ground_id_.fetch()->new_controller<controllers::StaticBody>(physics, smlt::controllers::GENERATED_COLLIDER_TYPE_BOX);
     }
 
     void spawn_box() {
@@ -46,7 +46,7 @@ public:
         );
 
         auto box = boxes_.back().fetch();
-        auto controller = box->new_controller<smlt::controllers::RigidBody>(physics);
+        auto controller = box->new_controller<smlt::controllers::RigidBody>(physics, smlt::controllers::GENERATED_COLLIDER_TYPE_BOX);
         controller->move_to(Vec3(
             ((float(rand()) / RAND_MAX) * 20.0f) - 10.0f,
             20, 0)

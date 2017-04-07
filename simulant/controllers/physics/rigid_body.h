@@ -50,7 +50,7 @@ class RigidBody:
     public Managed<RigidBody> {
 
 public:
-    RigidBody(Controllable* object, RigidBodySimulation *simulation, ColliderType collider=COLLIDER_TYPE_BOX);
+    RigidBody(Controllable* object, RigidBodySimulation *simulation, GeneratedColliderType collider=GENERATED_COLLIDER_TYPE_NONE);
     ~RigidBody();
 
     void add_force(const Vec3& force);

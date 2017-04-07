@@ -160,6 +160,7 @@ void WindowBase::_cleanup() {
     Sound::shutdown_openal();
 
     delete resource_manager_;
+    resource_manager_ = nullptr;
 
     destroy_window();
     GLThreadCheck::cleanup();

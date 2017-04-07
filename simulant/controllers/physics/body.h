@@ -25,7 +25,7 @@ class Body:
     public Controller {
 
 public:
-    Body(Controllable* object, RigidBodySimulation* simulation, ColliderType collider=COLLIDER_TYPE_BOX);
+    Body(Controllable* object, RigidBodySimulation* simulation, GeneratedColliderType collider=GENERATED_COLLIDER_TYPE_NONE);
     virtual ~Body();
 
     void move_to(const Vec3& position);
@@ -33,6 +33,24 @@ public:
 
     bool init();
     void cleanup();
+
+    void add_box_collider(
+        const Vec3& size,
+        const ColliderMaterial& properties,
+        const Vec3& offset, const Quaternion& rotation
+    );
+
+    void add_sphere_collider(
+        const float radius,
+        const ColliderMaterial& properties,
+        const Vec3& offset, const Quaternion& rotation
+    );
+
+    void add_mesh_collider(
+        const MeshID& mesh,
+        const ColliderMaterial& properties,
+        const Vec3& offset, const Quaternion& rotation
+    );
 
     Property<Body, RigidBodySimulation> simulation = {
         this, [](Body* _this) -> RigidBodySimulation* {
@@ -49,13 +67,13 @@ protected:
     StageNode* object_;
     b3Body* body_ = nullptr;
     std::weak_ptr<RigidBodySimulation> simulation_;
-    ColliderType collider_type_;
+    GeneratedColliderType collider_type_;
 
     std::pair<Vec3, Quaternion> last_state_;
 
     void update(float dt) override;
 
-    void build_collider(ColliderType collider);
+    void build_collider(GeneratedColliderType collider);
 
 private:
     virtual bool is_dynamic() const { return true; }

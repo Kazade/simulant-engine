@@ -12,7 +12,7 @@ namespace smlt {
 namespace controllers {
 namespace impl {
 
-Body::Body(Controllable* object, RigidBodySimulation* simulation, ColliderType collider_type):
+Body::Body(Controllable* object, RigidBodySimulation* simulation, GeneratedColliderType collider_type):
     Controller(),
     simulation_(simulation->shared_from_this()),
     collider_type_(collider_type) {
@@ -95,13 +95,17 @@ void Body::update(float dt) {
     }
 }
 
-void Body::build_collider(ColliderType collider) {
+void Body::build_collider(GeneratedColliderType collider) {
+    if(collider == GENERATED_COLLIDER_TYPE_NONE) {
+        return;
+    }
+
     auto sim = simulation_.lock();
     if(!sim) {
         return;
     }
 
-    if(collider == COLLIDER_TYPE_BOX) {
+    if(collider == GENERATED_COLLIDER_TYPE_BOX) {
         BoundableEntity* entity = dynamic_cast<BoundableEntity*>(object_);
         if(entity) {
             AABB aabb = entity->aabb();
@@ -121,43 +125,8 @@ void Body::build_collider(ColliderType collider) {
 
             sim->bodies_.at(this)->CreateShape(sdef);
         }
-    } else if(collider == COLLIDER_TYPE_RAYCAST_ONLY) {
-        assert(!is_dynamic()); // You can't have dynamic raycast colliders (yet)
-
-        Actor* actor = dynamic_cast<Actor*>(object_);
-        assert(actor && "Raycast colliders must be actors (or geoms, but that's not implemented");
-        assert(actor->mesh_id());
-
-        MeshPtr mesh = actor->stage->assets->mesh(actor->mesh_id());
-
-        RaycastCollider* collider = &sim->raycast_colliders_[this];
-        collider->triangles.clear();
-        collider->vertices.clear();
-
-        mesh->each([=](const std::string& name, SubMesh* submesh) {
-            assert(submesh->arrangement() == MESH_ARRANGEMENT_TRIANGLES);
-
-            uint32_t offset = collider->vertices.size();
-
-            for(uint32_t i = 0; i < submesh->vertex_data->count(); ++i) {
-                collider->vertices.push_back(submesh->vertex_data->position_at<Vec3>(i));
-            }
-
-            for(uint32_t i = 0; i < submesh->index_data->count(); i +=3) {
-                Triangle tri;
-                for(uint32_t j = 0; j < 3; ++j) {
-                    tri.index[j] = offset + submesh->index_data->at(i + j);
-                }
-
-                auto v1 = collider->vertices[tri.index[1]] - collider->vertices[tri.index[0]];
-                auto v2 = collider->vertices[tri.index[2]] - collider->vertices[tri.index[0]];
-                tri.normal = v1.cross(v2).normalized();
-                collider->triangles.push_back(tri);
-            }
-        });
-
-        // Build the octree for performance
-        collider->build_octree();
+    } else {
+        assert(0 && "Not Implemented");
     }
 }
 

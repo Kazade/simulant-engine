@@ -80,30 +80,14 @@ std::pair<Vec3, bool> RigidBodySimulation::intersect_ray(const Vec3& start, cons
         to_vec3(result.point, impact_point);
         closest = (impact_point - start).length();
         to_vec3(result.normal, closest_normal);
-    }
 
-    // Now, check all the raycast only colliders
-    for(auto& p: raycast_colliders_) {
-        float hit_distance;
-        Vec3 n;
-        auto ret = p.second.intersect_ray(start, direction, &hit_distance, &n);
-        if(ret.second) {
-            // We hit something
-            if(hit_distance < closest) {
-                closest = hit_distance;
-                impact_point = ret.first;
-                hit = true;
-                closest_normal = n;
-            }
+        if(distance) {
+            *distance = closest;
         }
-    }
 
-    if(distance) {
-        *distance = closest;
-    }
-
-    if(normal) {
-        *normal = closest_normal;
+        if(normal) {
+            *normal = closest_normal;
+        }
     }
 
     return std::make_pair(impact_point, hit);
