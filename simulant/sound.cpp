@@ -63,13 +63,14 @@ SourceInstance::SourceInstance(Source &parent, SoundID sound, bool loop_stream):
     loop_stream_(loop_stream),
     is_dead_(false) {
 
-    alGenSources(1, &source_);
-    alGenBuffers(2, buffers_);
+    ALCheck(alGenSources, 1, &source_);
+    ALCheck(alGenBuffers, 2, buffers_);
 }
 
 SourceInstance::~SourceInstance() {
-    alDeleteSources(1, &source_);
-    alDeleteBuffers(2, buffers_);
+    ALCheck(alSourceStopv, 1, &source_); // Make sure we have stopped playing!
+    ALCheck(alDeleteSources, 1, &source_);
+    ALCheck(alDeleteBuffers, 2, buffers_);
 }
 
 void SourceInstance::start() {

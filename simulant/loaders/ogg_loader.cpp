@@ -35,6 +35,7 @@ public:
 
     virtual ~StreamWrapper() {
         stb_vorbis_close(vorbis_);
+        vorbis_ = nullptr;
     }
 
     stb_vorbis* get() { return vorbis_; }
@@ -92,7 +93,7 @@ void OGGLoader::into(Loadable& resource, const LoaderOptions& options) {
     assert(!str.empty());
 
     L_DEBUG(_F("Stream size: {0}").format(str.length()));
-    std::vector<unsigned char> data(str.begin(), str.end());
+    std::vector<uint8_t> data(str.begin(), str.end());
 
     StreamWrapper stream(stb_vorbis_open_memory(&data[0], data.size(),nullptr, nullptr));
 

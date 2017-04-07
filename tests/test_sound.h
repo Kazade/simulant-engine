@@ -47,6 +47,11 @@ public:
         actor->play_sound(sound);
 
         assert_true(actor->playing_sound_count());
+
+        // Finish playing the sound
+        while(window->playing_sound_count()) {
+            window->run_frame();
+        }
     }
 
 private:
