@@ -308,8 +308,11 @@ public:
 
                     std::ifstream ifs(e.file);
                     if(ifs.good()) {
-                        std::string buffer((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
-                        auto lines = StringSplitter(buffer).split();
+			std::string buffer;
+			std::vector<std::string> lines;
+			while(std::getline(ifs, buffer)) {
+                            lines.push_back(buffer);			
+			}
 
                         int line_count = lines.size();
                         if(line_count && e.line <= line_count) {
@@ -351,7 +354,7 @@ public:
             std::cout << std::endl << std::endl;
         }
 
-        return failed;
+        return failed + crashed;
     }
 
 private:
