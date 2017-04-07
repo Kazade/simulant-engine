@@ -38,7 +38,6 @@
 
 #include "sound.h"
 #include "camera.h"
-#include "watcher.h"
 #include "render_sequence.h"
 #include "stage.h"
 #include "virtual_gamepad.h"
@@ -150,7 +149,6 @@ void WindowBase::create_defaults() {
 void WindowBase::_cleanup() {
     virtual_gamepad_.reset();
     loading_.reset();
-    watcher_.reset();
     background_manager_.reset();
     render_sequence_.reset();
 
@@ -339,7 +337,6 @@ bool WindowBase::run_frame() {
     if(!is_running_) {
         signal_shutdown_();
 
-        watcher_.reset();
         loading_.reset();
 
         //Shutdown the input controller

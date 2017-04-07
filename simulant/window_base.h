@@ -64,7 +64,6 @@ class Loader;
 class LoaderType;
 class RenderSequence;
 class SceneImpl;
-class Watcher;
 class VirtualGamepad;
 class Renderer;
 class Panel;
@@ -350,7 +349,6 @@ private:
     int32_t frame_counter_frames_;
     double frame_time_in_milliseconds_;
 
-    std::shared_ptr<Watcher> watcher_;
     std::shared_ptr<scenes::Loading> loading_;
     std::shared_ptr<smlt::RenderSequence> render_sequence_;
     generic::DataCarrier data_carrier_;
@@ -369,17 +367,6 @@ public:
     Property<WindowBase, VirtualGamepad> virtual_joypad = { this, &WindowBase::virtual_gamepad_ };
     Property<WindowBase, Renderer> renderer = { this, &WindowBase::renderer_ };
     Property<WindowBase, TimeKeeper> time_keeper = { this, &WindowBase::time_keeper_ };
-
-    Property<WindowBase, Watcher> watcher = {
-        this, [](const WindowBase* self) -> Watcher* {
-            if(!self->watcher_) {
-                L_WARN("Watcher has not been initialized");
-                return nullptr;
-            } else {
-                return self->watcher_.get();
-            }
-        }
-    };
 
     Property<WindowBase, IdleTaskManager> idle = { this, &WindowBase::idle_ };
     Property<WindowBase, generic::DataCarrier> data = { this, &WindowBase::data_carrier_ };

@@ -384,33 +384,6 @@ namespace loaders {
 void MaterialScriptLoader::into(Loadable& resource, const LoaderOptions& options) {
     Material* mat = loadable_to<Material>(resource);
     parser_->generate(*mat);
-
-    //FIXME: Need to handle resource manager deletion and material deletion
-    std::shared_ptr<MaterialReloader> reloader(new MaterialReloader(
-        mat->resource_manager(),
-        mat->id())
-    );
-/*
-    mat->resource_manager().window().watcher().watch(
-        filename_,
-        std::bind(&MaterialReloader::reload, reloader, std::placeholders::_1, std::placeholders::_2)
-    );*/
-}
-
-MaterialReloader::MaterialReloader(ResourceManager& rm, MaterialID material):
-    rm_(rm),
-    material_(material) {
-
-}
-
-void MaterialReloader::reload(const unicode& path, WatchEvent evt) {
-    try {
-        rm_.window->loader_for(path.encode())->into(rm_.material(material_));
-    } catch(SyntaxError& e) {
-        L_WARN("Unable to reload material as the syntax is incorrect");
-    } catch(std::runtime_error& e) {
-        L_WARN("Unable to reload material as there was an error");
-    }
 }
 
 }

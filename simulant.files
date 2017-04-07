@@ -231,7 +231,6 @@ kglt/loaders/obj_loader.cpp
 tests/test_obj_loader.h
 kglt/watcher.h
 kglt/watcher.cpp
-tests/test_watcher.h
 kglt/kazbase/os/core.h
 kglt/kazbase/os/path.cpp
 kglt/kazbase/os/core.cpp
@@ -1467,8 +1466,6 @@ simulant/viewport.cpp
 simulant/viewport.h
 simulant/virtual_gamepad.cpp
 simulant/virtual_gamepad.h
-simulant/watcher.cpp
-simulant/watcher.h
 simulant/window_base.cpp
 simulant/window_base.h
 simulant/CMakeLists.txt
