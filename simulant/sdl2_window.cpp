@@ -301,6 +301,7 @@ bool SDL2Window::create_window(int width, int height, int bpp, bool fullscreen) 
 
 void SDL2Window::destroy_window() {
     SDL_GL_DeleteContext(context_);
+    SDL_DestroyWindow(screen_);
     SDL_Quit();
 }
 
