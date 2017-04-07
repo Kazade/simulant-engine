@@ -70,7 +70,7 @@ before_script:
   - glxinfo
 
 script:
- - SDL_VIDEODRIVER=x11 ./tests/simulant_tests
+ - SDL_VIDEODRIVER=x11 catchsegv ./tests/simulant_tests
 
 matrix:
  allow_failures:
