@@ -52,9 +52,9 @@ before_install:
  - git submodule update --init --recursive
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install tinyxml sdl2; fi
- - sudo usermod -a -G audio travis
- - sudo bash ./.prep-dummy-soundcard.sh
- - dbus-launch pulseaudio --start
+ - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo usermod -a -G audio travis; fi
+ - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo bash ./.prep-dummy-soundcard.sh; fi
+ - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then dbus-launch pulseaudio --start; fi
 
 install:
  - mkdir build && cd build
