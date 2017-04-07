@@ -22,6 +22,7 @@
 #include <stdexcept>
 #include <memory>
 #include <string>
+#include <functional>
 
 
 class InstanceInitializationError :
