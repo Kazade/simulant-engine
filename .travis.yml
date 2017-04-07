@@ -47,9 +47,9 @@ addons:
    - pulseaudio
    
 before_install:
- - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo add-apt-repository -y ppa:oibaf/graphics-drivers; fi
+ - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo add-apt-repository -y ppa:xorg-edgers/ppa; fi
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update -qq -y; fi
- - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get -yq --force-yes install libgl1-mesa-dev libgl1-mesa-glx mesa-common-dev libglapi-mesa libgbm1 libgl1-mesa-dri libxatracker-dev xvfb; fi
+ - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get -yq install mesa; fi
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules; fi
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then sed -i '' 's/git@github.com:/https:\/\/github.com\//' .gitmodules; fi
  - git submodule update --init --recursive
@@ -65,12 +65,12 @@ install:
  - make
 
 before_script:
-  - export DISPLAY=:99
-  - export LIBGL_ALWAYS_SOFTWARE=1
-  - export ALSOFT_DRIVERS=pulse
-  - /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1400x900x24 -ac +extension RANDR +extension GLX +render
-  - sleep 3
-  - glxinfo
+ - export DISPLAY=:99
+ - export LIBGL_ALWAYS_SOFTWARE=1
+ - export ALSOFT_DRIVERS=pulse
+ - /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1400x900x24 -ac +extension RANDR +extension GLX +render
+ - sleep 3
+ - glxinfo
 
 script:
  - SDL_VIDEODRIVER=x11 catchsegv ./tests/simulant_tests
