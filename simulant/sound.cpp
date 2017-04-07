@@ -36,8 +36,16 @@ void Sound::init_openal() {
 }
 
 void Sound::shutdown_openal() {
-    alcDestroyContext(ctx);
-    alcCloseDevice(dev);
+    if(ctx) {
+        alcDestroyContext(ctx);
+        ctx = nullptr;
+    }
+
+    if(dev) {
+        alcCloseDevice(dev);
+        dev = nullptr;
+    }
+
 }
 
 Sound::Sound(SoundID id, ResourceManager *resource_manager):
