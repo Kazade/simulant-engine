@@ -43,7 +43,13 @@ private:
     stb_vorbis* vorbis_;
 };
 
-int32_t queue_buffer(Sound* self, StreamWrapper::ptr stream, ALuint buffer) {
+int32_t queue_buffer(std::weak_ptr<Sound> sound, StreamWrapper::ptr stream, ALuint buffer) {
+    auto self = sound.lock();
+    if(!self) {
+        // The sound was destroyed, we can't stream without a sound so just bail
+        return 0;
+    }
+
     std::vector<ALshort> pcm;
     int s = self->buffer_size();
     pcm.resize(s);
@@ -79,7 +85,7 @@ void init_source(Sound* self, SourceInstance& source) {
      */
 
     StreamWrapper::ptr stream(new StreamWrapper(stb_vorbis_open_memory(&self->data()[0], self->data().size(), nullptr, nullptr)));
-    source.set_stream_func(std::bind(&queue_buffer, self, stream, std::placeholders::_1));
+    source.set_stream_func(std::bind(&queue_buffer, self->shared_from_this(), stream, std::placeholders::_1));
 }
 
 
