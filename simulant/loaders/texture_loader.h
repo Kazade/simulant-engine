@@ -42,12 +42,12 @@ public:
 
     ~TextureLoaderType() {}
 
-    unicode name() { return "texture"; }
+    unicode name() override { return "texture"; }
     bool supports(const unicode& filename) const override {
         return filename.lower().contains(".tga") || filename.lower().contains(".png") || filename.lower().contains(".jpg") || filename.lower().contains(".dds");
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::stringstream> data) const {
+    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::stringstream> data) const override {
         return Loader::ptr(new TextureLoader(filename, data));
     }
 };
