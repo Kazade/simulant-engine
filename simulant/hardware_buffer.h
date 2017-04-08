@@ -124,7 +124,7 @@ private:
     virtual void do_release(const HardwareBufferImpl* buffer) = 0;
     virtual void do_bind(const HardwareBufferImpl* buffer, HardwareBufferPurpose purpose) = 0;
 
-    friend class HardwareBufferImpl;
+    friend struct HardwareBufferImpl;
 };
 
 }

@@ -69,7 +69,7 @@ public:
 
     smlt::ActorID actor_id() const { return actor_id_; }
 
-    const AABB aabb() const;
+    const AABB aabb() const override;
 
 private:
     float frame_width_ = 0;

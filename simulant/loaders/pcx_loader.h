@@ -42,12 +42,12 @@ public:
 
     ~PCXLoaderType() {}
 
-    unicode name() { return "pcx_texture"; }
+    unicode name() override { return "pcx_texture"; }
     bool supports(const unicode& filename) const override {
         return filename.lower().contains(".pcx");
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::stringstream> data) const {
+    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::stringstream> data) const override {
         return Loader::ptr(new PCXLoader(filename, data));
     }
 };

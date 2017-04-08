@@ -76,12 +76,12 @@ public:
 
     ~HeightmapLoaderType() {}
 
-    unicode name() { return "heightmap_loader"; }
+    unicode name() override { return "heightmap_loader"; }
     bool supports(const unicode& filename) const override {
         return filename.lower().ends_with(".tga") || filename.lower().ends_with(".png");
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::stringstream> data) const {
+    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::stringstream> data) const override {
         return Loader::ptr(new HeightmapLoader(filename, data));
     }
 };
