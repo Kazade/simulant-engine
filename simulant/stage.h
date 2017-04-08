@@ -203,8 +203,8 @@ public:
     sig::signal<void (SpriteID)>& signal_sprite_created() { return signal_sprite_created_; }
     sig::signal<void (SpriteID)>& signal_sprite_destroyed() { return signal_sprite_destroyed_; }
 
-    const AABB aabb() const { return AABB(); }
-    const AABB transformed_aabb() const { return AABB(); }
+    const AABB aabb() const override { return AABB(); }
+    const AABB transformed_aabb() const override { return AABB(); }
 
 private:
     ActorCreatedSignal signal_actor_created_;

@@ -40,12 +40,12 @@ public:
 
     ~KGLPLoaderType() {}
 
-    unicode name() { return "particle"; }
+    unicode name() override { return "particle"; }
     bool supports(const unicode& filename) const override {
         return filename.lower().contains(".kglp");
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::stringstream> data) const {
+    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::stringstream> data) const override {
         return Loader::ptr(new KGLPLoader(filename, data));
     }
 };

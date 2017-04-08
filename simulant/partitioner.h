@@ -92,6 +92,8 @@ protected:
     StaticChunkCreated signal_static_chunk_created_;
     StaticChunkDestroyed signal_static_chunk_destroyed_;
     StaticChunkChanged signal_static_chunk_changed_;
+
+    Stage* get_stage() const { return stage_; }
 private:
     Stage* stage_;
 };

@@ -40,13 +40,13 @@ public:
 
     ~TiledLoaderType() {}
 
-    unicode name() { return "tiled"; }
+    unicode name() override { return "tiled"; }
     bool supports(const unicode& filename) const override {        
         bool ret = filename.lower().ends_with(".tmx");
         return ret;
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::stringstream> data) const {
+    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::stringstream> data) const override {
         return Loader::ptr(new TiledLoader(filename, data));
     }
 };
