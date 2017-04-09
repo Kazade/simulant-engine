@@ -1,6 +1,7 @@
 #ifndef TEST_SOUND_H
 #define TEST_SOUND_H
 
+#include <cstdlib>
 #include "simulant/simulant.h"
 #include "kaztest/kaztest.h"
 
@@ -10,6 +11,12 @@ class SoundTest : public SimulantTestCase {
 public:
     void set_up() {
 	skip_if(smlt::Sound::is_disabled(), "No sound devices");
+
+#ifdef __APPLE__
+	bool skip = bool(getenv("TRAVIS"));
+	skip_if(skip, "OSX Travis builds hang on sound tests :(");
+#endif
+
         SimulantTestCase::set_up();
         camera_id_ = window->new_camera();
         stage_id_ = window->new_stage();
