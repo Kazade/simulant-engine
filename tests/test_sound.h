@@ -13,7 +13,7 @@ public:
 	skip_if(smlt::Sound::is_disabled(), "No sound devices");
 
 #ifdef __APPLE__
-	bool skip = bool(getenv("TRAVIS"));
+	bool skip = bool(std::getenv("TRAVIS"));
 	skip_if(skip, "OSX Travis builds hang on sound tests :(");
 #endif
 
