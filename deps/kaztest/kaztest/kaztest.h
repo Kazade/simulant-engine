@@ -140,10 +140,20 @@ public:
     int line;
 };
 
+
 class NotImplementedError: public std::logic_error {
 public:
     NotImplementedError(const std::string& file, int line):
         std::logic_error(_Format("Not implemented at {0}:{1}").format(file, line)) {}
+};
+
+
+class SkippedTestError: public std::logic_error {
+public:
+    SkippedTestError(const std::string& reason):
+	std::logic_error(reason) {
+
+    }
 };
 
 }
@@ -154,6 +164,10 @@ public:
 
     virtual void set_up() {}
     virtual void tear_down() {}
+
+    void skip_if(const bool& flag, const std::string& reason) {
+        if(flag) { throw kaztest::SkippedTestError(reason); }
+    }
 
     template<typename T, typename U>
     void _assert_equal(T expected, U actual, std::string file, int line) {
@@ -298,6 +312,9 @@ public:
                 test();
                 std::cout << "\033[32m" << "   OK   " << "\033[0m" << std::endl;
             } catch(kaztest::NotImplementedError& e) {
+                std::cout << "\033[34m" << " SKIPPED" << "\033[0m" << std::endl;
+                ++skipped;
+	    } catch(kaztest::SkippedTestError& e) {
                 std::cout << "\033[34m" << " SKIPPED" << "\033[0m" << std::endl;
                 ++skipped;
             } catch(kaztest::AssertionError& e) {
