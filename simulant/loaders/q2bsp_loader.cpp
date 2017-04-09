@@ -377,7 +377,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     }
 
     std::unordered_map<MaterialID, SubMesh*> submeshes_by_material;
-    uint32_t i;
+    uint32_t i = 0;
     for(auto& material: materials) {
         submeshes_by_material[material] = mesh->new_submesh_with_material(_F("{0}").format(i++), material);
     }
