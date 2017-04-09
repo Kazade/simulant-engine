@@ -65,15 +65,16 @@ install:
  - make
 
 before_script:
- - export DISPLAY=:99
- - export LIBGL_ALWAYS_SOFTWARE=1
- - export ALSOFT_DRIVERS=pulse
- - /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1400x900x24 -ac +extension RANDR +extension GLX +render
+ - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export DISPLAY=:99; fi
+ - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export LIBGL_ALWAYS_SOFTWARE=1; fi
+ - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export ALSOFT_DRIVERS=pulse; fi
+ - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1400x900x24 -ac +extension RANDR +extension GLX +render; fi
  - sleep 3
- - glxinfo
+ - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then glxinfo; fi
 
 script:
- - SDL_VIDEODRIVER=x11 catchsegv ./tests/simulant_tests
+ - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then SDL_VIDEODRIVER=x11 catchsegv ./tests/simulant_tests; fi;
+ - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ./tests/simulant_tests; fi;
 
 matrix:
  allow_failures:

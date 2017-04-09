@@ -42,12 +42,12 @@ public:
 
     ~OBJLoaderType() {}
 
-    unicode name() { return "obj"; }
+    unicode name() override { return "obj"; }
     bool supports(const unicode& filename) const override {
         return filename.lower().contains(".obj");
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::stringstream> data) const {
+    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::stringstream> data) const override {
         return Loader::ptr(new OBJLoader(filename, data));
     }
 };

@@ -31,6 +31,9 @@ public:
 
     Property<WindowHolder, WindowBase> window = { this, &WindowHolder::window_ };
 
+protected:
+    WindowBase* get_window() const { return window_; }
+
 private:
     WindowBase* window_;
 };

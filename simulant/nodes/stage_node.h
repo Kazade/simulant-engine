@@ -30,7 +30,7 @@ class StageNode:
     DEFINE_SIGNAL(BoundsUpdatedSignal, signal_bounds_updated);
 
 public:
-    unicode to_unicode() const {
+    unicode to_unicode() const override {
         return Nameable::to_unicode();
     }
 

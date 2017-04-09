@@ -46,12 +46,12 @@ public:
 
     ~WALLoaderType() {}
 
-    unicode name() { return "wal_texture"; }
+    unicode name() override { return "wal_texture"; }
     bool supports(const unicode& filename) const override {
         return filename.lower().contains(".wal");
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::stringstream> data) const {
+    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::stringstream> data) const override {
         return Loader::ptr(new WALLoader(filename, data));
     }
 };

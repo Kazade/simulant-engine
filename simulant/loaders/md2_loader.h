@@ -40,7 +40,7 @@ public:
 
     ~MD2LoaderType() {}
 
-    unicode name() {
+    unicode name() override {
         return "md2";
     }
 
@@ -48,7 +48,7 @@ public:
         return filename.lower().contains(".md2");
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::stringstream> data) const {
+    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::stringstream> data) const override {
         return Loader::ptr(new MD2Loader(filename, data));
     }
 };

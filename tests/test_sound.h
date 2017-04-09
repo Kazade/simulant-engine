@@ -9,6 +9,7 @@
 class SoundTest : public SimulantTestCase {
 public:
     void set_up() {
+	skip_if(smlt::Sound::is_disabled(), "No sound devices");
         SimulantTestCase::set_up();
         camera_id_ = window->new_camera();
         stage_id_ = window->new_stage();
@@ -47,6 +48,11 @@ public:
         actor->play_sound(sound);
 
         assert_true(actor->playing_sound_count());
+
+        // Finish playing the sound
+        while(window->playing_sound_count()) {
+            window->run_frame();
+        }
     }
 
 private:

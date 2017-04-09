@@ -27,7 +27,6 @@
 #include "../material.h"
 #include "../types.h"
 #include "../loader.h"
-#include "../watcher.h"
 
 namespace smlt {
 
@@ -77,15 +76,6 @@ private:
 
 namespace loaders {
 
-class MaterialReloader {
-public:
-    MaterialReloader(ResourceManager& rm, MaterialID material);
-    void reload(const unicode& path, WatchEvent evt);
-
-private:
-    ResourceManager& rm_;
-    MaterialID material_;
-};
 
 class MaterialScriptLoader:
     public Loader {

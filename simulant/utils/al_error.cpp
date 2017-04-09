@@ -17,8 +17,13 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#ifdef __APPLE__
+#include <OpenAL/al.h>
+#include <OpenAL/alc.h>
+#else
 #include <AL/al.h>
 #include <AL/alc.h>
+#endif
 
 #include "../deps/kazlog/kazlog.h"
 

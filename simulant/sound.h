@@ -49,7 +49,8 @@ class Sound :
     public Managed<Sound>,
     public generic::Identifiable<SoundID>,
     public Resource,
-    public Loadable {
+    public Loadable,
+    public std::enable_shared_from_this<Sound> {
 
 public:
     static void init_openal();
@@ -74,15 +75,16 @@ public:
 
     void set_source_init_function(std::function<void (SourceInstance&)> func) { init_source_ = func; }
 
+    static bool is_disabled();
 private:
     std::function<void (SourceInstance&)> init_source_;
 
     std::vector<uint8_t> sound_data_;
 
-    uint32_t sample_rate_;
+    uint32_t sample_rate_ = 0;
     ALenum format_;
-    uint8_t channels_;
-    std::size_t buffer_size_;
+    uint8_t channels_ = 0;
+    std::size_t buffer_size_ = 0;
 
     friend class Source;
     friend class SourceInstance;

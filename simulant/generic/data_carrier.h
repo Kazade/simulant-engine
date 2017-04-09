@@ -20,6 +20,9 @@
 #define USER_DATA_CARRIER_H
 
 #include <unordered_map>
+#include <string>
+#include <stdexcept>
+
 #include "any/any.h"
 
 namespace smlt {

@@ -160,7 +160,7 @@ public:
     ParticleSystem(ParticleSystemID id, Stage* stage);
     ~ParticleSystem();
 
-    const AABB aabb() const;
+    const AABB aabb() const override;
     const AABB transformed_aabb() const override {
         return StageNode::transformed_aabb();
     }
@@ -179,17 +179,17 @@ public:
     EmitterPtr push_emitter();
     void pop_emitter();
 
-    void ask_owner_for_destruction();
+    void ask_owner_for_destruction() override;
 
     //Renderable stuff
 
-    const MeshArrangement arrangement() const { return MESH_ARRANGEMENT_POINTS; }
-    virtual Mat4 final_transformation() const {
+    const MeshArrangement arrangement() const override { return MESH_ARRANGEMENT_POINTS; }
+    virtual Mat4 final_transformation() const override {
         return Mat4(); //Particles are absolutely positioned in the world
     }
 
     void set_material_id(MaterialID mat_id);
-    virtual const MaterialID material_id() const { return material_id_; }
+    virtual const MaterialID material_id() const override { return material_id_; }
 
     void deactivate_emitters() { for(auto emitter: emitters_) { emitter->deactivate(); }; }
     void activate_emitters() { for(auto emitter: emitters_) { emitter->activate(); }; }
@@ -209,7 +209,7 @@ public:
         return index_buffer_.get();
     }
 
-    VertexSpecification vertex_attribute_specification() const {
+    VertexSpecification vertex_attribute_specification() const override {
         return vertex_data_->specification();
     }
 
@@ -221,7 +221,7 @@ public:
         return HasMutableRenderPriority::render_priority();
     }
 
-    const bool is_visible() const {
+    const bool is_visible() const override {
         return StageNode::is_visible();
     }
 

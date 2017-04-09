@@ -140,10 +140,20 @@ public:
     int line;
 };
 
+
 class NotImplementedError: public std::logic_error {
 public:
     NotImplementedError(const std::string& file, int line):
         std::logic_error(_Format("Not implemented at {0}:{1}").format(file, line)) {}
+};
+
+
+class SkippedTestError: public std::logic_error {
+public:
+    SkippedTestError(const std::string& reason):
+	std::logic_error(reason) {
+
+    }
 };
 
 }
@@ -154,6 +164,10 @@ public:
 
     virtual void set_up() {}
     virtual void tear_down() {}
+
+    void skip_if(const bool& flag, const std::string& reason) {
+        if(flag) { throw kaztest::SkippedTestError(reason); }
+    }
 
     template<typename T, typename U>
     void _assert_equal(T expected, U actual, std::string file, int line) {
@@ -300,6 +314,9 @@ public:
             } catch(kaztest::NotImplementedError& e) {
                 std::cout << "\033[34m" << " SKIPPED" << "\033[0m" << std::endl;
                 ++skipped;
+	    } catch(kaztest::SkippedTestError& e) {
+                std::cout << "\033[34m" << " SKIPPED" << "\033[0m" << std::endl;
+                ++skipped;
             } catch(kaztest::AssertionError& e) {
                 std::cout << "\033[33m" << " FAILED " << "\033[0m" << std::endl;
                 std::cout << "        " << e.what() << std::endl;
@@ -308,8 +325,11 @@ public:
 
                     std::ifstream ifs(e.file);
                     if(ifs.good()) {
-                        std::string buffer((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
-                        auto lines = StringSplitter(buffer).split();
+			std::string buffer;
+			std::vector<std::string> lines;
+			while(std::getline(ifs, buffer)) {
+                            lines.push_back(buffer);			
+			}
 
                         int line_count = lines.size();
                         if(line_count && e.line <= line_count) {
@@ -351,7 +371,7 @@ public:
             std::cout << std::endl << std::endl;
         }
 
-        return failed;
+        return failed + crashed;
     }
 
 private:
