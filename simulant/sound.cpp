@@ -17,6 +17,7 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#include "deps/kazlog/kazlog.h"
 #include "utils/al_error.h"
 #include "window_base.h"
 #include "stage.h"
@@ -26,10 +27,23 @@ namespace smlt {
 
 static ALCdevice* dev = nullptr;
 static ALCcontext* ctx = nullptr;
+static bool sound_disabled = false;
+
+
+bool Sound::is_disabled() {
+    return sound_disabled;
+}
 
 void Sound::init_openal() {
     if(!dev) {
         dev = alcOpenDevice(NULL);
+        if(!dev) {
+            // If we couldn't open the default device for some reason,
+            // disable all sound functions
+            L_ERROR("Unable to initialize sound device");
+            sound_disabled = true;
+            return;
+        }
         ctx = alcCreateContext(dev, NULL);
         alcMakeContextCurrent(ctx);
     }
@@ -45,7 +59,6 @@ void Sound::shutdown_openal() {
         alcCloseDevice(dev);
         dev = nullptr;
     }
-
 }
 
 Sound::Sound(SoundID id, ResourceManager *resource_manager):
@@ -74,6 +87,9 @@ SourceInstance::~SourceInstance() {
 }
 
 void SourceInstance::start() {
+    if(sound_disabled) {
+        return;
+    }
     //Fill up two buffers to begin with
     auto bs1 = stream_func_(buffers_[0]);
     auto bs2 = stream_func_(buffers_[1]);
@@ -85,12 +101,16 @@ void SourceInstance::start() {
 }
 
 bool SourceInstance::is_playing() const {
+    if(sound_disabled)  return false;
+
     ALint val;
     ALCheck(alGetSourcei, source_, AL_SOURCE_STATE, &val);
     return val == AL_PLAYING;
 }
 
 void SourceInstance::update(float dt) {
+    if(sound_disabled) return;
+
     ALint processed = 0;
 
     ALCheck(alGetSourcei, source_, AL_BUFFERS_PROCESSED, &processed);
@@ -135,6 +155,10 @@ Source::~Source() {
 }
 
 void Source::play_sound(SoundID sound, bool loop) {
+    if(sound_disabled) {
+    	return;
+    }
+
     if(!sound) {
         L_WARN("Tried to play an invalid sound");
         return;
@@ -157,6 +181,10 @@ void Source::play_sound(SoundID sound, bool loop) {
 }
 
 void Source::update_source(float dt) {
+    if(sound_disabled) {
+        return;
+    }
+
     for(auto instance: instances_) {
         instance->update(dt);
     }

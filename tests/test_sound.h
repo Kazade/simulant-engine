@@ -9,6 +9,7 @@
 class SoundTest : public SimulantTestCase {
 public:
     void set_up() {
+	skip_if(smlt::Sound::is_disabled(), "No sound devices");
         SimulantTestCase::set_up();
         camera_id_ = window->new_camera();
         stage_id_ = window->new_stage();

@@ -75,6 +75,7 @@ public:
 
     void set_source_init_function(std::function<void (SourceInstance&)> func) { init_source_ = func; }
 
+    static bool is_disabled();
 private:
     std::function<void (SourceInstance&)> init_source_;
 
