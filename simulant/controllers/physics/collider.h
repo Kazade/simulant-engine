@@ -14,14 +14,6 @@ enum ColliderType {
     COLLIDER_TYPE_MESH
 };
 
-// Colliders available for auto generation on RigidBody construction
-enum GeneratedColliderType {
-    GENERATED_COLLIDER_TYPE_NONE,
-    GENERATED_COLLIDER_TYPE_BOX,
-    GENERATED_COLLIDER_TYPE_SPHERE,
-    GENERATED_COLLIDER_TYPE_MESH
-};
-
 struct PhysicsMaterial {
     PhysicsMaterial() = default;
     PhysicsMaterial(float density, float friction, float bounciness):
@@ -34,6 +26,7 @@ struct PhysicsMaterial {
     static const PhysicsMaterial WOOD;
     static const PhysicsMaterial RUBBER;
     static const PhysicsMaterial IRON;
+    static const PhysicsMaterial STONE;
 };
 
 

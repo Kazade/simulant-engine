@@ -12,10 +12,9 @@ namespace smlt {
 namespace controllers {
 namespace impl {
 
-Body::Body(Controllable* object, RigidBodySimulation* simulation, GeneratedColliderType collider_type):
+Body::Body(Controllable* object, RigidBodySimulation* simulation):
     Controller(),
-    simulation_(simulation->shared_from_this()),
-    collider_type_(collider_type) {
+    simulation_(simulation->shared_from_this()) {
 
     object_ = dynamic_cast<StageNode*>(object);
     if(!object_) {
@@ -41,7 +40,6 @@ bool Body::init() {
     }
 
     body_ = sim->acquire_body(this);
-    build_collider(collider_type_);
 
     return true;
 }
@@ -92,41 +90,6 @@ void Body::update(float dt) {
         auto state = sim->body_transform(this);
         object_->move_to_absolute(state.first);
         object_->rotate_to_absolute(state.second);
-    }
-}
-
-void Body::build_collider(GeneratedColliderType collider) {
-    if(collider == GENERATED_COLLIDER_TYPE_NONE) {
-        return;
-    }
-
-    auto sim = simulation_.lock();
-    if(!sim) {
-        return;
-    }
-
-    if(collider == GENERATED_COLLIDER_TYPE_BOX) {
-        BoundableEntity* entity = dynamic_cast<BoundableEntity*>(object_);
-        if(entity) {
-            AABB aabb = entity->aabb();
-
-            auto def = std::make_shared<b3BoxHull>();
-            def->Set(aabb.width() * 0.5, aabb.height() * 0.5, aabb.depth() * 0.5);
-            hulls_.push_back(def);
-
-            b3HullShape hsdef;
-            hsdef.m_hull = def.get();
-
-            b3ShapeDef sdef;
-            sdef.shape = &hsdef;
-            sdef.userData = this;
-            sdef.density = 0.005;
-            sdef.friction = 0.3;
-
-            sim->bodies_.at(this)->CreateShape(sdef);
-        }
-    } else {
-        assert(0 && "Not Implemented");
     }
 }
 

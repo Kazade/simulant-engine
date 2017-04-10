@@ -37,7 +37,8 @@ public:
         ground_id_ = stage->new_actor_with_mesh(ground_mesh_id_);
 
         // Make the ground a staticbody
-        ground_id_.fetch()->new_controller<controllers::StaticBody>(physics, smlt::controllers::GENERATED_COLLIDER_TYPE_BOX);
+        auto c = ground_id_.fetch()->new_controller<controllers::StaticBody>(physics);
+        c->add_box_collider(ground_id_.fetch()->aabb().dimensions(), controllers::PhysicsMaterial::STONE);
     }
 
     void spawn_box() {
@@ -46,7 +47,8 @@ public:
         );
 
         auto box = boxes_.back().fetch();
-        auto controller = box->new_controller<smlt::controllers::RigidBody>(physics, smlt::controllers::GENERATED_COLLIDER_TYPE_BOX);
+        auto controller = box->new_controller<smlt::controllers::RigidBody>(physics);
+        controller->add_box_collider(box->aabb().dimensions(), controllers::PhysicsMaterial::WOOD);
         controller->move_to(Vec3(
             ((float(rand()) / RAND_MAX) * 20.0f) - 10.0f,
             20, 0)

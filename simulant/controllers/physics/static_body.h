@@ -13,7 +13,7 @@ class StaticBody:
     public Managed<StaticBody> {
 
 public:
-    StaticBody(Controllable* object, RigidBodySimulation *simulation, GeneratedColliderType collider=GENERATED_COLLIDER_TYPE_NONE);
+    StaticBody(Controllable* object, RigidBodySimulation *simulation);
     ~StaticBody();
 
     using impl::Body::init;

@@ -25,7 +25,7 @@ class Body:
     public Controller {
 
 public:
-    Body(Controllable* object, RigidBodySimulation* simulation, GeneratedColliderType collider=GENERATED_COLLIDER_TYPE_NONE);
+    Body(Controllable* object, RigidBodySimulation* simulation);
     virtual ~Body();
 
     void move_to(const Vec3& position);
@@ -67,13 +67,10 @@ protected:
     StageNode* object_;
     b3Body* body_ = nullptr;
     std::weak_ptr<RigidBodySimulation> simulation_;
-    GeneratedColliderType collider_type_;
 
     std::pair<Vec3, Quaternion> last_state_;
 
     void update(float dt) override;
-
-    void build_collider(GeneratedColliderType collider);
 
 private:
     virtual bool is_dynamic() const { return true; }
