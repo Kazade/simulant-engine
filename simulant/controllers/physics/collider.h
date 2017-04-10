@@ -22,9 +22,18 @@ enum GeneratedColliderType {
     GENERATED_COLLIDER_TYPE_MESH
 };
 
-struct ColliderMaterial {
+struct PhysicsMaterial {
+    PhysicsMaterial() = default;
+    PhysicsMaterial(float density, float friction, float bounciness):
+        density(density), friction(friction), bounciness(bounciness) {}
+
     float density = 0.0f;
     float friction = 0.0f;
+    float bounciness = 0.0f;
+
+    static const PhysicsMaterial WOOD;
+    static const PhysicsMaterial RUBBER;
+    static const PhysicsMaterial IRON;
 };
 
 

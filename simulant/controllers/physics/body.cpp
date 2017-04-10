@@ -130,6 +130,29 @@ void Body::build_collider(GeneratedColliderType collider) {
     }
 }
 
+void Body::add_box_collider(const Vec3 &size, const PhysicsMaterial &properties, const Vec3 &offset, const Quaternion &rotation) {
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return;
+    }
+
+    auto def = std::make_shared<b3BoxHull>();
+    def->Set(size.x * 0.5, size.y * 0.5, size.z * 0.5);
+    hulls_.push_back(def);
+
+    b3HullShape hsdef;
+    hsdef.m_hull = def.get();
+
+    b3ShapeDef sdef;
+    sdef.shape = &hsdef;
+    sdef.userData = this;
+    sdef.density = properties.density;
+    sdef.friction = properties.friction;
+    sdef.restitution = properties.bounciness;
+
+    sim->bodies_.at(this)->CreateShape(sdef);
+}
+
 }
 }
 

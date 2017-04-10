@@ -36,20 +36,20 @@ public:
 
     void add_box_collider(
         const Vec3& size,
-        const ColliderMaterial& properties,
-        const Vec3& offset, const Quaternion& rotation
+        const PhysicsMaterial& properties,
+        const Vec3& offset=Vec3(), const Quaternion& rotation=Quaternion()
     );
 
     void add_sphere_collider(
         const float radius,
-        const ColliderMaterial& properties,
-        const Vec3& offset, const Quaternion& rotation
+        const PhysicsMaterial& properties,
+        const Vec3& offset=Vec3(), const Quaternion& rotation=Quaternion()
     );
 
     void add_mesh_collider(
         const MeshID& mesh,
-        const ColliderMaterial& properties,
-        const Vec3& offset, const Quaternion& rotation
+        const PhysicsMaterial& properties,
+        const Vec3& offset=Vec3(), const Quaternion& rotation=Quaternion()
     );
 
     Property<Body, RigidBodySimulation> simulation = {
