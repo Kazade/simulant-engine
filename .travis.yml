@@ -76,6 +76,3 @@ script:
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then SDL_VIDEODRIVER=x11 catchsegv ./tests/simulant_tests; fi;
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ./tests/simulant_tests; fi;
 
-matrix:
- allow_failures:
-  - os: osx
