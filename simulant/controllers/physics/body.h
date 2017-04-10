@@ -40,10 +40,9 @@ public:
         const Vec3& offset=Vec3(), const Quaternion& rotation=Quaternion()
     );
 
-    void add_sphere_collider(
-        const float radius,
+    void add_sphere_collider(const float diameter,
         const PhysicsMaterial& properties,
-        const Vec3& offset=Vec3(), const Quaternion& rotation=Quaternion()
+        const Vec3& offset=Vec3()
     );
 
     void add_mesh_collider(

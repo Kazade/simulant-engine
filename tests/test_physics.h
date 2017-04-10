@@ -44,6 +44,19 @@ public:
         assert_close(1.5, distance, 0.0001);
     }
 
+    void test_sphere_collider_addition() {
+        auto actor1 = stage->new_actor().fetch();
+
+        auto body = actor1->new_controller<controllers::RigidBody>(physics.get());
+        body->add_sphere_collider(2.0, controllers::PhysicsMaterial::WOOD);
+
+        float distance = 0;
+        auto hit = physics->intersect_ray(Vec3(0, 2, 0), Vec3(0, -2, 0), &distance);
+
+        assert_true(hit.second);
+        assert_close(distance, 1.0, 0.0001);
+    }
+
 private:
     std::shared_ptr<controllers::RigidBodySimulation> physics;
     StagePtr stage;

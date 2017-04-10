@@ -128,6 +128,25 @@ void Body::add_box_collider(const Vec3 &size, const PhysicsMaterial &properties,
     sim->bodies_.at(this)->CreateShape(sdef);
 }
 
+void Body::add_sphere_collider(const float diameter, const PhysicsMaterial& properties, const Vec3& offset) {
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return;
+    }
+
+    b3SphereShape sphere;
+    to_b3vec3(offset, sphere.m_center);
+    sphere.m_radius = diameter * 0.5;
+
+    b3ShapeDef sdef;
+    sdef.shape = &sphere;
+    sdef.density = properties.density;
+    sdef.friction = properties.friction;
+    sdef.restitution = properties.bounciness;
+
+    sim->bodies_.at(this)->CreateShape(sdef);
+}
+
 }
 }
 
