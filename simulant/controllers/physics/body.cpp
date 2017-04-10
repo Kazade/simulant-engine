@@ -136,8 +136,20 @@ void Body::add_box_collider(const Vec3 &size, const PhysicsMaterial &properties,
         return;
     }
 
+    b3Vec3 p;
+    b3Quat q;
+    to_b3vec3(offset, p);
+    to_b3quat(rotation, q);
+    b3Transform tx(p, q);
+
+    // Apply scaling
+    tx.rotation[0][0] = size.x * 0.5;
+    tx.rotation[1][1] = size.y * 0.5;
+    tx.rotation[2][2] = size.z * 0.5;
+
     auto def = std::make_shared<b3BoxHull>();
     def->Set(size.x * 0.5, size.y * 0.5, size.z * 0.5);
+    def->SetTransform(tx);
     hulls_.push_back(def);
 
     b3HullShape hsdef;

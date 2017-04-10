@@ -36,6 +36,12 @@ public:
         // But it does extend to 0.9 on the X-axis
         hit = physics->intersect_ray(Vec3(0.9, 2, 0), Vec3(0, -2, 0), &distance);
         assert_true(hit.second);
+
+        // Check that the local offset is respected
+        body->add_box_collider(Vec3(1, 1, 1), controllers::PhysicsMaterial::WOOD, Vec3(5, 0, 0));
+        hit = physics->intersect_ray(Vec3(5.0, 2, 0), Vec3(0, -2, 0), &distance);
+        assert_true(hit.second);
+        assert_close(1.5, distance, 0.0001);
     }
 
 private:

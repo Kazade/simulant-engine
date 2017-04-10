@@ -66,6 +66,7 @@ void to_b3vec3(const Vec3& rhs, b3Vec3& ret);
 void to_vec3(const b3Vec3& rhs, Vec3& ret);
 void to_mat3(const b3Mat33& rhs, Mat3& out);
 void to_quat(const b3Quat& rhs, Quaternion& out);
+void to_b3quat(const Quaternion& q, b3Quat& ret);
 
 }
 }

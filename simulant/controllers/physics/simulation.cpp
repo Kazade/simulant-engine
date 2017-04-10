@@ -12,6 +12,13 @@ void to_b3vec3(const Vec3& rhs, b3Vec3& ret) {
     ret.z = rhs.z;
 }
 
+void to_b3quat(const Quaternion& q, b3Quat& ret) {
+    ret.x = q.x;
+    ret.y = q.y;
+    ret.z = q.z;
+    ret.w = q.w;
+}
+
 void to_vec3(const b3Vec3& rhs, Vec3& ret) {
     ret.x = rhs.x;
     ret.y = rhs.y;
