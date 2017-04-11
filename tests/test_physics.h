@@ -60,7 +60,7 @@ public:
     void test_mesh_collider_addition() {
         auto mesh_id = stage->assets->new_mesh_as_box(1.0, 1.0, 1.0);
         auto actor1 = stage->new_actor().fetch();
-        auto body = actor1->new_controller<controllers::RigidBody>(physics.get());
+        auto body = actor1->new_controller<controllers::StaticBody>(physics.get());
         body->add_mesh_collider(mesh_id, controllers::PhysicsMaterial::WOOD);
 
         float distance = 0;

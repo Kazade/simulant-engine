@@ -32,9 +32,6 @@ public:
         box_mesh_id_ = window->shared_assets->new_mesh_as_box(5, 5, 5);
         window->shared_assets->mesh(box_mesh_id_)->set_material_id(mat);
 
-        ship_mesh_id_ = window->shared_assets->new_mesh_from_file("sample_data/fighter_good/space_frigate_6.obj");
-        ship_mesh_id_.fetch()->transform_vertices(smlt::Mat4::as_scaling(0.25));
-
         smlt::TextureID grass = window->shared_assets->new_texture_from_file("sample_data/beach_sand.png");
         ground_mesh_id_ = window->shared_assets->new_mesh_as_box(1000, 2.5, 1000); //window->shared_assets->new_mesh_from_file("sample_data/playground.obj");
         window->shared_assets->mesh(ground_mesh_id_)->set_material_id(
@@ -63,43 +60,15 @@ public:
         );
     }
 
-    void spawn_ship() {
-        boxes_.push_back(
-            stage_id_.fetch()->new_actor_with_mesh(ship_mesh_id_)
-        );
-
-        auto box = boxes_.back().fetch();
-        auto controller = box->new_controller<smlt::controllers::RigidBody>(physics);
-        controller->add_mesh_collider(ship_mesh_id_, controllers::PhysicsMaterial::IRON);
-
-        /*auto rot = Mat4::as_rotation_y(Degrees((float(rand()) / RAND_MAX) * 360.0f));
-        Quaternion q;
-        Vec3 p;
-        rot.extract_rotation_and_translation(q, p);
-        controller->rotate_to(q);*/
-
-        controller->move_to(Vec3(
-            ((float(rand()) / RAND_MAX) * 20.0f) - 10.0f,
-            20, 0)
-        );
-    }
-
     void do_activate() {
         window->enable_pipeline(pipeline_id_);
     }
 
     void update(float dt) {
-        static bool box = true;
         counter += dt;
         if(counter > 1.0f) {
             counter = 0;
-            if(box) {
-                spawn_box();
-            } else {
-                spawn_ship();
-            }
-
-            box = !box;
+            spawn_box();
         }
     }
 
@@ -111,7 +80,6 @@ private:
     CameraID camera_id_;
 
     MeshID box_mesh_id_;
-    MeshID ship_mesh_id_;
 
     MeshID ground_mesh_id_;
     ActorID ground_id_;

@@ -54,12 +54,6 @@ public:
         const Vec3& offset=Vec3()
     );
 
-    void add_mesh_collider(
-        const MeshID& mesh,
-        const PhysicsMaterial& properties,
-        const Vec3& offset=Vec3(), const Quaternion& rotation=Quaternion()
-    );
-
     Property<Body, RigidBodySimulation> simulation = {
         this, [](Body* _this) -> RigidBodySimulation* {
             if(auto ret = _this->simulation_.lock()) {
@@ -85,37 +79,6 @@ private:
 
     sig::connection simulation_stepped_connection_;
     std::vector<std::shared_ptr<b3Hull>> hulls_;
-
-    class b3MeshGenerator {
-    private:
-        std::vector<b3Vec3> vertices_;
-        std::vector<b3Triangle> triangles_;
-
-        std::shared_ptr<b3Mesh> mesh_;
-
-    public:
-        b3MeshGenerator();
-
-        template<typename InputIterator>
-        void insert_vertices(InputIterator first, InputIterator last) {
-            for(auto it = first; it != last; ++it) {
-                append_vertex((*it));
-            }
-        }
-
-        template<typename InputIterator>
-        void insert_triangles(InputIterator first, InputIterator last) {
-            for(auto it = first; it != last; ++it) {
-                append_triangle((*it));
-            }
-        }
-
-        void append_vertex(const Vec3& v);
-        void append_triangle(const utils::Triangle& tri);
-        b3Mesh* get_mesh() const { return mesh_.get(); }
-    };
-
-    std::unordered_map<MeshID, std::shared_ptr<b3MeshGenerator>> meshes_;
 };
 
 } // End impl
