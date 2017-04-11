@@ -2,6 +2,9 @@
 
 #include "simulant/simulant.h"
 
+#include <cstdlib>
+#include <ctime>
+
 using namespace smlt;
 
 class GameScene : public smlt::PhysicsScene<GameScene> {
@@ -42,6 +45,8 @@ public:
         // Make the ground a staticbody
         auto c = ground_id_.fetch()->new_controller<controllers::StaticBody>(physics);
         c->add_box_collider(ground_id_.fetch()->aabb().dimensions(), controllers::PhysicsMaterial::STONE);
+
+        srand(time(nullptr));
     }
 
     void spawn_box() {
@@ -66,6 +71,13 @@ public:
         auto box = boxes_.back().fetch();
         auto controller = box->new_controller<smlt::controllers::RigidBody>(physics);
         controller->add_mesh_collider(ship_mesh_id_, controllers::PhysicsMaterial::IRON);
+
+        /*auto rot = Mat4::as_rotation_y(Degrees((float(rand()) / RAND_MAX) * 360.0f));
+        Quaternion q;
+        Vec3 p;
+        rot.extract_rotation_and_translation(q, p);
+        controller->rotate_to(q);*/
+
         controller->move_to(Vec3(
             ((float(rand()) / RAND_MAX) * 20.0f) - 10.0f,
             20, 0)
