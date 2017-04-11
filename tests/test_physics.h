@@ -7,6 +7,18 @@ namespace {
 
 using namespace smlt;
 
+class Listener : public controllers::CollisionListener {
+public:
+    Listener(bool& enter_called):
+        enter_called(enter_called) {}
+
+    void on_collision_enter() {
+        enter_called = true;
+    }
+
+    bool& enter_called;
+};
+
 class ColliderTests : public SimulantTestCase {
 public:
     void set_up() {
@@ -68,6 +80,25 @@ public:
 
         assert_true(hit.second);
         assert_close(distance, 1.5, 0.0001);
+    }
+
+    void test_collision_listener_enter() {
+        skip_if(true, "Not yet implemented");
+
+        bool enter_called = false;
+
+        Listener listener(enter_called);
+
+        auto actor1 = stage->new_actor().fetch();
+        auto body = actor1->new_controller<controllers::StaticBody>(physics.get());
+        body->add_box_collider(Vec3(1, 1, 1), controllers::PhysicsMaterial::WOOD);
+        body->register_collision_listener(&listener);
+
+        auto actor2 = stage->new_actor().fetch();
+        auto body2 = actor2->new_controller<controllers::RigidBody>(physics.get());
+        body2->add_box_collider(Vec3(1, 1, 1), controllers::PhysicsMaterial::WOOD);
+
+        assert_true(enter_called);
     }
 
 private:

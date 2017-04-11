@@ -147,6 +147,14 @@ void Body::add_sphere_collider(const float diameter, const PhysicsMaterial& prop
     sim->bodies_.at(this)->CreateShape(sdef);
 }
 
+void Body::register_collision_listener(CollisionListener *listener) {
+    listeners_.insert(listener);
+}
+
+void Body::unregister_collision_listener(CollisionListener *listener) {
+    listeners_.erase(listener);
+}
+
 }
 }
 

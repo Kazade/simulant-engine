@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 #include <utility>
+#include <set>
 
 #include "collider.h"
 
@@ -27,6 +28,7 @@ class StageNode;
 namespace controllers {
 
 class RigidBodySimulation;
+class CollisionListener;
 
 namespace impl {
 
@@ -64,6 +66,10 @@ public:
         }
     };
 
+    void register_collision_listener(CollisionListener* listener);
+
+    void unregister_collision_listener(CollisionListener* listener);
+
 protected:
     friend class smlt::controllers::RigidBodySimulation;
     StageNode* object_;
@@ -79,6 +85,7 @@ private:
 
     sig::connection simulation_stepped_connection_;
     std::vector<std::shared_ptr<b3Hull>> hulls_;
+    std::set<CollisionListener*> listeners_;
 };
 
 } // End impl

@@ -44,7 +44,6 @@ void StaticBody::b3MeshGenerator::append_triangle(const utils::Triangle& src) {
     mesh_->BuildTree(); // Rebuild the tree
 }
 
-
 void StaticBody::add_mesh_collider(const MeshID &mesh_id, const PhysicsMaterial &properties, const Vec3 &offset, const Quaternion &rotation) {
     auto sim = simulation_.lock();
     if(!sim) {
