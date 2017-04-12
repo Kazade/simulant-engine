@@ -9,14 +9,30 @@ using namespace smlt;
 
 class Listener : public controllers::CollisionListener {
 public:
-    Listener(bool& enter_called):
+    Listener(bool* enter_called, uint32_t* stay_count, bool* leave_called):
         enter_called(enter_called) {}
 
     void on_collision_enter() {
-        enter_called = true;
+        if(enter_called) {
+            *enter_called = true;
+        }
     }
 
-    bool& enter_called;
+    void on_collision_stay() {
+        if(stay_count) {
+            *stay_count = *stay_count + 1;
+        }
+    }
+
+    void on_collision_leave() {
+        if(leave_called) {
+            *leave_called = true;
+        }
+    }
+
+    bool* enter_called = nullptr;
+    uint32_t* stay_count = nullptr;
+    bool* leave_called = nullptr;
 };
 
 class ColliderTests : public SimulantTestCase {
@@ -87,7 +103,7 @@ public:
 
         bool enter_called = false;
 
-        Listener listener(enter_called);
+        Listener listener(&enter_called, nullptr, nullptr);
 
         auto actor1 = stage->new_actor().fetch();
         auto body = actor1->new_controller<controllers::StaticBody>(physics.get());
@@ -101,6 +117,56 @@ public:
         assert_true(enter_called);
     }
 
+    void test_collision_listener_leave() {
+        skip_if(true, "Not yet implemented");
+
+        bool leave_called = false;
+
+        Listener listener(nullptr, nullptr, &leave_called);
+
+        auto actor1 = stage->new_actor().fetch();
+        auto body = actor1->new_controller<controllers::StaticBody>(physics.get());
+        body->add_box_collider(Vec3(1, 1, 1), controllers::PhysicsMaterial::WOOD);
+        body->register_collision_listener(&listener);
+
+        auto actor2 = stage->new_actor().fetch();
+        auto body2 = actor2->new_controller<controllers::RigidBody>(physics.get());
+        body2->add_box_collider(Vec3(1, 1, 1), controllers::PhysicsMaterial::WOOD);
+
+        assert_false(leave_called);
+
+        actor2->ask_owner_for_destruction();
+
+        assert_true(leave_called);
+    }
+
+    void test_collision_listener_stay() {
+        skip_if(true, "Not yet implemented");
+
+        uint32_t stay_count = 0;
+
+        Listener listener(nullptr, &stay_count, nullptr);
+
+        auto actor1 = stage->new_actor().fetch();
+        auto body = actor1->new_controller<controllers::StaticBody>(physics.get());
+        body->add_box_collider(Vec3(1, 1, 1), controllers::PhysicsMaterial::WOOD);
+        body->register_collision_listener(&listener);
+
+        auto actor2 = stage->new_actor().fetch();
+        auto body2 = actor2->new_controller<controllers::RigidBody>(physics.get());
+        body2->add_box_collider(Vec3(1, 1, 1), controllers::PhysicsMaterial::WOOD);
+
+        assert_false(stay_count);
+
+        window->run_frame();
+
+        assert_equal(stay_count, 1);
+
+        actor2->ask_owner_for_destruction();
+        window->run_frame();
+
+        assert_equal(stay_count, 1);
+    }
 private:
     std::shared_ptr<controllers::RigidBodySimulation> physics;
     StagePtr stage;
