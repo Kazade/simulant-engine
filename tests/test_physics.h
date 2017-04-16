@@ -26,7 +26,7 @@ public:
         }
     }
 
-    void on_collision_exit() override {
+    void on_collision_exit(const controllers::Collision& collision) override {
         if(leave_called) {
             *leave_called = true;
         }

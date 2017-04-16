@@ -55,27 +55,12 @@ public:
         Body* bodyA = (Body*) shapeA->GetUserData();
         Body* bodyB = (Body*) shapeB->GetUserData();
 
-        Collision collA, collB;
-
         if(simulation_->body_exists(bodyA) && simulation_->body_exists(bodyB)) {
-            collA.this_body = bodyA;
-            collA.this_collider_name = bodyA->collider_details_.at(shapeA).name;
-            collA.this_stage_node = bodyA->stage_node.get();
-
-            collA.other_body = bodyB;
-            collA.other_collider_name = bodyB->collider_details_.at(shapeB).name;
-            collA.other_stage_node = bodyB->stage_node.get();
+            auto coll_pair = build_collision_pair(contact);
+            auto& collA = coll_pair.first;
+            auto& collB = coll_pair.second;
 
             bodyA->contact_started(collA);
-
-            collB.other_body = bodyA;
-            collB.other_collider_name = bodyA->collider_details_.at(shapeA).name;
-            collB.other_stage_node = bodyA->stage_node.get();
-
-            collB.this_body = bodyB;
-            collB.this_collider_name = bodyB->collider_details_.at(shapeB).name;
-            collB.this_stage_node = bodyB->stage_node.get();
-
             bodyB->contact_started(collB);
 
             // FIXME: Populate contact points
@@ -97,8 +82,12 @@ public:
         Body* bodyB = (Body*) shapeB->GetUserData();
 
         if(simulation_->body_exists(bodyA) && simulation_->body_exists(bodyB)) {
-            bodyA->contact_finished();
-            bodyB->contact_finished();
+            auto coll_pair = build_collision_pair(contact);
+            auto& collA = coll_pair.first;
+            auto& collB = coll_pair.second;
+
+            bodyA->contact_finished(collA);
+            bodyB->contact_finished(collB);
 
             active_contacts_.erase(contact);
         } else {
@@ -124,6 +113,34 @@ public:
     }
 
 private:
+    std::pair<Collision, Collision> build_collision_pair(b3Contact* contact) {
+        b3Shape* shapeA = contact->GetShapeA();
+        b3Shape* shapeB = contact->GetShapeB();
+
+        Body* bodyA = (Body*) shapeA->GetUserData();
+        Body* bodyB = (Body*) shapeB->GetUserData();
+
+        Collision collA, collB;
+
+        collA.this_body = bodyA;
+        collA.this_collider_name = bodyA->collider_details_.at(shapeA).name;
+        collA.this_stage_node = bodyA->stage_node.get();
+
+        collA.other_body = bodyB;
+        collA.other_collider_name = bodyB->collider_details_.at(shapeB).name;
+        collA.other_stage_node = bodyB->stage_node.get();
+
+        collB.other_body = bodyA;
+        collB.other_collider_name = bodyA->collider_details_.at(shapeA).name;
+        collB.other_stage_node = bodyA->stage_node.get();
+
+        collB.this_body = bodyB;
+        collB.this_collider_name = bodyB->collider_details_.at(shapeB).name;
+        collB.this_stage_node = bodyB->stage_node.get();
+
+        return std::make_pair(collA, collB);
+    }
+
     std::set<b3Contact*> active_contacts_;
     RigidBodySimulation* simulation_;
 };

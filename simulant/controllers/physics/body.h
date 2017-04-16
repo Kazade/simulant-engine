@@ -129,7 +129,7 @@ private:
     friend class impl::ContactListener;
 
     void contact_started(const Collision& collision);
-    void contact_finished();
+    void contact_finished(const Collision &collision);
 };
 
 } // End impl

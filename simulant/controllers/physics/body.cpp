@@ -112,9 +112,9 @@ void Body::contact_started(const Collision &collision) {
     }
 }
 
-void Body::contact_finished() {
+void Body::contact_finished(const Collision& collision) {
     for(auto listener: listeners_) {
-        listener->on_collision_exit();
+        listener->on_collision_exit(collision);
     }
 }
 
