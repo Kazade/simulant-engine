@@ -43,6 +43,7 @@ public:
 
     void set_gravity(const Vec3& gravity);
 
+    bool body_exists(const impl::Body* body) const { return bodies_.count(body); }
 private:
     friend class impl::Body;
     friend class RigidBody;

@@ -64,8 +64,10 @@ public:
     void add_impulse_at_position(const Vec3& impulse, const Vec3& position);
 
     float mass() const;
+
     Vec3 linear_velocity() const;
-    Vec3 linear_velocity_at(const Vec3& position) const;
+    Vec3 linear_velocity_at(const Vec3& position) const;    
+    void set_linear_velocity(const Vec3& vel);
 
     using impl::Body::init;
     using impl::Body::cleanup;

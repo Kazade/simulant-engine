@@ -41,6 +41,19 @@ RigidBody::~RigidBody() {
 
 }
 
+void RigidBody::set_linear_velocity(const Vec3& vel) {
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return;
+    }
+
+    b3Body* b = sim->bodies_.at(this);
+
+    b3Vec3 v;
+    to_b3vec3(vel, v);
+    b->SetLinearVelocity(v);
+}
+
 void RigidBody::add_force(const Vec3 &force) {
     auto sim = simulation_.lock();
     if(!sim) {

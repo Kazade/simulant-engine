@@ -43,7 +43,14 @@ public:
         SimulantTestCase::set_up();
 
         physics = controllers::RigidBodySimulation::create(window->time_keeper);
+        physics->set_gravity(Vec3());
         stage = window->new_stage().fetch();
+    }
+
+    void tear_down() {
+        window->delete_all_stages();
+        physics.reset();
+        SimulantTestCase::tear_down();
     }
 
     void test_box_collider_addition() {
@@ -128,6 +135,7 @@ public:
         // Shouldn't call again!
         physics->fixed_update(1.0f / 60.0f);
         assert_false(enter_called);
+        assert_false(leave_called);
 
         // Move away (should still not call anything)
         body2->move_to(Vec3(0, 10, 0));
@@ -136,11 +144,14 @@ public:
         assert_false(enter_called);
         assert_true(leave_called);        
 
-        // Move back, should now call
-        /** SKIPPED, bug in Bounce??
+        // Move back, should now call        
         body2->move_to(Vec3(0, 0, 0));
+        body2->set_linear_velocity(Vec3(0, 0, 0));
         physics->fixed_update(1.0f / 60.0f);
-        assert_true(enter_called); */
+        physics->fixed_update(1.0f / 60.0f);
+        assert_true(enter_called);
+
+        body->unregister_collision_listener(&listener);
     }
 
     void test_collision_listener_leave() {
@@ -166,6 +177,8 @@ public:
         actor2->ask_owner_for_destruction();
 
         assert_true(leave_called);
+
+        body->unregister_collision_listener(&listener);
     }
 
     void test_collision_listener_stay() {
@@ -194,6 +207,8 @@ public:
         window->run_frame();
 
         assert_equal(stay_count, 1);
+
+        body->unregister_collision_listener(&listener);
     }
 private:
     std::shared_ptr<controllers::RigidBodySimulation> physics;
