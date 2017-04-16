@@ -21,6 +21,7 @@ namespace controllers {
 
 namespace impl {
     class Body;
+    class ContactListener;
 }
 
 typedef sig::signal<void ()> SimulationPreStepSignal;
@@ -50,6 +51,7 @@ private:
     TimeKeeper* time_keeper_ = nullptr;
 
     std::shared_ptr<b3World> scene_;
+    std::shared_ptr<impl::ContactListener> contact_listener_;
 
     // Used by the RigidBodyController on creation/destruction to register a body
     // in the simulation
@@ -59,7 +61,7 @@ private:
     std::unordered_map<const impl::Body*, b3Body*> bodies_;
 
     std::pair<Vec3, Quaternion> body_transform(const impl::Body *body);
-    void set_body_transform(impl::Body *body, const Vec3& position, const Quaternion& rotation);
+    void set_body_transform(impl::Body *body, const Vec3& position, const Quaternion& rotation);    
 };
 
 void to_b3vec3(const Vec3& rhs, b3Vec3& ret);

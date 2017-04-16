@@ -79,7 +79,6 @@ public:
     }
 
     const std::string name() const { return "Rigid Body"; }
-
 private:
     friend class RigidBodySimulation;
 

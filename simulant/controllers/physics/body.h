@@ -16,6 +16,7 @@ struct b3Hull;
 struct b3Mesh;
 struct b3Triangle;
 struct b3Vec3;
+struct b3Shape;
 
 namespace smlt {
 
@@ -27,10 +28,38 @@ class StageNode;
 
 namespace controllers {
 
+namespace impl {
+class Body;
+}
+
 class RigidBodySimulation;
 class CollisionListener;
 
+struct ContactPoint {
+    Vec3 normal;
+    Vec3 point;
+
+    float separation = 0.0f;
+
+    impl::Body* other_body = nullptr;
+    std::string other_collider;
+};
+
+struct Collision {
+    impl::Body* other_body = nullptr; ///< Body which owns the collider we hit
+    std::string other_collider_name; ///< Name of the collider we hit
+    StageNode* other_stage_node = nullptr; ///< Pointer to the owning stage node of the other body
+
+    impl::Body* this_body = nullptr; ///< This body
+    std::string this_collider_name; ///< The collider on this body which was hit
+    StageNode* this_stage_node = nullptr; ///< The owning stage node of this body
+
+    std::vector<ContactPoint> contact_points; ///< List of contact points found during this collision
+};
+
 namespace impl {
+
+class ContactListener;
 
 class Body:
     public Controller {
@@ -67,8 +96,9 @@ public:
     };
 
     void register_collision_listener(CollisionListener* listener);
-
     void unregister_collision_listener(CollisionListener* listener);
+
+    Property<Body, StageNode> stage_node = { this, &Body::object_ };
 
 protected:
     friend class smlt::controllers::RigidBodySimulation;
@@ -80,14 +110,32 @@ protected:
 
     void update(float dt) override;
 
+    struct ColliderDetails {
+        PhysicsMaterial material;
+        std::string name;
+    };
+
+    void store_collider(b3Shape* shape, const PhysicsMaterial& material);
+
+    std::unordered_map<b3Shape*, ColliderDetails> collider_details_;
+
 private:
     virtual bool is_dynamic() const { return true; }
 
     sig::connection simulation_stepped_connection_;
     std::vector<std::shared_ptr<b3Hull>> hulls_;
     std::set<CollisionListener*> listeners_;
+
+    friend class impl::ContactListener;
+
+    void contact_started(const Collision& collision);
+    void contact_finished();
 };
 
 } // End impl
+
+
+
+
 }
 }

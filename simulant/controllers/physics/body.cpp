@@ -1,6 +1,7 @@
 
 #include "body.h"
 #include "simulation.h"
+#include "collision_listener.h"
 
 #include "../../nodes/stage_node.h"
 #include "../../nodes/actor.h"
@@ -93,6 +94,30 @@ void Body::update(float dt) {
     }
 }
 
+void Body::store_collider(b3Shape *shape, const PhysicsMaterial &material) {
+    // Store details about the collider so that when contacts
+    // arise we can provide more detailed information to the user
+    ColliderDetails details;
+    details.material = material;
+
+    // Make sure the b3Shape has this body as its userData!
+    shape->SetUserData(this);
+
+    collider_details_.insert(std::make_pair(shape, details));
+}
+
+void Body::contact_started(const Collision &collision) {
+    for(auto listener: listeners_) {
+        listener->on_collision_enter(collision);
+    }
+}
+
+void Body::contact_finished() {
+    for(auto listener: listeners_) {
+        listener->on_collision_exit();
+    }
+}
+
 void Body::add_box_collider(const Vec3 &size, const PhysicsMaterial &properties, const Vec3 &offset, const Quaternion &rotation) {
     auto sim = simulation_.lock();
     if(!sim) {
@@ -125,7 +150,8 @@ void Body::add_box_collider(const Vec3 &size, const PhysicsMaterial &properties,
     sdef.friction = properties.friction;
     sdef.restitution = properties.bounciness;
 
-    sim->bodies_.at(this)->CreateShape(sdef);
+    store_collider(sim->bodies_.at(this)->CreateShape(sdef), properties);
+
 }
 
 void Body::add_sphere_collider(const float diameter, const PhysicsMaterial& properties, const Vec3& offset) {
@@ -144,7 +170,7 @@ void Body::add_sphere_collider(const float diameter, const PhysicsMaterial& prop
     sdef.friction = properties.friction;
     sdef.restitution = properties.bounciness;
 
-    sim->bodies_.at(this)->CreateShape(sdef);
+    store_collider(sim->bodies_.at(this)->CreateShape(sdef), properties);
 }
 
 void Body::register_collision_listener(CollisionListener *listener) {

@@ -39,11 +39,93 @@ void to_quat(const b3Quat& rhs, Quaternion& out) {
     );
 }
 
+namespace impl {
+
+class ContactListener : public b3ContactListener {
+public:
+    void BeginContact(b3Contact* contact) {
+        b3Shape* shapeA = contact->GetShapeA();
+        b3Shape* shapeB = contact->GetShapeB();
+
+        Body* bodyA = (Body*) shapeA->GetUserData();
+        Body* bodyB = (Body*) shapeB->GetUserData();
+
+        Collision collA, collB;
+
+        collA.this_body = bodyA;
+        collA.this_collider_name = bodyA->collider_details_.at(shapeA).name;
+        collA.this_stage_node = bodyA->stage_node.get();
+
+        collA.other_body = bodyB;
+        collA.other_collider_name = bodyB->collider_details_.at(shapeB).name;
+        collA.other_stage_node = bodyB->stage_node.get();
+
+        bodyA->contact_started(collA);
+
+        collB.other_body = bodyA;
+        collB.other_collider_name = bodyA->collider_details_.at(shapeA).name;
+        collB.other_stage_node = bodyA->stage_node.get();
+
+        collB.this_body = bodyB;
+        collB.this_collider_name = bodyB->collider_details_.at(shapeB).name;
+        collB.this_stage_node = bodyB->stage_node.get();
+
+        bodyB->contact_started(collB);
+
+        // FIXME: Populate contact points
+
+        active_contacts_.insert(contact);
+    }
+
+    void EndContact(b3Contact* contact) {
+        if(active_contacts_.count(contact) == 0) {
+            // Already released
+            return;
+        }
+
+        b3Shape* shapeA = contact->GetShapeA();
+        b3Shape* shapeB = contact->GetShapeB();
+
+        Body* bodyA = (Body*) shapeA->GetUserData();
+        Body* bodyB = (Body*) shapeB->GetUserData();
+
+        bodyA->contact_finished();
+        bodyB->contact_finished();
+
+        active_contacts_.erase(contact);
+    }
+
+    void PreSolve(b3Contact* contact) {
+
+    }
+
+    std::vector<b3Contact*> ActiveContactsForBody(b3Body* body) {
+        std::vector<b3Contact*> ret;
+        for(auto contact: active_contacts_) {
+
+            if(contact->GetShapeA()->GetBody() == body || contact->GetShapeB()->GetBody() == body) {
+                ret.push_back(contact);
+            }
+        }
+
+        return ret;
+    }
+
+private:
+    std::set<b3Contact*> active_contacts_;
+};
+
+}
+
+
 RigidBodySimulation::RigidBodySimulation(TimeKeeper *time_keeper):
     time_keeper_(time_keeper) {
 
+    contact_listener_ = std::make_shared<impl::ContactListener>();
+
     scene_.reset(new b3World());
     scene_->SetGravity(b3Vec3(0, -9.81, 0));
+    scene_->SetContactListener(contact_listener_.get());
 }
 
 void RigidBodySimulation::set_gravity(const Vec3& gravity) {
@@ -60,8 +142,6 @@ bool RigidBodySimulation::init() {
 void RigidBodySimulation::cleanup() {
 
 }
-
-
 
 void RigidBodySimulation::fixed_update(float step) {
     uint32_t velocity_iterations = 8;
@@ -113,7 +193,8 @@ b3Body *RigidBodySimulation::acquire_body(impl::Body *body) {
 }
 
 void RigidBodySimulation::release_body(impl::Body *body) {
-    scene_->DestroyBody(bodies_.at(body));
+    auto bbody = bodies_.at(body);
+    scene_->DestroyBody(bbody);
 }
 
 std::pair<Vec3, Quaternion> RigidBodySimulation::body_transform(const impl::Body *body) {

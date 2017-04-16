@@ -75,7 +75,10 @@ private:
 
 class Controllable {
 public:
-    virtual ~Controllable() {}
+    virtual ~Controllable() {
+        controllers_.clear();
+        controller_names_.clear();
+    }
 
     void add_controller(ControllerPtr controller) {
         if(!controller) {
@@ -95,21 +98,21 @@ public:
     }
 
     template<typename T>
-    std::shared_ptr<T> new_controller() {
+    T* new_controller() {
         static_assert(std::is_base_of<Controller, T>::value, "Controllers must derive smlt::Controller");
         static_assert(std::is_base_of<Managed<T>, T>::value, "Controllers must derive Managed<T>");
         std::shared_ptr<T> ret = T::create(this);
         add_controller(ret);
-        return ret;
+        return ret.get();
     }
 
     template<typename T, typename ...Params>
-    std::shared_ptr<T> new_controller(Params&&... params) {
+    T* new_controller(Params&&... params) {
         static_assert(std::is_base_of<Controller, T>::value, "Controllers must derive smlt::Controller");
         static_assert(std::is_base_of<Managed<T>, T>::value, "Controllers must derive Managed<T>");
         std::shared_ptr<T> ret = T::create(this, std::forward<Params>(params)...);
         add_controller(ret);
-        return ret;
+        return ret.get();
     }
 
     void fixed_update_controllers(float step) {

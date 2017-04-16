@@ -71,9 +71,9 @@ typedef generic::TemplatedManager<CameraProxy, CameraID> CameraProxyManager;
 typedef generic::TemplatedManager<Sprite, SpriteID> SpriteManager;
 typedef generic::TemplatedManager<ParticleSystem, ParticleSystemID> ParticleSystemManager;
 
-typedef sig::signal<void (ActorID)> ActorCreatedSignal;
-typedef sig::signal<void (ActorID)> ActorDestroyedSignal;
-typedef sig::signal<void (ActorID, ActorChangeEvent)> ActorChangedCallback;
+typedef sig::signal<void (const ActorID&)> ActorCreatedSignal;
+typedef sig::signal<void (const ActorID&)> ActorDestroyedSignal;
+typedef sig::signal<void (const ActorID&, ActorChangeEvent)> ActorChangedCallback;
 
 typedef sig::signal<void (GeomID)> GeomCreatedSignal;
 typedef sig::signal<void (GeomID)> GeomDestroyedSignal;

@@ -79,7 +79,7 @@ void StaticBody::add_mesh_collider(const MeshID &mesh_id, const PhysicsMaterial 
     sdef.friction = properties.friction;
     sdef.restitution = properties.bounciness;
 
-    sim->bodies_.at(this)->CreateShape(sdef);
+    store_collider(sim->bodies_.at(this)->CreateShape(sdef), properties);
 }
 
 
