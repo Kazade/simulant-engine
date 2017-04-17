@@ -46,6 +46,10 @@ bool Body::init() {
 }
 
 void Body::cleanup() {
+    for(auto listener: listeners_) {
+        unregister_collision_listener(listener);
+    }
+
     auto sim = simulation_.lock();
     if(sim) {
         sim->release_body(this);
@@ -175,9 +179,11 @@ void Body::add_sphere_collider(const float diameter, const PhysicsMaterial& prop
 
 void Body::register_collision_listener(CollisionListener *listener) {
     listeners_.insert(listener);
+    listener->watching_.insert(this);
 }
 
 void Body::unregister_collision_listener(CollisionListener *listener) {
+    listener->watching_.erase(this);
     listeners_.erase(listener);
 }
 

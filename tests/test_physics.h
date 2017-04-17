@@ -147,6 +147,8 @@ public:
         // Move back, should now call        
         body2->move_to(Vec3(0, 0, 0));
         body2->set_linear_velocity(Vec3(0, 0, 0));
+
+        /* The first step new contacts will be created, but new signals won't fire until the next step */
         physics->fixed_update(1.0f / 60.0f);
         physics->fixed_update(1.0f / 60.0f);
         assert_true(enter_called);
@@ -199,11 +201,19 @@ public:
 
         assert_false(stay_count);
 
+        physics->fixed_update(1.0 / 60.0f);
         window->run_frame();
 
         assert_equal(stay_count, 1);
 
+        physics->fixed_update(1.0 / 60.0f);
+        window->run_frame();
+
+        assert_equal(stay_count, 2);
+
         actor2->ask_owner_for_destruction();
+
+        physics->fixed_update(1.0 / 60.0f);
         window->run_frame();
 
         assert_equal(stay_count, 1);
