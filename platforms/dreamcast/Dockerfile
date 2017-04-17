@@ -12,5 +12,8 @@ RUN DIR=$(mktemp -d -t) && cd ${DIR} && \
     cd ${DIR}/kallistios/utils/dc-chain && \
     sh ./download.sh && \ 
     sh ./unpack.sh && \
-    make
+    make && \
+    cp ${DIR}/kallistios/doc/environ.sh.sample /etc/profile.d/dreamcast.sh && \
+    source /etc/profile.d/dreamcast.sh && \
+    cd ${DIR}/kallistios/ && make
 
