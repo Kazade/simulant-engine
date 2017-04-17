@@ -1,0 +1,4 @@
+- Implement "stay" notifications for the collision listener (although call it on_collision_persists())
+- Figure out why there's an assertion when quitting the physics sample
+- Fix memory leak from b3Mesh. BuildTree allocates, but apparently we need to manually free
+- Documentation 
