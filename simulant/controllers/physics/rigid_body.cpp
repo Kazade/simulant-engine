@@ -54,6 +54,27 @@ void RigidBody::set_linear_velocity(const Vec3& vel) {
     b->SetLinearVelocity(v);
 }
 
+
+void RigidBody::set_linear_damping(const float d) {
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return;
+    }
+
+    b3Body* b = sim->bodies_.at(this);
+    b->SetLinearDamping(d);
+}
+
+void RigidBody::set_angular_damping(const float d) {
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return;
+    }
+
+    b3Body* b = sim->bodies_.at(this);
+    b->SetAngularDamping(d);
+}
+
 void RigidBody::add_force(const Vec3 &force) {
     auto sim = simulation_.lock();
     if(!sim) {
@@ -65,6 +86,35 @@ void RigidBody::add_force(const Vec3 &force) {
     b3Vec3 v;
     to_b3vec3(force, v);
     b->ApplyForceToCenter(v, true);
+}
+
+void RigidBody::add_relative_force(const Vec3 &force) {
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return;
+    }
+
+    b3Body* b = sim->bodies_.at(this);
+
+    b3Vec3 v;
+    to_b3vec3(force, v);
+
+    // same as above, but convert the passed force vector to world space
+    b->ApplyForceToCenter(b->GetWorldVector(v), true);
+}
+
+void RigidBody::add_relative_torque(const Vec3 &torque) {
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return;
+    }
+
+    b3Body* b = sim->bodies_.at(this);
+    b3Vec3 t;
+    to_b3vec3(torque, t);
+
+    // Convert the vector to world space then apply
+    b->ApplyTorque(b->GetWorldVector(t), true);
 }
 
 void RigidBody::add_impulse(const Vec3& impulse) {

@@ -63,6 +63,9 @@ public:
     void add_impulse(const Vec3& impulse);
     void add_impulse_at_position(const Vec3& impulse, const Vec3& position);
 
+    void set_linear_damping(const float d);
+    void set_angular_damping(const float d);
+
     float mass() const;
 
     Vec3 linear_velocity() const;
