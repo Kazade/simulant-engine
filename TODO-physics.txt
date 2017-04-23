@@ -1,4 +1,6 @@
 - Implement "stay" notifications for the collision listener (although call it on_collision_persists())
 - Figure out why there's an assertion when quitting the physics sample
 - Fix memory leak from b3Mesh. BuildTree allocates, but apparently we need to manually free
-- Documentation 
+- Documentation
+- Implement a mesh cache which caches static meshes in memory, and also serializes the b3Mesh to/from disk if the disk is writable
+- MeshCache instance should be on the RigidBodySimulation, not on StaticBody
