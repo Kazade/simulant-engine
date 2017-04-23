@@ -15,4 +15,4 @@
 	url = git@github.com:Kazade/kfs.git
 [submodule "deps/bounce"]
 	path = deps/bounce
-	url = https://github.com/Kazade/bounce.git
+	url = https://github.com/irlanrobson/bounce.git

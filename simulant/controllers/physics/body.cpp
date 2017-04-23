@@ -1,6 +1,7 @@
 
 #include "body.h"
 #include "simulation.h"
+#include "collision_listener.h"
 
 #include "../../nodes/stage_node.h"
 #include "../../nodes/actor.h"
@@ -12,10 +13,9 @@ namespace smlt {
 namespace controllers {
 namespace impl {
 
-Body::Body(Controllable* object, RigidBodySimulation* simulation, GeneratedColliderType collider_type):
+Body::Body(Controllable* object, RigidBodySimulation* simulation):
     Controller(),
-    simulation_(simulation->shared_from_this()),
-    collider_type_(collider_type) {
+    simulation_(simulation->shared_from_this()) {
 
     object_ = dynamic_cast<StageNode*>(object);
     if(!object_) {
@@ -41,12 +41,15 @@ bool Body::init() {
     }
 
     body_ = sim->acquire_body(this);
-    build_collider(collider_type_);
 
     return true;
 }
 
 void Body::cleanup() {
+    for(auto listener: listeners_) {
+        unregister_collision_listener(listener);
+    }
+
     auto sim = simulation_.lock();
     if(sim) {
         sim->release_body(this);
@@ -95,39 +98,93 @@ void Body::update(float dt) {
     }
 }
 
-void Body::build_collider(GeneratedColliderType collider) {
-    if(collider == GENERATED_COLLIDER_TYPE_NONE) {
-        return;
-    }
+void Body::store_collider(b3Shape *shape, const PhysicsMaterial &material) {
+    // Store details about the collider so that when contacts
+    // arise we can provide more detailed information to the user
+    ColliderDetails details;
+    details.material = material;
 
+    // Make sure the b3Shape has this body as its userData!
+    shape->SetUserData(this);
+
+    collider_details_.insert(std::make_pair(shape, details));
+}
+
+void Body::contact_started(const Collision &collision) {
+    for(auto listener: listeners_) {
+        listener->on_collision_enter(collision);
+    }
+}
+
+void Body::contact_finished(const Collision& collision) {
+    for(auto listener: listeners_) {
+        listener->on_collision_exit(collision);
+    }
+}
+
+void Body::add_box_collider(const Vec3 &size, const PhysicsMaterial &properties, const Vec3 &offset, const Quaternion &rotation) {
     auto sim = simulation_.lock();
     if(!sim) {
         return;
     }
 
-    if(collider == GENERATED_COLLIDER_TYPE_BOX) {
-        BoundableEntity* entity = dynamic_cast<BoundableEntity*>(object_);
-        if(entity) {
-            AABB aabb = entity->aabb();
+    b3Vec3 p;
+    b3Quat q;
+    to_b3vec3(offset, p);
+    to_b3quat(rotation, q);
+    b3Transform tx(p, q);
 
-            auto def = std::make_shared<b3BoxHull>();
-            def->Set(aabb.width() * 0.5, aabb.height() * 0.5, aabb.depth() * 0.5);
-            hulls_.push_back(def);
+    // Apply scaling
+    tx.rotation[0][0] = size.x * 0.5;
+    tx.rotation[1][1] = size.y * 0.5;
+    tx.rotation[2][2] = size.z * 0.5;
 
-            b3HullShape hsdef;
-            hsdef.m_hull = def.get();
+    auto def = std::make_shared<b3BoxHull>();
+    def->Set(size.x * 0.5, size.y * 0.5, size.z * 0.5);
+    def->SetTransform(tx);
+    hulls_.push_back(def);
 
-            b3ShapeDef sdef;
-            sdef.shape = &hsdef;
-            sdef.userData = this;
-            sdef.density = 0.005;
-            sdef.friction = 0.3;
+    b3HullShape hsdef;
+    hsdef.m_hull = def.get();
 
-            sim->bodies_.at(this)->CreateShape(sdef);
-        }
-    } else {
-        assert(0 && "Not Implemented");
+    b3ShapeDef sdef;
+    sdef.shape = &hsdef;
+    sdef.userData = this;
+    sdef.density = properties.density;
+    sdef.friction = properties.friction;
+    sdef.restitution = properties.bounciness;
+
+    store_collider(sim->bodies_.at(this)->CreateShape(sdef), properties);
+
+}
+
+void Body::add_sphere_collider(const float diameter, const PhysicsMaterial& properties, const Vec3& offset) {
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return;
     }
+
+    b3SphereShape sphere;
+    to_b3vec3(offset, sphere.m_center);
+    sphere.m_radius = diameter * 0.5;
+
+    b3ShapeDef sdef;
+    sdef.shape = &sphere;
+    sdef.density = properties.density;
+    sdef.friction = properties.friction;
+    sdef.restitution = properties.bounciness;
+
+    store_collider(sim->bodies_.at(this)->CreateShape(sdef), properties);
+}
+
+void Body::register_collision_listener(CollisionListener *listener) {
+    listeners_.insert(listener);
+    listener->watching_.insert(this);
+}
+
+void Body::unregister_collision_listener(CollisionListener *listener) {
+    listener->watching_.erase(this);
+    listeners_.erase(listener);
 }
 
 }

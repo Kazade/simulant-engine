@@ -973,6 +973,10 @@ struct AABB {
         return fabs(max.z - min.z);
     }
 
+    const Vec3 dimensions() const {
+        return Vec3(width(), height(), depth());
+    }
+
     const float max_dimension() const {
         return std::max(width(), std::max(height(), depth()));
     }

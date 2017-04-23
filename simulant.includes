@@ -127,3 +127,4 @@ deps/bounce/include/bounce/common
 deps/bounce/include/bounce/dynamics/contacts
 simulant/controllers/physics
 deps/bounce/src/bounce/dynamics
+simulant/utils/mesh

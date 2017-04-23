@@ -21,6 +21,7 @@ namespace controllers {
 
 namespace impl {
     class Body;
+    class ContactListener;
 }
 
 typedef sig::signal<void ()> SimulationPreStepSignal;
@@ -42,6 +43,7 @@ public:
 
     void set_gravity(const Vec3& gravity);
 
+    bool body_exists(const impl::Body* body) const { return bodies_.count(body); }
 private:
     friend class impl::Body;
     friend class RigidBody;
@@ -50,6 +52,7 @@ private:
     TimeKeeper* time_keeper_ = nullptr;
 
     std::shared_ptr<b3World> scene_;
+    std::shared_ptr<impl::ContactListener> contact_listener_;
 
     // Used by the RigidBodyController on creation/destruction to register a body
     // in the simulation
@@ -59,13 +62,14 @@ private:
     std::unordered_map<const impl::Body*, b3Body*> bodies_;
 
     std::pair<Vec3, Quaternion> body_transform(const impl::Body *body);
-    void set_body_transform(impl::Body *body, const Vec3& position, const Quaternion& rotation);
+    void set_body_transform(impl::Body *body, const Vec3& position, const Quaternion& rotation);    
 };
 
 void to_b3vec3(const Vec3& rhs, b3Vec3& ret);
 void to_vec3(const b3Vec3& rhs, Vec3& ret);
 void to_mat3(const b3Mat33& rhs, Mat3& out);
 void to_quat(const b3Quat& rhs, Quaternion& out);
+void to_b3quat(const Quaternion& q, b3Quat& ret);
 
 }
 }

@@ -1632,3 +1632,7 @@ simulant/controllers/physics/collider.cpp
 simulant/controllers/physics/simulation.cpp
 simulant/controllers/physics/static_body.h
 simulant/controllers/physics/static_body.cpp
+tests/test_physics.h
+simulant/utils/mesh/triangulate.h
+simulant/utils/mesh/triangulate.cpp
+simulant/controllers/physics/collision_listener.h

@@ -50,7 +50,7 @@ class RigidBody:
     public Managed<RigidBody> {
 
 public:
-    RigidBody(Controllable* object, RigidBodySimulation *simulation, GeneratedColliderType collider=GENERATED_COLLIDER_TYPE_NONE);
+    RigidBody(Controllable* object, RigidBodySimulation *simulation);
     ~RigidBody();
 
     void add_force(const Vec3& force);
@@ -63,9 +63,14 @@ public:
     void add_impulse(const Vec3& impulse);
     void add_impulse_at_position(const Vec3& impulse, const Vec3& position);
 
+    void set_linear_damping(const float d);
+    void set_angular_damping(const float d);
+
     float mass() const;
+
     Vec3 linear_velocity() const;
-    Vec3 linear_velocity_at(const Vec3& position) const;
+    Vec3 linear_velocity_at(const Vec3& position) const;    
+    void set_linear_velocity(const Vec3& vel);
 
     using impl::Body::init;
     using impl::Body::cleanup;
@@ -79,7 +84,6 @@ public:
     }
 
     const std::string name() const { return "Rigid Body"; }
-
 private:
     friend class RigidBodySimulation;
 
