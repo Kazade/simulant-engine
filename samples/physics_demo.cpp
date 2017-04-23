@@ -26,6 +26,9 @@ public:
 
         window->pipeline(pipeline_id_)->viewport->set_colour(smlt::Colour::SKY_BLUE);
 
+        // Create a nice skybox
+        stage->skies->new_skybox_from_folder("sample_data/skyboxes/TropicalSunnyDay");
+
         smlt::TextureID crate = window->shared_assets->new_texture_from_file("sample_data/crate.png");
         smlt::MaterialID mat = window->shared_assets->new_material_from_texture(crate);
 

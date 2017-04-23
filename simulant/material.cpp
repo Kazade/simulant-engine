@@ -48,6 +48,7 @@ const std::string Material::BuiltIns::MULTITEXTURE2_ADD = "simulant/materials/op
 const std::string Material::BuiltIns::TEXTURE_WITH_LIGHTMAP = "simulant/materials/opengl-2.x/texture_with_lightmap.kglm";
 const std::string Material::BuiltIns::TEXTURE_WITH_LIGHTMAP_AND_LIGHTING = "simulant/materials/opengl-2.x/texture_with_lightmap_and_lighting.kglm";
 const std::string Material::BuiltIns::MULTITEXTURE2_MODULATE_WITH_LIGHTING = "simulant/materials/opengl-2.x/multitexture2_modulate_with_lighting.kglm";
+const std::string Material::BuiltIns::SKYBOX = "simulant/materials/opengl-2.x/skybox.kglm";
 #endif
 
 

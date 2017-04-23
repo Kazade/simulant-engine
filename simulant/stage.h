@@ -96,7 +96,6 @@ class Stage:
     public LightManager,
     public SpriteManager,
     public CameraProxyManager,
-    public SkyboxManager,
     public Loadable,    
     public RenderableStage,
     public virtual WindowHolder {
@@ -178,6 +177,7 @@ public:
     Property<Stage, ResourceManager> assets = { this, &Stage::resource_manager_ };
     Property<Stage, generic::DataCarrier> data = { this, &Stage::data_ };
     Property<Stage, ui::UIManager> ui = { this, &Stage::ui_ };
+    Property<Stage, SkyManager> skies = { this, &Stage::sky_manager_ };
 
     bool init() override;
     void cleanup() override;
@@ -237,7 +237,9 @@ private:
     std::unique_ptr<batcher::RenderQueue> render_queue_;
     std::shared_ptr<ResourceManager> resource_manager_;
     smlt::Colour ambient_light_;
+
     std::unique_ptr<GeomManager> geom_manager_;
+    std::unique_ptr<SkyManager> sky_manager_;
 
     generic::DataCarrier data_;
 

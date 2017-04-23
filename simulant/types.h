@@ -1362,7 +1362,7 @@ typedef UniqueID<PipelinePtr> PipelineID;
 typedef UniqueID<SpritePtr> SpriteID;
 typedef UniqueID<BackgroundPtr> BackgroundID;
 typedef UniqueID<ParticleSystemPtr> ParticleSystemID;
-typedef UniqueID<SkyboxPtr> SkyboxID;
+typedef UniqueID<SkyboxPtr> SkyID;
 typedef UniqueID<GPUProgramPtr> GPUProgramID;
 typedef UniqueID<ui::WidgetPtr> WidgetID;
 

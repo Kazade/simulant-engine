@@ -39,15 +39,17 @@ enum SkyboxFace {
     SKYBOX_FACE_MAX
 };
 
-class SkyboxManager;
+class SkyManager;
 
 class Skybox :
     public Managed<Skybox>,
-    public generic::Identifiable<SkyboxID>,
+    public generic::Identifiable<SkyID>,
     public StageNode {
 
 public:
-    Skybox(SkyboxID id, SkyboxManager* manager);
+    constexpr static float DEFAULT_SIZE = 1024.0f;
+
+    Skybox(SkyID id, SkyManager* manager);
 
     bool init() override;
     void cleanup() override;
@@ -70,9 +72,9 @@ public:
 
     void update(float step) {}
 private:
-    friend class SkyboxManager;
+    friend class SkyManager;
 
-    SkyboxManager* manager_;
+    SkyManager* manager_ = nullptr;
 
     CameraID follow_camera_;
 
@@ -98,17 +100,17 @@ public:
         std::runtime_error(what) {}
 };
 
-typedef generic::TemplatedManager<Skybox, SkyboxID> TemplatedSkyboxManager;
+typedef generic::TemplatedManager<Skybox, SkyID> TemplatedSkyboxManager;
 
-class SkyboxManager :
+class SkyManager :
     public TemplatedSkyboxManager,
     public virtual WindowHolder {
 
 public:
-    SkyboxManager(WindowBase* window, Stage* stage);
+    SkyManager(WindowBase* window, Stage* stage);
 
-    SkyboxID new_skybox_from_folder(const unicode& folder);
-    SkyboxID new_skybox_from_absolute_files(
+    SkyID new_skybox_from_folder(const unicode& folder);
+    SkyID new_skybox_from_files(
         const unicode& up,
         const unicode& down,
         const unicode& left,
@@ -117,25 +119,10 @@ public:
         const unicode& back
     );
 
-    SkyboxID new_skybox_from_folder_and_relative_files(
-        const unicode& folder,
-        const unicode& up,
-        const unicode& down,
-        const unicode& left,
-        const unicode& right,
-        const unicode& front,
-        const unicode& back
-    );
+    SkyboxPtr skybox(SkyID skybox_id);
+    void delete_skybox(SkyID skybox_id);
 
-    SkyboxID new_skybox_from_folder_and_relative_files(
-        const unicode& folder,
-        std::map<SkyboxFace, unicode> files
-    );
-
-    SkyboxPtr skybox(SkyboxID skybox_id);
-    void delete_skybox(SkyboxID skybox_id);
-
-    Property<SkyboxManager, Stage> stage = { this, &SkyboxManager::stage_ };
+    Property<SkyManager, Stage> stage = { this, &SkyManager::stage_ };
 private:
     Stage* stage_ = nullptr;
 

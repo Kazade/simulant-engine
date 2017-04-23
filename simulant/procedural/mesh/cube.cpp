@@ -27,6 +27,15 @@ namespace mesh {
 void box(MeshPtr mesh, float width, float height, float depth, MeshStyle style) {
     mesh->reset(VertexSpecification::DEFAULT);
 
+    static const std::map<uint8_t, std::string> SUBMESH_NAMES = {
+        {0, "front"},
+        {1, "back"},
+        {2, "left"},
+        {3, "right"},
+        {4, "top"},
+        {5, "bottom"},
+    };
+
     float rx = width * 0.5f;
     float ry = height * 0.5f;
     float rz = depth * 0.5f;
@@ -36,7 +45,7 @@ void box(MeshPtr mesh, float width, float height, float depth, MeshStyle style) 
 
     if(style == MESH_STYLE_SUBMESH_PER_FACE) {
         for(uint8_t i = 0; i < 6; ++i) {
-            submeshes[i] = mesh->new_submesh(std::to_string(i), MESH_ARRANGEMENT_TRIANGLES);
+            submeshes[i] = mesh->new_submesh(SUBMESH_NAMES.at(i), MESH_ARRANGEMENT_TRIANGLES);
         }
     } else {
         SubMesh* sm = mesh->new_submesh("box", MESH_ARRANGEMENT_TRIANGLES);

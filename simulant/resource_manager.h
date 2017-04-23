@@ -100,6 +100,7 @@ public:
         GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC
     );
     MeshID new_mesh_as_cube(float width, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshID new_mesh_as_cube_with_submesh_per_face(float width, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     MeshID new_mesh_as_box(float width, float height, float depth, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     MeshID new_mesh_as_sphere(float diameter, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     MeshID new_mesh_as_rectangle(float width, float height, const Vec2& offset=Vec2(), MaterialID material=MaterialID(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);

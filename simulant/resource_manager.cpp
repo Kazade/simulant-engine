@@ -224,6 +224,17 @@ MeshID ResourceManager::new_mesh_as_cube(float width, GarbageCollectMethod garba
     return m;
 }
 
+MeshID ResourceManager::new_mesh_as_cube_with_submesh_per_face(float width, GarbageCollectMethod garbage_collect) {
+    MeshID m = new_mesh(
+        VertexSpecification::DEFAULT,
+        garbage_collect
+    );
+    smlt::procedural::mesh::box(mesh(m), width, width, width, smlt::procedural::MESH_STYLE_SUBMESH_PER_FACE);
+    MeshManager::mark_as_uncollected(m);
+    return m;
+
+}
+
 MeshID ResourceManager::new_mesh_as_box(float width, float height, float depth, GarbageCollectMethod garbage_collect) {
     MeshID m = new_mesh(VertexSpecification::DEFAULT, garbage_collect);
     smlt::procedural::mesh::box(mesh(m), width, height, depth);

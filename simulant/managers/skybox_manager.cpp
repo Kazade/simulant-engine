@@ -28,9 +28,10 @@
 
 namespace smlt {
 
-Skybox::Skybox(SkyboxID id, SkyboxManager* manager):
-    generic::Identifiable<SkyboxID>(id),
-    StageNode(&(Stage&)manager->stage) {
+Skybox::Skybox(SkyID id, SkyManager* manager):
+    generic::Identifiable<SkyID>(id),
+    StageNode(&(Stage&)manager->stage),
+    manager_(manager) {
 
 }
 
@@ -56,30 +57,55 @@ void Skybox::generate(
     const unicode& front,
     const unicode& back
 ) {
-    auto& stage = manager_->stage;
+    auto stage = manager_->stage.get();
 
     if(!actor_id_) {
         actor_id_ = stage->new_actor();
+        actor_id_.fetch()->set_parent(this);
+        actor_id_.fetch()->move_to(0, 0, 0);
     }
 
     if(!mesh_id_) {
-        /*
-        mesh_id_ = stage->assets->new_mesh_as_box(
-            1.0, 1.0, 1.0,
-            smlt::GARBAGE_COLLECT_NEVER,
-            procedural::MESH_STYLE_SUBMESH_PER_FACE
-        );*/
+        mesh_id_ = stage->assets->new_mesh_as_cube_with_submesh_per_face(DEFAULT_SIZE, smlt::GARBAGE_COLLECT_NEVER);
+
+
+        auto mesh = mesh_id_.fetch();
+        mesh->reverse_winding();
+
+        // Set the skybox material on all submeshes
+        mesh->each([&stage](const std::string&, SubMesh* sm) {
+            auto mat = stage->assets->new_material_from_file(Material::BuiltIns::SKYBOX);
+            sm->set_material_id(mat);
+        });
+
+        auto up_path = manager_->window->resource_locator->locate_file(up);
+        auto down_path = manager_->window->resource_locator->locate_file(down);
+        auto left_path = manager_->window->resource_locator->locate_file(left);
+        auto right_path = manager_->window->resource_locator->locate_file(right);
+        auto back_path = manager_->window->resource_locator->locate_file(back);
+        auto front_path = manager_->window->resource_locator->locate_file(front);
+
+        TextureFlags flags;
+        flags.wrap = TEXTURE_WRAP_CLAMP_TO_EDGE;
+
+        mesh->submesh("top")->set_texture_on_material(0, stage->assets->new_texture_from_file(up_path, flags));
+        mesh->submesh("bottom")->set_texture_on_material(0, stage->assets->new_texture_from_file(down_path, flags));
+        mesh->submesh("left")->set_texture_on_material(0, stage->assets->new_texture_from_file(left_path, flags));
+        mesh->submesh("right")->set_texture_on_material(0, stage->assets->new_texture_from_file(right_path, flags));
+        mesh->submesh("front")->set_texture_on_material(0, stage->assets->new_texture_from_file(front_path, flags));
+        mesh->submesh("back")->set_texture_on_material(0, stage->assets->new_texture_from_file(back_path, flags));
     }
 
     {
         auto actor = stage->actor(actor_id_);
         actor->set_mesh(mesh_id_);
+        actor->set_render_priority(smlt::RENDER_PRIORITY_ABSOLUTE_BACKGROUND);
+        //actor->set_renderable_culling_mode(RENDERABLE_CULLING_MODE_NEVER);
     }
-
 }
 
 
-SkyboxManager::SkyboxManager(WindowBase* window, Stage* stage):
+SkyManager::SkyManager(WindowBase* window, Stage* stage):
     WindowHolder(window),
     stage_(stage) {
 
@@ -94,18 +120,20 @@ SkyboxManager::SkyboxManager(WindowBase* window, Stage* stage):
  * in their names. If duplicates are found, or if images are not found, then this function raises
  * SkyboxImageNotFoundError or SkyboxImageDuplicateError respectively
  */
-SkyboxID SkyboxManager::new_skybox_from_folder(const unicode& folder) {
-    std::map<SkyboxFace, unicode> files;
+SkyID SkyManager::new_skybox_from_folder(const unicode& folder) {
+    std::map<SkyboxFace, std::string> files;
 
-    for(auto& file: kfs::path::list_dir(folder.encode())) {
+    auto path = window->resource_locator->locate_file(folder);
+
+    for(auto& file: kfs::path::list_dir(path.encode())) {
         SkyboxFace face;
 
         // Case-insensitive detection
         unicode file_lower = unicode(file).lower();
 
-        if(file_lower.contains("top")) {
+        if(file_lower.contains("top") || file_lower.contains("up")) {
             face = SKYBOX_FACE_TOP;
-        } else if(file_lower.contains("bottom")) {
+        } else if(file_lower.contains("bottom") || file_lower.contains("down")) {
             face = SKYBOX_FACE_BOTTOM;
         } else if(file_lower.contains("left")) {
             face = SKYBOX_FACE_LEFT;
@@ -133,7 +161,7 @@ SkyboxID SkyboxManager::new_skybox_from_folder(const unicode& folder) {
         }
 
         // Store the relative path, rather than the absolute one
-        files[face] = file;
+        files[face] = full_path;
     }
 
     if(files.size() != 6) {
@@ -141,7 +169,14 @@ SkyboxID SkyboxManager::new_skybox_from_folder(const unicode& folder) {
     }
 
     // Call through now that we've detected the files
-    return new_skybox_from_folder_and_relative_files(folder, files);
+    return new_skybox_from_files(
+        files.at(SKYBOX_FACE_TOP),
+        files.at(SKYBOX_FACE_BOTTOM),
+        files.at(SKYBOX_FACE_LEFT),
+        files.at(SKYBOX_FACE_RIGHT),
+        files.at(SKYBOX_FACE_FRONT),
+        files.at(SKYBOX_FACE_BACK)
+    );
 }
 
 /**
@@ -157,7 +192,7 @@ SkyboxID SkyboxManager::new_skybox_from_folder(const unicode& folder) {
  * Creates a skybox with the 6 images specified. If any of the images are not found this throws a
  * SkyboxImageNotFoundError
  */
-SkyboxID SkyboxManager::new_skybox_from_absolute_files(
+SkyID SkyManager::new_skybox_from_files(
     const unicode& up,
     const unicode& down,
     const unicode& left,
@@ -167,7 +202,7 @@ SkyboxID SkyboxManager::new_skybox_from_absolute_files(
 
     assert(stage_);
 
-    SkyboxID sid = TemplatedSkyboxManager::make(this);
+    SkyID sid = TemplatedSkyboxManager::make(this);
 
     auto sb = skybox(sid);
     sb->generate(
@@ -177,57 +212,11 @@ SkyboxID SkyboxManager::new_skybox_from_absolute_files(
     return sid;
 }
 
-/**
- * @brief new_skybox_from_folder_and_relative_files
- * @param folder
- * @param up
- * @param down
- * @param left
- * @param right
- * @param front
- * @param back
- * @return New skybox ID
- *
- * Takes a folder and a list of filenames without paths, and creates a Skybox.
- *
- * Raises SkyboxImageNotFoundError if any of the images don't exist.
- */
-SkyboxID SkyboxManager::new_skybox_from_folder_and_relative_files(
-    const unicode& folder,
-    const unicode& up,
-    const unicode& down,
-    const unicode& left,
-    const unicode& right,
-    const unicode& front,
-    const unicode& back) {
-
-    return new_skybox_from_absolute_files(
-        kfs::path::join(folder.encode(), up.encode()),
-        kfs::path::join(folder.encode(), down.encode()),
-        kfs::path::join(folder.encode(), left.encode()),
-        kfs::path::join(folder.encode(), right.encode()),
-        kfs::path::join(folder.encode(), front.encode()),
-        kfs::path::join(folder.encode(), back.encode())
-    );
-}
-
-SkyboxID SkyboxManager::new_skybox_from_folder_and_relative_files(const unicode& folder, std::map<SkyboxFace, unicode> files) {
-    return new_skybox_from_folder_and_relative_files(
-        folder,
-        files.at(SKYBOX_FACE_TOP),
-        files.at(SKYBOX_FACE_BOTTOM),
-        files.at(SKYBOX_FACE_LEFT),
-        files.at(SKYBOX_FACE_RIGHT),
-        files.at(SKYBOX_FACE_FRONT),
-        files.at(SKYBOX_FACE_BACK)
-    );
-}
-
-SkyboxPtr SkyboxManager::skybox(SkyboxID skybox_id) {
+SkyboxPtr SkyManager::skybox(SkyID skybox_id) {
     return TemplatedSkyboxManager::get(skybox_id).lock().get();
 }
 
-void SkyboxManager::delete_skybox(SkyboxID skybox_id) {
+void SkyManager::delete_skybox(SkyID skybox_id) {
     TemplatedSkyboxManager::destroy(skybox_id);
 }
 
