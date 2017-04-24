@@ -62,8 +62,6 @@ void Transformable::rotate_to(const smlt::Degrees& angle, const smlt::Vec3& axis
 }
 
 void Transformable::rotate_to(const smlt::Quaternion& rotation) {
-    if(rotation_locked_) return;
-
     set_rotation(rotation);
 }
 
@@ -207,6 +205,8 @@ void Transformable::set_position(const Vec3 &p) {
 }
 
 void Transformable::set_rotation(const Quaternion& q) {
+    if(rotation_locked_) return;
+
     if(q.x != rotation_.x || q.y != rotation_.y || q.z != rotation_.z || q.w != rotation_.w) {
         auto tmp = rotation_;
         rotation_ = q;

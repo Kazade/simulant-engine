@@ -74,6 +74,7 @@ public:
     bool is_constrained() const;
     void remove_constraint();
 
+    bool rotation_locked() const { return rotation_locked_; }
 protected:
     void force_lock_transforms();
     void force_unlock_transforms();

@@ -73,6 +73,23 @@ public:
         assert_equal(first[10] * 2, second[10]);
     }
 
+    void test_set_parent() {
+        auto actor1 = window->stage(stage_id_)->new_actor().fetch();
+        auto actor2 = window->stage(stage_id_)->new_actor().fetch();
+
+        actor2->set_parent(actor1);
+
+        actor1->move_to(Vec3(0, 10, 0));
+
+        assert_equal(Vec3(0, 10, 0), actor2->absolute_position());
+        assert_equal(Vec3(), actor2->position());
+
+        actor1->rotate_to(Quaternion(Degrees(0), Degrees(90), Degrees(0)));
+
+        assert_close(actor2->absolute_rotation().x, actor1->rotation().x, 0.00001);
+        assert_close(actor2->absolute_rotation().y, actor1->rotation().y, 0.00001);
+    }
+
     void test_set_absolute_rotation() {
         smlt::ActorID act = window->stage(stage_id_)->new_actor();
         auto actor = window->stage(stage_id_)->actor(act);

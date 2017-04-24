@@ -95,14 +95,18 @@ void StageNode::on_scaling_set(const Vec3& olds, const Vec3& news) {
 }
 
 void StageNode::update_rotation_from_parent() {
+    if(rotation_locked()) {
+        return;
+    }
+
     StageNode* parent = static_cast<StageNode*>(this->parent());
 
     Quaternion prot;
     if(parent) {
-        prot = parent->rotation();
+        prot = parent->absolute_rotation();
     }
 
-    absolute_rotation_ = rotation() * prot;
+    absolute_rotation_ = prot * rotation();
     absolute_rotation_.normalize();
 
     recalc_bounds();
@@ -118,7 +122,7 @@ void StageNode::update_position_from_parent() {
 
     Vec3 ppos;
     if(parent) {
-        ppos = parent->position();
+        ppos = parent->absolute_position();
     }
 
     absolute_position_ = ppos + position();
