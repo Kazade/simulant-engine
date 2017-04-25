@@ -309,6 +309,21 @@ MaterialID Material::new_clone(ResourceManager* target_resource_manager, Garbage
 
     mat->pass_count_ = pass_count_;
 
+    for(auto& p: properties_) {
+        switch(p.second.type) {
+        case MATERIAL_PROPERTY_TYPE_INT: {
+            mat->create_int_property(p.first);
+            mat->set_int_property(p.first, p.second.int_value);
+        } break;
+        case MATERIAL_PROPERTY_TYPE_FLOAT: {
+            mat->create_float_property(p.first);
+            mat->set_float_property(p.first, p.second.float_value);
+        } break;
+        default:
+            assert(0 && "Not Implemented");
+        }
+    }
+
     return ret;
 }
 

@@ -98,7 +98,7 @@ public:
 
     const std::unordered_map<ShaderType, ShaderInfo> shader_infos() const { return shaders_; }
 
-    GLint locate_uniform(const std::string& name);
+    GLint locate_uniform(const std::string& name, bool fail_silently=false);
     GLint locate_attribute(const std::string& name);
     void set_uniform_location(const std::string& name, GLint location);
     void set_attribute_location(const std::string& name, GLint location);
@@ -109,8 +109,8 @@ public:
         uniform_cache_.clear();
     }
 
-    void set_uniform_int(const std::string& uniform_name, const int32_t value);
-    void set_uniform_float(const std::string& uniform_name, const float value);
+    void set_uniform_int(const std::string& uniform_name, const int32_t value, bool fail_silently=false);
+    void set_uniform_float(const std::string& uniform_name, const float value, bool fail_silently=false);
     void set_uniform_mat4x4(const std::string& uniform_name, const Mat4& values);
     void set_uniform_mat3x3(const std::string& uniform_name, const Mat3& values);
     void set_uniform_vec3(const std::string& uniform_name, const Vec3& values);

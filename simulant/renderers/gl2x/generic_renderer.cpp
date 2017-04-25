@@ -447,12 +447,15 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
             L_WARN_ONCE(_F("Property {0} was not set").format(name));
         }
 
+        /* As properties apply across passes, we must not throw an error if the uniform variable
+         * does not exist (as a single pass may not have a uniform) this is in contrast to automatic
+         * uniforms which *do* throw as they are pass-specific */
         switch(property.type) {
         case MATERIAL_PROPERTY_TYPE_INT:
-            program_->set_uniform_int(name, property.int_value);
+            program_->set_uniform_int(name, property.int_value, /* fail_silently= */true);
          break;
         case MATERIAL_PROPERTY_TYPE_FLOAT:
-            program_->set_uniform_float(name, property.float_value);
+            program_->set_uniform_float(name, property.float_value, /* fail_silently= */true);
         break;
         default:
             throw std::runtime_error("UNIMPLEMENTED property type");

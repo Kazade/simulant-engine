@@ -40,7 +40,6 @@ bool Skybox::init() {
 }
 
 void Skybox::cleanup() {
-
 }
 
 void Skybox::ask_owner_for_destruction() {

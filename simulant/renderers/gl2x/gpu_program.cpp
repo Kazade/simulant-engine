@@ -38,7 +38,7 @@ UniformInfo GPUProgram::uniform_info(const std::string& uniform_name) {
     return (*it).second;
 }
 
-GLint GPUProgram::locate_uniform(const std::string& uniform_name) {
+GLint GPUProgram::locate_uniform(const std::string& uniform_name, bool fail_silently) {
     auto it = uniform_cache_.find(uniform_name);
     if(it != uniform_cache_.end()) {
         return (*it).second;
@@ -59,7 +59,7 @@ GLint GPUProgram::locate_uniform(const std::string& uniform_name) {
     //L_DEBUG(_u("Looking up uniform with name {0} in program {1}").format(name, program_.program_object_));
     GLint location = _GLCheck<GLint>(__func__, glGetUniformLocation, program_object_, name.c_str());
 
-    if(location < 0) {
+    if(location < 0 && !fail_silently) {
         throw std::logic_error(_u("Couldn't find uniform {0}. Has it been optimized into non-existence?").format(name).encode());
     }
 
@@ -67,14 +67,18 @@ GLint GPUProgram::locate_uniform(const std::string& uniform_name) {
     return location;
 }
 
-void GPUProgram::set_uniform_int(const std::string& uniform_name, const int32_t value) {
-    GLint loc = locate_uniform(uniform_name);
-    GLCheck(glUniform1i, loc, value);
+void GPUProgram::set_uniform_int(const std::string& uniform_name, const int32_t value, bool fail_silently) {
+    GLint loc = locate_uniform(uniform_name, fail_silently);
+    if(loc >= 0) {
+        GLCheck(glUniform1i, loc, value);
+    }
 }
 
-void GPUProgram::set_uniform_float(const std::string& uniform_name, const float value) {
-    int32_t loc = locate_uniform(uniform_name);
-    GLCheck(glUniform1f, loc, value);
+void GPUProgram::set_uniform_float(const std::string& uniform_name, const float value, bool fail_silently) {
+    int32_t loc = locate_uniform(uniform_name, fail_silently);
+    if(loc >= 0) {
+        GLCheck(glUniform1f, loc, value);
+    }
 }
 
 void GPUProgram::set_uniform_mat4x4(const std::string& uniform_name, const Mat4& matrix) {
