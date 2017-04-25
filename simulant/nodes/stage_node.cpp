@@ -104,6 +104,7 @@ void StageNode::update_rotation_from_parent() {
     Quaternion prot;
     if(parent) {
         prot = parent->absolute_rotation();
+        update_position_from_parent();
     }
 
     absolute_rotation_ = prot * rotation();
@@ -121,11 +122,14 @@ void StageNode::update_position_from_parent() {
     StageNode* parent = static_cast<StageNode*>(this->parent());
 
     Vec3 ppos;
+    Vec3 rel = position();
+
     if(parent) {
         ppos = parent->absolute_position();
+        rel = parent->absolute_rotation().rotate_vector(rel);
     }
 
-    absolute_position_ = ppos + position();
+    absolute_position_ = ppos + rel;
 
     recalc_bounds();
 

@@ -90,6 +90,21 @@ public:
         assert_close(actor2->absolute_rotation().y, actor1->rotation().y, 0.00001);
     }
 
+    void test_parent_transformation_applied() {
+        auto actor1 = window->stage(stage_id_)->new_actor().fetch();
+        auto actor2 = window->stage(stage_id_)->new_actor().fetch();
+        actor2->set_parent(actor1);
+
+        actor2->move_to(smlt::Vec3(0, 0, -5));
+
+        actor1->move_to(smlt::Vec3(0, 0, -5));
+        actor1->rotate_to(smlt::Quaternion(smlt::Degrees(0), smlt::Degrees(90), smlt::Degrees(0)));
+
+        assert_close(actor2->absolute_position().x, -5.0f, 0.00001f);
+        assert_close(actor2->absolute_position().y,  0.0f, 0.00001f);
+        assert_close(actor2->absolute_position().z, -5.0f, 0.00001f);
+    }
+
     void test_set_absolute_rotation() {
         smlt::ActorID act = window->stage(stage_id_)->new_actor();
         auto actor = window->stage(stage_id_)->actor(act);
