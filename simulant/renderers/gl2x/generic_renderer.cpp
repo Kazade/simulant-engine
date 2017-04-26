@@ -345,13 +345,18 @@ void GL2RenderQueueVisitor::end_traversal(const batcher::RenderQueue &queue, Sta
     // Should be ordered by distance to camera
     for(auto p: blended_object_queue_) {
         RenderState& state = p.second;
+
         if(state.render_group_impl != current_group_) {
             // Make sure we change render group (shaders, textures etc.)
             batcher::RenderGroup prev(current_group_->shared_from_this());
             batcher::RenderGroup next(state.render_group_impl->shared_from_this());
 
             change_render_group(&prev, &next);
-            current_group_ = state.render_group_impl;
+            current_group_ = state.render_group_impl;            
+        }
+
+        if(pass_ != state.pass) {
+            change_material_pass(pass_, state.pass);
         }
 
         // FIXME: Pass the previous light from the last iteration, not nullptr
@@ -366,6 +371,7 @@ void GL2RenderQueueVisitor::end_traversal(const batcher::RenderQueue &queue, Sta
     }
 
     blended_object_queue_.clear();
+    queue_blended_objects_ = true;
 }
 
 void GL2RenderQueueVisitor::change_light(const Light *prev, const Light *next) {
