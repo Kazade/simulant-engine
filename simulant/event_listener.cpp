@@ -35,18 +35,20 @@ void EventListener::handle_touch_move(WindowBase* window, TouchPointID touch_id,
     on_touch_move(evt);
 }
 
-void EventListener::handle_key_down(WindowBase* window, KeyboardCode code) {
+void EventListener::handle_key_down(WindowBase* window, KeyboardCode code, ModifierKeyState modifiers) {
     KeyEvent evt;
     evt.type = KEY_EVENT_TYPE_KEY_DOWN;
     evt.keyboard_code = code;
+    evt.modifiers = modifiers;
 
     on_key_down(evt);
 }
 
-void EventListener::handle_key_up(WindowBase* window, KeyboardCode code) {
+void EventListener::handle_key_up(WindowBase* window, KeyboardCode code, ModifierKeyState modifiers) {
     KeyEvent evt;
     evt.type = KEY_EVENT_TYPE_KEY_UP;
     evt.keyboard_code = code;
+    evt.modifiers = modifiers;
 
     on_key_up(evt);
 }

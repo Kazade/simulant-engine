@@ -230,8 +230,8 @@ public:
         float dx, float dy // Between -1.0 and +1.0
     );
 
-    void on_key_down(KeyboardCode code);
-    void on_key_up(KeyboardCode code);
+    void on_key_down(KeyboardCode code, ModifierKeyState modifiers);
+    void on_key_up(KeyboardCode code, ModifierKeyState modifiers);
 
 
     /* Must be called directly after Window construction, it creates the window itself. The reason this

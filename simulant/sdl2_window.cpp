@@ -106,6 +106,24 @@ int event_filter(void* user_data, SDL_Event* event) {
 void SDL2Window::check_events() {
     SDL_Event event;
 
+    auto get_modifiers = []() -> ModifierKeyState {
+        ModifierKeyState state;
+        auto mod_state = SDL_GetModState();
+        state.lctrl = (mod_state & KMOD_LCTRL) == KMOD_LCTRL;
+        state.rctrl = (mod_state & KMOD_RCTRL) == KMOD_RCTRL;
+        state.lalt = (mod_state & KMOD_LALT) == KMOD_LALT;
+        state.ralt = (mod_state & KMOD_RALT) == KMOD_RALT;
+        state.lshift = (mod_state & KMOD_LSHIFT) == KMOD_LSHIFT;
+        state.rshift = (mod_state & KMOD_RSHIFT) == KMOD_RSHIFT;
+        state.lsuper = (mod_state & KMOD_LGUI) == KMOD_LGUI;
+        state.rsuper = (mod_state & KMOD_RGUI) == KMOD_RGUI;
+        state.mode = (mod_state & KMOD_MODE) == KMOD_MODE;
+        state.num_lock = (mod_state & KMOD_NUM) == KMOD_NUM;
+        state.caps_lock = (mod_state & KMOD_CAPS) == KMOD_CAPS;
+        return state;
+    };
+
+
     while(SDL_PollEvent(&event)) {
         input_controller().handle_event(event);
 
@@ -114,10 +132,10 @@ void SDL2Window::check_events() {
                 stop_running();
                 break;
             case SDL_KEYDOWN: {
-                on_key_down((KeyboardCode) event.key.keysym.scancode);
+                on_key_down((KeyboardCode) event.key.keysym.scancode, get_modifiers());
             } break;
             case SDL_KEYUP: {
-                on_key_up((KeyboardCode) event.key.keysym.scancode);
+                on_key_up((KeyboardCode) event.key.keysym.scancode, get_modifiers());
             } break;
             case SDL_MOUSEBUTTONDOWN: {
 

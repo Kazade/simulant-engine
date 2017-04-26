@@ -35,9 +35,29 @@ enum KeyEventType {
     KEY_EVENT_TYPE_KEY_UP
 };
 
+struct ModifierKeyState {
+    bool lshift = false;
+    bool rshift = false;
+    bool lctrl = false;
+    bool rctrl = false;
+    bool lalt = false;
+    bool ralt = false;
+    bool lsuper = false;
+    bool rsuper = false;
+    bool num_lock = false;
+    bool caps_lock = false;
+    bool mode = false; // AltGr
+
+    bool ctrl() const { return lctrl || rctrl; }
+    bool shift() const { return lshift || rshift; }
+    bool alt() const { return lalt || ralt; }
+    bool super() const { return lsuper || rsuper; }
+};
+
 struct KeyEvent {
     KeyEventType type;
     KeyboardCode keyboard_code;
+    ModifierKeyState modifiers;
 };
 
 class EventListener {
@@ -49,8 +69,8 @@ public:
     void handle_touch_end(WindowBase* window, TouchPointID touch_id, float normalized_x, float normalized_y);
     void handle_touch_move(WindowBase* window, TouchPointID touch_id, float normalized_x, float normalized_y, float dx, float dy);
 
-    void handle_key_down(WindowBase* window, KeyboardCode code);
-    void handle_key_up(WindowBase* window, KeyboardCode code);
+    void handle_key_down(WindowBase* window, KeyboardCode code, ModifierKeyState modifiers);
+    void handle_key_up(WindowBase* window, KeyboardCode code, ModifierKeyState modifiers);
 
 private:
     virtual void on_key_down(const KeyEvent& evt) {}
