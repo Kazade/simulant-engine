@@ -1,13 +1,17 @@
-# Kazade's GL Toolkit
+# Simulant
 
-[![Join the chat at https://gitter.im/Kazade/KGLT](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Kazade/KGLT?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join the chat at https://gitter.im/Kazade/Simulant](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Kazade/Simulant?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![build-status-image]][travis] [![codecov.io](https://img.shields.io/codecov/c/github/kazade/simulant-engine/master.svg)](http://codecov.io/github/kazade/simulant-engine?branch=master)
 
 ## What is it?
 
-While working on reverse engineering some obscure 3D model format, I needed a
-quick way to test file parsing, and procedually generating and rendering a mesh
-from the model file. This library was spawned from that, and before long it
-became a full blown game engine!
+Simulant is my accidental hobby engine. It started while I was reverse-engineering a model format and wanted to quickly and easily manipulate meshes. Over the next couple of years I chipped away at it here and there, using it for various little toy projects, but it grew out of control without any focus. Over time it became a dumping ground for useful graphics-related code, and depended on more and more third party libraries. 
+
+In 2014, I decided that it there were a lot of nice things in Simulant, but it was a mess, and so I developed my first game "Rocks & Spaceworms" (https://play.google.com/store/apps/details?id=uk.co.kazade.rocks) with it and ported the code to Android. This allowed me to start focusing on removing dependencies and structuring the codebase like a real game engine. 
+
+Since then the focus has been to remove dependencies, build an easy-to-use API, and performance. The engine now is already very different to the one that powered Rocks & Spaceworms. My future plan is to port the engine to "retro" consoles like the Dreamcast, and also Windows, OSX, iOS, and perhaps even PSP or NDS. Although you could use this engine for modern graphics (the material system is very powerful), it's generally aimed at providing mid-2000s style game graphics. 
+
+There are some glaring holes in functionality (LOD, billboards, shadows, projected textures) but you can already build some impressive things, and those features will arrive eventually, hopefully sooner rather than later!
 
 ## Features
 
@@ -15,24 +19,67 @@ became a full blown game engine!
  * Flexible rendering pipeline
  * Complex material scripting format
  * Loading of .obj models and the X-Wing vs Tie Fighter .opt format
+ * Loading of MD2 animated models
  * Loading of Q2 BSP files (needs work)
- * Octree partitioning/culling (WIP)
- * Loading of JPG, PNG, TGA, WAL images
+ * Loading of heightmap terrains from image files
+ * Advanced spatial hash partitioning and culling
+ * Loading of JPG, PNG, TGA, WAL, PCX images and more!
  * Shortcut functions for loading 2D sprites, 2D backgrounds and 3D skyboxes
  * Simple scene graph functions
- * HTML/CSS based UI renderer based on libRocket
+ * UI widgets (Button, Label, Progress Bar)
+ * Basic rigid body physics using the Bounce library
  * Procedural functions for generating spheres, cubes, capsules, circles and rectangles
- * Procedural functions for generate a starfield texture (needs work)
  * Functions for creating lights, multiple viewports and cameras
+
+## Screenshots
+
+![screenshot 1](/screenshots/screenshot1.png?raw=true)
+![screenshot 2](/screenshots/screenshot2.png?raw=true)
+![screenshot 3](/screenshots/screenshot3.png?raw=true)
+![screenshot 4](/screenshots/screenshot4.png?raw=true)
+
+## Roadmap / TODO
+
+ * Make geoms work using the new Octree in generic/tri_octree.h
+ * Finish the GL 1.x renderer
+ * Switch the GL 2.x renderer with a GL 4.x one
+ * Implement render-to-texture
+ * Fix lightmaps in the Q2 bsp loader
+ * Implement multiple LOD for meshes
+ * Build in support for shadows
+ * Finish skybox management
+ * Add Dreamcast support (depends on GL 1.x)
+ * Restore Android support
+ * Port to OSX and Windows, then iOS
+ * Implement VBO management in the GL 2.x renderer for improved performance 
+
+## Building
+
+Compiling the code requires CMake. Currently there are the following external dependencies:
+
+ - ZLIB
+ - SDL2
+ - OpenGL
+ - TinyXML
+ - OpenAL
+
+To build:
+
+```
+    git submodule update --init 
+    mkdir build && cd build
+    cmake ..
+    make
+```
 
 ## How do I use it?
 
 Well, it's pretty simple really...
 
 ```
-#include <kglt/kglt.h>
+#include <simulant/simulant.h>
 
-class MyApp : public kglt::Application {
+class MyApp : public smlt::Application {
 public:
     bool do_init() {
         return true;
@@ -61,13 +108,18 @@ But you wanted something more interesting than that right? OK, let's draw a
 rectangle:
 
 ```
-#include <kglt/kglt.h>
+#include <simulant/simulant.h>
 
-class MyApp : public kglt::Application {
+class MyApp : public smlt::Application {
 public:
     bool do_init() {
-        MeshID mesh_id = window->stage->new_mesh_as_rectangle(10.0, 5.0);
-        ActorID actor_id = window->stage->new_actor_with_mesh(mesh_id);
+        StageID stage_id;
+        CameraID camera_id;
+        prepare_basic_scene(stage_id, camera_id); // Set up a basic rendering pipeline
+
+        auto stage = window->stage(stage_id); // Grab a handle to the stage
+        MeshID mesh_id = stage->assets->new_mesh_as_rectangle(10.0, 5.0); // Load a mesh into the stage's asset manager
+        ActorID actor_id = stage->new_actor_with_mesh(mesh_id); // Create an actor with the loaded mesh
         return true;
     }
 
@@ -86,35 +138,10 @@ int main(int argc, char* argv[]) {
     return app.run();
 }
 
+```
+
 You can build up sections of your scene by creating _Actors_ inside _Stages_, you can then combine your stages by building up a set of rendering
 pipelines. For example, you can render Stage 1, to Viewport 1, with Camera 1 and target Texture 1. By building up these pipelines dynamically you
 can build complex scenes.
-```
 
-# Documentation
 
-## The Window, Stages and the RenderSequence
-
-The _Window_ owns everything (pretty much). You can do the following with a Window:
-
-* Create and delete Stages
-* Create and delete resources (e.g. Meshes, Textures, Shaders and Materials)
-* Manipulate the render sequence
-
-Stages are where you create your world by spawning _Actors_, you can think of them as a chunk of the overall scene. 
-
-The RenderSequence is where you assemble your Stages for rendering. You add _Pipelines_ to the RenderSequence, and each Pipeline has the following:
-
-* The Stage that this pipeline renders
-* The CameraID of the camera to use
-* The ViewportID of the viewport to render to
-* An optional TextureID if you want to render to a texture rather than the framebuffer (not yet implemented)
-
-For example, if you want to render a 2D overlay on your world you'll probably want to do that using a camera that has an orthographic projection. In that case, you'd do the following:
-
-* Create a new stage ( window->scene->new_stage() )
-* Build your 2D overlay in the subscene (e.g. using new_mesh(), new_material(), new_actor() etc.)
-* Manipulate the stage's camera (e.g. window.camera(camera_id).set_orthographic_projection())
-* Finally add a stage to the pipeline (e.g. window->render_sequence->add_pipeline(stage.id(), camera().id(), ViewportID(), TextureID(), 100) );
-
-The 100 in the above example is the priority of this stage, the stage that renders the default subscene has a priority of 0, so giving your overlay subscene a priority of 100 would mean it would be renderered after the default.

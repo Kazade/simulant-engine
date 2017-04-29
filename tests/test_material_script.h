@@ -3,16 +3,16 @@
 
 #include "kaztest/kaztest.h"
 
-#include "kglt/kglt.h"
+#include "simulant/simulant.h"
 #include "global.h"
-#include "kglt/loaders/material_script.h"
+#include "simulant/loaders/material_script.h"
 
-class MaterialScriptTest : public KGLTTestCase {
+class MaterialScriptTest : public SimulantTestCase {
 public:
     void test_basic_material_script_parsing() {
         const std::string text = R"(
                 BEGIN(pass)
-                    SET(TEXTURE_UNIT "../sample_data/sample.tga")
+                    SET(TEXTURE_UNIT 0 "sample.tga")
 
                     BEGIN_DATA(vertex)
                         #version 120
@@ -29,8 +29,8 @@ public:
                 END(pass)
         )";
 
-        auto mat = window->material(window->new_material());
-        kglt::MaterialScript script((kglt::MaterialLanguageText(text))); //Most vexing parse \o/
+        auto mat = window->shared_assets->material(window->shared_assets->new_material());
+        smlt::MaterialScript script((smlt::MaterialLanguageText(text))); //Most vexing parse \o/
         script.generate(*mat);
 
         this->assert_equal((uint32_t)1, mat->pass_count());

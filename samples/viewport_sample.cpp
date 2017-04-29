@@ -1,22 +1,22 @@
-#include "kglt/kglt.h"
-#include "kglt/shortcuts.h"
+#include "simulant/simulant.h"
+#include "simulant/shortcuts.h"
 
 
-class MainScreen : public kglt::Screen<MainScreen> {
+class MainScene : public smlt::Scene<MainScene> {
 public:
-    MainScreen(kglt::WindowBase& window):
-        kglt::Screen<MainScreen>(window, "main_screen") {}
+    MainScene(smlt::WindowBase& window):
+        smlt::Scene<MainScene>(window) {}
 
     void do_load() {
         // Create two viewports for the left and right hand side of the screen, set different clear colours
-        kglt::Viewport first(kglt::VIEWPORT_TYPE_VERTICAL_SPLIT_LEFT, kglt::Colour::RED);
-        kglt::Viewport second(kglt::VIEWPORT_TYPE_VERTICAL_SPLIT_RIGHT, kglt::Colour::GREEN);
+        smlt::Viewport first(smlt::VIEWPORT_TYPE_VERTICAL_SPLIT_LEFT, smlt::Colour::RED);
+        smlt::Viewport second(smlt::VIEWPORT_TYPE_VERTICAL_SPLIT_RIGHT, smlt::Colour::GREEN);
 
-        kglt::StageID sid = window->new_stage();
+        smlt::StageID sid = window->new_stage();
         auto stage = window->stage(sid);
 
-        kglt::MeshID cube = stage->new_mesh_as_cube(1.0);
-        kglt::ActorID aid = stage->new_actor_with_mesh(cube);
+        smlt::MeshID cube = stage->assets->new_mesh_as_cube(1.0);
+        smlt::ActorID aid = stage->new_actor_with_mesh(cube);
 
         stage->actor(aid)->move_to(0, 0, -5);
 
@@ -26,10 +26,10 @@ public:
     }
 };
 
-class ViewportSample : public kglt::Application {
+class ViewportSample : public smlt::Application {
 public:
     bool do_init() {
-        register_screen("/", kglt::screen_factory<MainScreen>());
+        register_scene<MainScene>("main");
         return true;
     }
 };

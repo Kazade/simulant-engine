@@ -1,8 +1,8 @@
 
 # Refcounted Managers
 
-Refcounted managers are the second kind of management class in KGLT (the other being [Manual managers](manual_managers.md)). All resources
-in KGLT use a refcounted manager, these resources include:
+Refcounted managers are the second kind of management class in Simulant (the other being [Manual managers](manual_managers.md)). All resources
+in Simulant use a refcounted manager, these resources include:
 
  - Textures
  - Materials

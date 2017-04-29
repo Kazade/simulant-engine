@@ -1,69 +1,63 @@
-#include "kglt/kglt.h"
+#include "simulant/simulant.h"
 
-using namespace kglt;
+using namespace smlt;
 
-class GameScreen : public kglt::Screen<GameScreen> {
+class GameScene : public smlt::Scene<GameScene> {
 public:
-    GameScreen(WindowBase& window):
-        kglt::Screen<GameScreen>(window, "game_screen") {}
+    GameScene(WindowBase& window):
+        smlt::Scene<GameScene>(window) {}
 
     void do_load() {
-        prepare_basic_scene(stage_id_, camera_id_);
+        auto pipeline_id = prepare_basic_scene(stage_id_, camera_id_, smlt::PARTITIONER_NULL);
+
+        window->pipeline(pipeline_id)->viewport->set_colour(smlt::Colour::SKY_BLUE);
 
         auto stage = window->stage(stage_id_);
+
         window->camera(camera_id_)->set_perspective_projection(
-            45.0,
+            Degrees(45.0),
             float(window->width()) / float(window->height()),
             1.0,
             1000.0
         );
 
-        /**
-            Generate a mesh and build a 2D square
+        stage->set_ambient_light(smlt::Colour::WHITE);
 
-            Base objects are always created with new_X() and can
-            be destroyed with delete_X(). They are held by the object
-            that spawned them. For example, meshes are held by the stage->
+        // Load an animated MD2 mesh
+        smlt::MeshID mesh_id = stage->assets->new_mesh_from_file("sample_data/ogro.md2");
 
-            Creating an object gives you an ID, this can then be exchanged
-            for a reference to an object.
-        */
+        auto actor = stage->new_actor_with_mesh(mesh_id).fetch(); // Create an instance of it
+        actor->move_to(0.0f, 0.0f, -80.0f);
+        actor->rotate_global_y_by(smlt::Degrees(180));
 
-        ///Shortcut function for loading images
-        kglt::TextureID tid = stage->new_texture_from_file("sample_data/sample.tga");
-        kglt::MaterialID matid = stage->new_material_from_texture(tid);
+        auto actor3 = stage->new_actor_with_mesh(mesh_id).fetch();
+        actor3->move_to(-40.0f, 0.0f, -95.0f);
+        actor3->rotate_global_y_by(smlt::Degrees(180));
+        actor3->animation_state->play_animation("idle_2");
 
-        stage->set_ambient_light(kglt::Colour::WHITE);
-        stage->new_light(kglt::LIGHT_TYPE_DIRECTIONAL);
+        auto scaling_matrix = smlt::Mat4::as_scaling(10.0);
 
-        actor_id_ = stage->new_actor_with_mesh(stage->new_mesh_as_capsule(0.5, 1.0));
-        {
-            auto actor = stage->actor(actor_id_);
-            actor->mesh()->set_material_id(matid);
-            actor->move_to(0.0f, 0.0f, -5.0f);
-        }
-    }
+        auto tank = stage->assets->new_mesh_from_file("sample_data/tank.obj").fetch();
+        tank->transform_vertices(scaling_matrix);
 
-    void do_step(double dt) {
-        auto stage = window->stage(stage_id_);
-        stage->actor(actor_id_)->rotate_y(kglt::Degrees(20.0 * dt));
+        auto tank_actor = stage->new_actor_with_mesh(tank->id()).fetch();
+        tank_actor->move_to(40, 0, -110);
     }
 
 private:
     CameraID camera_id_;
     StageID stage_id_;
-    ActorID actor_id_;
 };
 
-class Sample: public kglt::Application {
+class Sample: public smlt::Application {
 public:
     Sample():
-        Application("KGLT Combined Sample") {
+        Application("Simulant Sample") {
     }
 
 private:
     bool do_init() {
-        register_screen("/", screen_factory<GameScreen>());
+        register_scene<GameScene>("main");
         return true;
     }
 };

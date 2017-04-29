@@ -8,6 +8,7 @@
 #include <sstream>
 #include <algorithm>
 #include <fstream>
+#include <memory>
 
 #define assert_equal(expected, actual) _assert_equal((expected), (actual), __FILE__, __LINE__)
 #define assert_not_equal(expected, actual) _assert_not_equal((expected), (actual), __FILE__, __LINE__)
@@ -112,7 +113,7 @@ private:
     std::string str_;
 };
 
-#define _F StringFormatter
+typedef StringFormatter _Format;
 
 namespace kaztest {
 
@@ -139,10 +140,20 @@ public:
     int line;
 };
 
+
 class NotImplementedError: public std::logic_error {
 public:
     NotImplementedError(const std::string& file, int line):
-        std::logic_error(_F("Not implemented at {0}:{1}").format(file, line)) {}
+        std::logic_error(_Format("Not implemented at {0}:{1}").format(file, line)) {}
+};
+
+
+class SkippedTestError: public std::logic_error {
+public:
+    SkippedTestError(const std::string& reason):
+	std::logic_error(reason) {
+
+    }
 };
 
 }
@@ -154,11 +165,15 @@ public:
     virtual void set_up() {}
     virtual void tear_down() {}
 
+    void skip_if(const bool& flag, const std::string& reason) {
+        if(flag) { throw kaztest::SkippedTestError(reason); }
+    }
+
     template<typename T, typename U>
     void _assert_equal(T expected, U actual, std::string file, int line) {
         if(expected != (T) actual) {
             auto file_and_line = std::make_pair(file, line);
-            throw kaztest::AssertionError(file_and_line, _F("{0} does not match {1}").format(actual, expected));
+            throw kaztest::AssertionError(file_and_line, _Format("{0} does not match {1}").format(actual, expected));
         }
     }
 
@@ -166,7 +181,7 @@ public:
     void _assert_not_equal(T lhs, U rhs, std::string file, int line) {
         if(lhs == (T) rhs) {
             auto file_and_line = std::make_pair(file, line);
-            throw kaztest::AssertionError(file_and_line, _F("{0} should not match {1}").format(lhs, rhs));
+            throw kaztest::AssertionError(file_and_line, _Format("{0} should not match {1}").format(lhs, rhs));
         }
     }
 
@@ -174,7 +189,7 @@ public:
     void _assert_true(T actual, std::string file, int line) {
         if(!bool(actual)) {
             auto file_and_line = std::make_pair(file, line);
-            throw kaztest::AssertionError(file_and_line, _F("{0} is not true").format(bool(actual) ? "true" : "false"));
+            throw kaztest::AssertionError(file_and_line, _Format("{0} is not true").format(bool(actual) ? "true" : "false"));
         }
     }
 
@@ -182,7 +197,7 @@ public:
     void _assert_false(T actual, std::string file, int line) {
         if(bool(actual)) {
             auto file_and_line = std::make_pair(file, line);
-            throw kaztest::AssertionError(file_and_line, _F("{0} is not false").format(bool(actual) ? "true" : "false"));
+            throw kaztest::AssertionError(file_and_line, _Format("{0} is not false").format(bool(actual) ? "true" : "false"));
         }
     }
 
@@ -191,7 +206,7 @@ public:
         if(actual < expected - difference ||
            actual > expected + difference) {
             auto file_and_line = std::make_pair(file, line);
-            throw kaztest::AssertionError(file_and_line, _F("{0} is not close enough to {1}").format(actual, expected));
+            throw kaztest::AssertionError(file_and_line, _Format("{0} is not close enough to {1}").format(actual, expected));
         }
     }
 
@@ -216,7 +231,7 @@ public:
         try {
             func();
             auto file_and_line = std::make_pair(file, line);
-            throw kaztest::AssertionError(file_and_line, _F("Expected exception ({0}) was not thrown").format(typeid(T).name()));
+            throw kaztest::AssertionError(file_and_line, _Format("Expected exception ({0}) was not thrown").format(typeid(T).name()));
         } catch(T& e) {}
     }
 
@@ -230,7 +245,7 @@ public:
 
         for(auto item: lhs) {
             if(std::find(rhs.begin(), rhs.end(), item) == rhs.end()) {
-                throw kaztest::AssertionError(file_and_line, _F("Container does not contain {0}").format(item));
+                throw kaztest::AssertionError(file_and_line, _Format("Container does not contain {0}").format(item));
             }
         }
     }
@@ -299,6 +314,9 @@ public:
             } catch(kaztest::NotImplementedError& e) {
                 std::cout << "\033[34m" << " SKIPPED" << "\033[0m" << std::endl;
                 ++skipped;
+	    } catch(kaztest::SkippedTestError& e) {
+                std::cout << "\033[34m" << " SKIPPED" << "\033[0m" << std::endl;
+                ++skipped;
             } catch(kaztest::AssertionError& e) {
                 std::cout << "\033[33m" << " FAILED " << "\033[0m" << std::endl;
                 std::cout << "        " << e.what() << std::endl;
@@ -307,8 +325,11 @@ public:
 
                     std::ifstream ifs(e.file);
                     if(ifs.good()) {
-                        std::string buffer((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
-                        auto lines = StringSplitter(buffer).split();
+			std::string buffer;
+			std::vector<std::string> lines;
+			while(std::getline(ifs, buffer)) {
+                            lines.push_back(buffer);			
+			}
 
                         int line_count = lines.size();
                         if(line_count && e.line <= line_count) {
@@ -350,7 +371,7 @@ public:
             std::cout << std::endl << std::endl;
         }
 
-        return failed;
+        return failed + crashed;
     }
 
 private:

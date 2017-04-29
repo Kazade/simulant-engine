@@ -2,7 +2,7 @@ FILE(GLOB_RECURSE TEST_FILES *.h)
 
 FILE(GLOB_RECURSE TEST_SOURCES *.cpp)
 
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/deps/kaztest)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/deps/kaztest)
 
 SET(KAZTEST_EXECUTABLE ${CMAKE_SOURCE_DIR}/deps/kaztest/bin/kaztest_gen)
 
@@ -12,11 +12,11 @@ ADD_CUSTOM_COMMAND(
     DEPENDS ${TEST_FILES} ${KAZTEST_EXECUTABLE}
 )
 
-ADD_EXECUTABLE(kglt_tests ${TEST_FILES} ${TEST_SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
-ADD_TEST(kglt_suite kglt_tests)
+ADD_EXECUTABLE(simulant_tests ${TEST_FILES} ${TEST_SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
+ADD_TEST(simulant_suite simulant_tests)
 
 TARGET_LINK_LIBRARIES(
-    kglt_tests
-    kglt
+    simulant_tests
+    simulant
 )
 

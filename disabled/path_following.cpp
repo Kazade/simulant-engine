@@ -45,7 +45,7 @@ public:
         return true;
     }
 
-    void update(double dt) {
+    void update(float dt) {
         set_velocity(follower_->steer_to_path());
         actor()->move_to(position() + (velocity() * dt));
     }
@@ -67,7 +67,7 @@ private:
 class PathFollowing: public kglt::Application {
 public:
     PathFollowing():
-        Application("KGLT Sprite Sample") {
+        Application("Simulant Sprite Sample") {
 
         window->set_logging_level(kglt::LOG_LEVEL_DEBUG);
     }
@@ -87,7 +87,7 @@ private:
         return true;
     }
 
-    void do_step(double dt) {
+    void do_step(float dt) {
         if(initialized()) {
             car_->update(dt);
         }

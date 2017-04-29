@@ -31,7 +31,7 @@ public:
         return true;
     }
 
-    void update(double dt) {
+    void update(float dt) {
         set_velocity(follower_->seek(target));
 
         actor()->move_to(position() + (velocity() * dt));
@@ -72,7 +72,7 @@ public:
         );
     }
 
-    void do_step(double dt) {
+    void do_step(float dt) {
         dot_->update(dt);
     }
 
@@ -85,7 +85,7 @@ private:
 class SeekSample: public kglt::Application {
 public:
     SeekSample():
-        Application("KGLT Seek Behaviour") {
+        Application("Simulant Seek Behaviour") {
 
         window->set_logging_level(kglt::LOG_LEVEL_DEBUG);
     }

@@ -1,28 +1,32 @@
-#include <kazbase/random.h>
+#include "simulant/simulant.h"
+#include "simulant/utils/random.h"
 
-#include "kglt/kglt.h"
+using namespace smlt;
 
-using namespace kglt;
-
-class GameScreen : public kglt::Screen<GameScreen> {
+class GameScene : public smlt::Scene<GameScene> {
 public:
-    GameScreen(kglt::WindowBase& window):
-        kglt::Screen<GameScreen>(window, "game_screen") {}
+    GameScene(smlt::WindowBase& window):
+        smlt::Scene<GameScene>(window) {}
 
     void do_load() {
-        prepare_basic_scene(stage_id_, camera_id_);
+        auto pipeline = prepare_basic_scene(stage_id_, camera_id_);
+        pipeline.fetch()->viewport->set_colour(smlt::Colour::BLACK);
+
         auto stage = window->stage(stage_id_);
         stage->host_camera(camera_id_);
-        window->camera(camera_id_)->set_perspective_projection(45.0, float(window->width()) / float(window->height()), 10.0, 10000.0);
-        ship_mesh_id_ = window->new_mesh_from_file("sample_data/fighter_good/space_frigate_6.obj");
+        window->camera(camera_id_)->set_perspective_projection(Degrees(45.0), float(window->width()) / float(window->height()), 10.0, 10000.0);
+        ship_mesh_id_ = window->shared_assets->new_mesh_from_file("sample_data/fighter_good/space_frigate_6.obj");
         generate_ships();
+
+        stage->set_ambient_light(smlt::Colour(0.2, 0.2, 0.2, 1.0));
+        stage->new_light_as_directional();
     }
 
     void do_activate() {
 
     }
 
-    void do_step(double dt) override {
+    void fixed_update(float dt) override {
         Vec3 speed(-250, 0, 0.0);
 
         Vec3 avg;
@@ -31,7 +35,7 @@ public:
         for(auto ship_id: ship_ids_) {
             auto pos = stage->actor(ship_id)->position();
             avg += pos;
-            stage->actor(ship_id)->set_absolute_position(pos + (speed * dt * (0.01 * ship_id.value())));
+            stage->actor(ship_id)->move_to_absolute(pos + (speed * dt * (0.01 * ship_id.value())));
         }
 
         avg /= ship_ids_.size();
@@ -58,25 +62,25 @@ private:
 
             auto stage = window->stage(stage_id_);
             ship_ids_.push_back(stage->new_actor_with_mesh(ship_mesh_id_));
-            stage->actor(ship_ids_.back())->set_absolute_position(pos);
+            stage->actor(ship_ids_.back())->move_to_absolute(pos);
 
-            auto ps_id = stage->new_particle_system_with_parent_from_file(ship_ids_.back(), "kglt/particles/pixel_trail.kglp");
-            stage->particle_system(ps_id)->set_relative_position(0, 0, 0);
+            auto ps_id = stage->new_particle_system_with_parent_from_file(ship_ids_.back(), "simulant/particles/pixel_trail.kglp");
+            stage->particle_system(ps_id)->move_to(0, 0, 0);
         }
     }
 };
 
 
-class FleetsDemo: public kglt::Application {
+class FleetsDemo: public smlt::Application {
 public:
     FleetsDemo():
-        kglt::Application("Fleets Demo") {}
+        smlt::Application("Fleets Demo") {}
 
 private:
     bool do_init() {
-        register_screen("/", kglt::screen_factory<GameScreen>());
-        load_screen_in_background("/", true); //Do loading in a background thread, but show immediately when done
-        activate_screen("/loading"); // Show the loading screen in the meantime
+        register_scene<GameScene>("main");
+        load_scene_in_background("main", true); //Do loading in a background thread, but show immediately when done
+        activate_scene("_loading"); // Show the loading screen in the meantime
         return true;
     }
 };

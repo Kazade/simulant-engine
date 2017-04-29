@@ -3,12 +3,12 @@
 
 #include "kaztest/kaztest.h"
 
-#include "kglt/kglt.h"
+#include "simulant/simulant.h"
 #include "global.h"
 
-using namespace kglt;
+using namespace smlt;
 
-class FrustumTest : public KGLTTestCase {
+class FrustumTest : public SimulantTestCase {
 public:
     void test_frustum_generation() {
         Frustum frustum;
@@ -16,19 +16,17 @@ public:
         assert_true(!frustum.initialized());
 
         //Create an orthographic projection, and a modelview idactor matrix
-        kmMat4 projection, modelview;
-        kmMat4OrthographicProjection(&projection, -1.0, 1.0, -1.0, 1.0, 1.0, 10.0);
-        kmMat4Identity(&modelview);
+        Mat4 projection = Mat4::as_orthographic(-1.0, 1.0, -1.0, 1.0, 1.0, 10.0);
+        Mat4 modelview;
 
         //Create the modelview projection matrix
-        kmMat4 modelview_projection;
-        kmMat4Multiply(&modelview_projection, &projection, &modelview);
+        Mat4 modelview_projection = projection * modelview;
 
         //Build the frustum from the modelview projection matrix
         frustum.build(&modelview_projection);
         assert_true(frustum.initialized());
 
-        std::vector<kmVec3> near_corners = frustum.near_corners();
+        std::vector<Vec3> near_corners = frustum.near_corners();
 
         //Bottom left near corner
         assert_close(-1.0, near_corners[FRUSTUM_CORNER_BOTTOM_LEFT].x, 0.00001);
@@ -50,7 +48,7 @@ public:
         assert_close(1.0, near_corners[FRUSTUM_CORNER_TOP_LEFT].y, 0.00001);
         assert_close(-1.0, near_corners[FRUSTUM_CORNER_TOP_LEFT].z, 0.00001); //Near distance
 
-        std::vector<kmVec3> far_corners = frustum.far_corners();
+        std::vector<Vec3> far_corners = frustum.far_corners();
 
         //Bottom left near corner
         assert_close(-1.0, far_corners[FRUSTUM_CORNER_BOTTOM_LEFT].x, 0.00001);
@@ -75,6 +73,63 @@ public:
         assert_close(2.0, frustum.near_height(), 0.0001);
         assert_close(2.0, frustum.far_height(), 0.0001);
         assert_close(9.0, frustum.depth(), 0.0001);
+    }
+
+    void test_aspect_ratio() {
+        Frustum frustum;
+
+        assert_true(!frustum.initialized());
+
+        //Create an orthographic projection, and a modelview idactor matrix
+        Mat4 projection = Mat4::as_orthographic(-1.0, 1.0, -1.0, 1.0, 1.0, 10.0);
+        Mat4 modelview;
+
+        //Create the modelview projection matrix
+        Mat4 modelview_projection = projection * modelview;
+
+        //Build the frustum from the modelview projection matrix
+        frustum.build(&modelview_projection);
+        assert_true(frustum.initialized());
+
+        assert_close(frustum.aspect_ratio(), 1.0, 0.0001);
+    }
+
+    void test_field_of_view() {
+        Frustum frustum;
+
+        assert_true(!frustum.initialized());
+
+        //Create an orthographic projection, and a modelview idactor matrix
+        Mat4 projection = Mat4::as_projection(Degrees(45.0), 16.0 / 9.0, 1.0, 100.0);
+        Mat4 modelview;
+
+        //Create the modelview projection matrix
+        Mat4 modelview_projection = projection * modelview;
+
+        //Build the frustum from the modelview projection matrix
+        frustum.build(&modelview_projection);
+        assert_true(frustum.initialized());
+
+        assert_close(frustum.field_of_view().value, 45.0, 0.0001);
+    }
+
+    void test_depth() {
+        Frustum frustum;
+
+        assert_true(!frustum.initialized());
+
+        //Create an orthographic projection, and a modelview idactor matrix
+        Mat4 projection = Mat4::as_projection(Degrees(45.0), 16.0 / 9.0, 1.0, 100.0);
+        Mat4 modelview;
+
+        //Create the modelview projection matrix
+        Mat4 modelview_projection = projection * modelview;
+
+        //Build the frustum from the modelview projection matrix
+        frustum.build(&modelview_projection);
+        assert_true(frustum.initialized());
+
+        assert_close(frustum.depth(), 99.0, 0.001);
     }
 };
 
