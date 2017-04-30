@@ -17,4 +17,5 @@ RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos && make
 RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/libGL && make install clean
 RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/libjpeg && make install clean
 RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/libpng && make install clean
+RUN dnf -y install cmake
 

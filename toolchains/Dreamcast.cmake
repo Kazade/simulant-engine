@@ -1,9 +1,33 @@
-SET(CMAKE_SYSTEM_NAME KOS)
+SET(CMAKE_SYSTEM_NAME Dreamcast)
+SET(CMAKE_SYSTEM_VERSION 1)
 
-SET(CMAKE_C_COMPILER $ENV{KOS_BASE}/utils/gnu_wrappers/kos-cc)
-SET(CMAKE_CXX_COMPILER $ENV{KOS_BASE}/utils/gnu_wrappers/kos-c++)
-SET(CMAKE_FIND_ROOT_PATH $ENV{KOS_BASE})
+set(CMAKE_CROSSCOMPILING TRUE)
 
-SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+
+if ("${CMAKE_C_COMPILER}" STREQUAL "")
+    set(CMAKE_C_COMPILER "kos-cc")
+endif()
+
+if ("${CMAKE_CXX_COMPILER}" STREQUAL "")
+    set(CMAKE_CXX_COMPILER "kos-c++")
+endif()
+
+if ("${CMAKE_AR}" STREQUAL "")
+    set(CMAKE_AR "kos-ar")
+endif()
+
+if ("${CMAKE_RANLIB}" STREQUAL "")
+    set(CMAKE_RANLIB "kos-ranlib")
+endif()
+
+
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+
+set(CMAKE_SYSTEM_INCLUDE_PATH "$ENV{KOS_BASE}/include")
+
+SET(CMAKE_EXECUTABLE_SUFFIX ".elf")
+SET(CMAKE_EXECUTABLE_SUFFIX_CXX ".elf")
+
+add_definitions("-DDREAMCAST")
+add_definitions("-D_arch_dreamcast")
+add_definitions("-D_arch_sub_pristine")
