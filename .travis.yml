@@ -61,8 +61,8 @@ before_install:
 
 install:
  - mkdir build && cd build
- - if [[ "$DREAMCAST" == "false" ]]; cmake -DSIMULANT_BUILD_SAMPLES=OFF ..; fi
- - if [[ "$DREAMCAST" == "false" ]]; make; fi
+ - if [[ "$DREAMCAST" == "false" ]]; then cmake -DSIMULANT_BUILD_SAMPLES=OFF ..; fi
+ - if [[ "$DREAMCAST" == "false" ]]; then make; fi
 
 before_script:
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export DISPLAY=:99; fi
