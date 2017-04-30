@@ -11,8 +11,9 @@ git:
 env:
  global:
   - AUDIODEV=null
- - DREAMCAST=false
- - DREAMCAST=true
+ matrix:
+  - DREAMCAST=false
+  - DREAMCAST=true
 
 compiler:
  - gcc
