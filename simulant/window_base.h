@@ -113,8 +113,6 @@ typedef sig::signal<void (double)> UpdateSignal;
 typedef sig::signal<void (double)> LateUpdateSignal;
 
 typedef sig::signal<void ()> ShutdownSignal;
-typedef sig::signal<void (SDL_Scancode)> KeyUpSignal;
-typedef sig::signal<void (SDL_Scancode)> KeyDownSignal;
 
 class WindowBase :
     public Source,
@@ -152,9 +150,6 @@ public:
     
     void register_loader(LoaderTypePtr loader_type);
 
-    virtual KeyUpSignal& signal_key_up() = 0;
-    virtual KeyDownSignal& signal_key_down() = 0;
-    
     virtual void set_title(const std::string& title) = 0;
     virtual void cursor_position(int32_t& mouse_x, int32_t& mouse_y) = 0;
     virtual void show_cursor(bool cursor_shown=true) = 0;

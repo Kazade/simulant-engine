@@ -46,9 +46,6 @@ public:
     void show_cursor(bool value=true);
     void cursor_position(int32_t& mouse_x, int32_t& mouse_y);
     
-    sig::signal<void (SDL_Scancode)>& signal_key_down() { return signal_key_pressed_; }
-    sig::signal<void (SDL_Scancode)>& signal_key_up() { return signal_key_released_; }
-    
 private:
     SDL_Window* screen_;
     SDL_GLContext context_;
@@ -58,9 +55,6 @@ private:
 
     void check_events();
     void swap_buffers();
-
-    sig::signal<void (SDL_Scancode)> signal_key_pressed_;
-    sig::signal<void (SDL_Scancode)> signal_key_released_;
 
     friend int event_filter(void* user_data, SDL_Event* event);
 
