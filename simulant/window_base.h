@@ -19,8 +19,6 @@
 #ifndef SIMULANT_WINDOW_BASE_H
 #define SIMULANT_WINDOW_BASE_H
 
-#include <SDL.h>
-
 #include <memory>
 
 #include "deps/kazlog/kazlog.h"

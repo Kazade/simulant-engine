@@ -24,7 +24,6 @@
 #include <list>
 #include <thread>
 #include <future>
-#include <SDL.h>
 
 #include "utils/deprecated.h"
 #include "types.h"

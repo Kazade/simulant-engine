@@ -657,3 +657,4 @@ simulant/utils/mesh/triangulate.cpp
 simulant/controllers/physics/collision_listener.h
 tests/test_skybox.h
 toolchains/Dreamcast.cmake
+simulant/kos_window.h
