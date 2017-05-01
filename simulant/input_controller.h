@@ -23,7 +23,6 @@
 #include <vector>
 #include <map>
 #include <functional>
-#include <SDL.h>
 #include <set>
 #include <cassert>
 
