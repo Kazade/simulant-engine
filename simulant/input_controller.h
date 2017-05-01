@@ -27,6 +27,7 @@
 #include <set>
 #include <cassert>
 
+#include "keycodes.h"
 #include "deps/kazsignal/kazsignal.h"
 #include "generic/managed.h"
 #include "generic/identifiable.h"
@@ -71,11 +72,10 @@ private:
     std::weak_ptr<Device> device_;
 };
 
-typedef std::function<bool (SDL_Keysym)> GlobalKeyCallback;
-typedef std::function<void (SDL_Keysym)> KeyCallback;
-typedef std::function<void (SDL_Keysym, double)> KeyDownCallback;
-typedef std::function<bool (SDL_Keysym, double)> GlobalKeyDownCallback;
-typedef std::function<void (SDL_TextInputEvent)> TextInputCallback;
+typedef std::function<bool (KeyboardCode)> GlobalKeyCallback;
+typedef std::function<void (KeyboardCode)> KeyCallback;
+typedef std::function<void (KeyboardCode, double)> KeyDownCallback;
+typedef std::function<bool (KeyboardCode, double)> GlobalKeyDownCallback;
 
 class Keyboard :
     public Device,
@@ -84,15 +84,13 @@ class Keyboard :
 public:
     Keyboard();
     InputConnection key_pressed_connect(GlobalKeyCallback callback);
-    InputConnection key_pressed_connect(SDL_Scancode code, KeyCallback callback);
+    InputConnection key_pressed_connect(KeyboardCode code, KeyCallback callback);
     InputConnection key_while_pressed_connect(GlobalKeyDownCallback callback);
-    InputConnection key_while_pressed_connect(SDL_Scancode code, KeyDownCallback callback);
+    InputConnection key_while_pressed_connect(KeyboardCode code, KeyDownCallback callback);
     InputConnection key_released_connect(GlobalKeyCallback callback);
-    InputConnection key_released_connect(SDL_Scancode code, KeyCallback callback);
+    InputConnection key_released_connect(KeyboardCode code, KeyCallback callback);
 
-    InputConnection text_input_connect(TextInputCallback callback);
-
-    bool key_state(SDL_Scancode code) {
+    bool key_state(KeyboardCode code) {
         auto it = state_.find(code);
         if(it == state_.end()) {
             return false;
@@ -105,25 +103,21 @@ private:
     typedef std::pair<InputConnection, KeyCallback> KeySignalEntry;
     typedef std::pair<InputConnection, KeyDownCallback> KeyDownSignalEntry;
 
-    void _handle_keydown_event(SDL_Keysym key);
-    void _handle_keyup_event(SDL_Keysym key);
-    void _handle_text_input_event(SDL_TextInputEvent key);
+    void _handle_keydown_event(KeyboardCode key);
+    void _handle_keyup_event(KeyboardCode key);
 
     void _update(float dt);
     void _disconnect(const InputConnection &connection);
 
-    std::map<SDL_Scancode, bool> state_;
-    std::map<SDL_Scancode, SDL_Keysym> keys_down_;
+    std::map<KeyboardCode, bool> state_;
 
     std::map<InputConnection, GlobalKeyCallback> global_key_press_signals_;
-    std::map<InputConnection, GlobalKeyCallback> global_key_release_signals_;
-    std::map<InputConnection, TextInputCallback> text_input_signals_;
+    std::map<InputConnection, GlobalKeyCallback> global_key_release_signals_;   
     std::map<InputConnection, GlobalKeyDownCallback> global_while_key_pressed_signals_;
 
-    std::map<SDL_Scancode, std::map<InputConnection, KeyCallback> > key_press_signals_;
-    std::map<SDL_Scancode, std::map<InputConnection, KeyDownCallback> > key_while_down_signals_;
-    std::map<SDL_Scancode, std::map<InputConnection, KeyCallback> > key_release_signals_;
-
+    std::map<KeyboardCode, std::map<InputConnection, KeyCallback> > key_press_signals_;
+    std::map<KeyboardCode, std::map<InputConnection, KeyDownCallback> > key_while_down_signals_;
+    std::map<KeyboardCode, std::map<InputConnection, KeyCallback> > key_release_signals_;
 
     friend class InputController;
 };

@@ -25,6 +25,7 @@
 #include <thread>
 #include <future>
 
+#include "keycodes.h"
 #include "utils/deprecated.h"
 #include "types.h"
 #include "utils/unicode.h"
@@ -108,9 +109,9 @@ private:
     virtual void do_fixed_update(float dt) {}
     virtual void do_cleanup() {}
 
-    virtual bool while_key_pressed(SDL_Keysym key, double) { return false; }
-    virtual bool on_key_press(SDL_Keysym key) { return false; }
-    virtual bool on_key_release(SDL_Keysym key) { return false; }
+    virtual bool while_key_pressed(KeyboardCode key, double) { return false; }
+    virtual bool on_key_press(KeyboardCode key) { return false; }
+    virtual bool on_key_release(KeyboardCode key) { return false; }
 
     generic::DataCarrier data_carrier_;
 

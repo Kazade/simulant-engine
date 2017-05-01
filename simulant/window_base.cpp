@@ -214,7 +214,7 @@ bool WindowBase::_init() {
         idle->add_once([=]() {
             //Bind the stop_running method to the ESCAPE key
             input_controller().keyboard().key_pressed_connect(
-                SDL_SCANCODE_ESCAPE, bind(&WindowBase::stop_running, this)
+                smlt::KEYBOARD_CODE_ESCAPE, bind(&WindowBase::stop_running, this)
             );
         });
 
@@ -227,7 +227,7 @@ bool WindowBase::_init() {
 void WindowBase::register_panel(uint8_t function_key, std::shared_ptr<Panel> panel) {
     PanelEntry entry;
     entry.panel = panel;
-    entry.keyboard_connection = input_controller_->keyboard().key_pressed_connect((SDL_Scancode) (int(SDL_SCANCODE_F1) + (function_key - 1)), [panel](SDL_Keysym sym) {
+    entry.keyboard_connection = input_controller_->keyboard().key_pressed_connect((KeyboardCode) (int(KEYBOARD_CODE_F1) + (function_key - 1)), [panel](KeyboardCode sym) {
         if(panel->is_active()) {
             panel->deactivate();
         } else {

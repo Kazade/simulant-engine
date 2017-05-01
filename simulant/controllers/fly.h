@@ -47,19 +47,19 @@ public:
             throw std::logic_error("Tried to attach FlyController to something which wasn't an object");
         }
 
-        connections_.push_back(window->keyboard->key_while_pressed_connect(SDL_SCANCODE_W, [=](SDL_Keysym key, float dt) {
+        connections_.push_back(window->keyboard->key_while_pressed_connect(KEYBOARD_CODE_W, [=](KeyboardCode key, float dt) {
             moving_forward_ = true;
         }));
 
-        connections_.push_back(window->keyboard->key_while_pressed_connect(SDL_SCANCODE_S, [=](SDL_Keysym key, float dt) {
+        connections_.push_back(window->keyboard->key_while_pressed_connect(KEYBOARD_CODE_S, [=](KeyboardCode key, float dt) {
             moving_backward_ = true;
         }));
 
-        connections_.push_back(window->keyboard->key_while_pressed_connect(SDL_SCANCODE_A, [=](SDL_Keysym key, float dt) {
+        connections_.push_back(window->keyboard->key_while_pressed_connect(KEYBOARD_CODE_A, [=](KeyboardCode key, float dt) {
             rotating_left_ = true;
         }));
 
-        connections_.push_back(window->keyboard->key_while_pressed_connect(SDL_SCANCODE_D, [=](SDL_Keysym key, float dt) {
+        connections_.push_back(window->keyboard->key_while_pressed_connect(KEYBOARD_CODE_D, [=](KeyboardCode key, float dt) {
             rotating_right_ = true;
         }));
 

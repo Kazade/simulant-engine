@@ -55,7 +55,7 @@ InputConnection Keyboard::key_pressed_connect(GlobalKeyCallback callback) {
     return c;
 }
 
-InputConnection Keyboard::key_pressed_connect(SDL_Scancode code, KeyCallback callback) {
+InputConnection Keyboard::key_pressed_connect(KeyboardCode code, KeyCallback callback) {
     InputConnection c = new_input_connection();    
     key_press_signals_[code][c] = callback;
     return c;
@@ -72,7 +72,7 @@ InputConnection Keyboard::key_while_pressed_connect(GlobalKeyDownCallback callba
     return c;
 }
 
-InputConnection Keyboard::key_while_pressed_connect(SDL_Scancode code, KeyDownCallback callback) {
+InputConnection Keyboard::key_while_pressed_connect(KeyboardCode code, KeyDownCallback callback) {
     InputConnection c = new_input_connection();
     key_while_down_signals_[code][c] = callback;
     return c;
@@ -84,15 +84,9 @@ InputConnection Keyboard::key_released_connect(GlobalKeyCallback callback) {
     return c;
 }
 
-InputConnection Keyboard::key_released_connect(SDL_Scancode code, KeyCallback callback) {
+InputConnection Keyboard::key_released_connect(KeyboardCode code, KeyCallback callback) {
     InputConnection c = new_input_connection();
     key_release_signals_[code][c] = callback;
-    return c;
-}
-
-InputConnection Keyboard::text_input_connect(TextInputCallback callback) {
-    InputConnection c = new_input_connection();
-    text_input_signals_[c] = callback;
     return c;
 }
 
@@ -100,7 +94,7 @@ Keyboard::Keyboard() {
 
 }
 
-void Keyboard::_handle_keydown_event(SDL_Keysym key) {
+void Keyboard::_handle_keydown_event(KeyboardCode key) {
     bool propagation_stopped = false;
 
     //First trigger all global handlers
@@ -113,30 +107,19 @@ void Keyboard::_handle_keydown_event(SDL_Keysym key) {
     //If a global handler returned true, we don't trigger any more
     //signals
     if(!propagation_stopped) {
-        if(key_press_signals_.count(key.scancode)) {
-            for(KeySignalEntry entry: key_press_signals_[key.scancode]) {
+        if(key_press_signals_.count(key)) {
+            for(KeySignalEntry entry: key_press_signals_[key]) {
                 entry.second(key);
             }
         }
 
         //This is inside the IF because, otherwise while_key_pressed events will
         //trigger and we don't want that if the key down was handled... feels dirty
-        state_[key.scancode] = true;
-        keys_down_[key.scancode] = key;
+        state_[key] = true;
     }
 }
 
-bool modifier_is_set(uint32_t state, SDL_Keymod modifier) {
-    return (state & modifier) == modifier;
-}
-
-void Keyboard::_handle_text_input_event(SDL_TextInputEvent key) {
-    for(auto entry: text_input_signals_) {
-        entry.second(key);
-    }
-}
-
-void Keyboard::_handle_keyup_event(SDL_Keysym key) {
+void Keyboard::_handle_keyup_event(KeyboardCode key) {
     bool propagation_stopped = false;
 
     //First trigger all global handlers
@@ -147,28 +130,27 @@ void Keyboard::_handle_keyup_event(SDL_Keysym key) {
     }
 
     if(!propagation_stopped) {
-        if(key_release_signals_.count(key.scancode)) {
-            for(KeySignalEntry entry: key_release_signals_[key.scancode]) {
+        if(key_release_signals_.count(key)) {
+            for(KeySignalEntry entry: key_release_signals_[key]) {
                 entry.second(key);
             }
         }
-        state_[key.scancode] = false;
-        keys_down_.erase(key.scancode);
+        state_[key] = false;
     }
 
 }
 
 void Keyboard::_update(float dt) {
-    for(auto keysym: keys_down_) {
+    for(auto keysym: state_) {
         for(auto conn: global_while_key_pressed_signals_) {
-            conn.second(keysym.second, dt);
+            conn.second(keysym.first, dt);
         }
     }
 
     for(auto p: key_while_down_signals_) {
         if(key_state(p.first)) {
             for(std::pair<InputConnection, KeyDownCallback> p2: p.second) {
-                p2.second(keys_down_[p.first], dt);
+                p2.second(p.first, dt);
             }
         }
     }
@@ -193,7 +175,6 @@ void Keyboard::_disconnect(const InputConnection &connection) {
         }
     }
 
-    text_input_signals_.erase(connection);
     global_key_press_signals_.erase(connection);
 }
 
@@ -388,16 +369,13 @@ JoypadAxis SDL_axis_to_simulant_axis(Uint8 axis) {
 void InputController::handle_event(SDL_Event &event) {
     switch(event.type) {
         case SDL_KEYDOWN:
-            keyboard()._handle_keydown_event(event.key.keysym);
+            keyboard()._handle_keydown_event((KeyboardCode) event.key.keysym.scancode); //Abuses the fact that the values are the same for KeyboardCode and SDL_Scancode
         break;
         case SDL_KEYUP:
-            keyboard()._handle_keyup_event(event.key.keysym);
+            keyboard()._handle_keyup_event((KeyboardCode) event.key.keysym.scancode);
         break;
         case SDL_MOUSEMOTION:
             mouse()._handle_motion_event(event.motion.x, event.motion.y, event.motion.xrel, event.motion.yrel);
-        break;
-        case SDL_TEXTINPUT:
-            keyboard()._handle_text_input_event(event.text);
         break;
         case SDL_JOYAXISMOTION:
             joypad(event.jaxis.which)._handle_axis_changed_event(
