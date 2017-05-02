@@ -22,13 +22,7 @@
 #include <vector>
 #include <list>
 
-#ifdef __APPLE__
-#include <OpenAL/al.h>
-#include <OpenAL/alc.h>
-#else
-#include <AL/al.h>
-#include <AL/alc.h>
-#endif
+#include "sound_drivers/sound_driver.h"
 
 #include "generic/managed.h"
 #include "generic/identifiable.h"
@@ -53,16 +47,13 @@ class Sound :
     public std::enable_shared_from_this<Sound> {
 
 public:
-    static void init_openal();
-    static void shutdown_openal();
-
-    Sound(SoundID id, ResourceManager* resource_manager);
+    Sound(SoundID id, ResourceManager* resource_manager, SoundDriver* sound_driver);
 
     uint32_t sample_rate() const { return sample_rate_; }
     void set_sample_rate(uint32_t rate) { sample_rate_ = rate; }
 
-    ALenum format() { return format_; }
-    void set_format(ALenum format) { format_ = format; }
+    AudioDataFormat format() { return format_; }
+    void set_format(AudioDataFormat format) { format_ = format; }
 
     std::size_t buffer_size() const { return buffer_size_; }
     void set_buffer_size(std::size_t size) { buffer_size_ = size; }
@@ -75,14 +66,15 @@ public:
 
     void set_source_init_function(std::function<void (SourceInstance&)> func) { init_source_ = func; }
 
-    static bool is_disabled();
+    SoundDriver* _driver() const { return driver_; }
 private:
     std::function<void (SourceInstance&)> init_source_;
 
+    SoundDriver* driver_ = nullptr;
     std::vector<uint8_t> sound_data_;
 
     uint32_t sample_rate_ = 0;
-    ALenum format_;
+    AudioDataFormat format_;
     uint8_t channels_ = 0;
     std::size_t buffer_size_ = 0;
 
@@ -90,7 +82,7 @@ private:
     friend class SourceInstance;
 };
 
-typedef std::function<int32_t (ALuint)> StreamFunc;
+typedef std::function<int32_t (AudioBufferID)> StreamFunc;
 
 class Source;
 
@@ -100,8 +92,8 @@ class SourceInstance:
 private:
     Source& parent_;
 
-    ALuint source_;
-    ALuint buffers_[2];
+    AudioSourceID source_;
+    std::vector<AudioBufferID> buffers_;
     SoundID sound_;
     StreamFunc stream_func_;
 
@@ -124,7 +116,7 @@ public:
 class Source {
 public:
     Source(WindowBase* window);
-    Source(Stage* stage);
+    Source(Stage* stage, SoundDriver *driver);
     virtual ~Source();
 
     void play_sound(SoundID sound, bool loop=false);
@@ -135,8 +127,11 @@ public:
     sig::signal<void ()>& signal_stream_finished() { return signal_stream_finished_; }
 
 private:
-    Stage* stage_;
-    WindowBase* window_;
+    SoundDriver* _sound_driver() const;
+
+    Stage* stage_ = nullptr;
+    WindowBase* window_ = nullptr;
+    SoundDriver* driver_ = nullptr;
 
     std::list<SourceInstance::ptr> instances_;
     sig::signal<void ()> signal_stream_finished_;

@@ -22,10 +22,10 @@
 
 namespace smlt {
 
-Geom::Geom(GeomID id, Stage* stage, MeshID mesh, const Vec3 &position, const Quaternion rotation):
+Geom::Geom(GeomID id, Stage* stage, SoundDriver* sound_driver, MeshID mesh, const Vec3 &position, const Quaternion rotation):
     StageNode(stage),
     generic::Identifiable<GeomID>(id),
-    Source(stage),
+    Source(stage, sound_driver),
     render_priority_(RENDER_PRIORITY_MAIN) {
 
     set_parent(stage);

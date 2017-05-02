@@ -97,7 +97,7 @@ void Stage::on_subactor_material_changed(
 ActorID Stage::new_actor(RenderableCullingMode mode) {
     using namespace std::placeholders;
 
-    ActorID result = ActorManager::make(this);
+    ActorID result = ActorManager::make(this, window->_sound_driver());
     actor(result)->set_renderable_culling_mode(mode);
     actor(result)->set_parent(this);
     actor(result)->signal_subactor_material_changed().connect(
@@ -112,7 +112,7 @@ ActorID Stage::new_actor(RenderableCullingMode mode) {
 ActorID Stage::new_actor_with_mesh(MeshID mid, RenderableCullingMode mode) {
     using namespace std::placeholders;
 
-    ActorID result = ActorManager::make(this);
+    ActorID result = ActorManager::make(this, window->_sound_driver());
     actor(result)->set_renderable_culling_mode(mode);
     actor(result)->set_parent(this);
     actor(result)->signal_subactor_material_changed().connect(
@@ -168,7 +168,7 @@ void Stage::delete_actor(ActorID e) {
 //=============== GEOMS =====================
 
 GeomID Stage::new_geom_with_mesh(MeshID mid) {
-    auto gid = geom_manager_->make(this, mid);
+    auto gid = geom_manager_->make(this, window->_sound_driver(), mid);
     geom(gid)->set_parent(this);
 
     signal_geom_created_(gid);
@@ -181,7 +181,7 @@ GeomPtr Stage::geom(const GeomID gid) const {
 }
 
 GeomID Stage::new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, const Quaternion& rotation) {
-    auto gid = geom_manager_->make(this, mid, position, rotation);
+    auto gid = geom_manager_->make(this, window->_sound_driver(), mid, position, rotation);
     geom(gid)->set_parent(this);
 
     signal_geom_created_(gid);
@@ -206,7 +206,7 @@ uint32_t Stage::geom_count() const {
 //=============== PARTICLES =================
 
 ParticleSystemID Stage::new_particle_system() {
-    ParticleSystemID new_id = ParticleSystemManager::make(this);
+    ParticleSystemID new_id = ParticleSystemManager::make(this, window->_sound_driver());
 
     signal_particle_system_created_(new_id);
     return new_id;
@@ -252,7 +252,7 @@ void Stage::delete_particle_system(ParticleSystemID pid) {
 //=============== SPRITES ===================
 
 SpriteID Stage::new_sprite() {
-    SpriteID s = SpriteManager::make(this);
+    SpriteID s = SpriteManager::make(this, window->_sound_driver());
     sprite(s)->set_parent(this);
     signal_sprite_created_(s);
     return s;

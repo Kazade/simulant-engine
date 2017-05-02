@@ -658,3 +658,7 @@ simulant/controllers/physics/collision_listener.h
 tests/test_skybox.h
 toolchains/Dreamcast.cmake
 simulant/kos_window.h
+simulant/sound_drivers/sound_driver.h
+simulant/sound_drivers/openal_sound_driver.h
+simulant/sound_drivers/kos_sound_driver.h
+simulant/sound_drivers/openal_sound_driver.cpp

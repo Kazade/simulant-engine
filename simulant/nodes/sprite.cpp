@@ -27,10 +27,10 @@
 
 using namespace smlt;
 
-Sprite::Sprite(SpriteID id, Stage *stage):
+Sprite::Sprite(SpriteID id, Stage *stage, SoundDriver* sound_driver):
     StageNode(stage),
     generic::Identifiable<SpriteID>(id),
-    Source(stage) {
+    Source(stage, sound_driver) {
 
     sprite_sheet_padding_ = std::make_pair(0, 0);
 }

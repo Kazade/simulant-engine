@@ -352,6 +352,10 @@ private:
 
     Stats stats_;
 
+    std::shared_ptr<SoundDriver> sound_driver_;
+
+    virtual std::shared_ptr<SoundDriver> create_sound_driver() = 0;
+
 public:
 
     //Read only properties
@@ -372,6 +376,8 @@ public:
     };
 
     Property<WindowBase, Stats> stats = { this, &WindowBase::stats_ };
+
+    SoundDriver* _sound_driver() const { return sound_driver_.get(); }
 
     void run_update();
     void run_fixed_updates();

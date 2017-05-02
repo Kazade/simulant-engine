@@ -25,10 +25,10 @@
 
 namespace smlt {
 
-ParticleSystem::ParticleSystem(ParticleSystemID id, Stage* stage):
+ParticleSystem::ParticleSystem(ParticleSystemID id, Stage* stage, SoundDriver* sound_driver):
     StageNode(stage),
     generic::Identifiable<ParticleSystemID>(id),
-    Source(stage),
+    Source(stage, sound_driver),
     vertex_data_(new VertexData(VertexSpecification::POSITION_AND_DIFFUSE)),
     index_data_(new IndexData()) {
 

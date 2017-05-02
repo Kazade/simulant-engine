@@ -157,7 +157,7 @@ class ParticleSystem :
     public std::enable_shared_from_this<ParticleSystem> {
 
 public:
-    ParticleSystem(ParticleSystemID id, Stage* stage);
+    ParticleSystem(ParticleSystemID id, Stage* stage, SoundDriver *sound_driver);
     ~ParticleSystem();
 
     const AABB aabb() const override;

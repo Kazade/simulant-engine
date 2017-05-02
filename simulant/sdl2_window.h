@@ -26,6 +26,7 @@
 #include "sdl2_keycodes.h"
 #include "generic/managed.h"
 #include "window_base.h"
+#include "sound_drivers/openal_sound_driver.h"
 
 namespace smlt {
 
@@ -59,6 +60,10 @@ private:
     friend int event_filter(void* user_data, SDL_Event* event);
 
     void denormalize(float x, float y, int& xout, int& yout);
+
+    std::shared_ptr<SoundDriver> create_sound_driver() override {
+        return std::make_shared<OpenALSoundDriver>(this);
+    }
 };
 
 }

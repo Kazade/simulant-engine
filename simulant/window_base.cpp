@@ -155,7 +155,8 @@ void WindowBase::_cleanup() {
     delete_all_cameras();
     delete_all_stages();
 
-    Sound::shutdown_openal();
+    sound_driver_->shutdown();
+    sound_driver_.reset();
 
     delete resource_manager_;
     resource_manager_ = nullptr;
@@ -170,6 +171,10 @@ void WindowBase::each_stage(std::function<void (uint32_t, Stage*)> func) {
 
 bool WindowBase::_init() {
     GLThreadCheck::init();
+
+    // Initialize the sound driver (here rather than constructor as it relies on subclass type)
+    sound_driver_ = create_sound_driver();
+    sound_driver_->startup();
 
     bool result = create_window(width_, height_, bpp_, fullscreen_);
 
@@ -195,9 +200,6 @@ bool WindowBase::_init() {
         register_loader(std::make_shared<smlt::loaders::MD2LoaderType>());
         register_loader(std::make_shared<smlt::loaders::PCXLoaderType>());
         register_loader(std::make_shared<smlt::loaders::TTFLoaderType>());
-
-        L_INFO("Initializing OpenAL");
-        Sound::init_openal();
 
         L_INFO("Initializing the default resources");
         shared_assets->init();

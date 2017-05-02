@@ -47,8 +47,8 @@ class Actor :
     public std::enable_shared_from_this<Actor> {
 
 public:
-    Actor(ActorID id, Stage* stage);
-    Actor(ActorID id, Stage* stage, MeshID mesh);
+    Actor(ActorID id, Stage* stage, SoundDriver *sound_driver);
+    Actor(ActorID id, Stage* stage, SoundDriver *sound_driver, MeshID mesh);
     virtual ~Actor();
 
     const AABB aabb() const;
