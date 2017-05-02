@@ -18,4 +18,8 @@ RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/libGL && make insta
 RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/libjpeg && make install clean
 RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/libpng && make install clean
 RUN dnf -y install cmake
+RUN sed -i 's/-fno-rtti//' /opt/toolchains/dc/kos/environ_base.sh
+RUN sed -i 's/-fno-exceptions//' /opt/toolchains/dc/kos/environ_base.sh
+RUN sed -i 's/-fno-operator-names//' /opt/toolchains/dc/kos/environ_base.sh
+
 
