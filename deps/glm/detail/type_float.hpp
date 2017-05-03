@@ -59,7 +59,9 @@ namespace detail
 // check type sizes
 #ifndef GLM_STATIC_ASSERT_NULL
 	GLM_STATIC_ASSERT(sizeof(glm::float32) == 4, "float32 size isn't 4 bytes on this platform");
-	GLM_STATIC_ASSERT(sizeof(glm::float64) == 8, "float64 size isn't 8 bytes on this platform");
+
+//      ** THIS IS COMMENTED OUT BECAUSE THE DREAMCAST DOESNT HAVE 8 BYTE FLOATS **
+//	GLM_STATIC_ASSERT(sizeof(glm::float64) == 8, "float64 size isn't 8 bytes on this platform");
 #endif//GLM_STATIC_ASSERT_NULL
 
 	/// @}
