@@ -161,6 +161,8 @@ private:
     friend struct Mat3;
     friend struct Vec3;
 public:
+    using glm::mat4x4::value_type;
+
     Mat4() {
         glm::mat4x4();
     }
@@ -244,6 +246,8 @@ private:
     }
 
 public:
+    using glm::mat3x3::value_type;
+
     static Mat3 from_rotation_x(const Degrees& angle);
     static Mat3 from_rotation_y(const Degrees& angle);
     static Mat3 from_rotation_z(const Degrees& angle);
