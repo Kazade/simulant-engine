@@ -2,7 +2,7 @@
 #define KEYCODES_H
 
 #ifdef _arch_dreamcast
-
+    #include "kos_keycodes.h"
 #else
     #include "sdl2_keycodes.h"
 #endif

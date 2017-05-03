@@ -662,3 +662,4 @@ simulant/sound_drivers/sound_driver.h
 simulant/sound_drivers/openal_sound_driver.h
 simulant/sound_drivers/kos_sound_driver.h
 simulant/sound_drivers/openal_sound_driver.cpp
+simulant/kos_keycodes.h
