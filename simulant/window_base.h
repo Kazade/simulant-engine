@@ -371,13 +371,14 @@ public:
 
     Property<WindowBase, Keyboard> keyboard = {
         this, [](WindowBase* self) -> Keyboard* {
-            return &self->input_controller_->keyboard();
+            return &self->_input_controller()->keyboard();
         }
     };
 
     Property<WindowBase, Stats> stats = { this, &WindowBase::stats_ };
 
     SoundDriver* _sound_driver() const { return sound_driver_.get(); }
+    InputController* _input_controller() const { return input_controller_.get(); }
 
     void run_update();
     void run_fixed_updates();
