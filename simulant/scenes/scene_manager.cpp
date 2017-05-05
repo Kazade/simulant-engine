@@ -104,7 +104,7 @@ void SceneManager::load_scene_in_background(const std::string& route, bool redir
 #ifdef _arch_dreamcast
         stdX::async(std::bind(&SceneBase::load, scene))
 #else
-        std::async(std::bind(&SceneBase::load, scene))
+        std::async(std::launch::async, std::bind(&SceneBase::load, scene))
 #endif
     });
 
