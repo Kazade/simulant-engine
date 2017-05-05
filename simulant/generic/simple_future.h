@@ -5,6 +5,7 @@
 #include <mutex>
 #include "exception_ptr_lite.hpp"
 #include "static_if.h"
+#include "simple_this_thread.h"
 
 /*
  * The Dreamcast doesn't support <future> so this is a little wrapper around std::thread which simulates it really crappily
@@ -56,7 +57,7 @@ public:
         auto deadline = std::chrono::system_clock::now() + timeout_duration;
 
         while(deadline > std::chrono::system_clock::now()) {
-            std::this_thread::sleep_for(std::chrono::microseconds(0));
+            this_thread::sleep_for(std::chrono::microseconds(0));
             std::lock_guard<std::mutex> lock(state_->lock_);
             if(state_->status_ == future_status::ready) {
                 return future_status::ready;
@@ -69,7 +70,7 @@ public:
 
     void wait() {
         while(wait_for(std::chrono::microseconds(0)) != future_status::ready) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(0));
+            this_thread::sleep_for(std::chrono::milliseconds(0));
         }
     }
 
@@ -121,7 +122,7 @@ public:
         auto deadline = std::chrono::system_clock::now() + timeout_duration;
 
         while(deadline > std::chrono::system_clock::now()) {
-            std::this_thread::sleep_for(std::chrono::microseconds(0));
+            this_thread::sleep_for(std::chrono::microseconds(0));
             std::lock_guard<std::mutex> lock(state_->lock_);
             if(state_->status_ == future_status::ready) {
                 return future_status::ready;
@@ -134,7 +135,7 @@ public:
 
     void wait() {
         while(wait_for(std::chrono::microseconds(0)) != future_status::ready) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(0));
+            this_thread::sleep_for(std::chrono::milliseconds(0));
         }
     }
 
