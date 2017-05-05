@@ -663,3 +663,7 @@ simulant/sound_drivers/openal_sound_driver.h
 simulant/sound_drivers/kos_sound_driver.h
 simulant/sound_drivers/openal_sound_driver.cpp
 simulant/kos_keycodes.h
+simulant/generic/simple_future.h
+tests/test_simple_future.h
+simulant/generic/static_if.h
+simulant/generic/exception_ptr_lite.hpp
