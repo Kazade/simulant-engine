@@ -338,6 +338,7 @@ void VertexData::reset(VertexSpecification vertex_specification) {
 
     vertex_specification.recalc_stride();
     vertex_specification_ = vertex_specification;
+    stride_ = vertex_specification.stride();
     recalc_attributes();
 }
 
