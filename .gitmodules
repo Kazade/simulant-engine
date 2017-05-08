@@ -1,15 +1,15 @@
 [submodule "deps/kazsignal"]
 	path = deps/kazsignal
-	url = git@github.com:Kazade/kazsignal.git
+	url = https://github.com/Kazade/kazsignal.git
 [submodule "deps/kazlog"]
 	path = deps/kazlog
-	url = git@github.com:Kazade/kazlog.git
+	url = https://github.com/Kazade/kazlog.git
 [submodule "deps/jsonic"]
 	path = deps/jsonic
-	url = git@gitlab.com:Kazade/jsonic.git
+	url = https://Kazade@gitlab.com/Kazade/jsonic.git
 [submodule "deps/kfs"]
 	path = deps/kfs
-	url = git@github.com:Kazade/kfs.git
+	url = https://github.com/Kazade/kfs.git
 [submodule "deps/bounce"]
 	path = deps/bounce
-	url = git@github.com:Kazade/bounce.git
+	url = https://github.com/Kazade/bounce.git
