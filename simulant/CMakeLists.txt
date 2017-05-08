@@ -1,7 +1,7 @@
 FILE(GLOB_RECURSE SIMULANT_FILES FOLLOW_SYMLINKS *.cpp *.c *.cc)
 
 # Remove all the renderer files so we can add them specifically
-FILE(GLOB_RECURSE TO_REMOVE "renderers/gl1x/*" "renderers/gl2x/*" "deps/SOIL/original/*")
+FILE(GLOB_RECURSE TO_REMOVE "renderers/gl1x/*" "renderers/gl2x/*" "deps/SOIL/original/*" "sdl2_window.*" "kos_window.*")
 LIST(REMOVE_ITEM SIMULANT_FILES ${TO_REMOVE})
 
 # Add GL1 files if we're targetting that
@@ -18,6 +18,12 @@ IF(SIMULANT_GL_VERSION_2X)
 
     FILE(GLOB_RECURSE GL2_FILES renderers/gl2x/*.c*)
     SET(SIMULANT_FILES ${SIMULANT_FILES} ${GL2_FILES})
+ENDIF()
+
+IF(DREAMCAST_BUILD)
+    SET(SIMULANT_FILES ${SIMULANT_FILES} kos_window.cpp)
+ELSE()
+    SET(SIMULANT_FILES ${SIMULANT_FILES} sdl2_window.cpp)
 ENDIF()
 
 

@@ -20,7 +20,6 @@
 #include "stage.h"
 #include "debug.h"
 #include "nodes/actor.h"
-#include "sdl2_window.h"
 #include "utils/random.h"
 
 namespace smlt {
