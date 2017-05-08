@@ -243,6 +243,22 @@ private:
     friend class InputController;
 };
 
+
+struct GameControllerInfo {
+    uint32_t id;
+    std::string name;
+};
+
+struct KeyboardControllerInfo {
+    uint32_t id;
+};
+
+struct MouseControllerInfo {
+    uint32_t id;
+    uint32_t button_count;
+};
+
+
 class InputController:
     public Managed<InputController> {
 
@@ -256,7 +272,32 @@ public:
     uint8_t joypad_count() const;
 
     void update(float dt);
-    void handle_event(SDL_Event& event);
+
+    /* These methods should be called by BaseWindow subclasses when the OS sends the corresponding
+     * event. You should not call these unless you are implementing support for a new platform!
+     */
+
+    void _update_mouse_devices(const std::vector<MouseControllerInfo>& device_info) {
+        //FIXME: Need to implement support for multiple mouse devices
+    }
+
+    void _update_keyboard_devices(const std::vector<KeyboardControllerInfo>& device_info) {
+        //FIXME: Need to implement support for multiple keyboard devices
+    }
+
+    void _update_joypad_devices(const std::vector<GameControllerInfo>& device_info);
+
+    void _handle_key_down(uint32_t keyboard_id, KeyboardCode code);
+    void _handle_key_up(uint32_t keyboard_id, KeyboardCode code);
+
+    void _handle_mouse_motion(uint32_t mouse_id, uint32_t x, uint32_t y, uint32_t xrel, uint32_t yrel);
+    void _handle_mouse_down(uint32_t mouse_id, uint32_t button_id);
+    void _handle_mouse_up(uint32_t mouse_id, uint32_t button_id);
+
+    void _handle_joypad_axis_motion(uint32_t joypad_id, JoypadAxis axis, int32_t value);
+    void _handle_joypad_button_down(uint32_t joypad_id, uint32_t button_id);
+    void _handle_joypad_button_up(uint32_t joypad_id, uint32_t button_id);
+    void _handle_joypad_hat_motion(uint32_t joypad_id, uint32_t hat_id, HatPosition position);
 
 private:
     WindowBase& window_;
@@ -266,7 +307,6 @@ private:
 
     Joypad::ptr virtual_joypad_;
     std::vector<Joypad::ptr> joypads_;
-    std::vector<SDL_GameController*> sdl_joysticks_;
 
     void init_virtual_joypad();
     std::vector<sig::connection> virtual_joypad_connections_;

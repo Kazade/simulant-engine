@@ -103,6 +103,17 @@ int event_filter(void* user_data, SDL_Event* event) {
     return 1;
 }
 
+JoypadAxis SDL_axis_to_simulant_axis(Uint8 axis) {
+    switch(axis) {
+    case SDL_CONTROLLER_AXIS_LEFTX: return JOYPAD_AXIS_LEFT_X;
+    case SDL_CONTROLLER_AXIS_LEFTY: return JOYPAD_AXIS_LEFT_Y;
+    case SDL_CONTROLLER_AXIS_RIGHTX: return JOYPAD_AXIS_RIGHT_X;
+    case SDL_CONTROLLER_AXIS_RIGHTY: return JOYPAD_AXIS_RIGHT_Y;
+    default:
+        throw std::out_of_range("Invalid axis");
+    }
+}
+
 void SDL2Window::check_events() {
     SDL_Event event;
 
@@ -125,17 +136,38 @@ void SDL2Window::check_events() {
 
 
     while(SDL_PollEvent(&event)) {
-        input_controller().handle_event(event);
-
         switch(event.type) {
             case SDL_QUIT:
                 stop_running();
                 break;
+
+            case SDL_JOYAXISMOTION:
+                input_controller()._handle_joypad_axis_motion(
+                    event.jaxis.which, SDL_axis_to_simulant_axis(event.jaxis.axis), event.jaxis.value
+                );
+            break;
+            case SDL_JOYBUTTONDOWN:
+                input_controller()._handle_joypad_button_down(event.jbutton.which, event.jbutton.button);
+            break;
+            case SDL_JOYBUTTONUP:
+                input_controller()._handle_joypad_button_up(event.jbutton.which, event.jbutton.button);
+            break;
+            case SDL_JOYHATMOTION:
+                input_controller()._handle_joypad_hat_motion(event.jhat.which, event.jhat.hat, (HatPosition) event.jhat.value);
+            break;
             case SDL_KEYDOWN: {
+                input_controller()._handle_key_down(0, (KeyboardCode) event.key.keysym.scancode);
                 on_key_down((KeyboardCode) event.key.keysym.scancode, get_modifiers());
             } break;
             case SDL_KEYUP: {
+                input_controller()._handle_key_up(0, (KeyboardCode) event.key.keysym.scancode);
                 on_key_up((KeyboardCode) event.key.keysym.scancode, get_modifiers());
+            } break;
+            case SDL_MOUSEMOTION: {
+                input_controller()._handle_mouse_motion(
+                    event.motion.which,
+                    event.motion.x, event.motion.y, event.motion.xrel, event.motion.yrel
+                );
             } break;
             case SDL_MOUSEBUTTONDOWN: {
 
@@ -315,6 +347,32 @@ bool SDL2Window::create_window(int width, int height, int bpp, bool fullscreen) 
     }
 
     return true;
+}
+
+void SDL2Window::initialize_input_controller(InputController &controller) {
+    std::vector<GameControllerInfo> joypads;
+
+    MouseControllerInfo mouse;
+    mouse.id = 0;
+    mouse.button_count = 3;
+
+    KeyboardControllerInfo keyboard;
+
+    for(uint16_t i = 0; i < SDL_NumJoysticks(); i++) {
+        if(SDL_IsGameController(i)) {
+            SDL_GameController* controller = SDL_GameControllerOpen(i);
+
+            GameControllerInfo info;
+            info.id = i;
+            info.name = SDL_GameControllerName(controller);
+
+            joypads.push_back(info);
+        }
+    }
+
+    controller._update_keyboard_devices({keyboard});
+    controller._update_mouse_devices({mouse});
+    controller._update_joypad_devices(joypads);
 }
 
 void SDL2Window::destroy_window() {

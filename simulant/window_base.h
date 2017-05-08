@@ -299,6 +299,7 @@ private:
     Application* application_ = nullptr;
 
     void create_defaults();
+    virtual void initialize_input_controller(InputController& controller) = 0;
 
     bool can_attach_sound_by_id() const { return false; }
 

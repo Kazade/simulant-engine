@@ -331,69 +331,66 @@ InputController::InputController(WindowBase& window):
     keyboard_(new Keyboard()),
     mouse_(new Mouse()) {
 
-    //SDL_SetRelativeMouseMode(SDL_TRUE);
-    SDL_JoystickEventState(SDL_ENABLE);
-    for(uint8_t i = 0; i < SDL_NumJoysticks(); ++i) {
-        if(SDL_IsGameController(i)) {
-            joypads_.push_back(Joypad::create());
-            sdl_joysticks_.push_back(SDL_GameControllerOpen(i));
-        }
-    }
 }
 
 InputController::~InputController() {
-    //Disable joystick events
-    SDL_JoystickEventState(SDL_DISABLE);
 
-    //Make sure we close the joysticks   
-    if(SDL_WasInit(SDL_INIT_JOYSTICK)) {
-        for(auto joy: sdl_joysticks_) {
-            if(joy) {
-                SDL_GameControllerClose(joy);
-            }
-        }
-    }
 }
 
-JoypadAxis SDL_axis_to_simulant_axis(Uint8 axis) {
-    switch(axis) {
-    case SDL_CONTROLLER_AXIS_LEFTX: return JOYPAD_AXIS_LEFT_X;
-    case SDL_CONTROLLER_AXIS_LEFTY: return JOYPAD_AXIS_LEFT_Y;
-    case SDL_CONTROLLER_AXIS_RIGHTX: return JOYPAD_AXIS_RIGHT_X;
-    case SDL_CONTROLLER_AXIS_RIGHTY: return JOYPAD_AXIS_RIGHT_Y;
-    default:
-        throw std::out_of_range("Invalid axis");
+void InputController::_handle_key_down(uint32_t keyboard_id, KeyboardCode code) {
+    if(keyboard_id > 0) {
+        L_DEBUG("Multiple keyboards not yet supported");
     }
+
+    keyboard()._handle_keydown_event(code);
 }
 
-void InputController::handle_event(SDL_Event &event) {
-    switch(event.type) {
-        case SDL_KEYDOWN:
-            keyboard()._handle_keydown_event((KeyboardCode) event.key.keysym.scancode); //Abuses the fact that the values are the same for KeyboardCode and SDL_Scancode
-        break;
-        case SDL_KEYUP:
-            keyboard()._handle_keyup_event((KeyboardCode) event.key.keysym.scancode);
-        break;
-        case SDL_MOUSEMOTION:
-            mouse()._handle_motion_event(event.motion.x, event.motion.y, event.motion.xrel, event.motion.yrel);
-        break;
-        case SDL_JOYAXISMOTION:
-            joypad(event.jaxis.which)._handle_axis_changed_event(
-                SDL_axis_to_simulant_axis(event.jaxis.axis), event.jaxis.value
-            );
-        break;
-        case SDL_JOYBUTTONDOWN:
-            joypad(event.jbutton.which)._handle_button_down_event(event.jbutton.button);
-        break;
-        case SDL_JOYBUTTONUP:
-            joypad(event.jbutton.which)._handle_button_up_event(event.jbutton.button);
-        break;
-        case SDL_JOYHATMOTION:
-            joypad(event.jhat.which)._handle_hat_changed_event(event.jhat.hat, (HatPosition)event.jhat.value);
-        break;
-        default:
-            break;
+void InputController::_handle_key_up(uint32_t keyboard_id, KeyboardCode code) {
+    if(keyboard_id > 0) {
+        L_DEBUG("Multiple keyboards not yet supported");
     }
+
+    keyboard()._handle_keyup_event(code);
+}
+
+void InputController::_handle_mouse_motion(uint32_t mouse_id, uint32_t x, uint32_t y, uint32_t xrel, uint32_t yrel) {
+    if(mouse_id > 0) {
+        L_DEBUG("Multiple mice not yet supported");
+    }
+
+    mouse()._handle_motion_event(x, y, xrel, yrel);
+}
+
+void InputController::_handle_mouse_down(uint32_t mouse_id, uint32_t button_id) {
+    if(mouse_id > 0) {
+        L_DEBUG("Multiple mice not yet supported");
+    }
+
+    assert(0 && "Not implemented");
+}
+
+void InputController::_handle_mouse_up(uint32_t mouse_id, uint32_t button_id) {
+    if(mouse_id > 0) {
+        L_DEBUG("Multiple mice not yet supported");
+    }
+
+    assert(0 && "Not implemented");
+}
+
+void InputController::_handle_joypad_axis_motion(uint32_t joypad_id, JoypadAxis axis, int32_t value) {
+    joypad(joypad_id)._handle_axis_changed_event(axis, value);
+}
+
+void InputController::_handle_joypad_button_down(uint32_t joypad_id, uint32_t button_id) {
+    joypad(joypad_id)._handle_button_down_event(button_id);
+}
+
+void InputController::_handle_joypad_button_up(uint32_t joypad_id, uint32_t button_id) {
+    joypad(joypad_id)._handle_button_up_event(button_id);
+}
+
+void InputController::_handle_joypad_hat_motion(uint32_t joypad_id, uint32_t hat_id, HatPosition position) {
+    joypad(joypad_id)._handle_hat_changed_event(hat_id, position);
 }
 
 void InputController::update(float dt) {
@@ -406,6 +403,14 @@ void InputController::update(float dt) {
 
     if(virtual_joypad_) {
         virtual_joypad_->_update(dt);
+    }
+}
+
+void InputController::_update_joypad_devices(const std::vector<GameControllerInfo> &device_info) {
+    joypads_.clear();
+
+    while(device_info.size() > joypads_.size()) {
+        joypads_.push_back(Joypad::create());
     }
 }
 

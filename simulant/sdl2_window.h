@@ -64,6 +64,8 @@ private:
     std::shared_ptr<SoundDriver> create_sound_driver() override {
         return std::make_shared<OpenALSoundDriver>(this);
     }
+
+    void initialize_input_controller(InputController &controller);
 };
 
 }

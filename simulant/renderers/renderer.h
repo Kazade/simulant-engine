@@ -73,10 +73,11 @@ public:
     // Render support flags
     virtual bool supports_gpu_programs() const { return false; }
 
+    virtual HardwareBufferManager* _get_buffer_manager() const = 0;
+
 private:    
     WindowBase* window_ = nullptr;
 
-    virtual HardwareBufferManager* _get_buffer_manager() const = 0;
 };
 
 }

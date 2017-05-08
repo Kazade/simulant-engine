@@ -40,9 +40,9 @@ public:
         std::lock_guard<std::mutex> lock(state_->lock_);
         if(state_->exception_) {
             stdX::rethrow_exception(state_->exception_);
-        } else {
-            return state_->result_;
         }
+
+        return state_->result_;
     }
 
     template< class Rep, class Period >

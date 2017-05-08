@@ -25,6 +25,10 @@ public:
     void destroy_window() override;
     void check_events() override;
 
+    void initialize_input_controller(InputController &controller) override {
+
+    }
+
     std::shared_ptr<SoundDriver> create_sound_driver() override;
 };
 

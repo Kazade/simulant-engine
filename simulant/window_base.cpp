@@ -144,6 +144,9 @@ void WindowBase::create_defaults() {
 
     //This needs to happen after SDL or whatever is initialized
     input_controller_ = InputController::create(*this);
+
+    // Tell subclasses to initialize input devices
+    initialize_input_controller(*input_controller_);
 }
 
 void WindowBase::_cleanup() {
@@ -155,8 +158,10 @@ void WindowBase::_cleanup() {
     delete_all_cameras();
     delete_all_stages();
 
-    sound_driver_->shutdown();
-    sound_driver_.reset();
+    if(sound_driver_) {
+        sound_driver_->shutdown();
+        sound_driver_.reset();
+    }
 
     delete resource_manager_;
     resource_manager_ = nullptr;
