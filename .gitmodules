@@ -1,6 +1,3 @@
-[submodule "kglt/kazbase"]
-	path = kglt/kazbase
-	url = https://github.com/Kazade/kazbase.git
 [submodule "deps/kazsignal"]
 	path = deps/kazsignal
 	url = git@github.com:Kazade/kazsignal.git
@@ -9,7 +6,7 @@
 	url = git@github.com:Kazade/kazlog.git
 [submodule "deps/jsonic"]
 	path = deps/jsonic
-	url = https://gitlab.com/Kazade/jsonic.git
+	url = git@gitlab.com:Kazade/jsonic.git
 [submodule "deps/kfs"]
 	path = deps/kfs
 	url = git@github.com:Kazade/kfs.git
