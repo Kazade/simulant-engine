@@ -2,6 +2,8 @@
 
 #include <SDL2/SDL.h>
 
+namespace smlt {
+
 enum KeyboardCode {
     KEYBOARD_CODE_A = SDL_SCANCODE_A,
     KEYBOARD_CODE_B = SDL_SCANCODE_B,
@@ -245,3 +247,5 @@ enum KeyboardCode {
     KEYBOARD_CODE_APP2 = SDL_SCANCODE_APP2,
     MAX_KEYBOARD_CODES = 512
 };
+
+}

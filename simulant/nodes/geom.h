@@ -64,7 +64,7 @@ class Geom :
 public:
     typedef sig::signal<void (GeomID)> MeshChangedSignal;
 
-    Geom(GeomID id, Stage* stage, MeshID mesh, const Vec3& position=Vec3(), const Quaternion rotation=Quaternion());
+    Geom(GeomID id, Stage* stage, SoundDriver *sound_driver, MeshID mesh, const Vec3& position=Vec3(), const Quaternion rotation=Quaternion());
 
     MeshID mesh_id() const { return mesh_->id(); }
 

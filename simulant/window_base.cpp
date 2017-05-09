@@ -144,6 +144,9 @@ void WindowBase::create_defaults() {
 
     //This needs to happen after SDL or whatever is initialized
     input_controller_ = InputController::create(*this);
+
+    // Tell subclasses to initialize input devices
+    initialize_input_controller(*input_controller_);
 }
 
 void WindowBase::_cleanup() {
@@ -155,7 +158,10 @@ void WindowBase::_cleanup() {
     delete_all_cameras();
     delete_all_stages();
 
-    Sound::shutdown_openal();
+    if(sound_driver_) {
+        sound_driver_->shutdown();
+        sound_driver_.reset();
+    }
 
     delete resource_manager_;
     resource_manager_ = nullptr;
@@ -170,6 +176,10 @@ void WindowBase::each_stage(std::function<void (uint32_t, Stage*)> func) {
 
 bool WindowBase::_init() {
     GLThreadCheck::init();
+
+    // Initialize the sound driver (here rather than constructor as it relies on subclass type)
+    sound_driver_ = create_sound_driver();
+    sound_driver_->startup();
 
     bool result = create_window(width_, height_, bpp_, fullscreen_);
 
@@ -196,9 +206,6 @@ bool WindowBase::_init() {
         register_loader(std::make_shared<smlt::loaders::PCXLoaderType>());
         register_loader(std::make_shared<smlt::loaders::TTFLoaderType>());
 
-        L_INFO("Initializing OpenAL");
-        Sound::init_openal();
-
         L_INFO("Initializing the default resources");
         shared_assets->init();
 
@@ -214,7 +221,7 @@ bool WindowBase::_init() {
         idle->add_once([=]() {
             //Bind the stop_running method to the ESCAPE key
             input_controller().keyboard().key_pressed_connect(
-                SDL_SCANCODE_ESCAPE, bind(&WindowBase::stop_running, this)
+                smlt::KEYBOARD_CODE_ESCAPE, bind(&WindowBase::stop_running, this)
             );
         });
 
@@ -227,7 +234,7 @@ bool WindowBase::_init() {
 void WindowBase::register_panel(uint8_t function_key, std::shared_ptr<Panel> panel) {
     PanelEntry entry;
     entry.panel = panel;
-    entry.keyboard_connection = input_controller_->keyboard().key_pressed_connect((SDL_Scancode) (int(SDL_SCANCODE_F1) + (function_key - 1)), [panel](SDL_Keysym sym) {
+    entry.keyboard_connection = input_controller_->keyboard().key_pressed_connect((KeyboardCode) (int(KEYBOARD_CODE_F1) + (function_key - 1)), [panel](KeyboardCode sym) {
         if(panel->is_active()) {
             panel->deactivate();
         } else {

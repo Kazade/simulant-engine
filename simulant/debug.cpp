@@ -20,7 +20,6 @@
 #include "stage.h"
 #include "debug.h"
 #include "nodes/actor.h"
-#include "sdl2_window.h"
 #include "utils/random.h"
 
 namespace smlt {
@@ -75,11 +74,13 @@ bool Debug::init() {
 }
 
 void Debug::draw_line(const Vec3 &start, const Vec3 &end, const Colour &colour, double duration, bool depth_test) {
+    static int32_t line_counter = 0;
+
 
     auto mesh = stage_.assets->mesh(mesh_);
 
     DebugElement element;
-    element.submesh = mesh->new_submesh_with_material(std::to_string(random()), material_, MESH_ARRANGEMENT_LINE_STRIP, VERTEX_SHARING_MODE_INDEPENDENT);
+    element.submesh = mesh->new_submesh_with_material(std::to_string(++line_counter), material_, MESH_ARRANGEMENT_LINE_STRIP, VERTEX_SHARING_MODE_INDEPENDENT);
     element.colour = colour;
     element.duration = duration;
     element.depth_test = depth_test;

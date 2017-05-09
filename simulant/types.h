@@ -161,6 +161,12 @@ private:
     friend struct Mat3;
     friend struct Vec3;
 public:
+#ifndef __clang__
+#if (__GNUC__ == 4 && __GNUC_MINOR__ <= 7)
+    using glm::mat4x4::value_type;
+#endif
+#endif
+
     Mat4() {
         glm::mat4x4();
     }
@@ -244,6 +250,12 @@ private:
     }
 
 public:
+#ifndef __clang__
+#if (__GNUC__ == 4 && __GNUC_MINOR__ <= 7)
+    using glm::mat3x3::value_type;
+#endif
+#endif
+
     static Mat3 from_rotation_x(const Degrees& angle);
     static Mat3 from_rotation_y(const Degrees& angle);
     static Mat3 from_rotation_z(const Degrees& angle);

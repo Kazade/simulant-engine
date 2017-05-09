@@ -87,11 +87,7 @@ public:
 
     Property<Body, RigidBodySimulation> simulation = {
         this, [](Body* _this) -> RigidBodySimulation* {
-            if(auto ret = _this->simulation_.lock()) {
-                return ret.get();
-            } else {
-                return nullptr;
-            }
+            return _this->_simulation_ptr();
         }
     };
 
@@ -99,6 +95,14 @@ public:
     void unregister_collision_listener(CollisionListener* listener);
 
     Property<Body, StageNode> stage_node = { this, &Body::object_ };
+
+    RigidBodySimulation* _simulation_ptr() const {
+        if(auto ret = simulation_.lock()) {
+            return ret.get();
+        } else {
+            return nullptr;
+        }
+    }
 
 protected:
     friend class smlt::controllers::RigidBodySimulation;

@@ -35,7 +35,7 @@ public:
     );
 
     PipelineHelper(const PipelineHelper&) = default;
-    PipelineHelper& operator=(PipelineHelper& rhs) = default;
+    PipelineHelper& operator=(const PipelineHelper& rhs) = default;
 
     operator PipelineID() const {
         return pipeline_id_;

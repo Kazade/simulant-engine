@@ -27,17 +27,17 @@
 
 namespace smlt {
 
-Actor::Actor(ActorID id, Stage* stage):
+Actor::Actor(ActorID id, Stage* stage, SoundDriver* sound_driver):
     StageNode(stage),
     generic::Identifiable<ActorID>(id),
-    Source(stage) {
+    Source(stage, sound_driver) {
 
 }
 
-Actor::Actor(ActorID id, Stage* stage, MeshID mesh):
+Actor::Actor(ActorID id, Stage* stage, SoundDriver *sound_driver, MeshID mesh):
     StageNode(stage),
     generic::Identifiable<ActorID>(id),
-    Source(stage) {
+    Source(stage, sound_driver) {
 
     set_mesh(mesh);
 }

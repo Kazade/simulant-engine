@@ -22,48 +22,14 @@
 #include "window_base.h"
 #include "stage.h"
 #include "sound.h"
+#include "sound_drivers/sound_driver.h"
 
 namespace smlt {
 
-static ALCdevice* dev = nullptr;
-static ALCcontext* ctx = nullptr;
-static bool sound_disabled = false;
-
-
-bool Sound::is_disabled() {
-    return sound_disabled;
-}
-
-void Sound::init_openal() {
-    if(!dev) {
-        dev = alcOpenDevice(NULL);
-        if(!dev) {
-            // If we couldn't open the default device for some reason,
-            // disable all sound functions
-            L_ERROR("Unable to initialize sound device");
-            sound_disabled = true;
-            return;
-        }
-        ctx = alcCreateContext(dev, NULL);
-        alcMakeContextCurrent(ctx);
-    }
-}
-
-void Sound::shutdown_openal() {
-    if(ctx) {
-        alcDestroyContext(ctx);
-        ctx = nullptr;
-    }
-
-    if(dev) {
-        alcCloseDevice(dev);
-        dev = nullptr;
-    }
-}
-
-Sound::Sound(SoundID id, ResourceManager *resource_manager):
+Sound::Sound(SoundID id, ResourceManager *resource_manager, SoundDriver *sound_driver):
     generic::Identifiable<SoundID>(id),
-    Resource(resource_manager) {
+    Resource(resource_manager),
+    driver_(sound_driver) {
 
 
 }
@@ -76,48 +42,47 @@ SourceInstance::SourceInstance(Source &parent, SoundID sound, bool loop_stream):
     loop_stream_(loop_stream),
     is_dead_(false) {
 
-    ALCheck(alGenSources, 1, &source_);
-    ALCheck(alGenBuffers, 2, buffers_);
+
+    SoundDriver* driver = parent_._sound_driver();
+
+    source_ = driver->generate_sources(1).back();
+    buffers_ = driver->generate_buffers(2);
 }
 
 SourceInstance::~SourceInstance() {
-    ALCheck(alSourceStopv, 1, &source_); // Make sure we have stopped playing!
-    ALCheck(alDeleteSources, 1, &source_);
-    ALCheck(alDeleteBuffers, 2, buffers_);
+    SoundDriver* driver = parent_._sound_driver();
+
+    driver->stop_source(source_); // Make sure we have stopped playing!
+    driver->delete_sources({source_});
+    driver->delete_buffers(buffers_);
 }
 
 void SourceInstance::start() {
-    if(sound_disabled) {
-        return;
-    }
     //Fill up two buffers to begin with
     auto bs1 = stream_func_(buffers_[0]);
     auto bs2 = stream_func_(buffers_[1]);
 
     int to_queue = (bs1 && bs2) ? 2 : (bs1 || bs2)? 1 : 0;
 
-    ALCheck(alSourceQueueBuffers, source_, to_queue, buffers_);
-    ALCheck(alSourcePlay, source_);
+    SoundDriver* driver = parent_._sound_driver();
+
+    driver->queue_buffers_to_source(source_, to_queue, buffers_);
+    driver->play_source(source_);
 }
 
 bool SourceInstance::is_playing() const {
-    if(sound_disabled)  return false;
-
-    ALint val;
-    ALCheck(alGetSourcei, source_, AL_SOURCE_STATE, &val);
-    return val == AL_PLAYING;
+    SoundDriver* driver = parent_._sound_driver();
+    return driver->source_state(source_) == AUDIO_SOURCE_STATE_PLAYING;
 }
 
 void SourceInstance::update(float dt) {
-    if(sound_disabled) return;
+    SoundDriver* driver = parent_._sound_driver();
 
-    ALint processed = 0;
-
-    ALCheck(alGetSourcei, source_, AL_BUFFERS_PROCESSED, &processed);
+    int32_t processed = driver->source_buffers_processed_count(source_);
 
     while(processed--) {
-        ALuint buffer = 0;
-        ALCheck(alSourceUnqueueBuffers, source_, 1, &buffer);
+        AudioBufferID buffer = driver->unqueue_buffers_from_source(source_, 1).back();
+
         uint32_t bytes = stream_func_(buffer);
 
         if(!bytes) {
@@ -132,7 +97,7 @@ void SourceInstance::update(float dt) {
                 is_dead_ = true;
             }
         } else {
-            ALCheck(alSourceQueueBuffers, source_, 1, &buffer);
+            driver->queue_buffers_to_source(source_, 1, {buffer});
         }
     }
 }
@@ -143,9 +108,10 @@ Source::Source(WindowBase *window):
 
 }
 
-Source::Source(Stage *stage):
+Source::Source(Stage *stage, SoundDriver* driver):
     stage_(stage),
-    window_(nullptr) {
+    window_(nullptr),
+    driver_(driver) {
 
 
 }
@@ -155,10 +121,6 @@ Source::~Source() {
 }
 
 void Source::play_sound(SoundID sound, bool loop) {
-    if(sound_disabled) {
-    	return;
-    }
-
     if(!sound) {
         L_WARN("Tried to play an invalid sound");
         return;
@@ -181,10 +143,6 @@ void Source::play_sound(SoundID sound, bool loop) {
 }
 
 void Source::update_source(float dt) {
-    if(sound_disabled) {
-        return;
-    }
-
     for(auto instance: instances_) {
         instance->update(dt);
     }
@@ -198,6 +156,10 @@ void Source::update_source(float dt) {
         ),
         instances_.end()
     );
+}
+
+SoundDriver *Source::_sound_driver() const {
+    return (window_) ? window_->_sound_driver() : driver_;
 }
 
 int32_t Source::playing_sound_count() const {

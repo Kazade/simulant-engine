@@ -22,6 +22,7 @@
 #include "../mesh.h"
 #include "../resource_manager.h"
 #include "../shortcuts.h"
+#include "../resource_locator.h"
 
 namespace smlt {
 namespace loaders {

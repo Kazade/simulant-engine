@@ -127,7 +127,7 @@ public:
     const int32_t cursor_position() const { return cursor_position_; }
 
     inline uint32_t stride() const {
-        return specification().stride();
+        return stride_;
     }
 
 
@@ -157,12 +157,13 @@ public:
         vertex_count_ = size;
     }
 
-    VertexSpecification specification() const { return vertex_specification_; }
+    const VertexSpecification& specification() const { return vertex_specification_; }
 
 private:
     VertexSpecification vertex_specification_;
     std::vector<uint8_t> data_;
     uint32_t vertex_count_ = 0;
+    uint32_t stride_ = 0;
 
     int32_t cursor_position_ = 0;
 

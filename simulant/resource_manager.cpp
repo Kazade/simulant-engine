@@ -623,7 +623,7 @@ void ResourceManager::mark_texture_as_uncollected(TextureID t) {
 }
 
 SoundID ResourceManager::new_sound(GarbageCollectMethod garbage_collect) {
-    return SoundManager::make(garbage_collect, this);
+    return SoundManager::make(garbage_collect, this, window->_sound_driver());
 }
 
 SoundID ResourceManager::new_sound_from_file(const unicode& path, GarbageCollectMethod garbage_collect) {

@@ -101,7 +101,11 @@ void SceneManager::load_scene_in_background(const std::string& route, bool redir
     //Create a background task for loading the scene
     auto new_task = std::shared_ptr<BackgroundTask>(new BackgroundTask{
         route,
+#ifdef _arch_dreamcast
+        stdX::async(std::bind(&SceneBase::load, scene))
+#else
         std::async(std::launch::async, std::bind(&SceneBase::load, scene))
+#endif
     });
 
     // Add an idle task to check for when the background task completes

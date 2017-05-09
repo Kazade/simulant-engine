@@ -20,6 +20,7 @@
 #include <string>
 #include <sstream>
 #include <iomanip>
+#include <cstdlib>
 
 #include "colour.h"
 

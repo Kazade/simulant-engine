@@ -55,7 +55,7 @@ InputConnection Keyboard::key_pressed_connect(GlobalKeyCallback callback) {
     return c;
 }
 
-InputConnection Keyboard::key_pressed_connect(SDL_Scancode code, KeyCallback callback) {
+InputConnection Keyboard::key_pressed_connect(KeyboardCode code, KeyCallback callback) {
     InputConnection c = new_input_connection();    
     key_press_signals_[code][c] = callback;
     return c;
@@ -72,7 +72,7 @@ InputConnection Keyboard::key_while_pressed_connect(GlobalKeyDownCallback callba
     return c;
 }
 
-InputConnection Keyboard::key_while_pressed_connect(SDL_Scancode code, KeyDownCallback callback) {
+InputConnection Keyboard::key_while_pressed_connect(KeyboardCode code, KeyDownCallback callback) {
     InputConnection c = new_input_connection();
     key_while_down_signals_[code][c] = callback;
     return c;
@@ -84,15 +84,9 @@ InputConnection Keyboard::key_released_connect(GlobalKeyCallback callback) {
     return c;
 }
 
-InputConnection Keyboard::key_released_connect(SDL_Scancode code, KeyCallback callback) {
+InputConnection Keyboard::key_released_connect(KeyboardCode code, KeyCallback callback) {
     InputConnection c = new_input_connection();
     key_release_signals_[code][c] = callback;
-    return c;
-}
-
-InputConnection Keyboard::text_input_connect(TextInputCallback callback) {
-    InputConnection c = new_input_connection();
-    text_input_signals_[c] = callback;
     return c;
 }
 
@@ -100,7 +94,7 @@ Keyboard::Keyboard() {
 
 }
 
-void Keyboard::_handle_keydown_event(SDL_Keysym key) {
+void Keyboard::_handle_keydown_event(KeyboardCode key) {
     bool propagation_stopped = false;
 
     //First trigger all global handlers
@@ -113,30 +107,19 @@ void Keyboard::_handle_keydown_event(SDL_Keysym key) {
     //If a global handler returned true, we don't trigger any more
     //signals
     if(!propagation_stopped) {
-        if(key_press_signals_.count(key.scancode)) {
-            for(KeySignalEntry entry: key_press_signals_[key.scancode]) {
+        if(key_press_signals_.count(key)) {
+            for(KeySignalEntry entry: key_press_signals_[key]) {
                 entry.second(key);
             }
         }
 
         //This is inside the IF because, otherwise while_key_pressed events will
         //trigger and we don't want that if the key down was handled... feels dirty
-        state_[key.scancode] = true;
-        keys_down_[key.scancode] = key;
+        state_[key] = true;
     }
 }
 
-bool modifier_is_set(uint32_t state, SDL_Keymod modifier) {
-    return (state & modifier) == modifier;
-}
-
-void Keyboard::_handle_text_input_event(SDL_TextInputEvent key) {
-    for(auto entry: text_input_signals_) {
-        entry.second(key);
-    }
-}
-
-void Keyboard::_handle_keyup_event(SDL_Keysym key) {
+void Keyboard::_handle_keyup_event(KeyboardCode key) {
     bool propagation_stopped = false;
 
     //First trigger all global handlers
@@ -147,28 +130,27 @@ void Keyboard::_handle_keyup_event(SDL_Keysym key) {
     }
 
     if(!propagation_stopped) {
-        if(key_release_signals_.count(key.scancode)) {
-            for(KeySignalEntry entry: key_release_signals_[key.scancode]) {
+        if(key_release_signals_.count(key)) {
+            for(KeySignalEntry entry: key_release_signals_[key]) {
                 entry.second(key);
             }
         }
-        state_[key.scancode] = false;
-        keys_down_.erase(key.scancode);
+        state_[key] = false;
     }
 
 }
 
 void Keyboard::_update(float dt) {
-    for(auto keysym: keys_down_) {
+    for(auto keysym: state_) {
         for(auto conn: global_while_key_pressed_signals_) {
-            conn.second(keysym.second, dt);
+            conn.second(keysym.first, dt);
         }
     }
 
     for(auto p: key_while_down_signals_) {
         if(key_state(p.first)) {
             for(std::pair<InputConnection, KeyDownCallback> p2: p.second) {
-                p2.second(keys_down_[p.first], dt);
+                p2.second(p.first, dt);
             }
         }
     }
@@ -193,7 +175,6 @@ void Keyboard::_disconnect(const InputConnection &connection) {
         }
     }
 
-    text_input_signals_.erase(connection);
     global_key_press_signals_.erase(connection);
 }
 
@@ -350,72 +331,66 @@ InputController::InputController(WindowBase& window):
     keyboard_(new Keyboard()),
     mouse_(new Mouse()) {
 
-    //SDL_SetRelativeMouseMode(SDL_TRUE);
-    SDL_JoystickEventState(SDL_ENABLE);
-    for(uint8_t i = 0; i < SDL_NumJoysticks(); ++i) {
-        if(SDL_IsGameController(i)) {
-            joypads_.push_back(Joypad::create());
-            sdl_joysticks_.push_back(SDL_GameControllerOpen(i));
-        }
-    }
 }
 
 InputController::~InputController() {
-    //Disable joystick events
-    SDL_JoystickEventState(SDL_DISABLE);
 
-    //Make sure we close the joysticks   
-    if(SDL_WasInit(SDL_INIT_JOYSTICK)) {
-        for(auto joy: sdl_joysticks_) {
-            if(joy) {
-                SDL_GameControllerClose(joy);
-            }
-        }
-    }
 }
 
-JoypadAxis SDL_axis_to_simulant_axis(Uint8 axis) {
-    switch(axis) {
-    case SDL_CONTROLLER_AXIS_LEFTX: return JOYPAD_AXIS_LEFT_X;
-    case SDL_CONTROLLER_AXIS_LEFTY: return JOYPAD_AXIS_LEFT_Y;
-    case SDL_CONTROLLER_AXIS_RIGHTX: return JOYPAD_AXIS_RIGHT_X;
-    case SDL_CONTROLLER_AXIS_RIGHTY: return JOYPAD_AXIS_RIGHT_Y;
-    default:
-        throw std::out_of_range("Invalid axis");
+void InputController::_handle_key_down(uint32_t keyboard_id, KeyboardCode code) {
+    if(keyboard_id > 0) {
+        L_DEBUG("Multiple keyboards not yet supported");
     }
+
+    keyboard()._handle_keydown_event(code);
 }
 
-void InputController::handle_event(SDL_Event &event) {
-    switch(event.type) {
-        case SDL_KEYDOWN:
-            keyboard()._handle_keydown_event(event.key.keysym);
-        break;
-        case SDL_KEYUP:
-            keyboard()._handle_keyup_event(event.key.keysym);
-        break;
-        case SDL_MOUSEMOTION:
-            mouse()._handle_motion_event(event.motion.x, event.motion.y, event.motion.xrel, event.motion.yrel);
-        break;
-        case SDL_TEXTINPUT:
-            keyboard()._handle_text_input_event(event.text);
-        break;
-        case SDL_JOYAXISMOTION:
-            joypad(event.jaxis.which)._handle_axis_changed_event(
-                SDL_axis_to_simulant_axis(event.jaxis.axis), event.jaxis.value
-            );
-        break;
-        case SDL_JOYBUTTONDOWN:
-            joypad(event.jbutton.which)._handle_button_down_event(event.jbutton.button);
-        break;
-        case SDL_JOYBUTTONUP:
-            joypad(event.jbutton.which)._handle_button_up_event(event.jbutton.button);
-        break;
-        case SDL_JOYHATMOTION:
-            joypad(event.jhat.which)._handle_hat_changed_event(event.jhat.hat, (HatPosition)event.jhat.value);
-        break;
-        default:
-            break;
+void InputController::_handle_key_up(uint32_t keyboard_id, KeyboardCode code) {
+    if(keyboard_id > 0) {
+        L_DEBUG("Multiple keyboards not yet supported");
     }
+
+    keyboard()._handle_keyup_event(code);
+}
+
+void InputController::_handle_mouse_motion(uint32_t mouse_id, uint32_t x, uint32_t y, uint32_t xrel, uint32_t yrel) {
+    if(mouse_id > 0) {
+        L_DEBUG("Multiple mice not yet supported");
+    }
+
+    mouse()._handle_motion_event(x, y, xrel, yrel);
+}
+
+void InputController::_handle_mouse_down(uint32_t mouse_id, uint32_t button_id) {
+    if(mouse_id > 0) {
+        L_DEBUG("Multiple mice not yet supported");
+    }
+
+    assert(0 && "Not implemented");
+}
+
+void InputController::_handle_mouse_up(uint32_t mouse_id, uint32_t button_id) {
+    if(mouse_id > 0) {
+        L_DEBUG("Multiple mice not yet supported");
+    }
+
+    assert(0 && "Not implemented");
+}
+
+void InputController::_handle_joypad_axis_motion(uint32_t joypad_id, JoypadAxis axis, int32_t value) {
+    joypad(joypad_id)._handle_axis_changed_event(axis, value);
+}
+
+void InputController::_handle_joypad_button_down(uint32_t joypad_id, uint32_t button_id) {
+    joypad(joypad_id)._handle_button_down_event(button_id);
+}
+
+void InputController::_handle_joypad_button_up(uint32_t joypad_id, uint32_t button_id) {
+    joypad(joypad_id)._handle_button_up_event(button_id);
+}
+
+void InputController::_handle_joypad_hat_motion(uint32_t joypad_id, uint32_t hat_id, HatPosition position) {
+    joypad(joypad_id)._handle_hat_changed_event(hat_id, position);
 }
 
 void InputController::update(float dt) {
@@ -428,6 +403,14 @@ void InputController::update(float dt) {
 
     if(virtual_joypad_) {
         virtual_joypad_->_update(dt);
+    }
+}
+
+void InputController::_update_joypad_devices(const std::vector<GameControllerInfo> &device_info) {
+    joypads_.clear();
+
+    while(device_info.size() > joypads_.size()) {
+        joypads_.push_back(Joypad::create());
     }
 }
 

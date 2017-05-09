@@ -43,14 +43,14 @@ private:
     stb_vorbis* vorbis_;
 };
 
-int32_t queue_buffer(std::weak_ptr<Sound> sound, StreamWrapper::ptr stream, ALuint buffer) {
-    auto self = sound.lock();
+int32_t queue_buffer(std::weak_ptr<Sound> sound, StreamWrapper::ptr stream, AudioBufferID buffer) {
+    std::shared_ptr<Sound> self = sound.lock();
     if(!self) {
         // The sound was destroyed, we can't stream without a sound so just bail
         return 0;
     }
 
-    std::vector<ALshort> pcm;
+    std::vector<int16_t> pcm;
     int s = self->buffer_size();
     pcm.resize(s);
 
@@ -70,7 +70,7 @@ int32_t queue_buffer(std::weak_ptr<Sound> sound, StreamWrapper::ptr stream, ALui
         return 0;
     }
 
-    ALCheck(alBufferData, buffer, self->format(), &pcm[0], size * sizeof(ALshort), self->sample_rate());
+    self->_driver()->upload_buffer_data(buffer, self->format(), &pcm[0], size * sizeof(int16_t), self->sample_rate());
     return size;
 }
 
@@ -113,7 +113,7 @@ void OGGLoader::into(Loadable& resource, const LoaderOptions& options) {
     sound->set_buffer_size(4096 * 8);
     sound->set_data(data);
     sound->set_channels(info.channels);
-    sound->set_format((info.channels == 2) ? AL_FORMAT_STEREO16 : AL_FORMAT_MONO16);
+    sound->set_format((info.channels == 2) ? AUDIO_DATA_FORMAT_STEREO16 : AUDIO_DATA_FORMAT_MONO16);
     sound->set_source_init_function(std::bind(&init_source, sound, std::placeholders::_1));
 }
 

@@ -20,7 +20,14 @@
 #include <chrono>
 #include <future>
 
+#ifdef _arch_dreamcast
+#include "kos_window.h"
+namespace smlt { typedef KOSWindow Window; }
+#else
 #include "sdl2_window.h"
+namespace smlt { typedef SDL2Window Window; }
+#endif
+
 #include "application.h"
 #include "scenes/loading.h"
 #include "input_controller.h"
@@ -47,7 +54,7 @@ Application::Application(const unicode &title, uint32_t width, uint32_t height, 
 }
 
 void Application::construct_window(const AppConfig& config) {
-    window_ = SDL2Window::create(this, config.width, config.height, config.bpp, config.fullscreen);
+    window_ = Window::create(this, config.width, config.height, config.bpp, config.fullscreen);
 
     for(auto& search_path: config.search_paths) {
         window_->resource_locator->add_search_path(search_path);

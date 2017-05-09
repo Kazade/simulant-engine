@@ -48,7 +48,7 @@ public:
     void cleanup() override;
     void update(float dt) override;
 
-    Sprite(SpriteID id, Stage* stage);
+    Sprite(SpriteID id, Stage* stage, SoundDriver *sound_driver);
 
     void set_render_dimensions(float width, float height);
     void set_render_dimensions_from_width(float width);

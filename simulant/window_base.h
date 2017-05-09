@@ -19,8 +19,6 @@
 #ifndef SIMULANT_WINDOW_BASE_H
 #define SIMULANT_WINDOW_BASE_H
 
-#include <SDL.h>
-
 #include <memory>
 
 #include "deps/kazlog/kazlog.h"
@@ -115,8 +113,6 @@ typedef sig::signal<void (double)> UpdateSignal;
 typedef sig::signal<void (double)> LateUpdateSignal;
 
 typedef sig::signal<void ()> ShutdownSignal;
-typedef sig::signal<void (SDL_Scancode)> KeyUpSignal;
-typedef sig::signal<void (SDL_Scancode)> KeyDownSignal;
 
 class WindowBase :
     public Source,
@@ -154,9 +150,6 @@ public:
     
     void register_loader(LoaderTypePtr loader_type);
 
-    virtual KeyUpSignal& signal_key_up() = 0;
-    virtual KeyDownSignal& signal_key_down() = 0;
-    
     virtual void set_title(const std::string& title) = 0;
     virtual void cursor_position(int32_t& mouse_x, int32_t& mouse_y) = 0;
     virtual void show_cursor(bool cursor_shown=true) = 0;
@@ -306,6 +299,7 @@ private:
     Application* application_ = nullptr;
 
     void create_defaults();
+    virtual void initialize_input_controller(InputController& controller) = 0;
 
     bool can_attach_sound_by_id() const { return false; }
 
@@ -359,6 +353,10 @@ private:
 
     Stats stats_;
 
+    std::shared_ptr<SoundDriver> sound_driver_;
+
+    virtual std::shared_ptr<SoundDriver> create_sound_driver() = 0;
+
 public:
 
     //Read only properties
@@ -374,11 +372,14 @@ public:
 
     Property<WindowBase, Keyboard> keyboard = {
         this, [](WindowBase* self) -> Keyboard* {
-            return &self->input_controller_->keyboard();
+            return &self->_input_controller()->keyboard();
         }
     };
 
     Property<WindowBase, Stats> stats = { this, &WindowBase::stats_ };
+
+    SoundDriver* _sound_driver() const { return sound_driver_.get(); }
+    InputController* _input_controller() const { return input_controller_.get(); }
 
     void run_update();
     void run_fixed_updates();
