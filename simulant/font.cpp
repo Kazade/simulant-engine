@@ -4,6 +4,8 @@
 
 #define STB_TRUETYPE_IMPLEMENTATION  // force following include to generate implementation
 #define STBTT_STATIC
+#define STBTT_memcpy memcpy
+#define STBTT_memset memset
 
 #include "deps/stb_truetype/stb_truetype.h"
 
