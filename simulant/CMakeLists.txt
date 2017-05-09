@@ -46,15 +46,8 @@ SET(DEPS
     "kazsignal"
     "kaztimer"
     "kfs"
-    "qu3e"
-    "qu3e/common"
-    "qu3e/broadphase"
-    "qu3e/debug"
-    "qu3e/collision"
-    "qu3e/dynamics"
-    "qu3e/math"
-    "qu3e/scene"
     "SOIL"
+    "tinyxml"
 )
 
 FOREACH(DEP ${DEPS})
