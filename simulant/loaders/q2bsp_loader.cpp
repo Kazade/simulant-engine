@@ -24,7 +24,6 @@
 
 #include "../deps/kazlog/kazlog.h"
 
-#include "../sdl2_window.h"
 #include "../stage.h"
 #include "../mesh.h"
 #include "../types.h"
@@ -296,7 +295,6 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     mesh->reset(smlt::VertexSpecification::DEFAULT);
 
     auto assets = &mesh->resource_manager();
-    auto& locator = assets->window->resource_locator;
 
     assert(mesh && "You passed a Resource that is not a mesh to the QBSP loader");
 
