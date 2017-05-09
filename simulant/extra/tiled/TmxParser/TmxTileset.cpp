@@ -25,7 +25,7 @@
 //
 // Author: Tamir Atias
 //-----------------------------------------------------------------------------
-#include <tinyxml.h>
+#include "../../../deps/tinyxml/tinyxml.h"
 
 #include "TmxTileset.h"
 #include "TmxImage.h"
