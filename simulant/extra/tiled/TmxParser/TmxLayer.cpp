@@ -29,6 +29,7 @@
 #include <zlib.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "TmxLayer.h"
 #include "TmxUtil.h"
@@ -244,7 +245,8 @@ namespace Tmx
 	void Layer::ParseCSV(const std::string &innerText) 
 	{
 		// Duplicate the string for use with C stdio.
-		char *csv = strdup(innerText.c_str());
+		char* csv = new char[innerText.length()];
+		std::copy(innerText.begin(), innerText.end(), csv); 
 		
 		// Iterate through every token of ';' in the CSV string.
 		char *pch = strtok(csv, ",");
@@ -272,7 +274,6 @@ namespace Tmx
 			pch = strtok(NULL, ",");
 			tileCount++;
 		}
-
-		free(csv);
+		delete [] csv;
 	}
 };
