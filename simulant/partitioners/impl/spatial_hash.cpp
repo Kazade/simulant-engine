@@ -210,7 +210,7 @@ int32_t SpatialHash::find_cell_size_for_box(const AABB &box) const {
     if(maxd < 1.0f) {
         return 1;
     } else {
-        return 1 << uint32_t(std::ceil(std::log2(maxd)));
+        return 1 << uint32_t(std::ceil(::log2(maxd)));
     }
 }
 
@@ -230,7 +230,7 @@ Key make_key(int32_t cell_size, float x, float y, float z) {
     static const int32_t MAX_PATH_SIZE = pow(2, MAX_GRID_LEVELS - 1);
 
     Key key;
-    key.ancestors = 15 - (int(std::log2(cell_size)));
+    key.ancestors = 15 - (int(::log2(cell_size)));
 
     key.hash_path[0] = make_hash(MAX_PATH_SIZE, x, y, z);
     key.hash_path[1] = (key.ancestors > 0) ? make_hash(MAX_PATH_SIZE / 2, x, y, z) : Hash();

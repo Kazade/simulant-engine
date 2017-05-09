@@ -133,13 +133,12 @@ struct MaterialProperty {
     MaterialPropertyType type;
     bool is_set = false; // Has this property been set (either by shader or the user)
 
-    union {
-        int int_value;
-        float float_value;
-        Vec2 vec2_value;
-        Vec3 vec3_value;
-        Vec4 vec4_value;
-    };
+    // FIXME: Union? Works fine on newer compilers, fails on GCC 4.7.3 (Dreamcast)
+    int int_value;
+    float float_value;
+    Vec2 vec2_value;
+    Vec3 vec3_value;
+    Vec4 vec4_value;
 };
 
 typedef std::unordered_map<std::string, MaterialProperty> MaterialProperties;

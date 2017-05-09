@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <cstdint>
 
 /* Basic tree node class with sibling and parent/child access */
 

@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "widget.h"
 #include "ui_manager.h"
 #include "../actor.h"
@@ -55,7 +57,7 @@ void Widget::cleanup() {
 
 void Widget::set_font(FontID font_id) {
     font_ = stage->assets->font(font_id);
-    line_height_ = std::round(float(font_->size()) * 1.1);
+    line_height_ = ::round(float(font_->size()) * 1.1);
     rebuild();
 }
 
@@ -284,11 +286,11 @@ void Widget::render_text(MeshPtr mesh, const std::string& submesh_name, const un
     // Everything was positioned with the starting X being at the
     // the center of the widget, so now we move the text to the left by whatever its width was
     // or half of "width" if that was specified
-    float shiftX = std::round(std::max(submesh->aabb().width(), width) / 2.0);    
+    float shiftX = ::round(std::max(submesh->aabb().width(), width) / 2.0);
     float descent = font_->descent();
 
     // FIXME: I can't for the life of me figure out why this works - it's almost definitely wrong
-    float shiftY = std::round(-descent);
+    float shiftY = ::round(-descent);
 
     for(uint32_t i = 0; i < submesh->vertex_data->count(); ++i) {
         submesh->vertex_data->move_to(i);
