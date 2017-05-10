@@ -112,10 +112,15 @@ void SceneManager::load_scene_in_background(const std::string& route, bool redir
     window_->idle->add([=]() -> bool {
         // Checks for complete or failed tasks
         auto status = new_task->future.wait_for(std::chrono::microseconds(0));
+#ifdef _arch_dreamcast
+        if(status != stdX::future_status::ready) {
+            return true;
+        }
+#else
         if(status != std::future_status::ready) {
             return true; //Try again next frame
         }
-
+#endif
         new_task->future.get();
         if(redirect_after) {
             activate_scene(route);
