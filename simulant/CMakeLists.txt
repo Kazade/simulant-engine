@@ -31,7 +31,7 @@ ENDIF()
 IF(DREAMCAST_BUILD)
     SET(SIMULANT_FILES ${SIMULANT_FILES} kos_window.cpp sound_drivers/kos_sound_driver.cpp)
 ELSE()
-    SET(SIMULANT_FILES ${SIMULANT_FILES} sdl2_window.cpp sound_drivers/openal_sound_driver.cpp)
+    SET(SIMULANT_FILES ${SIMULANT_FILES} sdl2_window.cpp sound_drivers/openal_sound_driver.cpp sound_drivers/al_error.cpp)
 ENDIF()
 
 

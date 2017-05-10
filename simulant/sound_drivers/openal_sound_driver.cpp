@@ -1,6 +1,6 @@
 #include "openal_sound_driver.h"
 #include "../deps/kazlog/kazlog.h"
-#include "../utils/al_error.h"
+#include "al_error.h"
 
 namespace smlt {
 

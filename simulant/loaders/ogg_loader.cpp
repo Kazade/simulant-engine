@@ -21,7 +21,6 @@
 #include "stb_vorbis.h"
 
 #include "../deps/kazlog/kazlog.h"
-#include "../utils/al_error.h"
 #include "../sound.h"
 
 namespace smlt {
