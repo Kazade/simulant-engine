@@ -17,6 +17,7 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#include <stdexcept>
 #include "../deps/kazlog/kazlog.h"
 
 
