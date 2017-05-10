@@ -19,6 +19,7 @@
 #pragma once
 
 #include "../renderer.h"
+#include "buffer_manager.h"
 
 namespace smlt {
 
@@ -28,23 +29,16 @@ public:
         Renderer(window) {}
 
     batcher::RenderGroup new_render_group(Renderable *renderable, MaterialPass *material_pass);
-
-    void render(CameraPtr camera, bool render_group_changed,
-        const batcher::RenderGroup *,
-        Renderable* renderable,
-        MaterialPass* material_pass,
-        Light* light,
-        const Colour& global_ambient,
-        batcher::Iteration iteration
-    ) override;
+    std::shared_ptr<batcher::RenderQueueVisitor> get_render_queue_visitor(CameraPtr camera);
 
     void init_context();
 
-    void render_triangle_buffers(
-        VertexSpecification vertex_format,
-        uint8_t* vertex_data,
-        const ElementRenderList& render_list
-    );
+private:
+    std::unique_ptr<HardwareBufferManager> buffer_manager_;
+
+    HardwareBufferManager* _get_buffer_manager() const {
+        return buffer_manager_.get();
+    }
 };
 
 }

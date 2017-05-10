@@ -668,3 +668,4 @@ tests/test_simple_future.h
 simulant/generic/static_if.h
 simulant/generic/exception_ptr_lite.hpp
 simulant/generic/simple_this_thread.h
+simulant/renderers/gl1x/buffer_manager.h
