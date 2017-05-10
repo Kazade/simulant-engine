@@ -64,7 +64,7 @@ public:
     typedef std::shared_ptr<Texture> ptr;
     typedef std::vector<uint8_t> Data;
 
-    uint32_t gl_tex() const { return gl_tex_; }
+    unsigned int gl_tex() const { return gl_tex_; }
 
     Texture(TextureID id, ResourceManager* resource_manager):
         Resource(resource_manager),
@@ -107,7 +107,7 @@ private:
 
     Texture::Data data_;
 
-    uint32_t gl_tex_;
+    unsigned int gl_tex_;
 };
 
 }
