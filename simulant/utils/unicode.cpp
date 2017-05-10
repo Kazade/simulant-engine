@@ -23,9 +23,29 @@
 #include <iomanip>
 #include <cassert>
 #include <climits>
+#include <cstdlib>
 
 #include "utf8.h"
 #include "unicode.h"
+
+#ifndef __clang__
+#if (__GNUC__ == 4 && __GNUC_MINOR__ <= 7)
+
+/* GCC 4.7 doesn't define std::to_string... for some reason, so we just hack around it here */
+
+
+namespace std {
+
+static std::string to_string(uint32_t value) {
+    std::ostringstream ss;
+    ss << value;
+    return ss.str();
+}
+
+}
+
+#endif
+#endif
 
 std::ostream& operator<< (std::ostream& os, const unicode& str) {
     os << str.encode();
@@ -299,8 +319,12 @@ float _stof(const std::string& str) {
     const char* inp = str.c_str();
     char* p = nullptr;
 
+#ifdef _arch_dreamcast
+    // Dreamcast (GCC 4.7.3) doesn't define strtof but does define strtod
+    float test = (float) strtod(inp, &p);
+#else
     auto test = strtof(inp, &p);
-
+#endif
     if(p == inp) {
         throw std::invalid_argument("Couldn't convert from a string to a float");
     }
@@ -435,8 +459,8 @@ unicode unicode::_do_format(uint32_t counter, const std::string& value) {
             if(formatter[formatter.size() - 1] == 'f') {
                 if(formatter[0] == '.') {
                     auto precision_string = ustring(formatter.begin() + 1, formatter.end() - 1);
-                    auto precision = std::stoi(unicode(precision_string.c_str()).encode());
-                    auto float_val = std::stof(value);
+                    auto precision = _stoi(unicode(precision_string.c_str()).encode());
+                    auto float_val = _stof(value);
 
                     std::stringstream ss;
                     ss << std::fixed << std::setprecision(precision) << float_val;

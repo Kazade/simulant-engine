@@ -18,8 +18,6 @@
 //
 
 #include "viewport.h"
-#include "sdl2_window.h"
-
 #include "utils/gl_error.h"
 
 #ifdef SIMULANT_GL_VERSION_2X
