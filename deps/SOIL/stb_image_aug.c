@@ -74,7 +74,11 @@
 #include <stdio.h>
 #endif
 #include <stdlib.h>
+
+#ifndef _arch_dreamcast
 #include <memory.h>
+#endif
+
 #include <assert.h>
 #include <stdarg.h>
 
@@ -86,7 +90,7 @@
   #endif
 #endif
 
-
+#ifndef _arch_dreamcast
 // implementation:
 typedef unsigned char uint8;
 typedef unsigned short uint16;
@@ -94,6 +98,7 @@ typedef   signed short  int16;
 typedef unsigned int   uint32;
 typedef   signed int    int32;
 typedef unsigned int   uint;
+#endif
 
 // should produce compiler error if size is wrong
 typedef unsigned char validate_uint32[sizeof(uint32)==4];

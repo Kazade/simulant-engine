@@ -228,7 +228,7 @@
    #ifdef _MSC_VER
       #include <malloc.h>
    #endif
-   #if defined(__linux__) || defined(__linux) || defined(__EMSCRIPTEN__)
+   #if defined(__linux__) || defined(__linux) || defined(__EMSCRIPTEN__) || defined(_arch_dreamcast)
       #include <alloca.h>
    #endif
 #else // STB_VORBIS_NO_CRT
@@ -277,13 +277,14 @@
 #define MAX_BLOCKSIZE_LOG  13   // from specification
 #define MAX_BLOCKSIZE      (1 << MAX_BLOCKSIZE_LOG)
 
-
+#ifndef _arch_dreamcast
 typedef unsigned char  uint8;
 typedef   signed char   int8;
 typedef unsigned short uint16;
 typedef   signed short  int16;
 typedef unsigned int   uint32;
 typedef   signed int    int32;
+#endif
 
 #ifndef TRUE
 #define TRUE 1
@@ -4231,7 +4232,7 @@ static int get_seek_page_info(stb_vorbis *f, ProbedPage *z)
 // start of a packet
 static int go_to_page_before(stb_vorbis *f, unsigned int limit_offset)
 {
-   unsigned int previous_safe, end;
+   uint32 previous_safe, end;
 
    // now we want to seek back 64K from the limit
    if (limit_offset >= 65536 && limit_offset-65536 >= f->first_audio_page_offset)
@@ -4498,11 +4499,11 @@ int stb_vorbis_seek_start(stb_vorbis *f)
 unsigned int stb_vorbis_stream_length_in_samples(stb_vorbis *f)
 {
    unsigned int restore_offset, previous_safe;
-   unsigned int end, last_page_loc;
+   uint32 end, last_page_loc;
 
    if (IS_PUSH_MODE(f)) return error(f, VORBIS_invalid_api_mixing);
    if (!f->total_samples) {
-      unsigned int last;
+      uint32 last;
       uint32 lo,hi;
       char header[6];
 

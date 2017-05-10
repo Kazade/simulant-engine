@@ -25,6 +25,8 @@
 	#include <OpenGL/gl.h>
 	#include <Carbon/Carbon.h>
 	#define APIENTRY
+#elif defined(_arch_dreamcast)
+    #include <GL/gl.h>
 #else
 	#include <GL/gl.h>
 	#include <GL/glx.h>
@@ -1364,6 +1366,7 @@ unsigned int
 	return tex_id;
 }
 
+#ifndef _arch_dreamcast
 int
 	SOIL_save_screenshot
 	(
@@ -1420,6 +1423,7 @@ int
     SOIL_free_image_data( pixel_data );
 	return save_result;
 }
+#endif
 
 unsigned char*
 	SOIL_load_image
@@ -1994,6 +1998,8 @@ int query_DXT_capability( void )
 				CFRelease( bundleURL );
 				CFRelease( extensionName );
 				CFRelease( bundle );
+            #elif defined(_arch_dreamcast)
+                ext_addr = &glCompressedTexImage2D;
 			#else
 				ext_addr = (P_SOIL_GLCOMPRESSEDTEXIMAGE2DPROC)
 						glXGetProcAddressARB
