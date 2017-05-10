@@ -22,7 +22,7 @@
 #include "window_base.h"
 #include "stage.h"
 #include "sound.h"
-#include "sound_drivers/sound_driver.h"
+#include "sound_driver.h"
 
 namespace smlt {
 

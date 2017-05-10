@@ -22,7 +22,7 @@
 #include <vector>
 #include <list>
 
-#include "sound_drivers/sound_driver.h"
+#include "sound_driver.h"
 
 #include "generic/managed.h"
 #include "generic/identifiable.h"

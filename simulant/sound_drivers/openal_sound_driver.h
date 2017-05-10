@@ -8,7 +8,7 @@
 #include <AL/alc.h>
 #endif
 
-#include "sound_driver.h"
+#include "../sound_driver.h"
 
 namespace smlt {
 

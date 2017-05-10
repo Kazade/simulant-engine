@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <vector>
 
-#include "../generic/property.h"
+#include "generic/property.h"
 
 namespace smlt {
 
