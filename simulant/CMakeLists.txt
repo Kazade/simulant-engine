@@ -16,8 +16,14 @@ LIST(REMOVE_ITEM SIMULANT_FILES ${TO_REMOVE})
 IF(SIMULANT_GL_VERSION_1X)
     MESSAGE("-- Using the OpenGL 1.1 renderer (Retro!)")
 
-    FILE(GLOB_RECURSE GL1_FILES renderers/gl1x/*.c*)
+    FILE(GLOB_RECURSE GL1_FILES renderers/gl1x/*.cpp)
     SET(SIMULANT_FILES ${SIMULANT_FILES} ${GL1_FILES})
+
+    IF(NOT DREAMCAST_BUILD)
+        # DC build doesn't need glad, GL1 is available directly
+        FILE(GLOB_RECURSE GLAD1_FILES renderers/gl1x/glad/*.c)
+        SET(SIMULANT_FILES ${SIMULANT_FILES} ${GLAD1_FILES})
+    ENDIF()
 ENDIF()
 
 # Add GL2 files if we're using that instead
