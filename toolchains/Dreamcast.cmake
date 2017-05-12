@@ -4,23 +4,12 @@ SET(CMAKE_SYSTEM_VERSION 1)
 
 set(CMAKE_CROSSCOMPILING TRUE)
 
-
-if ("${CMAKE_C_COMPILER}" STREQUAL "")
-    set(CMAKE_C_COMPILER "kos-cc")
-endif()
-
-if ("${CMAKE_CXX_COMPILER}" STREQUAL "")
-    set(CMAKE_CXX_COMPILER "kos-c++")
-endif()
-
-if ("${CMAKE_AR}" STREQUAL "")
-    set(CMAKE_AR "kos-ar")
-endif()
-
-if ("${CMAKE_RANLIB}" STREQUAL "")
-    set(CMAKE_RANLIB "kos-ranlib")
-endif()
-
+set(CMAKE_C_COMPILER "kos-cc")
+set(CMAKE_CXX_COMPILER "kos-c++")
+set(CMAKE_AR "kos-ar" CACHE FILEPATH "Archiver")
+set(CMAKE_RANLIB "kos-ranlib" CACHE FILEPATH "Ranlib")
+set(CMAKE_ASM_COMPILER "kos-as")
+set(CMAKE_LINKER "kos-ld")
 
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 
