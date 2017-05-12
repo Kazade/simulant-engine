@@ -1,9 +1,13 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
+#ifdef _arch_dreamcast
+#include "simulant/kos_window.h"
+extern smlt::KOSWindow::ptr window;
+#else
 #include "simulant/sdl2_window.h"
-
 extern smlt::SDL2Window::ptr window;
+#endif
 
 #include "kaztest/kaztest.h"
 #include "simulant/window_base.h"
@@ -12,7 +16,11 @@ class SimulantTestCase : public TestCase {
 public:
     void set_up() {
         if(!window) {
+#ifdef _arch_dreamcast
+            window = smlt::KOSWindow::create(nullptr);
+#else
             window = smlt::SDL2Window::create(nullptr);
+#endif
             window->_init();
             window->set_logging_level(smlt::LOG_LEVEL_NONE);
 
