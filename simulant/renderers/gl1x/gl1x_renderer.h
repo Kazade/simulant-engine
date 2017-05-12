@@ -23,6 +23,7 @@
 
 namespace smlt {
 
+
 class GL1XRenderer : public Renderer {
 public:
     GL1XRenderer(WindowBase* window):

@@ -19,7 +19,6 @@
 
 #ifdef SIMULANT_GL_VERSION_1X
 
-
 #include "gl1x_renderer.h"
 #ifdef _arch_dreamcast
     #include <GL/gl.h>
@@ -31,34 +30,10 @@
 #include "../../material.h"
 #include "../../material_constants.h"
 #include "../../texture.h"
+#include "gl1x_render_queue_visitor.h"
+#include "gl1x_render_group_impl.h"
 
 namespace smlt {
-
-class GL1RenderGroupImpl: public batcher::RenderGroupImpl {
-public:
-    GL1RenderGroupImpl(RenderPriority priority):
-        batcher::RenderGroupImpl(priority) {}
-
-    GLuint texture_id[MAX_TEXTURE_UNITS] = {0};
-
-    bool lt(const RenderGroupImpl& other) const override {
-        const GL1RenderGroupImpl* rhs = dynamic_cast<const GL1RenderGroupImpl*>(&other);
-        if(!rhs) {
-            // Should never happen... throw an error maybe?
-            return false;
-        }
-
-        for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
-            if(texture_id[i] < rhs->texture_id[i]) {
-                return true;
-            } else if(texture_id[i] > rhs->texture_id[i]) {
-                return false;
-            }
-        }
-
-        return false;
-    }
-};
 
 batcher::RenderGroup GL1XRenderer::new_render_group(Renderable *renderable, MaterialPass *material_pass) {
     auto impl = std::make_shared<GL1RenderGroupImpl>(renderable->render_priority());
@@ -85,6 +60,10 @@ void GL1XRenderer::init_context() {
     GLCheck(glEnable, GL_DEPTH_TEST);
     GLCheck(glDepthFunc, GL_LEQUAL);
     GLCheck(glEnable, GL_CULL_FACE);
+}
+
+std::shared_ptr<batcher::RenderQueueVisitor> GL1XRenderer::get_render_queue_visitor(CameraPtr camera) {
+    return std::make_shared<GL1RenderQueueVisitor>(this, camera);
 }
 
 
