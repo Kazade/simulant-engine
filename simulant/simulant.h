@@ -20,7 +20,13 @@
 #define SIMULANT_MAIN_H
 
 #include "types.h"
+
+#ifdef _arch_dreamcast
+#include "kos_window.h"
+#else
 #include "sdl2_window.h"
+#endif
+
 #include "input_controller.h"
 #include "stage.h"
 #include "viewport.h"
