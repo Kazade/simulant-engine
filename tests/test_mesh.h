@@ -6,6 +6,10 @@
 #include "simulant/simulant.h"
 #include "global.h"
 
+namespace {
+
+using namespace smlt;
+
 class MeshTest : public SimulantTestCase {
 public:
     void set_up() {
@@ -262,5 +266,7 @@ private:
 
     smlt::SubMesh* first_mesh_;
 };
+
+}
 
 #endif // TEST_MESH_H
