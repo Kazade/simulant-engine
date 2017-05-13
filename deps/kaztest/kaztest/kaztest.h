@@ -22,6 +22,43 @@
 #define not_implemented() _not_implemented(__FILE__, __LINE__)
 
 
+#ifndef __clang__
+#if (__GNUC__ == 4 && __GNUC_MINOR__ <= 7)
+
+/* GCC 4.7 doesn't define std::to_string... for some reason, so we just hack around it here */
+
+
+namespace std {
+
+std::string to_string(int value) {
+    std::ostringstream ss;
+    ss << value;
+    return ss.str();
+}
+
+std::string to_string(uint32_t value) {
+    std::ostringstream ss;
+    ss << value;
+    return ss.str();
+}
+
+std::string to_string(long value) {
+    std::ostringstream ss;
+    ss << value;
+    return ss.str();
+}
+
+std::string to_string(float value) {
+    std::ostringstream ss;
+    ss << value;
+    return ss.str();
+}
+
+}
+
+#endif
+#endif
+
 class StringFormatter {
 public:
     StringFormatter(const std::string& templ):
