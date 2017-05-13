@@ -1,8 +1,8 @@
 #pragma once
 
 #include "simulant/simulant.h"
-#include "global.h"
-#include "../simulant/hardware_buffer.h"
+#include "../global.h"
+#include "../../simulant/hardware_buffer.h"
 
 namespace {
 
