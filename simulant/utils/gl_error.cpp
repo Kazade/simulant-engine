@@ -20,11 +20,16 @@
 #include <stdexcept>
 #include "../deps/kazlog/kazlog.h"
 
+#ifdef _arch_dreamcast
+#include <GL/gl.h>
+#else
 
 #ifdef SIMULANT_GL_VERSION_2X
     #include "../renderers/gl2x/glad/glad/glad.h"
 #else
     #include "../renderers/gl1x/glad/glad/glad.h"
+#endif
+
 #endif
 
 namespace GLChecker {
@@ -53,9 +58,11 @@ void check_and_log_error(const std::string &function_name) {
         case GL_INVALID_OPERATION:
             error_string = "GL_INVALID_OPERATION";
             break;
+#ifndef _arch_dreamcast
         case GL_INVALID_FRAMEBUFFER_OPERATION:
             error_string = "GL_INVALID_FRAMEBUFFER_OPERATION";
             break;
+#endif
         case GL_OUT_OF_MEMORY:
             error_string = "GL_OUT_OF_MEMORY";
             break;

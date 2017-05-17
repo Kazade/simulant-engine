@@ -1,25 +1,29 @@
-# Dockerfile for generating a Fedora image with the full KallistiOS SDK installed so you can compiled
+# Dockerfile for generating a Fedora image with the full KallistiOS SDK installed so you can compile
 # Dreamcast applications
 
-FROM fedora
+FROM fedora:21
 MAINTAINER kazade <kazade@gmail.com>
 
-# RUN dnf -y update && dnf clean all
-RUN dnf -y install git bzip2 patch gcc texinfo libjpeg-turbo-devel libpng-devel python && dnf clean all
+RUN yum -y update && yum clean all && yum -y install automake make git hostname glibc-static bison elfutils flex glibc-devel binutils gdb tar bzip2 patch gcc gcc-c++ texinfo libjpeg-turbo-devel libpng-devel python cmake mpfr-devel gmp-devel libmpc-devel && yum clean all
 RUN mkdir -p /opt/toolchains/dc
 RUN git clone git://git.code.sf.net/p/cadcdev/kallistios /opt/toolchains/dc/kos
 RUN git clone --recursive git://git.code.sf.net/p/cadcdev/kos-ports /opt/toolchains/dc/kos-ports
+#RUN sed -i 's/4.7.3/4.8.2/' /opt/toolchains/dc/kos/utils/dc-chain/download.sh
+#RUN sed -i 's/4.7.3/4.8.2/' /opt/toolchains/dc/kos/utils/dc-chain/unpack.sh
+#RUN sed -i 's/4.7.3/4.8.2/' /opt/toolchains/dc/kos/utils/dc-chain/Makefile
 RUN cd /opt/toolchains/dc/kos/utils/dc-chain && sh ./download.sh && sh ./unpack.sh && make
 RUN cp /opt/toolchains/dc/kos/doc/environ.sh.sample /opt/toolchains/dc/kos/environ.sh
+
+# Enable C++ functionality which is disabled by default
+RUN sed -i 's/-fno-rtti//' /opt/toolchains/dc/kos/environ_base.sh
+RUN sed -i 's/-fno-exceptions//' /opt/toolchains/dc/kos/environ_base.sh
+RUN sed -i 's/-fno-operator-names//' /opt/toolchains/dc/kos/environ_base.sh
+
 RUN echo -e "\nsource /opt/toolchains/dc/kos/environ.sh" >> /etc/bash.bashrc
 RUN source /etc/bash.bashrc; echo ${KOS_BASE}
 RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos && make
 RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/libGL && make install clean
 RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/libjpeg && make install clean
 RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/libpng && make install clean
-RUN dnf -y install cmake
-RUN sed -i 's/-fno-rtti//' /opt/toolchains/dc/kos/environ_base.sh
-RUN sed -i 's/-fno-exceptions//' /opt/toolchains/dc/kos/environ_base.sh
-RUN sed -i 's/-fno-operator-names//' /opt/toolchains/dc/kos/environ_base.sh
 
 

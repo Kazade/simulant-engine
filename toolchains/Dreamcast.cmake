@@ -9,8 +9,8 @@ set(CMAKE_CXX_COMPILER "kos-c++")
 set(CMAKE_AR "kos-ar" CACHE FILEPATH "Archiver")
 set(CMAKE_RANLIB "kos-ranlib" CACHE FILEPATH "Ranlib")
 set(CMAKE_ASM_COMPILER "kos-as")
-set(CMAKE_LINKER "kos-ld")
-
+set(CMAKE_LINKER "kos-c++")
+set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 
 set(CMAKE_SYSTEM_INCLUDE_PATH "$ENV{KOS_BASE}/include")
@@ -18,6 +18,10 @@ set(CMAKE_SYSTEM_INCLUDE_PATH "$ENV{KOS_BASE}/include")
 SET(CMAKE_EXECUTABLE_SUFFIX ".elf")
 SET(CMAKE_EXECUTABLE_SUFFIX_CXX ".elf")
 
+MESSAGE("FLAGS: " $ENV{KOS_CPPFLAGS})
+
 add_definitions("-DDREAMCAST")
 add_definitions("-D_arch_dreamcast")
 add_definitions("-D_arch_sub_pristine")
+
+link_libraries(m)

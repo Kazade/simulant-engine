@@ -35,10 +35,11 @@ public:
     void init_context();
 
 private:
-    std::unique_ptr<HardwareBufferManager> buffer_manager_;
-
     HardwareBufferManager* _get_buffer_manager() const {
-        return buffer_manager_.get();
+        /*
+         * The GL1 renderer doesn't use hardware buffers for vertex/index data
+         */
+        return nullptr;
     }
 };
 

@@ -12,6 +12,7 @@ namespace smlt {
 
 struct GL1HardwareBufferImpl : public HardwareBufferImpl {
     uint8_t* buffer = nullptr;
+    std::size_t size = 0;
 
     GL1HardwareBufferImpl(HardwareBufferManager* manager):
         HardwareBufferImpl(manager) {}
@@ -20,13 +21,12 @@ struct GL1HardwareBufferImpl : public HardwareBufferImpl {
     GL1HardwareBufferImpl& operator=(GL1HardwareBufferImpl&) = delete;
 
     ~GL1HardwareBufferImpl() {
-        if(buffer) {
-            delete [] buffer;
-            buffer = nullptr;
-        }
+
     }
 
-    void upload(const uint8_t *data, const std::size_t size) override;
+    void upload(const uint8_t *data, const std::size_t size) override {
+
+    }
 };
 
 class GL1BufferManager:

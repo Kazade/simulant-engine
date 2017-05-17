@@ -96,20 +96,49 @@ bool GL1RenderQueueVisitor::queue_if_blended(Renderable* renderable, MaterialPas
     }
 }
 
+GLenum convert_arrangement(MeshArrangement arrangement) {
+    switch(arrangement) {
+    case MESH_ARRANGEMENT_POINTS:
+        return GL_POINTS;
+    break;
+    case MESH_ARRANGEMENT_LINES:
+        return GL_LINES;
+    break;
+    case MESH_ARRANGEMENT_LINE_STRIP:
+        return GL_LINE_STRIP;
+    break;
+    case MESH_ARRANGEMENT_TRIANGLES:
+        return GL_TRIANGLES;
+    break;
+    case MESH_ARRANGEMENT_TRIANGLE_STRIP:
+        return GL_TRIANGLE_STRIP;
+    break;
+    case MESH_ARRANGEMENT_TRIANGLE_FAN:
+        return GL_TRIANGLE_FAN;
+    break;
+    }
+
+    throw std::runtime_error("Invalid vertex arrangement");
+}
+
+
 void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* material_pass, batcher::Iteration iteration) {
     if(queue_if_blended(renderable, material_pass, iteration)) {
         // If this was a transparent object, and we were queuing then do nothing else for now
         return;
     }
 
+    auto element_count = renderable->index_element_count();
     // Don't bother doing *anything* if there is nothing to render
-    if(!renderable->index_element_count()) {
+    if(!element_count) {
         return;
     }
 
+    glBegin(convert_arrangement(renderable->arrangement()));
+    for(uint32_t i = 0; i < element_count; ++i) {
 
-
-
+    }
+    glEnd();
 }
 
 }
