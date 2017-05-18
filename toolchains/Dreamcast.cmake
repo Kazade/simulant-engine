@@ -24,4 +24,7 @@ add_definitions("-DDREAMCAST")
 add_definitions("-D_arch_dreamcast")
 add_definitions("-D_arch_sub_pristine")
 
+# Optimise for size by default
+set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-Os")
+
 link_libraries(m)

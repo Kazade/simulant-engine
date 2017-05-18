@@ -57,13 +57,13 @@ before_install:
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo usermod -a -G audio travis; fi
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo bash ./.prep-dummy-soundcard.sh; fi
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then dbus-launch pulseaudio --start; fi
- - if [[ "$DREAMCAST" == "true" ]]; then docker pull kazade/simulant-dc-test; fi
+ - if [[ "$DREAMCAST" == "true" ]]; then docker pull kazade/dreamcast-sdk; fi
 
 install:
  - mkdir build && cd build
  - if [[ "$DREAMCAST" == "false" ]]; then cmake -DSIMULANT_BUILD_SAMPLES=OFF ..; fi
  - if [[ "$DREAMCAST" == "false" ]]; then make; fi
- - if [[ "$DREAMCAST" == "true" ]]; then sudo docker run kazade/simulant-dc-test /bin/sh -c "source /etc/bash.bashrc; git clone --recursive --branch=${TRAVIS_BRANCH} https://github.com/${TRAVIS_REPO_SLUG}.git /simulant; mkdir -p /simulant/dbuild; cd /simulant/dbuild; cmake -DCMAKE_TOOLCHAIN_FILE=/simulant/toolchains/Dreamcast.cmake .. && make"; fi
+ - if [[ "$DREAMCAST" == "true" ]]; then sudo docker run kazade/dreamcast-sdk /bin/sh -c "source /etc/bash.bashrc; git clone --recursive --branch=${TRAVIS_BRANCH} https://github.com/${TRAVIS_REPO_SLUG}.git /simulant; mkdir -p /simulant/dbuild; cd /simulant/dbuild; cmake -DCMAKE_TOOLCHAIN_FILE=/simulant/toolchains/Dreamcast.cmake .. && make"; fi
 
 before_script:
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export DISPLAY=:99; fi
