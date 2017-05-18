@@ -104,8 +104,7 @@ void Texture::__do_upload(MipmapGenerate mipmap, TextureWrap wrap, TextureFilter
         GLCheck(glGenTextures, 1, &gl_tex_);
     }
 
-    GLCheck(glBindTexture, GL_TEXTURE_2D, gl_tex_);
-    GLCheck(glPixelStorei, GL_PACK_ALIGNMENT,1);
+    GLCheck(glBindTexture, GL_TEXTURE_2D, gl_tex_);   
     GLCheck(glPixelStorei, GL_UNPACK_ALIGNMENT,1);
 
     // FIXME: This is awful, we should expose this via an API
@@ -119,10 +118,12 @@ void Texture::__do_upload(MipmapGenerate mipmap, TextureWrap wrap, TextureFilter
             internalFormat = GL_RGB;
             format = GL_RGB;
         } break;
+#ifndef _arch_dreamcast
         case 8: {
             internalFormat = GL_RED;
             format = GL_RED;
         } break;
+#endif
     default:
         assert(0 && "Not implemented");
     }

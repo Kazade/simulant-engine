@@ -20,10 +20,16 @@
 #include "viewport.h"
 #include "utils/gl_error.h"
 
+#ifdef _arch_dreamcast
+#include <GL/gl.h>
+#else
+
 #ifdef SIMULANT_GL_VERSION_2X
     #include "renderers/gl2x/glad/glad/glad.h"
 #else
     #include "renderers/gl1x/glad/glad/glad.h"
+#endif
+
 #endif
 
 namespace smlt {

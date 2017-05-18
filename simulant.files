@@ -674,3 +674,4 @@ simulant/renderers/gl1x/gl1x_render_queue_visitor.cpp
 simulant/renderers/gl1x/gl1x_render_group_impl.h
 simulant/generic/simple_tostring.cpp
 simulant/generic/simple_tostring.h
+simulant/sound_drivers/kos_sound_driver.cpp
