@@ -25,7 +25,10 @@ private:
 class App : public smlt::Application {
 public:
     App(const smlt::AppConfig& config):
-        smlt::Application(config) {}
+        smlt::Application(config) {
+
+        window->set_logging_level(smlt::LOG_LEVEL_DEBUG);
+    }
 
     bool do_init() {
         register_scene<MainScene>("main");

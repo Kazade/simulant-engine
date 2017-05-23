@@ -54,11 +54,17 @@ Application::Application(const unicode &title, uint32_t width, uint32_t height, 
 }
 
 void Application::construct_window(const AppConfig& config) {
+
+    kazlog::get_logger("/")->add_handler(kazlog::Handler::ptr(new kazlog::StdIOHandler));
+    L_DEBUG("Constructing the window");
+
     window_ = Window::create(this, config.width, config.height, config.bpp, config.fullscreen);
 
     for(auto& search_path: config.search_paths) {
         window_->resource_locator->add_search_path(search_path);
     }
+
+    L_DEBUG("Search paths added successfully");
 
     if(!window_->_init()) {
         throw InstanceInitializationError("Unable to create window");
@@ -79,6 +85,8 @@ StagePtr Application::stage(StageID stage) {
 }
 
 bool Application::init() {
+    L_DEBUG("Initializing the application");
+
     scene_manager_.reset(new SceneManager(window_.get()));
 
     // Add some useful scenes by default, these can be overridden in do_init if the

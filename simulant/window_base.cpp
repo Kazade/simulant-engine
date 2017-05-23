@@ -67,9 +67,6 @@ WindowBase::WindowBase():
     background_manager_(new BackgroundManager(this)),
     time_keeper_(TimeKeeper::create(1.0 / WindowBase::STEPS_PER_SECOND)) {
 
-
-    kazlog::get_logger("/")->add_handler(kazlog::Handler::ptr(new kazlog::StdIOHandler));
-
 }
 
 WindowBase::~WindowBase() {
