@@ -60,6 +60,11 @@ void Application::construct_window(const AppConfig& config) {
 
     window_ = Window::create(this, config.width, config.height, config.bpp, config.fullscreen);
 
+#ifdef _arch_dreamcast
+    // On the Dreamcast, always add the CD as a search path
+    window_->resource_locator->add_search_path("/cd");
+#endif
+
     for(auto& search_path: config.search_paths) {
         window_->resource_locator->add_search_path(search_path);
     }
