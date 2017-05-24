@@ -113,9 +113,12 @@ get_filename_component(EXE_FILENAME ${EXE} NAME)
 ADD_CUSTOM_TARGET(
     ${EXE_FILENAME}.bin ALL
     COMMAND $ENV{KOS_OBJCOPY} -R .stack -O binary -S -g ${CMAKE_BINARY_DIR}/${EXE}.elf ${CMAKE_BINARY_DIR}/${EXE}.bin
+    COMMAND rm -rf ${CMAKE_BINARY_DIR}/${EXE}
     COMMAND mkdir -p ${CMAKE_BINARY_DIR}/${EXE}
     COMMAND $ENV{KOS_BASE}/utils/scramble/scramble ${CMAKE_BINARY_DIR}/${EXE}.bin ${CMAKE_BINARY_DIR}/${EXE}/1ST_READ.BIN
     COMMAND IP_TEMPLATE_FILE=${CMAKE_SOURCE_DIR}/platforms/dreamcast/IP.TMPL $ENV{KOS_BASE}/utils/makeip/makeip ${CMAKE_SOURCE_DIR}/platforms/dreamcast/ip.txt ${CMAKE_BINARY_DIR}/${EXE}/IP.BIN
+    COMMAND mkdir -p ${CMAKE_BINARY_DIR}/${EXE}/simulant
+    COMMAND cp -r ${CMAKE_SOURCE_DIR}/simulant/fonts ${CMAKE_BINARY_DIR}/${EXE}/simulant
     COMMAND mkisofs -C 0,11702 -V ${EXE_FILENAME} -G ${CMAKE_BINARY_DIR}/${EXE}/IP.BIN -joliet -rock -l -o ${EXE}.iso ${CMAKE_BINARY_DIR}/${EXE}
     COMMAND $ENV{KOS_BASE}/utils/img4dc/build/cdi4dc/cdi4dc ${CMAKE_BINARY_DIR}/${EXE}.iso ${CMAKE_BINARY_DIR}/${EXE}.cdi
     DEPENDS ${EXE}
