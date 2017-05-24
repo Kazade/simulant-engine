@@ -15,32 +15,32 @@ namespace std {
 
 std::string to_string(int value) {
     char buffer[64];
-    ::sprintf(buffer, "%d", value);
-    return std::string(buffer, buffer + 64);
+    auto c = ::sprintf(buffer, "%d", value);
+    return std::string(buffer, buffer + c);
 }
 
 std::string to_string(unsigned value) {
     char buffer[64];
-    ::sprintf(buffer, "%u", value);
-    return std::string(buffer, buffer + 64);
+    auto c = ::sprintf(buffer, "%u", value);
+    return std::string(buffer, buffer + c);
 }
 
 std::string to_string(long value) {
     char buffer[64];
-    ::sprintf(buffer, "%ld", value);
-    return std::string(buffer, buffer + 64);
+    auto c = ::sprintf(buffer, "%ld", value);
+    return std::string(buffer, buffer + c);
 }
 
 std::string to_string(float value) {
     char buffer[64];
-    ::sprintf(buffer, "%f", (double) value);
-    return std::string(buffer, buffer + 64);
+    auto c = ::sprintf(buffer, "%f", (double) value);
+    return std::string(buffer, buffer + c);
 }
 
 std::string to_string(double value) {
     char buffer[64];
-    ::sprintf(buffer, "%f", value);
-    return std::string(buffer, buffer + 64);
+    auto c = ::sprintf(buffer, "%f", value);
+    return std::string(buffer, buffer + c);
 }
 
 

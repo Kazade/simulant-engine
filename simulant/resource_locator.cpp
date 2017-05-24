@@ -20,7 +20,7 @@
 #include <fstream>
 
 #include "deps/kfs/kfs.h"
-
+#include "deps/kazlog/kazlog.h"
 #include "resource_locator.h"
 
 #ifdef __ANDROID__
@@ -64,6 +64,7 @@ unicode ResourceLocator::locate_file(const unicode &filename) const {
 
     for(unicode path: resource_path_) {
         auto full_path = kfs::path::join(path.encode(), filename.encode());
+        L_DEBUG(_F("Checking {0}").format(full_path));
         if(kfs::path::exists(full_path)) {
             return kfs::path::abs_path(full_path);
         }
