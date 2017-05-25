@@ -100,6 +100,8 @@ void Texture::sub_texture(TextureID src, uint16_t offset_x, uint16_t offset_y) {
 }
 
 void Texture::__do_upload(MipmapGenerate mipmap, TextureWrap wrap, TextureFilter filter, bool free_after) {
+    L_DEBUG("Uploading texture");
+
     if(!gl_tex()) {
         GLCheck(glGenTextures, 1, &gl_tex_);
     }
@@ -182,6 +184,8 @@ void Texture::__do_upload(MipmapGenerate mipmap, TextureWrap wrap, TextureFilter
     if(free_after) {
         free();
     }
+
+    L_DEBUG("Texture uploaded");
 }
 
 void Texture::upload(MipmapGenerate mipmap, TextureWrap wrap, TextureFilter filter, bool free_after) {

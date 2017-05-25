@@ -161,7 +161,8 @@ public:
 
     uint32_t width() const override { return width_; }
     uint32_t height() const override { return height_; }
-    float aspect_ratio() const { return float(width_) / float(height_); }
+
+    float aspect_ratio() const;
     
     bool run_frame();
 

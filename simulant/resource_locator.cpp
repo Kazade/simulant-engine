@@ -35,6 +35,12 @@ ResourceLocator::ResourceLocator() {
     resource_path_.push_back(find_executable_directory()); //Make sure the directory the executable lives is on the resource path
     resource_path_.push_back(find_working_directory()); //Add the working directory (might be different)
 #endif
+
+#ifdef _arch_dreamcast
+    // On the Dreamcast, always add the CD as a search path
+    resource_path_.push_back("/cd");
+#endif
+
     resource_path_.push_back("/usr/local/share"); //Look in /usr/share (smlt files might be installed to /usr/share/smlt)
     resource_path_.push_back("/usr/share"); //Look in /usr/share (smlt files might be installed to /usr/share/smlt)
 }

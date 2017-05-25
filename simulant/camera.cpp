@@ -30,7 +30,7 @@ Camera::Camera(CameraID id, WindowBase *window):
     window_(window),
     proxy_(nullptr) {
 
-    set_perspective_projection(Degrees(45.0), float(window->width()) / float(window->height()));
+    set_perspective_projection(Degrees(45.0), window->aspect_ratio());
 }
 
 void Camera::set_transform(const smlt::Mat4& transform) {

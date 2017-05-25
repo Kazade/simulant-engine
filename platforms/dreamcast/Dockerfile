@@ -19,6 +19,12 @@ RUN sed -i 's/-fno-rtti//' /opt/toolchains/dc/kos/environ_base.sh
 RUN sed -i 's/-fno-exceptions//' /opt/toolchains/dc/kos/environ_base.sh
 RUN sed -i 's/-fno-operator-names//' /opt/toolchains/dc/kos/environ_base.sh
 
+# Remove any custom frame-pointer overrides (just use default)
+RUN sed -i 's/-fomit-frame-pointer//' /opt/toolchains/dc/kos/environ.sh
+
+# Remove default optimisations, so it can be controlled by CMake or whatever
+RUN sed -i 's/-O2//' /opt/toolchains/dc/kos/environ.sh 
+
 RUN echo -e "\nsource /opt/toolchains/dc/kos/environ.sh" >> /etc/bash.bashrc
 RUN source /etc/bash.bashrc; echo ${KOS_BASE}
 RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos && make

@@ -91,8 +91,10 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<un
 
     if(type == "TEXTURE_UNIT") {
         unicode arg_2 = unicode(args[2]);
+
         TextureID tex_id = mat.resource_manager().new_texture_from_file(arg_2.strip("\""));
         pass->set_texture_unit(arg_1.to_int(), tex_id);
+
     } else if(type == "ITERATION") {
         if(arg_1 == "ONCE") {
             pass->set_iteration(ITERATE_ONCE, pass->max_iterations());
@@ -250,6 +252,7 @@ void MaterialScript::handle_block(Material& mat,
         MaterialPass::ptr current_pass) {
 
     Renderer* renderer = mat.resource_manager().window->renderer;
+    assert(renderer && "No renderer?");
 
     unicode line = unicode(lines[current_line]).strip();
     current_line++;
@@ -268,6 +271,8 @@ void MaterialScript::handle_block(Material& mat,
         throw SyntaxError(_u("Line: {0}. Invalid block type: {1}").format(current_line, block_type));
     }
 
+    L_DEBUG(_F("Reading material block: {0}").format(block_type));
+
     if(block_type == "PASS" || block_type == "HEADER") {
         if(!parent_block_type.empty()) {
             throw SyntaxError(_u("Line: {0}. Unexpected {1} block").format(current_line, block_type));
@@ -281,11 +286,15 @@ void MaterialScript::handle_block(Material& mat,
             //Create the pass with the default shader
             uint32_t pass_number = mat.new_pass();
             current_pass = mat.pass(pass_number);
+
+            L_DEBUG("Material pass created");
         }
     }
 
     for(uint16_t i = current_line; current_line != lines.size(); ++i) {
-        line = lines[current_line];
+        assert(current_line < lines.size());
+
+        line = lines[current_line].strip();
 
         //If we hit another BEGIN block, process it
         if(line.starts_with("BEGIN_DATA")) {
@@ -315,9 +324,17 @@ void MaterialScript::handle_block(Material& mat,
            // L_DEBUG("Found BEGIN block");
             handle_block(mat, lines, current_line, block_type, current_pass);
         } else if(line.starts_with("END")) {
-           // L_DEBUG("Found END block");
+            L_DEBUG("Found END block");
             //If we hit an END block, the type must match the BEGIN
-            unicode end_block_type = line.split("(")[1].strip(")").upper();
+            auto parts = line.split("(");
+
+            if(parts.size() < 2) {
+                throw SyntaxError("Malformed END statement");
+            }
+
+            L_DEBUG("Parsing END type");
+            parts[1] = parts[1].strip(")");
+            unicode end_block_type = parts[1].upper();
 
             if(end_block_type != block_type) {
                 throw SyntaxError(
@@ -325,10 +342,14 @@ void MaterialScript::handle_block(Material& mat,
             }
 
             if(end_block_type == "PASS" && renderer->supports_gpu_programs()) {
+                L_DEBUG("Setting up GPU program on material");
+
                 current_pass->set_gpu_program_id(
                     renderer->new_or_existing_gpu_program(current_vert_shader_, current_frag_shader_)
                 );
             }
+
+            L_DEBUG("Finished reading material block");
             return; //Exit this function, we are done with this block
         } else if(line.starts_with("SET")) {
          //   L_DEBUG("Found SET command block");
@@ -348,6 +369,8 @@ void MaterialScript::handle_block(Material& mat,
             if(block_type == "HEADER") {
                 handle_header_property_command(mat, args);
             }
+        } else if(!line.empty()) {
+            L_DEBUG(_F("Unhandled line: ").format(line));
         }
         current_line++;
     }

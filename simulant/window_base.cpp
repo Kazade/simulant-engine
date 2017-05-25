@@ -364,6 +364,13 @@ void WindowBase::register_loader(LoaderTypePtr loader) {
     loaders_.push_back(loader);
 }
 
+float WindowBase::aspect_ratio() const {
+    assert(width_ > 0);
+    assert(height_ > 0);
+
+    return float(width_) / float(height_);
+}
+
 Mouse& WindowBase::mouse() {
     return input_controller_->mouse();
 }
