@@ -150,8 +150,9 @@ void Actor::set_mesh(MeshID mesh) {
 
         // Create an interpolated vertex hardware buffer if this is an animated mesh
         interpolated_vertex_buffer_ = stage->window->renderer->hardware_buffers->allocate(
-            mesh_->shared_data->specification().stride() * shared_vertices_per_frame,
-            HARDWARE_BUFFER_VERTEX_ATTRIBUTES
+            mesh_->shared_data->specification().stride() * shared_vertices_per_frame,                    
+            HARDWARE_BUFFER_VERTEX_ATTRIBUTES,
+            SHADOW_BUFFER_DISABLED
         );
 
         animation_state_ = std::make_shared<KeyFrameAnimationState>(

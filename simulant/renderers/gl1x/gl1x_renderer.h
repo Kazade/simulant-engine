@@ -19,15 +19,14 @@
 #pragma once
 
 #include "../renderer.h"
-#include "buffer_manager.h"
+#include "gl1x_buffer_manager.h"
 
 namespace smlt {
 
 
 class GL1XRenderer : public Renderer {
 public:
-    GL1XRenderer(WindowBase* window):
-        Renderer(window) {}
+    GL1XRenderer(WindowBase* window);
 
     batcher::RenderGroup new_render_group(Renderable *renderable, MaterialPass *material_pass);
     std::shared_ptr<batcher::RenderQueueVisitor> get_render_queue_visitor(CameraPtr camera);
@@ -35,11 +34,13 @@ public:
     void init_context();
 
 private:
+    std::unique_ptr<HardwareBufferManager> buffer_manager_;
+
     HardwareBufferManager* _get_buffer_manager() const {
         /*
          * The GL1 renderer doesn't use hardware buffers for vertex/index data
          */
-        return nullptr;
+        return buffer_manager_.get();
     }
 };
 

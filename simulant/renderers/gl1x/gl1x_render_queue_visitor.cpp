@@ -4,6 +4,7 @@
 #include "gl1x_render_group_impl.h"
 
 #include "../../camera.h"
+#include "../../utils/gl_error.h"
 
 namespace smlt {
 
@@ -15,7 +16,8 @@ GL1RenderQueueVisitor::GL1RenderQueueVisitor(GL1XRenderer* renderer, CameraPtr c
 }
 
 void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, Stage* stage) {
-
+    enable_vertex_arrays(true);
+    enable_colour_arrays(true);
 }
 
 void GL1RenderQueueVisitor::visit(Renderable* renderable, MaterialPass* pass, batcher::Iteration iteration) {
@@ -96,29 +98,57 @@ bool GL1RenderQueueVisitor::queue_if_blended(Renderable* renderable, MaterialPas
     }
 }
 
+void GL1RenderQueueVisitor::enable_vertex_arrays(bool force) {
+#ifndef _arch_dreamcast
+    if(!force && positions_enabled_) return;
+    GLCheck(glEnableClientState, GL_VERTEX_ARRAY);
+    positions_enabled_ = true;
+#endif
+}
+
+void GL1RenderQueueVisitor::disable_vertex_arrays(bool force) {
+#ifndef _arch_dreamcast
+    if(!force && !positions_enabled_) return;
+
+    GLCheck(glDisableClientState, GL_VERTEX_ARRAY);
+    positions_enabled_ = false;
+#endif
+}
+
+void GL1RenderQueueVisitor::enable_colour_arrays(bool force) {
+#ifndef _arch_dreamcast
+    if(!force && colours_enabled_) return;
+    GLCheck(glEnableClientState, GL_COLOR_ARRAY);
+    colours_enabled_ = true;
+#endif
+}
+
+void GL1RenderQueueVisitor::disable_colour_arrays(bool force) {
+#ifndef _arch_dreamcast
+    if(!force && !colours_enabled_) return;
+
+    GLCheck(glDisableClientState, GL_COLOR_ARRAY);
+    colours_enabled_ = false;
+#endif
+}
+
 GLenum convert_arrangement(MeshArrangement arrangement) {
     switch(arrangement) {
     case MESH_ARRANGEMENT_POINTS:
         return GL_POINTS;
-    break;
     case MESH_ARRANGEMENT_LINES:
         return GL_LINES;
-    break;
     case MESH_ARRANGEMENT_LINE_STRIP:
         return GL_LINE_STRIP;
-    break;
     case MESH_ARRANGEMENT_TRIANGLES:
         return GL_TRIANGLES;
-    break;
     case MESH_ARRANGEMENT_TRIANGLE_STRIP:
         return GL_TRIANGLE_STRIP;
-    break;
     case MESH_ARRANGEMENT_TRIANGLE_FAN:
         return GL_TRIANGLE_FAN;
-    break;
+    default:
+        throw std::runtime_error("Invalid vertex arrangement");
     }
-
-    throw std::runtime_error("Invalid vertex arrangement");
 }
 
 
@@ -134,11 +164,47 @@ void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
         return;
     }
 
-    glBegin(convert_arrangement(renderable->arrangement()));
-    for(uint32_t i = 0; i < element_count; ++i) {
+    auto spec = renderable->vertex_attribute_specification();
 
-    }
-    glEnd();
+    renderable->prepare_buffers();
+
+    /* We need to get access to the vertex data that's been uploaded, and map_target_for_read is the only way to do that
+     * but as on GL1 there are no VBOs this should be fast */
+    auto vertex_data = renderable->vertex_attribute_buffer()->map_target_for_read();
+    auto index_data = renderable->index_buffer()->map_target_for_read();
+
+    (spec.has_positions()) ? enable_vertex_arrays() : disable_vertex_arrays();
+    (spec.has_diffuse()) ? enable_colour_arrays() : disable_colour_arrays();
+
+    GLCheck(
+        glVertexPointer,
+        (spec.position_attribute == VERTEX_ATTRIBUTE_2F) ? 2 : (spec.position_attribute == VERTEX_ATTRIBUTE_3F) ? 3 : 4,
+        GL_FLOAT,
+        spec.stride(),
+        ((const uint8_t*) vertex_data) + spec.position_offset(false)
+    );
+
+    const uint8_t* colour_pointer = (spec.has_diffuse()) ?
+        ((const uint8_t*) vertex_data) + spec.diffuse_offset(false) :
+        nullptr;
+
+    GLCheck(
+        glColorPointer,
+        (spec.diffuse_attribute == VERTEX_ATTRIBUTE_2F) ? 2 : (spec.diffuse_attribute == VERTEX_ATTRIBUTE_3F) ? 3 : 4,
+        GL_FLOAT,
+        spec.stride(),
+        colour_pointer
+    );
+
+    auto arrangement = convert_arrangement(renderable->arrangement());
+
+    GLCheck(
+        glDrawElements,
+        arrangement,
+        element_count,
+        GL_UNSIGNED_INT,
+        (const void*) index_data
+    );
 }
 
 }

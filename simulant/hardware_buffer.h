@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <vector>
+
 #include "generic/managed.h"
 #include "generic/property.h"
 
@@ -29,7 +31,8 @@ class Renderer;
 
 enum HardwareBufferPurpose {
     HARDWARE_BUFFER_VERTEX_ATTRIBUTES,
-    HARDWARE_BUFFER_VERTEX_ARRAY_INDICES
+    HARDWARE_BUFFER_VERTEX_ARRAY_INDICES,
+    HARDWARE_BUFFER_TEXTURE_DATA
 };
 
 enum HardwareBufferUsage {
@@ -44,7 +47,64 @@ enum HardwareBufferUsage {
     HARDWARE_BUFFER_MODIFY_REPEATEDLY_USED_FOR_QUERYING_AND_RENDERING
 };
 
+/*
+ * When a shadow buffer is enabled, writes to the hardware buffer go there and are essentially queued until
+ * update_target_from_shadow_buffer() is called. Shadow buffers are normally in RAM, and target buffers on the GPU
+ * but on platforms that don't support that (e.g. the Dreamcast) the target buffer may be in RAM (for vertex data)
+ * if that's the case, a shadow buffer is wasteful so there is an option to only use a shadow buffer if it makes sense.
+ * update_target_from_shadow_buffer() is a no-op in this case.
+ */
+
+enum ShadowBufferEnableOption {
+    SHADOW_BUFFER_DISABLED, // No shadow buffer, all writes go direct to the target buffer
+    SHADOW_BUFFER_ENABLE_IF_OPTIMAL, // Shadow buffer if it makes sense (e.g. target buffer is on GPU, so shadow buffer in RAM)
+    SHADOW_BUFFER_ENABLE_REQUIRED // Always create a shadow buffer, even if both shadow and target are in RAM
+};
+
+enum BufferLocation {
+    BUFFER_LOCATION_RAM,
+    BUFFER_LOCATION_VRAM
+};
+
+
 class HardwareBufferManager;
+
+typedef std::function<const uint8_t* ()> MapBufferFunc;
+typedef std::function<void ()> UnMapBufferFunc;
+
+class MappedBuffer {
+public:
+    MappedBuffer(MapBufferFunc map, UnMapBufferFunc unmap):
+        buffer_(map()),
+        unmap_(unmap) {
+
+    }
+
+    MappedBuffer(MappedBuffer&& rhs):
+        buffer_(rhs.buffer_),
+        unmap_(rhs.unmap_) {
+
+        rhs.buffer_ = nullptr;
+        rhs.unmap_ = UnMapBufferFunc();
+    }
+
+    operator const uint8_t*() const {
+        return buffer_;
+    }
+
+    ~MappedBuffer() {
+        unmap_();
+        buffer_ = nullptr;
+    }
+
+    MappedBuffer(const MappedBuffer& rhs) = delete;
+    MappedBuffer& operator=(const MappedBuffer& rhs) = delete;
+
+private:
+    const uint8_t* buffer_ = nullptr;
+    UnMapBufferFunc unmap_;
+};
+
 
 /* HardwareBufferManager subclasses should return their own subclass of this
  * and use it to store additional data (e.g. GL buffer IDs or whatever)
@@ -64,9 +124,15 @@ struct HardwareBufferImpl {
     void resize(std::size_t new_size);
     void release();
 
+    virtual bool has_shadow_buffer() const = 0;
+    virtual BufferLocation shadow_buffer_location() const = 0;
+    virtual BufferLocation target_buffer_location() const = 0;
+    virtual void update_target_from_shadow_buffer() = 0;
+    virtual void destroy_shadow_buffer() = 0;
+    virtual MappedBuffer map_target_for_read() const = 0;
+
     virtual void upload(const uint8_t* data, const std::size_t size) = 0;
 };
-
 
 /* Public-facing API to hardware buffers */
 class HardwareBuffer {
@@ -76,9 +142,22 @@ public:
     HardwareBuffer(std::unique_ptr<HardwareBufferImpl> impl);
     ~HardwareBuffer() { release(); }
 
+    bool has_shadow_buffer() const;
+    BufferLocation shadow_buffer_location() const;
+    BufferLocation target_buffer_location() const;
+    void update_target_from_shadow_buffer();
+    void destroy_shadow_buffer();
+
     void upload(VertexData& vertex_data);
     void upload(IndexData& index_data);
     void upload(const uint8_t* data, const std::size_t size);
+
+    // Download data from the shadow buffer (if there is one) else the target
+    // buffer (may be slow!)
+    std::vector<uint8_t> download() const;
+
+    // Map the target buffer for reading
+    MappedBuffer map_target_for_read() const;
 
     void bind(HardwareBufferPurpose purpose);
 
@@ -112,13 +191,23 @@ private:
 class HardwareBufferManager {
 public:
     HardwareBufferManager(const Renderer* renderer);
-    HardwareBuffer::ptr allocate(std::size_t size, HardwareBufferPurpose purpose, HardwareBufferUsage usage=HARDWARE_BUFFER_MODIFY_ONCE_USED_FOR_RENDERING);
+    HardwareBuffer::ptr allocate(
+        std::size_t size,
+        HardwareBufferPurpose purpose,
+        ShadowBufferEnableOption shadow_buffer,
+        HardwareBufferUsage usage = HARDWARE_BUFFER_MODIFY_ONCE_USED_FOR_RENDERING
+    );
 
     Property<HardwareBufferManager, const Renderer> renderer = { this, &HardwareBufferManager::renderer_ };
 private:
     const Renderer* renderer_;
 
-    virtual std::unique_ptr<HardwareBufferImpl> do_allocation(std::size_t size, HardwareBufferPurpose purpose, HardwareBufferUsage usage) = 0;
+    virtual std::unique_ptr<HardwareBufferImpl> do_allocation(
+        std::size_t size,
+        HardwareBufferPurpose purpose,
+        ShadowBufferEnableOption shadow_buffer,
+        HardwareBufferUsage usage
+    ) = 0;
 
     virtual void do_resize(HardwareBufferImpl* buffer, std::size_t new_size) = 0;
     virtual void do_release(const HardwareBufferImpl* buffer) = 0;

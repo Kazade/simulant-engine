@@ -123,7 +123,8 @@ void ParticleSystem::prepare_buffers() {
         if(!vertex_buffer_) {
             vertex_buffer_ = renderer->hardware_buffers->allocate(
                 vertex_data_->stride() * quota_,
-                HARDWARE_BUFFER_VERTEX_ATTRIBUTES
+                HARDWARE_BUFFER_VERTEX_ATTRIBUTES,
+                SHADOW_BUFFER_DISABLED
             );
         } else {
             vertex_buffer_->resize(vertex_data_->stride() * quota_);
@@ -132,7 +133,8 @@ void ParticleSystem::prepare_buffers() {
         if(!index_buffer_) {
             index_buffer_ = renderer->hardware_buffers->allocate(
                 sizeof(Index) * quota_,
-                HARDWARE_BUFFER_VERTEX_ARRAY_INDICES
+                HARDWARE_BUFFER_VERTEX_ARRAY_INDICES,
+                SHADOW_BUFFER_DISABLED
             );
         } else {
             index_buffer_->resize(sizeof(Index) * quota_);

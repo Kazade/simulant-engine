@@ -61,11 +61,10 @@ void sync_buffer(HardwareBuffer::ptr* buffer, Data* data, Allocator* allocator, 
     if(!(*buffer) && data->count()) {
         (*buffer) = allocator->hardware_buffers->allocate(
             data->data_size(),
-            purpose
+            purpose,
+            SHADOW_BUFFER_DISABLED
         );
     } else {
-
-        // See FIXME above
         assert(data->count());
         (*buffer)->resize(data->data_size());
     }
