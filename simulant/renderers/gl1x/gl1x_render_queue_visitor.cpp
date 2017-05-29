@@ -82,6 +82,7 @@ void GL1RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev
                 GLCheck(glEnable, GL_TEXTURE_2D);
                 GLCheck(glBindTexture, GL_TEXTURE_2D, current_group_->texture_id[i]);
             } else {
+                GLCheck(glBindTexture, GL_TEXTURE_2D, 0);
                 GLCheck(glDisable, GL_TEXTURE_2D);
             }
         }
@@ -323,10 +324,6 @@ void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
     (spec.has_positions()) ? enable_vertex_arrays() : disable_vertex_arrays();
     (spec.has_diffuse()) ? enable_colour_arrays() : disable_colour_arrays();
 
-    for(uint8_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
-        (spec.has_texcoordX(i)) ? enable_texcoord_array(i) : disable_texcoord_array(i);
-    }
-
     GLCheck(
         glVertexPointer,
         (spec.position_attribute == VERTEX_ATTRIBUTE_2F) ? 2 : (spec.position_attribute == VERTEX_ATTRIBUTE_3F) ? 3 : 4,
@@ -351,16 +348,22 @@ void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
     for(uint8_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
         bool enabled = spec.has_texcoordX(i);
         auto offset = spec.texcoordX_offset(i, false);
-        const uint8_t* coord_pointer = (!enabled) ? nullptr : ((const uint8_t*) vertex_data) + offset;
+        const uint8_t* coord_pointer = (enabled) ?
+            ((const uint8_t*) vertex_data) + offset :
+            nullptr;
 
-        GLCheck(glClientActiveTextureARB, GL_TEXTURE0_ARB + i);
-        GLCheck(
-            glTexCoordPointer,
-            (spec.texcoordX_attribute(i) == VERTEX_ATTRIBUTE_2F) ? 2 : (spec.texcoordX_attribute(i) == VERTEX_ATTRIBUTE_3F) ? 3 : 4,
-            GL_FLOAT,
-            spec.stride(),
-            coord_pointer
-        );
+        (enabled) ? enable_texcoord_array(i) : disable_texcoord_array(i);
+
+        if(enabled) {
+            GLCheck(glClientActiveTextureARB, GL_TEXTURE0_ARB + i);
+            GLCheck(
+                glTexCoordPointer,
+                (spec.texcoordX_attribute(i) == VERTEX_ATTRIBUTE_2F) ? 2 : (spec.texcoordX_attribute(i) == VERTEX_ATTRIBUTE_3F) ? 3 : 4,
+                GL_FLOAT,
+                spec.stride(),
+                coord_pointer
+            );
+        }
     }
 
     auto arrangement = convert_arrangement(renderable->arrangement());
