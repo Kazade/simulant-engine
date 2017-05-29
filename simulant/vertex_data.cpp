@@ -31,6 +31,10 @@ const VertexSpecification VertexSpecification::DEFAULT = {
     VERTEX_ATTRIBUTE_2F,
     VERTEX_ATTRIBUTE_NONE,
     VERTEX_ATTRIBUTE_NONE,
+    VERTEX_ATTRIBUTE_NONE,
+    VERTEX_ATTRIBUTE_NONE,
+    VERTEX_ATTRIBUTE_NONE,
+    VERTEX_ATTRIBUTE_NONE,
     VERTEX_ATTRIBUTE_4F,
     VERTEX_ATTRIBUTE_NONE
 };
@@ -41,6 +45,10 @@ const VertexSpecification VertexSpecification::POSITION_ONLY = {
 
 const VertexSpecification VertexSpecification::POSITION_AND_DIFFUSE = {
     VERTEX_ATTRIBUTE_3F,
+    VERTEX_ATTRIBUTE_NONE,
+    VERTEX_ATTRIBUTE_NONE,
+    VERTEX_ATTRIBUTE_NONE,
+    VERTEX_ATTRIBUTE_NONE,
     VERTEX_ATTRIBUTE_NONE,
     VERTEX_ATTRIBUTE_NONE,
     VERTEX_ATTRIBUTE_NONE,
@@ -57,6 +65,10 @@ VertexAttribute attribute_for_type(VertexAttributeType type, const VertexSpecifi
         case VERTEX_ATTRIBUTE_TYPE_TEXCOORD1: return spec.texcoord1_attribute;
         case VERTEX_ATTRIBUTE_TYPE_TEXCOORD2: return spec.texcoord2_attribute;
         case VERTEX_ATTRIBUTE_TYPE_TEXCOORD3: return spec.texcoord3_attribute;
+        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD4: return spec.texcoord4_attribute;
+        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD5: return spec.texcoord5_attribute;
+        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD6: return spec.texcoord6_attribute;
+        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD7: return spec.texcoord7_attribute;
         case VERTEX_ATTRIBUTE_TYPE_DIFFUSE: return spec.diffuse_attribute;
         case VERTEX_ATTRIBUTE_TYPE_SPECULAR: return spec.specular_attribute;
     default:
@@ -155,46 +167,19 @@ void VertexData::normal(const Vec3 &n) {
 }
 
 void VertexData::tex_coordX(uint8_t which, float u, float v) {
-    uint32_t offset = 0;
-    switch(which) {
-        case 0: offset = specification().texcoord0_offset(); break;
-        case 1: offset = specification().texcoord1_offset(); break;
-        case 2: offset = specification().texcoord2_offset(); break;
-        case 3: offset = specification().texcoord3_offset(); break;
-    default:
-        throw std::logic_error("Invalid texture coordinate specified");
-    }
-
+    uint32_t offset = specification().texcoordX_offset(which);
     Vec2* out = (Vec2*) &data_[cursor_position_ + offset];
     *out = Vec2(u, v);
 }
 
 void VertexData::tex_coordX(uint8_t which, float u, float v, float w) {
-    uint32_t offset = 0;
-    switch(which) {
-        case 0: offset = specification().texcoord0_offset(); break;
-        case 1: offset = specification().texcoord1_offset(); break;
-        case 2: offset = specification().texcoord2_offset(); break;
-        case 3: offset = specification().texcoord3_offset(); break;
-    default:
-        throw std::logic_error("Invalid texture coordinate specified");
-    }
-
+    uint32_t offset = specification().texcoordX_offset(which);
     Vec3* out = (Vec3*) &data_[cursor_position_ + offset];
     *out = Vec3(u, v, w);
 }
 
 void VertexData::tex_coordX(uint8_t which, float u, float v, float w, float x) {
-    uint32_t offset = 0;
-    switch(which) {
-        case 0: offset = specification().texcoord0_offset(); break;
-        case 1: offset = specification().texcoord1_offset(); break;
-        case 2: offset = specification().texcoord2_offset(); break;
-        case 3: offset = specification().texcoord3_offset(); break;
-    default:
-        throw std::logic_error("Invalid texture coordinate specified");
-    }
-
+    uint32_t offset = specification().texcoordX_offset(which);
     Vec4* out = (Vec4*) &data_[cursor_position_ + offset];
     *out = Vec4(u, v, w, x);
 }
@@ -396,12 +381,43 @@ void VertexData::done() {
     signal_update_complete_();
 }
 
-IndexData::IndexData() {
+IndexData::IndexData(IndexType type):
+    index_type_(type) {
 
+}
+
+void IndexData::each(std::function<void (uint32_t)> cb) {
+    auto st = stride();
+    for(std::size_t i = 0; i < indices_.size(); i += st) {
+        uint32_t v;
+        switch(index_type_) {
+        case INDEX_TYPE_8_BIT:
+            v = indices_[i];
+            break;
+        case INDEX_TYPE_16_BIT:
+            v = *((uint16_t*)&indices_[i]);
+            break;
+        case INDEX_TYPE_32_BIT:
+            v = *((uint32_t*)&indices_[i]);
+            break;
+        }
+
+        cb(v);
+    }
 }
 
 void IndexData::reset() {
     clear();
+}
+
+std::vector<uint32_t> IndexData::all() {
+    std::vector<uint32_t> ret;
+
+    each([&ret](uint32_t v) {
+        ret.push_back(v);
+    });
+
+    return ret;
 }
 
 void IndexData::done() {

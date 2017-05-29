@@ -101,6 +101,9 @@ std::size_t SubActor::index_element_count() const {
     return submesh_->index_data->count();
 }
 
+IndexType SubActor::index_type() const {
+    return submesh_->index_data->index_type();
+}
 
 void Actor::rebuild_subactors() {
     clear_subactors();

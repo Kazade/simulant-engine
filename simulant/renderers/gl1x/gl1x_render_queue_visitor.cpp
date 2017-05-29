@@ -1,4 +1,10 @@
 
+#ifdef _arch_dreamcast
+    #include <GL/gl.h>
+#else
+    #include "./glad/glad/glad.h"
+#endif
+
 #include "gl1x_render_queue_visitor.h"
 #include "gl1x_renderer.h"
 #include "gl1x_render_group_impl.h"
@@ -132,6 +138,26 @@ void GL1RenderQueueVisitor::disable_colour_arrays(bool force) {
 #endif
 }
 
+void GL1RenderQueueVisitor::enable_texcoord_array(uint8_t which, bool force) {
+#ifndef _arch_dreamcast
+    if(!force && textures_enabled_[which]) return;
+
+    GLCheck(glClientActiveTextureARB, GL_TEXTURE0_ARB + which);
+    GLCheck(glEnableClientState, GL_TEXTURE_COORD_ARRAY);
+    textures_enabled_[which] = true;
+#endif
+}
+
+void GL1RenderQueueVisitor::disable_texcoord_array(uint8_t which, bool force) {
+#ifndef _arch_dreamcast
+    if(!force && !textures_enabled_[which]) return;
+
+    GLCheck(glClientActiveTextureARB, GL_TEXTURE0_ARB + which);
+    GLCheck(glDisableClientState, GL_TEXTURE_COORD_ARRAY);
+    textures_enabled_[which] = false;
+#endif
+}
+
 GLenum convert_arrangement(MeshArrangement arrangement) {
     switch(arrangement) {
     case MESH_ARRANGEMENT_POINTS:
@@ -151,6 +177,15 @@ GLenum convert_arrangement(MeshArrangement arrangement) {
     }
 }
 
+GLenum convert_index_type(IndexType type) {
+    switch(type) {
+    case INDEX_TYPE_8_BIT: return GL_UNSIGNED_BYTE;
+    case INDEX_TYPE_16_BIT: return GL_UNSIGNED_SHORT;
+    case INDEX_TYPE_32_BIT: return GL_UNSIGNED_INT;
+    default:
+        throw std::logic_error("Invalid index type");
+    }
+}
 
 void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* material_pass, batcher::Iteration iteration) {
     if(queue_if_blended(renderable, material_pass, iteration)) {
@@ -176,6 +211,10 @@ void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
     (spec.has_positions()) ? enable_vertex_arrays() : disable_vertex_arrays();
     (spec.has_diffuse()) ? enable_colour_arrays() : disable_colour_arrays();
 
+    for(uint8_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
+        (spec.has_texcoordX(i)) ? enable_texcoord_array(i) : disable_texcoord_array(i);
+    }
+
     GLCheck(
         glVertexPointer,
         (spec.position_attribute == VERTEX_ATTRIBUTE_2F) ? 2 : (spec.position_attribute == VERTEX_ATTRIBUTE_3F) ? 3 : 4,
@@ -196,13 +235,29 @@ void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
         colour_pointer
     );
 
+
+    for(uint8_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
+        bool enabled = spec.has_texcoordX(i);
+        auto offset = spec.texcoordX_offset(i, false);
+        const uint8_t* coord_pointer = (!enabled) ? nullptr : ((const uint8_t*) vertex_data) + offset;
+
+        GLCheck(glClientActiveTextureARB, GL_TEXTURE0_ARB + i);
+        GLCheck(
+            glTexCoordPointer,
+            (spec.texcoordX_attribute(i) == VERTEX_ATTRIBUTE_2F) ? 2 : (spec.texcoordX_attribute(i) == VERTEX_ATTRIBUTE_3F) ? 3 : 4,
+            GL_FLOAT,
+            spec.stride(),
+            coord_pointer
+        );
+    }
+
     auto arrangement = convert_arrangement(renderable->arrangement());
 
     GLCheck(
         glDrawElements,
         arrangement,
         element_count,
-        GL_UNSIGNED_INT,
+        convert_index_type(renderable->index_type()),
         (const void*) index_data
     );
 }

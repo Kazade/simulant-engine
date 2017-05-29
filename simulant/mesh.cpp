@@ -44,8 +44,7 @@ HardwareBuffer* SubMesh::vertex_buffer() const {
     return vertex_buffer_.get();
 }
 
-Mesh::Mesh(
-    MeshID id,
+Mesh::Mesh(MeshID id,
     ResourceManager *resource_manager,
     VertexSpecification vertex_specification):
         Resource(resource_manager),
@@ -53,7 +52,6 @@ Mesh::Mesh(
         normal_debug_mesh_(0) {
 
     reset(vertex_specification);
-
 }
 
 template<typename Data, typename Allocator>
@@ -170,7 +168,7 @@ void Mesh::enable_debug(bool value) {
 
         //Go through the submeshes, and for each index draw a normal line
         each([=](const std::string& name, SubMesh* mesh) {
-            for(uint16_t idx: mesh->index_data->all()) {
+            mesh->index_data->each([&](uint32_t idx) {
                 Vec3 pos1 = mesh->vertex_data->position_at<Vec3>(idx);
 
                 Vec3 n;
@@ -189,7 +187,7 @@ void Mesh::enable_debug(bool value) {
                 normal_debug_mesh_->vertex_data->diffuse(smlt::Colour::RED);
                 next_index = normal_debug_mesh_->vertex_data->move_next();
                 normal_debug_mesh_->index_data->index(next_index - 1);
-            }
+            });
         });
 
         normal_debug_mesh_->vertex_data->done();
@@ -207,13 +205,13 @@ SubMesh* Mesh::new_submesh_with_material(
     MaterialID material,
     MeshArrangement arrangement,
     VertexSharingMode vertex_sharing,
-    VertexSpecification vertex_specification) {
+    VertexSpecification vertex_specification, IndexType index_type) {
 
     if(submeshes_.count(name)) {
         throw std::runtime_error("Attempted to create a duplicate submesh with name: " + name);
     }
 
-    auto new_submesh = SubMesh::create(this, name, material, arrangement, vertex_sharing, vertex_specification);
+    auto new_submesh = SubMesh::create(this, name, material, arrangement, vertex_sharing, vertex_specification, index_type);
     submeshes_.insert(std::make_pair(name, new_submesh));
     ordered_submeshes_.push_back(new_submesh.get());
     signal_submesh_created_(id(), new_submesh.get());
@@ -224,13 +222,14 @@ SubMesh* Mesh::new_submesh(
     const std::string& name,
     MeshArrangement arrangement,
     VertexSharingMode vertex_sharing,
-    VertexSpecification vertex_specification) {
+    VertexSpecification vertex_specification, IndexType index_type) {
 
     return new_submesh_with_material(
         name,
         resource_manager().clone_default_material(),        
         arrangement, vertex_sharing,
-        vertex_specification
+        vertex_specification,
+        index_type
     );
 }
 
@@ -585,7 +584,7 @@ SubMesh* Mesh::submesh(const std::string& name) {
 }
 
 SubMesh::SubMesh(Mesh* parent, const std::string& name,
-        MaterialID material, MeshArrangement arrangement, VertexSharingMode vertex_sharing, VertexSpecification vertex_specification):
+        MaterialID material, MeshArrangement arrangement, VertexSharingMode vertex_sharing, VertexSpecification vertex_specification, IndexType index_type):
     parent_(parent),
     name_(name),
     arrangement_(arrangement),
@@ -601,7 +600,7 @@ SubMesh::SubMesh(Mesh* parent, const std::string& name,
         throw std::logic_error("You can't have submesh-independent vertices on an animated mesh (yet!)");
     }
 
-    index_data_ = new IndexData();
+    index_data_ = new IndexData(index_type);
     index_data_->signal_update_complete().connect([this]() { this->index_buffer_dirty_ = true; });
 
     if(!uses_shared_data_) {

@@ -69,8 +69,10 @@ public:
 
     virtual VertexSpecification vertex_attribute_specification() const = 0;
     virtual HardwareBuffer* vertex_attribute_buffer() const = 0;
+
     virtual HardwareBuffer* index_buffer() const = 0;
     virtual std::size_t index_element_count() const = 0; ///< The number of indexes that should be rendered
+    virtual IndexType index_type() const = 0; ///< The size of the index (e.g. 8bit, 16 bit)
 
     virtual RenderPriority render_priority() const = 0;
     virtual Mat4 final_transformation() const = 0;

@@ -30,7 +30,7 @@ ParticleSystem::ParticleSystem(ParticleSystemID id, Stage* stage, SoundDriver* s
     generic::Identifiable<ParticleSystemID>(id),
     Source(stage, sound_driver),
     vertex_data_(new VertexData(VertexSpecification::POSITION_AND_DIFFUSE)),
-    index_data_(new IndexData()) {
+    index_data_(new IndexData(INDEX_TYPE_16_BIT)) {
 
     set_quota(quota_); // Force hardware buffer initialization
     set_material_id(stage->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY));    

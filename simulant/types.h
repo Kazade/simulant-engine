@@ -50,6 +50,7 @@
 #include "generic/auto_weakptr.h"
 #include "generic/unique_id.h"
 #include "utils/unicode.h"
+#include "material_constants.h"
 
 #define DEFINE_SIGNAL(prototype, name) \
     public: \
@@ -1094,7 +1095,6 @@ enum VertexAttribute {
     VERTEX_ATTRIBUTE_4F
 };
 
-
 struct VertexSpecification {
     static const VertexSpecification DEFAULT;
     static const VertexSpecification POSITION_ONLY;
@@ -1106,30 +1106,42 @@ struct VertexSpecification {
     VertexAttribute texcoord1_attribute = VERTEX_ATTRIBUTE_NONE;
     VertexAttribute texcoord2_attribute = VERTEX_ATTRIBUTE_NONE;
     VertexAttribute texcoord3_attribute = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute texcoord4_attribute = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute texcoord5_attribute = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute texcoord6_attribute = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute texcoord7_attribute = VERTEX_ATTRIBUTE_NONE;
     VertexAttribute diffuse_attribute = VERTEX_ATTRIBUTE_NONE;
     VertexAttribute specular_attribute = VERTEX_ATTRIBUTE_NONE;
 
     VertexSpecification() = default;
     VertexSpecification(
         VertexAttribute position,
-        VertexAttribute normal=VERTEX_ATTRIBUTE_NONE,
-        VertexAttribute texcoord0=VERTEX_ATTRIBUTE_NONE,
-        VertexAttribute texcoord1=VERTEX_ATTRIBUTE_NONE,
-        VertexAttribute texcoord2=VERTEX_ATTRIBUTE_NONE,
-        VertexAttribute texcoord3=VERTEX_ATTRIBUTE_NONE,
-        VertexAttribute diffuse=VERTEX_ATTRIBUTE_NONE,
-        VertexAttribute specular=VERTEX_ATTRIBUTE_NONE
+        VertexAttribute normal = VERTEX_ATTRIBUTE_NONE,
+        VertexAttribute texcoord0 = VERTEX_ATTRIBUTE_NONE,
+        VertexAttribute texcoord1 = VERTEX_ATTRIBUTE_NONE,
+        VertexAttribute texcoord2 = VERTEX_ATTRIBUTE_NONE,
+        VertexAttribute texcoord3 = VERTEX_ATTRIBUTE_NONE,
+        VertexAttribute texcoord4 = VERTEX_ATTRIBUTE_NONE,
+        VertexAttribute texcoord5 = VERTEX_ATTRIBUTE_NONE,
+        VertexAttribute texcoord6 = VERTEX_ATTRIBUTE_NONE,
+        VertexAttribute texcoord7 = VERTEX_ATTRIBUTE_NONE,
+        VertexAttribute diffuse = VERTEX_ATTRIBUTE_NONE,
+        VertexAttribute specular = VERTEX_ATTRIBUTE_NONE
     );
 
     bool operator==(const VertexSpecification& rhs) const {
         return position_attribute == rhs.position_attribute &&
                normal_attribute == rhs.normal_attribute  &&
-               texcoord0_attribute == rhs.texcoord0_attribute &&
-               texcoord1_attribute == rhs.texcoord1_attribute &&
-               texcoord2_attribute == rhs.texcoord2_attribute &&
-               texcoord3_attribute == rhs.texcoord3_attribute &&
-               diffuse_attribute == rhs.diffuse_attribute &&
-               specular_attribute == rhs.specular_attribute;
+                texcoord0_attribute == rhs.texcoord0_attribute &&
+                texcoord1_attribute == rhs.texcoord1_attribute &&
+                texcoord2_attribute == rhs.texcoord2_attribute &&
+                texcoord3_attribute == rhs.texcoord3_attribute &&
+                texcoord4_attribute == rhs.texcoord4_attribute &&
+                texcoord5_attribute == rhs.texcoord5_attribute &&
+                texcoord6_attribute == rhs.texcoord6_attribute &&
+                texcoord7_attribute == rhs.texcoord7_attribute &&
+                diffuse_attribute == rhs.diffuse_attribute &&
+                specular_attribute == rhs.specular_attribute;
     }
 
     bool operator!=(const VertexSpecification& rhs) const {
@@ -1140,12 +1152,22 @@ struct VertexSpecification {
 
     bool has_positions() const { return bool(position_attribute); }
     bool has_normals() const { return bool(normal_attribute); }
+
+    bool has_texcoordX(uint8_t which) const;
+
+    const VertexAttribute texcoordX_attribute(uint8_t which) const;
+
     bool has_texcoord0() const { return bool(texcoord0_attribute); }
     bool has_texcoord1() const { return bool(texcoord1_attribute); }
     bool has_texcoord2() const { return bool(texcoord2_attribute); }
     bool has_texcoord3() const { return bool(texcoord3_attribute); }
+    bool has_texcoord4() const { return bool(texcoord4_attribute); }
+    bool has_texcoord5() const { return bool(texcoord5_attribute); }
+    bool has_texcoord6() const { return bool(texcoord6_attribute); }
+    bool has_texcoord7() const { return bool(texcoord7_attribute); }
+
     bool has_diffuse() const { return bool(diffuse_attribute); }
-    bool has_specular() const { return bool(specular_attribute); }
+    bool has_specular() const { return bool(specular_attribute); }    
 
     uint32_t position_offset(bool check=true) const;
     uint32_t normal_offset(bool check=true) const;
@@ -1153,6 +1175,13 @@ struct VertexSpecification {
     uint32_t texcoord1_offset(bool check=true) const;
     uint32_t texcoord2_offset(bool check=true) const;
     uint32_t texcoord3_offset(bool check=true) const;
+    uint32_t texcoord4_offset(bool check=true) const;
+    uint32_t texcoord5_offset(bool check=true) const;
+    uint32_t texcoord6_offset(bool check=true) const;
+    uint32_t texcoord7_offset(bool check=true) const;
+
+    uint32_t texcoordX_offset(uint8_t which, bool check=true) const;
+
     uint32_t diffuse_offset(bool check=true) const;
     uint32_t specular_offset(bool check=true) const;
 
@@ -1160,6 +1189,12 @@ struct VertexSpecification {
 
 private:
     uint32_t stride_;
+};
+
+enum IndexType {
+    INDEX_TYPE_8_BIT,
+    INDEX_TYPE_16_BIT,
+    INDEX_TYPE_32_BIT
 };
 
 enum BlendType {

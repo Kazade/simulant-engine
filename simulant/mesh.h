@@ -89,7 +89,8 @@ public:
         MaterialID material,
         MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES,
         VertexSharingMode vertex_sharing = VERTEX_SHARING_MODE_SHARED,
-        VertexSpecification vertex_specification = VertexSpecification()
+        VertexSpecification vertex_specification = VertexSpecification(),
+        IndexType index_type = INDEX_TYPE_16_BIT
     );
 
     virtual ~SubMesh();
@@ -182,7 +183,8 @@ class Mesh :
 public:
     Mesh(MeshID id,
          ResourceManager* resource_manager,
-         VertexSpecification vertex_specification);
+         VertexSpecification vertex_specification
+    );
 
     ~Mesh();
 
@@ -193,14 +195,16 @@ public:
         MaterialID material,        
         MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES,
         VertexSharingMode vertex_sharing=VERTEX_SHARING_MODE_SHARED,
-        VertexSpecification vertex_specification=VertexSpecification()
+        VertexSpecification vertex_specification=VertexSpecification(),
+        IndexType=INDEX_TYPE_16_BIT
     );
 
     SubMesh* new_submesh(
         const std::string& name,
         MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES,
         VertexSharingMode vertex_sharing=VERTEX_SHARING_MODE_SHARED,
-        VertexSpecification vertex_specification=VertexSpecification()
+        VertexSpecification vertex_specification=VertexSpecification(),
+        IndexType=INDEX_TYPE_16_BIT
     );
 
     SubMesh* new_submesh_as_rectangle(
