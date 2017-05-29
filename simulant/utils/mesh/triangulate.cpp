@@ -5,8 +5,7 @@ namespace smlt {
 namespace utils {
 
 std::vector<uint32_t> triangles_to_triangles(SubMesh* submesh) {
-    std::vector<uint32_t> ret(submesh->index_data->all().begin(), submesh->index_data->all().end());
-    return ret;
+    return submesh->index_data->all();
 }
 
 std::vector<uint32_t> triangle_strip_to_triangles(SubMesh* submesh) {
