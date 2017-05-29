@@ -387,7 +387,7 @@ VertexSpecification::VertexSpecification(VertexAttribute position, VertexAttribu
 }
 
 bool VertexSpecification::has_texcoordX(uint8_t which) const {
-    static const std::array<bool (VertexSpecification::*)() const, MAX_TEXTURE_UNITS> LOOKUPS = {{
+    static const std::array<bool (VertexSpecification::*)() const, 8> LOOKUPS = {{
             &VertexSpecification::has_texcoord0,
             &VertexSpecification::has_texcoord1,
             &VertexSpecification::has_texcoord2,
@@ -488,7 +488,7 @@ uint32_t VertexSpecification::texcoord7_offset(bool check) const {
 }
 
 uint32_t VertexSpecification::texcoordX_offset(uint8_t which, bool check) const {
-    static const std::array<uint32_t (VertexSpecification::*)(bool) const, MAX_TEXTURE_UNITS> LOOKUPS = {
+    static const std::array<uint32_t (VertexSpecification::*)(bool) const, 8> LOOKUPS = {
             &VertexSpecification::texcoord0_offset,
             &VertexSpecification::texcoord1_offset,
             &VertexSpecification::texcoord2_offset,

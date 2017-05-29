@@ -64,13 +64,13 @@ bool ResourceManager::init() {
 
     auto tex = texture(default_texture_id_);
 
-    tex->resize(1, 1);
+    tex->resize(8, 8);
     tex->set_bpp(32);
 
-    tex->data()[0] = 255;
-    tex->data()[1] = 255;
-    tex->data()[2] = 255;
-    tex->data()[3] = 255;
+    for(uint32_t i = 0; i < 64 * 4; ++i) {
+        tex->data()[i] = 255;
+    }
+
     tex->upload();
 
     //Maintain ref-count

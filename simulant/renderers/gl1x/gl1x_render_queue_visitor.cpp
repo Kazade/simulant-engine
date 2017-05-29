@@ -1,6 +1,8 @@
 
 #ifdef _arch_dreamcast
     #include <GL/gl.h>
+
+    #define GL_TEXTURE0_ARB GL_TEXTURE0
 #else
     #include "./glad/glad/glad.h"
 #endif
@@ -87,7 +89,90 @@ void GL1RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev
 }
 
 void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const MaterialPass* next) {
+    pass_ = next;
 
+    if(!prev || prev->depth_test_enabled() != next->depth_test_enabled()) {
+        if(next->depth_test_enabled()) {
+            GLCheck(glEnable, GL_DEPTH_TEST);
+        } else {
+            GLCheck(glDisable, GL_DEPTH_TEST);
+        }
+    }
+
+    if(!prev || prev->depth_write_enabled() != next->depth_write_enabled()) {
+        if(next->depth_write_enabled()) {
+            GLCheck(glDepthMask, GL_TRUE);
+        } else {
+            GLCheck(glDepthMask, GL_FALSE);
+        }
+    }
+
+#ifndef _arch_dreamcast
+    if(!prev || prev->point_size() != next->point_size()) {
+        glPointSize(next->point_size());
+    }
+
+    if(!prev || prev->polygon_mode() != next->polygon_mode()) {
+        switch(next->polygon_mode()) {
+            case POLYGON_MODE_POINT:
+                glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+            break;
+            case POLYGON_MODE_LINE:
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            break;
+            default:
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
+    }
+#endif
+
+    if(!prev || prev->cull_mode() != next->cull_mode()) {
+        if(next->cull_mode() != CULL_MODE_NONE) {
+            glEnable(GL_CULL_FACE);
+        }
+
+        switch(next->cull_mode()) {
+            case CULL_MODE_NONE:
+                glDisable(GL_CULL_FACE);
+            break;
+            case CULL_MODE_FRONT_FACE:
+                glCullFace(GL_FRONT);
+            break;
+            case CULL_MODE_BACK_FACE:
+                glCullFace(GL_BACK);
+            break;
+            case CULL_MODE_FRONT_AND_BACK_FACE:
+                glCullFace(GL_FRONT_AND_BACK);
+            break;
+        }
+    }
+
+    auto set_blending_mode = [](BlendType type) {
+        if(type == BLEND_NONE) {
+            GLCheck(glDisable, GL_BLEND);
+            return;
+        }
+
+        GLCheck(glEnable, GL_BLEND);
+        switch(type) {
+            case BLEND_ADD: GLCheck(glBlendFunc, GL_ONE, GL_ONE);
+            break;
+            case BLEND_ALPHA: GLCheck(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            break;
+            case BLEND_COLOUR: GLCheck(glBlendFunc, GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
+            break;
+            case BLEND_MODULATE: GLCheck(glBlendFunc, GL_DST_COLOR, GL_ZERO);
+            break;
+            case BLEND_ONE_ONE_MINUS_ALPHA: GLCheck(glBlendFunc, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+            break;
+        default:
+            throw std::logic_error("Invalid blend type specified");
+        }
+    };
+
+    if(!prev || prev->blending() != next->blending()) {
+        set_blending_mode(next->blending());
+    }
 }
 
 void GL1RenderQueueVisitor::change_light(const Light* prev, const Light* next) {
@@ -192,7 +277,7 @@ GLenum convert_arrangement(MeshArrangement arrangement) {
     }
 }
 
-GLenum convert_index_type(IndexType type) {
+static GLenum convert_index_type(IndexType type) {
     switch(type) {
     case INDEX_TYPE_8_BIT: return GL_UNSIGNED_BYTE;
     case INDEX_TYPE_16_BIT: return GL_UNSIGNED_SHORT;

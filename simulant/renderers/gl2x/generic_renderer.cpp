@@ -606,30 +606,42 @@ void GL2RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
     renderer_->send_geometry(renderable);
 }
 
+static GLenum convert_index_type(IndexType type) {
+    switch(type) {
+    case INDEX_TYPE_8_BIT: return GL_UNSIGNED_BYTE;
+    case INDEX_TYPE_16_BIT: return GL_UNSIGNED_SHORT;
+    case INDEX_TYPE_32_BIT: return GL_UNSIGNED_INT;
+    default:
+        throw std::logic_error("Invalid index type");
+    }
+}
+
 void GenericRenderer::send_geometry(Renderable *renderable) {
     std::size_t index_count = renderable->index_element_count();
     if(!index_count) {
         return;
     }
 
+    auto index_type = convert_index_type(renderable->index_type());
+
     switch(renderable->arrangement()) {
         case MESH_ARRANGEMENT_POINTS:
-            GLCheck(glDrawElements, GL_POINTS, index_count, GL_UNSIGNED_INT, BUFFER_OFFSET(0));
+            GLCheck(glDrawElements, GL_POINTS, index_count, index_type, BUFFER_OFFSET(0));
         break;
         case MESH_ARRANGEMENT_LINES:
-            GLCheck(glDrawElements, GL_LINES, index_count, GL_UNSIGNED_INT, BUFFER_OFFSET(0));
+            GLCheck(glDrawElements, GL_LINES, index_count, index_type, BUFFER_OFFSET(0));
         break;
         case MESH_ARRANGEMENT_LINE_STRIP:
-            GLCheck(glDrawElements, GL_LINE_STRIP, index_count, GL_UNSIGNED_INT, BUFFER_OFFSET(0));
+            GLCheck(glDrawElements, GL_LINE_STRIP, index_count, index_type, BUFFER_OFFSET(0));
         break;
         case MESH_ARRANGEMENT_TRIANGLES:
-            GLCheck(glDrawElements, GL_TRIANGLES, index_count, GL_UNSIGNED_INT, BUFFER_OFFSET(0));
+            GLCheck(glDrawElements, GL_TRIANGLES, index_count, index_type, BUFFER_OFFSET(0));
         break;
         case MESH_ARRANGEMENT_TRIANGLE_STRIP:
-            GLCheck(glDrawElements, GL_TRIANGLE_STRIP, index_count, GL_UNSIGNED_INT, BUFFER_OFFSET(0));
+            GLCheck(glDrawElements, GL_TRIANGLE_STRIP, index_count, index_type, BUFFER_OFFSET(0));
         break;
         case MESH_ARRANGEMENT_TRIANGLE_FAN:
-            GLCheck(glDrawElements, GL_TRIANGLE_FAN, index_count, GL_UNSIGNED_INT, BUFFER_OFFSET(0));
+            GLCheck(glDrawElements, GL_TRIANGLE_FAN, index_count, index_type, BUFFER_OFFSET(0));
         break;
         default:
             L_DEBUG("Tried to render a mesh with an invalid arrangement");
