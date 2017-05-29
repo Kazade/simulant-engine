@@ -676,3 +676,4 @@ simulant/generic/simple_tostring.cpp
 simulant/generic/simple_tostring.h
 simulant/sound_drivers/kos_sound_driver.cpp
 simulant/renderers/gl1x/gl1x_buffer_manager.cpp
+tests/gl2/test_gl2.h

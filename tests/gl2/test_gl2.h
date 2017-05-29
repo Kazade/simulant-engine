@@ -21,12 +21,12 @@ public:
     }
 
     void test_that_buffers_can_be_allocated() {
-        auto buffer = buffer_manager_.allocate(10, smlt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES);
+        auto buffer = buffer_manager_.allocate(10, smlt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES, SHADOW_BUFFER_DISABLED);
         assert_equal(10, buffer->size());
     }
 
     void test_that_buffers_can_be_released() {
-        auto buffer = buffer_manager_.allocate(10, smlt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES);
+        auto buffer = buffer_manager_.allocate(10, smlt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES, SHADOW_BUFFER_DISABLED);
         assert_equal(10, buffer->size());
         buffer->release();
         assert_true(buffer->is_dead());
@@ -53,14 +53,14 @@ public:
         data.position(smlt::Vec3());
         data.done();
 
-        auto small_buffer = buffer_manager_.allocate(3 * sizeof(float), smlt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES);
+        auto small_buffer = buffer_manager_.allocate(3 * sizeof(float), smlt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES, SHADOW_BUFFER_DISABLED);
 
         // Buffer is too small for the specified data, should raise an error
         assert_raises(std::out_of_range, [&]() {
             small_buffer->upload(data);
         });
 
-        auto buffer = buffer_manager_.allocate(sizeof(float) * 6, smlt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES);
+        auto buffer = buffer_manager_.allocate(sizeof(float) * 6, smlt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES, SHADOW_BUFFER_DISABLED);
         buffer->upload(data); //Should succeed
     }
 };

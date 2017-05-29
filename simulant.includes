@@ -129,3 +129,4 @@ simulant/controllers/physics
 deps/bounce/src/bounce/dynamics
 simulant/utils/mesh
 simulant/sound_drivers
+tests/gl2
