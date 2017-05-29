@@ -68,7 +68,22 @@ void GL1RenderQueueVisitor::end_traversal(const batcher::RenderQueue &queue, Sta
 }
 
 void GL1RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev, const batcher::RenderGroup *next) {
+    // Casting blindly because I can't see how it's possible that it's anything else!
+    auto last_group = (prev) ? (GL1RenderGroupImpl*) prev->impl() : nullptr;
+    current_group_ = (GL1RenderGroupImpl*) next->impl();
 
+    // Set up the textures appropriately depending on the group textures
+    for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
+        if(!last_group || last_group->texture_id[i] != current_group_->texture_id[i]) {
+            GLCheck(glActiveTextureARB, GL_TEXTURE0_ARB + i);
+            if(current_group_->texture_id[i]) {
+                GLCheck(glEnable, GL_TEXTURE_2D);
+                GLCheck(glBindTexture, GL_TEXTURE_2D, current_group_->texture_id[i]);
+            } else {
+                GLCheck(glDisable, GL_TEXTURE_2D);
+            }
+        }
+    }
 }
 
 void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const MaterialPass* next) {
@@ -198,6 +213,18 @@ void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
     if(!element_count) {
         return;
     }
+
+    const Mat4 model = renderable->final_transformation();
+    const Mat4& view = camera_->view_matrix();
+    const Mat4& projection = camera_->projection_matrix();
+
+    Mat4 modelview = view * model;
+
+    GLCheck(glMatrixMode, GL_MODELVIEW);
+    GLCheck(glLoadMatrixf, (const GLfloat*) &modelview);
+
+    GLCheck(glMatrixMode, GL_PROJECTION);
+    GLCheck(glLoadMatrixf, (const GLfloat*) &projection);
 
     auto spec = renderable->vertex_attribute_specification();
 
