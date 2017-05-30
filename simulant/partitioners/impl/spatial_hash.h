@@ -2,7 +2,7 @@
 
 #include <cstring>
 #include <map>
-#include <set>
+#include <unordered_set>
 #include <ostream>
 #include <unordered_set>
 #include "../../interfaces.h"
@@ -58,12 +58,37 @@ struct Key {
     friend std::ostream& operator<<(std::ostream& os, const Key& key);
 };
 
+}
+
+namespace std {
+
+    template<>
+    struct hash<smlt::Key> {
+        typedef smlt::Key argument_type;
+        typedef std::size_t result_type;
+
+        result_type operator()(argument_type const& s) const
+        {
+            result_type result = 0;
+            for(uint8_t i = 0; i < smlt::MAX_GRID_LEVELS; ++i) {
+                hash_combine(result, s.hash_path[i].x);
+                hash_combine(result, s.hash_path[i].y);
+                hash_combine(result, s.hash_path[i].z);
+            }
+            return result;
+        }
+    };
+
+}
+
+namespace smlt {
+
 std::ostream& operator<<(std::ostream& os, const Key& key);
 
 Key make_key(int32_t cell_size, float x, float y, float z);
 Hash make_hash(int32_t cell_size, float x, float y, float z);
 
-typedef std::set<Key> KeyList;
+typedef std::unordered_set<Key> KeyList;
 
 class SpatialHashEntry {
 public:
@@ -122,4 +147,6 @@ std::ostream &operator<<(std::ostream &os, const SpatialHash &hash);
 void generate_boxes_for_frustum(const Frustum& frustum, std::vector<AABB>& results);
 
 }
+
+
 

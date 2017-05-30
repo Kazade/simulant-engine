@@ -181,7 +181,7 @@ HGSHEntryList SpatialHash::find_objects_within_box(const AABB &box) {
 
     auto corners = box.corners();
 
-    std::set<Key> seen;
+    KeyList seen;
 
     for(auto& corner: corners) {
         auto key = make_key(
