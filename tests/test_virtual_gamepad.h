@@ -60,8 +60,8 @@ public:
 
         float w = window->width();
         float h = window->height();
-        float x = b1.min.x + 1;
-        float y = b1.min.y + 1;
+        float x = b1.min().x + 1;
+        float y = b1.min().y + 1;
 
         window->on_finger_down(0, x / w, y / h, 1.0);
         window->run_frame();
@@ -69,8 +69,8 @@ public:
         assert_true(b1_pressed);
         assert_false(b2_pressed);
 
-        x = b2.min.x + 1;
-        y = b2.min.y - 1; //Outside the button
+        x = b2.min().x + 1;
+        y = b2.min().y - 1; //Outside the button
 
         window->on_finger_down(1, x / w, y / h, 1.0);
         window->run_frame();
@@ -78,8 +78,8 @@ public:
         assert_false(b2_pressed);
         assert_true(b1_pressed);
 
-        x = b2.min.x + 1;
-        y = b2.min.y + 1;
+        x = b2.min().x + 1;
+        y = b2.min().y + 1;
 
         window->on_finger_down(1, x / w, y / h, 1.0);
         window->run_frame();
@@ -104,14 +104,14 @@ public:
 
         float w = window->width();
         float h = window->height();
-        int x = b1.min.x + 1;
-        int y = b1.min.y + 1;
+        int x = b1.min().x + 1;
+        int y = b1.min().y + 1;
 
         window->on_finger_down(0, x / w, y / h, 1.0);
         window->run_frame();
 
-        x = b2.min.x + 1;
-        y = b2.min.y + 1;
+        x = b2.min().x + 1;
+        y = b2.min().y + 1;
 
         window->on_finger_down(1, x / w, y / h, 1.0);
         window->run_frame();
@@ -144,8 +144,8 @@ public:
 
         float w = window->width();
         float h = window->height();
-        int x = b1.min.x + 1;
-        int y = b1.min.y + 1;
+        int x = b1.min().x + 1;
+        int y = b1.min().y + 1;
 
         window->on_finger_down(0, x / w, y / h);
         window->on_finger_down(1, x / w, y / h);
@@ -191,8 +191,8 @@ public:
 
         float w = window->width();
         float h = window->height();
-        int x = b1.min.x + 1;
-        int y = b1.min.y + 1;
+        int x = b1.min().x + 1;
+        int y = b1.min().y + 1;
 
         window->on_finger_down(0, x / w, y / h);
         window->run_frame();
@@ -229,8 +229,8 @@ public:
 
         float w = window->width();
         float h = window->height();
-        float x = b1.min.x + 1;
-        float y = b1.min.y + 1;
+        float x = b1.min().x + 1;
+        float y = b1.min().y + 1;
 
         window->on_finger_down(0, x / w, y / h);
         window->run_frame();
@@ -245,8 +245,8 @@ public:
 
         float w = window->width();
         float h = window->height();
-        float x = b1.min.x + 1;
-        float y = b1.min.y + 1;
+        float x = b1.min().x + 1;
+        float y = b1.min().y + 1;
 
         window->joypad(window->joypad_count() - 1).button_while_down_connect(0, [&](int btn, float dt) {
             button_pressed = true;

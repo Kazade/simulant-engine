@@ -136,17 +136,20 @@ const AABB Mesh::aabb() const {
     float max = std::numeric_limits<float>::max();
     float min = std::numeric_limits<float>::min();
 
-    result.min = smlt::Vec3(max, max, max);
-    result.max = smlt::Vec3(min, min, min);
+    result.set_min(smlt::Vec3(max, max, max));
+    result.set_max(smlt::Vec3(min, min, min));
 
     each([&result](const std::string& name, SubMesh* mesh) {
-        if(mesh->aabb().min.x < result.min.x) result.min.x = mesh->aabb().min.x;
-        if(mesh->aabb().min.y < result.min.y) result.min.y = mesh->aabb().min.y;
-        if(mesh->aabb().min.z < result.min.z) result.min.z = mesh->aabb().min.z;
+        auto sm_min = mesh->aabb().min();
+        auto sm_max = mesh->aabb().max();
 
-        if(mesh->aabb().max.x > result.max.x) result.max.x = mesh->aabb().max.x;
-        if(mesh->aabb().max.y > result.max.y) result.max.y = mesh->aabb().max.y;
-        if(mesh->aabb().max.z > result.max.z) result.max.z = mesh->aabb().max.z;
+        if(sm_min.x < result.min().x) result.set_min_x(sm_min.x);
+        if(sm_min.y < result.min().y) result.set_min_y(sm_min.y);
+        if(sm_min.z < result.min().z) result.set_min_z(sm_min.z);
+
+        if(sm_max.x > result.max().x) result.set_max_x(sm_max.x);
+        if(sm_max.y > result.max().y) result.set_max_y(sm_max.y);
+        if(sm_max.z > result.max().z) result.set_max_z(sm_max.z);
     });
 
     return result;
@@ -761,9 +764,13 @@ void SubMesh::reverse_winding() {
  */
 void SubMesh::_recalc_bounds() {
     //Set the min bounds to the max
-    bounds_.min = Vec3(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+    bounds_.set_min(
+        Vec3(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max())
+    );
     //Set the max bounds to the min
-    bounds_.max = Vec3(std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest());
+    bounds_.set_max(
+        Vec3(std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest())
+    );
 
     if(!index_data->count()) {
         bounds_ = AABB();
@@ -772,13 +779,13 @@ void SubMesh::_recalc_bounds() {
 
     for(uint16_t idx: index_data->all()) {
         Vec3 pos = vertex_data->position_at<Vec3>(idx);
-        if(pos.x < bounds_.min.x) bounds_.min.x = pos.x;
-        if(pos.y < bounds_.min.y) bounds_.min.y = pos.y;
-        if(pos.z < bounds_.min.z) bounds_.min.z = pos.z;
+        if(pos.x < bounds_.min().x) bounds_.set_min_x(pos.x);
+        if(pos.y < bounds_.min().y) bounds_.set_min_y(pos.y);
+        if(pos.z < bounds_.min().z) bounds_.set_min_z(pos.z);
 
-        if(pos.x > bounds_.max.x) bounds_.max.x = pos.x;
-        if(pos.y > bounds_.max.y) bounds_.max.y = pos.y;
-        if(pos.z > bounds_.max.z) bounds_.max.z = pos.z;
+        if(pos.x > bounds_.max().x) bounds_.set_max_x(pos.x);
+        if(pos.y > bounds_.max().y) bounds_.set_max_y(pos.y);
+        if(pos.z > bounds_.max().z) bounds_.set_max_z(pos.z);
     }
 }
 
@@ -827,7 +834,7 @@ void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
         // Create a plane at the origin with the opposite direction
         Plane plane(-dir.x, -dir.y, -dir.z, 0.0f);
 
-        smlt::Vec3 v1 = vd->position_at<Vec3>(i) - bounds_.min;
+        smlt::Vec3 v1 = vd->position_at<Vec3>(i) - bounds_.min();
 
         // Project the vertex position onto the plane
         smlt::Vec3 final = plane.project(v1);

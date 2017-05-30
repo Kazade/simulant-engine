@@ -607,12 +607,12 @@ bool Ray::intersects_aabb(const AABB &aabb) const {
     Vec3 rdir = this->dir.normalized();
     Vec3 dirfrac(1.0 / rdir.x, 1.0 / rdir.y, 1.0 / rdir.z);
 
-    float t1 = (aabb.min.x - start.x) * dirfrac.x;
-    float t2 = (aabb.max.x - start.x) * dirfrac.x;
-    float t3 = (aabb.min.y - start.y) * dirfrac.y;
-    float t4 = (aabb.max.y - start.y) * dirfrac.y;
-    float t5 = (aabb.min.z - start.z) * dirfrac.z;
-    float t6 = (aabb.max.z - start.z) * dirfrac.z;
+    float t1 = (aabb.min().x - start.x) * dirfrac.x;
+    float t2 = (aabb.max().x - start.x) * dirfrac.x;
+    float t3 = (aabb.min().y - start.y) * dirfrac.y;
+    float t4 = (aabb.max().y - start.y) * dirfrac.y;
+    float t5 = (aabb.min().z - start.z) * dirfrac.z;
+    float t6 = (aabb.max().z - start.z) * dirfrac.z;
 
     float tmin = std::max(std::max(std::min(t1, t2), std::min(t3, t4)), std::min(t5, t6));
     float tmax = std::min(std::min(std::max(t1, t2), std::max(t3, t4)), std::max(t5, t6));
@@ -653,6 +653,58 @@ bool Ray::intersects_triangle(const Vec3 &v1, const Vec3 &v2, const Vec3 &v3, Ve
     }
 
     return ret;
+}
+
+AABB::AABB(const Vec3 &min, const Vec3 &max) {
+    set_min(min);
+    set_max(max);
+    rebuild_corners();
+}
+
+AABB::AABB(const Vec3 &centre, float width) {
+    set_min(centre - Vec3(width * 0.5, width * 0.5, width * 0.5));
+    set_max(centre + Vec3(width * 0.5, width * 0.5, width * 0.5));
+
+    rebuild_corners();
+}
+
+AABB::AABB(const Vec3 &centre, float xsize, float ysize, float zsize) {
+    set_min(centre - Vec3(xsize * 0.5, ysize * 0.5, zsize * 0.5));
+    set_max(centre + Vec3(xsize * 0.5, ysize * 0.5, zsize * 0.5));
+
+    rebuild_corners();
+}
+
+AABB::AABB(const Vec3 *vertices, const std::size_t count) {
+    if(count == 0) {
+        set_min(Vec3());
+        set_max(Vec3());
+        rebuild_corners();
+        return;
+    }
+
+    float minx = std::numeric_limits<float>::max();
+    float miny = std::numeric_limits<float>::max();
+    float minz = std::numeric_limits<float>::max();
+
+    float maxx = std::numeric_limits<float>::lowest();
+    float maxy = std::numeric_limits<float>::lowest();
+    float maxz = std::numeric_limits<float>::lowest();
+
+    for(uint32_t i = 0; i < count; ++i) {
+        if(vertices[i].x < minx) minx = vertices[i].x;
+        if(vertices[i].y < miny) miny = vertices[i].y;
+        if(vertices[i].z < minz) minz = vertices[i].z;
+
+        if(vertices[i].x > maxx) maxx = vertices[i].x;
+        if(vertices[i].y > maxy) maxy = vertices[i].y;
+        if(vertices[i].z > maxz) maxz = vertices[i].z;
+    }
+
+    set_min(Vec3(minx, miny, minz));
+    set_max(Vec3(maxx, maxy, maxz));
+
+    rebuild_corners();
 }
 
 }

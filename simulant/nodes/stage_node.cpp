@@ -178,7 +178,7 @@ const AABB StageNode::transformed_aabb() const {
 
 void StageNode::recalc_bounds() {
     auto newb = transformed_aabb();
-    if(newb.min != bounds_.min || newb.max != bounds_.max) {
+    if(newb.min() != bounds_.min() || newb.max() != bounds_.max()) {
         bounds_ = newb;
         signal_bounds_updated_(bounds_);
     }

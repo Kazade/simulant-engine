@@ -187,13 +187,16 @@ void Transformable::set_position(const Vec3 &p) {
     auto to_set = p;
 
     if(constraint_ && !constraint_->contains_point(to_set)) {
-        if(to_set.x < constraint_->min.x) to_set.x = constraint_->min.x;
-        if(to_set.y < constraint_->min.y) to_set.y = constraint_->min.y;
-        if(to_set.z < constraint_->min.z) to_set.z = constraint_->min.z;
+        auto min = constraint_->min();
+        auto max = constraint_->max();
 
-        if(to_set.x > constraint_->max.x) to_set.x = constraint_->max.x;
-        if(to_set.y > constraint_->max.y) to_set.y = constraint_->max.y;
-        if(to_set.z > constraint_->max.z) to_set.z = constraint_->max.z;
+        if(to_set.x < min.x) to_set.x = min.x;
+        if(to_set.y < min.y) to_set.y = min.y;
+        if(to_set.z < min.z) to_set.z = min.z;
+
+        if(to_set.x > max.x) to_set.x = max.x;
+        if(to_set.y > max.y) to_set.y = max.y;
+        if(to_set.z > max.z) to_set.z = max.z;
     };
 
     if(to_set.x != position_.x || to_set.y != position_.y || to_set.z != position_.z) {

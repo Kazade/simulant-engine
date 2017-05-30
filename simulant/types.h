@@ -922,68 +922,111 @@ struct Ray {
     ) const;
 };
 
-struct AABB {
-    Vec3 min;
-    Vec3 max;
+class AABB {
+    /* This was originally a basic struct but for performance reasons it's now a class
+     * so that we can store things like pre-calculate corners and know they are kept up-to-date
+     * with setters */
 
-    AABB() = default;
+    Vec3 min_;
+    Vec3 max_;
 
-    AABB(const Vec3& min, const Vec3& max) {
-        this->min = min;
-        this->max = max;
+    std::array<Vec3, 8> corners_;
+
+    void rebuild_corners() {
+        corners_[0] = Vec3(min_.x, min_.y, min_.z);
+        corners_[1] = Vec3(max_.x, min_.y, min_.z);
+        corners_[2] = Vec3(max_.x, min_.y, max_.z);
+        corners_[3] = Vec3(min_.x, min_.y, max_.z);
+
+        corners_[4] = Vec3(min_.x, max_.y, min_.z);
+        corners_[5] = Vec3(max_.x, max_.y, min_.z);
+        corners_[6] = Vec3(max_.x, max_.y, max_.z);
+        corners_[7] = Vec3(min_.x, max_.y, max_.z);
     }
 
-    AABB(const Vec3& centre, float width):
-        min(centre - Vec3(width * 0.5, width * 0.5, width * 0.5)),
-        max(centre + Vec3(width * 0.5, width * 0.5, width * 0.5)){
-
-    }
-
-    AABB(const Vec3& centre, float xsize, float ysize, float zsize):
-        min(centre - Vec3(xsize * 0.5, ysize * 0.5, zsize * 0.5)),
-        max(centre + Vec3(xsize * 0.5, ysize * 0.5, zsize * 0.5)) {
-
-    }
-
-    AABB(const Vec3* vertices, const std::size_t count) {
-        if(count == 0) {
-            this->min = Vec3();
-            this->max = Vec3();
-            return;
+public:
+    void set_min(const Vec3& min) {
+        if(min_ != min) {
+            min_ = min;
+            rebuild_corners();
         }
-
-        float minx = std::numeric_limits<float>::max();
-        float miny = std::numeric_limits<float>::max();
-        float minz = std::numeric_limits<float>::max();
-
-        float maxx = std::numeric_limits<float>::lowest();
-        float maxy = std::numeric_limits<float>::lowest();
-        float maxz = std::numeric_limits<float>::lowest();
-
-        for(uint32_t i = 0; i < count; ++i) {
-            if(vertices[i].x < minx) minx = vertices[i].x;
-            if(vertices[i].y < miny) miny = vertices[i].y;
-            if(vertices[i].z < minz) minz = vertices[i].z;
-
-            if(vertices[i].x > maxx) maxx = vertices[i].x;
-            if(vertices[i].y > maxy) maxy = vertices[i].y;
-            if(vertices[i].z > maxz) maxz = vertices[i].z;
-        }
-
-        min = Vec3(minx, miny, minz);
-        max = Vec3(maxx, maxy, maxz);
     }
+
+    void set_min_x(float x) {
+        if(x != min_.x) {
+            min_.x = x;
+            rebuild_corners();
+        }
+    }
+
+    void set_min_y(float y) {
+        if(y != min_.y) {
+            min_.y = y;
+            rebuild_corners();
+        }
+    }
+
+    void set_min_z(float z) {
+        if(z != min_.z) {
+            min_.z = z;
+            rebuild_corners();
+        }
+    }
+
+
+    void set_max_x(float x) {
+        if(x != max_.x) {
+            max_.x = x;
+            rebuild_corners();
+        }
+    }
+
+    void set_max_y(float y) {
+        if(y != max_.y) {
+            max_.y = y;
+            rebuild_corners();
+        }
+    }
+
+    void set_max_z(float z) {
+        if(z != max_.z) {
+            max_.z = z;
+            rebuild_corners();
+        }
+    }
+
+    void set_max(const Vec3& max) {
+        if(max_ != max) {
+            max_ = max;
+            rebuild_corners();
+        }
+    }
+
+    const Vec3& min() const { return min_; }
+    const Vec3& max() const { return max_; }
+
+    AABB() {
+        rebuild_corners();
+    }
+
+    AABB(const Vec3& min, const Vec3& max);
+
+    AABB(const Vec3& centre, float width);
+
+    AABB(const Vec3& centre, float xsize, float ysize, float zsize);
+
+    AABB(const Vec3* vertices, const std::size_t count);
 
     const float width() const {
-        return fabs(max.x - min.x);
+        return fabs(max_.x - min_.x);
     }
 
     const float height() const {
-        return fabs(max.y - min.y);
+        return fabs(max_.y - min_.y);
     }
 
     const float depth() const  {
-        return fabs(max.z - min.z);
+        return fabs(max_.z - min_.z);
     }
 
     const Vec3 dimensions() const {
@@ -995,21 +1038,21 @@ struct AABB {
     }
 
     bool intersects(const AABB& other) const {
-        auto acx = (min.x + max.x) * 0.5;
-        auto acy = (min.y + max.y) * 0.5;
-        auto acz = (min.z + max.z) * 0.5;
+        auto acx = (min_.x + max_.x) * 0.5;
+        auto acy = (min_.y + max_.y) * 0.5;
+        auto acz = (min_.z + max_.z) * 0.5;
 
-        auto bcx = (other.min.x + other.max.x) * 0.5;
-        auto bcy = (other.min.y + other.max.y) * 0.5;
-        auto bcz = (other.min.z + other.max.z) * 0.5;
+        auto bcx = (other.min_.x + other.max_.x) * 0.5;
+        auto bcy = (other.min_.y + other.max_.y) * 0.5;
+        auto bcz = (other.min_.z + other.max_.z) * 0.5;
 
-        auto arx = (max.x - min.x) * 0.5;
-        auto ary = (max.y - min.y) * 0.5;
-        auto arz = (max.z - min.z) * 0.5;
+        auto arx = (max_.x - min_.x) * 0.5;
+        auto ary = (max_.y - min_.y) * 0.5;
+        auto arz = (max_.z - min_.z) * 0.5;
 
-        auto brx = (other.max.x - other.min.x) * 0.5;
-        auto bry = (other.max.y - other.min.y) * 0.5;
-        auto brz = (other.max.z - other.min.z) * 0.5;
+        auto brx = (other.max_.x - other.min_.x) * 0.5;
+        auto bry = (other.max_.y - other.min_.y) * 0.5;
+        auto brz = (other.max_.z - other.min_.z) * 0.5;
 
         bool x = fabs(acx - bcx) <= (arx + brx);
         bool y = fabs(acy - bcy) <= (ary + bry);
@@ -1019,7 +1062,7 @@ struct AABB {
     }
 
     Vec3 centre() const {
-        return Vec3(min) + ((Vec3(max) - Vec3(min)) * 0.5f);
+        return Vec3(min_) + ((Vec3(max_) - Vec3(min_)) * 0.5f);
     }
 
     const bool has_zero_area() const {
@@ -1034,29 +1077,17 @@ struct AABB {
     }
 
     bool contains_point(const Vec3& p) const {
-        if(p.x >= min.x && p.x <= max.x &&
-           p.y >= min.y && p.y <= max.y &&
-           p.z >= min.z && p.z <= max.z) {
+        if(p.x >= min_.x && p.x <= max_.x &&
+           p.y >= min_.y && p.y <= max_.y &&
+           p.z >= min_.z && p.z <= max_.z) {
             return true;
         }
 
         return false;
     }
 
-    std::array<Vec3, 8> corners() const {
-        std::array<Vec3, 8> ret;
-
-        ret[0] = Vec3(min.x, min.y, min.z);
-        ret[1] = Vec3(max.x, min.y, min.z);
-        ret[2] = Vec3(max.x, min.y, max.z);
-        ret[3] = Vec3(min.x, min.y, max.z);
-
-        ret[4] = Vec3(min.x, max.y, min.z);
-        ret[5] = Vec3(max.x, max.y, min.z);
-        ret[6] = Vec3(max.x, max.y, max.z);
-        ret[7] = Vec3(min.x, max.y, max.z);
-
-        return ret;
+    const std::array<Vec3, 8>& corners() const {
+        return corners_;
     }
 };
 

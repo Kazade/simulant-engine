@@ -34,12 +34,15 @@ RaycastVehicle::RaycastVehicle(smlt::Controllable* object, RigidBodySimulation* 
 
     float offset = 0.001;
 
-    wheel_position_local_[0] = Vec3(aabb.min.x, aabb.min.y - offset, aabb.min.z);
-    wheel_position_local_[1] = Vec3(aabb.max.x, aabb.min.y - offset, aabb.min.z);
-    wheel_position_local_[2] = Vec3(aabb.min.x, aabb.min.y - offset, aabb.max.z);
-    wheel_position_local_[3] = Vec3(aabb.max.x, aabb.min.y - offset, aabb.max.z);
+    auto min = aabb.min();
+    auto max = aabb.max();
 
-    ground_detector_local_ = Vec3(0, aabb.min.y - offset, 0);
+    wheel_position_local_[0] = Vec3(min.x, min.y - offset, min.z);
+    wheel_position_local_[1] = Vec3(max.x, min.y - offset, min.z);
+    wheel_position_local_[2] = Vec3(min.x, min.y - offset, max.z);
+    wheel_position_local_[3] = Vec3(max.x, min.y - offset, max.z);
+
+    ground_detector_local_ = Vec3(0, min.y - offset, 0);
 }
 
 void RaycastVehicle::recalculate_rays() {

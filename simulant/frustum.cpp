@@ -30,16 +30,7 @@ Frustum::Frustum():
 
 bool Frustum::intersects_aabb(const AABB& aabb) const {
     for(const Plane& plane: planes_) {
-        smlt::Vec3 points[] = {
-            Vec3(aabb.min.x, aabb.min.y, aabb.min.z),
-            Vec3(aabb.max.x, aabb.min.y, aabb.min.z),
-            Vec3(aabb.max.x, aabb.max.y, aabb.min.z),
-            Vec3(aabb.max.x, aabb.max.y, aabb.max.z),
-            Vec3(aabb.min.x, aabb.max.y, aabb.min.z),
-            Vec3(aabb.min.x, aabb.max.y, aabb.max.z),
-            Vec3(aabb.max.x, aabb.min.y, aabb.max.z),
-            Vec3(aabb.min.x, aabb.min.y, aabb.max.z)
-        };
+        auto points = aabb.corners();
 
         int32_t points_behind = 0;
         for(Vec3& p: points) {

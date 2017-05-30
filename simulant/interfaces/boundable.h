@@ -15,17 +15,17 @@ public:
 
     virtual const float width() const {
         AABB box = aabb();
-        return box.max.x - box.min.x;
+        return box.width();
     }
 
     virtual const float height() const {
         AABB box = aabb();
-        return box.max.y - box.min.y;
+        return box.height();
     }
 
     virtual const float depth() const {
         AABB box = aabb();
-        return box.max.z - box.min.z;
+        return box.depth();
     }
 
     virtual const float half_width() const { return width() * 0.5f; }
@@ -52,11 +52,7 @@ public:
     virtual const AABB transformed_aabb() const = 0;
     virtual const Vec3 centre() const {
         AABB box = transformed_aabb();
-        return Vec3(
-            box.min.x + half_width(),
-            box.min.y + half_height(),
-            box.min.z + half_depth()
-        );
+        return box.centre();
     }
 };
 
