@@ -104,6 +104,7 @@ void Texture::__do_upload(MipmapGenerate mipmap, TextureWrap wrap, TextureFilter
 
     if(!gl_tex()) {
         GLCheck(glGenTextures, 1, &gl_tex_);
+        L_DEBUG(_F("Loaded {0} into GL texture {1}").format(source(), gl_tex_));
     }
 
     GLCheck(glBindTexture, GL_TEXTURE_2D, gl_tex_);   
@@ -130,6 +131,7 @@ void Texture::__do_upload(MipmapGenerate mipmap, TextureWrap wrap, TextureFilter
         assert(0 && "Not implemented");
     }
 
+    L_DEBUG(_F("Texture {0} has dimensions, W:{1} H:{2}").format(gl_tex_, width_, height_));
     GLCheck(glTexImage2D,
         GL_TEXTURE_2D,
         0, internalFormat,

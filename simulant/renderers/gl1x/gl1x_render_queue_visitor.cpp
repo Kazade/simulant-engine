@@ -1,8 +1,7 @@
 
 #ifdef _arch_dreamcast
     #include <GL/gl.h>
-
-    #define GL_TEXTURE0_ARB GL_TEXTURE0
+    #include <GL/glext.h>
 #else
     #include "./glad/glad/glad.h"
 #endif
@@ -76,12 +75,15 @@ void GL1RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev
 
     // Set up the textures appropriately depending on the group textures
     for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
-        if(!last_group || last_group->texture_id[i] != current_group_->texture_id[i]) {
+        auto current_tex = current_group_->texture_id[i];
+        if(!last_group || last_group->texture_id[i] != current_tex) {
             GLCheck(glActiveTextureARB, GL_TEXTURE0_ARB + i);
-            if(current_group_->texture_id[i]) {
+            if(current_tex) {
+                //L_DEBUG(_F("Binding texture {0} to texture unit {1}").format(current_tex, i));
                 GLCheck(glEnable, GL_TEXTURE_2D);
-                GLCheck(glBindTexture, GL_TEXTURE_2D, current_group_->texture_id[i]);
+                GLCheck(glBindTexture, GL_TEXTURE_2D, current_tex);
             } else {
+                //L_DEBUG(_F("Disabling texture unit {0}").format(i));
                 GLCheck(glBindTexture, GL_TEXTURE_2D, 0);
                 GLCheck(glDisable, GL_TEXTURE_2D);
             }
