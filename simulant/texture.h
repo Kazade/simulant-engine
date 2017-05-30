@@ -100,6 +100,9 @@ public:
     void sub_texture(TextureID src, uint16_t offset_x, uint16_t offset_y);
 
     void save_to_file(const unicode& filename);
+
+    void set_source(const unicode& source) { source_ = source; }
+    unicode source() const { return source_; }
 private:
     uint32_t width_;
     uint32_t height_;
@@ -108,6 +111,8 @@ private:
     Texture::Data data_;
 
     unsigned int gl_tex_;
+
+    unicode source_;
 };
 
 }

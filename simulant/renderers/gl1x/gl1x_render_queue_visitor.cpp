@@ -354,6 +354,7 @@ void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
 
         (enabled) ? enable_texcoord_array(i) : disable_texcoord_array(i);
 
+
         if(enabled) {
             GLCheck(glClientActiveTextureARB, GL_TEXTURE0_ARB + i);
             GLCheck(
