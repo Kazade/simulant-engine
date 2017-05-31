@@ -1,6 +1,10 @@
 #pragma once
 
-#include <chrono>
+#ifdef _arch_dreamcast
+    #include <cstdint>
+#else
+    #include <chrono>
+#endif
 
 #include "generic/managed.h"
 
@@ -25,7 +29,11 @@ public:
     bool use_fixed_step();
 
 private:
+#ifdef _arch_dreamcast
+    uint64_t last_update_;
+#else
     std::chrono::high_resolution_clock::time_point last_update_;
+#endif
 
     float accumulator_ = 0.0f;
     float total_time_ = 0.0f;

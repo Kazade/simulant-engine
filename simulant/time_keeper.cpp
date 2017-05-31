@@ -1,3 +1,6 @@
+#ifdef _arch_dreamcast
+#include <kos.h>
+#endif
 
 #include "time_keeper.h"
 
@@ -9,8 +12,11 @@ TimeKeeper::TimeKeeper(const float fixed_step):
 }
 
 bool TimeKeeper::init() {
+#ifdef _arch_dreamcast
+    last_update_ = timer_us_gettime64();
+#else
     last_update_ = std::chrono::high_resolution_clock::now();
-
+#endif
     return true;
 }
 
@@ -19,6 +25,13 @@ void TimeKeeper::cleanup() {
 }
 
 void TimeKeeper::update() {
+#ifdef _arch_dreamcast
+    auto now = timer_us_gettime64();
+    auto diff = now - last_update_;
+    last_update_ = now;
+
+    delta_time_ = float(diff) * 0.0000001;
+#else
     auto now = std::chrono::high_resolution_clock::now();
     auto diff = now - last_update_;
     last_update_ = now;
@@ -27,6 +40,8 @@ void TimeKeeper::update() {
 
     // Store the frame time, and the total elapsed time
     delta_time_ = std::chrono::duration_cast<float_seconds>(diff).count();
+#endif
+
     accumulator_ += delta_time_;
     total_time_ += delta_time_;
 }
