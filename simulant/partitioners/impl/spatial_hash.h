@@ -36,6 +36,7 @@ struct Hash {
 struct Key {
     Hash hash_path[MAX_GRID_LEVELS];
     std::size_t ancestors = 0;
+    std::size_t hash_code = 0;
 
     bool operator<(const Key& other) const {
         auto len = std::min(other.ancestors, ancestors) + 1;
@@ -69,13 +70,7 @@ namespace std {
 
         result_type operator()(argument_type const& s) const
         {
-            result_type result = 0;
-            for(uint8_t i = 0; i < smlt::MAX_GRID_LEVELS; ++i) {
-                hash_combine(result, s.hash_path[i].x);
-                hash_combine(result, s.hash_path[i].y);
-                hash_combine(result, s.hash_path[i].z);
-            }
-            return result;
+            return s.hash_code;
         }
     };
 
@@ -102,11 +97,15 @@ public:
         keys_.insert(key);
     }
 
-    void set_keys(const KeyList& keys) {
-        keys_ = keys;
+    void remove_key(const Key& key) {
+        keys_.erase(key);
     }
 
-    KeyList keys() const {
+    void set_keys(const KeyList& keys) {
+        keys_ = std::move(keys);
+    }
+
+    const KeyList& keys() const {
         return keys_;
     }
 
