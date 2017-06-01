@@ -30,7 +30,7 @@ void TimeKeeper::update() {
     auto diff = now - last_update_;
     last_update_ = now;
 
-    delta_time_ = float(diff) * 0.0000001;
+    delta_time_ = float(diff) * 0.000001;
 #else
     auto now = std::chrono::high_resolution_clock::now();
     auto diff = now - last_update_;
