@@ -344,14 +344,16 @@ void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
 
         (enabled) ? enable_texcoord_array(i) : disable_texcoord_array(i);
 
-        GLCheck(glClientActiveTextureARB, GL_TEXTURE0_ARB + i);
-        GLCheck(
-            glTexCoordPointer,
-            (spec.texcoordX_attribute(i) == VERTEX_ATTRIBUTE_2F) ? 2 : (spec.texcoordX_attribute(i) == VERTEX_ATTRIBUTE_3F) ? 3 : 4,
-            GL_FLOAT,
-            spec.stride(),
-            coord_pointer
-        );
+        if(enabled) {
+            GLCheck(glClientActiveTextureARB, GL_TEXTURE0_ARB + i);
+            GLCheck(
+                glTexCoordPointer,
+                (spec.texcoordX_attribute(i) == VERTEX_ATTRIBUTE_2F) ? 2 : (spec.texcoordX_attribute(i) == VERTEX_ATTRIBUTE_3F) ? 3 : 4,
+                GL_FLOAT,
+                spec.stride(),
+                coord_pointer
+            );
+        }
     }
 
     auto arrangement = convert_arrangement(renderable->arrangement());

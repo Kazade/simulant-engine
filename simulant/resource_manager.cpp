@@ -557,7 +557,7 @@ TextureID ResourceManager::new_texture_from_file(const unicode& path, TextureFla
         flags.mipmap,
         flags.wrap,
         flags.filter,
-        false
+        (flags.free_data == TEXTURE_FREE_DATA_AFTER_UPLOAD) ? true : false
     );
 
     mark_texture_as_uncollected(tex->id());

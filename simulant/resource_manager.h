@@ -56,6 +56,7 @@ struct TextureFlags {
     MipmapGenerate mipmap = MIPMAP_GENERATE_COMPLETE;
     TextureWrap wrap = TEXTURE_WRAP_REPEAT;
     TextureFilter filter = TEXTURE_FILTER_NEAREST;
+    TextureFreeData free_data = TEXTURE_FREE_DATA_AFTER_UPLOAD;
     bool flip_vertically = false;
 };
 

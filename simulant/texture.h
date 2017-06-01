@@ -48,6 +48,11 @@ enum TextureFilter {
     TEXTURE_FILTER_NEAREST
 };
 
+enum TextureFreeData {
+    TEXTURE_FREE_DATA_NEVER,
+    TEXTURE_FREE_DATA_AFTER_UPLOAD
+};
+
 class Texture :
     public Resource,
     public Loadable,

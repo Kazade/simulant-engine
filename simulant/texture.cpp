@@ -185,6 +185,7 @@ void Texture::__do_upload(MipmapGenerate mipmap, TextureWrap wrap, TextureFilter
     }
 
     if(free_after) {
+        L_DEBUG("Releasing texture data from RAM");
         free();
     }
 
