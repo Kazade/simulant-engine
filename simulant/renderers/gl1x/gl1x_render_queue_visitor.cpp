@@ -76,16 +76,16 @@ void GL1RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev
     // Set up the textures appropriately depending on the group textures
     for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
         auto current_tex = current_group_->texture_id[i];
-        if(!last_group || last_group->texture_id[i] != current_tex) {
+        if(!last_group || last_group->texture_id[i] != current_tex) {            
+            GLCheck(glEnable, GL_TEXTURE_2D);
             GLCheck(glActiveTextureARB, GL_TEXTURE0_ARB + i);
             if(current_tex) {
                 //L_DEBUG(_F("Binding texture {0} to texture unit {1}").format(current_tex, i));
-                GLCheck(glEnable, GL_TEXTURE_2D);
                 GLCheck(glBindTexture, GL_TEXTURE_2D, current_tex);
             } else {
                 //L_DEBUG(_F("Disabling texture unit {0}").format(i));
                 GLCheck(glBindTexture, GL_TEXTURE_2D, 0);
-                GLCheck(glDisable, GL_TEXTURE_2D);
+                //GLCheck(glDisable, GL_TEXTURE_2D);
             }
         }
     }
@@ -208,57 +208,45 @@ bool GL1RenderQueueVisitor::queue_if_blended(Renderable* renderable, MaterialPas
 }
 
 void GL1RenderQueueVisitor::enable_vertex_arrays(bool force) {
-#ifndef _arch_dreamcast
     if(!force && positions_enabled_) return;
     GLCheck(glEnableClientState, GL_VERTEX_ARRAY);
     positions_enabled_ = true;
-#endif
 }
 
 void GL1RenderQueueVisitor::disable_vertex_arrays(bool force) {
-#ifndef _arch_dreamcast
     if(!force && !positions_enabled_) return;
 
     GLCheck(glDisableClientState, GL_VERTEX_ARRAY);
     positions_enabled_ = false;
-#endif
 }
 
 void GL1RenderQueueVisitor::enable_colour_arrays(bool force) {
-#ifndef _arch_dreamcast
     if(!force && colours_enabled_) return;
     GLCheck(glEnableClientState, GL_COLOR_ARRAY);
     colours_enabled_ = true;
-#endif
 }
 
 void GL1RenderQueueVisitor::disable_colour_arrays(bool force) {
-#ifndef _arch_dreamcast
     if(!force && !colours_enabled_) return;
 
     GLCheck(glDisableClientState, GL_COLOR_ARRAY);
     colours_enabled_ = false;
-#endif
 }
 
 void GL1RenderQueueVisitor::enable_texcoord_array(uint8_t which, bool force) {
-#ifndef _arch_dreamcast
     if(!force && textures_enabled_[which]) return;
 
     GLCheck(glClientActiveTextureARB, GL_TEXTURE0_ARB + which);
     GLCheck(glEnableClientState, GL_TEXTURE_COORD_ARRAY);
     textures_enabled_[which] = true;
-#endif
 }
 
 void GL1RenderQueueVisitor::disable_texcoord_array(uint8_t which, bool force) {
-#ifndef _arch_dreamcast
     if(!force && !textures_enabled_[which]) return;
 
     GLCheck(glClientActiveTextureARB, GL_TEXTURE0_ARB + which);
     GLCheck(glDisableClientState, GL_TEXTURE_COORD_ARRAY);
     textures_enabled_[which] = false;
-#endif
 }
 
 GLenum convert_arrangement(MeshArrangement arrangement) {
@@ -356,21 +344,17 @@ void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
 
         (enabled) ? enable_texcoord_array(i) : disable_texcoord_array(i);
 
-
-        if(enabled) {
-            GLCheck(glClientActiveTextureARB, GL_TEXTURE0_ARB + i);
-            GLCheck(
-                glTexCoordPointer,
-                (spec.texcoordX_attribute(i) == VERTEX_ATTRIBUTE_2F) ? 2 : (spec.texcoordX_attribute(i) == VERTEX_ATTRIBUTE_3F) ? 3 : 4,
-                GL_FLOAT,
-                spec.stride(),
-                coord_pointer
-            );
-        }
+        GLCheck(glClientActiveTextureARB, GL_TEXTURE0_ARB + i);
+        GLCheck(
+            glTexCoordPointer,
+            (spec.texcoordX_attribute(i) == VERTEX_ATTRIBUTE_2F) ? 2 : (spec.texcoordX_attribute(i) == VERTEX_ATTRIBUTE_3F) ? 3 : 4,
+            GL_FLOAT,
+            spec.stride(),
+            coord_pointer
+        );
     }
 
     auto arrangement = convert_arrangement(renderable->arrangement());
-
     GLCheck(
         glDrawElements,
         arrangement,
