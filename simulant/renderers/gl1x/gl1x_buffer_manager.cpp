@@ -46,7 +46,10 @@ void GL1BufferManager::do_release(const HardwareBufferImpl *buffer) {
     const GL1HardwareBufferImpl* impl = static_cast<const GL1HardwareBufferImpl*>(buffer);
 
     impl->target_buffer_.clear();
+    impl->target_buffer_.shrink_to_fit();
+
     impl->shadow_buffer_.clear();
+    impl->shadow_buffer_.shrink_to_fit();
 }
 
 void GL1BufferManager::do_resize(HardwareBufferImpl* buffer, std::size_t new_size) {
@@ -68,6 +71,7 @@ void GL1HardwareBufferImpl::update_target_from_shadow_buffer() {
 
 void GL1HardwareBufferImpl::destroy_shadow_buffer() {
     shadow_buffer_.clear();
+    shadow_buffer_.shrink_to_fit();
     has_shadow_buffer_ = false;
 }
 
