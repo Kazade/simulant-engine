@@ -32,11 +32,20 @@ void KGLPLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     ps->set_name((js.has_key("name")) ? _u(js["name"]): "");
 
+    L_DEBUG(_F("Loading particle system: {0}").format(ps->name()));
+
     if(js.has_key("quota")) ps->set_quota(js["quota"]);
+    L_DEBUG(_F("    Quota: {0}").format(ps->quota()));
+
     if(js.has_key("particle_width")) ps->set_particle_width(js["particle_width"]);
+    L_DEBUG(_F("    Particle Width: {0}").format(ps->particle_width()));
+
     if(js.has_key("cull_each")) ps->set_cull_each(js["cull_each"]);
+    L_DEBUG(_F("    Cull Each: {0}").format(ps->cull_each()));
 
     if(js.has_key("emitters")) {
+        L_DEBUG("Loading emitters");
+
         jsonic::Node& emitters = js["emitters"];
         for(uint32_t i = 0; i < emitters.length(); ++i) {
             jsonic::Node& emitter = emitters[i];
@@ -44,7 +53,9 @@ void KGLPLoader::into(Loadable &resource, const LoaderOptions &options) {
             auto new_emitter = ps->push_emitter();
 
             if(emitter.has_key("type")) {
-                new_emitter->set_type((std::string(emitter["type"]) == "point") ? PARTICLE_EMITTER_POINT : PARTICLE_EMITTER_BOX);
+                auto emitter_type = std::string(emitter["type"]);
+                L_DEBUG(_F("Emitter {0} has type {1}").format(i, emitter_type));
+                new_emitter->set_type((emitter_type == "point") ? PARTICLE_EMITTER_POINT : PARTICLE_EMITTER_BOX);
             }
 
             if(emitter.has_key("direction")) {
