@@ -2,6 +2,7 @@
 #include <kos.h>
 #endif
 #include "../../deps/kazlog/kazlog.h"
+#include "../../utils/memory.h"
 #include "gl1x_buffer_manager.h"
 
 namespace smlt {
@@ -22,7 +23,7 @@ std::unique_ptr<HardwareBufferImpl> GL1BufferManager::do_allocation(
     L_DEBUG(_F("Allocating HW buffer of size {0}").format(size));
 
 #ifdef _arch_dreamcast
-    malloc_stats();
+    print_available_ram();
 #endif
 
     std::unique_ptr<GL1HardwareBufferImpl> buffer_impl(new GL1HardwareBufferImpl(this));

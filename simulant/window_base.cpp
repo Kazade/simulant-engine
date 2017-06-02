@@ -48,6 +48,7 @@
 #include "scenes/loading.h"
 #include "utils/gl_thread_check.h"
 #include "utils/gl_error.h"
+#include "utils/memory.h"
 
 #include "panels/stats_panel.h"
 #include "panels/partitioner_panel.h"
@@ -181,7 +182,7 @@ bool WindowBase::_init() {
     L_DEBUG("Starting initialization");
 
 #ifdef _arch_dreamcast
-    malloc_stats();
+    print_available_ram();
 #endif
 
     // Initialize the sound driver (here rather than constructor as it relies on subclass type)
@@ -198,7 +199,7 @@ bool WindowBase::_init() {
 
         L_INFO("Registering loaders");
 #ifdef _arch_dreamcast
-        malloc_stats();
+        print_available_ram();
 #endif
 
         //Register the default resource loaders
@@ -218,7 +219,7 @@ bool WindowBase::_init() {
 
         L_INFO("Initializing the default resources");
 #ifdef _arch_dreamcast
-        malloc_stats();
+        print_available_ram();
 #endif
 
         shared_assets->init();
@@ -244,7 +245,7 @@ bool WindowBase::_init() {
 
     L_DEBUG("Initialization finished");
 #ifdef _arch_dreamcast
-        malloc_stats();
+        print_available_ram();
 #endif
     return result;
 }

@@ -5,6 +5,7 @@
 #include "kos_window.h"
 #include "sound_drivers/kos_sound_driver.h"
 #include "renderers/renderer_config.h"
+#include "utils/memory.h"
 
 namespace smlt {
 
@@ -34,13 +35,13 @@ bool KOSWindow::create_window(int width, int height, int bpp, bool fullscreen) {
 
     L_DEBUG("Initializing OpenGL");
 #ifdef _arch_dreamcast
-        malloc_stats();
+        print_available_ram();
 #endif
 
     glKosInit();
     L_DEBUG("OpenGL initialized");
 #ifdef _arch_dreamcast
-        malloc_stats();
+        print_available_ram();
 #endif
 
     renderer_ = std::make_shared<GL1XRenderer>(this);
@@ -49,7 +50,7 @@ bool KOSWindow::create_window(int width, int height, int bpp, bool fullscreen) {
 
     L_DEBUG("Renderer initialized");
 #ifdef _arch_dreamcast
-        malloc_stats();
+        print_available_ram();
 #endif
 
     return true;

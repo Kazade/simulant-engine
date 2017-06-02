@@ -22,6 +22,7 @@
 
 #include "utils/gl_thread_check.h"
 #include "utils/gl_error.h"
+#include "utils/memory.h"
 
 #include "deps/kazlog/kazlog.h"
 #include "deps/SOIL/SOIL.h"
@@ -187,6 +188,10 @@ void Texture::__do_upload(MipmapGenerate mipmap, TextureWrap wrap, TextureFilter
     if(free_after) {
         L_DEBUG("Releasing texture data from RAM");
         free();
+
+#ifdef _arch_dreamcast
+        print_available_ram();
+#endif
     }
 
     L_DEBUG("Texture uploaded");
