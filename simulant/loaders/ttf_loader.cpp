@@ -79,6 +79,7 @@ namespace loaders {
         L_DEBUG("F: Finished conversion");
 #endif
         font->texture_->upload(MIPMAP_GENERATE_COMPLETE, TEXTURE_WRAP_CLAMP_TO_EDGE);
+        font->texture_->free();
 #ifndef _arch_dreamcast
         font->material_ = font->resource_manager().new_material_from_file(Material::BuiltIns::ALPHA_TEXTURE).fetch();
 #else

@@ -1,3 +1,6 @@
+#ifdef _arch_dreamcast
+#include <kos.h>
+#endif
 #include "../../deps/kazlog/kazlog.h"
 #include "gl1x_buffer_manager.h"
 
@@ -17,6 +20,10 @@ std::unique_ptr<HardwareBufferImpl> GL1BufferManager::do_allocation(
 ) {
 
     L_DEBUG(_F("Allocating HW buffer of size {0}").format(size));
+
+#ifdef _arch_dreamcast
+    malloc_stats();
+#endif
 
     std::unique_ptr<GL1HardwareBufferImpl> buffer_impl(new GL1HardwareBufferImpl(this));
     buffer_impl->target_buffer_.resize(size, 0);

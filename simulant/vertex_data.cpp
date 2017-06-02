@@ -84,6 +84,7 @@ VertexData::VertexData(VertexSpecification vertex_specification):
 
 void VertexData::clear() {
     data_.clear();
+    data_.shrink_to_fit();
     cursor_position_ = 0;    
 }
 

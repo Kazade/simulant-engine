@@ -62,8 +62,8 @@ void Texture::resize(uint32_t width, uint32_t height) {
     width_ = width;
     height_ = height;
 
-    data_.clear();
     data_.resize(width * height * (bpp_ / 8));
+    data_.shrink_to_fit();
 }
 
 void Texture::sub_texture(TextureID src, uint16_t offset_x, uint16_t offset_y) {
@@ -231,6 +231,7 @@ void Texture::flip_vertically() {
 
 void Texture::free() {
     data_.clear();
+    data_.shrink_to_fit();
 }
 
 void Texture::save_to_file(const unicode& filename) {

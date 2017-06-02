@@ -32,12 +32,26 @@ bool KOSWindow::create_window(int width, int height, int bpp, bool fullscreen) {
     set_width(SCREEN_WIDTH);
     set_height(SCREEN_HEIGHT);
 
+    L_DEBUG("Initializing OpenGL");
+#ifdef _arch_dreamcast
+        malloc_stats();
+#endif
+
     glKosInit();
+    L_DEBUG("OpenGL initialized");
+#ifdef _arch_dreamcast
+        malloc_stats();
+#endif
+
     renderer_ = std::make_shared<GL1XRenderer>(this);
 
     set_has_context(true); //Mark that we have a valid GL context
 
     L_DEBUG("Renderer initialized");
+#ifdef _arch_dreamcast
+        malloc_stats();
+#endif
+
     return true;
 }
 
