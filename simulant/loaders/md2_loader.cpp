@@ -23,6 +23,7 @@
 #include "../resource_manager.h"
 #include "../resource_locator.h"
 
+#include "../utils/memory.h"
 
 namespace smlt {
 namespace loaders{
@@ -77,6 +78,8 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
     ResourceManager* resource_manager = &mesh->resource_manager();
 
     assert(mesh && "Tried to load an MD2 file into something that wasn't a mesh");
+
+    L_DEBUG(_F("Loading MD2 model: {0}").format(filename_));
 
     std::string parent_dir = kfs::path::dir_name(filename_.encode());
     std::string data = this->data_->str();
@@ -170,6 +173,9 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
         cursor += sizeof(MD2TexCoord);
     }
 
+    L_DEBUG("Loaded MD2 data, converting to mesh");
+    print_available_ram();
+
     VertexSpecification vertex_specification;
     vertex_specification.position_attribute = VERTEX_ATTRIBUTE_3F;
     vertex_specification.texcoord0_attribute = VERTEX_ATTRIBUTE_2F;
@@ -227,11 +233,15 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
         cursor += sizeof(MD2Triangle);
     }
 
+    L_DEBUG("MD2 first frame constructed");
+    print_available_ram();
+
     // This is necessary due to the difference in coordinate system
     submesh->reverse_winding();
 
     // Make room for all of the frame vertices
     uint32_t vertices_per_frame = submesh->vertex_data->count();
+    L_DEBUG(_F("About to allocate {0} vertices").format(vertices_per_frame * header->num_frames));
     submesh->vertex_data->resize(vertices_per_frame * header->num_frames);
 
     // Go through populating the same index as the first frame plus the frame offset
@@ -251,6 +261,9 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
                 submesh->vertex_data->normal(Vec3(0, 1, 0));
             }
         }
+
+        L_DEBUG("MD2 frame loaded");
+        print_available_ram();
     }
 
     submesh->index_data->done();
@@ -300,6 +313,8 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
     mesh->add_animation("death_2", 184, 189, 7.0);
     mesh->add_animation("death_3", 190, 197, 7.0);
     mesh->add_animation("death_4", 198, 198, 5.0);
+
+    L_DEBUG("Done loading MD2");
 }
 
 
