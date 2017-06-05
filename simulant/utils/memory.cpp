@@ -1,9 +1,8 @@
 #include "memory.h"
 #include "../deps/kazlog/kazlog.h"
 
-#include <malloc.h>
-
 #ifdef _arch_dreamcast
+#include <malloc.h>
 #include <kos.h>
 
 static unsigned long systemRam = 0x00000000;
