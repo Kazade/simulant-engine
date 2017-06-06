@@ -18,10 +18,10 @@ public:
         {
             auto stage = window->stage(stage_id_);
 
-            smlt::SpriteID sprite = stage->new_sprite_from_file("sample_data/sonic.png", 64, 64);
-            stage->sprite(sprite)->add_animation("running", 31, 34, 0.5);
-            stage->sprite(sprite)->set_render_dimensions_from_height(1.5);
-            stage->sprite(sprite)->move_to(0, -2.0, -1.0);
+            auto sprite = stage->sprites->new_sprite_from_file("sample_data/sonic.png", 64, 64).fetch();
+            sprite->add_animation("running", 31, 34, 0.5);
+            sprite->set_render_dimensions_from_height(1.5);
+            sprite->move_to(0, -2.0, -1.0);
         }
 
         window->new_background_from_file("sample_data/parallax/back_layer.png", 0.1);

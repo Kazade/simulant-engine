@@ -28,6 +28,7 @@
 
 #include "managers/window_holder.h"
 #include "managers/skybox_manager.h"
+#include "managers/sprite_manager.h"
 
 #include "nodes/stage_node.h"
 #include "types.h"
@@ -68,7 +69,6 @@ typedef generic::TemplatedManager<Actor, ActorID> ActorManager;
 typedef generic::TemplatedManager<Geom, GeomID> GeomManager;
 typedef generic::TemplatedManager<Light, LightID> LightManager;
 typedef generic::TemplatedManager<CameraProxy, CameraID> CameraProxyManager;
-typedef generic::TemplatedManager<Sprite, SpriteID> SpriteManager;
 typedef generic::TemplatedManager<ParticleSystem, ParticleSystemID> ParticleSystemManager;
 
 typedef sig::signal<void (const ActorID&)> ActorCreatedSignal;
@@ -94,7 +94,6 @@ class Stage:
     public ActorManager,
     public ParticleSystemManager,
     public LightManager,
-    public SpriteManager,
     public CameraProxyManager,
     public Loadable,    
     public RenderableStage,
@@ -139,18 +138,6 @@ public:
     void delete_particle_system(ParticleSystemID pid);
     uint32_t particle_system_count() const { return ParticleSystemManager::count(); }
 
-    SpriteID new_sprite();
-    SpriteID new_sprite_from_file(
-        const unicode& filename,
-        uint32_t frame_Width, uint32_t frame_height,
-        uint32_t margin=0, uint32_t spacing=0,
-        std::pair<uint32_t, uint32_t> padding=std::make_pair(0, 0)
-    );
-    SpritePtr sprite(SpriteID s);
-    bool has_sprite(SpriteID s) const;
-    void delete_sprite(SpriteID s);
-    uint32_t sprite_count() const;
-
     LightID new_light_as_directional(const Vec3& direction=Vec3(1, -0.5, 0), const smlt::Colour& colour=DEFAULT_LIGHT_COLOUR);
     LightID new_light_as_point(const Vec3& position=Vec3(), const smlt::Colour& colour=DEFAULT_LIGHT_COLOUR);
 
@@ -171,13 +158,14 @@ public:
 
     void ask_owner_for_destruction() override;
 
-    Property<Stage, Debug> debug = { this, &Stage::debug_ };
-    Property<Stage, batcher::RenderQueue> render_queue = { this, &Stage::render_queue_ };
-    Property<Stage, Partitioner> partitioner = { this, &Stage::partitioner_ };
-    Property<Stage, ResourceManager> assets = { this, &Stage::resource_manager_ };
-    Property<Stage, generic::DataCarrier> data = { this, &Stage::data_ };
-    Property<Stage, ui::UIManager> ui = { this, &Stage::ui_ };
-    Property<Stage, SkyManager> skies = { this, &Stage::sky_manager_ };
+    Property<Stage, Debug> debug = {this, &Stage::debug_};
+    Property<Stage, batcher::RenderQueue> render_queue = {this, &Stage::render_queue_};
+    Property<Stage, Partitioner> partitioner = {this, &Stage::partitioner_};
+    Property<Stage, ResourceManager> assets = {this, &Stage::resource_manager_};
+    Property<Stage, generic::DataCarrier> data = {this, &Stage::data_};
+    Property<Stage, ui::UIManager> ui = {this, &Stage::ui_};
+    Property<Stage, SkyManager> skies = {this, &Stage::sky_manager_};
+    Property<Stage, SpriteManager> sprites = {this, &Stage::sprite_manager_};
 
     bool init() override;
     void cleanup() override;
@@ -199,9 +187,6 @@ public:
 
     sig::signal<void (LightID)>& signal_light_created() { return signal_light_created_; }
     sig::signal<void (LightID)>& signal_light_destroyed() { return signal_light_destroyed_; }
-
-    sig::signal<void (SpriteID)>& signal_sprite_created() { return signal_sprite_created_; }
-    sig::signal<void (SpriteID)>& signal_sprite_destroyed() { return signal_sprite_destroyed_; }
 
     const AABB aabb() const override { return AABB(); }
     const AABB transformed_aabb() const override { return AABB(); }
@@ -240,6 +225,7 @@ private:
 
     std::unique_ptr<GeomManager> geom_manager_;
     std::unique_ptr<SkyManager> sky_manager_;
+    std::unique_ptr<SpriteManager> sprite_manager_;
 
     generic::DataCarrier data_;
 
