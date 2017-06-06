@@ -74,8 +74,6 @@ void Stage::cleanup() {
         stage_node->ask_owner_for_destruction();
     });
 
-    sprites->delete_all();
-
     LightManager::objects_.clear();
     ActorManager::objects_.clear();
     CameraProxyManager::objects_.clear();
