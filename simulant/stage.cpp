@@ -50,7 +50,8 @@ Stage::Stage(StageID id, WindowBase *parent, AvailablePartitioner partitioner):
     resource_manager_(ResourceManager::create(parent, parent->shared_assets.get())),
     ambient_light_(smlt::Colour::WHITE),
     geom_manager_(new GeomManager()),
-    sky_manager_(new SkyManager(parent, this)) {
+    sky_manager_(new SkyManager(parent, this)),
+    sprite_manager_(new SpriteManager(parent, this)) {
 
     set_partitioner(partitioner);
     render_queue_.reset(new batcher::RenderQueue(this, parent->renderer.get()));
