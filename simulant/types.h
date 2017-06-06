@@ -30,7 +30,8 @@
 #include "colour.h"
 #include "generic/optional.h"
 
-#include "deps/glm/vec2.hpp"
+#include "math/vec2.h"
+
 #include "deps/glm/vec3.hpp"
 #include "deps/glm/vec4.hpp"
 #include "deps/glm/mat4x4.hpp"
@@ -313,111 +314,6 @@ public:
 };
 
 
-struct Vec2 : private glm::vec2 {
-private:
-    Vec2(glm::vec2& rhs) {
-        x = rhs.x;
-        y = rhs.y;
-    }
-
-    Vec2& operator=(const glm::vec2& rhs) {
-        glm::vec2::operator =(rhs);
-        return *this;
-    }
-
-public:
-    using glm::vec2::x;
-    using glm::vec2::y;
-
-    Vec2() {
-        x = 0.0;
-        y = 0.0;
-    }
-
-    Vec2(float x, float y) {
-        this->x = x;
-        this->y = y;
-    }
-
-    Vec2 rotated_by(Degrees degrees) const;
-
-    float length() const {
-        return glm::vec2::length();
-    }
-
-    void normalize() {
-        *this = glm::normalize((glm::vec2) *this);
-    }
-
-    Vec2 normalized() const {
-        Vec2 ret = *this;
-        ret.normalize();
-        return ret;
-    }
-
-    void limit(float l) {
-        if(length() > l) {
-            normalize();            
-            *this *= l;
-        }
-    }
-
-    Vec2 operator*(float rhs) const {
-        Vec2 result(x * rhs, y * rhs);
-        return result;
-    }
-
-    Vec2& operator*=(float rhs) {
-        *this = *this * rhs;
-        return *this;
-    }
-
-    Vec2& operator+=(const Vec2& rhs) {
-        *this = *this + rhs;
-        return *this;
-    }
-
-    Vec2& operator-=(const Vec2& rhs) {
-        *this = *this - rhs;
-        return *this;
-    }
-
-    Vec2 operator+(const Vec2& rhs) const {
-        return Vec2(x + rhs.x, y + rhs.y);
-    }
-
-    Vec2& operator/=(float rhs) {
-        *this = *this / rhs;
-        return *this;
-    }
-
-    Vec2 operator/(float rhs) const {
-        Vec2 result(x / rhs, y / rhs);
-        return result;
-    }
-
-    Vec2 operator-() const {
-        return Vec2(-x, -y);
-    }
-
-    Vec2 operator-(const Vec2& rhs) const {
-        return Vec2(x - rhs.x, y - rhs.y);
-    }
-
-    float dot(const Vec2& rhs) const {
-        return glm::dot(glm::vec2(*this), (glm::vec2)rhs);
-    }
-
-    unicode to_string() const {
-        return _u("({0},{1})").format(x, y);
-    }
-
-    friend std::ostream& operator<<(std::ostream& stream, const Vec2& vec);
-    friend bool operator==(const Vec2& lhs, const Vec2& rhs);
-};
-
-bool operator==(const Vec2& lhs, const Vec2& rhs);
-bool operator!=(const Vec2& lhs, const Vec2& rhs);
 
 struct Degrees;
 

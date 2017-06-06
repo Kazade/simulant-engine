@@ -38,19 +38,6 @@ Degrees to_degrees(const Radians& radians) {
     return Degrees(radians.value * PI_UNDER_180);
 }
 
-bool operator==(const Vec2& lhs, const Vec2& rhs) {
-    return glm::operator==(lhs, rhs);
-}
-
-bool operator!=(const Vec2& lhs, const Vec2& rhs) {
-    return !(lhs == rhs);
-}
-
-smlt::Vec2 operator*(float lhs, const smlt::Vec2& rhs) {
-    smlt::Vec2 result = rhs;
-    result *= lhs;
-    return result;
-}
 
 smlt::Vec3 operator*(float lhs, const smlt::Vec3& rhs) {
     smlt::Vec3 result = rhs;
@@ -541,13 +528,6 @@ Radians math::lerp_angle(Radians a, Radians b, float t) {
 
 Degrees math::lerp_angle(Degrees a, Degrees b, float t) {
     return Degrees(lerp_angle(Radians(a), Radians(b), t));
-}
-
-Vec2 Vec2::rotated_by(Degrees degrees) const {
-    // FIXME: Lazy costly indirect way, should just do it manually
-    Mat4 rotation_z = Mat4::as_rotation_z(degrees);
-    auto result = Vec3(x, y, 0).rotated_by(rotation_z);
-    return Vec2(result.x, result.y);
 }
 
 Vec3 Plane::project(const Vec3 &p) {

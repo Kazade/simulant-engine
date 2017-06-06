@@ -681,3 +681,5 @@ simulant/utils/memory.h
 simulant/utils/memory.cpp
 simulant/managers/sprite_manager.h
 simulant/managers/sprite_manager.cpp
+simulant/math/vec2.h
+simulant/math/vec2.cpp
