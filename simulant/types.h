@@ -31,6 +31,7 @@
 #include "generic/optional.h"
 
 #include "math/vec2.h"
+#include "math/vec3.h"
 
 #include "deps/glm/vec3.hpp"
 #include "deps/glm/vec4.hpp"
@@ -317,231 +318,6 @@ public:
 
 struct Degrees;
 
-struct Vec3 : private glm::vec3 {
-private:
-    Vec3(const glm::vec3& rhs) {
-        x = rhs.x;
-        y = rhs.y;
-        z = rhs.z;
-    }
-
-    Vec3& operator=(const glm::vec3& rhs) {
-        x = rhs.x;
-        y = rhs.y;
-        z = rhs.z;
-
-        return *this;
-    }
-
-    friend struct Quaternion;
-    friend struct Mat4;
-    friend struct Mat3;
-    friend struct Vec2;
-    friend struct Ray;
-
-public:
-    using glm::vec3::value_type;
-
-    static const Vec3 NEGATIVE_X;
-    static const Vec3 POSITIVE_X;
-    static const Vec3 NEGATIVE_Y;
-    static const Vec3 POSITIVE_Y;
-    static const Vec3 POSITIVE_Z;
-    static const Vec3 NEGATIVE_Z;
-
-    using glm::vec3::x;
-    using glm::vec3::y;
-    using glm::vec3::z;
-
-    Vec3() {
-        x = y = z = 0;
-    }
-
-    Vec3(float x, float y, float z) {
-        this->x = x;
-        this->y = y;
-        this->z = z;
-    }
-
-    Vec3(const Vec2& v2, float z) {
-        this->x = v2.x;
-        this->y = v2.y;
-        this->z = z;
-    }
-
-    Vec3(const Vec3& v) {
-        this->x = v.x;
-        this->y = v.y;
-        this->z = v.z;
-    }
-
-    Vec3 operator+(const Vec3& rhs) const {
-        return Vec3(x + rhs.x, y + rhs.y, z + rhs.z);
-    }
-
-    Vec3& operator+=(const Vec3& rhs) {
-        *this = *this + rhs;
-        return *this;
-    }
-
-    Vec3 operator-(const Vec3& rhs) const {
-        return Vec3(x - rhs.x, y - rhs.y, z - rhs.z);
-    }
-
-    Vec3 operator*(const Vec3& rhs) const {
-        return Vec3(x * rhs.x, y * rhs.y, z * rhs.z);
-    }
-
-    Vec3 operator*(float rhs) const {
-        Vec3 result(x * rhs, y * rhs, z * rhs);
-        return result;
-    }
-
-    Vec3 operator*(const Quaternion& rhs) const;
-    Vec3& operator*=(const Quaternion& rhs) {
-        *this = *this * rhs;
-        return *this;
-    }
-
-    Vec3& operator*=(float rhs) {
-        *this = *this * rhs;
-        return *this;
-    }
-
-    Vec3& operator/=(float rhs) {
-        *this = *this / rhs;
-        return *this;
-    }
-
-    Vec3 operator/(float rhs) const {
-        Vec3 result(x / rhs, y / rhs, z / rhs);
-        return result;
-    }
-
-    bool operator==(const Vec3& rhs) const {
-        return glm::operator==(*this, rhs);
-    }
-
-    bool operator!=(const Vec3& rhs) const {
-        return !(*this == rhs);
-    }
-
-    void set(float x, float y, float z) {
-        this->x = x;
-        this->y = y;
-        this->z = z;
-    }
-
-    float length() const {        
-        return glm::length((glm::vec3) *this);
-    }
-
-    float length_squared() const {
-        return glm::length2((glm::vec3) *this);
-    }
-
-    const smlt::Vec3 normalized() const {
-        smlt::Vec3 result = glm::normalize((glm::vec3) *this);
-        return result;
-    }
-
-    void normalize() {
-        *this = glm::normalize((glm::vec3) *this);
-    }
-
-    Vec3 lerp(const Vec3& end, float t) {
-        if(t > 1.0f) t = 1.0f;
-        if(t < 0.0f) t = 0.0f;
-
-        Vec3 ret;
-        ret = glm::lerp((glm::vec3) *this, end, t);
-        return ret;
-    }
-
-    Vec3 rotated_by(const Quaternion& q) const {
-        return glm::rotate((const glm::quat&) q, (const glm::vec3&) *this);
-    }
-
-    Vec3 rotated_by(const Mat3& rot) const {
-        return rot.transform_vector(*this);
-    }
-
-    /* Note: We do *not* supply multiply operators with Mat4 because
-     * the behaviour you want depends on whether want translation or not
-     * (e.g. is this a point in space or a vector). Instead we provide
-     * rotated_by() and transformed_by() the former assumes a W component of
-     * 0 whereas the latter assumes a W component of 1.0
-     */
-
-    Vec3 rotated_by(const Mat4& rot) const;
-
-    Vec3 transformed_by(const Mat4& trans) const;
-
-    Vec3 project_onto_vec3(const Vec3& projection_target) const {
-        Vec3 unitW = this->normalized();
-        Vec3 unitV = projection_target.normalized();
-
-        float cos0 = unitW.dot(unitV);
-
-        unitV *= (this->length() * cos0);
-
-        return unitV;
-    }
-
-    float dot(const smlt::Vec3& rhs) const {
-        return glm::dot((glm::vec3) *this, (glm::vec3) rhs);
-    }
-
-    smlt::Vec3 cross(const smlt::Vec3& rhs) const {
-        return Vec3(glm::cross((glm::vec3) *this, (glm::vec3) rhs));
-    }
-
-    smlt::Vec3 limit(float l) {
-        if(length() > l) {
-            normalize();
-            *this *= l;
-        }
-
-        return *this;
-    }
-
-    template<typename Container>
-    static Vec3 find_average(const Container& vectors) {
-        Vec3 ret;
-        for(auto& v: vectors) {
-            ret += v;
-        }
-
-        ret /= float(vectors.size());
-        return ret;
-    }
-
-    static float distance(const smlt::Vec3& lhs, const smlt::Vec3& rhs) {
-        return (rhs - lhs).length();
-    }
-
-
-    inline Vec3 parallel_component(const Vec3& unit_basis) const {
-        const float projection = this->dot(unit_basis);
-        return unit_basis * projection;
-    }
-
-    // return component of vector perpendicular to a unit basis vector
-    // (IMPORTANT NOTE: assumes "basis" has unit magnitude (length==1))
-
-    inline Vec3 perpendicular_component (const Vec3& unit_basis) const {
-        return (*this) - parallel_component(unit_basis);
-    }
-
-    friend std::ostream& operator<<(std::ostream& stream, const Vec3& vec);
-
-    unicode to_string() const {
-        return _u("({0},{1},{2})").format(x, y, z);
-    }
-
-    Vec3 perpendicular() const;
-    Vec3 random_deviant(const Degrees& angle, const Vec3 up=Vec3()) const;
-};
 
 struct AxisAngle {
     Vec3 axis;
@@ -627,6 +403,24 @@ public:
         glm::quat r = rhs;
 
         return Quaternion(l * r);
+    }
+
+    Vec3 axis() const {
+        auto tmp1 = 1.0f - w * w;
+        if(tmp1 <= 0.0f) {
+            return Vec3(0, 0, 1);
+        }
+
+        auto tmp2 = 1.0f / sqrtf(tmp1);
+        return Vec3(x * tmp2, y * tmp2, z * tmp2);
+    }
+
+    Vec3 operator*(const Vec3& v) const {
+        const Vec3 quat_vector(x, y, z);
+        const Vec3 uv = quat_vector.cross(v);
+        const Vec3 uuv = quat_vector.cross(uv);
+
+        return v + ((uv * w) + uuv) * 2.0f;
     }
 
     Quaternion slerp(const Quaternion& rhs, float t) {

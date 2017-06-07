@@ -39,61 +39,6 @@ Degrees to_degrees(const Radians& radians) {
 }
 
 
-smlt::Vec3 operator*(float lhs, const smlt::Vec3& rhs) {
-    smlt::Vec3 result = rhs;
-    result *= lhs;
-    return result;
-}
-
-smlt::Vec3 operator/(float lhs, const smlt::Vec3& rhs) {
-    smlt::Vec3 result = rhs;
-    result /= lhs;
-    return result;
-}
-
-Vec3 Vec3::random_deviant(const Degrees& angle, const Vec3 up) const {
-    //Lovingly adapted from ogre
-    Vec3 new_up = (up == Vec3()) ? perpendicular() : up;
-
-    Quaternion q(*this, Radians(random_gen::random_float(0, 1) * (PI * 2.0)));
-
-    new_up = new_up * q;
-
-    q = Quaternion(new_up, angle);
-
-    return *this * q;
-
-}
-
-Vec3 Vec3::operator*(const Quaternion &rhs) const {
-    return rhs.rotate_vector(*this);
-}
-
-Vec3 Vec3::rotated_by(const Mat4 &rot) const {
-    auto tmp = rot * Vec4(*this, 0);
-    return Vec3(tmp.x, tmp.y, tmp.z);
-}
-
-Vec3 Vec3::transformed_by(const Mat4 &trans) const {
-    auto tmp = trans * Vec4(*this, 1);
-    return Vec3(tmp.x, tmp.y, tmp.z);
-}
-
-Vec3 Vec3::perpendicular() const {
-    //Lovingly adapted from Ogre
-    static const float square_zero = (float)(1e-06 * 1e-06);
-    Vec3 perp = this->cross(Vec3(1, 0, 0));
-
-    if(perp.length_squared() < square_zero) {
-        //This vector is the X-axis, so use another
-        perp = this->cross(Vec3(0, 1, 0));
-    }
-    return perp.normalized();
-}
-
-smlt::Vec3 operator-(const smlt::Vec3& vec) {
-    return smlt::Vec3(-vec.x, -vec.y, -vec.z);
-}
 
 smlt::Quaternion operator-(const smlt::Quaternion& q) {
     return smlt::Quaternion(-q.x, -q.y, -q.z, -q.w);
@@ -134,12 +79,18 @@ Quaternion::Quaternion(Degrees pitch, Degrees yaw, Degrees roll) {
 }
 
 Quaternion::Quaternion(const Vec3 &axis, const Degrees &degrees) {
-    *this = glm::angleAxis(Radians(degrees).value, axis);
+    float rad = Radians(degrees).value * 0.5f;
+    float scale	= sinf(rad);
+
+    x = axis.x * scale;
+    y = axis.y * scale;
+    z = axis.z * scale;
+    w = cosf(rad);
+
+    normalize();
 }
 
 Quaternion::Quaternion(const Mat3& rot_matrix) {
-    /* FIXME: This should be in kazmath */
-
     float m12 = rot_matrix[7];
     float m21 = rot_matrix[5];
     float m02 = rot_matrix[6];
@@ -183,9 +134,7 @@ Quaternion::Quaternion(const Mat3& rot_matrix) {
 }
 
 Vec3 Quaternion::rotate_vector(const Vec3 &v) const {
-    Vec3 ret;
-    ret = glm::rotate(*this, v);
-    return ret;
+    return (*this) * v;
 }
 
 Euler Quaternion::to_euler() const {
@@ -199,7 +148,7 @@ Euler Quaternion::to_euler() const {
 
 AxisAngle Quaternion::to_axis_angle() const {
     AxisAngle ret;
-    ret.axis = glm::axis(*this);
+    ret.axis = axis();
     ret.angle = Degrees(glm::angle(*this));
     return ret;
 }
@@ -213,9 +162,12 @@ void Mat4::extract_rotation_and_translation(Quaternion& rotation, Vec3& translat
     glm::vec3 scale;
     glm::vec3 skew;
     glm::vec4 perspective;
+    glm::vec3 trans_tmp;
 
-    glm::decompose(*this, scale, rotation, translation, skew, perspective);
+    glm::decompose(*this, scale, rotation, trans_tmp, skew, perspective);
+
     rotation = glm::conjugate(rotation);
+    translation = Vec3(trans_tmp.x, trans_tmp.y, trans_tmp.z);
 }
 
 Mat4 Mat4::as_rotation_x(const Degrees &angle) {
@@ -250,7 +202,8 @@ Mat3::Mat3(const Mat4 &rhs) {
 }
 
 Vec3 Mat3::transform_vector(const Vec3 &v) const {
-    return Vec3(glm::vec3(v.x, v.y, v.z) * (glm::mat3x3&) *this);
+    auto tmp = glm::vec3(v.x, v.y, v.z) * (glm::mat3x3&) *this;
+    return Vec3(tmp.x, tmp.y, tmp.z);
 }
 
 Mat4 Mat4::as_scaling(float s) {
@@ -260,7 +213,7 @@ Mat4 Mat4::as_scaling(float s) {
 
 Mat4 Mat4::as_translation(const Vec3 &v) {
     Mat4 ret;
-    ret = glm::translate((glm::mat4x4) ret, (glm::vec3) v);
+    ret = glm::translate((glm::mat4x4) ret, glm::vec3(v.x, v.y, v.z));
     return ret;
 }
 
@@ -326,9 +279,9 @@ Mat4 Mat4::as_look_at(const Vec3& eye, const Vec3& target, const Vec3& up) {
     float d = up.dot((target - eye));
 
     Mat4 ret = glm::lookAt(
-        eye,
-        target,
-        (almost_equal(d*d, 1.0f)) ? Vec3(up.x, up.z, up.y) : up
+        glm::vec3(eye.x, eye.y, eye.z),
+        glm::vec3(target.x, target.y, target.z),
+        (almost_equal(d*d, 1.0f)) ? glm::vec3(up.x, up.z, up.y) : glm::vec3(up.x, up.y, up.z)
     );
     return ret;
 }

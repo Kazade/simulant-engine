@@ -683,3 +683,5 @@ simulant/managers/sprite_manager.h
 simulant/managers/sprite_manager.cpp
 simulant/math/vec2.h
 simulant/math/vec2.cpp
+simulant/math/vec3.h
+simulant/math/vec3.cpp
