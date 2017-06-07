@@ -685,3 +685,4 @@ simulant/math/vec2.h
 simulant/math/vec2.cpp
 simulant/math/vec3.h
 simulant/math/vec3.cpp
+simulant/math/vec4.h

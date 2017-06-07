@@ -32,6 +32,7 @@
 
 #include "math/vec2.h"
 #include "math/vec3.h"
+#include "math/vec4.h"
 
 #include "deps/glm/vec3.hpp"
 #include "deps/glm/vec4.hpp"
@@ -433,15 +434,19 @@ public:
     }
 
     const Degrees pitch() const {
-        return Radians(glm::pitch(*this));
+        return Radians(atan2(2.0f * (y * z + w * x), w * w - x * x - y * y + z * z));
     }
 
     const Degrees yaw() const {
-        return Radians(glm::yaw(*this));
+        auto clamp = [](float x, float l, float h) -> float {
+            return std::min(std::max(x, l), h);
+        };
+
+        return Radians(asin(clamp(-2.0f * (x * z - w * y), -1.0f, 1.0f)));
     }
 
     const Degrees roll() const {
-        return Radians(glm::roll(*this));
+        return Radians(atan2(2.0f * (x * y + w * z), w * w + x * x - y * y - z * z));
     }
 
     Vec3 forward() const {
@@ -512,81 +517,6 @@ struct Plane {
 };
 
 
-struct Vec4 : private glm::vec4 {
-private:
-    Vec4(const glm::vec4& rhs) {
-        x = rhs.x;
-        y = rhs.y;
-        z = rhs.z;
-        w = rhs.w;
-    }
-
-    Vec4& operator=(const glm::vec4& rhs) {
-        glm::vec4::operator =(rhs);
-        return *this;
-    }
-
-    friend struct Vec3;
-    friend struct Mat4;
-public:
-    using glm::vec4::x;
-    using glm::vec4::y;
-    using glm::vec4::z;
-    using glm::vec4::w;
-
-    Vec4() {
-        x = y = z = 0;
-    }
-
-    Vec4(float x, float y, float z, float w) {
-        this->x = x;
-        this->y = y;
-        this->z = z;
-        this->w = w;
-    }
-
-    Vec4(const Vec3& v, float w) {
-        this->x = v.x;
-        this->y = v.y;
-        this->z = v.z;
-        this->w = w;
-    }
-
-    bool operator==(const Vec4& rhs) const {
-        return glm::operator==(*this, rhs);
-    }
-
-    bool operator!=(const Vec4& rhs) const {
-        return !(*this == rhs);
-    }
-
-    Vec4 operator-(const Vec4& rhs) const {
-        return Vec4(x - rhs.x, y - rhs.y, z - rhs.z, w - rhs.w);
-    }
-
-    Vec4 operator*(const float& rhs) const {
-        return Vec4(
-            x * rhs,
-            y * rhs,
-            z * rhs,
-            w * rhs
-        );
-    }
-
-    void normalize() {
-        *this = glm::normalize((glm::vec4) *this);
-    }
-
-    const smlt::Vec4 normalized() const {
-        smlt::Vec4 result = *this;
-        result.normalize();
-        return result;
-    }
-
-    Vec4 operator+(const Vec4& rhs) const {
-        return Vec4(x + rhs.x, y + rhs.y, z + rhs.z, w + rhs.w);
-    }
-};
 
 struct AABB;
 

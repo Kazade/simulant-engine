@@ -154,7 +154,11 @@ AxisAngle Quaternion::to_axis_angle() const {
 }
 
 Vec4 Mat4::operator*(const Vec4 &rhs) const {
-    return glm::operator*(*this, rhs);
+    auto tmp = glm::operator*(*this, glm::vec4(rhs.x, rhs.y, rhs.z, rhs.w));
+
+    return Vec4(
+        tmp.x, tmp.y, tmp.z, tmp.w
+    );
 }
 
 void Mat4::extract_rotation_and_translation(Quaternion& rotation, Vec3& translation) const {
