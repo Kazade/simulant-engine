@@ -5,6 +5,18 @@
 
 namespace smlt {
 
+const Vec3 Vec3::NEGATIVE_X = Vec3(-1, 0, 0);
+const Vec3 Vec3::POSITIVE_X = Vec3(1, 0, 0);
+const Vec3 Vec3::NEGATIVE_Y = Vec3(0, -1, 0);
+const Vec3 Vec3::POSITIVE_Y = Vec3(0, 1, 0);
+const Vec3 Vec3::POSITIVE_Z = Vec3(0, 0, 1);
+const Vec3 Vec3::NEGATIVE_Z = Vec3(0, 0, -1);
+
+std::ostream& operator<<(std::ostream& stream, const Vec3& vec) {
+    stream << "(" << vec.x << "," << vec.y << "," << vec.z << ")";
+    return stream;
+}
+
 Vec3::Vec3(const Vec2 &v2, float z):
     x(v2.x), y(v2.y), z(z) {
 

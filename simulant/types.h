@@ -33,6 +33,9 @@
 #include "math/vec2.h"
 #include "math/vec3.h"
 #include "math/vec4.h"
+#include "math/quaternion.h"
+#include "math/degrees.h"
+#include "math/radians.h"
 
 #include "deps/glm/vec3.hpp"
 #include "deps/glm/vec4.hpp"
@@ -64,71 +67,8 @@
 
 namespace smlt {
 
-struct Vec3;
 struct Mat3;
-struct Quaternion;
 
-struct Radians;
-struct Degrees {
-    Degrees():
-        value(0) {}
-
-    explicit Degrees(float value):
-        value(value) {}
-
-    Degrees(const Radians& rhs);
-
-    float value;
-
-    Degrees operator-() const {
-        Degrees ret = *this;
-        ret.value = -ret.value;
-        return ret;
-    }
-
-    bool operator==(const Degrees& rhs) const {
-        return value == rhs.value;
-    }
-
-    bool operator!=(const Degrees& rhs) const {
-        return !(*this == rhs);
-    }
-
-    bool is_effectively_equal_to(const Degrees& rhs, float epsilon=0.0f) {
-        // Returns equal if the values represent basically the same thing (e.g. -90 == 270)
-        float rhs_v = rhs.value;
-        if(rhs_v < 0) rhs_v += 360.0f;
-
-        float lhs_v = value;
-        if(lhs_v < 0) lhs_v += 360.0f;
-
-        return lhs_v - epsilon < rhs_v && lhs_v + epsilon > rhs_v;
-    }
-};
-
-struct Radians {
-    Radians():
-        value(0) {}
-
-    explicit Radians(float value):
-        value(value) {}
-
-    Radians(const Degrees& rhs);
-
-    float value;
-};
-
-Radians to_radians(const Degrees& degrees);
-Degrees to_degrees(const Radians& radians);
-
-struct Euler {
-    Euler(float x, float y, float z):
-        x(x), y(y), z(z) {}
-
-    Degrees x;
-    Degrees y;
-    Degrees z;
-};
 
 struct Plane;
 struct Vec4;
@@ -320,150 +260,6 @@ public:
 struct Degrees;
 
 
-struct AxisAngle {
-    Vec3 axis;
-    Degrees angle;
-};
-
-struct Quaternion : private glm::quat {
-private:
-    Quaternion(const glm::quat& rhs) {
-        this->x = rhs.x;
-        this->y = rhs.y;
-        this->z = rhs.z;
-        this->w = rhs.w;
-    }
-
-    Quaternion& operator=(const glm::quat& rhs) {
-        glm::quat::operator =(rhs);
-        return *this;
-    }
-
-    friend struct Vec3;
-    friend struct Mat4;
-    friend struct Mat3;
-public:
-    using glm::quat::x;
-    using glm::quat::y;
-    using glm::quat::z;
-    using glm::quat::w;
-
-    Quaternion() {
-        x = y = z = 0;
-        w = 1;
-    }
-
-    Quaternion(Degrees pitch, Degrees yaw, Degrees roll);
-
-    Quaternion(const Vec3& axis, const Degrees& degrees);
-    Quaternion(const Mat3& rot_matrix);
-
-    Quaternion(float x, float y, float z, float w) {
-        this->x = x;
-        this->y = y;
-        this->z = z;
-        this->w = w;
-    }
-
-    Vec3 rotate_vector(const Vec3& v) const;
-
-    Euler to_euler() const;
-
-    AxisAngle to_axis_angle() const;
-
-    void normalize() {
-        *this = glm::normalize((glm::quat) *this);
-    }
-
-    const Quaternion normalized() {
-        Quaternion result = *this;
-        result.normalize();
-        return result;
-    }
-
-    void inverse() {
-        glm::quat::operator =(glm::inverse(*this));
-    }
-
-    const Quaternion inversed() const {
-        Quaternion result(*this);
-        result.inverse();
-        return result;
-    }
-
-    bool operator==(const Quaternion& rhs) const {
-        return x == rhs.x && y == rhs.y && z == rhs.z && w == rhs.w;
-    }
-
-    bool operator!=(const Quaternion& rhs) const {
-        return !(*this == rhs);
-    }
-
-    Quaternion operator*(const Quaternion& rhs) const {
-        glm::quat l = *this;
-        glm::quat r = rhs;
-
-        return Quaternion(l * r);
-    }
-
-    Vec3 axis() const {
-        auto tmp1 = 1.0f - w * w;
-        if(tmp1 <= 0.0f) {
-            return Vec3(0, 0, 1);
-        }
-
-        auto tmp2 = 1.0f / sqrtf(tmp1);
-        return Vec3(x * tmp2, y * tmp2, z * tmp2);
-    }
-
-    Vec3 operator*(const Vec3& v) const {
-        const Vec3 quat_vector(x, y, z);
-        const Vec3 uv = quat_vector.cross(v);
-        const Vec3 uuv = quat_vector.cross(uv);
-
-        return v + ((uv * w) + uuv) * 2.0f;
-    }
-
-    Quaternion slerp(const Quaternion& rhs, float t) {
-        if(t > 1.0f) t = 1.0f;
-        if(t < 0.0f) t = 0.0f;
-
-        Quaternion result;
-        result = glm::slerp(*this, rhs, t);
-        return result;
-    }
-
-    const Degrees pitch() const {
-        return Radians(atan2(2.0f * (y * z + w * x), w * w - x * x - y * y + z * z));
-    }
-
-    const Degrees yaw() const {
-        auto clamp = [](float x, float l, float h) -> float {
-            return std::min(std::max(x, l), h);
-        };
-
-        return Radians(asin(clamp(-2.0f * (x * z - w * y), -1.0f, 1.0f)));
-    }
-
-    const Degrees roll() const {
-        return Radians(atan2(2.0f * (x * y + w * z), w * w + x * x - y * y - z * z));
-    }
-
-    Vec3 forward() const {
-        // OpenGL coordinate system has Neg-z as "forward"
-        return Vec3::NEGATIVE_Z.rotated_by(*this);
-    }
-
-    Vec3 up() const {
-        return Vec3::POSITIVE_Y.rotated_by(*this);
-    }
-
-    Vec3 right() const {
-        return Vec3::POSITIVE_X.rotated_by(*this);
-    }
-
-    static Quaternion as_look_at(const Vec3& direction, const Vec3& up);
-};
 
 class PlaneClassification {
 private:
@@ -711,33 +507,10 @@ public:
     }
 };
 
-std::ostream& operator<<(std::ostream& stream, const Vec2& vec);
-std::ostream& operator<<(std::ostream& stream, const Vec3& vec);
-std::ostream& operator<<(std::ostream& stream, const Vec4& vec);
-std::ostream& operator<<(std::ostream& stream, const Quaternion& quat);
 
 smlt::Vec2 operator*(float lhs, const smlt::Vec2& rhs);
 
-smlt::Vec3 operator*(float lhs, const smlt::Vec3& rhs);
-smlt::Vec3 operator/(float lhs, const smlt::Vec3& rhs);
-smlt::Vec3 operator-(const smlt::Vec3& vec);
-smlt::Quaternion operator-(const smlt::Quaternion& q);
 
-
-
-namespace math {
-
-float lerp(float a, float b, float t);
-Degrees lerp_angle(Degrees a, Degrees b, float t);
-Radians lerp_angle(Radians a, Radians b, float t);
-
-}
-
-
-const float PI = glm::pi<float>();
-const float TWO_PI = PI * 2.0f;
-const float PI_OVER_180 = PI / 180.0f;
-const float PI_UNDER_180 = 180.0f / PI;
 
 enum VertexAttribute {
     VERTEX_ATTRIBUTE_NONE,

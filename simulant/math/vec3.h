@@ -218,4 +218,10 @@ public:
     Vec3 random_deviant(const Degrees& angle, const Vec3 up=Vec3()) const;
 };
 
+std::ostream& operator<<(std::ostream& stream, const Vec3& vec);
+
+Vec3 operator*(float lhs, const Vec3& rhs);
+Vec3 operator/(float lhs, const Vec3& rhs);
+Vec3 operator-(const Vec3& vec);
+
 }

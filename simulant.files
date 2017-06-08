@@ -686,3 +686,13 @@ simulant/math/vec2.cpp
 simulant/math/vec3.h
 simulant/math/vec3.cpp
 simulant/math/vec4.h
+simulant/math/quaternion.h
+simulant/math/quaternion.cpp
+simulant/math/degrees.h
+simulant/math/degrees.cpp
+simulant/math/radians.h
+simulant/math/radians.cpp
+simulant/math/euler.h
+simulant/math/utils.h
+simulant/math/utils.cpp
+simulant/math/vec4.cpp

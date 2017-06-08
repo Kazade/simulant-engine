@@ -102,5 +102,6 @@ struct Vec2 {
 bool operator==(const Vec2& lhs, const Vec2& rhs);
 bool operator!=(const Vec2& lhs, const Vec2& rhs);
 
+std::ostream& operator<<(std::ostream& stream, const Vec2& vec);
 
 }

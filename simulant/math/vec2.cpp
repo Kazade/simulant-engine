@@ -31,4 +31,9 @@ smlt::Vec2 operator*(float lhs, const smlt::Vec2& rhs) {
     );
 }
 
+std::ostream& operator<<(std::ostream& stream, const Vec2& vec) {
+    stream << "(" << vec.x << "," << vec.y << ")";
+    return stream;
+}
+
 }

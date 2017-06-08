@@ -1,7 +1,12 @@
 #pragma once
 
+#include <cmath>
+#include <ostream>
+
 namespace smlt {
 
+
+struct Vec3;
 
 struct Vec4 {
     friend struct Vec3;
@@ -23,12 +28,7 @@ struct Vec4 {
         this->w = w;
     }
 
-    Vec4(const Vec3& v, float w) {
-        this->x = v.x;
-        this->y = v.y;
-        this->z = v.z;
-        this->w = w;
-    }
+    Vec4(const Vec3& v, float w);
 
     bool operator==(const Vec4& rhs) const {
         return x == rhs.x && y == rhs.y && z == rhs.z && w == rhs.w;
@@ -77,6 +77,8 @@ struct Vec4 {
         return Vec4(x + rhs.x, y + rhs.y, z + rhs.z, w + rhs.w);
     }
 };
+
+std::ostream& operator<<(std::ostream& stream, const Vec4& vec);
 
 
 }
