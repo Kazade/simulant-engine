@@ -696,3 +696,7 @@ simulant/math/euler.h
 simulant/math/utils.h
 simulant/math/utils.cpp
 simulant/math/vec4.cpp
+simulant/math/mat3.h
+simulant/math/mat3.cpp
+simulant/math/mat4.h
+simulant/math/mat4.cpp

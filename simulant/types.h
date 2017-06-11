@@ -36,21 +36,10 @@
 #include "math/quaternion.h"
 #include "math/degrees.h"
 #include "math/radians.h"
+#include "math/mat3.h"
+#include "math/mat4.h"
 
-#include "deps/glm/vec3.hpp"
-#include "deps/glm/vec4.hpp"
-#include "deps/glm/mat4x4.hpp"
-#include "deps/glm/mat3x3.hpp"
-#include "deps/glm/gtc/quaternion.hpp"
-#include "deps/glm/gtx/norm.hpp"
-#include "deps/glm/gtx/compatibility.hpp"
 #include "deps/glm/gtx/intersect.hpp"
-#include "deps/glm/gtc/epsilon.hpp"
-#include "deps/glm/gtx/transform.hpp"
-#include "deps/glm/gtc/matrix_transform.hpp"
-#include "deps/glm/gtx/matrix_decompose.hpp"
-#include "deps/glm/gtc/type_ptr.hpp"
-#include "deps/glm/gtx/rotate_vector.hpp"
 
 #include "generic/manager.h"
 #include "generic/auto_weakptr.h"
@@ -73,187 +62,12 @@ struct Mat3;
 struct Plane;
 struct Vec4;
 
-enum FrustumPlane {
-    FRUSTUM_PLANE_LEFT = 0,
-    FRUSTUM_PLANE_RIGHT,
-    FRUSTUM_PLANE_BOTTOM,
-    FRUSTUM_PLANE_TOP,
-    FRUSTUM_PLANE_NEAR,
-    FRUSTUM_PLANE_FAR,
-    FRUSTUM_PLANE_MAX
-};
 
 template<typename T>
 bool almost_equal(const T& lhs, const T& rhs) {
     return lhs + std::numeric_limits<T>::epsilon() > rhs &&
            lhs - std::numeric_limits<T>::epsilon() < rhs;
 }
-
-struct Mat4 : private glm::mat4x4 {
-private:
-    Mat4(const glm::mat4x4& rhs) {
-        *this = rhs;
-    }
-
-    Mat4& operator=(const glm::mat4x4& rhs) {
-        glm::mat4::operator =(rhs);
-        return *this;
-    }
-
-    friend struct Vec4;
-    friend struct Quaternion;
-    friend struct Mat3;
-    friend struct Vec3;
-public:
-#ifndef __clang__
-#if (__GNUC__ == 4 && __GNUC_MINOR__ <= 7)
-    using glm::mat4x4::value_type;
-#endif
-#endif
-
-    Mat4() {
-        glm::mat4x4();
-    }
-
-    Mat4(const Quaternion& rhs) {
-        *this = glm::mat4_cast((const glm::quat&) rhs);
-    }
-
-    Mat4 operator*(const Mat4& rhs) const {
-        Mat4 result = glm::operator *(*this, rhs);
-        return result;
-    }
-
-    Vec4 operator*(const Vec4& rhs) const;
-
-    void extract_rotation_and_translation(Quaternion& rotation, Vec3& translation) const;
-
-    static Mat4 as_rotation_x(const Degrees& angle);
-    static Mat4 as_rotation_y(const Degrees& angle);
-    static Mat4 as_rotation_z(const Degrees& angle);
-    static Mat4 as_look_at(const Vec3& eye, const Vec3& target, const Vec3& up);
-    static Mat4 as_scaling(float s);
-
-    const float& operator[](const uint32_t index) const {
-        uint32_t col = index / 4;
-        uint32_t row = index % 4;
-
-        const glm::mat4x4& self = *this;
-        return self[col][row];
-    }
-
-    float& operator[](const uint32_t index){
-        uint32_t col = index / 4;
-        uint32_t row = index % 4;
-
-        glm::mat4x4& self = *this;
-        return self[col][row];
-    }
-
-    static Mat4 as_translation(const Vec3& v);
-
-    static Mat4 as_projection(const Degrees& fov, float aspect, float near, float far) {
-        Mat4 ret;
-        ret = glm::perspective(Radians(fov).value, aspect, near, far);
-        return ret;
-    }
-
-    static Mat4 as_orthographic(float left, float right, float bottom, float top, float near, float far) {
-        Mat4 ret;
-        ret = glm::ortho(left, right, bottom, top, near, far);
-        return ret;
-    }
-
-    void inverse() {
-        *this = glm::inverse((glm::mat4x4) *this);
-    }
-
-    Mat4 inversed() const {
-        Mat4 ret = *this;
-        ret.inverse();
-        return ret;
-    }
-
-    Plane extract_plane(FrustumPlane plane) const;
-
-    const float* data() const {
-        return glm::value_ptr(*this);
-    }
-
-};
-
-struct Mat3 : private glm::mat3x3 {
-private:
-    Mat3(const glm::mat3x3& rhs) {
-        *this = rhs;
-    }
-
-    Mat3& operator=(const glm::mat3x3& rhs) {
-        glm::mat3x3::operator =(rhs);
-        return *this;
-    }
-
-public:
-#ifndef __clang__
-#if (__GNUC__ == 4 && __GNUC_MINOR__ <= 7)
-    using glm::mat3x3::value_type;
-#endif
-#endif
-
-    static Mat3 from_rotation_x(const Degrees& angle);
-    static Mat3 from_rotation_y(const Degrees& angle);
-    static Mat3 from_rotation_z(const Degrees& angle);
-
-    Mat3() {
-        glm::mat3x3();
-    }
-
-    Mat3(const float* data) {
-        for(uint32_t i = 0; i < 9; ++i) {
-            (*this)[i] = data[i];
-        }
-    }
-
-    Mat3(const Mat4& rhs);
-
-    const float operator[](const uint32_t index) const {
-        uint32_t col = index / 3;
-        auto& column = glm::mat3x3::operator [](col);
-        return column[index - (3 * col)];
-    }
-
-    float& operator[](const uint32_t index) {
-        uint32_t col = index / 3;
-        auto& column = glm::mat3x3::operator [](col);
-        return column[index - (3 * col)];
-    }
-
-    Vec3 transform_vector(const Vec3& v) const;
-
-    const float* data() const {
-        return glm::value_ptr(*this);
-    }
-
-    void inverse() {
-        *this = glm::inverse((const glm::mat3x3&) *this);
-    }
-
-    Mat3 inversed() const {
-        Mat3 ret = *this;
-        ret.inverse();
-        return ret;
-    }
-
-    void transpose() {
-        *this = glm::transpose((const glm::mat3x3&) *this);
-    }
-
-    Mat3 transposed() const {
-        Mat3 ret = *this;
-        ret.transpose();
-        return ret;
-    }
-};
 
 
 
