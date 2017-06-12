@@ -48,6 +48,19 @@ private:
 
     void do_visit(Renderable* renderable, MaterialPass* material_pass, batcher::Iteration iteration);
     bool queue_if_blended(Renderable* renderable, MaterialPass* material_pass, batcher::Iteration iteration);
+
+    void enable_vertex_arrays(bool force=false);
+    void disable_vertex_arrays(bool force=false);
+
+    void enable_colour_arrays(bool force=false);
+    void disable_colour_arrays(bool force=false);
+
+    void enable_texcoord_array(uint8_t which, bool force=false);
+    void disable_texcoord_array(uint8_t which, bool force=false);
+
+    bool positions_enabled_ = false;
+    bool colours_enabled_ = false;
+    bool textures_enabled_[MAX_TEXTURE_UNITS] = {0};
 };
 
 

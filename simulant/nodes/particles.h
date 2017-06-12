@@ -217,6 +217,10 @@ public:
         return index_data_->count();
     }
 
+    IndexType index_type() const override {
+        return index_data_->index_type();
+    }
+
     RenderPriority render_priority() const override {
         return HasMutableRenderPriority::render_priority();
     }

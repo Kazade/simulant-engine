@@ -30,7 +30,7 @@ ParticleSystem::ParticleSystem(ParticleSystemID id, Stage* stage, SoundDriver* s
     generic::Identifiable<ParticleSystemID>(id),
     Source(stage, sound_driver),
     vertex_data_(new VertexData(VertexSpecification::POSITION_AND_DIFFUSE)),
-    index_data_(new IndexData()) {
+    index_data_(new IndexData(INDEX_TYPE_16_BIT)) {
 
     set_quota(quota_); // Force hardware buffer initialization
     set_material_id(stage->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY));    
@@ -77,13 +77,13 @@ const AABB ParticleSystem::aabb() const {
         auto pos = emitter->relative_position();
 
         if(emitter->type() == PARTICLE_EMITTER_POINT) {            
-            if(pos.x > result.max.x || first) result.max.x = pos.x;
-            if(pos.y > result.max.y || first) result.max.y = pos.y;
-            if(pos.z > result.max.z || first) result.max.z = pos.z;
+            if(pos.x > result.max().x || first) result.set_max_x(pos.x);
+            if(pos.y > result.max().y || first) result.set_max_y(pos.y);
+            if(pos.z > result.max().z || first) result.set_max_z(pos.z);
 
-            if(pos.x < result.min.x || first) result.min.x = pos.x;
-            if(pos.y < result.min.x || first) result.min.y = pos.y;
-            if(pos.z < result.min.x || first) result.min.z = pos.z;
+            if(pos.x < result.min().x || first) result.set_min_x(pos.x);
+            if(pos.y < result.min().x || first) result.set_min_y(pos.y);
+            if(pos.z < result.min().x || first) result.set_min_z(pos.z);
         } else {
             // If this is not a point emitter, then calculate the max/min possible for
             // each emitter using their dimensions.
@@ -99,13 +99,13 @@ const AABB ParticleSystem::aabb() const {
             float minz = pos.z - hd;
             float maxz = pos.z + hd;
 
-            if(maxx > result.max.x || first) result.max.x = maxx;
-            if(maxy > result.max.y || first) result.max.y = maxy;
-            if(maxz > result.max.z || first) result.max.z = maxz;
+            if(maxx > result.max().x || first) result.set_max_x(maxx);
+            if(maxy > result.max().y || first) result.set_max_y(maxy);
+            if(maxz > result.max().z || first) result.set_max_z(maxz);
 
-            if(minx > result.min.x || first) result.min.x = minx;
-            if(miny > result.min.y || first) result.min.y = miny;
-            if(minz > result.min.z || first) result.min.z = minz;
+            if(minx > result.min().x || first) result.set_min_x(minx);
+            if(miny > result.min().y || first) result.set_min_y(miny);
+            if(minz > result.min().z || first) result.set_min_z(minz);
         }
 
         first = false;
@@ -123,7 +123,8 @@ void ParticleSystem::prepare_buffers() {
         if(!vertex_buffer_) {
             vertex_buffer_ = renderer->hardware_buffers->allocate(
                 vertex_data_->stride() * quota_,
-                HARDWARE_BUFFER_VERTEX_ATTRIBUTES
+                HARDWARE_BUFFER_VERTEX_ATTRIBUTES,
+                SHADOW_BUFFER_DISABLED
             );
         } else {
             vertex_buffer_->resize(vertex_data_->stride() * quota_);
@@ -132,7 +133,8 @@ void ParticleSystem::prepare_buffers() {
         if(!index_buffer_) {
             index_buffer_ = renderer->hardware_buffers->allocate(
                 sizeof(Index) * quota_,
-                HARDWARE_BUFFER_VERTEX_ARRAY_INDICES
+                HARDWARE_BUFFER_VERTEX_ARRAY_INDICES,
+                SHADOW_BUFFER_DISABLED
             );
         } else {
             index_buffer_->resize(sizeof(Index) * quota_);

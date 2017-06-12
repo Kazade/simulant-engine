@@ -50,7 +50,8 @@ Stage::Stage(StageID id, WindowBase *parent, AvailablePartitioner partitioner):
     resource_manager_(ResourceManager::create(parent, parent->shared_assets.get())),
     ambient_light_(smlt::Colour::WHITE),
     geom_manager_(new GeomManager()),
-    sky_manager_(new SkyManager(parent, this)) {
+    sky_manager_(new SkyManager(parent, this)),
+    sprite_manager_(new SpriteManager(parent, this)) {
 
     set_partitioner(partitioner);
     render_queue_.reset(new batcher::RenderQueue(this, parent->renderer.get()));
@@ -74,7 +75,6 @@ void Stage::cleanup() {
         stage_node->ask_owner_for_destruction();
     });
 
-    SpriteManager::objects_.clear();
     LightManager::objects_.clear();
     ActorManager::objects_.clear();
     CameraProxyManager::objects_.clear();
@@ -248,50 +248,6 @@ void Stage::delete_particle_system(ParticleSystemID pid) {
     signal_particle_system_destroyed_(pid);
     ParticleSystemManager::destroy(pid);
 }
-
-//=============== SPRITES ===================
-
-SpriteID Stage::new_sprite() {
-    SpriteID s = SpriteManager::make(this, window->_sound_driver());
-    sprite(s)->set_parent(this);
-    signal_sprite_created_(s);
-    return s;
-}
-
-SpriteID Stage::new_sprite_from_file(const unicode& filename, uint32_t frame_width, uint32_t frame_height, uint32_t margin, uint32_t spacing, std::pair<uint32_t, uint32_t> padding) {
-    SpriteID s = new_sprite();
-    TextureID t = assets->new_texture_from_file(
-        filename,
-        TextureFlags(MIPMAP_GENERATE_NONE, TEXTURE_WRAP_CLAMP_TO_EDGE, TEXTURE_FILTER_NEAREST)
-    );
-    try {
-        sprite(s)->set_spritesheet(t, frame_width, frame_height, margin, spacing, padding);
-    } catch(...) {
-        delete_sprite(s);
-        throw;
-    }
-
-    return s;
-}
-
-SpritePtr Stage::sprite(SpriteID s) {
-    return SpriteManager::get(s).lock().get();
-}
-
-bool Stage::has_sprite(SpriteID s) const {
-    return SpriteManager::contains(s);
-}
-
-void Stage::delete_sprite(SpriteID s) {     
-    SpriteManager::destroy(s);
-}
-
-uint32_t Stage::sprite_count() const {
-    return SpriteManager::count();
-}
-
-//============== END SPRITES ================
-
 
 LightID Stage::new_light_as_directional(const Vec3& direction, const smlt::Colour& colour) {
     auto light = LightManager::make(this).fetch();

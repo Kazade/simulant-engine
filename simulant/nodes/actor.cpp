@@ -101,6 +101,9 @@ std::size_t SubActor::index_element_count() const {
     return submesh_->index_data->count();
 }
 
+IndexType SubActor::index_type() const {
+    return submesh_->index_data->index_type();
+}
 
 void Actor::rebuild_subactors() {
     clear_subactors();
@@ -150,8 +153,9 @@ void Actor::set_mesh(MeshID mesh) {
 
         // Create an interpolated vertex hardware buffer if this is an animated mesh
         interpolated_vertex_buffer_ = stage->window->renderer->hardware_buffers->allocate(
-            mesh_->shared_data->specification().stride() * shared_vertices_per_frame,
-            HARDWARE_BUFFER_VERTEX_ATTRIBUTES
+            mesh_->shared_data->specification().stride() * shared_vertices_per_frame,                    
+            HARDWARE_BUFFER_VERTEX_ATTRIBUTES,
+            SHADOW_BUFFER_DISABLED
         );
 
         animation_state_ = std::make_shared<KeyFrameAnimationState>(

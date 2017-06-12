@@ -31,6 +31,7 @@
 namespace smlt {
 
 class KeyFrameAnimationState;
+class SpriteManager;
 
 class Sprite :
     public StageNode,
@@ -48,7 +49,7 @@ public:
     void cleanup() override;
     void update(float dt) override;
 
-    Sprite(SpriteID id, Stage* stage, SoundDriver *sound_driver);
+    Sprite(SpriteID id, SpriteManager *manager, SoundDriver *sound_driver);
 
     void set_render_dimensions(float width, float height);
     void set_render_dimensions_from_width(float width);
@@ -72,6 +73,8 @@ public:
     const AABB aabb() const override;
 
 private:
+    SpriteManager* manager_;
+
     float frame_width_ = 0;
     float frame_height_ = 0;
     float sprite_sheet_margin_ = 0;

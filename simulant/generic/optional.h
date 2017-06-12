@@ -1,5 +1,7 @@
 #pragma once
+#include <cstddef>
 #include <cassert>
+#include <utility>
 
 namespace smlt {
 

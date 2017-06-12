@@ -28,8 +28,8 @@ HardwareBufferManager::HardwareBufferManager(const Renderer* renderer):
 
 }
 
-HardwareBuffer::ptr HardwareBufferManager::allocate(std::size_t size, HardwareBufferPurpose purpose, HardwareBufferUsage usage) {
-    return HardwareBuffer::ptr(new HardwareBuffer(do_allocation(size, purpose, usage)));
+HardwareBuffer::ptr HardwareBufferManager::allocate(std::size_t size, HardwareBufferPurpose purpose, ShadowBufferEnableOption shadow_buffer, HardwareBufferUsage usage) {
+    return HardwareBuffer::ptr(new HardwareBuffer(do_allocation(size, purpose, shadow_buffer, usage)));
 }
 
 void HardwareBufferImpl::resize(std::size_t new_size) {
@@ -71,6 +71,10 @@ void HardwareBuffer::upload(const uint8_t *data, const std::size_t size) {
     }
 
     impl_->upload(data, size);
+}
+
+MappedBuffer HardwareBuffer::map_target_for_read() const {
+    return impl_->map_target_for_read();
 }
 
 }

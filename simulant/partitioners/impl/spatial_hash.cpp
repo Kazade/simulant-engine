@@ -42,13 +42,12 @@ void SpatialHash::update_object_for_box(const AABB& new_box, SpatialHashEntry* o
     auto cell_size = find_cell_size_for_box(new_box);
 
     KeyList new_keys;
-    KeyList old_keys = object->keys();
+    const KeyList& old_keys = object->keys();
 
     for(auto& corner: new_box.corners()) {
         auto key = make_key(cell_size, corner.x, corner.y, corner.z);
         new_keys.insert(key);
     }
-
 
     KeyList keys_to_add, keys_to_remove;
 
@@ -181,7 +180,7 @@ HGSHEntryList SpatialHash::find_objects_within_box(const AABB &box) {
 
     auto corners = box.corners();
 
-    std::set<Key> seen;
+    KeyList seen;
 
     for(auto& corner: corners) {
         auto key = make_key(
@@ -248,6 +247,14 @@ Key make_key(int32_t cell_size, float x, float y, float z) {
     key.hash_path[13] = (key.ancestors > 12) ? make_hash(MAX_PATH_SIZE / 8192, x, y, z) : Hash();
     key.hash_path[14] = (key.ancestors > 13) ? make_hash(MAX_PATH_SIZE / 16384, x, y, z) : Hash();
     key.hash_path[15] = (key.ancestors > 14) ? make_hash(1, x, y, z) : Hash();
+
+    /* Precalculate the hash_code for speed */
+    key.hash_code = 0;
+    for(uint8_t i = 0; i < smlt::MAX_GRID_LEVELS; ++i) {
+        std::hash_combine(key.hash_code, key.hash_path[i].x);
+        std::hash_combine(key.hash_code, key.hash_path[i].y);
+        std::hash_combine(key.hash_code, key.hash_path[i].z);
+    }
 
     return key;
 }

@@ -22,6 +22,7 @@
 
 #include "utils/gl_thread_check.h"
 #include "utils/gl_error.h"
+#include "utils/memory.h"
 
 #include "deps/kazlog/kazlog.h"
 #include "deps/SOIL/SOIL.h"
@@ -62,8 +63,8 @@ void Texture::resize(uint32_t width, uint32_t height) {
     width_ = width;
     height_ = height;
 
-    data_.clear();
     data_.resize(width * height * (bpp_ / 8));
+    data_.shrink_to_fit();
 }
 
 void Texture::sub_texture(TextureID src, uint16_t offset_x, uint16_t offset_y) {
@@ -104,6 +105,7 @@ void Texture::__do_upload(MipmapGenerate mipmap, TextureWrap wrap, TextureFilter
 
     if(!gl_tex()) {
         GLCheck(glGenTextures, 1, &gl_tex_);
+        L_DEBUG(_F("Loaded {0} into GL texture {1}").format(source(), gl_tex_));
     }
 
     GLCheck(glBindTexture, GL_TEXTURE_2D, gl_tex_);   
@@ -130,6 +132,7 @@ void Texture::__do_upload(MipmapGenerate mipmap, TextureWrap wrap, TextureFilter
         assert(0 && "Not implemented");
     }
 
+    L_DEBUG(_F("Texture {0} has dimensions, W:{1} H:{2}").format(gl_tex_, width_, height_));
     GLCheck(glTexImage2D,
         GL_TEXTURE_2D,
         0, internalFormat,
@@ -138,9 +141,10 @@ void Texture::__do_upload(MipmapGenerate mipmap, TextureWrap wrap, TextureFilter
         GL_UNSIGNED_BYTE, &data_[0]
     );
     if(mipmap == MIPMAP_GENERATE_COMPLETE) {
-#ifdef SIMULANT_GL_VERSION_1X
+#ifdef SIMULANT_GL_VERSION_1X        
         // FIXME: OpenGL >= 1.4 - may need to look for GL_SGIS_generate_mipmap extension
         //GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
+        mipmap = MIPMAP_GENERATE_NONE;
 #else
         GLCheck(glGenerateMipmap, GL_TEXTURE_2D);
 #endif
@@ -182,7 +186,12 @@ void Texture::__do_upload(MipmapGenerate mipmap, TextureWrap wrap, TextureFilter
     }
 
     if(free_after) {
+        L_DEBUG("Releasing texture data from RAM");
         free();
+
+#ifdef _arch_dreamcast
+        print_available_ram();
+#endif
     }
 
     L_DEBUG("Texture uploaded");
@@ -227,6 +236,7 @@ void Texture::flip_vertically() {
 
 void Texture::free() {
     data_.clear();
+    data_.shrink_to_fit();
 }
 
 void Texture::save_to_file(const unicode& filename) {

@@ -188,6 +188,7 @@ public:
     HardwareBuffer* vertex_attribute_buffer() const;
     HardwareBuffer* index_buffer() const;
     std::size_t index_element_count() const;
+    IndexType index_type() const;
 
 private:
     VertexData* get_vertex_data() const;

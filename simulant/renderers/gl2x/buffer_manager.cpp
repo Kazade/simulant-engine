@@ -96,7 +96,12 @@ GL2BufferManager::GL2BufferManager(const Renderer* renderer):
 
 }
 
-std::unique_ptr<HardwareBufferImpl> GL2BufferManager::do_allocation(std::size_t size, HardwareBufferPurpose purpose, HardwareBufferUsage usage) {
+std::unique_ptr<HardwareBufferImpl> GL2BufferManager::do_allocation(
+        std::size_t size,
+        HardwareBufferPurpose purpose,
+        ShadowBufferEnableOption shadow_buffer,
+        HardwareBufferUsage usage
+) {
     std::unique_ptr<GL2HardwareBufferImpl> buffer_impl(new GL2HardwareBufferImpl(this));
 
     buffer_impl->size = size;
@@ -105,10 +110,15 @@ std::unique_ptr<HardwareBufferImpl> GL2BufferManager::do_allocation(std::size_t 
     buffer_impl->usage = convert_usage(usage);
     buffer_impl->purpose = convert_purpose(purpose);
 
-    auto allocate_buffers = [&buffer_impl]() {
+    auto allocate_buffers = [&buffer_impl, shadow_buffer, size]() {
         GLCheck(glGenBuffers, 1, &buffer_impl->buffer_id);
         GLCheck(glBindBuffer, buffer_impl->purpose, buffer_impl->buffer_id);
         GLCheck(glBufferData, buffer_impl->purpose, buffer_impl->capacity, nullptr, buffer_impl->usage);
+
+        if(shadow_buffer != SHADOW_BUFFER_DISABLED) {
+            buffer_impl->shadow_buffer_.resize(size, 0);
+            buffer_impl->has_shadow_buffer_ = true;
+        }
     };
 
     if(GLThreadCheck::is_current()) {

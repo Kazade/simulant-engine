@@ -2,7 +2,7 @@
 
 #include <cstring>
 #include <map>
-#include <set>
+#include <unordered_set>
 #include <ostream>
 #include <unordered_set>
 #include "../../interfaces.h"
@@ -36,6 +36,7 @@ struct Hash {
 struct Key {
     Hash hash_path[MAX_GRID_LEVELS];
     std::size_t ancestors = 0;
+    std::size_t hash_code = 0;
 
     bool operator<(const Key& other) const {
         auto len = std::min(other.ancestors, ancestors) + 1;
@@ -58,12 +59,31 @@ struct Key {
     friend std::ostream& operator<<(std::ostream& os, const Key& key);
 };
 
+}
+
+namespace std {
+
+    template<>
+    struct hash<smlt::Key> {
+        typedef smlt::Key argument_type;
+        typedef std::size_t result_type;
+
+        result_type operator()(argument_type const& s) const
+        {
+            return s.hash_code;
+        }
+    };
+
+}
+
+namespace smlt {
+
 std::ostream& operator<<(std::ostream& os, const Key& key);
 
 Key make_key(int32_t cell_size, float x, float y, float z);
 Hash make_hash(int32_t cell_size, float x, float y, float z);
 
-typedef std::set<Key> KeyList;
+typedef std::unordered_set<Key> KeyList;
 
 class SpatialHashEntry {
 public:
@@ -77,11 +97,15 @@ public:
         keys_.insert(key);
     }
 
-    void set_keys(const KeyList& keys) {
-        keys_ = keys;
+    void remove_key(const Key& key) {
+        keys_.erase(key);
     }
 
-    KeyList keys() const {
+    void set_keys(const KeyList& keys) {
+        keys_ = std::move(keys);
+    }
+
+    const KeyList& keys() const {
         return keys_;
     }
 
@@ -122,4 +146,6 @@ std::ostream &operator<<(std::ostream &os, const SpatialHash &hash);
 void generate_boxes_for_frustum(const Frustum& frustum, std::vector<AABB>& results);
 
 }
+
+
 

@@ -19,6 +19,10 @@
 
 #include <thread>
 
+#ifdef _arch_dreamcast
+    #include <kos.h>
+#endif
+
 #include "utils/gl_error.h"
 #include "window_base.h"
 #include "input_controller.h"
@@ -44,6 +48,7 @@
 #include "scenes/loading.h"
 #include "utils/gl_thread_check.h"
 #include "utils/gl_error.h"
+#include "utils/memory.h"
 
 #include "panels/stats_panel.h"
 #include "panels/partitioner_panel.h"
@@ -174,6 +179,12 @@ void WindowBase::each_stage(std::function<void (uint32_t, Stage*)> func) {
 bool WindowBase::_init() {
     GLThreadCheck::init();
 
+    L_DEBUG("Starting initialization");
+
+#ifdef _arch_dreamcast
+    print_available_ram();
+#endif
+
     // Initialize the sound driver (here rather than constructor as it relies on subclass type)
     sound_driver_ = create_sound_driver();
     sound_driver_->startup();
@@ -187,6 +198,9 @@ bool WindowBase::_init() {
         //watcher_ = Watcher::create(*this);
 
         L_INFO("Registering loaders");
+#ifdef _arch_dreamcast
+        print_available_ram();
+#endif
 
         //Register the default resource loaders
         register_loader(std::make_shared<smlt::loaders::TextureLoaderType>());
@@ -204,6 +218,10 @@ bool WindowBase::_init() {
         register_loader(std::make_shared<smlt::loaders::TTFLoaderType>());
 
         L_INFO("Initializing the default resources");
+#ifdef _arch_dreamcast
+        print_available_ram();
+#endif
+
         shared_assets->init();
 
         create_defaults();
@@ -225,6 +243,10 @@ bool WindowBase::_init() {
         initialized_ = true;
     }
 
+    L_DEBUG("Initialization finished");
+#ifdef _arch_dreamcast
+        print_available_ram();
+#endif
     return result;
 }
 

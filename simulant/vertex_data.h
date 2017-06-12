@@ -41,6 +41,10 @@ enum VertexAttributeType {
     VERTEX_ATTRIBUTE_TYPE_TEXCOORD1,
     VERTEX_ATTRIBUTE_TYPE_TEXCOORD2,
     VERTEX_ATTRIBUTE_TYPE_TEXCOORD3,
+    VERTEX_ATTRIBUTE_TYPE_TEXCOORD4,
+    VERTEX_ATTRIBUTE_TYPE_TEXCOORD5,
+    VERTEX_ATTRIBUTE_TYPE_TEXCOORD6,
+    VERTEX_ATTRIBUTE_TYPE_TEXCOORD7,
     VERTEX_ATTRIBUTE_TYPE_DIFFUSE,
     VERTEX_ATTRIBUTE_TYPE_SPECULAR
 };
@@ -218,20 +222,65 @@ typedef uint32_t Index;
 
 class IndexData {
 public:
-    IndexData();
+    IndexData(IndexType type);
+
+    void each(std::function<void (uint32_t)> cb);
 
     void reset();
     void clear() { indices_.clear(); }
-    void resize(uint32_t size) { indices_.resize(size); }
-    void reserve(uint32_t size) { indices_.reserve(size); }
-    void index(Index idx) { indices_.push_back(idx); }
-    void push(Index idx) { index(idx); }
+    void resize(uint32_t size) { indices_.resize(size * stride(), 0); }
+    void reserve(uint32_t size) { indices_.reserve(size * stride()); }
+
+    std::vector<uint32_t> all();
+
+    void index(uint32_t idx) {
+        if(index_type_ == INDEX_TYPE_8_BIT) {
+            if(idx > 255) throw std::out_of_range("Index too large");
+
+            indices_.push_back(uint8_t(idx));
+        } else if(index_type_ == INDEX_TYPE_16_BIT) {
+            if(idx >= std::numeric_limits<uint16_t>::max()) throw std::out_of_range("Index too large");
+
+            auto i = indices_.size();
+            indices_.push_back(0);
+            indices_.push_back(0);
+
+            auto ptr = (uint16_t*) &indices_[i];
+            *ptr = (uint16_t) idx;
+        } else {
+            auto i = indices_.size();
+
+            indices_.push_back(0);
+            indices_.push_back(0);
+            indices_.push_back(0);
+            indices_.push_back(0);
+
+            auto ptr = (uint32_t*) &indices_[i];
+            *ptr = (uint32_t) idx;
+        }
+    }
+
+    void push(uint32_t idx) {
+        index(idx);
+    }
+
     void done();
-    Index at(const uint32_t i) { return indices_.at(i); }
 
-    uint32_t count() const { return indices_.size(); }
+    uint32_t at(const uint32_t i) {
+        auto ptr = &indices_[i * stride()];
 
-    const std::vector<Index>& all() const { return indices_; }
+        switch(index_type_) {
+            case INDEX_TYPE_8_BIT: return *ptr;
+            case INDEX_TYPE_16_BIT: return *((uint16_t*) ptr);
+            case INDEX_TYPE_32_BIT: return *((uint32_t*) ptr);
+        default:
+            throw std::logic_error("Invalid index type");
+        }
+    }
+
+    uint32_t count() const {
+        return indices_.size() / stride();
+    }
 
     bool operator==(const IndexData& other) const {
         return this->indices_ == other.indices_;
@@ -243,12 +292,25 @@ public:
 
     sig::signal<void ()>& signal_update_complete() { return signal_update_complete_; }
 
-    Index* _raw_data() { return &indices_[0]; }
+    const uint8_t* data() const { return &indices_[0]; }
+    std::size_t data_size() const { return indices_.size() * sizeof(uint8_t); }
 
-    const uint8_t* data() const { return (uint8_t*) &indices_[0]; }
-    std::size_t data_size() const { return indices_.size() * sizeof(Index); }
+    uint32_t stride() const {
+        switch(index_type_) {
+            case INDEX_TYPE_8_BIT: return sizeof(uint8_t);
+            case INDEX_TYPE_16_BIT: return sizeof(uint16_t);
+            case INDEX_TYPE_32_BIT: return sizeof(uint32_t);
+        default:
+            throw std::logic_error("Invalid index type");
+        }
+    }
+
+    IndexType index_type() const { return index_type_; }
+
 private:
-    std::vector<Index> indices_;
+
+    IndexType index_type_;
+    std::vector<uint8_t> indices_;
 
     sig::signal<void ()> signal_update_complete_;
 };

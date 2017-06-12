@@ -29,11 +29,14 @@ public:
         stage_->assets->texture(texture_2)->upload();
 
         auto mat_1 = stage_->assets->new_material_from_texture(texture_1);
+#ifndef SIMULANT_GL_VERSION_1X
         mat_1.fetch()->delete_pass(1); // Delete the lighting pass from the material
+#endif
 
         auto mat_2 = stage_->assets->new_material_from_texture(texture_2);
+#ifndef SIMULANT_GL_VERSION_1X
         mat_2.fetch()->delete_pass(1);
-
+#endif
         auto mesh_1 = stage_->assets->new_mesh_as_cube(1.0);
         stage_->assets->mesh(mesh_1)->set_material_id(mat_1);
 
@@ -88,10 +91,14 @@ public:
         auto mesh_1 = stage_->assets->new_mesh_as_cube(1.0);
         auto actor_id = stage_->new_actor_with_mesh(mesh_1);
 
+#ifdef SIMULANT_GL_VERSION_1X
+        assert_equal(1, render_queue->pass_count());
+        assert_equal(1, render_queue->group_count(0));
+#else
         assert_equal(2, render_queue->pass_count());
         assert_equal(1, render_queue->group_count(0));
         assert_equal(1, render_queue->group_count(1));
-
+#endif
         stage_->delete_actor(actor_id);
 
         assert_equal(0, render_queue->pass_count());
@@ -105,14 +112,17 @@ public:
         stage_->assets->texture(texture_2)->upload();
 
         auto mat_1 = stage_->assets->new_material_from_texture(texture_1);
+#ifndef SIMULANT_GL_VERSION_1X
         mat_1.fetch()->delete_pass(1);
-
+#endif
         auto mat_2 = stage_->assets->new_material_from_texture(texture_2);
+#ifndef SIMULANT_GL_VERSION_1X
         mat_2.fetch()->delete_pass(1);
-
+#endif
         auto mat_3 = stage_->assets->new_material_from_texture(texture_1); // Texture 1 repeated
+#ifndef SIMULANT_GL_VERSION_1X
         mat_3.fetch()->delete_pass(1);
-
+#endif
         auto& render_queue = stage_->render_queue;
 
         assert_equal(0, render_queue->pass_count());

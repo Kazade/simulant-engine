@@ -64,13 +64,13 @@ bool ResourceManager::init() {
 
     auto tex = texture(default_texture_id_);
 
-    tex->resize(1, 1);
+    tex->resize(8, 8);
     tex->set_bpp(32);
 
-    tex->data()[0] = 255;
-    tex->data()[1] = 255;
-    tex->data()[2] = 255;
-    tex->data()[3] = 255;
+    for(uint32_t i = 0; i < 64 * 4; ++i) {
+        tex->data()[i] = 255;
+    }
+
     tex->upload();
 
     //Maintain ref-count
@@ -557,7 +557,7 @@ TextureID ResourceManager::new_texture_from_file(const unicode& path, TextureFla
         flags.mipmap,
         flags.wrap,
         flags.filter,
-        false
+        (flags.free_data == TEXTURE_FREE_DATA_AFTER_UPLOAD) ? true : false
     );
 
     mark_texture_as_uncollected(tex->id());

@@ -33,6 +33,31 @@ struct GL2HardwareBufferImpl : public HardwareBufferImpl {
         HardwareBufferImpl(manager) {}
 
     void upload(const uint8_t *data, const std::size_t size) override;
+
+    virtual bool has_shadow_buffer() const override { return has_shadow_buffer_; }
+    virtual BufferLocation shadow_buffer_location() const override { return BUFFER_LOCATION_RAM; }
+    virtual BufferLocation target_buffer_location() const override { return BUFFER_LOCATION_VRAM; }
+    virtual void update_target_from_shadow_buffer() override {
+        //fixme: IMPLEMENT!
+    }
+
+    virtual void destroy_shadow_buffer() override  {
+        has_shadow_buffer_ = false;
+        shadow_buffer_.clear();
+    }
+
+    virtual MappedBuffer map_target_for_read() const {
+        //FIXME: implement
+        return MappedBuffer(
+            []() -> uint8_t* { return nullptr; },
+            [](){}
+        );
+    }
+private:
+    bool has_shadow_buffer_ = false;
+    mutable std::vector<uint8_t> shadow_buffer_; // Rarely used
+
+    friend class GL2BufferManager;
 };
 
 class GL2BufferManager:
@@ -42,7 +67,7 @@ public:
     GL2BufferManager(const Renderer* renderer);
 
 private:
-    std::unique_ptr<HardwareBufferImpl> do_allocation(std::size_t size, HardwareBufferPurpose purpose, HardwareBufferUsage usage);
+    std::unique_ptr<HardwareBufferImpl> do_allocation(std::size_t size, HardwareBufferPurpose purpose, ShadowBufferEnableOption shadow_buffer, HardwareBufferUsage usage);
     void do_release(const HardwareBufferImpl *buffer);
     void do_resize(HardwareBufferImpl* buffer, std::size_t new_size);
     void do_bind(const HardwareBufferImpl *buffer, HardwareBufferPurpose purpose);

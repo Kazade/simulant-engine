@@ -24,13 +24,15 @@
 #include "../stage.h"
 #include "../window_base.h"
 #include "../animation.h"
+#include "../managers/sprite_manager.h"
 
 using namespace smlt;
 
-Sprite::Sprite(SpriteID id, Stage *stage, SoundDriver* sound_driver):
-    StageNode(stage),
+Sprite::Sprite(SpriteID id, SpriteManager *manager, SoundDriver* sound_driver):
+    StageNode(manager->stage.get()),
     generic::Identifiable<SpriteID>(id),
-    Source(stage, sound_driver) {
+    Source(manager->stage, sound_driver),
+    manager_(manager) {
 
     sprite_sheet_padding_ = std::make_pair(0, 0);
 }
@@ -60,7 +62,7 @@ void Sprite::cleanup() {
 }
 
 void Sprite::ask_owner_for_destruction() {
-    stage->delete_sprite(id());
+    manager_->delete_sprite(id());
 }
 
 void Sprite::update(float dt) {
