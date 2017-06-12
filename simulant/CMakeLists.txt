@@ -61,9 +61,7 @@ INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} DESTINATION include FILES_MATCHING
 SET(DEPS
     "jsonic"
     "kazlog"
-    "kazmath"
     "kazsignal"
-    "kaztimer"
     "kfs"
     "SOIL"
     "tinyxml"
