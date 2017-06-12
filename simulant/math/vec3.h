@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include "../utils/unicode.h"
 
 namespace smlt {
