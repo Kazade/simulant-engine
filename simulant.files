@@ -702,3 +702,5 @@ simulant/math/mat4.h
 simulant/math/mat4.cpp
 simulant/math/aabb.h
 simulant/math/aabb.cpp
+simulant/math/plane.h
+simulant/math/plane.cpp

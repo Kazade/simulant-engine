@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <limits>
 
 namespace smlt {
 
@@ -11,5 +12,12 @@ const float PI_UNDER_180 = 180.0f / PI;
 
 float clamp(float x, float l, float h);
 float lerp(float x, float y, float t);
+
+template<typename T>
+bool almost_equal(const T& lhs, const T& rhs) {
+    return lhs + std::numeric_limits<T>::epsilon() > rhs &&
+           lhs - std::numeric_limits<T>::epsilon() < rhs;
+}
+
 
 }

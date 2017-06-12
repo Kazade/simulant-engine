@@ -39,6 +39,7 @@
 #include "math/mat3.h"
 #include "math/mat4.h"
 #include "math/aabb.h"
+#include "math/plane.h"
 
 #include "deps/glm/gtx/intersect.hpp"
 
@@ -63,69 +64,7 @@ struct Mat3;
 struct Plane;
 struct Vec4;
 
-
-template<typename T>
-bool almost_equal(const T& lhs, const T& rhs) {
-    return lhs + std::numeric_limits<T>::epsilon() > rhs &&
-           lhs - std::numeric_limits<T>::epsilon() < rhs;
-}
-
-
-
 struct Degrees;
-
-
-
-class PlaneClassification {
-private:
-    friend struct Plane;
-    PlaneClassification(int8_t v):
-        value_(v) {}
-
-    int8_t value_;
-public:
-    bool is_behind_plane() const { return value_ == -1; }
-    bool is_on_plane() const { return value_ == 0; }
-    bool is_in_front_of_plane() const { return value_ == 1; }
-};
-
-struct Plane {
-    Vec3 n;
-    float d;
-
-    Plane():
-        n(Vec3()),
-        d(0) {
-    }
-
-    Plane(const Vec3& N, float D):
-        n(N),
-        d(D) {
-
-    }
-
-    Plane(float A, float B, float C, float D):
-        n(A, B, C),
-        d(D) {
-
-    }
-
-    Vec3 project(const Vec3& p);
-
-    Vec3 normal() const {
-        return n;
-    }
-
-    float distance_to(const Vec3& p);
-
-    PlaneClassification classify_point(const Vec3& p) const;
-
-    static smlt::optional<Vec3> intersect_planes(
-        const Plane& p1,
-        const Plane& p2,
-        const Plane& p3
-    );
-};
 
 
 

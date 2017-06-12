@@ -36,7 +36,7 @@ bool Frustum::intersects_aabb(const AABB& aabb) const {
         for(Vec3& p: points) {
             auto classification = plane.classify_point(p);
 
-            if(classification.is_behind_plane()) {
+            if(classification == PLANE_CLASSIFICATION_IS_BEHIND_PLANE) {
                 points_behind++;
             }
         }
@@ -148,7 +148,7 @@ std::vector<Vec3> Frustum::far_corners() const {
 bool Frustum::contains_point(const Vec3 &point) const {
     for(const Plane& plane: planes_) {
         auto classify = plane.classify_point(point);
-        if(classify.is_behind_plane()) {
+        if(classify == PLANE_CLASSIFICATION_IS_BEHIND_PLANE) {
             return false;
         }
     }
