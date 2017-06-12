@@ -24,6 +24,8 @@
 namespace smlt {
 namespace controllers {
 
+static const float FLT_EPSILON = std::numeric_limits<float>::epsilon();
+
 RaycastVehicle::RaycastVehicle(smlt::Controllable* object, RigidBodySimulation* simulation, float wheel_height):
     RigidBody(object, simulation),
     wheel_height_(wheel_height) {

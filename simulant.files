@@ -704,3 +704,5 @@ simulant/math/aabb.h
 simulant/math/aabb.cpp
 simulant/math/plane.h
 simulant/math/plane.cpp
+simulant/math/ray.h
+simulant/math/ray.cpp

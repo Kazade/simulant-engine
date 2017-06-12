@@ -183,58 +183,6 @@ uint32_t VertexSpecification::specular_offset(bool check) const {
 }
 
 
-bool Ray::intersects_aabb(const AABB &aabb) const {
-    //http://gamedev.stackexchange.com/a/18459/15125
-    Vec3 rdir = this->dir.normalized();
-    Vec3 dirfrac(1.0 / rdir.x, 1.0 / rdir.y, 1.0 / rdir.z);
-
-    float t1 = (aabb.min().x - start.x) * dirfrac.x;
-    float t2 = (aabb.max().x - start.x) * dirfrac.x;
-    float t3 = (aabb.min().y - start.y) * dirfrac.y;
-    float t4 = (aabb.max().y - start.y) * dirfrac.y;
-    float t5 = (aabb.min().z - start.z) * dirfrac.z;
-    float t6 = (aabb.max().z - start.z) * dirfrac.z;
-
-    float tmin = std::max(std::max(std::min(t1, t2), std::min(t3, t4)), std::min(t5, t6));
-    float tmax = std::min(std::min(std::max(t1, t2), std::max(t3, t4)), std::max(t5, t6));
-
-    // if tmax < 0, ray (line) is intersecting AABB, but whole AABB is behind us
-    if(tmax < 0) {
-        return false;
-    }
-
-    // if tmin > tmax, ray doesn't intersect AABB
-    if (tmin > tmax) {
-        return false;
-    }
-
-    return false;
-}
-
-bool Ray::intersects_triangle(const Vec3 &v1, const Vec3 &v2, const Vec3 &v3, Vec3 *intersection, Vec3 *normal, float *distance) const {
-    Vec3 hit;
-    bool ret = glm::intersectLineTriangle(
-                (const glm::vec3&) start,
-                (const glm::vec3&) dir,
-                (const glm::vec3&) v1,
-                (const glm::vec3&) v2,
-                (const glm::vec3&) v3,
-                (glm::vec3&) hit
-                );
-
-    if(ret) {
-        if(intersection) *intersection = hit;
-        if(normal) {
-            *normal = (v2 - v1).cross(v3 - v1).normalized();
-        }
-
-        if(distance) {
-            *distance = (hit - start).length();
-        }
-    }
-
-    return ret;
-}
 
 
 }

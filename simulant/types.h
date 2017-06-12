@@ -40,8 +40,7 @@
 #include "math/mat4.h"
 #include "math/aabb.h"
 #include "math/plane.h"
-
-#include "deps/glm/gtx/intersect.hpp"
+#include "math/ray.h"
 
 #include "generic/manager.h"
 #include "generic/auto_weakptr.h"
@@ -57,46 +56,6 @@
 
 
 namespace smlt {
-
-struct Mat3;
-
-
-struct Plane;
-struct Vec4;
-
-struct Degrees;
-
-
-
-struct AABB;
-
-struct Ray {
-    Vec3 start;
-    Vec3 dir;
-    Vec3 dir_inv;
-
-    Ray() = default;
-
-    Ray(const Vec3& start, const Vec3& dir):
-        start(start),
-        dir(dir) {
-
-        dir_inv = Vec3(1.0 / dir.x, 1.0f / dir.y, 1.0 / dir.z);
-    }
-
-    bool intersects_aabb(const AABB& aabb) const;
-
-    bool intersects_triangle(
-        const Vec3& v1, const Vec3& v2, const Vec3& v3,
-        Vec3* intersection=nullptr, Vec3* normal=nullptr, float* distance=nullptr
-    ) const;
-};
-
-
-
-smlt::Vec2 operator*(float lhs, const smlt::Vec2& rhs);
-
-
 
 enum VertexAttribute {
     VERTEX_ATTRIBUTE_NONE,
