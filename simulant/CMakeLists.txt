@@ -65,6 +65,7 @@ SET(DEPS
     "kfs"
     "SOIL"
     "tinyxml"
+    "stb_truetype"
 )
 
 FOREACH(DEP ${DEPS})
