@@ -675,3 +675,5 @@ simulant/generic/simple_tostring.cpp
 simulant/generic/simple_tostring.h
 simulant/sound_drivers/kos_sound_driver.cpp
 cmake_modules/simulant-config.cmake
+simulant/utils/noise.cpp
+simulant/utils/noise.h
