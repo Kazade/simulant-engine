@@ -72,6 +72,7 @@ public:
 
     const AABB aabb() const override;
 
+    Property<Sprite, KeyFrameAnimationState> animations = {this, &Sprite::animation_state_};
 private:
     SpriteManager* manager_;
 
