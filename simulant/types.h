@@ -286,6 +286,9 @@ class Mesh;
 typedef std::weak_ptr<Mesh> MeshRef;
 typedef std::shared_ptr<Mesh> MeshPtr;
 
+class SubMesh;
+typedef SubMesh* SubMeshPtr;
+
 class Material;
 typedef std::weak_ptr<Material> MaterialRef;
 typedef std::shared_ptr<Material> MaterialPtr;

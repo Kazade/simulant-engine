@@ -125,7 +125,7 @@ public:
 
     void prepare_buffers(); // Called by actors to make sure things are up-to-date before rendering
 public:
-    typedef sig::signal<void (SubMesh*, MaterialID, MaterialID)> MaterialChangedCallback;
+    typedef sig::signal<void (SubMeshPtr, MaterialID, MaterialID)> MaterialChangedCallback;
 
     MaterialChangedCallback& signal_material_changed() {
         return signal_material_changed_;
@@ -190,7 +190,7 @@ public:
 
     void reset(VertexSpecification vertex_specification);
 
-    SubMesh* new_submesh_with_material(
+    SubMeshPtr new_submesh_with_material(
         const std::string& name,
         MaterialID material,        
         MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES,
@@ -199,7 +199,7 @@ public:
         IndexType=INDEX_TYPE_16_BIT
     );
 
-    SubMesh* new_submesh(
+    SubMeshPtr new_submesh(
         const std::string& name,
         MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES,
         VertexSharingMode vertex_sharing=VERTEX_SHARING_MODE_SHARED,
@@ -207,7 +207,7 @@ public:
         IndexType=INDEX_TYPE_16_BIT
     );
 
-    SubMesh* new_submesh_as_rectangle(
+    SubMeshPtr new_submesh_as_rectangle(
         const std::string& name,
         MaterialID material,
         float width,
@@ -215,7 +215,7 @@ public:
         const Vec3& offset=Vec3()
     );
 
-    SubMesh* new_submesh_as_box(
+    SubMeshPtr new_submesh_as_box(
         const std::string& name,
         MaterialID material,
         float width,
@@ -226,8 +226,8 @@ public:
 
     uint32_t submesh_count() const { return submeshes_.size(); }
     bool has_submesh(const std::string& name) const { return submeshes_.count(name); }
-    SubMesh* submesh(const std::string& name);
-    SubMesh* first_submesh() const;
+    SubMeshPtr submesh(const std::string& name);
+    SubMeshPtr first_submesh() const;
 
     void delete_submesh(const std::string& name);
     void clear();
@@ -244,7 +244,7 @@ public:
     void normalize(); //Scales the mesh so it has a radius of 1.0
     void transform_vertices(const smlt::Mat4& transform, bool include_submeshes=true);
 
-    void each(std::function<void (const std::string&, SubMesh*)> func) const;
+    void each(std::function<void (const std::string&, SubMeshPtr)> func) const;
 
     void enable_animation(MeshAnimationType animation_type, uint32_t animation_frames);
     bool is_animated() const { return animation_type_ != MESH_ANIMATION_TYPE_NONE; }
@@ -255,9 +255,9 @@ public:
 public:
     // Signals
 
-    typedef sig::signal<void (MeshID, SubMesh*)> SubMeshCreatedCallback;
-    typedef sig::signal<void (MeshID, SubMesh*)> SubMeshDestroyedCallback;
-    typedef sig::signal<void (MeshID, SubMesh*, MaterialID, MaterialID)> SubMeshMaterialChangedCallback;
+    typedef sig::signal<void (MeshID, SubMeshPtr)> SubMeshCreatedCallback;
+    typedef sig::signal<void (MeshID, SubMeshPtr)> SubMeshDestroyedCallback;
+    typedef sig::signal<void (MeshID, SubMeshPtr, MaterialID, MaterialID)> SubMeshMaterialChangedCallback;
 
     SubMeshCreatedCallback& signal_submesh_created() { return signal_submesh_created_; }
     SubMeshDestroyedCallback& signal_submesh_destroyed() { return signal_submesh_destroyed_; }
@@ -275,9 +275,9 @@ private:
     bool shared_vertex_buffer_dirty_ = false;
 
     std::unordered_map<std::string, std::shared_ptr<SubMesh>> submeshes_;
-    std::list<SubMesh*> ordered_submeshes_; // Ordered by insertion order
+    std::list<SubMeshPtr> ordered_submeshes_; // Ordered by insertion order
 
-    SubMesh* normal_debug_mesh_ = nullptr;
+    SubMeshPtr normal_debug_mesh_ = nullptr;
 
     SubMeshCreatedCallback signal_submesh_created_;
     SubMeshDestroyedCallback signal_submesh_destroyed_;
