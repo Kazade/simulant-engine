@@ -1,8 +1,8 @@
 #This file is for other projects to use, so that they can locate SIMULANT
 #using cmake
 
-FIND_PATH( SIMULANT_INCLUDE_DIR NAMES kglt/kglt.h PATHS /usr/include /usr/local/include $ENV{INCLUDE} )
-FIND_LIBRARY( SIMULANT_LIBRARY NAMES kglt PATHS /usr/lib /usr/local/lib )
+FIND_PATH( SIMULANT_INCLUDE_DIR NAMES simulant/simulant.h PATHS /usr/include /usr/local/include $ENV{INCLUDE} )
+FIND_LIBRARY( SIMULANT_LIBRARY NAMES simulant PATHS /usr/lib /usr/local/lib )
 
 IF(SIMULANT_INCLUDE_DIR)
 	MESSAGE(STATUS "Found SIMULANT include dir: ${SIMULANT_INCLUDE_DIR}")
