@@ -133,7 +133,7 @@ CameraID CameraManager::new_camera_for_viewport(const Viewport& vp) {
 }
 
 CameraID CameraManager::new_camera_for_ui() {
-    return new_camera_with_orthographic_projection(0, window_->width(), window_->height(), 0, -1, 1);
+    return new_camera_with_orthographic_projection(0, window_->width(), 0, window_->height(), -1, 1);
 }
 
 CameraPtr CameraManager::camera(CameraID c) {
