@@ -19,7 +19,7 @@ public:
             auto stage = window->stage(stage_id_);
 
             auto sprite = stage->sprites->new_sprite_from_file("sample_data/sonic.png", 64, 64).fetch();
-            sprite->add_animation("running", 31, 34, 0.5);
+            sprite->add_animation("running", 31, 34, 5);
             sprite->set_render_dimensions_from_height(1.5);
             sprite->move_to(0, -2.0, -1.0);
         }

@@ -29,6 +29,18 @@ public:
     double noise(double x, double y) const { return noise(x, y, 0); }
     double noise(double x, double y, double z) const;
 
+    double normalized_noise(double x) {
+        return (noise(x) + 1.0) * 0.5;
+    }
+
+    double normalized_noise(double x, double y) {
+        return (noise(x, y) + 1.0) * 0.5;
+    }
+
+    double normalized_noise(double x, double y, double z) {
+        return (noise(x, y, z) + 1.0) * 0.5;
+    }
+
 private:
     Perlin perlin_;
     int octaves_;
