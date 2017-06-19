@@ -278,7 +278,12 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
         } else if(parts[0] == "illum") {
 
         } else if(parts[0] == "map_Kd") {
-            auto texture_name = parts[1];
+            // The path may have spaces in, so we have to recombine everything
+            unicode texture_name = parts[1];
+            for(std::size_t i = 2; i < parts.size(); ++i) {
+                texture_name += " " + parts[i];
+            }
+
             auto mat = materials.at(current_material);
 
             std::vector<std::string> possible_locations;
