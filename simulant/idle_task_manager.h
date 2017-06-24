@@ -37,7 +37,8 @@ public:
 
     IdleConnectionID add(std::function<bool ()> callback);
     IdleConnectionID add_once(std::function<void ()> callback);
-    IdleConnectionID add_timeout(float seconds, std::function<void()> callback);
+    IdleConnectionID add_timeout(float seconds, std::function<bool()> callback);
+    IdleConnectionID add_timeout_once(float seconds, std::function<void()> callback);
     
     void run_sync(std::function<void()> callback);
 

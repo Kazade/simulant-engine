@@ -63,8 +63,8 @@ void IdleTaskManager::run_sync(std::function<void()> callback) {
     }
 }
 
-struct TimedTrigger {
-    TimedTrigger(float time, std::function<void ()> callback):
+struct TimedTriggerOnce {
+    TimedTriggerOnce(float time, std::function<void ()> callback):
         timeout_(time),
         callback_(callback) {
     }
@@ -87,9 +87,38 @@ struct TimedTrigger {
     std::function<void ()> callback_;
 };
 
-IdleConnectionID IdleTaskManager::add_timeout(float seconds, std::function<void()> callback) {
+struct TimedTrigger {
+    TimedTrigger(float time, std::function<bool ()> callback):
+        timeout_(time),
+        callback_(callback) {
+    }
+
+    bool update(smlt::WindowBase* window) {
+        auto now = window->time_keeper->total_elapsed_seconds();
+        if(!start_time_) {
+            start_time_ = now;
+        }
+
+        if((now - start_time_) > timeout_) {
+            start_time_ = now;
+            return callback_();
+        }
+        return true;
+    }
+
+    float timeout_ = 0.0;
+    float start_time_ = 0.0;
+    std::function<bool ()> callback_;
+};
+
+IdleConnectionID IdleTaskManager::add_timeout(float seconds, std::function<bool()> callback) {
     std::shared_ptr<TimedTrigger> trigger(new TimedTrigger(seconds, callback));
     return add(std::bind(&TimedTrigger::update, trigger, &this->window_));
+}
+
+IdleConnectionID IdleTaskManager::add_timeout_once(float seconds, std::function<void()> callback) {
+    std::shared_ptr<TimedTriggerOnce> trigger(new TimedTriggerOnce(seconds, callback));
+    return add(std::bind(&TimedTriggerOnce::update, trigger, &this->window_));
 }
 
 void IdleTaskManager::wait() {
