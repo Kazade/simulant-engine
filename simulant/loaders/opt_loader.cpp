@@ -454,6 +454,13 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
         throw std::runtime_error("Couldn't load the OPT file: " + filename_.encode());
     }
 
+    VertexSpecification spec;
+    spec.position_attribute = VERTEX_ATTRIBUTE_3F;
+    spec.texcoord0_attribute = VERTEX_ATTRIBUTE_2F;
+    spec.texcoord1_attribute = VERTEX_ATTRIBUTE_2F;
+    spec.diffuse_attribute = VERTEX_ATTRIBUTE_4F;
+    spec.normal_attribute = VERTEX_ATTRIBUTE_3F;
+
     MainHeader main_header;
     MainJumpHeader main_jump_header;
 
@@ -508,7 +515,8 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
             tex.name,
             mesh->resource_manager().new_material_from_texture(new_tex->id()),
             MESH_ARRANGEMENT_TRIANGLES,
-            VERTEX_SHARING_MODE_INDEPENDENT
+            VERTEX_SHARING_MODE_INDEPENDENT,
+            spec
         );
     }
 
