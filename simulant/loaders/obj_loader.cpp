@@ -284,6 +284,11 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                 texture_name += " " + parts[i];
             }
 
+#ifndef WIN32
+            // Convert windows paths (this is probably broken)
+            texture_name = texture_name.replace("\\", "/");
+#endif
+
             auto mat = materials.at(current_material);
 
             std::vector<std::string> possible_locations;
@@ -292,7 +297,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             possible_locations.push_back(
                 kfs::path::join(
                     kfs::path::dir_name(filename_.encode()),
-                    kfs::path::split(texture_name.encode()).second
+                    texture_name.encode()
                 )
             );
 
