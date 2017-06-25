@@ -290,7 +290,7 @@ void VertexData::move_to_start() {
 }
 
 void VertexData::move_to_end() {
-    move_to(data_.size());
+    move_to(data_.size() / stride());
 }
 
 void VertexData::move_by(int32_t amount) {
