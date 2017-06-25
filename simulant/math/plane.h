@@ -36,6 +36,12 @@ struct Plane {
 
     }
 
+    Plane(const Vec3& P, const Vec3& N):
+        n(N),
+        d(-P.dot(N)) {
+
+    }
+
     Vec3 project(const Vec3& p);
 
     Vec3 normal() const {

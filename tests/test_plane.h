@@ -5,6 +5,8 @@
 
 namespace {
 
+using namespace smlt;
+
 class PlaneTests : public TestCase {
 public:
     void test_distance_to_point() {
@@ -13,6 +15,18 @@ public:
         smlt::Vec3 point(0, 2, 0);
 
         assert_equal(1.0, p.distance_to(point));
+    }
+
+    void test_plane_from_point_and_normal() {
+        Vec3 p(0, 0, 0);
+        Vec3 n(0, 1, 0);
+
+        Plane plane(p, n);
+
+        assert_close(plane.n.x, n.x, 0.00001f);
+        assert_close(plane.n.y, n.y, 0.00001f);
+        assert_close(plane.n.z, n.z, 0.00001f);
+        assert_close(plane.d, 0.0f, 0.00001f);
     }
 
     void test_point_classification() {
