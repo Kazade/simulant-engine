@@ -346,14 +346,19 @@ void OPTLoader::process_embedded_texture_block(std::istream& file) {
     new_texture.name = texture_name;
     new_texture.width = texture_data_block.data.width;
     new_texture.height = texture_data_block.data.height;
-    new_texture.bytes_per_pixel = 4; //FIXME:
+    new_texture.bytes_per_pixel = 3;
 
     uint16_t palette_data[256];
     file.seekg(texture_data_block.data.offset_to_palette_data);
-    file.seekg(256 * 14, std::ios_base::cur);
+
+    // Seek past 15 shade tables to get to the actual palette
+    file.seekg(sizeof(uint16_t) * 256 * 15, std::ios_base::cur);
+
+    // Read in the palette data
     file.read((char*)&palette_data, sizeof(uint16_t) * 256);
 
     new_texture.data.resize(new_texture.width * new_texture.height * new_texture.bytes_per_pixel);
+
     for(int32_t i = 0; i < new_texture.width * new_texture.height; ++i) {
         uint8_t palette_index = image_data[i];
         uint16_t entry = palette_data[palette_index];
@@ -362,14 +367,13 @@ void OPTLoader::process_embedded_texture_block(std::istream& file) {
         uint32_t g = (entry & 0x07E0) >> 5;
         uint32_t r = (entry & 0x001F);
 
-        b = b * 255 / 31;
-        g = g * 255 / 63;
-        r = r * 255 / 31;
+        b = b * (255.0f / 31.0f);
+        g = g * (255.0f / 63.0f);
+        r = r * (255.0f / 31.0f);
 
         new_texture.data[i * new_texture.bytes_per_pixel] = r;
-        new_texture.data[i * new_texture.bytes_per_pixel + 1] = g;
-        new_texture.data[i * new_texture.bytes_per_pixel + 2] = b;
-        new_texture.data[i * new_texture.bytes_per_pixel + 3] = 255;
+        new_texture.data[(i * new_texture.bytes_per_pixel) + 1] = g;
+        new_texture.data[(i * new_texture.bytes_per_pixel) + 2] = b;
     }
 
     textures.push_back(new_texture);
@@ -499,7 +503,7 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
         read_block(file, off);
     }
 
-    for(Texture tex: textures) {        
+    for(Texture& tex: textures) {
         if(texture_name_to_id.count(tex.name)) continue;
 
         texture_name_to_id[tex.name] = mesh->resource_manager().new_texture();
@@ -508,7 +512,7 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
         new_tex->resize(tex.width, tex.height);
         new_tex->set_bpp(tex.bytes_per_pixel * 8);
         new_tex->data().assign(tex.data.begin(), tex.data.end());
-        new_tex->upload(MIPMAP_GENERATE_COMPLETE);
+        new_tex->upload();
 
         //Create a submesh for each texture. Don't share the vertex data between submeshes
         texture_submesh[tex.name] = mesh->new_submesh_with_material(
