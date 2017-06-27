@@ -230,5 +230,14 @@ void RigidBody::add_torque(const Vec3& torque) {
     b->ApplyTorque(t, true);
 }
 
+void RigidBody::on_controller_added(Controllable* controllable) {
+    /* If we were just added to a stage node, then inherit the position and orientation */
+    StageNode* stage_node = dynamic_cast<StageNode*>(controllable);
+    if(stage_node) {
+        move_to(stage_node->absolute_position());
+        rotate_to(stage_node->absolute_rotation());
+    }
+}
+
 }
 }

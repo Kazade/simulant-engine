@@ -37,6 +37,7 @@ namespace smlt {
 
 class Material;
 class Controller;
+class Controllable;
 
 typedef std::shared_ptr<Controller> ControllerPtr;
 
@@ -55,6 +56,11 @@ public:
     void _fixed_update_thunk(float step) override;
 
 private:
+    friend class Controllable;
+
+    virtual void on_controller_added(Controllable* controllable) {}
+    virtual void on_controller_removed(Controllable* controllable) {}
+
     bool is_enabled_ = true;
 };
 
@@ -95,6 +101,8 @@ public:
 
         controller_names_.insert(controller->name());
         controllers_.push_back(controller);
+
+        controller->on_controller_added(this);
     }
 
     template<typename T>

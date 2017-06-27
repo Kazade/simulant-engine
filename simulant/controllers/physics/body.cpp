@@ -72,6 +72,22 @@ void Body::move_to(const Vec3& position) {
     object_->move_to_absolute(position);
 }
 
+void Body::rotate_to(const Quaternion& rotation) {
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return;
+    }
+
+    auto xform = sim->body_transform(this);
+    sim->set_body_transform(
+        this,
+        xform.first,
+        rotation
+    );
+
+    object_->rotate_to_absolute(rotation);
+}
+
 void Body::update(float dt) {
     const bool INTERPOLATION_ENABLED = true;
 

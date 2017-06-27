@@ -87,9 +87,7 @@ public:
 private:
     friend class RigidBodySimulation;
 
-    // Cleared each step
-    Vec3 force_;
-    Vec3 torque_;
+    void on_controller_added(Controllable* controllable);
 };
 
 }
