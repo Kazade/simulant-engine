@@ -72,6 +72,8 @@ public:
     Vec3 linear_velocity_at(const Vec3& position) const;    
     void set_linear_velocity(const Vec3& vel);
 
+    Vec3 angular_velocity() const;
+
     using impl::Body::init;
     using impl::Body::cleanup;
 

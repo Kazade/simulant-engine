@@ -167,6 +167,19 @@ Vec3 RigidBody::linear_velocity() const {
     return v;
 }
 
+Vec3 RigidBody::angular_velocity() const {
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return Vec3();
+    }
+
+    const b3Body* b = sim->bodies_.at(this);
+
+    Vec3 v;
+    to_vec3(b->GetAngularVelocity(), v);
+    return v;
+}
+
 Vec3 RigidBody::linear_velocity_at(const Vec3& position) const {
     auto sim = simulation_.lock();
     if(!sim) {
