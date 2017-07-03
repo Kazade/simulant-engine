@@ -367,6 +367,18 @@ void SDL2Window::initialize_input_controller(InputController &controller) {
             info.name = SDL_GameControllerName(controller);
 
             joypads.push_back(info);
+
+            SDL_GameControllerClose(controller);
+        } else {
+            SDL_Joystick* joystick = SDL_JoystickOpen(i);
+
+            GameControllerInfo info;
+            info.id = i;
+            info.name = SDL_JoystickName(joystick);
+
+            joypads.push_back(info);
+
+            SDL_JoystickClose(joystick);
         }
     }
 
