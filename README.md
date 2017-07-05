@@ -1,7 +1,7 @@
 # Simulant
 
 [![Join the chat at https://gitter.im/Kazade/Simulant](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Kazade/Simulant?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![build-status-image]][travis] [![codecov.io](https://img.shields.io/codecov/c/github/kazade/simulant-engine/master.svg)](http://codecov.io/github/kazade/simulant-engine?branch=master)
+[![Build Status](https://travis-ci.org/Kazade/simulant-engine.svg?branch=master)](https://travis-ci.org/Kazade/simulant-engine)
 
 ## What is it?
 
