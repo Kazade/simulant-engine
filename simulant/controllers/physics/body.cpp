@@ -171,7 +171,6 @@ void Body::add_box_collider(const Vec3 &size, const PhysicsMaterial &properties,
     sdef.restitution = properties.bounciness;
 
     store_collider(sim->bodies_.at(this)->CreateShape(sdef), properties);
-
 }
 
 void Body::add_sphere_collider(const float diameter, const PhysicsMaterial& properties, const Vec3& offset) {

@@ -85,6 +85,16 @@ public:
         return Vec3::NEGATIVE_Z * rot;
     }
 
+    Vec3 right() {
+        Quaternion rot = rotation();
+        return Vec3::POSITIVE_X * rot;
+    }
+
+    Vec3 up() {
+        Quaternion rot = rotation();
+        return Vec3::POSITIVE_Y * rot;
+    }
+
     const std::string name() const { return "Rigid Body"; }
 private:
     friend class RigidBodySimulation;
