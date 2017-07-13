@@ -7,7 +7,7 @@
 class OBJLoaderTest : public SimulantTestCase {
 public:
     void test_face_parsing() {
-        unicode line = "1//2";
+        std::string line = "1//2";
 
         int32_t v, vn, vt;
 

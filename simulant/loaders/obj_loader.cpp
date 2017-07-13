@@ -16,6 +16,7 @@
 //     You should have received a copy of the GNU General Public License
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
+#include <string>
 
 #include "obj_loader.h"
 
@@ -27,7 +28,69 @@
 namespace smlt {
 namespace loaders {
 
-void parse_face(const unicode& input, int32_t& vertex_index, int32_t& tex_index, int32_t& normal_index) {
+static bool ends_with(const std::string& s, const std::string& what) {
+    return std::string(s.end() - what.size(), s.end()) == what;
+}
+
+static bool contains(const std::string& s, const std::string& what) {
+    return s.find(what) != std::string::npos;
+}
+
+static std::size_t count(const std::string& s, const std::string& what) {
+    std::size_t i = 0;
+    std::size_t count = 0;
+    while((i = s.find(what, i)) != std::string::npos) {
+        ++count;
+        ++i;
+    }
+
+    return count;
+}
+
+static std::vector<std::string> split(const std::string& s, const std::string& delim="", const int32_t count=-1) {
+    std::vector<std::string> result;
+
+    std::string d = (delim.empty()) ? "\t\n\r " : delim;
+    std::string buff;
+    auto counter = 0;
+
+    for(auto c: s) {
+        if(d.find(c) != std::string::npos) {
+            if(!buff.empty() ) {
+                if(counter != count) {
+                    result.push_back(buff);
+                    buff = "";
+                    ++counter;
+                } else {
+                    buff.push_back(c);
+                }
+            }
+        } else {
+            buff.push_back(c);
+        }
+    }
+
+    if(!buff.empty()) {
+        result.push_back(buff);
+    }
+
+    return result;
+}
+
+std::string strip(const std::string& s, const std::string& what=" \t\n\r") {
+    int32_t i = 0;
+    int32_t j = s.size();
+
+    while(what.find(s[i++]) != std::string::npos && i < (int32_t) s.size()) {}
+    while(what.find(s[j--]) != std::string::npos && j >= 0) {}
+
+    if(j < i) j = i;
+
+    return std::string(s.begin() + (i - 1), s.begin() + j);
+}
+
+
+void parse_face(const std::string& input, int32_t& vertex_index, int32_t& tex_index, int32_t& normal_index) {
     /*
      *  Parses the following
      *  1//2
@@ -37,26 +100,26 @@ void parse_face(const unicode& input, int32_t& vertex_index, int32_t& tex_index,
      *  and outputs to the passed references. The index will equal -1 if it wasn't in the input
      */
 
-    std::vector<unicode> parts = input.split("/");
-    int32_t slash_count = input.count("/");
+    auto parts = split(input, "/");
+    auto slash_count = count(input, "/");
 
-    if(slash_count == 0 || input.ends_with("//")) {
+    if(slash_count == 0 || ends_with(input, "//")) {
         tex_index = -1;
         normal_index = -1;
-        vertex_index = parts[0].to_int();
+        vertex_index = std::stoi(parts[0]);
     } else if(slash_count == 1) {
         normal_index = -1;
-        vertex_index = parts[0].to_int();
-        tex_index = parts[1].to_int();
+        vertex_index = std::stoi(parts[0]);
+        tex_index = std::stoi(parts[1]);
     } else if(slash_count == 2) {
-        if(input.contains("//")) {
+        if(contains(input, "//")) {
             tex_index = -1;
         } else {
-            tex_index = parts[1].to_int();
+            tex_index = std::stoi(parts[1]);
         }
 
-        vertex_index = parts[0].to_int();
-        normal_index = parts[parts.size() - 1].to_int();
+        vertex_index = std::stoi(parts[0]);
+        normal_index = std::stoi(parts[parts.size() - 1]);
     }
 
     //Handle the 1-based indexing
@@ -76,17 +139,16 @@ void parse_face(const unicode& input, int32_t& vertex_index, int32_t& tex_index,
 void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     Mesh* mesh = loadable_to<Mesh>(resource);
 
-    //Split on newlines
-    std::vector<unicode> lines = unicode(this->data_->str()).split("\n");
+    L_DEBUG(_F("Loading mesh from {0}").format(filename_));
 
     std::vector<Vec3> vertices;
     std::vector<Vec2> tex_coords;
     std::vector<Vec3> normals;
 
-    std::unordered_map<unicode, smlt::MaterialPtr> materials;
+    std::unordered_map<std::string, smlt::MaterialPtr> materials;
     SubMesh* sm = nullptr;
 
-    unicode current_material;
+    std::string current_material;
 
     VertexSpecification spec;
     spec.position_attribute = VERTEX_ATTRIBUTE_3F;
@@ -98,27 +160,126 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     SubMesh* default_submesh = nullptr;
 
     bool has_materials = false;
-    for(uint32_t l = 0; l < lines.size(); ++l) {
-        unicode line = lines[l].strip();
+
+    auto process_mtllib = [&](std::stringstream& data) {
+        std::string line;
+        while(std::getline(data, line)) {
+            line = strip(line);
+            auto parts = split(line);
+            if(line.empty() || parts.empty()) continue;
+            if(parts[0][0] == '#') continue;
+
+            if(parts[0] == "usemtl") {
+                current_material = parts[1];
+            } else if(parts[0] == "newmtl") {
+                auto material_name = parts[1];
+
+                // Clone the default material
+                materials[material_name] = mesh->resource_manager().clone_default_material().fetch();
+                current_material = material_name;
+
+                has_materials = true;
+            } else if(parts[0] == "Ns") {
+                auto mat = materials.at(current_material);
+                mat->pass(0)->set_shininess(std::stof(parts[1]));
+            } else if(parts[0] == "Ka") {
+                auto mat = materials.at(current_material);
+
+                float r = std::stof(parts[1]);
+                float g = std::stof(parts[2]);
+                float b = std::stof(parts[3]);
+
+                mat->pass(0)->set_ambient(smlt::Colour(r, g, b, 1.0));
+            } else if(parts[0] == "Kd") {
+                auto mat = materials.at(current_material);
+
+                float r = std::stof(parts[1]);
+                float g = std::stof(parts[2]);
+                float b = std::stof(parts[3]);
+
+                mat->pass(0)->set_diffuse(smlt::Colour(r, g, b, 1.0));
+            } else if(parts[0] == "Ks") {
+                auto mat = materials.at(current_material);
+
+                float r = std::stof(parts[1]);
+                float g = std::stof(parts[2]);
+                float b = std::stof(parts[3]);
+
+                mat->pass(0)->set_specular(smlt::Colour(r, g, b, 1.0));
+            } else if(parts[0] == "Ni") {
+
+            } else if(parts[0] == "d") {
+                // Dissolved == Transparency... apparently
+            } else if(parts[0] == "illum") {
+
+            } else if(parts[0] == "map_Kd") {
+                // The path may have spaces in, so we have to recombine everything
+                unicode texture_name = parts[1];
+                for(std::size_t i = 2; i < parts.size(); ++i) {
+                    texture_name += " " + parts[i];
+                }
+
+    #ifndef WIN32
+                // Convert windows paths (this is probably broken)
+                texture_name = texture_name.replace("\\", "/");
+    #endif
+
+                auto mat = materials.at(current_material);
+
+                std::vector<std::string> possible_locations;
+
+                // Check relative texture file first
+                possible_locations.push_back(
+                    kfs::path::join(
+                        kfs::path::dir_name(filename_.encode()),
+                        texture_name.encode()
+                    )
+                );
+
+                // Check potentially absolute file path
+                possible_locations.push_back(texture_name.encode());
+
+                bool found = false;
+                for(auto& texture_file: possible_locations) {
+                    if(kfs::path::exists(texture_file)) {
+                        auto tex_id = mesh->resource_manager().new_texture_from_file(texture_file);
+                        mat->set_texture_unit_on_all_passes(0, tex_id);
+                        found = true;
+                        break;
+                    }
+                }
+
+                if(!found) {
+                    L_WARN(_F("Unable to locate texture {0}").format(texture_name.encode()));
+                }
+            }
+        }
+    };
+
+
+    std::string line;
+    for(uint32_t l = 0; std::getline(*data_, line); ++l) {
+        line = strip(line);
+
+        auto parts = split(line); //Split on whitespace
+
+        if(line.empty() || parts.empty()) {
+            continue;
+        }
 
         //Ignore comments
-        if(line.starts_with("#")) {
+        if(parts[0][0] == '#') {
             continue;
         }
 
-        if(line.empty()) {
-            continue;
-        }
-
-        std::vector<unicode> parts = line.split("", -1, false); //Split on whitespace
         if(parts[0] == "v") {
             if(parts.size() != 4) {
                 throw std::runtime_error(_F("Found {0} components for vertex, expected 3").format(parts.size()));
             }
 
-            float x = parts[1].to_float();
-            float y = parts[2].to_float();
-            float z = parts[3].to_float();
+            float x = std::stof(parts[1]);
+            float y = std::stof(parts[2]);
+            float z = std::stof(parts[3]);
 
             vertices.push_back(Vec3(x, y, z));
         } else if(parts[0] == "vt") {
@@ -126,8 +287,8 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                 throw std::runtime_error(_F("Found {0} components for texture coordinate, expected 2").format(parts.size() - 1));
             }
 
-            float x = parts[1].to_float();
-            float y = parts[2].to_float();
+            float x = std::stof(parts[1]);
+            float y = std::stof(parts[2]);
 
             tex_coords.push_back(Vec2(x, y));
         } else if(parts[0] == "vn") {
@@ -135,9 +296,9 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                 throw std::runtime_error(_F("Found {0} components for vertex, expected 3").format(parts.size() - 1));
             }
 
-            float x = parts[1].to_float();
-            float y = parts[2].to_float();
-            float z = parts[3].to_float();
+            float x = std::stof(parts[1]);
+            float y = std::stof(parts[2]);
+            float z = std::stof(parts[3]);
 
             Vec3 n(x, y, z);
             normals.push_back(n.normalized());
@@ -151,11 +312,11 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             } else {
                 if(materials.count(current_material)) {
                     auto mat_id = materials.at(current_material)->id();
-                    if(mesh->has_submesh(current_material.encode())) {
-                        smi = current_material.encode();
+                    if(mesh->has_submesh(current_material)) {
+                        smi = current_material;
                     } else {
-                        mesh->new_submesh_with_material(current_material.encode(), mat_id);
-                        smi = current_material.encode();
+                        mesh->new_submesh_with_material(current_material, mat_id);
+                        smi = current_material;
                     }
                 } else {
                     L_WARN(_F("Ignoring non-existant material ({0}) while loading {1}").format(
@@ -178,7 +339,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             IndexData* index_data = sm->index_data.get();
 
             //Faces are a pain in the arse to parse
-            parts = std::vector<unicode>(parts.begin() + 1, parts.end()); //Strip off the first bit
+            parts = std::vector<std::string>(parts.begin() + 1, parts.end()); //Strip off the first bit
 
             /*
              * This loop looks weird because it builds a triangle fan
@@ -215,14 +376,6 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
 
                 ++i;
             }
-        } else if(parts[0] == "newmtl") {
-            auto material_name = parts[1];
-
-            // Clone the default material
-            materials[material_name] = mesh->resource_manager().clone_default_material().fetch();
-            current_material = material_name;
-
-            has_materials = true;
         } else if(parts[0] == "usemtl") {
             current_material = parts[1];
         } else if(parts[0] == "mtllib") {
@@ -234,89 +387,15 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
 
              // We need to re-get the filename because mtllib paths may have spaces and the existing 'parts'
              // variable would have split it to pieces.
-             auto filename = line.split(" ", 1, false).back();
+             unicode filename = split(line, " ", 1).back();
              filename = kfs::path::join(kfs::path::dir_name(filename_.encode()), filename.encode());
 
              try {
-                filename = this->locator->locate_file(filename);
-                auto material_lines = this->locator->read_file_lines(filename);
-                lines.insert(lines.begin() + l + 1, material_lines.begin(), material_lines.end());
+                 auto stream = locator->read_file(filename);
+                 process_mtllib(*stream);
              } catch(ResourceMissingError& e) {
                  L_DEBUG(_F("mtllib {0} not found. Skipping.").format(filename));
              }
-        } else if(parts[0] == "Ns") {
-            auto mat = materials.at(current_material);
-            mat->pass(0)->set_shininess(parts[1].to_float());
-        } else if(parts[0] == "Ka") {
-            auto mat = materials.at(current_material);
-
-            float r = parts[1].to_float();
-            float g = parts[2].to_float();
-            float b = parts[3].to_float();
-
-            mat->pass(0)->set_ambient(smlt::Colour(r, g, b, 1.0));
-        } else if(parts[0] == "Kd") {
-            auto mat = materials.at(current_material);
-
-            float r = parts[1].to_float();
-            float g = parts[2].to_float();
-            float b = parts[3].to_float();
-
-            mat->pass(0)->set_diffuse(smlt::Colour(r, g, b, 1.0));
-        } else if(parts[0] == "Ks") {
-            auto mat = materials.at(current_material);
-
-            float r = parts[1].to_float();
-            float g = parts[2].to_float();
-            float b = parts[3].to_float();
-
-            mat->pass(0)->set_specular(smlt::Colour(r, g, b, 1.0));
-        } else if(parts[0] == "Ni") {
-
-        } else if(parts[0] == "d") {
-            // Dissolved == Transparency... apparently
-        } else if(parts[0] == "illum") {
-
-        } else if(parts[0] == "map_Kd") {
-            // The path may have spaces in, so we have to recombine everything
-            unicode texture_name = parts[1];
-            for(std::size_t i = 2; i < parts.size(); ++i) {
-                texture_name += " " + parts[i];
-            }
-
-#ifndef WIN32
-            // Convert windows paths (this is probably broken)
-            texture_name = texture_name.replace("\\", "/");
-#endif
-
-            auto mat = materials.at(current_material);
-
-            std::vector<std::string> possible_locations;
-
-            // Check relative texture file first
-            possible_locations.push_back(
-                kfs::path::join(
-                    kfs::path::dir_name(filename_.encode()),
-                    texture_name.encode()
-                )
-            );
-
-            // Check potentially absolute file path
-            possible_locations.push_back(texture_name.encode());
-
-            bool found = false;
-            for(auto& texture_file: possible_locations) {
-                if(kfs::path::exists(texture_file)) {
-                    auto tex_id = mesh->resource_manager().new_texture_from_file(texture_file);
-                    mat->set_texture_unit_on_all_passes(0, tex_id);
-                    found = true;
-                    break;
-                }
-            }
-
-            if(!found) {
-                L_WARN(_F("Unable to locate texture {0}").format(texture_name.encode()));
-            }
         }
     }
 
@@ -389,6 +468,8 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     mesh->each([](const std::string&, SubMesh* submesh) {
         submesh->index_data->done();
     });
+
+    L_DEBUG("Mesh loaded");
 }
 
 }

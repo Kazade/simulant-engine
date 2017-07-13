@@ -32,7 +32,7 @@ public:
     void into(Loadable& resource, const LoaderOptions& options = LoaderOptions());
 };
 
-void parse_face(const unicode& input, int32_t& vertex_index, int32_t& tex_index, int32_t& normal_index);
+void parse_face(const std::string& input, int32_t& vertex_index, int32_t& tex_index, int32_t& normal_index);
 
 class OBJLoaderType : public LoaderType {
 public:

@@ -120,6 +120,10 @@ public:
         return std::max(width(), std::max(height(), depth()));
     }
 
+    const float min_dimension() const {
+        return std::min(width(), std::min(height(), depth()));
+    }
+
     bool intersects(const AABB& other) const {
         auto acx = (min_.x + max_.x) * 0.5;
         auto acy = (min_.y + max_.y) * 0.5;
