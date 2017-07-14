@@ -1,7 +1,9 @@
 #include <memory>
+#include <vector>
 #include <GL/gl.h>
 #include <GL/glut.h>
 
+#include "input_controller.h"
 #include "kos_window.h"
 #include "sound_drivers/kos_sound_driver.h"
 #include "renderers/renderer_config.h"
@@ -66,6 +68,36 @@ void KOSWindow::check_events() {
 
 std::shared_ptr<SoundDriver> KOSWindow::create_sound_driver() {
     return std::make_shared<KOSSoundDriver>(this);
+}
+
+void smlt::KOSWindow::initialize_input_controller(smlt::InputController &controller) {
+    std::vector<GameControllerInfo> joypads;
+
+    auto mouse_dev = maple_enum_type(0, MAPLE_FUNC_MOUSE);
+    if(mouse_dev) {
+        MouseControllerInfo mouse;
+        mouse.id = 0;
+        mouse.button_count = 3;
+        controller._update_mouse_devices({mouse});
+    }
+
+    auto keyboard_dev = maple_enum_type(0, MAPLE_FUNC_KEYBOARD);
+    if(keyboard_dev) {
+        KeyboardControllerInfo keyboard;
+        controller._update_keyboard_devices({keyboard});
+    }
+
+    for(int8_t i = 0; i < 4; ++i) {
+        auto device = maple_enum_type(i, MAPLE_FUNC_CONTROLLER);
+        if(device) {
+            GameControllerInfo info;
+            info.id = i;
+            info.name = device->info->product_name;
+            joypads.push_back(info);
+        }
+    }
+
+    controller._update_joypad_devices(joypads);
 }
 
 }
