@@ -24,8 +24,8 @@ public:
         Key test1 = make_key(1, 0, 0, 0);
         Key test2 = make_key(2, 0.5, 0, 0);
 
-        assert_equal(15, test1.ancestors);
-        assert_equal(14, test2.ancestors);
+        assert_equal(15u, test1.ancestors);
+        assert_equal(14u, test2.ancestors);
 
         assert_true(test2.is_ancestor_of(test1));
         assert_false(test1.is_ancestor_of(test2));
@@ -82,11 +82,11 @@ public:
 
         hash_->insert_object_for_box(box1, new_entry_);
 
-        assert_equal(new_entry_->keys().size(), 1);
+        assert_equal(new_entry_->keys().size(), 1u);
 
         hash_->insert_object_for_box(box2, new_entry_);
 
-        assert_equal(new_entry_->keys().size(), 9);
+        assert_equal(new_entry_->keys().size(), 9u);
     }
 
     void test_retrieving_objects_within_a_box() {
@@ -102,19 +102,19 @@ public:
 
         auto results = hash_->find_objects_within_box(AABB(Vec3(), 5.0));
 
-        assert_equal(results.size(), 2);
+        assert_equal(results.size(), 2u);
 
         results = hash_->find_objects_within_box(AABB(Vec3(150.0, 150.0, 150.0), 1.0));
 
-        assert_equal(results.size(), 0);
+        assert_equal(results.size(), 0u);
 
         results = hash_->find_objects_within_box(AABB(Vec3(), 400));
 
-        assert_equal(results.size(), 3);
+        assert_equal(results.size(), 3u);
 
         results = hash_->find_objects_within_box(AABB(Vec3(1000, 1000, 1000), 400));
 
-        assert_equal(results.size(), 0);
+        assert_equal(results.size(), 0u);
     }
 
     void test_inserting_and_getting_flat_objects() {
@@ -130,7 +130,7 @@ public:
 
         auto results = hash_->find_objects_within_box(AABB(Vec3(), 5.0));
 
-        assert_equal(results.size(), 3);
+        assert_equal(results.size(), 3u);
     }
 
     void test_retrieving_objects_within_frustum() {
@@ -163,7 +163,7 @@ public:
 
         auto results = hash_->find_objects_within_frustum(frustum);
 
-        assert_equal(results.size(), 2);
+        assert_equal(results.size(), 2u);
     }
 
     void test_removing_objects_from_the_hash() {
@@ -171,13 +171,13 @@ public:
 
         auto results = hash_->find_objects_within_box(AABB(Vec3(), 10));
 
-        assert_equal(results.size(), 1);
+        assert_equal(results.size(), 1u);
 
         hash_->remove_object(*results.begin());
 
         results = hash_->find_objects_within_box(AABB(Vec3(), 10));
 
-        assert_equal(results.size(), 0);
+        assert_equal(results.size(), 0u);
     }
 
 private:

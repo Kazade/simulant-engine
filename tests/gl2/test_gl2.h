@@ -22,12 +22,12 @@ public:
 
     void test_that_buffers_can_be_allocated() {
         auto buffer = buffer_manager_.allocate(10, smlt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES, SHADOW_BUFFER_DISABLED);
-        assert_equal(10, buffer->size());
+        assert_equal(10u, buffer->size());
     }
 
     void test_that_buffers_can_be_released() {
         auto buffer = buffer_manager_.allocate(10, smlt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES, SHADOW_BUFFER_DISABLED);
-        assert_equal(10, buffer->size());
+        assert_equal(10u, buffer->size());
         buffer->release();
         assert_true(buffer->is_dead());
 

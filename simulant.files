@@ -48,6 +48,8 @@ samples/q2bsp_sample.cpp
 samples/sample.cpp
 samples/selection_sample.cpp
 samples/viewport_sample.cpp
+simulant/utils/string.cpp
+simulant/utils/string.h
 tests/CMakeLists.txt
 tests/main.cpp
 CMakeLists.txt
@@ -65,6 +67,7 @@ tests/test_material_script.h
 tests/test_mesh.h
 tests/test_shader.h
 tests/test_sound.h
+tests/test_utils.h
 tests/test_vertex_data.h
 tests/test_tree.h
 samples/joypad_sample.cpp

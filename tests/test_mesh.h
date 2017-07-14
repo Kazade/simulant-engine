@@ -148,9 +148,9 @@ public:
         assert_true(!data->specification().has_texcoord3());
         assert_true(!data->specification().has_diffuse());
         assert_true(!data->specification().has_specular());
-        assert_equal(4, data->count());
+        assert_equal(4u, data->count());
 
-        assert_equal((uint32_t)2, mesh->submesh_count());
+        assert_equal(2u, mesh->submesh_count());
     }
 
     void test_actor_from_mesh() {
@@ -209,7 +209,7 @@ public:
 
         auto mesh = stage->assets->mesh(mesh_id);
 
-        assert_equal(mesh->animation_frames(), 3);
+        assert_equal(mesh->animation_frames(), 3u);
         assert_equal(mesh->animation_type(), smlt::MESH_ANIMATION_TYPE_VERTEX_MORPH);
         assert_true(mesh->is_animated());
     }

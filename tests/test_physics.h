@@ -204,19 +204,19 @@ public:
         physics->fixed_update(1.0 / 60.0f);
         window->run_frame();
 
-        assert_equal(stay_count, 1);
+        assert_equal(stay_count, 1u);
 
         physics->fixed_update(1.0 / 60.0f);
         window->run_frame();
 
-        assert_equal(stay_count, 2);
+        assert_equal(stay_count, 2u);
 
         actor2->ask_owner_for_destruction();
 
         physics->fixed_update(1.0 / 60.0f);
         window->run_frame();
 
-        assert_equal(stay_count, 1);
+        assert_equal(stay_count, 1u);
 
         body->unregister_collision_listener(&listener);
     }

@@ -13,7 +13,7 @@ public:
 
         auto sky = stage->skies->new_skybox_from_folder("skyboxes/TropicalSunnyDay").fetch_as<Skybox>();
 
-        assert_equal(sky->count_children(), 1); // Should have 1 child (the actor)
+        assert_equal(sky->count_children(), 1u); // Should have 1 child (the actor)
     }
 
     void test_skybox_from_files() {

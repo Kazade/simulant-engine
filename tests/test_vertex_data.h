@@ -28,7 +28,7 @@ public:
 
         smlt::VertexData data(spec);
 
-        assert_equal(0, data.data_size());
+        assert_equal(0u, data.data_size());
 
         data.position(0, 0, 0);
         data.tex_coord0(1, 1);

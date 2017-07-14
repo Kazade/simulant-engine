@@ -174,7 +174,7 @@ public:
 
     template<typename T, typename U>
     void _assert_equal(T expected, U actual, std::string file, int line) {
-        if(expected != (T) actual) {
+        if(expected != actual) {
             auto file_and_line = std::make_pair(file, line);
             throw kaztest::AssertionError(file_and_line, _Format("{0} does not match {1}").format(actual, expected));
         }

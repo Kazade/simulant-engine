@@ -42,7 +42,7 @@ public:
 
         auto actor_id = stage_->new_actor_with_mesh(mesh_1);
 
-        assert_equal(1, render_queue->pass_count());
+        assert_equal(1u, render_queue->pass_count());
 
         // Store the current group. We don't give direct access to batches and groups aside
         // from iteration so that's why the code is a bit funky. Also, RenderGroup doesn't have a
@@ -59,7 +59,7 @@ public:
 
         stage_->actor(actor_id)->override_material_id(mat_2);
 
-        assert_equal(1, render_queue->group_count(0));
+        assert_equal(1u, render_queue->group_count(0));
 
         render_queue->each_group(0, [&](uint32_t i, const RenderGroup& grp, const smlt::batcher::Batch&) {
              assert_true(*group < grp);
@@ -68,7 +68,7 @@ public:
         stage_->actor(actor_id)->remove_material_id_override();
         stage_->assets->mesh(mesh_1)->set_material_id(mat_1);
 
-        assert_equal(1, render_queue->group_count(0));
+        assert_equal(1u, render_queue->group_count(0));
 
         // Everything should be back to the first material now
         render_queue->each_group(0, [&](uint32_t i, const RenderGroup& grp, const smlt::batcher::Batch&) {
@@ -77,7 +77,7 @@ public:
 
         stage_->assets->mesh(mesh_1)->set_material_id(mat_2);
 
-        assert_equal(1, render_queue->group_count(0));
+        assert_equal(1u, render_queue->group_count(0));
 
         // Back to the second material again!
         render_queue->each_group(0, [&](uint32_t i, const RenderGroup& grp, const smlt::batcher::Batch&) {
@@ -92,16 +92,16 @@ public:
         auto actor_id = stage_->new_actor_with_mesh(mesh_1);
 
 #ifdef SIMULANT_GL_VERSION_1X
-        assert_equal(1, render_queue->pass_count());
-        assert_equal(1, render_queue->group_count(0));
+        assert_equal(1u, render_queue->pass_count());
+        assert_equal(1u, render_queue->group_count(0));
 #else
-        assert_equal(2, render_queue->pass_count());
-        assert_equal(1, render_queue->group_count(0));
-        assert_equal(1, render_queue->group_count(1));
+        assert_equal(2u, render_queue->pass_count());
+        assert_equal(1u, render_queue->group_count(0));
+        assert_equal(1u, render_queue->group_count(1));
 #endif
         stage_->delete_actor(actor_id);
 
-        assert_equal(0, render_queue->pass_count());
+        assert_equal(0u, render_queue->pass_count());
     }
 
     void test_texture_grouping() {
@@ -125,7 +125,7 @@ public:
 #endif
         auto& render_queue = stage_->render_queue;
 
-        assert_equal(0, render_queue->pass_count());
+        assert_equal(0u, render_queue->pass_count());
 
         auto mesh_1 = stage_->assets->new_mesh_as_cube(1.0);
         stage_->assets->mesh(mesh_1)->set_material_id(mat_1);
@@ -138,25 +138,25 @@ public:
 
         stage_->new_actor_with_mesh(mesh_1);
 
-        assert_equal(1, render_queue->pass_count());
-        assert_equal(1, render_queue->group_count(0));
+        assert_equal(1u, render_queue->pass_count());
+        assert_equal(1u, render_queue->group_count(0));
 
         stage_->new_actor_with_mesh(mesh_1);
 
         // Still only 1 pass, with 1 render group (although that
         // should have 2 renderables)
-        assert_equal(1, render_queue->pass_count());
-        assert_equal(1, render_queue->group_count(0));
+        assert_equal(1u, render_queue->pass_count());
+        assert_equal(1u, render_queue->group_count(0));
 
         stage_->new_actor_with_mesh(mesh_2);
 
-        assert_equal(1, render_queue->pass_count());
-        assert_equal(2, render_queue->group_count(0));
+        assert_equal(1u, render_queue->pass_count());
+        assert_equal(2u, render_queue->group_count(0));
 
         stage_->new_actor_with_mesh(mesh_3);
 
-        assert_equal(1, render_queue->pass_count());
-        assert_equal(2, render_queue->group_count(0));
+        assert_equal(1u, render_queue->pass_count());
+        assert_equal(2u, render_queue->group_count(0));
     }
 
 #ifdef SIMULANT_GL_VERSION_2X

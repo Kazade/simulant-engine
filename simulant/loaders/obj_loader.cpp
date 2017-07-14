@@ -24,71 +24,10 @@
 #include "../resource_manager.h"
 #include "../shortcuts.h"
 #include "../resource_locator.h"
+#include "../utils/string.h"
 
 namespace smlt {
 namespace loaders {
-
-static bool ends_with(const std::string& s, const std::string& what) {
-    return std::string(s.end() - what.size(), s.end()) == what;
-}
-
-static bool contains(const std::string& s, const std::string& what) {
-    return s.find(what) != std::string::npos;
-}
-
-static std::size_t count(const std::string& s, const std::string& what) {
-    std::size_t i = 0;
-    std::size_t count = 0;
-    while((i = s.find(what, i)) != std::string::npos) {
-        ++count;
-        ++i;
-    }
-
-    return count;
-}
-
-static std::vector<std::string> split(const std::string& s, const std::string& delim="", const int32_t count=-1) {
-    std::vector<std::string> result;
-
-    std::string d = (delim.empty()) ? "\t\n\r " : delim;
-    std::string buff;
-    auto counter = 0;
-
-    for(auto c: s) {
-        if(d.find(c) != std::string::npos) {
-            if(!buff.empty() ) {
-                if(counter != count) {
-                    result.push_back(buff);
-                    buff = "";
-                    ++counter;
-                } else {
-                    buff.push_back(c);
-                }
-            }
-        } else {
-            buff.push_back(c);
-        }
-    }
-
-    if(!buff.empty()) {
-        result.push_back(buff);
-    }
-
-    return result;
-}
-
-std::string strip(const std::string& s, const std::string& what=" \t\n\r") {
-    int32_t i = 0;
-    int32_t j = s.size();
-
-    while(what.find(s[i++]) != std::string::npos && i < (int32_t) s.size()) {}
-    while(what.find(s[j--]) != std::string::npos && j >= 0) {}
-
-    if(j < i) j = i;
-
-    return std::string(s.begin() + (i - 1), s.begin() + j);
-}
-
 
 void parse_face(const std::string& input, int32_t& vertex_index, int32_t& tex_index, int32_t& normal_index) {
     /*
