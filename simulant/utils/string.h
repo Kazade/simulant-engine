@@ -11,4 +11,12 @@ std::size_t count(const std::string& s, const std::string& what);
 std::vector<std::string> split(const std::string& s, const std::string& delim="", const int32_t count=-1);
 std::string strip(const std::string& s, const std::string& what=" \t\n\r");
 
+
+/* Not all supported platforms implement std::stof etc.*/
+#if defined(_arch_dreamcast) || defined(ANDROID)
+namespace std {
+    float stof(const std::string& str);
+}
+#endif
+
 }

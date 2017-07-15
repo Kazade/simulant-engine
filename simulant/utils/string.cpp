@@ -2,6 +2,25 @@
 
 namespace smlt {
 
+#if defined(_arch_dreamcast) || defined(ANDROID)
+static float stof(const std::string& str) {
+    const char* inp = str.c_str();
+    char* p = nullptr;
+
+#ifdef _arch_dreamcast
+    // Dreamcast (GCC 4.7.3) doesn't define strtof but does define strtod
+    float test = (float) strtod(inp, &p);
+#else
+    auto test = strtof(inp, &p);
+#endif
+    if(p == inp) {
+        throw std::invalid_argument("Couldn't convert from a string to a float");
+    }
+
+    return (float) test;
+}
+#endif
+
 bool ends_with(const std::string& s, const std::string& what) {
     if(what.size() > s.size()) {
         return false;
