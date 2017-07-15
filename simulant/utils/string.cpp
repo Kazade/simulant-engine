@@ -1,9 +1,13 @@
 #include "string.h"
 
-namespace smlt {
-
 #if defined(_arch_dreamcast) || defined(ANDROID)
-static float stof(const std::string& str) {
+
+#include <cstdlib>
+#include <stdexcept>
+#include <climits>
+
+namespace std {
+float stof(const std::string& str) {
     const char* inp = str.c_str();
     char* p = nullptr;
 
@@ -19,7 +23,24 @@ static float stof(const std::string& str) {
 
     return (float) test;
 }
+
+int32_t stoi(const std::string& str) {
+    const char* inp = str.c_str();
+    char* p = nullptr;
+
+    auto test = strtol(inp, &p, 10);
+
+    if(p == inp || test == LONG_MIN || test == LONG_MAX) {
+        throw std::invalid_argument("Couldn't convert from a string to an integer");
+    }
+
+    return (int32_t) test;
+}
+
+}
 #endif
+
+namespace smlt {
 
 bool ends_with(const std::string& s, const std::string& what) {
     if(what.size() > s.size()) {
