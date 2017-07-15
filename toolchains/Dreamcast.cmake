@@ -18,8 +18,6 @@ set(CMAKE_SYSTEM_INCLUDE_PATH "$ENV{KOS_BASE}/include")
 SET(CMAKE_EXECUTABLE_SUFFIX ".elf")
 SET(CMAKE_EXECUTABLE_SUFFIX_CXX ".elf")
 
-MESSAGE("FLAGS: " $ENV{KOS_CPPFLAGS})
-
 add_definitions("-DDREAMCAST")
 add_definitions("-D_arch_dreamcast")
 add_definitions("-D_arch_sub_pristine")
