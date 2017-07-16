@@ -108,6 +108,8 @@ std::shared_ptr<SoundDriver> KOSWindow::create_sound_driver() {
 }
 
 void smlt::KOSWindow::initialize_input_controller(smlt::InputController &controller) {
+    L_DEBUG("Detecting input devices");
+
     std::vector<GameControllerInfo> joypads;
 
     auto mouse_dev = maple_enum_type(0, MAPLE_FUNC_MOUSE);
@@ -125,6 +127,7 @@ void smlt::KOSWindow::initialize_input_controller(smlt::InputController &control
         controller._update_keyboard_devices({keyboard});
     }
 
+    auto controller_count = 0u;
     for(int8_t i = 0; i < 4; ++i) {
         auto device = maple_enum_type(i, MAPLE_FUNC_CONTROLLER);
         if(device) {
@@ -132,10 +135,14 @@ void smlt::KOSWindow::initialize_input_controller(smlt::InputController &control
             info.id = i;
             info.name = device->info.product_name;
             joypads.push_back(info);
+
+            controller_count++;
         }
     }
 
     controller._update_joypad_devices(joypads);
+
+    L_DEBUG(_F("Found {0} connected controllers").format(controller_count));
 }
 
 }
