@@ -46,17 +46,11 @@ public:
             stage->new_light_as_directional(Vec3(1, 0, 0), smlt::Colour::YELLOW);
         }
 
-        float xpos = 0;
-        window->keyboard->key_while_pressed_connect(KEYBOARD_CODE_A, [&](KeyboardCode key, float dt) mutable {
-                xpos -= 20.0 * dt;
-                window->stage(stage_id_)->camera(camera_id_)->move_to_absolute(xpos, 2, 0);
-                window->stage(stage_id_)->camera(camera_id_)->look_at(window->stage(stage_id_)->actor(actor_id_)->absolute_position());
-        });
-        window->keyboard->key_while_pressed_connect(KEYBOARD_CODE_D, [&](KeyboardCode key, float dt) mutable {
-                xpos += 20.0 * dt;
-                window->stage(stage_id_)->camera(camera_id_)->move_to_absolute(xpos, 2, 0);
-                window->stage(stage_id_)->camera(camera_id_)->look_at(window->stage(stage_id_)->actor(actor_id_)->absolute_position());
-        });
+        for(auto i = 0; i < window->joypad_count(); ++i) {
+            window->joypad(i).axis_while_nonzero_connect(JOYPAD_AXIS_X, [&](AxisRange v, JoypadAxis) {
+                actor_id_.fetch()->rotate_global_y_by(smlt::Degrees(v * 360.0f));
+            });
+        }
     }
 
     void fixed_update(float dt) {

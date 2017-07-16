@@ -68,8 +68,26 @@ void KOSWindow::check_events() {
         CONT_A, CONT_B, CONT_C, CONT_D, CONT_X, CONT_Y, CONT_Z, CONT_START
     };
 
+    const static std::vector<uint16_t> HAT1_BUTTONS = {
+        CONT_DPAD_UP, CONT_DPAD_DOWN, CONT_DPAD_LEFT, CONT_DPAD_RIGHT
+    };
+
+    const static std::vector<uint16_t> HAT2_BUTTONS = {
+        CONT_DPAD2_UP, CONT_DPAD2_DOWN, CONT_DPAD2_LEFT, CONT_DPAD2_RIGHT
+    };
+
     static std::array<uint16_t, MAX_CONTROLLERS> previous_controller_button_state = {{0, 0, 0, 0}};
+    static std::array<HatPosition, MAX_CONTROLLERS> previous_hat1_state = {
+        {HAT_POSITION_CENTERED, HAT_POSITION_CENTERED, HAT_POSITION_CENTERED, HAT_POSITION_CENTERED}
+    };
+    static std::array<HatPosition, MAX_CONTROLLERS> previous_hat2_state = {
+        {HAT_POSITION_CENTERED, HAT_POSITION_CENTERED, HAT_POSITION_CENTERED, HAT_POSITION_CENTERED}
+    };
+
     static auto previous_key_state = std::array<uint8_t, 256>(); // value-initialize to zero
+
+    static std::array<int32_t, MAX_CONTROLLERS> previous_joyx = {{0, 0, 0, 0}};
+    static std::array<int32_t, MAX_CONTROLLERS> previous_joyy = {{0, 0, 0, 0}};
 
     /* Check controller states */
     for(int8_t i = 0; i < MAX_CONTROLLERS; ++i) {
@@ -79,6 +97,23 @@ void KOSWindow::check_events() {
             if(state) {
                 auto button_state = state->buttons;
                 auto prev_state = previous_controller_button_state[i];
+                auto joyx_state = state->joyx;
+                auto joyy_state = state->joyy;
+
+                // # Deal with the first joystick axis
+                if(joyx_state != previous_joyx[i]) {
+                    // joy values on the DC are +/- 128, we scale up to the full integer range (which is then scaled to between -1.0 and 1.0)
+                    input_controller()._handle_joypad_axis_motion(i, JOYPAD_AXIS_X, joyx_state * 256);
+                    previous_joyx[i] = joyx_state;
+                }
+
+                if(joyy_state != previous_joyy[i]) {
+                    // joy values on the DC are +/- 128, we scale up to the full integer range (which is then scaled to between -1.0 and 1.0)
+                    input_controller()._handle_joypad_axis_motion(i, JOYPAD_AXIS_Y, joyy_state * 256);
+                    previous_joyy[i] = joyy_state;
+                }
+
+                // FIXME: Add support for the second joystick (really not urgent... there's no hardware for it really...)
 
                 // Check the current button state against the previous one
                 // and update the input controller appropriately
@@ -96,6 +131,60 @@ void KOSWindow::check_events() {
                             i, button
                         );
                     }
+                }
+
+                uint32_t hat1_state = (uint32_t) HAT_POSITION_CENTERED;
+                for(auto button: HAT1_BUTTONS) {
+                    if(button_state & button) {
+                        switch(button) {
+                        case CONT_DPAD_UP:
+                            hat1_state |= (uint32_t) HAT_POSITION_UP;
+                        break;
+                        case CONT_DPAD_DOWN:
+                            hat1_state |= (uint32_t) HAT_POSITION_DOWN;
+                        break;
+                        case CONT_DPAD_LEFT:
+                            hat1_state |= (uint32_t) HAT_POSITION_LEFT;
+                        break;
+                        case CONT_DPAD_RIGHT:
+                            hat1_state |= (uint32_t) HAT_POSITION_RIGHT;
+                        break;
+                        default:
+                            break;
+                        }
+                    }
+                }
+
+                if(hat1_state != previous_hat1_state[i]) {
+                    input_controller()._handle_joypad_hat_motion(i, 0, (HatPosition) hat1_state);
+                    previous_hat1_state[i] = (HatPosition) hat1_state;
+                }
+
+                uint32_t hat2_state = (uint32_t) HAT_POSITION_CENTERED;
+                for(auto button: HAT2_BUTTONS) {
+                    if(button_state & button) {
+                        switch(button) {
+                        case CONT_DPAD2_UP:
+                            hat2_state |= (uint32_t) HAT_POSITION_UP;
+                        break;
+                        case CONT_DPAD2_DOWN:
+                            hat2_state |= (uint32_t) HAT_POSITION_DOWN;
+                        break;
+                        case CONT_DPAD2_LEFT:
+                            hat2_state |= (uint32_t) HAT_POSITION_LEFT;
+                        break;
+                        case CONT_DPAD2_RIGHT:
+                            hat2_state |= (uint32_t) HAT_POSITION_RIGHT;
+                        break;
+                        default:
+                            break;
+                        }
+                    }
+                }
+
+                if(hat2_state != previous_hat2_state[i]) {
+                    input_controller()._handle_joypad_hat_motion(i, 0, (HatPosition) hat2_state);
+                    previous_hat2_state[i] = (HatPosition) hat2_state;
                 }
 
                 previous_controller_button_state[i] = button_state;
