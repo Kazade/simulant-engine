@@ -1,6 +1,6 @@
 #include "string.h"
 
-#if defined(_arch_dreamcast) || defined(ANDROID)
+#ifdef _arch_dreamcast
 
 #include <cstdlib>
 #include <stdexcept>
@@ -11,12 +11,9 @@ float stof(const std::string& str) {
     const char* inp = str.c_str();
     char* p = nullptr;
 
-#ifdef _arch_dreamcast
     // Dreamcast (GCC 4.7.3) doesn't define strtof but does define strtod
     float test = (float) strtod(inp, &p);
-#else
-    auto test = strtof(inp, &p);
-#endif
+
     if(p == inp) {
         throw std::invalid_argument("Couldn't convert from a string to a float");
     }

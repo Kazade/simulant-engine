@@ -14,7 +14,7 @@ std::string strip(const std::string& s, const std::string& what=" \t\n\r");
 }
 
 /* Not all supported platforms implement std::stof etc.*/
-#if defined(_arch_dreamcast) || defined(ANDROID)
+#ifdef _arch_dreamcast
 namespace std {
     float stof(const std::string& str);
     int32_t stoi(const std::string& str);
