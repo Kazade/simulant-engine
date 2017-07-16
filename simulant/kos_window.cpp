@@ -63,15 +63,16 @@ void KOSWindow::destroy_window() {
 }
 
 void KOSWindow::check_events() {
-    // The weird ordering is to match the order they are defined in KOS
+    const int8_t MAX_CONTROLLERS = 4;
     const static std::vector<uint16_t> CONTROLLER_BUTTONS = {
-        CONT_C, CONT_B, CONT_A, CONT_START, CONT_Z, CONT_Y, CONT_X, CONT_D
+        CONT_A, CONT_B, CONT_C, CONT_D, CONT_X, CONT_Y, CONT_Z, CONT_START
     };
 
-    static std::array<uint16_t, 4> previous_controller_button_state = {{0, 0, 0, 0}};
+    static std::array<uint16_t, MAX_CONTROLLERS> previous_controller_button_state = {{0, 0, 0, 0}};
+    static auto previous_key_state = std::array<uint8_t, 256>(); // value-initialize to zero
 
     /* Check controller states */
-    for(int8_t i = 0; i < 4; +i) {
+    for(int8_t i = 0; i < MAX_CONTROLLERS; ++i) {
         auto device = maple_enum_type(i, MAPLE_FUNC_CONTROLLER);
         if(device) {
             auto state = (cont_state_t*) maple_dev_status(device);
@@ -101,6 +102,38 @@ void KOSWindow::check_events() {
             }
         }
     }
+
+    /* FIXME: Support multiple keyboards */
+
+    for(int8_t i = 0; i < 1; ++i) {
+        auto device = maple_enum_type(i, MAPLE_FUNC_KEYBOARD);
+        if(device) {
+            auto state = (kbd_state_t*) maple_dev_status(device);
+            if(state) {
+                std::array<uint8_t, 256> key_state;
+                std::copy(state->matrix, state->matrix + 256, key_state.begin());
+
+                for(uint32_t j = 0; j < 256; ++j) {
+                    if(key_state[j] && !previous_key_state[j]) {
+                        // Key down
+                        L_DEBUG(_F("Key down: {0}").format(j));
+                        input_controller()._handle_key_down(
+                            i, KeyboardCode(j)
+                        );
+                    }
+                    if(!key_state[j] && previous_key_state[j]) {
+                        // Key up
+                        input_controller()._handle_key_up(
+                            i, KeyboardCode(j)
+                        );
+                    }
+                }
+
+                previous_key_state = key_state;
+            }
+        }
+    }
+
 }
 
 std::shared_ptr<SoundDriver> KOSWindow::create_sound_driver() {
@@ -125,6 +158,7 @@ void smlt::KOSWindow::initialize_input_controller(smlt::InputController &control
         KeyboardControllerInfo keyboard;
         keyboard.id = 0;
         controller._update_keyboard_devices({keyboard});
+        L_DEBUG("Found connected keyboard");
     }
 
     auto controller_count = 0u;
