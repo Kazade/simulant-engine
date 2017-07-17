@@ -78,8 +78,6 @@ script:
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ./tests/simulant_tests; fi;
 
 matrix:
- allow_failures:
-  - env: DREAMCAST=true
  exclude:
   - os: osx
     env: DREAMCAST=true

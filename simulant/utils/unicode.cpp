@@ -302,7 +302,7 @@ unicode unicode::slice(void* null, int32_t end) const {
 /*
  ANDROID SUCKS... can't use std::stoi and friends
 */
-int32_t _stoi(const std::string& str) {
+static int32_t _stoi(const std::string& str) {
     const char* inp = str.c_str();
     char* p = nullptr;
 
@@ -315,7 +315,7 @@ int32_t _stoi(const std::string& str) {
     return (int32_t) test;
 }
 
-float _stof(const std::string& str) {
+static float _stof(const std::string& str) {
     const char* inp = str.c_str();
     char* p = nullptr;
 
@@ -332,7 +332,7 @@ float _stof(const std::string& str) {
     return (float) test;
 }
 
-double _stod(const std::string& str) {
+static double _stod(const std::string& str) {
     const char* inp = str.c_str();
     char* p = nullptr;
 

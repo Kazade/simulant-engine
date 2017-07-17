@@ -111,7 +111,7 @@ void Mesh::enable_animation(MeshAnimationType animation_type, uint32_t animation
         throw std::logic_error("Tried to re-enable animations on an animated mesh");
     }
 
-    if(!abs(animation_frames)) {
+    if(!animation_frames) {
         throw std::logic_error("You must specify the number of frames when enabling mesh animations");
     }
 
