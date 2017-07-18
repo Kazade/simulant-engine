@@ -55,6 +55,21 @@ struct StaticChunkChangeEvent {
 };
 
 
+enum WriteOperation {
+    WRITE_OPERATION_ADD,
+    WRITE_OPERATION_UPDATE,
+    WRITE_OPERATION_REMOVE
+};
+
+struct StagedWrite {
+    WriteOperation operation;
+
+    GeomID geom_id;
+    ActorID actor_id;
+    LightID light_id;
+    ParticleSystemID particle_system_id;
+};
+
 class Partitioner:
     public Managed<Partitioner> {
 
@@ -62,17 +77,19 @@ public:
     Partitioner(Stage* ss):
         stage_(ss) {}
 
-    virtual void add_particle_system(ParticleSystemID ps) = 0;
-    virtual void remove_particle_system(ParticleSystemID ps) = 0;
+    void add_particle_system(ParticleSystemID ps);
+    void remove_particle_system(ParticleSystemID ps);
 
-    virtual void add_geom(GeomID geom_id) = 0;
-    virtual void remove_geom(GeomID geom_id) = 0;
+    void add_geom(GeomID geom_id);
+    void remove_geom(GeomID geom_id);
 
-    virtual void add_actor(ActorID obj) = 0;
-    virtual void remove_actor(ActorID obj) = 0;
+    void add_actor(ActorID obj);
+    void remove_actor(ActorID obj);
 
-    virtual void add_light(LightID obj) = 0;
-    virtual void remove_light(LightID obj) = 0;
+    void add_light(LightID obj);
+    void remove_light(LightID obj);
+
+    void _apply_writes();
 
     virtual std::vector<LightID> lights_visible_from(CameraID camera_id) = 0;
     virtual std::vector<std::shared_ptr<Renderable>> geometry_visible_from(CameraID camera_id) = 0;
@@ -94,8 +111,15 @@ protected:
     StaticChunkChanged signal_static_chunk_changed_;
 
     Stage* get_stage() const { return stage_; }
+
+    void stage_write(const StagedWrite& op);
+
+    virtual void apply_staged_write(const StagedWrite& write) = 0;
+
 private:
     Stage* stage_;
+
+    std::list<StagedWrite> staged_writes_;
 };
 
 }

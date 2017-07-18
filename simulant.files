@@ -48,6 +48,7 @@ samples/q2bsp_sample.cpp
 samples/sample.cpp
 samples/selection_sample.cpp
 samples/viewport_sample.cpp
+simulant/partitioner.cpp
 simulant/utils/string.cpp
 simulant/utils/string.h
 tests/CMakeLists.txt

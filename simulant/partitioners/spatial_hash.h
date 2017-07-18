@@ -48,18 +48,6 @@ public:
     SpatialHashPartitioner(Stage* ss);
     ~SpatialHashPartitioner();
 
-    void add_actor(ActorID obj);
-    void remove_actor(ActorID obj);
-
-    void add_geom(GeomID geom_id);
-    void remove_geom(GeomID geom_id);
-
-    void add_light(LightID obj);
-    void remove_light(LightID obj);
-
-    void add_particle_system(ParticleSystemID ps);
-    void remove_particle_system(ParticleSystemID ps);
-
     std::vector<LightID> lights_visible_from(CameraID camera_id);
     std::vector<RenderablePtr> geometry_visible_from(CameraID camera_id);
 
@@ -68,6 +56,20 @@ public:
     void _update_light(const AABB& bounds, LightID light);
 
 private:
+    void stage_add_actor(ActorID obj);
+    void stage_remove_actor(ActorID obj);
+
+    void stage_add_geom(GeomID geom_id);
+    void stage_remove_geom(GeomID geom_id);
+
+    void stage_add_light(LightID obj);
+    void stage_remove_light(LightID obj);
+
+    void stage_add_particle_system(ParticleSystemID ps);
+    void stage_remove_particle_system(ParticleSystemID ps);
+
+    void apply_staged_write(const StagedWrite& write);
+
     SpatialHash* hash_ = nullptr;
 
     typedef std::shared_ptr<PartitionerEntry> PartitionerEntryPtr;
