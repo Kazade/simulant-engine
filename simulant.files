@@ -66,6 +66,7 @@ tests/test_frustum.h
 tests/test_material.h
 tests/test_material_script.h
 tests/test_mesh.h
+tests/test_partitioner.h
 tests/test_shader.h
 tests/test_sound.h
 tests/test_utils.h

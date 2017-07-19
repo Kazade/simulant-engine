@@ -19,6 +19,7 @@
 #ifndef PARTITIONER_H
 #define PARTITIONER_H
 
+#include <stack>
 #include <memory>
 #include <set>
 #include <vector>
@@ -61,8 +62,16 @@ enum WriteOperation {
     WRITE_OPERATION_REMOVE
 };
 
+enum StageNodeType {
+    STAGE_NODE_TYPE_ACTOR,
+    STAGE_NODE_TYPE_LIGHT,
+    STAGE_NODE_TYPE_GEOM,
+    STAGE_NODE_TYPE_PARTICLE_SYSTEM
+};
+
 struct StagedWrite {
     WriteOperation operation;
+    StageNodeType stage_node_type;
 
     GeomID geom_id;
     ActorID actor_id;
@@ -119,7 +128,7 @@ protected:
 private:
     Stage* stage_;
 
-    std::list<StagedWrite> staged_writes_;
+    std::stack<StagedWrite> staged_writes_;
 };
 
 }
