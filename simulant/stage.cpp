@@ -120,15 +120,22 @@ ActorID Stage::new_actor_with_mesh(MeshID mid, RenderableCullingMode mode) {
     using namespace std::placeholders;
 
     ActorID result = ActorManager::make(this, window->_sound_driver());
-    actor(result)->set_renderable_culling_mode(mode);
-    actor(result)->set_parent(this);
-    actor(result)->signal_subactor_material_changed().connect(
+    auto a = result.fetch();
+
+    a->set_renderable_culling_mode(mode);
+    a->set_parent(this);
+    a->signal_subactor_material_changed().connect(
         std::bind(&Stage::on_subactor_material_changed, this, _1, _2, _3, _4)
     );
 
+    /* Whenever the actor moves, we need to tell the stage's partitioner */
+    a->signal_bounds_updated().connect([this, result](const AABB& new_bounds) {
+        this->partitioner->update_actor(result, new_bounds);
+    });
+
     //If a mesh was specified, set it
     if(mid) {
-        actor(result)->set_mesh(mid);
+        a->set_mesh(mid);
     }
 
     //Tell everyone about the new actor
