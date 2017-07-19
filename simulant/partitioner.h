@@ -81,6 +81,7 @@ struct StagedWrite {
     AABB new_bounds;
 };
 
+
 class Partitioner:
     public Managed<Partitioner> {
 
@@ -132,7 +133,6 @@ protected:
 
 private:
     Stage* stage_;
-
     std::stack<StagedWrite> staged_writes_;
 };
 
