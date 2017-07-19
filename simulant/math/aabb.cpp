@@ -6,28 +6,29 @@ namespace smlt {
 AABB::AABB(const Vec3 &min, const Vec3 &max) {
     set_min(min);
     set_max(max);
-    rebuild_corners();
+
+    corners_dirty_ = true;
 }
 
 AABB::AABB(const Vec3 &centre, float width) {
     set_min(centre - Vec3(width * 0.5, width * 0.5, width * 0.5));
     set_max(centre + Vec3(width * 0.5, width * 0.5, width * 0.5));
 
-    rebuild_corners();
+    corners_dirty_ = true;
 }
 
 AABB::AABB(const Vec3 &centre, float xsize, float ysize, float zsize) {
     set_min(centre - Vec3(xsize * 0.5, ysize * 0.5, zsize * 0.5));
     set_max(centre + Vec3(xsize * 0.5, ysize * 0.5, zsize * 0.5));
 
-    rebuild_corners();
+    corners_dirty_ = true;
 }
 
 AABB::AABB(const Vec3 *vertices, const std::size_t count) {
     if(count == 0) {
         set_min(Vec3());
         set_max(Vec3());
-        rebuild_corners();
+        corners_dirty_ = true;
         return;
     }
 
@@ -51,8 +52,7 @@ AABB::AABB(const Vec3 *vertices, const std::size_t count) {
 
     set_min(Vec3(minx, miny, minz));
     set_max(Vec3(maxx, maxy, maxz));
-
-    rebuild_corners();
+    corners_dirty_ = true;
 }
 
 }
