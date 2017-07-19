@@ -98,11 +98,18 @@ ActorID Stage::new_actor(RenderableCullingMode mode) {
     using namespace std::placeholders;
 
     ActorID result = ActorManager::make(this, window->_sound_driver());
-    actor(result)->set_renderable_culling_mode(mode);
-    actor(result)->set_parent(this);
-    actor(result)->signal_subactor_material_changed().connect(
+    auto a = result.fetch();
+
+    a->set_renderable_culling_mode(mode);
+    a->set_parent(this);
+    a->signal_subactor_material_changed().connect(
         std::bind(&Stage::on_subactor_material_changed, this, _1, _2, _3, _4)
     );
+
+    /* Whenever the actor moves, we need to tell the stage's partitioner */
+    a->signal_bounds_updated().connect([this, result](const AABB& new_bounds) {
+        this->partitioner->update_actor(result, new_bounds);
+    });
 
     //Tell everyone about the new actor
     signal_actor_created_(result);
@@ -208,6 +215,13 @@ uint32_t Stage::geom_count() const {
 ParticleSystemID Stage::new_particle_system() {
     ParticleSystemID new_id = ParticleSystemManager::make(this, window->_sound_driver());
 
+    auto p = new_id.fetch();
+
+    /* Whenever the particle system moves, we need to tell the stage's partitioner */
+    p->signal_bounds_updated().connect([this, new_id](const AABB& new_bounds) {
+        this->partitioner->update_particle_system(new_id, new_bounds);
+    });
+
     signal_particle_system_created_(new_id);
     return new_id;
 }
@@ -251,11 +265,17 @@ void Stage::delete_particle_system(ParticleSystemID pid) {
 
 LightID Stage::new_light_as_directional(const Vec3& direction, const smlt::Colour& colour) {
     auto light = LightManager::make(this).fetch();
+    auto light_id = light->id();
 
     light->set_type(smlt::LIGHT_TYPE_DIRECTIONAL);
     light->set_direction(direction.normalized());
     light->set_diffuse(colour);
     light->set_parent(this);
+
+    /* Whenever the light moves, we need to tell the stage's partitioner */
+    light->signal_bounds_updated().connect([this, light_id](const AABB& new_bounds) {
+        this->partitioner->update_light(light_id, new_bounds);
+    });
 
     signal_light_created_(light->id());
     return light->id();
@@ -263,12 +283,18 @@ LightID Stage::new_light_as_directional(const Vec3& direction, const smlt::Colou
 
 LightID Stage::new_light_as_point(const Vec3& position, const smlt::Colour& colour) {
     auto light = LightManager::make(this).fetch();
+    auto light_id = light->id();
 
     light->set_type(smlt::LIGHT_TYPE_POINT);
     light->move_to(position);
 
     light->set_diffuse(colour);
     light->set_parent(this);
+
+    /* Whenever the light moves, we need to tell the stage's partitioner */
+    light->signal_bounds_updated().connect([this, light_id](const AABB& new_bounds) {
+        this->partitioner->update_light(light_id, new_bounds);
+    });
 
     signal_light_created_(light->id());
     return light->id();
@@ -342,11 +368,7 @@ void Stage::update(float dt) {
 }
 
 void Stage::on_actor_created(ActorID actor_id) {
-    auto act = actor(actor_id);
 
-    act->each([](uint32_t i, SubActor* actor) {
-
-    });
 }
 
 void Stage::on_actor_destroyed(ActorID actor_id) {

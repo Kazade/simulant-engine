@@ -77,6 +77,8 @@ struct StagedWrite {
     ActorID actor_id;
     LightID light_id;
     ParticleSystemID particle_system_id;
+
+    AABB new_bounds;
 };
 
 class Partitioner:
@@ -86,17 +88,20 @@ public:
     Partitioner(Stage* ss):
         stage_(ss) {}
 
-    void add_particle_system(ParticleSystemID ps);
-    void remove_particle_system(ParticleSystemID ps);
+    void add_particle_system(ParticleSystemID particle_system_id);
+    void update_particle_system(ParticleSystemID particle_system_id, const AABB& bounds);
+    void remove_particle_system(ParticleSystemID particle_system_id);
 
     void add_geom(GeomID geom_id);
     void remove_geom(GeomID geom_id);
 
-    void add_actor(ActorID obj);
-    void remove_actor(ActorID obj);
+    void add_actor(ActorID actor_id);
+    void update_actor(ActorID actor_id, const AABB& bounds);
+    void remove_actor(ActorID actor_id);
 
-    void add_light(LightID obj);
-    void remove_light(LightID obj);
+    void add_light(LightID light_id);
+    void update_light(LightID light_id, const AABB& bounds);
+    void remove_light(LightID light_id);
 
     void _apply_writes();
 

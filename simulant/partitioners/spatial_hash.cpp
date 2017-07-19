@@ -26,9 +26,6 @@ void SpatialHashPartitioner::stage_add_actor(ActorID obj) {
     hash_->insert_object_for_box(actor->bounds(), partitioner_entry.get());
     actor_entries_.insert(std::make_pair(obj, partitioner_entry));
 
-    actor_updates_[obj] = actor->signal_bounds_updated().connect(
-        std::bind(&SpatialHashPartitioner::_update_actor, this, std::placeholders::_1, obj)
-    );
 }
 
 void SpatialHashPartitioner::stage_remove_actor(ActorID obj) {
@@ -39,9 +36,6 @@ void SpatialHashPartitioner::stage_remove_actor(ActorID obj) {
         hash_->remove_object(it->second.get());
         actor_entries_.erase(it);
     }
-
-    actor_updates_[obj].disconnect();
-    actor_updates_.erase(obj);
 }
 
 void SpatialHashPartitioner::_update_actor(const AABB &bounds, ActorID actor) {
@@ -79,10 +73,6 @@ void SpatialHashPartitioner::stage_add_light(LightID obj) {
         auto partitioner_entry = std::make_shared<PartitionerEntry>(obj);
         hash_->insert_object_for_box(light->bounds(), partitioner_entry.get());
         light_entries_[obj] = partitioner_entry;
-
-        light_updates_[obj] = light->signal_bounds_updated().connect(
-            std::bind(&SpatialHashPartitioner::_update_light, this, std::placeholders::_1, obj)
-        );
     }
 }
 
@@ -96,9 +86,6 @@ void SpatialHashPartitioner::stage_remove_light(LightID obj) {
         if(it != light_entries_.end()) {
             hash_->remove_object(it->second.get());
             light_entries_.erase(it);
-
-            light_updates_[obj].disconnect();
-            light_updates_.erase(obj);
         }
     }
 }
@@ -110,10 +97,6 @@ void SpatialHashPartitioner::stage_add_particle_system(ParticleSystemID ps) {
     auto partitioner_entry = std::make_shared<PartitionerEntry>(ps);
     hash_->insert_object_for_box(particle_system->bounds(), partitioner_entry.get());
     particle_system_entries_[ps] = partitioner_entry;
-
-    particle_system_updates_[ps] = particle_system->signal_bounds_updated().connect(
-        std::bind(&SpatialHashPartitioner::_update_particle_system, this, std::placeholders::_1, ps)
-    );
 }
 
 void SpatialHashPartitioner::stage_remove_particle_system(ParticleSystemID ps) {
@@ -124,9 +107,6 @@ void SpatialHashPartitioner::stage_remove_particle_system(ParticleSystemID ps) {
         hash_->remove_object(it->second.get());
         particle_system_entries_.erase(it);
     }
-
-    particle_system_updates_[ps].disconnect();
-    particle_system_updates_.erase(ps);
 }
 
 void SpatialHashPartitioner::apply_staged_write(const StagedWrite &write) {
@@ -151,7 +131,13 @@ void SpatialHashPartitioner::apply_staged_write(const StagedWrite &write) {
             stage_remove_particle_system(write.particle_system_id);
         }
     } else if(write.operation == WRITE_OPERATION_UPDATE) {
-        // Do nothing!
+        if(write.stage_node_type == STAGE_NODE_TYPE_ACTOR) {
+            _update_actor(write.new_bounds, write.actor_id);
+        } else if(write.stage_node_type == STAGE_NODE_TYPE_LIGHT) {
+            _update_light(write.new_bounds, write.light_id);
+        } else if(write.stage_node_type == STAGE_NODE_TYPE_PARTICLE_SYSTEM) {
+            _update_particle_system(write.new_bounds, write.particle_system_id);
+        }
     }
 }
 

@@ -10,6 +10,14 @@ void Partitioner::add_particle_system(ParticleSystemID ps) {
     stage_write(write);
 }
 
+void Partitioner::update_particle_system(ParticleSystemID ps, const AABB &bounds) {
+    StagedWrite write;
+    write.operation = WRITE_OPERATION_UPDATE;
+    write.new_bounds = bounds;
+    write.particle_system_id = ps;
+    stage_write(write);
+}
+
 void Partitioner::remove_particle_system(ParticleSystemID ps) {
     StagedWrite write;
     write.operation = WRITE_OPERATION_REMOVE;
@@ -42,6 +50,14 @@ void Partitioner::add_actor(ActorID obj) {
     stage_write(write);
 }
 
+void Partitioner::update_actor(ActorID actor_id, const AABB &bounds) {
+    StagedWrite write;
+    write.operation = WRITE_OPERATION_UPDATE;
+    write.new_bounds = bounds;
+    write.actor_id = actor_id;
+    stage_write(write);
+}
+
 void Partitioner::remove_actor(ActorID obj) {
     StagedWrite write;
     write.operation = WRITE_OPERATION_REMOVE;
@@ -55,6 +71,14 @@ void Partitioner::add_light(LightID obj) {
     write.operation = WRITE_OPERATION_ADD;
     write.stage_node_type = STAGE_NODE_TYPE_LIGHT;
     write.light_id = obj;
+    stage_write(write);
+}
+
+void Partitioner::update_light(LightID light_id, const AABB &bounds) {
+    StagedWrite write;
+    write.operation = WRITE_OPERATION_UPDATE;
+    write.new_bounds = bounds;
+    write.light_id = light_id;
     stage_write(write);
 }
 
