@@ -27,19 +27,38 @@
 
 namespace smlt {
 
-std::vector<LightID> NullPartitioner::lights_visible_from(CameraID camera_id) {
+void NullPartitioner::lights_and_geometry_visible_from(
+        CameraID camera_id, std::vector<LightID> &lights_out, std::vector<std::shared_ptr<Renderable> > &geom_out) {
+
     auto frustum = stage->window->camera(camera_id)->frustum();
 
-    std::vector<LightID> result;
     for(LightID lid: all_lights_) {
         auto light = stage->light(lid);
         auto aabb = light->bounds();
         if(light->type() == LIGHT_TYPE_DIRECTIONAL || frustum.intersects_aabb(aabb)) {
-            result.push_back(lid);
+            lights_out.push_back(lid);
         }
     }
 
-    return result;
+    for(ActorID eid: all_actors_) {
+        auto actor = stage->actor(eid);
+        auto subactors = actor->_subactors();
+
+        for(auto ent: subactors) {
+            if(frustum.intersects_aabb(ent->transformed_aabb())) {
+                geom_out.push_back(ent);
+            }
+        }
+    }
+
+    for(ParticleSystemID ps: all_particle_systems_) {
+        auto system = stage->particle_system(ps);
+        auto aabb = system->bounds();
+        if(frustum.intersects_aabb(aabb)) {
+            geom_out.push_back(system->shared_from_this());
+        }
+    }
+
 }
 
 void NullPartitioner::apply_staged_write(const StagedWrite &write) {
@@ -68,32 +87,6 @@ void NullPartitioner::apply_staged_write(const StagedWrite &write) {
     }
 }
 
-std::vector<RenderablePtr> NullPartitioner::geometry_visible_from(CameraID camera_id) {
-    std::vector<RenderablePtr> result;
 
-    auto frustum = stage->window->camera(camera_id)->frustum();
-
-    //Just return all of the meshes in the stage
-    for(ActorID eid: all_actors_) {
-        auto actor = stage->actor(eid);
-        auto subactors = actor->_subactors();
-
-        for(auto ent: subactors) {
-            if(frustum.intersects_aabb(ent->transformed_aabb())) {
-                result.push_back(ent);
-            }
-        }
-    }
-
-    for(ParticleSystemID ps: all_particle_systems_) {
-        auto system = stage->particle_system(ps);
-        auto aabb = system->bounds();
-        if(frustum.intersects_aabb(aabb)) {
-            result.push_back(system->shared_from_this());
-        }
-    }
-
-    return result;
-}
 
 }

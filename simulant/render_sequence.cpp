@@ -246,17 +246,22 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
     // Apply any outstanding writes to the partitioner
     stage->partitioner->_apply_writes();
 
-    auto light_ids = stage->partitioner->lights_visible_from(camera_id);
+    std::vector<LightID> light_ids;
+    std::vector<std::shared_ptr<Renderable>> geom_visible;
+
+    // Gather the lights and geometry visible to the camera
+    stage->partitioner->lights_and_geometry_visible_from(camera_id, light_ids, geom_visible);
+
+    // Get the actual lights from the IDs
     auto lights_visible = map<decltype(light_ids), std::vector<LightPtr>>(
         light_ids, [&](const LightID& light_id) -> LightPtr { return stage->light(light_id); }
     );
 
     uint32_t renderables_rendered = 0;
     // Mark the visible objects as visible
-    for(auto& renderable: stage->partitioner->geometry_visible_from(camera_id)) {
+    for(auto& renderable: geom_visible) {
         if(!renderable->is_visible()) {
             continue;
-
         }
 
         renderable->update_last_visible_frame_id(frame_id);

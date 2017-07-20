@@ -20,8 +20,9 @@ public:
         cb_(write);
     }
 
-    std::vector<LightID> lights_visible_from(CameraID camera_id) { return std::vector<LightID>(); }
-    std::vector<std::shared_ptr<Renderable>> geometry_visible_from(CameraID camera_id) { return std::vector<std::shared_ptr<Renderable>>(); }
+    void lights_and_geometry_visible_from(CameraID camera_id, std::vector<LightID> &lights_out, std::vector<std::shared_ptr<Renderable> > &geom_out) {
+
+    }
 
 private:
     std::function<void (const StagedWrite&)> cb_;
