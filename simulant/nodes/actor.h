@@ -51,7 +51,7 @@ public:
     Actor(ActorID id, Stage* stage, SoundDriver *sound_driver, MeshID mesh);
     virtual ~Actor();
 
-    const AABB aabb() const;
+    const AABB& aabb() const;
 
     MeshID mesh_id() const { return (mesh_) ? mesh_->id() : MeshID(0); }
 
@@ -172,7 +172,7 @@ public:
         return AABB(corners.data(), corners.size());
     }
 
-    const AABB aabb() const {
+    const AABB& aabb() const {
         return submesh()->aabb();
     }
 

@@ -112,7 +112,7 @@ void Widget::ask_owner_for_destruction() {
     owner_->delete_widget(id());
 }
 
-const AABB Widget::aabb() const {
+const AABB &Widget::aabb() const {
     return actor_.fetch()->aabb();
 }
 

@@ -46,7 +46,7 @@ void Skybox::ask_owner_for_destruction() {
     manager_->delete_skybox(id());
 }
 
-const AABB Skybox::aabb() const { return actor_id_.fetch()->aabb(); }
+const AABB &Skybox::aabb() const { return actor_id_.fetch()->aabb(); }
 
 void Skybox::generate(
         const unicode& up,

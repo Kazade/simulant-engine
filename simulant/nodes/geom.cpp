@@ -39,7 +39,7 @@ VertexData* Geom::get_shared_data() const {
     return mesh_->shared_data.get();
 }
 
-const AABB Geom::aabb() const {
+const AABB &Geom::aabb() const {
     return mesh_->aabb();
 }
 

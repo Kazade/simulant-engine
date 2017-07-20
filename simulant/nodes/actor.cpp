@@ -235,12 +235,14 @@ void Actor::refresh_animation_state(uint32_t current_frame, uint32_t next_frame,
 }
 
 
-const AABB Actor::aabb() const {
+const AABB &Actor::aabb() const {
+    static AABB aabb;
+
     if(has_mesh()) {
         return mesh()->aabb();
     }
 
-    return AABB();
+    return aabb;
 }
 
 void Actor::ask_owner_for_destruction() {

@@ -160,7 +160,7 @@ public:
     ParticleSystem(ParticleSystemID id, Stage* stage, SoundDriver *sound_driver);
     ~ParticleSystem();
 
-    const AABB aabb() const override;
+    const AABB& aabb() const override;
     const AABB transformed_aabb() const override {
         return StageNode::transformed_aabb();
     }
@@ -234,6 +234,9 @@ public:
     }
 
 private:
+    AABB aabb_;
+    void calc_aabb();
+
     std::unique_ptr<HardwareBuffer> vertex_buffer_;
     std::unique_ptr<HardwareBuffer> index_buffer_;
     bool resize_buffers_ = false;

@@ -80,6 +80,10 @@ public:
     inline operator T*() { return getter_(this_); }
 
     T* get() const { return getter_(this_); }
+
+    operator bool() const {
+        return bool(get());
+    }
 private:
     Container* this_ = nullptr;
     std::function<T* (Container*)> getter_;

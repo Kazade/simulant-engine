@@ -68,7 +68,7 @@ public:
 
     MeshID mesh_id() const { return mesh_->id(); }
 
-    const AABB aabb() const;
+    const AABB& aabb() const;
 
     void ask_owner_for_destruction();
 

@@ -30,7 +30,7 @@ uint32_t vertex_attribute_size(VertexAttribute attr) {
     case VERTEX_ATTRIBUTE_3F:  return sizeof(float) * 3;
     case VERTEX_ATTRIBUTE_4F: return sizeof(float) * 4;
     default:
-        assert(0 && "Invalid attribute specified");
+        return 0;
     }
 }
 
@@ -55,20 +55,20 @@ VertexSpecification::VertexSpecification(VertexAttribute position, VertexAttribu
 }
 
 bool VertexSpecification::has_texcoordX(uint8_t which) const {
-    static const std::array<bool (VertexSpecification::*)() const, 8> LOOKUPS = {{
-            &VertexSpecification::has_texcoord0,
-            &VertexSpecification::has_texcoord1,
-            &VertexSpecification::has_texcoord2,
-            &VertexSpecification::has_texcoord3,
-            &VertexSpecification::has_texcoord4,
-            &VertexSpecification::has_texcoord5,
-            &VertexSpecification::has_texcoord6,
-            &VertexSpecification::has_texcoord7
-    }};
-
     assert(which < MAX_TEXTURE_UNITS);
 
-    return std::bind(LOOKUPS[which], this)();
+    switch(which) {
+    case 0: return has_texcoord0();
+    case 1: return has_texcoord1();
+    case 2: return has_texcoord2();
+    case 3: return has_texcoord3();
+    case 4: return has_texcoord4();
+    case 5: return has_texcoord5();
+    case 6: return has_texcoord6();
+    case 7: return has_texcoord7();
+    default:
+        return false;
+    }
 }
 
 const VertexAttribute VertexSpecification::texcoordX_attribute(uint8_t which) const {
@@ -84,25 +84,25 @@ const VertexAttribute VertexSpecification::texcoordX_attribute(uint8_t which) co
     case 6: return texcoord6_attribute;
     case 7: return texcoord7_attribute;
     default:
-        throw std::out_of_range("Invalid texcoord");
+        return VERTEX_ATTRIBUTE_NONE;
     }
 }
 
 void VertexSpecification::recalc_stride() {
     stride_ = (
-                vertex_attribute_size(position_attribute) +
-                vertex_attribute_size(normal_attribute) +
-                vertex_attribute_size(texcoord0_attribute) +
-                vertex_attribute_size(texcoord1_attribute) +
-                vertex_attribute_size(texcoord2_attribute) +
-                vertex_attribute_size(texcoord3_attribute) +
-                vertex_attribute_size(texcoord4_attribute) +
-                vertex_attribute_size(texcoord5_attribute) +
-                vertex_attribute_size(texcoord6_attribute) +
-                vertex_attribute_size(texcoord7_attribute) +
-                vertex_attribute_size(diffuse_attribute) +
-                vertex_attribute_size(specular_attribute)
-                );
+        vertex_attribute_size(position_attribute) +
+        vertex_attribute_size(normal_attribute) +
+        vertex_attribute_size(texcoord0_attribute) +
+        vertex_attribute_size(texcoord1_attribute) +
+        vertex_attribute_size(texcoord2_attribute) +
+        vertex_attribute_size(texcoord3_attribute) +
+        vertex_attribute_size(texcoord4_attribute) +
+        vertex_attribute_size(texcoord5_attribute) +
+        vertex_attribute_size(texcoord6_attribute) +
+        vertex_attribute_size(texcoord7_attribute) +
+        vertex_attribute_size(diffuse_attribute) +
+        vertex_attribute_size(specular_attribute)
+    );
 }
 
 uint32_t VertexSpecification::position_offset(bool check) const {
@@ -156,20 +156,20 @@ uint32_t VertexSpecification::texcoord7_offset(bool check) const {
 }
 
 uint32_t VertexSpecification::texcoordX_offset(uint8_t which, bool check) const {
-    static const std::array<uint32_t (VertexSpecification::*)(bool) const, 8> LOOKUPS = {
-            &VertexSpecification::texcoord0_offset,
-            &VertexSpecification::texcoord1_offset,
-            &VertexSpecification::texcoord2_offset,
-            &VertexSpecification::texcoord3_offset,
-            &VertexSpecification::texcoord4_offset,
-            &VertexSpecification::texcoord5_offset,
-            &VertexSpecification::texcoord6_offset,
-            &VertexSpecification::texcoord7_offset
-    };
-
     assert(which < MAX_TEXTURE_UNITS);
 
-    return std::bind(LOOKUPS[which], this, check)();
+    switch(which) {
+    case 0: return texcoord0_offset(check);
+    case 1: return texcoord1_offset(check);
+    case 2: return texcoord2_offset(check);
+    case 3: return texcoord3_offset(check);
+    case 4: return texcoord4_offset(check);
+    case 5: return texcoord5_offset(check);
+    case 6: return texcoord6_offset(check);
+    case 7: return texcoord7_offset(check);
+    default:
+        return 0;
+    }
 }
 
 uint32_t VertexSpecification::diffuse_offset(bool check) const {

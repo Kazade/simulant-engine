@@ -188,10 +188,12 @@ public:
     sig::signal<void (LightID)>& signal_light_created() { return signal_light_created_; }
     sig::signal<void (LightID)>& signal_light_destroyed() { return signal_light_destroyed_; }
 
-    const AABB aabb() const override { return AABB(); }
-    const AABB transformed_aabb() const override { return AABB(); }
+    const AABB& aabb() const override { return aabb_; }
+    const AABB transformed_aabb() const override { return aabb_; }
 
 private:
+    AABB aabb_;
+
     ActorCreatedSignal signal_actor_created_;
     ActorDestroyedSignal signal_actor_destroyed_;
     ActorChangedCallback signal_actor_changed_;

@@ -102,7 +102,7 @@ public:
 
     const MeshArrangement arrangement() const { return arrangement_; }
 
-    const AABB aabb() const {
+    const AABB& aabb() const {
         return bounds_;
     }
 
@@ -240,7 +240,7 @@ public:
     void reverse_winding(); ///< Reverse the winding of all submeshes
     void set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass=0); ///< Replace the texture unit on all submesh materials
 
-    const AABB aabb() const;
+    const AABB& aabb() const;
     void normalize(); //Scales the mesh so it has a radius of 1.0
     void transform_vertices(const smlt::Mat4& transform, bool include_submeshes=true);
 
@@ -282,6 +282,10 @@ private:
     SubMeshCreatedCallback signal_submesh_created_;
     SubMeshDestroyedCallback signal_submesh_destroyed_;
     SubMeshMaterialChangedCallback signal_submesh_material_changed_;
+
+    void rebuild_aabb() const;
+    mutable AABB aabb_;
+    mutable bool aabb_dirty_ = true;
 };
 
 }

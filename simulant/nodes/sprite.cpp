@@ -82,7 +82,7 @@ void Sprite::flip_horizontally(bool value) {
     update_texture_coordinates();
 }
 
-const AABB Sprite::aabb() const { return actor_id_.fetch()->aabb(); }
+const AABB& Sprite::aabb() const { return actor_id_.fetch()->aabb(); }
 
 void Sprite::flip_vertically(bool value) {
     if(value == flipped_vertically_) return;

@@ -70,7 +70,7 @@ public:
 
     smlt::ActorID actor_id() const { return actor_id_; }
 
-    const AABB aabb() const override;
+    const AABB& aabb() const override;
 
     Property<Sprite, KeyFrameAnimationState> animations = {this, &Sprite::animation_state_};
 private:

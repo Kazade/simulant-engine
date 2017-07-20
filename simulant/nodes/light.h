@@ -58,6 +58,11 @@ public:
         set_direction(Vec3(x, y, z));
     }
 
+    void set_range(float range) {
+        range_ = range;
+        bounds_ = AABB(Vec3(), range_);
+    }
+
     void set_direction(const Vec3& dir) {
         set_type(LIGHT_TYPE_DIRECTIONAL);
         move_to(-dir.x, -dir.y, -dir.z);
@@ -91,9 +96,8 @@ public:
     float linear_attenuation() const { return linear_attenuation_; }
     float quadratic_attenuation() const { return quadratic_attenuation_; }
 
-    const AABB aabb() const {
-        AABB result(Vec3(), range());
-        return result;
+    const AABB& aabb() const {
+        return bounds_;
     }
 
     void ask_owner_for_destruction();
@@ -111,6 +115,7 @@ private:
     smlt::Colour diffuse_;
     smlt::Colour specular_;
 
+    AABB bounds_;
     float range_;
     float const_attenuation_;
     float linear_attenuation_;
