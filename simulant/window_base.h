@@ -66,7 +66,6 @@ class VirtualGamepad;
 class Renderer;
 class Panel;
 
-typedef std::function<void (double)> WindowUpdateCallback;
 typedef std::shared_ptr<Loader> LoaderPtr;
 typedef std::shared_ptr<LoaderType> LoaderTypePtr;
 
@@ -108,9 +107,9 @@ typedef sig::signal<void ()> FrameStartedSignal;
 typedef sig::signal<void ()> FrameFinishedSignal;
 typedef sig::signal<void ()> PreSwapSignal;
 
-typedef sig::signal<void (double)> FixedUpdateSignal;
-typedef sig::signal<void (double)> UpdateSignal;
-typedef sig::signal<void (double)> LateUpdateSignal;
+typedef sig::signal<void (float)> FixedUpdateSignal;
+typedef sig::signal<void (float)> UpdateSignal;
+typedef sig::signal<void (float)> LateUpdateSignal;
 
 typedef sig::signal<void ()> ShutdownSignal;
 
@@ -340,9 +339,9 @@ private:
     ResourceLocator::ptr resource_locator_;
     std::shared_ptr<InputController> input_controller_;
 
-    double frame_counter_time_;
+    float frame_counter_time_;
     int32_t frame_counter_frames_;
-    double frame_time_in_milliseconds_;
+    float frame_time_in_milliseconds_;
 
     std::shared_ptr<scenes::Loading> loading_;
     std::shared_ptr<smlt::RenderSequence> render_sequence_;
