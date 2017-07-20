@@ -13,9 +13,10 @@ class AABB {
     Vec3 min_;
     Vec3 max_;
 
-    std::array<Vec3, 8> corners_;
+    mutable std::array<Vec3, 8> corners_;
+    mutable bool corners_dirty_ = true;
 
-    void rebuild_corners() {
+    void rebuild_corners() const {
         corners_[0] = Vec3(min_.x, min_.y, min_.z);
         corners_[1] = Vec3(max_.x, min_.y, min_.z);
         corners_[2] = Vec3(max_.x, min_.y, max_.z);
@@ -25,34 +26,36 @@ class AABB {
         corners_[5] = Vec3(max_.x, max_.y, min_.z);
         corners_[6] = Vec3(max_.x, max_.y, max_.z);
         corners_[7] = Vec3(min_.x, max_.y, max_.z);
+
+        corners_dirty_ = false;
     }
 
 public:
     void set_min(const Vec3& min) {
         if(min_ != min) {
             min_ = min;
-            rebuild_corners();
+            corners_dirty_ = true;
         }
     }
 
     void set_min_x(float x) {
         if(x != min_.x) {
             min_.x = x;
-            rebuild_corners();
+            corners_dirty_ = true;
         }
     }
 
     void set_min_y(float y) {
         if(y != min_.y) {
             min_.y = y;
-            rebuild_corners();
+            corners_dirty_ = true;
         }
     }
 
     void set_min_z(float z) {
         if(z != min_.z) {
             min_.z = z;
-            rebuild_corners();
+            corners_dirty_ = true;
         }
     }
 
@@ -60,28 +63,28 @@ public:
     void set_max_x(float x) {
         if(x != max_.x) {
             max_.x = x;
-            rebuild_corners();
+            corners_dirty_ = true;
         }
     }
 
     void set_max_y(float y) {
         if(y != max_.y) {
             max_.y = y;
-            rebuild_corners();
+            corners_dirty_ = true;
         }
     }
 
     void set_max_z(float z) {
         if(z != max_.z) {
             max_.z = z;
-            rebuild_corners();
+            corners_dirty_ = true;
         }
     }
 
     void set_max(const Vec3& max) {
         if(max_ != max) {
             max_ = max;
-            rebuild_corners();
+            corners_dirty_ = true;
         }
     }
 
@@ -173,7 +176,12 @@ public:
         return false;
     }
 
+    /* NOTE: The corners are recalculated when called, so don't hold onto a reference for long */
     const std::array<Vec3, 8>& corners() const {
+        if(corners_dirty_) {
+            rebuild_corners();
+        }
+
         return corners_;
     }
 };

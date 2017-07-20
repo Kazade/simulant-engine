@@ -42,6 +42,32 @@ std::vector<LightID> NullPartitioner::lights_visible_from(CameraID camera_id) {
     return result;
 }
 
+void NullPartitioner::apply_staged_write(const StagedWrite &write) {
+    if(write.operation == WRITE_OPERATION_ADD) {
+        if(write.actor_id) {
+            all_actors_.insert(write.actor_id);
+        } else if(write.geom_id) {
+            all_geoms_.insert(write.geom_id);
+        } else if(write.light_id) {
+            all_lights_.insert(write.light_id);
+        } else if(write.particle_system_id) {
+            all_particle_systems_.insert(write.particle_system_id);
+        }
+    } else if(write.operation == WRITE_OPERATION_REMOVE) {
+        if(write.actor_id) {
+            all_actors_.erase(write.actor_id);
+        } else if(write.geom_id) {
+            all_geoms_.erase(write.geom_id);
+        } else if(write.light_id) {
+            all_lights_.erase(write.light_id);
+        } else if(write.particle_system_id) {
+            all_particle_systems_.erase(write.particle_system_id);
+        }
+    } else if(write.operation == WRITE_OPERATION_UPDATE) {
+        // Do nothing!
+    }
+}
+
 std::vector<RenderablePtr> NullPartitioner::geometry_visible_from(CameraID camera_id) {
     std::vector<RenderablePtr> result;
 

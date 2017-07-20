@@ -19,6 +19,7 @@
 #ifndef PARTITIONER_H
 #define PARTITIONER_H
 
+#include <stack>
 #include <memory>
 #include <set>
 #include <vector>
@@ -55,6 +56,32 @@ struct StaticChunkChangeEvent {
 };
 
 
+enum WriteOperation {
+    WRITE_OPERATION_ADD,
+    WRITE_OPERATION_UPDATE,
+    WRITE_OPERATION_REMOVE
+};
+
+enum StageNodeType {
+    STAGE_NODE_TYPE_ACTOR,
+    STAGE_NODE_TYPE_LIGHT,
+    STAGE_NODE_TYPE_GEOM,
+    STAGE_NODE_TYPE_PARTICLE_SYSTEM
+};
+
+struct StagedWrite {
+    WriteOperation operation;
+    StageNodeType stage_node_type;
+
+    GeomID geom_id;
+    ActorID actor_id;
+    LightID light_id;
+    ParticleSystemID particle_system_id;
+
+    AABB new_bounds;
+};
+
+
 class Partitioner:
     public Managed<Partitioner> {
 
@@ -62,17 +89,22 @@ public:
     Partitioner(Stage* ss):
         stage_(ss) {}
 
-    virtual void add_particle_system(ParticleSystemID ps) = 0;
-    virtual void remove_particle_system(ParticleSystemID ps) = 0;
+    void add_particle_system(ParticleSystemID particle_system_id);
+    void update_particle_system(ParticleSystemID particle_system_id, const AABB& bounds);
+    void remove_particle_system(ParticleSystemID particle_system_id);
 
-    virtual void add_geom(GeomID geom_id) = 0;
-    virtual void remove_geom(GeomID geom_id) = 0;
+    void add_geom(GeomID geom_id);
+    void remove_geom(GeomID geom_id);
 
-    virtual void add_actor(ActorID obj) = 0;
-    virtual void remove_actor(ActorID obj) = 0;
+    void add_actor(ActorID actor_id);
+    void update_actor(ActorID actor_id, const AABB& bounds);
+    void remove_actor(ActorID actor_id);
 
-    virtual void add_light(LightID obj) = 0;
-    virtual void remove_light(LightID obj) = 0;
+    void add_light(LightID light_id);
+    void update_light(LightID light_id, const AABB& bounds);
+    void remove_light(LightID light_id);
+
+    void _apply_writes();
 
     virtual std::vector<LightID> lights_visible_from(CameraID camera_id) = 0;
     virtual std::vector<std::shared_ptr<Renderable>> geometry_visible_from(CameraID camera_id) = 0;
@@ -94,8 +126,14 @@ protected:
     StaticChunkChanged signal_static_chunk_changed_;
 
     Stage* get_stage() const { return stage_; }
+
+    void stage_write(const StagedWrite& op);
+
+    virtual void apply_staged_write(const StagedWrite& write) = 0;
+
 private:
     Stage* stage_;
+    std::stack<StagedWrite> staged_writes_;
 };
 
 }

@@ -243,6 +243,9 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
     // Trigger a signal to indicate the stage is about to be rendered
     stage->signal_stage_pre_render()(camera_id, viewport);
 
+    // Apply any outstanding writes to the partitioner
+    stage->partitioner->_apply_writes();
+
     auto light_ids = stage->partitioner->lights_visible_from(camera_id);
     auto lights_visible = map<decltype(light_ids), std::vector<LightPtr>>(
         light_ids, [&](const LightID& light_id) -> LightPtr { return stage->light(light_id); }
