@@ -106,8 +106,11 @@ public:
 
     void _apply_writes();
 
-    virtual std::vector<LightID> lights_visible_from(CameraID camera_id) = 0;
-    virtual std::vector<std::shared_ptr<Renderable>> geometry_visible_from(CameraID camera_id) = 0;
+    virtual void lights_and_geometry_visible_from(
+        CameraID camera_id,
+        std::vector<LightID>& lights_out,
+        std::vector<std::shared_ptr<Renderable>>& geom_out
+    ) = 0;
 
     typedef sig::signal<void (StaticChunk*)> StaticChunkCreated;
     typedef sig::signal<void (StaticChunk*)> StaticChunkDestroyed;

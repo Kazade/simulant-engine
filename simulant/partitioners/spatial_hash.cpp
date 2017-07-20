@@ -141,41 +141,24 @@ void SpatialHashPartitioner::apply_staged_write(const StagedWrite &write) {
     }
 }
 
-std::vector<LightID> SpatialHashPartitioner::lights_visible_from(CameraID camera_id) {
-    read_lock<shared_mutex> lock(lock_);
+void SpatialHashPartitioner::lights_and_geometry_visible_from(
+        CameraID camera_id, std::vector<LightID> &lights_out,
+        std::vector<std::shared_ptr<Renderable> > &geom_out) {
 
-    std::vector<LightID> lights;
+    read_lock<shared_mutex> lock(lock_);
 
     auto entries = hash_->find_objects_within_frustum(
-                stage->window->camera(camera_id)->frustum()
-                );
+        stage->window->camera(camera_id)->frustum()
+    );
 
     for(auto& entry: entries) {
         auto pentry = static_cast<PartitionerEntry*>(entry);
-        if(pentry->type == PARTITIONER_ENTRY_TYPE_LIGHT) {
-            lights.push_back(pentry->light_id);
-        }
-    }
 
-    // Add directional lights to the end
-    lights.insert(lights.end(), directional_lights_.begin(), directional_lights_.end());
-
-    return lights;
-}
-
-std::vector<RenderablePtr> SpatialHashPartitioner::geometry_visible_from(CameraID camera_id) {
-    read_lock<shared_mutex> lock(lock_);
-
-    std::vector<RenderablePtr> geometry;
-    auto camera = stage->window->camera(camera_id);
-    auto entries = hash_->find_objects_within_frustum(camera->frustum());
-    for(auto& entry: entries) {
-        auto pentry = static_cast<PartitionerEntry*>(entry);
         switch(pentry->type) {
         case PARTITIONER_ENTRY_TYPE_ACTOR: {
                 ActorPtr actor = pentry->actor_id.fetch();
-                actor->each([&geometry](uint32_t i, SubActor* subactor) {
-                    geometry.push_back(subactor->shared_from_this());
+                actor->each([&geom_out](uint32_t i, SubActor* subactor) {
+                    geom_out.push_back(subactor->shared_from_this());
                 });
             }
             break;
@@ -183,7 +166,10 @@ std::vector<RenderablePtr> SpatialHashPartitioner::geometry_visible_from(CameraI
                 assert(0 && "Not implemented");
             break;
             case PARTITIONER_ENTRY_TYPE_PARTICLE_SYSTEM:
-                geometry.push_back(pentry->particle_system_id.fetch()->shared_from_this());
+                geom_out.push_back(pentry->particle_system_id.fetch()->shared_from_this());
+            break;
+            case PARTITIONER_ENTRY_TYPE_LIGHT:
+                lights_out.push_back(pentry->light_id);
             break;
         default:
             break;
@@ -191,7 +177,8 @@ std::vector<RenderablePtr> SpatialHashPartitioner::geometry_visible_from(CameraI
         }
     }
 
-    return geometry;
+    // Add directional lights to the end
+    lights_out.insert(lights_out.end(), directional_lights_.begin(), directional_lights_.end());
 }
 
 }

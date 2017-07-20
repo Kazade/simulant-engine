@@ -48,8 +48,7 @@ public:
     SpatialHashPartitioner(Stage* ss);
     ~SpatialHashPartitioner();
 
-    std::vector<LightID> lights_visible_from(CameraID camera_id);
-    std::vector<RenderablePtr> geometry_visible_from(CameraID camera_id);
+    void lights_and_geometry_visible_from(CameraID camera_id, std::vector<LightID> &lights_out, std::vector<std::shared_ptr<Renderable> > &geom_out);
 
 private:
     void stage_add_actor(ActorID obj);
