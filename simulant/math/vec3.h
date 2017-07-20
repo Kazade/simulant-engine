@@ -3,6 +3,10 @@
 #include <cmath>
 #include "../utils/unicode.h"
 
+#ifdef _arch_dreamcast
+#include <kos.h>
+#endif
+
 namespace smlt {
 
 struct Vec2;
@@ -103,7 +107,13 @@ public:
     }
 
     float length() const {
+    #ifdef _arch_dreamcast
+        float r;
+        vec3f_length(x, y, z, r);
+        return r;
+    #else
         return sqrtf(length_squared());
+    #endif
     }
 
     float length_squared() const {
@@ -120,11 +130,15 @@ public:
     }
 
     void normalize() {
+    #ifdef _arch_dreamcast
+        vec3f_normalize(x, y, z);
+    #else
         float l = 1.0f / length();
 
         x *= l;
         y *= l;
         z *= l;
+    #endif
     }
 
     Vec3 lerp(const Vec3& end, float t) {
@@ -161,7 +175,13 @@ public:
     }
 
     float dot(const Vec3& rhs) const {
+    #ifdef _arch_dreamcast
+        float r;
+        vec3f_dot(x, y, z, rhs.x, rhs.y, rhs.z, r);
+        return r;
+    #else
         return x * rhs.x + y * rhs.y + z * rhs.z;
+    #endif
     }
 
     Vec3 cross(const Vec3& rhs) const {
