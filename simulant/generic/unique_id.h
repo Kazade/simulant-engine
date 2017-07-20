@@ -22,15 +22,16 @@
 #include <cstdint>
 #include <functional>
 
-#include "safe_bool.h"
-
-
 template<typename ResourceTypePtr>
-class UniqueID : public safe_bool<UniqueID<ResourceTypePtr> >{
+class UniqueID {
 public:
     typedef ResourceTypePtr resource_pointer_type;
 
     typedef std::function<ResourceTypePtr (const UniqueID<ResourceTypePtr>*)> ResourceGetter;
+
+    operator bool() const {
+        return id_ > 0;
+    }
 
     UniqueID(const UniqueID<ResourceTypePtr>& other):
         id_(other.id_),
@@ -86,10 +87,6 @@ public:
 
     friend std::ostream& operator<< (std::ostream& o, UniqueID<ResourceTypePtr> const& instance) {
         return o << instance.value();
-    }
-
-    bool boolean_test() const {
-        return id_ != 0;
     }
 
     uint32_t value() const { return id_; }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cstring>
 
 namespace smlt {
 
@@ -22,12 +23,12 @@ enum FrustumPlane {
 
 struct Mat4 {
 private:
-    std::array<float, 16> m;
+    float m[16];
 
 public:
 
     Mat4() {
-        m.fill(0);
+        memset(m, 0, sizeof(float) * 16);
         m[0] = m[5] = m[10] = m[15] = 1.0f;
     }
 

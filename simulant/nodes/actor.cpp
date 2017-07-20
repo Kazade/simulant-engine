@@ -141,8 +141,13 @@ void Actor::set_mesh(MeshID mesh) {
         return;
     }
 
+    auto meshptr = stage->assets->mesh(mesh);
+    if(!meshptr) {
+        throw std::runtime_error(_F("Unable to locate mesh with the ID: {0}").format(mesh));
+    }
+
     //Increment the ref-count on this mesh
-    mesh_ = stage->assets->mesh(mesh)->shared_from_this();
+    mesh_ = meshptr->shared_from_this();
 
     /* FIXME: This logic should also happen if the associated Mesh has set_animation_enabled called */
     if(mesh_ && mesh_->is_animated()) {

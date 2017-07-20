@@ -282,7 +282,6 @@ simulant/generic/manager_base.h
 simulant/generic/property.h
 simulant/generic/refcount_manager.h
 simulant/generic/relation.h
-simulant/generic/safe_bool.h
 simulant/generic/tri_octree.h
 simulant/generic/unique_id.h
 simulant/generic/visitor.h
