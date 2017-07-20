@@ -11,7 +11,7 @@ namespace smlt {
  */
 class Boundable {
 public:
-    virtual const AABB aabb() const = 0;
+    virtual const AABB& aabb() const = 0;
 
     virtual const float width() const {
         AABB box = aabb();

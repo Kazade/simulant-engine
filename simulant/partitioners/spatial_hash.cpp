@@ -23,7 +23,7 @@ void SpatialHashPartitioner::stage_add_actor(ActorID obj) {
     auto actor = stage->actor(obj);
 
     auto partitioner_entry = std::make_shared<PartitionerEntry>(obj);
-    hash_->insert_object_for_box(actor->bounds(), partitioner_entry.get());
+    hash_->insert_object_for_box(actor->transformed_aabb(), partitioner_entry.get());
     actor_entries_.insert(std::make_pair(obj, partitioner_entry));
 
 }
@@ -71,7 +71,7 @@ void SpatialHashPartitioner::stage_add_light(LightID obj) {
         directional_lights_.insert(obj);
     } else {
         auto partitioner_entry = std::make_shared<PartitionerEntry>(obj);
-        hash_->insert_object_for_box(light->bounds(), partitioner_entry.get());
+        hash_->insert_object_for_box(light->transformed_aabb(), partitioner_entry.get());
         light_entries_[obj] = partitioner_entry;
     }
 }
@@ -95,7 +95,7 @@ void SpatialHashPartitioner::stage_add_particle_system(ParticleSystemID ps) {
 
     auto particle_system = stage->particle_system(ps);
     auto partitioner_entry = std::make_shared<PartitionerEntry>(ps);
-    hash_->insert_object_for_box(particle_system->bounds(), partitioner_entry.get());
+    hash_->insert_object_for_box(particle_system->transformed_aabb(), partitioner_entry.get());
     particle_system_entries_[ps] = partitioner_entry;
 }
 

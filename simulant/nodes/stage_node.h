@@ -50,7 +50,6 @@ public:
     Quaternion absolute_rotation() const;
     Vec3 absolute_scaling() const;
     Mat4 absolute_transformation() const;
-    const AABB& bounds() const { return bounds_; }
 
     bool is_visible() const { return is_visible_; }
     void set_visible(bool visible) { is_visible_ = visible; }
@@ -103,7 +102,7 @@ private:
     Quaternion absolute_rotation_;
     Vec3 absolute_scale_ = Vec3(1, 1, 1);
 
-    AABB bounds_;
+    AABB transformed_aabb_;
 };
 
 }

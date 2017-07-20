@@ -68,7 +68,7 @@ public:
 
     void ask_owner_for_destruction() override;
 
-    const AABB aabb() const;
+    const AABB& aabb() const;
 
     void update(float step) {}
 private:

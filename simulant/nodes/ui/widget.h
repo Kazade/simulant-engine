@@ -179,7 +179,7 @@ public:
     }
 
     void ask_owner_for_destruction();
-    const AABB aabb() const;
+    const AABB& aabb() const;
 
     const unicode& text() const { return text_; }
 

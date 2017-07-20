@@ -34,7 +34,7 @@ void NullPartitioner::lights_and_geometry_visible_from(
 
     for(LightID lid: all_lights_) {
         auto light = stage->light(lid);
-        auto aabb = light->bounds();
+        auto aabb = light->transformed_aabb();
         if(light->type() == LIGHT_TYPE_DIRECTIONAL || frustum.intersects_aabb(aabb)) {
             lights_out.push_back(lid);
         }
@@ -53,7 +53,7 @@ void NullPartitioner::lights_and_geometry_visible_from(
 
     for(ParticleSystemID ps: all_particle_systems_) {
         auto system = stage->particle_system(ps);
-        auto aabb = system->bounds();
+        auto aabb = system->transformed_aabb();
         if(frustum.intersects_aabb(aabb)) {
             geom_out.push_back(system->shared_from_this());
         }

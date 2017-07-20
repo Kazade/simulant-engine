@@ -52,6 +52,11 @@ Mesh::Mesh(MeshID id,
         normal_debug_mesh_(0) {
 
     reset(vertex_specification);
+
+    shared_data_->signal_update_complete().connect([this]() {
+        // Mark the AABB as dirty so it will be rebuilt on next access
+        aabb_dirty_ = true;
+    });
 }
 
 template<typename Data, typename Allocator>
@@ -104,6 +109,7 @@ void Mesh::clear() {
     //Delete the submeshes and clear the shared data
     submeshes_.clear();
     shared_data->clear();
+    rebuild_aabb();
 }
 
 void Mesh::enable_animation(MeshAnimationType animation_type, uint32_t animation_frames) {
@@ -125,12 +131,12 @@ VertexData* Mesh::get_shared_data() const {
     return shared_data_;
 }
 
-const AABB Mesh::aabb() const {
-    //FIXME: This should totally be cached for speed
-    AABB result;
+void Mesh::rebuild_aabb() const {
+    AABB& result = aabb_;
 
     if(!this->submesh_count()) {
-        return result;
+        result = AABB();
+        return;
     }
 
     float max = std::numeric_limits<float>::max();
@@ -152,7 +158,15 @@ const AABB Mesh::aabb() const {
         if(sm_max.z > result.max().z) result.set_max_z(sm_max.z);
     });
 
-    return result;
+    aabb_dirty_ = false;
+}
+
+const AABB &Mesh::aabb() const {
+    if(aabb_dirty_) {
+        rebuild_aabb();
+    }
+
+    return aabb_;
 }
 
 void Mesh::enable_debug(bool value) {
@@ -218,6 +232,21 @@ SubMesh* Mesh::new_submesh_with_material(
     submeshes_.insert(std::make_pair(name, new_submesh));
     ordered_submeshes_.push_back(new_submesh.get());
     signal_submesh_created_(id(), new_submesh.get());
+
+    // Mark the AABB as dirty so it will be rebuilt on next access
+    aabb_dirty_ = true;
+
+    if(new_submesh->vertex_data_) {
+        /* Make sure the AABB is marked as dirty if the vertex or index data changes on a submesh */
+        new_submesh->vertex_data_->signal_update_complete().connect([this]() {
+            aabb_dirty_ = true;
+        });
+    }
+
+    new_submesh->index_data_->signal_update_complete().connect([this]() {
+        aabb_dirty_ = true;
+    });
+
     return new_submesh.get();
 }
 
@@ -493,6 +522,7 @@ void Mesh::delete_submesh(const std::string& name) {
         submeshes_.erase(it);
         ordered_submeshes_.remove(submesh.get());
         signal_submesh_destroyed_(id(), submesh.get());
+        aabb_dirty_ = true;
     }
 }
 
@@ -609,6 +639,8 @@ SubMesh::SubMesh(Mesh* parent, const std::string& name,
     if(!uses_shared_data_) {
         vertex_data_ = new VertexData(vertex_specification);
         vertex_data->signal_update_complete().connect([this]() { this->vertex_buffer_dirty_ = true; });
+    } else {
+        vertex_data_ = nullptr;
     }
 
     if(!material) {

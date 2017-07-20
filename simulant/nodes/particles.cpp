@@ -58,25 +58,27 @@ void ParticleSystem::set_material_id(MaterialID mat_id) {
 EmitterPtr ParticleSystem::push_emitter() {
     auto new_emitter = std::make_shared<ParticleEmitter>(*this);
     emitters_.push_back(new_emitter);
+    calc_aabb();
     return new_emitter;
 }
 
 void ParticleSystem::pop_emitter() {
     emitters_.pop_back();
+    calc_aabb();
 }
 
-//Boundable entity things
-const AABB ParticleSystem::aabb() const {
+void ParticleSystem::calc_aabb() {
     if(emitters_.empty()) {
-        return AABB();
+        aabb_ = AABB();
+        return;
     }
 
-    AABB result;
+    AABB& result = aabb_;
     bool first = true;
     for(auto emitter: emitters_) {
         auto pos = emitter->relative_position();
 
-        if(emitter->type() == PARTICLE_EMITTER_POINT) {            
+        if(emitter->type() == PARTICLE_EMITTER_POINT) {
             if(pos.x > result.max().x || first) result.set_max_x(pos.x);
             if(pos.y > result.max().y || first) result.set_max_y(pos.y);
             if(pos.z > result.max().z || first) result.set_max_z(pos.z);
@@ -111,7 +113,11 @@ const AABB ParticleSystem::aabb() const {
         first = false;
     }
 
-    return result;
+}
+
+//Boundable entity things
+const AABB &ParticleSystem::aabb() const {
+    return aabb_;
 }
 
 void ParticleSystem::prepare_buffers() {

@@ -3,6 +3,7 @@
 #include "stage_node.h"
 #include "../generic/identifiable.h"
 #include "../generic/optional.h"
+#include "../math/aabb.h"
 
 namespace smlt {
 
@@ -27,8 +28,8 @@ public:
     void update(float step) override;
 
     /* Camera Proxies have no mass/body so their AABB is just 0,0,0, or their position */
-    const AABB aabb() const {
-        return AABB();
+    const AABB& aabb() const {
+        return bounds_;
     }
 
     const AABB transformed_aabb() const {
@@ -39,6 +40,7 @@ public:
         StageNode::cleanup();
     }
 private:    
+    AABB bounds_;
     CameraPtr camera();
 };
 

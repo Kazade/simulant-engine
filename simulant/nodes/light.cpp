@@ -25,9 +25,9 @@ namespace smlt {
 Light::Light(LightID lid, Stage* stage):
     StageNode(stage),
     generic::Identifiable<LightID>(lid),
-    type_(LIGHT_TYPE_POINT),
-    range_(100.0) {
+    type_(LIGHT_TYPE_POINT) {
 
+    set_range(100.0f);
     set_ambient(smlt::Colour(0.3f, 0.3f, 0.3f, 1.0f));
     set_diffuse(smlt::Colour(0.9f, 0.9f, 1.0f, 1.0f));
     set_specular(smlt::Colour(0.01f, 0.01f, 0.01f, 1.0f));
