@@ -34,49 +34,14 @@ APP_OPTIM               := debug
 
 LIBRARIES = [
     {
-        "name": "pcre",
-        "repo": "https://github.com/Kazade/pcre.git",
-        "include": "pcre"
-    },
-    {
-        "name": "kazmath",
-        "repo": "https://github.com/Kazade/kazmath.git",
-        "include": "kazmath"
-    },
-    {
-        "name": "kaztimer",
-        "repo": "https://github.com/Kazade/kaztimer.git",
-        "include": "kaztimer"
-    },
-    {
-        "name": "kazbase",
-        "repo": "https://github.com/Kazade/kazbase.git",
-        "include": "kazbase"
-    },
-    {
         "name": "sdl",
         "zip": "https://www.libsdl.org/release/SDL2-2.0.3.zip",
         "include": "sdl/include"
     },
     {
-        "name": "soil",
-        "repo": "https://github.com/Kazade/soil.git",
-        "include": "soil/src"
-    },
-    {
         "name": "openal",
         "repo": "https://github.com/Kazade/openal-soft.git",
         "include": "openal/OpenAL/include"
-    },
-    {
-        "name": "freetype2",
-        "repo": "https://github.com/Kazade/freetype2.git",
-        "include": "freetype2/include"
-    },
-    {
-        "name": "lua",
-        "repo": "https://github.com/Kazade/lua.git",
-        "include": "lua/src"
     },
     {
         "name": "tinyxml",
@@ -87,7 +52,7 @@ LIBRARIES = [
 
 def gather_headers(output_dir):
     file_list = []
-    for library in LIBRARIES + [ {"name": "kglt", "include": "kglt/kglt"}]:
+    for library in LIBRARIES + [ {"name": "simulant", "include": "simulant/simulant"}]:
         library_include_root = os.path.join(OUTPUT_DIRECTORY, library["include"])
         for root, subFolders, files in os.walk(library_include_root):
             for f in files:
@@ -107,10 +72,10 @@ if __name__ == "__main__":
     if not os.path.exists(OUTPUT_DIRECTORY):
         os.mkdir(OUTPUT_DIRECTORY)
 
-    #First, symlink kglt into the .android folder (so that it's with all the others)
-    kglt_link = os.path.join(OUTPUT_DIRECTORY, "kglt")
-    if not os.path.exists(kglt_link):
-        os.symlink(os.path.dirname(os.path.abspath("__file__")), kglt_link)
+    #First, symlink simulant into the .android folder (so that it's with all the others)
+    simulant_link = os.path.join(OUTPUT_DIRECTORY, "simulant")
+    if not os.path.exists(simulant_link):
+        os.symlink(os.path.dirname(os.path.abspath("__file__")), simulant_link)
 
     includes = []
     for library in LIBRARIES:

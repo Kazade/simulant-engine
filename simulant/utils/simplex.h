@@ -20,6 +20,7 @@
 #define SIMPLEX_H
 
 #include <vector>
+#include <ctime>
 #include "../generic/managed.h"
 
 class Simplex :

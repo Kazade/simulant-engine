@@ -100,7 +100,7 @@ std::shared_ptr<std::stringstream> ResourceLocator::read_file(const unicode& fil
         return result;
     } else {
         L_ERROR("There was an error loading the specified file");
-        throw IOError(_u("Unable to load file: ") + filename);
+        throw ResourceMissingError("Unable to load file: " + filename.encode());
     }
     SDL_FreeRW(ops);
 #else

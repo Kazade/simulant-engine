@@ -248,26 +248,7 @@ void GPUProgram::set_shader_source(ShaderType type, const std::string& source) {
     }
 
     ShaderInfo new_shader;
-
-    /*
-        TERRIBLE TEMPORARY HACK, MAKE SHADER GLES COMPATIBLE
-        The correct way to do this is to load different shader files
-    */
-#ifdef __ANDROID__
-    int version_index = 0;
-    auto lines = source.split("\n");
-    for(uint32_t i = 0; i < lines.size(); ++i) {
-        if(lines[i].starts_with("#version 120")) {
-            lines[i] = "#version 100";
-            version_index = i;
-        }
-    }
-
-    lines.insert(lines.begin() + (version_index + 1), "precision mediump float;");
-    new_shader.source = _u("\n").join(lines);
-#else
     new_shader.source = source;
-#endif
 
     is_linked_ = false; //We're no longer linked
     shaders_[type] = new_shader;

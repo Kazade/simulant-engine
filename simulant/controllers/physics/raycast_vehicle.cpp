@@ -24,7 +24,7 @@
 namespace smlt {
 namespace controllers {
 
-static const float FLT_EPSILON = std::numeric_limits<float>::epsilon();
+static const float FLOAT_EPSILON = std::numeric_limits<float>::epsilon();
 
 RaycastVehicle::RaycastVehicle(smlt::Controllable* object, RigidBodySimulation* simulation, float wheel_height):
     RigidBody(object, simulation),
@@ -156,11 +156,11 @@ void RaycastVehicle::fixed_update(float dt) {
         std::cout << "Fo: " << forward().x << ", " << forward().y << ", " << forward().z << std::endl;
         std::cout << "Pf: " << proj_forward.x << ", " << proj_forward.y << ", " << proj_forward.z << std::endl;
 
-        if(fabs(drive_force_) > FLT_EPSILON) {
+        if(fabs(drive_force_) > FLOAT_EPSILON) {
             average_surface_normal_.normalize();
             add_force(proj_forward * drive_force_);
         }
-        if(fabs(turn_force_) > FLT_EPSILON) {
+        if(fabs(turn_force_) > FLOAT_EPSILON) {
             Vec3 torque = Vec3(0, 1, 0);
             add_torque(torque * turn_force_);
         }

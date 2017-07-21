@@ -41,6 +41,7 @@ build/tests/cmake_install.cmake
 build/cmake_install.cmake
 build/CMakeCache.txt
 build/install_manifest.txt
+build_for_android.py
 cmake_modules/FindSIMULANT.cmake
 samples/2d_sample.cpp
 samples/CMakeLists.txt
