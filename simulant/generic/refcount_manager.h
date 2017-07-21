@@ -20,6 +20,7 @@
 #define REFCOUNT_MANAGER_H
 
 #include <set>
+#include <list>
 #include "../deps/kazsignal/kazsignal.h"
 #include "../deps/kazlog/kazlog.h"
 
@@ -138,23 +139,27 @@ public:
     }
 
     void each(std::function<void (ObjectType*)> func) const {
-        std::set<ObjectIDType> object_ids;
+        typedef std::shared_ptr<ObjectType> ObjectTypePtr;
+        std::list<ObjectTypePtr> objects;
+
         {
-            // We copy the object IDs so we don't keep a handle to
-            // any shared_ptrs or anything
+            // Create a list of shared pointers so that they don't go out of scope
             std::lock_guard<std::mutex> lock(manager_lock_);
             for(auto& p: objects_) {
-                object_ids.insert(p.first);
+                objects.push_back(p.second);
             }
         }
 
-        for(auto& obj_id: object_ids) {
-            auto thing = get(obj_id).lock();
-
-            // If thing is false-y it may have been deleted in another thread
-            if(thing) {
-                func(thing.get());
+        for(ObjectTypePtr& ptr: objects) {
+            ObjectType& thing = *ptr;
+            if(thing.uses_gc() && (ptr.use_count() <= 2)) {
+                // If the object is garbaged collected and either this it the
+                // only shared_ptr, or there are two (e.g. one here, one in objects_)
+                // then ignore
+                continue;
             }
+
+            func(&thing);
         }
     }
 
