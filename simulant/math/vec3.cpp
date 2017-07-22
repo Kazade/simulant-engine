@@ -65,9 +65,12 @@ Vec3 Vec3::rotated_by(const Mat4 &rot) const {
     return Vec3(tmp.x, tmp.y, tmp.z);
 }
 
-Vec3 Vec3::transformed_by(const Mat4 &trans) const {
-    auto tmp = trans * Vec4(*this, 1);
-    return Vec3(tmp.x, tmp.y, tmp.z);
+Vec3 Vec3::transformed_by(const Mat4 &m) const {
+    Vec3 ret;
+    ret.x = x * m[0] + y * m[4] + z * m[8] + 1.0 * m[12];
+    ret.y = x * m[1] + y * m[5] + z * m[9] + 1.0 * m[13];
+    ret.z = x * m[2] + y * m[6] + z * m[10] + 1.0 * m[14];
+    return ret;
 }
 
 Vec3 Vec3::perpendicular() const {
