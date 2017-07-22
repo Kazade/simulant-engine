@@ -43,8 +43,7 @@ class Actor :
     public Managed<Actor>,
     public generic::Identifiable<ActorID>,
     public Source,
-    public HasMutableRenderPriority,
-    public std::enable_shared_from_this<Actor> {
+    public HasMutableRenderPriority {
 
 public:
     Actor(ActorID id, Stage* stage, SoundDriver *sound_driver);

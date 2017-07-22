@@ -22,6 +22,7 @@
 #include "../generic/managed.h"
 #include "../generic/identifiable.h"
 #include "../types.h"
+
 #include "stage_node.h"
 
 namespace smlt {
@@ -29,8 +30,7 @@ namespace smlt {
 class Light :
     public StageNode,
     public generic::Identifiable<LightID>,
-    public Managed<Light>,
-    public std::enable_shared_from_this<Light> {
+    public Managed<Light> {
 
 public:
     typedef std::shared_ptr<Light> ptr;
@@ -86,7 +86,7 @@ public:
     smlt::Colour specular() const { return specular_; }
 
     /** Returns the owner stage's global ambient value. */
-    smlt::Colour global_ambient() const { return stage->ambient_light(); }
+    smlt::Colour global_ambient() const;
 
     void set_attenuation(float range, float constant, float linear, float quadratic);
     void set_attenuation_from_range(float range);

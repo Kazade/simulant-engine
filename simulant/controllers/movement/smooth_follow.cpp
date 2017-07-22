@@ -12,7 +12,7 @@ SmoothFollow::SmoothFollow(Controllable* controllable):
 }
 
 void SmoothFollow::late_update(float dt) {
-    auto target = target_.lock();
+    auto target = target_;
 
     if(!target) {
         return;
@@ -33,11 +33,11 @@ void SmoothFollow::late_update(float dt) {
 }
 
 void SmoothFollow::set_target(ActorPtr actor) {
-    target_ = actor->shared_from_this();
+    target_ = actor;
 }
 
 void SmoothFollow::set_target(ParticleSystemPtr ps) {
-    target_ = ps->shared_from_this();
+    target_ = ps;
 }
 
 }

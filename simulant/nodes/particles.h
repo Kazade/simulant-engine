@@ -153,7 +153,7 @@ class ParticleSystem :
     public Source,
     public Loadable,
     public HasMutableRenderPriority,
-    public Renderable,    
+    public Renderable,
     public std::enable_shared_from_this<ParticleSystem> {
 
 public:

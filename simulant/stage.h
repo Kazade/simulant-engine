@@ -21,6 +21,7 @@
 
 #include <functional>
 
+#include "generic/manual_manager.h"
 #include "generic/managed.h"
 #include "generic/manager.h"
 #include "generic/generic_tree.h"
@@ -31,6 +32,7 @@
 #include "managers/sprite_manager.h"
 
 #include "nodes/stage_node.h"
+#include "nodes/light.h"
 #include "types.h"
 #include "resource_manager.h"
 #include "window_base.h"
@@ -65,9 +67,9 @@ class Partitioner;
 class Debug;
 class Sprite;
 
-typedef generic::TemplatedManager<Actor, ActorID> ActorManager;
-typedef generic::TemplatedManager<Geom, GeomID> GeomManager;
-typedef generic::TemplatedManager<Light, LightID> LightManager;
+typedef generic::ManualManager<Actor, ActorID> ActorManager;
+typedef generic::ManualManager<Geom, GeomID> GeomManager;
+typedef generic::ManualManager<Light, LightID> LightManager;
 typedef generic::TemplatedManager<CameraProxy, CameraID> CameraProxyManager;
 typedef generic::TemplatedManager<ParticleSystem, ParticleSystemID> ParticleSystemManager;
 

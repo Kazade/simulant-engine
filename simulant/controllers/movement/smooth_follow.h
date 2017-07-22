@@ -31,7 +31,7 @@ public:
     void set_rotation_damping(float damping) { rotation_damping_ = damping; }
 
 private:
-    std::weak_ptr<StageNode> target_;
+    StageNode* target_;
 
     float distance_ = 10.0;
     float height_ = 10.0;

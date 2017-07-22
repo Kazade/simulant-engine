@@ -75,8 +75,8 @@ void Stage::cleanup() {
         stage_node->ask_owner_for_destruction();
     });
 
-    LightManager::objects_.clear();
-    ActorManager::objects_.clear();
+    LightManager::clear();
+    ActorManager::clear();
     CameraProxyManager::objects_.clear();
 }
 
@@ -167,11 +167,11 @@ bool Stage::has_actor(ActorID m) const {
 }
 
 ActorPtr Stage::actor(ActorID e) {
-    return ActorManager::get(e).lock().get();
+    return ActorManager::get(e);
 }
 
 const ActorPtr Stage::actor(ActorID e) const {
-    return ActorManager::get(e).lock().get();
+    return ActorManager::get(e);
 }
 
 void Stage::delete_actor(ActorID e) {
@@ -191,7 +191,7 @@ GeomID Stage::new_geom_with_mesh(MeshID mid) {
 }
 
 GeomPtr Stage::geom(const GeomID gid) const {
-    return geom_manager_->get(gid).lock().get();
+    return geom_manager_->get(gid);
 }
 
 GeomID Stage::new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, const Quaternion& rotation) {
@@ -308,7 +308,7 @@ LightID Stage::new_light_as_point(const Vec3& position, const smlt::Colour& colo
 }
 
 LightPtr Stage::light(LightID light_id) {
-    return LightManager::get(light_id).lock().get();
+    return LightManager::get(light_id);
 }
 
 void Stage::delete_light(LightID light_id) {

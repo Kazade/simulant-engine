@@ -34,6 +34,8 @@ Light::Light(LightID lid, Stage* stage):
     set_attenuation_from_range(100.0);
 }
 
+Colour Light::global_ambient() const { return stage->ambient_light(); }
+
 /**
     Sets the attenuation and the range of the light. The range doesn't have any
     direct effect on the brightness on the light, it simply is a cut-off -

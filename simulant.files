@@ -49,6 +49,7 @@ samples/q2bsp_sample.cpp
 samples/sample.cpp
 samples/selection_sample.cpp
 samples/viewport_sample.cpp
+simulant/generic/manual_manager.h
 simulant/math/aabb.cpp
 simulant/math/aabb.h
 simulant/math/degrees.cpp
