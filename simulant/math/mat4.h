@@ -73,19 +73,19 @@ public:
     static Mat4 as_look_at(const Vec3& eye, const Vec3& target, const Vec3& up);
     static Mat4 as_scaling(float s);
 
-    const float& operator[](const uint32_t index) const {
+    inline const float& operator[](const uint32_t index) const {
         return m[index];
     }
 
-    float& operator[](const uint32_t index){
+    inline float& operator[](const uint32_t index){
         return m[index];
     }
 
-    const float& operator[](const int index) const {
+    inline const float& operator[](const int index) const {
         return m[index];
     }
 
-    float& operator[](const int index) {
+    inline float& operator[](const int index) {
         return m[index];
     }
 

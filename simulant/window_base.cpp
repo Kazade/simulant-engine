@@ -320,6 +320,8 @@ void WindowBase::run_fixed_updates() {
 }
 
 bool WindowBase::run_frame() {
+    static float first_frame_time = 0.0f;
+
     signal_frame_started_();
 
     // Update timers
@@ -360,6 +362,12 @@ bool WindowBase::run_frame() {
 
     stats_.increment_frames();
 
+    /* The first frame can be really long (loading things) so it's unfair to include in the
+     * average count. So we ignore it using this time */
+    if(stats_.frames_run() == 1) {
+        first_frame_time = time_keeper->total_elapsed_seconds();
+    }
+
     if(!is_running_) {
         signal_shutdown_();
 
@@ -371,7 +379,7 @@ bool WindowBase::run_frame() {
         std::cout << "Frames rendered: " << stats_.frames_run() << std::endl;
         std::cout << "Fixed updates run: " << stats_.fixed_steps_run() << std::endl;
         std::cout << "Total time: " << time_keeper->total_elapsed_seconds() << std::endl;
-        std::cout << "Average FPS: " << float(stats_.frames_run()) / time_keeper->total_elapsed_seconds() << std::endl;
+        std::cout << "Average FPS: " << float(stats_.frames_run() - 1) / (time_keeper->total_elapsed_seconds() - first_frame_time) << std::endl;
     }
 
     return is_running_;

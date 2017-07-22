@@ -61,12 +61,23 @@ Vec3 Vec3::operator*(const Quaternion &rhs) const {
 }
 
 Vec3 Vec3::rotated_by(const Mat4 &rot) const {
-    auto tmp = rot * Vec4(*this, 0);
-    return Vec3(tmp.x, tmp.y, tmp.z);
+    Vec3 ret;
+
+    // Avoid going through the operator for performance
+    const float* m = &rot[0];
+
+    ret.x = x * m[0] + y * m[4] + z * m[8] * m[12];
+    ret.y = x * m[1] + y * m[5] + z * m[9] * m[13];
+    ret.z = x * m[2] + y * m[6] + z * m[10] * m[14];
+    return ret;
 }
 
-Vec3 Vec3::transformed_by(const Mat4 &m) const {
+Vec3 Vec3::transformed_by(const Mat4 &trans) const {
     Vec3 ret;
+
+    // Avoid going through the operator for performance
+    const float* m = &trans[0];
+
     ret.x = x * m[0] + y * m[4] + z * m[8] + 1.0 * m[12];
     ret.y = x * m[1] + y * m[5] + z * m[9] + 1.0 * m[13];
     ret.z = x * m[2] + y * m[6] + z * m[10] + 1.0 * m[14];
