@@ -289,6 +289,7 @@ MaterialPass::ptr MaterialPass::new_clone(Material* owner) const {
     ret->blend_ = blend_;
     ret->depth_writes_enabled_ = depth_writes_enabled_;
     ret->depth_test_enabled_ = depth_test_enabled_;
+    ret->lighting_enabled_ = lighting_enabled_;
     ret->point_size_ = point_size_;
     ret->albedo_ = albedo_;
     ret->reflection_texture_unit_ = reflection_texture_unit_;

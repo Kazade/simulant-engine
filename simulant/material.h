@@ -157,9 +157,9 @@ public:
     void set_texture_unit(uint32_t texture_unit_id, TextureID tex);
     void set_animated_texture_unit(uint32_t texture_unit_id, const std::vector<TextureID> textures, double duration);
 
-    Colour diffuse() const { return diffuse_; }
-    Colour ambient() const { return ambient_; }
-    Colour specular() const { return specular_; }
+    const Colour& diffuse() const { return diffuse_; }
+    const Colour& ambient() const { return ambient_; }
+    const Colour& specular() const { return specular_; }
     float shininess() const { return shininess_; }
 
     uint32_t texture_unit_count() const { return texture_units_.size(); }
@@ -190,6 +190,12 @@ public:
         depth_test_enabled_ = value;
     }
     bool depth_test_enabled() const { return depth_test_enabled_; }
+
+    void set_lighting_enabled(bool value=true) {
+        lighting_enabled_ = value;
+    }
+
+    bool lighting_enabled() const { return lighting_enabled_; }
 
     void set_point_size(float ps) { point_size_ = ps; }
 
@@ -246,6 +252,7 @@ private:
 
     bool depth_writes_enabled_ = true;
     bool depth_test_enabled_ = true;
+    bool lighting_enabled_ = false; // Only has an effect on GL 1.x
 
     float point_size_;
 

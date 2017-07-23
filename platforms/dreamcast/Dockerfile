@@ -37,4 +37,4 @@ RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/libpng && make inst
 RUN . /etc/bash.bashrc; cd /opt/toolchains/dc/kos/utils && mkdir makeip && cd makeip && curl http://www.boob.co.uk/files/makeip.tar.gz > makeip.tar.gz && tar -xf makeip.tar.gz && rm makeip.tar.gz && gcc makeip.c -o makeip
 RUN . /etc/bash.bashrc; yum -y install genisoimage unzip
 RUN . /etc/bash.bashrc; cd /opt/toolchains/dc/kos/utils && git clone https://github.com/Kazade/img4dc.git && cd img4dc && mkdir build && cd build && cmake .. && make BUMP=9
-RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/libGL && BUMP=19 make install clean 
+RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/libGL && BUMP=23 make install clean 

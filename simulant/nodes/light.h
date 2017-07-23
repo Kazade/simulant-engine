@@ -81,9 +81,9 @@ public:
     }
 
     LightType type() const { return type_; }
-    smlt::Colour ambient() const { return ambient_; }
-    smlt::Colour diffuse() const { return diffuse_; }
-    smlt::Colour specular() const { return specular_; }
+    const smlt::Colour& ambient() const { return ambient_; }
+    const smlt::Colour& diffuse() const { return diffuse_; }
+    const smlt::Colour& specular() const { return specular_; }
 
     /** Returns the owner stage's global ambient value. */
     smlt::Colour global_ambient() const;

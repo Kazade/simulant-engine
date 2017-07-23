@@ -40,6 +40,10 @@ struct Colour {
         return this->r == rhs.r && this->g == rhs.g && this->b == rhs.b && this->a == rhs.a;
     }
 
+    bool operator!=(const Colour& rhs) const {
+        return !(*this == rhs);
+    }
+
     bool operator<(const Colour& rhs) const {
         if(r < rhs.r) {
             return true;
