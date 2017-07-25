@@ -132,3 +132,4 @@ simulant/sound_drivers
 tests/gl2
 simulant/math
 cmake_modules
+documentation
