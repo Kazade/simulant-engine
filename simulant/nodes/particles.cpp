@@ -25,15 +25,29 @@
 
 namespace smlt {
 
+const static VertexSpecification PS_VERTEX_SPEC(
+        smlt::VERTEX_ATTRIBUTE_3F, // Position
+        smlt::VERTEX_ATTRIBUTE_NONE,
+        smlt::VERTEX_ATTRIBUTE_2F, // Texcoord 0
+        smlt::VERTEX_ATTRIBUTE_NONE,
+        smlt::VERTEX_ATTRIBUTE_NONE,
+        smlt::VERTEX_ATTRIBUTE_NONE,
+        smlt::VERTEX_ATTRIBUTE_NONE,
+        smlt::VERTEX_ATTRIBUTE_NONE,
+        smlt::VERTEX_ATTRIBUTE_NONE,
+        smlt::VERTEX_ATTRIBUTE_NONE,
+        smlt::VERTEX_ATTRIBUTE_4F // Diffuse
+);
+
 ParticleSystem::ParticleSystem(ParticleSystemID id, Stage* stage, SoundDriver* sound_driver):
     StageNode(stage),
     generic::Identifiable<ParticleSystemID>(id),
-    Source(stage, sound_driver),
-    vertex_data_(new VertexData(VertexSpecification::POSITION_AND_DIFFUSE)),
+    Source(stage, sound_driver),       
+    vertex_data_(new VertexData(PS_VERTEX_SPEC)),
     index_data_(new IndexData(INDEX_TYPE_16_BIT)) {
 
     set_quota(quota_); // Force hardware buffer initialization
-    set_material_id(stage->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY));    
+    set_material_id(stage->assets->clone_default_material());
 }
 
 ParticleSystem::~ParticleSystem() {
@@ -49,10 +63,14 @@ void ParticleSystem::set_material_id(MaterialID mat_id) {
         throw std::logic_error("A particle system must always have a valid material");
     }
 
+    auto old = material_id_;
+
     material_id_ = mat_id;
 
     //Hold a reference to the material so that it's destroyed when we are
     material_ref_ = stage->assets->material(material_id_);
+
+    signal_material_changed_(this, old, mat_id);
 }
 
 EmitterPtr ParticleSystem::push_emitter() {
@@ -128,22 +146,22 @@ void ParticleSystem::prepare_buffers() {
 
         if(!vertex_buffer_) {
             vertex_buffer_ = renderer->hardware_buffers->allocate(
-                vertex_data_->stride() * quota_,
+                vertex_data_->stride() * quota_ * 4,
                 HARDWARE_BUFFER_VERTEX_ATTRIBUTES,
                 SHADOW_BUFFER_DISABLED
             );
         } else {
-            vertex_buffer_->resize(vertex_data_->stride() * quota_);
+            vertex_buffer_->resize(vertex_data_->stride() * quota_ * 4);
         }
 
         if(!index_buffer_) {
             index_buffer_ = renderer->hardware_buffers->allocate(
-                sizeof(Index) * quota_,
+                sizeof(Index) * quota_ * 6,
                 HARDWARE_BUFFER_VERTEX_ARRAY_INDICES,
                 SHADOW_BUFFER_DISABLED
             );
         } else {
-            index_buffer_->resize(sizeof(Index) * quota_);
+            index_buffer_->resize(sizeof(Index) * quota_ * 6);
         }
 
         resize_buffers_ = false;
@@ -208,8 +226,8 @@ void ParticleEmitter::update(float dt) {
     }
 }
 
-void ParticleSystem::set_quota(int quota) {    
-    if(std::size_t(quota) == particles_.size()) {
+void ParticleSystem::set_quota(std::size_t quota) {
+    if(quota == particles_.size()) {
         return;
     }
 
@@ -217,29 +235,18 @@ void ParticleSystem::set_quota(int quota) {
     resize_buffers_ = true;
 
     quota_ = quota;
-    particles_.resize(quota);
+    if(particles_.size() > quota) {
+        particles_.resize(quota);
+    }
     vertex_buffer_dirty_ = index_buffer_dirty_ = true;
 }
 
 void ParticleSystem::update(float dt) {
     update_source(dt); //Update any sounds attached to this particle system
 
-    auto current_particle_count = particles_.size();
-    auto original_particle_count = current_particle_count;
+    auto original_particle_count = particles_.size();
 
-    for(auto emitter: emitters_) {
-        emitter->update(dt);
-
-        if(!emitter->is_active()) {
-            continue;
-        }
-
-        auto max_can_emit = quota_ - current_particle_count;
-        auto new_particles = emitter->do_emit(dt, max_can_emit);
-        particles_.insert(particles_.end(), new_particles.begin(), new_particles.end());
-        current_particle_count += new_particles.size();
-    }
-
+    // Update existing particles, erase any that are dead
     for(auto it = particles_.begin(); it != particles_.end(); ) {
         Particle& particle = (*it);
 
@@ -253,6 +260,23 @@ void ParticleSystem::update(float dt) {
         }
     }
 
+    for(auto emitter: emitters_) {
+        emitter->update(dt);
+
+        if(!emitter->is_active()) {
+            continue;
+        }
+
+        // Don't create new particles if we can't
+        if(particles_.size() >= quota_) {
+            continue;
+        }
+
+        auto max_can_emit = quota_ - particles_.size();
+        auto new_particles = emitter->do_emit(dt, max_can_emit);
+        particles_.insert(particles_.end(), new_particles.begin(), new_particles.end());
+    }
+
     if(particles_.empty() && !has_repeating_emitters() && !has_active_emitters()) {
         // If the particles are gone, and we don't have repeating emitters and all the emitters are inactive
         // Then destroy the particle system if that's what we've been told to do
@@ -263,23 +287,56 @@ void ParticleSystem::update(float dt) {
         }
     }
 
+    auto hh = (particle_height_ * Vec3::POSITIVE_Y) * 0.5f;
+    auto hw = (particle_width_ * Vec3::POSITIVE_X) * 0.5f;
+
     vertex_data_->move_to_start();
-    vertex_data_->resize(particles_.size());
-    for(auto particle: particles_) {
-        vertex_data_->position(particle.position);
+    vertex_data_->resize(particles_.size() * 4);
+    for(auto& particle: particles_) {
+        auto v1 = particle.position + (-hh + -hw);
+        auto v2 = particle.position + (-hh +  hw);
+        auto v3 = particle.position + ( hh +  hw);
+        auto v4 = particle.position + ( hh + -hw);
+
+        vertex_data_->position(v1);
         vertex_data_->diffuse(particle.colour);
+        vertex_data_->tex_coord0(0, 0);
         vertex_data_->move_next();
 
+        vertex_data_->position(v2);
+        vertex_data_->diffuse(particle.colour);
+        vertex_data_->tex_coord0(1, 0);
+        vertex_data_->move_next();
+
+        vertex_data_->position(v3);
+        vertex_data_->diffuse(particle.colour);
+        vertex_data_->tex_coord0(1, 1);
+        vertex_data_->move_next();
+
+        vertex_data_->position(v4);
+        vertex_data_->diffuse(particle.colour);
+        vertex_data_->tex_coord0(0, 1);
+        vertex_data_->move_next();
     }
 
     // Index any new particles
     auto new_particle_count = particles_.size();
-    for(uint32_t i = original_particle_count; i < new_particle_count; ++i) {
-        index_data_->index(i);
+    if(new_particle_count > original_particle_count) {
+        auto added_count = new_particle_count - original_particle_count;
+        for(uint32_t i = 0; i < added_count; ++i) {
+            auto new_start = original_particle_count + (i * 4);
+            index_data_->index(new_start + 0);
+            index_data_->index(new_start + 1);
+            index_data_->index(new_start + 2);
+
+            index_data_->index(new_start + 0);
+            index_data_->index(new_start + 2);
+            index_data_->index(new_start + 3);
+        }
     }
 
     // Truncate if necessary (in which case the above loop did nothing)
-    index_data_->resize(new_particle_count);
+    index_data_->resize(new_particle_count * 6);
 
     vertex_buffer_dirty_ = true;
     vertex_data_->done();
@@ -404,8 +461,11 @@ std::pair<float, float> ParticleEmitter::duration_range() const {
 }
 
 void ParticleSystem::set_particle_width(float width) {
-    stage->assets->material(material_id())->pass(0)->set_point_size(width);
     particle_width_ = width;
+}
+
+void ParticleSystem::set_particle_height(float height) {
+    particle_height_ = height;
 }
 
 }

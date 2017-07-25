@@ -130,6 +130,13 @@ RenderQueue::RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory)
     stage->signal_particle_system_created().connect([=](ParticleSystemID ps_id) {
         auto ps = stage->particle_system(ps_id);
         insert_renderable(ps);
+
+        // When a particle system material changes, update the place in the queue
+        ps->signal_material_changed().connect([this](ParticleSystem* ps, MaterialID, MaterialID) {
+            remove_renderable(ps);
+            insert_renderable(ps);
+        });
+
         ps->signal_render_priority_changed().connect([this, ps_id](RenderPriority old, RenderPriority newp) {
             auto ps = ps_id.fetch();
             remove_renderable(ps);

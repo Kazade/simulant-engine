@@ -290,6 +290,7 @@ public:
         static const std::string TEXTURE_WITH_LIGHTMAP_AND_LIGHTING;
         static const std::string MULTITEXTURE2_MODULATE_WITH_LIGHTING;
         static const std::string SKYBOX;
+        static const std::string TEXTURED_PARTICLE;
     };
 
     Material(MaterialID mat_id, ResourceManager* resource_manager);

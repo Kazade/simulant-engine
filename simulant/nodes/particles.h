@@ -134,7 +134,7 @@ private:
 
     Degrees angle_ = Degrees(0);
     smlt::Colour colour_ = smlt::Colour::WHITE;
-    int emission_rate_ = 10;
+    float emission_rate_ = 10.0;
 
     float emission_accumulator_ = 0.0;
 
@@ -146,6 +146,8 @@ private:
 
 typedef std::shared_ptr<ParticleEmitter> EmitterPtr;
 
+typedef sig::signal<void (ParticleSystem*, MaterialID, MaterialID)> ParticleSystemMaterialChangedSignal;
+
 class ParticleSystem :
     public StageNode,
     public Managed<ParticleSystem>,
@@ -156,6 +158,8 @@ class ParticleSystem :
     public Renderable,
     public std::enable_shared_from_this<ParticleSystem> {
 
+    DEFINE_SIGNAL(ParticleSystemMaterialChangedSignal, signal_material_changed);
+
 public:
     ParticleSystem(ParticleSystemID id, Stage* stage, SoundDriver *sound_driver);
     ~ParticleSystem();
@@ -165,11 +169,14 @@ public:
         return StageNode::transformed_aabb();
     }
 
-    void set_quota(int quota);
+    void set_quota(std::size_t quota);
     int32_t quota() const { return quota_; }
 
     void set_particle_width(float width);
     float particle_width() const { return particle_width_; }
+
+    void set_particle_height(float height);
+    float particle_height() const { return particle_height_; }
 
     void set_cull_each(bool val=true) { cull_each_ = val; }
     bool cull_each() const { return cull_each_; }
@@ -183,7 +190,7 @@ public:
 
     //Renderable stuff
 
-    const MeshArrangement arrangement() const override { return MESH_ARRANGEMENT_POINTS; }
+    const MeshArrangement arrangement() const override { return MESH_ARRANGEMENT_TRIANGLES; }
     virtual Mat4 final_transformation() const override {
         return Mat4(); //Particles are absolutely positioned in the world
     }
@@ -252,9 +259,10 @@ private:
         return index_data_;
     }
 
-    unicode name_;
-    int quota_ = 10;
-    float particle_width_ = 100.0;
+    std::string name_;
+    std::size_t quota_ = 10;
+    float particle_width_ = 100.0f;
+    float particle_height_ = 100.0f;
     bool cull_each_ = false;
 
     MaterialID material_id_;

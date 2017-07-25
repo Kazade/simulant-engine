@@ -40,6 +40,9 @@ void KGLPLoader::into(Loadable &resource, const LoaderOptions &options) {
     if(js.has_key("particle_width")) ps->set_particle_width(js["particle_width"]);
     L_DEBUG(_F("    Particle Width: {0}").format(ps->particle_width()));
 
+    if(js.has_key("particle_height")) ps->set_particle_height(js["particle_height"]);
+    L_DEBUG(_F("    Particle Height: {0}").format(ps->particle_height()));
+
     if(js.has_key("cull_each")) ps->set_cull_each(js["cull_each"]);
     L_DEBUG(_F("    Cull Each: {0}").format(ps->cull_each()));
 
@@ -87,11 +90,11 @@ void KGLPLoader::into(Loadable &resource, const LoaderOptions &options) {
             if(emitter.has_key("ttl")) {
                 new_emitter->set_ttl(emitter["ttl"]);
             } else {
-                if(emitter.has_key("ttl_min")) {
+                if(emitter.has_key("ttl_min") && emitter.has_key("ttl_max")) {
+                    new_emitter->set_ttl_range(emitter["ttl_min"], emitter["ttl_max"]);
+                } else if(emitter.has_key("ttl_min")) {
                     new_emitter->set_ttl_range(emitter["ttl_min"], new_emitter->ttl_range().second);
-                }
-
-                if(emitter.has_key("ttl_max")) {
+                } else if(emitter.has_key("ttl_max")) {
                     new_emitter->set_ttl_range(new_emitter->ttl_range().first, emitter["ttl_max"]);
                 }
             }
