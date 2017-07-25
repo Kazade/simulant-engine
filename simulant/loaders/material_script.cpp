@@ -218,8 +218,21 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<un
             } else if (arg_2 == "ONE_ONE_MINUS_ALPHA") {
                 pass->set_blending(BLEND_ONE_ONE_MINUS_ALPHA);
             } else {
-                throw SyntaxError("Invalid argument passed to SET(FLAG BLEND):" + arg_2);
+                throw SyntaxError("Invalid argument passed to SET(FLAG BLEND): " + arg_2);
             }
+        } else if(arg_1 == "CULL") {
+            if(arg_2 == "BACK") {
+                pass->set_cull_mode(smlt::CULL_MODE_BACK_FACE);
+            } else if(arg_2 == "FRONT") {
+                pass->set_cull_mode(smlt::CULL_MODE_FRONT_FACE);
+            } else if(arg_2 == "FRONT_AND_BACK") {
+                pass->set_cull_mode(smlt::CULL_MODE_FRONT_AND_BACK_FACE);
+            } else if(arg_2 == "NONE") {
+                pass->set_cull_mode(smlt::CULL_MODE_NONE);
+            } else {
+                throw SyntaxError("Invalid argument passed to SET(FLAG CULL): " + arg_2);
+            }
+
         } else if(arg_1 == "PREVENT_TEXTURES") {
             // Safety, don't allow code to set a texture unit on this pass
             if(arg_2 == "ON") {
