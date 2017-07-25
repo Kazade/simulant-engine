@@ -34,7 +34,7 @@ void KGLPLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     L_DEBUG(_F("Loading particle system: {0}").format(ps->name()));
 
-    if(js.has_key("quota")) ps->set_quota(js["quota"]);
+    if(js.has_key("quota")) ps->set_quota(uint32_t(js["quota"]));
     L_DEBUG(_F("    Quota: {0}").format(ps->quota()));
 
     if(js.has_key("particle_width")) ps->set_particle_width(js["particle_width"]);
