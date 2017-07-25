@@ -303,8 +303,6 @@ void GL1RenderQueueVisitor::disable_texcoord_array(uint8_t which, bool force) {
 
 GLenum convert_arrangement(MeshArrangement arrangement) {
     switch(arrangement) {
-    case MESH_ARRANGEMENT_POINTS:
-        return GL_POINTS;
     case MESH_ARRANGEMENT_LINES:
         return GL_LINES;
     case MESH_ARRANGEMENT_LINE_STRIP:
@@ -316,7 +314,8 @@ GLenum convert_arrangement(MeshArrangement arrangement) {
     case MESH_ARRANGEMENT_TRIANGLE_FAN:
         return GL_TRIANGLE_FAN;
     default:
-        throw std::runtime_error("Invalid vertex arrangement");
+        assert(0 && "Invalid mesh arrangement");
+        return GL_TRIANGLES;
     }
 }
 
@@ -326,7 +325,8 @@ static GLenum convert_index_type(IndexType type) {
     case INDEX_TYPE_16_BIT: return GL_UNSIGNED_SHORT;
     case INDEX_TYPE_32_BIT: return GL_UNSIGNED_INT;
     default:
-        throw std::logic_error("Invalid index type");
+        assert(0 && "Invalid index type");
+        return GL_UNSIGNED_SHORT;
     }
 }
 
