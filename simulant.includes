@@ -133,3 +133,7 @@ tests/gl2
 simulant/math
 cmake_modules
 documentation
+simulant/particles
+simulant/particles/manipulators
+simulant/nodes/particles/manipulators
+simulant/nodes/particles

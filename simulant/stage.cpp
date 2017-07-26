@@ -26,7 +26,7 @@
 #include "debug.h"
 
 #include "nodes/sprite.h"
-#include "nodes/particles.h"
+#include "nodes/particle_system.h"
 #include "nodes/geom.h"
 #include "nodes/camera_proxy.h"
 

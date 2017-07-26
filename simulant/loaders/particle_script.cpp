@@ -20,7 +20,7 @@
 #include "../deps/jsonic/jsonic.h"
 
 #include "particle_script.h"
-#include "../nodes/particles.h"
+#include "../nodes/particle_system.h"
 
 namespace smlt {
 namespace loaders {
@@ -37,13 +37,13 @@ void KGLPLoader::into(Loadable &resource, const LoaderOptions &options) {
     if(js.has_key("quota")) ps->set_quota(uint32_t(js["quota"]));
     L_DEBUG(_F("    Quota: {0}").format(ps->quota()));
 
-    if(js.has_key("particle_width")) ps->set_particle_width(js["particle_width"]);
+    if(js.has_key("particle_width")) ps->set_particle_width((uint32_t)js["particle_width"]);
     L_DEBUG(_F("    Particle Width: {0}").format(ps->particle_width()));
 
-    if(js.has_key("particle_height")) ps->set_particle_height(js["particle_height"]);
+    if(js.has_key("particle_height")) ps->set_particle_height((uint32_t)js["particle_height"]);
     L_DEBUG(_F("    Particle Height: {0}").format(ps->particle_height()));
 
-    if(js.has_key("cull_each")) ps->set_cull_each(js["cull_each"]);
+    if(js.has_key("cull_each")) ps->set_cull_each((bool) js["cull_each"]);
     L_DEBUG(_F("    Cull Each: {0}").format(ps->cull_each()));
 
     if(js.has_key("emitters")) {
@@ -58,7 +58,7 @@ void KGLPLoader::into(Loadable &resource, const LoaderOptions &options) {
             if(emitter.has_key("type")) {
                 auto emitter_type = std::string(emitter["type"]);
                 L_DEBUG(_F("Emitter {0} has type {1}").format(i, emitter_type));
-                new_emitter->set_type((emitter_type == "point") ? PARTICLE_EMITTER_POINT : PARTICLE_EMITTER_BOX);
+                new_emitter->set_type((emitter_type == "point") ? particles::PARTICLE_EMITTER_POINT : particles::PARTICLE_EMITTER_BOX);
             }
 
             if(emitter.has_key("direction")) {

@@ -21,7 +21,7 @@
 #include "../../stage.h"
 #include "../../material.h"
 #include "../../nodes/actor.h"
-#include "../../nodes/particles.h"
+#include "../../nodes/particle_system.h"
 
 #include "render_queue.h"
 #include "../../partitioner.h"

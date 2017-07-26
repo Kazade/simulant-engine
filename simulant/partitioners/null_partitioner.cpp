@@ -21,7 +21,7 @@
 #include "../camera.h"
 #include "../nodes/actor.h"
 #include "../nodes/light.h"
-#include "../nodes/particles.h"
+#include "../nodes/particle_system.h"
 
 #include "null_partitioner.h"
 

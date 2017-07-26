@@ -1,7 +1,7 @@
 #include "smooth_follow.h"
 
 #include "../../nodes/actor.h"
-#include "../../nodes/particles.h"
+#include "../../nodes/particle_system.h"
 
 namespace smlt {
 namespace controllers {

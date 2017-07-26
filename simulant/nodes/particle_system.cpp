@@ -1,29 +1,19 @@
-//
-//   Copyright (c) 2011-2017 Luke Benstead https://simulant-engine.appspot.com
-//
-//     This file is part of Simulant.
-//
-//     Simulant is free software: you can redistribute it and/or modify
-//     it under the terms of the GNU General Public License as published by
-//     the Free Software Foundation, either version 3 of the License, or
-//     (at your option) any later version.
-//
-//     Simulant is distributed in the hope that it will be useful,
-//     but WITHOUT ANY WARRANTY; without even the implied warranty of
-//     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//     GNU General Public License for more details.
-//
-//     You should have received a copy of the GNU General Public License
-//     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
-//
+#include "particle_system.h"
 
-#include "particles.h"
+#include "particles/emitter.h"
 
-#include "../utils/random.h"
 #include "../stage.h"
+#include "../types.h"
 #include "../hardware_buffer.h"
 
 namespace smlt {
+
+using smlt::particles::Emitter;
+using smlt::particles::EmitterPtr;
+using smlt::particles::Particle;
+using smlt::particles::PARTICLE_EMITTER_BOX;
+using smlt::particles::PARTICLE_EMITTER_POINT;
+
 
 const static VertexSpecification PS_VERTEX_SPEC(
         smlt::VERTEX_ATTRIBUTE_3F, // Position
@@ -42,7 +32,7 @@ const static VertexSpecification PS_VERTEX_SPEC(
 ParticleSystem::ParticleSystem(ParticleSystemID id, Stage* stage, SoundDriver* sound_driver):
     StageNode(stage),
     generic::Identifiable<ParticleSystemID>(id),
-    Source(stage, sound_driver),       
+    Source(stage, sound_driver),
     vertex_data_(new VertexData(PS_VERTEX_SPEC)),
     index_data_(new IndexData(INDEX_TYPE_16_BIT)) {
 
@@ -74,7 +64,7 @@ void ParticleSystem::set_material_id(MaterialID mat_id) {
 }
 
 EmitterPtr ParticleSystem::push_emitter() {
-    auto new_emitter = std::make_shared<ParticleEmitter>(*this);
+    auto new_emitter = std::make_shared<Emitter>(*this);
     emitters_.push_back(new_emitter);
     calc_aabb();
     return new_emitter;
@@ -204,28 +194,6 @@ void ParticleSystem::ask_owner_for_destruction() {
     stage->delete_particle_system(id());
 }
 
-void ParticleEmitter::activate() {
-    is_active_ = true;
-    time_active_ = 0.0;
-}
-
-void ParticleEmitter::deactivate() {
-    is_active_ = false;
-}
-
-void ParticleEmitter::update(float dt) {
-    time_active_ += dt;
-
-    if(current_duration_ && time_active_ >= current_duration_) {
-        deactivate();
-
-        float repeat_delay = random_gen::random_float(repeat_delay_range_.first, repeat_delay_range_.second);
-        if(repeat_delay > 0) {
-            system().stage->window->idle->add_timeout_once(repeat_delay, std::bind(&ParticleEmitter::activate, this));
-        }
-    }
-}
-
 void ParticleSystem::set_quota(std::size_t quota) {
     if(quota == particles_.size()) {
         return;
@@ -287,12 +255,12 @@ void ParticleSystem::update(float dt) {
         }
     }
 
-    auto hh = (particle_height_ * Vec3::POSITIVE_Y) * 0.5f;
-    auto hw = (particle_width_ * Vec3::POSITIVE_X) * 0.5f;
-
     vertex_data_->move_to_start();
     vertex_data_->resize(particles_.size() * 4);
     for(auto& particle: particles_) {
+        auto hh = (particle.dimensions.y * Vec3::POSITIVE_Y) * 0.5f;
+        auto hw = (particle.dimensions.x * Vec3::POSITIVE_X) * 0.5f;
+
         auto v1 = particle.position + (-hh + -hw);
         auto v2 = particle.position + (-hh +  hw);
         auto v3 = particle.position + ( hh +  hw);
@@ -343,121 +311,6 @@ void ParticleSystem::update(float dt) {
 
     index_buffer_dirty_ = true;
     index_data_->done();
-}
-
-std::vector<Particle> ParticleEmitter::do_emit(float dt, uint32_t max) {
-    std::vector<Particle> new_particles;
-
-    if(!max) {
-        return new_particles; //Do nothing
-    }
-
-    emission_accumulator_ += dt; //Buffer time
-
-    float decrement = 1.0 / float(emission_rate()); //Work out how often to emit per second
-
-    uint32_t to_emit = max;
-    while(emission_accumulator_ > decrement) {
-        //EMIT THE PARTICLE!
-        Particle p;
-        if(type() == PARTICLE_EMITTER_POINT) {
-            p.position = system().absolute_position() + relative_position();
-        } else {
-            p.position = system().absolute_position() + relative_position();
-
-            float hw = dimensions_.x * 0.5;
-            float hh = dimensions_.y * 0.5;
-            float hd = dimensions_.z * 0.5;
-
-            p.position.x += random_gen::random_float(-hw, hw);
-            p.position.y += random_gen::random_float(-hh, hh);
-            p.position.z += random_gen::random_float(-hd, hd);
-        }
-
-        Vec3 dir = direction();
-        if(angle().value != 0) {
-            Radians ang(angle()); //Convert from degress to radians
-            ang.value *= random_gen::random_float(0, 1); //Multiply by a random unit float
-            dir = dir.random_deviant(ang);
-        }
-
-        p.velocity = dir.normalized() * random_gen::random_float(velocity_range().first, velocity_range().second);
-
-        //We have to rotate the velocity by the system, because if the particle system is attached to something (e.g. the back of a spaceship)
-        //when that entity rotates we want the velocity to stay pointing relative to the entity
-        auto rot = system().absolute_rotation();
-
-        p.velocity *= rot;
-
-
-        p.ttl = random_gen::random_float(ttl_range().first, ttl_range().second);
-        p.colour = colour();
-
-        //FIXME: Initialize other properties
-        new_particles.push_back(p);
-
-        emission_accumulator_ -= decrement; //Decrement the accumulator while we can
-        to_emit--;
-        if(!to_emit) {
-            break;
-        }
-    }
-
-    return new_particles;
-}
-
-
-void ParticleEmitter::set_ttl(float seconds) {
-    ttl_range_ = std::make_pair(seconds, seconds);
-}
-
-void ParticleEmitter::set_ttl_range(float min_seconds, float max_seconds) {
-    if(min_seconds > max_seconds) {
-        throw std::logic_error("min_seconds can't be greater than max_seconds");
-    }
-
-    ttl_range_ = std::make_pair(min_seconds, max_seconds);
-}
-
-std::pair<float, float> ParticleEmitter::ttl_range() const {
-    return ttl_range_;
-}
-
-void ParticleEmitter::set_repeat_delay(float seconds) {
-    set_repeat_delay_range(seconds, seconds);
-}
-
-void ParticleEmitter::set_repeat_delay_range(float min_seconds, float max_seconds) {
-    repeat_delay_range_ = std::make_pair(min_seconds, max_seconds);
-}
-
-std::pair<float, float> ParticleEmitter::repeat_delay_range() const {
-    return repeat_delay_range_;
-}
-
-void ParticleEmitter::set_velocity(float vel) {
-    set_velocity_range(vel, vel);
-}
-
-void ParticleEmitter::set_velocity_range(float min_vel, float max_vel) {
-    velocity_range_ = std::make_pair(min_vel, max_vel);
-}
-
-std::pair<float, float> ParticleEmitter::velocity_range() const {
-    return velocity_range_;
-}
-
-void ParticleEmitter::set_duration(float seconds) {
-    set_duration_range(seconds, seconds);
-}
-
-void ParticleEmitter::set_duration_range(float min_seconds, float max_seconds) {
-    duration_range_ = std::make_pair(min_seconds, max_seconds);
-    current_duration_ = random_gen::random_float(duration_range_.first, duration_range_.second);
-}
-
-std::pair<float, float> ParticleEmitter::duration_range() const {
-    return duration_range_;
 }
 
 void ParticleSystem::set_particle_width(float width) {
