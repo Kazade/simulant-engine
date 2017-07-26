@@ -21,6 +21,7 @@
 
 #include "particle_script.h"
 #include "../nodes/particle_system.h"
+#include "../nodes/particles/manipulators/size_manipulator.h"
 
 namespace smlt {
 namespace loaders {
@@ -120,6 +121,21 @@ void KGLPLoader::into(Loadable &resource, const LoaderOptions &options) {
 
             if(emitter.has_key("emission_rate")) {
                 new_emitter->set_emission_rate(emitter["emission_rate"]);
+            }
+        }
+
+        if(js.has_key("manipulators")) {
+            jsonic::Node& manipulators = js["manipulators"];
+            for(uint32_t i = 0; i < manipulators.length(); ++i) {
+                auto& manipulator = manipulators[i];
+
+                if(std::string(manipulator["type"]) == "size") {
+                    auto m = ps->new_manipulator<particles::SizeManipulator>();
+
+                    if(manipulator.has_key("rate")) {
+                        m->set_property("rate", (float) manipulator["rate"]);
+                    }
+                }
             }
         }
     }

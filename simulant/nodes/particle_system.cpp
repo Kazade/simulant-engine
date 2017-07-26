@@ -255,6 +255,11 @@ void ParticleSystem::update(float dt) {
         }
     }
 
+    // Run any manipulations on the particles
+    for(auto& manipulator: manipulators_) {
+        manipulator->manipulate(particles_, dt);
+    }
+
     vertex_data_->move_to_start();
     vertex_data_->resize(particles_.size() * 4);
     for(auto& particle: particles_) {

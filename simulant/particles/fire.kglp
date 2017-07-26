@@ -9,14 +9,14 @@
         angle: 15,
         emission_rate: 25,
         ttl_min: 1.0,
-        ttl_max: 1.0,
+        ttl_max: 1.5,
         direction: "0.0 1.0 0.0",
         velocity_min: 10.0,
         velocity_max: 50.0
     }],
 
-    affectors: [{
-        type: "scaler",
-        rate: -200
+    manipulators: [{
+        type: "size",
+        rate: -0.8f
     }]
 }

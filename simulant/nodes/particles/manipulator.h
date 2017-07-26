@@ -25,7 +25,7 @@ private:
     virtual void do_manipulate(std::list<Particle>& particles, float dt) = 0;
 };
 
-
+typedef std::shared_ptr<Manipulator> ManipulatorPtr;
 
 }
 }

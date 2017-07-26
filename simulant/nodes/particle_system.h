@@ -12,7 +12,9 @@
 #include "../interfaces.h"
 #include "../types.h"
 #include "../vertex_data.h"
+
 #include "particles/emitter.h"
+#include "particles/manipulator.h"
 
 namespace smlt {
 
@@ -113,6 +115,13 @@ public:
         StageNode::cleanup();
     }
 
+    template<typename M, typename... Args>
+    particles::Manipulator* new_manipulator(Args&& ...args) {
+        auto m = std::make_shared<M>(std::forward<Args>(args)...);
+        manipulators_.push_back(m);
+        return m.get();
+    }
+
 private:
     AABB aabb_;
     void calc_aabb();
@@ -143,6 +152,7 @@ private:
 
     std::vector<particles::EmitterPtr> emitters_;
     std::list<particles::Particle> particles_;
+    std::vector<particles::ManipulatorPtr> manipulators_;
 
     void update(float dt) override;
 

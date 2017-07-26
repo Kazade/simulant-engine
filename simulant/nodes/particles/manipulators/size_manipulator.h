@@ -20,13 +20,13 @@ public:
     }
 
 private:
-    float rate_ = 100.0f;
+    float rate_ = 0.1f;
 
     void do_manipulate(std::list<Particle>& particles, float dt) {
-        auto rate_diff = rate_ * dt;
+        auto rate_diff = 1.0f + (rate_ * dt);
         for(auto& particle: particles) {
-            particle.dimensions.x = std::max(0.0f, particle.dimensions.x - rate_diff);
-            particle.dimensions.y = std::max(0.0f, particle.dimensions.y - rate_diff);
+            particle.dimensions.x = std::max(0.0f, particle.dimensions.x * rate_diff);
+            particle.dimensions.y = std::max(0.0f, particle.dimensions.y * rate_diff);
         }
     }
 };
