@@ -12,7 +12,7 @@ public:
         smlt::StagePtr stage = stage_.fetch();
 
         auto ps = stage->new_particle_system_from_file("simulant/particles/fire.kglp").fetch();
-        ps->move_to(0, 0, -5);
+        ps->move_to(0.0, 0, -4);
 
         auto mat = stage->assets->new_material_from_file(smlt::Material::BuiltIns::TEXTURED_PARTICLE).fetch();
         ps->set_material_id(mat->id());
@@ -50,6 +50,10 @@ public:
 int main(int argc, char* argv[]) {
     smlt::AppConfig config;
     config.title = "Particles";
+    config.fullscreen = false;
+    config.width = 1024;
+    config.height = 768;
+
     App app(config);
     return app.run();
 }
