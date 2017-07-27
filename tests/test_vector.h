@@ -79,6 +79,18 @@ public:
         assert_equal(a.y, 2);
         assert_equal(a.z, 3);
     }
+
+    void test_rotated_by_mat4() {
+        smlt::Mat4 rot = smlt::Mat4::as_rotation_y(smlt::Degrees(90));
+
+        smlt::Vec3 v1(1, 0, 0);
+
+        auto ret = v1.rotated_by(rot);
+
+        assert_close(ret.x, 0.0f, 0.00001f);
+        assert_close(ret.y, 0.0f, 0.00001f);
+        assert_close(ret.z, 1.0f, 0.00001f);
+    }
 };
 
 class Vec2Test : public TestCase {
