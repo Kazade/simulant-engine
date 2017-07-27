@@ -434,6 +434,8 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
             case CULL_MODE_FRONT_AND_BACK_FACE:
                 glCullFace(GL_FRONT_AND_BACK);
             break;
+        default:
+            assert(0 && "Invalid cull mode");
         }
     }
 
@@ -612,7 +614,7 @@ static GLenum convert_index_type(IndexType type) {
     case INDEX_TYPE_16_BIT: return GL_UNSIGNED_SHORT;
     case INDEX_TYPE_32_BIT: return GL_UNSIGNED_INT;
     default:
-        throw std::logic_error("Invalid index type");
+        return GL_UNSIGNED_SHORT;
     }
 }
 
@@ -625,9 +627,6 @@ void GenericRenderer::send_geometry(Renderable *renderable) {
     auto index_type = convert_index_type(renderable->index_type());
 
     switch(renderable->arrangement()) {
-        case MESH_ARRANGEMENT_POINTS:
-            GLCheck(glDrawElements, GL_POINTS, index_count, index_type, BUFFER_OFFSET(0));
-        break;
         case MESH_ARRANGEMENT_LINES:
             GLCheck(glDrawElements, GL_LINES, index_count, index_type, BUFFER_OFFSET(0));
         break;

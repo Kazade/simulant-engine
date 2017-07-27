@@ -2,7 +2,7 @@
 #include "../nodes/actor.h"
 #include "../nodes/light.h"
 #include "../camera.h"
-#include "../nodes/particles.h"
+#include "../nodes/particle_system.h"
 
 namespace smlt {
 

@@ -96,8 +96,8 @@ std::string strip(const std::string& s, const std::string& what) {
     int32_t i = 0;
     int32_t j = s.size() - 1;
 
-    while(what.find(s[i]) != std::string::npos && i < (int32_t) s.size()) {++i;}
-    while(what.find(s[j]) != std::string::npos && j >= 0) {--j;}
+    while(i < (int32_t) s.size() && what.find(s[i]) != std::string::npos) {++i;}
+    while(j >= 0 && what.find(s[j]) != std::string::npos) {--j;}
 
     if(j < i) {
         return "";

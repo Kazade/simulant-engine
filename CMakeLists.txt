@@ -106,6 +106,7 @@ SET(DC_EXECUTABLES # Names without .elf extension
     samples/terrain_demo
     samples/ui_demo
     samples/viewport_sample
+    samples/particles
 )
 
 FOREACH(EXE ${DC_EXECUTABLES})

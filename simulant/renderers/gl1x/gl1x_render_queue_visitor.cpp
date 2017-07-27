@@ -11,6 +11,8 @@
 #include "gl1x_render_group_impl.h"
 
 #include "../../camera.h"
+#include "../../stage.h"
+#include "../../nodes/light.h"
 #include "../../utils/gl_error.h"
 
 namespace smlt {
@@ -25,6 +27,8 @@ GL1RenderQueueVisitor::GL1RenderQueueVisitor(GL1XRenderer* renderer, CameraPtr c
 void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, Stage* stage) {
     enable_vertex_arrays(true);
     enable_colour_arrays(true);
+
+    global_ambient_ = stage->ambient_light();
 }
 
 void GL1RenderQueueVisitor::visit(Renderable* renderable, MaterialPass* pass, batcher::Iteration iteration) {
@@ -94,6 +98,25 @@ void GL1RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev
 void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const MaterialPass* next) {
     pass_ = next;
 
+    if(next->lighting_enabled()) {
+        /* Only send material properties if lighting is enabled on the pass */
+        if(!prev || prev->diffuse() != next->diffuse()) {
+            GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_DIFFUSE, &next->diffuse().r);
+        }
+
+        if(!prev || prev->ambient() != next->ambient()) {
+            GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_AMBIENT, &next->ambient().r);
+        }
+
+        if(!prev || prev->specular() != next->specular()) {
+            GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_SPECULAR, &next->specular().r);
+        }
+
+        if(!prev || prev->shininess() != next->shininess()) {
+            GLCheck(glMaterialf, GL_FRONT_AND_BACK, GL_SHININESS, next->shininess());
+        }
+    }
+
     if(!prev || prev->depth_test_enabled() != next->depth_test_enabled()) {
         if(next->depth_test_enabled()) {
             GLCheck(glEnable, GL_DEPTH_TEST);
@@ -107,6 +130,17 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
             GLCheck(glDepthMask, GL_TRUE);
         } else {
             GLCheck(glDepthMask, GL_FALSE);
+        }
+    }
+
+    /* Enable lighting on the pass appropriately */
+    if(!prev || prev->lighting_enabled() != next->lighting_enabled()) {
+        if(next->lighting_enabled()) {
+            GLCheck(glEnable, GL_LIGHTING);
+            GLCheck(glEnable, GL_LIGHT0);
+        } else {
+            GLCheck(glDisable, GL_LIGHT0);
+            GLCheck(glDisable, GL_LIGHTING);
         }
     }
 
@@ -176,10 +210,28 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
     if(!prev || prev->blending() != next->blending()) {
         set_blending_mode(next->blending());
     }
+
+    GLCheck(glLightModelfv, GL_LIGHT_MODEL_AMBIENT, &global_ambient_.r);
 }
 
 void GL1RenderQueueVisitor::change_light(const Light* prev, const Light* next) {
+    if(!next) {
+        return;
+    }
 
+    GLCheck(glLightfv, GL_LIGHT0, GL_AMBIENT, &next->ambient().r);
+    GLCheck(glLightfv, GL_LIGHT0, GL_DIFFUSE, &next->diffuse().r);
+    GLCheck(glLightfv, GL_LIGHT0, GL_SPECULAR, &next->specular().r);
+    GLCheck(glLightf, GL_LIGHT0, GL_CONSTANT_ATTENUATION, next->constant_attenuation());
+    GLCheck(glLightf, GL_LIGHT0, GL_LINEAR_ATTENUATION, next->linear_attenuation());
+    GLCheck(glLightf, GL_LIGHT0, GL_QUADRATIC_ATTENUATION, next->quadratic_attenuation());
+
+    Vec4 position(next->absolute_position(), 1.0);
+    if(next->type() == LIGHT_TYPE_DIRECTIONAL) {
+        position.w = 0.0f;
+    }
+
+    GLCheck(glLightfv, GL_LIGHT0, GL_POSITION, &position.x);
 }
 
 bool GL1RenderQueueVisitor::queue_if_blended(Renderable* renderable, MaterialPass* material_pass, batcher::Iteration iteration) {
@@ -251,8 +303,6 @@ void GL1RenderQueueVisitor::disable_texcoord_array(uint8_t which, bool force) {
 
 GLenum convert_arrangement(MeshArrangement arrangement) {
     switch(arrangement) {
-    case MESH_ARRANGEMENT_POINTS:
-        return GL_POINTS;
     case MESH_ARRANGEMENT_LINES:
         return GL_LINES;
     case MESH_ARRANGEMENT_LINE_STRIP:
@@ -264,7 +314,8 @@ GLenum convert_arrangement(MeshArrangement arrangement) {
     case MESH_ARRANGEMENT_TRIANGLE_FAN:
         return GL_TRIANGLE_FAN;
     default:
-        throw std::runtime_error("Invalid vertex arrangement");
+        assert(0 && "Invalid mesh arrangement");
+        return GL_TRIANGLES;
     }
 }
 
@@ -274,7 +325,8 @@ static GLenum convert_index_type(IndexType type) {
     case INDEX_TYPE_16_BIT: return GL_UNSIGNED_SHORT;
     case INDEX_TYPE_32_BIT: return GL_UNSIGNED_INT;
     default:
-        throw std::logic_error("Invalid index type");
+        assert(0 && "Invalid index type");
+        return GL_UNSIGNED_SHORT;
     }
 }
 

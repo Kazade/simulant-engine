@@ -157,7 +157,7 @@ private:
         }
 
         void resize(std::size_t elements) {
-            auto required_buffers = std::size_t(std::ceil(float(elements) / float(BUFFER_SIZE_IN_ELEMENTS)));
+            auto required_buffers = std::size_t(std::ceil(float(elements + 1) / float(BUFFER_SIZE_IN_ELEMENTS)));
 
             if(buffers_.size() < required_buffers) {
                 while(buffers_.size() < required_buffers) {

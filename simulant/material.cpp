@@ -39,6 +39,7 @@ const std::string Material::BuiltIns::TEXTURE_WITH_LIGHTMAP = "simulant/material
 const std::string Material::BuiltIns::TEXTURE_WITH_LIGHTMAP_AND_LIGHTING = "simulant/materials/opengl-1.x/texture_with_lightmap_and_lighting.kglm";
 const std::string Material::BuiltIns::MULTITEXTURE2_MODULATE_WITH_LIGHTING = "simulant/materials/opengl-1.x/multitexture2_modulate_with_lighting.kglm";
 const std::string Material::BuiltIns::SKYBOX = "simulant/materials/opengl-1.x/skybox.kglm";
+const std::string Material::BuiltIns::TEXTURED_PARTICLE = "simulant/materials/opengl-1.x/textured_particle.kglm";
 #else
 const std::string Material::BuiltIns::TEXTURE_ONLY = "simulant/materials/opengl-2.x/texture_only.kglm";
 const std::string Material::BuiltIns::DIFFUSE_ONLY = "simulant/materials/opengl-2.x/diffuse_only.kglm";
@@ -50,6 +51,7 @@ const std::string Material::BuiltIns::TEXTURE_WITH_LIGHTMAP = "simulant/material
 const std::string Material::BuiltIns::TEXTURE_WITH_LIGHTMAP_AND_LIGHTING = "simulant/materials/opengl-2.x/texture_with_lightmap_and_lighting.kglm";
 const std::string Material::BuiltIns::MULTITEXTURE2_MODULATE_WITH_LIGHTING = "simulant/materials/opengl-2.x/multitexture2_modulate_with_lighting.kglm";
 const std::string Material::BuiltIns::SKYBOX = "simulant/materials/opengl-2.x/skybox.kglm";
+const std::string Material::BuiltIns::TEXTURED_PARTICLE = "simulant/materials/opengl-2.x/textured_particle.kglm";
 #endif
 
 
@@ -289,6 +291,7 @@ MaterialPass::ptr MaterialPass::new_clone(Material* owner) const {
     ret->blend_ = blend_;
     ret->depth_writes_enabled_ = depth_writes_enabled_;
     ret->depth_test_enabled_ = depth_test_enabled_;
+    ret->lighting_enabled_ = lighting_enabled_;
     ret->point_size_ = point_size_;
     ret->albedo_ = albedo_;
     ret->reflection_texture_unit_ = reflection_texture_unit_;

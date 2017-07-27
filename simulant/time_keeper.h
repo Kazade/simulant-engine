@@ -28,6 +28,10 @@ public:
 
     bool use_fixed_step();
 
+    void restart() {
+        total_time_ = delta_time_ = accumulator_ = 0.0f;
+    }
+
 private:
 #ifdef _arch_dreamcast
     uint64_t last_update_;

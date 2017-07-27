@@ -20,7 +20,8 @@
 #include "../deps/jsonic/jsonic.h"
 
 #include "particle_script.h"
-#include "../nodes/particles.h"
+#include "../nodes/particle_system.h"
+#include "../nodes/particles/manipulators/size_manipulator.h"
 
 namespace smlt {
 namespace loaders {
@@ -34,13 +35,16 @@ void KGLPLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     L_DEBUG(_F("Loading particle system: {0}").format(ps->name()));
 
-    if(js.has_key("quota")) ps->set_quota(js["quota"]);
+    if(js.has_key("quota")) ps->set_quota(uint32_t(js["quota"]));
     L_DEBUG(_F("    Quota: {0}").format(ps->quota()));
 
-    if(js.has_key("particle_width")) ps->set_particle_width(js["particle_width"]);
+    if(js.has_key("particle_width")) ps->set_particle_width((uint32_t)js["particle_width"]);
     L_DEBUG(_F("    Particle Width: {0}").format(ps->particle_width()));
 
-    if(js.has_key("cull_each")) ps->set_cull_each(js["cull_each"]);
+    if(js.has_key("particle_height")) ps->set_particle_height((uint32_t)js["particle_height"]);
+    L_DEBUG(_F("    Particle Height: {0}").format(ps->particle_height()));
+
+    if(js.has_key("cull_each")) ps->set_cull_each((bool) js["cull_each"]);
     L_DEBUG(_F("    Cull Each: {0}").format(ps->cull_each()));
 
     if(js.has_key("emitters")) {
@@ -55,7 +59,7 @@ void KGLPLoader::into(Loadable &resource, const LoaderOptions &options) {
             if(emitter.has_key("type")) {
                 auto emitter_type = std::string(emitter["type"]);
                 L_DEBUG(_F("Emitter {0} has type {1}").format(i, emitter_type));
-                new_emitter->set_type((emitter_type == "point") ? PARTICLE_EMITTER_POINT : PARTICLE_EMITTER_BOX);
+                new_emitter->set_type((emitter_type == "point") ? particles::PARTICLE_EMITTER_POINT : particles::PARTICLE_EMITTER_BOX);
             }
 
             if(emitter.has_key("direction")) {
@@ -87,11 +91,11 @@ void KGLPLoader::into(Loadable &resource, const LoaderOptions &options) {
             if(emitter.has_key("ttl")) {
                 new_emitter->set_ttl(emitter["ttl"]);
             } else {
-                if(emitter.has_key("ttl_min")) {
+                if(emitter.has_key("ttl_min") && emitter.has_key("ttl_max")) {
+                    new_emitter->set_ttl_range(emitter["ttl_min"], emitter["ttl_max"]);
+                } else if(emitter.has_key("ttl_min")) {
                     new_emitter->set_ttl_range(emitter["ttl_min"], new_emitter->ttl_range().second);
-                }
-
-                if(emitter.has_key("ttl_max")) {
+                } else if(emitter.has_key("ttl_max")) {
                     new_emitter->set_ttl_range(new_emitter->ttl_range().first, emitter["ttl_max"]);
                 }
             }
@@ -117,6 +121,21 @@ void KGLPLoader::into(Loadable &resource, const LoaderOptions &options) {
 
             if(emitter.has_key("emission_rate")) {
                 new_emitter->set_emission_rate(emitter["emission_rate"]);
+            }
+        }
+
+        if(js.has_key("manipulators")) {
+            jsonic::Node& manipulators = js["manipulators"];
+            for(uint32_t i = 0; i < manipulators.length(); ++i) {
+                auto& manipulator = manipulators[i];
+
+                if(std::string(manipulator["type"]) == "size") {
+                    auto m = ps->new_manipulator<particles::SizeManipulator>();
+
+                    if(manipulator.has_key("rate")) {
+                        m->set_property("rate", (float) manipulator["rate"]);
+                    }
+                }
             }
         }
     }

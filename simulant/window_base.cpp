@@ -320,14 +320,16 @@ void WindowBase::run_fixed_updates() {
 }
 
 bool WindowBase::run_frame() {
-    static float first_frame_time = 0.0f;
+    static bool first_frame = true;
 
     signal_frame_started_();
 
-    // Update timers
-    time_keeper_->update();
-
-    float dt = time_keeper_->delta_time();
+    float dt = 0.0f;
+    if(!first_frame) {
+        // Update timers
+        time_keeper_->update();
+        dt = time_keeper_->delta_time();
+    }
 
     check_events(); // Check for any window events
     Source::update_source(dt); //Update any playing sounds
@@ -360,12 +362,14 @@ bool WindowBase::run_frame() {
 
     signal_frame_finished_();
 
-    stats_.increment_frames();
-
-    /* The first frame can be really long (loading things) so it's unfair to include in the
-     * average count. So we ignore it using this time */
-    if(stats_.frames_run() == 1) {
-        first_frame_time = time_keeper->total_elapsed_seconds();
+    /* We totally ignore the first frame as it can take a while and messes up
+     * delta time for both updates (like particle systems) and FPS
+     */
+    if(first_frame) {
+        first_frame = false;
+        time_keeper_->restart();
+    } else {
+        stats_.increment_frames();
     }
 
     if(!is_running_) {
@@ -379,7 +383,7 @@ bool WindowBase::run_frame() {
         std::cout << "Frames rendered: " << stats_.frames_run() << std::endl;
         std::cout << "Fixed updates run: " << stats_.fixed_steps_run() << std::endl;
         std::cout << "Total time: " << time_keeper->total_elapsed_seconds() << std::endl;
-        std::cout << "Average FPS: " << float(stats_.frames_run() - 1) / (time_keeper->total_elapsed_seconds() - first_frame_time) << std::endl;
+        std::cout << "Average FPS: " << float(stats_.frames_run() - 1) / (time_keeper->total_elapsed_seconds()) << std::endl;
     }
 
     return is_running_;
