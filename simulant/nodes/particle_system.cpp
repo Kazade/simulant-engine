@@ -228,6 +228,13 @@ void ParticleSystem::update(float dt) {
         }
     }
 
+    // Run any manipulations on the particles, we do this before
+    // we add new particles - otherwise they get manipulated before they're
+    // even displayed!
+    for(auto& manipulator: manipulators_) {
+        manipulator->manipulate(particles_, dt);
+    }
+
     for(auto emitter: emitters_) {
         emitter->update(dt);
 
@@ -253,11 +260,6 @@ void ParticleSystem::update(float dt) {
             // No point doing anything else!
             return;
         }
-    }
-
-    // Run any manipulations on the particles
-    for(auto& manipulator: manipulators_) {
-        manipulator->manipulate(particles_, dt);
     }
 
     vertex_data_->move_to_start();
@@ -292,24 +294,19 @@ void ParticleSystem::update(float dt) {
         vertex_data_->move_next();
     }
 
-    // Index any new particles
-    auto new_particle_count = particles_.size();
-    if(new_particle_count > original_particle_count) {
-        auto added_count = new_particle_count - original_particle_count;
-        for(uint32_t i = 0; i < added_count; ++i) {
-            auto new_start = original_particle_count + (i * 4);
-            index_data_->index(new_start + 0);
-            index_data_->index(new_start + 1);
-            index_data_->index(new_start + 2);
 
-            index_data_->index(new_start + 0);
-            index_data_->index(new_start + 2);
-            index_data_->index(new_start + 3);
-        }
+    index_data_->clear();
+
+    for(uint32_t i = 0; i < particles_.size(); ++i) {
+        auto new_start = (i * 4);
+        index_data_->index(new_start + 0);
+        index_data_->index(new_start + 1);
+        index_data_->index(new_start + 2);
+
+        index_data_->index(new_start + 0);
+        index_data_->index(new_start + 2);
+        index_data_->index(new_start + 3);
     }
-
-    // Truncate if necessary (in which case the above loop did nothing)
-    index_data_->resize(new_particle_count * 6);
 
     vertex_buffer_dirty_ = true;
     vertex_data_->done();

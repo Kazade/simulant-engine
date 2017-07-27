@@ -61,10 +61,10 @@ std::vector<Particle> Emitter::do_emit(float dt, uint32_t max) {
         if(angle().value != 0) {
             Radians ang(angle()); //Convert from degress to radians
             ang.value *= random_gen::random_float(0, 1); //Multiply by a random unit float
-            dir = dir.random_deviant(ang);
+            dir = dir.random_deviant(ang).normalized();
         }
 
-        p.velocity = dir.normalized() * random_gen::random_float(velocity_range().first, velocity_range().second);
+        p.velocity = dir * random_gen::random_float(velocity_range().first, velocity_range().second);
 
         //We have to rotate the velocity by the system, because if the particle system is attached to something (e.g. the back of a spaceship)
         //when that entity rotates we want the velocity to stay pointing relative to the entity
