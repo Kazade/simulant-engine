@@ -434,6 +434,8 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
             case CULL_MODE_FRONT_AND_BACK_FACE:
                 glCullFace(GL_FRONT_AND_BACK);
             break;
+        default:
+            assert(0 && "Invalid cull mode");
         }
     }
 
