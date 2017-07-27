@@ -89,7 +89,7 @@ public:
 
         assert_close(ret.x, 0.0f, 0.00001f);
         assert_close(ret.y, 0.0f, 0.00001f);
-        assert_close(ret.z, 1.0f, 0.00001f);
+        assert_close(ret.z, -1.0f, 0.00001f);
     }
 };
 
