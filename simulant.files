@@ -146,6 +146,7 @@ tests/main.cpp
 tests/global.cpp
 tests/global.h
 tests/test_frustum.h
+tests/test_manual_manager.h
 tests/test_material.h
 tests/test_material_script.h
 tests/test_mesh.h

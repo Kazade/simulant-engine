@@ -136,6 +136,8 @@ protected:
 
 private:
     Stage* stage_;
+
+    std::mutex staging_lock_;
     std::stack<StagedWrite> staged_writes_;
 };
 

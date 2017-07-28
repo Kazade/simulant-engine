@@ -92,6 +92,7 @@ public:
     }
 
     bool contains(ObjectIDType id) const {
+        std::lock_guard<std::recursive_mutex> lock(manager_lock_);
         auto slot = id.value() - 1;
         return objects_.is_occupied_slot(slot);
     }
@@ -209,7 +210,7 @@ private:
 
             assert(buffer_idx * sizeof(ObjectType) < buffer.size());
 
-            const uint8_t* ptr = &buffer[0] + (sizeof(ObjectType) * buffer_idx);
+            const uint8_t* ptr = &buffer.at(sizeof(ObjectType) * buffer_idx);
             return *((ObjectType*) ptr);
         }
 
@@ -219,7 +220,6 @@ private:
 
             if(!free_slots_.empty()) {
                 slot = *free_slots_.begin();
-                free_slots_.erase(slot);
             } else {
                 // If there are no free slots, then we must have filled the
                 // available buffers, so we ask for the next slot
@@ -229,6 +229,9 @@ private:
                     resize(slot);
                 }
             }
+
+            // Make sure that the slot we need isn't marked as free
+            free_slots_.erase(slot);
 
             void* dest = &(*this)[slot];
 
@@ -241,6 +244,8 @@ private:
                 }), std::forward<Args>(args)...
             );
             ++count_;
+
+            assert(inserted);
 
             return *inserted;
         }

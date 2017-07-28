@@ -212,8 +212,6 @@ void ParticleSystem::set_quota(std::size_t quota) {
 void ParticleSystem::update(float dt) {
     update_source(dt); //Update any sounds attached to this particle system
 
-    auto original_particle_count = particles_.size();
-
     // Update existing particles, erase any that are dead
     for(auto it = particles_.begin(); it != particles_.end(); ) {
         Particle& particle = (*it);
