@@ -322,7 +322,6 @@ uint16_t VertexData::move_next() {
 void VertexData::reset(VertexSpecification vertex_specification) {
     clear();
 
-    vertex_specification.recalc_stride();
     vertex_specification_ = vertex_specification;
     stride_ = vertex_specification.stride();
     recalc_attributes();

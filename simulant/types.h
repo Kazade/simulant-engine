@@ -64,25 +64,153 @@ enum VertexAttribute {
     VERTEX_ATTRIBUTE_4F
 };
 
-struct VertexSpecification {
+class VertexSpecification;
+
+/*
+ * Allows us to keep the original syntax of VertexSpecification when it was a struct
+ * but also ensure that stride and offsets are updated when a value changes
+ * C++ really could do with properties built-in :(
+ */
+class VertexAttributeProperty {
+public:
+    VertexAttributeProperty(VertexSpecification* spec, VertexAttribute VertexSpecification::* attr);
+
+    operator VertexAttribute() const {
+        return spec_->*attr_;
+    }
+
+    VertexAttributeProperty& operator=(const VertexAttribute& rhs);
+
+    VertexAttributeProperty(const VertexAttributeProperty& rhs) = delete;
+    VertexAttributeProperty& operator=(const VertexAttributeProperty& rhs) = delete;
+private:
+    VertexSpecification* spec_ = nullptr;
+    VertexAttribute VertexSpecification::* attr_ = nullptr;
+};
+
+
+class VertexSpecification {
+    VertexAttribute position_attribute_ = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute normal_attribute_ = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute texcoord0_attribute_ = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute texcoord1_attribute_ = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute texcoord2_attribute_ = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute texcoord3_attribute_ = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute texcoord4_attribute_ = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute texcoord5_attribute_ = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute texcoord6_attribute_ = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute texcoord7_attribute_ = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute diffuse_attribute_ = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute specular_attribute_ = VERTEX_ATTRIBUTE_NONE;
+
+    uint16_t normal_offset_ = 0;
+    uint16_t texcoord0_offset_ = 0;
+    uint16_t texcoord1_offset_ = 0;
+    uint16_t texcoord2_offset_ = 0;
+    uint16_t texcoord3_offset_ = 0;
+    uint16_t texcoord4_offset_ = 0;
+    uint16_t texcoord5_offset_ = 0;
+    uint16_t texcoord6_offset_ = 0;
+    uint16_t texcoord7_offset_ = 0;
+    uint16_t diffuse_offset_ = 0;
+    uint16_t specular_offset_ = 0;
+
+public:
     static const VertexSpecification DEFAULT;
     static const VertexSpecification POSITION_ONLY;
     static const VertexSpecification POSITION_AND_DIFFUSE;
 
-    VertexAttribute position_attribute = VERTEX_ATTRIBUTE_NONE;
-    VertexAttribute normal_attribute = VERTEX_ATTRIBUTE_NONE;
-    VertexAttribute texcoord0_attribute = VERTEX_ATTRIBUTE_NONE;
-    VertexAttribute texcoord1_attribute = VERTEX_ATTRIBUTE_NONE;
-    VertexAttribute texcoord2_attribute = VERTEX_ATTRIBUTE_NONE;
-    VertexAttribute texcoord3_attribute = VERTEX_ATTRIBUTE_NONE;
-    VertexAttribute texcoord4_attribute = VERTEX_ATTRIBUTE_NONE;
-    VertexAttribute texcoord5_attribute = VERTEX_ATTRIBUTE_NONE;
-    VertexAttribute texcoord6_attribute = VERTEX_ATTRIBUTE_NONE;
-    VertexAttribute texcoord7_attribute = VERTEX_ATTRIBUTE_NONE;
-    VertexAttribute diffuse_attribute = VERTEX_ATTRIBUTE_NONE;
-    VertexAttribute specular_attribute = VERTEX_ATTRIBUTE_NONE;
+    VertexAttributeProperty position_attribute = {this, &VertexSpecification::position_attribute_};
+    VertexAttributeProperty normal_attribute = {this, &VertexSpecification::normal_attribute_};
+    VertexAttributeProperty texcoord0_attribute = {this, &VertexSpecification::texcoord0_attribute_};
+    VertexAttributeProperty texcoord1_attribute = {this, &VertexSpecification::texcoord1_attribute_};
+    VertexAttributeProperty texcoord2_attribute = {this, &VertexSpecification::texcoord2_attribute_};
+    VertexAttributeProperty texcoord3_attribute = {this, &VertexSpecification::texcoord3_attribute_};
+    VertexAttributeProperty texcoord4_attribute = {this, &VertexSpecification::texcoord4_attribute_};
+    VertexAttributeProperty texcoord5_attribute = {this, &VertexSpecification::texcoord5_attribute_};
+    VertexAttributeProperty texcoord6_attribute = {this, &VertexSpecification::texcoord6_attribute_};
+    VertexAttributeProperty texcoord7_attribute = {this, &VertexSpecification::texcoord7_attribute_};
+    VertexAttributeProperty diffuse_attribute = {this, &VertexSpecification::diffuse_attribute_};
+    VertexAttributeProperty specular_attribute = {this, &VertexSpecification::specular_attribute_};
 
     VertexSpecification() = default;
+    VertexSpecification(const VertexSpecification&& rhs):
+        position_attribute_(rhs.position_attribute_),
+        normal_attribute_(rhs.normal_attribute_),
+        texcoord0_attribute_(rhs.texcoord0_attribute_),
+        texcoord1_attribute_(rhs.texcoord1_attribute_),
+        texcoord2_attribute_(rhs.texcoord2_attribute_),
+        texcoord3_attribute_(rhs.texcoord3_attribute_),
+        texcoord4_attribute_(rhs.texcoord4_attribute_),
+        texcoord5_attribute_(rhs.texcoord5_attribute_),
+        texcoord6_attribute_(rhs.texcoord6_attribute_),
+        texcoord7_attribute_(rhs.texcoord7_attribute_),
+        diffuse_attribute_(rhs.diffuse_attribute_),
+        specular_attribute_(rhs.specular_attribute_),
+        position_attribute(this, &VertexSpecification::position_attribute_),
+        normal_attribute(this, &VertexSpecification::normal_attribute_),
+        texcoord0_attribute(this, &VertexSpecification::texcoord0_attribute_),
+        texcoord1_attribute(this, &VertexSpecification::texcoord1_attribute_),
+        texcoord2_attribute(this, &VertexSpecification::texcoord2_attribute_),
+        texcoord3_attribute(this, &VertexSpecification::texcoord3_attribute_),
+        texcoord4_attribute(this, &VertexSpecification::texcoord4_attribute_),
+        texcoord5_attribute(this, &VertexSpecification::texcoord5_attribute_),
+        texcoord6_attribute(this, &VertexSpecification::texcoord6_attribute_),
+        texcoord7_attribute(this, &VertexSpecification::texcoord7_attribute_),
+        diffuse_attribute(this, &VertexSpecification::diffuse_attribute_),
+        specular_attribute(this, &VertexSpecification::specular_attribute_) {
+
+        recalc_stride_and_offsets();
+    }
+
+    VertexSpecification(const VertexSpecification& rhs):
+        position_attribute_(rhs.position_attribute_),
+        normal_attribute_(rhs.normal_attribute_),
+        texcoord0_attribute_(rhs.texcoord0_attribute_),
+        texcoord1_attribute_(rhs.texcoord1_attribute_),
+        texcoord2_attribute_(rhs.texcoord2_attribute_),
+        texcoord3_attribute_(rhs.texcoord3_attribute_),
+        texcoord4_attribute_(rhs.texcoord4_attribute_),
+        texcoord5_attribute_(rhs.texcoord5_attribute_),
+        texcoord6_attribute_(rhs.texcoord6_attribute_),
+        texcoord7_attribute_(rhs.texcoord7_attribute_),
+        diffuse_attribute_(rhs.diffuse_attribute_),
+        specular_attribute_(rhs.specular_attribute_),
+        position_attribute(this, &VertexSpecification::position_attribute_),
+        normal_attribute(this, &VertexSpecification::normal_attribute_),
+        texcoord0_attribute(this, &VertexSpecification::texcoord0_attribute_),
+        texcoord1_attribute(this, &VertexSpecification::texcoord1_attribute_),
+        texcoord2_attribute(this, &VertexSpecification::texcoord2_attribute_),
+        texcoord3_attribute(this, &VertexSpecification::texcoord3_attribute_),
+        texcoord4_attribute(this, &VertexSpecification::texcoord4_attribute_),
+        texcoord5_attribute(this, &VertexSpecification::texcoord5_attribute_),
+        texcoord6_attribute(this, &VertexSpecification::texcoord6_attribute_),
+        texcoord7_attribute(this, &VertexSpecification::texcoord7_attribute_),
+        diffuse_attribute(this, &VertexSpecification::diffuse_attribute_),
+        specular_attribute(this, &VertexSpecification::specular_attribute_) {
+
+        recalc_stride_and_offsets();
+    }
+
+    VertexSpecification& operator=(const VertexSpecification& rhs) {
+        position_attribute_ = rhs.position_attribute_;
+        normal_attribute_ = rhs.normal_attribute_;
+        texcoord0_attribute_ = rhs.texcoord0_attribute_;
+        texcoord1_attribute_ = rhs.texcoord1_attribute_;
+        texcoord2_attribute_ = rhs.texcoord2_attribute_;
+        texcoord3_attribute_ = rhs.texcoord3_attribute_;
+        texcoord4_attribute_ = rhs.texcoord4_attribute_;
+        texcoord5_attribute_ = rhs.texcoord5_attribute_;
+        texcoord6_attribute_ = rhs.texcoord6_attribute_;
+        texcoord7_attribute_ = rhs.texcoord7_attribute_;
+        diffuse_attribute_ = rhs.diffuse_attribute_;
+        specular_attribute_ = rhs.specular_attribute_;
+
+        recalc_stride_and_offsets();
+
+        return *this;
+    }
+
     VertexSpecification(
         VertexAttribute position,
         VertexAttribute normal = VERTEX_ATTRIBUTE_NONE,
@@ -119,45 +247,47 @@ struct VertexSpecification {
 
     inline uint32_t stride() const { return stride_; }
 
-    bool has_positions() const { return bool(position_attribute); }
-    bool has_normals() const { return bool(normal_attribute); }
+    bool has_positions() const { return bool(position_attribute_); }
+    bool has_normals() const { return bool(normal_attribute_); }
 
     bool has_texcoordX(uint8_t which) const;
 
     const VertexAttribute texcoordX_attribute(uint8_t which) const;
 
-    bool has_texcoord0() const { return bool(texcoord0_attribute); }
-    bool has_texcoord1() const { return bool(texcoord1_attribute); }
-    bool has_texcoord2() const { return bool(texcoord2_attribute); }
-    bool has_texcoord3() const { return bool(texcoord3_attribute); }
-    bool has_texcoord4() const { return bool(texcoord4_attribute); }
-    bool has_texcoord5() const { return bool(texcoord5_attribute); }
-    bool has_texcoord6() const { return bool(texcoord6_attribute); }
-    bool has_texcoord7() const { return bool(texcoord7_attribute); }
+    bool has_texcoord0() const { return bool(texcoord0_attribute_); }
+    bool has_texcoord1() const { return bool(texcoord1_attribute_); }
+    bool has_texcoord2() const { return bool(texcoord2_attribute_); }
+    bool has_texcoord3() const { return bool(texcoord3_attribute_); }
+    bool has_texcoord4() const { return bool(texcoord4_attribute_); }
+    bool has_texcoord5() const { return bool(texcoord5_attribute_); }
+    bool has_texcoord6() const { return bool(texcoord6_attribute_); }
+    bool has_texcoord7() const { return bool(texcoord7_attribute_); }
 
-    bool has_diffuse() const { return bool(diffuse_attribute); }
-    bool has_specular() const { return bool(specular_attribute); }    
+    bool has_diffuse() const { return bool(diffuse_attribute_); }
+    bool has_specular() const { return bool(specular_attribute_); }
 
-    uint32_t position_offset(bool check=true) const;
-    uint32_t normal_offset(bool check=true) const;
-    uint32_t texcoord0_offset(bool check=true) const;
-    uint32_t texcoord1_offset(bool check=true) const;
-    uint32_t texcoord2_offset(bool check=true) const;
-    uint32_t texcoord3_offset(bool check=true) const;
-    uint32_t texcoord4_offset(bool check=true) const;
-    uint32_t texcoord5_offset(bool check=true) const;
-    uint32_t texcoord6_offset(bool check=true) const;
-    uint32_t texcoord7_offset(bool check=true) const;
+    uint16_t position_offset(bool check=true) const;
+    uint16_t normal_offset(bool check=true) const;
+    uint16_t texcoord0_offset(bool check=true) const;
+    uint16_t texcoord1_offset(bool check=true) const;
+    uint16_t texcoord2_offset(bool check=true) const;
+    uint16_t texcoord3_offset(bool check=true) const;
+    uint16_t texcoord4_offset(bool check=true) const;
+    uint16_t texcoord5_offset(bool check=true) const;
+    uint16_t texcoord6_offset(bool check=true) const;
+    uint16_t texcoord7_offset(bool check=true) const;
 
-    uint32_t texcoordX_offset(uint8_t which, bool check=true) const;
+    uint16_t texcoordX_offset(uint8_t which, bool check=true) const;
 
-    uint32_t diffuse_offset(bool check=true) const;
-    uint32_t specular_offset(bool check=true) const;
-
-    void recalc_stride();
+    uint16_t diffuse_offset(bool check=true) const;
+    uint16_t specular_offset(bool check=true) const;
 
 private:
-    uint32_t stride_;
+    friend class VertexAttributeProperty;
+
+    uint32_t stride_ = 0;
+
+    void recalc_stride_and_offsets();
 };
 
 enum IndexType {

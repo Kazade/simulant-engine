@@ -252,7 +252,10 @@ void send_attribute(ShaderAvailableAttributes attr,
 
         enable_vertex_attribute(loc);
 
-        auto attr_size = vertex_attribute_size(attribute_for_type(convert(attr), vertex_spec));
+
+        auto converted = convert(attr);
+        auto attr_for_type = attribute_for_type(converted, vertex_spec);
+        auto attr_size = vertex_attribute_size(attr_for_type);
         auto stride = vertex_spec.stride();
 
         GLCheck(glVertexAttribPointer,

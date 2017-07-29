@@ -23,72 +23,75 @@
 
 namespace smlt {
 
-uint32_t vertex_attribute_size(VertexAttribute attr) {
-    switch(attr) {
-    case VERTEX_ATTRIBUTE_NONE: return 0;
-    case VERTEX_ATTRIBUTE_2F: return sizeof(float) * 2;
-    case VERTEX_ATTRIBUTE_3F:  return sizeof(float) * 3;
-    case VERTEX_ATTRIBUTE_4F: return sizeof(float) * 4;
-    default:
-        return 0;
-    }
+constexpr uint32_t vertex_attribute_size(VertexAttribute attr) {
+    return (attr == VERTEX_ATTRIBUTE_2F) ? sizeof(float) * 2 :
+           (attr == VERTEX_ATTRIBUTE_3F) ? sizeof(float) * 3 :
+           (attr == VERTEX_ATTRIBUTE_4F) ? sizeof(float) * 4 : 0;
 }
 
 VertexSpecification::VertexSpecification(VertexAttribute position, VertexAttribute normal, VertexAttribute texcoord0,
         VertexAttribute texcoord1, VertexAttribute texcoord2, VertexAttribute texcoord3, VertexAttribute texcoord4,
         VertexAttribute texcoord5, VertexAttribute texcoord6, VertexAttribute texcoord7,
         VertexAttribute diffuse, VertexAttribute specular):
-    position_attribute(position),
-    normal_attribute(normal),
-    texcoord0_attribute(texcoord0),
-    texcoord1_attribute(texcoord1),
-    texcoord2_attribute(texcoord2),
-    texcoord3_attribute(texcoord3),
-    texcoord4_attribute(texcoord4),
-    texcoord5_attribute(texcoord5),
-    texcoord6_attribute(texcoord6),
-    texcoord7_attribute(texcoord7),
-    diffuse_attribute(diffuse),
-    specular_attribute(specular) {
+    position_attribute_(position),
+    normal_attribute_(normal),
+    texcoord0_attribute_(texcoord0),
+    texcoord1_attribute_(texcoord1),
+    texcoord2_attribute_(texcoord2),
+    texcoord3_attribute_(texcoord3),
+    texcoord4_attribute_(texcoord4),
+    texcoord5_attribute_(texcoord5),
+    texcoord6_attribute_(texcoord6),
+    texcoord7_attribute_(texcoord7),
+    diffuse_attribute_(diffuse),
+    specular_attribute_(specular) {
 
-    recalc_stride();
+    recalc_stride_and_offsets();
 }
 
 bool VertexSpecification::has_texcoordX(uint8_t which) const {
     assert(which < MAX_TEXTURE_UNITS);
 
-    switch(which) {
-    case 0: return has_texcoord0();
-    case 1: return has_texcoord1();
-    case 2: return has_texcoord2();
-    case 3: return has_texcoord3();
-    case 4: return has_texcoord4();
-    case 5: return has_texcoord5();
-    case 6: return has_texcoord6();
-    case 7: return has_texcoord7();
-    default:
-        return false;
-    }
+    return (which == 0) ? has_texcoord0() :
+           (which == 1) ? has_texcoord1() :
+           (which == 2) ? has_texcoord2() :
+           (which == 3) ? has_texcoord3() :
+           (which == 4) ? has_texcoord4() :
+           (which == 5) ? has_texcoord5() :
+           (which == 6) ? has_texcoord6() :
+           (which == 7) ? has_texcoord7() : false;
 }
 
 const VertexAttribute VertexSpecification::texcoordX_attribute(uint8_t which) const {
     assert(which < MAX_TEXTURE_UNITS);
 
     switch(which) {
-    case 0: return texcoord0_attribute;
-    case 1: return texcoord1_attribute;
-    case 2: return texcoord2_attribute;
-    case 3: return texcoord3_attribute;
-    case 4: return texcoord4_attribute;
-    case 5: return texcoord5_attribute;
-    case 6: return texcoord6_attribute;
-    case 7: return texcoord7_attribute;
+    case 0: return texcoord0_attribute_;
+    case 1: return texcoord1_attribute_;
+    case 2: return texcoord2_attribute_;
+    case 3: return texcoord3_attribute_;
+    case 4: return texcoord4_attribute_;
+    case 5: return texcoord5_attribute_;
+    case 6: return texcoord6_attribute_;
+    case 7: return texcoord7_attribute_;
     default:
         return VERTEX_ATTRIBUTE_NONE;
     }
 }
 
-void VertexSpecification::recalc_stride() {
+void VertexSpecification::recalc_stride_and_offsets() {
+    normal_offset_ = vertex_attribute_size(position_attribute_);
+    texcoord0_offset_ = normal_offset_ + vertex_attribute_size(normal_attribute_);
+    texcoord1_offset_ = texcoord0_offset_ + vertex_attribute_size(texcoord0_attribute_);
+    texcoord2_offset_ = texcoord1_offset_ + vertex_attribute_size(texcoord1_attribute_);
+    texcoord3_offset_ = texcoord2_offset_ + vertex_attribute_size(texcoord2_attribute_);
+    texcoord4_offset_ = texcoord3_offset_ + vertex_attribute_size(texcoord3_attribute_);
+    texcoord5_offset_ = texcoord4_offset_ + vertex_attribute_size(texcoord4_attribute_);
+    texcoord6_offset_ = texcoord5_offset_ + vertex_attribute_size(texcoord5_attribute_);
+    texcoord7_offset_ = texcoord6_offset_ + vertex_attribute_size(texcoord6_attribute_);
+    diffuse_offset_ = texcoord7_offset_ + vertex_attribute_size(texcoord7_attribute_);
+    specular_offset_ = diffuse_offset_ + vertex_attribute_size(diffuse_attribute_);
+
     stride_ = (
         vertex_attribute_size(position_attribute) +
         vertex_attribute_size(normal_attribute) +
@@ -105,57 +108,57 @@ void VertexSpecification::recalc_stride() {
     );
 }
 
-uint32_t VertexSpecification::position_offset(bool check) const {
+uint16_t VertexSpecification::position_offset(bool check) const {
     if(check && !has_positions()) { throw std::logic_error("No such attribute"); }
     return 0;
 }
 
-uint32_t VertexSpecification::normal_offset(bool check) const {
+uint16_t VertexSpecification::normal_offset(bool check) const {
     if(check && !has_normals()) { throw std::logic_error("No such attribute"); }
-    return vertex_attribute_size(position_attribute);
+    return normal_offset_;
 }
 
-uint32_t VertexSpecification::texcoord0_offset(bool check) const {
+uint16_t VertexSpecification::texcoord0_offset(bool check) const {
     if(check && !has_texcoord0()) { throw std::logic_error("No such attribute"); }
-    return normal_offset(false) + vertex_attribute_size(normal_attribute);
+    return texcoord0_offset_;
 }
 
-uint32_t VertexSpecification::texcoord1_offset(bool check) const {
+uint16_t VertexSpecification::texcoord1_offset(bool check) const {
     if(check && !has_texcoord1()) { throw std::logic_error("No such attribute"); }
-    return texcoord0_offset(false) + vertex_attribute_size(texcoord0_attribute);
+    return texcoord1_offset_;
 }
 
-uint32_t VertexSpecification::texcoord2_offset(bool check) const {
+uint16_t VertexSpecification::texcoord2_offset(bool check) const {
     if(check && !has_texcoord2()) { throw std::logic_error("No such attribute"); }
-    return texcoord1_offset(false) + vertex_attribute_size(texcoord1_attribute);
+    return texcoord2_offset_;
 }
 
-uint32_t VertexSpecification::texcoord3_offset(bool check) const {
+uint16_t VertexSpecification::texcoord3_offset(bool check) const {
     if(check && !has_texcoord3()) { throw std::logic_error("No such attribute"); }
-    return texcoord2_offset(false) + vertex_attribute_size(texcoord2_attribute);
+    return texcoord3_offset_;
 }
 
-uint32_t VertexSpecification::texcoord4_offset(bool check) const {
+uint16_t VertexSpecification::texcoord4_offset(bool check) const {
     if(check && !has_texcoord4()) { throw std::logic_error("No such attribute"); }
-    return texcoord3_offset(false) + vertex_attribute_size(texcoord3_attribute);
+    return texcoord4_offset_;
 }
 
-uint32_t VertexSpecification::texcoord5_offset(bool check) const {
+uint16_t VertexSpecification::texcoord5_offset(bool check) const {
     if(check && !has_texcoord5()) { throw std::logic_error("No such attribute"); }
-    return texcoord4_offset(false) + vertex_attribute_size(texcoord4_attribute);
+    return texcoord5_offset_;
 }
 
-uint32_t VertexSpecification::texcoord6_offset(bool check) const {
+uint16_t VertexSpecification::texcoord6_offset(bool check) const {
     if(check && !has_texcoord6()) { throw std::logic_error("No such attribute"); }
-    return texcoord5_offset(false) + vertex_attribute_size(texcoord5_attribute);
+    return texcoord6_offset_;
 }
 
-uint32_t VertexSpecification::texcoord7_offset(bool check) const {
+uint16_t VertexSpecification::texcoord7_offset(bool check) const {
     if(check && !has_texcoord7()) { throw std::logic_error("No such attribute"); }
-    return texcoord6_offset(false) + vertex_attribute_size(texcoord6_attribute);
+    return texcoord7_offset_;
 }
 
-uint32_t VertexSpecification::texcoordX_offset(uint8_t which, bool check) const {
+uint16_t VertexSpecification::texcoordX_offset(uint8_t which, bool check) const {
     assert(which < MAX_TEXTURE_UNITS);
 
     switch(which) {
@@ -172,14 +175,29 @@ uint32_t VertexSpecification::texcoordX_offset(uint8_t which, bool check) const 
     }
 }
 
-uint32_t VertexSpecification::diffuse_offset(bool check) const {
+uint16_t VertexSpecification::diffuse_offset(bool check) const {
     if(check && !has_diffuse()) { throw std::logic_error("No such attribute"); }
-    return texcoord3_offset(false) + vertex_attribute_size(texcoord3_attribute);
+    return diffuse_offset_;
 }
 
-uint32_t VertexSpecification::specular_offset(bool check) const {
+uint16_t VertexSpecification::specular_offset(bool check) const {
     if(check && !has_specular()) { throw std::logic_error("No such attribute"); }
-    return diffuse_offset(false) + vertex_attribute_size(diffuse_attribute);
+    return specular_offset_;
+}
+
+VertexAttributeProperty::VertexAttributeProperty(VertexSpecification *spec, VertexAttribute VertexSpecification::*attr):
+    spec_(spec),
+    attr_(attr) {
+
+    assert(spec_);
+}
+
+VertexAttributeProperty &VertexAttributeProperty::operator=(const VertexAttribute &rhs) {
+    assert(spec_);
+
+    spec_->*attr_ = rhs;
+    spec_->recalc_stride_and_offsets();
+    return (*this);
 }
 
 
