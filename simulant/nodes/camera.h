@@ -21,8 +21,6 @@ public:
 
     void ask_owner_for_destruction();
 
-    void update(float step) override;
-
     /* Camera Proxies have no mass/body so their AABB is just 0,0,0, or their position */
     const AABB& aabb() const {
         return bounds_;
@@ -60,6 +58,11 @@ private:
     Mat4 projection_matrix_;
 
     void update_frustum();
+
+    void on_position_set(const Vec3& oldp, const Vec3& newp) override;
+    void on_rotation_set(const Quaternion& oldr, const Quaternion& newr) override;
+    void on_scaling_set(const Vec3& olds, const Vec3& news) override;
+    void on_parent_set(TreeNode* oldp, TreeNode* newp) override;
 };
 
 }
