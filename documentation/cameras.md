@@ -1,7 +1,6 @@
 
 # Cameras
 
-Camera''s belong to the window, this is because they are essential to the rendering process. This also means they are unrelated to stages.
+Cameras are treated as physical objects within a Stage. They are StageNodes (like Actors) and can be moved, rotated and made children (or parents) of other StageNodes.
 
-It's a common use case to want to attach a camera to an entity, so a camera can have a CameraProxy in one of the stages which when manipulated
-will update its associated camera. You can create a CameraProxy by calling stage.host_camera(CameraID).
+When you define a render pipeline (normally through `window.render(stage_id, camera_id)`) the Camera specified must exist within the Stage being rendered. 

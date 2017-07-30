@@ -55,8 +55,8 @@ public:
         window->disable_pipeline(pipeline_id_);
 
         auto stage = window->stage(stage_id_);
-        stage->host_camera(camera_id_);
-        window->camera(camera_id_)->set_perspective_projection(
+
+        camera_id_.fetch()->set_perspective_projection(
             Degrees(45.0), float(window->width()) / float(window->height()), 10.0, 10000.0
         );
 

@@ -13,11 +13,13 @@ public:
     void do_load() {
         prepare_basic_scene(stage_id_, camera_id_);
 
+        auto cam = camera_id_.fetch();
+
         //Automatically calculate an orthographic projection, taking into account the aspect ratio
         //and the passed height. For example, passing a height of 2.0 would mean the view would extend
         //+1 and -1 in the vertical direction, -1.0 - +1.0 near/far, and width would be calculated from the aspect
         float render_height = 16.0;
-        float render_width = window->camera(camera_id_)->set_orthographic_projection_from_height(
+        float render_width = cam->set_orthographic_projection_from_height(
             render_height, float(window->width()) / float(window->height())
         );
 
@@ -32,8 +34,6 @@ public:
             stage->new_actor_with_mesh(mesh_id);
 
             auto bounds = stage->assets->mesh(mesh_id)->aabb();
-
-            stage->host_camera(camera_id_);
 
             //Constrain the camera to the area where the sprite grid is rendered
             stage->camera(camera_id_)->constrain_to_aabb(

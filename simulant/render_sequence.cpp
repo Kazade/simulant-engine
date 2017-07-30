@@ -23,10 +23,10 @@
 #include "render_sequence.h"
 #include "stage.h"
 #include "nodes/actor.h"
-#include "nodes/camera_proxy.h"
-#include "mesh.h"
+#include "nodes/camera.h"
 #include "nodes/light.h"
-#include "camera.h"
+
+#include "mesh.h"
 #include "window_base.h"
 #include "partitioner.h"
 #include "loader.h"
@@ -237,8 +237,8 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
     CameraID camera_id = pipeline_stage->camera_id();
     StageID stage_id = pipeline_stage->stage_id();
 
-    auto camera = window->camera(camera_id);
     auto stage = window->stage(stage_id);
+    auto camera = stage->camera(camera_id);
 
     // Trigger a signal to indicate the stage is about to be rendered
     stage->signal_stage_pre_render()(camera_id, viewport);

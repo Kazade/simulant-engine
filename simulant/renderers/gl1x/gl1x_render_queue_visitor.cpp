@@ -10,8 +10,8 @@
 #include "gl1x_renderer.h"
 #include "gl1x_render_group_impl.h"
 
-#include "../../camera.h"
 #include "../../stage.h"
+#include "../../nodes/camera.h"
 #include "../../nodes/light.h"
 #include "../../utils/gl_error.h"
 

@@ -17,8 +17,8 @@ public:
         window->disable_pipeline(pipeline_id_);
 
         auto stage = window->stage(stage_id_);
-        stage->host_camera(camera_id_);
-        window->camera(camera_id_)->set_perspective_projection(
+
+        camera_id_.fetch()->set_perspective_projection(
             Degrees(45.0), float(window->width()) / float(window->height()), 1.0, 1000.0
         );
 
@@ -32,7 +32,7 @@ public:
         smlt::TextureID crate = window->shared_assets->new_texture_from_file("sample_data/crate.png");
         smlt::MaterialID mat = window->shared_assets->new_material_from_texture(crate);
 
-        box_mesh_id_ = window->shared_assets->new_mesh_as_box(5, 5, 5);
+        box_mesh_id_ = window->shared_assets->new_mesh_as_box(5, 5, 5, smlt::GARBAGE_COLLECT_NEVER);
         window->shared_assets->mesh(box_mesh_id_)->set_material_id(mat);
 
         smlt::TextureID grass = window->shared_assets->new_texture_from_file("sample_data/beach_sand.png");

@@ -15,7 +15,7 @@ public:
     void test_basic_usage() {
         Viewport view;
         StageID stage = window->new_stage();
-        CameraID cam = window->new_camera();
+        CameraID cam = stage.fetch()->new_camera();
         TextureID tex = window->shared_assets->new_texture();
 
         PipelineID pid1 = window->render(stage, cam);
@@ -60,7 +60,7 @@ public:
 
     void test_rendering_flag() {
         StageID stage = window->new_stage();
-        CameraID cam = window->new_camera();
+        CameraID cam = stage.fetch()->new_camera();
 
         assert_false(window->stage(stage)->is_being_rendered());
 

@@ -10,13 +10,13 @@ class ObjectTest : public SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();
-        camera_id_ = window->new_camera();
+
         stage_id_ = window->new_stage();
+        camera_id_ = stage_id_.fetch()->new_camera();
     }
 
     void tear_down() {
         SimulantTestCase::tear_down();
-        window->delete_camera(camera_id_);
         window->delete_stage(stage_id_);
     }
 

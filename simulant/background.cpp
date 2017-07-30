@@ -20,9 +20,9 @@
 #include "stage.h"
 #include "background.h"
 #include "window_base.h"
-#include "camera.h"
 #include "render_sequence.h"
 #include "nodes/actor.h"
+#include "nodes/camera.h"
 
 namespace smlt {
 
@@ -50,7 +50,7 @@ void Background::update_camera(const Viewport &viewport) {
         height = 1.0;
     }
 
-    manager_->window->camera(camera_id_)->set_orthographic_projection(
+    camera_id_.fetch()->set_orthographic_projection(
         0,
         width,
         0,
@@ -60,12 +60,12 @@ void Background::update_camera(const Viewport &viewport) {
 }
 
 bool Background::init() {
-    //We need to create an orthographic camera
-    camera_id_ = manager_->window->new_camera();
-    update_camera(Viewport()); //FIXME: Only fullscreen??
-
     //Create a stage to add to the render pipeline
     stage_id_ = manager_->window->new_stage(PARTITIONER_NULL);
+
+    //We need to create an orthographic camera
+    camera_id_ = stage_id_.fetch()->new_camera();
+    update_camera(Viewport()); //FIXME: Only fullscreen??
 
     {
         auto stage = manager_->window->stage(stage_id_);
@@ -88,10 +88,10 @@ bool Background::init() {
 }
 
 void Background::cleanup() {
-    //Remove the pipeline and delete the camera, everything else is cleaned
-    //up automatically when the node is detached from the scene tree
+    //Remove the pipeline and delete the stage, everything else is cleaned
+    //up automatically
     manager_->window->delete_pipeline(pipeline_id_);
-    manager_->window->delete_camera(camera_id_);
+    manager_->window->delete_stage(stage_id_);
 }
 
 void Background::update(float dt) {

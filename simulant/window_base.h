@@ -116,7 +116,6 @@ typedef sig::signal<void ()> ShutdownSignal;
 class WindowBase :
     public Source,
     public StageManager,
-    public CameraManager,
     public Loadable,
     public PipelineHelperAPIInterface,
     public RenderTarget,

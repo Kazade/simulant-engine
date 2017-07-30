@@ -22,7 +22,7 @@ This section covers the base subsystems and usages of Simulant.
  - The rendering process: [The Render Sequence](render_sequence.md) | [Pipelines](pipeline.md)
  - Partitioning: [Overview](partitioners.md) | [Spatial Hash Partitioner](spatial_hashing.md) | [The Null Partitioner](null_partitioner.md)
  - User interfaces: [Widgets](widgets.md)
- - Cameras(1)[1]: [Cameras and Camera Proxies](cameras.md)
+ - Cameras: [Cameras](cameras.md)
 
 ### Scene Building
 
@@ -31,4 +31,3 @@ This section covers the base subsystems and usages of Simulant.
  - Scene Tree: [Stage Nodes](stage_nodes.md)
  - Supported File Formats: [Mesh Formats](mesh_formats.md) | [Image Formats](image_formats.md)
 
-[1]: The Camera Proxy system will change at some point to make Cameras normal StageNodes

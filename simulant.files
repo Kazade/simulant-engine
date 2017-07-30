@@ -93,8 +93,8 @@ simulant/math/vec4.cpp
 simulant/math/vec4.h
 simulant/nodes/actor.cpp
 simulant/nodes/actor.h
-simulant/nodes/camera_proxy.cpp
-simulant/nodes/camera_proxy.h
+simulant/nodes/camera.cpp
+simulant/nodes/camera.h
 simulant/nodes/geom.cpp
 simulant/nodes/geom.h
 simulant/nodes/light.cpp
@@ -506,8 +506,6 @@ simulant/background.cpp
 simulant/background.h
 simulant/base.cpp
 simulant/base.h
-simulant/camera.cpp
-simulant/camera.h
 simulant/colour.cpp
 simulant/colour.h
 simulant/debug.cpp

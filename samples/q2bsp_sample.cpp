@@ -21,8 +21,6 @@ public:
 
         auto mesh = stage->assets->new_mesh_from_file("sample_data/sample.bsp").fetch();
         auto actor_id = stage->new_actor_with_mesh(mesh->id());
-
-        stage->host_camera(camera_id_);
         /*
         stage->camera(camera_id_)->move_to_absolute(
             mesh->data->get<smlt::Vec3>("player_spawn")
@@ -31,7 +29,7 @@ public:
         // Add a fly controller to the camera for user input
         stage->camera(camera_id_)->new_controller<controllers::Fly>(window);
 
-        window->camera(camera_id_)->set_perspective_projection(
+        camera_id_.fetch()->set_perspective_projection(
             Degrees(45.0),
             float(window->width()) / float(window->height()),
             1.0,

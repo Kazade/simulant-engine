@@ -1,7 +1,7 @@
 #include "spatial_hash.h"
 #include "../nodes/actor.h"
 #include "../nodes/light.h"
-#include "../camera.h"
+#include "../nodes/camera.h"
 #include "../nodes/particle_system.h"
 
 namespace smlt {
@@ -148,7 +148,7 @@ void SpatialHashPartitioner::lights_and_geometry_visible_from(
     read_lock<shared_mutex> lock(lock_);
 
     auto entries = hash_->find_objects_within_frustum(
-        stage->window->camera(camera_id)->frustum()
+        stage->camera(camera_id)->frustum()
     );
 
     for(auto& entry: entries) {

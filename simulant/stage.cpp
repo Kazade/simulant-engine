@@ -22,13 +22,13 @@
 #include "partitioner.h"
 #include "nodes/actor.h"
 #include "nodes/light.h"
-#include "camera.h"
+#include "nodes/camera.h"
 #include "debug.h"
 
 #include "nodes/sprite.h"
 #include "nodes/particle_system.h"
 #include "nodes/geom.h"
-#include "nodes/camera_proxy.h"
+#include "nodes/camera.h"
 
 #include "nodes/ui/ui_manager.h"
 
@@ -46,6 +46,7 @@ Stage::Stage(StageID id, WindowBase *parent, AvailablePartitioner partitioner):
     WindowHolder(parent),
     StageNode(this),
     generic::Identifiable<StageID>(id),
+    CameraManager(this),
     ui_(new ui::UIManager(this)),
     resource_manager_(ResourceManager::create(parent, parent->shared_assets.get())),
     ambient_light_(smlt::Colour::WHITE),
@@ -77,7 +78,7 @@ void Stage::cleanup() {
 
     LightManager::clear();
     ActorManager::clear();
-    CameraProxyManager::objects_.clear();
+    CameraManager::delete_all_cameras();
 }
 
 void Stage::ask_owner_for_destruction() {
@@ -314,27 +315,6 @@ LightPtr Stage::light(LightID light_id) {
 void Stage::delete_light(LightID light_id) {
     signal_light_destroyed_(light_id);
     LightManager::destroy(light_id);
-}
-
-void Stage::host_camera(CameraID c) {
-    if(window->camera(c)->has_proxy()) {
-        //Destroy any existing proxy
-        window->camera(c)->proxy().stage->evict_camera(c);
-    }
-
-    //Create a camera proxy for the camera ID
-    CameraProxyManager::make(c, this);
-
-    camera(c)->set_parent(this);
-}
-
-void Stage::evict_camera(CameraID c) {
-    //Delete the camera proxy
-    CameraProxyManager::destroy(c);
-}
-
-CameraProxyPtr Stage::camera(CameraID c) {
-    return CameraProxyManager::get(c).lock().get();
 }
 
 void Stage::set_partitioner(AvailablePartitioner partitioner) {
