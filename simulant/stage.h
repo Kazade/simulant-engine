@@ -35,6 +35,7 @@
 #include "nodes/light.h"
 #include "types.h"
 #include "resource_manager.h"
+#include "managers.h"
 #include "window_base.h"
 
 namespace smlt {
@@ -70,7 +71,6 @@ class Sprite;
 typedef generic::ManualManager<Actor, ActorID> ActorManager;
 typedef generic::ManualManager<Geom, GeomID> GeomManager;
 typedef generic::ManualManager<Light, LightID> LightManager;
-typedef generic::TemplatedManager<CameraProxy, CameraID> CameraProxyManager;
 typedef generic::TemplatedManager<ParticleSystem, ParticleSystemID> ParticleSystemManager;
 
 typedef sig::signal<void (const ActorID&)> ActorCreatedSignal;
@@ -96,7 +96,7 @@ class Stage:
     public ActorManager,
     public ParticleSystemManager,
     public LightManager,
-    public CameraProxyManager,
+    public CameraManager,
     public Loadable,    
     public RenderableStage,
     public virtual WindowHolder {
@@ -147,9 +147,6 @@ public:
     void delete_light(LightID light_id);
     uint32_t light_count() const { return LightManager::count(); }
 
-    void host_camera(CameraID c); ///< Create a representation (CameraProxy) of the designated camera
-    void evict_camera(CameraID c); ///< Remove the representation of the camera
-    CameraProxyPtr camera(CameraID c);
 
     smlt::Colour ambient_light() const { return ambient_light_; }
     void set_ambient_light(const smlt::Colour& c) { ambient_light_ = c; }

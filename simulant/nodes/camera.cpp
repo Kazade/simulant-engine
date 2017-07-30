@@ -1,42 +1,35 @@
-//
-//   Copyright (c) 2011-2017 Luke Benstead https://simulant-engine.appspot.com
-//
-//     This file is part of Simulant.
-//
-//     Simulant is free software: you can redistribute it and/or modify
-//     it under the terms of the GNU General Public License as published by
-//     the Free Software Foundation, either version 3 of the License, or
-//     (at your option) any later version.
-//
-//     Simulant is distributed in the hope that it will be useful,
-//     but WITHOUT ANY WARRANTY; without even the implied warranty of
-//     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//     GNU General Public License for more details.
-//
-//     You should have received a copy of the GNU General Public License
-//     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
-//
-
-#include "nodes/actor.h"
 #include "camera.h"
-#include "stage.h"
-#include "window_base.h"
-#include "./generic/optional.h"
+
+#include "../stage.h"
+#include "actor.h"
 
 namespace smlt {
 
-Camera::Camera(CameraID id, WindowBase *window):
-    generic::Identifiable<CameraID>(id),
-    window_(window),
-    proxy_(nullptr) {
 
-    set_perspective_projection(Degrees(45.0), window->aspect_ratio());
+Camera::Camera(CameraID camera_id, Stage *stage):
+    StageNode(stage),
+    generic::Identifiable<CameraID>(camera_id) {
+
+    assert(stage);
+
+    set_perspective_projection(smlt::Degrees(45.0f), stage->window->aspect_ratio());
 }
 
-void Camera::set_transform(const smlt::Mat4& transform) {
-    transform_ = transform;
+Camera::~Camera() {
+
+}
+
+void Camera::ask_owner_for_destruction() {
+    stage->delete_camera(id());
+}
+
+void Camera::update(float step) {
+    StageNode::update(step);
+
+    transform_ = absolute_transformation();
     update_frustum();
 }
+
 
 void Camera::update_frustum() {
     //Recalculate the view matrix
@@ -64,10 +57,6 @@ double Camera::set_orthographic_projection_from_height(double desired_height_in_
 }
 
 smlt::optional<Vec3> Camera::project_point(const RenderTarget &target, const Viewport &viewport, const Vec3& point) const {
-    if(!window_) {
-        throw std::logic_error("Passed a nullptr as a camera's window");
-    }
-
     Vec4 in(point, 1.0);
     Vec4 out = view_matrix() * in;
     in = projection_matrix() * out;

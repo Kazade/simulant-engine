@@ -7,10 +7,12 @@ public:
     GameScene(WindowBase& window):
         smlt::Scene<GameScene>(window) {}
 
-    void do_load() {
-        camera_id_ = window->new_camera();
-        cube_stage_ = window->new_stage();
+    void do_load() {        
+        cube_stage_ = window->new_stage();        
+        auto cube_cam = cube_stage_.fetch()->new_camera().fetch();
+
         rect_stage_ = window->new_stage();
+        auto rect_cam = rect_stage_.fetch()->new_camera().fetch();
 
         smlt::TextureID tid = window->shared_assets->new_texture_from_file("sample_data/sample.tga");
         MeshID cube_mesh = window->shared_assets->new_mesh_as_cube(1.0);
@@ -25,8 +27,8 @@ public:
         TextureID rtt = window->shared_assets->new_texture(smlt::GARBAGE_COLLECT_NEVER);
         window->shared_assets->mesh(rect_mesh)->set_texture_on_material(0, rtt);
 
-        window->render(cube_stage_, camera_id_).to_texture(rtt);
-        window->render(rect_stage_, camera_id_).to_framebuffer(
+        window->render(cube_stage_, cube_cam->id()).to_texture(rtt);
+        window->render(rect_stage_, rect_cam->id()).to_framebuffer(
             Viewport(VIEWPORT_TYPE_FULL, smlt::Colour::GREY)
         ).with_clear();
     }
@@ -37,7 +39,6 @@ public:
     }
 
 private:
-    CameraID camera_id_;
     StageID cube_stage_, rect_stage_;
     ActorID cube_, rect_;
 };

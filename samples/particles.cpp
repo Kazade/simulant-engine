@@ -18,7 +18,7 @@ public:
         ps->set_material_id(mat->id());
         mat->set_texture_unit_on_all_passes(0, stage->assets->new_texture_from_file("sample_data/flare.tga"));
 
-        window->camera(camera_)->set_perspective_projection(
+        camera_.fetch()->set_perspective_projection(
             smlt::Degrees(45.0),
             float(window->width()) / float(window->height()),
             0.1,

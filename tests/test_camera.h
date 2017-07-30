@@ -14,25 +14,26 @@ class CameraTest : public SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();
-        camera_id_ = window->new_camera();
         stage_id_ = window->new_stage();
+        camera_id_ = stage_id_.fetch()->new_camera();
     }
 
     void tear_down() {
         SimulantTestCase::tear_down();
-        window->delete_camera(camera_id_);
+        stage_id_.fetch()->delete_camera(camera_id_);
         window->delete_stage(stage_id_);
     }
 
     void test_project_point() {
-        window->camera(camera_id_)->set_perspective_projection(Degrees(45.0), float(window->width()) / float(window->height()));
+        auto camera = camera_id_.fetch();
+        camera->set_perspective_projection(Degrees(45.0), float(window->width()) / float(window->height()));
 
-        Vec3 p1 = window->camera(camera_id_)->project_point(*window, Viewport(), Vec3(0, 0, -10)).value();
+        Vec3 p1 = camera->project_point(*window, Viewport(), Vec3(0, 0, -10)).value();
 
         assert_equal(window->width() / 2, p1.x);
         assert_equal(window->height() / 2, p1.y);
 
-        p1 = window->camera(camera_id_)->project_point(*window, Viewport(), Vec3(1, 0, -10)).value();
+        p1 = camera->project_point(*window, Viewport(), Vec3(1, 0, -10)).value();
 
         assert_true(p1.x > (window->width() / 2));
         assert_equal(window->height() / 2, p1.y);
@@ -41,10 +42,7 @@ public:
     void test_look_at() {       
         Vec3 pos(0, 0, -1);
 
-
         auto stage = window->stage(stage_id_);
-
-        stage->host_camera(camera_id_);
         stage->camera(camera_id_)->look_at(pos);
 
         Quaternion q = stage->camera(camera_id_)->absolute_rotation();

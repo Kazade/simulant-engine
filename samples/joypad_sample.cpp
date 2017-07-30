@@ -77,7 +77,7 @@ public:
     void do_load() {
         prepare_basic_scene(stage_id_, camera_id_);
 
-        window->camera(camera_id_)->set_perspective_projection(
+        camera_id_.fetch()->set_perspective_projection(
             Degrees(45.0),
             float(window->width()) / float(window->height()),
             1.0,

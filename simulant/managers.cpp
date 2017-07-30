@@ -22,8 +22,7 @@
 #include "background.h"
 #include "window_base.h"
 #include "stage.h"
-#include "camera.h"
-#include "nodes/camera_proxy.h"
+#include "nodes/camera.h"
 #include "render_sequence.h"
 #include "loader.h"
 
@@ -91,13 +90,14 @@ uint32_t BackgroundManager::background_count() const {
 
 //=============== START CAMERAS ============
 
-CameraManager::CameraManager(WindowBase *window):
-    window_(window) {
+CameraManager::CameraManager(Stage *stage):
+    stage_(stage) {
 
 }
 
 CameraID CameraManager::new_camera() {
-    CameraID new_camera = CameraManager::make(this->window_);
+    CameraID new_camera = cameras_.make(this->stage_);
+    new_camera.fetch()->set_parent(stage_);
 
     return new_camera;
 }
@@ -110,11 +110,11 @@ CameraID CameraManager::new_camera_with_orthographic_projection(double left, dou
     CameraID new_camera_id = new_camera();
 
     if(!left && !right) {
-        right = window_->width();
+        right = stage_->window->width();
     }
 
     if(!bottom && !top) {
-        top = window_->height();
+        top = stage_->window->height();
     }
 
     camera(new_camera_id)->set_orthographic_projection(left, right, bottom, top, near, far);
@@ -133,33 +133,27 @@ CameraID CameraManager::new_camera_for_viewport(const Viewport& vp) {
 }
 
 CameraID CameraManager::new_camera_for_ui() {
-    return new_camera_with_orthographic_projection(0, window_->width(), 0, window_->height(), -1, 1);
+    return new_camera_with_orthographic_projection(0, stage_->window->width(), 0, stage_->window->height(), -1, 1);
 }
 
 CameraPtr CameraManager::camera(CameraID c) {
-    return CameraManager::get(c).lock().get();
+    return cameras_.get(c);
 }
 
 void CameraManager::delete_camera(CameraID cid) {
-    //Remove any associated proxy
-    auto cam = camera(cid);
-    if(cam && cam->has_proxy()) {
-        cam->proxy().stage->evict_camera(cid);
-    }
-
-    CameraManager::destroy(cid);
+    cameras_.destroy(cid);
 }
 
 uint32_t CameraManager::camera_count() const {
-    return CameraManager::count();
+    return cameras_.count();
 }
 
 const bool CameraManager::has_camera(CameraID id) const {
-    return CameraManager::contains(id);
+    return cameras_.contains(id);
 }
 
 void CameraManager::delete_all_cameras() {
-    destroy_all();
+    cameras_.clear();
 }
 
 //============== END CAMERAS ================

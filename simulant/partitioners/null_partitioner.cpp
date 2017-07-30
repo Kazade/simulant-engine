@@ -18,7 +18,7 @@
 //
 
 #include "../stage.h"
-#include "../camera.h"
+#include "../nodes/camera.h"
 #include "../nodes/actor.h"
 #include "../nodes/light.h"
 #include "../nodes/particle_system.h"
@@ -30,7 +30,7 @@ namespace smlt {
 void NullPartitioner::lights_and_geometry_visible_from(
         CameraID camera_id, std::vector<LightID> &lights_out, std::vector<std::shared_ptr<Renderable> > &geom_out) {
 
-    auto frustum = stage->window->camera(camera_id)->frustum();
+    auto frustum = stage->camera(camera_id)->frustum();
 
     for(LightID lid: all_lights_) {
         auto light = stage->light(lid);

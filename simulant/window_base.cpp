@@ -41,7 +41,6 @@
 #include "loaders/ttf_loader.h"
 
 #include "sound.h"
-#include "camera.h"
 #include "render_sequence.h"
 #include "stage.h"
 #include "virtual_gamepad.h"
@@ -58,7 +57,6 @@ namespace smlt {
 WindowBase::WindowBase():
     Source(this),
     StageManager(this),    
-    CameraManager(this),
     resource_manager_(new ResourceManager(this)),
     initialized_(false),
     width_(-1),
@@ -157,7 +155,6 @@ void WindowBase::_cleanup() {
     background_manager_.reset();
     render_sequence_.reset();
 
-    delete_all_cameras();
     delete_all_stages();
 
     if(sound_driver_) {
@@ -477,7 +474,6 @@ void WindowBase::reset() {
 
     render_sequence()->delete_all_pipelines();
 
-    CameraManager::destroy_all();
     StageManager::destroy_all();
     background_manager_.reset(new BackgroundManager(this));
 

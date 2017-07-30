@@ -32,7 +32,6 @@
 #include "viewport.h"
 #include "frustum.h"
 #include "material.h"
-#include "camera.h"
 #include "nodes/actor.h"
 
 #include "nodes/ui/ui_manager.h"
@@ -52,7 +51,7 @@
 #include "debug.h"
 #include "nodes/sprite.h"
 #include "nodes/particle_system.h"
-#include "nodes/camera_proxy.h"
+#include "nodes/camera.h"
 #include "hardware_buffer.h"
 #include "virtual_gamepad.h"
 #include "scenes/scene_manager.h"

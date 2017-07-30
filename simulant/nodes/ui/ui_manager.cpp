@@ -17,7 +17,7 @@
 #include "label.h"
 #include "progress_bar.h"
 #include "../../stage.h"
-#include "../../camera.h"
+#include "../camera.h"
 
 namespace smlt {
 namespace ui {

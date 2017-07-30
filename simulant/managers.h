@@ -21,6 +21,7 @@
 
 #include "generic/generic_tree.h"
 #include "generic/manager.h"
+#include "generic/manual_manager.h"
 #include "generic/property.h"
 #include "types.h"
 #include "interfaces.h"
@@ -52,11 +53,9 @@ private:
     WindowBase* window_;
 };
 
-class CameraManager:
-    public generic::TemplatedManager<Camera, CameraID> {
-
+class CameraManager {
 public:
-    CameraManager(WindowBase* window);
+    CameraManager(Stage* stage);
 
     CameraID new_camera();
     CameraID new_camera_with_orthographic_projection(double left=0, double right=0, double bottom=0, double top=0, double near=-1.0, double far=1.0);
@@ -69,7 +68,9 @@ public:
     void delete_all_cameras();
 
 private:
-    WindowBase* window_;
+    Stage* stage_;
+
+    generic::ManualManager<Camera, CameraID> cameras_;
 };
 
 typedef sig::signal<void (StageID)> StageAddedSignal;

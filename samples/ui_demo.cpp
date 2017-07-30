@@ -9,8 +9,9 @@ public:
         smlt::Scene<MainScene>(window) {}
 
     void do_load() {
-        camera_ = window->new_camera_with_orthographic_projection(0, window->width(), 0, window->height());
         stage_ = window->new_stage();
+        camera_ = stage_.fetch()->new_camera_with_orthographic_projection(0, window->width(), 0, window->height());
+
         window->render(stage_, camera_).with_clear(smlt::BUFFER_CLEAR_ALL, smlt::Colour::BLACK);
 
         smlt::StagePtr stage = stage_.fetch();

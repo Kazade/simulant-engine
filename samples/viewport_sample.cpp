@@ -21,8 +21,8 @@ public:
         stage->actor(aid)->move_to(0, 0, -5);
 
         // Render new stages to the framebuffer, using both viewports. Make sure we tell the pipeline to clear
-        window->render(sid, window->new_camera_for_viewport(first)).to_framebuffer(first).with_clear();
-        window->render(sid, window->new_camera_for_viewport(second)).to_framebuffer(second).with_clear();
+        window->render(sid, stage->new_camera_for_viewport(first)).to_framebuffer(first).with_clear();
+        window->render(sid, stage->new_camera_for_viewport(second)).to_framebuffer(second).with_clear();
     }
 };
 

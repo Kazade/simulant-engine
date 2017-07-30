@@ -1,5 +1,5 @@
 #include "../stage.h"
-#include "camera_proxy.h"
+#include "camera.h"
 
 namespace smlt {
 

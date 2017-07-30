@@ -23,7 +23,7 @@
 
 #include "../../nodes/actor.h"
 #include "../../stage.h"
-#include "../../camera.h"
+#include "../../nodes/camera.h"
 #include "../../nodes/light.h"
 #include "../../partitioner.h"
 #include "../../types.h"

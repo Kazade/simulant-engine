@@ -83,7 +83,7 @@ bool VirtualGamepad::init() {
         assert(0 && "Not Implemented");
     }
 
-    camera_id_ = window_.new_camera_with_orthographic_projection();
+    camera_id_ = stage->new_camera_with_orthographic_projection();
 
     //Finally add to the render sequence, give a ridiculously high priority
     pipeline_id_ = window_.render(stage_, camera_id_).with_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
@@ -104,7 +104,6 @@ void VirtualGamepad::cleanup() {
     L_DEBUG("Destroying virtual gamepad");
 
     window_.delete_pipeline(pipeline_id_);
-    window_.delete_camera(camera_id_);
     window_.delete_stage(stage_);
 }
 

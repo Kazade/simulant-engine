@@ -28,7 +28,7 @@
 #include "../mesh.h"
 #include "../types.h"
 #include "../nodes/light.h"
-#include "../camera.h"
+#include "../nodes/camera.h"
 #include "../procedural/texture.h"
 #include "../controllers/material/flowing.h"
 #include "../controllers/material/warp.h"

@@ -20,7 +20,7 @@
 #include "../stage.h"
 #include "../render_sequence.h"
 #include "../nodes/actor.h"
-#include "../camera.h"
+#include "../nodes/camera.h"
 #include "../window_base.h"
 #include "../nodes/ui/ui_manager.h"
 
@@ -45,9 +45,9 @@ void Loading::do_load() {
     label->set_background_colour(smlt::Colour::NONE);
 
     //Create an orthographic camera
-    camera_ = window->new_camera();
+    camera_ = stage_.fetch()->new_camera();
 
-    window->camera(camera_)->set_orthographic_projection(
+    camera_.fetch()->set_orthographic_projection(
         0, window->width(), 0, window->height()
     );
 
@@ -59,8 +59,7 @@ void Loading::do_load() {
 void Loading::do_unload() {
     //Clean up
     window->delete_pipeline(pipeline_);
-    window->delete_stage(stage_);
-    window->delete_camera(camera_);
+    window->delete_stage(stage_);    
 }
 
 void Loading::do_activate() {
