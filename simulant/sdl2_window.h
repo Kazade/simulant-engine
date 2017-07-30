@@ -66,6 +66,9 @@ private:
     }
 
     void initialize_input_controller(InputController &controller);
+
+    std::vector<SDL_Joystick*> open_joysticks_;
+    std::vector<SDL_GameController*> open_controllers_;
 };
 
 }

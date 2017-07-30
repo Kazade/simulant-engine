@@ -367,8 +367,7 @@ void SDL2Window::initialize_input_controller(InputController &controller) {
             info.name = SDL_GameControllerName(controller);
 
             joypads.push_back(info);
-
-            SDL_GameControllerClose(controller);
+            open_controllers_.push_back(controller);
         } else {
             SDL_Joystick* joystick = SDL_JoystickOpen(i);
 
@@ -377,8 +376,7 @@ void SDL2Window::initialize_input_controller(InputController &controller) {
             info.name = SDL_JoystickName(joystick);
 
             joypads.push_back(info);
-
-            SDL_JoystickClose(joystick);
+            open_joysticks_.push_back(joystick);
         }
     }
 
@@ -391,6 +389,16 @@ void SDL2Window::destroy_window() {
     if(!screen_ && !context_) {
         return;
     }
+
+    for(auto joystick: open_joysticks_) {
+        SDL_JoystickClose(joystick);
+    }
+    open_joysticks_.clear();
+
+    for(auto controller: open_controllers_) {
+        SDL_GameControllerClose(controller);
+    }
+    open_controllers_.clear();
 
     SDL_GL_DeleteContext(context_);
     context_ = nullptr;
