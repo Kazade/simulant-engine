@@ -195,7 +195,7 @@ void ParticleSystem::ask_owner_for_destruction() {
 }
 
 void ParticleSystem::set_quota(std::size_t quota) {
-    if(quota == particles_.size()) {
+    if(quota == quota_) {
         return;
     }
 
@@ -203,9 +203,15 @@ void ParticleSystem::set_quota(std::size_t quota) {
     resize_buffers_ = true;
 
     quota_ = quota;
+
+    // Shrink if necessary
     if(particles_.size() > quota) {
         particles_.resize(quota);
+    } else {
+        // Reserve space for all the particles
+        particles_.reserve(quota);
     }
+
     vertex_buffer_dirty_ = index_buffer_dirty_ = true;
 }
 
@@ -213,18 +219,16 @@ void ParticleSystem::update(float dt) {
     update_source(dt); //Update any sounds attached to this particle system
 
     // Update existing particles, erase any that are dead
-    for(auto it = particles_.begin(); it != particles_.end(); ) {
-        Particle& particle = (*it);
-
+    for(auto& particle: particles_) {
         particle.position += particle.velocity * dt;
         particle.ttl -= dt;
-
-        if(particle.ttl <= 0.0) {
-            it = particles_.erase(it);
-        } else {
-            ++it;
-        }
     }
+
+    // Erase dead particles
+    particles_.erase(
+        std::remove_if(particles_.begin(), particles_.end(), [](const Particle& p) -> bool { return p.ttl <= 0.0f; }),
+        particles_.end()
+    );
 
     // Run any manipulations on the particles, we do this before
     // we add new particles - otherwise they get manipulated before they're
@@ -246,8 +250,7 @@ void ParticleSystem::update(float dt) {
         }
 
         auto max_can_emit = quota_ - particles_.size();
-        auto new_particles = emitter->do_emit(dt, max_can_emit);
-        particles_.insert(particles_.end(), new_particles.begin(), new_particles.end());
+        emitter->do_emit(dt, max_can_emit, particles_);
     }
 
     if(particles_.empty() && !has_repeating_emitters() && !has_active_emitters()) {
@@ -260,16 +263,19 @@ void ParticleSystem::update(float dt) {
         }
     }
 
+    const static auto v1n = Vec3(-0.5, -0.5, 0.0);
+    const static auto v2n = Vec3( 0.5, -0.5, 0.0);
+    const static auto v3n = Vec3( 0.5,  0.5, 0.0);
+    const static auto v4n = Vec3(-0.5,  0.5, 0.0);
+
     vertex_data_->move_to_start();
     vertex_data_->resize(particles_.size() * 4);
     for(auto& particle: particles_) {
-        auto hh = (particle.dimensions.y * Vec3::POSITIVE_Y) * 0.5f;
-        auto hw = (particle.dimensions.x * Vec3::POSITIVE_X) * 0.5f;
-
-        auto v1 = particle.position + (-hh + -hw);
-        auto v2 = particle.position + (-hh +  hw);
-        auto v3 = particle.position + ( hh +  hw);
-        auto v4 = particle.position + ( hh + -hw);
+        auto scale = Vec3(particle.dimensions.x, particle.dimensions.y, 0);
+        auto v1 = particle.position + (v1n * scale);
+        auto v2 = particle.position + (v2n * scale);
+        auto v3 = particle.position + (v3n * scale);
+        auto v4 = particle.position + (v4n * scale);
 
         vertex_data_->position(v1);
         vertex_data_->diffuse(particle.colour);
@@ -291,7 +297,6 @@ void ParticleSystem::update(float dt) {
         vertex_data_->tex_coord0(0, 1);
         vertex_data_->move_next();
     }
-
 
     index_data_->clear();
 

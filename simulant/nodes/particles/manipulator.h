@@ -16,13 +16,13 @@ public:
     virtual void set_property(const std::string& name, int32_t value) {}
     virtual void set_property(const std::string& name, float value) {}
 
-    void manipulate(std::list<Particle>& particles, float dt) {
+    void manipulate(std::vector<Particle>& particles, float dt) {
         do_manipulate(particles, dt);
     }
 
 private:
     std::string name_;
-    virtual void do_manipulate(std::list<Particle>& particles, float dt) = 0;
+    virtual void do_manipulate(std::vector<Particle>& particles, float dt) = 0;
 };
 
 typedef std::shared_ptr<Manipulator> ManipulatorPtr;

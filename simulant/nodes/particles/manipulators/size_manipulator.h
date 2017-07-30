@@ -22,7 +22,7 @@ public:
 private:
     float rate_ = 0.1f;
 
-    void do_manipulate(std::list<Particle>& particles, float dt) {
+    void do_manipulate(std::vector<Particle>& particles, float dt) {
         auto rate_diff = 1.0f + (rate_ * dt);
         for(auto& particle: particles) {
             particle.dimensions.x = std::max(0.0f, particle.dimensions.x * rate_diff);

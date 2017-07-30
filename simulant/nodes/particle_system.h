@@ -151,7 +151,7 @@ private:
     MaterialPtr material_ref_;
 
     std::vector<particles::EmitterPtr> emitters_;
-    std::list<particles::Particle> particles_;
+    std::vector<particles::Particle> particles_;
     std::vector<particles::ManipulatorPtr> manipulators_;
 
     void update(float dt) override;

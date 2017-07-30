@@ -28,11 +28,9 @@ void Emitter::update(float dt) {
     }
 }
 
-std::vector<Particle> Emitter::do_emit(float dt, uint32_t max) {
-    std::vector<Particle> new_particles;
-
+void Emitter::do_emit(float dt, uint32_t max, std::vector<Particle> &particles) {
     if(!max) {
-        return new_particles; //Do nothing
+        return; //Do nothing
     }
 
     emission_accumulator_ += dt; //Buffer time
@@ -77,7 +75,7 @@ std::vector<Particle> Emitter::do_emit(float dt, uint32_t max) {
         p.dimensions = smlt::Vec2(system().particle_width(), system().particle_height());
 
         //FIXME: Initialize other properties
-        new_particles.push_back(p);
+        particles.push_back(p);
 
         emission_accumulator_ -= decrement; //Decrement the accumulator while we can
         to_emit--;
@@ -85,8 +83,6 @@ std::vector<Particle> Emitter::do_emit(float dt, uint32_t max) {
             break;
         }
     }
-
-    return new_particles;
 }
 
 

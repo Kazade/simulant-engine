@@ -84,7 +84,7 @@ public:
     void set_duration_range(float min_seconds, float max_seconds);
     std::pair<float, float> duration_range() const;
 
-    std::vector<Particle> do_emit(float dt, uint32_t max_to_emit);
+    void do_emit(float dt, uint32_t max_to_emit, std::vector<Particle>& particles);
 
     ParticleSystem& system() { return system_; }
 
