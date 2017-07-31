@@ -20,6 +20,8 @@
 #include "../deps/jsonic/jsonic.h"
 
 #include "particle_script.h"
+#include "../material.h"
+#include "../stage.h"
 #include "../nodes/particle_system.h"
 #include "../nodes/particles/manipulators/size_manipulator.h"
 
@@ -46,6 +48,17 @@ void KGLPLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     if(js.has_key("cull_each")) ps->set_cull_each((bool) js["cull_each"]);
     L_DEBUG(_F("    Cull Each: {0}").format(ps->cull_each()));
+
+    if(js.has_key("material")) {
+        std::string material = js["material"];
+
+        if(Material::BUILT_IN_NAMES.count(material)) {
+            material = Material::BUILT_IN_NAMES.at(material);
+        }
+
+        ps->set_material_id(ps->stage->assets->new_material_from_file(material));
+    }
+
 
     if(js.has_key("emitters")) {
         L_DEBUG("Loading emitters");

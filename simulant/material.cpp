@@ -54,6 +54,22 @@ const std::string Material::BuiltIns::SKYBOX = "simulant/materials/opengl-2.x/sk
 const std::string Material::BuiltIns::TEXTURED_PARTICLE = "simulant/materials/opengl-2.x/textured_particle.kglm";
 #endif
 
+/* This list is used by the particle script loader to determine if a specified material
+ * is a built-in or not. Please keep this up-to-date when changing the above materials!
+ */
+const std::map<std::string, std::string> Material::BUILT_IN_NAMES = {
+    {"TEXTURE_ONLY", Material::BuiltIns::TEXTURE_ONLY},
+    {"DIFFUSE_ONLY", Material::BuiltIns::DIFFUSE_ONLY},
+    {"ALPHA_TEXTURE", Material::BuiltIns::ALPHA_TEXTURE},
+    {"DIFFUSE_WITH_LIGHTING", Material::BuiltIns::DIFFUSE_WITH_LIGHTING},
+    {"MULTITEXTURE2_MODULATE", Material::BuiltIns::MULTITEXTURE2_MODULATE},
+    {"MULTITEXTURE2_ADD", Material::BuiltIns::MULTITEXTURE2_ADD},
+    {"TEXTURE_WITH_LIGHTMAP", Material::BuiltIns::TEXTURE_WITH_LIGHTMAP},
+    {"TEXTURE_WITH_LIGHTMAP_AND_LIGHTING", Material::BuiltIns::TEXTURE_WITH_LIGHTMAP_AND_LIGHTING},
+    {"MULTITEXTURE2_MODULATE_WITH_LIGHTING", Material::BuiltIns::MULTITEXTURE2_MODULATE_WITH_LIGHTING},
+    {"SKYBOX", Material::BuiltIns::SKYBOX},
+    {"TEXTURED_PARTICLE", Material::BuiltIns::TEXTURED_PARTICLE}
+};
 
 static const std::string DEFAULT_VERT_SHADER = R"(
     attribute vec3 vertex_position;

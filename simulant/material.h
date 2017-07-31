@@ -293,6 +293,8 @@ public:
         static const std::string TEXTURED_PARTICLE;
     };
 
+    static const std::map<std::string, std::string> BUILT_IN_NAMES;
+
     Material(MaterialID mat_id, ResourceManager* resource_manager);
     ~Material();
 
