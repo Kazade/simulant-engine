@@ -197,6 +197,12 @@ public:
 
     bool lighting_enabled() const { return lighting_enabled_; }
 
+    void set_texturing_enabled(bool value=true) {
+        texturing_enabled_ = value;
+    }
+
+    bool texturing_enabled() const { return texturing_enabled_; }
+
     void set_point_size(float ps) { point_size_ = ps; }
 
     float point_size() const { return point_size_; }
@@ -253,6 +259,7 @@ private:
     bool depth_writes_enabled_ = true;
     bool depth_test_enabled_ = true;
     bool lighting_enabled_ = false; // Only has an effect on GL 1.x
+    bool texturing_enabled_ = true; // Only has an effect on GL 1.x
 
     float point_size_;
 

@@ -241,6 +241,12 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<un
                 pass->set_prevent_textures(false);
             }
 #ifdef SIMULANT_GL_VERSION_1X
+        } else if(arg_1 == "TEXTURING") {
+            if(arg_2 == "ON") {
+                pass->set_texturing_enabled(true);
+            } else {
+                pass->set_texturing_enabled(false);
+            }
         } else if(arg_1 == "LIGHTING") {
             if(arg_2 == "ON") {
                 pass->set_lighting_enabled(true);
