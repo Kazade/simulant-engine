@@ -144,6 +144,14 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         }
     }
 
+    if(!prev || prev->texturing_enabled() != next->texturing_enabled()) {
+        if(next->texturing_enabled()) {
+            GLCheck(glEnable, GL_TEXTURE_2D);
+        } else {
+            GLCheck(glDisable, GL_TEXTURE_2D);
+        }
+    }
+
 #ifndef _arch_dreamcast
     if(!prev || prev->point_size() != next->point_size()) {
         glPointSize(next->point_size());
