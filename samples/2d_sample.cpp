@@ -61,6 +61,10 @@ private:
 
 
 class Sample2D: public smlt::Application {
+public:
+    Sample2D(const smlt::AppConfig& config):
+        smlt::Application(config) {}
+
 private:
     bool do_init() {
         register_scene<GameScene>("main");
@@ -72,6 +76,12 @@ private:
 
 
 int main(int argc, char* argv[]) {
-    Sample2D app;
+    smlt::AppConfig config;
+    config.title = "2D Sample";
+    config.fullscreen = false;
+    config.width = 1280;
+    config.height = 960;
+
+    Sample2D app(config);
     return app.run();
 }

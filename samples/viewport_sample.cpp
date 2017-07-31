@@ -28,6 +28,9 @@ public:
 
 class ViewportSample : public smlt::Application {
 public:
+    ViewportSample(const smlt::AppConfig& config):
+        smlt::Application(config) {}
+
     bool do_init() {
         register_scene<MainScene>("main");
         return true;
@@ -36,6 +39,12 @@ public:
 
 
 int main(int argc, char* argv[]) {
-    ViewportSample app;
+    smlt::AppConfig config;
+    config.title = "Viewport Sample";
+    config.fullscreen = false;
+    config.width = 1280;
+    config.height = 960;
+
+    ViewportSample app(config);
     return app.run();
 }

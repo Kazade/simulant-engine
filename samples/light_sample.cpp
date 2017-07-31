@@ -66,8 +66,8 @@ private:
 
 class LightingSample: public smlt::Application {
 public:
-    LightingSample():
-        Application("Simulant Light Sample") {
+    LightingSample(const smlt::AppConfig& config):
+        Application(config) {
     }
 
 private:
@@ -78,7 +78,13 @@ private:
 };
 
 int main(int argc, char* argv[]) {
-    LightingSample app;
+    smlt::AppConfig config;
+    config.title = "Light Sample";
+    config.fullscreen = false;
+    config.width = 1280;
+    config.height = 960;
+
+    LightingSample app(config);
     return app.run();
 }
 
