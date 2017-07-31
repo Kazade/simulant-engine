@@ -291,6 +291,7 @@ public:
         static const std::string MULTITEXTURE2_MODULATE_WITH_LIGHTING;
         static const std::string SKYBOX;
         static const std::string TEXTURED_PARTICLE;
+        static const std::string DIFFUSE_PARTICLE;
     };
 
     static const std::map<std::string, std::string> BUILT_IN_NAMES;

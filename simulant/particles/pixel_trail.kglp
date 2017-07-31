@@ -4,6 +4,7 @@
     "particle_width": 1,
     "particle_height": 1,
     "cull_each": false,
+    "material": "DIFFUSE_PARTICLE",
 
     "emitters": [
         {

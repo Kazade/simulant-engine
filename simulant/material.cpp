@@ -40,6 +40,7 @@ const std::string Material::BuiltIns::TEXTURE_WITH_LIGHTMAP_AND_LIGHTING = "simu
 const std::string Material::BuiltIns::MULTITEXTURE2_MODULATE_WITH_LIGHTING = "simulant/materials/opengl-1.x/multitexture2_modulate_with_lighting.kglm";
 const std::string Material::BuiltIns::SKYBOX = "simulant/materials/opengl-1.x/skybox.kglm";
 const std::string Material::BuiltIns::TEXTURED_PARTICLE = "simulant/materials/opengl-1.x/textured_particle.kglm";
+const std::string Material::BuiltIns::DIFFUSE_PARTICLE = "simulant/materials/opengl-1.x/diffuse_particle.kglm";
 #else
 const std::string Material::BuiltIns::TEXTURE_ONLY = "simulant/materials/opengl-2.x/texture_only.kglm";
 const std::string Material::BuiltIns::DIFFUSE_ONLY = "simulant/materials/opengl-2.x/diffuse_only.kglm";
@@ -52,6 +53,7 @@ const std::string Material::BuiltIns::TEXTURE_WITH_LIGHTMAP_AND_LIGHTING = "simu
 const std::string Material::BuiltIns::MULTITEXTURE2_MODULATE_WITH_LIGHTING = "simulant/materials/opengl-2.x/multitexture2_modulate_with_lighting.kglm";
 const std::string Material::BuiltIns::SKYBOX = "simulant/materials/opengl-2.x/skybox.kglm";
 const std::string Material::BuiltIns::TEXTURED_PARTICLE = "simulant/materials/opengl-2.x/textured_particle.kglm";
+const std::string Material::BuiltIns::DIFFUSE_PARTICLE = "simulant/materials/opengl-2.x/diffuse_particle.kglm";
 #endif
 
 /* This list is used by the particle script loader to determine if a specified material
@@ -68,7 +70,8 @@ const std::map<std::string, std::string> Material::BUILT_IN_NAMES = {
     {"TEXTURE_WITH_LIGHTMAP_AND_LIGHTING", Material::BuiltIns::TEXTURE_WITH_LIGHTMAP_AND_LIGHTING},
     {"MULTITEXTURE2_MODULATE_WITH_LIGHTING", Material::BuiltIns::MULTITEXTURE2_MODULATE_WITH_LIGHTING},
     {"SKYBOX", Material::BuiltIns::SKYBOX},
-    {"TEXTURED_PARTICLE", Material::BuiltIns::TEXTURED_PARTICLE}
+    {"TEXTURED_PARTICLE", Material::BuiltIns::TEXTURED_PARTICLE},
+    {"DIFFUSE_PARTICLE", Material::BuiltIns::DIFFUSE_PARTICLE}
 };
 
 static const std::string DEFAULT_VERT_SHADER = R"(

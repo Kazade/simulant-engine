@@ -1,0 +1,36 @@
+BEGIN(PASS)
+    SET(ITERATION ONCE)
+
+    SET(ATTRIBUTE DIFFUSE "vertex_diffuse")
+
+    SET(UNIFORM MODELVIEW_PROJECTION_MATRIX "modelview_projection")
+
+    SET(FLAG BLEND ADD)
+    SET(FLAG DEPTH_WRITE OFF)
+    SET(FLAG DEPTH_CHECK ON)
+
+    BEGIN_DATA(VERTEX)
+        #version 120
+        attribute vec3 vertex_position;
+        attribute vec4 vertex_diffuse;
+
+        uniform mat4 modelview_projection;
+
+        varying vec4 frag_diffuse;
+
+        void main() {
+            frag_diffuse = vertex_diffuse;
+            gl_Position = (modelview_projection * vec4(vertex_position, 1.0));
+        }
+    END_DATA(VERTEX)
+
+    BEGIN_DATA(FRAGMENT)
+        #version 120
+
+        varying vec4 frag_diffuse;
+
+        void main() {
+            gl_FragColor = frag_diffuse;
+        }
+    END_DATA(FRAGMENT)
+END(PASS)
