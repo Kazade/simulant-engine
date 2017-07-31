@@ -232,6 +232,8 @@ private:
     void clean_empty_batches();
 
     MaterialChangeWatcher material_watcher_;
+
+    mutable std::mutex queue_lock_;
 };
 
 }
