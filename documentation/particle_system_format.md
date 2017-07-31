@@ -12,7 +12,8 @@ The JSON file should have a root dictionary which defines the particle system, i
  - particle_height (float): This is the height of the particle sprites in world units
  - cull_each (boolean): If true each particle will be individually culled **(not yet implemented)**
  - emitters (array): A list of dictionaries, each defining the properties of a particle emitter 
- - affectors (array): A list of dictionaries, each defining a rule that affects particles each frame **(not yet implemented)**
+ - manipulators (array): A list of dictionaries, each defining a rule that affects particles each frame
+ - material (string): Either a path to a material file, or the name of a built-in material (e.g. `"TEXTURED_PARTICLE"`)
 
 ## Emitter properties
 
@@ -27,13 +28,17 @@ The JSON file should have a root dictionary which defines the particle system, i
  - duration (float): How long in seconds that the emitter should last. Zero means forever
  - repeat_delay (float): If set, the emitter will restart it's duration after this many seconds (e.g. repeated bursts of particles)
 
-## Affector properties **(not yet implemented)**
+## Manipulator properties 
 
- - type (string): The type of the affector, valid options are: "colour_fader"
+ - type (string): The type of the affector, valid options are: `size`, `colour_fader`.
  
 Additional properties depend on the type of the affector
 
-### Colour Fader
+### Size
+
+ - rate (float): A value between -1.0 and +1.0, the amount per second to reduce the size of the particle
+
+### Colour Fader **(Not Implemented)**
 
  - red (float): The amount per second added to the particle red (limited in the range 0.0 to 1.0)
  - green (float): The amount per second added to the particle green (limited in the range 0.0 to 1.0)
