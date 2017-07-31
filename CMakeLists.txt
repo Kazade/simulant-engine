@@ -42,7 +42,7 @@ IF(NOT DREAMCAST_BUILD)
 
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 ELSE()
-    MESSAGE("COMPILING FOR DREAMCAST")
+    MESSAGE("-- Cross-Compiling for the Sega Dreamcast")
 
     SET(OPENAL_INCLUDE_DIRS "") # Don't use OpenAL on DC
     SET(OPENAL_LIBRARY "")
