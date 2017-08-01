@@ -137,7 +137,7 @@ void Q2BSPLoader::generate_materials(
     std::map<unicode, TextureID> textures;
 
     // TESTING: BLACK TEXTURE
-    auto black = assets->new_texture().fetch();
+    auto black = assets->new_texture(smlt::GARBAGE_COLLECT_NEVER).fetch();
     black->resize(1, 1);
     black->set_bpp(32);
     black->data()[0] = black->data()[1] = black->data()[2] = 0;
@@ -174,7 +174,8 @@ void Q2BSPLoader::generate_materials(
 
         // Load the correct material depending on surface flags
         auto material_id = assets->new_material_from_file(
-            (uses_lightmap) ? Material::BuiltIns::TEXTURE_WITH_LIGHTMAP : Material::BuiltIns::MULTITEXTURE2_MODULATE_WITH_LIGHTING
+            (uses_lightmap) ? Material::BuiltIns::TEXTURE_WITH_LIGHTMAP : Material::BuiltIns::MULTITEXTURE2_MODULATE_WITH_LIGHTING,
+            smlt::GARBAGE_COLLECT_NEVER // Disable GC for now
         );
 
         auto mat = material_id.fetch();
@@ -185,13 +186,12 @@ void Q2BSPLoader::generate_materials(
             mat->first_pass()->set_texture_unit(1, lightmap_texture);
         }
 
-        // Important, we fetched but we don't want it collected yet
-        assets->mark_material_as_uncollected(material_id);
-
         auto tex = tex_id.fetch();
         materials.push_back(material_id);
         dimensions.push_back(Q2::TexDimension(tex->width(), tex->height()));
     }
+
+    black->enable_gc();
 }
 
 struct Lightmap {
@@ -260,9 +260,13 @@ std::vector<LightmapLocation> pack_lightmaps(const std::vector<Lightmap>& lightm
     for(uint32_t i = 0; i < lightmaps.size(); ++i) {
         auto& rect = rects[i];
 
-        if(!rect.was_packed && !logged) {
-            L_DEBUG("Ran out of space packing lightmaps!");
-            logged = true;
+        if(!rect.was_packed) {
+            if(!logged) {
+                L_ERROR("Ran out of space packing lightmaps!");
+                logged = true;
+            }
+
+            continue;
         }
 
         uint32_t src_idx = 0;
@@ -353,7 +357,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     std::vector<MaterialID> materials;    
     std::vector<Q2::TexDimension> dimensions;
 
-    TextureID lightmap_texture = assets->new_texture();
+    TextureID lightmap_texture = assets->new_texture(smlt::GARBAGE_COLLECT_NEVER);
 
     generate_materials(assets, textures, materials, dimensions, lightmap_texture);
 
@@ -378,6 +382,9 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     uint32_t i = 0;
     for(auto& material: materials) {
         submeshes_by_material[material] = mesh->new_submesh_with_material(_F("{0}").format(i++), material);
+        if(material) {
+            material.fetch()->enable_gc(); // Re-enable GC now the material has been applied
+        }
     }
 
     std::cout << "Num materials: " << materials.size() << std::endl;
@@ -528,6 +535,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             mesh->shared_data->tex_coord1(t);
         }
     }
+
+    lightmap_texture.fetch()->enable_gc();
 
     mesh->shared_data->done();
     mesh->each([&](const std::string& name, SubMesh* submesh) {
