@@ -106,7 +106,7 @@ void StageNode::update_rotation_from_parent() {
     Quaternion prot;
     if(parent) {
         prot = parent->absolute_rotation();
-        update_position_from_parent();
+        update_position_from_parent(false); // Don't recalc bounds when updating position
     }
 
     absolute_rotation_ = prot * rotation();
@@ -120,7 +120,9 @@ void StageNode::update_rotation_from_parent() {
     });
 }
 
-void StageNode::update_position_from_parent() {
+void StageNode::update_position_from_parent(bool _recalc_bounds) {
+    // _recalc_bounds is not a public interface, don't use it!
+
     StageNode* parent = static_cast<StageNode*>(this->parent());
 
     Vec3 ppos;
@@ -133,7 +135,9 @@ void StageNode::update_position_from_parent() {
 
     absolute_position_ = ppos + rel;
 
-    recalc_bounds();
+    if(_recalc_bounds) {
+        recalc_bounds();
+    }
 
     each_child([](uint32_t, TreeNode* child) {
         StageNode* node = static_cast<StageNode*>(child);

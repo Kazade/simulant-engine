@@ -245,13 +245,10 @@ void send_attribute(ShaderAvailableAttributes attr,
 
     int32_t loc = (int32_t) attr;
 
-    auto get_has_attribute = std::bind(exists_on_data_predicate, vertex_spec);
-
-    if(get_has_attribute()) {
-        auto offset = std::bind(offset_func, vertex_spec, false)();
+    if((vertex_spec.*exists_on_data_predicate)()) {
+        auto offset = (vertex_spec.*offset_func)(false);
 
         enable_vertex_attribute(loc);
-
 
         auto converted = convert(attr);
         auto attr_for_type = attribute_for_type(converted, vertex_spec);
