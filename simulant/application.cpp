@@ -40,19 +40,6 @@ Application::Application(const AppConfig &config):
     construct_window(config);
 }
 
-Application::Application(const unicode &title, uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen) {
-
-    AppConfig config;
-    config.title = title;;
-    config.width = width;
-    config.height = height;
-    config.bpp = bpp;
-    config.fullscreen = fullscreen;
-
-    config_ = config;
-    construct_window(config);
-}
-
 void Application::construct_window(const AppConfig& config) {
 
     kazlog::get_logger("/")->add_handler(kazlog::Handler::ptr(new kazlog::StdIOHandler));

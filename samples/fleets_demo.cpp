@@ -72,8 +72,8 @@ private:
 
 class FleetsDemo: public smlt::Application {
 public:
-    FleetsDemo():
-        smlt::Application("Fleets Demo") {}
+    FleetsDemo(const AppConfig& config):
+        smlt::Application(config) {}
 
 private:
     bool do_init() {
@@ -86,6 +86,9 @@ private:
 
 
 int main(int argc, char* argv[]) {
-    FleetsDemo app;
+    AppConfig config;
+    config.title = "Fleets Demo";
+
+    FleetsDemo app(config);
     return app.run();
 }
