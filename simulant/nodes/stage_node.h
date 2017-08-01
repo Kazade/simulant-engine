@@ -88,7 +88,7 @@ protected:
 
 private:
     void update_rotation_from_parent();
-    void update_position_from_parent();
+    void update_position_from_parent(bool _recalc_bounds=true);
     void update_scaling_from_parent();
     void recalc_bounds();
 
