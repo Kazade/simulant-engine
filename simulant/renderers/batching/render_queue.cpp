@@ -185,7 +185,9 @@ void RenderQueue::insert_renderable(Renderable* renderable) {
     material_watcher_.watch(material_id, renderable);
 }
 
-void RenderQueue::clean_empty_batches() {
+void RenderQueue::clean_empty_batches() {    
+    std::lock_guard<std::mutex> lock(queue_lock_);
+
     for(auto& pass: batches_) {
         auto group = pass.begin();
         while(group != pass.end()) {
@@ -218,7 +220,11 @@ void RenderQueue::remove_renderable(Renderable* renderable) {
     material_watcher_.unwatch(renderable);
 
     bool empty_batches_created = false;
-    for(auto batch: renderable->batches()) {
+
+    // Copy, we're about to manipulate in a loop
+    auto batches = renderable->batches();
+
+    for(auto& batch: batches) {
         batch->remove_renderable(renderable);
         if(!batch->renderable_count()) {
             empty_batches_created = true;
@@ -231,6 +237,8 @@ void RenderQueue::remove_renderable(Renderable* renderable) {
 }
 
 void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const {
+    std::lock_guard<std::mutex> lock(queue_lock_);
+
     Pass pass = 0;
 
     visitor->start_traversal(*this, frame_id, stage_);
