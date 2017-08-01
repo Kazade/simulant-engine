@@ -92,7 +92,17 @@ void VertexSpecification::recalc_stride_and_offsets() {
     diffuse_offset_ = texcoord7_offset_ + vertex_attribute_size(texcoord7_attribute_);
     specular_offset_ = diffuse_offset_ + vertex_attribute_size(diffuse_attribute_);
 
-    stride_ = (
+    /* Most platforms work better when the data is aligned to 4 byte boundaries */
+    auto round_to_four_bytes = [](uint16_t stride) -> uint16_t {
+        auto remainder = stride % 4;
+        if(remainder == 0) {
+            return stride;
+        } else {
+            return stride + 4 - remainder;
+        }
+    };
+
+    stride_ = round_to_four_bytes(
         vertex_attribute_size(position_attribute) +
         vertex_attribute_size(normal_attribute) +
         vertex_attribute_size(texcoord0_attribute) +

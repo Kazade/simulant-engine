@@ -285,7 +285,7 @@ public:
 private:
     friend class VertexAttributeProperty;
 
-    uint32_t stride_ = 0;
+    uint16_t stride_ = 0;
 
     void recalc_stride_and_offsets();
 };
