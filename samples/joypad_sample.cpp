@@ -177,8 +177,8 @@ private:
 
 class JoypadSample: public smlt::Application {
 public:
-    JoypadSample():
-        Application("Simulant Combined Sample") {
+    JoypadSample(const AppConfig& config):
+        Application(config) {
     }
 
 private:
@@ -189,7 +189,13 @@ private:
 };
 
 int main(int argc, char* argv[]) {
-    JoypadSample app;
+    smlt::AppConfig config;
+    config.title = "Joypad Sample";
+    config.fullscreen = false;
+    config.width = 1280;
+    config.height = 960;
+
+    JoypadSample app(config);
     return app.run();
 }
 

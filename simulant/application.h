@@ -65,13 +65,6 @@ class Application :
 public:
     Application(const AppConfig& config);
 
-    DEPRECATED
-    Application(const unicode& title=_u("Simulant Application"),
-        uint32_t width=1366,
-        uint32_t height=768,
-        uint32_t bpp=0,
-        bool fullscreen=false);
-
     //Create the window, start do_initialization in a thread, show the loading scene
     //when thread completes, hide the loading scene and run the main loop
     int32_t run();

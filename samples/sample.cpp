@@ -51,8 +51,8 @@ private:
 
 class Sample: public smlt::Application {
 public:
-    Sample():
-        Application("Simulant Sample") {
+    Sample(const AppConfig& config):
+        Application(config) {
     }
 
 private:
@@ -63,6 +63,12 @@ private:
 };
 
 int main(int argc, char* argv[]) {
-    Sample app;
+    smlt::AppConfig config;
+    config.title = "Basic Sample";
+    config.fullscreen = false;
+    config.width = 1280;
+    config.height = 960;
+
+    Sample app(config);
     return app.run();
 }
