@@ -53,14 +53,14 @@ public:
         data.position(smlt::Vec3());
         data.done();
 
-        auto small_buffer = buffer_manager_.allocate(3 * sizeof(float), smlt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES, SHADOW_BUFFER_DISABLED);
+        auto small_buffer = buffer_manager_.allocate(spec.stride(), smlt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES, SHADOW_BUFFER_DISABLED);
 
         // Buffer is too small for the specified data, should raise an error
         assert_raises(std::out_of_range, [&]() {
             small_buffer->upload(data);
         });
 
-        auto buffer = buffer_manager_.allocate(sizeof(float) * 6, smlt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES, SHADOW_BUFFER_DISABLED);
+        auto buffer = buffer_manager_.allocate(spec.stride() * 2, smlt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES, SHADOW_BUFFER_DISABLED);
         buffer->upload(data); //Should succeed
     }
 };

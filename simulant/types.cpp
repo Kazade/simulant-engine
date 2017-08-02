@@ -20,13 +20,28 @@
 #include "types.h"
 #include "utils/random.h"
 
+// Attributes should be aligned at 4 byte boundaries
+// according to this
+// https://developer.apple.com/library/content/documentation/3DDrawing/Conceptual/OpenGLES_ProgrammingGuide/TechniquesforWorkingwithVertexData/TechniquesforWorkingwithVertexData.html
+const uint16_t BUFFER_ATTRIBUTE_ALIGNMENT = 4;
+
+// According to Nvidia, stride should be 16 byte aligned
+const uint16_t BUFFER_STRIDE_ALIGNMENT = 16;
 
 namespace smlt {
 
-constexpr uint32_t vertex_attribute_size(VertexAttribute attr) {
-    return (attr == VERTEX_ATTRIBUTE_2F) ? sizeof(float) * 2 :
-           (attr == VERTEX_ATTRIBUTE_3F) ? sizeof(float) * 3 :
-           (attr == VERTEX_ATTRIBUTE_4F) ? sizeof(float) * 4 : 0;
+/* Most platforms work better when the data is aligned to 4 byte boundaries */
+constexpr uint16_t round_to_bytes(uint16_t stride, uint16_t bytes) {
+    return ((stride % bytes) == 0) ? stride : stride + bytes - (stride % bytes);
+};
+
+constexpr uint16_t vertex_attribute_size(VertexAttribute attr) {
+    return round_to_bytes(
+       (attr == VERTEX_ATTRIBUTE_2F) ? sizeof(float) * 2 :
+       (attr == VERTEX_ATTRIBUTE_3F) ? sizeof(float) * 3 :
+       (attr == VERTEX_ATTRIBUTE_4F) ? sizeof(float) * 4 : 0,
+        BUFFER_ATTRIBUTE_ALIGNMENT
+    );
 }
 
 VertexSpecification::VertexSpecification(VertexAttribute position, VertexAttribute normal, VertexAttribute texcoord0,
@@ -92,17 +107,7 @@ void VertexSpecification::recalc_stride_and_offsets() {
     diffuse_offset_ = texcoord7_offset_ + vertex_attribute_size(texcoord7_attribute_);
     specular_offset_ = diffuse_offset_ + vertex_attribute_size(diffuse_attribute_);
 
-    /* Most platforms work better when the data is aligned to 4 byte boundaries */
-    auto round_to_four_bytes = [](uint16_t stride) -> uint16_t {
-        auto remainder = stride % 4;
-        if(remainder == 0) {
-            return stride;
-        } else {
-            return stride + 4 - remainder;
-        }
-    };
-
-    stride_ = round_to_four_bytes(
+    stride_ = round_to_bytes(
         vertex_attribute_size(position_attribute) +
         vertex_attribute_size(normal_attribute) +
         vertex_attribute_size(texcoord0_attribute) +
@@ -114,7 +119,8 @@ void VertexSpecification::recalc_stride_and_offsets() {
         vertex_attribute_size(texcoord6_attribute) +
         vertex_attribute_size(texcoord7_attribute) +
         vertex_attribute_size(diffuse_attribute) +
-        vertex_attribute_size(specular_attribute)
+        vertex_attribute_size(specular_attribute),
+        BUFFER_STRIDE_ALIGNMENT
     );
 }
 

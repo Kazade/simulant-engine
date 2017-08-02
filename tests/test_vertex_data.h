@@ -33,13 +33,15 @@ public:
         data.position(0, 0, 0);
         data.tex_coord0(1, 1);
 
-        assert_equal(sizeof(float) * 9, data.data_size());
+        // sizeof(float) * 9 - but rounded to the nearest 16 byte boundary == 48
+        assert_equal(48u, data.data_size());
         data.move_next();
         data.position(0, 0, 0);
         data.tex_coord0(2, 2);
         data.done();
 
-        assert_equal(sizeof(float) * 18, data.data_size());
+        // sizeof(float) * 18, but rounded to the nearest 16 byte boundary == 96
+        assert_equal(96u, data.data_size());
     }
 };
 
