@@ -1,0 +1,127 @@
+#!/usr/bin/env python3
+
+import os
+import argparse
+import shutil
+import sys
+
+
+PLACEHOLDER = "__project_name__"
+
+POTENTIAL_TEMPLATE_DIRS = [
+    os.path.dirname(__file__),
+    "/usr/share/simulant"
+]
+
+def _locate_template_folder():
+    for path in POTENTIAL_TEMPLATE_DIRS:
+        path = os.path.abspath(path)
+
+        template = os.path.join(path, "template")
+
+        if os.path.exists(template):
+            return template
+
+
+def _rename_files_and_directories(search, replacement, directory):
+    " Recursively replaces 'search' in folder and filenames with 'replacement' "
+    for root, subdirs, files in os.walk(directory):
+        for subdir in subdirs:
+            if PLACEHOLDER in subdir:
+                path = os.path.join(root, subdir)
+                dest = os.path.join(root, subdir.replace(PLACEHOLDER, replacement))
+                shutil.move(path, dest)
+
+        for file in files:
+            if PLACEHOLDER in file:
+                path = os.path.join(root, file)
+                dest = os.path.join(root, file.replace(PLACEHOLDER, replacement))
+                shutil.move(path, dest)
+
+
+def _search_replace(search, replacement, directory, extensions=[".cpp", ".h", ".md", ".json"]):
+    "Recursively search replace text in files that match the extensions"
+    for root, subdirs, files in os.walk(directory):
+        for file in files:
+            if os.path.splitext(file)[-1] in extensions:
+                path = os.path.join(root, file)
+
+                with open(path, "r") as f:
+                    s = f.read()
+
+                s = s.replace(search, replacement)
+
+                with open(path, "w") as f:
+                    f.write(s)
+
+
+def build(args):
+    return 0
+
+
+def start(args):
+    " Start a Simulant project with a template "
+
+    template_folder = _locate_template_folder()
+
+    if not os.path.exists(template_folder):
+        print("Error: Unable to locate Simulant template")
+        return 1
+
+    target_folder = os.path.join(os.path.abspath(args.target), args.project)
+
+    if os.path.exists(target_folder):
+        result = input("The target folder already exists and will be replaced, this cannot be undone. Continue? [y/N]")
+        if result.lower() != "y":
+            return 0
+        else:
+            # Remove the directory before replacing it
+            shutil.rmtree(target_folder)
+
+    shutil.copytree(template_folder, target_folder)
+
+    # Rename any files that have the project name in them
+    _rename_files_and_directories("__project_name__", args.project.replace(" ", "_").lower(), target_folder)
+
+    # Replace the project name throughout
+    _search_replace("__project_name__", args.project, target_folder)
+
+    # These two replace with project_name or PROJECT_NAME respectively
+    _search_replace("__project_name_lower__", args.project.lower().replace(" ", "_"), target_folder)
+    _search_replace("__project_name_upper__", args.project.upper().replace(" ", "_"), target_folder)
+
+    return 0
+
+
+def test(args):
+    return 0
+
+
+COMMAND_LOOKUP = {
+    'start': start,
+    'build': build,
+    'test': test
+}
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Simulant Tool")
+    subs = parser.add_subparsers(dest="subcommand")
+
+    build = subs.add_parser("build", help="Build your project")
+    build.add_argument("platform", default="native", choices=["native", "dreamcast", "android", "windows"])
+    build.add_argument("--rebuild", default=False, action="store_true")
+
+    start = subs.add_parser("start", help="Start a new Simulant project from a template")
+    start.add_argument("project", action="store", type=str)
+    start.add_argument("target", default=".", nargs="?", type=str)
+
+    test = subs.add_parser("test", help="Test your Simulant project")
+
+    opts = parser.parse_args()
+
+    return COMMAND_LOOKUP[opts.subcommand](opts)
+
+
+if __name__ == '__main__':
+    sys.exit(main())
