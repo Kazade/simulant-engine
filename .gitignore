@@ -4,6 +4,7 @@
 *cmake_install*
 build
 tests/main.cpp
+tests/main-dc.cpp
 *.swp
 .ycm_extra_conf.py*
 *.user
