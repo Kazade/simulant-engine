@@ -1,15 +1,18 @@
 #include <SDL_main.h>
-#include <kglt/kglt.h>
-#include <kazbase/random.h>
+#include <simulant/simulant.h>
 
-class {PROJECT_NAME_TITLE}: public kglt::Application {
+using namespace smlt;
+
+class __project_name_pascal__:
+    public Application {
+
 public:
-    {PROJECT_NAME_TITLE}():
-        kglt::Application("{PROJECT_TITLE}", 0, 0, 0, true) {}
+    __project_name_pascal__(const AppConfig& config):
+        Application(config) {}
 
     bool do_init() {
-        window().set_logging_level(kglt::LOG_LEVEL_INFO);
-        window().resource_locator().add_search_path("./assets");
+        window->set_logging_level(smlt::LOG_LEVEL_INFO);
+        window->resource_locator->add_search_path("./assets");
 
         // Register screens here
         return true;
@@ -32,8 +35,10 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     int main(int argc, char* argv[])
 #endif
 {
-    seed(); //Make sure things happen randomly
-    {PROJECT_NAME_TITLE} app;
+    AppConfig config;
+    config.title = "__project_name__";
+
+    __project_name_pascal__ app(config);
     return app.run();
 }
 
