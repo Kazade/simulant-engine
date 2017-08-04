@@ -1,5 +1,6 @@
-#include <SDL_main.h>
 #include <simulant/simulant.h>
+
+#include "scenes/game.h"
 
 using namespace smlt;
 
@@ -15,6 +16,8 @@ public:
         window->resource_locator->add_search_path("./assets");
 
         // Register screens here
+        register_scene<GameScene>("main");
+
         return true;
     }
 };
@@ -23,6 +26,7 @@ extern "C" {
 
 #ifdef __ANDROID__
 
+#include <SDL_main.h>
 #include <gpg/gpg.h>
 
 jint JNI_OnLoad(JavaVM* vm, void* reserved) {
