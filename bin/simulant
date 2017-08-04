@@ -6,14 +6,42 @@ import shutil
 import sys
 import subprocess
 import platform
+import json
 
 
 PLACEHOLDER = "__project_name__"
 
+THIS_DIR = os.path.dirname(__file__)
+
 POTENTIAL_TEMPLATE_DIRS = [
-    os.path.dirname(__file__),
+    THIS_DIR,
     "/usr/share/simulant"
 ]
+
+POTENTIAL_TOOLCHAIN_DIRS = [
+    os.path.join(THIS_DIR, "toolchains"),
+    os.path.join(os.path.dirname(THIS_DIR), "toolchains"),
+    "/usr/share/simulant/toolchains"
+]
+
+
+def _check_tool(name):
+    try:
+        subprocess.check_output(["which", name])
+        return True
+    except subprocess.CalledProcessError:
+        print("{} is not installed, or not found".format(name))
+        return False
+
+
+def _locate_toolchain_file(name):
+    for path in POTENTIAL_TOOLCHAIN_DIRS:
+        path = os.path.abspath(path)
+
+        toolchain = os.path.join(path, "{}.cmake".format(name))
+        if os.path.exists(toolchain):
+            return toolchain
+
 
 def _locate_template_folder():
     for path in POTENTIAL_TEMPLATE_DIRS:
@@ -64,29 +92,57 @@ def _check_project():
 
     return True
 
-def build(args):
+
+class BuildOutput:
+    build_dir = None
+
+def build(args, build_output=None):
     if not _check_project():
         return 1
 
+    if not _check_tool("cmake"):
+        return 2
+
+    build_type = "release" if args.release else "debug"
+
     arch = args.platform
     if args.platform == "native":
-        build_dir = "build/{}-{}".format(
+        build_dir = "build/{}/{}-{}".format(
+            build_type,
             platform.system().lower(),
             platform.machine()
         )
     else:
-        build_dir = "build/{}".format(arch)
+        build_dir = "build/{}/{}".format(build_type, arch)
 
     if not os.path.exists(build_dir):
         os.makedirs(build_dir)
 
-    commands = [
-        "cmake ../..",
-        "make"
-    ]
+    if arch == "dreamcast":
+        if not _check_tool("docker"):
+            return 3
+
+        toolchain = _locate_toolchain_file("Dreamcast")
+        if not toolchain:
+            print("Unable to find the Dreamcast toolchain file")
+            return 4
+
+    else:
+        commands = [
+            "cmake",
+            "make"
+        ]
+
+        if build_type == "release":
+            commands[0] += " -DCMAKE_BUILD_TYPE=Release"
+
+        commands[0] += " ../../.."
 
     for cmd in commands:
         subprocess.check_call(cmd.split(), cwd=build_dir)
+
+    if build_output:
+        build_output.build_dir = build_dir
 
     return 0
 
@@ -125,6 +181,92 @@ def start(args):
     # Replace with ProjectName
     _search_replace("__project_name_pascal__", args.project.title().replace(" ", ""), target_folder)
 
+
+    print("Project successfully created. Remember to edit simulant.json before packaging!")
+
+    return 0
+
+
+def _generate_flatpak(args, build_dir):
+    META_TEMPLATE = """
+[Application]
+name={package}
+command={executable}
+"""
+
+    with open("simulant.json") as f:
+        data = json.loads(f.read())
+
+    package_dir = os.path.join(build_dir, "package")
+
+    if os.path.exists(package_dir):
+        shutil.rmtree(package_dir)
+
+    files_dir = os.path.join(package_dir, "files")
+    binary_dir = os.path.join(package_dir, "files/bin")
+
+    os.makedirs(binary_dir)
+    os.makedirs(os.path.join(package_dir, "export"))
+
+    project = data["executable"]
+    executable = os.path.join(build_dir, project)
+    assets = os.path.join(build_dir, "assets")
+
+    shutil.copy(executable, binary_dir)
+    shutil.copytree(assets, os.path.join(files_dir, "assets"))
+
+    with open(os.path.join(package_dir, "metadata"), "w") as f:
+        f.write(META_TEMPLATE.format(**data))
+
+    temp_repo = os.path.join(build_dir, "repo")
+    try:
+        if os.path.exists(temp_repo):
+            shutil.rmtree(temp_repo)
+
+        command = "flatpak build-export {} {}".format(
+            temp_repo, package_dir
+        )
+
+        subprocess.check_call(command.split())
+
+        command = "flatpak build-bundle {} {}.flatpak {}".format(
+            temp_repo,
+            executable,
+            data["package"]
+        )
+
+        subprocess.check_call(command.split())
+    finally:
+        if os.path.exists(temp_repo):
+            shutil.rmtree(temp_repo)
+
+
+def package(args):
+    if not _check_project():
+        return 1
+
+    plat = args.platform
+    if plat == "native":
+        if platform.system() == "Linux":
+            plat = "linux"
+        elif platform.system() == "Windows":
+            plat = "windows"
+        else:
+            plat = "osx"
+
+    if plat == "linux":
+        class Args:
+            release = True
+            platform = "native"
+
+        output = BuildOutput()
+
+        build(Args(), output) # Trigger a release build
+        _generate_flatpak(args, output.build_dir)
+    else:
+        print("Packaging for {} is not currently supported".format(plat))
+        return 1
+
     return 0
 
 
@@ -135,7 +277,8 @@ def test(args):
 COMMAND_LOOKUP = {
     'start': start,
     'build': build,
-    'test': test
+    'test': test,
+    'package': package
 }
 
 
@@ -148,6 +291,13 @@ def main():
         "native", "dreamcast", "android", "windows"
     ])
     build.add_argument("--rebuild", default=False, action="store_true")
+    build.add_argument("--release", default=False, action="store_true")
+
+
+    package = subs.add_parser("package", help="Package your project for a particular platform")
+    package.add_argument("platform", default="native", nargs="?", choices=[
+        "native", "dreamcast", "android", "windows"
+    ])
 
     start = subs.add_parser("start", help="Start a new Simulant project from a template")
     start.add_argument("project", action="store", type=str)
