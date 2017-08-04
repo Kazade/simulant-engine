@@ -15,12 +15,14 @@ THIS_DIR = os.path.dirname(__file__)
 
 POTENTIAL_TEMPLATE_DIRS = [
     THIS_DIR,
+    "/usr/local/share/simulant",
     "/usr/share/simulant"
 ]
 
 POTENTIAL_TOOLCHAIN_DIRS = [
     os.path.join(THIS_DIR, "toolchains"),
     os.path.join(os.path.dirname(THIS_DIR), "toolchains"),
+    "/usr/local/share/simulant/toolchains",
     "/usr/share/simulant/toolchains"
 ]
 

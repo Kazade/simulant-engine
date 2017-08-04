@@ -98,3 +98,7 @@ INSTALL(FILES ${particles} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/simulant/pa
 
 FILE(GLOB fonts "${CMAKE_CURRENT_SOURCE_DIR}/fonts/orbitron/*.ttf")
 INSTALL(FILES ${fonts} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/simulant/fonts/orbitron)
+
+INSTALL(DIRECTORY "${CMAKE_SOURCE_DIR}/bin/template" DESTINATION ${CMAKE_INSTALL_PREFIX}/share/simulant)
+
+INSTALL(PROGRAMS ${CMAKE_SOURCE_DIR}/bin/simulant DESTINATION bin)
