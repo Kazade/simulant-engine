@@ -213,9 +213,6 @@ private:
     std::shared_ptr<Debug> debug_;
     std::unique_ptr<ui::UIManager> ui_;
 
-    CameraID new_camera_proxy(CameraID cam);
-    void delete_camera_proxy(CameraID cam);
-
     unicode name_;
 
     //FIXME: All managers should be composition rather than inheritence,
