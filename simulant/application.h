@@ -98,6 +98,15 @@ private:
 
     bool initialized_ = false;
 
+
+    void _call_fixed_update(float dt) {
+        do_fixed_update(dt);
+    }
+
+    void _call_cleanup() {
+        do_cleanup();
+    }
+
     virtual bool do_init() = 0;
     virtual void do_fixed_update(float dt) {}
     virtual void do_cleanup() {}

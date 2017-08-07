@@ -59,8 +59,10 @@ void Application::construct_window(const AppConfig& config) {
 
     window_->set_title(config.title.encode());
 
-    window_->signal_fixed_update().connect(std::bind(&Application::do_fixed_update, this, std::placeholders::_1));
-    window_->signal_shutdown().connect(std::bind(&Application::do_cleanup, this));
+    /* FIXME: This is weird, the Application owns the Window, yet we're using the Window to call up to the App?
+     * Not sure how to fix this without substantial changes to the frame running code */
+    window_->signal_fixed_update().connect(std::bind(&Application::_call_fixed_update, this, std::placeholders::_1));
+    window_->signal_shutdown().connect(std::bind(&Application::_call_cleanup, this));
 
     window_->keyboard->key_pressed_connect(std::bind(&Application::on_key_press, this, std::placeholders::_1));
     window_->keyboard->key_released_connect(std::bind(&Application::on_key_release, this, std::placeholders::_1));
