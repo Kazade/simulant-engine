@@ -10,7 +10,7 @@ public:
     GameScene(smlt::WindowBase& window):
         smlt::Scene<GameScene>(window) {}
 
-    void do_load() {
+    void load() {
         pid_ = prepare_basic_scene(stage_id_, camera_id_);
         window->pipeline(pid_)->set_clear_flags(BUFFER_CLEAR_ALL);
         window->pipeline(pid_)->viewport->set_colour(smlt::Colour::GREY);
@@ -39,7 +39,7 @@ public:
         stage->set_ambient_light(smlt::Colour(0.8, 0.8, 0.8, 1.0));
     }
 
-    void do_activate() {
+    void activate() {
         window->enable_pipeline(pid_);
     }
 

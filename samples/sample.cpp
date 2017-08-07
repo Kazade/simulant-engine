@@ -7,7 +7,7 @@ public:
     GameScene(WindowBase& window):
         smlt::Scene<GameScene>(window) {}
 
-    void do_load() {
+    void load() {
         auto pipeline_id = prepare_basic_scene(stage_id_, camera_id_, smlt::PARTITIONER_NULL);
 
         window->pipeline(pipeline_id)->viewport->set_colour(smlt::Colour::SKY_BLUE);

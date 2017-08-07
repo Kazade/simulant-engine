@@ -10,7 +10,7 @@ public:
     GameScene(smlt::WindowBase& window):
         smlt::Scene<GameScene>(window) {}
 
-    void do_load() {
+    void load() {
         prepare_basic_scene(stage_id_, camera_id_);
 
         auto cam = camera_id_.fetch();
@@ -50,7 +50,7 @@ public:
         }
     }
 
-    void do_activate() {
+    void activate() {
         window->enable_virtual_joypad(smlt::VIRTUAL_GAMEPAD_CONFIG_TWO_BUTTONS);
     }
 

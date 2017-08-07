@@ -39,7 +39,7 @@ public:
     Gamescene(smlt::WindowBase& window):
         smlt::Scene<Gamescene>(window) {}
 
-    void do_load() {
+    void load() {
         auto loading = window->application->resolve_scene_as<scenes::Loading>("_loading");
         assert(loading);
 
@@ -91,7 +91,7 @@ public:
         done = true;
     }
 
-    void do_activate() {
+    void activate() {
         window->enable_pipeline(pipeline_id_);
     }
 

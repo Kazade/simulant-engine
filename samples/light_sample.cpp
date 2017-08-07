@@ -10,7 +10,7 @@ public:
     GameScene(WindowBase& window):
         smlt::Scene<GameScene>(window) {}
 
-    void do_load() {
+    void load() {
         prepare_basic_scene(stage_id_, camera_id_);
         auto stage = window->stage(stage_id_);
 

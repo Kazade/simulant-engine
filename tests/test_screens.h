@@ -27,10 +27,10 @@ public:
     TestScene(WindowBase& window):
         Scene<TestScene>(window) {}
 
-    void do_load() override { load_called = true; }
-    void do_unload() override { unload_called = true; }
-    void do_activate() override { activate_called = true; }
-    void do_deactivate() override { deactivate_called = true; }
+    void load() override { load_called = true; }
+    void unload() override { unload_called = true; }
+    void activate() override { activate_called = true; }
+    void deactivate() override { deactivate_called = true; }
 
     volatile bool load_called = false;
     volatile bool unload_called = false;

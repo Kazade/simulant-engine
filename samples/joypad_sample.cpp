@@ -74,7 +74,7 @@ public:
     GameScene(WindowBase& window):
         smlt::Scene<GameScene>(window) {}
 
-    void do_load() {
+    void load() {
         prepare_basic_scene(stage_id_, camera_id_);
 
         camera_id_.fetch()->set_perspective_projection(

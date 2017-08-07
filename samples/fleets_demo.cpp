@@ -8,7 +8,7 @@ public:
     GameScene(smlt::WindowBase& window):
         smlt::Scene<GameScene>(window) {}
 
-    void do_load() {
+    void load() {
         auto pipeline = prepare_basic_scene(stage_id_, camera_id_);
         pipeline.fetch()->viewport->set_colour(smlt::Colour::BLACK);
 
@@ -21,7 +21,7 @@ public:
         stage->new_light_as_directional();
     }
 
-    void do_activate() {
+    void activate() {
 
     }
 

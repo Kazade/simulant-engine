@@ -6,7 +6,7 @@ public:
     MainScene(smlt::WindowBase& window):
         smlt::Scene<MainScene>(window) {}
 
-    void do_load() {
+    void load() {
         prepare_basic_scene(stage_, camera_);
 
         smlt::StagePtr stage = stage_.fetch();

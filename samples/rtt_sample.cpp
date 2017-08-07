@@ -7,7 +7,7 @@ public:
     GameScene(WindowBase& window):
         smlt::Scene<GameScene>(window) {}
 
-    void do_load() {        
+    void load() {
         cube_stage_ = window->new_stage();        
         auto cube_cam = cube_stage_.fetch()->new_camera().fetch();
 
