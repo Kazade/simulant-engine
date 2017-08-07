@@ -80,7 +80,7 @@ bool Application::_call_init() {
 
     scene_manager_.reset(new SceneManager(window_.get()));
 
-    // Add some useful scenes by default, these can be overridden in do_init if the
+    // Add some useful scenes by default, these can be overridden in init if the
     // user so wishes
     register_scene<scenes::Loading>("_loading");
     load_scene("_loading");
