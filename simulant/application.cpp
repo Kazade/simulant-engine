@@ -71,7 +71,7 @@ StagePtr Application::stage(StageID stage) {
     return window->stage(stage);
 }
 
-bool Application::init() {
+bool Application::_call_init() {
     L_DEBUG("Initializing the application");
 
     scene_manager_.reset(new SceneManager(window_.get()));
@@ -94,7 +94,7 @@ bool Application::init() {
 
 
 int32_t Application::run() {
-    if(!init()) {
+    if(!_call_init()) {
         L_ERROR("Error while initializing, terminating application");
         return 1;
     }

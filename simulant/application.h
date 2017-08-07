@@ -88,7 +88,7 @@ public:
 protected:
     StagePtr stage(StageID stage=StageID());
 
-    bool init();
+    bool _call_init();
 
     Property<Application, AppConfig> config = { this, &Application::config_ };
 
