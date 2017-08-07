@@ -46,7 +46,7 @@ public:
 
     }
 
-    bool do_init() {
+    bool init() {
         register_scene<MainScene>("main");
         return true;
     }

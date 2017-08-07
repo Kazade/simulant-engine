@@ -56,7 +56,7 @@ public:
     }
 
 private:
-    bool do_init() {
+    bool init() {
         register_scene<GameScene>("main");
         return true;
     }

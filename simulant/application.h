@@ -100,16 +100,26 @@ private:
 
 
     void _call_fixed_update(float dt) {
-        do_fixed_update(dt);
+        fixed_update(dt);
     }
 
     void _call_cleanup() {
-        do_cleanup();
+        cleanup();
     }
 
-    virtual bool do_init() = 0;
-    virtual void do_fixed_update(float dt) {}
-    virtual void do_cleanup() {}
+    void _call_update(float dt) {
+        update(dt);
+    }
+
+    void _call_late_update(float dt) {
+        late_update(dt);
+    }
+
+    virtual bool init() = 0;
+    virtual void fixed_update(float dt) {}
+    virtual void update(float dt) {}
+    virtual void late_update(float dt) {}
+    virtual void cleanup() {}
 
     virtual bool while_key_pressed(KeyboardCode key, double) { return false; }
     virtual bool on_key_press(KeyboardCode key) { return false; }
@@ -122,31 +132,5 @@ private:
 };
 
 }
-
-/**
-
-  USAGE:
-
-  class MyApp: public smlt::App {
-
-  private:
-    bool do_init() {
-        cube_ = stage.actor(stage()->geom_factory().new_cube(1.0));
-        return true;
-    }
-
-    void do_step(float dt) {
-        cube_.rotate_x(10 * dt);
-    }
-
-    void do_cleanup() { }
-
-    Actor& cube_;
-  };
-
-
-  MyApp my_application;
-  return my_application.run();
-*/
 
 #endif // APPLICATION_H

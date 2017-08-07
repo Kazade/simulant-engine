@@ -61,6 +61,8 @@ void Application::construct_window(const AppConfig& config) {
 
     /* FIXME: This is weird, the Application owns the Window, yet we're using the Window to call up to the App?
      * Not sure how to fix this without substantial changes to the frame running code */
+    window_->signal_update().connect(std::bind(&Application::_call_update, this, std::placeholders::_1));
+    window_->signal_late_update().connect(std::bind(&Application::_call_late_update, this, std::placeholders::_1));
     window_->signal_fixed_update().connect(std::bind(&Application::_call_fixed_update, this, std::placeholders::_1));
     window_->signal_shutdown().connect(std::bind(&Application::_call_cleanup, this));
 
@@ -83,7 +85,7 @@ bool Application::_call_init() {
     register_scene<scenes::Loading>("_loading");
     load_scene("_loading");
 
-    initialized_ = do_init();
+    initialized_ = init();
 
     // If we successfully initialized, but the user didn't specify
     // a particular scene, we just hit the root route

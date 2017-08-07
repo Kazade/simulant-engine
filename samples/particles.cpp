@@ -41,7 +41,7 @@ public:
         window->set_logging_level(smlt::LOG_LEVEL_DEBUG);
     }
 
-    bool do_init() {
+    bool init() {
         register_scene<MainScene>("main");
         return true;
     }
