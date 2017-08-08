@@ -24,7 +24,7 @@ public:
 
 class TestScene : public Scene<TestScene> {
 public:
-    TestScene(WindowBase& window):
+    TestScene(Window& window):
         Scene<TestScene>(window) {}
 
     void load() override { load_called = true; }

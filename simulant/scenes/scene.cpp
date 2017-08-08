@@ -19,11 +19,11 @@
 
 #include "scene.h"
 #include "../stage.h"
-#include "../window_base.h"
+#include "../window.h"
 
 namespace smlt {
 
-SceneBase::SceneBase(WindowBase &window):
+SceneBase::SceneBase(Window &window):
     window_(&window),
     app_(window.application){
 

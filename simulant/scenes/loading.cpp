@@ -21,7 +21,7 @@
 #include "../render_sequence.h"
 #include "../nodes/actor.h"
 #include "../nodes/camera.h"
-#include "../window_base.h"
+#include "../window.h"
 #include "../nodes/ui/ui_manager.h"
 
 #include "loading.h"

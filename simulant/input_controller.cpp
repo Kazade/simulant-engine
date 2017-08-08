@@ -21,7 +21,7 @@
 
 #include "utils/unicode.h"
 #include "input_controller.h"
-#include "window_base.h"
+#include "window.h"
 #include "virtual_gamepad.h"
 
 namespace smlt {
@@ -326,7 +326,7 @@ void Joypad::_disconnect(const InputConnection &connection) {
     }
 }
 
-InputController::InputController(WindowBase& window):
+InputController::InputController(Window& window):
     window_(window),
     keyboard_(new Keyboard()),
     mouse_(new Mouse()) {

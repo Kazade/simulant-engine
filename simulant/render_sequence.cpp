@@ -27,7 +27,7 @@
 #include "nodes/light.h"
 
 #include "mesh.h"
-#include "window_base.h"
+#include "window.h"
 #include "partitioner.h"
 #include "loader.h"
 
@@ -75,7 +75,7 @@ void Pipeline::activate() {
     }
 }
 
-RenderSequence::RenderSequence(WindowBase *window):
+RenderSequence::RenderSequence(Window *window):
     window_(window),
     renderer_(window->renderer.get()) {
 

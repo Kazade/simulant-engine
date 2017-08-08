@@ -25,7 +25,7 @@
 
 #include "../types.h"
 #include "../generic/auto_weakptr.h"
-#include "../window_base.h"
+#include "../window.h"
 
 #include "batching/renderable.h"
 #include "batching/render_queue.h"
@@ -49,12 +49,12 @@ class Renderer:
 public:
     typedef std::shared_ptr<Renderer> ptr;
 
-    Renderer(WindowBase* window):
+    Renderer(Window* window):
         window_(window) {}
 
     virtual std::shared_ptr<batcher::RenderQueueVisitor> get_render_queue_visitor(CameraPtr camera) = 0;
 
-    Property<Renderer, WindowBase> window = { this, &Renderer::window_ };
+    Property<Renderer, Window> window = { this, &Renderer::window_ };
 
     virtual void init_context() = 0;
     // virtual void upload_texture(Texture* texture) = 0;
@@ -76,7 +76,7 @@ public:
     virtual HardwareBufferManager* _get_buffer_manager() const = 0;
 
 private:    
-    WindowBase* window_ = nullptr;
+    Window* window_ = nullptr;
 
 };
 

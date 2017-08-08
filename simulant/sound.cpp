@@ -18,7 +18,7 @@
 //
 
 #include "deps/kazlog/kazlog.h"
-#include "window_base.h"
+#include "window.h"
 #include "stage.h"
 #include "sound.h"
 #include "sound_driver.h"
@@ -101,7 +101,7 @@ void SourceInstance::update(float dt) {
     }
 }
 
-Source::Source(WindowBase *window):
+Source::Source(Window *window):
     stage_(nullptr),
     window_(window) {
 

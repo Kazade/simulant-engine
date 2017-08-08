@@ -26,7 +26,7 @@ namespace smlt {
 
 class GL1XRenderer : public Renderer {
 public:
-    GL1XRenderer(WindowBase* window);
+    GL1XRenderer(Window* window);
 
     batcher::RenderGroup new_render_group(Renderable *renderable, MaterialPass *material_pass);
     std::shared_ptr<batcher::RenderQueueVisitor> get_render_queue_visitor(CameraPtr camera);

@@ -34,11 +34,11 @@
 namespace smlt {
 
 class Application;
-class WindowBase;
+class Window;
 class SceneBase;
 
 typedef std::shared_ptr<SceneBase> SceneBasePtr;
-typedef std::function<SceneBasePtr (WindowBase*)> SceneFactory;
+typedef std::function<SceneBasePtr (Window*)> SceneFactory;
 
 
 /* Originally we used a lambda, but this doesn't compile with older GCC so we
@@ -57,7 +57,7 @@ public:
 
     }
 
-    SceneBasePtr operator()(WindowBase* window) {
+    SceneBasePtr operator()(Window* window) {
         auto ret = S::create(*window, std::forward<Ts>(args_)...);
         ret->set_name(name_);
         return ret;
@@ -76,7 +76,7 @@ public:
 
     template<typename T>
     void register_scene(const std::string& name) {
-        _store_scene_factory(name, [=](WindowBase* window) -> SceneBasePtr {
+        _store_scene_factory(name, [=](Window* window) -> SceneBasePtr {
             auto ret = T::create(*window);
             ret->set_name(name);
             return ret;
@@ -109,7 +109,7 @@ class SceneManager :
     public SceneManagerInterface {
 
 public:
-    SceneManager(WindowBase* window);
+    SceneManager(Window* window);
     ~SceneManager();
 
     bool has_scene(const std::string& route) const;
@@ -129,7 +129,7 @@ public:
     }
 
 private:
-    WindowBase* window_;
+    Window* window_;
 
     std::unordered_map<std::string, SceneFactory> scene_factories_;
     std::unordered_map<std::string, SceneBasePtr> routes_;

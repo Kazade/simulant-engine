@@ -454,7 +454,7 @@ class Background;
 typedef Background* BackgroundPtr;
 
 class Stage;
-class WindowBase;
+class Window;
 typedef Stage* StagePtr;
 
 namespace ui {
@@ -478,7 +478,7 @@ class Pipeline;
 typedef Pipeline* PipelinePtr;
 
 class Frustum;
-class WindowBase;
+class Window;
 class Partitioner;
 
 class GPUProgram;

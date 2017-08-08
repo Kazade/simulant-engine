@@ -20,7 +20,7 @@
 #include "deps/kazlog/kazlog.h"
 #include "utils/unicode.h"
 #include "virtual_gamepad.h"
-#include "window_base.h"
+#include "window.h"
 #include "stage.h"
 #include "render_sequence.h"
 #include "nodes/ui/ui_manager.h"
@@ -29,7 +29,7 @@
 
 namespace smlt {
 
-VirtualGamepad::VirtualGamepad(WindowBase &window, VirtualGamepadConfig config):
+VirtualGamepad::VirtualGamepad(Window &window, VirtualGamepadConfig config):
     window_(window),
     config_(config) {
 

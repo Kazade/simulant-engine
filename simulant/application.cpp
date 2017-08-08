@@ -22,10 +22,10 @@
 
 #ifdef _arch_dreamcast
 #include "kos_window.h"
-namespace smlt { typedef KOSWindow Window; }
+namespace smlt { typedef KOSWindow SysWindow; }
 #else
 #include "sdl2_window.h"
-namespace smlt { typedef SDL2Window Window; }
+namespace smlt { typedef SDL2Window SysWindow; }
 #endif
 
 #include "application.h"
@@ -45,7 +45,7 @@ void Application::construct_window(const AppConfig& config) {
     kazlog::get_logger("/")->add_handler(kazlog::Handler::ptr(new kazlog::StdIOHandler));
     L_DEBUG("Constructing the window");
 
-    window_ = Window::create(this, config.width, config.height, config.bpp, config.fullscreen);
+    window_ = SysWindow::create(this, config.width, config.height, config.bpp, config.fullscreen);
 
     for(auto& search_path: config.search_paths) {
         window_->resource_locator->add_search_path(search_path);
@@ -152,7 +152,7 @@ SceneBasePtr Application::active_scene() const {
     return scene_manager_->active_scene();
 }
 
-void Application::_store_scene_factory(const std::string &name, std::function<SceneBasePtr (WindowBase *)> func) {
+void Application::_store_scene_factory(const std::string &name, std::function<SceneBasePtr (Window *)> func) {
     scene_manager_->_store_scene_factory(name, func);
 }
 

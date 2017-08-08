@@ -72,7 +72,7 @@ public:
         into(*resource, options);
     }
 
-    void into(WindowBase& window, const LoaderOptions& options=LoaderOptions()) {
+    void into(Window& window, const LoaderOptions& options=LoaderOptions()) {
         into((Loadable&) window, options);
     }
 

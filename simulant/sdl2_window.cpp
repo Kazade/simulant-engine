@@ -76,7 +76,7 @@ int event_filter(void* user_data, SDL_Event* event) {
 
             _this->set_paused(true);
             {
-                //See WindowBase::context_lock_ for details
+                //See Window::context_lock_ for details
                 std::lock_guard<std::mutex> context_lock(_this->context_lock());
                 _this->set_has_context(false);
             }
@@ -89,7 +89,7 @@ int event_filter(void* user_data, SDL_Event* event) {
 
             L_INFO("Application is entering the foreground, enabling rendering");
             {
-                //See WindowBase::context_lock_ for details
+                //See Window::context_lock_ for details
                 std::lock_guard<std::mutex> context_lock(_this->context_lock());
                 _this->set_has_context(true);
             }

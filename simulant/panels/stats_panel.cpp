@@ -18,13 +18,13 @@
 //
 
 #include "stats_panel.h"
-#include "../window_base.h"
+#include "../window.h"
 #include "../stage.h"
 #include "../nodes/ui/ui_manager.h"
 
 namespace smlt {
 
-StatsPanel::StatsPanel(WindowBase *window):
+StatsPanel::StatsPanel(Window *window):
     window_(window) {
 
 }

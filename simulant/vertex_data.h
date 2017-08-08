@@ -28,7 +28,7 @@
 
 namespace smlt {
 
-class WindowBase;
+class Window;
 
 
 uint32_t vertex_attribute_size(VertexAttribute attr);

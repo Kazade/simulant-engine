@@ -67,7 +67,7 @@ std::shared_ptr<batcher::RenderQueueVisitor> GL1XRenderer::get_render_queue_visi
     return std::make_shared<GL1RenderQueueVisitor>(this, camera);
 }
 
-smlt::GL1XRenderer::GL1XRenderer(smlt::WindowBase *window):
+smlt::GL1XRenderer::GL1XRenderer(smlt::Window *window):
     Renderer(window),
     buffer_manager_(new GL1BufferManager(this)) {
 }

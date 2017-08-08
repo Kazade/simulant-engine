@@ -25,7 +25,7 @@ enum AudioDataFormat {
 };
 
 
-class WindowBase;
+class Window;
 
 /* Basically a hacky abstraction over OpenAL with the thinking that the only other drivers will be:
  *
@@ -36,7 +36,7 @@ class WindowBase;
  */
 class SoundDriver {
 public:
-    SoundDriver(WindowBase* window):
+    SoundDriver(Window* window):
         window_(window) {}
 
     virtual ~SoundDriver() {}
@@ -60,10 +60,10 @@ public:
     virtual AudioSourceState source_state(AudioSourceID source) = 0;
     virtual int32_t source_buffers_processed_count(AudioSourceID source) const = 0;
 
-    Property<SoundDriver, WindowBase> window = {this, &SoundDriver::window_};
+    Property<SoundDriver, Window> window = {this, &SoundDriver::window_};
 
 private:
-    WindowBase* window_ = nullptr;
+    Window* window_ = nullptr;
 };
 
 

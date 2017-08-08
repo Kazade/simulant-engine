@@ -76,7 +76,7 @@ class ResourceManager:
     public Managed<ResourceManager> {
 
 public:
-    ResourceManager(WindowBase* window, ResourceManager* parent=nullptr);
+    ResourceManager(Window* window, ResourceManager* parent=nullptr);
     ~ResourceManager();
 
     bool init();

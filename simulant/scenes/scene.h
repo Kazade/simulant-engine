@@ -39,7 +39,7 @@
 
 #include "../utils/unicode.h"
 #include "../types.h"
-#include "../window_base.h"
+#include "../window.h"
 #include "../generic/managed.h"
 #include "../generic/property.h"
 #include "../interfaces/nameable.h"
@@ -55,7 +55,7 @@ class SceneBase:
 public:
     typedef std::shared_ptr<SceneBase> ptr;
 
-    SceneBase(WindowBase& window);
+    SceneBase(Window& window);
     virtual ~SceneBase();
 
     void _call_load();
@@ -67,7 +67,7 @@ public:
     bool is_loaded() const { return is_loaded_; }
 
 protected:
-    Property<SceneBase, WindowBase> window = { this, &SceneBase::window_ };
+    Property<SceneBase, Window> window = { this, &SceneBase::window_ };
     Property<SceneBase, Application> app = { this, &SceneBase::app_ };
 
     virtual void load() = 0;
@@ -81,7 +81,7 @@ protected:
         AvailablePartitioner partitioner=PARTITIONER_HASH
     );
 
-    WindowBase* window_;
+    Window* window_;
     Application* app_;
 private:
     virtual void pre_load() {}
@@ -93,7 +93,7 @@ private:
 template<typename T>
 class Scene : public SceneBase, public Managed<T> {
 public:
-    Scene(WindowBase& window):
+    Scene(Window& window):
         SceneBase(window) {}
 
     void cleanup() override {

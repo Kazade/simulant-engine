@@ -17,7 +17,7 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "../window_base.h"
+#include "../window.h"
 #include "../loader.h"
 #include "../stage.h"
 #include "../nodes/actor.h"
@@ -105,7 +105,7 @@ void Skybox::generate(
 }
 
 
-SkyManager::SkyManager(WindowBase* window, Stage* stage):
+SkyManager::SkyManager(Window* window, Stage* stage):
     WindowHolder(window),
     stage_(stage) {
 

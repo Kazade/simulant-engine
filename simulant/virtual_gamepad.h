@@ -30,7 +30,7 @@ namespace smlt {
 
 class VirtualGamepad : public Managed<VirtualGamepad> {
 public:
-    VirtualGamepad(WindowBase& window, VirtualGamepadConfig config);
+    VirtualGamepad(Window& window, VirtualGamepadConfig config);
 
     bool init();
     void cleanup();
@@ -49,7 +49,7 @@ public:
     StageID stage_id() const { return stage_; }
 
 private:
-    WindowBase& window_;
+    Window& window_;
     VirtualGamepadConfig config_ = VIRTUAL_GAMEPAD_CONFIG_TWO_BUTTONS;
 
     std::vector<ui::Button*> buttons_;
@@ -66,7 +66,7 @@ private:
     std::vector<sig::ScopedConnection> connections_;
 
     void _prepare_deletion();
-    friend class WindowBase; // For _prepare_deletion
+    friend class Window; // For _prepare_deletion
 };
 
 }

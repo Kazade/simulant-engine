@@ -4,7 +4,7 @@
 
 class MainScene : public smlt::Scene<MainScene> {
 public:
-    MainScene(smlt::WindowBase& window):
+    MainScene(smlt::Window& window):
         smlt::Scene<MainScene>(window) {}
 
     void load() {

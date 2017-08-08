@@ -5,7 +5,7 @@
 class GameScene : public smlt::Scene<GameScene> {
 public:
     // Boilerplate
-    GameScene(smlt::WindowBase& window):
+    GameScene(smlt::Window& window):
         smlt::Scene<GameScene>(window) {}
 
     void load();

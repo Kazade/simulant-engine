@@ -19,11 +19,11 @@
 
 #include "scene_manager.h"
 #include "scene.h"
-#include "../window_base.h"
+#include "../window.h"
 
 namespace smlt {
 
-SceneManager::SceneManager(WindowBase *window):
+SceneManager::SceneManager(Window *window):
     window_(window) {
 
     step_conn_ = window_->signal_fixed_update().connect(std::bind(&SceneManager::fixed_update, this, std::placeholders::_1));

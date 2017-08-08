@@ -25,7 +25,7 @@
 
 #include "sdl2_keycodes.h"
 #include "generic/managed.h"
-#include "window_base.h"
+#include "window.h"
 #include "sound_drivers/openal_sound_driver.h"
 
 namespace smlt {
@@ -33,11 +33,11 @@ namespace smlt {
 int event_filter(void* user_data, SDL_Event* event);
 
 class SDL2Window :
-    public WindowBase {
+    public Window {
 
 public:
-    static WindowBase::ptr create(Application* app, int width=640, int height=480, int bpp=0, bool fullscreen=false) {
-        return WindowBase::create<SDL2Window>(app, width, height, bpp, fullscreen);
+    static Window::ptr create(Application* app, int width=640, int height=480, int bpp=0, bool fullscreen=false) {
+        return Window::create<SDL2Window>(app, width, height, bpp, fullscreen);
     }
 
     SDL2Window(uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen);

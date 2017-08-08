@@ -22,20 +22,20 @@
 
 namespace smlt {
 
-class WindowBase;
+class Window;
 
 class WindowHolder {
 public:
-    WindowHolder(WindowBase* window):
+    WindowHolder(Window* window):
         window_(window) {}
 
-    Property<WindowHolder, WindowBase> window = { this, &WindowHolder::window_ };
+    Property<WindowHolder, Window> window = { this, &WindowHolder::window_ };
 
 protected:
-    WindowBase* get_window() const { return window_; }
+    Window* get_window() const { return window_; }
 
 private:
-    WindowBase* window_;
+    Window* window_;
 };
 
 }

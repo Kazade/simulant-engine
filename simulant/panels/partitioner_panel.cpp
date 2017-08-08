@@ -19,14 +19,14 @@
 
 
 #include "partitioner_panel.h"
-#include "../window_base.h"
+#include "../window.h"
 #include "../stage.h"
 #include "../nodes/actor.h"
 #include "../partitioner.h"
 
 namespace smlt {
 
-PartitionerPanel::PartitionerPanel(WindowBase* window):
+PartitionerPanel::PartitionerPanel(Window* window):
     window_(window) {
 
     window_->signal_stage_removed().connect([=](StageID stage_id) {

@@ -36,7 +36,7 @@ class BackgroundManager:
     public virtual Updateable {
 
 public:
-    BackgroundManager(WindowBase* window);
+    BackgroundManager(Window* window);
     ~BackgroundManager();
 
     BackgroundID new_background();
@@ -48,9 +48,9 @@ public:
 
     void update(float dt) override;
 
-    Property<BackgroundManager, WindowBase> window = { this, &BackgroundManager::window_ };
+    Property<BackgroundManager, Window> window = { this, &BackgroundManager::window_ };
 private:
-    WindowBase* window_;
+    Window* window_;
 };
 
 class CameraManager {
@@ -84,7 +84,7 @@ class StageManager:
     DEFINE_SIGNAL(StageRemovedSignal, signal_stage_removed);
 
 public:
-    StageManager(WindowBase* window);
+    StageManager(Window* window);
 
     StageID new_stage(AvailablePartitioner partitioner=PARTITIONER_HASH);
     StagePtr stage(StageID s);
@@ -99,7 +99,7 @@ public:
 
     void delete_all_stages();
 private:
-    WindowBase* window_ = nullptr;
+    Window* window_ = nullptr;
     void print_tree(StageNode* node, uint32_t& level);
 };
 

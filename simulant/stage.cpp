@@ -18,7 +18,7 @@
 //
 
 #include "stage.h"
-#include "window_base.h"
+#include "window.h"
 #include "partitioner.h"
 #include "nodes/actor.h"
 #include "nodes/light.h"
@@ -42,7 +42,7 @@ namespace smlt {
 // Apparently this is the colour of a high noon sun (colour temp 5400 - 255, 255, 251)
 const Colour DEFAULT_LIGHT_COLOUR = Colour(1.0, 1.0, 251.0 / 255.0, 1.0);
 
-Stage::Stage(StageID id, WindowBase *parent, AvailablePartitioner partitioner):
+Stage::Stage(StageID id, Window *parent, AvailablePartitioner partitioner):
     WindowHolder(parent),
     StageNode(this),
     generic::Identifiable<StageID>(id),

@@ -20,7 +20,7 @@
 #include <stdexcept>
 #include <cassert>
 
-#include "window_base.h"
+#include "window.h"
 #include "material.h"
 #include "resource_manager.h"
 #include "renderers/renderer.h"

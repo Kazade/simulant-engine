@@ -20,7 +20,7 @@
 
 #include "managers.h"
 #include "background.h"
-#include "window_base.h"
+#include "window.h"
 #include "stage.h"
 #include "nodes/camera.h"
 #include "render_sequence.h"
@@ -31,7 +31,7 @@
 namespace smlt {
 
 //============== START BACKGROUNDS ==========
-BackgroundManager::BackgroundManager(WindowBase* window):
+BackgroundManager::BackgroundManager(Window* window):
     window_(window) {
 
 }
@@ -161,7 +161,7 @@ void CameraManager::delete_all_cameras() {
 
 //=========== START STAGES ==================
 
-StageManager::StageManager(WindowBase* window):
+StageManager::StageManager(Window* window):
     window_(window) {
 
 }

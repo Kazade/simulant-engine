@@ -20,7 +20,7 @@ class SpriteManager :
     DEFINE_SIGNAL(SpriteDestroyedSignal, signal_sprite_destroyed);
 
 public:
-    SpriteManager(WindowBase* window, Stage* stage);
+    SpriteManager(Window* window, Stage* stage);
 
     SpriteID new_sprite();
     SpriteID new_sprite_from_file(

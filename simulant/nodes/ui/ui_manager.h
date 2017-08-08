@@ -47,7 +47,7 @@ public:
 
 private:    
     Stage* stage_ = nullptr;
-    WindowBase* window_ = nullptr;
+    Window* window_ = nullptr;
 
     std::unique_ptr<WidgetManager> manager_;
     UIConfig config_;

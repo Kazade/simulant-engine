@@ -36,7 +36,7 @@
 
 namespace smlt {
 
-class WindowBase;
+class Window;
 class Stage;
 
 class BackgroundLoadException : public std::runtime_error {
@@ -69,7 +69,7 @@ public:
     //when thread completes, hide the loading scene and run the main loop
     int32_t run();
 
-    Property<Application, WindowBase> window = {this, &Application::window_ };
+    Property<Application, Window> window = {this, &Application::window_ };
     Property<Application, generic::DataCarrier> data = { this, &Application::data_carrier_ };
 
     bool initialized() const { return initialized_; }
@@ -83,7 +83,7 @@ public:
     bool is_scene_loaded(const std::string& route) const override;
     void reset() override;
     SceneBasePtr active_scene() const override;
-    void _store_scene_factory(const std::string& name, std::function<SceneBasePtr (WindowBase*)> func) override;
+    void _store_scene_factory(const std::string& name, std::function<SceneBasePtr (Window*)> func) override;
 
 protected:
     StagePtr stage(StageID stage=StageID());
@@ -93,7 +93,7 @@ protected:
     Property<Application, AppConfig> config = { this, &Application::config_ };
 
 private:
-    std::shared_ptr<WindowBase> window_;
+    std::shared_ptr<Window> window_;
     std::unique_ptr<SceneManager> scene_manager_;
 
     bool initialized_ = false;

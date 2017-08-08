@@ -98,7 +98,7 @@ class RenderSequence:
     public PipelineManager {
 
 public:
-    RenderSequence(WindowBase* window);
+    RenderSequence(Window* window);
     ~RenderSequence() {
         delete_all_pipelines();
     }
@@ -129,12 +129,12 @@ public:
 
     RenderOptions render_options;
 
-    Property<RenderSequence, WindowBase> window = { this, &RenderSequence::window_ };
+    Property<RenderSequence, Window> window = { this, &RenderSequence::window_ };
 private:    
     void sort_pipelines(bool acquire_lock=false);
     void run_pipeline(Pipeline::ptr stage, int& actors_rendered);
 
-    WindowBase* window_ = nullptr;
+    Window* window_ = nullptr;
     Renderer* renderer_ = nullptr;
 
     std::mutex pipeline_lock_;

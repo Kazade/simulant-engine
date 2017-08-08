@@ -23,14 +23,14 @@
 
 namespace smlt {
 
-class WindowBase;
+class Window;
 
 class StatsPanel : public Panel {
 public:
-    StatsPanel(WindowBase* window);
+    StatsPanel(Window* window);
 
 private:
-    WindowBase* window_ = nullptr;
+    Window* window_ = nullptr;
 
     void do_activate() override;
     void do_deactivate() override;

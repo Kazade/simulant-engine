@@ -1,11 +1,11 @@
 #include "sprite_manager.h"
 #include "../texture.h"
-#include "../window_base.h"
+#include "../window.h"
 #include "../stage.h"
 
 namespace smlt {
 
-SpriteManager::SpriteManager(WindowBase* window, Stage* stage):
+SpriteManager::SpriteManager(Window* window, Stage* stage):
     WindowHolder(window),
     stage_(stage)   {
 
