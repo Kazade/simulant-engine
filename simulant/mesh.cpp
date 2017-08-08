@@ -19,7 +19,7 @@
 
 #include <limits>
 
-#include "window_base.h"
+#include "window.h"
 #include "resource_manager.h"
 #include "mesh.h"
 #include "loader.h"

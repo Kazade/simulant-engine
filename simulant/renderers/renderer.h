@@ -25,7 +25,7 @@
 
 #include "../types.h"
 #include "../generic/auto_weakptr.h"
-#include "../window_base.h"
+#include "../window.h"
 
 #include "batching/renderable.h"
 #include "batching/render_queue.h"

@@ -20,7 +20,7 @@
 
 #include <deque>
 #include "./controller.h"
-#include "../window_base.h"
+#include "../window.h"
 
 #include "../interfaces/transformable.h"
 

@@ -18,7 +18,7 @@
 //
 
 #include "stats_panel.h"
-#include "../window_base.h"
+#include "../window.h"
 #include "../stage.h"
 #include "../nodes/ui/ui_manager.h"
 

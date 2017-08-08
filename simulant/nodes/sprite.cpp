@@ -22,7 +22,7 @@
 #include "actor.h"
 
 #include "../stage.h"
-#include "../window_base.h"
+#include "../window.h"
 #include "../animation.h"
 #include "../managers/sprite_manager.h"
 

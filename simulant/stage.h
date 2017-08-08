@@ -36,7 +36,7 @@
 #include "types.h"
 #include "resource_manager.h"
 #include "managers.h"
-#include "window_base.h"
+#include "window.h"
 
 namespace smlt {
 

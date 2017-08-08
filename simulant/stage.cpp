@@ -18,7 +18,7 @@
 //
 
 #include "stage.h"
-#include "window_base.h"
+#include "window.h"
 #include "partitioner.h"
 #include "nodes/actor.h"
 #include "nodes/light.h"

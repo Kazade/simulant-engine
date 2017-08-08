@@ -27,7 +27,7 @@
 #include "deps/kazlog/kazlog.h"
 #include "deps/SOIL/SOIL.h"
 
-#include "window_base.h"
+#include "window.h"
 #include "texture.h"
 #include "resource_manager.h"
 

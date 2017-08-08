@@ -19,7 +19,7 @@
 
 #include "scene.h"
 #include "../stage.h"
-#include "../window_base.h"
+#include "../window.h"
 
 namespace smlt {
 

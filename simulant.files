@@ -572,8 +572,8 @@ simulant/viewport.cpp
 simulant/viewport.h
 simulant/virtual_gamepad.cpp
 simulant/virtual_gamepad.h
-simulant/window_base.cpp
-simulant/window_base.h
+simulant/window.cpp
+simulant/window.h
 simulant/CMakeLists.txt
 simulant/partitioners/spatial_hash.h
 simulant/partitioners/impl/hgsh.h

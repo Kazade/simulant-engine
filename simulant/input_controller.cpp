@@ -21,7 +21,7 @@
 
 #include "utils/unicode.h"
 #include "input_controller.h"
-#include "window_base.h"
+#include "window.h"
 #include "virtual_gamepad.h"
 
 namespace smlt {

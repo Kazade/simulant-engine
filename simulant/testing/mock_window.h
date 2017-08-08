@@ -20,7 +20,7 @@
 #define MOCK_WINDOW_H
 
 #include "../generic/managed.h"
-#include "../window_base.h"
+#include "../window.h"
 
 namespace smlt {
 namespace testing {

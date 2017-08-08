@@ -18,7 +18,7 @@
 //
 
 #include "deps/kazlog/kazlog.h"
-#include "window_base.h"
+#include "window.h"
 #include "stage.h"
 #include "sound.h"
 #include "sound_driver.h"

@@ -1,6 +1,6 @@
 #include "sprite_manager.h"
 #include "../texture.h"
-#include "../window_base.h"
+#include "../window.h"
 #include "../stage.h"
 
 namespace smlt {

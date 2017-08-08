@@ -25,7 +25,7 @@
 
 #include "sdl2_keycodes.h"
 #include "generic/managed.h"
-#include "window_base.h"
+#include "window.h"
 #include "sound_drivers/openal_sound_driver.h"
 
 namespace smlt {

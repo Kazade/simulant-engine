@@ -24,7 +24,7 @@
 #endif
 
 #include "utils/gl_error.h"
-#include "window_base.h"
+#include "window.h"
 #include "input_controller.h"
 #include "loaders/texture_loader.h"
 #include "loaders/material_script.h"

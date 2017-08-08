@@ -39,7 +39,7 @@
 
 #include "../utils/unicode.h"
 #include "../types.h"
-#include "../window_base.h"
+#include "../window.h"
 #include "../generic/managed.h"
 #include "../generic/property.h"
 #include "../interfaces/nameable.h"

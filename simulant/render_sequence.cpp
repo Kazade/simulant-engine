@@ -27,7 +27,7 @@
 #include "nodes/light.h"
 
 #include "mesh.h"
-#include "window_base.h"
+#include "window.h"
 #include "partitioner.h"
 #include "loader.h"
 

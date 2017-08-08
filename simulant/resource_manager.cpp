@@ -17,7 +17,7 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "window_base.h"
+#include "window.h"
 #include "resource_manager.h"
 #include "loader.h"
 #include "procedural/mesh.h"
