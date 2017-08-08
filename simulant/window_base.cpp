@@ -54,7 +54,7 @@
 
 namespace smlt {
 
-WindowBase::WindowBase():
+Window::Window():
     Source(this),
     StageManager(this),    
     resource_manager_(new ResourceManager(this)),
@@ -68,19 +68,19 @@ WindowBase::WindowBase():
     frame_counter_frames_(0),
     frame_time_in_milliseconds_(0),
     background_manager_(new BackgroundManager(this)),
-    time_keeper_(TimeKeeper::create(1.0 / WindowBase::STEPS_PER_SECOND)) {
+    time_keeper_(TimeKeeper::create(1.0 / Window::STEPS_PER_SECOND)) {
 
 }
 
-WindowBase::~WindowBase() {
+Window::~Window() {
 
 }
 
-RenderSequencePtr WindowBase::render_sequence() {
+RenderSequencePtr Window::render_sequence() {
     return render_sequence_;
 }
 
-LoaderPtr WindowBase::loader_for(const unicode &filename, LoaderHint hint) {
+LoaderPtr Window::loader_for(const unicode &filename, LoaderHint hint) {
     unicode final_file = resource_locator->locate_file(filename);
 
     std::vector<std::pair<LoaderTypePtr, LoaderPtr>> possible_loaders;
@@ -114,7 +114,7 @@ LoaderPtr WindowBase::loader_for(const unicode &filename, LoaderHint hint) {
 }
 
 
-LoaderPtr WindowBase::loader_for(const unicode& loader_name, const unicode &filename) {
+LoaderPtr Window::loader_for(const unicode& loader_name, const unicode &filename) {
     unicode final_file = resource_locator->locate_file(filename);
 
     for(LoaderTypePtr loader_type: loaders_) {
@@ -130,7 +130,7 @@ LoaderPtr WindowBase::loader_for(const unicode& loader_name, const unicode &file
     return LoaderPtr();
 }
 
-LoaderTypePtr WindowBase::loader_type(const unicode& loader_name) const {
+LoaderTypePtr Window::loader_type(const unicode& loader_name) const {
     for(LoaderTypePtr loader_type: loaders_) {
         if(loader_type->name() == loader_name) {
             return loader_type;
@@ -139,7 +139,7 @@ LoaderTypePtr WindowBase::loader_type(const unicode& loader_name) const {
     return LoaderTypePtr();
 }
 
-void WindowBase::create_defaults() {
+void Window::create_defaults() {
     loading_ = scenes::Loading::create(*this);
 
     //This needs to happen after SDL or whatever is initialized
@@ -149,7 +149,7 @@ void WindowBase::create_defaults() {
     initialize_input_controller(*input_controller_);
 }
 
-void WindowBase::_cleanup() {
+void Window::_cleanup() {
     virtual_gamepad_.reset();
     loading_.reset();
     background_manager_.reset();
@@ -169,11 +169,11 @@ void WindowBase::_cleanup() {
     GLThreadCheck::cleanup();
 }
 
-void WindowBase::each_stage(std::function<void (uint32_t, Stage*)> func) {
+void Window::each_stage(std::function<void (uint32_t, Stage*)> func) {
     StageManager::each(func);
 }
 
-bool WindowBase::_init() {
+bool Window::_init() {
     GLThreadCheck::init();
 
     L_DEBUG("Starting initialization");
@@ -233,7 +233,7 @@ bool WindowBase::_init() {
         idle->add_once([=]() {
             //Bind the stop_running method to the ESCAPE key
             input_controller().keyboard().key_pressed_connect(
-                smlt::KEYBOARD_CODE_ESCAPE, bind(&WindowBase::stop_running, this)
+                smlt::KEYBOARD_CODE_ESCAPE, bind(&Window::stop_running, this)
             );
         });
 
@@ -247,7 +247,7 @@ bool WindowBase::_init() {
     return result;
 }
 
-void WindowBase::register_panel(uint8_t function_key, std::shared_ptr<Panel> panel) {
+void Window::register_panel(uint8_t function_key, std::shared_ptr<Panel> panel) {
     PanelEntry entry;
     entry.panel = panel;
     entry.keyboard_connection = input_controller_->keyboard().key_pressed_connect((KeyboardCode) (int(KEYBOARD_CODE_F1) + (function_key - 1)), [panel](KeyboardCode sym) {
@@ -261,16 +261,16 @@ void WindowBase::register_panel(uint8_t function_key, std::shared_ptr<Panel> pan
     panels_[function_key] = entry;
 }
 
-void WindowBase::unregister_panel(uint8_t function_key) {
+void Window::unregister_panel(uint8_t function_key) {
     panels_[function_key].keyboard_connection.disconnect();
     panels_.erase(function_key);
 }
 
-void WindowBase::set_logging_level(LoggingLevel level) {
+void Window::set_logging_level(LoggingLevel level) {
     kazlog::get_logger("/")->set_level((kazlog::LOG_LEVEL) level);
 }
 
-void WindowBase::_update_thunk(float dt) {
+void Window::_update_thunk(float dt) {
     if(is_paused()) {
         dt = 0.0; //If the application window is not displayed, don't send a deltatime down
         //it's still accessible through get_deltatime if the user needs it
@@ -280,13 +280,13 @@ void WindowBase::_update_thunk(float dt) {
     StageManager::_update_thunk(dt);
 }
 
-void WindowBase::_fixed_update_thunk(float dt) {
+void Window::_fixed_update_thunk(float dt) {
     if(is_paused()) return;
     StageManager::_fixed_update_thunk(dt);
 }
 
 
-void WindowBase::run_update() {
+void Window::run_update() {
     float dt = time_keeper_->delta_time();
 
     frame_counter_time_ += dt;
@@ -307,7 +307,7 @@ void WindowBase::run_update() {
     signal_late_update_(dt);
 }
 
-void WindowBase::run_fixed_updates() {
+void Window::run_fixed_updates() {
     while(time_keeper_->use_fixed_step()) {
         _fixed_update_thunk(time_keeper_->fixed_step()); // Run the fixed updates on controllers
         signal_fixed_update_(time_keeper_->fixed_step()); //Trigger any steps
@@ -316,7 +316,7 @@ void WindowBase::run_fixed_updates() {
     }
 }
 
-bool WindowBase::run_frame() {
+bool Window::run_frame() {
     static bool first_frame = true;
 
     signal_frame_started_();
@@ -387,7 +387,7 @@ bool WindowBase::run_frame() {
 
 }
 
-void WindowBase::register_loader(LoaderTypePtr loader) {
+void Window::register_loader(LoaderTypePtr loader) {
     if(std::find(loaders_.begin(), loaders_.end(), loader) != loaders_.end()) {
         throw std::logic_error("Tried to add the same loader twice");
     }
@@ -395,26 +395,26 @@ void WindowBase::register_loader(LoaderTypePtr loader) {
     loaders_.push_back(loader);
 }
 
-float WindowBase::aspect_ratio() const {
+float Window::aspect_ratio() const {
     assert(width_ > 0);
     assert(height_ > 0);
 
     return float(width_) / float(height_);
 }
 
-Mouse& WindowBase::mouse() {
+Mouse& Window::mouse() {
     return input_controller_->mouse();
 }
 
-Joypad& WindowBase::joypad(uint8_t idx) {
+Joypad& Window::joypad(uint8_t idx) {
     return input_controller_->joypad(idx);
 }
 
-uint8_t WindowBase::joypad_count() const {
+uint8_t Window::joypad_count() const {
     return input_controller_->joypad_count();
 }
 
-void WindowBase::set_paused(bool value) {
+void Window::set_paused(bool value) {
     if(value == is_paused_) return;
 
     if(value) {
@@ -426,13 +426,13 @@ void WindowBase::set_paused(bool value) {
     is_paused_ = value;
 }
 
-void WindowBase::set_has_context(bool value) {
+void Window::set_has_context(bool value) {
     if(value == has_context_) return;
 
     has_context_ = value;
 }
 
-void WindowBase::enable_virtual_joypad(VirtualGamepadConfig config, bool flipped) {
+void Window::enable_virtual_joypad(VirtualGamepadConfig config, bool flipped) {
     if(virtual_gamepad_) {
         virtual_gamepad_.reset();
     }
@@ -445,7 +445,7 @@ void WindowBase::enable_virtual_joypad(VirtualGamepadConfig config, bool flipped
     }
 }
 
-void WindowBase::disable_virtual_joypad() {
+void Window::disable_virtual_joypad() {
     /*
      * This is a little hacky, but basically when we disable the virtual gamepad's
      * UI, it triggers a series of events that release any buttons which are currently
@@ -464,12 +464,12 @@ void WindowBase::disable_virtual_joypad() {
 
 
 /**
- * @brief WindowBase::reset
+ * @brief Window::reset
  *
  * Destroys all stages and releases all loadables. Then resets the
  * window to its original state.
  */
-void WindowBase::reset() {
+void Window::reset() {
     idle->execute(); //Execute any idle tasks before we go deleting things
 
     render_sequence()->delete_all_pipelines();
@@ -481,11 +481,11 @@ void WindowBase::reset() {
 }
 
 /* PipelineHelperAPIInterface */
-PipelinePtr WindowBase::pipeline(PipelineID pid){
+PipelinePtr Window::pipeline(PipelineID pid){
     return render_sequence_->pipeline(pid);
 }
 
-bool WindowBase::enable_pipeline(PipelineID pid) {
+bool Window::enable_pipeline(PipelineID pid) {
     /*
      * Enables the specified pipeline, returns true if the pipeline
      * was enabled, or false if it was already enabled
@@ -496,7 +496,7 @@ bool WindowBase::enable_pipeline(PipelineID pid) {
     return state != pipeline->is_active();
 }
 
-bool WindowBase::disable_pipeline(PipelineID pid) {
+bool Window::disable_pipeline(PipelineID pid) {
     /*
      * Disables the specified pipeline, returns true if the pipeline
      * was disabled, or false if it was already disabled
@@ -507,32 +507,32 @@ bool WindowBase::disable_pipeline(PipelineID pid) {
     return state != pipeline->is_active();
 }
 
-void WindowBase::delete_pipeline(PipelineID pid) {
+void Window::delete_pipeline(PipelineID pid) {
     render_sequence_->delete_pipeline(pid);
 }
 
-bool WindowBase::has_pipeline(PipelineID pid) const {
+bool Window::has_pipeline(PipelineID pid) const {
     return render_sequence_->contains(pid);
 }
 
-bool WindowBase::is_pipeline_enabled(PipelineID pid) const {
+bool Window::is_pipeline_enabled(PipelineID pid) const {
     return render_sequence_->pipeline(pid)->is_active();
 }
 /* End PipelineHelperAPIInterface */
 
-void WindowBase::on_key_down(KeyboardCode code, ModifierKeyState modifiers) {
+void Window::on_key_down(KeyboardCode code, ModifierKeyState modifiers) {
     each_event_listener([=](EventListener* listener) {
         listener->handle_key_down(this, code, modifiers);
     });
 }
 
-void WindowBase::on_key_up(KeyboardCode code, ModifierKeyState modifiers) {
+void Window::on_key_up(KeyboardCode code, ModifierKeyState modifiers) {
     each_event_listener([=](EventListener* listener) {
         listener->handle_key_up(this, code, modifiers);
     });
 }
 
-void WindowBase::on_finger_down(TouchPointID touch_id, float normalized_x, float normalized_y, float pressure) {
+void Window::on_finger_down(TouchPointID touch_id, float normalized_x, float normalized_y, float pressure) {
     each_event_listener([&](EventListener* listener) {
         listener->handle_touch_begin(
             this,
@@ -544,7 +544,7 @@ void WindowBase::on_finger_down(TouchPointID touch_id, float normalized_x, float
     });
 }
 
-void WindowBase::on_finger_up(TouchPointID touch_id, float normalized_x, float normalized_y) {
+void Window::on_finger_up(TouchPointID touch_id, float normalized_x, float normalized_y) {
     each_event_listener([&](EventListener* listener) {
         listener->handle_touch_end(
             this,
@@ -555,7 +555,7 @@ void WindowBase::on_finger_up(TouchPointID touch_id, float normalized_x, float n
     });
 }
 
-void WindowBase::on_finger_motion(
+void Window::on_finger_motion(
     TouchPointID touch_id,
     float normalized_x, float normalized_y,
     float dx, float dy // Between -1.0 and +1.0

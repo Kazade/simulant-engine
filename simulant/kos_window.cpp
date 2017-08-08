@@ -18,7 +18,7 @@ KOS_INIT_FLAGS(INIT_DEFAULT | INIT_MALLOCSTATS);
 #define SCREEN_DEPTH 32
 
 KOSWindow::KOSWindow(uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen):
-    WindowBase() {
+    Window() {
 
     set_width(SCREEN_WIDTH);
     set_height(SCREEN_HEIGHT);

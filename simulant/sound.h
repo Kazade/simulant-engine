@@ -115,7 +115,7 @@ public:
 
 class Source {
 public:
-    Source(WindowBase* window);
+    Source(Window* window);
     Source(Stage* stage, SoundDriver *driver);
     virtual ~Source();
 
@@ -130,7 +130,7 @@ private:
     SoundDriver* _sound_driver() const;
 
     Stage* stage_ = nullptr;
-    WindowBase* window_ = nullptr;
+    Window* window_ = nullptr;
     SoundDriver* driver_ = nullptr;
 
     std::list<SourceInstance::ptr> instances_;

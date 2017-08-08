@@ -24,7 +24,7 @@
 
 namespace smlt {
 
-StatsPanel::StatsPanel(WindowBase *window):
+StatsPanel::StatsPanel(Window *window):
     window_(window) {
 
 }

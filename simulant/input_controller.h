@@ -36,7 +36,7 @@ namespace smlt {
 
 class InputController;
 class InputConnection;
-class WindowBase;
+class Window;
 
 typedef UniqueID<InputConnection> InputConnectionID;
 
@@ -263,7 +263,7 @@ class InputController:
     public Managed<InputController> {
 
 public:
-    InputController(WindowBase& window);
+    InputController(Window& window);
     ~InputController();
 
     Keyboard& keyboard() { assert(keyboard_); return *keyboard_; }
@@ -300,7 +300,7 @@ public:
     void _handle_joypad_hat_motion(uint32_t joypad_id, uint32_t hat_id, HatPosition position);
 
 private:
-    WindowBase& window_;
+    Window& window_;
 
     Keyboard::ptr keyboard_;
     Mouse::ptr mouse_;
@@ -311,7 +311,7 @@ private:
     void init_virtual_joypad();
     std::vector<sig::connection> virtual_joypad_connections_;
 
-    friend class WindowBase;
+    friend class Window;
 };
 
 }

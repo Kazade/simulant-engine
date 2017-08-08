@@ -35,10 +35,10 @@ class Fly:
     public Managed<Fly> {
 
 public:
-    Fly(Controllable* container, const Property<smlt::SceneBase, smlt::WindowBase>& window):
+    Fly(Controllable* container, const Property<smlt::SceneBase, smlt::Window>& window):
         Fly(container, window.get()) {}
 
-    Fly(Controllable* container, WindowBase* window):
+    Fly(Controllable* container, Window* window):
         Controller() {
 
         object_ = dynamic_cast<Transformable*>(container);

@@ -105,7 +105,7 @@ void Skybox::generate(
 }
 
 
-SkyManager::SkyManager(WindowBase* window, Stage* stage):
+SkyManager::SkyManager(Window* window, Stage* stage):
     WindowHolder(window),
     stage_(stage) {
 

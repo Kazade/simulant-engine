@@ -29,7 +29,7 @@
 
 namespace smlt {
 
-VirtualGamepad::VirtualGamepad(WindowBase &window, VirtualGamepadConfig config):
+VirtualGamepad::VirtualGamepad(Window &window, VirtualGamepadConfig config):
     window_(window),
     config_(config) {
 

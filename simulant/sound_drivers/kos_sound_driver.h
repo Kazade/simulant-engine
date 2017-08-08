@@ -6,7 +6,7 @@ namespace smlt {
 
 class KOSSoundDriver : public SoundDriver {
 public:
-    KOSSoundDriver(WindowBase* window):
+    KOSSoundDriver(Window* window):
         SoundDriver(window) {}
 
     bool startup() override;

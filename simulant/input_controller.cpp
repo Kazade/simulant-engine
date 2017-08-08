@@ -326,7 +326,7 @@ void Joypad::_disconnect(const InputConnection &connection) {
     }
 }
 
-InputController::InputController(WindowBase& window):
+InputController::InputController(Window& window):
     window_(window),
     keyboard_(new Keyboard()),
     mouse_(new Mouse()) {

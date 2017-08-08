@@ -16,7 +16,7 @@ The following signals are available for the Window class:
 
 Sometimes, when writing a game it is necessary to display a short message to the player, this could be something like "Your team mate is under attack", or "Base captured!" etc.
 
-The global MessageBar instance is accessible from the Window instance using the WindowBase::message_bar() method. The MessageBar provides the following messaging functions:
+The global MessageBar instance is accessible from the Window instance using the Window::message_bar() method. The MessageBar provides the following messaging functions:
     
  - alert(unicode);
  - warn(unicode);

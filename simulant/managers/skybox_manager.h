@@ -107,7 +107,7 @@ class SkyManager :
     public virtual WindowHolder {
 
 public:
-    SkyManager(WindowBase* window, Stage* stage);
+    SkyManager(Window* window, Stage* stage);
 
     SkyID new_skybox_from_folder(const unicode& folder);
     SkyID new_skybox_from_files(

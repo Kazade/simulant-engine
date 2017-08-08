@@ -113,7 +113,7 @@ typedef sig::signal<void (float)> LateUpdateSignal;
 
 typedef sig::signal<void ()> ShutdownSignal;
 
-class WindowBase :
+class Window :
     public Source,
     public StageManager,
     public Loadable,
@@ -130,17 +130,17 @@ class WindowBase :
     DEFINE_SIGNAL(ShutdownSignal, signal_shutdown);
 
 public:    
-    typedef std::shared_ptr<WindowBase> ptr;
+    typedef std::shared_ptr<Window> ptr;
     static const int STEPS_PER_SECOND = 60;
 
     template<typename T>
-    static std::shared_ptr<WindowBase> create(Application* app, int width=640, int height=480, int bpp=0, bool fullscreen=false) {
-        std::shared_ptr<WindowBase> window(new T(width, height, bpp, fullscreen));
+    static std::shared_ptr<Window> create(Application* app, int width=640, int height=480, int bpp=0, bool fullscreen=false) {
+        std::shared_ptr<Window> window(new T(width, height, bpp, fullscreen));
         window->set_application(app);
         return window;
     }
 
-    virtual ~WindowBase();
+    virtual ~Window();
     
     LoaderPtr loader_for(const unicode& filename, LoaderHint hint=LOADER_HINT_NONE);
     LoaderPtr loader_for(const unicode& loader_name, const unicode& filename);
@@ -228,7 +228,7 @@ public:
 
     /* Must be called directly after Window construction, it creates the window itself. The reason this
      * isn't done in create() or the constructor is that _init also sets up the default resources etc. and doesn't
-     * allow a window of opportunity to manipulate the WindowBase instance before creating the window.
+     * allow a window of opportunity to manipulate the Window instance before creating the window.
      *
      * FIXME: This is dirty and hacky and should be fixed.
      */
@@ -260,7 +260,7 @@ protected:
 
     InputController& input_controller() { assert(input_controller_); return *input_controller_; }
 
-    WindowBase();
+    Window();
 
     void set_paused(bool value=true);
     void set_has_context(bool value=true);
@@ -359,23 +359,23 @@ private:
 public:
 
     //Read only properties
-    Property<WindowBase, ResourceManager> shared_assets = { this, &WindowBase::resource_manager_ };
-    Property<WindowBase, Application> application = { this, &WindowBase::application_ };
-    Property<WindowBase, VirtualGamepad> virtual_joypad = { this, &WindowBase::virtual_gamepad_ };
-    Property<WindowBase, Renderer> renderer = { this, &WindowBase::renderer_ };
-    Property<WindowBase, TimeKeeper> time_keeper = { this, &WindowBase::time_keeper_ };
+    Property<Window, ResourceManager> shared_assets = { this, &Window::resource_manager_ };
+    Property<Window, Application> application = { this, &Window::application_ };
+    Property<Window, VirtualGamepad> virtual_joypad = { this, &Window::virtual_gamepad_ };
+    Property<Window, Renderer> renderer = { this, &Window::renderer_ };
+    Property<Window, TimeKeeper> time_keeper = { this, &Window::time_keeper_ };
 
-    Property<WindowBase, IdleTaskManager> idle = { this, &WindowBase::idle_ };
-    Property<WindowBase, generic::DataCarrier> data = { this, &WindowBase::data_carrier_ };
-    Property<WindowBase, ResourceLocator> resource_locator = { this, &WindowBase::resource_locator_ };
+    Property<Window, IdleTaskManager> idle = { this, &Window::idle_ };
+    Property<Window, generic::DataCarrier> data = { this, &Window::data_carrier_ };
+    Property<Window, ResourceLocator> resource_locator = { this, &Window::resource_locator_ };
 
-    Property<WindowBase, Keyboard> keyboard = {
-        this, [](WindowBase* self) -> Keyboard* {
+    Property<Window, Keyboard> keyboard = {
+        this, [](Window* self) -> Keyboard* {
             return &self->_input_controller()->keyboard();
         }
     };
 
-    Property<WindowBase, Stats> stats = { this, &WindowBase::stats_ };
+    Property<Window, Stats> stats = { this, &Window::stats_ };
 
     SoundDriver* _sound_driver() const { return sound_driver_.get(); }
     InputController* _input_controller() const { return input_controller_.get(); }

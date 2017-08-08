@@ -108,7 +108,7 @@ class Stage:
     DEFINE_SIGNAL(StagePostRenderSignal, signal_stage_post_render);
 
 public:
-    Stage(StageID id, WindowBase *parent, AvailablePartitioner partitioner);
+    Stage(StageID id, Window *parent, AvailablePartitioner partitioner);
     ~Stage();
 
     ActorID new_actor(RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);

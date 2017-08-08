@@ -8,10 +8,10 @@
 
 namespace smlt {
 
-class KOSWindow : public WindowBase {
+class KOSWindow : public Window {
 public:
-    static WindowBase::ptr create(Application* app, int width=640, int height=480, int bpp=0, bool fullscreen=false) {
-        return WindowBase::create<KOSWindow>(app, width, height, bpp, fullscreen);
+    static Window::ptr create(Application* app, int width=640, int height=480, int bpp=0, bool fullscreen=false) {
+        return Window::create<KOSWindow>(app, width, height, bpp, fullscreen);
     }
 
     KOSWindow(uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen);

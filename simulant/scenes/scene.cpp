@@ -23,7 +23,7 @@
 
 namespace smlt {
 
-SceneBase::SceneBase(WindowBase &window):
+SceneBase::SceneBase(Window &window):
     window_(&window),
     app_(window.application){
 

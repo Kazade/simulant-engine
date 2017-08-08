@@ -101,7 +101,7 @@ void SourceInstance::update(float dt) {
     }
 }
 
-Source::Source(WindowBase *window):
+Source::Source(Window *window):
     stage_(nullptr),
     window_(window) {
 

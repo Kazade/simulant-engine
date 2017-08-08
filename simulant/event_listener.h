@@ -65,12 +65,12 @@ public:
     EventListener() {}
     virtual ~EventListener() {}
 
-    void handle_touch_begin(WindowBase* window, TouchPointID touch_id, float normalized_x, float normalized_y, float pressure);
-    void handle_touch_end(WindowBase* window, TouchPointID touch_id, float normalized_x, float normalized_y);
-    void handle_touch_move(WindowBase* window, TouchPointID touch_id, float normalized_x, float normalized_y, float dx, float dy);
+    void handle_touch_begin(Window* window, TouchPointID touch_id, float normalized_x, float normalized_y, float pressure);
+    void handle_touch_end(Window* window, TouchPointID touch_id, float normalized_x, float normalized_y);
+    void handle_touch_move(Window* window, TouchPointID touch_id, float normalized_x, float normalized_y, float dx, float dy);
 
-    void handle_key_down(WindowBase* window, KeyboardCode code, ModifierKeyState modifiers);
-    void handle_key_up(WindowBase* window, KeyboardCode code, ModifierKeyState modifiers);
+    void handle_key_down(Window* window, KeyboardCode code, ModifierKeyState modifiers);
+    void handle_key_up(Window* window, KeyboardCode code, ModifierKeyState modifiers);
 
 private:
     virtual void on_key_down(const KeyEvent& evt) {}

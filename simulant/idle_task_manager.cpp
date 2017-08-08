@@ -28,7 +28,7 @@ namespace smlt {
 
 static IdleConnectionID connection_counter = 0;
 
-IdleTaskManager::IdleTaskManager(WindowBase &window):
+IdleTaskManager::IdleTaskManager(Window &window):
     window_(window) {
 
 }
@@ -69,7 +69,7 @@ struct TimedTriggerOnce {
         callback_(callback) {
     }
 
-    bool update(smlt::WindowBase* window) {
+    bool update(smlt::Window* window) {
         auto now = window->time_keeper->total_elapsed_seconds();
         if(!start_time_) {
             start_time_ = now;
@@ -93,7 +93,7 @@ struct TimedTrigger {
         callback_(callback) {
     }
 
-    bool update(smlt::WindowBase* window) {
+    bool update(smlt::Window* window) {
         auto now = window->time_keeper->total_elapsed_seconds();
         if(!start_time_) {
             start_time_ = now;

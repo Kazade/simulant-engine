@@ -5,7 +5,7 @@
 
 namespace smlt {
 
-SpriteManager::SpriteManager(WindowBase* window, Stage* stage):
+SpriteManager::SpriteManager(Window* window, Stage* stage):
     WindowHolder(window),
     stage_(stage)   {
 

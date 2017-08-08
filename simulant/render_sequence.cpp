@@ -75,7 +75,7 @@ void Pipeline::activate() {
     }
 }
 
-RenderSequence::RenderSequence(WindowBase *window):
+RenderSequence::RenderSequence(Window *window):
     window_(window),
     renderer_(window->renderer.get()) {
 

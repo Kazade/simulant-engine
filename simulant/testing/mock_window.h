@@ -26,7 +26,7 @@ namespace smlt {
 namespace testing {
 
 class MockWindow :
-    public WindowBase {
+    public Window {
 
 public:
     MockWindow() {}
@@ -40,8 +40,8 @@ public:
     void check_events() {}
     void swap_buffers() {}
 
-    static WindowBase::ptr create(int width=640, int height=480, int bpp=0, bool fullscreen=false) {
-        return WindowBase::create<MockWindow>(width, height, bpp, fullscreen);
+    static Window::ptr create(int width=640, int height=480, int bpp=0, bool fullscreen=false) {
+        return Window::create<MockWindow>(width, height, bpp, fullscreen);
     }
 
 private:

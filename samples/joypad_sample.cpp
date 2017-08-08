@@ -71,7 +71,7 @@ void joypad_axis_right(smlt::AxisRange axis_range, smlt::JoypadAxis axis) {
 
 class GameScene : public smlt::Scene<GameScene> {
 public:
-    GameScene(WindowBase& window):
+    GameScene(Window& window):
         smlt::Scene<GameScene>(window) {}
 
     void load() {

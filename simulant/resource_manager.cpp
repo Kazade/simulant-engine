@@ -31,7 +31,7 @@
 
 namespace smlt {
 
-ResourceManager::ResourceManager(WindowBase* window, ResourceManager *parent):
+ResourceManager::ResourceManager(Window* window, ResourceManager *parent):
     WindowHolder(window),
     parent_(parent) {
 

@@ -10,7 +10,7 @@ class PhysicsScene:
     public Scene<T> {
 
 protected:
-    PhysicsScene(WindowBase& window):
+    PhysicsScene(Window& window):
         Scene<T>(window) {}
 
     Property<PhysicsScene, smlt::controllers::RigidBodySimulation> physics = { this, &PhysicsScene::physics_ };
