@@ -24,7 +24,8 @@
 namespace smlt {
 
 SceneBase::SceneBase(WindowBase &window):
-    window_(&window) {
+    window_(&window),
+    app_(window.application){
 
 }
 

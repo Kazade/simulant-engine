@@ -68,6 +68,7 @@ public:
 
 protected:
     Property<SceneBase, WindowBase> window = { this, &SceneBase::window_ };
+    Property<SceneBase, Application> app = { this, &SceneBase::app_ };
 
     virtual void load() = 0;
     virtual void unload() {}
@@ -81,7 +82,7 @@ protected:
     );
 
     WindowBase* window_;
-
+    Application* app_;
 private:
     virtual void pre_load() {}
     virtual void post_unload() {}
