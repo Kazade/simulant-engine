@@ -8,7 +8,7 @@ public:
     MainScene(smlt::WindowBase& window):
         smlt::Scene<MainScene>(window) {}
 
-    void do_load() {
+    void load() {
         stage_ = window->new_stage();
         camera_ = stage_.fetch()->new_camera_with_orthographic_projection(0, window->width(), 0, window->height());
 
@@ -46,7 +46,7 @@ public:
 
     }
 
-    bool do_init() {
+    bool init() {
         register_scene<MainScene>("main");
         return true;
     }

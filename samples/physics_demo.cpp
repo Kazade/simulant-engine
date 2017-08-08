@@ -12,7 +12,7 @@ public:
     GameScene(smlt::WindowBase& window):
         smlt::PhysicsScene<GameScene>(window) {}
 
-    void do_load() {
+    void load() {
         pipeline_id_ = prepare_basic_scene(stage_id_, camera_id_, smlt::PARTITIONER_NULL);
         window->disable_pipeline(pipeline_id_);
 
@@ -63,7 +63,7 @@ public:
         );
     }
 
-    void do_activate() {
+    void activate() {
         window->enable_pipeline(pipeline_id_);
     }
 
@@ -97,7 +97,7 @@ public:
         smlt::Application(config) {}
 
 private:
-    bool do_init() {
+    bool init() {
         register_scene<GameScene>("main");
         load_scene_in_background("main", true); //Do loading in a background thread, but show immediately when done
         activate_scene("_loading"); // Show the loading screen in the meantime

@@ -7,7 +7,7 @@ public:
     MainScene(smlt::WindowBase& window):
         smlt::Scene<MainScene>(window) {}
 
-    void do_load() {
+    void load() {
         // Create two viewports for the left and right hand side of the screen, set different clear colours
         smlt::Viewport first(smlt::VIEWPORT_TYPE_VERTICAL_SPLIT_LEFT, smlt::Colour::RED);
         smlt::Viewport second(smlt::VIEWPORT_TYPE_VERTICAL_SPLIT_RIGHT, smlt::Colour::GREEN);
@@ -31,7 +31,7 @@ public:
     ViewportSample(const smlt::AppConfig& config):
         smlt::Application(config) {}
 
-    bool do_init() {
+    bool init() {
         register_scene<MainScene>("main");
         return true;
     }

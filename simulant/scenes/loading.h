@@ -42,11 +42,11 @@ public:
     Property<Loading, ui::ProgressBar> progress_bar = {this, &Loading::progress_bar_};
 
 private:
-    void do_activate() override;
-    void do_deactivate() override;
+    void activate() override;
+    void deactivate() override;
 
-    void do_load() override;
-    void do_unload() override;
+    void load() override;
+    void unload() override;
 
     StageID stage_;
     CameraID camera_;

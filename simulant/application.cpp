@@ -59,8 +59,12 @@ void Application::construct_window(const AppConfig& config) {
 
     window_->set_title(config.title.encode());
 
-    window_->signal_fixed_update().connect(std::bind(&Application::do_fixed_update, this, std::placeholders::_1));
-    window_->signal_shutdown().connect(std::bind(&Application::do_cleanup, this));
+    /* FIXME: This is weird, the Application owns the Window, yet we're using the Window to call up to the App?
+     * Not sure how to fix this without substantial changes to the frame running code */
+    window_->signal_update().connect(std::bind(&Application::_call_update, this, std::placeholders::_1));
+    window_->signal_late_update().connect(std::bind(&Application::_call_late_update, this, std::placeholders::_1));
+    window_->signal_fixed_update().connect(std::bind(&Application::_call_fixed_update, this, std::placeholders::_1));
+    window_->signal_shutdown().connect(std::bind(&Application::_call_cleanup, this));
 
     window_->keyboard->key_pressed_connect(std::bind(&Application::on_key_press, this, std::placeholders::_1));
     window_->keyboard->key_released_connect(std::bind(&Application::on_key_release, this, std::placeholders::_1));
@@ -71,17 +75,17 @@ StagePtr Application::stage(StageID stage) {
     return window->stage(stage);
 }
 
-bool Application::init() {
+bool Application::_call_init() {
     L_DEBUG("Initializing the application");
 
     scene_manager_.reset(new SceneManager(window_.get()));
 
-    // Add some useful scenes by default, these can be overridden in do_init if the
+    // Add some useful scenes by default, these can be overridden in init if the
     // user so wishes
     register_scene<scenes::Loading>("_loading");
     load_scene("_loading");
 
-    initialized_ = do_init();
+    initialized_ = init();
 
     // If we successfully initialized, but the user didn't specify
     // a particular scene, we just hit the root route
@@ -94,7 +98,7 @@ bool Application::init() {
 
 
 int32_t Application::run() {
-    if(!init()) {
+    if(!_call_init()) {
         L_ERROR("Error while initializing, terminating application");
         return 1;
     }

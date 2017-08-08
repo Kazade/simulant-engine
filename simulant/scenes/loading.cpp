@@ -30,7 +30,7 @@ namespace smlt {
 namespace scenes {
 
 
-void Loading::do_load() {
+void Loading::load() {
     //Create a stage
     stage_ = window->new_stage();
 
@@ -56,17 +56,17 @@ void Loading::do_load() {
     window->disable_pipeline(pipeline_);
 }
 
-void Loading::do_unload() {
+void Loading::unload() {
     //Clean up
     window->delete_pipeline(pipeline_);
     window->delete_stage(stage_);    
 }
 
-void Loading::do_activate() {
+void Loading::activate() {
     window->enable_pipeline(pipeline_);
 }
 
-void Loading::do_deactivate() {
+void Loading::deactivate() {
     //Deactivate the loading pipeline
     window->disable_pipeline(pipeline_);
 }

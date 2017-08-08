@@ -58,21 +58,21 @@ public:
     SceneBase(WindowBase& window);
     virtual ~SceneBase();
 
-    void load();
-    void unload();
+    void _call_load();
+    void _call_unload();
 
-    void activate();
-    void deactivate();
+    void _call_activate();
+    void _call_deactivate();
 
     bool is_loaded() const { return is_loaded_; }
 
 protected:
     Property<SceneBase, WindowBase> window = { this, &SceneBase::window_ };
 
-    virtual void do_load() = 0;
-    virtual void do_unload() {}
-    virtual void do_activate() {}
-    virtual void do_deactivate() {}
+    virtual void load() = 0;
+    virtual void unload() {}
+    virtual void activate() {}
+    virtual void deactivate() {}
 
     PipelineID prepare_basic_scene(
         StageID& new_stage,
@@ -96,7 +96,7 @@ public:
         SceneBase(window) {}
 
     void cleanup() override {
-        do_unload();
+        _call_unload();
     }
 };
 

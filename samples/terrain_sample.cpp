@@ -39,7 +39,7 @@ public:
     Gamescene(smlt::WindowBase& window):
         smlt::Scene<Gamescene>(window) {}
 
-    void do_load() {
+    void load() {
         auto loading = window->application->resolve_scene_as<scenes::Loading>("_loading");
         assert(loading);
 
@@ -91,7 +91,7 @@ public:
         done = true;
     }
 
-    void do_activate() {
+    void activate() {
         window->enable_pipeline(pipeline_id_);
     }
 
@@ -119,7 +119,7 @@ public:
         smlt::Application(config) {}
 
 private:
-    bool do_init() {
+    bool init() {
         register_scene<Gamescene>("main");
         load_scene_in_background("main", true); //Do loading in a background thread, but show immediately when done
         activate_scene("_loading"); // Show the loading scene in the meantime

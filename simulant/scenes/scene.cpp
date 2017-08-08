@@ -32,34 +32,34 @@ SceneBase::~SceneBase() {
 
 }
 
-void SceneBase::load() {
+void SceneBase::_call_load() {
     if(is_loaded_) {
         return;
     }
 
     pre_load();
-    do_load();
+    load();
 
     is_loaded_ = true;
 }
 
-void SceneBase::unload() {
+void SceneBase::_call_unload() {
     if(!is_loaded_) {
         return;
     }
 
-    do_unload();
+    unload();
     post_unload();
 
     is_loaded_ = false;
 }
 
-void SceneBase::activate() {
-    do_activate();
+void SceneBase::_call_activate() {
+    activate();
 }
 
-void SceneBase::deactivate() {
-    do_deactivate();
+void SceneBase::_call_deactivate() {
+    deactivate();
 }
 
 PipelineID SceneBase::prepare_basic_scene(StageID& new_stage, CameraID& new_camera, AvailablePartitioner partitioner) {

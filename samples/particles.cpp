@@ -6,7 +6,7 @@ public:
     MainScene(smlt::WindowBase& window):
         smlt::Scene<MainScene>(window) {}
 
-    void do_load() {
+    void load() {
         prepare_basic_scene(stage_, camera_);
 
         smlt::StagePtr stage = stage_.fetch();
@@ -41,7 +41,7 @@ public:
         window->set_logging_level(smlt::LOG_LEVEL_DEBUG);
     }
 
-    bool do_init() {
+    bool init() {
         register_scene<MainScene>("main");
         return true;
     }

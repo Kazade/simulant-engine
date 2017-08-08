@@ -80,19 +80,19 @@ void SceneManager::activate_scene(const std::string& route) {
         return;
     }
 
-    new_scene->load();
+    new_scene->_call_load();
 
     if(current_scene_) {
-        current_scene_->deactivate();
+        current_scene_->_call_deactivate();
     }
 
     std::swap(current_scene_, new_scene);
-    current_scene_->activate();
+    current_scene_->_call_activate();
 }
 
 void SceneManager::load_scene(const std::string& route) {
     auto scene = get_or_create_route(route);
-    scene->load();
+    scene->_call_load();
 }
 
 void SceneManager::load_scene_in_background(const std::string& route, bool redirect_after) {
@@ -102,9 +102,9 @@ void SceneManager::load_scene_in_background(const std::string& route, bool redir
     auto new_task = std::shared_ptr<BackgroundTask>(new BackgroundTask{
         route,
 #ifdef _arch_dreamcast
-        stdX::async(std::bind(&SceneBase::load, scene))
+        stdX::async(std::bind(&SceneBase::_call_load, scene))
 #else
-        std::async(std::launch::async, std::bind(&SceneBase::load, scene))
+        std::async(std::launch::async, std::bind(&SceneBase::_call_load, scene))
 #endif
     });
 
@@ -133,7 +133,7 @@ void SceneManager::load_scene_in_background(const std::string& route, bool redir
 void SceneManager::unload_scene(const std::string& route) {
     auto it = routes_.find(route);
     if(it != routes_.end()) {
-        it->second->unload();
+        it->second->_call_unload();
     }
 }
 
@@ -156,7 +156,7 @@ SceneBase::ptr SceneManager::resolve_scene(const std::string& route) {
 
 void SceneManager::reset() {
     for(auto p: routes_) {
-        p.second->unload();
+        p.second->_call_unload();
     }
     routes_.clear();
     scene_factories_.clear();
