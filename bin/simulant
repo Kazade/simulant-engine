@@ -98,13 +98,8 @@ def _check_project():
 class BuildOutput:
     build_dir = None
 
-def build(args, build_output=None):
-    if not _check_project():
-        return 1
 
-    if not _check_tool("cmake"):
-        return 2
-
+def _calculate_build_dir(args):
     build_type = "release" if args.release else "debug"
 
     arch = args.platform
@@ -116,6 +111,20 @@ def build(args, build_output=None):
         )
     else:
         build_dir = "build/{}/{}".format(build_type, arch)
+
+    return build_dir
+
+
+def build(args, build_output=None):
+    if not _check_project():
+        return 1
+
+    if not _check_tool("cmake"):
+        return 2
+
+    arch = args.platform
+    build_dir = _calculate_build_dir(args)
+    build_type = "release" if args.release else "debug"
 
     if not os.path.exists(build_dir):
         os.makedirs(build_dir)
@@ -276,11 +285,33 @@ def test(args):
     return 0
 
 
+def run(args):
+    if not _check_project():
+        return 1
+
+    if args.rebuild:
+        build(args) # Trigger a build
+
+    build_dir = _calculate_build_dir(args)
+
+    with open("simulant.json") as f:
+        data = json.loads(f.read())
+        executable = data["executable"]
+
+    subprocess.run(
+        [os.path.abspath(os.path.join(build_dir, executable))],
+        cwd=build_dir
+    )
+
+    return 0
+
+
 COMMAND_LOOKUP = {
     'start': start,
     'build': build,
     'test': test,
-    'package': package
+    'package': package,
+    'run': run
 }
 
 
@@ -306,6 +337,13 @@ def main():
     start.add_argument("target", default=".", nargs="?", type=str)
 
     test = subs.add_parser("test", help="Test your Simulant project")
+
+    run = subs.add_parser("run", help="Run your application")
+    run.add_argument("platform", default="native", nargs="?", choices=[
+        "native", "dreamcast", "android", "windows"
+    ])
+    run.add_argument("--rebuild", default=False, action="store_true")
+    run.add_argument("--release", default=False, action="store_true")
 
     opts = parser.parse_args()
 
