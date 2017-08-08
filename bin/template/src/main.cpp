@@ -11,7 +11,7 @@ public:
     __project_name_pascal__(const AppConfig& config):
         Application(config) {}
 
-    bool do_init() {
+    bool init() {
         window->set_logging_level(smlt::LOG_LEVEL_INFO);
         window->resource_locator->add_search_path("./assets");
 
