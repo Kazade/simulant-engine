@@ -36,7 +36,7 @@ private:
 #ifdef _arch_dreamcast
     uint64_t last_update_;
 #else
-    std::chrono::high_resolution_clock::time_point last_update_;
+    std::chrono::time_point<std::chrono::high_resolution_clock> last_update_;
 #endif
 
     float accumulator_ = 0.0f;
