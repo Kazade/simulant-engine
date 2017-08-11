@@ -84,6 +84,22 @@ public:
     virtual ~Controllable() {
         controllers_.clear();
         controller_names_.clear();
+        controller_types_.clear();
+    }
+
+    template<typename T>
+    bool has_controller() const {
+        return controller_types_.count(typeid(T).hash_code()) > 0;
+    }
+
+    template<typename T>
+    T* controller() const {
+        auto hash_code = typeid(T).hash_code();
+        if(!controller_types_.count(hash_code)) {
+            return nullptr;
+        }
+
+        return dynamic_cast<T*>(controller_types_.at(hash_code).get());
     }
 
     void add_controller(ControllerPtr controller) {
@@ -99,6 +115,7 @@ public:
             return;
         }
 
+        controller_types_.insert(std::make_pair(typeid(*controller).hash_code(), controller));
         controller_names_.insert(controller->name());
         controllers_.push_back(controller);
 
@@ -145,7 +162,8 @@ private:
     std::mutex container_lock_;
 
     std::vector<ControllerPtr> controllers_;
-    std::set<std::string> controller_names_;
+    std::unordered_set<std::string> controller_names_;
+    std::unordered_map<std::size_t, ControllerPtr> controller_types_;
 
 };
 

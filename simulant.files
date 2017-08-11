@@ -67,6 +67,9 @@ samples/q2bsp_sample.cpp
 samples/sample.cpp
 samples/selection_sample.cpp
 samples/viewport_sample.cpp
+simulant/controllers/airplane.h
+simulant/controllers/movement/airplane.cpp
+simulant/controllers/movement/airplane.h
 simulant/generic/manual_manager.h
 simulant/math/aabb.cpp
 simulant/math/aabb.h
