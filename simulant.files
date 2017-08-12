@@ -71,6 +71,10 @@ simulant/controllers/airplane.h
 simulant/controllers/movement/airplane.cpp
 simulant/controllers/movement/airplane.h
 simulant/generic/manual_manager.h
+simulant/input/input.cpp
+simulant/input/input.h
+simulant/input/input_manager.cpp
+simulant/input/input_manager.h
 simulant/math/aabb.cpp
 simulant/math/aabb.h
 simulant/math/degrees.cpp
