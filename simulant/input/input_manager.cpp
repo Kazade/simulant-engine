@@ -1,4 +1,4 @@
-
+#include "input.h"
 #include "input_manager.h"
 
 namespace smlt {
@@ -26,7 +26,7 @@ void InputManager::each_axis(EachAxisCallback callback) {
 void InputManager::delete_axises(const std::string& name) {
     axises_.erase(
         std::remove_if(axises_.begin(), axises_.end(),
-            [](InputAxis::ptr axis) -> bool {
+            [&name](InputAxis::ptr axis) -> bool {
                 return axis->name() == name;
             }
         ), axises_.end()
@@ -36,17 +36,21 @@ void InputManager::delete_axises(const std::string& name) {
 void InputManager::delete_axis(InputAxis* axis) {
     axises_.erase(
         std::remove_if(axises_.begin(), axises_.end(),
-            [](InputAxis::ptr ax) -> bool {
+            [axis](InputAxis::ptr ax) -> bool {
                 return ax.get() == axis;
             }
         ), axises_.end()
     );
 }
 
+float InputManager::_calculate_value(InputAxis *axis) const {
+
+}
+
 float InputManager::axis_value(const std::string& name) const {
     auto f = 0.0f;
     for(auto axis: axises(name)) {
-        auto v = axis->value();
+        auto v = _calculate_value(axis);
 
         // Return the result with the greatest overall value (positive or negative)
         if(fabs(v) > fabs(f)) {

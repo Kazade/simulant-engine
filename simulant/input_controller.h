@@ -27,6 +27,8 @@
 #include <cassert>
 
 #include "keycodes.h"
+#include "types.h"
+
 #include "deps/kazsignal/kazsignal.h"
 #include "generic/managed.h"
 #include "generic/identifiable.h"
@@ -35,143 +37,60 @@
 namespace smlt {
 
 class InputController;
-class InputConnection;
-class Window;
 
-typedef UniqueID<InputConnection> InputConnectionID;
-
-class Device : public std::enable_shared_from_this<Device> {
-public:
-    void disconnect(const InputConnection& connection) {
-        _disconnect(connection);
-    }
-
-protected:
-    InputConnection new_input_connection();
-
-private:
-    virtual void _disconnect(const InputConnection& connection) = 0;
-
-    friend class InputController;
+struct JoystickDeviceInfo {
+    uint32_t id;
+    std::string name;
+    uint8_t button_count;
+    uint8_t axis_count;
 };
 
-class InputConnection :
-    public generic::Identifiable<InputConnectionID> {
-
-public:
-    InputConnection(InputConnectionID id, std::weak_ptr<Device> device);
-    InputConnection():
-        generic::Identifiable<InputConnectionID>(InputConnectionID()) {}
-
-    InputConnection(const InputConnection& rhs) = default;
-
-    void disconnect();
-
-private:    
-    std::weak_ptr<Device> device_;
+struct KeyboardDeviceInfo {
+    uint32_t id;
 };
 
-typedef std::function<bool (KeyboardCode)> GlobalKeyCallback;
-typedef std::function<void (KeyboardCode)> KeyCallback;
-typedef std::function<void (KeyboardCode, double)> KeyDownCallback;
-typedef std::function<bool (KeyboardCode, double)> GlobalKeyDownCallback;
-
-class Keyboard :
-    public Device,
-    public Managed<Keyboard> {
-
-public:
-    Keyboard();
-    InputConnection key_pressed_connect(GlobalKeyCallback callback);
-    InputConnection key_pressed_connect(KeyboardCode code, KeyCallback callback);
-    InputConnection key_while_pressed_connect(GlobalKeyDownCallback callback);
-    InputConnection key_while_pressed_connect(KeyboardCode code, KeyDownCallback callback);
-    InputConnection key_released_connect(GlobalKeyCallback callback);
-    InputConnection key_released_connect(KeyboardCode code, KeyCallback callback);
-
-    bool key_state(KeyboardCode code) {
-        auto it = state_.find(code);
-        if(it == state_.end()) {
-            return false;
-        }
-
-        return (*it).second;
-    }
-private:
-    typedef std::pair<InputConnection, GlobalKeyCallback> GlobalKeySignalEntry;
-    typedef std::pair<InputConnection, KeyCallback> KeySignalEntry;
-    typedef std::pair<InputConnection, KeyDownCallback> KeyDownSignalEntry;
-
-    void _handle_keydown_event(KeyboardCode key);
-    void _handle_keyup_event(KeyboardCode key);
-
-    void _update(float dt);
-    void _disconnect(const InputConnection &connection);
-
-    std::map<KeyboardCode, bool> state_;
-
-    std::map<InputConnection, GlobalKeyCallback> global_key_press_signals_;
-    std::map<InputConnection, GlobalKeyCallback> global_key_release_signals_;   
-    std::map<InputConnection, GlobalKeyDownCallback> global_while_key_pressed_signals_;
-
-    std::map<KeyboardCode, std::map<InputConnection, KeyCallback> > key_press_signals_;
-    std::map<KeyboardCode, std::map<InputConnection, KeyDownCallback> > key_while_down_signals_;
-    std::map<KeyboardCode, std::map<InputConnection, KeyCallback> > key_release_signals_;
-
-    friend class InputController;
-};
-
-enum JoypadAxis {
-    JOYPAD_AXIS_LEFT_X = 0,
-    JOYPAD_AXIS_LEFT_Y,
-    JOYPAD_AXIS_RIGHT_X,
-    JOYPAD_AXIS_RIGHT_Y,
-    JOYPAD_AXIS_TRIGGER_LEFT,
-    JOYPAD_AXIS_TRIGGER_RIGHT,
-    JOYPAD_AXIS_MAX,
-    JOYPAD_AXIS_X = JOYPAD_AXIS_LEFT_X,
-    JOYPAD_AXIS_Y = JOYPAD_AXIS_LEFT_Y
-};
-
-typedef float AxisRange;
-typedef uint8_t Button;
-typedef uint8_t Hat;
-
-typedef std::function<void (int32_t, int32_t, int32_t, int32_t)> MouseMotionCallback;
-
-class Mouse :
-    public Device,
-    public Managed<Mouse> {
-
-public:
-    InputConnection motion_event_connect(MouseMotionCallback callback);
-
-private:
-    std::map<InputConnection, MouseMotionCallback> motion_event_signals_;
-
-    void _disconnect(const InputConnection &connection) override;
-    void _update(float dt);
-    void _handle_motion_event(int32_t x, int32_t y, int32_t relx, int32_t rely);
-
-    struct MotionEvent {
-        MotionEvent() = default;
-        MotionEvent(int32_t x, int32_t y, int32_t relx, int32_t rely):
-            x(x), y(y), relx(relx), rely(rely) {}
-
-        int32_t x = 0;
-        int32_t y = 0;
-        int32_t relx = 0;
-        int32_t rely = 0;
-    };
-
-    MotionEvent last_motion_event_;
-
-    friend class InputController;
+struct MouseDeviceInfo {
+    uint32_t id;
+    uint8_t button_count;
+    uint8_t axis_count;
 };
 
 
-// typedef uint8_t HatPosition;
-// Match SDL codes
+typedef uint8_t KeyboardID;
+typedef uint8_t MouseID;
+typedef uint8_t JoystickID;
+typedef uint8_t MouseButtonID;
+typedef uint8_t JoystickButtonID;
+typedef uint8_t JoystickHatID;
+
+enum MouseAxis {
+    MOUSE_AXIS_0,
+    MOUSE_AXIS_1,
+    MOUSE_AXIS_2,
+    MOUSE_AXIS_3,
+    MOUSE_AXIS_MAX,
+    MOUSE_AXIS_X = MOUSE_AXIS_0,
+    MOUSE_AXIS_Y = MOUSE_AXIS_1
+};
+
+enum JoystickAxis {
+    JOYSTICK_AXIS_0,
+    JOYSTICK_AXIS_1,
+    JOYSTICK_AXIS_2,
+    JOYSTICK_AXIS_3,
+    JOYSTICK_AXIS_4,
+    JOYSTICK_AXIS_5,
+    JOYSTICK_AXIS_6,
+    JOYSTICK_AXIS_7,
+    JOYSTICK_AXIS_MAX,
+    JOYSTICK_AXIS_X = JOYSTICK_AXIS_0,
+    JOYSTICK_AXIS_Y = JOYSTICK_AXIS_1
+};
+
+const static std::size_t MAX_MOUSE_BUTTONS = 16u;
+const static std::size_t MAX_JOYSTICK_BUTTONS = 16u;
+const static std::size_t MAX_DEVICE_TYPE_COUNT = 4u;
+
 enum HatPosition {
     HAT_POSITION_CENTERED = 0,
     HAT_POSITION_UP = 1,
@@ -184,134 +103,95 @@ enum HatPosition {
     HAT_POSITION_LEFT_DOWN = HAT_POSITION_LEFT | HAT_POSITION_DOWN
 };
 
-
-typedef std::function<void (AxisRange, JoypadAxis)> JoypadCallback;
-typedef std::function<void (uint8_t)> JoypadButtonCallback;
-typedef std::function<void (uint8_t, double)> JoypadButtonDownCallback;
-typedef std::function<void (HatPosition, Hat)> JoypadHatCallback;
-typedef std::function<void (HatPosition, Hat, double)> JoypadHatDownCallback;
-
-class Joypad :
-    public Device,
-    public Managed<Joypad> {
-public:
-    Joypad();
-
-    InputConnection axis_changed_connect(JoypadAxis axis, JoypadCallback callback);
-    InputConnection axis_while_nonzero_connect(JoypadAxis axis, JoypadCallback callback);
-    InputConnection axis_while_below_zero_connect(JoypadAxis axis, JoypadCallback callback);
-    InputConnection axis_while_above_zero_connect(JoypadAxis axis, JoypadCallback callback);
-
-    InputConnection button_pressed_connect(Button button, JoypadButtonCallback callback);
-    InputConnection button_released_connect(Button button, JoypadButtonCallback callback);
-    InputConnection button_while_down_connect(Button button, JoypadButtonDownCallback callback);
-
-    InputConnection hat_changed_connect(Hat hat, JoypadHatCallback callback);
-    InputConnection hat_while_not_centered_connect(Hat hat, JoypadHatDownCallback callback);
-
-private:
-    typedef std::pair<InputConnection, JoypadCallback> AxisSignalEntry;
-    typedef std::pair<InputConnection, JoypadButtonCallback> ButtonSignalEntry;
-    typedef std::pair<InputConnection, JoypadHatCallback> HatSignalEntry;
-
-    void _handle_axis_changed_event(JoypadAxis axis, int32_t value);
-    void _handle_button_down_event(Button button);
-    void _handle_button_up_event(Button button);
-    void _handle_hat_changed_event(Hat hat, HatPosition value);
-
-    void _update(float dt);
-    void _disconnect(const InputConnection &connection);
-
-    uint8_t jitter_value_;
-
-    std::map<JoypadAxis, int32_t> axis_state_;
-    std::map<Button, bool> button_state_;
-    std::map<Hat, HatPosition> hat_state_;
-
-    std::map<JoypadAxis, std::map<InputConnection, JoypadCallback> > axis_changed_signals_;
-    std::map<JoypadAxis, std::map<InputConnection, JoypadCallback> > axis_while_nonzero_signals_;
-    std::map<JoypadAxis, std::map<InputConnection, JoypadCallback> > axis_while_below_zero_signals_;
-    std::map<JoypadAxis, std::map<InputConnection, JoypadCallback> > axis_while_above_zero_signals_;
-
-    std::map<Button, std::map<InputConnection, JoypadButtonCallback> > button_pressed_signals_;
-    std::map<Button, std::map<InputConnection, JoypadButtonCallback> > button_released_signals_;
-    std::map<Button, std::map<InputConnection, JoypadButtonDownCallback>> button_down_signals_;
-
-    std::map<Hat, std::map<InputConnection, JoypadHatCallback> > hat_changed_signals_;
-    std::map<Hat, std::map<InputConnection, JoypadHatDownCallback> > hat_while_not_centered_signals_;
-
-    friend class InputController;
-};
-
-
-struct GameControllerInfo {
-    uint32_t id;
-    std::string name;
-};
-
-struct KeyboardControllerInfo {
-    uint32_t id;
-};
-
-struct MouseControllerInfo {
-    uint32_t id;
-    uint32_t button_count;
-};
-
-
 class InputController:
     public Managed<InputController> {
 
 public:
-    InputController(Window& window);
-    ~InputController();
-
-    Keyboard& keyboard() { assert(keyboard_); return *keyboard_; }
-    Mouse& mouse() { assert(mouse_); return *mouse_; }
-    Joypad& joypad(uint8_t idx=0);
-    uint8_t joypad_count() const;
-
     void update(float dt);
 
     /* These methods should be called by BaseWindow subclasses when the OS sends the corresponding
      * event. You should not call these unless you are implementing support for a new platform!
      */
 
-    void _update_mouse_devices(const std::vector<MouseControllerInfo>& device_info) {
-        //FIXME: Need to implement support for multiple mouse devices
+    void _update_mouse_devices(const std::vector<MouseDeviceInfo>& device_info) {
+        mouse_count_ = std::min(device_info.size(), MAX_DEVICE_TYPE_COUNT);
+        for(decltype(mouse_count_) i = 0; i < mouse_count_; ++i) {
+            mice_[i].button_count = device_info[i].button_count;
+            mice_[i].axis_count = device_info[i].axis_count;
+        }
     }
 
-    void _update_keyboard_devices(const std::vector<KeyboardControllerInfo>& device_info) {
-        //FIXME: Need to implement support for multiple keyboard devices
+    void _update_keyboard_devices(const std::vector<KeyboardDeviceInfo>& device_info) {
+        keyboard_count_ = std::min(device_info.size(), MAX_DEVICE_TYPE_COUNT);
     }
 
-    void _update_joypad_devices(const std::vector<GameControllerInfo>& device_info);
+    void _update_joystick_devices(const std::vector<JoystickDeviceInfo>& device_info) {
+        joystick_count_ = std::min(device_info.size(), MAX_DEVICE_TYPE_COUNT);
+        for(decltype(joystick_count_) i = 0; i < joystick_count_; ++i) {
+            joysticks_[i].button_count = device_info[i].button_count;
+            joysticks_[i].axis_count = device_info[i].axis_count;
+        }
+    }
 
-    void _handle_key_down(uint32_t keyboard_id, KeyboardCode code);
-    void _handle_key_up(uint32_t keyboard_id, KeyboardCode code);
+    void _handle_key_down(KeyboardID keyboard_id, KeyboardCode code);
+    void _handle_key_up(KeyboardID keyboard_id, KeyboardCode code);
 
-    void _handle_mouse_motion(uint32_t mouse_id, uint32_t x, uint32_t y, uint32_t xrel, uint32_t yrel);
-    void _handle_mouse_down(uint32_t mouse_id, uint32_t button_id);
-    void _handle_mouse_up(uint32_t mouse_id, uint32_t button_id);
+    void _handle_mouse_motion(MouseID mouse_id, uint32_t x, uint32_t y, int32_t xrel, int32_t yrel);
+    void _handle_mouse_down(MouseID mouse_id, MouseButtonID button_id);
+    void _handle_mouse_up(MouseID mouse_id, MouseButtonID button_id);
 
-    void _handle_joypad_axis_motion(uint32_t joypad_id, JoypadAxis axis, int32_t value);
-    void _handle_joypad_button_down(uint32_t joypad_id, uint32_t button_id);
-    void _handle_joypad_button_up(uint32_t joypad_id, uint32_t button_id);
-    void _handle_joypad_hat_motion(uint32_t joypad_id, uint32_t hat_id, HatPosition position);
+    void _handle_joystick_axis_motion(JoystickID joypad_id, JoystickAxis axis, float value);
+    void _handle_joystick_button_down(JoystickID joypad_id, JoystickButtonID button_id);
+    void _handle_joystick_button_up(JoystickID joypad_id, JoystickButtonID button_id);
+    void _handle_joystick_hat_motion(JoystickID joypad_id, JoystickHatID hat_id, HatPosition position);
 
-private:
-    Window& window_;
+    // Public state accessor functions
+    bool keyboard_key_state(KeyboardID keyboard_id, KeyboardCode code) const;
 
-    Keyboard::ptr keyboard_;
-    Mouse::ptr mouse_;
+    bool mouse_button_state(MouseID mouse_id, JoystickButtonID button) const;
+    float mouse_axis_state(MouseID mouse_id, MouseAxis axis) const;
+    Vec2 mouse_position(MouseID mouse_id) const;
 
-    Joypad::ptr virtual_joypad_;
-    std::vector<Joypad::ptr> joypads_;
+    bool joystick_button_state(JoystickID joystick_id, JoystickButtonID button) const;
+    float joystick_axis_state(JoystickID joystick_id, JoystickAxis axis) const;
+
+    std::size_t joystick_count() const { return joystick_count_; }
+    std::size_t keyboard_count() const { return keyboard_count_; }
+    std::size_t mouse_count() const { return mouse_count_; }
 
     void init_virtual_joypad();
-    std::vector<sig::connection> virtual_joypad_connections_;
+private:
+    struct KeyboardState {
+        std::array<bool, MAX_KEYBOARD_CODES> keys = {0};
+    };
 
-    friend class Window;
+    uint8_t keyboard_count_ = 0;
+    std::array<KeyboardState, 4> keyboards_;
+
+    struct MouseState {
+        uint8_t button_count = 0;
+        uint8_t axis_count = 0;
+
+        std::array<bool, MAX_MOUSE_BUTTONS> buttons = {0};
+        std::array<float, MOUSE_AXIS_MAX> axises = {0.0f};
+
+        uint32_t x = 0;
+        uint32_t y = 0;
+    };
+
+    uint8_t mouse_count_ = 0;
+    std::array<MouseState, 4> mice_;
+
+    struct JoystickState {
+        uint8_t button_count = 0;
+        uint8_t axis_count = 0;
+
+        std::array<bool, MAX_JOYSTICK_BUTTONS> buttons = {0};
+        std::array<float, JOYSTICK_AXIS_MAX> axises = {0.0f};
+    };
+
+    uint8_t joystick_count_ = 0;
+    std::array<JoystickState, 4> joysticks_;
 };
 
 }

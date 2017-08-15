@@ -67,8 +67,9 @@ public:
     bool is_loaded() const { return is_loaded_; }
 
 protected:
-    Property<SceneBase, Window> window = { this, &SceneBase::window_ };
-    Property<SceneBase, Application> app = { this, &SceneBase::app_ };
+    Property<SceneBase, Window> window = {this, &SceneBase::window_};
+    Property<SceneBase, Application> app = {this, &SceneBase::app_};
+    Property<SceneBase, InputManager> input = {this, &SceneBase::input_};
 
     virtual void load() = 0;
     virtual void unload() {}
@@ -82,6 +83,7 @@ protected:
     );
 
     Window* window_;
+    InputManager* input_;
     Application* app_;
 private:
     virtual void pre_load() {}

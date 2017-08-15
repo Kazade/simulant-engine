@@ -121,10 +121,6 @@ private:
     virtual void late_update(float dt) {}
     virtual void cleanup() {}
 
-    virtual bool while_key_pressed(KeyboardCode key, double) { return false; }
-    virtual bool on_key_press(KeyboardCode key) { return false; }
-    virtual bool on_key_release(KeyboardCode key) { return false; }
-
     generic::DataCarrier data_carrier_;
 
     AppConfig config_;

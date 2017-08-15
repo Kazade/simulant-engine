@@ -44,6 +44,7 @@
 namespace smlt {
 
 class ResourceManager;
+class InputManager;
 
 namespace ui {
     class Interface;
@@ -55,9 +56,7 @@ namespace scenes {
 
 class Application;
 class InputController;
-class Keyboard;
-class Mouse;
-class Joypad;
+
 class Loader;
 class LoaderType;
 class RenderSequence;
@@ -119,7 +118,8 @@ class Window :
     public Loadable,
     public PipelineHelperAPIInterface,
     public RenderTarget,
-    public EventListenerManager {
+    public EventListenerManager,
+    public EventListener {
 
     DEFINE_SIGNAL(FrameStartedSignal, signal_frame_started);
     DEFINE_SIGNAL(FrameFinishedSignal, signal_frame_finished);
@@ -166,10 +166,6 @@ public:
 
     void _fixed_update_thunk(float dt) override;
     void _update_thunk(float dt) override;
-
-    Mouse& mouse();
-    Joypad& joypad(uint8_t idx);
-    uint8_t joypad_count() const;
 
     void set_logging_level(LoggingLevel level);
 
@@ -269,6 +265,10 @@ protected:
     std::mutex& context_lock() { return context_lock_; }
 
     void set_application(Application* app) { application_ = app; }
+
+    void set_escape_to_quit(bool value=true) { escape_to_quit_ = value; }
+    bool escape_to_quit_enabled() const { return escape_to_quit_; }
+
 public:
     // Background things
     BackgroundID new_background() { return background_manager_->new_background(); }
@@ -294,6 +294,12 @@ public:
     void register_panel(uint8_t function_key, std::shared_ptr<Panel> panel);
     void unregister_panel(uint8_t function_key);
 
+    void handle_key_down(KeyboardCode code, ModifierKeyState modifiers) {
+        if(code == KEYBOARD_CODE_ESCAPE && escape_to_quit_enabled()) {
+            stop_running();
+        }
+    }
+
 private:    
     Application* application_ = nullptr;
 
@@ -309,6 +315,7 @@ private:
     uint32_t height_ = 0;
     uint32_t bpp_ = 0;
     bool fullscreen_ = false;
+    bool escape_to_quit_ = true;
 
     std::vector<LoaderTypePtr> loaders_;
     bool is_running_;
@@ -321,7 +328,6 @@ private:
 
     struct PanelEntry {
         std::shared_ptr<Panel> panel;
-        InputConnection keyboard_connection;
     };
 
     std::unordered_map<uint8_t, PanelEntry> panels_;
@@ -336,7 +342,6 @@ private:
     void destroy() {}
 
     ResourceLocator::ptr resource_locator_;
-    std::shared_ptr<InputController> input_controller_;
 
     float frame_counter_time_;
     int32_t frame_counter_frames_;
@@ -356,6 +361,10 @@ private:
 
     virtual std::shared_ptr<SoundDriver> create_sound_driver() = 0;
 
+
+    std::shared_ptr<InputController> input_controller_;
+    std::shared_ptr<InputManager> input_manager_;
+
 public:
 
     //Read only properties
@@ -369,11 +378,7 @@ public:
     Property<Window, generic::DataCarrier> data = { this, &Window::data_carrier_ };
     Property<Window, ResourceLocator> resource_locator = { this, &Window::resource_locator_ };
 
-    Property<Window, Keyboard> keyboard = {
-        this, [](Window* self) -> Keyboard* {
-            return &self->_input_controller()->keyboard();
-        }
-    };
+    Property<Window, InputManager> input = {this, &Window::input_manager_};
 
     Property<Window, Stats> stats = { this, &Window::stats_ };
 

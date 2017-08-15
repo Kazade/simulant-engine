@@ -25,6 +25,7 @@ namespace smlt {
 
 SceneBase::SceneBase(Window &window):
     window_(&window),
+    input_(window.input.get()),
     app_(window.application){
 
 }

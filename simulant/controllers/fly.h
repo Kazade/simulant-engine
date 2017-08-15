@@ -77,12 +77,6 @@ public:
         }));
     }
 
-    ~Fly() {
-        for(auto& conn: connections_) {
-            conn.disconnect();
-        }
-    }
-
     const std::string name() const override { return "Fly by Keyboard"; }
 
 private:
@@ -137,8 +131,6 @@ private:
 
     std::deque<int32_t> mouse_x_buffer_;
     std::deque<int32_t> mouse_y_buffer_;
-
-    std::vector<InputConnection> connections_;
 
     Transformable* object_ = nullptr;
 };

@@ -155,6 +155,7 @@ tests/main.cpp
 tests/global.cpp
 tests/global.h
 tests/test_frustum.h
+tests/test_input_controller.h
 tests/test_manual_manager.h
 tests/test_material.h
 tests/test_material_script.h
@@ -165,7 +166,6 @@ tests/test_sound.h
 tests/test_utils.h
 tests/test_vertex_data.h
 tests/test_tree.h
-samples/joypad_sample.cpp
 samples/path_following.cpp
 samples/seek_sample.cpp
 tests/test_object.h

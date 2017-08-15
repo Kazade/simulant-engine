@@ -143,7 +143,7 @@ void Window::create_defaults() {
     loading_ = scenes::Loading::create(*this);
 
     //This needs to happen after SDL or whatever is initialized
-    input_controller_ = InputController::create(*this);
+    input_controller_ = InputController::create();
 
     // Tell subclasses to initialize input devices
     initialize_input_controller(*input_controller_);
@@ -177,6 +177,9 @@ bool Window::_init() {
     GLThreadCheck::init();
 
     L_DEBUG("Starting initialization");
+
+    // Register the Window itself as an event listener so we can handle escape_to_quit functionality
+    register_event_listener(this);
 
 #ifdef _arch_dreamcast
     print_available_ram();
@@ -226,17 +229,6 @@ bool Window::_init() {
         register_panel(1, std::make_shared<StatsPanel>(this));
         register_panel(2, std::make_shared<PartitionerPanel>(this));
 
-        using std::bind;
-
-        //C++11 lambda awesomeness! input_controller isn't initialized yet
-        //so we connect ESCAPE in an idle task
-        idle->add_once([=]() {
-            //Bind the stop_running method to the ESCAPE key
-            input_controller().keyboard().key_pressed_connect(
-                smlt::KEYBOARD_CODE_ESCAPE, bind(&Window::stop_running, this)
-            );
-        });
-
         initialized_ = true;
     }
 
@@ -250,19 +242,15 @@ bool Window::_init() {
 void Window::register_panel(uint8_t function_key, std::shared_ptr<Panel> panel) {
     PanelEntry entry;
     entry.panel = panel;
-    entry.keyboard_connection = input_controller_->keyboard().key_pressed_connect((KeyboardCode) (int(KEYBOARD_CODE_F1) + (function_key - 1)), [panel](KeyboardCode sym) {
-        if(panel->is_active()) {
-            panel->deactivate();
-        } else {
-            panel->activate();
-        }
-    });
+
+    panel->set_activation_key((KeyboardCode) (int(KEYBOARD_CODE_F1) + (function_key - 1)));
 
     panels_[function_key] = entry;
+    register_event_listener(panel.get());
 }
 
-void Window::unregister_panel(uint8_t function_key) {
-    panels_[function_key].keyboard_connection.disconnect();
+void Window::unregister_panel(uint8_t function_key) {   
+    unregister_event_listener(panels_[function_key].panel.get());
     panels_.erase(function_key);
 }
 
@@ -400,18 +388,6 @@ float Window::aspect_ratio() const {
     assert(height_ > 0);
 
     return float(width_) / float(height_);
-}
-
-Mouse& Window::mouse() {
-    return input_controller_->mouse();
-}
-
-Joypad& Window::joypad(uint8_t idx) {
-    return input_controller_->joypad(idx);
-}
-
-uint8_t Window::joypad_count() const {
-    return input_controller_->joypad_count();
 }
 
 void Window::set_paused(bool value) {
