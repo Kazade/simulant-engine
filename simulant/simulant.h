@@ -57,6 +57,10 @@
 #include "scenes/scene_manager.h"
 #include "scenes/scene.h"
 #include "scenes/physics_scene.h"
+
+#include "input/input_manager.h"
+#include "input/input.h"
+
 #include "controllers/fly.h"
 #include "controllers/builtin.h"
 

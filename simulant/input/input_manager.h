@@ -24,6 +24,7 @@ public:
     void each_axis(EachAxisCallback callback);
     void delete_axises(const std::string& name);
     void delete_axis(InputAxis* axis);
+    std::size_t axis_count(const std::string& name) const;
 
     float axis_value(const std::string& name) const;
 

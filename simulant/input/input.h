@@ -48,7 +48,7 @@ public:
 private:
     std::string name_;
 
-    AxisType type_ = AXIS_TYPE_KEY_OR_MOUSE_BUTTON;
+    AxisType type_ = AXIS_TYPE_KEYBOARD_KEY;
 
     KeyboardID keyboard_source_ = ALL_KEYBOARDS;
     KeyboardCode positive_key_ = KEYBOARD_CODE_NONE;

@@ -22,6 +22,12 @@ InputManager::InputManager(InputController *controller):
     auto vertical_alt = new_axis("Vertical");
     vertical_alt->set_positive_keyboard_key(KEYBOARD_CODE_UP);
     vertical_alt->set_negative_keyboard_key(KEYBOARD_CODE_DOWN);
+
+    auto fire1 = new_axis("Fire1");
+    fire1->set_positive_keyboard_key(KEYBOARD_CODE_LCTRL);
+
+    auto fire2 = new_axis("Fire2");
+    fire2->set_positive_keyboard_key(KEYBOARD_CODE_LALT);
 }
 
 InputAxis* InputManager::new_axis(const std::string& name) {
@@ -64,6 +70,12 @@ void InputManager::delete_axis(InputAxis* axis) {
     );
 }
 
+std::size_t InputManager::axis_count(const std::string &name) const {
+    return std::count_if(axises_.begin(), axises_.end(), [&name](std::shared_ptr<InputAxis> axis) -> bool {
+        return axis->name() == name;
+    });
+}
+
 float sgn(float v) {
     if(v > 0) { return 1.0f; }
     else { return -1.0f; }
@@ -73,7 +85,7 @@ void InputManager::update(float dt) {
     for(auto axis: axises_) {
         float new_value = 0.0f;
 
-        if(axis->type() == AXIS_TYPE_KEY_OR_MOUSE_BUTTON) {
+        if(axis->type() == AXIS_TYPE_KEYBOARD_KEY) {
             auto pkey = axis->positive_keyboard_key();
             auto nkey = axis->negative_keyboard_key();
 
