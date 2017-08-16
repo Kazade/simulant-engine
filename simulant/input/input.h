@@ -9,7 +9,11 @@
 namespace smlt {
 
 enum AxisType {
-    AXIS_TYPE_KEY_OR_MOUSE_BUTTON
+    AXIS_TYPE_KEYBOARD_KEY,
+    AXIS_TYPE_MOUSE_BUTTON,
+    AXIS_TYPE_MOUSE_AXIS,
+    AXIS_TYPE_JOYSTICK_BUTTON,
+    AXIS_TYPE_JOYSTICK_AXIS
 };
 
 class InputAxis:
@@ -31,7 +35,15 @@ public:
     void set_keyboard_source(KeyboardID keyboard);
     KeyboardID keyboard_source() const { return keyboard_source_; }
 
-    float value() const { return value_; }
+    float value(bool respect_dead_zone=true) const {
+        if(respect_dead_zone) {
+            return abs(value_) > dead_zone_ ? value_ : 0.0f;
+        }
+
+        return value_;
+    }
+
+    float dead_zone() const { return dead_zone_; }
 
 private:
     std::string name_;
@@ -42,8 +54,9 @@ private:
     KeyboardCode positive_key_ = KEYBOARD_CODE_NONE;
     KeyboardCode negative_key_ = KEYBOARD_CODE_NONE;
 
-    float return_speed_;
+    float return_speed_ = 3.0f;
     float value_ = 0.0f;
+    float dead_zone_ = 0.001f;
 
     friend class InputManager;
 };
