@@ -23,25 +23,26 @@ public:
 
     void set_positive_keyboard_key(const KeyboardCode& key);
     void set_negative_keyboard_key(const KeyboardCode& key);
-    void set_return_speed(float ret);
-
-    const std::string& name() const { return name_; }
-
-    const AxisType& type() const { return type_; }
-
     KeyboardCode positive_keyboard_key() const { return positive_key_; }
     KeyboardCode negative_keyboard_key() const { return negative_key_; }
 
     void set_keyboard_source(KeyboardID keyboard);
     KeyboardID keyboard_source() const { return keyboard_source_; }
 
-    float value(bool respect_dead_zone=true) const {
-        if(respect_dead_zone) {
-            return abs(value_) > dead_zone_ ? value_ : 0.0f;
-        }
+    void set_positive_mouse_button(MouseButtonID button);
+    void set_negative_mouse_button(MouseButtonID button);
+    MouseButtonID positive_mouse_button() const { return positive_mouse_button_; }
+    MouseButtonID negative_mouse_button() const { return negative_mouse_button_; }
+    void set_mouse_source(MouseID mouse);
+    MouseID mouse_source() const { return mouse_source_; }
 
-        return value_;
-    }
+    void set_return_speed(float ret);
+
+    const std::string& name() const { return name_; }
+
+    const AxisType& type() const { return type_; }
+
+    float value(bool respect_dead_zone=true) const;
 
     float dead_zone() const { return dead_zone_; }
 
@@ -53,6 +54,10 @@ private:
     KeyboardID keyboard_source_ = ALL_KEYBOARDS;
     KeyboardCode positive_key_ = KEYBOARD_CODE_NONE;
     KeyboardCode negative_key_ = KEYBOARD_CODE_NONE;
+
+    MouseID mouse_source_ = ALL_MICE;
+    MouseButtonID positive_mouse_button_ = -1;
+    MouseButtonID negative_mouse_button_ = -1;
 
     float return_speed_ = 3.0f;
     float value_ = 0.0f;

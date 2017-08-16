@@ -150,15 +150,10 @@ public:
     void _handle_joystick_hat_motion(JoystickID joypad_id, JoystickHatID hat_id, HatPosition position);
 
     // Public state accessor functions
-    bool keyboard_key_state(KeyboardID keyboard_id, KeyboardCode code) const {
-        if(keyboard_id < keyboard_count_) {
-            return keyboards_[keyboard_id].keys[code];
-        }
-
-        return false;
-    }
+    bool keyboard_key_state(KeyboardID keyboard_id, KeyboardCode code) const;
 
     bool mouse_button_state(MouseID mouse_id, JoystickButtonID button) const;
+
     float mouse_axis_state(MouseID mouse_id, MouseAxis axis) const;
     Vec2 mouse_position(MouseID mouse_id) const;
 

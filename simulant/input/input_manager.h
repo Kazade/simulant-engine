@@ -36,6 +36,9 @@ private:
     std::vector<std::shared_ptr<InputAxis>> axises_;
 
     float _calculate_value(InputAxis* axis) const;
+
+    void _update_keyboard_axis(InputAxis* axis, float dt);
+    void _update_mouse_button_axis(InputAxis* axis, float dt);
 };
 
 }

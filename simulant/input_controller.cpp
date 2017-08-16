@@ -87,6 +87,22 @@ void InputController::_handle_joystick_hat_motion(JoystickID joypad_id, Joystick
     L_ERROR("HAT not yet implemented");
 }
 
+bool InputController::keyboard_key_state(KeyboardID keyboard_id, KeyboardCode code) const {
+    if(keyboard_id < keyboard_count_) {
+        return keyboards_[keyboard_id].keys[code];
+    }
+
+    return false;
+}
+
+bool InputController::mouse_button_state(MouseID mouse_id, JoystickButtonID button) const {
+    if(mouse_id < mouse_count_) {
+        return mice_[mouse_id].buttons[button];
+    }
+
+    return false;
+}
+
 void InputController::update(float dt) {
 
     /*

@@ -81,50 +81,101 @@ float sgn(float v) {
     else { return -1.0f; }
 }
 
+void InputManager::_update_mouse_button_axis(InputAxis* axis, float dt) {
+    float new_value = 0.0f;
+
+    auto pbtn = axis->positive_mouse_button();
+    auto nbtn = axis->negative_mouse_button();
+
+    bool positive_pressed = false;
+    bool negative_pressed = false;
+
+    auto process_mouse = [this, pbtn, nbtn, &positive_pressed, &negative_pressed](MouseID id) {
+        if(pbtn != -1 && controller_->mouse_button_state(id, pbtn)) {
+            positive_pressed = true;
+        }
+
+        if(nbtn != -1 && controller_->mouse_button_state(id, nbtn)) {
+            negative_pressed = true;
+        }
+    };
+
+    // If the user requested input from all mice, do that
+    if(axis->mouse_source() == ALL_MICE) {
+        for(std::size_t i = 0; i < controller_->mouse_count(); ++i) {
+            MouseID id = (MouseID) i;
+            process_mouse(id);
+        }
+    } else {
+        // Otherwise just check the one they asked for
+        MouseID id = axis->mouse_source();
+        process_mouse(id);
+    }
+
+    // If either positive or negative were pressed, adjust the value
+    if(positive_pressed) new_value = 1.0f;
+    if(negative_pressed) new_value = -1.0f;
+
+    // If neither were pressed, then apply the return speed (making sure we don't pass zero)
+    if(!positive_pressed && !negative_pressed) {
+        auto sign = sgn(axis->value());
+        new_value = std::max(0.0f, (abs(axis->value()) - (axis->return_speed_ * dt))) * sign;
+    }
+
+    axis->value_ = new_value;
+}
+
+void InputManager::_update_keyboard_axis(InputAxis* axis, float dt) {
+    float new_value = 0.0f;
+
+    auto pkey = axis->positive_keyboard_key();
+    auto nkey = axis->negative_keyboard_key();
+
+    bool positive_pressed = false;
+    bool negative_pressed = false;
+
+    auto process_keyboard = [this, pkey, nkey, &positive_pressed, &negative_pressed](KeyboardID id) {
+        if(pkey != KEYBOARD_CODE_NONE && controller_->keyboard_key_state(id, pkey)) {
+            positive_pressed = true;
+        }
+
+        if(nkey != KEYBOARD_CODE_NONE && controller_->keyboard_key_state(id, nkey)) {
+            negative_pressed = true;
+        }
+    };
+
+    // If the user requested input from all keyboards, do that
+    if(axis->keyboard_source() == ALL_KEYBOARDS) {
+        for(std::size_t i = 0; i < controller_->keyboard_count(); ++i) {
+            KeyboardID id = (KeyboardID) i;
+            process_keyboard(id);
+        }
+    } else {
+        // Otherwise just check the one they asked for
+        KeyboardID id = axis->keyboard_source();
+        process_keyboard(id);
+    }
+
+    // If either positive or negative were pressed, adjust the value
+    if(positive_pressed) new_value = 1.0f;
+    if(negative_pressed) new_value = -1.0f;
+
+    // If neither were pressed, then apply the return speed (making sure we don't pass zero)
+    if(!positive_pressed && !negative_pressed) {
+        auto sign = sgn(axis->value());
+        new_value = std::max(0.0f, (abs(axis->value()) - (axis->return_speed_ * dt))) * sign;
+    }
+
+    axis->value_ = new_value;
+}
+
 void InputManager::update(float dt) {
     for(auto axis: axises_) {
-        float new_value = 0.0f;
 
         if(axis->type() == AXIS_TYPE_KEYBOARD_KEY) {
-            auto pkey = axis->positive_keyboard_key();
-            auto nkey = axis->negative_keyboard_key();
-
-            bool positive_pressed = false;
-            bool negative_pressed = false;
-
-            auto process_keyboard = [this, pkey, nkey, &positive_pressed, &negative_pressed](KeyboardID id) {
-                if(pkey != KEYBOARD_CODE_NONE && controller_->keyboard_key_state(id, pkey)) {
-                    positive_pressed = true;
-                }
-
-                if(nkey != KEYBOARD_CODE_NONE && controller_->keyboard_key_state(id, pkey)) {
-                    negative_pressed = true;
-                }
-            };
-
-            // If the user requested input from all keyboards, do that
-            if(axis->keyboard_source() == ALL_KEYBOARDS) {
-                for(std::size_t i = 0; i < controller_->keyboard_count(); ++i) {
-                    KeyboardID id = (KeyboardID) i;
-                    process_keyboard(id);
-                }
-            } else {
-                // Otherwise just check the one they asked for
-                KeyboardID id = axis->keyboard_source();
-                process_keyboard(id);
-            }
-
-            // If either positive or negative were pressed, adjust the value
-            if(positive_pressed) new_value = 1.0f;
-            if(negative_pressed) new_value = -1.0f;
-
-            // If neither were pressed, then apply the return speed (making sure we don't pass zero)
-            if(!positive_pressed && !negative_pressed) {
-                auto sign = sgn(axis->value());
-                new_value = std::max(0.0f, (abs(axis->value()) - (axis->return_speed_ * dt))) * sign;
-            }
-
-            axis->value_ = new_value;
+            _update_keyboard_axis(axis.get(), dt);
+        } else if(axis->type() == AXIS_TYPE_MOUSE_BUTTON) {
+            _update_mouse_button_axis(axis.get(), dt);
         }
     }
 }
