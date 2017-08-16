@@ -17,8 +17,7 @@ class InputManager:
     public Managed<InputManager> {
 
 public:
-    InputManager(InputController* controller):
-        controller_(controller) {}
+    InputManager(InputController* controller);
 
     InputAxis* new_axis(const std::string& name);
     AxisList axises(const std::string& name) const;
@@ -27,6 +26,8 @@ public:
     void delete_axis(InputAxis* axis);
 
     float axis_value(const std::string& name) const;
+
+    void update(float dt);
 
 private:
     InputController* controller_;

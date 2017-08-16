@@ -178,9 +178,6 @@ bool Window::_init() {
 
     L_DEBUG("Starting initialization");
 
-    // Register the Window itself as an event listener so we can handle escape_to_quit functionality
-    register_event_listener(this);
-
 #ifdef _arch_dreamcast
     print_available_ram();
 #endif
@@ -497,6 +494,10 @@ bool Window::is_pipeline_enabled(PipelineID pid) const {
 /* End PipelineHelperAPIInterface */
 
 void Window::on_key_down(KeyboardCode code, ModifierKeyState modifiers) {
+    if(code == KEYBOARD_CODE_ESCAPE && escape_to_quit_enabled()) {
+        stop_running();
+    }
+
     each_event_listener([=](EventListener* listener) {
         listener->handle_key_down(this, code, modifiers);
     });

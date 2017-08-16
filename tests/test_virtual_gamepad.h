@@ -217,6 +217,9 @@ public:
     }
 
     void test_input_controller_signals_fire() {
+        skip_if(true, "Not implemented");
+
+        /*
         bool button_pressed = false;
 
         int virtual_joypad = window->joypad_count() - 1;
@@ -235,10 +238,13 @@ public:
         window->on_finger_down(0, x / w, y / h);
         window->run_frame();
 
-        assert_true(button_pressed);
+        assert_true(button_pressed); */
     }
 
     void test_while_down() {
+        skip_if(true, "Not implemented");
+
+        /*
         bool button_pressed = false;
 
         auto b1 = window->virtual_joypad->button_bounds(0);
@@ -265,12 +271,12 @@ public:
          * Two possible fixes:
          * 1. button press should trigger while down callbacks
          * 2. rendering should happen before input gathering
-         */
+
 
         window->run_frame();
         window->run_frame();
 
-        assert_true(button_pressed);
+        assert_true(button_pressed); */
     }
 };
 

@@ -68,6 +68,8 @@ samples/sample.cpp
 samples/selection_sample.cpp
 samples/viewport_sample.cpp
 simulant/controllers/airplane.h
+simulant/controllers/controller.cpp
+simulant/controllers/controller.h
 simulant/controllers/movement/airplane.cpp
 simulant/controllers/movement/airplane.h
 simulant/generic/manual_manager.h
@@ -133,6 +135,7 @@ simulant/nodes/ui/ui_manager.cpp
 simulant/nodes/ui/ui_manager.h
 simulant/nodes/ui/widget.cpp
 simulant/nodes/ui/widget.h
+simulant/panels/panel.cpp
 simulant/particles/emitter.cpp
 simulant/particles/emitter.h
 simulant/particles/manipulator.h
@@ -224,7 +227,6 @@ simulant/controllers/material/flowing.cpp
 simulant/controllers/material/flowing.h
 simulant/controllers/material/warp.cpp
 simulant/controllers/material/warp.h
-simulant/controllers/controller.h
 simulant/controllers/fly.h
 simulant/controllers/raycast_vehicle.cpp
 simulant/controllers/raycast_vehicle.h
@@ -647,7 +649,6 @@ simulant/keycodes.h
 simulant/utils/rect_pack.h
 simulant/utils/rect_pack.cpp
 tests/test_aabb.h
-simulant/controllers/controller.cpp
 simulant/materials/uniform_manager.h
 simulant/materials/attribute_manager.h
 simulant/materials/uniform_manager.cpp

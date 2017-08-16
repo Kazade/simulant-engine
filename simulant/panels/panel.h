@@ -43,15 +43,7 @@ public:
         is_active_ = false;
     }
 
-    void handle_key_down(Window *window, KeyboardCode code, ModifierKeyState modifiers) {
-        if(code == activation_key_) {
-            if(is_active()) {
-                deactivate();
-            } else {
-                activate();
-            }
-        }
-    }
+    void on_key_down(const KeyEvent& evt);
 
     void set_activation_key(KeyboardCode code) {
         activation_key_ = code;

@@ -294,12 +294,6 @@ public:
     void register_panel(uint8_t function_key, std::shared_ptr<Panel> panel);
     void unregister_panel(uint8_t function_key);
 
-    void handle_key_down(KeyboardCode code, ModifierKeyState modifiers) {
-        if(code == KEYBOARD_CODE_ESCAPE && escape_to_quit_enabled()) {
-            stop_running();
-        }
-    }
-
 private:    
     Application* application_ = nullptr;
 

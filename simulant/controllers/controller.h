@@ -32,9 +32,11 @@
 #include "../generic/property.h"
 #include "../generic/managed.h"
 #include "../interfaces/updateable.h"
+#include "../input/input_manager.h"
 
 namespace smlt {
 
+class InputManager;
 class Material;
 class Controller;
 class Controllable;
@@ -62,6 +64,18 @@ private:
     virtual void on_controller_removed(Controllable* controllable) {}
 
     bool is_enabled_ = true;
+};
+
+class ControllerWithInput : public Controller {
+public:
+    ControllerWithInput(InputManager* input):
+        input_(input) {}
+
+protected:
+    Property<ControllerWithInput, InputManager> input = {this, &ControllerWithInput::input_};
+
+private:
+    InputManager* input_;
 };
 
 class MaterialController : public Controller {

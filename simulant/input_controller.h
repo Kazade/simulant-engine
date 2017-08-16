@@ -56,12 +56,16 @@ struct MouseDeviceInfo {
 };
 
 
-typedef uint8_t KeyboardID;
-typedef uint8_t MouseID;
-typedef uint8_t JoystickID;
-typedef uint8_t MouseButtonID;
-typedef uint8_t JoystickButtonID;
-typedef uint8_t JoystickHatID;
+typedef int8_t KeyboardID;
+typedef int8_t MouseID;
+typedef int8_t JoystickID;
+typedef int8_t MouseButtonID;
+typedef int8_t JoystickButtonID;
+typedef int8_t JoystickHatID;
+
+static const KeyboardID ALL_KEYBOARDS = -1;
+static const MouseID ALL_MICE = -1;
+static const JoystickID ALL_JOYSTICKS = -1;
 
 enum MouseAxis {
     MOUSE_AXIS_0,
@@ -146,7 +150,13 @@ public:
     void _handle_joystick_hat_motion(JoystickID joypad_id, JoystickHatID hat_id, HatPosition position);
 
     // Public state accessor functions
-    bool keyboard_key_state(KeyboardID keyboard_id, KeyboardCode code) const;
+    bool keyboard_key_state(KeyboardID keyboard_id, KeyboardCode code) const {
+        if(keyboard_id < keyboard_count_) {
+            return keyboards_[keyboard_id].keys[code];
+        }
+
+        return false;
+    }
 
     bool mouse_button_state(MouseID mouse_id, JoystickButtonID button) const;
     float mouse_axis_state(MouseID mouse_id, MouseAxis axis) const;
