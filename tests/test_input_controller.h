@@ -83,7 +83,21 @@ public:
     }
 
     void test_mouse_axis_input() {
+        std::vector<MouseDeviceInfo> mice(2);
+        mice[0].id = 0;
+        mice[0].axis_count = 2;
 
+        controller_->_update_mouse_devices(mice);
+
+        controller_->_handle_mouse_motion(0, 0, 0, -5, 10);
+
+        assert_equal(controller_->mouse_axis_state(0, MOUSE_AXIS_X), -5.0f);
+        assert_equal(controller_->mouse_axis_state(0, MOUSE_AXIS_Y), 10.0f);
+
+        controller_->_handle_mouse_motion(0, 0, 0, 5, -10);
+
+        assert_equal(controller_->mouse_axis_state(0, MOUSE_AXIS_X), 5.0f);
+        assert_equal(controller_->mouse_axis_state(0, MOUSE_AXIS_Y), -10.0f);
     }
 
     void test_mouse_button_input() {

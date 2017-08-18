@@ -354,7 +354,8 @@ void SDL2Window::initialize_input_controller(InputController &controller) {
 
     MouseDeviceInfo mouse;
     mouse.id = 0;
-    mouse.button_count = 3;
+    mouse.button_count = 3; // FIXME: Not always true
+    mouse.axis_count = 2; // X + Y FIXME: Add scrollwheels
 
     KeyboardDeviceInfo keyboard;
 

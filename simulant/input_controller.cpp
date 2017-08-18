@@ -111,6 +111,14 @@ bool InputController::joystick_button_state(JoystickID joystick_id, JoystickButt
     return false;
 }
 
+float InputController::mouse_axis_state(MouseID mouse_id, MouseAxis axis) const {
+    if(mouse_id < mouse_count_) {
+        return mice_[mouse_id].axises[axis];
+    }
+
+    return 0.0f;
+}
+
 void InputController::update(float dt) {
 
     /*

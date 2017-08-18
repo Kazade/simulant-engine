@@ -216,14 +216,41 @@ void InputManager::_update_keyboard_axis(InputAxis* axis, float dt) {
 void InputManager::update(float dt) {
     for(auto axis: axises_) {
 
-        if(axis->type() == AXIS_TYPE_KEYBOARD_KEY) {
+        auto type = axis->type();
+        if(type == AXIS_TYPE_KEYBOARD_KEY) {
             _update_keyboard_axis(axis.get(), dt);
-        } else if(axis->type() == AXIS_TYPE_MOUSE_BUTTON) {
+        } else if(type == AXIS_TYPE_MOUSE_BUTTON) {
             _update_mouse_button_axis(axis.get(), dt);
-        } else if(axis->type() == AXIS_TYPE_JOYSTICK_BUTTON) {
+        } else if(type == AXIS_TYPE_JOYSTICK_BUTTON) {
             _update_joystick_button_axis(axis.get(), dt);
+        } else if(type == AXIS_TYPE_MOUSE_AXIS) {
+            _update_mouse_axis_axis(axis.get(), dt);
         }
     }
+}
+
+void InputManager::_update_mouse_axis_axis(InputAxis *axis, float dt) {
+    float new_value = 0.0f;
+
+    auto process_mouse = [this, axis](MouseID mouse_id) {
+        // We just store the mouse axis state directly, this will be a relative delta
+        // from the last frame for either mouse movement, or scroll wheel
+        return controller_->mouse_axis_state(mouse_id, axis->mouse_axis_);
+    };
+
+    // If the source is *all* mice, store the strongest axis (whether positive or negative)
+    if(axis->mouse_source() == ALL_MICE) {
+        for(std::size_t i = 0; i < controller_->mouse_count(); ++i) {
+            auto this_value = process_mouse((MouseID) i);
+            if(abs(this_value) > abs(new_value)) {
+                new_value = this_value;
+            }
+        }
+    } else {
+        new_value = process_mouse(axis->mouse_source());
+    }
+
+    axis->value_ = new_value;
 }
 
 
