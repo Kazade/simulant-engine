@@ -253,6 +253,27 @@ void InputManager::_update_mouse_axis_axis(InputAxis *axis, float dt) {
     axis->value_ = new_value;
 }
 
+void InputManager::_update_joystick_axis_axis(InputAxis* axis, float dt) {
+    float new_value = 0.0f;
+
+    auto process_joystick = [this, axis](JoystickID joystick_id) {
+        return controller_->joystick_axis_state(joystick_id, axis->joystick_axis_);
+    };
+
+    // If the source is *all* joysticks, store the strongest axis (whether positive or negative)
+    if(axis->joystick_source() == ALL_JOYSTICKS) {
+        for(std::size_t i = 0; i < controller_->joystick_count(); ++i) {
+            auto this_value = process_joystick((JoystickID) i);
+            if(abs(this_value) > abs(new_value)) {
+                new_value = this_value;
+            }
+        }
+    } else {
+        new_value = process_joystick(axis->joystick_source());
+    }
+
+    axis->value_ = new_value;
+}
 
 float InputManager::axis_value(const std::string& name) const {
     auto f = 0.0f;

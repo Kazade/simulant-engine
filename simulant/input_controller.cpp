@@ -119,6 +119,14 @@ float InputController::mouse_axis_state(MouseID mouse_id, MouseAxis axis) const 
     return 0.0f;
 }
 
+float InputController::joystick_axis_state(JoystickID joystick_id, JoystickAxis axis) const {
+    if(joystick_id < joystick_count_) {
+        return joysticks_[joystick_id].axises[axis];
+    }
+
+    return 0.0f;
+}
+
 void InputController::update(float dt) {
 
     /*

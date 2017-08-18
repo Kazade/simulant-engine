@@ -43,9 +43,8 @@ public:
     void set_joystick_source(JoystickID joystick);
     JoystickID joystick_source() const { return joystick_source_; }
 
-    void set_mouse_axis(MouseAxis axis) {
-        mouse_axis_ = axis;
-    }
+    void set_mouse_axis(MouseAxis axis);
+    void set_joystick_axis(JoystickAxis axis);
 
     void set_return_speed(float ret);
 
@@ -75,6 +74,7 @@ private:
     JoystickButtonID negative_joystick_button_ = -1;
 
     MouseAxis mouse_axis_;
+    JoystickAxis joystick_axis_;
 
     float return_speed_ = 3.0f;
     float value_ = 0.0f;

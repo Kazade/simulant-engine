@@ -75,7 +75,19 @@ public:
     }
 
     void test_joystick_axis_input() {
+        std::vector<JoystickDeviceInfo> joysticks(1);
+        joysticks[0].id = 0;
+        joysticks[0].axis_count = 2;
 
+        controller_->_update_joystick_devices(joysticks);
+
+        controller_->_handle_joystick_axis_motion(0, JOYSTICK_AXIS_0, 1.0f);
+
+        assert_equal(controller_->joystick_axis_state(0, JOYSTICK_AXIS_X), 1.0f);
+
+        controller_->_handle_joystick_axis_motion(0, JOYSTICK_AXIS_1, -1.0f);
+
+        assert_equal(controller_->joystick_axis_state(0, JOYSTICK_AXIS_Y), -1.0f);
     }
 
     void test_joystick_button_input() {

@@ -144,7 +144,9 @@ public:
     void _handle_mouse_down(MouseID mouse_id, MouseButtonID button_id);
     void _handle_mouse_up(MouseID mouse_id, MouseButtonID button_id);
 
+    // value must be a value between -1.0f and 1.0f!
     void _handle_joystick_axis_motion(JoystickID joypad_id, JoystickAxis axis, float value);
+
     void _handle_joystick_button_down(JoystickID joypad_id, JoystickButtonID button_id);
     void _handle_joystick_button_up(JoystickID joypad_id, JoystickButtonID button_id);
     void _handle_joystick_hat_motion(JoystickID joypad_id, JoystickHatID hat_id, HatPosition position);

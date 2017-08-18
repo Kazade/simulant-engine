@@ -27,6 +27,14 @@ void InputAxis::set_mouse_source(MouseID mouse) {
     mouse_source_ = mouse;
 }
 
+void InputAxis::set_mouse_axis(MouseAxis axis) {
+    mouse_axis_ = axis;
+}
+
+void InputAxis::set_joystick_axis(JoystickAxis axis) {
+    joystick_axis_ = axis;
+}
+
 void InputAxis::set_return_speed(float ret) {
     return_speed_ = ret;
 }
