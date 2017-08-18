@@ -39,6 +39,7 @@ private:
 
     void _update_keyboard_axis(InputAxis* axis, float dt);
     void _update_mouse_button_axis(InputAxis* axis, float dt);
+    void _update_joystick_button_axis(InputAxis* axis, float dt);
 };
 
 }

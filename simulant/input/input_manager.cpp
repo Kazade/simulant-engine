@@ -125,6 +125,50 @@ void InputManager::_update_mouse_button_axis(InputAxis* axis, float dt) {
     axis->value_ = new_value;
 }
 
+void InputManager::_update_joystick_button_axis(InputAxis* axis, float dt) {
+    float new_value = 0.0f;
+
+    auto pbtn = axis->positive_joystick_button();
+    auto nbtn = axis->negative_joystick_button();
+
+    bool positive_pressed = false;
+    bool negative_pressed = false;
+
+    auto process_joystick = [this, pbtn, nbtn, &positive_pressed, &negative_pressed](JoystickID id) {
+        if(pbtn != -1 && controller_->joystick_button_state(id, pbtn)) {
+            positive_pressed = true;
+        }
+
+        if(nbtn != -1 && controller_->joystick_button_state(id, nbtn)) {
+            negative_pressed = true;
+        }
+    };
+
+    // If the user requested input from all mice, do that
+    if(axis->joystick_source() == ALL_JOYSTICKS) {
+        for(std::size_t i = 0; i < controller_->joystick_count(); ++i) {
+            JoystickID id = (JoystickID) i;
+            process_joystick(id);
+        }
+    } else {
+        // Otherwise just check the one they asked for
+        JoystickID id = axis->joystick_source();
+        process_joystick(id);
+    }
+
+    // If either positive or negative were pressed, adjust the value
+    if(positive_pressed) new_value = 1.0f;
+    if(negative_pressed) new_value = -1.0f;
+
+    // If neither were pressed, then apply the return speed (making sure we don't pass zero)
+    if(!positive_pressed && !negative_pressed) {
+        auto sign = sgn(axis->value());
+        new_value = std::max(0.0f, (abs(axis->value()) - (axis->return_speed_ * dt))) * sign;
+    }
+
+    axis->value_ = new_value;
+}
+
 void InputManager::_update_keyboard_axis(InputAxis* axis, float dt) {
     float new_value = 0.0f;
 
@@ -176,6 +220,8 @@ void InputManager::update(float dt) {
             _update_keyboard_axis(axis.get(), dt);
         } else if(axis->type() == AXIS_TYPE_MOUSE_BUTTON) {
             _update_mouse_button_axis(axis.get(), dt);
+        } else if(axis->type() == AXIS_TYPE_JOYSTICK_BUTTON) {
+            _update_joystick_button_axis(axis.get(), dt);
         }
     }
 }

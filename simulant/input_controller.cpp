@@ -103,6 +103,14 @@ bool InputController::mouse_button_state(MouseID mouse_id, JoystickButtonID butt
     return false;
 }
 
+bool InputController::joystick_button_state(JoystickID joystick_id, JoystickButtonID button) const {
+    if(joystick_id < joystick_count_) {
+        return joysticks_[joystick_id].buttons[button];
+    }
+
+    return false;
+}
+
 void InputController::update(float dt) {
 
     /*

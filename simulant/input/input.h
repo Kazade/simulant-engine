@@ -36,6 +36,13 @@ public:
     void set_mouse_source(MouseID mouse);
     MouseID mouse_source() const { return mouse_source_; }
 
+    void set_positive_joystick_button(JoystickButtonID button);
+    void set_negative_joystick_button(JoystickButtonID button);
+    JoystickButtonID positive_joystick_button() const { return positive_mouse_button_; }
+    JoystickButtonID negative_joystick_button() const { return negative_mouse_button_; }
+    void set_joystick_source(JoystickID joystick);
+    JoystickID joystick_source() const { return joystick_source_; }
+
     void set_return_speed(float ret);
 
     const std::string& name() const { return name_; }
@@ -58,6 +65,10 @@ private:
     MouseID mouse_source_ = ALL_MICE;
     MouseButtonID positive_mouse_button_ = -1;
     MouseButtonID negative_mouse_button_ = -1;
+
+    JoystickID joystick_source_ = ALL_JOYSTICKS;
+    JoystickButtonID positive_joystick_button_ = -1;
+    JoystickButtonID negative_joystick_button_ = -1;
 
     float return_speed_ = 3.0f;
     float value_ = 0.0f;
