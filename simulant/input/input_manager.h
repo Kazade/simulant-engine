@@ -7,7 +7,7 @@
 
 namespace smlt {
 
-class InputController;
+class InputState;
 class InputAxis;
 
 typedef std::function<void (InputAxis*)> EachAxisCallback;
@@ -17,7 +17,7 @@ class InputManager:
     public Managed<InputManager> {
 
 public:
-    InputManager(InputController* controller);
+    InputManager(InputState* controller);
 
     InputAxis* new_axis(const std::string& name);
     AxisList axises(const std::string& name) const;
@@ -31,7 +31,7 @@ public:
     void update(float dt);
 
 private:
-    InputController* controller_;
+    InputState* controller_;
 
     std::vector<std::shared_ptr<InputAxis>> axises_;
 

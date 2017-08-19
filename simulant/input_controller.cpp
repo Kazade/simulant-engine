@@ -26,19 +26,19 @@
 
 namespace smlt {
 
-void InputController::_handle_key_down(KeyboardID keyboard_id, KeyboardCode code) {
+void InputState::_handle_key_down(KeyboardID keyboard_id, KeyboardCode code) {
     if(keyboard_id < keyboard_count_) {
         keyboards_[keyboard_id].keys[code] = true;
     }
 }
 
-void InputController::_handle_key_up(KeyboardID keyboard_id, KeyboardCode code) {
+void InputState::_handle_key_up(KeyboardID keyboard_id, KeyboardCode code) {
     if(keyboard_id < keyboard_count_) {
         keyboards_[keyboard_id].keys[code] = false;
     }
 }
 
-void InputController::_handle_mouse_motion(MouseID mouse_id, uint32_t x, uint32_t y, int32_t xrel, int32_t yrel) {
+void InputState::_handle_mouse_motion(MouseID mouse_id, uint32_t x, uint32_t y, int32_t xrel, int32_t yrel) {
     if(mouse_id < mouse_count_) {
         auto& mouse = mice_[mouse_id];
 
@@ -50,44 +50,44 @@ void InputController::_handle_mouse_motion(MouseID mouse_id, uint32_t x, uint32_
     }
 }
 
-void InputController::_handle_mouse_down(MouseID mouse_id, MouseButtonID button_id) {
+void InputState::_handle_mouse_down(MouseID mouse_id, MouseButtonID button_id) {
     if(mouse_id < mouse_count_) {
         mice_[mouse_id].buttons[button_id] = true;
     }
 }
 
-void InputController::_handle_mouse_up(MouseID mouse_id, MouseButtonID button_id) {
+void InputState::_handle_mouse_up(MouseID mouse_id, MouseButtonID button_id) {
     if(mouse_id < mouse_count_) {
         mice_[mouse_id].buttons[button_id] = false;
     }
 }
 
-void InputController::_handle_joystick_axis_motion(JoystickID joypad_id, JoystickAxis axis, float value) {
+void InputState::_handle_joystick_axis_motion(JoystickID joypad_id, JoystickAxis axis, float value) {
     if(joypad_id < joystick_count_) {
         auto& js = joysticks_[joypad_id];
         js.axises[axis] = value;
     }
 }
 
-void InputController::_handle_joystick_button_down(JoystickID joypad_id, JoystickButtonID button_id) {
+void InputState::_handle_joystick_button_down(JoystickID joypad_id, JoystickButtonID button_id) {
     if(joypad_id < joystick_count_) {
         auto& js = joysticks_[joypad_id];
         js.buttons[button_id] = true;
     }
 }
 
-void InputController::_handle_joystick_button_up(JoystickID joypad_id, JoystickButtonID button_id) {
+void InputState::_handle_joystick_button_up(JoystickID joypad_id, JoystickButtonID button_id) {
     if(joypad_id < joystick_count_) {
         auto& js = joysticks_[joypad_id];
         js.buttons[button_id] = false;
     }
 }
 
-void InputController::_handle_joystick_hat_motion(JoystickID joypad_id, JoystickHatID hat_id, HatPosition position) {
+void InputState::_handle_joystick_hat_motion(JoystickID joypad_id, JoystickHatID hat_id, HatPosition position) {
     L_ERROR("HAT not yet implemented");
 }
 
-bool InputController::keyboard_key_state(KeyboardID keyboard_id, KeyboardCode code) const {
+bool InputState::keyboard_key_state(KeyboardID keyboard_id, KeyboardCode code) const {
     if(keyboard_id < keyboard_count_) {
         return keyboards_[keyboard_id].keys[code];
     }
@@ -95,7 +95,7 @@ bool InputController::keyboard_key_state(KeyboardID keyboard_id, KeyboardCode co
     return false;
 }
 
-bool InputController::mouse_button_state(MouseID mouse_id, JoystickButtonID button) const {
+bool InputState::mouse_button_state(MouseID mouse_id, JoystickButtonID button) const {
     if(mouse_id < mouse_count_) {
         return mice_[mouse_id].buttons[button];
     }
@@ -103,7 +103,7 @@ bool InputController::mouse_button_state(MouseID mouse_id, JoystickButtonID butt
     return false;
 }
 
-bool InputController::joystick_button_state(JoystickID joystick_id, JoystickButtonID button) const {
+bool InputState::joystick_button_state(JoystickID joystick_id, JoystickButtonID button) const {
     if(joystick_id < joystick_count_) {
         return joysticks_[joystick_id].buttons[button];
     }
@@ -111,7 +111,7 @@ bool InputController::joystick_button_state(JoystickID joystick_id, JoystickButt
     return false;
 }
 
-float InputController::mouse_axis_state(MouseID mouse_id, MouseAxis axis) const {
+float InputState::mouse_axis_state(MouseID mouse_id, MouseAxis axis) const {
     if(mouse_id < mouse_count_) {
         return mice_[mouse_id].axises[axis];
     }
@@ -119,7 +119,7 @@ float InputController::mouse_axis_state(MouseID mouse_id, MouseAxis axis) const 
     return 0.0f;
 }
 
-float InputController::joystick_axis_state(JoystickID joystick_id, JoystickAxis axis) const {
+float InputState::joystick_axis_state(JoystickID joystick_id, JoystickAxis axis) const {
     if(joystick_id < joystick_count_) {
         return joysticks_[joystick_id].axises[axis];
     }
@@ -127,7 +127,7 @@ float InputController::joystick_axis_state(JoystickID joystick_id, JoystickAxis 
     return 0.0f;
 }
 
-void InputController::update(float dt) {
+void InputState::update(float dt) {
 
     /*
     if(virtual_joypad_) {
@@ -135,7 +135,7 @@ void InputController::update(float dt) {
     }*/
 }
 
-void InputController::init_virtual_joypad() {
+void InputState::init_virtual_joypad() {
     /*
     if(!virtual_joypad_) {
         virtual_joypad_ = std::make_shared<Joypad>();

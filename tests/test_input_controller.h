@@ -9,11 +9,11 @@ using namespace smlt;
 
 class InputControllerTests : public SimulantTestCase {
 public:
-    InputController* controller_;
+    InputState* controller_;
 
     void set_up() {
         SimulantTestCase::set_up();
-        controller_ = new InputController();
+        controller_ = new InputState();
     }
 
     void tear_down() {

@@ -229,7 +229,7 @@ std::shared_ptr<SoundDriver> KOSWindow::create_sound_driver() {
     return std::make_shared<KOSSoundDriver>(this);
 }
 
-void smlt::KOSWindow::initialize_input_controller(smlt::InputController &controller) {
+void smlt::KOSWindow::initialize_input_controller(smlt::InputState &controller) {
     L_DEBUG("Detecting input devices");
 
     std::vector<JoystickDeviceInfo> joypads;

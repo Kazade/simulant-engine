@@ -36,7 +36,7 @@
 
 namespace smlt {
 
-class InputController;
+class InputState;
 
 struct JoystickDeviceInfo {
     uint32_t id;
@@ -107,8 +107,8 @@ enum HatPosition {
     HAT_POSITION_LEFT_DOWN = HAT_POSITION_LEFT | HAT_POSITION_DOWN
 };
 
-class InputController:
-    public Managed<InputController> {
+class InputState:
+    public Managed<InputState> {
 
 public:
     void update(float dt);

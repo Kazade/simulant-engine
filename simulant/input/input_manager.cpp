@@ -4,7 +4,7 @@
 
 namespace smlt {
 
-InputManager::InputManager(InputController *controller):
+InputManager::InputManager(InputState *controller):
     controller_(controller) {
 
     auto horizontal = new_axis("Horizontal");

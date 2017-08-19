@@ -349,7 +349,7 @@ bool SDL2Window::create_window(int width, int height, int bpp, bool fullscreen) 
     return true;
 }
 
-void SDL2Window::initialize_input_controller(InputController &controller) {
+void SDL2Window::initialize_input_controller(InputState &controller) {
     std::vector<JoystickDeviceInfo> joypads;
 
     MouseDeviceInfo mouse;

@@ -55,7 +55,7 @@ namespace scenes {
 }
 
 class Application;
-class InputController;
+class InputState;
 
 class Loader;
 class LoaderType;
@@ -254,7 +254,7 @@ protected:
     virtual bool create_window(int width, int height, int bpp, bool fullscreen) = 0;
     virtual void destroy_window() = 0;
 
-    InputController& input_controller() { assert(input_controller_); return *input_controller_; }
+    InputState& input_controller() { assert(input_controller_); return *input_controller_; }
 
     Window();
 
@@ -298,7 +298,7 @@ private:
     Application* application_ = nullptr;
 
     void create_defaults();
-    virtual void initialize_input_controller(InputController& controller) = 0;
+    virtual void initialize_input_controller(InputState& controller) = 0;
 
     bool can_attach_sound_by_id() const { return false; }
 
@@ -356,7 +356,7 @@ private:
     virtual std::shared_ptr<SoundDriver> create_sound_driver() = 0;
 
 
-    std::shared_ptr<InputController> input_controller_;
+    std::shared_ptr<InputState> input_controller_;
     std::shared_ptr<InputManager> input_manager_;
 
 public:
@@ -377,7 +377,7 @@ public:
     Property<Window, Stats> stats = { this, &Window::stats_ };
 
     SoundDriver* _sound_driver() const { return sound_driver_.get(); }
-    InputController* _input_controller() const { return input_controller_.get(); }
+    InputState* _input_controller() const { return input_controller_.get(); }
 
     void run_update();
     void run_fixed_updates();

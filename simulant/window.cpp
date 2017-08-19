@@ -143,7 +143,7 @@ void Window::create_defaults() {
     loading_ = scenes::Loading::create(*this);
 
     //This needs to happen after SDL or whatever is initialized
-    input_controller_ = InputController::create();
+    input_controller_ = InputState::create();
     input_manager_ = InputManager::create(input_controller_.get());
 
     // Tell subclasses to initialize input devices
