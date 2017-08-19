@@ -169,7 +169,7 @@ public:
     void init_virtual_joypad();
 private:
     struct KeyboardState {
-        std::array<bool, MAX_KEYBOARD_CODES> keys = {0};
+        std::array<bool, MAX_KEYBOARD_CODES> keys = {};
     };
 
     uint8_t keyboard_count_ = 0;
@@ -179,8 +179,8 @@ private:
         uint8_t button_count = 0;
         uint8_t axis_count = 0;
 
-        std::array<bool, MAX_MOUSE_BUTTONS> buttons = {0};
-        std::array<float, MOUSE_AXIS_MAX> axises = {0.0f};
+        std::array<bool, MAX_MOUSE_BUTTONS> buttons = {};
+        std::array<float, MOUSE_AXIS_MAX> axises = {};
 
         uint32_t x = 0;
         uint32_t y = 0;
@@ -193,8 +193,8 @@ private:
         uint8_t button_count = 0;
         uint8_t axis_count = 0;
 
-        std::array<bool, MAX_JOYSTICK_BUTTONS> buttons = {0};
-        std::array<float, JOYSTICK_AXIS_MAX> axises = {0.0f};
+        std::array<bool, MAX_JOYSTICK_BUTTONS> buttons = {};
+        std::array<float, JOYSTICK_AXIS_MAX> axises = {};
     };
 
     uint8_t joystick_count_ = 0;

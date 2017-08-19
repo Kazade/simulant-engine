@@ -96,7 +96,6 @@ SET(DC_EXECUTABLES # Names without .elf extension
     samples/nehe01
     samples/2d_sample
     samples/fleets_demo
-    samples/joypad_sample
     samples/light_sample
     samples/physics_demo
     samples/q2bsp_sample

@@ -29,13 +29,13 @@ public:
 
         controller_->_update_keyboard_devices(keyboards);
 
-        assert_equal(controller_->keyboard_count(), 2);
+        assert_equal(controller_->keyboard_count(), 2u);
 
         keyboards.resize(1);
 
         controller_->_update_keyboard_devices(keyboards);
 
-        assert_equal(controller_->keyboard_count(), 1);
+        assert_equal(controller_->keyboard_count(), 1u);
     }
 
     void test_joystick_hotplugging() {
@@ -45,13 +45,13 @@ public:
 
         controller_->_update_joystick_devices(joysticks);
 
-        assert_equal(controller_->joystick_count(), 2);
+        assert_equal(controller_->joystick_count(), 2u);
 
         joysticks.resize(1);
 
         controller_->_update_joystick_devices(joysticks);
 
-        assert_equal(controller_->joystick_count(), 1);
+        assert_equal(controller_->joystick_count(), 1u);
     }
 
     void test_mouse_hotplugging() {
@@ -61,13 +61,13 @@ public:
 
         controller_->_update_mouse_devices(mice);
 
-        assert_equal(controller_->mouse_count(), 2);
+        assert_equal(controller_->mouse_count(), 2u);
 
         mice.resize(1);
 
         controller_->_update_mouse_devices(mice);
 
-        assert_equal(controller_->mouse_count(), 1);
+        assert_equal(controller_->mouse_count(), 1u);
     }
 
     void test_keyboard_key_input() {
