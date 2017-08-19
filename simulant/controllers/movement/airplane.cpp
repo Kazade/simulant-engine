@@ -1,7 +1,7 @@
 #include "airplane.h"
 #include "../physics/rigid_body.h"
 #include "../../window.h"
-#include "../../input/input.h"
+#include "../../input/input_axis.h"
 
 namespace smlt {
 namespace controllers {

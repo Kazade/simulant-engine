@@ -1,4 +1,4 @@
-#include "input.h"
+#include "input_axis.h"
 
 namespace smlt {
 

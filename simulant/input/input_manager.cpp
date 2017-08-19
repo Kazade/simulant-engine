@@ -1,4 +1,4 @@
-#include "input.h"
+#include "input_axis.h"
 #include "input_manager.h"
 #include "../input_controller.h"
 

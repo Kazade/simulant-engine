@@ -59,7 +59,7 @@
 #include "scenes/physics_scene.h"
 
 #include "input/input_manager.h"
-#include "input/input.h"
+#include "input/input_axis.h"
 
 #include "controllers/fly.h"
 #include "controllers/builtin.h"
