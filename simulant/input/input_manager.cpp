@@ -15,6 +15,10 @@ InputManager::InputManager(InputController *controller):
     horizontal_alt->set_positive_keyboard_key(KEYBOARD_CODE_RIGHT);
     horizontal_alt->set_negative_keyboard_key(KEYBOARD_CODE_LEFT);
 
+    auto horizontal_js = new_axis("Horizontal");
+    horizontal_js->set_type(AXIS_TYPE_JOYSTICK_AXIS);
+    horizontal_js->set_joystick_axis(JOYSTICK_AXIS_X);
+
     auto vertical = new_axis("Vertical");
     vertical->set_positive_keyboard_key(KEYBOARD_CODE_W);
     vertical->set_negative_keyboard_key(KEYBOARD_CODE_S);
@@ -22,6 +26,10 @@ InputManager::InputManager(InputController *controller):
     auto vertical_alt = new_axis("Vertical");
     vertical_alt->set_positive_keyboard_key(KEYBOARD_CODE_UP);
     vertical_alt->set_negative_keyboard_key(KEYBOARD_CODE_DOWN);
+
+    auto vertical_js = new_axis("Vertical");
+    vertical_js->set_type(AXIS_TYPE_JOYSTICK_AXIS);
+    vertical_js->set_joystick_axis(JOYSTICK_AXIS_Y);
 
     auto fire1 = new_axis("Fire1");
     fire1->set_positive_keyboard_key(KEYBOARD_CODE_LCTRL);
@@ -39,7 +47,9 @@ InputAxis* InputManager::new_axis(const std::string& name) {
 AxisList InputManager::axises(const std::string& name) const {
     AxisList result;
     for(auto& axis: axises_) {
-        result.push_back(axis.get());
+        if(axis->name() == name) {
+            result.push_back(axis.get());
+        }
     }
     return result;
 }
@@ -225,6 +235,8 @@ void InputManager::update(float dt) {
             _update_joystick_button_axis(axis.get(), dt);
         } else if(type == AXIS_TYPE_MOUSE_AXIS) {
             _update_mouse_axis_axis(axis.get(), dt);
+        } else if(type == AXIS_TYPE_JOYSTICK_AXIS) {
+            _update_joystick_axis_axis(axis.get(), dt);
         }
     }
 }

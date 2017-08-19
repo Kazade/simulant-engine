@@ -144,6 +144,7 @@ void Window::create_defaults() {
 
     //This needs to happen after SDL or whatever is initialized
     input_controller_ = InputController::create();
+    input_manager_ = InputManager::create(input_controller_.get());
 
     // Tell subclasses to initialize input devices
     initialize_input_controller(*input_controller_);
@@ -316,6 +317,7 @@ bool Window::run_frame() {
     check_events(); // Check for any window events
     Source::update_source(dt); //Update any playing sounds
     input_controller().update(dt); // Update input devices
+    input_manager_->update(dt); // Now update any manager stuff based on the new input state
     shared_assets->update(dt); // Update animated assets
 
     run_fixed_updates();

@@ -50,6 +50,7 @@ public:
 
     const std::string& name() const { return name_; }
 
+    void set_type(AxisType type) { type_ = type; }
     const AxisType& type() const { return type_; }
 
     float value(bool respect_dead_zone=true) const;
@@ -73,8 +74,8 @@ private:
     JoystickButtonID positive_joystick_button_ = -1;
     JoystickButtonID negative_joystick_button_ = -1;
 
-    MouseAxis mouse_axis_;
-    JoystickAxis joystick_axis_;
+    MouseAxis mouse_axis_ = MOUSE_AXIS_0;
+    JoystickAxis joystick_axis_ = JOYSTICK_AXIS_0;
 
     float return_speed_ = 3.0f;
     float value_ = 0.0f;
