@@ -103,7 +103,7 @@ void KOSWindow::check_events() {
                 // # Deal with the first joystick axis
                 if(joyx_state != previous_joyx[i]) {
                     // joy values on the DC are +/- 128, we scale up to the full integer range (which is then scaled to between -1.0 and 1.0)
-                    input_controller()._handle_joystick_axis_motion(i, JOYSTICK_AXIS_X, float(joyx_state / 128.0f));
+                    input_controller()._handle_joystick_axis_motion(i, JOYSTICK_AXIS_X, float(joyx_state) / 128.0f);
                     previous_joyx[i] = joyx_state;
                 }
 
