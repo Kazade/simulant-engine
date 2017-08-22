@@ -7,7 +7,7 @@ namespace {
 
 using namespace smlt;
 
-class InputControllerTests : public SimulantTestCase {
+class InputStateTests : public SimulantTestCase {
 public:
     InputState* controller_;
 
@@ -91,7 +91,19 @@ public:
     }
 
     void test_joystick_button_input() {
+        std::vector<JoystickDeviceInfo> joysticks(1);
+        joysticks[0].id = 0;
+        joysticks[0].button_count = 2;
 
+        controller_->_update_joystick_devices(joysticks);
+
+        controller_->_handle_joystick_button_down(0, 0);
+
+        assert_true(controller_->joystick_button_state(0, 0));
+
+        controller_->_handle_joystick_button_up(0, 0);
+
+        assert_false(controller_->joystick_button_state(0, 0));
     }
 
     void test_mouse_axis_input() {
@@ -113,7 +125,19 @@ public:
     }
 
     void test_mouse_button_input() {
+        std::vector<MouseDeviceInfo> mice(2);
+        mice[0].id = 0;
+        mice[0].axis_count = 2;
 
+        controller_->_update_mouse_devices(mice);
+
+        controller_->_handle_mouse_down(0, 0);
+
+        assert_true(controller_->mouse_button_state(0, 0));
+
+        controller_->_handle_mouse_up(0, 0);
+
+        assert_false(controller_->mouse_button_state(0, 0));
     }
 
     void test_too_many_keyboards() {

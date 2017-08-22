@@ -55,6 +55,7 @@ public:
 
     float value(bool respect_dead_zone=true) const;
 
+    void set_dead_zone(float v) { dead_zone_ = v; }
     float dead_zone() const { return dead_zone_; }
 
 private:
