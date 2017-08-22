@@ -26,13 +26,13 @@
 #include <set>
 #include <cassert>
 
-#include "keycodes.h"
-#include "types.h"
+#include "../keycodes.h"
+#include "../types.h"
 
-#include "deps/kazsignal/kazsignal.h"
-#include "generic/managed.h"
-#include "generic/identifiable.h"
-#include "generic/unique_id.h"
+#include "../deps/kazsignal/kazsignal.h"
+#include "../generic/managed.h"
+#include "../generic/identifiable.h"
+#include "../generic/unique_id.h"
 
 namespace smlt {
 

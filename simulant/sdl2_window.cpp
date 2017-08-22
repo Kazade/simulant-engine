@@ -19,7 +19,7 @@
 
 #include "deps/kazlog/kazlog.h"
 #include "utils/unicode.h"
-#include "input_controller.h"
+#include "input/input_state.h"
 #include "sdl2_window.h"
 
 #include "renderers/renderer_config.h"

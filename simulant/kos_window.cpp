@@ -3,7 +3,7 @@
 #include <GL/gl.h>
 #include <GL/glut.h>
 
-#include "input_controller.h"
+#include "input/input_state.h"
 #include "kos_window.h"
 #include "sound_drivers/kos_sound_driver.h"
 #include "renderers/renderer_config.h"
@@ -102,14 +102,21 @@ void KOSWindow::check_events() {
 
                 // # Deal with the first joystick axis
                 if(joyx_state != previous_joyx[i]) {
-                    // joy values on the DC are +/- 128, we scale up to the full integer range (which is then scaled to between -1.0 and 1.0)
-                    input_controller()._handle_joystick_axis_motion(i, JOYSTICK_AXIS_X, float(joyx_state) / 128.0f);
+                    // joy values on the DC are -128 to 127, we scale up to the full integer range (which is then scaled to between -1.0 and 1.0)
+
+                    float v = float(joyx_state) / 127.0f;
+                    if(v < -1.0f) v  = -1.0f; // This is possible at full range to the left (due to the imbalance of -128 to 127)
+
+                    input_controller()._handle_joystick_axis_motion(i, JOYSTICK_AXIS_X, v);
                     previous_joyx[i] = joyx_state;
                 }
 
                 if(joyy_state != previous_joyy[i]) {
                     // joy values on the DC are +/- 128, we scale up to the full integer range (which is then scaled to between -1.0 and 1.0)
-                    input_controller()._handle_joystick_axis_motion(i, JOYSTICK_AXIS_Y, float(joyy_state) / 128.0f);
+                    float v = float(joyy_state) / 127.0f;
+                    if(v < -1.0f) v  = -1.0f;
+
+                    input_controller()._handle_joystick_axis_motion(i, JOYSTICK_AXIS_Y, v);
                     previous_joyy[i] = joyy_state;
                 }
 

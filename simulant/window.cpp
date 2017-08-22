@@ -25,7 +25,9 @@
 
 #include "utils/gl_error.h"
 #include "window.h"
-#include "input_controller.h"
+
+#include "input/input_state.h"
+
 #include "loaders/texture_loader.h"
 #include "loaders/material_script.h"
 #include "loaders/opt_loader.h"

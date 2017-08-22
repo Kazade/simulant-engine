@@ -1,7 +1,7 @@
 #pragma once
 
 #include "global.h"
-#include "../simulant/input_controller.h"
+#include "../simulant/input/input_state.h"
 
 namespace {
 

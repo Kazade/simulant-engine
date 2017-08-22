@@ -17,12 +17,13 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "deps/kazlog/kazlog.h"
+#include "../deps/kazlog/kazlog.h"
+#include "../utils/unicode.h"
 
-#include "utils/unicode.h"
-#include "input_controller.h"
-#include "window.h"
-#include "virtual_gamepad.h"
+#include "input_state.h"
+
+#include "../window.h"
+#include "../virtual_gamepad.h"
 
 namespace smlt {
 

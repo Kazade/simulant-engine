@@ -29,7 +29,7 @@
 
 #include "resource_locator.h"
 #include "idle_task_manager.h"
-#include "input_controller.h"
+#include "input/input_state.h"
 #include "generic/auto_weakptr.h"
 #include "types.h"
 #include "sound.h"

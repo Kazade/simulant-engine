@@ -24,7 +24,7 @@
 #include "generic/managed.h"
 #include "types.h"
 
-#include "input_controller.h"
+#include "input/input_state.h"
 
 namespace smlt {
 
