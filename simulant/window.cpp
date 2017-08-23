@@ -145,11 +145,11 @@ void Window::create_defaults() {
     loading_ = scenes::Loading::create(*this);
 
     //This needs to happen after SDL or whatever is initialized
-    input_controller_ = InputState::create();
-    input_manager_ = InputManager::create(input_controller_.get());
+    input_state_ = InputState::create();
+    input_manager_ = InputManager::create(input_state_.get());
 
     // Tell subclasses to initialize input devices
-    initialize_input_controller(*input_controller_);
+    initialize_input_controller(*input_state_);
 }
 
 void Window::_cleanup() {
@@ -318,7 +318,7 @@ bool Window::run_frame() {
 
     check_events(); // Check for any window events
     Source::update_source(dt); //Update any playing sounds
-    input_controller().update(dt); // Update input devices
+    input_state_->update(dt); // Update input devices
     input_manager_->update(dt); // Now update any manager stuff based on the new input state
     shared_assets->update(dt); // Update animated assets
 
@@ -364,7 +364,7 @@ bool Window::run_frame() {
         loading_.reset();
 
         //Shutdown the input controller
-        input_controller_.reset();
+        input_state_.reset();
 
         std::cout << "Frames rendered: " << stats_.frames_run() << std::endl;
         std::cout << "Fixed updates run: " << stats_.fixed_steps_run() << std::endl;
@@ -415,7 +415,7 @@ void Window::enable_virtual_joypad(VirtualGamepadConfig config, bool flipped) {
     }
 
     virtual_gamepad_ = VirtualGamepad::create(*this, config);
-    input_controller().init_virtual_joypad();
+    input_state_->init_virtual_joypad();
 
     if(flipped) {
         virtual_gamepad_->flip();

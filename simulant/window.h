@@ -254,8 +254,6 @@ protected:
     virtual bool create_window(int width, int height, int bpp, bool fullscreen) = 0;
     virtual void destroy_window() = 0;
 
-    InputState& input_controller() { assert(input_controller_); return *input_controller_; }
-
     Window();
 
     void set_paused(bool value=true);
@@ -355,9 +353,11 @@ private:
 
     virtual std::shared_ptr<SoundDriver> create_sound_driver() = 0;
 
-
-    std::shared_ptr<InputState> input_controller_;
+    std::shared_ptr<InputState> input_state_;
     std::shared_ptr<InputManager> input_manager_;
+
+protected:
+    InputState* _input_state() const { return input_state_.get(); }
 
 public:
 
@@ -373,11 +373,10 @@ public:
     Property<Window, ResourceLocator> resource_locator = { this, &Window::resource_locator_ };
 
     Property<Window, InputManager> input = {this, &Window::input_manager_};
-
+    Property<Window, InputState> input_state = {this, &Window::input_state_};
     Property<Window, Stats> stats = { this, &Window::stats_ };
 
     SoundDriver* _sound_driver() const { return sound_driver_.get(); }
-    InputState* _input_controller() const { return input_controller_.get(); }
 
     void run_update();
     void run_fixed_updates();

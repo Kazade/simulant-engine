@@ -142,29 +142,29 @@ void SDL2Window::check_events() {
                 break;
 
             case SDL_JOYAXISMOTION:
-                input_controller()._handle_joystick_axis_motion(
+                input_state->_handle_joystick_axis_motion(
                     event.jaxis.which, SDL_axis_to_simulant_axis(event.jaxis.axis), float(event.jaxis.value) / 32768.0f
                 );
             break;
             case SDL_JOYBUTTONDOWN:
-                input_controller()._handle_joystick_button_down(event.jbutton.which, event.jbutton.button);
+                input_state->_handle_joystick_button_down(event.jbutton.which, event.jbutton.button);
             break;
             case SDL_JOYBUTTONUP:
-                input_controller()._handle_joystick_button_up(event.jbutton.which, event.jbutton.button);
+                input_state->_handle_joystick_button_up(event.jbutton.which, event.jbutton.button);
             break;
             case SDL_JOYHATMOTION:
-                input_controller()._handle_joystick_hat_motion(event.jhat.which, event.jhat.hat, (HatPosition) event.jhat.value);
+                input_state->_handle_joystick_hat_motion(event.jhat.which, event.jhat.hat, (HatPosition) event.jhat.value);
             break;
             case SDL_KEYDOWN: {
-                input_controller()._handle_key_down(0, (KeyboardCode) event.key.keysym.scancode);
+                input_state->_handle_key_down(0, (KeyboardCode) event.key.keysym.scancode);
                 on_key_down((KeyboardCode) event.key.keysym.scancode, get_modifiers());
             } break;
             case SDL_KEYUP: {
-                input_controller()._handle_key_up(0, (KeyboardCode) event.key.keysym.scancode);
+                input_state->_handle_key_up(0, (KeyboardCode) event.key.keysym.scancode);
                 on_key_up((KeyboardCode) event.key.keysym.scancode, get_modifiers());
             } break;
             case SDL_MOUSEMOTION: {
-                input_controller()._handle_mouse_motion(
+                input_state->_handle_mouse_motion(
                     event.motion.which,
                     event.motion.x, event.motion.y, event.motion.xrel, event.motion.yrel
                 );
