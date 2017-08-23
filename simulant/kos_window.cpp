@@ -112,7 +112,7 @@ void KOSWindow::check_events() {
                 }
 
                 if(joyy_state != previous_joyy[i]) {
-                    // joy values on the DC are +/- 128, we scale up to the full integer range (which is then scaled to between -1.0 and 1.0)
+                    // joy values on the DC are -128 to +127, we scale up to the full integer range (which is then scaled to between -1.0 and 1.0)
                     float v = float(joyy_state) / 127.0f;
                     if(v < -1.0f) v  = -1.0f;
 

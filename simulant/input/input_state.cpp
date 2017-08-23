@@ -85,7 +85,10 @@ void InputState::_handle_joystick_button_up(JoystickID joypad_id, JoystickButton
 }
 
 void InputState::_handle_joystick_hat_motion(JoystickID joypad_id, JoystickHatID hat_id, HatPosition position) {
-    L_ERROR("HAT not yet implemented");
+    if(joypad_id < joystick_count_) {
+        auto& js = joysticks_[joypad_id];
+        js.hats[hat_id] = position;
+    }
 }
 
 bool InputState::keyboard_key_state(KeyboardID keyboard_id, KeyboardCode code) const {
@@ -126,6 +129,14 @@ float InputState::joystick_axis_state(JoystickID joystick_id, JoystickAxis axis)
     }
 
     return 0.0f;
+}
+
+HatPosition InputState::joystick_hat_state(JoystickID joystick_id, JoystickHatID hat) const {
+    if(joystick_id < joystick_count_) {
+        return joysticks_[joystick_id].hats[hat];
+    }
+
+    return HAT_POSITION_CENTERED;
 }
 
 void InputState::update(float dt) {

@@ -227,16 +227,19 @@ void InputManager::update(float dt) {
     for(auto axis: axises_) {
 
         auto type = axis->type();
+        auto axis_ptr = axis.get();
         if(type == AXIS_TYPE_KEYBOARD_KEY) {
-            _update_keyboard_axis(axis.get(), dt);
+            _update_keyboard_axis(axis_ptr, dt);
         } else if(type == AXIS_TYPE_MOUSE_BUTTON) {
-            _update_mouse_button_axis(axis.get(), dt);
+            _update_mouse_button_axis(axis_ptr, dt);
         } else if(type == AXIS_TYPE_JOYSTICK_BUTTON) {
-            _update_joystick_button_axis(axis.get(), dt);
+            _update_joystick_button_axis(axis_ptr, dt);
         } else if(type == AXIS_TYPE_MOUSE_AXIS) {
-            _update_mouse_axis_axis(axis.get(), dt);
+            _update_mouse_axis_axis(axis_ptr, dt);
         } else if(type == AXIS_TYPE_JOYSTICK_AXIS) {
-            _update_joystick_axis_axis(axis.get(), dt);
+            _update_joystick_axis_axis(axis_ptr, dt);
+        } else if(type == AXIS_TYPE_JOYSTICK_HAT) {
+            _update_joystick_hat_axis(axis_ptr, dt);
         }
     }
 }
@@ -282,6 +285,60 @@ void InputManager::_update_joystick_axis_axis(InputAxis* axis, float dt) {
         }
     } else {
         new_value = process_joystick(axis->joystick_source());
+    }
+
+    axis->value_ = new_value;
+}
+
+void InputManager::_update_joystick_hat_axis(InputAxis* axis, float dt) {
+    float new_value = 0.0f;
+
+    auto process_joystick = [this, axis](JoystickID joystick_id) {
+        auto state = controller_->joystick_hat_state(joystick_id, axis->joystick_hat_);
+
+        if(axis->joystick_hat_axis_ == JOYSTICK_HAT_AXIS_X) {
+            switch(state) {
+                case HAT_POSITION_LEFT:
+                case HAT_POSITION_LEFT_UP:
+                case HAT_POSITION_LEFT_DOWN: return -1.0f;
+                case HAT_POSITION_RIGHT:
+                case HAT_POSITION_RIGHT_UP:
+                case HAT_POSITION_RIGHT_DOWN: return -1.0f;
+                default:
+                    return 0.0f;
+            }
+        } else if(axis->joystick_hat_axis_ == JOYSTICK_HAT_AXIS_Y) {
+            switch(state) {
+                case HAT_POSITION_UP:
+                case HAT_POSITION_LEFT_UP:
+                case HAT_POSITION_RIGHT_UP: return 1.0f;
+                case HAT_POSITION_DOWN:
+                case HAT_POSITION_LEFT_DOWN:
+                case HAT_POSITION_RIGHT_DOWN: return -1.0f;
+                default:
+                    return 0.0f;
+            }
+        }
+
+        return 0.0f;
+    };
+
+    // If the source is *all* joysticks, store the strongest axis (whether positive or negative)
+    if(axis->joystick_source() == ALL_JOYSTICKS) {
+        for(std::size_t i = 0; i < controller_->joystick_count(); ++i) {
+            auto this_value = process_joystick((JoystickID) i);
+            if(abs(this_value) > abs(new_value)) {
+                new_value = this_value;
+            }
+        }
+    } else {
+        new_value = process_joystick(axis->joystick_source());
+    }
+
+    if(new_value == 0.0f) {
+        // Neither direction pressed. Use return speed to reset to zero
+        auto sign = sgn(axis->value());
+        new_value = std::max(0.0f, (abs(axis->value()) - (axis->return_speed_ * dt))) * sign;
     }
 
     axis->value_ = new_value;

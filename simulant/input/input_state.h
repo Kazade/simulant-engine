@@ -91,8 +91,14 @@ enum JoystickAxis {
     JOYSTICK_AXIS_Y = JOYSTICK_AXIS_1
 };
 
+enum JoystickHatAxis {
+    JOYSTICK_HAT_AXIS_X,
+    JOYSTICK_HAT_AXIS_Y
+};
+
 const static std::size_t MAX_MOUSE_BUTTONS = 16u;
 const static std::size_t MAX_JOYSTICK_BUTTONS = 16u;
+const static std::size_t MAX_JOYSTICK_HATS = 4u;
 const static std::size_t MAX_DEVICE_TYPE_COUNT = 4u;
 
 enum HatPosition {
@@ -161,6 +167,7 @@ public:
 
     bool joystick_button_state(JoystickID joystick_id, JoystickButtonID button) const;
     float joystick_axis_state(JoystickID joystick_id, JoystickAxis axis) const;
+    HatPosition joystick_hat_state(JoystickID joystick_id, JoystickHatID hat) const;
 
     std::size_t joystick_count() const { return joystick_count_; }
     std::size_t keyboard_count() const { return keyboard_count_; }
@@ -192,9 +199,11 @@ private:
     struct JoystickState {
         uint8_t button_count = 0;
         uint8_t axis_count = 0;
+        uint8_t hat_count = 0;
 
         std::array<bool, MAX_JOYSTICK_BUTTONS> buttons = {};
         std::array<float, JOYSTICK_AXIS_MAX> axises = {};
+        std::array<HatPosition, MAX_JOYSTICK_HATS> hats = {};
     };
 
     uint8_t joystick_count_ = 0;

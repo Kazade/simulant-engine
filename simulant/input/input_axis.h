@@ -13,7 +13,8 @@ enum AxisType {
     AXIS_TYPE_MOUSE_BUTTON,
     AXIS_TYPE_MOUSE_AXIS,
     AXIS_TYPE_JOYSTICK_BUTTON,
-    AXIS_TYPE_JOYSTICK_AXIS
+    AXIS_TYPE_JOYSTICK_AXIS,
+    AXIS_TYPE_JOYSTICK_HAT
 };
 
 class InputAxis:
@@ -45,6 +46,7 @@ public:
 
     void set_mouse_axis(MouseAxis axis);
     void set_joystick_axis(JoystickAxis axis);
+    void set_joystick_hat_axis(JoystickHatID hat, JoystickHatAxis axis);
 
     void set_return_speed(float ret);
 
@@ -77,6 +79,9 @@ private:
 
     MouseAxis mouse_axis_ = MOUSE_AXIS_0;
     JoystickAxis joystick_axis_ = JOYSTICK_AXIS_0;
+
+    JoystickHatID joystick_hat_ = -1;
+    JoystickHatAxis joystick_hat_axis_ = JOYSTICK_HAT_AXIS_X;
 
     float return_speed_ = 3.0f;
     float value_ = 0.0f;
