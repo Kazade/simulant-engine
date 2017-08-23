@@ -118,8 +118,7 @@ class Window :
     public Loadable,
     public PipelineHelperAPIInterface,
     public RenderTarget,
-    public EventListenerManager,
-    public EventListener {
+    public EventListenerManager {
 
     DEFINE_SIGNAL(FrameStartedSignal, signal_frame_started);
     DEFINE_SIGNAL(FrameFinishedSignal, signal_frame_finished);

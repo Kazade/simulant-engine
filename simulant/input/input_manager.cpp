@@ -129,7 +129,7 @@ void InputManager::_update_mouse_button_axis(InputAxis* axis, float dt) {
     // If neither were pressed, then apply the return speed (making sure we don't pass zero)
     if(!positive_pressed && !negative_pressed) {
         auto sign = sgn(axis->value());
-        new_value = std::max(0.0f, (fabs(axis->value()) - (axis->return_speed_ * dt))) * sign;
+        new_value = std::max(0.0f, (std::abs(axis->value()) - (axis->return_speed_ * dt))) * sign;
     }
 
     axis->value_ = new_value;
@@ -173,7 +173,7 @@ void InputManager::_update_joystick_button_axis(InputAxis* axis, float dt) {
     // If neither were pressed, then apply the return speed (making sure we don't pass zero)
     if(!positive_pressed && !negative_pressed) {
         auto sign = sgn(axis->value());
-        new_value = std::max(0.0f, (fabs(axis->value()) - (axis->return_speed_ * dt))) * sign;
+        new_value = std::max(0.0f, (std::abs(axis->value()) - (axis->return_speed_ * dt))) * sign;
     }
 
     axis->value_ = new_value;
@@ -217,7 +217,7 @@ void InputManager::_update_keyboard_axis(InputAxis* axis, float dt) {
     // If neither were pressed, then apply the return speed (making sure we don't pass zero)
     if(!positive_pressed && !negative_pressed) {
         auto sign = sgn(axis->value());
-        new_value = std::max(0.0f, (fabs(axis->value()) - (axis->return_speed_ * dt))) * sign;
+        new_value = std::max(0.0f, (std::abs(axis->value()) - (axis->return_speed_ * dt))) * sign;
     }
 
     axis->value_ = new_value;
@@ -257,7 +257,7 @@ void InputManager::_update_mouse_axis_axis(InputAxis *axis, float dt) {
     if(axis->mouse_source() == ALL_MICE) {
         for(std::size_t i = 0; i < controller_->mouse_count(); ++i) {
             auto this_value = process_mouse((MouseID) i);
-            if(fabs(this_value) > fabs(new_value)) {
+            if(std::abs(this_value) > std::abs(new_value)) {
                 new_value = this_value;
             }
         }
@@ -279,7 +279,7 @@ void InputManager::_update_joystick_axis_axis(InputAxis* axis, float dt) {
     if(axis->joystick_source() == ALL_JOYSTICKS) {
         for(std::size_t i = 0; i < controller_->joystick_count(); ++i) {
             auto this_value = process_joystick((JoystickID) i);
-            if(fabs(this_value) > fabs(new_value)) {
+            if(std::abs(this_value) > std::abs(new_value)) {
                 new_value = this_value;
             }
         }
@@ -327,7 +327,7 @@ void InputManager::_update_joystick_hat_axis(InputAxis* axis, float dt) {
     if(axis->joystick_source() == ALL_JOYSTICKS) {
         for(std::size_t i = 0; i < controller_->joystick_count(); ++i) {
             auto this_value = process_joystick((JoystickID) i);
-            if(fabs(this_value) > fabs(new_value)) {
+            if(std::abs(this_value) > std::abs(new_value)) {
                 new_value = this_value;
             }
         }
@@ -338,7 +338,7 @@ void InputManager::_update_joystick_hat_axis(InputAxis* axis, float dt) {
     if(new_value == 0.0f) {
         // Neither direction pressed. Use return speed to reset to zero
         auto sign = sgn(axis->value());
-        new_value = std::max(0.0f, (fabs(axis->value()) - (axis->return_speed_ * dt))) * sign;
+        new_value = std::max(0.0f, (std::abs(axis->value()) - (axis->return_speed_ * dt))) * sign;
     }
 
     axis->value_ = new_value;
@@ -350,7 +350,7 @@ float InputManager::axis_value(const std::string& name) const {
         auto v = axis->value();
 
         // Return the result with the greatest overall value (positive or negative)
-        if(fabs(v) > fabs(f)) {
+        if(std::abs(v) > std::abs(f)) {
             f = v;
         }
     }

@@ -46,7 +46,7 @@ void InputAxis::set_return_speed(float ret) {
 
 float InputAxis::value(bool respect_dead_zone) const {
     if(respect_dead_zone) {
-        return abs(value_) >= dead_zone_ ? value_ : 0.0f;
+        return std::abs(value_) >= dead_zone_ ? value_ : 0.0f;
     }
 
     return value_;
