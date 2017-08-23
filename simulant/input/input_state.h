@@ -43,6 +43,7 @@ struct JoystickDeviceInfo {
     std::string name;
     uint8_t button_count;
     uint8_t axis_count;
+    uint8_t hat_count;
 };
 
 struct KeyboardDeviceInfo {
@@ -140,6 +141,7 @@ public:
         for(decltype(joystick_count_) i = 0; i < joystick_count_; ++i) {
             joysticks_[i].button_count = device_info[i].button_count;
             joysticks_[i].axis_count = device_info[i].axis_count;
+            joysticks_[i].hat_count = device_info[i].hat_count;
         }
     }
 

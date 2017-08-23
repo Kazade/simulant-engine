@@ -367,6 +367,7 @@ void SDL2Window::initialize_input_controller(InputState &controller) {
         info.name = SDL_JoystickName(joystick);
         info.axis_count = SDL_JoystickNumAxes(joystick);
         info.button_count = SDL_JoystickNumButtons(joystick);
+        info.hat_count = SDL_JoystickNumHats(joystick);
 
         joypads.push_back(info);
         open_joysticks_.push_back(joystick);
