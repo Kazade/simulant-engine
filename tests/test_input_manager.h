@@ -36,7 +36,8 @@ public:
         assert_equal(axis->value(), 1.0f);
 
         state_->_handle_key_up(0, KEYBOARD_CODE_A);
-        state_->update(1.0);
+
+        assert_false(state_->keyboard_key_state(0, KEYBOARD_CODE_A));
 
         manager_->update(1.0);
         assert_close(axis->value(), 0.9f, 0.0001f);
@@ -48,18 +49,15 @@ public:
     void test_axis_dead_zone() {
         InputAxis* axis = manager_->new_axis("Test");
         axis->set_type(AXIS_TYPE_JOYSTICK_AXIS);
-        axis->set_return_speed(0.1f);
         axis->set_joystick_axis(JOYSTICK_AXIS_0);
         axis->set_dead_zone(0.1f);
 
         state_->_handle_joystick_axis_motion(0, JOYSTICK_AXIS_0, 0.05f);
-        state_->update(1.0);
         manager_->update(1.0);
 
         assert_equal(axis->value(), 0.0f);
 
         state_->_handle_joystick_axis_motion(0, JOYSTICK_AXIS_0, 0.1f);
-        state_->update(1.0);
         manager_->update(1.0);
 
         assert_equal(axis->value(), 0.1f);
