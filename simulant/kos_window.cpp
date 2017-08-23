@@ -84,10 +84,12 @@ void KOSWindow::check_events() {
         {HAT_POSITION_CENTERED, HAT_POSITION_CENTERED, HAT_POSITION_CENTERED, HAT_POSITION_CENTERED}
     };
 
-    static auto previous_key_state = std::array<uint8_t, 256>(); // value-initialize to zero
-
+    static std::array<uint8_t, 256> previous_key_state = {}; // value-initialize to zero
     static std::array<int32_t, MAX_CONTROLLERS> previous_joyx = {{0, 0, 0, 0}};
     static std::array<int32_t, MAX_CONTROLLERS> previous_joyy = {{0, 0, 0, 0}};
+
+    // Rescan for devices in case a controller has been added or removed
+    initialize_input_controller(this->input_controller());
 
     /* Check controller states */
     for(int8_t i = 0; i < MAX_CONTROLLERS; ++i) {
@@ -266,7 +268,8 @@ void smlt::KOSWindow::initialize_input_controller(smlt::InputState &controller) 
             info.id = i;
             info.name = device->info.product_name;
             info.button_count = 5;
-            info.axis_count = 6; //2 triggers, 2 for analog, 2 for hat
+            info.axis_count = 4; //2 triggers, 2 for analog
+            info.hat_count = 1; // 1 D-pad
             joypads.push_back(info);
 
             controller_count++;
