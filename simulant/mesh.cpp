@@ -809,7 +809,10 @@ void SubMesh::_recalc_bounds() {
         return;
     }
 
+    auto vertex_count = vertex_data->count();
     for(uint16_t idx: index_data->all()) {
+        if(idx >= vertex_count) continue; // Don't read outside the bounds
+
         Vec3 pos = vertex_data->position_at<Vec3>(idx);
         if(pos.x < bounds_.min().x) bounds_.set_min_x(pos.x);
         if(pos.y < bounds_.min().y) bounds_.set_min_y(pos.y);

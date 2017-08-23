@@ -17,12 +17,8 @@ public:
 
         state_.reset(new InputState());
         state_->_update_keyboard_devices({KeyboardDeviceInfo{0}});
-        state_->_update_joystick_devices({JoystickDeviceInfo{0, "test", 1, 1}});
+        state_->_update_joystick_devices({JoystickDeviceInfo{0, "test", 1, 1, 0}});
         manager_.reset(new InputManager(state_.get()));
-    }
-
-    void tear_down() {
-        SimulantTestCase::tear_down();
     }
 
     void test_axis_return() {
