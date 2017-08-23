@@ -36,6 +36,7 @@ public:
         assert_equal(axis->value(), 1.0f);
 
         state_->_handle_key_up(0, KEYBOARD_CODE_A);
+        state_->update(1.0);
 
         manager_->update(1.0);
         assert_close(axis->value(), 0.9f, 0.0001f);
@@ -52,11 +53,13 @@ public:
         axis->set_dead_zone(0.1f);
 
         state_->_handle_joystick_axis_motion(0, JOYSTICK_AXIS_0, 0.05f);
+        state_->update(1.0);
         manager_->update(1.0);
 
         assert_equal(axis->value(), 0.0f);
 
         state_->_handle_joystick_axis_motion(0, JOYSTICK_AXIS_0, 0.1f);
+        state_->update(1.0);
         manager_->update(1.0);
 
         assert_equal(axis->value(), 0.1f);
