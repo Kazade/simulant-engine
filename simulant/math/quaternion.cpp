@@ -23,13 +23,13 @@ Quaternion::Quaternion(Degrees pitch, Degrees yaw, Degrees roll) {
 }
 
 Quaternion::Quaternion(const Vec3 &axis, const Degrees &degrees) {
-    float rad = Radians(degrees).value * 0.5f;
-    float scale	= sinf(rad);
+    auto half_rad = Radians(degrees).value / 2.0f;
+    auto factor = sinf(half_rad);
 
-    x = axis.x * scale;
-    y = axis.y * scale;
-    z = axis.z * scale;
-    w = cosf(rad);
+    x = axis.x * factor;
+    y = axis.y * factor;
+    z = axis.z * factor;
+    w = cosf(half_rad);
 
     normalize();
 }

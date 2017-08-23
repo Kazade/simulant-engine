@@ -3,7 +3,7 @@
 #include <GL/gl.h>
 #include <GL/glut.h>
 
-#include "input_controller.h"
+#include "input/input_state.h"
 #include "kos_window.h"
 #include "sound_drivers/kos_sound_driver.h"
 #include "renderers/renderer_config.h"
@@ -84,10 +84,12 @@ void KOSWindow::check_events() {
         {HAT_POSITION_CENTERED, HAT_POSITION_CENTERED, HAT_POSITION_CENTERED, HAT_POSITION_CENTERED}
     };
 
-    static auto previous_key_state = std::array<uint8_t, 256>(); // value-initialize to zero
-
+    static std::array<uint8_t, 256> previous_key_state = {}; // value-initialize to zero
     static std::array<int32_t, MAX_CONTROLLERS> previous_joyx = {{0, 0, 0, 0}};
     static std::array<int32_t, MAX_CONTROLLERS> previous_joyy = {{0, 0, 0, 0}};
+
+    // Rescan for devices in case a controller has been added or removed
+    initialize_input_controller(*this->_input_state());
 
     /* Check controller states */
     for(int8_t i = 0; i < MAX_CONTROLLERS; ++i) {
@@ -102,14 +104,21 @@ void KOSWindow::check_events() {
 
                 // # Deal with the first joystick axis
                 if(joyx_state != previous_joyx[i]) {
-                    // joy values on the DC are +/- 128, we scale up to the full integer range (which is then scaled to between -1.0 and 1.0)
-                    input_controller()._handle_joypad_axis_motion(i, JOYPAD_AXIS_X, joyx_state * 256);
+                    // joy values on the DC are -128 to 127, we scale up to the full integer range (which is then scaled to between -1.0 and 1.0)
+
+                    float v = float(joyx_state) / 127.0f;
+                    if(v < -1.0f) v  = -1.0f; // This is possible at full range to the left (due to the imbalance of -128 to 127)
+
+                    input_state->_handle_joystick_axis_motion(i, JOYSTICK_AXIS_X, v);
                     previous_joyx[i] = joyx_state;
                 }
 
                 if(joyy_state != previous_joyy[i]) {
-                    // joy values on the DC are +/- 128, we scale up to the full integer range (which is then scaled to between -1.0 and 1.0)
-                    input_controller()._handle_joypad_axis_motion(i, JOYPAD_AXIS_Y, joyy_state * 256);
+                    // joy values on the DC are -128 to +127, we scale up to the full integer range (which is then scaled to between -1.0 and 1.0)
+                    float v = float(joyy_state) / 127.0f;
+                    if(v < -1.0f) v  = -1.0f;
+
+                    input_state->_handle_joystick_axis_motion(i, JOYSTICK_AXIS_Y, v);
                     previous_joyy[i] = joyy_state;
                 }
 
@@ -120,14 +129,14 @@ void KOSWindow::check_events() {
                 for(auto button: CONTROLLER_BUTTONS) {
                     if((button_state & button) && !(prev_state & button)) {
                         // Button down
-                        input_controller()._handle_joypad_button_down(
+                        input_state->_handle_joystick_button_down(
                             i, button
                         );
                     }
 
                     if(!(button_state & button) && (prev_state & button)) {
                         // Button up
-                        input_controller()._handle_joypad_button_up(
+                        input_state->_handle_joystick_button_up(
                             i, button
                         );
                     }
@@ -156,7 +165,7 @@ void KOSWindow::check_events() {
                 }
 
                 if(hat1_state != previous_hat1_state[i]) {
-                    input_controller()._handle_joypad_hat_motion(i, 0, (HatPosition) hat1_state);
+                    input_state->_handle_joystick_hat_motion(i, 0, (HatPosition) hat1_state);
                     previous_hat1_state[i] = (HatPosition) hat1_state;
                 }
 
@@ -183,7 +192,7 @@ void KOSWindow::check_events() {
                 }
 
                 if(hat2_state != previous_hat2_state[i]) {
-                    input_controller()._handle_joypad_hat_motion(i, 0, (HatPosition) hat2_state);
+                    input_state->_handle_joystick_hat_motion(i, 0, (HatPosition) hat2_state);
                     previous_hat2_state[i] = (HatPosition) hat2_state;
                 }
 
@@ -206,13 +215,13 @@ void KOSWindow::check_events() {
                     if(key_state[j] && !previous_key_state[j]) {
                         // Key down
                         L_DEBUG(_F("Key down: {0}").format(j));
-                        input_controller()._handle_key_down(
+                        input_state->_handle_key_down(
                             i, KeyboardCode(j)
                         );
                     }
                     if(!key_state[j] && previous_key_state[j]) {
                         // Key up
-                        input_controller()._handle_key_up(
+                        input_state->_handle_key_up(
                             i, KeyboardCode(j)
                         );
                     }
@@ -229,22 +238,23 @@ std::shared_ptr<SoundDriver> KOSWindow::create_sound_driver() {
     return std::make_shared<KOSSoundDriver>(this);
 }
 
-void smlt::KOSWindow::initialize_input_controller(smlt::InputController &controller) {
+void smlt::KOSWindow::initialize_input_controller(smlt::InputState &controller) {
     L_DEBUG("Detecting input devices");
 
-    std::vector<GameControllerInfo> joypads;
+    std::vector<JoystickDeviceInfo> joypads;
 
     auto mouse_dev = maple_enum_type(0, MAPLE_FUNC_MOUSE);
     if(mouse_dev) {
-        MouseControllerInfo mouse;
+        MouseDeviceInfo mouse;
         mouse.id = 0;
         mouse.button_count = 3;
+        mouse.axis_count = 2;
         controller._update_mouse_devices({mouse});
     }
 
     auto keyboard_dev = maple_enum_type(0, MAPLE_FUNC_KEYBOARD);
     if(keyboard_dev) {
-        KeyboardControllerInfo keyboard;
+        KeyboardDeviceInfo keyboard;
         keyboard.id = 0;
         controller._update_keyboard_devices({keyboard});
         L_DEBUG("Found connected keyboard");
@@ -254,16 +264,19 @@ void smlt::KOSWindow::initialize_input_controller(smlt::InputController &control
     for(int8_t i = 0; i < 4; ++i) {
         auto device = maple_enum_type(i, MAPLE_FUNC_CONTROLLER);
         if(device) {
-            GameControllerInfo info;
+            JoystickDeviceInfo info;
             info.id = i;
             info.name = device->info.product_name;
+            info.button_count = 5;
+            info.axis_count = 4; //2 triggers, 2 for analog
+            info.hat_count = 1; // 1 D-pad
             joypads.push_back(info);
 
             controller_count++;
         }
     }
 
-    controller._update_joypad_devices(joypads);
+    controller._update_joystick_devices(joypads);
 
     L_DEBUG(_F("Found {0} connected controllers").format(controller_count));
 }

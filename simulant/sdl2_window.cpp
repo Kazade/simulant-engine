@@ -19,7 +19,7 @@
 
 #include "deps/kazlog/kazlog.h"
 #include "utils/unicode.h"
-#include "input_controller.h"
+#include "input/input_state.h"
 #include "sdl2_window.h"
 
 #include "renderers/renderer_config.h"
@@ -103,12 +103,12 @@ int event_filter(void* user_data, SDL_Event* event) {
     return 1;
 }
 
-JoypadAxis SDL_axis_to_simulant_axis(Uint8 axis) {
+JoystickAxis SDL_axis_to_simulant_axis(Uint8 axis) {
     switch(axis) {
-    case SDL_CONTROLLER_AXIS_LEFTX: return JOYPAD_AXIS_LEFT_X;
-    case SDL_CONTROLLER_AXIS_LEFTY: return JOYPAD_AXIS_LEFT_Y;
-    case SDL_CONTROLLER_AXIS_RIGHTX: return JOYPAD_AXIS_RIGHT_X;
-    case SDL_CONTROLLER_AXIS_RIGHTY: return JOYPAD_AXIS_RIGHT_Y;
+    case SDL_CONTROLLER_AXIS_LEFTX: return JOYSTICK_AXIS_0;
+    case SDL_CONTROLLER_AXIS_LEFTY: return JOYSTICK_AXIS_1;
+    case SDL_CONTROLLER_AXIS_RIGHTX: return JOYSTICK_AXIS_2;
+    case SDL_CONTROLLER_AXIS_RIGHTY: return JOYSTICK_AXIS_3;
     default:
         throw std::out_of_range("Invalid axis");
     }
@@ -142,29 +142,29 @@ void SDL2Window::check_events() {
                 break;
 
             case SDL_JOYAXISMOTION:
-                input_controller()._handle_joypad_axis_motion(
-                    event.jaxis.which, SDL_axis_to_simulant_axis(event.jaxis.axis), event.jaxis.value
+                input_state->_handle_joystick_axis_motion(
+                    event.jaxis.which, SDL_axis_to_simulant_axis(event.jaxis.axis), float(event.jaxis.value) / 32768.0f
                 );
             break;
             case SDL_JOYBUTTONDOWN:
-                input_controller()._handle_joypad_button_down(event.jbutton.which, event.jbutton.button);
+                input_state->_handle_joystick_button_down(event.jbutton.which, event.jbutton.button);
             break;
             case SDL_JOYBUTTONUP:
-                input_controller()._handle_joypad_button_up(event.jbutton.which, event.jbutton.button);
+                input_state->_handle_joystick_button_up(event.jbutton.which, event.jbutton.button);
             break;
             case SDL_JOYHATMOTION:
-                input_controller()._handle_joypad_hat_motion(event.jhat.which, event.jhat.hat, (HatPosition) event.jhat.value);
+                input_state->_handle_joystick_hat_motion(event.jhat.which, event.jhat.hat, (HatPosition) event.jhat.value);
             break;
             case SDL_KEYDOWN: {
-                input_controller()._handle_key_down(0, (KeyboardCode) event.key.keysym.scancode);
+                input_state->_handle_key_down(0, (KeyboardCode) event.key.keysym.scancode);
                 on_key_down((KeyboardCode) event.key.keysym.scancode, get_modifiers());
             } break;
             case SDL_KEYUP: {
-                input_controller()._handle_key_up(0, (KeyboardCode) event.key.keysym.scancode);
+                input_state->_handle_key_up(0, (KeyboardCode) event.key.keysym.scancode);
                 on_key_up((KeyboardCode) event.key.keysym.scancode, get_modifiers());
             } break;
             case SDL_MOUSEMOTION: {
-                input_controller()._handle_mouse_motion(
+                input_state->_handle_mouse_motion(
                     event.motion.which,
                     event.motion.x, event.motion.y, event.motion.xrel, event.motion.yrel
                 );
@@ -349,40 +349,33 @@ bool SDL2Window::create_window(int width, int height, int bpp, bool fullscreen) 
     return true;
 }
 
-void SDL2Window::initialize_input_controller(InputController &controller) {
-    std::vector<GameControllerInfo> joypads;
+void SDL2Window::initialize_input_controller(InputState &controller) {
+    std::vector<JoystickDeviceInfo> joypads;
 
-    MouseControllerInfo mouse;
+    MouseDeviceInfo mouse;
     mouse.id = 0;
-    mouse.button_count = 3;
+    mouse.button_count = 3; // FIXME: Not always true
+    mouse.axis_count = 2; // X + Y FIXME: Add scrollwheels
 
-    KeyboardControllerInfo keyboard;
+    KeyboardDeviceInfo keyboard;
 
     for(uint16_t i = 0; i < SDL_NumJoysticks(); i++) {
-        if(SDL_IsGameController(i)) {
-            SDL_GameController* controller = SDL_GameControllerOpen(i);
+        SDL_Joystick* joystick = SDL_JoystickOpen(i);
 
-            GameControllerInfo info;
-            info.id = i;
-            info.name = SDL_GameControllerName(controller);
+        JoystickDeviceInfo info;
+        info.id = i;
+        info.name = SDL_JoystickName(joystick);
+        info.axis_count = SDL_JoystickNumAxes(joystick);
+        info.button_count = SDL_JoystickNumButtons(joystick);
+        info.hat_count = SDL_JoystickNumHats(joystick);
 
-            joypads.push_back(info);
-            open_controllers_.push_back(controller);
-        } else {
-            SDL_Joystick* joystick = SDL_JoystickOpen(i);
-
-            GameControllerInfo info;
-            info.id = i;
-            info.name = SDL_JoystickName(joystick);
-
-            joypads.push_back(info);
-            open_joysticks_.push_back(joystick);
-        }
+        joypads.push_back(info);
+        open_joysticks_.push_back(joystick);
     }
 
     controller._update_keyboard_devices({keyboard});
     controller._update_mouse_devices({mouse});
-    controller._update_joypad_devices(joypads);
+    controller._update_joystick_devices(joypads);
 }
 
 void SDL2Window::destroy_window() {

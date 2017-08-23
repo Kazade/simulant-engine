@@ -18,9 +18,12 @@
 
 #pragma once
 
+#include "../event_listener.h"
+
 namespace smlt {
 
-class Panel {
+class Panel:
+    public EventListener {
 public:
     virtual ~Panel() {}
 
@@ -40,7 +43,14 @@ public:
         is_active_ = false;
     }
 
+    void on_key_down(const KeyEvent& evt);
+
+    void set_activation_key(KeyboardCode code) {
+        activation_key_ = code;
+    }
+
 private:
+    KeyboardCode activation_key_ = KEYBOARD_CODE_NONE;
     bool is_active_ = false;
 
     virtual void do_activate() = 0;

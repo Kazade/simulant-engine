@@ -27,7 +27,6 @@
 #include "sdl2_window.h"
 #endif
 
-#include "input_controller.h"
 #include "stage.h"
 #include "viewport.h"
 #include "frustum.h"
@@ -57,6 +56,11 @@
 #include "scenes/scene_manager.h"
 #include "scenes/scene.h"
 #include "scenes/physics_scene.h"
+
+#include "input/input_state.h"
+#include "input/input_manager.h"
+#include "input/input_axis.h"
+
 #include "controllers/fly.h"
 #include "controllers/builtin.h"
 

@@ -44,15 +44,11 @@ public:
 
             stage->new_light_as_directional(Vec3(1, 0, 0), smlt::Colour::YELLOW);
         }
-
-        for(auto i = 0; i < window->joypad_count(); ++i) {
-            window->joypad(i).axis_while_nonzero_connect(JOYPAD_AXIS_X, [&](AxisRange v, JoypadAxis) {
-                actor_id_.fetch()->rotate_global_y_by(smlt::Degrees(v * 360.0f));
-            });
-        }
     }
 
     void fixed_update(float dt) {
+        actor_id_.fetch()->rotate_global_y_by(smlt::Degrees(input->axis_value("Horizontal") * 360.0f * dt));
+
         window->stage(stage_id_)->actor(actor_id_)->rotate_x_by(smlt::Degrees(dt * 20.0));
         window->stage(stage_id_)->actor(actor_id_)->rotate_y_by(smlt::Degrees(dt * 15.0));
         window->stage(stage_id_)->actor(actor_id_)->rotate_z_by(smlt::Degrees(dt * 25.0));

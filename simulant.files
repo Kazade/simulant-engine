@@ -67,7 +67,16 @@ samples/q2bsp_sample.cpp
 samples/sample.cpp
 samples/selection_sample.cpp
 samples/viewport_sample.cpp
+simulant/controllers/airplane.h
+simulant/controllers/controller.cpp
+simulant/controllers/controller.h
+simulant/controllers/movement/airplane.cpp
+simulant/controllers/movement/airplane.h
 simulant/generic/manual_manager.h
+simulant/input/input.cpp
+simulant/input/input.h
+simulant/input/input_manager.cpp
+simulant/input/input_manager.h
 simulant/math/aabb.cpp
 simulant/math/aabb.h
 simulant/math/degrees.cpp
@@ -126,6 +135,7 @@ simulant/nodes/ui/ui_manager.cpp
 simulant/nodes/ui/ui_manager.h
 simulant/nodes/ui/widget.cpp
 simulant/nodes/ui/widget.h
+simulant/panels/panel.cpp
 simulant/particles/emitter.cpp
 simulant/particles/emitter.h
 simulant/particles/manipulator.h
@@ -148,6 +158,8 @@ tests/main.cpp
 tests/global.cpp
 tests/global.h
 tests/test_frustum.h
+tests/test_input_manager.h
+tests/test_input_state.h
 tests/test_manual_manager.h
 tests/test_material.h
 tests/test_material_script.h
@@ -158,7 +170,6 @@ tests/test_sound.h
 tests/test_utils.h
 tests/test_vertex_data.h
 tests/test_tree.h
-samples/joypad_sample.cpp
 samples/path_following.cpp
 samples/seek_sample.cpp
 tests/test_object.h
@@ -217,7 +228,6 @@ simulant/controllers/material/flowing.cpp
 simulant/controllers/material/flowing.h
 simulant/controllers/material/warp.cpp
 simulant/controllers/material/warp.h
-simulant/controllers/controller.h
 simulant/controllers/fly.h
 simulant/controllers/raycast_vehicle.cpp
 simulant/controllers/raycast_vehicle.h
@@ -640,7 +650,6 @@ simulant/keycodes.h
 simulant/utils/rect_pack.h
 simulant/utils/rect_pack.cpp
 tests/test_aabb.h
-simulant/controllers/controller.cpp
 simulant/materials/uniform_manager.h
 simulant/materials/attribute_manager.h
 simulant/materials/uniform_manager.cpp

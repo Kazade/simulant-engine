@@ -102,13 +102,7 @@ void Transformable::scale_by(const Vec3& x) {
 void Transformable::rotate_around(const smlt::Vec3& axis, const smlt::Degrees& degrees) {
     if(rotation_locked_) return;
 
-    Quaternion rot(axis, degrees);
-    Quaternion tmp = rotation_;
-
-    tmp = rot * tmp;
-    tmp.normalize();
-
-    set_rotation(tmp);
+    set_rotation(Quaternion(axis, degrees) * rotation_);
 }
 
 void Transformable::rotate_global_x_by(const Degrees &degrees) {

@@ -88,7 +88,7 @@ Mat4 Mat4::as_translation(const Vec3 &v) {
 }
 
 Mat4 Mat4::as_projection(const Degrees &fov, float aspect, float zNear, float zFar) {
-    assert(abs(aspect - std::numeric_limits<float>::epsilon()) > 0.0f);
+    assert(std::abs(aspect - std::numeric_limits<float>::epsilon()) > 0.0f);
 
     auto fovy = Radians(fov).value;
 

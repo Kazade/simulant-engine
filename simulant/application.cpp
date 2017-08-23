@@ -30,7 +30,7 @@ namespace smlt { typedef SDL2Window SysWindow; }
 
 #include "application.h"
 #include "scenes/loading.h"
-#include "input_controller.h"
+#include "input/input_state.h"
 
 namespace smlt {
 
@@ -65,10 +65,6 @@ void Application::construct_window(const AppConfig& config) {
     window_->signal_late_update().connect(std::bind(&Application::_call_late_update, this, std::placeholders::_1));
     window_->signal_fixed_update().connect(std::bind(&Application::_call_fixed_update, this, std::placeholders::_1));
     window_->signal_shutdown().connect(std::bind(&Application::_call_cleanup, this));
-
-    window_->keyboard->key_pressed_connect(std::bind(&Application::on_key_press, this, std::placeholders::_1));
-    window_->keyboard->key_released_connect(std::bind(&Application::on_key_release, this, std::placeholders::_1));
-    window_->keyboard->key_while_pressed_connect(std::bind(&Application::while_key_pressed, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 StagePtr Application::stage(StageID stage) {

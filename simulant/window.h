@@ -29,7 +29,7 @@
 
 #include "resource_locator.h"
 #include "idle_task_manager.h"
-#include "input_controller.h"
+#include "input/input_state.h"
 #include "generic/auto_weakptr.h"
 #include "types.h"
 #include "sound.h"
@@ -44,6 +44,7 @@
 namespace smlt {
 
 class ResourceManager;
+class InputManager;
 
 namespace ui {
     class Interface;
@@ -54,10 +55,8 @@ namespace scenes {
 }
 
 class Application;
-class InputController;
-class Keyboard;
-class Mouse;
-class Joypad;
+class InputState;
+
 class Loader;
 class LoaderType;
 class RenderSequence;
@@ -167,10 +166,6 @@ public:
     void _fixed_update_thunk(float dt) override;
     void _update_thunk(float dt) override;
 
-    Mouse& mouse();
-    Joypad& joypad(uint8_t idx);
-    uint8_t joypad_count() const;
-
     void set_logging_level(LoggingLevel level);
 
     void stop_running() { is_running_ = false; }
@@ -258,8 +253,6 @@ protected:
     virtual bool create_window(int width, int height, int bpp, bool fullscreen) = 0;
     virtual void destroy_window() = 0;
 
-    InputController& input_controller() { assert(input_controller_); return *input_controller_; }
-
     Window();
 
     void set_paused(bool value=true);
@@ -269,6 +262,10 @@ protected:
     std::mutex& context_lock() { return context_lock_; }
 
     void set_application(Application* app) { application_ = app; }
+
+    void set_escape_to_quit(bool value=true) { escape_to_quit_ = value; }
+    bool escape_to_quit_enabled() const { return escape_to_quit_; }
+
 public:
     // Background things
     BackgroundID new_background() { return background_manager_->new_background(); }
@@ -298,7 +295,7 @@ private:
     Application* application_ = nullptr;
 
     void create_defaults();
-    virtual void initialize_input_controller(InputController& controller) = 0;
+    virtual void initialize_input_controller(InputState& controller) = 0;
 
     bool can_attach_sound_by_id() const { return false; }
 
@@ -309,6 +306,7 @@ private:
     uint32_t height_ = 0;
     uint32_t bpp_ = 0;
     bool fullscreen_ = false;
+    bool escape_to_quit_ = true;
 
     std::vector<LoaderTypePtr> loaders_;
     bool is_running_;
@@ -321,7 +319,6 @@ private:
 
     struct PanelEntry {
         std::shared_ptr<Panel> panel;
-        InputConnection keyboard_connection;
     };
 
     std::unordered_map<uint8_t, PanelEntry> panels_;
@@ -336,7 +333,6 @@ private:
     void destroy() {}
 
     ResourceLocator::ptr resource_locator_;
-    std::shared_ptr<InputController> input_controller_;
 
     float frame_counter_time_;
     int32_t frame_counter_frames_;
@@ -356,6 +352,12 @@ private:
 
     virtual std::shared_ptr<SoundDriver> create_sound_driver() = 0;
 
+    std::shared_ptr<InputState> input_state_;
+    std::shared_ptr<InputManager> input_manager_;
+
+protected:
+    InputState* _input_state() const { return input_state_.get(); }
+
 public:
 
     //Read only properties
@@ -369,16 +371,11 @@ public:
     Property<Window, generic::DataCarrier> data = { this, &Window::data_carrier_ };
     Property<Window, ResourceLocator> resource_locator = { this, &Window::resource_locator_ };
 
-    Property<Window, Keyboard> keyboard = {
-        this, [](Window* self) -> Keyboard* {
-            return &self->_input_controller()->keyboard();
-        }
-    };
-
+    Property<Window, InputManager> input = {this, &Window::input_manager_};
+    Property<Window, InputState> input_state = {this, &Window::input_state_};
     Property<Window, Stats> stats = { this, &Window::stats_ };
 
     SoundDriver* _sound_driver() const { return sound_driver_.get(); }
-    InputController* _input_controller() const { return input_controller_.get(); }
 
     void run_update();
     void run_fixed_updates();

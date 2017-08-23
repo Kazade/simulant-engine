@@ -65,7 +65,7 @@ private:
         return std::make_shared<OpenALSoundDriver>(this);
     }
 
-    void initialize_input_controller(InputController &controller);
+    void initialize_input_controller(InputState &controller);
 
     std::vector<SDL_Joystick*> open_joysticks_;
     std::vector<SDL_GameController*> open_controllers_;

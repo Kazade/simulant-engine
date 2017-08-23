@@ -71,5 +71,9 @@ void to_mat3(const b3Mat33& rhs, Mat3& out);
 void to_quat(const b3Quat& rhs, Quaternion& out);
 void to_b3quat(const Quaternion& q, b3Quat& ret);
 
+// FIXME: Rename the actual class
+typedef RigidBodySimulation PhysicsSimulation;
+typedef std::shared_ptr<RigidBodySimulation> PhysicsSimulationPtr;
+
 }
 }
