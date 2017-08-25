@@ -1,35 +1,32 @@
 sudo: required
-os:
- - linux
- - osx
 dist: trusty
 language: cpp
 services: docker
 git:
    submodules: false
 
-env:
-    # Do debug and release builds for everything else
-    # except Dreamcast (because debug is too large)
-    - AUDIODEV=null DREAMCAST=true BUILD_TYPE=release
-    - AUDIODEV=null DREAMCAST=false BUILD_TYPE=debug
-    - AUDIODEV=null DREAMCAST=false BUILD_TYPE=release
-
 matrix:
-    exclude:
+    include:
+        # OSX builds
         - compiler: clang
-          env: AUDIODEV=null DREAMCAST=true BUILD_TYPE=release
           os: osx
+          env: AUDIODEV=null DREAMCAST=false BUILD_TYPE=debug
         - compiler: clang
-          env: AUDIODEV=null DREAMCAST=true BUILD_TYPE=release
-          os: linux
-        - compiler: gcc
-          env: AUDIODEV=null DREAMCAST=true BUILD_TYPE=release
           os: osx
+          env: AUDIODEV=null DREAMCAST=false BUILD_TYPE=release
 
-compiler:
- - gcc
- - clang
+        # Linux builds
+        - compiler: clang
+          os: linux
+          env: AUDIODEV=null DREAMCAST=false BUILD_TYPE=debug
+        - compiler: clang
+          os: linux
+          env: AUDIODEV=null DREAMCAST=false BUILD_TYPE=release
+
+        # Dreamcast build
+        - compiler: gcc
+          os: linux
+          env: AUDIODEV=null DREAMCAST=true BUILD_TYPE=release
 
 addons:
  apt:
