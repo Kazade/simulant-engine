@@ -1,28 +1,20 @@
-sudo: required
-dist: trusty
 language: cpp
 services: docker
 git:
  submodules: false
 
-env:
- - AUDIODEV=null DREAMCAST=false BUILD_TYPE=debug
- - AUDIODEV=null DREAMCAST=false BUILD_TYPE=release
- - AUDIODEV=null DREAMCAST=true  BUILD_TYPE=release
-
-os:
- - linux
- - osx
-
-compiler:
- - clang
-
 matrix:
- exclude:
-  # Don't do the Dreamcast build on OSX
-  - os: osx
+ include:
+  - os: linux
+    dist: trusty
     compiler: clang
-    env: AUDIODEV=null DREAMCAST=true BUILD_TYPE=release
+    env: AUDIODEV=null DREAMCAST=false BUILD_TYPE=debug
+    sudo: required
+  - os: linux
+    dist: trusty
+    compiler: clang
+    env: AUDIODEV=null DREAMCAST=false BUILD_TYPE=release
+    sudo: required
 
 addons:
  apt:
