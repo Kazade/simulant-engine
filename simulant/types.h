@@ -509,6 +509,28 @@ typedef UniqueID<ui::WidgetPtr> WidgetID;
 
 typedef generic::TemplatedManager<Stage, StageID> BaseStageManager;
 
+// Attributes should be aligned at 4 byte boundaries
+// according to this
+// https://developer.apple.com/library/content/documentation/3DDrawing/Conceptual/OpenGLES_ProgrammingGuide/TechniquesforWorkingwithVertexData/TechniquesforWorkingwithVertexData.html
+static const uint16_t BUFFER_ATTRIBUTE_ALIGNMENT = 4;
+
+// According to Nvidia, stride should be 16 byte aligned
+static const uint16_t BUFFER_STRIDE_ALIGNMENT = 16;
+
+/* Most platforms work better when the data is aligned to 4 byte boundaries */
+constexpr uint16_t round_to_bytes(uint16_t stride, uint16_t bytes) {
+    return ((stride % bytes) == 0) ? stride : stride + bytes - (stride % bytes);
+}
+
+constexpr uint16_t vertex_attribute_size(VertexAttribute attr) {
+    return round_to_bytes(
+       (attr == VERTEX_ATTRIBUTE_2F) ? sizeof(float) * 2 :
+       (attr == VERTEX_ATTRIBUTE_3F) ? sizeof(float) * 3 :
+       (attr == VERTEX_ATTRIBUTE_4F) ? sizeof(float) * 4 : 0,
+        BUFFER_ATTRIBUTE_ALIGNMENT
+    );
+}
+
 }
 
 /* Hash functions for smlt types */

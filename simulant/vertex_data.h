@@ -30,9 +30,6 @@ namespace smlt {
 
 class Window;
 
-
-uint32_t vertex_attribute_size(VertexAttribute attr);
-
 enum VertexAttributeType {
     VERTEX_ATTRIBUTE_TYPE_EMPTY = 0,
     VERTEX_ATTRIBUTE_TYPE_POSITION,
