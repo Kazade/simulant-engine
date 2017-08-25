@@ -82,13 +82,14 @@ after_script:
     - if [[ "$DREAMCAST" == "true" ]]; then export BUILD_TARGET=dreamcast; fi
     - if [[ "$DREAMCAST" == "false" ]]; then export BUILD_TARGET=$TRAVIS_OS_NAME; fi;
 
+    - cd $TRAVIS_BUILD_DIR # Make sure we're in the right place
     # Copy all the compiled libs for whatever platform
     - mkdir -p $BUILD_TARGET/simulant-latest/lib/debug
-    - cp build/simulant/*.so $BUILD_TARGET/simulant-latest/lib/debug
-    - cp build/simulant/*.a $BUILD_TARGET/simulant-latest/lib/debug
-    - cp build/simulant/*.dynlib $BUILD_TARGET/simulant-latest/lib/debug
-    - cp build/simulant/*.dll $BUILD_TARGET/simulant-latest/lib/debug
-    - cp build/simulant/*.lib $BUILD_TARGET/simulant-latest/lib/debug
+    - cp ./build/simulant/*.so $BUILD_TARGET/simulant-latest/lib/debug
+    - cp ./build/simulant/*.a $BUILD_TARGET/simulant-latest/lib/debug
+    - cp ./build/simulant/*.dynlib $BUILD_TARGET/simulant-latest/lib/debug
+    - cp ./build/simulant/*.dll $BUILD_TARGET/simulant-latest/lib/debug
+    - cp ./build/simulant/*.lib $BUILD_TARGET/simulant-latest/lib/debug
 
     # Copy the header files to the write place
     - mkdir -p $BUILD_TARGET/simulant-latest/include/simulant
@@ -104,6 +105,7 @@ deploy:
   skip_cleanup: true
   access_key_id: $GCS_ACCESS_KEY
   secret_access_key: $GCS_SECRET
+  all_branches: true # For testing
 
 matrix:
  exclude:
