@@ -93,7 +93,7 @@ after_script:
 
     # Copy the header files to the write place
     - mkdir -p $BUILD_TARGET/simulant-latest/include/simulant
-    - find simulant -name "*.h" -type f -exec cp {} ./$BUILD_TARGET/simulant-latest/include/simulant \;
+    - find simulant -name "*.h" -type f -exec cp --parents {} ./$BUILD_TARGET/simulant-latest/include/simulant \;
 
     - cd $BUILD_TARGET; zip -r simulant-latest{.zip,}; rm -r simulant-latest; cd -;
 
@@ -106,6 +106,7 @@ deploy:
   access_key_id: $GCS_ACCESS_KEY
   secret_access_key: $GCS_SECRET
   all_branches: true # For testing
+  tags: true
 
 matrix:
  exclude:
