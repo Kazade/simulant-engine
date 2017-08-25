@@ -17,10 +17,6 @@ env:
    - DREAMCAST=true
    - BUILD_TYPE=debug
    - BUILD_TYPE=release
-   exclude:
-       # Dreamcast builds are always release for size reasons
-       - DREAMCAST=true
-         BUILD_TYPE=debug
 
 compiler:
  - gcc
