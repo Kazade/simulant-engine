@@ -10,26 +10,17 @@ env:
  - AUDIODEV=null DREAMCAST=false BUILD_TYPE=release
  - AUDIODEV=null DREAMCAST=true  BUILD_TYPE=release
 
+os:
+ - linux
+ - osx
+
+compiler:
+ - clang
+
 matrix:
- include:
-  # OSX builds
+ exclude:
+  # Don't do the Dreamcast build on OSX
   - os: osx
-    compiler: clang
-    env: AUDIODEV=null DREAMCAST=false BUILD_TYPE=debug
-  - os: osx
-    compiler: clang
-    env: AUDIODEV=null DREAMCAST=false BUILD_TYPE=release
-
-  # Linux builds
-  - os: linux
-    compiler: clang
-    env: AUDIODEV=null DREAMCAST=false BUILD_TYPE=debug
-  - os: linux
-    compiler: clang
-    env: AUDIODEV=null DREAMCAST=false BUILD_TYPE=release
-
-  # Dreamcast build
-  - os: linux
     compiler: clang
     env: AUDIODEV=null DREAMCAST=true BUILD_TYPE=release
 
