@@ -20,10 +20,10 @@ compiler:
  - clang
 
 addons:
- apt: 
+ apt:
   packages:
-   - libsdl2-dev 
-   - libopenal-dev 
+   - libsdl2-dev
+   - libopenal-dev
    - libtinyxml-dev
    - libxi-dev
    - libxmu-dev
@@ -41,12 +41,12 @@ addons:
    - libudev-dev
    - mesa-utils
    - xvfb
-   - mesa-common-dev 
-   - libgbm1 
-   - libxatracker-dev 
+   - mesa-common-dev
+   - libgbm1
+   - libxatracker-dev
    - xvfb
    - pulseaudio
-   
+
 before_install:
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install --install-recommends linux-generic-lts-xenial xserver-xorg-core-lts-xenial xserver-xorg-lts-xenial xserver-xorg-video-all-lts-xenial xserver-xorg-input-all-lts-xenial libwayland-egl1-mesa-lts-xenial; fi
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules; fi
@@ -76,6 +76,34 @@ before_script:
 script:
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ $DREAMCAST == "false" ]]; then SDL_VIDEODRIVER=x11 catchsegv ./tests/simulant_tests; fi;
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ./tests/simulant_tests; fi;
+
+after_script:
+    # Package everything into a folder for upload to GCS
+    - if [[ "$DREAMCAST" == "true" ]]; then export BUILD_TARGET=dreamcast; fi
+    - if [[ "$DREAMCAST" == "false" ]]; then export BUILD_TARGET=$TRAVIS_OS_NAME; fi;
+
+    # Copy all the compiled libs for whatever platform
+    - mkdir -p $BUILD_TARGET/simulant-latest/lib/debug
+    - cp build/simulant/*.so $BUILD_TARGET/simulant-latest/lib/debug
+    - cp build/simulant/*.a $BUILD_TARGET/simulant-latest/lib/debug
+    - cp build/simulant/*.dynlib $BUILD_TARGET/simulant-latest/lib/debug
+    - cp build/simulant/*.dll $BUILD_TARGET/simulant-latest/lib/debug
+    - cp build/simulant/*.lib $BUILD_TARGET/simulant-latest/lib/debug
+
+    # Copy the header files to the write place
+    - mkdir -p $BUILD_TARGET/simulant-latest/include/simulant
+    - find simulant -name "*.h" -type f -exec cp {} ./$BUILD_TARGET/simulant-latest/include/simulant \;
+
+    - cd $BUILD_TARGET; zip -r simulant-latest{.zip,}; rm -r simulant-latest; cd -;
+
+deploy:
+  provider: gcs
+  bucket: staging.simulant-engine.appspot.com
+  acl: public-read
+  local-dir: $BUILD_TARGET
+  skip_cleanup: true
+  access_key_id: $GCS_ACCESS_KEY
+  secret_access_key: $GCS_SECRET
 
 matrix:
  exclude:
