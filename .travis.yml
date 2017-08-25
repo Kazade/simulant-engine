@@ -5,6 +5,17 @@ git:
 
 matrix:
  include:
+  # OSX builds
+  - os: osx
+    compiler: clang
+    env: AUDIODEV=null DREAMCAST=false BUILD_TYPE=debug
+    sudo: required
+  - os: osx
+    compiler: clang
+    env: AUDIODEV=null DREAMCAST=false BUILD_TYPE=release
+    sudo: required
+
+  # Linux builds
   - os: linux
     dist: trusty
     compiler: clang
@@ -14,6 +25,13 @@ matrix:
     dist: trusty
     compiler: clang
     env: AUDIODEV=null DREAMCAST=false BUILD_TYPE=release
+    sudo: required
+
+  # Dreamcast build
+  - os: linux
+    dist: trusty
+    compiler: clang
+    env: AUDIODEV=null DREAMCAST=true BUILD_TYPE=release
     sudo: required
 
 addons:
