@@ -5,6 +5,13 @@ services: docker
 git:
    submodules: false
 
+os:
+  - linux
+  - osx
+
+compiler:
+  - clang
+
 matrix:
     include:
         # OSX builds
@@ -24,7 +31,7 @@ matrix:
           env: AUDIODEV=null DREAMCAST=false BUILD_TYPE=release
 
         # Dreamcast build
-        - compiler: gcc
+        - compiler: clang
           os: linux
           env: AUDIODEV=null DREAMCAST=true BUILD_TYPE=release
 
