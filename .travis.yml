@@ -6,6 +6,9 @@ git:
  submodules: false
 
 env:
+ - AUDIODEV=null DREAMCAST=false BUILD_TYPE=debug
+ - AUDIODEV=null DREAMCAST=false BUILD_TYPE=release
+ - AUDIODEV=null DREAMCAST=true  BUILD_TYPE=release
 
 matrix:
  include:
