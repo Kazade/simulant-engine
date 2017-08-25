@@ -12,28 +12,35 @@ os:
 compiler:
   - clang
 
+env:
+  # Do debug and release builds for everything else
+  # except Dreamcast (because debug is too large)
+  - AUDIODEV=null DREAMCAST=true BUILD_TYPE=release
+  - AUDIODEV=null DREAMCAST=false BUILD_TYPE=debug
+  - AUDIODEV=null DREAMCAST=false BUILD_TYPE=release
+
 matrix:
-    include:
-        # OSX builds
-        - compiler: clang
-          os: osx
-          env: AUDIODEV=null DREAMCAST=false BUILD_TYPE=debug
-        - compiler: clang
-          os: osx
-          env: AUDIODEV=null DREAMCAST=false BUILD_TYPE=release
+  include:
+    # OSX builds
+    - compiler: clang
+      os: osx
+      env: AUDIODEV=null DREAMCAST=false BUILD_TYPE=debug
+    - compiler: clang
+      os: osx
+      env: AUDIODEV=null DREAMCAST=false BUILD_TYPE=release
 
-        # Linux builds
-        - compiler: clang
-          os: linux
-          env: AUDIODEV=null DREAMCAST=false BUILD_TYPE=debug
-        - compiler: clang
-          os: linux
-          env: AUDIODEV=null DREAMCAST=false BUILD_TYPE=release
+    # Linux builds
+    - compiler: clang
+      os: linux
+      env: AUDIODEV=null DREAMCAST=false BUILD_TYPE=debug
+    - compiler: clang
+      os: linux
+      env: AUDIODEV=null DREAMCAST=false BUILD_TYPE=release
 
-        # Dreamcast build
-        - compiler: clang
-          os: linux
-          env: AUDIODEV=null DREAMCAST=true BUILD_TYPE=release
+    # Dreamcast build
+    - compiler: clang
+      os: linux
+      env: AUDIODEV=null DREAMCAST=true BUILD_TYPE=release
 
 addons:
  apt:
