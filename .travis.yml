@@ -9,14 +9,23 @@ git:
    submodules: false
 
 env:
- global:
-  - AUDIODEV=null
- matrix:
-   # Do debug and release builds for everything else
-   # except Dreamcast (because debug is too large)
-   - DREAMCAST=true BUILD_TYPE=release
-   - DREAMCAST=false BUILD_TYPE=debug
-   - DREAMCAST=false BUILD_TYPE=release
+    # Do debug and release builds for everything else
+    # except Dreamcast (because debug is too large)
+    - AUDIODEV=null DREAMCAST=true BUILD_TYPE=release
+    - AUDIODEV=null DREAMCAST=false BUILD_TYPE=debug
+    - AUDIODEV=null DREAMCAST=false BUILD_TYPE=release
+
+matrix:
+    exclude:
+        - compiler: clang
+          env: AUDIODEV=null DREAMCAST=true BUILD_TYPE=release
+          os: osx
+        - compiler: clang
+          env: AUDIODEV=null DREAMCAST=true BUILD_TYPE=release
+          os: linux
+        - compiler: gcc
+          env: AUDIODEV=null DREAMCAST=true BUILD_TYPE=release
+          os: osx
 
 compiler:
  - gcc
