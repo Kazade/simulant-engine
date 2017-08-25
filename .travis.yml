@@ -3,30 +3,32 @@ dist: trusty
 language: cpp
 services: docker
 git:
-   submodules: false
+ submodules: false
+
+env:
 
 matrix:
-    include:
-    # OSX builds
-    - os: osx
-      compiler: clang
-      env: AUDIODEV=null DREAMCAST=false BUILD_TYPE=debug
-    - os: osx
-      compiler: clang
-      env: AUDIODEV=null DREAMCAST=false BUILD_TYPE=release
+ include:
+  # OSX builds
+  - os: osx
+    compiler: clang
+    env: AUDIODEV=null DREAMCAST=false BUILD_TYPE=debug
+  - os: osx
+    compiler: clang
+    env: AUDIODEV=null DREAMCAST=false BUILD_TYPE=release
 
-    # Linux builds
-    - os: linux
-      compiler: clang
-      env: AUDIODEV=null DREAMCAST=false BUILD_TYPE=debug
-    - os: linux
-      compiler: clang
-      env: AUDIODEV=null DREAMCAST=false BUILD_TYPE=release
+  # Linux builds
+  - os: linux
+    compiler: clang
+    env: AUDIODEV=null DREAMCAST=false BUILD_TYPE=debug
+  - os: linux
+    compiler: clang
+    env: AUDIODEV=null DREAMCAST=false BUILD_TYPE=release
 
-    # Dreamcast build
-    - os: linux
-      compiler: clang
-      env: AUDIODEV=null DREAMCAST=true BUILD_TYPE=release
+  # Dreamcast build
+  - os: linux
+    compiler: clang
+    env: AUDIODEV=null DREAMCAST=true BUILD_TYPE=release
 
 addons:
  apt:
