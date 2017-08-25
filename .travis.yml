@@ -12,8 +12,15 @@ env:
  global:
   - AUDIODEV=null
  matrix:
-  - DREAMCAST=false
-  - DREAMCAST=true
+  include:
+   # Dreamcast builds are always release for size reasons
+   - DREAMCAST=true
+     BUILD_TYPE=release
+   # Do debug and release builds for everything else
+   - DREAMCAST=false
+     BUILD_TYPE=debug
+   - DREAMCAST=false
+     BUILD_TYPE=release
 
 compiler:
  - gcc
@@ -61,8 +68,17 @@ before_install:
 
 install:
  - mkdir build && cd build
- - if [[ "$DREAMCAST" == "false" ]]; then cmake -DSIMULANT_BUILD_SAMPLES=OFF ..; fi
+ # Never build samples on Travis, it's too slow
+ - export SIMULANT_OPTIONS="-DSIMULANT_BUILD_SAMPLES=OFF"
+
+ # If releasing, then do a release build (default is debug)
+ - if [[ "$BUILD_TYPE" == "release" ]]; export SIMULANT_OPTIONS="$SIMULANT_OPTIONS -DCMAKE_BUILD_TYPE=Release"
+
+ # If we're not building for the Dreamcast, then do a normal make dance
+ - if [[ "$DREAMCAST" == "false" ]]; then cmake $SIMULANT_OPTIONS ..; fi
  - if [[ "$DREAMCAST" == "false" ]]; then make; fi
+
+ # Otherwise, use docker
  - if [[ "$DREAMCAST" == "true" ]]; then sudo docker run kazade/dreamcast-sdk /bin/sh -c "source /etc/bash.bashrc; git clone --recursive --branch=${TRAVIS_BRANCH} https://github.com/${TRAVIS_REPO_SLUG}.git /simulant; mkdir -p /simulant/dbuild; cd /simulant/dbuild; cmake -DCMAKE_TOOLCHAIN_FILE=/simulant/toolchains/Dreamcast.cmake .. && make"; fi
 
 before_script:
@@ -84,16 +100,16 @@ after_script:
 
     - cd $TRAVIS_BUILD_DIR # Make sure we're in the right place
     # Copy all the compiled libs for whatever platform
-    - mkdir -p $BUILD_TARGET/simulant-latest/lib/debug
-    - cp ./build/simulant/*.so $BUILD_TARGET/simulant-latest/lib/debug
-    - cp ./build/simulant/*.a $BUILD_TARGET/simulant-latest/lib/debug
-    - cp ./build/simulant/*.dynlib $BUILD_TARGET/simulant-latest/lib/debug
-    - cp ./build/simulant/*.dll $BUILD_TARGET/simulant-latest/lib/debug
-    - cp ./build/simulant/*.lib $BUILD_TARGET/simulant-latest/lib/debug
+    - mkdir -p $BUILD_TARGET/simulant-latest/lib/$BUILD_TYPE
+    - cp ./build/simulant/*.so $BUILD_TARGET/simulant-latest/lib/$BUILD_TYPE
+    - cp ./build/simulant/*.a $BUILD_TARGET/simulant-latest/lib/$BUILD_TYPE
+    - cp ./build/simulant/*.dynlib $BUILD_TARGET/simulant-latest/lib/$BUILD_TYPE
+    - cp ./build/simulant/*.dll $BUILD_TARGET/simulant-latest/lib/$BUILD_TYPE
+    - cp ./build/simulant/*.lib $BUILD_TARGET/simulant-latest/lib/$BUILD_TYPE
 
     # Copy the header files to the write place
     - mkdir -p $BUILD_TARGET/simulant-latest/include/simulant
-    - find simulant -name "*.h" -type f -exec cp --parents {} ./$BUILD_TARGET/simulant-latest/include/simulant \;
+    - find simulant -name "*.h" -type f -exec cp --parents {} ./$BUILD_TARGET/simulant-latest/include \;
 
     - cd $BUILD_TARGET; zip -r simulant-latest{.zip,}; rm -r simulant-latest; cd -;
 
