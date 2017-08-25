@@ -13,10 +13,10 @@ env:
   - AUDIODEV=null
  matrix:
    # Do debug and release builds for everything else
-   - DREAMCAST=false
-   - DREAMCAST=true
-   - BUILD_TYPE=debug
-   - BUILD_TYPE=release
+   # except Dreamcast (because debug is too large)
+   - DREAMCAST=true BUILD_TYPE=release
+   - DREAMCAST=false BUILD_TYPE=debug
+   - DREAMCAST=false BUILD_TYPE=release
 
 compiler:
  - gcc
