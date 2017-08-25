@@ -122,12 +122,3 @@ deploy:
   branch: master
   branch: travis-deploy
 
-matrix:
- exclude:
-  - os: osx
-    env: DREAMCAST=true
-  - os: osx
-    compiler: gcc
-  - compiler: clang
-    env: DREAMCAST=true
-
