@@ -12,15 +12,15 @@ env:
  global:
   - AUDIODEV=null
  matrix:
-  include:
-   # Dreamcast builds are always release for size reasons
-   - DREAMCAST=true
-     BUILD_TYPE=release
    # Do debug and release builds for everything else
    - DREAMCAST=false
-     BUILD_TYPE=debug
-   - DREAMCAST=false
-     BUILD_TYPE=release
+   - DREAMCAST=true
+   - BUILD_TYPE=debug
+   - BUILD_TYPE=release
+   exclude:
+       # Dreamcast builds are always release for size reasons
+       - DREAMCAST=true
+         BUILD_TYPE=debug
 
 compiler:
  - gcc
