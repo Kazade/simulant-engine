@@ -115,11 +115,13 @@ script:
   - mkdir -p $BUILD_TARGET/$FOLDER_NAME/lib/$BUILD_TYPE
 
   # Copy all the compiled libs for whatever platform, don't return an error code if they don't exist
-  - cp ./build/simulant/{*.so,*.a,*.dynlib,*.dll,*.lib} $BUILD_TARGET/$FOLDER_NAME/lib/$BUILD_TYPE 2> /dev/null | true
+  - cp ./build/simulant/{*.so,*.a,*.dylib,*.dll,*.lib} $BUILD_TARGET/$FOLDER_NAME/lib/$BUILD_TYPE 2> /dev/null | true
 
   # Copy the header files to the right place
   - mkdir -p $BUILD_TARGET/$FOLDER_NAME/include/simulant
-  - find simulant -name "*.h" -type f -exec cp --parents {} ./$BUILD_TARGET/$FOLDER_NAME/include \;
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export COPY_COMMAND=ditto; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export COPY_COMMAND="cp --parents"; fi
+  - find simulant -name "*.h" -type f -exec $COPY_COMMAND {} ./$BUILD_TARGET/$FOLDER_NAME/include \;
 
   - cd $BUILD_TARGET; zip -q -r $FOLDER_NAME{.zip,}; rm -r $FOLDER_NAME; cd -;
 
