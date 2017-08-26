@@ -34,8 +34,16 @@ InputManager::InputManager(InputState *controller):
     auto fire1 = new_axis("Fire1");
     fire1->set_positive_keyboard_key(KEYBOARD_CODE_LCTRL);
 
+    auto fire1_js = new_axis("Fire1");
+    fire1_js->set_type(AXIS_TYPE_JOYSTICK_BUTTON);
+    fire1_js->set_positive_joystick_button(JoystickButtonID(0));
+
     auto fire2 = new_axis("Fire2");
     fire2->set_positive_keyboard_key(KEYBOARD_CODE_LALT);
+
+    auto fire2_js = new_axis("Fire2");
+    fire2_js->set_type(AXIS_TYPE_JOYSTICK_BUTTON);
+    fire2_js->set_positive_joystick_button(JoystickButtonID(1));
 }
 
 InputAxis* InputManager::new_axis(const std::string& name) {
