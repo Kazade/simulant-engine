@@ -107,15 +107,13 @@ script:
   - if [[ "$DREAMCAST" == "false" ]]; then export BUILD_TARGET=$TRAVIS_OS_NAME; fi;
   - export FOLDER_NAME=simulant-latest-$BUILD_TYPE
   - cd $TRAVIS_BUILD_DIR # Make sure we're in the right place
-  # Copy all the compiled libs for whatever platform
-  - mkdir -p $BUILD_TARGET/$FOLDER_NAME/lib/$BUILD_TYPE
-  - cp ./build/simulant/*.so $BUILD_TARGET/$FOLDER_NAME/lib/$BUILD_TYPE
-  - cp ./build/simulant/*.a $BUILD_TARGET/$FOLDER_NAME/lib/$BUILD_TYPE
-  - cp ./build/simulant/*.dynlib $BUILD_TARGET/$FOLDER_NAME/lib/$BUILD_TYPE
-  - cp ./build/simulant/*.dll $BUILD_TARGET/$FOLDER_NAME/lib/$BUILD_TYPE
-  - cp ./build/simulant/*.lib $BUILD_TARGET/$FOLDER_NAME/lib/$BUILD_TYPE
 
-  # Copy the header files to the write place
+  - mkdir -p $BUILD_TARGET/$FOLDER_NAME/lib/$BUILD_TYPE
+
+  # Copy all the compiled libs for whatever platform, don't return an error code if they don't exist
+  - cp ./build/simulant/{*.so,*.a,*.dynlib,*.dll,*.lib} $BUILD_TARGET/$FOLDER_NAME/lib/$BUILD_TYPE 2> /dev/null | true
+
+  # Copy the header files to the right place
   - mkdir -p $BUILD_TARGET/$FOLDER_NAME/include/simulant
   - find simulant -name "*.h" -type f -exec cp --parents {} ./$BUILD_TARGET/$FOLDER_NAME/include \;
 
