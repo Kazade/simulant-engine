@@ -109,7 +109,7 @@ script:
   # Package everything into a folder for upload to GCS
   - if [[ "$DREAMCAST" == "true" ]]; then export BUILD_TARGET=dreamcast; fi
   - if [[ "$DREAMCAST" == "false" ]]; then export BUILD_TARGET=$TRAVIS_OS_NAME; fi;
-  - export FOLDER_NAME=simulant-latest-$BUILD_TYPE
+  - export FOLDER_NAME=simulant-$BUILD_TARGET-$BUILD_TYPE
   - cd $TRAVIS_BUILD_DIR # Make sure we're in the right place
 
   - mkdir -p $BUILD_TARGET/$FOLDER_NAME/lib/$BUILD_TYPE
