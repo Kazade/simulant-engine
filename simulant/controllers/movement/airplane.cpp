@@ -21,8 +21,8 @@ void Airplane::fixed_update(float step) {
     rigidbody->set_angular_damping(0.6);
     rigidbody->set_linear_damping(0.6);
 
-    rigidbody->add_relative_torque(Vec3(0, turn_speed_ * step * input->axis_value("Horizontal"), 0));
-    rigidbody->add_relative_torque(Vec3(-turn_speed_ * step * input->axis_value("Vertical"), 0, 0));
+    rigidbody->add_relative_torque(Vec3(0, -turn_speed_ * step * input->axis_value("Horizontal"), 0));
+    rigidbody->add_relative_torque(Vec3(turn_speed_ * step * input->axis_value("Vertical"), 0, 0));
     rigidbody->add_relative_torque(Vec3(turn_speed_ * step * input->axis_value("Roll"), 0, 0));
 
     throttle_ += throttle_speed_ * step * input->axis_value("Fire1");
