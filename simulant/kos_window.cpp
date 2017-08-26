@@ -257,7 +257,6 @@ void smlt::KOSWindow::initialize_input_controller(smlt::InputState &controller) 
         KeyboardDeviceInfo keyboard;
         keyboard.id = 0;
         controller._update_keyboard_devices({keyboard});
-        L_DEBUG("Found connected keyboard");
     }
 
     auto controller_count = 0u;
@@ -277,8 +276,6 @@ void smlt::KOSWindow::initialize_input_controller(smlt::InputState &controller) 
     }
 
     controller._update_joystick_devices(joypads);
-
-    L_DEBUG(_F("Found {0} connected controllers").format(controller_count));
 }
 
 }
