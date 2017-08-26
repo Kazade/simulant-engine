@@ -117,7 +117,7 @@ script:
   - mkdir -p $BUILD_TARGET/$FOLDER_NAME/include/simulant
   - find simulant -name "*.h" -type f -exec cp --parents {} ./$BUILD_TARGET/$FOLDER_NAME/include \;
 
-  - cd $BUILD_TARGET; zip -r $FOLDER_NAME{.zip,}; rm -r $FOLDER_NAME; cd -;
+  - cd $BUILD_TARGET; zip -q -r $FOLDER_NAME{.zip,}; rm -r $FOLDER_NAME; cd -;
 
 deploy:
   provider: gcs
