@@ -39,8 +39,8 @@ public:
 
     void set_positive_joystick_button(JoystickButtonID button);
     void set_negative_joystick_button(JoystickButtonID button);
-    JoystickButtonID positive_joystick_button() const { return positive_mouse_button_; }
-    JoystickButtonID negative_joystick_button() const { return negative_mouse_button_; }
+    JoystickButtonID positive_joystick_button() const { return positive_joystick_button_; }
+    JoystickButtonID negative_joystick_button() const { return negative_joystick_button_; }
     void set_joystick_source(JoystickID joystick);
     JoystickID joystick_source() const { return joystick_source_; }
 
