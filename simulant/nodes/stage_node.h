@@ -86,10 +86,11 @@ protected:
     void on_scaling_set(const Vec3& olds, const Vec3& news) override;
     void on_parent_set(TreeNode* oldp, TreeNode* newp) override;
 
+    virtual void update_rotation_from_parent();
+    virtual void update_position_from_parent(bool _recalc_bounds=true);
+    virtual void update_scaling_from_parent();
 private:
-    void update_rotation_from_parent();
-    void update_position_from_parent(bool _recalc_bounds=true);
-    void update_scaling_from_parent();
+
     void recalc_bounds();
 
     Stage* stage_ = nullptr;

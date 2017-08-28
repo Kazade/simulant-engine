@@ -47,11 +47,23 @@ void Camera::on_parent_set(TreeNode* oldp, TreeNode* newp) {
     update_frustum();
 }
 
+void Camera::update_position_from_parent(bool _recalc_bounds) {
+    StageNode::update_position_from_parent(_recalc_bounds);
+    transform_ = absolute_transformation();
+    update_frustum();
+}
+
+void Camera::update_rotation_from_parent() {
+    StageNode::update_rotation_from_parent();
+    transform_ = absolute_transformation();
+    update_frustum();
+}
+
 void Camera::update_frustum() {
     //Recalculate the view matrix
     view_matrix_ = transform_.inversed();
 
-    Mat4 mvp = projection_matrix() * view_matrix();
+    Mat4 mvp = projection_matrix_ * view_matrix_;
 
     frustum_.build(&mvp); //Update the frustum for this camera
 }
