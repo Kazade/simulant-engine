@@ -62,6 +62,24 @@ public:
         assert_close(res.z, 1, 0.000001);
     }
 
+    void test_camera_attached_to_parent_moves() {
+        auto stage = window->new_stage().fetch();
+
+        auto actor = stage->new_actor().fetch();
+        auto camera = stage->new_camera().fetch();
+
+        auto od = camera->frustum().plane(FRUSTUM_PLANE_NEAR).d;
+
+        camera->move_to(0, 0, 10.0f);
+        camera->set_parent(actor);
+
+        actor->move_to(0, 0, -10.0f);
+        assert_close(camera->absolute_position().z, 0.0f, 0.00001f);
+
+        auto d = camera->frustum().plane(FRUSTUM_PLANE_NEAR).d;
+        assert_close(d, od, 0.00001f);
+    }
+
 private:
     CameraID camera_id_;
     StageID stage_id_;
