@@ -25,6 +25,11 @@ void TreeNode::set_parent(TreeNode *node) {
         return;
     }
 
+    if(node == this) {
+        // Do nothing if we tried to set the parent node to itself
+        return;
+    }
+
     if(node) {
         node->add_child(this);
     }

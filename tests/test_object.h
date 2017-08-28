@@ -183,6 +183,27 @@ public:
         assert_equal(smlt::Vec3(10, 0, 0), actor2->position());
     }
 
+    void test_move_updates_children() {
+        auto stage = stage_id_.fetch();
+
+        auto actor1 = stage->new_actor().fetch();
+        auto actor2 = stage->new_actor().fetch();
+
+        actor2->move_to(0, 0, 10.0f);
+        actor2->set_parent(actor1);
+
+        assert_equal(10.0f, actor2->absolute_position().z);
+    }
+
+    void test_set_parent_to_self_does_nothing() {
+        auto stage = stage_id_.fetch();
+        auto actor1 = stage->new_actor().fetch();
+
+        auto original_parent = actor1->parent();
+        actor1->set_parent(actor1);
+        assert_equal(original_parent, actor1->parent());
+    }
+
 private:
     smlt::CameraID camera_id_;
     smlt::StageID stage_id_;
