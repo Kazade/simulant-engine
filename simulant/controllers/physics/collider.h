@@ -27,6 +27,22 @@ struct PhysicsMaterial {
     static const PhysicsMaterial RUBBER;
     static const PhysicsMaterial IRON;
     static const PhysicsMaterial STONE;
+
+    static const PhysicsMaterial WOOD_25;
+    static const PhysicsMaterial WOOD_50;
+    static const PhysicsMaterial WOOD_75;
+
+    static const PhysicsMaterial RUBBER_25;
+    static const PhysicsMaterial RUBBER_50;
+    static const PhysicsMaterial RUBBER_75;
+
+    static const PhysicsMaterial IRON_25;
+    static const PhysicsMaterial IRON_50;
+    static const PhysicsMaterial IRON_75;
+
+    static const PhysicsMaterial STONE_25;
+    static const PhysicsMaterial STONE_50;
+    static const PhysicsMaterial STONE_75;
 };
 
 
