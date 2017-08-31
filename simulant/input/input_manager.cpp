@@ -352,6 +352,18 @@ void InputManager::_update_joystick_hat_axis(InputAxis* axis, float dt) {
     axis->value_ = new_value;
 }
 
+/* Returns the axis value but rounded to -1, 0 or +1. Values in the dead zone will return 0 */
+int8_t InputManager::axis_value_hard(const std::string& name) const {
+    float v = axis_value(name);
+    if(v > 0.0f) {
+        return 1;
+    } else if(v < 0.0f) {
+        return -1;
+    }
+
+    return 0;
+}
+
 float InputManager::axis_value(const std::string& name) const {
     auto f = 0.0f;
     for(auto axis: axises(name)) {

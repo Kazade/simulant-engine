@@ -27,6 +27,7 @@ public:
     std::size_t axis_count(const std::string& name) const;
 
     float axis_value(const std::string& name) const;
+    int8_t axis_value_hard(const std::string& name) const;
 
     void update(float dt);
 

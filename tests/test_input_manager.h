@@ -42,6 +42,23 @@ public:
         assert_close(axis->value(), 0.8f, 0.0001f);
     }
 
+    void test_axis_value_hard() {
+        InputAxis* axis = manager_->new_axis("Test");
+        axis->set_type(AXIS_TYPE_JOYSTICK_AXIS);
+        axis->set_joystick_axis(JOYSTICK_AXIS_0);
+        axis->set_dead_zone(0.1f);
+
+        state_->_handle_joystick_axis_motion(0, JOYSTICK_AXIS_0, 0.05f);
+        manager_->update(1.0);
+
+        assert_equal(manager_->axis_value_hard("Test"), 0);
+
+        state_->_handle_joystick_axis_motion(0, JOYSTICK_AXIS_0, 0.1f);
+        manager_->update(1.0);
+
+        assert_equal(manager_->axis_value_hard("Test"), 1);
+    }
+
     void test_axis_dead_zone() {
         InputAxis* axis = manager_->new_axis("Test");
         axis->set_type(AXIS_TYPE_JOYSTICK_AXIS);
