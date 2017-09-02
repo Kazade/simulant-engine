@@ -41,6 +41,11 @@ public:
         return pipeline_id_;
     }
 
+    // This allows grabbing the pipeline directly after creation
+    PipelinePtr fetch() const {
+        return pipeline_id_.fetch();
+    }
+
 private:
     friend class PipelineHelperAPIInterface;
 
