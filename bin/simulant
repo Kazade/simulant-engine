@@ -189,8 +189,10 @@ def start(args):
     _search_replace("__project_name_lower__", args.project.lower().replace(" ", "_"), target_folder)
     _search_replace("__project_name_upper__", args.project.upper().replace(" ", "_"), target_folder)
 
+    pascal_name = args.project.replace("-", " ").title().replace(" ", "")
+
     # Replace with ProjectName
-    _search_replace("__project_name_pascal__", args.project.title().replace(" ", ""), target_folder)
+    _search_replace("__project_name_pascal__", pascal_name, target_folder)
 
 
     print("Project successfully created. Remember to edit simulant.json before packaging!")
