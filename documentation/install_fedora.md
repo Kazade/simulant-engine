@@ -65,3 +65,21 @@ This will build the DC port, and compile the samples to .cdi CD images. You can 
 ```
 lxdream -b dbuild/samples/light_sample.cdi
 ```
+
+# Cross-compiling for Windows (Not yet compiling)
+
+To cross compile for Windows, you'll find need to install some additional dependencies:
+
+```
+sudo dnf install mingw64-SDL2 mingw64-openal-soft mingw64-zlib
+```
+
+Then, create a new folder to build into, and run `mingw64-cmake` instead of `cmake`:
+
+```
+mkdir buildw
+cd buildw
+mingw64-cmake ..
+make
+```
+

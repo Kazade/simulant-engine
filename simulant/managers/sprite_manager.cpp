@@ -30,6 +30,9 @@ SpriteID SpriteManager::new_sprite_from_file(const unicode& filename, uint32_t f
     );
     try {
         sprite(s)->set_spritesheet(t, frame_width, frame_height, margin, spacing, padding);
+
+        // Set the render dimensions to match the image size by default
+        sprite(s)->set_render_dimensions(frame_width, frame_height);
     } catch(...) {
         delete_sprite(s);
         throw;
