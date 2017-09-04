@@ -28,6 +28,8 @@
 #include <future>
 #endif
 
+#include "scene.h"
+
 #include "../generic/managed.h"
 #include "../deps/kazsignal/kazsignal.h"
 
@@ -35,49 +37,32 @@ namespace smlt {
 
 class Application;
 class Window;
-class SceneBase;
 
 typedef std::shared_ptr<SceneBase> SceneBasePtr;
 typedef std::function<SceneBasePtr (Window*)> SceneFactory;
-
-
-/* Originally we used a lambda, but this doesn't compile with older GCC so we
- * are forced to reinvent the wheel here */
-template<typename S, typename... Ts>
-class SceneFactoryFunctor {
-private:
-    std::string name_;
-    std::tuple<Ts...> args_;
-
-public:
-    template<typename... Args>
-    SceneFactoryFunctor(const std::string& name, Args&&... args):
-        name_(name),
-        args_(std::forward<Args>(args)...) {
-
-    }
-
-    SceneBasePtr operator()(Window* window) {
-        auto ret = S::create(*window, std::forward<Ts>(args_)...);
-        ret->set_name(name_);
-        return ret;
-    }
-};
-
 
 class SceneManagerInterface {
 public:
     virtual ~SceneManagerInterface() {}
 
     template<typename T, typename... Args>
-    void register_scene(const std::string& name, const Args&&... args) {
-        _store_scene_factory(name, SceneFactoryFunctor<T>(name, args...));
+    void register_scene(const std::string& name, Args&&... args) {
+        SceneFactory func = std::bind(
+            &T::template create<Window*, typename std::decay<Args>::type&...>,
+            std::placeholders::_1, std::forward<Args>(args)...
+        );
+
+        _store_scene_factory(name, [=](Window* window) -> SceneBasePtr {
+            auto ret = func(window);
+            ret->set_name(name);
+            return ret;
+        });
     }
 
     template<typename T>
     void register_scene(const std::string& name) {
         _store_scene_factory(name, [=](Window* window) -> SceneBasePtr {
-            auto ret = T::create(*window);
+            auto ret = T::create(window);
             ret->set_name(name);
             return ret;
         });

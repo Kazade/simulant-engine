@@ -24,7 +24,7 @@ public:
 
 class TestScene : public Scene<TestScene> {
 public:
-    TestScene(Window& window):
+    TestScene(Window* window):
         Scene<TestScene>(window) {}
 
     void load() override { load_called = true; }
@@ -37,6 +37,17 @@ public:
     volatile bool activate_called = false;
     volatile bool deactivate_called = false;
 };
+
+class SceneWithArgs : public Scene<SceneWithArgs> {
+public:
+    // Boilerplate
+    SceneWithArgs(smlt::Window* window, const std::string& some_arg):
+        smlt::Scene<SceneWithArgs>(window) {}
+
+    void load() {}
+
+};
+
 
 class SceneManagerTests : public SimulantTestCase {
 private:
@@ -119,6 +130,11 @@ public:
 
     void test_reset() {
 
+    }
+
+    void test_register_scene() {
+        SceneManager manager(window.get());
+        manager.register_scene<SceneWithArgs>("test", "arg");
     }
 };
 

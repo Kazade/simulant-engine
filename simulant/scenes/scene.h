@@ -39,13 +39,17 @@
 
 #include "../utils/unicode.h"
 #include "../types.h"
-#include "../window.h"
 #include "../generic/managed.h"
 #include "../generic/property.h"
 #include "../interfaces/nameable.h"
+#include "../interfaces/updateable.h"
 #include "../interfaces.h"
 
 namespace smlt {
+
+class Application;
+class Window;
+class InputManager;
 
 class SceneLoadException : public std::runtime_error {};
 
@@ -55,7 +59,7 @@ class SceneBase:
 public:
     typedef std::shared_ptr<SceneBase> ptr;
 
-    SceneBase(Window& window);
+    SceneBase(Window* window);
     virtual ~SceneBase();
 
     void _call_load();
@@ -95,7 +99,7 @@ private:
 template<typename T>
 class Scene : public SceneBase, public Managed<T> {
 public:
-    Scene(Window& window):
+    Scene(Window* window):
         SceneBase(window) {}
 
     void cleanup() override {

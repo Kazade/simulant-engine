@@ -142,7 +142,7 @@ LoaderTypePtr Window::loader_type(const unicode& loader_name) const {
 }
 
 void Window::create_defaults() {
-    loading_ = scenes::Loading::create(*this);
+    loading_ = scenes::Loading::create(this);
 
     //This needs to happen after SDL or whatever is initialized
     input_state_ = InputState::create();

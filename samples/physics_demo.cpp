@@ -9,7 +9,7 @@ using namespace smlt;
 
 class GameScene : public smlt::PhysicsScene<GameScene> {
 public:
-    GameScene(smlt::Window& window):
+    GameScene(smlt::Window* window):
         smlt::PhysicsScene<GameScene>(window) {}
 
     void load() {

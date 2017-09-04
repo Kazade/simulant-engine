@@ -7,7 +7,7 @@ using namespace smlt::extra;
 
 class GameScene : public smlt::Scene<GameScene> {
 public:
-    GameScene(Window& window):
+    GameScene(Window* window):
         smlt::Scene<GameScene>(window) {}
 
     void load() {
