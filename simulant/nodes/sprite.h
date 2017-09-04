@@ -57,6 +57,10 @@ public:
 
     void set_render_priority(smlt::RenderPriority priority);
 
+    void set_alpha(float alpha);
+
+    float alpha() const { return alpha_; }
+
     void set_spritesheet(
         TextureID texture_id,
         uint32_t frame_width,
@@ -89,6 +93,8 @@ private:
 
     float image_width_ = 0;
     float image_height_ = 0;
+
+    float alpha_ = 1.0f;
 
     void update_texture_coordinates();
 

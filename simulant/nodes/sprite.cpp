@@ -171,6 +171,12 @@ void Sprite::set_render_priority(RenderPriority priority) {
     actor_id_.fetch()->set_render_priority(priority);
 }
 
+void Sprite::set_alpha(float alpha) {
+    alpha_ = alpha;
+    auto mesh = mesh_id_.fetch();
+    mesh->set_diffuse(smlt::Colour(1.0f, 1.0f, 1.0f, alpha_));
+}
+
 void Sprite::set_render_dimensions_from_width(float width) {
     set_render_dimensions(width, -1);
 }

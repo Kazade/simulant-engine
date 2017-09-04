@@ -167,6 +167,7 @@ tests/test_mesh.h
 tests/test_partitioner.h
 tests/test_shader.h
 tests/test_sound.h
+tests/test_sprites.h
 tests/test_utils.h
 tests/test_vertex_data.h
 tests/test_tree.h
