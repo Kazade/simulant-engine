@@ -77,6 +77,7 @@ public:
         manager_->activate_scene("main");
 
         TestScene* scr = dynamic_cast<TestScene*>(manager_->resolve_scene("main").get());
+        scr->set_destroy_on_unload(false); //Don't destroy on unload
 
         assert_true(scr->load_called);
         assert_true(scr->activate_called);
