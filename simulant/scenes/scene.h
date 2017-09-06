@@ -54,7 +54,6 @@ class InputManager;
 class SceneLoadException : public std::runtime_error {};
 
 class SceneBase:
-    public Nameable,
     public Updateable {
 public:
     typedef std::shared_ptr<SceneBase> ptr;
@@ -71,6 +70,13 @@ public:
     bool is_loaded() const { return is_loaded_; }
     bool is_active() const { return is_active_; }
 
+    const std::string name() const {
+        return name_;
+    }
+
+    void set_name(const std::string& name) {
+        name_ = name;
+    }
 protected:
     Property<SceneBase, Window> window = {this, &SceneBase::window_};
     Property<SceneBase, Application> app = {this, &SceneBase::app_};
@@ -90,12 +96,14 @@ protected:
     Window* window_;
     InputManager* input_;
     Application* app_;
+
 private:
     virtual void pre_load() {}
     virtual void post_unload() {}
 
     bool is_loaded_ = false;
     bool is_active_ = false;
+    std::string name_;
 };
 
 template<typename T>
@@ -110,6 +118,5 @@ public:
 };
 
 }
-
 
 #endif // SCENE_H
