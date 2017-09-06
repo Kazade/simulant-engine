@@ -140,8 +140,11 @@ void SceneManager::load_scene_in_background(const std::string& route, bool redir
 void SceneManager::unload_scene(const std::string& route) {
     auto it = routes_.find(route);
     if(it != routes_.end()) {
-        it->second->_call_unload();
-        routes_.erase(it); // Destroy the scene once it's been unloaded
+        auto scene = it->second;
+        scene->_call_unload();
+        if(scene->destroy_on_unload()) {
+            routes_.erase(it); // Destroy the scene once it's been unloaded
+        }
     }    
 }
 

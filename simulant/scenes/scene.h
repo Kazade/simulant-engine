@@ -77,6 +77,15 @@ public:
     void set_name(const std::string& name) {
         name_ = name;
     }
+
+    /* Whether or not to destroy the scene when it's been unloaded.
+     * If destroyed, the next time the scene is accessed by name via the scene manager
+     * a new instance will be created.
+     */
+    bool destroy_on_unload() const { return destroy_on_unload_; }
+    void set_destroy_on_unload(bool v) {
+        destroy_on_unload_ = v;
+    }
 protected:
     Property<SceneBase, Window> window = {this, &SceneBase::window_};
     Property<SceneBase, Application> app = {this, &SceneBase::app_};
@@ -104,6 +113,8 @@ private:
     bool is_loaded_ = false;
     bool is_active_ = false;
     std::string name_;
+
+    bool destroy_on_unload_ = true;
 };
 
 template<typename T>
