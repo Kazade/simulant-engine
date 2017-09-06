@@ -76,7 +76,7 @@ public:
 
     bool has_scene(const std::string& route) const override;
     SceneBasePtr resolve_scene(const std::string& route) override;
-    void activate_scene(const std::string& route) override;
+    void activate_scene(const std::string& route, SceneChangeBehaviour behaviour=SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE) override;
     void load_scene(const std::string& route) override;
     void load_scene_in_background(const std::string& route, bool redirect_after=true) override;
     void unload_scene(const std::string& route) override;

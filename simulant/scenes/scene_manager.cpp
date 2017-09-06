@@ -73,7 +73,7 @@ SceneBase::ptr SceneManager::active_scene() const {
     return current_scene_;
 }
 
-void SceneManager::activate_scene(const std::string& route) {
+void SceneManager::activate_scene(const std::string& route, SceneChangeBehaviour behaviour) {
     auto new_scene = get_or_create_route(route);
 
     if(new_scene == current_scene_) {
@@ -82,12 +82,19 @@ void SceneManager::activate_scene(const std::string& route) {
 
     new_scene->_call_load();
 
-    if(current_scene_) {
-        current_scene_->_call_deactivate();
+    auto previous = current_scene_;
+
+    if(previous) {
+        previous->_call_deactivate();
     }
 
     std::swap(current_scene_, new_scene);
     current_scene_->_call_activate();
+
+    if(previous && behaviour == SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE) {
+        // If requested, we unload the previous scene once the new on is active
+        unload_scene(previous->name());
+    }
 }
 
 void SceneManager::load_scene(const std::string& route) {
@@ -134,7 +141,8 @@ void SceneManager::unload_scene(const std::string& route) {
     auto it = routes_.find(route);
     if(it != routes_.end()) {
         it->second->_call_unload();
-    }
+        routes_.erase(it); // Destroy the scene once it's been unloaded
+    }    
 }
 
 bool SceneManager::is_scene_loaded(const std::string& route) const {

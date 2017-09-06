@@ -41,6 +41,13 @@ class Window;
 typedef std::shared_ptr<SceneBase> SceneBasePtr;
 typedef std::function<SceneBasePtr (Window*)> SceneFactory;
 
+
+enum SceneChangeBehaviour {
+    SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE,
+    SCENE_CHANGE_BEHAVIOUR_RETAIN_CURRENT_SCENE
+};
+
+
 class SceneManagerInterface {
 public:
     virtual ~SceneManagerInterface() {}
@@ -75,7 +82,7 @@ public:
 
     virtual bool has_scene(const std::string& route) const = 0;
     virtual SceneBasePtr resolve_scene(const std::string& route) = 0;
-    virtual void activate_scene(const std::string& route) = 0;
+    virtual void activate_scene(const std::string& route, SceneChangeBehaviour behaviour=SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE) = 0;
 
     virtual void load_scene(const std::string& route) = 0;
     virtual void load_scene_in_background(const std::string& route, bool redirect_after=true) = 0;
@@ -99,7 +106,7 @@ public:
 
     bool has_scene(const std::string& route) const;
     SceneBasePtr resolve_scene(const std::string& route);
-    void activate_scene(const std::string& route);
+    void activate_scene(const std::string& route, SceneChangeBehaviour behaviour=SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE);
 
     void load_scene(const std::string& route);
     void load_scene_in_background(const std::string& route, bool redirect_after=true);

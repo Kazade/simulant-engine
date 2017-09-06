@@ -120,8 +120,8 @@ SceneBasePtr Application::resolve_scene(const std::string &route) {
     return scene_manager_->resolve_scene(route);
 }
 
-void Application::activate_scene(const std::string &route) {
-    scene_manager_->activate_scene(route);
+void Application::activate_scene(const std::string &route, SceneChangeBehaviour behaviour) {
+    scene_manager_->activate_scene(route, behaviour);
 }
 
 void Application::load_scene(const std::string &route) {

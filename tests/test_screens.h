@@ -70,7 +70,7 @@ public:
     }
 
     void test_activate_scene() {
-        assert_raises(std::logic_error, std::bind(&SceneManager::activate_scene, manager_, "main"));
+        assert_raises(std::logic_error, std::bind(&SceneManager::activate_scene, manager_, "main", smlt::SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE));
 
         manager_->register_scene<TestScene>("main");
 
@@ -96,7 +96,7 @@ public:
         assert_true(scr->load_called);
         assert_true(scr->activate_called);
         assert_true(scr->deactivate_called); //Should've been deactivated
-        assert_false(scr->unload_called);
+        assert_true(scr->unload_called);
 
         TestScene* scr2 = dynamic_cast<TestScene*>(manager_->resolve_scene("/test").get());
 
