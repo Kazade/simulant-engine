@@ -1,11 +1,9 @@
 # Engine Structure
 
-The Simulant architecture can be divided into three parts:
+Here is a diagram describing the high-level architecture of Simulant:
 
- - Render system
- - Scene management
- - The "extra" namespace
- 
+![Architecture](/documentation/architecture.png?raw=true)
+
 ## Render System
 
 The render system in Simulant is in constant flux at the moment, but the general
@@ -38,8 +36,6 @@ do so while considering how your rendered output will be composited using pipeli
 For example, you might create a Stage for your background, and add that to a pipeline
 with a low priority, then add a Stage for your world geometry, and finally add one
 for rendering a UI overlay.
-
-
 
 ### Stages
 
