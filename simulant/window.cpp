@@ -42,6 +42,8 @@
 #include "loaders/pcx_loader.h"
 #include "loaders/ttf_loader.h"
 
+#include "nodes/camera.h"
+
 #include "sound.h"
 #include "render_sequence.h"
 #include "stage.h"
@@ -455,6 +457,11 @@ void Window::reset() {
     background_manager_.reset(new BackgroundManager(this));
 
     create_defaults();
+}
+
+PipelineHelper Window::render(StagePtr stage, CameraPtr camera) {
+    // This is a common enough requirement to provide a nice shortcut
+    return render(stage->id(), camera->id());
 }
 
 /* PipelineHelperAPIInterface */

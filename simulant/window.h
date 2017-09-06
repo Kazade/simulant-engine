@@ -183,6 +183,8 @@ public:
         return new_pipeline_helper(render_sequence_, stage_id, camera_id);
     }
 
+    PipelineHelper render(StagePtr stage, CameraPtr camera);
+
     virtual PipelinePtr pipeline(PipelineID pid) override;
     virtual bool enable_pipeline(PipelineID pid) override;
     virtual bool disable_pipeline(PipelineID pid) override;
