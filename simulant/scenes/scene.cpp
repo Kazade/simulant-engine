@@ -58,10 +58,12 @@ void SceneBase::_call_unload() {
 
 void SceneBase::_call_activate() {
     activate();
+    is_active_ = true;
 }
 
 void SceneBase::_call_deactivate() {
     deactivate();
+    is_active_ = false;
 }
 
 PipelineID SceneBase::prepare_basic_scene(StageID& new_stage, CameraID& new_camera, AvailablePartitioner partitioner) {

@@ -69,6 +69,7 @@ public:
     void _call_deactivate();
 
     bool is_loaded() const { return is_loaded_; }
+    bool is_active() const { return is_active_; }
 
 protected:
     Property<SceneBase, Window> window = {this, &SceneBase::window_};
@@ -94,6 +95,7 @@ private:
     virtual void post_unload() {}
 
     bool is_loaded_ = false;
+    bool is_active_ = false;
 };
 
 template<typename T>
