@@ -73,7 +73,7 @@ SceneBase::ptr SceneManager::active_scene() const {
     return current_scene_;
 }
 
-void SceneManager::activate_scene(const std::string& route, SceneChangeBehaviour behaviour) {
+void SceneManager::activate(const std::string& route, SceneChangeBehaviour behaviour) {
     auto new_scene = get_or_create_route(route);
 
     if(new_scene == current_scene_) {
@@ -93,16 +93,16 @@ void SceneManager::activate_scene(const std::string& route, SceneChangeBehaviour
 
     if(previous && behaviour == SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE) {
         // If requested, we unload the previous scene once the new on is active
-        unload_scene(previous->name());
+        unload(previous->name());
     }
 }
 
-void SceneManager::load_scene(const std::string& route) {
+void SceneManager::load(const std::string& route) {
     auto scene = get_or_create_route(route);
     scene->_call_load();
 }
 
-void SceneManager::load_scene_in_background(const std::string& route, bool redirect_after) {
+void SceneManager::load_in_background(const std::string& route, bool redirect_after) {
     auto scene = get_or_create_route(route);
 
     //Create a background task for loading the scene
@@ -130,14 +130,14 @@ void SceneManager::load_scene_in_background(const std::string& route, bool redir
 #endif
         new_task->future.get();
         if(redirect_after) {
-            activate_scene(route);
+            activate(route);
         }
 
         return false;
     });
 }
 
-void SceneManager::unload_scene(const std::string& route) {
+void SceneManager::unload(const std::string& route) {
     auto it = routes_.find(route);
     if(it != routes_.end()) {
         auto scene = it->second;
@@ -148,7 +148,7 @@ void SceneManager::unload_scene(const std::string& route) {
     }    
 }
 
-bool SceneManager::is_scene_loaded(const std::string& route) const {
+bool SceneManager::is_loaded(const std::string& route) const {
     auto it = routes_.find(route);
     if(it == routes_.end()) {
         return false;

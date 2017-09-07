@@ -25,7 +25,7 @@ protected:
 
 private:
     void pre_load() override {
-        physics_.reset(new smlt::controllers::RigidBodySimulation(this->window_->time_keeper));
+        physics_.reset(new smlt::controllers::RigidBodySimulation(this->window->time_keeper));
     }
 
     void post_unload() override {

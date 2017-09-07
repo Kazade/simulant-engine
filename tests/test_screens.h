@@ -69,12 +69,12 @@ public:
         assert_false(manager_->has_scene("main"));
     }
 
-    void test_activate_scene() {
-        assert_raises(std::logic_error, std::bind(&SceneManager::activate_scene, manager_, "main", smlt::SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE));
+    void test_activate() {
+        assert_raises(std::logic_error, std::bind(&SceneManager::activate, manager_, "main", smlt::SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE));
 
         manager_->register_scene<TestScene>("main");
 
-        manager_->activate_scene("main");
+        manager_->activate("main");
 
         TestScene* scr = dynamic_cast<TestScene*>(manager_->resolve_scene("main").get());
         scr->set_destroy_on_unload(false); //Don't destroy on unload
@@ -84,7 +84,7 @@ public:
         assert_false(scr->deactivate_called);
         assert_false(scr->unload_called);
 
-        manager_->activate_scene("main"); //activate_sceneing to the same place should do nothing
+        manager_->activate("main"); //activateing to the same place should do nothing
 
         assert_true(scr->load_called);
         assert_true(scr->activate_called);
@@ -92,7 +92,7 @@ public:
         assert_false(scr->unload_called);
 
         manager_->register_scene<TestScene>("/test");
-        manager_->activate_scene("/test");
+        manager_->activate("/test");
 
         assert_true(scr->load_called);
         assert_true(scr->activate_called);
@@ -112,7 +112,7 @@ public:
 
         TestScene* scr = dynamic_cast<TestScene*>(manager_->resolve_scene("main").get());
         assert_false(scr->load_called);
-        manager_->load_scene_in_background("main");
+        manager_->load_in_background("main");
 #ifdef _arch_dreamcast
         stdX::this_thread::sleep_for(std::chrono::milliseconds(100));
 #else
