@@ -148,7 +148,7 @@ void SceneManager::unload(const std::string& route) {
     }    
 }
 
-bool SceneManager::is_scene_loaded(const std::string& route) const {
+bool SceneManager::is_loaded(const std::string& route) const {
     auto it = routes_.find(route);
     if(it == routes_.end()) {
         return false;

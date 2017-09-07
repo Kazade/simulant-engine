@@ -62,7 +62,7 @@ public:
     void load_in_background(const std::string& route, bool redirect_after=true);
     void unload(const std::string& route);
 
-    bool is_scene_loaded(const std::string& route) const;
+    bool is_loaded(const std::string& route) const;
     void reset();
     SceneBasePtr active_scene() const;
 
