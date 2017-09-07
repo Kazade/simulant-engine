@@ -47,58 +47,8 @@ enum SceneChangeBehaviour {
     SCENE_CHANGE_BEHAVIOUR_RETAIN_CURRENT_SCENE
 };
 
-
-class SceneManagerInterface {
-public:
-    virtual ~SceneManagerInterface() {}
-
-    template<typename T, typename... Args>
-    void register_scene(const std::string& name, Args&&... args) {
-        SceneFactory func = std::bind(
-            &T::template create<Window*, typename std::decay<Args>::type&...>,
-            std::placeholders::_1, std::forward<Args>(args)...
-        );
-
-        _store_scene_factory(name, [=](Window* window) -> SceneBasePtr {
-            auto ret = func(window);
-            ret->set_name(name);
-            return ret;
-        });
-    }
-
-    template<typename T>
-    void register_scene(const std::string& name) {
-        _store_scene_factory(name, [=](Window* window) -> SceneBasePtr {
-            auto ret = T::create(window);
-            ret->set_name(name);
-            return ret;
-        });
-    }
-
-    template<typename T>
-    std::shared_ptr<T> resolve_scene_as(const std::string& route) {
-        return std::dynamic_pointer_cast<T>(resolve_scene(route));
-    }
-
-    virtual bool has_scene(const std::string& route) const = 0;
-    virtual SceneBasePtr resolve_scene(const std::string& route) = 0;
-    virtual void activate_scene(const std::string& route, SceneChangeBehaviour behaviour=SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE) = 0;
-
-    virtual void load_scene(const std::string& route) = 0;
-    virtual void load_scene_in_background(const std::string& route, bool redirect_after=true) = 0;
-    virtual void unload_scene(const std::string& route) = 0;
-
-    virtual bool is_scene_loaded(const std::string& route) const = 0;
-    virtual void reset() = 0;
-    virtual SceneBasePtr active_scene() const = 0;
-
-    virtual void _store_scene_factory(const std::string& name, SceneFactory func) = 0;
-
-};
-
 class SceneManager :
-    public Managed<SceneManager>,
-    public SceneManagerInterface {
+    public Managed<SceneManager> {
 
 public:
     SceneManager(Window* window);
@@ -116,11 +66,40 @@ public:
     void reset();
     SceneBasePtr active_scene() const;
 
+    template<typename T, typename... Args>
+    void register_scene(const std::string& name, Args&&... args) {
+        SceneFactory func = std::bind(
+            &T::template create<Window*, typename std::decay<Args>::type&...>,
+            std::placeholders::_1, std::forward<Args>(args)...
+        );
+
+        _store_scene_factory(name, [=](Window* window) -> SceneBasePtr {
+            auto ret = func(window);
+            ret->set_name(name);
+            ret->scene_manager_ = this;
+            return ret;
+        });
+    }
+
+    template<typename T>
+    void register_scene(const std::string& name) {
+        _store_scene_factory(name, [=](Window* window) -> SceneBasePtr {
+            auto ret = T::create(window);
+            ret->set_name(name);
+            ret->scene_manager_ = this;
+            return ret;
+        });
+    }
+
+    template<typename T>
+    std::shared_ptr<T> resolve_scene_as(const std::string& route) {
+        return std::dynamic_pointer_cast<T>(resolve_scene(route));
+    }
+private:
     void _store_scene_factory(const std::string& name, SceneFactory func) {
         scene_factories_[name] = func;
     }
 
-private:
     Window* window_;
 
     std::unordered_map<std::string, SceneFactory> scene_factories_;

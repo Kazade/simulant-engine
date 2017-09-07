@@ -40,7 +40,7 @@ public:
         smlt::Scene<Gamescene>(window) {}
 
     void load() {
-        auto loading = window->application->resolve_scene_as<scenes::Loading>("_loading");
+        auto loading = scenes->resolve_scene_as<scenes::Loading>("_loading");
         assert(loading);
 
         bool done = false;
@@ -120,9 +120,9 @@ public:
 
 private:
     bool init() {
-        register_scene<Gamescene>("main");
-        load_scene_in_background("main", true); //Do loading in a background thread, but show immediately when done
-        activate_scene("_loading"); // Show the loading scene in the meantime
+        scenes->register_scene<Gamescene>("main");
+        scenes->load_scene_in_background("main", true); //Do loading in a background thread, but show immediately when done
+        scenes->activate_scene("_loading"); // Show the loading scene in the meantime
         return true;
     }
 };

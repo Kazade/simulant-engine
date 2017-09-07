@@ -42,7 +42,7 @@ public:
     }
 
     bool init() {
-        register_scene<MainScene>("main");
+        scenes->register_scene<MainScene>("main");
         return true;
     }
 };

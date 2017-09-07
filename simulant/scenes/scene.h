@@ -50,6 +50,7 @@ namespace smlt {
 class Application;
 class Window;
 class InputManager;
+class SceneManager;
 
 class SceneLoadException : public std::runtime_error {};
 
@@ -90,6 +91,7 @@ protected:
     Property<SceneBase, Window> window = {this, &SceneBase::window_};
     Property<SceneBase, Application> app = {this, &SceneBase::app_};
     Property<SceneBase, InputManager> input = {this, &SceneBase::input_};
+    Property<SceneBase, SceneManager> scenes = {this, &SceneBase::scene_manager_};
 
     virtual void load() = 0;
     virtual void unload() {}
@@ -102,10 +104,6 @@ protected:
         AvailablePartitioner partitioner=PARTITIONER_HASH
     );
 
-    Window* window_;
-    InputManager* input_;
-    Application* app_;
-
 private:
     virtual void pre_load() {}
     virtual void post_unload() {}
@@ -115,6 +113,13 @@ private:
     std::string name_;
 
     bool destroy_on_unload_ = true;
+
+    Window* window_;
+    InputManager* input_;
+    Application* app_;
+    SceneManager* scene_manager_ = nullptr;
+
+    friend class SceneManager;
 };
 
 template<typename T>

@@ -68,7 +68,7 @@ public:
 
 private:
     bool init() {
-        register_scene<GameScene>("main");
+        scenes->register_scene<GameScene>("main");
         return true;
     }
 };

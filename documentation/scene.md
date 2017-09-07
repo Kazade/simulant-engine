@@ -8,7 +8,7 @@ A scene is designed to be a single screen in your game. For example, you might h
 Scenes are subclasses of a class template called `Scene<T>`. To create your Scene class you must do the following:
 
  - Subclass `Scene<T>` but pass your class up as `T` (Search for the 'Curiously Recurring Template Pattern' for more info)
- - Add a pass-through constructor which takes a `Window&` reference and passes it to the parent constructor
+ - Add a pass-through constructor which takes a `Window*` and passes it to the parent constructor
  - Override the `void load()` method
 
 Here's an example:
@@ -17,7 +17,7 @@ Here's an example:
 
 class MyScene : public Scene<MyScene> {
 public:
-    MyScene(Window& window):
+    MyScene(Window* window):
         Scene<MyScene>(window) {}
 
     void load();
@@ -50,3 +50,7 @@ You can override the following methods in your Scene class:
  - late_update()
 
 `activate()` and `deactivate()` are called when you change to a different scene.
+
+
+
+
