@@ -56,7 +56,7 @@ public:
 
     bool has_scene(const std::string& route) const;
     SceneBasePtr resolve_scene(const std::string& route);
-    void activate_scene(const std::string& route, SceneChangeBehaviour behaviour=SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE);
+    void activate(const std::string& route, SceneChangeBehaviour behaviour=SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE);
 
     void load(const std::string& route);
     void load_in_background(const std::string& route, bool redirect_after=true);

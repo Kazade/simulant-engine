@@ -86,7 +86,7 @@ bool Application::_call_init() {
     // If we successfully initialized, but the user didn't specify
     // a particular scene, we just hit the root route
     if(initialized_ && !scenes->active_scene()) {
-        scenes->activate_scene("main");
+        scenes->activate("main");
     }
 
     return initialized_;

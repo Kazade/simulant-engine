@@ -27,13 +27,13 @@
  *  manager->register_scene<MenuScene>("menu");
  *  manager->register_scene<GameScene>("ingame");
  *
- *  manager->activate_scene("loading");
+ *  manager->activate("loading");
  *  manager->load_in_background("menu");
  *  if(manager->is_loaded("menu")) {
- *      manager->activate_scene("menu");
+ *      manager->activate("menu");
  *  }
  *  manager->unload("loading");
- *  manager->activate_scene("loading"); // Will cause loading to happen again
+ *  manager->activate("loading"); // Will cause loading to happen again
  *
  */
 

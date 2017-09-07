@@ -73,7 +73,7 @@ SceneBase::ptr SceneManager::active_scene() const {
     return current_scene_;
 }
 
-void SceneManager::activate_scene(const std::string& route, SceneChangeBehaviour behaviour) {
+void SceneManager::activate(const std::string& route, SceneChangeBehaviour behaviour) {
     auto new_scene = get_or_create_route(route);
 
     if(new_scene == current_scene_) {
@@ -130,7 +130,7 @@ void SceneManager::load_in_background(const std::string& route, bool redirect_af
 #endif
         new_task->future.get();
         if(redirect_after) {
-            activate_scene(route);
+            activate(route);
         }
 
         return false;
