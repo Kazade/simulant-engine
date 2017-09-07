@@ -28,7 +28,7 @@
  *  manager->register_scene<GameScene>("ingame");
  *
  *  manager->activate_scene("loading");
- *  manager->load_scene_in_background("menu");
+ *  manager->load_in_background("menu");
  *  if(manager->is_loaded("menu")) {
  *      manager->activate_scene("menu");
  *  }

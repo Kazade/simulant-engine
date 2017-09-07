@@ -79,7 +79,7 @@ bool Application::_call_init() {
     // Add some useful scenes by default, these can be overridden in init if the
     // user so wishes
     scenes->register_scene<scenes::Loading>("_loading");
-    scenes->load_scene("_loading");
+    scenes->load("_loading");
 
     initialized_ = init();
 

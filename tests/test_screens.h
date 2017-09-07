@@ -112,7 +112,7 @@ public:
 
         TestScene* scr = dynamic_cast<TestScene*>(manager_->resolve_scene("main").get());
         assert_false(scr->load_called);
-        manager_->load_scene_in_background("main");
+        manager_->load_in_background("main");
 #ifdef _arch_dreamcast
         stdX::this_thread::sleep_for(std::chrono::milliseconds(100));
 #else
