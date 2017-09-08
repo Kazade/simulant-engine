@@ -19,18 +19,24 @@
 #ifndef BACKGROUND_H
 #define BACKGROUND_H
 
-#include "types.h"
+#include "../types.h"
 
-#include "generic/managed.h"
-#include "generic/identifiable.h"
-
-#include "interfaces/printable.h"
-#include "interfaces/nameable.h"
-#include "interfaces/updateable.h"
+#include "../generic/managed.h"
+#include "../generic/identifiable.h"
+#include "../generic/property.h"
+#include "../interfaces/printable.h"
+#include "../interfaces/nameable.h"
+#include "../interfaces/updateable.h"
+#include "../nodes/sprite.h"
 
 namespace smlt {
 
 class BackgroundManager;
+
+enum BackgroundType {
+    BACKGROUND_TYPE_SCROLL,
+    BACKGROUND_TYPE_ANIMATED
+};
 
 enum BackgroundResizeStyle {
     BACKGROUND_RESIZE_ZOOM,
@@ -45,7 +51,7 @@ class Background:
     public Printable {
 
 public:
-    Background(BackgroundID background_id, BackgroundManager *manager);
+    Background(BackgroundID background_id, BackgroundManager *manager, BackgroundType type);
 
     bool init() override;
     void cleanup() override;
@@ -54,10 +60,14 @@ public:
     void set_horizontal_scroll_rate(float x_rate);
     void set_vertical_scroll_rate(float y_rate);
     void set_texture(TextureID texture_id);
+    void set_spritesheet(TextureID texture_id, float frame_width, float frame_height, SpritesheetAttrs attrs=SpritesheetAttrs());
     void set_resize_style(BackgroundResizeStyle style);
 
     //Ownable interface
     void ask_owner_for_destruction();
+
+    Property<Background, Sprite> sprite = {this, &Background::sprite_};
+    Property<Background, Stage> stage = {this, &Background::stage_};
 
     unicode to_unicode() const {
         return Nameable::to_unicode();
@@ -66,13 +76,11 @@ public:
 private:
     BackgroundManager* manager_;
 
-    void update_camera(const Viewport& viewport);
-
-    StageID stage_id_;
+    BackgroundType type_;
+    StagePtr stage_;
     CameraID camera_id_;
     PipelineID pipeline_id_;
-    MaterialID material_id_;
-    ActorID actor_id_;
+    SpritePtr sprite_;
 
     BackgroundResizeStyle style_ = BACKGROUND_RESIZE_ZOOM;
     float x_rate_ = 0.0;

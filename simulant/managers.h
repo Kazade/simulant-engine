@@ -31,28 +31,6 @@ namespace smlt {
 
 class StageNode;
 
-class BackgroundManager:
-    public generic::TemplatedManager<Background, BackgroundID>,
-    public virtual Updateable {
-
-public:
-    BackgroundManager(Window* window);
-    ~BackgroundManager();
-
-    BackgroundID new_background();
-    BackgroundID new_background_from_file(const unicode& filename, float scroll_x=0.0, float scroll_y=0.0);
-    BackgroundPtr background(BackgroundID bid);
-    bool has_background(BackgroundID bid) const;
-    void delete_background(BackgroundID bid);
-    uint32_t background_count() const;
-
-    void update(float dt) override;
-
-    Property<BackgroundManager, Window> window = { this, &BackgroundManager::window_ };
-private:
-    Window* window_;
-};
-
 class CameraManager {
 public:
     CameraManager(Stage* stage);

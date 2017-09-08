@@ -67,6 +67,10 @@ samples/q2bsp_sample.cpp
 samples/sample.cpp
 samples/selection_sample.cpp
 samples/viewport_sample.cpp
+simulant/backgrounds/background.cpp
+simulant/backgrounds/background.h
+simulant/backgrounds/background_manager.cpp
+simulant/backgrounds/background_manager.h
 simulant/controllers/airplane.h
 simulant/controllers/controller.cpp
 simulant/controllers/controller.h

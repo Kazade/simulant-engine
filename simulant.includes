@@ -139,3 +139,4 @@ simulant/nodes/particles/manipulators
 simulant/nodes/particles
 bin
 simulant/input
+simulant/backgrounds

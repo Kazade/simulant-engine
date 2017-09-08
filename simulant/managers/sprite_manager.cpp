@@ -22,23 +22,29 @@ SpriteID SpriteManager::new_sprite() {
     return s;
 }
 
-SpriteID SpriteManager::new_sprite_from_file(const unicode& filename, uint32_t frame_width, uint32_t frame_height, uint32_t margin, uint32_t spacing, std::pair<uint32_t, uint32_t> padding) {
-    SpriteID s = new_sprite();
+SpriteID SpriteManager::new_sprite_from_file(const unicode &filename, uint32_t frame_Width, uint32_t frame_height, const SpritesheetAttrs& attrs) {
     TextureID t = stage_->assets->new_texture_from_file(
         filename,
         TextureFlags(MIPMAP_GENERATE_NONE, TEXTURE_WRAP_CLAMP_TO_EDGE, TEXTURE_FILTER_NEAREST)
     );
+
+    return new_sprite_from_texture(t, frame_Width, frame_height, attrs);
+}
+
+SpriteID SpriteManager::new_sprite_from_texture(TextureID texture_id, uint32_t frame_width, uint32_t frame_height, const SpritesheetAttrs& attrs) {
+    SpritePtr s = new_sprite().fetch();
+
     try {
-        sprite(s)->set_spritesheet(t, frame_width, frame_height, margin, spacing, padding);
+        s->set_spritesheet(texture_id, frame_width, frame_height, attrs);
 
         // Set the render dimensions to match the image size by default
-        sprite(s)->set_render_dimensions(frame_width, frame_height);
+        s->set_render_dimensions(frame_width, frame_height);
     } catch(...) {
-        delete_sprite(s);
+        delete_sprite(s->id());
         throw;
     }
 
-    return s;
+    return s->id();
 }
 
 SpritePtr SpriteManager::sprite(SpriteID s) {

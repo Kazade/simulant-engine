@@ -19,7 +19,6 @@
 
 
 #include "managers.h"
-#include "background.h"
 #include "window.h"
 #include "stage.h"
 #include "nodes/camera.h"
@@ -30,63 +29,6 @@
 
 namespace smlt {
 
-//============== START BACKGROUNDS ==========
-BackgroundManager::BackgroundManager(Window* window):
-    window_(window) {
-
-}
-
-BackgroundManager::~BackgroundManager() {
-    auto objects = BackgroundManager::__objects();
-    for(auto background_pair: objects) {
-        delete_background(background_pair.first);
-    }
-}
-
-void BackgroundManager::update(float dt) {
-    //Update the backgrounds
-    for(auto background_pair: BackgroundManager::__objects()) {
-        auto* bg = background_pair.second.get();
-        bg->update(dt);
-    }
-}
-
-BackgroundID BackgroundManager::new_background() {
-    BackgroundID bid = BackgroundManager::make(this);
-    return bid;
-}
-
-BackgroundID BackgroundManager::new_background_from_file(const unicode& filename, float scroll_x, float scroll_y) {
-    BackgroundID result = new_background();
-    try {
-        background(result)->set_texture(window_->shared_assets->new_texture_from_file(filename));
-        background(result)->set_horizontal_scroll_rate(scroll_x);
-        background(result)->set_vertical_scroll_rate(scroll_y);
-    } catch(...) {
-        delete_background(result);
-        throw;
-    }
-
-    return result;
-}
-
-BackgroundPtr BackgroundManager::background(BackgroundID bid) {
-    return BackgroundManager::get(bid).lock().get();
-}
-
-bool BackgroundManager::has_background(BackgroundID bid) const {
-    return BackgroundManager::contains(bid);
-}
-
-void BackgroundManager::delete_background(BackgroundID bid) {
-    BackgroundManager::destroy(bid);
-}
-
-uint32_t BackgroundManager::background_count() const {
-    return BackgroundManager::count();
-}
-
-//============== END BACKGROUNDS ============
 
 //=============== START CAMERAS ============
 
