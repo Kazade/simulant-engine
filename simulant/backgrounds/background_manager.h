@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../generic/property.h"
-#include "../interfaces.h"
 #include "../utils/unicode.h"
 #include "background.h"
 
@@ -10,8 +9,7 @@ namespace smlt {
 class Window;
 
 class BackgroundManager:
-    public generic::TemplatedManager<Background, BackgroundID>,
-    public virtual Updateable {
+    public generic::TemplatedManager<Background, BackgroundID> {
 
 public:
     BackgroundManager(Window* window);
@@ -26,7 +24,9 @@ public:
     void delete_background(BackgroundID bid);
     uint32_t background_count() const;
 
-    void update(float dt) override;
+    void delete_all_backgrounds();
+
+    void update(float dt);
 
     Property<BackgroundManager, Window> window = { this, &BackgroundManager::window_ };
 private:

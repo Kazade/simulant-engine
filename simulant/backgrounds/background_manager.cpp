@@ -72,6 +72,10 @@ uint32_t BackgroundManager::background_count() const {
     return BackgroundManager::count();
 }
 
+void BackgroundManager::delete_all_backgrounds() {
+    generic::TemplatedManager<Background, BackgroundID>::destroy_all();
+}
+
 //============== END BACKGROUNDS ============
 
 }

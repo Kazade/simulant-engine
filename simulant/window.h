@@ -116,6 +116,7 @@ typedef sig::signal<void ()> ShutdownSignal;
 class Window :
     public Source,
     public StageManager,
+    public BackgroundManager,
     public Loadable,
     public PipelineHelperAPIInterface,
     public RenderTarget,
@@ -342,9 +343,6 @@ protected:
     InputState* _input_state() const { return input_state_.get(); }
 
 public:
-
-    Property<Window, BackgroundManager> backgrounds = {this, &Window::background_manager_};
-
     //Read only properties
     Property<Window, ResourceManager> shared_assets = { this, &Window::resource_manager_ };
     Property<Window, Application> application = { this, &Window::application_ };
