@@ -94,6 +94,10 @@ void Background::set_spritesheet(TextureID texture_id, float frame_width, float 
     assert(tex);
 
     sprite_->set_spritesheet(texture_id, frame_width, frame_height, attrs);
+    sprite_->set_render_dimensions(
+        frame_width / frame_height,
+        1.0f
+    );
 
     auto mat = sprite_->material_id().fetch();
     mat->first_pass()->set_depth_write_enabled(false);
@@ -112,6 +116,10 @@ void Background::set_texture(TextureID texture_id) {
     sprite_->set_spritesheet(
         tex->id(),
         tex->width(), tex->height()
+    );
+    sprite_->set_render_dimensions(
+        tex->width() / tex->height(),
+        1.0f
     );
 
     auto mat = sprite_->material_id().fetch();
