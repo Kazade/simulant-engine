@@ -239,8 +239,6 @@ std::shared_ptr<SoundDriver> KOSWindow::create_sound_driver() {
 }
 
 void smlt::KOSWindow::initialize_input_controller(smlt::InputState &controller) {
-    L_DEBUG("Detecting input devices");
-
     std::vector<JoystickDeviceInfo> joypads;
 
     auto mouse_dev = maple_enum_type(0, MAPLE_FUNC_MOUSE);

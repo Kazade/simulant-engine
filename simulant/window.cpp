@@ -60,7 +60,8 @@ namespace smlt {
 
 Window::Window():
     Source(this),
-    StageManager(this),    
+    StageManager(this),
+    BackgroundManager(this),
     resource_manager_(new ResourceManager(this)),
     initialized_(false),
     width_(-1),
@@ -71,7 +72,6 @@ Window::Window():
     frame_counter_time_(0),
     frame_counter_frames_(0),
     frame_time_in_milliseconds_(0),
-    background_manager_(new BackgroundManager(this)),
     time_keeper_(TimeKeeper::create(1.0 / Window::STEPS_PER_SECOND)) {
 
 }
@@ -155,9 +155,10 @@ void Window::create_defaults() {
 }
 
 void Window::_cleanup() {
+    delete_all_backgrounds();
+
     virtual_gamepad_.reset();
     loading_.reset();
-    background_manager_.reset();
     render_sequence_.reset();
 
     delete_all_stages();
@@ -266,7 +267,7 @@ void Window::_update_thunk(float dt) {
         //it's still accessible through get_deltatime if the user needs it
     }
 
-    background_manager_->update(dt);
+    BackgroundManager::update(dt);
     StageManager::_update_thunk(dt);
 }
 

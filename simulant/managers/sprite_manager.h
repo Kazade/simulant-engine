@@ -25,10 +25,15 @@ public:
     SpriteID new_sprite();
     SpriteID new_sprite_from_file(
         const unicode& filename,
-        uint32_t frame_Width, uint32_t frame_height,
-        uint32_t margin=0, uint32_t spacing=0,
-        std::pair<uint32_t, uint32_t> padding=std::make_pair(0, 0)
+        uint32_t frame_width, uint32_t frame_height,
+        const SpritesheetAttrs &attrs=SpritesheetAttrs()
     );
+
+    SpriteID new_sprite_from_texture(TextureID texture_id,
+        uint32_t frame_width, uint32_t frame_height,
+        const SpritesheetAttrs &attrs=SpritesheetAttrs()
+    );
+
     SpritePtr sprite(SpriteID s);
     bool has_sprite(SpriteID s) const;
     void delete_sprite(SpriteID s);

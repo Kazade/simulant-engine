@@ -44,6 +44,8 @@ public:
 
             stage->new_light_as_directional(Vec3(1, 0, 0), smlt::Colour::YELLOW);
         }
+
+        window->new_background_as_scrollable_from_file("sample_data/background.png");
     }
 
     void fixed_update(float dt) {

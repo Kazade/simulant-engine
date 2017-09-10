@@ -33,6 +33,13 @@ namespace smlt {
 class KeyFrameAnimationState;
 class SpriteManager;
 
+struct SpritesheetAttrs {
+    uint32_t margin = 0;
+    uint32_t spacing = 0;
+    uint32_t padding_vertical = 0;
+    uint32_t padding_horizontal = 0;
+};
+
 class Sprite :
     public StageNode,
     public Managed<Sprite>,
@@ -60,13 +67,13 @@ public:
     void set_alpha(float alpha);
 
     float alpha() const { return alpha_; }
+    MaterialID material_id() const { return material_id_; }
 
     void set_spritesheet(
         TextureID texture_id,
         uint32_t frame_width,
         uint32_t frame_height,
-        uint32_t margin=0, uint32_t spacing=0,
-        std::pair<uint32_t, uint32_t> padding=std::make_pair(0, 0)
+        SpritesheetAttrs attrs=SpritesheetAttrs()
     );
 
     void flip_vertically(bool value=true);
@@ -86,7 +93,7 @@ private:
     float sprite_sheet_spacing_ = 0;
     std::pair<uint32_t, uint32_t> sprite_sheet_padding_;
     float render_width_ = 1.0;
-    float render_height_ = -1;
+    float render_height_ = 1.0;
     ActorID actor_id_;
     MeshID mesh_id_;
     MaterialID material_id_;
