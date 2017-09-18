@@ -69,6 +69,14 @@ public:
 
     virtual GPUProgramPtr gpu_program(GPUProgramID) const { return GPUProgramPtr(); }
 
+    /*
+     * Given a Texture, this should take care of:
+     * - Uploading the texture if the data is dirty
+     * - Updating texture filters and wrap modes if necessary
+     * - Generating or deleting mipmaps if the mipmap generation changed
+     */
+    virtual void prepare_texture(TexturePtr texture) = 0;
+
 public:
     // Render support flags
     virtual bool supports_gpu_programs() const { return false; }

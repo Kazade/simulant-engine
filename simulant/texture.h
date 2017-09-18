@@ -44,14 +44,81 @@ enum TextureWrap {
 };
 
 enum TextureFilter {
-    TEXTURE_FILTER_LINEAR,
-    TEXTURE_FILTER_NEAREST
+    TEXTURE_FILTER_POINT,
+    TEXTURE_FILTER_BILINEAR,
+    TEXTURE_FILTER_TRILINEAR
+};
+
+enum TextureFormat {
+    // Standard formats
+    TEXTURE_FORMAT_RGB,
+    TEXTURE_FORMAT_RGBA,
+
+    // Dreamcast PVR VQ compressed
+    TEXTURE_FORMAT_UNSIGNED_SHORT_5_6_5_VQ,
+    TEXTURE_FORMAT_UNSIGNED_SHORT_5_6_5_VQ_TWID,
+    TEXTURE_FORMAT_UNSIGNED_SHORT_4_4_4_4_VQ,
+    TEXTURE_FORMAT_UNSIGNED_SHORT_4_4_4_4_VQ_TWID,
+    TEXTURE_FORMAT_UNSIGNED_SHORT_1_5_5_5_VQ,
+    TEXTURE_FORMAT_UNSIGNED_SHORT_1_5_5_5_VQ_TWID,
+
+    // S3TC
+    TEXTURE_FORMAT_RGB_S3TC_DXT1_EXT,
+    TEXTURE_FORMAT_RGBA_S3TC_DXT1_EXT,
+    TEXTURE_FORMAT_RGBA_S3TC_DXT3_EXT,
+    TEXTURE_FORMAT_RGBA_S3TC_DXT5_EXT
+};
+
+enum TextureTexelType {
+    TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE,
+    TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_5_6_5,
+    TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_4_4_4_4,
+    TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_5_5_5_1
 };
 
 enum TextureFreeData {
     TEXTURE_FREE_DATA_NEVER,
     TEXTURE_FREE_DATA_AFTER_UPLOAD
 };
+
+class NoTextureLockError : public std::runtime_error {
+public:
+    NoTextureLockError(const std::string& what):
+        std::runtime_error(what) {}
+};
+
+class TextureLock {
+    /*
+     * Use when manipulating textures in a thread to prevent the
+     * renderer trying to upload your data before you're done
+     */
+
+    TextureLock() = default;
+    TextureLock(Texture* tex, bool wait=true);
+    ~TextureLock();
+
+    /* Only Texture can create TextureLock objects */
+    friend class Texture;
+
+    Texture* tex_ = nullptr;
+
+public:
+    /* TextureLock isn't copyable */
+    TextureLock(const TextureLock& rhs) = delete;
+    TextureLock& operator=(const TextureLock& rhs) = delete;
+
+    /* It *is* moveable though */
+    TextureLock(TextureLock&& rhs);
+    TextureLock& operator=(const TextureLock&& rhs);
+
+    /* TextureLock is false-y if it's not bound to a texture */
+    operator bool() const {
+        return bool(tex_);
+    }
+};
+
+typedef std::shared_ptr<TextureLock> TextureLockPtr;
+
 
 class Texture :
     public Resource,
@@ -69,55 +136,201 @@ public:
     typedef std::shared_ptr<Texture> ptr;
     typedef std::vector<uint8_t> Data;
 
-    unsigned int gl_tex() const { return gl_tex_; }
-
     Texture(TextureID id, ResourceManager* resource_manager):
         Resource(resource_manager),
         generic::Identifiable<TextureID>(id),
         width_(0),
-        height_(0),
-        bpp_(32),
-        gl_tex_(0) { }
+        height_(0) { }
 
-    ~Texture();
+    /*
+     * Lock the texture against uploads to the GPU.
+     *
+     * This is necessary around code which manipulates
+     * the texture data buffer (e.g .resize)
+     */
+    TextureLock lock() {
+        return TextureLock(this);
+    }
 
-    void set_bpp(uint32_t bits=32);
+    /*
+     * Try to lock the texture data, but don't wait for it.
+     * Returns a false-y object if the lock could not be obtained
+     */
+    TextureLock try_lock() {
+        try {
+            return TextureLock(this, false);
+        } catch(NoTextureLockError& e) {
+            return TextureLock();
+        }
+    }
+
+    void set_texel_type(TextureTexelType type);
+
+    /*
+     * Change the width and height, but manually set the data buffer size,
+     * mainly used for compressed textures
+     */
+    void resize(uint32_t width, uint32_t height, uint32_t data_size);
+
+    /*
+     * Change the width and height, automatically resizing the data buffer
+     * depending on the bytes_per_pixel of the texel_type
+     */
     void resize(uint32_t width, uint32_t height);
-    void upload(
-        MipmapGenerate mipmap = MIPMAP_GENERATE_COMPLETE,
-        TextureWrap wrap = TEXTURE_WRAP_REPEAT,
-        TextureFilter filter = TEXTURE_FILTER_NEAREST,
-        bool free_after=true
-    ); //Upload to GL, initializes the tex ID
 
-    void __do_upload(MipmapGenerate mipmap, TextureWrap wrap, TextureFilter filter, bool free_after);
-
+    /*
+     * Flip the data buffer vertically. This will have no effect if the
+     * data buffer has been wiped after upload
+     */
     void flip_vertically();
-    void free(); //Frees the data used to construct the texture
+
+    /* Clear the data buffer */
+    void free();
 
     uint32_t width() const { return width_; }
     uint32_t height() const { return height_; }
-    uint32_t bpp() const { return bpp_; }
-    uint8_t channels() const { return bpp_ / 8; }
 
-    Texture::Data& data() { return data_; }
+    /*
+     * Returns true if this Texture uses a compressed format
+     */
+    bool is_compressed() const;
 
-    void sub_texture(TextureID src, uint16_t offset_x, uint16_t offset_y);
+    /* Returns the data size of each texel in bytes */
+    std::size_t bytes_per_pixel() const {
+        return bits_per_pixel() / 8;
+    }
 
+    /* Returns the data size of each texel in bits */
+    std::size_t bits_per_pixel() const;
+
+    /*
+     * Returns the number of channels that this texture has
+     */
+    uint8_t channels() const;
+
+    /*
+     * Returns a pointer to the start of the data buffer.
+     * Returns a nullptr if the buffer hasn't been allocated
+     */
+    uint8_t* data() const;
+
+    /*
+     * Mark the data as changed so it will be reuploaded to the GPU
+     * by the renderer
+     */
+    void mark_data_changed() {
+        data_dirty_ = true;
+    }
+
+    /*
+     * Save a texture to the specified file. Will only work for
+     * uncompressed Textures
+     */
     void save_to_file(const unicode& filename);
 
     void set_source(const unicode& source) { source_ = source; }
     unicode source() const { return source_; }
+
+    /* Texture filtering and wrapping */
+    void set_texture_filter(TextureFilter filter);
+
+    /* Set the texture wrap modes, either together or per-dimension */
+    void set_texture_wrap(TextureWrap wrap_u, TextureWrap wrap_v, TextureWrap wrap_w);
+    void set_texture_wrap_u(TextureWrap wrap_u);
+    void set_texture_wrap_v(TextureWrap wrap_v);
+    void set_texture_wrap_w(TextureWrap wrap_w);
+
+    TextureFilter texture_filter() const {
+        return filter_;
+    }
+
+    TextureWrap wrap_u() const {
+        return wrap_u_;
+    }
+
+    TextureWrap wrap_v() const {
+        return wrap_v_;
+    }
+
+    TextureWrap wrap_w() const {
+        return wrap_w_;
+    }
+
+    MipmapGenerate mipmap_generation() const {
+        return mipmap_generation_;
+    }
+
+    void set_mipmap_generation(MipmapGenerate type) {
+        mipmap_generation_ = type;
+    }
+
+    /*
+     * INTERNAL: returns true if the filters are dirty
+     */
+    bool _params_dirty() const {
+        return params_dirty_;
+    }
+
+    /*
+     * INTERNAL: Clears the params dirty flag
+     */
+    void _set_params_clean() {
+        params_dirty_ = false;
+    }
+
+    /*
+     * INTERNAL: returns true if the mipmap flag changed
+     */
+    bool _mipmaps_dirty() const {
+        return mipmaps_dirty_;
+    }
+
+    /*
+     * INTERNAL: clears the mipmap flag
+     */
+    void _set_mipmaps_clean() {
+        mipmaps_dirty_ = false;
+    }
+
+    /*
+     * INTERNAL: returns true if the data needs re-uploading
+     */
+    bool _data_dirty() const {
+        return data_dirty_;
+    }
+
+    /*
+     * INTERNAL: clears the dirty data flag
+     */
+    void _set_data_clean() {
+        data_dirty_ = false;
+    }
+
 private:
     uint32_t width_;
     uint32_t height_;
-    uint32_t bpp_;
 
-    Texture::Data data_;
-
-    unsigned int gl_tex_;
+    TextureTexelType texel_type_ = TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE;
+    TextureFormat format_ = TEXTURE_FORMAT_RGBA;
 
     unicode source_;
+
+    bool data_dirty_ = true;
+    Texture::Data data_;
+    TextureFreeData free_data_mode_ = TEXTURE_FREE_DATA_AFTER_UPLOAD;
+
+    bool mipmaps_dirty_ = true;
+    MipmapGenerate mipmap_generation_ = MIPMAP_GENERATE_COMPLETE;
+
+    bool params_dirty_ = true;
+    TextureFilter filter_ = TEXTURE_FILTER_POINT;
+    TextureWrap wrap_u_ = TEXTURE_WRAP_REPEAT;
+    TextureWrap wrap_v_ = TEXTURE_WRAP_REPEAT;
+    TextureWrap wrap_w_ = TEXTURE_WRAP_REPEAT;
+
+    std::mutex mutex_;
+
+    friend class TextureLock;
 };
 
 }

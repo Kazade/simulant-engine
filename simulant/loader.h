@@ -33,6 +33,8 @@
 #include "generic/any/any.h"
 #include "types.h"
 
+#include "../texture.h"
+
 namespace smlt {
 
 class ResourceLocator;
@@ -125,6 +127,7 @@ struct TextureLoadResult {
     uint32_t width;
     uint32_t height;
     uint32_t channels;
+    TextureTexelType texel_type;
     std::vector<uint8_t> data;
 };
 

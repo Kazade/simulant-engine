@@ -94,6 +94,7 @@ public:
     GPUProgramPtr gpu_program(const GPUProgramID& program_id);
 
     bool supports_gpu_programs() const override { return true; }
+
 private:
     GPUProgramManager program_manager_;
 

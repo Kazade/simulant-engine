@@ -81,6 +81,8 @@ simulant/input/input.cpp
 simulant/input/input.h
 simulant/input/input_manager.cpp
 simulant/input/input_manager.h
+simulant/loaders/dds_texture_loader.h
+simulant/loaders/vq_texture_loader.h
 simulant/math/aabb.cpp
 simulant/math/aabb.h
 simulant/math/degrees.cpp
@@ -172,6 +174,7 @@ tests/test_partitioner.h
 tests/test_shader.h
 tests/test_sound.h
 tests/test_sprites.h
+tests/test_texture.h
 tests/test_utils.h
 tests/test_vertex_data.h
 tests/test_tree.h
