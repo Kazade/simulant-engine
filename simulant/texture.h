@@ -95,7 +95,6 @@ class TextureLock {
 
     TextureLock() = default;
     TextureLock(Texture* tex, bool wait=true);
-    ~TextureLock();
 
     /* Only Texture can create TextureLock objects */
     friend class Texture;
@@ -103,6 +102,8 @@ class TextureLock {
     Texture* tex_ = nullptr;
 
 public:
+    ~TextureLock();
+
     /* TextureLock isn't copyable */
     TextureLock(const TextureLock& rhs) = delete;
     TextureLock& operator=(const TextureLock& rhs) = delete;
@@ -165,6 +166,7 @@ public:
     }
 
     void set_texel_type(TextureTexelType type);
+    void set_format(TextureFormat format);
 
     /*
      * Change the width and height, but manually set the data buffer size,
@@ -209,10 +211,12 @@ public:
     uint8_t channels() const;
 
     /*
-     * Returns a pointer to the start of the data buffer.
-     * Returns a nullptr if the buffer hasn't been allocated
+     * Return a const-reference to the internal data buffer
      */
-    uint8_t* data() const;
+    const Texture::Data& data() const;
+
+    /* Returns a non-const reference to the internal data buffer */
+    Texture::Data& data() { return data_; }
 
     /*
      * Mark the data as changed so it will be reuploaded to the GPU

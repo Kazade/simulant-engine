@@ -79,7 +79,7 @@ void Texture::resize(uint32_t width, uint32_t height) {
     }
 
     if(is_compressed()) {
-        throw std::logic_error("Unable to resize a compressed texture with width and height")
+        throw std::logic_error("Unable to resize a compressed texture with width and height");
     }
 
     width_ = width;
@@ -153,19 +153,18 @@ uint8_t Texture::channels() const {
     case TEXTURE_FORMAT_RGBA_S3TC_DXT3_EXT:
     case TEXTURE_FORMAT_RGBA_S3TC_DXT5_EXT:
         return 4;
+    default:
+        // Shouldn't happen, but will be more obviously debuggable if it does
+        return 0;
     }
 }
 
-uint8_t *Texture::data() const {
-    if(data_.empty()) {
-        return nullptr;
-    }
-
-    return &data_[0];
+const Texture::Data &Texture::data() const {
+    return data_;
 }
 
 void Texture::save_to_file(const unicode& filename) {
-    SOIL_save_image(filename.encode().c_str(), SOIL_SAVE_TYPE_TGA, width(), height(), bpp() / 8, &data_[0]);
+    SOIL_save_image(filename.encode().c_str(), SOIL_SAVE_TYPE_TGA, width(), height(), bytes_per_pixel(), &data_[0]);
 }
 
 void Texture::set_texture_filter(TextureFilter filter) {

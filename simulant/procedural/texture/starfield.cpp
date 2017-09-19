@@ -38,7 +38,9 @@ void draw_circle(smlt::TexturePtr texture_ptr, float x, float y, float size, flo
     uint32_t start_x = int(x) - radius - 1;
     uint32_t end_x = int(x) + radius + 1;
 
-    int32_t bytes_per_pixel = texture.bpp() / 8;
+    int32_t bytes_per_pixel = texture.bytes_per_pixel();
+
+    auto texlock = texture.lock();
 
     for(uint32_t j = start_y; j < end_y; ++j) {
         for(uint32_t i = start_x; i < end_x; ++i) {
@@ -57,13 +59,15 @@ void draw_circle(smlt::TexturePtr texture_ptr, float x, float y, float size, flo
             }
         }
     }
+
+    texture.mark_data_changed();
 }
 
 void starfield(smlt::TexturePtr texture_ptr, uint32_t width, uint32_t height) {
     smlt::Texture& texture = *texture_ptr;
 
     texture.resize(width, height);
-    texture.set_bpp();
+    texture.set_format(TEXTURE_FORMAT_RGBA);
 
     const float GLOBAL_DENSITY = 0.01f;
     const float MAX_SIZE = 2.0;
@@ -93,8 +97,6 @@ void starfield(smlt::TexturePtr texture_ptr, uint32_t width, uint32_t height) {
             }
         }
     }
-
-    texture.upload(MIPMAP_GENERATE_COMPLETE, TEXTURE_WRAP_CLAMP_TO_EDGE, TEXTURE_FILTER_NEAREST, false);
 }
 
 }

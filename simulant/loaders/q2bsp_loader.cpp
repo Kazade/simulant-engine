@@ -138,11 +138,14 @@ void Q2BSPLoader::generate_materials(
 
     // TESTING: BLACK TEXTURE
     auto black = assets->new_texture(smlt::GARBAGE_COLLECT_NEVER).fetch();
-    black->resize(1, 1);
-    black->set_bpp(32);
-    black->data()[0] = black->data()[1] = black->data()[2] = 0;
-    black->data()[3] = 255;
-    black->upload();
+    {
+        auto lock = black->lock();
+        black->resize(1, 1);
+        black->set_format(TEXTURE_FORMAT_RGBA);
+        black->data()[0] = black->data()[1] = black->data()[2] = 0;
+        black->data()[3] = 255;
+        black->mark_data_changed();
+    }
 
     materials.clear();
     for(auto& info: texture_infos) {
@@ -252,9 +255,11 @@ std::vector<LightmapLocation> pack_lightmaps(const std::vector<Lightmap>& lightm
 
     // Finally generate the texture!
     output_texture->resize(LIGHTMAP_DIMENSION, LIGHTMAP_DIMENSION);
-    output_texture->set_bpp(32);
+    output_texture->set_format(TEXTURE_FORMAT_RGBA);
 
     std::vector<LightmapLocation> locations(lightmaps.size());
+
+    auto texlock = output_texture->lock();
 
     bool logged = false;
     for(uint32_t i = 0; i < lightmaps.size(); ++i) {
@@ -286,8 +291,8 @@ std::vector<LightmapLocation> pack_lightmaps(const std::vector<Lightmap>& lightm
         locations[i] = LightmapLocation(rect.x, rect.y);
     }
 
-    output_texture->save_to_file("/tmp/lightmap.tga");
-    output_texture->upload(MIPMAP_GENERATE_NONE, TEXTURE_WRAP_CLAMP_TO_EDGE, TEXTURE_FILTER_LINEAR);
+    // output_texture->save_to_file("/tmp/lightmap.tga");
+    output_texture->mark_data_changed();
     return locations;
 }
 

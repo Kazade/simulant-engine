@@ -87,7 +87,7 @@ void TiledLoader::into(Loadable &resource, const LoaderOptions &options) {
 
         TextureID tid = mesh->resource_manager().new_texture_from_file(
             final_path,
-            TextureFlags(MIPMAP_GENERATE_NONE, TEXTURE_WRAP_CLAMP_TO_EDGE, TEXTURE_FILTER_NEAREST)
+            TextureFlags(MIPMAP_GENERATE_NONE, TEXTURE_WRAP_CLAMP_TO_EDGE, TEXTURE_FILTER_POINT)
         );
 
         tileset_materials[i] = mesh->resource_manager().new_material_from_texture(tid);

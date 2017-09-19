@@ -44,7 +44,8 @@ void BaseTextureLoader::into(Loadable& resource, const LoaderOptions& options) {
         throw std::runtime_error("Couldn't load the file: " + filename_.encode());
     } else {
         tex->set_source(filename_);
-        tex->set_bpp(result.channels * 8);
+        tex->set_texel_type(result.texel_type);
+        tex->set_format(result.format);
         tex->resize(result.width, result.height);
         tex->data().assign(result.data.begin(), result.data.end());
 

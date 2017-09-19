@@ -247,6 +247,10 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     auto tex = mesh->resource_manager().texture(tid);
     tex->flip_vertically();
 
+    if(tex->is_compressed()) {
+        throw std::logic_error("Creating a heightmap from a compressed texture is currently unimplemented");
+    }
+
     float range = spec.max_height - spec.min_height;
 
     float x_offset = (spec.spacing * float(tex->width())) * 0.5f;
@@ -279,7 +283,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     std::vector<float> heights(total);
     auto& tex_data = tex->data();
-    auto stride = tex->bpp() / 8;
+    auto stride = tex->bytes_per_pixel();
     for(int32_t i = 0; i < total; i++) {
         heights[i] = float(tex_data[i * stride]) / 256.0f;
     }
