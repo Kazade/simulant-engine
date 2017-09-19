@@ -42,7 +42,7 @@ public:
     GL2RenderGroupImpl(RenderPriority priority):
         batcher::RenderGroupImpl(priority) {}
 
-    GLuint texture_id[MAX_TEXTURE_UNITS] = {0};
+    TextureID texture_id[MAX_TEXTURE_UNITS];
     GPUProgramID shader_id;
 
     bool lt(const RenderGroupImpl& other) const override {
@@ -83,10 +83,17 @@ batcher::RenderGroup GenericRenderer::new_render_group(Renderable* renderable, M
     auto impl = std::make_shared<GL2RenderGroupImpl>(renderable->render_priority());
     for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
         if(i < material_pass->texture_unit_count()) {
-            auto tex_id = material_pass->texture_unit(i).texture_id().fetch()->gl_tex();
+            auto tex_id = material_pass->texture_unit(i).texture_id();
+
+            /* Allocate the texture if it hasn't been already */
+            if(tex_id && !was_texture_allocated(tex_id)) {
+                auto tex = material_pass->material->resource_manager().texture(tex_id);
+                allocate_texture(tex_id, tex);
+            }
+
             impl->texture_id[i] = tex_id;
         } else {
-            impl->texture_id[i] = 0;
+            impl->texture_id[i] = TextureID();
         }
     }
     impl->shader_id = material_pass->gpu_program_id();
@@ -559,8 +566,12 @@ void GL2RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev
     // Set up the textures appropriately depending on the group textures
     for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
         if(!last_group || last_group->texture_id[i] != current_group_->texture_id[i]) {
+
+            // Make sure the texture is prepared
+            prepare_texture(current_group_->texture_id[i]);
+
             GLCheck(glActiveTexture, GL_TEXTURE0 + i);
-            GLCheck(glBindTexture, GL_TEXTURE_2D, current_group_->texture_id[i]);
+            GLCheck(glBindTexture, GL_TEXTURE_2D, gl_texture_name(current_group_->texture_id[i]));
         }
     }
 }

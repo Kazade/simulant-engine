@@ -69,6 +69,36 @@ public:
 
     virtual GPUProgramPtr gpu_program(GPUProgramID) const { return GPUProgramPtr(); }
 
+public:
+    // Render support flags
+    virtual bool supports_gpu_programs() const { return false; }
+
+    virtual HardwareBufferManager* _get_buffer_manager() const = 0;
+
+    /*
+     * Called when a texture is created. This should do whatever is necessary to
+     * prepare a texture for later upload (in GL this would call glGenTextures
+     *
+     * It's likely that data will need to also be stored here for prepare_texture
+     * to function (e.g. the resulting GLuint)
+     *
+     * This will be called from the main (rendering) thread.
+     */
+    virtual void allocate_texture(TextureID tex_id, TexturePtr texture) = 0;
+
+    /*
+     * Called when a texture is destroyed, should perform any cleanup from
+     * allocate_texture.
+     *
+     * This will be called from the main (rendering) thread.
+     */
+    virtual void deallocate_texture(TextureID texture_id) = 0;
+
+    /*
+     * Returns true if the texture has been allocated, false otherwise
+     */
+    virtual bool was_texture_allocated(TextureID texture_id) const = 0;
+
     /*
      * Given a Texture, this should take care of:
      * - Uploading the texture if the data is dirty
@@ -76,12 +106,6 @@ public:
      * - Generating or deleting mipmaps if the mipmap generation changed
      */
     virtual void prepare_texture(TexturePtr texture) = 0;
-
-public:
-    // Render support flags
-    virtual bool supports_gpu_programs() const { return false; }
-
-    virtual HardwareBufferManager* _get_buffer_manager() const = 0;
 
 private:    
     Window* window_ = nullptr;
