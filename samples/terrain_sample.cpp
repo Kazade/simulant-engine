@@ -10,6 +10,8 @@ inline T clamp(T x, T a = 0, T b = 1) {
 }
 
 void calculate_splat_map(int width, int length, TexturePtr texture, VertexData& vertices) {
+    auto lock = texture->lock();
+
     texture->resize(width, length);
 
     for(uint32_t i = 0; i < vertices.count(); ++i) {
@@ -31,7 +33,8 @@ void calculate_splat_map(int width, int length, TexturePtr texture, VertexData& 
         texture->data()[(i * 4) + 2] = 255.0f * (rock / z);
         texture->data()[(i * 4) + 3] = 255.0f * (snow / z);
     }
-    texture->upload(smlt::MIPMAP_GENERATE_NONE, smlt::TEXTURE_WRAP_CLAMP_TO_EDGE, smlt::TEXTURE_FILTER_LINEAR, false);
+    texture->mark_data_changed();
+
 }
 
 class Gamescene : public smlt::Scene<Gamescene> {

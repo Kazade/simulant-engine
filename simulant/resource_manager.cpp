@@ -87,6 +87,10 @@ void ResourceManager::update(float dt) {
         mat->update_controllers(dt);
         mat->update(dt);
     });
+
+    TextureManager::each([dt](Texture* tex) {
+        tex->update(dt);
+    });
 }
 
 void ResourceManager::run_garbage_collection() {

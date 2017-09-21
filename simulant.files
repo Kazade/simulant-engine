@@ -81,6 +81,7 @@ simulant/input/input.cpp
 simulant/input/input.h
 simulant/input/input_manager.cpp
 simulant/input/input_manager.h
+simulant/loaders/dds_texture_loader.cpp
 simulant/loaders/dds_texture_loader.h
 simulant/loaders/vq_texture_loader.h
 simulant/math/aabb.cpp

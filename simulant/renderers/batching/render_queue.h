@@ -137,7 +137,7 @@ class RenderGroupFactory {
 public:
     virtual ~RenderGroupFactory() {}
 
-    virtual RenderGroup new_render_group(Renderable* renderable, MaterialPass* material_pass) = 0;
+    virtual RenderGroup new_render_group(Renderable* renderable, MaterialPass* material_pass) = 0;  
 };
 
 typedef uint32_t Pass;

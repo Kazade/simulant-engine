@@ -114,6 +114,14 @@ private:
     void send_geometry(Renderable* renderable);
 
     friend class GL2RenderQueueVisitor;
+
+    void on_texture_register(TextureID tex_id, TexturePtr texture);
+
+    void on_texture_unregister(TextureID tex_id);
+
+    void on_texture_prepare(TexturePtr texture);
+
+    std::unordered_map<TextureID, GLuint> texture_objects_;
 };
 
 }

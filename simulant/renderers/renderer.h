@@ -75,41 +75,82 @@ public:
 
     virtual HardwareBufferManager* _get_buffer_manager() const = 0;
 
+    void register_texture(TextureID tex_id, TexturePtr texture) {
+        std::lock_guard<std::recursive_mutex> lock(texture_registry_mutex_);
+        if(!is_texture_registered(tex_id)) {
+            on_texture_register(tex_id, texture);
+            texture_registry_.insert(std::make_pair(tex_id, std::weak_ptr<Texture>(texture)));
+        }
+    }
+
+    void unregister_texture(TextureID texture_id) {
+        std::lock_guard<std::recursive_mutex> lock(texture_registry_mutex_);
+        if(texture_registry_.count(texture_id)) {
+            texture_registry_.erase(texture_id);
+            on_texture_unregister(texture_id);
+        }
+    }
+
+    /*
+     * Returns true if the texture has been allocated, false otherwise.
+     *
+     * Should be thread-safe along with allocate/deallocate texture.
+     */
+    bool is_texture_registered(TextureID texture_id) const {
+        std::lock_guard<std::recursive_mutex> lock(texture_registry_mutex_);
+        return texture_registry_.count(texture_id);
+    }
+
+    void prepare_texture(TextureID texture_id) {
+        std::lock_guard<std::recursive_mutex> lock(texture_registry_mutex_);
+
+        if(!texture_registry_.count(texture_id)) {
+            return;
+        }
+
+        auto tex = texture_registry_.at(texture_id).lock();
+        if(tex) {
+            on_texture_prepare(tex);
+        }
+    }
+
+private:    
+    Window* window_ = nullptr;
+
     /*
      * Called when a texture is created. This should do whatever is necessary to
-     * prepare a texture for later upload (in GL this would call glGenTextures
+     * prepare a texture for later upload
      *
      * It's likely that data will need to also be stored here for prepare_texture
-     * to function (e.g. the resulting GLuint)
+     * to function
      *
-     * This will be called from the main (rendering) thread.
+     * This will be called when a render group (which uses textures) is created, which
+     * means it can be called from any thread and should be thread-safe.
      */
-    virtual void allocate_texture(TextureID tex_id, TexturePtr texture) = 0;
+    virtual void on_texture_register(TextureID tex_id, TexturePtr texture) {}
 
     /*
      * Called when a texture is destroyed, should perform any cleanup from
-     * allocate_texture.
+     * register_texture.
      *
-     * This will be called from the main (rendering) thread.
+     * This will be called when all render groups sharing the texture are destroyed
+     * and so can be called from any thread and should be thread-safe
      */
-    virtual void deallocate_texture(TextureID texture_id) = 0;
-
-    /*
-     * Returns true if the texture has been allocated, false otherwise
-     */
-    virtual bool was_texture_allocated(TextureID texture_id) const = 0;
+    virtual void on_texture_unregister(TextureID tex_id) {}
 
     /*
      * Given a Texture, this should take care of:
      * - Uploading the texture if the data is dirty
      * - Updating texture filters and wrap modes if necessary
      * - Generating or deleting mipmaps if the mipmap generation changed
+     *
+     * Guaranteed to be called from the main (render) thread, although must obviously
+     * be aware of register/unregister
      */
-    virtual void prepare_texture(TexturePtr texture) = 0;
+    virtual void on_texture_prepare(TexturePtr texture) {}
 
-private:    
-    Window* window_ = nullptr;
-
+    mutable std::recursive_mutex texture_registry_mutex_; // Recursive because of nested is_texture_registered check
+    std::unordered_map<TextureID, std::weak_ptr<Texture>> texture_registry_;
 };
 
 }

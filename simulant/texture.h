@@ -28,6 +28,7 @@
 #include "types.h"
 #include "resource.h"
 #include "interfaces.h"
+#include "interfaces/updateable.h"
 
 namespace smlt {
 
@@ -126,7 +127,9 @@ class Texture :
     public Loadable,
     public generic::Identifiable<TextureID>,
     public Managed<Texture>,
-    public RenderTarget {
+    public Updateable,
+    public RenderTarget,
+    public std::enable_shared_from_this<Texture> {
 
 public:
     struct BuiltIns {
@@ -309,6 +312,12 @@ public:
     void _set_data_clean() {
         data_dirty_ = false;
     }
+
+
+    /* These are overridden to notify the renderer of texture changes */
+    bool init() override;
+    void cleanup() override;
+    void update(float dt) override;
 
 private:
     uint32_t width_;

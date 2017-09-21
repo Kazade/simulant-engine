@@ -3,7 +3,6 @@
 #include "simulant/extra.h"
 
 using namespace smlt;
-using namespace smlt::extra;
 
 class GameScene : public smlt::Scene<GameScene> {
 public:

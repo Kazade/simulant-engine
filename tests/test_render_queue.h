@@ -25,9 +25,6 @@ public:
         auto texture_1 = stage_->assets->new_texture();
         auto texture_2 = stage_->assets->new_texture();
 
-        stage_->assets->texture(texture_1)->upload();
-        stage_->assets->texture(texture_2)->upload();
-
         auto mat_1 = stage_->assets->new_material_from_texture(texture_1);
 #ifndef SIMULANT_GL_VERSION_1X
         mat_1.fetch()->delete_pass(1); // Delete the lighting pass from the material
@@ -107,9 +104,6 @@ public:
     void test_texture_grouping() {
         auto texture_1 = stage_->assets->new_texture();
         auto texture_2 = stage_->assets->new_texture();
-
-        stage_->assets->texture(texture_1)->upload();
-        stage_->assets->texture(texture_2)->upload();
 
         auto mat_1 = stage_->assets->new_material_from_texture(texture_1);
 #ifndef SIMULANT_GL_VERSION_1X
