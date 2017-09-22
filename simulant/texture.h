@@ -308,6 +308,12 @@ public:
     void cleanup() override;
     void update(float dt) override;
 
+    void _set_has_mipmaps(bool v) {
+        has_mipmaps_ = v;
+    }
+
+    bool has_mipmaps() const { return has_mipmaps_; }
+
 private:
     uint32_t width_;
     uint32_t height_;
@@ -322,6 +328,7 @@ private:
     TextureFreeData free_data_mode_ = TEXTURE_FREE_DATA_AFTER_UPLOAD;
 
     MipmapGenerate mipmap_generation_ = MIPMAP_GENERATE_COMPLETE;
+    bool has_mipmaps_ = false;
 
     bool params_dirty_ = true;
     TextureFilter filter_ = TEXTURE_FILTER_POINT;

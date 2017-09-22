@@ -726,6 +726,7 @@ void GenericRenderer::on_texture_prepare(TexturePtr texture) {
 
             if(texture->mipmap_generation() == MIPMAP_GENERATE_COMPLETE) {
                 GLCheck(glGenerateMipmap, GL_TEXTURE_2D);
+                texture->_set_has_mipmaps(true);
             }
 
         } else {
@@ -739,10 +740,22 @@ void GenericRenderer::on_texture_prepare(TexturePtr texture) {
     if(texture->_params_dirty()) {
         auto filter_mode = texture->texture_filter();
         switch(filter_mode) {
-            case TEXTURE_FILTER_BILINEAR:
+            case TEXTURE_FILTER_TRILINEAR: {
+                if(!texture->has_mipmaps()) {
+                    // Same as bilinear
+                    GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                    GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                } else {
+                    // Trilinear
+                    GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                    GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+                }
+
+            } break;
+            case TEXTURE_FILTER_BILINEAR: {
                 GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                 GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            break;
+            } break;
             case TEXTURE_FILTER_POINT:
             default: {
                 GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
