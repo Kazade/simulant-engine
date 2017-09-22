@@ -116,10 +116,11 @@ private:
     friend class GL2RenderQueueVisitor;
 
     void on_texture_register(TextureID tex_id, TexturePtr texture);
-
     void on_texture_unregister(TextureID tex_id);
-
     void on_texture_prepare(TexturePtr texture);
+
+    GLenum convert_texture_format(TextureFormat format);
+    GLenum convert_texel_type(TextureTexelType type);
 
     std::unordered_map<TextureID, GLuint> texture_objects_;
 };

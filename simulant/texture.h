@@ -169,7 +169,10 @@ public:
     }
 
     void set_texel_type(TextureTexelType type);
+    TextureTexelType texel_type() const { return texel_type_; }
+
     void set_format(TextureFormat format);
+    TextureFormat format() const { return format_; }
 
     /*
      * Change the width and height, but manually set the data buffer size,
@@ -286,20 +289,6 @@ public:
     }
 
     /*
-     * INTERNAL: returns true if the mipmap flag changed
-     */
-    bool _mipmaps_dirty() const {
-        return mipmaps_dirty_;
-    }
-
-    /*
-     * INTERNAL: clears the mipmap flag
-     */
-    void _set_mipmaps_clean() {
-        mipmaps_dirty_ = false;
-    }
-
-    /*
      * INTERNAL: returns true if the data needs re-uploading
      */
     bool _data_dirty() const {
@@ -332,7 +321,6 @@ private:
     Texture::Data data_;
     TextureFreeData free_data_mode_ = TEXTURE_FREE_DATA_AFTER_UPLOAD;
 
-    bool mipmaps_dirty_ = true;
     MipmapGenerate mipmap_generation_ = MIPMAP_GENERATE_COMPLETE;
 
     bool params_dirty_ = true;

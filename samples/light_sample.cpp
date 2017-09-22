@@ -26,6 +26,8 @@ public:
         stage->actor(actor_id_)->move_to(0.0, 0.0, -5.0);
 
         smlt::TextureID texture = stage->assets->new_texture_from_file("sample_data/crate.png");
+        texture.fetch()->set_texture_filter(TEXTURE_FILTER_BILINEAR);
+
         stage->actor(actor_id_)->mesh()->set_texture_on_material(0, texture);
 
         // Test Camera::look_at function

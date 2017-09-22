@@ -660,9 +660,42 @@ void GenericRenderer::on_texture_unregister(TextureID tex_id) {
     GLCheck(glDeleteTextures, 1, &gl_tex);
 }
 
+
+GLenum GenericRenderer::convert_texture_format(TextureFormat format) {
+    switch(format) {
+        case TEXTURE_FORMAT_RGB:
+            return GL_RGB;
+        case TEXTURE_FORMAT_RGBA:
+            return GL_RGBA;
+        default:
+            return GL_NONE;
+    }
+}
+
+GLenum GenericRenderer::convert_texel_type(TextureTexelType type) {
+    switch(type) {
+    case TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE:
+        return GL_UNSIGNED_BYTE;
+    case TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_4_4_4_4:
+        return GL_UNSIGNED_SHORT_4_4_4_4;
+    case TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_5_5_5_1:
+        return GL_UNSIGNED_SHORT_5_5_5_1;
+    case TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_5_6_5:
+        return GL_UNSIGNED_SHORT_5_6_5;
+    default:
+        return GL_NONE;
+    }
+}
+
 void GenericRenderer::on_texture_prepare(TexturePtr texture) {
+    auto lock = texture->try_lock();
+    if(!lock) {
+        // Don't update anything unless we can get a lock
+        return;
+    }
+
     // Do nothing if everything is up to date
-    if(!texture->_data_dirty() && !texture->_params_dirty() && !texture->_mipmaps_dirty()) {
+    if(!texture->_data_dirty() && !texture->_params_dirty()) {
         return;
     }
 
@@ -671,38 +704,56 @@ void GenericRenderer::on_texture_prepare(TexturePtr texture) {
 
     GLuint target = texture_objects_.at(texture->id());
 
-    if(active != target) {
-        GLCheck(glBindTexture, GL_TEXTURE_2D, target);
-    }
+    GLCheck(glBindTexture, GL_TEXTURE_2D, target);
 
     if(texture->_data_dirty()) {
         // Upload
-        if(texture->is_compressed()) {
+        auto format = convert_texture_format(texture->format());
+        auto type = convert_texel_type(texture->texel_type());
+
+        if(format != GL_NONE && type != GL_NONE) {
+            if(texture->is_compressed()) {
+
+            } else {
+                GLCheck(glTexImage2D,
+                    GL_TEXTURE_2D,
+                    0, format,
+                    texture->width(), texture->height(), 0,
+                    format,
+                    type, &texture->data()[0]
+                );
+            }
+
+            if(texture->mipmap_generation() == MIPMAP_GENERATE_COMPLETE) {
+                GLCheck(glGenerateMipmap, GL_TEXTURE_2D);
+            }
 
         } else {
-            GLCheck(glTexImage2D,
-                GL_TEXTURE_2D,
-                0, internalFormat,
-                texture->width(), texture->height(), 0,
-                format,
-                GL_UNSIGNED_BYTE, &texture->data()[0]
-            );
+            // If the format isn't supported, don't upload anything, but warn about it!
+            L_WARN_ONCE("Tried to use unsupported texture format in the GL renderer");
         }
 
         texture->_set_data_clean();
     }
 
     if(texture->_params_dirty()) {
+        auto filter_mode = texture->texture_filter();
+        switch(filter_mode) {
+            case TEXTURE_FILTER_BILINEAR:
+                GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            break;
+            case TEXTURE_FILTER_POINT:
+            default: {
+                GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            }
+        }
 
         texture->_set_params_clean();
     }
 
-    if(texture->_mipmaps_dirty()) {
-
-        texture->_set_mipmaps_clean();
-    }
-
-    if(active != target) {
+    if(active != (GLint) target) {
         GLCheck(glBindTexture, GL_TEXTURE_2D, active);
     }
 }
