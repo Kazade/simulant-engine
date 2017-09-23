@@ -713,7 +713,14 @@ void GenericRenderer::on_texture_prepare(TexturePtr texture) {
 
         if(format != GL_NONE && type != GL_NONE) {
             if(texture->is_compressed()) {
-
+                GLCheck(glCompressedTexImage2D,
+                    GL_TEXTURE_2D,
+                    0,
+                    format,
+                    texture->width(), texture->height(), 0,
+                    texture->data().size(),
+                    &texture->data()[0]
+                );
             } else {
                 GLCheck(glTexImage2D,
                     GL_TEXTURE_2D,
