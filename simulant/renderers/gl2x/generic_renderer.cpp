@@ -763,6 +763,23 @@ void GenericRenderer::on_texture_prepare(TexturePtr texture) {
             }
         }
 
+        auto convert_wrap_mode = [](TextureWrap wrap) -> GLenum {
+            switch(wrap) {
+                case TEXTURE_WRAP_CLAMP_TO_EDGE:
+                    return GL_CLAMP_TO_EDGE;
+                break;
+                default:
+                    // FIXME: Implement other modes
+                    return GL_REPEAT;
+            }
+        };
+
+        auto wrapu = convert_wrap_mode(texture->wrap_u());
+        auto wrapv = convert_wrap_mode(texture->wrap_v());
+
+        GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapu);
+        GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapv);
+
         texture->_set_params_clean();
     }
 
