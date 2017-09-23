@@ -88,6 +88,8 @@ public:
         std::runtime_error(what) {}
 };
 
+class Renderer;
+
 class TextureLock {
     /*
      * Use when manipulating textures in a thread to prevent the
@@ -140,11 +142,7 @@ public:
     typedef std::shared_ptr<Texture> ptr;
     typedef std::vector<uint8_t> Data;
 
-    Texture(TextureID id, ResourceManager* resource_manager):
-        Resource(resource_manager),
-        generic::Identifiable<TextureID>(id),
-        width_(0),
-        height_(0) { }
+    Texture(TextureID id, ResourceManager* resource_manager);
 
     /*
      * Lock the texture against uploads to the GPU.
@@ -315,6 +313,8 @@ public:
     bool has_mipmaps() const { return has_mipmaps_; }
 
 private:
+    Renderer* renderer_ = nullptr;
+
     uint32_t width_;
     uint32_t height_;
 

@@ -38,6 +38,15 @@ const std::string Texture::BuiltIns::CHECKERBOARD = "simulant/materials/textures
 const std::string Texture::BuiltIns::BUTTON = "simulant/materials/textures/button.png";
 
 
+Texture::Texture(TextureID id, ResourceManager *resource_manager):
+    Resource(resource_manager),
+    generic::Identifiable<TextureID>(id),
+    width_(0),
+    height_(0) {
+
+    renderer_ = resource_manager->window->renderer;
+}
+
 void Texture::set_texel_type(TextureTexelType type) {
     if(texel_type_ == type) {
         return;
@@ -198,26 +207,24 @@ void Texture::set_texture_wrap_w(TextureWrap wrap_w) {
 
 bool Texture::init() {
     // Tell the renderer about the texture
-    resource_manager().window->renderer->register_texture(id(), shared_from_this());
+    renderer_->register_texture(id(), shared_from_this());
     return true;
 }
 
 void Texture::cleanup() {
     // Tell the renderer to forget the texture
-    resource_manager().window->renderer->unregister_texture(id());
+    renderer_->unregister_texture(id());
 }
 
 void Texture::update(float dt) {
-    auto renderer = resource_manager().window->renderer.get();
-
     // Must only be called on the main thread as the renderer may do GL things
     assert(GLThreadCheck::is_current());
 
     // Should have been registered by now
-    assert(renderer->is_texture_registered(id()));
+    assert(renderer_->is_texture_registered(id()));
 
     // Make sure that the renderer is aware of any changes
-    renderer->prepare_texture(id());
+    renderer_->prepare_texture(id());
 }
 
 TextureLock::TextureLock(Texture *tex, bool wait):
@@ -227,13 +234,18 @@ TextureLock::TextureLock(Texture *tex, bool wait):
         tex_->mutex_.lock();
     } else {
         if(!tex_->mutex_.try_lock()) {
+
+            // If we can't lock, wipe the tex lock (false-y)
+            tex_ = nullptr;
             throw NoTextureLockError("Unable to lock the texture");
         }
     }
 }
 
 TextureLock::~TextureLock() {
-    tex_->mutex_.unlock();
+    if(tex_) {
+        tex_->mutex_.unlock();
+    }
 }
 
 }
