@@ -25,6 +25,7 @@
 
 #include "../types.h"
 #include "../generic/auto_weakptr.h"
+#include "../generic/threading/shared_mutex.h"
 #include "../window.h"
 
 #include "batching/renderable.h"
@@ -75,44 +76,18 @@ public:
 
     virtual HardwareBufferManager* _get_buffer_manager() const = 0;
 
-    void register_texture(TextureID tex_id, TexturePtr texture) {
-        std::lock_guard<std::recursive_mutex> lock(texture_registry_mutex_);
-        if(!is_texture_registered(tex_id)) {
-            on_texture_register(tex_id, texture);
-            texture_registry_.insert(std::make_pair(tex_id, std::weak_ptr<Texture>(texture)));
-        }
-    }
+    void register_texture(TextureID tex_id, TexturePtr texture);
 
-    void unregister_texture(TextureID texture_id) {
-        std::lock_guard<std::recursive_mutex> lock(texture_registry_mutex_);
-        if(texture_registry_.count(texture_id)) {
-            texture_registry_.erase(texture_id);
-            on_texture_unregister(texture_id);
-        }
-    }
+    void unregister_texture(TextureID texture_id);
 
     /*
      * Returns true if the texture has been allocated, false otherwise.
      *
      * Should be thread-safe along with allocate/deallocate texture.
      */
-    bool is_texture_registered(TextureID texture_id) const {
-        std::lock_guard<std::recursive_mutex> lock(texture_registry_mutex_);
-        return texture_registry_.count(texture_id);
-    }
+    bool is_texture_registered(TextureID texture_id) const;
 
-    void prepare_texture(TextureID texture_id) {
-        std::lock_guard<std::recursive_mutex> lock(texture_registry_mutex_);
-
-        if(!texture_registry_.count(texture_id)) {
-            return;
-        }
-
-        auto tex = texture_registry_.at(texture_id).lock();
-        if(tex) {
-            on_texture_prepare(tex);
-        }
-    }
+    void prepare_texture(TextureID texture_id);
 
 private:    
     Window* window_ = nullptr;
@@ -149,7 +124,7 @@ private:
      */
     virtual void on_texture_prepare(TexturePtr texture) {}
 
-    mutable std::recursive_mutex texture_registry_mutex_; // Recursive because of nested is_texture_registered check
+    mutable shared_mutex texture_registry_mutex_;
     std::unordered_map<TextureID, std::weak_ptr<Texture>> texture_registry_;
 };
 

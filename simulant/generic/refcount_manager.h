@@ -73,8 +73,9 @@ public:
 
     template<typename ...Args>
     ObjectIDType make(ObjectIDType id, GarbageCollectMethod garbage_collect, Args&&... args) {
-        std::lock_guard<std::mutex> lock(manager_lock_);
+
         if(!id) {
+            std::lock_guard<std::mutex> lock(manager_lock_);
             id = generate_new_id();
         }
 
@@ -85,9 +86,12 @@ public:
 
         assert(id);
 
-        objects_.insert(std::make_pair(id, obj));
-        creation_times_.insert(std::make_pair(id, std::chrono::system_clock::now()));
-        uncollected_.insert(id);
+        {
+            std::lock_guard<std::mutex> lock(manager_lock_);
+            objects_.insert(std::make_pair(id, obj));
+            creation_times_.insert(std::make_pair(id, std::chrono::system_clock::now()));
+            uncollected_.insert(id);
+        }
 
         signal_post_create_(*obj, id);
 

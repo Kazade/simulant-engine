@@ -122,6 +122,7 @@ private:
     GLenum convert_texture_format(TextureFormat format);
     GLenum convert_texel_type(TextureTexelType type);
 
+    std::mutex texture_object_mutex_;
     std::unordered_map<TextureID, GLuint> texture_objects_;
 };
 

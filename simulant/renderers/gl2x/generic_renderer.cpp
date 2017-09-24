@@ -650,14 +650,35 @@ void GenericRenderer::send_geometry(Renderable *renderable) {
 
 void GenericRenderer::on_texture_register(TextureID tex_id, TexturePtr texture) {
     GLuint gl_tex;
-    GLCheck(glGenTextures, 1, &gl_tex);
+
+    if(!GLThreadCheck::is_current()) {
+        window->idle->run_sync([&gl_tex]() {
+            GLCheck(glGenTextures, 1, &gl_tex);
+        });
+    } else {
+        GLCheck(glGenTextures, 1, &gl_tex);
+
+    }
+
+    std::lock_guard<std::mutex> lock(texture_object_mutex_);
     texture_objects_[tex_id] = gl_tex;
 }
 
 void GenericRenderer::on_texture_unregister(TextureID tex_id) {
-    GLuint gl_tex = texture_objects_.at(tex_id);
-    texture_objects_.erase(tex_id);
-    GLCheck(glDeleteTextures, 1, &gl_tex);
+    GLuint gl_tex;
+    {
+        std::lock_guard<std::mutex> lock(texture_object_mutex_);
+        gl_tex = texture_objects_.at(tex_id);
+        texture_objects_.erase(tex_id);
+    }
+
+    if(!GLThreadCheck::is_current()) {
+        window->idle->run_sync([&gl_tex]() {
+            GLCheck(glDeleteTextures, 1, &gl_tex);
+        });
+    } else {
+        GLCheck(glDeleteTextures, 1, &gl_tex);
+    }
 }
 
 
@@ -702,7 +723,12 @@ void GenericRenderer::on_texture_prepare(TexturePtr texture) {
     GLint active;
     GLCheck(glGetIntegerv, GL_TEXTURE_BINDING_2D, &active);
 
-    GLuint target = texture_objects_.at(texture->id());
+    GLuint target;
+
+    {
+        std::lock_guard<std::mutex> lock(texture_object_mutex_);
+        target = texture_objects_.at(texture->id());
+    }
 
     GLCheck(glBindTexture, GL_TEXTURE_2D, target);
 
