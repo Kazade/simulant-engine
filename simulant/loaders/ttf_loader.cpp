@@ -83,6 +83,7 @@ namespace loaders {
         }
 
         font->material_ = font->resource_manager().new_material_from_file(Material::BuiltIns::TEXTURE_ONLY).fetch();
+        font->material_->first_pass()->set_blending(smlt::BLEND_ALPHA);
         font->material_->set_texture_unit_on_all_passes(0, font->texture_id());
 
         L_DEBUG("Font loaded successfully");
