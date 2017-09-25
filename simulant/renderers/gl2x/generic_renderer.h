@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "../renderer.h"
+#include "../gl_renderer.h"
 #include "../../material.h"
 #include "./buffer_manager.h"
 #include "../batching/render_queue.h"
@@ -76,10 +77,14 @@ private:
 
 typedef generic::RefCountedTemplatedManager<GPUProgram, GPUProgramID> GPUProgramManager;
 
-class GenericRenderer : public Renderer {
+class GenericRenderer:
+    public Renderer,
+    private GLRenderer {
+
 public:
     GenericRenderer(Window* window):
         Renderer(window),
+        GLRenderer(window),
         buffer_manager_(new GL2BufferManager(this)) {
 
     }
@@ -115,15 +120,17 @@ private:
 
     friend class GL2RenderQueueVisitor;
 
-    void on_texture_register(TextureID tex_id, TexturePtr texture);
-    void on_texture_unregister(TextureID tex_id);
-    void on_texture_prepare(TexturePtr texture);
+    void on_texture_prepare(TexturePtr texture) override {
+        GLRenderer::on_texture_prepare(texture);
+    }
 
-    GLenum convert_texture_format(TextureFormat format);
-    GLenum convert_texel_type(TextureTexelType type);
+    void on_texture_register(TextureID tex_id, TexturePtr texture) override {
+        GLRenderer::on_texture_register(tex_id, texture);
+    }
 
-    std::mutex texture_object_mutex_;
-    std::unordered_map<TextureID, GLuint> texture_objects_;
+    void on_texture_unregister(TextureID tex_id) override {
+        GLRenderer::on_texture_unregister(tex_id);
+    }
 };
 
 }

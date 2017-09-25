@@ -77,16 +77,24 @@ public:
         if(!id) {
             std::lock_guard<std::mutex> lock(manager_lock_);
             id = generate_new_id();
+            assert(id);
         }
 
+        /* We intentionally create the object outside of the resource manager
+         * lock, otherwise we can end up with deadlocks if this is happening
+         * in a thread other than the main thread, and we need something to
+         * run on idle.
+         */
         auto obj = ObjectType::create(id, std::forward<Args>(args)...);
         assert(obj);
 
+        /*
+         * FIXME: Should be more options than on or off
+         */
         obj->enable_gc(garbage_collect == GARBAGE_COLLECT_PERIODIC);
 
-        assert(id);
-
         {
+            /* Update the containers within a lock */
             std::lock_guard<std::mutex> lock(manager_lock_);
             objects_.insert(std::make_pair(id, obj));
             creation_times_.insert(std::make_pair(id, std::chrono::system_clock::now()));
@@ -98,7 +106,7 @@ public:
         return id;
     }
 
-    uint32_t count() const {
+    std::size_t count() const {
         return objects_.size();
     }
 
@@ -131,7 +139,7 @@ public:
     }
 
     bool contains(ObjectIDType id) const {
-        return objects_.find(id) != objects_.end();
+        return objects_.count(id) > 0;
     }
 
     sig::signal<void (ObjectType&, ObjectIDType)>& signal_post_create() { return signal_post_create_; }
