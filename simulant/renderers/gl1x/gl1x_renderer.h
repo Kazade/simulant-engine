@@ -19,12 +19,17 @@
 #pragma once
 
 #include "../renderer.h"
+#include "../gl_renderer.h"
+
 #include "gl1x_buffer_manager.h"
 
 namespace smlt {
 
 
-class GL1XRenderer : public Renderer {
+class GL1XRenderer:
+    public Renderer,
+    public GLRenderer {
+
 public:
     GL1XRenderer(Window* window);
 
@@ -41,6 +46,18 @@ private:
          * The GL1 renderer doesn't use hardware buffers for vertex/index data
          */
         return buffer_manager_.get();
+    }
+
+    void on_texture_prepare(TexturePtr texture) override {
+        GLRenderer::on_texture_prepare(texture);
+    }
+
+    void on_texture_register(TextureID tex_id, TexturePtr texture) override {
+        GLRenderer::on_texture_register(tex_id, texture);
+    }
+
+    void on_texture_unregister(TextureID tex_id) override {
+        GLRenderer::on_texture_unregister(tex_id);
     }
 };
 

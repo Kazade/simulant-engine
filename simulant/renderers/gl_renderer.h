@@ -6,7 +6,11 @@
 #include "../texture.h"
 
 #if defined(SIMULANT_GL_VERSION_1X)
-    #include "gl1x/glad/glad/glad.h"
+    #ifdef _arch_dreamcast
+        #include <GL/gl.h>
+    #else
+        #include "gl1x/glad/glad/glad.h"
+    #endif
 #elif defined(SIMULANT_GL_VERSION_2X)
     #include "gl2x/glad/glad/glad.h"
 #endif

@@ -47,7 +47,7 @@ GLenum GLRenderer::convert_texture_format(TextureFormat format) {
         case TEXTURE_FORMAT_RGBA:
             return GL_RGBA;
         default:
-            return GL_NONE;
+            return 0;
     }
 }
 
@@ -62,7 +62,7 @@ GLenum GLRenderer::convert_texel_type(TextureTexelType type) {
     case TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_5_6_5:
         return GL_UNSIGNED_SHORT_5_6_5;
     default:
-        return GL_NONE;
+        return 0;
     }
 }
 
@@ -95,7 +95,7 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
         auto format = convert_texture_format(texture->format());
         auto type = convert_texel_type(texture->texel_type());
 
-        if(format != GL_NONE && type != GL_NONE) {
+        if(format > 0 && type > 0) {
             if(texture->is_compressed()) {
                 GLCheck(glCompressedTexImage2D,
                     GL_TEXTURE_2D,
@@ -116,8 +116,10 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
             }
 
             if(texture->mipmap_generation() == MIPMAP_GENERATE_COMPLETE) {
+#ifdef SIMULANT_GL_VERSION_2X
                 GLCheck(glGenerateMipmap, GL_TEXTURE_2D);
                 texture->_set_has_mipmaps(true);
+#endif
             }
 
         } else {
