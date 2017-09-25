@@ -55,12 +55,14 @@ GLenum GLRenderer::convert_texel_type(TextureTexelType type) {
     switch(type) {
     case TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE:
         return GL_UNSIGNED_BYTE;
+#ifdef SIMULANT_GL_VERSION_2X
     case TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_4_4_4_4:
         return GL_UNSIGNED_SHORT_4_4_4_4;
     case TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_5_5_5_1:
         return GL_UNSIGNED_SHORT_5_5_5_1;
     case TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_5_6_5:
         return GL_UNSIGNED_SHORT_5_6_5;
+#endif
     default:
         return 0;
     }
@@ -97,6 +99,8 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
 
         if(format > 0 && type > 0) {
             if(texture->is_compressed()) {
+
+#if defined(_arch_dreamcast) || defined(SIMULANT_GL_VERSION_2X)
                 GLCheck(glCompressedTexImage2D,
                     GL_TEXTURE_2D,
                     0,
@@ -105,6 +109,16 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
                     texture->data().size(),
                     &texture->data()[0]
                 );
+#else
+                GLCheck(glCompressedTexImage2DARB,
+                    GL_TEXTURE_2D,
+                    0,
+                    format,
+                    texture->width(), texture->height(), 0,
+                    texture->data().size(),
+                    &texture->data()[0]
+                );
+#endif
             } else {
                 GLCheck(glTexImage2D,
                     GL_TEXTURE_2D,
@@ -159,7 +173,11 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
         auto convert_wrap_mode = [](TextureWrap wrap) -> GLenum {
             switch(wrap) {
                 case TEXTURE_WRAP_CLAMP_TO_EDGE:
+#ifdef SIMULANT_GL_VERSION_2X
                     return GL_CLAMP_TO_EDGE;
+#else
+                    return GL_CLAMP;
+#endif
                 break;
                 default:
                     // FIXME: Implement other modes
