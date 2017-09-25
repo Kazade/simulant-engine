@@ -178,6 +178,10 @@ void Texture::set_texture_filter(TextureFilter filter) {
     }
 }
 
+void Texture::set_free_data_mode(TextureFreeData mode) {
+    free_data_mode_ = mode;
+}
+
 void Texture::set_texture_wrap(TextureWrap wrap_u, TextureWrap wrap_v, TextureWrap wrap_w) {
     set_texture_wrap_u(wrap_u);
     set_texture_wrap_v(wrap_v);

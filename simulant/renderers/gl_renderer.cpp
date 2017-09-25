@@ -129,6 +129,11 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
                 );
             }
 
+            /* Free the data if that's what is wanted */
+            if(texture->free_data_mode() == TEXTURE_FREE_DATA_AFTER_UPLOAD) {
+                texture->data().clear();
+            }
+
             if(texture->mipmap_generation() == MIPMAP_GENERATE_COMPLETE) {
 #ifdef SIMULANT_GL_VERSION_2X
                 GLCheck(glGenerateMipmap, GL_TEXTURE_2D);

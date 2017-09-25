@@ -10,7 +10,7 @@
 namespace smlt {
 namespace loaders {
 
-class VQTextureLoader : public BaseTextureLoader {
+class KMGTextureLoader : public BaseTextureLoader {
 
 };
 

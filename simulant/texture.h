@@ -242,6 +242,12 @@ public:
     /* Texture filtering and wrapping */
     void set_texture_filter(TextureFilter filter);
 
+    /* If set to TEXTURE_FREE_DATA_AFTER_UPLOAD then the data attribute will be
+     * wiped after the renderer has uploaded to the GPU.
+     */
+    void set_free_data_mode(TextureFreeData mode);
+    TextureFreeData free_data_mode() const { return free_data_mode_; }
+
     /* Set the texture wrap modes, either together or per-dimension */
     void set_texture_wrap(TextureWrap wrap_u, TextureWrap wrap_v, TextureWrap wrap_w);
     void set_texture_wrap_u(TextureWrap wrap_u);
