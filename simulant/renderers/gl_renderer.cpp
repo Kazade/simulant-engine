@@ -136,6 +136,10 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
             /* Free the data if that's what is wanted */
             if(texture->free_data_mode() == TEXTURE_FREE_DATA_AFTER_UPLOAD) {
                 texture->data().clear();
+
+                // Necessary to actually free the data, which on the Dreamcast
+                // is important!
+                texture->data().shrink_to_fit();
             }
 
             if(texture->mipmap_generation() == MIPMAP_GENERATE_COMPLETE) {
