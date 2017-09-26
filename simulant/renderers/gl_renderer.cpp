@@ -4,6 +4,10 @@
 #include "../utils/gl_error.h"
 #include "../utils/gl_thread_check.h"
 
+#ifdef _arch_dreamcast
+    #include <GL/glu.h> // Until libGL supports glGenerateMipmap
+#endif
+
 namespace smlt {
 
 void GLRenderer::on_texture_register(TextureID tex_id, TexturePtr texture) {
@@ -135,10 +139,26 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
             }
 
             if(texture->mipmap_generation() == MIPMAP_GENERATE_COMPLETE) {
-#ifdef SIMULANT_GL_VERSION_2X
+                // glGenerateMipmap is part of the ARB_framebuffer_object extension
+                // which is one of the minimum required extensions for the GL 1.x renderer
+                // However, the Dreamcast version of libGL doesn't support glGenerateMipmap
+                // so we have to use gluBuild2DMipmaps for now
+
+#ifdef _arch_dreamcast
+                GLCheck(
+                    gluBuild2DMipmaps,
+                    GL_TEXTURE_2D,
+                    format,
+                    texture->width(),
+                    texture->height(),
+                    format,
+                    type,
+                    &texture->data()[0]
+                );
+#else
                 GLCheck(glGenerateMipmap, GL_TEXTURE_2D);
-                texture->_set_has_mipmaps(true);
 #endif
+                texture->_set_has_mipmaps(true);
             }
 
         } else {
