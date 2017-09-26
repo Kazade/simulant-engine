@@ -41,8 +41,8 @@ batcher::RenderGroup GL1XRenderer::new_render_group(Renderable *renderable, Mate
 
     for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
         if(i < material_pass->texture_unit_count()) {
-            auto tex_id = material_pass->texture_unit(i).texture_id().fetch()->gl_tex();
-            impl->texture_id[i] = tex_id;
+            auto tex_id = material_pass->texture_unit(i).texture_id();
+            impl->texture_id[i] = this->texture_objects_.at(tex_id);
         } else {
             impl->texture_id[i] = 0;
         }
@@ -69,6 +69,7 @@ std::shared_ptr<batcher::RenderQueueVisitor> GL1XRenderer::get_render_queue_visi
 
 smlt::GL1XRenderer::GL1XRenderer(smlt::Window *window):
     Renderer(window),
+    GLRenderer(window),
     buffer_manager_(new GL1BufferManager(this)) {
 }
 

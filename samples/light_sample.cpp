@@ -3,7 +3,6 @@
 #include "simulant/extra.h"
 
 using namespace smlt;
-using namespace smlt::extra;
 
 class GameScene : public smlt::Scene<GameScene> {
 public:
@@ -26,8 +25,10 @@ public:
         actor_id_ = stage->new_actor_with_mesh(stage->assets->new_mesh_as_cube(2.0));
         stage->actor(actor_id_)->move_to(0.0, 0.0, -5.0);
 
-        smlt::TextureID texture = stage->assets->new_texture_from_file("sample_data/crate.png");
-        stage->actor(actor_id_)->mesh()->set_texture_on_material(0, texture);
+        texture_ = stage->assets->new_texture_from_file("sample_data/crate.png");
+        texture_.fetch()->set_texture_filter(TEXTURE_FILTER_BILINEAR);
+
+        stage->actor(actor_id_)->mesh()->set_texture_on_material(0, texture_);
 
         // Test Camera::look_at function
         stage->camera(camera_id_)->look_at(stage->actor(actor_id_)->absolute_position());
@@ -45,7 +46,24 @@ public:
             stage->new_light_as_directional(Vec3(1, 0, 0), smlt::Colour::YELLOW);
         }
 
-        window->new_background_as_scrollable_from_file("sample_data/background.png");
+        window->new_background_as_scrollable_from_file("sample_data/background.png");        
+
+        auto axis = input->new_axis("F");
+        axis->set_positive_keyboard_key(smlt::KEYBOARD_CODE_F);
+    }
+
+    void update(float dt) {
+        if(input->axis_value_hard("F") == 1 && !f_down) {
+            current_filter_++;
+            if(current_filter_ == 3) {
+                current_filter_ = 0;
+            }
+
+            texture_.fetch()->set_texture_filter(filters_[current_filter_]);
+            f_down = true;
+        } else if(input->axis_value_hard("F") == 0) {
+            f_down = false;
+        }
     }
 
     void fixed_update(float dt) {
@@ -60,6 +78,15 @@ private:
     CameraID camera_id_;
     StageID stage_id_;
     ActorID actor_id_;
+    TextureID texture_;
+
+    bool f_down = false;
+    uint8_t current_filter_ = 0;
+    const smlt::TextureFilter filters_[3] = {
+        TEXTURE_FILTER_POINT,
+        TEXTURE_FILTER_BILINEAR,
+        TEXTURE_FILTER_TRILINEAR
+    };
 };
 
 class LightingSample: public smlt::Application {

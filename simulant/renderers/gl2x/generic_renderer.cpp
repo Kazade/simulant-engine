@@ -42,7 +42,7 @@ public:
     GL2RenderGroupImpl(RenderPriority priority):
         batcher::RenderGroupImpl(priority) {}
 
-    GLuint texture_id[MAX_TEXTURE_UNITS] = {0};
+    GLuint texture_id[MAX_TEXTURE_UNITS];
     GPUProgramID shader_id;
 
     bool lt(const RenderGroupImpl& other) const override {
@@ -83,10 +83,10 @@ batcher::RenderGroup GenericRenderer::new_render_group(Renderable* renderable, M
     auto impl = std::make_shared<GL2RenderGroupImpl>(renderable->render_priority());
     for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
         if(i < material_pass->texture_unit_count()) {
-            auto tex_id = material_pass->texture_unit(i).texture_id().fetch()->gl_tex();
-            impl->texture_id[i] = tex_id;
+            auto tex_id = material_pass->texture_unit(i).texture_id();
+            impl->texture_id[i] = this->texture_objects_.at(tex_id);
         } else {
-            impl->texture_id[i] = 0;
+            impl->texture_id[i] = TextureID();
         }
     }
     impl->shader_id = material_pass->gpu_program_id();
@@ -559,6 +559,7 @@ void GL2RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev
     // Set up the textures appropriately depending on the group textures
     for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
         if(!last_group || last_group->texture_id[i] != current_group_->texture_id[i]) {
+
             GLCheck(glActiveTexture, GL_TEXTURE0 + i);
             GLCheck(glBindTexture, GL_TEXTURE_2D, current_group_->texture_id[i]);
         }
@@ -646,6 +647,8 @@ void GenericRenderer::send_geometry(Renderable *renderable) {
             L_DEBUG("Tried to render a mesh with an invalid arrangement");
     }
 }
+
+
 
 void GenericRenderer::init_context() {
     if(!gladLoadGL()) {

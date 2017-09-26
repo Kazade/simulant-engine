@@ -193,6 +193,7 @@ void RenderQueue::clean_empty_batches() {
         while(group != pass.end()) {
             auto& batch = group->second;
             if(!batch->renderable_count()) {
+                // Remove the group in a loop-safe way
                 group = pass.erase(group);
             } else {
                 ++group;

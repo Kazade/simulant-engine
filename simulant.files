@@ -81,6 +81,9 @@ simulant/input/input.cpp
 simulant/input/input.h
 simulant/input/input_manager.cpp
 simulant/input/input_manager.h
+simulant/loaders/dds_texture_loader.cpp
+simulant/loaders/dds_texture_loader.h
+simulant/loaders/kmg_texture_loader.h
 simulant/math/aabb.cpp
 simulant/math/aabb.h
 simulant/math/degrees.cpp
@@ -148,6 +151,8 @@ simulant/particles/particle.h
 simulant/particles/particle_system.cpp
 simulant/particles/particle_system.h
 simulant/partitioner.cpp
+simulant/renderers/gl_renderer.cpp
+simulant/renderers/gl_renderer.h
 simulant/utils/string.cpp
 simulant/utils/string.h
 tests/CMakeLists.txt
@@ -172,6 +177,7 @@ tests/test_partitioner.h
 tests/test_shader.h
 tests/test_sound.h
 tests/test_sprites.h
+tests/test_texture.h
 tests/test_utils.h
 tests/test_vertex_data.h
 tests/test_tree.h

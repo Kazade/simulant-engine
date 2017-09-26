@@ -48,6 +48,8 @@ TextureLoadResult TextureLoader::do_load(const std::vector<uint8_t> &buffer) {
         result.height = (uint32_t) height;
         result.channels = (uint32_t) channels;
         result.data.assign(data, data + (width * height * channels));
+        result.texel_type = TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE;
+        result.format = (channels == 4) ? TEXTURE_FORMAT_RGBA : TEXTURE_FORMAT_RGB;
         SOIL_free_image_data(data);
     }
 

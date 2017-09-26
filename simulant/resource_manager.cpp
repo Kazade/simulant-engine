@@ -65,13 +65,13 @@ bool ResourceManager::init() {
     auto tex = texture(default_texture_id_);
 
     tex->resize(8, 8);
-    tex->set_bpp(32);
+    tex->set_format(TEXTURE_FORMAT_RGBA);
 
+    auto texlock = tex->lock();
     for(uint32_t i = 0; i < 64 * 4; ++i) {
         tex->data()[i] = 255;
     }
-
-    tex->upload();
+    tex->mark_data_changed();
 
     //Maintain ref-count
     default_material_id_ = new_material_from_file(default_material_filename(), GARBAGE_COLLECT_NEVER);
@@ -86,6 +86,10 @@ void ResourceManager::update(float dt) {
     MaterialManager::each([dt](Material* mat) {
         mat->update_controllers(dt);
         mat->update(dt);
+    });
+
+    TextureManager::each([dt](Texture* tex) {
+        tex->update(dt);
     });
 }
 
@@ -547,18 +551,20 @@ TextureID ResourceManager::new_texture(GarbageCollectMethod garbage_collect) {
 TextureID ResourceManager::new_texture_from_file(const unicode& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
     //Load the texture
     auto tex = texture(new_texture(garbage_collect));
-    window->loader_for(path, LOADER_HINT_TEXTURE)->into(tex);
 
-    if(flags.flip_vertically) {
-        tex->flip_vertically();
+    auto texlock = tex->lock();
+    {
+        window->loader_for(path, LOADER_HINT_TEXTURE)->into(tex);
+
+        if(flags.flip_vertically) {
+            tex->flip_vertically();
+        }
+
+        tex->set_mipmap_generation(flags.mipmap);
+        tex->set_texture_wrap(flags.wrap, flags.wrap, flags.wrap);
+        tex->set_texture_filter(flags.filter);
+        tex->mark_data_changed();
     }
-
-    tex->upload(
-        flags.mipmap,
-        flags.wrap,
-        flags.filter,
-        (flags.free_data == TEXTURE_FREE_DATA_AFTER_UPLOAD) ? true : false
-    );
 
     mark_texture_as_uncollected(tex->id());
     return tex->id();
