@@ -60,7 +60,9 @@ TextureLoadResult PCXLoader::do_load(const std::vector<uint8_t> &buffer) {
 
     result.width = header->xmax - header->xmin + 1;
     result.height = header->ymax - header->ymin + 1;
-    result.channels = 4;
+    result.channels = 3;
+    result.format = TEXTURE_FORMAT_RGB;
+    result.texel_type = TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE;
     result.data.resize(result.width * result.height * result.channels);
 
     auto bitcount = header->bits_per_pixel * header->num_color_planes;
@@ -97,7 +99,6 @@ TextureLoadResult PCXLoader::do_load(const std::vector<uint8_t> &buffer) {
         result.data[idx + 0] = palette[(rle_value * 3) + 0];
         result.data[idx + 1] = palette[(rle_value * 3) + 1];
         result.data[idx + 2] = palette[(rle_value * 3) + 2];
-        result.data[idx + 3] = 255;
     }
 
     return result;
