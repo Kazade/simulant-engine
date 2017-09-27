@@ -5,16 +5,6 @@
 #include "../types.h"
 #include "../texture.h"
 
-#if defined(SIMULANT_GL_VERSION_1X)
-    #ifdef _arch_dreamcast
-        #include <GL/gl.h>
-    #else
-        #include "gl1x/glad/glad/glad.h"
-    #endif
-#elif defined(SIMULANT_GL_VERSION_2X)
-    #include "gl2x/glad/glad/glad.h"
-#endif
-
 namespace smlt {
 
 /*
@@ -33,11 +23,11 @@ protected:
     void on_texture_unregister(TextureID tex_id);
     void on_texture_prepare(TexturePtr texture);
 
-    GLenum convert_texture_format(TextureFormat format);
-    GLenum convert_texel_type(TextureTexelType type);
+    uint32_t convert_texture_format(TextureFormat format);
+    uint32_t convert_texel_type(TextureTexelType type);
 
     std::mutex texture_object_mutex_;
-    std::unordered_map<TextureID, GLuint> texture_objects_;
+    std::unordered_map<TextureID, uint32_t> texture_objects_;
 
 private:
     // Not called window_ to avoid name clashes in subclasses

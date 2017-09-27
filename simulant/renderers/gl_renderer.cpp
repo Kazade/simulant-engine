@@ -4,8 +4,15 @@
 #include "../utils/gl_error.h"
 #include "../utils/gl_thread_check.h"
 
-#ifdef _arch_dreamcast
-    #include <GL/glu.h> // Until libGL supports glGenerateMipmap
+#if defined(SIMULANT_GL_VERSION_1X)
+    #ifdef _arch_dreamcast
+        #include <GL/gl.h>
+        #include <GL/glu.h> // Until libGL supports glGenerateMipmap
+    #else
+        #include "gl1x/glad/glad/glad.h"
+    #endif
+#elif defined(SIMULANT_GL_VERSION_2X)
+    #include "gl2x/glad/glad/glad.h"
 #endif
 
 namespace smlt {
@@ -44,7 +51,7 @@ void GLRenderer::on_texture_unregister(TextureID tex_id) {
 }
 
 
-GLenum GLRenderer::convert_texture_format(TextureFormat format) {
+uint32_t GLRenderer::convert_texture_format(TextureFormat format) {
     switch(format) {
         case TEXTURE_FORMAT_RGB:
             return GL_RGB;
@@ -55,7 +62,7 @@ GLenum GLRenderer::convert_texture_format(TextureFormat format) {
     }
 }
 
-GLenum GLRenderer::convert_texel_type(TextureTexelType type) {
+uint32_t GLRenderer::convert_texel_type(TextureTexelType type) {
     switch(type) {
     case TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE:
         return GL_UNSIGNED_BYTE;

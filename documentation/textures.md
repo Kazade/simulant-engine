@@ -19,7 +19,7 @@ The default setting is `TEXTURE_FREE_DATA_AFTER_UPLOAD`.
 
 ## Locking textures
 
-Every frame the active rennderer will check to see if any textures need to be (re-)uploaded to the GPU. If you are manipulating texture data in another thread this could cause issues.
+Every frame the active renderer will check to see if any textures need to be (re-)uploaded to the GPU. If you are manipulating texture data in another thread this could cause issues.
 
 To protect against this you can lock a texture while you manipulate it. While a `Texture` is locked the renderer will not upload it to the GPU, update any filters, or generate any mipmaps.
 
@@ -45,7 +45,7 @@ Simulant supports so-called Point, Bilinear and Trilinear filtering. The default
 
 ## Mipmap generation
 
-Mipmaps can optionally be generated automatically each time a `Texture` is uploaded to the GPU. This is the default behaviour. If you want to disable this you should all `Texture::set_mipmap_generation(MIPMAP_GENERATE_NONE)`. 
+Mipmaps can optionally be generated automatically each time a `Texture` is uploaded to the GPU. This is the default behaviour. If you want to disable this you should call `Texture::set_mipmap_generation(MIPMAP_GENERATE_NONE)`. 
 
 
 
