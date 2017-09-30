@@ -47,6 +47,13 @@ Simulant supports so-called Point, Bilinear and Trilinear filtering. The default
 
 Mipmaps can optionally be generated automatically each time a `Texture` is uploaded to the GPU. This is the default behaviour. If you want to disable this you should call `Texture::set_mipmap_generation(MIPMAP_GENERATE_NONE)`. 
 
+## Disabling uploads
+
+Sometimes you might want to just leverage the texture loading functions of Simulant to get access to the image data (e.g. for generating heightmaps). In this situation it would be wasteful to
+upload the texture data to the GPU unnecessarily. 
+
+For this reason you can disable uploads by calling `Texture::set_auto_upload(false)`
+ 
 
 
 

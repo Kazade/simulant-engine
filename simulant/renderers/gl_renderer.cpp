@@ -103,7 +103,8 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
 
     GLCheck(glBindTexture, GL_TEXTURE_2D, target);
 
-    if(texture->_data_dirty()) {
+    /* Only upload data if it's enabled on the texture */
+    if(texture->_data_dirty() && texture->auto_upload()) {
         // Upload
         auto format = convert_texture_format(texture->format());
         auto type = convert_texel_type(texture->texel_type());

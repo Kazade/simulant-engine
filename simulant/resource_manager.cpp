@@ -563,6 +563,7 @@ TextureID ResourceManager::new_texture_from_file(const unicode& path, TextureFla
         tex->set_mipmap_generation(flags.mipmap);
         tex->set_texture_wrap(flags.wrap, flags.wrap, flags.wrap);
         tex->set_texture_filter(flags.filter);
+        tex->set_auto_upload(flags.auto_upload);
         tex->mark_data_changed();
     }
 

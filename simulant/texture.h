@@ -318,6 +318,18 @@ public:
 
     bool has_mipmaps() const { return has_mipmaps_; }
 
+    /* If enabled (default) the texture will be uploaded to the GPU
+     * by the renderer. You can disable this if you need just a way
+     * to load images from disk for other purposes (e.g. heightmaps)
+     */
+    void set_auto_upload(bool v=true) {
+        auto_upload_ = v;
+    }
+
+    bool auto_upload() const {
+        return auto_upload_;
+    }
+
 private:
     Renderer* renderer_ = nullptr;
 
@@ -329,6 +341,7 @@ private:
 
     unicode source_;
 
+    bool auto_upload_ = true; /* If true, the texture is uploaded by the renderer asap */
     bool data_dirty_ = true;
     Texture::Data data_;
     TextureFreeData free_data_mode_ = TEXTURE_FREE_DATA_AFTER_UPLOAD;

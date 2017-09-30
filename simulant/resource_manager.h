@@ -58,6 +58,7 @@ struct TextureFlags {
     TextureFilter filter = TEXTURE_FILTER_POINT;
     TextureFreeData free_data = TEXTURE_FREE_DATA_AFTER_UPLOAD;
     bool flip_vertically = false;
+    bool auto_upload = true; // Should the texture be uploaded automatically?
 };
 
 enum DefaultFontStyle {
