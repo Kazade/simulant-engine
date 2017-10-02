@@ -1,3 +1,5 @@
+#pragma once
+
 #include "controller.h"
 #include "../nodes/stage_node.h"
 

@@ -63,6 +63,7 @@
 
 #include "controllers/fly.h"
 #include "controllers/builtin.h"
+#include "controllers/stage_node_controller.h"
 
 #include "renderers/renderer_config.h"
 
