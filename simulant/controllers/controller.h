@@ -63,7 +63,11 @@ private:
     virtual void on_controller_added(Controllable* controllable) {}
     virtual void on_controller_removed(Controllable* controllable) {}
 
+    /* Called on the first update after being enabled */
+    virtual void on_controller_first_update(Controllable* controllable) {}
+
     bool is_enabled_ = true;
+    bool first_update_done_ = false;
 };
 
 class ControllerWithInput : public Controller {
@@ -162,6 +166,13 @@ public:
 
     void update_controllers(float dt) {
         for(auto& controller: controllers_) {
+
+            // Call any overridden functions looking for first update
+            if(!controller->first_update_done_) {
+                controller->on_controller_first_update(this);
+                controller->first_update_done_ = true;
+            }
+
             controller->_update_thunk(dt);
         }
     }

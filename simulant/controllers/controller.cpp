@@ -8,6 +8,7 @@ void Controller::enable() {
 
 void Controller::disable() {
     is_enabled_ = false;
+    first_update_done_ = false;
 }
 
 void Controller::_update_thunk(float dt) {

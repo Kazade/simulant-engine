@@ -166,6 +166,7 @@ tests/test_camera.h
 tests/main.cpp
 tests/global.cpp
 tests/global.h
+tests/test_controllers.h
 tests/test_frustum.h
 tests/test_input_manager.h
 tests/test_input_state.h
