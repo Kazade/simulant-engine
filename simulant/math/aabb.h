@@ -5,6 +5,17 @@
 
 namespace smlt {
 
+enum AABBCorner {
+    AABB_CORNER_NEG_X_NEG_Y_NEG_Z = 0,
+    AABB_CORNER_POS_X_NEG_Y_NEG_Z = 1,
+    AABB_CORNER_POS_X_NEG_Y_POS_Z = 2,
+    AABB_CORNER_NEG_X_NEG_Y_POS_Z = 3,
+    AABB_CORNER_NEG_X_POS_Y_NEG_Z = 4,
+    AABB_CORNER_POS_X_POS_Y_NEG_Z = 5,
+    AABB_CORNER_POS_X_POS_Y_POS_Z = 6,
+    AABB_CORNER_NEG_X_POS_Y_POS_Z = 7
+};
+
 class AABB {
     /* This was originally a basic struct but for performance reasons it's now a class
      * so that we can store things like pre-calculate corners and know they are kept up-to-date
@@ -17,37 +28,15 @@ class AABB {
     mutable bool corners_dirty_ = true;
 
     void rebuild_corners() const {
-        corners_[0].x = min_.x;
-        corners_[0].y = min_.y;
-        corners_[0].z = min_.z;
+        corners_[AABB_CORNER_NEG_X_NEG_Y_NEG_Z] = {min_.x, min_.y, min_.z};
+        corners_[AABB_CORNER_POS_X_NEG_Y_NEG_Z] = {max_.x, min_.y, min_.z};
+        corners_[AABB_CORNER_POS_X_NEG_Y_POS_Z] = {max_.x, min_.y, max_.z};
+        corners_[AABB_CORNER_NEG_X_NEG_Y_POS_Z] = {min_.x, min_.y, max_.z};
 
-        corners_[1].x = max_.x;
-        corners_[1].y = min_.y;
-        corners_[1].z = min_.z;
-
-        corners_[2].x = max_.x;
-        corners_[2].y = min_.y;
-        corners_[2].z = max_.z;
-
-        corners_[3].x = min_.x;
-        corners_[3].y = min_.y;
-        corners_[3].z = max_.z;
-
-        corners_[4].x = min_.x;
-        corners_[4].y = max_.y;
-        corners_[4].z = min_.z;
-
-        corners_[5].x = max_.x;
-        corners_[5].y = max_.y;
-        corners_[5].z = min_.z;
-
-        corners_[6].x = max_.x;
-        corners_[6].y = max_.y;
-        corners_[6].z = max_.z;
-
-        corners_[7].x = min_.x;
-        corners_[7].y = max_.y;
-        corners_[7].z = max_.z;
+        corners_[AABB_CORNER_NEG_X_POS_Y_NEG_Z] = {min_.x, max_.y, min_.z};
+        corners_[AABB_CORNER_POS_X_POS_Y_NEG_Z] = {max_.x, max_.y, min_.z};
+        corners_[AABB_CORNER_POS_X_POS_Y_POS_Z] = {max_.x, max_.y, max_.z};
+        corners_[AABB_CORNER_NEG_X_POS_Y_POS_Z] = {min_.x, max_.y, max_.z};
 
         corners_dirty_ = false;
     }
