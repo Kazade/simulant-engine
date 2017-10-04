@@ -30,14 +30,14 @@ public:
 
         auto controller = actor->new_controller<TestController>();
 
-        assert_equal(0, controller->call_count);
+        assert_equal(0u, controller->call_count);
 
         actor->_update_thunk(0.0f);
-        assert_equal(1, controller->call_count);
+        assert_equal(1u, controller->call_count);
 
         // No effect a second time
         actor->_update_thunk(0.0f);
-        assert_equal(1, controller->call_count);
+        assert_equal(1u, controller->call_count);
 
         // Disable then re-enable
         controller->disable();
@@ -45,7 +45,7 @@ public:
 
         // Called once more
         actor->_update_thunk(0.0f);
-        assert_equal(2, controller->call_count);
+        assert_equal(2u, controller->call_count);
     }
 };
 
