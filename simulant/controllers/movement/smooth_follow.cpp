@@ -18,13 +18,19 @@ void SmoothFollow::late_update(float dt) {
         return;
     }
 
-    auto wanted_position = target->absolute_position() + Vec3(0, height_, distance_).rotated_by(target->absolute_rotation());
+    auto target_position = target->absolute_position();
+
+    if(isnan(target_position.x) || isnan(target_position.y) || isnan(target_position.z)) {
+        return;
+    }
+
+    auto wanted_position = target_position + Vec3(0, height_, distance_).rotated_by(target->absolute_rotation());
 
     owner->move_to_absolute(
         owner->absolute_position().lerp(wanted_position, damping_ * dt)
     );
 
-    auto wanted_rotation = Quaternion::as_look_at((target->absolute_position() - owner->absolute_position()).normalized(), target->absolute_rotation().up());
+    auto wanted_rotation = Quaternion::as_look_at((target_position - owner->absolute_position()).normalized(), target->absolute_rotation().up());
     wanted_rotation.inverse(); // << FIXME: This seems like a bug in as_look_at...
 
     owner->rotate_to_absolute(
