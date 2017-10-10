@@ -10,6 +10,7 @@
 #include "../controllers/controller.h"
 #include "../interfaces/has_auto_id.h"
 #include "../generic/data_carrier.h"
+#include "../shadows.h"
 
 namespace smlt {
 
@@ -77,6 +78,16 @@ public:
     void cleanup();
 
     const AABB transformed_aabb() const override;
+
+    /* Control shading on the stage node (behaviour depends on the type of node) */
+    ShadowCast shadow_cast() const { return shadow_cast_; }
+    void set_shadow_cast(ShadowCast cast) {
+        shadow_cast_ = cast;
+    }
+
+    ShadowReceive shadow_receive() const { return shadow_receive_; }
+    void set_shadow_receive(ShadowReceive receive) { shadow_receive_ = receive; }
+
 protected:
     // Faster than properties, useful for subclasses where a clean API isn't as important
     Stage* get_stage() const { return stage_; }
@@ -89,6 +100,7 @@ protected:
     virtual void update_rotation_from_parent();
     virtual void update_position_from_parent(bool _recalc_bounds=true);
     virtual void update_scaling_from_parent();
+
 private:
 
     void recalc_bounds();
@@ -104,6 +116,10 @@ private:
     Vec3 absolute_scale_ = Vec3(1, 1, 1);
 
     AABB transformed_aabb_;
+
+    // By default, always cast and receive shadows
+    ShadowCast shadow_cast_ = SHADOW_CAST_ALWAYS;
+    ShadowReceive shadow_receive_ = SHADOW_RECEIVE_ALWAYS;
 };
 
 }
