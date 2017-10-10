@@ -245,6 +245,13 @@ protected:
     std::set<uint32_t> fingers_down_;
 
     WidgetPtr focused_in_chain_or_this();
+
+    /*
+     * We regularly need to rebuild the text submesh. Wiping out vertex data
+     * is cumbersome and slow, so instead we wipe the submesh indexes and add
+     * them here, then used these indexes as necessary when rebuilding
+     */
+    std::set<uint16_t> available_indexes_;
 };
 
 }

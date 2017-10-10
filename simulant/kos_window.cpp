@@ -207,6 +207,13 @@ void KOSWindow::check_events() {
         auto device = maple_enum_type(i, MAPLE_FUNC_KEYBOARD);
         if(device) {
             auto state = (kbd_state_t*) maple_dev_status(device);
+
+            auto get_modifiers = []() -> ModifierKeyState {
+                ModifierKeyState mod_state;
+                //FIXME:!
+                return mod_state;
+            };
+
             if(state) {
                 std::array<uint8_t, 256> key_state;
                 std::copy(state->matrix, state->matrix + 256, key_state.begin());
@@ -214,16 +221,18 @@ void KOSWindow::check_events() {
                 for(uint32_t j = 0; j < 256; ++j) {
                     if(key_state[j] && !previous_key_state[j]) {
                         // Key down
-                        L_DEBUG(_F("Key down: {0}").format(j));
                         input_state->_handle_key_down(
                             i, KeyboardCode(j)
                         );
+                        on_key_down((KeyboardCode) j, get_modifiers());
                     }
                     if(!key_state[j] && previous_key_state[j]) {
                         // Key up
                         input_state->_handle_key_up(
                             i, KeyboardCode(j)
                         );
+
+                        on_key_up((KeyboardCode) j, get_modifiers());
                     }
                 }
 

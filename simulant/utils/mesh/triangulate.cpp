@@ -38,17 +38,6 @@ void triangulate(MeshPtr mesh, std::vector<Vec3> &vertices, std::vector<Triangle
     auto process_submesh = [&](const std::string& name, SubMesh* submesh) {
         uint32_t offset = 0;
 
-        // If we're not using shared vertices, we need to store the offset to add to
-        // the new indexes we generate
-        if(!submesh->uses_shared_vertices()) {
-            offset = vertices.size();
-
-            // Push back the submesh vertices
-            for(uint32_t i = 0; i < submesh->vertex_data->count(); ++i) {
-                vertices.push_back(submesh->vertex_data->position_at<Vec3>(i));
-            }
-        }
-
         auto indexes = PROCESSORS.at(submesh->arrangement())(submesh);
 
         // Add the offset if necessary

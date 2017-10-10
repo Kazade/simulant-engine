@@ -153,6 +153,7 @@ simulant/particles/particle_system.h
 simulant/partitioner.cpp
 simulant/renderers/gl_renderer.cpp
 simulant/renderers/gl_renderer.h
+simulant/shadows.h
 simulant/utils/string.cpp
 simulant/utils/string.h
 tests/CMakeLists.txt

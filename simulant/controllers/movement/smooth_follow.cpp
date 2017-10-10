@@ -1,3 +1,4 @@
+#include <cmath>
 #include "smooth_follow.h"
 
 #include "../../nodes/actor.h"
@@ -20,7 +21,7 @@ void SmoothFollow::late_update(float dt) {
 
     auto target_position = target->absolute_position();
 
-    if(isnan(target_position.x) || isnan(target_position.y) || isnan(target_position.z)) {
+    if(std::isnan(target_position.x) || std::isnan(target_position.y) || std::isnan(target_position.z)) {
         return;
     }
 

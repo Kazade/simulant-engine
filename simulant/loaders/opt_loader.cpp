@@ -465,6 +465,8 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
     spec.diffuse_attribute = VERTEX_ATTRIBUTE_4F;
     spec.normal_attribute = VERTEX_ATTRIBUTE_3F;
 
+    mesh->reset(spec);
+
     MainHeader main_header;
     MainJumpHeader main_jump_header;
 
@@ -516,13 +518,11 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
         );
         new_tex->data().assign(tex.data.begin(), tex.data.end());
 
-        //Create a submesh for each texture. Don't share the vertex data between submeshes
+        //Create a submesh for each texture.
         texture_submesh[tex.name] = mesh->new_submesh_with_material(
             tex.name,
             mesh->resource_manager().new_material_from_texture(new_tex->id()),
-            MESH_ARRANGEMENT_TRIANGLES,
-            VERTEX_SHARING_MODE_INDEPENDENT,
-            spec
+            MESH_ARRANGEMENT_TRIANGLES
         );
     }
 

@@ -132,16 +132,20 @@ void Widget::set_text_colour(const Colour &colour) {
 }
 
 void Widget::render_text(MeshPtr mesh, const std::string& submesh_name, const unicode& text, float width, float left_margin, float top_margin) {
-    mesh->delete_submesh(submesh_name); // Delete the text submesh if it exists
+    if(mesh->has_submesh(submesh_name)) {
+        // Save these vertices as free
+        mesh->submesh(submesh_name)->index_data->each([&](uint32_t idx) {
+            available_indexes_.insert(idx);
+        });
 
-    VertexSpecification spec;
-    spec.position_attribute = VERTEX_ATTRIBUTE_3F;
-    spec.texcoord0_attribute = VERTEX_ATTRIBUTE_2F;
-    spec.diffuse_attribute = VERTEX_ATTRIBUTE_4F;
+        mesh->submesh(submesh_name)->index_data->clear();
+    } else {
+        // Create a new submesh for the text
+        auto sm = mesh->new_submesh(submesh_name, MESH_ARRANGEMENT_TRIANGLES);
+        sm->set_material_id(font_->material_id());
+    }
 
-    // Create a new submesh for the text
-    auto submesh = mesh->new_submesh(submesh_name, MESH_ARRANGEMENT_TRIANGLES, VERTEX_SHARING_MODE_INDEPENDENT, spec);
-    submesh->set_material_id(font_->material_id());
+    auto submesh = mesh->submesh(submesh_name);
 
     // We return here so there's always a text mesh even if it's got nothing in it
     // FIXME: although totally not thread or exception safe :/
@@ -246,7 +250,7 @@ void Widget::render_text(MeshPtr mesh, const std::string& submesh_name, const un
                 yoffset -= line_height_;
             }
 
-            auto offset = submesh->vertex_data->count();
+            std::vector<uint32_t> used_indexes;
 
             // We're at the end of the word, time to commit to the mesh
             for(auto& v: word_vertices) {
@@ -254,23 +258,39 @@ void Widget::render_text(MeshPtr mesh, const std::string& submesh_name, const un
                 if(pos.y < min_height) min_height = pos.y;
                 if(pos.y > max_height) max_height = pos.y;
 
+                if(!available_indexes_.empty()) {
+                    auto it = available_indexes_.begin();
+                    auto idx = *it;
+                    available_indexes_.erase(it);
+
+                    // Use an existing slot
+                    submesh->vertex_data->move_to(idx);
+                    used_indexes.push_back(idx);
+                } else {
+                    // Move to the end to create a new vertex
+                    used_indexes.push_back(submesh->vertex_data->count());
+                    submesh->vertex_data->move_to_end();
+                }
+
                 submesh->vertex_data->position(pos);
                 submesh->vertex_data->tex_coord0(v.texcoord);
                 submesh->vertex_data->diffuse(text_colour_);
-                submesh->vertex_data->move_next();
             }
 
-            for(std::size_t k = 0; k < word_vertices.size(); k += 4) {
-                submesh->index_data->index(offset + k);
-                submesh->index_data->index(offset + k + 1);
-                submesh->index_data->index(offset + k + 2);
+            assert(used_indexes.size() == word_vertices.size());
 
-                submesh->index_data->index(offset + k);
-                submesh->index_data->index(offset + k + 2);
-                submesh->index_data->index(offset + k + 3);
+            for(std::size_t k = 0; k < word_vertices.size(); k += 4) {
+                submesh->index_data->index(used_indexes[k]);
+                submesh->index_data->index(used_indexes[k + 1]);
+                submesh->index_data->index(used_indexes[k + 2]);
+
+                submesh->index_data->index(used_indexes[k]);
+                submesh->index_data->index(used_indexes[k + 2]);
+                submesh->index_data->index(used_indexes[k + 3]);
             }
 
             word_vertices.clear();
+            used_indexes.clear();
             word_length = .0f;
             word_wrap = false;
             if(line_length > longest_line) {
