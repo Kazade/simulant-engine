@@ -31,8 +31,7 @@
 namespace smlt {
 
 VertexData *SubMesh::get_vertex_data() const {
-    if(uses_shared_data_) { return parent_->shared_data.get(); }
-    return vertex_data_;
+    return parent_->shared_data.get();
 }
 
 IndexData* SubMesh::get_index_data() const {
@@ -40,16 +39,14 @@ IndexData* SubMesh::get_index_data() const {
 }
 
 HardwareBuffer* SubMesh::vertex_buffer() const {
-    if(uses_shared_data_) { return parent_->shared_vertex_buffer_.get(); }
-    return vertex_buffer_.get();
+    return parent_->shared_vertex_buffer_.get();
 }
 
 Mesh::Mesh(MeshID id,
     ResourceManager *resource_manager,
     VertexSpecification vertex_specification):
         Resource(resource_manager),
-        generic::Identifiable<MeshID>(id),
-        normal_debug_mesh_(0) {
+        generic::Identifiable<MeshID>(id) {
 
     reset(vertex_specification);
 
@@ -169,79 +166,22 @@ const AABB &Mesh::aabb() const {
     return aabb_;
 }
 
-void Mesh::enable_debug(bool value) {
-    if(value) {
-        if(normal_debug_mesh_) return;
-
-        //This maintains a lock on the material
-        MaterialID mid = resource_manager().new_material();
-
-        resource_manager().window->loader_for(
-            "material_loader",
-            Material::BuiltIns::DIFFUSE_ONLY
-        )->into(resource_manager().material(mid));
-
-        normal_debug_mesh_ = new_submesh_with_material("__debug__", mid, MESH_ARRANGEMENT_LINES, VERTEX_SHARING_MODE_INDEPENDENT);
-
-        //Go through the submeshes, and for each index draw a normal line
-        each([=](const std::string& name, SubMesh* mesh) {
-            mesh->index_data->each([&](uint32_t idx) {
-                Vec3 pos1 = mesh->vertex_data->position_at<Vec3>(idx);
-
-                Vec3 n;
-                mesh->vertex_data->normal_at(idx, n);
-
-                n *= 10.0f;
-
-                Vec3 pos2 = pos1 + n;
-
-                normal_debug_mesh_->vertex_data->position(pos1);
-                normal_debug_mesh_->vertex_data->diffuse(smlt::Colour::RED);
-                int16_t next_index = normal_debug_mesh_->vertex_data->move_next();
-                normal_debug_mesh_->index_data->index(next_index - 1);
-
-                normal_debug_mesh_->vertex_data->position(pos2);
-                normal_debug_mesh_->vertex_data->diffuse(smlt::Colour::RED);
-                next_index = normal_debug_mesh_->vertex_data->move_next();
-                normal_debug_mesh_->index_data->index(next_index - 1);
-            });
-        });
-
-        normal_debug_mesh_->vertex_data->done();
-        normal_debug_mesh_->index_data->done();
-    } else {
-        if(normal_debug_mesh_) {
-            delete_submesh(normal_debug_mesh_->name());
-            normal_debug_mesh_ = nullptr;
-        }
-    }
-}
-
 SubMesh* Mesh::new_submesh_with_material(
     const std::string& name,
     MaterialID material,
-    MeshArrangement arrangement,
-    VertexSharingMode vertex_sharing,
-    VertexSpecification vertex_specification, IndexType index_type) {
+    MeshArrangement arrangement, IndexType index_type) {
 
     if(submeshes_.count(name)) {
         throw std::runtime_error("Attempted to create a duplicate submesh with name: " + name);
     }
 
-    auto new_submesh = SubMesh::create(this, name, material, arrangement, vertex_sharing, vertex_specification, index_type);
+    auto new_submesh = SubMesh::create(this, name, material, arrangement, index_type);
     submeshes_.insert(std::make_pair(name, new_submesh));
     ordered_submeshes_.push_back(new_submesh.get());
     signal_submesh_created_(id(), new_submesh.get());
 
     // Mark the AABB as dirty so it will be rebuilt on next access
     aabb_dirty_ = true;
-
-    if(new_submesh->vertex_data_) {
-        /* Make sure the AABB is marked as dirty if the vertex or index data changes on a submesh */
-        new_submesh->vertex_data_->signal_update_complete().connect([this]() {
-            aabb_dirty_ = true;
-        });
-    }
 
     new_submesh->index_data_->signal_update_complete().connect([this]() {
         aabb_dirty_ = true;
@@ -252,15 +192,12 @@ SubMesh* Mesh::new_submesh_with_material(
 
 SubMesh* Mesh::new_submesh(
     const std::string& name,
-    MeshArrangement arrangement,
-    VertexSharingMode vertex_sharing,
-    VertexSpecification vertex_specification, IndexType index_type) {
+    MeshArrangement arrangement, IndexType index_type) {
 
     return new_submesh_with_material(
         name,
         resource_manager().clone_default_material(),        
-        arrangement, vertex_sharing,
-        vertex_specification,
+        arrangement,
         index_type
     );
 }
@@ -276,9 +213,7 @@ SubMesh* Mesh::new_submesh_as_box(const std::string& name, MaterialID material, 
     SubMesh* sm = new_submesh_with_material(
         name,
         material,
-        MESH_ARRANGEMENT_TRIANGLES,
-        VERTEX_SHARING_MODE_INDEPENDENT,
-        spec
+        MESH_ARRANGEMENT_TRIANGLES
     );
 
     auto vd = sm->vertex_data.get();
@@ -465,51 +400,54 @@ SubMesh* Mesh::new_submesh_as_rectangle(const std::string& name, MaterialID mate
     SubMesh* sm = new_submesh_with_material(
         name,
         material,
-        MESH_ARRANGEMENT_TRIANGLES, VERTEX_SHARING_MODE_INDEPENDENT,
-        VertexSpecification::DEFAULT
+        MESH_ARRANGEMENT_TRIANGLES
     );
 
     float x_offset = offset.x;
     float y_offset = offset.y;
     float z_offset = offset.z;
 
+    auto idx_offset = sm->vertex_data->count();
+
+    auto spec = sm->vertex_data->specification();
+    sm->vertex_data->move_to_end();
+
     //Build some shared vertex data
     sm->vertex_data->position(x_offset + (-width / 2.0), y_offset + (-height / 2.0), z_offset);
-    sm->vertex_data->diffuse(smlt::Colour::WHITE);
-    sm->vertex_data->tex_coord0(0.0, 0.0);
-    sm->vertex_data->tex_coord1(0.0, 0.0);
-    sm->vertex_data->normal(0, 0, 1);
+    if(spec.has_diffuse())   sm->vertex_data->diffuse(smlt::Colour::WHITE);
+    if(spec.has_texcoord0()) sm->vertex_data->tex_coord0(0.0, 0.0);
+    if(spec.has_texcoord1()) sm->vertex_data->tex_coord1(0.0, 0.0);
+    if(spec.has_normals())   sm->vertex_data->normal(0, 0, 1);
     sm->vertex_data->move_next();
 
     sm->vertex_data->position(x_offset + (width / 2.0), y_offset + (-height / 2.0), z_offset);
-    sm->vertex_data->diffuse(smlt::Colour::WHITE);
-    sm->vertex_data->tex_coord0(1.0, 0.0);
-    sm->vertex_data->tex_coord1(1.0, 0.0);
-    sm->vertex_data->normal(0, 0, 1);
+    if(spec.has_diffuse())   sm->vertex_data->diffuse(smlt::Colour::WHITE);
+    if(spec.has_texcoord0()) sm->vertex_data->tex_coord0(1.0, 0.0);
+    if(spec.has_texcoord1()) sm->vertex_data->tex_coord1(1.0, 0.0);
+    if(spec.has_normals())   sm->vertex_data->normal(0, 0, 1);
     sm->vertex_data->move_next();
 
     sm->vertex_data->position(x_offset + (width / 2.0),  y_offset + (height / 2.0), z_offset);
-    sm->vertex_data->diffuse(smlt::Colour::WHITE);
-    sm->vertex_data->tex_coord0(1.0, 1.0);
-    sm->vertex_data->tex_coord1(1.0, 1.0);
-    sm->vertex_data->normal(0, 0, 1);
+    if(spec.has_diffuse())   sm->vertex_data->diffuse(smlt::Colour::WHITE);
+    if(spec.has_texcoord0()) sm->vertex_data->tex_coord0(1.0, 1.0);
+    if(spec.has_texcoord1()) sm->vertex_data->tex_coord1(1.0, 1.0);
+    if(spec.has_normals())   sm->vertex_data->normal(0, 0, 1);
     sm->vertex_data->move_next();
 
     sm->vertex_data->position(x_offset + (-width / 2.0),  y_offset + (height / 2.0), z_offset);
-    sm->vertex_data->diffuse(smlt::Colour::WHITE);
-    sm->vertex_data->tex_coord0(0.0, 1.0);
-    sm->vertex_data->tex_coord1(0.0, 1.0);
-    sm->vertex_data->normal(0, 0, 1);
-    sm->vertex_data->move_next();
+    if(spec.has_diffuse())   sm->vertex_data->diffuse(smlt::Colour::WHITE);
+    if(spec.has_texcoord0()) sm->vertex_data->tex_coord0(0.0, 1.0);
+    if(spec.has_texcoord1()) sm->vertex_data->tex_coord1(0.0, 1.0);
+    if(spec.has_normals())   sm->vertex_data->normal(0, 0, 1);
     sm->vertex_data->done();
 
-    sm->index_data->index(0);
-    sm->index_data->index(1);
-    sm->index_data->index(2);
+    sm->index_data->index(idx_offset + 0);
+    sm->index_data->index(idx_offset + 1);
+    sm->index_data->index(idx_offset + 2);
 
-    sm->index_data->index(0);
-    sm->index_data->index(2);
-    sm->index_data->index(3);
+    sm->index_data->index(idx_offset + 0);
+    sm->index_data->index(idx_offset + 2);
+    sm->index_data->index(idx_offset + 3);
     sm->index_data->done();
 
     return sm;
@@ -540,7 +478,7 @@ void Mesh::set_material_id(MaterialID material) {
     });
 }
 
-void Mesh::transform_vertices(const smlt::Mat4& transform, bool include_submeshes) {
+void Mesh::transform_vertices(const smlt::Mat4& transform) {
     shared_data->move_to_start();
 
     for(uint32_t i = 0; i < shared_data->count(); ++i) {
@@ -559,31 +497,15 @@ void Mesh::transform_vertices(const smlt::Mat4& transform, bool include_submeshe
         shared_data->move_next();
     }
     shared_data->done();
-
-    if(include_submeshes) {
-        each([transform](const std::string& name, SubMesh* mesh) {
-            if(!mesh->uses_shared_vertices()) {
-                mesh->transform_vertices(transform);
-            }
-        });
-    }
 }
 
-void Mesh::set_diffuse(const smlt::Colour& colour, bool include_submeshes) {
+void Mesh::set_diffuse(const smlt::Colour& colour) {
     shared_data->move_to_start();
     for(uint32_t i = 0; i < shared_data->count(); ++i) {
         shared_data->diffuse(colour);
         shared_data->move_next();
     }
     shared_data->done();
-
-    if(include_submeshes) {
-        each([=](const std::string& name, SubMesh* mesh) {
-            if(!mesh->uses_shared_vertices()) {
-                mesh->set_diffuse(colour);
-            }
-        });
-    }
 }
 
 void Mesh::normalize() {
@@ -617,31 +539,13 @@ SubMesh* Mesh::submesh(const std::string& name) {
 }
 
 SubMesh::SubMesh(Mesh* parent, const std::string& name,
-        MaterialID material, MeshArrangement arrangement, VertexSharingMode vertex_sharing, VertexSpecification vertex_specification, IndexType index_type):
+        MaterialID material, MeshArrangement arrangement, IndexType index_type):
     parent_(parent),
     name_(name),
-    arrangement_(arrangement),
-    uses_shared_data_(vertex_sharing == VERTEX_SHARING_MODE_SHARED) {
-
-    if(!uses_shared_data_ && vertex_specification == VertexSpecification()) {
-        throw std::logic_error(
-            "You must specify a vertex_attribute_mask when creating a submesh with independent vertices"
-        );
-    }
-
-    if(!uses_shared_data_ && parent_->is_animated()) {
-        throw std::logic_error("You can't have submesh-independent vertices on an animated mesh (yet!)");
-    }
+    arrangement_(arrangement) {
 
     index_data_ = new IndexData(index_type);
     index_data_->signal_update_complete().connect([this]() { this->index_buffer_dirty_ = true; });
-
-    if(!uses_shared_data_) {
-        vertex_data_ = new VertexData(vertex_specification);
-        vertex_data->signal_update_complete().connect([this]() { this->vertex_buffer_dirty_ = true; });
-    } else {
-        vertex_data_ = nullptr;
-    }
 
     if(!material) {
         //Set the material to the default one (store the pointer to increment the ref-count)
@@ -672,16 +576,7 @@ void Mesh::prepare_buffers() {
 void SubMesh::prepare_buffers() {
     auto* renderer = parent_->resource_manager().window->renderer.get();
 
-    if(uses_shared_data_) {
-        parent_->prepare_buffers();
-    } else if(vertex_buffer_dirty_) {
-        sync_buffer<VertexData, Renderer>(
-            &vertex_buffer_, vertex_data_,
-            renderer,
-            HARDWARE_BUFFER_VERTEX_ATTRIBUTES
-        );
-        vertex_buffer_dirty_ = false;
-    }
+    parent_->prepare_buffers();
 
     if(index_buffer_dirty_) {
         sync_buffer<IndexData, Renderer>(
@@ -691,6 +586,15 @@ void SubMesh::prepare_buffers() {
         );
         index_buffer_dirty_ = false;
     }
+}
+
+void SubMesh::set_diffuse(const smlt::Colour& colour) {
+    index_data->each([this, colour](uint32_t i) {
+        vertex_data->move_to(i);
+        vertex_data->diffuse(colour);
+    });
+
+    vertex_data->done();
 }
 
 void SubMesh::set_material_id(MaterialID mat) {
@@ -732,45 +636,6 @@ void SubMesh::set_material_id(MaterialID mat) {
     );
 }
 
-void SubMesh::transform_vertices(const smlt::Mat4& transformation) {
-    if(uses_shared_data_) {
-        throw std::logic_error("Tried to transform shared_data, use Mesh::transform_vertices instead");
-    }
-
-    vertex_data->move_to_start();
-    for(uint16_t i = 0; i < vertex_data->count(); ++i) {
-        smlt::Vec3 v = vertex_data->position_at<Vec3>(i);
-
-        v = v.transformed_by(transformation);
-
-        vertex_data->position(v);
-
-        if(vertex_data->specification().has_normals()) {
-            smlt::Vec3 n;
-            vertex_data->normal_at(i, n);
-            n = n.rotated_by(transformation);
-            vertex_data->normal(n.normalized());
-        }
-
-        vertex_data->move_next();
-    }
-    vertex_data->done();
-}
-
-void SubMesh::set_diffuse(const smlt::Colour& colour) {
-    if(uses_shared_data_) {
-        L_WARN("Tried to set the diffuse colour on shared_data, use Mesh::set_diffuse instead");
-        return;
-    }
-
-    vertex_data->move_to_start();
-    for(uint16_t i = 0; i < vertex_data->count(); ++i) {
-        vertex_data->diffuse(colour);
-        vertex_data->move_next();
-    }
-    vertex_data->done();
-}
-
 void SubMesh::reverse_winding() {
     if(arrangement_ != MESH_ARRANGEMENT_TRIANGLES) {
         assert(0 && "Not implemented");
@@ -792,17 +657,22 @@ void SubMesh::reverse_winding() {
  *
  * Recalculate the bounds of the submesh. This involves interating over all of the
  * vertices that make up the submesh and so is potentially quite slow. This happens automatically
- * when vertex_data->done() or index_data->done() are called.
+ * when index_data->done() is called.
  */
 void SubMesh::_recalc_bounds() {
     //Set the min bounds to the max
-    bounds_.set_min(
-        Vec3(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max())
-    );
+    bounds_.set_min(Vec3(
+        std::numeric_limits<float>::max(),
+        std::numeric_limits<float>::max(),
+        std::numeric_limits<float>::max()
+    ));
+
     //Set the max bounds to the min
-    bounds_.set_max(
-        Vec3(std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest())
-    );
+    bounds_.set_max(Vec3(
+        std::numeric_limits<float>::lowest(),
+        std::numeric_limits<float>::lowest(),
+        std::numeric_limits<float>::lowest()
+    ));
 
     if(!index_data->count()) {
         bounds_ = AABB();
@@ -930,9 +800,6 @@ void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
 SubMesh::~SubMesh() {
     vrecalc_.disconnect();
     irecalc_.disconnect();
-
-    delete vertex_data_;
-    vertex_data_ = nullptr;
 
     delete index_data_;
     index_data_ = nullptr;

@@ -81,7 +81,7 @@ void Debug::draw_line(const Vec3 &start, const Vec3 &end, const Colour &colour, 
     auto mesh = stage_.assets->mesh(mesh_);
 
     DebugElement element;
-    element.submesh = mesh->new_submesh_with_material(std::to_string(++line_counter), material_, MESH_ARRANGEMENT_LINE_STRIP, VERTEX_SHARING_MODE_INDEPENDENT);
+    element.submesh = mesh->new_submesh_with_material(std::to_string(++line_counter), material_, MESH_ARRANGEMENT_LINE_STRIP);
     element.colour = colour;
     element.duration = duration;
     element.depth_test = depth_test;
@@ -89,7 +89,8 @@ void Debug::draw_line(const Vec3 &start, const Vec3 &end, const Colour &colour, 
 
     auto& submesh = *element.submesh;
 
-    submesh.vertex_data->move_to_start();
+    auto initial = submesh.vertex_data->count();
+
     submesh.vertex_data->position(start);
     submesh.vertex_data->diffuse(colour);
     submesh.vertex_data->move_next();
@@ -98,8 +99,8 @@ void Debug::draw_line(const Vec3 &start, const Vec3 &end, const Colour &colour, 
     submesh.vertex_data->diffuse(colour);
     submesh.vertex_data->done();
 
-    submesh.index_data->index(0);
-    submesh.index_data->index(1);
+    submesh.index_data->index(initial);
+    submesh.index_data->index(initial + 1);
     submesh.index_data->done();
 
     elements_.push_back(element);

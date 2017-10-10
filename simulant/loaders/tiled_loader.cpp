@@ -151,7 +151,7 @@ void TiledLoader::into(Loadable &resource, const LoaderOptions &options) {
             float tx1 = x1 / tileset.total_width - (0.5 / tileset.total_width);
             float ty1 = y1 / tileset.total_height + (0.5 / tileset.total_height);
 
-            submesh->vertex_data->move_to(0);
+            submesh->vertex_data->move_to(submesh->index_data->at(0));
             submesh->vertex_data->tex_coord0(smlt::Vec2(tx0, ty1));
 
             submesh->vertex_data->move_next();

@@ -33,9 +33,11 @@ SubMesh* new_rectangle_submesh(
     SubMesh* submesh = mesh->new_submesh_with_material(
         "rectangle",
         (material_id) ? material_id : mesh->resource_manager().clone_default_material(),
-        MESH_ARRANGEMENT_TRIANGLES,
-        VERTEX_SHARING_MODE_INDEPENDENT
+        MESH_ARRANGEMENT_TRIANGLES
     );
+
+    auto offset = mesh->shared_data->count();
+    submesh->vertex_data->move_to_end();
 
     //Build some shared vertex data
     submesh->vertex_data->position(x_offset + (-width / 2.0), y_offset + (-height / 2.0), z_offset);
@@ -75,13 +77,13 @@ SubMesh* new_rectangle_submesh(
     submesh->vertex_data->move_next();
     submesh->vertex_data->done();
 
-    submesh->index_data->index(0);
-    submesh->index_data->index(1);
-    submesh->index_data->index(2);
+    submesh->index_data->index(offset + 0);
+    submesh->index_data->index(offset + 1);
+    submesh->index_data->index(offset + 2);
 
-    submesh->index_data->index(0);
-    submesh->index_data->index(2);
-    submesh->index_data->index(3);
+    submesh->index_data->index(offset + 0);
+    submesh->index_data->index(offset + 2);
+    submesh->index_data->index(offset + 3);
     submesh->index_data->done();
 
     return submesh;

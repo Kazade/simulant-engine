@@ -72,10 +72,6 @@ private:
     virtual IndexData* get_index_data() const = 0;
 };
 
-enum VertexSharingMode {
-    VERTEX_SHARING_MODE_SHARED,
-    VERTEX_SHARING_MODE_INDEPENDENT
-};
 
 class SubMesh :
     public SubMeshInterface,
@@ -88,8 +84,6 @@ public:
         const std::string& name,
         MaterialID material,
         MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES,
-        VertexSharingMode vertex_sharing = VERTEX_SHARING_MODE_SHARED,
-        VertexSpecification vertex_specification = VertexSpecification(),
         IndexType index_type = INDEX_TYPE_16_BIT
     );
 
@@ -98,17 +92,13 @@ public:
     const MaterialID material_id() const;
     void set_material_id(MaterialID mat);
 
-    void set_diffuse(const smlt::Colour& colour);
-
     const MeshArrangement arrangement() const { return arrangement_; }
 
     const AABB& aabb() const {
         return bounds_;
     }
 
-    bool uses_shared_vertices() const { return uses_shared_data_; }
     void reverse_winding();
-    void transform_vertices(const Mat4 &transformation);
     void set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass=0);
 
     void _recalc_bounds();
@@ -124,6 +114,11 @@ public:
     HardwareBuffer* index_buffer() const { return index_buffer_.get(); }
 
     void prepare_buffers(); // Called by actors to make sure things are up-to-date before rendering
+
+    /* Goes through the indexes in this submesh and changes the diffuse colour of the vertices
+     * they point to */
+    void set_diffuse(const Colour &colour);
+
 public:
     typedef sig::signal<void (SubMeshPtr, MaterialID, MaterialID)> MaterialChangedCallback;
 
@@ -141,15 +136,11 @@ private:
 
     MaterialPtr material_;
     MeshArrangement arrangement_;
-    bool uses_shared_data_;
 
-    VertexData* vertex_data_ = nullptr;
     IndexData* index_data_ = nullptr;
 
-    std::unique_ptr<HardwareBuffer> vertex_buffer_;
     std::unique_ptr<HardwareBuffer> index_buffer_;
 
-    bool vertex_buffer_dirty_ = false;
     bool index_buffer_dirty_ = false;
 
     AABB bounds_;
@@ -194,16 +185,12 @@ public:
         const std::string& name,
         MaterialID material,        
         MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES,
-        VertexSharingMode vertex_sharing=VERTEX_SHARING_MODE_SHARED,
-        VertexSpecification vertex_specification=VertexSpecification(),
         IndexType=INDEX_TYPE_16_BIT
     );
 
     SubMeshPtr new_submesh(
         const std::string& name,
         MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES,
-        VertexSharingMode vertex_sharing=VERTEX_SHARING_MODE_SHARED,
-        VertexSpecification vertex_specification=VertexSpecification(),
         IndexType=INDEX_TYPE_16_BIT
     );
 
@@ -232,17 +219,15 @@ public:
     void delete_submesh(const std::string& name);
     void clear();
 
-    void enable_debug(bool value);
-
     void set_material_id(MaterialID material); ///< Apply material to all submeshes
-    void set_diffuse(const smlt::Colour& colour, bool include_submeshes=true); ///< Override vertex colour on all vertices
+    void set_diffuse(const smlt::Colour& colour); ///< Override vertex colour on all vertices
 
     void reverse_winding(); ///< Reverse the winding of all submeshes
     void set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass=0); ///< Replace the texture unit on all submesh materials
 
     const AABB& aabb() const;
     void normalize(); //Scales the mesh so it has a radius of 1.0
-    void transform_vertices(const smlt::Mat4& transform, bool include_submeshes=true);
+    void transform_vertices(const smlt::Mat4& transform);
 
     void each(std::function<void (const std::string&, SubMeshPtr)> func) const;
 
@@ -276,8 +261,6 @@ private:
 
     std::unordered_map<std::string, std::shared_ptr<SubMesh>> submeshes_;
     std::list<SubMeshPtr> ordered_submeshes_; // Ordered by insertion order
-
-    SubMeshPtr normal_debug_mesh_ = nullptr;
 
     SubMeshCreatedCallback signal_submesh_created_;
     SubMeshDestroyedCallback signal_submesh_destroyed_;

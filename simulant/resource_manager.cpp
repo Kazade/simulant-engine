@@ -162,8 +162,7 @@ MeshID ResourceManager::new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMe
     SubMesh* target = mesh(result)->new_submesh_with_material(
         submesh->name(),
         submesh->material_id(),
-        submesh->arrangement(),
-        VERTEX_SHARING_MODE_SHARED
+        submesh->arrangement()
     );
 
     std::unordered_map<Index, Index> old_to_new;

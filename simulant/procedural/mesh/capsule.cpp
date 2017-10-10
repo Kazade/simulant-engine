@@ -31,9 +31,7 @@ SubMesh* capsule(MeshPtr mesh, float diameter, float height,
 
     SubMesh* submesh = mesh->new_submesh(
         "capsule",
-        MESH_ARRANGEMENT_TRIANGLES,
-        VERTEX_SHARING_MODE_INDEPENDENT,
-        VertexSpecification::DEFAULT
+        MESH_ARRANGEMENT_TRIANGLES
     );
 
     auto& vdata = submesh->vertex_data;
@@ -45,7 +43,7 @@ SubMesh* capsule(MeshPtr mesh, float diameter, float height,
     float sphere_ratio = radius / (2 * radius + height);
     float cylinder_ratio = height / (2 * radius + height);
 
-    int32_t offset = 0;
+    auto offset = mesh->shared_data->count();
 
     for(uint32_t ring = 0; ring <= ring_count; ++ring) {
         float r0 = radius * sinf(ring * delta_ring_angle);

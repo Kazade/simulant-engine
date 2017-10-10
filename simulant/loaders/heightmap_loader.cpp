@@ -271,7 +271,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     std::vector<smlt::SubMesh*> submeshes;
     for(int i = 0; i < total_patches; ++i) {
         submeshes.push_back(mesh->new_submesh_with_material(
-            std::to_string(i), mat, MESH_ARRANGEMENT_TRIANGLES, VERTEX_SHARING_MODE_SHARED, VertexSpecification(), index_type
+            std::to_string(i), mat, MESH_ARRANGEMENT_TRIANGLES, index_type
         ));
         submeshes.back()->index_data->reserve(patch_size * patch_size);
     }
