@@ -111,6 +111,9 @@ simulant/math/vec4.cpp
 simulant/math/vec4.h
 simulant/meshes/mesh.cpp
 simulant/meshes/mesh.h
+simulant/meshes/private.h
+simulant/meshes/submesh.cpp
+simulant/meshes/submesh.h
 simulant/nodes/actor.cpp
 simulant/nodes/actor.h
 simulant/nodes/camera.cpp
