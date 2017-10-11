@@ -20,7 +20,7 @@
 
 #include "cylinder.h"
 #include "../../types.h"
-#include "../../mesh.h"
+#include "../../meshes/mesh.h"
 #include "../../resource_manager.h"
 
 namespace smlt {

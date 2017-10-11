@@ -18,7 +18,7 @@
 //
 
 #include "heightmap_loader.h"
-#include "../mesh.h"
+#include "../meshes/mesh.h"
 #include "../resource_manager.h"
 #include "texture_loader.h"
 

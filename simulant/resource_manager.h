@@ -27,7 +27,7 @@
 #include "loaders/heightmap_loader.h"
 
 #include "texture.h"
-#include "mesh.h"
+#include "meshes/mesh.h"
 #include "material.h"
 #include "sound.h"
 #include "font.h"

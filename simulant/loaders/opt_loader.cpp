@@ -20,7 +20,7 @@
 #include <queue>
 #include <deque>
 
-#include "../mesh.h"
+#include "../meshes/mesh.h"
 #include "../texture.h"
 #include "../resource_manager.h"
 #include "../shortcuts.h"

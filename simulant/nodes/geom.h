@@ -21,7 +21,7 @@
 #include "../generic/managed.h"
 #include "../generic/tri_octree.h"
 #include "../interfaces.h"
-#include "../mesh.h"
+#include "../meshes/mesh.h"
 #include "../sound.h"
 
 #include "stage_node.h"

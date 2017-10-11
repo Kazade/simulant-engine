@@ -18,7 +18,7 @@
 //
 
 #include "tiled_loader.h"
-#include "../mesh.h"
+#include "../meshes/mesh.h"
 #include "../types.h"
 #include "../extra/tiled/TmxParser/Tmx.h"
 #include "../resource_manager.h"

@@ -1,4 +1,4 @@
-#include "../../mesh.h"
+#include "../../meshes/mesh.h"
 #include "triangulate.h"
 
 namespace smlt {

@@ -19,13 +19,13 @@
 
 #include <limits>
 
-#include "window.h"
-#include "resource_manager.h"
 #include "mesh.h"
-#include "loader.h"
-#include "material.h"
-#include "hardware_buffer.h"
-#include "renderers/renderer.h"
+#include "../window.h"
+#include "../resource_manager.h"
+#include "../loader.h"
+#include "../material.h"
+#include "../hardware_buffer.h"
+#include "../renderers/renderer.h"
 
 
 namespace smlt {

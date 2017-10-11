@@ -109,6 +109,8 @@ simulant/math/vec3.cpp
 simulant/math/vec3.h
 simulant/math/vec4.cpp
 simulant/math/vec4.h
+simulant/meshes/mesh.cpp
+simulant/meshes/mesh.h
 simulant/nodes/actor.cpp
 simulant/nodes/actor.h
 simulant/nodes/camera.cpp

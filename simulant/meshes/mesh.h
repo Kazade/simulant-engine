@@ -26,17 +26,17 @@
 #include <memory>
 #include <list>
 
-#include "generic/managed.h"
-#include "generic/identifiable.h"
-#include "generic/property.h"
+#include "../generic/managed.h"
+#include "../generic/identifiable.h"
+#include "../generic/property.h"
 
-#include "interfaces/boundable.h"
-#include "loadable.h"
-#include "resource.h"
-#include "vertex_data.h"
-#include "types.h"
-#include "interfaces.h"
-#include "animation.h"
+#include "../interfaces/boundable.h"
+#include "../loadable.h"
+#include "../resource.h"
+#include "../vertex_data.h"
+#include "../types.h"
+#include "../interfaces.h"
+#include "../animation.h"
 
 namespace smlt {
 

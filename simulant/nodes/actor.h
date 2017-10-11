@@ -26,7 +26,7 @@
 
 #include "stage_node.h"
 #include "../interfaces.h"
-#include "../mesh.h"
+#include "../meshes/mesh.h"
 #include "../sound.h"
 
 #include "../renderers/batching/render_queue.h"

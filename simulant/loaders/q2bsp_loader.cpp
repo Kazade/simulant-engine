@@ -25,7 +25,7 @@
 #include "../deps/kazlog/kazlog.h"
 
 #include "../stage.h"
-#include "../mesh.h"
+#include "../meshes/mesh.h"
 #include "../types.h"
 #include "../nodes/light.h"
 #include "../nodes/camera.h"

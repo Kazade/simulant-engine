@@ -21,7 +21,7 @@
 
 #include "types.h"
 #include "generic/managed.h"
-#include "mesh.h"
+#include "meshes/mesh.h"
 
 namespace smlt {
 

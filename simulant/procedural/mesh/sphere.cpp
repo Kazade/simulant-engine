@@ -21,7 +21,7 @@
 #include "sphere.h"
 #include "../../types.h"
 #include "../../resource_manager.h"
-#include "../../mesh.h"
+#include "../../meshes/mesh.h"
 
 namespace smlt {
 namespace procedural {

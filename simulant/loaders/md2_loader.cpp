@@ -19,7 +19,7 @@
 
 
 #include "md2_loader.h"
-#include "../mesh.h"
+#include "../meshes/mesh.h"
 #include "../resource_manager.h"
 #include "../resource_locator.h"
 
