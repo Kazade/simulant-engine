@@ -44,6 +44,7 @@ namespace smlt {
 
 class HardwareBuffer;
 class ResourceManager;
+class AdjacencyInfo;
 
 class MeshInterface:
     public virtual Boundable {
@@ -142,6 +143,12 @@ public:
     MeshAnimationType animation_type() const { return animation_type_; }
 
     void prepare_buffers();
+
+    void set_maintain_adjacency_info(bool v);
+
+    /* Returns a nullptr if there is no adjacecy info */
+    Property<Mesh, AdjacencyInfo> adjacency = {this, &Mesh::adjacency_};
+
 public:
     // Signals
 
@@ -174,6 +181,10 @@ private:
     void rebuild_aabb() const;
     mutable AABB aabb_;
     mutable bool aabb_dirty_ = true;
+
+    /* Automatically maintain adjacency info for submeshes or not */
+    bool maintain_adjacency_info_ = true;
+    std::unique_ptr<AdjacencyInfo> adjacency_;
 };
 
 }

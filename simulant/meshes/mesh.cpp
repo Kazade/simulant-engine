@@ -20,6 +20,8 @@
 #include <limits>
 
 #include "mesh.h"
+#include "adjacency_info.h"
+
 #include "../window.h"
 #include "../resource_manager.h"
 #include "../loader.h"
@@ -46,6 +48,8 @@ Mesh::Mesh(MeshID id,
 }
 
 void Mesh::reset(VertexSpecification vertex_specification) {
+    adjacency_.reset();
+
     submeshes_.clear();
     ordered_submeshes_.clear();
 
@@ -56,7 +60,11 @@ void Mesh::reset(VertexSpecification vertex_specification) {
     shared_data_ = new VertexData(vertex_specification);
 
     // When the vertex data updates, update the hardware buffer
-    shared_data->signal_update_complete().connect([this]() { shared_vertex_buffer_dirty_ = true; });
+    shared_data->signal_update_complete().connect([this]() {
+        shared_vertex_buffer_dirty_ = true;
+    });
+
+    set_maintain_adjacency_info(true);
 }
 
 Mesh::~Mesh() {
@@ -519,6 +527,19 @@ void Mesh::prepare_buffers() {
             HARDWARE_BUFFER_VERTEX_ATTRIBUTES
         );
         shared_vertex_buffer_dirty_ = false;
+    }
+}
+
+void Mesh::set_maintain_adjacency_info(bool v) {
+    maintain_adjacency_info_ = v;
+
+    /* If we've just enabled adjacency info then allocate
+         * otherwise delete if we just disabled it */
+    if(v && !adjacency_) {
+        adjacency_.reset(new AdjacencyInfo(this));
+        adjacency_->rebuild();
+    } else if(!v && adjacency_) {
+        adjacency_.reset();
     }
 }
 

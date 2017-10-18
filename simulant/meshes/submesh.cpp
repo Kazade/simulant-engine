@@ -164,6 +164,48 @@ void SubMesh::_recalc_bounds() {
     }
 }
 
+void SubMesh::each_triangle(std::function<void (uint32_t, uint32_t, uint32_t)> cb) {
+    if(arrangement_ == MESH_ARRANGEMENT_TRIANGLES) {
+        assert(index_data_->count() % 3 == 0);
+        for(uint32_t i = 0; i < index_data_->count(); i += 3) {
+            cb(index_data_->at(i), index_data_->at(i + 1), index_data_->at(i + 2));
+        }
+    } else if(arrangement_ == MESH_ARRANGEMENT_TRIANGLE_STRIP) {
+        assert(index_data_->count() >= 3);
+
+        for(uint32_t i = 2; i < index_data_->count(); ++i) {
+            cb(
+                index_data_->at(i - 2),
+                index_data_->at(i - 1),
+                index_data_->at(i)
+            );
+        }
+    } else if(arrangement_ == MESH_ARRANGEMENT_LINES) {
+        for(uint32_t i = 0; i < index_data_->count(); i += 2) {
+            // Pass the 3rd index the same as the first for lines
+            cb(index_data_->at(i), index_data_->at(i + 1), index_data_->at(i));
+        }
+    } else if(arrangement_ == MESH_ARRANGEMENT_LINE_STRIP) {
+        assert(index_data_->count() >= 2);
+
+        for(uint32_t i = 1; i < index_data_->count(); ++i) {
+            // Pass the 3rd index the same as the first for lines
+            cb(
+                index_data_->at(i - 1),
+                index_data_->at(i),
+                index_data_->at(i - 1)
+            );
+        }
+    } else if(arrangement_ == MESH_ARRANGEMENT_TRIANGLE_FAN) {
+        auto hub = index_data_->at(0);
+        for(uint32_t i = 2; i < index_data_->count(); ++i) {
+            cb(
+                hub, index_data_->at(i - 1), index_data_->at(i)
+            );
+        }
+    }
+}
+
 void SubMesh::set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass) {
     material_->pass(pass)->set_texture_unit(unit, tex);
 }

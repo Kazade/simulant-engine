@@ -74,6 +74,24 @@ public:
      * they point to */
     void set_diffuse(const Colour &colour);
 
+    /*
+     * Whether or not this submesh contributes to the adjacency info attached to the mesh
+     * which is used for silhouettes
+     */
+    void set_contributes_to_edge_list(bool v=true) {
+        contributes_to_edge_list_ = v;
+    }
+
+    bool contributes_to_edge_list() const {
+        return contributes_to_edge_list_;
+    }
+
+    /*
+     * Iterates the submesh indexes and breaks them into triangles (a, b, c). In the case of lines
+     * index c will be the same as index a.
+     */
+    void each_triangle(std::function<void (uint32_t, uint32_t, uint32_t)> cb);
+
 public:
     typedef sig::signal<void (SubMeshPtr, MaterialID, MaterialID)> MaterialChangedCallback;
 
@@ -104,6 +122,8 @@ private:
     sig::connection irecalc_;
 
     MaterialChangedCallback signal_material_changed_;
+
+    bool contributes_to_edge_list_ = true;
 };
 
 }
