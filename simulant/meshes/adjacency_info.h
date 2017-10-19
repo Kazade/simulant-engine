@@ -27,7 +27,7 @@ public:
     void rebuild();
 
     uint32_t edge_count() const { return edges_.size(); }
-    void each_edge(std::function<void (std::size_t, const EdgeInfo& edge)>& cb);
+    void each_edge(const std::function<void (std::size_t, const EdgeInfo &)> &cb);
 
     /*
      * Given an edge, this returns the two normals of the triangles which share it.

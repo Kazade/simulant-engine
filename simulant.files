@@ -170,6 +170,7 @@ samples/combined_sample_1.cpp
 samples/light_sample.cpp
 samples/new_pipeline_sample.cpp
 samples/flightsim.cpp
+tests/test_adjacency.h
 tests/test_camera.h
 tests/main.cpp
 tests/global.cpp

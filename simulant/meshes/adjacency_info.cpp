@@ -42,9 +42,9 @@ void AdjacencyInfo::rebuild() {
             auto v3 = to_tuple(mesh_->shared_data->position_at<smlt::Vec3>(c));
 
             // If this vertex already exist, use the first known index (or insert this as the first known index)
-            a = (position_map.count(v1)) ? position_map[v1] : position_map.insert(std::make_pair(v1, a)).second;
-            b = (position_map.count(v2)) ? position_map[v2] : position_map.insert(std::make_pair(v2, b)).second;
-            c = (position_map.count(v3)) ? position_map[v3] : position_map.insert(std::make_pair(v3, c)).second;
+            a = (position_map.count(v1)) ? position_map[v1] : position_map.insert(std::make_pair(v1, a)).first->second;
+            b = (position_map.count(v2)) ? position_map[v2] : position_map.insert(std::make_pair(v2, b)).first->second;
+            c = (position_map.count(v3)) ? position_map[v3] : position_map.insert(std::make_pair(v3, c)).first->second;
 
             edge_triangles.insert(std::make_pair(std::make_pair(a, b), c));
             edge_triangles.insert(std::make_pair(std::make_pair(b, c), a));
@@ -89,7 +89,7 @@ void AdjacencyInfo::rebuild() {
     }
 }
 
-void AdjacencyInfo::each_edge(std::function<void (std::size_t, const EdgeInfo& edge)>& cb) {
+void AdjacencyInfo::each_edge(const std::function<void (std::size_t, const EdgeInfo& edge)>& cb) {
     std::size_t i = 0;
     for(auto& edge: edges_) {
         cb(i++, edge);
