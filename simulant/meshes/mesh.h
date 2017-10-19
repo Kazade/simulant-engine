@@ -145,6 +145,7 @@ public:
     void prepare_buffers();
 
     void set_maintain_adjacency_info(bool v);
+    bool maintain_adjacency_info() const { return maintain_adjacency_info_; }
 
     /* Returns a nullptr if there is no adjacecy info */
     Property<Mesh, AdjacencyInfo> adjacency_info = {this, &Mesh::adjacency_};
