@@ -59,6 +59,8 @@ void AdjacencyInfo::rebuild() {
     */
 
     for(auto& p: edge_triangles) {
+        /* Checking only for reversed is intentional because of polygon winding
+         * an edge can only be shared if it's in the opposite direction */
         auto reversed = std::make_pair(
             std::get<1>(p.first),
             std::get<0>(p.first)

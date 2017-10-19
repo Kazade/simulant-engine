@@ -147,7 +147,7 @@ public:
     void set_maintain_adjacency_info(bool v);
 
     /* Returns a nullptr if there is no adjacecy info */
-    Property<Mesh, AdjacencyInfo> adjacency = {this, &Mesh::adjacency_};
+    Property<Mesh, AdjacencyInfo> adjacency_info = {this, &Mesh::adjacency_};
 
 public:
     // Signals
