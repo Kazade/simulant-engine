@@ -21,7 +21,7 @@
 #include "../loader.h"
 #include "../stage.h"
 #include "../nodes/actor.h"
-#include "../mesh.h"
+#include "../meshes/mesh.h"
 #include "../procedural/constants.h"
 
 #include "skybox_manager.h"

@@ -19,7 +19,7 @@
 #ifndef CAPSULE_H
 #define CAPSULE_H
 
-#include "../../mesh.h"
+#include "../../meshes/mesh.h"
 
 namespace smlt {
 namespace procedural {

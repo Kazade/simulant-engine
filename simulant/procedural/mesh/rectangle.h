@@ -19,7 +19,7 @@
 #ifndef RECTANGLE_H_INCLUDED
 #define RECTANGLE_H_INCLUDED
 
-#include "simulant/mesh.h"
+#include "../../meshes/mesh.h"
 
 namespace smlt {
 

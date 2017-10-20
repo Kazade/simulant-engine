@@ -1,5 +1,7 @@
 #pragma once
 
+#include "renderers/batching/renderable.h"
+
 namespace smlt {
 
 
@@ -8,6 +10,15 @@ enum ShadowMethod {
     SHADOW_METHOD_STENCIL_EXCLUSIVE_OR // Really for the Dreamcast modifier volume stuff
 };
 
+enum ShadowCast {
+    SHADOW_CAST_ALWAYS,
+    SHADOW_CAST_NEVER
+};
+
+enum ShadowReceive {
+    SHADOW_RECEIVE_ALWAYS,
+    SHADOW_RECEIVE_NEVER
+};
 
 class MeshAdjacencyInfo {
     /*

@@ -140,3 +140,4 @@ simulant/nodes/particles
 bin
 simulant/input
 simulant/backgrounds
+simulant/meshes

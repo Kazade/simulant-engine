@@ -41,7 +41,7 @@
 #include "sound.h"
 #include "render_sequence.h"
 #include "nodes/light.h"
-#include "mesh.h"
+#include "meshes/mesh.h"
 #include "procedural/mesh.h"
 #include "procedural/texture.h"
 #include "loader.h"

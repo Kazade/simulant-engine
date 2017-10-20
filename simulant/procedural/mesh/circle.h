@@ -19,7 +19,7 @@
 #ifndef CIRCLE_H
 #define CIRCLE_H
 
-#include "../../mesh.h"
+#include "../../meshes/mesh.h"
 
 namespace smlt {
 namespace procedural {

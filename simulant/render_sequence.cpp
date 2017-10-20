@@ -26,7 +26,7 @@
 #include "nodes/camera.h"
 #include "nodes/light.h"
 
-#include "mesh.h"
+#include "meshes/mesh.h"
 #include "window.h"
 #include "partitioner.h"
 #include "loader.h"
