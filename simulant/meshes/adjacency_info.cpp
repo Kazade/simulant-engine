@@ -28,6 +28,12 @@ void AdjacencyInfo::rebuild() {
 
     // FIXME: handle other types
     assert(mesh_->shared_data->specification().position_attribute == VERTEX_ATTRIBUTE_3F);
+    auto vertices = mesh_->shared_data.get();
+    auto calculate_normal = [&vertices](uint32_t a, uint32_t b, uint32_t c) -> smlt::Vec3 {
+        auto v1 = vertices->position_at<smlt::Vec3>(b) - vertices->position_at<smlt::Vec3>(a);
+        auto v2 = vertices->position_at<smlt::Vec3>(c) - vertices->position_at<smlt::Vec3>(a);
+        return v1.cross(v2).normalized();
+    };
 
     mesh_->each([&](const std::string&, SubMeshPtr submesh) {
         if(!submesh->contributes_to_edge_list()) {
@@ -78,6 +84,7 @@ void AdjacencyInfo::rebuild() {
         if(existing != edges_.end()) {
             existing->triangle_indexes[1] = p.second;
             existing->triangle_count = 2;
+            existing->normals[1] = calculate_normal(existing->indexes[1], existing->indexes[0], existing->triangle_indexes[1]);
         } else {
             // Add the new edge
             EdgeInfo new_info;
@@ -85,6 +92,7 @@ void AdjacencyInfo::rebuild() {
             new_info.indexes[1] = std::get<1>(p.first);
             new_info.triangle_indexes[0] = p.second;
             new_info.triangle_count = 1;
+            new_info.normals[0] = calculate_normal(new_info.indexes[0], new_info.indexes[1], new_info.triangle_indexes[0]);
 
             edges_.push_back(new_info);
         }
@@ -96,14 +104,6 @@ void AdjacencyInfo::each_edge(const std::function<void (std::size_t, const EdgeI
     for(auto& edge: edges_) {
         cb(i++, edge);
     }
-}
-
-/*
- * Given an edge, this returns the two normals of the triangles which share it.
- * If a triangle doesn't exist then a zero-vector will be returned
- */
-std::pair<smlt::Vec3, smlt::Vec3> AdjacencyInfo::edge_normals(const EdgeInfo& edge) const {
-    assert(0 && "Not Implemented");
 }
 
 }

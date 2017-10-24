@@ -20,16 +20,25 @@ enum ShadowReceive {
     SHADOW_RECEIVE_NEVER
 };
 
-class MeshAdjacencyInfo {
-    /*
-     * Stores the adjacency info for a mesh
-     *
-     * INVALIDATED: When the mesh index or vertex data changes
-    */
-public:
-    MeshAdjacencyInfo(MeshPtr mesh);
-};
+struct SilhouetteEdge {
+    SilhouetteEdge(const smlt::Vec3& v1, const smlt::Vec3& v2):
+        first(v1), second(v2) {
 
+    }
+
+    smlt::Vec3 first;
+    smlt::Vec3 second;
+
+    const smlt::Vec3& operator[](std::size_t i) const {
+        if(i == 0) {
+            return first;
+        } else if(i == 1) {
+            return second;
+        } else {
+            throw std::out_of_range("Invalid edge index");
+        }
+    }
+};
 
 class MeshSilhouette {
     /*
@@ -41,8 +50,32 @@ class MeshSilhouette {
     */
 public:
 
-    MeshSilhouette(MeshPtr mesh, const LightPtr light, const MeshAdjacencyInfo& adjacency);
+    /*
+     * mesh - The mesh that this silhouette is for
+     * mesh_rotation - The rotation of the mesh to calculate (normally from the Actor)
+     * light - The light to calculate the silhoutte from
+    */
+    MeshSilhouette(MeshPtr mesh, const Mat4& mesh_transformation, const LightPtr light);
 
+    /*
+     * Returns the list of vertex pairs which make up the calculated silhouette. Returns
+     * an empty list if the mesh isn't influenced by the light
+     */
+    const std::vector<SilhouetteEdge>& edge_list();
+
+private:
+    void recalculate_silhouette();
+    void calculate_directional_silhouette();
+    void calculate_point_silhouette();
+    void calculate_spot_silhouette();
+
+    std::vector<SilhouetteEdge> edge_list_;
+
+    smlt::MeshPtr mesh_;
+    smlt::Vec3 inverse_mesh_position_;
+    smlt::Quaternion inverse_mesh_rotation_;
+    smlt::Vec3 light_direction_or_position_;
+    LightType light_type_;
 };
 
 class ShadowVolumeManager {
