@@ -17,7 +17,27 @@ MeshSilhouette::MeshSilhouette(MeshPtr mesh, const Mat4& mesh_transformation, co
     inverse_mesh_rotation_.inverse();
     inverse_mesh_position_ = -inverse_mesh_position_;
 
-    recalculate_silhouette();
+    // Directional lights are always in range
+    auto within_range = true;
+
+    if(light->type() == LIGHT_TYPE_POINT) {
+        // If it's a point light, we see if the meshes aabb intersects the
+        // radius of the light
+        // FIXME: Do we need to rotate the light position based on the mesh rotation?
+        //        the AABB won't be the same if the mesh is rotated, so probably the light
+        //        position should be rotated into the mesh identity first...
+        within_range = mesh->aabb().intersects_sphere(
+            light_direction_or_position_ + inverse_mesh_position_,
+            light->range() * 2.0 // Range is radius, intersects_sphere takes diameter
+        );
+    } else if(light->type() == LIGHT_TYPE_SPOT_LIGHT) {
+        // FIXME: need to check spotlight cone for AABB intersection
+        assert(0 && "Not Implemented");
+    }
+
+    if(within_range) {
+        recalculate_silhouette();
+    }
 }
 
 const std::vector<SilhouetteEdge> &MeshSilhouette::edge_list() {
