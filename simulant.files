@@ -160,6 +160,7 @@ simulant/particles/particle_system.h
 simulant/partitioner.cpp
 simulant/renderers/gl_renderer.cpp
 simulant/renderers/gl_renderer.h
+simulant/shadows.cpp
 simulant/shadows.h
 simulant/utils/string.cpp
 simulant/utils/string.h
@@ -183,6 +184,7 @@ tests/test_manual_manager.h
 tests/test_material.h
 tests/test_material_script.h
 tests/test_mesh.h
+tests/test_mesh_silhouette.h
 tests/test_partitioner.h
 tests/test_shader.h
 tests/test_sound.h

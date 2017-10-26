@@ -270,9 +270,13 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
             // Filter by whether or not the renderable bounds intersects the light bounds
             if(light->type() == LIGHT_TYPE_DIRECTIONAL) {
                 return true;
+            } else if(light->type() == LIGHT_TYPE_SPOT_LIGHT) {
+                return renderable->transformed_aabb().intersects_aabb(light->transformed_aabb());
+            } else {
+                return renderable->transformed_aabb().intersects_sphere(light->absolute_position(), light->range() * 2);
             }
 
-            return renderable->transformed_aabb().intersects(light->transformed_aabb());
+
         });
 
         std::partial_sort(
