@@ -61,11 +61,13 @@ documentation/widgets.md
 documentation/window.md
 samples/2d_sample.cpp
 samples/CMakeLists.txt
+samples/CMakeLists.txt
 samples/nehe01.cpp
 samples/particles.cpp
 samples/q2bsp_sample.cpp
 samples/sample.cpp
 samples/selection_sample.cpp
+samples/shadows.cpp
 samples/viewport_sample.cpp
 simulant/backgrounds/background.cpp
 simulant/backgrounds/background.h
@@ -76,6 +78,8 @@ simulant/controllers/controller.cpp
 simulant/controllers/controller.h
 simulant/controllers/movement/airplane.cpp
 simulant/controllers/movement/airplane.h
+simulant/controllers/movement/hover_ship.cpp
+simulant/controllers/movement/hover_ship.h
 simulant/generic/manual_manager.h
 simulant/input/input.cpp
 simulant/input/input.h
