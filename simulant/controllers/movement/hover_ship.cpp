@@ -1,14 +1,22 @@
 
 #include "hover_ship.h"
 
+#include "../../window.h"
 #include "../physics/rigid_body.h"
 #include "../physics/simulation.h"
 
 namespace smlt {
 namespace controllers {
 
+HoverShip::HoverShip(Controllable* owner, Window* window):
+    ControllerWithInput(window->input.get()),
+    owner_(owner) {
+
+}
+
 void HoverShip::on_controller_first_update(Controllable* owner) {
     body_ = owner->controller<RigidBody>();
+    assert(body_ && "No RigidBody controller attached");
     simulation_ = body_->simulation;
 }
 
@@ -42,8 +50,8 @@ void HoverShip::fixed_update(float step) {
         body_->add_force(force);
     }
 
-    body_->add_relative_force(smlt::Vec3(0.0f, 0.0f, power_input_ * speed_));
-    body_->add_relative_torque(smlt::Vec3(0.0f, turn_input_ * turn_speed_, 0.0f));
+    body_->add_relative_force(smlt::Vec3(0.0f, 0.0f, -power_input_ * speed_));
+    body_->add_relative_torque(smlt::Vec3(0.0f, -turn_input_ * turn_speed_, 0.0f));
 }
 
 

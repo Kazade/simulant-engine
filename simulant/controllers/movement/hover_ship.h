@@ -3,6 +3,9 @@
 #include "../controller.h"
 
 namespace smlt {
+
+class Window;
+
 namespace controllers {
 
 class RigidBody;
@@ -13,6 +16,8 @@ class HoverShip:
     public Managed<HoverShip> {
 
 public:
+    HoverShip(Controllable* owner, Window* window);
+
     const std::string name() const {
         return "Hover Ship";
     }
@@ -28,6 +33,7 @@ public:
 private:
     void on_controller_first_update(Controllable* owner);
 
+    Controllable* owner_ = nullptr;
     RigidBody* body_ = nullptr;
     RigidBodySimulation* simulation_ = nullptr;
 
