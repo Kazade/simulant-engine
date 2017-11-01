@@ -178,6 +178,8 @@ void Transformable::move_up_by(float amount) {
 
 
 void Transformable::set_position(const Vec3 &p) {
+    assert(!std::isnan(p.x) && !std::isnan(p.y) && !std::isnan(p.z));
+
     auto to_set = p;
 
     if(constraint_ && !constraint_->contains_point(to_set)) {
@@ -202,6 +204,8 @@ void Transformable::set_position(const Vec3 &p) {
 }
 
 void Transformable::set_rotation(const Quaternion& q) {
+    assert(!std::isnan(q.x) && !std::isnan(q.y) && !std::isnan(q.z) && !std::isnan(q.w));
+
     if(rotation_locked_) return;
 
     if(q.x != rotation_.x || q.y != rotation_.y || q.z != rotation_.z || q.w != rotation_.w) {

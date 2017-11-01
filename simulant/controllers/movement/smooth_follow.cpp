@@ -21,9 +21,7 @@ void SmoothFollow::late_update(float dt) {
 
     auto target_position = target->absolute_position();
 
-    if(std::isnan(target_position.x) || std::isnan(target_position.y) || std::isnan(target_position.z)) {
-        return;
-    }
+    assert(!(std::isnan(target_position.x) || std::isnan(target_position.y) || std::isnan(target_position.z)));
 
     auto wanted_position = target_position + Vec3(0, height_, distance_).rotated_by(target->absolute_rotation());
 

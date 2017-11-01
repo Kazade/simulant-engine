@@ -100,7 +100,8 @@ void Body::update(float dt) {
         auto prev_state = last_state_; // This is set by the signal connected in Body::Body()
         auto next_state = sim->body_transform(this);
 
-        float t = sim->time_keeper_->fixed_step_remainder() / dt;
+        // Prevent a divide by zero.
+        float t = (dt == 0.0f) ? 0.0f : sim->time_keeper_->fixed_step_remainder() / dt;
 
         auto new_pos = prev_state.first.lerp(next_state.first, t);
         auto new_rot = prev_state.second.slerp(next_state.second, t);
