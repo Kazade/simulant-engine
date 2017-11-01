@@ -25,15 +25,19 @@ void SmoothFollow::late_update(float dt) {
 
     auto wanted_position = target_position + Vec3(0, height_, distance_).rotated_by(target->absolute_rotation());
 
+    // Keep within 0.0 - 1.0f;
+    auto damping_to_apply = std::max(std::min(damping_ * dt, 1.0f), 0.0f);
     owner->move_to_absolute(
-        owner->absolute_position().lerp(wanted_position, damping_ * dt)
+        owner->absolute_position().lerp(wanted_position, damping_to_apply)
     );
 
     auto wanted_rotation = Quaternion::as_look_at((target_position - owner->absolute_position()).normalized(), target->absolute_rotation().up());
     wanted_rotation.inverse(); // << FIXME: This seems like a bug in as_look_at...
 
+    // Keep within 0.0 - 1.0f;
+    auto rot_damping_to_apply = std::max(std::min(rotation_damping_ * dt, 1.0f), 0.0f);
     owner->rotate_to_absolute(
-        owner->absolute_rotation().slerp(wanted_rotation, rotation_damping_ * dt)
+        owner->absolute_rotation().slerp(wanted_rotation, rot_damping_to_apply)
     );
 }
 
@@ -43,6 +47,14 @@ void SmoothFollow::set_target(ActorPtr actor) {
 
 void SmoothFollow::set_target(ParticleSystemPtr ps) {
     target_ = ps;
+}
+
+void SmoothFollow::set_damping(float damping) {
+    damping_ = damping;
+}
+
+void SmoothFollow::set_rotation_damping(float damping) {
+    rotation_damping_ = damping;
 }
 
 }
