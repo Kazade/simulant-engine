@@ -98,8 +98,6 @@ public:
     const std::string name() const { return "Rigid Body"; }
 private:
     friend class RigidBodySimulation;
-
-    void on_controller_added(Controllable* controllable);
 };
 
 }

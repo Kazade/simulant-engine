@@ -1,6 +1,6 @@
 #include "simulation.h"
 #include "body.h"
-
+#include "../../nodes/stage_node.h"
 #include "../../deps/bounce/bounce.h"
 
 namespace smlt{
@@ -217,6 +217,13 @@ b3Body *RigidBodySimulation::acquire_body(impl::Body *body) {
     def.type = (is_dynamic) ? b3BodyType::e_dynamicBody : b3BodyType::e_staticBody;
     def.gravityScale = (is_dynamic) ? 1.0 : 0.0;
     def.userData = this;
+
+    // If the body is attached to a stage node then set up the initial rotation
+    // and position from that.
+    if(body->object_) {
+        to_b3vec3(body->object_->absolute_position(), def.position);
+        to_b3quat(body->object_->absolute_rotation(), def.orientation);
+    }
 
     bodies_[body] = scene_->CreateBody(def);
     return bodies_[body];
