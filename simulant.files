@@ -192,6 +192,7 @@ tests/test_material_script.h
 tests/test_mesh.h
 tests/test_mesh_silhouette.h
 tests/test_partitioner.h
+tests/test_random_generator.h
 tests/test_shader.h
 tests/test_sound.h
 tests/test_sprites.h
