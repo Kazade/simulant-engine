@@ -1,10 +1,10 @@
 # Resource Management
 
-This section gives a brief overview of how resources are managed in KGLT
+This section gives a brief overview of how resources are managed in Simulant
 
 ## An ID for Everything
 
-When using KGLT you'll inevitably need to create, manipulate and delete many
+When using Simulant you'll inevitably need to create, manipulate and delete many
 different kinds of object. These include Cameras, Viewports, Actors, Stages and 
 Pipelines.
 
@@ -57,7 +57,7 @@ with a way to pause execution when this happens. This will allow you to examine
 the call stack of both threads to determine if a deadlock has occurred, and where
 in the code it happened. 
 
-### Avoiding deadlocks in KGLT
+### Avoiding deadlocks in Simulant
 
  - Always release resource handles as soon as possible
  - Be aware that calling texture.upload() or vertex_data().done() will wait until the 

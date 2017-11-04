@@ -1,29 +1,34 @@
 #ifndef TEST_SOUND_H
 #define TEST_SOUND_H
 
-#include "kglt/kglt.h"
-#include <kaztest/kaztest.h>
+#include <cstdlib>
+#include "simulant/simulant.h"
+#include "kaztest/kaztest.h"
 
 #include "global.h"
 
-class SoundTest : public KGLTTestCase {
+class SoundTest : public SimulantTestCase {
 public:
     void set_up() {
-        KGLTTestCase::set_up();
-        camera_id_ = window->new_camera();
+#ifdef __APPLE__
+	bool skip = bool(std::getenv("TRAVIS"));
+	skip_if(skip, "OSX Travis builds hang on sound tests :(");
+#endif
+
+        SimulantTestCase::set_up();
+
         stage_id_ = window->new_stage();
+        camera_id_ = stage_id_.fetch()->new_camera();
     }
 
     void tear_down() {
-        KGLTTestCase::tear_down();
-        window->delete_camera(camera_id_);
+        SimulantTestCase::tear_down();
+        stage_id_.fetch()->delete_camera(camera_id_);
         window->delete_stage(stage_id_);
     }
 
     void test_2d_sound_output() {
-        auto stage = window->stage(stage_id_);
-
-        kglt::SoundID sound = stage->new_sound_from_file("sample_data/test_sound.ogg");
+        smlt::SoundID sound = window->shared_assets->new_sound_from_file("test_sound.ogg");
 
         assert_false(window->playing_sound_count());
 
@@ -39,7 +44,7 @@ public:
     void test_3d_sound_output() {
         auto stage = window->stage(stage_id_);
 
-        kglt::SoundID sound = stage->new_sound_from_file("sample_data/test_sound.ogg");
+        smlt::SoundID sound = stage->assets->new_sound_from_file("test_sound.ogg");
 
         auto actor = stage->actor(stage->new_actor());
         actor->move_to(10, 0, 0);
@@ -49,11 +54,16 @@ public:
         actor->play_sound(sound);
 
         assert_true(actor->playing_sound_count());
+
+        // Finish playing the sound
+        while(window->playing_sound_count()) {
+            window->run_frame();
+        }
     }
 
 private:
-    CameraID camera_id_;
-    StageID stage_id_;
+    smlt::CameraID camera_id_;
+    smlt::StageID stage_id_;
 
 };
 #endif // TEST_SOUND_H

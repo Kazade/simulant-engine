@@ -1,0 +1,49 @@
+BEGIN(HEADER)
+    PROPERTY(INT "texture" 0)
+END(HEADER)
+
+    BEGIN(PASS)
+        SET(ITERATION ONCE)
+    
+        SET(ATTRIBUTE POSITION "vertex_position")
+        SET(ATTRIBUTE TEXCOORD0 "texture_coord0")
+        SET(ATTRIBUTE DIFFUSE "vertex_diffuse")
+        
+        SET(UNIFORM MODELVIEW_PROJECTION_MATRIX "modelview_projection")
+        SET(UNIFORM TEXTURE_MATRIX0 "texture_matrix")
+        
+        SET(FLAG DEPTH_WRITE ON)
+        SET(FLAG DEPTH_CHECK ON)
+        SET(FLAG BLEND ALPHA)
+
+        BEGIN_DATA(VERTEX)
+            #version 120
+            attribute vec3 vertex_position;
+            attribute vec2 texture_coord0;
+            attribute vec4 vertex_diffuse;
+
+            uniform mat4 modelview_projection;
+            uniform mat4 texture_matrix;
+        
+            varying vec2 frag_texcoord0;
+            varying vec4 frag_diffuse;
+            
+            void main() {
+                frag_diffuse = vertex_diffuse;
+                frag_texcoord0 = (texture_matrix * vec4(texture_coord0, 0, 1)).st;
+                gl_Position = (modelview_projection * vec4(vertex_position, 1.0));
+            }
+        END_DATA(VERTEX)
+        
+        BEGIN_DATA(FRAGMENT)
+            #version 120
+            
+            uniform sampler2D texture;
+            varying vec2 frag_texcoord0;
+            varying vec4 frag_diffuse;
+                        
+            void main() {
+                gl_FragColor = vec4(frag_diffuse.rgb, frag_diffuse.a * texture2D(texture, frag_texcoord0.st).r);
+            }                
+        END_DATA(FRAGMENT)        
+    END(PASS)

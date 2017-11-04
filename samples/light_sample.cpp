@@ -1,95 +1,115 @@
-#include "kglt/kglt.h"
-#include "kglt/shortcuts.h"
-#include "kglt/extra.h"
+#include "simulant/simulant.h"
+#include "simulant/shortcuts.h"
+#include "simulant/extra.h"
 
-using namespace kglt;
-using namespace kglt::extra;
+using namespace smlt;
 
-class GameScreen : public kglt::Screen<GameScreen> {
+class GameScene : public smlt::Scene<GameScene> {
 public:
-    GameScreen(WindowBase& window):
-        kglt::Screen<GameScreen>(window) {}
+    GameScene(Window* window):
+        smlt::Scene<GameScene>(window) {}
 
-    void do_load() {
+    void load() {
         prepare_basic_scene(stage_id_, camera_id_);
         auto stage = window->stage(stage_id_);
-        stage->host_camera(camera_id_);
 
-        window->camera(camera_id_)->set_perspective_projection(
-            45.0,
+        camera_id_.fetch()->set_perspective_projection(
+            Degrees(45.0),
             float(window->width()) / float(window->height()),
             0.1,
             1000.0
         );
 
-        stage->set_ambient_light(kglt::Colour(0.2, 0.2, 0.2, 1.0));
+        stage->set_ambient_light(smlt::Colour(0.2, 0.2, 0.2, 1.0));
 
-        actor_id_ = stage->geom_factory().new_cube(2.0);
-        stage->actor(actor_id_)->move_to(0.0, 0.0, -10.0);
+        actor_id_ = stage->new_actor_with_mesh(stage->assets->new_mesh_as_cube(2.0));
+        stage->actor(actor_id_)->move_to(0.0, 0.0, -5.0);
 
-        kglt::TextureID texture = stage->new_texture_from_file("sample_data/crate.png");
-        stage->actor(actor_id_)->mesh()->set_texture_on_material(0, texture);
+        texture_ = stage->assets->new_texture_from_file("sample_data/crate.png");
+        texture_.fetch()->set_texture_filter(TEXTURE_FILTER_BILINEAR);
+
+        stage->actor(actor_id_)->mesh()->set_texture_on_material(0, texture_);
 
         // Test Camera::look_at function
         stage->camera(camera_id_)->look_at(stage->actor(actor_id_)->absolute_position());
 
         {
-            auto light = stage->light(stage->new_light());
-            light->move_to(5.0, 0.0, -5.0);
-            light->set_diffuse(kglt::Colour::GREEN);
-            light->set_attenuation_from_range(5.0);
+            auto light = stage->new_light_as_point(Vec3(5, 0, -5), smlt::Colour::GREEN).fetch();
+            light->set_attenuation_from_range(20.0);
 
-            auto light2 = stage->light(stage->new_light());
-            light2->move_to(-5.0, 0.0, -5.0);
-            light2->set_diffuse(kglt::Colour::BLUE);
-            light2->set_attenuation_from_range(10.0);
+            auto light2 = stage->new_light_as_point(Vec3(-5, 0, -5), smlt::Colour::BLUE).fetch();
+            light2->set_attenuation_from_range(30.0);
 
-            auto light3 = stage->light(stage->new_light());
-            light3->move_to(0.0, 15.0, -5.0);
-            light3->set_diffuse(kglt::Colour::RED);
-            light3->set_attenuation_from_range(20.0);
+            auto light3 = stage->new_light_as_point(Vec3(0, -15, -5), smlt::Colour::RED).fetch();
+            light3->set_attenuation_from_range(50.0);
+
+            stage->new_light_as_directional(Vec3(1, 0, 0), smlt::Colour::YELLOW);
         }
 
-        float xpos = 0;
-        window->keyboard->key_while_pressed_connect(SDL_SCANCODE_A, [&](SDL_Keysym key, double dt) mutable {
-                xpos -= 20.0 * dt;
-                window->stage(stage_id_)->camera(camera_id_)->set_absolute_position(xpos, 2, 0);
-                window->stage(stage_id_)->camera(camera_id_)->look_at(window->stage(stage_id_)->actor(actor_id_)->absolute_position());
-        });
-        window->keyboard->key_while_pressed_connect(SDL_SCANCODE_D, [&](SDL_Keysym key, double dt) mutable {
-                xpos += 20.0 * dt;
-                window->stage(stage_id_)->camera(camera_id_)->set_absolute_position(xpos, 2, 0);
-                window->stage(stage_id_)->camera(camera_id_)->look_at(window->stage(stage_id_)->actor(actor_id_)->absolute_position());
-        });
+        window->new_background_as_scrollable_from_file("sample_data/background.png");        
+
+        auto axis = input->new_axis("F");
+        axis->set_positive_keyboard_key(smlt::KEYBOARD_CODE_F);
     }
 
-    void do_step(double dt) {
-        window->stage(stage_id_)->actor(actor_id_)->rotate_x(kglt::Degrees(dt * 20.0));
-        window->stage(stage_id_)->actor(actor_id_)->rotate_y(kglt::Degrees(dt * 15.0));
-        window->stage(stage_id_)->actor(actor_id_)->rotate_z(kglt::Degrees(dt * 25.0));
+    void update(float dt) {
+        if(input->axis_value_hard("F") == 1 && !f_down) {
+            current_filter_++;
+            if(current_filter_ == 3) {
+                current_filter_ = 0;
+            }
+
+            texture_.fetch()->set_texture_filter(filters_[current_filter_]);
+            f_down = true;
+        } else if(input->axis_value_hard("F") == 0) {
+            f_down = false;
+        }
+    }
+
+    void fixed_update(float dt) {
+        actor_id_.fetch()->rotate_global_y_by(smlt::Degrees(input->axis_value("Horizontal") * 360.0f * dt));
+
+        window->stage(stage_id_)->actor(actor_id_)->rotate_x_by(smlt::Degrees(dt * 20.0));
+        window->stage(stage_id_)->actor(actor_id_)->rotate_y_by(smlt::Degrees(dt * 15.0));
+        window->stage(stage_id_)->actor(actor_id_)->rotate_z_by(smlt::Degrees(dt * 25.0));
     }
 
 private:
     CameraID camera_id_;
     StageID stage_id_;
     ActorID actor_id_;
+    TextureID texture_;
+
+    bool f_down = false;
+    uint8_t current_filter_ = 0;
+    const smlt::TextureFilter filters_[3] = {
+        TEXTURE_FILTER_POINT,
+        TEXTURE_FILTER_BILINEAR,
+        TEXTURE_FILTER_TRILINEAR
+    };
 };
 
-class LightingSample: public kglt::Application {
+class LightingSample: public smlt::Application {
 public:
-    LightingSample():
-        Application("KGLT Combined Sample") {
+    LightingSample(const smlt::AppConfig& config):
+        Application(config) {
     }
 
 private:
-    bool do_init() {
-        register_screen("/", screen_factory<GameScreen>());
+    bool init() {
+        scenes->register_scene<GameScene>("main");
         return true;
     }
 };
 
 int main(int argc, char* argv[]) {
-    LightingSample app;
+    smlt::AppConfig config;
+    config.title = "Light Sample";
+    config.fullscreen = false;
+    config.width = 1280;
+    config.height = 960;
+
+    LightingSample app(config);
     return app.run();
 }
 

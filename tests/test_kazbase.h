@@ -1,9 +1,9 @@
 #ifndef TEST_KAZBASE_H
 #define TEST_KAZBASE_H
 
-#include <kaztest/kaztest.h>
+#include "kaztest/kaztest.h"
 
-#include "kglt/kglt.h"
+#include "simulant/simulant.h"
 #include "global.h"
 
 class KazbaseTest : public TestCase {

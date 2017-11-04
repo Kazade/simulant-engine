@@ -1,16 +1,14 @@
 # Engine Structure
 
-The KGLT architecture can be divided into three parts:
+Here is a diagram describing the high-level architecture of Simulant:
 
- - Render system
- - Scene management
- - The "extra" namespace
- 
+![Architecture](/documentation/architecture.png?raw=true)
+
 ## Render System
 
-The render system in KGLT is in constant flux at the moment, but the general
+The render system in Simulant is in constant flux at the moment, but the general
 architecture has been established. The rendering process is based around a series
-of pipelines. Each pipeline take a StageID (or UIStageID), CameraID and ViewportID 
+of pipelines. Each pipeline take a StageID (or OverlayID), CameraID and ViewportID 
 as inputs, and an optional target TextureID as an output. If the TextureID is omitted, 
 then the output of the pipeline is applied directly to the framebuffer.
 
@@ -38,8 +36,6 @@ do so while considering how your rendered output will be composited using pipeli
 For example, you might create a Stage for your background, and add that to a pipeline
 with a low priority, then add a Stage for your world geometry, and finally add one
 for rendering a UI overlay.
-
-
 
 ### Stages
 

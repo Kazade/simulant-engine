@@ -1,22 +1,34 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
-#include "kglt/window.h"
+#ifdef _arch_dreamcast
+#include "simulant/kos_window.h"
+extern smlt::KOSWindow::ptr window;
+#else
+#include "simulant/sdl2_window.h"
+extern smlt::SDL2Window::ptr window;
+#endif
 
-extern kglt::Window::ptr window;
+#include "kaztest/kaztest.h"
+#include "simulant/window.h"
 
-#include <kaztest/kaztest.h>
-#include <kazbase/logging.h>
-#include "kglt/window_base.h"
-
-class KGLTTestCase : public TestCase {
+class SimulantTestCase : public TestCase {
 public:
     void set_up() {
-        logging::get_logger("/")->set_level(logging::LOG_LEVEL_NONE);
-
         if(!window) {
-            window = kglt::Window::create();
-            window->set_logging_level(kglt::LOG_LEVEL_NONE);
+#ifdef _arch_dreamcast
+            window = smlt::KOSWindow::create(nullptr);
+#else
+            window = smlt::SDL2Window::create(nullptr);
+#endif
+            window->_init();
+            window->set_logging_level(smlt::LOG_LEVEL_NONE);
+
+            auto root = kfs::path::dir_name(kfs::path::dir_name(__FILE__));
+            window->resource_locator->add_search_path(
+                kfs::path::join(root, "samples/data")
+            );
+
         } else {
             window->reset();
         }

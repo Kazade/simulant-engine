@@ -1,48 +1,47 @@
-#ifndef TEST_SHADER_H
-#define TEST_SHADER_H
+#pragma once
 
-#include "kglt/kglt.h"
-#include <kaztest/kaztest.h>
+#include "simulant/simulant.h"
+#include "kaztest/kaztest.h"
 
 #include "global.h"
 
-#include "kglt/gpu_program.h"
+#ifndef SIMULANT_GL_VERSION_1X
+#include "simulant/renderers/gl2x/gpu_program.h"
+#endif
 
-class ShaderTest : public KGLTTestCase {
+class ShaderTest : public SimulantTestCase {
 public:
     void test_shader() {
-        kglt::GPUProgram::ptr s = kglt::GPUProgram::create();
+#ifndef SIMULANT_GL_VERSION_1X
+        smlt::GPUProgram::ptr program = smlt::GPUProgram::create(
+            smlt::GPUProgramID(1),
+            "uniform vec3 c; attribute vec3 tns; void main(){ gl_Position = vec4(c, tns.x); }",
+            "void main(){ gl_FragColor = vec4(1.0); }"
+        );
+        smlt::Mat4 ident;
 
-        kglt::Mat4 ident;
+        assert_false(program->is_compiled(smlt::SHADER_TYPE_VERTEX));
+        assert_false(program->is_compiled(smlt::SHADER_TYPE_FRAGMENT));
 
-        assert_false(s->is_complete());
+        program->compile(smlt::SHADER_TYPE_VERTEX);
 
-        s->set_shader_source(kglt::SHADER_TYPE_VERTEX, "uniform vec3 c; attribute vec3 tns; void main(){ gl_Position = vec4(c, tns.x); }");
-        s->set_shader_source(kglt::SHADER_TYPE_FRAGMENT, "void main(){ gl_FragColor = vec4(1.0); }");
+        assert_true(program->is_compiled(smlt::SHADER_TYPE_VERTEX));
+        assert_false(program->is_compiled(smlt::SHADER_TYPE_FRAGMENT));
 
-        assert_false(s->is_compiled(kglt::SHADER_TYPE_VERTEX));
-        assert_false(s->is_compiled(kglt::SHADER_TYPE_FRAGMENT));
+        program->build();
 
-        s->compile(kglt::SHADER_TYPE_VERTEX);
+        assert_true(program->is_compiled(smlt::SHADER_TYPE_VERTEX));
+        assert_true(program->is_compiled(smlt::SHADER_TYPE_FRAGMENT));
+        assert_true(program->is_complete());
 
-        assert_true(s->is_compiled(kglt::SHADER_TYPE_VERTEX));
-        assert_false(s->is_compiled(kglt::SHADER_TYPE_FRAGMENT));
+        program->activate();
+        program->set_uniform_vec3("c", smlt::Vec3());
 
-        s->build();
-
-        assert_true(s->is_compiled(kglt::SHADER_TYPE_VERTEX));
-        assert_true(s->is_compiled(kglt::SHADER_TYPE_FRAGMENT));
-        assert_true(s->is_complete());
-
-        s->activate();
-        s->uniforms().set_vec3("c", kglt::Vec3());
-
-        s->attributes().set_location("tns", 1);
-        auto loc = s->attributes().locate("tns");
+        program->set_attribute_location("tns", 1);
+        auto loc = program->locate_attribute("tns");
 
         assert_equal(1, loc);
+#endif
     }
 
 };
-
-#endif // TEST_SHADER_H

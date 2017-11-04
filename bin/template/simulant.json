@@ -1,0 +1,8 @@
+{
+    "name": "__project_name__",
+    "package": "tld.domain.__project_name_pascal__",
+    "executable": "__project_name_lower__",
+    "description": "...",
+    "author": "...",
+    "license": "..."
+}

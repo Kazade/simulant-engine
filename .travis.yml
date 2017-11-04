@@ -1,0 +1,169 @@
+language: cpp
+services: docker
+git:
+ submodules: false
+
+env:
+ global:
+  - AUDIODEV=null
+
+matrix:
+ allow_failures:
+  # Allow Windows builds to fail for now
+  - os: linux
+    dist: trusty
+    compiler: clang
+    env: CROSS_BUILD=windows BUILD_TYPE=release
+    sudo: required
+
+  - os: linux
+    dist: trusty
+    compiler: clang
+    env: CROSS_BUILD=windows BUILD_TYPE=debug
+    sudo: required
+
+ include:
+  # OSX builds
+  - os: osx
+    compiler: clang
+    env: CROSS_BUILD=0 BUILD_TYPE=debug
+    sudo: required
+  - os: osx
+    compiler: clang
+    env: CROSS_BUILD=0 BUILD_TYPE=release
+    sudo: required
+
+  # Linux builds
+  - os: linux
+    dist: trusty
+    compiler: clang
+    env: CROSS_BUILD=0 BUILD_TYPE=debug
+    sudo: required
+  - os: linux
+    dist: trusty
+    compiler: clang
+    env: CROSS_BUILD=0 BUILD_TYPE=release
+    sudo: required
+
+  # Dreamcast build
+  - os: linux
+    dist: trusty
+    compiler: clang
+    env: CROSS_BUILD=dreamcast BUILD_TYPE=release
+    sudo: required
+
+  # Windows build
+  - os: linux
+    dist: trusty
+    compiler: clang
+    env: CROSS_BUILD=windows BUILD_TYPE=release
+    sudo: required
+
+  - os: linux
+    dist: trusty
+    compiler: clang
+    env: CROSS_BUILD=windows BUILD_TYPE=debug
+    sudo: required
+
+addons:
+ apt:
+  packages:
+   - libsdl2-dev
+   - libopenal-dev
+   - libtinyxml-dev
+   - libxi-dev
+   - libxmu-dev
+   - xserver-xorg-video-dummy
+   - xpra
+   - xorg-dev
+   - opencl-headers
+   - libgl1-mesa-dev
+   - libxcursor-dev
+   - libpulse-dev
+   - libxinerama-dev
+   - libxrandr-dev
+   - libxv-dev
+   - libasound2-dev
+   - libudev-dev
+   - mesa-utils
+   - xvfb
+   - mesa-common-dev
+   - libgbm1
+   - libxatracker-dev
+   - xvfb
+   - pulseaudio
+   - dbus-x11
+
+before_install:
+ - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install --install-recommends linux-generic-lts-xenial xserver-xorg-core-lts-xenial xserver-xorg-lts-xenial xserver-xorg-video-all-lts-xenial xserver-xorg-input-all-lts-xenial libwayland-egl1-mesa-lts-xenial; fi
+ - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules; fi
+ - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then sed -i '' 's/git@github.com:/https:\/\/github.com\//' .gitmodules; fi
+ - git submodule update --init --recursive
+ - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
+ - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install tinyxml sdl2 openal-soft; fi
+ - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo usermod -a -G audio travis; fi
+ - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo bash ./.prep-dummy-soundcard.sh; fi
+ - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then dbus-launch pulseaudio --start; fi
+ - if [[ "$CROSS_BUILD" == "dreamcast" ]]; then docker pull kazade/dreamcast-sdk; fi
+
+install:
+ - mkdir build && cd build
+ # Never build samples on Travis, it's too slow
+ - export SIMULANT_OPTIONS="-DSIMULANT_BUILD_SAMPLES=OFF"
+
+ # If releasing, then do a release build (default is debug)
+ - if [[ "$BUILD_TYPE" == "release" ]]; then export SIMULANT_OPTIONS="$SIMULANT_OPTIONS -DCMAKE_BUILD_TYPE=Release"; fi
+
+ # If we're not cross-compiling, then do a normal make dance
+ - if [[ "$CROSS_BUILD" == "0" ]]; then cmake $SIMULANT_OPTIONS ..; fi
+ - if [[ "$CROSS_BUILD" == "0" ]]; then make; fi
+
+ # Use mingw64-cmake for cross-compiling to windows
+ - if [[ "$CROSS_BUILD" == "windows" ]]; then mingw64-cmake $SIMULANT_OPTIONS ..; fi
+ - if [[ "$CROSS_BUILD" == "windows" ]]; then make; fi
+
+ # Otherwise, use docker for the dreamcast
+ - if [[ "$CROSS_BUILD" == "dreamcast" ]]; then sudo docker run kazade/dreamcast-sdk /bin/sh -c "source /etc/bash.bashrc; git clone --recursive --branch=${TRAVIS_BRANCH} https://github.com/${TRAVIS_REPO_SLUG}.git /simulant; mkdir -p /simulant/dbuild; cd /simulant/dbuild; cmake -DCMAKE_TOOLCHAIN_FILE=/simulant/toolchains/Dreamcast.cmake .. && make"; fi
+
+before_script:
+ - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export DISPLAY=:99; fi
+ - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export LIBGL_ALWAYS_SOFTWARE=1; fi
+ - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export ALSOFT_DRIVERS=pulse; fi
+ - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1400x900x24 -ac +extension RANDR +extension GLX +render; fi
+ - sleep 3
+ - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then glxinfo; fi
+
+script:
+  # Run the tests
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ $CROSS_BUILD == "0" ]]; then SDL_VIDEODRIVER=x11 catchsegv ./tests/simulant_tests; fi;
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ./tests/simulant_tests; fi;
+
+  # Package everything into a folder for upload to GCS
+  - if [[ "$CROSS_BUILD" == "dreamcast" ]]; then export BUILD_TARGET=dreamcast; fi
+  - if [[ "$CROSS_BUILD" == "0" ]]; then export BUILD_TARGET=$TRAVIS_OS_NAME; fi;
+  - export FOLDER_NAME=simulant-$BUILD_TARGET-$BUILD_TYPE
+  - cd $TRAVIS_BUILD_DIR # Make sure we're in the right place
+
+  - mkdir -p $BUILD_TARGET/$FOLDER_NAME/lib/$BUILD_TYPE
+
+  # Copy all the compiled libs for whatever platform, don't return an error code if they don't exist
+  - cp ./build/simulant/{*.so,*.a,*.dylib,*.dll,*.lib} $BUILD_TARGET/$FOLDER_NAME/lib/$BUILD_TYPE 2> /dev/null | true
+
+  # Copy the header files to the right place
+  - mkdir -p $BUILD_TARGET/$FOLDER_NAME/include/simulant
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export COPY_COMMAND=ditto; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export COPY_COMMAND="cp --parents"; fi
+  - find simulant -name "*.h" -type f -exec $COPY_COMMAND {} ./$BUILD_TARGET/$FOLDER_NAME/include \;
+
+  - cd $BUILD_TARGET; zip -q -r $FOLDER_NAME{.zip,}; rm -r $FOLDER_NAME; cd -;
+
+deploy:
+  provider: gcs
+  bucket: staging.simulant-engine.appspot.com
+  acl: public-read
+  local-dir: $BUILD_TARGET
+  skip_cleanup: true
+  access_key_id: $GCS_ACCESS_KEY
+  secret_access_key: $GCS_SECRET
+  branch: master
+

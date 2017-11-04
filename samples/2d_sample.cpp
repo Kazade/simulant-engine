@@ -1,52 +1,56 @@
-#include "kglt/kglt.h"
-#include "kglt/shortcuts.h"
-#include "kglt/extra.h"
+#include "simulant/simulant.h"
+#include "simulant/shortcuts.h"
+#include "simulant/extra.h"
 
-using namespace kglt;
-using namespace kglt::extra;
+using namespace smlt;
 
-class GameScreen : public kglt::Screen<GameScreen> {
+class GameScene : public smlt::Scene<GameScene> {
 public:
-    GameScreen(kglt::WindowBase& window):
-        kglt::Screen<GameScreen>(window) {}
+    GameScene(smlt::Window* window):
+        smlt::Scene<GameScene>(window) {}
 
-    void do_load() {
+    void load() {
         prepare_basic_scene(stage_id_, camera_id_);
+
+        auto cam = camera_id_.fetch();
 
         //Automatically calculate an orthographic projection, taking into account the aspect ratio
         //and the passed height. For example, passing a height of 2.0 would mean the view would extend
         //+1 and -1 in the vertical direction, -1.0 - +1.0 near/far, and width would be calculated from the aspect
         float render_height = 16.0;
-        float render_width = window->camera(camera_id_)->set_orthographic_projection_from_height(
+        float render_width = cam->set_orthographic_projection_from_height(
             render_height, float(window->width()) / float(window->height())
         );
 
-        //Load a sprite grid, from the 'Layer 1' layer in a tmx file
-        kglt::MeshID mesh_id = window->stage(stage_id_)->new_mesh_from_tmx_file(
-            "sample_data/tiled/example.tmx", "Layer 1"
-        );
-        window->stage(stage_id_)->new_actor_with_mesh(mesh_id);
+        {
+            auto stage = window->stage(stage_id_);
 
-        auto bounds = window->stage(stage_id_)->mesh(mesh_id)->aabb();
+            //Load a sprite grid, from the 'Layer 1' layer in a tmx file
+            smlt::MeshID mesh_id = stage->assets->new_mesh_from_tmx_file(
+                "sample_data/tiled/example.tmx", "Layer 1"
+            );
 
-        window->stage(stage_id_)->host_camera(camera_id_);
+            stage->new_actor_with_mesh(mesh_id);
 
-        //Constrain the camera to the area where the sprite grid is rendered
-        window->stage(stage_id_)->camera(camera_id_)->constrain_to(
-            kglt::Vec3(render_width / 2, render_height / 2, 0),
-            kglt::Vec3(
-                bounds.width() - render_width / 2,
-                bounds.height() - render_height / 2,
-                0
-            )
-        );
+            auto bounds = stage->assets->mesh(mesh_id)->aabb();
 
+            //Constrain the camera to the area where the sprite grid is rendered
+            stage->camera(camera_id_)->constrain_to_aabb(
+                AABB(
+                    smlt::Vec3(render_width / 2, render_height / 2, 0),
+                    smlt::Vec3(
+                        bounds.width() - render_width / 2,
+                        bounds.height() - render_height / 2,
+                        0
+                    )
+                )
+            );
 
+        }
     }
 
-    void do_activate() {
-        window->enable_virtual_joypad(kglt::VIRTUAL_DPAD_DIRECTIONS_TWO, 2);
-        window->message_bar->inform("Sample demonstrating 2D sprites");
+    void activate() {
+        window->enable_virtual_joypad(smlt::VIRTUAL_GAMEPAD_CONFIG_TWO_BUTTONS);
     }
 
 private:
@@ -55,18 +59,28 @@ private:
 };
 
 
-class Sample2D: public kglt::Application {
+class Sample2D: public smlt::Application {
+public:
+    Sample2D(const smlt::AppConfig& config):
+        smlt::Application(config) {}
+
 private:
-    bool do_init() {
-        register_screen("/", kglt::screen_factory<GameScreen>());
-        load_screen_in_background("/", true); //Do loading in a background thread, but show immediately when done
-        activate_screen("/loading"); // Show the loading screen in the meantime
+    bool init() {
+        scenes->register_scene<GameScene>("main");
+        scenes->load_in_background("main", true); //Do loading in a background thread, but show immediately when done
+        scenes->activate("_loading"); // Show the loading screen in the meantime
         return true;
     }
 };
 
 
 int main(int argc, char* argv[]) {
-    Sample2D app;
+    smlt::AppConfig config;
+    config.title = "2D Sample";
+    config.fullscreen = false;
+    config.width = 1280;
+    config.height = 960;
+
+    Sample2D app(config);
     return app.run();
 }

@@ -1,6 +1,15 @@
-[submodule "kglt/kazbase"]
-	path = kglt/kazbase
-	url = https://github.com/Kazade/kazbase.git
-[submodule "submodules/luabind"]
-	path = submodules/luabind
-	url = https://github.com/Kazade/luabind-deboostified.git
+[submodule "deps/kazsignal"]
+	path = deps/kazsignal
+	url = https://github.com/Kazade/kazsignal.git
+[submodule "deps/kazlog"]
+	path = deps/kazlog
+	url = https://github.com/Kazade/kazlog.git
+[submodule "deps/jsonic"]
+	path = deps/jsonic
+	url = https://Kazade@gitlab.com/Kazade/jsonic.git
+[submodule "deps/kfs"]
+	path = deps/kfs
+	url = https://github.com/Kazade/kfs.git
+[submodule "deps/bounce"]
+	path = deps/bounce
+	url = https://github.com/Kazade/bounce.git

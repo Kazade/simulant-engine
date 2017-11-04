@@ -1,17 +1,17 @@
-#ifndef TEST_SCREENS_H
-#define TEST_SCREENS_H
+#ifndef TEST_sceneS_H
+#define TEST_sceneS_H
 
-#include <kaztest/kaztest.h>
+#include "kaztest/kaztest.h"
 
-#include "kglt/kglt.h"
+#include "simulant/simulant.h"
 #include "global.h"
 
 namespace {
 
-using namespace kglt;
+using namespace smlt;
 
 
-class ScreenTests : public KGLTTestCase {
+class SceneTests : public SimulantTestCase {
 public:
     void test_load() {
 
@@ -22,15 +22,15 @@ public:
     }
 };
 
-class TestScreen : public Screen<TestScreen> {
+class TestScene : public Scene<TestScene> {
 public:
-    TestScreen(WindowBase& window):
-        Screen<TestScreen>(window) {}
+    TestScene(Window* window):
+        Scene<TestScene>(window) {}
 
-    void do_load() override { load_called = true; }
-    void do_unload() override { unload_called = true; }
-    void do_activate() override { activate_called = true; }
-    void do_deactivate() override { deactivate_called = true; }
+    void load() override { load_called = true; }
+    void unload() override { unload_called = true; }
+    void activate() override { activate_called = true; }
+    void deactivate() override { deactivate_called = true; }
 
     volatile bool load_called = false;
     volatile bool unload_called = false;
@@ -38,56 +38,68 @@ public:
     volatile bool deactivate_called = false;
 };
 
-class ScreenManagerTests : public KGLTTestCase {
+class SceneWithArgs : public Scene<SceneWithArgs> {
+public:
+    // Boilerplate
+    SceneWithArgs(smlt::Window* window, const std::string& some_arg):
+        smlt::Scene<SceneWithArgs>(window) {}
+
+    void load() {}
+
+};
+
+
+class SceneManagerTests : public SimulantTestCase {
 private:
-    ScreenManager::ptr manager_;
+    SceneManager::ptr manager_;
 
 public:
     void set_up() {
-        KGLTTestCase::set_up();
-        manager_ = std::make_shared<ScreenManager>(*window);
+        SimulantTestCase::set_up();
+        manager_ = std::make_shared<SceneManager>(window.get());
     }
 
     void test_route() {
-        assert_false(manager_->has_screen("/"));
-        assert_false(manager_->has_screen("/test"));
+        assert_false(manager_->has_scene("main"));
+        assert_false(manager_->has_scene("/test"));
 
-        manager_->register_screen("/test", screen_factory<TestScreen>());
+        manager_->register_scene<TestScene>("/test");
 
-        assert_true(manager_->has_screen("/test"));
-        assert_false(manager_->has_screen("/"));
+        assert_true(manager_->has_scene("/test"));
+        assert_false(manager_->has_scene("main"));
     }
 
-    void test_activate_screen() {
-        assert_raises(ValueError, std::bind(&ScreenManager::activate_screen, manager_, "/"));
+    void test_activate() {
+        assert_raises(std::logic_error, std::bind(&SceneManager::activate, manager_, "main", smlt::SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE));
 
-        manager_->register_screen("/", screen_factory<TestScreen>());
+        manager_->register_scene<TestScene>("main");
 
-        manager_->activate_screen("/");
+        manager_->activate("main");
 
-        TestScreen* scr = dynamic_cast<TestScreen*>(manager_->resolve_screen("/").get());
-
-        assert_true(scr->load_called);
-        assert_true(scr->activate_called);
-        assert_false(scr->deactivate_called);
-        assert_false(scr->unload_called);
-
-        manager_->activate_screen("/"); //activate_screening to the same place should do nothing
+        TestScene* scr = dynamic_cast<TestScene*>(manager_->resolve_scene("main").get());
+        scr->set_destroy_on_unload(false); //Don't destroy on unload
 
         assert_true(scr->load_called);
         assert_true(scr->activate_called);
         assert_false(scr->deactivate_called);
         assert_false(scr->unload_called);
 
-        manager_->register_screen("/test", screen_factory<TestScreen>());
-        manager_->activate_screen("/test");
+        manager_->activate("main"); //activateing to the same place should do nothing
+
+        assert_true(scr->load_called);
+        assert_true(scr->activate_called);
+        assert_false(scr->deactivate_called);
+        assert_false(scr->unload_called);
+
+        manager_->register_scene<TestScene>("/test");
+        manager_->activate("/test");
 
         assert_true(scr->load_called);
         assert_true(scr->activate_called);
         assert_true(scr->deactivate_called); //Should've been deactivated
-        assert_false(scr->unload_called);
+        assert_true(scr->unload_called);
 
-        TestScreen* scr2 = dynamic_cast<TestScreen*>(manager_->resolve_screen("/test").get());
+        TestScene* scr2 = dynamic_cast<TestScene*>(manager_->resolve_scene("/test").get());
 
         assert_true(scr2->load_called);
         assert_true(scr2->activate_called);
@@ -96,15 +108,16 @@ public:
     }
 
     void test_background_load() {
-        manager_->register_screen("/", screen_factory<TestScreen>());
+        manager_->register_scene<TestScene>("main");
 
-        TestScreen* scr = dynamic_cast<TestScreen*>(manager_->resolve_screen("/").get());
+        TestScene* scr = dynamic_cast<TestScene*>(manager_->resolve_scene("main").get());
         assert_false(scr->load_called);
-        manager_->load_screen_in_background("/");
-        assert_false(scr->load_called);
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        window->idle->execute();
+        manager_->load_in_background("main");
+#ifdef _arch_dreamcast
+        stdX::this_thread::sleep_for(std::chrono::milliseconds(100));
+#else
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));        
+#endif
         assert_true(scr->load_called);
     }
 
@@ -119,10 +132,15 @@ public:
     void test_reset() {
 
     }
+
+    void test_register_scene() {
+        SceneManager manager(window.get());
+        manager.register_scene<SceneWithArgs>("test", "arg");
+    }
 };
 
 
 }
 
-#endif // TEST_SCREENS_H
+#endif // TEST_sceneS_H
 

@@ -1,0 +1,29 @@
+cmake_minimum_required(VERSION 2.8)
+project(__project_name_pascal__)
+
+FIND_PACKAGE(PkgConfig REQUIRED)
+FIND_PACKAGE(SIMULANT)
+
+PKG_CHECK_MODULES(SDL2 REQUIRED sdl2)
+PKG_CHECK_MODULES(GL REQUIRED gl)
+
+INCLUDE_DIRECTORIES(
+    ${SDL2_INCLUDE_DIRS}
+    ${GL_INCLUDE_DIRS}
+    ${SIMULANT_INCLUDE_DIRS}
+)
+
+LINK_LIBRARIES(
+    ${SDL2_LIBRARIES}
+    ${GL_LIBRARIES}
+    ${SIMULANT_LIBRARIES}
+)
+
+FILE(GLOB_RECURSE SOURCES FOLLOW_SYMLINKS ${CMAKE_SOURCE_DIR}/src/*.cpp)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread")
+
+add_definitions("-Wall -g")
+add_executable(__project_name_lower__ ${SOURCES})
+
+FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets/ DESTINATION ${CMAKE_BINARY_DIR}/assets/)

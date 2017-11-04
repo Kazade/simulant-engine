@@ -1,86 +1,145 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-PROJECT(kglt)
+PROJECT(simulant)
+
+# Set a default build type if none was specified
+IF(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  MESSAGE(STATUS "Setting CMAKE_BUILD_TYPE to 'Debug' by default. Use -DCMAKE_BUILD_TYPE=Release for a release build.")
+  SET(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build." FORCE)
+  # Set the possible values of build type for cmake-gui
+  SET_PROPERTY(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+ENDIF()
+
 
 # Set module options
-OPTION(KGLT_BUILD_TESTS "Build KGLT tests" ON)
-OPTION(KGLT_BUILD_SAMPLES "Build KGLT samples" ON)
+OPTION(SIMULANT_BUILD_TESTS "Build Simulant tests" ON)
+OPTION(SIMULANT_BUILD_SAMPLES "Build Simulant samples" ON)
+OPTION(SIMULANT_GL_VERSION_1X "Enable GL 1.x support" OFF)
+
+IF(SIMULANT_GL_VERSION_1X OR DREAMCAST_BUILD)
+    # Dreamcast builds always use this
+    SET(SIMULANT_GL_VERSION_1X "1")
+    ADD_DEFINITIONS(-DSIMULANT_GL_VERSION_1X)
+ELSE()
+    SET(SIMULANT_GL_VERSION_2X "1")
+    ADD_DEFINITIONS(-DSIMULANT_GL_VERSION_2X)
+ENDIF()
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
-INCLUDE(cotire)
 
-if(${CMAKE_CURRENT_SOURCE_DIR} MATCHES ${CMAKE_SOURCE_DIR})
-    SET (CMAKE_C_COMPILER "/usr/bin/clang")
-    SET (CMAKE_CXX_COMPILER "/usr/bin/clang++")
-ENDIF(${CMAKE_CURRENT_SOURCE_DIR} MATCHES ${CMAKE_SOURCE_DIR})
+ADD_DEFINITIONS("-Wall -DTIXML_USE_STL")
 
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
 
-FIND_PACKAGE(PkgConfig REQUIRED)
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -s -fomit-frame-pointer")
 
-FIND_PACKAGE(KAZTEST)
-FIND_PACKAGE(KAZBASE REQUIRED)
-FIND_PACKAGE(KAZMATH REQUIRED)
-FIND_PACKAGE(KAZTIMER REQUIRED)
-FIND_PACKAGE(SOIL REQUIRED)
-FIND_PACKAGE(OpenAL REQUIRED)
-FIND_PACKAGE(TinyXML REQUIRED)
+IF(NOT DREAMCAST_BUILD)
+    FIND_PACKAGE(PkgConfig REQUIRED)
+    PKG_CHECK_MODULES(SDL2 sdl2 REQUIRED)
+    FIND_PACKAGE(OpenAL REQUIRED)
+    FIND_PACKAGE(ZLIB REQUIRED)
+    FIND_PACKAGE(OpenGL REQUIRED)
 
-ADD_DEFINITIONS("-Wall -g -Wno-mismatched-tags -DdSINGLE")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread")
-#ADD_DEFINITIONS("-DBOOST_NO_RVALUE_REFERENCES") #https://svn.boost.org/trac/boost/ticket/4521
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+ELSE()
+    MESSAGE("-- Cross-Compiling for the Sega Dreamcast")
 
-PKG_CHECK_MODULES(SDL2 sdl2 REQUIRED)
-PKG_CHECK_MODULES(GL gl REQUIRED)
-PKG_CHECK_MODULES(ODE REQUIRED ode)
-PKG_CHECK_MODULES(LUA REQUIRED lua)
+    SET(OPENAL_INCLUDE_DIRS "") # Don't use OpenAL on DC
+    SET(OPENAL_LIBRARY "")
 
-FIND_PACKAGE(Freetype REQUIRED)
-FIND_PACKAGE(GLEW REQUIRED)
+    SET(SDL2_INCLUDE_DIRS "") # Don't use SDL2 on DC
+    SET(SDL2_LIBRARIES "")
 
-FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/kglt/materials DESTINATION ${CMAKE_BINARY_DIR}/kglt)
-FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/kglt/fonts DESTINATION ${CMAKE_BINARY_DIR}/kglt)
+    SET(ZLIB_INCLUDE_DIRS $ENV{KOS_PORTS}/include/zlib)
+    SET(ZLIB_LIBRARIES z)
+
+    SET(OPENGL_INCLUDE_DIRS $ENV{KOS_PORTS}/include/libGL)
+    SET(OPENGL_LIBRARIES GL)
+ENDIF()
+
+FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/simulant/materials DESTINATION ${CMAKE_BINARY_DIR}/simulant)
+FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/simulant/fonts DESTINATION ${CMAKE_BINARY_DIR}/simulant)
 
 INCLUDE_DIRECTORIES(
-    ${CMAKE_CURRENT_SOURCE_DIR}/kglt/ui/rocket/Include #libRocket`
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${KAZBASE_INCLUDE_DIRS}
-    ${KAZMATH_INCLUDE_DIRS}
-    ${KAZTIMER_INCLUDE_DIRS}
     ${SDL2_INCLUDE_DIRS}
-    ${GL_INCLUDE_DIRS}
-    ${SOIL_INCLUDE_DIRS}
-    ${FREETYPE_INCLUDE_DIRS}
+    ${OPENGL_INCLUDE_DIRS}
     ${OPENAL_INCLUDE_DIRS}
-    ${LUA_INCLUDE_DIRS}
-    ${ODE_INCLUDE_DIRS}
-    ${GLEW_INCLUDE_DIR}
-    ${TinyXML_INCLUDE_DIR}
+    ${ZLIB_INCLUDE_DIRS}
 )
 
 LINK_LIBRARIES(
     ${SDL2_LIBRARIES}
-    ${GL_LIBRARIES}
-    ${SOIL_LIBRARIES}
-    ${KAZBASE_LIBRARIES}
-    ${KAZTIMER_LIBRARIES}
-    ${KAZMATH_LIBRARIES}
-    ${FREETYPE_LIBRARY}
+    ${OPENGL_LIBRARIES}
     ${OPENAL_LIBRARY}
-    ${LUA_LIBRARIES}
-    ${ODE_LIBRARIES}
-    ${GLEW_LIBRARIES}
-    ${TinyXML_LIBRARIES}
-    rt
+    ${ZLIB_LIBRARIES}
 )
 
-ADD_SUBDIRECTORY(submodules)
-
-INCLUDE_DIRECTORIES(submodules/luabind)
-LINK_LIBRARIES(luabind)
-
-ADD_SUBDIRECTORY(kglt)
-IF(KAZTEST_FOUND)
-    ADD_SUBDIRECTORY(tests)
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+LINK_LIBRARIES(rt)
 ENDIF()
-IF(KGLT_BUILD_SAMPLES)
+
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+LINK_LIBRARIES("-framework CoreFoundation")
+ENDIF()
+
+ADD_SUBDIRECTORY(simulant)
+ADD_SUBDIRECTORY(tests)
+
+IF(SIMULANT_BUILD_SAMPLES)
     ADD_SUBDIRECTORY(samples)
-ENDIF(KGLT_BUILD_SAMPLES)
+ENDIF(SIMULANT_BUILD_SAMPLES)
+
+IF(DREAMCAST_BUILD)
+
+SET(DC_EXECUTABLES # Names without .elf extension
+    tests/simulant_tests
+    samples/nehe01
+    samples/2d_sample
+    samples/fleets_demo
+    samples/light_sample
+    samples/physics_demo
+    samples/q2bsp_sample
+    samples/rtt_sample
+    samples/sample
+    samples/selection_sample
+    samples/terrain_demo
+    samples/ui_demo
+    samples/viewport_sample
+    samples/particles
+)
+
+FOREACH(EXE ${DC_EXECUTABLES})
+get_filename_component(EXE_FILENAME ${EXE} NAME)
+ADD_CUSTOM_TARGET(
+    ${EXE_FILENAME}.bin ALL
+    COMMAND $ENV{KOS_OBJCOPY} -R .stack -O binary -S -g ${CMAKE_BINARY_DIR}/${EXE}.elf ${CMAKE_BINARY_DIR}/${EXE}.bin
+    COMMAND rm -rf ${CMAKE_BINARY_DIR}/${EXE}
+    COMMAND mkdir -p ${CMAKE_BINARY_DIR}/${EXE}
+    COMMAND $ENV{KOS_BASE}/utils/scramble/scramble ${CMAKE_BINARY_DIR}/${EXE}.bin ${CMAKE_BINARY_DIR}/${EXE}/1ST_READ.BIN
+    COMMAND IP_TEMPLATE_FILE=${CMAKE_SOURCE_DIR}/platforms/dreamcast/IP.TMPL $ENV{KOS_BASE}/utils/makeip/makeip ${CMAKE_SOURCE_DIR}/platforms/dreamcast/ip.txt ${CMAKE_BINARY_DIR}/${EXE}/IP.BIN
+    COMMAND mkdir -p ${CMAKE_BINARY_DIR}/${EXE}/simulant
+    COMMAND cp -r ${CMAKE_SOURCE_DIR}/simulant/fonts ${CMAKE_BINARY_DIR}/${EXE}/simulant
+    COMMAND cp -r ${CMAKE_SOURCE_DIR}/simulant/materials ${CMAKE_BINARY_DIR}/${EXE}/simulant
+    COMMAND cp -r ${CMAKE_SOURCE_DIR}/simulant/particles ${CMAKE_BINARY_DIR}/${EXE}/simulant
+    COMMAND cp -r ${CMAKE_SOURCE_DIR}/samples/data ${CMAKE_BINARY_DIR}/${EXE}/sample_data
+    COMMAND mkisofs -C 0,11702 -V ${EXE_FILENAME} -G ${CMAKE_BINARY_DIR}/${EXE}/IP.BIN -joliet -rock -l -o ${EXE}.iso ${CMAKE_BINARY_DIR}/${EXE}
+    COMMAND $ENV{KOS_BASE}/utils/img4dc/build/cdi4dc/cdi4dc ${CMAKE_BINARY_DIR}/${EXE}.iso ${CMAKE_BINARY_DIR}/${EXE}.cdi
+    DEPENDS ${EXE}
+    COMMENT "Converting ${EXE}.elf to ${EXE}.bin"
+)
+ENDFOREACH()
+
+ENDIF()
+
+
+## Add `make uninstall` command
+
+# uninstall target
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
+    IMMEDIATE @ONLY)
+
+add_custom_target(uninstall
+    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+
