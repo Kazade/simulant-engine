@@ -162,6 +162,8 @@ simulant/particles/particle.h
 simulant/particles/particle_system.cpp
 simulant/particles/particle_system.h
 simulant/partitioner.cpp
+simulant/random.cpp
+simulant/random.h
 simulant/renderers/gl_renderer.cpp
 simulant/renderers/gl_renderer.h
 simulant/shadows.cpp

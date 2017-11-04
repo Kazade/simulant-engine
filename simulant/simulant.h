@@ -39,6 +39,7 @@
 #include "nodes/ui/progress_bar.h"
 
 #include "sound.h"
+#include "random.h"
 #include "render_sequence.h"
 #include "nodes/light.h"
 #include "meshes/mesh.h"
