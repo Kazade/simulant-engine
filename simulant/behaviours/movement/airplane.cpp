@@ -4,16 +4,16 @@
 #include "../../input/input_axis.h"
 
 namespace smlt {
-namespace controllers {
+namespace behaviours {
 
-Airplane::Airplane(Controllable *owner, Window *window):
-    ControllerWithInput(window->input.get()),
+Airplane::Airplane(Organism *owner, Window *window):
+    BehaviourWithInput(window->input.get()),
     owner_(owner),
     window_(window) {
 }
 
 void Airplane::fixed_update(float step) {
-    RigidBody* rigidbody = owner_->controller<RigidBody>();
+    RigidBody* rigidbody = owner_->behaviour<RigidBody>();
     if(!rigidbody) {
         return;
     }
@@ -30,7 +30,7 @@ void Airplane::fixed_update(float step) {
     rigidbody->add_relative_force(Vec3(0, 0, -throttle_ * step));
 }
 
-void Airplane::on_controller_added(Controllable *controllable) {
+void Airplane::on_behaviour_added(Organism *controllable) {
     if(!input->axis_count("Roll")) {
         auto axis = input->new_axis("Roll");
         axis->set_positive_keyboard_key(KEYBOARD_CODE_E);

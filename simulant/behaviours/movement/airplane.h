@@ -1,17 +1,17 @@
 #pragma once
 
-#include "../controller.h"
+#include "../behaviour.h"
 #include "../../event_listener.h"
 
 namespace smlt {
-namespace controllers {
+namespace behaviours {
 
 class Airplane:
-    public ControllerWithInput,
+    public BehaviourWithInput,
     public Managed<Airplane> {
 
 public:
-    Airplane(Controllable* owner, Window* window);
+    Airplane(Organism* owner, Window* window);
 
     void set_turn_speed(float x) { turn_speed_ = x; }
 
@@ -20,9 +20,9 @@ public:
     const std::string name() const { return "Airplane"; }
 
 private:
-    void on_controller_added(Controllable *controllable);
+    void on_behaviour_added(Organism *controllable);
 
-    Controllable* owner_;
+    Organism* owner_;
     Window* window_;
 
     float turn_speed_ = 10.0f;

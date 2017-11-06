@@ -26,7 +26,7 @@ public:
         );*/
 
         // Add a fly controller to the camera for user input
-        stage->camera(camera_id_)->new_controller<controllers::Fly>(window);
+        stage->camera(camera_id_)->new_behaviour<behaviours::Fly>(window);
 
         camera_id_.fetch()->set_perspective_projection(
             Degrees(45.0),

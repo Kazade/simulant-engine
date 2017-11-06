@@ -30,8 +30,8 @@
 #include "../nodes/light.h"
 #include "../nodes/camera.h"
 #include "../procedural/texture.h"
-#include "../controllers/material/flowing.h"
-#include "../controllers/material/warp.h"
+#include "../behaviours/material/flowing.h"
+#include "../behaviours/material/warp.h"
 #include "../utils/rect_pack.h"
 
 #include "q2bsp_loader.h"

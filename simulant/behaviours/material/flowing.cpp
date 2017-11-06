@@ -21,7 +21,7 @@
 #include "./flowing.h"
 
 namespace smlt {
-namespace controllers {
+namespace behaviours {
 namespace material {
 
 void Flowing::update(float dt) {

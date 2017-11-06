@@ -5,11 +5,11 @@
 #include "../../utils/mesh/triangulate.h"
 
 namespace smlt {
-namespace controllers {
+namespace behaviours {
 
 std::unordered_map<MeshID, std::shared_ptr<StaticBody::b3MeshGenerator>> StaticBody::mesh_cache;
 
-StaticBody::StaticBody(Controllable* object, RigidBodySimulation* simulation):
+StaticBody::StaticBody(Organism* object, RigidBodySimulation* simulation):
     Body(object, simulation) {
 
 }

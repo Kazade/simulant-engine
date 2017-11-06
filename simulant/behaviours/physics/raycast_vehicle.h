@@ -21,7 +21,7 @@
 #include "rigid_body.h"
 
 namespace smlt {
-namespace controllers {
+namespace behaviours {
 
 class RaycastVehicle;
 
@@ -38,7 +38,7 @@ class RaycastVehicle:
     DEFINE_SIGNAL(VehicleAirbourneSignal, signal_vehicle_airbourne);
 
 public:    
-    RaycastVehicle(Controllable *object,
+    RaycastVehicle(Organism *object,
         RigidBodySimulation *simulation,
         float wheel_height
     );

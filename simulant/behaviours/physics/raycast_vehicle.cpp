@@ -22,11 +22,11 @@
 #include "simulation.h"
 
 namespace smlt {
-namespace controllers {
+namespace behaviours {
 
 static const float FLOAT_EPSILON = std::numeric_limits<float>::epsilon();
 
-RaycastVehicle::RaycastVehicle(smlt::Controllable* object, RigidBodySimulation* simulation, float wheel_height):
+RaycastVehicle::RaycastVehicle(smlt::Organism* object, RigidBodySimulation* simulation, float wheel_height):
     RigidBody(object, simulation),
     wheel_height_(wheel_height) {
 

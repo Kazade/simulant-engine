@@ -1,7 +1,7 @@
 #include "collider.h"
 
 namespace smlt {
-namespace controllers {
+namespace behaviours {
 
 // FIXME: Calculate these values from real-world values!
 const PhysicsMaterial PhysicsMaterial::WOOD(0.005, 0.4, 0.2);

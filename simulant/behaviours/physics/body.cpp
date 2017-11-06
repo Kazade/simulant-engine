@@ -10,11 +10,11 @@
 #include "../../stage.h"
 
 namespace smlt {
-namespace controllers {
+namespace behaviours {
 namespace impl {
 
-Body::Body(Controllable* object, RigidBodySimulation* simulation):
-    Controller(),
+Body::Body(Organism* object, RigidBodySimulation* simulation):
+    Behaviour(),
     simulation_(simulation->shared_from_this()) {
 
     object_ = dynamic_cast<StageNode*>(object);

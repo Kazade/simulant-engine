@@ -19,29 +19,29 @@
 #pragma once
 
 #include <deque>
-#include "./controller.h"
+#include "./behaviour.h"
 #include "../window.h"
 
 #include "../interfaces/transformable.h"
 
 namespace smlt {
-namespace controllers {
+namespace behaviours {
 
 class Fly:
-    public ControllerWithInput,
+    public BehaviourWithInput,
     public Managed<Fly> {
 
 public:
-    Fly(Controllable* container, const Property<smlt::SceneBase, smlt::Window>& window):
+    Fly(Organism* container, const Property<smlt::SceneBase, smlt::Window>& window):
         Fly(container, window.get()) {}
 
-    Fly(Controllable* container, Window* window):
-        ControllerWithInput(window->input.get()) {
+    Fly(Organism* container, Window* window):
+        BehaviourWithInput(window->input.get()) {
 
         object_ = dynamic_cast<Transformable*>(container);
 
         if(!object_) {
-            throw std::logic_error("Tried to attach FlyController to something which wasn't an object");
+            throw std::logic_error("Tried to attach FlyBehaviour to something which wasn't an object");
         }
     }
 

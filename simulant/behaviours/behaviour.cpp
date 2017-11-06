@@ -1,17 +1,17 @@
-#include "controller.h"
+#include "behaviour.h"
 
 namespace smlt {
 
-void Controller::enable() {
+void Behaviour::enable() {
     is_enabled_ = true;
 }
 
-void Controller::disable() {
+void Behaviour::disable() {
     is_enabled_ = false;
     first_update_done_ = false;
 }
 
-void Controller::_update_thunk(float dt) {
+void Behaviour::_update_thunk(float dt) {
     if(!is_enabled_) {
         return;
     }
@@ -19,7 +19,7 @@ void Controller::_update_thunk(float dt) {
     Updateable::_update_thunk(dt);
 }
 
-void Controller::_late_update_thunk(float dt) {
+void Behaviour::_late_update_thunk(float dt) {
     if(!is_enabled_) {
         return;
     }
@@ -27,7 +27,7 @@ void Controller::_late_update_thunk(float dt) {
     Updateable::_late_update_thunk(dt);
 }
 
-void Controller::_fixed_update_thunk(float step) {
+void Behaviour::_fixed_update_thunk(float step) {
     if(!is_enabled_) {
         return;
     }

@@ -17,7 +17,7 @@ namespace smlt {
 
 class TimeKeeper;
 
-namespace controllers {
+namespace behaviours {
 
 namespace impl {
     class Body;
@@ -54,7 +54,7 @@ private:
     std::shared_ptr<b3World> scene_;
     std::shared_ptr<impl::ContactListener> contact_listener_;
 
-    // Used by the RigidBodyController on creation/destruction to register a body
+    // Used by the RigidBodyBehaviour on creation/destruction to register a body
     // in the simulation
     b3Body *acquire_body(impl::Body* body);
     void release_body(impl::Body *body);

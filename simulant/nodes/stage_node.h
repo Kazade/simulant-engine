@@ -7,7 +7,7 @@
 #include "../interfaces/updateable.h"
 #include "../interfaces/ownable.h"
 #include "../interfaces/boundable.h"
-#include "../controllers/controller.h"
+#include "../behaviours/behaviour.h"
 #include "../interfaces/has_auto_id.h"
 #include "../generic/data_carrier.h"
 #include "../shadows.h"
@@ -24,7 +24,7 @@ class StageNode:
     public Updateable,
     public Ownable,
     public BoundableEntity,
-    public Controllable,
+    public Organism,
     public HasAutoID<StageNode> {
 
 

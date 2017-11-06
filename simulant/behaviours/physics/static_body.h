@@ -3,7 +3,7 @@
 #include "body.h"
 
 namespace smlt {
-namespace controllers {
+namespace behaviours {
 
 /*
  * Almost the same as a rigid body, but has no mass, and doesn't take part in the simulation
@@ -13,7 +13,7 @@ class StaticBody:
     public Managed<StaticBody> {
 
 public:
-    StaticBody(Controllable* object, RigidBodySimulation *simulation);
+    StaticBody(Organism* object, RigidBodySimulation *simulation);
     ~StaticBody();
 
     using impl::Body::init;

@@ -4,7 +4,7 @@
 #include "../../types.h"
 
 namespace smlt {
-namespace controllers {
+namespace behaviours {
 
 // Colliders available to add_X_collider
 enum ColliderType {
