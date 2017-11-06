@@ -4,7 +4,7 @@
 #include "body.h"
 
 namespace smlt {
-namespace controllers {
+namespace behaviours {
 
 class CollisionListener {
 public:

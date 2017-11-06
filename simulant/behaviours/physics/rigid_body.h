@@ -34,7 +34,7 @@ struct b3Hull;
 
 namespace smlt {
 
-namespace controllers {
+namespace behaviours {
 
 namespace impl {
     class Body;
@@ -50,7 +50,7 @@ class RigidBody:
     public Managed<RigidBody> {
 
 public:
-    RigidBody(Controllable* object, RigidBodySimulation *simulation);
+    RigidBody(Organism* object, RigidBodySimulation *simulation);
     ~RigidBody();
 
     void add_force(const Vec3& force);

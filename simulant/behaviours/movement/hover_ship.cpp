@@ -6,17 +6,17 @@
 #include "../physics/simulation.h"
 
 namespace smlt {
-namespace controllers {
+namespace behaviours {
 
-HoverShip::HoverShip(Controllable* owner, Window* window):
-    ControllerWithInput(window->input.get()),
+HoverShip::HoverShip(Organism* owner, Window* window):
+    BehaviourWithInput(window->input.get()),
     owner_(owner) {
 
 }
 
-void HoverShip::on_controller_first_update(Controllable* owner) {
-    body_ = owner->controller<RigidBody>();
-    assert(body_ && "No RigidBody controller attached");
+void HoverShip::on_behaviour_first_update(Organism* owner) {
+    body_ = owner->behaviour<RigidBody>();
+    assert(body_ && "No RigidBody behaviour attached");
     simulation_ = body_->simulation;
 }
 

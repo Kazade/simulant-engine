@@ -20,19 +20,19 @@
 #define FLOWING_H
 
 #include "../../material.h"
-#include "../controller.h"
+#include "../behaviour.h"
 #include "../../generic/managed.h"
 
 namespace smlt {
-namespace controllers {
+namespace behaviours {
 namespace material {
 
 class Flowing :
-    public MaterialController,
+    public MaterialBehaviour,
     public Managed<Flowing> {
 public:
-    Flowing(Controllable* material):
-        MaterialController(dynamic_cast<Material*>(material)) {
+    Flowing(Organism* material):
+        MaterialBehaviour(dynamic_cast<Material*>(material)) {
 
     }
 

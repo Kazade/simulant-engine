@@ -35,7 +35,7 @@
 #include "generic/cloneable.h"
 #include "generic/property.h"
 #include "generic/refcount_manager.h"
-#include "controllers/controller.h"
+#include "behaviours/behaviour.h"
 #include "types.h"
 #include "interfaces.h"
 #include "material_constants.h"
@@ -281,7 +281,7 @@ class Material:
     public generic::Identifiable<MaterialID>,
     public Managed<Material>,
     public Updateable,
-    public Controllable {
+    public Organism {
 
     DEFINE_SIGNAL(MaterialChangedSignal, signal_material_changed);
 

@@ -6,7 +6,7 @@
 
 #include "collider.h"
 
-#include "../controller.h"
+#include "../behaviour.h"
 #include "../../generic/property.h"
 #include "../../types.h"
 
@@ -26,7 +26,7 @@ namespace utils {
 
 class StageNode;
 
-namespace controllers {
+namespace behaviours {
 
 namespace impl {
 class Body;
@@ -62,10 +62,10 @@ namespace impl {
 class ContactListener;
 
 class Body:
-    public Controller {
+    public Behaviour {
 
 public:
-    Body(Controllable* object, RigidBodySimulation* simulation);
+    Body(Organism* object, RigidBodySimulation* simulation);
     virtual ~Body();
 
     void move_to(const Vec3& position);
@@ -105,7 +105,7 @@ public:
     }
 
 protected:
-    friend class smlt::controllers::RigidBodySimulation;
+    friend class smlt::behaviours::RigidBodySimulation;
     StageNode* object_;
     b3Body* body_ = nullptr;
     std::weak_ptr<RigidBodySimulation> simulation_;

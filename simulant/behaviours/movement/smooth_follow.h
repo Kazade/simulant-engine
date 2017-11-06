@@ -1,21 +1,21 @@
 #pragma once
 
 #include "../../types.h"
-#include "../stage_node_controller.h"
+#include "../stage_node_behaviour.h"
 
 
 namespace smlt {
 
-class Controllable;
+class Organism;
 
-namespace controllers {
+namespace behaviours {
 
 class SmoothFollow:
-    public StageNodeController,
+    public StageNodeBehaviour,
     public Managed<SmoothFollow> {
 
 public:
-    SmoothFollow(Controllable* controllable);
+    SmoothFollow(Organism* controllable);
 
     const std::string name() const {
         return "Smooth Follow";

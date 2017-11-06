@@ -5,10 +5,10 @@
 #include "../../nodes/particle_system.h"
 
 namespace smlt {
-namespace controllers {
+namespace behaviours {
 
-SmoothFollow::SmoothFollow(Controllable* controllable):
-    StageNodeController(controllable) {
+SmoothFollow::SmoothFollow(Organism* controllable):
+    StageNodeBehaviour(controllable) {
 
 }
 

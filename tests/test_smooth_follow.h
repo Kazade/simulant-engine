@@ -28,7 +28,7 @@ public:
 
     void test_half_turn() {
         auto follower = stage->new_actor().fetch();
-        auto controller = follower->new_controller<smlt::controllers::SmoothFollow>();
+        auto controller = follower->new_behaviour<smlt::behaviours::SmoothFollow>();
         controller->set_target(actor);
         controller->set_follow_height(0);
 

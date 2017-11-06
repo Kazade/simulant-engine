@@ -29,10 +29,10 @@ void b3PopProfileScope() {}
 
 
 namespace smlt {
-namespace controllers {
+namespace behaviours {
 
 
-RigidBody::RigidBody(Controllable* object, RigidBodySimulation* simulation):
+RigidBody::RigidBody(Organism* object, RigidBodySimulation* simulation):
     Body(object, simulation) {
 
 }

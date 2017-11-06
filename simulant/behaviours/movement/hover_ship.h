@@ -1,22 +1,22 @@
 #pragma once
 
-#include "../controller.h"
+#include "../behaviour.h"
 
 namespace smlt {
 
 class Window;
 
-namespace controllers {
+namespace behaviours {
 
 class RigidBody;
 class RigidBodySimulation;
 
 class HoverShip:
-    public ControllerWithInput,
+    public BehaviourWithInput,
     public Managed<HoverShip> {
 
 public:
-    HoverShip(Controllable* owner, Window* window);
+    HoverShip(Organism* owner, Window* window);
 
     const std::string name() const {
         return "Hover Ship";
@@ -31,9 +31,9 @@ public:
     void fixed_update(float step);
 
 private:
-    void on_controller_first_update(Controllable* owner);
+    void on_behaviour_first_update(Organism* owner);
 
-    Controllable* owner_ = nullptr;
+    Organism* owner_ = nullptr;
     RigidBody* body_ = nullptr;
     RigidBodySimulation* simulation_ = nullptr;
 

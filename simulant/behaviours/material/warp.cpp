@@ -21,7 +21,7 @@
 #include "./warp.h"
 
 namespace smlt {
-namespace controllers {
+namespace behaviours {
 namespace material {
 
 void Warp::update(float dt) {

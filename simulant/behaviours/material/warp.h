@@ -20,20 +20,20 @@
 #define WARP_H
 
 #include "../../material.h"
-#include "../controller.h"
+#include "../behaviour.h"
 #include "../../generic/managed.h"
 
 namespace smlt {
-namespace controllers {
+namespace behaviours {
 namespace material {
 
 class Warp:
-    public MaterialController,
+    public MaterialBehaviour,
     public Managed<Warp> {
 
 public:
-    Warp(Controllable* material):
-        MaterialController(dynamic_cast<Material*>(material)) {
+    Warp(Organism* material):
+        MaterialBehaviour(dynamic_cast<Material*>(material)) {
 
     }
 
