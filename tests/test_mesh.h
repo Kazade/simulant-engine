@@ -103,8 +103,7 @@ public:
     void test_user_data_works() {
         auto stage = window->stage(stage_id_);
 
-        smlt::ActorID mid = stage->new_actor();
-        auto actor = stage->actor(mid);
+        auto actor = stage->new_actor();
 
         this->assert_true(actor->id() != 0); //Make sure we set an id for the mesh
         this->assert_true(actor->auto_id() != 0); //Make sure we set a unique ID for the object
@@ -113,26 +112,26 @@ public:
         this->assert_true(actor->data->exists("data"));
         this->assert_equal((int)0xDEADBEEF, actor->data->get<int>("data"));
 
-        stage->delete_actor(mid);
+        stage->delete_actor(actor->id());
 
-        this->assert_true(!stage->has_actor(mid));
+        this->assert_true(!stage->has_actor(actor->id()));
     }
 
     void test_deleting_entities_deletes_children() {
         auto stage = window->stage(stage_id_);
 
-        smlt::ActorID mid = stage->new_actor(); //Create the root mesh
-        smlt::ActorID cid1 = stage->new_actor_with_parent(mid); //Create a child
-        smlt::ActorID cid2 = stage->new_actor_with_parent(cid1); //Create a child of the child
+        auto mid = stage->new_actor(); //Create the root mesh
+        auto cid1 = stage->new_actor_with_parent(mid->id()); //Create a child
+        auto cid2 = stage->new_actor_with_parent(cid1->id()); //Create a child of the child
 
-        this->assert_equal((uint32_t)1, stage->actor(mid)->count_children());
-        this->assert_equal((uint32_t)1, stage->actor(cid1)->count_children());
-        this->assert_equal((uint32_t)0, stage->actor(cid2)->count_children());
+        this->assert_equal((uint32_t)1, mid->count_children());
+        this->assert_equal((uint32_t)1, cid1->count_children());
+        this->assert_equal((uint32_t)0, cid2->count_children());
 
-        stage->delete_actor(mid);
-        this->assert_true(!stage->has_actor(mid));
-        this->assert_true(!stage->has_actor(cid1));
-        this->assert_true(!stage->has_actor(cid2));
+        stage->delete_actor(mid->id());
+        this->assert_true(!stage->has_actor(mid->id()));
+        this->assert_true(!stage->has_actor(cid1->id()));
+        this->assert_true(!stage->has_actor(cid2->id()));
     }
 
     void test_basic_usage() {
@@ -159,7 +158,7 @@ public:
 
         auto mesh = stage->assets->mesh(generate_test_mesh(stage));
 
-        auto actor = stage->actor(stage->new_actor());
+        auto actor = stage->new_actor();
 
         assert_true(!actor->has_mesh());
 
@@ -192,7 +191,7 @@ public:
         auto stage = window->stage(stage_id_);
 
         smlt::MeshID mesh_id = stage->assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY); //Create a mesh
-        auto actor = stage->actor(stage->new_actor_with_mesh(mesh_id));
+        auto actor = stage->new_actor_with_mesh(mesh_id);
 
         assert_true(mesh_id == actor->mesh()->id());
     }

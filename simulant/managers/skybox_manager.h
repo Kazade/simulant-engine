@@ -78,7 +78,7 @@ private:
 
     CameraID follow_camera_;
 
-    ActorID actor_id_;
+    ActorPtr actor_;
     MeshID mesh_id_;
 
     MaterialID materials_[SKYBOX_FACE_MAX];

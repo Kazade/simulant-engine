@@ -46,7 +46,7 @@ public:
 
         smlt::SoundID sound = stage->assets->new_sound_from_file("test_sound.ogg");
 
-        auto actor = stage->actor(stage->new_actor());
+        auto actor = stage->new_actor();
         actor->move_to(10, 0, 0);
 
         assert_false(actor->playing_sound_count());

@@ -89,7 +89,7 @@ public:
 
         terrain_mesh->set_material_id(terrain_material_id_);
 
-        terrain_actor_id_ = stage->new_actor_with_mesh(terrain_mesh_id_);
+        terrain_actor_ = stage->new_actor_with_mesh(terrain_mesh_id_);
 
         done = true;
     }
@@ -100,7 +100,7 @@ public:
 
     void fixed_update(float dt) override {
         auto stage = window->stage(stage_id_);
-        stage->actor(terrain_actor_id_)->rotate_global_y_by(smlt::Degrees(dt * 5.0));
+        terrain_actor_->rotate_global_y_by(smlt::Degrees(dt * 5.0));
     }
 
 private:
@@ -109,7 +109,7 @@ private:
     CameraID camera_id_;
 
     MeshID terrain_mesh_id_;
-    ActorID terrain_actor_id_;
+    ActorPtr terrain_actor_;
     MaterialID terrain_material_id_;
 
     TextureID terrain_textures_[4];

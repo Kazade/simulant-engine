@@ -22,16 +22,16 @@ public:
 
         stage->set_ambient_light(smlt::Colour(0.2, 0.2, 0.2, 1.0));
 
-        actor_id_ = stage->new_actor_with_mesh(stage->assets->new_mesh_as_cube(2.0));
-        stage->actor(actor_id_)->move_to(0.0, 0.0, -5.0);
+        actor_ = stage->new_actor_with_mesh(stage->assets->new_mesh_as_cube(2.0));
+        actor_->move_to(0.0, 0.0, -5.0);
 
         texture_ = stage->assets->new_texture_from_file("sample_data/crate.png");
         texture_.fetch()->set_texture_filter(TEXTURE_FILTER_BILINEAR);
 
-        stage->actor(actor_id_)->mesh()->set_texture_on_material(0, texture_);
+        actor_->mesh()->set_texture_on_material(0, texture_);
 
         // Test Camera::look_at function
-        stage->camera(camera_id_)->look_at(stage->actor(actor_id_)->absolute_position());
+        stage->camera(camera_id_)->look_at(actor_->absolute_position());
 
         {
             auto light = stage->new_light_as_point(Vec3(5, 0, -5), smlt::Colour::GREEN).fetch();
@@ -67,17 +67,17 @@ public:
     }
 
     void fixed_update(float dt) {
-        actor_id_.fetch()->rotate_global_y_by(smlt::Degrees(input->axis_value("Horizontal") * 360.0f * dt));
+        actor_->rotate_global_y_by(smlt::Degrees(input->axis_value("Horizontal") * 360.0f * dt));
 
-        window->stage(stage_id_)->actor(actor_id_)->rotate_x_by(smlt::Degrees(dt * 20.0));
-        window->stage(stage_id_)->actor(actor_id_)->rotate_y_by(smlt::Degrees(dt * 15.0));
-        window->stage(stage_id_)->actor(actor_id_)->rotate_z_by(smlt::Degrees(dt * 25.0));
+        actor_->rotate_x_by(smlt::Degrees(dt * 20.0));
+        actor_->rotate_y_by(smlt::Degrees(dt * 15.0));
+        actor_->rotate_z_by(smlt::Degrees(dt * 25.0));
     }
 
 private:
     CameraID camera_id_;
     StageID stage_id_;
-    ActorID actor_id_;
+    ActorPtr actor_;
     TextureID texture_;
 
     bool f_down = false;

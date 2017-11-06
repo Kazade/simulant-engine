@@ -26,11 +26,11 @@ public:
         // Load an animated MD2 mesh
         smlt::MeshID mesh_id = stage->assets->new_mesh_from_file("sample_data/ogro.md2");
 
-        auto actor = stage->new_actor_with_mesh(mesh_id).fetch(); // Create an instance of it
+        auto actor = stage->new_actor_with_mesh(mesh_id); // Create an instance of it
         actor->move_to(0.0f, 0.0f, -80.0f);
         actor->rotate_global_y_by(smlt::Degrees(180));
 
-        auto actor3 = stage->new_actor_with_mesh(mesh_id).fetch();
+        auto actor3 = stage->new_actor_with_mesh(mesh_id);
         actor3->move_to(-40.0f, 0.0f, -95.0f);
         actor3->rotate_global_y_by(smlt::Degrees(180));
         actor3->animation_state->play_animation("idle_2");
@@ -40,7 +40,7 @@ public:
         auto tank = stage->assets->new_mesh_from_file("sample_data/tank.obj").fetch();
         tank->transform_vertices(scaling_matrix);
 
-        auto tank_actor = stage->new_actor_with_mesh(tank->id()).fetch();
+        auto tank_actor = stage->new_actor_with_mesh(tank->id());
         tank_actor->move_to(40, 0, -110);
     }
 

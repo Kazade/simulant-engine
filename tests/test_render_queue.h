@@ -37,7 +37,7 @@ public:
         auto mesh_1 = stage_->assets->new_mesh_as_cube(1.0);
         stage_->assets->mesh(mesh_1)->set_material_id(mat_1);
 
-        auto actor_id = stage_->new_actor_with_mesh(mesh_1);
+        auto actor = stage_->new_actor_with_mesh(mesh_1);
 
         assert_equal(1u, render_queue->pass_count());
 
@@ -54,7 +54,7 @@ public:
         // in the render queue, and because the texture ID is higher, then this should make
         // the new group > the old one.
 
-        stage_->actor(actor_id)->override_material_id(mat_2);
+        actor->override_material_id(mat_2);
 
         assert_equal(1u, render_queue->group_count(0));
 
@@ -62,7 +62,7 @@ public:
              assert_true(*group < grp);
         });
 
-        stage_->actor(actor_id)->remove_material_id_override();
+        actor->remove_material_id_override();
         stage_->assets->mesh(mesh_1)->set_material_id(mat_1);
 
         assert_equal(1u, render_queue->group_count(0));
@@ -86,7 +86,7 @@ public:
         auto& render_queue = stage_->render_queue;
 
         auto mesh_1 = stage_->assets->new_mesh_as_cube(1.0);
-        auto actor_id = stage_->new_actor_with_mesh(mesh_1);
+        auto actor = stage_->new_actor_with_mesh(mesh_1);
 
 #ifdef SIMULANT_GL_VERSION_1X
         assert_equal(1u, render_queue->pass_count());
@@ -96,7 +96,7 @@ public:
         assert_equal(1u, render_queue->group_count(0));
         assert_equal(1u, render_queue->group_count(1));
 #endif
-        stage_->delete_actor(actor_id);
+        stage_->delete_actor(actor->id());
 
         assert_equal(0u, render_queue->pass_count());
     }

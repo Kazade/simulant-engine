@@ -16,9 +16,9 @@ public:
         auto stage = window->stage(sid);
 
         smlt::MeshID cube = stage->assets->new_mesh_as_cube(1.0);
-        smlt::ActorID aid = stage->new_actor_with_mesh(cube);
+        smlt::ActorPtr actor = stage->new_actor_with_mesh(cube);
 
-        stage->actor(aid)->move_to(0, 0, -5);
+        actor->move_to(0, 0, -5);
 
         // Render new stages to the framebuffer, using both viewports. Make sure we tell the pipeline to clear
         window->render(sid, stage->new_camera_for_viewport(first)).to_framebuffer(first).with_clear();

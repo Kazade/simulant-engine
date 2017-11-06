@@ -65,7 +65,7 @@ public:
     void test_camera_attached_to_parent_moves() {
         auto stage = window->new_stage().fetch();
 
-        auto actor = stage->new_actor().fetch();
+        auto actor = stage->new_actor();
         auto camera = stage->new_camera().fetch();
 
         auto od = camera->frustum().plane(FRUSTUM_PLANE_NEAR).d;

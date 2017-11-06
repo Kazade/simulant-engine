@@ -95,7 +95,7 @@ void Stage::on_subactor_material_changed(
     signal_actor_changed_(actor_id, evt);
 }
 
-ActorID Stage::new_actor(RenderableCullingMode mode) {
+ActorPtr Stage::new_actor(RenderableCullingMode mode) {
     using namespace std::placeholders;
 
     ActorID result = ActorManager::make(this, window->_sound_driver());
@@ -114,10 +114,10 @@ ActorID Stage::new_actor(RenderableCullingMode mode) {
 
     //Tell everyone about the new actor
     signal_actor_created_(result);
-    return result;
+    return a;
 }
 
-ActorID Stage::new_actor_with_mesh(MeshID mid, RenderableCullingMode mode) {
+ActorPtr Stage::new_actor_with_mesh(MeshID mid, RenderableCullingMode mode) {
     using namespace std::placeholders;
 
     ActorID result = ActorManager::make(this, window->_sound_driver());
@@ -142,25 +142,25 @@ ActorID Stage::new_actor_with_mesh(MeshID mid, RenderableCullingMode mode) {
     //Tell everyone about the new actor
     signal_actor_created_(result);
 
-    return result;
+    return a;
 }
 
-ActorID Stage::new_actor_with_parent(ActorID parent, RenderableCullingMode mode) {
-    ActorID new_id = new_actor(mode);
-    actor(new_id)->set_parent(parent);
-    return new_id;
+ActorPtr Stage::new_actor_with_parent(ActorID parent, RenderableCullingMode mode) {
+    auto a = new_actor(mode);
+    a->set_parent(parent);
+    return a;
 }
 
-ActorID Stage::new_actor_with_parent_and_mesh(SpriteID parent, MeshID mid, RenderableCullingMode mode) {
-    ActorID new_id = new_actor_with_mesh(mid, mode);
-    actor(new_id)->set_parent(parent);
-    return new_id;
+ActorPtr Stage::new_actor_with_parent_and_mesh(SpriteID parent, MeshID mid, RenderableCullingMode mode) {
+    auto a = new_actor_with_mesh(mid, mode);
+    a->set_parent(parent);
+    return a;
 }
 
-ActorID Stage::new_actor_with_parent_and_mesh(ActorID parent, MeshID mid, RenderableCullingMode mode) {
-    ActorID new_id = new_actor_with_mesh(mid, mode);
-    actor(new_id)->set_parent(parent);
-    return new_id;
+ActorPtr Stage::new_actor_with_parent_and_mesh(ActorID parent, MeshID mid, RenderableCullingMode mode) {
+    auto a = new_actor_with_mesh(mid, mode);
+    a->set_parent(parent);
+    return a;
 }
 
 bool Stage::has_actor(ActorID m) const {

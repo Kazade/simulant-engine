@@ -12,7 +12,7 @@ public:
         smlt::StagePtr stage = stage_.fetch();
         smlt::MeshPtr square = stage->assets->new_mesh_as_rectangle(1.0, 1.0).fetch();
 
-        auto actor = stage->new_actor_with_mesh(square->id()).fetch();
+        auto actor = stage->new_actor_with_mesh(square->id());
         actor->move_to(0, 0, -5);
         actor->scale_by(2.0);
 

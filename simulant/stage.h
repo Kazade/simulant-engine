@@ -111,12 +111,16 @@ public:
     Stage(StageID id, Window *parent, AvailablePartitioner partitioner);
     ~Stage();
 
-    ActorID new_actor(RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
-    ActorID new_actor_with_mesh(MeshID mid, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
-
-    ActorID new_actor_with_parent(ActorID parent, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
-    ActorID new_actor_with_parent_and_mesh(ActorID parent, MeshID mid, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
-    ActorID new_actor_with_parent_and_mesh(SpriteID parent, MeshID mid, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
+    ActorPtr new_actor(RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
+    ActorPtr new_actor_with_mesh(MeshID mid, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
+    ActorPtr new_actor_with_parent(ActorID parent, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
+    ActorPtr new_actor_with_parent_and_mesh(ActorID parent, MeshID mid, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
+    ActorPtr new_actor_with_parent_and_mesh(SpriteID parent, MeshID mid, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
+    ActorPtr actor(ActorID e);
+    const ActorPtr actor(ActorID e) const;
+    bool has_actor(ActorID e) const;
+    void delete_actor(ActorID e);
+    std::size_t actor_count() const { return ActorManager::count(); }
 
     GeomID new_geom_with_mesh(MeshID mid);
     GeomID new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, const Quaternion& rotation=Quaternion());
@@ -124,13 +128,6 @@ public:
     bool has_geom(GeomID geom_id) const;
     void delete_geom(GeomID geom_id);
     uint32_t geom_count() const;
-
-    ActorPtr actor(ActorID e);
-    const ActorPtr actor(ActorID e) const;
-
-    bool has_actor(ActorID e) const;
-    void delete_actor(ActorID e);
-    uint32_t actor_count() const { return ActorManager::count(); }
 
     ParticleSystemID new_particle_system();
     ParticleSystemID new_particle_system_from_file(const unicode& filename, bool destroy_on_completion=false);

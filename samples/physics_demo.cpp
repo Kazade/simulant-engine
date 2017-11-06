@@ -40,11 +40,11 @@ public:
         window->shared_assets->mesh(ground_mesh_id_)->set_material_id(
             window->shared_assets->new_material_from_texture(grass)
         );
-        ground_id_ = stage->new_actor_with_mesh(ground_mesh_id_);
+        ground_ = stage->new_actor_with_mesh(ground_mesh_id_);
 
         // Make the ground a staticbody
-        auto c = ground_id_.fetch()->new_behaviour<behaviours::StaticBody>(physics);
-        c->add_box_collider(ground_id_.fetch()->aabb().dimensions(), behaviours::PhysicsMaterial::STONE);
+        auto c = ground_->new_behaviour<behaviours::StaticBody>(physics);
+        c->add_box_collider(ground_->aabb().dimensions(), behaviours::PhysicsMaterial::STONE);
 
         srand(time(nullptr));
     }
@@ -54,7 +54,7 @@ public:
             stage_id_.fetch()->new_actor_with_mesh(box_mesh_id_)
         );
 
-        auto box = boxes_.back().fetch();
+        auto box = boxes_.back();
         auto controller = box->new_behaviour<smlt::behaviours::RigidBody>(physics);
         controller->add_box_collider(box->aabb().dimensions(), behaviours::PhysicsMaterial::WOOD);
         controller->move_to(Vec3(
@@ -76,7 +76,7 @@ public:
     }
 
 private:
-    std::vector<ActorID> boxes_;
+    std::vector<ActorPtr> boxes_;
 
     PipelineID pipeline_id_;
     StageID stage_id_;
@@ -85,7 +85,7 @@ private:
     MeshID box_mesh_id_;
 
     MeshID ground_mesh_id_;
-    ActorID ground_id_;
+    ActorPtr ground_;
 
     float counter = 0.0f;
 };

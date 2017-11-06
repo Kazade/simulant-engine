@@ -42,10 +42,10 @@ public:
         };
 
         StagePtr stage = window->new_stage().fetch();
-        ActorID actor = stage->new_actor();
+        ActorPtr actor = stage->new_actor();
 
         MockPartitioner partitioner(stage, test);
-        partitioner.add_actor(actor);
+        partitioner.add_actor(actor->id());
         partitioner._apply_writes();
 
         window->delete_stage(stage->id());
@@ -62,10 +62,10 @@ public:
         };
 
         StagePtr stage = window->new_stage().fetch();
-        ActorID actor = stage->new_actor();
+        ActorPtr actor = stage->new_actor();
 
         MockPartitioner partitioner(stage, test);
-        partitioner.remove_actor(actor);
+        partitioner.remove_actor(actor->id());
         partitioner._apply_writes();
 
         window->delete_stage(stage->id());

@@ -31,13 +31,13 @@ public:
         Vec3 avg;
 
         auto stage = window->stage(stage_id_);
-        for(auto ship_id: ship_ids_) {
-            auto pos = stage->actor(ship_id)->position();
+        for(auto ship: ships_) {
+            auto pos = ship->position();
             avg += pos;
-            stage->actor(ship_id)->move_to_absolute(pos + (speed * dt * (0.01 * ship_id.value())));
+            ship->move_to_absolute(pos + (speed * dt * (0.01 * ship->id().value())));
         }
 
-        avg /= ship_ids_.size();
+        avg /= ships_.size();
 
         stage->camera(camera_id_)->look_at(avg);
     }
@@ -47,7 +47,7 @@ private:
     CameraID camera_id_;
 
     MeshID ship_mesh_id_;
-    std::vector<ActorID> ship_ids_;
+    std::vector<ActorPtr> ships_;
 
     void generate_ships() {
         Vec3 centre = Vec3(2000, 0, 0);
@@ -60,10 +60,10 @@ private:
             ).normalized() * random_gen::random_float(100.0f, 150.0f));
 
             auto stage = window->stage(stage_id_);
-            ship_ids_.push_back(stage->new_actor_with_mesh(ship_mesh_id_));
-            stage->actor(ship_ids_.back())->move_to_absolute(pos);
+            ships_.push_back(stage->new_actor_with_mesh(ship_mesh_id_));
+            ships_.back()->move_to_absolute(pos);
 
-            auto ps_id = stage->new_particle_system_with_parent_from_file(ship_ids_.back(), "simulant/particles/pixel_trail.kglp");
+            auto ps_id = stage->new_particle_system_with_parent_from_file(ships_.back()->id(), "simulant/particles/pixel_trail.kglp");
             stage->particle_system(ps_id)->move_to(0, 0, 0);
         }
     }

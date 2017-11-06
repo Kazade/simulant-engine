@@ -194,7 +194,7 @@ public:
 private:
     bool initialized_ = false;
     UIManager* owner_;
-    ActorID actor_;
+    ActorPtr actor_;
     MeshPtr mesh_;
     FontPtr font_;
     MaterialPtr material_;
