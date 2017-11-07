@@ -193,11 +193,11 @@ public:
 
 private:
     bool initialized_ = false;
-    UIManager* owner_;
-    ActorPtr actor_;
-    MeshPtr mesh_;
-    FontPtr font_;
-    MaterialPtr material_;
+    UIManager* owner_ = nullptr;
+    ActorPtr actor_ = nullptr;
+    MeshPtr mesh_ = nullptr;
+    FontPtr font_ = nullptr;
+    MaterialPtr material_ = nullptr;
 
     virtual MeshID construct_widget(float requested_width, float requested_height);
 

@@ -427,35 +427,97 @@ class Font;
 typedef std::weak_ptr<Font> FontRef;
 typedef std::shared_ptr<Font> FontPtr;
 
+
+template<typename T>
+class default_init_ptr {
+    /* This class exists to protect against forgetting to initialize a
+     * an object pointer. It could theoretically cause a performance issue
+     * but no more so than any other smart pointer, and hopefully the compiler
+     * will be smart enough to optimise any cost away.
+     *
+     * If this does cause a performance hit on a particular platform
+     * (Dreamcast, I'm looking at you!) then it can always be typedef'd away
+     */
+private:
+    T* ptr_ = nullptr;
+
+public:
+    default_init_ptr() = default;
+    default_init_ptr(const default_init_ptr<T>&) = default;
+    default_init_ptr<T>& operator=(const default_init_ptr<T>&) = default;
+
+    default_init_ptr(T* p):
+        ptr_(p) {}
+
+    default_init_ptr(std::nullptr_t p):
+        ptr_(p) {
+
+    }
+
+    default_init_ptr<T>& operator=(std::nullptr_t) {
+        ptr_ = nullptr;
+        return *this;
+    }
+
+    default_init_ptr<T>& operator=(T* p) {
+        ptr_ = p;
+        return *this;
+    }
+
+    T* operator->() const {
+        return ptr_;
+    }
+
+    T& operator*() const {
+        return *ptr_;
+    }
+
+    T& operator[](std::size_t i) const {
+        return ptr_[i];
+    }
+
+    operator T*() const {
+        return ptr_;
+    }
+
+    bool operator==(const std::nullptr_t& rhs) const {
+        return ptr_ == rhs;
+    }
+
+    bool operator!=(const std::nullptr_t& rhs) const {
+        return !(*this == rhs);
+    }
+};
+
+
 class Actor;
-typedef Actor* ActorPtr;
+typedef default_init_ptr<Actor> ActorPtr;
 
 class Geom;
-typedef Geom* GeomPtr;
+typedef default_init_ptr<Geom> GeomPtr;
 
 class ParticleSystem;
-typedef ParticleSystem* ParticleSystemPtr;
+typedef default_init_ptr<ParticleSystem> ParticleSystemPtr;
 
 class Sprite;
-typedef Sprite* SpritePtr;
+typedef default_init_ptr<Sprite> SpritePtr;
 
 class Light;
-typedef Light* LightPtr;
+typedef default_init_ptr<Light> LightPtr;
 
 class Camera;
 class CameraProxy;
 
-typedef Camera* CameraPtr;
-typedef CameraProxy* CameraProxyPtr;
+typedef default_init_ptr<Camera> CameraPtr;
 
 class Viewport;
 
 class Background;
-typedef Background* BackgroundPtr;
+typedef default_init_ptr<Background> BackgroundPtr;
 
 class Stage;
 class Window;
-typedef Stage* StagePtr;
+typedef default_init_ptr<Stage> StagePtr;
 
 namespace ui {
 
@@ -464,7 +526,7 @@ class ProgressBar;
 class Button;
 class Label;
 
-typedef Widget* WidgetPtr;
+typedef default_init_ptr<Widget> WidgetPtr;
 
 }
 
@@ -475,7 +537,7 @@ class RenderSequence;
 typedef AutoWeakPtr<RenderSequence> RenderSequencePtr;
 
 class Pipeline;
-typedef Pipeline* PipelinePtr;
+typedef default_init_ptr<Pipeline> PipelinePtr;
 
 class Frustum;
 class Window;

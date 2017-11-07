@@ -35,7 +35,7 @@ void Loading::load() {
     stage_ = window->new_stage();
 
     auto stage = stage_.fetch();
-    progress_bar_ = dynamic_cast<ui::ProgressBar*>(stage->ui->new_widget_as_progress_bar().fetch());
+    progress_bar_ = dynamic_cast<ui::ProgressBar*>((ui::Widget*) stage->ui->new_widget_as_progress_bar().fetch());
     progress_bar_->resize(window->width() * 0.5f, 8);
     progress_bar_->move_to(window->coordinate_from_normalized(0.5, 0.5));
     progress_bar_->set_pulse_step(progress_bar_->requested_width());

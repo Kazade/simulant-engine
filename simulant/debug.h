@@ -77,7 +77,7 @@ private:
     std::vector<DebugElement> elements_;
 
     MeshID mesh_;
-    ActorPtr actor_;
+    ActorPtr actor_ = nullptr;
     MaterialID material_;
 
     sig::Connection update_connection_;

@@ -32,7 +32,7 @@ public:
         auto widget1 = stage_->ui->new_widget_as_label("label1").fetch();
         auto widget2 = stage_->ui->new_widget_as_label("label2").fetch();
 
-        assert_is_null(widget1->focused_in_chain());
+        assert_is_null((ui::Widget*) widget1->focused_in_chain());
 
         widget1->set_focus_next(widget2);
         widget1->focus();
@@ -44,7 +44,7 @@ public:
 
         widget2->blur();
 
-        assert_is_null(widget1->focused_in_chain());
+        assert_is_null((ui::Widget*) widget1->focused_in_chain());
     }
 
 private:

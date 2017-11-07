@@ -93,7 +93,8 @@ private:
     std::pair<uint32_t, uint32_t> sprite_sheet_padding_;
     float render_width_ = 1.0;
     float render_height_ = 1.0;
-    ActorPtr actor_;
+
+    ActorPtr actor_ = nullptr;
     MeshID mesh_id_;
     MaterialID material_id_;
 
