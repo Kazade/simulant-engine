@@ -122,12 +122,12 @@ public:
     void delete_actor(ActorID e);
     std::size_t actor_count() const { return ActorManager::count(); }
 
-    GeomID new_geom_with_mesh(MeshID mid);
-    GeomID new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, const Quaternion& rotation=Quaternion());
+    GeomPtr new_geom_with_mesh(MeshID mid);
+    GeomPtr new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, const Quaternion& rotation=Quaternion());
     GeomPtr geom(const GeomID gid) const;
     bool has_geom(GeomID geom_id) const;
     void delete_geom(GeomID geom_id);
-    uint32_t geom_count() const;
+    std::size_t geom_count() const;
 
     ParticleSystemID new_particle_system();
     ParticleSystemID new_particle_system_from_file(const unicode& filename, bool destroy_on_completion=false);

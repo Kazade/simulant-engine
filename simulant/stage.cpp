@@ -182,11 +182,11 @@ void Stage::delete_actor(ActorID e) {
 
 //=============== GEOMS =====================
 
-GeomID Stage::new_geom_with_mesh(MeshID mid) {
-    auto gid = geom_manager_->make(this, window->_sound_driver(), mid);
-    geom(gid)->set_parent(this);
+GeomPtr Stage::new_geom_with_mesh(MeshID mid) {
+    auto gid = geom_manager_->make(this, window->_sound_driver(), mid).fetch();
+    gid->set_parent(this);
 
-    signal_geom_created_(gid);
+    signal_geom_created_(gid->id());
 
     return gid;
 }
@@ -195,11 +195,11 @@ GeomPtr Stage::geom(const GeomID gid) const {
     return geom_manager_->get(gid);
 }
 
-GeomID Stage::new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, const Quaternion& rotation) {
-    auto gid = geom_manager_->make(this, window->_sound_driver(), mid, position, rotation);
-    geom(gid)->set_parent(this);
+GeomPtr Stage::new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, const Quaternion& rotation) {
+    auto gid = geom_manager_->make(this, window->_sound_driver(), mid, position, rotation).fetch();
+    gid->set_parent(this);
 
-    signal_geom_created_(gid);
+    signal_geom_created_(gid->id());
 
     return gid;
 }
@@ -214,7 +214,7 @@ void Stage::delete_geom(GeomID geom_id) {
     geom_manager_->destroy(geom_id);
 }
 
-uint32_t Stage::geom_count() const {
+std::size_t Stage::geom_count() const {
     return geom_manager_->count();
 }
 
