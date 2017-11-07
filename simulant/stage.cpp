@@ -220,7 +220,7 @@ std::size_t Stage::geom_count() const {
 
 //=============== PARTICLES =================
 
-ParticleSystemID Stage::new_particle_system() {
+ParticleSystemPtr Stage::new_particle_system() {
     ParticleSystemID new_id = ParticleSystemManager::make(this, window->_sound_driver());
 
     auto p = new_id.fetch();
@@ -231,31 +231,28 @@ ParticleSystemID Stage::new_particle_system() {
     });
 
     signal_particle_system_created_(new_id);
-    return new_id;
+    return p;
 }
 
-ParticleSystemID Stage::new_particle_system_from_file(const unicode& filename, bool destroy_on_completion) {
-    ParticleSystemID new_id = new_particle_system();
+ParticleSystemPtr Stage::new_particle_system_from_file(const unicode& filename, bool destroy_on_completion) {
+    auto ps = new_particle_system();
 
-    auto ps = particle_system(new_id)->shared_from_this();
     ps->set_parent(this);
     ps->set_destroy_on_completion(destroy_on_completion);
 
     window->loader_for(filename)->into(ps);
 
-    return new_id;
+    return ps;
 }
 
-ParticleSystemID Stage::new_particle_system_with_parent_from_file(ActorID parent, const unicode& filename, bool destroy_on_completion) {
-    ParticleSystemID new_id = new_particle_system();
-
-    auto ps = particle_system(new_id)->shared_from_this();
+ParticleSystemPtr Stage::new_particle_system_with_parent_from_file(ActorID parent, const unicode& filename, bool destroy_on_completion) {
+    auto ps = new_particle_system();
     ps->set_parent(parent);
     ps->set_destroy_on_completion(destroy_on_completion);
 
     window->loader_for(filename)->into(ps);
 
-    return new_id;
+    return ps;
 }
 
 ParticleSystemPtr Stage::particle_system(ParticleSystemID pid) {

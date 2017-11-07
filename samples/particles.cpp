@@ -11,7 +11,7 @@ public:
 
         smlt::StagePtr stage = stage_.fetch();
 
-        auto ps = stage->new_particle_system_from_file("simulant/particles/fire.kglp").fetch();
+        auto ps = stage->new_particle_system_from_file("simulant/particles/fire.kglp");
         ps->move_to(0.0, 0, -4);
 
         auto mat = stage->assets->new_material_from_file(smlt::Material::BuiltIns::TEXTURED_PARTICLE).fetch();

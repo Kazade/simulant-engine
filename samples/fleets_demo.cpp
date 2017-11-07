@@ -63,8 +63,8 @@ private:
             ships_.push_back(stage->new_actor_with_mesh(ship_mesh_id_));
             ships_.back()->move_to_absolute(pos);
 
-            auto ps_id = stage->new_particle_system_with_parent_from_file(ships_.back()->id(), "simulant/particles/pixel_trail.kglp");
-            stage->particle_system(ps_id)->move_to(0, 0, 0);
+            auto ps = stage->new_particle_system_with_parent_from_file(ships_.back()->id(), "simulant/particles/pixel_trail.kglp");
+            ps->move_to(0, 0, 0);
         }
     }
 };

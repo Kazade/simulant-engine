@@ -122,10 +122,10 @@ public:
         };
 
         StagePtr stage = window->new_stage().fetch();
-        ParticleSystemID ps = stage->new_particle_system();
+        auto ps = stage->new_particle_system();
 
         MockPartitioner partitioner(stage, test);
-        partitioner.add_particle_system(ps);
+        partitioner.add_particle_system(ps->id());
         partitioner._apply_writes();
 
         window->delete_stage(stage->id());
@@ -142,10 +142,10 @@ public:
         };
 
         StagePtr stage = window->new_stage().fetch();
-        ParticleSystemID ps = stage->new_particle_system();
+        auto ps = stage->new_particle_system();
 
         MockPartitioner partitioner(stage, test);
-        partitioner.remove_particle_system(ps);
+        partitioner.remove_particle_system(ps->id());
         partitioner._apply_writes();
         window->delete_stage(stage->id());
     }
