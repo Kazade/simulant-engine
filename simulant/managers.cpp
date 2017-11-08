@@ -108,13 +108,13 @@ StageManager::StageManager(Window* window):
 
 }
 
-StageID StageManager::new_stage(AvailablePartitioner partitioner) {
+StagePtr StageManager::new_stage(AvailablePartitioner partitioner) {
     auto ret = StageManager::make(this->window_, partitioner);
     signal_stage_added_(ret);
-    return ret;
+    return ret.fetch();
 }
 
-uint32_t StageManager::stage_count() const {
+std::size_t StageManager::stage_count() const {
     return StageManager::count();
 }
 

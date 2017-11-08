@@ -9,7 +9,7 @@ using namespace smlt;
 class SkyboxTest : public SimulantTestCase {
 public:
     void test_skybox_from_folder() {
-        auto stage = window->new_stage().fetch();
+        auto stage = window->new_stage();
 
         auto sky = stage->skies->new_skybox_from_folder("skyboxes/TropicalSunnyDay").fetch_as<Skybox>();
 

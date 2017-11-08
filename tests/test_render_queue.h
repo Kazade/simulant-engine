@@ -12,7 +12,7 @@ class RenderQueueTests : public SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();
-        stage_ = window->stage(window->new_stage());
+        stage_ = window->new_stage();
     }
 
     void tear_down() {

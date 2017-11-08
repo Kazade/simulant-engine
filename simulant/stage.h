@@ -142,7 +142,7 @@ public:
 
     LightPtr light(LightID light);
     void delete_light(LightID light_id);
-    uint32_t light_count() const { return LightManager::count(); }
+    std::size_t light_count() const { return LightManager::count(); }
 
 
     smlt::Colour ambient_light() const { return ambient_light_; }

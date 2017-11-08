@@ -13,21 +13,19 @@ public:
         smlt::PhysicsScene<GameScene>(window) {}
 
     void load() {
-        pipeline_id_ = prepare_basic_scene(stage_id_, camera_id_, smlt::PARTITIONER_NULL);
+        pipeline_id_ = prepare_basic_scene(stage_, camera_id_, smlt::PARTITIONER_NULL);
         window->disable_pipeline(pipeline_id_);
-
-        auto stage = window->stage(stage_id_);
 
         camera_id_.fetch()->set_perspective_projection(
             Degrees(45.0), float(window->width()) / float(window->height()), 1.0, 1000.0
         );
 
-        stage->camera(camera_id_)->move_to(0, 10, 50);
+        stage_->camera(camera_id_)->move_to(0, 10, 50);
 
         window->pipeline(pipeline_id_)->viewport->set_colour(smlt::Colour::SKY_BLUE);
 
         // Create a nice skybox
-        stage->skies->new_skybox_from_folder("sample_data/skyboxes/TropicalSunnyDay");
+        stage_->skies->new_skybox_from_folder("sample_data/skyboxes/TropicalSunnyDay");
 
         smlt::TextureID crate = window->shared_assets->new_texture_from_file("sample_data/crate.png");
         smlt::MaterialID mat = window->shared_assets->new_material_from_texture(crate);
@@ -40,7 +38,7 @@ public:
         window->shared_assets->mesh(ground_mesh_id_)->set_material_id(
             window->shared_assets->new_material_from_texture(grass)
         );
-        ground_ = stage->new_actor_with_mesh(ground_mesh_id_);
+        ground_ = stage_->new_actor_with_mesh(ground_mesh_id_);
 
         // Make the ground a staticbody
         auto c = ground_->new_behaviour<behaviours::StaticBody>(physics);
@@ -51,7 +49,7 @@ public:
 
     void spawn_box() {
         boxes_.push_back(
-            stage_id_.fetch()->new_actor_with_mesh(box_mesh_id_)
+            stage_->new_actor_with_mesh(box_mesh_id_)
         );
 
         auto box = boxes_.back();
@@ -79,7 +77,7 @@ private:
     std::vector<ActorPtr> boxes_;
 
     PipelineID pipeline_id_;
-    StageID stage_id_;
+    StagePtr stage_;
     CameraID camera_id_;
 
     MeshID box_mesh_id_;

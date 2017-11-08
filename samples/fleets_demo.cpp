@@ -9,16 +9,15 @@ public:
         smlt::Scene<GameScene>(window) {}
 
     void load() {
-        auto pipeline = prepare_basic_scene(stage_id_, camera_id_);
+        auto pipeline = prepare_basic_scene(stage_, camera_id_);
         pipeline.fetch()->viewport->set_colour(smlt::Colour::BLACK);
 
-        auto stage = window->stage(stage_id_);
         camera_id_.fetch()->set_perspective_projection(Degrees(45.0), float(window->width()) / float(window->height()), 10.0, 10000.0);
         ship_mesh_id_ = window->shared_assets->new_mesh_from_file("sample_data/fighter_good/space_frigate_6.obj");
         generate_ships();
 
-        stage->set_ambient_light(smlt::Colour(0.2, 0.2, 0.2, 1.0));
-        stage->new_light_as_directional();
+        stage_->set_ambient_light(smlt::Colour(0.2, 0.2, 0.2, 1.0));
+        stage_->new_light_as_directional();
     }
 
     void activate() {
@@ -27,10 +26,8 @@ public:
 
     void fixed_update(float dt) override {
         Vec3 speed(-250, 0, 0.0);
-
         Vec3 avg;
 
-        auto stage = window->stage(stage_id_);
         for(auto ship: ships_) {
             auto pos = ship->position();
             avg += pos;
@@ -39,11 +36,11 @@ public:
 
         avg /= ships_.size();
 
-        stage->camera(camera_id_)->look_at(avg);
+        stage_->camera(camera_id_)->look_at(avg);
     }
 
 private:
-    StageID stage_id_;
+    StagePtr stage_;
     CameraID camera_id_;
 
     MeshID ship_mesh_id_;
@@ -59,11 +56,10 @@ private:
                 random_gen::random_float(-100, 100)
             ).normalized() * random_gen::random_float(100.0f, 150.0f));
 
-            auto stage = window->stage(stage_id_);
-            ships_.push_back(stage->new_actor_with_mesh(ship_mesh_id_));
+            ships_.push_back(stage_->new_actor_with_mesh(ship_mesh_id_));
             ships_.back()->move_to_absolute(pos);
 
-            auto ps = stage->new_particle_system_with_parent_from_file(ships_.back()->id(), "simulant/particles/pixel_trail.kglp");
+            auto ps = stage_->new_particle_system_with_parent_from_file(ships_.back()->id(), "simulant/particles/pixel_trail.kglp");
             ps->move_to(0, 0, 0);
         }
     }

@@ -44,7 +44,7 @@ public:
 
         physics = behaviours::RigidBodySimulation::create(window->time_keeper);
         physics->set_gravity(Vec3());
-        stage = window->new_stage().fetch();
+        stage = window->new_stage();
     }
 
     void tear_down() {

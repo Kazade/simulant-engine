@@ -15,7 +15,7 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage = window->new_stage().fetch();
+        stage = window->new_stage();
         actor = stage->new_actor();
     }
 

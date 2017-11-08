@@ -34,7 +34,7 @@ Background::Background(BackgroundID background_id, BackgroundManager *manager, B
 
 bool Background::init() {
     //Create a stage to add to the render pipeline
-    stage_ = manager_->window->new_stage(PARTITIONER_NULL).fetch();
+    stage_ = manager_->window->new_stage(PARTITIONER_NULL);
     //We need to create an orthographic camera
     camera_id_ = stage_->new_camera();
 

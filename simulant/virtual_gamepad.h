@@ -22,6 +22,7 @@
 #include <unordered_map>
 #include "deps/kazsignal/kazsignal.h"
 #include "generic/managed.h"
+#include "generic/property.h"
 #include "types.h"
 
 #include "input/input_state.h"
@@ -46,7 +47,7 @@ public:
     AABB button_bounds(int button);
 
 
-    StageID stage_id() const { return stage_; }
+    Property<VirtualGamepad, Stage> stage = {this, &VirtualGamepad::stage_};
 
 private:
     Window& window_;
@@ -54,7 +55,7 @@ private:
 
     std::vector<ui::Button*> buttons_;
 
-    StageID stage_;
+    StagePtr stage_;
     CameraID camera_id_;
     PipelineID pipeline_id_;
 

@@ -12,7 +12,7 @@ class WidgetTest : public SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();
-        stage_ = window->new_stage().fetch();
+        stage_ = window->new_stage();
     }
 
     void tear_down() {

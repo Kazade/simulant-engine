@@ -15,19 +15,19 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage_id_ = window->new_stage();
-        camera_id_ = stage_id_.fetch()->new_camera();
+        stage_ = window->new_stage();
+        camera_id_ = stage_->new_camera();
     }
 
     void tear_down() {
         SimulantTestCase::tear_down();
-        stage_id_.fetch()->delete_camera(camera_id_);
-        window->delete_stage(stage_id_);
+        stage_->delete_camera(camera_id_);
+        window->delete_stage(stage_->id());
     }
 
     smlt::MeshID generate_test_mesh(smlt::StagePtr stage) {
-        smlt::MeshID mid = stage->assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY);
-        auto mesh = stage->assets->mesh(mid);
+        smlt::MeshID mid = stage_->assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY);
+        auto mesh = stage_->assets->mesh(mid);
 
         auto& data = mesh->shared_data;
 
@@ -74,12 +74,11 @@ public:
     }
 
     void test_create_mesh_from_submesh() {
-        auto stage = window->stage(stage_id_);
-        auto mesh = stage->assets->mesh(generate_test_mesh(stage));
+        auto mesh = stage_->assets->mesh(generate_test_mesh(stage_));
         auto submesh = mesh->first_submesh();
 
-        auto second_mesh_id = stage->assets->new_mesh_from_submesh(submesh);
-        auto second_mesh = stage->assets->mesh(second_mesh_id);
+        auto second_mesh_id = stage_->assets->new_mesh_from_submesh(submesh);
+        auto second_mesh = stage_->assets->mesh(second_mesh_id);
 
         assert_equal(second_mesh->first_submesh()->index_data->count(), submesh->index_data->count());
         assert_equal(second_mesh->first_submesh()->arrangement(), submesh->arrangement());
@@ -92,8 +91,7 @@ public:
          *  size relative to other models
          */
 
-        auto stage = window->stage(stage_id_);
-        auto mesh = stage->assets->mesh(generate_test_mesh(stage));
+        auto mesh = stage_->assets->mesh(generate_test_mesh(stage_));
 
         assert_close(2.0, mesh->diameter(), 0.00001);
         mesh->normalize();
@@ -101,9 +99,7 @@ public:
     }
 
     void test_user_data_works() {
-        auto stage = window->stage(stage_id_);
-
-        auto actor = stage->new_actor();
+        auto actor = stage_->new_actor();
 
         this->assert_true(actor->id() != 0); //Make sure we set an id for the mesh
         this->assert_true(actor->auto_id() != 0); //Make sure we set a unique ID for the object
@@ -112,31 +108,28 @@ public:
         this->assert_true(actor->data->exists("data"));
         this->assert_equal((int)0xDEADBEEF, actor->data->get<int>("data"));
 
-        stage->delete_actor(actor->id());
+        stage_->delete_actor(actor->id());
 
-        this->assert_true(!stage->has_actor(actor->id()));
+        this->assert_true(!stage_->has_actor(actor->id()));
     }
 
     void test_deleting_entities_deletes_children() {
-        auto stage = window->stage(stage_id_);
-
-        auto mid = stage->new_actor(); //Create the root mesh
-        auto cid1 = stage->new_actor_with_parent(mid->id()); //Create a child
-        auto cid2 = stage->new_actor_with_parent(cid1->id()); //Create a child of the child
+        auto mid = stage_->new_actor(); //Create the root mesh
+        auto cid1 = stage_->new_actor_with_parent(mid->id()); //Create a child
+        auto cid2 = stage_->new_actor_with_parent(cid1->id()); //Create a child of the child
 
         this->assert_equal((uint32_t)1, mid->count_children());
         this->assert_equal((uint32_t)1, cid1->count_children());
         this->assert_equal((uint32_t)0, cid2->count_children());
 
-        stage->delete_actor(mid->id());
-        this->assert_true(!stage->has_actor(mid->id()));
-        this->assert_true(!stage->has_actor(cid1->id()));
-        this->assert_true(!stage->has_actor(cid2->id()));
+        stage_->delete_actor(mid->id());
+        this->assert_true(!stage_->has_actor(mid->id()));
+        this->assert_true(!stage_->has_actor(cid1->id()));
+        this->assert_true(!stage_->has_actor(cid2->id()));
     }
 
     void test_basic_usage() {
-        auto stage = window->stage(stage_id_);
-        auto mesh = stage->assets->mesh(generate_test_mesh(stage));
+        auto mesh = stage_->assets->mesh(generate_test_mesh(stage_));
 
         auto& data = mesh->shared_data;
 
@@ -154,11 +147,9 @@ public:
     }
 
     void test_actor_from_mesh() {
-        auto stage = window->stage(stage_id_);
+        auto mesh = stage_->assets->mesh(generate_test_mesh(stage_));
 
-        auto mesh = stage->assets->mesh(generate_test_mesh(stage));
-
-        auto actor = stage->new_actor();
+        auto actor = stage_->new_actor();
 
         assert_true(!actor->has_mesh());
 
@@ -188,26 +179,22 @@ public:
     }
 
     void test_scene_methods() {
-        auto stage = window->stage(stage_id_);
-
-        smlt::MeshID mesh_id = stage->assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY); //Create a mesh
-        auto actor = stage->new_actor_with_mesh(mesh_id);
+        smlt::MeshID mesh_id = stage_->assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY); //Create a mesh
+        auto actor = stage_->new_actor_with_mesh(mesh_id);
 
         assert_true(mesh_id == actor->mesh()->id());
     }
 
     void test_animated_mesh_initialization() {
-        auto stage = window->stage(stage_id_);
-
         const int num_frames = 3;
 
-        auto mesh_id = stage->assets->new_animated_mesh(
+        auto mesh_id = stage_->assets->new_animated_mesh(
             smlt::VertexSpecification::POSITION_ONLY,
             smlt::MESH_ANIMATION_TYPE_VERTEX_MORPH,
             num_frames
         );
 
-        auto mesh = stage->assets->mesh(mesh_id);
+        auto mesh = stage_->assets->mesh(mesh_id);
 
         assert_equal(mesh->animation_frames(), 3u);
         assert_equal(mesh->animation_type(), smlt::MESH_ANIMATION_TYPE_VERTEX_MORPH);
@@ -216,12 +203,10 @@ public:
 
     // Skipped, currently fails
     void X_test_cubic_texture_generation() {
-        auto stage = window->stage(stage_id_);
+        auto mesh_id = stage_->assets->new_mesh_as_box(10.0f, 10.0f, 10.0f);
+        stage_->assets->mesh(mesh_id)->first_submesh()->generate_texture_coordinates_cube();
 
-        auto mesh_id = stage->assets->new_mesh_as_box(10.0f, 10.0f, 10.0f);
-        stage->assets->mesh(mesh_id)->first_submesh()->generate_texture_coordinates_cube();
-
-        auto& vd = *stage->assets->mesh(mesh_id)->first_submesh()->vertex_data.get();
+        auto& vd = *stage_->assets->mesh(mesh_id)->first_submesh()->vertex_data.get();
 
         // Neg Z
         assert_equal(smlt::Vec2((1.0 / 3.0), 0), vd.texcoord0_at<smlt::Vec2>(0));
@@ -262,7 +247,7 @@ public:
 
 private:
     smlt::CameraID camera_id_;
-    smlt::StageID stage_id_;
+    smlt::StagePtr stage_;
 
     smlt::SubMesh* first_mesh_;
 };

@@ -32,14 +32,13 @@ StatsPanel::StatsPanel(Window *window):
 void StatsPanel::initialize() {
     if(initialized_) return;
 
-    stage_id_ = window_->new_stage();
-    auto stage = stage_id_.fetch();
+    stage_ = window_->new_stage();
 
-    ui_camera_ = stage->new_camera_with_orthographic_projection(0, 640, 0, 480);
-    pipeline_id_ = window_->render(stage_id_, ui_camera_).with_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
+    ui_camera_ = stage_->new_camera_with_orthographic_projection(0, 640, 0, 480);
+    pipeline_id_ = window_->render(stage_, ui_camera_.fetch()).with_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
     window_->disable_pipeline(pipeline_id_);
 
-    auto overlay = stage_id_.fetch();
+    auto overlay = stage_;
 
     float vheight = 460;
     const float diff = 32;

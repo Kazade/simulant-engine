@@ -98,8 +98,7 @@ protected:
     virtual void activate() {}
     virtual void deactivate() {}
 
-    PipelineID prepare_basic_scene(
-        StageID& new_stage,
+    PipelineID prepare_basic_scene(StagePtr &new_stage,
         CameraID& new_camera,
         AvailablePartitioner partitioner=PARTITIONER_HASH
     );

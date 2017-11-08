@@ -14,14 +14,14 @@ class CameraTest : public SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();
-        stage_id_ = window->new_stage();
-        camera_id_ = stage_id_.fetch()->new_camera();
+        stage_ = window->new_stage();
+        camera_id_ = stage_->new_camera();
     }
 
     void tear_down() {
         SimulantTestCase::tear_down();
-        stage_id_.fetch()->delete_camera(camera_id_);
-        window->delete_stage(stage_id_);
+        stage_->delete_camera(camera_id_);
+        window->delete_stage(stage_->id());
     }
 
     void test_project_point() {
@@ -42,31 +42,28 @@ public:
     void test_look_at() {       
         Vec3 pos(0, 0, -1);
 
-        auto stage = window->stage(stage_id_);
-        stage->camera(camera_id_)->look_at(pos);
+        stage_->camera(camera_id_)->look_at(pos);
 
-        Quaternion q = stage->camera(camera_id_)->absolute_rotation();
+        Quaternion q = stage_->camera(camera_id_)->absolute_rotation();
         assert_true(q == Quaternion());
 
         pos = Vec3(0, -1, 0);
-        stage->camera(camera_id_)->look_at(pos);
+        stage_->camera(camera_id_)->look_at(pos);
 
-        auto f = stage->camera(camera_id_)->forward();
+        auto f = stage_->camera(camera_id_)->forward();
         assert_close(0.0f, f.x, 0.000001);
         assert_close(-1.0f, f.y, 0.000001);
         assert_close(0.0f, f.z, 0.000001);
 
-        auto res = stage->camera(camera_id_)->up();
+        auto res = stage_->camera(camera_id_)->up();
         assert_close(res.x, 0, 0.000001);
         assert_close(res.y, 0, 0.000001);
         assert_close(res.z, 1, 0.000001);
     }
 
     void test_camera_attached_to_parent_moves() {
-        auto stage = window->new_stage().fetch();
-
-        auto actor = stage->new_actor();
-        auto camera = stage->new_camera().fetch();
+        auto actor = stage_->new_actor();
+        auto camera = stage_->new_camera().fetch();
 
         auto od = camera->frustum().plane(FRUSTUM_PLANE_NEAR).d;
 
@@ -82,7 +79,7 @@ public:
 
 private:
     CameraID camera_id_;
-    StageID stage_id_;
+    StagePtr stage_;
 };
 
 }

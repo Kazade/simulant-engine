@@ -64,10 +64,10 @@ class StageManager:
 public:
     StageManager(Window* window);
 
-    StageID new_stage(AvailablePartitioner partitioner=PARTITIONER_HASH);
+    StagePtr new_stage(AvailablePartitioner partitioner=PARTITIONER_HASH);
     StagePtr stage(StageID s);
     void delete_stage(StageID s);
-    uint32_t stage_count() const;
+    std::size_t stage_count() const;
     bool has_stage(StageID stage_id) const;
 
     void print_tree();

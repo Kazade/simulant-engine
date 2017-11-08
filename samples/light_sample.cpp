@@ -10,8 +10,7 @@ public:
         smlt::Scene<GameScene>(window) {}
 
     void load() {
-        prepare_basic_scene(stage_id_, camera_id_);
-        auto stage = window->stage(stage_id_);
+        prepare_basic_scene(stage_, camera_id_);
 
         camera_id_.fetch()->set_perspective_projection(
             Degrees(45.0),
@@ -20,30 +19,30 @@ public:
             1000.0
         );
 
-        stage->set_ambient_light(smlt::Colour(0.2, 0.2, 0.2, 1.0));
+        stage_->set_ambient_light(smlt::Colour(0.2, 0.2, 0.2, 1.0));
 
-        actor_ = stage->new_actor_with_mesh(stage->assets->new_mesh_as_cube(2.0));
+        actor_ = stage_->new_actor_with_mesh(stage_->assets->new_mesh_as_cube(2.0));
         actor_->move_to(0.0, 0.0, -5.0);
 
-        texture_ = stage->assets->new_texture_from_file("sample_data/crate.png");
+        texture_ = stage_->assets->new_texture_from_file("sample_data/crate.png");
         texture_.fetch()->set_texture_filter(TEXTURE_FILTER_BILINEAR);
 
         actor_->mesh()->set_texture_on_material(0, texture_);
 
         // Test Camera::look_at function
-        stage->camera(camera_id_)->look_at(actor_->absolute_position());
+        stage_->camera(camera_id_)->look_at(actor_->absolute_position());
 
         {
-            auto light = stage->new_light_as_point(Vec3(5, 0, -5), smlt::Colour::GREEN);
+            auto light = stage_->new_light_as_point(Vec3(5, 0, -5), smlt::Colour::GREEN);
             light->set_attenuation_from_range(20.0);
 
-            auto light2 = stage->new_light_as_point(Vec3(-5, 0, -5), smlt::Colour::BLUE);
+            auto light2 = stage_->new_light_as_point(Vec3(-5, 0, -5), smlt::Colour::BLUE);
             light2->set_attenuation_from_range(30.0);
 
-            auto light3 = stage->new_light_as_point(Vec3(0, -15, -5), smlt::Colour::RED);
+            auto light3 = stage_->new_light_as_point(Vec3(0, -15, -5), smlt::Colour::RED);
             light3->set_attenuation_from_range(50.0);
 
-            stage->new_light_as_directional(Vec3(1, 0, 0), smlt::Colour::YELLOW);
+            stage_->new_light_as_directional(Vec3(1, 0, 0), smlt::Colour::YELLOW);
         }
 
         window->new_background_as_scrollable_from_file("sample_data/background.png");        
@@ -76,7 +75,7 @@ public:
 
 private:
     CameraID camera_id_;
-    StageID stage_id_;
+    StagePtr stage_;
     ActorPtr actor_;
     TextureID texture_;
 

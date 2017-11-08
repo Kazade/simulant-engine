@@ -48,7 +48,7 @@ private:
     void load() override;
     void unload() override;
 
-    StageID stage_;
+    StagePtr stage_;
     CameraID camera_;
     PipelineID pipeline_;
 
