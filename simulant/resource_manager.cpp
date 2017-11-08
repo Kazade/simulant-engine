@@ -200,7 +200,12 @@ MeshID ResourceManager::new_mesh_from_file(const unicode& path, GarbageCollectMe
 
 MeshID ResourceManager::new_mesh_from_tmx_file(const unicode& tmx_file, const unicode& layer_name, float tile_render_size, GarbageCollectMethod garbage_collect) {
     smlt::MeshID mesh_id = new_mesh(VertexSpecification::DEFAULT, garbage_collect);
-    window->loader_for(tmx_file.encode())->into(mesh(mesh_id), {
+    auto mesh = mesh_id.fetch();
+
+    // There's no point maintaining adjacency info on a flat grid
+    mesh->set_maintain_adjacency_info(false);
+
+    window->loader_for(tmx_file.encode())->into(mesh, {
         {"layer", layer_name},
         {"render_size", tile_render_size}
     });
@@ -210,7 +215,12 @@ MeshID ResourceManager::new_mesh_from_tmx_file(const unicode& tmx_file, const un
 
 MeshID ResourceManager::new_mesh_from_heightmap(const unicode& image_file, const HeightmapSpecification& spec, GarbageCollectMethod garbage_collect) {
     smlt::MeshID mesh_id = new_mesh(VertexSpecification::DEFAULT, garbage_collect);
-    window->loader_for("heightmap_loader", image_file)->into(mesh(mesh_id), {
+    auto mesh = mesh_id.fetch();
+
+    // Heightmaps are huge, and calculating adjacency is slow, so.. don't do that by default (for now! maybe it can be optimised)
+    mesh->set_maintain_adjacency_info(false);
+
+    window->loader_for("heightmap_loader", image_file)->into(mesh, {
         { "spec", spec},
     });
     MeshManager::mark_as_uncollected(mesh_id);
