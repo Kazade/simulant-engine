@@ -82,10 +82,10 @@ public:
         };
 
         StagePtr stage = window->new_stage().fetch();
-        LightID light = stage->new_light_as_point();
+        auto light = stage->new_light_as_point();
 
         MockPartitioner partitioner(stage, test);
-        partitioner.add_light(light);
+        partitioner.add_light(light->id());
         partitioner._apply_writes();
 
         window->delete_stage(stage->id());
@@ -102,10 +102,10 @@ public:
         };
 
         StagePtr stage = window->new_stage().fetch();
-        LightID light = stage->new_light_as_point();
+        auto light = stage->new_light_as_point();
 
         MockPartitioner partitioner(stage, test);
-        partitioner.remove_light(light);
+        partitioner.remove_light(light->id());
         partitioner._apply_writes();
 
         window->delete_stage(stage->id());

@@ -99,7 +99,6 @@ public:
     }
 
     void fixed_update(float dt) override {
-        auto stage = window->stage(stage_id_);
         terrain_actor_->rotate_global_y_by(smlt::Degrees(dt * 5.0));
     }
 

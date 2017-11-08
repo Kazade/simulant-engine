@@ -34,13 +34,13 @@ public:
         stage->camera(camera_id_)->look_at(actor_->absolute_position());
 
         {
-            auto light = stage->new_light_as_point(Vec3(5, 0, -5), smlt::Colour::GREEN).fetch();
+            auto light = stage->new_light_as_point(Vec3(5, 0, -5), smlt::Colour::GREEN);
             light->set_attenuation_from_range(20.0);
 
-            auto light2 = stage->new_light_as_point(Vec3(-5, 0, -5), smlt::Colour::BLUE).fetch();
+            auto light2 = stage->new_light_as_point(Vec3(-5, 0, -5), smlt::Colour::BLUE);
             light2->set_attenuation_from_range(30.0);
 
-            auto light3 = stage->new_light_as_point(Vec3(0, -15, -5), smlt::Colour::RED).fetch();
+            auto light3 = stage->new_light_as_point(Vec3(0, -15, -5), smlt::Colour::RED);
             light3->set_attenuation_from_range(50.0);
 
             stage->new_light_as_directional(Vec3(1, 0, 0), smlt::Colour::YELLOW);

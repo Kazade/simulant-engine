@@ -268,7 +268,7 @@ void Stage::delete_particle_system(ParticleSystemID pid) {
     ParticleSystemManager::destroy(pid);
 }
 
-LightID Stage::new_light_as_directional(const Vec3& direction, const smlt::Colour& colour) {
+LightPtr Stage::new_light_as_directional(const Vec3& direction, const smlt::Colour& colour) {
     auto light = LightManager::make(this).fetch();
     auto light_id = light->id();
 
@@ -282,11 +282,11 @@ LightID Stage::new_light_as_directional(const Vec3& direction, const smlt::Colou
         this->partitioner->update_light(light_id, new_bounds);
     });
 
-    signal_light_created_(light->id());
-    return light->id();
+    signal_light_created_(light_id);
+    return light;
 }
 
-LightID Stage::new_light_as_point(const Vec3& position, const smlt::Colour& colour) {
+LightPtr Stage::new_light_as_point(const Vec3& position, const smlt::Colour& colour) {
     auto light = LightManager::make(this).fetch();
     auto light_id = light->id();
 
@@ -301,8 +301,8 @@ LightID Stage::new_light_as_point(const Vec3& position, const smlt::Colour& colo
         this->partitioner->update_light(light_id, new_bounds);
     });
 
-    signal_light_created_(light->id());
-    return light->id();
+    signal_light_created_(light_id);
+    return light;
 }
 
 LightPtr Stage::light(LightID light_id) {
