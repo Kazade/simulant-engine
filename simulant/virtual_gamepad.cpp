@@ -82,10 +82,10 @@ bool VirtualGamepad::init() {
         assert(0 && "Not Implemented");
     }
 
-    camera_id_ = stage_->new_camera_with_orthographic_projection();
+    camera_ = stage_->new_camera_with_orthographic_projection();
 
     //Finally add to the render sequence, give a ridiculously high priority
-    pipeline_id_ = window_.render(stage_->id(), camera_id_).with_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
+    pipeline_id_ = window_.render(stage_, camera_).with_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
 
     return true;
 }

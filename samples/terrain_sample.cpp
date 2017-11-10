@@ -54,16 +54,16 @@ public:
             return !done;
         });
 
-        pipeline_id_ = prepare_basic_scene(stage_, camera_id_);
+        pipeline_id_ = prepare_basic_scene(stage_, camera_);
         window->disable_pipeline(pipeline_id_);
 
-        camera_id_.fetch()->set_perspective_projection(
+        camera_->set_perspective_projection(
             Degrees(45.0), float(window->width()) / float(window->height()), 10.0, 10000.0
         );
 
         window->pipeline(pipeline_id_)->viewport->set_colour(smlt::Colour::SKY_BLUE);
 
-        auto cam = stage_->camera(camera_id_);
+        auto cam = camera_;
         cam->move_to(0, 50, 700);
         cam->look_at(0, 0, 0);
 
@@ -103,7 +103,7 @@ public:
 private:
     PipelineID pipeline_id_;
     StagePtr stage_;
-    CameraID camera_id_;
+    CameraPtr camera_;
 
     MeshID terrain_mesh_id_;
     ActorPtr terrain_actor_;

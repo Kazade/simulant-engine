@@ -35,10 +35,10 @@ class CameraManager {
 public:
     CameraManager(Stage* stage);
 
-    CameraID new_camera();
-    CameraID new_camera_with_orthographic_projection(double left=0, double right=0, double bottom=0, double top=0, double near=-1.0, double far=1.0);
-    CameraID new_camera_for_ui();
-    CameraID new_camera_for_viewport(const Viewport& vp);
+    CameraPtr new_camera();
+    CameraPtr new_camera_with_orthographic_projection(double left=0, double right=0, double bottom=0, double top=0, double near=-1.0, double far=1.0);
+    CameraPtr new_camera_for_ui();
+    CameraPtr new_camera_for_viewport(const Viewport& vp);
     CameraPtr camera(CameraID c);
     void delete_camera(CameraID cid);
     uint32_t camera_count() const;

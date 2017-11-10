@@ -78,7 +78,7 @@ private:
 
     BackgroundType type_;
     StagePtr stage_;
-    CameraID camera_id_;
+    CameraPtr camera_;
     PipelineID pipeline_id_;
     SpritePtr sprite_;
 

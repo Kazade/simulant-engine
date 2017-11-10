@@ -35,7 +35,7 @@ void StatsPanel::initialize() {
     stage_ = window_->new_stage();
 
     ui_camera_ = stage_->new_camera_with_orthographic_projection(0, 640, 0, 480);
-    pipeline_id_ = window_->render(stage_, ui_camera_.fetch()).with_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
+    pipeline_id_ = window_->render(stage_, ui_camera_).with_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
     window_->disable_pipeline(pipeline_id_);
 
     auto overlay = stage_;

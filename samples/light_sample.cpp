@@ -10,9 +10,9 @@ public:
         smlt::Scene<GameScene>(window) {}
 
     void load() {
-        prepare_basic_scene(stage_, camera_id_);
+        prepare_basic_scene(stage_, camera_);
 
-        camera_id_.fetch()->set_perspective_projection(
+        camera_->set_perspective_projection(
             Degrees(45.0),
             float(window->width()) / float(window->height()),
             0.1,
@@ -30,7 +30,7 @@ public:
         actor_->mesh()->set_texture_on_material(0, texture_);
 
         // Test Camera::look_at function
-        stage_->camera(camera_id_)->look_at(actor_->absolute_position());
+        camera_->look_at(actor_->absolute_position());
 
         {
             auto light = stage_->new_light_as_point(Vec3(5, 0, -5), smlt::Colour::GREEN);
@@ -74,7 +74,7 @@ public:
     }
 
 private:
-    CameraID camera_id_;
+    CameraPtr camera_;
     StagePtr stage_;
     ActorPtr actor_;
     TextureID texture_;

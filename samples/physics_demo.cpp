@@ -13,14 +13,14 @@ public:
         smlt::PhysicsScene<GameScene>(window) {}
 
     void load() {
-        pipeline_id_ = prepare_basic_scene(stage_, camera_id_, smlt::PARTITIONER_NULL);
+        pipeline_id_ = prepare_basic_scene(stage_, camera_, smlt::PARTITIONER_NULL);
         window->disable_pipeline(pipeline_id_);
 
-        camera_id_.fetch()->set_perspective_projection(
+        camera_->set_perspective_projection(
             Degrees(45.0), float(window->width()) / float(window->height()), 1.0, 1000.0
         );
 
-        stage_->camera(camera_id_)->move_to(0, 10, 50);
+        camera_->move_to(0, 10, 50);
 
         window->pipeline(pipeline_id_)->viewport->set_colour(smlt::Colour::SKY_BLUE);
 
@@ -78,7 +78,7 @@ private:
 
     PipelineID pipeline_id_;
     StagePtr stage_;
-    CameraID camera_id_;
+    CameraPtr camera_;
 
     MeshID box_mesh_id_;
 

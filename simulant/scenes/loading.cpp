@@ -46,12 +46,12 @@ void Loading::load() {
     //Create an orthographic camera
     camera_ = stage_->new_camera();
 
-    camera_.fetch()->set_orthographic_projection(
+    camera_->set_orthographic_projection(
         0, window->width(), 0, window->height()
     );
 
     //Create an inactive pipeline
-    pipeline_ = window->render(stage_->id(), camera_);
+    pipeline_ = window->render(stage_, camera_);
     window->disable_pipeline(pipeline_);
 }
 

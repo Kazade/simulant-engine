@@ -12,7 +12,7 @@ public:
         SimulantTestCase::set_up();
 
         stage_ = window->new_stage();
-        camera_id_ = stage_->new_camera();
+        camera_ = stage_->new_camera();
     }
 
     void tear_down() {
@@ -196,7 +196,7 @@ public:
     }
 
 private:
-    smlt::CameraID camera_id_;
+    smlt::CameraPtr camera_;
     smlt::StagePtr stage_;
 };
 

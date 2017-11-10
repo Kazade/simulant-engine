@@ -10,7 +10,7 @@ public:
         smlt::Scene<GameScene>(window) {}
 
     void load() {
-        pid_ = prepare_basic_scene(stage_, camera_id_);
+        pid_ = prepare_basic_scene(stage_, camera_);
         window->pipeline(pid_)->set_clear_flags(BUFFER_CLEAR_ALL);
         window->pipeline(pid_)->viewport->set_colour(smlt::Colour::GREY);
         window->disable_pipeline(pid_);
@@ -25,9 +25,9 @@ public:
         );*/
 
         // Add a fly controller to the camera for user input
-        stage_->camera(camera_id_)->new_behaviour<behaviours::Fly>(window);
+        camera_->new_behaviour<behaviours::Fly>(window);
 
-        camera_id_.fetch()->set_perspective_projection(
+        camera_->set_perspective_projection(
             Degrees(45.0),
             float(window->width()) / float(window->height()),
             1.0,
@@ -43,7 +43,7 @@ public:
 
 private:
     StagePtr stage_;
-    CameraID camera_id_;
+    CameraPtr camera_;
     PipelineID pid_;
 };
 

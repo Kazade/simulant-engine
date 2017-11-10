@@ -9,10 +9,10 @@ public:
         smlt::Scene<GameScene>(window) {}
 
     void load() {
-        auto pipeline = prepare_basic_scene(stage_, camera_id_);
+        auto pipeline = prepare_basic_scene(stage_, camera_);
         pipeline.fetch()->viewport->set_colour(smlt::Colour::BLACK);
 
-        camera_id_.fetch()->set_perspective_projection(Degrees(45.0), float(window->width()) / float(window->height()), 10.0, 10000.0);
+        camera_->set_perspective_projection(Degrees(45.0), float(window->width()) / float(window->height()), 10.0, 10000.0);
         ship_mesh_id_ = window->shared_assets->new_mesh_from_file("sample_data/fighter_good/space_frigate_6.obj");
         generate_ships();
 
@@ -36,12 +36,12 @@ public:
 
         avg /= ships_.size();
 
-        stage_->camera(camera_id_)->look_at(avg);
+        camera_->look_at(avg);
     }
 
 private:
     StagePtr stage_;
-    CameraID camera_id_;
+    CameraPtr camera_;
 
     MeshID ship_mesh_id_;
     std::vector<ActorPtr> ships_;

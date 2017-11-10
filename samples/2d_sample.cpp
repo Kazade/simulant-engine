@@ -10,9 +10,9 @@ public:
         smlt::Scene<GameScene>(window) {}
 
     void load() {
-        prepare_basic_scene(stage_, camera_id_);
+        prepare_basic_scene(stage_, camera_);
 
-        auto cam = camera_id_.fetch();
+        auto cam = camera_;
 
         //Automatically calculate an orthographic projection, taking into account the aspect ratio
         //and the passed height. For example, passing a height of 2.0 would mean the view would extend
@@ -33,7 +33,7 @@ public:
             auto bounds = stage_->assets->mesh(mesh_id)->aabb();
 
             //Constrain the camera to the area where the sprite grid is rendered
-            stage_->camera(camera_id_)->constrain_to_aabb(
+            camera_->constrain_to_aabb(
                 AABB(
                     smlt::Vec3(render_width / 2, render_height / 2, 0),
                     smlt::Vec3(
@@ -53,7 +53,7 @@ public:
 
 private:
     StagePtr stage_;
-    CameraID camera_id_;
+    CameraPtr camera_;
 };
 
 

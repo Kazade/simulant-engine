@@ -9,10 +9,10 @@ public:
 
     void load() {
         cube_stage_ = window->new_stage();        
-        auto cube_cam = cube_stage_->new_camera().fetch();
+        auto cube_cam = cube_stage_->new_camera();
 
         rect_stage_ = window->new_stage();
-        auto rect_cam = rect_stage_->new_camera().fetch();
+        auto rect_cam = rect_stage_->new_camera();
 
         smlt::TextureID tid = window->shared_assets->new_texture_from_file("sample_data/sample.tga");
         MeshID cube_mesh = window->shared_assets->new_mesh_as_cube(1.0);

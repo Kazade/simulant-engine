@@ -12,7 +12,7 @@ public:
         stage_ = window->new_stage();
         camera_ = stage_->new_camera_with_orthographic_projection(0, window->width(), 0, window->height());
 
-        window->render(stage_->id(), camera_).with_clear(smlt::BUFFER_CLEAR_ALL, smlt::Colour::BLACK);
+        window->render(stage_, camera_).with_clear(smlt::BUFFER_CLEAR_ALL, smlt::Colour::BLACK);
 
         //stage_->ui->transform_input_with_camera(camera_);
 
@@ -34,7 +34,7 @@ public:
 
 private:
     smlt::StagePtr stage_;
-    smlt::CameraID camera_;
+    smlt::CameraPtr camera_;
 };
 
 class App : public smlt::Application {

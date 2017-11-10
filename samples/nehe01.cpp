@@ -20,7 +20,7 @@ public:
 
 private:
     smlt::StagePtr stage_;
-    smlt::CameraID camera_;
+    smlt::CameraPtr camera_;
 };
 
 class App : public smlt::Application {
