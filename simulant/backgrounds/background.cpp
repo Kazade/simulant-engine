@@ -44,7 +44,7 @@ bool Background::init() {
         -0.5, 0.5, -0.5, 0.5
     );
 
-    sprite_ = stage->sprites->new_sprite().fetch();
+    sprite_ = stage->sprites->new_sprite();
 
     //Add a pass for this background
     pipeline_id_ = manager_->window->render(stage_, camera_).with_priority(

@@ -15,14 +15,14 @@ void SpriteManager::delete_all() {
     objects_.clear();
 }
 
-SpriteID SpriteManager::new_sprite() {
-    SpriteID s = TemplatedSpriteManager::make(this, window->_sound_driver());
-    sprite(s)->set_parent(stage_->id());
-    signal_sprite_created_(s);
+SpritePtr SpriteManager::new_sprite() {
+    auto s = TemplatedSpriteManager::make(this, window->_sound_driver()).fetch();
+    s->set_parent(stage_->id());
+    signal_sprite_created_(s->id());
     return s;
 }
 
-SpriteID SpriteManager::new_sprite_from_file(const unicode &filename, uint32_t frame_Width, uint32_t frame_height, const SpritesheetAttrs& attrs) {
+SpritePtr SpriteManager::new_sprite_from_file(const unicode &filename, uint32_t frame_Width, uint32_t frame_height, const SpritesheetAttrs& attrs) {
     TextureID t = stage_->assets->new_texture_from_file(
         filename,
         TextureFlags(MIPMAP_GENERATE_NONE, TEXTURE_WRAP_CLAMP_TO_EDGE, TEXTURE_FILTER_POINT)
@@ -31,8 +31,8 @@ SpriteID SpriteManager::new_sprite_from_file(const unicode &filename, uint32_t f
     return new_sprite_from_texture(t, frame_Width, frame_height, attrs);
 }
 
-SpriteID SpriteManager::new_sprite_from_texture(TextureID texture_id, uint32_t frame_width, uint32_t frame_height, const SpritesheetAttrs& attrs) {
-    SpritePtr s = new_sprite().fetch();
+SpritePtr SpriteManager::new_sprite_from_texture(TextureID texture_id, uint32_t frame_width, uint32_t frame_height, const SpritesheetAttrs& attrs) {
+    SpritePtr s = new_sprite();
 
     try {
         s->set_spritesheet(texture_id, frame_width, frame_height, attrs);
@@ -44,7 +44,7 @@ SpriteID SpriteManager::new_sprite_from_texture(TextureID texture_id, uint32_t f
         throw;
     }
 
-    return s->id();
+    return s;
 }
 
 SpritePtr SpriteManager::sprite(SpriteID s) {
