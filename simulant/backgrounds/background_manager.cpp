@@ -26,12 +26,12 @@ void BackgroundManager::update(float dt) {
     }
 }
 
-BackgroundID BackgroundManager::new_background(BackgroundType type) {
-    return make(this, type);
+BackgroundPtr BackgroundManager::new_background(BackgroundType type) {
+    return make(this, type).fetch();
 }
 
-BackgroundID BackgroundManager::new_background_as_scrollable_from_file(const unicode& filename, float scroll_x, float scroll_y) {
-    BackgroundPtr bg = new_background(BACKGROUND_TYPE_SCROLL).fetch();
+BackgroundPtr BackgroundManager::new_background_as_scrollable_from_file(const unicode& filename, float scroll_x, float scroll_y) {
+    BackgroundPtr bg = new_background(BACKGROUND_TYPE_SCROLL);
     try {
         bg->set_texture(window_->shared_assets->new_texture_from_file(filename));
         bg->set_horizontal_scroll_rate(scroll_x);
@@ -41,11 +41,11 @@ BackgroundID BackgroundManager::new_background_as_scrollable_from_file(const uni
         throw;
     }
 
-    return bg->id();
+    return bg;
 }
 
-BackgroundID BackgroundManager::new_background_as_animated_from_file(const unicode& filename) {
-    BackgroundPtr bg = new_background(BACKGROUND_TYPE_ANIMATED).fetch();
+BackgroundPtr BackgroundManager::new_background_as_animated_from_file(const unicode& filename) {
+    BackgroundPtr bg = new_background(BACKGROUND_TYPE_ANIMATED);
     try {
         bg->set_texture(window_->shared_assets->new_texture_from_file(filename));
     } catch(...) {
@@ -53,7 +53,7 @@ BackgroundID BackgroundManager::new_background_as_animated_from_file(const unico
         throw;
     }
 
-    return bg->id();
+    return bg;
 }
 
 BackgroundPtr BackgroundManager::background(BackgroundID bid) {
