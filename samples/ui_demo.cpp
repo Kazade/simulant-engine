@@ -16,13 +16,13 @@ public:
 
         //stage_->ui->transform_input_with_camera(camera_);
 
-        auto title = stage_->ui->new_widget_as_label("UI Sample demonstrating widgets").fetch();
+        auto title = stage_->ui->new_widget_as_label("UI Sample demonstrating widgets");
         title->move_to(window->coordinate_from_normalized(0.5, 0.9));
 
-        auto button = stage_->ui->new_widget_as_button("Button 1").fetch();
+        auto button = stage_->ui->new_widget_as_button("Button 1");
         button->move_to(window->coordinate_from_normalized(0.1, 0.25));
 
-        auto pg = stage_->ui->new_widget_as_progress_bar().fetch_as<smlt::ui::ProgressBar>();
+        auto pg = stage_->ui->new_widget_as_progress_bar();
         pg->move_to(window->coordinate_from_normalized(0.5, 0.5));
         pg->resize(400, 10);
         pg->pulse();

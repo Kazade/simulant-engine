@@ -22,6 +22,7 @@
 #include "../stage.h"
 #include "../nodes/ui/ui_manager.h"
 #include "../render_sequence.h"
+#include "../nodes/ui/label.h"
 
 namespace smlt {
 
@@ -44,19 +45,19 @@ void StatsPanel::initialize() {
     float vheight = 460;
     const float diff = 32;
 
-    auto heading1 = overlay->ui->new_widget_as_label("Performance").fetch();
+    auto heading1 = overlay->ui->new_widget_as_label("Performance");
     heading1->move_to(320, vheight);
     vheight -= diff;
 
-    fps_ = overlay->ui->new_widget_as_label("FPS: 0").fetch();
+    fps_ = overlay->ui->new_widget_as_label("FPS: 0");
     fps_->move_to(320, vheight);
     vheight -= diff;
 
-    ram_usage_ = overlay->ui->new_widget_as_label("RAM: 0").fetch();
+    ram_usage_ = overlay->ui->new_widget_as_label("RAM: 0");
     ram_usage_->move_to(320, vheight);
     vheight -= diff;
 
-    actors_rendered_ = overlay->ui->new_widget_as_label("Renderables visible: 0").fetch();
+    actors_rendered_ = overlay->ui->new_widget_as_label("Renderables visible: 0");
     actors_rendered_->move_to(320, vheight);
     vheight -= diff;
 

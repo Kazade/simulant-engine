@@ -46,8 +46,8 @@ bool VirtualGamepad::init() {
     uint32_t button_size = int(float(window_.width() / 10.0));
 
     if(this->config_ == VIRTUAL_GAMEPAD_CONFIG_TWO_BUTTONS) {
-        auto button1 = stage_->ui->new_widget_as_button("L").fetch_as<ui::Button>();
-        auto button2 = stage_->ui->new_widget_as_button("R").fetch_as<ui::Button>();
+        auto button1 = stage_->ui->new_widget_as_button("L");
+        auto button2 = stage_->ui->new_widget_as_button("R");
 
         button1->set_background_colour(smlt::Colour(0, 0, 0, 0.2));
         button2->set_background_colour(smlt::Colour(0, 0, 0, 0.2));
