@@ -173,10 +173,12 @@ MeshID ResourceManager::new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMe
         if(old_to_new.count(old_index)) {
             target->index_data->index(old_to_new[old_index]);
         } else {
-            old_to_new[old_index] = submesh->vertex_data->copy_vertex_to_another(
+            auto j = submesh->vertex_data->copy_vertex_to_another(
                 *target->vertex_data.get(), submesh->index_data->at(i)
             );
-            target->index_data->index(i);
+
+            old_to_new[old_index] = j;
+            target->index_data->index(j);
         }
     }
 
