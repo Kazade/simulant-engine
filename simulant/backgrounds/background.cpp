@@ -21,7 +21,7 @@
 #include "../nodes/camera.h"
 
 #include "background.h"
-
+#include "../render_sequence.h"
 
 namespace smlt {
 
@@ -47,7 +47,7 @@ bool Background::init() {
     sprite_ = stage->sprites->new_sprite();
 
     //Add a pass for this background
-    pipeline_id_ = manager_->window->render(stage_, camera_).with_priority(
+    pipeline_ = manager_->window->render(stage_, camera_).with_priority(
         smlt::RENDER_PRIORITY_BACKGROUND + manager_->background_count()
     );
 
@@ -57,7 +57,7 @@ bool Background::init() {
 void Background::cleanup() {
     //Remove the pipeline and delete the stage, everything else is cleaned
     //up automatically
-    manager_->window->delete_pipeline(pipeline_id_);
+    manager_->window->delete_pipeline(pipeline_->id());
     manager_->window->delete_stage(stage_->id());
 }
 

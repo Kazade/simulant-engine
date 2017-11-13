@@ -54,14 +54,14 @@ public:
             return !done;
         });
 
-        pipeline_id_ = prepare_basic_scene(stage_, camera_);
-        window->disable_pipeline(pipeline_id_);
+        pipeline_ = prepare_basic_scene(stage_, camera_);
+        pipeline_->deactivate();
 
         camera_->set_perspective_projection(
             Degrees(45.0), float(window->width()) / float(window->height()), 10.0, 10000.0
         );
 
-        window->pipeline(pipeline_id_)->viewport->set_colour(smlt::Colour::SKY_BLUE);
+        pipeline_->viewport->set_colour(smlt::Colour::SKY_BLUE);
 
         auto cam = camera_;
         cam->move_to(0, 50, 700);
@@ -93,7 +93,7 @@ public:
     }
 
     void activate() {
-        window->enable_pipeline(pipeline_id_);
+        pipeline_->activate();
     }
 
     void fixed_update(float dt) override {
@@ -101,7 +101,7 @@ public:
     }
 
 private:
-    PipelineID pipeline_id_;
+    PipelinePtr pipeline_;
     StagePtr stage_;
     CameraPtr camera_;
 

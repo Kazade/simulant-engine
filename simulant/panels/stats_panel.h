@@ -39,7 +39,7 @@ private:
 
     StagePtr stage_;
     CameraPtr ui_camera_;
-    PipelineID pipeline_id_;
+    PipelinePtr pipeline_;
 
     void update();
 

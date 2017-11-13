@@ -41,6 +41,7 @@ AABB VirtualGamepad::button_bounds(int button) {
 
 bool VirtualGamepad::init() {
     stage_ = window_.new_stage(); //Create a Stage to hold the controller buttons
+    stage_id_ = stage_->id();
 
     uint32_t button_size = int(float(window_.width() / 10.0));
 
@@ -85,13 +86,14 @@ bool VirtualGamepad::init() {
     camera_ = stage_->new_camera_with_orthographic_projection();
 
     //Finally add to the render sequence, give a ridiculously high priority
-    pipeline_id_ = window_.render(stage_, camera_).with_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
+    pipeline_ = window_.render(stage_, camera_).with_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
+    pipeline_id_ = pipeline_->id();
 
     return true;
 }
 
 void VirtualGamepad::_prepare_deletion() {
-    window_.disable_pipeline(pipeline_id_);
+    pipeline_->deactivate();
 
     // make sure we delete the buttons before we delete the gamepad
     for(auto& button: buttons_) {
@@ -102,8 +104,13 @@ void VirtualGamepad::_prepare_deletion() {
 void VirtualGamepad::cleanup() {
     L_DEBUG("Destroying virtual gamepad");
 
-    window_.delete_pipeline(pipeline_id_);
-    window_.delete_stage(stage_->id());
+    if(window_.has_pipeline(pipeline_id_)) {
+        pipeline_ = window_.delete_pipeline(pipeline_id_);
+    }
+
+    if(window_.has_stage(stage_id_)) {
+        stage_ = window_.delete_stage(stage_id_);
+    }
 }
 
 void VirtualGamepad::flip() {

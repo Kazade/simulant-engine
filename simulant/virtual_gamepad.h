@@ -56,7 +56,10 @@ private:
     std::vector<ui::Button*> buttons_;
 
     StagePtr stage_;
+    StageID stage_id_;
+
     CameraPtr camera_;
+    PipelinePtr pipeline_;
     PipelineID pipeline_id_;
 
     sig::signal<void (int)> signal_button_down_;

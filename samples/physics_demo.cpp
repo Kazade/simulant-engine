@@ -13,16 +13,15 @@ public:
         smlt::PhysicsScene<GameScene>(window) {}
 
     void load() {
-        pipeline_id_ = prepare_basic_scene(stage_, camera_, smlt::PARTITIONER_NULL);
-        window->disable_pipeline(pipeline_id_);
+        pipeline_ = prepare_basic_scene(stage_, camera_, smlt::PARTITIONER_NULL);
+        pipeline_->deactivate();
+        pipeline_->viewport->set_colour(smlt::Colour::SKY_BLUE);
 
         camera_->set_perspective_projection(
             Degrees(45.0), float(window->width()) / float(window->height()), 1.0, 1000.0
         );
 
         camera_->move_to(0, 10, 50);
-
-        window->pipeline(pipeline_id_)->viewport->set_colour(smlt::Colour::SKY_BLUE);
 
         // Create a nice skybox
         stage_->skies->new_skybox_from_folder("sample_data/skyboxes/TropicalSunnyDay");
@@ -62,7 +61,7 @@ public:
     }
 
     void activate() {
-        window->enable_pipeline(pipeline_id_);
+        pipeline_->activate();
     }
 
     void update(float dt) {
@@ -76,7 +75,7 @@ public:
 private:
     std::vector<ActorPtr> boxes_;
 
-    PipelineID pipeline_id_;
+    PipelinePtr pipeline_;
     StagePtr stage_;
     CameraPtr camera_;
 

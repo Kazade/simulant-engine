@@ -10,10 +10,10 @@ public:
         smlt::Scene<GameScene>(window) {}
 
     void load() {
-        pid_ = prepare_basic_scene(stage_, camera_);
-        window->pipeline(pid_)->set_clear_flags(BUFFER_CLEAR_ALL);
-        window->pipeline(pid_)->viewport->set_colour(smlt::Colour::GREY);
-        window->disable_pipeline(pid_);
+        pipeline_ = prepare_basic_scene(stage_, camera_);
+        pipeline_->set_clear_flags(BUFFER_CLEAR_ALL);
+        pipeline_->viewport->set_colour(smlt::Colour::GREY);
+        pipeline_->deactivate();
 
         window->resource_locator->add_search_path("sample_data/q2");
 
@@ -38,13 +38,13 @@ public:
     }
 
     void activate() {
-        window->enable_pipeline(pid_);
+        pipeline_->activate();
     }
 
 private:
     StagePtr stage_;
     CameraPtr camera_;
-    PipelineID pid_;
+    PipelinePtr pipeline_;
 };
 
 

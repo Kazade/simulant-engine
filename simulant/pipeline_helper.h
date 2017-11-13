@@ -37,13 +37,8 @@ public:
     PipelineHelper(const PipelineHelper&) = default;
     PipelineHelper& operator=(const PipelineHelper& rhs) = default;
 
-    operator PipelineID() const {
-        return pipeline_id_;
-    }
-
-    // This allows grabbing the pipeline directly after creation
-    PipelinePtr fetch() const {
-        return pipeline_id_.fetch();
+    operator PipelinePtr() const {
+        return pipeline_;
     }
 
 private:
@@ -51,11 +46,11 @@ private:
 
     typedef std::shared_ptr<RenderSequence> RenderSequencePtr;
 
-    PipelineHelper(RenderSequencePtr sequence, PipelineID pid):
-        sequence_(sequence), pipeline_id_(pid) {}
+    PipelineHelper(RenderSequencePtr sequence, PipelinePtr pid):
+        sequence_(sequence), pipeline_(pid) {}
 
     RenderSequencePtr sequence_;
-    PipelineID pipeline_id_;
+    PipelinePtr pipeline_;
 };
 
 class PipelineHelperAPIInterface {
@@ -67,7 +62,7 @@ public:
     virtual PipelinePtr pipeline(PipelineID pid) = 0;
     virtual bool enable_pipeline(PipelineID pid) = 0;
     virtual bool disable_pipeline(PipelineID pid) = 0;
-    virtual void delete_pipeline(PipelineID pid) = 0;
+    virtual PipelinePtr delete_pipeline(PipelineID pid) = 0;
     virtual bool has_pipeline(PipelineID pid) const = 0;
     virtual bool is_pipeline_enabled(PipelineID pid) const = 0;
 

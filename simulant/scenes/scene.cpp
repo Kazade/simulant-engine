@@ -66,7 +66,7 @@ void SceneBase::_call_deactivate() {
     is_active_ = false;
 }
 
-PipelineID SceneBase::prepare_basic_scene(StagePtr& new_stage, CameraPtr& new_camera, AvailablePartitioner partitioner) {
+PipelinePtr SceneBase::prepare_basic_scene(StagePtr& new_stage, CameraPtr& new_camera, AvailablePartitioner partitioner) {
     new_stage = window->new_stage(partitioner);
     new_camera = new_stage->new_camera();
     return window->render(new_stage, new_camera);

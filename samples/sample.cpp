@@ -8,9 +8,8 @@ public:
         smlt::Scene<GameScene>(window) {}
 
     void load() {
-        auto pipeline_id = prepare_basic_scene(stage_, camera_, smlt::PARTITIONER_NULL);
-
-        window->pipeline(pipeline_id)->viewport->set_colour(smlt::Colour::SKY_BLUE);
+        auto pipeline = prepare_basic_scene(stage_, camera_, smlt::PARTITIONER_NULL);
+        pipeline->viewport->set_colour(smlt::Colour::SKY_BLUE);
 
         camera_->set_perspective_projection(
             Degrees(45.0),

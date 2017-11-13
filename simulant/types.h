@@ -449,16 +449,6 @@ public:
     default_init_ptr(T* p):
         ptr_(p) {}
 
-    default_init_ptr(std::nullptr_t p):
-        ptr_(p) {
-
-    }
-
-    default_init_ptr<T>& operator=(std::nullptr_t) {
-        ptr_ = nullptr;
-        return *this;
-    }
-
     default_init_ptr<T>& operator=(T* p) {
         ptr_ = p;
         return *this;
@@ -478,14 +468,6 @@ public:
 
     operator T*() const {
         return ptr_;
-    }
-
-    bool operator==(const std::nullptr_t& rhs) const {
-        return ptr_ == rhs;
-    }
-
-    bool operator!=(const std::nullptr_t& rhs) const {
-        return !(*this == rhs);
     }
 };
 

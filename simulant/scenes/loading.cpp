@@ -52,22 +52,22 @@ void Loading::load() {
 
     //Create an inactive pipeline
     pipeline_ = window->render(stage_, camera_);
-    window->disable_pipeline(pipeline_);
+    pipeline_->deactivate();
 }
 
 void Loading::unload() {
     //Clean up
-    window->delete_pipeline(pipeline_);
+    pipeline_->deactivate();
     window->delete_stage(stage_->id());
 }
 
 void Loading::activate() {
-    window->enable_pipeline(pipeline_);
+    pipeline_->activate();
 }
 
 void Loading::deactivate() {
     //Deactivate the loading pipeline
-    window->disable_pipeline(pipeline_);
+    pipeline_->deactivate();
 }
 
 }

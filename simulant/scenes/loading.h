@@ -50,7 +50,7 @@ private:
 
     StagePtr stage_;
     CameraPtr camera_;
-    PipelineID pipeline_;
+    PipelinePtr pipeline_;
 
     ui::ProgressBar* progress_bar_ = nullptr;
 };
