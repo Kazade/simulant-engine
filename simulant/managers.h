@@ -66,7 +66,7 @@ public:
 
     StagePtr new_stage(AvailablePartitioner partitioner=PARTITIONER_HASH);
     StagePtr stage(StageID s);
-    void delete_stage(StageID s);
+    StagePtr delete_stage(StageID s);
     std::size_t stage_count() const;
     bool has_stage(StageID stage_id) const;
 

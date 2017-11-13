@@ -131,9 +131,10 @@ StagePtr StageManager::stage(StageID s) {
     return StageManager::get(s).lock().get();
 }
 
-void StageManager::delete_stage(StageID s) {
+StagePtr StageManager::delete_stage(StageID s) {
     StageManager::destroy(s);
     signal_stage_removed_(s);
+    return nullptr;
 }
 
 void StageManager::fixed_update(float dt) {
