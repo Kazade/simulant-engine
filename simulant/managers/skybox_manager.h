@@ -112,8 +112,8 @@ public:
     SkyManager(const SkyManager& rhs) = delete;
     SkyManager& operator=(const SkyManager&) = delete;
 
-    SkyID new_skybox_from_folder(const unicode& folder);
-    SkyID new_skybox_from_files(
+    SkyboxPtr new_skybox_from_folder(const unicode& folder);
+    SkyboxPtr new_skybox_from_files(
         const unicode& up,
         const unicode& down,
         const unicode& left,

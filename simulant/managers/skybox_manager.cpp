@@ -119,7 +119,7 @@ SkyManager::SkyManager(Window* window, Stage* stage):
  * in their names. If duplicates are found, or if images are not found, then this function raises
  * SkyboxImageNotFoundError or SkyboxImageDuplicateError respectively
  */
-SkyID SkyManager::new_skybox_from_folder(const unicode& folder) {
+SkyboxPtr SkyManager::new_skybox_from_folder(const unicode& folder) {
     std::map<SkyboxFace, std::string> files;
 
     auto path = window->resource_locator->locate_file(folder);
@@ -191,7 +191,7 @@ SkyID SkyManager::new_skybox_from_folder(const unicode& folder) {
  * Creates a skybox with the 6 images specified. If any of the images are not found this throws a
  * SkyboxImageNotFoundError
  */
-SkyID SkyManager::new_skybox_from_files(
+SkyboxPtr SkyManager::new_skybox_from_files(
     const unicode& up,
     const unicode& down,
     const unicode& left,
@@ -208,7 +208,7 @@ SkyID SkyManager::new_skybox_from_files(
         up, down, left, right, front, back
     );
 
-    return sid;
+    return sb;
 }
 
 SkyboxPtr SkyManager::skybox(SkyID skybox_id) {
