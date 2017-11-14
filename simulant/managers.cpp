@@ -37,19 +37,19 @@ CameraManager::CameraManager(Stage *stage):
 
 }
 
-CameraID CameraManager::new_camera() {
-    CameraID new_camera = cameras_.make(this->stage_);
-    new_camera.fetch()->set_parent(stage_);
+CameraPtr CameraManager::new_camera() {
+    auto new_camera = cameras_.make(this->stage_).fetch();
+    new_camera->set_parent(stage_);
 
     return new_camera;
 }
 
-CameraID CameraManager::new_camera_with_orthographic_projection(double left, double right, double bottom, double top, double near, double far) {
+CameraPtr CameraManager::new_camera_with_orthographic_projection(double left, double right, double bottom, double top, double near, double far) {
     /*
      *  Instantiates a camera with an orthographic projection. If both left and right are zero then they default to 0 and window.width()
      *  respectively. If top and bottom are zero, then they default to window.height() and 0 respectively. So top left is 0,0
      */
-    CameraID new_camera_id = new_camera();
+    auto new_cam = new_camera();
 
     if(!left && !right) {
         right = stage_->window->width();
@@ -59,22 +59,22 @@ CameraID CameraManager::new_camera_with_orthographic_projection(double left, dou
         top = stage_->window->height();
     }
 
-    camera(new_camera_id)->set_orthographic_projection(left, right, bottom, top, near, far);
+    new_cam->set_orthographic_projection(left, right, bottom, top, near, far);
 
-    return new_camera_id;
+    return new_cam;
 }
 
-CameraID CameraManager::new_camera_for_viewport(const Viewport& vp) {
+CameraPtr CameraManager::new_camera_for_viewport(const Viewport& vp) {
     float x, y, width, height;
     calculate_ratios_from_viewport(vp.type(), x, y, width, height);
 
-    CameraID cid = new_camera();
-    camera(cid)->set_perspective_projection(Degrees(45.0), width / height);
+    auto camera = new_camera();
+    camera->set_perspective_projection(Degrees(45.0), width / height);
 
-    return cid;
+    return camera;
 }
 
-CameraID CameraManager::new_camera_for_ui() {
+CameraPtr CameraManager::new_camera_for_ui() {
     return new_camera_with_orthographic_projection(0, stage_->window->width(), 0, stage_->window->height(), -1, 1);
 }
 
@@ -108,13 +108,13 @@ StageManager::StageManager(Window* window):
 
 }
 
-StageID StageManager::new_stage(AvailablePartitioner partitioner) {
+StagePtr StageManager::new_stage(AvailablePartitioner partitioner) {
     auto ret = StageManager::make(this->window_, partitioner);
     signal_stage_added_(ret);
-    return ret;
+    return ret.fetch();
 }
 
-uint32_t StageManager::stage_count() const {
+std::size_t StageManager::stage_count() const {
     return StageManager::count();
 }
 
@@ -131,9 +131,10 @@ StagePtr StageManager::stage(StageID s) {
     return StageManager::get(s).lock().get();
 }
 
-void StageManager::delete_stage(StageID s) {
+StagePtr StageManager::delete_stage(StageID s) {
     StageManager::destroy(s);
     signal_stage_removed_(s);
+    return nullptr;
 }
 
 void StageManager::fixed_update(float dt) {

@@ -28,7 +28,7 @@ Widget::~Widget() {
 
 bool Widget::init() {
     actor_ = stage->new_actor();
-    actor_.fetch()->set_parent(this);
+    actor_->set_parent(this);
 
     material_ = stage->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY).fetch();
     material_->first_pass()->set_blending(BLEND_ALPHA);
@@ -72,7 +72,7 @@ void Widget::rebuild() {
     if(!is_initialized()) return;
 
     mesh_ = construct_widget(width_, height_).fetch();
-    actor_.fetch()->set_mesh(mesh_->id());
+    actor_->set_mesh(mesh_->id());
 }
 
 void Widget::set_border_width(float x) {
@@ -113,7 +113,7 @@ void Widget::ask_owner_for_destruction() {
 }
 
 const AABB &Widget::aabb() const {
-    return actor_.fetch()->aabb();
+    return actor_->aabb();
 }
 
 void Widget::set_background_colour(const Colour& colour) {

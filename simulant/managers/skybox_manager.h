@@ -78,7 +78,7 @@ private:
 
     CameraID follow_camera_;
 
-    ActorID actor_id_;
+    ActorPtr actor_ = nullptr;
     MeshID mesh_id_;
 
     MaterialID materials_[SKYBOX_FACE_MAX];
@@ -112,8 +112,8 @@ public:
     SkyManager(const SkyManager& rhs) = delete;
     SkyManager& operator=(const SkyManager&) = delete;
 
-    SkyID new_skybox_from_folder(const unicode& folder);
-    SkyID new_skybox_from_files(
+    SkyboxPtr new_skybox_from_folder(const unicode& folder);
+    SkyboxPtr new_skybox_from_files(
         const unicode& up,
         const unicode& down,
         const unicode& left,

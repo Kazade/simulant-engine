@@ -48,9 +48,9 @@ private:
     void load() override;
     void unload() override;
 
-    StageID stage_;
-    CameraID camera_;
-    PipelineID pipeline_;
+    StagePtr stage_;
+    CameraPtr camera_;
+    PipelinePtr pipeline_;
 
     ui::ProgressBar* progress_bar_ = nullptr;
 };

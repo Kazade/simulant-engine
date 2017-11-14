@@ -103,7 +103,7 @@ public:
         delete_all_pipelines();
     }
 
-    PipelineID new_pipeline(
+    PipelinePtr new_pipeline(
         StageID stage,
         CameraID camera,
         const Viewport& viewport=Viewport(),

@@ -39,6 +39,7 @@
 #include "nodes/ui/progress_bar.h"
 
 #include "sound.h"
+#include "random.h"
 #include "render_sequence.h"
 #include "nodes/light.h"
 #include "meshes/mesh.h"
@@ -61,9 +62,9 @@
 #include "input/input_manager.h"
 #include "input/input_axis.h"
 
-#include "controllers/fly.h"
-#include "controllers/builtin.h"
-#include "controllers/stage_node_controller.h"
+#include "behaviours/fly.h"
+#include "behaviours/builtin.h"
+#include "behaviours/stage_node_behaviour.h"
 
 #include "renderers/renderer_config.h"
 

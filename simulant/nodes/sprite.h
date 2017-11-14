@@ -79,10 +79,9 @@ public:
     void flip_vertically(bool value=true);
     void flip_horizontally(bool value=true);
 
-    smlt::ActorID actor_id() const { return actor_id_; }
-
     const AABB& aabb() const override;
 
+    Property<Sprite, Actor> actor = {this, &Sprite::actor_};
     Property<Sprite, KeyFrameAnimationState> animations = {this, &Sprite::animation_state_};
 private:
     SpriteManager* manager_;
@@ -94,7 +93,8 @@ private:
     std::pair<uint32_t, uint32_t> sprite_sheet_padding_;
     float render_width_ = 1.0;
     float render_height_ = 1.0;
-    ActorID actor_id_;
+
+    ActorPtr actor_ = nullptr;
     MeshID mesh_id_;
     MaterialID material_id_;
 

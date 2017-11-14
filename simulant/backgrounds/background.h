@@ -78,8 +78,8 @@ private:
 
     BackgroundType type_;
     StagePtr stage_;
-    CameraID camera_id_;
-    PipelineID pipeline_id_;
+    CameraPtr camera_;
+    PipelinePtr pipeline_;
     SpritePtr sprite_;
 
     BackgroundResizeStyle style_ = BACKGROUND_RESIZE_ZOOM;
