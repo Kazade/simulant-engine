@@ -55,11 +55,12 @@ bool SpriteManager::has_sprite(SpriteID s) const {
     return TemplatedSpriteManager::contains(s);
 }
 
-void SpriteManager::delete_sprite(SpriteID s) {
+SpritePtr SpriteManager::delete_sprite(SpriteID s) {
     TemplatedSpriteManager::destroy(s);
+    return nullptr;
 }
 
-uint32_t SpriteManager::sprite_count() const {
+std::size_t SpriteManager::sprite_count() const {
     return TemplatedSpriteManager::count();
 }
 

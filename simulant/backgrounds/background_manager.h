@@ -21,7 +21,7 @@ public:
 
     BackgroundPtr background(BackgroundID bid);
     bool has_background(BackgroundID bid) const;
-    void delete_background(BackgroundID bid);
+    BackgroundPtr delete_background(BackgroundID bid);
     uint32_t background_count() const;
 
     void delete_all_backgrounds();

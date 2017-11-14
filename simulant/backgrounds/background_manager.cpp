@@ -64,8 +64,9 @@ bool BackgroundManager::has_background(BackgroundID bid) const {
     return BackgroundManager::contains(bid);
 }
 
-void BackgroundManager::delete_background(BackgroundID bid) {
+BackgroundPtr BackgroundManager::delete_background(BackgroundID bid) {
     BackgroundManager::destroy(bid);
+    return nullptr;
 }
 
 uint32_t BackgroundManager::background_count() const {

@@ -175,9 +175,10 @@ const ActorPtr Stage::actor(ActorID e) const {
     return ActorManager::get(e);
 }
 
-void Stage::delete_actor(ActorID e) {
+ActorPtr Stage::delete_actor(ActorID e) {
     signal_actor_destroyed_(e);
     ActorManager::destroy(e);
+    return nullptr;
 }
 
 //=============== GEOMS =====================
@@ -208,10 +209,11 @@ bool Stage::has_geom(GeomID geom_id) const {
     return geom_manager_->contains(geom_id);
 }
 
-void Stage::delete_geom(GeomID geom_id) {
+GeomPtr Stage::delete_geom(GeomID geom_id) {
     signal_geom_destroyed_(geom_id);
 
     geom_manager_->destroy(geom_id);
+    return nullptr;
 }
 
 std::size_t Stage::geom_count() const {
@@ -263,9 +265,10 @@ bool Stage::has_particle_system(ParticleSystemID pid) const {
     return ParticleSystemManager::contains(pid);
 }
 
-void Stage::delete_particle_system(ParticleSystemID pid) {
+ParticleSystemPtr Stage::delete_particle_system(ParticleSystemID pid) {
     signal_particle_system_destroyed_(pid);
     ParticleSystemManager::destroy(pid);
+    return nullptr;
 }
 
 LightPtr Stage::new_light_as_directional(const Vec3& direction, const smlt::Colour& colour) {
@@ -309,9 +312,10 @@ LightPtr Stage::light(LightID light_id) {
     return LightManager::get(light_id);
 }
 
-void Stage::delete_light(LightID light_id) {
+LightPtr Stage::delete_light(LightID light_id) {
     signal_light_destroyed_(light_id);
     LightManager::destroy(light_id);
+    return nullptr;
 }
 
 void Stage::set_partitioner(AvailablePartitioner partitioner) {

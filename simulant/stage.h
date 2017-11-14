@@ -119,14 +119,14 @@ public:
     ActorPtr actor(ActorID e);
     const ActorPtr actor(ActorID e) const;
     bool has_actor(ActorID e) const;
-    void delete_actor(ActorID e);
+    ActorPtr delete_actor(ActorID e);
     std::size_t actor_count() const { return ActorManager::count(); }
 
     GeomPtr new_geom_with_mesh(MeshID mid);
     GeomPtr new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, const Quaternion& rotation=Quaternion());
     GeomPtr geom(const GeomID gid) const;
     bool has_geom(GeomID geom_id) const;
-    void delete_geom(GeomID geom_id);
+    GeomPtr delete_geom(GeomID geom_id);
     std::size_t geom_count() const;
 
     ParticleSystemPtr new_particle_system();
@@ -134,14 +134,14 @@ public:
     ParticleSystemPtr new_particle_system_with_parent_from_file(ActorID parent, const unicode& filename, bool destroy_on_completion=false);
     ParticleSystemPtr particle_system(ParticleSystemID pid);
     bool has_particle_system(ParticleSystemID pid) const;
-    void delete_particle_system(ParticleSystemID pid);
+    ParticleSystemPtr delete_particle_system(ParticleSystemID pid);
     std::size_t particle_system_count() const { return ParticleSystemManager::count(); }
 
     LightPtr new_light_as_directional(const Vec3& direction=Vec3(1, -0.5, 0), const smlt::Colour& colour=DEFAULT_LIGHT_COLOUR);
     LightPtr new_light_as_point(const Vec3& position=Vec3(), const smlt::Colour& colour=DEFAULT_LIGHT_COLOUR);
 
     LightPtr light(LightID light);
-    void delete_light(LightID light_id);
+    LightPtr delete_light(LightID light_id);
     std::size_t light_count() const { return LightManager::count(); }
 
 
@@ -229,7 +229,6 @@ private:
     void on_actor_destroyed(ActorID actor_id);
     void on_subactor_material_changed(ActorID actor_id, SubActor* subactor, MaterialID old, MaterialID newM);
 };
-
 
 }
 #endif // SUBSCENE_H
