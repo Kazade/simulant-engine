@@ -17,14 +17,13 @@ public:
 
         SimulantTestCase::set_up();
 
-        stage_id_ = window->new_stage();
-        camera_id_ = stage_id_.fetch()->new_camera();
+        stage_ = window->new_stage();
+        camera_ = stage_->new_camera();
     }
 
     void tear_down() {
         SimulantTestCase::tear_down();
-        stage_id_.fetch()->delete_camera(camera_id_);
-        window->delete_stage(stage_id_);
+        window->delete_stage(stage_->id());
     }
 
     void test_2d_sound_output() {
@@ -42,11 +41,9 @@ public:
     }
 
     void test_3d_sound_output() {
-        auto stage = window->stage(stage_id_);
+        smlt::SoundID sound = stage_->assets->new_sound_from_file("test_sound.ogg");
 
-        smlt::SoundID sound = stage->assets->new_sound_from_file("test_sound.ogg");
-
-        auto actor = stage->actor(stage->new_actor());
+        auto actor = stage_->new_actor();
         actor->move_to(10, 0, 0);
 
         assert_false(actor->playing_sound_count());
@@ -62,8 +59,8 @@ public:
     }
 
 private:
-    smlt::CameraID camera_id_;
-    smlt::StageID stage_id_;
+    smlt::CameraPtr camera_;
+    smlt::StagePtr stage_;
 
 };
 #endif // TEST_SOUND_H

@@ -8,8 +8,8 @@
 class RigidBodyTest : public SimulantTestCase {
 public:
     void test_adding_to_stage_node_inherits_location() {
-        smlt::StagePtr stage = window->new_stage().fetch();
-        smlt::ActorPtr actor = stage->new_actor().fetch();
+        smlt::StagePtr stage = window->new_stage();
+        smlt::ActorPtr actor = stage->new_actor();
 
         actor->move_to(10, 0, 0);
         actor->rotate_x_by(smlt::Degrees(90));

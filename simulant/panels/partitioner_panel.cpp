@@ -38,13 +38,13 @@ void PartitionerPanel::do_activate() {
     initialize();
 
     for(auto& pair: debug_actors_) {
-        window_->stage(pair.first)->actor(pair.second)->set_visible(true);
+        pair.second->set_visible(true);
     }
 }
 
 void PartitionerPanel::do_deactivate() {
     for(auto& pair: debug_actors_) {
-        window_->stage(pair.first)->actor(pair.second)->set_visible(false);
+        pair.second->set_visible(false);
     }
 }
 

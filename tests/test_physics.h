@@ -44,7 +44,7 @@ public:
 
         physics = behaviours::RigidBodySimulation::create(window->time_keeper);
         physics->set_gravity(Vec3());
-        stage = window->new_stage().fetch();
+        stage = window->new_stage();
     }
 
     void tear_down() {
@@ -54,7 +54,7 @@ public:
     }
 
     void test_box_collider_addition() {
-        auto actor1 = stage->new_actor().fetch();
+        auto actor1 = stage->new_actor();
 
         auto body = actor1->new_behaviour<behaviours::RigidBody>(physics.get());
 
@@ -82,7 +82,7 @@ public:
     }
 
     void test_sphere_collider_addition() {
-        auto actor1 = stage->new_actor().fetch();
+        auto actor1 = stage->new_actor();
 
         auto body = actor1->new_behaviour<behaviours::RigidBody>(physics.get());
         body->add_sphere_collider(2.0, behaviours::PhysicsMaterial::WOOD);
@@ -96,7 +96,7 @@ public:
 
     void test_mesh_collider_addition() {
         auto mesh_id = stage->assets->new_mesh_as_box(1.0, 1.0, 1.0);
-        auto actor1 = stage->new_actor().fetch();
+        auto actor1 = stage->new_actor();
         auto body = actor1->new_behaviour<behaviours::StaticBody>(physics.get());
         body->add_mesh_collider(mesh_id, behaviours::PhysicsMaterial::WOOD);
 
@@ -115,13 +115,13 @@ public:
         Listener listener(&enter_called, nullptr, &leave_called);
 
         // Create body A
-        auto actor1 = stage->new_actor().fetch();
+        auto actor1 = stage->new_actor();
         auto body = actor1->new_behaviour<behaviours::StaticBody>(physics.get());
         body->add_box_collider(Vec3(1, 1, 1), behaviours::PhysicsMaterial::WOOD);
         body->register_collision_listener(&listener); // Register the listener
 
         // Create overlapping body B!
-        auto actor2 = stage->new_actor().fetch();
+        auto actor2 = stage->new_actor();
         auto body2 = actor2->new_behaviour<behaviours::RigidBody>(physics.get());
         body2->add_box_collider(Vec3(1, 1, 1), behaviours::PhysicsMaterial::WOOD);
 
@@ -162,12 +162,12 @@ public:
 
         Listener listener(&enter_called, nullptr, &leave_called);
 
-        auto actor1 = stage->new_actor().fetch();
+        auto actor1 = stage->new_actor();
         auto body = actor1->new_behaviour<behaviours::StaticBody>(physics.get());
         body->add_box_collider(Vec3(1, 1, 1), behaviours::PhysicsMaterial::WOOD);
         body->register_collision_listener(&listener);
 
-        auto actor2 = stage->new_actor().fetch();
+        auto actor2 = stage->new_actor();
         auto body2 = actor2->new_behaviour<behaviours::RigidBody>(physics.get());
         body2->add_box_collider(Vec3(1, 1, 1), behaviours::PhysicsMaterial::WOOD);
 
@@ -190,12 +190,12 @@ public:
 
         Listener listener(nullptr, &stay_count, nullptr);
 
-        auto actor1 = stage->new_actor().fetch();
+        auto actor1 = stage->new_actor();
         auto body = actor1->new_behaviour<behaviours::StaticBody>(physics.get());
         body->add_box_collider(Vec3(1, 1, 1), behaviours::PhysicsMaterial::WOOD);
         body->register_collision_listener(&listener);
 
-        auto actor2 = stage->new_actor().fetch();
+        auto actor2 = stage->new_actor();
         auto body2 = actor2->new_behaviour<behaviours::RigidBody>(physics.get());
         body2->add_box_collider(Vec3(1, 1, 1), behaviours::PhysicsMaterial::WOOD);
 

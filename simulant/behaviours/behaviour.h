@@ -120,32 +120,12 @@ public:
         return dynamic_cast<T*>(behaviour_types_.at(hash_code).get());
     }
 
-    void add_behaviour(BehaviourPtr behaviour) {
-        if(!behaviour) {
-            L_WARN("Tried to add a null behaviour to the controllable");
-            return;
-        }
-
-        std::lock_guard<std::mutex> lock(container_lock_);
-
-        if(behaviour_names_.count(behaviour->name())) {
-            L_WARN(_F("Tried to add a duplicate behaviour: {0}").format((std::string)behaviour->name()));
-            return;
-        }
-
-        behaviour_types_.insert(std::make_pair(typeid(*behaviour).hash_code(), behaviour));
-        behaviour_names_.insert(behaviour->name());
-        behaviours_.push_back(behaviour);
-
-        behaviour->on_behaviour_added(this);
-    }
-
     template<typename T>
     T* new_behaviour() {
         static_assert(std::is_base_of<Behaviour, T>::value, "Behaviours must derive smlt::Behaviour");
         static_assert(std::is_base_of<Managed<T>, T>::value, "Behaviours must derive Managed<T>");
         std::shared_ptr<T> ret = T::create(this);
-        add_behaviour(ret);
+        add_behaviour<T>(ret);
         return ret.get();
     }
 
@@ -154,7 +134,7 @@ public:
         static_assert(std::is_base_of<Behaviour, T>::value, "Behaviours must derive smlt::Behaviour");
         static_assert(std::is_base_of<Managed<T>, T>::value, "Behaviours must derive Managed<T>");
         std::shared_ptr<T> ret = T::create(this, std::forward<Params>(params)...);
-        add_behaviour(ret);
+        add_behaviour<T>(ret);
         return ret.get();
     }
 
@@ -184,6 +164,29 @@ public:
     }
 
 private:
+    template<typename T>
+    void add_behaviour(std::shared_ptr<T> behaviour) {
+        static_assert(std::is_base_of<Behaviour, T>::value, "Behaviours must derive smlt::Behaviour");
+
+        if(!behaviour) {
+            L_WARN("Tried to add a null behaviour to the controllable");
+            return;
+        }
+
+        std::lock_guard<std::mutex> lock(container_lock_);
+
+        if(behaviour_names_.count(behaviour->name())) {
+            L_WARN(_F("Tried to add a duplicate behaviour: {0}").format((std::string)behaviour->name()));
+            return;
+        }
+
+        behaviour_types_.insert(std::make_pair(typeid(T).hash_code(), behaviour));
+        behaviour_names_.insert(behaviour->name());
+        behaviours_.push_back(behaviour);
+
+        behaviour->on_behaviour_added(this);
+    }
+
     std::mutex container_lock_;
 
     std::vector<BehaviourPtr> behaviours_;

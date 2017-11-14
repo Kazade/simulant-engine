@@ -15,8 +15,8 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage = window->new_stage().fetch();
-        actor = stage->new_actor().fetch();
+        stage = window->new_stage();
+        actor = stage->new_actor();
     }
 
     void tear_down() {
@@ -27,7 +27,7 @@ public:
 
 
     void test_half_turn() {
-        auto follower = stage->new_actor().fetch();
+        auto follower = stage->new_actor();
         auto controller = follower->new_behaviour<smlt::behaviours::SmoothFollow>();
         controller->set_target(actor);
         controller->set_follow_height(0);

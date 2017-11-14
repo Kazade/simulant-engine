@@ -54,62 +54,59 @@ public:
             return !done;
         });
 
-        pipeline_id_ = prepare_basic_scene(stage_id_, camera_id_);
-        window->disable_pipeline(pipeline_id_);
+        pipeline_ = prepare_basic_scene(stage_, camera_);
+        pipeline_->deactivate();
 
-        auto stage = window->stage(stage_id_);
-
-        camera_id_.fetch()->set_perspective_projection(
+        camera_->set_perspective_projection(
             Degrees(45.0), float(window->width()) / float(window->height()), 10.0, 10000.0
         );
 
-        window->pipeline(pipeline_id_)->viewport->set_colour(smlt::Colour::SKY_BLUE);
+        pipeline_->viewport->set_colour(smlt::Colour::SKY_BLUE);
 
-        auto cam = stage->camera(camera_id_);
+        auto cam = camera_;
         cam->move_to(0, 50, 700);
         cam->look_at(0, 0, 0);
 
-        terrain_material_id_ = stage->assets->new_material_from_file("sample_data/terrain_splat.kglm", GARBAGE_COLLECT_NEVER);
+        terrain_material_id_ = stage_->assets->new_material_from_file("sample_data/terrain_splat.kglm", GARBAGE_COLLECT_NEVER);
         smlt::HeightmapSpecification spec;
         spec.smooth_iterations = 0;
 
-        terrain_mesh_id_ = stage->assets->new_mesh_from_heightmap("sample_data/terrain.png", spec);
-        auto terrain_mesh = stage->assets->mesh(terrain_mesh_id_);
+        terrain_mesh_id_ = stage_->assets->new_mesh_from_heightmap("sample_data/terrain.png", spec);
+        auto terrain_mesh = stage_->assets->mesh(terrain_mesh_id_);
 
         auto terrain_data = terrain_mesh->data->get<smlt::TerrainData>("terrain_data");
-        smlt::TextureID terrain_splatmap = stage->assets->new_texture();
+        smlt::TextureID terrain_splatmap = stage_->assets->new_texture();
         calculate_splat_map(
             terrain_data.x_size,
             terrain_data.z_size,
-            stage->assets->texture(terrain_splatmap),
+            stage_->assets->texture(terrain_splatmap),
             terrain_mesh->shared_data
         );
 
-        stage->assets->material(terrain_material_id_)->first_pass()->set_texture_unit(4, terrain_splatmap);
+        stage_->assets->material(terrain_material_id_)->first_pass()->set_texture_unit(4, terrain_splatmap);
 
         terrain_mesh->set_material_id(terrain_material_id_);
 
-        terrain_actor_id_ = stage->new_actor_with_mesh(terrain_mesh_id_);
+        terrain_actor_ = stage_->new_actor_with_mesh(terrain_mesh_id_);
 
         done = true;
     }
 
     void activate() {
-        window->enable_pipeline(pipeline_id_);
+        pipeline_->activate();
     }
 
     void fixed_update(float dt) override {
-        auto stage = window->stage(stage_id_);
-        stage->actor(terrain_actor_id_)->rotate_global_y_by(smlt::Degrees(dt * 5.0));
+        terrain_actor_->rotate_global_y_by(smlt::Degrees(dt * 5.0));
     }
 
 private:
-    PipelineID pipeline_id_;
-    StageID stage_id_;
-    CameraID camera_id_;
+    PipelinePtr pipeline_;
+    StagePtr stage_;
+    CameraPtr camera_;
 
     MeshID terrain_mesh_id_;
-    ActorID terrain_actor_id_;
+    ActorPtr terrain_actor_;
     MaterialID terrain_material_id_;
 
     TextureID terrain_textures_[4];

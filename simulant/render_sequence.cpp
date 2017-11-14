@@ -160,7 +160,7 @@ void RenderSequence::sort_pipelines(bool acquire_lock) {
     }
 }
 
-PipelineID RenderSequence::new_pipeline(StageID stage, CameraID camera, const Viewport& viewport, TextureID target, int32_t priority) {
+PipelinePtr RenderSequence::new_pipeline(StageID stage, CameraID camera, const Viewport& viewport, TextureID target, int32_t priority) {
     PipelineID new_p = PipelineManager::make(this);
 
     auto pipeline = PipelineManager::get(new_p).lock();
@@ -176,7 +176,7 @@ PipelineID RenderSequence::new_pipeline(StageID stage, CameraID camera, const Vi
     ordered_pipelines_.push_back(pipeline);
     sort_pipelines();
 
-    return new_p;
+    return pipeline.get();
 }
 
 void RenderSequence::set_renderer(Renderer* renderer) {

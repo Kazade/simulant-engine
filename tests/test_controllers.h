@@ -25,8 +25,8 @@ class BehaviourTests : public SimulantTestCase {
 public:
     void test_behaviour_first_update() {
 
-        auto stage = window->new_stage().fetch();
-        auto actor = stage->new_actor().fetch();
+        auto stage = window->new_stage();
+        auto actor = stage->new_actor();
 
         auto behaviour = actor->new_behaviour<TestBehaviour>();
 

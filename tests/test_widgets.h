@@ -12,7 +12,7 @@ class WidgetTest : public SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();
-        stage_ = window->new_stage().fetch();
+        stage_ = window->new_stage();
     }
 
     void tear_down() {
@@ -21,7 +21,7 @@ public:
     }
 
     void test_button_creation() {
-        auto button = stage_->ui->new_widget_as_button("Test", 100, 20).fetch();
+        auto button = stage_->ui->new_widget_as_button("Test", 100, 20);
 
         assert_equal(_u("Test"), button->text());
         assert_equal(100, button->requested_width());
@@ -29,10 +29,10 @@ public:
     }
 
     void test_focus_chain() {
-        auto widget1 = stage_->ui->new_widget_as_label("label1").fetch();
-        auto widget2 = stage_->ui->new_widget_as_label("label2").fetch();
+        auto widget1 = stage_->ui->new_widget_as_label("label1");
+        auto widget2 = stage_->ui->new_widget_as_label("label2");
 
-        assert_is_null(widget1->focused_in_chain());
+        assert_is_null((ui::Widget*) widget1->focused_in_chain());
 
         widget1->set_focus_next(widget2);
         widget1->focus();
@@ -44,7 +44,7 @@ public:
 
         widget2->blur();
 
-        assert_is_null(widget1->focused_in_chain());
+        assert_is_null((ui::Widget*) widget1->focused_in_chain());
     }
 
 private:

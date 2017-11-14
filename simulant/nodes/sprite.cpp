@@ -42,8 +42,8 @@ bool Sprite::init() {
 
     //Annoyingly, we can't use new_actor_with_parent_and_mesh here, because that looks
     //up our ID in the stage, which doesn't exist until this function returns
-    actor_id_ = stage->new_actor_with_mesh(mesh_id_);
-    actor_id_.fetch()->set_parent(this);
+    actor_ = stage->new_actor_with_mesh(mesh_id_);
+    actor_->set_parent(this);
 
     set_render_dimensions(1.0f, 1.0f);
 
@@ -57,9 +57,9 @@ bool Sprite::init() {
 }
 
 void Sprite::cleanup() {
-    if(actor_id_ && stage->has_actor(actor_id_)) {
-        stage->delete_actor(actor_id_);
-        actor_id_ = smlt::ActorID(0);
+    if(actor_ && stage->has_actor(actor_->id())) {
+        stage->delete_actor(actor_->id());
+        actor_ = nullptr;
     }
 }
 
@@ -68,8 +68,8 @@ void Sprite::ask_owner_for_destruction() {
 }
 
 void Sprite::update(float dt) {
-    if(actor_id_) {
-        stage->actor(actor_id_)->set_parent(this); //Make sure every frame that our actor stays attached to us!
+    if(actor_) {
+        actor_->set_parent(this); //Make sure every frame that our actor stays attached to us!
     }
 
     // Update any keyframe animations
@@ -84,7 +84,9 @@ void Sprite::flip_horizontally(bool value) {
     update_texture_coordinates();
 }
 
-const AABB& Sprite::aabb() const { return actor_id_.fetch()->aabb(); }
+const AABB& Sprite::aabb() const {
+    return actor_->aabb();
+}
 
 void Sprite::flip_vertically(bool value) {
     if(value == flipped_vertically_) return;
@@ -166,7 +168,7 @@ void Sprite::set_render_dimensions_from_height(float height) {
 }
 
 void Sprite::set_render_priority(RenderPriority priority) {
-    actor_id_.fetch()->set_render_priority(priority);
+    actor_->set_render_priority(priority);
 }
 
 void Sprite::set_alpha(float alpha) {

@@ -13,21 +13,18 @@ public:
         smlt::PhysicsScene<GameScene>(window) {}
 
     void load() {
-        pipeline_id_ = prepare_basic_scene(stage_id_, camera_id_, smlt::PARTITIONER_NULL);
-        window->disable_pipeline(pipeline_id_);
+        pipeline_ = prepare_basic_scene(stage_, camera_, smlt::PARTITIONER_NULL);
+        pipeline_->deactivate();
+        pipeline_->viewport->set_colour(smlt::Colour::SKY_BLUE);
 
-        auto stage = window->stage(stage_id_);
-
-        camera_id_.fetch()->set_perspective_projection(
+        camera_->set_perspective_projection(
             Degrees(45.0), float(window->width()) / float(window->height()), 1.0, 1000.0
         );
 
-        stage->camera(camera_id_)->move_to(0, 10, 50);
-
-        window->pipeline(pipeline_id_)->viewport->set_colour(smlt::Colour::SKY_BLUE);
+        camera_->move_to(0, 10, 50);
 
         // Create a nice skybox
-        stage->skies->new_skybox_from_folder("sample_data/skyboxes/TropicalSunnyDay");
+        stage_->skies->new_skybox_from_folder("sample_data/skyboxes/TropicalSunnyDay");
 
         smlt::TextureID crate = window->shared_assets->new_texture_from_file("sample_data/crate.png");
         smlt::MaterialID mat = window->shared_assets->new_material_from_texture(crate);
@@ -40,21 +37,21 @@ public:
         window->shared_assets->mesh(ground_mesh_id_)->set_material_id(
             window->shared_assets->new_material_from_texture(grass)
         );
-        ground_id_ = stage->new_actor_with_mesh(ground_mesh_id_);
+        ground_ = stage_->new_actor_with_mesh(ground_mesh_id_);
 
         // Make the ground a staticbody
-        auto c = ground_id_.fetch()->new_behaviour<behaviours::StaticBody>(physics);
-        c->add_box_collider(ground_id_.fetch()->aabb().dimensions(), behaviours::PhysicsMaterial::STONE);
+        auto c = ground_->new_behaviour<behaviours::StaticBody>(physics);
+        c->add_box_collider(ground_->aabb().dimensions(), behaviours::PhysicsMaterial::STONE);
 
         srand(time(nullptr));
     }
 
     void spawn_box() {
         boxes_.push_back(
-            stage_id_.fetch()->new_actor_with_mesh(box_mesh_id_)
+            stage_->new_actor_with_mesh(box_mesh_id_)
         );
 
-        auto box = boxes_.back().fetch();
+        auto box = boxes_.back();
         auto controller = box->new_behaviour<smlt::behaviours::RigidBody>(physics);
         controller->add_box_collider(box->aabb().dimensions(), behaviours::PhysicsMaterial::WOOD);
         controller->move_to(Vec3(
@@ -64,7 +61,7 @@ public:
     }
 
     void activate() {
-        window->enable_pipeline(pipeline_id_);
+        pipeline_->activate();
     }
 
     void update(float dt) {
@@ -76,16 +73,16 @@ public:
     }
 
 private:
-    std::vector<ActorID> boxes_;
+    std::vector<ActorPtr> boxes_;
 
-    PipelineID pipeline_id_;
-    StageID stage_id_;
-    CameraID camera_id_;
+    PipelinePtr pipeline_;
+    StagePtr stage_;
+    CameraPtr camera_;
 
     MeshID box_mesh_id_;
 
     MeshID ground_mesh_id_;
-    ActorID ground_id_;
+    ActorPtr ground_;
 
     float counter = 0.0f;
 };

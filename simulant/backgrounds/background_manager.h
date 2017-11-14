@@ -15,13 +15,13 @@ public:
     BackgroundManager(Window* window);
     ~BackgroundManager();
 
-    BackgroundID new_background(BackgroundType type);
-    BackgroundID new_background_as_scrollable_from_file(const unicode& filename, float scroll_x=0.0, float scroll_y=0.0);
-    BackgroundID new_background_as_animated_from_file(const unicode& filename);
+    BackgroundPtr new_background(BackgroundType type);
+    BackgroundPtr new_background_as_scrollable_from_file(const unicode& filename, float scroll_x=0.0, float scroll_y=0.0);
+    BackgroundPtr new_background_as_animated_from_file(const unicode& filename);
 
     BackgroundPtr background(BackgroundID bid);
     bool has_background(BackgroundID bid) const;
-    void delete_background(BackgroundID bid);
+    BackgroundPtr delete_background(BackgroundID bid);
     uint32_t background_count() const;
 
     void delete_all_backgrounds();

@@ -22,6 +22,7 @@
 #include <cstdint>
 #include <functional>
 
+
 template<typename ResourceTypePtr>
 class UniqueID {
 public:
@@ -50,7 +51,8 @@ public:
 
     template<typename T>
     T* fetch_as() const {
-        return dynamic_cast<T*>(fetch());
+        /* The weird &(* casting is to handle smart pointers */
+        return dynamic_cast<T*>(&(*fetch()));
     }
 
     bool is_bound() const {

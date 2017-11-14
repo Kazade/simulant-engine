@@ -43,6 +43,10 @@ void AdjacencyInfo::rebuild() {
 
         submesh->each_triangle([&](uint32_t a, uint32_t b, uint32_t c) {
             // FIXME: What if it's a vec2?
+            assert(a < mesh_->shared_data->count());
+            assert(b < mesh_->shared_data->count());
+            assert(c < mesh_->shared_data->count());
+
             auto v1 = to_tuple(mesh_->shared_data->position_at<smlt::Vec3>(a));
             auto v2 = to_tuple(mesh_->shared_data->position_at<smlt::Vec3>(b));
             auto v3 = to_tuple(mesh_->shared_data->position_at<smlt::Vec3>(c));

@@ -21,7 +21,7 @@
 #include "../nodes/camera.h"
 
 #include "background.h"
-
+#include "../render_sequence.h"
 
 namespace smlt {
 
@@ -34,21 +34,20 @@ Background::Background(BackgroundID background_id, BackgroundManager *manager, B
 
 bool Background::init() {
     //Create a stage to add to the render pipeline
-    stage_ = manager_->window->new_stage(PARTITIONER_NULL).fetch();
+    stage_ = manager_->window->new_stage(PARTITIONER_NULL);
     //We need to create an orthographic camera
-    camera_id_ = stage_->new_camera();
+    camera_ = stage_->new_camera();
 
     // Create a unit projection
     // FIXME: allow passing a viewport and adjust accordingly
-    auto cam = camera_id_.fetch();
-    cam->set_orthographic_projection(
+    camera_->set_orthographic_projection(
         -0.5, 0.5, -0.5, 0.5
     );
 
-    sprite_ = stage->sprites->new_sprite().fetch();
+    sprite_ = stage->sprites->new_sprite();
 
     //Add a pass for this background
-    pipeline_id_ = manager_->window->render(stage_, cam).with_priority(
+    pipeline_ = manager_->window->render(stage_, camera_).with_priority(
         smlt::RENDER_PRIORITY_BACKGROUND + manager_->background_count()
     );
 
@@ -58,7 +57,7 @@ bool Background::init() {
 void Background::cleanup() {
     //Remove the pipeline and delete the stage, everything else is cleaned
     //up automatically
-    manager_->window->delete_pipeline(pipeline_id_);
+    manager_->window->delete_pipeline(pipeline_->id());
     manager_->window->delete_stage(stage_->id());
 }
 

@@ -494,8 +494,9 @@ bool Window::disable_pipeline(PipelineID pid) {
     return state != pipeline->is_active();
 }
 
-void Window::delete_pipeline(PipelineID pid) {
+PipelinePtr Window::delete_pipeline(PipelineID pid) {
     render_sequence_->delete_pipeline(pid);
+    return nullptr;
 }
 
 bool Window::has_pipeline(PipelineID pid) const {

@@ -111,41 +111,38 @@ public:
     Stage(StageID id, Window *parent, AvailablePartitioner partitioner);
     ~Stage();
 
-    ActorID new_actor(RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
-    ActorID new_actor_with_mesh(MeshID mid, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
-
-    ActorID new_actor_with_parent(ActorID parent, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
-    ActorID new_actor_with_parent_and_mesh(ActorID parent, MeshID mid, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
-    ActorID new_actor_with_parent_and_mesh(SpriteID parent, MeshID mid, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
-
-    GeomID new_geom_with_mesh(MeshID mid);
-    GeomID new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, const Quaternion& rotation=Quaternion());
-    GeomPtr geom(const GeomID gid) const;
-    bool has_geom(GeomID geom_id) const;
-    void delete_geom(GeomID geom_id);
-    uint32_t geom_count() const;
-
+    ActorPtr new_actor(RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
+    ActorPtr new_actor_with_mesh(MeshID mid, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
+    ActorPtr new_actor_with_parent(ActorID parent, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
+    ActorPtr new_actor_with_parent_and_mesh(ActorID parent, MeshID mid, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
+    ActorPtr new_actor_with_parent_and_mesh(SpriteID parent, MeshID mid, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
     ActorPtr actor(ActorID e);
     const ActorPtr actor(ActorID e) const;
-
     bool has_actor(ActorID e) const;
-    void delete_actor(ActorID e);
-    uint32_t actor_count() const { return ActorManager::count(); }
+    ActorPtr delete_actor(ActorID e);
+    std::size_t actor_count() const { return ActorManager::count(); }
 
-    ParticleSystemID new_particle_system();
-    ParticleSystemID new_particle_system_from_file(const unicode& filename, bool destroy_on_completion=false);
-    ParticleSystemID new_particle_system_with_parent_from_file(ActorID parent, const unicode& filename, bool destroy_on_completion=false);
+    GeomPtr new_geom_with_mesh(MeshID mid);
+    GeomPtr new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, const Quaternion& rotation=Quaternion());
+    GeomPtr geom(const GeomID gid) const;
+    bool has_geom(GeomID geom_id) const;
+    GeomPtr delete_geom(GeomID geom_id);
+    std::size_t geom_count() const;
+
+    ParticleSystemPtr new_particle_system();
+    ParticleSystemPtr new_particle_system_from_file(const unicode& filename, bool destroy_on_completion=false);
+    ParticleSystemPtr new_particle_system_with_parent_from_file(ActorID parent, const unicode& filename, bool destroy_on_completion=false);
     ParticleSystemPtr particle_system(ParticleSystemID pid);
     bool has_particle_system(ParticleSystemID pid) const;
-    void delete_particle_system(ParticleSystemID pid);
-    uint32_t particle_system_count() const { return ParticleSystemManager::count(); }
+    ParticleSystemPtr delete_particle_system(ParticleSystemID pid);
+    std::size_t particle_system_count() const { return ParticleSystemManager::count(); }
 
-    LightID new_light_as_directional(const Vec3& direction=Vec3(1, -0.5, 0), const smlt::Colour& colour=DEFAULT_LIGHT_COLOUR);
-    LightID new_light_as_point(const Vec3& position=Vec3(), const smlt::Colour& colour=DEFAULT_LIGHT_COLOUR);
+    LightPtr new_light_as_directional(const Vec3& direction=Vec3(1, -0.5, 0), const smlt::Colour& colour=DEFAULT_LIGHT_COLOUR);
+    LightPtr new_light_as_point(const Vec3& position=Vec3(), const smlt::Colour& colour=DEFAULT_LIGHT_COLOUR);
 
     LightPtr light(LightID light);
-    void delete_light(LightID light_id);
-    uint32_t light_count() const { return LightManager::count(); }
+    LightPtr delete_light(LightID light_id);
+    std::size_t light_count() const { return LightManager::count(); }
 
 
     smlt::Colour ambient_light() const { return ambient_light_; }
@@ -232,7 +229,6 @@ private:
     void on_actor_destroyed(ActorID actor_id);
     void on_subactor_material_changed(ActorID actor_id, SubActor* subactor, MaterialID old, MaterialID newM);
 };
-
 
 }
 #endif // SUBSCENE_H
