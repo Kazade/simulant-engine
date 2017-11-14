@@ -58,10 +58,6 @@ void Actor::remove_material_id_override() {
     }
 }
 
-VertexData* Actor::get_shared_data() const {
-    return mesh_->shared_data.get();
-}
-
 void Actor::clear_subactors() {
     for(auto& subactor: subactors_) {
         signal_subactor_destroyed_(id(), subactor.get());
@@ -133,6 +129,7 @@ void Actor::set_mesh(MeshID mesh) {
     if(!mesh) {
         clear_subactors();
         mesh_.reset();
+        shared_data_ = nullptr;
         return;
     }
 
@@ -148,6 +145,7 @@ void Actor::set_mesh(MeshID mesh) {
 
     //Increment the ref-count on this mesh
     mesh_ = meshptr->shared_from_this();
+    shared_data_ = mesh_->shared_data.get();
 
     /* FIXME: This logic should also happen if the associated Mesh has set_animation_enabled called */
     if(mesh_ && mesh_->is_animated()) {

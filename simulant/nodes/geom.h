@@ -56,7 +56,7 @@ namespace impl {
  */
 class Geom :
     public StageNode,
-    public MeshInterface,
+    public virtual Boundable,
     public Managed<Geom>,
     public generic::Identifiable<GeomID>,
     public Source {
@@ -77,8 +77,11 @@ public:
     void cleanup() override {
         StageNode::cleanup();
     }
+
+    Property<Geom, VertexData> shared_data = {this, &Geom::shared_data_};
+
 private:
-    VertexData* get_shared_data() const;
+    VertexData* shared_data_ = nullptr;
 
     std::shared_ptr<Mesh> mesh_;
     RenderPriority render_priority_;
