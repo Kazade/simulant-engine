@@ -85,7 +85,7 @@ public:
         const Vec3& offset=Vec3()
     );
 
-    Property<Body, RigidBodySimulation> simulation = {
+    Property<Body, RigidBodySimulation, true> simulation = {
         this, [](Body* _this) -> RigidBodySimulation* {
             return _this->_simulation_ptr();
         }

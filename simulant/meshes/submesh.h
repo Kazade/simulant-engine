@@ -20,8 +20,8 @@ public:
     virtual const MaterialID material_id() const = 0;
     virtual const MeshArrangement arrangement() const = 0;
 
-    Property<SubMeshInterface, VertexData> vertex_data = { this, &SubMeshInterface::get_vertex_data };
-    Property<SubMeshInterface, IndexData> index_data = { this, &SubMeshInterface::get_index_data };
+    Property<SubMeshInterface, VertexData, true> vertex_data = { this, &SubMeshInterface::get_vertex_data };
+    Property<SubMeshInterface, IndexData, true> index_data = { this, &SubMeshInterface::get_index_data };
 
 private:
     virtual VertexData* get_vertex_data() const = 0;
