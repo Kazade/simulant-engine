@@ -79,10 +79,10 @@ void AdjacencyInfo::rebuild() {
     for(auto& p: edge_triangles) {
         /* Checking only for reversed is intentional because of polygon winding
          * an edge can only be shared if it's in the opposite direction */
-        auto reversed = std::make_tuple(
-            std::get<1>(p.first),
-            std::get<0>(p.first)
-        );
+        auto i0 = std::get<0>(p.first);
+        auto i1 = std::get<1>(p.first);
+
+        auto reversed = std::make_tuple(i1, i0);
 
         /* If the edge exists in reversed order, then update that */
         auto existing = edge_lookup.find(reversed);
@@ -99,8 +99,8 @@ void AdjacencyInfo::rebuild() {
         } else {
             // Add the new edge
             EdgeInfo new_info;
-            new_info.indexes[0] = std::get<0>(p.first);
-            new_info.indexes[1] = std::get<1>(p.first);
+            new_info.indexes[0] = i0;
+            new_info.indexes[1] = i1;
             new_info.triangle_indexes[0] = p.second;
             new_info.triangle_count = 1;
             new_info.normals[0] = calculate_normal(new_info.indexes[0], new_info.indexes[1], new_info.triangle_indexes[0]);
