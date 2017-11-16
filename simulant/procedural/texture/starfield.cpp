@@ -19,7 +19,7 @@
 
 #include "../../texture.h"
 #include "../../utils/simplex.h"
-#include "../../utils/random.h"
+#include "../../random.h"
 
 #include "starfield.h"
 
@@ -74,18 +74,19 @@ void starfield(smlt::TexturePtr texture_ptr, uint32_t width, uint32_t height) {
     const float MAX_BRIGHTNESS = 255;
 
     Simplex::ptr noise = Simplex::create(width, height);
+    auto rgen = RandomGenerator();
 
     for(uint32_t y = 0; y < height; ++y) {
         for(uint32_t x = 0; x < width; ++x) {
             float this_density = (noise->get(x, y) + 1.0) / 2.0;
 
-            if(random_gen::random_float(0, 1) < this_density * GLOBAL_DENSITY) {
-                float weight = random_gen::random_float(0, 1) * this_density;
+            if(rgen.float_in_range(0, 1) < this_density * GLOBAL_DENSITY) {
+                float weight = rgen.float_in_range(0, 1) * this_density;
                 float size = std::max(1.0f, weight * MAX_SIZE);
                 float brightness = weight * MAX_BRIGHTNESS;
 
                 smlt::Colour colour = smlt::Colour::WHITE;
-                float col_rand = random_gen::random_float(0, 1);
+                float col_rand = rgen.float_in_range(0, 1);
                 if(col_rand < 0.05) {
                     colour = smlt::Colour::ORANGE;
                 } else if(col_rand < 0.07) {

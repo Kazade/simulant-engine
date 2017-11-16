@@ -690,8 +690,6 @@ simulant/utils/mesh/triangulate.cpp
 simulant/utils/mesh/triangulate.h
 simulant/utils/noise.cpp
 simulant/utils/noise.h
-simulant/utils/random.cpp
-simulant/utils/random.h
 simulant/utils/rect_pack.cpp
 simulant/utils/rect_pack.h
 simulant/utils/simplex.cpp

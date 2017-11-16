@@ -21,7 +21,7 @@
 #include "stage.h"
 #include "debug.h"
 #include "nodes/actor.h"
-#include "utils/random.h"
+#include "random.h"
 
 namespace smlt {
 

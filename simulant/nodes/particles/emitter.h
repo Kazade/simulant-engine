@@ -10,6 +10,7 @@
 #include "../../math/vec3.h"
 #include "../../math/degrees.h"
 #include "../../colour.h"
+#include "../../random.h"
 
 namespace smlt {
 
@@ -116,6 +117,8 @@ private:
     float current_duration_ = 0.0;
 
     bool is_active_ = true;
+
+    RandomGenerator rgen_;
 };
 
 typedef std::shared_ptr<Emitter> EmitterPtr;
