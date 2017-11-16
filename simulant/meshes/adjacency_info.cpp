@@ -30,8 +30,11 @@ void AdjacencyInfo::rebuild() {
     assert(mesh_->shared_data->specification().position_attribute == VERTEX_ATTRIBUTE_3F);
     auto vertices = mesh_->shared_data.get();
     auto calculate_normal = [&vertices](uint32_t a, uint32_t b, uint32_t c) -> smlt::Vec3 {
-        auto v1 = vertices->position_at<smlt::Vec3>(b) - vertices->position_at<smlt::Vec3>(a);
-        auto v2 = vertices->position_at<smlt::Vec3>(c) - vertices->position_at<smlt::Vec3>(a);
+        auto va = vertices->position_at<smlt::Vec3>(a);
+        auto vb = vertices->position_at<smlt::Vec3>(b);
+        auto vc = vertices->position_at<smlt::Vec3>(c);
+        auto v1 = vb - va;
+        auto v2 = vc - va;
         return v1.cross(v2).normalized();
     };
 
