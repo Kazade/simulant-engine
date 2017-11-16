@@ -30,8 +30,11 @@ void AdjacencyInfo::rebuild() {
     assert(mesh_->shared_data->specification().position_attribute == VERTEX_ATTRIBUTE_3F);
     auto vertices = mesh_->shared_data.get();
     auto calculate_normal = [&vertices](uint32_t a, uint32_t b, uint32_t c) -> smlt::Vec3 {
-        auto v1 = vertices->position_at<smlt::Vec3>(b) - vertices->position_at<smlt::Vec3>(a);
-        auto v2 = vertices->position_at<smlt::Vec3>(c) - vertices->position_at<smlt::Vec3>(a);
+        auto va = vertices->position_at<smlt::Vec3>(a);
+        auto vb = vertices->position_at<smlt::Vec3>(b);
+        auto vc = vertices->position_at<smlt::Vec3>(c);
+        auto v1 = vb - va;
+        auto v2 = vc - va;
         return v1.cross(v2).normalized();
     };
 
@@ -47,9 +50,9 @@ void AdjacencyInfo::rebuild() {
             assert(b < mesh_->shared_data->count());
             assert(c < mesh_->shared_data->count());
 
-            auto v1 = to_tuple(mesh_->shared_data->position_at<smlt::Vec3>(a));
-            auto v2 = to_tuple(mesh_->shared_data->position_at<smlt::Vec3>(b));
-            auto v3 = to_tuple(mesh_->shared_data->position_at<smlt::Vec3>(c));
+            auto v1 = to_tuple(vertices->position_at<smlt::Vec3>(a));
+            auto v2 = to_tuple(vertices->position_at<smlt::Vec3>(b));
+            auto v3 = to_tuple(vertices->position_at<smlt::Vec3>(c));
 
             // If this vertex already exist, use the first known index (or insert this as the first known index)
             a = (position_map.count(v1)) ? position_map[v1] : position_map.insert(std::make_pair(v1, a)).first->second;
@@ -68,27 +71,31 @@ void AdjacencyInfo::rebuild() {
        (1, 0) -> 4
     */
 
+    // For performance
+    edges_.reserve(edge_triangles.size());
+
+    std::unordered_map<std::tuple<uint32_t, uint32_t>, std::size_t> edge_lookup;
+
     for(auto& p: edge_triangles) {
         /* Checking only for reversed is intentional because of polygon winding
          * an edge can only be shared if it's in the opposite direction */
-        auto reversed = std::make_pair(
+        auto reversed = std::make_tuple(
             std::get<1>(p.first),
             std::get<0>(p.first)
         );
 
         /* If the edge exists in reversed order, then update that */
-        auto existing = std::find_if(
-            edges_.begin(), edges_.end(),
-            [&reversed](const EdgeInfo& e) -> bool {
-                return e.indexes[0] == reversed.first &&
-                       e.indexes[1] == reversed.second;
-            }
-        );
+        auto existing = edge_lookup.find(reversed);
 
-        if(existing != edges_.end()) {
-            existing->triangle_indexes[1] = p.second;
-            existing->triangle_count = 2;
-            existing->normals[1] = calculate_normal(existing->indexes[1], existing->indexes[0], existing->triangle_indexes[1]);
+        if(existing != edge_lookup.end()) {
+            auto& existing_edge = edges_[existing->second];
+            existing_edge.triangle_indexes[1] = p.second;
+            existing_edge.triangle_count = 2;
+            existing_edge.normals[1] = calculate_normal(
+                existing_edge.indexes[1],
+                existing_edge.indexes[0],
+                existing_edge.triangle_indexes[1]
+            );
         } else {
             // Add the new edge
             EdgeInfo new_info;
@@ -99,6 +106,9 @@ void AdjacencyInfo::rebuild() {
             new_info.normals[0] = calculate_normal(new_info.indexes[0], new_info.indexes[1], new_info.triangle_indexes[0]);
 
             edges_.push_back(new_info);
+
+            auto t = std::make_tuple(new_info.indexes[0], new_info.indexes[1]);
+            edge_lookup.insert(std::make_pair(t, edges_.size() - 1));
         }
     }
 }

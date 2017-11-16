@@ -105,10 +105,6 @@ void Mesh::enable_animation(MeshAnimationType animation_type, uint32_t animation
     signal_animation_enabled_(this, animation_type_, animation_frames_);
 }
 
-VertexData* Mesh::get_shared_data() const {
-    return shared_data_;
-}
-
 void Mesh::rebuild_aabb() const {
     AABB& result = aabb_;
 

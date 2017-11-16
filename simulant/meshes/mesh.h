@@ -46,17 +46,6 @@ class HardwareBuffer;
 class ResourceManager;
 class AdjacencyInfo;
 
-class MeshInterface:
-    public virtual Boundable {
-
-public:
-    virtual ~MeshInterface() {}
-
-    Property<MeshInterface, VertexData> shared_data = { this, &MeshInterface::get_shared_data };
-
-private:
-    virtual VertexData* get_shared_data() const = 0;
-};
 
 enum MeshAnimationType {
     MESH_ANIMATION_TYPE_NONE,
@@ -67,7 +56,7 @@ enum MeshAnimationType {
 typedef sig::signal<void (Mesh*, MeshAnimationType, uint32_t)> SignalAnimationEnabled;
 
 class Mesh :
-    public MeshInterface,
+    public virtual Boundable,
     public Resource,
     public Loadable,
     public Managed<Mesh>,
@@ -149,7 +138,7 @@ public:
 
     /* Returns a nullptr if there is no adjacecy info */
     Property<Mesh, AdjacencyInfo> adjacency_info = {this, &Mesh::adjacency_};
-
+    Property<Mesh, VertexData> shared_data = { this, &Mesh::shared_data_ };
 public:
     // Signals
 
@@ -163,7 +152,6 @@ public:
 
 private:
     friend class SubMesh;
-    VertexData* get_shared_data() const;
 
     VertexData* shared_data_ = nullptr;
     MeshAnimationType animation_type_ = MESH_ANIMATION_TYPE_NONE;

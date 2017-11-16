@@ -60,7 +60,7 @@ public:
     virtual void init_context() = 0;
     // virtual void upload_texture(Texture* texture) = 0;
 
-    Property<Renderer, HardwareBufferManager> hardware_buffers = { this, [](Renderer* self) {
+    Property<Renderer, HardwareBufferManager, true> hardware_buffers = { this, [](Renderer* self) {
         return self->_get_buffer_manager();
     }};
 
