@@ -20,8 +20,9 @@
 #include <cmath>
 #include <cstdlib>
 #include "simplex.h"
+#include "../math/utils.h"
 
-static const float PI = 3.14159f;
+namespace smlt {
 
 int fastfloor(double x) {
     return x > 0 ? (int)x : (int)x-1;
@@ -238,4 +239,6 @@ double Simplex::noise(double x, double y, double z, double w) {
 
     // Sum up and scale the result to cover the range [-1,1]
     return 27.0 * (n0 + n1 + n2 + n3 + n4);
+}
+
 }

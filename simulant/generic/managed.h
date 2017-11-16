@@ -16,14 +16,14 @@
  *     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MANAGED_H
-#define MANAGED_H
+#pragma once
 
 #include <stdexcept>
 #include <memory>
 #include <string>
 #include <functional>
 
+namespace smlt {
 
 class InstanceInitializationError :
     public std::runtime_error {
@@ -98,4 +98,5 @@ private:
     bool uses_gc_ = true;
 };
 
-#endif // MANAGED_H
+}
+

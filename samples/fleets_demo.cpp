@@ -1,5 +1,4 @@
 #include "simulant/simulant.h"
-#include "simulant/utils/random.h"
 
 using namespace smlt;
 
@@ -49,12 +48,14 @@ private:
     void generate_ships() {
         Vec3 centre = Vec3(2000, 0, 0);
 
+        auto rgen = smlt::RandomGenerator();
+
         for(uint32_t i = 0; i < 100; ++i) {
             Vec3 pos = centre + (Vec3(
-                random_gen::random_float(-100, 100),
-                random_gen::random_float(-100, 100),
-                random_gen::random_float(-100, 100)
-            ).normalized() * random_gen::random_float(100.0f, 150.0f));
+                rgen.float_in_range(-100, 100),
+                rgen.float_in_range(-100, 100),
+                rgen.float_in_range(-100, 100)
+            ).normalized() * rgen.float_in_range(100.0f, 150.0f));
 
             ships_.push_back(stage_->new_actor_with_mesh(ship_mesh_id_));
             ships_.back()->move_to_absolute(pos);

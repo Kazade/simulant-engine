@@ -1,5 +1,5 @@
 #include "../types.h"
-#include "../utils/random.h"
+#include "../random.h"
 
 #include "vec3.h"
 
@@ -46,7 +46,7 @@ Vec3 Vec3::random_deviant(const Degrees& angle, const Vec3 up) const {
     //Lovingly adapted from ogre
     Vec3 new_up = (up == Vec3()) ? perpendicular() : up;
 
-    Quaternion q(*this, Radians(random_gen::random_float(0, 1) * (PI * 2.0)));
+    Quaternion q(*this, Radians(RandomGenerator().float_in_range(0, 1) * (PI * 2.0)));
 
     new_up = new_up * q;
 

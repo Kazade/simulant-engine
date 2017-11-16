@@ -16,14 +16,15 @@
  *     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PROPERTY_H
-#define PROPERTY_H
+#pragma once
 
 #include <functional>
 #include <memory>
 #include <cstdint>
 
 #include "default_init_ptr.h"
+
+namespace smlt {
 
 template<typename Container, typename T, bool IsFunction=false>
 class Property {};
@@ -164,7 +165,4 @@ private:
     };
 };
 
-
-
-#endif // PROPERTY_H
-
+}

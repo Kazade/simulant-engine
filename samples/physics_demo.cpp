@@ -1,5 +1,3 @@
-#include "simulant/utils/random.h"
-
 #include "simulant/simulant.h"
 
 #include <cstdlib>
