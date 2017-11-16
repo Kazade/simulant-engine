@@ -21,6 +21,7 @@
 
 #include <functional>
 #include <memory>
+#include <cstdint>
 
 #include "default_init_ptr.h"
 
