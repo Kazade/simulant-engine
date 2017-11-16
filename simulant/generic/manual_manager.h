@@ -5,6 +5,7 @@
 #include <unordered_set>
 #include <numeric>
 #include <cmath>
+#include <cstring>
 
 #include "../deps/kazsignal/kazsignal.h"
 #include "../deps/kazlog/kazlog.h"
@@ -258,7 +259,7 @@ private:
             assert(free_slots_.count(i) == 0);
             ObjectType* obj = &(*this)[i];
             obj->~ObjectType();
-            memset(obj, 0, sizeof(ObjectType));
+            std::memset(obj, 0, sizeof(ObjectType));
             free_slots_.insert(i);
             --count_;
         }
