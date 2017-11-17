@@ -193,8 +193,8 @@ public:
     /* Clear the data buffer */
     void free();
 
-    uint32_t width() const { return width_; }
-    uint32_t height() const { return height_; }
+    uint32_t width() const override { return width_; }
+    uint32_t height() const override { return height_; }
 
     /*
      * Returns true if this Texture uses a compressed format

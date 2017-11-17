@@ -259,7 +259,7 @@ private:
             assert(free_slots_.count(i) == 0);
             ObjectType* obj = &(*this)[i];
             obj->~ObjectType();
-            std::memset(obj, 0, sizeof(ObjectType));
+            std::memset((void*) obj, 0, sizeof(ObjectType));
             free_slots_.insert(i);
             --count_;
         }

@@ -19,14 +19,14 @@ public:
     Camera(CameraID camera_id, Stage* stage);
     ~Camera();
 
-    void ask_owner_for_destruction();
+    void ask_owner_for_destruction() override;
 
     /* Camera Proxies have no mass/body so their AABB is just 0,0,0, or their position */
-    const AABB& aabb() const {
+    const AABB& aabb() const override {
         return bounds_;
     }
 
-    const AABB transformed_aabb() const {
+    const AABB transformed_aabb() const override {
         return AABB(position(), position());
     }
 

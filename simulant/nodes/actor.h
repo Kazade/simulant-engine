@@ -50,7 +50,7 @@ public:
     Actor(ActorID id, Stage* stage, SoundDriver *sound_driver, MeshID mesh);
     virtual ~Actor();
 
-    const AABB& aabb() const;
+    const AABB& aabb() const override;
 
     MeshID mesh_id() const { return (mesh_) ? mesh_->id() : MeshID(0); }
 
@@ -72,7 +72,7 @@ public:
 
     const std::vector<std::shared_ptr<SubActor> >& _subactors() { return subactors_; }
 
-    void ask_owner_for_destruction();
+    void ask_owner_for_destruction() override;
 
     void each(std::function<void (uint32_t, SubActor*)> callback);
 

@@ -54,8 +54,8 @@ public:
     bool init() override;
     void cleanup() override;
 
-    void set_width(float width) { width_ = width; }
-    const float width() const { return width_; }
+    void set_size(float size) { width_ = size; }
+    const float size() const { return width_; }
 
     void generate(
         const unicode& up,
@@ -68,9 +68,9 @@ public:
 
     void ask_owner_for_destruction() override;
 
-    const AABB& aabb() const;
+    const AABB& aabb() const override;
 
-    void update(float step) {}
+    void update(float step) override {}
 private:
     friend class SkyManager;
 

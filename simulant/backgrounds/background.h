@@ -69,7 +69,7 @@ public:
     Property<Background, Sprite> sprite = {this, &Background::sprite_};
     Property<Background, Stage> stage = {this, &Background::stage_};
 
-    unicode to_unicode() const {
+    unicode to_unicode() const override {
         return Nameable::to_unicode();
     }
 
