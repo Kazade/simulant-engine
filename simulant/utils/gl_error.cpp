@@ -25,7 +25,12 @@
 #else
 
 #ifdef SIMULANT_GL_VERSION_2X
-    #include "../renderers/gl2x/glad/glad/glad.h"
+    #ifndef __ANDROID__
+        #include "../renderers/gl2x/glad/glad/glad.h"
+    #else
+        #include <GLES2/gl2.h>
+        #include <GLES2/gl2ext.h>
+    #endif
 #else
     #include "../renderers/gl1x/glad/glad/glad.h"
 #endif

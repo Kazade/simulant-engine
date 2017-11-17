@@ -12,7 +12,12 @@
         #include "gl1x/glad/glad/glad.h"
     #endif
 #elif defined(SIMULANT_GL_VERSION_2X)
-    #include "gl2x/glad/glad/glad.h"
+    #ifdef __ANDROID__
+        #include <GLES2/gl2.h>
+        #include <GLES2/gl2ext.h>
+    #else
+        #include "gl2x/glad/glad/glad.h"
+    #endif
 #endif
 
 namespace smlt {

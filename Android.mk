@@ -20,7 +20,8 @@ LOCAL_MODULE	:= simulant
 define all-cpp-files-under
 $(patsubst ./%, %, \
   $(shell cd $(LOCAL_PATH) ; \
-          find -L $(1) -name "*.cpp" -and -not -name ".*" -and -not -name "kos_*.cpp") \
+          find -L $(1) \( -name "*.cpp" -o -name "*.c" \) -and \
+          -not -name ".*" -and -not -name "kos_*.cpp" | grep -v gl1x ) \
  )
 endef
 
