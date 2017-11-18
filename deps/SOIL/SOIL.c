@@ -27,6 +27,10 @@
 	#define APIENTRY
 #elif defined(_arch_dreamcast)
     #include <GL/gl.h>
+#elif defined(__ANDROID__)
+    #include <GLES2/gl2.h>
+    #include <GLES2/gl2ext.h>
+    #define APIENTRY
 #else
 	#include <GL/gl.h>
 	#include <GL/glx.h>
@@ -1345,7 +1349,7 @@ unsigned int
 		} else
 		{
 			/*	unsigned int clamp_mode = SOIL_CLAMP_TO_EDGE;	*/
-			unsigned int clamp_mode = GL_CLAMP;
+            unsigned int clamp_mode = GL_CLAMP_TO_EDGE;
 			glTexParameteri( opengl_texture_type, GL_TEXTURE_WRAP_S, clamp_mode );
 			glTexParameteri( opengl_texture_type, GL_TEXTURE_WRAP_T, clamp_mode );
 			if( opengl_texture_type == SOIL_TEXTURE_CUBE_MAP )
@@ -1814,7 +1818,7 @@ unsigned int SOIL_direct_load_DDS_from_memory(
 		} else
 		{
 			/*	unsigned int clamp_mode = SOIL_CLAMP_TO_EDGE;	*/
-			unsigned int clamp_mode = GL_CLAMP;
+            unsigned int clamp_mode = GL_CLAMP_TO_EDGE;
 			glTexParameteri( opengl_texture_type, GL_TEXTURE_WRAP_S, clamp_mode );
 			glTexParameteri( opengl_texture_type, GL_TEXTURE_WRAP_T, clamp_mode );
 			glTexParameteri( opengl_texture_type, SOIL_TEXTURE_WRAP_R, clamp_mode );
@@ -1883,7 +1887,7 @@ int query_NPOT_capability( void )
 		if(
 			(NULL == strstr( (char const*)glGetString( GL_EXTENSIONS ),
 				"GL_ARB_texture_non_power_of_two" ) )
-			)
+            )
 		{
 			/*	not there, flag the failure	*/
 			has_NPOT_capability = SOIL_CAPABILITY_NONE;
@@ -1931,6 +1935,9 @@ int query_cubemap_capability( void )
 	/*	check for the capability	*/
 	if( has_cubemap_capability == SOIL_CAPABILITY_UNKNOWN )
 	{
+#ifdef __ANDROID__
+        has_cubemap_capability = SOIL_CAPABILITY_PRESENT;
+#else
 		/*	we haven't yet checked for the capability, do so	*/
 		if(
 			(NULL == strstr( (char const*)glGetString( GL_EXTENSIONS ),
@@ -1947,7 +1954,8 @@ int query_cubemap_capability( void )
 			/*	it's there!	*/
 			has_cubemap_capability = SOIL_CAPABILITY_PRESENT;
 		}
-	}
+#endif
+    }
 	/*	let the user know if we can do cubemaps or not	*/
 	return has_cubemap_capability;
 }
@@ -1999,6 +2007,8 @@ int query_DXT_capability( void )
 				CFRelease( extensionName );
 				CFRelease( bundle );
             #elif defined(_arch_dreamcast)
+                ext_addr = &glCompressedTexImage2D;
+            #elif defined(__ANDROID__)
                 ext_addr = &glCompressedTexImage2D;
 			#else
 				ext_addr = (P_SOIL_GLCOMPRESSEDTEXIMAGE2DPROC)

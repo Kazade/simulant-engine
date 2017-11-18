@@ -114,18 +114,19 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "gather_headers":
         gather_headers(sys.argv[2])
     else:
-        ##Make an Android.mk file
-        with open(ANDROID_MK_PATH, "w") as make_file:
-            make_file.write(MAKE_FILE_DATA)
-
-        with open(ANDROID_APP_MK_PATH, "w") as make_file:
-            make_file.write(APPLICATION_FILE_DATA % " ".join(["-I{}".format(x) for x in includes ]))
-
-        with open(ANDROID_MANIFEST_PATH, "w") as make_file:
-            make_file.write("\n")
-
         os.chdir(OUTPUT_DIRECTORY)
 
-        subprocess.check_call([
-            "ndk-build", "NDK_APPLICATION_MK=%s" % ANDROID_APP_MK_PATH, "--jobs", str(multiprocessing.cpu_count())
-        ])
+
+        ANDROID_NDK = os.path.dirname(subprocess.check_output(["which", "ndk-build"]))
+
+        command = "cmake -DCMAKE_TOOLCHAIN_FILE={0}/build/cmake/android.toolchain.cmake " \
+        "-DCMAKE_BUILD_TYPE=Debug " \
+        "-DANDROID_ABI=armeabi-v7a " \
+        "-DANDROID_NDK={0} " \
+        "-DANDROID_NATIVE_API_LEVEL=21 " \
+        "-DANDROID_STL=c++_shared " \
+        "..".format(ANDROID_NDK)
+
+        subprocess.check_call(command.split())
+        subprocess.check_call(["make"])
+

@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <cmath>
 #include <unordered_map>
 #include <memory>
 #include <vector>
