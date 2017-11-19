@@ -125,7 +125,7 @@ if __name__ == "__main__":
         "-DANDROID_NDK={0} " \
         "-DANDROID_NATIVE_API_LEVEL=21 " \
         "-DANDROID_STL=c++_shared " \
-        "..".format(ANDROID_NDK)
+        "..".format(ANDROID_NDK, OUTPUT_DIRECTORY)
 
         subprocess.check_call(command.split())
         subprocess.check_call(["make"])
