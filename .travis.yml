@@ -6,7 +6,7 @@ git:
 env:
  global:
   - AUDIODEV=null
-  - TRAVIS_WORKER_DOCKER_BINDS='/home/travis:/simulant'
+  - TRAVIS_WORKER_DOCKER_BINDS='/home/travis/Kazade/simulant-engine:/simulant'
 
 matrix:
  allow_failures:
