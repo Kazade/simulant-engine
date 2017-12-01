@@ -6,7 +6,6 @@ git:
 env:
  global:
   - AUDIODEV=null
-  - TRAVIS_WORKER_DOCKER_BINDS='/home/travis/Kazade/simulant-engine:/simulant'
 
 matrix:
  allow_failures:
@@ -124,6 +123,7 @@ install:
  - if [[ "$CROSS_BUILD" == "windows" ]]; then make; fi
 
  # Otherwise, use docker for the dreamcast
+ - if [[ "$CROSS_BUILD" == "dreamcast" ]]; then export TRAVIS_WORKER_DOCKER_BINDS="${TRAVIS_BUILD_DIR}:/simulant"; fi
  - if [[ "$CROSS_BUILD" == "dreamcast" ]]; then sudo docker run kazade/dreamcast-sdk /bin/sh -c "mkdir -p /simulant/build; cd /simulant/build; cmake -DCMAKE_TOOLCHAIN_FILE=/simulant/toolchains/Dreamcast.cmake .. && make"; fi
 
 before_script:
