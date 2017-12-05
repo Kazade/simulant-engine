@@ -23,38 +23,8 @@ void Camera::ask_owner_for_destruction() {
     stage->delete_camera(id());
 }
 
-void Camera::on_position_set(const Vec3& oldp, const Vec3& newp) {
-    StageNode::on_position_set(oldp, newp);
-    transform_ = absolute_transformation();
-    update_frustum();
-}
-
-void Camera::on_rotation_set(const Quaternion& oldr, const Quaternion& newr) {
-    StageNode::on_rotation_set(oldr, newr);
-    transform_ = absolute_transformation();
-    update_frustum();
-}
-
-void Camera::on_scaling_set(const Vec3& olds, const Vec3& news) {
-    StageNode::on_scaling_set(olds, news);
-    transform_ = absolute_transformation();
-    update_frustum();
-}
-
-void Camera::on_parent_set(TreeNode* oldp, TreeNode* newp) {
-    StageNode::on_parent_set(oldp, newp);
-    transform_ = absolute_transformation();
-    update_frustum();
-}
-
-void Camera::update_position_from_parent(bool _recalc_bounds) {
-    StageNode::update_position_from_parent(_recalc_bounds);
-    transform_ = absolute_transformation();
-    update_frustum();
-}
-
-void Camera::update_rotation_from_parent() {
-    StageNode::update_rotation_from_parent();
+void Camera::update_transformation_from_parent() {
+    StageNode::update_transformation_from_parent();
     transform_ = absolute_transformation();
     update_frustum();
 }
