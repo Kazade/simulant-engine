@@ -34,9 +34,13 @@ void cylinder(MeshPtr mesh, float diameter, float length, int32_t segments, int3
     float delta_height = length / (float) stacks;
     int offset = 0;
 
+    // 5 6 7 8 9
+    // 0 1 2 3 4
+
     auto buffer = mesh->new_submesh("cylinder");
     for(auto i = 0; i <= stacks; ++i) {
-        for(auto j = 0; j <= segments; ++j) {
+        auto segment_offset = offset;
+        for(auto j = 0; j < segments; ++j) {
             float x0 = radius * cosf(delta_angle * j);
             float z0 = radius * sinf(delta_angle * j);
 
@@ -50,13 +54,22 @@ void cylinder(MeshPtr mesh, float diameter, float length, int32_t segments, int3
             mesh->shared_data->tex_coord0(new_uv);
             mesh->shared_data->move_next();
 
-            if(i != stacks) {
-                buffer->index_data->index(offset + segments + 1);
+            if(i > 0 && j > 0) {
+                buffer->index_data->index(offset - 1);
                 buffer->index_data->index(offset);
-                buffer->index_data->index(offset + segments);
-                buffer->index_data->index(offset + segments + 1);
-                buffer->index_data->index(offset + 1);
+                buffer->index_data->index(offset - segments - 1);
+                buffer->index_data->index(offset - segments - 1);
                 buffer->index_data->index(offset);
+                buffer->index_data->index(offset - segments);
+
+                if(j == segments - 1) {
+                    buffer->index_data->index(offset);
+                    buffer->index_data->index(segment_offset);
+                    buffer->index_data->index(offset - segments);
+                    buffer->index_data->index(offset - segments);
+                    buffer->index_data->index(segment_offset);
+                    buffer->index_data->index(segment_offset - segments);
+                }
             }
             ++offset;
         }
@@ -71,7 +84,7 @@ void cylinder(MeshPtr mesh, float diameter, float length, int32_t segments, int3
     mesh->shared_data->tex_coord0(smlt::Vec2());
     mesh->shared_data->move_next();
 
-    for(auto j = 0; j <= segments; ++j) {
+    for(auto j = 1; j <= segments; ++j) {
         float x0 = cosf(j * delta_angle);
         float z0 = sinf(j * delta_angle);
 
@@ -84,7 +97,7 @@ void cylinder(MeshPtr mesh, float diameter, float length, int32_t segments, int3
         mesh->shared_data->tex_coord0(new_uv);
         mesh->shared_data->move_next();
 
-        if(j > 0) {
+        if(j > 1) {
             buffer->index_data->index(center_index);
             buffer->index_data->index(center_index + j - 1);
             buffer->index_data->index(center_index + j);
@@ -102,7 +115,7 @@ void cylinder(MeshPtr mesh, float diameter, float length, int32_t segments, int3
     mesh->shared_data->tex_coord0(smlt::Vec2());
     mesh->shared_data->move_next();
 
-    for(auto j = 0; j <= segments; ++j) {
+    for(auto j = 1; j <= segments; ++j) {
         float x0 = cosf(j * delta_angle);
         float z0 = sinf(j * delta_angle);
 
@@ -116,7 +129,7 @@ void cylinder(MeshPtr mesh, float diameter, float length, int32_t segments, int3
         mesh->shared_data->move_next();
         ++offset;
 
-        if(j > 0) {
+        if(j > 1) {
             buffer->index_data->index(center_index);
             buffer->index_data->index(center_index + j);
             buffer->index_data->index(center_index + j - 1);
