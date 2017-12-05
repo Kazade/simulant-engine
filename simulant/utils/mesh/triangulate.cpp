@@ -31,8 +31,8 @@ void triangulate(MeshPtr mesh, std::vector<Vec3> &vertices, std::vector<Triangle
     // First, we populate any shared vertices in the output. This is so that when we process submeshes
     // if they use shared vertices we can store the triangle indexes as they are without offsetting into new
     // data. If they don't use shared vertices, we need to append the submesh vertices and offset the indexes.
-    for(uint32_t i = 0; i < mesh->shared_data->count(); ++i) {
-        vertices.push_back(mesh->shared_data->position_at<Vec3>(i));
+    for(uint32_t i = 0; i < mesh->vertex_data->count(); ++i) {
+        vertices.push_back(mesh->vertex_data->position_at<Vec3>(i));
     }
 
     auto process_submesh = [&](const std::string& name, SubMesh* submesh) {

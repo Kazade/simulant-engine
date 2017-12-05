@@ -32,7 +32,7 @@ SubMesh* circle(smlt::Mesh& mesh, float diameter, int32_t point_count, float x_o
         MESH_ARRANGEMENT_TRIANGLE_FAN
     );
 
-    auto offset = mesh.shared_data->count();
+    auto offset = mesh.vertex_data->count();
 
     auto& vdata = submesh->vertex_data;
     auto& idata = submesh->index_data;
@@ -75,7 +75,7 @@ SubMesh* circle_outline(smlt::Mesh& mesh, float diameter, int32_t point_count, f
 
     SubMesh* submesh = mesh.new_submesh("circle_outline", MESH_ARRANGEMENT_LINE_STRIP);
 
-    auto offset = mesh.shared_data->count();
+    auto offset = mesh.vertex_data->count();
 
     auto& vdata = submesh->vertex_data;
     auto& idata = submesh->index_data;

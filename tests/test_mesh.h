@@ -29,7 +29,7 @@ public:
         smlt::MeshID mid = stage_->assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY);
         auto mesh = stage_->assets->mesh(mid);
 
-        auto& data = mesh->shared_data;
+        auto& data = mesh->vertex_data;
 
         data->position(-1.0, -1.0, 0.0);
         data->move_next();
@@ -131,7 +131,7 @@ public:
     void test_basic_usage() {
         auto mesh = stage_->assets->mesh(generate_test_mesh(stage_));
 
-        auto& data = mesh->shared_data;
+        auto& data = mesh->vertex_data;
 
         assert_true(data->specification().has_positions());
         assert_true(!data->specification().has_normals());
@@ -163,7 +163,7 @@ public:
         //The actor should report the same data as the mesh, the same subactor count
         //as well as the same shared vertex data
         assert_equal(mesh->submesh_count(), actor->subactor_count());
-        assert_true(mesh->shared_data->count() == actor->shared_data->count());
+        assert_true(mesh->vertex_data->count() == actor->vertex_data->count());
 
         smlt::SubMesh* sm = actor->subactor(0).submesh();
 

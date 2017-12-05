@@ -78,10 +78,10 @@ public:
         StageNode::cleanup();
     }
 
-    Property<Geom, VertexData> shared_data = {this, &Geom::shared_data_};
+    Property<Geom, VertexData> vertex_data = {this, &Geom::vertex_data_};
 
 private:
-    VertexData* shared_data_ = nullptr;
+    VertexData* vertex_data_ = nullptr;
 
     std::shared_ptr<Mesh> mesh_;
     RenderPriority render_priority_;

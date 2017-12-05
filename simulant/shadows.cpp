@@ -71,7 +71,7 @@ void MeshSilhouette::calculate_directional_silhouette() {
     light_direction = -light_direction; // Reverse to be direction to, rather than from
 
     AdjacencyInfo* adj = mesh_->adjacency_info.get();
-    VertexData* vertices = mesh_->shared_data.get();
+    VertexData* vertices = mesh_->vertex_data.get();
 
     adj->each_edge([&](std::size_t, const EdgeInfo& edge) {
         auto d1 = edge.normals[0].dot(light_direction);
@@ -102,7 +102,7 @@ void MeshSilhouette::calculate_point_silhouette() {
     light_position += inverse_mesh_position_;
 
     AdjacencyInfo* adj = mesh_->adjacency_info.get();
-    VertexData* vertices = mesh_->shared_data.get();
+    VertexData* vertices = mesh_->vertex_data.get();
 
     const float eps = std::numeric_limits<float>::epsilon();
 

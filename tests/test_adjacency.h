@@ -38,15 +38,15 @@ public:
         auto mesh = window->shared_assets->new_mesh_as_rectangle(1.0, 1.0f).fetch();
 
         // Add another vertex, using the same position as the first
-        auto i = mesh->shared_data->count();
-        mesh->shared_data->move_to_end();
-        mesh->shared_data->position(mesh->shared_data->position_at<smlt::Vec3>(1));
-        mesh->shared_data->move_next();
+        auto i = mesh->vertex_data->count();
+        mesh->vertex_data->move_to_end();
+        mesh->vertex_data->position(mesh->vertex_data->position_at<smlt::Vec3>(1));
+        mesh->vertex_data->move_next();
 
         // Add another vertex
-        mesh->shared_data->position(10, 10, 10);
-        mesh->shared_data->move_next();
-        mesh->shared_data->done();
+        mesh->vertex_data->position(10, 10, 10);
+        mesh->vertex_data->move_next();
+        mesh->vertex_data->done();
 
         // Add another triangle
         mesh->first_submesh()->index_data->index(i + 1);

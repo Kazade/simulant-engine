@@ -43,7 +43,7 @@ SubMesh* capsule(MeshPtr mesh, float diameter, float height,
     float sphere_ratio = radius / (2 * radius + height);
     float cylinder_ratio = height / (2 * radius + height);
 
-    auto offset = mesh->shared_data->count();
+    auto offset = mesh->vertex_data->count();
 
     for(uint32_t ring = 0; ring <= ring_count; ++ring) {
         float r0 = radius * sinf(ring * delta_ring_angle);

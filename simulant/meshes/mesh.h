@@ -138,7 +138,7 @@ public:
 
     /* Returns a nullptr if there is no adjacecy info */
     Property<Mesh, AdjacencyInfo> adjacency_info = {this, &Mesh::adjacency_};
-    Property<Mesh, VertexData> shared_data = { this, &Mesh::shared_data_ };
+    Property<Mesh, VertexData> vertex_data = { this, &Mesh::vertex_data_ };
 public:
     // Signals
 
@@ -153,7 +153,7 @@ public:
 private:
     friend class SubMesh;
 
-    VertexData* shared_data_ = nullptr;
+    VertexData* vertex_data_ = nullptr;
     MeshAnimationType animation_type_ = MESH_ANIMATION_TYPE_NONE;
     uint32_t animation_frames_ = 0;
 
