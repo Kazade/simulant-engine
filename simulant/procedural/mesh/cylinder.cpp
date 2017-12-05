@@ -48,11 +48,11 @@ void cylinder(MeshPtr mesh, float diameter, float length, int32_t segments, int3
             smlt::Vec3 new_normal = smlt::Vec3(x0, 0, z0).normalized();
             smlt::Vec2 new_uv = smlt::Vec2(j / (float) segments, i / (float) stacks);
 
-            mesh->shared_data->position(new_point);
-            mesh->shared_data->diffuse(smlt::Colour::WHITE);
-            mesh->shared_data->normal(new_normal);
-            mesh->shared_data->tex_coord0(new_uv);
-            mesh->shared_data->move_next();
+            mesh->vertex_data->position(new_point);
+            mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+            mesh->vertex_data->normal(new_normal);
+            mesh->vertex_data->tex_coord0(new_uv);
+            mesh->vertex_data->move_next();
 
             if(i > 0 && j > 0) {
                 buffer->index_data->index(offset - 1);
@@ -79,10 +79,10 @@ void cylinder(MeshPtr mesh, float diameter, float length, int32_t segments, int3
     auto center_index = offset;
 
     // Add a central point at the base
-    mesh->shared_data->position(smlt::Vec3(0, -half_length, 0));
-    mesh->shared_data->normal(smlt::Vec3(0, -1, 0));
-    mesh->shared_data->tex_coord0(smlt::Vec2());
-    mesh->shared_data->move_next();
+    mesh->vertex_data->position(smlt::Vec3(0, -half_length, 0));
+    mesh->vertex_data->normal(smlt::Vec3(0, -1, 0));
+    mesh->vertex_data->tex_coord0(smlt::Vec2());
+    mesh->vertex_data->move_next();
 
     for(auto j = 1; j <= segments; ++j) {
         float x0 = cosf(j * delta_angle);
@@ -92,10 +92,10 @@ void cylinder(MeshPtr mesh, float diameter, float length, int32_t segments, int3
         smlt::Vec3 new_normal(0, -1, 0);
         smlt::Vec2 new_uv(x0, z0);
 
-        mesh->shared_data->position(new_point);
-        mesh->shared_data->normal(new_normal);
-        mesh->shared_data->tex_coord0(new_uv);
-        mesh->shared_data->move_next();
+        mesh->vertex_data->position(new_point);
+        mesh->vertex_data->normal(new_normal);
+        mesh->vertex_data->tex_coord0(new_uv);
+        mesh->vertex_data->move_next();
 
         if(j > 1) {
             buffer->index_data->index(center_index);
@@ -108,12 +108,12 @@ void cylinder(MeshPtr mesh, float diameter, float length, int32_t segments, int3
     buffer->index_data->index(center_index + segments);
     buffer->index_data->index(center_index + 1);
 
-    center_index = mesh->shared_data->count();
+    center_index = mesh->vertex_data->count();
     // Add a central point at the top
-    mesh->shared_data->position(smlt::Vec3(0, half_length, 0));
-    mesh->shared_data->normal(smlt::Vec3(0, 1, 0));
-    mesh->shared_data->tex_coord0(smlt::Vec2());
-    mesh->shared_data->move_next();
+    mesh->vertex_data->position(smlt::Vec3(0, half_length, 0));
+    mesh->vertex_data->normal(smlt::Vec3(0, 1, 0));
+    mesh->vertex_data->tex_coord0(smlt::Vec2());
+    mesh->vertex_data->move_next();
 
     for(auto j = 1; j <= segments; ++j) {
         float x0 = cosf(j * delta_angle);
@@ -123,10 +123,10 @@ void cylinder(MeshPtr mesh, float diameter, float length, int32_t segments, int3
         smlt::Vec3 new_normal(0, 1, 0);
         smlt::Vec2 new_uv(x0, z0);
 
-        mesh->shared_data->position(new_point);
-        mesh->shared_data->normal(new_normal);
-        mesh->shared_data->tex_coord0(new_uv);
-        mesh->shared_data->move_next();
+        mesh->vertex_data->position(new_point);
+        mesh->vertex_data->normal(new_normal);
+        mesh->vertex_data->tex_coord0(new_uv);
+        mesh->vertex_data->move_next();
         ++offset;
 
         if(j > 1) {
@@ -141,7 +141,7 @@ void cylinder(MeshPtr mesh, float diameter, float length, int32_t segments, int3
     buffer->index_data->index(center_index + 1);
     buffer->index_data->index(center_index + segments);
 
-    mesh->shared_data->done();
+    mesh->vertex_data->done();
     buffer->index_data->done();
 }
 

@@ -292,12 +292,12 @@ MeshID ResourceManager::new_mesh_from_vertices(VertexSpecification vertex_specif
     auto submesh = new_mesh->new_submesh(submesh_name, arrangement);
     int i = 0;
     for(auto v: vertices) {
-        new_mesh->shared_data->position(v);
-        new_mesh->shared_data->move_next();
+        new_mesh->vertex_data->position(v);
+        new_mesh->vertex_data->move_next();
         submesh->index_data->index(i++);
     }
 
-    new_mesh->shared_data->done();
+    new_mesh->vertex_data->done();
     submesh->index_data->done();
 
     MeshManager::mark_as_uncollected(m);
@@ -313,12 +313,12 @@ MeshID ResourceManager::new_mesh_from_vertices(VertexSpecification vertex_specif
     auto submesh = new_mesh->new_submesh(submesh_name, arrangement);
     int i = 0;
     for(auto v: vertices) {
-        new_mesh->shared_data->position(v);
-        new_mesh->shared_data->move_next();
+        new_mesh->vertex_data->position(v);
+        new_mesh->vertex_data->move_next();
         submesh->index_data->index(i++);
     }
 
-    new_mesh->shared_data->done();
+    new_mesh->vertex_data->done();
     submesh->index_data->done();
     MeshManager::mark_as_uncollected(m);
     return m;

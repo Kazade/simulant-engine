@@ -41,7 +41,7 @@ Mesh::Mesh(MeshID id,
 
     reset(vertex_specification);
 
-    shared_data_->signal_update_complete().connect([this]() {
+    vertex_data_->signal_update_complete().connect([this]() {
         // Mark the AABB as dirty so it will be rebuilt on next access
         aabb_dirty_ = true;
     });
@@ -56,11 +56,11 @@ void Mesh::reset(VertexSpecification vertex_specification) {
     animation_type_ = MESH_ANIMATION_TYPE_NONE;
     animation_frames_ = 0;
 
-    delete shared_data_;
-    shared_data_ = new VertexData(vertex_specification);
+    delete vertex_data_;
+    vertex_data_ = new VertexData(vertex_specification);
 
     // When the vertex data updates, update the hardware buffer
-    shared_data->signal_update_complete().connect([this]() {
+    vertex_data->signal_update_complete().connect([this]() {
         shared_vertex_buffer_dirty_ = true;
     });
 
@@ -70,8 +70,8 @@ void Mesh::reset(VertexSpecification vertex_specification) {
 Mesh::~Mesh() {
     assert(ordered_submeshes_.size() == submeshes_.size());
 
-    delete shared_data_;
-    shared_data_ = nullptr;
+    delete vertex_data_;
+    vertex_data_ = nullptr;
 }
 
 void Mesh::each(std::function<void (const std::string&, SubMesh*)> func) const {
@@ -86,7 +86,7 @@ void Mesh::each(std::function<void (const std::string&, SubMesh*)> func) const {
 void Mesh::clear() {
     //Delete the submeshes and clear the shared data
     submeshes_.clear();
-    shared_data->clear();
+    vertex_data->clear();
     rebuild_aabb();
 }
 
@@ -456,33 +456,33 @@ void Mesh::set_material_id(MaterialID material) {
 }
 
 void Mesh::transform_vertices(const smlt::Mat4& transform) {
-    shared_data->move_to_start();
+    vertex_data->move_to_start();
 
-    for(uint32_t i = 0; i < shared_data->count(); ++i) {
-        if(shared_data->specification().has_positions()) {
-            smlt::Vec3 v = shared_data->position_at<Vec3>(i);
+    for(uint32_t i = 0; i < vertex_data->count(); ++i) {
+        if(vertex_data->specification().has_positions()) {
+            smlt::Vec3 v = vertex_data->position_at<Vec3>(i);
             v = v.transformed_by(transform);
-            shared_data->position(v);
+            vertex_data->position(v);
         }
 
-        if(shared_data->specification().has_normals()) {
+        if(vertex_data->specification().has_normals()) {
             smlt::Vec3 n;
-            shared_data->normal_at(i, n);
+            vertex_data->normal_at(i, n);
             n = n.rotated_by(transform);
-            shared_data->normal(n.normalized());
+            vertex_data->normal(n.normalized());
         }
-        shared_data->move_next();
+        vertex_data->move_next();
     }
-    shared_data->done();
+    vertex_data->done();
 }
 
 void Mesh::set_diffuse(const smlt::Colour& colour) {
-    shared_data->move_to_start();
-    for(uint32_t i = 0; i < shared_data->count(); ++i) {
-        shared_data->diffuse(colour);
-        shared_data->move_next();
+    vertex_data->move_to_start();
+    for(uint32_t i = 0; i < vertex_data->count(); ++i) {
+        vertex_data->diffuse(colour);
+        vertex_data->move_next();
     }
-    shared_data->done();
+    vertex_data->done();
 }
 
 void Mesh::normalize() {
@@ -518,7 +518,7 @@ SubMesh* Mesh::submesh(const std::string& name) {
 void Mesh::prepare_buffers() {
     if(shared_vertex_buffer_dirty_) {
         sync_buffer<VertexData, Renderer>(
-            &shared_vertex_buffer_, shared_data_,
+            &shared_vertex_buffer_, vertex_data_,
             resource_manager().window->renderer.get(),
             HARDWARE_BUFFER_VERTEX_ATTRIBUTES
         );

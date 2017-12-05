@@ -79,7 +79,7 @@ public:
             terrain_data.x_size,
             terrain_data.z_size,
             stage_->assets->texture(terrain_splatmap),
-            terrain_mesh->shared_data
+            terrain_mesh->vertex_data
         );
 
         stage_->assets->material(terrain_material_id_)->first_pass()->set_texture_unit(4, terrain_splatmap);

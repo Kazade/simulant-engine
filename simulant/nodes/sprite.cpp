@@ -129,19 +129,19 @@ void Sprite::update_texture_coordinates() {
     {
         auto mesh = stage->assets->mesh(mesh_id_);
 
-        mesh->shared_data->move_to_start();
-        mesh->shared_data->tex_coord0(x0, y0);
+        mesh->vertex_data->move_to_start();
+        mesh->vertex_data->tex_coord0(x0, y0);
 
-        mesh->shared_data->move_next();
-        mesh->shared_data->tex_coord0(x1, y0);
+        mesh->vertex_data->move_next();
+        mesh->vertex_data->tex_coord0(x1, y0);
 
-        mesh->shared_data->move_next();
-        mesh->shared_data->tex_coord0(x1, y1);
+        mesh->vertex_data->move_next();
+        mesh->vertex_data->tex_coord0(x1, y1);
 
-        mesh->shared_data->move_next();
-        mesh->shared_data->tex_coord0(x0, y1);
+        mesh->vertex_data->move_next();
+        mesh->vertex_data->tex_coord0(x0, y1);
 
-        mesh->shared_data->done();
+        mesh->vertex_data->done();
     }
 }
 
@@ -204,17 +204,17 @@ void Sprite::set_render_dimensions(float width, float height) {
     //Rebuild the mesh
     auto mesh = stage->assets->mesh(mesh_id_);
 
-    mesh->shared_data->move_to_start();
-    mesh->shared_data->position((-width / 2.0), (-height / 2.0), 0);
+    mesh->vertex_data->move_to_start();
+    mesh->vertex_data->position((-width / 2.0), (-height / 2.0), 0);
 
-    mesh->shared_data->move_next();
-    mesh->shared_data->position((width / 2.0), (-height / 2.0), 0);
+    mesh->vertex_data->move_next();
+    mesh->vertex_data->position((width / 2.0), (-height / 2.0), 0);
 
-    mesh->shared_data->move_next();
-    mesh->shared_data->position((width / 2.0),  (height / 2.0), 0);
+    mesh->vertex_data->move_next();
+    mesh->vertex_data->position((width / 2.0),  (height / 2.0), 0);
 
-    mesh->shared_data->move_next();
-    mesh->shared_data->position((-width / 2.0),  (height / 2.0), 0);
+    mesh->vertex_data->move_next();
+    mesh->vertex_data->position((-width / 2.0),  (height / 2.0), 0);
 
-    mesh->shared_data->done();
+    mesh->vertex_data->done();
 }

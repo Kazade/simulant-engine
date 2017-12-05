@@ -31,7 +31,7 @@ Geom::Geom(GeomID id, Stage* stage, SoundDriver* sound_driver, MeshID mesh, cons
     set_parent(stage);
 
     mesh_ = stage->assets->mesh(mesh)->shared_from_this();
-    shared_data_ = mesh_->shared_data.get();
+    vertex_data_ = mesh_->vertex_data.get();
 
     compile();
 }

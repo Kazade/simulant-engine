@@ -40,7 +40,7 @@ const MaterialID SubMesh::material_id() const {
 }
 
 VertexData *SubMesh::get_vertex_data() const {
-    return parent_->shared_data.get();
+    return parent_->vertex_data.get();
 }
 
 IndexData* SubMesh::get_index_data() const {
