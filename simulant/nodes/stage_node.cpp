@@ -103,9 +103,9 @@ void StageNode::update_transformation_from_parent() {
         absolute_rotation_ = parent_rot * rotation();
         absolute_position_ = parent_pos + parent_rot.rotate_vector(position());
         absolute_scale_ = parent_scale * scale();
-
-        recalc_bounds();
     }
+
+    recalc_bounds();
 
     each_child([](uint32_t, TreeNode* child) {
         StageNode* node = static_cast<StageNode*>(child);
