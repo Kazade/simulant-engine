@@ -195,10 +195,9 @@ void Transformable::set_position(const Vec3 &p) {
         if(to_set.z > max.z) to_set.z = max.z;
     };
 
-    if(to_set.x != position_.x || to_set.y != position_.y || to_set.z != position_.z) {
-        auto tmp = position_;
+    if(to_set != position_) {
         position_ = to_set;
-        on_position_set(tmp, position_);
+        on_transformation_changed();
         signal_transformation_changed_();
     }
 }
@@ -208,19 +207,17 @@ void Transformable::set_rotation(const Quaternion& q) {
 
     if(rotation_locked_) return;
 
-    if(q.x != rotation_.x || q.y != rotation_.y || q.z != rotation_.z || q.w != rotation_.w) {
-        auto tmp = rotation_;
+    if(q != rotation_) {
         rotation_ = q;
-        on_rotation_set(tmp, rotation_);
+        on_transformation_changed();
         signal_transformation_changed_();
     }
 }
 
 void Transformable::set_scaling(const Vec3 &s) {
-    if(s.x != scaling_.x || s.y != scaling_.y || s.z != scaling_.z) {
-        auto tmp = scaling_;
+    if(s != scaling_) {
         scaling_ = s;
-        on_scaling_set(tmp, scaling_);
+        on_transformation_changed();
         signal_transformation_changed_();
     }
 }
