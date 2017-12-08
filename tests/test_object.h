@@ -195,6 +195,19 @@ public:
         assert_equal(original_parent, actor1->parent());
     }
 
+    void test_find_child_by_name() {
+        auto actor1 = stage_->new_actor_with_name("actor1");
+
+        assert_equal(actor1, stage_->find_child_with_name("actor1"));
+        assert_is_null(stage_->find_child_with_name("bananas"));
+
+        auto dupe = stage_->new_actor_with_name("actor1");
+        dupe->set_parent(actor1);
+
+        // Just find the first one
+        assert_equal(actor1, stage_->find_child_with_name("actor1"));
+    }
+
 private:
     smlt::CameraPtr camera_;
     smlt::StagePtr stage_;

@@ -88,6 +88,8 @@ public:
     ShadowReceive shadow_receive() const { return shadow_receive_; }
     void set_shadow_receive(ShadowReceive receive) { shadow_receive_ = receive; }
 
+    StageNode* find_child_with_name(const std::string& name);
+
 protected:
     // Faster than properties, useful for subclasses where a clean API isn't as important
     Stage* get_stage() const { return stage_; }

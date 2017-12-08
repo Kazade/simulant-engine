@@ -117,6 +117,12 @@ ActorPtr Stage::new_actor(RenderableCullingMode mode) {
     return a;
 }
 
+ActorPtr Stage::new_actor_with_name(const std::string& name, RenderableCullingMode mode) {
+    auto a = new_actor(mode);
+    a->set_name(name);
+    return a;
+}
+
 ActorPtr Stage::new_actor_with_mesh(MeshID mid, RenderableCullingMode mode) {
     using namespace std::placeholders;
 
@@ -142,6 +148,12 @@ ActorPtr Stage::new_actor_with_mesh(MeshID mid, RenderableCullingMode mode) {
     //Tell everyone about the new actor
     signal_actor_created_(result);
 
+    return a;
+}
+
+ActorPtr Stage::new_actor_with_name_and_mesh(const std::string& name, MeshID mid, RenderableCullingMode mode) {
+    auto a = new_actor_with_mesh(mid, mode);
+    a->set_name(name);
     return a;
 }
 

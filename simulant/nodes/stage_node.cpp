@@ -128,6 +128,23 @@ const AABB StageNode::transformed_aabb() const {
     return AABB(corners.data(), corners.size());
 }
 
+StageNode *StageNode::find_child_with_name(const std::string &name) {
+    bool found = false;
+    StageNode* result = nullptr;
+
+    each_descendent([&](uint32_t, TreeNode* node) {
+        if(found) return;
+
+        StageNode* stage_node = static_cast<StageNode*>(node); // All nodes are stage nodes, if not then.. bad things!
+        if(stage_node && stage_node->name() == name) {
+            found = true;
+            result = stage_node;
+        }
+    });
+
+    return result;
+}
+
 void StageNode::recalc_bounds() {
     auto newb = transformed_aabb();
     if(newb.min() != transformed_aabb_.min() || newb.max() != transformed_aabb_.max()) {
