@@ -8,9 +8,8 @@
 namespace smlt {
 namespace behaviours {
 
-HoverShip::HoverShip(Organism* owner, Window* window):
-    BehaviourWithInput(window->input.get()),
-    owner_(owner) {
+HoverShip::HoverShip(Window* window):
+    BehaviourWithInput(window->input.get()) {
 
 }
 

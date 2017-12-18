@@ -57,9 +57,30 @@ public:
     void _late_update_thunk(float dt) override;
     void _fixed_update_thunk(float step) override;
 
+    Property<Behaviour, Organism> organism = {this, &Behaviour::organism_};
+
+    bool attached() const { return organism_ != nullptr; }
 private:
     friend class Organism;
 
+    Organism* organism_ = nullptr;
+    void set_organism(Organism* organism) {
+        if(organism) {
+            if(organism_) {
+                on_behaviour_removed(organism_);
+            }
+
+            organism_ = organism;
+
+            on_behaviour_added(organism);
+        } else if(organism_) {
+            organism_ = nullptr;
+
+            on_behaviour_removed(organism_);
+        }
+    }
+
+    /* Don't call these directly, use set_organism instead */
     virtual void on_behaviour_added(Organism* controllable) {}
     virtual void on_behaviour_removed(Organism* controllable) {}
 
@@ -124,7 +145,7 @@ public:
     T* new_behaviour() {
         static_assert(std::is_base_of<Behaviour, T>::value, "Behaviours must derive smlt::Behaviour");
         static_assert(std::is_base_of<Managed<T>, T>::value, "Behaviours must derive Managed<T>");
-        std::shared_ptr<T> ret = T::create(this);
+        std::shared_ptr<T> ret = T::create();
         add_behaviour<T>(ret);
         return ret.get();
     }
@@ -133,7 +154,7 @@ public:
     T* new_behaviour(Params&&... params) {
         static_assert(std::is_base_of<Behaviour, T>::value, "Behaviours must derive smlt::Behaviour");
         static_assert(std::is_base_of<Managed<T>, T>::value, "Behaviours must derive Managed<T>");
-        std::shared_ptr<T> ret = T::create(this, std::forward<Params>(params)...);
+        std::shared_ptr<T> ret = T::create(std::forward<Params>(params)...);
         add_behaviour<T>(ret);
         return ret.get();
     }
@@ -184,7 +205,7 @@ private:
         behaviour_names_.insert(behaviour->name());
         behaviours_.push_back(behaviour);
 
-        behaviour->on_behaviour_added(this);
+        behaviour->set_organism(this);
     }
 
     std::mutex container_lock_;

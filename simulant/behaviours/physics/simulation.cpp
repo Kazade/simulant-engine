@@ -220,9 +220,10 @@ b3Body *RigidBodySimulation::acquire_body(impl::Body *body) {
 
     // If the body is attached to a stage node then set up the initial rotation
     // and position from that.
-    if(body->object_) {
-        to_b3vec3(body->object_->absolute_position(), def.position);
-        to_b3quat(body->object_->absolute_rotation(), def.orientation);
+
+    if(body->stage_node) {
+        to_b3vec3(body->stage_node->absolute_position(), def.position);
+        to_b3quat(body->stage_node->absolute_rotation(), def.orientation);
     }
 
     bodies_[body] = scene_->CreateBody(def);

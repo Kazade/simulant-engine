@@ -11,7 +11,7 @@ class Airplane:
     public Managed<Airplane> {
 
 public:
-    Airplane(Organism* owner, Window* window);
+    Airplane(Window* window);
 
     void set_turn_speed(float x) { turn_speed_ = x; }
 
@@ -22,7 +22,6 @@ public:
 private:
     void on_behaviour_added(Organism *controllable);
 
-    Organism* owner_;
     Window* window_;
 
     float turn_speed_ = 10.0f;

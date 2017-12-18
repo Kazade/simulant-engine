@@ -6,14 +6,13 @@
 namespace smlt {
 namespace behaviours {
 
-Airplane::Airplane(Organism *owner, Window *window):
+Airplane::Airplane(Window *window):
     BehaviourWithInput(window->input.get()),
-    owner_(owner),
     window_(window) {
 }
 
 void Airplane::fixed_update(float step) {
-    RigidBody* rigidbody = owner_->behaviour<RigidBody>();
+    RigidBody* rigidbody = organism->behaviour<RigidBody>();
     if(!rigidbody) {
         return;
     }

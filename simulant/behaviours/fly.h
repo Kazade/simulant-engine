@@ -32,17 +32,11 @@ class Fly:
     public Managed<Fly> {
 
 public:
-    Fly(Organism* container, const Property<smlt::SceneBase, smlt::Window>& window):
-        Fly(container, window.get()) {}
+    Fly(const Property<smlt::SceneBase, smlt::Window>& window):
+        Fly(window.get()) {}
 
-    Fly(Organism* container, Window* window):
+    Fly(Window* window):
         BehaviourWithInput(window->input.get()) {
-
-        object_ = dynamic_cast<Transformable*>(container);
-
-        if(!object_) {
-            throw std::logic_error("Tried to attach FlyBehaviour to something which wasn't an object");
-        }
     }
 
     const std::string name() const override { return "Fly by Keyboard"; }

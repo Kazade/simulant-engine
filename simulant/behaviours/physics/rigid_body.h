@@ -50,7 +50,7 @@ class RigidBody:
     public Managed<RigidBody> {
 
 public:
-    RigidBody(Organism* object, RigidBodySimulation *simulation);
+    RigidBody(RigidBodySimulation *simulation);
     ~RigidBody();
 
     void add_force(const Vec3& force);

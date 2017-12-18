@@ -9,8 +9,8 @@ namespace behaviours {
 
 std::unordered_map<MeshID, std::shared_ptr<StaticBody::b3MeshGenerator>> StaticBody::mesh_cache;
 
-StaticBody::StaticBody(Organism* object, RigidBodySimulation* simulation):
-    Body(object, simulation) {
+StaticBody::StaticBody(RigidBodySimulation* simulation):
+    Body(simulation) {
 
 }
 

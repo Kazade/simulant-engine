@@ -13,7 +13,7 @@ class StaticBody:
     public Managed<StaticBody> {
 
 public:
-    StaticBody(Organism* object, RigidBodySimulation *simulation);
+    StaticBody(RigidBodySimulation *simulation);
     ~StaticBody();
 
     using impl::Body::init;

@@ -11,19 +11,20 @@ class StageNodeBehaviour:
     public Behaviour {
 
 public:
-    StageNodeBehaviour(Organism* controllable):
-        owner_(dynamic_cast<StageNode*>(controllable)) {
-
-        if(!owner_) {
-            throw std::logic_error("Attempted to use StageNodeBehaviour on an object which wasn't a StageNode");
-        }
-    }
+    StageNodeBehaviour() = default;
+    Property<StageNodeBehaviour, StageNode> stage_node = { this, &StageNodeBehaviour::stage_node_ };
 
 protected:
-    Property<StageNodeBehaviour, StageNode> owner = { this, &StageNodeBehaviour::owner_ };
+    void on_behaviour_added(Organism* controllable) override {
+        stage_node_ = dynamic_cast<StageNode*>(controllable);
+    }
+
+    void on_behaviour_removed(Organism *controllable) override {
+        stage_node_ = nullptr;
+    }
 
 private:
-    StageNode* owner_;
+    StageNode* stage_node_ = nullptr;
 };
 
 }
