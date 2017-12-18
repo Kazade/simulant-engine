@@ -16,7 +16,7 @@ class HoverShip:
     public Managed<HoverShip> {
 
 public:
-    HoverShip(Organism* owner, Window* window);
+    HoverShip(Window* window);
 
     const std::string name() const {
         return "Hover Ship";
@@ -33,7 +33,6 @@ public:
 private:
     void on_behaviour_first_update(Organism* owner);
 
-    Organism* owner_ = nullptr;
     RigidBody* body_ = nullptr;
     RigidBodySimulation* simulation_ = nullptr;
 
@@ -44,6 +43,13 @@ private:
 
     float power_input_ = 0.0f;
     float turn_input_ = 0.0f;
+
+protected:
+    float power_input() const { return power_input_; }
+    void set_power_input(float pi) { power_input_ = pi; }
+
+    float turn_input() const { return turn_input_; }
+    void set_turn_input(float ti) { turn_input_ = ti; }
 };
 
 }

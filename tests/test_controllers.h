@@ -9,7 +9,7 @@ using namespace smlt;
 
 class TestBehaviour : public Behaviour, public Managed<TestBehaviour> {
 public:
-    TestBehaviour(Organism* c) {}
+    TestBehaviour() {}
 
     void on_behaviour_first_update(Organism* controllable) {
         call_count++;

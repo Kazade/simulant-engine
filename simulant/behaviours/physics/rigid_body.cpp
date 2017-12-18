@@ -32,8 +32,8 @@ namespace smlt {
 namespace behaviours {
 
 
-RigidBody::RigidBody(Organism* object, RigidBodySimulation* simulation):
-    Body(object, simulation) {
+RigidBody::RigidBody(RigidBodySimulation* simulation):
+    Body(simulation) {
 
 }
 

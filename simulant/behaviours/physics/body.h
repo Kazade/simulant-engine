@@ -7,6 +7,7 @@
 #include "collider.h"
 
 #include "../behaviour.h"
+#include "../stage_node_behaviour.h"
 #include "../../generic/property.h"
 #include "../../types.h"
 
@@ -62,10 +63,10 @@ namespace impl {
 class ContactListener;
 
 class Body:
-    public Behaviour {
+    public StageNodeBehaviour {
 
 public:
-    Body(Organism* object, RigidBodySimulation* simulation);
+    Body(RigidBodySimulation* simulation);
     virtual ~Body();
 
     void move_to(const Vec3& position);
@@ -94,8 +95,6 @@ public:
     void register_collision_listener(CollisionListener* listener);
     void unregister_collision_listener(CollisionListener* listener);
 
-    Property<Body, StageNode> stage_node = { this, &Body::object_ };
-
     RigidBodySimulation* _simulation_ptr() const {
         if(auto ret = simulation_.lock()) {
             return ret.get();
@@ -106,7 +105,7 @@ public:
 
 protected:
     friend class smlt::behaviours::RigidBodySimulation;
-    StageNode* object_;
+
     b3Body* body_ = nullptr;
     std::weak_ptr<RigidBodySimulation> simulation_;
 
@@ -134,6 +133,8 @@ private:
 
     void contact_started(const Collision& collision);
     void contact_finished(const Collision &collision);
+
+    void on_behaviour_added(Organism* organism) override;
 };
 
 } // End impl

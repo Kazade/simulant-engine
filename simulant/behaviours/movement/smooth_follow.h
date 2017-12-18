@@ -15,7 +15,7 @@ class SmoothFollow:
     public Managed<SmoothFollow> {
 
 public:
-    SmoothFollow(Organism* controllable);
+    SmoothFollow();
 
     const std::string name() const {
         return "Smooth Follow";

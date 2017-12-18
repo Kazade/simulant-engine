@@ -13,14 +13,8 @@ namespace smlt {
 namespace behaviours {
 namespace impl {
 
-Body::Body(Organism* object, RigidBodySimulation* simulation):
-    Behaviour(),
+Body::Body(RigidBodySimulation* simulation):
     simulation_(simulation->shared_from_this()) {
-
-    object_ = dynamic_cast<StageNode*>(object);
-    if(!object_) {
-        throw std::runtime_error("Tried to attach a rigid body controller to something that isn't moveable");
-    }
 
     // Keep each body's last_state in sync when the simulation is stepped
     simulation_stepped_connection_ = simulation->signal_simulation_pre_step().connect([this]() {
@@ -39,8 +33,6 @@ bool Body::init() {
     if(!sim) {
         return false;
     }
-
-    body_ = sim->acquire_body(this);
 
     return true;
 }
@@ -69,7 +61,7 @@ void Body::move_to(const Vec3& position) {
         xform.second
     );
 
-    object_->move_to_absolute(position);
+    stage_node->move_to_absolute(position);
 }
 
 void Body::rotate_to(const Quaternion& rotation) {
@@ -85,7 +77,7 @@ void Body::rotate_to(const Quaternion& rotation) {
         rotation
     );
 
-    object_->rotate_to_absolute(rotation);
+    stage_node->rotate_to_absolute(rotation);
 }
 
 void Body::update(float dt) {
@@ -106,12 +98,12 @@ void Body::update(float dt) {
         auto new_pos = prev_state.first.lerp(next_state.first, t);
         auto new_rot = prev_state.second.slerp(next_state.second, t);
 
-        object_->move_to_absolute(new_pos);
-        object_->rotate_to_absolute(new_rot);
+        stage_node->move_to_absolute(new_pos);
+        stage_node->rotate_to_absolute(new_rot);
     } else {
         auto state = sim->body_transform(this);
-        object_->move_to_absolute(state.first);
-        object_->rotate_to_absolute(state.second);
+        stage_node->move_to_absolute(state.first);
+        stage_node->rotate_to_absolute(state.second);
     }
 }
 
@@ -136,6 +128,16 @@ void Body::contact_started(const Collision &collision) {
 void Body::contact_finished(const Collision& collision) {
     for(auto listener: listeners_) {
         listener->on_collision_exit(collision);
+    }
+}
+
+void Body::on_behaviour_added(Organism *organism) {
+    StageNodeBehaviour::on_behaviour_added(organism); // Set the stage_node property from `organism`
+
+    // We aquire the body at this point so we can set the initial transform from the stage node
+    auto sim = simulation_.lock();
+    if(sim) {
+        body_ = sim->acquire_body(this);
     }
 }
 
@@ -202,6 +204,8 @@ void Body::unregister_collision_listener(CollisionListener *listener) {
     listener->watching_.erase(this);
     listeners_.erase(listener);
 }
+
+
 
 }
 }

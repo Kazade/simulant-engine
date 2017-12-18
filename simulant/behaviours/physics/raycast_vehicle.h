@@ -38,8 +38,7 @@ class RaycastVehicle:
     DEFINE_SIGNAL(VehicleAirbourneSignal, signal_vehicle_airbourne);
 
 public:    
-    RaycastVehicle(Organism *object,
-        RigidBodySimulation *simulation,
+    RaycastVehicle(RigidBodySimulation *simulation,
         float wheel_height
     );
 

@@ -26,12 +26,12 @@ namespace behaviours {
 
 static const float FLOAT_EPSILON = std::numeric_limits<float>::epsilon();
 
-RaycastVehicle::RaycastVehicle(smlt::Organism* object, RigidBodySimulation* simulation, float wheel_height):
-    RigidBody(object, simulation),
+RaycastVehicle::RaycastVehicle(RigidBodySimulation* simulation, float wheel_height):
+    RigidBody(simulation),
     wheel_height_(wheel_height) {
 
 
-    BoundableEntity* entity = dynamic_cast<BoundableEntity*>(object_);
+    BoundableEntity* entity = dynamic_cast<BoundableEntity*>(stage_node.get());
     AABB aabb = entity->aabb();
 
     float offset = 0.001;
