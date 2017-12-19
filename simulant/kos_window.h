@@ -19,6 +19,7 @@ public:
     void set_title(const std::string&) override {} // No-op
     void cursor_position(int32_t &mouse_x, int32_t &mouse_y) override {} // No-op
     void show_cursor(bool) override {} // No-op
+    void lock_cursor(bool) override {} // No-op
 
     void swap_buffers() override;
     bool create_window(int width, int height, int bpp, bool fullscreen) override;
