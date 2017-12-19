@@ -24,8 +24,12 @@ public:
 
     void set_hover_height(float h);
     void set_hover_force(float f);
+
     void set_speed(float s);
+    float speed() const { return speed_; }
+
     void set_turn_speed(float s);
+    float turn_speed() const { return turn_speed_; }
 
     void update(float dt);
     void fixed_update(float step);
