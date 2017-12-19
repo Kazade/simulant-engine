@@ -44,6 +44,14 @@ InputManager::InputManager(InputState *controller):
     auto fire2_js = new_axis("Fire2");
     fire2_js->set_type(AXIS_TYPE_JOYSTICK_BUTTON);
     fire2_js->set_positive_joystick_button(JoystickButtonID(1));
+
+    auto mouse_x = new_axis("MouseX");
+    mouse_x->set_type(AXIS_TYPE_MOUSE_AXIS);
+    mouse_x->set_mouse_axis(MOUSE_AXIS_0);
+
+    auto mouse_y = new_axis("MouseY");
+    mouse_y->set_type(AXIS_TYPE_MOUSE_AXIS);
+    mouse_y->set_mouse_axis(MOUSE_AXIS_1);
 }
 
 InputAxis* InputManager::new_axis(const std::string& name) {
