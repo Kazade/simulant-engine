@@ -45,6 +45,7 @@ public:
 
     void set_title(const std::string& title);
     void show_cursor(bool value=true);
+    void lock_cursor(bool cursor_locked=true);
     void cursor_position(int32_t& mouse_x, int32_t& mouse_y);
     
 private:

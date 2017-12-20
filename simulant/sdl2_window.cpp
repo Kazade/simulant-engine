@@ -51,6 +51,10 @@ void SDL2Window::show_cursor(bool value) {
 	SDL_ShowCursor(value);
 }
 
+void SDL2Window::lock_cursor(bool cursor_locked) {
+    SDL_SetRelativeMouseMode((cursor_locked) ? SDL_TRUE : SDL_FALSE);
+}
+
 void SDL2Window::cursor_position(int32_t& mouse_x, int32_t& mouse_y) {
 	SDL_GetMouseState(&mouse_x, &mouse_y);
 }
