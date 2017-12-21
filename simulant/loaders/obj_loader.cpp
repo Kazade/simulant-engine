@@ -20,7 +20,7 @@
 
 #include "obj_loader.h"
 
-#include "../mesh.h"
+#include "../meshes/mesh.h"
 #include "../resource_manager.h"
 #include "../shortcuts.h"
 #include "../resource_locator.h"
@@ -403,7 +403,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
         }
     }
 
-    mesh->shared_data->done();
+    mesh->vertex_data->done();
     mesh->each([](const std::string&, SubMesh* submesh) {
         submesh->index_data->done();
     });

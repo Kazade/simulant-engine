@@ -41,11 +41,11 @@ public:
             assert_false(write.geom_id);
         };
 
-        StagePtr stage = window->new_stage().fetch();
-        ActorID actor = stage->new_actor();
+        StagePtr stage = window->new_stage();
+        ActorPtr actor = stage->new_actor();
 
         MockPartitioner partitioner(stage, test);
-        partitioner.add_actor(actor);
+        partitioner.add_actor(actor->id());
         partitioner._apply_writes();
 
         window->delete_stage(stage->id());
@@ -61,11 +61,11 @@ public:
             assert_false(write.geom_id);
         };
 
-        StagePtr stage = window->new_stage().fetch();
-        ActorID actor = stage->new_actor();
+        StagePtr stage = window->new_stage();
+        ActorPtr actor = stage->new_actor();
 
         MockPartitioner partitioner(stage, test);
-        partitioner.remove_actor(actor);
+        partitioner.remove_actor(actor->id());
         partitioner._apply_writes();
 
         window->delete_stage(stage->id());
@@ -81,11 +81,11 @@ public:
             assert_false(write.geom_id);
         };
 
-        StagePtr stage = window->new_stage().fetch();
-        LightID light = stage->new_light_as_point();
+        StagePtr stage = window->new_stage();
+        auto light = stage->new_light_as_point();
 
         MockPartitioner partitioner(stage, test);
-        partitioner.add_light(light);
+        partitioner.add_light(light->id());
         partitioner._apply_writes();
 
         window->delete_stage(stage->id());
@@ -101,11 +101,11 @@ public:
             assert_false(write.geom_id);
         };
 
-        StagePtr stage = window->new_stage().fetch();
-        LightID light = stage->new_light_as_point();
+        StagePtr stage = window->new_stage();
+        auto light = stage->new_light_as_point();
 
         MockPartitioner partitioner(stage, test);
-        partitioner.remove_light(light);
+        partitioner.remove_light(light->id());
         partitioner._apply_writes();
 
         window->delete_stage(stage->id());
@@ -121,11 +121,11 @@ public:
             assert_false(write.geom_id);
         };
 
-        StagePtr stage = window->new_stage().fetch();
-        ParticleSystemID ps = stage->new_particle_system();
+        StagePtr stage = window->new_stage();
+        auto ps = stage->new_particle_system();
 
         MockPartitioner partitioner(stage, test);
-        partitioner.add_particle_system(ps);
+        partitioner.add_particle_system(ps->id());
         partitioner._apply_writes();
 
         window->delete_stage(stage->id());
@@ -141,11 +141,11 @@ public:
             assert_false(write.geom_id);
         };
 
-        StagePtr stage = window->new_stage().fetch();
-        ParticleSystemID ps = stage->new_particle_system();
+        StagePtr stage = window->new_stage();
+        auto ps = stage->new_particle_system();
 
         MockPartitioner partitioner(stage, test);
-        partitioner.remove_particle_system(ps);
+        partitioner.remove_particle_system(ps->id());
         partitioner._apply_writes();
         window->delete_stage(stage->id());
     }

@@ -19,7 +19,7 @@
 
 
 #include "tiled.h"
-#include "../mesh.h"
+#include "../meshes/mesh.h"
 
 namespace smlt {
 namespace tiled {

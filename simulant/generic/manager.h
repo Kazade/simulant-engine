@@ -41,7 +41,9 @@ private:
     template<typename Q=ObjectIDType>
     typename ObjectIDType::resource_pointer_type getter(
             const ObjectIDType* id,
-            typename std::enable_if<std::is_pointer<typename Q::resource_pointer_type>::value>::type* = 0) {
+            typename std::enable_if<
+                std::is_convertible<typename Q::resource_pointer_type, ObjectType*>::value
+            >::type* = 0) {
         return get(*id).lock().get();
     }
 
@@ -49,7 +51,9 @@ private:
     template<typename Q=ObjectIDType>
     typename ObjectIDType::resource_pointer_type getter(
             const ObjectIDType* id,
-            typename std::enable_if<!std::is_pointer<typename Q::resource_pointer_type>::value>::type* = 0) {
+            typename std::enable_if<
+                !std::is_convertible<typename Q::resource_pointer_type, ObjectType*>::value
+            >::type* = 0) {
         return get(*id).lock();
     }
 

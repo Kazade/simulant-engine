@@ -59,8 +59,7 @@ struct AppConfig {
     std::vector<unicode> arguments;
 };
 
-class Application :
-    public SceneManagerInterface {
+class Application {
 
 public:
     Application(const AppConfig& config);
@@ -71,19 +70,9 @@ public:
 
     Property<Application, Window> window = {this, &Application::window_ };
     Property<Application, generic::DataCarrier> data = { this, &Application::data_carrier_ };
+    Property<Application, SceneManager> scenes = {this, &Application::scene_manager_};
 
     bool initialized() const { return initialized_; }
-
-    bool has_scene(const std::string& route) const override;
-    SceneBasePtr resolve_scene(const std::string& route) override;
-    void activate_scene(const std::string& route) override;
-    void load_scene(const std::string& route) override;
-    void load_scene_in_background(const std::string& route, bool redirect_after=true) override;
-    void unload_scene(const std::string& route) override;
-    bool is_scene_loaded(const std::string& route) const override;
-    void reset() override;
-    SceneBasePtr active_scene() const override;
-    void _store_scene_factory(const std::string& name, std::function<SceneBasePtr (Window*)> func) override;
 
 protected:
     StagePtr stage(StageID stage=StageID());

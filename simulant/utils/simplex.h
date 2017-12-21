@@ -16,12 +16,13 @@
  *     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SIMPLEX_H
-#define SIMPLEX_H
+#pragma once
 
 #include <vector>
 #include <ctime>
 #include "../generic/managed.h"
+
+namespace smlt {
 
 class Simplex :
     public Managed<Simplex> {
@@ -67,4 +68,5 @@ private:
     double noise(double x, double y, double z, double w);
 };
 
-#endif // SIMPLEX_H
+}
+

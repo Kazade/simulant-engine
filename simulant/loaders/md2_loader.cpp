@@ -19,7 +19,7 @@
 
 
 #include "md2_loader.h"
-#include "../mesh.h"
+#include "../meshes/mesh.h"
 #include "../resource_manager.h"
 #include "../resource_locator.h"
 
@@ -188,8 +188,7 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
 
     SubMesh* submesh = mesh->new_submesh(
         "default",
-        MESH_ARRANGEMENT_TRIANGLES,
-        VERTEX_SHARING_MODE_SHARED
+        MESH_ARRANGEMENT_TRIANGLES
     );
 
     submesh->set_material_id(material);

@@ -16,7 +16,7 @@ public:
         window->resource_locator->add_search_path("./assets");
 
         // Register screens here
-        register_scene<GameScene>("main");
+        scenes->register_scene<GameScene>("main");
 
         return true;
     }

@@ -25,6 +25,7 @@
 
 #include "../types.h"
 #include "../generic/auto_weakptr.h"
+#include "../generic/threading/shared_mutex.h"
 #include "../window.h"
 
 #include "batching/renderable.h"
@@ -59,7 +60,7 @@ public:
     virtual void init_context() = 0;
     // virtual void upload_texture(Texture* texture) = 0;
 
-    Property<Renderer, HardwareBufferManager> hardware_buffers = { this, [](Renderer* self) {
+    Property<Renderer, HardwareBufferManager, true> hardware_buffers = { this, [](Renderer* self) {
         return self->_get_buffer_manager();
     }};
 
@@ -75,9 +76,56 @@ public:
 
     virtual HardwareBufferManager* _get_buffer_manager() const = 0;
 
+    void register_texture(TextureID tex_id, TexturePtr texture);
+
+    void unregister_texture(TextureID texture_id);
+
+    /*
+     * Returns true if the texture has been allocated, false otherwise.
+     *
+     * Should be thread-safe along with allocate/deallocate texture.
+     */
+    bool is_texture_registered(TextureID texture_id) const;
+
+    void prepare_texture(TextureID texture_id);
+
 private:    
     Window* window_ = nullptr;
 
+    /*
+     * Called when a texture is created. This should do whatever is necessary to
+     * prepare a texture for later upload
+     *
+     * It's likely that data will need to also be stored here for prepare_texture
+     * to function
+     *
+     * This will be called when a render group (which uses textures) is created, which
+     * means it can be called from any thread and should be thread-safe.
+     */
+    virtual void on_texture_register(TextureID tex_id, TexturePtr texture) {}
+
+    /*
+     * Called when a texture is destroyed, should perform any cleanup from
+     * register_texture.
+     *
+     * This will be called when all render groups sharing the texture are destroyed
+     * and so can be called from any thread and should be thread-safe
+     */
+    virtual void on_texture_unregister(TextureID tex_id) {}
+
+    /*
+     * Given a Texture, this should take care of:
+     * - Uploading the texture if the data is dirty
+     * - Updating texture filters and wrap modes if necessary
+     * - Generating or deleting mipmaps if the mipmap generation changed
+     *
+     * Guaranteed to be called from the main (render) thread, although must obviously
+     * be aware of register/unregister
+     */
+    virtual void on_texture_prepare(TexturePtr texture) {}
+
+    mutable shared_mutex texture_registry_mutex_;
+    std::unordered_map<TextureID, std::weak_ptr<Texture>> texture_registry_;
 };
 
 }

@@ -41,19 +41,19 @@ AABB VirtualGamepad::button_bounds(int button) {
 
 bool VirtualGamepad::init() {
     stage_ = window_.new_stage(); //Create a Stage to hold the controller buttons
+    stage_id_ = stage_->id();
 
     uint32_t button_size = int(float(window_.width() / 10.0));
-    auto stage = stage_.fetch();
 
     if(this->config_ == VIRTUAL_GAMEPAD_CONFIG_TWO_BUTTONS) {
-        auto button1 = stage->ui->new_widget_as_button("L").fetch_as<ui::Button>();
-        auto button2 = stage->ui->new_widget_as_button("R").fetch_as<ui::Button>();
+        auto button1 = stage_->ui->new_widget_as_button("L");
+        auto button2 = stage_->ui->new_widget_as_button("R");
 
         button1->set_background_colour(smlt::Colour(0, 0, 0, 0.2));
         button2->set_background_colour(smlt::Colour(0, 0, 0, 0.2));
 
-        button1->set_font(stage->assets->default_font_id(DEFAULT_FONT_STYLE_HEADING));
-        button2->set_font(stage->assets->default_font_id(DEFAULT_FONT_STYLE_HEADING));
+        button1->set_font(stage_->assets->default_font_id(DEFAULT_FONT_STYLE_HEADING));
+        button2->set_font(stage_->assets->default_font_id(DEFAULT_FONT_STYLE_HEADING));
 
         button1->move_to(window_.coordinate_from_normalized(0.10, 0.10 * window_.aspect_ratio()));
         button2->move_to(window_.coordinate_from_normalized(0.90, 0.10 * window_.aspect_ratio()));
@@ -83,28 +83,34 @@ bool VirtualGamepad::init() {
         assert(0 && "Not Implemented");
     }
 
-    camera_id_ = stage->new_camera_with_orthographic_projection();
+    camera_ = stage_->new_camera_with_orthographic_projection();
 
     //Finally add to the render sequence, give a ridiculously high priority
-    pipeline_id_ = window_.render(stage_, camera_id_).with_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
+    pipeline_ = window_.render(stage_, camera_).with_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
+    pipeline_id_ = pipeline_->id();
 
     return true;
 }
 
 void VirtualGamepad::_prepare_deletion() {
-    window_.disable_pipeline(pipeline_id_);
+    pipeline_->deactivate();
 
     // make sure we delete the buttons before we delete the gamepad
     for(auto& button: buttons_) {
-        stage_.fetch()->ui->delete_widget(button->id());
+        stage_->ui->delete_widget(button->id());
     }
 }
 
 void VirtualGamepad::cleanup() {
     L_DEBUG("Destroying virtual gamepad");
 
-    window_.delete_pipeline(pipeline_id_);
-    window_.delete_stage(stage_);
+    if(window_.has_pipeline(pipeline_id_)) {
+        pipeline_ = window_.delete_pipeline(pipeline_id_);
+    }
+
+    if(window_.has_stage(stage_id_)) {
+        stage_ = window_.delete_stage(stage_id_);
+    }
 }
 
 void VirtualGamepad::flip() {

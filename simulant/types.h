@@ -45,6 +45,8 @@
 #include "generic/manager.h"
 #include "generic/auto_weakptr.h"
 #include "generic/unique_id.h"
+#include "generic/default_init_ptr.h"
+
 #include "utils/unicode.h"
 #include "material_constants.h"
 
@@ -428,34 +430,33 @@ typedef std::weak_ptr<Font> FontRef;
 typedef std::shared_ptr<Font> FontPtr;
 
 class Actor;
-typedef Actor* ActorPtr;
+typedef default_init_ptr<Actor> ActorPtr;
 
 class Geom;
-typedef Geom* GeomPtr;
+typedef default_init_ptr<Geom> GeomPtr;
 
 class ParticleSystem;
-typedef ParticleSystem* ParticleSystemPtr;
+typedef default_init_ptr<ParticleSystem> ParticleSystemPtr;
 
 class Sprite;
-typedef Sprite* SpritePtr;
+typedef default_init_ptr<Sprite> SpritePtr;
 
 class Light;
-typedef Light* LightPtr;
+typedef default_init_ptr<Light> LightPtr;
 
 class Camera;
 class CameraProxy;
 
-typedef Camera* CameraPtr;
-typedef CameraProxy* CameraProxyPtr;
+typedef default_init_ptr<Camera> CameraPtr;
 
 class Viewport;
 
 class Background;
-typedef Background* BackgroundPtr;
+typedef default_init_ptr<Background> BackgroundPtr;
 
 class Stage;
 class Window;
-typedef Stage* StagePtr;
+typedef default_init_ptr<Stage> StagePtr;
 
 namespace ui {
 
@@ -464,7 +465,7 @@ class ProgressBar;
 class Button;
 class Label;
 
-typedef Widget* WidgetPtr;
+typedef default_init_ptr<Widget> WidgetPtr;
 
 }
 
@@ -475,7 +476,7 @@ class RenderSequence;
 typedef AutoWeakPtr<RenderSequence> RenderSequencePtr;
 
 class Pipeline;
-typedef Pipeline* PipelinePtr;
+typedef default_init_ptr<Pipeline> PipelinePtr;
 
 class Frustum;
 class Window;

@@ -5,6 +5,17 @@
 
 namespace smlt {
 
+enum AABBCorner {
+    AABB_CORNER_NEG_X_NEG_Y_NEG_Z = 0,
+    AABB_CORNER_POS_X_NEG_Y_NEG_Z = 1,
+    AABB_CORNER_POS_X_NEG_Y_POS_Z = 2,
+    AABB_CORNER_NEG_X_NEG_Y_POS_Z = 3,
+    AABB_CORNER_NEG_X_POS_Y_NEG_Z = 4,
+    AABB_CORNER_POS_X_POS_Y_NEG_Z = 5,
+    AABB_CORNER_POS_X_POS_Y_POS_Z = 6,
+    AABB_CORNER_NEG_X_POS_Y_POS_Z = 7
+};
+
 class AABB {
     /* This was originally a basic struct but for performance reasons it's now a class
      * so that we can store things like pre-calculate corners and know they are kept up-to-date
@@ -17,37 +28,15 @@ class AABB {
     mutable bool corners_dirty_ = true;
 
     void rebuild_corners() const {
-        corners_[0].x = min_.x;
-        corners_[0].y = min_.y;
-        corners_[0].z = min_.z;
+        corners_[AABB_CORNER_NEG_X_NEG_Y_NEG_Z] = {min_.x, min_.y, min_.z};
+        corners_[AABB_CORNER_POS_X_NEG_Y_NEG_Z] = {max_.x, min_.y, min_.z};
+        corners_[AABB_CORNER_POS_X_NEG_Y_POS_Z] = {max_.x, min_.y, max_.z};
+        corners_[AABB_CORNER_NEG_X_NEG_Y_POS_Z] = {min_.x, min_.y, max_.z};
 
-        corners_[1].x = max_.x;
-        corners_[1].y = min_.y;
-        corners_[1].z = min_.z;
-
-        corners_[2].x = max_.x;
-        corners_[2].y = min_.y;
-        corners_[2].z = max_.z;
-
-        corners_[3].x = min_.x;
-        corners_[3].y = min_.y;
-        corners_[3].z = max_.z;
-
-        corners_[4].x = min_.x;
-        corners_[4].y = max_.y;
-        corners_[4].z = min_.z;
-
-        corners_[5].x = max_.x;
-        corners_[5].y = max_.y;
-        corners_[5].z = min_.z;
-
-        corners_[6].x = max_.x;
-        corners_[6].y = max_.y;
-        corners_[6].z = max_.z;
-
-        corners_[7].x = min_.x;
-        corners_[7].y = max_.y;
-        corners_[7].z = max_.z;
+        corners_[AABB_CORNER_NEG_X_POS_Y_NEG_Z] = {min_.x, max_.y, min_.z};
+        corners_[AABB_CORNER_POS_X_POS_Y_NEG_Z] = {max_.x, max_.y, min_.z};
+        corners_[AABB_CORNER_POS_X_POS_Y_POS_Z] = {max_.x, max_.y, max_.z};
+        corners_[AABB_CORNER_NEG_X_POS_Y_POS_Z] = {min_.x, max_.y, max_.z};
 
         corners_dirty_ = false;
     }
@@ -149,29 +138,8 @@ public:
         return std::min(width(), std::min(height(), depth()));
     }
 
-    bool intersects(const AABB& other) const {
-        auto acx = (min_.x + max_.x) * 0.5;
-        auto acy = (min_.y + max_.y) * 0.5;
-        auto acz = (min_.z + max_.z) * 0.5;
-
-        auto bcx = (other.min_.x + other.max_.x) * 0.5;
-        auto bcy = (other.min_.y + other.max_.y) * 0.5;
-        auto bcz = (other.min_.z + other.max_.z) * 0.5;
-
-        auto arx = (max_.x - min_.x) * 0.5;
-        auto ary = (max_.y - min_.y) * 0.5;
-        auto arz = (max_.z - min_.z) * 0.5;
-
-        auto brx = (other.max_.x - other.min_.x) * 0.5;
-        auto bry = (other.max_.y - other.min_.y) * 0.5;
-        auto brz = (other.max_.z - other.min_.z) * 0.5;
-
-        bool x = fabs(acx - bcx) <= (arx + brx);
-        bool y = fabs(acy - bcy) <= (ary + bry);
-        bool z = fabs(acz - bcz) <= (arz + brz);
-
-        return x && y && z;
-    }
+    bool intersects_aabb(const AABB& other) const;
+    bool intersects_sphere(const smlt::Vec3& center, float radius) const;
 
     Vec3 centre() const {
         return Vec3(min_) + ((Vec3(max_) - Vec3(min_)) * 0.5f);

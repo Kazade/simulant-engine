@@ -28,6 +28,8 @@
 #include <future>
 #endif
 
+#include "scene.h"
+
 #include "../generic/managed.h"
 #include "../deps/kazsignal/kazsignal.h"
 
@@ -35,50 +37,56 @@ namespace smlt {
 
 class Application;
 class Window;
-class SceneBase;
 
 typedef std::shared_ptr<SceneBase> SceneBasePtr;
 typedef std::function<SceneBasePtr (Window*)> SceneFactory;
 
 
-/* Originally we used a lambda, but this doesn't compile with older GCC so we
- * are forced to reinvent the wheel here */
-template<typename S, typename... Ts>
-class SceneFactoryFunctor {
-private:
-    std::string name_;
-    std::tuple<Ts...> args_;
-
-public:
-    template<typename... Args>
-    SceneFactoryFunctor(const std::string& name, Args&&... args):
-        name_(name),
-        args_(std::forward<Args>(args)...) {
-
-    }
-
-    SceneBasePtr operator()(Window* window) {
-        auto ret = S::create(*window, std::forward<Ts>(args_)...);
-        ret->set_name(name_);
-        return ret;
-    }
+enum SceneChangeBehaviour {
+    SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE,
+    SCENE_CHANGE_BEHAVIOUR_RETAIN_CURRENT_SCENE
 };
 
+class SceneManager :
+    public Managed<SceneManager> {
 
-class SceneManagerInterface {
 public:
-    virtual ~SceneManagerInterface() {}
+    SceneManager(Window* window);
+    ~SceneManager();
+
+    bool has_scene(const std::string& route) const;
+    SceneBasePtr resolve_scene(const std::string& route);
+    void activate(const std::string& route, SceneChangeBehaviour behaviour=SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE);
+
+    void load(const std::string& route);
+    void load_in_background(const std::string& route, bool redirect_after=true);
+    void unload(const std::string& route);
+
+    bool is_loaded(const std::string& route) const;
+    void reset();
+    SceneBasePtr active_scene() const;
 
     template<typename T, typename... Args>
-    void register_scene(const std::string& name, const Args&&... args) {
-        _store_scene_factory(name, SceneFactoryFunctor<T>(name, args...));
+    void register_scene(const std::string& name, Args&&... args) {
+        SceneFactory func = std::bind(
+            &T::template create<Window*, typename std::decay<Args>::type&...>,
+            std::placeholders::_1, std::forward<Args>(args)...
+        );
+
+        _store_scene_factory(name, [=](Window* window) -> SceneBasePtr {
+            auto ret = func(window);
+            ret->set_name(name);
+            ret->scene_manager_ = this;
+            return ret;
+        });
     }
 
     template<typename T>
     void register_scene(const std::string& name) {
         _store_scene_factory(name, [=](Window* window) -> SceneBasePtr {
-            auto ret = T::create(*window);
+            auto ret = T::create(window);
             ret->set_name(name);
+            ret->scene_manager_ = this;
             return ret;
         });
     }
@@ -87,48 +95,11 @@ public:
     std::shared_ptr<T> resolve_scene_as(const std::string& route) {
         return std::dynamic_pointer_cast<T>(resolve_scene(route));
     }
-
-    virtual bool has_scene(const std::string& route) const = 0;
-    virtual SceneBasePtr resolve_scene(const std::string& route) = 0;
-    virtual void activate_scene(const std::string& route) = 0;
-
-    virtual void load_scene(const std::string& route) = 0;
-    virtual void load_scene_in_background(const std::string& route, bool redirect_after=true) = 0;
-    virtual void unload_scene(const std::string& route) = 0;
-
-    virtual bool is_scene_loaded(const std::string& route) const = 0;
-    virtual void reset() = 0;
-    virtual SceneBasePtr active_scene() const = 0;
-
-    virtual void _store_scene_factory(const std::string& name, SceneFactory func) = 0;
-
-};
-
-class SceneManager :
-    public Managed<SceneManager>,
-    public SceneManagerInterface {
-
-public:
-    SceneManager(Window* window);
-    ~SceneManager();
-
-    bool has_scene(const std::string& route) const;
-    SceneBasePtr resolve_scene(const std::string& route);
-    void activate_scene(const std::string& route);
-
-    void load_scene(const std::string& route);
-    void load_scene_in_background(const std::string& route, bool redirect_after=true);
-    void unload_scene(const std::string& route);
-
-    bool is_scene_loaded(const std::string& route) const;
-    void reset();
-    SceneBasePtr active_scene() const;
-
+private:
     void _store_scene_factory(const std::string& name, SceneFactory func) {
         scene_factories_[name] = func;
     }
 
-private:
     Window* window_;
 
     std::unordered_map<std::string, SceneFactory> scene_factories_;

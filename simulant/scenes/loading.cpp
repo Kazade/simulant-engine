@@ -23,6 +23,7 @@
 #include "../nodes/camera.h"
 #include "../window.h"
 #include "../nodes/ui/ui_manager.h"
+#include "../nodes/ui/label.h"
 
 #include "loading.h"
 
@@ -34,41 +35,40 @@ void Loading::load() {
     //Create a stage
     stage_ = window->new_stage();
 
-    auto stage = stage_.fetch();
-    progress_bar_ = dynamic_cast<ui::ProgressBar*>(stage->ui->new_widget_as_progress_bar().fetch());
+    progress_bar_ = stage_->ui->new_widget_as_progress_bar();
     progress_bar_->resize(window->width() * 0.5f, 8);
     progress_bar_->move_to(window->coordinate_from_normalized(0.5, 0.5));
     progress_bar_->set_pulse_step(progress_bar_->requested_width());
 
-    auto label = stage->ui->new_widget_as_label("LOADING").fetch();
+    auto label = stage_->ui->new_widget_as_label("LOADING");
     label->move_to(window->coordinate_from_normalized(0.5, 0.55));
     label->set_background_colour(smlt::Colour::NONE);
 
     //Create an orthographic camera
-    camera_ = stage_.fetch()->new_camera();
+    camera_ = stage_->new_camera();
 
-    camera_.fetch()->set_orthographic_projection(
+    camera_->set_orthographic_projection(
         0, window->width(), 0, window->height()
     );
 
     //Create an inactive pipeline
     pipeline_ = window->render(stage_, camera_);
-    window->disable_pipeline(pipeline_);
+    pipeline_->deactivate();
 }
 
 void Loading::unload() {
     //Clean up
-    window->delete_pipeline(pipeline_);
-    window->delete_stage(stage_);    
+    pipeline_->deactivate();
+    window->delete_stage(stage_->id());
 }
 
 void Loading::activate() {
-    window->enable_pipeline(pipeline_);
+    pipeline_->activate();
 }
 
 void Loading::deactivate() {
     //Deactivate the loading pipeline
-    window->disable_pipeline(pipeline_);
+    pipeline_->deactivate();
 }
 
 }

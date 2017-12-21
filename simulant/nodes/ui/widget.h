@@ -193,11 +193,11 @@ public:
 
 private:
     bool initialized_ = false;
-    UIManager* owner_;
-    ActorID actor_;
-    MeshPtr mesh_;
-    FontPtr font_;
-    MaterialPtr material_;
+    UIManager* owner_ = nullptr;
+    ActorPtr actor_ = nullptr;
+    MeshPtr mesh_ = nullptr;
+    FontPtr font_ = nullptr;
+    MaterialPtr material_ = nullptr;
 
     virtual MeshID construct_widget(float requested_width, float requested_height);
 
@@ -245,6 +245,13 @@ protected:
     std::set<uint32_t> fingers_down_;
 
     WidgetPtr focused_in_chain_or_this();
+
+    /*
+     * We regularly need to rebuild the text submesh. Wiping out vertex data
+     * is cumbersome and slow, so instead we wipe the submesh indexes and add
+     * them here, then used these indexes as necessary when rebuilding
+     */
+    std::set<uint16_t> available_indexes_;
 };
 
 }

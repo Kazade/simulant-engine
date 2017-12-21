@@ -36,7 +36,7 @@ class Loading:
     public Scene<Loading> {
 
 public:
-    Loading(Window& window):
+    Loading(Window* window):
         Scene<Loading>(window) {}
 
     Property<Loading, ui::ProgressBar> progress_bar = {this, &Loading::progress_bar_};
@@ -48,9 +48,9 @@ private:
     void load() override;
     void unload() override;
 
-    StageID stage_;
-    CameraID camera_;
-    PipelineID pipeline_;
+    StagePtr stage_;
+    CameraPtr camera_;
+    PipelinePtr pipeline_;
 
     ui::ProgressBar* progress_bar_ = nullptr;
 };

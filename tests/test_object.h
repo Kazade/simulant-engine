@@ -11,17 +11,17 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage_id_ = window->new_stage();
-        camera_id_ = stage_id_.fetch()->new_camera();
+        stage_ = window->new_stage();
+        camera_ = stage_->new_camera();
     }
 
     void tear_down() {
         SimulantTestCase::tear_down();
-        window->delete_stage(stage_id_);
+        window->delete_stage(stage_->id());
     }
 
     void test_move_forward_by() {
-        auto actor = stage_id_.fetch()->new_actor().fetch();
+        auto actor = stage_->new_actor();
 
         actor->rotate_to(smlt::Quaternion(smlt::Degrees(0), smlt::Degrees(90), smlt::Degrees(0)));
         actor->move_forward_by(200);
@@ -34,7 +34,7 @@ public:
     void test_positional_constraints() {
         smlt::AABB aabb(Vec3(), 2.0);
 
-        auto actor = stage_id_.fetch()->new_actor().fetch();
+        auto actor = stage_->new_actor();
         actor->move_to(Vec3(2, 0.5, 0.5));
 
         assert_equal(2, actor->position().x);
@@ -49,7 +49,7 @@ public:
     }
 
     void test_scaling_applies() {
-        auto actor = window->stage(stage_id_)->new_actor().fetch();
+        auto actor = stage_->new_actor();
         actor->scale_by(smlt::Vec3(2.0, 1.0, 0.5));
 
         auto transform = actor->absolute_transformation();
@@ -58,7 +58,7 @@ public:
         assert_equal(transform[5], 1.0);
         assert_equal(transform[10], 0.5);
 
-        auto actor2 = window->stage(stage_id_)->new_actor().fetch();
+        auto actor2 = stage_->new_actor();
 
         actor2->rotate_y_by(smlt::Degrees(1.0));
 
@@ -74,8 +74,8 @@ public:
     }
 
     void test_set_parent() {
-        auto actor1 = window->stage(stage_id_)->new_actor().fetch();
-        auto actor2 = window->stage(stage_id_)->new_actor().fetch();
+        auto actor1 = stage_->new_actor();
+        auto actor2 = stage_->new_actor();
 
         actor2->set_parent(actor1);
 
@@ -91,8 +91,8 @@ public:
     }
 
     void test_parent_transformation_applied() {
-        auto actor1 = window->stage(stage_id_)->new_actor().fetch();
-        auto actor2 = window->stage(stage_id_)->new_actor().fetch();
+        auto actor1 = stage_->new_actor();
+        auto actor2 = stage_->new_actor();
         actor2->set_parent(actor1);
 
         actor2->move_to(smlt::Vec3(0, 0, -5));
@@ -106,17 +106,15 @@ public:
     }
 
     void test_set_absolute_rotation() {
-        smlt::ActorID act = window->stage(stage_id_)->new_actor();
-        auto actor = window->stage(stage_id_)->actor(act);
+        auto actor = stage_->new_actor();
 
         actor->rotate_to_absolute(smlt::Degrees(10), 0, 0, 1);
 
         assert_equal(actor->rotation(), actor->absolute_rotation());
 
-        smlt::ActorID act2 = window->stage(stage_id_)->new_actor();
-        auto actor2 = window->stage(stage_id_)->actor(act2);
+        auto actor2 = stage_->new_actor();
 
-        actor2->set_parent(act);
+        actor2->set_parent(actor->id());
 
         assert_equal(actor2->absolute_rotation(), actor->absolute_rotation());
 
@@ -137,17 +135,15 @@ public:
     }
 
     void test_set_absolute_position() {
-        smlt::ActorID act = window->stage(stage_id_)->new_actor();
-        auto actor = window->stage(stage_id_)->actor(act);
+        auto actor = stage_->new_actor();
 
         actor->move_to_absolute(10, 10, 10);
 
         assert_equal(smlt::Vec3(10, 10, 10), actor->absolute_position());
 
-        smlt::ActorID act2 = window->stage(stage_id_)->new_actor();
-        auto actor2 = window->stage(stage_id_)->actor(act2);
+        auto actor2 = stage_->new_actor();
 
-        actor2->set_parent(act);
+        actor2->set_parent(actor->id());
 
         //Should be the same as its parent
         assert_equal(actor2->absolute_position(), actor->absolute_position());
@@ -163,8 +159,7 @@ public:
     }
 
     void test_set_relative_position() {
-        smlt::ActorID act = window->stage(stage_id_)->new_actor();
-        auto actor = window->stage(stage_id_)->actor(act);
+        auto actor = stage_->new_actor();
 
         actor->move_to(10, 10, 10);
 
@@ -172,10 +167,9 @@ public:
         assert_equal(smlt::Vec3(10, 10, 10), actor->position());
         assert_equal(smlt::Vec3(10, 10, 10), actor->absolute_position());
 
-        smlt::ActorID act2 = window->stage(stage_id_)->new_actor();
-        auto actor2 = window->stage(stage_id_)->actor(act2);
+        auto actor2 = stage_->new_actor();
 
-        actor2->set_parent(act);
+        actor2->set_parent(actor->id());
 
         actor2->move_to(smlt::Vec3(10, 0, 0));
 
@@ -184,10 +178,8 @@ public:
     }
 
     void test_move_updates_children() {
-        auto stage = stage_id_.fetch();
-
-        auto actor1 = stage->new_actor().fetch();
-        auto actor2 = stage->new_actor().fetch();
+        auto actor1 = stage_->new_actor();
+        auto actor2 = stage_->new_actor();
 
         actor2->move_to(0, 0, 10.0f);
         actor2->set_parent(actor1);
@@ -196,17 +188,29 @@ public:
     }
 
     void test_set_parent_to_self_does_nothing() {
-        auto stage = stage_id_.fetch();
-        auto actor1 = stage->new_actor().fetch();
+        auto actor1 = stage_->new_actor();
 
         auto original_parent = actor1->parent();
         actor1->set_parent(actor1);
         assert_equal(original_parent, actor1->parent());
     }
 
+    void test_find_child_by_name() {
+        auto actor1 = stage_->new_actor_with_name("actor1");
+
+        assert_equal(actor1, stage_->find_child_with_name("actor1"));
+        assert_is_null(stage_->find_child_with_name("bananas"));
+
+        auto dupe = stage_->new_actor_with_name("actor1");
+        dupe->set_parent(actor1);
+
+        // Just find the first one
+        assert_equal(actor1, stage_->find_child_with_name("actor1"));
+    }
+
 private:
-    smlt::CameraID camera_id_;
-    smlt::StageID stage_id_;
+    smlt::CameraPtr camera_;
+    smlt::StagePtr stage_;
 };
 
 #endif // TEST_OBJECT_H

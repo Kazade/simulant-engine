@@ -58,10 +58,6 @@ void Actor::remove_material_id_override() {
     }
 }
 
-VertexData* Actor::get_shared_data() const {
-    return mesh_->shared_data.get();
-}
-
 void Actor::clear_subactors() {
     for(auto& subactor: subactors_) {
         signal_subactor_destroyed_(id(), subactor.get());
@@ -133,6 +129,7 @@ void Actor::set_mesh(MeshID mesh) {
     if(!mesh) {
         clear_subactors();
         mesh_.reset();
+        vertex_data_ = nullptr;
         return;
     }
 
@@ -148,17 +145,18 @@ void Actor::set_mesh(MeshID mesh) {
 
     //Increment the ref-count on this mesh
     mesh_ = meshptr->shared_from_this();
+    vertex_data_ = mesh_->vertex_data.get();
 
     /* FIXME: This logic should also happen if the associated Mesh has set_animation_enabled called */
     if(mesh_ && mesh_->is_animated()) {
         using namespace std::placeholders;
 
-        auto shared_data_size = mesh_->shared_data->count();
-        auto shared_vertices_per_frame = shared_data_size / mesh_->animation_frames();
+        auto vertex_data_size = mesh_->vertex_data->count();
+        auto shared_vertices_per_frame = vertex_data_size / mesh_->animation_frames();
 
         // Create an interpolated vertex hardware buffer if this is an animated mesh
         interpolated_vertex_buffer_ = stage->window->renderer->hardware_buffers->allocate(
-            mesh_->shared_data->specification().stride() * shared_vertices_per_frame,                    
+            mesh_->vertex_data->specification().stride() * shared_vertices_per_frame,                    
             HARDWARE_BUFFER_VERTEX_ATTRIBUTES,
             SHADOW_BUFFER_DISABLED
         );
@@ -207,15 +205,15 @@ void Actor::refresh_animation_state(uint32_t current_frame, uint32_t next_frame,
 
     assert(mesh_ && mesh_->is_animated());
 
-    auto shared_data_size = mesh_->shared_data->count();
-    if(shared_data_size) {
-        assert(shared_data_size % mesh_->animation_frames() == 0);
-        auto shared_vertices_per_frame = shared_data_size / mesh_->animation_frames();
+    auto vertex_data_size = mesh_->vertex_data->count();
+    if(vertex_data_size) {
+        assert(vertex_data_size % mesh_->animation_frames() == 0);
+        auto shared_vertices_per_frame = vertex_data_size / mesh_->animation_frames();
 
         auto source_offset = shared_vertices_per_frame * animation_state_->current_frame();
         auto target_offset = shared_vertices_per_frame * animation_state_->next_frame();
 
-        VertexData* source_data = mesh_->shared_data.get();
+        VertexData* source_data = mesh_->vertex_data.get();
 
         VertexData target(source_data->specification());
         target.resize(shared_vertices_per_frame);

@@ -27,9 +27,9 @@ struct Quaternion {
     float z;
     float w;
 
-    Quaternion() {
-        x = y = z = 0;
-        w = 1;
+    Quaternion():
+        x(0), y(0), z(0), w(1) {
+
     }
 
     Quaternion(Degrees pitch, Degrees yaw, Degrees roll);
@@ -37,11 +37,9 @@ struct Quaternion {
     Quaternion(const Vec3& axis, const Degrees& degrees);
     Quaternion(const Mat3& rot_matrix);
 
-    Quaternion(float x, float y, float z, float w) {
-        this->x = x;
-        this->y = y;
-        this->z = z;
-        this->w = w;
+    Quaternion(float x, float y, float z, float w):
+        x(x), y(y), z(z), w(w) {
+
     }
 
     Vec3 rotate_vector(const Vec3& v) const;

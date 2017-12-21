@@ -23,7 +23,13 @@
 #include <vector>
 
 #include "../../generic/managed.h"
-#include "glad/glad/glad.h"
+
+#ifdef __ANDROID__
+    #include <GLES2/gl2.h>
+    #include <GLES2/gl2ext.h>
+#else
+    #include "glad/glad/glad.h"
+#endif
 
 namespace smlt {
 

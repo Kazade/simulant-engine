@@ -27,35 +27,39 @@
  *  manager->register_scene<MenuScene>("menu");
  *  manager->register_scene<GameScene>("ingame");
  *
- *  manager->activate_scene("loading");
- *  manager->load_scene_in_background("menu");
+ *  manager->activate("loading");
+ *  manager->load_in_background("menu");
  *  if(manager->is_loaded("menu")) {
- *      manager->activate_scene("menu");
+ *      manager->activate("menu");
  *  }
  *  manager->unload("loading");
- *  manager->activate_scene("loading"); // Will cause loading to happen again
+ *  manager->activate("loading"); // Will cause loading to happen again
  *
  */
 
 #include "../utils/unicode.h"
 #include "../types.h"
-#include "../window.h"
 #include "../generic/managed.h"
 #include "../generic/property.h"
 #include "../interfaces/nameable.h"
+#include "../interfaces/updateable.h"
 #include "../interfaces.h"
 
 namespace smlt {
 
+class Application;
+class Window;
+class InputManager;
+class SceneManager;
+
 class SceneLoadException : public std::runtime_error {};
 
 class SceneBase:
-    public Nameable,
     public Updateable {
 public:
     typedef std::shared_ptr<SceneBase> ptr;
 
-    SceneBase(Window& window);
+    SceneBase(Window* window);
     virtual ~SceneBase();
 
     void _call_load();
@@ -65,37 +69,62 @@ public:
     void _call_deactivate();
 
     bool is_loaded() const { return is_loaded_; }
+    bool is_active() const { return is_active_; }
 
+    const std::string name() const {
+        return name_;
+    }
+
+    void set_name(const std::string& name) {
+        name_ = name;
+    }
+
+    /* Whether or not to destroy the scene when it's been unloaded.
+     * If destroyed, the next time the scene is accessed by name via the scene manager
+     * a new instance will be created.
+     */
+    bool destroy_on_unload() const { return destroy_on_unload_; }
+    void set_destroy_on_unload(bool v) {
+        destroy_on_unload_ = v;
+    }
 protected:
     Property<SceneBase, Window> window = {this, &SceneBase::window_};
     Property<SceneBase, Application> app = {this, &SceneBase::app_};
     Property<SceneBase, InputManager> input = {this, &SceneBase::input_};
+    Property<SceneBase, SceneManager> scenes = {this, &SceneBase::scene_manager_};
 
     virtual void load() = 0;
     virtual void unload() {}
     virtual void activate() {}
     virtual void deactivate() {}
 
-    PipelineID prepare_basic_scene(
-        StageID& new_stage,
-        CameraID& new_camera,
+    PipelinePtr prepare_basic_scene(StagePtr &new_stage,
+        CameraPtr &new_camera,
         AvailablePartitioner partitioner=PARTITIONER_HASH
     );
 
-    Window* window_;
-    InputManager* input_;
-    Application* app_;
 private:
     virtual void pre_load() {}
     virtual void post_unload() {}
 
     bool is_loaded_ = false;
+    bool is_active_ = false;
+    std::string name_;
+
+    bool destroy_on_unload_ = true;
+
+    Window* window_;
+    InputManager* input_;
+    Application* app_;
+    SceneManager* scene_manager_ = nullptr;
+
+    friend class SceneManager;
 };
 
 template<typename T>
 class Scene : public SceneBase, public Managed<T> {
 public:
-    Scene(Window& window):
+    Scene(Window* window):
         SceneBase(window) {}
 
     void cleanup() override {
@@ -104,6 +133,5 @@ public:
 };
 
 }
-
 
 #endif // SCENE_H

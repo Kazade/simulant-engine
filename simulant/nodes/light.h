@@ -96,11 +96,11 @@ public:
     float linear_attenuation() const { return linear_attenuation_; }
     float quadratic_attenuation() const { return quadratic_attenuation_; }
 
-    const AABB& aabb() const {
+    const AABB& aabb() const override {
         return bounds_;
     }
 
-    void ask_owner_for_destruction();
+    void ask_owner_for_destruction() override;
     RenderableCullingMode renderable_culling_mode() const { return culling_mode_; }
 
     void update(float step) override {}

@@ -18,7 +18,7 @@
 //
 
 #include "tiled_loader.h"
-#include "../mesh.h"
+#include "../meshes/mesh.h"
 #include "../types.h"
 #include "../extra/tiled/TmxParser/Tmx.h"
 #include "../resource_manager.h"
@@ -87,7 +87,7 @@ void TiledLoader::into(Loadable &resource, const LoaderOptions &options) {
 
         TextureID tid = mesh->resource_manager().new_texture_from_file(
             final_path,
-            TextureFlags(MIPMAP_GENERATE_NONE, TEXTURE_WRAP_CLAMP_TO_EDGE, TEXTURE_FILTER_NEAREST)
+            TextureFlags(MIPMAP_GENERATE_NONE, TEXTURE_WRAP_CLAMP_TO_EDGE, TEXTURE_FILTER_POINT)
         );
 
         tileset_materials[i] = mesh->resource_manager().new_material_from_texture(tid);
@@ -151,7 +151,7 @@ void TiledLoader::into(Loadable &resource, const LoaderOptions &options) {
             float tx1 = x1 / tileset.total_width - (0.5 / tileset.total_width);
             float ty1 = y1 / tileset.total_height + (0.5 / tileset.total_height);
 
-            submesh->vertex_data->move_to(0);
+            submesh->vertex_data->move_to(submesh->index_data->at(0));
             submesh->vertex_data->tex_coord0(smlt::Vec2(tx0, ty1));
 
             submesh->vertex_data->move_next();

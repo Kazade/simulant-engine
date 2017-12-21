@@ -57,35 +57,35 @@ void box(MeshPtr mesh, float width, float height, float depth, MeshStyle style) 
 
     //front and back
     for(int32_t z: { -1, 1 }) {
-        uint32_t count = mesh->shared_data->count();
+        uint32_t count = mesh->vertex_data->count();
 
-        mesh->shared_data->position(-1 * rx, -1 * ry, z * rz);
-        mesh->shared_data->tex_coord0((z > 0) ? 0 : 1, 0);
-        mesh->shared_data->tex_coord1((z > 0) ? 0 : 1, 0);
-        mesh->shared_data->diffuse(smlt::Colour::WHITE);
-        mesh->shared_data->normal(0, 0, z);
-        mesh->shared_data->move_next();
+        mesh->vertex_data->position(-1 * rx, -1 * ry, z * rz);
+        mesh->vertex_data->tex_coord0((z > 0) ? 0 : 1, 0);
+        mesh->vertex_data->tex_coord1((z > 0) ? 0 : 1, 0);
+        mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+        mesh->vertex_data->normal(0, 0, z);
+        mesh->vertex_data->move_next();
 
-        mesh->shared_data->position( 1 * rx, -1 * ry, z * rz);
-        mesh->shared_data->tex_coord0((z > 0) ? 1 : 0, 0);
-        mesh->shared_data->tex_coord1((z > 0) ? 1 : 0, 0);
-        mesh->shared_data->diffuse(smlt::Colour::WHITE);
-        mesh->shared_data->normal(0, 0, z);
-        mesh->shared_data->move_next();
+        mesh->vertex_data->position( 1 * rx, -1 * ry, z * rz);
+        mesh->vertex_data->tex_coord0((z > 0) ? 1 : 0, 0);
+        mesh->vertex_data->tex_coord1((z > 0) ? 1 : 0, 0);
+        mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+        mesh->vertex_data->normal(0, 0, z);
+        mesh->vertex_data->move_next();
 
-        mesh->shared_data->position( 1 * rx,  1 * ry, z * rz);
-        mesh->shared_data->tex_coord0((z > 0) ? 1 : 0, 1);
-        mesh->shared_data->tex_coord1((z > 0) ? 1 : 0, 1);
-        mesh->shared_data->diffuse(smlt::Colour::WHITE);
-        mesh->shared_data->normal(0, 0, z);
-        mesh->shared_data->move_next();
+        mesh->vertex_data->position( 1 * rx,  1 * ry, z * rz);
+        mesh->vertex_data->tex_coord0((z > 0) ? 1 : 0, 1);
+        mesh->vertex_data->tex_coord1((z > 0) ? 1 : 0, 1);
+        mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+        mesh->vertex_data->normal(0, 0, z);
+        mesh->vertex_data->move_next();
 
-        mesh->shared_data->position(-1 * rx,  1 * ry, z * rz);
-        mesh->shared_data->tex_coord0((z > 0) ? 0 : 1, 1);
-        mesh->shared_data->tex_coord1((z > 0) ? 0 : 1, 1);
-        mesh->shared_data->diffuse(smlt::Colour::WHITE);
-        mesh->shared_data->normal(0, 0, z);
-        mesh->shared_data->move_next();
+        mesh->vertex_data->position(-1 * rx,  1 * ry, z * rz);
+        mesh->vertex_data->tex_coord0((z > 0) ? 0 : 1, 1);
+        mesh->vertex_data->tex_coord1((z > 0) ? 0 : 1, 1);
+        mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+        mesh->vertex_data->normal(0, 0, z);
+        mesh->vertex_data->move_next();
 
         if(z > 0) {
             SubMesh* sm = submeshes[0];
@@ -111,35 +111,35 @@ void box(MeshPtr mesh, float width, float height, float depth, MeshStyle style) 
 
     //left and right
     for(int32_t x: { -1, 1 }) {
-        uint32_t count = mesh->shared_data->count();
+        uint32_t count = mesh->vertex_data->count();
 
-        mesh->shared_data->position( x * rx, -1 * ry, -1 * rz);
-        mesh->shared_data->tex_coord0((x < 0) ? 0 : 1, 0);
-        mesh->shared_data->tex_coord1((x < 0) ? 0 : 1, 0);
-        mesh->shared_data->diffuse(smlt::Colour::WHITE);
-        mesh->shared_data->normal(x, 0, 0);
-        mesh->shared_data->move_next();
+        mesh->vertex_data->position( x * rx, -1 * ry, -1 * rz);
+        mesh->vertex_data->tex_coord0((x < 0) ? 0 : 1, 0);
+        mesh->vertex_data->tex_coord1((x < 0) ? 0 : 1, 0);
+        mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+        mesh->vertex_data->normal(x, 0, 0);
+        mesh->vertex_data->move_next();
 
-        mesh->shared_data->position( x * rx,  1 * ry, -1 * rz);
-        mesh->shared_data->tex_coord0((x < 0) ? 0 : 1, 1);
-        mesh->shared_data->tex_coord1((x < 0) ? 0 : 1, 1);
-        mesh->shared_data->diffuse(smlt::Colour::WHITE);
-        mesh->shared_data->normal(x, 0, 0);
-        mesh->shared_data->move_next();
+        mesh->vertex_data->position( x * rx,  1 * ry, -1 * rz);
+        mesh->vertex_data->tex_coord0((x < 0) ? 0 : 1, 1);
+        mesh->vertex_data->tex_coord1((x < 0) ? 0 : 1, 1);
+        mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+        mesh->vertex_data->normal(x, 0, 0);
+        mesh->vertex_data->move_next();
 
-        mesh->shared_data->position( x * rx,  1 * ry, 1 * rz);
-        mesh->shared_data->tex_coord0((x < 0) ? 1 : 0, 1);
-        mesh->shared_data->tex_coord1((x < 0) ? 1 : 0, 1);
-        mesh->shared_data->diffuse(smlt::Colour::WHITE);
-        mesh->shared_data->normal(x, 0, 0);
-        mesh->shared_data->move_next();
+        mesh->vertex_data->position( x * rx,  1 * ry, 1 * rz);
+        mesh->vertex_data->tex_coord0((x < 0) ? 1 : 0, 1);
+        mesh->vertex_data->tex_coord1((x < 0) ? 1 : 0, 1);
+        mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+        mesh->vertex_data->normal(x, 0, 0);
+        mesh->vertex_data->move_next();
 
-        mesh->shared_data->position(x * rx, -1 * ry, 1 * rz);
-        mesh->shared_data->tex_coord0((x < 0) ? 1 : 0, 0);
-        mesh->shared_data->tex_coord1((x < 0) ? 1 : 0, 0);
-        mesh->shared_data->diffuse(smlt::Colour::WHITE);
-        mesh->shared_data->normal(x, 0, 0);
-        mesh->shared_data->move_next();
+        mesh->vertex_data->position(x * rx, -1 * ry, 1 * rz);
+        mesh->vertex_data->tex_coord0((x < 0) ? 1 : 0, 0);
+        mesh->vertex_data->tex_coord1((x < 0) ? 1 : 0, 0);
+        mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+        mesh->vertex_data->normal(x, 0, 0);
+        mesh->vertex_data->move_next();
 
         if(x > 0) {
             SubMesh* sm = submeshes[2];
@@ -165,35 +165,35 @@ void box(MeshPtr mesh, float width, float height, float depth, MeshStyle style) 
 
     //top and bottom
     for(int32_t y: { -1, 1 }) {
-        uint32_t count = mesh->shared_data->count();
+        uint32_t count = mesh->vertex_data->count();
 
-        mesh->shared_data->position( 1 * rx, y * ry, -1 * rz);
-        mesh->shared_data->tex_coord0((y > 0) ? 1 : 0, 1);
-        mesh->shared_data->tex_coord1((y > 0) ? 1 : 0, 1);
-        mesh->shared_data->diffuse(smlt::Colour::WHITE);
-        mesh->shared_data->normal(0, y, 0);
-        mesh->shared_data->move_next();
+        mesh->vertex_data->position( 1 * rx, y * ry, -1 * rz);
+        mesh->vertex_data->tex_coord0((y > 0) ? 1 : 0, 1);
+        mesh->vertex_data->tex_coord1((y > 0) ? 1 : 0, 1);
+        mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+        mesh->vertex_data->normal(0, y, 0);
+        mesh->vertex_data->move_next();
 
-        mesh->shared_data->position( -1 * rx,  y * ry, -1 * rz);
-        mesh->shared_data->tex_coord0((y > 0) ? 0 : 1, 1);
-        mesh->shared_data->tex_coord1((y > 0) ? 0 : 1, 1);
-        mesh->shared_data->diffuse(smlt::Colour::WHITE);
-        mesh->shared_data->normal(0, y, 0);
-        mesh->shared_data->move_next();
+        mesh->vertex_data->position( -1 * rx,  y * ry, -1 * rz);
+        mesh->vertex_data->tex_coord0((y > 0) ? 0 : 1, 1);
+        mesh->vertex_data->tex_coord1((y > 0) ? 0 : 1, 1);
+        mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+        mesh->vertex_data->normal(0, y, 0);
+        mesh->vertex_data->move_next();
 
-        mesh->shared_data->position( -1 * rx,  y * ry, 1 * rz);
-        mesh->shared_data->tex_coord0((y > 0) ? 0 : 1, 0);
-        mesh->shared_data->tex_coord1((y > 0) ? 0 : 1, 0);
-        mesh->shared_data->diffuse(smlt::Colour::WHITE);
-        mesh->shared_data->normal(0, y, 0);
-        mesh->shared_data->move_next();
+        mesh->vertex_data->position( -1 * rx,  y * ry, 1 * rz);
+        mesh->vertex_data->tex_coord0((y > 0) ? 0 : 1, 0);
+        mesh->vertex_data->tex_coord1((y > 0) ? 0 : 1, 0);
+        mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+        mesh->vertex_data->normal(0, y, 0);
+        mesh->vertex_data->move_next();
 
-        mesh->shared_data->position( 1 * rx, y * ry, 1 * rz);
-        mesh->shared_data->tex_coord0((y > 0) ? 1 : 0, 0);
-        mesh->shared_data->tex_coord1((y > 0) ? 1 : 0, 0);
-        mesh->shared_data->diffuse(smlt::Colour::WHITE);
-        mesh->shared_data->normal(0, y, 0);
-        mesh->shared_data->move_next();
+        mesh->vertex_data->position( 1 * rx, y * ry, 1 * rz);
+        mesh->vertex_data->tex_coord0((y > 0) ? 1 : 0, 0);
+        mesh->vertex_data->tex_coord1((y > 0) ? 1 : 0, 0);
+        mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+        mesh->vertex_data->normal(0, y, 0);
+        mesh->vertex_data->move_next();
 
         if(y > 0) {
             SubMesh* sm = submeshes[4];
@@ -217,7 +217,7 @@ void box(MeshPtr mesh, float width, float height, float depth, MeshStyle style) 
 
     }
 
-    mesh->shared_data->done();
+    mesh->vertex_data->done();
     for(auto sm: submeshes) {
         sm->index_data->done();
     }

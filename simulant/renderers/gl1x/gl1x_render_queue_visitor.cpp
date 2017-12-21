@@ -239,7 +239,13 @@ void GL1RenderQueueVisitor::change_light(const Light* prev, const Light* next) {
         position.w = 0.0f;
     }
 
+    Mat4 identity = camera_->view_matrix();
+
+    GLCheck(glMatrixMode, GL_MODELVIEW);
+    GLCheck(glPushMatrix);
+    GLCheck(glLoadMatrixf, (const float*) &identity);
     GLCheck(glLightfv, GL_LIGHT0, GL_POSITION, &position.x);
+    GLCheck(glPopMatrix);
 }
 
 bool GL1RenderQueueVisitor::queue_if_blended(Renderable* renderable, MaterialPass* material_pass, batcher::Iteration iteration) {

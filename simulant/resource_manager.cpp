@@ -65,13 +65,13 @@ bool ResourceManager::init() {
     auto tex = texture(default_texture_id_);
 
     tex->resize(8, 8);
-    tex->set_bpp(32);
+    tex->set_format(TEXTURE_FORMAT_RGBA);
 
+    auto texlock = tex->lock();
     for(uint32_t i = 0; i < 64 * 4; ++i) {
         tex->data()[i] = 255;
     }
-
-    tex->upload();
+    tex->mark_data_changed();
 
     //Maintain ref-count
     default_material_id_ = new_material_from_file(default_material_filename(), GARBAGE_COLLECT_NEVER);
@@ -84,8 +84,12 @@ bool ResourceManager::init() {
 
 void ResourceManager::update(float dt) {
     MaterialManager::each([dt](Material* mat) {
-        mat->update_controllers(dt);
+        mat->update_behaviours(dt);
         mat->update(dt);
+    });
+
+    TextureManager::each([dt](Texture* tex) {
+        tex->update(dt);
     });
 }
 
@@ -158,8 +162,7 @@ MeshID ResourceManager::new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMe
     SubMesh* target = mesh(result)->new_submesh_with_material(
         submesh->name(),
         submesh->material_id(),
-        submesh->arrangement(),
-        VERTEX_SHARING_MODE_SHARED
+        submesh->arrangement()
     );
 
     std::unordered_map<Index, Index> old_to_new;
@@ -170,10 +173,12 @@ MeshID ResourceManager::new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMe
         if(old_to_new.count(old_index)) {
             target->index_data->index(old_to_new[old_index]);
         } else {
-            old_to_new[old_index] = submesh->vertex_data->copy_vertex_to_another(
+            auto j = submesh->vertex_data->copy_vertex_to_another(
                 *target->vertex_data.get(), submesh->index_data->at(i)
             );
-            target->index_data->index(i);
+
+            old_to_new[old_index] = j;
+            target->index_data->index(j);
         }
     }
 
@@ -197,7 +202,12 @@ MeshID ResourceManager::new_mesh_from_file(const unicode& path, GarbageCollectMe
 
 MeshID ResourceManager::new_mesh_from_tmx_file(const unicode& tmx_file, const unicode& layer_name, float tile_render_size, GarbageCollectMethod garbage_collect) {
     smlt::MeshID mesh_id = new_mesh(VertexSpecification::DEFAULT, garbage_collect);
-    window->loader_for(tmx_file.encode())->into(mesh(mesh_id), {
+    auto mesh = mesh_id.fetch();
+
+    // There's no point maintaining adjacency info on a flat grid
+    mesh->set_maintain_adjacency_info(false);
+
+    window->loader_for(tmx_file.encode())->into(mesh, {
         {"layer", layer_name},
         {"render_size", tile_render_size}
     });
@@ -207,7 +217,12 @@ MeshID ResourceManager::new_mesh_from_tmx_file(const unicode& tmx_file, const un
 
 MeshID ResourceManager::new_mesh_from_heightmap(const unicode& image_file, const HeightmapSpecification& spec, GarbageCollectMethod garbage_collect) {
     smlt::MeshID mesh_id = new_mesh(VertexSpecification::DEFAULT, garbage_collect);
-    window->loader_for("heightmap_loader", image_file)->into(mesh(mesh_id), {
+    auto mesh = mesh_id.fetch();
+
+    // Heightmaps are huge, and calculating adjacency is slow, so.. don't do that by default (for now! maybe it can be optimised)
+    mesh->set_maintain_adjacency_info(false);
+
+    window->loader_for("heightmap_loader", image_file)->into(mesh, {
         { "spec", spec},
     });
     MeshManager::mark_as_uncollected(mesh_id);
@@ -277,12 +292,12 @@ MeshID ResourceManager::new_mesh_from_vertices(VertexSpecification vertex_specif
     auto submesh = new_mesh->new_submesh(submesh_name, arrangement);
     int i = 0;
     for(auto v: vertices) {
-        new_mesh->shared_data->position(v);
-        new_mesh->shared_data->move_next();
+        new_mesh->vertex_data->position(v);
+        new_mesh->vertex_data->move_next();
         submesh->index_data->index(i++);
     }
 
-    new_mesh->shared_data->done();
+    new_mesh->vertex_data->done();
     submesh->index_data->done();
 
     MeshManager::mark_as_uncollected(m);
@@ -298,12 +313,12 @@ MeshID ResourceManager::new_mesh_from_vertices(VertexSpecification vertex_specif
     auto submesh = new_mesh->new_submesh(submesh_name, arrangement);
     int i = 0;
     for(auto v: vertices) {
-        new_mesh->shared_data->position(v);
-        new_mesh->shared_data->move_next();
+        new_mesh->vertex_data->position(v);
+        new_mesh->vertex_data->move_next();
         submesh->index_data->index(i++);
     }
 
-    new_mesh->shared_data->done();
+    new_mesh->vertex_data->done();
     submesh->index_data->done();
     MeshManager::mark_as_uncollected(m);
     return m;
@@ -547,18 +562,21 @@ TextureID ResourceManager::new_texture(GarbageCollectMethod garbage_collect) {
 TextureID ResourceManager::new_texture_from_file(const unicode& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
     //Load the texture
     auto tex = texture(new_texture(garbage_collect));
-    window->loader_for(path, LOADER_HINT_TEXTURE)->into(tex);
 
-    if(flags.flip_vertically) {
-        tex->flip_vertically();
+    auto texlock = tex->lock();
+    {
+        window->loader_for(path, LOADER_HINT_TEXTURE)->into(tex);
+
+        if(flags.flip_vertically) {
+            tex->flip_vertically();
+        }
+
+        tex->set_mipmap_generation(flags.mipmap);
+        tex->set_texture_wrap(flags.wrap, flags.wrap, flags.wrap);
+        tex->set_texture_filter(flags.filter);
+        tex->set_auto_upload(flags.auto_upload);
+        tex->mark_data_changed();
     }
-
-    tex->upload(
-        flags.mipmap,
-        flags.wrap,
-        flags.filter,
-        (flags.free_data == TEXTURE_FREE_DATA_AFTER_UPLOAD) ? true : false
-    );
 
     mark_texture_as_uncollected(tex->id());
     return tex->id();

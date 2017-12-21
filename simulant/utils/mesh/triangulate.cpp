@@ -1,4 +1,4 @@
-#include "../../mesh.h"
+#include "../../meshes/mesh.h"
 #include "triangulate.h"
 
 namespace smlt {
@@ -31,23 +31,12 @@ void triangulate(MeshPtr mesh, std::vector<Vec3> &vertices, std::vector<Triangle
     // First, we populate any shared vertices in the output. This is so that when we process submeshes
     // if they use shared vertices we can store the triangle indexes as they are without offsetting into new
     // data. If they don't use shared vertices, we need to append the submesh vertices and offset the indexes.
-    for(uint32_t i = 0; i < mesh->shared_data->count(); ++i) {
-        vertices.push_back(mesh->shared_data->position_at<Vec3>(i));
+    for(uint32_t i = 0; i < mesh->vertex_data->count(); ++i) {
+        vertices.push_back(mesh->vertex_data->position_at<Vec3>(i));
     }
 
     auto process_submesh = [&](const std::string& name, SubMesh* submesh) {
         uint32_t offset = 0;
-
-        // If we're not using shared vertices, we need to store the offset to add to
-        // the new indexes we generate
-        if(!submesh->uses_shared_vertices()) {
-            offset = vertices.size();
-
-            // Push back the submesh vertices
-            for(uint32_t i = 0; i < submesh->vertex_data->count(); ++i) {
-                vertices.push_back(submesh->vertex_data->position_at<Vec3>(i));
-            }
-        }
 
         auto indexes = PROCESSORS.at(submesh->arrangement())(submesh);
 

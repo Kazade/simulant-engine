@@ -36,7 +36,9 @@ class unicode {
 public:
     typedef ustring::size_type size_type;
 
-    unicode() {}
+    unicode():
+        string_(u"") {}
+
     unicode(const unicode& rhs):
         string_(rhs.string_){
 

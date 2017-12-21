@@ -21,7 +21,7 @@
 #include "../loader.h"
 #include "../stage.h"
 #include "../nodes/actor.h"
-#include "../mesh.h"
+#include "../meshes/mesh.h"
 #include "../procedural/constants.h"
 
 #include "skybox_manager.h"
@@ -46,7 +46,9 @@ void Skybox::ask_owner_for_destruction() {
     manager_->delete_skybox(id());
 }
 
-const AABB &Skybox::aabb() const { return actor_id_.fetch()->aabb(); }
+const AABB &Skybox::aabb() const {
+    return actor_->aabb();
+}
 
 void Skybox::generate(
         const unicode& up,
@@ -58,10 +60,10 @@ void Skybox::generate(
 ) {
     auto stage = manager_->stage.get();
 
-    if(!actor_id_) {
-        actor_id_ = stage->new_actor();
-        actor_id_.fetch()->set_parent(this);
-        actor_id_.fetch()->move_to(0, 0, 0);
+    if(!actor_) {
+        actor_ = stage->new_actor();
+        actor_->set_parent(this);
+        actor_->move_to(0, 0, 0);
     }
 
     if(!mesh_id_) {
@@ -95,13 +97,10 @@ void Skybox::generate(
         mesh->submesh("back")->set_texture_on_material(0, stage->assets->new_texture_from_file(back_path, flags));
     }
 
-    {
-        auto actor = stage->actor(actor_id_);
-        actor->set_mesh(mesh_id_);
-        actor->set_render_priority(smlt::RENDER_PRIORITY_ABSOLUTE_BACKGROUND);
-        actor->lock_rotation();
-        actor->set_renderable_culling_mode(RENDERABLE_CULLING_MODE_NEVER);
-    }
+    actor_->set_mesh(mesh_id_);
+    actor_->set_render_priority(smlt::RENDER_PRIORITY_ABSOLUTE_BACKGROUND);
+    actor_->lock_rotation();
+    actor_->set_renderable_culling_mode(RENDERABLE_CULLING_MODE_NEVER);
 }
 
 
@@ -120,7 +119,7 @@ SkyManager::SkyManager(Window* window, Stage* stage):
  * in their names. If duplicates are found, or if images are not found, then this function raises
  * SkyboxImageNotFoundError or SkyboxImageDuplicateError respectively
  */
-SkyID SkyManager::new_skybox_from_folder(const unicode& folder) {
+SkyboxPtr SkyManager::new_skybox_from_folder(const unicode& folder) {
     std::map<SkyboxFace, std::string> files;
 
     auto path = window->resource_locator->locate_file(folder);
@@ -192,7 +191,7 @@ SkyID SkyManager::new_skybox_from_folder(const unicode& folder) {
  * Creates a skybox with the 6 images specified. If any of the images are not found this throws a
  * SkyboxImageNotFoundError
  */
-SkyID SkyManager::new_skybox_from_files(
+SkyboxPtr SkyManager::new_skybox_from_files(
     const unicode& up,
     const unicode& down,
     const unicode& left,
@@ -209,7 +208,7 @@ SkyID SkyManager::new_skybox_from_files(
         up, down, left, right, front, back
     );
 
-    return sid;
+    return sb;
 }
 
 SkyboxPtr SkyManager::skybox(SkyID skybox_id) {

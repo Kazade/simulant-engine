@@ -21,7 +21,7 @@
 #include "sphere.h"
 #include "../../types.h"
 #include "../../resource_manager.h"
-#include "../../mesh.h"
+#include "../../meshes/mesh.h"
 
 namespace smlt {
 namespace procedural {
@@ -74,36 +74,36 @@ void sphere(MeshPtr mesh, float diameter, int32_t slices, int32_t stacks) {
 
             generate_uv(pos, u, v);
 
-            mesh->shared_data->position(pos);
-            mesh->shared_data->tex_coord0(u, v);
-            mesh->shared_data->tex_coord1(u, v);
-            mesh->shared_data->normal(n);
-            mesh->shared_data->diffuse(smlt::Colour::WHITE);
-            mesh->shared_data->move_next();
+            mesh->vertex_data->position(pos);
+            mesh->vertex_data->tex_coord0(u, v);
+            mesh->vertex_data->tex_coord1(u, v);
+            mesh->vertex_data->normal(n);
+            mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+            mesh->vertex_data->move_next();
         }
     }
     pos = Vec3(0, 1 * radius, 0);
     n = pos.normalized();
     generate_uv(pos, u, v);
 
-    mesh->shared_data->position(pos);
-    mesh->shared_data->tex_coord0(u, v);
-    mesh->shared_data->tex_coord1(u, v);
-    mesh->shared_data->diffuse(smlt::Colour::WHITE);
-    mesh->shared_data->move_next();
+    mesh->vertex_data->position(pos);
+    mesh->vertex_data->tex_coord0(u, v);
+    mesh->vertex_data->tex_coord1(u, v);
+    mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+    mesh->vertex_data->move_next();
 
     pos = Vec3(0, -1 * radius, 0);
     n = pos.normalized();
 
     generate_uv(pos, u, v);
 
-    mesh->shared_data->position(pos);
-    mesh->shared_data->tex_coord0(u, v);
-    mesh->shared_data->tex_coord1(u, v);
-    mesh->shared_data->diffuse(smlt::Colour::WHITE);
-    mesh->shared_data->move_next();
+    mesh->vertex_data->position(pos);
+    mesh->vertex_data->tex_coord0(u, v);
+    mesh->vertex_data->tex_coord1(u, v);
+    mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+    mesh->vertex_data->move_next();
 
-    mesh->shared_data->done();
+    mesh->vertex_data->done();
 
     SubMesh* sm = mesh->new_submesh(
         "sphere",

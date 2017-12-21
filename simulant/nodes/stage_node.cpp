@@ -84,89 +84,37 @@ void StageNode::rotate_to_absolute(const Degrees& degrees, float x, float y, flo
     rotate_to_absolute(Quaternion(Vec3(x, y, z), degrees));
 }
 
-void StageNode::on_position_set(const Vec3& oldp, const Vec3& newp) {
-    update_position_from_parent();
+void StageNode::on_transformation_changed() {
+    update_transformation_from_parent();
 }
 
-void StageNode::on_rotation_set(const Quaternion& oldr, const Quaternion& newr) {
-    update_rotation_from_parent();
-}
-
-void StageNode::on_scaling_set(const Vec3& olds, const Vec3& news) {
-    update_scaling_from_parent();
-}
-
-void StageNode::update_rotation_from_parent() {
-    if(rotation_locked()) {
-        return;
-    }
-
+void StageNode::update_transformation_from_parent() {
     StageNode* parent = static_cast<StageNode*>(this->parent());
 
-    Quaternion prot;
-    if(parent) {
-        prot = parent->absolute_rotation();
-        update_position_from_parent(false); // Don't recalc bounds when updating position
-    }
+    if(!parent || parent == stage_) {
+        absolute_rotation_ = rotation();
+        absolute_position_ = position();
+        absolute_scale_ = scale();
+    } else {
+        auto parent_pos = parent->absolute_position();
+        auto parent_rot = parent->absolute_rotation();
+        auto parent_scale = parent->absolute_scaling();
 
-    absolute_rotation_ = prot * rotation();
-    absolute_rotation_.normalize();
+        absolute_rotation_ = parent_rot * rotation();
+        absolute_position_ = parent_pos + parent_rot.rotate_vector(position());
+        absolute_scale_ = parent_scale * scale();
+    }
 
     recalc_bounds();
 
     each_child([](uint32_t, TreeNode* child) {
         StageNode* node = static_cast<StageNode*>(child);
-        node->update_rotation_from_parent();
-    });
-}
-
-void StageNode::update_position_from_parent(bool _recalc_bounds) {
-    // _recalc_bounds is not a public interface, don't use it!
-
-    StageNode* parent = static_cast<StageNode*>(this->parent());
-
-    Vec3 ppos;
-    Vec3 rel = position();
-
-    if(parent) {
-        ppos = parent->absolute_position();
-        rel = parent->absolute_rotation().rotate_vector(rel);
-    }
-
-    absolute_position_ = ppos + rel;
-
-    if(_recalc_bounds) {
-        recalc_bounds();
-    }
-
-    each_child([](uint32_t, TreeNode* child) {
-        StageNode* node = static_cast<StageNode*>(child);
-        node->update_position_from_parent();
-    });
-}
-
-void StageNode::update_scaling_from_parent() {
-    StageNode* parent = static_cast<StageNode*>(this->parent());
-
-    Vec3 pscale(1, 1, 1);
-    if(parent) {
-        pscale = parent->scale();
-    }
-
-    absolute_scale_ = pscale * scale();
-
-    recalc_bounds();
-
-    each_child([](uint32_t, TreeNode* child) {
-        StageNode* node = static_cast<StageNode*>(child);
-        node->update_scaling_from_parent();
+        node->update_transformation_from_parent();
     });
 }
 
 void StageNode::on_parent_set(TreeNode* oldp, TreeNode* newp) {
-    update_position_from_parent();
-    update_rotation_from_parent();
-    update_scaling_from_parent();
+    update_transformation_from_parent();
 }
 
 const AABB StageNode::transformed_aabb() const {
@@ -180,6 +128,23 @@ const AABB StageNode::transformed_aabb() const {
     return AABB(corners.data(), corners.size());
 }
 
+StageNode *StageNode::find_child_with_name(const std::string &name) {
+    bool found = false;
+    StageNode* result = nullptr;
+
+    each_descendent([&](uint32_t, TreeNode* node) {
+        if(found) return;
+
+        StageNode* stage_node = static_cast<StageNode*>(node); // All nodes are stage nodes, if not then.. bad things!
+        if(stage_node && stage_node->name() == name) {
+            found = true;
+            result = stage_node;
+        }
+    });
+
+    return result;
+}
+
 void StageNode::recalc_bounds() {
     auto newb = transformed_aabb();
     if(newb.min() != transformed_aabb_.min() || newb.max() != transformed_aabb_.max()) {
@@ -190,15 +155,15 @@ void StageNode::recalc_bounds() {
 
 
 void StageNode::update(float dt) {
-    update_controllers(dt);
+    update_behaviours(dt);
 }
 
 void StageNode::late_update(float dt) {
-    late_update_controllers(dt);
+    late_update_behaviours(dt);
 }
 
 void StageNode::fixed_update(float step) {
-    fixed_update_controllers(step);
+    fixed_update_behaviours(step);
 }
 
 }

@@ -95,7 +95,7 @@ void Stage::on_subactor_material_changed(
     signal_actor_changed_(actor_id, evt);
 }
 
-ActorID Stage::new_actor(RenderableCullingMode mode) {
+ActorPtr Stage::new_actor(RenderableCullingMode mode) {
     using namespace std::placeholders;
 
     ActorID result = ActorManager::make(this, window->_sound_driver());
@@ -114,10 +114,16 @@ ActorID Stage::new_actor(RenderableCullingMode mode) {
 
     //Tell everyone about the new actor
     signal_actor_created_(result);
-    return result;
+    return a;
 }
 
-ActorID Stage::new_actor_with_mesh(MeshID mid, RenderableCullingMode mode) {
+ActorPtr Stage::new_actor_with_name(const std::string& name, RenderableCullingMode mode) {
+    auto a = new_actor(mode);
+    a->set_name(name);
+    return a;
+}
+
+ActorPtr Stage::new_actor_with_mesh(MeshID mid, RenderableCullingMode mode) {
     using namespace std::placeholders;
 
     ActorID result = ActorManager::make(this, window->_sound_driver());
@@ -142,25 +148,31 @@ ActorID Stage::new_actor_with_mesh(MeshID mid, RenderableCullingMode mode) {
     //Tell everyone about the new actor
     signal_actor_created_(result);
 
-    return result;
+    return a;
 }
 
-ActorID Stage::new_actor_with_parent(ActorID parent, RenderableCullingMode mode) {
-    ActorID new_id = new_actor(mode);
-    actor(new_id)->set_parent(parent);
-    return new_id;
+ActorPtr Stage::new_actor_with_name_and_mesh(const std::string& name, MeshID mid, RenderableCullingMode mode) {
+    auto a = new_actor_with_mesh(mid, mode);
+    a->set_name(name);
+    return a;
 }
 
-ActorID Stage::new_actor_with_parent_and_mesh(SpriteID parent, MeshID mid, RenderableCullingMode mode) {
-    ActorID new_id = new_actor_with_mesh(mid, mode);
-    actor(new_id)->set_parent(parent);
-    return new_id;
+ActorPtr Stage::new_actor_with_parent(ActorID parent, RenderableCullingMode mode) {
+    auto a = new_actor(mode);
+    a->set_parent(parent);
+    return a;
 }
 
-ActorID Stage::new_actor_with_parent_and_mesh(ActorID parent, MeshID mid, RenderableCullingMode mode) {
-    ActorID new_id = new_actor_with_mesh(mid, mode);
-    actor(new_id)->set_parent(parent);
-    return new_id;
+ActorPtr Stage::new_actor_with_parent_and_mesh(SpriteID parent, MeshID mid, RenderableCullingMode mode) {
+    auto a = new_actor_with_mesh(mid, mode);
+    a->set_parent(parent);
+    return a;
+}
+
+ActorPtr Stage::new_actor_with_parent_and_mesh(ActorID parent, MeshID mid, RenderableCullingMode mode) {
+    auto a = new_actor_with_mesh(mid, mode);
+    a->set_parent(parent);
+    return a;
 }
 
 bool Stage::has_actor(ActorID m) const {
@@ -175,18 +187,19 @@ const ActorPtr Stage::actor(ActorID e) const {
     return ActorManager::get(e);
 }
 
-void Stage::delete_actor(ActorID e) {
+ActorPtr Stage::delete_actor(ActorID e) {
     signal_actor_destroyed_(e);
     ActorManager::destroy(e);
+    return nullptr;
 }
 
 //=============== GEOMS =====================
 
-GeomID Stage::new_geom_with_mesh(MeshID mid) {
-    auto gid = geom_manager_->make(this, window->_sound_driver(), mid);
-    geom(gid)->set_parent(this);
+GeomPtr Stage::new_geom_with_mesh(MeshID mid) {
+    auto gid = geom_manager_->make(this, window->_sound_driver(), mid).fetch();
+    gid->set_parent(this);
 
-    signal_geom_created_(gid);
+    signal_geom_created_(gid->id());
 
     return gid;
 }
@@ -195,11 +208,11 @@ GeomPtr Stage::geom(const GeomID gid) const {
     return geom_manager_->get(gid);
 }
 
-GeomID Stage::new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, const Quaternion& rotation) {
-    auto gid = geom_manager_->make(this, window->_sound_driver(), mid, position, rotation);
-    geom(gid)->set_parent(this);
+GeomPtr Stage::new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, const Quaternion& rotation) {
+    auto gid = geom_manager_->make(this, window->_sound_driver(), mid, position, rotation).fetch();
+    gid->set_parent(this);
 
-    signal_geom_created_(gid);
+    signal_geom_created_(gid->id());
 
     return gid;
 }
@@ -208,19 +221,20 @@ bool Stage::has_geom(GeomID geom_id) const {
     return geom_manager_->contains(geom_id);
 }
 
-void Stage::delete_geom(GeomID geom_id) {
+GeomPtr Stage::delete_geom(GeomID geom_id) {
     signal_geom_destroyed_(geom_id);
 
     geom_manager_->destroy(geom_id);
+    return nullptr;
 }
 
-uint32_t Stage::geom_count() const {
+std::size_t Stage::geom_count() const {
     return geom_manager_->count();
 }
 
 //=============== PARTICLES =================
 
-ParticleSystemID Stage::new_particle_system() {
+ParticleSystemPtr Stage::new_particle_system() {
     ParticleSystemID new_id = ParticleSystemManager::make(this, window->_sound_driver());
 
     auto p = new_id.fetch();
@@ -231,31 +245,28 @@ ParticleSystemID Stage::new_particle_system() {
     });
 
     signal_particle_system_created_(new_id);
-    return new_id;
+    return p;
 }
 
-ParticleSystemID Stage::new_particle_system_from_file(const unicode& filename, bool destroy_on_completion) {
-    ParticleSystemID new_id = new_particle_system();
+ParticleSystemPtr Stage::new_particle_system_from_file(const unicode& filename, bool destroy_on_completion) {
+    auto ps = new_particle_system();
 
-    auto ps = particle_system(new_id)->shared_from_this();
     ps->set_parent(this);
     ps->set_destroy_on_completion(destroy_on_completion);
 
     window->loader_for(filename)->into(ps);
 
-    return new_id;
+    return ps;
 }
 
-ParticleSystemID Stage::new_particle_system_with_parent_from_file(ActorID parent, const unicode& filename, bool destroy_on_completion) {
-    ParticleSystemID new_id = new_particle_system();
-
-    auto ps = particle_system(new_id)->shared_from_this();
+ParticleSystemPtr Stage::new_particle_system_with_parent_from_file(ActorID parent, const unicode& filename, bool destroy_on_completion) {
+    auto ps = new_particle_system();
     ps->set_parent(parent);
     ps->set_destroy_on_completion(destroy_on_completion);
 
     window->loader_for(filename)->into(ps);
 
-    return new_id;
+    return ps;
 }
 
 ParticleSystemPtr Stage::particle_system(ParticleSystemID pid) {
@@ -266,12 +277,13 @@ bool Stage::has_particle_system(ParticleSystemID pid) const {
     return ParticleSystemManager::contains(pid);
 }
 
-void Stage::delete_particle_system(ParticleSystemID pid) {
+ParticleSystemPtr Stage::delete_particle_system(ParticleSystemID pid) {
     signal_particle_system_destroyed_(pid);
     ParticleSystemManager::destroy(pid);
+    return nullptr;
 }
 
-LightID Stage::new_light_as_directional(const Vec3& direction, const smlt::Colour& colour) {
+LightPtr Stage::new_light_as_directional(const Vec3& direction, const smlt::Colour& colour) {
     auto light = LightManager::make(this).fetch();
     auto light_id = light->id();
 
@@ -285,11 +297,11 @@ LightID Stage::new_light_as_directional(const Vec3& direction, const smlt::Colou
         this->partitioner->update_light(light_id, new_bounds);
     });
 
-    signal_light_created_(light->id());
-    return light->id();
+    signal_light_created_(light_id);
+    return light;
 }
 
-LightID Stage::new_light_as_point(const Vec3& position, const smlt::Colour& colour) {
+LightPtr Stage::new_light_as_point(const Vec3& position, const smlt::Colour& colour) {
     auto light = LightManager::make(this).fetch();
     auto light_id = light->id();
 
@@ -304,17 +316,18 @@ LightID Stage::new_light_as_point(const Vec3& position, const smlt::Colour& colo
         this->partitioner->update_light(light_id, new_bounds);
     });
 
-    signal_light_created_(light->id());
-    return light->id();
+    signal_light_created_(light_id);
+    return light;
 }
 
 LightPtr Stage::light(LightID light_id) {
     return LightManager::get(light_id);
 }
 
-void Stage::delete_light(LightID light_id) {
+LightPtr Stage::delete_light(LightID light_id) {
     signal_light_destroyed_(light_id);
     LightManager::destroy(light_id);
+    return nullptr;
 }
 
 void Stage::set_partitioner(AvailablePartitioner partitioner) {

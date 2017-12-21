@@ -26,7 +26,7 @@
 #include "nodes/camera.h"
 #include "nodes/light.h"
 
-#include "mesh.h"
+#include "meshes/mesh.h"
 #include "window.h"
 #include "partitioner.h"
 #include "loader.h"
@@ -160,7 +160,7 @@ void RenderSequence::sort_pipelines(bool acquire_lock) {
     }
 }
 
-PipelineID RenderSequence::new_pipeline(StageID stage, CameraID camera, const Viewport& viewport, TextureID target, int32_t priority) {
+PipelinePtr RenderSequence::new_pipeline(StageID stage, CameraID camera, const Viewport& viewport, TextureID target, int32_t priority) {
     PipelineID new_p = PipelineManager::make(this);
 
     auto pipeline = PipelineManager::get(new_p).lock();
@@ -176,7 +176,7 @@ PipelineID RenderSequence::new_pipeline(StageID stage, CameraID camera, const Vi
     ordered_pipelines_.push_back(pipeline);
     sort_pipelines();
 
-    return new_p;
+    return pipeline.get();
 }
 
 void RenderSequence::set_renderer(Renderer* renderer) {
@@ -270,9 +270,13 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
             // Filter by whether or not the renderable bounds intersects the light bounds
             if(light->type() == LIGHT_TYPE_DIRECTIONAL) {
                 return true;
+            } else if(light->type() == LIGHT_TYPE_SPOT_LIGHT) {
+                return renderable->transformed_aabb().intersects_aabb(light->transformed_aabb());
+            } else {
+                return renderable->transformed_aabb().intersects_sphere(light->absolute_position(), light->range() * 2);
             }
 
-            return renderable->transformed_aabb().intersects(light->transformed_aabb());
+
         });
 
         std::partial_sort(

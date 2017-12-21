@@ -30,188 +30,67 @@
 #include "window.h"
 #include "texture.h"
 #include "resource_manager.h"
-
-#ifdef _arch_dreamcast
-#include <GL/gl.h>
-#else
-
-#ifdef SIMULANT_GL_VERSION_2X
-#include "./renderers/gl2x/glad/glad/glad.h"
-#else
-#include "./renderers/gl1x/glad/glad/glad.h"
-#endif
-
-#endif //_arch_dreamcast
+#include "renderers/renderer.h"
 
 namespace smlt {
 
 const std::string Texture::BuiltIns::CHECKERBOARD = "simulant/materials/textures/checkerboard.png";
 const std::string Texture::BuiltIns::BUTTON = "simulant/materials/textures/button.png";
 
-Texture::~Texture() {
-    if(gl_tex_) {
-        GLCheck(glDeleteTextures, 1, &gl_tex_);
-    }
+
+Texture::Texture(TextureID id, ResourceManager *resource_manager):
+    Resource(resource_manager),
+    generic::Identifiable<TextureID>(id),
+    width_(0),
+    height_(0) {
+
+    renderer_ = resource_manager->window->renderer;
 }
 
-void Texture::set_bpp(uint32_t bits) {
-    bpp_ = bits;
-    resize(width_, height_);
+void Texture::set_texel_type(TextureTexelType type) {
+    if(texel_type_ == type) {
+        return;
+    }
+
+    texel_type_ = type;
+    data_.resize(width_ * height_ * bytes_per_pixel());
+    data_.shrink_to_fit();
+
+    data_dirty_ = true;
+}
+
+void Texture::set_format(TextureFormat format) {
+    format_ = format;
+}
+
+void Texture::resize(uint32_t width, uint32_t height, uint32_t data_size) {
+    if(width_ == width && height_ == height && data_.size() == data_size) {
+        return;
+    }
+
+    width_ = width;
+    height_ = height;
+    data_.resize(data_size);
+    data_.shrink_to_fit();
+    data_dirty_ = true;
 }
 
 void Texture::resize(uint32_t width, uint32_t height) {
+    if(width_ == width && height_ == height) {
+        return;
+    }
+
+    if(is_compressed()) {
+        throw std::logic_error("Unable to resize a compressed texture with width and height");
+    }
+
     width_ = width;
     height_ = height;
 
-    data_.resize(width * height * (bpp_ / 8));
+    data_.resize(width * height * bytes_per_pixel());
     data_.shrink_to_fit();
-}
 
-void Texture::sub_texture(TextureID src, uint16_t offset_x, uint16_t offset_y) {
-    auto source_ptr = resource_manager().texture(src); //Lock
-
-    //Bad things...
-    Texture& source = *source_ptr;
-
-    if(offset_x + source.width() > width() ||
-        offset_y + source.height() > height()) {
-        throw std::logic_error("Out of bounds error while blitting texture");
-    }
-
-    if(bpp() != source.bpp()) {
-        throw std::logic_error("Tried to blit texture of a different colour depth");
-    }
-
-    for(uint16_t j = 0; j < source.height(); ++j) {
-        for(uint16_t i = 0; i < source.width(); ++i) {
-            uint16_t idx = ((width() * (offset_y + j)) + (offset_x + i)) * (bpp() / 8);
-            uint16_t source_idx = ((source.width() * j) + i) * (bpp() / 8);
-
-            data()[idx] = source.data()[source_idx];
-            data()[idx+1] = source.data()[source_idx+1];
-            data()[idx+2] = source.data()[source_idx+2];
-            if(bpp() == 32) {
-                data()[idx+3] = source.data()[source_idx+3];
-            }
-        }
-    }
-
-    //FIXME: SHould use glTexSubImage
-    upload();
-}
-
-void Texture::__do_upload(MipmapGenerate mipmap, TextureWrap wrap, TextureFilter filter, bool free_after) {
-    L_DEBUG("Uploading texture");
-
-    if(!gl_tex()) {
-        GLCheck(glGenTextures, 1, &gl_tex_);
-        L_DEBUG(_F("Loaded {0} into GL texture {1}").format(source(), gl_tex_));
-    }
-
-    GLCheck(glBindTexture, GL_TEXTURE_2D, gl_tex_);   
-    GLCheck(glPixelStorei, GL_UNPACK_ALIGNMENT,1);
-
-    // FIXME: This is awful, we should expose this via an API
-    GLenum internalFormat, format;
-    switch(bpp_) {
-        case 32: {
-            internalFormat = GL_RGBA;
-            format = GL_RGBA;
-        } break;
-        case 24: {
-            internalFormat = GL_RGB;
-            format = GL_RGB;
-        } break;
-#ifndef _arch_dreamcast
-        case 8: {
-            internalFormat = GL_RED;
-            format = GL_RED;
-        } break;
-#endif
-    default:
-        assert(0 && "Not implemented");
-    }
-
-    L_DEBUG(_F("Texture {0} has dimensions, W:{1} H:{2}").format(gl_tex_, width_, height_));
-    GLCheck(glTexImage2D,
-        GL_TEXTURE_2D,
-        0, internalFormat,
-        width_, height_, 0,
-        format,
-        GL_UNSIGNED_BYTE, &data_[0]
-    );
-    if(mipmap == MIPMAP_GENERATE_COMPLETE) {
-#ifdef SIMULANT_GL_VERSION_1X        
-        // FIXME: OpenGL >= 1.4 - may need to look for GL_SGIS_generate_mipmap extension
-        //GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
-        mipmap = MIPMAP_GENERATE_NONE;
-#else
-        GLCheck(glGenerateMipmap, GL_TEXTURE_2D);
-#endif
-    }
-
-    switch(wrap) {
-        case TEXTURE_WRAP_REPEAT: {
-            GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-            GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        } break;
-        case TEXTURE_WRAP_CLAMP_TO_EDGE: {
-#ifdef SIMULANT_GL_VERSION_2X
-            GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-#else
-            //FIXME: check for extension and use GL_CLAMP_TO_EDGE
-            GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-            GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-#endif
-        } break;
-    default:
-        assert(0 && "Not Implemented");
-    }
-
-    if(filter == TEXTURE_FILTER_NEAREST) {
-        if(mipmap == MIPMAP_GENERATE_COMPLETE) {
-            GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
-        } else {
-            GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        }
-        GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    } else {
-        if(mipmap == MIPMAP_GENERATE_COMPLETE) {
-            GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        } else {
-            GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        }
-        GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    }
-
-    if(free_after) {
-        L_DEBUG("Releasing texture data from RAM");
-        free();
-
-#ifdef _arch_dreamcast
-        print_available_ram();
-#endif
-    }
-
-    L_DEBUG("Texture uploaded");
-}
-
-void Texture::upload(MipmapGenerate mipmap, TextureWrap wrap, TextureFilter filter, bool free_after) {
-    if(GLThreadCheck::is_current()) {
-        __do_upload(mipmap, wrap, filter, free_after);
-    } else {
-
-        //FIXME: This might get hairy if more than one thread is messing with the texture
-        //as we do an unlocked access here (which is fine when it's only this thread and the
-        //main thread, but if there's another one then, that could be bad news)
-        resource_manager().window->idle->add_once([=] {
-            this->__do_upload(mipmap, wrap, filter, free_after);
-        });
-
-        //Wait for the main thread to process the upload
-        resource_manager().window->idle->wait();
-    }
+    data_dirty_ = true;
 }
 
 void Texture::flip_vertically() {
@@ -239,8 +118,138 @@ void Texture::free() {
     data_.shrink_to_fit();
 }
 
+bool Texture::is_compressed() const {
+    switch(format_) {
+    case TEXTURE_FORMAT_RGB:
+    case TEXTURE_FORMAT_RGBA:
+        return false;
+    default:
+        return true;
+    }
+}
+
+std::size_t Texture::bits_per_pixel() const {
+    switch(texel_type_) {
+    case TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_4_4_4_4:
+    case TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_5_6_5:
+    case TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_5_5_5_1:
+        // Packed into a short
+        return sizeof(unsigned short) * 8;
+    default:
+        // byte per channel
+        return sizeof(unsigned char) * channels() * 8;
+    }
+}
+
+uint8_t Texture::channels() const {
+    switch(format_) {
+    case TEXTURE_FORMAT_RGB:
+    case TEXTURE_FORMAT_UNSIGNED_SHORT_5_6_5_VQ:
+    case TEXTURE_FORMAT_UNSIGNED_SHORT_5_6_5_VQ_TWID:
+    case TEXTURE_FORMAT_RGB_S3TC_DXT1_EXT:
+        return 3;
+    case TEXTURE_FORMAT_RGBA:
+    case TEXTURE_FORMAT_UNSIGNED_SHORT_4_4_4_4_VQ:
+    case TEXTURE_FORMAT_UNSIGNED_SHORT_4_4_4_4_VQ_TWID:
+    case TEXTURE_FORMAT_UNSIGNED_SHORT_1_5_5_5_VQ:
+    case TEXTURE_FORMAT_UNSIGNED_SHORT_1_5_5_5_VQ_TWID:
+    case TEXTURE_FORMAT_RGBA_S3TC_DXT1_EXT:
+    case TEXTURE_FORMAT_RGBA_S3TC_DXT3_EXT:
+    case TEXTURE_FORMAT_RGBA_S3TC_DXT5_EXT:
+        return 4;
+    default:
+        // Shouldn't happen, but will be more obviously debuggable if it does
+        return 0;
+    }
+}
+
+const Texture::Data &Texture::data() const {
+    return data_;
+}
+
 void Texture::save_to_file(const unicode& filename) {
-    SOIL_save_image(filename.encode().c_str(), SOIL_SAVE_TYPE_TGA, width(), height(), bpp() / 8, &data_[0]);
+    SOIL_save_image(filename.encode().c_str(), SOIL_SAVE_TYPE_TGA, width(), height(), bytes_per_pixel(), &data_[0]);
+}
+
+void Texture::set_texture_filter(TextureFilter filter) {
+    if(filter != filter_) {
+        filter_ = filter;
+        params_dirty_ = true;
+    }
+}
+
+void Texture::set_free_data_mode(TextureFreeData mode) {
+    free_data_mode_ = mode;
+}
+
+void Texture::set_texture_wrap(TextureWrap wrap_u, TextureWrap wrap_v, TextureWrap wrap_w) {
+    set_texture_wrap_u(wrap_u);
+    set_texture_wrap_v(wrap_v);
+    set_texture_wrap_w(wrap_w);
+}
+
+void Texture::set_texture_wrap_u(TextureWrap wrap_u) {
+    if(wrap_u != wrap_u_) {
+        wrap_u_ = wrap_u;
+        params_dirty_ = true;
+    }
+}
+
+void Texture::set_texture_wrap_v(TextureWrap wrap_v) {
+    if(wrap_v != wrap_v_) {
+        wrap_v_ = wrap_v;
+        params_dirty_ = true;
+    }
+}
+
+void Texture::set_texture_wrap_w(TextureWrap wrap_w) {
+    if(wrap_w != wrap_w_) {
+        wrap_w_ = wrap_w;
+        params_dirty_ = true;
+    }
+}
+
+bool Texture::init() {
+    // Tell the renderer about the texture
+    renderer_->register_texture(id(), shared_from_this());
+    return true;
+}
+
+void Texture::cleanup() {
+    // Tell the renderer to forget the texture
+    renderer_->unregister_texture(id());
+}
+
+void Texture::update(float dt) {
+    // Must only be called on the main thread as the renderer may do GL things
+    assert(GLThreadCheck::is_current());
+
+    // Should have been registered by now
+    assert(renderer_->is_texture_registered(id()));
+
+    // Make sure that the renderer is aware of any changes
+    renderer_->prepare_texture(id());
+}
+
+TextureLock::TextureLock(Texture *tex, bool wait):
+    tex_(tex) {
+
+    if(wait) {
+        tex_->mutex_.lock();
+    } else {
+        if(!tex_->mutex_.try_lock()) {
+
+            // If we can't lock, wipe the tex lock (false-y)
+            tex_ = nullptr;
+            throw NoTextureLockError("Unable to lock the texture");
+        }
+    }
+}
+
+TextureLock::~TextureLock() {
+    if(tex_) {
+        tex_->mutex_.unlock();
+    }
 }
 
 }

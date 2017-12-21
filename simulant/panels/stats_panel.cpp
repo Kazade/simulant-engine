@@ -21,6 +21,8 @@
 #include "../window.h"
 #include "../stage.h"
 #include "../nodes/ui/ui_manager.h"
+#include "../render_sequence.h"
+#include "../nodes/ui/label.h"
 
 namespace smlt {
 
@@ -32,31 +34,30 @@ StatsPanel::StatsPanel(Window *window):
 void StatsPanel::initialize() {
     if(initialized_) return;
 
-    stage_id_ = window_->new_stage();
-    auto stage = stage_id_.fetch();
+    stage_ = window_->new_stage();
 
-    ui_camera_ = stage->new_camera_with_orthographic_projection(0, 640, 0, 480);
-    pipeline_id_ = window_->render(stage_id_, ui_camera_).with_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
-    window_->disable_pipeline(pipeline_id_);
+    ui_camera_ = stage_->new_camera_with_orthographic_projection(0, 640, 0, 480);
+    pipeline_ = window_->render(stage_, ui_camera_).with_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
+    pipeline_->deactivate();
 
-    auto overlay = stage_id_.fetch();
+    auto overlay = stage_;
 
     float vheight = 460;
     const float diff = 32;
 
-    auto heading1 = overlay->ui->new_widget_as_label("Performance").fetch();
+    auto heading1 = overlay->ui->new_widget_as_label("Performance");
     heading1->move_to(320, vheight);
     vheight -= diff;
 
-    fps_ = overlay->ui->new_widget_as_label("FPS: 0").fetch();
+    fps_ = overlay->ui->new_widget_as_label("FPS: 0");
     fps_->move_to(320, vheight);
     vheight -= diff;
 
-    ram_usage_ = overlay->ui->new_widget_as_label("RAM: 0").fetch();
+    ram_usage_ = overlay->ui->new_widget_as_label("RAM: 0");
     ram_usage_->move_to(320, vheight);
     vheight -= diff;
 
-    actors_rendered_ = overlay->ui->new_widget_as_label("Renderables visible: 0").fetch();
+    actors_rendered_ = overlay->ui->new_widget_as_label("Renderables visible: 0");
     actors_rendered_->move_to(320, vheight);
     vheight -= diff;
 
@@ -125,12 +126,12 @@ void StatsPanel::update() {
 void StatsPanel::do_activate() {
     initialize();
 
-    window_->enable_pipeline(pipeline_id_);
+    pipeline_->activate();
     L_DEBUG("Activating stats panel");
 }
 
 void StatsPanel::do_deactivate() {
-    window_->disable_pipeline(pipeline_id_);
+    pipeline_->deactivate();
     L_DEBUG("Deactivating stats panel");
 }
 

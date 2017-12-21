@@ -92,6 +92,9 @@ addons:
    - libxatracker-dev
    - xvfb
    - pulseaudio
+   - dbus-x11
+   - mingw-w64 
+   - g++-mingw-w64
 
 before_install:
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install --install-recommends linux-generic-lts-xenial xserver-xorg-core-lts-xenial xserver-xorg-lts-xenial xserver-xorg-video-all-lts-xenial xserver-xorg-input-all-lts-xenial libwayland-egl1-mesa-lts-xenial; fi
@@ -118,7 +121,7 @@ install:
  - if [[ "$CROSS_BUILD" == "0" ]]; then make; fi
 
  # Use mingw64-cmake for cross-compiling to windows
- - if [[ "$CROSS_BUILD" == "windows" ]]; then mingw64-cmake $SIMULANT_OPTIONS ..; fi
+ - if [[ "$CROSS_BUILD" == "windows" ]]; then cmake -DCMAKE_TOOLCHAIN_FILE=../toolchains/Windows.cmake $SIMULANT_OPTIONS ..; fi
  - if [[ "$CROSS_BUILD" == "windows" ]]; then make; fi
 
  # Otherwise, use docker for the dreamcast

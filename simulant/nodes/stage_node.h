@@ -7,9 +7,10 @@
 #include "../interfaces/updateable.h"
 #include "../interfaces/ownable.h"
 #include "../interfaces/boundable.h"
-#include "../controllers/controller.h"
+#include "../behaviours/behaviour.h"
 #include "../interfaces/has_auto_id.h"
 #include "../generic/data_carrier.h"
+#include "../shadows.h"
 
 namespace smlt {
 
@@ -23,7 +24,7 @@ class StageNode:
     public Updateable,
     public Ownable,
     public BoundableEntity,
-    public Controllable,
+    public Organism,
     public HasAutoID<StageNode> {
 
 
@@ -77,18 +78,27 @@ public:
     void cleanup();
 
     const AABB transformed_aabb() const override;
+
+    /* Control shading on the stage node (behaviour depends on the type of node) */
+    ShadowCast shadow_cast() const { return shadow_cast_; }
+    void set_shadow_cast(ShadowCast cast) {
+        shadow_cast_ = cast;
+    }
+
+    ShadowReceive shadow_receive() const { return shadow_receive_; }
+    void set_shadow_receive(ShadowReceive receive) { shadow_receive_ = receive; }
+
+    StageNode* find_child_with_name(const std::string& name);
+
 protected:
     // Faster than properties, useful for subclasses where a clean API isn't as important
     Stage* get_stage() const { return stage_; }
 
-    void on_position_set(const Vec3& oldp, const Vec3& newp) override;
-    void on_rotation_set(const Quaternion& oldr, const Quaternion& newr) override;
-    void on_scaling_set(const Vec3& olds, const Vec3& news) override;
+    void on_transformation_changed() override;
     void on_parent_set(TreeNode* oldp, TreeNode* newp) override;
 
-    virtual void update_rotation_from_parent();
-    virtual void update_position_from_parent(bool _recalc_bounds=true);
-    virtual void update_scaling_from_parent();
+    virtual void update_transformation_from_parent();
+
 private:
 
     void recalc_bounds();
@@ -104,6 +114,10 @@ private:
     Vec3 absolute_scale_ = Vec3(1, 1, 1);
 
     AABB transformed_aabb_;
+
+    // By default, always cast and receive shadows
+    ShadowCast shadow_cast_ = SHADOW_CAST_ALWAYS;
+    ShadowReceive shadow_receive_ = SHADOW_RECEIVE_ALWAYS;
 };
 
 }

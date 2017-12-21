@@ -26,7 +26,7 @@
 
 #include "stage_node.h"
 #include "../interfaces.h"
-#include "../mesh.h"
+#include "../meshes/mesh.h"
 #include "../sound.h"
 
 #include "../renderers/batching/render_queue.h"
@@ -39,7 +39,7 @@ class SubActor;
 
 class Actor :
     public StageNode,
-    public MeshInterface,
+    public virtual Boundable,
     public Managed<Actor>,
     public generic::Identifiable<ActorID>,
     public Source,
@@ -50,7 +50,7 @@ public:
     Actor(ActorID id, Stage* stage, SoundDriver *sound_driver, MeshID mesh);
     virtual ~Actor();
 
-    const AABB& aabb() const;
+    const AABB& aabb() const override;
 
     MeshID mesh_id() const { return (mesh_) ? mesh_->id() : MeshID(0); }
 
@@ -72,7 +72,7 @@ public:
 
     const std::vector<std::shared_ptr<SubActor> >& _subactors() { return subactors_; }
 
-    void ask_owner_for_destruction();
+    void ask_owner_for_destruction() override;
 
     void each(std::function<void (uint32_t, SubActor*)> callback);
 
@@ -102,6 +102,7 @@ public:
     RenderableCullingMode renderable_culling_mode() const { return culling_mode_; }
 
     Property<Actor, KeyFrameAnimationState> animation_state = { this, &Actor::animation_state_ };
+    Property<Actor, VertexData> vertex_data = {this, &Actor::vertex_data_};
 
     bool has_animated_mesh() const {
         return mesh_ && mesh_->is_animated();
@@ -115,7 +116,7 @@ private:
     // Used for animated meshes
     std::unique_ptr<HardwareBuffer> interpolated_vertex_buffer_;
 
-    VertexData* get_shared_data() const;
+    VertexData* vertex_data_ = nullptr;
 
     std::shared_ptr<Mesh> mesh_;
     std::vector<std::shared_ptr<SubActor> > subactors_;

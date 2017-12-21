@@ -29,12 +29,15 @@ SubMesh* circle(smlt::Mesh& mesh, float diameter, int32_t point_count, float x_o
 
     SubMesh* submesh = mesh.new_submesh(
         "circle",
-        MESH_ARRANGEMENT_TRIANGLE_FAN,
-        VERTEX_SHARING_MODE_INDEPENDENT
+        MESH_ARRANGEMENT_TRIANGLE_FAN
     );
+
+    auto offset = mesh.vertex_data->count();
 
     auto& vdata = submesh->vertex_data;
     auto& idata = submesh->index_data;
+
+    vdata->move_to_end();
 
     for(uint16_t i = 0; i < point_count; ++i) {
         //Build some shared vertex data
@@ -60,7 +63,7 @@ SubMesh* circle(smlt::Mesh& mesh, float diameter, int32_t point_count, float x_o
     vdata->done();
 
     for(uint16_t i = 0; i < point_count; ++i) {
-        idata->index(i);
+        idata->index(offset + i);
     }
     idata->done();
 
@@ -70,10 +73,14 @@ SubMesh* circle(smlt::Mesh& mesh, float diameter, int32_t point_count, float x_o
 SubMesh* circle_outline(smlt::Mesh& mesh, float diameter, int32_t point_count, float x_offset, float y_offset, float z_offset) {
     float radius = diameter * 0.5f;
 
-    SubMesh* submesh = mesh.new_submesh("circle_outline", MESH_ARRANGEMENT_LINE_STRIP, VERTEX_SHARING_MODE_INDEPENDENT);
+    SubMesh* submesh = mesh.new_submesh("circle_outline", MESH_ARRANGEMENT_LINE_STRIP);
+
+    auto offset = mesh.vertex_data->count();
 
     auto& vdata = submesh->vertex_data;
     auto& idata = submesh->index_data;
+
+    vdata->move_to_end();
 
     for(uint16_t i = 0; i < point_count; ++i) {
         //Build some shared vertex data
@@ -99,7 +106,7 @@ SubMesh* circle_outline(smlt::Mesh& mesh, float diameter, int32_t point_count, f
     vdata->done();
 
     for(uint16_t i = 0; i < point_count; ++i) {
-        idata->index(i);
+        idata->index(offset + i);
     }
     idata->index(0);
     idata->done();

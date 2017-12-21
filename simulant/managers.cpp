@@ -19,7 +19,6 @@
 
 
 #include "managers.h"
-#include "background.h"
 #include "window.h"
 #include "stage.h"
 #include "nodes/camera.h"
@@ -30,63 +29,6 @@
 
 namespace smlt {
 
-//============== START BACKGROUNDS ==========
-BackgroundManager::BackgroundManager(Window* window):
-    window_(window) {
-
-}
-
-BackgroundManager::~BackgroundManager() {
-    auto objects = BackgroundManager::__objects();
-    for(auto background_pair: objects) {
-        delete_background(background_pair.first);
-    }
-}
-
-void BackgroundManager::update(float dt) {
-    //Update the backgrounds
-    for(auto background_pair: BackgroundManager::__objects()) {
-        auto* bg = background_pair.second.get();
-        bg->update(dt);
-    }
-}
-
-BackgroundID BackgroundManager::new_background() {
-    BackgroundID bid = BackgroundManager::make(this);
-    return bid;
-}
-
-BackgroundID BackgroundManager::new_background_from_file(const unicode& filename, float scroll_x, float scroll_y) {
-    BackgroundID result = new_background();
-    try {
-        background(result)->set_texture(window_->shared_assets->new_texture_from_file(filename));
-        background(result)->set_horizontal_scroll_rate(scroll_x);
-        background(result)->set_vertical_scroll_rate(scroll_y);
-    } catch(...) {
-        delete_background(result);
-        throw;
-    }
-
-    return result;
-}
-
-BackgroundPtr BackgroundManager::background(BackgroundID bid) {
-    return BackgroundManager::get(bid).lock().get();
-}
-
-bool BackgroundManager::has_background(BackgroundID bid) const {
-    return BackgroundManager::contains(bid);
-}
-
-void BackgroundManager::delete_background(BackgroundID bid) {
-    BackgroundManager::destroy(bid);
-}
-
-uint32_t BackgroundManager::background_count() const {
-    return BackgroundManager::count();
-}
-
-//============== END BACKGROUNDS ============
 
 //=============== START CAMERAS ============
 
@@ -95,19 +37,19 @@ CameraManager::CameraManager(Stage *stage):
 
 }
 
-CameraID CameraManager::new_camera() {
-    CameraID new_camera = cameras_.make(this->stage_);
-    new_camera.fetch()->set_parent(stage_);
+CameraPtr CameraManager::new_camera() {
+    auto new_camera = cameras_.make(this->stage_).fetch();
+    new_camera->set_parent(stage_);
 
     return new_camera;
 }
 
-CameraID CameraManager::new_camera_with_orthographic_projection(double left, double right, double bottom, double top, double near, double far) {
+CameraPtr CameraManager::new_camera_with_orthographic_projection(double left, double right, double bottom, double top, double near, double far) {
     /*
      *  Instantiates a camera with an orthographic projection. If both left and right are zero then they default to 0 and window.width()
      *  respectively. If top and bottom are zero, then they default to window.height() and 0 respectively. So top left is 0,0
      */
-    CameraID new_camera_id = new_camera();
+    auto new_cam = new_camera();
 
     if(!left && !right) {
         right = stage_->window->width();
@@ -117,22 +59,22 @@ CameraID CameraManager::new_camera_with_orthographic_projection(double left, dou
         top = stage_->window->height();
     }
 
-    camera(new_camera_id)->set_orthographic_projection(left, right, bottom, top, near, far);
+    new_cam->set_orthographic_projection(left, right, bottom, top, near, far);
 
-    return new_camera_id;
+    return new_cam;
 }
 
-CameraID CameraManager::new_camera_for_viewport(const Viewport& vp) {
+CameraPtr CameraManager::new_camera_for_viewport(const Viewport& vp) {
     float x, y, width, height;
     calculate_ratios_from_viewport(vp.type(), x, y, width, height);
 
-    CameraID cid = new_camera();
-    camera(cid)->set_perspective_projection(Degrees(45.0), width / height);
+    auto camera = new_camera();
+    camera->set_perspective_projection(Degrees(45.0), width / height);
 
-    return cid;
+    return camera;
 }
 
-CameraID CameraManager::new_camera_for_ui() {
+CameraPtr CameraManager::new_camera_for_ui() {
     return new_camera_with_orthographic_projection(0, stage_->window->width(), 0, stage_->window->height(), -1, 1);
 }
 
@@ -166,13 +108,13 @@ StageManager::StageManager(Window* window):
 
 }
 
-StageID StageManager::new_stage(AvailablePartitioner partitioner) {
+StagePtr StageManager::new_stage(AvailablePartitioner partitioner) {
     auto ret = StageManager::make(this->window_, partitioner);
     signal_stage_added_(ret);
-    return ret;
+    return ret.fetch();
 }
 
-uint32_t StageManager::stage_count() const {
+std::size_t StageManager::stage_count() const {
     return StageManager::count();
 }
 
@@ -189,9 +131,10 @@ StagePtr StageManager::stage(StageID s) {
     return StageManager::get(s).lock().get();
 }
 
-void StageManager::delete_stage(StageID s) {
+StagePtr StageManager::delete_stage(StageID s) {
     StageManager::destroy(s);
     signal_stage_removed_(s);
+    return nullptr;
 }
 
 void StageManager::fixed_update(float dt) {

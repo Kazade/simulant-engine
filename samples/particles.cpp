@@ -3,22 +3,20 @@
 
 class MainScene : public smlt::Scene<MainScene> {
 public:
-    MainScene(smlt::Window& window):
+    MainScene(smlt::Window* window):
         smlt::Scene<MainScene>(window) {}
 
     void load() {
         prepare_basic_scene(stage_, camera_);
 
-        smlt::StagePtr stage = stage_.fetch();
-
-        auto ps = stage->new_particle_system_from_file("simulant/particles/fire.kglp").fetch();
+        auto ps = stage_->new_particle_system_from_file("simulant/particles/fire.kglp");
         ps->move_to(0.0, 0, -4);
 
-        auto mat = stage->assets->new_material_from_file(smlt::Material::BuiltIns::TEXTURED_PARTICLE).fetch();
+        auto mat = stage_->assets->new_material_from_file(smlt::Material::BuiltIns::TEXTURED_PARTICLE).fetch();
         ps->set_material_id(mat->id());
-        mat->set_texture_unit_on_all_passes(0, stage->assets->new_texture_from_file("sample_data/flare.tga"));
+        mat->set_texture_unit_on_all_passes(0, stage_->assets->new_texture_from_file("sample_data/flare.tga"));
 
-        camera_.fetch()->set_perspective_projection(
+        camera_->set_perspective_projection(
             smlt::Degrees(45.0),
             float(window->width()) / float(window->height()),
             0.1,
@@ -29,8 +27,8 @@ public:
     }
 
 private:
-    smlt::StageID stage_;
-    smlt::CameraID camera_;
+    smlt::StagePtr stage_;
+    smlt::CameraPtr camera_;
 };
 
 class App : public smlt::Application {
@@ -42,7 +40,7 @@ public:
     }
 
     bool init() {
-        register_scene<MainScene>("main");
+        scenes->register_scene<MainScene>("main");
         return true;
     }
 };

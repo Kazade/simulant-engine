@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "../renderer.h"
+#include "../gl_renderer.h"
 #include "../../material.h"
 #include "./buffer_manager.h"
 #include "../batching/render_queue.h"
@@ -76,10 +77,14 @@ private:
 
 typedef generic::RefCountedTemplatedManager<GPUProgram, GPUProgramID> GPUProgramManager;
 
-class GenericRenderer : public Renderer {
+class GenericRenderer:
+    public Renderer,
+    private GLRenderer {
+
 public:
     GenericRenderer(Window* window):
         Renderer(window),
+        GLRenderer(window),
         buffer_manager_(new GL2BufferManager(this)) {
 
     }
@@ -94,6 +99,7 @@ public:
     GPUProgramPtr gpu_program(const GPUProgramID& program_id);
 
     bool supports_gpu_programs() const override { return true; }
+
 private:
     GPUProgramManager program_manager_;
 
@@ -113,6 +119,18 @@ private:
     void send_geometry(Renderable* renderable);
 
     friend class GL2RenderQueueVisitor;
+
+    void on_texture_prepare(TexturePtr texture) override {
+        GLRenderer::on_texture_prepare(texture);
+    }
+
+    void on_texture_register(TextureID tex_id, TexturePtr texture) override {
+        GLRenderer::on_texture_register(tex_id, texture);
+    }
+
+    void on_texture_unregister(TextureID tex_id) override {
+        GLRenderer::on_texture_unregister(tex_id);
+    }
 };
 
 }

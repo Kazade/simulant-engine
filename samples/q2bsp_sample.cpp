@@ -3,50 +3,48 @@
 #include "simulant/extra.h"
 
 using namespace smlt;
-using namespace smlt::extra;
 
 class GameScene : public smlt::Scene<GameScene> {
 public:
-    GameScene(smlt::Window& window):
+    GameScene(smlt::Window* window):
         smlt::Scene<GameScene>(window) {}
 
     void load() {
-        pid_ = prepare_basic_scene(stage_id_, camera_id_);
-        window->pipeline(pid_)->set_clear_flags(BUFFER_CLEAR_ALL);
-        window->pipeline(pid_)->viewport->set_colour(smlt::Colour::GREY);
-        window->disable_pipeline(pid_);
+        pipeline_ = prepare_basic_scene(stage_, camera_);
+        pipeline_->set_clear_flags(BUFFER_CLEAR_ALL);
+        pipeline_->viewport->set_colour(smlt::Colour::GREY);
+        pipeline_->deactivate();
 
-        auto stage = window->stage(stage_id_);
         window->resource_locator->add_search_path("sample_data/q2");
 
-        auto mesh = stage->assets->new_mesh_from_file("sample_data/sample.bsp").fetch();
-        auto actor_id = stage->new_actor_with_mesh(mesh->id());
+        auto mesh = stage_->assets->new_mesh_from_file("sample_data/sample.bsp").fetch();
+        auto actor_id = stage_->new_actor_with_mesh(mesh->id());
         /*
         stage->camera(camera_id_)->move_to_absolute(
             mesh->data->get<smlt::Vec3>("player_spawn")
         );*/
 
         // Add a fly controller to the camera for user input
-        stage->camera(camera_id_)->new_controller<controllers::Fly>(window);
+        camera_->new_behaviour<behaviours::Fly>(window);
 
-        camera_id_.fetch()->set_perspective_projection(
+        camera_->set_perspective_projection(
             Degrees(45.0),
             float(window->width()) / float(window->height()),
             1.0,
             1000.0
         );
 
-        stage->set_ambient_light(smlt::Colour(0.8, 0.8, 0.8, 1.0));
+        stage_->set_ambient_light(smlt::Colour(0.8, 0.8, 0.8, 1.0));
     }
 
     void activate() {
-        window->enable_pipeline(pid_);
+        pipeline_->activate();
     }
 
 private:
-    StageID stage_id_;
-    CameraID camera_id_;
-    PipelineID pid_;
+    StagePtr stage_;
+    CameraPtr camera_;
+    PipelinePtr pipeline_;
 };
 
 
@@ -57,9 +55,9 @@ public:
 
 private:
     bool init() {
-        register_scene<GameScene>("main");
-        load_scene_in_background("main", true); //Do loading in a background thread, but show immediately when done
-        activate_scene("_loading"); // Show the loading screen in the meantime
+        scenes->register_scene<GameScene>("main");
+        scenes->load_in_background("main", true); //Do loading in a background thread, but show immediately when done
+        scenes->activate("_loading"); // Show the loading screen in the meantime
         return true;
     }
 };

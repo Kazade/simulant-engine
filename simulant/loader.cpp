@@ -39,14 +39,22 @@ void BaseTextureLoader::into(Loadable& resource, const LoaderOptions& options) {
 
     auto result = do_load(buffer);
 
+    /* Respect the auto_upload option if it exists*/
+    bool auto_upload = true;
+    if(options.count("auto_upload")) {
+        auto_upload = smlt::any_cast<bool>(options.at("auto_upload"));
+    }
+
     if (result.data.empty()) {
         L_ERROR(_F("Unable to load texture with name: {0}").format(filename_));
         throw std::runtime_error("Couldn't load the file: " + filename_.encode());
     } else {
         tex->set_source(filename_);
-        tex->set_bpp(result.channels * 8);
+        tex->set_texel_type(result.texel_type);
+        tex->set_format(result.format);
         tex->resize(result.width, result.height);
         tex->data().assign(result.data.begin(), result.data.end());
+        tex->set_auto_upload(auto_upload);
 
         tex->flip_vertically();
     }

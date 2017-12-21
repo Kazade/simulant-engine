@@ -21,7 +21,7 @@
 
 #include "types.h"
 #include "generic/managed.h"
-#include "mesh.h"
+#include "meshes/mesh.h"
 
 namespace smlt {
 
@@ -77,7 +77,7 @@ private:
     std::vector<DebugElement> elements_;
 
     MeshID mesh_;
-    ActorID actor_;
+    ActorPtr actor_ = nullptr;
     MaterialID material_;
 
     sig::Connection update_connection_;

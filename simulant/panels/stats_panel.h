@@ -37,9 +37,9 @@ private:
     void initialize();
     bool initialized_ = false;
 
-    StageID stage_id_;
-    CameraID ui_camera_;
-    PipelineID pipeline_id_;
+    StagePtr stage_;
+    CameraPtr ui_camera_;
+    PipelinePtr pipeline_;
 
     void update();
 

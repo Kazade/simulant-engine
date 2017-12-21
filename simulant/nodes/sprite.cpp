@@ -34,7 +34,7 @@ Sprite::Sprite(SpriteID id, SpriteManager *manager, SoundDriver* sound_driver):
     Source(manager->stage, sound_driver),
     manager_(manager) {
 
-    sprite_sheet_padding_ = std::make_pair(0, 0);
+    sprite_sheet_padding_ = std::make_pair(0, 0);  
 }
 
 bool Sprite::init() {
@@ -42,8 +42,10 @@ bool Sprite::init() {
 
     //Annoyingly, we can't use new_actor_with_parent_and_mesh here, because that looks
     //up our ID in the stage, which doesn't exist until this function returns
-    actor_id_ = stage->new_actor_with_mesh(mesh_id_);
-    actor_id_.fetch()->set_parent(this);
+    actor_ = stage->new_actor_with_mesh(mesh_id_);
+    actor_->set_parent(this);
+
+    set_render_dimensions(1.0f, 1.0f);
 
     using namespace std::placeholders;
     animation_state_ = std::make_shared<KeyFrameAnimationState>(
@@ -55,9 +57,9 @@ bool Sprite::init() {
 }
 
 void Sprite::cleanup() {
-    if(actor_id_ && stage->has_actor(actor_id_)) {
-        stage->delete_actor(actor_id_);
-        actor_id_ = smlt::ActorID(0);
+    if(actor_ && stage->has_actor(actor_->id())) {
+        stage->delete_actor(actor_->id());
+        actor_ = nullptr;
     }
 }
 
@@ -66,8 +68,8 @@ void Sprite::ask_owner_for_destruction() {
 }
 
 void Sprite::update(float dt) {
-    if(actor_id_) {
-        stage->actor(actor_id_)->set_parent(this); //Make sure every frame that our actor stays attached to us!
+    if(actor_) {
+        actor_->set_parent(this); //Make sure every frame that our actor stays attached to us!
     }
 
     // Update any keyframe animations
@@ -82,7 +84,9 @@ void Sprite::flip_horizontally(bool value) {
     update_texture_coordinates();
 }
 
-const AABB& Sprite::aabb() const { return actor_id_.fetch()->aabb(); }
+const AABB& Sprite::aabb() const {
+    return actor_->aabb();
+}
 
 void Sprite::flip_vertically(bool value) {
     if(value == flipped_vertically_) return;
@@ -125,32 +129,28 @@ void Sprite::update_texture_coordinates() {
     {
         auto mesh = stage->assets->mesh(mesh_id_);
 
-        mesh->shared_data->move_to_start();
-        mesh->shared_data->tex_coord0(x0, y0);
+        mesh->vertex_data->move_to_start();
+        mesh->vertex_data->tex_coord0(x0, y0);
 
-        mesh->shared_data->move_next();
-        mesh->shared_data->tex_coord0(x1, y0);
+        mesh->vertex_data->move_next();
+        mesh->vertex_data->tex_coord0(x1, y0);
 
-        mesh->shared_data->move_next();
-        mesh->shared_data->tex_coord0(x1, y1);
+        mesh->vertex_data->move_next();
+        mesh->vertex_data->tex_coord0(x1, y1);
 
-        mesh->shared_data->move_next();
-        mesh->shared_data->tex_coord0(x0, y1);
+        mesh->vertex_data->move_next();
+        mesh->vertex_data->tex_coord0(x0, y1);
 
-        mesh->shared_data->done();
+        mesh->vertex_data->done();
     }
 }
 
-void Sprite::set_spritesheet(TextureID texture_id, uint32_t frame_width,
-    uint32_t frame_height, uint32_t margin, uint32_t spacing,
-    std::pair<uint32_t, uint32_t> padding
-) {
-
+void Sprite::set_spritesheet(TextureID texture_id, uint32_t frame_width, uint32_t frame_height, SpritesheetAttrs attrs) {
     frame_width_ = frame_width;
     frame_height_ = frame_height;
-    sprite_sheet_margin_ = margin;
-    sprite_sheet_spacing_ = spacing;
-    sprite_sheet_padding_ = padding;
+    sprite_sheet_margin_ = attrs.margin;
+    sprite_sheet_spacing_ = attrs.spacing;
+    sprite_sheet_padding_ = std::make_pair(attrs.padding_horizontal, attrs.padding_vertical);
 
     image_width_ = stage->assets->texture(texture_id)->width();
     image_height_ = stage->assets->texture(texture_id)->height();
@@ -168,7 +168,13 @@ void Sprite::set_render_dimensions_from_height(float height) {
 }
 
 void Sprite::set_render_priority(RenderPriority priority) {
-    actor_id_.fetch()->set_render_priority(priority);
+    actor_->set_render_priority(priority);
+}
+
+void Sprite::set_alpha(float alpha) {
+    alpha_ = alpha;
+    auto mesh = mesh_id_.fetch();
+    mesh->set_diffuse(smlt::Colour(1.0f, 1.0f, 1.0f, alpha_));
 }
 
 void Sprite::set_render_dimensions_from_width(float width) {
@@ -176,7 +182,7 @@ void Sprite::set_render_dimensions_from_width(float width) {
 }
 
 void Sprite::set_render_dimensions(float width, float height) {
-    if(!frame_width_ || !frame_height_) {
+    if((!frame_width_ || !frame_height_) && (width < 0 || height < 0)) {
         throw std::runtime_error("You can't call set_render_dimensions without first specifying a spritesheet");
     }
 
@@ -198,17 +204,17 @@ void Sprite::set_render_dimensions(float width, float height) {
     //Rebuild the mesh
     auto mesh = stage->assets->mesh(mesh_id_);
 
-    mesh->shared_data->move_to_start();
-    mesh->shared_data->position((-width / 2.0), (-height / 2.0), 0);
+    mesh->vertex_data->move_to_start();
+    mesh->vertex_data->position((-width / 2.0), (-height / 2.0), 0);
 
-    mesh->shared_data->move_next();
-    mesh->shared_data->position((width / 2.0), (-height / 2.0), 0);
+    mesh->vertex_data->move_next();
+    mesh->vertex_data->position((width / 2.0), (-height / 2.0), 0);
 
-    mesh->shared_data->move_next();
-    mesh->shared_data->position((width / 2.0),  (height / 2.0), 0);
+    mesh->vertex_data->move_next();
+    mesh->vertex_data->position((width / 2.0),  (height / 2.0), 0);
 
-    mesh->shared_data->move_next();
-    mesh->shared_data->position((-width / 2.0),  (height / 2.0), 0);
+    mesh->vertex_data->move_next();
+    mesh->vertex_data->position((-width / 2.0),  (height / 2.0), 0);
 
-    mesh->shared_data->done();
+    mesh->vertex_data->done();
 }

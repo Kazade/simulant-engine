@@ -19,14 +19,14 @@ public:
     Camera(CameraID camera_id, Stage* stage);
     ~Camera();
 
-    void ask_owner_for_destruction();
+    void ask_owner_for_destruction() override;
 
     /* Camera Proxies have no mass/body so their AABB is just 0,0,0, or their position */
-    const AABB& aabb() const {
+    const AABB& aabb() const override {
         return bounds_;
     }
 
-    const AABB transformed_aabb() const {
+    const AABB transformed_aabb() const override {
         return AABB(position(), position());
     }
 
@@ -59,13 +59,7 @@ private:
 
     void update_frustum();
 
-    void on_position_set(const Vec3& oldp, const Vec3& newp) override;
-    void on_rotation_set(const Quaternion& oldr, const Quaternion& newr) override;
-    void on_scaling_set(const Vec3& olds, const Vec3& news) override;
-    void on_parent_set(TreeNode* oldp, TreeNode* newp) override;
-
-    void update_position_from_parent(bool _recalc_bounds);
-    void update_rotation_from_parent();
+    void update_transformation_from_parent() override;
 };
 
 }

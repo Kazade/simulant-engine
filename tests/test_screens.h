@@ -24,7 +24,7 @@ public:
 
 class TestScene : public Scene<TestScene> {
 public:
-    TestScene(Window& window):
+    TestScene(Window* window):
         Scene<TestScene>(window) {}
 
     void load() override { load_called = true; }
@@ -37,6 +37,17 @@ public:
     volatile bool activate_called = false;
     volatile bool deactivate_called = false;
 };
+
+class SceneWithArgs : public Scene<SceneWithArgs> {
+public:
+    // Boilerplate
+    SceneWithArgs(smlt::Window* window, const std::string& some_arg):
+        smlt::Scene<SceneWithArgs>(window) {}
+
+    void load() {}
+
+};
+
 
 class SceneManagerTests : public SimulantTestCase {
 private:
@@ -58,21 +69,22 @@ public:
         assert_false(manager_->has_scene("main"));
     }
 
-    void test_activate_scene() {
-        assert_raises(std::logic_error, std::bind(&SceneManager::activate_scene, manager_, "main"));
+    void test_activate() {
+        assert_raises(std::logic_error, std::bind(&SceneManager::activate, manager_, "main", smlt::SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE));
 
         manager_->register_scene<TestScene>("main");
 
-        manager_->activate_scene("main");
+        manager_->activate("main");
 
         TestScene* scr = dynamic_cast<TestScene*>(manager_->resolve_scene("main").get());
+        scr->set_destroy_on_unload(false); //Don't destroy on unload
 
         assert_true(scr->load_called);
         assert_true(scr->activate_called);
         assert_false(scr->deactivate_called);
         assert_false(scr->unload_called);
 
-        manager_->activate_scene("main"); //activate_sceneing to the same place should do nothing
+        manager_->activate("main"); //activateing to the same place should do nothing
 
         assert_true(scr->load_called);
         assert_true(scr->activate_called);
@@ -80,12 +92,12 @@ public:
         assert_false(scr->unload_called);
 
         manager_->register_scene<TestScene>("/test");
-        manager_->activate_scene("/test");
+        manager_->activate("/test");
 
         assert_true(scr->load_called);
         assert_true(scr->activate_called);
         assert_true(scr->deactivate_called); //Should've been deactivated
-        assert_false(scr->unload_called);
+        assert_true(scr->unload_called);
 
         TestScene* scr2 = dynamic_cast<TestScene*>(manager_->resolve_scene("/test").get());
 
@@ -100,7 +112,7 @@ public:
 
         TestScene* scr = dynamic_cast<TestScene*>(manager_->resolve_scene("main").get());
         assert_false(scr->load_called);
-        manager_->load_scene_in_background("main");
+        manager_->load_in_background("main");
 #ifdef _arch_dreamcast
         stdX::this_thread::sleep_for(std::chrono::milliseconds(100));
 #else
@@ -119,6 +131,11 @@ public:
 
     void test_reset() {
 
+    }
+
+    void test_register_scene() {
+        SceneManager manager(window.get());
+        manager.register_scene<SceneWithArgs>("test", "arg");
     }
 };
 

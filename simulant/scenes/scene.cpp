@@ -23,10 +23,10 @@
 
 namespace smlt {
 
-SceneBase::SceneBase(Window &window):
-    window_(&window),
-    input_(window.input.get()),
-    app_(window.application){
+SceneBase::SceneBase(Window *window):
+    window_(window),
+    input_(window->input.get()),
+    app_(window->application){
 
 }
 
@@ -58,16 +58,18 @@ void SceneBase::_call_unload() {
 
 void SceneBase::_call_activate() {
     activate();
+    is_active_ = true;
 }
 
 void SceneBase::_call_deactivate() {
     deactivate();
+    is_active_ = false;
 }
 
-PipelineID SceneBase::prepare_basic_scene(StageID& new_stage, CameraID& new_camera, AvailablePartitioner partitioner) {
+PipelinePtr SceneBase::prepare_basic_scene(StagePtr& new_stage, CameraPtr& new_camera, AvailablePartitioner partitioner) {
     new_stage = window->new_stage(partitioner);
-    new_camera = new_stage.fetch()->new_camera();
-    return window->render(new_stage, new_camera).with_clear();
+    new_camera = new_stage->new_camera();
+    return window->render(new_stage, new_camera);
 }
 
 }

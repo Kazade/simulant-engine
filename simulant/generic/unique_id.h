@@ -16,11 +16,12 @@
  *     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UNIQUE_ID_H
-#define UNIQUE_ID_H
+#pragma once
 
 #include <cstdint>
 #include <functional>
+
+namespace smlt {
 
 template<typename ResourceTypePtr>
 class UniqueID {
@@ -50,7 +51,8 @@ public:
 
     template<typename T>
     T* fetch_as() const {
-        return dynamic_cast<T*>(fetch());
+        /* The weird &(* casting is to handle smart pointers */
+        return dynamic_cast<T*>(&(*fetch()));
     }
 
     bool is_bound() const {
@@ -96,10 +98,12 @@ private:
     ResourceGetter getter_;
 };
 
+}
+
 namespace std {
     template<typename ResourcePtrType>
-    struct hash< UniqueID<ResourcePtrType> > {
-        size_t operator()(const UniqueID<ResourcePtrType>& id) const {
+    struct hash< smlt::UniqueID<ResourcePtrType> > {
+        size_t operator()(const smlt::UniqueID<ResourcePtrType>& id) const {
             hash<uint32_t> make_hash;
             return make_hash(id.value());
         }
@@ -107,4 +111,3 @@ namespace std {
 }
 
 
-#endif // UNIQUE_ID_H

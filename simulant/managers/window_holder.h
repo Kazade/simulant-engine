@@ -29,6 +29,8 @@ public:
     WindowHolder(Window* window):
         window_(window) {}
 
+    virtual ~WindowHolder() {}
+
     Property<WindowHolder, Window> window = { this, &WindowHolder::window_ };
 
 protected:

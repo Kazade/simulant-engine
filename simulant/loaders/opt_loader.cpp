@@ -20,7 +20,7 @@
 #include <queue>
 #include <deque>
 
-#include "../mesh.h"
+#include "../meshes/mesh.h"
 #include "../texture.h"
 #include "../resource_manager.h"
 #include "../shortcuts.h"
@@ -465,6 +465,8 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
     spec.diffuse_attribute = VERTEX_ATTRIBUTE_4F;
     spec.normal_attribute = VERTEX_ATTRIBUTE_3F;
 
+    mesh->reset(spec);
+
     MainHeader main_header;
     MainJumpHeader main_jump_header;
 
@@ -510,17 +512,17 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
 
         auto new_tex = mesh->resource_manager().texture(texture_name_to_id[tex.name]);
         new_tex->resize(tex.width, tex.height);
-        new_tex->set_bpp(tex.bytes_per_pixel * 8);
+        new_tex->set_texel_type(TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE);
+        new_tex->set_format(
+            (tex.bytes_per_pixel == 3) ? TEXTURE_FORMAT_RGB : TEXTURE_FORMAT_RGBA
+        );
         new_tex->data().assign(tex.data.begin(), tex.data.end());
-        new_tex->upload();
 
-        //Create a submesh for each texture. Don't share the vertex data between submeshes
+        //Create a submesh for each texture.
         texture_submesh[tex.name] = mesh->new_submesh_with_material(
             tex.name,
             mesh->resource_manager().new_material_from_texture(new_tex->id()),
-            MESH_ARRANGEMENT_TRIANGLES,
-            VERTEX_SHARING_MODE_INDEPENDENT,
-            spec
+            MESH_ARRANGEMENT_TRIANGLES
         );
     }
 

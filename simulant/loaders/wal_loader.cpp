@@ -90,6 +90,8 @@ TextureLoadResult WALLoader::do_load(const std::vector<uint8_t> &buffer) {
     result.width = header->width;
     result.height = header->height;
     result.channels = 4;
+    result.format = TEXTURE_FORMAT_RGBA;
+    result.texel_type = TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE;
 
     uint8_t* data = (uint8_t*) &buffer[0];
     data += header->offset[0];

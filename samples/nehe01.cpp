@@ -3,16 +3,15 @@
 
 class MainScene : public smlt::Scene<MainScene> {
 public:
-    MainScene(smlt::Window& window):
+    MainScene(smlt::Window* window):
         smlt::Scene<MainScene>(window) {}
 
     void load() {
         prepare_basic_scene(stage_, camera_);
 
-        smlt::StagePtr stage = stage_.fetch();
-        smlt::MeshPtr square = stage->assets->new_mesh_as_rectangle(1.0, 1.0).fetch();
+        smlt::MeshPtr square = stage_->assets->new_mesh_as_rectangle(1.0, 1.0).fetch();
 
-        auto actor = stage->new_actor_with_mesh(square->id()).fetch();
+        auto actor = stage_->new_actor_with_mesh(square->id());
         actor->move_to(0, 0, -5);
         actor->scale_by(2.0);
 
@@ -20,8 +19,8 @@ public:
     }
 
 private:
-    smlt::StageID stage_;
-    smlt::CameraID camera_;
+    smlt::StagePtr stage_;
+    smlt::CameraPtr camera_;
 };
 
 class App : public smlt::Application {
@@ -33,7 +32,7 @@ public:
     }
 
     bool init() {
-        register_scene<MainScene>("main");
+        scenes->register_scene<MainScene>("main");
         return true;
     }
 };

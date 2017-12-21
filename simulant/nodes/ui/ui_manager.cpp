@@ -52,34 +52,34 @@ UIManager::~UIManager() {
     window_->unregister_event_listener(this);
 }
 
-WidgetID UIManager::new_widget_as_button(const unicode &text, float width, float height) {
-    auto button = manager_->make_as<Button>(this, &config_).fetch();
+Button* UIManager::new_widget_as_button(const unicode &text, float width, float height) {
+    auto button = manager_->make_as<Button>(this, &config_).fetch_as<Button>();
     button->set_text(text);
     button->resize(width, height);
     stage_->add_child(button);
 
-    return button->id();
+    return button;
 }
 
-WidgetID UIManager::new_widget_as_label(const unicode &text, float width, float height) {
-    auto label = manager_->make_as<Label>(this, &config_).fetch();
+Label* UIManager::new_widget_as_label(const unicode &text, float width, float height) {
+    auto label = manager_->make_as<Label>(this, &config_).fetch_as<Label>();
     label->set_text(text);
     label->resize(width, height);
 
     stage_->add_child(label);
 
-    return label->id();
+    return label;
 }
 
-WidgetID UIManager::new_widget_as_progress_bar(float min, float max, float value) {
-    auto pg = manager_->make_as<ProgressBar>(this, &config_).fetch();
+ProgressBar* UIManager::new_widget_as_progress_bar(float min, float max, float value) {
+    auto pg = manager_->make_as<ProgressBar>(this, &config_).fetch_as<ProgressBar>();
     pg->set_property("min", min);
     pg->set_property("max", max);
     pg->set_property("value", value);
 
     stage_->add_child(pg);
 
-    return pg->id();
+    return pg;
 }
 
 void UIManager::delete_widget(WidgetID widget) {

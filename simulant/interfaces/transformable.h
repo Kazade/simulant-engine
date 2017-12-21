@@ -84,9 +84,7 @@ private:
     void set_rotation(const Quaternion& q);
     void set_scaling(const Vec3& s);
 
-    virtual void on_position_set(const Vec3& old_pos, const Vec3& new_pos) {}
-    virtual void on_rotation_set(const Quaternion& old_rot, const Quaternion& new_rot) {}
-    virtual void on_scaling_set(const Vec3& old_scaling, const Vec3& new_scaling) {}
+    virtual void on_transformation_changed() {}
 
     Vec3 position_;
     Quaternion rotation_;

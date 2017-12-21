@@ -3,17 +3,16 @@
 #include "simulant/extra.h"
 
 using namespace smlt;
-using namespace smlt::extra;
 
 class GameScene : public smlt::Scene<GameScene> {
 public:
-    GameScene(smlt::Window& window):
+    GameScene(smlt::Window* window):
         smlt::Scene<GameScene>(window) {}
 
     void load() {
-        prepare_basic_scene(stage_id_, camera_id_);
+        prepare_basic_scene(stage_, camera_);
 
-        auto cam = camera_id_.fetch();
+        auto cam = camera_;
 
         //Automatically calculate an orthographic projection, taking into account the aspect ratio
         //and the passed height. For example, passing a height of 2.0 would mean the view would extend
@@ -24,19 +23,17 @@ public:
         );
 
         {
-            auto stage = window->stage(stage_id_);
-
             //Load a sprite grid, from the 'Layer 1' layer in a tmx file
-            smlt::MeshID mesh_id = stage->assets->new_mesh_from_tmx_file(
+            smlt::MeshID mesh_id = stage_->assets->new_mesh_from_tmx_file(
                 "sample_data/tiled/example.tmx", "Layer 1"
             );
 
-            stage->new_actor_with_mesh(mesh_id);
+            stage_->new_actor_with_mesh(mesh_id);
 
-            auto bounds = stage->assets->mesh(mesh_id)->aabb();
+            auto bounds = stage_->assets->mesh(mesh_id)->aabb();
 
             //Constrain the camera to the area where the sprite grid is rendered
-            stage->camera(camera_id_)->constrain_to_aabb(
+            camera_->constrain_to_aabb(
                 AABB(
                     smlt::Vec3(render_width / 2, render_height / 2, 0),
                     smlt::Vec3(
@@ -55,8 +52,8 @@ public:
     }
 
 private:
-    StageID stage_id_;
-    CameraID camera_id_;
+    StagePtr stage_;
+    CameraPtr camera_;
 };
 
 
@@ -67,9 +64,9 @@ public:
 
 private:
     bool init() {
-        register_scene<GameScene>("main");
-        load_scene_in_background("main", true); //Do loading in a background thread, but show immediately when done
-        activate_scene("_loading"); // Show the loading screen in the meantime
+        scenes->register_scene<GameScene>("main");
+        scenes->load_in_background("main", true); //Do loading in a background thread, but show immediately when done
+        scenes->activate("_loading"); // Show the loading screen in the meantime
         return true;
     }
 };

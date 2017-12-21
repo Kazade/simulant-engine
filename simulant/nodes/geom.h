@@ -21,7 +21,7 @@
 #include "../generic/managed.h"
 #include "../generic/tri_octree.h"
 #include "../interfaces.h"
-#include "../mesh.h"
+#include "../meshes/mesh.h"
 #include "../sound.h"
 
 #include "stage_node.h"
@@ -56,7 +56,7 @@ namespace impl {
  */
 class Geom :
     public StageNode,
-    public MeshInterface,
+    public virtual Boundable,
     public Managed<Geom>,
     public generic::Identifiable<GeomID>,
     public Source {
@@ -77,8 +77,11 @@ public:
     void cleanup() override {
         StageNode::cleanup();
     }
+
+    Property<Geom, VertexData> vertex_data = {this, &Geom::vertex_data_};
+
 private:
-    VertexData* get_shared_data() const;
+    VertexData* vertex_data_ = nullptr;
 
     std::shared_ptr<Mesh> mesh_;
     RenderPriority render_priority_;

@@ -34,6 +34,7 @@
 #include "types.h"
 #include "sound.h"
 #include "managers.h"
+#include "backgrounds/background_manager.h"
 #include "pipeline_helper.h"
 #include "scenes/scene_manager.h"
 #include "loader.h"
@@ -115,6 +116,7 @@ typedef sig::signal<void ()> ShutdownSignal;
 class Window :
     public Source,
     public StageManager,
+    public BackgroundManager,
     public Loadable,
     public PipelineHelperAPIInterface,
     public RenderTarget,
@@ -183,10 +185,16 @@ public:
         return new_pipeline_helper(render_sequence_, stage_id, camera_id);
     }
 
+    PipelineHelper render(StagePtr stage, CameraPtr camera);
+
     virtual PipelinePtr pipeline(PipelineID pid) override;
     virtual bool enable_pipeline(PipelineID pid) override;
     virtual bool disable_pipeline(PipelineID pid) override;
-    virtual void delete_pipeline(PipelineID pid) override;
+
+    /* Delete a pipeline and return a nullptr so you can use the pattern
+     * pipeline_ = delete_pipeline(pipeline->id()) for safety
+     */
+    virtual PipelinePtr delete_pipeline(PipelineID pid) override;
     virtual bool has_pipeline(PipelineID pid) const override;
     virtual bool is_pipeline_enabled(PipelineID pid) const override;
 
@@ -267,26 +275,6 @@ protected:
     bool escape_to_quit_enabled() const { return escape_to_quit_; }
 
 public:
-    // Background things
-    BackgroundID new_background() { return background_manager_->new_background(); }
-    BackgroundID new_background_from_file(const unicode& filename, float scroll_x=0.0, float scroll_y=0.0) {
-        return background_manager_->new_background_from_file(filename, scroll_x, scroll_y);
-    }
-
-    BackgroundPtr background(BackgroundID bid) {
-        return background_manager_->background(bid);
-    }
-
-    bool has_background(BackgroundID bid) const {
-        return background_manager_->has_background(bid);
-    }
-
-    void delete_background(BackgroundID bid) {
-        background_manager_->delete_background(bid);
-    }
-
-    uint32_t background_count() const { return background_manager_->background_count(); }
-
     // Panels
     void register_panel(uint8_t function_key, std::shared_ptr<Panel> panel);
     void unregister_panel(uint8_t function_key);
@@ -359,7 +347,6 @@ protected:
     InputState* _input_state() const { return input_state_.get(); }
 
 public:
-
     //Read only properties
     Property<Window, ResourceManager> shared_assets = { this, &Window::resource_manager_ };
     Property<Window, Application> application = { this, &Window::application_ };

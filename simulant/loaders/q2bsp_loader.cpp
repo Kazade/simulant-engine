@@ -25,13 +25,13 @@
 #include "../deps/kazlog/kazlog.h"
 
 #include "../stage.h"
-#include "../mesh.h"
+#include "../meshes/mesh.h"
 #include "../types.h"
 #include "../nodes/light.h"
 #include "../nodes/camera.h"
 #include "../procedural/texture.h"
-#include "../controllers/material/flowing.h"
-#include "../controllers/material/warp.h"
+#include "../behaviours/material/flowing.h"
+#include "../behaviours/material/warp.h"
 #include "../utils/rect_pack.h"
 
 #include "q2bsp_loader.h"
@@ -138,11 +138,14 @@ void Q2BSPLoader::generate_materials(
 
     // TESTING: BLACK TEXTURE
     auto black = assets->new_texture(smlt::GARBAGE_COLLECT_NEVER).fetch();
-    black->resize(1, 1);
-    black->set_bpp(32);
-    black->data()[0] = black->data()[1] = black->data()[2] = 0;
-    black->data()[3] = 255;
-    black->upload();
+    {
+        auto lock = black->lock();
+        black->resize(1, 1);
+        black->set_format(TEXTURE_FORMAT_RGBA);
+        black->data()[0] = black->data()[1] = black->data()[2] = 0;
+        black->data()[3] = 255;
+        black->mark_data_changed();
+    }
 
     materials.clear();
     for(auto& info: texture_infos) {
@@ -252,9 +255,11 @@ std::vector<LightmapLocation> pack_lightmaps(const std::vector<Lightmap>& lightm
 
     // Finally generate the texture!
     output_texture->resize(LIGHTMAP_DIMENSION, LIGHTMAP_DIMENSION);
-    output_texture->set_bpp(32);
+    output_texture->set_format(TEXTURE_FORMAT_RGBA);
 
     std::vector<LightmapLocation> locations(lightmaps.size());
+
+    auto texlock = output_texture->lock();
 
     bool logged = false;
     for(uint32_t i = 0; i < lightmaps.size(); ++i) {
@@ -286,8 +291,8 @@ std::vector<LightmapLocation> pack_lightmaps(const std::vector<Lightmap>& lightm
         locations[i] = LightmapLocation(rect.x, rect.y);
     }
 
-    output_texture->save_to_file("/tmp/lightmap.tga");
-    output_texture->upload(MIPMAP_GENERATE_NONE, TEXTURE_WRAP_CLAMP_TO_EDGE, TEXTURE_FILTER_LINEAR);
+    // output_texture->save_to_file("/tmp/lightmap.tga");
+    output_texture->mark_data_changed();
     return locations;
 }
 
@@ -489,21 +494,21 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
                 float w = float(dimensions[f.texture_info].width);
                 float h = float(dimensions[f.texture_info].height);
 
-                mesh->shared_data->position(pos);
-                mesh->shared_data->normal(normal);
-                mesh->shared_data->diffuse(smlt::Colour::WHITE);
-                mesh->shared_data->tex_coord0(u / w, v / h);
-                mesh->shared_data->tex_coord1(u / w, v / h);
-                mesh->shared_data->move_next();
+                mesh->vertex_data->position(pos);
+                mesh->vertex_data->normal(normal);
+                mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+                mesh->vertex_data->tex_coord0(u / w, v / h);
+                mesh->vertex_data->tex_coord1(u / w, v / h);
+                mesh->vertex_data->move_next();
 
-                sm->index_data->index(mesh->shared_data->count() - 1);
+                sm->index_data->index(mesh->vertex_data->count() - 1);
 
                 //Cache this new vertex in the lookup
-                index_lookup[tri_idx[j]] = mesh->shared_data->count() - 1;
+                index_lookup[tri_idx[j]] = mesh->vertex_data->count() - 1;
 
                 // Record this vertex against this face so we can manipulate the lightmap coordinates
                 // after packing
-                face_indexes[face_id].insert(mesh->shared_data->count() - 1);
+                face_indexes[face_id].insert(mesh->vertex_data->count() - 1);
             }
         }
 
@@ -517,8 +522,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     for(uint32_t i = 0; i < locations.size(); ++i) {
         for(auto idx: face_indexes[i]) {
-            mesh->shared_data->move_to(idx);
-            auto t = mesh->shared_data->texcoord1_at<Vec2>(idx);
+            mesh->vertex_data->move_to(idx);
+            auto t = mesh->vertex_data->texcoord1_at<Vec2>(idx);
 
             t.x -= uv_limits[i].min.x;
             t.y -= uv_limits[i].min.y;
@@ -532,13 +537,13 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             t.x += float(locations[i].x) / float(LIGHTMAP_DIMENSION);
             t.y += float(locations[i].y) / float(LIGHTMAP_DIMENSION);
 
-            mesh->shared_data->tex_coord1(t);
+            mesh->vertex_data->tex_coord1(t);
         }
     }
 
     lightmap_texture.fetch()->enable_gc();
 
-    mesh->shared_data->done();
+    mesh->vertex_data->done();
     mesh->each([&](const std::string& name, SubMesh* submesh) {
         //Delete empty submeshes
         /*if(!submesh->index_data->count()) {

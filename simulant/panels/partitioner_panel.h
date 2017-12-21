@@ -38,7 +38,7 @@ private:
     void initialize();
     bool initialized_ = false;
 
-    std::unordered_map<StageID, ActorID> debug_actors_;
+    std::unordered_map<StageID, ActorPtr> debug_actors_;
 };
 
 }

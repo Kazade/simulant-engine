@@ -41,6 +41,9 @@
 #include "loaders/md2_loader.h"
 #include "loaders/pcx_loader.h"
 #include "loaders/ttf_loader.h"
+#include "loaders/dds_texture_loader.h"
+
+#include "nodes/camera.h"
 
 #include "sound.h"
 #include "render_sequence.h"
@@ -58,7 +61,8 @@ namespace smlt {
 
 Window::Window():
     Source(this),
-    StageManager(this),    
+    StageManager(this),
+    BackgroundManager(this),
     resource_manager_(new ResourceManager(this)),
     initialized_(false),
     width_(-1),
@@ -69,7 +73,6 @@ Window::Window():
     frame_counter_time_(0),
     frame_counter_frames_(0),
     frame_time_in_milliseconds_(0),
-    background_manager_(new BackgroundManager(this)),
     time_keeper_(TimeKeeper::create(1.0 / Window::STEPS_PER_SECOND)) {
 
 }
@@ -142,7 +145,7 @@ LoaderTypePtr Window::loader_type(const unicode& loader_name) const {
 }
 
 void Window::create_defaults() {
-    loading_ = scenes::Loading::create(*this);
+    loading_ = scenes::Loading::create(this);
 
     //This needs to happen after SDL or whatever is initialized
     input_state_ = InputState::create();
@@ -153,9 +156,10 @@ void Window::create_defaults() {
 }
 
 void Window::_cleanup() {
+    delete_all_backgrounds();
+
     virtual_gamepad_.reset();
     loading_.reset();
-    background_manager_.reset();
     render_sequence_.reset();
 
     delete_all_stages();
@@ -216,6 +220,7 @@ bool Window::_init() {
         register_loader(std::make_shared<smlt::loaders::MD2LoaderType>());
         register_loader(std::make_shared<smlt::loaders::PCXLoaderType>());
         register_loader(std::make_shared<smlt::loaders::TTFLoaderType>());
+        register_loader(std::make_shared<smlt::loaders::DDSTextureLoaderType>());
 
         L_INFO("Initializing the default resources");
 #ifdef _arch_dreamcast
@@ -264,7 +269,7 @@ void Window::_update_thunk(float dt) {
         //it's still accessible through get_deltatime if the user needs it
     }
 
-    background_manager_->update(dt);
+    BackgroundManager::update(dt);
     StageManager::_update_thunk(dt);
 }
 
@@ -457,6 +462,11 @@ void Window::reset() {
     create_defaults();
 }
 
+PipelineHelper Window::render(StagePtr stage, CameraPtr camera) {
+    // This is a common enough requirement to provide a nice shortcut
+    return render(stage->id(), camera->id());
+}
+
 /* PipelineHelperAPIInterface */
 PipelinePtr Window::pipeline(PipelineID pid){
     return render_sequence_->pipeline(pid);
@@ -484,8 +494,9 @@ bool Window::disable_pipeline(PipelineID pid) {
     return state != pipeline->is_active();
 }
 
-void Window::delete_pipeline(PipelineID pid) {
+PipelinePtr Window::delete_pipeline(PipelineID pid) {
     render_sequence_->delete_pipeline(pid);
+    return nullptr;
 }
 
 bool Window::has_pipeline(PipelineID pid) const {

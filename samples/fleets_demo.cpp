@@ -1,24 +1,22 @@
 #include "simulant/simulant.h"
-#include "simulant/utils/random.h"
 
 using namespace smlt;
 
 class GameScene : public smlt::Scene<GameScene> {
 public:
-    GameScene(smlt::Window& window):
+    GameScene(smlt::Window* window):
         smlt::Scene<GameScene>(window) {}
 
     void load() {
-        auto pipeline = prepare_basic_scene(stage_id_, camera_id_);
-        pipeline.fetch()->viewport->set_colour(smlt::Colour::BLACK);
+        auto pipeline = prepare_basic_scene(stage_, camera_);
+        pipeline->viewport->set_colour(smlt::Colour::BLACK);
 
-        auto stage = window->stage(stage_id_);
-        camera_id_.fetch()->set_perspective_projection(Degrees(45.0), float(window->width()) / float(window->height()), 10.0, 10000.0);
+        camera_->set_perspective_projection(Degrees(45.0), float(window->width()) / float(window->height()), 10.0, 10000.0);
         ship_mesh_id_ = window->shared_assets->new_mesh_from_file("sample_data/fighter_good/space_frigate_6.obj");
         generate_ships();
 
-        stage->set_ambient_light(smlt::Colour(0.2, 0.2, 0.2, 1.0));
-        stage->new_light_as_directional();
+        stage_->set_ambient_light(smlt::Colour(0.2, 0.2, 0.2, 1.0));
+        stage_->new_light_as_directional();
     }
 
     void activate() {
@@ -27,44 +25,43 @@ public:
 
     void fixed_update(float dt) override {
         Vec3 speed(-250, 0, 0.0);
-
         Vec3 avg;
 
-        auto stage = window->stage(stage_id_);
-        for(auto ship_id: ship_ids_) {
-            auto pos = stage->actor(ship_id)->position();
+        for(auto ship: ships_) {
+            auto pos = ship->position();
             avg += pos;
-            stage->actor(ship_id)->move_to_absolute(pos + (speed * dt * (0.01 * ship_id.value())));
+            ship->move_to_absolute(pos + (speed * dt * (0.01 * ship->id().value())));
         }
 
-        avg /= ship_ids_.size();
+        avg /= ships_.size();
 
-        stage->camera(camera_id_)->look_at(avg);
+        camera_->look_at(avg);
     }
 
 private:
-    StageID stage_id_;
-    CameraID camera_id_;
+    StagePtr stage_;
+    CameraPtr camera_;
 
     MeshID ship_mesh_id_;
-    std::vector<ActorID> ship_ids_;
+    std::vector<ActorPtr> ships_;
 
     void generate_ships() {
         Vec3 centre = Vec3(2000, 0, 0);
 
+        auto rgen = smlt::RandomGenerator();
+
         for(uint32_t i = 0; i < 100; ++i) {
             Vec3 pos = centre + (Vec3(
-                random_gen::random_float(-100, 100),
-                random_gen::random_float(-100, 100),
-                random_gen::random_float(-100, 100)
-            ).normalized() * random_gen::random_float(100.0f, 150.0f));
+                rgen.float_in_range(-100, 100),
+                rgen.float_in_range(-100, 100),
+                rgen.float_in_range(-100, 100)
+            ).normalized() * rgen.float_in_range(100.0f, 150.0f));
 
-            auto stage = window->stage(stage_id_);
-            ship_ids_.push_back(stage->new_actor_with_mesh(ship_mesh_id_));
-            stage->actor(ship_ids_.back())->move_to_absolute(pos);
+            ships_.push_back(stage_->new_actor_with_mesh(ship_mesh_id_));
+            ships_.back()->move_to_absolute(pos);
 
-            auto ps_id = stage->new_particle_system_with_parent_from_file(ship_ids_.back(), "simulant/particles/pixel_trail.kglp");
-            stage->particle_system(ps_id)->move_to(0, 0, 0);
+            auto ps = stage_->new_particle_system_with_parent_from_file(ships_.back()->id(), "simulant/particles/pixel_trail.kglp");
+            ps->move_to(0, 0, 0);
         }
     }
 };
@@ -77,9 +74,9 @@ public:
 
 private:
     bool init() {
-        register_scene<GameScene>("main");
-        load_scene_in_background("main", true); //Do loading in a background thread, but show immediately when done
-        activate_scene("_loading"); // Show the loading screen in the meantime
+        scenes->register_scene<GameScene>("main");
+        scenes->load_in_background("main", true); //Do loading in a background thread, but show immediately when done
+        scenes->activate("_loading"); // Show the loading screen in the meantime
         return true;
     }
 };

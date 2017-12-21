@@ -18,7 +18,7 @@
 //
 
 #include "heightmap_loader.h"
-#include "../mesh.h"
+#include "../meshes/mesh.h"
 #include "../resource_manager.h"
 #include "texture_loader.h"
 
@@ -39,7 +39,7 @@ Vec3 get_vertex_at(MeshPtr terrain, int x, int z) {
     /* Returns the vertex at the specified point */
     TerrainData data = terrain->data->get<TerrainData>("terrain_data");
     int idx = (z * data.x_size) + x;
-    return terrain->shared_data->position_at<Vec3>(idx);
+    return terrain->vertex_data->position_at<Vec3>(idx);
 }
 
 static std::vector<Vec3> _get_surrounding_vertices_from_index(Mesh* terrain, uint32_t i) {
@@ -85,11 +85,11 @@ static std::vector<Vec3> _get_surrounding_vertices_from_index(Mesh* terrain, uin
         }
     }
 
-    VertexData& shared_data = terrain->shared_data;
+    VertexData& vertex_data = terrain->vertex_data;
 
     for(auto& idx: surrounding_indexes) {
         if(idx == -1) continue;
-        surrounding_vertices.push_back(shared_data.position_at<Vec3>(idx));
+        surrounding_vertices.push_back(vertex_data.position_at<Vec3>(idx));
     }
 
     return surrounding_vertices;
@@ -108,12 +108,12 @@ std::vector<Vec3> get_surrounding_vertices(MeshPtr terrain, int x, int z) {
 
 
 static void _smooth_terrain_iteration(Mesh* mesh, int width, int height) {
-    VertexData& shared_data = mesh->shared_data;
+    VertexData& vertex_data = mesh->vertex_data;
 
-    shared_data.move_to_start();
+    vertex_data.move_to_start();
 
-    for(uint32_t i = 0; i < mesh->shared_data->count(); ++i) {
-        auto this_pos = shared_data.position_at<Vec3>(i);
+    for(uint32_t i = 0; i < mesh->vertex_data->count(); ++i) {
+        auto this_pos = vertex_data.position_at<Vec3>(i);
         auto vertices = _get_surrounding_vertices_from_index(mesh, i);
 
         float total_height = this_pos.y;
@@ -124,8 +124,8 @@ static void _smooth_terrain_iteration(Mesh* mesh, int width, int height) {
         // http://nic-gamedev.blogspot.co.uk/2013/02/simple-terrain-smoothing.html
 
         float new_height = total_height / float(vertices.size() + 1);
-        shared_data.position(this_pos.x, new_height, this_pos.z);
-        shared_data.move_next();
+        vertex_data.position(this_pos.x, new_height, this_pos.z);
+        vertex_data.move_next();
     }
 }
 
@@ -241,11 +241,15 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     // Load the texture using the texture loader
     TextureID tid = mesh->resource_manager().new_texture();
     TextureLoader loader(this->filename_, this->data_);
-    loader.into(*mesh->resource_manager().texture(tid));
+    loader.into(*mesh->resource_manager().texture(tid), {{"auto_upload", false}});
 
     // Now generate the heightmap from it
     auto tex = mesh->resource_manager().texture(tid);
     tex->flip_vertically();
+
+    if(tex->is_compressed()) {
+        throw std::logic_error("Creating a heightmap from a compressed texture is currently unimplemented");
+    }
 
     float range = spec.max_height - spec.min_height;
 
@@ -267,7 +271,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     std::vector<smlt::SubMesh*> submeshes;
     for(int i = 0; i < total_patches; ++i) {
         submeshes.push_back(mesh->new_submesh_with_material(
-            std::to_string(i), mat, MESH_ARRANGEMENT_TRIANGLES, VERTEX_SHARING_MODE_SHARED, VertexSpecification(), index_type
+            std::to_string(i), mat, MESH_ARRANGEMENT_TRIANGLES, index_type
         ));
         submeshes.back()->index_data->reserve(patch_size * patch_size);
     }
@@ -279,7 +283,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     std::vector<float> heights(total);
     auto& tex_data = tex->data();
-    auto stride = tex->bpp() / 8;
+    auto stride = tex->bytes_per_pixel();
     for(int32_t i = 0; i < total; i++) {
         heights[i] = float(tex_data[i * stride]) / 256.0f;
     }
@@ -307,24 +311,24 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
                 final_pos,
                 (float(z) * spec.spacing) - z_offset
             );
-            mesh->shared_data->position(pos);
-            mesh->shared_data->normal(Vec3(0, 1, 0));
+            mesh->vertex_data->position(pos);
+            mesh->vertex_data->normal(Vec3(0, 1, 0));
 
-            mesh->shared_data->diffuse(smlt::Colour::WHITE);
+            mesh->vertex_data->diffuse(smlt::Colour::WHITE);
 
             // First texture coordinate takes into account texture_repeat setting
-            mesh->shared_data->tex_coord0(
+            mesh->vertex_data->tex_coord0(
                 (spec.texcoord0_repeat / float(largest)) * float(x),
                 (spec.texcoord0_repeat / float(largest)) * float(z)
             );
 
             // Second texture coordinate makes the texture span the entire terrain
-            mesh->shared_data->tex_coord1(
+            mesh->vertex_data->tex_coord1(
                 (1.0 / float(width)) * float(x),
                 (1.0 / float(height)) * float(z)
             );
 
-            mesh->shared_data->move_next();
+            mesh->vertex_data->move_next();
 
             if(z < (height - 1) && x < (width - 1)) {
                 int patch_x = (x / float(patch_size));
@@ -373,16 +377,16 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
 
         // Now set the normal on the vertex data
         for(auto p: index_to_normal) {
-            mesh->shared_data->move_to(p.first);
+            mesh->vertex_data->move_to(p.first);
             auto n = p.second.normalized();
-            mesh->shared_data->normal(n);
+            mesh->vertex_data->normal(n);
         }
     }
 
     for(auto sm: submeshes) {
         sm->index_data->done();
     }
-    mesh->shared_data->done();
+    mesh->vertex_data->done();
 
     mesh->resource_manager().delete_texture(tid); //Finally delete the texture
 
