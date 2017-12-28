@@ -141,6 +141,7 @@ script:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ./tests/simulant_tests; fi;
 
   # Package everything into a folder for upload to GCS
+  - cd $TRAVIS_BUILD_DIR
   - if [[ "$CROSS_BUILD" == "dreamcast" ]]; then export BUILD_TARGET=dreamcast; fi
   - if [[ "$CROSS_BUILD" == "0" ]]; then export BUILD_TARGET=$TRAVIS_OS_NAME; fi;
   - ./platforms/package.py --build-type=$BUILD_TYPE --build-target=$BUILD_TARGET --target-folder=$TRAVIS_BUILD_DIR --header-folder=./simulant --lib-folder=./build
