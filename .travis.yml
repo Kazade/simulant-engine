@@ -143,21 +143,7 @@ script:
   # Package everything into a folder for upload to GCS
   - if [[ "$CROSS_BUILD" == "dreamcast" ]]; then export BUILD_TARGET=dreamcast; fi
   - if [[ "$CROSS_BUILD" == "0" ]]; then export BUILD_TARGET=$TRAVIS_OS_NAME; fi;
-  - export FOLDER_NAME=simulant-$BUILD_TARGET-$BUILD_TYPE
-  - cd $TRAVIS_BUILD_DIR # Make sure we're in the right place
-
-  - mkdir -p $BUILD_TARGET/$FOLDER_NAME/lib/$BUILD_TYPE
-
-  # Copy all the compiled libs for whatever platform, don't return an error code if they don't exist
-  - cp ./build/simulant/{*.so,*.a,*.dylib,*.dll,*.lib} $BUILD_TARGET/$FOLDER_NAME/lib/$BUILD_TYPE 2> /dev/null | true
-
-  # Copy the header files to the right place
-  - mkdir -p $BUILD_TARGET/$FOLDER_NAME/include/simulant
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export COPY_COMMAND=ditto; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export COPY_COMMAND="cp --parents"; fi
-  - find simulant -name "*.h" -type f -exec $COPY_COMMAND {} ./$BUILD_TARGET/$FOLDER_NAME/include \;
-
-  - cd $BUILD_TARGET; zip -q -r $FOLDER_NAME{.zip,}; rm -r $FOLDER_NAME; cd -;
+  - ./platforms/package.py --build-type=$BUILD_TYPE --build-target=$BUILD_TARGET --target-folder=$TRAVIS_BUILD_DIR --header-folder=./simulant --lib-folder=./build
 
 deploy:
   provider: gcs
