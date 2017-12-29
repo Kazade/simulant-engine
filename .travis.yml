@@ -127,7 +127,7 @@ install:
  # Otherwise, use docker for the dreamcast
  - if [[ "$CROSS_BUILD" == "dreamcast" ]]; then docker run -it -d --name dreamcast kazade/dreamcast-sdk bash; fi
  - if [[ "$CROSS_BUILD" == "dreamcast" ]]; then docker ps -a; fi
- - if [[ "$CROSS_BUILD" == "dreamcast" ]]; then docker exec -it dreamcast /bin/sh -c "source /etc/bash.bashrc; git clone --recursive --branch=${TRAVIS_BRANCH} https://github.com/${TRAVIS_REPO_SLUG}.git /simulant; mkdir -p /simulant/dbuild; cd /simulant/dbuild; cmake -DSIMULANT_BUILD_SAMPLES=OFF -DCMAKE_TOOLCHAIN_FILE=/simulant/toolchains/Dreamcast.cmake .. && make"; fi
+ - if [[ "$CROSS_BUILD" == "dreamcast" ]]; then docker exec -it dreamcast /bin/sh -c "source /etc/bash.bashrc; git clone --recursive --branch=${TRAVIS_BRANCH} https://github.com/${TRAVIS_REPO_SLUG}.git /simulant; mkdir -p /simulant/dbuild; cd /simulant/dbuild; cmake -DCMAKE_TOOLCHAIN_FILE=/simulant/toolchains/Dreamcast.cmake .. && make"; fi
 
 before_script:
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export DISPLAY=:99; fi
