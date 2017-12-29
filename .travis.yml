@@ -151,8 +151,8 @@ script:
   # On most platforms, we package, but we don't upload. We leave that to the deploy section
   - if [[ "$CROSS_BUILD" == "0" ]]; then mkdir $BUILD_TARGET && ./platforms/package.py --build-type=$BUILD_TYPE --build-target=$BUILD_TARGET --target-folder=$TRAVIS_BUILD_DIR/$BUILD_TARGET --header-folder=./simulant --lib-folder=./build --package-only; fi;
 
-  # Debugging
-  - if [[ "$CROSS_BUILD" == "dreamcast" ]] && [[ $TRAVIS_BRANCH == "dreamcast-upload" ]]; then sudo docker exec -it dreamcast /bin/sh -c "ls -l /simulant"; fi
+  # Install the gsutil executable
+  - if [[ "$CROSS_BUILD" == "dreamcast" ]]; then docker exec -it dreamcast /bin/sh -c "sudo yum install -y gcc openssl-devel python-devel python-setuptools libffi-devel python-pip && sudo pip install gsutil"; fi
 
   # On the Dreamcast we need to run the package command on Docker as we don't have access to the host filesystem
   - if [[ "$CROSS_BUILD" == "dreamcast" ]] && [[ $TRAVIS_BRANCH == "dreamcast-upload" ]]; then sudo docker exec -it dreamcast /bin/sh -c "/simulant/platforms/package.py --build-type=$BUILD_TYPE --build-target=$BUILD_TARGET --target-folder=/simulant --header-folder=./simulant --lib-folder=/simulant/dbuild"; fi;
