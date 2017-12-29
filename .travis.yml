@@ -125,8 +125,7 @@ install:
  - if [[ "$CROSS_BUILD" == "windows" ]]; then make; fi
 
  # Otherwise, use docker for the dreamcast
- - if [[ "$CROSS_BUILD" == "dreamcast" ]]; then sudo docker run -d kazade/dreamcast-sdk /bin/sh -c "source /etc/bash.bashrc; git clone --recursive --branch=${TRAVIS_BRANCH} https://github.com/${TRAVIS_REPO_SLUG}.git /simulant; mkdir -p /simulant/dbuild; cd /simulant/dbuild; cmake -DCMAKE_TOOLCHAIN_FILE=/simulant/toolchains/Dreamcast.cmake .. && make" > $TRAVIS_BUILD_DIR/container_id; fi
- - if [[ "$CROSS_BUILD" == "dreamcast" ]]; then cat $TRAVIS_BUILD_DIR/container_id; fi
+ - if [[ "$CROSS_BUILD" == "dreamcast" ]]; then sudo docker run --name dreamcast kazade/dreamcast-sdk /bin/sh -c "source /etc/bash.bashrc; git clone --recursive --branch=${TRAVIS_BRANCH} https://github.com/${TRAVIS_REPO_SLUG}.git /simulant; mkdir -p /simulant/dbuild; cd /simulant/dbuild; cmake -DCMAKE_TOOLCHAIN_FILE=/simulant/toolchains/Dreamcast.cmake .. && make"; fi
 
 before_script:
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export DISPLAY=:99; fi
@@ -151,10 +150,10 @@ script:
   - if [[ "$CROSS_BUILD" == "0" ]]; then mkdir $BUILD_TARGET && ./platforms/package.py --build-type=$BUILD_TYPE --build-target=$BUILD_TARGET --target-folder=$TRAVIS_BUILD_DIR/$BUILD_TARGET --header-folder=./simulant --lib-folder=./build --package-only; fi;
 
   # Debugging
-  - if [[ "$CROSS_BUILD" == "dreamcast" ]] && [[ $TRAVIS_BRANCH == "dreamcast-upload" ]]; then sudo docker exec `cat container_id` /bin/sh -c "ls -l /simulant"; fi
+  - if [[ "$CROSS_BUILD" == "dreamcast" ]] && [[ $TRAVIS_BRANCH == "dreamcast-upload" ]]; then sudo docker exec -d dreamcast /bin/sh -c "ls -l /simulant"; fi
 
   # On the Dreamcast we need to run the package command on Docker as we don't have access to the host filesystem
-  - if [[ "$CROSS_BUILD" == "dreamcast" ]] && [[ $TRAVIS_BRANCH == "dreamcast-upload" ]]; then sudo docker exec `cat container_id` /bin/sh -c "/simulant/platforms/package.py --build-type=$BUILD_TYPE --build-target=$BUILD_TARGET --target-folder=/simulant --header-folder=./simulant --lib-folder=/simulant/dbuild"; fi;
+  - if [[ "$CROSS_BUILD" == "dreamcast" ]] && [[ $TRAVIS_BRANCH == "dreamcast-upload" ]]; then sudo docker exec -d dreamcast /bin/sh -c "/simulant/platforms/package.py --build-type=$BUILD_TYPE --build-target=$BUILD_TARGET --target-folder=/simulant --header-folder=./simulant --lib-folder=/simulant/dbuild"; fi;
 
 deploy:
   provider: gcs
