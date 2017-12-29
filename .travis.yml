@@ -150,7 +150,7 @@ script:
   - if [[ "$CROSS_BUILD" == "0" ]]; then mkdir $BUILD_TARGET && ./platforms/package.py --build-type=$BUILD_TYPE --build-target=$BUILD_TARGET --target-folder=$TRAVIS_BUILD_DIR/$BUILD_TARGET --header-folder=./simulant --lib-folder=./build --package-only; fi;
 
   # On the Dreamcast we need to run the package command on Docker as we don't have access to the host filesystem
-  - if [[ "$CROSS_BUILD" == "dreamcast" ]] && [[ $TRAVIS_BRANCH == "dreamcast-upload" ]]; then sudo docker run /simulant/platforms/package.py --build-type=$BUILD_TYPE --build-target=$BUILD_TARGET --target-folder=/simulant --header-folder=./simulant --lib-folder=/simulant/dbuild; fi;
+  - if [[ "$CROSS_BUILD" == "dreamcast" ]] && [[ $TRAVIS_BRANCH == "dreamcast-upload" ]]; then sudo docker run kazade/dreamcast-sdk /bin/sh -c "/simulant/platforms/package.py --build-type=$BUILD_TYPE --build-target=$BUILD_TARGET --target-folder=/simulant --header-folder=./simulant --lib-folder=/simulant/dbuild"; fi;
 
 deploy:
   provider: gcs

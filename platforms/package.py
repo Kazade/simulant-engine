@@ -73,7 +73,7 @@ if __name__ == '__main__':
 
     # Upload controls
     parser.add_argument("--bucket", dest="bucket")
-    parser.add_argument("--package-only", dest="package_only")
+    parser.add_argument("--package-only", dest="package_only", action="store_true")
 
     args = parser.parse_args()
 
