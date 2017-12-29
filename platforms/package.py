@@ -7,7 +7,9 @@
 # checkout directory from inside the Docker container.
 import os
 import argparse
+import subprocess
 import sys
+
 from zipfile import ZipFile
 
 
@@ -35,7 +37,9 @@ def run(options):
     lib_files = gather_files(options.library_folder, LIBRARY_EXTENSIONS)
     header_files = gather_files(header_folder, HEADER_EXTENSIONS)
 
-    zipf = ZipFile(os.path.join(options.target_folder, folder_name + ".zip"), "w")
+    zip_filename = os.path.join(options.target_folder, folder_name + ".zip")
+
+    zipf = ZipFile(zip_filename, "w")
 
     for header in header_files:
         arcname = "{}/include/simulant{}".format(
@@ -53,6 +57,20 @@ def run(options):
         )
         print("Adding %s to %s" % (lib, arcname))
         zipf.write(lib, arcname)
+
+    if not options.package_only:
+        echo = subprocess.Popen(
+            ("echo", "-e", "{}\n{}\n".format(options.access_key, options.access_secret)),
+            stdout=subprocess.PIPE
+        )
+
+        command = [
+            "gsutil", "mv", zip_filename,
+            "gs://{}".format(options.bucket)
+        ]
+
+        subprocess.check_call(command, stdin=echo.stdout)
+        echo.wait()
 
     return 0
 
@@ -72,7 +90,9 @@ if __name__ == '__main__':
     parser.add_argument("--target-folder", dest="target_folder", required=True)
 
     # Upload controls
-    parser.add_argument("--bucket", dest="bucket")
+    parser.add_argument("--bucket", dest="bucket", required=False)
+    parser.add_argument("--access-key", dest="access_key", required=False)
+    parser.add_argument("--access-secret", dest="access_secret", required=False)
     parser.add_argument("--package-only", dest="package_only", action="store_true")
 
     args = parser.parse_args()

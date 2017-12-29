@@ -155,7 +155,7 @@ script:
   - if [[ "$CROSS_BUILD" == "dreamcast" ]]; then docker exec -it dreamcast /bin/sh -c "yum install -y gcc openssl-devel python-devel python-setuptools libffi-devel python-pip && pip install gsutil"; fi
 
   # On the Dreamcast we need to run the package command on Docker as we don't have access to the host filesystem
-  - if [[ "$CROSS_BUILD" == "dreamcast" ]] && [[ $TRAVIS_BRANCH == "dreamcast-upload" ]]; then sudo docker exec -it dreamcast /bin/sh -c "/simulant/platforms/package.py --build-type=$BUILD_TYPE --build-target=$BUILD_TARGET --target-folder=/simulant --header-folder=./simulant --lib-folder=/simulant/dbuild"; fi;
+  - if [[ "$CROSS_BUILD" == "dreamcast" ]] && [[ $TRAVIS_BRANCH == "dreamcast-upload" ]]; then sudo docker exec -it dreamcast /bin/sh -c "/simulant/platforms/package.py --build-type=$BUILD_TYPE --build-target=$BUILD_TARGET --target-folder=/simulant --header-folder=./simulant --lib-folder=/simulant/dbuild" --access-key=$GCS_ACCESS_KEY --access-secret=$GCS_SECRET --bucket=staging.simulant-engine.appspot.com; fi;
 
 deploy:
   provider: gcs
