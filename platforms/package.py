@@ -78,10 +78,6 @@ def run(options):
 
         subprocess.check_call(command)
 
-        # Set the permissions to public-read
-        command = ["gsutil", "acl", "ch", "public-read", gs_url]
-        subprocess.check_call(command)
-
 
     return 0
 
