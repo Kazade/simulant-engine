@@ -64,13 +64,24 @@ def run(options):
             stdout=subprocess.PIPE
         )
 
-        command = [
-            "gsutil", "mv", zip_filename,
-            "gs://{}".format(options.bucket)
-        ]
-
+        # Authenticate with gsutil
+        command = ["gsutil", "config", "-a"]
         subprocess.check_call(command, stdin=echo.stdout)
         echo.wait()
+
+        # Upload the file
+        gs_url = "gs://{}".format(options.bucket)
+        command = [
+            "gsutil", "mv", zip_filename,
+            gs_url
+        ]
+
+        subprocess.check_call(command)
+
+        # Set the permissions to public-read
+        command = ["gsutil", "acl", "ch", "public-read", gs_url]
+        subprocess.check_call(command)
+
 
     return 0
 
