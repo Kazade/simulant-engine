@@ -90,11 +90,10 @@ if __name__ == '__main__':
     parser.add_argument("--target-folder", dest="target_folder", required=True)
 
     # Upload controls
-    parser.add_argument("--bucket", dest="bucket", required=False)
-    parser.add_argument("--access-key", dest="access_key", required=False)
-    parser.add_argument("--access-secret", dest="access_secret", required=False)
-    parser.add_argument("--package-only", dest="package_only", action="store_true")
+    parser.add_argument("--bucket")
+    parser.add_argument("--access-key")
+    parser.add_argument("--access-secret")
+    parser.add_argument("--package-only", action="store_true")
 
-    args = parser.parse_args()
-
-    sys.exit(run(args))
+    options = parser.parse_args()
+    sys.exit(run(options))
