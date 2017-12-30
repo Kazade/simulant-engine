@@ -60,7 +60,7 @@ def run(options):
 
     if not options.package_only:
         echo = subprocess.Popen(
-            ("echo", "-e", "{}\n{}\n".format(options.access_key, options.access_secret)),
+            ("echo", "-e", "{}\n{}\n{}\n".format(options.access_key, options.access_secret, options.project_id)),
             stdout=subprocess.PIPE
         )
 
@@ -100,6 +100,7 @@ if __name__ == '__main__':
     parser.add_argument("--bucket")
     parser.add_argument("--access-key")
     parser.add_argument("--access-secret")
+    parser.add_argument("--project-id")
     parser.add_argument("--package-only", action="store_true")
 
     options = parser.parse_args()
