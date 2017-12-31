@@ -165,5 +165,5 @@ deploy:
   skip_cleanup: true
   access_key_id: $GCS_ACCESS_KEY
   secret_access_key: $GCS_SECRET
-  branch: master
+  branch: dreamcast-upload
 
