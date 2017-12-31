@@ -93,7 +93,7 @@ addons:
    - xvfb
    - pulseaudio
    - dbus-x11
-   - mingw-w64 
+   - mingw-w64
    - gcc-mingw-w64-x86-64
 
 before_install:
@@ -125,7 +125,14 @@ install:
  - if [[ "$CROSS_BUILD" == "windows" ]]; then make; fi
 
  # Otherwise, use docker for the dreamcast
- - if [[ "$CROSS_BUILD" == "dreamcast" ]]; then sudo docker run kazade/dreamcast-sdk /bin/sh -c "source /etc/bash.bashrc; git clone --recursive --branch=${TRAVIS_BRANCH} https://github.com/${TRAVIS_REPO_SLUG}.git /simulant; mkdir -p /simulant/dbuild; cd /simulant/dbuild; cmake -DCMAKE_TOOLCHAIN_FILE=/simulant/toolchains/Dreamcast.cmake .. && make"; fi
+ - if [[ "$CROSS_BUILD" == "dreamcast" ]]; then docker run -it -d --name dreamcast kazade/dreamcast-sdk bash; fi
+ - if [[ "$CROSS_BUILD" == "dreamcast" ]]; then docker ps -a; fi
+
+ # If this is a pull request, pass the PR branch
+ - if [[ "$CROSS_BUILD" == "dreamcast" ]] && [[ -n $TRAVIS_PULL_REQUEST_BRANCH ]]; then docker exec -it dreamcast /bin/sh -c "source /etc/bash.bashrc; git clone --recursive --branch=${TRAVIS_PULL_REQUEST_BRANCH} https://github.com/${TRAVIS_REPO_SLUG}.git /simulant; mkdir -p /simulant/dbuild; cd /simulant/dbuild; cmake -DCMAKE_TOOLCHAIN_FILE=/simulant/toolchains/Dreamcast.cmake $SIMULANT_OPTIONS .. && make"; fi
+
+ # Pass the branch otherwise
+ - if [[ "$CROSS_BUILD" == "dreamcast" ]] && [[ ! -n $TRAVIS_PULL_REQUEST_BRANCH ]]; then docker exec -it dreamcast /bin/sh -c "source /etc/bash.bashrc; git clone --recursive --branch=${TRAVIS_BRANCH} https://github.com/${TRAVIS_REPO_SLUG}.git /simulant; mkdir -p /simulant/dbuild; cd /simulant/dbuild; cmake -DCMAKE_TOOLCHAIN_FILE=/simulant/toolchains/Dreamcast.cmake $SIMULANT_OPTIONS .. && make"; fi
 
 before_script:
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export DISPLAY=:99; fi
@@ -143,21 +150,17 @@ script:
   # Package everything into a folder for upload to GCS
   - if [[ "$CROSS_BUILD" == "dreamcast" ]]; then export BUILD_TARGET=dreamcast; fi
   - if [[ "$CROSS_BUILD" == "0" ]]; then export BUILD_TARGET=$TRAVIS_OS_NAME; fi;
-  - export FOLDER_NAME=simulant-$BUILD_TARGET-$BUILD_TYPE
-  - cd $TRAVIS_BUILD_DIR # Make sure we're in the right place
 
-  - mkdir -p $BUILD_TARGET/$FOLDER_NAME/lib/$BUILD_TYPE
+  - cd $TRAVIS_BUILD_DIR
 
-  # Copy all the compiled libs for whatever platform, don't return an error code if they don't exist
-  - cp ./build/simulant/{*.so,*.a,*.dylib,*.dll,*.lib} $BUILD_TARGET/$FOLDER_NAME/lib/$BUILD_TYPE 2> /dev/null | true
+  # On most platforms, we package, but we don't upload. We leave that to the deploy section
+  - if [[ "$CROSS_BUILD" == "0" ]]; then mkdir $BUILD_TARGET && ./platforms/package.py --build-type=$BUILD_TYPE --build-target=$BUILD_TARGET --target-folder=$TRAVIS_BUILD_DIR/$BUILD_TARGET --header-folder=./simulant --lib-folder=./build --package-only; fi;
 
-  # Copy the header files to the right place
-  - mkdir -p $BUILD_TARGET/$FOLDER_NAME/include/simulant
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export COPY_COMMAND=ditto; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export COPY_COMMAND="cp --parents"; fi
-  - find simulant -name "*.h" -type f -exec $COPY_COMMAND {} ./$BUILD_TARGET/$FOLDER_NAME/include \;
+  # Install the gsutil executable
+  - if [[ "$CROSS_BUILD" == "dreamcast" ]]; then docker exec -it dreamcast /bin/sh -c "yum -y update && yum clean all && yum -y install yum-plugin-ovl && yum install -y gcc openssl-devel python-devel python-setuptools libffi-devel python-pip && pip install -U pip && pip install gsutil"; fi
 
-  - cd $BUILD_TARGET; zip -q -r $FOLDER_NAME{.zip,}; rm -r $FOLDER_NAME; cd -;
+  # On the Dreamcast we need to run the package command on Docker as we don't have access to the host filesystem
+  - if [[ "$CROSS_BUILD" == "dreamcast" ]] && [[ $TRAVIS_BRANCH == "master" ]]; then sudo docker exec -it dreamcast /bin/sh -c "/simulant/platforms/package.py --build-type=$BUILD_TYPE --build-target=$BUILD_TARGET --target-folder=/simulant --header-folder=/simulant/simulant --lib-folder=/simulant/dbuild --access-key=$GCS_ACCESS_KEY --access-secret=$GCS_SECRET --bucket=staging.simulant-engine.appspot.com --project-id=simulant-engine"; fi;
 
 deploy:
   provider: gcs
