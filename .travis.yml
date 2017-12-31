@@ -127,7 +127,12 @@ install:
  # Otherwise, use docker for the dreamcast
  - if [[ "$CROSS_BUILD" == "dreamcast" ]]; then docker run -it -d --name dreamcast kazade/dreamcast-sdk bash; fi
  - if [[ "$CROSS_BUILD" == "dreamcast" ]]; then docker ps -a; fi
- - if [[ "$CROSS_BUILD" == "dreamcast" ]]; then docker exec -it dreamcast /bin/sh -c "source /etc/bash.bashrc; git clone --recursive --branch=${TRAVIS_BRANCH} https://github.com/${TRAVIS_REPO_SLUG}.git /simulant; mkdir -p /simulant/dbuild; cd /simulant/dbuild; cmake -DCMAKE_TOOLCHAIN_FILE=/simulant/toolchains/Dreamcast.cmake $SIMULANT_OPTIONS .. && make"; fi
+
+ # If this is a pull request, pass the PR branch
+ - if [[ "$CROSS_BUILD" == "dreamcast" ]] && [[ -n $TRAVIS_PULL_REQUEST_BRANCH ]]; then docker exec -it dreamcast /bin/sh -c "source /etc/bash.bashrc; git clone --recursive --branch=${TRAVIS_PULL_REQUEST_BRANCH} https://github.com/${TRAVIS_REPO_SLUG}.git /simulant; mkdir -p /simulant/dbuild; cd /simulant/dbuild; cmake -DCMAKE_TOOLCHAIN_FILE=/simulant/toolchains/Dreamcast.cmake $SIMULANT_OPTIONS .. && make"; fi
+
+ # Pass the branch otherwise
+ - if [[ "$CROSS_BUILD" == "dreamcast" ]] && [[ ! -n $TRAVIS_PULL_REQUEST_BRANCH ]]; then docker exec -it dreamcast /bin/sh -c "source /etc/bash.bashrc; git clone --recursive --branch=${TRAVIS_BRANCH} https://github.com/${TRAVIS_REPO_SLUG}.git /simulant; mkdir -p /simulant/dbuild; cd /simulant/dbuild; cmake -DCMAKE_TOOLCHAIN_FILE=/simulant/toolchains/Dreamcast.cmake $SIMULANT_OPTIONS .. && make"; fi
 
 before_script:
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export DISPLAY=:99; fi
