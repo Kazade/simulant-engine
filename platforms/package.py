@@ -75,9 +75,15 @@ def run(options):
             "gsutil", "mv", zip_filename,
             gs_url
         ]
-
         subprocess.check_call(command)
 
+        # Make it public
+        gs_url = "{}/{}".format(gs_url, zip_filename)
+        command = [
+            "gsutil", "acl", "ch", "-u", "AllUsers:R",
+            gs_url
+        ]
+        subprocess.check_call(command)
 
     return 0
 
