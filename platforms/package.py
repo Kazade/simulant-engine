@@ -58,6 +58,8 @@ def run(options):
         print("Adding %s to %s" % (lib, arcname))
         zipf.write(lib, arcname)
 
+    zipf.close()
+
     if not options.package_only:
         echo = subprocess.Popen(
             ("echo", "-e", "{}\n{}\n{}\n".format(options.access_key, options.access_secret, options.project_id)),
