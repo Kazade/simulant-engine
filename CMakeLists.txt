@@ -31,6 +31,7 @@ ADD_DEFINITIONS("-Wall -DTIXML_USE_STL")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
 
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2 -s -fomit-frame-pointer")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -s -fomit-frame-pointer")
 
 IF(NOT DREAMCAST_BUILD)
@@ -55,7 +56,8 @@ ENDIF()
 
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 ELSE()
-    MESSAGE("-- Cross-Compiling for the Sega Dreamcast")
+    MESSAGE("-- Cross-Compiling for the Sega Dreamcast. Forcing Release build.")
+    SET(CMAKE_BUILD_TYPE Release)
 
     SET(OPENAL_INCLUDE_DIRS "") # Don't use OpenAL on DC
     SET(OPENAL_LIBRARY "")
