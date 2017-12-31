@@ -7,6 +7,8 @@ import sys
 import subprocess
 import platform
 import json
+import tempfile
+from io import BytesIO
 from zipfile import ZipFile
 
 from urllib.request import urlopen
@@ -332,6 +334,51 @@ def test(args):
     return 0
 
 
+def update(args):
+    """
+        Downloads the latest binaries from Google Cloud Storage, will download the debug + release
+        binaries for the current platform, and also any cross-buildable versions (e.g. Dreamcast, Windows-on-Linux)
+    """
+    if not _check_project():
+        return 1
+
+    DOWNLOAD_ROOT = "https://storage.googleapis.com/staging.simulant-engine.appspot.com"
+
+    system = platform.system()
+
+    to_download = []
+
+    if system == "Linux":
+        to_download.extend([
+            ("linux", "simulant-linux-release.zip"),
+            ("linux", "simulant-linux-debug.zip")
+        ])
+    elif system == "Darwin":
+        to_download.extend([
+            ("osx", "simulant-osx-release.zip"),
+            ("osx", "simulant-osx-debug.zip")
+        ])
+    else:
+        print("Unsupported platform: {}".format(system))
+
+    to_download.append(("dreamcast", "simulant-dreamcast-release.zip"))
+
+    for folder, download in to_download:
+        print("Downloading {}...".format(download))
+
+        target_dir = os.path.join("libs", folder)
+
+        url = "{}/{}".format(DOWNLOAD_ROOT, download)
+        url = urlopen(url)
+
+        with ZipFile(BytesIO(url.read())) as zipfile:
+            tempdir = tempfile.mkdtemp()
+            zipfile.extractall(path=tempdir)
+
+            for folder in ("include", "lib"):
+                source = os.path.join(tempdir, os.path.splitext(download)[0], folder)
+                shutil.move(source, target_dir)
+
 def run(args):
     if not _check_project():
         return 1
@@ -358,7 +405,8 @@ COMMAND_LOOKUP = {
     'build': build,
     'test': test,
     'package': package,
-    'run': run
+    'run': run,
+    'update': update
 }
 
 
@@ -391,6 +439,8 @@ def main():
     ])
     run.add_argument("--rebuild", default=False, action="store_true")
     run.add_argument("--release", default=False, action="store_true")
+
+    update = subs.add_parser("update", help="Update Simulant library")
 
     opts = parser.parse_args()
 
