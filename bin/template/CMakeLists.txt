@@ -1,8 +1,28 @@
 cmake_minimum_required(VERSION 2.8)
 project(__project_name_pascal__)
 
+SET(SIMULANT_INCLUDE_FOLDER "" CACHE STRING "Specify the path to the Simulant includes")
+SET(SIMULANT_LIBRARY_FOLDER "" CACHE STRING "Specify the path to the Simulant libraries")
+
 FIND_PACKAGE(PkgConfig REQUIRED)
-FIND_PACKAGE(SIMULANT)
+
+# If an include override was passed, use that and set an empty include path
+IF(${SIMULANT_INCLUDE_FOLDER})
+    INCLUDE_DIRECTORIES(${SIMULANT_INCLUDE_FOLDER})
+    SET(SIMULANT_INCLUDE_DIRS "")
+ENDIF()
+
+# If a library override was passed, use that, and set libraries to empty
+IF(${SIMULANT_LIBRARY_FOLDER})
+    LINK_DIRECTORIES(${SIMULANT_LIBRARY_FOLDER})
+    LINK_LIBRARIES(simulant)
+    SET(SIMULANT_LIBRARIES "")
+ENDIF()
+
+IF(${SIMULANT_INCLUDE_FOLDER} MATCHES "")
+    # If we were missing either override, use the cmake module
+    FIND_PACKAGE(SIMULANT)
+ENDIF()
 
 PKG_CHECK_MODULES(SDL2 REQUIRED sdl2)
 PKG_CHECK_MODULES(GL REQUIRED gl)

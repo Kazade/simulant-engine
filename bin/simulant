@@ -2,6 +2,8 @@
 
 import os
 import argparse
+import getpass
+import pwd
 import shutil
 import sys
 import subprocess
@@ -103,6 +105,13 @@ class BuildOutput:
     build_dir = None
 
 
+def _calculate_platform(platform_name):
+    if platform_name == "native":
+        return platform.system().lower()
+    else:
+        return platform_name.lower()
+
+
 def _calculate_build_dir(args):
     build_type = "release" if args.release else "debug"
 
@@ -119,36 +128,6 @@ def _calculate_build_dir(args):
     return build_dir
 
 
-def _download_binaries_for_platform(platform, build_type="release"):
-    url_template = "https://storage.googleapis.com/staging.simulant-engine.appspot.com/{}"
-    filename = "simulant-{}-{}.zip".format(platform, build_type)
-    target_folder = ".simulant-libs/{}/{}/".format(platform, build_type)
-
-    if os.path.exists(target_folder):
-        shutil.rmtree(target_folder)
-
-    os.makedirs(target_folder)
-
-    target_file = os.path.join(target_folder, filename)
-
-    print("Downloading {}...".format(filename))
-    f = urlopen(url_template.format(filename))
-
-    with open(target_file, "wb") as local:
-        local.write(f.read())
-
-    def find_members(zip_file, prefix):
-        result = []
-        for f in zip_file.namelist():
-            if f.startswith(prefix) and f != prefix:
-                result.append(f)
-
-        return result
-
-    with ZipFile(target_file) as zipf:
-        zipf.extractall(target_folder)
-
-
 def build(args, build_output=None):
     if not _check_project():
         return 1
@@ -156,12 +135,27 @@ def build(args, build_output=None):
     if not _check_tool("cmake"):
         return 2
 
+    project_dir = os.getcwd()
+    platform = _calculate_platform(args.platform)
     arch = args.platform
     build_dir = _calculate_build_dir(args)
     build_type = "release" if args.release else "debug"
 
     if not os.path.exists(build_dir):
         os.makedirs(build_dir)
+
+    cmake_params = ""
+    if build_type == "release":
+        cmake_params += " -DCMAKE_BUILD_TYPE=Release"
+
+    if not args.use_global_simulant:
+        cmake_params += " -DSIMULANT_INCLUDE_FOLDER={}".format(
+            os.path.join(project_dir, "libs", platform, "include")
+        )
+
+        cmake_params += " -DSIMULANT_LIBRARY_FOLDER={}".format(
+            os.path.join(project_dir, "libs", platform, "lib", build_type)
+        )
 
     if arch == "dreamcast":
         if not _check_tool("docker"):
@@ -172,27 +166,50 @@ def build(args, build_output=None):
             print("Unable to find the Dreamcast toolchain file")
             return 4
 
-        _download_binaries_for_platform("dreamcast", "release")
+        volume_mount = "{}:/simulant-project:Z".format(os.path.abspath("."))
+        container_name = "simulant-dc-build"
+        container_build_dir = os.path.join("/simulant-project", build_dir)
+        build_dir = os.getcwd()
+
+        # Start docker if neccesary and forcibly remove any existing build container
+        commands = [
+            "sudo service docker start",
+            "sudo docker rm {} -f".format(container_name)
+        ]
+
+        for cmd in commands:
+            subprocess.call(cmd.split())
+
+        user = getpass.getuser()
+        uid = pwd.getpwnam(user).pw_uid
+
+        commands = [
+            # First, start up a docker container with the name simulant-dc-build, and start bash
+            "sudo docker run -it -d --name={} -v {} kazade/dreamcast-sdk bash".format(container_name, volume_mount),
+
+            # Add a group and user matching the running users group so that we don't mess with file permissions
+            "sudo docker exec -it {} groupadd -g {} simulant".format(container_name, uid),
+            "sudo docker exec -it {} useradd -g simulant -u {} simulant".format(container_name, uid),
+            'sudo docker exec -it {} /bin/bash -c "cd {}; cmake -DCMAKE_BUILD_TYPE=Release ../../.."'.format(
+                container_build_dir, container_name
+            ),
+            "sudo docker exec -it -u {} {} make".format("simulant", container_name),
+        ]
+
     elif arch == "windows" and platform.system() == "Linux":
         # We support cross-compiling from Linux to Windows using mingw64
         commands = [
-            "mingw64-cmake",
+            "mingw64-cmake" + cmake_params,
             "make"
         ]
-
-        if build_type == "release":
-            commands[0] += " -DCMAKE_BUILD_TYPE=Release"
 
         commands[0] += " ../../.."
 
     else:
         commands = [
-            "cmake",
+            "cmake" + cmake_params,
             "make"
         ]
-
-        if build_type == "release":
-            commands[0] += " -DCMAKE_BUILD_TYPE=Release"
 
         commands[0] += " ../../.."
 
@@ -208,6 +225,10 @@ def build(args, build_output=None):
 def start(args):
     " Start a Simulant project with a template "
 
+    if "/" in args.project:
+        # FIXME: [a-zA-Z0-9_-]+
+        print("Project name must not contain slashes")
+
     template_folder = _locate_template_folder()
 
     if not os.path.exists(template_folder):
@@ -216,13 +237,16 @@ def start(args):
 
     target_folder = os.path.join(os.path.abspath(args.target), args.project)
 
-    if os.path.exists(target_folder):
+    if os.path.exists(target_folder) and not args.force:
         result = input("The target folder already exists and will be replaced, this cannot be undone. Continue? [y/N] ")
         if result.lower() != "y":
             return 0
         else:
             # Remove the directory before replacing it
             shutil.rmtree(target_folder)
+    elif os.path.exists(target_folder) and args.force:
+        # If we are forcing this, then just remove the folder without asking!
+        shutil.rmtree(target_folder)
 
     shutil.copytree(template_folder, target_folder)
 
@@ -241,8 +265,13 @@ def start(args):
     # Replace with ProjectName
     _search_replace("__project_name_pascal__", pascal_name, target_folder)
 
+    # Change to the project directory
+    os.chdir(target_folder)
 
-    print("Project successfully created. Remember to edit simulant.json before packaging!")
+    # Run the update command to get the latest simulant libraries
+    update(args)
+
+    print("\n\nProject successfully created. Remember to edit simulant.json before packaging!")
 
     return 0
 
@@ -363,8 +392,10 @@ def update(args):
 
     to_download.append(("dreamcast", "simulant-dreamcast-release.zip"))
 
+    print("Downloading Simulant dependencies", end='')
+
     for folder, download in to_download:
-        print("Downloading {}...".format(download))
+        print(".", end='')
 
         target_dir = os.path.join("libs", folder)
 
@@ -376,8 +407,24 @@ def update(args):
             zipfile.extractall(path=tempdir)
 
             for folder in ("include", "lib"):
+                target_subfolder = os.path.join(target_dir, folder)
+
                 source = os.path.join(tempdir, os.path.splitext(download)[0], folder)
-                shutil.move(source, target_dir)
+
+                for root, dirs, files in os.walk(source):
+                    for file in files:
+                        paths = (
+                            os.path.join(root, file),
+                            os.path.join(target_subfolder, root[len(source) + 1:], file)
+                        )
+
+                        dest_dir = os.path.dirname(paths[1])
+                        if not os.path.exists(dest_dir):
+                            os.makedirs(dest_dir)
+
+                        shutil.copy(paths[0], paths[1])
+
+                shutil.rmtree(source)
 
 def run(args):
     if not _check_project():
@@ -421,6 +468,10 @@ def main():
     build.add_argument("--rebuild", default=False, action="store_true")
     build.add_argument("--release", default=False, action="store_true")
     build.add_argument("--upgrade", default=False, action="store_true")
+    build.add_argument(
+        "--use-global-simulant", default=False, action="store_true",
+        help="When specified, search the system for the Simulant includes and libraries"
+    )
 
     package = subs.add_parser("package", help="Package your project for a particular platform")
     package.add_argument("platform", default="native", nargs="?", choices=[
@@ -430,6 +481,7 @@ def main():
     start = subs.add_parser("start", help="Start a new Simulant project from a template")
     start.add_argument("project", action="store", type=str)
     start.add_argument("target", default=".", nargs="?", type=str)
+    start.add_argument("-f", dest="force", action="store_true")
 
     test = subs.add_parser("test", help="Test your Simulant project")
 
