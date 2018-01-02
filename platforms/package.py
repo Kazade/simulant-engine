@@ -22,11 +22,11 @@ LIBRARY_EXTENSIONS = (
 def gather_files(source_folder, extensions):
     output = []
 
-    for root, dirs, files in os.walk(source_folder):
+    for root, dirs, files in os.walk(source_folder, followlinks=True):
         for filename in files:
             if os.path.splitext(filename)[-1] in extensions:
                 path = os.path.join(root, filename)
-                output.append(path)
+                output.append(os.path.abspath(path))
 
     return output
 
