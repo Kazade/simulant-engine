@@ -12,13 +12,13 @@ matrix:
   # Allow Windows builds to fail for now
   - os: linux
     dist: trusty
-    compiler: clang
+    compiler: gcc
     env: CROSS_BUILD=windows BUILD_TYPE=release
     sudo: required
 
   - os: linux
     dist: trusty
-    compiler: clang
+    compiler: gcc
     env: CROSS_BUILD=windows BUILD_TYPE=debug
     sudo: required
 
