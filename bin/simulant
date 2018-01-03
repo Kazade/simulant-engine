@@ -150,11 +150,11 @@ def build(args, build_output=None):
 
     if not args.use_global_simulant:
         cmake_params += " -DSIMULANT_INCLUDE_FOLDER={}".format(
-            os.path.join(project_dir, "libs", platform, "include")
+            os.path.join(project_dir, "libraries", platform, "include")
         )
 
         cmake_params += " -DSIMULANT_LIBRARY_FOLDER={}".format(
-            os.path.join(project_dir, "libs", platform, "lib", build_type)
+            os.path.join(project_dir, "libraries", platform, "lib", build_type)
         )
 
     if arch == "dreamcast":
@@ -390,14 +390,16 @@ def update(args):
     else:
         print("Unsupported platform: {}".format(system))
 
-    to_download.append(("dreamcast", "simulant-dreamcast-release.zip"))
+    if not args.native_only:
+        # Download cross-compile toolchains unless explicitly told not to
+        to_download.append(("dreamcast", "simulant-dreamcast-release.zip"))
 
     print("Downloading Simulant dependencies", end='')
 
     for folder, download in to_download:
         print(".", end='')
 
-        target_dir = os.path.join("libs", folder)
+        target_dir = os.path.join("libraries", folder)
 
         url = "{}/{}".format(DOWNLOAD_ROOT, download)
         url = urlopen(url)
@@ -467,7 +469,6 @@ def main():
     ])
     build.add_argument("--rebuild", default=False, action="store_true")
     build.add_argument("--release", default=False, action="store_true")
-    build.add_argument("--upgrade", default=False, action="store_true")
     build.add_argument(
         "--use-global-simulant", default=False, action="store_true",
         help="When specified, search the system for the Simulant includes and libraries"
@@ -482,6 +483,7 @@ def main():
     start.add_argument("project", action="store", type=str)
     start.add_argument("target", default=".", nargs="?", type=str)
     start.add_argument("-f", dest="force", action="store_true")
+    start.add_argument("--native-only", action="store_true", default=False)
 
     test = subs.add_parser("test", help="Test your Simulant project")
 
@@ -493,6 +495,7 @@ def main():
     run.add_argument("--release", default=False, action="store_true")
 
     update = subs.add_parser("update", help="Update Simulant library")
+    update.add_argument("--native-only", action="store_true", default=False)
 
     opts = parser.parse_args()
 
