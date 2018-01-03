@@ -6,12 +6,12 @@ SET(SIMULANT_LIBRARY_FOLDER "" CACHE STRING "Specify the path to the Simulant li
 
 FIND_PACKAGE(PkgConfig REQUIRED)
 
-# If an include override was passed, use that and set an empty include path
+# If an include override was passed, use that
 IF(NOT ${SIMULANT_INCLUDE_FOLDER} STREQUAL "")
     INCLUDE_DIRECTORIES(BEFORE ${SIMULANT_INCLUDE_FOLDER})
 ENDIF()
 
-# If a library override was passed, use that, and set libraries to empty
+# If a library override was passed, use that
 IF(NOT ${SIMULANT_LIBRARY_FOLDER} STREQUAL "")
     LINK_DIRECTORIES(${SIMULANT_LIBRARY_FOLDER})
     LINK_LIBRARIES(simulant)
