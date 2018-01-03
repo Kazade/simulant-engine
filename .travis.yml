@@ -36,32 +36,32 @@ matrix:
   # Linux builds
   - os: linux
     dist: trusty
-    compiler: clang
+    compiler: gcc
     env: CROSS_BUILD=0 BUILD_TYPE=debug
     sudo: required
   - os: linux
     dist: trusty
-    compiler: clang
+    compiler: gcc
     env: CROSS_BUILD=0 BUILD_TYPE=release
     sudo: required
 
   # Dreamcast build
   - os: linux
     dist: trusty
-    compiler: clang
+    compiler: gcc
     env: CROSS_BUILD=dreamcast BUILD_TYPE=release
     sudo: required
 
   # Windows build
   - os: linux
     dist: trusty
-    compiler: clang
+    compiler: gcc
     env: CROSS_BUILD=windows BUILD_TYPE=release
     sudo: required
 
   - os: linux
     dist: trusty
-    compiler: clang
+    compiler: gcc
     env: CROSS_BUILD=windows BUILD_TYPE=debug
     sudo: required
 
