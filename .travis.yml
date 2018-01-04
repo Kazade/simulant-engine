@@ -37,13 +37,25 @@ matrix:
   - os: linux
     dist: trusty
     compiler: gcc
-    env: CROSS_BUILD=0 BUILD_TYPE=debug
+    env: CROSS_BUILD=0 BUILD_TYPE=debug MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
     sudo: required
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - g++-7
   - os: linux
     dist: trusty
     compiler: gcc
-    env: CROSS_BUILD=0 BUILD_TYPE=release
+    env: CROSS_BUILD=0 BUILD_TYPE=release MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
     sudo: required
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - g++-7
 
   # Dreamcast build
   - os: linux
