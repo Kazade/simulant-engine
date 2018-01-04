@@ -214,6 +214,7 @@ def build(args, build_output=None):
         commands[0] += " ../../.."
 
     for cmd in commands:
+        print(cmd)
         subprocess.check_call(cmd.split(), cwd=build_dir)
 
     if build_output:
