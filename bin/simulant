@@ -144,6 +144,11 @@ def build(args, build_output=None):
     if not os.path.exists(build_dir):
         os.makedirs(build_dir)
 
+    if platform == "dreamcast":
+        build_type = "release"
+        project_dir = "/simulant-project"
+        args.use_global_simulant = False
+
     cmake_params = ""
     if build_type == "release":
         cmake_params += " -DCMAKE_BUILD_TYPE=Release"
@@ -180,20 +185,13 @@ def build(args, build_output=None):
         for cmd in commands:
             subprocess.call(cmd.split())
 
-        user = getpass.getuser()
-        uid = pwd.getpwnam(user).pw_uid
-
         commands = [
             # First, start up a docker container with the name simulant-dc-build, and start bash
-            "sudo docker run -it -d --name={} -v {} kazade/dreamcast-sdk bash".format(container_name, volume_mount),
-
-            # Add a group and user matching the running users group so that we don't mess with file permissions
-            "sudo docker exec -it {} groupadd -g {} simulant".format(container_name, uid),
-            "sudo docker exec -it {} useradd -g simulant -u {} simulant".format(container_name, uid),
-            'sudo docker exec -it {} /bin/bash -c "cd {}; cmake -DCMAKE_BUILD_TYPE=Release ../../.."'.format(
-                container_build_dir, container_name
-            ),
-            "sudo docker exec -it -u {} {} make".format("simulant", container_name),
+            "sudo docker run -it -d --name={} -v {} --workdir={} kazade/dreamcast-sdk bash".format(container_name, volume_mount, container_build_dir).split(),
+            'sudo docker exec -it {} cmake {} ../../..'.format(
+                container_name, cmake_params
+            ).split(),
+            "sudo docker exec -it {} make".format(container_name).split(),
         ]
 
     elif arch == "windows" and platform.system() == "Linux":
@@ -204,6 +202,7 @@ def build(args, build_output=None):
         ]
 
         commands[0] += " ../../.."
+        commands = [cmd.split() for cmd in commands]
 
     else:
         commands = [
@@ -212,10 +211,11 @@ def build(args, build_output=None):
         ]
 
         commands[0] += " ../../.."
+        commands = [cmd.split() for cmd in commands]
 
     for cmd in commands:
         print(cmd)
-        subprocess.check_call(cmd.split(), cwd=build_dir)
+        subprocess.check_call(cmd, cwd=build_dir)
 
     if build_output:
         build_output.build_dir = build_dir
