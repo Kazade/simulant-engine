@@ -67,6 +67,8 @@ matrix:
 
 addons:
  apt:
+  sources:
+   - ubuntu-toolchain-r-test
   packages:
    - libsdl2-dev
    - libopenal-dev
@@ -95,8 +97,10 @@ addons:
    - dbus-x11
    - mingw-w64
    - gcc-mingw-w64-x86-64
+   - g++-7
 
 before_install:
+ - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export CC=gcc-7 && export CXX=g++-7; fi
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install --install-recommends linux-generic-lts-xenial xserver-xorg-core-lts-xenial xserver-xorg-lts-xenial xserver-xorg-video-all-lts-xenial xserver-xorg-input-all-lts-xenial libwayland-egl1-mesa-lts-xenial; fi
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules; fi
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then sed -i '' 's/git@github.com:/https:\/\/github.com\//' .gitmodules; fi
