@@ -7,6 +7,7 @@ import pwd
 import shutil
 import sys
 import subprocess
+from subprocess import Popen
 import platform
 import json
 import tempfile
@@ -176,6 +177,10 @@ def build(args, build_output=None):
         container_build_dir = os.path.join("/simulant-project", build_dir)
         build_dir = os.getcwd()
 
+        cmake_params += " -DCMAKE_TOOLCHAIN_FILE={}".format(
+            os.path.join("/simulant-project", "libraries", "Dreamcast.cmake")
+        )
+
         # Start docker if neccesary and forcibly remove any existing build container
         commands = [
             "sudo service docker start",
@@ -185,14 +190,14 @@ def build(args, build_output=None):
         for cmd in commands:
             subprocess.call(cmd.split())
 
-        commands = [
-            # First, start up a docker container with the name simulant-dc-build, and start bash
-            "sudo docker run -it -d --name={} -v {} --workdir={} kazade/dreamcast-sdk bash".format(container_name, volume_mount, container_build_dir).split(),
-            'sudo docker exec -it {} cmake {} ../../..'.format(
-                container_name, cmake_params
-            ).split(),
-            "sudo docker exec -it {} make".format(container_name).split(),
-        ]
+        run_command = "sudo docker run -it -d --name={} -v {} --workdir={} kazade/dreamcast-sdk bash --login".format(container_name, volume_mount, container_build_dir)
+        subprocess.check_call(run_command, shell=True)
+
+        cmake_command = 'sudo docker exec -it {} /bin/bash -c "source /etc/bash.bashrc; cmake {} ../../.. && make"'.format(
+            container_name, cmake_params
+        )
+        print(cmake_command)
+        return subprocess.call(cmake_command, shell=True)
 
     elif arch == "windows" and platform.system() == "Linux":
         # We support cross-compiling from Linux to Windows using mingw64
