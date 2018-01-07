@@ -57,8 +57,8 @@ IF(NOT DREAMCAST_BUILD)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
     # Force the new C++ ABI on GCC
-    MESSAGE("-- Enabling new C++11 ABI")
-    ADD_DEFINITIONS(-D_GLIBCXX_USE_CXX11_ABI=1)
+    MESSAGE("-- Enabling old C++11 ABI (until TravisCI is upgraded past Trusty)")
+    ADD_DEFINITIONS(-D_GLIBCXX_USE_CXX11_ABI=0)
 ELSE()
     MESSAGE("-- Cross-Compiling for the Sega Dreamcast. Forcing Release build.")
     SET(CMAKE_BUILD_TYPE Release)
