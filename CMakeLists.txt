@@ -54,7 +54,7 @@ ENDIF()
 
     FIND_PACKAGE(ZLIB REQUIRED)
 
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -D_GLIBCXX_USE_CXX11_ABI=1")
 ELSE()
     MESSAGE("-- Cross-Compiling for the Sega Dreamcast. Forcing Release build.")
     SET(CMAKE_BUILD_TYPE Release)
