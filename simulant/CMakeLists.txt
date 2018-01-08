@@ -78,25 +78,27 @@ ENDFOREACH()
 
 INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/../cmake_modules/simulant-config.cmake DESTINATION ${CMAKE_INSTALL_PREFIX}/share/simulant)
 
-FILE(GLOB_RECURSE materials "${CMAKE_CURRENT_SOURCE_DIR}/materials/opengl-2.x/*.kglm")
+SET(ASSET_ROOT ${CMAKE_SOURCE_DIR}/assets)
+
+FILE(GLOB_RECURSE materials "${ASSET_ROOT}/materials/opengl-2.x/*.kglm")
 INSTALL(FILES ${materials} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/simulant/materials/opengl-2.x)
 
-FILE(GLOB_RECURSE materials "${CMAKE_CURRENT_SOURCE_DIR}/materials/opengl-1.x/*.kglm")
+FILE(GLOB_RECURSE materials "${ASSET_ROOT}/materials/opengl-1.x/*.kglm")
 INSTALL(FILES ${materials} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/simulant/materials/opengl-1.x)
 
-FILE(GLOB textures "${CMAKE_CURRENT_SOURCE_DIR}/materials/*.png")
+FILE(GLOB textures "${ASSET_ROOT}/materials/*.png")
 INSTALL(FILES ${textures} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/simulant/materials)
 
-FILE(GLOB_RECURSE materials "${CMAKE_CURRENT_SOURCE_DIR}/materials/*.vert")
+FILE(GLOB_RECURSE materials "${ASSET_ROOT}/materials/*.vert")
 INSTALL(FILES ${materials} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/simulant/materials)
 
-FILE(GLOB_RECURSE materials "${CMAKE_CURRENT_SOURCE_DIR}/materials/*.frag")
+FILE(GLOB_RECURSE materials "${ASSET_ROOT}/materials/*.frag")
 INSTALL(FILES ${materials} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/simulant/materials)
 
-FILE(GLOB particles "${CMAKE_CURRENT_SOURCE_DIR}/particles/*.kglp")
+FILE(GLOB particles "${ASSET_ROOT}/particles/*.kglp")
 INSTALL(FILES ${particles} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/simulant/particles)
 
-FILE(GLOB fonts "${CMAKE_CURRENT_SOURCE_DIR}/fonts/orbitron/*.ttf")
+FILE(GLOB fonts "${ASSET_ROOT}/fonts/orbitron/*.ttf")
 INSTALL(FILES ${fonts} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/simulant/fonts/orbitron)
 
 INSTALL(DIRECTORY "${CMAKE_SOURCE_DIR}/bin/template" DESTINATION ${CMAKE_INSTALL_PREFIX}/share/simulant)

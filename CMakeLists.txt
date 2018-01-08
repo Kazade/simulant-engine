@@ -76,8 +76,8 @@ ELSE()
     SET(OPENGL_LIBRARIES GL)
 ENDIF()
 
-FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/simulant/materials DESTINATION ${CMAKE_BINARY_DIR}/simulant)
-FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/simulant/fonts DESTINATION ${CMAKE_BINARY_DIR}/simulant)
+FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets/materials DESTINATION ${CMAKE_BINARY_DIR}/simulant)
+FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts DESTINATION ${CMAKE_BINARY_DIR}/simulant)
 
 INCLUDE_DIRECTORIES(
     ${SDL2_INCLUDE_DIR}
@@ -139,9 +139,9 @@ IF(SIMULANT_BUILD_SAMPLES)
             COMMAND $ENV{KOS_BASE}/utils/scramble/scramble ${CMAKE_BINARY_DIR}/${EXE}.bin ${CMAKE_BINARY_DIR}/${EXE}/1ST_READ.BIN
             COMMAND IP_TEMPLATE_FILE=${CMAKE_SOURCE_DIR}/platforms/dreamcast/IP.TMPL $ENV{KOS_BASE}/utils/makeip/makeip ${CMAKE_SOURCE_DIR}/platforms/dreamcast/ip.txt ${CMAKE_BINARY_DIR}/${EXE}/IP.BIN
             COMMAND mkdir -p ${CMAKE_BINARY_DIR}/${EXE}/simulant
-            COMMAND cp -r ${CMAKE_SOURCE_DIR}/simulant/fonts ${CMAKE_BINARY_DIR}/${EXE}/simulant
-            COMMAND cp -r ${CMAKE_SOURCE_DIR}/simulant/materials ${CMAKE_BINARY_DIR}/${EXE}/simulant
-            COMMAND cp -r ${CMAKE_SOURCE_DIR}/simulant/particles ${CMAKE_BINARY_DIR}/${EXE}/simulant
+            COMMAND cp -r ${CMAKE_SOURCE_DIR}/assets/fonts ${CMAKE_BINARY_DIR}/${EXE}/simulant
+            COMMAND cp -r ${CMAKE_SOURCE_DIR}/assets/materials ${CMAKE_BINARY_DIR}/${EXE}/simulant
+            COMMAND cp -r ${CMAKE_SOURCE_DIR}/assets/particles ${CMAKE_BINARY_DIR}/${EXE}/simulant
             COMMAND cp -r ${CMAKE_SOURCE_DIR}/samples/data ${CMAKE_BINARY_DIR}/${EXE}/sample_data
             COMMAND mkisofs -C 0,11702 -V ${EXE_FILENAME} -G ${CMAKE_BINARY_DIR}/${EXE}/IP.BIN -joliet -rock -l -o ${EXE}.iso ${CMAKE_BINARY_DIR}/${EXE}
             COMMAND $ENV{KOS_BASE}/utils/img4dc/build/cdi4dc/cdi4dc ${CMAKE_BINARY_DIR}/${EXE}.iso ${CMAKE_BINARY_DIR}/${EXE}.cdi
