@@ -336,6 +336,44 @@ command={executable}
             shutil.rmtree(temp_repo)
 
 
+def _run_docker_command(command, use_existing=False):
+    pass
+
+
+def _generate_ip_bin(dest):
+    pass
+
+
+def _scramble_binary(binary, dest):
+    bin_file = os.path.splitext(binary)[0] + ".bin"
+    commands = [
+        "sh-elf-objcopy -R .stack -O binary {} {}".format(binary, bin_file),
+        "scramble {} {}".format(bin_file, dest)
+    ]
+
+    for command in commands:
+        _run_docker_command(command)
+
+
+def _generate_dc_cdi(args, build_dir):
+    output_dir = "/tmp/dcbuild" # FIXME: tempdir
+    if os.path.exists(output_dir):
+        shutil.rmtree(output_dir)
+
+    os.makedirs(output_dir)
+
+    # Search for the .elf binary in the build directory
+    binary = (x for x in os.listdir(build_dir) if x.endswith(".elf")).next()
+
+    # Copy assets to the output directory
+    shutil.copy("assets", os.path.join(output_dir, "assets"))
+
+    _generate_ip_bin(os.path.join(output_dir, "IP.BIN"))
+    _scramble_binary(
+        os.path.join(build_dir, binary), os.path.join(output_dir, "1ST_READ.BIN")
+    )
+
+
 def package(args):
     if not _check_project():
         return 1
@@ -348,6 +386,17 @@ def package(args):
             plat = "windows"
         else:
             plat = "osx"
+
+    if plat == "dreamcast":
+        class Args:
+            release = True
+            platform = "dreamcast"
+
+        # Compile to .elf using docker
+        output = BuildOutput()
+        build(Args(), output)
+
+        _generate_dc_cdi(args, output.build_dir)
 
     if plat == "linux":
         class Args:
