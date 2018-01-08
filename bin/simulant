@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import itertools
 import argparse
 import getpass
 import pwd
@@ -449,10 +450,10 @@ def update(args):
         # Download cross-compile toolchains unless explicitly told not to
         to_download.append(("dreamcast", "simulant-dreamcast-release.zip"))
 
-    print("Downloading Simulant dependencies", end='')
+    print("Downloading Simulant dependencies", end='', flush=True)
 
-    for folder, download in to_download:
-        print(".", end='')
+    for i, (folder, download) in enumerate(to_download):
+        print(".", end='', flush=True)
 
         target_dir = os.path.join("libraries", folder)
 
@@ -482,6 +483,7 @@ def update(args):
                         shutil.copy(paths[0], paths[1])
 
                 shutil.rmtree(source)
+    print("\nDone!\n")
 
 def run(args):
     if not _check_project():
