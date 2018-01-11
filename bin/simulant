@@ -288,7 +288,29 @@ def _generate_flatpak(args, build_dir):
 [Application]
 name={package}
 command={executable}
+runtime=org.freedesktop.Platform/x86_64/1.6
+
+[Context]
+shared=network;
+sockets=x11;wayland;pulseaudio;
+devices=dri;
 """
+
+    DESKTOP_TEMPLATE = """
+[Desktop Entry]
+Name={name}
+Exec={executable}
+Comment={description}
+"""
+
+    APPDATA_TEMPLATE = """
+<?xml version="1.0" encoding="UTF-8" ?>
+<component type="desktop">
+    <id>{package}.desktop</id>
+    <name>{name}</name>
+    <description>{description}</description>
+</component>
+    """
 
     with open("simulant.json") as f:
         data = json.loads(f.read())
@@ -300,9 +322,22 @@ command={executable}
 
     files_dir = os.path.join(package_dir, "files")
     binary_dir = os.path.join(package_dir, "files/bin")
+    export_dir = os.path.join(package_dir, "export")
+    desktop_file = os.path.join(export_dir, "applications", "{}.desktop".format(
+        data["package"]
+    ))
+    appdata_file = os.path.join(export_dir, "appdata", "{}.appdata.xml".format(data["name"]))
 
     os.makedirs(binary_dir)
-    os.makedirs(os.path.join(package_dir, "export"))
+    os.makedirs(export_dir)
+    os.makedirs(os.path.dirname(appdata_file))
+    os.makedirs(os.path.dirname(desktop_file))
+
+    with open(desktop_file, "w") as fout:
+        fout.write(DESKTOP_TEMPLATE.format(**data))
+
+    with open(appdata_file, "w") as fout:
+        fout.write(APPDATA_TEMPLATE.format(**data).lstrip())
 
     project = data["executable"]
     executable = os.path.join(build_dir, project)
@@ -403,6 +438,7 @@ def package(args):
         class Args:
             release = True
             platform = "native"
+            use_global_simulant = False
 
         output = BuildOutput()
 
