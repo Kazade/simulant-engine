@@ -35,6 +35,10 @@ POTENTIAL_TOOLCHAIN_DIRS = [
 ]
 
 
+LIBRARY_PATH_TEMPLATE = "libraries/{build_type}/{platform}-{architecture}/"
+BUILD_PATH_TEMPLATE = "build/{build_type}/{platform}-{architecture}/"
+
+
 def _check_tool(name):
     try:
         subprocess.check_output(["which", name])
@@ -115,19 +119,41 @@ def _calculate_platform(platform_name):
 
 
 def _calculate_build_dir(args):
-    build_type = "release" if args.release else "debug"
+    kwargs = {
+        "build_type": "release" if args.release else "debug"
+    }
 
-    arch = args.platform
     if args.platform == "native":
-        build_dir = "build/{}/{}-{}".format(
-            build_type,
-            platform.system().lower(),
-            platform.machine()
-        )
+        kwargs["platform"] = platform.system().lower()
+        kwargs["architecture"] = platform.machine()
+    elif args.platform == "dreamcast":
+        kwargs["platform"] = "dreamcast"
+        kwargs["architecture"] = "sh4"
+        kwargs["build_type"] = "release"
     else:
-        build_dir = "build/{}/{}".format(build_type, arch)
+        raise ValueError("{} not yet supported".format(args.platform))
 
-    return build_dir
+    return BUILD_PATH_TEMPLATE.format(**kwargs)
+
+
+def _calculate_simulant_dir(args):
+    kwargs = {
+        "build_type": "release" if args.release else "debug"
+    }
+
+    if args.platform == "native":
+        kwargs["platform"] = platform.system().lower()
+        kwargs["architecture"] = platform.machine()
+    elif args.platform == "dreamcast":
+        kwargs["platform"] = "dreamcast"
+        kwargs["architecture"] = "sh4"
+    elif platform.system().lower() in ("linux", "darwin"):
+        kwargs["platform"] = platform.system().lower()
+        kwargs["architecture"] = platform.machine()
+    else:
+        raise ValueError("{} not yet supported".format(args.platform))
+
+    return LIBRARY_PATH_TEMPLATE.format(**kwargs)
 
 
 def build(args, build_output=None):
@@ -138,6 +164,11 @@ def build(args, build_output=None):
         return 2
 
     project_dir = os.getcwd()
+    if args.platform == "dreamcast":
+        project_dir = "/simulant-project"
+        args.use_global_simulant = False
+        args.release = True
+
     platform = _calculate_platform(args.platform)
     arch = args.platform
     build_dir = _calculate_build_dir(args)
@@ -146,22 +177,19 @@ def build(args, build_output=None):
     if not os.path.exists(build_dir):
         os.makedirs(build_dir)
 
-    if platform == "dreamcast":
-        build_type = "release"
-        project_dir = "/simulant-project"
-        args.use_global_simulant = False
-
     cmake_params = ""
     if build_type == "release":
         cmake_params += " -DCMAKE_BUILD_TYPE=Release"
 
     if not args.use_global_simulant:
+        library_dir = os.path.join(project_dir, _calculate_simulant_dir(args))
+
         cmake_params += " -DSIMULANT_INCLUDE_FOLDER={}".format(
-            os.path.join(project_dir, "libraries", platform, "include")
+            os.path.join(library_dir, "include")
         )
 
         cmake_params += " -DSIMULANT_LIBRARY_FOLDER={}".format(
-            os.path.join(project_dir, "libraries", platform, "lib", build_type)
+            os.path.join(library_dir, "lib")
         )
 
     if arch == "dreamcast":
@@ -322,6 +350,7 @@ Comment={description}
 
     files_dir = os.path.join(package_dir, "files")
     binary_dir = os.path.join(package_dir, "files/bin")
+    library_dir = os.path.join(package_dir, "files/lib")
     export_dir = os.path.join(package_dir, "export")
     desktop_file = os.path.join(export_dir, "applications", "{}.desktop".format(
         data["package"]
@@ -329,9 +358,16 @@ Comment={description}
     appdata_file = os.path.join(export_dir, "appdata", "{}.appdata.xml".format(data["name"]))
 
     os.makedirs(binary_dir)
+    os.makedirs(library_dir)
     os.makedirs(export_dir)
     os.makedirs(os.path.dirname(appdata_file))
     os.makedirs(os.path.dirname(desktop_file))
+
+    args.release = True
+    simulant_dir = _calculate_simulant_dir(args)
+
+    for file in [x for x in os.listdir(simulant_dir) if x.endswith(".so")]:
+        shutil.copy(os.path.join(simulant_dir, file), os.path.join(library_dir, file))
 
     with open(desktop_file, "w") as fout:
         fout.write(DESKTOP_TEMPLATE.format(**data))
@@ -471,27 +507,34 @@ def update(args):
 
     if system == "Linux":
         to_download.extend([
-            ("linux", "simulant-linux-release.zip"),
-            ("linux", "simulant-linux-debug.zip")
+            ("linux", "release", "simulant-linux-release.zip"),
+            ("linux", "debug", "simulant-linux-debug.zip")
         ])
     elif system == "Darwin":
         to_download.extend([
-            ("osx", "simulant-osx-release.zip"),
-            ("osx", "simulant-osx-debug.zip")
+            ("darwin", "release", "simulant-osx-release.zip"),
+            ("darwin", "debug", "simulant-osx-debug.zip")
         ])
     else:
         print("Unsupported platform: {}".format(system))
 
     if not args.native_only:
         # Download cross-compile toolchains unless explicitly told not to
-        to_download.append(("dreamcast", "simulant-dreamcast-release.zip"))
+        to_download.append(("dreamcast", "release", "simulant-dreamcast-release.zip"))
 
     print("Downloading Simulant dependencies", end='', flush=True)
 
-    for i, (folder, download) in enumerate(to_download):
+    for i, (plat, build_type, download) in enumerate(to_download):
         print(".", end='', flush=True)
 
-        target_dir = os.path.join("libraries", folder)
+        class Args:
+            def __init__(self, platform, release):
+                self.platform = platform
+                self.release = release
+
+        target_dir = _calculate_simulant_dir(
+            Args(plat, build_type == "release")
+        )
 
         url = "{}/{}".format(DOWNLOAD_ROOT, download)
         url = urlopen(url)
@@ -500,25 +543,23 @@ def update(args):
             tempdir = tempfile.mkdtemp()
             zipfile.extractall(path=tempdir)
 
-            for folder in ("include", "lib"):
-                target_subfolder = os.path.join(target_dir, folder)
+            dest = os.path.join(target_dir, "include")
+            if os.path.exists(dest):
+                shutil.rmtree(dest)
 
-                source = os.path.join(tempdir, os.path.splitext(download)[0], folder)
+            if not os.path.exists(os.path.dirname(dest)):
+                os.makedirs(os.path.dirname(dest))
 
-                for root, dirs, files in os.walk(source):
-                    for file in files:
-                        paths = (
-                            os.path.join(root, file),
-                            os.path.join(target_subfolder, root[len(source) + 1:], file)
-                        )
+            shutil.copytree(
+                os.path.join(tempdir, os.path.splitext(download)[0], "include"),
+                os.path.join(target_dir, "include")
+            )
 
-                        dest_dir = os.path.dirname(paths[1])
-                        if not os.path.exists(dest_dir):
-                            os.makedirs(dest_dir)
+            shutil.copytree(
+                os.path.join(tempdir, os.path.splitext(download)[0], "lib", build_type),
+                os.path.join(target_dir, "lib")
+            )
 
-                        shutil.copy(paths[0], paths[1])
-
-                shutil.rmtree(source)
     print("\nDone!\n")
 
 def run(args):
