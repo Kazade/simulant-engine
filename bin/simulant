@@ -38,6 +38,8 @@ POTENTIAL_TOOLCHAIN_DIRS = [
 LIBRARY_PATH_TEMPLATE = "libraries/{build_type}/{platform}-{architecture}/"
 BUILD_PATH_TEMPLATE = "build/{build_type}/{platform}-{architecture}/"
 
+DOCKER_CONTAINER_NAME = "simulant-dc-build"
+
 
 def _check_tool(name):
     try:
@@ -201,32 +203,21 @@ def build(args, build_output=None):
             print("Unable to find the Dreamcast toolchain file")
             return 4
 
-        volume_mount = "{}:/simulant-project:Z".format(os.path.abspath("."))
-        container_name = "simulant-dc-build"
         container_build_dir = os.path.join("/simulant-project", build_dir)
-        build_dir = os.getcwd()
 
         cmake_params += " -DCMAKE_TOOLCHAIN_FILE={}".format(
             os.path.join("/simulant-project", "libraries", "Dreamcast.cmake")
         )
 
-        # Start docker if neccesary and forcibly remove any existing build container
-        commands = [
-            "sudo service docker start",
-            "sudo docker rm {} -f".format(container_name)
-        ]
+        _start_docker_container(container_build_dir)
 
-        for cmd in commands:
-            subprocess.call(cmd.split())
+        if build_output:
+            build_output.build_dir = build_dir
 
-        run_command = "sudo docker run -it -d --name={} -v {} --workdir={} kazade/dreamcast-sdk bash --login".format(container_name, volume_mount, container_build_dir)
-        subprocess.check_call(run_command, shell=True)
-
-        cmake_command = 'sudo docker exec -it {} /bin/bash -c "source /etc/bash.bashrc; cmake {} ../../.. && make"'.format(
-            container_name, cmake_params
+        return _run_docker_command(
+            'source /etc/bash.bashrc; cmake {} ../../.. && make'.format(cmake_params),
+            check=False
         )
-        print(cmake_command)
-        return subprocess.call(cmake_command, shell=True)
 
     elif arch == "windows" and platform.system() == "Linux":
         # We support cross-compiling from Linux to Windows using mingw64
@@ -408,19 +399,48 @@ Comment={description}
             shutil.rmtree(temp_repo)
 
 
-def _run_docker_command(command, use_existing=False):
-    pass
+def _start_docker_container(working_dir):
+    volume_mount = "{}:/simulant-project:Z".format(os.path.abspath("."))
+
+    # Start docker if neccesary and forcibly remove any existing build container
+    commands = [
+        "sudo service docker start",
+        "sudo docker rm {} -f".format(DOCKER_CONTAINER_NAME)
+    ]
+
+    for cmd in commands:
+        subprocess.call(cmd.split(), stdout=subprocess.DEVNULL)
+
+    run_command = "sudo docker run -it -d --name={} -v {} --workdir={} kazade/dreamcast-sdk bash --login".format(
+        DOCKER_CONTAINER_NAME, volume_mount, working_dir
+    )
+
+    subprocess.check_call(run_command, shell=True)
+
+def _run_docker_command(command, check=True):
+    run_command = 'sudo docker exec -it {} /bin/bash -c "{}"'.format(DOCKER_CONTAINER_NAME, command)
+
+    if check:
+        return subprocess.check_call(run_command, shell=True)
+    else:
+        return subprocess.call(run_command, shell=True)
 
 
-def _generate_ip_bin(dest):
-    pass
+def _generate_ip_bin(template, text, dest):
+    command = "export IP_TEMPLATE_FILE={template}; /opt/toolchains/dc/kos/utils/makeip/makeip {text} {dest}".format(
+        template=template, dest=dest, text=text
+    )
+    _run_docker_command(command)
+
+    return dest
 
 
 def _scramble_binary(binary, dest):
     bin_file = os.path.splitext(binary)[0] + ".bin"
     commands = [
-        "sh-elf-objcopy -R .stack -O binary {} {}".format(binary, bin_file),
-        "scramble {} {}".format(bin_file, dest)
+        "source /etc/bash.bashrc; sh-elf-objcopy -R .stack -O binary -S -g {} {}".format(binary, bin_file),
+        "source /etc/bash.bashrc; /opt/toolchains/dc/kos/utils/scramble/scramble {} {}".format(bin_file, dest),
+#        "rm {}".format(bin_file) # Remove intermediate file
     ]
 
     for command in commands:
@@ -428,23 +448,64 @@ def _scramble_binary(binary, dest):
 
 
 def _generate_dc_cdi(args, build_dir):
-    output_dir = "/tmp/dcbuild" # FIXME: tempdir
-    if os.path.exists(output_dir):
-        shutil.rmtree(output_dir)
 
-    os.makedirs(output_dir)
+    IP_TXT_TEMPLATE = """
+Hardware ID   : SEGA SEGAKATANA
+Maker ID      : SEGA ENTERPRISES
+Device Info   : 0000 CD-ROM1/1
+Area Symbols  : JUE
+Peripherals   : E000F10
+Product No    : T0000
+Version       : V1.000
+Release Date  : 20000627
+Boot Filename : 1ST_READ.BIN
+SW Maker Name : {author}
+Game Title    : {name}
+""".strip()
+
+    package_dir = os.path.join(build_dir, "package")
+    if os.path.exists(package_dir):
+        shutil.rmtree(package_dir)
+
+    os.makedirs(package_dir)
 
     # Search for the .elf binary in the build directory
-    binary = (x for x in os.listdir(build_dir) if x.endswith(".elf")).next()
+    binary = next(x for x in os.listdir(build_dir) if x.endswith(".elf"))
+    binary = os.path.join(build_dir, binary)
 
     # Copy assets to the output directory
-    shutil.copy("assets", os.path.join(output_dir, "assets"))
+    shutil.copytree("assets", os.path.join(package_dir, "assets"))
 
-    _generate_ip_bin(os.path.join(output_dir, "IP.BIN"))
-    _scramble_binary(
-        os.path.join(build_dir, binary), os.path.join(output_dir, "1ST_READ.BIN")
+    template = os.path.join("/simulant-project", "libraries/IP.TMPL")
+    text = os.path.join(package_dir, "ip.txt")
+
+    with open("simulant.json", "r") as fin:
+        data = json.loads(fin.read())
+
+    with open(text, "w") as fout:
+        fout.write(IP_TXT_TEMPLATE.format(**data))
+
+    ip_bin = _generate_ip_bin(
+        os.path.join("/simulant-project", template),
+        os.path.join("/simulant-project", text),
+        os.path.join("/simulant-project", package_dir, "IP.BIN")
     )
 
+    # Don't need the text file any more
+    #os.remove(text)
+
+    _scramble_binary(
+        os.path.join("/simulant-project", binary),
+        os.path.join("/simulant-project", package_dir, "1ST_READ.BIN")
+    )
+
+    _run_docker_command("mkisofs -C 0,11702 -V {title} -G {ip_bin} -joliet -rock -l -o {name}.iso {package_dir}".format(
+        title=data["name"], ip_bin=ip_bin, name=data["executable"], package_dir=os.path.join("/simulant-project", package_dir)
+    ))
+
+    _run_docker_command("/opt/toolchains/dc/kos/utils/img4dc/build/cdi4dc/cdi4dc {name}.iso {name}.cdi".format(
+        name=data["executable"]
+    ))
 
 def package(args):
     if not _check_project():
@@ -470,7 +531,7 @@ def package(args):
 
         _generate_dc_cdi(args, output.build_dir)
 
-    if plat == "linux":
+    elif plat == "linux":
         class Args:
             release = True
             platform = "native"
