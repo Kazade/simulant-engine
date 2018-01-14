@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+from os.path import dirname, join, split, exists, splitext, abspath
 import itertools
 import argparse
 import getpass
@@ -19,7 +20,7 @@ from urllib.request import urlopen
 
 PLACEHOLDER = "__project_name__"
 
-THIS_DIR = os.path.dirname(__file__)
+THIS_DIR = dirname(__file__)
 
 POTENTIAL_TEMPLATE_DIRS = [
     THIS_DIR,
@@ -28,8 +29,8 @@ POTENTIAL_TEMPLATE_DIRS = [
 ]
 
 POTENTIAL_TOOLCHAIN_DIRS = [
-    os.path.join(THIS_DIR, "toolchains"),
-    os.path.join(os.path.dirname(THIS_DIR), "toolchains"),
+    join(THIS_DIR, "toolchains"),
+    join(dirname(THIS_DIR), "toolchains"),
     "/usr/local/share/simulant/toolchains",
     "/usr/share/simulant/toolchains"
 ]
@@ -52,20 +53,20 @@ def _check_tool(name):
 
 def _locate_toolchain_file(name):
     for path in POTENTIAL_TOOLCHAIN_DIRS:
-        path = os.path.abspath(path)
+        path = abspath(path)
 
-        toolchain = os.path.join(path, "{}.cmake".format(name))
-        if os.path.exists(toolchain):
+        toolchain = join(path, "{}.cmake".format(name))
+        if exists(toolchain):
             return toolchain
 
 
 def _locate_template_folder():
     for path in POTENTIAL_TEMPLATE_DIRS:
-        path = os.path.abspath(path)
+        path = abspath(path)
 
-        template = os.path.join(path, "template")
+        template = join(path, "template")
 
-        if os.path.exists(template):
+        if exists(template):
             return template
 
 
@@ -74,14 +75,14 @@ def _rename_files_and_directories(search, replacement, directory):
     for root, subdirs, files in os.walk(directory):
         for subdir in subdirs:
             if PLACEHOLDER in subdir:
-                path = os.path.join(root, subdir)
-                dest = os.path.join(root, subdir.replace(PLACEHOLDER, replacement))
+                path = join(root, subdir)
+                dest = join(root, subdir.replace(PLACEHOLDER, replacement))
                 shutil.move(path, dest)
 
         for file in files:
             if PLACEHOLDER in file:
-                path = os.path.join(root, file)
-                dest = os.path.join(root, file.replace(PLACEHOLDER, replacement))
+                path = join(root, file)
+                dest = join(root, file.replace(PLACEHOLDER, replacement))
                 shutil.move(path, dest)
 
 
@@ -89,8 +90,8 @@ def _search_replace(search, replacement, directory, extensions=[".cpp", ".h", ".
     "Recursively search replace text in files that match the extensions"
     for root, subdirs, files in os.walk(directory):
         for file in files:
-            if os.path.splitext(file)[-1] in extensions:
-                path = os.path.join(root, file)
+            if splitext(file)[-1] in extensions:
+                path = join(root, file)
 
                 with open(path, "r") as f:
                     s = f.read()
@@ -102,7 +103,7 @@ def _search_replace(search, replacement, directory, extensions=[".cpp", ".h", ".
 
 
 def _check_project():
-    if not os.path.exists("simulant.json"):
+    if not exists("simulant.json"):
         print("ERROR: Unable to find simulant.json")
         return False
 
@@ -176,7 +177,7 @@ def build(args, build_output=None):
     build_dir = _calculate_build_dir(args)
     build_type = "release" if args.release else "debug"
 
-    if not os.path.exists(build_dir):
+    if not exists(build_dir):
         os.makedirs(build_dir)
 
     cmake_params = ""
@@ -184,14 +185,14 @@ def build(args, build_output=None):
         cmake_params += " -DCMAKE_BUILD_TYPE=Release"
 
     if not args.use_global_simulant:
-        library_dir = os.path.join(project_dir, _calculate_simulant_dir(args))
+        library_dir = join(project_dir, _calculate_simulant_dir(args))
 
         cmake_params += " -DSIMULANT_INCLUDE_FOLDER={}".format(
-            os.path.join(library_dir, "include")
+            join(library_dir, "include")
         )
 
         cmake_params += " -DSIMULANT_LIBRARY_FOLDER={}".format(
-            os.path.join(library_dir, "lib")
+            join(library_dir, "lib")
         )
 
     if arch == "dreamcast":
@@ -203,10 +204,10 @@ def build(args, build_output=None):
             print("Unable to find the Dreamcast toolchain file")
             return 4
 
-        container_build_dir = os.path.join("/simulant-project", build_dir)
+        container_build_dir = join("/simulant-project", build_dir)
 
         cmake_params += " -DCMAKE_TOOLCHAIN_FILE={}".format(
-            os.path.join("/simulant-project", "libraries", "Dreamcast.cmake")
+            join("/simulant-project", "libraries", "Dreamcast.cmake")
         )
 
         _start_docker_container(container_build_dir)
@@ -257,20 +258,20 @@ def start(args):
 
     template_folder = _locate_template_folder()
 
-    if not os.path.exists(template_folder):
+    if not exists(template_folder):
         print("Error: Unable to locate Simulant template")
         return 1
 
-    target_folder = os.path.join(os.path.abspath(args.target), args.project)
+    target_folder = join(abspath(args.target), args.project)
 
-    if os.path.exists(target_folder) and not args.force:
+    if exists(target_folder) and not args.force:
         result = input("The target folder already exists and will be replaced, this cannot be undone. Continue? [y/N] ")
         if result.lower() != "y":
             return 0
         else:
             # Remove the directory before replacing it
             shutil.rmtree(target_folder)
-    elif os.path.exists(target_folder) and args.force:
+    elif exists(target_folder) and args.force:
         # If we are forcing this, then just remove the folder without asking!
         shutil.rmtree(target_folder)
 
@@ -334,31 +335,31 @@ Comment={description}
     with open("simulant.json") as f:
         data = json.loads(f.read())
 
-    package_dir = os.path.join(build_dir, "package")
+    package_dir = join(build_dir, "package")
 
-    if os.path.exists(package_dir):
+    if exists(package_dir):
         shutil.rmtree(package_dir)
 
-    files_dir = os.path.join(package_dir, "files")
-    binary_dir = os.path.join(package_dir, "files/bin")
-    library_dir = os.path.join(package_dir, "files/lib")
-    export_dir = os.path.join(package_dir, "export")
-    desktop_file = os.path.join(export_dir, "applications", "{}.desktop".format(
+    files_dir = join(package_dir, "files")
+    binary_dir = join(package_dir, "files/bin")
+    library_dir = join(package_dir, "files/lib")
+    export_dir = join(package_dir, "export")
+    desktop_file = join(export_dir, "applications", "{}.desktop".format(
         data["package"]
     ))
-    appdata_file = os.path.join(export_dir, "appdata", "{}.appdata.xml".format(data["name"]))
+    appdata_file = join(export_dir, "appdata", "{}.appdata.xml".format(data["name"]))
 
     os.makedirs(binary_dir)
     os.makedirs(library_dir)
     os.makedirs(export_dir)
-    os.makedirs(os.path.dirname(appdata_file))
-    os.makedirs(os.path.dirname(desktop_file))
+    os.makedirs(dirname(appdata_file))
+    os.makedirs(dirname(desktop_file))
 
     args.release = True
     simulant_dir = _calculate_simulant_dir(args)
 
     for file in [x for x in os.listdir(simulant_dir) if x.endswith(".so")]:
-        shutil.copy(os.path.join(simulant_dir, file), os.path.join(library_dir, file))
+        shutil.copy(join(simulant_dir, file), join(library_dir, file))
 
     with open(desktop_file, "w") as fout:
         fout.write(DESKTOP_TEMPLATE.format(**data))
@@ -367,18 +368,18 @@ Comment={description}
         fout.write(APPDATA_TEMPLATE.format(**data).lstrip())
 
     project = data["executable"]
-    executable = os.path.join(build_dir, project)
-    assets = os.path.join(build_dir, "assets")
+    executable = join(build_dir, project)
+    assets = join(build_dir, "assets")
 
     shutil.copy(executable, binary_dir)
-    shutil.copytree(assets, os.path.join(files_dir, "assets"))
+    shutil.copytree(assets, join(files_dir, "assets"))
 
-    with open(os.path.join(package_dir, "metadata"), "w") as f:
+    with open(join(package_dir, "metadata"), "w") as f:
         f.write(META_TEMPLATE.format(**data))
 
-    temp_repo = os.path.join(build_dir, "repo")
+    temp_repo = join(build_dir, "repo")
     try:
-        if os.path.exists(temp_repo):
+        if exists(temp_repo):
             shutil.rmtree(temp_repo)
 
         command = "flatpak build-export {} {}".format(
@@ -395,12 +396,12 @@ Comment={description}
 
         subprocess.check_call(command.split())
     finally:
-        if os.path.exists(temp_repo):
+        if exists(temp_repo):
             shutil.rmtree(temp_repo)
 
 
 def _start_docker_container(working_dir):
-    volume_mount = "{}:/simulant-project:Z".format(os.path.abspath("."))
+    volume_mount = "{}:/simulant-project:Z".format(abspath("."))
 
     # Start docker if neccesary and forcibly remove any existing build container
     commands = [
@@ -436,7 +437,7 @@ def _generate_ip_bin(template, text, dest):
 
 
 def _scramble_binary(binary, dest):
-    bin_file = os.path.splitext(binary)[0] + ".bin"
+    bin_file = splitext(binary)[0] + ".bin"
     commands = [
         "source /etc/bash.bashrc; sh-elf-objcopy -R .stack -O binary -S -g {} {}".format(binary, bin_file),
         "source /etc/bash.bashrc; /opt/toolchains/dc/kos/utils/scramble/scramble {} {}".format(bin_file, dest),
@@ -463,21 +464,21 @@ SW Maker Name : {author}
 Game Title    : {name}
 """.strip()
 
-    package_dir = os.path.join(build_dir, "package")
-    if os.path.exists(package_dir):
+    package_dir = join(build_dir, "package")
+    if exists(package_dir):
         shutil.rmtree(package_dir)
 
     os.makedirs(package_dir)
 
     # Search for the .elf binary in the build directory
     binary = next(x for x in os.listdir(build_dir) if x.endswith(".elf"))
-    binary = os.path.join(build_dir, binary)
+    binary = join(build_dir, binary)
 
     # Copy assets to the output directory
-    shutil.copytree("assets", os.path.join(package_dir, "assets"))
+    shutil.copytree("assets", join(package_dir, "assets"))
 
-    template = os.path.join("/simulant-project", "libraries/IP.TMPL")
-    text = os.path.join(package_dir, "ip.txt")
+    template = join("/simulant-project", "libraries/IP.TMPL")
+    text = join(package_dir, "ip.txt")
 
     with open("simulant.json", "r") as fin:
         data = json.loads(fin.read())
@@ -486,21 +487,21 @@ Game Title    : {name}
         fout.write(IP_TXT_TEMPLATE.format(**data))
 
     ip_bin = _generate_ip_bin(
-        os.path.join("/simulant-project", template),
-        os.path.join("/simulant-project", text),
-        os.path.join("/simulant-project", package_dir, "IP.BIN")
+        join("/simulant-project", template),
+        join("/simulant-project", text),
+        join("/simulant-project", package_dir, "IP.BIN")
     )
 
     # Don't need the text file any more
     #os.remove(text)
 
     _scramble_binary(
-        os.path.join("/simulant-project", binary),
-        os.path.join("/simulant-project", package_dir, "1ST_READ.BIN")
+        join("/simulant-project", binary),
+        join("/simulant-project", package_dir, "1ST_READ.BIN")
     )
 
     _run_docker_command("mkisofs -C 0,11702 -V {title} -G {ip_bin} -joliet -rock -l -o {name}.iso {package_dir}".format(
-        title=data["name"], ip_bin=ip_bin, name=data["executable"], package_dir=os.path.join("/simulant-project", package_dir)
+        title=data["name"], ip_bin=ip_bin, name=data["executable"], package_dir=join("/simulant-project", package_dir)
     ))
 
     _run_docker_command("/opt/toolchains/dc/kos/utils/img4dc/build/cdi4dc/cdi4dc {name}.iso {name}.cdi".format(
@@ -604,21 +605,21 @@ def update(args):
             tempdir = tempfile.mkdtemp()
             zipfile.extractall(path=tempdir)
 
-            dest = os.path.join(target_dir, "include")
-            if os.path.exists(dest):
+            dest = join(target_dir, "include")
+            if exists(dest):
                 shutil.rmtree(dest)
 
-            if not os.path.exists(os.path.dirname(dest)):
-                os.makedirs(os.path.dirname(dest))
+            if not exists(dirname(dest)):
+                os.makedirs(dirname(dest))
 
             shutil.copytree(
-                os.path.join(tempdir, os.path.splitext(download)[0], "include"),
-                os.path.join(target_dir, "include")
+                join(tempdir, splitext(download)[0], "include"),
+                join(target_dir, "include")
             )
 
             shutil.copytree(
-                os.path.join(tempdir, os.path.splitext(download)[0], "lib", build_type),
-                os.path.join(target_dir, "lib")
+                join(tempdir, splitext(download)[0], "lib", build_type),
+                join(target_dir, "lib")
             )
 
     print("\nDone!\n")
@@ -637,7 +638,7 @@ def run(args):
         executable = data["executable"]
 
     subprocess.run(
-        [os.path.abspath(os.path.join(build_dir, executable))],
+        [abspath(join(build_dir, executable))],
         cwd=build_dir
     )
 
