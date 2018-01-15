@@ -113,6 +113,8 @@ typedef sig::signal<void (float)> LateUpdateSignal;
 
 typedef sig::signal<void ()> ShutdownSignal;
 
+class Platform;
+
 class Window :
     public Source,
     public StageManager,
@@ -134,9 +136,11 @@ public:
     typedef std::shared_ptr<Window> ptr;
     static const int STEPS_PER_SECOND = 60;
 
+    virtual const Platform* platform() const = 0;
+
     template<typename T>
-    static std::shared_ptr<Window> create(Application* app, int width=640, int height=480, int bpp=0, bool fullscreen=false) {
-        std::shared_ptr<Window> window(new T(width, height, bpp, fullscreen));
+    static std::shared_ptr<Window> create(Application* app, int width, int height, int bpp, bool fullscreen, bool enable_vsync) {
+        std::shared_ptr<Window> window(new T(width, height, bpp, fullscreen, enable_vsync));
         window->set_application(app);
         return window;
     }
@@ -161,6 +165,8 @@ public:
 
     uint32_t width() const override { return width_; }
     uint32_t height() const override { return height_; }
+    bool is_fullscreen() const { return fullscreen_; }
+    bool vsync_enabled() const { return vsync_enabled_; }
 
     float aspect_ratio() const;
     
@@ -243,6 +249,10 @@ protected:
 
     RenderSequencePtr render_sequence();
 
+    void set_vsync_enabled(bool vsync) {
+        vsync_enabled_ = vsync;
+    }
+
     void set_width(uint32_t width) { 
         width_ = width; 
     }
@@ -259,10 +269,10 @@ protected:
         fullscreen_ = val;
     }
 
-    virtual bool create_window(int width, int height, int bpp, bool fullscreen) = 0;
+    virtual bool create_window() = 0;
     virtual void destroy_window() = 0;
 
-    Window();
+    Window(int width, int height, int bpp, bool fullscreen, bool enable_vsync);
 
     void set_paused(bool value=true);
     void set_has_context(bool value=true);
@@ -295,6 +305,8 @@ private:
     uint32_t height_ = 0;
     uint32_t bpp_ = 0;
     bool fullscreen_ = false;
+    bool vsync_enabled_ = false;
+
     bool escape_to_quit_ = true;
 
     std::vector<LoaderTypePtr> loaders_;
@@ -344,6 +356,9 @@ private:
     std::shared_ptr<InputState> input_state_;
     std::shared_ptr<InputManager> input_manager_;
 
+    void await_frame_time();
+    uint64_t last_frame_time_us_ = 0;
+    float requested_frame_time_ms_ = 0;
 protected:
     InputState* _input_state() const { return input_state_.get(); }
 
@@ -367,6 +382,7 @@ public:
 
     void run_update();
     void run_fixed_updates();
+    void request_frame_time(float ms);
 };
 
 }

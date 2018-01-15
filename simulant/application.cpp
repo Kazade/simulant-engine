@@ -45,7 +45,12 @@ void Application::construct_window(const AppConfig& config) {
     kazlog::get_logger("/")->add_handler(kazlog::Handler::ptr(new kazlog::StdIOHandler));
     L_DEBUG("Constructing the window");
 
-    window_ = SysWindow::create(this, config.width, config.height, config.bpp, config.fullscreen);
+    window_ = SysWindow::create(this, config.width, config.height, config.bpp, config.fullscreen, config.enable_vsync);
+
+    if(config_.target_frame_rate) {
+        float frame_time = (1.0f / float(config_.target_frame_rate)) * 1000.0f;
+        window_->request_frame_time(frame_time);
+    }
 
     for(auto& search_path: config.search_paths) {
         window_->resource_locator->add_search_path(search_path);

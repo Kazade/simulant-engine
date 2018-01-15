@@ -12,6 +12,15 @@ TimeKeeper::TimeKeeper(const float fixed_step):
 
 }
 
+uint64_t TimeKeeper::now_in_us() const {
+#ifdef _arch_dreamcast
+    return timer_us_gettime64();
+#else
+    auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
+    return std::chrono::duration_cast<std::chrono::microseconds>(now).count();
+#endif
+}
+
 bool TimeKeeper::init() {
 #ifdef _arch_dreamcast
     last_update_ = timer_us_gettime64();

@@ -576,6 +576,7 @@ simulant/partitioners/spatial_hash.cpp
 simulant/partitioners/spatial_hash.h
 simulant/pipeline_helper.cpp
 simulant/pipeline_helper.h
+simulant/platform.h
 simulant/procedural/constants.h
 simulant/procedural/mesh.h
 simulant/procedural/mesh/capsule.cpp

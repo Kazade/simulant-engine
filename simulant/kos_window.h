@@ -5,16 +5,29 @@
 #include <kos.h>
 
 #include "window.h"
+#include "platform.h"
 
 namespace smlt {
 
 class KOSWindow : public Window {
+    class DreamcastPlatform : public Platform {
+    public:
+        std::string name() const override { return "dreamcast"; }
+        void sleep_ms(uint32_t ms) const {
+            usleep(ms * 1000);
+        }
+    };
+
+    DreamcastPlatform platform_;
+
 public:
-    static Window::ptr create(Application* app, int width=640, int height=480, int bpp=0, bool fullscreen=false) {
-        return Window::create<KOSWindow>(app, width, height, bpp, fullscreen);
+    const Platform* platform() const override { return &platform_; }
+
+    static Window::ptr create(Application* app, int width, int height, int bpp, bool fullscreen, bool enable_vsync) {
+        return Window::create<KOSWindow>(app, width, height, bpp, fullscreen, enable_vsync);
     }
 
-    KOSWindow(uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen);
+    KOSWindow(uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen, bool vsync_enabled);
 
     void set_title(const std::string&) override {} // No-op
     void cursor_position(int32_t &mouse_x, int32_t &mouse_y) override {} // No-op
@@ -22,7 +35,7 @@ public:
     void lock_cursor(bool) override {} // No-op
 
     void swap_buffers() override;
-    bool create_window(int width, int height, int bpp, bool fullscreen) override;
+    bool create_window() override;
     void destroy_window() override;
     void check_events() override;
 

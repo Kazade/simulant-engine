@@ -17,13 +17,9 @@ KOS_INIT_FLAGS(INIT_DEFAULT | INIT_MALLOCSTATS);
 #define SCREEN_HEIGHT 480
 #define SCREEN_DEPTH 32
 
-KOSWindow::KOSWindow(uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen):
-    Window() {
+KOSWindow::KOSWindow(uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen, bool vsync_enabled):
+    Window(width ? width : SCREEN_WIDTH, height ? height : SCREEN_HEIGHT, bpp ? bpp : SCREEN_DEPTH, true, true) {
 
-    set_width(SCREEN_WIDTH);
-    set_height(SCREEN_HEIGHT);
-    set_bpp(SCREEN_DEPTH);
-    set_fullscreen(true);
 }
 
 
@@ -31,10 +27,7 @@ void KOSWindow::swap_buffers() {
     glutSwapBuffers();
 }
 
-bool KOSWindow::create_window(int width, int height, int bpp, bool fullscreen) {
-    set_width(SCREEN_WIDTH);
-    set_height(SCREEN_HEIGHT);
-
+bool KOSWindow::create_window() {
     L_DEBUG("Initializing OpenGL");
 #ifdef _arch_dreamcast
         print_available_ram();

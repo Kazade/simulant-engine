@@ -26,11 +26,9 @@
 
 namespace smlt {
 
-SDL2Window::SDL2Window(uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen) {
-    set_width(width);
-    set_height(height);
-    set_bpp(bpp);
-    set_fullscreen(fullscreen);
+SDL2Window::SDL2Window(uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen, bool enable_vsync):
+    Window(width, height, bpp, fullscreen, enable_vsync) {
+
 }
 
 SDL2Window::~SDL2Window() {
@@ -255,14 +253,14 @@ void SDL2Window::denormalize(float x, float y, int& xout, int& yout) {
     yout = (int) (y * float(height()));
 }
 
-bool SDL2Window::create_window(int width, int height, int bpp, bool fullscreen) {
+bool SDL2Window::create_window() {
     if(SDL_Init(SDL_INIT_EVERYTHING) != 0) {
         L_ERROR(_F("Unable to initialize SDL {0}").format(SDL_GetError()));
         return false;
     }
 
     int32_t flags = SDL_WINDOW_OPENGL;
-    if(fullscreen) {
+    if(is_fullscreen()) {
         flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
     }
 
@@ -307,7 +305,7 @@ bool SDL2Window::create_window(int width, int height, int bpp, bool fullscreen) 
         "",
         SDL_WINDOWPOS_UNDEFINED,
         SDL_WINDOWPOS_UNDEFINED,
-        width, height,
+        width(), height(),
         flags
     );
 
@@ -328,14 +326,16 @@ bool SDL2Window::create_window(int width, int height, int bpp, bool fullscreen) 
     renderer_->init_context();
 
     //Reset the width and height to whatever was actually created
+    int32_t width = 0, height = 0;
     SDL_GetWindowSize(screen_, &width, &height);
 
     set_width(width);
     set_height(height);
 
+    SDL_GL_SetSwapInterval((vsync_enabled()) ? 1 : 0);
+
 #ifndef NDEBUG
     //DEBUG mode
-    SDL_GL_SetSwapInterval(0);
     SDL_ShowCursor(1);
 #else
     SDL_ShowCursor(0);
