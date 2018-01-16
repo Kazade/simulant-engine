@@ -410,4 +410,8 @@ void SDL2Window::swap_buffers() {
     SDL_GL_SwapWindow(screen_);
 }
 
+void SDL2Window::SDLPlatform::sleep_ms(uint32_t ms) const {
+    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+}
+
 }

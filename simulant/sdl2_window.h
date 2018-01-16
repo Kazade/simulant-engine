@@ -43,9 +43,9 @@ class SDL2Window :
 #if defined(__LINUX__)
             return "linux";
 #elif defined(__APPLE__)
-            return "darwin"
+            return "darwin";
 #elif defined(__ANDROID__)
-            return "android"
+            return "android";
 #elif defined(WIN32)
             return "windows";
 #else
@@ -53,9 +53,7 @@ class SDL2Window :
 #endif
         }
 
-        void sleep_ms(uint32_t ms) const override {
-            std::this_thread::sleep_for(std::chrono::milliseconds(ms));
-        }
+        void sleep_ms(uint32_t ms) const override;
     };
 
     SDLPlatform platform_;

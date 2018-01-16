@@ -382,7 +382,6 @@ public:
 
     void run_update();
     void run_fixed_updates();
-    void request_frame_time(float ms);
 };
 
 }
