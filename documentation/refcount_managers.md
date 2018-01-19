@@ -21,19 +21,19 @@ will be destroyed and a warning will be logged.
 
 For example, say you load a mesh, like so:
 
-    MeshID my_mesh = stage()->new_mesh_from_file("test.obj");
+    MeshID my_mesh = stage->new_mesh_from_file("test.obj");
     
 Once the new_mesh_from_file call returns, you have 10 seconds to do this:
 
-    auto mesh = stage()->mesh(my_mesh); //Marks resource as accessed
+    auto mesh = my_mesh.fetch(); //Marks resource as accessed
     // when 'mesh' goes out of scope, the mesh will be destroyed!
     
 or this:
 
-    stage()->new_actor_with_mesh(my_mesh); //Links the mesh to an actor, preventing its destruction    
+    stage->new_actor_with_mesh(my_mesh); //Links the mesh to an actor, preventing its destruction    
     
 Failure to access a resource within the 10 second grace period will result in its destruction,
-and any further attempts to access it will result in an ObjectDoesNotExist<T> exception.
+and any further attempts to access it will result in a NULL return value.
 
 # Disabling collection
 

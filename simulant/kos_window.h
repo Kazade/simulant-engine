@@ -18,11 +18,7 @@ class KOSWindow : public Window {
         }
     };
 
-    DreamcastPlatform platform_;
-
 public:
-    const Platform* platform() const override { return &platform_; }
-
     static Window::ptr create(Application* app, int width, int height, int bpp, bool fullscreen, bool enable_vsync) {
         return Window::create<KOSWindow>(app, width, height, bpp, fullscreen, enable_vsync);
     }

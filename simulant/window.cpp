@@ -329,7 +329,7 @@ void Window::await_frame_time() {
     auto this_time = time_keeper_->now_in_us();
     while((float(this_time - last_frame_time_us_) * 0.001f) < requested_frame_time_ms_) {
 
-        platform()->sleep_ms(0);
+        platform->sleep_ms(0);
 
         this_time = time_keeper_->now_in_us();
     }

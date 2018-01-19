@@ -136,7 +136,6 @@ public:
     typedef std::shared_ptr<Window> ptr;
     static const int STEPS_PER_SECOND = 60;
 
-    virtual const Platform* platform() const = 0;
 
     template<typename T>
     static std::shared_ptr<Window> create(Application* app, int width, int height, int bpp, bool fullscreen, bool enable_vsync) {
@@ -284,7 +283,6 @@ protected:
 
     void set_escape_to_quit(bool value=true) { escape_to_quit_ = value; }
     bool escape_to_quit_enabled() const { return escape_to_quit_; }
-
 public:
     // Panels
     void register_panel(uint8_t function_key, std::shared_ptr<Panel> panel);
@@ -362,6 +360,7 @@ private:
 protected:
     InputState* _input_state() const { return input_state_.get(); }
 
+    std::shared_ptr<Platform> platform_;
 public:
     //Read only properties
     Property<Window, ResourceManager> shared_assets = { this, &Window::resource_manager_ };
@@ -377,6 +376,7 @@ public:
     Property<Window, InputManager> input = {this, &Window::input_manager_};
     Property<Window, InputState> input_state = {this, &Window::input_state_};
     Property<Window, Stats> stats = { this, &Window::stats_ };
+    Property<Window, Platform> platform = {this, &Window::platform_};
 
     SoundDriver* _sound_driver() const { return sound_driver_.get(); }
 

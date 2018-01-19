@@ -20,6 +20,7 @@ KOS_INIT_FLAGS(INIT_DEFAULT | INIT_MALLOCSTATS);
 KOSWindow::KOSWindow(uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen, bool vsync_enabled):
     Window(width ? width : SCREEN_WIDTH, height ? height : SCREEN_HEIGHT, bpp ? bpp : SCREEN_DEPTH, true, true) {
 
+    platform_.reset(new DreamcastPlatform);
 }
 
 

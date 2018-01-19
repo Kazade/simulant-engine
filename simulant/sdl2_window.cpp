@@ -29,6 +29,7 @@ namespace smlt {
 SDL2Window::SDL2Window(uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen, bool enable_vsync):
     Window(width, height, bpp, fullscreen, enable_vsync) {
 
+    platform_.reset(new SDLPlatform);
 }
 
 SDL2Window::~SDL2Window() {

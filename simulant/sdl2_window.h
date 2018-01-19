@@ -56,12 +56,8 @@ class SDL2Window :
         void sleep_ms(uint32_t ms) const override;
     };
 
-    SDLPlatform platform_;
-public:
-    const Platform* platform() const {
-        return &platform_;
-    }
 
+public:
     static Window::ptr create(Application* app, int width, int height, int bpp, bool fullscreen, bool enable_vsync) {
         return Window::create<SDL2Window>(app, width, height, bpp, fullscreen, enable_vsync);
     }
