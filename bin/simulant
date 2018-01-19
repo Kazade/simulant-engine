@@ -637,9 +637,13 @@ def run(args):
         data = json.loads(f.read())
         executable = data["executable"]
 
+    env = dict(os.environ)
+    env["LD_LIBRARY_PATH"] = join(_calculate_simulant_dir(args), "lib")
+
     subprocess.run(
         [abspath(join(build_dir, executable))],
-        cwd=build_dir
+        cwd=build_dir,
+        env=env
     )
 
     return 0
