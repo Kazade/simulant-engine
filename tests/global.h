@@ -17,9 +17,9 @@ public:
     void set_up() {
         if(!window) {
 #ifdef _arch_dreamcast
-            window = smlt::KOSWindow::create(nullptr);
+            window = smlt::KOSWindow::create(nullptr, 640, 480, 32, false, true);
 #else
-            window = smlt::SDL2Window::create(nullptr);
+            window = smlt::SDL2Window::create(nullptr, 640, 480, 0, false, true);
 #endif
             window->_init();
             window->set_logging_level(smlt::LOG_LEVEL_NONE);

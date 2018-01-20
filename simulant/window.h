@@ -113,6 +113,8 @@ typedef sig::signal<void (float)> LateUpdateSignal;
 
 typedef sig::signal<void ()> ShutdownSignal;
 
+class Platform;
+
 class Window :
     public Source,
     public StageManager,
@@ -134,9 +136,10 @@ public:
     typedef std::shared_ptr<Window> ptr;
     static const int STEPS_PER_SECOND = 60;
 
+
     template<typename T>
-    static std::shared_ptr<Window> create(Application* app, int width=640, int height=480, int bpp=0, bool fullscreen=false) {
-        std::shared_ptr<Window> window(new T(width, height, bpp, fullscreen));
+    static std::shared_ptr<Window> create(Application* app, int width, int height, int bpp, bool fullscreen, bool enable_vsync) {
+        std::shared_ptr<Window> window(new T(width, height, bpp, fullscreen, enable_vsync));
         window->set_application(app);
         return window;
     }
@@ -161,6 +164,8 @@ public:
 
     uint32_t width() const override { return width_; }
     uint32_t height() const override { return height_; }
+    bool is_fullscreen() const { return fullscreen_; }
+    bool vsync_enabled() const { return vsync_enabled_; }
 
     float aspect_ratio() const;
     
@@ -243,6 +248,10 @@ protected:
 
     RenderSequencePtr render_sequence();
 
+    void set_vsync_enabled(bool vsync) {
+        vsync_enabled_ = vsync;
+    }
+
     void set_width(uint32_t width) { 
         width_ = width; 
     }
@@ -259,10 +268,10 @@ protected:
         fullscreen_ = val;
     }
 
-    virtual bool create_window(int width, int height, int bpp, bool fullscreen) = 0;
+    virtual bool create_window() = 0;
     virtual void destroy_window() = 0;
 
-    Window();
+    Window(int width, int height, int bpp, bool fullscreen, bool enable_vsync);
 
     void set_paused(bool value=true);
     void set_has_context(bool value=true);
@@ -274,7 +283,6 @@ protected:
 
     void set_escape_to_quit(bool value=true) { escape_to_quit_ = value; }
     bool escape_to_quit_enabled() const { return escape_to_quit_; }
-
 public:
     // Panels
     void register_panel(uint8_t function_key, std::shared_ptr<Panel> panel);
@@ -295,6 +303,8 @@ private:
     uint32_t height_ = 0;
     uint32_t bpp_ = 0;
     bool fullscreen_ = false;
+    bool vsync_enabled_ = false;
+
     bool escape_to_quit_ = true;
 
     std::vector<LoaderTypePtr> loaders_;
@@ -344,9 +354,13 @@ private:
     std::shared_ptr<InputState> input_state_;
     std::shared_ptr<InputManager> input_manager_;
 
+    void await_frame_time();
+    uint64_t last_frame_time_us_ = 0;
+    float requested_frame_time_ms_ = 0;
 protected:
     InputState* _input_state() const { return input_state_.get(); }
 
+    std::shared_ptr<Platform> platform_;
 public:
     //Read only properties
     Property<Window, ResourceManager> shared_assets = { this, &Window::resource_manager_ };
@@ -362,11 +376,13 @@ public:
     Property<Window, InputManager> input = {this, &Window::input_manager_};
     Property<Window, InputState> input_state = {this, &Window::input_state_};
     Property<Window, Stats> stats = { this, &Window::stats_ };
+    Property<Window, Platform> platform = {this, &Window::platform_};
 
     SoundDriver* _sound_driver() const { return sound_driver_.get(); }
 
     void run_update();
     void run_fixed_updates();
+    void request_frame_time(float ms);
 };
 
 }

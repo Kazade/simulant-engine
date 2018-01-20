@@ -26,6 +26,7 @@
 #include "sdl2_keycodes.h"
 #include "generic/managed.h"
 #include "window.h"
+#include "platform.h"
 #include "sound_drivers/openal_sound_driver.h"
 
 namespace smlt {
@@ -35,12 +36,33 @@ int event_filter(void* user_data, SDL_Event* event);
 class SDL2Window :
     public Window {
 
+
+    class SDLPlatform : public Platform {
+    public:
+        std::string name() const override {
+#if defined(__LINUX__)
+            return "linux";
+#elif defined(__APPLE__)
+            return "darwin";
+#elif defined(__ANDROID__)
+            return "android";
+#elif defined(WIN32)
+            return "windows";
+#else
+    #error Currently unsupported platform
+#endif
+        }
+
+        void sleep_ms(uint32_t ms) const override;
+    };
+
+
 public:
-    static Window::ptr create(Application* app, int width=640, int height=480, int bpp=0, bool fullscreen=false) {
-        return Window::create<SDL2Window>(app, width, height, bpp, fullscreen);
+    static Window::ptr create(Application* app, int width, int height, int bpp, bool fullscreen, bool enable_vsync) {
+        return Window::create<SDL2Window>(app, width, height, bpp, fullscreen, enable_vsync);
     }
 
-    SDL2Window(uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen);
+    SDL2Window(uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen, bool enable_vsync);
     virtual ~SDL2Window();
 
     void set_title(const std::string& title);
@@ -52,8 +74,8 @@ private:
     SDL_Window* screen_;
     SDL_GLContext context_;
 
-    bool create_window(int width, int height, int bpp, bool fullscreen);
-    void destroy_window();
+    bool create_window() override;
+    void destroy_window() override;
 
     void check_events();
     void swap_buffers();

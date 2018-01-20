@@ -52,6 +52,12 @@ struct AppConfig {
     uint32_t bpp = 0;
     bool fullscreen = true;
 
+    /* This is the frame limit; set to 0 to disable */
+    uint16_t target_frame_rate = 60;
+
+    /* Whether to enable vsync or not */
+    bool enable_vsync = false;
+
     // Additional paths for asset loading
     std::vector<unicode> search_paths;
 
