@@ -27,7 +27,11 @@ void AdjacencyInfo::rebuild() {
     std::unordered_map<edge_pair, uint32_t> edge_triangles;
 
     // FIXME: handle other types
-    assert(mesh_->vertex_data->specification().position_attribute == VERTEX_ATTRIBUTE_3F);
+    if(mesh_->vertex_data->specification().position_attribute != VERTEX_ATTRIBUTE_3F) {
+        L_WARN("Adjacency info currently only supported on 3D vertices");
+        return;
+    }
+
     auto vertices = mesh_->vertex_data.get();
     auto calculate_normal = [&vertices](uint32_t a, uint32_t b, uint32_t c) -> smlt::Vec3 {
         auto va = vertices->position_at<smlt::Vec3>(a);
