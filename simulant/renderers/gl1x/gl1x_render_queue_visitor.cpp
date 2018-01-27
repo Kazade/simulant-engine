@@ -363,10 +363,10 @@ void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
     Mat4 modelview = view * model;
 
     GLCheck(glMatrixMode, GL_MODELVIEW);
-    GLCheck(glLoadMatrixf, (const GLfloat*) &modelview);
+    GLCheck(glLoadMatrixf, modelview.data());
 
     GLCheck(glMatrixMode, GL_PROJECTION);
-    GLCheck(glLoadMatrixf, (const GLfloat*) &projection);
+    GLCheck(glLoadMatrixf, projection.data());
 
     auto spec = renderable->vertex_attribute_specification();
 
