@@ -17,11 +17,6 @@ SubMesh::SubMesh(Mesh* parent, const std::string& name,
     index_data_ = new IndexData(index_type);
     index_data_->signal_update_complete().connect([this]() {
         this->index_buffer_dirty_ = true;
-
-        // Rebuild the adjacency info if that's enabled on the parent mesh
-        if(parent_->maintain_adjacency_info()) {
-            parent_->adjacency_info->rebuild();
-        }
     });
 
     if(!material) {

@@ -63,8 +63,6 @@ void Mesh::reset(VertexSpecification vertex_specification) {
     vertex_data->signal_update_complete().connect([this]() {
         shared_vertex_buffer_dirty_ = true;
     });
-
-    set_maintain_adjacency_info(true);
 }
 
 Mesh::~Mesh() {
@@ -526,17 +524,9 @@ void Mesh::prepare_buffers() {
     }
 }
 
-void Mesh::set_maintain_adjacency_info(bool v) {
-    maintain_adjacency_info_ = v;
-
-    /* If we've just enabled adjacency info then allocate
-         * otherwise delete if we just disabled it */
-    if(v && !adjacency_) {
-        adjacency_.reset(new AdjacencyInfo(this));
-        adjacency_->rebuild();
-    } else if(!v && adjacency_) {
-        adjacency_.reset();
-    }
+void Mesh::generate_adjacency_info() {
+    adjacency_.reset(new AdjacencyInfo(this));
+    adjacency_->rebuild();
 }
 
 
