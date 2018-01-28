@@ -1,5 +1,6 @@
 #pragma once
 
+#include <simulant/simulant.h>
 #include "global.h"
 
 namespace {

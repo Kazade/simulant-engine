@@ -730,6 +730,7 @@ tests/global.cpp
 tests/global.h
 tests/test_controllers.h
 tests/test_frustum.h
+tests/test_geom.h
 tests/test_input_manager.h
 tests/test_input_state.h
 tests/test_manual_manager.h
