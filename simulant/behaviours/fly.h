@@ -42,12 +42,24 @@ public:
     const std::string name() const override { return "Fly by Keyboard"; }
 
 private:
-    void late_update(float dt) override {
-        object_->move_forward_by(input->axis_value("Vertical") * 600.0 * dt);
-        object_->rotate_global_y_by(Degrees(input->axis_value("Horizontal") * 50.0 * dt));
+    void on_behaviour_added(Organism* controllable) override {
+        stage_node_ = dynamic_cast<StageNode*>(controllable);
     }
 
-    Transformable* object_ = nullptr;
+    void on_behaviour_removed(Organism *controllable) override {
+        stage_node_ = nullptr;
+    }
+
+    void late_update(float dt) override {
+        if(!attached()) {
+            return;
+        }
+
+        stage_node_->move_forward_by(input->axis_value("Vertical") * 600.0 * dt);
+        stage_node_->rotate_global_y_by(Degrees(input->axis_value("Horizontal") * -50.0 * dt));
+    }
+
+    StageNode* stage_node_ = nullptr;
 };
 
 }
