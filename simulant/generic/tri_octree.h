@@ -214,7 +214,7 @@ public:
 
     typedef Node node;
 
-    Octree(vector_type aabb_min, vector_type aabb_max, uint8_t max_triangles_per_node, void* user_data=nullptr);
+    Octree(vector_type aabb_min, vector_type aabb_max, uint16_t max_triangles_per_node, void* user_data=nullptr);
     ~Octree() {
         delete root_;
     }
