@@ -31,7 +31,7 @@ public:
             Degrees(45.0),
             float(window->width()) / float(window->height()),
             1.0,
-            1000.0
+            10000.0
         );
 
         stage_->set_ambient_light(smlt::Colour(0.8, 0.8, 0.8, 1.0));
