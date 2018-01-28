@@ -109,6 +109,8 @@ unicode locate_texture(ResourceLocator& locator, const unicode& filename) {
         }
     }
 
+    L_ERROR(_F("Unable to find texture: {0}").format(filename));
+
     return Texture::BuiltIns::CHECKERBOARD;
 }
 
