@@ -11,6 +11,8 @@ AdjacencyInfo::AdjacencyInfo(Mesh* mesh):
 }
 
 void AdjacencyInfo::rebuild() {
+    L_DEBUG("Generating adjacency info");
+
     auto to_tuple = [](const Vec3& v) {
         return std::make_tuple(v.x, v.y, v.z);
     };
@@ -42,6 +44,8 @@ void AdjacencyInfo::rebuild() {
         return v1.cross(v2).normalized();
     };
 
+    auto size = mesh_->vertex_data->count();
+
     mesh_->each([&](const std::string&, SubMeshPtr submesh) {
         if(!submesh->contributes_to_edge_list()) {
             // Ignore submeshes which don't contribute to the edge list
@@ -50,9 +54,9 @@ void AdjacencyInfo::rebuild() {
 
         submesh->each_triangle([&](uint32_t a, uint32_t b, uint32_t c) {
             // FIXME: What if it's a vec2?
-            assert(a < mesh_->vertex_data->count());
-            assert(b < mesh_->vertex_data->count());
-            assert(c < mesh_->vertex_data->count());
+            assert(a < size);
+            assert(b < size);
+            assert(c < size);
 
             auto v1 = to_tuple(vertices->position_at<smlt::Vec3>(a));
             auto v2 = to_tuple(vertices->position_at<smlt::Vec3>(b));
