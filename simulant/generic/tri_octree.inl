@@ -11,7 +11,7 @@ Octree<Triangle>::Octree(vector_type aabb_min, vector_type aabb_max, uint16_t ma
 
 template<typename Triangle>
 typename Octree<Triangle>::node* Octree<Triangle>::insert_triangle(const Triangle& triangle) {
-    const std::string OVERFLOW_MESSAGE = "Ran out of room in tree, consider increasing max_triangles_per_node";
+    const std::string OVERFLOW_MESSAGE = "Hit octree node limit, consider increasing max_triangles_per_node";
 
     node* target = root_;
 
@@ -27,14 +27,16 @@ typename Octree<Triangle>::node* Octree<Triangle>::insert_triangle(const Triangl
 
     if(target->count + 1 == max_triangles_per_node_) {
         if(target->has_children()) {
-            // We couldn't fit the child any lower, but we hit the max_triangles_per_node, game over.
-            throw std::overflow_error(OVERFLOW_MESSAGE);
+            // We couldn't fit the child any lower, we have to add to this node
+            // but log a warning
+            L_WARN(OVERFLOW_MESSAGE);
         } else {
             target->split(); // Create child nodes
             node* child = target->find_child_node_for(triangle); // Find the new child
             if(!child) {
                 // Child won't physically fit :(
-                throw std::overflow_error(OVERFLOW_MESSAGE);
+                // target will be *this* node
+                L_WARN(OVERFLOW_MESSAGE);
             } else {
                 target = child;
             }
