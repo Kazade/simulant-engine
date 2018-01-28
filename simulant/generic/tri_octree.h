@@ -228,7 +228,7 @@ private:
     friend class Node;
 
     node* root_ = nullptr;
-    uint8_t max_triangles_per_node_ = 100;
+    uint16_t max_triangles_per_node_ = 1000;
     void* user_data_ = nullptr;
 };
 

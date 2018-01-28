@@ -2,7 +2,7 @@
 #include "../types.h"
 
 template<typename Triangle>
-Octree<Triangle>::Octree(vector_type aabb_min, vector_type aabb_max, uint8_t max_triangles_per_node, void* user_data):
+Octree<Triangle>::Octree(vector_type aabb_min, vector_type aabb_max, uint16_t max_triangles_per_node, void* user_data):
     root_(new node(this, aabb_min, aabb_max)),
     max_triangles_per_node_(max_triangles_per_node),
     user_data_(user_data) {
