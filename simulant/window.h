@@ -40,7 +40,7 @@
 #include "loader.h"
 #include "event_listener.h"
 #include "time_keeper.h"
-
+#include "stats_recorder.h"
 
 namespace smlt {
 
@@ -69,39 +69,6 @@ class Panel;
 typedef std::shared_ptr<Loader> LoaderPtr;
 typedef std::shared_ptr<LoaderType> LoaderTypePtr;
 
-class Stats {
-public:
-    uint32_t geometry_visible() const {
-        return geometry_visible_;
-    }
-
-    void set_geometry_visible(uint32_t value) {
-        geometry_visible_ = value;
-    }
-
-    uint32_t subactors_rendered() const { return subactors_renderered_; }
-    void set_subactors_rendered(uint32_t value) {
-        subactors_renderered_ = value;
-    }
-
-    uint32_t frames_per_second() const { return frames_per_second_; }
-    void set_frames_per_second(uint32_t value) {
-        frames_per_second_ = value;
-    }
-
-    uint64_t fixed_steps_run() const { return fixed_steps_run_; }
-    uint64_t frames_run() const { return frames_run_; }
-
-    void increment_fixed_steps() { fixed_steps_run_++; }
-    void increment_frames() { frames_run_++; }
-private:
-    uint32_t subactors_renderered_ = 0;
-    uint32_t frames_per_second_ = 0;
-    uint32_t geometry_visible_ = 0;
-
-    uint64_t fixed_steps_run_ = 0;
-    uint64_t frames_run_ = 0;
-};
 
 typedef sig::signal<void ()> FrameStartedSignal;
 typedef sig::signal<void ()> FrameFinishedSignal;
@@ -345,7 +312,7 @@ private:
     std::unique_ptr<BackgroundManager> background_manager_;
     std::shared_ptr<TimeKeeper> time_keeper_;
 
-    Stats stats_;
+    StatsRecorder stats_;
 
     std::shared_ptr<SoundDriver> sound_driver_;
 
@@ -375,7 +342,7 @@ public:
 
     Property<Window, InputManager> input = {this, &Window::input_manager_};
     Property<Window, InputState> input_state = {this, &Window::input_state_};
-    Property<Window, Stats> stats = { this, &Window::stats_ };
+    Property<Window, StatsRecorder> stats = { this, &Window::stats_ };
     Property<Window, Platform> platform = {this, &Window::platform_};
 
     SoundDriver* _sound_driver() const { return sound_driver_.get(); }

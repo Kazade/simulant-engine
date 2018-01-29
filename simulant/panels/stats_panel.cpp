@@ -61,6 +61,10 @@ void StatsPanel::initialize() {
     actors_rendered_->move_to(320, vheight);
     vheight -= diff;
 
+    polygons_rendered_ = overlay->ui->new_widget_as_label("Polygons Rendered: 0");
+    polygons_rendered_->move_to(320, vheight);
+    vheight -= diff;
+
     window_->signal_frame_started().connect(std::bind(&StatsPanel::update, this));
 
     initialized_ = true;
@@ -98,6 +102,7 @@ void StatsPanel::update() {
         fps_->set_text(_u("FPS: {0}").format(window_->stats->frames_per_second()));
         ram_usage_->set_text(_u("RAM: {0} MB").format(mem_usage));
         actors_rendered_->set_text(_u("Renderables Visible: {0}").format(actors_rendered));
+        polygons_rendered_->set_text(_u("Polygons Rendered: {0}").format(window_->stats->polygons_rendered()));
 
         last_update = 0.0f;
         first_update = false;

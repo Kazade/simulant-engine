@@ -315,7 +315,7 @@ void GL1RenderQueueVisitor::disable_texcoord_array(uint8_t which, bool force) {
     textures_enabled_[which] = false;
 }
 
-GLenum convert_arrangement(MeshArrangement arrangement) {
+static GLenum convert_arrangement(MeshArrangement arrangement) {
     switch(arrangement) {
     case MESH_ARRANGEMENT_LINES:
         return GL_LINES;
@@ -430,6 +430,8 @@ void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
         convert_index_type(renderable->index_type()),
         (const void*) index_data
     );
+
+    renderer_->window->stats->increment_polygons_rendered(renderable->arrangement(), element_count);
 }
 
 }

@@ -666,6 +666,8 @@ simulant/sound_drivers/openal_sound_driver.cpp
 simulant/sound_drivers/openal_sound_driver.h
 simulant/stage.cpp
 simulant/stage.h
+simulant/stats_recorder.cpp
+simulant/stats_recorder.h
 simulant/std/optional.hpp
 simulant/testing/mock_window.h
 simulant/texture.cpp

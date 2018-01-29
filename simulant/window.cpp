@@ -369,6 +369,8 @@ bool Window::run_frame() {
     {
         std::lock_guard<std::mutex> rendering_lock(context_lock_);
         if(has_context()) {
+
+            stats->reset_polygons_rendered();
             render_sequence()->run();
 
             signal_pre_swap_();
