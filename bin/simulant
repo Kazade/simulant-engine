@@ -641,11 +641,18 @@ def run(args):
     env = dict(os.environ)
     env["LD_LIBRARY_PATH"] = join(_calculate_simulant_dir(args), "lib")
 
-    subprocess.run(
-        [abspath(join(build_dir, executable))],
-        cwd=build_dir,
-        env=env
-    )
+    if args.platform == "dreamcast":
+        subprocess.run(
+            ["lxdream", "-b", executable + ".cdi"],
+            cwd=build_dir,
+            env=env
+        )
+    else:
+        subprocess.run(
+            [abspath(join(build_dir, executable))],
+            cwd=build_dir,
+            env=env
+        )
 
     return 0
 
