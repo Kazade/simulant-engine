@@ -600,6 +600,7 @@ simulant/random.h
 simulant/random.h
 simulant/render_sequence.cpp
 simulant/render_sequence.h
+simulant/renderers/batching/render_list.h
 simulant/renderers/batching/render_queue.cpp
 simulant/renderers/batching/render_queue.h
 simulant/renderers/batching/renderable.h
