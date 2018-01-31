@@ -1,22 +1,21 @@
 #!/usr/bin/env python3
 
-import os
-from os.path import dirname, join, split, exists, splitext, abspath
-import itertools
 import argparse
 import getpass
+import itertools
+import json
+import os
+import platform
 import pwd
 import shutil
-import sys
 import subprocess
-from subprocess import Popen
-import platform
-import json
+import sys
 import tempfile
 from io import BytesIO
-from zipfile import ZipFile
-
+from os.path import abspath, dirname, exists, join, split, splitext
+from subprocess import Popen
 from urllib.request import urlopen
+from zipfile import ZipFile
 
 PLACEHOLDER = "__project_name__"
 
@@ -493,7 +492,7 @@ Game Title    : {name}
     )
 
     # Don't need the text file any more
-    #os.remove(text)
+    os.remove(text)
 
     _scramble_binary(
         join("/simulant-project", binary),
@@ -507,6 +506,7 @@ Game Title    : {name}
     _run_docker_command("/opt/toolchains/dc/kos/utils/img4dc/build/cdi4dc/cdi4dc {name}.iso {name}.cdi".format(
         name=data["executable"]
     ))
+
 
 def package(args):
     if not _check_project():
@@ -540,7 +540,7 @@ def package(args):
 
         output = BuildOutput()
 
-        build(Args(), output) # Trigger a release build
+        build(Args(), output)  # Trigger a release build
         _generate_flatpak(args, output.build_dir)
     else:
         print("Packaging for {} is not currently supported".format(plat))
@@ -624,12 +624,13 @@ def update(args):
 
     print("\nDone!\n")
 
+
 def run(args):
     if not _check_project():
         return 1
 
     if args.rebuild:
-        build(args) # Trigger a build
+        build(args)  # Trigger a build
 
     build_dir = _calculate_build_dir(args)
 
