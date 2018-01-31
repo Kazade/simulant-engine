@@ -29,6 +29,7 @@ void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, u
     enable_colour_arrays(true);
 
     global_ambient_ = stage->ambient_light();
+    GLCheck(glLightModelfv, GL_LIGHT_MODEL_AMBIENT, &global_ambient_.r);
 }
 
 void GL1RenderQueueVisitor::visit(Renderable* renderable, MaterialPass* pass, batcher::Iteration iteration) {
@@ -218,8 +219,6 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
     if(!prev || prev->blending() != next->blending()) {
         set_blending_mode(next->blending());
     }
-
-    GLCheck(glLightModelfv, GL_LIGHT_MODEL_AMBIENT, &global_ambient_.r);
 }
 
 void GL1RenderQueueVisitor::change_light(const Light* prev, const Light* next) {

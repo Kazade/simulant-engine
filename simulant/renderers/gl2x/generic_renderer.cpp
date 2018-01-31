@@ -523,7 +523,7 @@ void GenericRenderer::set_renderable_uniforms(const MaterialPass* pass, GPUProgr
 }
 
 void GL2RenderQueueVisitor::rebind_attribute_locations_if_necessary(const MaterialPass* pass, GPUProgram* program) {
-    const std::set<ShaderAvailableAttributes> SHADER_AVAILABLE_ATTRS = {
+    static const std::set<ShaderAvailableAttributes> SHADER_AVAILABLE_ATTRS = {
         SP_ATTR_VERTEX_POSITION,
         SP_ATTR_VERTEX_DIFFUSE,
         SP_ATTR_VERTEX_NORMAL,
