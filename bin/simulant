@@ -617,10 +617,23 @@ def update(args):
                 join(target_dir, "include")
             )
 
-            shutil.copytree(
+            args = [
                 join(tempdir, splitext(download)[0], "lib", build_type),
                 join(target_dir, "lib")
-            )
+            ]
+            
+            if exists(args[1]):
+                shutil.rmtree(args[1])
+
+            shutil.copytree(*args)
+            
+    print("Downloading assets...")
+
+    url = "{}/{}".format(DOWNLOAD_ROOT, "simulant-assets.zip")
+    url = urlopen(url)
+
+    with ZipFile(BytesIO(url.read())) as zipfile:
+        zipfile.extractall(path="assets/simulant")
 
     print("\nDone!\n")
 
