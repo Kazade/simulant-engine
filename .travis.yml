@@ -12,13 +12,13 @@ matrix:
   # Allow Windows builds to fail for now
   - os: linux
     dist: trusty
-    compiler: clang
+    compiler: gcc
     env: CROSS_BUILD=windows BUILD_TYPE=release
     sudo: required
 
   - os: linux
     dist: trusty
-    compiler: clang
+    compiler: gcc
     env: CROSS_BUILD=windows BUILD_TYPE=debug
     sudo: required
 
@@ -36,37 +36,39 @@ matrix:
   # Linux builds
   - os: linux
     dist: trusty
-    compiler: clang
+    compiler: gcc
     env: CROSS_BUILD=0 BUILD_TYPE=debug
     sudo: required
   - os: linux
     dist: trusty
-    compiler: clang
+    compiler: gcc
     env: CROSS_BUILD=0 BUILD_TYPE=release
     sudo: required
 
   # Dreamcast build
   - os: linux
     dist: trusty
-    compiler: clang
+    compiler: gcc
     env: CROSS_BUILD=dreamcast BUILD_TYPE=release
     sudo: required
 
   # Windows build
   - os: linux
     dist: trusty
-    compiler: clang
+    compiler: gcc
     env: CROSS_BUILD=windows BUILD_TYPE=release
     sudo: required
 
   - os: linux
     dist: trusty
-    compiler: clang
+    compiler: gcc
     env: CROSS_BUILD=windows BUILD_TYPE=debug
     sudo: required
 
 addons:
  apt:
+  sources:
+   - ubuntu-toolchain-r-test
   packages:
    - libsdl2-dev
    - libopenal-dev
@@ -95,8 +97,10 @@ addons:
    - dbus-x11
    - mingw-w64
    - gcc-mingw-w64-x86-64
+   - g++-7
 
 before_install:
+ - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export CC=gcc-7 && export CXX=g++-7; fi
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install --install-recommends linux-generic-lts-xenial xserver-xorg-core-lts-xenial xserver-xorg-lts-xenial xserver-xorg-video-all-lts-xenial xserver-xorg-input-all-lts-xenial libwayland-egl1-mesa-lts-xenial; fi
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules; fi
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then sed -i '' 's/git@github.com:/https:\/\/github.com\//' .gitmodules; fi
@@ -127,7 +131,12 @@ install:
  # Otherwise, use docker for the dreamcast
  - if [[ "$CROSS_BUILD" == "dreamcast" ]]; then docker run -it -d --name dreamcast kazade/dreamcast-sdk bash; fi
  - if [[ "$CROSS_BUILD" == "dreamcast" ]]; then docker ps -a; fi
- - if [[ "$CROSS_BUILD" == "dreamcast" ]]; then docker exec -it dreamcast /bin/sh -c "source /etc/bash.bashrc; git clone --recursive --branch=${TRAVIS_BRANCH} https://github.com/${TRAVIS_REPO_SLUG}.git /simulant; mkdir -p /simulant/dbuild; cd /simulant/dbuild; cmake -DCMAKE_TOOLCHAIN_FILE=/simulant/toolchains/Dreamcast.cmake $SIMULANT_OPTIONS .. && make"; fi
+
+ # If this is a pull request, pass the PR branch
+ - if [[ "$CROSS_BUILD" == "dreamcast" ]] && [[ -n $TRAVIS_PULL_REQUEST_BRANCH ]]; then docker exec -it dreamcast /bin/sh -c "source /etc/bash.bashrc; git clone --recursive --branch=${TRAVIS_PULL_REQUEST_BRANCH} https://github.com/${TRAVIS_REPO_SLUG}.git /simulant; mkdir -p /simulant/dbuild; cd /simulant/dbuild; cmake -DCMAKE_TOOLCHAIN_FILE=/simulant/toolchains/Dreamcast.cmake $SIMULANT_OPTIONS .. && make"; fi
+
+ # Pass the branch otherwise
+ - if [[ "$CROSS_BUILD" == "dreamcast" ]] && [[ ! -n $TRAVIS_PULL_REQUEST_BRANCH ]]; then docker exec -it dreamcast /bin/sh -c "source /etc/bash.bashrc; git clone --recursive --branch=${TRAVIS_BRANCH} https://github.com/${TRAVIS_REPO_SLUG}.git /simulant; mkdir -p /simulant/dbuild; cd /simulant/dbuild; cmake -DCMAKE_TOOLCHAIN_FILE=/simulant/toolchains/Dreamcast.cmake $SIMULANT_OPTIONS .. && make"; fi
 
 before_script:
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export DISPLAY=:99; fi
@@ -165,5 +174,7 @@ deploy:
   skip_cleanup: true
   access_key_id: $GCS_ACCESS_KEY
   secret_access_key: $GCS_SECRET
-  branch: master
+  on:
+    branch: master
+    condition: $CROSS_BUILD = "0"
 

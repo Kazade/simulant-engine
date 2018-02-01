@@ -25,7 +25,7 @@
 
 #include "utils/gl_error.h"
 #include "window.h"
-
+#include "platform.h"
 #include "input/input_state.h"
 
 #include "loaders/texture_loader.h"
@@ -59,7 +59,7 @@
 
 namespace smlt {
 
-Window::Window():
+Window::Window(int width, int height, int bpp, bool fullscreen, bool enable_vsync):
     Source(this),
     StageManager(this),
     BackgroundManager(this),
@@ -74,6 +74,12 @@ Window::Window():
     frame_counter_frames_(0),
     frame_time_in_milliseconds_(0),
     time_keeper_(TimeKeeper::create(1.0 / Window::STEPS_PER_SECOND)) {
+
+    set_width(width);
+    set_height(height);
+    set_bpp(bpp);
+    set_fullscreen(fullscreen);
+    set_vsync_enabled(enable_vsync);
 
 }
 
@@ -193,7 +199,7 @@ bool Window::_init() {
     sound_driver_ = create_sound_driver();
     sound_driver_->startup();
 
-    bool result = create_window(width_, height_, bpp_, fullscreen_);
+    bool result = create_window();
 
     // Initialize the render_sequence once we have a renderer
     render_sequence_ = std::make_shared<RenderSequence>(this);
@@ -315,8 +321,25 @@ void Window::run_fixed_updates() {
     }
 }
 
+void Window::request_frame_time(float ms) {
+    requested_frame_time_ms_ = ms;
+}
+
+void Window::await_frame_time() {
+    auto this_time = time_keeper_->now_in_us();
+    while((float(this_time - last_frame_time_us_) * 0.001f) < requested_frame_time_ms_) {
+
+        platform->sleep_ms(0);
+
+        this_time = time_keeper_->now_in_us();
+    }
+    last_frame_time_us_ = this_time;
+}
+
 bool Window::run_frame() {
     static bool first_frame = true;
+
+    await_frame_time(); /* Frame limiter */
 
     signal_frame_started_();
 

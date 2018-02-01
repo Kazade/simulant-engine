@@ -35,26 +35,30 @@ set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2 -s -fomit-frame-pointer"
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -s -fomit-frame-pointer")
 
 IF(NOT DREAMCAST_BUILD)
-IF(ANDROID)
-    LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/libs/${ANDROID_ABI})
+    IF(ANDROID)
+        LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/libs/${ANDROID_ABI})
 
-    SET(SDL2_LIBRARY SDL2)
-    SET(SDL2_INCLUDE_DIR ${CMAKE_BINARY_DIR}/sdl/include)
+        SET(SDL2_LIBRARY SDL2)
+        SET(SDL2_INCLUDE_DIR ${CMAKE_BINARY_DIR}/sdl/include)
 
-    SET(OPENAL_LIBRARY openal)
-    SET(OPENAL_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/openal/OpenAL/include)
+        SET(OPENAL_LIBRARY openal)
+        SET(OPENAL_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/openal/OpenAL/include)
 
-    FIND_LIBRARY(OPENGL_LIBRARIES NAMES GLESv2)
-    FIND_PATH(OPENGL_INCLUDE_DIRS NAMES gl2.h PATH_SUFFIXES GLES2)
-ELSE()
-    FIND_PACKAGE(SDL2 REQUIRED)
-    FIND_PACKAGE(OpenAL REQUIRED)
-    FIND_PACKAGE(OpenGL REQUIRED)
-ENDIF()
+        FIND_LIBRARY(OPENGL_LIBRARIES NAMES GLESv2)
+        FIND_PATH(OPENGL_INCLUDE_DIRS NAMES gl2.h PATH_SUFFIXES GLES2)
+    ELSE()
+        FIND_PACKAGE(SDL2 REQUIRED)
+        FIND_PACKAGE(OpenAL REQUIRED)
+        FIND_PACKAGE(OpenGL REQUIRED)
+    ENDIF()
 
     FIND_PACKAGE(ZLIB REQUIRED)
 
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+
+    # Force the new C++ ABI on GCC
+    MESSAGE("-- Enabling old C++11 ABI (until TravisCI is upgraded past Trusty)")
+    ADD_DEFINITIONS(-D_GLIBCXX_USE_CXX11_ABI=0)
 ELSE()
     MESSAGE("-- Cross-Compiling for the Sega Dreamcast. Forcing Release build.")
     SET(CMAKE_BUILD_TYPE Release)
@@ -72,8 +76,8 @@ ELSE()
     SET(OPENGL_LIBRARIES GL)
 ENDIF()
 
-FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/simulant/materials DESTINATION ${CMAKE_BINARY_DIR}/simulant)
-FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/simulant/fonts DESTINATION ${CMAKE_BINARY_DIR}/simulant)
+FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets/materials DESTINATION ${CMAKE_BINARY_DIR}/simulant)
+FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts DESTINATION ${CMAKE_BINARY_DIR}/simulant)
 
 INCLUDE_DIRECTORIES(
     ${SDL2_INCLUDE_DIR}
@@ -135,9 +139,9 @@ IF(SIMULANT_BUILD_SAMPLES)
             COMMAND $ENV{KOS_BASE}/utils/scramble/scramble ${CMAKE_BINARY_DIR}/${EXE}.bin ${CMAKE_BINARY_DIR}/${EXE}/1ST_READ.BIN
             COMMAND IP_TEMPLATE_FILE=${CMAKE_SOURCE_DIR}/platforms/dreamcast/IP.TMPL $ENV{KOS_BASE}/utils/makeip/makeip ${CMAKE_SOURCE_DIR}/platforms/dreamcast/ip.txt ${CMAKE_BINARY_DIR}/${EXE}/IP.BIN
             COMMAND mkdir -p ${CMAKE_BINARY_DIR}/${EXE}/simulant
-            COMMAND cp -r ${CMAKE_SOURCE_DIR}/simulant/fonts ${CMAKE_BINARY_DIR}/${EXE}/simulant
-            COMMAND cp -r ${CMAKE_SOURCE_DIR}/simulant/materials ${CMAKE_BINARY_DIR}/${EXE}/simulant
-            COMMAND cp -r ${CMAKE_SOURCE_DIR}/simulant/particles ${CMAKE_BINARY_DIR}/${EXE}/simulant
+            COMMAND cp -r ${CMAKE_SOURCE_DIR}/assets/fonts ${CMAKE_BINARY_DIR}/${EXE}/simulant
+            COMMAND cp -r ${CMAKE_SOURCE_DIR}/assets/materials ${CMAKE_BINARY_DIR}/${EXE}/simulant
+            COMMAND cp -r ${CMAKE_SOURCE_DIR}/assets/particles ${CMAKE_BINARY_DIR}/${EXE}/simulant
             COMMAND cp -r ${CMAKE_SOURCE_DIR}/samples/data ${CMAKE_BINARY_DIR}/${EXE}/sample_data
             COMMAND mkisofs -C 0,11702 -V ${EXE_FILENAME} -G ${CMAKE_BINARY_DIR}/${EXE}/IP.BIN -joliet -rock -l -o ${EXE}.iso ${CMAKE_BINARY_DIR}/${EXE}
             COMMAND $ENV{KOS_BASE}/utils/img4dc/build/cdi4dc/cdi4dc ${CMAKE_BINARY_DIR}/${EXE}.iso ${CMAKE_BINARY_DIR}/${EXE}.cdi

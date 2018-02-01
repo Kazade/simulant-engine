@@ -6,6 +6,7 @@
  - Tutorial: [1. Basic Application](tutorial_1.md) | [2. Rendering Pipelines](tutorial_2.md) | [3. Actors and Meshes](tutorial_3.md) | [4. Keyboard Input](tutorial_4.md)
  - Platforms: [Platform Notes](platform_notes.md)
  - Licensing: [FAQ](license.md)
+ - Contributing: [Compile on Fedora](develop_fedora.md)
 
 ## Architecture
 

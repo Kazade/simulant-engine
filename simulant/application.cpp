@@ -32,6 +32,8 @@ namespace smlt { typedef SDL2Window SysWindow; }
 #include "scenes/loading.h"
 #include "input/input_state.h"
 
+#define SIMULANT_PROFILE_KEY "SIMULANT_PROFILE"
+
 namespace smlt {
 
 Application::Application(const AppConfig &config):
@@ -41,12 +43,33 @@ Application::Application(const AppConfig &config):
 }
 
 void Application::construct_window(const AppConfig& config) {
+    /* Copy to remove const */
+    AppConfig config_copy = config;
+
+    /* If we're profiling, disable the frame time and vsync */
+    if(std::getenv(SIMULANT_PROFILE_KEY)) {
+        config_copy.target_frame_rate = std::numeric_limits<uint16_t>::max();
+        config_copy.enable_vsync = false;
+    }
+
     kazlog::get_logger("/")->add_handler(kazlog::Handler::ptr(new kazlog::StdIOHandler));
     kazlog::get_logger("/")->set_level((kazlog::LOG_LEVEL) config.log_level);
 
     L_DEBUG("Constructing the window");
 
-    window_ = SysWindow::create(this, config.width, config.height, config.bpp, config.fullscreen);
+    window_ = SysWindow::create(
+        this,
+        config_copy.width,
+        config_copy.height,
+        config_copy.bpp,
+        config_copy.fullscreen,
+        config_copy.enable_vsync
+    );
+
+    if(config_copy.target_frame_rate) {
+        float frame_time = (1.0f / float(config_copy.target_frame_rate)) * 1000.0f;
+        window_->request_frame_time(frame_time);
+    }
 
     for(auto& search_path: config.search_paths) {
         window_->resource_locator->add_search_path(search_path);

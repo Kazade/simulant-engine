@@ -16,7 +16,7 @@ easy to use game engine. Until then, here are some of the things that need doing
  - Unit tests... lots of unit tests
  - Special effects (fog, projective textures etc.)
  - Animated, dynamic sky spheres/weather systems
- - Culling improvments, testing of the dynamic octree partitioner
+ - Culling improvements
  - Funky anti-aliasing
  - Steam controller compatibility 
  - General game controller improvements using SDL 2 features
