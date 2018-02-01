@@ -57,6 +57,8 @@ struct AppConfig {
 
     // Program arguments
     std::vector<unicode> arguments;
+
+    smlt::LoggingLevel log_level = smlt::LOG_LEVEL_WARN;
 };
 
 class Application {

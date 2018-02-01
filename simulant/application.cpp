@@ -41,8 +41,9 @@ Application::Application(const AppConfig &config):
 }
 
 void Application::construct_window(const AppConfig& config) {
-
     kazlog::get_logger("/")->add_handler(kazlog::Handler::ptr(new kazlog::StdIOHandler));
+    kazlog::get_logger("/")->set_level((kazlog::LOG_LEVEL) config.log_level);
+
     L_DEBUG("Constructing the window");
 
     window_ = SysWindow::create(this, config.width, config.height, config.bpp, config.fullscreen);
