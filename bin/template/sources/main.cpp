@@ -12,9 +12,6 @@ public:
         Application(config) {}
 
     bool init() {
-        window->set_logging_level(smlt::LOG_LEVEL_INFO);
-        window->resource_locator->add_search_path("./assets");
-
         // Register screens here
         scenes->register_scene<GameScene>("main");
 
@@ -41,6 +38,14 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
 {
     AppConfig config;
     config.title = "__project_name__";
+    config.search_paths.push_back("assets");
+
+    // Dreamcast only
+    config.search_paths.push_back("/cd/assets");
+
+#ifndef NDEBUG
+    config.log_level = smlt::LOG_LEVEL_DEBUG;
+#endif
 
     __project_name_pascal__ app(config);
     return app.run();
