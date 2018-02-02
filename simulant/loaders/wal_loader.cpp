@@ -96,17 +96,22 @@ TextureLoadResult WALLoader::do_load(const std::vector<uint8_t> &buffer) {
     uint8_t* data = (uint8_t*) &buffer[0];
     data += header->offset[0];
 
+    result.data.resize(result.width * result.height * 4);
+
+    uint8_t* out = &result.data[0];
+
+    uint32_t j = 0;
     for(uint32_t i = 0; i < result.width * result.height; ++i) {
         auto idx = data[i] * 3;
-        result.data.push_back(PALETTE[idx]);
-        result.data.push_back(PALETTE[idx+1]);
-        result.data.push_back(PALETTE[idx+2]);
+        out[j++] = PALETTE[idx];
+        out[j++] = PALETTE[idx+1];
+        out[j++] = PALETTE[idx+2];
 
         // The last colour in the PALETTE is transparent
         if(idx == 255) {
-            result.data.push_back(0);
+            out[j++] = 0;
         } else {
-            result.data.push_back(255);
+            out[j++] = 255;
         }
     }
 

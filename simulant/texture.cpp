@@ -97,20 +97,24 @@ void Texture::flip_vertically() {
     /**
      *  Flips the texture data vertically
      */
+    auto w = (uint32_t) width();
+    auto h = (uint32_t) height();
+    auto c = (uint32_t) channels();
 
-    for(uint32_t j = 0; j * 2 < (uint32_t) height(); ++j)
-    {
-        int index1 = j * width() * channels();
-        int index2 = (height() - 1 - j) * width() * channels();
-        for(uint32_t i = width() * channels(); i > 0; --i )
-        {
-            uint8_t temp = data_[index1];
-            data_[index1] = data_[index2];
-            data_[index2] = temp;
-            ++index1;
-            ++index2;
-        }
+    auto row_size = w * c;
+
+    std::vector<uint8_t> new_data(data_.size());
+
+    auto* in = &data_[0];
+    auto* out = &new_data[row_size * (h - 1)];
+
+    for(uint32_t j = 0; j < h; ++j) {
+        std::memcpy(out, in, row_size);
+        in += row_size;
+        out -= row_size;
     }
+
+    data_ = std::move(new_data);
 }
 
 void Texture::free() {
