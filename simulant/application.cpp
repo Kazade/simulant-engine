@@ -39,7 +39,6 @@ namespace smlt {
 Application::Application(const AppConfig &config):
     config_(config) {
 
-    kazlog::get_logger("/")->add_handler(kazlog::Handler::ptr(new kazlog::StdIOHandler));
     construct_window(config);
 }
 
@@ -52,6 +51,9 @@ void Application::construct_window(const AppConfig& config) {
         config_copy.target_frame_rate = std::numeric_limits<uint16_t>::max();
         config_copy.enable_vsync = false;
     }
+
+    kazlog::get_logger("/")->add_handler(kazlog::Handler::ptr(new kazlog::StdIOHandler));
+    kazlog::get_logger("/")->set_level((kazlog::LOG_LEVEL) config.log_level);
 
     L_DEBUG("Constructing the window");
 
