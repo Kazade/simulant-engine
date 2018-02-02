@@ -16,3 +16,6 @@
 [submodule "assets"]
 	path = assets
 	url = https://github.com/Kazade/simulant-assets.git
+[submodule "bin"]
+	path = bin
+	url = https://github.com/Kazade/simulant-tools.git
