@@ -254,12 +254,21 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
         for(auto& p: batches) {
             const RenderGroup* current_group = &p.first;
 
-            visitor->change_render_group(last_group, current_group);
+            // Track whether we've called change_render_group yet
+            bool render_group_changed_ = false;
 
             p.second->each([&](uint32_t i, Renderable* renderable) {
                 if(!renderable->is_visible_in_frame(frame_id)) {
                     return;
                 }
+
+                /* We do this here so that we don't change render group unless something in the
+                 * new group is visible */
+                if(!render_group_changed_) {
+                    visitor->change_render_group(last_group, current_group);
+                    render_group_changed_ = true;
+                }
+
 
                 /* As the pass number is constant for the entire batch, a material_pass
                  * will only change if and when a material changes

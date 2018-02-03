@@ -264,6 +264,11 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
             continue;
         }
 
+        if(!renderable->index_element_count()) {
+            // Don't render things with no indices
+            continue;
+        }
+
         renderable->update_last_visible_frame_id(frame_id);
 
         auto renderable_lights = filter(lights_visible, [=](const LightPtr& light) -> bool {
@@ -275,8 +280,6 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
             } else {
                 return renderable->transformed_aabb().intersects_sphere(light->absolute_position(), light->range() * 2);
             }
-
-
         });
 
         std::partial_sort(
