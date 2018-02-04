@@ -72,12 +72,6 @@ public:
         // Should've detected another shared edges
         assert_equal(2, shared);
     }
-
-    void test_rebuild_on_index_data_change() {
-        auto mesh = window->shared_assets->new_mesh_as_rectangle(1.0f, 1.0f).fetch();
-        assert_is_not_null(mesh->adjacency_info.get());
-        assert_equal(5u, mesh->adjacency_info->edge_count());
-    }
 };
 
 }
