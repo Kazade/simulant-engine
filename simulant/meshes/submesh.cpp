@@ -161,7 +161,7 @@ void SubMesh::_recalc_bounds() {
     for(uint16_t idx: index_data->all()) {
         if(idx >= vertex_count) continue; // Don't read outside the bounds
 
-        Vec3 pos = vertex_data->position_at<Vec3>(idx);
+        Vec4 pos = vertex_data->position_nd_at(idx);
         if(pos.x < bounds_.min().x) bounds_.set_min_x(pos.x);
         if(pos.y < bounds_.min().y) bounds_.set_min_y(pos.y);
         if(pos.z < bounds_.min().z) bounds_.set_min_z(pos.z);

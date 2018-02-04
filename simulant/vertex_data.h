@@ -75,6 +75,14 @@ public:
     template<typename T>
     T position_at(uint32_t idx) const;
 
+    /*
+     * Position Non-Dimensional
+     * Returns the position as a Vec4 with the remaining components
+     * set to default (e.g. if your vertices are 2D, this will return
+     * Vec4(x, y, def, def)
+     */
+    Vec4 position_nd_at(uint32_t idx, float def=0.0f) const;
+
     void normal(float x, float y, float z);
     void normal(const Vec3& n);
 
