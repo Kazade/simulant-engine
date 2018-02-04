@@ -157,6 +157,19 @@ Vec4 VertexData::position_at<Vec4>(uint32_t idx) const {
     return out;
 }
 
+Vec4 VertexData::position_nd_at(uint32_t idx, float def) const {
+    const auto& attr = vertex_specification_.position_attribute;
+    if(attr == VERTEX_ATTRIBUTE_2F) {
+        auto v = position_at<Vec2>(idx);
+        return Vec4(v.x, v.y, def, def);
+    } else if(attr == VERTEX_ATTRIBUTE_3F) {
+        auto v = position_at<Vec3>(idx);
+        return Vec4(v.x, v.y, v.z, def);
+    } else {
+        return position_at<Vec4>(idx);
+    }
+}
+
 void VertexData::normal(float x, float y, float z) {
     assert(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_3F);
     Vec3* out = (Vec3*) &data_[cursor_position_ + specification().normal_offset()];
