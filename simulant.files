@@ -498,6 +498,10 @@ simulant/nodes/geom.cpp
 simulant/nodes/geom.cpp
 simulant/nodes/geom.h
 simulant/nodes/geom.h
+simulant/nodes/geoms/geom_culler.cpp
+simulant/nodes/geoms/geom_culler.h
+simulant/nodes/geoms/octree_culler.cpp
+simulant/nodes/geoms/octree_culler.h
 simulant/nodes/light.cpp
 simulant/nodes/light.cpp
 simulant/nodes/light.h
@@ -741,6 +745,7 @@ tests/test_material.h
 tests/test_material_script.h
 tests/test_mesh.h
 tests/test_mesh_silhouette.h
+tests/test_octree_culler.h
 tests/test_partitioner.h
 tests/test_random_generator.h
 tests/test_shader.h

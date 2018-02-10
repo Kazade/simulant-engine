@@ -5,6 +5,8 @@
 
 namespace smlt {
 
+class VertexData;
+
 enum AABBCorner {
     AABB_CORNER_NEG_X_NEG_Y_NEG_Z = 0,
     AABB_CORNER_POS_X_NEG_Y_NEG_Z = 1,
@@ -107,12 +109,10 @@ public:
     }
 
     AABB(const Vec3& min, const Vec3& max);
-
     AABB(const Vec3& centre, float width);
-
     AABB(const Vec3& centre, float xsize, float ysize, float zsize);
-
-    AABB(const Vec3* vertices, const std::size_t count);
+    AABB(const Vec3* vertices, const std::size_t count);    
+    AABB(const VertexData& vertex_data);
 
     const float width() const {
         return fabs(max_.x - min_.x);
@@ -164,6 +164,20 @@ public:
         }
 
         return false;
+    }
+
+    bool contains_points(const Vec3* vertices, std::size_t count) const {
+        for(std::size_t i = 0; i < count; ++i) {
+            if(!contains_point(vertices[i])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    bool contains_points(const std::vector<Vec3>& points) const {
+        return contains_points(&points[0], points.size());
     }
 
     /* NOTE: The corners are recalculated when called, so don't hold onto a reference for long */

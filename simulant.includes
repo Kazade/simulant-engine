@@ -179,3 +179,4 @@ simulant/deps/bounce/dynamics/contacts/collide
 simulant/behaviours/movement
 simulant/deps/bounce_src/bounce/dynamics/joints
 simulant/deps/bounce/common
+simulant/nodes/geoms
