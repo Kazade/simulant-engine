@@ -394,6 +394,19 @@ void VertexData::done() {
     signal_update_complete_();
 }
 
+bool VertexData::clone_into(VertexData& other) {
+    if(vertex_specification_ != other.vertex_specification_) {
+        return false;
+    }
+
+    other.data_ = this->data_;
+    other.vertex_count_ = this->vertex_count_;
+    other.stride_ = this->stride_;
+    other.cursor_position_ = 0;
+
+    return true;
+}
+
 IndexData::IndexData(IndexType type):
     index_type_(type) {
 

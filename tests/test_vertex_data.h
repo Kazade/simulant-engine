@@ -22,6 +22,36 @@ public:
         assert_equal(sizeof(float) * 6, data->specification().texcoord0_offset());
     }
 
+    void test_clone_into() {
+        smlt::VertexSpecification spec = { smlt::VERTEX_ATTRIBUTE_2F };
+
+        smlt::VertexData source(spec);
+
+        for(auto i = 0; i < 5; ++i) {
+            source.position(i, 0);
+            source.move_next();
+        }
+
+        smlt::VertexData dest(spec);
+
+        // Should be wiped by clone
+        dest.position(-1, -1);
+
+        // Clone the data
+        assert_true(source.clone_into(dest));
+
+        // Check the data is valid
+        assert_equal(dest.count(), source.count());
+        assert_equal(smlt::Vec2(0, 0), dest.position_at<smlt::Vec2>(0));
+        assert_equal(smlt::Vec2(1, 0), dest.position_at<smlt::Vec2>(1));
+        assert_equal(smlt::Vec2(2, 0), dest.position_at<smlt::Vec2>(2));
+        assert_equal(smlt::Vec2(3, 0), dest.position_at<smlt::Vec2>(3));
+        assert_equal(smlt::Vec2(4, 0), dest.position_at<smlt::Vec2>(4));
+        assert_equal(source.stride(), dest.stride());
+
+        assert_equal(dest.cursor_position(), 0u);
+    }
+
     void test_basic_usage() {
         smlt::VertexSpecification spec = smlt::VertexSpecification::POSITION_AND_DIFFUSE;
         spec.texcoord0_attribute = smlt::VERTEX_ATTRIBUTE_2F;

@@ -168,6 +168,16 @@ public:
 
     const VertexSpecification& specification() const { return vertex_specification_; }
 
+    /* Clones this VertexData into another. The other data must have the same
+     * specification and will be wiped if it contains vertices already.
+     *
+     * We don't do this with a traditional assignment operator as copying vertex data
+     * is a costly and rare operation and so copying should be explicit
+     *
+     * Returns true on success, false otherwise.
+    */
+    bool clone_into(VertexData& other);
+
 private:
     VertexSpecification vertex_specification_;
     std::vector<uint8_t> data_;
