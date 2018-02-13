@@ -3,6 +3,9 @@
 #include "../../vertex_data.h"
 #include "../../frustum.h"
 #include "../../meshes/mesh.h"
+#include "../geom.h"
+
+#include "geom_culler_renderable.h"
 
 namespace smlt {
 
@@ -47,6 +50,14 @@ public:
         /* Grow the tree to whatever size we passed in */
         while(levels_ < max_level_count) {
             grow();
+        }
+    }
+
+    ~Octree() {
+        /* Make sure we delete the node data */
+        for(auto& node: nodes_) {
+            delete node.data;
+            node.data = nullptr;
         }
     }
 
@@ -127,7 +138,7 @@ private:
     }
 
     uint32_t calc_index(uint8_t k, uint32_t x, uint32_t y, uint32_t z) {
-        auto level_base = ipow(8, k) - 1;
+        auto level_base = (k == 0) ? 0 : ipow(8, k - 1);
         auto level_width = ipow(2, k);
         auto idx = x + level_width * y + level_width * level_width * z;
         return level_base + idx;
@@ -156,30 +167,30 @@ private:
             return;
         }
 
-        if(nodes_.empty()) {
-            Octree::Node node;
-            node.level = 0;
-            node.grid[0] = 0;
-            node.grid[1] = 0;
-            node.grid[2] = 0;
-            nodes_.push_back(node);
-        } else {
-            auto k = ++levels_;
-            auto level_grid_width = ipow(2, k);
+        auto k = 0;
+        if(!nodes_.empty()) {
+            k = ++levels_;
+        }
 
-            // Reserve space in one go
-            auto new_node_count = ipow(level_grid_width, 3);
-            nodes_.resize(nodes_.size() + new_node_count);
+        auto level_grid_width = ipow(2, k);
 
-            for(auto z = -level_grid_width / 2; z < level_grid_width; ++z) {
-                for(auto y = -level_grid_width / 2; y < level_grid_width; ++y) {
-                    for(auto x = -level_grid_width / 2; x < level_grid_width; ++x) {
-                        auto& new_node = nodes_[calc_index(k, x, y, z)];
-                        new_node.grid[0] = x;
-                        new_node.grid[1] = y;
-                        new_node.grid[2] = z;
-                        new_node.level = k;
-                    }
+        // Reserve space in one go
+        auto new_node_count = ipow(level_grid_width, 3);
+        nodes_.resize(nodes_.size() + new_node_count);
+
+        for(auto z = 0; z < level_grid_width; ++z) {
+            for(auto y = 0; y < level_grid_width; ++y) {
+                for(auto x = 0; x < level_grid_width; ++x) {
+                    auto idx = calc_index(k, x, y, z);
+                    assert(idx < nodes_.size());
+                    assert(idx >= 0);
+
+                    auto& new_node = nodes_[idx];
+                    new_node.grid[0] = x;
+                    new_node.grid[1] = y;
+                    new_node.grid[2] = z;
+                    new_node.level = k;
+                    new_node.data = new NodeData();
                 }
             }
         }
@@ -206,17 +217,34 @@ struct CullerNodeData {
 typedef Octree<CullerTreeData, CullerNodeData> CullerOctree;
 
 
-OctreeCuller::OctreeCuller(const MeshPtr mesh):
-    GeomCuller(mesh) {
+struct _OctreeCullerImpl {
+    std::unordered_map<MaterialID, std::shared_ptr<GeomCullerRenderable>> renderable_map;
+    std::shared_ptr<CullerOctree> octree;
+};
 
+OctreeCuller::OctreeCuller(Geom *geom, const MeshPtr mesh):
+    GeomCuller(geom, mesh),
+    pimpl_(new _OctreeCullerImpl()),
+    vertices_(mesh->vertex_data->specification()) {
+
+    /* We have to clone the vertex data as the mesh will be destroyed */
+    mesh->vertex_data->clone_into(vertices_);
+
+    /* Find the size of index we need to store all indices */
+    IndexType type = INDEX_TYPE_8_BIT;
+    mesh->each([&](const std::string&, SubMesh* submesh) {
+        if(submesh->index_data->index_type() > type) {
+            type = submesh->index_data->index_type();
+        }
+    });
 }
 
 void OctreeCuller::_compile() {
     CullerTreeData data;
-    data.vertices = mesh_->vertex_data.get();
+    data.vertices = &vertices_;
 
     AABB bounds(*data.vertices);
-    CullerOctree octree(bounds, 5, &data);
+    pimpl_->octree.reset(new CullerOctree(bounds, 5, &data));
 
     Vec3 stash[3];
 
@@ -227,7 +255,7 @@ void OctreeCuller::_compile() {
             stash[1] = data.vertices->position_at<Vec3>(b);
             stash[2] = data.vertices->position_at<Vec3>(c);
 
-            auto node = octree.find_destination_for_triangle(stash);
+            auto node = pimpl_->octree->find_destination_for_triangle(stash);
 
             auto& indexes = node->data->triangles[material_id];
             indexes.push_back(a);
@@ -237,8 +265,46 @@ void OctreeCuller::_compile() {
     });
 }
 
-void OctreeCuller::_gather_renderables(const Frustum &frustum, std::vector<std::shared_ptr<Renderable> > &out) {
+void OctreeCuller::_gather_renderables(const Frustum &frustum, std::vector<std::shared_ptr<Renderable> > &out) {    
+    auto& renderable_map = pimpl_->renderable_map;
 
+    /* Reset all the index data before we start gathering */
+    for(auto& p: renderable_map) {
+        p.second->_indices().reset();
+    }
+
+    auto visitor = [&](CullerOctree::Node* node) {
+        for(auto& p: node->data->triangles) {
+            auto mat_id = p.first;
+
+            GeomCullerRenderable* renderable = nullptr;
+            if(!renderable_map.count(mat_id)) {
+                // Not in the map yet? Create a new renderable
+                auto r = std::make_shared<GeomCullerRenderable>(
+                    geom_->shared_from_this(),
+                    mat_id,
+                    index_type_,
+                    vertices_.specification()
+                );
+
+                renderable_map.insert(std::make_pair(mat_id, r));
+                renderable = r.get();
+
+                // Add the new renderable to the resultset
+                out.push_back(r);
+            } else {
+                renderable = renderable_map.at(mat_id).get();
+            }
+
+            /* Transfer the indices to the renderable */
+            /* FIXME: Need to be able to do this in bulk for performance */
+            for(auto idx: p.second) {
+                renderable->_indices().index(idx);
+            }
+        }
+    };
+
+    pimpl_->octree->traverse_visible(frustum, visitor);
 }
 
 }

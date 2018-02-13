@@ -19,6 +19,7 @@
 
 #include "geom.h"
 #include "../stage.h"
+#include "geoms/octree_culler.h"
 
 namespace smlt {
 
@@ -30,22 +31,20 @@ Geom::Geom(GeomID id, Stage* stage, SoundDriver* sound_driver, MeshID mesh, cons
 
     set_parent(stage);
 
-    mesh_ = stage->assets->mesh(mesh)->shared_from_this();
-    vertex_data_ = mesh_->vertex_data.get();
+    auto mesh_ptr = stage->assets->mesh(mesh);
+    culler_.reset(new OctreeCuller(this, mesh_ptr));
 
-    compile();
+    /* FIXME: Transform and recalc */
+    aabb_ = mesh_ptr->aabb();
 }
 
 const AABB &Geom::aabb() const {
-    return mesh_->aabb();
+    return aabb_;
 }
 
 void Geom::ask_owner_for_destruction() {
     stage->delete_geom(id());
 }
 
-void Geom::compile() {
-
-}
 
 }

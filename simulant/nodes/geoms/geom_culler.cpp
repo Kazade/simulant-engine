@@ -2,7 +2,8 @@
 
 namespace smlt {
 
-GeomCuller::GeomCuller(const MeshPtr mesh):
+GeomCuller::GeomCuller(Geom *geom, const MeshPtr mesh):
+    geom_(geom),
     mesh_(mesh) {
 
 }

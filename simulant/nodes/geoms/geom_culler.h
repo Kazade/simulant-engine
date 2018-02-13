@@ -6,6 +6,7 @@
 
 namespace smlt {
 
+class HardwareBuffer;
 class Renderable;
 
 /*
@@ -16,11 +17,12 @@ class Renderable;
  * partitioner.
  */
 
-typedef std::vector<std::shared_ptr<Renderable>> RenderableList;
+typedef std::shared_ptr<Renderable> RenderablePtr;
+typedef std::vector<RenderablePtr> RenderableList;
 
 class GeomCuller {
 public:
-    GeomCuller(const MeshPtr mesh);
+    GeomCuller(Geom* geom, const MeshPtr mesh);
 
     bool is_compiled() const;
 
@@ -28,6 +30,7 @@ public:
     RenderableList renderables_visible(const Frustum& frustum);
 
 protected:
+    Geom* geom_ = nullptr;
     MeshPtr mesh_;
 
 private:
@@ -35,6 +38,11 @@ private:
 
     virtual void _compile() = 0;
     virtual void _gather_renderables(const Frustum& frustum, std::vector<std::shared_ptr<Renderable>>& out) = 0;
+
+    virtual VertexData* _vertex_data() = 0;
+    virtual HardwareBuffer* _vertex_attribute_buffer() = 0;
+
+    friend class GeomCullerRenderable;
 };
 
 }

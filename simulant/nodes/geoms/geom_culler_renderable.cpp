@@ -1,0 +1,41 @@
+#include "geom_culler_renderable.h"
+#include "../geom.h"
+#include "geom_culler.h"
+
+namespace smlt {
+
+GeomCullerRenderable::GeomCullerRenderable(GeomCuller *owner, MaterialID mat_id, IndexType index_type):
+    culler_(owner),
+    indices_(index_type),
+    geom_(owner->geom_->shared_from_this()),
+    material_id_(mat_id) {
+
+}
+
+VertexSpecification GeomCullerRenderable::vertex_attribute_specification() const {
+    return culler_->_vertex_data()->specification();
+}
+
+HardwareBuffer *GeomCullerRenderable::vertex_attribute_buffer() const {
+    return culler_->_vertex_attribute_buffer();
+}
+
+std::size_t GeomCullerRenderable::index_element_count() const {
+    return indices_.count();
+}
+
+IndexType GeomCullerRenderable::index_type() const {
+    return indices_.index_type();
+}
+
+RenderPriority GeomCullerRenderable::render_priority() const {
+    return geom_->render_priority();
+}
+
+const bool GeomCullerRenderable::is_visible() const {
+    return geom_->is_visible();
+}
+
+
+
+}

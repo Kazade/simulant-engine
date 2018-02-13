@@ -500,6 +500,8 @@ simulant/nodes/geom.h
 simulant/nodes/geom.h
 simulant/nodes/geoms/geom_culler.cpp
 simulant/nodes/geoms/geom_culler.h
+simulant/nodes/geoms/geom_culler_renderable.cpp
+simulant/nodes/geoms/geom_culler_renderable.h
 simulant/nodes/geoms/octree_culler.cpp
 simulant/nodes/geoms/octree_culler.h
 simulant/nodes/light.cpp

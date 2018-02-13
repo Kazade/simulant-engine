@@ -42,6 +42,7 @@ namespace impl {
 
 }
 
+class GeomCuller;
 
 /**
  * @brief The Geom class
@@ -59,14 +60,11 @@ class Geom :
     public virtual Boundable,
     public Managed<Geom>,
     public generic::Identifiable<GeomID>,
-    public Source {
+    public Source,
+    public std::enable_shared_from_this<Geom> {
 
 public:
-    typedef sig::signal<void (GeomID)> MeshChangedSignal;
-
     Geom(GeomID id, Stage* stage, SoundDriver *sound_driver, MeshID mesh, const Vec3& position=Vec3(), const Quaternion rotation=Quaternion());
-
-    MeshID mesh_id() const { return mesh_->id(); }
 
     const AABB& aabb() const;
 
@@ -78,19 +76,16 @@ public:
         StageNode::cleanup();
     }
 
-    Property<Geom, VertexData> vertex_data = {this, &Geom::vertex_data_};
-
 private:
-    VertexData* vertex_data_ = nullptr;
-
-    std::shared_ptr<Mesh> mesh_;
     RenderPriority render_priority_;
+
+    std::unique_ptr<GeomCuller> culler_;
+
+    AABB aabb_;
 
     void update(float dt) {
         update_source(dt);
     }
-
-    void compile();
 };
 
 }

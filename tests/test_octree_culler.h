@@ -8,7 +8,7 @@ namespace {
 
 using namespace smlt;
 
-class OctreeCullerTests : public TestCase {
+class OctreeCullerTests : public SimulantTestCase {
 public:
     void test_basic_visibility() {
         auto stage = window->new_stage();
