@@ -36,14 +36,6 @@ namespace smlt {
 class SubActor;
 class HardwareBufferManager;
 
-struct ElementRenderSpecification {
-    MaterialID material_id;
-    uint32_t count;
-    uint8_t* indices; // Must be an array of UNSIGNED_SHORT
-};
-
-typedef std::vector<ElementRenderSpecification> ElementRenderList;
-
 class Renderer:
     public batcher::RenderGroupFactory {
 

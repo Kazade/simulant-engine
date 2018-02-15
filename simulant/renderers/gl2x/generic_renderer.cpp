@@ -596,7 +596,7 @@ void GL2RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
 
     renderer_->set_renderable_uniforms(material_pass, program_, renderable, camera_);
 
-    renderable->prepare_buffers();
+    renderable->prepare_buffers(renderer_);
 
     auto* vertex_buffer = renderable->vertex_attribute_buffer();
     auto* index_buffer = renderable->index_buffer();

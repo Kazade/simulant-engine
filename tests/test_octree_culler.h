@@ -22,7 +22,7 @@ public:
         mesh->new_submesh_as_box("visible", mat1, 1.0, 1.0, 1.0, Vec3(0, 0, -10.0));
         mesh->new_submesh_as_box("not visible", mat2, 1.0, 1.0, 1.0, Vec3(0, 0, 10.0));
 
-        OctreeCuller culler(mesh);
+        OctreeCuller culler(nullptr, mesh);
         culler.compile();
 
         auto result = culler.renderables_visible(camera->frustum());

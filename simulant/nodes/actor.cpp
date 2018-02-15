@@ -66,9 +66,9 @@ void Actor::clear_subactors() {
     subactors_.clear();
 }
 
-void SubActor::prepare_buffers() {
+void SubActor::prepare_buffers(Renderer *renderer) {
     if(submesh_) {
-        submesh_->prepare_buffers();
+        submesh_->prepare_buffers(renderer);
     }
 }
 

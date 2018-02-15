@@ -65,7 +65,7 @@ public:
 
     virtual const MeshArrangement arrangement() const = 0;
 
-    virtual void prepare_buffers() = 0;
+    virtual void prepare_buffers(Renderer* renderer) = 0;
 
     virtual VertexSpecification vertex_attribute_specification() const = 0;
     virtual HardwareBuffer* vertex_attribute_buffer() const = 0;

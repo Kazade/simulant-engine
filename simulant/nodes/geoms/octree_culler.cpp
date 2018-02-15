@@ -4,7 +4,8 @@
 #include "../../frustum.h"
 #include "../../meshes/mesh.h"
 #include "../geom.h"
-
+#include "../../renderers/renderer.h"
+#include "../../hardware_buffer.h"
 #include "geom_culler_renderable.h"
 
 namespace smlt {
@@ -239,6 +240,14 @@ OctreeCuller::OctreeCuller(Geom *geom, const MeshPtr mesh):
     });
 }
 
+const VertexData *OctreeCuller::_vertex_data() const {
+    return &vertices_;
+}
+
+HardwareBuffer *OctreeCuller::_vertex_attribute_buffer() const {
+    return vertex_attribute_buffer_.get();
+}
+
 void OctreeCuller::_compile() {
     CullerTreeData data;
     data.vertices = &vertices_;
@@ -281,10 +290,9 @@ void OctreeCuller::_gather_renderables(const Frustum &frustum, std::vector<std::
             if(!renderable_map.count(mat_id)) {
                 // Not in the map yet? Create a new renderable
                 auto r = std::make_shared<GeomCullerRenderable>(
-                    geom_->shared_from_this(),
+                    this,
                     mat_id,
-                    index_type_,
-                    vertices_.specification()
+                    index_type_
                 );
 
                 renderable_map.insert(std::make_pair(mat_id, r));
@@ -305,6 +313,17 @@ void OctreeCuller::_gather_renderables(const Frustum &frustum, std::vector<std::
     };
 
     pimpl_->octree->traverse_visible(frustum, visitor);
+}
+
+void OctreeCuller::_prepare_buffers(Renderer* renderer) {
+    if(!vertex_attribute_buffer_ && is_compiled()) {
+        vertex_attribute_buffer_ = renderer->hardware_buffers->allocate(
+            vertices_.data_size(),
+            HARDWARE_BUFFER_VERTEX_ATTRIBUTES,
+            SHADOW_BUFFER_DISABLED,
+            HARDWARE_BUFFER_MODIFY_ONCE_USED_FOR_RENDERING
+        );
+    }
 }
 
 }

@@ -513,11 +513,11 @@ SubMesh* Mesh::submesh(const std::string& name) {
     return nullptr;
 }
 
-void Mesh::prepare_buffers() {
+void Mesh::prepare_buffers(Renderer* renderer) {
     if(shared_vertex_buffer_dirty_) {
         sync_buffer<VertexData, Renderer>(
             &shared_vertex_buffer_, vertex_data_,
-            resource_manager().window->renderer.get(),
+            renderer,
             HARDWARE_BUFFER_VERTEX_ATTRIBUTES
         );
         shared_vertex_buffer_dirty_ = false;

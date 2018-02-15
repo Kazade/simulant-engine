@@ -49,7 +49,7 @@ public:
         assert_equal(smlt::Vec2(4, 0), dest.position_at<smlt::Vec2>(4));
         assert_equal(source.stride(), dest.stride());
 
-        assert_equal(dest.cursor_position(), 0u);
+        assert_equal(dest.cursor_position(), 0);
     }
 
     void test_basic_usage() {

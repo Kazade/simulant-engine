@@ -182,7 +182,7 @@ public:
     SubMesh* submesh();
     const SubMesh* submesh() const;
 
-    void prepare_buffers();
+    void prepare_buffers(Renderer* renderer);
 
     VertexSpecification vertex_attribute_specification() const;
     HardwareBuffer* vertex_attribute_buffer() const;

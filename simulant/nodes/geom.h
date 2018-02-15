@@ -79,7 +79,7 @@ public:
 private:
     RenderPriority render_priority_;
 
-    std::unique_ptr<GeomCuller> culler_;
+    std::shared_ptr<GeomCuller> culler_;
 
     AABB aabb_;
 

@@ -10,6 +10,7 @@ class VertexData;
 class IndexData;
 class Mesh;
 class HardwareBuffer;
+class Renderer;
 
 class SubMeshInterface:
     public Boundable {
@@ -68,7 +69,7 @@ public:
     HardwareBuffer* vertex_buffer() const;
     HardwareBuffer* index_buffer() const { return index_buffer_.get(); }
 
-    void prepare_buffers(); // Called by actors to make sure things are up-to-date before rendering
+    void prepare_buffers(Renderer *renderer); // Called by actors to make sure things are up-to-date before rendering
 
     /* Goes through the indexes in this submesh and changes the diffuse colour of the vertices
      * they point to */

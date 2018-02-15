@@ -46,10 +46,8 @@ HardwareBuffer* SubMesh::vertex_buffer() const {
     return parent_->shared_vertex_buffer_.get();
 }
 
-void SubMesh::prepare_buffers() {
-    auto* renderer = parent_->resource_manager().window->renderer.get();
-
-    parent_->prepare_buffers();
+void SubMesh::prepare_buffers(Renderer* renderer) {
+    parent_->prepare_buffers(renderer);
 
     if(index_buffer_dirty_) {
         sync_buffer<IndexData, Renderer>(

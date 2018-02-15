@@ -45,7 +45,7 @@ namespace smlt {
 class HardwareBuffer;
 class ResourceManager;
 class AdjacencyInfo;
-
+class Renderer;
 
 enum MeshAnimationType {
     MESH_ANIMATION_TYPE_NONE,
@@ -131,7 +131,7 @@ public:
     uint32_t animation_frames() const { return animation_frames_; }
     MeshAnimationType animation_type() const { return animation_type_; }
 
-    void prepare_buffers();
+    void prepare_buffers(Renderer *renderer);
 
     /* Generates adjacency information for this mesh. This is necessary for stencil shadowing
      * to work */
