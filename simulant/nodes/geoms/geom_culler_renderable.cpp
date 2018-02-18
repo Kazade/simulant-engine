@@ -9,7 +9,6 @@ namespace smlt {
 GeomCullerRenderable::GeomCullerRenderable(GeomCuller *owner, MaterialID mat_id, IndexType index_type):
     culler_(owner),
     indices_(index_type),
-    geom_(owner->geom_->shared_from_this()),
     material_id_(mat_id) {
 
     indices_.signal_update_complete().connect([&]() {
@@ -56,11 +55,11 @@ IndexType GeomCullerRenderable::index_type() const {
 }
 
 RenderPriority GeomCullerRenderable::render_priority() const {
-    return geom_->render_priority();
+    return culler_->geom_->render_priority();
 }
 
 const bool GeomCullerRenderable::is_visible() const {
-    return geom_->is_visible();
+    return culler_->geom_->is_visible();
 }
 
 const AABB GeomCullerRenderable::transformed_aabb() const {
@@ -68,7 +67,7 @@ const AABB GeomCullerRenderable::transformed_aabb() const {
 }
 
 const AABB& GeomCullerRenderable::aabb() const {
-    return geom_->aabb();
+    return culler_->geom_->aabb();
 }
 
 

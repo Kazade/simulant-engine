@@ -15,6 +15,52 @@ static constexpr int64_t ipow(int64_t base, int exp, int64_t result = 1) {
 }
 
 
+static std::pair<Vec3, float> find_triangle_bounding_sphere(const Vec3* vertices) {
+    Vec3 centre = (vertices[0] + vertices[1] + vertices[2]) / 3;
+
+    float a = (vertices[0] - centre).length_squared();
+    float b = (vertices[1] - centre).length_squared();
+    float c = (vertices[2] - centre).length_squared();
+
+    return std::make_pair(
+        centre,
+        std::sqrt(std::max(std::max(a, b), c))
+    );
+}
+
+static std::pair<uint8_t, float> level_for_width(float root_width, float obj_width, uint8_t max_level) {
+    /*
+     * Given the diameter of the root node, and the diameter of the object
+     * this returns the level the object will fit, and the node width at that level
+     *
+     * I *know* there's a non-iterative way to calculate this, so if you know, let me know!
+     */
+
+    assert(obj_width <= root_width);
+
+    if(obj_width > root_width) {
+        // Should never happen, but this is the safest thing to do if it does
+        return std::make_pair(0, root_width);
+    }
+
+    auto node_width = root_width;
+    uint8_t depth = 0;
+
+    while(node_width > obj_width) {
+        ++depth;
+        node_width *= 0.5f;
+
+        if(depth == max_level) {
+            break;
+        }
+    }
+
+    assert(depth >= 1);
+
+    // Off-by-one
+    return std::make_pair(depth - 1, node_width * 2);
+}
+
 /*
  * TreeData is a structure which contains data needed across the whole tree,
  * this will usually contain the vertex data for the mesh being inserted.
@@ -35,7 +81,7 @@ public:
     typedef TreeData tree_data_type;
     typedef NodeData node_data_type;
 
-    Octree(const AABB& bounds, uint8_t max_level_count=5, TreeData* tree_data=nullptr):
+    Octree(const AABB& bounds, uint8_t max_level_count=4, TreeData* tree_data=nullptr):
         tree_data_(tree_data),
         bounds_(bounds),
         centre_(bounds_.centre()) {
@@ -74,35 +120,21 @@ public:
          * true while finding the destination.
          */
 
-        if(nodes_.empty()) {
-            grow();
-            nodes_[0].data = new NodeData();
-            return &nodes_[0];
-        }
+        auto root_width = bounds().width();
+        auto triangle_bounds = find_triangle_bounding_sphere(vertices);
+        auto centre = triangle_bounds.first;
+        auto diameter = triangle_bounds.second * 2;
+        auto level_and_node_width = level_for_width(root_width, diameter, levels_);
 
-        std::function<Octree::Node* (Octree::Node&)> visitor = [&](Octree::Node& node) -> Octree::Node* {
-            if(is_leaf(node)) {
-                return &node;
-            }
+        auto half_width = root_width * 0.5;
+        auto x = (int) ((centre.x + half_width) / level_and_node_width.second);
+        auto y = (int) ((centre.y + half_width) / level_and_node_width.second);
+        auto z = (int) ((centre.z + half_width) / level_and_node_width.second);
 
-            std::vector<uint32_t> indexes;
-            child_indexes(node, indexes);
+        auto idx = calc_index(level_and_node_width.first, x, y, z);
+        assert(idx < nodes_.size());
 
-            for(auto idx: indexes) {
-                auto& child = nodes_[idx];
-                auto child_bounds = calc_bounds(child);
-
-                if(child_bounds.contains_points(vertices, 3)) {
-                    // Recurse down
-                    return visitor(child);
-                }
-            }
-
-            // If we get here, it didn't fit any of the children so return this
-            return &node;
-        };
-
-        return visitor(nodes_[0]);
+        return &nodes_[idx];
     }
 
     void traverse_visible(const Frustum& frustum, std::function<void (Octree::Node*)> cb) {
@@ -111,7 +143,7 @@ public:
         }
 
         std::function<void (Octree::Node&)> visitor = [&](Octree::Node& node) {
-            auto bounds = calc_bounds(node);
+            auto bounds = calc_loose_bounds(node);
             if(frustum.intersects_aabb(bounds)) {
                 cb(&node);
 
@@ -120,6 +152,7 @@ public:
                     child_indexes(node, indexes);
 
                     for(auto child: indexes) {
+                        assert(child < nodes_.size());
                         visitor(nodes_[child]);
                     }
                 }
@@ -129,11 +162,28 @@ public:
         visitor(nodes_[0]);
     }
 
+    AABB bounds() const { return bounds_; }
+
 private:
+    AABB calc_loose_bounds(Octree::Node& node) {
+        /* Returns the loose bounds of the cell which is
+         * twice the size, but with the same centre */
+
+        AABB bounds = calc_bounds(node);
+        float r = bounds.width() * 0.5;
+        Vec3 diff(r, r, r);
+        bounds.set_min(bounds.min() - diff);
+        bounds.set_max(bounds.max() + diff);
+        return bounds;
+    }
+
     AABB calc_bounds(Octree::Node& node) {
         auto grid_width = ipow(2, node.level);
         auto cell_width = bounds_.max_dimension() / grid_width;
+
         Vec3 min(node.grid[0] * cell_width, node.grid[1] * cell_width, node.grid[2] * cell_width);
+        min += bounds_.min();
+
         Vec3 max = min + Vec3(cell_width, cell_width, cell_width);
         return AABB(min, max);
     }
@@ -253,7 +303,7 @@ void OctreeCuller::_compile() {
     data.vertices = &vertices_;
 
     AABB bounds(*data.vertices);
-    pimpl_->octree.reset(new CullerOctree(bounds, 5, &data));
+    pimpl_->octree.reset(new CullerOctree(bounds, 4, &data));
 
     Vec3 stash[3];
 
@@ -287,7 +337,8 @@ void OctreeCuller::_gather_renderables(const Frustum &frustum, std::vector<std::
             auto mat_id = p.first;
 
             GeomCullerRenderable* renderable = nullptr;
-            if(!renderable_map.count(mat_id)) {
+            auto it = renderable_map.find(mat_id);
+            if(it == renderable_map.end()) {
                 // Not in the map yet? Create a new renderable
                 auto r = std::make_shared<GeomCullerRenderable>(
                     this,
@@ -301,7 +352,7 @@ void OctreeCuller::_gather_renderables(const Frustum &frustum, std::vector<std::
                 // Add the new renderable to the resultset
                 out.push_back(r);
             } else {
-                renderable = renderable_map.at(mat_id).get();
+                renderable = it->second.get();
             }
 
             /* Transfer the indices to the renderable */
@@ -324,6 +375,10 @@ void OctreeCuller::_prepare_buffers(Renderer* renderer) {
             HARDWARE_BUFFER_MODIFY_ONCE_USED_FOR_RENDERING
         );
     }
+}
+
+AABB OctreeCuller::octree_bounds() const {
+    return pimpl_->octree->bounds();
 }
 
 }

@@ -13,6 +13,7 @@ class OctreeCuller : public GeomCuller {
 public:
     OctreeCuller(Geom* geom, const MeshPtr mesh);
 
+    AABB octree_bounds() const;
 private:
     const VertexData* _vertex_data() const override;
     HardwareBuffer* _vertex_attribute_buffer() const override;

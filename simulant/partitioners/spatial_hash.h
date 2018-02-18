@@ -76,6 +76,7 @@ private:
     std::unordered_map<ActorID, PartitionerEntryPtr> actor_entries_;
     std::unordered_map<LightID, PartitionerEntryPtr> light_entries_;
     std::unordered_map<ParticleSystemID, PartitionerEntryPtr> particle_system_entries_;
+    std::unordered_map<GeomID, PartitionerEntryPtr> geom_entries_;
 
     std::unordered_set<LightID> directional_lights_;
 

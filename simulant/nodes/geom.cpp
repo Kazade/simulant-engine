@@ -27,15 +27,21 @@ Geom::Geom(GeomID id, Stage* stage, SoundDriver* sound_driver, MeshID mesh, cons
     StageNode(stage),
     generic::Identifiable<GeomID>(id),
     Source(stage, sound_driver),
+    mesh_id_(mesh),
     render_priority_(RENDER_PRIORITY_MAIN) {
 
     set_parent(stage);
+}
 
-    auto mesh_ptr = stage->assets->mesh(mesh);
+bool Geom::init() {
+    auto mesh_ptr = stage->assets->mesh(mesh_id_);
     culler_.reset(new OctreeCuller(this, mesh_ptr));
 
     /* FIXME: Transform and recalc */
     aabb_ = mesh_ptr->aabb();
+
+    culler_->compile();
+    return true;
 }
 
 const AABB &Geom::aabb() const {

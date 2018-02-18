@@ -76,8 +76,13 @@ public:
         StageNode::cleanup();
     }
 
+    Property<Geom, GeomCuller> culler = {this, &Geom::culler_};
+
+    bool init() override;
+
 private:
-    RenderPriority render_priority_;
+    MeshID mesh_id_;
+    RenderPriority render_priority_ = RENDER_PRIORITY_MAIN;
 
     std::shared_ptr<GeomCuller> culler_;
 
