@@ -194,9 +194,9 @@ SubMesh* Mesh::new_submesh_as_box(const std::string& name, MaterialID material, 
     auto vd = sm->vertex_data.get();
     auto id = sm->index_data.get();
 
-    float x_offset = offset.x;
-    float y_offset = offset.y;
-    float z_offset = offset.z;
+    float ox = offset.x;
+    float oy = offset.y;
+    float oz = offset.z;
 
     float rx = width * 0.5f;
     float ry = height * 0.5f;
@@ -206,28 +206,28 @@ SubMesh* Mesh::new_submesh_as_box(const std::string& name, MaterialID material, 
     for(int32_t z: { -1, 1 }) {
         uint32_t count = vd->count();
 
-        vd->position(-1 * rx, -1 * ry, z * rz);
+        vd->position(ox + -1 * rx, oy + -1 * ry, oz + z * rz);
         vd->tex_coord0(0, 0);
         vd->tex_coord1(0, 0);
         vd->diffuse(smlt::Colour::WHITE);
         vd->normal(0, 0, z);
         vd->move_next();
 
-        vd->position( 1 * rx, -1 * ry, z * rz);
+        vd->position(ox + 1 * rx, oy + -1 * ry, oz + z * rz);
         vd->tex_coord0(1, 0);
         vd->tex_coord1(1, 0);
         vd->diffuse(smlt::Colour::WHITE);
         vd->normal(0, 0, z);
         vd->move_next();
 
-        vd->position( 1 * rx,  1 * ry, z * rz);
+        vd->position(ox + 1 * rx,  oy + 1 * ry, oz + z * rz);
         vd->tex_coord0(1, 1);
         vd->tex_coord1(1, 1);
         vd->diffuse(smlt::Colour::WHITE);
         vd->normal(0, 0, z);
         vd->move_next();
 
-        vd->position(-1 * rx,  1 * ry, z * rz);
+        vd->position(ox + -1 * rx, oy + 1 * ry, oz + z * rz);
         vd->tex_coord0(0, 1);
         vd->tex_coord1(0, 1);
         vd->diffuse(smlt::Colour::WHITE);
@@ -257,28 +257,28 @@ SubMesh* Mesh::new_submesh_as_box(const std::string& name, MaterialID material, 
     for(int32_t x: { -1, 1 }) {
         uint32_t count = vd->count();
 
-        vd->position( x * rx, -1 * ry, -1 * rz);
+        vd->position(ox + x * rx, oy + -1 * ry, oz + -1 * rz);
         vd->tex_coord0(0, 0);
         vd->tex_coord1(0, 0);
         vd->diffuse(smlt::Colour::WHITE);
         vd->normal(x, 0, 0);
         vd->move_next();
 
-        vd->position( x * rx,  1 * ry, -1 * rz);
+        vd->position(ox + x * rx, oy + 1 * ry, oz + -1 * rz);
         vd->tex_coord0(1, 0);
         vd->tex_coord1(1, 0);
         vd->diffuse(smlt::Colour::WHITE);
         vd->normal(x, 0, 0);
         vd->move_next();
 
-        vd->position( x * rx,  1 * ry, 1 * rz);
+        vd->position(ox + x * rx, oy + 1 * ry, oz + 1 * rz);
         vd->tex_coord0(1, 1);
         vd->tex_coord1(1, 1);
         vd->diffuse(smlt::Colour::WHITE);
         vd->normal(x, 0, 0);
         vd->move_next();
 
-        vd->position(x * rx, -1 * ry, 1 * rz);
+        vd->position(ox + x * rx, oy + -1 * ry, oz + 1 * rz);
         vd->tex_coord0(0, 1);
         vd->tex_coord1(0, 1);
         vd->diffuse(smlt::Colour::WHITE);
@@ -309,28 +309,28 @@ SubMesh* Mesh::new_submesh_as_box(const std::string& name, MaterialID material, 
     for(int32_t y: { -1, 1 }) {
         uint32_t count = vd->count();
 
-        vd->position( 1 * rx, y * ry, -1 * rz);
+        vd->position(ox + 1 * rx, oy + y * ry, oz + -1 * rz);
         vd->tex_coord0(0, 0);
         vd->tex_coord1(0, 0);
         vd->diffuse(smlt::Colour::WHITE);
         vd->normal(0, y, 0);
         vd->move_next();
 
-        vd->position( -1 * rx,  y * ry, -1 * rz);
+        vd->position(ox + -1 * rx,  oy + y * ry, oz + -1 * rz);
         vd->tex_coord0(1, 0);
         vd->tex_coord1(1, 0);
         vd->diffuse(smlt::Colour::WHITE);
         vd->normal(0, y, 0);
         vd->move_next();
 
-        vd->position( -1 * rx,  y * ry, 1 * rz);
+        vd->position(ox + -1 * rx, oy + y * ry, oz + 1 * rz);
         vd->tex_coord0(1, 1);
         vd->tex_coord1(1, 1);
         vd->diffuse(smlt::Colour::WHITE);
         vd->normal(0, y, 0);
         vd->move_next();
 
-        vd->position( 1 * rx, y * ry, 1 * rz);
+        vd->position(ox + 1 * rx, oy + y * ry, oz + 1 * rz);
         vd->tex_coord0(0, 1);
         vd->tex_coord1(0, 1);
         vd->diffuse(smlt::Colour::WHITE);
@@ -355,14 +355,6 @@ SubMesh* Mesh::new_submesh_as_box(const std::string& name, MaterialID material, 
             id->index(count + 2);
         }
 
-    }
-
-    // Apply offset
-    vd->move_to_start();
-    for(uint16_t i = 0; i < vd->count(); ++i) {
-        Vec3 pos = vd->position_at<Vec3>(i);
-        vd->position(pos + smlt::Vec3(x_offset, y_offset, z_offset));
-        vd->move_next();
     }
 
     vd->done();
