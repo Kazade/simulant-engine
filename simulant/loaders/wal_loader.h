@@ -34,6 +34,7 @@ public:
         BaseTextureLoader(filename, data) {}
 
 private:
+    bool format_stored_upside_down() const { return false; }
     TextureLoadResult do_load(const std::vector<uint8_t> &buffer) override;
 };
 

@@ -56,7 +56,9 @@ void BaseTextureLoader::into(Loadable& resource, const LoaderOptions& options) {
         tex->data().assign(result.data.begin(), result.data.end());
         tex->set_auto_upload(auto_upload);
 
-        tex->flip_vertically();
+        if(format_stored_upside_down()) {
+            tex->flip_vertically();
+        }
     }
 }
 
