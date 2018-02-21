@@ -183,10 +183,13 @@ private:
          * twice the size, but with the same centre */
 
         AABB bounds = calc_bounds(node);
-        float r = bounds.width() * 0.5;
+        auto centre = bounds.centre();
+
+        float r = bounds.width();
+
         Vec3 diff(r, r, r);
-        bounds.set_min(bounds.min() - diff);
-        bounds.set_max(bounds.max() + diff);
+        bounds.set_min(centre - diff);
+        bounds.set_max(centre + diff);
         return bounds;
     }
 
