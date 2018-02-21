@@ -14,20 +14,6 @@ static constexpr int64_t ipow(int64_t base, int exp, int64_t result = 1) {
   return exp < 1 ? result : ipow(base*base, exp/2, (exp % 2) ? result*base : result);
 }
 
-
-static std::pair<Vec3, float> find_triangle_bounding_sphere(const Vec3* vertices) {
-    Vec3 centre = (vertices[0] + vertices[1] + vertices[2]) / 3;
-
-    float a = (vertices[0] - centre).length_squared();
-    float b = (vertices[1] - centre).length_squared();
-    float c = (vertices[2] - centre).length_squared();
-
-    return std::make_pair(
-        centre,
-        std::sqrt(std::max(std::max(a, b), c))
-    );
-}
-
 static std::pair<uint8_t, float> level_for_width(float root_width, float obj_width, uint8_t max_level) {
     /*
      * Given the diameter of the root node, and the diameter of the object
@@ -46,7 +32,7 @@ static std::pair<uint8_t, float> level_for_width(float root_width, float obj_wid
     auto node_width = root_width;
     uint8_t depth = 0;
 
-    while(node_width > obj_width) {
+    while(node_width >= obj_width) {
         ++depth;
         node_width *= 0.5f;
 
@@ -112,20 +98,12 @@ public:
         return node.level == levels_;
     }
 
-    Octree::Node* find_destination_for_triangle(const Vec3* vertices) {
-        /*
-         * Goes through the tree and return the node that this triangle should be
-         * inserted into (the actual insertion won't happen as that's implementation specific
-         * depending on the NodeData). This may cause one or more splits if the split_func returns
-         * true while finding the destination.
-         */
-
+    Octree::Node* find_destination_for_sphere(const Vec3& centre, float radius) {
         auto root_width = bounds().width();
-        auto triangle_bounds = find_triangle_bounding_sphere(vertices);
-        auto centre = triangle_bounds.first;
-        auto diameter = triangle_bounds.second * 2;
+        auto diameter = radius * 2;
         auto level_and_node_width = level_for_width(root_width, diameter, levels_);
 
+        /* Calculate the cell index to insert the sphere */
         auto half_width = root_width * 0.5;
         auto x = (int) ((centre.x + half_width) / level_and_node_width.second);
         auto y = (int) ((centre.y + half_width) / level_and_node_width.second);
@@ -135,6 +113,41 @@ public:
         assert(idx < nodes_.size());
 
         return &nodes_[idx];
+    }
+
+    Octree::Node* find_destination_for_triangle(const Vec3* vertices) {
+        /*
+         * Return the node that this triangle should be
+         * inserted into (the actual insertion won't happen as that's implementation specific
+         * depending on the NodeData).
+         */
+
+        AABB bounds(vertices, 3);
+        auto centre = bounds.centre();
+        auto radius = bounds.max_dimension() / 2.0f;
+        return find_destination_for_sphere(centre, radius);
+    }
+
+    void traverse(std::function<void (Octree::Node*)> cb) {
+        if(nodes_.empty()) {
+            return;
+        }
+
+        std::function<void (Octree::Node&)> visitor = [&](Octree::Node& node) {
+            cb(&node);
+
+            if(!is_leaf(node)) {
+                std::vector<uint32_t> indexes;
+                child_indexes(node, indexes);
+
+                for(auto child: indexes) {
+                    assert(child < nodes_.size());
+                    visitor(nodes_[child]);
+                }
+            }
+        };
+
+        visitor(nodes_[0]);
     }
 
     void traverse_visible(const Frustum& frustum, std::function<void (Octree::Node*)> cb) {
@@ -307,8 +320,32 @@ void OctreeCuller::_compile() {
 
     Vec3 stash[3];
 
+    auto& renderable_map = pimpl_->renderable_map;
+
     mesh_->each([&](const std::string&, SubMesh* submesh) {
         auto material_id = submesh->material_id();
+
+        /* Generate a renderable for each material. These are added
+         * to the RenderQueue and updated before each render queu
+         * iteration by _gather_renderables
+         *
+         * This must be done here, because when the geom_created() signal is
+         * fired by the stage, then the render queue is updated which will call
+         * _all_renderables.
+        */
+
+        auto it = renderable_map.find(material_id);
+        if(it == renderable_map.end()) {
+            // Not in the map yet? Create a new renderable
+            auto r = std::make_shared<GeomCullerRenderable>(
+                this,
+                material_id,
+                index_type_
+            );
+
+            renderable_map.insert(std::make_pair(material_id, r));
+        }
+
         submesh->each_triangle([&](uint32_t a, uint32_t b, uint32_t c) {
             stash[0] = data.vertices->position_at<Vec3>(a);
             stash[1] = data.vertices->position_at<Vec3>(b);
@@ -324,6 +361,13 @@ void OctreeCuller::_compile() {
     });
 }
 
+void OctreeCuller::_all_renderables(RenderableList& out) {
+    auto& renderable_map = pimpl_->renderable_map;
+    for(auto& p: renderable_map) {
+        out.push_back(p.second);
+    }
+}
+
 void OctreeCuller::_gather_renderables(const Frustum &frustum, std::vector<std::shared_ptr<Renderable> > &out) {    
     auto& renderable_map = pimpl_->renderable_map;
 
@@ -332,27 +376,17 @@ void OctreeCuller::_gather_renderables(const Frustum &frustum, std::vector<std::
         p.second->_indices().reset();
     }
 
+    std::unordered_set<GeomCullerRenderable*> seen;
+
     auto visitor = [&](CullerOctree::Node* node) {
         for(auto& p: node->data->triangles) {
             auto mat_id = p.first;
-
-            GeomCullerRenderable* renderable = nullptr;
             auto it = renderable_map.find(mat_id);
-            if(it == renderable_map.end()) {
-                // Not in the map yet? Create a new renderable
-                auto r = std::make_shared<GeomCullerRenderable>(
-                    this,
-                    mat_id,
-                    index_type_
-                );
+            GeomCullerRenderable* renderable = it->second.get();
 
-                renderable_map.insert(std::make_pair(mat_id, r));
-                renderable = r.get();
-
-                // Add the new renderable to the resultset
-                out.push_back(r);
-            } else {
-                renderable = it->second.get();
+            if(!seen.count(renderable)) {
+                seen.insert(renderable);
+                out.push_back(it->second);
             }
 
             /* Transfer the indices to the renderable */
@@ -360,6 +394,7 @@ void OctreeCuller::_gather_renderables(const Frustum &frustum, std::vector<std::
             for(auto idx: p.second) {
                 renderable->_indices().index(idx);
             }
+            renderable->_indices().done();
         }
     };
 
@@ -374,6 +409,8 @@ void OctreeCuller::_prepare_buffers(Renderer* renderer) {
             SHADOW_BUFFER_DISABLED,
             HARDWARE_BUFFER_MODIFY_ONCE_USED_FOR_RENDERING
         );
+
+        vertex_attribute_buffer_->upload(vertices_);
     }
 }
 

@@ -162,9 +162,7 @@ void SpatialHashPartitioner::lights_and_geometry_visible_from(
     read_lock<shared_mutex> lock(lock_);
 
     auto frustum = stage->camera(camera_id)->frustum();
-    auto entries = hash_->find_objects_within_frustum(
-        frustum
-    );
+    auto entries = hash_->find_objects_within_frustum(frustum);
 
     for(auto& entry: entries) {
         auto pentry = static_cast<PartitionerEntry*>(entry);

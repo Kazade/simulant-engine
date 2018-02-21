@@ -255,13 +255,15 @@ std::vector<LightmapLocation> pack_lightmaps(const std::vector<Lightmap>& lightm
     // Pack the rectangles
     stbrp_pack_rects(&context, &rects[0], rects.size());
 
+    // Make sure we lock the texture so that the renderer doesn't
+    // upload it while we're working on it!
+    auto texlock = output_texture->lock();
+
     // Finally generate the texture!
     output_texture->resize(LIGHTMAP_DIMENSION, LIGHTMAP_DIMENSION);
     output_texture->set_format(TEXTURE_FORMAT_RGBA);
 
     std::vector<LightmapLocation> locations(lightmaps.size());
-
-    auto texlock = output_texture->lock();
 
     bool logged = false;
     for(uint32_t i = 0; i < lightmaps.size(); ++i) {

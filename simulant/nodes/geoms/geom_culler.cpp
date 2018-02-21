@@ -1,4 +1,6 @@
 #include "geom_culler.h"
+#include "../../meshes/mesh.h"
+#include "../../resource_manager.h"
 
 namespace smlt {
 
@@ -19,8 +21,12 @@ void GeomCuller::compile() {
     }
 
     _compile(); // Do whatever the subclass does
-
     compiled_ = true;
+
+    /* Grab references to materials before releasing the mesh */
+    mesh_->each_submesh([this](const std::string, SubMesh* submesh) {
+        material_refs_.push_back(mesh_->resource_manager().material(submesh->material_id()));
+    });
 
     // No longer hold onto the mesh, we don't need it anymore
     mesh_.reset();
@@ -32,5 +38,13 @@ RenderableList GeomCuller::renderables_visible(const Frustum& frustum) {
     return ret;
 }
 
+void GeomCuller::each_renderable(EachRenderableCallback cb) {
+    RenderableList ret;
+    _all_renderables(ret);
+
+    for(auto renderable: ret) {
+        cb(renderable.get());
+    }
+}
 
 }

@@ -19,7 +19,8 @@ private:
     HardwareBuffer* _vertex_attribute_buffer() const override;
 
     void _compile() override;
-    void _gather_renderables(const Frustum &frustum, std::vector<std::shared_ptr<Renderable> > &out) override;
+    void _gather_renderables(const Frustum &frustum, RenderableList &out) override;
+    void _all_renderables(RenderableList& out) override;
 
     void _prepare_buffers(Renderer* renderer);
 

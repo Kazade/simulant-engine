@@ -124,7 +124,9 @@ public:
     void normalize(); //Scales the mesh so it has a radius of 1.0
     void transform_vertices(const smlt::Mat4& transform);
 
+    // DEPRECATED use each_submesh
     void each(std::function<void (const std::string&, SubMeshPtr)> func) const;
+    void each_submesh(std::function<void (const std::string&, SubMeshPtr)> func) const;
 
     void enable_animation(MeshAnimationType animation_type, uint32_t animation_frames);
     bool is_animated() const { return animation_type_ != MESH_ANIMATION_TYPE_NONE; }

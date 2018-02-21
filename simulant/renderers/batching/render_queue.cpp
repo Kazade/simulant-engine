@@ -22,6 +22,8 @@
 #include "../../material.h"
 #include "../../nodes/actor.h"
 #include "../../nodes/particle_system.h"
+#include "../../nodes/geom.h"
+#include "../../nodes/geoms/geom_culler.h"
 
 #include "render_queue.h"
 #include "../../partitioner.h"
@@ -124,6 +126,20 @@ RenderQueue::RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory)
         auto actor = stage->actor(actor_id);
         actor->each([=](uint32_t i, SubActor* subactor) {
             remove_renderable(subactor);
+        });
+    });
+
+    stage->signal_geom_created().connect([=](GeomID geom_id) {
+        auto geom = stage->geom(geom_id);
+        geom->culler->each_renderable([=](Renderable* renderable) {
+            insert_renderable(renderable);
+        });
+    });
+
+    stage->signal_geom_destroyed().connect([=](GeomID geom_id) {
+        auto geom = stage->geom(geom_id);
+        geom->culler->each_renderable([=](Renderable* renderable) {
+            remove_renderable(renderable);
         });
     });
 

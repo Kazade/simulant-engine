@@ -59,6 +59,9 @@ void GL1BufferManager::do_resize(HardwareBufferImpl* buffer, std::size_t new_siz
     if(impl->has_shadow_buffer()) {
         impl->shadow_buffer_.resize(new_size, 0);
     }
+
+    buffer->size = new_size;
+    buffer->capacity = new_size;
 }
 
 void GL1BufferManager::do_bind(const HardwareBufferImpl *buffer, HardwareBufferPurpose purpose) {

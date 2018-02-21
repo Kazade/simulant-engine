@@ -30,6 +30,9 @@ void GeomCullerRenderable::prepare_buffers(Renderer *renderer) {
 
     if(index_buffer_dirty_) {
         index_buffer_dirty_ = false;
+        if(indices_.data_size() > index_buffer_->size()) {
+            index_buffer_->resize(indices_.data_size());
+        }
         index_buffer_->upload(indices_);
     }
 }

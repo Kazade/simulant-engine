@@ -72,7 +72,11 @@ Mesh::~Mesh() {
     vertex_data_ = nullptr;
 }
 
-void Mesh::each(std::function<void (const std::string&, SubMesh*)> func) const {
+void Mesh::each(std::function<void (const std::string &, SubMeshPtr)> func) const {
+    return each_submesh(func);
+}
+
+void Mesh::each_submesh(std::function<void (const std::string&, SubMesh*)> func) const {
     assert(ordered_submeshes_.size() == submeshes_.size());
 
     // Respect insertion order while iterating
