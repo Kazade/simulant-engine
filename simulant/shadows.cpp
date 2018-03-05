@@ -73,6 +73,12 @@ void MeshSilhouette::calculate_directional_silhouette() {
     AdjacencyInfo* adj = mesh_->adjacency_info.get();
     VertexData* vertices = mesh_->vertex_data.get();
 
+    /* Generate mesh adjacency if we haven't already */
+    if(!adj) {
+        mesh_->generate_adjacency_info();
+        adj = mesh_->adjacency_info.get();
+    }
+
     adj->each_edge([&](std::size_t, const EdgeInfo& edge) {
         auto d1 = edge.normals[0].dot(light_direction);
 
@@ -103,6 +109,11 @@ void MeshSilhouette::calculate_point_silhouette() {
 
     AdjacencyInfo* adj = mesh_->adjacency_info.get();
     VertexData* vertices = mesh_->vertex_data.get();
+
+    if(!adj) {
+        mesh_->generate_adjacency_info();
+        adj = mesh_->adjacency_info.get();
+    }
 
     const float eps = std::numeric_limits<float>::epsilon();
 
