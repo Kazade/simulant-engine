@@ -77,13 +77,25 @@ public:
         assert(centre.y <= bounds_.max().y && centre.y >= bounds_.min().y);
         assert(centre.z <= bounds_.max().z && centre.z >= bounds_.min().z);
 
-        auto x = (int) ((centre.x + half_width - centre_.x) / level_and_node_width.second);
-        auto y = (int) ((centre.y + half_width - centre_.y) / level_and_node_width.second);
-        auto z = (int) ((centre.z + half_width - centre_.z) / level_and_node_width.second);
+        auto x = (GridCoord) ((centre.x + half_width - centre_.x) / level_and_node_width.second);
+        auto y = (GridCoord) ((centre.y + half_width - centre_.y) / level_and_node_width.second);
+        auto z = (GridCoord) ((centre.z + half_width - centre_.z) / level_and_node_width.second);
 
         assert(x >= 0);
         assert(y >= 0);
         assert(z >= 0);
+
+        auto level_width = ipow(2, level_and_node_width.first);
+        assert(x <= level_width);
+        assert(y <= level_width);
+        assert(z <= level_width);
+
+        /* This handles the case that the center was on the cusp of the cell
+         * in which case the above calculation will result in an out of range
+         * index */
+        x = std::min<GridCoord>(x, level_width - 1);
+        y = std::min<GridCoord>(y, level_width - 1);
+        z = std::min<GridCoord>(z, level_width - 1);
 
         auto idx = calc_index(level_and_node_width.first, x, y, z);
         assert(idx < nodes_.size());
