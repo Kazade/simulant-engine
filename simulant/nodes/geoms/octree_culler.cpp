@@ -133,10 +133,7 @@ void OctreeCuller::_gather_renderables(const Frustum &frustum, std::vector<std::
             }
 
             /* Transfer the indices to the renderable */
-            /* FIXME: Need to be able to do this in bulk for performance */
-            for(auto idx: p.second) {
-                renderable->_indices().index(idx);
-            }
+            renderable->_indices().index(&p.second[0], p.second.size());
             renderable->_indices().done();
         }
     };
