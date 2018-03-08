@@ -407,8 +407,13 @@ bool VertexData::clone_into(VertexData& other) {
     return true;
 }
 
+static constexpr uint32_t calc_index_stride(IndexType type) {
+    return (type == INDEX_TYPE_16_BIT) ? sizeof(uint16_t) : (type == INDEX_TYPE_8_BIT) ? sizeof(uint8_t) : sizeof(uint32_t);
+}
+
 IndexData::IndexData(IndexType type):
-    index_type_(type) {
+    index_type_(type),
+    stride_(calc_index_stride(type)){
 
 }
 

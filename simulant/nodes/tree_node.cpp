@@ -1,5 +1,8 @@
 
 #include "tree_node.h"
+#include "tree_node.h"
+#include "tree_node.h"
+#include "tree_node.h"
 
 namespace smlt {
 
@@ -107,64 +110,15 @@ TreeNode* TreeNode::last_child() const {
 }
 
 
-void TreeNode::each_child(TreeNodeTraversalCallback cb) {
-    uint32_t i = 0;
-    TreeNode* child = first_child_;
-    while(child) {
-        cb(i++, child);
-        child = child->right_;
-    }
-}
 
-void TreeNode::each_sibling(TreeNodeTraversalCallback cb) {
-    uint32_t i = 0;
-    TreeNode* sibling = parent_->first_child_;
-    while(sibling) {
-        if(sibling != this) {
-            cb(i++, sibling);
-        }
-        sibling = sibling->right_;
-    }
-}
 
-void TreeNode::each_ancestor(TreeNodeTraversalCallback cb) {
-    uint32_t i = 0;
-    TreeNode* ancestor = parent_;
-    while(ancestor) {
-        cb(i++, ancestor);
-        ancestor = ancestor->parent_;
-    }
-}
 
-void TreeNode::each_descendent(TreeNodeTraversalCallback cb) {
-    TreeNode* descendent = first_child_;
-    while(descendent) {
-        cb(0, descendent); //FIXME: Increment first argument for each descendent
 
-        descendent->each_descendent(cb);
-        descendent = descendent->right_;
-    }
-}
 
-void TreeNode::each_descendent_and_self(TreeNodeTraversalCallback cb) {
-    cb(0, this);
-    each_descendent(cb); // FIXME: Need increment to start from 1
-}
 
 // Leaf-first versions
-void TreeNode::each_descendent_lf(TreeNodeTraversalCallback cb) {
-    TreeNode* descendent = first_child_;
-    while(descendent) {
-        descendent->each_descendent_lf(cb);
-        auto next = descendent->right_;
-        cb(0, descendent); //FIXME: Increment first argument for each descendent
-        descendent = next;
-    }
-}
 
-void TreeNode::each_descendent_and_self_lf(TreeNodeTraversalCallback cb) {
-    each_descendent_lf(cb);
-    cb(0, this); //FIXME: Should not be zero
-}
+
+
 
 }

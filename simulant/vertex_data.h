@@ -277,6 +277,8 @@ public:
         default:
             break;
         }
+
+        count_ = indices_.size() / stride_;
     }
 
     void index(uint32_t idx) {
@@ -297,6 +299,8 @@ public:
             auto ptr = (uint32_t*) &indices_[i];
             *ptr = (uint32_t) idx;
         }
+
+        count_ = indices_.size() / stride_;
     }
 
     void push(uint32_t idx) {
@@ -318,7 +322,7 @@ public:
     }
 
     uint32_t count() const {
-        return indices_.size() / stride();
+        return count_;
     }
 
     bool operator==(const IndexData& other) const {
@@ -335,21 +339,16 @@ public:
     std::size_t data_size() const { return indices_.size() * sizeof(uint8_t); }
 
     uint32_t stride() const {
-        switch(index_type_) {
-            case INDEX_TYPE_8_BIT: return sizeof(uint8_t);
-            case INDEX_TYPE_16_BIT: return sizeof(uint16_t);
-            case INDEX_TYPE_32_BIT: return sizeof(uint32_t);
-        default:
-            throw std::logic_error("Invalid index type");
-        }
+        return stride_;
     }
 
     IndexType index_type() const { return index_type_; }
 
 private:
-
     IndexType index_type_;
     std::vector<uint8_t> indices_;
+    uint32_t stride_ = 0;
+    uint32_t count_ = 0;
 
     sig::signal<void ()> signal_update_complete_;
 };

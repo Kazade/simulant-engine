@@ -145,13 +145,15 @@ void SubMesh::_recalc_bounds() {
         std::numeric_limits<float>::lowest()
     ));
 
-    if(!index_data->count()) {
+    if(!index_data_->count()) {
         bounds_ = AABB();
         return;
     }
 
-    auto vertex_count = vertex_data->count();
-    for(uint16_t idx: index_data->all()) {
+    auto vertex_count = this->parent_->vertex_data_->count();
+
+    // FIXME:! This will break with 32 bit indices
+    for(uint16_t idx: index_data_->all()) {
         if(idx >= vertex_count) continue; // Don't read outside the bounds
 
         Vec4 pos = vertex_data->position_nd_at(idx);

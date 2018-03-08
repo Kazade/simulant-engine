@@ -3,6 +3,7 @@
 #include <cstdint>
 #include "../../math/aabb.h"
 #include "../../frustum.h"
+#include "../../generic/check_signature.h"
 
 namespace smlt {
 
@@ -32,6 +33,8 @@ public:
         GridCoord grid[3] = {0, 0, 0};
         NodeData* data = nullptr;
     };
+
+    using TraverseCallback = void(Octree::Node*);
 
     typedef TreeData tree_data_type;
     typedef NodeData node_data_type;
@@ -137,33 +140,37 @@ public:
         visitor(nodes_[0]);
     }
 
-    void traverse_visible(const Frustum& frustum, std::function<void (Octree::Node*)> cb) {
+    template<typename Callback>
+    void traverse_visible(const Frustum& frustum, const Callback& cb) {
+        check_signature<Callback, TraverseCallback>();
+
         if(nodes_.empty()) {
             return;
         }
 
-        std::function<void (Octree::Node&)> visitor = [&](Octree::Node& node) {
-            auto bounds = calc_loose_bounds(node);
-            if(frustum.intersects_cube(bounds.centre(), bounds.max_dimension())) {
-                cb(&node);
-
-                if(!is_leaf(node)) {
-                    auto indexes = child_indexes(node);
-
-                    for(auto child: indexes) {
-                        assert(child < nodes_.size());
-                        visitor(nodes_[child]);
-                    }
-                }
-            }
-        };
-
-        visitor(nodes_[0]);
+        _visible_visitor(frustum, cb, nodes_[0]);
     }
 
     AABB bounds() const { return bounds_; }
 
 private:
+    template<typename Callback>
+    void _visible_visitor(const Frustum& frustum, const Callback& callback, Octree::Node& node) {
+        auto bounds = calc_loose_bounds(node);
+        if(frustum.intersects_cube(bounds.centre(), bounds.max_dimension())) {
+            callback(&node);
+
+            if(!is_leaf(node)) {
+                auto indexes = child_indexes(node);
+
+                for(auto child: indexes) {
+                    assert(child < nodes_.size());
+                    _visible_visitor(frustum, callback, nodes_[child]);
+                }
+            }
+        }
+    }
+
     std::pair<Level, float> level_for_width(float obj_width) {
         /*
          * Given the diameter of the object
@@ -197,7 +204,7 @@ private:
         return std::make_pair(depth - 1, node_width * 2);
     }
 
-    AABB calc_loose_bounds(Octree::Node& node) {
+    AABB calc_loose_bounds(const Octree::Node& node) const {
         /* Returns the loose bounds of the cell which is
          * twice the size, but with the same centre */
 
@@ -212,7 +219,7 @@ private:
         return bounds;
     }
 
-    AABB calc_bounds(Octree::Node& node) {
+    AABB calc_bounds(const Octree::Node& node) const {
         auto grid_width = ipow(2, node.level);
         auto cell_width = bounds_.max_dimension() / grid_width;
 
