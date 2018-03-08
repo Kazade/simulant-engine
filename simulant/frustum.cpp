@@ -33,6 +33,8 @@ bool Frustum::intersects_cube(const Vec3& centre, float size) const {
     const float& y = centre.y;
     const float& z = centre.z;
 
+    size /= 2;
+
     for(const Plane& plane: planes_) {
         if(plane.n.x * (x - size) + plane.n.y * (y - size) + plane.n.z * (z - size) + plane.d > 0)
           continue;
