@@ -28,7 +28,7 @@ public:
                 "sample_data/tiled/example.tmx", "Layer 1"
             );
 
-            stage_->new_actor_with_mesh(mesh_id);
+            stage_->new_geom_with_mesh(mesh_id);
 
             auto bounds = stage_->assets->mesh(mesh_id)->aabb();
 
