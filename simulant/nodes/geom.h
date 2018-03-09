@@ -19,7 +19,6 @@
 #pragma once
 
 #include "../generic/managed.h"
-#include "../generic/tri_octree.h"
 #include "../interfaces.h"
 #include "../meshes/mesh.h"
 #include "../sound.h"
@@ -28,19 +27,6 @@
 
 namespace smlt {
 
-namespace impl {
-
-    struct Triangle {
-        Vec3 get_vertex(uint32_t i, void* user_data) {
-            return Vec3();
-        }
-
-        group_id get_group(void* user_data) {
-            return 0;
-        }
-    };
-
-}
 
 class GeomCuller;
 

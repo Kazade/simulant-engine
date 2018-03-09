@@ -2,7 +2,6 @@
 
 #include <memory>
 #include "geom_culler.h"
-#include "../../generic/tri_octree.h"
 #include "../../vertex_data.h"
 
 namespace smlt {
