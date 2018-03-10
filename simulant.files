@@ -308,6 +308,7 @@ simulant/generic/any/any.h
 simulant/generic/any/type_traits.h
 simulant/generic/any/utility.h
 simulant/generic/auto_weakptr.h
+simulant/generic/check_signature.h
 simulant/generic/cloneable.h
 simulant/generic/creator.h
 simulant/generic/data_carrier.h
@@ -336,7 +337,7 @@ simulant/generic/simple_tostring.cpp
 simulant/generic/simple_tostring.h
 simulant/generic/static_if.h
 simulant/generic/threading/shared_mutex.h
-simulant/generic/tri_octree.h
+simulant/generic/unique_id.h
 simulant/generic/unique_id.h
 simulant/hardware_buffer.cpp
 simulant/hardware_buffer.h
@@ -498,6 +499,13 @@ simulant/nodes/geom.cpp
 simulant/nodes/geom.cpp
 simulant/nodes/geom.h
 simulant/nodes/geom.h
+simulant/nodes/geoms/geom_culler.cpp
+simulant/nodes/geoms/geom_culler.h
+simulant/nodes/geoms/geom_culler_renderable.cpp
+simulant/nodes/geoms/geom_culler_renderable.h
+simulant/nodes/geoms/loose_octree.h
+simulant/nodes/geoms/octree_culler.cpp
+simulant/nodes/geoms/octree_culler.h
 simulant/nodes/light.cpp
 simulant/nodes/light.cpp
 simulant/nodes/light.h
@@ -600,6 +608,7 @@ simulant/random.h
 simulant/random.h
 simulant/render_sequence.cpp
 simulant/render_sequence.h
+simulant/renderers/batching/render_list.h
 simulant/renderers/batching/render_queue.cpp
 simulant/renderers/batching/render_queue.h
 simulant/renderers/batching/renderable.h
@@ -666,6 +675,8 @@ simulant/sound_drivers/openal_sound_driver.cpp
 simulant/sound_drivers/openal_sound_driver.h
 simulant/stage.cpp
 simulant/stage.h
+simulant/stats_recorder.cpp
+simulant/stats_recorder.h
 simulant/std/optional.hpp
 simulant/testing/mock_window.h
 simulant/texture.cpp
@@ -730,13 +741,16 @@ tests/global.cpp
 tests/global.h
 tests/test_controllers.h
 tests/test_frustum.h
+tests/test_geom.h
 tests/test_input_manager.h
 tests/test_input_state.h
+tests/test_loose_octree.h
 tests/test_manual_manager.h
 tests/test_material.h
 tests/test_material_script.h
 tests/test_mesh.h
 tests/test_mesh_silhouette.h
+tests/test_octree_culler.h
 tests/test_partitioner.h
 tests/test_random_generator.h
 tests/test_shader.h

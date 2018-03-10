@@ -82,7 +82,7 @@ public:
     bool has_repeating_emitters() const;
     bool has_active_emitters() const;
 
-    void prepare_buffers() override;
+    void prepare_buffers(Renderer* renderer) override;
     HardwareBuffer* vertex_attribute_buffer() const override {
         return vertex_buffer_.get();
     }

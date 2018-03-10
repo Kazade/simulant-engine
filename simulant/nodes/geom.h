@@ -19,7 +19,6 @@
 #pragma once
 
 #include "../generic/managed.h"
-#include "../generic/tri_octree.h"
 #include "../interfaces.h"
 #include "../meshes/mesh.h"
 #include "../sound.h"
@@ -28,20 +27,8 @@
 
 namespace smlt {
 
-namespace impl {
 
-    struct Triangle {
-        Vec3 get_vertex(uint32_t i, void* user_data) {
-            return Vec3();
-        }
-
-        group_id get_group(void* user_data) {
-            return 0;
-        }
-    };
-
-}
-
+class GeomCuller;
 
 /**
  * @brief The Geom class
@@ -59,14 +46,11 @@ class Geom :
     public virtual Boundable,
     public Managed<Geom>,
     public generic::Identifiable<GeomID>,
-    public Source {
+    public Source,
+    public std::enable_shared_from_this<Geom> {
 
 public:
-    typedef sig::signal<void (GeomID)> MeshChangedSignal;
-
     Geom(GeomID id, Stage* stage, SoundDriver *sound_driver, MeshID mesh, const Vec3& position=Vec3(), const Quaternion rotation=Quaternion());
-
-    MeshID mesh_id() const { return mesh_->id(); }
 
     const AABB& aabb() const;
 
@@ -78,19 +62,21 @@ public:
         StageNode::cleanup();
     }
 
-    Property<Geom, VertexData> vertex_data = {this, &Geom::vertex_data_};
+    Property<Geom, GeomCuller> culler = {this, &Geom::culler_};
+
+    bool init() override;
 
 private:
-    VertexData* vertex_data_ = nullptr;
+    MeshID mesh_id_;
+    RenderPriority render_priority_ = RENDER_PRIORITY_MAIN;
 
-    std::shared_ptr<Mesh> mesh_;
-    RenderPriority render_priority_;
+    std::shared_ptr<GeomCuller> culler_;
+
+    AABB aabb_;
 
     void update(float dt) {
         update_source(dt);
     }
-
-    void compile();
 };
 
 }

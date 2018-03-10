@@ -51,6 +51,7 @@ public:
 
     bool contains_point(const Vec3& point) const; ///< Returns true if the frustum contains point
     bool intersects_aabb(const AABB &box) const;
+    bool intersects_cube(const Vec3& centre, float size) const;
 
     bool initialized() const { return initialized_; }
 

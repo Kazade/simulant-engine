@@ -33,6 +33,7 @@ namespace smlt { typedef SDL2Window SysWindow; }
 #include "input/input_state.h"
 
 #define SIMULANT_PROFILE_KEY "SIMULANT_PROFILE"
+#define SIMULANT_SHOW_CURSOR_KEY "SIMULANT_SHOW_CURSOR"
 
 namespace smlt {
 
@@ -52,6 +53,11 @@ void Application::construct_window(const AppConfig& config) {
         config_copy.enable_vsync = false;
     }
 
+    /* Allow forcing the cursor at runtime */
+    if(std::getenv(SIMULANT_SHOW_CURSOR_KEY)) {
+        config_copy.show_cursor = true;
+    }
+
     kazlog::get_logger("/")->add_handler(kazlog::Handler::ptr(new kazlog::StdIOHandler));
     kazlog::get_logger("/")->set_level((kazlog::LOG_LEVEL) config.log_level);
 
@@ -65,6 +71,16 @@ void Application::construct_window(const AppConfig& config) {
         config_copy.fullscreen,
         config_copy.enable_vsync
     );
+
+    if(!config_copy.show_cursor) {
+        // By default, don't show the cursor
+        window_->show_cursor(false);
+
+        // Lock the cursor by default
+        window_->lock_cursor(true);
+    } else {
+        window_->show_cursor(true);
+    }
 
     if(config_copy.target_frame_rate) {
         float frame_time = (1.0f / float(config_copy.target_frame_rate)) * 1000.0f;

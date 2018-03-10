@@ -168,6 +168,16 @@ public:
 
     const VertexSpecification& specification() const { return vertex_specification_; }
 
+    /* Clones this VertexData into another. The other data must have the same
+     * specification and will be wiped if it contains vertices already.
+     *
+     * We don't do this with a traditional assignment operator as copying vertex data
+     * is a costly and rare operation and so copying should be explicit
+     *
+     * Returns true on success, false otherwise.
+    */
+    bool clone_into(VertexData& other);
+
 private:
     VertexSpecification vertex_specification_;
     std::vector<uint8_t> data_;
@@ -238,6 +248,39 @@ public:
 
     std::vector<uint32_t> all();
 
+    template<typename T>
+    void _index(uint32_t* indexes, std::size_t count) {
+        const auto bytes = (index_type_ == INDEX_TYPE_8_BIT) ? 1 : (index_type_ == INDEX_TYPE_16_BIT) ? 2 : 4;
+        auto i = indices_.size();
+        indices_.resize(i + (count * bytes));
+
+        uint32_t* idx = indexes;
+        for(std::size_t j = 0; j < count; ++j) {
+            auto ptr = (T*) &indices_[i];
+            *ptr = (T) (*idx);
+            ++idx;
+            i += sizeof(T);
+        }
+    }
+
+    void index(uint32_t* indexes, std::size_t count) {
+        switch(index_type_) {
+        case INDEX_TYPE_8_BIT:
+            _index<uint8_t>(indexes, count);
+        break;
+        case INDEX_TYPE_16_BIT:
+            _index<uint16_t>(indexes, count);
+        break;
+        case INDEX_TYPE_32_BIT:
+            _index<uint32_t>(indexes, count);
+        break;
+        default:
+            break;
+        }
+
+        count_ = indices_.size() / stride_;
+    }
+
     void index(uint32_t idx) {
         if(index_type_ == INDEX_TYPE_8_BIT) {
             if(idx > 255) throw std::out_of_range("Index too large");
@@ -247,22 +290,17 @@ public:
             if(idx >= std::numeric_limits<uint16_t>::max()) throw std::out_of_range("Index too large");
 
             auto i = indices_.size();
-            indices_.push_back(0);
-            indices_.push_back(0);
-
+            indices_.resize(i + 2);
             auto ptr = (uint16_t*) &indices_[i];
             *ptr = (uint16_t) idx;
         } else {
             auto i = indices_.size();
-
-            indices_.push_back(0);
-            indices_.push_back(0);
-            indices_.push_back(0);
-            indices_.push_back(0);
-
+            indices_.resize(i + 4);
             auto ptr = (uint32_t*) &indices_[i];
             *ptr = (uint32_t) idx;
         }
+
+        count_ = indices_.size() / stride_;
     }
 
     void push(uint32_t idx) {
@@ -284,7 +322,7 @@ public:
     }
 
     uint32_t count() const {
-        return indices_.size() / stride();
+        return count_;
     }
 
     bool operator==(const IndexData& other) const {
@@ -301,21 +339,16 @@ public:
     std::size_t data_size() const { return indices_.size() * sizeof(uint8_t); }
 
     uint32_t stride() const {
-        switch(index_type_) {
-            case INDEX_TYPE_8_BIT: return sizeof(uint8_t);
-            case INDEX_TYPE_16_BIT: return sizeof(uint16_t);
-            case INDEX_TYPE_32_BIT: return sizeof(uint32_t);
-        default:
-            throw std::logic_error("Invalid index type");
-        }
+        return stride_;
     }
 
     IndexType index_type() const { return index_type_; }
 
 private:
-
     IndexType index_type_;
     std::vector<uint8_t> indices_;
+    uint32_t stride_ = 0;
+    uint32_t count_ = 0;
 
     sig::signal<void ()> signal_update_complete_;
 };

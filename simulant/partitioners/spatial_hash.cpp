@@ -3,6 +3,8 @@
 #include "../nodes/light.h"
 #include "../nodes/camera.h"
 #include "../nodes/particle_system.h"
+#include "../nodes/geom.h"
+#include "../nodes/geoms/geom_culler.h"
 
 namespace smlt {
 
@@ -54,11 +56,23 @@ void SpatialHashPartitioner::_update_light(const AABB& bounds, LightID light) {
 }
 
 void SpatialHashPartitioner::stage_add_geom(GeomID geom_id) {
+    write_lock<shared_mutex> lock(lock_);
 
+    auto geom = stage->geom(geom_id);
+
+    auto partitioner_entry = std::make_shared<PartitionerEntry>(geom_id);
+    hash_->insert_object_for_box(geom->transformed_aabb(), partitioner_entry.get());
+    geom_entries_.insert(std::make_pair(geom_id, partitioner_entry));
 }
 
 void SpatialHashPartitioner::stage_remove_geom(GeomID geom_id) {
+    write_lock<shared_mutex> lock(lock_);
 
+    auto it = geom_entries_.find(geom_id);
+    if(it != geom_entries_.end()) {
+        hash_->remove_object(it->second.get());
+        geom_entries_.erase(it);
+    }
 }
 
 void SpatialHashPartitioner::stage_add_light(LightID obj) {
@@ -147,9 +161,8 @@ void SpatialHashPartitioner::lights_and_geometry_visible_from(
 
     read_lock<shared_mutex> lock(lock_);
 
-    auto entries = hash_->find_objects_within_frustum(
-        stage->camera(camera_id)->frustum()
-    );
+    auto frustum = stage->camera(camera_id)->frustum();
+    auto entries = hash_->find_objects_within_frustum(frustum);
 
     for(auto& entry: entries) {
         auto pentry = static_cast<PartitionerEntry*>(entry);
@@ -162,9 +175,13 @@ void SpatialHashPartitioner::lights_and_geometry_visible_from(
                 });
             }
             break;
-            case PARTITIONER_ENTRY_TYPE_GEOM:
-                assert(0 && "Not implemented");
-            break;
+            case PARTITIONER_ENTRY_TYPE_GEOM: {
+                auto geom = pentry->geom_id.fetch();
+                auto renderables = geom->culler->renderables_visible(frustum);
+                for(auto r: renderables) {
+                    geom_out.push_back(r);
+                }
+            } break;
             case PARTITIONER_ENTRY_TYPE_PARTICLE_SYSTEM:
                 geom_out.push_back(pentry->particle_system_id.fetch()->shared_from_this());
             break;

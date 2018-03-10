@@ -162,7 +162,7 @@ void StageManager::late_update(float dt) {
 
 void StageManager::update(float dt) {
     //Update the stages
-    for(auto stage_pair: StageManager::__objects()) {
+    for(auto& stage_pair: StageManager::__objects()) {
         TreeNode* root = stage_pair.second.get();
 
         root->each_descendent_and_self([=](uint32_t, TreeNode* node) {

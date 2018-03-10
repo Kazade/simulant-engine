@@ -29,6 +29,7 @@ void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, u
     enable_colour_arrays(true);
 
     global_ambient_ = stage->ambient_light();
+    GLCheck(glLightModelfv, GL_LIGHT_MODEL_AMBIENT, &global_ambient_.r);
 }
 
 void GL1RenderQueueVisitor::visit(Renderable* renderable, MaterialPass* pass, batcher::Iteration iteration) {
@@ -80,16 +81,13 @@ void GL1RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev
     // Set up the textures appropriately depending on the group textures
     for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
         auto current_tex = current_group_->texture_id[i];
-        if(!last_group || last_group->texture_id[i] != current_tex) {            
-            GLCheck(glEnable, GL_TEXTURE_2D);
+        if(!last_group || last_group->texture_id[i] != current_tex) {
             GLCheck(glActiveTextureARB, GL_TEXTURE0_ARB + i);
             if(current_tex) {
-                //L_DEBUG(_F("Binding texture {0} to texture unit {1}").format(current_tex, i));
+                GLCheck(glEnable, GL_TEXTURE_2D);
                 GLCheck(glBindTexture, GL_TEXTURE_2D, current_tex);
             } else {
-                //L_DEBUG(_F("Disabling texture unit {0}").format(i));
                 GLCheck(glBindTexture, GL_TEXTURE_2D, 0);
-                //GLCheck(glDisable, GL_TEXTURE_2D);
             }
         }
     }
@@ -218,8 +216,6 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
     if(!prev || prev->blending() != next->blending()) {
         set_blending_mode(next->blending());
     }
-
-    GLCheck(glLightModelfv, GL_LIGHT_MODEL_AMBIENT, &global_ambient_.r);
 }
 
 void GL1RenderQueueVisitor::change_light(const Light* prev, const Light* next) {
@@ -315,7 +311,7 @@ void GL1RenderQueueVisitor::disable_texcoord_array(uint8_t which, bool force) {
     textures_enabled_[which] = false;
 }
 
-GLenum convert_arrangement(MeshArrangement arrangement) {
+static GLenum convert_arrangement(MeshArrangement arrangement) {
     switch(arrangement) {
     case MESH_ARRANGEMENT_LINES:
         return GL_LINES;
@@ -370,7 +366,7 @@ void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
 
     auto spec = renderable->vertex_attribute_specification();
 
-    renderable->prepare_buffers();
+    renderable->prepare_buffers(renderer_);
 
     /* We need to get access to the vertex data that's been uploaded, and map_target_for_read is the only way to do that
      * but as on GL1 there are no VBOs this should be fast */
@@ -430,6 +426,8 @@ void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
         convert_index_type(renderable->index_type()),
         (const void*) index_data
     );
+
+    renderer_->window->stats->increment_polygons_rendered(renderable->arrangement(), element_count);
 }
 
 }

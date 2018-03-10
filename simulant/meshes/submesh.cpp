@@ -17,11 +17,6 @@ SubMesh::SubMesh(Mesh* parent, const std::string& name,
     index_data_ = new IndexData(index_type);
     index_data_->signal_update_complete().connect([this]() {
         this->index_buffer_dirty_ = true;
-
-        // Rebuild the adjacency info if that's enabled on the parent mesh
-        if(parent_->maintain_adjacency_info()) {
-            parent_->adjacency_info->rebuild();
-        }
     });
 
     if(!material) {
@@ -51,10 +46,8 @@ HardwareBuffer* SubMesh::vertex_buffer() const {
     return parent_->shared_vertex_buffer_.get();
 }
 
-void SubMesh::prepare_buffers() {
-    auto* renderer = parent_->resource_manager().window->renderer.get();
-
-    parent_->prepare_buffers();
+void SubMesh::prepare_buffers(Renderer* renderer) {
+    parent_->prepare_buffers(renderer);
 
     if(index_buffer_dirty_) {
         sync_buffer<IndexData, Renderer>(
@@ -152,13 +145,15 @@ void SubMesh::_recalc_bounds() {
         std::numeric_limits<float>::lowest()
     ));
 
-    if(!index_data->count()) {
+    if(!index_data_->count()) {
         bounds_ = AABB();
         return;
     }
 
-    auto vertex_count = vertex_data->count();
-    for(uint16_t idx: index_data->all()) {
+    auto vertex_count = this->parent_->vertex_data_->count();
+
+    // FIXME:! This will break with 32 bit indices
+    for(uint16_t idx: index_data_->all()) {
         if(idx >= vertex_count) continue; // Don't read outside the bounds
 
         Vec4 pos = vertex_data->position_nd_at(idx);

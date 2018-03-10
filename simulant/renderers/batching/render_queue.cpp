@@ -22,6 +22,8 @@
 #include "../../material.h"
 #include "../../nodes/actor.h"
 #include "../../nodes/particle_system.h"
+#include "../../nodes/geom.h"
+#include "../../nodes/geoms/geom_culler.h"
 
 #include "render_queue.h"
 #include "../../partitioner.h"
@@ -124,6 +126,20 @@ RenderQueue::RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory)
         auto actor = stage->actor(actor_id);
         actor->each([=](uint32_t i, SubActor* subactor) {
             remove_renderable(subactor);
+        });
+    });
+
+    stage->signal_geom_created().connect([=](GeomID geom_id) {
+        auto geom = stage->geom(geom_id);
+        geom->culler->each_renderable([=](Renderable* renderable) {
+            insert_renderable(renderable);
+        });
+    });
+
+    stage->signal_geom_destroyed().connect([=](GeomID geom_id) {
+        auto geom = stage->geom(geom_id);
+        geom->culler->each_renderable([=](Renderable* renderable) {
+            remove_renderable(renderable);
         });
     });
 
@@ -254,12 +270,21 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
         for(auto& p: batches) {
             const RenderGroup* current_group = &p.first;
 
-            visitor->change_render_group(last_group, current_group);
+            // Track whether we've called change_render_group yet
+            bool render_group_changed_ = false;
 
             p.second->each([&](uint32_t i, Renderable* renderable) {
                 if(!renderable->is_visible_in_frame(frame_id)) {
                     return;
                 }
+
+                /* We do this here so that we don't change render group unless something in the
+                 * new group is visible */
+                if(!render_group_changed_) {
+                    visitor->change_render_group(last_group, current_group);
+                    render_group_changed_ = true;
+                }
+
 
                 /* As the pass number is constant for the entire batch, a material_pass
                  * will only change if and when a material changes

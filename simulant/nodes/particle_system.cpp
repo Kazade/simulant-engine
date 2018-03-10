@@ -128,12 +128,10 @@ const AABB &ParticleSystem::aabb() const {
     return aabb_;
 }
 
-void ParticleSystem::prepare_buffers() {
+void ParticleSystem::prepare_buffers(Renderer *renderer) {
 
     // Only resize the hardware buffers if someone called set_quota()
     if(resize_buffers_) {
-        auto* renderer = stage->window->renderer.get();
-
         if(!vertex_buffer_) {
             vertex_buffer_ = renderer->hardware_buffers->allocate(
                 vertex_data_->stride() * quota_ * 4,

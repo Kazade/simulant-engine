@@ -15,10 +15,10 @@ public:
         pipeline_->viewport->set_colour(smlt::Colour::GREY);
         pipeline_->deactivate();
 
-        window->resource_locator->add_search_path("sample_data/q2");
+        window->resource_locator->add_search_path("sample_data/quake2/textures");
 
-        auto mesh = stage_->assets->new_mesh_from_file("sample_data/sample.bsp").fetch();
-        auto actor_id = stage_->new_actor_with_mesh(mesh->id());
+        auto mesh = stage_->assets->new_mesh_from_file("sample_data/quake2/maps/aggression.bsp").fetch();
+        auto actor_id = stage_->new_geom_with_mesh(mesh->id());
         /*
         stage->camera(camera_id_)->move_to_absolute(
             mesh->data->get<smlt::Vec3>("player_spawn")
@@ -31,7 +31,7 @@ public:
             Degrees(45.0),
             float(window->width()) / float(window->height()),
             1.0,
-            1000.0
+            10000.0
         );
 
         stage_->set_ambient_light(smlt::Colour(0.8, 0.8, 0.8, 1.0));

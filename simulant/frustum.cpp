@@ -28,6 +28,36 @@ Frustum::Frustum():
 
 }
 
+bool Frustum::intersects_cube(const Vec3& centre, float size) const {
+    const float& x = centre.x;
+    const float& y = centre.y;
+    const float& z = centre.z;
+
+    size /= 2;
+
+    for(const Plane& plane: planes_) {
+        if(plane.n.x * (x - size) + plane.n.y * (y - size) + plane.n.z * (z - size) + plane.d > 0)
+          continue;
+        if(plane.n.x * (x + size) + plane.n.y * (y - size) + plane.n.z * (z - size) + plane.d > 0)
+          continue;
+        if(plane.n.x * (x - size) + plane.n.y * (y + size) + plane.n.z * (z - size) + plane.d > 0)
+          continue;
+        if(plane.n.x * (x + size) + plane.n.y * (y + size) + plane.n.z * (z - size) + plane.d > 0)
+          continue;
+        if(plane.n.x * (x - size) + plane.n.y * (y - size) + plane.n.z * (z + size) + plane.d > 0)
+          continue;
+        if(plane.n.x * (x + size) + plane.n.y * (y - size) + plane.n.z * (z + size) + plane.d > 0)
+          continue;
+        if(plane.n.x * (x - size) + plane.n.y * (y + size) + plane.n.z * (z + size) + plane.d > 0)
+          continue;
+        if(plane.n.x * (x + size) + plane.n.y * (y + size) + plane.n.z * (z + size) + plane.d > 0)
+          continue;
+        return false;
+    }
+
+    return true;
+}
+
 bool Frustum::intersects_aabb(const AABB& aabb) const {
     for(const Plane& plane: planes_) {
         auto points = aabb.corners();

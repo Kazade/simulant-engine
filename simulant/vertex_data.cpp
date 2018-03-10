@@ -394,8 +394,26 @@ void VertexData::done() {
     signal_update_complete_();
 }
 
+bool VertexData::clone_into(VertexData& other) {
+    if(vertex_specification_ != other.vertex_specification_) {
+        return false;
+    }
+
+    other.data_ = this->data_;
+    other.vertex_count_ = this->vertex_count_;
+    other.stride_ = this->stride_;
+    other.cursor_position_ = 0;
+
+    return true;
+}
+
+static constexpr uint32_t calc_index_stride(IndexType type) {
+    return (type == INDEX_TYPE_16_BIT) ? sizeof(uint16_t) : (type == INDEX_TYPE_8_BIT) ? sizeof(uint8_t) : sizeof(uint32_t);
+}
+
 IndexData::IndexData(IndexType type):
-    index_type_(type) {
+    index_type_(type),
+    stride_(calc_index_stride(type)){
 
 }
 

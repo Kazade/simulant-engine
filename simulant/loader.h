@@ -143,6 +143,7 @@ public:
     void into(Loadable& resource, const LoaderOptions& options = LoaderOptions()) override;
 
 private:
+    virtual bool format_stored_upside_down() const { return true; }
     virtual TextureLoadResult do_load(const std::vector<uint8_t>& buffer) = 0;
 };
 

@@ -254,40 +254,40 @@ Plane Mat4::extract_plane(FrustumPlane plane) const {
 
     switch(plane) {
     case FRUSTUM_PLANE_RIGHT:
-        out.n.x = (*this)[3] - (*this)[0];
-        out.n.y = (*this)[7] - (*this)[4];
-        out.n.z = (*this)[11] - (*this)[8];
-        out.d = (*this)[15] - (*this)[12];
+        out.n.x = m[3] - m[0];
+        out.n.y = m[7] - m[4];
+        out.n.z = m[11] - m[8];
+        out.d = m[15] - m[12];
         break;
     case FRUSTUM_PLANE_LEFT:
-        out.n.x = (*this)[3] + (*this)[0];
-        out.n.y = (*this)[7] + (*this)[4];
-        out.n.z = (*this)[11] + (*this)[8];
-        out.d = (*this)[15] + (*this)[12];
+        out.n.x = m[3] + m[0];
+        out.n.y = m[7] + m[4];
+        out.n.z = m[11] + m[8];
+        out.d = m[15] + m[12];
         break;
     case FRUSTUM_PLANE_BOTTOM:
-        out.n.x = (*this)[3] + (*this)[1];
-        out.n.y = (*this)[7] + (*this)[5];
-        out.n.z = (*this)[11] + (*this)[9];
-        out.d = (*this)[15] + (*this)[13];
+        out.n.x = m[3] + m[1];
+        out.n.y = m[7] + m[5];
+        out.n.z = m[11] + m[9];
+        out.d = m[15] + m[13];
         break;
     case FRUSTUM_PLANE_TOP:
-        out.n.x = (*this)[3] - (*this)[1];
-        out.n.y = (*this)[7] - (*this)[5];
-        out.n.z = (*this)[11] - (*this)[9];
-        out.d = (*this)[15] - (*this)[13];
+        out.n.x = m[3] - m[1];
+        out.n.y = m[7] - m[5];
+        out.n.z = m[11] - m[9];
+        out.d = m[15] - m[13];
         break;
     case FRUSTUM_PLANE_FAR:
-        out.n.x = (*this)[3] - (*this)[2];
-        out.n.y = (*this)[7] - (*this)[6];
-        out.n.z = (*this)[11] - (*this)[10];
-        out.d = (*this)[15] - (*this)[14];
+        out.n.x = m[3] - m[2];
+        out.n.y = m[7] - m[6];
+        out.n.z = m[11] - m[10];
+        out.d = m[15] - m[14];
         break;
     case FRUSTUM_PLANE_NEAR:
-        out.n.x = (*this)[3] + (*this)[2];
-        out.n.y = (*this)[7] + (*this)[6];
-        out.n.z = (*this)[11] + (*this)[10];
-        out.d = (*this)[15] + (*this)[14];
+        out.n.x = m[3] + m[2];
+        out.n.y = m[7] + m[6];
+        out.n.z = m[11] + m[10];
+        out.d = m[15] + m[14];
         break;
     default:
         assert(0 && "Invalid plane index");

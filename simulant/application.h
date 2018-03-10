@@ -65,6 +65,9 @@ struct AppConfig {
     std::vector<unicode> arguments;
 
     smlt::LoggingLevel log_level = smlt::LOG_LEVEL_WARN;
+
+    /* If set to true, the mouse cursor will not be hidden by default */
+    bool show_cursor = false;
 };
 
 class Application {

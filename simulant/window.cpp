@@ -243,12 +243,6 @@ bool Window::_init() {
         initialized_ = true;
     }
 
-    // By default, don't show the cursor
-    show_cursor(false);
-
-    // Lock the cursor by default
-    lock_cursor(true);
-
     L_DEBUG("Initialization finished");
 #ifdef _arch_dreamcast
         print_available_ram();
@@ -369,6 +363,8 @@ bool Window::run_frame() {
     {
         std::lock_guard<std::mutex> rendering_lock(context_lock_);
         if(has_context()) {
+
+            stats->reset_polygons_rendered();
             render_sequence()->run();
 
             signal_pre_swap_();

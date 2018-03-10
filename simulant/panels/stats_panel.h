@@ -48,6 +48,7 @@ private:
     ui::WidgetPtr fps_;
     ui::WidgetPtr ram_usage_;
     ui::WidgetPtr actors_rendered_;
+    ui::WidgetPtr polygons_rendered_;
 };
 
 }

@@ -523,7 +523,7 @@ void GenericRenderer::set_renderable_uniforms(const MaterialPass* pass, GPUProgr
 }
 
 void GL2RenderQueueVisitor::rebind_attribute_locations_if_necessary(const MaterialPass* pass, GPUProgram* program) {
-    const std::set<ShaderAvailableAttributes> SHADER_AVAILABLE_ATTRS = {
+    static const std::set<ShaderAvailableAttributes> SHADER_AVAILABLE_ATTRS = {
         SP_ATTR_VERTEX_POSITION,
         SP_ATTR_VERTEX_DIFFUSE,
         SP_ATTR_VERTEX_NORMAL,
@@ -596,7 +596,7 @@ void GL2RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
 
     renderer_->set_renderable_uniforms(material_pass, program_, renderable, camera_);
 
-    renderable->prepare_buffers();
+    renderable->prepare_buffers(renderer_);
 
     auto* vertex_buffer = renderable->vertex_attribute_buffer();
     auto* index_buffer = renderable->index_buffer();
@@ -619,36 +619,37 @@ static GLenum convert_index_type(IndexType type) {
     }
 }
 
-void GenericRenderer::send_geometry(Renderable *renderable) {
-    std::size_t index_count = renderable->index_element_count();
-    if(!index_count) {
-        return;
-    }
-
-    auto index_type = convert_index_type(renderable->index_type());
-
-    switch(renderable->arrangement()) {
-        case MESH_ARRANGEMENT_LINES:
-            GLCheck(glDrawElements, GL_LINES, index_count, index_type, BUFFER_OFFSET(0));
-        break;
-        case MESH_ARRANGEMENT_LINE_STRIP:
-            GLCheck(glDrawElements, GL_LINE_STRIP, index_count, index_type, BUFFER_OFFSET(0));
-        break;
-        case MESH_ARRANGEMENT_TRIANGLES:
-            GLCheck(glDrawElements, GL_TRIANGLES, index_count, index_type, BUFFER_OFFSET(0));
-        break;
-        case MESH_ARRANGEMENT_TRIANGLE_STRIP:
-            GLCheck(glDrawElements, GL_TRIANGLE_STRIP, index_count, index_type, BUFFER_OFFSET(0));
-        break;
-        case MESH_ARRANGEMENT_TRIANGLE_FAN:
-            GLCheck(glDrawElements, GL_TRIANGLE_FAN, index_count, index_type, BUFFER_OFFSET(0));
-        break;
-        default:
-            L_DEBUG("Tried to render a mesh with an invalid arrangement");
+static GLenum convert_arrangement(MeshArrangement arrangement) {
+    switch(arrangement) {
+    case MESH_ARRANGEMENT_LINES:
+        return GL_LINES;
+    case MESH_ARRANGEMENT_LINE_STRIP:
+        return GL_LINE_STRIP;
+    case MESH_ARRANGEMENT_TRIANGLES:
+        return GL_TRIANGLES;
+    case MESH_ARRANGEMENT_TRIANGLE_STRIP:
+        return GL_TRIANGLE_STRIP;
+    case MESH_ARRANGEMENT_TRIANGLE_FAN:
+        return GL_TRIANGLE_FAN;
+    default:
+        assert(0 && "Invalid mesh arrangement");
+        return GL_TRIANGLES;
     }
 }
 
 
+void GenericRenderer::send_geometry(Renderable *renderable) {
+    auto element_count = renderable->index_element_count();
+    if(!element_count) {
+        return;
+    }
+
+    auto index_type = convert_index_type(renderable->index_type());
+    auto arrangement = renderable->arrangement();
+
+    GLCheck(glDrawElements, convert_arrangement(arrangement), element_count, index_type, BUFFER_OFFSET(0));
+    window->stats->increment_polygons_rendered(arrangement, element_count);
+}
 
 void GenericRenderer::init_context() {
     if(!gladLoadGL()) {
