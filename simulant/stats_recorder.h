@@ -20,6 +20,11 @@ public:
         subactors_renderered_ = value;
     }
 
+    float frame_time() const { return frame_time_; }
+    void set_frame_time(float value) {
+        frame_time_ = value;
+    }
+
     uint32_t frames_per_second() const { return frames_per_second_; }
     void set_frames_per_second(uint32_t value) {
         frames_per_second_ = value;
@@ -41,6 +46,7 @@ public:
     }
 
 private:
+    float frame_time_ = 0;
     uint32_t subactors_renderered_ = 0;
     uint32_t frames_per_second_ = 0;
     uint32_t geometry_visible_ = 0;

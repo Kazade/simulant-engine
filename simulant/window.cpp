@@ -295,6 +295,9 @@ void Window::run_update() {
         stats->set_frames_per_second(frame_counter_frames_);
 
         frame_time_in_milliseconds_ = 1000.0 / float(frame_counter_frames_);
+
+        stats->set_frame_time(frame_time_in_milliseconds_);
+
         frame_counter_frames_ = 0;
         frame_counter_time_ = 0.0;
     }

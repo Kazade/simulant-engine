@@ -53,6 +53,10 @@ void StatsPanel::initialize() {
     fps_->move_to(320, vheight);
     vheight -= diff;
 
+    frame_time_ = overlay->ui->new_widget_as_label("Frame Time: 0ms");
+    frame_time_->move_to(320, vheight);
+    vheight -= diff;
+
     ram_usage_ = overlay->ui->new_widget_as_label("RAM: 0");
     ram_usage_->move_to(320, vheight);
     vheight -= diff;
@@ -100,6 +104,7 @@ void StatsPanel::update() {
         auto actors_rendered = window_->stats->geometry_visible();
 
         fps_->set_text(_u("FPS: {0}").format(window_->stats->frames_per_second()));
+        frame_time_->set_text(_F("Frame Time: {0}ms").format(window_->stats->frame_time()));
         ram_usage_->set_text(_u("RAM: {0} MB").format(mem_usage));
         actors_rendered_->set_text(_u("Renderables Visible: {0}").format(actors_rendered));
         polygons_rendered_->set_text(_u("Polygons Rendered: {0}").format(window_->stats->polygons_rendered()));

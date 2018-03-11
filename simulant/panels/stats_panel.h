@@ -46,6 +46,7 @@ private:
     int32_t get_memory_usage_in_megabytes();
 
     ui::WidgetPtr fps_;
+    ui::WidgetPtr frame_time_;
     ui::WidgetPtr ram_usage_;
     ui::WidgetPtr actors_rendered_;
     ui::WidgetPtr polygons_rendered_;
