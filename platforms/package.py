@@ -15,7 +15,7 @@ from zipfile import ZipFile
 
 HEADER_EXTENSIONS = (".h", ".hpp")
 LIBRARY_EXTENSIONS = (
-    ".lib", ".dylib", ".dll", ".so", ".a"
+    ".lib", ".dylib", ".dll", ".so", ".a", ".so.1"
 )
 
 
