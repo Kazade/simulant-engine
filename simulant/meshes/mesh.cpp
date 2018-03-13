@@ -80,8 +80,14 @@ void Mesh::each_submesh(std::function<void (const std::string&, SubMesh*)> func)
     assert(ordered_submeshes_.size() == submeshes_.size());
 
     // Respect insertion order while iterating
-    for(SubMesh* submesh: this->ordered_submeshes_) {
-        func(submesh->name(), submesh);
+    // Copy array in case of deletions during iteration
+    auto to_iterate = this->ordered_submeshes_;
+
+    for(SubMesh* submesh: to_iterate) {
+        auto sm = submesh->shared_from_this();
+        if(sm) {
+            func(sm->name(), sm.get());
+        }
     }
 }
 

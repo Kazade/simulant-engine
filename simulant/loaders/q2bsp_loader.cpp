@@ -496,6 +496,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         uv_limits.push_back(uv_limit);
     }
 
+    L_WARN("About to pack lightmaps");
+
     auto lightmaps = extract_lightmaps(lightmap_data, faces, uv_limits);
     auto locations = pack_lightmaps(lightmaps, lightmap_texture.fetch());
 
@@ -522,18 +524,17 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     lightmap_texture.fetch()->enable_gc();
 
-    L_INFO("Finished loading Quake 2 BSP");
+    L_WARN("Finished loading Quake 2 BSP");
 
     mesh->vertex_data->done();
-    mesh->each([&](const std::string& name, SubMesh* submesh) {
+    mesh->each_submesh([&](const std::string& name, SubMesh* submesh) {
         //Delete empty submeshes
-        /*if(!submesh->index_data->count()) {
+        if(!submesh->index_data->count()) {
             mesh->delete_submesh(name);
             return;
-        }*/
+        }
         submesh->index_data->done();
     });
-
 
     //FIXME: mark mesh as uncollected
 }
