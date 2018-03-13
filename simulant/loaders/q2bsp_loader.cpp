@@ -492,7 +492,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
                 float h = float(dimensions[f.texture_info].height);
 
                 mesh->vertex_data->position(pos);
-                mesh->vertex_data->normal(planes[f.plane].normal);
+                auto N = planes[f.plane].normal;
+                mesh->vertex_data->normal((f.plane_side == 0) ? N : -N);
                 mesh->vertex_data->diffuse(smlt::Colour::WHITE);
                 mesh->vertex_data->tex_coord0(u / w, v / h);
                 mesh->vertex_data->tex_coord1(u / w, v / h);
