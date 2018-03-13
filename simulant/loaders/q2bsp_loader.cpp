@@ -136,18 +136,7 @@ void Q2BSPLoader::generate_materials(
 
     /* Given a list of texture infos, this generates counterpart materials */
 
-    std::map<unicode, TextureID> textures;
-
-    // TESTING: BLACK TEXTURE
-    auto black = assets->new_texture(smlt::GARBAGE_COLLECT_NEVER).fetch();
-    {
-        auto lock = black->lock();
-        black->resize(1, 1);
-        black->set_format(TEXTURE_FORMAT_RGBA);
-        black->data()[0] = black->data()[1] = black->data()[2] = 0;
-        black->data()[3] = 255;
-        black->mark_data_changed();
-    }
+    std::unordered_map<std::string, TextureID> textures;
 
     materials.clear();
     for(auto& info: texture_infos) {
@@ -162,7 +151,7 @@ void Q2BSPLoader::generate_materials(
             continue;
         }
 
-        unicode texture_name = info.texture_name;
+        const std::string& texture_name = info.texture_name;
 
         // Only load each texture once
         TextureID tex_id;
@@ -173,9 +162,6 @@ void Q2BSPLoader::generate_materials(
         } else {
             tex_id = textures.at(texture_name);
         }
-
-        // TESTING: USE BLACK TEXTURE
-       // tex_id = black->id();
 
         // Load the correct material depending on surface flags
         auto material_id = assets->new_material_from_file(
@@ -195,8 +181,6 @@ void Q2BSPLoader::generate_materials(
         materials.push_back(material_id);
         dimensions.push_back(Q2::TexDimension(tex->width(), tex->height()));
     }
-
-    black->enable_gc();
 }
 
 struct Lightmap {
@@ -398,9 +382,6 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         }
     }
 
-    std::cout << "Num materials: " << materials.size() << std::endl;
-    std::cout << "Num submeshes: " << mesh->submesh_count() << std::endl;
-
     std::vector<FaceUVLimits> uv_limits;
 
     std::vector<std::set<uint32_t>> face_indexes(faces.size());
@@ -540,6 +521,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     }
 
     lightmap_texture.fetch()->enable_gc();
+
+    L_INFO("Finished loading Quake 2 BSP");
 
     mesh->vertex_data->done();
     mesh->each([&](const std::string& name, SubMesh* submesh) {
