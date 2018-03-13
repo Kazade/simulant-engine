@@ -337,15 +337,17 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     std::vector<Q2::Edge> edges;
     std::vector<Q2::TextureInfo> textures;
     std::vector<Q2::Face> faces;
+    std::vector<Q2::Plane> planes;
     std::vector<uint32_t> face_edges;
     std::vector<uint8_t> lightmap_data;
 
+    read_lump(file, header, Q2::LumpType::PLANES, planes);
     read_lump(file, header, Q2::LumpType::VERTICES, vertices);
-    read_lump(file, header, Q2::LumpType::EDGES, edges);
     read_lump(file, header, Q2::LumpType::TEXTURE_INFO, textures);
     read_lump(file, header, Q2::LumpType::FACES, faces);
     read_lump(file, header, Q2::LumpType::FACE_EDGE_TABLE, face_edges);
     read_lump(file, header, Q2::LumpType::LIGHTMAPS, lightmap_data);
+    read_lump(file, header, Q2::LumpType::EDGES, edges);
 
     std::for_each(vertices.begin(), vertices.end(), [&](Q2::Point3f& vert) {
         vert = vert.transformed_by(rotation);
@@ -446,7 +448,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
          * Build the triangles for this "face"
          */
 
-        std::map<uint32_t, uint32_t> index_lookup;
+        std::unordered_map<uint32_t, uint32_t> index_lookup;
 
         int32_t min_u = std::numeric_limits<int32_t>::max();
         int32_t max_u = std::numeric_limits<int32_t>::lowest();
@@ -454,20 +456,11 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         int32_t max_v = std::numeric_limits<int32_t>::lowest();
 
         for(int16_t i = 1; i < (int16_t) indexes.size() - 1; ++i) {
-            uint32_t tri_idx[] = {
+            const uint32_t tri_idx[] = {
                 indexes[0],
                 indexes[i+1],
                 indexes[i]
             };
-
-            //Calculate the surface normal for this triangle
-            Vec3& v1 = vertices[tri_idx[0]];
-            Vec3& v2 = vertices[tri_idx[1]];
-            Vec3& v3 = vertices[tri_idx[2]];
-
-            Vec3 vec1 = v2 - v1;
-            Vec3 vec2 = v3 - v1;
-            Vec3 normal = vec1.cross(vec2).normalized();
 
             for(uint8_t j = 0; j < 3; ++j) {
                 if(index_lookup.count(tri_idx[j])) {
@@ -499,7 +492,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
                 float h = float(dimensions[f.texture_info].height);
 
                 mesh->vertex_data->position(pos);
-                mesh->vertex_data->normal(normal);
+                mesh->vertex_data->normal(planes[f.plane].normal);
                 mesh->vertex_data->diffuse(smlt::Colour::WHITE);
                 mesh->vertex_data->tex_coord0(u / w, v / h);
                 mesh->vertex_data->tex_coord1(u / w, v / h);

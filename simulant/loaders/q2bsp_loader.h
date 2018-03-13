@@ -68,6 +68,12 @@ struct Edge {
     uint16_t b;
 };
 
+struct Plane {
+    Point3f normal;
+    float distance;
+    uint32_t type;
+};
+
 enum SurfaceFlag {
     SURFACE_FLAG_NONE = 0x0,
     SURFACE_FLAG_LIGHT = 0x1,
