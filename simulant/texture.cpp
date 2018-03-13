@@ -34,8 +34,8 @@
 
 namespace smlt {
 
-const std::string Texture::BuiltIns::CHECKERBOARD = "simulant/materials/textures/checkerboard.png";
-const std::string Texture::BuiltIns::BUTTON = "simulant/materials/textures/button.png";
+const std::string Texture::BuiltIns::CHECKERBOARD = "simulant/textures/checkerboard.png";
+const std::string Texture::BuiltIns::BUTTON = "simulant/textures/button.png";
 
 
 Texture::Texture(TextureID id, ResourceManager *resource_manager):
