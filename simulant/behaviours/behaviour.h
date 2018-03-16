@@ -194,17 +194,21 @@ private:
             return;
         }
 
-        std::lock_guard<std::mutex> lock(container_lock_);
+        {
+            std::lock_guard<std::mutex> lock(container_lock_);
 
-        if(behaviour_names_.count(behaviour->name())) {
-            L_WARN(_F("Tried to add a duplicate behaviour: {0}").format((std::string)behaviour->name()));
-            return;
+            if(behaviour_names_.count(behaviour->name())) {
+                L_WARN(_F("Tried to add a duplicate behaviour: {0}").format((std::string)behaviour->name()));
+                return;
+            }
+
+            behaviour_types_.insert(std::make_pair(typeid(T).hash_code(), behaviour));
+            behaviour_names_.insert(behaviour->name());
+            behaviours_.push_back(behaviour);
         }
 
-        behaviour_types_.insert(std::make_pair(typeid(T).hash_code(), behaviour));
-        behaviour_names_.insert(behaviour->name());
-        behaviours_.push_back(behaviour);
-
+        // Call outside the lock to prevent deadlocking if
+        // this call triggers the addition/removal of another behaviour
         behaviour->set_organism(this);
     }
 
