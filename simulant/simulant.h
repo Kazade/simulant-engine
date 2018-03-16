@@ -32,6 +32,7 @@
 #include "frustum.h"
 #include "material.h"
 #include "nodes/actor.h"
+#include "nodes/geom.h"
 
 #include "nodes/ui/ui_manager.h"
 #include "nodes/ui/button.h"
