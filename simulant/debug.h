@@ -56,7 +56,7 @@ public:
 
     bool init() override;
 private:
-    void update();
+    void update(float dt);
 
     Stage& stage_;
 
@@ -71,14 +71,22 @@ private:
         Colour colour = Colour::WHITE;
         bool depth_test = true;
         double duration = 0.0;
-        SubMesh* submesh = nullptr;
+
+        smlt::Vec3 points[2]; // For lines, or the first one for points
+        float size; // Diameter for spheres + points
     };
 
-    std::vector<DebugElement> elements_;
+    std::list<DebugElement> elements_;
+
+    SubMesh* lines_without_depth_ = nullptr;
+    SubMesh* lines_with_depth_ = nullptr;
+    SubMesh* points_without_depth_ = nullptr;
+    SubMesh* points_with_depth_ = nullptr;
 
     MeshID mesh_;
     ActorPtr actor_ = nullptr;
     MaterialID material_;
+    MaterialID material_no_depth_;
 
     sig::Connection update_connection_;
 };
