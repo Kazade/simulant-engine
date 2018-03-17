@@ -66,22 +66,15 @@ bool Debug::init() {
     //Don't GC the material, if there are no debug lines then it won't be attached to the mesh
     material_ = stage_.assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY, GARBAGE_COLLECT_NEVER);
 
-    //Connect regular updates so we can remove debug lines after their duration
-    /*stage_.window().signal_frame_finished().connect(
-        std::bind(&Debug::update, this)
-    );*/
-
     return true;
 }
 
 void Debug::draw_line(const Vec3 &start, const Vec3 &end, const Colour &colour, double duration, bool depth_test) {
     static int32_t line_counter = 0;
-
-
     auto mesh = stage_.assets->mesh(mesh_);
 
     DebugElement element;
-    element.submesh = mesh->new_submesh_with_material(std::to_string(++line_counter), material_, MESH_ARRANGEMENT_LINE_STRIP);
+    element.submesh = mesh->new_submesh_with_material(std::to_string(++line_counter), material_, MESH_ARRANGEMENT_LINES);
     element.colour = colour;
     element.duration = duration;
     element.depth_test = depth_test;
