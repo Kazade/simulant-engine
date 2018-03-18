@@ -69,6 +69,7 @@ bool Stage::init() {
 
 void Stage::cleanup() {    
     ui_.reset();
+    debug_.reset();
 
     //Recurse through the tree, destroying all children
     this->each_descendent_lf([](uint32_t, TreeNode* node) {

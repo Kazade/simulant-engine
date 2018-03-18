@@ -35,4 +35,5 @@ This section covers the base subsystems and usages of Simulant.
  - Scene Tree: [Stage Nodes](stage_nodes.md)
  - Supported File Formats: [Mesh Formats](mesh_formats.md) | [Image Formats](image_formats.md)
  - Assets: [Textures](textures.md) | [Meshes](meshes.md)
+ - Debugging: [Debugging](debugging.md)
 
