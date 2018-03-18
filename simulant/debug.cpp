@@ -36,6 +36,18 @@ Debug::Debug(Stage &stage):
 Debug::~Debug() {
     // Make sure we disconnect otherwise crashes happen
     update_connection_.disconnect();
+    if(mesh_) {
+        auto mesh = mesh_.fetch();
+        if(mesh) {
+            mesh->enable_gc();
+        }
+
+        mesh_ = MeshID();
+    }
+
+    if(actor_) {
+        actor_->ask_owner_for_destruction();
+    }
 }
 
 void Debug::update(float dt) {
