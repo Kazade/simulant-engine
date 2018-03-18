@@ -95,12 +95,28 @@ void Debug::update(float dt) {
     points_with_depth_->index_data->done();
 }
 
-bool Debug::init() {
-    mesh_ = stage_.assets->new_mesh(VertexSpecification::POSITION_AND_DIFFUSE);
+void Debug::initialize_actor() {
+    /*
+     * We don't initialize the actor until first use to avoid unnecessary
+     * clutter in the render queue in release setups. We could potentially
+     * move the asset loading here too but that would result in a stutter on
+     * first draw as files are loaded.
+     */
+
+    if(initialized_) {
+        return;
+    }
+
     actor_ = stage_.new_actor_with_mesh(
-        mesh_,
-        RENDERABLE_CULLING_MODE_NEVER // Important!
-    );
+                mesh_,
+                RENDERABLE_CULLING_MODE_NEVER // Important!
+                );
+
+    initialized_ = true;
+}
+
+bool Debug::init() {
+    mesh_ = stage_.assets->new_mesh(VertexSpecification::POSITION_AND_DIFFUSE, GARBAGE_COLLECT_NEVER);
 
     //Don't GC the material, if there are no debug lines then it won't be attached to the mesh
     material_ = stage_.assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY, GARBAGE_COLLECT_NEVER);
@@ -116,6 +132,8 @@ bool Debug::init() {
 }
 
 void Debug::draw_line(const Vec3 &start, const Vec3 &end, const Colour &colour, double duration, bool depth_test) {
+    initialize_actor();
+
     DebugElement element;
     element.colour = colour;
     element.duration = duration;
@@ -127,10 +145,14 @@ void Debug::draw_line(const Vec3 &start, const Vec3 &end, const Colour &colour, 
 }
 
 void Debug::draw_ray(const Vec3 &start, const Vec3 &dir, const Colour &colour, double duration, bool depth_test) {
+    initialize_actor();
+
     draw_line(start, start+dir, colour, duration, depth_test);
 }
 
 void Debug::draw_point(const Vec3 &position, const Colour &colour, double duration, bool depth_test) {
+    initialize_actor();
+
     DebugElement element;
     element.colour = colour;
     element.duration = duration;

@@ -58,6 +58,11 @@ public:
 private:
     void update(float dt);
 
+    bool initialized_ = false;
+
+    void initialize_actor();
+
+
     Stage& stage_;
 
     enum DebugElementType {
