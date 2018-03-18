@@ -86,6 +86,7 @@ void VertexData::clear() {
     data_.clear();
     data_.shrink_to_fit();
     cursor_position_ = 0;    
+    vertex_count_ = 0;
 }
 
 void VertexData::position_checks() {
