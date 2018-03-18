@@ -183,6 +183,7 @@ void Debug::draw_line(const Vec3 &start, const Vec3 &end, const Colour &colour, 
     element.depth_test = depth_test;
     element.points[0] = start;
     element.points[1] = end;
+    element.size = 0.25f;
     element.type = DebugElementType::DET_LINE;
     elements_.push_back(element);
 }
@@ -202,7 +203,7 @@ void Debug::draw_point(const Vec3 &position, const Colour &colour, double durati
     element.depth_test = depth_test;
     element.points[0] = position;
     element.type = DebugElementType::DET_POINT;
-    element.size = 0.1f;
+    element.size = 0.25f;
     elements_.push_back(element);
 }
 
