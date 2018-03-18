@@ -31,11 +31,17 @@ Debug::Debug(Stage &stage):
     update_connection_ = stage_.window->signal_late_update().connect(
         std::bind(&Debug::update, this, std::placeholders::_1)
     );
+
+    frame_finished_connection_ = stage_.window->signal_frame_finished().connect(
+        std::bind(&Debug::frame_finished, this)
+    );
 }
 
 Debug::~Debug() {
     // Make sure we disconnect otherwise crashes happen
     update_connection_.disconnect();
+    frame_finished_connection_.disconnect();
+
     if(mesh_) {
         auto mesh = mesh_.fetch();
         if(mesh) {
@@ -50,6 +56,18 @@ Debug::~Debug() {
     }
 }
 
+void Debug::frame_finished() {
+    auto dt = stage_.window->time_keeper->delta_time();
+
+    for(auto it = elements_.begin(); it != elements_.end(); ++it) {
+        auto& element = (*it);
+        element.time_since_created += dt;
+        if(element.time_since_created >= element.duration) {
+            it = elements_.erase(it);
+        }
+    }
+}
+
 void Debug::update(float dt) {
     auto mesh = mesh_.fetch();
 
@@ -59,14 +77,7 @@ void Debug::update(float dt) {
     points_without_depth_->index_data->clear();
     points_with_depth_->index_data->clear();
 
-    for(auto it = elements_.begin(); it != elements_.end(); ++it) {
-        auto& element = (*it);
-        element.time_since_created += dt;
-        if(element.time_since_created >= element.duration) {
-            it = elements_.erase(it);
-            continue;
-        }
-
+    for(auto& element: elements_) {
         if(element.type == DET_LINE) {
             auto& array = (element.depth_test) ? lines_with_depth_->index_data : lines_without_depth_->index_data;
             auto i = array->count();
@@ -120,9 +131,9 @@ void Debug::initialize_actor() {
     }
 
     actor_ = stage_.new_actor_with_mesh(
-                mesh_,
-                RENDERABLE_CULLING_MODE_NEVER // Important!
-                );
+        mesh_,
+        RENDERABLE_CULLING_MODE_NEVER // Important!
+    );
 
     initialized_ = true;
 }

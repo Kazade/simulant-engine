@@ -57,6 +57,7 @@ public:
     bool init() override;
 private:
     void update(float dt);
+    void frame_finished();
 
     bool initialized_ = false;
 
@@ -94,6 +95,7 @@ private:
     MaterialID material_no_depth_;
 
     sig::Connection update_connection_;
+    sig::Connection frame_finished_connection_;
 };
 
 }
