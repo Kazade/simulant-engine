@@ -80,30 +80,38 @@ void Debug::update(float dt) {
     for(auto& element: elements_) {
         if(element.type == DET_LINE) {
             auto& array = (element.depth_test) ? lines_with_depth_->index_data : lines_without_depth_->index_data;
-            auto i = array->count();
+            auto i = mesh->vertex_data->count();
             mesh->vertex_data->position(element.points[0]);
             mesh->vertex_data->diffuse(element.colour);
+            mesh->vertex_data->move_next();
 
             mesh->vertex_data->position(element.points[1]);
             mesh->vertex_data->diffuse(element.colour);
+            mesh->vertex_data->move_next();
 
             array->index(i);
             array->index(i + 1);
         } else {
-            auto& array = (element.depth_test) ? points_with_depth_->index_data : points_without_depth_->index_data;
-            auto i = array->count();
-            mesh->vertex_data->position(element.points[0]);
-            mesh->vertex_data->diffuse(element.colour);
+            /* HACKITY HACKITY HACKITY HACK */
+            /*
+             * Need to support points sprites, and use those... or at least make these billboard quads!
+             * (Simulant issue #133)
+            */
 
             float hs = element.size / 2.0f;
+            auto& array = (element.depth_test) ? points_with_depth_->index_data : points_without_depth_->index_data;
+            auto i = mesh->vertex_data->count();
+            mesh->vertex_data->position(element.points[0] + smlt::Vec3(0, hs, 0));
+            mesh->vertex_data->diffuse(element.colour);
+            mesh->vertex_data->move_next();
 
-            /* HACKITY HACKITY HACKITY HACK */
-            /* Need to support points sprites, and use those... or at least make these billboard quads! */
             mesh->vertex_data->position(element.points[0] + smlt::Vec3(-hs, -hs, 0));
             mesh->vertex_data->diffuse(element.colour);
+            mesh->vertex_data->move_next();
 
             mesh->vertex_data->position(element.points[0] + smlt::Vec3(hs, -hs, 0));
             mesh->vertex_data->diffuse(element.colour);
+            mesh->vertex_data->move_next();
 
             array->index(i);
             array->index(i + 1);
@@ -135,6 +143,9 @@ void Debug::initialize_actor() {
         RENDERABLE_CULLING_MODE_NEVER // Important!
     );
 
+    // Always render debug stuff last
+    actor_->set_render_priority(smlt::RENDER_PRIORITY_MAX);
+
     initialized_ = true;
 }
 
@@ -143,13 +154,22 @@ bool Debug::init() {
 
     //Don't GC the material, if there are no debug lines then it won't be attached to the mesh
     material_ = stage_.assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY, GARBAGE_COLLECT_NEVER);
-    material_no_depth_ = stage_.assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY, GARBAGE_COLLECT_NEVER);
-    material_no_depth_.fetch()->first_pass()->set_depth_test_enabled(false);
+    material_.fetch()->first_pass()->set_cull_mode(CULL_MODE_NONE);
 
-    lines_with_depth_ = mesh_.fetch()->new_submesh_with_material("lines_with_depth", material_, MESH_ARRANGEMENT_LINES);
-    lines_without_depth_ = mesh_.fetch()->new_submesh_with_material("lines_without_depth", material_no_depth_, MESH_ARRANGEMENT_LINES);
-    points_with_depth_ = mesh_.fetch()->new_submesh_with_material("points_with_depth", material_, MESH_ARRANGEMENT_TRIANGLES);
-    points_without_depth_ = mesh_.fetch()->new_submesh_with_material("points_without_depth", material_no_depth_, MESH_ARRANGEMENT_TRIANGLES);
+    // Never write to the depth buffer with debug stuff
+    material_.fetch()->first_pass()->set_depth_write_enabled(false);
+
+    material_no_depth_ = stage_.assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY, GARBAGE_COLLECT_NEVER);
+    material_no_depth_.fetch()->first_pass()->set_depth_write_enabled(false);
+    material_no_depth_.fetch()->first_pass()->set_depth_test_enabled(false);
+    material_no_depth_.fetch()->first_pass()->set_cull_mode(CULL_MODE_NONE);
+
+    auto mesh = mesh_.fetch();
+
+    lines_with_depth_ = mesh->new_submesh_with_material("lines_with_depth", material_, MESH_ARRANGEMENT_LINES);
+    lines_without_depth_ = mesh->new_submesh_with_material("lines_without_depth", material_no_depth_, MESH_ARRANGEMENT_LINES);
+    points_with_depth_ = mesh->new_submesh_with_material("points_with_depth", material_, MESH_ARRANGEMENT_TRIANGLES);
+    points_without_depth_ = mesh->new_submesh_with_material("points_without_depth", material_no_depth_, MESH_ARRANGEMENT_TRIANGLES);
 
     return true;
 }
