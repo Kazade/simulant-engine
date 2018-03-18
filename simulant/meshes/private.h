@@ -16,8 +16,15 @@ void sync_buffer(HardwareBuffer::ptr* buffer, Data* data, Allocator* allocator, 
             SHADOW_BUFFER_DISABLED
         );
     } else {
-        assert(data->count());
-        (*buffer)->resize(data->data_size());
+        // If we have a buffer, then resize it (possibly to zero)
+        if((*buffer)) {
+            (*buffer)->resize(data->data_size());
+        }
+
+        if(!data->count()) {
+            // Just bail out if there is nothing to upload
+            return;
+        }
     }
 
     (*buffer)->upload(*data);
