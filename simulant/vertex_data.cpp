@@ -442,6 +442,16 @@ void IndexData::reset() {
     clear();
 }
 
+void IndexData::clear() {
+    indices_.clear();
+    count_ = 0;
+}
+
+void IndexData::resize(uint32_t size) {
+    indices_.resize(size * stride(), 0);
+    count_ = size;
+}
+
 std::vector<uint32_t> IndexData::all() {
     std::vector<uint32_t> ret;
 

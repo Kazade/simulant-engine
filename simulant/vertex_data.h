@@ -242,8 +242,11 @@ public:
     void each(std::function<void (uint32_t)> cb);
 
     void reset();
-    void clear() { indices_.clear(); }
-    void resize(uint32_t size) { indices_.resize(size * stride(), 0); }
+
+    void clear();
+
+    void resize(uint32_t size);
+
     void reserve(uint32_t size) { indices_.reserve(size * stride()); }
 
     std::vector<uint32_t> all();

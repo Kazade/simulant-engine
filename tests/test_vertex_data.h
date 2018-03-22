@@ -6,6 +6,18 @@
 
 #include "global.h"
 
+class IndexDataTest : public SimulantTestCase {
+public:
+    void test_clear() {
+        smlt::IndexData data(smlt::INDEX_TYPE_16_BIT);
+        data.index(0); data.index(1); data.index(2);
+        assert_equal(data.count(), 3u);
+
+        data.clear();
+        assert_equal(data.count(), 0u);
+    }
+};
+
 class VertexDataTest : public SimulantTestCase {
 public:
     void test_offsets() {
