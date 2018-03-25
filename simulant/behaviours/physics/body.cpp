@@ -151,7 +151,7 @@ void Body::add_box_collider(const Vec3 &size, const PhysicsMaterial &properties,
     b3Quat q;
     to_b3vec3(offset, p);
     to_b3quat(rotation, q);
-    b3Transform tx(p, q);
+    b3Transform tx(q, p);
 
     // Apply scaling
     tx.rotation[0][0] = size.x * 0.5;
