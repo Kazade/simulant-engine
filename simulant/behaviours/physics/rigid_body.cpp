@@ -243,5 +243,15 @@ void RigidBody::add_torque(const Vec3& torque) {
     b->ApplyTorque(t, true);
 }
 
+bool RigidBody::is_awake() const {
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return false;
+    }
+
+    b3Body* b = sim->bodies_.at(this);
+    return b->IsAwake();
+}
+
 }
 }

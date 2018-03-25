@@ -96,6 +96,8 @@ public:
     }
 
     const std::string name() const { return "Rigid Body"; }
+
+    bool is_awake() const;
 private:
     friend class RigidBodySimulation;
 };
