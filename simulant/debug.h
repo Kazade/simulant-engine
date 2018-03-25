@@ -55,6 +55,11 @@ public:
     );
 
     bool init() override;
+
+    void set_point_size(float ps);
+
+    float point_size() const;
+
 private:
     void update(float dt);
     void frame_finished();
@@ -93,6 +98,7 @@ private:
     ActorPtr actor_ = nullptr;
     MaterialID material_;
     MaterialID material_no_depth_;
+    float current_point_size_ = 0.001f;
 
     sig::Connection update_connection_;
     sig::Connection frame_finished_connection_;

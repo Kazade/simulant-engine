@@ -101,7 +101,7 @@ void Debug::update(float dt) {
             float hs = element.size / 2.0f;
             auto& array = (element.depth_test) ? points_with_depth_->index_data : points_without_depth_->index_data;
             auto i = mesh->vertex_data->count();
-            mesh->vertex_data->position(element.points[0] + smlt::Vec3(0, hs, 0));
+            mesh->vertex_data->position(element.points[0] + smlt::Vec3(-hs, hs, 0));
             mesh->vertex_data->diffuse(element.colour);
             mesh->vertex_data->move_next();
 
@@ -113,9 +113,17 @@ void Debug::update(float dt) {
             mesh->vertex_data->diffuse(element.colour);
             mesh->vertex_data->move_next();
 
+            mesh->vertex_data->position(element.points[0] + smlt::Vec3(hs, hs, 0));
+            mesh->vertex_data->diffuse(element.colour);
+            mesh->vertex_data->move_next();
+
             array->index(i);
             array->index(i + 1);
             array->index(i + 2);
+
+            array->index(i);
+            array->index(i + 2);
+            array->index(i + 3);
         }
     }
 
@@ -174,6 +182,14 @@ bool Debug::init() {
     return true;
 }
 
+void Debug::set_point_size(float ps) {
+    current_point_size_ = ps;
+}
+
+float Debug::point_size() const {
+    return current_point_size_;
+}
+
 void Debug::draw_line(const Vec3 &start, const Vec3 &end, const Colour &colour, double duration, bool depth_test) {
     initialize_actor();
 
@@ -203,7 +219,7 @@ void Debug::draw_point(const Vec3 &position, const Colour &colour, double durati
     element.depth_test = depth_test;
     element.points[0] = position;
     element.type = DebugElementType::DET_POINT;
-    element.size = 0.25f;
+    element.size = current_point_size_;
     elements_.push_back(element);
 }
 
