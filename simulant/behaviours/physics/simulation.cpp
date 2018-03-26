@@ -239,18 +239,16 @@ void RigidBodySimulation::release_body(impl::Body *body) {
 std::pair<Vec3, Quaternion> RigidBodySimulation::body_transform(const impl::Body *body) {
     b3Body* b = bodies_.at(body);
 
-    auto tx = b->GetTransform();
+    auto position = b->GetWorldCenter();
+    auto rotation = b->GetOrientation();
 
     Vec3 p;
-    to_vec3(tx.position, p);
+    to_vec3(position, p);
 
-    Mat3 r;
-    to_mat3(tx.rotation, r);
+    Quaternion r;
+    to_quat(rotation, r);
 
-    return std::make_pair(
-        p,
-        Quaternion(r)
-    );
+    return std::make_pair(p, r);
 }
 
 void RigidBodySimulation::set_body_transform(impl::Body* body, const Vec3& position, const Quaternion& rotation) {
