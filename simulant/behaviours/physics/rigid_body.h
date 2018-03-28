@@ -67,6 +67,7 @@ public:
     void set_angular_damping(const float d);
 
     float mass() const;
+    void set_center_of_mass(const smlt::Vec3& com);
 
     Vec3 linear_velocity() const;
     Vec3 linear_velocity_at(const Vec3& position) const;    

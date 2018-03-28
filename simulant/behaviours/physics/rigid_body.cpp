@@ -207,6 +207,20 @@ Vec3 RigidBody::position() const {
     return sim->body_transform(this).first;
 }
 
+void RigidBody::set_center_of_mass(const smlt::Vec3& com) {
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return;
+    }
+
+    b3Body* b = sim->bodies_.at(this);
+
+    b3MassData data;
+    b->GetMassData(&data);
+    to_b3vec3(com, data.center);
+    b->SetMassData(&data);
+}
+
 Quaternion RigidBody::rotation() const {
     auto sim = simulation_.lock();
     if(!sim) {
