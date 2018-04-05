@@ -41,17 +41,15 @@ There are some glaring holes in functionality (LOD, billboards, shadows, project
 
 ## Roadmap / TODO
 
- * Make geoms work using the new Octree in generic/tri_octree.h
  * Finish the GL 1.x renderer
  * Switch the GL 2.x renderer with a GL 4.x one
  * Implement render-to-texture
  * Fix lightmaps in the Q2 bsp loader
  * Implement multiple LOD for meshes
  * Build in support for shadows
- * Finish skybox management
- * Add Dreamcast support (depends on GL 1.x)
+ * Improve Dreamcast support (depends on GL 1.x)
  * Restore Android support
- * Port to OSX and Windows, then iOS
+ * Port to Windows, then iOS
  * Implement VBO management in the GL 2.x renderer for improved performance 
 
 ## Building
@@ -75,74 +73,30 @@ To build:
 
 ## How do I use it?
 
-Well, it's pretty simple really...
+The easiest way to get started is to use simulant-tools which is a Python package (so requires Python and Pip installed):
 
 ```
-#include <simulant/simulant.h>
-
-class MyApp : public smlt::Application {
-public:
-    bool do_init() {
-        return true;
-    }
-
-    void do_step(double dt) {
-
-    }
-
-    void do_cleanup() {
-
-    }
-};
-
-
-int main(int argc, char* argv[]) {
-    MyApp app;
-    return app.run();
-}
+pip install --user --upgrade git+git://github.com/kazade/simulant-tools.git
+simulant start myproject
+cd myproject
+simulant run --rebuild
 ```
 
-Crazy eh? Those few lines of code construct an OpenGL window, with an empty
-scene and the program runs until the window is closed.
+This will generate a template project, download pre-compiled Simulant libraries, and compile and run the application.
 
-But you wanted something more interesting than that right? OK, let's draw a
-rectangle:
+The advantage of using simulant-tools and sticking to that project structure is this:
 
 ```
-#include <simulant/simulant.h>
-
-class MyApp : public smlt::Application {
-public:
-    bool do_init() {
-        StageID stage_id;
-        CameraID camera_id;
-        prepare_basic_scene(stage_id, camera_id); // Set up a basic rendering pipeline
-
-        auto stage = window->stage(stage_id); // Grab a handle to the stage
-        MeshID mesh_id = stage->assets->new_mesh_as_rectangle(10.0, 5.0); // Load a mesh into the stage's asset manager
-        ActorID actor_id = stage->new_actor_with_mesh(mesh_id); // Create an actor with the loaded mesh
-        return true;
-    }
-
-    void do_step(double dt) {
-
-    }
-
-    void do_cleanup() {
-
-    }
-};
-
-
-int main(int argc, char* argv[]) {
-    MyApp app;
-    return app.run();
-}
-
+simulant package dreamcast
 ```
 
-You can build up sections of your scene by creating _Actors_ inside _Stages_, you can then combine your stages by building up a set of rendering
-pipelines. For example, you can render Stage 1, to Viewport 1, with Camera 1 and target Texture 1. By building up these pipelines dynamically you
-can build complex scenes.
+Which would generate a .cdi image of your application for the SEGA Dreamcast.
 
+Or
+
+```
+simulant run dreamcast
+```
+
+Which currently uses the lxdream emulator to run the .cdi image.
 
