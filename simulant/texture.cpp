@@ -124,8 +124,12 @@ void Texture::free() {
 
 bool Texture::is_compressed() const {
     switch(format_) {
+    case TEXTURE_FORMAT_R:
+    case TEXTURE_FORMAT_RG:
     case TEXTURE_FORMAT_RGB:
     case TEXTURE_FORMAT_RGBA:
+    case TEXTURE_FORMAT_LUMINANCE:
+    case TEXTURE_FORMAT_ALPHA:
         return false;
     default:
         return true;
@@ -147,6 +151,12 @@ std::size_t Texture::bits_per_pixel() const {
 
 uint8_t Texture::channels() const {
     switch(format_) {
+    case TEXTURE_FORMAT_R:
+    case TEXTURE_FORMAT_LUMINANCE:
+    case TEXTURE_FORMAT_ALPHA:
+        return 1;
+    case TEXTURE_FORMAT_RG:
+        return 2;
     case TEXTURE_FORMAT_RGB:
     case TEXTURE_FORMAT_UNSIGNED_SHORT_5_6_5_VQ:
     case TEXTURE_FORMAT_UNSIGNED_SHORT_5_6_5_VQ_TWID:

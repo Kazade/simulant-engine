@@ -52,8 +52,14 @@ enum TextureFilter {
 
 enum TextureFormat {
     // Standard formats
+    TEXTURE_FORMAT_R,
+    TEXTURE_FORMAT_RG,
     TEXTURE_FORMAT_RGB,
     TEXTURE_FORMAT_RGBA,
+
+    // GL 1.x formats
+    TEXTURE_FORMAT_LUMINANCE,
+    TEXTURE_FORMAT_ALPHA,
 
     // Dreamcast PVR VQ compressed
     TEXTURE_FORMAT_UNSIGNED_SHORT_5_6_5_VQ,
