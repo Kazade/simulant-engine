@@ -377,6 +377,8 @@ simulant/loaders/dds_texture_loader.cpp
 simulant/loaders/dds_texture_loader.cpp
 simulant/loaders/dds_texture_loader.h
 simulant/loaders/dds_texture_loader.h
+simulant/loaders/fnt_loader.cpp
+simulant/loaders/fnt_loader.h
 simulant/loaders/heightmap_loader.cpp
 simulant/loaders/heightmap_loader.h
 simulant/loaders/kmg_texture_loader.h

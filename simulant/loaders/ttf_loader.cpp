@@ -16,6 +16,8 @@ namespace loaders {
 
         font->info_.reset(new stbtt_fontinfo());
         font->font_size_ = font_size;
+        font->page_width_ = TEXTURE_WIDTH;
+        font->page_height_ = TEXTURE_HEIGHT;
 
         stbtt_fontinfo* info = font->info_.get();
 
@@ -55,7 +57,7 @@ namespace loaders {
             &buffer[0], 0, font_size, out_buffer,
             TEXTURE_WIDTH, TEXTURE_HEIGHT,
             first_char, char_count,
-            &font->char_data_[0]
+            (stbtt_bakedchar*) &font->char_data_[0]
         );
 
         L_DEBUG("F: Converting font texture from 8bit -> 32bit");

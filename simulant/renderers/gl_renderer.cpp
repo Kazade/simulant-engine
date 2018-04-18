@@ -58,6 +58,12 @@ void GLRenderer::on_texture_unregister(TextureID tex_id) {
 
 uint32_t GLRenderer::convert_texture_format(TextureFormat format) {
     switch(format) {
+        case TEXTURE_FORMAT_R:
+            return GL_RED;
+        case TEXTURE_FORMAT_ALPHA:
+            return GL_ALPHA;
+        case TEXTURE_FORMAT_LUMINANCE:
+            return GL_LUMINANCE;
         case TEXTURE_FORMAT_RGB:
             return GL_RGB;
         case TEXTURE_FORMAT_RGBA:

@@ -31,6 +31,10 @@
 
 namespace smlt {
 
+#define HEADING_FONT "simulant/fonts/orbitron/orbitron-regular-48.fnt"
+#define SUBHEADING_FONT "simulant/fonts/orbitron/orbitron-regular-24.fnt"
+#define BODY_FONT "simulant/fonts/orbitron/orbitron-regular-18.fnt"
+
 ResourceManager::ResourceManager(Window* window, ResourceManager *parent):
     WindowHolder(window),
     parent_(parent) {
@@ -54,9 +58,9 @@ bool ResourceManager::init() {
         return true;
     }
 
-    default_heading_font_ = new_font_from_ttf(default_font_filename(), 64).fetch();
-    default_subheading_font_ = new_font_from_ttf(default_font_filename(), 24).fetch();
-    default_body_font_ = new_font_from_ttf(default_font_filename(), 18).fetch();
+    default_heading_font_ = new_font_from_file(HEADING_FONT).fetch();
+    default_subheading_font_ = new_font_from_file(SUBHEADING_FONT).fetch();
+    default_body_font_ = new_font_from_file(BODY_FONT).fetch();
 
     //FIXME: Should lock the default texture and material during construction!
     //Create the default blank texture
@@ -730,15 +734,39 @@ MaterialID ResourceManager::default_material_id() const {
     }
 }
 
-unicode ResourceManager::default_font_filename() const {
-    return window->resource_locator->locate_file("simulant/fonts/orbitron/Orbitron-Regular.ttf");
-}
-
 unicode ResourceManager::default_material_filename() const {
     return window->resource_locator->locate_file(Material::BuiltIns::MULTITEXTURE2_MODULATE_WITH_LIGHTING);
 }
 
 // ========== FONTS ======================
+
+FontID ResourceManager::new_font_from_file(const unicode& filename, GarbageCollectMethod garbage_collect) {
+    auto font_id = font_manager_->make(garbage_collect, this);
+    auto font = font_id.fetch();
+
+    try {
+        LoaderOptions options;
+        window->loader_for(filename)->into(font.get(), options);
+        mark_font_as_uncollected(font_id);
+    } catch (...) {
+        // Make sure we don't leave the font hanging around
+        delete_font(font_id);
+        throw;
+    }
+
+    return font_id;
+}
+
+FontID ResourceManager::new_font_with_alias_from_file(const std::string& alias, const unicode& filename, GarbageCollectMethod garbage_collect) {
+    auto fid = new_font_from_file(filename, garbage_collect);
+    try {
+        font_manager_->manager_store_alias(alias, fid);
+    } catch(...) {
+        delete_font(fid);
+        throw;
+    }
+    return fid;
+}
 
 FontID ResourceManager::new_font_from_ttf(const unicode& filename, uint32_t font_size, CharacterSet charset, GarbageCollectMethod garbage_collect) {
     auto font_id = font_manager_->make(garbage_collect, this);
