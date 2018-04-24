@@ -37,7 +37,7 @@ namespace loaders {
 
         // Generate a new texture for rendering the font to
         auto texture = font->texture_ = font->resource_manager().new_texture().fetch();
-        texture->set_format(TEXTURE_FORMAT_RGBA); // Need to use GL_RGBA for Dreamcast
+        texture->set_format(TEXTURE_FORMAT_RGBA8888); // Need to use GL_RGBA for Dreamcast
 
         if(charset != CHARACTER_SET_LATIN) {
             throw std::runtime_error("Unsupported character set - please submit a patch!");

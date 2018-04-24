@@ -58,18 +58,17 @@ void GLRenderer::on_texture_unregister(TextureID tex_id) {
 
 uint32_t GLRenderer::convert_texture_format(TextureFormat format) {
     switch(format) {
-        case TEXTURE_FORMAT_R:
+        case TEXTURE_FORMAT_R8:
             return GL_RED;
-        case TEXTURE_FORMAT_ALPHA:
-            return GL_ALPHA;
-        case TEXTURE_FORMAT_LUMINANCE:
-            return GL_LUMINANCE;
-        case TEXTURE_FORMAT_RGB:
+        case TEXTURE_FORMAT_RGB888:
             return GL_RGB;
-        case TEXTURE_FORMAT_RGBA:
+        case TEXTURE_FORMAT_RGBA4444:
+        case TEXTURE_FORMAT_RGBA5551:
+        case TEXTURE_FORMAT_RGBA8888:
             return GL_RGBA;
         default:
-            return 0;
+            assert(0 && "Not implemented");
+            return GL_RGBA;
     }
 }
 
@@ -77,16 +76,28 @@ uint32_t GLRenderer::convert_texel_type(TextureTexelType type) {
     switch(type) {
     case TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE:
         return GL_UNSIGNED_BYTE;
-#ifdef SIMULANT_GL_VERSION_2X
     case TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_4_4_4_4:
         return GL_UNSIGNED_SHORT_4_4_4_4;
     case TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_5_5_5_1:
         return GL_UNSIGNED_SHORT_5_5_5_1;
-    case TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_5_6_5:
-        return GL_UNSIGNED_SHORT_5_6_5;
-#endif
     default:
+        assert(0 && "Not implemented");
         return 0;
+    }
+}
+
+GLenum texture_format_to_internal_format(TextureFormat format) {
+    /* Converts a TextureFormat to a recommended GL internal format,
+     * this should really be configurable by the user, but this should
+     * satisfy the most common cases */
+
+    switch(format) {
+        case TEXTURE_FORMAT_R8:
+            return GL_RED;
+        case TEXTURE_FORMAT_RGB888:
+            return GL_RGB;
+        default:
+            return GL_RGBA;
     }
 }
 
@@ -118,6 +129,7 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
     if(texture->_data_dirty() && texture->auto_upload()) {
         // Upload
         auto format = convert_texture_format(texture->format());
+        auto internal_format = texture_format_to_internal_format(texture->format());
         auto type = convert_texel_type(texture->texel_type());
 
         if(format > 0 && type > 0) {
@@ -145,7 +157,7 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
             } else {
                 GLCheck(glTexImage2D,
                     GL_TEXTURE_2D,
-                    0, format,
+                    0, internal_format,
                     texture->width(), texture->height(), 0,
                     format,
                     type, &texture->data()[0]

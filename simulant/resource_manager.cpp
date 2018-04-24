@@ -69,7 +69,7 @@ bool ResourceManager::init() {
     auto tex = texture(default_texture_id_);
 
     tex->resize(8, 8);
-    tex->set_format(TEXTURE_FORMAT_RGBA);
+    tex->set_format(TEXTURE_FORMAT_RGBA8888);
 
     auto texlock = tex->lock();
     for(uint32_t i = 0; i < 64 * 4; ++i) {

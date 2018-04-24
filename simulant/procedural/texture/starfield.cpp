@@ -67,7 +67,7 @@ void starfield(smlt::TexturePtr texture_ptr, uint32_t width, uint32_t height) {
     smlt::Texture& texture = *texture_ptr;
 
     texture.resize(width, height);
-    texture.set_format(TEXTURE_FORMAT_RGBA);
+    texture.set_format(TEXTURE_FORMAT_RGBA8888);
 
     const float GLOBAL_DENSITY = 0.01f;
     const float MAX_SIZE = 2.0;

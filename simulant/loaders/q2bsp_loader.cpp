@@ -245,7 +245,7 @@ std::vector<LightmapLocation> pack_lightmaps(const std::vector<Lightmap>& lightm
 
     // Finally generate the texture!
     output_texture->resize(LIGHTMAP_DIMENSION, LIGHTMAP_DIMENSION);
-    output_texture->set_format(TEXTURE_FORMAT_RGBA);
+    output_texture->set_format(TEXTURE_FORMAT_RGBA8888);
 
     std::vector<LightmapLocation> locations(lightmaps.size());
 
