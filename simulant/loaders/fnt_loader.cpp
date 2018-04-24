@@ -232,6 +232,8 @@ void FNTLoader::prepare_texture(Font* font, const std::string& texture_file) {
     texture_path = kfs::path::join(texture_path, texture_file);
 
     font->texture_ = font->resource_manager().new_texture_from_file(texture_path).fetch();
+    font->texture_->set_texture_filter(TEXTURE_FILTER_TRILINEAR);
+
     font->material_ = font->resource_manager().new_material_from_file(Material::BuiltIns::TEXTURE_ONLY).fetch();
     font->material_->set_texture_unit_on_all_passes(0, font->texture_id());
 
