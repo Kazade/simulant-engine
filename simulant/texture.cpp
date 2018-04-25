@@ -37,6 +37,12 @@ namespace smlt {
 const std::string Texture::BuiltIns::CHECKERBOARD = "simulant/textures/checkerboard.png";
 const std::string Texture::BuiltIns::BUTTON = "simulant/textures/button.png";
 
+const SourceChannelSet Texture::DEFAULT_SOURCE_CHANNELS = {{
+    SOURCE_CHANNEL_RED,
+    SOURCE_CHANNEL_GREEN,
+    SOURCE_CHANNEL_BLUE,
+    SOURCE_CHANNEL_ALPHA
+}};
 
 Texture::Texture(TextureID id, ResourceManager *resource_manager):
     Resource(resource_manager),
@@ -143,11 +149,11 @@ static void compress_rgba8888(uint8_t* dest, float r, float g, float b, float a)
 typedef void (*ExplodeFunc)(uint8_t*, const SourceChannelSet&, float&, float&, float&, float&);
 typedef void (*CompressFunc)(uint8_t*, float, float, float, float);
 
-static const std::unordered_map<TextureFormat, ExplodeFunc> EXPLODERS = {
+static const std::map<TextureFormat, ExplodeFunc> EXPLODERS = {
     {TEXTURE_FORMAT_R8, explode_r8}
 };
 
-static const std::unordered_map<TextureFormat, CompressFunc> COMPRESSORS = {
+static const std::map<TextureFormat, CompressFunc> COMPRESSORS = {
     {TEXTURE_FORMAT_RGBA4444, compress_rgba4444},
     {TEXTURE_FORMAT_RGBA8888, compress_rgba8888}
 };

@@ -158,6 +158,8 @@ class Texture :
     public std::enable_shared_from_this<Texture> {
 
 public:
+    static const SourceChannelSet DEFAULT_SOURCE_CHANNELS;
+
     struct BuiltIns {
         static const std::string CHECKERBOARD;
         static const std::string BUTTON;
@@ -198,7 +200,7 @@ public:
     /* Convert a texture to a new format and allow manipulating/filling the channels during the conversion */
     void convert(
         TextureFormat new_format,
-        const SourceChannelSet& channels={SOURCE_CHANNEL_RED, SOURCE_CHANNEL_GREEN, SOURCE_CHANNEL_BLUE, SOURCE_CHANNEL_ALPHA}
+        const SourceChannelSet& channels=DEFAULT_SOURCE_CHANNELS
     );
 
     /*

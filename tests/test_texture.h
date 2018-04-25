@@ -36,7 +36,7 @@ public:
         // Should convert each pixel to: {1, 0, 0, v}
         tex->convert(
             TEXTURE_FORMAT_RGBA4444,
-            {SOURCE_CHANNEL_ONE, SOURCE_CHANNEL_ZERO, SOURCE_CHANNEL_GREEN, SOURCE_CHANNEL_RED}
+            {{SOURCE_CHANNEL_ONE, SOURCE_CHANNEL_ZERO, SOURCE_CHANNEL_GREEN, SOURCE_CHANNEL_RED}}
         );
 
         assert_equal(8u, data.size());

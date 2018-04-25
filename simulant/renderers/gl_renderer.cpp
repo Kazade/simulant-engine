@@ -56,6 +56,17 @@ void GLRenderer::on_texture_unregister(TextureID tex_id) {
 }
 
 
+#ifdef _arch_dreamcast
+
+/*
+ * GL_RED technically isn't a GL1.x format, however, it works fine on modern implementations
+ * (as it's a valid format in GL 2+)
+ */
+
+#define GL_RED 0x1903
+
+#endif
+
 uint32_t GLRenderer::convert_texture_format(TextureFormat format) {
     switch(format) {
         case TEXTURE_FORMAT_R8:
@@ -86,18 +97,22 @@ uint32_t GLRenderer::convert_texel_type(TextureTexelType type) {
     }
 }
 
-GLenum texture_format_to_internal_format(TextureFormat format) {
-    /* Converts a TextureFormat to a recommended GL internal format,
-     * this should really be configurable by the user, but this should
-     * satisfy the most common cases */
+GLint texture_format_to_internal_format(TextureFormat format) {
+    /*
+     * In OpenGL 1.x, this would be the number of channels (1, 2, 3 or 4)
+     * In 2.x this was a number of channels *or* a symbolic constant
+     * In 3+ this must be a symbolic constant
+     *
+     * So for now, for compatibility we just return the number
+     */
 
     switch(format) {
         case TEXTURE_FORMAT_R8:
-            return GL_RED;
+            return 1;
         case TEXTURE_FORMAT_RGB888:
-            return GL_RGB;
+            return 3;
         default:
-            return GL_RGBA;
+            return 4;
     }
 }
 

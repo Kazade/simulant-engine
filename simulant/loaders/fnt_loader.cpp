@@ -1,4 +1,5 @@
-
+#include <string>
+#include "../utils/string.h"
 #include "fnt_loader.h"
 #include "../font.h"
 #include "../resource_manager.h"
@@ -184,7 +185,7 @@ void FNTLoader::read_binary(Font* font, std::istream& data, const LoaderOptions&
                     auto length = std::distance(page_data.begin(), it);
                     auto count = header.size / length;
 
-                    for(auto i = 0; i < count; ++i) {
+                    for(auto i = 0u; i < count; ++i) {
                         auto start = i * length;
                         auto end = (i * length) + length;
                         std::string page(page_data.begin() + start, page_data.begin() + end);
@@ -252,7 +253,7 @@ void FNTLoader::prepare_texture(Font* font, const std::string& texture_file) {
          */
         font->texture_->convert(
             TEXTURE_FORMAT_RGBA4444,
-            {SOURCE_CHANNEL_ONE, SOURCE_CHANNEL_ONE, SOURCE_CHANNEL_ONE, SOURCE_CHANNEL_RED}
+            {{SOURCE_CHANNEL_ONE, SOURCE_CHANNEL_ONE, SOURCE_CHANNEL_ONE, SOURCE_CHANNEL_RED}}
         );
     }
 }
