@@ -170,7 +170,7 @@ void Widget::render_text(MeshPtr mesh, const std::string& submesh_name, const un
     float max_height = std::numeric_limits<float>::lowest();
 
     float xoffset = 0;
-    float yoffset = 0;
+    float yoffset = line_height_ / 2.0f;
 
 
     for(std::size_t i = 0; i < text.length(); ++i) {
