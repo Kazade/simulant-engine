@@ -232,8 +232,13 @@ void FNTLoader::prepare_texture(Font* font, const std::string& texture_file) {
     auto texture_path = kfs::path::dir_name(filename_.encode());
     texture_path = kfs::path::join(texture_path, texture_file);
 
-    font->texture_ = font->resource_manager().new_texture_from_file(texture_path).fetch();
-    font->texture_->set_texture_filter(TEXTURE_FILTER_TRILINEAR);
+    TextureFlags flags;
+
+    // Disable auto upload until we've converted the texture
+    flags.auto_upload = false;
+    flags.filter = TEXTURE_FILTER_TRILINEAR;
+
+    font->texture_ = font->resource_manager().new_texture_from_file(texture_path, flags).fetch();
 
     font->material_ = font->resource_manager().new_material_from_file(Material::BuiltIns::TEXTURE_ONLY).fetch();
     font->material_->set_texture_unit_on_all_passes(0, font->texture_id());
@@ -256,6 +261,9 @@ void FNTLoader::prepare_texture(Font* font, const std::string& texture_file) {
             {{SOURCE_CHANNEL_ONE, SOURCE_CHANNEL_ONE, SOURCE_CHANNEL_ONE, SOURCE_CHANNEL_RED}}
         );
     }
+
+    // OK, it's fine to upload now
+    font->texture_->set_auto_upload(true);
 }
 
 void FNTLoader::into(Loadable& resource, const LoaderOptions& options) {
