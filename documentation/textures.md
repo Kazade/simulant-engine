@@ -54,7 +54,18 @@ upload the texture data to the GPU unnecessarily.
 
 For this reason you can disable uploads by calling `Texture::set_auto_upload(false)`
  
+## Format conversion
 
+There are times when the texture loaded from disk isn't in the format required during rendering. For example, the .fnt font loader loads single-channel textures from disk, but requires RGBA
+textures during rendering. `Texture::convert(format, channels)` allows you to perform conversions
+between different formats, or even just swizzle channels.
 
+The `format` parameter is the destination `TextureFormat`, the `channels` parameter is a 4-element array (RGBA) of constants choosing which source channel will be used in place of the destination channels. For example, if you wanted to swap red and green, you could pass:
+
+```
+{TEXTURE_CHANNEL_GREEN, TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_BLUE, TEXTURE_CHANNEL_ALPHA}
+```
+
+There are two additional channel constants, `TEXTURE_CHANNEL_ONE` and `TEXTURE_CHANNEL_ZERO`. These allow you to set channels to full or zero intensity.
 
 
