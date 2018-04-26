@@ -55,16 +55,15 @@ void GLRenderer::on_texture_unregister(TextureID tex_id) {
     }
 }
 
-
 #ifdef _arch_dreamcast
 
 /*
  * GL_RED technically isn't a GL1.x format, however, it works fine on modern implementations
- * (as it's a valid format in GL 2+)
+ * (as it's a valid format in GL 2+) this define is here until I make GL_RED work on the
+ * Dreamcast libGL
  */
 
 #define GL_RED 0x1903
-
 #endif
 
 uint32_t GLRenderer::convert_texture_format(TextureFormat format) {
@@ -108,11 +107,11 @@ GLint texture_format_to_internal_format(TextureFormat format) {
 
     switch(format) {
         case TEXTURE_FORMAT_R8:
-            return 1;
+            return GL_RED;
         case TEXTURE_FORMAT_RGB888:
-            return 3;
+            return GL_RGB;
         default:
-            return 4;
+            return GL_RGBA;
     }
 }
 
