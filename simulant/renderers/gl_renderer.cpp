@@ -55,15 +55,30 @@ void GLRenderer::on_texture_unregister(TextureID tex_id) {
     }
 }
 
+#ifdef _arch_dreamcast
+
+/*
+ * GL_RED technically isn't a GL1.x format, however, it works fine on modern implementations
+ * (as it's a valid format in GL 2+) this define is here until I make GL_RED work on the
+ * Dreamcast libGL
+ */
+
+#define GL_RED 0x1903
+#endif
 
 uint32_t GLRenderer::convert_texture_format(TextureFormat format) {
     switch(format) {
-        case TEXTURE_FORMAT_RGB:
+        case TEXTURE_FORMAT_R8:
+            return GL_RED;
+        case TEXTURE_FORMAT_RGB888:
             return GL_RGB;
-        case TEXTURE_FORMAT_RGBA:
+        case TEXTURE_FORMAT_RGBA4444:
+        case TEXTURE_FORMAT_RGBA5551:
+        case TEXTURE_FORMAT_RGBA8888:
             return GL_RGBA;
         default:
-            return 0;
+            assert(0 && "Not implemented");
+            return GL_RGBA;
     }
 }
 
@@ -71,16 +86,32 @@ uint32_t GLRenderer::convert_texel_type(TextureTexelType type) {
     switch(type) {
     case TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE:
         return GL_UNSIGNED_BYTE;
-#ifdef SIMULANT_GL_VERSION_2X
     case TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_4_4_4_4:
         return GL_UNSIGNED_SHORT_4_4_4_4;
     case TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_5_5_5_1:
         return GL_UNSIGNED_SHORT_5_5_5_1;
-    case TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_5_6_5:
-        return GL_UNSIGNED_SHORT_5_6_5;
-#endif
     default:
+        assert(0 && "Not implemented");
         return 0;
+    }
+}
+
+GLint texture_format_to_internal_format(TextureFormat format) {
+    /*
+     * In OpenGL 1.x, this would be the number of channels (1, 2, 3 or 4)
+     * In 2.x this was a number of channels *or* a symbolic constant
+     * In 3+ this must be a symbolic constant
+     *
+     * So for now, for compatibility we just return the number
+     */
+
+    switch(format) {
+        case TEXTURE_FORMAT_R8:
+            return GL_RED;
+        case TEXTURE_FORMAT_RGB888:
+            return GL_RGB;
+        default:
+            return GL_RGBA;
     }
 }
 
@@ -112,6 +143,7 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
     if(texture->_data_dirty() && texture->auto_upload()) {
         // Upload
         auto format = convert_texture_format(texture->format());
+        auto internal_format = texture_format_to_internal_format(texture->format());
         auto type = convert_texel_type(texture->texel_type());
 
         if(format > 0 && type > 0) {
@@ -139,7 +171,7 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
             } else {
                 GLCheck(glTexImage2D,
                     GL_TEXTURE_2D,
-                    0, format,
+                    0, internal_format,
                     texture->width(), texture->height(), 0,
                     format,
                     type, &texture->data()[0]

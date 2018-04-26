@@ -61,7 +61,7 @@ TextureLoadResult PCXLoader::do_load(const std::vector<uint8_t> &buffer) {
     result.width = header->xmax - header->xmin + 1;
     result.height = header->ymax - header->ymin + 1;
     result.channels = 3;
-    result.format = TEXTURE_FORMAT_RGB;
+    result.format = TEXTURE_FORMAT_RGB888;
     result.texel_type = TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE;
     result.data.resize(result.width * result.height * result.channels);
 

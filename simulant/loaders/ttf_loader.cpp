@@ -16,6 +16,8 @@ namespace loaders {
 
         font->info_.reset(new stbtt_fontinfo());
         font->font_size_ = font_size;
+        font->page_width_ = TEXTURE_WIDTH;
+        font->page_height_ = TEXTURE_HEIGHT;
 
         stbtt_fontinfo* info = font->info_.get();
 
@@ -35,7 +37,7 @@ namespace loaders {
 
         // Generate a new texture for rendering the font to
         auto texture = font->texture_ = font->resource_manager().new_texture().fetch();
-        texture->set_format(TEXTURE_FORMAT_RGBA); // Need to use GL_RGBA for Dreamcast
+        texture->set_format(TEXTURE_FORMAT_RGBA8888); // Need to use GL_RGBA for Dreamcast
 
         if(charset != CHARACTER_SET_LATIN) {
             throw std::runtime_error("Unsupported character set - please submit a patch!");
@@ -55,7 +57,7 @@ namespace loaders {
             &buffer[0], 0, font_size, out_buffer,
             TEXTURE_WIDTH, TEXTURE_HEIGHT,
             first_char, char_count,
-            &font->char_data_[0]
+            (stbtt_bakedchar*) &font->char_data_[0]
         );
 
         L_DEBUG("F: Converting font texture from 8bit -> 32bit");

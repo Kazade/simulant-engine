@@ -169,6 +169,16 @@ public:
     bool has_sound(SoundID s) const;
     uint32_t sound_count() const;
 
+    FontID new_font_from_file(
+        const unicode& filename,
+        GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC
+    );
+
+    FontID new_font_with_alias_from_file(
+        const std::string& alias, const unicode& filename,
+        GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC
+    );
+
     FontID new_font_from_ttf(const unicode& filename, uint32_t font_size, CharacterSet charset=CHARACTER_SET_LATIN, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     FontID new_font_with_alias_from_ttf(const std::string& alias, const unicode& filename, uint32_t font_size, CharacterSet charset=CHARACTER_SET_LATIN, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     FontID get_font_with_alias(const std::string& alias);
@@ -183,7 +193,6 @@ public:
     void update(float dt);
 
     unicode default_material_filename() const;
-    unicode default_font_filename() const;
 
     MaterialID clone_default_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) {
         return base_manager()->material(base_manager()->default_material_id())->new_clone(this, garbage_collect);

@@ -54,8 +54,24 @@ TextureLoadResult TextureLoader::do_load(const std::vector<uint8_t> &buffer) {
         result.channels = (uint32_t) channels;
         result.data.assign(data, data + (width * height * channels));
         result.texel_type = TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE;
-        result.format = (channels == 4) ? TEXTURE_FORMAT_RGBA : TEXTURE_FORMAT_RGB;
+
+        switch(channels) {
+        case 1:
+            result.format = TEXTURE_FORMAT_R8;
+        break;
+        case 2:
+            throw std::runtime_error("2-channel textures are not supported");
+        break;
+        case 3:
+            result.format = TEXTURE_FORMAT_RGB888;
+        break;
+        default:
+            result.format = TEXTURE_FORMAT_RGBA8888;
+        }
+
         SOIL_free_image_data(data);
+    } else {
+        throw std::runtime_error("Unable to load texture: " + filename_.encode());
     }
 
     return result;

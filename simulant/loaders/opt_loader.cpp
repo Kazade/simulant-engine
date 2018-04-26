@@ -512,9 +512,8 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
 
         auto new_tex = mesh->resource_manager().texture(texture_name_to_id[tex.name]);
         new_tex->resize(tex.width, tex.height);
-        new_tex->set_texel_type(TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE);
         new_tex->set_format(
-            (tex.bytes_per_pixel == 3) ? TEXTURE_FORMAT_RGB : TEXTURE_FORMAT_RGBA
+            (tex.bytes_per_pixel == 3) ? TEXTURE_FORMAT_RGB888 : TEXTURE_FORMAT_RGBA8888
         );
         new_tex->data().assign(tex.data.begin(), tex.data.end());
 

@@ -22,6 +22,11 @@ public:
         auto button = stage_->ui->new_widget_as_button("Button 1");
         button->move_to(window->coordinate_from_normalized(0.1, 0.25));
 
+        auto ttf_font = stage_->assets->new_font_from_ttf("simulant/fonts/orbitron/Orbitron-Bold.ttf", 32);
+        auto big_label = stage_->ui->new_widget_as_label("Using a TrueType font!");
+        big_label->set_font(ttf_font);
+        big_label->move_to(window->coordinate_from_normalized(0.5, 0.6));
+
         auto pg = stage_->ui->new_widget_as_progress_bar();
         pg->move_to(window->coordinate_from_normalized(0.5, 0.5));
         pg->resize(400, 10);

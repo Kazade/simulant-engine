@@ -37,6 +37,12 @@ namespace smlt {
 const std::string Texture::BuiltIns::CHECKERBOARD = "simulant/textures/checkerboard.png";
 const std::string Texture::BuiltIns::BUTTON = "simulant/textures/button.png";
 
+const TextureChannelSet Texture::DEFAULT_SOURCE_CHANNELS = {{
+    TEXTURE_CHANNEL_RED,
+    TEXTURE_CHANNEL_GREEN,
+    TEXTURE_CHANNEL_BLUE,
+    TEXTURE_CHANNEL_ALPHA
+}};
 
 Texture::Texture(TextureID id, ResourceManager *resource_manager):
     Resource(resource_manager),
@@ -47,20 +53,23 @@ Texture::Texture(TextureID id, ResourceManager *resource_manager):
     renderer_ = resource_manager->window->renderer;
 }
 
-void Texture::set_texel_type(TextureTexelType type) {
-    if(texel_type_ == type) {
+void Texture::set_format(TextureFormat format, TextureTexelType texel_type) {
+    if(format == format_) {
         return;
     }
 
-    texel_type_ = type;
+    format_ = format;
+
+    // Default the texel type to what is probably required
+    texel_type_ = (
+        (texel_type == TEXTURE_TEXEL_TYPE_UNSPECIFIED) ?
+        texel_type_from_texture_format(format) : texel_type
+    );
+
     data_.resize(width_ * height_ * bytes_per_pixel());
     data_.shrink_to_fit();
 
     data_dirty_ = true;
-}
-
-void Texture::set_format(TextureFormat format) {
-    format_ = format;
 }
 
 void Texture::resize(uint32_t width, uint32_t height, uint32_t data_size) {
@@ -91,6 +100,93 @@ void Texture::resize(uint32_t width, uint32_t height) {
     data_.shrink_to_fit();
 
     data_dirty_ = true;
+}
+
+static void explode_r8(uint8_t* source, const TextureChannelSet& channels, float& r, float& g, float& b, float& a) {
+    float sr = float(*source) / 255.0f;
+
+    auto calculate_component = [&channels](uint8_t i, float sr, float sg, float sb, float sa) -> float {
+        switch(channels[i]) {
+            case TEXTURE_CHANNEL_ZERO: return 0.0f;
+            case TEXTURE_CHANNEL_ONE: return 1.0f;
+            case TEXTURE_CHANNEL_RED: return sr;
+            case TEXTURE_CHANNEL_GREEN: return sg;
+            case TEXTURE_CHANNEL_BLUE: return sb;
+            case TEXTURE_CHANNEL_ALPHA: return sa;
+            default:
+                return 0.0f;
+        }
+    };
+
+    r = calculate_component(0, sr, 0, 0, 0);
+    g = calculate_component(1, sr, 0, 0, 0);
+    b = calculate_component(2, sr, 0, 0, 0);
+    a = calculate_component(3, sr, 0, 0, 0);
+}
+
+static void compress_rgba4444(uint8_t* dest, float r, float g, float b, float a) {
+    uint16_t* out = (uint16_t*) dest;
+
+    uint8_t rr = (uint8_t) float(15) * r;
+    uint8_t rg = (uint8_t) float(15) * g;
+    uint8_t rb = (uint8_t) float(15) * b;
+    uint8_t ra = (uint8_t) float(15) * a;
+
+    *out = (rr << 12) | (rg << 8) | (rb << 4) | ra;
+}
+
+static void compress_rgba8888(uint8_t* dest, float r, float g, float b, float a) {
+    uint32_t* out = (uint32_t*) dest;
+
+    uint8_t rr = (uint8_t) float(255) * r;
+    uint8_t rg = (uint8_t) float(255) * g;
+    uint8_t rb = (uint8_t) float(255) * b;
+    uint8_t ra = (uint8_t) float(255) * a;
+
+    *out = (rr << 24) | (rg << 16) | (rb << 8) | ra;
+}
+
+typedef void (*ExplodeFunc)(uint8_t*, const TextureChannelSet&, float&, float&, float&, float&);
+typedef void (*CompressFunc)(uint8_t*, float, float, float, float);
+
+static const std::map<TextureFormat, ExplodeFunc> EXPLODERS = {
+    {TEXTURE_FORMAT_R8, explode_r8}
+};
+
+static const std::map<TextureFormat, CompressFunc> COMPRESSORS = {
+    {TEXTURE_FORMAT_RGBA4444, compress_rgba4444},
+    {TEXTURE_FORMAT_RGBA8888, compress_rgba8888}
+};
+
+void Texture::convert(TextureFormat new_format, const TextureChannelSet &channels) {
+    if(data_.empty()) {
+        throw std::logic_error("Tried to convert a texture with no data");
+    }
+
+    auto original_format = format_;
+    auto original_data = data_;
+
+    set_format(new_format);
+
+    if(original_format == TEXTURE_FORMAT_R8 && new_format == TEXTURE_FORMAT_RGBA4444) {
+        auto source_stride = texture_format_stride(original_format);
+        auto dest_stride = texture_format_stride(new_format);
+
+        uint8_t* source_ptr = &original_data[0];
+        uint8_t* dest_ptr = &data_[0];
+
+        auto explode = EXPLODERS.at(original_format);
+        auto compress = COMPRESSORS.at(new_format);
+
+        for(auto i = 0u; i < original_data.size(); i += source_stride, source_ptr += source_stride, dest_ptr += dest_stride) {
+            float r, g, b, a;
+
+            explode(source_ptr, channels, r, g, b, a);
+            compress(dest_ptr, r, g, b, a);
+        }
+    } else {
+        throw std::logic_error("Unsupported texture conversion");
+    }
 }
 
 void Texture::flip_vertically() {
@@ -124,8 +220,11 @@ void Texture::free() {
 
 bool Texture::is_compressed() const {
     switch(format_) {
-    case TEXTURE_FORMAT_RGB:
-    case TEXTURE_FORMAT_RGBA:
+    case TEXTURE_FORMAT_R8:
+    case TEXTURE_FORMAT_RGB888:
+    case TEXTURE_FORMAT_RGBA8888:
+    case TEXTURE_FORMAT_RGBA4444:
+    case TEXTURE_FORMAT_RGBA5551:
         return false;
     default:
         return true;
@@ -135,7 +234,6 @@ bool Texture::is_compressed() const {
 std::size_t Texture::bits_per_pixel() const {
     switch(texel_type_) {
     case TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_4_4_4_4:
-    case TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_5_6_5:
     case TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_5_5_5_1:
         // Packed into a short
         return sizeof(unsigned short) * 8;
@@ -147,12 +245,16 @@ std::size_t Texture::bits_per_pixel() const {
 
 uint8_t Texture::channels() const {
     switch(format_) {
-    case TEXTURE_FORMAT_RGB:
+    case TEXTURE_FORMAT_R8:
+        return 1;
+    case TEXTURE_FORMAT_RGB888:
     case TEXTURE_FORMAT_UNSIGNED_SHORT_5_6_5_VQ:
     case TEXTURE_FORMAT_UNSIGNED_SHORT_5_6_5_VQ_TWID:
     case TEXTURE_FORMAT_RGB_S3TC_DXT1_EXT:
         return 3;
-    case TEXTURE_FORMAT_RGBA:
+    case TEXTURE_FORMAT_RGBA8888:
+    case TEXTURE_FORMAT_RGBA4444:
+    case TEXTURE_FORMAT_RGBA5551:
     case TEXTURE_FORMAT_UNSIGNED_SHORT_4_4_4_4_VQ:
     case TEXTURE_FORMAT_UNSIGNED_SHORT_4_4_4_4_VQ_TWID:
     case TEXTURE_FORMAT_UNSIGNED_SHORT_1_5_5_5_VQ:
@@ -161,7 +263,8 @@ uint8_t Texture::channels() const {
     case TEXTURE_FORMAT_RGBA_S3TC_DXT3_EXT:
     case TEXTURE_FORMAT_RGBA_S3TC_DXT5_EXT:
         return 4;
-    default:
+    default:        
+        assert(0 && "Not implemented");
         // Shouldn't happen, but will be more obviously debuggable if it does
         return 0;
     }
@@ -253,6 +356,37 @@ TextureLock::TextureLock(Texture *tex, bool wait):
 TextureLock::~TextureLock() {
     if(tex_) {
         tex_->mutex_.unlock();
+    }
+}
+
+uint8_t texture_format_stride(TextureFormat format) {
+    switch(format) {
+    case TEXTURE_FORMAT_R8: return 1;
+    case TEXTURE_FORMAT_RGBA4444:
+    case TEXTURE_FORMAT_RGBA5551: return 2;
+    case TEXTURE_FORMAT_RGB888: return 3;
+    case TEXTURE_FORMAT_RGBA8888: return 4;
+    default:
+        assert(0 && "Not implemented");
+        return 0;
+    }
+}
+
+TextureTexelType texel_type_from_texture_format(TextureFormat format) {
+    /* Given a texture format definition, return the texel type for it */
+
+    switch(format) {
+    case TEXTURE_FORMAT_R8:
+    case TEXTURE_FORMAT_RGB888:
+    case TEXTURE_FORMAT_RGBA8888:
+        return TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE;
+    case TEXTURE_FORMAT_RGBA4444:
+        return TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_4_4_4_4;
+    case TEXTURE_FORMAT_RGBA5551:
+        return TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_5_5_5_1;
+    default:
+        assert(0 && "Not implemented");
+        return TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE;
     }
 }
 

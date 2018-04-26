@@ -50,10 +50,20 @@ enum TextureFilter {
     TEXTURE_FILTER_TRILINEAR
 };
 
+/*
+ * Simulant intentionally only supports a handful of formats for portability.
+ *
+ * This list isn't fixed though, if you need more, just file an issue.
+ */
 enum TextureFormat {
     // Standard formats
-    TEXTURE_FORMAT_RGB,
-    TEXTURE_FORMAT_RGBA,
+    TEXTURE_FORMAT_R8,
+    TEXTURE_FORMAT_RGB888,
+    TEXTURE_FORMAT_RGBA8888,
+
+    // Packed short formats
+    TEXTURE_FORMAT_RGBA4444,
+    TEXTURE_FORMAT_RGBA5551,
 
     // Dreamcast PVR VQ compressed
     TEXTURE_FORMAT_UNSIGNED_SHORT_5_6_5_VQ,
@@ -67,15 +77,19 @@ enum TextureFormat {
     TEXTURE_FORMAT_RGB_S3TC_DXT1_EXT,
     TEXTURE_FORMAT_RGBA_S3TC_DXT1_EXT,
     TEXTURE_FORMAT_RGBA_S3TC_DXT3_EXT,
-    TEXTURE_FORMAT_RGBA_S3TC_DXT5_EXT
+    TEXTURE_FORMAT_RGBA_S3TC_DXT5_EXT,
 };
+
+uint8_t texture_format_stride(TextureFormat format);
 
 enum TextureTexelType {
     TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE,
-    TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_5_6_5,
     TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_4_4_4_4,
-    TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_5_5_5_1
+    TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_5_5_5_1,
+    TEXTURE_TEXEL_TYPE_UNSPECIFIED = 1000
 };
+
+TextureTexelType texel_type_from_texture_format(TextureFormat format);
 
 enum TextureFreeData {
     TEXTURE_FREE_DATA_NEVER,
@@ -123,6 +137,16 @@ public:
 
 typedef std::shared_ptr<TextureLock> TextureLockPtr;
 
+enum TextureChannel {
+    TEXTURE_CHANNEL_RED,
+    TEXTURE_CHANNEL_GREEN,
+    TEXTURE_CHANNEL_BLUE,
+    TEXTURE_CHANNEL_ALPHA,
+    TEXTURE_CHANNEL_ZERO,
+    TEXTURE_CHANNEL_ONE
+};
+
+typedef std::array<TextureChannel, 4> TextureChannelSet;
 
 class Texture :
     public Resource,
@@ -134,6 +158,8 @@ class Texture :
     public std::enable_shared_from_this<Texture> {
 
 public:
+    static const TextureChannelSet DEFAULT_SOURCE_CHANNELS;
+
     struct BuiltIns {
         static const std::string CHECKERBOARD;
         static const std::string BUTTON;
@@ -166,11 +192,16 @@ public:
         }
     }
 
-    void set_texel_type(TextureTexelType type);
-    TextureTexelType texel_type() const { return texel_type_; }
+    void set_format(TextureFormat format, TextureTexelType texel_type=TEXTURE_TEXEL_TYPE_UNSPECIFIED);
 
-    void set_format(TextureFormat format);
+    TextureTexelType texel_type() const { return texel_type_; }
     TextureFormat format() const { return format_; }
+
+    /* Convert a texture to a new format and allow manipulating/filling the channels during the conversion */
+    void convert(
+        TextureFormat new_format,
+        const TextureChannelSet& channels=DEFAULT_SOURCE_CHANNELS
+    );
 
     /*
      * Change the width and height, but manually set the data buffer size,
@@ -337,7 +368,7 @@ private:
     uint32_t height_;
 
     TextureTexelType texel_type_ = TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE;
-    TextureFormat format_ = TEXTURE_FORMAT_RGBA;
+    TextureFormat format_ = TEXTURE_FORMAT_RGBA8888;
 
     unicode source_;
 
