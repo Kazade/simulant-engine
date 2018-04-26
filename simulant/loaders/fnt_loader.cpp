@@ -258,7 +258,7 @@ void FNTLoader::prepare_texture(Font* font, const std::string& texture_file) {
          */
         font->texture_->convert(
             TEXTURE_FORMAT_RGBA4444,
-            {{SOURCE_CHANNEL_ONE, SOURCE_CHANNEL_ONE, SOURCE_CHANNEL_ONE, SOURCE_CHANNEL_RED}}
+            {{TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_RED}}
         );
     }
 

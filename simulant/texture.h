@@ -137,16 +137,16 @@ public:
 
 typedef std::shared_ptr<TextureLock> TextureLockPtr;
 
-enum SourceChannel {
-    SOURCE_CHANNEL_RED,
-    SOURCE_CHANNEL_GREEN,
-    SOURCE_CHANNEL_BLUE,
-    SOURCE_CHANNEL_ALPHA,
-    SOURCE_CHANNEL_ZERO,
-    SOURCE_CHANNEL_ONE
+enum TextureChannel {
+    TEXTURE_CHANNEL_RED,
+    TEXTURE_CHANNEL_GREEN,
+    TEXTURE_CHANNEL_BLUE,
+    TEXTURE_CHANNEL_ALPHA,
+    TEXTURE_CHANNEL_ZERO,
+    TEXTURE_CHANNEL_ONE
 };
 
-typedef std::array<SourceChannel, 4> SourceChannelSet;
+typedef std::array<TextureChannel, 4> TextureChannelSet;
 
 class Texture :
     public Resource,
@@ -158,7 +158,7 @@ class Texture :
     public std::enable_shared_from_this<Texture> {
 
 public:
-    static const SourceChannelSet DEFAULT_SOURCE_CHANNELS;
+    static const TextureChannelSet DEFAULT_SOURCE_CHANNELS;
 
     struct BuiltIns {
         static const std::string CHECKERBOARD;
@@ -200,7 +200,7 @@ public:
     /* Convert a texture to a new format and allow manipulating/filling the channels during the conversion */
     void convert(
         TextureFormat new_format,
-        const SourceChannelSet& channels=DEFAULT_SOURCE_CHANNELS
+        const TextureChannelSet& channels=DEFAULT_SOURCE_CHANNELS
     );
 
     /*

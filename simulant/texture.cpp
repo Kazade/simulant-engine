@@ -37,11 +37,11 @@ namespace smlt {
 const std::string Texture::BuiltIns::CHECKERBOARD = "simulant/textures/checkerboard.png";
 const std::string Texture::BuiltIns::BUTTON = "simulant/textures/button.png";
 
-const SourceChannelSet Texture::DEFAULT_SOURCE_CHANNELS = {{
-    SOURCE_CHANNEL_RED,
-    SOURCE_CHANNEL_GREEN,
-    SOURCE_CHANNEL_BLUE,
-    SOURCE_CHANNEL_ALPHA
+const TextureChannelSet Texture::DEFAULT_SOURCE_CHANNELS = {{
+    TEXTURE_CHANNEL_RED,
+    TEXTURE_CHANNEL_GREEN,
+    TEXTURE_CHANNEL_BLUE,
+    TEXTURE_CHANNEL_ALPHA
 }};
 
 Texture::Texture(TextureID id, ResourceManager *resource_manager):
@@ -102,17 +102,17 @@ void Texture::resize(uint32_t width, uint32_t height) {
     data_dirty_ = true;
 }
 
-static void explode_r8(uint8_t* source, const SourceChannelSet& channels, float& r, float& g, float& b, float& a) {
+static void explode_r8(uint8_t* source, const TextureChannelSet& channels, float& r, float& g, float& b, float& a) {
     float sr = float(*source) / 255.0f;
 
     auto calculate_component = [&channels](uint8_t i, float sr, float sg, float sb, float sa) -> float {
         switch(channels[i]) {
-            case SOURCE_CHANNEL_ZERO: return 0.0f;
-            case SOURCE_CHANNEL_ONE: return 1.0f;
-            case SOURCE_CHANNEL_RED: return sr;
-            case SOURCE_CHANNEL_GREEN: return sg;
-            case SOURCE_CHANNEL_BLUE: return sb;
-            case SOURCE_CHANNEL_ALPHA: return sa;
+            case TEXTURE_CHANNEL_ZERO: return 0.0f;
+            case TEXTURE_CHANNEL_ONE: return 1.0f;
+            case TEXTURE_CHANNEL_RED: return sr;
+            case TEXTURE_CHANNEL_GREEN: return sg;
+            case TEXTURE_CHANNEL_BLUE: return sb;
+            case TEXTURE_CHANNEL_ALPHA: return sa;
             default:
                 return 0.0f;
         }
@@ -146,7 +146,7 @@ static void compress_rgba8888(uint8_t* dest, float r, float g, float b, float a)
     *out = (rr << 24) | (rg << 16) | (rb << 8) | ra;
 }
 
-typedef void (*ExplodeFunc)(uint8_t*, const SourceChannelSet&, float&, float&, float&, float&);
+typedef void (*ExplodeFunc)(uint8_t*, const TextureChannelSet&, float&, float&, float&, float&);
 typedef void (*CompressFunc)(uint8_t*, float, float, float, float);
 
 static const std::map<TextureFormat, ExplodeFunc> EXPLODERS = {
@@ -158,7 +158,7 @@ static const std::map<TextureFormat, CompressFunc> COMPRESSORS = {
     {TEXTURE_FORMAT_RGBA8888, compress_rgba8888}
 };
 
-void Texture::convert(TextureFormat new_format, const SourceChannelSet &channels) {
+void Texture::convert(TextureFormat new_format, const TextureChannelSet &channels) {
     if(data_.empty()) {
         throw std::logic_error("Tried to convert a texture with no data");
     }
