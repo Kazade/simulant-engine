@@ -61,7 +61,7 @@ class Loader {
 public:
     typedef std::shared_ptr<Loader> ptr;
 
-    Loader(const unicode& filename, std::shared_ptr<std::stringstream> data):
+    Loader(const unicode& filename, std::shared_ptr<std::istream> data):
         filename_(filename),
         data_(data) {}
 
@@ -83,7 +83,7 @@ public:
     Property<Loader, ResourceLocator> locator = { this, &Loader::locator_ };
 protected:
     unicode filename_;
-    std::shared_ptr<std::stringstream> data_;
+    std::shared_ptr<std::istream> data_;
 
     template<typename T>
     T* loadable_to(Loadable& loadable) {
@@ -109,7 +109,7 @@ public:
 
     virtual unicode name() = 0;
     virtual bool supports(const unicode& filename) const = 0;
-    virtual Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::stringstream> data) const = 0;
+    virtual Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::istream> data) const = 0;
 
     bool has_hint(LoaderHint hint) {
         return (bool) hints_.count(hint);
@@ -136,7 +136,7 @@ namespace loaders {
 
 class BaseTextureLoader : public Loader {
 public:
-    BaseTextureLoader(const unicode& filename, std::shared_ptr<std::stringstream> data):
+    BaseTextureLoader(const unicode& filename, std::shared_ptr<std::istream> data):
         Loader(filename, data) {
     }
 

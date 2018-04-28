@@ -100,7 +100,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     bool has_materials = false;
 
-    auto process_mtllib = [&](std::stringstream& data) {
+    auto process_mtllib = [&](std::istream& data) {
         std::string line;
         while(std::getline(data, line)) {
             line = strip(line);
@@ -330,7 +330,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
              filename = kfs::path::join(kfs::path::dir_name(filename_.encode()), filename.encode());
 
              try {
-                 auto stream = locator->read_file(filename);
+                 auto stream = locator->open_file(filename);
                  process_mtllib(*stream);
              } catch(ResourceMissingError& e) {
                  L_DEBUG(_F("mtllib {0} not found. Skipping.").format(filename));

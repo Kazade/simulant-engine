@@ -7,7 +7,7 @@ namespace loaders {
 
 class TTFLoader : public Loader {
 public:
-    TTFLoader(const unicode& filename, std::shared_ptr<std::stringstream> data):
+    TTFLoader(const unicode& filename, std::shared_ptr<std::istream> data):
         Loader(filename, data) {}
 
     void into(Loadable& resource, const LoaderOptions& options = LoaderOptions());
@@ -20,7 +20,7 @@ public:
         return filename.lower().ends_with(".ttf");
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::stringstream> data) const {
+    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::istream> data) const {
         return Loader::ptr(new TTFLoader(filename, data));
     }
 };

@@ -34,7 +34,7 @@ typedef int32_t Offset;
 
 class OPTLoader : public Loader {
 public:
-    OPTLoader(const unicode& filename, std::shared_ptr<std::stringstream> data):
+    OPTLoader(const unicode& filename, std::shared_ptr<std::istream> data):
         Loader(filename, data) {}
 
     void into(Loadable& resource, const LoaderOptions& options=LoaderOptions());
@@ -89,7 +89,7 @@ public:
         return filename.lower().contains(".opt");
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::stringstream> data) const {
+    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::istream> data) const {
         return Loader::ptr(new OPTLoader(filename, data));
     }
 };

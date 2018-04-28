@@ -26,7 +26,7 @@ namespace loaders {
 
 class KGLPLoader : public Loader {
 public:
-    KGLPLoader(const unicode& filename, std::shared_ptr<std::stringstream> data):
+    KGLPLoader(const unicode& filename, std::shared_ptr<std::istream> data):
         Loader(filename, data) {}
 
     void into(Loadable& resource, const LoaderOptions& options = LoaderOptions());
@@ -45,7 +45,7 @@ public:
         return filename.lower().contains(".kglp");
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::stringstream> data) const override {
+    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::istream> data) const override {
         return Loader::ptr(new KGLPLoader(filename, data));
     }
 };

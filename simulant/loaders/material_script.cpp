@@ -32,8 +32,10 @@
 
 namespace smlt {
 
-MaterialScript::MaterialScript(std::shared_ptr<std::stringstream> data):
-    text_(MaterialLanguageText(data->str())) {
+MaterialScript::MaterialScript(std::shared_ptr<std::istream> data):
+    text_(MaterialLanguageText(
+        std::string((std::istreambuf_iterator<char>(*data)), std::istreambuf_iterator<char>())
+    )) {
 
 }
 

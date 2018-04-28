@@ -31,7 +31,11 @@ namespace loaders {
 void KGLPLoader::into(Loadable &resource, const LoaderOptions &options) {
     ParticleSystem* ps = loadable_to<ParticleSystem>(resource);
     jsonic::Node js;
-    jsonic::loads(data_->str(), js);
+
+    jsonic::loads(
+        std::string((std::istreambuf_iterator<char>(*this->data_)), std::istreambuf_iterator<char>()),
+        js
+    );
 
     ps->set_name((js.has_key("name")) ? _u(js["name"]): "");
 

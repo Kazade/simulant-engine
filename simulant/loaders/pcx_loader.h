@@ -26,7 +26,7 @@ namespace loaders {
 
 class PCXLoader : public BaseTextureLoader {
 public:
-    PCXLoader(const unicode& filename, std::shared_ptr<std::stringstream> data):
+    PCXLoader(const unicode& filename, std::shared_ptr<std::istream> data):
         BaseTextureLoader(filename, data) {}
 
 private:
@@ -47,7 +47,7 @@ public:
         return filename.lower().contains(".pcx");
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::stringstream> data) const override {
+    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::istream> data) const override {
         return Loader::ptr(new PCXLoader(filename, data));
     }
 };

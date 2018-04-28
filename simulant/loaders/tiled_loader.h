@@ -26,7 +26,7 @@ namespace loaders {
 
 class TiledLoader : public Loader {
 public:
-    TiledLoader(const unicode& filename, std::shared_ptr<std::stringstream> data):
+    TiledLoader(const unicode& filename, std::shared_ptr<std::istream> data):
         Loader(filename, data) {}
 
     void into(Loadable& resource, const LoaderOptions& options = LoaderOptions());
@@ -46,7 +46,7 @@ public:
         return ret;
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::stringstream> data) const override {
+    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::istream> data) const override {
         return Loader::ptr(new TiledLoader(filename, data));
     }
 };

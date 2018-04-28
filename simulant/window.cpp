@@ -132,7 +132,7 @@ LoaderPtr Window::loader_for(const unicode& loader_name, const unicode &filename
     for(LoaderTypePtr loader_type: loaders_) {
         if(loader_type->name() == loader_name) {
             if(loader_type->supports(final_file)) {
-                return loader_type->loader_for(final_file, resource_locator->read_file(final_file));
+                return loader_type->loader_for(final_file, resource_locator->open_file(final_file));
             } else {
                 throw std::logic_error(_u("Loader '{0}' does not support file '{1}'").format(loader_name, filename).encode());
             }

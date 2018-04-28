@@ -26,7 +26,7 @@ namespace loaders {
 
 class TextureLoader : public BaseTextureLoader {
 public:
-    TextureLoader(const unicode& filename, std::shared_ptr<std::stringstream> data):
+    TextureLoader(const unicode& filename, std::shared_ptr<std::istream> data):
         BaseTextureLoader(filename, data) {}
 
 private:
@@ -47,7 +47,7 @@ public:
         return filename.lower().contains(".tga") || filename.lower().contains(".png") || filename.lower().contains(".jpg");
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::stringstream> data) const override {
+    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::istream> data) const override {
         return Loader::ptr(new TextureLoader(filename, data));
     }
 };

@@ -82,7 +82,7 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
     L_DEBUG(_F("Loading MD2 model: {0}").format(filename_));
 
     std::string parent_dir = kfs::path::dir_name(filename_.encode());
-    std::string data = this->data_->str();
+    std::string data((std::istreambuf_iterator<char>(*this->data_)), std::istreambuf_iterator<char>());
 
     // Cast the raw header data
     MD2Header* header = (MD2Header*) &data[0];
