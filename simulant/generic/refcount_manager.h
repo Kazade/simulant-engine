@@ -111,6 +111,8 @@ public:
     }
 
     std::weak_ptr<ObjectType> manager_unlocked_get(ObjectIDType id) const {
+        assert(id);
+
         auto it = objects_.find(id);
         if(it == objects_.end()) {
             L_WARN(_F("Unable to locate object of type {0} with ID {1}").format(typeid(ObjectType).name(), id));

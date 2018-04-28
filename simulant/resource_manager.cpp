@@ -58,31 +58,31 @@ bool ResourceManager::init() {
         return true;
     }
 
-    default_heading_font_ = new_font_from_file(HEADING_FONT).fetch();
-    default_subheading_font_ = new_font_from_file(SUBHEADING_FONT).fetch();
-    default_body_font_ = new_font_from_file(BODY_FONT).fetch();
-
     //FIXME: Should lock the default texture and material during construction!
     //Create the default blank texture
     default_texture_id_ = new_texture(GARBAGE_COLLECT_NEVER);
 
-    auto tex = texture(default_texture_id_);
+    {
+        // FIXME: Race condition between these two lines?
+        auto tex = texture(default_texture_id_);
+        auto texlock = tex->lock();
 
-    tex->resize(8, 8);
-    tex->set_format(TEXTURE_FORMAT_RGBA8888);
-
-    auto texlock = tex->lock();
-    for(uint32_t i = 0; i < 64 * 4; ++i) {
-        tex->data()[i] = 255;
+        tex->resize(2, 2);
+        tex->set_format(TEXTURE_FORMAT_RGBA8888);
+        for(uint32_t i = 0; i < 4 * 4; ++i) {
+            tex->data()[i] = 255;
+        }
+        tex->mark_data_changed();
     }
-    tex->mark_data_changed();
-
     //Maintain ref-count
     default_material_id_ = new_material_from_file(default_material_filename(), GARBAGE_COLLECT_NEVER);
 
     //Set the default material's first texture to the default (white) texture
     material(default_material_id_)->pass(0)->set_texture_unit(0, default_texture_id_);
 
+    default_heading_font_ = new_font_from_file(HEADING_FONT).fetch();
+    default_subheading_font_ = new_font_from_file(SUBHEADING_FONT).fetch();
+    default_body_font_ = new_font_from_file(BODY_FONT).fetch();
     return true;
 }
 
