@@ -67,9 +67,12 @@ bool ResourceManager::init() {
         auto tex = texture(default_texture_id_);
         auto texlock = tex->lock();
 
-        tex->resize(2, 2);
+        /* 8x8 is the smallest size we can do without the Dreamcast pvr library
+         * complaining that it's not a valid size :/
+         */
+        tex->resize(8, 8);
         tex->set_format(TEXTURE_FORMAT_RGBA8888);
-        for(uint32_t i = 0; i < 4 * 4; ++i) {
+        for(uint32_t i = 0; i < 64 * 4; ++i) {
             tex->data()[i] = 255;
         }
         tex->mark_data_changed();
