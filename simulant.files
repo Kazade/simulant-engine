@@ -64,6 +64,8 @@ samples/2d_sample.cpp
 samples/CMakeLists.txt
 samples/CMakeLists.txt
 samples/nehe01.cpp
+samples/nehe02.cpp
+samples/nehe03.cpp
 samples/particles.cpp
 samples/q2bsp_sample.cpp
 samples/sample.cpp
