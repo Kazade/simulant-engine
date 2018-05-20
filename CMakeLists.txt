@@ -1,5 +1,5 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-PROJECT(simulant)
+PROJECT(simulant CXX C ASM)
 
 # Set a default build type if none was specified
 IF(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -18,18 +18,16 @@ OPTION(SIMULANT_GL_VERSION_1X "Enable GL 1.x support" OFF)
 IF(SIMULANT_GL_VERSION_1X OR DREAMCAST_BUILD)
     # Dreamcast builds always use this
     SET(SIMULANT_GL_VERSION_1X "1")
-    ADD_DEFINITIONS(-DSIMULANT_GL_VERSION_1X)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMULANT_GL_VERSION_1X")
 ELSE()
     SET(SIMULANT_GL_VERSION_2X "1")
-    ADD_DEFINITIONS(-DSIMULANT_GL_VERSION_2X)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMULANT_GL_VERSION_2X")
 ENDIF()
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
-
-ADD_DEFINITIONS("-Wall -DTIXML_USE_STL")
-
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -DTIXML_USE_STL")
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall")
+SET(CMAKE_ASM_FLAGS "")
 
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2 -s -fomit-frame-pointer")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -s -fomit-frame-pointer")
@@ -72,8 +70,9 @@ ELSE()
     SET(ZLIB_INCLUDE_DIRS $ENV{KOS_PORTS}/include/zlib)
     SET(ZLIB_LIBRARIES z)
 
-    SET(OPENGL_INCLUDE_DIRS $ENV{KOS_PORTS}/include/libGL)
-    SET(OPENGL_LIBRARIES GL)
+    # We build libGL source files into Simulant directly (see simulant/CMakeLists.txt)
+    SET(OPENGL_INCLUDE_DIRS "")
+    SET(OPENGL_LIBRARIES "")
 ENDIF()
 
 FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets/materials DESTINATION ${CMAKE_BINARY_DIR}/simulant)
@@ -114,7 +113,8 @@ IF(SIMULANT_BUILD_SAMPLES)
     IF(DREAMCAST_BUILD)
         SET(DC_EXECUTABLES # Names without .elf extension
             tests/simulant_tests
-            samples/nehe01
+            samples/nehe02
+            samples/nehe03
             samples/2d_sample
             samples/fleets_demo
             samples/light_sample

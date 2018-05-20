@@ -52,6 +52,9 @@ private:
     void enable_vertex_arrays(bool force=false);
     void disable_vertex_arrays(bool force=false);
 
+    void enable_normal_arrays(bool force=false);
+    void disable_normal_arrays(bool force=false);
+
     void enable_colour_arrays(bool force=false);
     void disable_colour_arrays(bool force=false);
 
@@ -60,6 +63,7 @@ private:
 
     bool positions_enabled_ = false;
     bool colours_enabled_ = false;
+    bool normals_enabled_ = false;
     bool textures_enabled_[MAX_TEXTURE_UNITS] = {0};
 };
 

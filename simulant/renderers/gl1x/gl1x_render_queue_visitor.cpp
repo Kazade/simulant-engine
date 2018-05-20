@@ -1,7 +1,7 @@
 
 #ifdef _arch_dreamcast
-    #include <GL/gl.h>
-    #include <GL/glext.h>
+    #include "../../../deps/libgl/include/gl.h"
+    #include "../../../deps/libgl/include/glext.h"
 #else
     #include "./glad/glad/glad.h"
 #endif
@@ -295,6 +295,19 @@ void GL1RenderQueueVisitor::disable_colour_arrays(bool force) {
     colours_enabled_ = false;
 }
 
+void GL1RenderQueueVisitor::enable_normal_arrays(bool force) {
+    if(!force && normals_enabled_) return;
+    GLCheck(glEnableClientState, GL_NORMAL_ARRAY);
+    normals_enabled_ = true;
+}
+
+void GL1RenderQueueVisitor::disable_normal_arrays(bool force) {
+    if(!force && !normals_enabled_) return;
+
+    GLCheck(glDisableClientState, GL_NORMAL_ARRAY);
+    normals_enabled_ = false;
+}
+
 void GL1RenderQueueVisitor::enable_texcoord_array(uint8_t which, bool force) {
     if(!force && textures_enabled_[which]) return;
 
@@ -375,6 +388,7 @@ void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
 
     (spec.has_positions()) ? enable_vertex_arrays() : disable_vertex_arrays();
     (spec.has_diffuse()) ? enable_colour_arrays() : disable_colour_arrays();
+    (spec.has_normals()) ? enable_normal_arrays() : disable_normal_arrays();
 
     GLCheck(
         glVertexPointer,
@@ -396,6 +410,16 @@ void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
         colour_pointer
     );
 
+    const uint8_t* normal_pointer = (spec.has_normals()) ?
+        ((const uint8_t*) vertex_data) + spec.normal_offset(false) :
+        nullptr;
+
+    GLCheck(
+        glNormalPointer,
+        GL_FLOAT,
+        spec.stride(),
+        normal_pointer
+    );
 
     for(uint8_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
         bool enabled = spec.has_texcoordX(i);

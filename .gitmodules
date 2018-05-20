@@ -19,3 +19,6 @@
 [submodule "bin"]
 	path = bin
 	url = https://github.com/Kazade/simulant-tools.git
+[submodule "deps/libgl"]
+	path = deps/libgl
+	url = https://github.com/Kazade/libgl.git

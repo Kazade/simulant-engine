@@ -34,18 +34,18 @@ public:
 
         {
             auto light = stage_->new_light_as_point(Vec3(5, 0, -5), smlt::Colour::GREEN);
-            light->set_attenuation_from_range(20.0);
+            light->set_attenuation_from_range(30.0);
 
             auto light2 = stage_->new_light_as_point(Vec3(-5, 0, -5), smlt::Colour::BLUE);
             light2->set_attenuation_from_range(30.0);
 
-            auto light3 = stage_->new_light_as_point(Vec3(0, -15, -5), smlt::Colour::RED);
-            light3->set_attenuation_from_range(50.0);
+            auto light3 = stage_->new_light_as_point(Vec3(0, -5, -5), smlt::Colour::RED);
+            light3->set_attenuation_from_range(30.0);
 
             stage_->new_light_as_directional(Vec3(1, 0, 0), smlt::Colour::YELLOW);
         }
 
-        window->new_background_as_scrollable_from_file("sample_data/background.png");        
+        window->new_background_as_scrollable_from_file("sample_data/background.png");
 
         auto axis = input->new_axis("F");
         axis->set_positive_keyboard_key(smlt::KEYBOARD_CODE_F);

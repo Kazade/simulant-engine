@@ -6,8 +6,8 @@
 
 #if defined(SIMULANT_GL_VERSION_1X)
     #ifdef _arch_dreamcast
-        #include <GL/gl.h>
-        #include <GL/glu.h> // Until libGL supports glGenerateMipmap
+        #include "../../../deps/libgl/include/gl.h"
+        #include "../../../deps/libgl/include/glu.h" // Until libGL supports glGenerateMipmap
     #else
         #include "gl1x/glad/glad/glad.h"
     #endif
@@ -194,7 +194,7 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
                 // so we have to use gluBuild2DMipmaps for now
 
 #ifdef _arch_dreamcast
-                GLCheck(
+                /*GLCheck(
                     gluBuild2DMipmaps,
                     GL_TEXTURE_2D,
                     format,
@@ -203,7 +203,7 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
                     format,
                     type,
                     &texture->data()[0]
-                );
+                );*/
 #else
                 GLCheck(glGenerateMipmap, GL_TEXTURE_2D);
 #endif

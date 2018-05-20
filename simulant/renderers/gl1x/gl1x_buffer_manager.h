@@ -1,7 +1,7 @@
 #pragma once
 
 #ifdef _arch_dreamcast
-#include <GL/gl.h>
+#include "../../../deps/libgl/include/gl.h"
 #else
 #include "./glad/glad/glad.h"
 #endif

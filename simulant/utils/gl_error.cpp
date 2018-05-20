@@ -21,7 +21,7 @@
 #include "../deps/kazlog/kazlog.h"
 
 #ifdef _arch_dreamcast
-#include <GL/gl.h>
+#include "../../../deps/libgl/include/gl.h"
 #else
 
 #ifdef SIMULANT_GL_VERSION_2X

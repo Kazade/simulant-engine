@@ -7,7 +7,8 @@ public:
         smlt::Scene<MainScene>(window) {}
 
     void load() {
-        prepare_basic_scene(stage_, camera_);
+        auto pipeline = prepare_basic_scene(stage_, camera_);
+        pipeline->viewport->set_colour(smlt::Colour::RED);
 
         smlt::MeshPtr square = stage_->assets->new_mesh_as_rectangle(1.0, 1.0).fetch();
 

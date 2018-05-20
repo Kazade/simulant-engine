@@ -1,7 +1,7 @@
 #include <memory>
 #include <vector>
-#include <GL/gl.h>
-#include <GL/glut.h>
+#include "../deps/libgl/include/gl.h"
+#include "../deps/libgl/include/glkos.h"
 
 #include "input/input_state.h"
 #include "kos_window.h"
@@ -28,7 +28,7 @@ KOSWindow::KOSWindow(uint32_t width, uint32_t height, uint32_t bpp, bool fullscr
 
 
 void KOSWindow::swap_buffers() {
-    glutSwapBuffers();
+    glKosSwapBuffers();
 }
 
 bool KOSWindow::create_window() {

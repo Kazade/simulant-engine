@@ -180,3 +180,8 @@ simulant/behaviours/movement
 simulant/deps/bounce_src/bounce/dynamics/joints
 simulant/deps/bounce/common
 simulant/nodes/geoms
+deps/libgl
+deps/libgl/include
+deps/libgl/containers
+deps/libgl/experimental
+deps/libgl/GL

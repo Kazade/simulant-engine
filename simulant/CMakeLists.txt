@@ -35,6 +35,17 @@ IF(SIMULANT_GL_VERSION_2X)
 ENDIF()
 
 IF(DREAMCAST_BUILD)
+    # We build in libGL directly for the Dreamcast build because we use a custom fork and this is the easiest
+    # way to prevent mishaps in linking with the upstream version
+    FILE(GLOB_RECURSE LIBGL ${CMAKE_SOURCE_DIR}/deps/libgl/*.c)
+    FILE(GLOB_RECURSE LIBGL_ASM ${CMAKE_SOURCE_DIR}/deps/libgl/*.S)
+    INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/deps/libgl/include)
+
+    SET(SIMULANT_FILES ${SIMULANT_FILES}
+        ${LIBGL}
+        ${LIBGL_ASM}
+    )
+
     SET(SIMULANT_FILES ${SIMULANT_FILES} kos_window.cpp sound_drivers/kos_sound_driver.cpp)
 ELSE()
     SET(SIMULANT_FILES ${SIMULANT_FILES} sdl2_window.cpp sound_drivers/openal_sound_driver.cpp sound_drivers/al_error.cpp)
