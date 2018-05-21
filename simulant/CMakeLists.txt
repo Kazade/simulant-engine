@@ -35,6 +35,8 @@ IF(SIMULANT_GL_VERSION_2X)
 ENDIF()
 
 IF(DREAMCAST_BUILD)
+    MESSAGE("-- Including libGL in build, as this is the Dreamcast")
+
     # We build in libGL directly for the Dreamcast build because we use a custom fork and this is the easiest
     # way to prevent mishaps in linking with the upstream version
     FILE(GLOB_RECURSE LIBGL ${CMAKE_SOURCE_DIR}/deps/libgl/*.c)
