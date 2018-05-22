@@ -30,6 +30,30 @@ void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, u
 
     global_ambient_ = stage->ambient_light();
     GLCheck(glLightModelfv, GL_LIGHT_MODEL_AMBIENT, &global_ambient_.r);
+
+    if(!stage->fog->is_enabled()) {
+        GLCheck(glDisable, GL_FOG);
+    } else {
+        GLCheck(glEnable, GL_FOG);
+        switch(stage->fog->type()) {
+        case FOG_TYPE_EXP: {
+            GLCheck(glFogi, GL_FOG_MODE, GL_EXP);
+            GLCheck(glFogf, GL_FOG_DENSITY, stage->fog->exp_density());
+        } break;
+        case FOG_TYPE_EXP2: {
+            GLCheck(glFogi, GL_FOG_MODE, GL_EXP2);
+            GLCheck(glFogf, GL_FOG_DENSITY, stage->fog->exp_density());
+        } break;
+        case FOG_TYPE_LINEAR:
+        default: {
+            GLCheck(glFogi, GL_FOG_MODE, GL_LINEAR);
+            GLCheck(glFogf, GL_FOG_START, stage->fog->linear_start());
+            GLCheck(glFogf, GL_FOG_END, stage->fog->linear_end());
+        } break;
+        }
+
+        GLCheck(glFogfv, GL_FOG_COLOR, &stage->fog->colour().r);
+    }
 }
 
 void GL1RenderQueueVisitor::visit(Renderable* renderable, MaterialPass* pass, batcher::Iteration iteration) {

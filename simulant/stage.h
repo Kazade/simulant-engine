@@ -36,6 +36,7 @@
 #include "types.h"
 #include "resource_manager.h"
 #include "managers.h"
+#include "fog_settings.h"
 #include "window.h"
 
 namespace smlt {
@@ -148,7 +149,6 @@ public:
     LightPtr delete_light(LightID light_id);
     std::size_t light_count() const { return LightManager::count(); }
 
-
     smlt::Colour ambient_light() const { return ambient_light_; }
     void set_ambient_light(const smlt::Colour& c) { ambient_light_ = c; }
 
@@ -166,6 +166,7 @@ public:
     Property<Stage, ui::UIManager> ui = {this, &Stage::ui_};
     Property<Stage, SkyManager> skies = {this, &Stage::sky_manager_};
     Property<Stage, SpriteManager> sprites = {this, &Stage::sprite_manager_};
+    Property<Stage, FogSettings> fog = {this, &Stage::fog_};
 
     bool init() override;
     void cleanup() override;
@@ -222,6 +223,7 @@ private:
     std::shared_ptr<ResourceManager> resource_manager_;
     smlt::Colour ambient_light_;
 
+    std::unique_ptr<FogSettings> fog_;
     std::unique_ptr<GeomManager> geom_manager_;
     std::unique_ptr<SkyManager> sky_manager_;
     std::unique_ptr<SpriteManager> sprite_manager_;

@@ -45,6 +45,9 @@ public:
             stage_->new_light_as_directional(Vec3(1, 0, 0), smlt::Colour::YELLOW);
         }
 
+        stage_->fog->enable();
+        stage_->fog->set_linear(0.0f, 50.0f);
+
         window->new_background_as_scrollable_from_file("sample_data/background.png");
 
         auto axis = input->new_axis("F");

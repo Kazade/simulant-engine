@@ -326,6 +326,8 @@ simulant/extra/tiled/TmxParser/TmxUtil.cpp
 simulant/extra/tiled/TmxParser/TmxUtil.h
 simulant/extra/tiled/TmxParser/base64/base64.cpp
 simulant/extra/tiled/TmxParser/base64/base64.h
+simulant/fog_settings.cpp
+simulant/fog_settings.h
 simulant/font.cpp
 simulant/font.h
 simulant/framebuffer.h
@@ -758,7 +760,6 @@ simulant/virtual_gamepad.h
 simulant/window.cpp
 simulant/window.h
 tests/CMakeLists.txt
-tests/main.cpp
 CMakeLists.txt
 samples/combined_sample_1.cpp
 samples/light_sample.cpp
@@ -766,7 +767,6 @@ samples/new_pipeline_sample.cpp
 samples/flightsim.cpp
 tests/test_adjacency.h
 tests/test_camera.h
-tests/main.cpp
 tests/global.cpp
 tests/global.h
 tests/test_controllers.h
