@@ -33,6 +33,10 @@ double dot(int* g, double x, double y, double z, double w) {
 }
 
 bool Simplex::init() {
+    if(initialized_) {
+        return true;
+    }
+
     srand(seed_);
 
     p.clear();
@@ -51,6 +55,8 @@ bool Simplex::init() {
         perm[i] = p[i & 255];
     }
 
+    initialized_ = true;
+
     return true;
 }
 
@@ -68,6 +74,10 @@ float Simplex::noise(float x, float y, float z) {
 }
 
 float Simplex::noise(float x, float y, float z, float w) {
+    if(!initialized_) {
+        init();
+    }
+
     // The skewing and unskewing factors are hairy again for the 4D case
     const double F4 = (sqrt(5.0) - 1.0) / 4.0;
     const double G4 = (5.0 - sqrt(5.0)) / 20.0;

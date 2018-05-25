@@ -62,7 +62,7 @@ private:
 
     std::vector<int> perm;
     int seed_;
-
+    bool initialized_ = false;
 };
 
 }
