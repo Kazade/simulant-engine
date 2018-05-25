@@ -51,44 +51,23 @@ bool Simplex::init() {
         perm[i] = p[i & 255];
     }
 
-    float range_x0 = -1;
-    float range_x1 = 1;
-    float range_y0 = -1;
-    float range_y1 = 1;
-
-    for(int x = 0; x < buffer_width_; ++x) {
-        for(int y = 0; y < buffer_height_; ++y) {
-            float s = float(x) / float(buffer_width_);
-            float t = float(y) / float(buffer_height_);
-
-            float dx = range_x1 - range_x0;
-            float dy = range_y1 - range_y0;
-
-            float nx = range_x1 + cos(s * 2 * PI) * dx / (2 * PI);
-            float ny = range_y1 + cos(t * 2 * PI) * dy / (2 * PI);
-            float nz = range_x1 + sin(s * 2 * PI) * dx / (2 * PI);
-            float nw = range_y1 + sin(t * 2 * PI) * dy / (2 * PI);
-
-            buffer[(y * buffer_width_) + x] = noise(nx, ny, nz, nw);
-        }
-    }
-
     return true;
 }
 
-Simplex::Simplex(int width, int height, int seed):
-    buffer_width_(width),
-    buffer_height_(height),
+Simplex::Simplex(int seed):
     seed_(seed) {
 
-    buffer.resize(width * height);
 }
 
-double Simplex::get(float x, float y) {
-    return buffer[(y * buffer_width_) + x];
+float Simplex::noise(float x, float y) {
+    return noise(x, y, 0, 0);
 }
 
-double Simplex::noise(double x, double y, double z, double w) {
+float Simplex::noise(float x, float y, float z) {
+    return noise(x, y, z, 0);
+}
+
+float Simplex::noise(float x, float y, float z, float w) {
     // The skewing and unskewing factors are hairy again for the 4D case
     const double F4 = (sqrt(5.0) - 1.0) / 4.0;
     const double G4 = (5.0 - sqrt(5.0)) / 20.0;
@@ -238,7 +217,7 @@ double Simplex::noise(double x, double y, double z, double w) {
     }
 
     // Sum up and scale the result to cover the range [-1,1]
-    return 27.0 * (n0 + n1 + n2 + n3 + n4);
+    return 27.0f * (n0 + n1 + n2 + n3 + n4);
 }
 
 }

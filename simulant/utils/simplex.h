@@ -28,10 +28,13 @@ class Simplex :
     public Managed<Simplex> {
 
 public:
-    Simplex(int width, int height, int seed=time(NULL));
+    Simplex(int seed=time(NULL));
     bool init();
 
-    double get(float x, float y);
+    float noise(float x, float y);
+    float noise(float x, float y, float z);
+    float noise(float x, float y, float z, float w);
+
 private:
     std::vector<int> p;
 
@@ -58,14 +61,8 @@ private:
     };
 
     std::vector<int> perm;
-
-    int buffer_width_;
-    int buffer_height_;
     int seed_;
 
-    std::vector<float> buffer;
-
-    double noise(double x, double y, double z, double w);
 };
 
 }

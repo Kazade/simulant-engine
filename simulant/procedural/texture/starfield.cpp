@@ -73,12 +73,12 @@ void starfield(smlt::TexturePtr texture_ptr, uint32_t width, uint32_t height) {
     const float MAX_SIZE = 2.0;
     const float MAX_BRIGHTNESS = 255;
 
-    Simplex::ptr noise = Simplex::create(width, height);
+    Simplex::ptr noise = Simplex::create();
     auto rgen = RandomGenerator();
 
     for(uint32_t y = 0; y < height; ++y) {
         for(uint32_t x = 0; x < width; ++x) {
-            float this_density = (noise->get(x, y) + 1.0) / 2.0;
+            float this_density = (noise->noise(x, y) + 1.0) / 2.0;
 
             if(rgen.float_in_range(0, 1) < this_density * GLOBAL_DENSITY) {
                 float weight = rgen.float_in_range(0, 1) * this_density;
