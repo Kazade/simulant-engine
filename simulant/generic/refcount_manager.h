@@ -178,9 +178,17 @@ public:
     }
 
     void garbage_collect() {
+        const uint32_t MAX_COLLECTIONS = 16;
+
         std::lock_guard<std::mutex> lock(manager_lock_);
 
-        for(auto obj_it = objects_.begin(); obj_it != objects_.end(); ) {
+        auto i = 0u;
+        auto deleted = 0u;
+        for(auto obj_it = objects_.begin(); obj_it != objects_.end(); ++i) {
+            if(i == MAX_COLLECTIONS) {
+                break;
+            }
+
             auto key = obj_it->first;
             assert(key);
 
@@ -215,15 +223,17 @@ public:
                 }
 
                 if(ok_to_delete) {
+                    ++deleted;
                     obj_it = objects_.erase(obj_it);
                     creation_times_.erase(key);
-                    L_DEBUG(_F("Garbage collected: {0}").format(key.value()));
                     continue; // Don't increment the iterator
                 }
             }
 
             ++obj_it;
         }
+
+        L_DEBUG(_F("Garbage collected {0} objects of type {1}").format(deleted, typeid(ObjectIDType).name()));
     }
 
     typedef std::unordered_map<ObjectIDType, std::shared_ptr<ObjectType>> ObjectMap;
