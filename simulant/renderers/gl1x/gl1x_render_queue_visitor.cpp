@@ -240,6 +240,14 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
     if(!prev || prev->blending() != next->blending()) {
         set_blending_mode(next->blending());
     }
+
+    if(!prev || prev->shade_model() != next->shade_model()) {
+        if(next->shade_model() == SHADE_MODEL_SMOOTH) {
+            GLCheck(glShadeModel, GL_SMOOTH);
+        } else {
+            GLCheck(glShadeModel, GL_FLAT);
+        }
+    }
 }
 
 void GL1RenderQueueVisitor::change_light(const Light* prev, const Light* next) {

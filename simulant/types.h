@@ -381,6 +381,11 @@ enum PolygonMode {
     POLYGON_MODE_POINT
 };
 
+enum ShadeModel {
+    SHADE_MODEL_SMOOTH,
+    SHADE_MODEL_FLAT
+};
+
 enum RenderableCullingMode {
     RENDERABLE_CULLING_MODE_NEVER,
     RENDERABLE_CULLING_MODE_PARTITIONER

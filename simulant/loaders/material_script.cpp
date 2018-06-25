@@ -242,6 +242,12 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<un
             } else {
                 pass->set_prevent_textures(false);
             }
+        } else if(arg_1 == "SHADE_MODEL") {
+            if(arg_2 == "FLAT") {
+                pass->set_shade_model(SHADE_MODEL_FLAT);
+            } else {
+                pass->set_shade_model(SHADE_MODEL_SMOOTH);
+            }
 #ifdef SIMULANT_GL_VERSION_1X
         } else if(arg_1 == "TEXTURING") {
             if(arg_2 == "ON") {
