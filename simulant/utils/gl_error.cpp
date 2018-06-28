@@ -24,7 +24,7 @@
 #include "../../../deps/libgl/include/gl.h"
 #else
 
-#ifdef SIMULANT_GL_VERSION_2X
+#ifdef SIMULANT_GL_VERSION_4X
     #ifndef __ANDROID__
         #include "../renderers/gl2x/glad/glad/glad.h"
     #else

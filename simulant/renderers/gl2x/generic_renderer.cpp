@@ -17,7 +17,7 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifdef SIMULANT_GL_VERSION_2X
+#ifdef SIMULANT_GL_VERSION_4X
 
 #include "generic_renderer.h"
 
@@ -210,31 +210,12 @@ void GenericRenderer::set_stage_uniforms(const MaterialPass *pass, GPUProgram *p
     }
 }
 
-
-/* Shadows GL state to avoid unnecessary GL calls */
-static uint8_t enabled_vertex_attributes_ = 0;
-
 void enable_vertex_attribute(uint8_t i) {
-    uint8_t v = 1 << i;
-    if((enabled_vertex_attributes_ & v) == v) {
-        return;
-    }
-
     GLCheck(glEnableVertexAttribArray, i);
-
-    enabled_vertex_attributes_ ^= v;
 }
 
 void disable_vertex_attribute(uint8_t i) {
-    uint8_t v = 1 << i;
-
-    if((enabled_vertex_attributes_ & v) != v) {
-        return;
-    }
-
     GLCheck(glDisableVertexAttribArray, i);
-
-    enabled_vertex_attributes_ ^= v;
 }
 
 template<typename EnabledMethod, typename OffsetMethod>
@@ -269,15 +250,28 @@ void send_attribute(ShaderAvailableAttributes attr,
     }
 }
 
-void GenericRenderer::set_auto_attributes_on_shader(Renderable &buffer) {
+void GenericRenderer::prepare_vertex_array_object(const VertexSpecification& vertex_spec) {
     /*
      *  Binding attributes generically is hard. So we have some template magic in the send_attribute
      *  function above that takes the VertexData member functions we need to provide the attribute
      *  and just makes the whole thing generic. Before this was 100s of lines of boilerplate. Thank god
      *  for templates!
-     */        
-    const VertexSpecification& vertex_spec = buffer.vertex_attribute_specification();
+     */
 
+    auto it = vertex_array_objects_.find(vertex_spec);
+    if(it == vertex_array_objects_.end()) {
+        GLuint vao;
+
+        GLCheck(glGenVertexArrays, 1, &vao);
+        GLCheck(glBindVertexArray, vao);
+
+        vertex_array_objects_[vertex_spec] = vao;
+    } else {
+        GLCheck(glBindVertexArray, it->second);
+    }
+}
+
+static void send_vertex_attributes(const VertexSpecification& vertex_spec) {
     send_attribute(SP_ATTR_VERTEX_POSITION, vertex_spec, &VertexSpecification::has_positions, &VertexSpecification::position_offset);
     send_attribute(SP_ATTR_VERTEX_DIFFUSE, vertex_spec, &VertexSpecification::has_diffuse, &VertexSpecification::diffuse_offset);
     send_attribute(SP_ATTR_VERTEX_TEXCOORD0, vertex_spec, &VertexSpecification::has_texcoord0, &VertexSpecification::texcoord0_offset);
@@ -594,10 +588,14 @@ void GL2RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
         return;
     }
 
+    /* Set up the VAO */
+    renderer_->prepare_vertex_array_object(renderable->vertex_attribute_specification());
+
     renderer_->set_renderable_uniforms(material_pass, program_, renderable, camera_);
 
     renderable->prepare_buffers(renderer_);
 
+    /* Now bind the real buffers */
     auto* vertex_buffer = renderable->vertex_attribute_buffer();
     auto* index_buffer = renderable->index_buffer();
 
@@ -605,7 +603,8 @@ void GL2RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
     vertex_buffer->bind(HARDWARE_BUFFER_VERTEX_ATTRIBUTES);
     index_buffer->bind(HARDWARE_BUFFER_VERTEX_ARRAY_INDICES);
 
-    renderer_->set_auto_attributes_on_shader(*renderable);
+    send_vertex_attributes(renderable->vertex_attribute_specification());
+
     renderer_->send_geometry(renderable);
 }
 
@@ -664,4 +663,4 @@ void GenericRenderer::init_context() {
 
 }
 
-#endif //SIMULANT_GL_VERSION_2X
+#endif //SIMULANT_GL_VERSION_4X

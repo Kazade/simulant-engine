@@ -117,6 +117,8 @@ class VertexSpecification {
     uint16_t diffuse_offset_ = 0;
     uint16_t specular_offset_ = 0;
 
+    friend class std::hash<smlt::VertexSpecification>;
+
 public:
     static const VertexSpecification DEFAULT;
     static const VertexSpecification POSITION_ONLY;
@@ -539,14 +541,6 @@ constexpr uint16_t vertex_attribute_size(VertexAttribute attr) {
 
 }
 
-/* Hash functions for smlt types */
-namespace std {
-    template <> struct hash<smlt::MeshArrangement> {
-        size_t operator() (smlt::MeshArrangement t) { return size_t(t); }
-    };
-}
-
-
 
 // Generic hash for tuples by Leo Goodstadt
 // http://stackoverflow.com/questions/7110301/generic-hash-for-tuples-in-unordered-map-unordered-set
@@ -600,6 +594,33 @@ namespace std{
 
     };
 }
+
+/* Hash functions for smlt types */
+namespace std {
+    template <> struct hash<smlt::MeshArrangement> {
+        size_t operator()(smlt::MeshArrangement t) { return size_t(t); }
+    };
+
+    template <> struct hash<smlt::VertexSpecification> {
+        size_t operator()(const smlt::VertexSpecification& s) const {
+            size_t seed;
+            hash_combine(seed, s.position_attribute_);
+            hash_combine(seed, s.normal_attribute_);
+            hash_combine(seed, s.texcoord0_attribute_);
+            hash_combine(seed, s.texcoord1_attribute_);
+            hash_combine(seed, s.texcoord2_attribute_);
+            hash_combine(seed, s.texcoord3_attribute_);
+            hash_combine(seed, s.texcoord4_attribute_);
+            hash_combine(seed, s.texcoord5_attribute_);
+            hash_combine(seed, s.texcoord6_attribute_);
+            hash_combine(seed, s.texcoord7_attribute_);
+            hash_combine(seed, s.diffuse_attribute_);
+            hash_combine(seed, s.specular_attribute_);
+            return seed;
+        }
+    };
+}
+
 
 
 #endif // TYPES_H_INCLUDED

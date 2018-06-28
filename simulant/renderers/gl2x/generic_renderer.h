@@ -114,7 +114,7 @@ private:
     void set_renderable_uniforms(const MaterialPass* pass, GPUProgram* program, Renderable* renderable, Camera* camera);
     void set_stage_uniforms(const MaterialPass* pass, GPUProgram* program, const Colour& global_ambient);
 
-    void set_auto_attributes_on_shader(Renderable &buffer);
+    void prepare_vertex_array_object(const VertexSpecification& spec);
     void set_blending_mode(BlendType type);
     void send_geometry(Renderable* renderable);
 
@@ -131,6 +131,11 @@ private:
     void on_texture_unregister(TextureID tex_id) override {
         GLRenderer::on_texture_unregister(tex_id);
     }
+
+    /* We create one VAO per vertex specification so we only have to set up vertex pointers once
+     * for each spec type. At some point this all needs cleaning up and optimising but this'll do for now
+     */
+    std::unordered_map<VertexSpecification, GLuint> vertex_array_objects_;
 };
 
 }

@@ -11,7 +11,7 @@
     #else
         #include "gl1x/glad/glad/glad.h"
     #endif
-#elif defined(SIMULANT_GL_VERSION_2X)
+#elif defined(SIMULANT_GL_VERSION_4X)
     #ifdef __ANDROID__
         #include <GLES2/gl2.h>
         #include <GLES2/gl2ext.h>
@@ -149,7 +149,7 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
         if(format > 0 && type > 0) {
             if(texture->is_compressed()) {
 
-#if defined(_arch_dreamcast) || defined(SIMULANT_GL_VERSION_2X)
+#if defined(_arch_dreamcast) || defined(SIMULANT_GL_VERSION_4X)
                 GLCheck(glCompressedTexImage2D,
                     GL_TEXTURE_2D,
                     0,
@@ -247,7 +247,7 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
         auto convert_wrap_mode = [](TextureWrap wrap) -> GLenum {
             switch(wrap) {
                 case TEXTURE_WRAP_CLAMP_TO_EDGE:
-#ifdef SIMULANT_GL_VERSION_2X
+#ifdef SIMULANT_GL_VERSION_4X
                     return GL_CLAMP_TO_EDGE;
 #else
                     return GL_CLAMP;

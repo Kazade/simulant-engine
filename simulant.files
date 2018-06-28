@@ -54,6 +54,8 @@ deps/libgl/GL/immediate.c
 deps/libgl/GL/lighting.c
 deps/libgl/GL/matrix.c
 deps/libgl/GL/private.h
+deps/libgl/GL/profile.c
+deps/libgl/GL/profile.h
 deps/libgl/GL/state.c
 deps/libgl/GL/texture.c
 deps/libgl/containers/aligned_vector.h

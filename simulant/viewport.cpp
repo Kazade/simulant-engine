@@ -24,7 +24,7 @@
 #include <GL/gl.h>
 #else
 
-#ifdef SIMULANT_GL_VERSION_2X
+#ifdef SIMULANT_GL_VERSION_4X
     #include "renderers/gl2x/glad/glad/glad.h"
 #else
     #include "renderers/gl1x/glad/glad/glad.h"
