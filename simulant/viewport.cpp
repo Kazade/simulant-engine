@@ -25,7 +25,7 @@
 #else
 
 #ifdef SIMULANT_GL_VERSION_4X
-    #include "renderers/gl2x/glad/glad/glad.h"
+    #include "renderers/gl4x/glad/glad/glad.h"
 #else
     #include "renderers/gl1x/glad/glad/glad.h"
 #endif

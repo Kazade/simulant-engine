@@ -16,7 +16,7 @@
         #include <GLES2/gl2.h>
         #include <GLES2/gl2ext.h>
     #else
-        #include "gl2x/glad/glad/glad.h"
+        #include "gl4x/glad/glad/glad.h"
     #endif
 #endif
 

@@ -6,7 +6,7 @@
 #include "global.h"
 
 #ifndef SIMULANT_GL_VERSION_1X
-#include "simulant/renderers/gl2x/gpu_program.h"
+#include "simulant/renderers/gl4x/gpu_program.h"
 #endif
 
 class ShaderTest : public SimulantTestCase {
