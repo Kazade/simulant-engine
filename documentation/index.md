@@ -18,6 +18,7 @@ This section covers the base subsystems and usages of Simulant.
  - Managing objects: [Manual managers](manual_managers.md) | [Refcounted managers](refcount_managers.md)
  - Core systems: [The Window](window.md) | [Idle Manager](idle.md) | [Viewports](viewport.md) | [Threading](threading.md)
  - Utilities: [Random](random.md) 
+ - Simulant Architecture: [Renderers](renderers.md)
 
 ### The Rendering System
 
