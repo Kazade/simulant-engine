@@ -604,18 +604,18 @@ namespace std {
     template <> struct hash<smlt::VertexSpecification> {
         size_t operator()(const smlt::VertexSpecification& s) const {
             size_t seed;
-            hash_combine(seed, s.position_attribute_);
-            hash_combine(seed, s.normal_attribute_);
-            hash_combine(seed, s.texcoord0_attribute_);
-            hash_combine(seed, s.texcoord1_attribute_);
-            hash_combine(seed, s.texcoord2_attribute_);
-            hash_combine(seed, s.texcoord3_attribute_);
-            hash_combine(seed, s.texcoord4_attribute_);
-            hash_combine(seed, s.texcoord5_attribute_);
-            hash_combine(seed, s.texcoord6_attribute_);
-            hash_combine(seed, s.texcoord7_attribute_);
-            hash_combine(seed, s.diffuse_attribute_);
-            hash_combine(seed, s.specular_attribute_);
+            hash_combine(seed, (int32_t) s.position_attribute_);
+            hash_combine(seed, (int32_t) s.normal_attribute_);
+            hash_combine(seed, (int32_t) s.texcoord0_attribute_);
+            hash_combine(seed, (int32_t) s.texcoord1_attribute_);
+            hash_combine(seed, (int32_t) s.texcoord2_attribute_);
+            hash_combine(seed, (int32_t) s.texcoord3_attribute_);
+            hash_combine(seed, (int32_t) s.texcoord4_attribute_);
+            hash_combine(seed, (int32_t) s.texcoord5_attribute_);
+            hash_combine(seed, (int32_t) s.texcoord6_attribute_);
+            hash_combine(seed, (int32_t) s.texcoord7_attribute_);
+            hash_combine(seed, (int32_t) s.diffuse_attribute_);
+            hash_combine(seed, (int32_t) s.specular_attribute_);
             return seed;
         }
     };
