@@ -288,8 +288,18 @@ bool SDL2Window::create_window() {
 #else
     renderer_ = std::make_shared<GL4Renderer>(this);
 
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
+    /*
+     * Unfortunately, Mesa doesn't yet support OpenGL 4.5 on the softpipe driver
+     * so we (Simulant) need to force 3.0 on Travis, this means we need to remain 3.0 compatible for the
+     * near future (but users can use 4.5 GLSL shaders)
+     */
+    if(getenv("TRAVIS")) {
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    } else {
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
+    }
 
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
