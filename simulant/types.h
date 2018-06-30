@@ -117,7 +117,7 @@ class VertexSpecification {
     uint16_t diffuse_offset_ = 0;
     uint16_t specular_offset_ = 0;
 
-    friend class std::hash<smlt::VertexSpecification>;
+    friend struct std::hash<smlt::VertexSpecification>;
 
 public:
     static const VertexSpecification DEFAULT;
