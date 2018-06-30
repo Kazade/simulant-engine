@@ -24,9 +24,9 @@
 #include "../../../deps/libgl/include/gl.h"
 #else
 
-#ifdef SIMULANT_GL_VERSION_2X
+#ifdef SIMULANT_GL_VERSION_3X
     #ifndef __ANDROID__
-        #include "../renderers/gl2x/glad/glad/glad.h"
+        #include "../renderers/gl3x/glad/glad/glad.h"
     #else
         #include <GLES2/gl2.h>
         #include <GLES2/gl2ext.h>
@@ -63,15 +63,18 @@ void check_and_log_error(const std::string &function_name) {
         case GL_INVALID_OPERATION:
             error_string = "GL_INVALID_OPERATION";
             break;
-#ifndef _arch_dreamcast
+
+#ifdef SIMULANT_GL_VERSION_3X
         case GL_INVALID_FRAMEBUFFER_OPERATION:
             error_string = "GL_INVALID_FRAMEBUFFER_OPERATION";
             break;
 #endif
+
         case GL_OUT_OF_MEMORY:
             error_string = "GL_OUT_OF_MEMORY";
             break;
-#ifndef __ANDROID__
+
+#ifdef SIMULANT_GL_VERSION_1X
         case GL_STACK_OVERFLOW:
             error_string = "GL_STACK_OVERFLOW";
             break;

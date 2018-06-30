@@ -17,7 +17,7 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifdef SIMULANT_GL_VERSION_2X
+#ifdef SIMULANT_GL_VERSION_3X
 
 #include "generic_renderer.h"
 
@@ -79,7 +79,7 @@ public:
     }
 };
 
-batcher::RenderGroup GenericRenderer::new_render_group(Renderable* renderable, MaterialPass *material_pass) {
+batcher::RenderGroup GL3Renderer::new_render_group(Renderable* renderable, MaterialPass *material_pass) {
     auto impl = std::make_shared<GL2RenderGroupImpl>(renderable->render_priority());
     for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
         if(i < material_pass->texture_unit_count()) {
@@ -93,7 +93,7 @@ batcher::RenderGroup GenericRenderer::new_render_group(Renderable* renderable, M
     return batcher::RenderGroup(impl);
 }
 
-void GenericRenderer::set_light_uniforms(const MaterialPass* pass, GPUProgram* program, const Light *light) {
+void GL3Renderer::set_light_uniforms(const MaterialPass* pass, GPUProgram* program, const Light *light) {
     auto& uniforms = pass->uniforms;
 
     if(uniforms->uses_auto(SP_AUTO_LIGHT_POSITION)) {
@@ -143,7 +143,7 @@ void GenericRenderer::set_light_uniforms(const MaterialPass* pass, GPUProgram* p
     }
 }
 
-void GenericRenderer::set_material_uniforms(const MaterialPass* pass, GPUProgram* program) {
+void GL3Renderer::set_material_uniforms(const MaterialPass* pass, GPUProgram* program) {
     auto& uniforms = pass->uniforms;
 
     if(uniforms->uses_auto(SP_AUTO_MATERIAL_AMBIENT)) {
@@ -203,38 +203,19 @@ void GenericRenderer::set_material_uniforms(const MaterialPass* pass, GPUProgram
     }
 }
 
-void GenericRenderer::set_stage_uniforms(const MaterialPass *pass, GPUProgram *program, const Colour &global_ambient) {
+void GL3Renderer::set_stage_uniforms(const MaterialPass *pass, GPUProgram *program, const Colour &global_ambient) {
     if(pass->uniforms->uses_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT)) {
         auto varname = pass->uniforms->auto_variable_name(SP_AUTO_LIGHT_GLOBAL_AMBIENT);
         program->set_uniform_colour(varname, global_ambient);
     }
 }
 
-
-/* Shadows GL state to avoid unnecessary GL calls */
-static uint8_t enabled_vertex_attributes_ = 0;
-
 void enable_vertex_attribute(uint8_t i) {
-    uint8_t v = 1 << i;
-    if((enabled_vertex_attributes_ & v) == v) {
-        return;
-    }
-
     GLCheck(glEnableVertexAttribArray, i);
-
-    enabled_vertex_attributes_ ^= v;
 }
 
 void disable_vertex_attribute(uint8_t i) {
-    uint8_t v = 1 << i;
-
-    if((enabled_vertex_attributes_ & v) != v) {
-        return;
-    }
-
     GLCheck(glDisableVertexAttribArray, i);
-
-    enabled_vertex_attributes_ ^= v;
 }
 
 template<typename EnabledMethod, typename OffsetMethod>
@@ -269,15 +250,28 @@ void send_attribute(ShaderAvailableAttributes attr,
     }
 }
 
-void GenericRenderer::set_auto_attributes_on_shader(Renderable &buffer) {
+void GL3Renderer::prepare_vertex_array_object(const VertexSpecification& vertex_spec) {
     /*
      *  Binding attributes generically is hard. So we have some template magic in the send_attribute
      *  function above that takes the VertexData member functions we need to provide the attribute
      *  and just makes the whole thing generic. Before this was 100s of lines of boilerplate. Thank god
      *  for templates!
-     */        
-    const VertexSpecification& vertex_spec = buffer.vertex_attribute_specification();
+     */
 
+    auto it = vertex_array_objects_.find(vertex_spec);
+    if(it == vertex_array_objects_.end()) {
+        GLuint vao;
+
+        GLCheck(glGenVertexArrays, 1, &vao);
+        GLCheck(glBindVertexArray, vao);
+
+        vertex_array_objects_[vertex_spec] = vao;
+    } else {
+        GLCheck(glBindVertexArray, it->second);
+    }
+}
+
+static void send_vertex_attributes(const VertexSpecification& vertex_spec) {
     send_attribute(SP_ATTR_VERTEX_POSITION, vertex_spec, &VertexSpecification::has_positions, &VertexSpecification::position_offset);
     send_attribute(SP_ATTR_VERTEX_DIFFUSE, vertex_spec, &VertexSpecification::has_diffuse, &VertexSpecification::diffuse_offset);
     send_attribute(SP_ATTR_VERTEX_TEXCOORD0, vertex_spec, &VertexSpecification::has_texcoord0, &VertexSpecification::texcoord0_offset);
@@ -287,7 +281,7 @@ void GenericRenderer::set_auto_attributes_on_shader(Renderable &buffer) {
     send_attribute(SP_ATTR_VERTEX_NORMAL, vertex_spec, &VertexSpecification::has_normals, &VertexSpecification::normal_offset);
 }
 
-void GenericRenderer::set_blending_mode(BlendType type) {
+void GL3Renderer::set_blending_mode(BlendType type) {
     if(type == BLEND_NONE) {
         GLCheck(glDisable, GL_BLEND);
         return;
@@ -311,34 +305,34 @@ void GenericRenderer::set_blending_mode(BlendType type) {
 }
 
 
-std::shared_ptr<batcher::RenderQueueVisitor> GenericRenderer::get_render_queue_visitor(CameraPtr camera) {
-    return std::make_shared<GL2RenderQueueVisitor>(this, camera);
+std::shared_ptr<batcher::RenderQueueVisitor> GL3Renderer::get_render_queue_visitor(CameraPtr camera) {
+    return std::make_shared<GL3RenderQueueVisitor>(this, camera);
 }
 
-smlt::GPUProgramID smlt::GenericRenderer::new_or_existing_gpu_program(const std::string &vertex_shader_source, const std::string &fragment_shader_source) {
+smlt::GPUProgramID smlt::GL3Renderer::new_or_existing_gpu_program(const std::string &vertex_shader_source, const std::string &fragment_shader_source) {
     return program_manager_.make(GARBAGE_COLLECT_PERIODIC, vertex_shader_source, fragment_shader_source);
 }
 
-smlt::GPUProgramPtr smlt::GenericRenderer::gpu_program(const smlt::GPUProgramID &program_id) {
+smlt::GPUProgramPtr smlt::GL3Renderer::gpu_program(const smlt::GPUProgramID &program_id) {
     return program_manager_.get(program_id).lock();
 }
 
-GL2RenderQueueVisitor::GL2RenderQueueVisitor(GenericRenderer* renderer, CameraPtr camera):
+GL3RenderQueueVisitor::GL3RenderQueueVisitor(GL3Renderer* renderer, CameraPtr camera):
     renderer_(renderer),
     camera_(camera) {
 
 }
 
-void GL2RenderQueueVisitor::visit(Renderable* renderable, MaterialPass* material_pass, batcher::Iteration iteration) {
+void GL3RenderQueueVisitor::visit(Renderable* renderable, MaterialPass* material_pass, batcher::Iteration iteration) {
     queue_blended_objects_ = true;
     do_visit(renderable, material_pass, iteration);
 }
 
-void GL2RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, Stage* stage) {
+void GL3RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, Stage* stage) {
     global_ambient_ = stage->ambient_light();
 }
 
-void GL2RenderQueueVisitor::end_traversal(const batcher::RenderQueue &queue, Stage* stage) {
+void GL3RenderQueueVisitor::end_traversal(const batcher::RenderQueue &queue, Stage* stage) {
     // When running do_visit, don't queue blended objects just render them
     queue_blended_objects_ = false;
 
@@ -374,13 +368,13 @@ void GL2RenderQueueVisitor::end_traversal(const batcher::RenderQueue &queue, Sta
     queue_blended_objects_ = true;
 }
 
-void GL2RenderQueueVisitor::change_light(const Light *prev, const Light *next) {
+void GL3RenderQueueVisitor::change_light(const Light *prev, const Light *next) {
     light_ = next;
 
     renderer_->set_light_uniforms(pass_, program_, next);
 }
 
-void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const MaterialPass* next) {
+void GL3RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const MaterialPass* next) {
     pass_ = next;
 
     if(!prev || prev->depth_test_enabled() != next->depth_test_enabled()) {
@@ -443,6 +437,14 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         renderer_->set_blending_mode(next->blending());
     }
 
+    if(!prev || prev->shade_model() != next->shade_model()) {
+        if(next->shade_model() == SHADE_MODEL_SMOOTH) {
+            GLCheck(glShadeModel, GL_SMOOTH);
+        } else {
+            GLCheck(glShadeModel, GL_FLAT);
+        }
+    }
+
     renderer_->set_stage_uniforms(next, program_, global_ambient_);
     renderer_->set_material_uniforms(next, program_);
 
@@ -473,7 +475,7 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
     rebind_attribute_locations_if_necessary(next, program_);
 }
 
-void GenericRenderer::set_renderable_uniforms(const MaterialPass* pass, GPUProgram* program, Renderable* renderable, Camera* camera) {
+void GL3Renderer::set_renderable_uniforms(const MaterialPass* pass, GPUProgram* program, Renderable* renderable, Camera* camera) {
     //Calculate the modelview-projection matrix    
     const Mat4 model = renderable->final_transformation();
     const Mat4& view = camera->view_matrix();
@@ -522,7 +524,7 @@ void GenericRenderer::set_renderable_uniforms(const MaterialPass* pass, GPUProgr
     }
 }
 
-void GL2RenderQueueVisitor::rebind_attribute_locations_if_necessary(const MaterialPass* pass, GPUProgram* program) {
+void GL3RenderQueueVisitor::rebind_attribute_locations_if_necessary(const MaterialPass* pass, GPUProgram* program) {
     static const std::set<ShaderAvailableAttributes> SHADER_AVAILABLE_ATTRS = {
         SP_ATTR_VERTEX_POSITION,
         SP_ATTR_VERTEX_DIFFUSE,
@@ -543,7 +545,7 @@ void GL2RenderQueueVisitor::rebind_attribute_locations_if_necessary(const Materi
     program->relink(); // Will only do somethig if set_attribute_location did something
 }
 
-void GL2RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev, const batcher::RenderGroup *next) {
+void GL3RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev, const batcher::RenderGroup *next) {
 
     // Casting blindly because I can't see how it's possible that it's anything else!
     auto last_group = (prev) ? (GL2RenderGroupImpl*) prev->impl() : nullptr;
@@ -566,7 +568,7 @@ void GL2RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev
     }
 }
 
-void GL2RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* material_pass, batcher::Iteration iteration) {
+void GL3RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* material_pass, batcher::Iteration iteration) {
     // Queue transparent objects for render later
     if(material_pass->is_blended() && queue_blended_objects_) {
         auto pos = renderable->transformed_aabb().centre();
@@ -594,10 +596,14 @@ void GL2RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
         return;
     }
 
+    /* Set up the VAO */
+    renderer_->prepare_vertex_array_object(renderable->vertex_attribute_specification());
+
     renderer_->set_renderable_uniforms(material_pass, program_, renderable, camera_);
 
     renderable->prepare_buffers(renderer_);
 
+    /* Now bind the real buffers */
     auto* vertex_buffer = renderable->vertex_attribute_buffer();
     auto* index_buffer = renderable->index_buffer();
 
@@ -605,7 +611,8 @@ void GL2RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
     vertex_buffer->bind(HARDWARE_BUFFER_VERTEX_ATTRIBUTES);
     index_buffer->bind(HARDWARE_BUFFER_VERTEX_ARRAY_INDICES);
 
-    renderer_->set_auto_attributes_on_shader(*renderable);
+    send_vertex_attributes(renderable->vertex_attribute_specification());
+
     renderer_->send_geometry(renderable);
 }
 
@@ -638,7 +645,7 @@ static GLenum convert_arrangement(MeshArrangement arrangement) {
 }
 
 
-void GenericRenderer::send_geometry(Renderable *renderable) {
+void GL3Renderer::send_geometry(Renderable *renderable) {
     auto element_count = renderable->index_element_count();
     if(!element_count) {
         return;
@@ -651,7 +658,7 @@ void GenericRenderer::send_geometry(Renderable *renderable) {
     window->stats->increment_polygons_rendered(arrangement, element_count);
 }
 
-void GenericRenderer::init_context() {
+void GL3Renderer::init_context() {
     if(!gladLoadGL()) {
         throw std::runtime_error("Unable to intialize OpenGL 2.1");
     }
@@ -664,4 +671,4 @@ void GenericRenderer::init_context() {
 
 }
 
-#endif //SIMULANT_GL_VERSION_2X
+#endif //SIMULANT_GL_VERSION_3X

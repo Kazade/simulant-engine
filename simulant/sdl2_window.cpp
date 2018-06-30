@@ -282,14 +282,23 @@ bool SDL2Window::create_window() {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 #elif __ANDROID__
-    renderer_ = std::make_shared<GenericRenderer>(this);
+    renderer_ = std::make_shared<GL3Renderer>(this);
 
     SDL_GL_SetAttribute (SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 #else
-    renderer_ = std::make_shared<GenericRenderer>(this);
+    renderer_ = std::make_shared<GL3Renderer>(this);
 
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+    /*
+     * Unfortunately, Mesa doesn't yet support anything higher than GL 3.0 on softpipe.
+     * When it does we can upgrade, but we can't upgrade past 4.1 without breaking OSX :/
+     */
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+
+#ifdef __APPLE__
+    /* Apple requires a core profile for Opengl 3.0+ apparently */
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+#endif
 
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
@@ -299,7 +308,6 @@ bool SDL2Window::create_window() {
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
 
-    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
 #endif
 
     screen_ = SDL_CreateWindow(

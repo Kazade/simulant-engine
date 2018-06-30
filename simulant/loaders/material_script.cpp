@@ -27,7 +27,7 @@
 #include "../renderers/renderer.h"
 
 #ifndef SIMULANT_GL_VERSION_1X
-#include "../renderers/gl2x/gpu_program.h"
+#include "../renderers/gl3x/gpu_program.h"
 #endif
 
 namespace smlt {

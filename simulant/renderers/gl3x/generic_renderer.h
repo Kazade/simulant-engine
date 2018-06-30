@@ -30,7 +30,7 @@
 namespace smlt {
 
 class GL2RenderGroupImpl;
-class GenericRenderer;
+class GL3Renderer;
 
 struct RenderState {
     Renderable* renderable;
@@ -40,9 +40,9 @@ struct RenderState {
     GL2RenderGroupImpl* render_group_impl;
 };
 
-class GL2RenderQueueVisitor : public batcher::RenderQueueVisitor {
+class GL3RenderQueueVisitor : public batcher::RenderQueueVisitor {
 public:
-    GL2RenderQueueVisitor(GenericRenderer* renderer, CameraPtr camera);
+    GL3RenderQueueVisitor(GL3Renderer* renderer, CameraPtr camera);
 
     void start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, Stage* stage);
     void visit(Renderable* renderable, MaterialPass* pass, batcher::Iteration);
@@ -53,7 +53,7 @@ public:
     void change_light(const Light* prev, const Light* next);
 
 private:
-    GenericRenderer* renderer_;
+    GL3Renderer* renderer_;
     CameraPtr camera_;
     Colour global_ambient_;
 
@@ -77,12 +77,12 @@ private:
 
 typedef generic::RefCountedTemplatedManager<GPUProgram, GPUProgramID> GPUProgramManager;
 
-class GenericRenderer:
+class GL3Renderer:
     public Renderer,
     private GLRenderer {
 
 public:
-    GenericRenderer(Window* window):
+    GL3Renderer(Window* window):
         Renderer(window),
         GLRenderer(window),
         buffer_manager_(new GL2BufferManager(this)) {
@@ -114,11 +114,11 @@ private:
     void set_renderable_uniforms(const MaterialPass* pass, GPUProgram* program, Renderable* renderable, Camera* camera);
     void set_stage_uniforms(const MaterialPass* pass, GPUProgram* program, const Colour& global_ambient);
 
-    void set_auto_attributes_on_shader(Renderable &buffer);
+    void prepare_vertex_array_object(const VertexSpecification& spec);
     void set_blending_mode(BlendType type);
     void send_geometry(Renderable* renderable);
 
-    friend class GL2RenderQueueVisitor;
+    friend class GL3RenderQueueVisitor;
 
     void on_texture_prepare(TexturePtr texture) override {
         GLRenderer::on_texture_prepare(texture);
@@ -131,6 +131,11 @@ private:
     void on_texture_unregister(TextureID tex_id) override {
         GLRenderer::on_texture_unregister(tex_id);
     }
+
+    /* We create one VAO per vertex specification so we only have to set up vertex pointers once
+     * for each spec type. At some point this all needs cleaning up and optimising but this'll do for now
+     */
+    std::unordered_map<VertexSpecification, GLuint> vertex_array_objects_;
 };
 
 }
