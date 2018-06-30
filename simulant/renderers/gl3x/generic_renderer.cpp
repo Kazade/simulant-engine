@@ -437,6 +437,14 @@ void GL4RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         renderer_->set_blending_mode(next->blending());
     }
 
+    if(!prev || prev->shade_model() != next->shade_model()) {
+        if(next->shade_model() == SHADE_MODEL_SMOOTH) {
+            GLCheck(glShadeModel, GL_SMOOTH);
+        } else {
+            GLCheck(glShadeModel, GL_FLAT);
+        }
+    }
+
     renderer_->set_stage_uniforms(next, program_, global_ambient_);
     renderer_->set_material_uniforms(next, program_);
 
