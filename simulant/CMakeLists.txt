@@ -27,7 +27,7 @@ IF(SIMULANT_GL_VERSION_1X)
 ENDIF()
 
 # Add GL2 files if we're using that instead
-IF(SIMULANT_GL_VERSION_4X)
+IF(SIMULANT_GL_VERSION_3X)
     MESSAGE("-- Using the OpenGL 4.5 renderer")
 
     FILE(GLOB_RECURSE GL2_FILES renderers/gl2x/*.c*)

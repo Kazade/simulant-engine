@@ -17,7 +17,7 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifdef SIMULANT_GL_VERSION_4X
+#ifdef SIMULANT_GL_VERSION_3X
 
 #include "generic_renderer.h"
 
@@ -663,4 +663,4 @@ void GL4Renderer::init_context() {
 
 }
 
-#endif //SIMULANT_GL_VERSION_4X
+#endif //SIMULANT_GL_VERSION_3X

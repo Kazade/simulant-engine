@@ -153,7 +153,7 @@ public:
         assert_equal(2u, render_queue->group_count(0));
     }
 
-#ifdef SIMULANT_GL_VERSION_4X
+#ifdef SIMULANT_GL_VERSION_3X
     void test_shader_grouping() {
 
     }

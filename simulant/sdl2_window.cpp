@@ -289,17 +289,11 @@ bool SDL2Window::create_window() {
     renderer_ = std::make_shared<GL4Renderer>(this);
 
     /*
-     * Unfortunately, Mesa doesn't yet support OpenGL 4.1 on the softpipe driver
-     * so we (Simulant) need to force 3.0 on Travis, this means we need to remain 3.0 compatible for the
-     * near future (but users can use 4.1 GLSL shaders). We can't upgrade past 4.1 without breaking OSX :/
+     * Unfortunately, Mesa doesn't yet support anything higher than GL 3.0 on softpipe.
+     * When it does we can upgrade, but we can't upgrade past 4.1 without breaking OSX :/
      */
-    if(getenv("TRAVIS")) {
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-    } else {
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-    }
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
@@ -309,7 +303,10 @@ bool SDL2Window::create_window() {
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
 
+#ifndef __APPLE__
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
+#endif
+
 #endif
 
     screen_ = SDL_CreateWindow(
