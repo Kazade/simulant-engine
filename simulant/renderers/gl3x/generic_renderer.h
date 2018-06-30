@@ -30,7 +30,7 @@
 namespace smlt {
 
 class GL2RenderGroupImpl;
-class GL4Renderer;
+class GL3Renderer;
 
 struct RenderState {
     Renderable* renderable;
@@ -40,9 +40,9 @@ struct RenderState {
     GL2RenderGroupImpl* render_group_impl;
 };
 
-class GL4RenderQueueVisitor : public batcher::RenderQueueVisitor {
+class GL3RenderQueueVisitor : public batcher::RenderQueueVisitor {
 public:
-    GL4RenderQueueVisitor(GL4Renderer* renderer, CameraPtr camera);
+    GL3RenderQueueVisitor(GL3Renderer* renderer, CameraPtr camera);
 
     void start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, Stage* stage);
     void visit(Renderable* renderable, MaterialPass* pass, batcher::Iteration);
@@ -53,7 +53,7 @@ public:
     void change_light(const Light* prev, const Light* next);
 
 private:
-    GL4Renderer* renderer_;
+    GL3Renderer* renderer_;
     CameraPtr camera_;
     Colour global_ambient_;
 
@@ -77,12 +77,12 @@ private:
 
 typedef generic::RefCountedTemplatedManager<GPUProgram, GPUProgramID> GPUProgramManager;
 
-class GL4Renderer:
+class GL3Renderer:
     public Renderer,
     private GLRenderer {
 
 public:
-    GL4Renderer(Window* window):
+    GL3Renderer(Window* window):
         Renderer(window),
         GLRenderer(window),
         buffer_manager_(new GL2BufferManager(this)) {
@@ -118,7 +118,7 @@ private:
     void set_blending_mode(BlendType type);
     void send_geometry(Renderable* renderable);
 
-    friend class GL4RenderQueueVisitor;
+    friend class GL3RenderQueueVisitor;
 
     void on_texture_prepare(TexturePtr texture) override {
         GLRenderer::on_texture_prepare(texture);

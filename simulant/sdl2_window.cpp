@@ -282,11 +282,11 @@ bool SDL2Window::create_window() {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 #elif __ANDROID__
-    renderer_ = std::make_shared<GL4Renderer>(this);
+    renderer_ = std::make_shared<GL3Renderer>(this);
 
     SDL_GL_SetAttribute (SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 #else
-    renderer_ = std::make_shared<GL4Renderer>(this);
+    renderer_ = std::make_shared<GL3Renderer>(this);
 
     /*
      * Unfortunately, Mesa doesn't yet support anything higher than GL 3.0 on softpipe.
