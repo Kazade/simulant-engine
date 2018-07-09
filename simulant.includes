@@ -185,3 +185,5 @@ deps/libgl/include
 deps/libgl/containers
 deps/libgl/experimental
 deps/libgl/GL
+deps/libgl/samples/nehe02
+deps/libgl/samples/nehe06

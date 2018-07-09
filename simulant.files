@@ -56,6 +56,7 @@ deps/libgl/GL/matrix.c
 deps/libgl/GL/private.h
 deps/libgl/GL/state.c
 deps/libgl/GL/texture.c
+deps/libgl/containers/aligned_vector.c
 deps/libgl/containers/aligned_vector.h
 deps/libgl/containers/named_array.h
 deps/libgl/containers/stack.h
@@ -71,6 +72,8 @@ deps/libgl/gl-error.c
 deps/libgl/include/gl.h
 deps/libgl/include/glext.h
 deps/libgl/include/glkos.h
+deps/libgl/samples/nehe02/main.c
+deps/libgl/samples/nehe06/main.c
 documentation/cameras.md
 documentation/engine_structure.md
 documentation/index.md
