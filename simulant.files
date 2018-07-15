@@ -45,11 +45,14 @@ build/install_manifest.txt
 build_for_android.py
 cmake_modules/FindSDL2.cmake
 cmake_modules/FindSIMULANT.cmake
+deps/libgl/GL/clip.c
+deps/libgl/GL/clip.h
 deps/libgl/GL/draw.c
 deps/libgl/GL/error.c
 deps/libgl/GL/flush.c
 deps/libgl/GL/fog.c
 deps/libgl/GL/framebuffer.c
+deps/libgl/GL/glu.c
 deps/libgl/GL/immediate.c
 deps/libgl/GL/lighting.c
 deps/libgl/GL/matrix.c
@@ -59,6 +62,7 @@ deps/libgl/GL/texture.c
 deps/libgl/containers/aligned_vector.c
 deps/libgl/containers/aligned_vector.h
 deps/libgl/containers/named_array.h
+deps/libgl/containers/stack.c
 deps/libgl/containers/stack.h
 deps/libgl/experimental/draw.c
 deps/libgl/experimental/flush.c
@@ -74,6 +78,9 @@ deps/libgl/include/glext.h
 deps/libgl/include/glkos.h
 deps/libgl/samples/nehe02/main.c
 deps/libgl/samples/nehe06/main.c
+deps/libgl/samples/zclip/main.c
+deps/libgl/samples/zclip_triangle/main.c
+deps/libgl/samples/zclip_trianglestrip/main.c
 documentation/cameras.md
 documentation/engine_structure.md
 documentation/index.md

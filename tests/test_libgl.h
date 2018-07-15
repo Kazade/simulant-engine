@@ -9,6 +9,7 @@
 
 #include "../deps/libgl/containers/named_array.h"
 #include "../deps/libgl/containers/aligned_vector.h"
+#include "../deps/libgl/GL/clip.h"
 
 namespace {
 
@@ -195,6 +196,391 @@ public:
         assert_equal(vector.capacity, 5u);
     }
 };
+
+const uint32_t VERTEX_CMD_EOL = 0xf0000000;
+const uint32_t VERTEX_CMD = 0xe0000000;
+
+class LibGLTriangleStripClippingTests : public TestCase {
+public:
+    void set_up() {
+        aligned_vector_init(&input, sizeof(ClipVertex));
+        aligned_vector_init(&output, sizeof(ClipVertex));
+    }
+
+    void tear_down() {
+        aligned_vector_cleanup(&input);
+        aligned_vector_cleanup(&output);
+    }
+
+    void _init_vector(float* vec, float x, float y, float z) {
+        vec[0] = x;
+        vec[1] = y;
+        vec[2] = z;
+    }
+
+    void test_all_vertices_visible() {
+        ClipVertex vertices[4];
+
+        _init_vector(vertices[0].xyz, -0.5, 0.0, 0);
+        _init_vector(vertices[1].xyz, -0.5, 0.0, -1);
+        _init_vector(vertices[2].xyz, 0.5, 0.0, 0);
+        _init_vector(vertices[3].xyz, 0.5, 0.0, -1);
+
+        aligned_vector_push_back(&input, vertices, 4);
+
+        clipTriangleStrip(&input, &output);
+
+        assert_equal(output.size, 4);
+    }
+
+    void test_no_vertices_visible() {
+        ClipVertex vertices[4];
+
+        _init_vector(vertices[0].xyz, -0.5, 0.0, 0.1);
+        _init_vector(vertices[1].xyz, -0.5, 0.0, 1);
+        _init_vector(vertices[2].xyz, 0.5, 0.0, 0.1);
+        _init_vector(vertices[3].xyz, 0.5, 0.0, 1);
+
+        aligned_vector_push_back(&input, vertices, 4);
+
+        clipTriangleStrip(&input, &output);
+
+        assert_equal(output.size, 0);
+    }
+
+    void test_first_vertex_clipped_single_triangle() {
+        /* Case that the strip is a single triangle but the first vertex is behind the plane */
+
+        ClipVertex vertices[3];
+
+        _init_vector(vertices[0].xyz, 0, 0.0, 1);
+        _init_vector(vertices[1].xyz, 0.5, 0.0, -1);
+        _init_vector(vertices[2].xyz, -0.5, 0.0, -1);
+
+        aligned_vector_push_back(&input, vertices, 3);
+
+        clipTriangleStrip(&input, &output);
+
+        assert_equal(output.size, 4);
+
+        ClipVertex* v1 = (ClipVertex*) aligned_vector_at(&output, 0);
+        ClipVertex* v2 = (ClipVertex*) aligned_vector_at(&output, 1);
+        ClipVertex* v3 = (ClipVertex*) aligned_vector_at(&output, 2);
+        ClipVertex* v4 = (ClipVertex*) aligned_vector_at(&output, 3);
+
+        assert_close(v1->xyz[2], 0.0f, 0.00001f);
+        assert_close(v2->xyz[2], -1.0f, 0.00001f);
+        assert_close(v3->xyz[2], 0.0f, 0.00001f);
+        assert_close(v4->xyz[2], -1.0f, 0.00001f);
+
+        assert_equal(v1->flags, VERTEX_CMD);
+        assert_equal(v2->flags, VERTEX_CMD);
+        assert_equal(v3->flags, VERTEX_CMD);
+        assert_equal(v4->flags, VERTEX_CMD_EOL);
+    }
+
+    void test_second_vertex_clipped_single_triangle() {
+        /* Case that the strip is a single triangle but the second vertex is behind the plane */
+
+        ClipVertex vertices[3];
+
+        _init_vector(vertices[0].xyz, -0.5, 0.0, -1);
+        _init_vector(vertices[1].xyz, 0, 0.0, 1);
+        _init_vector(vertices[2].xyz, 0.5, 0.0, -1);
+
+        aligned_vector_push_back(&input, vertices, 3);
+
+        clipTriangleStrip(&input, &output);
+
+        assert_equal(output.size, 4);
+
+        ClipVertex* v1 = (ClipVertex*) aligned_vector_at(&output, 0);
+        ClipVertex* v2 = (ClipVertex*) aligned_vector_at(&output, 1);
+        ClipVertex* v3 = (ClipVertex*) aligned_vector_at(&output, 2);
+        ClipVertex* v4 = (ClipVertex*) aligned_vector_at(&output, 3);
+
+        assert_close(v1->xyz[2], -1.0f, 0.00001f);
+        assert_close(v2->xyz[2], 0.0f, 0.00001f);
+        assert_close(v3->xyz[2], 0.0f, 0.00001f);
+        assert_close(v4->xyz[2], -1.0f, 0.00001f);
+
+        assert_equal(v1->flags, VERTEX_CMD);
+        assert_equal(v2->flags, VERTEX_CMD);
+        assert_equal(v3->flags, VERTEX_CMD);
+        assert_equal(v4->flags, VERTEX_CMD_EOL);
+    }
+
+    void test_third_vertex_clipped_single_triangle() {
+        /* Case that the strip is a single triangle but the third vertex is behind the plane */
+
+        ClipVertex vertices[3];
+
+        _init_vector(vertices[0].xyz, 0.5, 0.0, -1);
+        _init_vector(vertices[1].xyz, -0.5, 0.0, -1);
+        _init_vector(vertices[2].xyz, 0, 0.0, 1);
+
+        aligned_vector_push_back(&input, vertices, 3);
+
+        clipTriangleStrip(&input, &output);
+
+        assert_equal(output.size, 4);
+
+        ClipVertex* v1 = (ClipVertex*) aligned_vector_at(&output, 0);
+        ClipVertex* v2 = (ClipVertex*) aligned_vector_at(&output, 1);
+        ClipVertex* v3 = (ClipVertex*) aligned_vector_at(&output, 2);
+        ClipVertex* v4 = (ClipVertex*) aligned_vector_at(&output, 3);
+
+        assert_close(v1->xyz[2], -1.0f, 0.00001f);
+        assert_close(v2->xyz[2], -1.0f, 0.00001f);
+        assert_close(v3->xyz[2], 0.0f, 0.00001f);
+        assert_close(v4->xyz[2], 0.0f, 0.00001f);
+
+        assert_equal(v1->flags, VERTEX_CMD);
+        assert_equal(v2->flags, VERTEX_CMD);
+        assert_equal(v3->flags, VERTEX_CMD);
+        assert_equal(v4->flags, VERTEX_CMD_EOL);
+    }
+
+    void test_first_vertex_clipped_multiple_triangles() {
+        /* Case that the strip is two triangles but the first vertex is behind the plane */
+
+        ClipVertex vertices[4];
+
+        _init_vector(vertices[0].xyz, 0, 0, 1);
+        _init_vector(vertices[1].xyz, 0.5, 0, -1);
+        _init_vector(vertices[2].xyz, -0.5, 0, -1);
+        _init_vector(vertices[3].xyz, 0, 0, -2);
+
+        vertices[0].flags = vertices[1].flags = vertices[2].flags = VERTEX_CMD;
+        vertices[3].flags = VERTEX_CMD_EOL;
+
+        aligned_vector_push_back(&input, vertices, 4);
+
+        clipTriangleStrip(&input, &output);
+
+        assert_equal(output.size, 7);
+
+        ClipVertex* v1 = (ClipVertex*) aligned_vector_at(&output, 0);
+        ClipVertex* v2 = (ClipVertex*) aligned_vector_at(&output, 1);
+        ClipVertex* v3 = (ClipVertex*) aligned_vector_at(&output, 2);
+        ClipVertex* v4 = (ClipVertex*) aligned_vector_at(&output, 3);
+        ClipVertex* v5 = (ClipVertex*) aligned_vector_at(&output, 4);
+        ClipVertex* v6 = (ClipVertex*) aligned_vector_at(&output, 5);
+        ClipVertex* v7 = (ClipVertex*) aligned_vector_at(&output, 6);
+
+        assert_close(v1->xyz[2], 0.0f, 0.00001f);
+        assert_close(v2->xyz[2], -1.0f, 0.00001f);
+        assert_close(v3->xyz[2], 0.0f, 0.00001f);
+        assert_close(v4->xyz[2], -1.0f, 0.00001f);
+        assert_close(v5->xyz[2], -1.0f, 0.00001f);
+        assert_close(v6->xyz[2], -1.0f, 0.00001f);
+        assert_close(v7->xyz[2], -2.0f, 0.00001f);
+
+        assert_equal(v1->flags, VERTEX_CMD);
+        assert_equal(v2->flags, VERTEX_CMD);
+        assert_equal(v3->flags, VERTEX_CMD);
+        assert_equal(v4->flags, VERTEX_CMD_EOL);
+        assert_equal(v5->flags, VERTEX_CMD);
+        assert_equal(v6->flags, VERTEX_CMD);
+        assert_equal(v7->flags, VERTEX_CMD_EOL);
+    }
+
+    void test_second_vertex_clipped_multiple_triangles() {
+        /* Case that the strip is two triangles but the second vertex is behind the plane */
+
+        ClipVertex vertices[4];
+
+        _init_vector(vertices[0].xyz, -0.5, 0, -1);
+        _init_vector(vertices[1].xyz, 0, 0, 1);
+        _init_vector(vertices[2].xyz, 0, 0, -2);
+        _init_vector(vertices[3].xyz, 0.05, 0, -1);
+
+        vertices[0].flags = vertices[1].flags = vertices[2].flags = VERTEX_CMD;
+        vertices[3].flags = VERTEX_CMD_EOL;
+
+        aligned_vector_push_back(&input, vertices, 4);
+
+        clipTriangleStrip(&input, &output);
+
+        assert_equal(output.size, 8);
+
+        ClipVertex* v1 = (ClipVertex*) aligned_vector_at(&output, 0);
+        ClipVertex* v2 = (ClipVertex*) aligned_vector_at(&output, 1);
+        ClipVertex* v3 = (ClipVertex*) aligned_vector_at(&output, 2);
+        ClipVertex* v4 = (ClipVertex*) aligned_vector_at(&output, 3);
+        ClipVertex* v5 = (ClipVertex*) aligned_vector_at(&output, 4);
+        ClipVertex* v6 = (ClipVertex*) aligned_vector_at(&output, 5);
+        ClipVertex* v7 = (ClipVertex*) aligned_vector_at(&output, 6);
+        ClipVertex* v8 = (ClipVertex*) aligned_vector_at(&output, 7);
+
+        assert_close(v1->xyz[2], -1.0f, 0.00001f);
+        assert_close(v2->xyz[2], 0.0f, 0.00001f);
+        assert_close(v3->xyz[2], 0.0f, 0.00001f);
+        assert_close(v4->xyz[2], -2.0f, 0.00001f);
+        assert_close(v5->xyz[2], -2.0f, 0.00001f);
+        assert_close(v6->xyz[2], -0.0f, 0.00001f);
+        assert_close(v7->xyz[2], -0.0f, 0.00001f);
+        assert_close(v8->xyz[2], -1.0f, 0.00001f);
+
+        assert_equal(v1->flags, VERTEX_CMD);
+        assert_equal(v2->flags, VERTEX_CMD);
+        assert_equal(v3->flags, VERTEX_CMD);
+        assert_equal(v4->flags, VERTEX_CMD_EOL);
+        assert_equal(v5->flags, VERTEX_CMD);
+        assert_equal(v6->flags, VERTEX_CMD);
+        assert_equal(v7->flags, VERTEX_CMD);
+        assert_equal(v8->flags, VERTEX_CMD_EOL);
+    }
+
+    void test_third_vertex_clipped_multiple_triangles() {
+        /* Case that the strip is two triangles but the third vertex is behind the plane */
+    }
+
+    void test_penultimate_vertex_clipped_multiple_triangles() {
+        /* Case that the strip is two triangles but the second-to-last vertex is behind the plane */
+    }
+
+    void test_last_vertex_clipped_multiple_triangles() {
+        /* Case that the strip is two triangles but the last vertex is behind the plane */
+    }
+
+    void test_first_vertex_visible_single_triangle() {
+        ClipVertex vertices[3];
+
+        _init_vector(vertices[0].xyz, 0, 0.0, -1);
+        _init_vector(vertices[1].xyz, -0.5, 0.0, 1);
+        _init_vector(vertices[2].xyz, 0.5, 0.0, 1);
+
+        aligned_vector_push_back(&input, vertices, 3);
+
+        clipTriangleStrip(&input, &output);
+
+        assert_equal(output.size, 3);
+
+        ClipVertex* v1 = (ClipVertex*) aligned_vector_at(&output, 0);
+        ClipVertex* v2 = (ClipVertex*) aligned_vector_at(&output, 1);
+        ClipVertex* v3 = (ClipVertex*) aligned_vector_at(&output, 2);
+
+        assert_close(v1->xyz[2], -1.0f, 0.00001f);
+        assert_close(v2->xyz[2], 0.0f, 0.00001f);
+        assert_close(v3->xyz[2], 0.0f, 0.00001f);
+
+        assert_equal(v1->flags, VERTEX_CMD);
+        assert_equal(v2->flags, VERTEX_CMD);
+        assert_equal(v3->flags, VERTEX_CMD_EOL);
+    }
+
+    void test_second_vertex_visible_single_triangle() {
+        ClipVertex vertices[3];
+
+        _init_vector(vertices[0].xyz, 0.5, 0.0, 1);
+        _init_vector(vertices[1].xyz, 0, 0.0, -1);
+        _init_vector(vertices[2].xyz, -0.5, 0.0, 1);
+
+        aligned_vector_push_back(&input, vertices, 3);
+
+        clipTriangleStrip(&input, &output);
+
+        assert_equal(output.size, 3);
+
+        ClipVertex* v1 = (ClipVertex*) aligned_vector_at(&output, 0);
+        ClipVertex* v2 = (ClipVertex*) aligned_vector_at(&output, 1);
+        ClipVertex* v3 = (ClipVertex*) aligned_vector_at(&output, 2);
+
+        assert_close(v1->xyz[2], 0.0f, 0.00001f);
+        assert_close(v2->xyz[2], -1.0f, 0.00001f);
+        assert_close(v3->xyz[2], 0.0f, 0.00001f);
+
+        assert_equal(v1->flags, VERTEX_CMD);
+        assert_equal(v2->flags, VERTEX_CMD);
+        assert_equal(v3->flags, VERTEX_CMD_EOL);
+    }
+
+    void test_third_vertex_visible_single_triangle() {
+        ClipVertex vertices[3];
+
+        _init_vector(vertices[0].xyz, -0.5, 0.0, 1);
+        _init_vector(vertices[1].xyz, 0.5, 0.0, 1);
+        _init_vector(vertices[2].xyz, 0, 0.0, -1);
+
+        aligned_vector_push_back(&input, vertices, 3);
+
+        clipTriangleStrip(&input, &output);
+
+        assert_equal(output.size, 3);
+
+        ClipVertex* v1 = (ClipVertex*) aligned_vector_at(&output, 0);
+        ClipVertex* v2 = (ClipVertex*) aligned_vector_at(&output, 1);
+        ClipVertex* v3 = (ClipVertex*) aligned_vector_at(&output, 2);
+
+        assert_close(v1->xyz[2], 0.0f, 0.00001f);
+        assert_close(v2->xyz[2], 0.0f, 0.00001f);
+        assert_close(v3->xyz[2], -1.0f, 0.00001f);
+
+        assert_equal(v1->flags, VERTEX_CMD);
+        assert_equal(v2->flags, VERTEX_CMD);
+        assert_equal(v3->flags, VERTEX_CMD_EOL);
+    }
+
+    void test_first_vertex_visible_multiple_triangles() {
+        ClipVertex vertices[4];
+
+        _init_vector(vertices[0].xyz, 0, 0.0, -1);
+        _init_vector(vertices[1].xyz, -0.5, 0.0, 1);
+        _init_vector(vertices[2].xyz, 0.5, 0.0, 1);
+        _init_vector(vertices[3].xyz, 0.0, 0.0, 2);
+
+        aligned_vector_push_back(&input, vertices, 4);
+
+        clipTriangleStrip(&input, &output);
+
+        assert_equal(output.size, 3);
+
+        ClipVertex* v1 = (ClipVertex*) aligned_vector_at(&output, 0);
+        ClipVertex* v2 = (ClipVertex*) aligned_vector_at(&output, 1);
+        ClipVertex* v3 = (ClipVertex*) aligned_vector_at(&output, 2);
+
+        assert_close(v1->xyz[2], -1.0f, 0.00001f);
+        assert_close(v2->xyz[2], 0.0f, 0.00001f);
+        assert_close(v3->xyz[2], 0.0f, 0.00001f);
+
+        assert_equal(v1->flags, VERTEX_CMD);
+        assert_equal(v2->flags, VERTEX_CMD);
+        assert_equal(v3->flags, VERTEX_CMD_EOL);
+    }
+
+    void test_last_vertex_visible_multiple_triangles() {
+        ClipVertex vertices[4];
+
+        _init_vector(vertices[0].xyz, 0, 0.0, 2);
+        _init_vector(vertices[1].xyz, 0.5, 0.0, 1);
+        _init_vector(vertices[2].xyz, -0.5, 0.0, 1);
+        _init_vector(vertices[3].xyz, 0.0, 0.0, -1);
+
+        aligned_vector_push_back(&input, vertices, 4);
+
+        clipTriangleStrip(&input, &output);
+
+        assert_equal(output.size, 3);
+
+        ClipVertex* v1 = (ClipVertex*) aligned_vector_at(&output, 0);
+        ClipVertex* v2 = (ClipVertex*) aligned_vector_at(&output, 1);
+        ClipVertex* v3 = (ClipVertex*) aligned_vector_at(&output, 2);
+
+        assert_close(v1->xyz[2], 0.0f, 0.00001f);
+        assert_close(v2->xyz[2], 0.0f, 0.00001f);
+        assert_close(v3->xyz[2], -1.0f, 0.00001f);
+
+        assert_equal(v1->flags, VERTEX_CMD);
+        assert_equal(v2->flags, VERTEX_CMD);
+        assert_equal(v3->flags, VERTEX_CMD_EOL);
+    }
+
+private:
+    AlignedVector input;
+    AlignedVector output;
+};
+
 
 }
 
