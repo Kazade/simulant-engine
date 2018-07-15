@@ -230,7 +230,7 @@ public:
 
         clipTriangleStrip(&input, &output);
 
-        assert_equal(output.size, 4);
+        assert_equal(output.size, 4u);
     }
 
     void test_no_vertices_visible() {
