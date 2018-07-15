@@ -221,10 +221,10 @@ public:
     void test_all_vertices_visible() {
         ClipVertex vertices[4];
 
-        _init_vector(vertices[0].xyz, -0.5, 0.0, 0);
-        _init_vector(vertices[1].xyz, -0.5, 0.0, -1);
-        _init_vector(vertices[2].xyz, 0.5, 0.0, 0);
-        _init_vector(vertices[3].xyz, 0.5, 0.0, -1);
+        _init_vector(vertices[0].xyz, -0.5, 0.0, -1);
+        _init_vector(vertices[1].xyz, -0.5, 0.0, -2);
+        _init_vector(vertices[2].xyz, 0.5, 0.0, -1);
+        _init_vector(vertices[3].xyz, 0.5, 0.0, -2);
 
         aligned_vector_push_back(&input, vertices, 4);
 
@@ -268,9 +268,9 @@ public:
         ClipVertex* v3 = (ClipVertex*) aligned_vector_at(&output, 2);
         ClipVertex* v4 = (ClipVertex*) aligned_vector_at(&output, 3);
 
-        assert_close(v1->xyz[2], 0.0f, 0.00001f);
+        assert_close(v1->xyz[2], CLIP_DISTANCE, 0.00001f);
         assert_close(v2->xyz[2], -1.0f, 0.00001f);
-        assert_close(v3->xyz[2], 0.0f, 0.00001f);
+        assert_close(v3->xyz[2], CLIP_DISTANCE, 0.00001f);
         assert_close(v4->xyz[2], -1.0f, 0.00001f);
 
         assert_equal(v1->flags, VERTEX_CMD);
@@ -300,9 +300,9 @@ public:
         ClipVertex* v4 = (ClipVertex*) aligned_vector_at(&output, 3);
 
         assert_close(v1->xyz[2], -1.0f, 0.00001f);
-        assert_close(v2->xyz[2], 0.0f, 0.00001f);
-        assert_close(v3->xyz[2], 0.0f, 0.00001f);
-        assert_close(v4->xyz[2], -1.0f, 0.00001f);
+        assert_close(v2->xyz[2], CLIP_DISTANCE, 0.00001f);
+        assert_close(v3->xyz[2], -1.0f, 0.00001f);
+        assert_close(v4->xyz[2], CLIP_DISTANCE, 0.00001f);
 
         assert_equal(v1->flags, VERTEX_CMD);
         assert_equal(v2->flags, VERTEX_CMD);
@@ -332,8 +332,8 @@ public:
 
         assert_close(v1->xyz[2], -1.0f, 0.00001f);
         assert_close(v2->xyz[2], -1.0f, 0.00001f);
-        assert_close(v3->xyz[2], 0.0f, 0.00001f);
-        assert_close(v4->xyz[2], 0.0f, 0.00001f);
+        assert_close(v3->xyz[2], CLIP_DISTANCE, 0.00001f);
+        assert_close(v4->xyz[2], CLIP_DISTANCE, 0.00001f);
 
         assert_equal(v1->flags, VERTEX_CMD);
         assert_equal(v2->flags, VERTEX_CMD);
@@ -368,9 +368,9 @@ public:
         ClipVertex* v6 = (ClipVertex*) aligned_vector_at(&output, 5);
         ClipVertex* v7 = (ClipVertex*) aligned_vector_at(&output, 6);
 
-        assert_close(v1->xyz[2], 0.0f, 0.00001f);
+        assert_close(v1->xyz[2], CLIP_DISTANCE, 0.00001f);
         assert_close(v2->xyz[2], -1.0f, 0.00001f);
-        assert_close(v3->xyz[2], 0.0f, 0.00001f);
+        assert_close(v3->xyz[2], CLIP_DISTANCE, 0.00001f);
         assert_close(v4->xyz[2], -1.0f, 0.00001f);
         assert_close(v5->xyz[2], -1.0f, 0.00001f);
         assert_close(v6->xyz[2], -1.0f, 0.00001f);
@@ -414,13 +414,14 @@ public:
         ClipVertex* v8 = (ClipVertex*) aligned_vector_at(&output, 7);
 
         assert_close(v1->xyz[2], -1.0f, 0.00001f);
-        assert_close(v2->xyz[2], 0.0f, 0.00001f);
-        assert_close(v3->xyz[2], 0.0f, 0.00001f);
-        assert_close(v4->xyz[2], -2.0f, 0.00001f);
+        assert_close(v2->xyz[2], CLIP_DISTANCE, 0.00001f);
+        assert_close(v3->xyz[2], -2.0f, 0.00001f);
+        assert_close(v4->xyz[2], CLIP_DISTANCE, 0.00001f);
         assert_close(v5->xyz[2], -2.0f, 0.00001f);
-        assert_close(v6->xyz[2], -0.0f, 0.00001f);
-        assert_close(v7->xyz[2], -0.0f, 0.00001f);
-        assert_close(v8->xyz[2], -1.0f, 0.00001f);
+        assert_close(v6->xyz[2], CLIP_DISTANCE, 0.00001f);
+        assert_close(v7->xyz[2], -1.0f, 0.00001f);
+        assert_close(v8->xyz[2], CLIP_DISTANCE, 0.00001f);
+
 
         assert_equal(v1->flags, VERTEX_CMD);
         assert_equal(v2->flags, VERTEX_CMD);
@@ -462,8 +463,8 @@ public:
         ClipVertex* v3 = (ClipVertex*) aligned_vector_at(&output, 2);
 
         assert_close(v1->xyz[2], -1.0f, 0.00001f);
-        assert_close(v2->xyz[2], 0.0f, 0.00001f);
-        assert_close(v3->xyz[2], 0.0f, 0.00001f);
+        assert_close(v2->xyz[2], CLIP_DISTANCE, 0.00001f);
+        assert_close(v3->xyz[2], CLIP_DISTANCE, 0.00001f);
 
         assert_equal(v1->flags, VERTEX_CMD);
         assert_equal(v2->flags, VERTEX_CMD);
@@ -487,9 +488,9 @@ public:
         ClipVertex* v2 = (ClipVertex*) aligned_vector_at(&output, 1);
         ClipVertex* v3 = (ClipVertex*) aligned_vector_at(&output, 2);
 
-        assert_close(v1->xyz[2], 0.0f, 0.00001f);
+        assert_close(v1->xyz[2], CLIP_DISTANCE, 0.00001f);
         assert_close(v2->xyz[2], -1.0f, 0.00001f);
-        assert_close(v3->xyz[2], 0.0f, 0.00001f);
+        assert_close(v3->xyz[2], CLIP_DISTANCE, 0.00001f);
 
         assert_equal(v1->flags, VERTEX_CMD);
         assert_equal(v2->flags, VERTEX_CMD);
@@ -513,8 +514,8 @@ public:
         ClipVertex* v2 = (ClipVertex*) aligned_vector_at(&output, 1);
         ClipVertex* v3 = (ClipVertex*) aligned_vector_at(&output, 2);
 
-        assert_close(v1->xyz[2], 0.0f, 0.00001f);
-        assert_close(v2->xyz[2], 0.0f, 0.00001f);
+        assert_close(v1->xyz[2], CLIP_DISTANCE, 0.00001f);
+        assert_close(v2->xyz[2], CLIP_DISTANCE, 0.00001f);
         assert_close(v3->xyz[2], -1.0f, 0.00001f);
 
         assert_equal(v1->flags, VERTEX_CMD);
@@ -541,8 +542,8 @@ public:
         ClipVertex* v3 = (ClipVertex*) aligned_vector_at(&output, 2);
 
         assert_close(v1->xyz[2], -1.0f, 0.00001f);
-        assert_close(v2->xyz[2], 0.0f, 0.00001f);
-        assert_close(v3->xyz[2], 0.0f, 0.00001f);
+        assert_close(v2->xyz[2], CLIP_DISTANCE, 0.00001f);
+        assert_close(v3->xyz[2], CLIP_DISTANCE, 0.00001f);
 
         assert_equal(v1->flags, VERTEX_CMD);
         assert_equal(v2->flags, VERTEX_CMD);
@@ -567,8 +568,8 @@ public:
         ClipVertex* v2 = (ClipVertex*) aligned_vector_at(&output, 1);
         ClipVertex* v3 = (ClipVertex*) aligned_vector_at(&output, 2);
 
-        assert_close(v1->xyz[2], 0.0f, 0.00001f);
-        assert_close(v2->xyz[2], 0.0f, 0.00001f);
+        assert_close(v1->xyz[2], CLIP_DISTANCE, 0.00001f);
+        assert_close(v2->xyz[2], CLIP_DISTANCE, 0.00001f);
         assert_close(v3->xyz[2], -1.0f, 0.00001f);
 
         assert_equal(v1->flags, VERTEX_CMD);
