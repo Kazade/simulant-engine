@@ -200,6 +200,8 @@ public:
 const uint32_t VERTEX_CMD_EOL = 0xf0000000;
 const uint32_t VERTEX_CMD = 0xe0000000;
 
+const float CLIP_DISTANCE = -0.2f;
+
 class LibGLTriangleStripClippingTests : public TestCase {
 public:
     void set_up() {
@@ -212,19 +214,20 @@ public:
         aligned_vector_cleanup(&output);
     }
 
-    void _init_vector(float* vec, float x, float y, float z) {
-        vec[0] = x;
-        vec[1] = y;
-        vec[2] = z;
+    void _init_vector(ClipVertex& vec, float x, float y, float z) {
+        vec.xyz[0] = x;
+        vec.xyz[1] = y;
+        vec.xyz[2] = z;
+        vec.w = z * -1;
     }
 
     void test_all_vertices_visible() {
         ClipVertex vertices[4];
 
-        _init_vector(vertices[0].xyz, -0.5, 0.0, -1);
-        _init_vector(vertices[1].xyz, -0.5, 0.0, -2);
-        _init_vector(vertices[2].xyz, 0.5, 0.0, -1);
-        _init_vector(vertices[3].xyz, 0.5, 0.0, -2);
+        _init_vector(vertices[0], -0.5, 0.0, -1);
+        _init_vector(vertices[1], -0.5, 0.0, -2);
+        _init_vector(vertices[2], 0.5, 0.0, -1);
+        _init_vector(vertices[3], 0.5, 0.0, -2);
 
         aligned_vector_push_back(&input, vertices, 4);
 
@@ -236,16 +239,16 @@ public:
     void test_no_vertices_visible() {
         ClipVertex vertices[4];
 
-        _init_vector(vertices[0].xyz, -0.5, 0.0, 0.1);
-        _init_vector(vertices[1].xyz, -0.5, 0.0, 1);
-        _init_vector(vertices[2].xyz, 0.5, 0.0, 0.1);
-        _init_vector(vertices[3].xyz, 0.5, 0.0, 1);
+        _init_vector(vertices[0], -0.5, 0.0, 0.1);
+        _init_vector(vertices[1], -0.5, 0.0, 1);
+        _init_vector(vertices[2], 0.5, 0.0, 0.1);
+        _init_vector(vertices[3], 0.5, 0.0, 1);
 
         aligned_vector_push_back(&input, vertices, 4);
 
         clipTriangleStrip(&input, &output);
 
-        assert_equal(output.size, 0);
+        assert_equal(output.size, 0u);
     }
 
     void test_first_vertex_clipped_single_triangle() {
@@ -253,9 +256,9 @@ public:
 
         ClipVertex vertices[3];
 
-        _init_vector(vertices[0].xyz, 0, 0.0, 1);
-        _init_vector(vertices[1].xyz, 0.5, 0.0, -1);
-        _init_vector(vertices[2].xyz, -0.5, 0.0, -1);
+        _init_vector(vertices[0], 0, 0.0, 1);
+        _init_vector(vertices[1], 0.5, 0.0, -1);
+        _init_vector(vertices[2], -0.5, 0.0, -1);
 
         aligned_vector_push_back(&input, vertices, 3);
 
@@ -284,9 +287,9 @@ public:
 
         ClipVertex vertices[3];
 
-        _init_vector(vertices[0].xyz, -0.5, 0.0, -1);
-        _init_vector(vertices[1].xyz, 0, 0.0, 1);
-        _init_vector(vertices[2].xyz, 0.5, 0.0, -1);
+        _init_vector(vertices[0], -0.5, 0.0, -1);
+        _init_vector(vertices[1], 0, 0.0, 1);
+        _init_vector(vertices[2], 0.5, 0.0, -1);
 
         aligned_vector_push_back(&input, vertices, 3);
 
@@ -315,9 +318,9 @@ public:
 
         ClipVertex vertices[3];
 
-        _init_vector(vertices[0].xyz, 0.5, 0.0, -1);
-        _init_vector(vertices[1].xyz, -0.5, 0.0, -1);
-        _init_vector(vertices[2].xyz, 0, 0.0, 1);
+        _init_vector(vertices[0], 0.5, 0.0, -1);
+        _init_vector(vertices[1], -0.5, 0.0, -1);
+        _init_vector(vertices[2], 0, 0.0, 1);
 
         aligned_vector_push_back(&input, vertices, 3);
 
@@ -346,10 +349,10 @@ public:
 
         ClipVertex vertices[4];
 
-        _init_vector(vertices[0].xyz, 0, 0, 1);
-        _init_vector(vertices[1].xyz, 0.5, 0, -1);
-        _init_vector(vertices[2].xyz, -0.5, 0, -1);
-        _init_vector(vertices[3].xyz, 0, 0, -2);
+        _init_vector(vertices[0], 0, 0, 1);
+        _init_vector(vertices[1], 0.5, 0, -1);
+        _init_vector(vertices[2], -0.5, 0, -1);
+        _init_vector(vertices[3], 0, 0, -2);
 
         vertices[0].flags = vertices[1].flags = vertices[2].flags = VERTEX_CMD;
         vertices[3].flags = VERTEX_CMD_EOL;
@@ -390,10 +393,10 @@ public:
 
         ClipVertex vertices[4];
 
-        _init_vector(vertices[0].xyz, -0.5, 0, -1);
-        _init_vector(vertices[1].xyz, 0, 0, 1);
-        _init_vector(vertices[2].xyz, 0, 0, -2);
-        _init_vector(vertices[3].xyz, 0.05, 0, -1);
+        _init_vector(vertices[0], -0.5, 0, -1);
+        _init_vector(vertices[1], 0, 0, 1);
+        _init_vector(vertices[2], 0, 0, -2);
+        _init_vector(vertices[3], 0.05, 0, -1);
 
         vertices[0].flags = vertices[1].flags = vertices[2].flags = VERTEX_CMD;
         vertices[3].flags = VERTEX_CMD_EOL;
@@ -448,9 +451,9 @@ public:
     void test_first_vertex_visible_single_triangle() {
         ClipVertex vertices[3];
 
-        _init_vector(vertices[0].xyz, 0, 0.0, -1);
-        _init_vector(vertices[1].xyz, -0.5, 0.0, 1);
-        _init_vector(vertices[2].xyz, 0.5, 0.0, 1);
+        _init_vector(vertices[0], 0, 0.0, -1);
+        _init_vector(vertices[1], -0.5, 0.0, 1);
+        _init_vector(vertices[2], 0.5, 0.0, 1);
 
         aligned_vector_push_back(&input, vertices, 3);
 
@@ -474,9 +477,9 @@ public:
     void test_second_vertex_visible_single_triangle() {
         ClipVertex vertices[3];
 
-        _init_vector(vertices[0].xyz, 0.5, 0.0, 1);
-        _init_vector(vertices[1].xyz, 0, 0.0, -1);
-        _init_vector(vertices[2].xyz, -0.5, 0.0, 1);
+        _init_vector(vertices[0], 0.5, 0.0, 1);
+        _init_vector(vertices[1], 0, 0.0, -1);
+        _init_vector(vertices[2], -0.5, 0.0, 1);
 
         aligned_vector_push_back(&input, vertices, 3);
 
@@ -500,9 +503,9 @@ public:
     void test_third_vertex_visible_single_triangle() {
         ClipVertex vertices[3];
 
-        _init_vector(vertices[0].xyz, -0.5, 0.0, 1);
-        _init_vector(vertices[1].xyz, 0.5, 0.0, 1);
-        _init_vector(vertices[2].xyz, 0, 0.0, -1);
+        _init_vector(vertices[0], -0.5, 0.0, 1);
+        _init_vector(vertices[1], 0.5, 0.0, 1);
+        _init_vector(vertices[2], 0, 0.0, -1);
 
         aligned_vector_push_back(&input, vertices, 3);
 
@@ -526,10 +529,10 @@ public:
     void test_first_vertex_visible_multiple_triangles() {
         ClipVertex vertices[4];
 
-        _init_vector(vertices[0].xyz, 0, 0.0, -1);
-        _init_vector(vertices[1].xyz, -0.5, 0.0, 1);
-        _init_vector(vertices[2].xyz, 0.5, 0.0, 1);
-        _init_vector(vertices[3].xyz, 0.0, 0.0, 2);
+        _init_vector(vertices[0], 0, 0.0, -1);
+        _init_vector(vertices[1], -0.5, 0.0, 1);
+        _init_vector(vertices[2], 0.5, 0.0, 1);
+        _init_vector(vertices[3], 0.0, 0.0, 2);
 
         aligned_vector_push_back(&input, vertices, 4);
 
@@ -553,10 +556,10 @@ public:
     void test_last_vertex_visible_multiple_triangles() {
         ClipVertex vertices[4];
 
-        _init_vector(vertices[0].xyz, 0, 0.0, 2);
-        _init_vector(vertices[1].xyz, 0.5, 0.0, 1);
-        _init_vector(vertices[2].xyz, -0.5, 0.0, 1);
-        _init_vector(vertices[3].xyz, 0.0, 0.0, -1);
+        _init_vector(vertices[0], 0, 0.0, 2);
+        _init_vector(vertices[1], 0.5, 0.0, 1);
+        _init_vector(vertices[2], -0.5, 0.0, 1);
+        _init_vector(vertices[3], 0.0, 0.0, -1);
 
         aligned_vector_push_back(&input, vertices, 4);
 
