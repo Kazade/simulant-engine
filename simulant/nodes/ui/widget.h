@@ -199,7 +199,7 @@ private:
     FontPtr font_ = nullptr;
     MaterialPtr material_ = nullptr;
 
-    virtual MeshID construct_widget(float requested_width, float requested_height);
+    virtual MeshPtr construct_widget(float requested_width, float requested_height);
 
     float width_ = .0f;
     float height_ = .0f;

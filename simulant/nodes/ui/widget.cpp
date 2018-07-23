@@ -36,7 +36,7 @@ bool Widget::init() {
     // Assign the default font as default
     set_font(stage->assets->default_font_id());
 
-    mesh_ = construct_widget(0, 0).fetch();
+    mesh_ = construct_widget(0, 0);
 
     initialized_ = true;
     return true;
@@ -71,7 +71,7 @@ void Widget::rebuild() {
     // If we aren't initialized, don't do anything yet
     if(!is_initialized()) return;
 
-    mesh_ = construct_widget(width_, height_).fetch();
+    mesh_ = construct_widget(width_, height_);
     actor_->set_mesh(mesh_->id());
 }
 
@@ -324,7 +324,7 @@ void Widget::render_text(MeshPtr mesh, const std::string& submesh_name, const un
     submesh->index_data->done();
 }
 
-MeshID Widget::construct_widget(float requested_width, float requested_height) {
+MeshPtr Widget::construct_widget(float requested_width, float requested_height) {
     VertexSpecification spec;
     spec.position_attribute = VERTEX_ATTRIBUTE_3F;
     spec.texcoord0_attribute = VERTEX_ATTRIBUTE_2F;
@@ -368,13 +368,10 @@ MeshID Widget::construct_widget(float requested_width, float requested_height) {
 
     resize_foreground(mesh, width, height, 0, 0);
 
-    // Make sure the mesh doesn't get cleaned up until next access
-    stage->assets->MeshManager::mark_as_uncollected(mesh->id());
-
     content_width_ = width;
     content_height_ = height;
 
-    return mesh->id();
+    return mesh;
 }
 
 void Widget::set_resize_mode(ResizeMode resize_mode) {
