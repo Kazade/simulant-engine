@@ -56,8 +56,7 @@ void Mesh::reset(VertexSpecification vertex_specification) {
     animation_type_ = MESH_ANIMATION_TYPE_NONE;
     animation_frames_ = 0;
 
-    delete vertex_data_;
-    vertex_data_ = new VertexData(vertex_specification);
+    vertex_data_ = std::make_shared<VertexData>(vertex_specification);
 
     // When the vertex data updates, update the hardware buffer
     vertex_data->signal_update_complete().connect([this]() {
@@ -67,9 +66,7 @@ void Mesh::reset(VertexSpecification vertex_specification) {
 
 Mesh::~Mesh() {
     assert(ordered_submeshes_.size() == submeshes_.size());
-
-    delete vertex_data_;
-    vertex_data_ = nullptr;
+    vertex_data_.reset();
 }
 
 void Mesh::each(std::function<void (const std::string &, SubMeshPtr)> func) const {
@@ -518,7 +515,7 @@ SubMesh* Mesh::submesh(const std::string& name) {
 void Mesh::prepare_buffers(Renderer* renderer) {
     if(shared_vertex_buffer_dirty_) {
         sync_buffer<VertexData, Renderer>(
-            &shared_vertex_buffer_, vertex_data_,
+            &shared_vertex_buffer_, vertex_data_.get(),
             renderer,
             HARDWARE_BUFFER_VERTEX_ATTRIBUTES
         );

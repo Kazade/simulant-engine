@@ -72,7 +72,7 @@ public:
          VertexSpecification vertex_specification
     );
 
-    ~Mesh();
+    virtual ~Mesh();
 
     void reset(VertexSpecification vertex_specification);
 
@@ -157,7 +157,7 @@ public:
 private:
     friend class SubMesh;
 
-    VertexData* vertex_data_ = nullptr;
+    std::shared_ptr<VertexData> vertex_data_;
     MeshAnimationType animation_type_ = MESH_ANIMATION_TYPE_NONE;
     uint32_t animation_frames_ = 0;
 
