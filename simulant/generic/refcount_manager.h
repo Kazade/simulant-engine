@@ -233,7 +233,9 @@ public:
             ++obj_it;
         }
 
-        L_DEBUG(_F("Garbage collected {0} objects of type {1}").format(deleted, typeid(ObjectIDType).name()));
+        if(deleted) {
+            L_DEBUG(_F("Garbage collected {0} objects of type {1}").format(deleted, typeid(ObjectIDType).name()));
+        }
     }
 
     typedef std::unordered_map<ObjectIDType, std::shared_ptr<ObjectType>> ObjectMap;
