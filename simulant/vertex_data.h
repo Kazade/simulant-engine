@@ -53,6 +53,10 @@ class VertexData :
 
 public:
     VertexData(VertexSpecification vertex_specification);
+    virtual ~VertexData();
+
+    VertexData(const VertexData& rhs) = delete;
+    VertexData& operator=(const VertexData& rhs) = delete;
 
     void reset(VertexSpecification vertex_specification);
     void clear();
@@ -134,6 +138,7 @@ public:
     bool empty() const { return data_.empty(); }
 
     const int32_t cursor_position() const { return cursor_position_; }
+    const int32_t cursor_offset() const { return cursor_position_ * stride_; }
 
     inline uint32_t stride() const {
         return stride_;
@@ -196,13 +201,12 @@ private:
 
     sig::signal<void ()> signal_update_complete_;
 
-    void push_back() {
-        data_.resize((vertex_count_ + 1) * stride(), 0);
-        vertex_count_++;
-    }
+    void push_back();
 
     void position_checks();
     void recalc_attributes();
+
+    friend class VertexDataTest;
 };
 
 template<>

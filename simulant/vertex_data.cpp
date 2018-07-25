@@ -82,6 +82,10 @@ VertexData::VertexData(VertexSpecification vertex_specification):
     reset(vertex_specification);
 }
 
+VertexData::~VertexData() {
+    clear();
+}
+
 void VertexData::clear() {
     data_.clear();
     data_.shrink_to_fit();
@@ -94,9 +98,9 @@ void VertexData::position_checks() {
         throw std::logic_error("Vertex data has no position attribute");
     }
 
-    if(cursor_position_ == (int32_t) data_.size()) {
+    if(cursor_position_ == (int32_t) vertex_count_) {
         push_back();
-    } else if(cursor_position_ > (int32_t) data_.size()) {
+    } else if(cursor_position_ > (int32_t) vertex_count_) {
         throw std::out_of_range("Cursor moved out of range");
     }
 }
@@ -105,7 +109,7 @@ void VertexData::position(float x, float y, float z, float w) {
     position_checks();
 
     assert(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_4F);
-    Vec4* out = (Vec4*) &data_[cursor_position_];
+    Vec4* out = (Vec4*) &data_[cursor_offset()];
     *out = Vec4(x, y, z, w);
 }
 
@@ -113,7 +117,7 @@ void VertexData::position(float x, float y, float z) {
     position_checks();
 
     assert(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_3F);
-    Vec3* out = (Vec3*) &data_[cursor_position_];
+    Vec3* out = (Vec3*) &data_[cursor_offset()];
     *out = Vec3(x, y, z);
 }
 
@@ -121,7 +125,7 @@ void VertexData::position(float x, float y) {
     position_checks();
 
     assert(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_2F);
-    Vec2* out = (Vec2*) &data_[cursor_position_];
+    Vec2* out = (Vec2*) &data_[cursor_offset()];
     *out = Vec2(x, y);
 }
 
@@ -173,7 +177,7 @@ Vec4 VertexData::position_nd_at(uint32_t idx, float def) const {
 
 void VertexData::normal(float x, float y, float z) {
     assert(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_3F);
-    Vec3* out = (Vec3*) &data_[cursor_position_ + specification().normal_offset()];
+    Vec3* out = (Vec3*) &data_[cursor_offset() + specification().normal_offset()];
     *out = Vec3(x, y, z);
 }
 
@@ -183,20 +187,25 @@ void VertexData::normal(const Vec3 &n) {
 
 void VertexData::tex_coordX(uint8_t which, float u, float v) {
     uint32_t offset = specification().texcoordX_offset(which);
-    Vec2* out = (Vec2*) &data_[cursor_position_ + offset];
+    Vec2* out = (Vec2*) &data_[cursor_offset() + offset];
     *out = Vec2(u, v);
 }
 
 void VertexData::tex_coordX(uint8_t which, float u, float v, float w) {
     uint32_t offset = specification().texcoordX_offset(which);
-    Vec3* out = (Vec3*) &data_[cursor_position_ + offset];
+    Vec3* out = (Vec3*) &data_[cursor_offset() + offset];
     *out = Vec3(u, v, w);
 }
 
 void VertexData::tex_coordX(uint8_t which, float u, float v, float w, float x) {
     uint32_t offset = specification().texcoordX_offset(which);
-    Vec4* out = (Vec4*) &data_[cursor_position_ + offset];
+    Vec4* out = (Vec4*) &data_[cursor_offset() + offset];
     *out = Vec4(u, v, w, x);
+}
+
+void VertexData::push_back() {
+    vertex_count_++;
+    data_.resize(vertex_count_ * stride(), 0);
 }
 
 void VertexData::tex_coord0(float u, float v) {
@@ -291,7 +300,7 @@ void VertexData::tex_coord3(float u, float v, float w, float x) {
 
 void VertexData::diffuse(float r, float g, float b, float a) {
     assert(vertex_specification_.diffuse_attribute == VERTEX_ATTRIBUTE_4F);
-    Vec4* out = (Vec4*) &data_[cursor_position_ + specification().diffuse_offset()];
+    Vec4* out = (Vec4*) &data_[cursor_offset() + specification().diffuse_offset()];
     *out = Vec4(r, g, b, a);
 }
 
@@ -312,24 +321,15 @@ void VertexData::move_by(int32_t amount) {
 }
 
 void VertexData::move_to(int32_t index) {
-    int32_t offset = int32_t(stride()) * index;
-
-    if(offset > (int32_t) data_.size()) {
+    if(index > (int32_t) vertex_count_) {
         throw std::out_of_range("Tried to move outside the range of the data");
     }
 
-    cursor_position_ = offset;
+    cursor_position_ = index;
 }
 
 uint16_t VertexData::move_next() {
-    int32_t new_pos = cursor_position_ + stride();
-
-    //cursor_position_ == data_.size() is allowed (see position())
-    if(new_pos > (int32_t) data_.size()) {
-        throw std::out_of_range("Cursor moved out of range");
-    }
-
-    cursor_position_ = new_pos;
+    move_to(cursor_position_ + 1);
     return cursor_position_;
 }
 

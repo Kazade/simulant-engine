@@ -34,6 +34,37 @@ public:
         assert_equal(sizeof(float) * 6, data->specification().texcoord0_offset());
     }
 
+    void test_moving_cursor() {
+        smlt::VertexSpecification spec = {
+            smlt::VERTEX_ATTRIBUTE_3F,
+            smlt::VERTEX_ATTRIBUTE_3F,
+            smlt::VERTEX_ATTRIBUTE_2F
+        };
+
+        smlt::VertexData::ptr data = smlt::VertexData::create(spec);
+        auto stride = data->stride();
+
+        data->position(0, 0, 0);
+        data->move_next();
+        data->position(1, 1, 1);
+        data->move_next();
+        data->position(2, 2, 2);
+        data->move_next();
+
+        assert_equal(data->cursor_position(), 3);
+        assert_equal(data->cursor_offset(), 3 * stride);
+
+        data->move_to(1);
+
+        assert_equal(data->cursor_position(), 1);
+        assert_equal(data->cursor_offset(), 1 * stride);
+
+        data->move_by(1);
+
+        assert_equal(data->cursor_position(), 2);
+        assert_equal(data->cursor_offset(), 2 * stride);
+    }
+
     void test_clone_into() {
         smlt::VertexSpecification spec = { smlt::VERTEX_ATTRIBUTE_2F };
 
