@@ -239,7 +239,10 @@ protected:
     float foreground_depth_bias_ = 0.0002f;
     float text_depth_bias_ = 0.0004f;
 
-    void resize_foreground(MeshPtr mesh, float width, float height, float xoffset, float yoffset);
+    void resize_or_generate_foreground(MeshPtr mesh, float width, float height, float xoffset, float yoffset);
+    void resize_or_generate_background(MeshPtr mesh, float width, float height, float xoffset, float yoffset);
+    void resize_or_generate_border(MeshPtr mesh, float width, float height, float xoffset, float yoffset);
+
     void render_text(MeshPtr mesh, const std::string& submesh_name, const unicode& text, float width, float xoffset=0, float yoffset=0);
 
     std::set<uint32_t> fingers_down_;

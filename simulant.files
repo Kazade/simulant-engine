@@ -1258,6 +1258,7 @@ simulant/utils/endian.cpp
 simulant/nodes/ui/widget.h
 simulant/nodes/ui/button.h
 simulant/nodes/ui/ui_manager.h
+tests/test_virtual_gamepad.h
 tests/test_widgets.h
 simulant/nodes/ui/ui_manager.cpp
 simulant/generic/optional.h

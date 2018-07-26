@@ -333,7 +333,10 @@ MeshPtr Widget::construct_widget(float requested_width, float requested_height) 
     float width = requested_width;
     float height = requested_height;
 
-    auto mesh = stage->assets->new_mesh(spec).fetch();
+    auto mesh = (mesh_) ? mesh_ : stage->assets->new_mesh(spec).fetch();
+
+    /* New mesh, so make sure we clear the available vertices */
+    available_indexes_.clear();
 
     // Render the text to the specified width
     render_text(mesh, "text", text_, width - padding_.left - padding_.right, padding_.left, padding_.top);
@@ -360,13 +363,9 @@ MeshPtr Widget::construct_widget(float requested_width, float requested_height) 
         // Clip the content?
     }
 
-    mesh->new_submesh_as_rectangle("border", material_->id(), width + (border_width_ * 2), height + (border_width_ * 2));
-    mesh->submesh("border")->set_diffuse(border_colour_);
-
-    mesh->new_submesh_as_rectangle("background", material_->id(), width, height, Vec3(0, 0, background_depth_bias_));
-    mesh->submesh("background")->set_diffuse(background_colour_);
-
-    resize_foreground(mesh, width, height, 0, 0);
+    resize_or_generate_border(mesh, width + (border_width_ * 2), height + (border_width_ * 2), 0, 0);
+    resize_or_generate_background(mesh, width, height, 0, 0);
+    resize_or_generate_foreground(mesh, width, height, 0, 0);
 
     content_width_ = width;
     content_height_ = height;
@@ -386,10 +385,41 @@ void Widget::set_padding(float left, float right, float bottom, float top) {
     padding_.top = top;
 }
 
-void Widget::resize_foreground(MeshPtr mesh, float width, float height, float xoffset, float yoffset) {
-    mesh->delete_submesh("foreground");
+void generate_or_resize_rectangle(MeshPtr mesh, MaterialID material_id, const std::string& submesh_name, float width, float height, float xoffset, float yoffset, float zoffset) {
+    if(!mesh->has_submesh(submesh_name)) {
+        mesh->new_submesh_as_rectangle(
+            submesh_name, material_id, width, height,
+            Vec3(xoffset, yoffset, zoffset)
+        );
+    } else {
+        auto submesh = mesh->submesh(submesh_name);
+        mesh->vertex_data->move_to(submesh->index_data->at(0));
+        mesh->vertex_data->position(xoffset + (-width / 2.0), yoffset + (-height / 2.0), zoffset);
 
-    mesh->new_submesh_as_rectangle("foreground", material_->id(), width, height, Vec3(xoffset, yoffset, foreground_depth_bias_));
+        mesh->vertex_data->move_to(submesh->index_data->at(1));
+        mesh->vertex_data->position(xoffset + (width / 2.0), yoffset + (-height / 2.0), zoffset);
+
+        mesh->vertex_data->move_to(submesh->index_data->at(2));
+        mesh->vertex_data->position(xoffset + (width / 2.0),  yoffset + (height / 2.0), zoffset);
+
+        mesh->vertex_data->move_to(submesh->index_data->at(5));
+        mesh->vertex_data->position(xoffset + (-width / 2.0),  yoffset + (height / 2.0), zoffset);
+        mesh->vertex_data->done();
+    }
+}
+
+void Widget::resize_or_generate_border(MeshPtr mesh, float width, float height, float xoffset, float yoffset) {
+    generate_or_resize_rectangle(mesh, material_->id(), "border", width, height, xoffset, yoffset, 0);
+    mesh->submesh("border")->set_diffuse(border_colour_);
+}
+
+void Widget::resize_or_generate_background(MeshPtr mesh, float width, float height, float xoffset, float yoffset) {
+    generate_or_resize_rectangle(mesh, material_->id(), "background", width, height, xoffset, yoffset, background_depth_bias_);
+    mesh->submesh("background")->set_diffuse(background_colour_);
+}
+
+void Widget::resize_or_generate_foreground(MeshPtr mesh, float width, float height, float xoffset, float yoffset) {
+    generate_or_resize_rectangle(mesh, material_->id(), "foreground", width, height, xoffset, yoffset, foreground_depth_bias_);
     mesh->submesh("foreground")->set_diffuse(foreground_colour_);
 }
 

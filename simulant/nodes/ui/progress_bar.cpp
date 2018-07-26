@@ -50,7 +50,7 @@ void ProgressBar::refresh_pulse() {
         pulse_right_ = false;
     }
 
-    resize_foreground(mesh(), pulse_width_, content_height(), pulse_position_, 0);
+    resize_or_generate_foreground(mesh(), pulse_width_, content_height(), pulse_position_, 0);
 }
 
 void ProgressBar::refresh_fraction() {
@@ -81,7 +81,7 @@ void ProgressBar::set_pulse_step(float value) {
 }
 
 void ProgressBar::set_fraction(float fraction) {
-    resize_foreground(mesh(), content_width() * fraction, content_height(), 0, 0);
+    resize_or_generate_foreground(mesh(), content_width() * fraction, content_height(), 0, 0);
 }
 
 }
