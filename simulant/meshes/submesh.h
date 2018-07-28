@@ -31,8 +31,7 @@ private:
 
 class SubMesh :
     public SubMeshInterface,
-    public Managed<SubMesh>,
-    public std::enable_shared_from_this<SubMesh> {
+    public Managed<SubMesh> {
 
 public:
     SubMesh(

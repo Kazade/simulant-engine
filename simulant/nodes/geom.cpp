@@ -52,5 +52,9 @@ void Geom::ask_owner_for_destruction() {
     stage->delete_geom(id());
 }
 
+std::vector<std::shared_ptr<Renderable>> Geom::_get_renderables(const Frustum &frustum) const {
+    return culler_->renderables_visible(frustum);
+}
+
 
 }

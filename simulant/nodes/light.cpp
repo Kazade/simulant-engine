@@ -23,7 +23,7 @@
 namespace smlt {
 
 Light::Light(LightID lid, Stage* stage):
-    StageNode(stage),
+    ContainerNode(stage),
     generic::Identifiable<LightID>(lid),
     type_(LIGHT_TYPE_POINT) {
 

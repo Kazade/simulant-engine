@@ -29,7 +29,7 @@
 using namespace smlt;
 
 Sprite::Sprite(SpriteID id, SpriteManager *manager, SoundDriver* sound_driver):
-    StageNode(manager->stage.get()),
+    ContainerNode(manager->stage.get()),
     generic::Identifiable<SpriteID>(id),
     Source(manager->stage, sound_driver),
     manager_(manager) {

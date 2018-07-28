@@ -87,7 +87,7 @@ public:
     virtual void lights_and_geometry_visible_from(
         CameraID camera_id,
         std::vector<LightID>& lights_out,
-        std::vector<std::shared_ptr<Renderable>>& geom_out
+        std::vector<StageNode*>& geom_out
     ) = 0;
 
     virtual MeshID debug_mesh_id() { return MeshID(); }

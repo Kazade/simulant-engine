@@ -112,6 +112,9 @@ public:
         StageNode::cleanup();
     }
 
+    RenderableList _get_renderables(const Frustum &frustum) const {
+        return RenderableList(subactors_.begin(), subactors_.end());
+    }
 private:
     // Used for animated meshes
     std::unique_ptr<HardwareBuffer> interpolated_vertex_buffer_;
@@ -144,8 +147,7 @@ class SubActor :
     public SubMeshInterface,
     public virtual BoundableEntity,
     public Managed<SubActor>,
-    public Renderable,
-    public std::enable_shared_from_this<SubActor> {
+    public Renderable {
 
 public:
     const MaterialID material_id() const;

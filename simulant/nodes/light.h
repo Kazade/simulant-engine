@@ -28,7 +28,7 @@
 namespace smlt {
 
 class Light :
-    public StageNode,
+    public ContainerNode,
     public generic::Identifiable<LightID>,
     public Managed<Light> {
 

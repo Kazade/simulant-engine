@@ -53,7 +53,7 @@ public:
 };
 
 template<typename T>
-class Managed : public virtual ManagedBase {
+class Managed : public virtual ManagedBase, public std::enable_shared_from_this<T> {
 public:
     typedef std::shared_ptr<T> ptr;
     typedef std::weak_ptr<T> wptr;

@@ -16,6 +16,8 @@ namespace smlt {
 
 typedef sig::signal<void (AABB)> BoundsUpdatedSignal;
 
+typedef std::vector<std::shared_ptr<Renderable>> RenderableList;
+
 class StageNode:
     public TreeNode,
     public Nameable,
@@ -90,6 +92,9 @@ public:
 
     StageNode* find_child_with_name(const std::string& name);
 
+    /* Return a list of renderables to pass into the render queue */
+    virtual RenderableList _get_renderables(const smlt::Frustum& frustum) const = 0;
+
 protected:
     // Faster than properties, useful for subclasses where a clean API isn't as important
     Stage* get_stage() const { return stage_; }
@@ -118,6 +123,20 @@ private:
     // By default, always cast and receive shadows
     ShadowCast shadow_cast_ = SHADOW_CAST_ALWAYS;
     ShadowReceive shadow_receive_ = SHADOW_RECEIVE_ALWAYS;
+};
+
+
+class ContainerNode : public StageNode {
+public:
+    ContainerNode(Stage* stage):
+        StageNode(stage) {}
+
+    /* Containers don't directly have renderables, but their children do */
+    std::vector<std::shared_ptr<Renderable>> _get_renderables(const Frustum& frustum) const {
+        return std::vector<std::shared_ptr<Renderable>>();
+    }
+
+    virtual ~ContainerNode() {}
 };
 
 }

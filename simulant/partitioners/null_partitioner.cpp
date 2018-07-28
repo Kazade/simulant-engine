@@ -28,7 +28,8 @@
 namespace smlt {
 
 void NullPartitioner::lights_and_geometry_visible_from(
-        CameraID camera_id, std::vector<LightID> &lights_out, std::vector<std::shared_ptr<Renderable> > &geom_out) {
+        CameraID camera_id, std::vector<LightID> &lights_out,
+        std::vector<StageNode*> &geom_out) {
 
     auto frustum = stage->camera(camera_id)->frustum();
 
@@ -42,12 +43,9 @@ void NullPartitioner::lights_and_geometry_visible_from(
 
     for(ActorID eid: all_actors_) {
         auto actor = stage->actor(eid);
-        auto subactors = actor->_subactors();
 
-        for(auto ent: subactors) {
-            if(frustum.intersects_aabb(ent->transformed_aabb())) {
-                geom_out.push_back(ent);
-            }
+        if(frustum.intersects_aabb(actor->transformed_aabb())) {
+            geom_out.push_back(actor);
         }
     }
 
@@ -55,10 +53,9 @@ void NullPartitioner::lights_and_geometry_visible_from(
         auto system = stage->particle_system(ps);
         auto aabb = system->transformed_aabb();
         if(frustum.intersects_aabb(aabb)) {
-            geom_out.push_back(system->shared_from_this());
+            geom_out.push_back(system);
         }
     }
-
 }
 
 void NullPartitioner::apply_staged_write(const StagedWrite &write) {

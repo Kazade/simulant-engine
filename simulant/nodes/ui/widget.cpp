@@ -10,7 +10,7 @@ namespace smlt {
 namespace ui {
 
 Widget::Widget(WidgetID id, UIManager *owner, UIConfig *defaults):
-    StageNode(owner->stage()),
+    ContainerNode(owner->stage()),
     generic::Identifiable<WidgetID>(id),
     owner_(owner) {
 

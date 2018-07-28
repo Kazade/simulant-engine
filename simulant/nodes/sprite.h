@@ -41,14 +41,15 @@ struct SpritesheetAttrs {
 };
 
 class Sprite :
-    public StageNode,
+    public ContainerNode,
     public Managed<Sprite>,
     public generic::Identifiable<SpriteID>,
     public KeyFrameAnimated,
-    public Source,
-    public std::enable_shared_from_this<Sprite> {
+    public Source {
 
 public:
+    using ContainerNode::_get_renderables;
+
     //Ownable interface (inherited through ParentSetterMixin)
     void ask_owner_for_destruction() override;
 

@@ -91,7 +91,7 @@ typedef sig::signal<void (CameraID, Viewport)> StagePostRenderSignal;
 extern const Colour DEFAULT_LIGHT_COLOUR;
 
 class Stage:
-    public StageNode,
+    public ContainerNode,
     public Managed<Stage>,
     public generic::Identifiable<StageID>,
     public ActorManager,
