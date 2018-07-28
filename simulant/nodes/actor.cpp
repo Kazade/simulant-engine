@@ -335,6 +335,14 @@ void Actor::each(std::function<void (uint32_t, SubActor*)> callback) {
     }
 }
 
+RenderableList Actor::_get_renderables(const Frustum &frustum) const {
+    auto ret = RenderableList();
+    for(auto& actor: subactors_) {
+        ret.push_back(std::const_pointer_cast<SubActor>(actor));
+    }
+    return ret;
+}
+
 
 VertexData* SubActor::get_vertex_data() const {
     return submesh()->vertex_data.get();

@@ -112,9 +112,7 @@ public:
         StageNode::cleanup();
     }
 
-    RenderableList _get_renderables(const Frustum &frustum) const {
-        return RenderableList(subactors_.begin(), subactors_.end());
-    }
+    RenderableList _get_renderables(const Frustum &frustum) const;
 private:
     // Used for animated meshes
     std::unique_ptr<HardwareBuffer> interpolated_vertex_buffer_;
