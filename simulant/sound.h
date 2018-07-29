@@ -43,8 +43,7 @@ class Sound :
     public Managed<Sound>,
     public generic::Identifiable<SoundID>,
     public Resource,
-    public Loadable,
-    public std::enable_shared_from_this<Sound> {
+    public Loadable {
 
 public:
     Sound(SoundID id, ResourceManager* resource_manager, SoundDriver* sound_driver);

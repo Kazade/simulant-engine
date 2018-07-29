@@ -30,8 +30,7 @@ class ParticleSystem :
     public Source,
     public Loadable,
     public HasMutableRenderPriority,
-    public Renderable,
-    public std::enable_shared_from_this<ParticleSystem> {
+    public Renderable {
 
     DEFINE_SIGNAL(ParticleSystemMaterialChangedSignal, signal_material_changed);
 
@@ -120,6 +119,13 @@ public:
         auto m = std::make_shared<M>(std::forward<Args>(args)...);
         manipulators_.push_back(m);
         return m.get();
+    }
+
+    RenderableList _get_renderables(const Frustum &frustum) const {
+        auto ret = RenderableList();
+        std::shared_ptr<Renderable> sptr = std::const_pointer_cast<ParticleSystem>(shared_from_this());
+        ret.push_back(sptr);
+        return ret;
     }
 
 private:

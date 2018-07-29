@@ -27,8 +27,7 @@ namespace impl {
 typedef sig::signal<void ()> SimulationPreStepSignal;
 
 class RigidBodySimulation:
-    public Managed<RigidBodySimulation>,
-    public std::enable_shared_from_this<RigidBodySimulation> {
+    public Managed<RigidBodySimulation> {
 
     DEFINE_SIGNAL(SimulationPreStepSignal, signal_simulation_pre_step);
 

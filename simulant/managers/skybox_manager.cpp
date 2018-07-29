@@ -30,7 +30,7 @@ namespace smlt {
 
 Skybox::Skybox(SkyID id, SkyManager* manager):
     generic::Identifiable<SkyID>(id),
-    StageNode(&(Stage&)manager->stage),
+    ContainerNode(&(Stage&)manager->stage),
     manager_(manager) {
 
 }

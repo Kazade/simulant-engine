@@ -11,11 +11,13 @@ namespace smlt {
 class RenderTarget;
 
 class Camera:
-    public StageNode,
+    public ContainerNode,
     public generic::Identifiable<CameraID>,
-    public Managed<Camera> {
+    public Managed<Camera>{
 
 public:
+    using ContainerNode::_get_renderables;
+
     Camera(CameraID camera_id, Stage* stage);
     ~Camera();
 

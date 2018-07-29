@@ -154,8 +154,7 @@ class Texture :
     public generic::Identifiable<TextureID>,
     public Managed<Texture>,
     public Updateable,
-    public RenderTarget,
-    public std::enable_shared_from_this<Texture> {
+    public RenderTarget {
 
 public:
     static const TextureChannelSet DEFAULT_SOURCE_CHANNELS;

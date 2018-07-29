@@ -157,7 +157,7 @@ void SpatialHashPartitioner::apply_staged_write(const StagedWrite &write) {
 
 void SpatialHashPartitioner::lights_and_geometry_visible_from(
         CameraID camera_id, std::vector<LightID> &lights_out,
-        std::vector<std::shared_ptr<Renderable> > &geom_out) {
+        std::vector<StageNode*> &geom_out) {
 
     read_lock<shared_mutex> lock(lock_);
 
@@ -170,20 +170,15 @@ void SpatialHashPartitioner::lights_and_geometry_visible_from(
         switch(pentry->type) {
         case PARTITIONER_ENTRY_TYPE_ACTOR: {
                 ActorPtr actor = pentry->actor_id.fetch();
-                actor->each([&geom_out](uint32_t i, SubActor* subactor) {
-                    geom_out.push_back(subactor->shared_from_this());
-                });
+                geom_out.push_back(actor);
             }
             break;
             case PARTITIONER_ENTRY_TYPE_GEOM: {
                 auto geom = pentry->geom_id.fetch();
-                auto renderables = geom->culler->renderables_visible(frustum);
-                for(auto r: renderables) {
-                    geom_out.push_back(r);
-                }
+                geom_out.push_back(geom);
             } break;
             case PARTITIONER_ENTRY_TYPE_PARTICLE_SYSTEM:
-                geom_out.push_back(pentry->particle_system_id.fetch()->shared_from_this());
+                geom_out.push_back(pentry->particle_system_id.fetch());
             break;
             case PARTITIONER_ENTRY_TYPE_LIGHT:
                 lights_out.push_back(pentry->light_id);

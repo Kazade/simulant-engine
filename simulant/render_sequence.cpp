@@ -246,11 +246,15 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
     // Apply any outstanding writes to the partitioner
     stage->partitioner->_apply_writes();
 
-    std::vector<LightID> light_ids;
-    std::vector<std::shared_ptr<Renderable>> geom_visible;
+    static std::vector<LightID> light_ids;
+    static std::vector<StageNode*> nodes_visible;
+
+    /* Empty out, but leave capacity to prevent constant allocations */
+    light_ids.resize(0);
+    nodes_visible.resize(0);
 
     // Gather the lights and geometry visible to the camera
-    stage->partitioner->lights_and_geometry_visible_from(camera_id, light_ids, geom_visible);
+    stage->partitioner->lights_and_geometry_visible_from(camera_id, light_ids, nodes_visible);
 
     // Get the actual lights from the IDs
     auto lights_visible = map<decltype(light_ids), std::vector<LightPtr>>(
@@ -259,26 +263,19 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
 
     uint32_t renderables_rendered = 0;
     // Mark the visible objects as visible
-    for(auto& renderable: geom_visible) {
-        if(!renderable->is_visible()) {
+    for(auto& node: nodes_visible) {
+        if(!node->is_visible()) {
             continue;
         }
-
-        if(!renderable->index_element_count()) {
-            // Don't render things with no indices
-            continue;
-        }
-
-        renderable->update_last_visible_frame_id(frame_id);
 
         auto renderable_lights = filter(lights_visible, [=](const LightPtr& light) -> bool {
             // Filter by whether or not the renderable bounds intersects the light bounds
             if(light->type() == LIGHT_TYPE_DIRECTIONAL) {
                 return true;
             } else if(light->type() == LIGHT_TYPE_SPOT_LIGHT) {
-                return renderable->transformed_aabb().intersects_aabb(light->transformed_aabb());
+                return node->transformed_aabb().intersects_aabb(light->transformed_aabb());
             } else {
-                return renderable->transformed_aabb().intersects_sphere(light->absolute_position(), light->range() * 2);
+                return node->transformed_aabb().intersects_sphere(light->absolute_position(), light->range() * 2);
             }
         });
 
@@ -297,14 +294,22 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
                     return false;
                 }
 
-                float lhs_dist = (renderable->centre() - lhs->position()).length_squared();
-                float rhs_dist = (renderable->centre() - rhs->position()).length_squared();
+                float lhs_dist = (node->centre() - lhs->position()).length_squared();
+                float rhs_dist = (node->centre() - rhs->position()).length_squared();
                 return lhs_dist < rhs_dist;
             }
         );
 
-        renderable->set_affected_by_lights(renderable_lights);
-        ++renderables_rendered;
+        for(auto& renderable: node->_get_renderables(camera->frustum())) {
+            if(!renderable->index_element_count()) {
+                // Don't render things with no indices
+                continue;
+            }
+
+            renderable->update_last_visible_frame_id(frame_id);
+            renderable->set_affected_by_lights(renderable_lights);
+            ++renderables_rendered;
+        }
     }
 
     window->stats->set_geometry_visible(renderables_rendered);

@@ -61,8 +61,7 @@ class Mesh :
     public Loadable,
     public Managed<Mesh>,
     public generic::Identifiable<MeshID>,
-    public KeyFrameAnimated,
-    public std::enable_shared_from_this<Mesh> {
+    public KeyFrameAnimated {
 
     DEFINE_SIGNAL(SignalAnimationEnabled, signal_animation_enabled);
 

@@ -46,8 +46,7 @@ class Geom :
     public virtual Boundable,
     public Managed<Geom>,
     public generic::Identifiable<GeomID>,
-    public Source,
-    public std::enable_shared_from_this<Geom> {
+    public Source {
 
 public:
     Geom(GeomID id, Stage* stage, SoundDriver *sound_driver, MeshID mesh, const Vec3& position=Vec3(), const Quaternion rotation=Quaternion());
@@ -66,6 +65,7 @@ public:
 
     bool init() override;
 
+    std::vector<std::shared_ptr<Renderable>> _get_renderables(const Frustum& frustum) const;
 private:
     MeshID mesh_id_;
     RenderPriority render_priority_ = RENDER_PRIORITY_MAIN;

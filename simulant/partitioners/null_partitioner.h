@@ -30,7 +30,11 @@ public:
     NullPartitioner(Stage* ss):
         Partitioner(ss) {}
 
-    void lights_and_geometry_visible_from(CameraID camera_id, std::vector<LightID> &lights_out, std::vector<std::shared_ptr<Renderable> > &geom_out);
+    void lights_and_geometry_visible_from(
+        CameraID camera_id,
+        std::vector<LightID> &lights_out,
+        std::vector<StageNode*> &geom_out
+    );
 
 private:
     void apply_staged_write(const StagedWrite& write);

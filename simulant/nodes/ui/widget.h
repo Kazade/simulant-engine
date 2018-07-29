@@ -96,7 +96,7 @@ typedef sig::signal<void ()> WidgetFocusedSignal;
 typedef sig::signal<void ()> WidgetBlurredSignal;
 
 class Widget:
-    public StageNode,
+    public ContainerNode,
     public generic::Identifiable<WidgetID> {
 
     DEFINE_SIGNAL(WidgetPressedSignal, signal_pressed);

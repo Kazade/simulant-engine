@@ -44,7 +44,7 @@ const Colour DEFAULT_LIGHT_COLOUR = Colour(1.0, 1.0, 251.0 / 255.0, 1.0);
 
 Stage::Stage(StageID id, Window *parent, AvailablePartitioner partitioner):
     WindowHolder(parent),
-    StageNode(this),
+    ContainerNode(this),
     generic::Identifiable<StageID>(id),
     CameraManager(this),
     ui_(new ui::UIManager(this)),

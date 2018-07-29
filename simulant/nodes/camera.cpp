@@ -7,7 +7,7 @@ namespace smlt {
 
 
 Camera::Camera(CameraID camera_id, Stage *stage):
-    StageNode(stage),
+    ContainerNode(stage),
     generic::Identifiable<CameraID>(camera_id) {
 
     assert(stage);
