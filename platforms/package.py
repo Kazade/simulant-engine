@@ -5,6 +5,7 @@
 
 # This is for use on Travis which frustratingly doesn't allow access to the
 # checkout directory from inside the Docker container.
+import fnmatch
 import os
 import argparse
 import subprocess
@@ -15,7 +16,12 @@ from zipfile import ZipFile
 
 HEADER_EXTENSIONS = (".h", ".hpp")
 LIBRARY_EXTENSIONS = (
-    ".lib", ".dylib", ".dll", ".so", ".a", ".so.1"
+    ".lib", ".dylib", ".dll", ".a", ".so.?.?.?"
+)
+
+META_EXTENSIONS = (
+    ".soname",
+    ".version"
 )
 
 
@@ -24,7 +30,9 @@ def gather_files(source_folder, extensions):
 
     for root, dirs, files in os.walk(source_folder, followlinks=True):
         for filename in files:
-            if os.path.splitext(filename)[-1] in extensions:
+            extension = os.path.splitext(filename)[-1]
+            if extension in extensions or any(
+                    fnmatch.fnmatch(extension, x) for x in extensions):
                 path = os.path.join(root, filename)
                 output.append(os.path.abspath(path))
 
@@ -33,7 +41,9 @@ def gather_files(source_folder, extensions):
 
 def run(options):
     header_folder = os.path.abspath(options.header_folder)
-    folder_name = "simulant-{}-{}".format(options.build_target, options.build_type)
+    folder_name = "simulant-{}-{}".format(
+        options.build_target, options.build_type
+    )
     lib_files = gather_files(options.library_folder, LIBRARY_EXTENSIONS)
     header_files = gather_files(header_folder, HEADER_EXTENSIONS)
 
@@ -62,7 +72,9 @@ def run(options):
 
     if not options.package_only:
         echo = subprocess.Popen(
-            ("echo", "-e", "{}\n{}\n{}\n".format(options.access_key, options.access_secret, options.project_id)),
+            ("echo", "-e", "{}\n{}\n{}\n".format(
+                options.access_key, options.access_secret, options.project_id
+            )),
             stdout=subprocess.PIPE
         )
 

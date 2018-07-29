@@ -68,6 +68,12 @@ SET_TARGET_PROPERTIES(simulant
                       VERSION 0.0.1
                       SOVERSION 1)
 
+get_target_property(SONAME simulant SOVERSION)
+get_target_property(VERSION simulant VERSION)
+
+FILE(WRITE ${CMAKE_BINARY_DIR}/simulant.soname ${SONAME})
+FILE(WRITE ${CMAKE_BINARY_DIR}/simulant.version ${VERSION})
+
 INSTALL(TARGETS simulant DESTINATION lib)
 INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} DESTINATION include FILES_MATCHING PATTERN "*.h" PATTERN "*.inl" PATTERN "deps*" EXCLUDE)
 
