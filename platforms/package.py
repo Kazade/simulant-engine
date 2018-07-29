@@ -15,14 +15,14 @@ from zipfile import ZipFile
 
 
 HEADER_EXTENSIONS = (".h", ".hpp")
-LIBRARY_EXTENSIONS = (
+LIBRARY_EXTENSIONS = [
     ".lib", ".dylib", ".dll", ".a", ".so"
-)
+]
 
-META_EXTENSIONS = (
+META_EXTENSIONS = [
     ".soname",
     ".version"
-)
+]
 
 
 def gather_files(source_folder, extensions):
@@ -44,7 +44,10 @@ def run(options):
     folder_name = "simulant-{}-{}".format(
         options.build_target, options.build_type
     )
-    lib_files = gather_files(options.library_folder, LIBRARY_EXTENSIONS)
+    lib_files = gather_files(
+        options.library_folder,
+        LIBRARY_EXTENSIONS + META_EXTENSIONS
+    )
     header_files = gather_files(header_folder, HEADER_EXTENSIONS)
 
     zip_filename = os.path.join(options.target_folder, folder_name + ".zip")
