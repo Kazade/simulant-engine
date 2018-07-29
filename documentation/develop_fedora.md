@@ -1,7 +1,7 @@
 
 # Fedora (Linux) Installation for Contributors
 
-*This process is for compiling Simulant from source, if you just want to get started using Simulant to build a game you probably want the [normal installation](install_fedora.py).*
+*This process is for compiling Simulant from source, if you just want to get started using Simulant to build a game you probably want the [normal installation](install_fedora.md).*
 
 The following installation process is probably very similar for other Linux distributions (such as Ubuntu, Debian etc.) the main difference should
 only be the packages which must be installed.
@@ -91,4 +91,4 @@ To avoid confusion, uninstall simulant-tools from pip if you have it installed (
 
 Make sure that `which simulant` returns `/usr/local/bin/simulant`.
 
-From then you can use the `simulant` command as normal, except pass `--use-global-simulant` to use the version you compiled and installed. 
+From then you can use the `simulant` command as normal, except pass `--use-global-simulant` to use the version you compiled and installed.
