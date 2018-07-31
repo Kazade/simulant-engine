@@ -580,6 +580,51 @@ public:
         assert_equal(v3->flags, VERTEX_CMD_EOL);
     }
 
+    void test_triangle_series() {
+        /* Test a number of individual triangles made up of a tristrip each */
+        ClipVertex vertices[6];
+
+        vertices[0].flags = vertices[1].flags = vertices[3].flags = vertices[4].flags = VERTEX_CMD;
+        vertices[2].flags = vertices[5].flags = VERTEX_CMD_EOL;
+
+        _init_vector(vertices[0], 0.0, 0.0, -1);
+        _init_vector(vertices[1], 0.5, 0.0, -2);
+        _init_vector(vertices[2], -0.5, 0.0, -2);
+        _init_vector(vertices[3], 0.5, 0.0, -2);
+        _init_vector(vertices[4], 1.0, 0.0, -3);
+        _init_vector(vertices[5], -0.5, 0.0, -1);
+
+        aligned_vector_push_back(&input, vertices, 6);
+
+        clipTriangleStrip(&input, &output);
+
+        ClipVertex* v1 = (ClipVertex*) aligned_vector_at(&output, 0);
+        ClipVertex* v2 = (ClipVertex*) aligned_vector_at(&output, 1);
+        ClipVertex* v3 = (ClipVertex*) aligned_vector_at(&output, 2);
+        ClipVertex* v4 = (ClipVertex*) aligned_vector_at(&output, 3);
+        ClipVertex* v5 = (ClipVertex*) aligned_vector_at(&output, 4);
+        ClipVertex* v6 = (ClipVertex*) aligned_vector_at(&output, 5);
+
+        assert_equal(v1->xyz[2], -1);
+        assert_equal(v1->flags, VERTEX_CMD);
+
+        assert_equal(v2->xyz[2], -2);
+        assert_equal(v2->flags, VERTEX_CMD);
+
+        assert_equal(v3->xyz[2], -2);
+        assert_equal(v3->flags, VERTEX_CMD_EOL);
+
+        assert_equal(v4->xyz[2], -2);
+        assert_equal(v4->flags, VERTEX_CMD);
+
+        assert_equal(v5->xyz[2], -3);
+        assert_equal(v5->flags, VERTEX_CMD);
+
+        assert_equal(v6->xyz[2], -1);
+        assert_equal(v6->flags, VERTEX_CMD_EOL);
+    }
+
+
 private:
     AlignedVector input;
     AlignedVector output;
