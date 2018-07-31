@@ -117,7 +117,7 @@ void StageNode::on_parent_set(TreeNode* oldp, TreeNode* newp) {
     update_transformation_from_parent();
 }
 
-const AABB StageNode::transformed_aabb() const {
+AABB StageNode::calculate_transformed_aabb() const {
     auto corners = aabb().corners();
     auto transform = absolute_transformation();
 
@@ -126,6 +126,10 @@ const AABB StageNode::transformed_aabb() const {
     }
 
     return AABB(corners.data(), corners.size());
+}
+
+const AABB StageNode::transformed_aabb() const {
+    return transformed_aabb_;
 }
 
 StageNode *StageNode::find_child_with_name(const std::string &name) {
@@ -146,7 +150,7 @@ StageNode *StageNode::find_child_with_name(const std::string &name) {
 }
 
 void StageNode::recalc_bounds() {
-    auto newb = transformed_aabb();
+    auto newb = calculate_transformed_aabb();
     if(newb.min() != transformed_aabb_.min() || newb.max() != transformed_aabb_.max()) {
         transformed_aabb_ = newb;
         signal_bounds_updated_(transformed_aabb_);
