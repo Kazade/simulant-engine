@@ -24,7 +24,6 @@
 #include <memory>
 
 #include "../types.h"
-#include "../generic/auto_weakptr.h"
 #include "../generic/threading/shared_mutex.h"
 #include "../window.h"
 

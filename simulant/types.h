@@ -43,7 +43,6 @@
 #include "math/ray.h"
 
 #include "generic/manager.h"
-#include "generic/auto_weakptr.h"
 #include "generic/unique_id.h"
 #include "generic/default_init_ptr.h"
 
@@ -475,10 +474,10 @@ typedef default_init_ptr<Widget> WidgetPtr;
 }
 
 class ResourceManager;
-typedef AutoWeakPtr<ResourceManager> ResourceManagerPtr;
+typedef std::shared_ptr<ResourceManager> ResourceManagerPtr;
 
 class RenderSequence;
-typedef AutoWeakPtr<RenderSequence> RenderSequencePtr;
+typedef std::shared_ptr<RenderSequence> RenderSequencePtr;
 
 class Pipeline;
 typedef default_init_ptr<Pipeline> PipelinePtr;

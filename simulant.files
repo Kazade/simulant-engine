@@ -347,7 +347,6 @@ simulant/generic/algorithm.h
 simulant/generic/any/any.h
 simulant/generic/any/type_traits.h
 simulant/generic/any/utility.h
-simulant/generic/auto_weakptr.h
 simulant/generic/check_signature.h
 simulant/generic/cloneable.h
 simulant/generic/creator.h

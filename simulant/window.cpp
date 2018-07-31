@@ -88,8 +88,8 @@ Window::~Window() {
 
 }
 
-RenderSequencePtr Window::render_sequence() {
-    return render_sequence_;
+RenderSequence* Window::render_sequence() {
+    return render_sequence_.get();
 }
 
 LoaderPtr Window::loader_for(const unicode &filename, LoaderHint hint) {
@@ -370,7 +370,7 @@ bool Window::run_frame() {
         if(has_context()) {
 
             stats->reset_polygons_rendered();
-            render_sequence()->run();
+            render_sequence_->run();
 
             signal_pre_swap_();
 
@@ -484,7 +484,7 @@ void Window::disable_virtual_joypad() {
 void Window::reset() {
     idle->execute(); //Execute any idle tasks before we go deleting things
 
-    render_sequence()->delete_all_pipelines();
+    render_sequence_->delete_all_pipelines();
 
     StageManager::destroy_all();
     background_manager_.reset(new BackgroundManager(this));

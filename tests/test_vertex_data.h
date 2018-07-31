@@ -52,17 +52,17 @@ public:
         data->move_next();
 
         assert_equal(data->cursor_position(), 3);
-        assert_equal(data->cursor_offset(), 3 * stride);
+        assert_equal(data->cursor_offset(), 3u * stride);
 
         data->move_to(1);
 
         assert_equal(data->cursor_position(), 1);
-        assert_equal(data->cursor_offset(), 1 * stride);
+        assert_equal(data->cursor_offset(), 1u * stride);
 
         data->move_by(1);
 
         assert_equal(data->cursor_position(), 2);
-        assert_equal(data->cursor_offset(), 2 * stride);
+        assert_equal(data->cursor_offset(), 2u * stride);
     }
 
     void test_clone_into() {

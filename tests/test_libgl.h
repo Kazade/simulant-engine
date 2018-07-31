@@ -264,7 +264,7 @@ public:
 
         clipTriangleStrip(&input, &output);
 
-        assert_equal(output.size, 4);
+        assert_equal(output.size, 4u);
 
         ClipVertex* v1 = (ClipVertex*) aligned_vector_at(&output, 0);
         ClipVertex* v2 = (ClipVertex*) aligned_vector_at(&output, 1);

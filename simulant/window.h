@@ -30,7 +30,6 @@
 #include "resource_locator.h"
 #include "idle_task_manager.h"
 #include "input/input_state.h"
-#include "generic/auto_weakptr.h"
 #include "types.h"
 #include "sound.h"
 #include "managers.h"
@@ -213,7 +212,7 @@ public:
 protected:    
     std::shared_ptr<Renderer> renderer_;
 
-    RenderSequencePtr render_sequence();
+    RenderSequence* render_sequence();
 
     void set_vsync_enabled(bool vsync) {
         vsync_enabled_ = vsync;
