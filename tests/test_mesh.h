@@ -70,6 +70,8 @@ public:
         assert_true(box.min() == expected_min);
         assert_true(box.max() == expected_max);
 
+        stage_->assets->mark_mesh_as_uncollected(mesh->id());
+
         return mid;
     }
 
@@ -82,6 +84,28 @@ public:
 
         assert_equal(second_mesh->first_submesh()->index_data->count(), submesh->index_data->count());
         assert_equal(second_mesh->first_submesh()->arrangement(), submesh->arrangement());
+    }
+
+    void test_mesh_garbage_collection() {
+        auto initial = stage_->assets->mesh_count();
+
+        auto mesh1 = generate_test_mesh(stage_);
+        auto mesh2 = generate_test_mesh(stage_);
+
+        auto actor = stage_->new_actor_with_mesh(mesh1);
+
+        stage_->assets->run_garbage_collection();
+        assert_equal(stage_->assets->mesh_count(), initial + 2);
+
+        actor->set_mesh(mesh2);
+        stage_->assets->run_garbage_collection();
+
+        assert_equal(stage_->assets->mesh_count(), initial + 1);
+
+        stage_->delete_actor(actor->id());
+        stage_->assets->run_garbage_collection();
+
+        assert_equal(stage_->assets->mesh_count(), initial + 0);
     }
 
     void test_mesh_normalization() {

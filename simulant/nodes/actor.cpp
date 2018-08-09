@@ -144,7 +144,9 @@ void Actor::set_mesh(MeshID mesh) {
     }
 
     //Increment the ref-count on this mesh
-    mesh_ = meshptr->shared_from_this();
+    mesh_ = meshptr;
+    meshptr.reset();
+
     vertex_data_ = mesh_->vertex_data.get();
 
     /* FIXME: This logic should also happen if the associated Mesh has set_animation_enabled called */

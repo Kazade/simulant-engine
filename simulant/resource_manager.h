@@ -119,6 +119,8 @@ public:
     MeshID new_mesh_with_alias_as_cylinder(const std::string& name, float diameter, float length, int segments = 20, int stacks = 20, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     MeshID get_mesh_with_alias(const std::string& alias);
 
+    void mark_mesh_as_uncollected(MeshID m);
+
     MeshPtr mesh(MeshID m);
     const MeshPtr mesh(MeshID m) const;
 
@@ -230,7 +232,6 @@ private:
 
     MaterialID get_template_material(const unicode& path);
 
-    std::chrono::time_point<std::chrono::system_clock> last_collection_;
     std::set<ResourceManager*> children_;
     void register_child(ResourceManager* child) {
         children_.insert(child);

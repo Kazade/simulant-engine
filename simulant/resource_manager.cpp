@@ -105,20 +105,13 @@ void ResourceManager::run_garbage_collection() {
         child->run_garbage_collection();
     }
 
-    auto now = std::chrono::system_clock::now();
-    auto diff = now - last_collection_;
+    //Garbage collect all the things
+    MeshManager::garbage_collect();
+    MaterialManager::garbage_collect();
+    TextureManager::garbage_collect();
+    SoundManager::garbage_collect();
 
-    if(std::chrono::duration_cast<std::chrono::seconds>(diff).count() >= 5) {
-        //Garbage collect all the things
-        MeshManager::garbage_collect();
-        MaterialManager::garbage_collect();
-        TextureManager::garbage_collect();
-        SoundManager::garbage_collect();
-
-        font_manager_->garbage_collect();
-
-        last_collection_ = std::chrono::system_clock::now();
-    }
+    font_manager_->garbage_collect();
 }
 
 MeshPtr ResourceManager::mesh(MeshID m) {
@@ -402,6 +395,10 @@ void ResourceManager::delete_mesh(MeshID m) {
 
 bool ResourceManager::has_mesh(MeshID m) const {
     return MeshManager::contains(m);
+}
+
+void ResourceManager::mark_mesh_as_uncollected(MeshID m) {
+    MeshManager::mark_as_uncollected(m);
 }
 
 uint32_t ResourceManager::mesh_count() const {
