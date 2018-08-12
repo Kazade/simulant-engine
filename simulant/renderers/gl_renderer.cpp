@@ -7,7 +7,7 @@
 #if defined(SIMULANT_GL_VERSION_1X)
     #ifdef _arch_dreamcast
         #include "../../../deps/libgl/include/gl.h"
-        #include "../../../deps/libgl/include/glu.h" // Until libGL supports glGenerateMipmap
+        #include "../../../deps/libgl/include/glext.h"
     #else
         #include "gl1x/glad/glad/glad.h"
     #endif
@@ -149,7 +149,7 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
         if(format > 0 && type > 0) {
             if(texture->is_compressed()) {
 
-#if defined(_arch_dreamcast) || defined(SIMULANT_GL_VERSION_2X)
+#if defined(SIMULANT_GL_VERSION_2X)
                 GLCheck(glCompressedTexImage2D,
                     GL_TEXTURE_2D,
                     0,
@@ -194,16 +194,7 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
                 // so we have to use gluBuild2DMipmaps for now
 
 #ifdef _arch_dreamcast
-                /*GLCheck(
-                    gluBuild2DMipmaps,
-                    GL_TEXTURE_2D,
-                    format,
-                    texture->width(),
-                    texture->height(),
-                    format,
-                    type,
-                    &texture->data()[0]
-                );*/
+                GLCheck(glGenerateMipmapEXT, GL_TEXTURE_2D);
 #else
                 GLCheck(glGenerateMipmap, GL_TEXTURE_2D);
 #endif
