@@ -83,13 +83,6 @@ public:
     bool init();
 
     MeshID new_mesh(VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MeshID new_animated_mesh(
-        VertexSpecification vertex_specification,
-        MeshAnimationType animation_type,
-        uint32_t animation_frames,
-        GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC
-    );
-
     MeshID new_mesh_from_file(const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
     /*

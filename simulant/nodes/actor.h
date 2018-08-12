@@ -102,7 +102,6 @@ public:
     RenderableCullingMode renderable_culling_mode() const { return culling_mode_; }
 
     Property<Actor, KeyFrameAnimationState> animation_state = { this, &Actor::animation_state_ };
-    Property<Actor, VertexData> vertex_data = {this, &Actor::vertex_data_};
 
     bool has_animated_mesh() const {
         return mesh_ && mesh_->is_animated();
@@ -116,8 +115,7 @@ public:
 private:
     // Used for animated meshes
     std::unique_ptr<HardwareBuffer> interpolated_vertex_buffer_;
-
-    VertexData* vertex_data_ = nullptr;
+    std::shared_ptr<VertexData> interpolated_vertex_data_;
 
     std::shared_ptr<Mesh> mesh_;
     std::vector<std::shared_ptr<SubActor> > subactors_;

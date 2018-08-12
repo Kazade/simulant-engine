@@ -135,25 +135,6 @@ MeshID ResourceManager::new_mesh(VertexSpecification vertex_specification, Garba
     return result;
 }
 
-MeshID ResourceManager::new_animated_mesh(
-    VertexSpecification vertex_specification,
-    MeshAnimationType animation_type,
-    uint32_t animation_frames,
-    GarbageCollectMethod garbage_collect
-) {
-    MeshID result = MeshManager::make(
-        garbage_collect,
-        this,
-        vertex_specification
-    );
-
-    mesh(result)->enable_animation(animation_type, animation_frames);
-
-    // Mark as uncollected as the user didn't actually grab it
-    MeshManager::mark_as_uncollected(result);
-
-    return result;
-}
 
 MeshID ResourceManager::new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMethod garbage_collect) {
     VertexSpecification spec = submesh->vertex_data->specification();

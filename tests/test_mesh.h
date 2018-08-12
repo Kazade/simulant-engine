@@ -187,7 +187,6 @@ public:
         //The actor should report the same data as the mesh, the same subactor count
         //as well as the same shared vertex data
         assert_equal(mesh->submesh_count(), actor->subactor_count());
-        assert_true(mesh->vertex_data->count() == actor->vertex_data->count());
 
         smlt::SubMesh* sm = actor->subactor(0).submesh();
 
@@ -207,22 +206,6 @@ public:
         auto actor = stage_->new_actor_with_mesh(mesh_id);
 
         assert_true(mesh_id == actor->mesh()->id());
-    }
-
-    void test_animated_mesh_initialization() {
-        const int num_frames = 3;
-
-        auto mesh_id = stage_->assets->new_animated_mesh(
-            smlt::VertexSpecification::POSITION_ONLY,
-            smlt::MESH_ANIMATION_TYPE_VERTEX_MORPH,
-            num_frames
-        );
-
-        auto mesh = stage_->assets->mesh(mesh_id);
-
-        assert_equal(mesh->animation_frames(), 3u);
-        assert_equal(mesh->animation_type(), smlt::MESH_ANIMATION_TYPE_VERTEX_MORPH);
-        assert_true(mesh->is_animated());
     }
 
     // Skipped, currently fails

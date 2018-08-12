@@ -95,7 +95,7 @@ void Mesh::clear() {
     rebuild_aabb();
 }
 
-void Mesh::enable_animation(MeshAnimationType animation_type, uint32_t animation_frames) {
+void Mesh::enable_animation(MeshAnimationType animation_type, uint32_t animation_frames, MeshFrameDataPtr data) {
     if(animation_type_ != MESH_ANIMATION_TYPE_NONE) {
         throw std::logic_error("Tried to re-enable animations on an animated mesh");
     }
@@ -106,6 +106,7 @@ void Mesh::enable_animation(MeshAnimationType animation_type, uint32_t animation
 
     animation_type_ = animation_type;
     animation_frames_ = animation_frames;
+    animated_frame_data_ = data;
 
     signal_animation_enabled_(this, animation_type_, animation_frames_);
 }

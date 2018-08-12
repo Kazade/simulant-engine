@@ -129,7 +129,9 @@ void Actor::set_mesh(MeshID mesh) {
     if(!mesh) {
         clear_subactors();
         mesh_.reset();
-        vertex_data_ = nullptr;
+        interpolated_vertex_data_.reset();
+
+        // FIXME: Delete vertex buffer!
         return;
     }
 
@@ -147,28 +149,21 @@ void Actor::set_mesh(MeshID mesh) {
     mesh_ = meshptr;
     meshptr.reset();
 
-    vertex_data_ = mesh_->vertex_data.get();
 
     /* FIXME: This logic should also happen if the associated Mesh has set_animation_enabled called */
     if(mesh_ && mesh_->is_animated()) {
         using namespace std::placeholders;
 
-        auto vertex_data_size = mesh_->vertex_data->count();
-        auto shared_vertices_per_frame = vertex_data_size / mesh_->animation_frames();
-
-        // Create an interpolated vertex hardware buffer if this is an animated mesh
-        interpolated_vertex_buffer_ = stage->window->renderer->hardware_buffers->allocate(
-            mesh_->vertex_data->specification().stride() * shared_vertices_per_frame,                    
-            HARDWARE_BUFFER_VERTEX_ATTRIBUTES,
-            SHADOW_BUFFER_DISABLED
-        );
-
+        interpolated_vertex_data_ = std::make_shared<VertexData>(mesh_->vertex_data->specification());
         animation_state_ = std::make_shared<KeyFrameAnimationState>(
             mesh_,
             std::bind(&Actor::refresh_animation_state, this, _1, _2, _3)
         );
 
         animation_state_->play_first_animation();
+
+        /* Make sure we update the vertex data immediately */
+        refresh_animation_state(animation_state_->current_frame(), animation_state_->next_frame(), 0);
     }
 
     //Watch the mesh for changes to its submeshes so we can adapt to it
@@ -200,38 +195,20 @@ void Actor::update(float dt) {
 }
 
 void Actor::refresh_animation_state(uint32_t current_frame, uint32_t next_frame, float interp) {
-    if(!interpolated_vertex_buffer_) {
-        // The animation buffer hasn't been configured yet
-        return;
-    }
-
     assert(mesh_ && mesh_->is_animated());
 
-    auto vertex_data_size = mesh_->vertex_data->count();
-    if(vertex_data_size) {
-        assert(vertex_data_size % mesh_->animation_frames() == 0);
-        auto shared_vertices_per_frame = vertex_data_size / mesh_->animation_frames();
+    mesh_->animated_frame_data_->unpack_frame(current_frame, next_frame, interp, interpolated_vertex_data_.get());
 
-        auto source_offset = shared_vertices_per_frame * animation_state_->current_frame();
-        auto target_offset = shared_vertices_per_frame * animation_state_->next_frame();
-
-        VertexData* source_data = mesh_->vertex_data.get();
-
-        VertexData target(source_data->specification());
-        target.resize(shared_vertices_per_frame);
-
-        for(uint32_t i = 0; i < shared_vertices_per_frame; ++i) {
-            source_data->interp_vertex(
-                source_offset + i,
-                *source_data, target_offset + i,
-                target, i,
-                animation_state_->interp()
-            );
-        }
-        target.done();
-
-        interpolated_vertex_buffer_->upload(target);
+    if(!interpolated_vertex_buffer_) {
+        // Create an interpolated vertex hardware buffer if this is an animated mesh
+        interpolated_vertex_buffer_ = stage->window->renderer->hardware_buffers->allocate(
+            interpolated_vertex_data_->data_size(),
+            HARDWARE_BUFFER_VERTEX_ATTRIBUTES,
+            SHADOW_BUFFER_DISABLED
+        );
     }
+
+    interpolated_vertex_buffer_->upload(*interpolated_vertex_data_);
 }
 
 

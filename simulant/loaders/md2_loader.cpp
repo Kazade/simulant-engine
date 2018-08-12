@@ -71,6 +71,84 @@ struct MD2Vertex {
     uint8_t normal;
 };
 
+static Vec3 ANORMS [] = {
+    #include "md2_anorms.h"
+};
+
+class MD2MeshFrameData : public MeshFrameData {
+public:
+    /* This is the frame data from an MD2 file, but without the vertices */
+    struct FrameTransform {
+        Vec3 scale;
+        Vec3 translate;
+    };
+
+    struct FrameVertex {
+        uint8_t v[3];
+        Vec2 st;
+        uint8_t normal;
+    };
+
+    uint16_t vertex_count = 0;
+
+    /* This contains all the vertices for all frames sequentially */
+    std::vector<FrameVertex> vertices_;
+
+    /* This contains the scale/translate data for each frame */
+    std::vector<FrameTransform> frames_;
+
+    void unpack_frame(uint32_t current_frame, uint32_t next_frame, float t, VertexData *out) {
+        const Mat4 ROT_X = Mat4::as_rotation_x(Degrees(-90.0f));
+        const Mat4 ROT_Y = Mat4::as_rotation_y(Degrees(90.0f));
+        const Mat4 VERTEX_ROTATION = ROT_Y * ROT_X;
+
+        FrameTransform& frame1 = frames_[current_frame];
+        FrameTransform& frame2 = frames_[next_frame];
+
+        FrameVertex* v1 = &vertices_[vertex_count * current_frame];
+        FrameVertex* v2 = &vertices_[vertex_count * next_frame];
+
+        out->resize(vertex_count);
+        out->move_to_start();
+
+        for(uint16_t i = 0; i < vertex_count; ++i) {
+            float vx1 = float(v1->v[0]) * frame1.scale.x + frame1.translate.x;
+            float vy1 = float(v1->v[1]) * frame1.scale.y + frame1.translate.y;
+            float vz1 = float(v1->v[2]) * frame1.scale.z + frame1.translate.z;
+
+            float vx2 = float(v2->v[0]) * frame2.scale.x + frame2.translate.x;
+            float vy2 = float(v2->v[1]) * frame2.scale.y + frame2.translate.y;
+            float vz2 = float(v2->v[2]) * frame2.scale.z + frame2.translate.z;
+
+            auto v1v = Vec3(vx1, vy1, vz1);
+            auto v2v = Vec3(vx2, vy2, vz2);
+
+            auto n1 = ANORMS[v1->normal];
+            auto n2 = ANORMS[v2->normal];
+
+            auto ret = v1v + (v2v - v1v) * t;
+            ret = ret.rotated_by(VERTEX_ROTATION);
+
+            auto n = n1 + (n2 - n1) * t;
+            n = n.rotated_by(VERTEX_ROTATION);
+
+            out->position(ret);
+            out->tex_coord0(v1->st);
+            out->diffuse(smlt::Colour::WHITE);
+            out->normal(n);
+            out->move_next();
+
+            ++v1;
+            ++v2;
+        }
+
+        out->done();
+    }
+};
+
+typedef std::shared_ptr<MD2MeshFrameData> MD2MeshFrameDataPtr;
+
+
 const int32_t MAGIC_NUMBER_ID = 844121161;
 
 void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
@@ -78,103 +156,6 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
     ResourceManager* resource_manager = &mesh->resource_manager();
 
     assert(mesh && "Tried to load an MD2 file into something that wasn't a mesh");
-
-    L_DEBUG(_F("Loading MD2 model: {0}").format(filename_));
-
-    std::string parent_dir = kfs::path::dir_name(filename_.encode());
-    std::string data((std::istreambuf_iterator<char>(*this->data_)), std::istreambuf_iterator<char>());
-
-    // Cast the raw header data
-    MD2Header* header = (MD2Header*) &data[0];
-
-    if(header->ident != MAGIC_NUMBER_ID || header->version != 8) {
-        throw std::logic_error("Unsupported MD2 file: " + this->filename_.encode());
-    }
-
-    auto get_frame_vertex_position = [header, &data](int32_t frame_index, int16_t vertex_index) -> Vec3 {
-        //Needed because the Quake 2 coord system is weird
-        Mat4 rotation_x = Mat4::as_rotation_x(Degrees(-90.0f));
-        Mat4 rotation_y = Mat4::as_rotation_y(Degrees(90.0f));
-
-        Mat4 rotation = rotation_y * rotation_x;
-
-        const char* cursor = &data[0];
-        cursor += header->offset_frames;
-        cursor += header->framesize * frame_index;
-
-        Vec3* scale = (Vec3*) cursor;
-        cursor += sizeof(float) * 3;
-
-        Vec3* translate = (Vec3*) cursor;
-        cursor += sizeof(float) * 3;
-        cursor += sizeof(char) * 16;
-
-        cursor += (sizeof(MD2Vertex) * vertex_index);
-
-        MD2Vertex* vert = (MD2Vertex*) cursor;
-
-        float x = float(vert->v[0]) * scale->x + translate->x;
-        float y = float(vert->v[1]) * scale->y + translate->y;
-        float z = float(vert->v[2]) * scale->z + translate->z;
-        auto ret = Vec3(x, y, z);
-
-        ret = ret.rotated_by(rotation);
-
-        return ret;
-    };
-
-
-    MaterialID material;
-    std::vector<Vec2> texture_coordinates;
-
-    char* cursor = &data[0] + sizeof(MD2Header);
-    for(int32_t i = 0; i < header->num_skins; ++i) {
-        MD2Skin* skin = (MD2Skin*) cursor;
-
-        if(i == 0) {
-            // Only load the first skin
-            std::string skin_name(skin->name);
-            std::vector<std::string> possible_paths = {
-                kfs::path::join(kfs::path::dir_name(filename_.encode()), kfs::path::split(skin_name).second),
-                skin_name
-            };
-
-            smlt::TextureID tex_id;
-            bool found = false;
-            for(auto& texture_path: possible_paths) {
-                try {
-                    tex_id = resource_manager->new_texture_from_file(locator->locate_file(texture_path));
-                    found = true;
-                } catch(ResourceMissingError&) {
-                    L_DEBUG("MD2 skin not found at: " + texture_path);
-                    continue;
-                }
-            }
-
-            if(!found) {
-                L_WARN("Unable to locate MD2 skin: " + skin_name);
-                tex_id = resource_manager->default_texture_id();
-            }
-
-            material = resource_manager->new_material_from_texture(tex_id);
-        }
-        cursor += sizeof(MD2Skin);
-    }
-
-    for(int32_t i = 0; i < header->num_st; ++i) {
-        MD2TexCoord* coord = (MD2TexCoord*) cursor;
-        texture_coordinates.push_back(
-            Vec2(
-                float(coord->s) / float(header->skinwidth),
-                -float(coord->t) / float(header->skinheight)
-            )
-        );
-
-        cursor += sizeof(MD2TexCoord);
-    }
-
-    L_DEBUG("Loaded MD2 data, converting to mesh");
-    print_available_ram();
 
     VertexSpecification vertex_specification;
     vertex_specification.position_attribute = VERTEX_ATTRIBUTE_3F;
@@ -184,89 +165,156 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
 
     // Rebuild the mesh from the loaded data
     mesh->reset(vertex_specification);
-    mesh->enable_animation(MESH_ANIMATION_TYPE_VERTEX_MORPH, header->num_frames);
 
-    SubMesh* submesh = mesh->new_submesh(
-        "default",
-        MESH_ARRANGEMENT_TRIANGLES
-    );
+    SubMesh* submesh = mesh->new_submesh("default", MESH_ARRANGEMENT_TRIANGLES);
 
+    L_DEBUG(_F("Loading MD2 model: {0}").format(filename_));
+
+    MD2Header header;
+
+    data_->read((char*) &header, sizeof(MD2Header));
+
+    if(header.ident != MAGIC_NUMBER_ID || header.version != 8) {
+        throw std::logic_error("Unsupported MD2 file: " + this->filename_.encode());
+    }
+
+    data_->seekg(header.offset_frames, std::ios_base::beg);
+
+    std::vector<std::vector<MD2Vertex>> vertices_by_frame;
+
+    MD2MeshFrameDataPtr frame_data = std::make_shared<MD2MeshFrameData>();
+
+    /* Load all the vertex data from the frames */
+    for(auto i = 0; i < header.num_frames; ++i) {
+        MD2MeshFrameData::FrameTransform frame_transform;
+        char name[16];
+
+
+        data_->read((char*) &frame_transform.scale, sizeof(Vec3));
+        data_->read((char*) &frame_transform.translate, sizeof(Vec3));
+        data_->read(name, sizeof(char) * 16);
+
+        std::vector<MD2Vertex> frame_vertices(header.num_vertices);
+
+        data_->read((char*) &frame_vertices[0], sizeof(MD2Vertex) * header.num_vertices);
+
+        vertices_by_frame.push_back(frame_vertices);
+
+        frame_data->frames_.push_back(frame_transform);
+    }
+
+    //========== LOAD SKINS ===================
+
+    std::vector<MD2Skin> skins(header.num_skins);
+    data_->seekg(header.offset_skins, std::ios::beg);
+    data_->read((char*) &skins[0], sizeof(MD2Skin) * header.num_skins);
+
+    MD2Skin* skin = &skins[0];
+
+    // Only load the first skin
+    std::string skin_name(skin->name);
+    std::vector<std::string> possible_paths = {
+        kfs::path::join(kfs::path::dir_name(filename_.encode()), kfs::path::split(skin_name).second),
+        skin_name
+    };
+
+    smlt::TextureID tex_id;
+    bool found = false;
+    for(auto& texture_path: possible_paths) {
+        try {
+            tex_id = resource_manager->new_texture_from_file(locator->locate_file(texture_path));
+            found = true;
+        } catch(ResourceMissingError&) {
+            L_DEBUG("MD2 skin not found at: " + texture_path);
+            continue;
+        }
+    }
+
+    if(!found) {
+        L_WARN("Unable to locate MD2 skin: " + skin_name);
+        tex_id = resource_manager->default_texture_id();
+    }
+
+    auto material = resource_manager->new_material_from_texture(tex_id);
     submesh->set_material_id(material);
 
-    /* Each index in an MD2 triangle may have its own texture coordinate. As
-     * we store texture coords on the vertex data, we need to duplicate the position
-     * and normal data when this happens. We create a key representing a combination of
-     * a vertex index and a texture coordinate index and only push new vertices of that
-     * combination hasn't been seen before
+    // =========== TEXTURE COORDS =============
+    std::vector<MD2TexCoord> texture_coordinates(header.num_st);
+    data_->seekg(header.offset_st, std::ios_base::beg);
+    data_->read((char*) &texture_coordinates[0], sizeof(MD2TexCoord) * header.num_st);
+
+    // =========== TRIANGLES ==================
+    std::vector<MD2Triangle> triangles(header.num_tris);
+    data_->seekg(header.offset_tris, std::ios_base::beg);
+    data_->read((char*) &triangles[0], sizeof(MD2Triangle) * header.num_tris);
+
+    /* We have to combine MD2Vertices with the ST coordinates from the triangles
+     * which means we end up with more vertices at the end. We look the triangles
+     * twice, once to generate the vertices for the first frame (while counting how many we do)
+     * and then again to generate the rest of the vertices for the other frames
      */
+
     typedef std::pair<uint16_t, uint16_t> VertexKey;
 
-    // Lookup to the index in our vertex data
-    std::map<VertexKey, uint32_t> vertex_lookup;
+    uint16_t current_frame = 0;
+    for(auto& frame_transform: frame_data->frames_) {
+        std::map<VertexKey, uint16_t> seen_vertices;
 
-    char* triangle_cursor = cursor; // Store for later
+        for(auto& triangle: triangles) {
+            for(uint8_t i = 0; i < 3; ++i) {
+                MD2MeshFrameData::FrameVertex vert;
 
-    for(int32_t i = 0; i < header->num_tris; ++i) {
-        MD2Triangle* tri = (MD2Triangle*) cursor;
+                VertexKey key = std::make_pair(triangle.index[i], triangle.st[i]);
 
-        for(int32_t j = 0; j < 3; ++j) {
-            VertexKey key = std::make_pair(tri->index[j], tri->st[j]);
+                if(seen_vertices.count(key)) {
+                    if(current_frame == 0) {
+                        submesh->index_data->index(seen_vertices[key]);
+                    }
+                } else {
+                    MD2Vertex& source_vert = vertices_by_frame[current_frame][triangle.index[i]];
 
-            if(vertex_lookup.count(key)) {
-                submesh->index_data->index(vertex_lookup.at(key));
-            } else {
-                // This just populates the first frame, after that point we know how many
-                // vertices we need per frame and we can populate the other frames
-                Vec3 v = get_frame_vertex_position(0, tri->index[j]);
-                submesh->vertex_data->position(v);
-                submesh->vertex_data->diffuse(smlt::Colour::WHITE);
-                submesh->vertex_data->tex_coord0(texture_coordinates[tri->st[j]]);
-                submesh->vertex_data->normal(Vec3(0, 1, 0));
-                submesh->vertex_data->move_next();
+                    vert.v[0] = source_vert.v[0];
+                    vert.v[1] = source_vert.v[1];
+                    vert.v[2] = source_vert.v[2];
+                    vert.normal = source_vert.normal;
+                    vert.st = Vec2(
+                        float(texture_coordinates[triangle.st[i]].s),
+                        float(texture_coordinates[triangle.st[i]].t)
+                    );
 
-                vertex_lookup[key] = submesh->vertex_data->count() - 1;
-                submesh->index_data->index(vertex_lookup.at(key));
+                    vert.st.x /= float(header.skinwidth);
+                    vert.st.y /= float(header.skinheight);
+                    vert.st.y *= -1.0f;
+
+                    if(current_frame == 0) {
+                        submesh->index_data->index(frame_data->vertices_.size());
+                    }
+
+                    seen_vertices.insert(std::make_pair(key, frame_data->vertices_.size()));
+                    frame_data->vertices_.push_back(vert);
+                }
             }
         }
 
-        cursor += sizeof(MD2Triangle);
+        if(current_frame == 0) {
+            // After the first frame, we know how many verts there are per-frame
+            frame_data->vertex_count = frame_data->vertices_.size();
+        }
+
+        ++current_frame;
     }
 
-    L_DEBUG("MD2 first frame constructed");
+    L_DEBUG("Loaded MD2 data, converting to mesh");
+    print_available_ram();
+
+    mesh->enable_animation(MESH_ANIMATION_TYPE_VERTEX_MORPH, header.num_frames, frame_data);
+
     print_available_ram();
 
     // This is necessary due to the difference in coordinate system
     submesh->reverse_winding();
 
-    // Make room for all of the frame vertices
-    uint32_t vertices_per_frame = submesh->vertex_data->count();
-    L_DEBUG(_F("About to allocate {0} vertices").format(vertices_per_frame * header->num_frames));
-    submesh->vertex_data->resize(vertices_per_frame * header->num_frames);
-
-    // Go through populating the same index as the first frame plus the frame offset
-    // with the combined position + texcoord data
-    for(int32_t frame_id = 0; frame_id < header->num_frames; ++frame_id) {
-        for(int32_t i = 0; i < header->num_tris; ++i) {
-            MD2Triangle* tri = ((MD2Triangle*) triangle_cursor) + i;
-
-            for(int32_t j = 0; j < 3; ++j) {
-                VertexKey key = std::make_pair(tri->index[j], tri->st[j]);
-
-                Vec3 v = get_frame_vertex_position(frame_id, tri->index[j]);
-                submesh->vertex_data->move_to((frame_id * vertices_per_frame) + vertex_lookup[key]);
-                submesh->vertex_data->position(v);
-                submesh->vertex_data->diffuse(smlt::Colour::WHITE);
-                submesh->vertex_data->tex_coord0(texture_coordinates[tri->st[j]]);
-                submesh->vertex_data->normal(Vec3(0, 1, 0));
-            }
-        }
-
-        L_DEBUG("MD2 frame loaded");
-        print_available_ram();
-    }
-
     submesh->index_data->done();
-    submesh->vertex_data->done();
 
     /*
      *     {   0,  39,  9 },   // STAND

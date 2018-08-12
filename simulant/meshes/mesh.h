@@ -55,6 +55,18 @@ enum MeshAnimationType {
 
 typedef sig::signal<void (Mesh*, MeshAnimationType, uint32_t)> SignalAnimationEnabled;
 
+
+/* When enabling animations you must pass MeshFrameData which holds all the data necessary to
+ * produce a frame
+ */
+class MeshFrameData {
+public:
+    virtual ~MeshFrameData() {}
+    virtual void unpack_frame(uint32_t current_frame, uint32_t next_frame, float t, VertexData* out) = 0;
+};
+
+typedef std::shared_ptr<MeshFrameData> MeshFrameDataPtr;
+
 class Mesh :
     public virtual Boundable,
     public Resource,
@@ -127,7 +139,7 @@ public:
     void each(std::function<void (const std::string&, SubMeshPtr)> func) const;
     void each_submesh(std::function<void (const std::string&, SubMeshPtr)> func) const;
 
-    void enable_animation(MeshAnimationType animation_type, uint32_t animation_frames);
+    void enable_animation(MeshAnimationType animation_type, uint32_t animation_frames, MeshFrameDataPtr data);
     bool is_animated() const { return animation_type_ != MESH_ANIMATION_TYPE_NONE; }
     uint32_t animation_frames() const { return animation_frames_; }
     MeshAnimationType animation_type() const { return animation_type_; }
@@ -155,10 +167,12 @@ public:
 
 private:
     friend class SubMesh;
+    friend class Actor;
 
     std::shared_ptr<VertexData> vertex_data_;
     MeshAnimationType animation_type_ = MESH_ANIMATION_TYPE_NONE;
     uint32_t animation_frames_ = 0;
+    MeshFrameDataPtr animated_frame_data_;
 
     std::unique_ptr<HardwareBuffer> shared_vertex_buffer_;
     bool shared_vertex_buffer_dirty_ = false;
@@ -176,7 +190,7 @@ private:
 
     /* Automatically maintain adjacency info for submeshes or not */
     bool maintain_adjacency_info_ = true;
-    std::unique_ptr<AdjacencyInfo> adjacency_;
+    std::unique_ptr<AdjacencyInfo> adjacency_;    
 };
 
 }

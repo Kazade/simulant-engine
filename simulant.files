@@ -424,6 +424,7 @@ simulant/loaders/kmg_texture_loader.h
 simulant/loaders/kmg_texture_loader.h
 simulant/loaders/material_script.cpp
 simulant/loaders/material_script.h
+simulant/loaders/md2_anorms.h
 simulant/loaders/md2_loader.cpp
 simulant/loaders/md2_loader.h
 simulant/loaders/obj_loader.cpp
