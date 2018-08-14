@@ -43,7 +43,7 @@ TextureLoadResult TextureLoader::do_load(const std::vector<uint8_t> &buffer) {
         SOIL_LOAD_AUTO
     );
 
-    if((width & -width) != width || (height & -height) != height) {
+    if((width & -width) != width || (height & -height) != height || width < 8 || height < 8) {
         // FIXME: Add SIMULANT_COMPAT_WARNINGS=1 and only do this then
         L_WARN("[COMPAT] Using a non power-of-two texture will break compatibility with some platforms (e.g. Dreamcast)");
     }
