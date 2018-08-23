@@ -57,10 +57,13 @@ deps/libgl/GL/immediate.c
 deps/libgl/GL/lighting.c
 deps/libgl/GL/matrix.c
 deps/libgl/GL/private.h
+deps/libgl/GL/profiler.c
+deps/libgl/GL/profiler.h
 deps/libgl/GL/state.c
 deps/libgl/GL/texture.c
 deps/libgl/containers/aligned_vector.c
 deps/libgl/containers/aligned_vector.h
+deps/libgl/containers/named_array.c
 deps/libgl/containers/named_array.h
 deps/libgl/containers/stack.c
 deps/libgl/containers/stack.h
@@ -644,6 +647,8 @@ simulant/procedural/mesh/sphere.h
 simulant/procedural/texture.h
 simulant/procedural/texture/starfield.cpp
 simulant/procedural/texture/starfield.h
+simulant/profiler.cpp
+simulant/profiler.h
 simulant/random.cpp
 simulant/random.cpp
 simulant/random.h

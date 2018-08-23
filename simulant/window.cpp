@@ -23,6 +23,8 @@
     #include <kos.h>
 #endif
 
+#include "profiler.h"
+
 #include "utils/gl_error.h"
 #include "window.h"
 #include "platform.h"
@@ -340,6 +342,8 @@ bool Window::run_frame() {
 
     await_frame_time(); /* Frame limiter */
 
+    Profiler profiler(__func__);
+
     signal_frame_started_();
 
     float dt = 0.0f;
@@ -350,18 +354,32 @@ bool Window::run_frame() {
     }
 
     check_events(); // Check for any window events
+
+    profiler.checkpoint("event_poll");
+
     Source::update_source(dt); //Update any playing sounds
     input_state_->update(dt); // Update input devices
     input_manager_->update(dt); // Now update any manager stuff based on the new input state
     shared_assets->update(dt); // Update animated assets
 
+    profiler.checkpoint("asset_updates");
+
     run_fixed_updates();
+
+    profiler.checkpoint("fixed_updates");
+
     run_update();
+
+    profiler.checkpoint("updates");
 
     idle_.execute(); //Execute idle tasks before render
 
+    profiler.checkpoint("idle");
+
     // Garbage collect resources after idle, but before rendering
     resource_manager_->run_garbage_collection();
+
+    profiler.checkpoint("garbage_collection");
 
     /* Don't run the render sequence if we don't have a context, and don't update the resource
      * manager either because that probably needs a context too! */
@@ -380,6 +398,8 @@ bool Window::run_frame() {
             //std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
     }
+
+    profiler.checkpoint("rendering");
 
     signal_frame_finished_();
 
@@ -405,6 +425,10 @@ bool Window::run_frame() {
         std::cout << "Fixed updates run: " << stats_.fixed_steps_run() << std::endl;
         std::cout << "Total time: " << time_keeper->total_elapsed_seconds() << std::endl;
         std::cout << "Average FPS: " << float(stats_.frames_run() - 1) / (time_keeper->total_elapsed_seconds()) << std::endl;
+
+        if(getenv("SIMULANT_PROFILE")) {
+            profiler.get_root()->print_stats();
+        }
     }
 
     return is_running_;

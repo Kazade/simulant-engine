@@ -231,7 +231,7 @@ public:
 
         aligned_vector_push_back(&input, vertices, 4);
 
-        clipTriangleStrip(&input, &output);
+        clipTriangleStrip((ClipVertex*) input.data, input.size, &output);
 
         assert_equal(output.size, 4u);
     }
@@ -246,7 +246,7 @@ public:
 
         aligned_vector_push_back(&input, vertices, 4);
 
-        clipTriangleStrip(&input, &output);
+        clipTriangleStrip((ClipVertex*) input.data, input.size, &output);
 
         assert_equal(output.size, 0u);
     }
@@ -262,7 +262,7 @@ public:
 
         aligned_vector_push_back(&input, vertices, 3);
 
-        clipTriangleStrip(&input, &output);
+        clipTriangleStrip((ClipVertex*) input.data, input.size, &output);
 
         assert_equal(output.size, 4u);
 
@@ -293,7 +293,7 @@ public:
 
         aligned_vector_push_back(&input, vertices, 3);
 
-        clipTriangleStrip(&input, &output);
+        clipTriangleStrip((ClipVertex*) input.data, input.size, &output);
 
         assert_equal(output.size, 4);
 
@@ -324,7 +324,7 @@ public:
 
         aligned_vector_push_back(&input, vertices, 3);
 
-        clipTriangleStrip(&input, &output);
+        clipTriangleStrip((ClipVertex*) input.data, input.size, &output);
 
         assert_equal(output.size, 4);
 
@@ -359,7 +359,7 @@ public:
 
         aligned_vector_push_back(&input, vertices, 4);
 
-        clipTriangleStrip(&input, &output);
+        clipTriangleStrip((ClipVertex*) input.data, input.size, &output);
 
         assert_equal(output.size, 7);
 
@@ -403,7 +403,7 @@ public:
 
         aligned_vector_push_back(&input, vertices, 4);
 
-        clipTriangleStrip(&input, &output);
+        clipTriangleStrip((ClipVertex*) input.data, input.size, &output);
 
         assert_equal(output.size, 8);
 
@@ -457,7 +457,7 @@ public:
 
         aligned_vector_push_back(&input, vertices, 3);
 
-        clipTriangleStrip(&input, &output);
+        clipTriangleStrip((ClipVertex*) input.data, input.size, &output);
 
         assert_equal(output.size, 3);
 
@@ -483,7 +483,7 @@ public:
 
         aligned_vector_push_back(&input, vertices, 3);
 
-        clipTriangleStrip(&input, &output);
+        clipTriangleStrip((ClipVertex*) input.data, input.size, &output);
 
         assert_equal(output.size, 3);
 
@@ -509,7 +509,7 @@ public:
 
         aligned_vector_push_back(&input, vertices, 3);
 
-        clipTriangleStrip(&input, &output);
+        clipTriangleStrip((ClipVertex*) input.data, input.size, &output);
 
         assert_equal(output.size, 3);
 
@@ -536,7 +536,7 @@ public:
 
         aligned_vector_push_back(&input, vertices, 4);
 
-        clipTriangleStrip(&input, &output);
+        clipTriangleStrip((ClipVertex*) input.data, input.size, &output);
 
         assert_equal(output.size, 3);
 
@@ -563,7 +563,7 @@ public:
 
         aligned_vector_push_back(&input, vertices, 4);
 
-        clipTriangleStrip(&input, &output);
+        clipTriangleStrip((ClipVertex*) input.data, input.size, &output);
 
         assert_equal(output.size, 3);
 
@@ -596,7 +596,7 @@ public:
 
         aligned_vector_push_back(&input, vertices, 6);
 
-        clipTriangleStrip(&input, &output);
+        clipTriangleStrip((ClipVertex*) input.data, input.size, &output);
 
         ClipVertex* v1 = (ClipVertex*) aligned_vector_at(&output, 0);
         ClipVertex* v2 = (ClipVertex*) aligned_vector_at(&output, 1);

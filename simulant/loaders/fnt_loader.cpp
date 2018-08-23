@@ -236,7 +236,7 @@ void FNTLoader::prepare_texture(Font* font, const std::string& texture_file) {
 
     // Disable auto upload until we've converted the texture
     flags.auto_upload = false;
-    flags.filter = TEXTURE_FILTER_TRILINEAR;
+    flags.filter = TEXTURE_FILTER_BILINEAR;
 
     font->texture_ = font->resource_manager().new_texture_from_file(texture_path, flags).fetch();
 

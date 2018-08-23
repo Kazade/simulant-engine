@@ -19,6 +19,8 @@
 
 #include <unordered_map>
 
+#include "profiler.h"
+
 #include "generic/algorithm.h"
 #include "render_sequence.h"
 #include "stage.h"
@@ -201,6 +203,8 @@ uint64_t generate_frame_id() {
 }
 
 void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rendered) {
+    Profiler profiler(__func__);
+
     uint64_t frame_id = generate_frame_id();
 
     if(!pipeline_stage->is_active()) {
@@ -240,11 +244,17 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
     auto stage = window->stage(stage_id);
     auto camera = stage->camera(camera_id);
 
+    profiler.checkpoint("prepare");
+
     // Trigger a signal to indicate the stage is about to be rendered
     stage->signal_stage_pre_render()(camera_id, viewport);
 
+    profiler.checkpoint("pre_render");
+
     // Apply any outstanding writes to the partitioner
     stage->partitioner->_apply_writes();
+
+    profiler.checkpoint("apply_writes");
 
     static std::vector<LightID> light_ids;
     static std::vector<StageNode*> nodes_visible;
@@ -260,6 +270,8 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
     auto lights_visible = map<decltype(light_ids), std::vector<LightPtr>>(
         light_ids, [&](const LightID& light_id) -> LightPtr { return stage->light(light_id); }
     );
+
+    profiler.checkpoint("gather");
 
     uint32_t renderables_rendered = 0;
     // Mark the visible objects as visible
@@ -312,6 +324,8 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
         }
     }
 
+    profiler.checkpoint("lights");
+
     window->stats->set_geometry_visible(renderables_rendered);
 
     using namespace std::placeholders;
@@ -321,10 +335,13 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
     // Render the visible objects
     stage->render_queue->traverse(visitor.get(), frame_id);
 
+    profiler.checkpoint("traversal");
+
     // Trigger a signal to indicate the stage has been rendered
     stage->signal_stage_post_render()(camera_id, viewport);
 
     signal_pipeline_finished_(*pipeline_stage);
+    profiler.checkpoint("post_render");
 }
 
 }
