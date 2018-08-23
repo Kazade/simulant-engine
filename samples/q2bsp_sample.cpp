@@ -10,7 +10,7 @@ public:
         smlt::Scene<GameScene>(window) {}
 
     void load() {
-        pipeline_ = prepare_basic_scene(stage_, camera_, smlt::PARTITIONER_NULL);
+        pipeline_ = prepare_basic_scene(stage_, camera_, smlt::PARTITIONER_FRUSTUM);
         pipeline_->set_clear_flags(BUFFER_CLEAR_ALL);
         pipeline_->viewport->set_colour(smlt::Colour::GREY);
         pipeline_->deactivate();

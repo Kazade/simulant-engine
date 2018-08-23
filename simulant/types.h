@@ -316,6 +316,7 @@ enum MeshArrangement {
 
 enum AvailablePartitioner {
     PARTITIONER_NULL,
+    PARTITIONER_FRUSTUM,
     PARTITIONER_HASH
 };
 

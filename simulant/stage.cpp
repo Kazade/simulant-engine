@@ -35,6 +35,7 @@
 #include "loader.h"
 #include "partitioners/null_partitioner.h"
 #include "partitioners/spatial_hash.h"
+#include "partitioners/frustum_partitioner.h"
 #include "renderers/batching/render_queue.h"
 
 namespace smlt {
@@ -340,6 +341,9 @@ void Stage::set_partitioner(AvailablePartitioner partitioner) {
     switch(partitioner) {
         case PARTITIONER_NULL:
             partitioner_ = Partitioner::ptr(new NullPartitioner(this));
+        break;
+        case PARTITIONER_FRUSTUM:
+            partitioner_ = std::make_shared<FrustumPartitioner>(this);
         break;
         case PARTITIONER_HASH:
             partitioner_ = std::make_shared<SpatialHashPartitioner>(this);

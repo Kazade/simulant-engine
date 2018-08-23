@@ -24,35 +24,49 @@
 #include "../nodes/particle_system.h"
 #include "../nodes/geom.h"
 
-#include "null_partitioner.h"
+#include "frustum_partitioner.h"
 
 namespace smlt {
 
-void NullPartitioner::lights_and_geometry_visible_from(
+void FrustumPartitioner::lights_and_geometry_visible_from(
         CameraID camera_id, std::vector<LightID> &lights_out,
         std::vector<StageNode*> &geom_out) {
 
+    auto frustum = stage->camera(camera_id)->frustum();
+
     for(LightID lid: all_lights_) {
-        lights_out.push_back(lid);
+        auto light = stage->light(lid);
+        auto aabb = light->transformed_aabb();
+        if(light->type() == LIGHT_TYPE_DIRECTIONAL || frustum.intersects_aabb(aabb)) {
+            lights_out.push_back(lid);
+        }
     }
 
     for(ActorID eid: all_actors_) {
         auto actor = stage->actor(eid);
-        geom_out.push_back(actor);
+
+        if(frustum.intersects_aabb(actor->transformed_aabb())) {
+            geom_out.push_back(actor);
+        }
     }
 
     for(GeomID gid: all_geoms_) {
         auto geom = stage->geom(gid);
-        geom_out.push_back(geom);
+        if(frustum.intersects_aabb(geom->aabb())) {
+            geom_out.push_back(geom);
+        }
     }
 
     for(ParticleSystemID ps: all_particle_systems_) {
         auto system = stage->particle_system(ps);
-        geom_out.push_back(system);
+        auto aabb = system->transformed_aabb();
+        if(frustum.intersects_aabb(aabb)) {
+            geom_out.push_back(system);
+        }
     }
 }
 
-void NullPartitioner::apply_staged_write(const StagedWrite &write) {
+void FrustumPartitioner::apply_staged_write(const StagedWrite &write) {
     if(write.operation == WRITE_OPERATION_ADD) {
         if(write.actor_id) {
             all_actors_.insert(write.actor_id);

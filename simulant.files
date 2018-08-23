@@ -620,6 +620,8 @@ simulant/particles/particle_system.h
 simulant/partitioner.cpp
 simulant/partitioner.cpp
 simulant/partitioner.h
+simulant/partitioners/frustum_partitioner.cpp
+simulant/partitioners/frustum_partitioner.h
 simulant/partitioners/impl/grid.h
 simulant/partitioners/impl/spatial_hash.cpp
 simulant/partitioners/impl/spatial_hash.h
