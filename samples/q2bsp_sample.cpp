@@ -18,7 +18,7 @@ public:
         window->resource_locator->add_search_path("sample_data/quake2/textures");
 
         auto mesh = stage_->assets->new_mesh_from_file("sample_data/quake2/maps/aggression.bsp").fetch();
-        auto actor_id = stage_->new_geom_with_mesh(mesh->id());
+        auto geom_id = stage_->new_geom_with_mesh(mesh->id());
 
         auto entities = mesh->data->get<smlt::Q2EntityList>("entities");
 

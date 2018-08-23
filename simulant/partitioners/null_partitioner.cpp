@@ -22,6 +22,7 @@
 #include "../nodes/actor.h"
 #include "../nodes/light.h"
 #include "../nodes/particle_system.h"
+#include "../nodes/geom.h"
 
 #include "null_partitioner.h"
 
@@ -46,6 +47,13 @@ void NullPartitioner::lights_and_geometry_visible_from(
 
         if(frustum.intersects_aabb(actor->transformed_aabb())) {
             geom_out.push_back(actor);
+        }
+    }
+
+    for(GeomID gid: all_geoms_) {
+        auto geom = stage->geom(gid);
+        if(frustum.intersects_aabb(geom->aabb())) {
+            geom_out.push_back(geom);
         }
     }
 
